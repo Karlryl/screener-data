@@ -5,7 +5,7 @@
 ## Aktueller Stand
 
 - **70 Stocks** in der Watchlist (kein Position-Tracking, kein Buy-Signal-Layer)
-- **20 Methoden** (4 disabled in methods/disabled/) parallel, alle isoliert (kein Aggregat-Score)
+- **21 Methoden** (4 disabled in methods/disabled/) parallel, alle isoliert (kein Aggregat-Score)
 - **Pipeline autonom** via GitHub Actions wöchentlich (Mo 08:00 UTC) + manuelle Trigger
 - **Workflow** läuft in ~3-7 Min: Engine-Tests → Yahoo-Pull → Sektor-Median-Auto-Compute → Methods-Report → Methods-History-Snapshot → Price-Pull → Diff-Report
 - **Sektor-relative Schwellen** für ROIC + ROCE + FCF-Yield bei 6 Sub-Profile (auto-computed wenn ≥5 stocks/sektor, sonst hardcoded)
@@ -82,7 +82,8 @@ Tag 46 ROCE ✓ · Tag 47 Magic Formula ✓ · Tag 48 Aktienfinder-Helper ✓ ·
 | 65 | Methods-Report Mobile-Responsive | ✓ done |
 | 66 | Drawdown-52w | ✓ done |
 | 67 | 52w-High-Proximity | ✓ done |
-| 68-75 | offen's Bedürfnissen |
+| 68 | Volatility-Annualized | ✓ done |
+| 69-75 | offen's Bedürfnissen |
 
 ## Zwischenspeicherung
 
