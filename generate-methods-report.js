@@ -71,6 +71,19 @@ function evaluateAllStocks(args) {
         return tr;
       })()
     });
+    // Tag-36: Pass-Count-Ranking
+    const lastRow = rows[rows.length - 1];
+    let passCount = 0, computableCount = 0;
+    const failedMethods = [];
+    for (const m of Runner.getMethods()) {
+      const r = lastRow.results[m.id];
+      if (r.computable) computableCount++;
+      if (r.computable && r.pass) passCount++;
+      else if (r.computable && !r.pass) failedMethods.push(m.label);
+    }
+    lastRow.passCount = passCount;
+    lastRow.computableCount = computableCount;
+    lastRow.failedMethods = failedMethods;
   }
   return rows;
 }
@@ -98,6 +111,29 @@ function renderHTML(rows, methods) {
   const methodCols = methods.map(m =>
     `<th class="method-col" data-method="${m.id}" title="${escHtml(m.description)}">${escHtml(m.label)}<div class="threshold">${m.thresholdOp === 'gte' ? '≥' : (m.thresholdOp === 'lte' ? '≤' : '|·|≤')} ${m.threshold}</div></th>`
   ).join('');
+
+  // Tag-36: Top-Picks-Ranking
+  const ranked = [...rows].sort((a, b) => {
+    if (b.passCount !== a.passCount) return b.passCount - a.passCount;
+    if (b.computableCount !== a.computableCount) return b.computableCount - a.computableCount;
+    return a.ticker.localeCompare(b.ticker);
+  });
+  const topPicksRows = ranked.map((r, i) => {
+    const passRatio = r.computableCount > 0 ? (r.passCount / r.computableCount) : 0;
+    const ratioColor = passRatio >= 0.9 ? '#10b981' : passRatio >= 0.7 ? '#84cc16' : passRatio >= 0.5 ? '#f59e0b' : '#94a3b8';
+    const failedShort = r.failedMethods.length > 3
+      ? r.failedMethods.slice(0, 3).join(', ') + ' +' + (r.failedMethods.length - 3)
+      : r.failedMethods.join(', ');
+    return `<tr class="row-clickable" data-ticker="${r.ticker}" data-row='${encodeURIComponent(JSON.stringify({ ticker: r.ticker, name: r.name, sector: r.sector, marketCap: r.marketCap, growthYoY: r.growthYoY, revenueTTM: r.revenueTTM, results: r.results, trends: r.trends }))}'>
+      <td><strong style="color:${ratioColor};">#${i+1}</strong></td>
+      <td><strong>${escHtml(r.ticker)}</strong></td>
+      <td>${escHtml(r.name)}</td>
+      <td><span style="color:${ratioColor};font-weight:700;">${r.passCount} / ${r.computableCount}</span></td>
+      <td><span class="position-${r.position}">${r.position}</span></td>
+      <td>${escHtml(r.sector)}</td>
+      <td style="color:#fca5a5;font-size:11px;">${escHtml(failedShort) || '<span style="color:#10b981;">— alle pass —</span>'}</td>
+    </tr>`;
+  }).join('');
 
   const tableRows = rows.map(r => {
     const methodCells = methods.map(m => {
@@ -202,6 +238,13 @@ function renderHTML(rows, methods) {
   <span class="filter-mode">Mode: <select id="filter-mode" style="background:#0f172a;color:#cbd5e1;border:1px solid #334155;padding:2px 6px;border-radius:3px;"><option value="AND">AND (alle ausgewählten pass)</option><option value="OR">OR (mind. einer pass)</option></select></span>
   <span class="filter-mode" id="visible-count">Showing all ${rows.length}</span>
 </div>
+
+<h2 style="color:#f1f5f9;font-size:18px;margin:24px 0 8px;border-bottom:1px solid #334155;padding-bottom:6px;">🏆 Top-Picks (Pass-Count-Ranking)</h2>
+<div class="sub" style="margin-bottom:14px;">Stocks gerankt nach Pass-Count. Klick auf eine Reihe für Details. Stocks mit ≥7 Pass von 10 Methoden sind potentielle Kandidaten — die fehlenden Methoden geben dir konkrete Punkte zum manuellen Prüfen.</div>
+<table id="top-picks" style="margin-bottom:30px;">
+<thead><tr><th>Rank</th><th>Ticker</th><th>Name</th><th>Pass / Computable</th><th>Position</th><th>Sector</th><th>Failed Methods</th></tr></thead>
+<tbody>${topPicksRows}</tbody>
+</table>
 
 <div id="modal-overlay" class="modal-overlay">
   <div class="modal">
