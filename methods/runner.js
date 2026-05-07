@@ -25,7 +25,8 @@ const METHODS = [
   require('./aktienfinder-quality.js'),
   require('./forward-pe.js'),
   require('./multi-year-stability.js'),
-  require('./peg.js')
+  require('./peg.js'),
+  require('./ev-ebitda.js')
 ];
 
 function evaluateStock(stock) {
