@@ -1,74 +1,90 @@
 # Project Status — Karl's Stock-Screener
 
-**Last Update:** 2026-05-07 — Tag 59 done, Tag 60 pending
+**Last Update:** 2026-05-07 — Tag 60 done. 21 Methoden parallel laufend.
 
 ## Aktueller Stand
 
-- **70 Stocks** in der Watchlist (kein Position-Tracking)
-- **21 Methoden** parallel laufend, alle isoliert
-- **Pipeline autonom** via GitHub Actions wöchentlich (Mo 08:00 UTC)
-- **Workflow** läuft in ~3-6 Min: Engine-Tests → Yahoo-Pull → Methods-Report → Methods-History-Snapshot → Price-Pull
-- **Sektor-relative Schwellen** für ROIC + FCF-Yield bei 6 Sub-Profile
+- **70 Stocks** in der Watchlist (kein Position-Tracking, kein Buy-Signal-Layer)
+- **21 Methoden** parallel, alle isoliert (kein Aggregat-Score)
+- **Pipeline autonom** via GitHub Actions wöchentlich (Mo 08:00 UTC) + manuelle Trigger
+- **Workflow** läuft in ~3-7 Min: Engine-Tests → Yahoo-Pull → Sektor-Median-Auto-Compute → Methods-Report → Methods-History-Snapshot → Price-Pull → Diff-Report
+- **Sektor-relative Schwellen** für ROIC + ROCE + FCF-Yield bei 6 Sub-Profile (auto-computed wenn ≥5 stocks/sektor, sonst hardcoded)
 
-## Aktive Methoden (13)
+## Aktive Methoden (21)
 
-| # | ID | Threshold | Type |
-|---|---|---|---|
-| 1 | rule-of-40 | ≥ 40 | Hypergrowth |
-| 2 | rule-of-x | ≥ 60 | Hypergrowth (Bessemer) |
-| 3 | roic | ≥ 15% (sektor-relativ) | Quality |
-| 4 | net-debt-ebitda | ≤ 3 | Solvenz |
-| 5 | sloan-ratio | \|·\| ≤ 10% | Bullshit-Detektor |
-| 6 | revenue-growth-3y | ≥ 25% CAGR | Hypergrowth |
-| 7 | fcf-yield | ≥ 5% (sektor-relativ) | Bewertung |
-| 8 | gross-margin-stability | CoV ≤ 10% | Quality |
-| 9 | asset-growth-divergence | ≤ 1.5 | Bullshit-Detektor |
-| 10 | margin-decay | GMI ≤ 1.10 | Bullshit-Detektor |
-| 11 | sbc-revenue | ≤ 15% | Verwässerungs-Detektor |
-| 12 | capex-trend | ≤ 1.5 | Cash-Burn-Frühwarn |
-| 13 | working-capital-anomaly | ≤ 1.3 | Manipulation-Detektor |
+### Hypergrowth (4)
+- rule-of-40, rule-of-x, revenue-growth-3y, multi-year-stability
 
-## Roadmap Tag 46-60
+### Quality (5)
+- roic, roce, gross-margin-stability, magic-formula, aktienfinder-quality
 
-| Tag | Was | Status |
-|---|---|---|
-| 46 | ROCE-Methode (EU-Standard) | ✓ done |
-| 47 | Magic-Formula-Combined (Greenblatt) | ✓ done |
-| 48 | Aktienfinder-Score-CSV-Helper | ✓ done |
-| 49 | Sektor-Median-Auto-Compute | ✓ done |
-| 50 | Watchlist-Diff-Detector | ✓ done |
-| 51 | Forward-PE-Methode | ✓ done |
-| 52 | TTM-Variants — Yahoo limitiert, skip mit Doku | ⊘ skip |
-| 53 | Multi-Year-Stability-Score | ✓ done |
-| 54 | PEG-Methode | ✓ done |
-| 55 | EV/EBITDA-Methode | ✓ done |
-| 56 | Insider-Ownership | ✓ done |
-| 57 | Performance-Tracker 30d+90d | ✓ done |
-| 58 | Method-Correlation-Analyse | ✓ done |
-| 59 | Threshold-Tuning-CLI | ✓ done |
-| 60 | Status-Recap + Roadmap-Refresh | pending |
+### Bewertung (4)
+- fcf-yield, forward-pe, peg, ev-ebitda
+
+### Solvenz/Manipulation-Detektoren (7)
+- net-debt-ebitda, sloan-ratio, asset-growth-divergence, margin-decay, sbc-revenue, capex-trend, working-capital-anomaly
+
+### Skin-in-the-Game (1)
+- insider-ownership
+
+## Tools (CLI)
+
+- `node watchlist-cli.js list/add/remove/info` — Watchlist-Verwaltung
+- `node history-cli.js TICKER` — Methoden-Werte über Zeit für einen Stock
+- `node tune-threshold.js METHOD-ID` — Pass-Count-Sweep um optimale Schwelle zu finden
+- `node analyze-correlation.js` — Method-Correlation-Matrix (Redundanzen finden)
+- `node aktienfinder-import.js path/to/csv` — Aktienfinder-Score CSV-Import
+- `node backtest-pass-vs-fail.js` — Performance-Backtest (30d + 90d)
+- `node methods/sector-medians-compute.js ./snapshots` — Sektor-Median-Auto
+
+## Reports (HTML)
+
+- `methods-report.html` — Methoden-Matrix mit Sektor-Distribution, Top-Picks-Ranking, Pass-Count-Quick-Filter, Filter-Presets, Modal-Detail-View
+- `diff-report.html` — Watchlist-Diff vs. vorigem Run (Pass-Count-Wechsel, Werte-Changes ≥20%)
+
+## Ergebnisse Tag 46-60
+
+Tag 46 ROCE ✓ · Tag 47 Magic Formula ✓ · Tag 48 Aktienfinder-Helper ✓ · Tag 49 Sektor-Median-Auto ✓ · Tag 50 Watchlist-Diff ✓ · Tag 51 Forward-PE ✓ · Tag 52 TTM skip (Yahoo-limit) · Tag 53 Multi-Year-Stability ✓ · Tag 54 PEG ✓ · Tag 55 EV/EBITDA ✓ · Tag 56 Insider-Ownership ✓ · Tag 57 Performance-Tracker dual-horizon ✓ · Tag 58 Method-Correlation ✓ · Tag 59 Threshold-Tuning-CLI ✓ · Tag 60 Status-Recap ✓
+
+## Bekannte Korrelationen (von Tag 58)
+
+- rule-of-40 ↔ rule-of-x: r=0.97 (erwartet)
+- roic ↔ roce: r=0.93 (erwartet)
+- fcf-yield ↔ magic-formula: r=0.88
+- asset-growth-divergence ↔ working-capital-anomaly: r=0.84
+
+→ wenn Karl Methoden-Anzahl reduzieren will: 1 aus jedem Pair behalten = 17 statt 21.
 
 ## Wichtige Files
 
-- `methods/` — 13 Plugin-Modules + runner + helpers + sector-medians + trend
-- `pull-yahoo.js` — Yahoo-Pull (quoteSummary + fundamentalsTimeSeries)
+- `methods/` — 21 Plugin-Modules + runner + helpers + sector-medians (hardcoded + auto) + trend
+- `pull-yahoo.js` — Yahoo-Pull (quoteSummary + fundamentalsTimeSeries: financials + cash-flow + balance-sheet)
 - `pull-historical-prices.js` — Closing-Prices für Backtest
-- `detect-changes.js` — Method-Pass-Fail-Tracking + alert-state
+- `detect-changes.js` — Method-Pass-Fail-Tracking + alert-state + methodHistory
 - `generate-methods-report.js` — HTML-Matrix-Report
+- `generate-diff-report.js` — Diff-vs-previous-Run
 - `snapshot-methods-history.js` — kumulative History
-- `backtest-pass-vs-fail.js` — Performance-Backtest (braucht 4+ Wochen Daten)
-- `watchlist-cli.js` — CLI für Watchlist-Verwaltung
-- `history-cli.js` — Stock-History-Lookup
-- `engine-cli-tests.js` + `tag21-tests.js` + `tag22-tests.js` + `tag28-tests.js` — Test-Suite
+- `backtest-pass-vs-fail.js` — Performance-Backtest dual-horizon
+- `analyze-correlation.js` + `tune-threshold.js` — Analyse-Tools
+- `watchlist-cli.js` + `history-cli.js` + `aktienfinder-import.js` — User-Tools
+- `engine-cli-tests.js` + `tag21-tests.js` + `tag22-tests.js` + `tag28-tests.js` — Test-Suite (20+ tests)
 - `engine-v7.3.js` + `score-orchestrator.js` + `manipulation-filters.js` — legacy (für Sub-Profile-Detection)
 - `.github/workflows/daily-pull.yml` — Cron-Workflow
+
+## Mögliche Tag 61-75 Roadmap
+
+| Tag | Idee |
+|---|---|
+| 61 | Methoden-Redundanz-Cleanup: Karl entscheidet welche aus den 4 corr-Pairs raus |
+| 62 | Watchlist-Wachstums-Vorschläge: aus S&P500 stocks finden die ≥7/21 pass aber nicht in WL |
+| 63 | Earnings-Calendar-Pull (Yahoo earnings dates) |
+| 64 | Quarterly-Method-Variants (wo quarterly daten vorhanden) |
+| 65 | Methods-Report Mobile-Responsive |
+| 66-75 | offen je nach Datenstand + Karl's Bedürfnissen |
 
 ## Zwischenspeicherung
 
 Jeder Tag wird sofort committed + gepusht. Bei Session-Abbruch:
 1. Neue Session öffnen
 2. Diese Datei lesen für Stand
-3. `git clone` + `cd screener-data` + weiter machen ab nächstem pending-Tag
-
-PAT (in der Cowork-Session-Memory; gültig bis 2026-06-06).
-
+3. `git clone` mit dem vorhandenen PAT (in Cowork-Memory) + weiter ab nächstem pending-Tag
