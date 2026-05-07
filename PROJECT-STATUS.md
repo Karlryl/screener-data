@@ -1,11 +1,11 @@
 # Project Status — Karl's Stock-Screener
 
-**Last Update:** 2026-05-07 — Tag 46 done, Tag 47-60 pending
+**Last Update:** 2026-05-07 — Tag 47 done, Tag 48-60 pending
 
 ## Aktueller Stand
 
 - **70 Stocks** in der Watchlist (kein Position-Tracking)
-- **14 Methoden** parallel laufend, alle isoliert
+- **15 Methoden** parallel laufend, alle isoliert
 - **Pipeline autonom** via GitHub Actions wöchentlich (Mo 08:00 UTC)
 - **Workflow** läuft in ~3-6 Min: Engine-Tests → Yahoo-Pull → Methods-Report → Methods-History-Snapshot → Price-Pull
 - **Sektor-relative Schwellen** für ROIC + FCF-Yield bei 6 Sub-Profile
@@ -33,7 +33,7 @@
 | Tag | Was | Status |
 |---|---|---|
 | 46 | ROCE-Methode (EU-Standard) | ✓ done |
-| 47 | Magic-Formula-Combined (Greenblatt) | pending |
+| 47 | Magic-Formula-Combined (Greenblatt) | ✓ done |
 | 48 | Aktienfinder-Score-CSV-Helper | pending |
 | 49 | Sektor-Median-Auto-Compute | pending |
 | 50 | Watchlist-Diff-Detector | pending |
