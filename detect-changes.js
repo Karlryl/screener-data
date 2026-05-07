@@ -26,13 +26,14 @@ const fs = require('fs');
 const path = require('path');
 
 // Engine + Tracks + Manipulation-Filters laden
-let Engine, ManipulationFilters, ScoreOrchestrator;
+let Engine, ManipulationFilters, ScoreOrchestrator, FieldCoverage;
 try {
   Engine = require('./engine-v7.3.js');
   ManipulationFilters = require('./manipulation-filters.js');
   ScoreOrchestrator = require('./score-orchestrator.js');
+  FieldCoverage = require('./field-coverage.js');  // Tag-22
 } catch (e) {
-  console.error('FATAL: engine-v7.3.js, manipulation-filters.js oder score-orchestrator.js fehlen.');
+  console.error('FATAL: engine/manipulation/orchestrator/field-coverage Modul fehlt.');
   console.error('       Erwartet im selben Ordner. Error:', e.message);
   process.exit(1);
 }
@@ -82,7 +83,14 @@ function loadState(statePath) {
     lastRun: typeof parsed.lastRun === 'string' ? parsed.lastRun : null,
     byTicker: (parsed.byTicker && typeof parsed.byTicker === 'object' && !Array.isArray(parsed.byTicker))
       ? parsed.byTicker
-      : {}
+      : {},
+    // Tag-22: fieldCoverage = { history: [{date, coverage}], baseline: {...} }
+    fieldCoverage: (parsed.fieldCoverage && typeof parsed.fieldCoverage === 'object' && !Array.isArray(parsed.fieldCoverage))
+      ? {
+          history: Array.isArray(parsed.fieldCoverage.history) ? parsed.fieldCoverage.history : [],
+          baseline: (parsed.fieldCoverage.baseline && typeof parsed.fieldCoverage.baseline === 'object') ? parsed.fieldCoverage.baseline : {}
+        }
+      : { history: [], baseline: {} }
   };
 }
 
@@ -252,6 +260,7 @@ async function main() {
   const fxRates = { EUR_USD: 1.07, USD_USD: 1, DKK_USD: 0.143, GBP_USD: 1.27 };
 
   const allEvents = [];
+  const allStocks = [];  // Tag-22: für Field-Coverage
   for (const file of files) {
     const filePath = path.join(args.snapshots, file);
     let stock;
@@ -261,6 +270,7 @@ async function main() {
       _log('WARN', `Skip ${file}: parse error ${e.message}`);
       continue;
     }
+    allStocks.push(stock);  // Tag-22: für Coverage-Calc
     const ticker = (stock.meta && stock.meta.ticker) || file.replace(/\.json$/, '');
     let score;
     try {
@@ -278,6 +288,25 @@ async function main() {
       _log('INFO', `${ticker}: ${events.map(e => e.type + '/' + e.severity + ': ' + e.message).join(' | ')}`);
       events.forEach(ev => allEvents.push(Object.assign({ ticker }, ev)));
     }
+  }
+
+  // Tag-22: Field-Coverage berechnen, Baseline updaten, Drift erkennen.
+  const currentCoverage = FieldCoverage.computeCoverage(allStocks);
+  const todayEntry = { date: new Date().toISOString().slice(0, 10), coverage: currentCoverage };
+  const newHistory = FieldCoverage.updateHistory(state.fieldCoverage.history, todayEntry);
+  const newBaseline = FieldCoverage.computeBaseline(newHistory);
+  const drifts = FieldCoverage.detectDrift(currentCoverage, newBaseline);
+  newState.fieldCoverage = { history: newHistory, baseline: newBaseline };
+  if (drifts.length) {
+    for (const d of drifts) {
+      const msg = `${d.field}: ${(d.current*100).toFixed(0)}% (baseline ${(d.baseline*100).toFixed(0)}%, drop ${(d.drop*100).toFixed(0)}pp)`;
+      _log('WARN', `FIELD_DRIFT: ${msg}`);
+      allEvents.push({ ticker: '_GLOBAL', type: 'FIELD_DRIFT', severity: 'WARNING', message: msg });
+    }
+  } else if (newHistory.length >= FieldCoverage.MIN_HISTORY_FOR_ALERT) {
+    _log('INFO', `field-coverage stabil (history=${newHistory.length})`);
+  } else {
+    _log('INFO', `field-coverage baseline wird aufgebaut (history=${newHistory.length}/${FieldCoverage.MIN_HISTORY_FOR_ALERT})`);
   }
 
   // Save state for next run
