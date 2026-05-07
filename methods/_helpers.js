@@ -91,10 +91,29 @@ const path = require('path');
 let _sectorMediansCache = null;
 function _loadSectorMedians() {
   if (_sectorMediansCache) return _sectorMediansCache;
+  // Tag-49: try auto-computed first, then hardcoded fallback
+  let merged = {};
+  try {
+    const autoPath = path.join(__dirname, 'sector-medians-auto.json');
+    if (fs.existsSync(autoPath)) {
+      const auto = JSON.parse(fs.readFileSync(autoPath, 'utf8'));
+      merged = JSON.parse(JSON.stringify(auto.medians || {}));
+    }
+  } catch (e) {}
   try {
     const p = path.join(__dirname, 'sector-medians.json');
-    _sectorMediansCache = JSON.parse(fs.readFileSync(p, 'utf8'));
-  } catch (e) { _sectorMediansCache = {}; }
+    const hardcoded = JSON.parse(fs.readFileSync(p, 'utf8'));
+    // overlay hardcoded INTO merged where auto doesn't have it
+    for (const [spId, metrics] of Object.entries(hardcoded)) {
+      if (spId === '_meta') continue;
+      if (!merged[spId]) merged[spId] = {};
+      for (const [mid, val] of Object.entries(metrics)) {
+        if (mid.startsWith('_')) continue;
+        if (merged[spId][mid] == null) merged[spId][mid] = val;
+      }
+    }
+  } catch (e) {}
+  _sectorMediansCache = merged;
   return _sectorMediansCache;
 }
 

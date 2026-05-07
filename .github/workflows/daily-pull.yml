@@ -45,6 +45,11 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: node detect-changes.js --snapshots snapshots --state alert-state.json
 
+      # Tag-49: Compute sector-medians-auto from current snapshots
+      - name: Compute Sector-Medians (auto)
+        run: node methods/sector-medians-compute.js ./snapshots
+        continue-on-error: true
+
       # Tag-28: Methods-Report (Werte-Matrix pro Stock × Methode)
       - name: Generate Methods-Report
         run: node generate-methods-report.js --out methods-report.html
