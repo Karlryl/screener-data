@@ -58,13 +58,17 @@ const ACTION_STATUS = {
 // ═══════════════════════════════════════════════════════════════
 
 const SUB_PROFILES = {
-  SAAS:        { id: 'SAAS',        label: 'SaaS / Software',        antiManipFilters: ['NRR_CHECK', 'RPO_GROWTH'] },
-  HARDWARE:    { id: 'HARDWARE',    label: 'Hardware / Semis',       antiManipFilters: ['INVENTORY_DAYS', 'CAPEX_CYCLE'] },
-  MARKETPLACE: { id: 'MARKETPLACE', label: 'Marketplace / Ads',      antiManipFilters: [] },
-  FINTECH:     { id: 'FINTECH',     label: 'Fintech / Adtech',       antiManipFilters: [] },
-  HEALTHCARE:  { id: 'HEALTHCARE',  label: 'Healthcare / Pharma',    antiManipFilters: [] },
-  INDUSTRIAL:  { id: 'INDUSTRIAL',  label: 'Industrial / Defense',   antiManipFilters: [] },
-  OTHER:       { id: 'OTHER',       label: 'Other / Unclassified',   antiManipFilters: [] }
+  SAAS:             { id: 'SAAS',             label: 'SaaS / Software',         antiManipFilters: ['NRR_CHECK', 'RPO_GROWTH'] },
+  HARDWARE:         { id: 'HARDWARE',         label: 'Hardware / Semis',        antiManipFilters: ['INVENTORY_DAYS', 'CAPEX_CYCLE'] },
+  MARKETPLACE:      { id: 'MARKETPLACE',      label: 'Marketplace / Ads',       antiManipFilters: [] },
+  FINTECH:          { id: 'FINTECH',          label: 'Fintech / Payments',      antiManipFilters: [] },
+  BANK:             { id: 'BANK',             label: 'Bank / Lender',           antiManipFilters: [] },
+  HEALTHCARE:       { id: 'HEALTHCARE',       label: 'Healthcare / Pharma',     antiManipFilters: [] },
+  INDUSTRIAL:       { id: 'INDUSTRIAL',       label: 'Industrial / Defense',    antiManipFilters: [] },
+  CONSUMER_STAPLES: { id: 'CONSUMER_STAPLES', label: 'Consumer Staples',        antiManipFilters: [] },
+  ENERGY:           { id: 'ENERGY',           label: 'Energy / Oil & Gas',      antiManipFilters: [] },
+  REIT:             { id: 'REIT',             label: 'Real Estate / REIT',      antiManipFilters: [] },
+  OTHER:            { id: 'OTHER',            label: 'Other / Unclassified',    antiManipFilters: [] }
 };
 
 // ChatGPT-Iter-2-Fix-7: Klassifikation in dieser Reihenfolge:
@@ -122,6 +126,9 @@ function classifySubProfile(stock) {
 
   // Healthcare ist sektor-getrieben, nicht keyword-getrieben — höchste Priorität
   if (sec.includes('healthcare') || sec.includes('health care')) return SUB_PROFILES.HEALTHCARE;
+  // Tag-26: Banks ZUERST raus aus FINTECH. FINTECH bleibt für payments/asset-mgmt-tech.
+  if (ind.includes('bank') || ind.includes('credit services') || ind.includes('mortgage finance') ||
+      ind.includes('asset management')) return SUB_PROFILES.BANK;
   // Financial Sector dominiert über keywords (z.B. "payment" könnte auch SaaS sein)
   if (sec.includes('financial')) return SUB_PROFILES.FINTECH;
 
@@ -130,8 +137,8 @@ function classifySubProfile(stock) {
       ind.includes('drug')) return SUB_PROFILES.HEALTHCARE;
   if (ind.includes('aerospace') || ind.includes('defense') || ind.includes('weapon') ||
       ind.includes('military')) return SUB_PROFILES.INDUSTRIAL;
-  if (ind.includes('fintech') || ind.includes('payment') || ind.includes('insurance') ||
-      ind.includes('bank')) return SUB_PROFILES.FINTECH;
+  if (ind.includes('fintech') || ind.includes('payment') || ind.includes('insurance')) return SUB_PROFILES.FINTECH;
+  // (bank ist oben schon zu BANK gemappt)
   if (ind.includes('semic') || ind.includes('hardware') || ind.includes('chip') ||
       ind.includes('electronic equipment') || ind.includes('lithography')) return SUB_PROFILES.HARDWARE;
   if (ind.includes('software') || ind.includes('saas') || ind.includes('cloud') ||
@@ -141,6 +148,15 @@ function classifySubProfile(stock) {
       ind.includes('platform') || ind.includes('media') ||
       sec.includes('communication')) return SUB_PROFILES.MARKETPLACE;
   if (sec.includes('industrial') || sec.includes('industrials')) return SUB_PROFILES.INDUSTRIAL;
+
+  // Tag-26: Neue Sektor-Mappings
+  if (sec.includes('consumer defensive') || sec.includes('consumer staples') ||
+      ind.includes('beverage') || ind.includes('packaged food') ||
+      ind.includes('household') || ind.includes('tobacco') ||
+      ind.includes('grocery')) return SUB_PROFILES.CONSUMER_STAPLES;
+  if (sec.includes('energy') || ind.includes('oil & gas') || ind.includes('oil and gas') ||
+      ind.includes('coal') || ind.includes('integrated oil')) return SUB_PROFILES.ENERGY;
+  if (sec.includes('real estate') || ind.includes('reit') || ind.includes('real estate')) return SUB_PROFILES.REIT;
 
   // 5) fallback
   return SUB_PROFILES.OTHER;
