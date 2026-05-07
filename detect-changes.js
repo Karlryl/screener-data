@@ -1,23 +1,18 @@
 #!/usr/bin/env node
 /**
- * Tag 16: Detect-Changes + Alerts
- * ================================
- *
- * Liest snapshots/*.json (canonicalInput-Snapshots aus pull-yahoo.js),
- * scoret jeden Stock via Engine, vergleicht mit alert-state.json (gestern-Stand),
- * feuert Discord-Webhook bei:
- *   - Bucket-Wechsel (A→B, B→INFLECTION, → OUT etc.)
- *   - Action-Wechsel (QUALIFIED → REVIEW → DISQUALIFIED)
- *   - Neuer Hard-Penalty (z.B. EXCLUDE_CASH_RUNWAY, EXCLUDE_MCAP_LOW, SBC_EXTREME_HARD)
- *   - Erst-Klassifikation (Stock noch nie geseen)
+ * Tag 29 — Detect-Changes: Method-Pass-Fail-Tracking
+ * ====================================================
+ * Architektur-Pivot vom Tag 28:
+ *   - keine BUCKET_CHANGE / BUY_STATUS_CHANGE Events mehr
+ *   - dafür: METHOD_PASS_LOST (WARNING), METHOD_PASS_GAINED (INFO) pro Stock × Methode
+ *   - FIELD_DRIFT bleibt aus Tag 22
  *
  * Run:
- *   node detect-changes.js [--snapshots ./snapshots] [--state ./alert-state.json] [--webhook $DISCORD_WEBHOOK]
+ *   node detect-changes.js [--snapshots ./snapshots] [--state ./alert-state.json]
  *
  * Workflow-Integration:
- *   - Step nach pull-yahoo.js
- *   - DISCORD_WEBHOOK als GitHub-Secret
- *   - alert-state.json wird mit-committet (state-of-yesterday)
+ *   - Step nach pull-yahoo.js + generate-methods-report.js
+ *   - alert-state.json wird mit-committet
  */
 
 'use strict';
@@ -25,67 +20,41 @@
 const fs = require('fs');
 const path = require('path');
 
-// Engine + Tracks + Manipulation-Filters laden
-let Engine, ManipulationFilters, ScoreOrchestrator, FieldCoverage;
-try {
-  Engine = require('./engine-v7.3.js');
-  ManipulationFilters = require('./manipulation-filters.js');
-  ScoreOrchestrator = require('./score-orchestrator.js');
-  FieldCoverage = require('./field-coverage.js');  // Tag-22
-} catch (e) {
-  console.error('FATAL: engine/manipulation/orchestrator/field-coverage Modul fehlt.');
-  console.error('       Erwartet im selben Ordner. Error:', e.message);
-  process.exit(1);
-}
+const Runner = require('./methods/runner.js');
+const FieldCoverage = require('./field-coverage.js');
+const Trend = require('./methods/trend.js');
 
 function _ts() { return new Date().toISOString(); }
 function _log(level, msg) { console.log(`[${_ts()}] [${level}] ${msg}`); }
 
-// ─── Hard-Penalty-Codes — Tag-18-Audit-P2-Fix: aus orchestrator importieren statt duplizieren.
-const HARD_PENALTY_CODES = ScoreOrchestrator.HARD_PENALTY_CODES;
-
-// ─── Score-Wrapper: läuft Engine + Manipulation-Filters über einen Snapshot ──
-// Tag-17-Fix: Multi-Track-Score statt naivem Track-A-First.
-// Reife Quality-Compounder (NVO 24%, MSFT 18%, ASML 13% growth) sind unter Track-A-
-// Hypergrowth-Floor und scoren als OUT — obwohl Track-B sie korrekt als A/B einordnen würde.
-// Lösung: beide Tracks laufen lassen wenn beide passable, den mit dem höheren finalScore wählen.
-// Bei Tie: bei sub-Profile-Hint (HEALTHCARE, sehr reife Tech) Track-B bevorzugen, sonst A.
-function scoreSnapshot(stock, fxRates) {
-  // Tag-18-Fix: zentral via ScoreOrchestrator. Vorher dupliziert in detect-changes
-  // und Dashboard. Konsistenz-Garantie: beide Konsumenten produzieren identische Scores.
-  return ScoreOrchestrator.scoreSnapshot(stock, { fxRates, engine: Engine, manipulationFilters: ManipulationFilters });
-}
-
-
-// ─── Alert-State-Format ───
-// alert-state.json: { lastRun, byTicker: { TICKER: { bucket, action, hardPenalties[], scoreScored: 'YYYY-MM-DD' }}}
+// ─── State-Management ─────────────────────────────────────────────
+// alert-state.json schema (Tag-29):
+// {
+//   "lastRun": "2026-05-07T...",
+//   "methodState": {
+//     "CRDO": { "rule-of-40": { value, pass, lastChanged }, ... },
+//     ...
+//   },
+//   "fieldCoverage": { history: [], baseline: {} }   // Tag-22
+// }
 
 function loadState(statePath) {
-  // Tag-21-Robustness-Fix: alle Felder explizit normalisieren.
-  // Vorher: wenn alert-state.json nur `{}` enthielt (initial-commit oder manuell geleert),
-  // returned loadState `{}` ohne byTicker → state.byTicker[ticker] in main() crashte mit
-  // "Cannot read properties of undefined". Dieser Fix erzwingt die erwartete Shape egal
-  // was das JSON enthält. Akzeptiert: {}, null-Felder, missing-Keys, korrupte JSON.
-  const fallback = { lastRun: null, byTicker: {} };
+  // Tag-21-Robustness + Tag-29-Schema-Migration
+  const fallback = { lastRun: null, methodState: {}, fieldCoverage: { history: [], baseline: {} } };
   if (!fs.existsSync(statePath)) return fallback;
   let parsed;
-  try {
-    parsed = JSON.parse(fs.readFileSync(statePath, 'utf8'));
-  } catch (e) {
+  try { parsed = JSON.parse(fs.readFileSync(statePath, 'utf8')); }
+  catch (e) {
     _log('WARN', `state-file unparseable, treating as fresh: ${e.message}`);
     return fallback;
   }
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    _log('WARN', `state-file is not an object, treating as fresh.`);
-    return fallback;
-  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return fallback;
   return {
     lastRun: typeof parsed.lastRun === 'string' ? parsed.lastRun : null,
-    byTicker: (parsed.byTicker && typeof parsed.byTicker === 'object' && !Array.isArray(parsed.byTicker))
-      ? parsed.byTicker
-      : {},
-    // Tag-22: fieldCoverage = { history: [{date, coverage}], baseline: {...} }
-    fieldCoverage: (parsed.fieldCoverage && typeof parsed.fieldCoverage === 'object' && !Array.isArray(parsed.fieldCoverage))
+    methodState: (parsed.methodState && typeof parsed.methodState === 'object' && !Array.isArray(parsed.methodState)) ? parsed.methodState : {},
+    // Tag-31: methodHistory[ticker][methodId] = [{date, value, pass}, ...]
+    methodHistory: (parsed.methodHistory && typeof parsed.methodHistory === 'object' && !Array.isArray(parsed.methodHistory)) ? parsed.methodHistory : {},
+    fieldCoverage: (parsed.fieldCoverage && typeof parsed.fieldCoverage === 'object')
       ? {
           history: Array.isArray(parsed.fieldCoverage.history) ? parsed.fieldCoverage.history : [],
           baseline: (parsed.fieldCoverage.baseline && typeof parsed.fieldCoverage.baseline === 'object') ? parsed.fieldCoverage.baseline : {}
@@ -98,144 +67,84 @@ function saveState(statePath, state) {
   fs.writeFileSync(statePath, JSON.stringify(state, null, 2));
 }
 
-// ─── Diff-Detector ───────────────────────────────────────────────
+// ─── Diff-Detector ────────────────────────────────────────────────
 
-function detectDiff(prev, curr, position) {
-  // Tag-18: position-aware Severity (Karl-Buy-only-Reframing).
-  // position: 'owned' | 'watching' | undefined
+function detectMethodDiffs(prevMethods, currResults, today) {
+  // prevMethods: { 'rule-of-40': { value, pass, lastChanged }, ... } oder {}
+  // currResults: aus Runner.evaluateStock()
   const events = [];
-  const currBucket = (curr.bucket && curr.bucket.id) || null;
-  const currAction = curr.actionStatus;
-  const currCodes = curr.reasonCodes || [];
-  const currHardPenalties = currCodes.filter(c => HARD_PENALTY_CODES.has(c));
-  const currBuyStatus = ScoreOrchestrator.buyStatus(curr, position);
+  const newState = {};
+  for (const [methodId, result] of Object.entries(currResults)) {
+    const prev = prevMethods[methodId];
+    const wasPass = prev && prev.pass === true;
+    const isPass = result.computable && result.pass === true;
+    const wasComputable = prev && prev.value != null;
+    const isComputable = result.computable;
 
-  if (!prev) {
-    events.push({
-      type: 'FIRST_SEEN',
-      // Tag-19-Audit-P1-3: Severity nach buyStatus. Neuer Stock direkt OUT/Hard-Penalty
-      // ist Karl-relevant ("schlechter Watchlist-Pick"), nicht INFO.
-      severity: ScoreOrchestrator.alertSeverity('FIRST_SEEN', currBuyStatus, position),
-      message: `bucket=${currBucket} action=${currAction} buyStatus=${currBuyStatus}`
-    });
-  } else {
-    if (currBucket !== prev.bucket) {
-      const ORDER = ['A', 'B', 'INFLECTION', 'SPEC', 'OUT', null];
-      const prevIdx = ORDER.indexOf(prev.bucket);
-      const currIdx = ORDER.indexOf(currBucket);
-      const direction = currIdx > prevIdx ? 'DOWNGRADE' : (currIdx < prevIdx ? 'UPGRADE' : 'LATERAL');
-      const arrow = direction === 'DOWNGRADE' ? '↓' : (direction === 'UPGRADE' ? '↑' : '·');
-      events.push({
-        type: 'BUCKET_CHANGE',
-        severity: ScoreOrchestrator.alertSeverity('BUCKET_CHANGE', direction, position),
-        direction,
-        message: `${prev.bucket} → ${currBucket} ${arrow} ${direction}` +
-                 (position === 'owned' && direction === 'DOWNGRADE'
-                   ? ' (gehalten — Conviction-Hinweis, kein Sell-Trigger; Sells via EW)'
-                   : (position !== 'owned' && direction === 'DOWNGRADE'
-                      ? ' (von Watchlist streichen wenn weiter fällt)'
-                      : ''))
-      });
+    // Events nur wenn beide computable sind UND pass-Status flippt
+    if (wasComputable && isComputable && wasPass !== isPass) {
+      const lastChanged = today;
+      if (isPass) {
+        events.push({
+          methodId,
+          type: 'METHOD_PASS_GAINED',
+          severity: 'INFO',
+          message: `${methodId}: ${prev.value != null ? prev.value.toFixed(2) : '?'} → ${result.value != null ? result.value.toFixed(2) : '?'} (now PASS)`
+        });
+      } else {
+        events.push({
+          methodId,
+          type: 'METHOD_PASS_LOST',
+          severity: 'WARNING',
+          message: `${methodId}: ${prev.value != null ? prev.value.toFixed(2) : '?'} → ${result.value != null ? result.value.toFixed(2) : '?'} (now FAIL)`
+        });
+      }
+      newState[methodId] = { value: result.value, pass: isPass, lastChanged };
+    } else {
+      // Behalte lastChanged falls vorhanden, sonst heute
+      newState[methodId] = {
+        value: result.computable ? result.value : null,
+        pass: isPass,
+        lastChanged: prev && prev.lastChanged ? prev.lastChanged : today
+      };
     }
-    if (currAction !== prev.action) {
-      events.push({
-        type: 'ACTION_CHANGE',
-        severity: ScoreOrchestrator.alertSeverity('ACTION_CHANGE', currAction, position),
-        message: `${prev.action} → ${currAction}` +
-                 (position === 'owned' ? ' (gehalten — kein Sell-Trigger; Sells via EW)' : '')
-      });
-    }
-    const prevHard = new Set(prev.hardPenalties || []);
-    const newHard = currHardPenalties.filter(c => !prevHard.has(c));
-    if (newHard.length) {
-      events.push({
-        type: 'NEW_HARD_PENALTY',
-        severity: ScoreOrchestrator.alertSeverity('NEW_HARD_PENALTY', null, position),
-        message: newHard.join(', ') +
-                 (position === 'owned' ? ' (Conviction-Check empfohlen — Buy-Stop für künftige Käufe)' : ' (Buy-Stop)')
-      });
-    }
-    // Tag-19-Audit-P0-2 + P1-8-Fix: BUY_STATUS_CHANGE auch bei state-Migration ohne buyStatus,
-    // plus saubere Severity-Logik (BUY_READY-Aufstieg, NO_BUY-Abstieg, OWNED_CRITICAL alle CRITICAL).
-    const prevBuy = prev.buyStatus || 'UNKNOWN';
-    if (prevBuy !== currBuyStatus) {
-      const becomesNegative = currBuyStatus === 'NO_BUY';
-      const becomesPositive = currBuyStatus === 'BUY_READY';
-      const ownedDegraded = (currBuyStatus === 'OWNED_REVIEW' || currBuyStatus === 'OWNED_CRITICAL');
-      const isCritical = becomesNegative || becomesPositive || ownedDegraded;
-      events.push({
-        type: 'BUY_STATUS_CHANGE',
-        severity: isCritical ? 'CRITICAL' : 'INFO',
-        message: `${prevBuy} → ${currBuyStatus}`
-      });
-    }
+
+    // First-time detection: wenn kein prev-state, optional FIRST_SEEN-Event (skip per default — alert-noise)
   }
-  return {
-    events,
-    currState: {
-      bucket: currBucket,
-      action: currAction,
-      buyStatus: currBuyStatus,
-      hardPenalties: currHardPenalties,
-      position: position || null,
-      scoreScored: new Date().toISOString().slice(0, 10)
-    }
-  };
+  return { events, newState };
 }
 
-// ─── Discord-Webhook ─────────────────────────────────────────────
+// ─── Discord-Webhook (legacy, wird nicht aktiv genutzt da Karl Discord nicht will) ───
 
 async function postToDiscord(webhook, content) {
-  if (!webhook) {
-    _log('WARN', 'Kein Webhook konfiguriert, skip notification.');
-    return false;
-  }
+  if (!webhook) return false;
   try {
     const res = await fetch(webhook, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content })
     });
-    if (!res.ok) {
-      _log('ERROR', `Discord HTTP ${res.status}: ${res.statusText}`);
-      return false;
-    }
-    return true;
+    return res.ok;
   } catch (e) {
     _log('ERROR', `Discord post failed: ${e.message}`);
     return false;
   }
 }
 
-// ─── Main ────────────────────────────────────────────────────────
+// ─── Main ─────────────────────────────────────────────────────────
 
 function parseArgs(argv) {
   const args = {
     snapshots: './snapshots',
     state: './alert-state.json',
-    watchlist: './watchlist.json',
     webhook: process.env.DISCORD_WEBHOOK || ''
   };
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--snapshots' && argv[i+1]) args.snapshots = argv[++i];
     else if (argv[i] === '--state' && argv[i+1]) args.state = argv[++i];
-    else if (argv[i] === '--watchlist' && argv[i+1]) args.watchlist = argv[++i];
     else if (argv[i] === '--webhook' && argv[i+1]) args.webhook = argv[++i];
   }
   return args;
-}
-
-// Tag-18: Watchlist-Position pro Ticker extrahieren (für position-aware Severity).
-function loadPositionMap(watchlistPath) {
-  const map = {};
-  if (!fs.existsSync(watchlistPath)) return map;
-  try {
-    const wl = JSON.parse(fs.readFileSync(watchlistPath, 'utf8'));
-    for (const s of (wl.stocks || [])) {
-      if (s.ticker) map[s.ticker] = s.position || 'watching';
-    }
-  } catch (e) { /* skip silently — position bleibt undefined */ }
-  return map;
 }
 
 async function main() {
@@ -245,54 +154,49 @@ async function main() {
     process.exit(1);
   }
   const state = loadState(args.state);
-  const newState = { lastRun: new Date().toISOString(), byTicker: {} };
-  const positions = loadPositionMap(args.watchlist);
-  _log('INFO', `Loaded ${Object.keys(positions).length} positions from ${args.watchlist}`);
+  const today = new Date().toISOString().slice(0, 10);
+  const newState = { lastRun: new Date().toISOString(), methodState: {}, methodHistory: {}, fieldCoverage: state.fieldCoverage };
 
-  // Watchlist-Files lesen (alle .json außer _manifest)
   const files = fs.readdirSync(args.snapshots).filter(f => f.endsWith('.json') && f !== '_manifest.json');
   if (files.length === 0) {
     _log('WARN', 'Keine Snapshot-Files gefunden.');
     process.exit(0);
   }
 
-  // FX-Rates: heute hardcoded — Tag 17+ kann das aus separatem fxRates.json kommen
-  const fxRates = { EUR_USD: 1.07, USD_USD: 1, DKK_USD: 0.143, GBP_USD: 1.27 };
-
   const allEvents = [];
-  const allStocks = [];  // Tag-22: für Field-Coverage
+  const allStocks = [];
+
   for (const file of files) {
     const filePath = path.join(args.snapshots, file);
     let stock;
-    try {
-      stock = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    } catch (e) {
-      _log('WARN', `Skip ${file}: parse error ${e.message}`);
-      continue;
-    }
-    allStocks.push(stock);  // Tag-22: für Coverage-Calc
+    try { stock = JSON.parse(fs.readFileSync(filePath, 'utf8')); }
+    catch (e) { _log('WARN', `Skip ${file}: parse error ${e.message}`); continue; }
+    allStocks.push(stock);
     const ticker = (stock.meta && stock.meta.ticker) || file.replace(/\.json$/, '');
-    let score;
-    try {
-      score = scoreSnapshot(stock, fxRates);
-    } catch (e) {
-      // Tag-19-Audit-P1-7: ausführlicheres Logging für Diagnostik bei NaN-Pfaden
-      _log('WARN', `Skip ${ticker}: score error ${e.message}\n  stack: ${(e.stack||'').split('\n').slice(0,3).join(' | ')}`);
-      continue;
+    const results = Runner.evaluateStock(stock);
+    const prevMethods = state.methodState[ticker] || {};
+    const { events, newState: tickerNewState } = detectMethodDiffs(prevMethods, results, today);
+    newState.methodState[ticker] = tickerNewState;
+    // Tag-31: append history per method per ticker
+    const tickerHist = state.methodHistory[ticker] || {};
+    const newHist = {};
+    for (const [methodId, result] of Object.entries(results)) {
+      if (result.computable) {
+        newHist[methodId] = Trend.appendHistory(tickerHist[methodId] || [], today, result.value, result.pass);
+      } else if (tickerHist[methodId]) {
+        newHist[methodId] = tickerHist[methodId];  // preserve prior history if current incomputable
+      }
     }
-    const prev = state.byTicker[ticker];
-    const position = positions[ticker] || 'watching';
-    const { events, currState } = detectDiff(prev, score, position);
-    newState.byTicker[ticker] = currState;
+    newState.methodHistory[ticker] = newHist;
     if (events.length) {
       _log('INFO', `${ticker}: ${events.map(e => e.type + '/' + e.severity + ': ' + e.message).join(' | ')}`);
       events.forEach(ev => allEvents.push(Object.assign({ ticker }, ev)));
     }
   }
 
-  // Tag-22: Field-Coverage berechnen, Baseline updaten, Drift erkennen.
+  // Tag-22: Field-Coverage
   const currentCoverage = FieldCoverage.computeCoverage(allStocks);
-  const todayEntry = { date: new Date().toISOString().slice(0, 10), coverage: currentCoverage };
+  const todayEntry = { date: today, coverage: currentCoverage };
   const newHistory = FieldCoverage.updateHistory(state.fieldCoverage.history, todayEntry);
   const newBaseline = FieldCoverage.computeBaseline(newHistory);
   const drifts = FieldCoverage.detectDrift(currentCoverage, newBaseline);
@@ -301,49 +205,37 @@ async function main() {
     for (const d of drifts) {
       const msg = `${d.field}: ${(d.current*100).toFixed(0)}% (baseline ${(d.baseline*100).toFixed(0)}%, drop ${(d.drop*100).toFixed(0)}pp)`;
       _log('WARN', `FIELD_DRIFT: ${msg}`);
-      allEvents.push({ ticker: '_GLOBAL', type: 'FIELD_DRIFT', severity: 'WARNING', message: msg });
+      allEvents.push({ ticker: '_GLOBAL', methodId: '_FIELD_COVERAGE', type: 'FIELD_DRIFT', severity: 'WARNING', message: msg });
     }
-  } else if (newHistory.length >= FieldCoverage.MIN_HISTORY_FOR_ALERT) {
-    _log('INFO', `field-coverage stabil (history=${newHistory.length})`);
-  } else {
-    _log('INFO', `field-coverage baseline wird aufgebaut (history=${newHistory.length}/${FieldCoverage.MIN_HISTORY_FOR_ALERT})`);
   }
 
-  // Save state for next run
   saveState(args.state, newState);
-  _log('INFO', `state saved: ${args.state} (${Object.keys(newState.byTicker).length} tickers)`);
+  _log('INFO', `state saved: ${args.state} (${Object.keys(newState.methodState).length} tickers tracked)`);
 
-  // Wenn keine Events: nichts posten
   if (allEvents.length === 0) {
-    _log('INFO', 'Keine Bucket/Action-Wechsel oder neue Hard-Penalties. Kein Alert.');
+    _log('INFO', 'Keine Method-Pass-Fail-Wechsel oder Drift. Kein Alert.');
     process.exit(0);
   }
 
-  // Discord-Notification: gruppiere nach Severity
   const critical = allEvents.filter(e => e.severity === 'CRITICAL');
   const warning = allEvents.filter(e => e.severity === 'WARNING');
   const info = allEvents.filter(e => e.severity === 'INFO');
+  _log('INFO', `Events: ${critical.length} critical · ${warning.length} warning · ${info.length} info`);
 
-  let msg = `**📊 Watchlist-Alerts ${new Date().toISOString().slice(0, 10)}**\n`;
-  if (critical.length) {
-    msg += `\n🔴 **CRITICAL** (${critical.length}):\n`;
-    msg += critical.map(e => `  • ${e.ticker}: ${e.type} — ${e.message}`).join('\n');
+  if (args.webhook) {
+    let msg = `**📊 Method-Changes ${today}**\n`;
+    if (warning.length) {
+      msg += `\n🟡 **METHOD_PASS_LOST** (${warning.length}):\n`;
+      msg += warning.slice(0, 10).map(e => `  • ${e.ticker}: ${e.message}`).join('\n');
+    }
+    if (info.length && warning.length === 0) {
+      msg += `\nℹ️ **METHOD_PASS_GAINED** (${info.length}):\n`;
+      msg += info.slice(0, 10).map(e => `  • ${e.ticker}: ${e.message}`).join('\n');
+    }
+    if (msg.length > 1900) msg = msg.slice(0, 1850) + '\n…(truncated)';
+    const posted = await postToDiscord(args.webhook, msg);
+    if (posted) _log('INFO', `Discord-Alert posted (${allEvents.length} events).`);
   }
-  if (warning.length) {
-    msg += `\n🟡 **WARNING** (${warning.length}):\n`;
-    msg += warning.map(e => `  • ${e.ticker}: ${e.type} — ${e.message}`).join('\n');
-  }
-  if (info.length && critical.length + warning.length === 0) {
-    msg += `\nℹ️ **INFO** (${info.length}):\n`;
-    msg += info.slice(0, 5).map(e => `  • ${e.ticker}: ${e.type} — ${e.message}`).join('\n');
-    if (info.length > 5) msg += `\n  …und ${info.length - 5} weitere.`;
-  }
-
-  if (msg.length > 1900) msg = msg.slice(0, 1850) + '\n…(truncated)';
-
-  const posted = await postToDiscord(args.webhook, msg);
-  if (posted) _log('INFO', `Discord-Alert posted (${allEvents.length} events).`);
-  else _log('WARN', 'Discord-Alert NOT posted (siehe Log oben).');
 
   process.exit(0);
 }
@@ -355,4 +247,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { detectDiff, scoreSnapshot };
+module.exports = { detectMethodDiffs, loadState, saveState };

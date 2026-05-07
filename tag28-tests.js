@@ -118,12 +118,57 @@ test('Sloan-Ratio: fail case (NI=20, FCF=0, Assets=100 → 20% high accruals)', 
   if (r.pass) throw new Error('should fail (20% > 10%)');
 });
 
+// ─── Tag-30 New Methods ───
+test('Revenue-Growth-3Y: pass case (100→200 over 3y = 26% CAGR)', () => {
+  const s = { annual: { annualRev: [{value:200},{value:170},{value:140},{value:100}] } };
+  const r = Runner.evaluateStock(s)['revenue-growth-3y'];
+  if (!r.computable) throw new Error('should be computable');
+  if (!r.pass) throw new Error(`should pass, got ${r.value}`);
+});
+
+test('Revenue-Growth-3Y: fail case (100→130 over 3y = 9% CAGR)', () => {
+  const s = { annual: { annualRev: [{value:130},{value:120},{value:110},{value:100}] } };
+  const r = Runner.evaluateStock(s)['revenue-growth-3y'];
+  if (r.pass) throw new Error('should fail');
+});
+
+test('FCF-Yield: pass case (FCF=10B / MCap=100B = 10%)', () => {
+  const s = { marketCap: { value: 100e9 }, annual: { annualFCF: [{value: 10e9}] } };
+  const r = Runner.evaluateStock(s)['fcf-yield'];
+  if (!r.pass) throw new Error('should pass');
+});
+
+test('FCF-Yield: fail case (FCF=2B / MCap=100B = 2%)', () => {
+  const s = { marketCap: { value: 100e9 }, annual: { annualFCF: [{value: 2e9}] } };
+  const r = Runner.evaluateStock(s)['fcf-yield'];
+  if (r.pass) throw new Error('should fail');
+});
+
+test('GM-Stability: pass case (stable margins, low CoV)', () => {
+  const s = { annual: {
+    annualRev: [{value:100},{value:95},{value:90},{value:85}],
+    annualGP: [{value:50},{value:48},{value:46},{value:43}]  // ~50%, ~50.5%, ~51.1%, ~50.6% — stable
+  }};
+  const r = Runner.evaluateStock(s)['gross-margin-stability'];
+  if (!r.computable) throw new Error('should be computable');
+  if (!r.pass) throw new Error(`should pass, CoV=${r.value}`);
+});
+
+test('GM-Stability: fail case (volatile margins)', () => {
+  const s = { annual: {
+    annualRev: [{value:100},{value:100},{value:100},{value:100}],
+    annualGP: [{value:60},{value:30},{value:50},{value:40}]  // very volatile
+  }};
+  const r = Runner.evaluateStock(s)['gross-margin-stability'];
+  if (r.pass) throw new Error('should fail');
+});
+
 // ─── Runner-Level ───
-test('Runner: getMethods returns 5 methods', () => {
+test('Runner: getMethods returns 10 methods', () => {
   const methods = Runner.getMethods();
-  assertEq(methods.length, 5);
+  assertEq(methods.length, 10);
   const ids = methods.map(m => m.id).sort();
-  assertEq(ids, ['net-debt-ebitda', 'roic', 'rule-of-40', 'rule-of-x', 'sloan-ratio']);
+  assertEq(ids, ['asset-growth-divergence','fcf-yield','gross-margin-stability','margin-decay','net-debt-ebitda','revenue-growth-3y','roic','rule-of-40','rule-of-x','sloan-ratio']);
 });
 
 test('Runner: evaluateStock handles thrown errors', () => {

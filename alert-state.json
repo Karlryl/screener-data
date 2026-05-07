@@ -1,367 +1,6283 @@
 {
-  "lastRun": "2026-05-07T16:21:31.532Z",
-  "byTicker": {
+  "lastRun": "2026-05-07T16:30:55.719Z",
+  "methodState": {
     "AFRM": {
-      "bucket": "OUT",
-      "action": "DISQUALIFIED",
-      "buyStatus": "NO_BUY",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 41.91071221843265,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 71.51071221843264,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.0053248444922153765,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": 15.944383463562854,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.04926378285330189,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 33.69490627173186,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.026697702860714215,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.16868205166101655,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.8442007571738724,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 0.942362485384995,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "ALAB": {
-      "bucket": "A",
-      "action": "QUALIFIED",
-      "buyStatus": "OWNED_OK",
-      "hardPenalties": [],
-      "position": "owned",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 117.93456008034991,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 211.33456008034992,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.1606304591954916,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.040884619175975294,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 120.17644470675775,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.008495139687701856,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.04562676778915678,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.675250162391801,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.009182194134093,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "AMAT": {
-      "bucket": "SPEC",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 13.288636205757294,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 11.188636205757295,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.24082868745268085,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": -0.0674931129476584,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": 0.035813658778478745,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 3.2334704568867556,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.017666737834793615,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.020727361243891813,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 1.010600305469078,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 0.9749921203734055,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "ANET": {
-      "bucket": "B",
-      "action": "QUALIFIED",
-      "buyStatus": "BUY_READY",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 80.02566906593785,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 115.12566906593784,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.20082700875622686,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.03810042882264019,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 27.146525721597637,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.024026372536899186,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.024442076447396828,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 1.0769023404827942,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.0011943865460793,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "ARM": {
-      "bucket": "INFLECTION",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 43.95681876899242,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 70.25681876899242,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.13202862567547832,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": 0.08351992834751455,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.0007012576818131213,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.01838700265125317,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.9176859780456011,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 0.9728651648087283,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "ASML": {
-      "bucket": "INFLECTION",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "watching",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 37.66605522142218,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 50.86605522142217,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.2494701279660882,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": -0.6286168085369954,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.032325685333797406,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 15.551134263329036,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.01897980759643592,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.018728914695752746,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.9003760010312727,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 0.9705867979825623,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "CDNS": {
-      "bucket": "SPEC",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 45.81624584462856,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 64.51624584462856,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.1550495250796614,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": -0.2632505970994534,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.04708116142894795,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 14.143248241855332,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.016069460596195517,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.02148623239816629,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.9913280275743442,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 0.9963491165506402,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "CEG": {
-      "bucket": "OUT",
-      "action": "DISQUALIFIED",
-      "buyStatus": "NO_BUY",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 17.826957332731226,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 30.726957332731224,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.04325846888524101,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": 1.0622121645227887,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": 0.018009048192981537,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 1.469039149633189,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.01128608658468935,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.43971206498063004,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.9984348162652356,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.3827873055289261,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      }
     },
     "COIN": {
-      "bucket": "OUT",
-      "action": "DISQUALIFIED",
-      "buyStatus": "NO_BUY",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": -3.337885328373577,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": -25.537885328373576,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.06854677212153779,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": -2.075530481740028,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.03929841608701478,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 31.002765221245365,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.04789776790377983,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.09627917091270763,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 1.2031470296155669,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.0019131871461764,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "CRDO": {
-      "bucket": "B",
-      "action": "QUALIFIED",
-      "buyStatus": "OWNED_OK",
-      "hardPenalties": [],
-      "position": "owned",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 217.62536232022995,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 419.12536232022995,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.09108109381790763,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": 0.028620079900451897,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 60.078862161456435,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.0008371784843233055,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.04904559715734047,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.5939789539446285,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 0.9555166973572505,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "CRWD": {
-      "bucket": "SPEC",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 56.64608100678761,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 79.94608100678761,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": -0.027747009805587204,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.12663768535298742,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 29.00686653697968,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.009776707930731132,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.012087334126856596,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 1.0468222529091533,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.0038346891104395,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "DDOG": {
-      "bucket": "SPEC",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 54.86694374444624,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 84.06694374444623,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.01725916329877955,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.12146221374252616,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 26.94953937625746,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.013984039059082864,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.008861309291288115,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.8994633956486748,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.0104922579023912,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "DUOL": {
-      "bucket": "SPEC",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 54.93660423343205,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 81.43660423343205,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.4332161880239759,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": 0.026925752767568426,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 41.082213323758765,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.06807677414906345,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.006144656011431035,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 1.103313516101374,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.0075450411313238,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "HOOD": {
-      "bucket": "OUT",
-      "action": "DISQUALIFIED",
-      "buyStatus": "NO_BUY",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.0555850749793364,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": 2.9309933142311366,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": 0.0078401552298293,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 48.787475836737705,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.023166242951247036,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.1939543009978754,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.9607957867152167,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 0.953040578373811,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "HUBS": {
-      "bucket": "SPEC",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 41.20905518763508,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 61.60905518763508,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.015448319581790694,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.13770685165163482,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 21.84570470312226,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.04561401447811382,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.01448320916015224,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.8520233525585926,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.0151860511509663,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "KLAC": {
-      "bucket": "INFLECTION",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 33.568121101748375,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 45.068121101748375,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.29034511214439784,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": 0.632425330298502,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": 0.019912277415268156,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 9.685534331651668,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.016330297136820077,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.010268071366232806,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.8403603095050487,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 0.9845319180671528,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "LRCX": {
-      "bucket": "SPEC",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 43.87366836065688,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 67.67366836065688,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.35829889409954835,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": -0.271324834614705,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.002617021296531408,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 2.285830538778799,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.015278658934629423,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.03855464711987954,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.9206794911795837,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 0.9715027322294655,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "MELI": {
-      "bucket": "SPEC",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 36.10183390027297,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 80.70183390027297,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.051209067364156216,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": 1.4039883369780277,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.20568589307896032,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 39.96685979876013,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.11480925834463691,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.07335821418983272,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 1.2177291726011736,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.03577604781266,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "META": {
-      "bucket": "B",
-      "action": "QUALIFIED",
-      "buyStatus": "BUY_READY",
-      "hardPenalties": [],
-      "position": "watching",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 44.98960427734122,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 78.08960427734122,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.18312393229703042,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": 0.22886746081303938,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": 0.039202668699336925,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 19.89383144293926,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.02946378809762146,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.020436556495828914,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 1.0853202662927492,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 0.9959233181335387,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "MNDY": {
-      "bucket": "SPEC",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "watching",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 45.33604825237505,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 69.93604825237504,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.19677156885977487,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.09074337795499858,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 33.39493570984708,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.07771825951191928,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.011290382493954835,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.9860652232389067,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.0015209493926838,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "MRVL": {
-      "bucket": "INFLECTION",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 39.70656367935227,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 61.806563679352266,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.1359071590359606,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": 1.1405409444112373,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": 0.05735619444207617,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 11.449587642355707,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.009846757927536505,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.11619560909639486,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.7762742153243513,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 0.8096259737142537,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "MSFT": {
-      "bucket": "INFLECTION",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "watching",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 29.9287752160241,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 48.2287752160241,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.17295982580367925,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": 0.08369771567284949,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": 0.04882205740521452,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 12.423114652863054,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.02275518282150776,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.008276668420906635,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 1.0515816487868492,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.0136682692511543,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "NET": {
-      "bucket": "SPEC",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 51.49835754933811,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 85.09835754933812,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": -0.020081017609450354,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.06010828566581669,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 30.510334305337782,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.0029251976210622533,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.015274027503852835,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 1.4082292296484227,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.037635517014029,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "NVDA": {
-      "bucket": "A",
-      "action": "QUALIFIED",
-      "buyStatus": "BUY_READY",
-      "hardPenalties": [],
-      "position": "watching",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 100.11929929187143,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 173.31929929187143,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.6119685215955311,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": -0.013658058957820437,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": 0.1131076435061387,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 100.04509499443964,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.018829841316951586,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.11835691812972424,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 1.119850895433137,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.055166995650228,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "NVO": {
-      "bucket": "SPEC",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "watching",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 20.327257458318762,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 44.32725745831876,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.19834713944365054,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": 0.6261652227044133,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": 0.13528224246733297,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 20.42851902310494,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.1418410995253026,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.02085669706096958,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 1.0955524271990107,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.0455699379072096,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "OKTA": {
-      "bucket": "OUT",
-      "action": "DISQUALIFIED",
-      "buyStatus": "NO_BUY",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 40.24422657306252,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 51.84422657306253,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.026547672842295526,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": -2.766884531590414,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.06467559217301751,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 16.25084769972627,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.05989191382512815,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.039819814998181366,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.9200081766887918,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 0.9866406035246328,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "ON": {
-      "bucket": "OUT",
-      "action": "DISQUALIFIED",
-      "buyStatus": "NO_BUY",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 28.098893765870162,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 32.79889376587016,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.01166096467980533,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": 0.9240891137442862,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.10360824330690428,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": -10.369233936412636,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.0358393198481647,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.16447017185491075,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 1.0500206828642011,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.3723143701357015,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      }
     },
     "PANW": {
-      "bucket": "OUT",
-      "action": "DISQUALIFIED",
-      "buyStatus": "NO_BUY",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 43.800036546662305,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 58.700036546662304,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.05321575400326644,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.09907873194153426,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 18.788250033170904,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.021905798676656926,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.03386374117877276,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 1.0266447815657116,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.0127206084231026,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "PLTR": {
-      "bucket": "INFLECTION",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "watching",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 118.25548825815545,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 202.95548825815544,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.21734931244111624,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.05343112977495822,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 32.917125287657846,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.006375114385301641,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.019393053974186652,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.8987201494573197,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 0.9742814823505157,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "RBLX": {
-      "bucket": "SPEC",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 62.024852342936875,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 101.32485234293688,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": -0.1275242615393402,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.25299855039981717,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 33.20339646897954,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.041966755313742166,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.05667615512187299,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.8572887102757977,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.1397192997469805,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      }
     },
     "RHM.DE": {
-      "bucket": "OUT",
-      "action": "DISQUALIFIED",
-      "buyStatus": "NO_BUY",
-      "hardPenalties": [],
-      "position": "watching",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.06798042586959396,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": -0.3300039169604387,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.023074171237777247,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 15.727511347833945,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.022772849771855532,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.10804003087264945,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 1.1476140647617208,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 0.8132946572578023,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "SHOP": {
-      "bucket": "OUT",
-      "action": "DISQUALIFIED",
-      "buyStatus": "NO_BUY",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 44.46294629622699,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 78.762946296227,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.09015012815818381,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.051089604318915,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 27.314152818748116,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.01406544599820326,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.019850649215786817,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.8382442829387122,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.0476405478385675,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "SMCI": {
-      "bucket": "B",
-      "action": "QUALIFIED",
-      "buyStatus": "BUY_READY",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 100.65150086182594,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 223.35150086182594,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.1185344257648569,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": -0.27418194606944113,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.03448717399075175,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 61.707812102886514,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.07545240967623458,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.1999654382187729,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.9702455353889304,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.2474091138508006,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      }
     },
     "SNOW": {
-      "bucket": "SPEC",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 63.99205540419827,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 94.09205540419828,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": -0.21122237851686745,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.268144576044115,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 31.376518861527902,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.021341487571292606,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.017225432545891654,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.7826645888523024,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 0.990115581979173,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "SNPS": {
-      "bucket": "B",
-      "action": "QUALIFIED",
-      "buyStatus": "BUY_READY",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 104.16575323739576,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 169.66575323739576,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.02938519796584782,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": 9.651484945429162,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.0003511495960525095,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 11.553610630615886,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.013802048839992956,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.04120536989517952,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 3.2040984683105833,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.0349713971271426,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "TEAM": {
-      "bucket": "SPEC",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 54.91725875359723,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 86.61725875359723,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": -0.07273449064576311,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.2767690008391303,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 22.996174695570872,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.05988622080453715,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.012005724497734675,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.9687924826404092,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 0.9845909252726,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "TTD": {
-      "bucket": "INFLECTION",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 35.069574942885154,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 49.36957494288515,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.08067340667819826,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.055199391538089,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 22.44193656887754,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.06809972976577697,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.018611558925317958,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 0.849826516205028,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.0263018837223328,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "VEEV": {
-      "bucket": "INFLECTION",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 48.800139388242805,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 64.8001393882428,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.12025572530698812,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.056387087563087857,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 14.029684526801777,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.050795399815089404,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.02815296600816033,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 1.051594302090931,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 0.9867771337168391,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "VRT": {
-      "bucket": "OUT",
-      "action": "DISQUALIFIED",
-      "buyStatus": "NO_BUY",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 48.21931605595029,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 78.31931605595028,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": 0.12712705074399083,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": 0.5206026087262243,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.04541285906128197,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 21.58543401649824,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.014543847861599207,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.11314030682403155,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 1.0472974610448198,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.008437074184011,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
     },
     "ZS": {
-      "bucket": "SPEC",
-      "action": "REVIEW",
-      "buyStatus": "WATCH",
-      "hardPenalties": [],
-      "position": "interested",
-      "scoreScored": "2026-05-07"
+      "rule-of-40": {
+        "value": 59.91948642244819,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "rule-of-x": {
+        "value": 85.8194864224482,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "roic": {
+        "value": -0.010290099023410607,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "net-debt-ebitda": {
+        "value": null,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "sloan-ratio": {
+        "value": -0.1196548911756716,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "revenue-growth-3y": {
+        "value": 34.81497314980287,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "fcf-yield": {
+        "value": 0.029838554061974082,
+        "pass": false,
+        "lastChanged": "2026-05-07"
+      },
+      "gross-margin-stability": {
+        "value": 0.006266384094168161,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "asset-growth-divergence": {
+        "value": 1.1065385195497626,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      },
+      "margin-decay": {
+        "value": 1.0145124540655446,
+        "pass": true,
+        "lastChanged": "2026-05-07"
+      }
+    }
+  },
+  "methodHistory": {
+    "AFRM": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 41.91071221843265,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 41.91071221843265,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 71.51071221843264,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 71.51071221843264,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.0053248444922153765,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.0053248444922153765,
+          "pass": false
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": 15.944383463562854,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 15.944383463562854,
+          "pass": false
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.04926378285330189,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.04926378285330189,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 33.69490627173186,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 33.69490627173186,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.026697702860714215,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.026697702860714215,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.16868205166101655,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.16868205166101655,
+          "pass": false
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.8442007571738724,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 0.942362485384995,
+          "pass": true
+        }
+      ]
+    },
+    "ALAB": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 117.93456008034991,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 117.93456008034991,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 211.33456008034992,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 211.33456008034992,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.1606304591954916,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.1606304591954916,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.040884619175975294,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.040884619175975294,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 120.17644470675775,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 120.17644470675775,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.008495139687701856,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.008495139687701856,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.04562676778915678,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.04562676778915678,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.675250162391801,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.009182194134093,
+          "pass": true
+        }
+      ]
+    },
+    "AMAT": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 13.288636205757294,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 13.288636205757294,
+          "pass": false
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 11.188636205757295,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 11.188636205757295,
+          "pass": false
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.24082868745268085,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.24082868745268085,
+          "pass": true
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": -0.0674931129476584,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.0674931129476584,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": 0.035813658778478745,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.035813658778478745,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 3.2334704568867556,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 3.2334704568867556,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.017666737834793615,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.017666737834793615,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.020727361243891813,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.020727361243891813,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 1.010600305469078,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9749921203734055,
+          "pass": true
+        }
+      ]
+    },
+    "ANET": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 80.02566906593785,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 80.02566906593785,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 115.12566906593784,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 115.12566906593784,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.20082700875622686,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.20082700875622686,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.03810042882264019,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.03810042882264019,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 27.146525721597637,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 27.146525721597637,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.024026372536899186,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.024026372536899186,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.024442076447396828,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.024442076447396828,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0769023404827942,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0011943865460793,
+          "pass": true
+        }
+      ]
+    },
+    "ARM": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 43.95681876899242,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 43.95681876899242,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 70.25681876899242,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 70.25681876899242,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.13202862567547832,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.13202862567547832,
+          "pass": false
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": 0.08351992834751455,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.08351992834751455,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.0007012576818131213,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.0007012576818131213,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.01838700265125317,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.01838700265125317,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9176859780456011,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9728651648087283,
+          "pass": true
+        }
+      ]
+    },
+    "ASML": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 37.66605522142218,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 37.66605522142218,
+          "pass": false
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 50.86605522142217,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 50.86605522142217,
+          "pass": false
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.2494701279660882,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.2494701279660882,
+          "pass": true
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": -0.6286168085369954,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.6286168085369954,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.032325685333797406,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.032325685333797406,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 15.551134263329036,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 15.551134263329036,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.01897980759643592,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.01897980759643592,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.018728914695752746,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.018728914695752746,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9003760010312727,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9705867979825623,
+          "pass": true
+        }
+      ]
+    },
+    "CDNS": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 45.81624584462856,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 45.81624584462856,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 64.51624584462856,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 64.51624584462856,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.1550495250796614,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.1550495250796614,
+          "pass": true
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": -0.2632505970994534,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.2632505970994534,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.04708116142894795,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.04708116142894795,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 14.143248241855332,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 14.143248241855332,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.016069460596195517,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.016069460596195517,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.02148623239816629,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.02148623239816629,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9913280275743442,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9963491165506402,
+          "pass": true
+        }
+      ]
+    },
+    "CEG": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 17.826957332731226,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 17.826957332731226,
+          "pass": false
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 30.726957332731224,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 30.726957332731224,
+          "pass": false
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.04325846888524101,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.04325846888524101,
+          "pass": false
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0622121645227887,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 1.0622121645227887,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": 0.018009048192981537,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.018009048192981537,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 1.469039149633189,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 1.469039149633189,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.01128608658468935,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.01128608658468935,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.43971206498063004,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.43971206498063004,
+          "pass": false
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9984348162652356,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.3827873055289261,
+          "pass": false
+        }
+      ]
+    },
+    "COIN": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": -3.337885328373577,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -3.337885328373577,
+          "pass": false
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": -25.537885328373576,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -25.537885328373576,
+          "pass": false
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.06854677212153779,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.06854677212153779,
+          "pass": false
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": -2.075530481740028,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -2.075530481740028,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.03929841608701478,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.03929841608701478,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 31.002765221245365,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 31.002765221245365,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.04789776790377983,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.04789776790377983,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.09627917091270763,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.09627917091270763,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 1.2031470296155669,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0019131871461764,
+          "pass": true
+        }
+      ]
+    },
+    "CRDO": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 217.62536232022995,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 217.62536232022995,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 419.12536232022995,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 419.12536232022995,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.09108109381790763,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.09108109381790763,
+          "pass": false
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": 0.028620079900451897,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.028620079900451897,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 60.078862161456435,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 60.078862161456435,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.0008371784843233055,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.0008371784843233055,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.04904559715734047,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.04904559715734047,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.5939789539446285,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9555166973572505,
+          "pass": true
+        }
+      ]
+    },
+    "CRWD": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 56.64608100678761,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 56.64608100678761,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 79.94608100678761,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 79.94608100678761,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": -0.027747009805587204,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.027747009805587204,
+          "pass": false
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.12663768535298742,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.12663768535298742,
+          "pass": false
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 29.00686653697968,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 29.00686653697968,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.009776707930731132,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.009776707930731132,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.012087334126856596,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.012087334126856596,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0468222529091533,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0038346891104395,
+          "pass": true
+        }
+      ]
+    },
+    "DDOG": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 54.86694374444624,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 54.86694374444624,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 84.06694374444623,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 84.06694374444623,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.01725916329877955,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.01725916329877955,
+          "pass": false
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.12146221374252616,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.12146221374252616,
+          "pass": false
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 26.94953937625746,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 26.94953937625746,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.013984039059082864,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.013984039059082864,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.008861309291288115,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.008861309291288115,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.8994633956486748,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0104922579023912,
+          "pass": true
+        }
+      ]
+    },
+    "DUOL": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 54.93660423343205,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 54.93660423343205,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 81.43660423343205,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 81.43660423343205,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.4332161880239759,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.4332161880239759,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": 0.026925752767568426,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.026925752767568426,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 41.082213323758765,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 41.082213323758765,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.06807677414906345,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.06807677414906345,
+          "pass": true
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.006144656011431035,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.006144656011431035,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 1.103313516101374,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0075450411313238,
+          "pass": true
+        }
+      ]
+    },
+    "HOOD": {
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.0555850749793364,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.0555850749793364,
+          "pass": false
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": 2.9309933142311366,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 2.9309933142311366,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": 0.0078401552298293,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.0078401552298293,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 48.787475836737705,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 48.787475836737705,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.023166242951247036,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.023166242951247036,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.1939543009978754,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.1939543009978754,
+          "pass": false
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9607957867152167,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 0.953040578373811,
+          "pass": true
+        }
+      ]
+    },
+    "HUBS": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 41.20905518763508,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 41.20905518763508,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 61.60905518763508,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 61.60905518763508,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.015448319581790694,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.015448319581790694,
+          "pass": false
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.13770685165163482,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.13770685165163482,
+          "pass": false
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 21.84570470312226,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 21.84570470312226,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.04561401447811382,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.04561401447811382,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.01448320916015224,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.01448320916015224,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.8520233525585926,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0151860511509663,
+          "pass": true
+        }
+      ]
+    },
+    "KLAC": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 33.568121101748375,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 33.568121101748375,
+          "pass": false
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 45.068121101748375,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 45.068121101748375,
+          "pass": false
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.29034511214439784,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.29034511214439784,
+          "pass": true
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": 0.632425330298502,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.632425330298502,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": 0.019912277415268156,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.019912277415268156,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 9.685534331651668,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 9.685534331651668,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.016330297136820077,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.016330297136820077,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.010268071366232806,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.010268071366232806,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.8403603095050487,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9845319180671528,
+          "pass": true
+        }
+      ]
+    },
+    "LRCX": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 43.87366836065688,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 43.87366836065688,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 67.67366836065688,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 67.67366836065688,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.35829889409954835,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.35829889409954835,
+          "pass": true
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": -0.271324834614705,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.271324834614705,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.002617021296531408,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.002617021296531408,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 2.285830538778799,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 2.285830538778799,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.015278658934629423,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.015278658934629423,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.03855464711987954,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.03855464711987954,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9206794911795837,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9715027322294655,
+          "pass": true
+        }
+      ]
+    },
+    "MELI": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 36.10183390027297,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 36.10183390027297,
+          "pass": false
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 80.70183390027297,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 80.70183390027297,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.051209067364156216,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.051209067364156216,
+          "pass": false
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": 1.4039883369780277,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 1.4039883369780277,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.20568589307896032,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.20568589307896032,
+          "pass": false
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 39.96685979876013,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 39.96685979876013,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.11480925834463691,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.11480925834463691,
+          "pass": true
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.07335821418983272,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.07335821418983272,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 1.2177291726011736,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.03577604781266,
+          "pass": true
+        }
+      ]
+    },
+    "META": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 44.98960427734122,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 44.98960427734122,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 78.08960427734122,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 78.08960427734122,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.18312393229703042,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.18312393229703042,
+          "pass": true
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": 0.22886746081303938,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.22886746081303938,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": 0.039202668699336925,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.039202668699336925,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 19.89383144293926,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 19.89383144293926,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.02946378809762146,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.02946378809762146,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.020436556495828914,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.020436556495828914,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0853202662927492,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9959233181335387,
+          "pass": true
+        }
+      ]
+    },
+    "MNDY": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 45.33604825237505,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 45.33604825237505,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 69.93604825237504,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 69.93604825237504,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.19677156885977487,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.19677156885977487,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.09074337795499858,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.09074337795499858,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 33.39493570984708,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 33.39493570984708,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.07771825951191928,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.07771825951191928,
+          "pass": true
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.011290382493954835,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.011290382493954835,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9860652232389067,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0015209493926838,
+          "pass": true
+        }
+      ]
+    },
+    "MRVL": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 39.70656367935227,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 39.70656367935227,
+          "pass": false
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 61.806563679352266,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 61.806563679352266,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.1359071590359606,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.1359071590359606,
+          "pass": false
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": 1.1405409444112373,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 1.1405409444112373,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": 0.05735619444207617,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.05735619444207617,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 11.449587642355707,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 11.449587642355707,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.009846757927536505,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.009846757927536505,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.11619560909639486,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.11619560909639486,
+          "pass": false
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.7762742153243513,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 0.8096259737142537,
+          "pass": true
+        }
+      ]
+    },
+    "MSFT": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 29.9287752160241,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 29.9287752160241,
+          "pass": false
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 48.2287752160241,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 48.2287752160241,
+          "pass": false
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.17295982580367925,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.17295982580367925,
+          "pass": true
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": 0.08369771567284949,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.08369771567284949,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": 0.04882205740521452,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.04882205740521452,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 12.423114652863054,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 12.423114652863054,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.02275518282150776,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.02275518282150776,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.008276668420906635,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.008276668420906635,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0515816487868492,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0136682692511543,
+          "pass": true
+        }
+      ]
+    },
+    "NET": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 51.49835754933811,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 51.49835754933811,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 85.09835754933812,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 85.09835754933812,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": -0.020081017609450354,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.020081017609450354,
+          "pass": false
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.06010828566581669,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.06010828566581669,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 30.510334305337782,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 30.510334305337782,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.0029251976210622533,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.0029251976210622533,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.015274027503852835,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.015274027503852835,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 1.4082292296484227,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.037635517014029,
+          "pass": true
+        }
+      ]
+    },
+    "NVDA": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 100.11929929187143,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 100.11929929187143,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 173.31929929187143,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 173.31929929187143,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.6119685215955311,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.6119685215955311,
+          "pass": true
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": -0.013658058957820437,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.013658058957820437,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": 0.1131076435061387,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.1131076435061387,
+          "pass": false
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 100.04509499443964,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 100.04509499443964,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.018829841316951586,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.018829841316951586,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.11835691812972424,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.11835691812972424,
+          "pass": false
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 1.119850895433137,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.055166995650228,
+          "pass": true
+        }
+      ]
+    },
+    "NVO": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 20.327257458318762,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 20.327257458318762,
+          "pass": false
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 44.32725745831876,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 44.32725745831876,
+          "pass": false
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.19834713944365054,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.19834713944365054,
+          "pass": true
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": 0.6261652227044133,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.6261652227044133,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": 0.13528224246733297,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.13528224246733297,
+          "pass": false
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 20.42851902310494,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 20.42851902310494,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.1418410995253026,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.1418410995253026,
+          "pass": true
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.02085669706096958,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.02085669706096958,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0955524271990107,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0455699379072096,
+          "pass": true
+        }
+      ]
+    },
+    "OKTA": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 40.24422657306252,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 40.24422657306252,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 51.84422657306253,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 51.84422657306253,
+          "pass": false
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.026547672842295526,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.026547672842295526,
+          "pass": false
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": -2.766884531590414,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -2.766884531590414,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.06467559217301751,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.06467559217301751,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 16.25084769972627,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 16.25084769972627,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.05989191382512815,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.05989191382512815,
+          "pass": true
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.039819814998181366,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.039819814998181366,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9200081766887918,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9866406035246328,
+          "pass": true
+        }
+      ]
+    },
+    "ON": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 28.098893765870162,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 28.098893765870162,
+          "pass": false
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 32.79889376587016,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 32.79889376587016,
+          "pass": false
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.01166096467980533,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.01166096467980533,
+          "pass": false
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9240891137442862,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.9240891137442862,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.10360824330690428,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.10360824330690428,
+          "pass": false
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": -10.369233936412636,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -10.369233936412636,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.0358393198481647,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.0358393198481647,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.16447017185491075,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.16447017185491075,
+          "pass": false
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0500206828642011,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.3723143701357015,
+          "pass": false
+        }
+      ]
+    },
+    "PANW": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 43.800036546662305,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 43.800036546662305,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 58.700036546662304,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 58.700036546662304,
+          "pass": false
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.05321575400326644,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.05321575400326644,
+          "pass": false
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.09907873194153426,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.09907873194153426,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 18.788250033170904,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 18.788250033170904,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.021905798676656926,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.021905798676656926,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.03386374117877276,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.03386374117877276,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0266447815657116,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0127206084231026,
+          "pass": true
+        }
+      ]
+    },
+    "PLTR": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 118.25548825815545,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 118.25548825815545,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 202.95548825815544,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 202.95548825815544,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.21734931244111624,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.21734931244111624,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.05343112977495822,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.05343112977495822,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 32.917125287657846,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 32.917125287657846,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.006375114385301641,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.006375114385301641,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.019393053974186652,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.019393053974186652,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.8987201494573197,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9742814823505157,
+          "pass": true
+        }
+      ]
+    },
+    "RBLX": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 62.024852342936875,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 62.024852342936875,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 101.32485234293688,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 101.32485234293688,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": -0.1275242615393402,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.1275242615393402,
+          "pass": false
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.25299855039981717,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.25299855039981717,
+          "pass": false
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 33.20339646897954,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 33.20339646897954,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.041966755313742166,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.041966755313742166,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.05667615512187299,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.05667615512187299,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.8572887102757977,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.1397192997469805,
+          "pass": false
+        }
+      ]
+    },
+    "RHM.DE": {
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.06798042586959396,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.06798042586959396,
+          "pass": false
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": -0.3300039169604387,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.3300039169604387,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.023074171237777247,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.023074171237777247,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 15.727511347833945,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 15.727511347833945,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.022772849771855532,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.022772849771855532,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.10804003087264945,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.10804003087264945,
+          "pass": false
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 1.1476140647617208,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 0.8132946572578023,
+          "pass": true
+        }
+      ]
+    },
+    "SHOP": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 44.46294629622699,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 44.46294629622699,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 78.762946296227,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 78.762946296227,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.09015012815818381,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.09015012815818381,
+          "pass": false
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.051089604318915,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.051089604318915,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 27.314152818748116,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 27.314152818748116,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.01406544599820326,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.01406544599820326,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.019850649215786817,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.019850649215786817,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.8382442829387122,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0476405478385675,
+          "pass": true
+        }
+      ]
+    },
+    "SMCI": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 100.65150086182594,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 100.65150086182594,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 223.35150086182594,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 223.35150086182594,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.1185344257648569,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.1185344257648569,
+          "pass": false
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": -0.27418194606944113,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.27418194606944113,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.03448717399075175,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.03448717399075175,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 61.707812102886514,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 61.707812102886514,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.07545240967623458,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.07545240967623458,
+          "pass": true
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.1999654382187729,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.1999654382187729,
+          "pass": false
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9702455353889304,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.2474091138508006,
+          "pass": false
+        }
+      ]
+    },
+    "SNOW": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 63.99205540419827,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 63.99205540419827,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 94.09205540419828,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 94.09205540419828,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": -0.21122237851686745,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.21122237851686745,
+          "pass": false
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.268144576044115,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.268144576044115,
+          "pass": false
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 31.376518861527902,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 31.376518861527902,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.021341487571292606,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.021341487571292606,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.017225432545891654,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.017225432545891654,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.7826645888523024,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 0.990115581979173,
+          "pass": true
+        }
+      ]
+    },
+    "SNPS": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 104.16575323739576,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 104.16575323739576,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 169.66575323739576,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 169.66575323739576,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.02938519796584782,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.02938519796584782,
+          "pass": false
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": 9.651484945429162,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 9.651484945429162,
+          "pass": false
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.0003511495960525095,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.0003511495960525095,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 11.553610630615886,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 11.553610630615886,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.013802048839992956,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.013802048839992956,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.04120536989517952,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.04120536989517952,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 3.2040984683105833,
+          "pass": false
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0349713971271426,
+          "pass": true
+        }
+      ]
+    },
+    "TEAM": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 54.91725875359723,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 54.91725875359723,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 86.61725875359723,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 86.61725875359723,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": -0.07273449064576311,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.07273449064576311,
+          "pass": false
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.2767690008391303,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.2767690008391303,
+          "pass": false
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 22.996174695570872,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 22.996174695570872,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.05988622080453715,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.05988622080453715,
+          "pass": true
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.012005724497734675,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.012005724497734675,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9687924826404092,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9845909252726,
+          "pass": true
+        }
+      ]
+    },
+    "TTD": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 35.069574942885154,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 35.069574942885154,
+          "pass": false
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 49.36957494288515,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 49.36957494288515,
+          "pass": false
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.08067340667819826,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.08067340667819826,
+          "pass": false
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.055199391538089,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.055199391538089,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 22.44193656887754,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 22.44193656887754,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.06809972976577697,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.06809972976577697,
+          "pass": true
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.018611558925317958,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.018611558925317958,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 0.849826516205028,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0263018837223328,
+          "pass": true
+        }
+      ]
+    },
+    "VEEV": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 48.800139388242805,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 48.800139388242805,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 64.8001393882428,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 64.8001393882428,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.12025572530698812,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.12025572530698812,
+          "pass": false
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.056387087563087857,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.056387087563087857,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 14.029684526801777,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 14.029684526801777,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.050795399815089404,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.050795399815089404,
+          "pass": true
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.02815296600816033,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.02815296600816033,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 1.051594302090931,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 0.9867771337168391,
+          "pass": true
+        }
+      ]
+    },
+    "VRT": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 48.21931605595029,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 48.21931605595029,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 78.31931605595028,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 78.31931605595028,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": 0.12712705074399083,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.12712705074399083,
+          "pass": false
+        }
+      ],
+      "net-debt-ebitda": [
+        {
+          "date": "2026-05-07",
+          "value": 0.5206026087262243,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.5206026087262243,
+          "pass": true
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.04541285906128197,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.04541285906128197,
+          "pass": true
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 21.58543401649824,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 21.58543401649824,
+          "pass": false
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.014543847861599207,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.014543847861599207,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.11314030682403155,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.11314030682403155,
+          "pass": false
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0472974610448198,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.008437074184011,
+          "pass": true
+        }
+      ]
+    },
+    "ZS": {
+      "rule-of-40": [
+        {
+          "date": "2026-05-07",
+          "value": 59.91948642244819,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 59.91948642244819,
+          "pass": true
+        }
+      ],
+      "rule-of-x": [
+        {
+          "date": "2026-05-07",
+          "value": 85.8194864224482,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 85.8194864224482,
+          "pass": true
+        }
+      ],
+      "roic": [
+        {
+          "date": "2026-05-07",
+          "value": -0.010290099023410607,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.010290099023410607,
+          "pass": false
+        }
+      ],
+      "sloan-ratio": [
+        {
+          "date": "2026-05-07",
+          "value": -0.1196548911756716,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": -0.1196548911756716,
+          "pass": false
+        }
+      ],
+      "revenue-growth-3y": [
+        {
+          "date": "2026-05-07",
+          "value": 34.81497314980287,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 34.81497314980287,
+          "pass": true
+        }
+      ],
+      "fcf-yield": [
+        {
+          "date": "2026-05-07",
+          "value": 0.029838554061974082,
+          "pass": false
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.029838554061974082,
+          "pass": false
+        }
+      ],
+      "gross-margin-stability": [
+        {
+          "date": "2026-05-07",
+          "value": 0.006266384094168161,
+          "pass": true
+        },
+        {
+          "date": "2026-05-07",
+          "value": 0.006266384094168161,
+          "pass": true
+        }
+      ],
+      "asset-growth-divergence": [
+        {
+          "date": "2026-05-07",
+          "value": 1.1065385195497626,
+          "pass": true
+        }
+      ],
+      "margin-decay": [
+        {
+          "date": "2026-05-07",
+          "value": 1.0145124540655446,
+          "pass": true
+        }
+      ]
     }
   },
   "fieldCoverage": {
     "history": [
-      {
-        "date": "2026-05-07",
-        "coverage": {
-          "metrics.annualRev": 0,
-          "metrics.annualOpInc": 0,
-          "metrics.annualNetIncome": 0,
-          "metrics.annualGrossProfit": 0,
-          "metrics.annualFCF": 0,
-          "metrics.quarterlyRev": 0,
-          "metrics.quarterlyOpInc": 0,
-          "metrics.marketCapUSD": 0,
-          "metrics.peRatio": 0,
-          "metrics.psRatio": 0,
-          "metrics.sector": 0,
-          "metrics.industry": 0,
-          "metrics.operatingMargin": 1,
-          "metrics.grossMargin": 1
-        }
-      },
-      {
-        "date": "2026-05-07",
-        "coverage": {
-          "metrics.annualRev": 0,
-          "metrics.annualOpInc": 0,
-          "metrics.annualNetIncome": 0,
-          "metrics.annualGrossProfit": 0,
-          "metrics.annualFCF": 0,
-          "metrics.quarterlyRev": 0,
-          "metrics.quarterlyOpInc": 0,
-          "metrics.marketCapUSD": 0,
-          "metrics.peRatio": 0,
-          "metrics.psRatio": 0,
-          "metrics.sector": 0,
-          "metrics.industry": 0,
-          "metrics.operatingMargin": 1,
-          "metrics.grossMargin": 1
-        }
-      },
       {
         "date": "2026-05-07",
         "coverage": {

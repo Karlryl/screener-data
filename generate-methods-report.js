@@ -8,12 +8,14 @@
 const fs = require('fs');
 const path = require('path');
 const Runner = require('./methods/runner.js');
+const Trend = require('./methods/trend.js');
 
 function parseArgs(argv) {
-  const args = { snapshots: './snapshots', watchlist: './watchlist.json', out: './methods-report.html' };
+  const args = { snapshots: './snapshots', watchlist: './watchlist.json', state: './alert-state.json', out: './methods-report.html' };
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--snapshots' && argv[i+1]) args.snapshots = argv[++i];
     else if (argv[i] === '--watchlist' && argv[i+1]) args.watchlist = argv[++i];
+    else if (argv[i] === '--state' && argv[i+1]) args.state = argv[++i];
     else if (argv[i] === '--out' && argv[i+1]) args.out = argv[++i];
   }
   return args;
@@ -36,6 +38,13 @@ function escHtml(s) {
 function evaluateAllStocks(args) {
   const files = fs.readdirSync(args.snapshots).filter(f => f.endsWith('.json') && f !== '_manifest.json');
   const positions = loadPositionMap(args.watchlist);
+  let methodHistory = {};
+  if (fs.existsSync(args.state)) {
+    try {
+      const s = JSON.parse(fs.readFileSync(args.state, 'utf8'));
+      methodHistory = s.methodHistory || {};
+    } catch (e) { /* ignore */ }
+  }
   const rows = [];
   for (const file of files) {
     let stock;
@@ -51,7 +60,16 @@ function evaluateAllStocks(args) {
       marketCap: stock.marketCap && stock.marketCap.value || null,
       revenueTTM: stock.metrics && stock.metrics.revenueTTM && stock.metrics.revenueTTM.value || null,
       growthYoY: stock.metrics && stock.metrics.revenueGrowthYoY && stock.metrics.revenueGrowthYoY.value || null,
-      results: Runner.evaluateStock(stock)
+      results: Runner.evaluateStock(stock),
+      // Tag-31: trend per method based on methodHistory
+      trends: (() => {
+        const tickerHist = methodHistory[ticker] || {};
+        const tr = {};
+        for (const m of Runner.getMethods()) {
+          tr[m.id] = Trend.computeTrend(tickerHist[m.id] || [], m.thresholdOp);
+        }
+        return tr;
+      })()
     });
   }
   return rows;
@@ -67,7 +85,10 @@ function fmtMoney(v) {
 function fmtValue(v, unit) {
   if (v == null || !Number.isFinite(v)) return '—';
   if (unit === 'percent') return (v).toFixed(1) + '%';
-  if (unit === 'ratio') return v.toFixed(3);
+  if (unit === 'ratio') {
+    if (Math.abs(v) < 1) return (v * 100).toFixed(2) + '%';  // small ratios als % (FCF-Yield, ROIC, Sloan)
+    return v.toFixed(2);  // larger ratios as-is (Net-Debt/EBITDA, GMI)
+  }
   return v.toFixed(1);
 }
 
@@ -86,9 +107,15 @@ function renderHTML(rows, methods) {
       }
       const klass = result.pass ? 'pass' : 'fail';
       const valStr = fmtValue(result.value, m.unit);
-      return `<td class="method-cell ${klass}" data-method="${m.id}" data-pass="${result.pass}" data-value="${result.value}" title="${escHtml(result.reason)}">${valStr}</td>`;
+      const trend = r.trends[m.id] || { direction: 'n/a' };
+      const trendIcon = ({ improving: '<span class="trend-up" title="improving">↑</span>',
+                          deteriorating: '<span class="trend-down" title="deteriorating">↓</span>',
+                          stable: '<span class="trend-flat" title="stable">·</span>',
+                          'n/a': '' })[trend.direction] || '';
+      return `<td class="method-cell ${klass}" data-method="${m.id}" data-pass="${result.pass}" data-value="${result.value}" title="${escHtml(result.reason)} | trend=${trend.direction} (${trend.points || 0} pts)">${valStr} ${trendIcon}</td>`;
     }).join('');
-    return `<tr data-ticker="${r.ticker}" data-position="${r.position}">
+    const rowData = encodeURIComponent(JSON.stringify({ ticker: r.ticker, name: r.name, sector: r.sector, marketCap: r.marketCap, growthYoY: r.growthYoY, revenueTTM: r.revenueTTM, results: r.results, trends: r.trends }));
+    return `<tr class="row-clickable" data-ticker="${r.ticker}" data-position="${r.position}" data-row='${rowData}'>
       <td><strong>${escHtml(r.ticker)}</strong></td>
       <td>${escHtml(r.name)}</td>
       <td><span class="position-${r.position}">${r.position}</span></td>
@@ -137,6 +164,22 @@ function renderHTML(rows, methods) {
   .position-owned { color: #fbbf24; font-weight: 600; padding: 1px 6px; background: #fbbf2420; border-radius: 3px; font-size: 10px; }
   .position-watching { color: #60a5fa; padding: 1px 6px; background: #60a5fa20; border-radius: 3px; font-size: 10px; }
   .position-interested { color: #94a3b8; padding: 1px 6px; background: #94a3b820; border-radius: 3px; font-size: 10px; }
+  .trend-up { color: #10b981; font-weight: bold; margin-left: 2px; }
+  .trend-down { color: #ef4444; font-weight: bold; margin-left: 2px; }
+  .trend-flat { color: #64748b; margin-left: 2px; }
+  .preset-btn { background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+  .preset-btn:hover { background: #334155; color: #f1f5f9; }
+  tr.row-clickable { cursor: pointer; }
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 100; padding: 30px; overflow-y: auto; }
+  .modal-overlay.open { display: block; }
+  .modal { background: #1e293b; border: 1px solid #334155; border-radius: 8px; max-width: 900px; margin: 0 auto; padding: 24px; }
+  .modal h3 { margin: 0 0 8px; color: #f1f5f9; font-size: 22px; }
+  .modal .close { float: right; background: #334155; color: #cbd5e1; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; }
+  .modal .stock-meta-row { color: #94a3b8; font-size: 12px; margin-bottom: 16px; }
+  .modal table { width: 100%; }
+  .modal td.method-name { font-weight: 600; color: #cbd5e1; }
+  .modal td.calc { color: #64748b; font-size: 11px; font-family: ui-monospace, monospace; }
 </style></head><body>
 
 <h1>📊 Karl's Stock-Screener — Methoden-Matrix</h1>
@@ -144,11 +187,27 @@ function renderHTML(rows, methods) {
 
 <div class="summary">${methodSummary}</div>
 
+<div class="preset-bar" style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+  <strong style="color:#f1f5f9;font-size:12px;align-self:center;">Presets:</strong>
+  <button class="preset-btn" data-preset="all-pass">All Pass (alle 8)</button>
+  <button class="preset-btn" data-preset="hypergrowth">Hypergrowth (Rule of 40 + Rule of X + Rev-Growth-3Y)</button>
+  <button class="preset-btn" data-preset="quality">Quality (ROIC + GM-Stability + Sloan)</button>
+  <button class="preset-btn" data-preset="solvency">Solvency-Guard (Net-Debt + Sloan)</button>
+  <button class="preset-btn" data-preset="value">Value (FCF-Yield + Sloan)</button>
+  <button class="preset-btn" data-preset="clear">Clear</button>
+</div>
 <div class="filter-bar">
   <strong style="color:#f1f5f9;font-size:13px;">Filter:</strong>
   ${methods.map(m => `<label data-filter="${m.id}"><input type="checkbox" data-method="${m.id}"> ${escHtml(m.label)}</label>`).join('')}
   <span class="filter-mode">Mode: <select id="filter-mode" style="background:#0f172a;color:#cbd5e1;border:1px solid #334155;padding:2px 6px;border-radius:3px;"><option value="AND">AND (alle ausgewählten pass)</option><option value="OR">OR (mind. einer pass)</option></select></span>
   <span class="filter-mode" id="visible-count">Showing all ${rows.length}</span>
+</div>
+
+<div id="modal-overlay" class="modal-overlay">
+  <div class="modal">
+    <button class="close" onclick="document.getElementById('modal-overlay').classList.remove('open');">×</button>
+    <div id="modal-content">Loading...</div>
+  </div>
 </div>
 
 <table id="matrix">
@@ -222,6 +281,57 @@ function renderHTML(rows, methods) {
       rows.forEach(r => tbody.appendChild(r));
     });
   });
+
+  // Tag-32: Filter-Presets
+  const presetMap = {
+    'all-pass': ['rule-of-40','rule-of-x','roic','net-debt-ebitda','sloan-ratio','revenue-growth-3y','fcf-yield','gross-margin-stability'],
+    'hypergrowth': ['rule-of-40','rule-of-x','revenue-growth-3y'],
+    'quality': ['roic','gross-margin-stability','sloan-ratio'],
+    'solvency': ['net-debt-ebitda','sloan-ratio'],
+    'value': ['fcf-yield','sloan-ratio'],
+    'clear': []
+  };
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const preset = btn.dataset.preset;
+      const ids = presetMap[preset] || [];
+      checkboxes.forEach(cb => { cb.checked = ids.includes(cb.dataset.method); });
+      applyFilter();
+    });
+  });
+
+  // Tag-32: Modal Detail-View
+  const modal = document.getElementById('modal-overlay');
+  const modalContent = document.getElementById('modal-content');
+  document.querySelectorAll('tr.row-clickable').forEach(tr => {
+    tr.addEventListener('click', (e) => {
+      if (e.target.closest('.method-cell')) {
+        // direct method-cell click — show only that method's details
+        // (skip — main row click handler)
+      }
+      const data = JSON.parse(decodeURIComponent(tr.dataset.row));
+      let html = '<h3>' + data.ticker + ' — ' + data.name + '</h3>';
+      html += '<div class="stock-meta-row">' + data.sector + ' · MCap ' + (data.marketCap ? '$' + (data.marketCap/1e9).toFixed(1) + 'B' : '—') +
+              ' · Rev TTM ' + (data.revenueTTM ? '$' + (data.revenueTTM/1e9).toFixed(1) + 'B' : '—') +
+              ' · Growth YoY ' + (data.growthYoY != null ? data.growthYoY.toFixed(1) + '%' : '—') + '</div>';
+      html += '<table><thead><tr><th>Method</th><th>Value</th><th>Pass</th><th>Trend</th><th>Calc</th></tr></thead><tbody>';
+      for (const [mid, r] of Object.entries(data.results)) {
+        const t = data.trends[mid] || { direction: 'n/a', points: 0 };
+        const trIcon = { improving: '↑', deteriorating: '↓', stable: '·', 'n/a': '—' }[t.direction];
+        html += '<tr>'
+              + '<td class="method-name">' + mid + '</td>'
+              + '<td>' + (r.value != null && Number.isFinite(r.value) ? r.value.toFixed(3) : '—') + '</td>'
+              + '<td>' + (r.computable ? (r.pass ? '✓' : '✗') : '—') + '</td>'
+              + '<td>' + trIcon + ' (' + t.points + ' pts)' + '</td>'
+              + '<td class="calc">' + r.reason + '</td>'
+              + '</tr>';
+      }
+      html += '</tbody></table>';
+      modalContent.innerHTML = html;
+      modal.classList.add('open');
+    });
+  });
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
 
   // Method-Spalten sortieren
   document.querySelectorAll('th.method-col').forEach((th) => {

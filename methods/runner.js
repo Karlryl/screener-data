@@ -11,7 +11,12 @@ const METHODS = [
   require('./rule-of-x.js'),
   require('./roic.js'),
   require('./net-debt-ebitda.js'),
-  require('./sloan-ratio.js')
+  require('./sloan-ratio.js'),
+  require('./revenue-growth-3y.js'),
+  require('./fcf-yield.js'),
+  require('./gross-margin-stability.js'),
+  require('./asset-growth-divergence.js'),
+  require('./margin-decay.js')
 ];
 
 function evaluateStock(stock) {
