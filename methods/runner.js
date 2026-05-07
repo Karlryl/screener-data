@@ -26,7 +26,8 @@ const METHODS = [
   require('./insider-ownership.js'),
   require('./quarterly-revenue-acceleration.js'),
   require('./drawdown-52w.js'),
-  require('./high-proximity-52w.js')
+  require('./high-proximity-52w.js'),
+  require('./volatility-annualized.js')
 ];
 
 function evaluateStock(stock) {
