@@ -1,11 +1,11 @@
 # Project Status — Karl's Stock-Screener
 
-**Last Update:** 2026-05-07 — Tag 60 done. 21 Methoden parallel laufend.
+**Last Update:** 2026-05-07 — Tag 61 done. 17 Methoden konsolidiert (von 21).
 
 ## Aktueller Stand
 
 - **70 Stocks** in der Watchlist (kein Position-Tracking, kein Buy-Signal-Layer)
-- **21 Methoden** parallel, alle isoliert (kein Aggregat-Score)
+- **17 Methoden** (4 disabled in methods/disabled/) parallel, alle isoliert (kein Aggregat-Score)
 - **Pipeline autonom** via GitHub Actions wöchentlich (Mo 08:00 UTC) + manuelle Trigger
 - **Workflow** läuft in ~3-7 Min: Engine-Tests → Yahoo-Pull → Sektor-Median-Auto-Compute → Methods-Report → Methods-History-Snapshot → Price-Pull → Diff-Report
 - **Sektor-relative Schwellen** für ROIC + ROCE + FCF-Yield bei 6 Sub-Profile (auto-computed wenn ≥5 stocks/sektor, sonst hardcoded)
