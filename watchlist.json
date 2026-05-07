@@ -1,25 +1,417 @@
 {
   "_meta": {
     "owner": "Karl",
-    "version": "1.1",
+    "version": "2.0",
     "updated_at": "2026-05-07",
-    "notes": "Hypergrowth + Quality-Compounder Watchlist. Tag-18: position-Feld eingefuehrt. Tool ist Buy-only — Sells laufen ueber Elliott Waves (extern). Conviction-Tracking fuer owned-Stocks via OWNED_OK/OWNED_REVIEW-Buy-Status."
+    "notes": "Tag-24: 10 → 50 Stocks. Karl's original 10 (2 owned + 8 watching) + 40 S&P-500-Top-Cap als 'interested' (passive radar). Tool ist Buy-only — Sells via EW. Sub-Profile-Coverage breiter: Healthcare, Financials, Energy, Industrials, Communication."
   },
   "_position_legend": {
-    "owned": "Karl hat gekauft. Tool checkt ob These bestaetigt bleibt (kein Sell-Trigger).",
+    "owned": "Karl hat gekauft. Tool checkt ob These bestaetigt bleibt.",
     "watching": "Buy-Kandidat. Tool prueft ob bucket steigt (BUY_READY) oder faellt (NO_BUY).",
-    "interested": "auf Radar, noch keine aktive Watchlist-Pflege."
+    "interested": "auf Radar, niedrige Alert-Prioritaet — meist nur INFO-events."
   },
   "stocks": [
-    { "isin": "US22667D1019", "ticker": "CRDO",   "yahoo_symbol": "CRDO",     "name": "Credo Technology",       "track_hint": "A", "position": "owned",    "purchase_note": "Buy Tag-17 — Hypergrowth + Quality" },
-    { "isin": "US01024W1027", "ticker": "ALAB",   "yahoo_symbol": "ALAB",     "name": "Astera Labs",            "track_hint": "A", "position": "owned",    "purchase_note": "Buy Tag-17 — Hypergrowth A-Bucket" },
-    { "isin": "DK0062498333", "ticker": "NVO",    "yahoo_symbol": "NVO",      "name": "Novo Nordisk",           "track_hint": "B", "position": "watching" },
-    { "isin": "US67066G1040", "ticker": "NVDA",   "yahoo_symbol": "NVDA",     "name": "NVIDIA",                 "track_hint": "A", "position": "watching" },
-    { "isin": "DE0007030009", "ticker": "RHM.DE", "yahoo_symbol": "RHM.DE",   "name": "Rheinmetall",            "track_hint": "A", "position": "watching" },
-    { "isin": "US69608A1088", "ticker": "PLTR",   "yahoo_symbol": "PLTR",     "name": "Palantir",               "track_hint": "A", "position": "watching" },
-    { "isin": "NL0010273215", "ticker": "ASML",   "yahoo_symbol": "ASML",     "name": "ASML Holding",           "track_hint": "B", "position": "watching" },
-    { "isin": "US5949181045", "ticker": "MSFT",   "yahoo_symbol": "MSFT",     "name": "Microsoft",              "track_hint": "B", "position": "watching" },
-    { "isin": "US30303M1027", "ticker": "META",   "yahoo_symbol": "META",     "name": "Meta Platforms",         "track_hint": "B", "position": "watching" },
-    { "isin": "IL0011762130", "ticker": "MNDY",   "yahoo_symbol": "MNDY",     "name": "monday.com",             "track_hint": "A", "position": "watching" }
+    {
+      "isin": "US22667D1019",
+      "ticker": "CRDO",
+      "yahoo_symbol": "CRDO",
+      "name": "Credo Technology",
+      "track_hint": "A",
+      "position": "owned",
+      "purchase_note": "Buy Tag-17 — Hypergrowth + Quality"
+    },
+    {
+      "isin": "US01024W1027",
+      "ticker": "ALAB",
+      "yahoo_symbol": "ALAB",
+      "name": "Astera Labs",
+      "track_hint": "A",
+      "position": "owned",
+      "purchase_note": "Buy Tag-17 — Hypergrowth A-Bucket"
+    },
+    {
+      "isin": "DK0062498333",
+      "ticker": "NVO",
+      "yahoo_symbol": "NVO",
+      "name": "Novo Nordisk",
+      "track_hint": "B",
+      "position": "watching"
+    },
+    {
+      "isin": "US67066G1040",
+      "ticker": "NVDA",
+      "yahoo_symbol": "NVDA",
+      "name": "NVIDIA",
+      "track_hint": "A",
+      "position": "watching"
+    },
+    {
+      "isin": "DE0007030009",
+      "ticker": "RHM.DE",
+      "yahoo_symbol": "RHM.DE",
+      "name": "Rheinmetall",
+      "track_hint": "A",
+      "position": "watching"
+    },
+    {
+      "isin": "US69608A1088",
+      "ticker": "PLTR",
+      "yahoo_symbol": "PLTR",
+      "name": "Palantir",
+      "track_hint": "A",
+      "position": "watching"
+    },
+    {
+      "isin": "NL0010273215",
+      "ticker": "ASML",
+      "yahoo_symbol": "ASML",
+      "name": "ASML Holding",
+      "track_hint": "B",
+      "position": "watching"
+    },
+    {
+      "isin": "US5949181045",
+      "ticker": "MSFT",
+      "yahoo_symbol": "MSFT",
+      "name": "Microsoft",
+      "track_hint": "B",
+      "position": "watching"
+    },
+    {
+      "isin": "US30303M1027",
+      "ticker": "META",
+      "yahoo_symbol": "META",
+      "name": "Meta Platforms",
+      "track_hint": "B",
+      "position": "watching"
+    },
+    {
+      "isin": "IL0011762130",
+      "ticker": "MNDY",
+      "yahoo_symbol": "MNDY",
+      "name": "monday.com",
+      "track_hint": "A",
+      "position": "watching"
+    },
+    {
+      "isin": "US0378331005",
+      "ticker": "AAPL",
+      "yahoo_symbol": "AAPL",
+      "name": "Apple",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US0231351067",
+      "ticker": "AMZN",
+      "yahoo_symbol": "AMZN",
+      "name": "Amazon",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US02079K3059",
+      "ticker": "GOOGL",
+      "yahoo_symbol": "GOOGL",
+      "name": "Alphabet (Class A)",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US88160R1014",
+      "ticker": "TSLA",
+      "yahoo_symbol": "TSLA",
+      "name": "Tesla",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": "US0846707026",
+      "ticker": "BRK-B",
+      "yahoo_symbol": "BRK-B",
+      "name": "Berkshire Hathaway B",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US5324571083",
+      "ticker": "LLY",
+      "yahoo_symbol": "LLY",
+      "name": "Eli Lilly",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US11135F1012",
+      "ticker": "AVGO",
+      "yahoo_symbol": "AVGO",
+      "name": "Broadcom",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US46625H1005",
+      "ticker": "JPM",
+      "yahoo_symbol": "JPM",
+      "name": "JPMorgan Chase",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US92826C8394",
+      "ticker": "V",
+      "yahoo_symbol": "V",
+      "name": "Visa",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US9311421039",
+      "ticker": "WMT",
+      "yahoo_symbol": "WMT",
+      "name": "Walmart",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US30231G1022",
+      "ticker": "XOM",
+      "yahoo_symbol": "XOM",
+      "name": "ExxonMobil",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US91324P1021",
+      "ticker": "UNH",
+      "yahoo_symbol": "UNH",
+      "name": "UnitedHealth Group",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US57636Q1040",
+      "ticker": "MA",
+      "yahoo_symbol": "MA",
+      "name": "Mastercard",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US68389X1054",
+      "ticker": "ORCL",
+      "yahoo_symbol": "ORCL",
+      "name": "Oracle",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US22160K1051",
+      "ticker": "COST",
+      "yahoo_symbol": "COST",
+      "name": "Costco Wholesale",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US4370761029",
+      "ticker": "HD",
+      "yahoo_symbol": "HD",
+      "name": "Home Depot",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US7427181091",
+      "ticker": "PG",
+      "yahoo_symbol": "PG",
+      "name": "Procter & Gamble",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US4781601046",
+      "ticker": "JNJ",
+      "yahoo_symbol": "JNJ",
+      "name": "Johnson & Johnson",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US0605051046",
+      "ticker": "BAC",
+      "yahoo_symbol": "BAC",
+      "name": "Bank of America",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US00287Y1091",
+      "ticker": "ABBV",
+      "yahoo_symbol": "ABBV",
+      "name": "AbbVie",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US1912161007",
+      "ticker": "KO",
+      "yahoo_symbol": "KO",
+      "name": "Coca-Cola",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US1667641005",
+      "ticker": "CVX",
+      "yahoo_symbol": "CVX",
+      "name": "Chevron",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US64110L1061",
+      "ticker": "NFLX",
+      "yahoo_symbol": "NFLX",
+      "name": "Netflix",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US8835561023",
+      "ticker": "TMO",
+      "yahoo_symbol": "TMO",
+      "name": "Thermo Fisher Scientific",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US0079031078",
+      "ticker": "AMD",
+      "yahoo_symbol": "AMD",
+      "name": "Advanced Micro Devices",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": "US58933Y1055",
+      "ticker": "MRK",
+      "yahoo_symbol": "MRK",
+      "name": "Merck & Co",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US00724F1012",
+      "ticker": "ADBE",
+      "yahoo_symbol": "ADBE",
+      "name": "Adobe",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US79466L3024",
+      "ticker": "CRM",
+      "yahoo_symbol": "CRM",
+      "name": "Salesforce",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "IE000S9YS762",
+      "ticker": "LIN",
+      "yahoo_symbol": "LIN",
+      "name": "Linde",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US7134481081",
+      "ticker": "PEP",
+      "yahoo_symbol": "PEP",
+      "name": "PepsiCo",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "IE00B4BNMY34",
+      "ticker": "ACN",
+      "yahoo_symbol": "ACN",
+      "name": "Accenture",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US0028241000",
+      "ticker": "ABT",
+      "yahoo_symbol": "ABT",
+      "name": "Abbott Laboratories",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US17275R1023",
+      "ticker": "CSCO",
+      "yahoo_symbol": "CSCO",
+      "name": "Cisco Systems",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US9497461015",
+      "ticker": "WFC",
+      "yahoo_symbol": "WFC",
+      "name": "Wells Fargo",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US2358511028",
+      "ticker": "DHR",
+      "yahoo_symbol": "DHR",
+      "name": "Danaher",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US4592001014",
+      "ticker": "IBM",
+      "yahoo_symbol": "IBM",
+      "name": "IBM",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US5801351017",
+      "ticker": "MCD",
+      "yahoo_symbol": "MCD",
+      "name": "McDonald's",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US7181721090",
+      "ticker": "PM",
+      "yahoo_symbol": "PM",
+      "name": "Philip Morris International",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US81762P1021",
+      "ticker": "NOW",
+      "yahoo_symbol": "NOW",
+      "name": "ServiceNow",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US2546871060",
+      "ticker": "DIS",
+      "yahoo_symbol": "DIS",
+      "name": "Walt Disney",
+      "track_hint": "B",
+      "position": "interested"
+    }
   ]
 }
