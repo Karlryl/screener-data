@@ -302,4 +302,28 @@ async function main() {
   }
   if (warning.length) {
     msg += `\n🟡 **WARNING** (${warning.length}):\n`;
-    msg += warning.map(e => 
+    msg += warning.map(e => `  • ${e.ticker}: ${e.type} — ${e.message}`).join('\n');
+  }
+  if (info.length && critical.length + warning.length === 0) {
+    msg += `\nℹ️ **INFO** (${info.length}):\n`;
+    msg += info.slice(0, 5).map(e => `  • ${e.ticker}: ${e.type} — ${e.message}`).join('\n');
+    if (info.length > 5) msg += `\n  …und ${info.length - 5} weitere.`;
+  }
+
+  if (msg.length > 1900) msg = msg.slice(0, 1850) + '\n…(truncated)';
+
+  const posted = await postToDiscord(args.webhook, msg);
+  if (posted) _log('INFO', `Discord-Alert posted (${allEvents.length} events).`);
+  else _log('WARN', 'Discord-Alert NOT posted (siehe Log oben).');
+
+  process.exit(0);
+}
+
+if (require.main === module) {
+  main().catch(e => {
+    _log('FATAL', e.stack || e.message);
+    process.exit(1);
+  });
+}
+
+module.exports = { detectDiff, scoreSnapshot };
