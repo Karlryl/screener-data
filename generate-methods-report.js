@@ -192,7 +192,7 @@ function renderHTML(rows, methods) {
   }).join('');
 
   return `<!DOCTYPE html>
-<html lang="de"><head><meta charset="UTF-8"><title>Karl's Stock-Screener — Methoden-Matrix ${generatedAt}</title>
+<html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Karl's Stock-Screener — Methoden-Matrix ${generatedAt}</title>
 <style>
   body { font-family: ui-sans-serif, system-ui, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 24px; line-height: 1.4; }
   h1 { color: #f1f5f9; font-size: 24px; margin: 0 0 4px; }
