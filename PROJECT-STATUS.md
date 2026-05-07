@@ -1,6 +1,6 @@
 # Project Status — Karl's Stock-Screener
 
-**Last Update:** 2026-05-07 — Tag 48 done, Tag 49-60 pending
+**Last Update:** 2026-05-07 — Tag 49 done, Tag 50-60 pending
 
 ## Aktueller Stand
 
@@ -35,7 +35,7 @@
 | 46 | ROCE-Methode (EU-Standard) | ✓ done |
 | 47 | Magic-Formula-Combined (Greenblatt) | ✓ done |
 | 48 | Aktienfinder-Score-CSV-Helper | ✓ done |
-| 49 | Sektor-Median-Auto-Compute | pending |
+| 49 | Sektor-Median-Auto-Compute | ✓ done |
 | 50 | Watchlist-Diff-Detector | pending |
 | 51 | Forward-PE-Methode | pending |
 | 52 | TTM-Variants für annual methods | pending |
