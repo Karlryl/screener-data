@@ -77,7 +77,7 @@ Tag 46 ROCE ✓ · Tag 47 Magic Formula ✓ · Tag 48 Aktienfinder-Helper ✓ ·
 |---|---|
 | 61 | Methoden-Redundanz-Cleanup: Karl entscheidet welche aus den 4 corr-Pairs raus |
 | 62 | Watchlist-Wachstums-Vorschläge: aus S&P500 stocks finden die ≥7/21 pass aber nicht in WL |
-| 63 | Earnings-Calendar-Pull (Yahoo earnings dates) |
+| 63 | Earnings-Calendar Helper | ✓ done |
 | 64 | Quarterly-Method-Variants (wo quarterly daten vorhanden) |
 | 65 | Methods-Report Mobile-Responsive |
 | 66-75 | offen je nach Datenstand + Karl's Bedürfnissen |
