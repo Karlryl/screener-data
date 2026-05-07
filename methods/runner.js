@@ -23,7 +23,8 @@ const METHODS = [
   require('./roce.js'),
   require('./magic-formula.js'),
   require('./aktienfinder-quality.js'),
-  require('./forward-pe.js')
+  require('./forward-pe.js'),
+  require('./multi-year-stability.js')
 ];
 
 function evaluateStock(stock) {
