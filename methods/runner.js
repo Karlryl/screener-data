@@ -21,7 +21,8 @@ const METHODS = [
   require('./capex-trend.js'),
   require('./working-capital-anomaly.js'),
   require('./roce.js'),
-  require('./magic-formula.js')
+  require('./magic-formula.js'),
+  require('./aktienfinder-quality.js')
 ];
 
 function evaluateStock(stock) {
