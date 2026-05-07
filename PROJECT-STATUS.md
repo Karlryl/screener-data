@@ -79,7 +79,7 @@ Tag 46 ROCE ✓ · Tag 47 Magic Formula ✓ · Tag 48 Aktienfinder-Helper ✓ ·
 | 62 | Watchlist-Wachstums-Vorschläge: aus S&P500 stocks finden die ≥7/21 pass aber nicht in WL |
 | 63 | Earnings-Calendar Helper | ✓ done |
 | 64 | Quarterly-Rev-Acceleration | ✓ done |
-| 65 | Methods-Report Mobile-Responsive |
+| 65 | Methods-Report Mobile-Responsive | ✓ done |
 | 66-75 | offen je nach Datenstand + Karl's Bedürfnissen |
 
 ## Zwischenspeicherung
