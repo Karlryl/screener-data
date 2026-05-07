@@ -185,7 +185,7 @@ async function fetchFundamentalsTS(symbol) {
   // Period: 5y back, jetzt
   const period1 = new Date(Date.now() - 5 * 365 * 86400 * 1000);
   const period2 = new Date();
-  const out = { annualFin: [], quarterlyFin: [], annualCash: [] };
+  const out = { annualFin: [], quarterlyFin: [], annualCash: [], annualBs: [] };
   // Defensive: jeder Aufruf eigener try/catch, Teilausfall darf nicht alles töten.
   try {
     out.annualFin = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'annual', module: 'financials' });
@@ -196,6 +196,10 @@ async function fetchFundamentalsTS(symbol) {
   try {
     out.annualCash = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'annual', module: 'cash-flow' });
   } catch (e) { _log('WARN', `  fundamentalsTimeSeries annual cash-flow failed for ${symbol}: ${e.message}`); }
+  // Tag-28: Balance-Sheet via fundamentalsTimeSeries (für ROIC/Sloan/Net-Debt-EBITDA).
+  try {
+    out.annualBs = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'annual', module: 'balance-sheet' });
+  } catch (e) { _log('WARN', `  fundamentalsTimeSeries annual balance-sheet failed for ${symbol}: ${e.message}`); }
   return out;
 }
 
@@ -240,6 +244,24 @@ function mapFTSToAnnual(annualRows, cashRows) {
   return { annualRev, annualOpInc, annualGP, annualNetIncome, annualFCF };
 }
 
+function mapFTSToBalance(bsRows) {
+  // Tag-28: Pulled balance-sheet rows from fundamentalsTimeSeries → array of {totalCash, totalDebt, totalAssets}, latest first.
+  const sorted = (bsRows || []).slice().reverse();
+  const annualBalance = [];
+  for (const r of sorted) {
+    if (!r) continue;
+    // Yahoo FTS field names: totalAssets, cashAndCashEquivalents, shortTermDebt, longTermDebt
+    const cash = _ftsValue(r, 'cashAndCashEquivalents', 'cashCashEquivalentsAndShortTermInvestments', 'cashAndShortTermInvestments');
+    const std = _ftsValue(r, 'currentDebt', 'shortLongTermDebt', 'shortTermDebt');
+    const ltd = _ftsValue(r, 'longTermDebt');
+    const totalDebt = (std == null && ltd == null) ? null : (std || 0) + (ltd || 0);
+    const totalAssets = _ftsValue(r, 'totalAssets');
+    if (cash == null && totalDebt == null && totalAssets == null) continue;
+    annualBalance.push({ totalCash: cash, totalDebt, totalAssets });
+  }
+  return annualBalance;
+}
+
 function mapFTSToQuarterly(quarterlyRows) {
   const sorted = (quarterlyRows || []).slice().reverse();
   const revenueQ = [];
@@ -277,9 +299,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const fts = await fetchFundamentalsTS(stock.yahoo_symbol);
       const ftsAnnual = mapFTSToAnnual(fts.annualFin, fts.annualCash);
       const ftsQuarterly = mapFTSToQuarterly(fts.quarterlyFin);
+      const ftsBalance = mapFTSToBalance(fts.annualBs);  // Tag-28: balance-sheet from FTS
       // Override leere annual-Arrays aus quoteSummary mit FTS-Daten wenn FTS welche hat
       if (ftsAnnual.annualRev.length > canonical.annual.annualRev.length) canonical.annual.annualRev = ftsAnnual.annualRev;
       if (ftsAnnual.annualOpInc.length > 0) canonical.annual.annualOpInc = ftsAnnual.annualOpInc;
+      // Tag-28: annualBalance aus FTS überschreiben wenn FTS mehr nicht-null Werte hat
+      const oldBalanceUsable = (canonical.annual.annualBalance || []).filter(r => r.totalDebt != null || r.totalCash != null || r.totalAssets != null).length;
+      const newBalanceUsable = ftsBalance.filter(r => r.totalDebt != null || r.totalCash != null || r.totalAssets != null).length;
+      if (newBalanceUsable > oldBalanceUsable) canonical.annual.annualBalance = ftsBalance;
       if (ftsAnnual.annualGP.length > 0) canonical.annual.annualGP = ftsAnnual.annualGP;
       if (ftsAnnual.annualNetIncome.length > canonical.annual.annualNetIncome.length) canonical.annual.annualNetIncome = ftsAnnual.annualNetIncome;
       if (ftsAnnual.annualFCF.length > 0) canonical.annual.annualFCF = ftsAnnual.annualFCF;
