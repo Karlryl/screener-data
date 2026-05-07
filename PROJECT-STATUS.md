@@ -1,6 +1,6 @@
 # Project Status — Karl's Stock-Screener
 
-**Last Update:** 2026-05-07 — Tag 51 done, Tag 52-60 pending
+**Last Update:** 2026-05-07 — Tag 52 skipped (Yahoo limited), Tag 53-60 pending
 
 ## Aktueller Stand
 
@@ -38,7 +38,7 @@
 | 49 | Sektor-Median-Auto-Compute | ✓ done |
 | 50 | Watchlist-Diff-Detector | ✓ done |
 | 51 | Forward-PE-Methode | ✓ done |
-| 52 | TTM-Variants für annual methods | pending |
+| 52 | TTM-Variants — Yahoo limitiert, skip mit Doku | ⊘ skip |
 | 53 | Multi-Year-Stability-Score | pending |
 | 54 | PEG-Methode | pending |
 | 55 | EV/EBITDA-Methode | pending |
