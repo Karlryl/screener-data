@@ -160,6 +160,7 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       operatingMargin:  _metric(_y(fd, 'operatingMargins') != null ? _y(fd, 'operatingMargins') * 100 : null, SRC, CONF, asOf),
       fcfMarginTTM:     _metric(fcfMarginTTM, SRC, CONF, asOf),
       sbcRatio:         _metric(sbcRatio, SRC, 0.5, asOf),
+      insidersOwnership: _metric(_y(ks, 'heldPercentInsiders'), SRC, 0.7, asOf),  // Tag-56
       cashRunway:       null,
       priceSales:       _metric(_y(sd, 'priceToSalesTrailing12Months'), SRC, CONF, asOf),
       forwardPE:        _metric(_y(sd, 'forwardPE'), SRC, CONF, asOf),
