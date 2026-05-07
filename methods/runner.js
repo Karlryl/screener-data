@@ -20,7 +20,8 @@ const METHODS = [
   require('./sbc-revenue.js'),
   require('./capex-trend.js'),
   require('./working-capital-anomaly.js'),
-  require('./roce.js')
+  require('./roce.js'),
+  require('./magic-formula.js')
 ];
 
 function evaluateStock(stock) {
