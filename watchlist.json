@@ -1,9 +1,9 @@
 {
   "_meta": {
     "owner": "Karl",
-    "version": "3.0",
+    "version": "4.0",
     "updated_at": "2026-05-07",
-    "notes": "Tag-27: Hypergrowth-Refinement. Karl's 10 existing bleiben (2 owned + 8 watching), +30 Hypergrowth-Kandidaten (Tech, Cloud, Security, Semis, Fintech) als 'interested'. Mega-Caps (AAPL/KO/JNJ etc.) entfernt — passten nicht zur Buy-only-Hypergrowth-Strategy."
+    "notes": "Tag-37: Watchlist 40 → 70+. Karl will Markt-Coverage breiter — Quality-Compounder zurück (Mega-Cap-Tech, Healthcare, Defensive) + Mid-Cap-Hypergrowth Adds (Emerging-Cloud, AI-Semis, EU). Karl 10 + 30 vorher + 30 neue."
   },
   "_position_legend": {
     "owned": "Karl hat gekauft. Tool checkt These-Bestaetigung.",
@@ -11,46 +11,567 @@
     "interested": "Auf Radar. Niedrige Alert-Prioritaet."
   },
   "stocks": [
-    { "isin": "US22667D1019", "ticker": "CRDO",   "yahoo_symbol": "CRDO",   "name": "Credo Technology",       "track_hint": "A", "position": "owned",    "purchase_note": "Buy Tag-17" },
-    { "isin": "US01024W1027", "ticker": "ALAB",   "yahoo_symbol": "ALAB",   "name": "Astera Labs",            "track_hint": "A", "position": "owned",    "purchase_note": "Buy Tag-17" },
-    { "isin": "DK0062498333", "ticker": "NVO",    "yahoo_symbol": "NVO",    "name": "Novo Nordisk",           "track_hint": "B", "position": "watching" },
-    { "isin": "US67066G1040", "ticker": "NVDA",   "yahoo_symbol": "NVDA",   "name": "NVIDIA",                 "track_hint": "A", "position": "watching" },
-    { "isin": "DE0007030009", "ticker": "RHM.DE", "yahoo_symbol": "RHM.DE", "name": "Rheinmetall",            "track_hint": "A", "position": "watching" },
-    { "isin": "US69608A1088", "ticker": "PLTR",   "yahoo_symbol": "PLTR",   "name": "Palantir",               "track_hint": "A", "position": "watching" },
-    { "isin": "NL0010273215", "ticker": "ASML",   "yahoo_symbol": "ASML",   "name": "ASML Holding",           "track_hint": "B", "position": "watching" },
-    { "isin": "US5949181045", "ticker": "MSFT",   "yahoo_symbol": "MSFT",   "name": "Microsoft",              "track_hint": "B", "position": "watching" },
-    { "isin": "US30303M1027", "ticker": "META",   "yahoo_symbol": "META",   "name": "Meta Platforms",         "track_hint": "B", "position": "watching" },
-    { "isin": "IL0011762130", "ticker": "MNDY",   "yahoo_symbol": "MNDY",   "name": "monday.com",             "track_hint": "A", "position": "watching" },
-
-    { "isin": null, "ticker": "TTD",   "yahoo_symbol": "TTD",   "name": "The Trade Desk",         "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "NET",   "yahoo_symbol": "NET",   "name": "Cloudflare",             "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "DDOG",  "yahoo_symbol": "DDOG",  "name": "Datadog",                "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "CRWD",  "yahoo_symbol": "CRWD",  "name": "CrowdStrike",            "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "SNOW",  "yahoo_symbol": "SNOW",  "name": "Snowflake",              "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "PANW",  "yahoo_symbol": "PANW",  "name": "Palo Alto Networks",     "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "MELI",  "yahoo_symbol": "MELI",  "name": "MercadoLibre",           "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "SHOP",  "yahoo_symbol": "SHOP",  "name": "Shopify",                "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "ZS",    "yahoo_symbol": "ZS",    "name": "Zscaler",                "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "OKTA",  "yahoo_symbol": "OKTA",  "name": "Okta",                   "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "TEAM",  "yahoo_symbol": "TEAM",  "name": "Atlassian",              "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "HUBS",  "yahoo_symbol": "HUBS",  "name": "HubSpot",                "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "VEEV",  "yahoo_symbol": "VEEV",  "name": "Veeva Systems",          "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "ON",    "yahoo_symbol": "ON",    "name": "ON Semiconductor",       "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "MRVL",  "yahoo_symbol": "MRVL",  "name": "Marvell Technology",     "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "ARM",   "yahoo_symbol": "ARM",   "name": "Arm Holdings",           "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "CDNS",  "yahoo_symbol": "CDNS",  "name": "Cadence Design",         "track_hint": "B", "position": "interested" },
-    { "isin": null, "ticker": "SNPS",  "yahoo_symbol": "SNPS",  "name": "Synopsys",               "track_hint": "B", "position": "interested" },
-    { "isin": null, "ticker": "KLAC",  "yahoo_symbol": "KLAC",  "name": "KLA Corp",               "track_hint": "B", "position": "interested" },
-    { "isin": null, "ticker": "LRCX",  "yahoo_symbol": "LRCX",  "name": "Lam Research",           "track_hint": "B", "position": "interested" },
-    { "isin": null, "ticker": "AMAT",  "yahoo_symbol": "AMAT",  "name": "Applied Materials",      "track_hint": "B", "position": "interested" },
-    { "isin": null, "ticker": "ANET",  "yahoo_symbol": "ANET",  "name": "Arista Networks",        "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "SMCI",  "yahoo_symbol": "SMCI",  "name": "Super Micro Computer",   "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "VRT",   "yahoo_symbol": "VRT",   "name": "Vertiv",                 "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "CEG",   "yahoo_symbol": "CEG",   "name": "Constellation Energy",   "track_hint": "B", "position": "interested" },
-    { "isin": null, "ticker": "COIN",  "yahoo_symbol": "COIN",  "name": "Coinbase",               "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "HOOD",  "yahoo_symbol": "HOOD",  "name": "Robinhood",              "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "AFRM",  "yahoo_symbol": "AFRM",  "name": "Affirm",                 "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "RBLX",  "yahoo_symbol": "RBLX",  "name": "Roblox",                 "track_hint": "A", "position": "interested" },
-    { "isin": null, "ticker": "DUOL",  "yahoo_symbol": "DUOL",  "name": "Duolingo",               "track_hint": "A", "position": "interested" }
+    {
+      "isin": "US22667D1019",
+      "ticker": "CRDO",
+      "yahoo_symbol": "CRDO",
+      "name": "Credo Technology",
+      "track_hint": "A",
+      "position": "owned",
+      "purchase_note": "Buy Tag-17"
+    },
+    {
+      "isin": "US01024W1027",
+      "ticker": "ALAB",
+      "yahoo_symbol": "ALAB",
+      "name": "Astera Labs",
+      "track_hint": "A",
+      "position": "owned",
+      "purchase_note": "Buy Tag-17"
+    },
+    {
+      "isin": "DK0062498333",
+      "ticker": "NVO",
+      "yahoo_symbol": "NVO",
+      "name": "Novo Nordisk",
+      "track_hint": "B",
+      "position": "watching"
+    },
+    {
+      "isin": "US67066G1040",
+      "ticker": "NVDA",
+      "yahoo_symbol": "NVDA",
+      "name": "NVIDIA",
+      "track_hint": "A",
+      "position": "watching"
+    },
+    {
+      "isin": "DE0007030009",
+      "ticker": "RHM.DE",
+      "yahoo_symbol": "RHM.DE",
+      "name": "Rheinmetall",
+      "track_hint": "A",
+      "position": "watching"
+    },
+    {
+      "isin": "US69608A1088",
+      "ticker": "PLTR",
+      "yahoo_symbol": "PLTR",
+      "name": "Palantir",
+      "track_hint": "A",
+      "position": "watching"
+    },
+    {
+      "isin": "NL0010273215",
+      "ticker": "ASML",
+      "yahoo_symbol": "ASML",
+      "name": "ASML Holding",
+      "track_hint": "B",
+      "position": "watching"
+    },
+    {
+      "isin": "US5949181045",
+      "ticker": "MSFT",
+      "yahoo_symbol": "MSFT",
+      "name": "Microsoft",
+      "track_hint": "B",
+      "position": "watching"
+    },
+    {
+      "isin": "US30303M1027",
+      "ticker": "META",
+      "yahoo_symbol": "META",
+      "name": "Meta Platforms",
+      "track_hint": "B",
+      "position": "watching"
+    },
+    {
+      "isin": "IL0011762130",
+      "ticker": "MNDY",
+      "yahoo_symbol": "MNDY",
+      "name": "monday.com",
+      "track_hint": "A",
+      "position": "watching"
+    },
+    {
+      "isin": null,
+      "ticker": "TTD",
+      "yahoo_symbol": "TTD",
+      "name": "The Trade Desk",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "NET",
+      "yahoo_symbol": "NET",
+      "name": "Cloudflare",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "DDOG",
+      "yahoo_symbol": "DDOG",
+      "name": "Datadog",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "CRWD",
+      "yahoo_symbol": "CRWD",
+      "name": "CrowdStrike",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "SNOW",
+      "yahoo_symbol": "SNOW",
+      "name": "Snowflake",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "PANW",
+      "yahoo_symbol": "PANW",
+      "name": "Palo Alto Networks",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "MELI",
+      "yahoo_symbol": "MELI",
+      "name": "MercadoLibre",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "SHOP",
+      "yahoo_symbol": "SHOP",
+      "name": "Shopify",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "ZS",
+      "yahoo_symbol": "ZS",
+      "name": "Zscaler",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "OKTA",
+      "yahoo_symbol": "OKTA",
+      "name": "Okta",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "TEAM",
+      "yahoo_symbol": "TEAM",
+      "name": "Atlassian",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "HUBS",
+      "yahoo_symbol": "HUBS",
+      "name": "HubSpot",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "VEEV",
+      "yahoo_symbol": "VEEV",
+      "name": "Veeva Systems",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "ON",
+      "yahoo_symbol": "ON",
+      "name": "ON Semiconductor",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "MRVL",
+      "yahoo_symbol": "MRVL",
+      "name": "Marvell Technology",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "ARM",
+      "yahoo_symbol": "ARM",
+      "name": "Arm Holdings",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "CDNS",
+      "yahoo_symbol": "CDNS",
+      "name": "Cadence Design",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "SNPS",
+      "yahoo_symbol": "SNPS",
+      "name": "Synopsys",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "KLAC",
+      "yahoo_symbol": "KLAC",
+      "name": "KLA Corp",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "LRCX",
+      "yahoo_symbol": "LRCX",
+      "name": "Lam Research",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "AMAT",
+      "yahoo_symbol": "AMAT",
+      "name": "Applied Materials",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "ANET",
+      "yahoo_symbol": "ANET",
+      "name": "Arista Networks",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "SMCI",
+      "yahoo_symbol": "SMCI",
+      "name": "Super Micro Computer",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "VRT",
+      "yahoo_symbol": "VRT",
+      "name": "Vertiv",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "CEG",
+      "yahoo_symbol": "CEG",
+      "name": "Constellation Energy",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "COIN",
+      "yahoo_symbol": "COIN",
+      "name": "Coinbase",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "HOOD",
+      "yahoo_symbol": "HOOD",
+      "name": "Robinhood",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "AFRM",
+      "yahoo_symbol": "AFRM",
+      "name": "Affirm",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "RBLX",
+      "yahoo_symbol": "RBLX",
+      "name": "Roblox",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "DUOL",
+      "yahoo_symbol": "DUOL",
+      "name": "Duolingo",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": "US0378331005",
+      "ticker": "AAPL",
+      "yahoo_symbol": "AAPL",
+      "name": "Apple",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US0231351067",
+      "ticker": "AMZN",
+      "yahoo_symbol": "AMZN",
+      "name": "Amazon",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US02079K3059",
+      "ticker": "GOOGL",
+      "yahoo_symbol": "GOOGL",
+      "name": "Alphabet (A)",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US92826C8394",
+      "ticker": "V",
+      "yahoo_symbol": "V",
+      "name": "Visa",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US57636Q1040",
+      "ticker": "MA",
+      "yahoo_symbol": "MA",
+      "name": "Mastercard",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US22160K1051",
+      "ticker": "COST",
+      "yahoo_symbol": "COST",
+      "name": "Costco",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US68389X1054",
+      "ticker": "ORCL",
+      "yahoo_symbol": "ORCL",
+      "name": "Oracle",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US5324571083",
+      "ticker": "LLY",
+      "yahoo_symbol": "LLY",
+      "name": "Eli Lilly",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US8835561023",
+      "ticker": "TMO",
+      "yahoo_symbol": "TMO",
+      "name": "Thermo Fisher",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": "US2358511028",
+      "ticker": "DHR",
+      "yahoo_symbol": "DHR",
+      "name": "Danaher",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "TSM",
+      "yahoo_symbol": "TSM",
+      "name": "TSMC",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "AVGO",
+      "yahoo_symbol": "AVGO",
+      "name": "Broadcom",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "AMD",
+      "yahoo_symbol": "AMD",
+      "name": "Advanced Micro Devices",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "NFLX",
+      "yahoo_symbol": "NFLX",
+      "name": "Netflix",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "ADBE",
+      "yahoo_symbol": "ADBE",
+      "name": "Adobe",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "CRM",
+      "yahoo_symbol": "CRM",
+      "name": "Salesforce",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "NOW",
+      "yahoo_symbol": "NOW",
+      "name": "ServiceNow",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "INTU",
+      "yahoo_symbol": "INTU",
+      "name": "Intuit",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "SE",
+      "yahoo_symbol": "SE",
+      "name": "Sea Limited",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "GLBE",
+      "yahoo_symbol": "GLBE",
+      "name": "Global-e Online",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "FROG",
+      "yahoo_symbol": "FROG",
+      "name": "JFrog",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "GTLB",
+      "yahoo_symbol": "GTLB",
+      "name": "GitLab",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "S",
+      "yahoo_symbol": "S",
+      "name": "SentinelOne",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "MDB",
+      "yahoo_symbol": "MDB",
+      "name": "MongoDB",
+      "track_hint": "A",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "SAP",
+      "yahoo_symbol": "SAP",
+      "name": "SAP",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "SU.PA",
+      "yahoo_symbol": "SU.PA",
+      "name": "Schneider Electric",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "MC.PA",
+      "yahoo_symbol": "MC.PA",
+      "name": "LVMH",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "WMT",
+      "yahoo_symbol": "WMT",
+      "name": "Walmart",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "UNH",
+      "yahoo_symbol": "UNH",
+      "name": "UnitedHealth",
+      "track_hint": "B",
+      "position": "interested"
+    },
+    {
+      "isin": null,
+      "ticker": "BRK-B",
+      "yahoo_symbol": "BRK-B",
+      "name": "Berkshire Hathaway B",
+      "track_hint": "B",
+      "position": "interested"
+    }
   ]
 }
