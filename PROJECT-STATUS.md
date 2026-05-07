@@ -1,11 +1,11 @@
 # Project Status — Karl's Stock-Screener
 
-**Last Update:** 2026-05-07 — Tag 50 done, Tag 51-60 pending
+**Last Update:** 2026-05-07 — Tag 51 done, Tag 52-60 pending
 
 ## Aktueller Stand
 
 - **70 Stocks** in der Watchlist (kein Position-Tracking)
-- **16 Methoden** parallel laufend, alle isoliert
+- **17 Methoden** parallel laufend, alle isoliert
 - **Pipeline autonom** via GitHub Actions wöchentlich (Mo 08:00 UTC)
 - **Workflow** läuft in ~3-6 Min: Engine-Tests → Yahoo-Pull → Methods-Report → Methods-History-Snapshot → Price-Pull
 - **Sektor-relative Schwellen** für ROIC + FCF-Yield bei 6 Sub-Profile
@@ -37,7 +37,7 @@
 | 48 | Aktienfinder-Score-CSV-Helper | ✓ done |
 | 49 | Sektor-Median-Auto-Compute | ✓ done |
 | 50 | Watchlist-Diff-Detector | ✓ done |
-| 51 | Forward-PE-Methode | pending |
+| 51 | Forward-PE-Methode | ✓ done |
 | 52 | TTM-Variants für annual methods | pending |
 | 53 | Multi-Year-Stability-Score | pending |
 | 54 | PEG-Methode | pending |
