@@ -27,7 +27,8 @@ const METHODS = [
   require('./quarterly-revenue-acceleration.js'),
   require('./drawdown-52w.js'),
   require('./high-proximity-52w.js'),
-  require('./volatility-annualized.js')
+  require('./volatility-annualized.js'),
+  require('./above-200d-ma.js')
 ];
 
 function evaluateStock(stock) {
