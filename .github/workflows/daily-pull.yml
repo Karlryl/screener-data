@@ -60,6 +60,11 @@ jobs:
         run: node snapshot-methods-history.js --out methods-history
         continue-on-error: true
 
+      # Tag-63: Earnings-Calendar Pull
+      - name: Pull Earnings-Calendar
+        run: node pull-earnings-dates.js
+        continue-on-error: true
+
       # Tag-39: Historical-Price-Pull (für Performance-Backtest)
       - name: Pull Historical Prices
         run: node pull-historical-prices.js --out prices --rate-limit 1500
@@ -74,7 +79,7 @@ jobs:
         run: |
           git config user.name "yahoo-pull-bot"
           git config user.email "yahoo-pull-bot@users.noreply.github.com"
-          git add snapshots/ alert-state.json methods-report.html diff-report.html methods-history/ prices/
+          git add snapshots/ alert-state.json methods-report.html diff-report.html methods-history/ prices/ earnings-calendar.json
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
