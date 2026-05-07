@@ -83,7 +83,8 @@ Tag 46 ROCE ✓ · Tag 47 Magic Formula ✓ · Tag 48 Aktienfinder-Helper ✓ ·
 | 66 | Drawdown-52w | ✓ done |
 | 67 | 52w-High-Proximity | ✓ done |
 | 68 | Volatility-Annualized | ✓ done |
-| 69-75 | offen's Bedürfnissen |
+| 69 | Watchlist CSV Bulk-Import/Export | ✓ done |
+| 70-75 | offen's Bedürfnissen |
 
 ## Zwischenspeicherung
 
