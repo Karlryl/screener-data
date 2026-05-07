@@ -164,11 +164,11 @@ test('GM-Stability: fail case (volatile margins)', () => {
 });
 
 // ─── Runner-Level ───
-test('Runner: getMethods returns 13 methods', () => {
+test('Runner: getMethods returns 14 methods', () => {
   const methods = Runner.getMethods();
-  assertEq(methods.length, 13);
+  assertEq(methods.length, 14);
   const ids = methods.map(m => m.id).sort();
-  assertEq(ids, ['asset-growth-divergence','capex-trend','fcf-yield','gross-margin-stability','margin-decay','net-debt-ebitda','revenue-growth-3y','roic','rule-of-40','rule-of-x','sbc-revenue','sloan-ratio','working-capital-anomaly']);
+  assertEq(ids, ['asset-growth-divergence','capex-trend','fcf-yield','gross-margin-stability','margin-decay','net-debt-ebitda','revenue-growth-3y','roce','roic','rule-of-40','rule-of-x','sbc-revenue','sloan-ratio','working-capital-anomaly']);
 });
 
 test('Runner: evaluateStock handles thrown errors', () => {

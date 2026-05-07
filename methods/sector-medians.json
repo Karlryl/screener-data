@@ -6,31 +6,37 @@
   "BANK": {
     "roic": 0.08,
     "fcf-yield": 0.05,
-    "_note": "Banks haben strukturell niedrigeres ROIC (Eigenkapital-Anforderungen). FCF-Yield bleibt 5% weil Banken stabile Cash-Flows haben."
+    "_note": "Banks haben strukturell niedrigeres ROIC (Eigenkapital-Anforderungen). FCF-Yield bleibt 5% weil Banken stabile Cash-Flows haben.",
+    "roce": 0.1
   },
   "REIT": {
     "roic": 0.05,
     "fcf-yield": 0.06,
-    "_note": "REITs: ROIC niedrig wegen Asset-Heaviness. FCF-Yield höher weil Pass-Through-Modell."
+    "_note": "REITs: ROIC niedrig wegen Asset-Heaviness. FCF-Yield höher weil Pass-Through-Modell.",
+    "roce": 0.06
   },
   "ENERGY": {
-    "roic": 0.10,
+    "roic": 0.1,
     "fcf-yield": 0.08,
-    "_note": "Energy zyklisch — ROIC schwankt stark. FCF-Yield höher weil Capex-light in Late-Stage."
+    "_note": "Energy zyklisch — ROIC schwankt stark. FCF-Yield höher weil Capex-light in Late-Stage.",
+    "roce": 0.12
   },
   "INDUSTRIAL": {
     "roic": 0.12,
     "fcf-yield": 0.05,
-    "_note": "Industrials moderate ROIC."
+    "_note": "Industrials moderate ROIC.",
+    "roce": 0.13
   },
   "CONSUMER_STAPLES": {
     "roic": 0.12,
     "fcf-yield": 0.045,
-    "_note": "Consumer Staples mature, niedrigeres Wachstum aber stabile ROIC."
+    "_note": "Consumer Staples mature, niedrigeres Wachstum aber stabile ROIC.",
+    "roce": 0.13
   },
   "HEALTHCARE": {
-    "roic": 0.10,
+    "roic": 0.1,
     "fcf-yield": 0.045,
-    "_note": "Healthcare/Pharma: R&D-heavy drückt ROIC, FCF aber stabil."
+    "_note": "Healthcare/Pharma: R&D-heavy drückt ROIC, FCF aber stabil.",
+    "roce": 0.12
   }
 }

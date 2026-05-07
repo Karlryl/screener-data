@@ -19,7 +19,8 @@ const METHODS = [
   require('./margin-decay.js'),
   require('./sbc-revenue.js'),
   require('./capex-trend.js'),
-  require('./working-capital-anomaly.js')
+  require('./working-capital-anomaly.js'),
+  require('./roce.js')
 ];
 
 function evaluateStock(stock) {
