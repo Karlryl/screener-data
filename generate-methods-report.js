@@ -21,23 +21,12 @@ function parseArgs(argv) {
   return args;
 }
 
-function loadPositionMap(watchlistPath) {
-  const map = {};
-  if (!fs.existsSync(watchlistPath)) return map;
-  const wl = JSON.parse(fs.readFileSync(watchlistPath, 'utf8'));
-  for (const s of (wl.stocks || [])) {
-    if (s.ticker) map[s.ticker] = { position: s.position || 'watching', name: s.name };
-  }
-  return map;
-}
-
 function escHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 function evaluateAllStocks(args) {
   const files = fs.readdirSync(args.snapshots).filter(f => f.endsWith('.json') && f !== '_manifest.json');
-  const positions = loadPositionMap(args.watchlist);
   let methodHistory = {};
   if (fs.existsSync(args.state)) {
     try {
@@ -51,12 +40,10 @@ function evaluateAllStocks(args) {
     try { stock = JSON.parse(fs.readFileSync(path.join(args.snapshots, file), 'utf8')); }
     catch (e) { continue; }
     const ticker = (stock.meta && stock.meta.ticker) || file.replace(/\.json$/, '');
-    const pi = positions[ticker] || { position: 'watching', name: ticker };
     rows.push({
       ticker,
       name: stock.meta && stock.meta.name || ticker,
       sector: stock.meta && stock.meta.sector || '—',
-      position: pi.position,
       marketCap: stock.marketCap && stock.marketCap.value || null,
       revenueTTM: stock.metrics && stock.metrics.revenueTTM && stock.metrics.revenueTTM.value || null,
       growthYoY: stock.metrics && stock.metrics.revenueGrowthYoY && stock.metrics.revenueGrowthYoY.value || null,
@@ -112,6 +99,43 @@ function renderHTML(rows, methods) {
     `<th class="method-col" data-method="${m.id}" title="${escHtml(m.description)}">${escHtml(m.label)}<div class="threshold">${m.thresholdOp === 'gte' ? '≥' : (m.thresholdOp === 'lte' ? '≤' : '|·|≤')} ${m.threshold}</div></th>`
   ).join('');
 
+  // Tag-42: Sektor-Distribution
+  const sectorMap = {};
+  for (const r of rows) {
+    const sec = r.sector || 'Unknown';
+    if (!sectorMap[sec]) sectorMap[sec] = { count: 0, totalPass: 0, totalComputable: 0, stocks: [] };
+    sectorMap[sec].count++;
+    sectorMap[sec].totalPass += r.passCount;
+    sectorMap[sec].totalComputable += r.computableCount;
+    sectorMap[sec].stocks.push(r.ticker);
+  }
+  const sectorRows = Object.entries(sectorMap)
+    .map(([sec, d]) => ({
+      sector: sec,
+      count: d.count,
+      avgPass: d.count > 0 ? (d.totalPass / d.count) : 0,
+      avgPassRate: d.totalComputable > 0 ? (d.totalPass / d.totalComputable * 100) : 0,
+      stocks: d.stocks
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  const sectorHtml = '<h2 style="color:#f1f5f9;font-size:18px;margin:24px 0 8px;border-bottom:1px solid #334155;padding-bottom:6px;">📈 Sektor-Distribution</h2>'
+    + '<div class="sub" style="margin-bottom:14px;">Konzentrationen + durchschnittliche Pass-Rate pro Sektor.</div>'
+    + '<table style="margin-bottom:30px;"><thead><tr><th>Sektor</th><th># Stocks</th><th>% of Total</th><th>Avg Pass-Count</th><th>Avg Pass-Rate</th><th>Bar</th></tr></thead><tbody>'
+    + sectorRows.map(s => {
+      const pct = (s.count / rows.length * 100);
+      const barWidth = (s.avgPassRate || 0).toFixed(0);
+      const barColor = s.avgPassRate >= 70 ? '#10b981' : s.avgPassRate >= 50 ? '#f59e0b' : '#ef4444';
+      return '<tr>'
+           + '<td><strong>' + escHtml(s.sector) + '</strong></td>'
+           + '<td>' + s.count + '</td>'
+           + '<td>' + pct.toFixed(1) + '%</td>'
+           + '<td>' + s.avgPass.toFixed(1) + '</td>'
+           + '<td>' + s.avgPassRate.toFixed(0) + '%</td>'
+           + '<td><div style="width:120px;height:14px;background:#334155;border-radius:2px;overflow:hidden;"><div style="width:' + barWidth + '%;height:100%;background:' + barColor + ';"></div></div></td>'
+           + '</tr>';
+    }).join('') + '</tbody></table>';
+
   // Tag-36: Top-Picks-Ranking
   const ranked = [...rows].sort((a, b) => {
     if (b.passCount !== a.passCount) return b.passCount - a.passCount;
@@ -129,7 +153,6 @@ function renderHTML(rows, methods) {
       <td><strong>${escHtml(r.ticker)}</strong></td>
       <td>${escHtml(r.name)}</td>
       <td><span style="color:${ratioColor};font-weight:700;">${r.passCount} / ${r.computableCount}</span></td>
-      <td><span class="position-${r.position}">${r.position}</span></td>
       <td>${escHtml(r.sector)}</td>
       <td style="color:#fca5a5;font-size:11px;">${escHtml(failedShort) || '<span style="color:#10b981;">— alle pass —</span>'}</td>
     </tr>`;
@@ -151,10 +174,9 @@ function renderHTML(rows, methods) {
       return `<td class="method-cell ${klass}" data-method="${m.id}" data-pass="${result.pass}" data-value="${result.value}" title="${escHtml(result.reason)} | trend=${trend.direction} (${trend.points || 0} pts)">${valStr} ${trendIcon}</td>`;
     }).join('');
     const rowData = encodeURIComponent(JSON.stringify({ ticker: r.ticker, name: r.name, sector: r.sector, marketCap: r.marketCap, growthYoY: r.growthYoY, revenueTTM: r.revenueTTM, results: r.results, trends: r.trends }));
-    return `<tr class="row-clickable" data-ticker="${r.ticker}" data-position="${r.position}" data-row='${rowData}'>
+    return `<tr class="row-clickable" data-ticker="${r.ticker}" data-row='${rowData}'>
       <td><strong>${escHtml(r.ticker)}</strong></td>
       <td>${escHtml(r.name)}</td>
-      <td><span class="position-${r.position}">${r.position}</span></td>
       <td>${escHtml(r.sector)}</td>
       <td>${fmtMoney(r.marketCap)}</td>
       <td>${r.growthYoY != null ? r.growthYoY.toFixed(1) + '%' : '—'}</td>
@@ -192,7 +214,7 @@ function renderHTML(rows, methods) {
   th .threshold { color: #64748b; font-size: 10px; font-weight: 400; margin-top: 2px; }
   td { padding: 8px 8px; border-bottom: 1px solid #131c2b; }
   tr:hover td { background: #1a2436; }
-  tr.hidden { display: none; }
+  tr.hidden, tr.pc-hidden { display: none; }
   td.method-cell { text-align: center; font-weight: 600; }
   td.method-cell.pass { background: #10b98115; color: #6ee7b7; }
   td.method-cell.fail { background: #ef444415; color: #fca5a5; }
@@ -205,6 +227,8 @@ function renderHTML(rows, methods) {
   .trend-flat { color: #64748b; margin-left: 2px; }
   .preset-btn { background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
   .preset-btn:hover { background: #334155; color: #f1f5f9; }
+  .pcb { background: #334155; color: #cbd5e1; border: 1px solid #475569; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; margin: 0 1px; }
+  .pcb:hover { background: #475569; color: #f1f5f9; }
   tr.row-clickable { cursor: pointer; }
   /* Modal */
   .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 100; padding: 30px; overflow-y: auto; }
@@ -223,6 +247,18 @@ function renderHTML(rows, methods) {
 
 <div class="summary">${methodSummary}</div>
 
+<div class="quick-filter-bar" style="background:#1e293b;border:1px solid #334155;padding:10px 14px;border-radius:6px;margin-bottom:10px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+  <strong style="color:#f1f5f9;font-size:13px;">Quick-Filter:</strong>
+  <label style="color:#cbd5e1;font-size:12px;">Pass-Count ≥
+    <input type="number" id="passcount-filter" min="0" max="10" value="0" style="width:50px;background:#0f172a;color:#cbd5e1;border:1px solid #334155;padding:3px 6px;border-radius:3px;margin:0 6px;">
+    <button data-passcount="10" class="pcb">10</button>
+    <button data-passcount="9" class="pcb">9+</button>
+    <button data-passcount="8" class="pcb">8+</button>
+    <button data-passcount="7" class="pcb">7+</button>
+    <button data-passcount="0" class="pcb">All</button>
+  </label>
+  <span id="quick-count" style="color:#94a3b8;font-size:12px;margin-left:auto;"></span>
+</div>
 <div class="preset-bar" style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
   <strong style="color:#f1f5f9;font-size:12px;align-self:center;">Presets:</strong>
   <button class="preset-btn" data-preset="all-pass">All Pass (alle 8)</button>
@@ -239,10 +275,12 @@ function renderHTML(rows, methods) {
   <span class="filter-mode" id="visible-count">Showing all ${rows.length}</span>
 </div>
 
+${sectorHtml}
+
 <h2 style="color:#f1f5f9;font-size:18px;margin:24px 0 8px;border-bottom:1px solid #334155;padding-bottom:6px;">🏆 Top-Picks (Pass-Count-Ranking)</h2>
 <div class="sub" style="margin-bottom:14px;">Stocks gerankt nach Pass-Count. Klick auf eine Reihe für Details. Stocks mit ≥7 Pass von 10 Methoden sind potentielle Kandidaten — die fehlenden Methoden geben dir konkrete Punkte zum manuellen Prüfen.</div>
 <table id="top-picks" style="margin-bottom:30px;">
-<thead><tr><th>Rank</th><th>Ticker</th><th>Name</th><th>Pass / Computable</th><th>Position</th><th>Sector</th><th>Failed Methods</th></tr></thead>
+<thead><tr><th>Rank</th><th>Ticker</th><th>Name</th><th>Pass / Computable</th><th>Sector</th><th>Failed Methods</th></tr></thead>
 <tbody>${topPicksRows}</tbody>
 </table>
 
@@ -257,7 +295,6 @@ function renderHTML(rows, methods) {
 <thead><tr>
   <th data-sort="ticker">Ticker</th>
   <th data-sort="name">Name</th>
-  <th data-sort="position">Pos</th>
   <th data-sort="sector">Sector</th>
   <th data-sort="marketCap">MCap</th>
   <th data-sort="growthYoY">Growth YoY</th>
@@ -322,6 +359,37 @@ function renderHTML(rows, methods) {
         return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
       });
       rows.forEach(r => tbody.appendChild(r));
+    });
+  });
+
+  // Tag-41: Pass-Count-Quick-Filter
+  const pcInput = document.getElementById('passcount-filter');
+  const pcCount = document.getElementById('quick-count');
+  function applyPassCount() {
+    const min = parseInt(pcInput.value) || 0;
+    const allRows = document.querySelectorAll('#matrix tbody tr, #top-picks tbody tr');
+    let visible = 0, total = 0;
+    allRows.forEach(tr => {
+      try {
+        const data = JSON.parse(decodeURIComponent(tr.dataset.row));
+        let passCount = 0;
+        for (const r of Object.values(data.results)) {
+          if (r.computable && r.pass) passCount++;
+        }
+        const show = passCount >= min;
+        // Don't override the methods-filter hidden class — only set our own marker
+        tr.classList.toggle('pc-hidden', !show);
+        total++;
+        if (show && !tr.classList.contains('hidden')) visible++;
+      } catch (e) { /* skip rows without data */ }
+    });
+    if (pcCount) pcCount.textContent = min === 0 ? '' : (visible + ' / ' + total + ' stocks ≥ ' + min + ' pass');
+  }
+  if (pcInput) pcInput.addEventListener('input', applyPassCount);
+  document.querySelectorAll('.pcb').forEach(b => {
+    b.addEventListener('click', () => {
+      pcInput.value = b.dataset.passcount;
+      applyPassCount();
     });
   });
 

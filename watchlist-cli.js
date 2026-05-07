@@ -26,18 +26,10 @@ function save(wl) {
 
 function cmdList() {
   const wl = load();
-  const groups = { owned: [], watching: [], interested: [] };
+  console.log(`Watchlist (${wl.stocks.length} stocks):`);
   for (const s of wl.stocks) {
-    (groups[s.position] || (groups[s.position] = [])).push(s);
+    console.log(`  ${s.ticker.padEnd(8)} ${s.name.padEnd(35)} track=${s.track_hint || '?'} ${s.isin || '(no isin)'}`);
   }
-  for (const pos of ['owned', 'watching', 'interested']) {
-    const list = groups[pos] || [];
-    console.log(`\n${pos.toUpperCase()} (${list.length}):`);
-    for (const s of list) {
-      console.log(`  ${s.ticker.padEnd(8)} ${s.name.padEnd(35)} track=${s.track_hint || '?'} ${s.isin || '(no isin)'}`);
-    }
-  }
-  console.log(`\nTotal: ${wl.stocks.length}`);
 }
 
 function cmdAdd(ticker, opts) {
@@ -52,7 +44,6 @@ function cmdAdd(ticker, opts) {
     yahoo_symbol: opts.yahoo || ticker,
     name: opts.name || ticker,
     track_hint: opts.track || 'A',
-    position: opts.position || 'interested'
   };
   wl.stocks.push(stock);
   save(wl);
@@ -66,19 +57,6 @@ function cmdRemove(ticker) {
   wl.stocks.splice(idx, 1);
   save(wl);
   console.log(`✓ Removed ${ticker}`);
-}
-
-function cmdPosition(ticker, position) {
-  const wl = load();
-  const s = wl.stocks.find(s => s.ticker === ticker);
-  if (!s) { console.error(`✗ ${ticker} not in watchlist`); process.exit(1); }
-  if (!['owned', 'watching', 'interested'].includes(position)) {
-    console.error(`✗ position must be owned|watching|interested`); process.exit(1);
-  }
-  const old = s.position;
-  s.position = position;
-  save(wl);
-  console.log(`✓ ${ticker}: position ${old} → ${position}`);
 }
 
 function cmdInfo(ticker) {
@@ -114,10 +92,6 @@ function main() {
       if (!args[1]) { console.error('Usage: remove TICKER'); process.exit(1); }
       cmdRemove(args[1].toUpperCase());
       break;
-    case 'position': case 'pos':
-      if (!args[1] || !args[2]) { console.error('Usage: position TICKER owned|watching|interested'); process.exit(1); }
-      cmdPosition(args[1].toUpperCase(), args[2]);
-      break;
     case 'info':
       if (!args[1]) { console.error('Usage: info TICKER'); process.exit(1); }
       cmdInfo(args[1].toUpperCase());
@@ -126,10 +100,9 @@ function main() {
       console.log('Watchlist-CLI');
       console.log('Commands:');
       console.log('  list                                              — alle Stocks anzeigen');
-      console.log('  add TICKER --name "Name" [--position p] [--track A|B] [--isin X] [--yahoo S]');
+      console.log('  add TICKER --name "Name" [--track A|B] [--isin X] [--yahoo S]');
       console.log('  remove TICKER                                     — Stock entfernen');
-      console.log('  position TICKER owned|watching|interested         — Position ändern');
-      console.log('  info TICKER                                       — Details zu einem Stock');
+          console.log('  info TICKER                                       — Details zu einem Stock');
   }
 }
 main();

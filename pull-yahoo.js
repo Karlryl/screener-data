@@ -209,6 +209,19 @@ function _ftsValue(row, ...keys) {
 }
 
 // Mappt fundamentalsTimeSeries-Rows zu engine-Schema-Arrays (latest first).
+function _ftsExtractByYear(rows, fieldNames) {
+  // Returns [{year: 2025, value: ...}, ...] sorted latest first
+  const sorted = (rows || []).slice().reverse();
+  const out = [];
+  for (const r of sorted) {
+    if (!r) continue;
+    const v = _ftsValue(r, ...fieldNames);
+    if (v == null) continue;
+    out.push(v);
+  }
+  return out;
+}
+
 function mapFTSToAnnual(annualRows, cashRows) {
   // Rows kommen oldest first → wir wollen latest first
   // Erste Row in annualRows ist meist null/incomplete-Quartal — filtere wenn keine totalRevenue.
@@ -300,6 +313,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const ftsAnnual = mapFTSToAnnual(fts.annualFin, fts.annualCash);
       const ftsQuarterly = mapFTSToQuarterly(fts.quarterlyFin);
       const ftsBalance = mapFTSToBalance(fts.annualBs);  // Tag-28: balance-sheet from FTS
+      // Tag-43: SBC from cash-flow stockBasedCompensation
+      const ftsAnnualSBC = _ftsExtractByYear(fts.annualCash, ['stockBasedCompensation']);
+      // Tag-44: Capex from cash-flow capitalExpenditure
+      const ftsAnnualCapex = _ftsExtractByYear(fts.annualCash, ['capitalExpenditure', 'capitalExpenditures']);
       // Override leere annual-Arrays aus quoteSummary mit FTS-Daten wenn FTS welche hat
       if (ftsAnnual.annualRev.length > canonical.annual.annualRev.length) canonical.annual.annualRev = ftsAnnual.annualRev;
       if (ftsAnnual.annualOpInc.length > 0) canonical.annual.annualOpInc = ftsAnnual.annualOpInc;
@@ -307,6 +324,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const oldBalanceUsable = (canonical.annual.annualBalance || []).filter(r => r.totalDebt != null || r.totalCash != null || r.totalAssets != null).length;
       const newBalanceUsable = ftsBalance.filter(r => r.totalDebt != null || r.totalCash != null || r.totalAssets != null).length;
       if (newBalanceUsable > oldBalanceUsable) canonical.annual.annualBalance = ftsBalance;
+      // Tag-43: annualSBC aus FTS hinzufügen
+      canonical.annual.annualSBC = ftsAnnualSBC;
+      // Tag-44: annualCapex aus FTS hinzufügen
+      canonical.annual.annualCapex = ftsAnnualCapex;
       if (ftsAnnual.annualGP.length > 0) canonical.annual.annualGP = ftsAnnual.annualGP;
       if (ftsAnnual.annualNetIncome.length > canonical.annual.annualNetIncome.length) canonical.annual.annualNetIncome = ftsAnnual.annualNetIncome;
       if (ftsAnnual.annualFCF.length > 0) canonical.annual.annualFCF = ftsAnnual.annualFCF;

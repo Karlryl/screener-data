@@ -16,7 +16,10 @@ const METHODS = [
   require('./fcf-yield.js'),
   require('./gross-margin-stability.js'),
   require('./asset-growth-divergence.js'),
-  require('./margin-decay.js')
+  require('./margin-decay.js'),
+  require('./sbc-revenue.js'),
+  require('./capex-trend.js'),
+  require('./working-capital-anomaly.js')
 ];
 
 function evaluateStock(stock) {
