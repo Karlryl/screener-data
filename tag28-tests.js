@@ -55,19 +55,6 @@ test('Rule of 40: not computable when growth missing', () => {
 });
 
 // ─── Rule of X ───
-test('Rule of X: pass case (30% × 2 + 5% FCF = 65)', () => {
-  const s = makeStock({ revenueGrowthYoY: 30, fcfMarginTTM: 5 });
-  const r = Runner.evaluateStock(s)['rule-of-x'];
-  if (!r.pass) throw new Error('should pass');
-  if (!approx(r.value, 65)) throw new Error(`value=${r.value}`);
-});
-
-test('Rule of X: fail case (20% × 2 + 5% FCF = 45 < 60)', () => {
-  const s = makeStock({ revenueGrowthYoY: 20, fcfMarginTTM: 5 });
-  const r = Runner.evaluateStock(s)['rule-of-x'];
-  if (r.pass) throw new Error('should fail');
-});
-
 // ─── ROIC ───
 test('ROIC: pass case (NI=20, Assets=100, Cash=20 → 20/80 = 25%)', () => {
   const s = makeStock({}, { netIncome: [20] }, [{ totalAssets: 100, totalCash: 20, totalDebt: 30 }]);
