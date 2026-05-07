@@ -1,6 +1,98 @@
 {
   "date": "2026-05-07",
   "stocks": {
+    "AAPL": {
+      "results": {
+        "rule-of-40": {
+          "value": 38.99285284218523,
+          "pass": false
+        },
+        "rule-of-x": {
+          "value": 55.59285284218523,
+          "pass": false
+        },
+        "roic": {
+          "value": 0.3464508965163142,
+          "pass": true
+        },
+        "net-debt-ebitda": {
+          "value": 0.39285356382312414,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": 0.03686383235766519,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 1.8125357434793932,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.02324688997656866,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.037555564597864355,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.9248495348934918,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 0.9851015489396862,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 6
+    },
+    "ADBE": {
+      "results": {
+        "rule-of-40": {
+          "value": 50.11955603465712,
+          "pass": true
+        },
+        "rule-of-x": {
+          "value": 62.11955603465712,
+          "pass": true
+        },
+        "roic": {
+          "value": 0.2962809058799086,
+          "pass": true
+        },
+        "net-debt-ebitda": {
+          "value": 0.07456543380044414,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": -0.0922836994846759,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 10.522339932516122,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.09466393940228782,
+          "pass": true
+        },
+        "gross-margin-stability": {
+          "value": 0.008999446372406772,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.8827820902217586,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 0.997396307272591,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 9
+    },
     "AFRM": {
       "results": {
         "rule-of-40": {
@@ -28,7 +120,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.02649991573579942,
+          "value": 0.02662737812100131,
           "pass": false
         },
         "gross-margin-stability": {
@@ -74,7 +166,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.008375459582603769,
+          "value": 0.008439530629629412,
           "pass": false
         },
         "gross-margin-stability": {
@@ -120,7 +212,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.01750051857261442,
+          "value": 0.017496892840723675,
           "pass": false
         },
         "gross-margin-stability": {
@@ -138,6 +230,98 @@
       },
       "computable": 10,
       "passing": 6
+    },
+    "AMD": {
+      "results": {
+        "rule-of-40": {
+          "value": 56.952493596104034,
+          "pass": true
+        },
+        "rule-of-x": {
+          "value": 94.75249359610403,
+          "pass": true
+        },
+        "roic": {
+          "value": 0.06072534214913079,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": -0.5226944594838476,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": -0.031198814445051088,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 13.643599335368428,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.010162336042744321,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.04866841858978601,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.8271908131771771,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 0.9966466998739577,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 7
+    },
+    "AMZN": {
+      "results": {
+        "rule-of-40": {
+          "value": 17.92026681417155,
+          "pass": false
+        },
+        "rule-of-x": {
+          "value": 34.520266814171556,
+          "pass": false
+        },
+        "roic": {
+          "value": 0.1062179992122883,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": -0.22050640825257892,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": 0.08553961777023673,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 11.731283601806375,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.0026226016222646105,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.05895951989598807,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 1.1649006738222116,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 0.9715371884246522,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 5
     },
     "ANET": {
       "results": {
@@ -166,7 +350,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.02396839598036583,
+          "value": 0.02402295451907562,
           "pass": false
         },
         "gross-margin-stability": {
@@ -212,7 +396,7 @@
           "pass": null
         },
         "fcf-yield": {
-          "value": 0.0006973448970493804,
+          "value": 0.0006968761458266942,
           "pass": false
         },
         "gross-margin-stability": {
@@ -258,7 +442,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.01886853168726413,
+          "value": 0.018870025602776265,
           "pass": false
         },
         "gross-margin-stability": {
@@ -276,6 +460,98 @@
       },
       "computable": 10,
       "passing": 6
+    },
+    "AVGO": {
+      "results": {
+        "rule-of-40": {
+          "value": 66.85062005073661,
+          "pass": true
+        },
+        "rule-of-x": {
+          "value": 96.35062005073661,
+          "pass": true
+        },
+        "roic": {
+          "value": 0.14928282789160438,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": 1.5646532438478746,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": -0.02214013513197578,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 24.378426000041763,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.01360828608509546,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.03830555228034458,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.8338149790297735,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 0.9301598229877116,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 7
+    },
+    "BRK-B": {
+      "results": {
+        "rule-of-40": {
+          "value": 20.71039590555822,
+          "pass": false
+        },
+        "rule-of-x": {
+          "value": 25.11039590555822,
+          "pass": false
+        },
+        "roic": {
+          "value": 0.0572229831863481,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": null,
+          "pass": null
+        },
+        "sloan-ratio": {
+          "value": 0.03430438823868248,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 7.132065620170969,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.02434971282684648,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": null,
+          "pass": null
+        },
+        "asset-growth-divergence": {
+          "value": 1.0591558456124361,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": null,
+          "pass": null
+        }
+      },
+      "computable": 7,
+      "passing": 2
     },
     "CDNS": {
       "results": {
@@ -304,7 +580,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.016060265281108904,
+          "value": 0.016076868997200577,
           "pass": false
         },
         "gross-margin-stability": {
@@ -350,7 +626,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.011266593472456078,
+          "value": 0.011245033478004046,
           "pass": false
         },
         "gross-margin-stability": {
@@ -396,7 +672,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.04740109662669315,
+          "value": 0.04760616598477793,
           "pass": false
         },
         "gross-margin-stability": {
@@ -414,6 +690,52 @@
       },
       "computable": 10,
       "passing": 6
+    },
+    "COST": {
+      "results": {
+        "rule-of-40": {
+          "value": 23.837126364236276,
+          "pass": false
+        },
+        "rule-of-x": {
+          "value": 45.337126364236276,
+          "pass": false
+        },
+        "roic": {
+          "value": 0.12868219517620516,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": -0.6780313974766445,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": 0.0033982282519877042,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 6.640442726947482,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.01764795825681055,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.02567032974963398,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 1.0207147712048084,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 0.982101403703705,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 5
     },
     "CRDO": {
       "results": {
@@ -442,7 +764,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.00082525706773015,
+          "value": 0.0008303087930337232,
           "pass": false
         },
         "gross-margin-stability": {
@@ -460,6 +782,52 @@
       },
       "computable": 9,
       "passing": 7
+    },
+    "CRM": {
+      "results": {
+        "rule-of-40": {
+          "value": 51.51481103802262,
+          "pass": true
+        },
+        "rule-of-x": {
+          "value": 63.61481103802262,
+          "pass": true
+        },
+        "roic": {
+          "value": 0.07103393091885919,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": 0.6646480505401667,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": -0.06184052357419527,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 9.820006113830493,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.09409010312248124,
+          "pass": true
+        },
+        "gross-margin-stability": {
+          "value": 0.02585802830751792,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.9957213709731383,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 0.9937708378377224,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 8
     },
     "CRWD": {
       "results": {
@@ -488,7 +856,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.009741365469834621,
+          "value": 0.009767017175014934,
           "pass": false
         },
         "gross-margin-stability": {
@@ -534,7 +902,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.013891440791082402,
+          "value": 0.013936641089574103,
           "pass": false
         },
         "gross-margin-stability": {
@@ -552,6 +920,52 @@
       },
       "computable": 9,
       "passing": 6
+    },
+    "DHR": {
+      "results": {
+        "rule-of-40": {
+          "value": 22.137727634188092,
+          "pass": false
+        },
+        "rule-of-x": {
+          "value": 25.83772763418809,
+          "pass": false
+        },
+        "roic": {
+          "value": 0.04583444304937285,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": 2.4525586353944564,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": -0.01972107735071408,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": -7.922591678036017,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.042653809322432755,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.06736785394551378,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 1.04600984677868,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 1.006565164553932,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 5
     },
     "DUOL": {
       "results": {
@@ -580,7 +994,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.06738295093993511,
+          "value": 0.06774291324894224,
           "pass": true
         },
         "gross-margin-stability": {
@@ -598,6 +1012,190 @@
       },
       "computable": 9,
       "passing": 9
+    },
+    "FROG": {
+      "results": {
+        "rule-of-40": {
+          "value": 58.08528880866426,
+          "pass": true
+        },
+        "rule-of-x": {
+          "value": 83.28528880866426,
+          "pass": true
+        },
+        "roic": {
+          "value": -0.05674982240740492,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": null,
+          "pass": null
+        },
+        "sloan-ratio": {
+          "value": -0.15960315407227052,
+          "pass": false
+        },
+        "revenue-growth-3y": {
+          "value": 23.837918290133132,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.020720846422013217,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.007295435850527026,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.9564586664161618,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 1.0035331210268095,
+          "pass": true
+        }
+      },
+      "computable": 9,
+      "passing": 5
+    },
+    "GLBE": {
+      "results": {
+        "rule-of-40": {
+          "value": 50.17526033974186,
+          "pass": true
+        },
+        "rule-of-x": {
+          "value": 78.17526033974187,
+          "pass": true
+        },
+        "roic": {
+          "value": 0.056100324834603886,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": null,
+          "pass": null
+        },
+        "sloan-ratio": {
+          "value": -0.14521116198052075,
+          "pass": false
+        },
+        "revenue-growth-3y": {
+          "value": 32.993144153421206,
+          "pass": true
+        },
+        "fcf-yield": {
+          "value": 0.05138550026320343,
+          "pass": true
+        },
+        "gross-margin-stability": {
+          "value": 0.07648829572890842,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.9057488230926315,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 0.9945437043460252,
+          "pass": true
+        }
+      },
+      "computable": 9,
+      "passing": 7
+    },
+    "GOOGL": {
+      "results": {
+        "rule-of-40": {
+          "value": 28.30245681661374,
+          "pass": false
+        },
+        "rule-of-x": {
+          "value": 50.102456816613746,
+          "pass": false
+        },
+        "roic": {
+          "value": 0.23410612976532708,
+          "pass": true
+        },
+        "net-debt-ebitda": {
+          "value": 0.10228819710836776,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": 0.09895158756956798,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 12.511745609215975,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.0153178207734029,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.03237022442024196,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 1.1487475978360402,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 0.9756609667576734,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 6
+    },
+    "GTLB": {
+      "results": {
+        "rule-of-40": {
+          "value": 52.834056095742994,
+          "pass": true
+        },
+        "rule-of-x": {
+          "value": 76.034056095743,
+          "pass": true
+        },
+        "roic": {
+          "value": -0.03747460940508488,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": null,
+          "pass": null
+        },
+        "sloan-ratio": {
+          "value": -0.16136147675775955,
+          "pass": false
+        },
+        "revenue-growth-3y": {
+          "value": 31.058476691652004,
+          "pass": true
+        },
+        "fcf-yield": {
+          "value": 0.051332524445812835,
+          "pass": true
+        },
+        "gross-margin-stability": {
+          "value": 0.011799706492335207,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.9785908593572243,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 1.016329822887593,
+          "pass": true
+        }
+      },
+      "computable": 9,
+      "passing": 7
     },
     "HOOD": {
       "results": {
@@ -626,7 +1224,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.022969610427685645,
+          "value": 0.023017701760283716,
           "pass": false
         },
         "gross-margin-stability": {
@@ -672,7 +1270,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.045529657804368025,
+          "value": 0.04553336125641454,
           "pass": false
         },
         "gross-margin-stability": {
@@ -690,6 +1288,52 @@
       },
       "computable": 9,
       "passing": 5
+    },
+    "INTU": {
+      "results": {
+        "rule-of-40": {
+          "value": 43.74747275414931,
+          "pass": true
+        },
+        "rule-of-x": {
+          "value": 61.147472754149305,
+          "pass": true
+        },
+        "roic": {
+          "value": 0.11354698597170863,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": 0.5212974213581747,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": -0.05990583906055522,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 13.953365148240149,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.053382852089979796,
+          "pass": true
+        },
+        "gross-margin-stability": {
+          "value": 0.016229290951021384,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.9946838859826945,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 0.9894067436698445,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 8
     },
     "KLAC": {
       "results": {
@@ -718,7 +1362,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.01621653457066564,
+          "value": 0.01625338815657318,
           "pass": false
         },
         "gross-margin-stability": {
@@ -736,6 +1380,52 @@
       },
       "computable": 10,
       "passing": 6
+    },
+    "LLY": {
+      "results": {
+        "rule-of-40": {
+          "value": 68.17366996928837,
+          "pass": true
+        },
+        "rule-of-x": {
+          "value": 123.67366996928837,
+          "pass": true
+        },
+        "roic": {
+          "value": 0.19618279978708844,
+          "pass": true
+        },
+        "net-debt-ebitda": {
+          "value": 0.98876953125,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": 0.13048116931612078,
+          "pass": false
+        },
+        "revenue-growth-3y": {
+          "value": 31.687374880620432,
+          "pass": true
+        },
+        "fcf-yield": {
+          "value": 0.006864313087871448,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.033766622794471075,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.9874590303430295,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 0.9791448724290094,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 8
     },
     "LRCX": {
       "results": {
@@ -764,7 +1454,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.015139742180627651,
+          "value": 0.015140005767360885,
           "pass": false
         },
         "gross-margin-stability": {
@@ -782,6 +1472,144 @@
       },
       "computable": 10,
       "passing": 8
+    },
+    "MA": {
+      "results": {
+        "rule-of-40": {
+          "value": 63.37984916161979,
+          "pass": true
+        },
+        "rule-of-x": {
+          "value": 79.17984916161979,
+          "pass": true
+        },
+        "roic": {
+          "value": 0.3433736321717786,
+          "pass": true
+        },
+        "net-debt-ebitda": {
+          "value": 0.36016876772231904,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": -0.02705098140591244,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 13.82198495222513,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.03713904798062242,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.011076289533962464,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.9675357918596691,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 0.9797390516162704,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 8
+    },
+    "MC.PA": {
+      "results": {
+        "rule-of-40": {
+          "value": 9.775385882757497,
+          "pass": false
+        },
+        "rule-of-x": {
+          "value": 5.075385882757496,
+          "pass": false
+        },
+        "roic": {
+          "value": 0.08164031131091315,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": 0.544770206022187,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": -0.023423474165182312,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 0.678603389860033,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.06010990381779498,
+          "pass": true
+        },
+        "gross-margin-stability": {
+          "value": 0.017751712202712096,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.9977208046580306,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 1.011916606472979,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 6
+    },
+    "MDB": {
+      "results": {
+        "rule-of-40": {
+          "value": 45.50522208219337,
+          "pass": true
+        },
+        "rule-of-x": {
+          "value": 72.20522208219337,
+          "pass": true
+        },
+        "roic": {
+          "value": -0.02659544246868024,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": null,
+          "pass": null
+        },
+        "sloan-ratio": {
+          "value": -0.1519984314343118,
+          "pass": false
+        },
+        "revenue-growth-3y": {
+          "value": 24.26308261987642,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.02104559289292817,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.017233385986924064,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.8923710067202777,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 1.0219179379701055,
+          "pass": true
+        }
+      },
+      "computable": 9,
+      "passing": 5
     },
     "MELI": {
       "results": {
@@ -810,7 +1638,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.11484897403879106,
+          "value": 0.11489367575900647,
           "pass": true
         },
         "gross-margin-stability": {
@@ -856,7 +1684,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.029309514304537272,
+          "value": 0.029384191697472035,
           "pass": false
         },
         "gross-margin-stability": {
@@ -902,7 +1730,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.07754782668661145,
+          "value": 0.07752282241153031,
           "pass": true
         },
         "gross-margin-stability": {
@@ -948,7 +1776,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.009783211304577166,
+          "value": 0.00980339557656899,
           "pass": false
         },
         "gross-margin-stability": {
@@ -994,7 +1822,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.02270722781148067,
+          "value": 0.022761092589348147,
           "pass": false
         },
         "gross-margin-stability": {
@@ -1040,7 +1868,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.0028974383776859724,
+          "value": 0.0029058882172849766,
           "pass": false
         },
         "gross-margin-stability": {
@@ -1058,6 +1886,98 @@
       },
       "computable": 9,
       "passing": 7
+    },
+    "NFLX": {
+      "results": {
+        "rule-of-40": {
+          "value": 71.63544706419216,
+          "pass": true
+        },
+        "rule-of-x": {
+          "value": 87.83544706419217,
+          "pass": true
+        },
+        "roic": {
+          "value": 0.23583376113795343,
+          "pass": true
+        },
+        "net-debt-ebitda": {
+          "value": 0.33949355535940656,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": 0.027342270111622765,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 12.639718371360665,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.02535953496862654,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.09471244340124889,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.8948297867264982,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 0.9498826404661361,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 8
+    },
+    "NOW": {
+      "results": {
+        "rule-of-40": {
+          "value": 58.691155955205716,
+          "pass": true
+        },
+        "rule-of-x": {
+          "value": 80.79115595520571,
+          "pass": true
+        },
+        "roic": {
+          "value": 0.07834349229114378,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": -1.0211074561403508,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": -0.10695905983562486,
+          "pass": false
+        },
+        "revenue-growth-3y": {
+          "value": 22.376517864742617,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.04668495891055917,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.0087237925815492,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 1.0567381296758724,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 1.0212104710034322,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 6
     },
     "NVDA": {
       "results": {
@@ -1086,7 +2006,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.018583091918616,
+          "value": 0.018656856543856248,
           "pass": false
         },
         "gross-margin-stability": {
@@ -1132,7 +2052,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.14133590424050094,
+          "value": 0.14161073805905727,
           "pass": true
         },
         "gross-margin-stability": {
@@ -1178,7 +2098,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.060043015857398616,
+          "value": 0.05998027146981349,
           "pass": true
         },
         "gross-margin-stability": {
@@ -1224,7 +2144,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.03592112308748466,
+          "value": 0.0360867461125552,
           "pass": false
         },
         "gross-margin-stability": {
@@ -1242,6 +2162,52 @@
       },
       "computable": 10,
       "passing": 2
+    },
+    "ORCL": {
+      "results": {
+        "rule-of-40": {
+          "value": -13.10007901017384,
+          "pass": false
+        },
+        "rule-of-x": {
+          "value": 8.59992098982616,
+          "pass": false
+        },
+        "roic": {
+          "value": 0.07896557194986514,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": 3.775297289312357,
+          "pass": false
+        },
+        "sloan-ratio": {
+          "value": 0.07624687427610907,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 10.588419257288816,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": -0.0007054977874580917,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.05267120781614716,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 1.1019151732196713,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 1.0127261881110088,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 4
     },
     "PANW": {
       "results": {
@@ -1270,7 +2236,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.021911410391081514,
+          "value": 0.02193668736586709,
           "pass": false
         },
         "gross-margin-stability": {
@@ -1316,7 +2282,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.006317431023480982,
+          "value": 0.006322457929675422,
           "pass": false
         },
         "gross-margin-stability": {
@@ -1362,7 +2328,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.041739634389414054,
+          "value": 0.04178116912474114,
           "pass": false
         },
         "gross-margin-stability": {
@@ -1427,6 +2393,144 @@
       "computable": 8,
       "passing": 4
     },
+    "S": {
+      "results": {
+        "rule-of-40": {
+          "value": 48.55301559242463,
+          "pass": true
+        },
+        "rule-of-x": {
+          "value": 68.75301559242463,
+          "pass": true
+        },
+        "roic": {
+          "value": -0.19869515864181883,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": null,
+          "pass": null
+        },
+        "sloan-ratio": {
+          "value": -0.20607054175748185,
+          "pass": false
+        },
+        "revenue-growth-3y": {
+          "value": 33.35808456206237,
+          "pass": true
+        },
+        "fcf-yield": {
+          "value": 0.009607471439559638,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.05527255205348203,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.8311429442907591,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 1.0025065395490933,
+          "pass": true
+        }
+      },
+      "computable": 9,
+      "passing": 6
+    },
+    "SAP": {
+      "results": {
+        "rule-of-40": {
+          "value": 27.808554280447343,
+          "pass": false
+        },
+        "rule-of-x": {
+          "value": 33.80855428044734,
+          "pass": false
+        },
+        "roic": {
+          "value": 0.12056258247240192,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": -0.21032571032571032,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": -0.013146300559961343,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 6.030881905601859,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.04039098596959163,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.021966142121634533,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.8802198833231524,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 1.001202904514356,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 5
+    },
+    "SE": {
+      "results": {
+        "rule-of-40": {
+          "value": 40.627908124281724,
+          "pass": true
+        },
+        "rule-of-x": {
+          "value": 79.02790812428172,
+          "pass": true
+        },
+        "roic": {
+          "value": 0.06259500661964974,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": -0.9718367512783084,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": -0.0994817026698361,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 22.59378555374607,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.08181240581776984,
+          "pass": true
+        },
+        "gross-margin-stability": {
+          "value": 0.03395224603318502,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.9518728414553033,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 0.9592300294642093,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 8
+    },
     "SHOP": {
       "results": {
         "rule-of-40": {
@@ -1454,7 +2558,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.014034814434143386,
+          "value": 0.014085941432104237,
           "pass": false
         },
         "gross-margin-stability": {
@@ -1500,7 +2604,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.07492073495666313,
+          "value": 0.07549705545530068,
           "pass": true
         },
         "gross-margin-stability": {
@@ -1546,7 +2650,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.021229334534504343,
+          "value": 0.021225151659839646,
           "pass": false
         },
         "gross-margin-stability": {
@@ -1592,7 +2696,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.01371937437069488,
+          "value": 0.013731009508862245,
           "pass": false
         },
         "gross-margin-stability": {
@@ -1605,6 +2709,52 @@
         },
         "margin-decay": {
           "value": 1.0349713971271426,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 5
+    },
+    "SU.PA": {
+      "results": {
+        "rule-of-40": {
+          "value": 14.122295657517586,
+          "pass": false
+        },
+        "rule-of-x": {
+          "value": 18.322295657517586,
+          "pass": false
+        },
+        "roic": {
+          "value": 0.07193710039744254,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": 1.5746552543984784,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": -0.006799564827851018,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 5.518510129741738,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.02967875545356317,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.02056930344607853,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.9006594708694982,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 1.0133383005871741,
           "pass": true
         }
       },
@@ -1638,7 +2788,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.05949981960824798,
+          "value": 0.059537859274691074,
           "pass": true
         },
         "gross-margin-stability": {
@@ -1656,6 +2806,98 @@
       },
       "computable": 9,
       "passing": 6
+    },
+    "TMO": {
+      "results": {
+        "rule-of-40": {
+          "value": 18.41458297234183,
+          "pass": false
+        },
+        "rule-of-x": {
+          "value": 24.61458297234183,
+          "pass": false
+        },
+        "roic": {
+          "value": 0.06671244191022081,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": 3.0346280312371556,
+          "pass": false
+        },
+        "sloan-ratio": {
+          "value": 0.0037247491911584787,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": -0.26714219508328085,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.03596452654216724,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.023487696813789056,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 1.0911304550496819,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 1.008516156239456,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 4
+    },
+    "TSM": {
+      "results": {
+        "rule-of-40": {
+          "value": 52.68229672550545,
+          "pass": true
+        },
+        "rule-of-x": {
+          "value": 87.78229672550545,
+          "pass": true
+        },
+        "roic": {
+          "value": 0.33260166953789094,
+          "pass": true
+        },
+        "net-debt-ebitda": {
+          "value": -0.7467213481951339,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": 0.09145581801226987,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 18.93797467396279,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.46454736255638307,
+          "pass": true
+        },
+        "gross-margin-stability": {
+          "value": 0.046807286644236876,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.9007738826879214,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 0.9370692821367614,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 9
     },
     "TTD": {
       "results": {
@@ -1684,7 +2926,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.06756825329232971,
+          "value": 0.06767944876526923,
           "pass": true
         },
         "gross-margin-stability": {
@@ -1702,6 +2944,98 @@
       },
       "computable": 9,
       "passing": 5
+    },
+    "UNH": {
+      "results": {
+        "rule-of-40": {
+          "value": 5.933064042863997,
+          "pass": false
+        },
+        "rule-of-x": {
+          "value": 7.933064042863997,
+          "pass": false
+        },
+        "roic": {
+          "value": 0.04226971838887019,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": 2.373971735920692,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": -0.012982062852694449,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 11.352161443193465,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.0482103984911539,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.12576701150422825,
+          "pass": false
+        },
+        "asset-growth-divergence": {
+          "value": 0.9282324351081974,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 1.205550525737845,
+          "pass": false
+        }
+      },
+      "computable": 10,
+      "passing": 3
+    },
+    "V": {
+      "results": {
+        "rule-of-40": {
+          "value": 65.53412039195254,
+          "pass": true
+        },
+        "rule-of-x": {
+          "value": 82.63412039195255,
+          "pass": true
+        },
+        "roic": {
+          "value": 0.2432363605495798,
+          "pass": true
+        },
+        "net-debt-ebitda": {
+          "value": 0.2512614851634282,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": -0.015246870828189145,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 10.921242130254294,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.03526419763628854,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.00321278968361809,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 0.94676799578885,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 1.0004491786130918,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 8
     },
     "VEEV": {
       "results": {
@@ -1730,7 +3064,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.05078052490480505,
+          "value": 0.050777554699313825,
           "pass": true
         },
         "gross-margin-stability": {
@@ -1776,7 +3110,7 @@
           "pass": false
         },
         "fcf-yield": {
-          "value": 0.014428329714334168,
+          "value": 0.014421554372949043,
           "pass": false
         },
         "gross-margin-stability": {
@@ -1794,6 +3128,52 @@
       },
       "computable": 10,
       "passing": 6
+    },
+    "WMT": {
+      "results": {
+        "rule-of-40": {
+          "value": 7.079921144349883,
+          "pass": false
+        },
+        "rule-of-x": {
+          "value": 12.679921144349883,
+          "pass": false
+        },
+        "roic": {
+          "value": 0.07991866861842513,
+          "pass": false
+        },
+        "net-debt-ebitda": {
+          "value": 0.9509639564124057,
+          "pass": true
+        },
+        "sloan-ratio": {
+          "value": 0.02448466283530288,
+          "pass": true
+        },
+        "revenue-growth-3y": {
+          "value": 5.250406806733099,
+          "pass": false
+        },
+        "fcf-yield": {
+          "value": 0.014443480113395798,
+          "pass": false
+        },
+        "gross-margin-stability": {
+          "value": 0.01579820339421557,
+          "pass": true
+        },
+        "asset-growth-divergence": {
+          "value": 1.0421746424432323,
+          "pass": true
+        },
+        "margin-decay": {
+          "value": 0.9969678716236601,
+          "pass": true
+        }
+      },
+      "computable": 10,
+      "passing": 5
     },
     "ZS": {
       "results": {
@@ -1822,7 +3202,7 @@
           "pass": true
         },
         "fcf-yield": {
-          "value": 0.029735484786284138,
+          "value": 0.029825752621926847,
           "pass": false
         },
         "gross-margin-stability": {
@@ -1843,8 +3223,8 @@
     }
   },
   "summary": {
-    "totalStocks": 40,
-    "anyComputable": 40,
+    "totalStocks": 70,
+    "anyComputable": 70,
     "allPass": 0,
     "methodCount": 10
   }
