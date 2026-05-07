@@ -25,7 +25,8 @@ const METHODS = [
   require('./ev-ebitda.js'),
   require('./insider-ownership.js'),
   require('./quarterly-revenue-acceleration.js'),
-  require('./drawdown-52w.js')
+  require('./drawdown-52w.js'),
+  require('./high-proximity-52w.js')
 ];
 
 function evaluateStock(stock) {
