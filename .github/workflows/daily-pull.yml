@@ -24,6 +24,12 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      # Tag-23: Pre-Pull Engine-Tests. Bricht workflow ab BEVOR Yahoo-Pull
+      # läuft, falls Engine/Orchestrator/Filters durch einen Commit kaputt sind.
+      # Schützt gegen production-Schäden bei Engine-Bugs.
+      - name: Run Engine Tests (pre-pull guard)
+        run: node engine-cli-tests.js
+
       - name: Run Yahoo Pull
         run: node pull-yahoo.js --watchlist watchlist.json --output snapshots --rate-limit 2000
 
