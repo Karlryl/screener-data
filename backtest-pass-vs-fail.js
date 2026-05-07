@@ -26,8 +26,14 @@ function dateAddDays(dateStr, days) {
   return d.toISOString().slice(0, 10);
 }
 
-function main() {
-  const args = parseArgs(process.argv);
+function runForHorizon(args, horizon) {
+  console.log('═'.repeat(70));
+  console.log(`Horizon: ${horizon} days`);
+  args.horizon = horizon;
+  runMain(args);
+}
+
+function runMain(args) {
   if (!fs.existsSync(args.methods)) { console.error(`No methods-history at ${args.methods}`); process.exit(1); }
   const histPath = path.join(args.prices, 'history.json');
   if (!fs.existsSync(histPath)) { console.error(`No prices history at ${histPath}`); process.exit(1); }
@@ -84,7 +90,13 @@ function main() {
       console.log(`  Alpha (Pass - Fail): ${(alpha*100).toFixed(2)}%`);
     }
   }
-  console.log('\n─'.repeat(70));
-  console.log(`Hinweis: aussagekräftiger Backtest braucht ≥4 Wochen Daten + horizon-Dauer. Aktuell ${methodFiles.length} Datenpunkt(e).`);
+  console.log('Datenpunkt(e):', methodFiles.length);
+}
+
+function main() {
+  const args = parseArgs(process.argv);
+  // Tag-57: dual horizon 30 + 90
+  runForHorizon(args, 30);
+  runForHorizon(args, 90);
 }
 main();
