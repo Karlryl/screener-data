@@ -24,7 +24,8 @@ const METHODS = [
   require('./magic-formula.js'),
   require('./aktienfinder-quality.js'),
   require('./forward-pe.js'),
-  require('./multi-year-stability.js')
+  require('./multi-year-stability.js'),
+  require('./peg.js')
 ];
 
 function evaluateStock(stock) {
