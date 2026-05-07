@@ -88,7 +88,8 @@ Tag 46 ROCE ✓ · Tag 47 Magic Formula ✓ · Tag 48 Aktienfinder-Helper ✓ ·
 | 71 | Methods-CLI | ✓ done |
 | 72 | OpInc-Margin-Spike | ✓ done |
 | 73 | Sektor-Pass-Rate-Trends | ✓ done |
-| 74-75 | offen's Bedürfnissen |
+| 74 | Watchlist-Cleanup-Suggestions | ✓ done |
+| 75 | Final Recap | pending |'s Bedürfnissen |
 
 ## Zwischenspeicherung
 
