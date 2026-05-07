@@ -22,7 +22,8 @@ const METHODS = [
   require('./working-capital-anomaly.js'),
   require('./roce.js'),
   require('./magic-formula.js'),
-  require('./aktienfinder-quality.js')
+  require('./aktienfinder-quality.js'),
+  require('./forward-pe.js')
 ];
 
 function evaluateStock(stock) {
