@@ -85,7 +85,8 @@ Tag 46 ROCE ✓ · Tag 47 Magic Formula ✓ · Tag 48 Aktienfinder-Helper ✓ ·
 | 68 | Volatility-Annualized | ✓ done |
 | 69 | Watchlist CSV Bulk-Import/Export | ✓ done |
 | 70 | Above-200d-MA | ✓ done |
-| 71-75 | offen's Bedürfnissen |
+| 71 | Methods-CLI | ✓ done |
+| 72-75 | offen's Bedürfnissen |
 
 ## Zwischenspeicherung
 
