@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="UTF-8"><title>Karl's Stock-Screener — Methoden-Matrix 2026-05-07 16:21 UTC</title>
+<style>
+  body { font-family: ui-sans-serif, system-ui, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 24px; line-height: 1.4; }
+  h1 { color: #f1f5f9; font-size: 24px; margin: 0 0 4px; }
+  .sub { color: #94a3b8; font-size: 12px; margin-bottom: 18px; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 14px 0 22px; }
+  .msum { background: #1e293b; border: 1px solid #334155; border-left: 3px solid #8b5cf6; border-radius: 6px; padding: 10px 14px; }
+  .ml { font-size: 12px; color: #94a3b8; font-weight: 600; }
+  .mv { font-size: 22px; font-weight: 700; color: #f1f5f9; margin: 2px 0; }
+  .mv .pass-count { color: #10b981; }
+  .mh { font-size: 10px; color: #64748b; }
+  .filter-bar { background: #1e293b; border: 1px solid #334155; padding: 12px 16px; border-radius: 6px; margin-bottom: 14px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  .filter-bar label { color: #cbd5e1; font-size: 13px; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 4px; padding: 3px 8px; background: #334155; border-radius: 4px; }
+  .filter-bar label.active { background: #10b98140; color: #6ee7b7; border: 1px solid #10b98180; }
+  .filter-bar label input { margin-right: 4px; }
+  .filter-bar .filter-mode { color: #94a3b8; font-size: 12px; padding-left: 12px; border-left: 1px solid #334155; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; background: #1e293b; border-radius: 8px; overflow: hidden; }
+  th { text-align: left; padding: 10px 8px; background: #0f172a; color: #94a3b8; border-bottom: 2px solid #334155; font-weight: 600; vertical-align: bottom; cursor: pointer; user-select: none; position: sticky; top: 0; z-index: 5; }
+  th:hover { background: #1a2436; }
+  th .threshold { color: #64748b; font-size: 10px; font-weight: 400; margin-top: 2px; }
+  td { padding: 8px 8px; border-bottom: 1px solid #131c2b; }
+  tr:hover td { background: #1a2436; }
+  tr.hidden { display: none; }
+  td.method-cell { text-align: center; font-weight: 600; }
+  td.method-cell.pass { background: #10b98115; color: #6ee7b7; }
+  td.method-cell.fail { background: #ef444415; color: #fca5a5; }
+  td.method-cell.incomputable { color: #475569; background: transparent; }
+  .position-owned { color: #fbbf24; font-weight: 600; padding: 1px 6px; background: #fbbf2420; border-radius: 3px; font-size: 10px; }
+  .position-watching { color: #60a5fa; padding: 1px 6px; background: #60a5fa20; border-radius: 3px; font-size: 10px; }
+  .position-interested { color: #94a3b8; padding: 1px 6px; background: #94a3b820; border-radius: 3px; font-size: 10px; }
+</style></head><body>
+
+<h1>📊 Karl's Stock-Screener — Methoden-Matrix</h1>
+<div class="sub">Generated 2026-05-07 16:21 UTC · 40 stocks · 5 methods · Buy-only-Filter (kein Aggregat-Score)</div>
+
+<div class="summary"><div class="msum"><div class="ml">Rule of 40</div><div class="mv"><span class="pass-count">27</span> / 38</div><div class="mh">pass / computable (40 total)</div></div><div class="msum"><div class="ml">Rule of X</div><div class="mv"><span class="pass-count">27</span> / 38</div><div class="mh">pass / computable (40 total)</div></div><div class="msum"><div class="ml">ROIC</div><div class="mv"><span class="pass-count">14</span> / 40</div><div class="mh">pass / computable (40 total)</div></div><div class="msum"><div class="ml">Net-Debt/EBITDA</div><div class="mv"><span class="pass-count">19</span> / 21</div><div class="mh">pass / computable (40 total)</div></div><div class="msum"><div class="ml">Sloan-Ratio</div><div class="mv"><span class="pass-count">29</span> / 40</div><div class="mh">pass / computable (40 total)</div></div></div>
+
+<div class="filter-bar">
+  <strong style="color:#f1f5f9;font-size:13px;">Filter:</strong>
+  <label data-filter="rule-of-40"><input type="checkbox" data-method="rule-of-40"> Rule of 40</label><label data-filter="rule-of-x"><input type="checkbox" data-method="rule-of-x"> Rule of X</label><label data-filter="roic"><input type="checkbox" data-method="roic"> ROIC</label><label data-filter="net-debt-ebitda"><input type="checkbox" data-method="net-debt-ebitda"> Net-Debt/EBITDA</label><label data-filter="sloan-ratio"><input type="checkbox" data-method="sloan-ratio"> Sloan-Ratio</label>
+  <span class="filter-mode">Mode: <select id="filter-mode" style="background:#0f172a;color:#cbd5e1;border:1px solid #334155;padding:2px 6px;border-radius:3px;"><option value="AND">AND (alle ausgewählten pass)</option><option value="OR">OR (mind. einer pass)</option></select></span>
+  <span class="filter-mode" id="visible-count">Showing all 40</span>
+</div>
+
+<table id="matrix">
+<thead><tr>
+  <th data-sort="ticker">Ticker</th>
+  <th data-sort="name">Name</th>
+  <th data-sort="position">Pos</th>
+  <th data-sort="sector">Sector</th>
+  <th data-sort="marketCap">MCap</th>
+  <th data-sort="growthYoY">Growth YoY</th>
+  <th class="method-col" data-method="rule-of-40" title="Revenue Growth YoY + FCF Margin TTM ≥ 40">Rule of 40<div class="threshold">≥ 40</div></th><th class="method-col" data-method="rule-of-x" title="Bessemer: Revenue Growth × 2 + FCF Margin ≥ 60">Rule of X<div class="threshold">≥ 60</div></th><th class="method-col" data-method="roic" title="Return on Invested Capital ≥ 15% (NetIncome / (TotalAssets - Cash))">ROIC<div class="threshold">≥ 0.15</div></th><th class="method-col" data-method="net-debt-ebitda" title="Net Debt / EBITDA ≤ 3 (EBITDA approx via OpInc × 1.2)">Net-Debt/EBITDA<div class="threshold">≤ 3</div></th><th class="method-col" data-method="sloan-ratio" title="Sloan Accruals (|NI-FCF|/TotalAssets) ≤ 10% (Earnings-Manipulation-Detector)">Sloan-Ratio<div class="threshold">|·|≤ 0.1</div></th>
+</tr></thead>
+<tbody><tr data-ticker="AFRM" data-position="interested">
+      <td><strong>AFRM</strong></td>
+      <td>Affirm Holdings, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Financial Services</td>
+      <td>$22.5B</td>
+      <td>29.6%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="41.91071221843265" title="29.6 + 12.3 = 41.9">41.9</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="71.51071221843264" title="29.6 × 2 + 12.3 = 71.5">71.5</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.0053248444922153765" title="0.1B / 9.8B = 0.5%">0.005</td><td class="method-cell fail" data-method="net-debt-ebitda" data-pass="false" data-value="15.944383463562854" title="(7.8B - 1.4B) / 0.4B = 15.94">15.944</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.04926378285330189" title="(0.1B - 0.6B) / 11.2B = -4.93%">-0.049</td>
+    </tr><tr data-ticker="ALAB" data-position="owned">
+      <td><strong>ALAB</strong></td>
+      <td>Astera Labs, Inc.</td>
+      <td><span class="position-owned">owned</span></td>
+      <td>Technology</td>
+      <td>$33.2B</td>
+      <td>93.4%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="117.93456008034991" title="93.4 + 24.5 = 117.9">117.9</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="211.33456008034992" title="93.4 × 2 + 24.5 = 211.3">211.3</td><td class="method-cell pass" data-method="roic" data-pass="true" data-value="0.1606304591954916" title="0.2B / 1.4B = 16.1%">0.161</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="missing inputs: opInc=173423000, totalDebt=null">—</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.040884619175975294" title="(0.2B - 0.3B) / 1.5B = -4.09%">-0.041</td>
+    </tr><tr data-ticker="AMAT" data-position="interested">
+      <td><strong>AMAT</strong></td>
+      <td>Applied Materials, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$322.5B</td>
+      <td>-2.1%</td>
+      <td class="method-cell fail" data-method="rule-of-40" data-pass="false" data-value="13.288636205757294" title="-2.1 + 15.4 = 13.3">13.3</td><td class="method-cell fail" data-method="rule-of-x" data-pass="false" data-value="11.188636205757295" title="-2.1 × 2 + 15.4 = 11.2">11.2</td><td class="method-cell pass" data-method="roic" data-pass="true" data-value="0.24082868745268085" title="7.0B / 29.1B = 24.1%">0.241</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="-0.0674931129476584" title="(6.6B - 7.2B) / 10.2B = -0.07">-0.067</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="0.035813658778478745" title="(7.0B - 5.7B) / 36.3B = 3.58%">0.036</td>
+    </tr><tr data-ticker="ANET" data-position="interested">
+      <td><strong>ANET</strong></td>
+      <td>Arista Networks, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$177.0B</td>
+      <td>35.1%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="80.02566906593785" title="35.1 + 44.9 = 80.0">80.0</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="115.12566906593784" title="35.1 × 2 + 44.9 = 115.1">115.1</td><td class="method-cell pass" data-method="roic" data-pass="true" data-value="0.20082700875622686" title="3.5B / 17.5B = 20.1%">0.201</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="missing inputs: opInc=3856100000, totalDebt=null">—</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.03810042882264019" title="(3.5B - 4.3B) / 19.4B = -3.81%">-0.038</td>
+    </tr><tr data-ticker="ARM" data-position="interested">
+      <td><strong>ARM</strong></td>
+      <td>Arm Holdings plc</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$225.3B</td>
+      <td>26.3%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="43.95681876899242" title="26.3 + 17.7 = 44.0">44.0</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="70.25681876899242" title="26.3 × 2 + 17.7 = 70.3">70.3</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.13202862567547832" title="0.9B / 6.8B = 13.2%">0.132</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="missing inputs: opInc=831000000, totalDebt=null">—</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="0.08351992834751455" title="(0.9B - 0.2B) / 8.9B = 8.35%">0.084</td>
+    </tr><tr data-ticker="ASML" data-position="watching">
+      <td><strong>ASML</strong></td>
+      <td>ASML Holding N.V.</td>
+      <td><span class="position-watching">watching</span></td>
+      <td>Technology</td>
+      <td>$581.0B</td>
+      <td>13.2%</td>
+      <td class="method-cell fail" data-method="rule-of-40" data-pass="false" data-value="37.66605522142218" title="13.2 + 24.5 = 37.7">37.7</td><td class="method-cell fail" data-method="rule-of-x" data-pass="false" data-value="50.86605522142217" title="13.2 × 2 + 24.5 = 50.9">50.9</td><td class="method-cell pass" data-method="roic" data-pass="true" data-value="0.2494701279660882" title="9.4B / 37.7B = 24.9%">0.249</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="-0.6286168085369954" title="(4.4B - 12.9B) / 13.6B = -0.63">-0.629</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.032325685333797406" title="(9.4B - 11.0B) / 50.6B = -3.23%">-0.032</td>
+    </tr><tr data-ticker="CDNS" data-position="interested">
+      <td><strong>CDNS</strong></td>
+      <td>Cadence Design Systems, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$98.8B</td>
+      <td>18.7%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="45.81624584462856" title="18.7 + 27.1 = 45.8">45.8</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="64.51624584462856" title="18.7 × 2 + 27.1 = 64.5">64.5</td><td class="method-cell pass" data-method="roic" data-pass="true" data-value="0.1550495250796614" title="1.1B / 7.2B = 15.5%">0.155</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="-0.2632505970994534" title="(2.5B - 3.0B) / 2.0B = -0.26">-0.263</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.04708116142894795" title="(1.1B - 1.6B) / 10.2B = -4.71%">-0.047</td>
+    </tr><tr data-ticker="CEG" data-position="interested">
+      <td><strong>CEG</strong></td>
+      <td>Constellation Energy Corporation</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Utilities</td>
+      <td>$114.1B</td>
+      <td>12.9%</td>
+      <td class="method-cell fail" data-method="rule-of-40" data-pass="false" data-value="17.826957332731226" title="12.9 + 4.9 = 17.8">17.8</td><td class="method-cell fail" data-method="rule-of-x" data-pass="false" data-value="30.726957332731224" title="12.9 × 2 + 4.9 = 30.7">30.7</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.04325846888524101" title="2.3B / 53.6B = 4.3%">0.043</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="1.0622121645227887" title="(9.0B - 3.6B) / 5.0B = 1.06">1.062</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="0.018009048192981537" title="(2.3B - 1.3B) / 57.2B = 1.80%">0.018</td>
+    </tr><tr data-ticker="COIN" data-position="interested">
+      <td><strong>COIN</strong></td>
+      <td>Coinbase Global, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Financial Services</td>
+      <td>$50.7B</td>
+      <td>-22.2%</td>
+      <td class="method-cell fail" data-method="rule-of-40" data-pass="false" data-value="-3.337885328373577" title="-22.2 + 18.9 = -3.3">-3.3</td><td class="method-cell fail" data-method="rule-of-x" data-pass="false" data-value="-25.537885328373576" title="-22.2 × 2 + 18.9 = -25.5">-25.5</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.06854677212153779" title="1.3B / 18.4B = 6.9%">0.069</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="-2.075530481740028" title="(7.7B - 11.3B) / 1.7B = -2.08">-2.076</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.03929841608701478" title="(1.3B - 2.4B) / 29.7B = -3.93%">-0.039</td>
+    </tr><tr data-ticker="CRDO" data-position="owned">
+      <td><strong>CRDO</strong></td>
+      <td>Credo Technology Group Holding Ltd</td>
+      <td><span class="position-owned">owned</span></td>
+      <td>Technology</td>
+      <td>$34.7B</td>
+      <td>201.5%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="217.62536232022995" title="201.5 + 16.1 = 217.6">217.6</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="419.12536232022995" title="201.5 × 2 + 16.1 = 419.1">419.1</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.09108109381790763" title="0.1B / 0.6B = 9.1%">0.091</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="missing inputs: opInc=37997000, totalDebt=null">—</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="0.028620079900451897" title="(0.1B - 0.0B) / 0.8B = 2.86%">0.029</td>
+    </tr><tr data-ticker="CRWD" data-position="interested">
+      <td><strong>CRWD</strong></td>
+      <td>CrowdStrike Holdings, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$127.0B</td>
+      <td>23.3%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="56.64608100678761" title="23.3 + 33.3 = 56.6">56.6</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="79.94608100678761" title="23.3 × 2 + 33.3 = 79.9">79.9</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="-0.027747009805587204" title="-0.2B / 5.9B = -2.8%">-0.028</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="EBITDA &lt;= 0 (opInc=-293292000)">—</td><td class="method-cell fail" data-method="sloan-ratio" data-pass="false" data-value="-0.12663768535298742" title="(-0.2B - 1.2B) / 11.1B = -12.66%">-0.127</td>
+    </tr><tr data-ticker="DDOG" data-position="interested">
+      <td><strong>DDOG</strong></td>
+      <td>Datadog, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$65.4B</td>
+      <td>29.2%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="54.86694374444624" title="29.2 + 25.7 = 54.9">54.9</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="84.06694374444623" title="29.2 × 2 + 25.7 = 84.1">84.1</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.01725916329877955" title="0.1B / 6.2B = 1.7%">0.017</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="EBITDA &lt;= 0 (opInc=-44373000)">—</td><td class="method-cell fail" data-method="sloan-ratio" data-pass="false" data-value="-0.12146221374252616" title="(0.1B - 0.9B) / 6.6B = -12.15%">-0.121</td>
+    </tr><tr data-ticker="DUOL" data-position="interested">
+      <td><strong>DUOL</strong></td>
+      <td>Duolingo, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$5.3B</td>
+      <td>26.5%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="54.93660423343205" title="26.5 + 28.4 = 54.9">54.9</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="81.43660423343205" title="26.5 × 2 + 28.4 = 81.4">81.4</td><td class="method-cell pass" data-method="roic" data-pass="true" data-value="0.4332161880239759" title="0.4B / 1.0B = 43.3%">0.433</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="missing inputs: opInc=135570000, totalDebt=null">—</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="0.026925752767568426" title="(0.4B - 0.4B) / 2.0B = 2.69%">0.027</td>
+    </tr><tr data-ticker="HOOD" data-position="interested">
+      <td><strong>HOOD</strong></td>
+      <td>Robinhood Markets, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Financial Services</td>
+      <td>$68.4B</td>
+      <td>15.1%</td>
+      <td class="method-cell incomputable" data-method="rule-of-40" data-pass="incomputable" title="missing inputs: growth=15.1, fcfMargin=null">—</td><td class="method-cell incomputable" data-method="rule-of-x" data-pass="incomputable" title="missing inputs: growth=15.1, fcfMargin=null">—</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.0555850749793364" title="1.9B / 33.9B = 5.6%">0.056</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="2.9309933142311366" title="(11.6B - 4.3B) / 2.5B = 2.93">2.931</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="0.0078401552298293" title="(1.9B - 1.6B) / 38.1B = 0.78%">0.008</td>
+    </tr><tr data-ticker="HUBS" data-position="interested">
+      <td><strong>HUBS</strong></td>
+      <td>HubSpot, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$12.6B</td>
+      <td>20.4%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="41.20905518763508" title="20.4 + 20.8 = 41.2">41.2</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="61.60905518763508" title="20.4 × 2 + 20.8 = 61.6">61.6</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.015448319581790694" title="0.0B / 3.0B = 1.5%">0.015</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="missing inputs: opInc=11415000, totalDebt=null">—</td><td class="method-cell fail" data-method="sloan-ratio" data-pass="false" data-value="-0.13770685165163482" title="(0.0B - 0.6B) / 3.9B = -13.77%">-0.138</td>
+    </tr><tr data-ticker="KLAC" data-position="interested">
+      <td><strong>KLAC</strong></td>
+      <td>KLA Corporation</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$229.1B</td>
+      <td>11.5%</td>
+      <td class="method-cell fail" data-method="rule-of-40" data-pass="false" data-value="33.568121101748375" title="11.5 + 22.1 = 33.6">33.6</td><td class="method-cell fail" data-method="rule-of-x" data-pass="false" data-value="45.068121101748375" title="11.5 × 2 + 22.1 = 45.1">45.1</td><td class="method-cell pass" data-method="roic" data-pass="true" data-value="0.29034511214439784" title="4.1B / 14.0B = 29.0%">0.290</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="0.632425330298502" title="(5.9B - 2.1B) / 6.0B = 0.63">0.632</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="0.019912277415268156" title="(4.1B - 3.7B) / 16.1B = 1.99%">0.020</td>
+    </tr><tr data-ticker="LRCX" data-position="interested">
+      <td><strong>LRCX</strong></td>
+      <td>Lam Research Corporation</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$354.4B</td>
+      <td>23.8%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="43.87366836065688" title="23.8 + 20.1 = 43.9">43.9</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="67.67366836065688" title="23.8 × 2 + 20.1 = 67.7">67.7</td><td class="method-cell pass" data-method="roic" data-pass="true" data-value="0.35829889409954835" title="5.4B / 15.0B = 35.8%">0.358</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="-0.271324834614705" title="(4.5B - 6.4B) / 7.1B = -0.27">-0.271</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.002617021296531408" title="(5.4B - 5.4B) / 21.3B = -0.26%">-0.003</td>
+    </tr><tr data-ticker="MELI" data-position="interested">
+      <td><strong>MELI</strong></td>
+      <td>MercadoLibre, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Consumer Cyclical</td>
+      <td>$93.8B</td>
+      <td>44.6%</td>
+      <td class="method-cell fail" data-method="rule-of-40" data-pass="false" data-value="36.10183390027297" title="44.6 + -8.5 = 36.1">36.1</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="80.70183390027297" title="44.6 × 2 + -8.5 = 80.7">80.7</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.051209067364156216" title="2.0B / 39.0B = 5.1%">0.051</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="1.4039883369780277" title="(9.1B - 3.7B) / 3.8B = 1.40">1.404</td><td class="method-cell fail" data-method="sloan-ratio" data-pass="false" data-value="-0.20568589307896032" title="(2.0B - 10.8B) / 42.7B = -20.57%">-0.206</td>
+    </tr><tr data-ticker="META" data-position="watching">
+      <td><strong>META</strong></td>
+      <td>Meta Platforms, Inc.</td>
+      <td><span class="position-watching">watching</span></td>
+      <td>Communication Services</td>
+      <td>$1.56T</td>
+      <td>33.1%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="44.98960427734122" title="33.1 + 11.9 = 45.0">45.0</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="78.08960427734122" title="33.1 × 2 + 11.9 = 78.1">78.1</td><td class="method-cell pass" data-method="roic" data-pass="true" data-value="0.18312393229703042" title="60.5B / 330.1B = 18.3%">0.183</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="0.22886746081303938" title="(58.7B - 35.9B) / 99.9B = 0.23">0.229</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="0.039202668699336925" title="(60.5B - 46.1B) / 366.0B = 3.92%">0.039</td>
+    </tr><tr data-ticker="MNDY" data-position="watching">
+      <td><strong>MNDY</strong></td>
+      <td>monday.com Ltd.</td>
+      <td><span class="position-watching">watching</span></td>
+      <td>Technology</td>
+      <td>$4.0B</td>
+      <td>24.6%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="45.33604825237505" title="24.6 + 20.7 = 45.3">45.3</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="69.93604825237504" title="24.6 × 2 + 20.7 = 69.9">69.9</td><td class="method-cell pass" data-method="roic" data-pass="true" data-value="0.19677156885977487" title="0.1B / 0.6B = 19.7%">0.197</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="missing inputs: opInc=-1748000, totalDebt=null">—</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.09074337795499858" title="(0.1B - 0.3B) / 2.1B = -9.07%">-0.091</td>
+    </tr><tr data-ticker="MRVL" data-position="interested">
+      <td><strong>MRVL</strong></td>
+      <td>Marvell Technology, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$141.4B</td>
+      <td>22.1%</td>
+      <td class="method-cell fail" data-method="rule-of-40" data-pass="false" data-value="39.70656367935227" title="22.1 + 17.6 = 39.7">39.7</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="61.806563679352266" title="22.1 × 2 + 17.6 = 61.8">61.8</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.1359071590359606" title="2.7B / 19.6B = 13.6%">0.136</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="1.1405409444112373" title="(4.5B - 2.6B) / 1.6B = 1.14">1.141</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="0.05735619444207617" title="(2.7B - 1.4B) / 22.3B = 5.74%">0.057</td>
+    </tr><tr data-ticker="MSFT" data-position="watching">
+      <td><strong>MSFT</strong></td>
+      <td>Microsoft Corporation</td>
+      <td><span class="position-watching">watching</span></td>
+      <td>Technology</td>
+      <td>$3.15T</td>
+      <td>18.3%</td>
+      <td class="method-cell fail" data-method="rule-of-40" data-pass="false" data-value="29.9287752160241" title="18.3 + 11.6 = 29.9">29.9</td><td class="method-cell fail" data-method="rule-of-x" data-pass="false" data-value="48.2287752160241" title="18.3 × 2 + 11.6 = 48.2">48.2</td><td class="method-cell pass" data-method="roic" data-pass="true" data-value="0.17295982580367925" title="101.8B / 588.8B = 17.3%">0.173</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="0.08369771567284949" title="(43.2B - 30.2B) / 154.2B = 0.08">0.084</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="0.04882205740521452" title="(101.8B - 71.6B) / 619.0B = 4.88%">0.049</td>
+    </tr><tr data-ticker="NET" data-position="interested">
+      <td><strong>NET</strong></td>
+      <td>Cloudflare, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$89.1B</td>
+      <td>33.6%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="51.49835754933811" title="33.6 + 17.9 = 51.5">51.5</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="85.09835754933812" title="33.6 × 2 + 17.9 = 85.1">85.1</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="-0.020081017609450354" title="-0.1B / 5.1B = -2.0%">-0.020</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="EBITDA &lt;= 0 (opInc=-207205000)">—</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.06010828566581669" title="(-0.1B - 0.3B) / 6.0B = -6.01%">-0.060</td>
+    </tr><tr data-ticker="NVDA" data-position="watching">
+      <td><strong>NVDA</strong></td>
+      <td>NVIDIA Corporation</td>
+      <td><span class="position-watching">watching</span></td>
+      <td>Technology</td>
+      <td>$5.13T</td>
+      <td>73.2%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="100.11929929187143" title="73.2 + 26.9 = 100.1">100.1</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="173.31929929187143" title="73.2 × 2 + 26.9 = 173.3">173.3</td><td class="method-cell pass" data-method="roic" data-pass="true" data-value="0.6119685215955311" title="120.1B / 196.2B = 61.2%">0.612</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="-0.013658058957820437" title="(8.5B - 10.6B) / 156.5B = -0.01">-0.014</td><td class="method-cell fail" data-method="sloan-ratio" data-pass="false" data-value="0.1131076435061387" title="(120.1B - 96.7B) / 206.8B = 11.31%">0.113</td>
+    </tr><tr data-ticker="NVO" data-position="watching">
+      <td><strong>NVO</strong></td>
+      <td>Novo Nordisk A/S</td>
+      <td><span class="position-watching">watching</span></td>
+      <td>Healthcare</td>
+      <td>$204.4B</td>
+      <td>24.0%</td>
+      <td class="method-cell fail" data-method="rule-of-40" data-pass="false" data-value="20.327257458318762" title="24.0 + -3.7 = 20.3">20.3</td><td class="method-cell fail" data-method="rule-of-x" data-pass="false" data-value="44.32725745831876" title="24.0 × 2 + -3.7 = 44.3">44.3</td><td class="method-cell pass" data-method="roic" data-pass="true" data-value="0.19834713944365054" title="102.4B / 516.4B = 19.8%">0.198</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="0.6261652227044133" title="(122.4B - 26.5B) / 153.2B = 0.63">0.626</td><td class="method-cell fail" data-method="sloan-ratio" data-pass="false" data-value="0.13528224246733297" title="(102.4B - 29.0B) / 542.9B = 13.53%">0.135</td>
+    </tr><tr data-ticker="OKTA" data-position="interested">
+      <td><strong>OKTA</strong></td>
+      <td>Okta, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$14.4B</td>
+      <td>11.6%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="40.24422657306252" title="11.6 + 28.6 = 40.2">40.2</td><td class="method-cell fail" data-method="rule-of-x" data-pass="false" data-value="51.84422657306253" title="11.6 × 2 + 28.6 = 51.8">51.8</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.026547672842295526" title="0.2B / 8.9B = 2.7%">0.027</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="-2.766884531590414" title="(0.3B - 0.9B) / 0.2B = -2.77">-2.767</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.06467559217301751" title="(0.2B - 0.9B) / 9.7B = -6.47%">-0.065</td>
+    </tr><tr data-ticker="ON" data-position="interested">
+      <td><strong>ON</strong></td>
+      <td>ON Semiconductor Corporation</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$39.6B</td>
+      <td>4.7%</td>
+      <td class="method-cell fail" data-method="rule-of-40" data-pass="false" data-value="28.098893765870162" title="4.7 + 23.4 = 28.1">28.1</td><td class="method-cell fail" data-method="rule-of-x" data-pass="false" data-value="32.79889376587016" title="4.7 × 2 + 23.4 = 32.8">32.8</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.01166096467980533" title="0.1B / 10.4B = 1.2%">0.012</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="0.9240891137442862" title="(3.0B - 2.1B) / 0.9B = 0.92">0.924</td><td class="method-cell fail" data-method="sloan-ratio" data-pass="false" data-value="-0.10360824330690428" title="(0.1B - 1.4B) / 12.5B = -10.36%">-0.104</td>
+    </tr><tr data-ticker="PANW" data-position="interested">
+      <td><strong>PANW</strong></td>
+      <td>Palo Alto Networks, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$158.4B</td>
+      <td>14.9%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="43.800036546662305" title="14.9 + 28.9 = 43.8">43.8</td><td class="method-cell fail" data-method="rule-of-x" data-pass="false" data-value="58.700036546662304" title="14.9 × 2 + 28.9 = 58.7">58.7</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.05321575400326644" title="1.1B / 21.3B = 5.3%">0.053</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="missing inputs: opInc=1242900000, totalDebt=null">—</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.09907873194153426" title="(1.1B - 3.5B) / 23.6B = -9.91%">-0.099</td>
+    </tr><tr data-ticker="PLTR" data-position="watching">
+      <td><strong>PLTR</strong></td>
+      <td>Palantir Technologies Inc.</td>
+      <td><span class="position-watching">watching</span></td>
+      <td>Technology</td>
+      <td>$329.5B</td>
+      <td>84.7%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="118.25548825815545" title="84.7 + 33.6 = 118.3">118.3</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="202.95548825815544" title="84.7 × 2 + 33.6 = 203.0">203.0</td><td class="method-cell pass" data-method="roic" data-pass="true" data-value="0.21734931244111624" title="1.6B / 7.5B = 21.7%">0.217</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="missing inputs: opInc=1414015000, totalDebt=null">—</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.05343112977495822" title="(1.6B - 2.1B) / 8.9B = -5.34%">-0.053</td>
+    </tr><tr data-ticker="RBLX" data-position="interested">
+      <td><strong>RBLX</strong></td>
+      <td>Roblox Corporation</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Communication Services</td>
+      <td>$32.2B</td>
+      <td>39.3%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="62.024852342936875" title="39.3 + 22.7 = 62.0">62.0</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="101.32485234293688" title="39.3 × 2 + 22.7 = 101.3">101.3</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="-0.1275242615393402" title="-1.1B / 8.4B = -12.8%">-0.128</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="EBITDA &lt;= 0 (opInc=-1232342000)">—</td><td class="method-cell fail" data-method="sloan-ratio" data-pass="false" data-value="-0.25299855039981717" title="(-1.1B - 1.4B) / 9.6B = -25.30%">-0.253</td>
+    </tr><tr data-ticker="RHM.DE" data-position="watching">
+      <td><strong>RHM.DE</strong></td>
+      <td>Rheinmetall AG</td>
+      <td><span class="position-watching">watching</span></td>
+      <td>Industrials</td>
+      <td>$62.1B</td>
+      <td>—</td>
+      <td class="method-cell incomputable" data-method="rule-of-40" data-pass="incomputable" title="missing inputs: growth=null, fcfMargin=9.857977455095511">—</td><td class="method-cell incomputable" data-method="rule-of-x" data-pass="incomputable" title="missing inputs: growth=null, fcfMargin=9.857977455095511">—</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.06798042586959396" title="1.0B / 15.1B = 6.8%">0.068</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="-0.3300039169604387" title="(1.0B - 1.6B) / 2.0B = -0.33">-0.330</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.023074171237777247" title="(1.0B - 1.4B) / 16.8B = -2.31%">-0.023</td>
+    </tr><tr data-ticker="SHOP" data-position="interested">
+      <td><strong>SHOP</strong></td>
+      <td>Shopify Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$142.7B</td>
+      <td>34.3%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="44.46294629622699" title="34.3 + 10.2 = 44.5">44.5</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="78.762946296227" title="34.3 × 2 + 10.2 = 78.8">78.8</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.09015012815818381" title="1.2B / 13.7B = 9.0%">0.090</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="missing inputs: opInc=1885000000, totalDebt=null">—</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.051089604318915" title="(1.2B - 2.0B) / 15.2B = -5.11%">-0.051</td>
+    </tr><tr data-ticker="SMCI" data-position="interested">
+      <td><strong>SMCI</strong></td>
+      <td>Super Micro Computer, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$20.3B</td>
+      <td>122.7%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="100.65150086182594" title="122.7 + -22.0 = 100.7">100.7</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="223.35150086182594" title="122.7 × 2 + -22.0 = 223.4">223.4</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.1185344257648569" title="1.0B / 8.8B = 11.9%">0.119</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="-0.27418194606944113" title="(4.8B - 5.2B) / 1.5B = -0.27">-0.274</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.03448717399075175" title="(1.0B - 1.5B) / 14.0B = -3.45%">-0.034</td>
+    </tr><tr data-ticker="SNOW" data-position="interested">
+      <td><strong>SNOW</strong></td>
+      <td>Snowflake Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$52.3B</td>
+      <td>30.1%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="63.99205540419827" title="30.1 + 33.9 = 64.0">64.0</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="94.09205540419828" title="30.1 × 2 + 33.9 = 94.1">94.1</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="-0.21122237851686745" title="-1.3B / 6.3B = -21.1%">-0.211</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="EBITDA &lt;= 0 (opInc=-1435165000)">—</td><td class="method-cell fail" data-method="sloan-ratio" data-pass="false" data-value="-0.268144576044115" title="(-1.3B - 1.1B) / 9.1B = -26.81%">-0.268</td>
+    </tr><tr data-ticker="SNPS" data-position="interested">
+      <td><strong>SNPS</strong></td>
+      <td>Synopsys, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$97.8B</td>
+      <td>65.5%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="104.16575323739576" title="65.5 + 38.7 = 104.2">104.2</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="169.66575323739576" title="65.5 × 2 + 38.7 = 169.7">169.7</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.02938519796584782" title="1.3B / 45.3B = 2.9%">0.029</td><td class="method-cell fail" data-method="net-debt-ebitda" data-pass="false" data-value="9.651484945429162" title="(13.5B - 2.9B) / 1.1B = 9.65">9.651</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.0003511495960525095" title="(1.3B - 1.3B) / 48.2B = -0.04%">-0.000</td>
+    </tr><tr data-ticker="TEAM" data-position="interested">
+      <td><strong>TEAM</strong></td>
+      <td>Atlassian Corporation</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$23.6B</td>
+      <td>31.7%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="54.91725875359723" title="31.7 + 23.2 = 54.9">54.9</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="86.61725875359723" title="31.7 × 2 + 23.2 = 86.6">86.6</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="-0.07273449064576311" title="-0.3B / 3.5B = -7.3%">-0.073</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="EBITDA &lt;= 0 (opInc=-130392000)">—</td><td class="method-cell fail" data-method="sloan-ratio" data-pass="false" data-value="-0.2767690008391303" title="(-0.3B - 1.4B) / 6.0B = -27.68%">-0.277</td>
+    </tr><tr data-ticker="TTD" data-position="interested">
+      <td><strong>TTD</strong></td>
+      <td>The Trade Desk, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Communication Services</td>
+      <td>$11.5B</td>
+      <td>14.3%</td>
+      <td class="method-cell fail" data-method="rule-of-40" data-pass="false" data-value="35.069574942885154" title="14.3 + 20.8 = 35.1">35.1</td><td class="method-cell fail" data-method="rule-of-x" data-pass="false" data-value="49.36957494288515" title="14.3 × 2 + 20.8 = 49.4">49.4</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.08067340667819826" title="0.4B / 5.5B = 8.1%">0.081</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="missing inputs: opInc=589321000, totalDebt=null">—</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.055199391538089" title="(0.4B - 0.8B) / 6.2B = -5.52%">-0.055</td>
+    </tr><tr data-ticker="VEEV" data-position="interested">
+      <td><strong>VEEV</strong></td>
+      <td>Veeva Systems Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Healthcare</td>
+      <td>$27.9B</td>
+      <td>16.0%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="48.800139388242805" title="16.0 + 32.8 = 48.8">48.8</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="64.8001393882428" title="16.0 × 2 + 32.8 = 64.8">64.8</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.12025572530698812" title="0.9B / 7.6B = 12.0%">0.120</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="missing inputs: opInc=916369000, totalDebt=null">—</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.056387087563087857" title="(0.9B - 1.4B) / 9.0B = -5.64%">-0.056</td>
+    </tr><tr data-ticker="VRT" data-position="interested">
+      <td><strong>VRT</strong></td>
+      <td>Vertiv Holdings Co</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Industrials</td>
+      <td>$129.8B</td>
+      <td>30.1%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="48.21931605595029" title="30.1 + 18.1 = 48.2">48.2</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="78.31931605595028" title="30.1 × 2 + 18.1 = 78.3">78.3</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="0.12712705074399083" title="1.3B / 10.5B = 12.7%">0.127</td><td class="method-cell pass" data-method="net-debt-ebitda" data-pass="true" data-value="0.5206026087262243" title="(2.9B - 1.7B) / 2.3B = 0.52">0.521</td><td class="method-cell pass" data-method="sloan-ratio" data-pass="true" data-value="-0.04541285906128197" title="(1.3B - 1.9B) / 12.2B = -4.54%">-0.045</td>
+    </tr><tr data-ticker="ZS" data-position="interested">
+      <td><strong>ZS</strong></td>
+      <td>Zscaler, Inc.</td>
+      <td><span class="position-interested">interested</span></td>
+      <td>Technology</td>
+      <td>$24.4B</td>
+      <td>25.9%</td>
+      <td class="method-cell pass" data-method="rule-of-40" data-pass="true" data-value="59.91948642244819" title="25.9 + 34.0 = 59.9">59.9</td><td class="method-cell pass" data-method="rule-of-x" data-pass="true" data-value="85.8194864224482" title="25.9 × 2 + 34.0 = 85.8">85.8</td><td class="method-cell fail" data-method="roic" data-pass="false" data-value="-0.010290099023410607" title="-0.0B / 4.0B = -1.0%">-0.010</td><td class="method-cell incomputable" data-method="net-debt-ebitda" data-pass="incomputable" title="EBITDA &lt;= 0 (opInc=-127144000)">—</td><td class="method-cell fail" data-method="sloan-ratio" data-pass="false" data-value="-0.1196548911756716" title="(-0.0B - 0.7B) / 6.4B = -11.97%">-0.120</td>
+    </tr></tbody>
+</table>
+
+<script>
+(function() {
+  const tbody = document.querySelector('#matrix tbody');
+  const checkboxes = document.querySelectorAll('.filter-bar input[type=checkbox]');
+  const modeSelect = document.getElementById('filter-mode');
+  const countEl = document.getElementById('visible-count');
+  const totalRows = tbody.querySelectorAll('tr').length;
+
+  function applyFilter() {
+    const active = Array.from(checkboxes).filter(c => c.checked).map(c => c.dataset.method);
+    const mode = modeSelect.value;
+
+    document.querySelectorAll('.filter-bar label').forEach(l => {
+      const cb = l.querySelector('input');
+      l.classList.toggle('active', cb && cb.checked);
+    });
+
+    let visible = 0;
+    tbody.querySelectorAll('tr').forEach(tr => {
+      let show = true;
+      if (active.length > 0) {
+        const passes = active.map(m => {
+          const cell = tr.querySelector('[data-method="' + m + '"]');
+          return cell && cell.dataset.pass === 'true';
+        });
+        if (mode === 'AND') show = passes.every(p => p);
+        else show = passes.some(p => p);
+      }
+      tr.classList.toggle('hidden', !show);
+      if (show) visible++;
+    });
+
+    countEl.textContent = active.length === 0
+      ? 'Showing all ' + totalRows
+      : 'Showing ' + visible + ' / ' + totalRows + ' (filter: ' + active.join(' ' + mode + ' ') + ')';
+  }
+
+  checkboxes.forEach(cb => cb.addEventListener('change', applyFilter));
+  modeSelect.addEventListener('change', applyFilter);
+
+  // Sortable columns
+  document.querySelectorAll('th[data-sort]').forEach((th, idx) => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const dir = th.dataset.dir === 'asc' ? 'desc' : 'asc';
+      th.dataset.dir = dir;
+      rows.sort((a, b) => {
+        const av = a.cells[idx].textContent.trim();
+        const bv = b.cells[idx].textContent.trim();
+        const an = parseFloat(av.replace(/[^0-9.-]/g, ''));
+        const bn = parseFloat(bv.replace(/[^0-9.-]/g, ''));
+        if (!isNaN(an) && !isNaN(bn)) return dir === 'asc' ? an - bn : bn - an;
+        return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+      });
+      rows.forEach(r => tbody.appendChild(r));
+    });
+  });
+
+  // Method-Spalten sortieren
+  document.querySelectorAll('th.method-col').forEach((th) => {
+    th.addEventListener('click', () => {
+      const m = th.dataset.method;
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const dir = th.dataset.dir === 'desc' ? 'asc' : 'desc';
+      th.dataset.dir = dir;
+      rows.sort((a, b) => {
+        const ac = a.querySelector('[data-method="' + m + '"]');
+        const bc = b.querySelector('[data-method="' + m + '"]');
+        const av = parseFloat(ac.dataset.value);
+        const bv = parseFloat(bc.dataset.value);
+        if (isNaN(av) && isNaN(bv)) return 0;
+        if (isNaN(av)) return 1;
+        if (isNaN(bv)) return -1;
+        return dir === 'asc' ? av - bv : bv - av;
+      });
+      rows.forEach(r => tbody.appendChild(r));
+    });
+  });
+})();
+</script>
+
+</body></html>
