@@ -23,7 +23,8 @@ const METHODS = [
   require('./multi-year-stability.js'),
   require('./peg.js'),
   require('./ev-ebitda.js'),
-  require('./insider-ownership.js')
+  require('./insider-ownership.js'),
+  require('./quarterly-revenue-acceleration.js')
 ];
 
 function evaluateStock(stock) {
