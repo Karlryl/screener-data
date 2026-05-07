@@ -1,0 +1,25 @@
+{
+  "_meta": {
+    "owner": "Karl",
+    "version": "1.1",
+    "updated_at": "2026-05-07",
+    "notes": "Hypergrowth + Quality-Compounder Watchlist. Tag-18: position-Feld eingefuehrt. Tool ist Buy-only — Sells laufen ueber Elliott Waves (extern). Conviction-Tracking fuer owned-Stocks via OWNED_OK/OWNED_REVIEW-Buy-Status."
+  },
+  "_position_legend": {
+    "owned": "Karl hat gekauft. Tool checkt ob These bestaetigt bleibt (kein Sell-Trigger).",
+    "watching": "Buy-Kandidat. Tool prueft ob bucket steigt (BUY_READY) oder faellt (NO_BUY).",
+    "interested": "auf Radar, noch keine aktive Watchlist-Pflege."
+  },
+  "stocks": [
+    { "isin": "US22667D1019", "ticker": "CRDO",   "yahoo_symbol": "CRDO",     "name": "Credo Technology",       "track_hint": "A", "position": "owned",    "purchase_note": "Buy Tag-17 — Hypergrowth + Quality" },
+    { "isin": "US01024W1027", "ticker": "ALAB",   "yahoo_symbol": "ALAB",     "name": "Astera Labs",            "track_hint": "A", "position": "owned",    "purchase_note": "Buy Tag-17 — Hypergrowth A-Bucket" },
+    { "isin": "DK0062498333", "ticker": "NVO",    "yahoo_symbol": "NVO",      "name": "Novo Nordisk",           "track_hint": "B", "position": "watching" },
+    { "isin": "US67066G1040", "ticker": "NVDA",   "yahoo_symbol": "NVDA",     "name": "NVIDIA",                 "track_hint": "A", "position": "watching" },
+    { "isin": "DE0007030009", "ticker": "RHM.DE", "yahoo_symbol": "RHM.DE",   "name": "Rheinmetall",            "track_hint": "A", "position": "watching" },
+    { "isin": "US69608A1088", "ticker": "PLTR",   "yahoo_symbol": "PLTR",     "name": "Palantir",               "track_hint": "A", "position": "watching" },
+    { "isin": "NL0010273215", "ticker": "ASML",   "yahoo_symbol": "ASML",     "name": "ASML Holding",           "track_hint": "B", "position": "watching" },
+    { "isin": "US5949181045", "ticker": "MSFT",   "yahoo_symbol": "MSFT",     "name": "Microsoft",              "track_hint": "B", "position": "watching" },
+    { "isin": "US30303M1027", "ticker": "META",   "yahoo_symbol": "META",     "name": "Meta Platforms",         "track_hint": "B", "position": "watching" },
+    { "isin": "IL0011762130", "ticker": "MNDY",   "yahoo_symbol": "MNDY",     "name": "monday.com",             "track_hint": "A", "position": "watching" }
+  ]
+}
