@@ -66,6 +66,44 @@ function cmdInfo(ticker) {
   console.log(JSON.stringify(s, null, 2));
 }
 
+
+function cmdImport(csvPath) {
+  if (!csvPath || !fs.existsSync(csvPath)) { console.error('CSV nicht gefunden'); process.exit(1); }
+  const lines = fs.readFileSync(csvPath, 'utf8').split(/\r?\n/).filter(Boolean);
+  const wl = load();
+  const existing = new Set(wl.stocks.map(s => s.ticker));
+  let added = 0, skipped = 0;
+  for (const line of lines) {
+    if (line.toLowerCase().startsWith('ticker')) continue;
+    const parts = line.split(',').map(s => s.trim());
+    if (!parts[0]) continue;
+    const ticker = parts[0].toUpperCase();
+    if (existing.has(ticker)) { skipped++; continue; }
+    wl.stocks.push({
+      isin: parts[3] || null,
+      ticker,
+      yahoo_symbol: parts[2] || ticker,
+      name: parts[1] || ticker,
+      track_hint: parts[4] || 'A'
+    });
+    existing.add(ticker);
+    added++;
+  }
+  save(wl);
+  console.log('✓ ' + added + ' added, ' + skipped + ' skipped (duplicates)');
+}
+
+function cmdExport(csvPath) {
+  const wl = load();
+  const target = csvPath || './watchlist-export.csv';
+  const lines = ['ticker,name,yahoo_symbol,isin,track_hint'];
+  for (const s of wl.stocks) {
+    lines.push([s.ticker, s.name, s.yahoo_symbol, s.isin || '', s.track_hint || 'A'].join(','));
+  }
+  fs.writeFileSync(target, lines.join('\n'));
+  console.log('✓ Exported ' + wl.stocks.length + ' stocks → ' + target);
+}
+
 function parseFlags(argv) {
   const opts = {};
   for (let i = 0; i < argv.length; i++) {
@@ -96,6 +134,12 @@ function main() {
       if (!args[1]) { console.error('Usage: info TICKER'); process.exit(1); }
       cmdInfo(args[1].toUpperCase());
       break;
+    case 'import':
+      cmdImport(args[1]);
+      break;
+    case 'export':
+      cmdExport(args[1]);
+      break;
     default:
       console.log('Watchlist-CLI');
       console.log('Commands:');
@@ -103,6 +147,8 @@ function main() {
       console.log('  add TICKER --name "Name" [--track A|B] [--isin X] [--yahoo S]');
       console.log('  remove TICKER                                     — Stock entfernen');
           console.log('  info TICKER                                       — Details zu einem Stock');
+      console.log('  import path/to/file.csv                            — Bulk-Add aus CSV (ticker,name,yahoo,isin,track)');
+      console.log('  export [path/to/file.csv]                          — Watchlist als CSV speichern');
   }
 }
 main();
