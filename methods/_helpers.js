@@ -66,3 +66,49 @@ function buildResult({ value, pass, computable, reason, components, threshold, t
 }
 
 module.exports = { val, metricValue, latestAnnual, latestBalance, cagr3y, buildResult };
+
+
+// Tag-38: Sub-Profile-Klassifikation (delegiert an Engine v7.3 die wir noch haben)
+let _subProfileCache = null;
+function _getEngine() {
+  if (_subProfileCache) return _subProfileCache;
+  try {
+    _subProfileCache = require('../engine-v7.3.js');
+    return _subProfileCache;
+  } catch (e) {
+    return null;
+  }
+}
+function classifySubProfile(stock) {
+  const E = _getEngine();
+  if (!E || !E.classifySubProfile) return null;
+  try { return E.classifySubProfile(stock); } catch (e) { return null; }
+}
+
+// Lade Sektor-Median-Overrides
+const fs = require('fs');
+const path = require('path');
+let _sectorMediansCache = null;
+function _loadSectorMedians() {
+  if (_sectorMediansCache) return _sectorMediansCache;
+  try {
+    const p = path.join(__dirname, 'sector-medians.json');
+    _sectorMediansCache = JSON.parse(fs.readFileSync(p, 'utf8'));
+  } catch (e) { _sectorMediansCache = {}; }
+  return _sectorMediansCache;
+}
+
+// Tag-38: gibt sektor-überschriebene Schwelle zurück oder fallback
+function effectiveThreshold(stock, methodId, defaultThreshold) {
+  const sp = classifySubProfile(stock);
+  if (!sp || !sp.id) return { threshold: defaultThreshold, source: 'default' };
+  const medians = _loadSectorMedians();
+  const sectorEntry = medians[sp.id];
+  if (sectorEntry && sectorEntry[methodId] != null) {
+    return { threshold: sectorEntry[methodId], source: 'sector:' + sp.id };
+  }
+  return { threshold: defaultThreshold, source: 'default' };
+}
+
+module.exports.classifySubProfile = classifySubProfile;
+module.exports.effectiveThreshold = effectiveThreshold;

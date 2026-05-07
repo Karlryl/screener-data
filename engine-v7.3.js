@@ -126,9 +126,9 @@ function classifySubProfile(stock) {
 
   // Healthcare ist sektor-getrieben, nicht keyword-getrieben — höchste Priorität
   if (sec.includes('healthcare') || sec.includes('health care')) return SUB_PROFILES.HEALTHCARE;
-  // Tag-26: Banks ZUERST raus aus FINTECH. FINTECH bleibt für payments/asset-mgmt-tech.
-  if (ind.includes('bank') || ind.includes('credit services') || ind.includes('mortgage finance') ||
-      ind.includes('asset management')) return SUB_PROFILES.BANK;
+  // Tag-26+38: Banks ZUERST raus aus FINTECH. Aber 'Credit Services' (Visa/MA) bleibt FINTECH (Payment-Processing).
+  if (ind.includes('bank') || ind.includes('mortgage finance')) return SUB_PROFILES.BANK;
+  if (ind.includes('credit services') || ind.includes('asset management')) return SUB_PROFILES.FINTECH;
   // Financial Sector dominiert über keywords (z.B. "payment" könnte auch SaaS sein)
   if (sec.includes('financial')) return SUB_PROFILES.FINTECH;
 
