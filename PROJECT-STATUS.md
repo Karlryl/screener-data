@@ -1,6 +1,6 @@
 # Project Status — Karl's Stock-Screener
 
-**Last Update:** 2026-05-07 — Tag 57 done, Tag 58-60 pending
+**Last Update:** 2026-05-07 — Tag 58 done, Tag 59-60 pending
 
 ## Aktueller Stand
 
@@ -44,7 +44,7 @@
 | 55 | EV/EBITDA-Methode | ✓ done |
 | 56 | Insider-Ownership | ✓ done |
 | 57 | Performance-Tracker 30d+90d | ✓ done |
-| 58 | Method-Correlation-Analyse | pending |
+| 58 | Method-Correlation-Analyse | ✓ done |
 | 59 | Threshold-Tuning-Tool | pending |
 | 60 | Status-Recap + Roadmap-Refresh | pending |
 
