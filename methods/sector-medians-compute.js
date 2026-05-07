@@ -51,6 +51,7 @@ function computeMedians(stocks, classify) {
   const buckets = gatherBySubProfile(stocks, classify);
   const result = {};
   for (const [spId, metrics] of Object.entries(buckets)) {
+    if (spId === 'OTHER') continue;  // Tag-49: OTHER bleibt default-threshold (synthetic + edge-cases)
     result[spId] = {};
     for (const [mid, arr] of Object.entries(metrics)) {
       if (arr.length >= MIN_STOCKS_PER_SECTOR) {
