@@ -166,7 +166,10 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       region: _y(pr, 'exchangeName') || null,
       reportingCurrency: _y(pr, 'currency') || 'USD',
       fetchedAt: asOf,
-      filingDate: null  // Yahoo liefert kein Filing-Datum für TTM
+      filingDate: null,  // Yahoo liefert kein Filing-Datum für TTM
+      // Tag 104: IPO/First-Trade-Datum fuer IPO-Filter im Modes-Report
+      firstTradeDate: _y(pr, 'firstTradeDateMilliseconds') ? new Date(_y(pr, 'firstTradeDateMilliseconds')).toISOString() : null,
+      ipoYear: _y(pr, 'firstTradeDateMilliseconds') ? new Date(_y(pr, 'firstTradeDateMilliseconds')).getUTCFullYear() : null
     },
     marketCap: _metric(_convertToUSD(_y(sd, 'marketCap'), _y(sd, 'currency') || _y(pr, 'currency')), SRC, CONF, asOf),
     metrics: {
