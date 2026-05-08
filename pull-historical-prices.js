@@ -49,7 +49,11 @@ async function main() {
   const todaysSnapshot = {};
   let ok = 0, failed = 0;
 
-  for (const stock of wl.stocks) {
+  // Tag-84: parallel pulls
+  const CONCURRENCY = parseInt(process.env.PRICE_CONCURRENCY || '10', 10);
+  _log('INFO', `Parallel price pulls: ${CONCURRENCY} concurrent`);
+  async function processOne(stock) {
+
     try {
       _log('INFO', `Pulling ${stock.ticker}...`);
       const period1 = new Date(Date.now() - 400 * 86400 * 1000);
@@ -58,7 +62,7 @@ async function main() {
         period1, period2, interval: '1d'
       });
       const quotes = (result.quotes || []).filter(q => q.close != null);
-      if (!quotes.length) { failed++; continue; }
+      if (!quotes.length) { failed++; return; }
       const latestClose = quotes[quotes.length - 1].close;
       todaysSnapshot[stock.ticker] = { close: latestClose, asOf: today, currency: result.meta && result.meta.currency };
 
@@ -75,8 +79,17 @@ async function main() {
       _log('WARN', `  ${stock.ticker} failed: ${e.message}`);
       failed++;
     }
-    await sleep(args.rateLimit);
+
+    }
+  for (let batchStart = 0; batchStart < wl.stocks.length; batchStart += CONCURRENCY) {
+    const batch = wl.stocks.slice(batchStart, batchStart + CONCURRENCY);
+    await Promise.all(batch.map(s => processOne(s).catch(e => _log('WARN', `Batch ${s.ticker}: ${e.message}`))));
+    if (batchStart + CONCURRENCY < wl.stocks.length) {
+      await sleep(args.rateLimit);
+      if (batchStart % 100 === 0) _log('INFO', `Price pull progress: ${batchStart + CONCURRENCY}/${wl.stocks.length}`);
+    }
   }
+
 
   fs.writeFileSync(path.join(args.out, `${today}.json`), JSON.stringify(todaysSnapshot, null, 2));
   fs.writeFileSync(histPath, JSON.stringify(history, null, 2));

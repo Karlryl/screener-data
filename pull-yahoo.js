@@ -312,16 +312,42 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const asOf = new Date().toISOString();
       const canonical = mapYahooToCanonical(yahoo, stock, asOf);
 
-      // Tag-14: fundamentalsTimeSeries-Pull für annualOpInc/FCF/opIncQ.
-      // Yahoo's incomeStatementHistory liefert das seit Nov 2024 leer.
-      const fts = await fetchFundamentalsTS(stock.yahoo_symbol);
-      const ftsAnnual = mapFTSToAnnual(fts.annualFin, fts.annualCash);
-      const ftsQuarterly = mapFTSToQuarterly(fts.quarterlyFin);
-      const ftsBalance = mapFTSToBalance(fts.annualBs);  // Tag-28: balance-sheet from FTS
-      // Tag-43: SBC from cash-flow stockBasedCompensation
-      const ftsAnnualSBC = _ftsExtractByYear(fts.annualCash, ['stockBasedCompensation']);
-      // Tag-44: Capex from cash-flow capitalExpenditure
-      const ftsAnnualCapex = _ftsExtractByYear(fts.annualCash, ['capitalExpenditure', 'capitalExpenditures']);
+      // Tag-85: Smart-Cache — skip FTS-Pull wenn cache <28 Tage alt
+      const cacheDir = path.join(__dirname, 'fundamentals-cache');
+      if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
+      const cachePath = path.join(cacheDir, stock.ticker.replace(/[^A-Z0-9.-]/gi, '_') + '.json');
+      const CACHE_TTL_MS = 28 * 86400 * 1000;
+      let useCache = false;
+      let cached = null;
+      if (fs.existsSync(cachePath)) {
+        try {
+          cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+          const age = Date.now() - new Date(cached.cachedAt).getTime();
+          if (age < CACHE_TTL_MS) useCache = true;
+        } catch (e) {}
+      }
+      let ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex;
+      if (useCache && cached.payload) {
+        ftsAnnual = cached.payload.ftsAnnual;
+        ftsQuarterly = cached.payload.ftsQuarterly;
+        ftsBalance = cached.payload.ftsBalance;
+        ftsAnnualSBC = cached.payload.ftsAnnualSBC;
+        ftsAnnualCapex = cached.payload.ftsAnnualCapex;
+      } else {
+        // Tag-14: fundamentalsTimeSeries-Pull für annualOpInc/FCF/opIncQ.
+        const fts = await fetchFundamentalsTS(stock.yahoo_symbol);
+        ftsAnnual = mapFTSToAnnual(fts.annualFin, fts.annualCash);
+        ftsQuarterly = mapFTSToQuarterly(fts.quarterlyFin);
+        ftsBalance = mapFTSToBalance(fts.annualBs);
+        ftsAnnualSBC = _ftsExtractByYear(fts.annualCash, ['stockBasedCompensation']);
+        ftsAnnualCapex = _ftsExtractByYear(fts.annualCash, ['capitalExpenditure', 'capitalExpenditures']);
+        try {
+          fs.writeFileSync(cachePath, JSON.stringify({
+            cachedAt: new Date().toISOString(),
+            payload: { ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex }
+          }));
+        } catch (e) {}
+      }
       // Override leere annual-Arrays aus quoteSummary mit FTS-Daten wenn FTS welche hat
       if (ftsAnnual.annualRev.length > canonical.annual.annualRev.length) canonical.annual.annualRev = ftsAnnual.annualRev;
       if (ftsAnnual.annualOpInc.length > 0) canonical.annual.annualOpInc = ftsAnnual.annualOpInc;
