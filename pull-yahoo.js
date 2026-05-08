@@ -167,9 +167,8 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       reportingCurrency: _y(pr, 'currency') || 'USD',
       fetchedAt: asOf,
       filingDate: null,  // Yahoo liefert kein Filing-Datum für TTM
-      // Tag 104: IPO/First-Trade-Datum fuer IPO-Filter im Modes-Report
-      firstTradeDate: _y(pr, 'firstTradeDateMilliseconds') ? new Date(_y(pr, 'firstTradeDateMilliseconds')).toISOString() : null,
-      ipoYear: _y(pr, 'firstTradeDateMilliseconds') ? new Date(_y(pr, 'firstTradeDateMilliseconds')).getUTCFullYear() : null
+      firstTradeDate: null,  // wird unten aus yf.quote() gesetzt (Tag 106)
+      ipoYear: null
     },
     marketCap: _metric(_convertToUSD(_y(sd, 'marketCap'), _y(sd, 'currency') || _y(pr, 'currency')), SRC, CONF, asOf),
     metrics: {
@@ -330,6 +329,16 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const yahoo = await yf.quoteSummary(stock.yahoo_symbol, { modules: MODULES });
       const asOf = new Date().toISOString();
       const canonical = mapYahooToCanonical(yahoo, stock, asOf);
+
+      // Tag 106: IPO-Datum via separates yf.quote() — quoteSummary.price hat das Feld nicht.
+      try {
+        const q = await yf.quote(stock.yahoo_symbol);
+        if (q && q.firstTradeDateMilliseconds) {
+          const ftd = new Date(q.firstTradeDateMilliseconds);
+          canonical.meta.firstTradeDate = ftd.toISOString();
+          canonical.meta.ipoYear = ftd.getUTCFullYear();
+        }
+      } catch (e) { /* IPO-Feld optional, nicht-kritisch */ }
 
       // Tag-85: Smart-Cache — skip FTS-Pull wenn cache <28 Tage alt
       const cacheDir = path.join(__dirname, 'fundamentals-cache');
