@@ -3,7 +3,7 @@
     "owner": "Karl",
     "version": "9.0",
     "updated_at": "2026-05-08",
-    "notes": "Tag-87b: Universum auf 1638 Tickers. Mid/Large-Cap-Filter ($2B-$300B) im pull-yahoo aktiv. Erwartete erfolgreiche Pulls: ~1700-1800 nach Yahoo-fail-rate + MCap-Filter. | Tag-100h: +7 Tickers (RDDT, ELF, CELH, UBER, HIMS, HRMS.PA, LVMUY)"
+    "notes": "Tag 100j: Watchlist auf gesamtes Universum gemerged (1645 Tickers). pull-yahoo zieht jetzt das volle Universe. MCap-Filter $2B-$300B im pull-yahoo aktiv (kicked Small/Mega-Caps)."
   },
   "stocks": [
     {
@@ -11512,6 +11512,13 @@
       "ticker": "LVMUY",
       "yahoo_symbol": "LVMUY",
       "name": "LVMH (ADR)",
+      "track_hint": "A"
+    },
+    {
+      "isin": null,
+      "ticker": "STMicroelectronics",
+      "yahoo_symbol": "STMicroelectronics",
+      "name": "STMicroelectronics",
       "track_hint": "A"
     }
   ]
