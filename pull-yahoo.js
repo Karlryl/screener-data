@@ -53,6 +53,22 @@ const MODULES = [
 
 // ─── Logger ───────────────────────────────────────────────────────
 
+
+// Tag-87c: FX-Rates für Currency-Conversion (USD-base)
+const FX_TO_USD = {
+  USD: 1.0, EUR: 1.08, GBP: 1.27, CHF: 1.10,
+  SEK: 0.095, NOK: 0.092, DKK: 0.145,
+  JPY: 0.0067, HKD: 0.128, CNY: 0.139,
+  AUD: 0.65, CAD: 0.74, KRW: 0.00074, INR: 0.012,
+  TWD: 0.031, BRL: 0.20, MXN: 0.058, ZAR: 0.054
+};
+function _convertToUSD(value, currency) {
+  if (value == null || !currency) return value;
+  const rate = FX_TO_USD[currency.toUpperCase()];
+  if (rate == null) return value;  // unknown currency, leave as is
+  return value * rate;
+}
+
 function _ts() { return new Date().toISOString(); }
 function _log(level, msg) { console.log(`[${_ts()}] [${level}] ${msg}`); }
 
@@ -152,7 +168,7 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       fetchedAt: asOf,
       filingDate: null  // Yahoo liefert kein Filing-Datum für TTM
     },
-    marketCap: _metric(_y(sd, 'marketCap'), SRC, CONF, asOf),
+    marketCap: _metric(_convertToUSD(_y(sd, 'marketCap'), _y(sd, 'currency') || _y(pr, 'currency')), SRC, CONF, asOf),
     metrics: {
       revenueTTM:       _metric(revTTM, SRC, CONF, asOf),
       revenueGrowthYoY: _metric(revGrowthYoY, SRC, CONF, asOf),
@@ -366,6 +382,22 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (ftsQuarterly.opIncQ.length > 0) canonical.timeseries.opIncQ = ftsQuarterly.opIncQ;
       if (ftsQuarterly.grossProfitQ.length > 0) canonical.timeseries.grossProfitQ = ftsQuarterly.grossProfitQ;
 
+      // Tag-87a: MarketCap-Filter — skip Stocks außerhalb Karl's Mid/Large-Cap-Range
+      const MIN_MCAP = 2e9;       // $2B
+      const MAX_MCAP = 300e9;     // $300B (Mega-Caps optional out)
+      const mcapVal = canonical.marketCap && canonical.marketCap.value;
+      if (mcapVal != null && (mcapVal < MIN_MCAP || mcapVal > MAX_MCAP)) {
+        const reason = mcapVal < MIN_MCAP ? `mcap=${(mcapVal/1e9).toFixed(2)}B < $2B (Small-Cap)` : `mcap=${(mcapVal/1e9).toFixed(0)}B > $300B (Mega-Cap)`;
+        _log('INFO', `  ⊘ ${stock.ticker} skipped: ${reason}`);
+        // Remove existing snapshot if was previously included
+        const filename = `${stock.ticker.replace(/[^A-Z0-9.-]/gi, '_')}.json`;
+        const outPath = path.join(outputDir, filename);
+        if (fs.existsSync(outPath)) {
+          try { fs.unlinkSync(outPath); } catch (e) {}
+        }
+        results.push({ ticker: stock.ticker, status: 'skipped-mcap', reason });
+        return;  // skip this stock
+      }
       const filename = `${stock.ticker.replace(/[^A-Z0-9.-]/gi, '_')}.json`;
       const outPath = path.join(outputDir, filename);
       fs.writeFileSync(outPath, JSON.stringify(canonical, null, 2));
