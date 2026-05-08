@@ -17,7 +17,10 @@ async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 async function main() {
   const wl = JSON.parse(fs.readFileSync('./watchlist.json', 'utf8'));
   const result = {};
-  for (const stock of wl.stocks) {
+  // Tag-86: parallel earnings pulls
+  const CONCURRENCY = parseInt(process.env.EARNINGS_CONCURRENCY || '15', 10);
+  async function processOne(stock) {
+
     try {
       const r = await yf.quoteSummary(stock.yahoo_symbol, { modules: ['calendarEvents'] });
       const d = r.calendarEvents && r.calendarEvents.earnings && r.calendarEvents.earnings.earningsDate;
@@ -28,8 +31,16 @@ async function main() {
         if (iso) result[stock.ticker] = { date: iso.slice(0, 10), pulledAt: new Date().toISOString().slice(0, 10) };
       }
     } catch (e) { /* skip */ }
-    await sleep(800);
+
+    }
+  for (let batchStart = 0; batchStart < wl.stocks.length; batchStart += CONCURRENCY) {
+    const batch = wl.stocks.slice(batchStart, batchStart + CONCURRENCY);
+    await Promise.all(batch.map(s => processOne(s).catch(() => {})));
+    if (batchStart + CONCURRENCY < wl.stocks.length) {
+      await sleep(300);
+    }
   }
+
   fs.writeFileSync('./earnings-calendar.json', JSON.stringify(result, null, 2));
   console.log(`✓ Saved earnings-calendar.json (${Object.keys(result).length} stocks with date)`);
 }
