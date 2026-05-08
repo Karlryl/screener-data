@@ -18,7 +18,7 @@
 
 const SECTOR_EXCLUDE_DEFAULT = [
   /bank|insurance|financial services|capital markets|asset management/i,
-  /real estate investment trust|reit/i
+  /real estate|reit|equity reit|mortgage reit/i
 ];
 
 const MODES = {
@@ -77,9 +77,11 @@ const MODES = {
 };
 
 function isExcludedBySector(stock, mode) {
-  const sector = (stock && stock.meta && (stock.meta.sector || stock.meta.industry)) || '';
-  if (!sector) return false;
-  return mode.excludeSectors.some(rgx => rgx.test(sector));
+  const m = stock && stock.meta;
+  if (!m) return false;
+  const combined = [(m.sector || ''), (m.industry || '')].filter(Boolean).join(' ');
+  if (!combined) return false;
+  return mode.excludeSectors.some(rgx => rgx.test(combined));
 }
 
 function evaluateMode(stock, modeId, allResults) {
