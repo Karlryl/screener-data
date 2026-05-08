@@ -21,6 +21,13 @@ const SECTOR_EXCLUDE_DEFAULT = [
   /real estate|reit|equity reit|mortgage reit/i
 ];
 
+// Tag 104: zusaetzlich Mining/Materials aus Hypergrowth raus — rohstoff-preis-abhaengig
+const SECTOR_EXCLUDE_HYPERGROWTH = [
+  ...SECTOR_EXCLUDE_DEFAULT,
+  /\bgold\b|\bsilver\b|\bcopper\b|\bmining\b|\bmetals\b|\bcoal\b/i,
+  /oil & gas|integrated oil|exploration|drilling/i
+];
+
 const MODES = {
   HYPERGROWTH: {
     id: 'HYPERGROWTH',
@@ -38,7 +45,7 @@ const MODES = {
       { id: 'profitability-state', required: false, weight: 'prefer', storyHint: 'Profitabilitaets-Status' }
     ],
     dataGuards: ['revenue-shock-guard', 'sloan-ratio'],
-    excludeSectors: SECTOR_EXCLUDE_DEFAULT,
+    excludeSectors: SECTOR_EXCLUDE_HYPERGROWTH,
     storyTemplate: '{ticker} — Hypergrowth: {coreSummary}. {warnings}',
     defaultSortMethod: 'rule-of-x'
   },
