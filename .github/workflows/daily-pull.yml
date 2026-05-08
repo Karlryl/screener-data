@@ -58,6 +58,11 @@ jobs:
         run: node generate-methods-report.js --out methods-report.html
         continue-on-error: true
 
+      # Tag 100: Modes-Report (3 Discovery-Modi: Hypergrowth/Quality/Turnaround)
+      - name: Generate Modes-Report
+        run: node generate-modes-report.js --snapshots snapshots --out modes-report.html
+        continue-on-error: true
+
       # Tag-35: Methods-History-Snapshot (für Backtest später)
       - name: Snapshot Methods-History
         run: node snapshot-methods-history.js --out methods-history
@@ -87,7 +92,7 @@ jobs:
         run: |
           git config user.name "yahoo-pull-bot"
           git config user.email "yahoo-pull-bot@users.noreply.github.com"
-          git add snapshots/ alert-state.json methods-report.html diff-report.html dashboard.html methods-history/ prices/ earnings-calendar.json watchlist.json fundamentals-cache/ universe-list.txt
+          git add snapshots/ alert-state.json methods-report.html modes-report.html diff-report.html dashboard.html methods-history/ prices/ earnings-calendar.json watchlist.json fundamentals-cache/ universe-list.txt
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
