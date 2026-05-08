@@ -61,6 +61,11 @@ jobs:
         run: node generate-modes-report.js --snapshots snapshots --out modes-report.html
         continue-on-error: true
 
+      # Tag 102g: Walk-Forward Picks-History — friert Mode-Picks pro Run für späteren Performance-Vergleich.
+      - name: Snapshot Picks-History
+        run: node snapshot-picks.js --snapshots snapshots --out picks-history
+        continue-on-error: true
+
       # Tag-35: Methods-History-Snapshot (für Backtest später)
       - name: Snapshot Methods-History
         run: node snapshot-methods-history.js --out methods-history
@@ -90,7 +95,7 @@ jobs:
         run: |
           git config user.name "yahoo-pull-bot"
           git config user.email "yahoo-pull-bot@users.noreply.github.com"
-          git add snapshots/ alert-state.json modes-report.html diff-report.html dashboard.html methods-history/ prices/ earnings-calendar.json watchlist.json fundamentals-cache/ universe-list.txt
+          git add snapshots/ alert-state.json modes-report.html picks-history/ diff-report.html dashboard.html methods-history/ prices/ earnings-calendar.json watchlist.json fundamentals-cache/ universe-list.txt
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
