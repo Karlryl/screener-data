@@ -159,8 +159,11 @@ function renderCard(ev, i, modeId, sortMethodId) {
 
   const warningHtml = story && story.warnings ? `<div style="color:#fcd34d;font-size:10px;margin-top:4px;padding-top:4px;border-top:1px solid #334155;">${escHtml(story.warnings)}</div>` : '';
 
+  // Tag 102c: prof-state attr fuer Quick-Filter
+  const psRes = ev.allResults['profitability-state'];
+  const profState = (psRes && psRes.computable && psRes.components) ? psRes.components.state : 'NA';
   return `
-    <div class="mode-card">
+    <div class="mode-card" data-prof-state="${profState}">
       <div class="mode-card-head">
         <div>
           <div class="mode-card-ticker">${escHtml(ticker)}</div>
@@ -236,7 +239,19 @@ function renderModeSection(modeId, eligible, evaluated, topN) {
     return `<div class="mode-tab-panel" data-mode="${modeId}" data-tab="${escHtml(tabId)}" style="${visible}">${cards}</div>`;
   }).join('');
 
-  return headerHtml + `
+  // Tag 102c: Profitability-State Quick-Filter (Loss/Turnaround/Recent/Stable/All)
+  const profStateFilterHtml = `
+    <div class="prof-state-filter" data-mode="${modeId}" style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;padding:6px 10px;background:#1e1b3a;border-radius:6px;align-items:center;">
+      <strong style="color:#f1f5f9;font-size:11px;">Profitabilitaet:</strong>
+      <button class="psb-mode psb-active" data-mode="${modeId}" data-pstate="ALL" style="background:#3b82f6;color:white;border:1px solid #2563eb;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;font-weight:600;">Alle</button>
+      <button class="psb-mode" data-mode="${modeId}" data-pstate="LOSS" style="background:#1f0a14;color:#fca5a5;border:1px solid #ef444460;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;">Loss</button>
+      <button class="psb-mode" data-mode="${modeId}" data-pstate="TURNAROUND" style="background:#332010;color:#fcd34d;border:1px solid #f59e0b60;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;">Turnaround</button>
+      <button class="psb-mode" data-mode="${modeId}" data-pstate="RECENT" style="background:#1f2c10;color:#bef264;border:1px solid #84cc1660;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;">Recent (1-2y)</button>
+      <button class="psb-mode" data-mode="${modeId}" data-pstate="STABLE" style="background:#0a2818;color:#6ee7b7;border:1px solid #10b98160;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;">Stable (3+y)</button>
+    </div>
+  `;
+
+  return headerHtml + profStateFilterHtml + `
     <div class="mode-tabs">${tabButtonsHtml}</div>
     ${panelsHtml}
   `;
@@ -311,7 +326,37 @@ ${sections}
 </div>
 <script>
 (function() {
+  // Tag 102c: Profitability-State Quick-Filter
   document.addEventListener('click', function(e) {
+    if (e.target.classList && e.target.classList.contains('psb-mode')) {
+      const btn = e.target;
+      const mode = btn.dataset.mode;
+      const pstate = btn.dataset.pstate;
+      // Update button states
+      document.querySelectorAll('.psb-mode[data-mode="' + mode + '"]').forEach(b => {
+        b.classList.remove('psb-active');
+        b.style.background = b.dataset.pstate === 'LOSS' ? '#1f0a14' :
+                              b.dataset.pstate === 'TURNAROUND' ? '#332010' :
+                              b.dataset.pstate === 'RECENT' ? '#1f2c10' :
+                              b.dataset.pstate === 'STABLE' ? '#0a2818' : '#334155';
+        b.style.color = b.dataset.pstate === 'LOSS' ? '#fca5a5' :
+                         b.dataset.pstate === 'TURNAROUND' ? '#fcd34d' :
+                         b.dataset.pstate === 'RECENT' ? '#bef264' :
+                         b.dataset.pstate === 'STABLE' ? '#6ee7b7' : '#cbd5e1';
+        b.style.fontWeight = '400';
+      });
+      btn.classList.add('psb-active');
+      btn.style.background = '#3b82f6';
+      btn.style.color = 'white';
+      btn.style.fontWeight = '600';
+      // Filter cards in this mode
+      document.querySelectorAll('.mode-tab-panel[data-mode="' + mode + '"] .mode-card').forEach(card => {
+        const ps = card.dataset.profState;
+        const visible = pstate === 'ALL' || ps === pstate;
+        card.style.display = visible ? '' : 'none';
+      });
+      return;
+    }
     if (!e.target.classList || !e.target.classList.contains('mode-tab-btn')) return;
     const btn = e.target;
     const mode = btn.dataset.mode;
