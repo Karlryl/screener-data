@@ -37,7 +37,8 @@ const MODES = {
     ],
     dataGuards: ['revenue-shock-guard', 'sloan-ratio'],
     excludeSectors: SECTOR_EXCLUDE_DEFAULT,
-    storyTemplate: '{ticker} — Hypergrowth: {coreSummary}. {warnings}'
+    storyTemplate: '{ticker} — Hypergrowth: {coreSummary}. {warnings}',
+    defaultSortMethod: 'rule-of-x'
   },
 
   QUALITY_COMPOUNDER: {
@@ -56,7 +57,8 @@ const MODES = {
     dataGuards: ['asset-growth-divergence'],
     softWarnings: ['sloan-ratio'],
     excludeSectors: SECTOR_EXCLUDE_DEFAULT,
-    storyTemplate: '{ticker} — Quality-Compounder: {coreSummary}. {warnings}'
+    storyTemplate: '{ticker} — Quality-Compounder: {coreSummary}. {warnings}',
+    defaultSortMethod: 'roic'
   },
 
   TURNAROUND: {
@@ -73,7 +75,8 @@ const MODES = {
     dataGuards: ['sloan-ratio', 'net-debt-ebitda', 'revenue-shock-guard'],
     excludeSectors: SECTOR_EXCLUDE_DEFAULT,
     enabled: false,  // Phase 2 — nicht in v1.0
-    storyTemplate: '{ticker} — Turnaround: {coreSummary}. {warnings}'
+    storyTemplate: '{ticker} — Turnaround: {coreSummary}. {warnings}',
+    defaultSortMethod: 'profitability-trend'
   }
 };
 
@@ -150,16 +153,52 @@ function evaluateMode(stock, modeId, allResults) {
   };
 }
 
-function buildStory(stock, modeEval, allResults) {
+// Soft-Warning Texte pro DataGuard
+const SOFT_WARNING_TEXT = {
+  'sloan-ratio': 'Earnings-Quality auffaellig (Sloan-Ratio hoch — kann R&D/Working-Capital-Effekt sein)',
+  'net-debt-ebitda': 'Bilanz-Risiko (Net-Debt/EBITDA hoch)',
+  'asset-growth-divergence': 'Asset-Wachstum > Umsatz-Wachstum (Acquired-Growth-Risiko)',
+  'revenue-shock-guard': 'Umsatzsprung wirkt wie Einmaleffekt'
+};
+const MISSING_GUARD_TEXT = {
+  'sloan-ratio': 'Sloan-Ratio nicht berechenbar',
+  'net-debt-ebitda': 'Net-Debt/EBITDA nicht berechenbar',
+  'asset-growth-divergence': 'Asset-Growth nicht berechenbar',
+  'revenue-shock-guard': 'Umsatz-Shock-Check nicht moeglich (keine Quartalsdaten)'
+};
+
+function buildStory(stock, modeEval, allResults, modeRef) {
   if (!modeEval.passed) return null;
   const passingMust = modeEval.mustResults.filter(m => m.status === 'pass').map(m => m.storyHint);
   const passingPrefer = modeEval.preferResults.filter(m => m.status === 'pass').map(m => m.storyHint);
   const facts = [...passingMust, ...passingPrefer].slice(0, 3);
 
-  // Warnings: incomputable musts, near thresholds
+  // Warnings: incomputable musts, near thresholds, soft warnings, missing dataguards
   const warnings = [];
   const incomputableMusts = modeEval.mustResults.filter(m => m.status === 'incomputable');
   if (incomputableMusts.length > 0) warnings.push(`${incomputableMusts.length} Datenfeld(er) fehlen`);
+
+  // Tag 102 fix: softWarnings (z.B. Sloan in Quality)
+  const mode = modeRef || MODES[modeEval.mode];
+  if (mode && Array.isArray(mode.softWarnings)) {
+    for (const warnId of mode.softWarnings) {
+      const r = allResults[warnId];
+      if (r && r.computable === true && r.pass === false) {
+        warnings.push(SOFT_WARNING_TEXT[warnId] || (warnId + ' auffaellig'));
+      }
+    }
+  }
+
+  // Tag 102 fix: incomputable DataGuards als Warning (vorher silent)
+  if (mode && Array.isArray(mode.dataGuards)) {
+    for (const guardId of mode.dataGuards) {
+      const r = allResults[guardId];
+      if (!r || r.computable !== true) {
+        warnings.push(MISSING_GUARD_TEXT[guardId] || (guardId + ' nicht pruefbar'));
+      }
+    }
+  }
+
   // Bewertung-Hinweis bei Hypergrowth (oft teuer)
   if (modeEval.mode === 'HYPERGROWTH') {
     const fcfY = allResults['fcf-yield'];
