@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 /**
- * Tag 103c: Modes-Report Generator — Claude-Design
- * =================================================
- * Cream-Hintergrund, Coral-Akzent, Sage/Slate sekundär.
- * Inter (sans) + Source Serif 4 (Headlines).
- * Cleaner Card-Style, generous whitespace, Pillen-basierte Filter.
+ * Tag 104: Modes-Report — Anthrazit-Design + IPO/Mcap-Slider
+ * ============================================================
+ * - Anthrazit/Pewter Hintergrund, warmes Cream-Off-White, Bronze-Akzent.
+ * - Source Serif (Headlines) + Inter (Body).
+ * - Klassisch-modern: dezente Linien, Serifen-Headlines, generous whitespace.
+ * - IPO-Filter (Slider Jahr-min) und MarketCap-Range-Slider pro Modus.
  */
 'use strict';
 const fs = require('fs');
@@ -56,7 +57,8 @@ function evaluateAll(stocks) {
   return stocks.map(stock => {
     const allResults = Runner.evaluateStock(stock);
     const mcap = (stock.marketCap && stock.marketCap.value) || stock.marketCap || 0;
-    return { stock, allResults, mcap };
+    const ipoYear = stock.meta && stock.meta.ipoYear ? stock.meta.ipoYear : null;
+    return { stock, allResults, mcap, ipoYear };
   });
 }
 
@@ -108,7 +110,6 @@ function topAllMust(eligible, modeId, topN) {
   return passing.slice(0, topN);
 }
 
-// ── Card-Render: Cream-Style ──────────────────────────
 const PSTATE_LABEL = { LOSS:'Loss', TURNAROUND:'Turnaround', RECENT:'Recent', STABLE:'Stable', NA:'—' };
 const PSTATE_CLASS = { LOSS:'pst-loss', TURNAROUND:'pst-turnaround', RECENT:'pst-recent', STABLE:'pst-stable', NA:'pst-na' };
 
@@ -118,6 +119,7 @@ function renderCard(ev, i, modeId, sortMethodId) {
   const name = (s.meta && s.meta.name) || '';
   const sector = (s.meta && s.meta.sector) || '';
   const mcap = ev.mcap;
+  const ipoYear = ev.ipoYear;
 
   const me = SM.evaluateMode(s, modeId, ev.allResults);
   const story = me.passed ? SM.buildStory(s, me, ev.allResults, SM.MODES[modeId]) : null;
@@ -139,9 +141,7 @@ function renderCard(ev, i, modeId, sortMethodId) {
   if (story) {
     const facts = (story.coreSummary || '').split(', ').filter(Boolean).slice(0, 3);
     factsHtml = facts.map(f => `<li>${escHtml(f)}</li>`).join('');
-    if (story.warnings) {
-      warningHtml = `<div class="card-warn">${escHtml(story.warnings)}</div>`;
-    }
+    if (story.warnings) warningHtml = `<div class="card-warn">${escHtml(story.warnings)}</div>`;
   } else {
     factsHtml = `<li class="muted">Erfüllt nicht alle MUST-Kriterien dieses Modus</li>`;
   }
@@ -150,8 +150,9 @@ function renderCard(ev, i, modeId, sortMethodId) {
     ? `<div class="card-val">${escHtml(sortValStr)}</div><div class="card-val-label">${escHtml(sortLabel)}</div>`
     : '';
 
-  return `
-    <article class="card" data-prof-state="${profState}">
+  const ipoTag = ipoYear ? `<span class="tag tag-ipo">IPO ${ipoYear}</span>` : '';
+
+  return `<article class="card" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}">
       <header class="card-head">
         <div class="card-id">
           <div class="card-ticker">${escHtml(ticker)}</div>
@@ -162,6 +163,7 @@ function renderCard(ev, i, modeId, sortMethodId) {
       <div class="card-tags">
         <span class="tag tag-sector">${escHtml(sector || '—')}</span>
         <span class="tag ${psClass}">${escHtml(psLabel)}</span>
+        ${ipoTag}
       </div>
       <ul class="card-facts">${factsHtml}</ul>
       ${warningHtml}
@@ -187,7 +189,7 @@ function renderModeSection(modeId, eligible, evaluated, topN) {
   `;
 
   if (mode.enabled === false) {
-    return headerHtml + `<div class="mode-disabled">Modus in Phase 2 — noch nicht aktiv. Erst Hypergrowth + Quality validieren, dann Turnaround.</div>`;
+    return `<section class="mode-section">${headerHtml}<div class="mode-disabled">Modus in Phase 2 — noch nicht aktiv. Erst Hypergrowth + Quality validieren.</div></section>`;
   }
 
   const tabMethods = mode.core.map(c => c.id);
@@ -221,19 +223,43 @@ function renderModeSection(modeId, eligible, evaluated, topN) {
     return `<div class="tab-panel" data-mode="${modeId}" data-tab="${escHtml(tabId)}" style="${visible}">${cardsBlock}</div>`;
   }).join('');
 
-  const profStateFilterHtml = `
-    <div class="ps-filter" data-mode="${modeId}">
-      <span class="ps-label">Profitabilität</span>
-      <button class="ps-btn ps-active" data-mode="${modeId}" data-pstate="ALL">Alle</button>
-      <button class="ps-btn ps-loss" data-mode="${modeId}" data-pstate="LOSS">Loss</button>
-      <button class="ps-btn ps-turnaround" data-mode="${modeId}" data-pstate="TURNAROUND">Turnaround</button>
-      <button class="ps-btn ps-recent" data-mode="${modeId}" data-pstate="RECENT">Recent</button>
-      <button class="ps-btn ps-stable" data-mode="${modeId}" data-pstate="STABLE">Stable</button>
+  // Mcap range and IPO range from eligible
+  const mcaps = eligible.map(e => e.mcap || 0).filter(Boolean);
+  const ipos = eligible.map(e => e.ipoYear || 0).filter(Boolean);
+  const mcapMin = mcaps.length ? Math.min(...mcaps) : 0;
+  const mcapMax = mcaps.length ? Math.max(...mcaps) : 1e12;
+  const ipoMin = ipos.length ? Math.min(...ipos) : 1980;
+  const ipoMax = ipos.length ? Math.max(...ipos) : new Date().getFullYear();
+
+  const filtersHtml = `
+    <div class="filters" data-mode="${modeId}">
+      <div class="filter-group">
+        <span class="f-label">Profitabilität</span>
+        <button class="ps-btn ps-active" data-mode="${modeId}" data-pstate="ALL">Alle</button>
+        <button class="ps-btn ps-loss" data-mode="${modeId}" data-pstate="LOSS">Loss</button>
+        <button class="ps-btn ps-turnaround" data-mode="${modeId}" data-pstate="TURNAROUND">Turnaround</button>
+        <button class="ps-btn ps-recent" data-mode="${modeId}" data-pstate="RECENT">Recent</button>
+        <button class="ps-btn ps-stable" data-mode="${modeId}" data-pstate="STABLE">Stable</button>
+      </div>
+      <div class="filter-group filter-slider">
+        <span class="f-label">MarketCap (USD)</span>
+        <span class="slider-val" data-mode="${modeId}" data-slider="mcap-min">$2B</span>
+        <input type="range" class="range-input" data-mode="${modeId}" data-slider="mcap-min" min="2" max="500" step="1" value="2">
+        <span class="slider-sep">–</span>
+        <input type="range" class="range-input" data-mode="${modeId}" data-slider="mcap-max" min="2" max="500" step="1" value="500">
+        <span class="slider-val" data-mode="${modeId}" data-slider="mcap-max">$500B</span>
+      </div>
+      <div class="filter-group filter-slider">
+        <span class="f-label">IPO ab</span>
+        <input type="range" class="range-input" data-mode="${modeId}" data-slider="ipo-min" min="1980" max="${ipoMax}" step="1" value="1980">
+        <span class="slider-val" data-mode="${modeId}" data-slider="ipo-min">1980</span>
+        <button class="reset-btn" data-mode="${modeId}">Reset</button>
+      </div>
     </div>`;
 
   return `<section class="mode-section">
     ${headerHtml}
-    ${profStateFilterHtml}
+    ${filtersHtml}
     <div class="tabs">${tabButtonsHtml}</div>
     ${panelsHtml}
   </section>`;
@@ -260,175 +286,226 @@ function buildHtml(evaluated, topN) {
 <title>Karl's Stock-Screener · Modes-Report</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --cream: #faf7f2; --cream-2: #f4efe6; --cream-3: #ebe4d3;
-    --ink: #1a1a1a; --ink-soft: #3d3a36; --ink-mute: #6b665e; --ink-faint: #97928a;
-    --rule: #e6dfd2; --rule-soft: #efeadc;
-    --coral: #cc785c; --coral-soft: #f0d9cf; --coral-deep: #a85a3f;
-    --sage: #6d8c6e; --sage-soft: #d9e3da;
-    --slate: #5a6478; --slate-soft: #dde0e6;
-    --warning: #c47a2c; --warning-soft: #f5e3cc;
-    --loss: #b8443c; --loss-soft: #f2d9d6;
-    --turnaround: #c47a2c; --turnaround-soft: #f5e3cc;
-    --recent: #7a9d4c; --recent-soft: #e0e8cf;
-    --stable: #4a8567; --stable-soft: #d2e3da;
+    --anthracite: #1c1f24;
+    --anthracite-2: #232831;
+    --anthracite-3: #2c323d;
+    --anthracite-4: #3a4150;
+    --rule: #3a4150;
+    --rule-soft: #2c323d;
+    --paper: #f0ece3;
+    --paper-mute: #c9c4b8;
+    --paper-faint: #8a8579;
+    --paper-dim: #5d5b54;
+    --bronze: #c89866;
+    --bronze-soft: #3d3328;
+    --bronze-deep: #b5824a;
+    --copper: #d4a574;
+    --sage: #98a98a;
+    --sage-soft: #2c3a2c;
+    --slate-cool: #8a9bb5;
+    --slate-soft: #2c333d;
+    --warning: #d9a05f;
+    --warning-soft: #3d2f1d;
+    --loss: #c47a78;
+    --loss-soft: #3a1f1d;
+    --turnaround: #d9a05f;
+    --turnaround-soft: #3d2f1d;
+    --recent: #a5b884;
+    --recent-soft: #2a3322;
+    --stable: #7fb09c;
+    --stable-soft: #1f3028;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--cream); color: var(--ink);
-    font-size: 15px; line-height: 1.5;
+    background: var(--anthracite);
+    color: var(--paper);
+    font-size: 15px; line-height: 1.55;
     -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
   }
-  .wrap { max-width: 1280px; margin: 0 auto; padding: 48px 32px 80px; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 56px 32px 80px; }
 
-  /* Header */
-  .doc-header { margin-bottom: 40px; }
-  .eyebrow { font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--coral); margin-bottom: 12px; }
-  h1 { font-family: 'Source Serif 4', Georgia, serif; font-size: 38px; font-weight: 600; line-height: 1.1; letter-spacing: -0.01em; margin-bottom: 10px; }
-  .sub { font-size: 14px; color: var(--ink-mute); }
+  .doc-header { margin-bottom: 44px; padding-bottom: 32px; border-bottom: 1px solid var(--rule); }
+  .eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--bronze); margin-bottom: 14px; }
+  h1 { font-family: 'Source Serif 4', Georgia, serif; font-size: 42px; font-weight: 500; line-height: 1.1; letter-spacing: -0.012em; color: var(--paper); margin-bottom: 12px; }
+  .sub { font-size: 14px; color: var(--paper-mute); max-width: 640px; }
 
-  /* Status-Strip */
   .status-strip {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
     background: var(--rule); border: 1px solid var(--rule);
-    border-radius: 10px; overflow: hidden; margin-bottom: 28px;
+    border-radius: 8px; overflow: hidden; margin-bottom: 32px;
   }
-  .status-cell { background: var(--cream-2); padding: 16px 18px; }
-  .status-label { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 4px; }
-  .status-value { font-size: 22px; font-weight: 600; color: var(--ink); font-feature-settings: 'tnum'; line-height: 1.1; }
-  .status-sub { font-size: 11px; color: var(--ink-mute); margin-top: 2px; }
+  .status-cell { background: var(--anthracite-2); padding: 18px 20px; }
+  .status-label { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--paper-faint); margin-bottom: 6px; }
+  .status-value { font-family: 'Source Serif 4', serif; font-size: 28px; font-weight: 500; color: var(--paper); font-feature-settings: 'tnum'; line-height: 1; }
+  .status-sub { font-size: 11px; color: var(--paper-mute); margin-top: 4px; }
   @media (max-width: 720px) { .status-strip { grid-template-columns: repeat(2, 1fr); } }
 
-  /* Disclaimer */
   .disclaimer {
-    background: var(--coral-soft); border-left: 3px solid var(--coral);
-    padding: 14px 20px; border-radius: 8px; margin-bottom: 40px;
-    color: var(--coral-deep); font-size: 13px; line-height: 1.55;
+    background: var(--bronze-soft); border-left: 2px solid var(--bronze);
+    padding: 14px 20px; border-radius: 6px; margin-bottom: 44px;
+    color: var(--copper); font-size: 13px; line-height: 1.6;
   }
-  .disclaimer strong { color: var(--coral-deep); font-weight: 600; }
+  .disclaimer strong { color: var(--bronze); font-weight: 600; }
 
-  /* Mode-Section */
   .mode-section {
-    background: white; border: 1px solid var(--rule);
-    border-radius: 12px; padding: 32px;
-    margin-bottom: 32px;
+    background: var(--anthracite-2); border: 1px solid var(--rule);
+    border-radius: 10px; padding: 32px;
+    margin-bottom: 28px;
   }
   .mode-header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 6px; }
-  .mode-title { display: flex; align-items: center; gap: 12px; }
-  .mode-title h2 { font-family: 'Source Serif 4', serif; font-size: 26px; font-weight: 600; letter-spacing: -0.005em; }
-  .mode-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .mode-dot-hg { background: var(--coral); }
-  .mode-dot-qc { background: var(--slate); }
-  .mode-dot-ta { background: var(--sage); }
-  .ev-pill { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 12px; letter-spacing: 0.02em; }
-  .ev-pill.ev-lit { background: var(--sage-soft); color: var(--sage); }
-  .ev-pill.ev-heur { background: var(--coral-soft); color: var(--coral-deep); }
-  .ev-pill.ev-exp { background: var(--slate-soft); color: var(--slate); }
-  .mode-count { font-size: 13px; color: var(--ink-mute); font-feature-settings: 'tnum'; }
-  .mode-desc { color: var(--ink-mute); font-size: 14px; margin-bottom: 20px; }
+  .mode-title { display: flex; align-items: center; gap: 14px; }
+  .mode-title h2 { font-family: 'Source Serif 4', serif; font-size: 28px; font-weight: 500; letter-spacing: -0.005em; color: var(--paper); }
+  .mode-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .mode-dot-hg { background: var(--bronze); box-shadow: 0 0 8px rgba(200,152,102,0.35); }
+  .mode-dot-qc { background: var(--slate-cool); box-shadow: 0 0 8px rgba(138,155,181,0.3); }
+  .mode-dot-ta { background: var(--sage); box-shadow: 0 0 8px rgba(152,169,138,0.3); }
+  .ev-pill { font-size: 10.5px; font-weight: 500; padding: 3px 10px; border-radius: 12px; letter-spacing: 0.04em; text-transform: lowercase; }
+  .ev-pill.ev-lit { background: var(--sage-soft); color: var(--sage); border: 1px solid var(--sage)40; }
+  .ev-pill.ev-heur { background: var(--bronze-soft); color: var(--bronze); border: 1px solid var(--bronze)40; }
+  .ev-pill.ev-exp { background: var(--slate-soft); color: var(--slate-cool); border: 1px solid var(--slate-cool)40; }
+  .mode-count { font-size: 13px; color: var(--paper-mute); font-feature-settings: 'tnum'; }
+  .mode-desc { color: var(--paper-mute); font-size: 14px; margin-bottom: 22px; }
   .mode-disabled {
-    background: var(--cream-2); border: 1px dashed var(--rule);
-    padding: 20px; text-align: center; border-radius: 8px;
-    color: var(--ink-mute); font-size: 13px;
+    background: var(--anthracite-3); border: 1px dashed var(--rule);
+    padding: 22px; text-align: center; border-radius: 6px;
+    color: var(--paper-faint); font-size: 13px;
   }
 
-  /* Profitability-Filter */
-  .ps-filter {
-    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
-    padding: 10px 14px; background: var(--cream-2);
-    border-radius: 8px; margin-bottom: 16px;
+  .filters {
+    display: grid; gap: 14px;
+    padding: 16px 18px; background: var(--anthracite-3);
+    border: 1px solid var(--rule); border-radius: 8px; margin-bottom: 18px;
   }
-  .ps-label { font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); margin-right: 4px; }
+  .filter-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .f-label { font-size: 10.5px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--paper-faint); margin-right: 6px; min-width: 90px; }
   .ps-btn {
-    background: white; border: 1px solid var(--rule);
-    padding: 5px 12px; border-radius: 14px;
+    background: var(--anthracite); border: 1px solid var(--rule);
+    padding: 5px 12px; border-radius: 12px;
     font: inherit; font-size: 12px; font-weight: 500;
-    cursor: pointer; color: var(--ink-soft);
+    cursor: pointer; color: var(--paper-mute);
     transition: all 0.12s;
   }
-  .ps-btn:hover { border-color: var(--ink-faint); }
-  .ps-btn.ps-active { background: var(--ink); color: white; border-color: var(--ink); }
-  .ps-btn.ps-loss.ps-active { background: var(--loss); border-color: var(--loss); }
-  .ps-btn.ps-turnaround.ps-active { background: var(--turnaround); border-color: var(--turnaround); }
-  .ps-btn.ps-recent.ps-active { background: var(--recent); border-color: var(--recent); }
-  .ps-btn.ps-stable.ps-active { background: var(--stable); border-color: var(--stable); }
+  .ps-btn:hover { border-color: var(--paper-faint); color: var(--paper); }
+  .ps-btn.ps-active { background: var(--paper); color: var(--anthracite); border-color: var(--paper); }
+  .ps-btn.ps-loss.ps-active { background: var(--loss); border-color: var(--loss); color: var(--anthracite); }
+  .ps-btn.ps-turnaround.ps-active { background: var(--turnaround); border-color: var(--turnaround); color: var(--anthracite); }
+  .ps-btn.ps-recent.ps-active { background: var(--recent); border-color: var(--recent); color: var(--anthracite); }
+  .ps-btn.ps-stable.ps-active { background: var(--stable); border-color: var(--stable); color: var(--anthracite); }
 
-  /* Sub-Tabs */
+  .filter-slider { gap: 12px; }
+  .range-input {
+    -webkit-appearance: none; appearance: none;
+    background: transparent;
+    width: 140px; height: 4px;
+  }
+  .range-input::-webkit-slider-runnable-track { background: var(--anthracite-4); height: 3px; border-radius: 2px; }
+  .range-input::-moz-range-track { background: var(--anthracite-4); height: 3px; border-radius: 2px; }
+  .range-input::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--bronze); border: 2px solid var(--anthracite);
+    margin-top: -6px; cursor: pointer;
+    transition: background 0.12s;
+  }
+  .range-input::-webkit-slider-thumb:hover { background: var(--copper); }
+  .range-input::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--bronze); border: 2px solid var(--anthracite);
+    cursor: pointer;
+  }
+  .slider-val {
+    font-feature-settings: 'tnum'; font-size: 12.5px; color: var(--paper);
+    font-weight: 500; min-width: 56px; display: inline-block;
+  }
+  .slider-sep { color: var(--paper-faint); font-size: 12px; }
+  .reset-btn {
+    background: transparent; border: 1px solid var(--rule);
+    padding: 4px 10px; border-radius: 4px;
+    font: inherit; font-size: 11px; color: var(--paper-mute);
+    cursor: pointer; margin-left: auto;
+  }
+  .reset-btn:hover { border-color: var(--bronze); color: var(--bronze); }
+
   .tabs {
-    display: flex; gap: 4px; flex-wrap: wrap;
-    padding-bottom: 12px; margin-bottom: 16px;
+    display: flex; gap: 2px; flex-wrap: wrap;
+    padding-bottom: 14px; margin-bottom: 18px;
     border-bottom: 1px solid var(--rule);
   }
   .tab-btn {
     background: transparent; border: none;
-    padding: 8px 14px; border-radius: 6px;
+    padding: 8px 14px; border-radius: 4px;
     font: inherit; font-size: 13px; font-weight: 500;
-    color: var(--ink-mute); cursor: pointer;
-    transition: all 0.12s;
+    color: var(--paper-mute); cursor: pointer;
+    transition: all 0.12s; letter-spacing: 0.005em;
   }
-  .tab-btn:hover { background: var(--cream-2); color: var(--ink); }
-  .tab-btn.tab-active { background: var(--ink); color: white; }
+  .tab-btn:hover { background: var(--anthracite-3); color: var(--paper); }
+  .tab-btn.tab-active { background: var(--paper); color: var(--anthracite); }
 
-  /* Card-Grid */
   .card-grid {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 12px;
   }
   .card {
-    background: var(--cream-2); border: 1px solid var(--rule);
-    border-radius: 10px; padding: 16px 18px;
-    transition: border-color 0.15s, transform 0.15s;
+    background: var(--anthracite-3); border: 1px solid var(--rule);
+    border-radius: 8px; padding: 16px 18px;
+    transition: border-color 0.15s, transform 0.15s, background 0.15s;
   }
-  .card:hover { border-color: var(--coral); transform: translateY(-1px); }
+  .card:hover {
+    border-color: var(--bronze);
+    background: var(--anthracite-3);
+    transform: translateY(-1px);
+  }
   .card-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
   .card-id { flex: 1; min-width: 0; }
-  .card-ticker { font-weight: 700; font-size: 16px; color: var(--ink); font-feature-settings: 'tnum'; }
-  .card-name { font-size: 12px; color: var(--ink-mute); margin-top: 1px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card-ticker { font-family: 'Source Serif 4', serif; font-weight: 500; font-size: 18px; color: var(--paper); font-feature-settings: 'tnum'; letter-spacing: 0.01em; }
+  .card-name { font-size: 12px; color: var(--paper-mute); margin-top: 1px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .card-meta { text-align: right; flex-shrink: 0; }
-  .card-val { font-size: 18px; font-weight: 700; color: var(--coral-deep); font-feature-settings: 'tnum'; line-height: 1; }
-  .card-val-label { font-size: 10px; color: var(--ink-faint); margin-top: 2px; letter-spacing: 0.04em; }
-  .card-rank { font-size: 11px; color: var(--ink-faint); margin-top: 4px; font-feature-settings: 'tnum'; }
+  .card-val { font-family: 'Source Serif 4', serif; font-size: 19px; font-weight: 500; color: var(--bronze); font-feature-settings: 'tnum'; line-height: 1; }
+  .card-val-label { font-size: 10px; color: var(--paper-faint); margin-top: 3px; letter-spacing: 0.04em; }
+  .card-rank { font-size: 11px; color: var(--paper-faint); margin-top: 4px; font-feature-settings: 'tnum'; }
 
-  .card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-  .tag { font-size: 11px; font-weight: 500; padding: 2px 9px; border-radius: 10px; }
-  .tag-sector { background: var(--cream-3); color: var(--ink-soft); }
+  .card-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tag { font-size: 10.5px; font-weight: 500; padding: 2px 8px; border-radius: 9px; letter-spacing: 0.01em; }
+  .tag-sector { background: var(--anthracite-4); color: var(--paper-mute); }
+  .tag-ipo { background: var(--anthracite-4); color: var(--paper-faint); font-feature-settings: 'tnum'; }
   .pst-loss { background: var(--loss-soft); color: var(--loss); }
   .pst-turnaround { background: var(--turnaround-soft); color: var(--turnaround); }
   .pst-recent { background: var(--recent-soft); color: var(--recent); }
   .pst-stable { background: var(--stable-soft); color: var(--stable); }
-  .pst-na { background: var(--cream-3); color: var(--ink-faint); }
+  .pst-na { background: var(--anthracite-4); color: var(--paper-faint); }
 
   .card-facts { list-style: none; padding: 0; margin: 0; }
   .card-facts li {
-    font-size: 12.5px; color: var(--ink-soft); line-height: 1.5;
+    font-size: 12.5px; color: var(--paper-mute); line-height: 1.5;
     padding: 2px 0 2px 16px; position: relative;
   }
   .card-facts li::before {
-    content: '✓'; color: var(--sage); position: absolute; left: 0;
-    font-weight: 600; font-size: 11px;
+    content: '·'; color: var(--bronze); position: absolute; left: 4px;
+    font-weight: 700; font-size: 16px; line-height: 1;
   }
-  .card-facts li.muted { color: var(--ink-faint); font-style: italic; }
+  .card-facts li.muted { color: var(--paper-faint); font-style: italic; }
   .card-facts li.muted::before { content: ''; }
   .card-warn {
     margin-top: 10px; padding: 8px 10px;
     background: var(--warning-soft); color: var(--warning);
-    border-radius: 6px; font-size: 11.5px; line-height: 1.45;
+    border-radius: 5px; font-size: 11.5px; line-height: 1.45;
+    border-left: 2px solid var(--warning);
   }
 
   .empty {
-    background: var(--cream-2); border: 1px dashed var(--rule);
-    padding: 32px; text-align: center; border-radius: 8px;
-    color: var(--ink-mute); font-size: 13px;
+    background: var(--anthracite-3); border: 1px dashed var(--rule);
+    padding: 32px; text-align: center; border-radius: 6px;
+    color: var(--paper-faint); font-size: 13px;
   }
 
-  /* Footer */
   footer {
     margin-top: 56px; padding-top: 24px;
     border-top: 1px solid var(--rule);
-    font-size: 12px; color: var(--ink-faint);
+    font-size: 12px; color: var(--paper-faint);
     display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
   }
 </style>
@@ -439,7 +516,7 @@ function buildHtml(evaluated, topN) {
   <header class="doc-header">
     <div class="eyebrow">Modes-Report · ${escHtml(dateLabel)}</div>
     <h1>Drei Strategien, klare Story-Cards.</h1>
-    <p class="sub">Discovery-Filter über ${totalStocks} Stocks. Banks, REITs und Insurance fliegen automatisch raus. DataGuards filtern Earnings-Manipulation, Solvenz-Risiken und Reverse-Mergers.</p>
+    <p class="sub">Discovery-Filter über ${totalStocks} Stocks. Banks, REITs, Insurance und (in Hypergrowth) Mining/Materials/Oil & Gas fliegen automatisch raus. DataGuards filtern Earnings-Manipulation, Solvenz-Risiken und Reverse-Mergers.</p>
   </header>
 
   <div class="status-strip">
@@ -451,7 +528,7 @@ function buildHtml(evaluated, topN) {
     <div class="status-cell">
       <div class="status-label">Sektor-Ausschluss</div>
       <div class="status-value">${sectorExcluded.toLocaleString('de-DE')}</div>
-      <div class="status-sub">Banks · REITs · Insurance</div>
+      <div class="status-sub">Banks · REITs · Insurance · Mining</div>
     </div>
     <div class="status-cell">
       <div class="status-label">Hypergrowth</div>
@@ -480,23 +557,67 @@ function buildHtml(evaluated, topN) {
 
 <script>
 (function() {
-  // Profitability-State Quick-Filter
+  function fmtMcap(b) {
+    if (b >= 1000) return '$' + (b/1000).toFixed(1) + 'T';
+    if (b >= 1) return '$' + Math.round(b) + 'B';
+    return '$' + Math.round(b*1000) + 'M';
+  }
+
+  function applyFilters(mode) {
+    const filtersRoot = document.querySelector('.filters[data-mode="' + mode + '"]');
+    if (!filtersRoot) return;
+    const activePs = filtersRoot.querySelector('.ps-btn.ps-active');
+    const pstate = activePs ? activePs.dataset.pstate : 'ALL';
+    const mcapMin = parseFloat(filtersRoot.querySelector('[data-slider="mcap-min"].range-input').value) * 1e9;
+    const mcapMax = parseFloat(filtersRoot.querySelector('[data-slider="mcap-max"].range-input').value) * 1e9;
+    const ipoMin = parseFloat(filtersRoot.querySelector('[data-slider="ipo-min"].range-input').value);
+
+    document.querySelectorAll('.tab-panel[data-mode="' + mode + '"] .card').forEach(card => {
+      const ps = card.dataset.profState;
+      const mcap = parseFloat(card.dataset.mcap) || 0;
+      const ipo = parseFloat(card.dataset.ipo) || 0;
+      const psOk = pstate === 'ALL' || ps === pstate;
+      const mcapOk = mcap >= mcapMin && mcap <= mcapMax;
+      const ipoOk = ipo === 0 || ipo >= ipoMin;
+      card.style.display = (psOk && mcapOk && ipoOk) ? '' : 'none';
+    });
+  }
+
+  function syncSliderLabel(input) {
+    const mode = input.dataset.mode;
+    const which = input.dataset.slider;
+    const labelEl = document.querySelector('.slider-val[data-mode="' + mode + '"][data-slider="' + which + '"]');
+    if (!labelEl) return;
+    const v = parseFloat(input.value);
+    if (which === 'mcap-min' || which === 'mcap-max') labelEl.textContent = fmtMcap(v);
+    else labelEl.textContent = String(Math.round(v));
+  }
+
+  document.querySelectorAll('.range-input').forEach(input => {
+    syncSliderLabel(input);
+    input.addEventListener('input', () => {
+      // mcap min must not exceed max
+      if (input.dataset.slider === 'mcap-min') {
+        const max = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-max"]');
+        if (max && parseFloat(input.value) > parseFloat(max.value)) input.value = max.value;
+      } else if (input.dataset.slider === 'mcap-max') {
+        const min = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-min"]');
+        if (min && parseFloat(input.value) < parseFloat(min.value)) input.value = min.value;
+      }
+      syncSliderLabel(input);
+      applyFilters(input.dataset.mode);
+    });
+  });
+
   document.addEventListener('click', function(e) {
     const t = e.target;
-
     if (t.classList && t.classList.contains('ps-btn')) {
       const mode = t.dataset.mode;
-      const pstate = t.dataset.pstate;
       document.querySelectorAll('.ps-btn[data-mode="' + mode + '"]').forEach(b => b.classList.remove('ps-active'));
       t.classList.add('ps-active');
-      document.querySelectorAll('.tab-panel[data-mode="' + mode + '"] .card').forEach(card => {
-        const ps = card.dataset.profState;
-        const visible = pstate === 'ALL' || ps === pstate;
-        card.style.display = visible ? '' : 'none';
-      });
+      applyFilters(mode);
       return;
     }
-
     if (t.classList && t.classList.contains('tab-btn')) {
       const mode = t.dataset.mode;
       const tab = t.dataset.tab;
@@ -505,6 +626,22 @@ function buildHtml(evaluated, topN) {
       document.querySelectorAll('.tab-panel[data-mode="' + mode + '"]').forEach(p => {
         p.style.display = p.dataset.tab === tab ? '' : 'none';
       });
+      // Re-apply filters in the new active panel (cards may need hiding)
+      applyFilters(mode);
+      return;
+    }
+    if (t.classList && t.classList.contains('reset-btn')) {
+      const mode = t.dataset.mode;
+      const root = document.querySelector('.filters[data-mode="' + mode + '"]');
+      root.querySelectorAll('.ps-btn').forEach(b => b.classList.remove('ps-active'));
+      root.querySelector('.ps-btn[data-pstate="ALL"]').classList.add('ps-active');
+      root.querySelectorAll('.range-input').forEach(input => {
+        if (input.dataset.slider === 'mcap-min') input.value = input.min;
+        else if (input.dataset.slider === 'mcap-max') input.value = input.max;
+        else if (input.dataset.slider === 'ipo-min') input.value = input.min;
+        syncSliderLabel(input);
+      });
+      applyFilters(mode);
     }
   });
 })();
