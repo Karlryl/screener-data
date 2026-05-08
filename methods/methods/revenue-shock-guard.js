@@ -1,15 +1,8 @@
 'use strict';
 /**
- * Tag 98h + 102d: Revenue-Shock-Guard v2 (DATAGUARD)
- * ====================================================
- * 3-stufige Outlier-Detection:
- *   1. timeseries.revenueQ (>=6Q): MAD-z-score auf Q0 vs prior 6-7Q
- *      Tag 102d: pull-yahoo schreibt timeseries.revenueQ — Guard suchte vorher
- *      quarterly.revenue → fiel IMMER auf Annual-Fallback → kippte CRDO/ALAB raus.
- *   2. annual.annualRev (>=3y): z-score auf Y0 vs prior 3y, skalenadaptive Materiality.
- *   3. metrics.revenueGrowthYoY > 500% trivialer Outlier-Trigger.
- * Materiality: floor = max(10M USD, 8% TTM, 0.25% MarketCap)
- * Shock = z>4 AND absoluteJump > floor
+ * Tag 98h + 102d + 102e: Revenue-Shock-Guard v2 (DATAGUARD)
+ * Tag 102d: timeseries.revenueQ statt quarterly.revenue
+ * Tag 102e: Q-Schwelle 6→4 (Yahoo liefert oft nur 5Q, sonst Stage-2-Fallback)
  */
 const H = require('./_helpers.js');
 
@@ -45,7 +38,7 @@ function evaluate(stock) {
   if (!qrev) qrev = _arr(stock, 'quarterly.revenue') || _arr(stock, 'quarterly.totalRevenue');
   const floor = _materialityFloor(stock);
 
-  if (qrev && qrev.length >= 6) {
+  if (qrev && qrev.length >= 4) {
     const window = qrev.slice(0, 8);
     const latest = window[0];
     const prior = window.slice(1);
