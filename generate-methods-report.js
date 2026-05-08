@@ -189,7 +189,9 @@ function renderHTML(rows, methods) {
       return `<td class="method-cell ${klass}" data-method="${m.id}" data-pass="${result.pass}" data-value="${result.value}" title="${escHtml(result.reason)} | trend=${trend.direction} (${trend.points || 0} pts)">${valStr} ${trendIcon}</td>`;
     }).join('');
     
-    return `<tr class="row-clickable" data-ticker="${r.ticker}" >
+    const psR = r.results['profitability-state'];
+    const pState = (psR && psR.computable && psR.components) ? psR.components.state : 'NA';
+    return `<tr class="row-clickable" data-ticker="${r.ticker}" data-prof-state="${pState}">
       <td><strong>${escHtml(r.ticker)}</strong></td>
       <td>${escHtml(r.name)}</td>
       <td>${escHtml(r.sector)}</td>
@@ -274,6 +276,15 @@ function renderHTML(rows, methods) {
   </label>
   <span id="quick-count" style="color:#94a3b8;font-size:12px;margin-left:auto;"></span>
 </div>
+<div class="prof-filter-bar" style="background:#1e293b;border:1px solid #334155;padding:10px 14px;border-radius:6px;margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+  <strong style="color:#f1f5f9;font-size:13px;">Profitabilität:</strong>
+  <button data-prof="ALL" class="psb psb-active" style="background:#334155;color:#cbd5e1;border:1px solid #475569;padding:4px 10px;border-radius:4px;font-size:12px;cursor:pointer;">Alle</button>
+  <button data-prof="LOSS" class="psb" style="background:#1f0a14;color:#fca5a5;border:1px solid #ef444460;padding:4px 10px;border-radius:4px;font-size:12px;cursor:pointer;">L · nicht profitabel</button>
+  <button data-prof="TURNAROUND" class="psb" style="background:#332010;color:#fcd34d;border:1px solid #f59e0b60;padding:4px 10px;border-radius:4px;font-size:12px;cursor:pointer;">T · kurz vor profitabel</button>
+  <button data-prof="RECENT" class="psb" style="background:#1f2c10;color:#bef264;border:1px solid #84cc1660;padding:4px 10px;border-radius:4px;font-size:12px;cursor:pointer;">R · seit 1-2 Jahren profitabel</button>
+  <button data-prof="STABLE" class="psb" style="background:#0a2818;color:#6ee7b7;border:1px solid #10b98160;padding:4px 10px;border-radius:4px;font-size:12px;cursor:pointer;">S · 3+ Jahre profitabel</button>
+  <span id="prof-count" style="color:#94a3b8;font-size:12px;margin-left:auto;"></span>
+</div>
 <div class="preset-bar" style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
   <strong style="color:#f1f5f9;font-size:12px;align-self:center;">Presets:</strong>
   <button class="preset-btn" data-preset="all-pass">All Pass (alle 8)</button>
@@ -317,12 +328,24 @@ ${methods.map(m => {
              const mark = res.pass ? '✓' : '✗';
              return '<span title="' + mid + '" style="color:' + color + ';font-size:9px;margin:0 1px;font-weight:600;">' + sym + mark + '</span>';
            }
-           const flags = flagSym('multi-year-stability', 'M') + flagSym('roic', 'R') + flagSym('forward-pe', 'P') + flagSym('sloan-ratio', 'S') + flagSym('ev-ebitda', 'E');
+           // Tag 98c: profitability-state badge statt M-Flag
+           function profStateBadge(r) {
+             const ps = r.results['profitability-state'];
+             if (!ps || !ps.computable) return '<span title="profitability-state: n/a" style="color:#475569;font-size:9px;margin:0 1px;">P·</span>';
+             const state = ps.components && ps.components.state;
+             const map = { LOSS: { c: '#ef4444', l: 'L' }, TURNAROUND: { c: '#f59e0b', l: 'T' }, RECENT: { c: '#84cc16', l: 'R' }, STABLE: { c: '#10b981', l: 'S' } };
+             const m = map[state] || { c: '#94a3b8', l: '?' };
+             return '<span title="profitability-state=' + state + '" style="color:' + m.c + ';font-size:9px;margin:0 1px;font-weight:700;">' + m.l + '</span>';
+           }
+           const flags = profStateBadge(r) + flagSym('roic', 'R') + flagSym('forward-pe', 'P') + flagSym('sloan-ratio', 'S') + flagSym('ev-ebitda', 'E');
            // Tag-92b: data-passes für Filter-Reaktion
            const passMap = {};
            for (const [mid2, res2] of Object.entries(r.results)) passMap[mid2] = res2.computable && res2.pass === true;
            const passDataAttr = encodeURIComponent(JSON.stringify(passMap));
-           return '<div class="topm-row" data-ticker="' + escHtml(r.ticker) + '" data-passes="' + passDataAttr + '" style="padding:3px 0;border-bottom:1px solid #131c2b;display:flex;align-items:center;gap:4px;">'
+           // Tag 98c: data-prof-state für Profitability-Filter
+           const psRes = r.results['profitability-state'];
+           const profState = (psRes && psRes.computable && psRes.components) ? psRes.components.state : 'NA';
+           return '<div class="topm-row" data-ticker="' + escHtml(r.ticker) + '" data-passes="' + passDataAttr + '" data-prof-state="' + profState + '" style="padding:3px 0;border-bottom:1px solid #131c2b;display:flex;align-items:center;gap:4px;">'
                 + '<span style="color:#94a3b8;width:24px;flex-shrink:0;">#' + (i+1) + '</span>'
                 + '<strong style="color:#f1f5f9;min-width:55px;">' + escHtml(r.ticker) + '</strong>'
                 + '<span style="color:#64748b;flex:1;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml((r.name || '').slice(0, 16)) + '</span>'
@@ -422,6 +445,46 @@ ${methods.map(m => {
     });
   }
 
+  // Tag 98c: Profitability-Bucket-Filter
+  let profActive = 'ALL';
+  document.querySelectorAll('.psb').forEach(btn => {
+    btn.addEventListener('click', () => {
+      profActive = btn.dataset.prof;
+      document.querySelectorAll('.psb').forEach(b => b.classList.remove('psb-active'));
+      btn.classList.add('psb-active');
+      applyProfFilter();
+    });
+  });
+  function applyProfFilter() {
+    let visibleRows = 0;
+    document.querySelectorAll('#matrix tbody tr').forEach(tr => {
+      const ps = tr.dataset.profState || 'NA';
+      const visible = profActive === 'ALL' || ps === profActive;
+      tr.classList.toggle('prof-hidden', !visible);
+      if (visible && !tr.classList.contains('hidden') && !tr.classList.contains('pc-hidden')) visibleRows++;
+    });
+    document.querySelectorAll('.topm-row').forEach(tr => {
+      const ps = tr.dataset.profState || 'NA';
+      const visible = profActive === 'ALL' || ps === profActive;
+      tr.classList.toggle('prof-hidden', !visible);
+    });
+    const c = document.getElementById('prof-count');
+    if (c) c.textContent = profActive === 'ALL' ? '' : 'Filter aktiv: ' + profActive;
+    // Top-50-Cards Counter aktualisieren
+    document.querySelectorAll('.topm-card').forEach(card => {
+      const total = card.querySelectorAll('.topm-row').length;
+      const visible = card.querySelectorAll('.topm-row:not(.prof-hidden):not(.pc-hidden):not(.hidden)').length;
+      const sum = card.querySelector('.topm-summary-count');
+      if (sum && profActive !== 'ALL') sum.textContent = ' (' + visible + '/' + total + ' nach Profit-Filter)';
+    });
+  }
+  // Inject CSS for prof-hidden if not present
+  if (!document.getElementById('prof-style')) {
+    const s = document.createElement('style');
+    s.id = 'prof-style';
+    s.textContent = '.prof-hidden { display: none !important; } .psb-active { outline: 2px solid #f1f5f9; }';
+    document.head.appendChild(s);
+  }
   checkboxes.forEach(cb => cb.addEventListener('change', applyFilter));
   modeSelect.addEventListener('change', applyFilter);
 
