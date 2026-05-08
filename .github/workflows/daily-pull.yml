@@ -40,6 +40,13 @@ jobs:
           node tag22-tests.js
           node tag28-tests.js
 
+      # Tag 103: Auto-Universe-Refresh — laeuft am 1. jedes Monats vor dem Pull.
+      # Pullt Yahoo-Screener-Buckets, mergt neue Mid-Caps in watchlist.json.
+      - name: Refresh Universe (monthly)
+        if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && contains(github.event.schedule, '0 8 1 *'))
+        run: node refresh-universe.js --watchlist watchlist.json
+        continue-on-error: true
+
       - name: Run Yahoo Pull
         run: node pull-yahoo.js --watchlist watchlist.json --output snapshots --rate-limit 2000
 
