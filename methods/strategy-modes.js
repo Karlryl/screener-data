@@ -33,7 +33,9 @@ const MODES = {
       { id: 'rule-of-40', required: true, weight: 'must', storyHint: 'Rule-of-40 erfuellt' },
       { id: 'rule-of-x', required: false, weight: 'prefer', storyHint: 'Rule-of-X attraktiv' },
       { id: 'revenue-growth-3y', required: true, weight: 'must', storyHint: 'starkes 3-Jahres-Umsatzwachstum' },
-      { id: 'gross-margin-stability', required: false, weight: 'prefer', storyHint: 'Bruttomarge stabil/hoch' }
+      { id: 'gross-margin-stability', required: false, weight: 'prefer', storyHint: 'Bruttomarge stabil/hoch' },
+      // Tag 102c: profitability-state als CORE auch in Hypergrowth (Karl-Wunsch: Loss/Turnaround/Recent/Stable filtern)
+      { id: 'profitability-state', required: false, weight: 'prefer', storyHint: 'Profitabilitaets-Status' }
     ],
     dataGuards: ['revenue-shock-guard', 'sloan-ratio'],
     excludeSectors: SECTOR_EXCLUDE_DEFAULT,
