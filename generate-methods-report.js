@@ -136,7 +136,22 @@ function renderHTML(rows, methods) {
            + '</tr>';
     }).join('') + '</tbody></table>';
 
-  // Tag-36: Top-Picks-Ranking
+  // Tag-81: Top-N-per-Method-Ranking
+  const TOP_N = 50;
+  const methodTopLists = {};
+  for (const m of methods) {
+    const valid = rows.filter(r => r.results[m.id].computable && Number.isFinite(r.results[m.id].value));
+    // Sort by value, direction depends on thresholdOp
+    valid.sort((a, b) => {
+      const av = a.results[m.id].value, bv = b.results[m.id].value;
+      if (m.thresholdOp === 'gte') return bv - av;     // higher = better
+      if (m.thresholdOp === 'lte_abs') return Math.abs(av) - Math.abs(bv);  // lower abs = better
+      return av - bv;  // lte: lower = better
+    });
+    methodTopLists[m.id] = valid.slice(0, TOP_N);
+  }
+
+  // Tag-36: Top-Picks-Ranking (gesamt-pass-count)
   const ranked = [...rows].sort((a, b) => {
     if (b.passCount !== a.passCount) return b.passCount - a.passCount;
     if (b.computableCount !== a.computableCount) return b.computableCount - a.computableCount;
@@ -276,6 +291,33 @@ function renderHTML(rows, methods) {
 </div>
 
 ${sectorHtml}
+
+<h2 style="color:#f1f5f9;font-size:18px;margin:24px 0 8px;border-bottom:1px solid #334155;padding-bottom:6px;">🎯 Top ${TOP_N} per Method (Discovery)</h2>
+<div class="sub" style="margin-bottom:14px;">Pro Methode die ${TOP_N} Stocks mit besten Werten — sortiert nach Methoden-Wert (nicht Pass/Fail). Karl's Discovery-Modus für Mid/Small-Caps. Klick auf eine Methode-Karte für Top-${TOP_N}.</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-bottom:30px;">
+${methods.map(m => {
+  const list = methodTopLists[m.id] || [];
+  if (list.length === 0) return '';
+  const top5 = list.slice(0, 5);
+  const opSym = m.thresholdOp === 'gte' ? '↑' : (m.thresholdOp === 'lte' ? '↓' : '|·|↓');
+  return '<details class="topm-card" style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:12px;"><summary style="cursor:pointer;color:#f1f5f9;font-weight:600;font-size:13px;">'
+       + escHtml(m.label) + ' <span style="color:#94a3b8;font-weight:400;font-size:11px;">' + opSym + ' (top ' + Math.min(list.length, TOP_N) + ')</span></summary>'
+       + '<div style="margin-top:8px;font-size:11px;color:#cbd5e1;">'
+       + list.slice(0, TOP_N).map((r, i) => {
+           const v = r.results[m.id].value;
+           const valStr = (m.unit === 'percent') ? v.toFixed(1) + '%' :
+                          (m.unit === 'ratio' && Math.abs(v) < 1) ? (v*100).toFixed(2) + '%' :
+                          v.toFixed(2);
+           return '<div style="padding:2px 0;border-bottom:1px solid #131c2b;">'
+                + '<span style="color:#94a3b8;width:24px;display:inline-block;">#' + (i+1) + '</span>'
+                + '<strong style="color:#f1f5f9;">' + escHtml(r.ticker) + '</strong>'
+                + ' <span style="color:#64748b;">' + escHtml((r.name || '').slice(0, 22)) + '</span>'
+                + ' <span style="float:right;color:#10b981;">' + valStr + '</span>'
+                + '</div>';
+         }).join('')
+       + '</div></details>';
+}).join('')}
+</div>
 
 <h2 style="color:#f1f5f9;font-size:18px;margin:24px 0 8px;border-bottom:1px solid #334155;padding-bottom:6px;">🏆 Top-Picks (Pass-Count-Ranking)</h2>
 <div class="sub" style="margin-bottom:14px;">Stocks gerankt nach Pass-Count. Klick auf eine Reihe für Details. Stocks mit ≥7 Pass von 10 Methoden sind potentielle Kandidaten — die fehlenden Methoden geben dir konkrete Punkte zum manuellen Prüfen.</div>

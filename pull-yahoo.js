@@ -301,7 +301,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
   const results = [];
   const failures = [];
-  for (const stock of watchlist.stocks) {
+  // Tag-80: Parallel pulls in batches of CONCURRENCY
+  const CONCURRENCY = parseInt(process.env.PULL_CONCURRENCY || '10', 10);
+  _log('INFO', `Parallel pulls: ${CONCURRENCY} concurrent. Total: ${watchlist.stocks.length} stocks.`);
+  async function processOne(stock) {
+
     try {
       _log('INFO', `Pulling ${stock.ticker} (${stock.yahoo_symbol})…`);
       const yahoo = await yf.quoteSummary(stock.yahoo_symbol, { modules: MODULES });
@@ -358,8 +362,18 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       failures.push({ ticker: stock.ticker, error: e.message });
       _log('ERROR', `  ✗ ${stock.ticker}: ${e.message}`);
     }
-    await _sleep(rateLimitMs);
+
+    }
+  // Run in parallel batches with rate-limit sleep between batches
+  for (let batchStart = 0; batchStart < watchlist.stocks.length; batchStart += CONCURRENCY) {
+    const batch = watchlist.stocks.slice(batchStart, batchStart + CONCURRENCY);
+    await Promise.all(batch.map(s => processOne(s).catch(e => _log('WARN', `Batch error ${s.ticker}: ${e.message}`))));
+    if (batchStart + CONCURRENCY < watchlist.stocks.length) {
+      await _sleep(rateLimitMs);
+      _log('INFO', `Batch ${Math.ceil((batchStart + CONCURRENCY) / CONCURRENCY)} done (${batchStart + CONCURRENCY}/${watchlist.stocks.length})`);
+    }
   }
+
   const manifest = {
     pulled_at: new Date().toISOString(),
     watchlist_version: watchlist._meta && watchlist._meta.version,
