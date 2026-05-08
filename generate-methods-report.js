@@ -139,8 +139,18 @@ function renderHTML(rows, methods) {
   // Tag-81: Top-N-per-Method-Ranking
   const TOP_N = 50;
   const methodTopLists = {};
+  // Tag 98f: nur CORE-Methoden + disqualified-Stocks raus aus Discovery-Cards
+  const MT_local = require('./methods/method-types.js');
+  const discoveryRows = rows.filter(r => {
+    // disqualified durch DataGuard? Pruefen ob irgendein DATAGUARD pass=false hat
+    for (const [mid, res] of Object.entries(r.results)) {
+      if (MT_local.isDataGuard(mid) && res.computable === true && res.pass === false) return false;
+    }
+    return true;
+  });
   for (const m of methods) {
-    const valid = rows.filter(r => r.results[m.id].computable && Number.isFinite(r.results[m.id].value));
+    // Tag 98f: nur discoveryRows fuer Top-50 (DataGuard-disqualified bereits raus)
+    const valid = discoveryRows.filter(r => r.results[m.id].computable && Number.isFinite(r.results[m.id].value));
     // Sort by value, direction depends on thresholdOp
     valid.sort((a, b) => {
       const av = a.results[m.id].value, bv = b.results[m.id].value;
@@ -260,7 +270,7 @@ function renderHTML(rows, methods) {
 </style></head><body>
 
 <h1>📊 Karl's Stock-Screener — Methoden-Matrix</h1>
-<div class="sub">Generated ${escHtml(generatedAt)} · ${rows.length} stocks · ${methods.length} methods · Buy-only-Filter (kein Aggregat-Score)</div>
+<div class="sub">Generated ${escHtml(generatedAt)} · ${rows.length} stocks (${rows.length - discoveryRows.length} disqualified by DataGuards) · ${methods.length} methods · Buy-only-Filter (kein Aggregat-Score)</div>
 
 <div class="summary">${methodSummary}</div>
 
@@ -296,7 +306,7 @@ function renderHTML(rows, methods) {
 </div>
 <div class="filter-bar">
   <strong style="color:#f1f5f9;font-size:13px;">Filter:</strong>
-  ${methods.map(m => `<label data-filter="${m.id}"><input type="checkbox" data-method="${m.id}"> ${escHtml(m.label)}</label>`).join('')}
+  ${methods.filter(m => MT_local.isCore(m.id) || MT_local.isDataGuard(m.id)).map(m => `<label data-filter="${m.id}"><input type="checkbox" data-method="${m.id}"> ${escHtml(m.label)}</label>`).join('')}
   <span class="filter-mode">Mode: <select id="filter-mode" style="background:#0f172a;color:#cbd5e1;border:1px solid #334155;padding:2px 6px;border-radius:3px;"><option value="AND">AND (alle ausgewählten pass)</option><option value="OR">OR (mind. einer pass)</option></select></span>
   <span class="filter-mode" id="visible-count">Showing all ${rows.length}</span>
 </div>
@@ -306,7 +316,7 @@ ${sectorHtml}
 <h2 style="color:#f1f5f9;font-size:18px;margin:24px 0 8px;border-bottom:1px solid #334155;padding-bottom:6px;">🎯 Top ${TOP_N} per Method (Discovery)</h2>
 <div class="sub" style="margin-bottom:14px;">Pro Methode die ${TOP_N} Stocks mit besten Werten — sortiert nach Methoden-Wert (nicht Pass/Fail). Karl's Discovery-Modus für Mid/Small-Caps. Klick auf eine Methode-Karte für Top-${TOP_N}.</div>
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-bottom:30px;">
-${methods.map(m => {
+${methods.filter(m => MT_local.isCore(m.id)).map(m => {
   const list = methodTopLists[m.id] || [];
   if (list.length === 0) return '';
   const opSym = m.thresholdOp === 'gte' ? '↑' : (m.thresholdOp === 'lte' ? '↓' : '|·|↓');
