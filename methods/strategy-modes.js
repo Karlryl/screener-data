@@ -65,7 +65,7 @@ const MODES = {
     ],
     dataGuards: ['asset-growth-divergence'],
     softWarnings: ['sloan-ratio'],
-    excludeSectors: SECTOR_EXCLUDE_DEFAULT,
+    excludeSectors: SECTOR_EXCLUDE_HYPERGROWTH,
     storyTemplate: '{ticker} — Quality-Compounder: {coreSummary}. {warnings}',
     defaultSortMethod: 'roic'
   },
@@ -82,7 +82,7 @@ const MODES = {
       { id: 'revenue-growth-3y', required: false, weight: 'prefer', storyHint: 'Umsatz waechst' }
     ],
     dataGuards: ['sloan-ratio', 'net-debt-ebitda', 'revenue-shock-guard'],
-    excludeSectors: SECTOR_EXCLUDE_DEFAULT,
+    excludeSectors: SECTOR_EXCLUDE_HYPERGROWTH,
     enabled: false,  // Phase 2 — nicht in v1.0
     storyTemplate: '{ticker} — Turnaround: {coreSummary}. {warnings}',
     defaultSortMethod: 'profitability-trend'
