@@ -298,22 +298,36 @@ ${sectorHtml}
 ${methods.map(m => {
   const list = methodTopLists[m.id] || [];
   if (list.length === 0) return '';
-  const top5 = list.slice(0, 5);
   const opSym = m.thresholdOp === 'gte' ? '↑' : (m.thresholdOp === 'lte' ? '↓' : '|·|↓');
-  return '<details class="topm-card" style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:12px;"><summary style="cursor:pointer;color:#f1f5f9;font-weight:600;font-size:13px;">'
-       + escHtml(m.label) + ' <span style="color:#94a3b8;font-weight:400;font-size:11px;">' + opSym + ' (top ' + Math.min(list.length, TOP_N) + ')</span>'
-       + '<div style="font-size:9px;color:#64748b;margin-top:2px;">Quality-Flags: M=Multi-Year-Stability · R=ROIC · P=Fwd-PE · S=Sloan · E=EV/EBITDA</div></summary>'
+  return '<details class="topm-card" data-card-method="' + m.id + '" style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:12px;"><summary style="cursor:pointer;color:#f1f5f9;font-weight:600;font-size:13px;">'
+       + escHtml(m.label) + ' <span class="topm-summary-count" style="color:#94a3b8;font-weight:400;font-size:11px;">' + opSym + ' (top ' + Math.min(list.length, TOP_N) + ')</span>'
+       + '<div style="font-size:9px;color:#64748b;margin-top:2px;">Quality-Flags: M=MYS · R=ROIC · P=FwdPE · S=Sloan · E=EV/EBITDA</div></summary>'
        + '<div style="margin-top:8px;font-size:11px;color:#cbd5e1;">'
        + list.slice(0, TOP_N).map((r, i) => {
            const v = r.results[m.id].value;
            const valStr = (m.unit === 'percent') ? v.toFixed(1) + '%' :
                           (m.unit === 'ratio' && Math.abs(v) < 1) ? (v*100).toFixed(2) + '%' :
                           v.toFixed(2);
-           return '<div style="padding:2px 0;border-bottom:1px solid #131c2b;">'
-                + '<span style="color:#94a3b8;width:24px;display:inline-block;">#' + (i+1) + '</span>'
-                + '<strong style="color:#f1f5f9;">' + escHtml(r.ticker) + '</strong>'
-                + ' <span style="color:#64748b;">' + escHtml((r.name || '').slice(0, 22)) + '</span>'
-                + ' <span style="float:right;color:#10b981;">' + valStr + '</span>'
+           // Tag-89 Quality-Flags
+           function flagSym(mid, sym) {
+             const res = r.results[mid];
+             if (!res) return '';
+             if (!res.computable) return '<span title="' + mid + ': n/a" style="color:#475569;font-size:9px;margin:0 1px;">' + sym + '·</span>';
+             const color = res.pass ? '#10b981' : '#ef4444';
+             const mark = res.pass ? '✓' : '✗';
+             return '<span title="' + mid + '" style="color:' + color + ';font-size:9px;margin:0 1px;font-weight:600;">' + sym + mark + '</span>';
+           }
+           const flags = flagSym('multi-year-stability', 'M') + flagSym('roic', 'R') + flagSym('forward-pe', 'P') + flagSym('sloan-ratio', 'S') + flagSym('ev-ebitda', 'E');
+           // Tag-92b: data-passes für Filter-Reaktion
+           const passMap = {};
+           for (const [mid2, res2] of Object.entries(r.results)) passMap[mid2] = res2.computable && res2.pass === true;
+           const passDataAttr = encodeURIComponent(JSON.stringify(passMap));
+           return '<div class="topm-row" data-ticker="' + escHtml(r.ticker) + '" data-passes="' + passDataAttr + '" style="padding:3px 0;border-bottom:1px solid #131c2b;display:flex;align-items:center;gap:4px;">'
+                + '<span style="color:#94a3b8;width:24px;flex-shrink:0;">#' + (i+1) + '</span>'
+                + '<strong style="color:#f1f5f9;min-width:55px;">' + escHtml(r.ticker) + '</strong>'
+                + '<span style="color:#64748b;flex:1;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml((r.name || '').slice(0, 16)) + '</span>'
+                + '<span style="white-space:nowrap;font-size:9px;">' + flags + '</span>'
+                + '<span style="color:#10b981;min-width:50px;text-align:right;">' + valStr + '</span>'
                 + '</div>';
          }).join('')
        + '</div></details>';
@@ -381,6 +395,31 @@ ${methods.map(m => {
     countEl.textContent = active.length === 0
       ? 'Showing all ' + totalRows
       : 'Showing ' + visible + ' / ' + totalRows + ' (filter: ' + active.join(' ' + mode + ' ') + ')';
+
+    // Tag-92b: Top-50-Cards reagieren auf Filter
+    document.querySelectorAll('.topm-card').forEach(card => {
+      let cardVisible = 0, cardTotal = 0;
+      card.querySelectorAll('.topm-row').forEach(row => {
+        cardTotal++;
+        let show = true;
+        if (active.length > 0) {
+          let passData = {};
+          try { passData = JSON.parse(decodeURIComponent(row.dataset.passes || '%7B%7D')); }
+          catch (e) {}
+          const passes = active.map(m => passData[m] === true);
+          if (mode === 'AND') show = passes.every(p => p);
+          else show = passes.some(p => p);
+        }
+        row.style.display = show ? '' : 'none';
+        if (show) cardVisible++;
+      });
+      const summary = card.querySelector('.topm-summary-count');
+      if (summary && active.length > 0) {
+        summary.textContent = '(' + cardVisible + ' / ' + cardTotal + ' nach Filter)';
+      } else if (summary) {
+        summary.textContent = '(top ' + cardTotal + ')';
+      }
+    });
   }
 
   checkboxes.forEach(cb => cb.addEventListener('change', applyFilter));
