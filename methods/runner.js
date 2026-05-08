@@ -31,7 +31,9 @@ const METHODS = [
   require('./above-200d-ma.js'),
   require('./opinc-margin-spike.js'),
   require('./quarterly-earnings-stability.js'),
-  require('./stable-quarterly-growth.js')
+  require('./stable-quarterly-growth.js'),
+  require('./recent-profitability.js'),
+  require('./emerging-profitable.js')
 ];
 
 function evaluateStock(stock) {

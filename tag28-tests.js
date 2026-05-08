@@ -151,9 +151,9 @@ test('GM-Stability: fail case (volatile margins)', () => {
 });
 
 // ─── Runner-Level ───
-test('Runner: getMethods returns 25 methods', () => {
+test('Runner: getMethods returns 27 methods', () => {
   const methods = Runner.getMethods();
-  assertEq(methods.length, 25);
+  assertEq(methods.length, 27);
   const ids = methods.map(m => m.id).sort();
   assertEq(ids, ['above-200d-ma','aktienfinder-quality','capex-trend','drawdown-52w','ev-ebitda','fcf-yield','forward-pe','gross-margin-stability','high-proximity-52w','insider-ownership','margin-decay','multi-year-stability','net-debt-ebitda','opinc-margin-spike','peg','quarterly-earnings-stability','quarterly-rev-acceleration','revenue-growth-3y','roic','rule-of-40','sbc-revenue','sloan-ratio','stable-quarterly-growth','volatility-annualized','working-capital-anomaly']);
 });
