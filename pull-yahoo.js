@@ -343,12 +343,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         } catch (e) {}
       }
       let ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex;
+      var ftsQuarterlyNI;
       if (useCache && cached.payload) {
         ftsAnnual = cached.payload.ftsAnnual;
         ftsQuarterly = cached.payload.ftsQuarterly;
         ftsBalance = cached.payload.ftsBalance;
         ftsAnnualSBC = cached.payload.ftsAnnualSBC;
         ftsAnnualCapex = cached.payload.ftsAnnualCapex;
+        ftsQuarterlyNI = cached.payload.ftsQuarterlyNI || [];
       } else {
         // Tag-14: fundamentalsTimeSeries-Pull für annualOpInc/FCF/opIncQ.
         const fts = await fetchFundamentalsTS(stock.yahoo_symbol);
@@ -357,10 +359,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         ftsBalance = mapFTSToBalance(fts.annualBs);
         ftsAnnualSBC = _ftsExtractByYear(fts.annualCash, ['stockBasedCompensation']);
         ftsAnnualCapex = _ftsExtractByYear(fts.annualCash, ['capitalExpenditure', 'capitalExpenditures']);
+        // Tag-90: Quarterly NetIncome (8-Quarter-Earnings-Stability)
+        var ftsQuarterlyNI = (fts.quarterlyFin || []).slice().reverse()
+          .map(r => r && r.netIncome != null ? r.netIncome : null)
+          .filter(v => v != null);
         try {
           fs.writeFileSync(cachePath, JSON.stringify({
             cachedAt: new Date().toISOString(),
-            payload: { ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex }
+            payload: { ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsQuarterlyNI }
           }));
         } catch (e) {}
       }
@@ -375,6 +381,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       canonical.annual.annualSBC = ftsAnnualSBC;
       // Tag-44: annualCapex aus FTS hinzufügen
       canonical.annual.annualCapex = ftsAnnualCapex;
+      // Tag-90: quarterlyNI in timeseries
+      canonical.timeseries.netIncomeQ = (ftsQuarterlyNI || []).map(v => ({ value: v }));
       if (ftsAnnual.annualGP.length > 0) canonical.annual.annualGP = ftsAnnual.annualGP;
       if (ftsAnnual.annualNetIncome.length > canonical.annual.annualNetIncome.length) canonical.annual.annualNetIncome = ftsAnnual.annualNetIncome;
       if (ftsAnnual.annualFCF.length > 0) canonical.annual.annualFCF = ftsAnnual.annualFCF;

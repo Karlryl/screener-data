@@ -301,7 +301,8 @@ ${methods.map(m => {
   const top5 = list.slice(0, 5);
   const opSym = m.thresholdOp === 'gte' ? '↑' : (m.thresholdOp === 'lte' ? '↓' : '|·|↓');
   return '<details class="topm-card" style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:12px;"><summary style="cursor:pointer;color:#f1f5f9;font-weight:600;font-size:13px;">'
-       + escHtml(m.label) + ' <span style="color:#94a3b8;font-weight:400;font-size:11px;">' + opSym + ' (top ' + Math.min(list.length, TOP_N) + ')</span></summary>'
+       + escHtml(m.label) + ' <span style="color:#94a3b8;font-weight:400;font-size:11px;">' + opSym + ' (top ' + Math.min(list.length, TOP_N) + ')</span>'
+       + '<div style="font-size:9px;color:#64748b;margin-top:2px;">Quality-Flags: M=Multi-Year-Stability · R=ROIC · P=Fwd-PE · S=Sloan · E=EV/EBITDA</div></summary>'
        + '<div style="margin-top:8px;font-size:11px;color:#cbd5e1;">'
        + list.slice(0, TOP_N).map((r, i) => {
            const v = r.results[m.id].value;
