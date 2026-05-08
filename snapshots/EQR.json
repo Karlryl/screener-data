@@ -1,0 +1,240 @@
+{
+  "identifier": {
+    "primary": "ISIN",
+    "value": "TICKER:EQR"
+  },
+  "meta": {
+    "ticker": "EQR",
+    "name": "Equity Residential",
+    "sector": "Real Estate",
+    "industry": "REIT - Residential",
+    "region": "NYSE",
+    "reportingCurrency": "USD",
+    "fetchedAt": "2026-05-08T05:18:01.987Z",
+    "filingDate": null
+  },
+  "marketCap": {
+    "value": 25444061184,
+    "source": "yahoo_quoteSummary",
+    "confidence": 0.9,
+    "asOf": "2026-05-08T05:18:01.987Z"
+  },
+  "metrics": {
+    "revenueTTM": {
+      "value": 3112995072,
+      "source": "yahoo_quoteSummary",
+      "confidence": 0.9,
+      "asOf": "2026-05-08T05:18:01.987Z"
+    },
+    "revenueGrowthYoY": {
+      "value": 2.5,
+      "source": "yahoo_quoteSummary",
+      "confidence": 0.9,
+      "asOf": "2026-05-08T05:18:01.987Z"
+    },
+    "grossMargin": {
+      "value": 62.775004,
+      "source": "yahoo_quoteSummary",
+      "confidence": 0.9,
+      "asOf": "2026-05-08T05:18:01.987Z"
+    },
+    "operatingMargin": {
+      "value": 27.398001999999998,
+      "source": "yahoo_quoteSummary",
+      "confidence": 0.9,
+      "asOf": "2026-05-08T05:18:01.987Z"
+    },
+    "fcfMarginTTM": {
+      "value": 45.50411726446832,
+      "source": "yahoo_quoteSummary",
+      "confidence": 0.9,
+      "asOf": "2026-05-08T05:18:01.987Z"
+    },
+    "sbcRatio": null,
+    "insidersOwnership": {
+      "value": 0.00588,
+      "source": "yahoo_quoteSummary",
+      "confidence": 0.7,
+      "asOf": "2026-05-08T05:18:01.987Z"
+    },
+    "cashRunway": null,
+    "priceSales": {
+      "value": 8.173499,
+      "source": "yahoo_quoteSummary",
+      "confidence": 0.9,
+      "asOf": "2026-05-08T05:18:01.987Z"
+    },
+    "forwardPE": {
+      "value": 43.332367,
+      "source": "yahoo_quoteSummary",
+      "confidence": 0.9,
+      "asOf": "2026-05-08T05:18:01.987Z"
+    },
+    "pe": {
+      "value": 26.344,
+      "source": "yahoo_quoteSummary",
+      "confidence": 0.9,
+      "asOf": "2026-05-08T05:18:01.987Z"
+    }
+  },
+  "external": {},
+  "timeseries": {
+    "revenueQ": [
+      {
+        "value": 779846000
+      },
+      {
+        "value": 781911000
+      },
+      {
+        "value": 782411000
+      },
+      {
+        "value": 768827000
+      },
+      {
+        "value": 760810000
+      }
+    ],
+    "opIncQ": [
+      {
+        "value": 213662000
+      },
+      {
+        "value": 222922000
+      },
+      {
+        "value": 226547000
+      },
+      {
+        "value": 226015000
+      },
+      {
+        "value": 194268000
+      }
+    ],
+    "grossProfitQ": [
+      {
+        "value": 478023000
+      },
+      {
+        "value": 494860000
+      },
+      {
+        "value": 495868000
+      },
+      {
+        "value": 485435000
+      },
+      {
+        "value": 469269000
+      }
+    ]
+  },
+  "annual": {
+    "annualRev": [
+      {
+        "value": 3093959000
+      },
+      {
+        "value": 2980108000
+      },
+      {
+        "value": 2873964000
+      },
+      {
+        "value": 2735180000
+      }
+    ],
+    "annualOpInc": [
+      {
+        "value": 869752000
+      },
+      {
+        "value": 871699000
+      },
+      {
+        "value": 878046000
+      },
+      {
+        "value": 811721000
+      }
+    ],
+    "annualNetIncome": [
+      {
+        "value": 1118667000
+      },
+      {
+        "value": 1032774000
+      },
+      {
+        "value": 832348000
+      },
+      {
+        "value": 773821000
+      }
+    ],
+    "annualGP": [
+      {
+        "value": 1945432000
+      },
+      {
+        "value": 1885543000
+      },
+      {
+        "value": 1827471000
+      },
+      {
+        "value": 1752599000
+      }
+    ],
+    "annualFCF": [
+      {
+        "value": 1289704000
+      },
+      {
+        "value": 1254918000
+      },
+      {
+        "value": 1199258000
+      },
+      {
+        "value": 1222515000
+      }
+    ],
+    "annualBalance": [
+      {
+        "totalCash": 55904000,
+        "totalDebt": 8175010000,
+        "totalAssets": 20746023000
+      },
+      {
+        "totalCash": 62302000,
+        "totalDebt": 8121745000,
+        "totalAssets": 20834176000
+      },
+      {
+        "totalCash": 50743000,
+        "totalDebt": 7390450000,
+        "totalAssets": 20034564000
+      },
+      {
+        "totalCash": 53869000,
+        "totalDebt": 7425722000,
+        "totalAssets": 20218262000
+      }
+    ],
+    "annualSBC": [
+      32210000,
+      31287000,
+      31815000,
+      29513000
+    ],
+    "annualCapex": [
+      -359059000,
+      -318689000,
+      -333540000,
+      -232241000
+    ]
+  }
+}
