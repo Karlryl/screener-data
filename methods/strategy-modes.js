@@ -53,7 +53,8 @@ const MODES = {
       { id: 'net-debt-ebitda', required: true, weight: 'must', storyHint: 'solide Bilanz' },
       { id: 'above-200d-ma', required: false, weight: 'prefer', storyHint: 'positiver Trend' }
     ],
-    dataGuards: ['sloan-ratio', 'asset-growth-divergence'],
+    dataGuards: ['asset-growth-divergence'],
+    softWarnings: ['sloan-ratio'],
     excludeSectors: SECTOR_EXCLUDE_DEFAULT,
     storyTemplate: '{ticker} — Quality-Compounder: {coreSummary}. {warnings}'
   },
