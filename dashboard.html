@@ -2,311 +2,80 @@
 <html lang="de"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Karl's Stock-Screener</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+<title>Karl's Stock-Screener — Dashboard</title>
 <style>
-  :root {
-    --cream: #faf7f2; --cream-2: #f4efe6;
-    --ink: #1a1a1a; --ink-soft: #3d3a36; --ink-mute: #6b665e; --ink-faint: #97928a;
-    --rule: #e6dfd2; --rule-soft: #efeadc;
-    --coral: #cc785c; --coral-soft: #f0d9cf; --coral-deep: #a85a3f;
-    --sage: #6d8c6e; --sage-soft: #d9e3da;
-    --slate: #5a6478; --slate-soft: #dde0e6;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--cream); color: var(--ink);
-    font-size: 16px; line-height: 1.5;
-    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
-  }
-  .wrap { max-width: 760px; margin: 0 auto; padding: 56px 32px 80px; }
-
-  header { margin-bottom: 56px; }
-  .eyebrow {
-    font-size: 12px; font-weight: 500; letter-spacing: 0.12em;
-    text-transform: uppercase; color: var(--coral); margin-bottom: 14px;
-  }
-  h1 {
-    font-family: 'Source Serif 4', Georgia, serif;
-    font-size: 44px; font-weight: 600; line-height: 1.1;
-    letter-spacing: -0.01em; margin-bottom: 12px;
-  }
-  .lede { font-size: 17px; color: var(--ink-mute); max-width: 540px; line-height: 1.55; }
-
-  .status-strip {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
-    background: var(--rule); border: 1px solid var(--rule);
-    border-radius: 10px; overflow: hidden; margin-bottom: 48px;
-  }
-  .status-cell { background: var(--cream-2); padding: 18px 20px; }
-  .status-label {
-    font-size: 11px; font-weight: 500; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--ink-faint); margin-bottom: 6px;
-  }
-  .status-value { font-size: 18px; font-weight: 600; color: var(--ink); font-feature-settings: 'tnum'; }
-  .status-sub { font-size: 12px; color: var(--ink-mute); margin-top: 2px; }
-  @media (max-width: 580px) { .status-strip { grid-template-columns: 1fr; } }
-
-  .primary-action {
-    display: flex; align-items: center; gap: 20px;
-    padding: 24px 28px; background: white;
-    border: 1px solid var(--rule); border-radius: 12px;
-    margin-bottom: 56px; transition: border-color .15s;
-    text-decoration: none; color: inherit;
-  }
-  .primary-action:hover { border-color: var(--coral); }
-  .primary-action .icon {
-    width: 44px; height: 44px; border-radius: 50%;
-    background: var(--coral-soft); color: var(--coral-deep);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; font-weight: 600; font-size: 18px;
-    font-family: 'Source Serif 4', serif;
-  }
-  .primary-action .label-block { flex: 1; }
-  .primary-action .label { font-weight: 600; font-size: 16px; margin-bottom: 2px; }
-  .primary-action .sublabel { font-size: 13px; color: var(--ink-mute); }
-  .primary-action .arrow { color: var(--coral); font-size: 22px; }
-
-  section { margin-bottom: 48px; }
-  h2 {
-    font-family: 'Source Serif 4', serif;
-    font-size: 22px; font-weight: 600; margin-bottom: 20px;
-    letter-spacing: -0.005em;
-  }
-  .section-intro {
-    font-size: 14px; color: var(--ink-mute);
-    margin-top: -14px; margin-bottom: 24px; max-width: 540px;
-  }
-
-  .reports-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 12px;
-  }
-  .report-card {
-    display: flex; flex-direction: column; gap: 6px;
-    padding: 18px 20px; background: white;
-    border: 1px solid var(--rule); border-radius: 10px;
-    text-decoration: none; transition: border-color .15s, background .15s;
-    color: inherit;
-  }
-  .report-card:hover { border-color: var(--coral); background: #fffefa; }
-  .report-card .head { display: flex; align-items: center; justify-content: space-between; }
-  .report-card .name { font-weight: 600; font-size: 15px; }
-  .report-card .pill {
-    font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 10px;
-    background: var(--coral-soft); color: var(--coral-deep);
-  }
-  .report-card.secondary .pill { background: var(--sage-soft); color: var(--sage); }
-  .report-card.tertiary .pill { background: var(--slate-soft); color: var(--slate); }
-  .report-card .desc { font-size: 12px; color: var(--ink-mute); line-height: 1.45; }
-
-  .steps { display: grid; gap: 12px; }
-  .step {
-    display: grid; grid-template-columns: 32px 1fr;
-    gap: 16px; align-items: flex-start;
-    padding: 16px 20px; background: var(--cream-2);
-    border-radius: 10px;
-  }
-  .step-num {
-    width: 28px; height: 28px; border-radius: 50%;
-    background: white; border: 1px solid var(--rule);
-    color: var(--ink-soft); display: flex; align-items: center; justify-content: center;
-    font-weight: 600; font-size: 13px;
-    font-feature-settings: 'tnum';
-  }
-  .step-body .step-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
-  .step-body .step-sub { font-size: 13px; color: var(--ink-mute); line-height: 1.5; }
-
-  .modes-card {
-    background: white; border: 1px solid var(--rule);
-    border-radius: 12px; padding: 28px;
-  }
-  .mode-item {
-    display: grid; grid-template-columns: 12px 1fr;
-    gap: 16px; padding: 14px 0;
-    border-bottom: 1px solid var(--rule-soft);
-  }
-  .mode-item:last-child { border-bottom: none; }
-  .mode-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 8px; }
-  .mode-dot.hg { background: var(--coral); }
-  .mode-dot.qc { background: var(--slate); }
-  .mode-dot.ta { background: var(--sage); }
-  .mode-name { font-weight: 600; font-size: 15px; margin-bottom: 2px; }
-  .mode-desc { font-size: 13px; color: var(--ink-mute); line-height: 1.5; }
-  .mode-meta {
-    display: inline-block; font-size: 11px; font-weight: 500;
-    color: var(--ink-faint); margin-left: 8px;
-    letter-spacing: 0.04em; text-transform: uppercase;
-  }
-
-  footer {
-    margin-top: 80px; padding-top: 28px;
-    border-top: 1px solid var(--rule);
-    font-size: 12px; color: var(--ink-faint);
-    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
-  }
-  footer a { color: var(--ink-mute); text-decoration: none; }
-  footer a:hover { color: var(--coral); }
+  * { box-sizing: border-box; }
+  body { font-family: ui-sans-serif, system-ui, sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #e2e8f0; margin: 0; padding: 30px; min-height: 100vh; }
+  .container { max-width: 800px; margin: 0 auto; }
+  h1 { color: #f1f5f9; font-size: 32px; margin: 0 0 8px; }
+  .sub { color: #94a3b8; font-size: 14px; margin-bottom: 30px; }
+  .card { background: rgba(30, 41, 59, 0.7); border: 1px solid #334155; border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+  .hero { text-align: center; padding: 40px 24px; }
+  .discover-btn { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; font-size: 22px; font-weight: 700; padding: 18px 48px; border-radius: 50px; cursor: pointer; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3); transition: all 0.2s; letter-spacing: 0.5px; text-decoration: none; display: inline-block; }
+  .discover-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(16, 185, 129, 0.4); }
+  .step { display: flex; gap: 14px; align-items: flex-start; padding: 14px; background: rgba(15, 23, 42, 0.5); border-radius: 8px; margin-bottom: 10px; }
+  .step-num { background: #8b5cf6; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; font-size: 13px; }
+  .step-text { flex: 1; }
+  .step-text strong { color: #f1f5f9; }
+  .step-text small { color: #94a3b8; font-size: 12px; display: block; margin-top: 2px; }
+  .links { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
+  .links a { background: #334155; color: #cbd5e1; text-decoration: none; padding: 10px 18px; border-radius: 6px; font-size: 13px; transition: background 0.15s; }
+  .links a:hover { background: #475569; color: #f1f5f9; }
+  .links a.primary { background: #3b82f6; color: white; }
+  .links a.primary:hover { background: #2563eb; }
+  .footer { text-align: center; color: #64748b; font-size: 11px; margin-top: 30px; }
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <header>
-    <div class="eyebrow">Stock-Screener · Karl Viehrig</div>
-    <h1>Heute besser entscheiden, was du dir genauer ansiehst.</h1>
-    <p class="lede">
-      Ein automatischer Discovery-Filter über 4&#8239;000+ Mid- und Mega-Caps weltweit.
-      Drei vordefinierte Strategie-Modi, kein Filter-Sumpf, klare Story-Cards.
-    </p>
-  </header>
+<div class="container">
+  <h1>📊 Karl's Stock-Screener</h1>
+  <div class="sub">23 Methoden · 70 Stocks · autonome Pipeline</div>
 
-  <div class="status-strip">
-    <div class="status-cell">
-      <div class="status-label">Universum</div>
-      <div class="status-value" id="universe-count">4 018</div>
-      <div class="status-sub">Stocks ≥ $2B Mcap</div>
+  <div class="card hero">
+    <a class="discover-btn" href="https://github.com/Karlryl/screener-data/actions/workflows/daily-pull.yml" target="_blank">🔍 Discover öffnen</a>
+    <div style="color:#94a3b8;font-size:12px;margin-top:14px;">Öffnet GitHub Action-Seite in neuem Tab</div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;color:#f1f5f9;">📖 So nutzt du den Discover-Flow</h3>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text"><strong>Discover-Button klicken</strong><small>Öffnet die GitHub Action-Seite (du bist eingeloggt, kein PAT nötig)</small></div>
     </div>
-    <div class="status-cell">
-      <div class="status-label">Letzter Pull</div>
-      <div class="status-value" id="last-pull">—</div>
-      <div class="status-sub" id="last-pull-sub">Cron Mo 08:00 UTC</div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text"><strong>Auf GitHub: rechts oben „Run workflow" klicken</strong><small>Drop-down lassen wie es ist, grüner „Run workflow"-Button drücken</small></div>
     </div>
-    <div class="status-cell">
-      <div class="status-label">Hypergrowth-Picks</div>
-      <div class="status-value" id="hg-count">—</div>
-      <div class="status-sub">DataGuard- &amp; Sektor-gefiltert</div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text"><strong>5-7 Min warten</strong><small>Workflow zieht Yahoo-Daten, evaluiert 23 Methoden, schreibt Reports</small></div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-text"><strong>Zurück hier: Methods-Report öffnen</strong><small>Frische Daten sind aktualisiert (Cache-Busted via Repo-Sync)</small></div>
     </div>
   </div>
 
-  <a class="primary-action" href="./modes-report.html">
-    <div class="icon">→</div>
-    <div class="label-block">
-      <div class="label">Modes-Report öffnen</div>
-      <div class="sublabel">Hypergrowth · Quality-Compounder · Turnaround. 30 Sekunden, eine Aktie ausgewählt.</div>
+  <div class="card hero">
+    <h3 style="margin-top:0;margin-bottom:18px;color:#f1f5f9;">📋 Reports</h3>
+    <div class="links">
+      <a href="./methods-report.html" class="primary">📋 Methods-Report</a>
+      <a href="./diff-report.html">🔄 Diff-Report</a>
+      <a href="https://github.com/Karlryl/screener-data/actions" target="_blank">⚙️ GitHub-Actions</a>
+      <a href="https://github.com/Karlryl/screener-data" target="_blank">📁 Repo</a>
     </div>
-    <div class="arrow">›</div>
-  </a>
+  </div>
 
-  <section>
-    <h2>Die drei Modi</h2>
-    <p class="section-intro">Jeder Modus hat eigene Pflicht-Kriterien und einen Profitability-State-Filter (Loss · Turnaround · Recent · Stable).</p>
-    <div class="modes-card">
-      <div class="mode-item">
-        <div class="mode-dot hg"></div>
-        <div>
-          <div class="mode-name">Hypergrowth <span class="mode-meta">heuristisch</span></div>
-          <div class="mode-desc">Stark wachsend, oft noch unprofitabel. Rule-of-40 + 3-Jahres-Umsatzwachstum als Pflicht. Profil: CRDO, ALAB, RDDT.</div>
-        </div>
-      </div>
-      <div class="mode-item">
-        <div class="mode-dot qc"></div>
-        <div>
-          <div class="mode-name">Quality-Compounder <span class="mode-meta">literaturgestützt</span></div>
-          <div class="mode-desc">Profitabel, hoher ROIC, stabile Marge, gesunde Bilanz. Profil: NVO, EVO, MSFT.</div>
-        </div>
-      </div>
-      <div class="mode-item">
-        <div class="mode-dot ta"></div>
-        <div>
-          <div class="mode-name">Turnaround <span class="mode-meta">Phase 2 — inaktiv</span></div>
-          <div class="mode-desc">Frischer Sign-Flip von Verlust zu Profit. Kommt in v2 mit eigener DataGuard-Konfiguration.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <h2>So nutze ich ihn morgens</h2>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-body">
-          <div class="step-title">Modes-Report öffnen</div>
-          <div class="step-sub">Wird nach jedem Pull automatisch aktualisiert.</div>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-body">
-          <div class="step-title">Modus wählen</div>
-          <div class="step-sub">Hypergrowth oder Quality-Compounder. Sub-Tabs sortieren nach einzelner Methode.</div>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-body">
-          <div class="step-title">Profitability-Filter setzen</div>
-          <div class="step-sub">Loss · Turnaround · Recent · Stable. Genau die Buckets in denen Re-Rating-Potential liegt.</div>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">4</div>
-        <div class="step-body">
-          <div class="step-title">Story-Cards lesen, Kandidat markieren</div>
-          <div class="step-sub">Ein Satz, drei Fakten, max. eine Warnung pro Stock. Deep-Dive macht Aktienfinder.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <h2>Reports</h2>
-    <div class="reports-grid">
-      <a class="report-card" href="./modes-report.html">
-        <div class="head"><span class="name">Modes-Report</span><span class="pill">primary</span></div>
-        <div class="desc">Discovery-Output mit Story-Cards pro Modus.</div>
-      </a>
-      <a class="report-card secondary" href="./diff-report.html">
-        <div class="head"><span class="name">Diff-Report</span><span class="pill">delta</span></div>
-        <div class="desc">Was sich seit letztem Pull verändert hat.</div>
-      </a>
-      <a class="report-card tertiary" href="https://github.com/Karlryl/screener-data/actions" target="_blank">
-        <div class="head"><span class="name">GitHub Actions</span><span class="pill">trigger</span></div>
-        <div class="desc">Manuellen Pull starten oder Status checken.</div>
-      </a>
-      <a class="report-card tertiary" href="https://github.com/Karlryl/screener-data" target="_blank">
-        <div class="head"><span class="name">Repo</span><span class="pill">code</span></div>
-        <div class="desc">Code, Snapshots, Picks-History.</div>
-      </a>
-    </div>
-  </section>
-
-  <footer>
-    <div>
-      Build: <span id="build-stamp">—</span> ·
-      <a href="https://github.com/Karlryl/screener-data" target="_blank">Karlryl/screener-data</a>
-    </div>
-    <div>Verkauf läuft extern (Elliot-Wave). Discovery-only Tool.</div>
-  </footer>
-
+  <div class="card">
+    <h3 style="margin-top:0;color:#f1f5f9;">📅 Stand</h3>
+    <p style="color:#cbd5e1;font-size:13px;line-height:1.6;margin:0;">
+      <strong style="color:#f1f5f9;">70 Stocks</strong> Watchlist · <strong style="color:#f1f5f9;">23 Methoden</strong> aktiv · Cron läuft <strong style="color:#f1f5f9;">Mo 08:00 UTC</strong> automatisch.<br>
+      Manueller Discover wenn du zwischendurch frische Daten willst.
+    </p>
+  </div>
 </div>
 
-<script>
-(async () => {
-  try {
-    const r = await fetch('./manifest.json', { cache: 'no-store' });
-    if (r.ok) {
-      const m = await r.json();
-      if (m.lastPull) {
-        const d = new Date(m.lastPull);
-        document.getElementById('last-pull').textContent =
-          d.toLocaleDateString('de-DE', { day:'2-digit', month:'short' });
-        document.getElementById('last-pull-sub').textContent =
-          d.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }) + ' UTC';
-      }
-      if (m.universeSize) document.getElementById('universe-count').textContent =
-        m.universeSize.toLocaleString('de-DE');
-      if (m.hypergrowthCount != null) document.getElementById('hg-count').textContent =
-        m.hypergrowthCount.toString();
-    }
-  } catch (e) {}
-  document.getElementById('build-stamp').textContent =
-    new Date().toLocaleDateString('de-DE', { day:'2-digit', month:'short', year:'numeric' });
-})();
-</script>
+<div class="footer">Last build: 2026-05-08T17:38 UTC · Repo: Karlryl/screener-data</div>
 
 </body></html>
