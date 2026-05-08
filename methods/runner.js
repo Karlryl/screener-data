@@ -1,59 +1,84 @@
 'use strict';
 /**
- * Tag 28: Methods-Runner
- * Lädt alle Methoden, runnt sie auf einem Stock, returnt Ergebnis-Matrix.
+ * Tag 97b: Methods-Runner mit Type-Klassifikation
+ * Plug-and-Play Method-Loader. aktienfinder-quality wird automatisch übersprungen.
  */
 const fs = require('fs');
 const path = require('path');
+const H = require('./_helpers.js');
+const MT = require('./method-types.js');
 
-const METHODS = [
-  require('./rule-of-40.js'),
-  require('./roic.js'),
-  require('./net-debt-ebitda.js'),
-  require('./sloan-ratio.js'),
-  require('./revenue-growth-3y.js'),
-  require('./fcf-yield.js'),
-  require('./gross-margin-stability.js'),
-  require('./margin-decay.js'),
-  require('./sbc-revenue.js'),
-  require('./capex-trend.js'),
-  require('./working-capital-anomaly.js'),
-  require('./aktienfinder-quality.js'),
-  require('./forward-pe.js'),
-  require('./multi-year-stability.js'),
-  require('./peg.js'),
-  require('./ev-ebitda.js'),
-  require('./insider-ownership.js'),
-  require('./quarterly-revenue-acceleration.js'),
-  require('./drawdown-52w.js'),
-  require('./high-proximity-52w.js'),
-  require('./volatility-annualized.js'),
-  require('./above-200d-ma.js'),
-  require('./opinc-margin-spike.js'),
-  require('./quarterly-earnings-stability.js'),
-  require('./stable-quarterly-growth.js'),
-  require('./recent-profitability.js'),
-  require('./emerging-profitable.js')
-];
+function _loadAllMethods() {
+  const dir = __dirname;
+  const out = [];
+  const files = fs.readdirSync(dir).filter(f => f.endsWith('.js') && !f.startsWith('_'));
+  for (const f of files) {
+    if (['runner.js', 'trend.js', 'method-types.js'].includes(f)) continue;
+    const full = path.join(dir, f);
+    let mod;
+    try { mod = require(full); }
+    catch (e) { continue; }
+    if (!mod || typeof mod.evaluate !== 'function' || !mod.id) continue;
+    if (MT.isDisabled(mod.id)) continue;
+    out.push(mod);
+  }
+  return out;
+}
 
-function evaluateStock(stock) {
+const METHODS = _loadAllMethods();
+
+function evaluateStock(stock, opts) {
+  opts = opts || {};
+  const filterType = opts.type || null;
+  const onlyDefault = opts.onlyDefault === true;
+
   const results = {};
   for (const m of METHODS) {
-    try {
-      results[m.id] = m.evaluate(stock);
-    } catch (e) {
-      results[m.id] = {
-        value: null, pass: false, computable: false,
-        reason: `error: ${e.message}`, components: {},
-        threshold: m.threshold, thresholdOp: m.thresholdOp
-      };
-    }
+    const methodType = MT.getType(m.id);
+    if (filterType && methodType !== filterType) continue;
+    if (onlyDefault && !MT.isDefaultActive(m.id)) continue;
+    results[m.id] = H.wrapEvaluate(m, stock, { methodType });
   }
-  return results;
+
+  const dq = MT.isDisqualifiedByDataGuards(results);
+
+  return {
+    results,
+    disqualified: dq.disqualified,
+    disqualifiedBy: dq.disqualified ? dq.methodId : null,
+    coreCount: Object.keys(results).filter(id => MT.isCore(id)).length,
+    coreCountPass: Object.keys(results).filter(id => MT.isCore(id) && results[id].pass).length
+  };
 }
 
-function getMethods() {
-  return METHODS.map(m => ({ id: m.id, label: m.label, description: m.description, threshold: m.threshold, thresholdOp: m.thresholdOp, unit: m.unit }));
+function getMethods(opts) {
+  opts = opts || {};
+  return METHODS
+    .filter(m => !opts.type || MT.getType(m.id) === opts.type)
+    .filter(m => !opts.onlyDefault || MT.isDefaultActive(m.id))
+    .map(m => ({
+      id: m.id,
+      label: m.label,
+      description: m.description,
+      threshold: m.threshold,
+      thresholdOp: m.thresholdOp,
+      unit: m.unit,
+      methodType: MT.getType(m.id),
+      defaultActive: MT.isDefaultActive(m.id)
+    }));
 }
 
-module.exports = { METHODS, evaluateStock, getMethods };
+function evaluateStockLegacy(stock) {
+  const out = evaluateStock(stock);
+  return out.results;
+}
+
+module.exports = {
+  METHODS,
+  evaluateStock: evaluateStockLegacy,
+  evaluateStockExtended: evaluateStock,
+  getMethods,
+  METHOD_TYPES: MT.METHOD_TYPES,
+  isCore: MT.isCore,
+  isDataGuard: MT.isDataGuard
+};
