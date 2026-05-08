@@ -11,9 +11,9 @@ permissions:
 jobs:
   pull:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 180
     env:
-      PULL_CONCURRENCY: '10'
+      PULL_CONCURRENCY: '20'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
