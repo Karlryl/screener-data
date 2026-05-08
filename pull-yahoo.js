@@ -392,7 +392,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
 
       // Tag-87a: MarketCap-Filter — skip Stocks außerhalb Karl's Mid/Large-Cap-Range
       const MIN_MCAP = 2e9;       // $2B
-      const MAX_MCAP = 300e9;     // $300B (Mega-Caps optional out)
+      const MAX_MCAP = Infinity;       // Tag 101: kein Mega-Cap-Cut mehr
       const mcapVal = canonical.marketCap && canonical.marketCap.value;
       if (mcapVal != null && (mcapVal < MIN_MCAP || mcapVal > MAX_MCAP)) {
         const reason = mcapVal < MIN_MCAP ? `mcap=${(mcapVal/1e9).toFixed(2)}B < $2B (Small-Cap)` : `mcap=${(mcapVal/1e9).toFixed(0)}B > $300B (Mega-Cap)`;
