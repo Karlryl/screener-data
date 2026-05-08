@@ -61,6 +61,40 @@ function evaluateAll(stocks) {
     return { stock, allResults, mcap, ipoYear };
   });
 }
+// Tag 105: Dedupe Mehrfach-Listings (GMAB+GMAB.CO, PBR+PBR-A+PETR4.SA = 1 Unternehmen).
+// Strategie: normalisiere longName, gruppiere, behalte hoechsten Mcap.
+function dedupeByCompany(evaluated) {
+  function norm(s) {
+    if (!s) return '';
+    return String(s).toLowerCase()
+      .replace(/[\u00e9\u00e8\u00ea\u00eb]/g, 'e')
+      .replace(/[\u00f3\u00f2\u00f4\u00f6]/g, 'o')
+      .replace(/[\u00e1\u00e0\u00e2\u00e4]/g, 'a')
+      .replace(/\b(inc|corporation|corp|incorporated|company|co|ltd|limited|plc|sa|a\/s|ag|nv|holdings|holding|group|grp|sarl|spa|n\.v\.)\b/gi, '')
+      .replace(/[^a-z0-9]+/g, '')
+      .trim();
+  }
+  const byKey = new Map();
+  for (const ev of evaluated) {
+    const name = (ev.stock.meta && ev.stock.meta.name) || '';
+    const ticker = (ev.stock.meta && ev.stock.meta.ticker) || '';
+    // Bevorzuge longName-basiert. Falls leer: Ticker-Stamm (vor erstem Punkt/Dash)
+    const key = norm(name) || ticker.split(/[.\-]/)[0].toLowerCase();
+    if (!key) continue;
+    const existing = byKey.get(key);
+    if (!existing) { byKey.set(key, ev); continue; }
+    // Conflict: zwei Listings — bevorzuge US-Listing (kein Dot im Ticker) ueber International
+    const evIsUS = !/\./.test(ticker);
+    const exIsUS = !/\./.test(existing.stock.meta.ticker);
+    let keep;
+    if (evIsUS && !exIsUS) keep = ev;
+    else if (!evIsUS && exIsUS) keep = existing;
+    else keep = (ev.mcap || 0) >= (existing.mcap || 0) ? ev : existing;
+    byKey.set(key, keep);
+  }
+  return [...byKey.values()];
+}
+
 
 function eligibleForMode(evaluated, modeId) {
   const mode = SM.MODES[modeId];
@@ -655,8 +689,10 @@ function main() {
   console.log('Loading snapshots from', args.snapshots);
   const stocks = loadStocks(args.snapshots);
   console.log('  loaded', stocks.length, 'stocks');
-  const evaluated = evaluateAll(stocks);
-  console.log('  evaluated all methods');
+  let evaluated = evaluateAll(stocks);
+  console.log('  evaluated all methods,', evaluated.length, 'stocks');
+  evaluated = dedupeByCompany(evaluated);
+  console.log('  after dedupe:', evaluated.length, 'unique companies');
 
   const html = buildHtml(evaluated, args.topN);
   fs.writeFileSync(args.out, html);
