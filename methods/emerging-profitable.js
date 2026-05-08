@@ -24,22 +24,24 @@ function evaluate(stock) {
       computable: false, reason: 'missing NI values', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
+  // Tag-95-Bug-Fix: Karl's Beobachtung — PLTR (3y profitable) wurde falsch als 'emerging' gepasst.
+  // Korrigierte Definition: gerade erst profitabel geworden = Y-0 > 0 UND Y-1 ≤ 0
   const isProfitable = niY0 > 0;
-  const isImproving = niY0 > niY1;
-  const value = isProfitable && isImproving ? 1 : 0;
+  const wasNotProfitable = niY1 <= 0;
+  const value = isProfitable && wasNotProfitable ? 1 : 0;
   return H.buildResult({
     value,
     pass: value >= THRESHOLD,
     computable: true,
-    components: { niY0, niY1, isProfitable, isImproving },
-    reason: `Y-0 NI=${(niY0/1e6).toFixed(0)}M${isProfitable ? '✓>0' : '✗≤0'}, Y-1 NI=${(niY1/1e6).toFixed(0)}M (improving=${isImproving})`,
+    components: { niY0, niY1, isProfitable, wasNotProfitable },
+    reason: `Y-0 NI=${(niY0/1e6).toFixed(0)}M${isProfitable ? '✓>0' : '✗≤0'} | Y-1 NI=${(niY1/1e6).toFixed(0)}M${wasNotProfitable ? '✗≤0 (Turnaround)' : '✓>0 (already profitable, not emerging)'}`,
     threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
   });
 }
 
 module.exports = {
   id: ID, label: LABEL,
-  description: 'NI > 0 im letzten Jahr UND besser als Y-1 (für Hypergrowth-Discovery, Recent-IPOs)',
+  description: 'Turnaround: Y-0 profitable UND Y-1 NICHT profitable (gerade-erst-profitabel, CRDO/ALAB-Style)',
   threshold: THRESHOLD, thresholdOp: THRESHOLD_OP, unit: 'composite',
   evaluate
 };
