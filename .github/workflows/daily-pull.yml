@@ -102,7 +102,7 @@ jobs:
         run: |
           git config user.name "yahoo-pull-bot"
           git config user.email "yahoo-pull-bot@users.noreply.github.com"
-          git add snapshots/ alert-state.json modes-report.html picks-history/ diff-report.html dashboard.html methods-history/ prices/ earnings-calendar.json watchlist.json fundamentals-cache/ universe-list.txt
+          git add -A
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
