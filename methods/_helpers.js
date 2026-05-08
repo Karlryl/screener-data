@@ -1,22 +1,22 @@
 'use strict';
 /**
- * Tag 28: Method-Plugin-Helpers
- * Gemeinsame Helper für alle 5 Methoden.
+ * Tag 28 + 97c: Method-Plugin-Helpers
+ * Tag 97c: wrapEvaluate() reichert Results um confidence/dataAsOf/methodType/flags an.
  */
+const fs = require('fs');
+const path = require('path');
 
-// Holt einen Wert aus stock-snapshot, returnt null wenn nicht vorhanden.
-function val(obj, path) {
+function val(obj, p) {
   if (!obj) return null;
-  const parts = path.split('.');
+  const parts = p.split('.');
   let cur = obj;
-  for (const p of parts) {
+  for (const x of parts) {
     if (cur == null) return null;
-    cur = cur[p];
+    cur = cur[x];
   }
   return cur;
 }
 
-// Wert aus canonical-input metric-Object {value, source, confidence, asOf}
 function metricValue(stock, metricKey) {
   const m = val(stock, `metrics.${metricKey}`);
   if (m == null) return null;
@@ -25,7 +25,6 @@ function metricValue(stock, metricKey) {
   return null;
 }
 
-// Letzter Wert aus annual-Array (latest first → index 0)
 function latestAnnual(stock, key) {
   const arr = val(stock, `annual.${key}`);
   if (!Array.isArray(arr) || arr.length === 0) return null;
@@ -36,14 +35,12 @@ function latestAnnual(stock, key) {
   return null;
 }
 
-// Latest balance-sheet field
 function latestBalance(stock, field) {
   const arr = val(stock, 'annual.annualBalance');
   if (!Array.isArray(arr) || arr.length === 0) return null;
   return arr[0] && arr[0][field];
 }
 
-// 3-Year-CAGR aus annual-Array. Latest first.
 function cagr3y(annualArr) {
   if (!Array.isArray(annualArr) || annualArr.length < 4) return null;
   const latest = annualArr[0] && (typeof annualArr[0] === 'number' ? annualArr[0] : annualArr[0].value);
@@ -52,7 +49,6 @@ function cagr3y(annualArr) {
   return (Math.pow(latest / oldest, 1/3) - 1) * 100;
 }
 
-// Standard Pass/Fail-Result-Builder
 function buildResult({ value, pass, computable, reason, components, threshold, thresholdOp }) {
   return {
     value: value != null && Number.isFinite(value) ? value : null,
@@ -65,19 +61,14 @@ function buildResult({ value, pass, computable, reason, components, threshold, t
   };
 }
 
-module.exports = { val, metricValue, latestAnnual, latestBalance, cagr3y, buildResult };
-
-
-// Tag-38: Sub-Profile-Klassifikation (delegiert an Engine v7.3 die wir noch haben)
+// Tag-38: Sub-Profile-Klassifikation (delegiert an Engine v7.3)
 let _subProfileCache = null;
 function _getEngine() {
   if (_subProfileCache) return _subProfileCache;
   try {
     _subProfileCache = require('../engine-v7.3.js');
     return _subProfileCache;
-  } catch (e) {
-    return null;
-  }
+  } catch (e) { return null; }
 }
 function classifySubProfile(stock) {
   const E = _getEngine();
@@ -85,39 +76,16 @@ function classifySubProfile(stock) {
   try { return E.classifySubProfile(stock); } catch (e) { return null; }
 }
 
-// Lade Sektor-Median-Overrides
-const fs = require('fs');
-const path = require('path');
 let _sectorMediansCache = null;
 function _loadSectorMedians() {
   if (_sectorMediansCache) return _sectorMediansCache;
-  // Tag-49: try auto-computed first, then hardcoded fallback
-  let merged = {};
-  try {
-    const autoPath = path.join(__dirname, 'sector-medians-auto.json');
-    if (fs.existsSync(autoPath)) {
-      const auto = JSON.parse(fs.readFileSync(autoPath, 'utf8'));
-      merged = JSON.parse(JSON.stringify(auto.medians || {}));
-    }
-  } catch (e) {}
   try {
     const p = path.join(__dirname, 'sector-medians.json');
-    const hardcoded = JSON.parse(fs.readFileSync(p, 'utf8'));
-    // overlay hardcoded INTO merged where auto doesn't have it
-    for (const [spId, metrics] of Object.entries(hardcoded)) {
-      if (spId === '_meta') continue;
-      if (!merged[spId]) merged[spId] = {};
-      for (const [mid, val] of Object.entries(metrics)) {
-        if (mid.startsWith('_')) continue;
-        if (merged[spId][mid] == null) merged[spId][mid] = val;
-      }
-    }
-  } catch (e) {}
-  _sectorMediansCache = merged;
+    _sectorMediansCache = JSON.parse(fs.readFileSync(p, 'utf8'));
+  } catch (e) { _sectorMediansCache = {}; }
   return _sectorMediansCache;
 }
 
-// Tag-38: gibt sektor-überschriebene Schwelle zurück oder fallback
 function effectiveThreshold(stock, methodId, defaultThreshold) {
   const sp = classifySubProfile(stock);
   if (!sp || !sp.id) return { threshold: defaultThreshold, source: 'default' };
@@ -129,5 +97,84 @@ function effectiveThreshold(stock, methodId, defaultThreshold) {
   return { threshold: defaultThreshold, source: 'default' };
 }
 
-module.exports.classifySubProfile = classifySubProfile;
-module.exports.effectiveThreshold = effectiveThreshold;
+// --- Tag 97c: Extended Plugin-Interface --------------------------
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function _dataAsOfFromStock(stock) {
+  const candidates = [
+    stock && stock.meta && stock.meta.dataAsOf,
+    stock && stock.meta && stock.meta.fetchedAt,
+    stock && stock.annual && stock.annual.lastFiscalYearEnd,
+    stock && stock.meta && stock.meta.lastUpdate
+  ].filter(Boolean);
+  return candidates.length === 0 ? null : candidates[0];
+}
+
+function _dataAgeDays(asOf) {
+  if (!asOf) return null;
+  const t = (typeof asOf === 'string') ? Date.parse(asOf) : Number(asOf);
+  if (!Number.isFinite(t)) return null;
+  return Math.floor((Date.now() - t) / DAY_MS);
+}
+
+function _inferConfidence(result, ageDays) {
+  if (result.components && Number.isFinite(result.components.confidence)) {
+    return Math.max(0, Math.min(1, result.components.confidence));
+  }
+  if (!result.computable) return 0;
+  let c = 0.7;
+  if (ageDays != null) {
+    if (ageDays > 365) c -= 0.3;
+    else if (ageDays > 180) c -= 0.15;
+    else if (ageDays > 90) c -= 0.05;
+  }
+  if (result.value != null && result.threshold != null && result.threshold !== 0) {
+    const dist = Math.abs((result.value - result.threshold) / result.threshold);
+    if (dist < 0.05) c -= 0.1;
+    else if (dist < 0.10) c -= 0.05;
+  }
+  return Math.max(0, Math.min(1, c));
+}
+
+function _autoFlags(result, ageDays) {
+  const flags = [];
+  if (ageDays != null && ageDays > 180) flags.push('STALE_DATA');
+  if (!result.computable) flags.push('NO_DATA');
+  if (result.value != null && result.threshold != null && result.threshold !== 0) {
+    const dist = Math.abs((result.value - result.threshold) / result.threshold);
+    if (dist < 0.05) flags.push('NEAR_THRESHOLD');
+  }
+  return flags;
+}
+
+function wrapEvaluate(method, stock, opts) {
+  opts = opts || {};
+  let raw;
+  try { raw = method.evaluate(stock); }
+  catch (e) {
+    raw = buildResult({
+      computable: false, reason: `error: ${e.message}`,
+      threshold: method.threshold, thresholdOp: method.thresholdOp
+    });
+  }
+  const dataAsOf = (raw.components && raw.components.dataAsOf) || _dataAsOfFromStock(stock);
+  const ageDays = _dataAgeDays(dataAsOf);
+  const confidence = _inferConfidence(raw, ageDays);
+  const methodType = opts.methodType || 'DIAGNOSTIC';
+  const flags = _autoFlags(raw, ageDays).concat(Array.isArray(raw.flags) ? raw.flags : []);
+
+  return Object.assign({}, raw, {
+    methodType,
+    confidence,
+    dataAsOf: dataAsOf || null,
+    dataAgeDays: ageDays,
+    sectorPercentile: Number.isFinite(opts.sectorPercentile) ? opts.sectorPercentile : null,
+    flags
+  });
+}
+
+module.exports = {
+  val, metricValue, latestAnnual, latestBalance, cagr3y, buildResult,
+  classifySubProfile, effectiveThreshold,
+  wrapEvaluate
+};
