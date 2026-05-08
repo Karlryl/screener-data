@@ -188,8 +188,8 @@ function renderHTML(rows, methods) {
                           'n/a': '' })[trend.direction] || '';
       return `<td class="method-cell ${klass}" data-method="${m.id}" data-pass="${result.pass}" data-value="${result.value}" title="${escHtml(result.reason)} | trend=${trend.direction} (${trend.points || 0} pts)">${valStr} ${trendIcon}</td>`;
     }).join('');
-    const rowData = encodeURIComponent(JSON.stringify({ ticker: r.ticker, name: r.name, sector: r.sector, marketCap: r.marketCap, growthYoY: r.growthYoY, revenueTTM: r.revenueTTM, results: r.results, trends: r.trends }));
-    return `<tr class="row-clickable" data-ticker="${r.ticker}" data-row='${rowData}'>
+    
+    return `<tr class="row-clickable" data-ticker="${r.ticker}" >
       <td><strong>${escHtml(r.ticker)}</strong></td>
       <td>${escHtml(r.name)}</td>
       <td>${escHtml(r.sector)}</td>
@@ -333,7 +333,7 @@ ${methods.map(m => {
   </div>
 </div>
 
-<table id="matrix">
+<details style="margin-top:30px;"><summary style="cursor:pointer;color:#f1f5f9;font-size:16px;font-weight:700;padding:12px;background:#1e293b;border:1px solid #334155;border-radius:8px;margin-bottom:8px;">📋 Full Matrix Tabelle (klicken zum Aufklappen)</summary><table id="matrix">
 <thead><tr>
   <th data-sort="ticker">Ticker</th>
   <th data-sort="name">Name</th>
@@ -479,7 +479,7 @@ ${methods.map(m => {
               + '<td class="calc">' + r.reason + '</td>'
               + '</tr>';
       }
-      html += '</tbody></table>';
+      html += '</tbody></table></details>';
       modalContent.innerHTML = html;
       modal.classList.add('open');
     });
