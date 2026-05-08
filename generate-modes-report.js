@@ -74,6 +74,7 @@ function evaluateAll(stocks) {
 // Stocks die fuer einen Modus eligible sind: nicht Sektor-excluded UND alle DataGuards passing
 function eligibleForMode(evaluated, modeId) {
   const mode = SM.MODES[modeId];
+  if (mode.enabled === false) return [];  // Tag 102 fix #5: disabled mode → []
   return evaluated.filter(ev => {
     if (SM.isExcludedBySector(ev.stock, mode)) return false;
     for (const guardId of mode.dataGuards) {
@@ -107,14 +108,19 @@ function topAllMust(eligible, modeId, topN) {
     const me = SM.evaluateMode(ev.stock, modeId, ev.allResults);
     return me.passed;
   });
-  // Sortier nach mustPassCount + preferPassCount
-  passing.sort((a, b) => {
-    const ma = SM.evaluateMode(a.stock, modeId, a.allResults);
-    const mb = SM.evaluateMode(b.stock, modeId, b.allResults);
-    const sa = (ma.mustPassCount * 10) + ma.preferPassCount;
-    const sb = (mb.mustPassCount * 10) + mb.preferPassCount;
-    return sb - sa;
-  });
+  // Tag 102 fix #2: Sortier nach mode.defaultSortMethod (z.B. roic, rule-of-x), NICHT nach Pass-Count-Mini-Score
+  const sortMethodId = mode && mode.defaultSortMethod;
+  const sortMethodMeta = sortMethodId ? Runner.METHODS.find(m => m.id === sortMethodId) : null;
+  const op = sortMethodMeta && sortMethodMeta.thresholdOp;
+  if (sortMethodId) {
+    passing.sort((a, b) => {
+      const ra = a.allResults[sortMethodId];
+      const rb = b.allResults[sortMethodId];
+      const va = ra && ra.computable && Number.isFinite(ra.value) ? ra.value : (op === 'lte' ? Infinity : -Infinity);
+      const vb = rb && rb.computable && Number.isFinite(rb.value) ? rb.value : (op === 'lte' ? Infinity : -Infinity);
+      return op === 'lte' ? va - vb : vb - va;
+    });
+  }
   return passing.slice(0, topN);
 }
 
@@ -127,7 +133,7 @@ function renderCard(ev, i, modeId, sortMethodId) {
 
   // 1-Satz-Story aus mode evaluation
   const me = SM.evaluateMode(s, modeId, ev.allResults);
-  const story = me.passed ? SM.buildStory(s, me, ev.allResults) : null;
+  const story = me.passed ? SM.buildStory(s, me, ev.allResults, SM.MODES[modeId]) : null;
 
   // Sortier-Methodenwert
   const sortMethod = sortMethodId ? Runner.METHODS.find(m => m.id === sortMethodId) : null;
@@ -196,12 +202,13 @@ function renderModeSection(modeId, eligible, evaluated, topN) {
   // Sub-Tabs: Methode-Liste + "Alle MUST"
   const tabMethods = mode.core.map(c => c.id);
   const tabs = [...tabMethods, '__ALL_MUST__'];
-  const defaultTab = tabMethods[0] || '__ALL_MUST__';
+  // Tag 102 fix #1: Default ist 'Beste Kandidaten' (alle MUST), nicht erste Methode
+  const defaultTab = '__ALL_MUST__';
 
   const tabButtonsHtml = tabs.map(tabId => {
     const isAllMust = tabId === '__ALL_MUST__';
     const methodMeta = isAllMust ? null : Runner.METHODS.find(m => m.id === tabId);
-    const label = isAllMust ? 'Alle MUST' : (methodMeta && methodMeta.label) || tabId;
+    const label = isAllMust ? 'Beste Kandidaten' : (methodMeta && methodMeta.label) || tabId;
     const active = tabId === defaultTab;
     return `<button class="mode-tab-btn ${active ? 'mode-tab-active' : ''}" data-mode="${modeId}" data-tab="${escHtml(tabId)}">${escHtml(label)}</button>`;
   }).join('');
