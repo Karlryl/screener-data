@@ -107,15 +107,15 @@ jobs:
             echo "No changes to commit."
           else
             git commit -m "chore: yahoo-pull + alert-state $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            # Tag-94 fix: rebase auf remote falls jemand parallel gepushed hat
+            # Tag 103d fix: --autostash damit unstaged changes den rebase nicht killen
             for i in 1 2 3; do
-              git pull --rebase --strategy-option theirs origin main || true
+              git pull --rebase --autostash --strategy-option theirs origin main || git rebase --abort || true
               if git push; then
                 echo "✓ Pushed on attempt $i"
                 exit 0
               fi
               echo "Push attempt $i failed, retrying..."
-              sleep 5
+              sleep $((5 * i))
             done
             echo "Push failed after 3 attempts"
             exit 1
