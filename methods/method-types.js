@@ -18,6 +18,7 @@ const REGISTRY = {
   'fcf-yield':                  { type: 'CORE', defaultActive: true,  reason: 'Valuation + cash quality combined' },
   'profitability-state':        { type: 'CORE', defaultActive: true,  reason: 'LOSS / EMERGING / STABLE classification (Tag 98)' },
   'profitability-trend':        { type: 'CORE', defaultActive: true,  reason: 'DETERIORATING / FLAT / IMPROVING direction (Tag 98)' },
+  'hypergrowth-quality-class':{ type: 'CORE', defaultActive: true, reason: 'Tag 112: Real-Hypergrowth vs Q-Spike-Fake Klassifikator (Quarter-Breadth + OI-Direction + Spike-Concentration)' },
 
   // --- DIAGNOSTIC - Kontext für Deep-Dive --------------------------
   'rule-of-x':                  { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Alternative hypergrowth metric, redundant mit Rule-of-40' },
