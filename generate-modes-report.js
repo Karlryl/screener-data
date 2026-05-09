@@ -201,7 +201,12 @@ function renderRow(ev, i, modeId, sortMethodId) {
   const spark = buildSparkline(s);
   const afUrl = aktienfinderUrl(ticker);
 
-  return `<a class="row" href="${afUrl}" target="_blank" rel="noopener" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}">
+  // Tag 113: FCF-Margin und Revenue-Growth als data-attrs fuer Filter-Slider
+  const r40 = ev.allResults['rule-of-40'];
+  const fcfMargin = (r40 && r40.computable && r40.components && Number.isFinite(r40.components.fcfMargin)) ? r40.components.fcfMargin : -999;
+  const revGrowth = (r40 && r40.computable && r40.components && Number.isFinite(r40.components.growth)) ? r40.components.growth : -999;
+
+  return `<a class="row" href="${afUrl}" target="_blank" rel="noopener" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}">
     <span class="r-rank">${String(i+1).padStart(3, '0')}</span>
     <span class="r-tk">${escHtml(ticker)}</span>
     <span class="r-name">${escHtml(name.slice(0, 36))}${name.length>36?'…':''}</span>
@@ -312,6 +317,14 @@ function renderModeContent(modeId, eligible, topN) {
         <span class="slider-val" data-mode="${modeId}" data-slider="ipo-min">${ipoMin}</span>
         <span class="f-label" style="margin-left:24px;">Branche</span>
         ${sectorPills}
+      </div>
+      <div class="f-row">
+        <span class="f-label">FCF-Marge ≥</span>
+        <input type="range" class="range-input" data-mode="${modeId}" data-slider="fcf-min" min="-30" max="50" step="1" value="-30">
+        <span class="slider-val" data-mode="${modeId}" data-slider="fcf-min">-30%</span>
+        <span class="f-label" style="margin-left:24px;">Wachstum ≥</span>
+        <input type="range" class="range-input" data-mode="${modeId}" data-slider="growth-min" min="0" max="100" step="1" value="0">
+        <span class="slider-val" data-mode="${modeId}" data-slider="growth-min">0%</span>
         <button class="reset-btn" data-mode="${modeId}">Reset</button>
       </div>
     </div>`;
@@ -693,17 +706,27 @@ function buildHtml(evaluated, topN) {
     const ipoMin = parseFloat(root.querySelector('[data-slider="ipo-min"].range-input').value);
     const ipoActive = ipoMin > ipoDefault;
     const sector = root.querySelector('.sec-select').value;
+    // Tag 113b: FCF-Margin und Growth Slider
+    const fcfMinEl = root.querySelector('[data-slider="fcf-min"].range-input');
+    const growthMinEl = root.querySelector('[data-slider="growth-min"].range-input');
+    const fcfMin = fcfMinEl ? parseFloat(fcfMinEl.value) : -999;
+    const growthMin = growthMinEl ? parseFloat(growthMinEl.value) : 0;
 
     document.querySelectorAll('.sub-panel[data-mode="' + mode + '"] .row').forEach(card => {
       const ps = card.dataset.profState;
       const mcap = parseFloat(card.dataset.mcap) || 0;
       const ipo = parseFloat(card.dataset.ipo) || 0;
       const sec = card.dataset.sector || '';
+      const fcfM = parseFloat(card.dataset.fcfMargin);
+      const revG = parseFloat(card.dataset.revGrowth);
       const psOk = pstate === 'ALL' || ps === pstate;
       const mcapOk = mcap >= mcapMin && mcap <= mcapMax;
       const ipoOk = !ipoActive ? true : (ipo > 0 && ipo >= ipoMin);
       const secOk = sector === 'ALL' || sec === sector;
-      card.style.display = (psOk && mcapOk && ipoOk && secOk) ? '' : 'none';
+      // Wenn fcfM nicht verfuegbar (-999) und Slider gesetzt: ausblenden
+      const fcfOk = (fcfMin <= -30) ? true : (Number.isFinite(fcfM) && fcfM > -100 && fcfM >= fcfMin);
+      const growthOk = (growthMin <= 0) ? true : (Number.isFinite(revG) && revG > -100 && revG >= growthMin);
+      card.style.display = (psOk && mcapOk && ipoOk && secOk && fcfOk && growthOk) ? '' : 'none';
     });
   }
 
@@ -714,6 +737,7 @@ function buildHtml(evaluated, topN) {
     if (!labelEl) return;
     const v = parseFloat(input.value);
     if (which === 'mcap-min' || which === 'mcap-max') labelEl.textContent = fmtMcap(v);
+    else if (which === 'fcf-min' || which === 'growth-min') labelEl.textContent = (v >= 0 ? '+' : '') + Math.round(v) + '%';
     else labelEl.textContent = String(Math.round(v));
   }
 
@@ -778,6 +802,8 @@ function buildHtml(evaluated, topN) {
         if (input.dataset.slider === 'mcap-min') input.value = input.min;
         else if (input.dataset.slider === 'mcap-max') input.value = input.max;
         else if (input.dataset.slider === 'ipo-min') input.value = input.min;
+        else if (input.dataset.slider === 'fcf-min') input.value = input.min;
+        else if (input.dataset.slider === 'growth-min') input.value = input.min;
         syncSliderLabel(input);
       });
       root.querySelector('.sec-select').value = 'ALL';
