@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Tag 28 - Methods-Plugin-Framework Tests
- * Tag 97+98: Liste auf 26 Methoden korrigiert (4 alte disabled, 3 neue hinzu)
+ * Tag 97+98: Liste auf 27 Methoden korrigiert (4 alte disabled, 3 neue hinzu)
  */
 'use strict';
 const Runner = require('./methods/runner.js');
@@ -144,10 +144,10 @@ test('GM-Stability: fail case (volatile margins)', () => {
   if (r.pass) throw new Error('should fail');
 });
 
-// Tag 97+98: 26 Methoden total
-test('Runner: getMethods returns 26 methods', () => {
+// Tag 97+98: 27 Methoden total (Tag 107: rule-of-x neu)
+test('Runner: getMethods returns 27 methods', () => {
   const methods = Runner.getMethods();
-  assertEq(methods.length, 26);
+  assertEq(methods.length, 27);
   const ids = methods.map(m => m.id).sort();
   assertEq(ids, ['above-200d-ma','capex-trend','drawdown-52w','ev-ebitda','fcf-yield','forward-pe','gross-margin-stability','high-proximity-52w','insider-ownership','margin-decay','net-debt-ebitda','opinc-margin-spike','peg','profitability-state','profitability-trend','quarterly-earnings-stability','quarterly-rev-acceleration','revenue-growth-3y','revenue-shock-guard','roic','rule-of-40','sbc-revenue','sloan-ratio','stable-quarterly-growth','volatility-annualized','working-capital-anomaly']);
 });
