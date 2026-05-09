@@ -106,10 +106,16 @@ function eligibleForMode(evaluated, modeId) {
   });
 }
 
-function topByMethod(eligible, methodId, methodMeta, topN) {
+function topByMethod(eligible, methodId, methodMeta, topN, modeId) {
+  // Tag 112c: Sub-Tab respektiert MUST-Filter — IONQ/MRNA fliegen ueberall raus, nicht nur in "Beste Kandidaten"
   const valid = eligible.filter(ev => {
     const r = ev.allResults[methodId];
-    return r && r.computable && Number.isFinite(r.value);
+    if (!(r && r.computable && Number.isFinite(r.value))) return false;
+    if (modeId) {
+      const me = SM.evaluateMode(ev.stock, modeId, ev.allResults);
+      if (!me.passed) return false;
+    }
+    return true;
   });
   const op = methodMeta && methodMeta.thresholdOp;
   valid.sort((a, b) => {
