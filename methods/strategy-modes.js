@@ -42,7 +42,9 @@ const MODES = {
       { id: 'revenue-growth-3y', required: true, weight: 'must', storyHint: 'starkes 3-Jahres-Umsatzwachstum' },
       { id: 'gross-margin-stability', required: false, weight: 'prefer', storyHint: 'Bruttomarge stabil/hoch' },
       // Tag 102c: profitability-state als CORE auch in Hypergrowth (Karl-Wunsch: Loss/Turnaround/Recent/Stable filtern)
-      { id: 'profitability-state', required: false, weight: 'prefer', storyHint: 'Profitabilitaets-Status' }
+      { id: 'profitability-state', required: false, weight: 'prefer', storyHint: 'Profitabilitaets-Status' },
+      // Tag 112: Hypergrowth-Quality-Klassifikator als HARD-FILTER (Q_SPIKE_FAKE und LOW_BASE_EFFECT raus)
+      { id: 'hypergrowth-quality-class', required: true, weight: 'must', storyHint: 'echtes Hypergrowth-Pattern' }
     ],
     dataGuards: ['revenue-shock-guard', 'sloan-ratio'],
     excludeSectors: SECTOR_EXCLUDE_HYPERGROWTH,
