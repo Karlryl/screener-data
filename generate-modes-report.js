@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 /**
- * Tag 106: Modes-Report — Premium-Design (FT/Bloomberg-Stil) + Filter-Strict
- * ===========================================================================
- * - Tiefes Anthrazit mit Pergament-Off-White, Champagner-Akzent.
- * - Source Serif 4 für Headlines + Werte (Buchtypografie),
- *   Inter für Body (modern-clean).
- * - Weniger Card-Boxen, mehr Listings mit horizontaler Trennung.
- * - Filter strict: wenn IPO-Slider aktiv (>min), Stocks ohne IPO ausblenden.
+ * Tag 109: Modes-Report — Top-Tabs + Tabellen-Layout + Sparklines + Aktienfinder-Klick
+ * =====================================================================================
+ * - Modi als Top-Level-Tabs (nicht mehr stacked Sections)
+ * - Top-200 statt Top-50 pro Sub-Tab
+ * - Compact Tabellen-Listings: ~38px pro Stock, ~20 sichtbar pro Viewport
+ * - Sparkline (annual.annualRev) inline-SVG pro Stock
+ * - Branchen-Filter im UI (dynamisch aus eligible-Set)
+ * - Click → Aktienfinder (https://aktienfinder.net/aktie/[ticker-base])
+ * - R-of-40 + R-of-X Sub-Tabs zeigen jeweils ihren Wert prominent
+ * - Anthrazit-Premium-Stil, JetBrains Mono fuer Numerics
  */
 'use strict';
 const fs = require('fs');
@@ -16,7 +19,7 @@ const Runner = require('./methods/runner.js');
 const SM = require('./methods/strategy-modes.js');
 
 function parseArgs(argv) {
-  const args = { snapshots: './snapshots', out: './modes-report.html', topN: 50 };
+  const args = { snapshots: './snapshots', out: './modes-report.html', topN: 200 };
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--snapshots' && argv[i+1]) args.snapshots = argv[++i];
     else if (argv[i] === '--out' && argv[i+1]) args.out = argv[++i];
@@ -42,7 +45,7 @@ function fmtValue(v, unit) {
   if (unit === 'percent') return v.toFixed(1) + '%';
   if (unit === 'ratio' && Math.abs(v) < 1) return (v*100).toFixed(2) + '%';
   if (typeof v === 'string') return v;
-  return v.toFixed(2);
+  return v.toFixed(1);
 }
 
 function loadStocks(dir) {
@@ -67,12 +70,9 @@ function dedupeByCompany(evaluated) {
   function norm(s) {
     if (!s) return '';
     return String(s).toLowerCase()
-      .replace(/[éèêë]/g, 'e')
-      .replace(/[óòôö]/g, 'o')
-      .replace(/[áàâä]/g, 'a')
+      .replace(/[éèêë]/g, 'e').replace(/[óòôö]/g, 'o').replace(/[áàâä]/g, 'a')
       .replace(/\b(inc|corporation|corp|incorporated|company|co|ltd|limited|plc|sa|a\/s|ag|nv|holdings|holding|group|grp|sarl|spa|n\.v\.)\b/gi, '')
-      .replace(/[^a-z0-9]+/g, '')
-      .trim();
+      .replace(/[^a-z0-9]+/g, '').trim();
   }
   const byKey = new Map();
   for (const ev of evaluated) {
@@ -141,10 +141,37 @@ function topAllMust(eligible, modeId, topN) {
   return passing.slice(0, topN);
 }
 
-const PSTATE_LABEL = { LOSS:'Loss', TURNAROUND:'Turnaround', RECENT:'Recent', STABLE:'Stable', NA:'—' };
+const PSTATE_LABEL = { LOSS:'Loss', TURNAROUND:'Turn', RECENT:'Recent', STABLE:'Stable', NA:'—' };
 const PSTATE_CLASS = { LOSS:'pst-loss', TURNAROUND:'pst-turnaround', RECENT:'pst-recent', STABLE:'pst-stable', NA:'pst-na' };
 
-function renderCard(ev, i, modeId, sortMethodId) {
+function _arrVals(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr.map(v => v == null ? null : (typeof v === 'number' ? v : v.value)).filter(v => Number.isFinite(v));
+}
+
+function buildSparkline(stock) {
+  const a = (stock.annual && stock.annual.annualRev) || [];
+  const vals = _arrVals(a).slice(0, 5).reverse(); // oldest → newest, max 5
+  if (vals.length < 2) return '';
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  const range = max - min || 1;
+  const w = 56, h = 16;
+  const pts = vals.map((v, i) => {
+    const x = (i / (vals.length - 1)) * w;
+    const y = h - ((v - min) / range) * h;
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  }).join(' ');
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+
+function aktienfinderUrl(ticker) {
+  // Strip exchange suffix (.HK, .CO, .T etc.) for Aktienfinder URL
+  const base = ticker.split(/[.\-]/)[0];
+  return 'https://aktienfinder.net/aktie/' + encodeURIComponent(base);
+}
+
+function renderRow(ev, i, modeId, sortMethodId) {
   const s = ev.stock;
   const ticker = (s.meta && s.meta.ticker) || '???';
   const name = (s.meta && s.meta.name) || '';
@@ -152,84 +179,50 @@ function renderCard(ev, i, modeId, sortMethodId) {
   const mcap = ev.mcap;
   const ipoYear = ev.ipoYear;
 
-  const me = SM.evaluateMode(s, modeId, ev.allResults);
-  const story = me.passed ? SM.buildStory(s, me, ev.allResults, SM.MODES[modeId]) : null;
-
   const sortMethod = sortMethodId ? Runner.METHODS.find(m => m.id === sortMethodId) : null;
   const sortRes = sortMethodId ? ev.allResults[sortMethodId] : null;
   const sortValStr = sortRes && sortRes.computable
     ? fmtValue(sortRes.value, sortMethod && sortMethod.unit)
-    : null;
-  const sortLabel = (sortMethod && sortMethod.label) || sortMethodId || '';
+    : '—';
 
   const psRes = ev.allResults['profitability-state'];
   const profState = (psRes && psRes.computable && psRes.components) ? psRes.components.state : 'NA';
+  const profConf = (psRes && psRes.components && psRes.components.confidence) ? psRes.components.confidence.split(' ')[0] : '';
   const psClass = PSTATE_CLASS[profState] || 'pst-na';
   const psLabel = PSTATE_LABEL[profState] || profState;
 
-  let factsHtml = '';
-  let warningHtml = '';
-  if (story) {
-    const facts = (story.coreSummary || '').split(', ').filter(Boolean).slice(0, 3);
-    factsHtml = facts.map(f => `<li>${escHtml(f)}</li>`).join('');
-    if (story.warnings) warningHtml = `<div class="card-warn">${escHtml(story.warnings)}</div>`;
-  } else {
-    factsHtml = `<li class="muted">Erfüllt nicht alle MUST-Kriterien dieses Modus</li>`;
-  }
+  const spark = buildSparkline(s);
+  const afUrl = aktienfinderUrl(ticker);
 
-  const ipoTag = ipoYear ? `<span class="meta-tag">IPO ${ipoYear}</span>` : '';
-  const valBlock = sortValStr
-    ? `<div class="row-val">${escHtml(sortValStr)}<span class="row-val-unit">${escHtml(sortLabel)}</span></div>`
-    : '';
-
-  return `<article class="row" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}">
-    <div class="row-head">
-      <div class="row-id">
-        <div class="row-rank">${String(i+1).padStart(2,'0')}</div>
-        <div class="row-name">
-          <div class="row-ticker">${escHtml(ticker)}</div>
-          <div class="row-company">${escHtml(name.slice(0, 48))}${name.length>48?'…':''}</div>
-        </div>
-      </div>
-      <div class="row-meta-block">
-        ${valBlock}
-        <div class="row-mcap">${fmtMoney(mcap)}</div>
-      </div>
-    </div>
-    <div class="row-tags">
-      <span class="meta-tag">${escHtml(sector || '—')}</span>
-      <span class="meta-tag ${psClass}">${escHtml(psLabel)}</span>
-      ${ipoTag}
-    </div>
-    <ul class="row-facts">${factsHtml}</ul>
-    ${warningHtml}
-  </article>`;
+  return `<a class="row" href="${afUrl}" target="_blank" rel="noopener" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}">
+    <span class="r-rank">${String(i+1).padStart(3, '0')}</span>
+    <span class="r-tk">${escHtml(ticker)}</span>
+    <span class="r-name">${escHtml(name.slice(0, 36))}${name.length>36?'…':''}</span>
+    <span class="r-sec">${escHtml(sector)}</span>
+    <span class="r-state ${psClass}">${escHtml(psLabel)}<span class="r-conf">${escHtml(profConf)}</span></span>
+    <span class="r-ipo">${ipoYear ? "'"+(ipoYear%100).toString().padStart(2,'0') : '—'}</span>
+    <span class="r-spark">${spark}</span>
+    <span class="r-val">${escHtml(sortValStr)}</span>
+    <span class="r-mcap">${fmtMoney(mcap)}</span>
+  </a>`;
 }
 
-function renderModeSection(modeId, eligible, evaluated, topN) {
+function renderModeContent(modeId, eligible, topN) {
   const mode = SM.MODES[modeId];
-  const evidenceClass = mode.evidence === 'literaturgestuetzt' ? 'ev-lit'
-                     : mode.evidence === 'heuristisch' ? 'ev-heur' : 'ev-exp';
-  const dotClass = modeId === 'HYPERGROWTH' ? 'dot-hg' : modeId === 'QUALITY_COMPOUNDER' ? 'dot-qc' : 'dot-ta';
-
-  const headerHtml = `
-    <div class="mode-header">
-      <div class="mode-title">
-        <span class="mode-dot ${dotClass}"></span>
-        <h2>${escHtml(mode.label)}</h2>
-        <span class="ev-pill ${evidenceClass}">${escHtml(mode.evidence)}</span>
-      </div>
-      <div class="mode-count">${eligible.length} eligible</div>
-    </div>
-    <p class="mode-desc">${escHtml(mode.description)}</p>
-  `;
-
   if (mode.enabled === false) {
-    return `<section class="mode-section">${headerHtml}<div class="mode-disabled">Modus in Phase 2 — noch nicht aktiv.</div></section>`;
+    return `<div class="mode-disabled">Modus in Phase 2 — noch nicht aktiv. Erst Hypergrowth + Quality validieren.</div>`;
   }
 
+  // Distinct sectors aus eligible
+  const sectorSet = new Set();
+  for (const ev of eligible) {
+    const s = ev.stock.meta && ev.stock.meta.sector;
+    if (s) sectorSet.add(s);
+  }
+  const sectors = [...sectorSet].sort();
+
   const tabMethods = mode.core.map(c => c.id);
-  const tabs = [...tabMethods, '__ALL_MUST__'];
+  const tabs = ['__ALL_MUST__', ...tabMethods];
   const defaultTab = '__ALL_MUST__';
 
   const tabButtonsHtml = tabs.map(tabId => {
@@ -237,36 +230,61 @@ function renderModeSection(modeId, eligible, evaluated, topN) {
     const methodMeta = isAllMust ? null : Runner.METHODS.find(m => m.id === tabId);
     const label = isAllMust ? 'Beste Kandidaten' : (methodMeta && methodMeta.label) || tabId;
     const active = tabId === defaultTab;
-    return `<button class="tab-btn ${active ? 'tab-active' : ''}" data-mode="${modeId}" data-tab="${escHtml(tabId)}">${escHtml(label)}</button>`;
+    return `<button class="sub-tab ${active ? 'sub-tab-active' : ''}" data-mode="${modeId}" data-tab="${escHtml(tabId)}">${escHtml(label)}</button>`;
   }).join('');
 
   const panelsHtml = tabs.map(tabId => {
     const isAllMust = tabId === '__ALL_MUST__';
-    let cardsBlock;
+    const sortMethodId = isAllMust ? mode.defaultSortMethod : tabId;
+    const sortMethodMeta = isAllMust ? Runner.METHODS.find(m => m.id === mode.defaultSortMethod) : Runner.METHODS.find(m => m.id === tabId);
+    const headerLabel = isAllMust ? ((sortMethodMeta && sortMethodMeta.label) || 'Score') : ((sortMethodMeta && sortMethodMeta.label) || tabId);
+
+    let rows;
     if (isAllMust) {
       const list = topAllMust(eligible, modeId, topN);
-      cardsBlock = list.length === 0
+      rows = list.length === 0
         ? `<div class="empty">Keine Stocks erfüllen alle MUST-Kriterien.</div>`
-        : `<div class="row-list">${list.map((ev,i) => renderCard(ev, i, modeId, null)).join('')}</div>`;
+        : list.map((ev, i) => renderRow(ev, i, modeId, mode.defaultSortMethod)).join('');
     } else {
-      const methodMeta = Runner.METHODS.find(m => m.id === tabId);
-      const list = topByMethod(eligible, tabId, methodMeta, topN);
-      cardsBlock = list.length === 0
+      const list = topByMethod(eligible, tabId, sortMethodMeta, topN);
+      rows = list.length === 0
         ? `<div class="empty">Keine Stocks mit computable Werten für diese Methode.</div>`
-        : `<div class="row-list">${list.map((ev,i) => renderCard(ev, i, modeId, tabId)).join('')}</div>`;
+        : list.map((ev, i) => renderRow(ev, i, modeId, tabId)).join('');
     }
+
+    const tableHead = `<div class="table-head">
+      <span class="r-rank">#</span>
+      <span class="r-tk">Ticker</span>
+      <span class="r-name">Firma</span>
+      <span class="r-sec">Sektor</span>
+      <span class="r-state">Profit.</span>
+      <span class="r-ipo">IPO</span>
+      <span class="r-spark">Trend</span>
+      <span class="r-val">${escHtml(headerLabel)}</span>
+      <span class="r-mcap">Mcap</span>
+    </div>`;
+
     const visible = tabId === defaultTab ? '' : 'display:none;';
-    return `<div class="tab-panel" data-mode="${modeId}" data-tab="${escHtml(tabId)}" style="${visible}">${cardsBlock}</div>`;
+    return `<div class="sub-panel" data-mode="${modeId}" data-tab="${escHtml(tabId)}" style="${visible}">
+      ${tableHead}
+      <div class="row-list">${rows}</div>
+    </div>`;
   }).join('');
 
+  // Filter
   const ipos = eligible.map(e => e.ipoYear || 0).filter(Boolean);
   const ipoMin = ipos.length ? Math.min(...ipos) : 1980;
   const ipoMax = ipos.length ? Math.max(...ipos) : new Date().getFullYear();
 
+  const sectorPills = `<select class="sec-select" data-mode="${modeId}">
+    <option value="ALL">Alle Branchen</option>
+    ${sectors.map(s => `<option value="${escHtml(s)}">${escHtml(s)}</option>`).join('')}
+  </select>`;
+
   const filtersHtml = `
     <div class="filters" data-mode="${modeId}" data-ipo-default="${ipoMin}">
       <div class="f-row">
-        <span class="f-label">Profitabilität</span>
+        <span class="f-label">Profit.</span>
         <button class="ps-btn ps-active" data-mode="${modeId}" data-pstate="ALL">Alle</button>
         <button class="ps-btn ps-loss" data-mode="${modeId}" data-pstate="LOSS">Loss</button>
         <button class="ps-btn ps-turnaround" data-mode="${modeId}" data-pstate="TURNAROUND">Turnaround</button>
@@ -285,16 +303,18 @@ function renderModeSection(modeId, eligible, evaluated, topN) {
         <span class="f-label">IPO ab</span>
         <input type="range" class="range-input" data-mode="${modeId}" data-slider="ipo-min" min="${ipoMin}" max="${ipoMax}" step="1" value="${ipoMin}">
         <span class="slider-val" data-mode="${modeId}" data-slider="ipo-min">${ipoMin}</span>
-        <button class="reset-btn" data-mode="${modeId}">Reset Filter</button>
+        <span class="f-label" style="margin-left:24px;">Branche</span>
+        ${sectorPills}
+        <button class="reset-btn" data-mode="${modeId}">Reset</button>
       </div>
     </div>`;
 
-  return `<section class="mode-section">
-    ${headerHtml}
+  return `<div class="mode-content" data-mode="${modeId}">
+    <p class="mode-desc">${escHtml(mode.description)}</p>
     ${filtersHtml}
-    <div class="tabs">${tabButtonsHtml}</div>
+    <div class="sub-tabs">${tabButtonsHtml}</div>
     ${panelsHtml}
-  </section>`;
+  </div>`;
 }
 
 function buildHtml(evaluated, topN) {
@@ -303,13 +323,37 @@ function buildHtml(evaluated, topN) {
   const eligibleByMode = {};
   for (const m of modes) eligibleByMode[m] = eligibleForMode(evaluated, m);
 
-  const sections = modes.map(m => renderModeSection(m, eligibleByMode[m], evaluated, topN)).join('\n');
-
   const totalStocks = evaluated.length;
   const sectorExcluded = totalStocks - eligibleByMode.HYPERGROWTH.length;
   const hgPicks = topAllMust(eligibleByMode.HYPERGROWTH, 'HYPERGROWTH', 9999).length;
   const qcPicks = topAllMust(eligibleByMode.QUALITY_COMPOUNDER, 'QUALITY_COMPOUNDER', 9999).length;
   const dateLabel = new Date(generatedAt).toLocaleDateString('de-DE', { day:'2-digit', month:'long', year:'numeric' });
+
+  const modeLabels = {
+    HYPERGROWTH: 'Hypergrowth',
+    QUALITY_COMPOUNDER: 'Quality-Compounder',
+    TURNAROUND: 'Turnaround'
+  };
+  const modeMeta = {
+    HYPERGROWTH: 'heuristisch',
+    QUALITY_COMPOUNDER: 'literaturgestützt',
+    TURNAROUND: 'experimentell'
+  };
+
+  const topTabsHtml = modes.map((m, i) => {
+    const cls = i === 0 ? 'top-tab-active' : '';
+    const dotClass = m === 'HYPERGROWTH' ? 'dot-hg' : m === 'QUALITY_COMPOUNDER' ? 'dot-qc' : 'dot-ta';
+    return `<button class="top-tab ${cls}" data-mode="${m}">
+      <span class="tt-dot ${dotClass}"></span>
+      <span class="tt-name">${modeLabels[m]}</span>
+      <span class="tt-meta">${modeMeta[m]}</span>
+    </button>`;
+  }).join('');
+
+  const contentsHtml = modes.map((m, i) => {
+    const visible = i === 0 ? '' : 'display:none;';
+    return `<div class="mode-content-wrap" data-mode="${m}" style="${visible}">${renderModeContent(m, eligibleByMode[m], topN)}</div>`;
+  }).join('');
 
   return `<!DOCTYPE html>
 <html lang="de"><head>
@@ -321,165 +365,136 @@ function buildHtml(evaluated, topN) {
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0b0d;
-    --bg-2: #0f1114;
-    --bg-3: #14171c;
-    --bg-4: #1c2027;
-    --line: #1c2027;
-    --line-soft: #14171c;
-    --hairline: #2a2f38;
-    --paper: #ebe4d2;
-    --paper-mute: #b8b1a0;
-    --paper-faint: #7a766a;
-    --paper-dim: #4a4842;
-    --champagne: #d4b878;
-    --champagne-soft: #2c2519;
-    --champagne-deep: #b59653;
+    --bg: #0a0b0d; --bg-2: #0f1114; --bg-3: #14171c; --bg-4: #1c2027;
+    --line: #1c2027; --line-soft: #14171c; --hairline: #2a2f38;
+    --paper: #ebe4d2; --paper-mute: #b8b1a0; --paper-faint: #7a766a; --paper-dim: #4a4842;
+    --champagne: #d4b878; --champagne-soft: #2c2519; --champagne-deep: #b59653;
     --gold: #e0c890;
-    --sage: #a3b693;
-    --sage-soft: #1c2519;
-    --slate: #8a98ad;
-    --slate-soft: #1a2129;
-    --warning: #d4a368;
-    --warning-soft: #2a1f12;
-    --loss: #c47a72;
-    --loss-soft: #2c1815;
-    --turnaround: #d4a368;
-    --turnaround-soft: #2a1f12;
-    --recent: #aabb88;
-    --recent-soft: #1f2618;
-    --stable: #82b8a0;
-    --stable-soft: #15261f;
+    --sage: #a3b693; --sage-soft: #1c2519;
+    --slate: #8a98ad; --slate-soft: #1a2129;
+    --warning: #d4a368; --warning-soft: #2a1f12;
+    --loss: #b56c66; --loss-soft: #2c1815;
+    --turnaround: #d4a368; --turnaround-soft: #2a1f12;
+    --recent: #aabb88; --recent-soft: #1f2618;
+    --stable: #82b8a0; --stable-soft: #15261f;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { background: var(--bg); }
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background:
-      radial-gradient(ellipse 1200px 800px at 50% -10%, rgba(212,184,120,0.06), transparent 60%),
-      linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+    background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
     background-attachment: fixed;
     color: var(--paper);
-    font-size: 15px; line-height: 1.65;
-    font-weight: 400;
+    font-size: 14px; line-height: 1.55; font-weight: 400;
     -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
-    font-feature-settings: 'kern', 'liga', 'calt', 'ss01';
+    font-feature-settings: 'kern', 'liga', 'calt';
   }
-  .wrap { max-width: 1200px; margin: 0 auto; padding: 96px 48px 120px; }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 56px 36px 96px; }
 
-  /* Hero */
-  .doc-header { margin-bottom: 80px; }
+  /* Header */
+  .doc-header { margin-bottom: 32px; }
   .eyebrow {
-    font-family: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 11px; font-weight: 400; letter-spacing: 0.2em;
-    text-transform: uppercase; color: var(--champagne); margin-bottom: 28px;
-    display: inline-block; padding-bottom: 0;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10.5px; font-weight: 400; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--champagne); margin-bottom: 16px;
   }
   h1 {
     font-family: 'Source Serif 4', Georgia, serif;
-    font-size: clamp(40px, 6vw, 64px); font-weight: 300; line-height: 1.04;
-    letter-spacing: -0.025em; color: var(--paper); margin-bottom: 24px;
-    max-width: 880px;
-    font-feature-settings: 'ss01';
+    font-size: clamp(32px, 4vw, 44px); font-weight: 300; line-height: 1.06;
+    letter-spacing: -0.02em; color: var(--paper); margin-bottom: 12px;
   }
   h1 em { font-style: italic; color: var(--champagne); font-weight: 300; }
-  .sub {
-    font-size: 16px; color: var(--paper-mute); max-width: 620px;
-    line-height: 1.7; font-weight: 300;
-  }
+  .sub { font-size: 14px; color: var(--paper-mute); max-width: 720px; line-height: 1.65; font-weight: 300; }
 
-  /* Status — minimaler, ohne Outer-Border, hairline only */
+  /* Status */
   .status-strip {
     display: grid; grid-template-columns: repeat(4, 1fr);
-    margin: 64px 0 56px;
-    border-top: 1px solid var(--hairline);
-    border-bottom: 1px solid var(--hairline);
+    margin: 32px 0;
+    border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
   }
-  .status-cell { padding: 28px 28px 24px; border-right: 1px solid var(--line-soft); }
+  .status-cell { padding: 16px 20px; border-right: 1px solid var(--line-soft); }
   .status-cell:last-child { border-right: none; }
   .status-label {
-    font-family: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
-    font-size: 10px; font-weight: 400; letter-spacing: 0.16em;
-    text-transform: uppercase; color: var(--paper-faint); margin-bottom: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px; font-weight: 400; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--paper-faint); margin-bottom: 8px;
   }
   .status-value {
-    font-family: 'Source Serif 4', serif; font-size: 38px; font-weight: 300;
-    color: var(--paper); font-feature-settings: 'tnum'; line-height: 1; letter-spacing: -0.02em;
+    font-family: 'Source Serif 4', serif; font-size: 26px; font-weight: 300;
+    color: var(--paper); font-feature-settings: 'tnum'; line-height: 1; letter-spacing: -0.015em;
   }
   .status-sub {
-    font-size: 11.5px; color: var(--paper-mute); margin-top: 10px; font-weight: 300;
-    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.02em;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; color: var(--paper-mute); margin-top: 6px; font-weight: 300; letter-spacing: 0.02em;
   }
-  @media (max-width: 720px) { .status-strip { grid-template-columns: repeat(2, 1fr); } }
 
-  /* Disclaimer — minimal, kein Border-Box */
+  /* Disclaimer */
   .disclaimer {
-    padding: 18px 0 18px 24px; margin-bottom: 80px;
+    padding: 12px 0 12px 20px; margin-bottom: 32px;
     border-left: 1px solid var(--champagne);
-    color: var(--gold); font-size: 13.5px; line-height: 1.7; font-weight: 300;
-    max-width: 720px;
+    color: var(--gold); font-size: 12.5px; line-height: 1.65; font-weight: 300; max-width: 880px;
   }
   .disclaimer strong { color: var(--champagne); font-weight: 400; }
 
-  /* Mode-Section: kein Container, nur große Typo */
-  .mode-section { margin-bottom: 96px; }
-  .mode-header {
-    display: flex; align-items: baseline; justify-content: space-between;
-    gap: 24px; margin-bottom: 12px;
+  /* TOP TABS — gross, edel */
+  .top-tabs {
+    display: flex; gap: 0; margin-bottom: 28px;
+    border-bottom: 1px solid var(--hairline);
   }
-  .mode-title { display: flex; align-items: center; gap: 18px; }
-  .mode-title h2 {
-    font-family: 'Source Serif 4', serif; font-size: 38px; font-weight: 300;
-    letter-spacing: -0.018em; color: var(--paper);
+  .top-tab {
+    background: transparent; border: none; cursor: pointer;
+    padding: 18px 24px 16px; margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+    display: flex; align-items: baseline; gap: 12px;
+    color: var(--paper-mute); transition: all 0.18s;
+    font: inherit;
   }
-  .mode-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .top-tab:first-child { padding-left: 0; }
+  .top-tab:hover { color: var(--paper); }
+  .top-tab.top-tab-active { color: var(--paper); border-bottom-color: var(--champagne); }
+  .tt-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
   .dot-hg { background: var(--champagne); }
   .dot-qc { background: var(--slate); }
   .dot-ta { background: var(--sage); }
-  .ev-pill {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; font-weight: 400; padding: 4px 10px;
-    letter-spacing: 0.14em; text-transform: uppercase;
-    background: transparent;
+  .tt-name {
+    font-family: 'Source Serif 4', serif; font-size: 24px; font-weight: 400;
+    letter-spacing: -0.01em;
   }
-  .ev-pill.ev-lit { color: var(--sage); border: 1px solid var(--sage); }
-  .ev-pill.ev-heur { color: var(--champagne); border: 1px solid var(--champagne); }
-  .ev-pill.ev-exp { color: var(--slate); border: 1px solid var(--slate); }
-  .mode-count {
+  .tt-meta {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px; color: var(--paper-mute); letter-spacing: 0.04em;
+    font-size: 9.5px; font-weight: 400; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--paper-faint);
   }
+  .top-tab.top-tab-active .tt-meta { color: var(--champagne); }
+
+  .mode-content-wrap { /* container per mode */ }
   .mode-desc {
-    color: var(--paper-mute); font-size: 15px;
-    margin-bottom: 36px; font-weight: 300;
-    max-width: 680px; line-height: 1.7;
+    color: var(--paper-mute); font-size: 13.5px;
+    margin-bottom: 18px; font-weight: 300; max-width: 720px; line-height: 1.65;
   }
   .mode-disabled {
-    border-top: 1px solid var(--hairline); padding: 40px 0;
+    border-top: 1px solid var(--hairline); padding: 32px;
     text-align: center; color: var(--paper-faint); font-size: 13px; font-style: italic;
   }
 
-  /* Filters — kein Container, hairline-Trennung */
+  /* Filter */
   .filters {
-    padding: 18px 0;
+    padding: 14px 0; margin-bottom: 16px;
     border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
-    margin-bottom: 32px;
-    display: grid; gap: 16px;
+    display: grid; gap: 10px;
   }
-  .f-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .f-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   .f-label {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; font-weight: 400; letter-spacing: 0.14em;
+    font-size: 9.5px; font-weight: 400; letter-spacing: 0.14em;
     text-transform: uppercase; color: var(--paper-faint);
-    margin-right: 14px; min-width: 110px;
+    margin-right: 12px; min-width: 88px;
   }
   .ps-btn {
-    background: transparent; border: none;
-    padding: 5px 14px; border-radius: 0;
-    font: inherit; font-size: 12.5px; font-weight: 400;
+    background: transparent; border: none; padding: 5px 12px;
+    font: inherit; font-size: 12px; font-weight: 400;
     cursor: pointer; color: var(--paper-mute);
-    transition: all 0.18s; letter-spacing: 0.005em;
-    border-bottom: 1px solid transparent;
+    transition: all 0.18s; border-bottom: 1px solid transparent;
   }
   .ps-btn:hover { color: var(--paper); }
   .ps-btn.ps-active { color: var(--champagne); border-bottom-color: var(--champagne); font-weight: 500; }
@@ -488,150 +503,136 @@ function buildHtml(evaluated, topN) {
   .ps-btn.ps-recent.ps-active { color: var(--recent); border-bottom-color: var(--recent); }
   .ps-btn.ps-stable.ps-active { color: var(--stable); border-bottom-color: var(--stable); }
 
-  .range-input {
-    -webkit-appearance: none; appearance: none;
-    background: transparent; width: 180px; height: 14px;
-  }
+  .range-input { -webkit-appearance: none; appearance: none; background: transparent; width: 140px; height: 14px; }
   .range-input::-webkit-slider-runnable-track { background: var(--hairline); height: 1px; }
   .range-input::-moz-range-track { background: var(--hairline); height: 1px; }
   .range-input::-webkit-slider-thumb {
     -webkit-appearance: none; appearance: none;
-    width: 10px; height: 10px; border-radius: 50%;
+    width: 9px; height: 9px; border-radius: 50%;
     background: var(--champagne); border: none;
-    margin-top: -4.5px; cursor: pointer;
-    transition: all 0.15s;
+    margin-top: -4px; cursor: pointer; transition: all 0.15s;
   }
   .range-input::-webkit-slider-thumb:hover { background: var(--gold); transform: scale(1.3); }
   .range-input::-moz-range-thumb {
-    width: 10px; height: 10px; border-radius: 50%;
+    width: 9px; height: 9px; border-radius: 50%;
     background: var(--champagne); border: none; cursor: pointer;
   }
   .slider-val {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12.5px; color: var(--paper); font-weight: 400;
-    min-width: 56px; display: inline-block;
+    font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--paper);
+    font-weight: 400; min-width: 50px; display: inline-block;
     font-variant-numeric: tabular-nums;
   }
-  .slider-sep { color: var(--paper-faint); font-size: 12px; }
+  .slider-sep { color: var(--paper-faint); font-size: 11px; }
+  .sec-select {
+    background: var(--bg-2); border: 1px solid var(--hairline);
+    color: var(--paper); padding: 4px 8px;
+    font: inherit; font-size: 12px; cursor: pointer;
+  }
   .reset-btn {
     background: transparent; border: 1px solid var(--hairline);
-    padding: 5px 14px; border-radius: 0;
-    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--paper-mute);
+    padding: 4px 12px;
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--paper-mute);
     cursor: pointer; margin-left: auto;
     text-transform: uppercase; letter-spacing: 0.14em;
     transition: all 0.18s;
   }
   .reset-btn:hover { border-color: var(--champagne); color: var(--champagne); }
 
-  /* Tabs — sehr clean, nur underline */
-  .tabs {
+  /* SUB-TABS */
+  .sub-tabs {
     display: flex; gap: 0; flex-wrap: wrap;
-    margin-bottom: 32px;
-    border-bottom: 1px solid var(--hairline);
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--line);
   }
-  .tab-btn {
+  .sub-tab {
     background: transparent; border: none;
-    padding: 14px 20px; border-bottom: 2px solid transparent;
+    padding: 10px 16px; border-bottom: 2px solid transparent;
     margin-bottom: -1px;
-    font: inherit; font-size: 13px; font-weight: 400;
-    color: var(--paper-mute); cursor: pointer;
-    transition: all 0.18s; letter-spacing: 0;
+    font: inherit; font-size: 12.5px; font-weight: 400;
+    color: var(--paper-mute); cursor: pointer; transition: all 0.18s;
   }
-  .tab-btn:first-child { padding-left: 0; }
-  .tab-btn:hover { color: var(--paper); }
-  .tab-btn.tab-active { color: var(--paper); border-bottom-color: var(--champagne); font-weight: 500; }
+  .sub-tab:first-child { padding-left: 0; }
+  .sub-tab:hover { color: var(--paper); }
+  .sub-tab.sub-tab-active { color: var(--paper); border-bottom-color: var(--champagne); font-weight: 500; }
 
-  /* Listings — ultra-clean, Editorial */
+  /* TABLE-LIST */
+  .table-head {
+    display: grid; grid-template-columns: 36px 70px 1fr 130px 110px 36px 80px 72px 60px;
+    gap: 10px; align-items: center;
+    padding: 10px 12px 10px 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px; font-weight: 400; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--paper-faint);
+    border-bottom: 1px solid var(--line);
+  }
   .row-list { display: flex; flex-direction: column; }
   .row {
-    padding: 28px 0;
+    display: grid; grid-template-columns: 36px 70px 1fr 130px 110px 36px 80px 72px 60px;
+    gap: 10px; align-items: center;
+    padding: 9px 12px 9px 4px;
     border-bottom: 1px solid var(--line-soft);
-    transition: background 0.2s;
+    transition: background 0.15s, color 0.15s;
+    cursor: pointer; text-decoration: none; color: inherit;
   }
+  .row:hover { background: rgba(212,184,120,0.04); }
   .row:last-child { border-bottom: none; }
-  .row:hover { background: rgba(212,184,120,0.025); }
-  .row-head {
-    display: grid; grid-template-columns: 1fr auto;
-    gap: 32px; align-items: baseline; margin-bottom: 14px;
-  }
-  .row-id { display: grid; grid-template-columns: 44px 1fr; gap: 22px; align-items: baseline; }
-  .row-rank {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px; font-weight: 400; color: var(--paper-faint);
-    font-variant-numeric: tabular-nums; letter-spacing: 0.08em;
-  }
-  .row-name { min-width: 0; }
-  .row-ticker {
-    font-family: 'Source Serif 4', serif;
-    font-size: 26px; font-weight: 400; color: var(--paper);
-    font-feature-settings: 'tnum'; letter-spacing: -0.005em;
-    line-height: 1.05;
-  }
-  .row-company {
-    font-size: 13.5px; color: var(--paper-mute);
-    margin-top: 5px; line-height: 1.5; font-weight: 300;
-  }
-  .row-meta-block { text-align: right; }
-  .row-val {
-    font-family: 'Source Serif 4', serif;
-    font-size: 32px; font-weight: 300; color: var(--champagne);
-    font-feature-settings: 'tnum'; line-height: 1; letter-spacing: -0.018em;
-  }
-  .row-val-unit {
-    display: block; font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; color: var(--paper-faint);
-    margin-top: 7px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 400;
-  }
-  .row-mcap {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11.5px; color: var(--paper-faint);
-    margin-top: 10px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em;
-  }
 
-  .row-tags { display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 12px 66px; }
-  .meta-tag {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; font-weight: 400; padding: 3px 10px;
-    color: var(--paper-mute); border: 1px solid var(--line);
-    letter-spacing: 0.04em; text-transform: uppercase;
+  .r-rank {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--paper-faint); font-variant-numeric: tabular-nums;
   }
-  .pst-loss { color: var(--loss); border-color: var(--loss); }
-  .pst-turnaround { color: var(--turnaround); border-color: var(--turnaround); }
-  .pst-recent { color: var(--recent); border-color: var(--recent); }
-  .pst-stable { color: var(--stable); border-color: var(--stable); }
-  .pst-na { color: var(--paper-faint); border-color: var(--line); }
+  .r-tk {
+    font-family: 'Source Serif 4', serif; font-size: 14px;
+    color: var(--paper); font-weight: 500; letter-spacing: 0;
+  }
+  .r-name { color: var(--paper-mute); font-size: 12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .r-sec { color: var(--paper-faint); font-size: 11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .r-state {
+    font-size: 10.5px; padding: 3px 8px;
+    color: var(--paper-faint); display:flex; align-items:center; gap:4px;
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em;
+  }
+  .r-conf { color: var(--paper-dim); font-size: 9px; }
+  .pst-loss { background: var(--loss-soft); color: var(--loss); }
+  .pst-turnaround { background: var(--turnaround-soft); color: var(--turnaround); }
+  .pst-recent { background: var(--recent-soft); color: var(--recent); }
+  .pst-stable { background: var(--stable-soft); color: var(--stable); }
+  .pst-na { background: var(--bg-3); color: var(--paper-faint); }
 
-  .row-facts { list-style: none; padding: 0; margin: 0 0 0 66px; }
-  .row-facts li {
-    font-size: 14px; color: var(--paper-mute); line-height: 1.65;
-    padding: 2px 0 2px 18px; position: relative; font-weight: 300;
+  .r-ipo {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--paper-faint); font-variant-numeric: tabular-nums;
   }
-  .row-facts li::before {
-    content: '·'; color: var(--champagne); position: absolute; left: 4px;
-    font-weight: 600; font-size: 16px; line-height: 1;
+  .r-spark { color: var(--champagne); display: flex; align-items: center; }
+  .r-spark .spark { display: block; }
+  .r-val {
+    font-family: 'Source Serif 4', serif; font-size: 16px;
+    color: var(--champagne); font-weight: 400; font-feature-settings: 'tnum';
+    text-align: right; letter-spacing: -0.005em;
   }
-  .row-facts li.muted { color: var(--paper-faint); font-style: italic; }
-  .row-facts li.muted::before { content: ''; }
-  .card-warn {
-    margin: 14px 0 0 66px; padding: 9px 14px;
-    background: var(--warning-soft); color: var(--warning);
-    font-size: 12.5px; line-height: 1.55; font-weight: 300;
-    border-left: 1px solid var(--warning);
+  .r-mcap {
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+    color: var(--paper-mute); text-align: right; font-variant-numeric: tabular-nums;
   }
 
   .empty {
-    padding: 64px 32px; text-align: center;
-    color: var(--paper-faint); font-size: 14px; font-style: italic;
-    border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline);
+    padding: 40px 24px; text-align: center;
+    color: var(--paper-faint); font-size: 13px; font-style: italic;
+    border-top: 1px solid var(--hairline);
   }
 
   footer {
-    margin-top: 96px; padding-top: 36px;
+    margin-top: 64px; padding-top: 24px;
     border-top: 1px solid var(--hairline);
-    font-size: 11.5px; color: var(--paper-faint);
-    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px;
-    font-weight: 300; font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 0.02em;
+    font-size: 11px; color: var(--paper-faint);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    font-weight: 300; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.02em;
+  }
+
+  @media (max-width: 1100px) {
+    .table-head, .row { grid-template-columns: 30px 60px 1fr 90px 100px 30px 60px 60px 50px; gap: 6px; font-size: 11px; }
+    .r-tk { font-size: 13px; }
+    .r-val { font-size: 14px; }
   }
 </style>
 </head>
@@ -641,40 +642,26 @@ function buildHtml(evaluated, topN) {
   <header class="doc-header">
     <div class="eyebrow">Modes-Report &middot; ${escHtml(dateLabel)}</div>
     <h1>Drei Strategien, <em>klare</em> Story-Cards.</h1>
-    <p class="sub">Discovery-Filter über ${totalStocks.toLocaleString('de-DE')} Stocks. Banks, REITs, Insurance sowie Mining, Materials und Oil &amp; Gas werden automatisch ausgeschlossen. DataGuards filtern Earnings-Manipulation, Solvenz-Risiken und Reverse-Mergers.</p>
+    <p class="sub">Discovery-Filter über ${totalStocks.toLocaleString('de-DE')} Stocks. Banks · REITs · Insurance · Mining · Oil &amp; Gas werden automatisch ausgeschlossen. DataGuards filtern Earnings-Manipulation, Solvenz-Risiken und Reverse-Mergers. Klick auf eine Aktie öffnet Aktienfinder.</p>
   </header>
 
   <div class="status-strip">
-    <div class="status-cell">
-      <div class="status-label">Universum</div>
-      <div class="status-value">${totalStocks.toLocaleString('de-DE')}</div>
-      <div class="status-sub">Stocks gepullt</div>
-    </div>
-    <div class="status-cell">
-      <div class="status-label">Sektor-Exclude</div>
-      <div class="status-value">${sectorExcluded.toLocaleString('de-DE')}</div>
-      <div class="status-sub">Banks · REITs · Mining · Oil &amp; Gas</div>
-    </div>
-    <div class="status-cell">
-      <div class="status-label">Hypergrowth</div>
-      <div class="status-value">${hgPicks}</div>
-      <div class="status-sub">erfüllen alle MUST</div>
-    </div>
-    <div class="status-cell">
-      <div class="status-label">Quality-Compounder</div>
-      <div class="status-value">${qcPicks}</div>
-      <div class="status-sub">erfüllen alle MUST</div>
-    </div>
+    <div class="status-cell"><div class="status-label">Universum</div><div class="status-value">${totalStocks.toLocaleString('de-DE')}</div><div class="status-sub">Stocks gepullt</div></div>
+    <div class="status-cell"><div class="status-label">Sektor-Exclude</div><div class="status-value">${sectorExcluded.toLocaleString('de-DE')}</div><div class="status-sub">Banks · REITs · Mining</div></div>
+    <div class="status-cell"><div class="status-label">Hypergrowth</div><div class="status-value">${hgPicks}</div><div class="status-sub">erfüllen alle MUST</div></div>
+    <div class="status-cell"><div class="status-label">Quality</div><div class="status-value">${qcPicks}</div><div class="status-sub">erfüllen alle MUST</div></div>
   </div>
 
   <div class="disclaimer">
-    <strong>Discovery-Tool, kein Alpha-System.</strong> Diese Modi sind strukturierte Ideenquellen, keine statistisch validierte Outperformance-Garantie. Finale Entscheidung liegt bei deinem Deep-Dive (Aktienfinder, Elliot-Wellen, eigene Recherche).
+    <strong>Discovery-Tool, kein Alpha-System.</strong> Strukturierte Ideenquelle, keine Outperformance-Garantie. Finale Entscheidung liegt bei deinem Deep-Dive (Aktienfinder, Elliot-Wellen).
   </div>
 
-  ${sections}
+  <div class="top-tabs">${topTabsHtml}</div>
+
+  ${contentsHtml}
 
   <footer>
-    <div>Karl's privater Stock-Screener · keine Anlageberatung · Daten via Yahoo Finance · ohne Gewähr</div>
+    <div>Karl's Stock-Screener · keine Anlageberatung · Daten via Yahoo Finance</div>
     <div>Generated ${escHtml(generatedAt.slice(0,16).replace('T',' '))} UTC</div>
   </footer>
 
@@ -697,17 +684,19 @@ function buildHtml(evaluated, topN) {
     const mcapMin = parseFloat(root.querySelector('[data-slider="mcap-min"].range-input').value) * 1e9;
     const mcapMax = parseFloat(root.querySelector('[data-slider="mcap-max"].range-input').value) * 1e9;
     const ipoMin = parseFloat(root.querySelector('[data-slider="ipo-min"].range-input').value);
-    const ipoActive = ipoMin > ipoDefault;  // wenn slider ueber default min, aktiv
+    const ipoActive = ipoMin > ipoDefault;
+    const sector = root.querySelector('.sec-select').value;
 
-    document.querySelectorAll('.tab-panel[data-mode="' + mode + '"] .row').forEach(card => {
+    document.querySelectorAll('.sub-panel[data-mode="' + mode + '"] .row').forEach(card => {
       const ps = card.dataset.profState;
       const mcap = parseFloat(card.dataset.mcap) || 0;
       const ipo = parseFloat(card.dataset.ipo) || 0;
+      const sec = card.dataset.sector || '';
       const psOk = pstate === 'ALL' || ps === pstate;
       const mcapOk = mcap >= mcapMin && mcap <= mcapMax;
-      // Tag 106: wenn IPO-Filter aktiv UND Stock hat keine IPO-Daten → ausblenden
       const ipoOk = !ipoActive ? true : (ipo > 0 && ipo >= ipoMin);
-      card.style.display = (psOk && mcapOk && ipoOk) ? '' : 'none';
+      const secOk = sector === 'ALL' || sec === sector;
+      card.style.display = (psOk && mcapOk && ipoOk && secOk) ? '' : 'none';
     });
   }
 
@@ -736,8 +725,25 @@ function buildHtml(evaluated, topN) {
     });
   });
 
+  document.querySelectorAll('.sec-select').forEach(sel => {
+    sel.addEventListener('change', () => applyFilters(sel.dataset.mode));
+  });
+
   document.addEventListener('click', function(e) {
     const t = e.target;
+
+    // TOP-TABS (Modus-Switch)
+    const topTab = t.closest && t.closest('.top-tab');
+    if (topTab) {
+      const mode = topTab.dataset.mode;
+      document.querySelectorAll('.top-tab').forEach(b => b.classList.remove('top-tab-active'));
+      topTab.classList.add('top-tab-active');
+      document.querySelectorAll('.mode-content-wrap').forEach(w => {
+        w.style.display = w.dataset.mode === mode ? '' : 'none';
+      });
+      return;
+    }
+
     if (t.classList && t.classList.contains('ps-btn')) {
       const mode = t.dataset.mode;
       document.querySelectorAll('.ps-btn[data-mode="' + mode + '"]').forEach(b => b.classList.remove('ps-active'));
@@ -745,12 +751,12 @@ function buildHtml(evaluated, topN) {
       applyFilters(mode);
       return;
     }
-    if (t.classList && t.classList.contains('tab-btn')) {
+    if (t.classList && t.classList.contains('sub-tab')) {
       const mode = t.dataset.mode;
       const tab = t.dataset.tab;
-      document.querySelectorAll('.tab-btn[data-mode="' + mode + '"]').forEach(b => b.classList.remove('tab-active'));
-      t.classList.add('tab-active');
-      document.querySelectorAll('.tab-panel[data-mode="' + mode + '"]').forEach(p => {
+      document.querySelectorAll('.sub-tab[data-mode="' + mode + '"]').forEach(b => b.classList.remove('sub-tab-active'));
+      t.classList.add('sub-tab-active');
+      document.querySelectorAll('.sub-panel[data-mode="' + mode + '"]').forEach(p => {
         p.style.display = p.dataset.tab === tab ? '' : 'none';
       });
       applyFilters(mode);
@@ -767,6 +773,7 @@ function buildHtml(evaluated, topN) {
         else if (input.dataset.slider === 'ipo-min') input.value = input.min;
         syncSliderLabel(input);
       });
+      root.querySelector('.sec-select').value = 'ALL';
       applyFilters(mode);
     }
   });
