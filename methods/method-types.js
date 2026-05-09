@@ -42,7 +42,8 @@ const REGISTRY = {
   'sloan-ratio':                { type: 'DATAGUARD', defaultActive: true, reason: 'Earnings-manipulation detector - fail = skip stock' },
   'net-debt-ebitda':            { type: 'DATAGUARD', defaultActive: true, reason: 'Solvency floor - fail = skip stock' },
   'asset-growth-divergence':    { type: 'DATAGUARD', defaultActive: true, reason: 'Acquired-growth detector' },
-  'revenue-shock-guard':        { type: 'DATAGUARD', defaultActive: true, reason: 'Robust outlier detection auf latest Q-revenue (Tag 98b)' }
+  'revenue-shock-guard':        { type: 'DATAGUARD', defaultActive: true, reason: 'Robust outlier detection auf latest Q-revenue (Tag 98b)' },
+  'q-spike-dataguard':          { type: 'DATAGUARD', defaultActive: true, reason: 'Tag 113: Hard-Filter Q-Spike (>55% Single-Q-Konzentration ODER OI-Severity >3x bei YoY>100%)' }
 };
 
 // Disabled (Tag 97a + Tag 98)
