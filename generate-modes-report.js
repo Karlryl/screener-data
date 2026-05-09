@@ -166,9 +166,10 @@ function buildSparkline(stock) {
 }
 
 function aktienfinderUrl(ticker) {
-  // Strip exchange suffix (.HK, .CO, .T etc.) for Aktienfinder URL
+  // Tag 110: Aktienfinder hat kein einheitliches URL-Schema → Google-Site-Search nutzen
+  // Top-Treffer ist meist die Aktienfinder-Aktien-Seite
   const base = ticker.split(/[.\-]/)[0];
-  return 'https://aktienfinder.net/aktie/' + encodeURIComponent(base);
+  return 'https://www.google.com/search?q=' + encodeURIComponent('site:aktienfinder.net ' + base + ' aktie');
 }
 
 function renderRow(ev, i, modeId, sortMethodId) {
