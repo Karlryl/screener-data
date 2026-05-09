@@ -28,7 +28,7 @@ const MATERIAL_REV_FLOOR = 100e6;
 const MATERIAL_MCAP_RATIO = 0.005;
 
 const SPIKE_SHARE_HARD = 0.55;       // >55% Single-Q-Konzentration → Fail
-const OI_SEVERITY_HARD = 3.0;        // OI-Verlust expandiert >3x → Fail
+const OI_SEVERITY_HARD = 2.0;       // Tag 113e: 3.0->2.0 (synchron mit HG-Quality), faengt IONQ (2.72x)        // OI-Verlust expandiert >3x → Fail
 const HYPERGROWTH_TRIGGER = 100;     // YoY > 100% → DataGuard aktiv
 
 function _arr(stock, path) {
@@ -130,6 +130,6 @@ function evaluate(stock) {
 
 module.exports = {
   id: ID, label: LABEL,
-  description: 'Hard-DataGuard fuer Q-Spike-Faelle: Spike-Konzentration >55% oder OI-Severity >3x bei YoY>100%',
+  description: 'Hard-DataGuard fuer Q-Spike-Faelle: Spike-Konzentration >55% oder OI-Severity >2x bei YoY>100%',
   evaluate
 };
