@@ -144,12 +144,12 @@ test('GM-Stability: fail case (volatile margins)', () => {
   if (r.pass) throw new Error('should fail');
 });
 
-// Tag 97+98: 27 Methoden total (Tag 107: rule-of-x neu)
-test('Runner: getMethods returns 27 methods', () => {
+// Tag 97+98: 28 Methoden total (Tag 112: hypergrowth-quality-class neu) (Tag 107: rule-of-x neu)
+test('Runner: getMethods returns 28 methods', () => {
   const methods = Runner.getMethods();
-  assertEq(methods.length, 27);
+  assertEq(methods.length, 28);
   const ids = methods.map(m => m.id).sort();
-  assertEq(ids, ['above-200d-ma','capex-trend','drawdown-52w','ev-ebitda','fcf-yield','forward-pe','gross-margin-stability','high-proximity-52w','insider-ownership','margin-decay','net-debt-ebitda','opinc-margin-spike','peg','profitability-state','profitability-trend','quarterly-earnings-stability','quarterly-rev-acceleration','revenue-growth-3y','revenue-shock-guard','roic','rule-of-40','rule-of-x','sbc-revenue','sloan-ratio','stable-quarterly-growth','volatility-annualized','working-capital-anomaly']);
+  assertEq(ids, ['above-200d-ma','capex-trend','drawdown-52w','ev-ebitda','fcf-yield','forward-pe','gross-margin-stability','high-proximity-52w','hypergrowth-quality-class','insider-ownership','margin-decay','net-debt-ebitda','opinc-margin-spike','peg','profitability-state','profitability-trend','quarterly-earnings-stability','quarterly-rev-acceleration','revenue-growth-3y','revenue-shock-guard','roic','rule-of-40','rule-of-x','sbc-revenue','sloan-ratio','stable-quarterly-growth','volatility-annualized','working-capital-anomaly']);
 });
 
 test('Runner: evaluateStock handles thrown errors', () => {
