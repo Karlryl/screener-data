@@ -44,9 +44,9 @@ const MODES = {
       // Tag 102c: profitability-state als CORE auch in Hypergrowth (Karl-Wunsch: Loss/Turnaround/Recent/Stable filtern)
       { id: 'profitability-state', required: false, weight: 'prefer', storyHint: 'Profitabilitaets-Status' },
       // Tag 112: Hypergrowth-Quality-Klassifikator als HARD-FILTER (Q_SPIKE_FAKE und LOW_BASE_EFFECT raus)
-      { id: 'hypergrowth-quality-class', required: true, weight: 'must', storyHint: 'echtes Hypergrowth-Pattern' }
+      { id: 'hypergrowth-quality-class', required: false, weight: 'prefer', storyHint: 'echtes Hypergrowth-Pattern' }
     ],
-    dataGuards: ['revenue-shock-guard', 'sloan-ratio'],
+    dataGuards: ['revenue-shock-guard', 'sloan-ratio', 'q-spike-dataguard'],
     excludeSectors: SECTOR_EXCLUDE_HYPERGROWTH,
     storyTemplate: '{ticker} — Hypergrowth: {coreSummary}. {warnings}',
     defaultSortMethod: 'rule-of-x'
@@ -169,13 +169,15 @@ const SOFT_WARNING_TEXT = {
   'sloan-ratio': 'Earnings-Quality auffaellig (Sloan-Ratio hoch — kann R&D/Working-Capital-Effekt sein)',
   'net-debt-ebitda': 'Bilanz-Risiko (Net-Debt/EBITDA hoch)',
   'asset-growth-divergence': 'Asset-Wachstum > Umsatz-Wachstum (Acquired-Growth-Risiko)',
-  'revenue-shock-guard': 'Umsatzsprung wirkt wie Einmaleffekt'
+  'revenue-shock-guard': 'Umsatzsprung wirkt wie Einmaleffekt',
+  'q-spike-dataguard': 'Q-Spike-Pattern (OI-Expansion oder >55% Single-Q-Konzentration)'
 };
 const MISSING_GUARD_TEXT = {
   'sloan-ratio': 'Sloan-Ratio nicht berechenbar',
   'net-debt-ebitda': 'Net-Debt/EBITDA nicht berechenbar',
   'asset-growth-divergence': 'Asset-Growth nicht berechenbar',
-  'revenue-shock-guard': 'Umsatz-Shock-Check nicht moeglich (keine Quartalsdaten)'
+  'revenue-shock-guard': 'Umsatz-Shock-Check nicht moeglich (keine Quartalsdaten)',
+  'q-spike-dataguard': 'Q-Spike-Check nicht moeglich (keine Quartals/OI-Daten)'
 };
 
 function buildStory(stock, modeEval, allResults, modeRef) {
