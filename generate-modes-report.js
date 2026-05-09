@@ -206,7 +206,29 @@ function renderRow(ev, i, modeId, sortMethodId) {
   const fcfMargin = (r40 && r40.computable && r40.components && Number.isFinite(r40.components.fcfMargin)) ? r40.components.fcfMargin : -999;
   const revGrowth = (r40 && r40.computable && r40.components && Number.isFinite(r40.components.growth)) ? r40.components.growth : -999;
 
-  return `<a class="row" href="${afUrl}" target="_blank" rel="noopener" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}">
+  // Tag 114: Stock-Daten als JSON fuer Modal
+  const _arrV = a => Array.isArray(a) ? a.map(v => v == null ? null : (typeof v === 'number' ? v : v.value)).filter(v => Number.isFinite(v)) : [];
+  const hgRes = ev.allResults['hypergrowth-quality-class'];
+  const hgClass = (hgRes && hgRes.computable && hgRes.components && hgRes.components.class) || null;
+  const stockData = {
+    ticker, name, sector,
+    industry: (s.meta && s.meta.industry) || '',
+    ipoYear: ipoYear || null,
+    mcap: mcap || 0,
+    afUrl,
+    annualRev: _arrV(s.annual && s.annual.annualRev).slice(0, 5),
+    annualOpInc: _arrV(s.annual && s.annual.annualOpInc).slice(0, 5),
+    annualFCF: _arrV(s.annual && s.annual.annualFCF).slice(0, 5),
+    annualGP: _arrV(s.annual && s.annual.annualGP).slice(0, 5),
+    annualNetIncome: _arrV(s.annual && s.annual.annualNetIncome).slice(0, 5),
+    revenueGrowthYoY: (function(){ const m = s.metrics && s.metrics.revenueGrowthYoY; return m == null ? null : (typeof m === 'number' ? m : m.value); })(),
+    fcfMarginTTM: (function(){ const m = s.metrics && s.metrics.fcfMarginTTM; return m == null ? null : (typeof m === 'number' ? m : m.value); })(),
+    rule40: (r40 && r40.computable) ? r40.value : null,
+    profState, hgClass
+  };
+  const stockJson = escHtml(JSON.stringify(stockData));
+
+  return `<div class="row" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}" data-stock="${stockJson}" data-af-url="${escHtml(afUrl)}">
     <span class="r-rank">${String(i+1).padStart(3, '0')}</span>
     <span class="r-tk">${escHtml(ticker)}</span>
     <span class="r-name">${escHtml(name.slice(0, 36))}${name.length>36?'…':''}</span>
@@ -216,7 +238,7 @@ function renderRow(ev, i, modeId, sortMethodId) {
     <span class="r-spark">${spark}</span>
     <span class="r-val">${escHtml(sortValStr)}</span>
     <span class="r-mcap">${fmtMoney(mcap)}</span>
-  </a>`;
+  </div>`;
 }
 
 function renderModeContent(modeId, eligible, topN) {
@@ -586,6 +608,37 @@ function buildHtml(evaluated, topN) {
     border-bottom: 1px solid var(--line);
   }
   .row-list { display: flex; flex-direction: column; }
+  .row { cursor: pointer; }
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; z-index: 9000; backdrop-filter: blur(4px); }
+  .modal-backdrop.show { display: block; }
+  .modal-panel { position: fixed; top: 0; right: 0; width: min(560px, 92vw); height: 100vh; background: #1a1612; box-shadow: -8px 0 32px rgba(0,0,0,0.5); z-index: 9001; transform: translateX(100%); transition: transform 0.25s ease-out; overflow-y: auto; }
+  .modal-panel.show { transform: translateX(0); }
+  .modal-close { position: absolute; top: 16px; right: 16px; background: transparent; border: 1px solid var(--hairline); color: var(--paper-mute); padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+  .modal-close:hover { color: var(--paper); border-color: var(--champagne); }
+  .modal-body { padding: 32px 28px 24px; font-family: ui-sans-serif, system-ui; }
+  .modal-tk { font-size: 28px; font-weight: 700; color: var(--paper); letter-spacing: -0.01em; }
+  .modal-name { font-size: 14px; color: var(--paper-faint); margin-top: 4px; }
+  .modal-meta { font-size: 11px; color: var(--paper-mute); margin-top: 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .modal-badges { display: flex; gap: 8px; margin: 16px 0 24px; flex-wrap: wrap; }
+  .modal-badge { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; border: 1px solid; }
+  .modal-section { margin-top: 24px; }
+  .modal-section-title { text-transform: uppercase; font-size: 10px; letter-spacing: 0.08em; color: var(--paper-mute); margin-bottom: 8px; }
+  .modal-chart-row { display: grid; grid-template-columns: 110px 1fr 90px; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--hairline); font-size: 12px; }
+  .modal-chart-row:last-child { border-bottom: none; }
+  .modal-chart-label { color: var(--paper-faint); }
+  .modal-chart-value { text-align: right; font-family: 'JetBrains Mono', monospace; color: var(--paper); font-weight: 600; }
+  .modal-chart-svg { height: 32px; }
+  .modal-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+  .modal-stat { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--hairline); font-size: 12px; }
+  .modal-stat-label { color: var(--paper-faint); }
+  .modal-stat-value { color: var(--paper); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+  .modal-action { display: flex; gap: 8px; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--hairline); }
+  .modal-action-btn { flex: 1; padding: 12px 16px; background: var(--champagne); color: #1a1612; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: inherit; }
+  .modal-action-btn:hover { background: var(--gold); }
+  .modal-action-btn.secondary { background: transparent; color: var(--paper-faint); border: 1px solid var(--hairline); }
+  .modal-action-btn.secondary:hover { color: var(--paper); border-color: var(--champagne); }
+  .modal-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1a3a24; color: #6ee7b7; padding: 10px 18px; border-radius: 6px; border: 1px solid #10b98140; z-index: 10000; font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+  .modal-toast.show { opacity: 1; }
   .row {
     display: grid; grid-template-columns: 36px 70px 1fr 130px 110px 36px 80px 72px 60px;
     gap: 10px; align-items: center;
@@ -741,6 +794,1213 @@ function buildHtml(evaluated, topN) {
     else labelEl.textContent = String(Math.round(v));
   }
 
+  // Tag 114: Modal-Render-Logik
+  const PSTATE_LABEL_MODAL = { LOSS:'Loss', TURNAROUND:'Turnaround', RECENT:'Recent', STABLE:'Stable', NA:'Unbekannt' };
+  const HG_CLASS_LABEL = { REAL_HYPERGROWTH_ACCELERATING:'Real HG · Accelerating', REAL_HYPERGROWTH_BUT_LOSSY:'Real HG · Lossy', HYPERGROWTH_REVIEW:'HG Review', LOW_BASE_EFFECT:'Low-Base', NOT_HYPERGROWTH:'Not HG', Q_SPIKE_FAKE:'Q-Spike-Fake' };
+  const HG_CLASS_COLOR = { REAL_HYPERGROWTH_ACCELERATING:'#6ee7b7', REAL_HYPERGROWTH_BUT_LOSSY:'#bef264', HYPERGROWTH_REVIEW:'#fcd34d', LOW_BASE_EFFECT:'#a5b4fc', NOT_HYPERGROWTH:'#94a3b8', Q_SPIKE_FAKE:'#fca5a5' };
+  function fmtM(v) { if (!Number.isFinite(v)) return '\u2014'; if (Math.abs(v) >= 1e9) return (v/1e9).toFixed(1)+'B'; if (Math.abs(v) >= 1e6) return (v/1e6).toFixed(0)+'M'; return v.toFixed(0); }
+  function fmtPct(v) { return Number.isFinite(v) ? (v >= 0 ? '+' : '') + v.toFixed(1) + '%' : '\u2014'; }
+  function fmtMoneyM(v) { if (!Number.isFinite(v)) return '\u2014'; if (v >= 1e12) return '
+    syncSliderLabel(input);
+    input.addEventListener('input', () => {
+      if (input.dataset.slider === 'mcap-min') {
+        const max = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-max"]');
+        if (max && parseFloat(input.value) > parseFloat(max.value)) input.value = max.value;
+      } else if (input.dataset.slider === 'mcap-max') {
+        const min = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-min"]');
+        if (min && parseFloat(input.value) < parseFloat(min.value)) input.value = min.value;
+      }
+      syncSliderLabel(input);
+      applyFilters(input.dataset.mode);
+    });
+  });
+
+  document.querySelectorAll('.sec-select').forEach(sel => {
+    sel.addEventListener('change', () => applyFilters(sel.dataset.mode));
+  });
+
+  document.addEventListener('click', function(e) {
+    const t = e.target;
+
+    // TOP-TABS (Modus-Switch)
+    const topTab = t.closest && t.closest('.top-tab');
+    if (topTab) {
+      const mode = topTab.dataset.mode;
+      document.querySelectorAll('.top-tab').forEach(b => b.classList.remove('top-tab-active'));
+      topTab.classList.add('top-tab-active');
+      document.querySelectorAll('.mode-content-wrap').forEach(w => {
+        w.style.display = w.dataset.mode === mode ? '' : 'none';
+      });
+      return;
+    }
+
+    if (t.classList && t.classList.contains('ps-btn')) {
+      const mode = t.dataset.mode;
+      document.querySelectorAll('.ps-btn[data-mode="' + mode + '"]').forEach(b => b.classList.remove('ps-active'));
+      t.classList.add('ps-active');
+      applyFilters(mode);
+      return;
+    }
+    if (t.classList && t.classList.contains('sub-tab')) {
+      const mode = t.dataset.mode;
+      const tab = t.dataset.tab;
+      document.querySelectorAll('.sub-tab[data-mode="' + mode + '"]').forEach(b => b.classList.remove('sub-tab-active'));
+      t.classList.add('sub-tab-active');
+      document.querySelectorAll('.sub-panel[data-mode="' + mode + '"]').forEach(p => {
+        p.style.display = p.dataset.tab === tab ? '' : 'none';
+      });
+      applyFilters(mode);
+      return;
+    }
+    // Tag 114: Stock-Modal-Click
+    const row = t.closest && t.closest('.row');
+    if (row && row.dataset.stock) {
+      e.preventDefault();
+      try { openStockModal(JSON.parse(row.dataset.stock), row.dataset.afUrl); } catch (err) { console.error(err); }
+      return;
+    }
+    if (t.classList && t.classList.contains('reset-btn')) {
+      const mode = t.dataset.mode;
+      const root = document.querySelector('.filters[data-mode="' + mode + '"]');
+      root.querySelectorAll('.ps-btn').forEach(b => b.classList.remove('ps-active'));
+      root.querySelector('.ps-btn[data-pstate="ALL"]').classList.add('ps-active');
+      root.querySelectorAll('.range-input').forEach(input => {
+        if (input.dataset.slider === 'mcap-min') input.value = input.min;
+        else if (input.dataset.slider === 'mcap-max') input.value = input.max;
+        else if (input.dataset.slider === 'ipo-min') input.value = input.min;
+        else if (input.dataset.slider === 'fcf-min') input.value = input.min;
+        else if (input.dataset.slider === 'growth-min') input.value = input.min;
+        syncSliderLabel(input);
+      });
+      root.querySelector('.sec-select').value = 'ALL';
+      applyFilters(mode);
+    }
+  });
+})();
+</script>
+
+<div class="modal-backdrop" id="stockModalBackdrop"></div>
+<aside class="modal-panel" id="stockModalPanel" role="dialog" aria-hidden="true">
+  <button class="modal-close" id="stockModalClose">Schliessen ✕</button>
+  <div class="modal-body" id="stockModalBody"></div>
+</aside>
+<div class="modal-toast" id="modalToast">Ticker kopiert</div>
+</body></html>`;
+}
+
+function main() {
+  const args = parseArgs(process.argv);
+  console.log('Loading snapshots from', args.snapshots);
+  const stocks = loadStocks(args.snapshots);
+  console.log('  loaded', stocks.length, 'stocks');
+  let evaluated = evaluateAll(stocks);
+  console.log('  evaluated all methods,', evaluated.length, 'stocks');
+  evaluated = dedupeByCompany(evaluated);
+  console.log('  after dedupe:', evaluated.length, 'unique companies');
+
+  const html = buildHtml(evaluated, args.topN);
+  fs.writeFileSync(args.out, html);
+  console.log('Wrote', args.out, '(' + (html.length/1024).toFixed(0) + ' KB)');
+
+  for (const modeId of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
+    const eligible = eligibleForMode(evaluated, modeId);
+    const allMust = topAllMust(eligible, modeId, args.topN);
+    console.log(`  ${modeId}: ${eligible.length} eligible, ${allMust.length} all-MUST-pass`);
+  }
+}
+
+if (require.main === module) main();
+module.exports = { eligibleForMode, topByMethod, topAllMust, evaluateAll, dedupeByCompany };
++(v/1e12).toFixed(1)+'T'; if (v >= 1e9) return '
+    syncSliderLabel(input);
+    input.addEventListener('input', () => {
+      if (input.dataset.slider === 'mcap-min') {
+        const max = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-max"]');
+        if (max && parseFloat(input.value) > parseFloat(max.value)) input.value = max.value;
+      } else if (input.dataset.slider === 'mcap-max') {
+        const min = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-min"]');
+        if (min && parseFloat(input.value) < parseFloat(min.value)) input.value = min.value;
+      }
+      syncSliderLabel(input);
+      applyFilters(input.dataset.mode);
+    });
+  });
+
+  document.querySelectorAll('.sec-select').forEach(sel => {
+    sel.addEventListener('change', () => applyFilters(sel.dataset.mode));
+  });
+
+  document.addEventListener('click', function(e) {
+    const t = e.target;
+
+    // TOP-TABS (Modus-Switch)
+    const topTab = t.closest && t.closest('.top-tab');
+    if (topTab) {
+      const mode = topTab.dataset.mode;
+      document.querySelectorAll('.top-tab').forEach(b => b.classList.remove('top-tab-active'));
+      topTab.classList.add('top-tab-active');
+      document.querySelectorAll('.mode-content-wrap').forEach(w => {
+        w.style.display = w.dataset.mode === mode ? '' : 'none';
+      });
+      return;
+    }
+
+    if (t.classList && t.classList.contains('ps-btn')) {
+      const mode = t.dataset.mode;
+      document.querySelectorAll('.ps-btn[data-mode="' + mode + '"]').forEach(b => b.classList.remove('ps-active'));
+      t.classList.add('ps-active');
+      applyFilters(mode);
+      return;
+    }
+    if (t.classList && t.classList.contains('sub-tab')) {
+      const mode = t.dataset.mode;
+      const tab = t.dataset.tab;
+      document.querySelectorAll('.sub-tab[data-mode="' + mode + '"]').forEach(b => b.classList.remove('sub-tab-active'));
+      t.classList.add('sub-tab-active');
+      document.querySelectorAll('.sub-panel[data-mode="' + mode + '"]').forEach(p => {
+        p.style.display = p.dataset.tab === tab ? '' : 'none';
+      });
+      applyFilters(mode);
+      return;
+    }
+    // Tag 114: Stock-Modal-Click
+    const row = t.closest && t.closest('.row');
+    if (row && row.dataset.stock) {
+      e.preventDefault();
+      try { openStockModal(JSON.parse(row.dataset.stock), row.dataset.afUrl); } catch (err) { console.error(err); }
+      return;
+    }
+    if (t.classList && t.classList.contains('reset-btn')) {
+      const mode = t.dataset.mode;
+      const root = document.querySelector('.filters[data-mode="' + mode + '"]');
+      root.querySelectorAll('.ps-btn').forEach(b => b.classList.remove('ps-active'));
+      root.querySelector('.ps-btn[data-pstate="ALL"]').classList.add('ps-active');
+      root.querySelectorAll('.range-input').forEach(input => {
+        if (input.dataset.slider === 'mcap-min') input.value = input.min;
+        else if (input.dataset.slider === 'mcap-max') input.value = input.max;
+        else if (input.dataset.slider === 'ipo-min') input.value = input.min;
+        else if (input.dataset.slider === 'fcf-min') input.value = input.min;
+        else if (input.dataset.slider === 'growth-min') input.value = input.min;
+        syncSliderLabel(input);
+      });
+      root.querySelector('.sec-select').value = 'ALL';
+      applyFilters(mode);
+    }
+  });
+})();
+</script>
+
+<div class="modal-backdrop" id="stockModalBackdrop"></div>
+<aside class="modal-panel" id="stockModalPanel" role="dialog" aria-hidden="true">
+  <button class="modal-close" id="stockModalClose">Schliessen ✕</button>
+  <div class="modal-body" id="stockModalBody"></div>
+</aside>
+<div class="modal-toast" id="modalToast">Ticker kopiert</div>
+</body></html>`;
+}
+
+function main() {
+  const args = parseArgs(process.argv);
+  console.log('Loading snapshots from', args.snapshots);
+  const stocks = loadStocks(args.snapshots);
+  console.log('  loaded', stocks.length, 'stocks');
+  let evaluated = evaluateAll(stocks);
+  console.log('  evaluated all methods,', evaluated.length, 'stocks');
+  evaluated = dedupeByCompany(evaluated);
+  console.log('  after dedupe:', evaluated.length, 'unique companies');
+
+  const html = buildHtml(evaluated, args.topN);
+  fs.writeFileSync(args.out, html);
+  console.log('Wrote', args.out, '(' + (html.length/1024).toFixed(0) + ' KB)');
+
+  for (const modeId of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
+    const eligible = eligibleForMode(evaluated, modeId);
+    const allMust = topAllMust(eligible, modeId, args.topN);
+    console.log(`  ${modeId}: ${eligible.length} eligible, ${allMust.length} all-MUST-pass`);
+  }
+}
+
+if (require.main === module) main();
+module.exports = { eligibleForMode, topByMethod, topAllMust, evaluateAll, dedupeByCompany };
++(v/1e9).toFixed(1)+'B'; if (v >= 1e6) return '
+    syncSliderLabel(input);
+    input.addEventListener('input', () => {
+      if (input.dataset.slider === 'mcap-min') {
+        const max = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-max"]');
+        if (max && parseFloat(input.value) > parseFloat(max.value)) input.value = max.value;
+      } else if (input.dataset.slider === 'mcap-max') {
+        const min = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-min"]');
+        if (min && parseFloat(input.value) < parseFloat(min.value)) input.value = min.value;
+      }
+      syncSliderLabel(input);
+      applyFilters(input.dataset.mode);
+    });
+  });
+
+  document.querySelectorAll('.sec-select').forEach(sel => {
+    sel.addEventListener('change', () => applyFilters(sel.dataset.mode));
+  });
+
+  document.addEventListener('click', function(e) {
+    const t = e.target;
+
+    // TOP-TABS (Modus-Switch)
+    const topTab = t.closest && t.closest('.top-tab');
+    if (topTab) {
+      const mode = topTab.dataset.mode;
+      document.querySelectorAll('.top-tab').forEach(b => b.classList.remove('top-tab-active'));
+      topTab.classList.add('top-tab-active');
+      document.querySelectorAll('.mode-content-wrap').forEach(w => {
+        w.style.display = w.dataset.mode === mode ? '' : 'none';
+      });
+      return;
+    }
+
+    if (t.classList && t.classList.contains('ps-btn')) {
+      const mode = t.dataset.mode;
+      document.querySelectorAll('.ps-btn[data-mode="' + mode + '"]').forEach(b => b.classList.remove('ps-active'));
+      t.classList.add('ps-active');
+      applyFilters(mode);
+      return;
+    }
+    if (t.classList && t.classList.contains('sub-tab')) {
+      const mode = t.dataset.mode;
+      const tab = t.dataset.tab;
+      document.querySelectorAll('.sub-tab[data-mode="' + mode + '"]').forEach(b => b.classList.remove('sub-tab-active'));
+      t.classList.add('sub-tab-active');
+      document.querySelectorAll('.sub-panel[data-mode="' + mode + '"]').forEach(p => {
+        p.style.display = p.dataset.tab === tab ? '' : 'none';
+      });
+      applyFilters(mode);
+      return;
+    }
+    // Tag 114: Stock-Modal-Click
+    const row = t.closest && t.closest('.row');
+    if (row && row.dataset.stock) {
+      e.preventDefault();
+      try { openStockModal(JSON.parse(row.dataset.stock), row.dataset.afUrl); } catch (err) { console.error(err); }
+      return;
+    }
+    if (t.classList && t.classList.contains('reset-btn')) {
+      const mode = t.dataset.mode;
+      const root = document.querySelector('.filters[data-mode="' + mode + '"]');
+      root.querySelectorAll('.ps-btn').forEach(b => b.classList.remove('ps-active'));
+      root.querySelector('.ps-btn[data-pstate="ALL"]').classList.add('ps-active');
+      root.querySelectorAll('.range-input').forEach(input => {
+        if (input.dataset.slider === 'mcap-min') input.value = input.min;
+        else if (input.dataset.slider === 'mcap-max') input.value = input.max;
+        else if (input.dataset.slider === 'ipo-min') input.value = input.min;
+        else if (input.dataset.slider === 'fcf-min') input.value = input.min;
+        else if (input.dataset.slider === 'growth-min') input.value = input.min;
+        syncSliderLabel(input);
+      });
+      root.querySelector('.sec-select').value = 'ALL';
+      applyFilters(mode);
+    }
+  });
+})();
+</script>
+
+<div class="modal-backdrop" id="stockModalBackdrop"></div>
+<aside class="modal-panel" id="stockModalPanel" role="dialog" aria-hidden="true">
+  <button class="modal-close" id="stockModalClose">Schliessen ✕</button>
+  <div class="modal-body" id="stockModalBody"></div>
+</aside>
+<div class="modal-toast" id="modalToast">Ticker kopiert</div>
+</body></html>`;
+}
+
+function main() {
+  const args = parseArgs(process.argv);
+  console.log('Loading snapshots from', args.snapshots);
+  const stocks = loadStocks(args.snapshots);
+  console.log('  loaded', stocks.length, 'stocks');
+  let evaluated = evaluateAll(stocks);
+  console.log('  evaluated all methods,', evaluated.length, 'stocks');
+  evaluated = dedupeByCompany(evaluated);
+  console.log('  after dedupe:', evaluated.length, 'unique companies');
+
+  const html = buildHtml(evaluated, args.topN);
+  fs.writeFileSync(args.out, html);
+  console.log('Wrote', args.out, '(' + (html.length/1024).toFixed(0) + ' KB)');
+
+  for (const modeId of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
+    const eligible = eligibleForMode(evaluated, modeId);
+    const allMust = topAllMust(eligible, modeId, args.topN);
+    console.log(`  ${modeId}: ${eligible.length} eligible, ${allMust.length} all-MUST-pass`);
+  }
+}
+
+if (require.main === module) main();
+module.exports = { eligibleForMode, topByMethod, topAllMust, evaluateAll, dedupeByCompany };
++(v/1e6).toFixed(0)+'M'; return '
+    syncSliderLabel(input);
+    input.addEventListener('input', () => {
+      if (input.dataset.slider === 'mcap-min') {
+        const max = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-max"]');
+        if (max && parseFloat(input.value) > parseFloat(max.value)) input.value = max.value;
+      } else if (input.dataset.slider === 'mcap-max') {
+        const min = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-min"]');
+        if (min && parseFloat(input.value) < parseFloat(min.value)) input.value = min.value;
+      }
+      syncSliderLabel(input);
+      applyFilters(input.dataset.mode);
+    });
+  });
+
+  document.querySelectorAll('.sec-select').forEach(sel => {
+    sel.addEventListener('change', () => applyFilters(sel.dataset.mode));
+  });
+
+  document.addEventListener('click', function(e) {
+    const t = e.target;
+
+    // TOP-TABS (Modus-Switch)
+    const topTab = t.closest && t.closest('.top-tab');
+    if (topTab) {
+      const mode = topTab.dataset.mode;
+      document.querySelectorAll('.top-tab').forEach(b => b.classList.remove('top-tab-active'));
+      topTab.classList.add('top-tab-active');
+      document.querySelectorAll('.mode-content-wrap').forEach(w => {
+        w.style.display = w.dataset.mode === mode ? '' : 'none';
+      });
+      return;
+    }
+
+    if (t.classList && t.classList.contains('ps-btn')) {
+      const mode = t.dataset.mode;
+      document.querySelectorAll('.ps-btn[data-mode="' + mode + '"]').forEach(b => b.classList.remove('ps-active'));
+      t.classList.add('ps-active');
+      applyFilters(mode);
+      return;
+    }
+    if (t.classList && t.classList.contains('sub-tab')) {
+      const mode = t.dataset.mode;
+      const tab = t.dataset.tab;
+      document.querySelectorAll('.sub-tab[data-mode="' + mode + '"]').forEach(b => b.classList.remove('sub-tab-active'));
+      t.classList.add('sub-tab-active');
+      document.querySelectorAll('.sub-panel[data-mode="' + mode + '"]').forEach(p => {
+        p.style.display = p.dataset.tab === tab ? '' : 'none';
+      });
+      applyFilters(mode);
+      return;
+    }
+    // Tag 114: Stock-Modal-Click
+    const row = t.closest && t.closest('.row');
+    if (row && row.dataset.stock) {
+      e.preventDefault();
+      try { openStockModal(JSON.parse(row.dataset.stock), row.dataset.afUrl); } catch (err) { console.error(err); }
+      return;
+    }
+    if (t.classList && t.classList.contains('reset-btn')) {
+      const mode = t.dataset.mode;
+      const root = document.querySelector('.filters[data-mode="' + mode + '"]');
+      root.querySelectorAll('.ps-btn').forEach(b => b.classList.remove('ps-active'));
+      root.querySelector('.ps-btn[data-pstate="ALL"]').classList.add('ps-active');
+      root.querySelectorAll('.range-input').forEach(input => {
+        if (input.dataset.slider === 'mcap-min') input.value = input.min;
+        else if (input.dataset.slider === 'mcap-max') input.value = input.max;
+        else if (input.dataset.slider === 'ipo-min') input.value = input.min;
+        else if (input.dataset.slider === 'fcf-min') input.value = input.min;
+        else if (input.dataset.slider === 'growth-min') input.value = input.min;
+        syncSliderLabel(input);
+      });
+      root.querySelector('.sec-select').value = 'ALL';
+      applyFilters(mode);
+    }
+  });
+})();
+</script>
+
+<div class="modal-backdrop" id="stockModalBackdrop"></div>
+<aside class="modal-panel" id="stockModalPanel" role="dialog" aria-hidden="true">
+  <button class="modal-close" id="stockModalClose">Schliessen ✕</button>
+  <div class="modal-body" id="stockModalBody"></div>
+</aside>
+<div class="modal-toast" id="modalToast">Ticker kopiert</div>
+</body></html>`;
+}
+
+function main() {
+  const args = parseArgs(process.argv);
+  console.log('Loading snapshots from', args.snapshots);
+  const stocks = loadStocks(args.snapshots);
+  console.log('  loaded', stocks.length, 'stocks');
+  let evaluated = evaluateAll(stocks);
+  console.log('  evaluated all methods,', evaluated.length, 'stocks');
+  evaluated = dedupeByCompany(evaluated);
+  console.log('  after dedupe:', evaluated.length, 'unique companies');
+
+  const html = buildHtml(evaluated, args.topN);
+  fs.writeFileSync(args.out, html);
+  console.log('Wrote', args.out, '(' + (html.length/1024).toFixed(0) + ' KB)');
+
+  for (const modeId of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
+    const eligible = eligibleForMode(evaluated, modeId);
+    const allMust = topAllMust(eligible, modeId, args.topN);
+    console.log(`  ${modeId}: ${eligible.length} eligible, ${allMust.length} all-MUST-pass`);
+  }
+}
+
+if (require.main === module) main();
+module.exports = { eligibleForMode, topByMethod, topAllMust, evaluateAll, dedupeByCompany };
++v.toFixed(0); }
+  function spark(values, height) {
+    if (!values || values.length < 2) return '';
+    const arr = values.slice().reverse();
+    const minV = Math.min(...arr), maxV = Math.max(...arr); const range = maxV - minV || 1;
+    const w = 280, h = height || 32;
+    const pts = arr.map((v, i) => { const x = (i/(arr.length-1))*w; const y = h - ((v-minV)/range)*h; return x.toFixed(1)+','+y.toFixed(1); }).join(' ');
+    const color = arr[arr.length-1] >= arr[0] ? '#10b981' : '#ef4444';
+    return '<svg class="modal-chart-svg" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'"><polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+  }
+  function gmRow(s) { if (!s.annualGP || !s.annualRev || s.annualGP.length < 2 || s.annualRev.length < 2) return null; const margins = s.annualGP.map((gp, i) => s.annualRev[i] > 0 ? (gp/s.annualRev[i])*100 : null).filter(v => Number.isFinite(v)); if (margins.length < 2) return null; return margins; }
+  function omRow(s) { if (!s.annualOpInc || !s.annualRev || s.annualOpInc.length < 2 || s.annualRev.length < 2) return null; const margins = s.annualOpInc.map((oi, i) => s.annualRev[i] > 0 ? (oi/s.annualRev[i])*100 : null).filter(v => Number.isFinite(v)); if (margins.length < 2) return null; return margins; }
+  
+  function openStockModal(s, afUrl) {
+    const body = document.getElementById('stockModalBody');
+    const psBadgeColor = { LOSS:'#fca5a5', TURNAROUND:'#fcd34d', RECENT:'#bef264', STABLE:'#6ee7b7', NA:'#94a3b8' };
+    const psColor = psBadgeColor[s.profState] || '#94a3b8';
+    const psLabel = PSTATE_LABEL_MODAL[s.profState] || s.profState;
+    let badgesHtml = '<span class="modal-badge" style="color:'+psColor+';border-color:'+psColor+'40;background:'+psColor+'15;">Profit · '+psLabel+'</span>';
+    if (s.hgClass) {
+      const hgC = HG_CLASS_COLOR[s.hgClass] || '#94a3b8';
+      const hgL = HG_CLASS_LABEL[s.hgClass] || s.hgClass;
+      badgesHtml += '<span class="modal-badge" style="color:'+hgC+';border-color:'+hgC+'40;background:'+hgC+'15;">HG-Class · '+hgL+'</span>';
+    }
+    
+    const revLatest = s.annualRev && s.annualRev[0];
+    const revOldest = s.annualRev && s.annualRev[s.annualRev.length-1];
+    const revGrowthAbs = (revLatest && revOldest) ? '
+    syncSliderLabel(input);
+    input.addEventListener('input', () => {
+      if (input.dataset.slider === 'mcap-min') {
+        const max = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-max"]');
+        if (max && parseFloat(input.value) > parseFloat(max.value)) input.value = max.value;
+      } else if (input.dataset.slider === 'mcap-max') {
+        const min = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-min"]');
+        if (min && parseFloat(input.value) < parseFloat(min.value)) input.value = min.value;
+      }
+      syncSliderLabel(input);
+      applyFilters(input.dataset.mode);
+    });
+  });
+
+  document.querySelectorAll('.sec-select').forEach(sel => {
+    sel.addEventListener('change', () => applyFilters(sel.dataset.mode));
+  });
+
+  document.addEventListener('click', function(e) {
+    const t = e.target;
+
+    // TOP-TABS (Modus-Switch)
+    const topTab = t.closest && t.closest('.top-tab');
+    if (topTab) {
+      const mode = topTab.dataset.mode;
+      document.querySelectorAll('.top-tab').forEach(b => b.classList.remove('top-tab-active'));
+      topTab.classList.add('top-tab-active');
+      document.querySelectorAll('.mode-content-wrap').forEach(w => {
+        w.style.display = w.dataset.mode === mode ? '' : 'none';
+      });
+      return;
+    }
+
+    if (t.classList && t.classList.contains('ps-btn')) {
+      const mode = t.dataset.mode;
+      document.querySelectorAll('.ps-btn[data-mode="' + mode + '"]').forEach(b => b.classList.remove('ps-active'));
+      t.classList.add('ps-active');
+      applyFilters(mode);
+      return;
+    }
+    if (t.classList && t.classList.contains('sub-tab')) {
+      const mode = t.dataset.mode;
+      const tab = t.dataset.tab;
+      document.querySelectorAll('.sub-tab[data-mode="' + mode + '"]').forEach(b => b.classList.remove('sub-tab-active'));
+      t.classList.add('sub-tab-active');
+      document.querySelectorAll('.sub-panel[data-mode="' + mode + '"]').forEach(p => {
+        p.style.display = p.dataset.tab === tab ? '' : 'none';
+      });
+      applyFilters(mode);
+      return;
+    }
+    // Tag 114: Stock-Modal-Click
+    const row = t.closest && t.closest('.row');
+    if (row && row.dataset.stock) {
+      e.preventDefault();
+      try { openStockModal(JSON.parse(row.dataset.stock), row.dataset.afUrl); } catch (err) { console.error(err); }
+      return;
+    }
+    if (t.classList && t.classList.contains('reset-btn')) {
+      const mode = t.dataset.mode;
+      const root = document.querySelector('.filters[data-mode="' + mode + '"]');
+      root.querySelectorAll('.ps-btn').forEach(b => b.classList.remove('ps-active'));
+      root.querySelector('.ps-btn[data-pstate="ALL"]').classList.add('ps-active');
+      root.querySelectorAll('.range-input').forEach(input => {
+        if (input.dataset.slider === 'mcap-min') input.value = input.min;
+        else if (input.dataset.slider === 'mcap-max') input.value = input.max;
+        else if (input.dataset.slider === 'ipo-min') input.value = input.min;
+        else if (input.dataset.slider === 'fcf-min') input.value = input.min;
+        else if (input.dataset.slider === 'growth-min') input.value = input.min;
+        syncSliderLabel(input);
+      });
+      root.querySelector('.sec-select').value = 'ALL';
+      applyFilters(mode);
+    }
+  });
+})();
+</script>
+
+<div class="modal-backdrop" id="stockModalBackdrop"></div>
+<aside class="modal-panel" id="stockModalPanel" role="dialog" aria-hidden="true">
+  <button class="modal-close" id="stockModalClose">Schliessen ✕</button>
+  <div class="modal-body" id="stockModalBody"></div>
+</aside>
+<div class="modal-toast" id="modalToast">Ticker kopiert</div>
+</body></html>`;
+}
+
+function main() {
+  const args = parseArgs(process.argv);
+  console.log('Loading snapshots from', args.snapshots);
+  const stocks = loadStocks(args.snapshots);
+  console.log('  loaded', stocks.length, 'stocks');
+  let evaluated = evaluateAll(stocks);
+  console.log('  evaluated all methods,', evaluated.length, 'stocks');
+  evaluated = dedupeByCompany(evaluated);
+  console.log('  after dedupe:', evaluated.length, 'unique companies');
+
+  const html = buildHtml(evaluated, args.topN);
+  fs.writeFileSync(args.out, html);
+  console.log('Wrote', args.out, '(' + (html.length/1024).toFixed(0) + ' KB)');
+
+  for (const modeId of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
+    const eligible = eligibleForMode(evaluated, modeId);
+    const allMust = topAllMust(eligible, modeId, args.topN);
+    console.log(`  ${modeId}: ${eligible.length} eligible, ${allMust.length} all-MUST-pass`);
+  }
+}
+
+if (require.main === module) main();
+module.exports = { eligibleForMode, topByMethod, topAllMust, evaluateAll, dedupeByCompany };
++fmtM(revOldest)+' \u2192 
+    syncSliderLabel(input);
+    input.addEventListener('input', () => {
+      if (input.dataset.slider === 'mcap-min') {
+        const max = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-max"]');
+        if (max && parseFloat(input.value) > parseFloat(max.value)) input.value = max.value;
+      } else if (input.dataset.slider === 'mcap-max') {
+        const min = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-min"]');
+        if (min && parseFloat(input.value) < parseFloat(min.value)) input.value = min.value;
+      }
+      syncSliderLabel(input);
+      applyFilters(input.dataset.mode);
+    });
+  });
+
+  document.querySelectorAll('.sec-select').forEach(sel => {
+    sel.addEventListener('change', () => applyFilters(sel.dataset.mode));
+  });
+
+  document.addEventListener('click', function(e) {
+    const t = e.target;
+
+    // TOP-TABS (Modus-Switch)
+    const topTab = t.closest && t.closest('.top-tab');
+    if (topTab) {
+      const mode = topTab.dataset.mode;
+      document.querySelectorAll('.top-tab').forEach(b => b.classList.remove('top-tab-active'));
+      topTab.classList.add('top-tab-active');
+      document.querySelectorAll('.mode-content-wrap').forEach(w => {
+        w.style.display = w.dataset.mode === mode ? '' : 'none';
+      });
+      return;
+    }
+
+    if (t.classList && t.classList.contains('ps-btn')) {
+      const mode = t.dataset.mode;
+      document.querySelectorAll('.ps-btn[data-mode="' + mode + '"]').forEach(b => b.classList.remove('ps-active'));
+      t.classList.add('ps-active');
+      applyFilters(mode);
+      return;
+    }
+    if (t.classList && t.classList.contains('sub-tab')) {
+      const mode = t.dataset.mode;
+      const tab = t.dataset.tab;
+      document.querySelectorAll('.sub-tab[data-mode="' + mode + '"]').forEach(b => b.classList.remove('sub-tab-active'));
+      t.classList.add('sub-tab-active');
+      document.querySelectorAll('.sub-panel[data-mode="' + mode + '"]').forEach(p => {
+        p.style.display = p.dataset.tab === tab ? '' : 'none';
+      });
+      applyFilters(mode);
+      return;
+    }
+    // Tag 114: Stock-Modal-Click
+    const row = t.closest && t.closest('.row');
+    if (row && row.dataset.stock) {
+      e.preventDefault();
+      try { openStockModal(JSON.parse(row.dataset.stock), row.dataset.afUrl); } catch (err) { console.error(err); }
+      return;
+    }
+    if (t.classList && t.classList.contains('reset-btn')) {
+      const mode = t.dataset.mode;
+      const root = document.querySelector('.filters[data-mode="' + mode + '"]');
+      root.querySelectorAll('.ps-btn').forEach(b => b.classList.remove('ps-active'));
+      root.querySelector('.ps-btn[data-pstate="ALL"]').classList.add('ps-active');
+      root.querySelectorAll('.range-input').forEach(input => {
+        if (input.dataset.slider === 'mcap-min') input.value = input.min;
+        else if (input.dataset.slider === 'mcap-max') input.value = input.max;
+        else if (input.dataset.slider === 'ipo-min') input.value = input.min;
+        else if (input.dataset.slider === 'fcf-min') input.value = input.min;
+        else if (input.dataset.slider === 'growth-min') input.value = input.min;
+        syncSliderLabel(input);
+      });
+      root.querySelector('.sec-select').value = 'ALL';
+      applyFilters(mode);
+    }
+  });
+})();
+</script>
+
+<div class="modal-backdrop" id="stockModalBackdrop"></div>
+<aside class="modal-panel" id="stockModalPanel" role="dialog" aria-hidden="true">
+  <button class="modal-close" id="stockModalClose">Schliessen ✕</button>
+  <div class="modal-body" id="stockModalBody"></div>
+</aside>
+<div class="modal-toast" id="modalToast">Ticker kopiert</div>
+</body></html>`;
+}
+
+function main() {
+  const args = parseArgs(process.argv);
+  console.log('Loading snapshots from', args.snapshots);
+  const stocks = loadStocks(args.snapshots);
+  console.log('  loaded', stocks.length, 'stocks');
+  let evaluated = evaluateAll(stocks);
+  console.log('  evaluated all methods,', evaluated.length, 'stocks');
+  evaluated = dedupeByCompany(evaluated);
+  console.log('  after dedupe:', evaluated.length, 'unique companies');
+
+  const html = buildHtml(evaluated, args.topN);
+  fs.writeFileSync(args.out, html);
+  console.log('Wrote', args.out, '(' + (html.length/1024).toFixed(0) + ' KB)');
+
+  for (const modeId of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
+    const eligible = eligibleForMode(evaluated, modeId);
+    const allMust = topAllMust(eligible, modeId, args.topN);
+    console.log(`  ${modeId}: ${eligible.length} eligible, ${allMust.length} all-MUST-pass`);
+  }
+}
+
+if (require.main === module) main();
+module.exports = { eligibleForMode, topByMethod, topAllMust, evaluateAll, dedupeByCompany };
++fmtM(revLatest) : '\u2014';
+    
+    const oiLatest = s.annualOpInc && s.annualOpInc[0];
+    const oiOldest = s.annualOpInc && s.annualOpInc[s.annualOpInc.length-1];
+    const oiText = (Number.isFinite(oiLatest) && Number.isFinite(oiOldest)) ? '
+    syncSliderLabel(input);
+    input.addEventListener('input', () => {
+      if (input.dataset.slider === 'mcap-min') {
+        const max = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-max"]');
+        if (max && parseFloat(input.value) > parseFloat(max.value)) input.value = max.value;
+      } else if (input.dataset.slider === 'mcap-max') {
+        const min = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-min"]');
+        if (min && parseFloat(input.value) < parseFloat(min.value)) input.value = min.value;
+      }
+      syncSliderLabel(input);
+      applyFilters(input.dataset.mode);
+    });
+  });
+
+  document.querySelectorAll('.sec-select').forEach(sel => {
+    sel.addEventListener('change', () => applyFilters(sel.dataset.mode));
+  });
+
+  document.addEventListener('click', function(e) {
+    const t = e.target;
+
+    // TOP-TABS (Modus-Switch)
+    const topTab = t.closest && t.closest('.top-tab');
+    if (topTab) {
+      const mode = topTab.dataset.mode;
+      document.querySelectorAll('.top-tab').forEach(b => b.classList.remove('top-tab-active'));
+      topTab.classList.add('top-tab-active');
+      document.querySelectorAll('.mode-content-wrap').forEach(w => {
+        w.style.display = w.dataset.mode === mode ? '' : 'none';
+      });
+      return;
+    }
+
+    if (t.classList && t.classList.contains('ps-btn')) {
+      const mode = t.dataset.mode;
+      document.querySelectorAll('.ps-btn[data-mode="' + mode + '"]').forEach(b => b.classList.remove('ps-active'));
+      t.classList.add('ps-active');
+      applyFilters(mode);
+      return;
+    }
+    if (t.classList && t.classList.contains('sub-tab')) {
+      const mode = t.dataset.mode;
+      const tab = t.dataset.tab;
+      document.querySelectorAll('.sub-tab[data-mode="' + mode + '"]').forEach(b => b.classList.remove('sub-tab-active'));
+      t.classList.add('sub-tab-active');
+      document.querySelectorAll('.sub-panel[data-mode="' + mode + '"]').forEach(p => {
+        p.style.display = p.dataset.tab === tab ? '' : 'none';
+      });
+      applyFilters(mode);
+      return;
+    }
+    // Tag 114: Stock-Modal-Click
+    const row = t.closest && t.closest('.row');
+    if (row && row.dataset.stock) {
+      e.preventDefault();
+      try { openStockModal(JSON.parse(row.dataset.stock), row.dataset.afUrl); } catch (err) { console.error(err); }
+      return;
+    }
+    if (t.classList && t.classList.contains('reset-btn')) {
+      const mode = t.dataset.mode;
+      const root = document.querySelector('.filters[data-mode="' + mode + '"]');
+      root.querySelectorAll('.ps-btn').forEach(b => b.classList.remove('ps-active'));
+      root.querySelector('.ps-btn[data-pstate="ALL"]').classList.add('ps-active');
+      root.querySelectorAll('.range-input').forEach(input => {
+        if (input.dataset.slider === 'mcap-min') input.value = input.min;
+        else if (input.dataset.slider === 'mcap-max') input.value = input.max;
+        else if (input.dataset.slider === 'ipo-min') input.value = input.min;
+        else if (input.dataset.slider === 'fcf-min') input.value = input.min;
+        else if (input.dataset.slider === 'growth-min') input.value = input.min;
+        syncSliderLabel(input);
+      });
+      root.querySelector('.sec-select').value = 'ALL';
+      applyFilters(mode);
+    }
+  });
+})();
+</script>
+
+<div class="modal-backdrop" id="stockModalBackdrop"></div>
+<aside class="modal-panel" id="stockModalPanel" role="dialog" aria-hidden="true">
+  <button class="modal-close" id="stockModalClose">Schliessen ✕</button>
+  <div class="modal-body" id="stockModalBody"></div>
+</aside>
+<div class="modal-toast" id="modalToast">Ticker kopiert</div>
+</body></html>`;
+}
+
+function main() {
+  const args = parseArgs(process.argv);
+  console.log('Loading snapshots from', args.snapshots);
+  const stocks = loadStocks(args.snapshots);
+  console.log('  loaded', stocks.length, 'stocks');
+  let evaluated = evaluateAll(stocks);
+  console.log('  evaluated all methods,', evaluated.length, 'stocks');
+  evaluated = dedupeByCompany(evaluated);
+  console.log('  after dedupe:', evaluated.length, 'unique companies');
+
+  const html = buildHtml(evaluated, args.topN);
+  fs.writeFileSync(args.out, html);
+  console.log('Wrote', args.out, '(' + (html.length/1024).toFixed(0) + ' KB)');
+
+  for (const modeId of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
+    const eligible = eligibleForMode(evaluated, modeId);
+    const allMust = topAllMust(eligible, modeId, args.topN);
+    console.log(`  ${modeId}: ${eligible.length} eligible, ${allMust.length} all-MUST-pass`);
+  }
+}
+
+if (require.main === module) main();
+module.exports = { eligibleForMode, topByMethod, topAllMust, evaluateAll, dedupeByCompany };
++fmtM(oiOldest)+' \u2192 
+    syncSliderLabel(input);
+    input.addEventListener('input', () => {
+      if (input.dataset.slider === 'mcap-min') {
+        const max = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-max"]');
+        if (max && parseFloat(input.value) > parseFloat(max.value)) input.value = max.value;
+      } else if (input.dataset.slider === 'mcap-max') {
+        const min = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-min"]');
+        if (min && parseFloat(input.value) < parseFloat(min.value)) input.value = min.value;
+      }
+      syncSliderLabel(input);
+      applyFilters(input.dataset.mode);
+    });
+  });
+
+  document.querySelectorAll('.sec-select').forEach(sel => {
+    sel.addEventListener('change', () => applyFilters(sel.dataset.mode));
+  });
+
+  document.addEventListener('click', function(e) {
+    const t = e.target;
+
+    // TOP-TABS (Modus-Switch)
+    const topTab = t.closest && t.closest('.top-tab');
+    if (topTab) {
+      const mode = topTab.dataset.mode;
+      document.querySelectorAll('.top-tab').forEach(b => b.classList.remove('top-tab-active'));
+      topTab.classList.add('top-tab-active');
+      document.querySelectorAll('.mode-content-wrap').forEach(w => {
+        w.style.display = w.dataset.mode === mode ? '' : 'none';
+      });
+      return;
+    }
+
+    if (t.classList && t.classList.contains('ps-btn')) {
+      const mode = t.dataset.mode;
+      document.querySelectorAll('.ps-btn[data-mode="' + mode + '"]').forEach(b => b.classList.remove('ps-active'));
+      t.classList.add('ps-active');
+      applyFilters(mode);
+      return;
+    }
+    if (t.classList && t.classList.contains('sub-tab')) {
+      const mode = t.dataset.mode;
+      const tab = t.dataset.tab;
+      document.querySelectorAll('.sub-tab[data-mode="' + mode + '"]').forEach(b => b.classList.remove('sub-tab-active'));
+      t.classList.add('sub-tab-active');
+      document.querySelectorAll('.sub-panel[data-mode="' + mode + '"]').forEach(p => {
+        p.style.display = p.dataset.tab === tab ? '' : 'none';
+      });
+      applyFilters(mode);
+      return;
+    }
+    // Tag 114: Stock-Modal-Click
+    const row = t.closest && t.closest('.row');
+    if (row && row.dataset.stock) {
+      e.preventDefault();
+      try { openStockModal(JSON.parse(row.dataset.stock), row.dataset.afUrl); } catch (err) { console.error(err); }
+      return;
+    }
+    if (t.classList && t.classList.contains('reset-btn')) {
+      const mode = t.dataset.mode;
+      const root = document.querySelector('.filters[data-mode="' + mode + '"]');
+      root.querySelectorAll('.ps-btn').forEach(b => b.classList.remove('ps-active'));
+      root.querySelector('.ps-btn[data-pstate="ALL"]').classList.add('ps-active');
+      root.querySelectorAll('.range-input').forEach(input => {
+        if (input.dataset.slider === 'mcap-min') input.value = input.min;
+        else if (input.dataset.slider === 'mcap-max') input.value = input.max;
+        else if (input.dataset.slider === 'ipo-min') input.value = input.min;
+        else if (input.dataset.slider === 'fcf-min') input.value = input.min;
+        else if (input.dataset.slider === 'growth-min') input.value = input.min;
+        syncSliderLabel(input);
+      });
+      root.querySelector('.sec-select').value = 'ALL';
+      applyFilters(mode);
+    }
+  });
+})();
+</script>
+
+<div class="modal-backdrop" id="stockModalBackdrop"></div>
+<aside class="modal-panel" id="stockModalPanel" role="dialog" aria-hidden="true">
+  <button class="modal-close" id="stockModalClose">Schliessen ✕</button>
+  <div class="modal-body" id="stockModalBody"></div>
+</aside>
+<div class="modal-toast" id="modalToast">Ticker kopiert</div>
+</body></html>`;
+}
+
+function main() {
+  const args = parseArgs(process.argv);
+  console.log('Loading snapshots from', args.snapshots);
+  const stocks = loadStocks(args.snapshots);
+  console.log('  loaded', stocks.length, 'stocks');
+  let evaluated = evaluateAll(stocks);
+  console.log('  evaluated all methods,', evaluated.length, 'stocks');
+  evaluated = dedupeByCompany(evaluated);
+  console.log('  after dedupe:', evaluated.length, 'unique companies');
+
+  const html = buildHtml(evaluated, args.topN);
+  fs.writeFileSync(args.out, html);
+  console.log('Wrote', args.out, '(' + (html.length/1024).toFixed(0) + ' KB)');
+
+  for (const modeId of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
+    const eligible = eligibleForMode(evaluated, modeId);
+    const allMust = topAllMust(eligible, modeId, args.topN);
+    console.log(`  ${modeId}: ${eligible.length} eligible, ${allMust.length} all-MUST-pass`);
+  }
+}
+
+if (require.main === module) main();
+module.exports = { eligibleForMode, topByMethod, topAllMust, evaluateAll, dedupeByCompany };
++fmtM(oiLatest) : '\u2014';
+    
+    const fcfLatest = s.annualFCF && s.annualFCF[0];
+    const fcfOldest = s.annualFCF && s.annualFCF[s.annualFCF.length-1];
+    const fcfText = (Number.isFinite(fcfLatest) && Number.isFinite(fcfOldest)) ? '
+    syncSliderLabel(input);
+    input.addEventListener('input', () => {
+      if (input.dataset.slider === 'mcap-min') {
+        const max = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-max"]');
+        if (max && parseFloat(input.value) > parseFloat(max.value)) input.value = max.value;
+      } else if (input.dataset.slider === 'mcap-max') {
+        const min = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-min"]');
+        if (min && parseFloat(input.value) < parseFloat(min.value)) input.value = min.value;
+      }
+      syncSliderLabel(input);
+      applyFilters(input.dataset.mode);
+    });
+  });
+
+  document.querySelectorAll('.sec-select').forEach(sel => {
+    sel.addEventListener('change', () => applyFilters(sel.dataset.mode));
+  });
+
+  document.addEventListener('click', function(e) {
+    const t = e.target;
+
+    // TOP-TABS (Modus-Switch)
+    const topTab = t.closest && t.closest('.top-tab');
+    if (topTab) {
+      const mode = topTab.dataset.mode;
+      document.querySelectorAll('.top-tab').forEach(b => b.classList.remove('top-tab-active'));
+      topTab.classList.add('top-tab-active');
+      document.querySelectorAll('.mode-content-wrap').forEach(w => {
+        w.style.display = w.dataset.mode === mode ? '' : 'none';
+      });
+      return;
+    }
+
+    if (t.classList && t.classList.contains('ps-btn')) {
+      const mode = t.dataset.mode;
+      document.querySelectorAll('.ps-btn[data-mode="' + mode + '"]').forEach(b => b.classList.remove('ps-active'));
+      t.classList.add('ps-active');
+      applyFilters(mode);
+      return;
+    }
+    if (t.classList && t.classList.contains('sub-tab')) {
+      const mode = t.dataset.mode;
+      const tab = t.dataset.tab;
+      document.querySelectorAll('.sub-tab[data-mode="' + mode + '"]').forEach(b => b.classList.remove('sub-tab-active'));
+      t.classList.add('sub-tab-active');
+      document.querySelectorAll('.sub-panel[data-mode="' + mode + '"]').forEach(p => {
+        p.style.display = p.dataset.tab === tab ? '' : 'none';
+      });
+      applyFilters(mode);
+      return;
+    }
+    // Tag 114: Stock-Modal-Click
+    const row = t.closest && t.closest('.row');
+    if (row && row.dataset.stock) {
+      e.preventDefault();
+      try { openStockModal(JSON.parse(row.dataset.stock), row.dataset.afUrl); } catch (err) { console.error(err); }
+      return;
+    }
+    if (t.classList && t.classList.contains('reset-btn')) {
+      const mode = t.dataset.mode;
+      const root = document.querySelector('.filters[data-mode="' + mode + '"]');
+      root.querySelectorAll('.ps-btn').forEach(b => b.classList.remove('ps-active'));
+      root.querySelector('.ps-btn[data-pstate="ALL"]').classList.add('ps-active');
+      root.querySelectorAll('.range-input').forEach(input => {
+        if (input.dataset.slider === 'mcap-min') input.value = input.min;
+        else if (input.dataset.slider === 'mcap-max') input.value = input.max;
+        else if (input.dataset.slider === 'ipo-min') input.value = input.min;
+        else if (input.dataset.slider === 'fcf-min') input.value = input.min;
+        else if (input.dataset.slider === 'growth-min') input.value = input.min;
+        syncSliderLabel(input);
+      });
+      root.querySelector('.sec-select').value = 'ALL';
+      applyFilters(mode);
+    }
+  });
+})();
+</script>
+
+<div class="modal-backdrop" id="stockModalBackdrop"></div>
+<aside class="modal-panel" id="stockModalPanel" role="dialog" aria-hidden="true">
+  <button class="modal-close" id="stockModalClose">Schliessen ✕</button>
+  <div class="modal-body" id="stockModalBody"></div>
+</aside>
+<div class="modal-toast" id="modalToast">Ticker kopiert</div>
+</body></html>`;
+}
+
+function main() {
+  const args = parseArgs(process.argv);
+  console.log('Loading snapshots from', args.snapshots);
+  const stocks = loadStocks(args.snapshots);
+  console.log('  loaded', stocks.length, 'stocks');
+  let evaluated = evaluateAll(stocks);
+  console.log('  evaluated all methods,', evaluated.length, 'stocks');
+  evaluated = dedupeByCompany(evaluated);
+  console.log('  after dedupe:', evaluated.length, 'unique companies');
+
+  const html = buildHtml(evaluated, args.topN);
+  fs.writeFileSync(args.out, html);
+  console.log('Wrote', args.out, '(' + (html.length/1024).toFixed(0) + ' KB)');
+
+  for (const modeId of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
+    const eligible = eligibleForMode(evaluated, modeId);
+    const allMust = topAllMust(eligible, modeId, args.topN);
+    console.log(`  ${modeId}: ${eligible.length} eligible, ${allMust.length} all-MUST-pass`);
+  }
+}
+
+if (require.main === module) main();
+module.exports = { eligibleForMode, topByMethod, topAllMust, evaluateAll, dedupeByCompany };
++fmtM(fcfOldest)+' \u2192 
+    syncSliderLabel(input);
+    input.addEventListener('input', () => {
+      if (input.dataset.slider === 'mcap-min') {
+        const max = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-max"]');
+        if (max && parseFloat(input.value) > parseFloat(max.value)) input.value = max.value;
+      } else if (input.dataset.slider === 'mcap-max') {
+        const min = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-min"]');
+        if (min && parseFloat(input.value) < parseFloat(min.value)) input.value = min.value;
+      }
+      syncSliderLabel(input);
+      applyFilters(input.dataset.mode);
+    });
+  });
+
+  document.querySelectorAll('.sec-select').forEach(sel => {
+    sel.addEventListener('change', () => applyFilters(sel.dataset.mode));
+  });
+
+  document.addEventListener('click', function(e) {
+    const t = e.target;
+
+    // TOP-TABS (Modus-Switch)
+    const topTab = t.closest && t.closest('.top-tab');
+    if (topTab) {
+      const mode = topTab.dataset.mode;
+      document.querySelectorAll('.top-tab').forEach(b => b.classList.remove('top-tab-active'));
+      topTab.classList.add('top-tab-active');
+      document.querySelectorAll('.mode-content-wrap').forEach(w => {
+        w.style.display = w.dataset.mode === mode ? '' : 'none';
+      });
+      return;
+    }
+
+    if (t.classList && t.classList.contains('ps-btn')) {
+      const mode = t.dataset.mode;
+      document.querySelectorAll('.ps-btn[data-mode="' + mode + '"]').forEach(b => b.classList.remove('ps-active'));
+      t.classList.add('ps-active');
+      applyFilters(mode);
+      return;
+    }
+    if (t.classList && t.classList.contains('sub-tab')) {
+      const mode = t.dataset.mode;
+      const tab = t.dataset.tab;
+      document.querySelectorAll('.sub-tab[data-mode="' + mode + '"]').forEach(b => b.classList.remove('sub-tab-active'));
+      t.classList.add('sub-tab-active');
+      document.querySelectorAll('.sub-panel[data-mode="' + mode + '"]').forEach(p => {
+        p.style.display = p.dataset.tab === tab ? '' : 'none';
+      });
+      applyFilters(mode);
+      return;
+    }
+    // Tag 114: Stock-Modal-Click
+    const row = t.closest && t.closest('.row');
+    if (row && row.dataset.stock) {
+      e.preventDefault();
+      try { openStockModal(JSON.parse(row.dataset.stock), row.dataset.afUrl); } catch (err) { console.error(err); }
+      return;
+    }
+    if (t.classList && t.classList.contains('reset-btn')) {
+      const mode = t.dataset.mode;
+      const root = document.querySelector('.filters[data-mode="' + mode + '"]');
+      root.querySelectorAll('.ps-btn').forEach(b => b.classList.remove('ps-active'));
+      root.querySelector('.ps-btn[data-pstate="ALL"]').classList.add('ps-active');
+      root.querySelectorAll('.range-input').forEach(input => {
+        if (input.dataset.slider === 'mcap-min') input.value = input.min;
+        else if (input.dataset.slider === 'mcap-max') input.value = input.max;
+        else if (input.dataset.slider === 'ipo-min') input.value = input.min;
+        else if (input.dataset.slider === 'fcf-min') input.value = input.min;
+        else if (input.dataset.slider === 'growth-min') input.value = input.min;
+        syncSliderLabel(input);
+      });
+      root.querySelector('.sec-select').value = 'ALL';
+      applyFilters(mode);
+    }
+  });
+})();
+</script>
+
+<div class="modal-backdrop" id="stockModalBackdrop"></div>
+<aside class="modal-panel" id="stockModalPanel" role="dialog" aria-hidden="true">
+  <button class="modal-close" id="stockModalClose">Schliessen ✕</button>
+  <div class="modal-body" id="stockModalBody"></div>
+</aside>
+<div class="modal-toast" id="modalToast">Ticker kopiert</div>
+</body></html>`;
+}
+
+function main() {
+  const args = parseArgs(process.argv);
+  console.log('Loading snapshots from', args.snapshots);
+  const stocks = loadStocks(args.snapshots);
+  console.log('  loaded', stocks.length, 'stocks');
+  let evaluated = evaluateAll(stocks);
+  console.log('  evaluated all methods,', evaluated.length, 'stocks');
+  evaluated = dedupeByCompany(evaluated);
+  console.log('  after dedupe:', evaluated.length, 'unique companies');
+
+  const html = buildHtml(evaluated, args.topN);
+  fs.writeFileSync(args.out, html);
+  console.log('Wrote', args.out, '(' + (html.length/1024).toFixed(0) + ' KB)');
+
+  for (const modeId of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
+    const eligible = eligibleForMode(evaluated, modeId);
+    const allMust = topAllMust(eligible, modeId, args.topN);
+    console.log(`  ${modeId}: ${eligible.length} eligible, ${allMust.length} all-MUST-pass`);
+  }
+}
+
+if (require.main === module) main();
+module.exports = { eligibleForMode, topByMethod, topAllMust, evaluateAll, dedupeByCompany };
++fmtM(fcfLatest) : '\u2014';
+    
+    const gms = gmRow(s);
+    const oms = omRow(s);
+    const gmText = gms ? gms[0].toFixed(1)+'%' : '\u2014';
+    const omText = oms ? oms[0].toFixed(1)+'%' : '\u2014';
+    
+    body.innerHTML = ''
+      + '<div class="modal-tk">'+s.ticker+'</div>'
+      + '<div class="modal-name">'+s.name+'</div>'
+      + '<div class="modal-meta">'+s.sector+(s.industry ? ' \u00b7 '+s.industry : '')+(s.ipoYear ? ' \u00b7 IPO '+s.ipoYear : '')+'</div>'
+      + '<div class="modal-badges">'+badgesHtml+'</div>'
+      + '<div class="modal-section"><div class="modal-section-title">5-Jahres-Trends</div>'
+      + '<div class="modal-chart-row"><span class="modal-chart-label">Revenue</span>'+spark(s.annualRev)+'<span class="modal-chart-value">'+revGrowthAbs+'</span></div>'
+      + '<div class="modal-chart-row"><span class="modal-chart-label">Op Income</span>'+spark(s.annualOpInc)+'<span class="modal-chart-value">'+oiText+'</span></div>'
+      + '<div class="modal-chart-row"><span class="modal-chart-label">Free Cash Flow</span>'+spark(s.annualFCF)+'<span class="modal-chart-value">'+fcfText+'</span></div>'
+      + (gms ? '<div class="modal-chart-row"><span class="modal-chart-label">Gross Margin</span>'+spark(gms)+'<span class="modal-chart-value">'+gmText+'</span></div>' : '')
+      + (oms ? '<div class="modal-chart-row"><span class="modal-chart-label">Op Margin</span>'+spark(oms)+'<span class="modal-chart-value">'+omText+'</span></div>' : '')
+      + '</div>'
+      + '<div class="modal-section"><div class="modal-section-title">Kennzahlen</div><div class="modal-stat-grid">'
+      + '<div class="modal-stat"><span class="modal-stat-label">Marktkap</span><span class="modal-stat-value">'+fmtMoneyM(s.mcap)+'</span></div>'
+      + '<div class="modal-stat"><span class="modal-stat-label">Rule-of-40</span><span class="modal-stat-value">'+(Number.isFinite(s.rule40) ? s.rule40.toFixed(1) : '\u2014')+'</span></div>'
+      + '<div class="modal-stat"><span class="modal-stat-label">YoY Growth</span><span class="modal-stat-value">'+fmtPct(s.revenueGrowthYoY)+'</span></div>'
+      + '<div class="modal-stat"><span class="modal-stat-label">FCF-Margin</span><span class="modal-stat-value">'+fmtPct(s.fcfMarginTTM)+'</span></div>'
+      + '</div></div>'
+      + '<div class="modal-action">'
+      + '<button class="modal-action-btn" id="modalCopyOpenBtn">\u270e '+s.ticker+' kopieren + Aktienfinder</button>'
+      + '<button class="modal-action-btn secondary" id="modalCopyOnlyBtn">Nur kopieren</button>'
+      + '</div>';
+    
+    document.getElementById('stockModalBackdrop').classList.add('show');
+    document.getElementById('stockModalPanel').classList.add('show');
+    document.getElementById('stockModalPanel').setAttribute('aria-hidden', 'false');
+    
+    document.getElementById('modalCopyOpenBtn').onclick = () => { 
+      navigator.clipboard.writeText(s.ticker).then(() => showToast(s.ticker + ' kopiert')); 
+      window.open(afUrl, '_blank');
+    };
+    document.getElementById('modalCopyOnlyBtn').onclick = () => {
+      navigator.clipboard.writeText(s.ticker).then(() => showToast(s.ticker + ' kopiert'));
+    };
+  }
+  function closeStockModal() {
+    document.getElementById('stockModalBackdrop').classList.remove('show');
+    document.getElementById('stockModalPanel').classList.remove('show');
+    document.getElementById('stockModalPanel').setAttribute('aria-hidden', 'true');
+  }
+  function showToast(msg) {
+    const t = document.getElementById('modalToast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+  document.getElementById('stockModalClose').onclick = closeStockModal;
+  document.getElementById('stockModalBackdrop').onclick = closeStockModal;
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeStockModal(); });
+
   document.querySelectorAll('.range-input').forEach(input => {
     syncSliderLabel(input);
     input.addEventListener('input', () => {
@@ -793,6 +2053,13 @@ function buildHtml(evaluated, topN) {
       applyFilters(mode);
       return;
     }
+    // Tag 114: Stock-Modal-Click
+    const row = t.closest && t.closest('.row');
+    if (row && row.dataset.stock) {
+      e.preventDefault();
+      try { openStockModal(JSON.parse(row.dataset.stock), row.dataset.afUrl); } catch (err) { console.error(err); }
+      return;
+    }
     if (t.classList && t.classList.contains('reset-btn')) {
       const mode = t.dataset.mode;
       const root = document.querySelector('.filters[data-mode="' + mode + '"]');
@@ -813,6 +2080,12 @@ function buildHtml(evaluated, topN) {
 })();
 </script>
 
+<div class="modal-backdrop" id="stockModalBackdrop"></div>
+<aside class="modal-panel" id="stockModalPanel" role="dialog" aria-hidden="true">
+  <button class="modal-close" id="stockModalClose">Schliessen ✕</button>
+  <div class="modal-body" id="stockModalBody"></div>
+</aside>
+<div class="modal-toast" id="modalToast">Ticker kopiert</div>
 </body></html>`;
 }
 
