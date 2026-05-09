@@ -38,6 +38,13 @@ function _arr(stock, path) {
 }
 
 function evaluate(stock) {
+  // Tag 113d: bei null-stock alles incomputable (Test-Anforderung)
+  if (!stock) {
+    return H.buildResult({
+      computable: false, pass: false,
+      reason: 'no stock data'
+    });
+  }
   const yoyGrowth = H.metricValue(stock, 'revenueGrowthYoY');
   const revQ = _arr(stock, 'timeseries.revenueQ');
   const oiArr = _arr(stock, 'annual.annualOpInc');
