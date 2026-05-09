@@ -60,25 +60,34 @@ function evaluate(stock) {
   // Material-Threshold
   const isMaterial = ttmRev >= MATERIAL_REV_FLOOR || (mcap > 0 && ttmRev / mcap >= MATERIAL_MCAP_RATIO);
 
-  // Faktor 1: Quarter Breadth (mit Annual-Fallback wenn <8Q verfuegbar)
-  // Yahoo liefert oft nur 4-5Q → fallback auf annualRev YoY-Vergleich pro Jahr.
-  let strongQ = 0, breadthOk = false, breadthSource = 'q';
+  // Faktor 1: Quarter Breadth — Tag 112d: Zwei-Tier-Schwelle
+  //   strongQ = Y2Y > 50% (echter Hypergrowth-Tier — CRDO/ALAB/RDDT)
+  //   solidQ  = Y2Y > 25% (solid growth — APP/NOW/MELI/ANET)
+  let strongQ = 0, solidQ = 0, breadthOk = false, breadthSource = 'q';
   if (revQ.length >= 8) {
     breadthOk = true;
     for (let i = 0; i < 4; i++) {
       const cur = revQ[i], prev = revQ[i + 4];
-      if (cur > 0 && prev > 0 && (cur - prev) / prev > 0.5) strongQ++;
+      if (cur > 0 && prev > 0) {
+        const g = (cur - prev) / prev;
+        if (g > 0.5) strongQ++;
+        if (g > 0.25) solidQ++;
+      }
     }
   } else if (revY.length >= 4) {
-    // Fallback: count(annualRev YoY > 50%) ueber 3 Y2Y-Vergleiche
     breadthOk = true; breadthSource = 'y';
     for (let i = 0; i < 3; i++) {
       const cur = revY[i], prev = revY[i + 1];
-      if (cur > 0 && prev > 0 && (cur - prev) / prev > 0.5) strongQ++;
+      if (cur > 0 && prev > 0) {
+        const g = (cur - prev) / prev;
+        if (g > 0.5) strongQ++;
+        if (g > 0.25) solidQ++;
+      }
     }
-    // skaliere auf "von 4" damit Schwelle vergleichbar bleibt (3-of-3 ≈ 4-of-4)
     if (strongQ === 3) strongQ = 4;
     else if (strongQ === 2) strongQ = 3;
+    if (solidQ === 3) solidQ = 4;
+    else if (solidQ === 2) solidQ = 3;
   }
 
   // Faktor 2: OI Direction
@@ -134,16 +143,23 @@ function evaluate(stock) {
       reasons.push('Spike ' + Math.round(spikeShare*100) + '% + nur ' + strongQ + '/4 Q stark');
     } else if (isBroadGrowth && isOIGood) {
       cls = 'REAL_HYPERGROWTH_ACCELERATING';
-      reasons.push(strongQ + '/4 Q stark, OI: ' + oiDir);
+      reasons.push(strongQ + '/4 Y >50%, OI: ' + oiDir);
     } else if (isBroadGrowth) {
       cls = 'REAL_HYPERGROWTH_BUT_LOSSY';
-      reasons.push(strongQ + '/4 Q stark, OI: ' + oiDir);
-    } else if (breadthOk && strongQ >= 2) {
+      reasons.push(strongQ + '/4 Y >50%, OI: ' + oiDir);
+    } else if (breadthOk && solidQ >= 3 && isOIGood) {
+      // Tag 112d: solid growth tier (25%+ konsistent) — APP/NOW/MELI
+      cls = 'REAL_HYPERGROWTH_BUT_LOSSY';
+      reasons.push(solidQ + '/4 Y >25%, OI: ' + oiDir);
+    } else if (breadthOk && solidQ >= 3) {
       cls = 'HYPERGROWTH_REVIEW';
-      reasons.push(strongQ + '/4 Q stark — Review');
+      reasons.push(solidQ + '/4 Y >25% (solid), OI: ' + oiDir);
+    } else if (breadthOk && (strongQ >= 2 || solidQ >= 2)) {
+      cls = 'HYPERGROWTH_REVIEW';
+      reasons.push('mixed Q-pattern — Review');
     } else {
       cls = 'HYPERGROWTH_REVIEW';
-      reasons.push('Daten unvollständig oder mixed signals');
+      reasons.push('Daten unvollständig oder schwache Signale');
     }
   }
 
@@ -154,7 +170,7 @@ function evaluate(stock) {
     value, pass, computable: true,
     components: {
       class: cls,
-      strongQuarters: strongQ,
+      strongQuarters: strongQ, solidQuarters: solidQ,
       breadthOk: breadthOk, breadthSource: breadthSource,
       oiDirection: oiDir,
       oiSeverity: oiSeverity,
