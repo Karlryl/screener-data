@@ -72,6 +72,21 @@ function evaluate(stock) {
   const reasons = [];
   let fail = false;
 
+  // Check 0 (Tag 113f): Annual-Revenue-Decline — Cyclical-Rebound erkennen
+  // MRNA-Pattern: annualRev geht stark rueckwaerts, aber YoY Q-vs-Q hoch wegen Tiefpunkt
+  const revY = _arr(stock, 'annual.annualRev');
+  let annualDecline = null;
+  if (revY.length >= 4) {
+    const latest = revY[0], threeYrAgo = revY[3];
+    if (threeYrAgo > 0) {
+      annualDecline = (latest - threeYrAgo) / threeYrAgo;
+      if (latest < threeYrAgo) {
+        fail = true;
+        reasons.push('3y-Annual-Revenue ' + Math.round(annualDecline*100) + '% (Cyclical-Rebound, kein echter Hypergrowth)');
+      }
+    }
+  }
+
   // Check 1: Spike Concentration (largest Q / sum letzte 4Q)
   let spikeShare = null;
   if (revQ.length >= 4) {
@@ -110,7 +125,8 @@ function evaluate(stock) {
         spikeShare: spikeShare != null ? Math.round(spikeShare*100) : null,
         oiSeverity: oiSeverity,
         oiDir: oiDir,
-        yoyGrowth: yoyGrowth
+        yoyGrowth: yoyGrowth,
+        annualDecline3y: annualDecline != null ? Math.round(annualDecline*100) : null
       },
       reason: 'Hypergrowth-Pattern OK — keine Spike/OI-Anomalie'
     });
@@ -119,11 +135,12 @@ function evaluate(stock) {
   return H.buildResult({
     computable: true, pass: false, value: 'Q_SPIKE_DETECTED',
     components: {
-      spikeShare: spikeShare != null ? Math.round(spikeShare*100) : null,
-      oiSeverity: oiSeverity,
-      oiDir: oiDir,
-      yoyGrowth: yoyGrowth
-    },
+        spikeShare: spikeShare != null ? Math.round(spikeShare*100) : null,
+        oiSeverity: oiSeverity,
+        oiDir: oiDir,
+        yoyGrowth: yoyGrowth,
+        annualDecline3y: annualDecline != null ? Math.round(annualDecline*100) : null
+      },
     reason: 'Q-Spike: ' + reasons.join('; ')
   });
 }
