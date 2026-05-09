@@ -1,9 +1,9 @@
 {
-  "pulled_at": "2026-05-09T10:34:41.734Z",
+  "pulled_at": "2026-05-09T12:48:18.016Z",
   "watchlist_version": "9.0",
   "n_total": 4808,
-  "n_ok": 4076,
-  "n_failed": 732,
+  "n_ok": 4074,
+  "n_failed": 734,
   "results": [
     {
       "ticker": "000001.SZ",
@@ -54126,19 +54126,8 @@
     },
     {
       "ticker": "YRD",
-      "status": "ok",
-      "file": "YRD.json",
-      "revenue": "$5.7B",
-      "growth": "-34.1%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
+      "status": "skipped-mcap",
+      "reason": "mcap=0.17B < $2B (Small-Cap)"
     },
     {
       "ticker": "YRIV",
@@ -57232,11 +57221,11 @@
     },
     {
       "ticker": "WIRE",
-      "error": "Quote not found for symbol: WIRE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "WKME",
-      "error": "Quote not found for symbol: WKME"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "WNS",
@@ -57260,7 +57249,7 @@
     },
     {
       "ticker": "WRK",
-      "error": "Quote not found for symbol: WRK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "WSA.AX",
@@ -57268,11 +57257,11 @@
     },
     {
       "ticker": "WWE",
-      "error": "Quote not found for symbol: WWE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "X",
-      "error": "Quote not found for symbol: X"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "XBC.TO",
@@ -57340,7 +57329,7 @@
     },
     {
       "ticker": "ZI",
-      "error": "Quote not found for symbol: ZI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ZNGA",
@@ -57352,11 +57341,11 @@
     },
     {
       "ticker": "ZUO",
-      "error": "Quote not found for symbol: ZUO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ZYNE",
-      "error": "Quote not found for symbol: ZYNE"
+      "error": "Failed Yahoo Schema validation"
     }
   ]
 }
