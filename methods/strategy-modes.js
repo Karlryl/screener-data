@@ -3,13 +3,13 @@
  * Tag 100: Strategy-Modes Registry
  * =================================
  * 3 vordefinierte Discovery-Modi statt Methoden-Selbst-Filtern.
- * Karl ist Nicht-Quant — er soll keine Methoden bedienen, sondern
+ * Karl ist Nicht-Quant â er soll keine Methoden bedienen, sondern
  * Kandidaten-Storys lesen.
  *
  * Pro Modus:
  *   - core: Methoden die den Modus charakterisieren (sichtbar als Story)
  *   - dataGuards: harte Reject-Filter (revenue-shock etc.)
- *   - evidence: literaturgestützt | heuristisch | experimentell
+ *   - evidence: literaturgestÃ¼tzt | heuristisch | experimentell
  *   - story: Template fuer 1-Satz-Beschreibung pro Stock
  *   - excludeSectors: Sektor-Ausschluesse fuer diesen Modus
  *
@@ -21,20 +21,31 @@ const SECTOR_EXCLUDE_DEFAULT = [
   /real estate|reit|equity reit|mortgage reit/i
 ];
 
-// Tag 104: zusaetzlich Mining/Materials aus Hypergrowth raus — rohstoff-preis-abhaengig
+// Tag 104: zusaetzlich Mining/Materials aus Hypergrowth raus â rohstoff-preis-abhaengig
 const SECTOR_EXCLUDE_HYPERGROWTH = [
   ...SECTOR_EXCLUDE_DEFAULT,
   /\bgold\b|\bsilver\b|\bcopper\b|\bmining\b|\bmetals\b|\bcoal\b/i,
   /oil & gas|integrated oil|exploration|drilling/i
 ];
 
+// Tag 117: Quality-Compounder erweitert â Konsens nach 5-Runden-Battle
+// Excludes: Banks/REITs/Insurance + Mining/Oil/Steel + Auto/Airlines/Utilities/Telecom
+const SECTOR_EXCLUDE_QC = [
+  ...SECTOR_EXCLUDE_HYPERGROWTH,
+  /\bsteel\b|integrated steel|\biron\b/i,
+  /auto manufacturers|automotive|car manufacturer/i,
+  /airlines?|airline industry/i,
+  /utilities|utility|electric utilities|water utilities|gas utilities/i,
+  /telecom|telecommunication/i
+];
+
 const MODES = {
   HYPERGROWTH: {
     id: 'HYPERGROWTH',
     label: 'Hypergrowth',
-    description: 'Stark wachsende Firmen wie CRDO, ALAB, PLTR — fruehzeitig entdecken.',
+    description: 'Stark wachsende Firmen wie CRDO, ALAB, PLTR â fruehzeitig entdecken.',
     evidence: 'heuristisch',
-    evidenceLabel: 'Heuristisch — sucht stark wachsende Firmen, manueller Deep-Dive empfohlen.',
+    evidenceLabel: 'Heuristisch â sucht stark wachsende Firmen, manueller Deep-Dive empfohlen.',
     core: [
       // Rule-of-40 sichtbar als CORE (Karl's expliziter Wunsch)
       { id: 'rule-of-40', required: true, weight: 'must', storyHint: 'Rule-of-40 erfuellt' },
@@ -48,36 +59,42 @@ const MODES = {
     ],
     dataGuards: ['revenue-shock-guard', 'sloan-ratio', 'q-spike-dataguard'],
     excludeSectors: SECTOR_EXCLUDE_HYPERGROWTH,
-    storyTemplate: '{ticker} — Hypergrowth: {coreSummary}. {warnings}',
+    storyTemplate: '{ticker} â Hypergrowth: {coreSummary}. {warnings}',
     defaultSortMethod: 'rule-of-x'
   },
 
   QUALITY_COMPOUNDER: {
     id: 'QUALITY_COMPOUNDER',
     label: 'Quality-Compounder',
-    description: 'Profitable Firmen mit stabilem ROIC und Margenstabilitaet — Novo Nordisk, Evolution AB-Profil.',
+    description: 'Proven Reinvestment-Compounder mit Pricing-Power und Earnings-Stabilitaet (Buffett/Smith-Profil).',
     evidence: 'literaturgestuetzt',
-    evidenceLabel: 'Literaturgestuetzt — basiert auf etablierten Quality/Value-Faktoren (Greenblatt, Asness, Novy-Marx).',
+    evidenceLabel: 'Literaturgestuetzt + Council-Konsens (Tag 117): Asness QMJ, Damodaran ROICÃReinvestment, Terry Smith Quality-Compounder.',
     core: [
-      { id: 'roic', required: true, weight: 'must', storyHint: 'starke Kapitalrendite' },
-      { id: 'gross-margin-stability', required: true, weight: 'must', storyHint: 'stabile Bruttomargen' },
-      { id: 'fcf-yield', required: true, weight: 'must', storyHint: 'gesundes FCF-Yield' },
-      { id: 'net-debt-ebitda', required: true, weight: 'must', storyHint: 'solide Bilanz' },
+      // Tag 117 v2 â Konsens nach 5-Runden-Battle
+      { id: 'quality-compounder-roic', required: true, weight: 'must', storyHint: 'PreTax-ROIC>=20% (oder >=17% mit AT>=2)' },
+      { id: 'earnings-stability', required: true, weight: 'must', storyHint: 'OpInc+FCF positive 4/5y, kein dauerhafter Decline' },
+      { id: 'margin-quality', required: true, weight: 'must', storyHint: 'GM>=35% + OpMargin>=15% (mit AT-Override)' },
+      { id: 'reinvestment-rate', required: true, weight: 'must', storyHint: 'Reinvestment-Rate>=20% (Capex+R&D)/OCF' },
+      // Premium-Proof als Soft-Tag (sichtbar im Reason-Code)
+      { id: 'premium-compounder-proof', required: false, weight: 'prefer', storyHint: 'Premium-Compounder (alle 6 Premium-Punkte)' },
+      { id: 'fcf-yield', required: false, weight: 'prefer', storyHint: 'FCF-Yield-Sortier-Hint' },
+      { id: 'net-debt-ebitda', required: true, weight: 'must', storyHint: 'Net-Debt/EBITDA <= 2.5' },
       { id: 'above-200d-ma', required: false, weight: 'prefer', storyHint: 'positiver Trend' }
     ],
-    dataGuards: ['asset-growth-divergence'],
-    softWarnings: ['sloan-ratio'],
-    excludeSectors: SECTOR_EXCLUDE_HYPERGROWTH,
-    storyTemplate: '{ticker} — Quality-Compounder: {coreSummary}. {warnings}',
-    defaultSortMethod: 'roic'
+    dataGuards: ['asset-growth-divergence', 'sloan-ratio', 'working-capital-anomaly'],
+    softWarnings: [],
+    excludeSectors: SECTOR_EXCLUDE_QC,  // Tag 117: erweiterte Excludes
+    mcapFloor: 5e9,  // Tag 117: 5B Mcap-Floor fuer Quality-Compounder
+    storyTemplate: '{ticker} â Quality-Compounder: {coreSummary}. {warnings}',
+    defaultSortMethod: 'quality-compounder-roic'
   },
 
   TURNAROUND: {
     id: 'TURNAROUND',
     label: 'Turnaround',
-    description: 'Firmen die gerade aus Verlust in Profit drehen — fruehe Re-Rating-Kandidaten.',
+    description: 'Firmen die gerade aus Verlust in Profit drehen â fruehe Re-Rating-Kandidaten.',
     evidence: 'experimentell',
-    evidenceLabel: 'Experimentell — hohe Fehlerrate moeglich, nur als Ideenquelle (NICHT in v1.0 — kommt in Phase 2).',
+    evidenceLabel: 'Experimentell â hohe Fehlerrate moeglich, nur als Ideenquelle (NICHT in v1.0 â kommt in Phase 2).',
     core: [
       { id: 'profitability-state', required: true, weight: 'must', storyHint: 'frischer Sign-Flip oder neue Profitabilitaet', acceptValues: ['TURNAROUND', 'RECENT'] },
       { id: 'profitability-trend', required: true, weight: 'must', storyHint: 'Profitabilitaet verbessert sich', acceptValues: ['IMPROVING'] },
@@ -85,8 +102,8 @@ const MODES = {
     ],
     dataGuards: ['sloan-ratio', 'net-debt-ebitda', 'revenue-shock-guard'],
     excludeSectors: SECTOR_EXCLUDE_HYPERGROWTH,
-    enabled: false,  // Phase 2 — nicht in v1.0
-    storyTemplate: '{ticker} — Turnaround: {coreSummary}. {warnings}',
+    enabled: false,  // Phase 2 â nicht in v1.0
+    storyTemplate: '{ticker} â Turnaround: {coreSummary}. {warnings}',
     defaultSortMethod: 'profitability-trend'
   }
 };
@@ -104,8 +121,16 @@ function evaluateMode(stock, modeId, allResults) {
   if (!mode) return { passed: false, reason: 'unknown_mode' };
   if (mode.enabled === false) return { passed: false, reason: 'mode_disabled' };
   if (isExcludedBySector(stock, mode)) return { passed: false, reason: 'sector_excluded', sector: stock.meta && stock.meta.sector };
+  // Tag 117: Mcap-Floor pro Mode
+  if (mode.mcapFloor != null) {
+    const mcRaw = stock && stock.marketCap;
+    const mc = (typeof mcRaw === 'number') ? mcRaw : (mcRaw && mcRaw.value) || 0;
+    if (mc > 0 && mc < mode.mcapFloor) {
+      return { passed: false, reason: 'mcap_below_floor', mcap: mc, mcapFloor: mode.mcapFloor };
+    }
+  }
 
-  // DataGuard-Check zuerst — modusbezogen
+  // DataGuard-Check zuerst â modusbezogen
   const failedGuards = [];
   for (const guardId of mode.dataGuards) {
     const r = allResults[guardId];
@@ -166,7 +191,7 @@ function evaluateMode(stock, modeId, allResults) {
 
 // Soft-Warning Texte pro DataGuard
 const SOFT_WARNING_TEXT = {
-  'sloan-ratio': 'Earnings-Quality auffaellig (Sloan-Ratio hoch — kann R&D/Working-Capital-Effekt sein)',
+  'sloan-ratio': 'Earnings-Quality auffaellig (Sloan-Ratio hoch â kann R&D/Working-Capital-Effekt sein)',
   'net-debt-ebitda': 'Bilanz-Risiko (Net-Debt/EBITDA hoch)',
   'asset-growth-divergence': 'Asset-Wachstum > Umsatz-Wachstum (Acquired-Growth-Risiko)',
   'revenue-shock-guard': 'Umsatzsprung wirkt wie Einmaleffekt',
@@ -221,7 +246,7 @@ function buildStory(stock, modeEval, allResults, modeRef) {
   return {
     ticker: stock.meta && stock.meta.ticker,
     coreSummary: facts.join(', '),
-    warnings: warnings.length > 0 ? '⚠ ' + warnings.join('; ') : '',
+    warnings: warnings.length > 0 ? 'â  ' + warnings.join('; ') : '',
     mustPassCount: modeEval.mustPassCount,
     mustTotal: modeEval.mustTotal,
     preferPassCount: modeEval.preferPassCount,
