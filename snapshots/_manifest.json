@@ -1,9 +1,9 @@
 {
-  "pulled_at": "2026-05-09T22:15:50.579Z",
+  "pulled_at": "2026-05-10T10:33:32.608Z",
   "watchlist_version": "9.0",
   "n_total": 4874,
-  "n_ok": 4137,
-  "n_failed": 737,
+  "n_ok": 4135,
+  "n_failed": 739,
   "results": [
     {
       "ticker": "000001.SZ",
@@ -667,7 +667,7 @@
         "annualNetIncome": 4,
         "annualGP": 4,
         "annualFCF": 4,
-        "revenueQ": 4,
+        "revenueQ": 0,
         "opIncQ": 0
       }
     },
@@ -1173,22 +1173,6 @@
       }
     },
     {
-      "ticker": "003816.SZ",
-      "status": "ok",
-      "file": "003816.SZ.json",
-      "revenue": "$73.2B",
-      "growth": "-13.3%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 4,
-        "opIncQ": 0
-      }
-    },
-    {
       "ticker": "003670.KS",
       "status": "ok",
       "file": "003670.KS.json",
@@ -1202,6 +1186,22 @@
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 5
+      }
+    },
+    {
+      "ticker": "003816.SZ",
+      "status": "ok",
+      "file": "003816.SZ.json",
+      "revenue": "$73.2B",
+      "growth": "-13.3%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 4,
+        "opIncQ": 0
       }
     },
     {
@@ -1311,6 +1311,22 @@
       "reason": "mcap=1.05B < $2B (Small-Cap)"
     },
     {
+      "ticker": "009150.KS",
+      "status": "ok",
+      "file": "009150.KS.json",
+      "revenue": "$11314.5B",
+      "growth": "16.4%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "0101.HK",
       "status": "ok",
       "file": "0101.HK.json",
@@ -1324,6 +1340,22 @@
         "annualFCF": 4,
         "revenueQ": 0,
         "opIncQ": 0
+      }
+    },
+    {
+      "ticker": "012330.KS",
+      "status": "ok",
+      "file": "012330.KS.json",
+      "revenue": "$61118.1B",
+      "growth": "4.7%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
       }
     },
     {
@@ -1471,38 +1503,6 @@
       }
     },
     {
-      "ticker": "009150.KS",
-      "status": "ok",
-      "file": "009150.KS.json",
-      "revenue": "$11314.5B",
-      "growth": "16.4%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "012330.KS",
-      "status": "ok",
-      "file": "012330.KS.json",
-      "revenue": "$61118.1B",
-      "growth": "4.7%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
       "ticker": "0200.HK",
       "status": "skipped-mcap",
       "reason": "mcap=1.19B < $2B (Small-Cap)"
@@ -1593,6 +1593,22 @@
       "file": "028050.KS.json",
       "revenue": "$9198.2B",
       "growth": "8.1%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
+      "ticker": "028260.KS",
+      "status": "ok",
+      "file": "028260.KS.json",
+      "revenue": "$40742.2B",
+      "growth": "8.4%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -1774,22 +1790,6 @@
       }
     },
     {
-      "ticker": "028260.KS",
-      "status": "ok",
-      "file": "028260.KS.json",
-      "revenue": "$40742.2B",
-      "growth": "8.4%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
       "ticker": "0358.HK",
       "status": "ok",
       "file": "0358.HK.json",
@@ -1918,6 +1918,22 @@
       }
     },
     {
+      "ticker": "042700.KS",
+      "status": "ok",
+      "file": "042700.KS.json",
+      "revenue": "$576.7B",
+      "growth": "-44.5%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "0489.HK",
       "status": "ok",
       "file": "0489.HK.json",
@@ -1935,8 +1951,19 @@
     },
     {
       "ticker": "0511.HK",
-      "status": "skipped-mcap",
-      "reason": "mcap=0.17B < $2B (Small-Cap)"
+      "status": "ok",
+      "file": "0511.HK.json",
+      "revenue": "$3.2B",
+      "growth": "-2.9%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 0,
+        "opIncQ": 0
+      }
     },
     {
       "ticker": "051910.KS",
@@ -2042,22 +2069,6 @@
         "annualFCF": 4,
         "revenueQ": 0,
         "opIncQ": 0
-      }
-    },
-    {
-      "ticker": "042700.KS",
-      "status": "ok",
-      "file": "042700.KS.json",
-      "revenue": "$576.7B",
-      "growth": "-44.5%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
       }
     },
     {
@@ -2364,6 +2375,22 @@
       }
     },
     {
+      "ticker": "086520.KQ",
+      "status": "ok",
+      "file": "086520.KQ.json",
+      "revenue": "no-rev",
+      "growth": "-",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "0867.HK",
       "status": "ok",
       "file": "0867.HK.json",
@@ -2540,6 +2567,22 @@
       }
     },
     {
+      "ticker": "096770.KS",
+      "status": "ok",
+      "file": "096770.KS.json",
+      "revenue": "$80296.1B",
+      "growth": "-",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "0968.HK",
       "status": "ok",
       "file": "0968.HK.json",
@@ -2604,35 +2647,19 @@
       }
     },
     {
-      "ticker": "086520.KQ",
+      "ticker": "1023.KL",
       "status": "ok",
-      "file": "086520.KQ.json",
-      "revenue": "no-rev",
-      "growth": "-",
+      "file": "1023.KL.json",
+      "revenue": "$21.3B",
+      "growth": "6.0%",
       "completeness": {
         "annualRev": 4,
-        "annualOpInc": 4,
+        "annualOpInc": 0,
         "annualNetIncome": 4,
         "annualGP": 4,
         "annualFCF": 4,
         "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "096770.KS",
-      "status": "ok",
-      "file": "096770.KS.json",
-      "revenue": "$80296.1B",
-      "growth": "-",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
+        "opIncQ": 0
       }
     },
     {
@@ -2870,11 +2897,16 @@
       }
     },
     {
-      "ticker": "1023.KL",
+      "ticker": "1114.HK",
+      "status": "skipped-mcap",
+      "reason": "mcap=1.93B < $2B (Small-Cap)"
+    },
+    {
+      "ticker": "1120.SR",
       "status": "ok",
-      "file": "1023.KL.json",
-      "revenue": "$21.3B",
-      "growth": "6.0%",
+      "file": "1120.SR.json",
+      "revenue": "$38.0B",
+      "growth": "14.1%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 0,
@@ -2884,11 +2916,6 @@
         "revenueQ": 5,
         "opIncQ": 0
       }
-    },
-    {
-      "ticker": "1114.HK",
-      "status": "skipped-mcap",
-      "reason": "mcap=1.93B < $2B (Small-Cap)"
     },
     {
       "ticker": "1133.HK",
@@ -2956,6 +2983,22 @@
         "annualGP": 4,
         "annualFCF": 4,
         "revenueQ": 4,
+        "opIncQ": 0
+      }
+    },
+    {
+      "ticker": "1180.SR",
+      "status": "ok",
+      "file": "1180.SR.json",
+      "revenue": "$38.8B",
+      "growth": "6.8%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 0,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
         "opIncQ": 0
       }
     },
@@ -3082,38 +3125,6 @@
       }
     },
     {
-      "ticker": "1120.SR",
-      "status": "ok",
-      "file": "1120.SR.json",
-      "revenue": "$38.0B",
-      "growth": "14.1%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 0,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 0
-      }
-    },
-    {
-      "ticker": "1180.SR",
-      "status": "ok",
-      "file": "1180.SR.json",
-      "revenue": "$38.8B",
-      "growth": "6.8%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 0,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 0
-      }
-    },
-    {
       "ticker": "1295.KL",
       "status": "ok",
       "file": "1295.KL.json",
@@ -3207,8 +3218,8 @@
       "ticker": "1326.TW",
       "status": "ok",
       "file": "1326.TW.json",
-      "revenue": "$287.0B",
-      "growth": "-20.0%",
+      "revenue": "$289.9B",
+      "growth": "3.6%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -3487,7 +3498,7 @@
       "ticker": "1658.HK",
       "status": "ok",
       "file": "1658.HK.json",
-      "revenue": "$321.0B",
+      "revenue": "$322.7B",
       "growth": "-0.3%",
       "completeness": {
         "annualRev": 4,
@@ -3912,6 +3923,22 @@
       "reason": "mcap=1.41B < $2B (Small-Cap)"
     },
     {
+      "ticker": "196170.KQ",
+      "status": "ok",
+      "file": "196170.KQ.json",
+      "revenue": "$215.9B",
+      "growth": "26.9%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "1963.T",
       "status": "ok",
       "file": "1963.T.json",
@@ -3995,8 +4022,8 @@
       "ticker": "2002.TW",
       "status": "ok",
       "file": "2002.TW.json",
-      "revenue": "$317.2B",
-      "growth": "-13.0%",
+      "revenue": "$313.1B",
+      "growth": "-4.8%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -4011,22 +4038,6 @@
       "ticker": "2007.HK",
       "status": "skipped-mcap",
       "reason": "mcap=1.57B < $2B (Small-Cap)"
-    },
-    {
-      "ticker": "196170.KQ",
-      "status": "ok",
-      "file": "196170.KQ.json",
-      "revenue": "$215.9B",
-      "growth": "26.9%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
     },
     {
       "ticker": "2010.SR",
@@ -4253,6 +4264,22 @@
       }
     },
     {
+      "ticker": "2222.SR",
+      "status": "ok",
+      "file": "2222.SR.json",
+      "revenue": "$1671.2B",
+      "growth": "-2.9%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "2227.TW",
       "status": "skipped-mcap",
       "reason": "mcap=0.50B < $2B (Small-Cap)"
@@ -4302,22 +4329,6 @@
         "annualFCF": 4,
         "revenueQ": 0,
         "opIncQ": 0
-      }
-    },
-    {
-      "ticker": "2222.SR",
-      "status": "ok",
-      "file": "2222.SR.json",
-      "revenue": "$1671.2B",
-      "growth": "-2.9%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
       }
     },
     {
@@ -4601,8 +4612,8 @@
       "ticker": "2345.TW",
       "status": "ok",
       "file": "2345.TW.json",
-      "revenue": "$248.3B",
-      "growth": "84.8%",
+      "revenue": "$275.7B",
+      "growth": "64.0%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -4996,6 +5007,22 @@
       }
     },
     {
+      "ticker": "247540.KQ",
+      "status": "ok",
+      "file": "247540.KQ.json",
+      "revenue": "$2531.6B",
+      "growth": "6.9%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "2486.TW",
       "status": "ok",
       "file": "2486.TW.json",
@@ -5137,22 +5164,6 @@
       "ticker": "2606.TW",
       "status": "skipped-mcap",
       "reason": "mcap=1.70B < $2B (Small-Cap)"
-    },
-    {
-      "ticker": "247540.KQ",
-      "status": "ok",
-      "file": "247540.KQ.json",
-      "revenue": "$2531.6B",
-      "growth": "6.9%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
     },
     {
       "ticker": "2609.TW",
@@ -5530,7 +5541,7 @@
       "ticker": "2914.T",
       "status": "ok",
       "file": "2914.T.json",
-      "revenue": "$3564.7B",
+      "revenue": "$3589.8B",
       "growth": "11.7%",
       "completeness": {
         "annualRev": 4,
@@ -6422,8 +6433,8 @@
       "ticker": "3661.TW",
       "status": "ok",
       "file": "3661.TW.json",
-      "revenue": "$30.9B",
-      "growth": "-63.8%",
+      "revenue": "$24.6B",
+      "growth": "-60.1%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -6546,6 +6557,22 @@
       "reason": "mcap=1.62B < $2B (Small-Cap)"
     },
     {
+      "ticker": "373220.KS",
+      "status": "ok",
+      "file": "373220.KS.json",
+      "revenue": "$23671.8B",
+      "growth": "-",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "3765.T",
       "status": "skipped-mcap",
       "reason": "mcap=0.85B < $2B (Small-Cap)"
@@ -6601,22 +6628,6 @@
         "annualFCF": 4,
         "revenueQ": 4,
         "opIncQ": 1
-      }
-    },
-    {
-      "ticker": "373220.KS",
-      "status": "ok",
-      "file": "373220.KS.json",
-      "revenue": "$23671.8B",
-      "growth": "-",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
       }
     },
     {
@@ -7503,6 +7514,22 @@
       }
     },
     {
+      "ticker": "5347.KL",
+      "status": "ok",
+      "file": "5347.KL.json",
+      "revenue": "$65.0B",
+      "growth": "3.6%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "5388.TW",
       "status": "skipped-mcap",
       "reason": "mcap=0.79B < $2B (Small-Cap)"
@@ -7694,22 +7721,6 @@
       }
     },
     {
-      "ticker": "5347.KL",
-      "status": "ok",
-      "file": "5347.KL.json",
-      "revenue": "$65.0B",
-      "growth": "3.6%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
       "ticker": "5871.TW",
       "status": "ok",
       "file": "5871.TW.json",
@@ -7729,8 +7740,8 @@
       "ticker": "5876.TW",
       "status": "ok",
       "file": "5876.TW.json",
-      "revenue": "$37.8B",
-      "growth": "11.6%",
+      "revenue": "$38.5B",
+      "growth": "12.6%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 0,
@@ -9557,7 +9568,7 @@
       "ticker": "601658.SS",
       "status": "ok",
       "file": "601658.SS.json",
-      "revenue": "$321.0B",
+      "revenue": "$322.7B",
       "growth": "-0.3%",
       "completeness": {
         "annualRev": 4,
@@ -10087,6 +10098,22 @@
       }
     },
     {
+      "ticker": "6033.KL",
+      "status": "ok",
+      "file": "6033.KL.json",
+      "revenue": "$6.4B",
+      "growth": "-2.8%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "603799.SS",
       "status": "ok",
       "file": "603799.SS.json",
@@ -10106,24 +10133,8 @@
       "ticker": "603833.SS",
       "status": "ok",
       "file": "603833.SS.json",
-      "revenue": "$18.3B",
-      "growth": "-6.1%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "6033.KL",
-      "status": "ok",
-      "file": "6033.KL.json",
-      "revenue": "$6.4B",
-      "growth": "-2.8%",
+      "revenue": "$16.4B",
+      "growth": "-23.0%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -10277,7 +10288,7 @@
       "status": "ok",
       "file": "6178.T.json",
       "revenue": "$11553.4B",
-      "growth": "-",
+      "growth": "0.3%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 0,
@@ -11260,6 +11271,22 @@
       "reason": "mcap=1.44B < $2B (Small-Cap)"
     },
     {
+      "ticker": "7010.SR",
+      "status": "ok",
+      "file": "7010.SR.json",
+      "revenue": "$78.5B",
+      "growth": "3.8%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "7011.T",
       "status": "ok",
       "file": "7011.T.json",
@@ -11305,6 +11332,22 @@
         "annualFCF": 4,
         "revenueQ": 4,
         "opIncQ": 0
+      }
+    },
+    {
+      "ticker": "7113.KL",
+      "status": "ok",
+      "file": "7113.KL.json",
+      "revenue": "$3.6B",
+      "growth": "13.7%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
       }
     },
     {
@@ -11361,38 +11404,6 @@
       "file": "7203.T.json",
       "revenue": "$50685.0B",
       "growth": "1.9%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "7010.SR",
-      "status": "ok",
-      "file": "7010.SR.json",
-      "revenue": "$78.5B",
-      "growth": "3.8%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "7113.KL",
-      "status": "ok",
-      "file": "7113.KL.json",
-      "revenue": "$3.6B",
-      "growth": "13.7%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -13964,6 +13975,22 @@
       }
     },
     {
+      "ticker": "ABI.BR",
+      "status": "ok",
+      "file": "ABI.BR.json",
+      "revenue": "$61.0B",
+      "growth": "12.0%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "ABN.AS",
       "status": "ok",
       "file": "ABN.AS.json",
@@ -13983,8 +14010,8 @@
       "ticker": "ABNB",
       "status": "ok",
       "file": "ABNB.json",
-      "revenue": "$12.2B",
-      "growth": "12.0%",
+      "revenue": "$12.6B",
+      "growth": "17.9%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -14015,22 +14042,6 @@
       "ticker": "ABX",
       "status": "skipped-mcap",
       "reason": "mcap=0.87B < $2B (Small-Cap)"
-    },
-    {
-      "ticker": "ABI.BR",
-      "status": "ok",
-      "file": "ABI.BR.json",
-      "revenue": "$61.0B",
-      "growth": "12.0%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
     },
     {
       "ticker": "ABX.TO",
@@ -14246,6 +14257,22 @@
       }
     },
     {
+      "ticker": "AD.AS",
+      "status": "ok",
+      "file": "AD.AS.json",
+      "revenue": "$91.4B",
+      "growth": "-4.3%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "ADBE",
       "status": "ok",
       "file": "ADBE.json",
@@ -14299,22 +14326,6 @@
       "file": "ADM.json",
       "revenue": "$80.6B",
       "growth": "1.6%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "AD.AS",
-      "status": "ok",
-      "file": "AD.AS.json",
-      "revenue": "$91.4B",
-      "growth": "-4.3%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -14427,6 +14438,22 @@
       "reason": "mcap=1.86B < $2B (Small-Cap)"
     },
     {
+      "ticker": "ADVANC.BK",
+      "status": "ok",
+      "file": "ADVANC.BK.json",
+      "revenue": "$228.2B",
+      "growth": "3.4%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "ADYEN.AS",
       "status": "ok",
       "file": "ADYEN.AS.json",
@@ -14447,7 +14474,7 @@
       "status": "ok",
       "file": "AEE.json",
       "revenue": "$8.5B",
-      "growth": "7.9%",
+      "growth": "3.7%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -14608,22 +14635,6 @@
       "file": "AFRM.json",
       "revenue": "$4.0B",
       "growth": "32.6%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "ADVANC.BK",
-      "status": "ok",
-      "file": "ADVANC.BK.json",
-      "revenue": "$228.2B",
-      "growth": "3.4%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -14917,6 +14928,22 @@
       }
     },
     {
+      "ticker": "AKRBP.OL",
+      "status": "ok",
+      "file": "AKRBP.OL.json",
+      "revenue": "$10.8B",
+      "growth": "-4.7%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "AKZA.AS",
       "status": "ok",
       "file": "AKZA.AS.json",
@@ -15122,22 +15149,6 @@
         "annualFCF": 4,
         "revenueQ": 1,
         "opIncQ": 0
-      }
-    },
-    {
-      "ticker": "AKRBP.OL",
-      "status": "ok",
-      "file": "AKRBP.OL.json",
-      "revenue": "$10.8B",
-      "growth": "-4.7%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
       }
     },
     {
@@ -15560,7 +15571,7 @@
       "status": "ok",
       "file": "AMR.json",
       "revenue": "$2.1B",
-      "growth": "-15.7%",
+      "growth": "-1.3%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -15811,6 +15822,22 @@
       "reason": "mcap=1.13B < $2B (Small-Cap)"
     },
     {
+      "ticker": "AOT.BK",
+      "status": "ok",
+      "file": "AOT.BK.json",
+      "revenue": "$65.9B",
+      "growth": "-4.6%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "APA",
       "status": "ok",
       "file": "APA.json",
@@ -15901,22 +15928,6 @@
       "file": "APO.json",
       "revenue": "$31.3B",
       "growth": "-9.2%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "AOT.BK",
-      "status": "ok",
-      "file": "AOT.BK.json",
-      "revenue": "$65.9B",
-      "growth": "-4.6%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -16209,22 +16220,6 @@
       "reason": "mcap=1.58B < $2B (Small-Cap)"
     },
     {
-      "ticker": "ASAP",
-      "status": "ok",
-      "file": "ASAP.json",
-      "revenue": "no-rev",
-      "growth": "-",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 0,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 0,
-        "revenueQ": 4,
-        "opIncQ": 0
-      }
-    },
-    {
       "ticker": "ASB",
       "status": "ok",
       "file": "ASB.json",
@@ -16265,6 +16260,22 @@
       "ticker": "ASHM.L",
       "status": "skipped-mcap",
       "reason": "mcap=1.80B < $2B (Small-Cap)"
+    },
+    {
+      "ticker": "ASII.JK",
+      "status": "ok",
+      "file": "ASII.JK.json",
+      "revenue": "$318699.0B",
+      "growth": "-5.6%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
     },
     {
       "ticker": "ASML",
@@ -16400,22 +16411,6 @@
       "file": "ATCO-A.ST.json",
       "revenue": "$166.2B",
       "growth": "-5.1%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "ASII.JK",
-      "status": "ok",
-      "file": "ASII.JK.json",
-      "revenue": "$318699.0B",
-      "growth": "-5.6%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -16670,7 +16665,7 @@
       "status": "ok",
       "file": "AVB.json",
       "revenue": "$3.1B",
-      "growth": "3.4%",
+      "growth": "2.5%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -16980,6 +16975,22 @@
       }
     },
     {
+      "ticker": "AZN.ST",
+      "status": "ok",
+      "file": "AZN.ST.json",
+      "revenue": "$60.4B",
+      "growth": "12.5%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "AZO",
       "status": "ok",
       "file": "AZO.json",
@@ -17057,22 +17068,6 @@
         "annualFCF": 4,
         "revenueQ": 0,
         "opIncQ": 0
-      }
-    },
-    {
-      "ticker": "AZN.ST",
-      "status": "ok",
-      "file": "AZN.ST.json",
-      "revenue": "$60.4B",
-      "growth": "12.5%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
       }
     },
     {
@@ -17379,6 +17374,22 @@
       }
     },
     {
+      "ticker": "BBCA.JK",
+      "status": "ok",
+      "file": "BBCA.JK.json",
+      "revenue": "$108629.2B",
+      "growth": "2.5%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 0,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 0
+      }
+    },
+    {
       "ticker": "BBD",
       "status": "ok",
       "file": "BBD.json",
@@ -17408,6 +17419,22 @@
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 5
+      }
+    },
+    {
+      "ticker": "BBL.BK",
+      "status": "ok",
+      "file": "BBL.BK.json",
+      "revenue": "$137.6B",
+      "growth": "-13.1%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 0,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 0
       }
     },
     {
@@ -17526,8 +17553,8 @@
       "ticker": "BC8.DE",
       "status": "ok",
       "file": "BC8.DE.json",
-      "revenue": "$6.4B",
-      "growth": "2.9%",
+      "revenue": "$6.5B",
+      "growth": "7.6%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -17619,38 +17646,6 @@
       }
     },
     {
-      "ticker": "BBCA.JK",
-      "status": "ok",
-      "file": "BBCA.JK.json",
-      "revenue": "$108629.2B",
-      "growth": "2.5%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 0,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 0
-      }
-    },
-    {
-      "ticker": "BBL.BK",
-      "status": "ok",
-      "file": "BBL.BK.json",
-      "revenue": "$137.6B",
-      "growth": "-13.1%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 0,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 0
-      }
-    },
-    {
       "ticker": "BCRX",
       "status": "ok",
       "file": "BCRX.json",
@@ -17671,7 +17666,7 @@
       "status": "ok",
       "file": "BDX.json",
       "revenue": "$22.2B",
-      "growth": "-10.6%",
+      "growth": "5.2%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -18553,6 +18548,22 @@
       }
     },
     {
+      "ticker": "BMRI.JK",
+      "status": "ok",
+      "file": "BMRI.JK.json",
+      "revenue": "$145312.5B",
+      "growth": "1.5%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 0,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 0
+      }
+    },
+    {
       "ticker": "BMRN",
       "status": "ok",
       "file": "BMRN.json",
@@ -18582,22 +18593,6 @@
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "BMRI.JK",
-      "status": "ok",
-      "file": "BMRI.JK.json",
-      "revenue": "$145312.5B",
-      "growth": "1.5%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 0,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 0
       }
     },
     {
@@ -18814,11 +18809,6 @@
       }
     },
     {
-      "ticker": "BORR",
-      "status": "skipped-mcap",
-      "reason": "mcap=1.80B < $2B (Small-Cap)"
-    },
-    {
       "ticker": "BOSS.DE",
       "status": "ok",
       "file": "BOSS.DE.json",
@@ -18833,6 +18823,11 @@
         "revenueQ": 5,
         "opIncQ": 5
       }
+    },
+    {
+      "ticker": "BORR",
+      "status": "skipped-mcap",
+      "reason": "mcap=1.80B < $2B (Small-Cap)"
     },
     {
       "ticker": "BOX",
@@ -19440,7 +19435,7 @@
       "status": "ok",
       "file": "BXP.json",
       "revenue": "$3.2B",
-      "growth": "5.6%",
+      "growth": "0.6%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -19497,6 +19492,22 @@
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 0
+      }
+    },
+    {
+      "ticker": "C6L.SI",
+      "status": "ok",
+      "file": "C6L.SI.json",
+      "revenue": "$19.7B",
+      "growth": "1.9%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
       }
     },
     {
@@ -19633,22 +19644,6 @@
       }
     },
     {
-      "ticker": "C6L.SI",
-      "status": "ok",
-      "file": "C6L.SI.json",
-      "revenue": "$19.7B",
-      "growth": "1.9%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
       "ticker": "CAL",
       "status": "skipped-mcap",
       "reason": "mcap=0.46B < $2B (Small-Cap)"
@@ -19766,6 +19761,22 @@
       }
     },
     {
+      "ticker": "CARL-B.CO",
+      "status": "ok",
+      "file": "CARL-B.CO.json",
+      "revenue": "$89.1B",
+      "growth": "-",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 4,
+        "opIncQ": 0
+      }
+    },
+    {
       "ticker": "CARLB.CO",
       "status": "ok",
       "file": "CARLB.CO.json",
@@ -19878,22 +19889,6 @@
         "annualGP": 4,
         "annualFCF": 4,
         "revenueQ": 5,
-        "opIncQ": 0
-      }
-    },
-    {
-      "ticker": "CARL-B.CO",
-      "status": "ok",
-      "file": "CARL-B.CO.json",
-      "revenue": "$89.1B",
-      "growth": "-",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 4,
         "opIncQ": 0
       }
     },
@@ -20311,11 +20306,11 @@
       }
     },
     {
-      "ticker": "CENT",
+      "ticker": "CEMEXCPO.MX",
       "status": "ok",
-      "file": "CENT.json",
-      "revenue": "$3.2B",
-      "growth": "8.7%",
+      "file": "CEMEXCPO.MX.json",
+      "revenue": "$16.5B",
+      "growth": "11.2%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -20327,11 +20322,11 @@
       }
     },
     {
-      "ticker": "CEMEXCPO.MX",
+      "ticker": "CENT",
       "status": "ok",
-      "file": "CEMEXCPO.MX.json",
-      "revenue": "$16.5B",
-      "growth": "11.2%",
+      "file": "CENT.json",
+      "revenue": "$3.2B",
+      "growth": "8.7%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -20927,7 +20922,7 @@
       "status": "ok",
       "file": "CLDX.json",
       "revenue": "$0.0B",
-      "growth": "-89.7%",
+      "growth": "-97.8%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -21561,8 +21556,8 @@
       "ticker": "COIN",
       "status": "ok",
       "file": "COIN.json",
-      "revenue": "$6.9B",
-      "growth": "-22.2%",
+      "revenue": "$6.3B",
+      "growth": "-30.8%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -22427,8 +22422,8 @@
       "ticker": "CSH-UN.TO",
       "status": "ok",
       "file": "CSH-UN.TO.json",
-      "revenue": "$1.1B",
-      "growth": "27.5%",
+      "revenue": "$1.2B",
+      "growth": "22.3%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -23101,6 +23096,22 @@
       }
     },
     {
+      "ticker": "D05.SI",
+      "status": "ok",
+      "file": "D05.SI.json",
+      "revenue": "$22.3B",
+      "growth": "3.2%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 0,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 0
+      }
+    },
+    {
       "ticker": "DAC",
       "status": "ok",
       "file": "DAC.json",
@@ -23231,22 +23242,6 @@
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "D05.SI",
-      "status": "ok",
-      "file": "D05.SI.json",
-      "revenue": "$22.3B",
-      "growth": "3.2%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 0,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 0
       }
     },
     {
@@ -23641,7 +23636,7 @@
       "status": "ok",
       "file": "DIA.MI.json",
       "revenue": "$1.2B",
-      "growth": "-4.6%",
+      "growth": "-8.3%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -23726,7 +23721,7 @@
       "status": "ok",
       "file": "DJT.json",
       "revenue": "$0.0B",
-      "growth": "6.1%",
+      "growth": "0.5%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -23934,6 +23929,22 @@
       "reason": "mcap=0.58B < $2B (Small-Cap)"
     },
     {
+      "ticker": "DNB.OL",
+      "status": "ok",
+      "file": "DNB.OL.json",
+      "revenue": "$87.5B",
+      "growth": "-1.7%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 0,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 0
+      }
+    },
+    {
       "ticker": "DNLI",
       "status": "ok",
       "file": "DNLI.json",
@@ -24043,22 +24054,6 @@
       "ticker": "DOM.MC",
       "status": "skipped-mcap",
       "reason": "mcap=0.54B < $2B (Small-Cap)"
-    },
-    {
-      "ticker": "DNB.OL",
-      "status": "ok",
-      "file": "DNB.OL.json",
-      "revenue": "$87.5B",
-      "growth": "-1.7%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 0,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 0
-      }
     },
     {
       "ticker": "DOMO",
@@ -25274,8 +25269,24 @@
       "ticker": "EMA.TO",
       "status": "ok",
       "file": "EMA.TO.json",
-      "revenue": "$8.8B",
-      "growth": "13.8%",
+      "revenue": "$8.9B",
+      "growth": "5.1%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
+      "ticker": "EMAAR.AE",
+      "status": "ok",
+      "file": "EMAAR.AE.json",
+      "revenue": "$49.6B",
+      "growth": "40.5%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -25415,27 +25426,11 @@
       }
     },
     {
-      "ticker": "EMAAR.AE",
-      "status": "ok",
-      "file": "EMAAR.AE.json",
-      "revenue": "$49.6B",
-      "growth": "40.5%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
       "ticker": "ENEL.MI",
       "status": "ok",
       "file": "ENEL.MI.json",
-      "revenue": "$79.4B",
-      "growth": "-",
+      "revenue": "$77.9B",
+      "growth": "-6.7%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -25701,9 +25696,36 @@
       }
     },
     {
+      "ticker": "EPI-A.ST",
+      "status": "ok",
+      "file": "EPI-A.ST.json",
+      "revenue": "$60.8B",
+      "growth": "-7.6%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "EPM",
-      "status": "skipped-mcap",
-      "reason": "mcap=0.16B < $2B (Small-Cap)"
+      "status": "ok",
+      "file": "EPM.json",
+      "revenue": "$0.1B",
+      "growth": "2.0%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
     },
     {
       "ticker": "EPRT",
@@ -25884,22 +25906,6 @@
         "annualFCF": 4,
         "revenueQ": 4,
         "opIncQ": 0
-      }
-    },
-    {
-      "ticker": "EPI-A.ST",
-      "status": "ok",
-      "file": "EPI-A.ST.json",
-      "revenue": "$60.8B",
-      "growth": "-7.6%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
       }
     },
     {
@@ -26582,22 +26588,6 @@
       }
     },
     {
-      "ticker": "FA",
-      "status": "ok",
-      "file": "FA.json",
-      "revenue": "$1.6B",
-      "growth": "8.6%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
       "ticker": "F34.SI",
       "status": "ok",
       "file": "F34.SI.json",
@@ -26611,6 +26601,22 @@
         "annualFCF": 4,
         "revenueQ": 4,
         "opIncQ": 0
+      }
+    },
+    {
+      "ticker": "FA",
+      "status": "ok",
+      "file": "FA.json",
+      "revenue": "$1.6B",
+      "growth": "8.6%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
       }
     },
     {
@@ -26922,6 +26928,22 @@
       }
     },
     {
+      "ticker": "FEMSAUBD.MX",
+      "status": "ok",
+      "file": "FEMSAUBD.MX.json",
+      "revenue": "$852.9B",
+      "growth": "6.1%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "FER.MC",
       "status": "ok",
       "file": "FER.MC.json",
@@ -27092,32 +27114,16 @@
       }
     },
     {
-      "ticker": "FEMSAUBD.MX",
-      "status": "ok",
-      "file": "FEMSAUBD.MX.json",
-      "revenue": "$852.9B",
-      "growth": "6.3%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
       "ticker": "FHN",
       "status": "ok",
       "file": "FHN.json",
       "revenue": "$3.4B",
-      "growth": "9.6%",
+      "growth": "9.7%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 0,
         "annualNetIncome": 4,
-        "annualGP": 4,
+        "annualGP": 0,
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 0
@@ -27446,7 +27452,7 @@
       "status": "ok",
       "file": "FMX.json",
       "revenue": "$852.9B",
-      "growth": "6.3%",
+      "growth": "6.1%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -28169,8 +28175,19 @@
     },
     {
       "ticker": "GAIN",
-      "status": "skipped-mcap",
-      "reason": "mcap=0.66B < $2B (Small-Cap)"
+      "status": "ok",
+      "file": "GAIN.json",
+      "revenue": "$0.1B",
+      "growth": "17.3%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 0,
+        "annualNetIncome": 4,
+        "annualGP": 0,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 0
+      }
     },
     {
       "ticker": "GAP",
@@ -28554,6 +28571,22 @@
       }
     },
     {
+      "ticker": "GFNORTEO.MX",
+      "status": "ok",
+      "file": "GFNORTEO.MX.json",
+      "revenue": "$141.1B",
+      "growth": "4.1%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 0,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 0
+      }
+    },
+    {
       "ticker": "GFRD.L",
       "status": "skipped-mcap",
       "reason": "mcap=0.68B < $2B (Small-Cap)"
@@ -28612,22 +28645,6 @@
       }
     },
     {
-      "ticker": "GFNORTEO.MX",
-      "status": "ok",
-      "file": "GFNORTEO.MX.json",
-      "revenue": "$141.1B",
-      "growth": "4.1%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 0,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 0
-      }
-    },
-    {
       "ticker": "GGB",
       "status": "ok",
       "file": "GGB.json",
@@ -28663,8 +28680,8 @@
       "ticker": "GH",
       "status": "ok",
       "file": "GH.json",
-      "revenue": "$1.0B",
-      "growth": "39.4%",
+      "revenue": "$1.1B",
+      "growth": "48.3%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -29035,8 +29052,8 @@
       "ticker": "GMED",
       "status": "ok",
       "file": "GMED.json",
-      "revenue": "$2.9B",
-      "growth": "25.7%",
+      "revenue": "$3.1B",
+      "growth": "27.0%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -29205,6 +29222,22 @@
       "reason": "mcap=0.21B < $2B (Small-Cap)"
     },
     {
+      "ticker": "GOTO.JK",
+      "status": "ok",
+      "file": "GOTO.JK.json",
+      "revenue": "$19432.8B",
+      "growth": "26.3%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "GOTU",
       "status": "skipped-mcap",
       "reason": "mcap=0.47B < $2B (Small-Cap)"
@@ -29263,27 +29296,11 @@
       "reason": "mcap=0.07B < $2B (Small-Cap)"
     },
     {
-      "ticker": "GOTO.JK",
-      "status": "ok",
-      "file": "GOTO.JK.json",
-      "revenue": "$19432.8B",
-      "growth": "26.3%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
       "ticker": "GPN",
       "status": "ok",
       "file": "GPN.json",
       "revenue": "$8.9B",
-      "growth": "64.2%",
+      "growth": "63.1%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -31117,7 +31134,7 @@
       "status": "ok",
       "file": "HWC.json",
       "revenue": "$1.4B",
-      "growth": "-20.9%",
+      "growth": "-21.1%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 0,
@@ -32434,7 +32451,7 @@
       "status": "ok",
       "file": "IREN.json",
       "revenue": "$0.8B",
-      "growth": "-2.2%",
+      "growth": "0.0%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -32497,8 +32514,8 @@
       "ticker": "ISP.MI",
       "status": "ok",
       "file": "ISP.MI.json",
-      "revenue": "$25.3B",
-      "growth": "0.0%",
+      "revenue": "$25.7B",
+      "growth": "8.5%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 0,
@@ -33242,6 +33259,22 @@
       }
     },
     {
+      "ticker": "KBANK.BK",
+      "status": "ok",
+      "file": "KBANK.BK.json",
+      "revenue": "$154.9B",
+      "growth": "1.1%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 0,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 0
+      }
+    },
+    {
       "ticker": "KBC.BR",
       "status": "ok",
       "file": "KBC.BR.json",
@@ -33287,22 +33320,6 @@
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "KBANK.BK",
-      "status": "ok",
-      "file": "KBANK.BK.json",
-      "revenue": "$154.9B",
-      "growth": "1.1%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 0,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 0
       }
     },
     {
@@ -33860,7 +33877,7 @@
       "status": "ok",
       "file": "KOF.json",
       "revenue": "$292.5B",
-      "growth": "1.6%",
+      "growth": "1.1%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -35136,6 +35153,22 @@
       }
     },
     {
+      "ticker": "LOGN.SW",
+      "status": "ok",
+      "file": "LOGN.SW.json",
+      "revenue": "$4.8B",
+      "growth": "7.4%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "LONN.SW",
       "status": "ok",
       "file": "LONN.SW.json",
@@ -35294,22 +35327,6 @@
       "file": "LSCC.json",
       "revenue": "$0.6B",
       "growth": "42.2%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "LOGN.SW",
-      "status": "ok",
-      "file": "LOGN.SW.json",
-      "revenue": "$4.8B",
-      "growth": "7.4%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -35801,7 +35818,7 @@
         "annualRev": 4,
         "annualOpInc": 4,
         "annualNetIncome": 4,
-        "annualGP": 4,
+        "annualGP": 0,
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 5
@@ -37338,7 +37355,7 @@
       "status": "ok",
       "file": "MSGS.json",
       "revenue": "$1.1B",
-      "growth": "12.8%",
+      "growth": "1.9%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -37353,8 +37370,8 @@
       "ticker": "MSI",
       "status": "ok",
       "file": "MSI.json",
-      "revenue": "$11.7B",
-      "growth": "12.3%",
+      "revenue": "$11.9B",
+      "growth": "7.4%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -38185,6 +38202,22 @@
       }
     },
     {
+      "ticker": "NESTE.HE",
+      "status": "ok",
+      "file": "NESTE.HE.json",
+      "revenue": "$19.2B",
+      "growth": "2.9%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 4
+      }
+    },
+    {
       "ticker": "NET",
       "status": "ok",
       "file": "NET.json",
@@ -38374,22 +38407,6 @@
       "ticker": "NGS",
       "status": "skipped-mcap",
       "reason": "mcap=0.49B < $2B (Small-Cap)"
-    },
-    {
-      "ticker": "NESTE.HE",
-      "status": "ok",
-      "file": "NESTE.HE.json",
-      "revenue": "$19.2B",
-      "growth": "2.9%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 4
-      }
     },
     {
       "ticker": "NGVC",
@@ -38682,8 +38699,8 @@
       "ticker": "NNI",
       "status": "ok",
       "file": "NNI.json",
-      "revenue": "$1.7B",
-      "growth": "-4.8%",
+      "revenue": "$1.6B",
+      "growth": "-7.1%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 0,
@@ -39612,6 +39629,22 @@
       }
     },
     {
+      "ticker": "NXT.AX",
+      "status": "ok",
+      "file": "NXT.AX.json",
+      "revenue": "$0.5B",
+      "growth": "12.8%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 0,
+        "opIncQ": 0
+      }
+    },
+    {
       "ticker": "NXT.L",
       "status": "ok",
       "file": "NXT.L.json",
@@ -39665,6 +39698,22 @@
       }
     },
     {
+      "ticker": "O39.SI",
+      "status": "ok",
+      "file": "O39.SI.json",
+      "revenue": "$14.1B",
+      "growth": "4.9%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 0,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 0
+      }
+    },
+    {
       "ticker": "OA",
       "status": "ok",
       "file": "OA.json",
@@ -39699,38 +39748,6 @@
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "NXT.AX",
-      "status": "ok",
-      "file": "NXT.AX.json",
-      "revenue": "$0.5B",
-      "growth": "12.8%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 0,
-        "opIncQ": 0
-      }
-    },
-    {
-      "ticker": "O39.SI",
-      "status": "ok",
-      "file": "O39.SI.json",
-      "revenue": "$14.1B",
-      "growth": "4.9%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 0,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 0
       }
     },
     {
@@ -40863,8 +40880,8 @@
       "ticker": "PAGP",
       "status": "ok",
       "file": "PAGP.json",
-      "revenue": "$44.3B",
-      "growth": "-12.2%",
+      "revenue": "$45.3B",
+      "growth": "8.7%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -41309,7 +41326,7 @@
       "status": "ok",
       "file": "PDFS.json",
       "revenue": "$0.2B",
-      "growth": "24.6%",
+      "growth": "25.9%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -42425,8 +42442,8 @@
       "ticker": "PPL",
       "status": "ok",
       "file": "PPL.json",
-      "revenue": "$9.0B",
-      "growth": "2.8%",
+      "revenue": "$9.3B",
+      "growth": "10.8%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -42674,6 +42691,22 @@
       }
     },
     {
+      "ticker": "PRX.AS",
+      "status": "ok",
+      "file": "PRX.AS.json",
+      "revenue": "$6.8B",
+      "growth": "22.3%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 0,
+        "opIncQ": 0
+      }
+    },
+    {
       "ticker": "PRY.AX",
       "status": "ok",
       "file": "PRY.AX.json",
@@ -42725,22 +42758,6 @@
       "ticker": "PSEC",
       "status": "skipped-mcap",
       "reason": "mcap=1.24B < $2B (Small-Cap)"
-    },
-    {
-      "ticker": "PRX.AS",
-      "status": "ok",
-      "file": "PRX.AS.json",
-      "revenue": "$6.8B",
-      "growth": "22.3%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 0,
-        "opIncQ": 0
-      }
     },
     {
       "ticker": "PSEM",
@@ -42971,6 +42988,22 @@
       "reason": "mcap=1.71B < $2B (Small-Cap)"
     },
     {
+      "ticker": "PTT.BK",
+      "status": "ok",
+      "file": "PTT.BK.json",
+      "revenue": "$2662.1B",
+      "growth": "-11.9%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "PUB.PA",
       "status": "ok",
       "file": "PUB.PA.json",
@@ -42992,22 +43025,6 @@
       "file": "PUM.DE.json",
       "revenue": "$7.2B",
       "growth": "-6.3%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "PTT.BK",
-      "status": "ok",
-      "file": "PTT.BK.json",
-      "revenue": "$2662.1B",
-      "growth": "-11.9%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -44536,8 +44553,8 @@
       "ticker": "ROAD",
       "status": "ok",
       "file": "ROAD.json",
-      "revenue": "$3.1B",
-      "growth": "44.1%",
+      "revenue": "$3.3B",
+      "growth": "34.6%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -46679,6 +46696,22 @@
       }
     },
     {
+      "ticker": "SIKA.SW",
+      "status": "ok",
+      "file": "SIKA.SW.json",
+      "revenue": "$11.2B",
+      "growth": "-7.9%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 4,
+        "opIncQ": 0
+      }
+    },
+    {
       "ticker": "SIRI",
       "status": "ok",
       "file": "SIRI.json",
@@ -46793,22 +46826,6 @@
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 0,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 4,
-        "opIncQ": 0
-      }
-    },
-    {
-      "ticker": "SIKA.SW",
-      "status": "ok",
-      "file": "SIKA.SW.json",
-      "revenue": "$11.2B",
-      "growth": "-7.9%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
         "annualNetIncome": 4,
         "annualGP": 4,
         "annualFCF": 4,
@@ -47593,7 +47610,7 @@
       "status": "ok",
       "file": "SOUN.json",
       "revenue": "$0.2B",
-      "growth": "59.4%",
+      "growth": "51.7%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -48989,7 +49006,7 @@
       "status": "ok",
       "file": "T.TO.json",
       "revenue": "$20.3B",
-      "growth": "-1.9%",
+      "growth": "-0.6%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -48998,22 +49015,6 @@
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "TAB.L",
-      "status": "ok",
-      "file": "TAB.L.json",
-      "revenue": "no-rev",
-      "growth": "-",
-      "completeness": {
-        "annualRev": 0,
-        "annualOpInc": 0,
-        "annualNetIncome": 0,
-        "annualGP": 0,
-        "annualFCF": 4,
-        "revenueQ": 0,
-        "opIncQ": 0
       }
     },
     {
@@ -49349,7 +49350,7 @@
       "status": "ok",
       "file": "TDS.json",
       "revenue": "$1.2B",
-      "growth": "12.0%",
+      "growth": "-73.2%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -49558,6 +49559,22 @@
       }
     },
     {
+      "ticker": "TEMN.SW",
+      "status": "ok",
+      "file": "TEMN.SW.json",
+      "revenue": "$1.1B",
+      "growth": "8.9%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "TEN",
       "status": "skipped-mcap",
       "reason": "mcap=1.32B < $2B (Small-Cap)"
@@ -49600,22 +49617,6 @@
       "file": "TEO.json",
       "revenue": "$8328.8B",
       "growth": "60.6%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "TEMN.SW",
-      "status": "ok",
-      "file": "TEMN.SW.json",
-      "revenue": "$1.1B",
-      "growth": "8.9%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -50136,6 +50137,22 @@
       }
     },
     {
+      "ticker": "TLKM.JK",
+      "status": "ok",
+      "file": "TLKM.JK.json",
+      "revenue": "$147365.0B",
+      "growth": "-0.9%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "TLRY",
       "status": "skipped-mcap",
       "reason": "mcap=0.66B < $2B (Small-Cap)"
@@ -50289,22 +50306,6 @@
       }
     },
     {
-      "ticker": "TLKM.JK",
-      "status": "ok",
-      "file": "TLKM.JK.json",
-      "revenue": "$147365.0B",
-      "growth": "-0.9%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
       "ticker": "TMV.DE",
       "status": "skipped-mcap",
       "reason": "mcap=0.93B < $2B (Small-Cap)"
@@ -50313,6 +50314,22 @@
       "ticker": "TNDM",
       "status": "skipped-mcap",
       "reason": "mcap=1.06B < $2B (Small-Cap)"
+    },
+    {
+      "ticker": "TNE.AX",
+      "status": "ok",
+      "file": "TNE.AX.json",
+      "revenue": "$0.6B",
+      "growth": "18.0%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 0,
+        "opIncQ": 0
+      }
     },
     {
       "ticker": "TNET",
@@ -50497,22 +50514,6 @@
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "TNE.AX",
-      "status": "ok",
-      "file": "TNE.AX.json",
-      "revenue": "$0.6B",
-      "growth": "18.0%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 0,
-        "opIncQ": 0
       }
     },
     {
@@ -50725,8 +50726,8 @@
       "ticker": "TRN.MI",
       "status": "ok",
       "file": "TRN.MI.json",
-      "revenue": "$4.0B",
-      "growth": "-",
+      "revenue": "$4.1B",
+      "growth": "9.6%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -51033,8 +51034,8 @@
       "ticker": "TTD",
       "status": "ok",
       "file": "TTD.json",
-      "revenue": "$2.9B",
-      "growth": "14.3%",
+      "revenue": "$3.0B",
+      "growth": "11.8%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -51145,7 +51146,7 @@
       "status": "ok",
       "file": "TU.json",
       "revenue": "$20.3B",
-      "growth": "-1.9%",
+      "growth": "-0.6%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -51309,7 +51310,7 @@
       "status": "ok",
       "file": "TX.json",
       "revenue": "$15.6B",
-      "growth": "-2.6%",
+      "growth": "0.0%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -51464,6 +51465,22 @@
       }
     },
     {
+      "ticker": "U11.SI",
+      "status": "ok",
+      "file": "U11.SI.json",
+      "revenue": "$11.6B",
+      "growth": "-4.4%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 0,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 4,
+        "opIncQ": 0
+      }
+    },
+    {
       "ticker": "UAA",
       "status": "ok",
       "file": "UAA.json",
@@ -51565,6 +51582,22 @@
       }
     },
     {
+      "ticker": "UCB.BR",
+      "status": "ok",
+      "file": "UCB.BR.json",
+      "revenue": "$7.7B",
+      "growth": "26.6%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 4,
+        "opIncQ": 0
+      }
+    },
+    {
       "ticker": "UCG.MI",
       "status": "ok",
       "file": "UCG.MI.json",
@@ -51610,38 +51643,6 @@
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "U11.SI",
-      "status": "ok",
-      "file": "U11.SI.json",
-      "revenue": "$11.6B",
-      "growth": "-4.4%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 0,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 4,
-        "opIncQ": 0
-      }
-    },
-    {
-      "ticker": "UCB.BR",
-      "status": "ok",
-      "file": "UCB.BR.json",
-      "revenue": "$7.7B",
-      "growth": "26.6%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 4,
-        "opIncQ": 0
       }
     },
     {
@@ -51740,6 +51741,22 @@
       }
     },
     {
+      "ticker": "UHR.SW",
+      "status": "ok",
+      "file": "UHR.SW.json",
+      "revenue": "$6.3B",
+      "growth": "-2.1%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 0,
+        "opIncQ": 0
+      }
+    },
+    {
       "ticker": "UHS",
       "status": "ok",
       "file": "UHS.json",
@@ -51759,8 +51776,8 @@
       "ticker": "UI",
       "status": "ok",
       "file": "UI.json",
-      "revenue": "$3.0B",
-      "growth": "35.8%",
+      "revenue": "$3.1B",
+      "growth": "18.7%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -51869,22 +51886,6 @@
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "UHR.SW",
-      "status": "ok",
-      "file": "UHR.SW.json",
-      "revenue": "$6.3B",
-      "growth": "-2.1%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 0,
-        "opIncQ": 0
       }
     },
     {
@@ -52026,6 +52027,22 @@
       "reason": "mcap=0.54B < $2B (Small-Cap)"
     },
     {
+      "ticker": "UNVR.JK",
+      "status": "ok",
+      "file": "UNVR.JK.json",
+      "revenue": "$32175.8B",
+      "growth": "2.8%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "UPLD",
       "status": "skipped-mcap",
       "reason": "mcap=0.03B < $2B (Small-Cap)"
@@ -52052,22 +52069,6 @@
       "file": "UPS.json",
       "revenue": "$88.3B",
       "growth": "-1.6%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "UNVR.JK",
-      "status": "ok",
-      "file": "UNVR.JK.json",
-      "revenue": "$32175.8B",
-      "growth": "2.8%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -52300,6 +52301,22 @@
       }
     },
     {
+      "ticker": "V03.SI",
+      "status": "ok",
+      "file": "V03.SI.json",
+      "revenue": "$2.5B",
+      "growth": "-5.8%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 4,
+        "opIncQ": 0
+      }
+    },
+    {
       "ticker": "VABK",
       "status": "skipped-mcap",
       "reason": "mcap=0.23B < $2B (Small-Cap)"
@@ -52435,22 +52452,6 @@
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "V03.SI",
-      "status": "ok",
-      "file": "V03.SI.json",
-      "revenue": "$2.5B",
-      "growth": "-5.8%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 4,
-        "opIncQ": 0
       }
     },
     {
@@ -53374,6 +53375,22 @@
       "reason": "mcap=0.23B < $2B (Small-Cap)"
     },
     {
+      "ticker": "WALMEX.MX",
+      "status": "ok",
+      "file": "WALMEX.MX.json",
+      "revenue": "$1014.8B",
+      "growth": "1.7%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
+    },
+    {
       "ticker": "WAT",
       "status": "ok",
       "file": "WAT.json",
@@ -53395,22 +53412,6 @@
       "file": "WB.json",
       "revenue": "$1.8B",
       "growth": "3.6%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "WALMEX.MX",
-      "status": "ok",
-      "file": "WALMEX.MX.json",
-      "revenue": "$1014.8B",
-      "growth": "1.7%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -54294,8 +54295,8 @@
       "ticker": "WPM",
       "status": "ok",
       "file": "WPM.json",
-      "revenue": "$2.3B",
-      "growth": "127.2%",
+      "revenue": "$2.7B",
+      "growth": "91.6%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -54678,7 +54679,7 @@
       "status": "ok",
       "file": "WULF.json",
       "revenue": "$0.2B",
-      "growth": "2.4%",
+      "growth": "-1.1%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -54937,6 +54938,22 @@
       }
     },
     {
+      "ticker": "XRO.AX",
+      "status": "ok",
+      "file": "XRO.AX.json",
+      "revenue": "$2.3B",
+      "growth": "19.9%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 0,
+        "opIncQ": 0
+      }
+    },
+    {
       "ticker": "XRX",
       "status": "skipped-mcap",
       "reason": "mcap=0.36B < $2B (Small-Cap)"
@@ -55063,41 +55080,14 @@
       }
     },
     {
-      "ticker": "XRO.AX",
-      "status": "ok",
-      "file": "XRO.AX.json",
-      "revenue": "$2.3B",
-      "growth": "19.9%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 0,
-        "opIncQ": 0
-      }
-    },
-    {
       "ticker": "YQ",
       "status": "skipped-mcap",
       "reason": "mcap=0.02B < $2B (Small-Cap)"
     },
     {
       "ticker": "YRD",
-      "status": "ok",
-      "file": "YRD.json",
-      "revenue": "$5.7B",
-      "growth": "-34.1%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
+      "status": "skipped-mcap",
+      "reason": "mcap=0.17B < $2B (Small-Cap)"
     },
     {
       "ticker": "YRIV",
@@ -55155,6 +55145,22 @@
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 5
+      }
+    },
+    {
+      "ticker": "Z74.SI",
+      "status": "ok",
+      "file": "Z74.SI.json",
+      "revenue": "$14.1B",
+      "growth": "0.9%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 4,
+        "opIncQ": 0
       }
     },
     {
@@ -55250,22 +55256,6 @@
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "Z74.SI",
-      "status": "ok",
-      "file": "Z74.SI.json",
-      "revenue": "$14.1B",
-      "growth": "0.9%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 4,
-        "opIncQ": 0
       }
     },
     {
@@ -55415,7 +55405,7 @@
     },
     {
       "ticker": "091990.KQ",
-      "error": "Quote not found for symbol: 091990.KQ"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "091990.KS",
@@ -55515,7 +55505,7 @@
     },
     {
       "ticker": "3682.TW",
-      "error": "Quote not found for symbol: 3682.TW"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "3724.T",
@@ -55559,7 +55549,7 @@
     },
     {
       "ticker": "600837.SS",
-      "error": "Quote not found for symbol: 600837.SS"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "601258.SS",
@@ -55583,7 +55573,7 @@
     },
     {
       "ticker": "6502.T",
-      "error": "Quote not found for symbol: 6502.T"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "656.HK",
@@ -55595,11 +55585,11 @@
     },
     {
       "ticker": "6837.HK",
-      "error": "Quote not found for symbol: 6837.HK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "6967.T",
-      "error": "Quote not found for symbol: 6967.T"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "700.HK",
@@ -55667,7 +55657,7 @@
     },
     {
       "ticker": "9783.T",
-      "error": "Quote not found for symbol: 9783.T"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "992.HK",
@@ -55751,15 +55741,19 @@
     },
     {
       "ticker": "ARCH",
-      "error": "Quote not found for symbol: ARCH"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ARL.DE",
-      "error": "Quote not found for symbol: ARL.DE"
+      "error": "Failed Yahoo Schema validation"
+    },
+    {
+      "ticker": "ASAP",
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ASCL.L",
-      "error": "Quote not found for symbol: ASCL.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "AT.TO",
@@ -55783,7 +55777,7 @@
     },
     {
       "ticker": "ATSG",
-      "error": "Quote not found for symbol: ATSG"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ATUS",
@@ -55799,7 +55793,7 @@
     },
     {
       "ticker": "AVGR",
-      "error": "Quote not found for symbol: AVGR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "AVST.L",
@@ -55811,7 +55805,7 @@
     },
     {
       "ticker": "AYX",
-      "error": "Quote not found for symbol: AYX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "AZA.SW",
@@ -55819,11 +55813,11 @@
     },
     {
       "ticker": "AZPN",
-      "error": "Quote not found for symbol: AZPN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "B4B.DE",
-      "error": "Quote not found for symbol: B4B.DE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "B5A.DE",
@@ -55839,11 +55833,11 @@
     },
     {
       "ticker": "BDEV.L",
-      "error": "Quote not found for symbol: BDEV.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BECN",
-      "error": "Quote not found for symbol: BECN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BEEM.PA",
@@ -55851,7 +55845,7 @@
     },
     {
       "ticker": "BERY",
-      "error": "Quote not found for symbol: BERY"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BHLB",
@@ -55859,7 +55853,7 @@
     },
     {
       "ticker": "BIG",
-      "error": "Quote not found for symbol: BIG"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BIGC",
@@ -55871,15 +55865,15 @@
     },
     {
       "ticker": "BKI",
-      "error": "Quote not found for symbol: BKI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BLD.AX",
-      "error": "Quote not found for symbol: BLD.AX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BLUE",
-      "error": "Quote not found for symbol: BLUE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BPER.MI",
@@ -55891,7 +55885,7 @@
     },
     {
       "ticker": "BRDS",
-      "error": "Quote not found for symbol: BRDS"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BRFS",
@@ -55903,7 +55897,7 @@
     },
     {
       "ticker": "BSIG",
-      "error": "Quote not found for symbol: BSIG"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BSL.MI",
@@ -55923,7 +55917,7 @@
     },
     {
       "ticker": "CDAY",
-      "error": "Quote not found for symbol: CDAY"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CDEV",
@@ -55935,11 +55929,11 @@
     },
     {
       "ticker": "CDXC",
-      "error": "Quote not found for symbol: CDXC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CEIX",
-      "error": "Quote not found for symbol: CEIX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CELG",
@@ -55947,7 +55941,7 @@
     },
     {
       "ticker": "CEQP",
-      "error": "Quote not found for symbol: CEQP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CERN",
@@ -55959,7 +55953,7 @@
     },
     {
       "ticker": "CGG.PA",
-      "error": "Quote not found for symbol: CGG.PA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CHEK",
@@ -55967,11 +55961,11 @@
     },
     {
       "ticker": "CHK",
-      "error": "Quote not found for symbol: CHK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CHR.CO",
-      "error": "Quote not found for symbol: CHR.CO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CIM.AX",
@@ -55995,7 +55989,7 @@
     },
     {
       "ticker": "CMRX",
-      "error": "Quote not found for symbol: CMRX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CNH.MI",
@@ -56023,15 +56017,15 @@
     },
     {
       "ticker": "CPE",
-      "error": "Quote not found for symbol: CPE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CPG.TO",
-      "error": "Quote not found for symbol: CPG.TO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CPTN",
-      "error": "Quote not found for symbol: CPTN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CRCM",
@@ -56051,11 +56045,11 @@
     },
     {
       "ticker": "CSWI",
-      "error": "Quote not found for symbol: CSWI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CTLT",
-      "error": "Quote not found for symbol: CTLT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CTXS",
@@ -56071,7 +56065,7 @@
     },
     {
       "ticker": "CWB.TO",
-      "error": "Quote not found for symbol: CWB.TO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CYBR",
@@ -56079,7 +56073,7 @@
     },
     {
       "ticker": "DADA",
-      "error": "Quote not found for symbol: DADA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DAI.DE",
@@ -56099,7 +56093,7 @@
     },
     {
       "ticker": "DEN",
-      "error": "Quote not found for symbol: DEN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DENN",
@@ -56107,7 +56101,7 @@
     },
     {
       "ticker": "DESP",
-      "error": "Quote not found for symbol: DESP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DEX",
@@ -56115,7 +56109,7 @@
     },
     {
       "ticker": "DFS",
-      "error": "Quote not found for symbol: DFS"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DGOC.L",
@@ -56143,7 +56137,7 @@
     },
     {
       "ticker": "DISH",
-      "error": "Quote not found for symbol: DISH"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DLG.DE",
@@ -56151,11 +56145,11 @@
     },
     {
       "ticker": "DM",
-      "error": "Quote not found for symbol: DM"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DMS",
-      "error": "Quote not found for symbol: DMS"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DNB",
@@ -56167,7 +56161,7 @@
     },
     {
       "ticker": "DOOR",
-      "error": "Quote not found for symbol: DOOR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DPW.DE",
@@ -56199,7 +56193,7 @@
     },
     {
       "ticker": "DUFN.SW",
-      "error": "Quote not found for symbol: DUFN.SW"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DVAX",
@@ -56227,7 +56221,7 @@
     },
     {
       "ticker": "EDR",
-      "error": "Quote not found for symbol: EDR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ELIA.BR",
@@ -56255,11 +56249,11 @@
     },
     {
       "ticker": "ENLC",
-      "error": "Quote not found for symbol: ENLC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ENV",
-      "error": "Quote not found for symbol: ENV"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "EO.PA",
@@ -56271,11 +56265,11 @@
     },
     {
       "ticker": "ERF.TO",
-      "error": "Quote not found for symbol: ERF.TO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ESGR",
-      "error": "Quote not found for symbol: ESGR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ESL.PA",
@@ -56283,15 +56277,15 @@
     },
     {
       "ticker": "ETRN",
-      "error": "Quote not found for symbol: ETRN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "EVA",
-      "error": "Quote not found for symbol: EVA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "EVBG",
-      "error": "Quote not found for symbol: EVBG"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "EVOK",
@@ -56339,7 +56333,7 @@
     },
     {
       "ticker": "FLT",
-      "error": "Quote not found for symbol: FLT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "FOLD",
@@ -56355,7 +56349,7 @@
     },
     {
       "ticker": "FRES",
-      "error": "Quote not found for symbol: FRES"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "FRGE",
@@ -56367,11 +56361,11 @@
     },
     {
       "ticker": "FSR",
-      "error": "Quote not found for symbol: FSR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "FTCH",
-      "error": "Quote not found for symbol: FTCH"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "FYBR",
@@ -56383,7 +56377,7 @@
     },
     {
       "ticker": "GAN",
-      "error": "Quote not found for symbol: GAN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "GBIO",
@@ -56415,7 +56409,7 @@
     },
     {
       "ticker": "GHL",
-      "error": "Quote not found for symbol: GHL"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "GLEN",
@@ -56427,7 +56421,7 @@
     },
     {
       "ticker": "GLT",
-      "error": "Quote not found for symbol: GLT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "GME.PA",
@@ -56471,7 +56465,7 @@
     },
     {
       "ticker": "GUD.AX",
-      "error": "Quote not found for symbol: GUD.AX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "GVD.L",
@@ -56479,7 +56473,7 @@
     },
     {
       "ticker": "HA",
-      "error": "Quote not found for symbol: HA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HBI",
@@ -56491,15 +56485,15 @@
     },
     {
       "ticker": "HCP",
-      "error": "Quote not found for symbol: HCP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HEAR",
-      "error": "Quote not found for symbol: HEAR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HEES",
-      "error": "Quote not found for symbol: HEES"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HEIA",
@@ -56507,7 +56501,7 @@
     },
     {
       "ticker": "HEP",
-      "error": "Quote not found for symbol: HEP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HES",
@@ -56523,7 +56517,7 @@
     },
     {
       "ticker": "HIBB",
-      "error": "Quote not found for symbol: HIBB"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HKW.PA",
@@ -56535,7 +56529,7 @@
     },
     {
       "ticker": "HOLI",
-      "error": "Quote not found for symbol: HOLI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HOLX",
@@ -56575,7 +56569,7 @@
     },
     {
       "ticker": "HUM.L",
-      "error": "Quote not found for symbol: HUM.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HUSA",
@@ -56587,11 +56581,11 @@
     },
     {
       "ticker": "HYZN",
-      "error": "Quote not found for symbol: HYZN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HZNP",
-      "error": "Quote not found for symbol: HZNP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "I",
@@ -56607,7 +56601,7 @@
     },
     {
       "ticker": "ICP.L",
-      "error": "Quote not found for symbol: ICP.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "IG.L",
@@ -56615,7 +56609,7 @@
     },
     {
       "ticker": "IGT",
-      "error": "Quote not found for symbol: IGT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "IHC.AE",
@@ -56631,7 +56625,7 @@
     },
     {
       "ticker": "IMPL",
-      "error": "Quote not found for symbol: IMPL"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "INE.TO",
@@ -56643,7 +56637,7 @@
     },
     {
       "ticker": "INFN",
-      "error": "Quote not found for symbol: INFN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "INFY.L",
@@ -56655,11 +56649,11 @@
     },
     {
       "ticker": "INSI",
-      "error": "Quote not found for symbol: INSI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "INST",
-      "error": "Quote not found for symbol: INST"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "INT",
@@ -56675,7 +56669,7 @@
     },
     {
       "ticker": "IPL.AX",
-      "error": "Quote not found for symbol: IPL.AX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "IPL.TO",
@@ -56703,7 +56697,7 @@
     },
     {
       "ticker": "ITCI",
-      "error": "Quote not found for symbol: ITCI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ITE.L",
@@ -56715,7 +56709,7 @@
     },
     {
       "ticker": "IVAC",
-      "error": "Quote not found for symbol: IVAC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "JAMF",
@@ -56723,7 +56717,7 @@
     },
     {
       "ticker": "JBT",
-      "error": "Quote not found for symbol: JBT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "JBT.AS",
@@ -56735,7 +56729,7 @@
     },
     {
       "ticker": "JET.L",
-      "error": "Quote not found for symbol: JET.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "JFRO",
@@ -56755,7 +56749,7 @@
     },
     {
       "ticker": "JNPR",
-      "error": "Quote not found for symbol: JNPR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "JUNG.DE",
@@ -56763,7 +56757,7 @@
     },
     {
       "ticker": "JWN",
-      "error": "Quote not found for symbol: JWN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "K",
@@ -56771,7 +56765,7 @@
     },
     {
       "ticker": "KAMN",
-      "error": "Quote not found for symbol: KAMN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "KAR",
@@ -56791,7 +56785,7 @@
     },
     {
       "ticker": "KIND-SDB.ST",
-      "error": "Quote not found for symbol: KIND-SDB.ST"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "KNAB.SW",
@@ -56815,7 +56809,7 @@
     },
     {
       "ticker": "KRTX",
-      "error": "Quote not found for symbol: KRTX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "KSS.SW",
@@ -56827,7 +56821,7 @@
     },
     {
       "ticker": "LBPH",
-      "error": "Quote not found for symbol: LBPH"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "LEO.DE",
@@ -56839,7 +56833,7 @@
     },
     {
       "ticker": "LGF-A",
-      "error": "Quote not found for symbol: LGF-A"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "LITTLE",
@@ -56867,15 +56861,15 @@
     },
     {
       "ticker": "LSXMA",
-      "error": "Quote not found for symbol: LSXMA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "LSXMB",
-      "error": "Quote not found for symbol: LSXMB"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "LSXMK",
-      "error": "Quote not found for symbol: LSXMK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "LTON.HE",
@@ -56915,7 +56909,7 @@
     },
     {
       "ticker": "MCBC",
-      "error": "Quote not found for symbol: MCBC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "MCRO.L",
@@ -56923,7 +56917,7 @@
     },
     {
       "ticker": "MDC",
-      "error": "Quote not found for symbol: MDC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "MEAN.SW",
@@ -56979,7 +56973,7 @@
     },
     {
       "ticker": "MHLD",
-      "error": "Quote not found for symbol: MHLD"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "MIDD-IT.MI",
@@ -56987,7 +56981,7 @@
     },
     {
       "ticker": "MIXT",
-      "error": "Quote not found for symbol: MIXT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "MLAB.PA",
@@ -57007,7 +57001,7 @@
     },
     {
       "ticker": "MNK",
-      "error": "Quote not found for symbol: MNK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "MODG",
@@ -57027,7 +57021,7 @@
     },
     {
       "ticker": "MPLN",
-      "error": "Quote not found for symbol: MPLN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "MPP.MI",
@@ -57043,7 +57037,7 @@
     },
     {
       "ticker": "MRO",
-      "error": "Quote not found for symbol: MRO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "MRO.MC",
@@ -57067,15 +57061,15 @@
     },
     {
       "ticker": "MTCR",
-      "error": "Failed Yahoo Schema validation"
+      "error": "Quote not found for symbol: MTCR"
     },
     {
       "ticker": "MTTR",
-      "error": "Quote not found for symbol: MTTR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "MYTE",
-      "error": "Quote not found for symbol: MYTE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NAVI.MI",
@@ -57083,19 +57077,19 @@
     },
     {
       "ticker": "NCM.AX",
-      "error": "Quote not found for symbol: NCM.AX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NEP",
-      "error": "Quote not found for symbol: NEP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NEPT",
-      "error": "Quote not found for symbol: NEPT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NEWR",
-      "error": "Quote not found for symbol: NEWR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NEX.L",
@@ -57123,7 +57117,7 @@
     },
     {
       "ticker": "NOVA",
-      "error": "Quote not found for symbol: NOVA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NOVN",
@@ -57139,7 +57133,7 @@
     },
     {
       "ticker": "NR",
-      "error": "Quote not found for symbol: NR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NRT.AS",
@@ -57155,7 +57149,7 @@
     },
     {
       "ticker": "NUVA",
-      "error": "Quote not found for symbol: NUVA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NUVI.TO",
@@ -57171,7 +57165,7 @@
     },
     {
       "ticker": "NVRO",
-      "error": "Quote not found for symbol: NVRO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NVT.AX",
@@ -57179,11 +57173,11 @@
     },
     {
       "ticker": "NVTA",
-      "error": "Quote not found for symbol: NVTA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NYCB",
-      "error": "Quote not found for symbol: NYCB"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NYMT",
@@ -57195,7 +57189,7 @@
     },
     {
       "ticker": "OFC",
-      "error": "Quote not found for symbol: OFC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "OGC.AX",
@@ -57247,7 +57241,7 @@
     },
     {
       "ticker": "OSTK",
-      "error": "Quote not found for symbol: OSTK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "OXBR.L",
@@ -57263,7 +57257,7 @@
     },
     {
       "ticker": "PACW",
-      "error": "Quote not found for symbol: PACW"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PAH3.L",
@@ -57291,7 +57285,7 @@
     },
     {
       "ticker": "PCRFY",
-      "error": "Quote not found for symbol: PCRFY"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PCSF.L",
@@ -57299,15 +57293,15 @@
     },
     {
       "ticker": "PDCO",
-      "error": "Quote not found for symbol: PDCO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PEAK",
-      "error": "Quote not found for symbol: PEAK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PEPL",
-      "error": "Quote not found for symbol: PEPL"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PER.MI",
@@ -57319,11 +57313,11 @@
     },
     {
       "ticker": "PETQ",
-      "error": "Quote not found for symbol: PETQ"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PFC",
-      "error": "Quote not found for symbol: PFC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PFC.L",
@@ -57331,7 +57325,7 @@
     },
     {
       "ticker": "PFIE",
-      "error": "Quote not found for symbol: PFIE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PGRE",
@@ -57339,7 +57333,7 @@
     },
     {
       "ticker": "PGTI",
-      "error": "Quote not found for symbol: PGTI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PHNX.L",
@@ -57347,7 +57341,7 @@
     },
     {
       "ticker": "PHX",
-      "error": "Quote not found for symbol: PHX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PLATO.OL",
@@ -57363,15 +57357,15 @@
     },
     {
       "ticker": "PNM",
-      "error": "Quote not found for symbol: PNM"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "POLY.L",
-      "error": "Quote not found for symbol: POLY.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "POM.PA",
-      "error": "Quote not found for symbol: POM.PA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PORR.VI",
@@ -57399,7 +57393,7 @@
     },
     {
       "ticker": "PRFT",
-      "error": "Quote not found for symbol: PRFT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PRG.MC",
@@ -57439,19 +57433,19 @@
     },
     {
       "ticker": "PXD",
-      "error": "Quote not found for symbol: PXD"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PYR",
-      "error": "Quote not found for symbol: PYR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "QRTEA",
-      "error": "Quote not found for symbol: QRTEA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "QUOT",
-      "error": "Quote not found for symbol: QUOT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "RB.L",
@@ -57463,11 +57457,11 @@
     },
     {
       "ticker": "RCM",
-      "error": "Quote not found for symbol: RCM"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "RDFN",
-      "error": "Quote not found for symbol: RDFN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "RDSA.L",
@@ -57487,7 +57481,7 @@
     },
     {
       "ticker": "RDW.L",
-      "error": "Quote not found for symbol: RDW.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "RE",
@@ -57527,7 +57521,7 @@
     },
     {
       "ticker": "ROIC",
-      "error": "Quote not found for symbol: ROIC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ROK.DE",
@@ -57535,7 +57529,7 @@
     },
     {
       "ticker": "ROL.L",
-      "error": "Quote not found for symbol: ROL.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "RPC.L",
@@ -57591,7 +57585,7 @@
     },
     {
       "ticker": "SAVE",
-      "error": "Quote not found for symbol: SAVE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SBM.AS",
@@ -57607,7 +57601,7 @@
     },
     {
       "ticker": "SCHN",
-      "error": "Quote not found for symbol: SCHN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SCR.MC",
@@ -57623,11 +57617,11 @@
     },
     {
       "ticker": "SCWX",
-      "error": "Quote not found for symbol: SCWX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SDIG",
-      "error": "Quote not found for symbol: SDIG"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SDRC.L",
@@ -57635,7 +57629,7 @@
     },
     {
       "ticker": "SEAS",
-      "error": "Quote not found for symbol: SEAS"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SEK.L",
@@ -57647,7 +57641,7 @@
     },
     {
       "ticker": "SGEN",
-      "error": "Quote not found for symbol: SGEN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SGFY",
@@ -57655,7 +57649,7 @@
     },
     {
       "ticker": "SGH",
-      "error": "Quote not found for symbol: SGH"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SGM.MI",
@@ -57675,23 +57669,23 @@
     },
     {
       "ticker": "SHCR",
-      "error": "Quote not found for symbol: SHCR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SHYF",
-      "error": "Quote not found for symbol: SHYF"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SILV",
-      "error": "Quote not found for symbol: SILV"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SIX",
-      "error": "Quote not found for symbol: SIX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SJW",
-      "error": "Quote not found for symbol: SJW"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SK.MC",
@@ -57711,11 +57705,11 @@
     },
     {
       "ticker": "SMAR",
-      "error": "Quote not found for symbol: SMAR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SMDS.L",
-      "error": "Quote not found for symbol: SMDS.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SMIH",
@@ -57723,7 +57717,7 @@
     },
     {
       "ticker": "SMLP",
-      "error": "Quote not found for symbol: SMLP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SMS.L",
@@ -57735,7 +57729,7 @@
     },
     {
       "ticker": "SOI",
-      "error": "Quote not found for symbol: SOI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SOL",
@@ -57743,15 +57737,15 @@
     },
     {
       "ticker": "SOW.DE",
-      "error": "Quote not found for symbol: SOW.DE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SP",
-      "error": "Quote not found for symbol: SP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SPLK",
-      "error": "Quote not found for symbol: SPLK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SPLP",
@@ -57783,11 +57777,11 @@
     },
     {
       "ticker": "SQ",
-      "error": "Quote not found for symbol: SQ"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SQSP",
-      "error": "Quote not found for symbol: SQSP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SRDX",
@@ -57847,7 +57841,7 @@
     },
     {
       "ticker": "SUM",
-      "error": "Quote not found for symbol: SUM"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SUMO",
@@ -57855,19 +57849,19 @@
     },
     {
       "ticker": "SVT",
-      "error": "Quote not found for symbol: SVT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SVW.AX",
-      "error": "Quote not found for symbol: SVW.AX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SWAV",
-      "error": "Quote not found for symbol: SWAV"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SWI",
-      "error": "Quote not found for symbol: SWI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SWMA.ST",
@@ -57875,7 +57869,7 @@
     },
     {
       "ticker": "SWN",
-      "error": "Quote not found for symbol: SWN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SXS.L",
@@ -57894,12 +57888,16 @@
       "error": "Quote not found for symbol: SYM.MI"
     },
     {
+      "ticker": "TAB.L",
+      "error": "Failed Yahoo Schema validation"
+    },
+    {
       "ticker": "TASK.PA",
       "error": "Quote not found for symbol: TASK.PA"
     },
     {
       "ticker": "TAST",
-      "error": "Quote not found for symbol: TAST"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TC.MC",
@@ -57911,7 +57909,7 @@
     },
     {
       "ticker": "TCN",
-      "error": "Quote not found for symbol: TCN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TCRR",
@@ -57919,7 +57917,7 @@
     },
     {
       "ticker": "TCS",
-      "error": "Quote not found for symbol: TCS"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TEC.MI",
@@ -57935,7 +57933,7 @@
     },
     {
       "ticker": "TELL",
-      "error": "Quote not found for symbol: TELL"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TEVA.MI",
@@ -57971,7 +57969,7 @@
     },
     {
       "ticker": "TNT.L",
-      "error": "Quote not found for symbol: TNT.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TPM.AX",
@@ -57979,19 +57977,19 @@
     },
     {
       "ticker": "TPX",
-      "error": "Quote not found for symbol: TPX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TRHC",
-      "error": "Quote not found for symbol: TRHC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TRS.AX",
-      "error": "Quote not found for symbol: TRS.AX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TRTN",
-      "error": "Quote not found for symbol: TRTN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TRUE",
@@ -58011,7 +58009,7 @@
     },
     {
       "ticker": "TUI.L",
-      "error": "Quote not found for symbol: TUI.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TVIY",
@@ -58019,7 +58017,7 @@
     },
     {
       "ticker": "TWNK",
-      "error": "Quote not found for symbol: TWNK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "UBI.MI",
@@ -58043,7 +58041,7 @@
     },
     {
       "ticker": "UN01.DE",
-      "error": "Quote not found for symbol: UN01.DE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "UNAVO.AS",
@@ -58107,7 +58105,7 @@
     },
     {
       "ticker": "VGR",
-      "error": "Quote not found for symbol: VGR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "VHM.SW",
@@ -58127,7 +58125,7 @@
     },
     {
       "ticker": "VMW",
-      "error": "Quote not found for symbol: VMW"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "VNT.L",
@@ -58147,11 +58145,11 @@
     },
     {
       "ticker": "VOXX",
-      "error": "Quote not found for symbol: VOXX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "VRN.TO",
-      "error": "Quote not found for symbol: VRN.TO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "VRT.AX",
@@ -58159,7 +58157,7 @@
     },
     {
       "ticker": "VRTV",
-      "error": "Quote not found for symbol: VRTV"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "VRX.L",
@@ -58183,7 +58181,7 @@
     },
     {
       "ticker": "VVI",
-      "error": "Quote not found for symbol: VVI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "WAVE.L",
@@ -58219,11 +58217,11 @@
     },
     {
       "ticker": "WIRE",
-      "error": "Quote not found for symbol: WIRE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "WKME",
-      "error": "Quote not found for symbol: WKME"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "WNS",
@@ -58247,7 +58245,7 @@
     },
     {
       "ticker": "WRK",
-      "error": "Quote not found for symbol: WRK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "WSA.AX",
@@ -58255,11 +58253,11 @@
     },
     {
       "ticker": "WWE",
-      "error": "Quote not found for symbol: WWE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "X",
-      "error": "Quote not found for symbol: X"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "XBC.TO",
@@ -58327,7 +58325,7 @@
     },
     {
       "ticker": "ZI",
-      "error": "Quote not found for symbol: ZI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ZNGA",
@@ -58339,11 +58337,11 @@
     },
     {
       "ticker": "ZUO",
-      "error": "Quote not found for symbol: ZUO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ZYNE",
-      "error": "Quote not found for symbol: ZYNE"
+      "error": "Failed Yahoo Schema validation"
     }
   ]
 }
