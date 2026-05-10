@@ -20,7 +20,13 @@ const REGISTRY = {
   'profitability-trend':        { type: 'CORE', defaultActive: true,  reason: 'DETERIORATING / FLAT / IMPROVING direction (Tag 98)' },
   'hypergrowth-quality-class':{ type: 'CORE', defaultActive: true, reason: 'Tag 112: Real-Hypergrowth vs Q-Spike-Fake Klassifikator (Quarter-Breadth + OI-Direction + Spike-Concentration)' },
 
-  // --- DIAGNOSTIC - Kontext für Deep-Dive --------------------------
+  'earnings-stability':         { type: 'CORE', defaultActive: true,  reason: 'Tag 117: QC v2 MUST 1 - OpInc+FCF positive 4/5 + Recovery' },
+  'quality-compounder-roic':    { type: 'CORE', defaultActive: true,  reason: 'Tag 117: QC v2 MUST 2 - PreTax-ROIC + AssetTurnover-Override' },
+  'margin-quality':             { type: 'CORE', defaultActive: true,  reason: 'Tag 117: QC v2 MUST 3 - GM-Floor + OpMargin-Floor + GM-Decline asymmetrisch' },
+  'reinvestment-rate':          { type: 'CORE', defaultActive: true,  reason: 'Tag 117: QC v2 MUST 4 - Direct (Capex+RnD)/OCF >= 20%' },
+  'premium-compounder-proof':   { type: 'CORE', defaultActive: true,  reason: 'Tag 117: QC v2 - 6er-Proof fuer Conditional FCF-Yield 1.5-3%' },
+
+  // --- DIAGNOSTIC - Kontext fÃ¼r Deep-Dive --------------------------
   'rule-of-x':                  { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Alternative hypergrowth metric, redundant mit Rule-of-40' },
   'stable-quarterly-growth':    { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Growth-pattern indicator - DataGuard-Job geht an revenue-shock-guard' },
   'margin-decay':               { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Erosion-detection im Detail-Modal' },
@@ -30,13 +36,13 @@ const REGISTRY = {
   'insider-ownership':          { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Skin in the game' },
   'quarterly-earnings-stability':{ type: 'DIAGNOSTIC', defaultActive: false, reason: '8Q earnings volatility' },
   'opinc-margin-spike':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Operating margin shock detection' },
-  'drawdown-52w':               { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext für Elliot-Analyse' },
-  'high-proximity-52w':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext für Elliot-Analyse' },
+  'drawdown-52w':               { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },
+  'high-proximity-52w':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },
   'volatility-annualized':      { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Risk context' },
   'above-200d-ma':              { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Trend regime context' },
   'forward-pe':                 { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Forward estimate, not a hard signal' },
   'peg':                        { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Forward estimate, not a hard signal' },
-  'ev-ebitda':                  { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Komplementär zu fcf-yield' },
+  'ev-ebitda':                  { type: 'DIAGNOSTIC', defaultActive: false, reason: 'KomplementÃ¤r zu fcf-yield' },
 
   // --- DATAGUARD - Disqualifiziert auf Fail ------------------------
   'sloan-ratio':                { type: 'DATAGUARD', defaultActive: true, reason: 'Earnings-manipulation detector - fail = skip stock' },
