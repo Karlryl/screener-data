@@ -57,7 +57,7 @@ const MODES = {
       // Tag 112: Hypergrowth-Quality-Klassifikator als HARD-FILTER (Q_SPIKE_FAKE und LOW_BASE_EFFECT raus)
       { id: 'hypergrowth-quality-class', required: false, weight: 'prefer', storyHint: 'echtes Hypergrowth-Pattern' }
     ],
-    dataGuards: ['revenue-shock-guard', 'sloan-ratio', 'q-spike-dataguard'],
+    dataGuards: ['revenue-shock-guard', 'sloan-ratio', 'q-spike-dataguard', 'forecast-contamination-guard', 'quarter-concentration-guard', 'deceleration-guard'],
     excludeSectors: SECTOR_EXCLUDE_HYPERGROWTH,
     storyTemplate: '{ticker} â Hypergrowth: {coreSummary}. {warnings}',
     defaultSortMethod: 'rule-of-x'
@@ -81,7 +81,7 @@ const MODES = {
       { id: 'net-debt-ebitda', required: true, weight: 'must', storyHint: 'Net-Debt/EBITDA <= 2.5' },
       { id: 'above-200d-ma', required: false, weight: 'prefer', storyHint: 'positiver Trend' }
     ],
-    dataGuards: ['asset-growth-divergence', 'sloan-ratio', 'working-capital-anomaly'],
+    dataGuards: ['asset-growth-divergence', 'sloan-ratio', 'working-capital-anomaly', 'forecast-contamination-guard'],
     softWarnings: [],
     excludeSectors: SECTOR_EXCLUDE_QC,  // Tag 117: erweiterte Excludes
     mcapFloor: 5e9,  // Tag 117: 5B Mcap-Floor fuer Quality-Compounder
