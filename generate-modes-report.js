@@ -206,7 +206,22 @@ function renderRow(ev, i, modeId, sortMethodId) {
   const fcfMargin = (r40 && r40.computable && r40.components && Number.isFinite(r40.components.fcfMargin)) ? r40.components.fcfMargin : -999;
   const revGrowth = (r40 && r40.computable && r40.components && Number.isFinite(r40.components.growth)) ? r40.components.growth : -999;
 
-  return `<div class="row" data-stock="${escHtml(JSON.stringify(stock))}" data-af-url="${afUrl}" target="_blank" rel="noopener" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}">
+// Tag 114-fix: minimal stock data for modal (avoid HTML bloat)
+  const stockSlim = {
+    meta: { ticker: ticker, name: name, sector: sector,
+            industry: (s.meta && s.meta.industry) || '',
+            country: (s.meta && s.meta.country) || '',
+            marketCap: mcap },
+    timeseries: { revenueQ: ((s.timeseries && s.timeseries.revenueQ) || []).slice(0, 8) },
+    annual: {
+      annualRev: ((s.annual && s.annual.annualRev) || []).slice(0, 5),
+      annualOpInc: ((s.annual && s.annual.annualOpInc) || []).slice(0, 5),
+      annualFcf: ((s.annual && s.annual.annualFcf) || []).slice(0, 5)
+    },
+    metrics: { revenueGrowthYoY: (s.metrics && s.metrics.revenueGrowthYoY) || null }
+  };
+
+    return `<div class="row" data-stock="${escHtml(JSON.stringify(stockSlim))}" data-af-url="${afUrl}" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}">
     <span class="r-rank">${String(i+1).padStart(3, '0')}</span>
     <span class="r-tk">${escHtml(ticker)}</span>
     <span class="r-name">${escHtml(name.slice(0, 36))}${name.length>36?'…':''}</span>
