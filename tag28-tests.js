@@ -145,12 +145,12 @@ test('GM-Stability: fail case (volatile margins)', () => {
   if (r.pass) throw new Error('should fail');
 });
 
-// Tag 117: 34 Methoden total (5 QC v2) (Tag 113: q-spike-dataguard neu) (Tag 112: hypergrowth-quality-class) (Tag 107: rule-of-x)
-test('Runner: getMethods returns 34 methods', () => {
+// Tag 118: 37 Methoden total (+ 3 DataGuards) (5 QC v2) (Tag 113: q-spike-dataguard neu) (Tag 112: hypergrowth-quality-class) (Tag 107: rule-of-x)
+test('Runner: getMethods returns 37 methods', () => {
   const methods = Runner.getMethods();
-  assertEq(methods.length, 34);
+  assertEq(methods.length, 37);
   const ids = methods.map(m => m.id).sort();
-  assertEq(ids, ['above-200d-ma','capex-trend','drawdown-52w','earnings-stability','ev-ebitda','fcf-yield','forward-pe','gross-margin-stability','high-proximity-52w','hypergrowth-quality-class','insider-ownership','margin-decay','margin-quality','net-debt-ebitda','opinc-margin-spike','peg','premium-compounder-proof','profitability-state','profitability-trend','q-spike-dataguard','quality-compounder-roic','quarterly-earnings-stability','quarterly-rev-acceleration','reinvestment-rate','revenue-growth-3y','revenue-shock-guard','roic','rule-of-40','rule-of-x','sbc-revenue','sloan-ratio','stable-quarterly-growth','volatility-annualized','working-capital-anomaly']);
+  assertEq(ids, ['above-200d-ma','capex-trend','deceleration-guard','drawdown-52w','earnings-stability','ev-ebitda','fcf-yield','forecast-contamination-guard','forward-pe','gross-margin-stability','high-proximity-52w','hypergrowth-quality-class','insider-ownership','margin-decay','margin-quality','net-debt-ebitda','opinc-margin-spike','peg','premium-compounder-proof','profitability-state','profitability-trend','q-spike-dataguard','quality-compounder-roic','quarter-concentration-guard','quarterly-earnings-stability','quarterly-rev-acceleration','reinvestment-rate','revenue-growth-3y','revenue-shock-guard','roic','rule-of-40','rule-of-x','sbc-revenue','sloan-ratio','stable-quarterly-growth','volatility-annualized','working-capital-anomaly']);
 });
 
 test('Runner: evaluateStock handles thrown errors', () => {
