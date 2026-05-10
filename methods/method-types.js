@@ -49,7 +49,10 @@ const REGISTRY = {
   'net-debt-ebitda':            { type: 'DATAGUARD', defaultActive: true, reason: 'Solvency floor - fail = skip stock' },
   'asset-growth-divergence':    { type: 'DATAGUARD', defaultActive: true, reason: 'Acquired-growth detector' },
   'revenue-shock-guard':        { type: 'DATAGUARD', defaultActive: true, reason: 'Robust outlier detection auf latest Q-revenue (Tag 98b)' },
-  'q-spike-dataguard':          { type: 'DATAGUARD', defaultActive: true, reason: 'Tag 113: Hard-Filter Q-Spike (>55% Single-Q-Konzentration ODER OI-Severity >3x bei YoY>100%)' }
+  'q-spike-dataguard':          { type: 'DATAGUARD', defaultActive: true, reason: 'Tag 113: Hard-Filter Q-Spike (>55% Single-Q-Konzentration ODER OI-Severity >3x bei YoY>100%)' },
+  'forecast-contamination-guard':{ type: 'DATAGUARD', defaultActive: true, reason: 'Tag 118: Yahoo annualRev[0] Forecast-Contamination Cross-Check' },
+  'quarter-concentration-guard': { type: 'DATAGUARD', defaultActive: true, reason: 'Tag 118: Single-Q-Konzentration <=50% (Hypergrowth-spezifisch)' },
+  'deceleration-guard':         { type: 'DATAGUARD', defaultActive: true, reason: 'Tag 118: Q-YoY << TTM-Growth Deceleration (Hypergrowth)' },
 };
 
 // Disabled (Tag 97a + Tag 98)
