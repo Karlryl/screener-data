@@ -206,7 +206,7 @@ function renderRow(ev, i, modeId, sortMethodId) {
   const fcfMargin = (r40 && r40.computable && r40.components && Number.isFinite(r40.components.fcfMargin)) ? r40.components.fcfMargin : -999;
   const revGrowth = (r40 && r40.computable && r40.components && Number.isFinite(r40.components.growth)) ? r40.components.growth : -999;
 
-  return `<a class="row" href="${afUrl}" target="_blank" rel="noopener" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}">
+  return `<div class="row" data-stock="${escHtml(JSON.stringify(stock))}" data-af-url="${afUrl}" target="_blank" rel="noopener" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}">
     <span class="r-rank">${String(i+1).padStart(3, '0')}</span>
     <span class="r-tk">${escHtml(ticker)}</span>
     <span class="r-name">${escHtml(name.slice(0, 36))}${name.length>36?'…':''}</span>
@@ -216,7 +216,7 @@ function renderRow(ev, i, modeId, sortMethodId) {
     <span class="r-spark">${spark}</span>
     <span class="r-val">${escHtml(sortValStr)}</span>
     <span class="r-mcap">${fmtMoney(mcap)}</span>
-  </a>`;
+  </div>`;
 }
 
 function renderModeContent(modeId, eligible, topN) {
@@ -654,6 +654,28 @@ function buildHtml(evaluated, topN) {
     .r-tk { font-size: 13px; }
     .r-val { font-size: 14px; }
   }
+
+/* Tag 114: Stock-Detail-Modal */
+.row { cursor: pointer; }
+#stockModalBackdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999; display: none; }
+#stockModalBackdrop.show { display: block; }
+#stockModalPanel { position: fixed; top: 0; right: 0; width: 720px; max-width: 95vw; height: 100vh; background: #1a1a1a; z-index: 1000; transform: translateX(100%); transition: transform .25s ease; overflow-y: auto; padding: 24px 28px; box-shadow: -8px 0 32px rgba(0,0,0,0.5); }
+#stockModalPanel.show { transform: translateX(0); }
+#stockModalClose { position: absolute; top: 16px; right: 20px; background: none; border: 0; color: #999; font-size: 24px; cursor: pointer; }
+#stockModalClose:hover { color: #fff; }
+#stockModalBody h2 { margin: 0 0 4px; font-size: 22px; color: #fff; }
+#stockModalBody .modal-meta { color: #888; font-size: 12px; margin-bottom: 20px; }
+#stockModalBody .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+#stockModalBody .kpi { background: #222; padding: 10px 12px; border-radius: 6px; }
+#stockModalBody .kpi .lbl { color: #888; font-size: 11px; text-transform: uppercase; }
+#stockModalBody .kpi .val { color: #fff; font-size: 17px; font-weight: 600; margin-top: 2px; }
+#stockModalBody .chart-block { margin: 18px 0 6px; }
+#stockModalBody .chart-title { color: #ccc; font-size: 13px; margin-bottom: 4px; }
+#stockModalBody .chart-svg { background: #0f0f0f; border-radius: 4px; }
+#stockModalBody .af-btn { display: inline-block; margin-top: 18px; padding: 10px 16px; background: #d97706; color: #fff; border: 0; border-radius: 6px; cursor: pointer; font-size: 13px; }
+#stockModalBody .af-btn:hover { background: #b45309; }
+#modalToast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 20px; border-radius: 6px; z-index: 1100; opacity: 0; transition: opacity .2s; pointer-events: none; }
+#modalToast.show { opacity: 1; }
 </style>
 </head>
 <body>
@@ -743,7 +765,72 @@ function buildHtml(evaluated, topN) {
 
   document.querySelectorAll('.range-input').forEach(input => {
     syncSliderLabel(input);
-    input.addEventListener('input', () => {
+// Tag 114: Modal-Render
+    function fmtM(v) { if (v == null || !isFinite(v)) return "n/a"; var n = Math.abs(v); if (n >= 1e9) return (v/1e9).toFixed(2) + "B"; if (n >= 1e6) return (v/1e6).toFixed(1) + "M"; return v.toFixed(0); }
+    function fmtP(v) { return (v==null||!isFinite(v)) ? "n/a" : v.toFixed(1) + "%"; }
+    function fmtMC(v) { return fmtM(v); }
+    function spk(values, w, h, color) {
+      if (!values || !values.length) return "";
+      w = w || 280; h = h || 60; color = color || "#fbbf24";
+      var min = Math.min.apply(null, values), max = Math.max.apply(null, values);
+      var range = (max - min) || 1;
+      var pts = values.map(function(v, i) {
+        var x = (i / (values.length-1 || 1)) * (w-4) + 2;
+        var y = h - 2 - ((v - min) / range) * (h-4);
+        return x.toFixed(1) + "," + y.toFixed(1);
+      });
+      return '<svg class="chart-svg" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'"><polyline fill="none" stroke="'+color+'" stroke-width="2" points="'+pts.join(" ")+'"/></svg>';
+    }
+    function tst(msg) {
+      var el = document.getElementById("modalToast");
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.add("show");
+      setTimeout(function(){ el.classList.remove("show"); }, 1800);
+    }
+    function arrVals(a) { if (!Array.isArray(a)) return []; return a.map(function(x){ return typeof x === "number" ? x : (x && x.value); }).filter(function(v){ return isFinite(v); }); }
+    function openStockModal(stock, afUrl) {
+      var b = document.getElementById("stockModalBody");
+      if (!b) return;
+      var m = stock.meta || {};
+      var ts = stock.timeseries || {};
+      var ann = stock.annual || {};
+      var revQ = arrVals(ts.revenueQ).slice().reverse();
+      var revA = arrVals(ann.annualRev).slice().reverse();
+      var oiA = arrVals(ann.annualOpInc).slice().reverse();
+      var fcfA = arrVals(ann.annualFcf).slice().reverse();
+      var mcap = (typeof m.marketCap === "number") ? m.marketCap : (m.marketCap && m.marketCap.value);
+      var html = '<h2>' + (m.ticker || "?") + ' &middot; ' + (m.name || "") + '</h2>';
+      html += '<div class="modal-meta">' + (m.sector || "") + ' &middot; ' + (m.industry || "") + ' &middot; ' + (m.country || "") + '</div>';
+      html += '<div class="kpi-grid">';
+      html += '<div class="kpi"><div class="lbl">Market Cap</div><div class="val">' + fmtMC(mcap) + '</div></div>';
+      html += '<div class="kpi"><div class="lbl">Rev TTM</div><div class="val">' + fmtM(revA[revA.length-1]) + '</div></div>';
+      html += '<div class="kpi"><div class="lbl">YoY</div><div class="val">' + fmtP(stock.metrics && stock.metrics.revenueGrowthYoY) + '</div></div>';
+      html += '</div>';
+      html += '<div class="chart-block"><div class="chart-title">Revenue (annual, 5y)</div>' + spk(revA.slice(-5), 640, 90, "#fbbf24") + '</div>';
+      html += '<div class="chart-block"><div class="chart-title">Revenue (quarterly, 8Q)</div>' + spk(revQ.slice(-8), 640, 90, "#60a5fa") + '</div>';
+      html += '<div class="chart-block"><div class="chart-title">Operating Income (annual, 5y)</div>' + spk(oiA.slice(-5), 640, 90, "#10b981") + '</div>';
+      html += '<div class="chart-block"><div class="chart-title">Free Cash Flow (annual, 5y)</div>' + spk(fcfA.slice(-5), 640, 90, "#a78bfa") + '</div>';
+      if (afUrl) html += '<button class="af-btn" data-af="' + afUrl + '">Aktienfinder oeffnen</button>';
+      b.innerHTML = html;
+      var afBtn = b.querySelector(".af-btn");
+      if (afBtn) afBtn.addEventListener("click", function(){ window.open(afBtn.dataset.af, "_blank"); });
+      document.getElementById("stockModalBackdrop").classList.add("show");
+      document.getElementById("stockModalPanel").classList.add("show");
+      document.getElementById("stockModalPanel").setAttribute("aria-hidden", "false");
+    }
+    function closeStockModal() {
+      var bd = document.getElementById("stockModalBackdrop");
+      var pn = document.getElementById("stockModalPanel");
+      if (bd) bd.classList.remove("show");
+      if (pn) { pn.classList.remove("show"); pn.setAttribute("aria-hidden", "true"); }
+    }
+    document.addEventListener("click", function(e) {
+      if (e.target.id === "stockModalBackdrop" || e.target.id === "stockModalClose") closeStockModal();
+    });
+    document.addEventListener("keydown", function(e) { if (e.key === "Escape") closeStockModal(); });
+
+        input.addEventListener('input', () => {
       if (input.dataset.slider === 'mcap-min') {
         const max = document.querySelector('.range-input[data-mode="' + input.dataset.mode + '"][data-slider="mcap-max"]');
         if (max && parseFloat(input.value) > parseFloat(max.value)) input.value = max.value;
@@ -793,7 +880,13 @@ function buildHtml(evaluated, topN) {
       applyFilters(mode);
       return;
     }
-    if (t.classList && t.classList.contains('reset-btn')) {
+    var row = t.closest && t.closest('.row');
+      if (row && row.dataset.stock) {
+        e.preventDefault();
+        try { openStockModal(JSON.parse(row.dataset.stock), row.dataset.afUrl); } catch (err) { console.error(err); }
+        return;
+      }
+      if (t.classList && t.classList.contains('reset-btn')) {
       const mode = t.dataset.mode;
       const root = document.querySelector('.filters[data-mode="' + mode + '"]');
       root.querySelectorAll('.ps-btn').forEach(b => b.classList.remove('ps-active'));
@@ -813,6 +906,13 @@ function buildHtml(evaluated, topN) {
 })();
 </script>
 
+
+<div id="stockModalBackdrop"></div>
+<aside id="stockModalPanel" role="dialog" aria-hidden="true">
+  <button id="stockModalClose" aria-label="Schliessen">&times;</button>
+  <div id="stockModalBody"></div>
+</aside>
+<div id="modalToast"></div>
 </body></html>`;
 }
 
