@@ -5,7 +5,7 @@
  * Erkennt: improving, stable, deteriorating, oder n/a (zu wenig Daten).
  */
 
-const HISTORY_WINDOW = 12;            // letzte 12 Runs behalten
+const HISTORY_WINDOW = 8;            // Tag 119: 12 -> 8 to keep alert-state.json bounded
 const MIN_FOR_TREND = 3;              // ab 3 Datenpunkten wird Trend berechnet
 const IMPROVE_PCT = 0.10;             // ≥10% Verbesserung über min vs. max → improving
 const DETERIORATE_PCT = 0.10;         // ≥10% Verschlechterung → deteriorating
