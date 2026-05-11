@@ -64,7 +64,7 @@ function loadState(statePath) {
 }
 
 function saveState(statePath, state) {
-  fs.writeFileSync(statePath, JSON.stringify(state, null, 2));
+  fs.writeFileSync(statePath, JSON.stringify(state)); // Tag 119: no pretty-print (saves ~50% size)
 }
 
 // ─── Diff-Detector ────────────────────────────────────────────────
