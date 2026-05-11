@@ -35,6 +35,7 @@ function parseArgs(argv) {
 // Yahoo-vordefinierte Screener (geographisch/thematisch breit)
 // Liste keine Banken/REITs/Insurance — die fliegen sowieso im Modus-Filter raus,
 // aber wir minimieren Pull-Last.
+// Tag 116: Erweitert auf 13 Buckets (mehr Coverage)
 const SCREENER_IDS = [
   'most_actives',                  // Volume-leaders weltweit
   'day_gainers',                   // momentum candidates
@@ -43,18 +44,26 @@ const SCREENER_IDS = [
   'aggressive_small_caps',         // potential mid-cap upgrades
   'small_cap_gainers',
   'undervalued_large_caps',
-  'high_yield_bond',               // skip but check
-  'top_mutual_funds',              // skip but check
+  'most_shorted_stocks',           // Tag 116: contrarian/short-squeeze
+  'portfolio_anchors',             // Tag 116: large-cap quality
+  'solid_large_growth_funds',      // Tag 116: large-growth
+  'solid_midcap_growth_funds',     // Tag 116: midcap-growth
+  'conservative_foreign_funds',    // Tag 116: international
+  'high_yield_bond',               // skip but kept for coverage
 ];
+
+// Tag 116: Multi-Region Pull — Yahoo screener region-aware
+const REGIONS = ['US', 'GB', 'DE', 'FR', 'HK', 'JP', 'AU', 'CA'];
 
 async function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-async function fetchScreener(id) {
+async function fetchScreener(id, region) {
+  region = region || 'US';
   try {
-    const r = await yf.screener({ scrIds: id, count: 250, region: 'US' });
+    const r = await yf.screener({ scrIds: id, count: 250, region: region });
     return (r && r.quotes) || [];
   } catch (e) {
-    console.warn(`  WARN screener ${id}: ${e.message}`);
+    // Manche Screener-IDs nur in bestimmten Regionen verfuegbar - silent fail
     return [];
   }
 }
@@ -75,30 +84,35 @@ async function main() {
   const existing = new Set(wlRaw.stocks.map(s => s.ticker.toUpperCase()));
   console.log('  current size: ' + existing.size);
 
-  // 1. Pull all screener-buckets in parallel
-  console.log('\nPulling Yahoo Screener-Buckets...');
+  // 1. Pull all screener-buckets x regions in parallel
+  // Tag 116: Mcap-Range gesenkt auf $1B (mehr Mid-Cap-Coverage), max bleibt $500B
+  console.log('\nPulling Yahoo Screener-Buckets (Multi-Region)...');
   const allTickers = new Map(); // ticker -> {marketCap, name, sector, exchange}
-  for (const id of SCREENER_IDS) {
-    const quotes = await fetchScreener(id);
-    let kept = 0;
-    for (const q of quotes) {
-      if (!q || !q.symbol) continue;
-      const sym = q.symbol.toUpperCase();
-      const mcap = q.marketCap;
-      if (!mcap || mcap < 2e9 || mcap > 500e9) continue;  // $2B–$500B
-      if (!allTickers.has(sym) || (allTickers.get(sym).marketCap || 0) < mcap) {
-        allTickers.set(sym, {
-          ticker: sym,
-          marketCap: mcap,
-          name: q.longName || q.shortName || '',
-          sector: q.sector || '',
-          exchange: q.fullExchangeName || q.exchange || ''
-        });
+  for (const region of REGIONS) {
+    console.log('  --- Region: ' + region + ' ---');
+    for (const id of SCREENER_IDS) {
+      const quotes = await fetchScreener(id, region);
+      if (quotes.length === 0) continue;
+      let kept = 0;
+      for (const q of quotes) {
+        if (!q || !q.symbol) continue;
+        const sym = q.symbol.toUpperCase();
+        const mcap = q.marketCap;
+        if (!mcap || mcap < 1e9 || mcap > 500e9) continue;  // Tag 116: $1B-$500B
+        if (!allTickers.has(sym) || (allTickers.get(sym).marketCap || 0) < mcap) {
+          allTickers.set(sym, {
+            ticker: sym,
+            marketCap: mcap,
+            name: q.longName || q.shortName || '',
+            sector: q.sector || '',
+            exchange: q.fullExchangeName || q.exchange || ''
+          });
+        }
+        kept++;
       }
-      kept++;
+      if (kept > 0) console.log('    ' + id.padEnd(36) + quotes.length + ' -> ' + kept);
+      await _sleep(300);
     }
-    console.log(`  ${id}: ${quotes.length} → ${kept} kept after Mcap-Filter`);
-    await _sleep(500);
   }
 
   // 2. Filter out Banks/REITs/Insurance (Modus-Logik schließt sie eh aus, kein Pull)
