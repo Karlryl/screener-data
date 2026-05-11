@@ -31,7 +31,9 @@ const SECTOR_EXCLUDE_DEFAULT = [
 const SECTOR_EXCLUDE_HYPERGROWTH = [
   ...SECTOR_EXCLUDE_DEFAULT,
   /\bgold\b|\bsilver\b|\bcopper\b|\bmining\b|\bmetals\b|\bcoal\b/i,
-  /oil & gas|integrated oil|exploration|drilling/i
+  /oil & gas|integrated oil|exploration|drilling/i,
+  // Tag 121e: Healthcare Plans (Insurance) sind keine Hypergrowth-Stocks (OSCR-Fix)
+  /healthcare plans|managed (health )?care|health insurance/i
 ];
 
 // Tag 117: Quality-Compounder erweitert â Konsens nach 5-Runden-Battle
@@ -65,7 +67,7 @@ const MODES = {
     ],
     // Tag 121c: q-spike-dataguard zurueck zu HARD (IONQ-Fix). NVDA bleibt sichtbar weil
     // sein OI nicht dramatisch expandiert (NVDA q-spike=pass, IONQ q-spike=fail OI-Severity 2.7x).
-    dataGuards: ['sloan-ratio', 'forecast-contamination-guard', 'q-spike-dataguard'],
+    dataGuards: ['sloan-ratio', 'forecast-contamination-guard', 'q-spike-dataguard', 'revenue-volatility-guard'],
     // Tag 120d: revenue-shock-guard NACHTRAEGLICH in softGuards (war Hauptursache NVDA in HG nicht sichtbar)
     softGuards: ['revenue-shock-guard', 'quarter-concentration-guard', 'deceleration-guard'],
     excludeSectors: SECTOR_EXCLUDE_HYPERGROWTH,

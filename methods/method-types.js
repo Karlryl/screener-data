@@ -53,6 +53,7 @@ const REGISTRY = {
   'forecast-contamination-guard':{ type: 'DATAGUARD', defaultActive: true, reason: 'Tag 118: Yahoo annualRev[0] Forecast-Contamination Cross-Check' },
   'quarter-concentration-guard': { type: 'DATAGUARD', defaultActive: true, reason: 'Tag 118: Single-Q-Konzentration <=50% (Hypergrowth-spezifisch)' },
   'deceleration-guard':         { type: 'DATAGUARD', defaultActive: true, reason: 'Tag 118: Q-YoY << TTM-Growth Deceleration (Hypergrowth)' },
+  'revenue-volatility-guard':   { type: 'DATAGUARD', defaultActive: true, reason: 'Tag 121e: Faengt SPHR-Pattern - lumpy Annual-Revenue mit -25%+ Single-Year-Decline' },
 };
 
 // Disabled (Tag 97a + Tag 98)
