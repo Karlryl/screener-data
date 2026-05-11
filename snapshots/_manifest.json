@@ -1,9 +1,9 @@
 {
-  "pulled_at": "2026-05-10T16:08:59.776Z",
+  "pulled_at": "2026-05-11T04:41:09.978Z",
   "watchlist_version": "9.0",
   "n_total": 4874,
-  "n_ok": 4137,
-  "n_failed": 737,
+  "n_ok": 4135,
+  "n_failed": 739,
   "results": [
     {
       "ticker": "000001.SZ",
@@ -248,7 +248,7 @@
     {
       "ticker": "000503.SZ",
       "status": "skipped-mcap",
-      "reason": "mcap=1.09B < $2B (Small-Cap)"
+      "reason": "mcap=1.08B < $2B (Small-Cap)"
     },
     {
       "ticker": "000538.SZ",
@@ -525,7 +525,7 @@
     {
       "ticker": "000839.SZ",
       "status": "skipped-mcap",
-      "reason": "mcap=1.83B < $2B (Small-Cap)"
+      "reason": "mcap=1.89B < $2B (Small-Cap)"
     },
     {
       "ticker": "000858.SZ",
@@ -667,7 +667,7 @@
         "annualNetIncome": 4,
         "annualGP": 4,
         "annualFCF": 4,
-        "revenueQ": 4,
+        "revenueQ": 0,
         "opIncQ": 0
       }
     },
@@ -1505,7 +1505,7 @@
     {
       "ticker": "0200.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=1.19B < $2B (Small-Cap)"
+      "reason": "mcap=1.16B < $2B (Small-Cap)"
     },
     {
       "ticker": "0220.HK",
@@ -1755,7 +1755,7 @@
     {
       "ticker": "0354.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=1.14B < $2B (Small-Cap)"
+      "reason": "mcap=1.12B < $2B (Small-Cap)"
     },
     {
       "ticker": "035420.KS",
@@ -1951,8 +1951,19 @@
     },
     {
       "ticker": "0511.HK",
-      "status": "skipped-mcap",
-      "reason": "mcap=0.17B < $2B (Small-Cap)"
+      "status": "ok",
+      "file": "0511.HK.json",
+      "revenue": "$3.2B",
+      "growth": "-2.9%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 0,
+        "opIncQ": 0
+      }
     },
     {
       "ticker": "051910.KS",
@@ -2042,7 +2053,7 @@
     {
       "ticker": "0590.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=1.75B < $2B (Small-Cap)"
+      "reason": "mcap=1.72B < $2B (Small-Cap)"
     },
     {
       "ticker": "0656.HK",
@@ -2175,7 +2186,7 @@
     {
       "ticker": "0719.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=0.55B < $2B (Small-Cap)"
+      "reason": "mcap=0.57B < $2B (Small-Cap)"
     },
     {
       "ticker": "0728.HK",
@@ -2297,7 +2308,7 @@
     {
       "ticker": "0819.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=0.90B < $2B (Small-Cap)"
+      "reason": "mcap=0.92B < $2B (Small-Cap)"
     },
     {
       "ticker": "0823.HK",
@@ -2846,7 +2857,7 @@
     {
       "ticker": "1108.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=0.28B < $2B (Small-Cap)"
+      "reason": "mcap=0.29B < $2B (Small-Cap)"
     },
     {
       "ticker": "1109.HK",
@@ -2867,7 +2878,7 @@
     {
       "ticker": "1112.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=1.20B < $2B (Small-Cap)"
+      "reason": "mcap=1.19B < $2B (Small-Cap)"
     },
     {
       "ticker": "1113.HK",
@@ -2888,7 +2899,7 @@
     {
       "ticker": "1114.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=1.93B < $2B (Small-Cap)"
+      "reason": "mcap=1.92B < $2B (Small-Cap)"
     },
     {
       "ticker": "1120.SR",
@@ -3196,7 +3207,7 @@
     {
       "ticker": "1313.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=1.24B < $2B (Small-Cap)"
+      "reason": "mcap=1.27B < $2B (Small-Cap)"
     },
     {
       "ticker": "1315.HK",
@@ -3302,7 +3313,7 @@
     {
       "ticker": "1368.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=1.53B < $2B (Small-Cap)"
+      "reason": "mcap=1.52B < $2B (Small-Cap)"
     },
     {
       "ticker": "1378.HK",
@@ -3365,7 +3376,7 @@
     {
       "ticker": "1478.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=1.39B < $2B (Small-Cap)"
+      "reason": "mcap=1.37B < $2B (Small-Cap)"
     },
     {
       "ticker": "1530.HK",
@@ -3455,7 +3466,7 @@
     {
       "ticker": "1610.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=0.81B < $2B (Small-Cap)"
+      "reason": "mcap=0.82B < $2B (Small-Cap)"
     },
     {
       "ticker": "1618.HK",
@@ -3476,7 +3487,7 @@
     {
       "ticker": "1635.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=1.17B < $2B (Small-Cap)"
+      "reason": "mcap=1.16B < $2B (Small-Cap)"
     },
     {
       "ticker": "1638.HK",
@@ -3502,7 +3513,7 @@
     {
       "ticker": "1666.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=0.63B < $2B (Small-Cap)"
+      "reason": "mcap=0.62B < $2B (Small-Cap)"
     },
     {
       "ticker": "1668.HK",
@@ -3517,7 +3528,7 @@
     {
       "ticker": "1717.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=0.37B < $2B (Small-Cap)"
+      "reason": "mcap=0.35B < $2B (Small-Cap)"
     },
     {
       "ticker": "1755.HK",
@@ -3740,7 +3751,7 @@
     {
       "ticker": "1858.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=0.53B < $2B (Small-Cap)"
+      "reason": "mcap=0.55B < $2B (Small-Cap)"
     },
     {
       "ticker": "1869.HK",
@@ -3750,7 +3761,7 @@
     {
       "ticker": "1873.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=0.43B < $2B (Small-Cap)"
+      "reason": "mcap=0.42B < $2B (Small-Cap)"
     },
     {
       "ticker": "1876.HK",
@@ -3909,7 +3920,7 @@
     {
       "ticker": "1958.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=1.41B < $2B (Small-Cap)"
+      "reason": "mcap=1.40B < $2B (Small-Cap)"
     },
     {
       "ticker": "196170.KQ",
@@ -4026,7 +4037,7 @@
     {
       "ticker": "2007.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=1.57B < $2B (Small-Cap)"
+      "reason": "mcap=1.63B < $2B (Small-Cap)"
     },
     {
       "ticker": "2010.SR",
@@ -4276,7 +4287,7 @@
     {
       "ticker": "2233.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=0.55B < $2B (Small-Cap)"
+      "reason": "mcap=0.58B < $2B (Small-Cap)"
     },
     {
       "ticker": "2238.HK",
@@ -4302,7 +4313,7 @@
     {
       "ticker": "2247.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=0.54B < $2B (Small-Cap)"
+      "reason": "mcap=0.53B < $2B (Small-Cap)"
     },
     {
       "ticker": "2269.HK",
@@ -4717,12 +4728,12 @@
     {
       "ticker": "2362.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=0.71B < $2B (Small-Cap)"
+      "reason": "mcap=0.72B < $2B (Small-Cap)"
     },
     {
       "ticker": "2371.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=1.94B < $2B (Small-Cap)"
+      "reason": "mcap=1.93B < $2B (Small-Cap)"
     },
     {
       "ticker": "2376.TW",
@@ -4976,8 +4987,19 @@
     },
     {
       "ticker": "2455.TW",
-      "status": "skipped-mcap",
-      "reason": "mcap=1.93B < $2B (Small-Cap)"
+      "status": "ok",
+      "file": "2455.TW.json",
+      "revenue": "$3.4B",
+      "growth": "32.8%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
     },
     {
       "ticker": "2474.TW",
@@ -5131,7 +5153,7 @@
     {
       "ticker": "2548.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=1.22B < $2B (Small-Cap)"
+      "reason": "mcap=1.28B < $2B (Small-Cap)"
     },
     {
       "ticker": "2603.TW",
@@ -5152,7 +5174,7 @@
     {
       "ticker": "2606.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=1.70B < $2B (Small-Cap)"
+      "reason": "mcap=1.71B < $2B (Small-Cap)"
     },
     {
       "ticker": "2609.TW",
@@ -5444,7 +5466,7 @@
     {
       "ticker": "2889.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=1.65B < $2B (Small-Cap)"
+      "reason": "mcap=1.66B < $2B (Small-Cap)"
     },
     {
       "ticker": "2890.TW",
@@ -5961,7 +5983,7 @@
     {
       "ticker": "3019.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=1.25B < $2B (Small-Cap)"
+      "reason": "mcap=1.27B < $2B (Small-Cap)"
     },
     {
       "ticker": "3023.TW",
@@ -5998,7 +6020,7 @@
     {
       "ticker": "3035.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=1.44B < $2B (Small-Cap)"
+      "reason": "mcap=1.58B < $2B (Small-Cap)"
     },
     {
       "ticker": "3036.TW",
@@ -6316,7 +6338,7 @@
     {
       "ticker": "3406.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=1.77B < $2B (Small-Cap)"
+      "reason": "mcap=1.78B < $2B (Small-Cap)"
     },
     {
       "ticker": "3407.T",
@@ -6337,7 +6359,7 @@
     {
       "ticker": "3413.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=1.07B < $2B (Small-Cap)"
+      "reason": "mcap=1.05B < $2B (Small-Cap)"
     },
     {
       "ticker": "3431.T",
@@ -6379,7 +6401,7 @@
     {
       "ticker": "3479.T",
       "status": "skipped-mcap",
-      "reason": "mcap=0.44B < $2B (Small-Cap)"
+      "reason": "mcap=0.43B < $2B (Small-Cap)"
     },
     {
       "ticker": "3563.T",
@@ -6400,7 +6422,7 @@
     {
       "ticker": "3596.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=1.22B < $2B (Small-Cap)"
+      "reason": "mcap=1.23B < $2B (Small-Cap)"
     },
     {
       "ticker": "3659.T",
@@ -6437,7 +6459,7 @@
     {
       "ticker": "3673.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=0.74B < $2B (Small-Cap)"
+      "reason": "mcap=0.75B < $2B (Small-Cap)"
     },
     {
       "ticker": "3690.HK",
@@ -6543,7 +6565,7 @@
     {
       "ticker": "3714.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=1.62B < $2B (Small-Cap)"
+      "reason": "mcap=1.55B < $2B (Small-Cap)"
     },
     {
       "ticker": "373220.KS",
@@ -6564,7 +6586,7 @@
     {
       "ticker": "3765.T",
       "status": "skipped-mcap",
-      "reason": "mcap=0.85B < $2B (Small-Cap)"
+      "reason": "mcap=0.92B < $2B (Small-Cap)"
     },
     {
       "ticker": "3800.HK",
@@ -6601,7 +6623,7 @@
     {
       "ticker": "3863.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.12B < $2B (Small-Cap)"
+      "reason": "mcap=1.11B < $2B (Small-Cap)"
     },
     {
       "ticker": "3888.HK",
@@ -7288,7 +7310,7 @@
     {
       "ticker": "4915.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=1.06B < $2B (Small-Cap)"
+      "reason": "mcap=1.05B < $2B (Small-Cap)"
     },
     {
       "ticker": "4922.T",
@@ -7309,7 +7331,7 @@
     {
       "ticker": "4927.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.92B < $2B (Small-Cap)"
+      "reason": "mcap=1.89B < $2B (Small-Cap)"
     },
     {
       "ticker": "4938.TW",
@@ -7447,7 +7469,7 @@
     {
       "ticker": "5232.T",
       "status": "skipped-mcap",
-      "reason": "mcap=0.85B < $2B (Small-Cap)"
+      "reason": "mcap=0.86B < $2B (Small-Cap)"
     },
     {
       "ticker": "5233.T",
@@ -7484,7 +7506,7 @@
     {
       "ticker": "5301.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.70B < $2B (Small-Cap)"
+      "reason": "mcap=1.82B < $2B (Small-Cap)"
     },
     {
       "ticker": "5333.T",
@@ -7521,7 +7543,7 @@
     {
       "ticker": "5388.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=0.79B < $2B (Small-Cap)"
+      "reason": "mcap=0.81B < $2B (Small-Cap)"
     },
     {
       "ticker": "5401.T",
@@ -7590,7 +7612,7 @@
     {
       "ticker": "5703.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.21B < $2B (Small-Cap)"
+      "reason": "mcap=1.20B < $2B (Small-Cap)"
     },
     {
       "ticker": "5706.T",
@@ -8165,7 +8187,7 @@
     {
       "ticker": "600340.SS",
       "status": "skipped-mcap",
-      "reason": "mcap=0.60B < $2B (Small-Cap)"
+      "reason": "mcap=0.61B < $2B (Small-Cap)"
     },
     {
       "ticker": "600346.SS",
@@ -8218,7 +8240,7 @@
     {
       "ticker": "600383.SS",
       "status": "skipped-mcap",
-      "reason": "mcap=1.86B < $2B (Small-Cap)"
+      "reason": "mcap=1.93B < $2B (Small-Cap)"
     },
     {
       "ticker": "600406.SS",
@@ -9407,7 +9429,7 @@
     {
       "ticker": "601388.SS",
       "status": "skipped-mcap",
-      "reason": "mcap=1.24B < $2B (Small-Cap)"
+      "reason": "mcap=1.22B < $2B (Small-Cap)"
     },
     {
       "ticker": "601398.SS",
@@ -9844,7 +9866,7 @@
     {
       "ticker": "601890.SS",
       "status": "skipped-mcap",
-      "reason": "mcap=1.46B < $2B (Small-Cap)"
+      "reason": "mcap=1.45B < $2B (Small-Cap)"
     },
     {
       "ticker": "601898.SS",
@@ -10249,7 +10271,7 @@
     {
       "ticker": "6116.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=0.82B < $2B (Small-Cap)"
+      "reason": "mcap=0.86B < $2B (Small-Cap)"
     },
     {
       "ticker": "6160.HK",
@@ -10270,7 +10292,7 @@
     {
       "ticker": "6176.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=1.49B < $2B (Small-Cap)"
+      "reason": "mcap=1.48B < $2B (Small-Cap)"
     },
     {
       "ticker": "6178.T",
@@ -10291,7 +10313,7 @@
     {
       "ticker": "6196.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=1.22B < $2B (Small-Cap)"
+      "reason": "mcap=1.25B < $2B (Small-Cap)"
     },
     {
       "ticker": "6213.TW",
@@ -10328,7 +10350,7 @@
     {
       "ticker": "6271.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=1.18B < $2B (Small-Cap)"
+      "reason": "mcap=1.20B < $2B (Small-Cap)"
     },
     {
       "ticker": "6273.T",
@@ -10477,7 +10499,7 @@
     {
       "ticker": "6472.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.66B < $2B (Small-Cap)"
+      "reason": "mcap=1.68B < $2B (Small-Cap)"
     },
     {
       "ticker": "6473.T",
@@ -10732,7 +10754,7 @@
     {
       "ticker": "6699.HK",
       "status": "skipped-mcap",
-      "reason": "mcap=1.86B < $2B (Small-Cap)"
+      "reason": "mcap=1.85B < $2B (Small-Cap)"
     },
     {
       "ticker": "6701.T",
@@ -10768,8 +10790,19 @@
     },
     {
       "ticker": "6703.T",
-      "status": "skipped-mcap",
-      "reason": "mcap=1.98B < $2B (Small-Cap)"
+      "status": "ok",
+      "file": "6703.T.json",
+      "revenue": "$427.7B",
+      "growth": "-6.0%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 4,
+        "opIncQ": 0
+      }
     },
     {
       "ticker": "6724.T",
@@ -11114,7 +11147,7 @@
     {
       "ticker": "6905.T",
       "status": "skipped-mcap",
-      "reason": "mcap=0.36B < $2B (Small-Cap)"
+      "reason": "mcap=0.37B < $2B (Small-Cap)"
     },
     {
       "ticker": "6920.T",
@@ -11135,7 +11168,7 @@
     {
       "ticker": "6925.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.80B < $2B (Small-Cap)"
+      "reason": "mcap=1.83B < $2B (Small-Cap)"
     },
     {
       "ticker": "6952.T",
@@ -11252,12 +11285,12 @@
     {
       "ticker": "6995.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.69B < $2B (Small-Cap)"
+      "reason": "mcap=1.71B < $2B (Small-Cap)"
     },
     {
       "ticker": "7004.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.44B < $2B (Small-Cap)"
+      "reason": "mcap=1.42B < $2B (Small-Cap)"
     },
     {
       "ticker": "7010.SR",
@@ -11598,7 +11631,7 @@
     {
       "ticker": "7607.T",
       "status": "skipped-mcap",
-      "reason": "mcap=0.28B < $2B (Small-Cap)"
+      "reason": "mcap=0.27B < $2B (Small-Cap)"
     },
     {
       "ticker": "7733.T",
@@ -11715,7 +11748,7 @@
     {
       "ticker": "7867.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.56B < $2B (Small-Cap)"
+      "reason": "mcap=1.57B < $2B (Small-Cap)"
     },
     {
       "ticker": "7911.T",
@@ -11917,17 +11950,17 @@
     {
       "ticker": "8081.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=0.67B < $2B (Small-Cap)"
+      "reason": "mcap=0.71B < $2B (Small-Cap)"
     },
     {
       "ticker": "8112.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=1.45B < $2B (Small-Cap)"
+      "reason": "mcap=1.39B < $2B (Small-Cap)"
     },
     {
       "ticker": "8114.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=0.47B < $2B (Small-Cap)"
+      "reason": "mcap=0.52B < $2B (Small-Cap)"
     },
     {
       "ticker": "8233.T",
@@ -12209,7 +12242,7 @@
     {
       "ticker": "8628.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.58B < $2B (Small-Cap)"
+      "reason": "mcap=1.56B < $2B (Small-Cap)"
     },
     {
       "ticker": "8630.T",
@@ -12358,7 +12391,7 @@
     {
       "ticker": "8803.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.08B < $2B (Small-Cap)"
+      "reason": "mcap=1.09B < $2B (Small-Cap)"
     },
     {
       "ticker": "8804.T",
@@ -12480,12 +12513,12 @@
     {
       "ticker": "8961.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.77B < $2B (Small-Cap)"
+      "reason": "mcap=1.78B < $2B (Small-Cap)"
     },
     {
       "ticker": "8964.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.54B < $2B (Small-Cap)"
+      "reason": "mcap=1.53B < $2B (Small-Cap)"
     },
     {
       "ticker": "8966.T",
@@ -12521,7 +12554,7 @@
     {
       "ticker": "8975.T",
       "status": "skipped-mcap",
-      "reason": "mcap=0.91B < $2B (Small-Cap)"
+      "reason": "mcap=0.92B < $2B (Small-Cap)"
     },
     {
       "ticker": "8976.T",
@@ -12542,7 +12575,7 @@
     {
       "ticker": "8977.T",
       "status": "skipped-mcap",
-      "reason": "mcap=0.69B < $2B (Small-Cap)"
+      "reason": "mcap=0.70B < $2B (Small-Cap)"
     },
     {
       "ticker": "8979.T",
@@ -12584,12 +12617,12 @@
     {
       "ticker": "8986.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.70B < $2B (Small-Cap)"
+      "reason": "mcap=1.69B < $2B (Small-Cap)"
     },
     {
       "ticker": "8987.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.23B < $2B (Small-Cap)"
+      "reason": "mcap=1.24B < $2B (Small-Cap)"
     },
     {
       "ticker": "9001.T",
@@ -12626,7 +12659,7 @@
     {
       "ticker": "9003.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.73B < $2B (Small-Cap)"
+      "reason": "mcap=1.70B < $2B (Small-Cap)"
     },
     {
       "ticker": "9005.T",
@@ -12711,7 +12744,7 @@
     {
       "ticker": "9010.T",
       "status": "skipped-mcap",
-      "reason": "mcap=0.84B < $2B (Small-Cap)"
+      "reason": "mcap=0.82B < $2B (Small-Cap)"
     },
     {
       "ticker": "9020.T",
@@ -12997,8 +13030,19 @@
     },
     {
       "ticker": "9302.T",
-      "status": "skipped-mcap",
-      "reason": "mcap=1.98B < $2B (Small-Cap)"
+      "status": "ok",
+      "file": "9302.T.json",
+      "revenue": "$294.6B",
+      "growth": "7.5%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 4,
+        "opIncQ": 0
+      }
     },
     {
       "ticker": "9303.T",
@@ -13013,12 +13057,12 @@
     {
       "ticker": "9305.T",
       "status": "skipped-mcap",
-      "reason": "mcap=0.28B < $2B (Small-Cap)"
+      "reason": "mcap=0.29B < $2B (Small-Cap)"
     },
     {
       "ticker": "9306.T",
       "status": "skipped-mcap",
-      "reason": "mcap=0.10B < $2B (Small-Cap)"
+      "reason": "mcap=0.11B < $2B (Small-Cap)"
     },
     {
       "ticker": "9307.T",
@@ -13065,7 +13109,7 @@
     {
       "ticker": "9413.T",
       "status": "skipped-mcap",
-      "reason": "mcap=0.71B < $2B (Small-Cap)"
+      "reason": "mcap=0.69B < $2B (Small-Cap)"
     },
     {
       "ticker": "9432.T",
@@ -13182,7 +13226,7 @@
     {
       "ticker": "9505.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.24B < $2B (Small-Cap)"
+      "reason": "mcap=1.27B < $2B (Small-Cap)"
     },
     {
       "ticker": "9506.T",
@@ -13235,7 +13279,7 @@
     {
       "ticker": "9509.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.37B < $2B (Small-Cap)"
+      "reason": "mcap=1.38B < $2B (Small-Cap)"
     },
     {
       "ticker": "9511.T",
@@ -13309,7 +13353,7 @@
     {
       "ticker": "9534.T",
       "status": "skipped-mcap",
-      "reason": "mcap=0.47B < $2B (Small-Cap)"
+      "reason": "mcap=0.48B < $2B (Small-Cap)"
     },
     {
       "ticker": "9601.T",
@@ -13484,12 +13528,12 @@
     {
       "ticker": "9722.T",
       "status": "skipped-mcap",
-      "reason": "mcap=0.81B < $2B (Small-Cap)"
+      "reason": "mcap=0.82B < $2B (Small-Cap)"
     },
     {
       "ticker": "9729.T",
       "status": "skipped-mcap",
-      "reason": "mcap=0.54B < $2B (Small-Cap)"
+      "reason": "mcap=0.53B < $2B (Small-Cap)"
     },
     {
       "ticker": "9735.T",
@@ -13510,12 +13554,12 @@
     {
       "ticker": "9755.T",
       "status": "skipped-mcap",
-      "reason": "mcap=0.42B < $2B (Small-Cap)"
+      "reason": "mcap=0.41B < $2B (Small-Cap)"
     },
     {
       "ticker": "9759.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.37B < $2B (Small-Cap)"
+      "reason": "mcap=1.35B < $2B (Small-Cap)"
     },
     {
       "ticker": "9766.T",
@@ -13573,7 +13617,7 @@
     {
       "ticker": "9861.T",
       "status": "skipped-mcap",
-      "reason": "mcap=1.39B < $2B (Small-Cap)"
+      "reason": "mcap=1.40B < $2B (Small-Cap)"
     },
     {
       "ticker": "9888.HK",
@@ -13594,17 +13638,17 @@
     {
       "ticker": "9928.T",
       "status": "skipped-mcap",
-      "reason": "mcap=0.35B < $2B (Small-Cap)"
+      "reason": "mcap=0.34B < $2B (Small-Cap)"
     },
     {
       "ticker": "9933.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=1.07B < $2B (Small-Cap)"
+      "reason": "mcap=1.06B < $2B (Small-Cap)"
     },
     {
       "ticker": "9938.TW",
       "status": "skipped-mcap",
-      "reason": "mcap=0.41B < $2B (Small-Cap)"
+      "reason": "mcap=0.42B < $2B (Small-Cap)"
     },
     {
       "ticker": "9945.TW",
@@ -14149,7 +14193,7 @@
       "status": "ok",
       "file": "ACIW.json",
       "revenue": "$1.8B",
-      "growth": "6.3%",
+      "growth": "7.9%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -15556,11 +15600,11 @@
       }
     },
     {
-      "ticker": "AMRX",
+      "ticker": "AMR",
       "status": "ok",
-      "file": "AMRX.json",
-      "revenue": "$3.0B",
-      "growth": "3.9%",
+      "file": "AMR.json",
+      "revenue": "$2.1B",
+      "growth": "-1.3%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -15572,11 +15616,11 @@
       }
     },
     {
-      "ticker": "AMR",
+      "ticker": "AMRX",
       "status": "ok",
-      "file": "AMR.json",
-      "revenue": "$2.1B",
-      "growth": "-1.3%",
+      "file": "AMRX.json",
+      "revenue": "$3.0B",
+      "growth": "3.9%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -16207,22 +16251,6 @@
       "ticker": "ASAN",
       "status": "skipped-mcap",
       "reason": "mcap=1.58B < $2B (Small-Cap)"
-    },
-    {
-      "ticker": "ASAP",
-      "status": "ok",
-      "file": "ASAP.json",
-      "revenue": "no-rev",
-      "growth": "-",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 0,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 0,
-        "revenueQ": 4,
-        "opIncQ": 0
-      }
     },
     {
       "ticker": "ASB",
@@ -18917,7 +18945,7 @@
     {
       "ticker": "BPT.AX",
       "status": "skipped-mcap",
-      "reason": "mcap=1.59B < $2B (Small-Cap)"
+      "reason": "mcap=1.58B < $2B (Small-Cap)"
     },
     {
       "ticker": "BR",
@@ -19348,7 +19376,7 @@
     {
       "ticker": "BWP.AX",
       "status": "skipped-mcap",
-      "reason": "mcap=1.82B < $2B (Small-Cap)"
+      "reason": "mcap=1.81B < $2B (Small-Cap)"
     },
     {
       "ticker": "BWXT",
@@ -20171,7 +20199,7 @@
     {
       "ticker": "CCP.AX",
       "status": "skipped-mcap",
-      "reason": "mcap=0.52B < $2B (Small-Cap)"
+      "reason": "mcap=0.53B < $2B (Small-Cap)"
     },
     {
       "ticker": "CCRN",
@@ -20767,7 +20795,7 @@
     {
       "ticker": "CIA.AX",
       "status": "skipped-mcap",
-      "reason": "mcap=1.74B < $2B (Small-Cap)"
+      "reason": "mcap=1.77B < $2B (Small-Cap)"
     },
     {
       "ticker": "CIB",
@@ -21210,7 +21238,7 @@
     {
       "ticker": "CMW.AX",
       "status": "skipped-mcap",
-      "reason": "mcap=0.71B < $2B (Small-Cap)"
+      "reason": "mcap=0.73B < $2B (Small-Cap)"
     },
     {
       "ticker": "CNA",
@@ -23726,7 +23754,7 @@
       "status": "ok",
       "file": "DJT.json",
       "revenue": "$0.0B",
-      "growth": "0.5%",
+      "growth": "6.1%",
       "completeness": {
         "annualRev": 4,
         "annualOpInc": 4,
@@ -23926,7 +23954,7 @@
     {
       "ticker": "DMP.AX",
       "status": "skipped-mcap",
-      "reason": "mcap=0.99B < $2B (Small-Cap)"
+      "reason": "mcap=0.97B < $2B (Small-Cap)"
     },
     {
       "ticker": "DNA",
@@ -25718,8 +25746,19 @@
     },
     {
       "ticker": "EPM",
-      "status": "skipped-mcap",
-      "reason": "mcap=0.16B < $2B (Small-Cap)"
+      "status": "ok",
+      "file": "EPM.json",
+      "revenue": "$0.1B",
+      "growth": "2.0%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 4,
+        "annualNetIncome": 4,
+        "annualGP": 4,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 5
+      }
     },
     {
       "ticker": "EPRT",
@@ -26770,7 +26809,7 @@
     {
       "ticker": "FCL.AX",
       "status": "skipped-mcap",
-      "reason": "mcap=0.63B < $2B (Small-Cap)"
+      "reason": "mcap=0.62B < $2B (Small-Cap)"
     },
     {
       "ticker": "FCN",
@@ -27117,7 +27156,7 @@
         "annualRev": 4,
         "annualOpInc": 0,
         "annualNetIncome": 4,
-        "annualGP": 4,
+        "annualGP": 0,
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 0
@@ -27333,7 +27372,7 @@
     {
       "ticker": "FLT.AX",
       "status": "skipped-mcap",
-      "reason": "mcap=1.44B < $2B (Small-Cap)"
+      "reason": "mcap=1.41B < $2B (Small-Cap)"
     },
     {
       "ticker": "FLWS",
@@ -28169,8 +28208,19 @@
     },
     {
       "ticker": "GAIN",
-      "status": "skipped-mcap",
-      "reason": "mcap=0.66B < $2B (Small-Cap)"
+      "status": "ok",
+      "file": "GAIN.json",
+      "revenue": "$0.1B",
+      "growth": "17.3%",
+      "completeness": {
+        "annualRev": 4,
+        "annualOpInc": 0,
+        "annualNetIncome": 4,
+        "annualGP": 0,
+        "annualFCF": 4,
+        "revenueQ": 5,
+        "opIncQ": 0
+      }
     },
     {
       "ticker": "GAP",
@@ -29082,7 +29132,7 @@
     {
       "ticker": "GNC.AX",
       "status": "skipped-mcap",
-      "reason": "mcap=0.88B < $2B (Small-Cap)"
+      "reason": "mcap=0.89B < $2B (Small-Cap)"
     },
     {
       "ticker": "GNK",
@@ -32427,7 +32477,7 @@
     {
       "ticker": "IRE.AX",
       "status": "skipped-mcap",
-      "reason": "mcap=0.79B < $2B (Small-Cap)"
+      "reason": "mcap=0.78B < $2B (Small-Cap)"
     },
     {
       "ticker": "IREN",
@@ -34736,7 +34786,7 @@
     {
       "ticker": "LIC.AX",
       "status": "skipped-mcap",
-      "reason": "mcap=0.39B < $2B (Small-Cap)"
+      "reason": "mcap=0.40B < $2B (Small-Cap)"
     },
     {
       "ticker": "LIF.TO",
@@ -34953,7 +35003,7 @@
     {
       "ticker": "LMB",
       "status": "skipped-mcap",
-      "reason": "mcap=0.86B < $2B (Small-Cap)"
+      "reason": "mcap=0.85B < $2B (Small-Cap)"
     },
     {
       "ticker": "LMND",
@@ -35752,7 +35802,7 @@
     {
       "ticker": "MAH.AX",
       "status": "skipped-mcap",
-      "reason": "mcap=1.09B < $2B (Small-Cap)"
+      "reason": "mcap=1.10B < $2B (Small-Cap)"
     },
     {
       "ticker": "MAIN",
@@ -35801,7 +35851,7 @@
         "annualRev": 4,
         "annualOpInc": 4,
         "annualNetIncome": 4,
-        "annualGP": 4,
+        "annualGP": 0,
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 5
@@ -36875,7 +36925,7 @@
     {
       "ticker": "MND.AX",
       "status": "skipped-mcap",
-      "reason": "mcap=1.94B < $2B (Small-Cap)"
+      "reason": "mcap=1.91B < $2B (Small-Cap)"
     },
     {
       "ticker": "MNDI.L",
@@ -39264,7 +39314,7 @@
     {
       "ticker": "NUF.AX",
       "status": "skipped-mcap",
-      "reason": "mcap=0.60B < $2B (Small-Cap)"
+      "reason": "mcap=0.61B < $2B (Small-Cap)"
     },
     {
       "ticker": "NUS",
@@ -44954,7 +45004,7 @@
     {
       "ticker": "RWC.AX",
       "status": "skipped-mcap",
-      "reason": "mcap=1.55B < $2B (Small-Cap)"
+      "reason": "mcap=1.53B < $2B (Small-Cap)"
     },
     {
       "ticker": "RWE",
@@ -48559,7 +48609,7 @@
     {
       "ticker": "SUL.AX",
       "status": "skipped-mcap",
-      "reason": "mcap=1.70B < $2B (Small-Cap)"
+      "reason": "mcap=1.66B < $2B (Small-Cap)"
     },
     {
       "ticker": "SUN",
@@ -48998,22 +49048,6 @@
         "annualFCF": 4,
         "revenueQ": 5,
         "opIncQ": 5
-      }
-    },
-    {
-      "ticker": "TAB.L",
-      "status": "ok",
-      "file": "TAB.L.json",
-      "revenue": "no-rev",
-      "growth": "-",
-      "completeness": {
-        "annualRev": 0,
-        "annualOpInc": 0,
-        "annualNetIncome": 0,
-        "annualGP": 0,
-        "annualFCF": 4,
-        "revenueQ": 0,
-        "opIncQ": 0
       }
     },
     {
@@ -55085,19 +55119,8 @@
     },
     {
       "ticker": "YRD",
-      "status": "ok",
-      "file": "YRD.json",
-      "revenue": "$5.7B",
-      "growth": "-34.1%",
-      "completeness": {
-        "annualRev": 4,
-        "annualOpInc": 4,
-        "annualNetIncome": 4,
-        "annualGP": 4,
-        "annualFCF": 4,
-        "revenueQ": 5,
-        "opIncQ": 5
-      }
+      "status": "skipped-mcap",
+      "reason": "mcap=0.17B < $2B (Small-Cap)"
     },
     {
       "ticker": "YRIV",
@@ -55415,7 +55438,7 @@
     },
     {
       "ticker": "091990.KQ",
-      "error": "Quote not found for symbol: 091990.KQ"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "091990.KS",
@@ -55515,7 +55538,7 @@
     },
     {
       "ticker": "3682.TW",
-      "error": "Quote not found for symbol: 3682.TW"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "3724.T",
@@ -55559,7 +55582,7 @@
     },
     {
       "ticker": "600837.SS",
-      "error": "Quote not found for symbol: 600837.SS"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "601258.SS",
@@ -55583,7 +55606,7 @@
     },
     {
       "ticker": "6502.T",
-      "error": "Quote not found for symbol: 6502.T"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "656.HK",
@@ -55595,11 +55618,11 @@
     },
     {
       "ticker": "6837.HK",
-      "error": "Quote not found for symbol: 6837.HK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "6967.T",
-      "error": "Quote not found for symbol: 6967.T"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "700.HK",
@@ -55667,7 +55690,7 @@
     },
     {
       "ticker": "9783.T",
-      "error": "Quote not found for symbol: 9783.T"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "992.HK",
@@ -55751,15 +55774,19 @@
     },
     {
       "ticker": "ARCH",
-      "error": "Quote not found for symbol: ARCH"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ARL.DE",
-      "error": "Quote not found for symbol: ARL.DE"
+      "error": "Failed Yahoo Schema validation"
+    },
+    {
+      "ticker": "ASAP",
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ASCL.L",
-      "error": "Quote not found for symbol: ASCL.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "AT.TO",
@@ -55783,7 +55810,7 @@
     },
     {
       "ticker": "ATSG",
-      "error": "Quote not found for symbol: ATSG"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ATUS",
@@ -55799,7 +55826,7 @@
     },
     {
       "ticker": "AVGR",
-      "error": "Quote not found for symbol: AVGR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "AVST.L",
@@ -55811,7 +55838,7 @@
     },
     {
       "ticker": "AYX",
-      "error": "Quote not found for symbol: AYX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "AZA.SW",
@@ -55819,11 +55846,11 @@
     },
     {
       "ticker": "AZPN",
-      "error": "Quote not found for symbol: AZPN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "B4B.DE",
-      "error": "Quote not found for symbol: B4B.DE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "B5A.DE",
@@ -55839,11 +55866,11 @@
     },
     {
       "ticker": "BDEV.L",
-      "error": "Quote not found for symbol: BDEV.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BECN",
-      "error": "Quote not found for symbol: BECN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BEEM.PA",
@@ -55851,7 +55878,7 @@
     },
     {
       "ticker": "BERY",
-      "error": "Quote not found for symbol: BERY"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BHLB",
@@ -55859,7 +55886,7 @@
     },
     {
       "ticker": "BIG",
-      "error": "Quote not found for symbol: BIG"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BIGC",
@@ -55871,15 +55898,15 @@
     },
     {
       "ticker": "BKI",
-      "error": "Quote not found for symbol: BKI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BLD.AX",
-      "error": "Quote not found for symbol: BLD.AX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BLUE",
-      "error": "Quote not found for symbol: BLUE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BPER.MI",
@@ -55891,7 +55918,7 @@
     },
     {
       "ticker": "BRDS",
-      "error": "Quote not found for symbol: BRDS"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BRFS",
@@ -55903,7 +55930,7 @@
     },
     {
       "ticker": "BSIG",
-      "error": "Quote not found for symbol: BSIG"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "BSL.MI",
@@ -55923,7 +55950,7 @@
     },
     {
       "ticker": "CDAY",
-      "error": "Quote not found for symbol: CDAY"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CDEV",
@@ -55935,11 +55962,11 @@
     },
     {
       "ticker": "CDXC",
-      "error": "Quote not found for symbol: CDXC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CEIX",
-      "error": "Quote not found for symbol: CEIX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CELG",
@@ -55947,7 +55974,7 @@
     },
     {
       "ticker": "CEQP",
-      "error": "Quote not found for symbol: CEQP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CERN",
@@ -55959,7 +55986,7 @@
     },
     {
       "ticker": "CGG.PA",
-      "error": "Quote not found for symbol: CGG.PA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CHEK",
@@ -55967,11 +55994,11 @@
     },
     {
       "ticker": "CHK",
-      "error": "Quote not found for symbol: CHK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CHR.CO",
-      "error": "Quote not found for symbol: CHR.CO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CIM.AX",
@@ -55995,7 +56022,7 @@
     },
     {
       "ticker": "CMRX",
-      "error": "Quote not found for symbol: CMRX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CNH.MI",
@@ -56023,15 +56050,15 @@
     },
     {
       "ticker": "CPE",
-      "error": "Quote not found for symbol: CPE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CPG.TO",
-      "error": "Quote not found for symbol: CPG.TO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CPTN",
-      "error": "Quote not found for symbol: CPTN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CRCM",
@@ -56051,11 +56078,11 @@
     },
     {
       "ticker": "CSWI",
-      "error": "Quote not found for symbol: CSWI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CTLT",
-      "error": "Quote not found for symbol: CTLT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CTXS",
@@ -56071,7 +56098,7 @@
     },
     {
       "ticker": "CWB.TO",
-      "error": "Quote not found for symbol: CWB.TO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "CYBR",
@@ -56079,7 +56106,7 @@
     },
     {
       "ticker": "DADA",
-      "error": "Quote not found for symbol: DADA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DAI.DE",
@@ -56099,7 +56126,7 @@
     },
     {
       "ticker": "DEN",
-      "error": "Quote not found for symbol: DEN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DENN",
@@ -56107,7 +56134,7 @@
     },
     {
       "ticker": "DESP",
-      "error": "Quote not found for symbol: DESP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DEX",
@@ -56115,7 +56142,7 @@
     },
     {
       "ticker": "DFS",
-      "error": "Quote not found for symbol: DFS"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DGOC.L",
@@ -56143,7 +56170,7 @@
     },
     {
       "ticker": "DISH",
-      "error": "Quote not found for symbol: DISH"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DLG.DE",
@@ -56151,11 +56178,11 @@
     },
     {
       "ticker": "DM",
-      "error": "Quote not found for symbol: DM"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DMS",
-      "error": "Quote not found for symbol: DMS"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DNB",
@@ -56167,7 +56194,7 @@
     },
     {
       "ticker": "DOOR",
-      "error": "Quote not found for symbol: DOOR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DPW.DE",
@@ -56199,7 +56226,7 @@
     },
     {
       "ticker": "DUFN.SW",
-      "error": "Quote not found for symbol: DUFN.SW"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "DVAX",
@@ -56227,7 +56254,7 @@
     },
     {
       "ticker": "EDR",
-      "error": "Quote not found for symbol: EDR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ELIA.BR",
@@ -56255,11 +56282,11 @@
     },
     {
       "ticker": "ENLC",
-      "error": "Quote not found for symbol: ENLC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ENV",
-      "error": "Quote not found for symbol: ENV"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "EO.PA",
@@ -56271,11 +56298,11 @@
     },
     {
       "ticker": "ERF.TO",
-      "error": "Quote not found for symbol: ERF.TO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ESGR",
-      "error": "Quote not found for symbol: ESGR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ESL.PA",
@@ -56283,15 +56310,15 @@
     },
     {
       "ticker": "ETRN",
-      "error": "Quote not found for symbol: ETRN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "EVA",
-      "error": "Quote not found for symbol: EVA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "EVBG",
-      "error": "Quote not found for symbol: EVBG"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "EVOK",
@@ -56339,7 +56366,7 @@
     },
     {
       "ticker": "FLT",
-      "error": "Quote not found for symbol: FLT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "FOLD",
@@ -56355,7 +56382,7 @@
     },
     {
       "ticker": "FRES",
-      "error": "Quote not found for symbol: FRES"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "FRGE",
@@ -56367,11 +56394,11 @@
     },
     {
       "ticker": "FSR",
-      "error": "Quote not found for symbol: FSR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "FTCH",
-      "error": "Quote not found for symbol: FTCH"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "FYBR",
@@ -56383,7 +56410,7 @@
     },
     {
       "ticker": "GAN",
-      "error": "Quote not found for symbol: GAN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "GBIO",
@@ -56415,7 +56442,7 @@
     },
     {
       "ticker": "GHL",
-      "error": "Quote not found for symbol: GHL"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "GLEN",
@@ -56427,7 +56454,7 @@
     },
     {
       "ticker": "GLT",
-      "error": "Quote not found for symbol: GLT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "GME.PA",
@@ -56471,7 +56498,7 @@
     },
     {
       "ticker": "GUD.AX",
-      "error": "Quote not found for symbol: GUD.AX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "GVD.L",
@@ -56479,7 +56506,7 @@
     },
     {
       "ticker": "HA",
-      "error": "Quote not found for symbol: HA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HBI",
@@ -56491,15 +56518,15 @@
     },
     {
       "ticker": "HCP",
-      "error": "Quote not found for symbol: HCP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HEAR",
-      "error": "Quote not found for symbol: HEAR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HEES",
-      "error": "Quote not found for symbol: HEES"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HEIA",
@@ -56507,7 +56534,7 @@
     },
     {
       "ticker": "HEP",
-      "error": "Quote not found for symbol: HEP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HES",
@@ -56523,7 +56550,7 @@
     },
     {
       "ticker": "HIBB",
-      "error": "Quote not found for symbol: HIBB"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HKW.PA",
@@ -56535,7 +56562,7 @@
     },
     {
       "ticker": "HOLI",
-      "error": "Quote not found for symbol: HOLI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HOLX",
@@ -56575,7 +56602,7 @@
     },
     {
       "ticker": "HUM.L",
-      "error": "Quote not found for symbol: HUM.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HUSA",
@@ -56587,11 +56614,11 @@
     },
     {
       "ticker": "HYZN",
-      "error": "Quote not found for symbol: HYZN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "HZNP",
-      "error": "Quote not found for symbol: HZNP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "I",
@@ -56607,7 +56634,7 @@
     },
     {
       "ticker": "ICP.L",
-      "error": "Quote not found for symbol: ICP.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "IG.L",
@@ -56615,7 +56642,7 @@
     },
     {
       "ticker": "IGT",
-      "error": "Quote not found for symbol: IGT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "IHC.AE",
@@ -56631,7 +56658,7 @@
     },
     {
       "ticker": "IMPL",
-      "error": "Quote not found for symbol: IMPL"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "INE.TO",
@@ -56643,7 +56670,7 @@
     },
     {
       "ticker": "INFN",
-      "error": "Quote not found for symbol: INFN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "INFY.L",
@@ -56655,11 +56682,11 @@
     },
     {
       "ticker": "INSI",
-      "error": "Quote not found for symbol: INSI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "INST",
-      "error": "Quote not found for symbol: INST"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "INT",
@@ -56675,7 +56702,7 @@
     },
     {
       "ticker": "IPL.AX",
-      "error": "Quote not found for symbol: IPL.AX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "IPL.TO",
@@ -56703,7 +56730,7 @@
     },
     {
       "ticker": "ITCI",
-      "error": "Quote not found for symbol: ITCI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ITE.L",
@@ -56715,7 +56742,7 @@
     },
     {
       "ticker": "IVAC",
-      "error": "Quote not found for symbol: IVAC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "JAMF",
@@ -56723,7 +56750,7 @@
     },
     {
       "ticker": "JBT",
-      "error": "Quote not found for symbol: JBT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "JBT.AS",
@@ -56735,7 +56762,7 @@
     },
     {
       "ticker": "JET.L",
-      "error": "Quote not found for symbol: JET.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "JFRO",
@@ -56755,7 +56782,7 @@
     },
     {
       "ticker": "JNPR",
-      "error": "Quote not found for symbol: JNPR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "JUNG.DE",
@@ -56763,7 +56790,7 @@
     },
     {
       "ticker": "JWN",
-      "error": "Quote not found for symbol: JWN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "K",
@@ -56771,7 +56798,7 @@
     },
     {
       "ticker": "KAMN",
-      "error": "Quote not found for symbol: KAMN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "KAR",
@@ -56791,7 +56818,7 @@
     },
     {
       "ticker": "KIND-SDB.ST",
-      "error": "Quote not found for symbol: KIND-SDB.ST"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "KNAB.SW",
@@ -56815,7 +56842,7 @@
     },
     {
       "ticker": "KRTX",
-      "error": "Quote not found for symbol: KRTX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "KSS.SW",
@@ -56827,7 +56854,7 @@
     },
     {
       "ticker": "LBPH",
-      "error": "Quote not found for symbol: LBPH"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "LEO.DE",
@@ -56839,7 +56866,7 @@
     },
     {
       "ticker": "LGF-A",
-      "error": "Quote not found for symbol: LGF-A"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "LITTLE",
@@ -56867,15 +56894,15 @@
     },
     {
       "ticker": "LSXMA",
-      "error": "Quote not found for symbol: LSXMA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "LSXMB",
-      "error": "Quote not found for symbol: LSXMB"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "LSXMK",
-      "error": "Quote not found for symbol: LSXMK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "LTON.HE",
@@ -56915,7 +56942,7 @@
     },
     {
       "ticker": "MCBC",
-      "error": "Quote not found for symbol: MCBC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "MCRO.L",
@@ -56923,7 +56950,7 @@
     },
     {
       "ticker": "MDC",
-      "error": "Quote not found for symbol: MDC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "MEAN.SW",
@@ -56979,7 +57006,7 @@
     },
     {
       "ticker": "MHLD",
-      "error": "Quote not found for symbol: MHLD"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "MIDD-IT.MI",
@@ -56987,7 +57014,7 @@
     },
     {
       "ticker": "MIXT",
-      "error": "Quote not found for symbol: MIXT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "MLAB.PA",
@@ -57007,7 +57034,7 @@
     },
     {
       "ticker": "MNK",
-      "error": "Quote not found for symbol: MNK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "MODG",
@@ -57027,7 +57054,7 @@
     },
     {
       "ticker": "MPLN",
-      "error": "Quote not found for symbol: MPLN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "MPP.MI",
@@ -57043,7 +57070,7 @@
     },
     {
       "ticker": "MRO",
-      "error": "Quote not found for symbol: MRO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "MRO.MC",
@@ -57067,15 +57094,15 @@
     },
     {
       "ticker": "MTCR",
-      "error": "Failed Yahoo Schema validation"
+      "error": "Quote not found for symbol: MTCR"
     },
     {
       "ticker": "MTTR",
-      "error": "Quote not found for symbol: MTTR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "MYTE",
-      "error": "Quote not found for symbol: MYTE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NAVI.MI",
@@ -57083,19 +57110,19 @@
     },
     {
       "ticker": "NCM.AX",
-      "error": "Quote not found for symbol: NCM.AX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NEP",
-      "error": "Quote not found for symbol: NEP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NEPT",
-      "error": "Quote not found for symbol: NEPT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NEWR",
-      "error": "Quote not found for symbol: NEWR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NEX.L",
@@ -57123,7 +57150,7 @@
     },
     {
       "ticker": "NOVA",
-      "error": "Quote not found for symbol: NOVA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NOVN",
@@ -57139,7 +57166,7 @@
     },
     {
       "ticker": "NR",
-      "error": "Quote not found for symbol: NR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NRT.AS",
@@ -57155,7 +57182,7 @@
     },
     {
       "ticker": "NUVA",
-      "error": "Quote not found for symbol: NUVA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NUVI.TO",
@@ -57171,7 +57198,7 @@
     },
     {
       "ticker": "NVRO",
-      "error": "Quote not found for symbol: NVRO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NVT.AX",
@@ -57179,11 +57206,11 @@
     },
     {
       "ticker": "NVTA",
-      "error": "Quote not found for symbol: NVTA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NYCB",
-      "error": "Quote not found for symbol: NYCB"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "NYMT",
@@ -57195,7 +57222,7 @@
     },
     {
       "ticker": "OFC",
-      "error": "Quote not found for symbol: OFC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "OGC.AX",
@@ -57247,7 +57274,7 @@
     },
     {
       "ticker": "OSTK",
-      "error": "Quote not found for symbol: OSTK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "OXBR.L",
@@ -57263,7 +57290,7 @@
     },
     {
       "ticker": "PACW",
-      "error": "Quote not found for symbol: PACW"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PAH3.L",
@@ -57291,7 +57318,7 @@
     },
     {
       "ticker": "PCRFY",
-      "error": "Quote not found for symbol: PCRFY"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PCSF.L",
@@ -57299,15 +57326,15 @@
     },
     {
       "ticker": "PDCO",
-      "error": "Quote not found for symbol: PDCO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PEAK",
-      "error": "Quote not found for symbol: PEAK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PEPL",
-      "error": "Quote not found for symbol: PEPL"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PER.MI",
@@ -57319,11 +57346,11 @@
     },
     {
       "ticker": "PETQ",
-      "error": "Quote not found for symbol: PETQ"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PFC",
-      "error": "Quote not found for symbol: PFC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PFC.L",
@@ -57331,7 +57358,7 @@
     },
     {
       "ticker": "PFIE",
-      "error": "Quote not found for symbol: PFIE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PGRE",
@@ -57339,7 +57366,7 @@
     },
     {
       "ticker": "PGTI",
-      "error": "Quote not found for symbol: PGTI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PHNX.L",
@@ -57347,7 +57374,7 @@
     },
     {
       "ticker": "PHX",
-      "error": "Quote not found for symbol: PHX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PLATO.OL",
@@ -57363,15 +57390,15 @@
     },
     {
       "ticker": "PNM",
-      "error": "Quote not found for symbol: PNM"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "POLY.L",
-      "error": "Quote not found for symbol: POLY.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "POM.PA",
-      "error": "Quote not found for symbol: POM.PA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PORR.VI",
@@ -57399,7 +57426,7 @@
     },
     {
       "ticker": "PRFT",
-      "error": "Quote not found for symbol: PRFT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PRG.MC",
@@ -57439,19 +57466,19 @@
     },
     {
       "ticker": "PXD",
-      "error": "Quote not found for symbol: PXD"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "PYR",
-      "error": "Quote not found for symbol: PYR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "QRTEA",
-      "error": "Quote not found for symbol: QRTEA"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "QUOT",
-      "error": "Quote not found for symbol: QUOT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "RB.L",
@@ -57463,11 +57490,11 @@
     },
     {
       "ticker": "RCM",
-      "error": "Quote not found for symbol: RCM"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "RDFN",
-      "error": "Quote not found for symbol: RDFN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "RDSA.L",
@@ -57487,7 +57514,7 @@
     },
     {
       "ticker": "RDW.L",
-      "error": "Quote not found for symbol: RDW.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "RE",
@@ -57527,7 +57554,7 @@
     },
     {
       "ticker": "ROIC",
-      "error": "Quote not found for symbol: ROIC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ROK.DE",
@@ -57535,7 +57562,7 @@
     },
     {
       "ticker": "ROL.L",
-      "error": "Quote not found for symbol: ROL.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "RPC.L",
@@ -57591,7 +57618,7 @@
     },
     {
       "ticker": "SAVE",
-      "error": "Quote not found for symbol: SAVE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SBM.AS",
@@ -57607,7 +57634,7 @@
     },
     {
       "ticker": "SCHN",
-      "error": "Quote not found for symbol: SCHN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SCR.MC",
@@ -57623,11 +57650,11 @@
     },
     {
       "ticker": "SCWX",
-      "error": "Quote not found for symbol: SCWX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SDIG",
-      "error": "Quote not found for symbol: SDIG"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SDRC.L",
@@ -57635,7 +57662,7 @@
     },
     {
       "ticker": "SEAS",
-      "error": "Quote not found for symbol: SEAS"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SEK.L",
@@ -57647,7 +57674,7 @@
     },
     {
       "ticker": "SGEN",
-      "error": "Quote not found for symbol: SGEN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SGFY",
@@ -57655,7 +57682,7 @@
     },
     {
       "ticker": "SGH",
-      "error": "Quote not found for symbol: SGH"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SGM.MI",
@@ -57675,23 +57702,23 @@
     },
     {
       "ticker": "SHCR",
-      "error": "Quote not found for symbol: SHCR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SHYF",
-      "error": "Quote not found for symbol: SHYF"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SILV",
-      "error": "Quote not found for symbol: SILV"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SIX",
-      "error": "Quote not found for symbol: SIX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SJW",
-      "error": "Quote not found for symbol: SJW"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SK.MC",
@@ -57711,11 +57738,11 @@
     },
     {
       "ticker": "SMAR",
-      "error": "Quote not found for symbol: SMAR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SMDS.L",
-      "error": "Quote not found for symbol: SMDS.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SMIH",
@@ -57723,7 +57750,7 @@
     },
     {
       "ticker": "SMLP",
-      "error": "Quote not found for symbol: SMLP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SMS.L",
@@ -57735,7 +57762,7 @@
     },
     {
       "ticker": "SOI",
-      "error": "Quote not found for symbol: SOI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SOL",
@@ -57743,15 +57770,15 @@
     },
     {
       "ticker": "SOW.DE",
-      "error": "Quote not found for symbol: SOW.DE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SP",
-      "error": "Quote not found for symbol: SP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SPLK",
-      "error": "Quote not found for symbol: SPLK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SPLP",
@@ -57783,11 +57810,11 @@
     },
     {
       "ticker": "SQ",
-      "error": "Quote not found for symbol: SQ"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SQSP",
-      "error": "Quote not found for symbol: SQSP"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SRDX",
@@ -57847,7 +57874,7 @@
     },
     {
       "ticker": "SUM",
-      "error": "Quote not found for symbol: SUM"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SUMO",
@@ -57855,19 +57882,19 @@
     },
     {
       "ticker": "SVT",
-      "error": "Quote not found for symbol: SVT"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SVW.AX",
-      "error": "Quote not found for symbol: SVW.AX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SWAV",
-      "error": "Quote not found for symbol: SWAV"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SWI",
-      "error": "Quote not found for symbol: SWI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SWMA.ST",
@@ -57875,7 +57902,7 @@
     },
     {
       "ticker": "SWN",
-      "error": "Quote not found for symbol: SWN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "SXS.L",
@@ -57894,12 +57921,16 @@
       "error": "Quote not found for symbol: SYM.MI"
     },
     {
+      "ticker": "TAB.L",
+      "error": "Failed Yahoo Schema validation"
+    },
+    {
       "ticker": "TASK.PA",
       "error": "Quote not found for symbol: TASK.PA"
     },
     {
       "ticker": "TAST",
-      "error": "Quote not found for symbol: TAST"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TC.MC",
@@ -57911,7 +57942,7 @@
     },
     {
       "ticker": "TCN",
-      "error": "Quote not found for symbol: TCN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TCRR",
@@ -57919,7 +57950,7 @@
     },
     {
       "ticker": "TCS",
-      "error": "Quote not found for symbol: TCS"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TEC.MI",
@@ -57935,7 +57966,7 @@
     },
     {
       "ticker": "TELL",
-      "error": "Quote not found for symbol: TELL"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TEVA.MI",
@@ -57971,7 +58002,7 @@
     },
     {
       "ticker": "TNT.L",
-      "error": "Quote not found for symbol: TNT.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TPM.AX",
@@ -57979,19 +58010,19 @@
     },
     {
       "ticker": "TPX",
-      "error": "Quote not found for symbol: TPX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TRHC",
-      "error": "Quote not found for symbol: TRHC"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TRS.AX",
-      "error": "Quote not found for symbol: TRS.AX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TRTN",
-      "error": "Quote not found for symbol: TRTN"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TRUE",
@@ -58011,7 +58042,7 @@
     },
     {
       "ticker": "TUI.L",
-      "error": "Quote not found for symbol: TUI.L"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "TVIY",
@@ -58019,7 +58050,7 @@
     },
     {
       "ticker": "TWNK",
-      "error": "Quote not found for symbol: TWNK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "UBI.MI",
@@ -58043,7 +58074,7 @@
     },
     {
       "ticker": "UN01.DE",
-      "error": "Quote not found for symbol: UN01.DE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "UNAVO.AS",
@@ -58107,7 +58138,7 @@
     },
     {
       "ticker": "VGR",
-      "error": "Quote not found for symbol: VGR"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "VHM.SW",
@@ -58127,7 +58158,7 @@
     },
     {
       "ticker": "VMW",
-      "error": "Quote not found for symbol: VMW"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "VNT.L",
@@ -58147,11 +58178,11 @@
     },
     {
       "ticker": "VOXX",
-      "error": "Quote not found for symbol: VOXX"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "VRN.TO",
-      "error": "Quote not found for symbol: VRN.TO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "VRT.AX",
@@ -58159,7 +58190,7 @@
     },
     {
       "ticker": "VRTV",
-      "error": "Quote not found for symbol: VRTV"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "VRX.L",
@@ -58183,7 +58214,7 @@
     },
     {
       "ticker": "VVI",
-      "error": "Quote not found for symbol: VVI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "WAVE.L",
@@ -58219,11 +58250,11 @@
     },
     {
       "ticker": "WIRE",
-      "error": "Quote not found for symbol: WIRE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "WKME",
-      "error": "Quote not found for symbol: WKME"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "WNS",
@@ -58247,7 +58278,7 @@
     },
     {
       "ticker": "WRK",
-      "error": "Quote not found for symbol: WRK"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "WSA.AX",
@@ -58255,11 +58286,11 @@
     },
     {
       "ticker": "WWE",
-      "error": "Quote not found for symbol: WWE"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "X",
-      "error": "Quote not found for symbol: X"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "XBC.TO",
@@ -58327,7 +58358,7 @@
     },
     {
       "ticker": "ZI",
-      "error": "Quote not found for symbol: ZI"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ZNGA",
@@ -58339,11 +58370,11 @@
     },
     {
       "ticker": "ZUO",
-      "error": "Quote not found for symbol: ZUO"
+      "error": "Failed Yahoo Schema validation"
     },
     {
       "ticker": "ZYNE",
-      "error": "Quote not found for symbol: ZYNE"
+      "error": "Failed Yahoo Schema validation"
     }
   ]
 }
