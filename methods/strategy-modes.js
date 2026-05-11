@@ -58,15 +58,20 @@ const MODES = {
       { id: 'rule-of-x', required: false, weight: 'prefer', storyHint: 'Rule-of-X attraktiv' },
       { id: 'revenue-growth-3y', required: true, weight: 'must', storyHint: 'starkes 3-Jahres-Umsatzwachstum' },
       { id: 'gross-margin-stability', required: false, weight: 'prefer', storyHint: 'Bruttomarge stabil/hoch' },
-      // Tag 102c: profitability-state als CORE auch in Hypergrowth (Karl-Wunsch: Loss/Turnaround/Recent/Stable filtern)
+      // Tag 102c: profitability-state als CORE auch in Hypergrowth (Karl-Wunsch: Loss/Turnaround/Recent/Recent/Stable filtern)
       { id: 'profitability-state', required: false, weight: 'prefer', storyHint: 'Profitabilitaets-Status' },
       // Tag 112: Hypergrowth-Quality-Klassifikator als HARD-FILTER (Q_SPIKE_FAKE und LOW_BASE_EFFECT raus)
       { id: 'hypergrowth-quality-class', required: false, weight: 'prefer', storyHint: 'echtes Hypergrowth-Pattern' }
     ],
-    dataGuards: ['revenue-shock-guard', 'sloan-ratio', 'q-spike-dataguard', 'forecast-contamination-guard', 'quarter-concentration-guard', 'deceleration-guard'],
+    dataGuards: ['revenue-shock-guard', 'sloan-ratio', 'forecast-contamination-guard'],
+    // Tag 120b: Soft-Guards - Score-Penalty statt Hard-Fail (NVDA-False-Negative-Fix)
+    softGuards: ['q-spike-dataguard', 'quarter-concentration-guard', 'deceleration-guard'],
     excludeSectors: SECTOR_EXCLUDE_HYPERGROWTH,
     storyTemplate: '{ticker} â Hypergrowth: {coreSummary}. {warnings}',
     defaultSortMethod: 'rule-of-x'
+  },
+
+  QUALITY_COMPOUNDER: {8'
   },
 
   QUALITY_COMPOUNDER: {
@@ -87,7 +92,9 @@ const MODES = {
       { id: 'net-debt-ebitda', required: true, weight: 'must', storyHint: 'Net-Debt/EBITDA <= 2.5' },
       { id: 'above-200d-ma', required: false, weight: 'prefer', storyHint: 'positiver Trend' }
     ],
-    dataGuards: ['asset-growth-divergence', 'sloan-ratio', 'working-capital-anomaly', 'forecast-contamination-guard'],
+    dataGuards: ['sloan-ratio', 'forecast-contamination-guard'],
+    // Tag 120b: Soft-Guards - M&A-Compounder + Seasonal-Businesses-Fix
+    softGuards: ['asset-growth-divergence', 'working-capital-anomaly'],
     softWarnings: [],
     excludeSectors: SECTOR_EXCLUDE_QC,  // Tag 117: erweiterte Excludes
     mcapFloor: 5e9,  // Tag 117: 5B Mcap-Floor fuer Quality-Compounder
@@ -107,6 +114,7 @@ const MODES = {
       { id: 'revenue-growth-3y', required: false, weight: 'prefer', storyHint: 'Umsatz waechst' }
     ],
     dataGuards: ['sloan-ratio', 'net-debt-ebitda', 'revenue-shock-guard'],
+    softGuards: [],  // Tag 120b: Turnaround keine softGuards definiert
     excludeSectors: SECTOR_EXCLUDE_HYPERGROWTH,
     enabled: false,  // Phase 2 â nicht in v1.0
     storyTemplate: '{ticker} â Turnaround: {coreSummary}. {warnings}',
@@ -146,6 +154,17 @@ function evaluateMode(stock, modeId, allResults) {
   }
   if (failedGuards.length > 0) {
     return { passed: false, reason: 'dataguard_fail', failedGuards };
+  }
+
+  // Tag 120b: SoftGuard-Check - sammelt Warnings, blockt NICHT passed
+  const failedSoftGuards = [];
+  if (mode.softGuards && mode.softGuards.length > 0) {
+    for (const sgId of mode.softGuards) {
+      const r = allResults[sgId];
+      if (r && r.computable === true && r.pass === false) {
+        failedSoftGuards.push(sgId);
+      }
+    }
   }
 
   // CORE-Check: alle "must" Methoden muessen pass haben
@@ -188,7 +207,7 @@ function evaluateMode(stock, modeId, allResults) {
   // Hier wird der Score nur fuer Stocks berechnet die durch Hygiene durch sind.
   var scoreResult = null;
   if (ScoreAggregator) {
-    try { scoreResult = ScoreAggregator.computeScore(allResults, modeId, null); }
+    try { scoreResult = ScoreAggregator.computeScore(allResults, modeId, null, failedSoftGuards); }
     catch (e) { scoreResult = null; }
   }
 
@@ -205,7 +224,10 @@ function evaluateMode(stock, modeId, allResults) {
     score: scoreResult ? scoreResult.score : null,
     tier: scoreResult ? scoreResult.tier : null,
     redFlags: scoreResult ? scoreResult.redFlags : [],
-    scoreBreakdown: scoreResult ? scoreResult.breakdown : null
+    scoreBreakdown: scoreResult ? scoreResult.breakdown : null,
+    // Tag 120b: SoftGuards die ausgeloest haben - sichtbar als Warnings im UI
+    failedSoftGuards: failedSoftGuards,
+    softGuardPenalty: scoreResult ? scoreResult.softGuardPenalty : 0
   };
 }
 
