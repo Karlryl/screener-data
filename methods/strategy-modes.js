@@ -63,9 +63,11 @@ const MODES = {
       // Tag 112: Hypergrowth-Quality-Klassifikator als HARD-FILTER (Q_SPIKE_FAKE und LOW_BASE_EFFECT raus)
       { id: 'hypergrowth-quality-class', required: false, weight: 'prefer', storyHint: 'echtes Hypergrowth-Pattern' }
     ],
-    dataGuards: ['sloan-ratio', 'forecast-contamination-guard'],
+    // Tag 121c: q-spike-dataguard zurueck zu HARD (IONQ-Fix). NVDA bleibt sichtbar weil
+    // sein OI nicht dramatisch expandiert (NVDA q-spike=pass, IONQ q-spike=fail OI-Severity 2.7x).
+    dataGuards: ['sloan-ratio', 'forecast-contamination-guard', 'q-spike-dataguard'],
     // Tag 120d: revenue-shock-guard NACHTRAEGLICH in softGuards (war Hauptursache NVDA in HG nicht sichtbar)
-    softGuards: ['revenue-shock-guard', 'q-spike-dataguard', 'quarter-concentration-guard', 'deceleration-guard'],
+    softGuards: ['revenue-shock-guard', 'quarter-concentration-guard', 'deceleration-guard'],
     excludeSectors: SECTOR_EXCLUDE_HYPERGROWTH,
     storyTemplate: '{ticker} â Hypergrowth: {coreSummary}. {warnings}',
     defaultSortMethod: 'rule-of-x'

@@ -106,6 +106,22 @@ function topByScore(eligible, modeId, topN) {
   return valid.slice(0, topN);
 }
 
+// Tag 121b: Stocks die Hygiene durch + genau EINEN CORE-MUST verfehlen.
+// Diagnose-Werkzeug fuer Tag 122-Entscheidung: zeigt Karl welche
+// bekannten Compounder nur an einer Schwelle scheitern (z.B. nur ROIC).
+function blockedByOneMust(eligible, modeId, topN) {
+  const items = [];
+  for (const ev of eligible) {
+    const me = ev.modeEvals && ev.modeEvals[modeId];
+    if (!me || me.passed || !me.mustResults) continue;
+    const failed = me.mustResults.filter(m => m.status === 'fail');
+    if (failed.length !== 1) continue;  // genau 1 MUST fail
+    items.push({ ev: ev, me: me, failedMust: failed[0] });
+  }
+  items.sort(function(a, b) { return (b.me.score || 0) - (a.me.score || 0); });
+  return items.slice(0, topN);
+}
+
 function dedupeByCompany(evaluated) {
   function norm(s) {
     if (!s) return '';
@@ -295,14 +311,15 @@ function renderModeContent(modeId, eligible, topN) {
 
   const tabMethods = mode.core.map(c => c.id);
   // Tag 121: '__BY_SCORE__' Sub-Tab vorangestellt - Score-basierte Sicht mit Tier-Gruppierung
-  const tabs = ['__BY_SCORE__', '__ALL_MUST__', ...tabMethods];
+  const tabs = ['__BY_SCORE__', '__BLOCKED_BY_ONE__', '__ALL_MUST__', ...tabMethods];
   const defaultTab = '__BY_SCORE__';
 
   const tabButtonsHtml = tabs.map(tabId => {
     const isAllMust = tabId === '__ALL_MUST__';
     const isByScore = tabId === '__BY_SCORE__';
-    const methodMeta = (isAllMust || isByScore) ? null : Runner.METHODS.find(m => m.id === tabId);
-    const label = isByScore ? 'By Score (Tier)' : isAllMust ? 'Alle MUSTs (Legacy)' : (methodMeta && methodMeta.label) || tabId;
+    const isBlockedByOne = tabId === '__BLOCKED_BY_ONE__';
+    const methodMeta = (isAllMust || isByScore || isBlockedByOne) ? null : Runner.METHODS.find(m => m.id === tabId);
+    const label = isByScore ? 'By Score (Tier)' : isBlockedByOne ? 'Blocked by 1 MUST' : isAllMust ? 'Alle MUSTs (Legacy)' : (methodMeta && methodMeta.label) || tabId;
     const active = tabId === defaultTab;
     return `<button class="sub-tab ${active ? 'sub-tab-active' : ''}" data-mode="${modeId}" data-tab="${escHtml(tabId)}">${escHtml(label)}</button>`;
   }).join('');
@@ -310,9 +327,10 @@ function renderModeContent(modeId, eligible, topN) {
   const panelsHtml = tabs.map(tabId => {
     const isAllMust = tabId === '__ALL_MUST__';
     const isByScore = tabId === '__BY_SCORE__';
-    const sortMethodId = (isAllMust || isByScore) ? mode.defaultSortMethod : tabId;
-    const sortMethodMeta = (isAllMust || isByScore) ? Runner.METHODS.find(m => m.id === mode.defaultSortMethod) : Runner.METHODS.find(m => m.id === tabId);
-    const headerLabel = isByScore ? 'Score' : isAllMust ? ((sortMethodMeta && sortMethodMeta.label) || 'Score') : ((sortMethodMeta && sortMethodMeta.label) || tabId);
+    const isBlockedByOne = tabId === '__BLOCKED_BY_ONE__';
+    const sortMethodId = (isAllMust || isByScore || isBlockedByOne) ? mode.defaultSortMethod : tabId;
+    const sortMethodMeta = (isAllMust || isByScore || isBlockedByOne) ? Runner.METHODS.find(m => m.id === mode.defaultSortMethod) : Runner.METHODS.find(m => m.id === tabId);
+    const headerLabel = (isByScore || isBlockedByOne) ? 'Score' : isAllMust ? ((sortMethodMeta && sortMethodMeta.label) || 'Score') : ((sortMethodMeta && sortMethodMeta.label) || tabId);
 
     let rows;
     if (isByScore) {
@@ -343,6 +361,33 @@ function renderModeContent(modeId, eligible, topN) {
                renderGroup('B-Tier (Score 65-79)', groups.B, 'b') +
                renderGroup('Near-Miss (Score 50-64)', groups.NEAR_MISS, 'near') +
                renderGroup('Red-Flag (Score downgraded)', groups.RED_FLAG, 'red');
+      }
+    } else if (isBlockedByOne) {
+      // Tag 121b: Diagnose - Stocks die nur an EINEM MUST scheitern
+      const list = blockedByOneMust(eligible, modeId, topN);
+      if (list.length === 0) {
+        rows = `<div class="empty">Keine Stocks die genau 1 MUST verfehlen (alle erfuellen alles oder mehrere fallen).</div>`;
+      } else {
+        // Gruppiere nach failedMust ID
+        const byMust = {};
+        for (const item of list) {
+          const k = item.failedMust.id;
+          if (!byMust[k]) byMust[k] = [];
+          byMust[k].push(item);
+        }
+        const sectionHtml = Object.keys(byMust).sort().map(mustId => {
+          const items = byMust[mustId];
+          const meta = Runner.METHODS.find(m => m.id === mustId);
+          const mustLabel = (meta && meta.label) || mustId;
+          const itemsHtml = items.map((item, i) => {
+            const ev = item.ev;
+            const me = item.me;
+            const opts = { tier: me.tier, crossProfileTags: computeCrossProfileTags(ev.modeEvals, modeId) };
+            return renderRow(ev, i, modeId, mode.defaultSortMethod, opts);
+          }).join('');
+          return `<div class="tier-section tier-section-blocked"><div class="tier-header">Blocked by: ${escHtml(mustLabel)} (${items.length})</div>${itemsHtml}</div>`;
+        }).join('');
+        rows = sectionHtml;
       }
     } else if (isAllMust) {
       const list = topAllMust(eligible, modeId, topN);
@@ -785,6 +830,7 @@ function buildHtml(evaluated, topN) {
 .tier-section-b .tier-header { border-left-color: #2563eb; background: linear-gradient(90deg, rgba(37,99,235,0.15), transparent); }
 .tier-section-near .tier-header { border-left-color: #ca8a04; background: linear-gradient(90deg, rgba(202,138,4,0.15), transparent); }
 .tier-section-red .tier-header { border-left-color: #dc2626; background: linear-gradient(90deg, rgba(220,38,38,0.15), transparent); }
+.tier-section-blocked .tier-header { border-left-color: #d97706; background: linear-gradient(90deg, rgba(217,119,6,0.18), transparent); }
 </style>
 </head>
 <body>
