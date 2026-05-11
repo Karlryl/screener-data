@@ -58,7 +58,7 @@ const MODES = {
       { id: 'rule-of-x', required: false, weight: 'prefer', storyHint: 'Rule-of-X attraktiv' },
       { id: 'revenue-growth-3y', required: true, weight: 'must', storyHint: 'starkes 3-Jahres-Umsatzwachstum' },
       { id: 'gross-margin-stability', required: false, weight: 'prefer', storyHint: 'Bruttomarge stabil/hoch' },
-      // Tag 102c: profitability-state als CORE auch in Hypergrowth (Karl-Wunsch: Loss/Turnaround/Recent/Recent/Stable filtern)
+      // Tag 102c: profitability-state als CORE auch in Hypergrowth (Karl-Wunsch: Loss/Turnaround/Recent/Stable filtern)
       { id: 'profitability-state', required: false, weight: 'prefer', storyHint: 'Profitabilitaets-Status' },
       // Tag 112: Hypergrowth-Quality-Klassifikator als HARD-FILTER (Q_SPIKE_FAKE und LOW_BASE_EFFECT raus)
       { id: 'hypergrowth-quality-class', required: false, weight: 'prefer', storyHint: 'echtes Hypergrowth-Pattern' }
@@ -69,9 +69,6 @@ const MODES = {
     excludeSectors: SECTOR_EXCLUDE_HYPERGROWTH,
     storyTemplate: '{ticker} â Hypergrowth: {coreSummary}. {warnings}',
     defaultSortMethod: 'rule-of-x'
-  },
-
-  QUALITY_COMPOUNDER: {8'
   },
 
   QUALITY_COMPOUNDER: {
