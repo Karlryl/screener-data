@@ -1,4 +1,10 @@
 'use strict';
+
+// Tag 120: Score-Aggregator Integration (Hygiene-Filter + Investment-Score Trennung)
+var ScoreAggregator;
+try { ScoreAggregator = require('./score-aggregator.js'); }
+catch (e) { ScoreAggregator = null; }
+
 /**
  * Tag 100: Strategy-Modes Registry
  * =================================
@@ -177,6 +183,15 @@ function evaluateMode(stock, modeId, allResults) {
 
   const allMustPass = mustPassCount === mustChecks.length;
 
+  // Tag 120: Score-Aggregator (Investment-Score-Schicht)
+  // Hygiene-Layer (DataGuards/Sector/Mcap) wurde bereits oben durch fruehe Returns gefiltert.
+  // Hier wird der Score nur fuer Stocks berechnet die durch Hygiene durch sind.
+  var scoreResult = null;
+  if (ScoreAggregator) {
+    try { scoreResult = ScoreAggregator.computeScore(allResults, modeId, null); }
+    catch (e) { scoreResult = null; }
+  }
+
   return {
     passed: allMustPass,
     mustResults,
@@ -185,7 +200,12 @@ function evaluateMode(stock, modeId, allResults) {
     mustTotal: mustChecks.length,
     preferPassCount: preferResults.filter(p => p.status === 'pass').length,
     preferTotal: preferResults.length,
-    mode: modeId
+    mode: modeId,
+    // Tag 120 NEW fields (non-breaking, modes-report kann sie ignorieren bis Tag 121)
+    score: scoreResult ? scoreResult.score : null,
+    tier: scoreResult ? scoreResult.tier : null,
+    redFlags: scoreResult ? scoreResult.redFlags : [],
+    scoreBreakdown: scoreResult ? scoreResult.breakdown : null
   };
 }
 
