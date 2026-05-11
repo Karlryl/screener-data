@@ -403,7 +403,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (ftsQuarterly.grossProfitQ.length > 0) canonical.timeseries.grossProfitQ = ftsQuarterly.grossProfitQ;
 
       // Tag-87a: MarketCap-Filter — skip Stocks außerhalb Karl's Mid/Large-Cap-Range
-      const MIN_MCAP = 2e9;       // $2B
+      // Tag 116: untere Schwelle von $2B auf $1B gesenkt (konsistent mit refresh-universe).
+      // Erhoeht Coverage; Karl filtert via Mcap-Slider in modes-report.
+      const MIN_MCAP = 1e9;       // $1B (vorher $2B)
       const MAX_MCAP = Infinity;       // Tag 101: kein Mega-Cap-Cut mehr
       const mcapVal = canonical.marketCap && canonical.marketCap.value;
       if (mcapVal != null && (mcapVal < MIN_MCAP || mcapVal > MAX_MCAP)) {
