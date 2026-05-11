@@ -98,6 +98,19 @@ jobs:
         run: node generate-dashboard.js dashboard.html
         continue-on-error: true
 
+      # Tag 119: alert-state.json size guard (GitHub 100MB limit)
+      - name: Truncate alert-state if too large
+        run: |
+          if [ -f alert-state.json ]; then
+            size=$(stat -c %s alert-state.json)
+            if [ $size -gt 50000000 ]; then
+              echo "alert-state.json is $size bytes — truncating methodHistory + pretty-print off"
+              node -e "const fs=require('fs');const s=JSON.parse(fs.readFileSync('alert-state.json'));s.methodHistory={};fs.writeFileSync('alert-state.json',JSON.stringify(s));console.log('post-truncate:',fs.statSync('alert-state.json').size,'bytes');"
+            else
+              echo "alert-state.json is $size bytes — within budget"
+            fi
+          fi
+
       - name: Commit Snapshots + Alert-State
         run: |
           git config user.name "yahoo-pull-bot"
