@@ -62,8 +62,48 @@ function evaluateAll(stocks) {
     const allResults = Runner.evaluateStock(stock);
     const mcap = (stock.marketCap && stock.marketCap.value) || stock.marketCap || 0;
     const ipoYear = stock.meta && stock.meta.ipoYear ? stock.meta.ipoYear : null;
-    return { stock, allResults, mcap, ipoYear };
+    // Tag 121: pre-compute modeEvals fuer alle 3 Modi -> cross-profile-detection
+    const modeEvals = {};
+    for (const mId of Object.keys(SM.MODES)) {
+      try { modeEvals[mId] = SM.evaluateMode(stock, mId, allResults); }
+      catch (e) { modeEvals[mId] = null; }
+    }
+    return { stock, allResults, mcap, ipoYear, modeEvals };
   });
+}
+
+// Tag 121: Cross-Profile-Tags pro Stock (HG+QC, TRIPLE_PROFILE, ...)
+function computeCrossProfileTags(modeEvals, currentModeId) {
+  const tags = [];
+  const SCORE_THRESHOLD = 65;  // Stock muss in einem Mode >=65 erreichen damit Cross-Profile zaehlt
+  const strongModes = [];
+  for (const [mId, me] of Object.entries(modeEvals)) {
+    if (me && me.score != null && me.score >= SCORE_THRESHOLD) strongModes.push(mId);
+  }
+  if (strongModes.length >= 3) tags.push('TRIPLE_PROFILE');
+  else if (strongModes.length === 2) {
+    const ids = strongModes.sort().join('+');
+    if (ids === 'HYPERGROWTH+QUALITY_COMPOUNDER') tags.push('HG+QC');
+    else if (ids === 'HYPERGROWTH+TURNAROUND') tags.push('HG+TA');
+    else if (ids === 'QUALITY_COMPOUNDER+TURNAROUND') tags.push('QC+TA');
+  }
+  return tags;
+}
+
+// Tag 121: Score-basierte Top-Selektion mit Tier-Klassifikation.
+// Filtert NUR Hygiene-Layer (sector + mcap + DataGuards), nicht passed/MUSTs.
+// Sortiert nach modus-spezifischem Score, gibt Tier-Info zurueck.
+function topByScore(eligible, modeId, topN) {
+  const valid = eligible.filter(ev => {
+    const me = ev.modeEvals && ev.modeEvals[modeId];
+    return me && me.score != null;  // Score muss berechenbar sein (Hygiene durch)
+  });
+  valid.sort((a, b) => {
+    const sa = a.modeEvals[modeId].score;
+    const sb = b.modeEvals[modeId].score;
+    return sb - sa;  // descending
+  });
+  return valid.slice(0, topN);
 }
 
 function dedupeByCompany(evaluated) {
@@ -178,7 +218,7 @@ function aktienfinderUrl(ticker) {
   return 'https://www.google.com/search?q=' + encodeURIComponent('site:aktienfinder.net ' + base + ' aktie');
 }
 
-function renderRow(ev, i, modeId, sortMethodId) {
+function renderRow(ev, i, modeId, sortMethodId, opts) {
   const s = ev.stock;
   const ticker = (s.meta && s.meta.ticker) || '???';
   const name = (s.meta && s.meta.name) || '';
@@ -221,9 +261,14 @@ function renderRow(ev, i, modeId, sortMethodId) {
     metrics: { revenueGrowthYoY: (s.metrics && s.metrics.revenueGrowthYoY) || null }
   };
 
-    return `<div class="row" data-stock="${escHtml(JSON.stringify(stockSlim))}" data-af-url="${afUrl}" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}">
+    // Tag 121: Tier + Cross-Profile-Badges
+    const tier = (opts && opts.tier) || null;
+    const xpTags = (opts && opts.crossProfileTags) || [];
+    const tierBadge = tier ? `<span class="tier-badge tier-${tier.toLowerCase()}">${tier === 'NEAR_MISS' ? 'Near' : tier}</span>` : '';
+    const xpHtml = xpTags.length > 0 ? `<span class="xp-tags">${xpTags.map(t => `<span class="xp-tag">${escHtml(t)}</span>`).join('')}</span>` : '';
+    return `<div class="row" data-stock="${escHtml(JSON.stringify(stockSlim))}" data-af-url="${afUrl}" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}" data-tier="${tier||''}" data-xp="${xpTags.join(',')}">
     <span class="r-rank">${String(i+1).padStart(3, '0')}</span>
-    <span class="r-tk">${escHtml(ticker)}</span>
+    <span class="r-tk">${escHtml(ticker)}${tierBadge}${xpHtml}</span>
     <span class="r-name">${escHtml(name.slice(0, 36))}${name.length>36?'…':''}</span>
     <span class="r-sec">${escHtml(sector)}</span>
     <span class="r-state ${psClass}">${escHtml(psLabel)}<span class="r-conf">${escHtml(profConf)}</span></span>
@@ -249,25 +294,57 @@ function renderModeContent(modeId, eligible, topN) {
   const sectors = [...sectorSet].sort();
 
   const tabMethods = mode.core.map(c => c.id);
-  const tabs = ['__ALL_MUST__', ...tabMethods];
-  const defaultTab = '__ALL_MUST__';
+  // Tag 121: '__BY_SCORE__' Sub-Tab vorangestellt - Score-basierte Sicht mit Tier-Gruppierung
+  const tabs = ['__BY_SCORE__', '__ALL_MUST__', ...tabMethods];
+  const defaultTab = '__BY_SCORE__';
 
   const tabButtonsHtml = tabs.map(tabId => {
     const isAllMust = tabId === '__ALL_MUST__';
-    const methodMeta = isAllMust ? null : Runner.METHODS.find(m => m.id === tabId);
-    const label = isAllMust ? 'Beste Kandidaten' : (methodMeta && methodMeta.label) || tabId;
+    const isByScore = tabId === '__BY_SCORE__';
+    const methodMeta = (isAllMust || isByScore) ? null : Runner.METHODS.find(m => m.id === tabId);
+    const label = isByScore ? 'By Score (Tier)' : isAllMust ? 'Alle MUSTs (Legacy)' : (methodMeta && methodMeta.label) || tabId;
     const active = tabId === defaultTab;
     return `<button class="sub-tab ${active ? 'sub-tab-active' : ''}" data-mode="${modeId}" data-tab="${escHtml(tabId)}">${escHtml(label)}</button>`;
   }).join('');
 
   const panelsHtml = tabs.map(tabId => {
     const isAllMust = tabId === '__ALL_MUST__';
-    const sortMethodId = isAllMust ? mode.defaultSortMethod : tabId;
-    const sortMethodMeta = isAllMust ? Runner.METHODS.find(m => m.id === mode.defaultSortMethod) : Runner.METHODS.find(m => m.id === tabId);
-    const headerLabel = isAllMust ? ((sortMethodMeta && sortMethodMeta.label) || 'Score') : ((sortMethodMeta && sortMethodMeta.label) || tabId);
+    const isByScore = tabId === '__BY_SCORE__';
+    const sortMethodId = (isAllMust || isByScore) ? mode.defaultSortMethod : tabId;
+    const sortMethodMeta = (isAllMust || isByScore) ? Runner.METHODS.find(m => m.id === mode.defaultSortMethod) : Runner.METHODS.find(m => m.id === tabId);
+    const headerLabel = isByScore ? 'Score' : isAllMust ? ((sortMethodMeta && sortMethodMeta.label) || 'Score') : ((sortMethodMeta && sortMethodMeta.label) || tabId);
 
     let rows;
-    if (isAllMust) {
+    if (isByScore) {
+      // Tag 121: Score-basierte Sicht mit Tier-Gruppen
+      const list = topByScore(eligible, modeId, topN);
+      if (list.length === 0) {
+        rows = `<div class="empty">Keine Stocks mit Score-Daten (Hygiene-Layer).</div>`;
+      } else {
+        // Gruppiere nach Tier
+        const groups = { A: [], B: [], NEAR_MISS: [], RED_FLAG: [] };
+        for (const ev of list) {
+          const me = ev.modeEvals[modeId];
+          if (me.redFlags && me.redFlags.length > 0) groups.RED_FLAG.push(ev);
+          else if (me.tier === 'A') groups.A.push(ev);
+          else if (me.tier === 'B') groups.B.push(ev);
+          else if (me.tier === 'NEAR_MISS') groups.NEAR_MISS.push(ev);
+        }
+        const renderGroup = (label, evs, cls) => {
+          if (evs.length === 0) return '';
+          const items = evs.map((ev, i) => {
+            const me = ev.modeEvals[modeId];
+            const opts = { tier: me.tier, crossProfileTags: computeCrossProfileTags(ev.modeEvals, modeId) };
+            return renderRow(ev, i, modeId, mode.defaultSortMethod, opts);
+          }).join('');
+          return `<div class="tier-section tier-section-${cls}"><div class="tier-header">${label} (${evs.length})</div>${items}</div>`;
+        };
+        rows = renderGroup('A-Tier (Score >= 80)', groups.A, 'a') +
+               renderGroup('B-Tier (Score 65-79)', groups.B, 'b') +
+               renderGroup('Near-Miss (Score 50-64)', groups.NEAR_MISS, 'near') +
+               renderGroup('Red-Flag (Score downgraded)', groups.RED_FLAG, 'red');
+      }
+    } else if (isAllMust) {
       const list = topAllMust(eligible, modeId, topN);
       rows = list.length === 0
         ? `<div class="empty">Keine Stocks erfüllen alle MUST-Kriterien.</div>`
@@ -691,6 +768,23 @@ function buildHtml(evaluated, topN) {
 #stockModalBody .af-btn:hover { background: #b45309; }
 #modalToast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 20px; border-radius: 6px; z-index: 1100; opacity: 0; transition: opacity .2s; pointer-events: none; }
 #modalToast.show { opacity: 1; }
+
+/* Tag 121: Tier Badges + Cross-Profile-Tags + Tier-Sections */
+.tier-badge { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; letter-spacing: 0.4px; vertical-align: middle; }
+.tier-a { background: #16a34a; color: #fff; }
+.tier-b { background: #2563eb; color: #fff; }
+.tier-near_miss { background: #ca8a04; color: #fff; }
+.tier-reject { background: #6b7280; color: #fff; }
+
+.xp-tags { display: inline-flex; gap: 4px; margin-left: 6px; vertical-align: middle; }
+.xp-tag { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 700; background: linear-gradient(135deg, #d97706, #f59e0b); color: #fff; letter-spacing: 0.3px; }
+
+.tier-section { margin-bottom: 16px; }
+.tier-header { font-size: 12px; font-weight: 600; color: #fff; padding: 8px 14px; background: linear-gradient(90deg, rgba(217,119,6,0.15), transparent); border-left: 3px solid #d97706; margin-bottom: 4px; letter-spacing: 0.6px; text-transform: uppercase; }
+.tier-section-a .tier-header { border-left-color: #16a34a; background: linear-gradient(90deg, rgba(22,163,74,0.15), transparent); }
+.tier-section-b .tier-header { border-left-color: #2563eb; background: linear-gradient(90deg, rgba(37,99,235,0.15), transparent); }
+.tier-section-near .tier-header { border-left-color: #ca8a04; background: linear-gradient(90deg, rgba(202,138,4,0.15), transparent); }
+.tier-section-red .tier-header { border-left-color: #dc2626; background: linear-gradient(90deg, rgba(220,38,38,0.15), transparent); }
 </style>
 </head>
 <body>
