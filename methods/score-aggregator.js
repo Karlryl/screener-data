@@ -110,7 +110,18 @@ function normalizeMethodScore(methodResult, methodMeta) {
  * @param {Object} methodRegistry - optional: Method-Meta-Lookup fuer threshold/op
  * @returns {Object|null} { score, tier, redFlags, breakdown } oder null bei unbekanntem Modus
  */
-function computeScore(allResults, modeId, methodRegistry) {
+// Tag 120b: SoftGuard-Penalty-Schwellen (Punkte Abzug pro failed SoftGuard)
+const SOFT_GUARD_PENALTY = {
+  // High-Severity SoftGuards (echte Investment-Sorgen)
+  'q-spike-dataguard': 8,           // Q-Spike kann True-Hypergrowth-Discontinuity sein, aber auch fake
+  'deceleration-guard': 10,         // Verlangsamung ist echtes Warnzeichen, aber S-Curve-Normal
+  // Medium-Severity
+  'quarter-concentration-guard': 6, // Single-Q-Dominanz oft normal bei Discontinuity
+  'asset-growth-divergence': 8,     // M&A-Compounder triggern das fälschlich
+  'working-capital-anomaly': 6      // Seasonal-Effekt oft normal
+};
+
+function computeScore(allResults, modeId, methodRegistry, failedSoftGuards) {
   var weights = SCORE_WEIGHTS[modeId];
   if (!weights) return null;
 
@@ -136,7 +147,17 @@ function computeScore(allResults, modeId, methodRegistry) {
   }
 
   var normScore = totalWeight > 0 ? (weightedSum / totalWeight) * 100 : 0;
-  var score = Math.round(normScore);
+  var baseScore = Math.round(normScore);
+
+  // Tag 120b: SoftGuard-Penalty anwenden
+  var softGuardPenalty = 0;
+  if (Array.isArray(failedSoftGuards)) {
+    for (var i = 0; i < failedSoftGuards.length; i++) {
+      var sgId = failedSoftGuards[i];
+      softGuardPenalty += SOFT_GUARD_PENALTY[sgId] || 5;
+    }
+  }
+  var score = Math.max(0, baseScore - softGuardPenalty);
 
   // Tier-Klassifikation
   var tier;
@@ -161,7 +182,15 @@ function computeScore(allResults, modeId, methodRegistry) {
     tier = 'NEAR_MISS';
   }
 
-  return { score: score, tier: tier, redFlags: redFlags, breakdown: breakdown, mode: modeId };
+  return { 
+    score: score, 
+    baseScore: baseScore,  // Tag 120b: Score ohne SoftGuard-Penalty
+    tier: tier, 
+    redFlags: redFlags, 
+    softGuardPenalty: softGuardPenalty,  // Tag 120b: applied penalty
+    breakdown: breakdown, 
+    mode: modeId 
+  };
 }
 
 module.exports = {
@@ -169,5 +198,6 @@ module.exports = {
   normalizeMethodScore: normalizeMethodScore,
   TIER_THRESHOLDS: TIER_THRESHOLDS,
   SCORE_WEIGHTS: SCORE_WEIGHTS,
-  RED_FLAG_RULES: RED_FLAG_RULES
+  RED_FLAG_RULES: RED_FLAG_RULES,
+  SOFT_GUARD_PENALTY: SOFT_GUARD_PENALTY  // Tag 120b
 };
