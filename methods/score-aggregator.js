@@ -116,6 +116,7 @@ const SOFT_GUARD_PENALTY = {
   'q-spike-dataguard': 8,           // Q-Spike kann True-Hypergrowth-Discontinuity sein, aber auch fake
   'deceleration-guard': 10,         // Verlangsamung ist echtes Warnzeichen, aber S-Curve-Normal
   // Medium-Severity
+  'revenue-shock-guard': 7, // Tag 120d: Single-Q-Revenue-Sprung sieht oft wie Shock aus bei True-Hypergrowth (NVDA)
   'quarter-concentration-guard': 6, // Single-Q-Dominanz oft normal bei Discontinuity
   'asset-growth-divergence': 8,     // M&A-Compounder triggern das fälschlich
   'working-capital-anomaly': 6      // Seasonal-Effekt oft normal
