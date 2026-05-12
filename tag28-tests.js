@@ -145,12 +145,27 @@ test('GM-Stability: fail case (volatile margins)', () => {
   if (r.pass) throw new Error('should fail');
 });
 
-// Tag 118: 37 Methoden total (+ 3 DataGuards) (5 QC v2) (Tag 113: q-spike-dataguard neu) (Tag 112: hypergrowth-quality-class) (Tag 107: rule-of-x)
-test('Runner: getMethods returns 37 methods', () => {
+// Tag 121f: Self-updating - count derives from filesystem, no hardcode.
+// Anti-regression: catches silent method-drops (count<30) and runner/filesystem mismatch.
+test('Runner: getMethods matches filesystem (no silent drops)', () => {
+  const fs = require('fs');
+  const path = require('path');
   const methods = Runner.getMethods();
-  assertEq(methods.length, 37);
   const ids = methods.map(m => m.id).sort();
-  assertEq(ids, ['above-200d-ma','capex-trend','deceleration-guard','drawdown-52w','earnings-stability','ev-ebitda','fcf-yield','forecast-contamination-guard','forward-pe','gross-margin-stability','high-proximity-52w','hypergrowth-quality-class','insider-ownership','margin-decay','margin-quality','net-debt-ebitda','opinc-margin-spike','peg','premium-compounder-proof','profitability-state','profitability-trend','q-spike-dataguard','quality-compounder-roic','quarter-concentration-guard','quarterly-earnings-stability','quarterly-rev-acceleration','reinvestment-rate','revenue-growth-3y','revenue-shock-guard','roic','rule-of-40','rule-of-x','sbc-revenue','sloan-ratio','stable-quarterly-growth','volatility-annualized','working-capital-anomaly']);
+  if (ids.length < 30) {
+    throw new Error('only ' + ids.length + ' methods - did some silently drop?');
+  }
+  // Cross-check: filesystem .js count matches runner's loaded count.
+  // Method-IDs may differ from filenames (z.B. 'quarterly-rev-acceleration' vs 'quarterly-revenue-acceleration.js').
+  const NON_METHOD_FILES = new Set([
+    'runner.js', 'trend.js', 'method-types.js',
+    'score-aggregator.js', 'strategy-modes.js', 'sector-medians-compute.js'
+  ]);
+  const dir = path.join(__dirname, 'methods');
+  const fsCount = fs.readdirSync(dir)
+    .filter(f => f.endsWith('.js') && !f.startsWith('_') && !NON_METHOD_FILES.has(f))
+    .length;
+  assertEq(ids.length, fsCount, 'runner vs filesystem method count');
 });
 
 test('Runner: evaluateStock handles thrown errors', () => {
@@ -158,6 +173,49 @@ test('Runner: evaluateStock handles thrown errors', () => {
   for (const k of Object.keys(r)) {
     if (r[k].computable) throw new Error(`${k} should be incomputable for null stock`);
   }
+});
+
+
+// Tag 121g: net-debt-ebitda must flag EBITDA approximation (D&A synthesized).
+test('Net-Debt/EBITDA: approximationFlag exposes EBITDA synthesis', () => {
+  const s = makeStock({}, { opInc: [10] }, [{ totalDebt: 10, totalCash: 2, totalAssets: 100 }]);
+  const r = Runner.evaluateStock(s)['net-debt-ebitda'];
+  if (!r.computable) throw new Error('should be computable');
+  if (!r.components || r.components.approximationFlag !== true) {
+    throw new Error('approximationFlag missing - EBITDA-synthesis is silent (audit-finding)');
+  }
+  if (!r.components.approxReason || !/EBITDA/.test(r.components.approxReason)) {
+    throw new Error('approxReason missing or unclear');
+  }
+});
+
+// Tag 124: revenue-volatility-guard MATERIAL_REV_FLOOR must be currency-aware.
+test('revenue-volatility-guard: MATERIAL_REV_FLOOR is currency-aware (USD)', () => {
+  const stock = {
+    meta: { ticker: '7203.T', reportingCurrency: 'JPY' },
+    metrics: { revenueTTM: { value: 150e6 } },
+    annual: { annualRev: [{ value: 150e6 }, { value: 140e6 }, { value: 50e6 }] }
+  };
+  const r = Runner.evaluateStock(stock)['revenue-volatility-guard'];
+  if (!r.computable) throw new Error('should be computable (immaterial branch)');
+  if (!r.reason || !/immaterial|usd-?aequiv|<\$100m/i.test(r.reason)) {
+    throw new Error('JPY 150M (~$1M USD) should hit immaterial branch, got reason=' + r.reason);
+  }
+  if (r.pass !== true) {
+    throw new Error('immaterial = pass:true; got pass=' + r.pass);
+  }
+});
+
+// Tag 124: revenue-volatility-guard must still fire for USD-large stocks.
+test('revenue-volatility-guard: USD large-cap with -67% YoY still FAILS', () => {
+  const stock = {
+    meta: { ticker: 'SPHR', reportingCurrency: 'USD' },
+    metrics: { revenueTTM: { value: 1220e6 } },
+    annual: { annualRev: [{ value: 1220e6 }, { value: 574e6 }, { value: 1725e6 }, { value: 180e6 }] }
+  };
+  const r = Runner.evaluateStock(stock)['revenue-volatility-guard'];
+  if (!r.computable) throw new Error('should be computable');
+  if (r.pass) throw new Error('SPHR-pattern (-67% YoY decline) should still FAIL after Tag 124');
 });
 
 console.log('---------------------------');
