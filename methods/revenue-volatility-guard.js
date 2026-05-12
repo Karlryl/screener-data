@@ -29,23 +29,26 @@ const SPLIT_PATTERN_SPIKE = 5.0;                // 500%+ jump
 const SPLIT_PATTERN_DROP = -0.50;               // followed by -50%+ drop = FAIL
 const MATERIAL_REV_FLOOR_USD = 100e6;           // Tag 124: explicit USD
 
-// Tag 124: rough FX-table (USD per 1 local currency).
-// Aim is "is this material" filter, not accounting accuracy.
-// Static fallback - daily-pull workflow could refresh this from Yahoo FX endpoint.
-const FX_TO_USD = {
-  USD: 1.0,
-  EUR: 1.08,
-  GBP: 1.27,
-  JPY: 0.0067,   // 1 JPY ~ $0.0067
-  HKD: 0.128,
-  CNY: 0.138,
-  AUD: 0.66,
-  CAD: 0.73,
-  CHF: 1.12,
-  KRW: 0.00073,
-  SGD: 0.74,
-  TWD: 0.031
+// Tag 124b: FX-Tabelle wird taeglich via scripts/refresh-fx.js gepflegt.
+// Static fallback bleibt fuer Fall dass fx-rates.json fehlt oder Yahoo-Endpoint down war.
+const STATIC_FX_FALLBACK = {
+  USD: 1.0, EUR: 1.08, GBP: 1.27, JPY: 0.0067, HKD: 0.128, CNY: 0.138,
+  AUD: 0.66, CAD: 0.73, CHF: 1.12, KRW: 0.00073, SGD: 0.74, TWD: 0.031,
+  SEK: 0.095, NOK: 0.092, DKK: 0.145, INR: 0.012, BRL: 0.20, MXN: 0.058, ZAR: 0.054
 };
+let FX_TO_USD = Object.assign({}, STATIC_FX_FALLBACK);
+try {
+  const path = require('path');
+  const fs = require('fs');
+  // Look for fx-rates.json in repo root (two levels up from methods/)
+  const fxPath = path.join(__dirname, '..', 'fx-rates.json');
+  if (fs.existsSync(fxPath)) {
+    const fresh = JSON.parse(fs.readFileSync(fxPath, 'utf8'));
+    if (fresh && fresh.rates) FX_TO_USD = Object.assign({}, STATIC_FX_FALLBACK, fresh.rates);
+  }
+} catch (e) {
+  // silent fallback
+}
 
 function toUsdRough(value, currency) {
   if (value == null || !Number.isFinite(value)) return null;

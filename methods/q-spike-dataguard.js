@@ -37,6 +37,43 @@ function _arr(stock, path) {
   return a.map(v => v == null ? null : (typeof v === 'number' ? v : v.value)).filter(v => Number.isFinite(v));
 }
 
+// Tag 126: Clinical-Stage-Biotech-Detection.
+// WVE-Pattern: Industry=Biotechnology + OpMargin<-100% + R&D/Rev>2.0 → Milestone-Revenue, not real product sales.
+// These shouldn't be in HG at all (Revenue is accounting-artifact).
+function _isClinicalStageBiotech(stock) {
+  const industry = (stock.meta && stock.meta.industry) || '';
+  if (!/biotechnology|drug manufacturers - specialty/i.test(industry)) return false;
+  const opMargin = H.metricValue(stock, 'operatingMargin');
+  if (opMargin == null || opMargin > -100) return false;
+  // R&D/Rev not always available — heuristic: if FCF-Margin < -100 AND OpMargin < -100, it's clinical-stage
+  const fcfMargin = H.metricValue(stock, 'fcfMarginTTM');
+  return fcfMargin != null && fcfMargin < -100;
+}
+
+// Tag 125: Seasonal-Sector-Detection.
+// GLBE/GENI-Pattern: Q4 strukturell 30-40% des FY (E-Commerce, Sports-Betting, Retail).
+// Wenn aktuelle Q4-Share-of-TTM ≈ prior-Year-Q4-Share (within 3pp): NICHT als Spike werten.
+const SEASONAL_SECTORS = /\b(internet retail|internet content|sports? betting|leisure|specialty retail|gambling|department stores|home improvement)\b/i;
+function _isSeasonalQ4Spike(stock, qVals) {
+  const sectorInfo = ((stock.meta && stock.meta.sector) || '') + ' ' + ((stock.meta && stock.meta.industry) || '');
+  if (!SEASONAL_SECTORS.test(sectorInfo)) return false;
+  if (qVals.length < 8) return false;
+  const currentQ4Share = qVals[0] / (qVals[0] + qVals[1] + qVals[2] + qVals[3]);
+  const priorQ4Share = qVals[4] / (qVals[4] + qVals[5] + qVals[6] + qVals[7]);
+  return Math.abs(currentQ4Share - priorQ4Share) < 0.03;  // within 3pp = seasonal pattern
+}
+
+// Tag 127: Launch-Inflection-Detection.
+// INSM/CELH/ALNY-Pattern: recent-4Q-avg > 1.5x prior-4Q-avg = strukturelles step-change (M&A, FDA-approval, new indication).
+// In dem Fall: Spike-Konzentration ist erwartet, nicht anomal. Suppress alert für 2-3 Quartale.
+function _inLaunchInflection(qVals) {
+  if (qVals.length < 8) return false;
+  const recent4 = (qVals[0] + qVals[1] + qVals[2] + qVals[3]) / 4;
+  const prior4 = (qVals[4] +qVals[5] + qVals[6] + qVals[7]) / 4;
+  return prior4 > 0 && recent4 / prior4 > 1.5;
+}
+
+
 function evaluate(stock) {
   // Tag 113d: bei null-stock alles incomputable (Test-Anforderung)
   if (!stock) {
@@ -69,6 +106,25 @@ function evaluate(stock) {
     });
   }
 
+  // Tag 126: Clinical-Stage-Biotech early exit — these don't belong in HG at all.
+  if (_isClinicalStageBiotech(stock)) {
+    return H.buildResult({
+      computable: true, pass: false, value: 'CLINICAL_STAGE_BIOTECH',
+      reason: 'Clinical-Stage-Biotech (OpMargin<-100% + FCF<-100% + Industry=Biotech) - Revenue is milestone-accounting, not product sales'
+    });
+  }
+
+  // Tag 128 integration: if pull-yahoo flagged validation issues (e.g. q_rev_guidance_suspect), fail.
+  if (stock.validation && stock.validation.issues) {
+    const dataIssues = stock.validation.issues.filter(i => i.code === 'q_rev_guidance_suspect');
+    if (dataIssues.length > 0) {
+      return H.buildResult({
+        computable: true, pass: false, value: 'DATA_SUSPECT',
+        reason: 'Snapshot validation: ' + dataIssues.map(i => i.code).join(', ') + ' — refusing to evaluate Q-spike on suspect data'
+      });
+    }
+  }
+
   const reasons = [];
   let fail = false;
 
@@ -88,15 +144,24 @@ function evaluate(stock) {
   }
 
   // Check 1: Spike Concentration (largest Q / sum letzte 4Q)
+  // Tag 125: suppress for seasonal Q4 spikes (GLBE/GENI fix)
+  // Tag 127: suppress during launch-inflection windows (INSM/CELH/ALNY fix)
   let spikeShare = null;
+  let spikeSuppression = null;
   if (revQ.length >= 4) {
     const last4 = revQ.slice(0, 4);
     const total = last4.reduce((s, v) => s + v, 0);
     const max = Math.max(...last4);
     if (total > 0) spikeShare = max / total;
     if (spikeShare != null && spikeShare > SPIKE_SHARE_HARD) {
-      fail = true;
-      reasons.push('Spike-Konzentration ' + Math.round(spikeShare*100) + '% > ' + Math.round(SPIKE_SHARE_HARD*100) + '%');
+      if (_isSeasonalQ4Spike(stock, revQ)) {
+        spikeSuppression = 'seasonal_q4_pattern';
+      } else if (_inLaunchInflection(revQ)) {
+        spikeSuppression =  'launch_inflection_window';
+      } else {
+        fail = true;
+        reasons.push('Spike-Konzentration ' + Math.round(spikeShare*100) + '% > ' + Math.round(SPIKE_SHARE_HARD*100) + '%');
+      }
     }
   }
 
@@ -120,15 +185,18 @@ function evaluate(stock) {
   // Wenn beide Checks nicht ausloesen → pass
   if (!fail) {
     return H.buildResult({
-      computable: true, pass: true, value: 'CLEAN',
+      computable: true, pass: true, value: spikeSuppression ? 'CLEAN_SUPPRESSED' : 'CLEAN',
       components: {
         spikeShare: spikeShare != null ? Math.round(spikeShare*100) : null,
         oiSeverity: oiSeverity,
         oiDir: oiDir,
         yoyGrowth: yoyGrowth,
-        annualDecline3y: annualDecline != null ? Math.round(annualDecline*100) : null
+        annualDecline3y: annualDecline != null ? Math.round(annualDecline*100) : null,
+        spikeSuppression: spikeSuppression
       },
-      reason: 'Hypergrowth-Pattern OK — keine Spike/OI-Anomalie'
+      reason: spikeSuppression
+        ? 'Hypergrowth-Pattern OK (Spike suppressed: ' + spikeSuppression + ')'
+        : 'Hypergrowth-Pattern OK — keine Spike/OI-Anomalie'
     });
   }
 

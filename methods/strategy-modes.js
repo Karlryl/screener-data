@@ -297,8 +297,67 @@ function buildStory(stock, modeEval, allResults, modeRef) {
   };
 }
 
+
+/**
+ * Tag 122: QC Profile-Overrides
+ * ==============================
+ * Statt drei neue Top-Level-Modes: optional moduliert ein Profile einzelne MUSTs
+ * im QUALITY_COMPOUNDER, ohne Mode-Liste zu explodieren.
+ *
+ * Anwendung: const qcMA = applyProfile(MODES.QUALITY_COMPOUNDER, 'M_AND_A');
+ *
+ * Profiles:
+ *   - M_AND_A: net-debt-ebitda von must→prefer (Acquirer hat erwartungsgemaess hoeheren Debt)
+ *   - ASSET_HEAVY: reinvestment-rate von must→prefer (Capex-intensive Sektoren)
+ *   - COVID_RECOVERY: earnings-stability von must→prefer (Pandemic-Dip fuer 1-2 Jahre)
+ *
+ * Per-Profile modulation ist nicht-destruktiv (mutiert MODES.QUALITY_COMPOUNDER nicht).
+ */
+const PROFILES = {
+  M_AND_A: {
+    label: 'M&A-Compounder',
+    description: 'Acquirer-Profile - erlaubt erhoehten Net-Debt fuer Capital-Allokation via Akquisitionen',
+    coreOverrides: { 'net-debt-ebitda': { weight: 'prefer' } },
+    softGuardsAdd: ['asset-growth-divergence']  // Acquired-Growth detection
+  },
+  ASSET_HEAVY: {
+    label: 'Asset-Heavy-Compounder',
+    description: 'Capex-intensive Sektoren - relaxed Reinvestment-Rate (Capex selbst IST Reinvestment)',
+    coreOverrides: { 'reinvestment-rate': { weight: 'prefer' } }
+  },
+  COVID_RECOVERY: {
+    label: 'COVID-Recovery',
+    description: 'Pandemic-affected Sektoren - earnings-stability darf 2020-2022 Dip haben',
+    coreOverrides: { 'earnings-stability': { weight: 'prefer' } }
+  }
+};
+
+function applyProfile(mode, profileId) {
+  const profile = PROFILES[profileId];
+  if (!profile) throw new Error('Unknown profile: ' + profileId);
+  // Non-destructive deep-ish clone of core[]; rest is shared
+  const newCore = mode.core.map(c => {
+    const override = profile.coreOverrides && profile.coreOverrides[c.id];
+    if (!override) return c;
+    return Object.assign({}, c, override, { required: override.weight === 'must' });
+  });
+  const newSoftGuards = profile.softGuardsAdd
+    ? [...(mode.softGuards || []), ...profile.softGuardsAdd]
+    : mode.softGuards;
+  return Object.assign({}, mode, {
+    id: mode.id + '_' + profileId,
+    label: mode.label + ' (' + profile.label + ')',
+    description: profile.description,
+    core: newCore,
+    softGuards: newSoftGuards,
+    appliedProfile: profileId
+  });
+}
+
 module.exports = {
   MODES,
+  PROFILES,
+  applyProfile,
   evaluateMode,
   buildStory,
   isExcludedBySector
