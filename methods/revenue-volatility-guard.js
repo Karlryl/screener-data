@@ -27,7 +27,34 @@ const LABEL = 'Revenue-Volatility-Guard';
 const SINGLE_YEAR_DECLINE_THRESHOLD = -0.25;   // -25% single-year YoY = FAIL
 const SPLIT_PATTERN_SPIKE = 5.0;                // 500%+ jump
 const SPLIT_PATTERN_DROP = -0.50;               // followed by -50%+ drop = FAIL
-const MATERIAL_REV_FLOOR = 100e6;
+const MATERIAL_REV_FLOOR_USD = 100e6;           // Tag 124: explicit USD
+
+// Tag 124: rough FX-table (USD per 1 local currency).
+// Aim is "is this material" filter, not accounting accuracy.
+// Static fallback - daily-pull workflow could refresh this from Yahoo FX endpoint.
+const FX_TO_USD = {
+  USD: 1.0,
+  EUR: 1.08,
+  GBP: 1.27,
+  JPY: 0.0067,   // 1 JPY ~ $0.0067
+  HKD: 0.128,
+  CNY: 0.138,
+  AUD: 0.66,
+  CAD: 0.73,
+  CHF: 1.12,
+  KRW: 0.00073,
+  SGD: 0.74,
+  TWD: 0.031
+};
+
+function toUsdRough(value, currency) {
+  if (value == null || !Number.isFinite(value)) return null;
+  const c = (currency || 'USD').toUpperCase();
+  const rate = FX_TO_USD[c];
+  // Unknown currency: conservatively treat as USD (do not silently disable floor).
+  if (rate == null) return value;
+  return value * rate;
+}
 
 function _arr(stock, path) {
   const a = H.val(stock, path);
@@ -41,11 +68,15 @@ function evaluate(stock) {
   const revY = _arr(stock, 'annual.annualRev');
   const ttmRev = H.metricValue(stock, 'revenueTTM') || revY[0] || 0;
 
-  // Material-Schwelle: Mini-Stocks tolerieren
-  if (ttmRev < MATERIAL_REV_FLOOR) {
+  // Tag 124: Material-Schwelle in USD (currency-aware).
+  // Vorher silent disable fuer non-USD Reporter (JPY/EUR/etc.) weil 100M lokal-Currency
+  // viel zu niedrig war. Jetzt wird ttmRev nach USD konvertiert vor Comparison.
+  const reportingCurrency = (stock.meta && stock.meta.reportingCurrency) || 'USD';
+  const ttmRevUsd = toUsdRough(ttmRev, reportingCurrency);
+  if (ttmRevUsd != null && ttmRevUsd < MATERIAL_REV_FLOOR_USD) {
     return H.buildResult({
       computable: true, pass: true, value: 'IMMATERIAL',
-      reason: 'TTM-Rev <\$100M, Volatilitaet toleriert (Mini-Stock)'
+      reason: 'TTM-Rev <$100M (USD-aequiv, currency=' + reportingCurrency + ')'
     });
   }
 
@@ -99,7 +130,7 @@ function evaluate(stock) {
   return H.buildResult({
     computable: true, pass: true, value: 'CONSISTENT',
     reason: 'Annual-Revenue stabil/wachsend (worst YoY = ' + (worstDecline ? Math.round(worstDecline.rate*100) + '%' : 'n/a') + ')',
-    components: { yoyRates, worstDecline: worstDecline ? worstDecline.rate : null }
+    components: { yoyRates: yoyRates, worstDecline: worstDecline ? worstDecline.rate : null }
   });
 }
 

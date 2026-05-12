@@ -35,8 +35,16 @@ function evaluate(stock) {
     value,
     pass: value <= THRESHOLD,
     computable: true,
-    components: { netDebt, ebitda, totalDebt, totalCash: totalCash || 0, opInc },
-    reason: `(${(totalDebt/1e9).toFixed(1)}B - ${((totalCash||0)/1e9).toFixed(1)}B) / ${(ebitda/1e9).toFixed(1)}B = ${value.toFixed(2)}`,
+    // Tag 121g: approximationFlag macht die EBITDA-Synthese sichtbar.
+    // EBITDA = OpInc × 1.2 ist eine ~20%-Inflation gegenueber realem EBITDA.
+    // Net-Debt-Ratio ist entsprechend ~20% niedriger als real - QC-Hard-Guard
+    // darf nicht silent passen wenn EBITDA gar nicht aus Originaldaten kommt.
+    components: {
+      netDebt, ebitda, totalDebt, totalCash: totalCash || 0, opInc,
+      approximationFlag: true,
+      approxReason: 'EBITDA approximated as OpInc x 1.2 (D&A synthesized)'
+    },
+    reason: `(${(totalDebt/1e9).toFixed(1)}B - ${((totalCash||0)/1e9).toFixed(1)}B) / ${(ebitda/1e9).toFixed(1)}B = ${value.toFixed(2)} [EBITDA approx]`,
     threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
   });
 }
