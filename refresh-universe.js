@@ -52,8 +52,33 @@ const SCREENER_IDS = [
   'high_yield_bond',               // skip but kept for coverage
 ];
 
-// Tag 116: Multi-Region Pull — Yahoo screener region-aware
-const REGIONS = ['US', 'GB', 'DE', 'FR', 'HK', 'JP', 'AU', 'CA'];
+// Tag 130: Multi-Region Pull — 14 Regionen (CN/IN/IT/NL/SE/ES neu)
+const REGIONS = ['US', 'GB', 'DE', 'FR', 'HK', 'JP', 'AU', 'CA', 'CN', 'IN', 'IT', 'NL', 'SE', 'ES'];
+
+// Tag 131: Exchange-Code-basierter Custom-Screener (geht über curated Yahoo-Listen hinaus)
+// Paginiert über alle Stocks $1B–$500B mcap je Exchange → ~10k+ Coverage möglich
+const EXCHANGE_CODES = [
+  'NMS',  // NASDAQ Global Select
+  'NYQ',  // NYSE
+  'NGM',  // NASDAQ Global Market
+  'NIM',  // NASDAQ Capital Market
+  'ASE',  // NYSE American
+  'LSE',  // London
+  'FRA',  // Frankfurt
+  'PAR',  // Paris (Euronext)
+  'AMS',  // Amsterdam
+  'MIL',  // Milan
+  'STO',  // Stockholm
+  'HKG',  // Hong Kong
+  'TYO',  // Tokyo
+  'SHH',  // Shanghai
+  'SHZ',  // Shenzhen
+  'BSE',  // Bombay/NSE India
+  'KOE',  // Korea
+  'TAI',  // Taiwan
+  'ASX',  // Australia
+  'TOR',  // Toronto
+];
 
 async function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -63,7 +88,29 @@ async function fetchScreener(id, region) {
     const r = await yf.screener({ scrIds: id, count: 250, region: region });
     return (r && r.quotes) || [];
   } catch (e) {
-    // Manche Screener-IDs nur in bestimmten Regionen verfuegbar - silent fail
+    return [];
+  }
+}
+
+// Tag 131: Custom Exchange-Screener mit Pagination.
+// Liefert ALLE Stocks je Exchange die $1B-$500B Mcap haben — nicht nur curated Listen.
+async function fetchExchangePage(exchangeCode, minMcap, maxMcap, offset) {
+  try {
+    const r = await yf.screener({
+      query: {
+        operator: 'AND',
+        operands: [
+          { operator: 'btwn', operands: ['intradaymarketcap', minMcap, maxMcap] },
+          { operator: 'eq', operands: ['exchange', exchangeCode] }
+        ]
+      },
+      count: 250,
+      offset: offset || 0,
+      sortField: 'intradaymarketcap',
+      sortType: 'DESC'
+    });
+    return (r && r.quotes) || [];
+  } catch (e) {
     return [];
   }
 }
@@ -114,6 +161,42 @@ async function main() {
       await _sleep(300);
     }
   }
+
+  // Tag 131: Custom Exchange-Screener (paginiert) — zusätzlich zu predefined Screener-Buckets.
+  // Ziel: 10k+ Stocks statt ~3500. Errors sind non-fatal (silent skip).
+  console.log('\nCustom Exchange-Screener (Tag 131)...');
+  const MIN_MCAP_CUSTOM = 1e9;
+  const MAX_MCAP_CUSTOM = 500e9;
+  let customAdded = 0;
+  for (const exch of EXCHANGE_CODES) {
+    let offset = 0;
+    let pageEmpty = false;
+    while (!pageEmpty) {
+      const quotes = await fetchExchangePage(exch, MIN_MCAP_CUSTOM, MAX_MCAP_CUSTOM, offset);
+      if (quotes.length === 0) { pageEmpty = true; break; }
+      let kept = 0;
+      for (const q of quotes) {
+        if (!q || !q.symbol) continue;
+        const sym = q.symbol.toUpperCase();
+        const mcap = q.marketCap;
+        if (!mcap || mcap < MIN_MCAP_CUSTOM || mcap > MAX_MCAP_CUSTOM) continue;
+        if (!allTickers.has(sym) || (allTickers.get(sym).marketCap || 0) < mcap) {
+          allTickers.set(sym, {
+            ticker: sym, marketCap: mcap,
+            name: q.longName || q.shortName || '',
+            sector: q.sector || '',
+            exchange: q.fullExchangeName || q.exchange || exch
+          });
+          kept++;
+          customAdded++;
+        }
+      }
+      if (kept > 0) console.log(`  ${exch} offset=${offset}: ${quotes.length} quotes, ${kept} new`);
+      if (quotes.length < 250) { pageEmpty = true; }
+      else { offset += 250; await _sleep(400); }
+    }
+  }
+  console.log('Custom-Screener total neue Tickers: ' + customAdded);
 
   // 2. Filter out Banks/REITs/Insurance (Modus-Logik schließt sie eh aus, kein Pull)
   const SECTOR_EXCLUDE = /bank|insurance|financial services|capital markets|asset management|real estate|reit/i;

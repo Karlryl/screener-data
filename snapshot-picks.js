@@ -62,10 +62,33 @@ function pickStockForMode(stock, modeId) {
     industry: stock.meta.industry || '',
     profState: getProfState(results),
     primaryMetric: primaryMetricFor(modeId, results),
+    score: (ev.score != null) ? Math.round(ev.score * 10) / 10 : null,
     marketCap: getMcap(stock),
     mustPassCount: ev.mustPassCount,
     mustTotal: ev.mustTotal
   };
+}
+
+function dedupePicksByCompany(picks) {
+  function norm(s) {
+    if (!s) return '';
+    return String(s).toLowerCase()
+      .replace(/[éèêë]/g, 'e').replace(/[óòôö]/g, 'o').replace(/[áàâä]/g, 'a')
+      .replace(/\b(inc|corporation|corp|incorporated|company|co|ltd|limited|plc|sa|ag|nv|holdings|holding|group|sarl|spa)\b/gi, '')
+      .replace(/[^a-z0-9]+/g, '').trim();
+  }
+  const byKey = new Map();
+  for (const p of picks) {
+    const key = norm(p.name) || p.ticker.split(/[.\-]/)[0].toLowerCase();
+    if (!key) continue;
+    const existing = byKey.get(key);
+    if (!existing) { byKey.set(key, p); continue; }
+    const pIsUS = !/\./.test(p.ticker);
+    const exIsUS = !/\./.test(existing.ticker);
+    if (pIsUS && !exIsUS) byKey.set(key, p);
+    else if (pIsUS === exIsUS && (p.score || 0) > (existing.score || 0)) byKey.set(key, p);
+  }
+  return Array.from(byKey.values());
 }
 
 function main() {
@@ -91,14 +114,20 @@ function main() {
       if (p) picks.push(p);
     }
     picks.sort((a, b) => {
+      const sa = a.score, sb = b.score;
+      if (sa != null && sb != null) return sb - sa;
+      if (sa != null) return -1;
+      if (sb != null) return 1;
       const va = a.primaryMetric.value, vb = b.primaryMetric.value;
       if (va == null && vb == null) return 0;
       if (va == null) return 1;
       if (vb == null) return -1;
       return vb - va;
     });
-    result.modes[modeId] = picks;
-    console.log('  ' + modeId + ': ' + picks.length + ' picks');
+    const deduped = dedupePicksByCompany(picks);
+    const top100 = deduped.slice(0, 100);
+    result.modes[modeId] = top100;
+    console.log('  ' + modeId + ': ' + picks.length + ' picks -> ' + deduped.length + ' deduped -> top ' + top100.length);
   }
 
   const dateStr = result.asOf.slice(0, 10);
