@@ -84,7 +84,10 @@ function normalizeMethodScore(methodResult, methodMeta) {
   if (methodResult.pass) return 1.0;
 
   var val = methodResult.value;
-  var threshold = methodMeta && methodMeta.threshold;
+  // Tag 155: prefer per-result threshold (e.g. piotroski scaledThreshold) over module-level meta.
+  // piotroski buildResult() passes threshold:scaledThreshold so stocks with fewer computable signals
+  // get normalized against the correct denominator, not always 6.
+  var threshold = methodResult.threshold != null ? methodResult.threshold : (methodMeta && methodMeta.threshold);
   // Tag 152: guard non-numeric thresholds (e.g. profitability-state exports threshold:'TURNAROUND',
   // profitability-trend exports threshold:'FLAT') — dividing by a string produces NaN which
   // poisons weightedSum and turns any failing stock's score into NaN → silent REJECT mis-tier.
