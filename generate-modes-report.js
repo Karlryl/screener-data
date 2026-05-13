@@ -282,6 +282,29 @@ function renderRow(ev, i, modeId, sortMethodId, opts) {
     const xpTags = (opts && opts.crossProfileTags) || [];
     const tierBadge = tier ? `<span class="tier-badge tier-${tier.toLowerCase()}">${tier === 'NEAR_MISS' ? 'Near' : tier}</span>` : '';
     const xpHtml = xpTags.length > 0 ? `<span class="xp-tags">${xpTags.map(t => `<span class="xp-tag">${escHtml(t)}</span>`).join('')}</span>` : '';
+
+    // Tag 133h: per-pick reason-chips. Pulls scoreBreakdown from modeEvals (compute on-demand if missing).
+    let chipsHtml = '';
+    try {
+      const me = (ev.modeEvals && ev.modeEvals[modeId]) || SM.evaluateMode(ev.stock, modeId, ev.allResults);
+      const bd = me && me.scoreBreakdown;
+      const dqGrade = me && me.dataQualityGrade;
+      if (bd && typeof bd === 'object') {
+        const chips = Object.entries(bd).map(([mid, b]) => {
+          const meta = Runner.METHODS.find(m => m.id === mid);
+          const lbl = (meta && meta.label) || mid;
+          const short = lbl.replace(/Rule[- ]of[- ]/i, 'R').replace(/Hypergrowth /, 'HG ').slice(0, 18);
+          if (!b.computable) return `<span class="chip chip-na" title="${escHtml(lbl + ': incomputable')}">${escHtml(short)}</span>`;
+          const cls = b.pass ? 'chip-pass' : 'chip-fail';
+          const valStr = b.value == null ? '' : ' ' + fmtValue(b.value, meta && meta.unit);
+          const wPct = b.weight ? ' · w' + Math.round(b.weight * 100) : '';
+          return `<span class="chip ${cls}" title="${escHtml(lbl + valStr + wPct + ' · score=' + b.score)}">${escHtml(short + valStr)}</span>`;
+        }).join('');
+        const dqChip = dqGrade ? `<span class="chip chip-dq chip-dq-${dqGrade.toLowerCase()}" title="Data-Quality Grade">DQ ${dqGrade}</span>` : '';
+        if (chips || dqChip) chipsHtml = `<div class="chip-strip">${dqChip}${chips}</div>`;
+      }
+    } catch (e) { /* chips are best-effort; never block row rendering */ }
+
     return `<div class="row" data-stock="${escHtml(JSON.stringify(stockSlim))}" data-af-url="${afUrl}" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}" data-tier="${tier||''}" data-xp="${xpTags.join(',')}">
     <span class="r-rank">${String(i+1).padStart(3, '0')}</span>
     <span class="r-tk">${escHtml(ticker)}${tierBadge}${xpHtml}</span>
@@ -292,6 +315,7 @@ function renderRow(ev, i, modeId, sortMethodId, opts) {
     <span class="r-spark">${spark}</span>
     <span class="r-val">${escHtml(sortValStr)}</span>
     <span class="r-mcap">${fmtMoney(mcap)}</span>
+    ${chipsHtml}
   </div>`;
 }
 
@@ -831,6 +855,30 @@ function buildHtml(evaluated, topN) {
 .tier-section-near .tier-header { border-left-color: #ca8a04; background: linear-gradient(90deg, rgba(202,138,4,0.15), transparent); }
 .tier-section-red .tier-header { border-left-color: #dc2626; background: linear-gradient(90deg, rgba(220,38,38,0.15), transparent); }
 .tier-section-blocked .tier-header { border-left-color: #d97706; background: linear-gradient(90deg, rgba(217,119,6,0.18), transparent); }
+
+/* Tag 133h: per-pick reason chips (score-breakdown surfaced) */
+.chip-strip {
+  grid-column: 1 / -1;
+  display: flex; flex-wrap: wrap; gap: 4px;
+  padding: 4px 0 2px 110px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.chip {
+  display: inline-block; padding: 2px 6px; border-radius: 3px;
+  font-size: 9.5px; line-height: 1.2; letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.chip-pass { background: rgba(22,163,74,0.16); color: #4ade80; }
+.chip-fail { background: rgba(220,38,38,0.16); color: #f87171; }
+.chip-na   { background: rgba(107,114,128,0.18); color: #9ca3af; opacity: 0.7; }
+.chip-dq   { font-weight: 600; }
+.chip-dq-a { background: rgba(22,163,74,0.22); color: #4ade80; }
+.chip-dq-b { background: rgba(37,99,235,0.22); color: #93c5fd; }
+.chip-dq-c { background: rgba(202,138,4,0.22); color: #fde047; }
+.chip-dq-d { background: rgba(220,38,38,0.28); color: #fca5a5; }
+@media (max-width: 1100px) {
+  .chip-strip { padding-left: 80px; }
+}
 </style>
 </head>
 <body>

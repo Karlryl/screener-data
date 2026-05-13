@@ -69,7 +69,47 @@ function writeAutoMedians(autoMedians) {
   fs.writeFileSync(outPath, JSON.stringify({ _generatedAt: new Date().toISOString(), medians: autoMedians }, null, 2));
 }
 
-module.exports = { computeMedians, writeAutoMedians, MIN_STOCKS_PER_SECTOR };
+// Tag 133i: Rolling 12-month accumulator. Appends today's medians to a history file
+// and recomputes the rolling 12m median per sub-profile × metric.
+// Output structure:
+//   { _generatedAt, _windowDays: 365,
+//     medians: { spId: { metricId: { asOf, values: [{asOf, median, n}], rolling12mMedian } } } }
+const ROLLING_WINDOW_DAYS = 365;
+function writeRollingMedians(autoMedians) {
+  const outPath = path.join(__dirname, 'sector-medians-rolling.json');
+  const today = new Date().toISOString().slice(0, 10);
+  const cutoff = (() => {
+    const d = new Date(); d.setUTCDate(d.getUTCDate() - ROLLING_WINDOW_DAYS);
+    return d.toISOString().slice(0, 10);
+  })();
+  let prior = { medians: {} };
+  if (fs.existsSync(outPath)) {
+    try { prior = JSON.parse(fs.readFileSync(outPath, 'utf8')) || { medians: {} }; } catch (e) {}
+  }
+  const merged = prior.medians || {};
+  for (const [spId, metrics] of Object.entries(autoMedians)) {
+    merged[spId] = merged[spId] || {};
+    for (const [mid, val] of Object.entries(metrics)) {
+      if (mid.startsWith('_')) continue;
+      const n = metrics['_n_' + mid] || 0;
+      const entry = merged[spId][mid] = merged[spId][mid] || { values: [], rolling12mMedian: null };
+      // de-duplicate today's entry on re-run
+      entry.values = entry.values.filter(v => v.asOf !== today && v.asOf >= cutoff);
+      entry.values.push({ asOf: today, median: val, n });
+      const med = median(entry.values.map(v => v.median).filter(Number.isFinite));
+      entry.rolling12mMedian = med;
+      entry.asOf = today;
+    }
+  }
+  fs.writeFileSync(outPath, JSON.stringify({
+    _generatedAt: new Date().toISOString(),
+    _windowDays: ROLLING_WINDOW_DAYS,
+    medians: merged
+  }, null, 2));
+  return merged;
+}
+
+module.exports = { computeMedians, writeAutoMedians, writeRollingMedians, MIN_STOCKS_PER_SECTOR };
 
 // CLI mode: when run directly, compute + save
 if (require.main === module) {
@@ -82,6 +122,9 @@ if (require.main === module) {
   }
   const auto = computeMedians(stocks, (s) => Engine.classifySubProfile(s));
   writeAutoMedians(auto);
+  // Tag 133i: also append to rolling 12-month history
+  try { writeRollingMedians(auto); console.log('✓ rolling-medians appended (sector-medians-rolling.json)'); }
+  catch (e) { console.log('rolling-medians append failed: ' + e.message); }
   console.log('✓ auto-medians written. Sub-profiles:');
   for (const [sp, m] of Object.entries(auto)) {
     const metrics = Object.keys(m).filter(k => !k.startsWith('_'));

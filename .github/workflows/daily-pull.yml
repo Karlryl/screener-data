@@ -124,6 +124,11 @@ jobs:
         run: node scripts/check-pull-stats.js
         continue-on-error: true
 
+      # Tag 133j: Method-Drift Time-Series — Sparkline-Daten für Dashboard.
+      - name: Compute Method-Drift
+        run: node scripts/compute-method-drift.js
+        continue-on-error: true
+
       # Tag-50: Watchlist-Diff-Report (zeigt Änderungen vs vorigem Run)
       - name: Generate Diff-Report
         run: node generate-diff-report.js --out diff-report.html
