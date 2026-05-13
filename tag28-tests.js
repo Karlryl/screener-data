@@ -159,7 +159,8 @@ test('Runner: getMethods matches filesystem (no silent drops)', () => {
   // Method-IDs may differ from filenames (z.B. 'quarterly-rev-acceleration' vs 'quarterly-revenue-acceleration.js').
   const NON_METHOD_FILES = new Set([
     'runner.js', 'trend.js', 'method-types.js',
-    'score-aggregator.js', 'strategy-modes.js', 'sector-medians-compute.js'
+    'score-aggregator.js', 'strategy-modes.js', 'sector-medians-compute.js',
+    'index.js', 'data-quality.js'
   ]);
   const dir = path.join(__dirname, 'methods');
   const fsCount = fs.readdirSync(dir)
