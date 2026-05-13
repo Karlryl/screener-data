@@ -27,6 +27,19 @@ const path = require('path');
 // Tag 133c: data-quality grading (per-snapshot A/B/C/D)
 const { gradeSnapshot } = require('./methods/data-quality.js');
 
+// Tag 134: Windows reserved-name sanitization. Continental AG (`CON.DE`) collides
+// with the Windows reserved device name CON; the file can't be written on Windows,
+// breaking `git checkout` and `git pull` for any Windows developer. Prefix such
+// tickers with `_` so the filename is portable. The ticker inside the JSON is
+// unchanged — only the on-disk filename differs.
+const WINDOWS_RESERVED = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i;
+function safeSnapshotFilename(ticker) {
+  const sanitized = String(ticker).replace(/[^A-Z0-9.-]/gi, '_');
+  const stem = sanitized.split('.')[0];
+  if (WINDOWS_RESERVED.test(stem)) return '_' + sanitized + '.json';
+  return sanitized + '.json';
+}
+
 let YahooFinance;
 try {
   YahooFinance = require('yahoo-finance2').default;
@@ -95,6 +108,95 @@ function _convertToUSD(value, currency) {
   const rate = FX_TO_USD[currency.toUpperCase()];
   if (rate == null) return value;
   return value * rate;
+}
+
+// Tag 134: stable region enum derived from currency + exchangeName.
+// Replaces the prior bug where meta.region held Yahoo's raw exchangeName
+// like "NasdaqGS" / "Frankfurt", which the engine then compared against
+// "US" / "EU" — never matched, fell through to 0.25 tax rate fallback.
+const REGION_BY_CURRENCY = {
+  USD: 'US', CAD: 'CA',
+  EUR: 'EU', GBP: 'UK', GBp: 'UK', CHF: 'CH',
+  SEK: 'SE', NOK: 'NO', DKK: 'DK', PLN: 'EU',
+  JPY: 'JP', HKD: 'HK', CNY: 'CN', KRW: 'KR', TWD: 'TW',
+  SGD: 'SG', INR: 'IN', THB: 'EM', IDR: 'EM',
+  AUD: 'AU', NZD: 'AU',
+  BRL: 'EM', MXN: 'EM', ZAR: 'EM', RUB: 'EM', TRY: 'EM',
+  SAR: 'EM', AED: 'EM', ILS: 'EM'
+};
+function normalizeRegion(currency, exchangeName) {
+  if (currency) {
+    const cur = String(currency);
+    const region = REGION_BY_CURRENCY[cur] || REGION_BY_CURRENCY[cur.toUpperCase()];
+    if (region) return region;
+  }
+  const exch = String(exchangeName || '').toLowerCase();
+  if (/nasdaq|nyse|amex|otc|pink|bats/.test(exch)) return 'US';
+  if (/london|lse/.test(exch)) return 'UK';
+  if (/frankfurt|xetra|stuttgart|berlin|munich|tradegate/.test(exch)) return 'EU';
+  if (/paris|euronext|amsterdam|brussels|lisbon|milan/.test(exch)) return 'EU';
+  if (/tokyo|osaka/.test(exch)) return 'JP';
+  if (/hong ?kong|hkex/.test(exch)) return 'HK';
+  if (/shanghai|shenzhen/.test(exch)) return 'CN';
+  if (/toronto|tsx/.test(exch)) return 'CA';
+  if (/sydney|asx|aussie/.test(exch)) return 'AU';
+  return 'OTHER';
+}
+
+// Tag 134: single-pass USD normalization applied at end of mapper.
+// Closes the structural defect where marketCap was USD but annual/quarterly
+// series were left in reportingCurrency — silently corrupting every ratio
+// (fcf-yield, ev/ebitda, etc.) for non-USD stocks.
+function _convertSnapshotToUSD(snap) {
+  if (!snap || !snap.meta) return snap;
+  const origCurrency = snap.meta.reportingCurrency || 'USD';
+  if (origCurrency === 'USD') {
+    snap.meta.reportingCurrencyOriginal = 'USD';
+    snap.meta.fxRateApplied = 1.0;
+    return snap;
+  }
+  const rate = FX_TO_USD[origCurrency.toUpperCase()];
+  if (rate == null) {
+    // unknown currency — keep values as-is, flag for diagnostics
+    snap.meta.reportingCurrencyOriginal = origCurrency;
+    snap.meta.fxRateApplied = null;
+    snap.meta.fxConversionFailed = true;
+    return snap;
+  }
+
+  function scale(item) {
+    if (item == null) return item;
+    if (typeof item === 'number') return Number.isFinite(item) ? item * rate : item;
+    if (typeof item !== 'object') return item;
+    if ('value' in item) {
+      const out = Object.assign({}, item);
+      if (typeof item.value === 'number' && Number.isFinite(item.value)) out.value = item.value * rate;
+      return out;
+    }
+    // balance-sheet rows: { totalCash, totalDebt, totalAssets }
+    const out = {};
+    for (const [k, v] of Object.entries(item)) {
+      out[k] = (typeof v === 'number' && Number.isFinite(v)) ? v * rate : v;
+    }
+    return out;
+  }
+
+  if (snap.marketCap) snap.marketCap = scale(snap.marketCap);
+  if (snap.metrics && snap.metrics.revenueTTM) snap.metrics.revenueTTM = scale(snap.metrics.revenueTTM);
+  if (snap.annual) {
+    for (const key of Object.keys(snap.annual)) {
+      if (Array.isArray(snap.annual[key])) snap.annual[key] = snap.annual[key].map(scale);
+    }
+  }
+  if (snap.timeseries) {
+    for (const key of Object.keys(snap.timeseries)) {
+      if (Array.isArray(snap.timeseries[key])) snap.timeseries[key] = snap.timeseries[key].map(scale);
+    }
+  }
+  snap.meta.reportingCurrencyOriginal = origCurrency;
+  snap.meta.reportingCurrency = 'USD';
+  snap.meta.fxRateApplied = rate;
+  return snap;
 }
 
 function _ts() { return new Date().toISOString(); }
@@ -184,6 +286,8 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   // SBC-Ratio: nicht in Default-Modules — TODO Tag-14: separater financials-Module-Pull
   const sbcRatio = null;
 
+  const rcOriginal = _y(pr, 'currency') || 'USD';
+  const exchangeName = _y(pr, 'exchangeName') || '';
   return {
     identifier: { primary: 'ISIN', value: watchlistEntry.isin || `TICKER:${watchlistEntry.ticker}` },
     meta: {
@@ -191,14 +295,17 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       name: _y(pr, 'longName') || watchlistEntry.name || watchlistEntry.ticker,
       sector: _y(ap, 'sector') || null,
       industry: _y(ap, 'industry') || null,
-      region: _y(pr, 'exchangeName') || null,
-      reportingCurrency: _y(pr, 'currency') || 'USD',
+      region: normalizeRegion(rcOriginal, exchangeName),  // Tag 134: enum, not Yahoo string
+      exchangeName: exchangeName || null,                  // Tag 134: preserved for diagnostics
+      reportingCurrency: rcOriginal,                       // overwritten to 'USD' by _convertSnapshotToUSD
       fetchedAt: asOf,
       filingDate: null,  // Yahoo liefert kein Filing-Datum für TTM
       firstTradeDate: null,  // wird unten aus yf.quote() gesetzt (Tag 106)
       ipoYear: null
     },
-    marketCap: _metric(_convertToUSD(_y(sd, 'marketCap'), _y(sd, 'currency') || _y(pr, 'currency')), SRC, CONF, asOf),
+    // Tag 134: marketCap stored in reportingCurrency at mapper level;
+    // _convertSnapshotToUSD applies FX conversion uniformly across all currency-denominated fields.
+    marketCap: _metric(_y(sd, 'marketCap'), SRC, CONF, asOf),
     metrics: {
       revenueTTM:       _metric(revTTM, SRC, CONF, asOf),
       revenueGrowthYoY: _metric(revGrowthYoY, SRC, CONF, asOf),
@@ -371,7 +478,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // Tag-85: Smart-Cache — skip FTS-Pull wenn cache <28 Tage alt
       const cacheDir = path.join(__dirname, 'fundamentals-cache');
       if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
-      const cachePath = path.join(cacheDir, stock.ticker.replace(/[^A-Z0-9.-]/gi, '_') + '.json');
+      const cachePath = path.join(cacheDir, safeSnapshotFilename(stock.ticker));
       const CACHE_TTL_MS = 28 * 86400 * 1000;
       let useCache = false;
       let cached = null;
@@ -430,6 +537,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (ftsQuarterly.opIncQ.length > 0) canonical.timeseries.opIncQ = ftsQuarterly.opIncQ;
       if (ftsQuarterly.grossProfitQ.length > 0) canonical.timeseries.grossProfitQ = ftsQuarterly.grossProfitQ;
 
+      // Tag 134: single-pass USD conversion across marketCap + revenueTTM + all annual/quarterly series.
+      // Must run AFTER FTS overrides (FTS values are also in reporting currency) and BEFORE mcap filter
+      // (which compares against $1B USD floor). Fixes the structural currency mismatch where mcap was USD
+      // but annual.* was local — silently corrupting fcf-yield, ev/ebitda, ROIC and every other ratio.
+      try { _convertSnapshotToUSD(canonical); }
+      catch (e) { _log('WARN', `  FX conversion failed for ${stock.ticker}: ${e.message}`); }
+
       // Tag-87a: MarketCap-Filter — skip Stocks außerhalb Karl's Mid/Large-Cap-Range
       // Tag 116: untere Schwelle von $2B auf $1B gesenkt (konsistent mit refresh-universe).
       // Erhoeht Coverage; Karl filtert via Mcap-Slider in modes-report.
@@ -440,10 +554,16 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         const reason = mcapVal < MIN_MCAP ? `mcap=${(mcapVal/1e9).toFixed(2)}B < $2B (Small-Cap)` : `mcap=${(mcapVal/1e9).toFixed(0)}B > $300B (Mega-Cap)`;
         _log('INFO', `  ⊘ ${stock.ticker} skipped: ${reason}`);
         // Remove existing snapshot if was previously included
-        const filename = `${stock.ticker.replace(/[^A-Z0-9.-]/gi, '_')}.json`;
+        const filename = safeSnapshotFilename(stock.ticker);
         const outPath = path.join(outputDir, filename);
         if (fs.existsSync(outPath)) {
           try { fs.unlinkSync(outPath); } catch (e) {}
+        }
+        // Tag 134: also clean up the legacy un-sanitized name if it exists (migration step)
+        const legacyFilename = `${stock.ticker.replace(/[^A-Z0-9.-]/gi, '_')}.json`;
+        if (legacyFilename !== filename) {
+          const legacyPath = path.join(outputDir, legacyFilename);
+          if (fs.existsSync(legacyPath)) { try { fs.unlinkSync(legacyPath); } catch (e) {} }
         }
         results.push({ ticker: stock.ticker, status: 'skipped-mcap', reason });
         return;  // skip this stock
@@ -453,8 +573,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       try { canonical._quality = gradeSnapshot(canonical); }
       catch (e) { canonical._quality = { grade: 'D', nanRatio: 1.0, missingFields: ['<grade-error>'], computedAt: new Date().toISOString() }; }
 
-      const filename = `${stock.ticker.replace(/[^A-Z0-9.-]/gi, '_')}.json`;
+      const filename = safeSnapshotFilename(stock.ticker);
       const outPath = path.join(outputDir, filename);
+      // Tag 134: migrate from legacy un-sanitized name (one-time)
+      const legacyFilename = `${stock.ticker.replace(/[^A-Z0-9.-]/gi, '_')}.json`;
+      if (legacyFilename !== filename) {
+        const legacyPath = path.join(outputDir, legacyFilename);
+        if (fs.existsSync(legacyPath)) { try { fs.unlinkSync(legacyPath); } catch (e) {} }
+      }
       fs.writeFileSync(outPath, JSON.stringify(canonical, null, 2));
       const revStr = canonical.metrics.revenueTTM ? '$' + (canonical.metrics.revenueTTM.value / 1e9).toFixed(1) + 'B' : 'no-rev';
       const growthStr = canonical.metrics.revenueGrowthYoY ? canonical.metrics.revenueGrowthYoY.value.toFixed(1) + '%' : '-';
@@ -536,4 +662,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { mapYahooToCanonical, pullAll };
+module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename };

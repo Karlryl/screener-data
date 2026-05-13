@@ -72,14 +72,16 @@ jobs:
       # Tag 102b: Methods-Report deaktiviert — Modes-Report ist primärer Output
       
       # Tag 100: Modes-Report (3 Discovery-Modi: Hypergrowth/Quality/Turnaround)
+      # Tag 134: hard-fail. modes-report is the primary user-facing artifact;
+      # silently publishing yesterday's HTML masks real breakage.
       - name: Generate Modes-Report
         run: node generate-modes-report.js --snapshots snapshots --out modes-report.html
-        continue-on-error: true
 
       # Tag 102g: Walk-Forward Picks-History — friert Mode-Picks pro Run für späteren Performance-Vergleich.
+      # Tag 134: hard-fail. picks-history is the source of truth for backtest;
+      # a silent gap of even one week destroys vintage continuity.
       - name: Snapshot Picks-History
         run: node snapshot-picks.js --snapshots snapshots --out picks-history
-        continue-on-error: true
 
       # Tag 133d: Picks-Regression Guard — Alarm wenn Pick-Count >35% von 4-Week-Median driftet.
       # ALLOW_PICKS_DRIFT=1 für legitimate Universe-Expansion-Runs setzen.
@@ -91,9 +93,10 @@ jobs:
         continue-on-error: true
 
       # Tag-35: Methods-History-Snapshot (für Backtest später)
+      # Tag 134: hard-fail. methods-history feeds method-effectiveness which is
+      # the core "is this method earning its weight?" measurement.
       - name: Snapshot Methods-History
         run: node snapshot-methods-history.js --out methods-history
-        continue-on-error: true
 
       # Tag-63: Earnings-Calendar Pull
       - name: Pull Earnings-Calendar
