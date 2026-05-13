@@ -500,7 +500,7 @@ function renderModeContent(modeId, eligible, topN) {
 
 function buildHtml(evaluated, topN) {
   const generatedAt = new Date().toISOString();
-  const modes = ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND'];
+  const modes = Object.keys(SM.MODES);
   const eligibleByMode = {};
   for (const m of modes) eligibleByMode[m] = eligibleForMode(evaluated, m);
 

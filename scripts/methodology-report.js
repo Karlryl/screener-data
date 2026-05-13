@@ -49,7 +49,7 @@ function main() {
   if (wf && wf.modes) {
     md += '## Pick-Performance (Walk-Forward)\n\n';
     md += '_Vintages analyzed:_ **' + (wf.vintageCount || 0) + '**.\n';
-    md += '_Benchmarks: universe-median (today\'s survivors, upward biased) · frozen-vintage-median (no look-ahead survivor selection) · SPY (external)._\n\n';
+    md += '_Benchmarks: universe-median (Tag 138: survivor-bias corrected via evaluatedTickers when available) · frozen-vintage-median (no look-ahead survivor selection) · SPY (external)._\n\n';
     for (const [mode, data] of Object.entries(wf.modes)) {
       md += '### ' + mode + '\n\n';
       md += '| Horizon | n vintages | α vs SPY | α vs Frozen-Vintage | α vs Universe | total picks |\n';
@@ -60,6 +60,24 @@ function main() {
         md += `| ${days}d | ${s.vintageCount} | ${_fmtAlpha(s.medianAlphaVsSpy)} | ${_fmtAlpha(s.medianAlphaVsFrozenVintage)} | ${_fmtAlpha(s.medianAlphaVsUniverse)} | ${s.totalPicks} |\n`;
       }
       md += '\n';
+      // Tag 139: regime alpha breakdown
+      const hasRegime = (wf.horizonsDays || [7, 28, 84]).some(days => {
+        const s = data.summary && data.summary[days + 'd'];
+        return s && s.regimeAlpha && Object.keys(s.regimeAlpha).length > 0;
+      });
+      if (hasRegime) {
+        md += '**Regime Alpha (28d, α vs SPY):** ';
+        const s28 = data.summary && data.summary['28d'];
+        if (s28 && s28.regimeAlpha) {
+          const parts = ['BULL', 'BEAR', 'SIDEWAYS'].filter(r => s28.regimeAlpha[r]).map(r => {
+            const ra = s28.regimeAlpha[r];
+            return `${r} ${_fmtAlpha(ra.medianAlphaVsSpy)} (n=${ra.vintages})`;
+          });
+          md += parts.join(' · ') + '\n\n';
+        } else {
+          md += '_no 28d regime data_\n\n';
+        }
+      }
     }
   } else {
     md += '## Pick-Performance (Walk-Forward)\n\n_walk-forward.json missing — run `node scripts/walk-forward-perf.js` first._\n\n';

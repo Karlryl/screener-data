@@ -49,6 +49,11 @@ jobs:
         run: node refresh-universe.js --watchlist watchlist.json
         continue-on-error: true
 
+      # Tag 142: Prune delisted/stale tickers before Yahoo pull
+      - name: Prune Watchlist
+        run: node scripts/prune-watchlist.js
+        continue-on-error: true
+
       # Tag 133b: FX-Rates refresh — frische Yahoo-Currency-Quotes statt hardcoded.
       # Fix für stille mcap-Korruption bei non-USD-Tickern.
       - name: Refresh FX-Rates
@@ -106,6 +111,11 @@ jobs:
       # Tag-39: Historical-Price-Pull (für Performance-Backtest)
       - name: Pull Historical Prices
         run: node pull-historical-prices.js --out prices --rate-limit 1500
+        continue-on-error: true
+
+      # Tag 139: Macro-Regime-Tagging — SPY 200d-MA → BULL/BEAR/SIDEWAYS
+      - name: Compute Macro Regime
+        run: node scripts/macro-regime.js
         continue-on-error: true
 
       # Tag 133e: Walk-Forward-Performance — picks-history × prices/history.json.
