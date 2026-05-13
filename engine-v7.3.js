@@ -889,7 +889,18 @@ function computeExpectationsRisk(stock) {
 // SCORE TRACK A
 // ═══════════════════════════════════════════════════════════════
 
+// Tag 134 — Phase 2: deprecation warner. Track-A/B retired per ADR-001
+// (docs/decisions/ADR-001-retire-track-a-b-scoring.md). Functions still exist
+// for the test gate; production scorer is methods/score-aggregator.js.
+const _deprecationWarned = new Set();
+function _warnDeprecated(fnName) {
+  if (_deprecationWarned.has(fnName)) return;
+  _deprecationWarned.add(fnName);
+  console.warn('[engine-v7.3 DEPRECATED] ' + fnName + ' is retired per ADR-001. Production scorer: methods/score-aggregator.js');
+}
+
 function scoreTrackA(stock, options) {
+  _warnDeprecated('scoreTrackA');
   options = options || {};
   // v7.3.1 Fix-A (ChatGPT): Engine darf canonicalInput nicht mutieren — Deep-freeze für Snapshot-Sicherheit
   if (stock && !Object.isFrozen(stock)) {
@@ -1015,6 +1026,7 @@ function scoreTrackA(stock, options) {
 // ═══════════════════════════════════════════════════════════════
 
 function scoreTrackB(stock, options) {
+  _warnDeprecated('scoreTrackB');
   options = options || {};
   // v7.3.1 Fix-A: Deep-freeze input
   if (stock && !Object.isFrozen(stock)) {
