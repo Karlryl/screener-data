@@ -84,47 +84,47 @@ test('updateHistory: handles missing/non-array input', () => {
 
 // ─── Baseline ───
 test('computeBaseline: single entry returns empty (no comparison possible)', () => {
-  const h = [{ date: 'x', coverage: { 'metrics.annualRev': 0.8 } }];
+  const h = [{ date: 'x', coverage: { 'annual.annualRev': 0.8 } }];
   const b = FC.computeBaseline(h);
   assertEq(b, {});
 });
 
 test('computeBaseline: averages excl. latest', () => {
   const h = [
-    { date: 'a', coverage: { 'metrics.annualRev': 0.9 } },
-    { date: 'b', coverage: { 'metrics.annualRev': 0.7 } },
-    { date: 'c', coverage: { 'metrics.annualRev': 0.5 } } // latest, excluded
+    { date: 'a', coverage: { 'annual.annualRev': 0.9 } },
+    { date: 'b', coverage: { 'annual.annualRev': 0.7 } },
+    { date: 'c', coverage: { 'annual.annualRev': 0.5 } } // latest, excluded
   ];
   const b = FC.computeBaseline(h);
-  assertApprox(b['metrics.annualRev'], 0.8, 'avg');  // (0.9+0.7)/2
+  assertApprox(b['annual.annualRev'], 0.8, 'avg');  // (0.9+0.7)/2
 });
 
 // ─── Drift-Detection ───
 test('detectDrift: current >= baseline → no drift', () => {
-  const cur = { 'metrics.annualRev': 0.95, 'metrics.annualOpInc': 0.85 };
-  const base = { 'metrics.annualRev': 0.90, 'metrics.annualOpInc': 0.80 };
+  const cur = { 'annual.annualRev': 0.95, 'annual.annualOpInc': 0.85 };
+  const base = { 'annual.annualRev': 0.90, 'annual.annualOpInc': 0.80 };
   const drifts = FC.detectDrift(cur, base);
   assertEq(drifts, []);
 });
 
 test('detectDrift: drop >= threshold → drift detected', () => {
-  const cur = { 'metrics.annualOpInc': 0.50 };
-  const base = { 'metrics.annualOpInc': 0.90 };
+  const cur = { 'annual.annualOpInc': 0.50 };
+  const base = { 'annual.annualOpInc': 0.90 };
   const drifts = FC.detectDrift(cur, base);
   assertEq(drifts.length, 1);
-  assertEq(drifts[0].field, 'metrics.annualOpInc');
+  assertEq(drifts[0].field, 'annual.annualOpInc');
   assertEq(drifts[0].drop, 0.4);
 });
 
 test('detectDrift: drop < threshold → no drift', () => {
-  const cur = { 'metrics.annualOpInc': 0.75 };
-  const base = { 'metrics.annualOpInc': 0.90 };
+  const cur = { 'annual.annualOpInc': 0.75 };
+  const base = { 'annual.annualOpInc': 0.90 };
   const drifts = FC.detectDrift(cur, base);
   assertEq(drifts.length, 0);  // 0.15 drop < 0.20 threshold
 });
 
 test('detectDrift: missing baseline field skipped', () => {
-  const cur = { 'metrics.annualOpInc': 0.50 };
+  const cur = { 'annual.annualOpInc': 0.50 };
   const base = {};
   const drifts = FC.detectDrift(cur, base);
   assertEq(drifts, []);
@@ -138,19 +138,19 @@ test('integration: Yahoo Nov-2024-Drift wird erkannt', () => {
   for (let i = 0; i < 4; i++) {
     history = FC.updateHistory(history, {
       date: '2024-10-' + i,
-      coverage: { 'metrics.annualRev': 1.0, 'metrics.annualOpInc': 0.95 }
+      coverage: { 'annual.annualRev': 1.0, 'annual.annualOpInc': 0.95 }
     });
   }
   // 5. Run mit drift
   history = FC.updateHistory(history, {
     date: '2024-11-15',
-    coverage: { 'metrics.annualRev': 1.0, 'metrics.annualOpInc': 0.10 }
+    coverage: { 'annual.annualRev': 1.0, 'annual.annualOpInc': 0.10 }
   });
   const baseline = FC.computeBaseline(history);
   const current = history[history.length - 1].coverage;
   const drifts = FC.detectDrift(current, baseline);
   assertEq(drifts.length, 1);
-  assertEq(drifts[0].field, 'metrics.annualOpInc');
+  assertEq(drifts[0].field, 'annual.annualOpInc');
 });
 
 console.log('────────────────────────');
