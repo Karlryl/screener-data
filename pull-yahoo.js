@@ -709,7 +709,8 @@ async function main() {
     process.exit(1);
   }
   const manifest = await pullAll(watchlist, args.output, args.rateLimit);
-  process.exit(manifest.n_failed > manifest.n_total / 2 ? 1 : 0);
+  // Tag 146: threshold raised 50%→75% — large universe has inherent Yahoo coverage gaps
+  process.exit(manifest.n_failed > manifest.n_total * 0.75 ? 1 : 0);
 }
 
 if (require.main === module) {
