@@ -30,6 +30,27 @@ function main() {
   const data = { date: today, stocks: {} };
   let allPass = 0, anyComputable = 0;
 
+  // Tag 134 — Phase 3.4: record _quality.grade + input-field digest per stock per vintage.
+  // Without this, a Yahoo data-shape change (like the Nov 2024 incomeStatementHistory thinning)
+  // silently shifts every method's historical pass rate with no diagnostic trail.
+  function _digest(stock) {
+    return {
+      // Currency normalization (Tag 134 Phase 1): record original currency for audit
+      reportingCurrencyOriginal: stock.meta && stock.meta.reportingCurrencyOriginal || null,
+      region: stock.meta && stock.meta.region || null,
+      sector: stock.meta && stock.meta.sector || null,
+      // Key inputs that most methods consume
+      marketCapUsd: stock.marketCap && stock.marketCap.value || null,
+      revenueGrowthYoY: stock.metrics && stock.metrics.revenueGrowthYoY && stock.metrics.revenueGrowthYoY.value || null,
+      fcfMarginTTM: stock.metrics && stock.metrics.fcfMarginTTM && stock.metrics.fcfMarginTTM.value || null,
+      operatingMargin: stock.metrics && stock.metrics.operatingMargin && stock.metrics.operatingMargin.value || null,
+      // Series shape (useful when a Yahoo endpoint suddenly returns fewer rows)
+      annualRevN: (stock.annual && Array.isArray(stock.annual.annualRev)) ? stock.annual.annualRev.length : 0,
+      annualFcfN: (stock.annual && Array.isArray(stock.annual.annualFCF)) ? stock.annual.annualFCF.length : 0,
+      revenueQN: (stock.timeseries && Array.isArray(stock.timeseries.revenueQ)) ? stock.timeseries.revenueQ.length : 0
+    };
+  }
+
   for (const file of files) {
     let stock;
     try { stock = JSON.parse(fs.readFileSync(path.join(args.snapshots, file), 'utf8')); }
@@ -43,7 +64,15 @@ function main() {
       if (r.computable) computableCount++;
       if (r.computable && r.pass) passCount++;
     }
-    data.stocks[ticker] = { results: compact, computable: computableCount, passing: passCount };
+    data.stocks[ticker] = {
+      results: compact,
+      computable: computableCount,
+      passing: passCount,
+      // Tag 134 — Phase 3.4
+      quality: (stock._quality && stock._quality.grade) || null,
+      nanRatio: (stock._quality && stock._quality.nanRatio) != null ? stock._quality.nanRatio : null,
+      inputs: _digest(stock)
+    };
     if (computableCount > 0) anyComputable++;
     if (computableCount === Object.keys(results).length && passCount === computableCount) allPass++;
   }

@@ -119,6 +119,12 @@ jobs:
         run: node scripts/method-effectiveness.js
         continue-on-error: true
 
+      # Tag 134 — Phase 3.6: Methodology Report combines walk-forward + method-effectiveness
+      # into a decision-ready summary. Read this in GitHub after the run completes.
+      - name: Methodology Report
+        run: node scripts/methodology-report.js
+        continue-on-error: true
+
       # Tag 133g: Pull-Stats Monitoring — Discord-Alert wenn ein Pull-Output >25% vs 4-Week-Median shrinkt.
       - name: Pull-Stats Check
         env:
