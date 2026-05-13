@@ -26,30 +26,30 @@ console.log('──────────────────────�
 // ─── Coverage-Calculation ───
 test('computeCoverage: empty snapshots returns 0 per field', () => {
   const cov = FC.computeCoverage([]);
-  assertEq(cov['metrics.annualRev'], 0);
-  assertEq(cov['metrics.annualOpInc'], 0);
+  assertEq(cov['annual.annualRev'], 0);
+  assertEq(cov['annual.annualOpInc'], 0);
 });
 
 test('computeCoverage: full coverage = 1.0', () => {
   const snaps = [
-    { metrics: { annualRev: [100], annualOpInc: [10], sector: 'Tech' } },
-    { metrics: { annualRev: [200], annualOpInc: [20], sector: 'Health' } }
+    { annual: { annualRev: [{value: 100}], annualOpInc: [{value: 10}] }, meta: { sector: 'Tech' } },
+    { annual: { annualRev: [{value: 200}], annualOpInc: [{value: 20}] }, meta: { sector: 'Health' } }
   ];
   const cov = FC.computeCoverage(snaps);
-  assertEq(cov['metrics.annualRev'], 1);
-  assertEq(cov['metrics.annualOpInc'], 1);
-  assertEq(cov['metrics.sector'], 1);
+  assertEq(cov['annual.annualRev'], 1);
+  assertEq(cov['annual.annualOpInc'], 1);
+  assertEq(cov['meta.sector'], 1);
 });
 
 test('computeCoverage: partial coverage reflects ratio', () => {
   const snaps = [
-    { metrics: { annualRev: [100], annualOpInc: [10] } },
-    { metrics: { annualRev: [200], annualOpInc: null } },
-    { metrics: { annualRev: null,  annualOpInc: null } }
+    { annual: { annualRev: [{value: 100}], annualOpInc: [{value: 10}] } },
+    { annual: { annualRev: [{value: 200}], annualOpInc: null } },
+    { annual: { annualRev: null, annualOpInc: null } }
   ];
   const cov = FC.computeCoverage(snaps);
-  assertApprox(cov['metrics.annualRev'], 2/3, 'rev');
-  assertApprox(cov['metrics.annualOpInc'], 1/3, 'opinc');
+  assertApprox(cov['annual.annualRev'], 2/3, 'rev');
+  assertApprox(cov['annual.annualOpInc'], 1/3, 'opinc');
 });
 
 test('isPresent: null/undefined/empty array/empty string/NaN are absent', () => {
@@ -67,12 +67,12 @@ test('isPresent: null/undefined/empty array/empty string/NaN are absent', () => 
 // ─── History-Management ───
 test('updateHistory: appends and trims to window', () => {
   let h = [];
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 16; i++) {
     h = FC.updateHistory(h, { date: '2026-05-' + i, coverage: {} });
   }
-  assertEq(h.length, FC.HISTORY_WINDOW);  // 6
-  assertEq(h[0].date, '2026-05-2');  // älteste die noch drin ist
-  assertEq(h[h.length-1].date, '2026-05-7');
+  assertEq(h.length, FC.HISTORY_WINDOW);  // 14
+  assertEq(h[0].date, '2026-05-2');  // oldest still in (pushed 0-15, keep latest 14 = 2-15)
+  assertEq(h[h.length-1].date, '2026-05-15');
 });
 
 test('updateHistory: handles missing/non-array input', () => {
