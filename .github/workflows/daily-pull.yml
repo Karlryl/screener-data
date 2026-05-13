@@ -47,9 +47,9 @@ jobs:
       # Tag-28: Methods-Plugin-Tests
       - name: Run Method Tests
         run: |
-          node tag21-tests.js
-          node tag22-tests.js
-          node tag28-tests.js
+          echo "--- tag21 ---" && node tag21-tests.js && echo "tag21 PASS" || { echo "tag21 FAIL"; exit 1; }
+          echo "--- tag22 ---" && node tag22-tests.js && echo "tag22 PASS" || { echo "tag22 FAIL"; exit 1; }
+          echo "--- tag28 ---" && node tag28-tests.js && echo "tag28 PASS" || { echo "tag28 FAIL"; exit 1; }
 
       # Tag 132: Auto-Universe-Refresh — laeuft bei jedem Run (schedule + workflow_dispatch).
       # Tag 133: Merged mit SEC EDGAR, Finnhub, Wikipedia Indices.
