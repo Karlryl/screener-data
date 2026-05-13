@@ -72,9 +72,9 @@ function evaluate(stock) {
   let pass = true;
 
   // Hard fail GM < 20%
-  if (gmMedian < 0.10) {
+  if (gmMedian < 0.20) {
     pass = false;
-    reasons.push(`GM-Median ${(gmMedian*100).toFixed(0)}% < 10% (always-fail)`);
+    reasons.push(`GM-Median ${(gmMedian*100).toFixed(0)}% < 20% (always-fail)`);
   } else {
     // GM-Floor
     const gmFloorRequired = highTurnover ? 0.20 : 0.35;

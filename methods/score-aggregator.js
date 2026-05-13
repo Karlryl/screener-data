@@ -67,7 +67,7 @@ const RED_FLAG_RULES = {
   },
   EXTREME_SLOAN: {
     id: 'sloan-ratio',
-    condition: function(val) { return Math.abs(val) > 30; },
+    condition: function(val) { return Math.abs(val) > 0.30; },
     label: 'Sloan-Ratio extrem (|>30%|)'
   }
   // Tag 121+: Dilution-Red-Flag wenn Share-Outstanding-Daten verfuegbar

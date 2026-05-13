@@ -5,6 +5,24 @@ var ScoreAggregator;
 try { ScoreAggregator = require('./score-aggregator.js'); }
 catch (e) { ScoreAggregator = null; }
 
+// Tag 147: Build method-registry for graduated scoring (threshold/thresholdOp per method).
+// Lazy-loaded to avoid circular-require issues. Runner does NOT import strategy-modes.
+var _methodRegistryCache = null;
+function _getMethodRegistry() {
+  if (_methodRegistryCache) return _methodRegistryCache;
+  try {
+    var Runner = require('./runner.js');
+    var reg = {};
+    var methods = Runner.METHODS || [];
+    for (var i = 0; i < methods.length; i++) {
+      var m = methods[i];
+      if (m && m.id) reg[m.id] = { threshold: m.threshold, thresholdOp: m.thresholdOp };
+    }
+    _methodRegistryCache = reg;
+    return reg;
+  } catch (e) { return null; }
+}
+
 /**
  * Tag 100: Strategy-Modes Registry
  * =================================
@@ -187,12 +205,16 @@ function evaluateMode(stock, modeId, allResults) {
       mustResults.push({ id: check.id, status: 'incomputable', storyHint: check.storyHint });
       continue;
     }
-    // acceptValues check (z.B. profitability-state == TURNAROUND/RECENT)
-    if (check.acceptValues && r.components && r.components.state) {
-      const ok = check.acceptValues.includes(r.components.state);
-      mustResults.push({ id: check.id, status: ok ? 'pass' : 'fail', storyHint: check.storyHint, value: r.components.state });
-      if (ok) mustPassCount++;
-      continue;
+    // acceptValues check (z.B. profitability-state == TURNAROUND/RECENT, profitability-trend == IMPROVING)
+    // profitability-state stores result in components.state; profitability-trend in components.trend
+    if (check.acceptValues && r.components) {
+      const componentVal = r.components.state != null ? r.components.state : r.components.trend;
+      if (componentVal != null) {
+        const ok = check.acceptValues.includes(componentVal);
+        mustResults.push({ id: check.id, status: ok ? 'pass' : 'fail', storyHint: check.storyHint, value: componentVal });
+        if (ok) mustPassCount++;
+        continue;
+      }
     }
     if (r.pass) {
       mustResults.push({ id: check.id, status: 'pass', storyHint: check.storyHint, value: r.value });
@@ -215,8 +237,8 @@ function evaluateMode(stock, modeId, allResults) {
   // Hier wird der Score nur fuer Stocks berechnet die durch Hygiene durch sind.
   var scoreResult = null;
   if (ScoreAggregator) {
-    // Tag 133c: pass stock._quality through (computeScore enforces cap only when env flag set).
-    try { scoreResult = ScoreAggregator.computeScore(allResults, modeId, null, failedSoftGuards, stock && stock._quality); }
+    // Tag 147: pass methodRegistry so graduated scoring is active (was null → binary scores before).
+    try { scoreResult = ScoreAggregator.computeScore(allResults, modeId, _getMethodRegistry(), failedSoftGuards, stock && stock._quality); }
     catch (e) { scoreResult = null; }
   }
 

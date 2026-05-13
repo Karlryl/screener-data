@@ -17,7 +17,7 @@ const H = require('./_helpers.js');
 const ID = 'quality-compounder-roic';
 const LABEL = 'QC-ROIC (PreTax + AT-Override)';
 const THRESHOLD_STD = 0.20;
-const THRESHOLD_OVERRIDE = 0.15;
+const THRESHOLD_OVERRIDE = 0.17;
 const AT_OVERRIDE = 2.0;
 const THRESHOLD_OP = 'gte';
 

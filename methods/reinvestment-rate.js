@@ -10,7 +10,7 @@ var H = require('./_helpers.js');
 
 var ID = 'reinvestment-rate';
 var LABEL = 'Reinvestment-Rate';
-var THRESHOLD = 0.05;
+var THRESHOLD = 0.20;
 var THRESHOLD_OP = 'gte';
 
 function _arrVals(stock, path) {
