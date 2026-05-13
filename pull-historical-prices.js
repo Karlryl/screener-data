@@ -37,6 +37,16 @@ async function main() {
   const args = parseArgs(process.argv);
   if (!fs.existsSync(args.out)) fs.mkdirSync(args.out, { recursive: true });
   const wl = JSON.parse(fs.readFileSync(args.watchlist, 'utf8'));
+  // Tag 134 — Phase 3.3: ensure benchmark ETFs are always pulled so walk-forward-perf
+  // can compute alpha vs SPY. Prepended to the watchlist (idempotent: skip if already present).
+  const BENCHMARKS = [
+    { ticker: 'SPY', yahoo_symbol: 'SPY', name: 'SPDR S&P 500 ETF', added_via: 'benchmark' },
+    { ticker: 'QQQ', yahoo_symbol: 'QQQ', name: 'Invesco QQQ (Nasdaq-100)', added_via: 'benchmark' },
+    { ticker: 'IWM', yahoo_symbol: 'IWM', name: 'iShares Russell 2000', added_via: 'benchmark' }
+  ];
+  for (const b of BENCHMARKS) {
+    if (!wl.stocks.find(s => s.ticker === b.ticker)) wl.stocks.unshift(b);
+  }
   const today = new Date().toISOString().slice(0, 10);
 
   // Load existing kumulative history wenn vorhanden
