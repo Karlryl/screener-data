@@ -26,6 +26,8 @@ catch (e) { console.error('yahoo-finance2 nicht installiert'); process.exit(1); 
 const { fetchSecTickers }       = require('./discovery/sec-tickers.js');
 const { fetchFinnhubUniverse }  = require('./discovery/finnhub.js');
 const { fetchWikipediaIndices } = require('./discovery/wikipedia-indices.js');
+// Tag 135: NASDAQ Trader exchange files — all US common stocks, no auth required
+const { fetchNasdaqAll }        = require('./discovery/nasdaq-all.js');
 
 function parseArgs(argv) {
   const args = { watchlist: './watchlist.json', out: null };
@@ -213,12 +215,14 @@ async function main() {
   }
   console.log('Custom-Screener total neue Tickers: ' + customAdded);
 
-  // Tag 133: Merge additional discovery sources into allTickers
-  // SEC EDGAR: ~10k US-listed companies (no auth required)
-  // Finnhub:   ~20k+ global stocks per exchange (needs FINNHUB_API_KEY secret)
-  // Wikipedia: S&P 500 / FTSE 100 / DAX constituents (no auth required)
-  console.log('\nDiscovery: Additional Sources (Tag 133)...');
+  // Tag 133/135: Merge additional discovery sources into allTickers
+  // NASDAQ-Trader: ~7k–8k US common stocks (no auth required) — Tag 135
+  // SEC EDGAR:     ~10k US-listed companies (no auth required)
+  // Finnhub:       ~20k+ global stocks per exchange (needs FINNHUB_API_KEY secret)
+  // Wikipedia:     S&P 500 / FTSE 100 / DAX constituents (no auth required)
+  console.log('\nDiscovery: Additional Sources (Tag 133/135)...');
   const discoverySources = await Promise.allSettled([
+    fetchNasdaqAll(),
     fetchSecTickers(),
     fetchFinnhubUniverse(),
     fetchWikipediaIndices()
@@ -241,7 +245,7 @@ async function main() {
 
   // 2. No sector-exclude at universe level (Tag 132: modes filter sectors, not discovery)
   // Banks/REITs/Insurance are allowed for Quality-Compounder mode.
-  console.log('Distinct candidates after all sources: ' + allTickers.size);
+  console.log('Distinct candidates after all sources: ' + allTickers.size + ' (target: 8000+)');
 
   // 3. Identify new tickers
   const newTickers = [];
