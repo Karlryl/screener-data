@@ -39,6 +39,7 @@ module.exports = [
   { file: './above-200d-ma.js' },
 
   // Data guards (hard-fail hygiene)
+  { file: './asset-growth-divergence.js' },
   { file: './q-spike-dataguard.js' },
   { file: './revenue-shock-guard.js' },
   { file: './revenue-volatility-guard.js' },

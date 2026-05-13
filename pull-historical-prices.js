@@ -102,6 +102,42 @@ async function main() {
   }
 
 
+  // Tag 134 — Phase 3.3 (guarantee): always ensure SPY is in history, even if the
+  // benchmark-injection above was a no-op (e.g. history.json pre-dates that fix).
+  // Only pull if SPY is missing from history OR missing from today's snapshot.
+  if (!history['SPY'] || !todaysSnapshot['SPY']) {
+    try {
+      _log('INFO', 'SPY not in history — pulling dedicated SPY benchmark...');
+      const period1 = new Date(Date.now() - 400 * 86400 * 1000);
+      const period2 = new Date();
+      const spyResult = await yf.chart('SPY', { period1, period2, interval: '1d' });
+      const spyQuotes = (spyResult.quotes || []).filter(q => (q.adjclose ?? q.close) != null);
+      if (spyQuotes.length) {
+        const latestClose = spyQuotes[spyQuotes.length - 1].adjclose ?? spyQuotes[spyQuotes.length - 1].close;
+        todaysSnapshot['SPY'] = { close: latestClose, asOf: today, currency: spyResult.meta && spyResult.meta.currency };
+        if (!history['SPY']) history['SPY'] = [];
+        const existing = history['SPY'].find(e => e.date === today);
+        if (!existing) history['SPY'].push({ date: today, close: latestClose });
+        history['SPY'] = history['SPY'].slice(-400);
+        // Back-fill all available dates from this pull (so walk-forward has enough history)
+        for (const q of spyQuotes) {
+          const d = (q.date instanceof Date ? q.date : new Date(q.date)).toISOString().slice(0, 10);
+          if (!history['SPY'].find(e => e.date === d)) {
+            history['SPY'].push({ date: d, close: q.adjclose ?? q.close });
+          }
+        }
+        history['SPY'].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+        history['SPY'] = history['SPY'].slice(-400);
+        ok++;
+        _log('INFO', `SPY dedicated pull: ${history['SPY'].length} history entries`);
+      } else {
+        _log('WARN', 'SPY dedicated pull returned no quotes');
+      }
+    } catch (e) {
+      _log('WARN', `SPY dedicated pull failed: ${e.message}`);
+    }
+  }
+
   fs.writeFileSync(path.join(args.out, `${today}.json`), JSON.stringify(todaysSnapshot, null, 2));
   fs.writeFileSync(histPath, JSON.stringify(history, null, 2));
   _log('INFO', `Done: ${ok}/${wl.stocks.length} ok, ${failed} failed`);

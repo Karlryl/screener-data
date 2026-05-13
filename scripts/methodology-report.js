@@ -162,6 +162,7 @@ function main() {
   md += '3. If any method appears in **flagged** above for ≥3 consecutive monthly reports, propose retirement via ADR-002+ and bump weight to 0 in score-aggregator.\n';
   md += '4. Quality-split section: once Phase 3.4 has ≥4 weeks of `_quality.grade` records, evaluate whether methods should be gated to grade-A stocks only.\n';
 
+  if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(OUT_PATH, md);
   console.log('Methodology report written: ' + OUT_PATH);
 }

@@ -159,7 +159,14 @@ function _convertSnapshotToUSD(snap) {
     snap.meta.fxRateApplied = 1.0;
     return snap;
   }
-  const rate = FX_TO_USD[origCurrency.toUpperCase()];
+
+  // Tag 148: British pence (GBp) — Yahoo quotes some UK shares in pence, not pounds.
+  // marketCap and financial values are already 100x too small relative to GBP.
+  // Divide by 100 first to convert pence → pounds, then apply the GBP→USD rate.
+  const isPence = origCurrency === 'GBp';
+  const fxKey = isPence ? 'GBP' : origCurrency.toUpperCase();
+
+  const rate = FX_TO_USD[fxKey];
   if (rate == null) {
     // unknown currency — keep values as-is, flag for diagnostics
     snap.meta.reportingCurrencyOriginal = origCurrency;
@@ -168,19 +175,22 @@ function _convertSnapshotToUSD(snap) {
     return snap;
   }
 
+  // Combined factor: pence→pounds (÷100) then pounds→USD (*rate), or just *rate for normal currencies.
+  const factor = isPence ? rate / 100 : rate;
+
   function scale(item) {
     if (item == null) return item;
-    if (typeof item === 'number') return Number.isFinite(item) ? item * rate : item;
+    if (typeof item === 'number') return Number.isFinite(item) ? item * factor : item;
     if (typeof item !== 'object') return item;
     if ('value' in item) {
       const out = Object.assign({}, item);
-      if (typeof item.value === 'number' && Number.isFinite(item.value)) out.value = item.value * rate;
+      if (typeof item.value === 'number' && Number.isFinite(item.value)) out.value = item.value * factor;
       return out;
     }
     // balance-sheet rows: { totalCash, totalDebt, totalAssets }
     const out = {};
     for (const [k, v] of Object.entries(item)) {
-      out[k] = (typeof v === 'number' && Number.isFinite(v)) ? v * rate : v;
+      out[k] = (typeof v === 'number' && Number.isFinite(v)) ? v * factor : v;
     }
     return out;
   }
@@ -199,7 +209,9 @@ function _convertSnapshotToUSD(snap) {
   }
   snap.meta.reportingCurrencyOriginal = origCurrency;
   snap.meta.reportingCurrency = 'USD';
-  snap.meta.fxRateApplied = rate;
+  // For GBp: store the effective combined factor (pence→USD = GBP_rate/100).
+  // fxRateApplied reflects what was actually multiplied so callers can reverse if needed.
+  snap.meta.fxRateApplied = factor;
   return snap;
 }
 
@@ -652,10 +664,29 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const msg = String(e.message || '');
       let errClass = 'other';
       if (/429|too many request|rate.?limit/i.test(msg)) errClass = 'rate-limit';
-      else if (/404|not found|invalid (cookie|crumb|symbol)|no data found/i.test(msg)) errClass = 'not-found';
+      else if (/404|not found|invalid (cookie|crumb|symbol)|no data found|no fundamentals data found/i.test(msg)) errClass = 'not-found';
       else if (/timeout|ETIMEDOUT|ESOCKETTIMEDOUT/i.test(msg)) errClass = 'timeout';
       else if (/ENOTFOUND|ECONNREFUSED|ECONNRESET|EAI_AGAIN|network/i.test(msg)) errClass = 'network';
       else if (/parse|unexpected token|JSON/i.test(msg)) errClass = 'parse';
+
+      // Tag 148: mark snapshot as delisted when Yahoo definitively rejects the symbol
+      // (not-found class only — transient errors like rate-limit/timeout/network must NOT set this flag).
+      if (errClass === 'not-found') {
+        const filename = safeSnapshotFilename(stock.ticker);
+        const outPath = path.join(outputDir, filename);
+        try {
+          let existing = fs.existsSync(outPath) ? JSON.parse(fs.readFileSync(outPath, 'utf8')) : null;
+          if (existing && existing.meta) {
+            existing.meta.delisted = true;
+            existing.meta.delistedAt = new Date().toISOString();
+            fs.writeFileSync(outPath, JSON.stringify(existing, null, 2));
+            _log('INFO', `  Marked ${stock.ticker} as delisted in snapshot`);
+          }
+        } catch (writeErr) {
+          _log('WARN', `  Could not update delisted flag for ${stock.ticker}: ${writeErr.message}`);
+        }
+      }
+
       failures.push({ ticker: stock.ticker, error: msg, errClass });
       _log('ERROR', `  ✗ ${stock.ticker}: [${errClass}] ${msg}`);
     }

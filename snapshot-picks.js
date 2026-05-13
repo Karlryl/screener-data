@@ -138,18 +138,17 @@ function main() {
     benchmarks: ['SPY', 'QQQ', 'IWM']
   };
 
-  // Tag 138: collect ALL evaluated tickers for survivor-bias-free universe median
-  const evaluatedTickers = [];
+  // Tag 138: collect ALL evaluated tickers for survivor-bias-free universe median.
+  // Built directly from the stocks array so it's never empty even if a mode is disabled.
+  const evaluatedTickers = stocks
+    .filter(s => s && s.meta && s.meta.ticker)
+    .map(s => s.meta.ticker);
 
   for (const modeId of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
     const mode = SM.MODES[modeId];
     if (!mode || mode.enabled === false) { result.modes[modeId] = []; continue; }
     const picks = [];
     for (const stock of stocks) {
-      // Tag 138: collect all tickers evaluated this run (deduplicated across modes)
-      if (modeId === 'HYPERGROWTH' && stock.meta && stock.meta.ticker) {
-        evaluatedTickers.push(stock.meta.ticker);
-      }
       const p = pickStockForMode(stock, modeId);
       if (p) picks.push(p);
     }

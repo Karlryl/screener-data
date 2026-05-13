@@ -73,7 +73,7 @@ jobs:
       # Tag 147: Quality-gate — fail hard only if coverage is too low to produce useful reports
       - name: Verify Pull Coverage
         run: |
-          ok=$(node -e "try{const m=require('./snapshots/_manifest.json');console.log(m.n_ok||0)}catch(e){console.log(0)}")
+          ok=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.n_ok||0)}catch(e){console.log(0)}")
           echo "Snapshots ok: $ok"
           if [ "$ok" -lt 1500 ]; then
             echo "::error::Pull coverage $ok < 1500 — downstream reports would be meaningless"
@@ -84,6 +84,7 @@ jobs:
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: node detect-changes.js --snapshots snapshots --state alert-state.json
+        continue-on-error: true
 
       # Tag-49: Compute sector-medians-auto from current snapshots
       - name: Compute Sector-Medians (auto)
@@ -122,11 +123,15 @@ jobs:
 
       # Tag-63: Earnings-Calendar Pull
       - name: Pull Earnings-Calendar
+        env:
+          EARNINGS_CONCURRENCY: '20'
         run: node pull-earnings-dates.js
         continue-on-error: true
 
       # Tag-39: Historical-Price-Pull (für Performance-Backtest)
       - name: Pull Historical Prices
+        env:
+          PRICE_CONCURRENCY: '20'
         run: node pull-historical-prices.js --out prices --rate-limit 1500
         continue-on-error: true
 

@@ -19,7 +19,10 @@
 const fs = require('fs');
 const path = require('path');
 let yf;
-try { yf = require('yahoo-finance2').default; }
+try {
+  const YF = require('yahoo-finance2').default;
+  yf = (typeof YF === 'function') ? new YF({ suppressNotices: ['yahooSurvey'] }) : YF;
+}
 catch (e) { console.error('yahoo-finance2 nicht installiert'); process.exit(1); }
 
 // Tag 133: Additional discovery sources

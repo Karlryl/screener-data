@@ -146,6 +146,16 @@ async function main() {
     console.log('  Need >=' + MIN_HISTORY_RUNS + ' priors for check, have ' + priorCountsList.length + ' — passing.');
     return 0;
   }
+  // Absolute-minimum guard: if ALL modes together produce fewer than 5 picks,
+  // that is a genuine data problem regardless of historical drift. Hard-fail.
+  const totalPicks = Object.values(latestCounts).reduce((s, n) => s + n, 0);
+  if (totalPicks < 5) {
+    const absMsg = `🚨 Picks-Regression HARD FAIL (${date}): total picks across all modes = ${totalPicks} (minimum is 5). Possible data pipeline failure.`;
+    console.error('  ' + absMsg);
+    await postDiscord(absMsg);
+    return 1;
+  }
+
   if (alerts.length === 0) {
     console.log('  No drift detected. OK.');
     return 0;
@@ -155,13 +165,14 @@ async function main() {
     console.log(`    ${a.mode}: today=${a.today} vs median=${a.median} (drift=${(a.drift*100).toFixed(0)}% ${a.direction})`);
   }
   if (process.env.ALLOW_PICKS_DRIFT === '1') {
-    console.log('  ALLOW_PICKS_DRIFT=1 — not failing the workflow.');
+    console.log('  ALLOW_PICKS_DRIFT=1 — suppressing Discord alert and not failing the workflow.');
     return 0;
   }
-  const msg = '⚠ Picks-Regression Alert (' + date + '): ' +
+  const msg = `⚠ Picks-Regression Alert (${date}): ` +
     alerts.map(a => `${a.mode} ${a.direction} ${(a.drift*100).toFixed(0)}% (today=${a.today}, median=${a.median})`).join(', ');
   await postDiscord(msg);
-  return 1;
+  // Drift is a warning, not a hard fail — downstream steps should still run.
+  return 0;
 }
 
 module.exports = { detectDrift, median, countsByMode };

@@ -73,7 +73,7 @@ function loadStocks(dir) {
   return files.map(f => {
     try { return JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')); }
     catch (e) { return null; }
-  }).filter(Boolean);
+  }).filter(x => x !== null && typeof x === 'object' && !Array.isArray(x));
 }
 
 function evaluateAll(stocks) {
@@ -986,6 +986,14 @@ function buildHtml(evaluated, topN) {
 
 <script>
 (function() {
+  function escHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
   function fmtMcap(b) {
     if (b >= 1000) return '$' + (b/1000).toFixed(1) + 'T';
     if (b >= 1) return '$' + Math.round(b) + 'B';
@@ -1011,8 +1019,8 @@ function buildHtml(evaluated, topN) {
     var oiA  = arrVals(ann.annualOpInc).slice().reverse();
     var fcfA = arrVals(ann.annualFcf).slice().reverse();
     var mcap = (typeof m.marketCap === 'number') ? m.marketCap : (m.marketCap && m.marketCap.value);
-    var html = '<h2>' + (m.ticker||'?') + ' &middot; ' + (m.name||'') + '</h2>';
-    html += '<div class="modal-meta">' + (m.sector||'') + ' &middot; ' + (m.industry||'') + ' &middot; ' + (m.country||'') + '</div>';
+    var html = '<h2>' + escHtml(m.ticker||'?') + ' &middot; ' + escHtml(m.name||'') + '</h2>';
+    html += '<div class="modal-meta">' + escHtml(m.sector||'') + ' &middot; ' + escHtml(m.industry||'') + ' &middot; ' + escHtml(m.country||'') + '</div>';
     html += '<div class="kpi-grid">';
     html += '<div class="kpi"><div class="lbl">Market Cap</div><div class="val">' + fmtM(mcap) + '</div></div>';
     html += '<div class="kpi"><div class="lbl">Rev TTM</div><div class="val">' + fmtM(revA[revA.length-1]) + '</div></div>';
