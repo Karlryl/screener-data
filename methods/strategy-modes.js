@@ -245,18 +245,26 @@ function evaluateMode(stock, modeId, allResults) {
 
 // Soft-Warning Texte pro DataGuard
 const SOFT_WARNING_TEXT = {
-  'sloan-ratio': 'Earnings-Quality auffaellig (Sloan-Ratio hoch â kann R&D/Working-Capital-Effekt sein)',
+  'sloan-ratio': 'Earnings-Quality auffaellig (Sloan-Ratio hoch - kann R&D/Working-Capital-Effekt sein)',
   'net-debt-ebitda': 'Bilanz-Risiko (Net-Debt/EBITDA hoch)',
   'asset-growth-divergence': 'Asset-Wachstum > Umsatz-Wachstum (Acquired-Growth-Risiko)',
   'revenue-shock-guard': 'Umsatzsprung wirkt wie Einmaleffekt',
-  'q-spike-dataguard': 'Q-Spike-Pattern (OI-Expansion oder >55% Single-Q-Konzentration)'
+  'q-spike-dataguard': 'Q-Spike-Pattern (OI-Expansion oder >55% Single-Q-Konzentration)',
+  'deceleration-guard': 'Wachstumsrate verlangsamt sich (Deceleration-Signal)',
+  'quarter-concentration-guard': 'Umsatz stark auf ein Quartal konzentriert',
+  'working-capital-anomaly': 'Working-Capital-Anomalie (ungewoehnliche Verschiebungen)'
 };
 const MISSING_GUARD_TEXT = {
   'sloan-ratio': 'Sloan-Ratio nicht berechenbar',
   'net-debt-ebitda': 'Net-Debt/EBITDA nicht berechenbar',
   'asset-growth-divergence': 'Asset-Growth nicht berechenbar',
   'revenue-shock-guard': 'Umsatz-Shock-Check nicht moeglich (keine Quartalsdaten)',
-  'q-spike-dataguard': 'Q-Spike-Check nicht moeglich (keine Quartals/OI-Daten)'
+  'q-spike-dataguard': 'Q-Spike-Check nicht moeglich (keine Quartals/OI-Daten)',
+  'forecast-contamination-guard': 'Forecast-Contamination-Check nicht moeglich (keine Zeitreihendaten)',
+  'revenue-volatility-guard': 'Revenue-Volatility-Check nicht moeglich (keine Quartalsdaten)',
+  'deceleration-guard': 'Deceleration-Check nicht moeglich (zu wenig Quartalsdaten)',
+  'quarter-concentration-guard': 'Quarter-Concentration-Check nicht moeglich (keine Quartalsdaten)',
+  'working-capital-anomaly': 'Working-Capital-Check nicht moeglich (keine Bilanzdaten)'
 };
 
 function buildStory(stock, modeEval, allResults, modeRef) {

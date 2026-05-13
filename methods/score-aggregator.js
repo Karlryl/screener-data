@@ -49,9 +49,12 @@ const SCORE_WEIGHTS = {
     'above-200d-ma': 0.05
   },
   TURNAROUND: {
-    'profitability-state': 0.40,
-    'profitability-trend': 0.40,
-    'revenue-growth-3y': 0.20
+    'profitability-state': 0.25,
+    'profitability-trend': 0.25,
+    'altman-z-score': 0.20,
+    'piotroski-f-score': 0.15,
+    'revenue-growth-3y': 0.10,
+    'estimate-revision-proxy': 0.05
   }
 };
 
