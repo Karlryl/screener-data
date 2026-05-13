@@ -47,6 +47,13 @@ module.exports = [
   { file: './quarter-concentration-guard.js' },
   { file: './working-capital-anomaly.js' },
 
+  // Tag 140: Turnaround analysis
+  { file: './piotroski-f-score.js' },
+  { file: './altman-z-score.js' },
+
+  // Tag 141: Estimate revision proxy
+  { file: './estimate-revision-proxy.js' },
+
   // Aux / context (red-flag rules, sub-scores)
   { file: './roic.js' },
   { file: './sloan-ratio.js' },
@@ -63,5 +70,8 @@ module.exports = [
   { file: './insider-ownership.js' },
   { file: './forward-pe.js' },
   { file: './peg.js' },
-  { file: './ev-ebitda.js' }
+  { file: './ev-ebitda.js' },
+
+  // Tag 137: Insider-buy-cluster signal
+  { file: './insider-buy-cluster.js' }
 ];

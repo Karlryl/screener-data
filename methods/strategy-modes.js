@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 // Tag 120: Score-Aggregator Integration (Hygiene-Filter + Investment-Score Trennung)
 var ScoreAggregator;
@@ -108,20 +108,25 @@ const MODES = {
   TURNAROUND: {
     id: 'TURNAROUND',
     label: 'Turnaround',
-    description: 'Firmen die gerade aus Verlust in Profit drehen â fruehe Re-Rating-Kandidaten.',
+    description: 'Firmen die gerade aus Verlust in Profit drehen - fruehe Re-Rating-Kandidaten mit F-Score & Altman-Absicherung.',
     evidence: 'experimentell',
-    evidenceLabel: 'Experimentell â hohe Fehlerrate moeglich, nur als Ideenquelle (NICHT in v1.0 â kommt in Phase 2).',
+    evidenceLabel: 'Experimentell (Tag 140) - Piotroski F-Score + Altman Z" als Hygiene-Filter. Hohe Fehlerrate moeglich, nur als Ideenquelle.',
     core: [
       { id: 'profitability-state', required: true, weight: 'must', storyHint: 'frischer Sign-Flip oder neue Profitabilitaet', acceptValues: ['TURNAROUND', 'RECENT'] },
       { id: 'profitability-trend', required: true, weight: 'must', storyHint: 'Profitabilitaet verbessert sich', acceptValues: ['IMPROVING'] },
-      { id: 'revenue-growth-3y', required: false, weight: 'prefer', storyHint: 'Umsatz waechst' }
+      // Tag 140: Altman Z" als must-Filter (kein Distress), F-Score als prefer
+      { id: 'altman-z-score', required: true, weight: 'must', storyHint: 'kein Insolvenz-Risiko (Altman Z" > 1.1)' },
+      { id: 'piotroski-f-score', required: false, weight: 'prefer', storyHint: 'starkes Piotroski F-Signal (>=6/8)' },
+      { id: 'revenue-growth-3y', required: false, weight: 'prefer', storyHint: 'Umsatz waechst' },
+      // Tag 141: Estimate-Revision-Proxy als prefer-Signal
+      { id: 'estimate-revision-proxy', required: false, weight: 'prefer', storyHint: 'positive Revisionen / Rev-Beschleunigung' }
     ],
-    dataGuards: ['sloan-ratio', 'net-debt-ebitda', 'revenue-shock-guard'],
-    softGuards: [],  // Tag 120b: Turnaround keine softGuards definiert
+    dataGuards: ['sloan-ratio', 'revenue-shock-guard'],
+    softGuards: ['net-debt-ebitda'],
     excludeSectors: SECTOR_EXCLUDE_HYPERGROWTH,
-    enabled: false,  // Phase 2 â nicht in v1.0
-    storyTemplate: '{ticker} â Turnaround: {coreSummary}. {warnings}',
-    defaultSortMethod: 'profitability-trend'
+    // Tag 140: enabled (Phase 2 abgeschlossen)
+    storyTemplate: '{ticker} - Turnaround: {coreSummary}. {warnings}',
+    defaultSortMethod: 'piotroski-f-score'
   }
 };
 

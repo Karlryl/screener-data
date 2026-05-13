@@ -95,7 +95,7 @@ function dedupePicksByCompany(picks) {
 // all prior vintages. Used to enrich each pick with the date it was first seen
 // in this mode (for "weeks on list" continuity and pick-stability investigation).
 function _buildFirstSeenMap(picksHistDir) {
-  const map = { HYPERGROWTH: {}, QUALITY_COMPOUNDER: {} };
+  const map = { HYPERGROWTH: {}, QUALITY_COMPOUNDER: {}, TURNAROUND: {} };
   if (!fs.existsSync(picksHistDir)) return map;
   const files = fs.readdirSync(picksHistDir)
     .filter(f => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
@@ -138,11 +138,18 @@ function main() {
     benchmarks: ['SPY', 'QQQ', 'IWM']
   };
 
-  for (const modeId of ['HYPERGROWTH', 'QUALITY_COMPOUNDER']) {
+  // Tag 138: collect ALL evaluated tickers for survivor-bias-free universe median
+  const evaluatedTickers = [];
+
+  for (const modeId of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
     const mode = SM.MODES[modeId];
     if (!mode || mode.enabled === false) { result.modes[modeId] = []; continue; }
     const picks = [];
     for (const stock of stocks) {
+      // Tag 138: collect all tickers evaluated this run (deduplicated across modes)
+      if (modeId === 'HYPERGROWTH' && stock.meta && stock.meta.ticker) {
+        evaluatedTickers.push(stock.meta.ticker);
+      }
       const p = pickStockForMode(stock, modeId);
       if (p) picks.push(p);
     }
@@ -160,8 +167,9 @@ function main() {
     const deduped = dedupePicksByCompany(picks);
     const top100 = deduped.slice(0, 100);
     // Tag 134 — Phase 4.1: enrich each pick with firstSeenAt + weeksOnList
+    const modeFirstSeen = firstSeen[modeId] || {};
     for (const p of top100) {
-      const seen = firstSeen[modeId][p.ticker];
+      const seen = modeFirstSeen[p.ticker];
       p.firstSeenAt = seen || today;
       p.weeksOnList = _weeksBetween(p.firstSeenAt, today);
     }
@@ -169,10 +177,13 @@ function main() {
     console.log('  ' + modeId + ': ' + picks.length + ' picks -> ' + deduped.length + ' deduped -> top ' + top100.length);
   }
 
+  // Tag 138: save evaluated tickers for survivor-bias fix in walk-forward
+  result.evaluatedTickers = evaluatedTickers;
+
   const dateStr = result.asOf.slice(0, 10);
   const outFile = path.join(args.out, dateStr + '.json');
   fs.writeFileSync(outFile, JSON.stringify(result, null, 2));
-  console.log('Written: ' + outFile);
+  console.log('Written: ' + outFile + ' (' + evaluatedTickers.length + ' evaluated tickers)');
   fs.writeFileSync(path.join(args.out, 'latest.json'), JSON.stringify(result, null, 2));
 }
 
