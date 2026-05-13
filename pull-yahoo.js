@@ -52,9 +52,10 @@ try {
   }
 }
 
-// Tag 145: concurrency raised from 1 → 8 so the internal queue doesn't serialize
-// all requests. concurrency:1 was the root cause of the 2-hour hang on 8000-stock runs.
-const yf = new YahooFinance({ suppressNotices: ['yahooSurvey'], queue: { concurrency: 8 } });
+// Tag 147: yf-queue concurrency now reads PULL_CONCURRENCY env (same as outer batch).
+// Hard-coding 8 made PULL_CONCURRENCY=20 a no-op for actual HTTP parallelism.
+const _YF_CONC = parseInt(process.env.PULL_CONCURRENCY || '10', 10);
+const yf = new YahooFinance({ suppressNotices: ['yahooSurvey'], queue: { concurrency: _YF_CONC } });
 
 // Modules die wir brauchen für canonicalInput-Mapping
 const MODULES = [
@@ -679,7 +680,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     results,
     failures
   };
-  fs.writeFileSync(path.join(outputDir, '_manifest.json'), JSON.stringify(manifest, null, 2));
+  // Tag 147: no pretty-print — halves string allocation at 22k+ entries
+  fs.writeFileSync(path.join(outputDir, '_manifest.json'), JSON.stringify(manifest));
   _log('INFO', `Pull complete: ${results.length}/${watchlist.stocks.length} ok, ${failures.length} failed`);
   return manifest;
 }
@@ -709,8 +711,14 @@ async function main() {
     process.exit(1);
   }
   const manifest = await pullAll(watchlist, args.output, args.rateLimit);
-  // Tag 146: threshold raised 50%→75% — large universe has inherent Yahoo coverage gaps
-  process.exit(manifest.n_failed > manifest.n_total * 0.75 ? 1 : 0);
+  // Tag 147: threshold is relative to "attempted" (excludes skipped-mcap which never
+  // hit the network). Counting skipped-mcap in n_total inflated the denominator and
+  // made the 75% guard meaningless for large universes with many micro-cap tickers.
+  const skippedMcap = (manifest.results || []).filter(r => r.status === 'skipped-mcap').length;
+  const attempted = Math.max(1, manifest.n_total - skippedMcap);
+  const failRatio = manifest.n_failed / attempted;
+  _log('INFO', `Fail-ratio: ${(failRatio * 100).toFixed(1)}% (${manifest.n_failed} fail / ${attempted} attempted; ${skippedMcap} skipped-mcap)`);
+  process.exit(failRatio > 0.75 ? 1 : 0);
 }
 
 if (require.main === module) {

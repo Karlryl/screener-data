@@ -26,8 +26,11 @@ jobs:
           node-version: '22'
 
 
+      - name: Verify Node version
+        run: node --version && npm --version
+
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       # Tag-23: Pre-Pull Engine-Tests. Bricht workflow ab BEVOR Yahoo-Pull
       # läuft, falls Engine/Orchestrator/Filters durch einen Commit kaputt sind.
@@ -63,7 +66,19 @@ jobs:
         continue-on-error: true
 
       - name: Run Yahoo Pull
-        run: node pull-yahoo.js --watchlist watchlist.json --output snapshots --rate-limit 2000
+        run: node --max-old-space-size=6144 pull-yahoo.js --watchlist watchlist.json --output snapshots --rate-limit 2000
+        continue-on-error: true
+        timeout-minutes: 150
+
+      # Tag 147: Quality-gate — fail hard only if coverage is too low to produce useful reports
+      - name: Verify Pull Coverage
+        run: |
+          ok=$(node -e "try{const m=require('./snapshots/_manifest.json');console.log(m.n_ok||0)}catch(e){console.log(0)}")
+          echo "Snapshots ok: $ok"
+          if [ "$ok" -lt 1500 ]; then
+            echo "::error::Pull coverage $ok < 1500 — downstream reports would be meaningless"
+            exit 1
+          fi
 
       - name: Detect Changes + Discord-Alert
         env:

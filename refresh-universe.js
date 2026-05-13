@@ -243,9 +243,21 @@ async function main() {
     }
   }
 
+  // Tag 147: Hard-cap universe by marketCap rank. Finnhub/SEC/NASDAQ add tickers
+  // without mcap filter — without this cap the universe exploded to 22k+, causing
+  // Node OOM and Yahoo rate-limiting in pull-yahoo.js.
+  const MAX_UNIVERSE = parseInt(process.env.MAX_UNIVERSE || '10000', 10);
+  if (allTickers.size > MAX_UNIVERSE) {
+    const ranked = [...allTickers.entries()].sort((a, b) => (b[1].marketCap || 0) - (a[1].marketCap || 0));
+    const capped = new Map(ranked.slice(0, MAX_UNIVERSE));
+    console.log(`Universe-Cap: ${allTickers.size} -> ${capped.size} (top ${MAX_UNIVERSE} by mcap)`);
+    allTickers.clear();
+    for (const [k, v] of capped) allTickers.set(k, v);
+  }
+
   // 2. No sector-exclude at universe level (Tag 132: modes filter sectors, not discovery)
   // Banks/REITs/Insurance are allowed for Quality-Compounder mode.
-  console.log('Distinct candidates after all sources: ' + allTickers.size + ' (target: 8000+)');
+  console.log('Distinct candidates after all sources: ' + allTickers.size + ' (target: 8000-10000)');
 
   // 3. Identify new tickers
   const newTickers = [];

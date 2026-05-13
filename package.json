@@ -10,7 +10,7 @@
     "pull:single": "node pull-yahoo.js --watchlist watchlist.json --output snapshots-single --rate-limit 100"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "dependencies": {
     "yahoo-finance2": "^3.14.0"
