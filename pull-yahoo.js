@@ -516,14 +516,35 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // Tag-80: Parallel pulls in batches of CONCURRENCY
   const CONCURRENCY = parseInt(process.env.PULL_CONCURRENCY || '10', 10);
   _log('INFO', `Parallel pulls: ${CONCURRENCY} concurrent. Total: ${watchlist.stocks.length} stocks.`);
+  // Tag 154: exponential-backoff retry for rate-limit errors.
+  // Yahoo 429s are transient — one retry after 10–30s usually succeeds.
+  // Max 3 attempts: initial + 2 retries with 10s / 25s sleep.
+  async function quoteSummaryWithRetry(symbol, label) {
+    const DELAYS = [10000, 25000];
+    let lastErr;
+    for (let attempt = 0; attempt <= DELAYS.length; attempt++) {
+      try {
+        return await _withTimeout(yf.quoteSummary(symbol, { modules: MODULES }), 30000, label);
+      } catch (e) {
+        lastErr = e;
+        const isRateLimit = /429|too many request|rate.?limit/i.test(String(e.message || ''));
+        if (isRateLimit && attempt < DELAYS.length) {
+          const delay = DELAYS[attempt];
+          _log('WARN', `  ${label} rate-limited (attempt ${attempt + 1}) — retrying in ${delay / 1000}s`);
+          await _sleep(delay);
+        } else {
+          throw e;
+        }
+      }
+    }
+    throw lastErr;
+  }
+
   async function processOne(stock) {
 
     try {
       _log('INFO', `Pulling ${stock.ticker} (${stock.yahoo_symbol})…`);
-      const yahoo = await _withTimeout(
-        yf.quoteSummary(stock.yahoo_symbol, { modules: MODULES }),
-        30000, stock.ticker
-      );
+      const yahoo = await quoteSummaryWithRetry(stock.yahoo_symbol, stock.ticker);
       const asOf = new Date().toISOString();
       const canonical = mapYahooToCanonical(yahoo, stock, asOf);
 
@@ -694,13 +715,29 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     }
 
     }
-  // Run in parallel batches with rate-limit sleep between batches
+  // Run in parallel batches with rate-limit sleep between batches.
+  // Tag 154: adaptive sleep — doubles inter-batch delay when a batch has >=50% rate-limit failures,
+  // resets toward baseline when a batch is clean. Caps at 4× base.
+  let adaptiveMs = rateLimitMs;
+  let consecutiveRateLimitBatches = 0;
+  const failuresBefore = failures.length;
   for (let batchStart = 0; batchStart < watchlist.stocks.length; batchStart += CONCURRENCY) {
     const batch = watchlist.stocks.slice(batchStart, batchStart + CONCURRENCY);
+    const failBefore = failures.length;
     await Promise.all(batch.map(s => processOne(s).catch(e => _log('WARN', `Batch error ${s.ticker}: ${e.message}`))));
+    const batchFails = failures.length - failBefore;
+    const batchRateLimits = failures.slice(failBefore).filter(f => f.errClass === 'rate-limit').length;
     if (batchStart + CONCURRENCY < watchlist.stocks.length) {
-      await _sleep(rateLimitMs);
-      _log('INFO', `Batch ${Math.ceil((batchStart + CONCURRENCY) / CONCURRENCY)} done (${batchStart + CONCURRENCY}/${watchlist.stocks.length})`);
+      if (batchRateLimits >= Math.ceil(batch.length * 0.5)) {
+        consecutiveRateLimitBatches++;
+        adaptiveMs = Math.min(rateLimitMs * 4, adaptiveMs * 2);
+        _log('WARN', `Rate-limit detected in batch — sleep extended to ${adaptiveMs}ms (${consecutiveRateLimitBatches} consecutive)`);
+      } else if (consecutiveRateLimitBatches > 0) {
+        consecutiveRateLimitBatches = Math.max(0, consecutiveRateLimitBatches - 1);
+        adaptiveMs = Math.max(rateLimitMs, adaptiveMs / 1.5);
+      }
+      await _sleep(adaptiveMs);
+      _log('INFO', `Batch ${Math.ceil((batchStart + CONCURRENCY) / CONCURRENCY)} done (${batchStart + CONCURRENCY}/${watchlist.stocks.length}) sleep=${adaptiveMs}ms`);
     }
   }
 
