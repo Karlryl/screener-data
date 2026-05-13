@@ -22,6 +22,11 @@ let yf;
 try { yf = require('yahoo-finance2').default; }
 catch (e) { console.error('yahoo-finance2 nicht installiert'); process.exit(1); }
 
+// Tag 133: Additional discovery sources
+const { fetchSecTickers }       = require('./discovery/sec-tickers.js');
+const { fetchFinnhubUniverse }  = require('./discovery/finnhub.js');
+const { fetchWikipediaIndices } = require('./discovery/wikipedia-indices.js');
+
 function parseArgs(argv) {
   const args = { watchlist: './watchlist.json', out: null };
   for (let i = 2; i < argv.length; i++) {
@@ -208,9 +213,35 @@ async function main() {
   }
   console.log('Custom-Screener total neue Tickers: ' + customAdded);
 
+  // Tag 133: Merge additional discovery sources into allTickers
+  // SEC EDGAR: ~10k US-listed companies (no auth required)
+  // Finnhub:   ~20k+ global stocks per exchange (needs FINNHUB_API_KEY secret)
+  // Wikipedia: S&P 500 / FTSE 100 / DAX constituents (no auth required)
+  console.log('\nDiscovery: Additional Sources (Tag 133)...');
+  const discoverySources = await Promise.allSettled([
+    fetchSecTickers(),
+    fetchFinnhubUniverse(),
+    fetchWikipediaIndices()
+  ]);
+  for (const res of discoverySources) {
+    if (res.status === 'rejected') { console.error('  Discovery source error: ' + res.reason); continue; }
+    const srcMap = res.value;
+    for (const [sym, info] of srcMap) {
+      if (!allTickers.has(sym)) {
+        allTickers.set(sym, {
+          ticker: sym,
+          marketCap: null,
+          name: info.name || '',
+          sector: '',
+          exchange: info.exchange || ''
+        });
+      }
+    }
+  }
+
   // 2. No sector-exclude at universe level (Tag 132: modes filter sectors, not discovery)
   // Banks/REITs/Insurance are allowed for Quality-Compounder mode.
-  console.log('Distinct candidates: ' + allTickers.size);
+  console.log('Distinct candidates after all sources: ' + allTickers.size);
 
   // 3. Identify new tickers
   const newTickers = [];
@@ -229,10 +260,10 @@ async function main() {
     wlRaw.stocks.push({
       ticker: info.ticker,
       yahoo_symbol: info.ticker,
-      name: info.name,
-      sector_hint: info.sector,
-      exchange_hint: info.exchange,
-      added_via: 'auto-universe-refresh',
+      name: info.name || '',
+      sector_hint: info.sector || '',
+      exchange_hint: info.exchange || '',
+      added_via: info.source || 'auto-universe-refresh',
       added_at: new Date().toISOString()
     });
   }

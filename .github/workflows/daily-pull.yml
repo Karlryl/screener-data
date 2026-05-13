@@ -41,8 +41,11 @@ jobs:
           node tag28-tests.js
 
       # Tag 132: Auto-Universe-Refresh — laeuft bei jedem Run (schedule + workflow_dispatch).
-      # Pullt Yahoo-Screener-Buckets, mergt neue Mid-Caps in watchlist.json.
+      # Tag 133: Merged mit SEC EDGAR, Finnhub, Wikipedia Indices.
+      # FINNHUB_API_KEY: GitHub Secret (Settings → Secrets → Actions → FINNHUB_API_KEY)
       - name: Refresh Universe
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
         run: node refresh-universe.js --watchlist watchlist.json
         continue-on-error: true
 
