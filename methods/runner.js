@@ -1,24 +1,36 @@
 'use strict';
 /**
- * Tag 97b: Methods-Runner mit Type-Klassifikation
- * Plug-and-Play Method-Loader. aktienfinder-quality wird automatisch übersprungen.
+ * Tag 97b: Methods-Runner mit Type-Klassifikation.
+ * Tag 134 — Phase 2: Loader liest jetzt aus expliziter Registry (methods/index.js)
+ * statt fs.readdirSync. Verhindert dass ein typo'd module.exports.id silently
+ * de-registriert oder ein syntax-error eines Method-Files silently übersprungen wird.
  */
-const fs = require('fs');
 const path = require('path');
 const H = require('./_helpers.js');
 const MT = require('./method-types.js');
+const REGISTRY = require('./index.js');
 
 function _loadAllMethods() {
-  const dir = __dirname;
   const out = [];
-  const files = fs.readdirSync(dir).filter(f => f.endsWith('.js') && !f.startsWith('_'));
-  for (const f of files) {
-    if (['runner.js', 'trend.js', 'method-types.js'].includes(f)) continue;
-    const full = path.join(dir, f);
+  const seenIds = new Set();
+  for (const entry of REGISTRY) {
+    if (!entry || !entry.file) continue;
     let mod;
-    try { mod = require(full); }
-    catch (e) { continue; }
-    if (!mod || typeof mod.evaluate !== 'function' || !mod.id) continue;
+    try { mod = require(path.resolve(__dirname, entry.file)); }
+    catch (e) {
+      const msg = '[methods/runner] FAILED to load ' + entry.file + ': ' + e.message;
+      if (entry.optional) { console.warn(msg + ' (optional, skipping)'); continue; }
+      throw new Error(msg);
+    }
+    if (!mod || typeof mod.evaluate !== 'function' || !mod.id) {
+      const msg = '[methods/runner] Module ' + entry.file + ' missing evaluate() or id';
+      if (entry.optional) { console.warn(msg + ' (optional, skipping)'); continue; }
+      throw new Error(msg);
+    }
+    if (seenIds.has(mod.id)) {
+      throw new Error('[methods/runner] Duplicate method id "' + mod.id + '" from ' + entry.file);
+    }
+    seenIds.add(mod.id);
     if (MT.isDisabled(mod.id)) continue;
     out.push(mod);
   }

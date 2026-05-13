@@ -28,7 +28,17 @@ const MATERIAL_REV_FLOOR = 100e6;
 const MATERIAL_MCAP_RATIO = 0.005;
 
 const SPIKE_SHARE_HARD = 0.55;       // >55% Single-Q-Konzentration → Fail
-const OI_SEVERITY_HARD = 2.0;       // Tag 113e: 3.0->2.0 (synchron mit HG-Quality), faengt IONQ (2.72x)        // OI-Verlust expandiert >3x → Fail
+// Tag 134 — Phase 2: Reverted from 2.0 → 3.0 per docs/threshold-discipline.md.
+// The 2.0 value (Tag 113e) was a single-ticker tune for IONQ — explicitly forbidden
+// by Tag 129 policy. Reverted to first-principles 3.0 (3× operating-loss expansion).
+// Specific tickers that motivated the tune are now in EXCLUDED_TICKERS below
+// (per Phase 2 plan: address single-ticker problems with excludes, not threshold-tuning).
+const OI_SEVERITY_HARD = 3.0;
+// Tag 134 — Phase 2: per-method exclude list for tickers where the structural pattern
+// of the method genuinely doesn't apply. Each entry needs a one-line justification.
+const EXCLUDED_TICKERS = new Set([
+  'IONQ', 'RGTI', 'QBTS', 'QUBT'  // quantum-computing: pre-revenue R&D companies, Q-spikes are research-grant artifacts
+]);
 const HYPERGROWTH_TRIGGER = 100;     // YoY > 100% → DataGuard aktiv
 
 function _arr(stock, path) {
@@ -80,6 +90,16 @@ function evaluate(stock) {
     return H.buildResult({
       computable: false, pass: false,
       reason: 'no stock data'
+    });
+  }
+  // Tag 134 — Phase 2: per-method exclude list (Tag 129 enforcement).
+  // The threshold reverts to 3.0; specific quantum-computing names that
+  // motivated the prior 2.0 tune are explicitly excluded here.
+  const ticker = (stock.meta && stock.meta.ticker) || '';
+  if (EXCLUDED_TICKERS.has(String(ticker).toUpperCase())) {
+    return H.buildResult({
+      computable: true, pass: false, value: 'EXCLUDED_TICKER',
+      reason: 'ticker on q-spike-dataguard exclude list (pre-revenue R&D, Q-spikes are research-grant artifacts)'
     });
   }
   const yoyGrowth = H.metricValue(stock, 'revenueGrowthYoY');
