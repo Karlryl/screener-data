@@ -98,7 +98,7 @@ function main() {
     modes: {}
   };
 
-  for (const mode of ['HYPERGROWTH', 'QUALITY_COMPOUNDER']) {
+  for (const mode of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
     const latestTickers = picksToTickers(latest, mode);
     const priorTickers = picksToTickers(prior, mode);
     const latestSet = new Set(latestTickers);
@@ -124,7 +124,7 @@ function main() {
   // Rolling 4-week Jaccard average
   const recentVintages = picksVintages.slice(-5); // latest + 4 priors
   diff.rollingJaccard = {};
-  for (const mode of ['HYPERGROWTH', 'QUALITY_COMPOUNDER']) {
+  for (const mode of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
     const tickerSets = [];
     for (const f of recentVintages) {
       const v = loadJson(path.join(PICKS_DIR, f));
@@ -161,7 +161,7 @@ function main() {
   html += '<h1>Pick Diff — ' + todayDate + '</h1>';
   html += '<div class="sub">Compared against ' + priorDate + '. Jaccard ≥ 0.7 = healthy stability. Lower = more whip-saw.</div>';
 
-  for (const mode of ['HYPERGROWTH', 'QUALITY_COMPOUNDER']) {
+  for (const mode of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
     const m = diff.modes[mode];
     const r = diff.rollingJaccard[mode];
     const jacClass = m.jaccard >= 0.7 ? 'jac-good' : m.jaccard >= 0.5 ? 'jac-warn' : 'jac-bad';
@@ -195,7 +195,7 @@ function main() {
   console.log('Pick-diff written:');
   console.log('  ' + path.join(OUT_DIR, 'pick-diff-' + todayDate + '.json'));
   console.log('  ' + path.join(OUT_DIR, 'pick-diff.html'));
-  for (const mode of ['HYPERGROWTH', 'QUALITY_COMPOUNDER']) {
+  for (const mode of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
     const m = diff.modes[mode];
     console.log('  ' + mode + ': jaccard=' + m.jaccard + ', +' + m.added.length + ' -' + m.removed.length + ', =' + m.sameCount);
   }

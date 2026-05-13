@@ -71,16 +71,17 @@ async function main() {
       const result = await yf.chart(stock.yahoo_symbol, {
         period1, period2, interval: '1d'
       });
-      const quotes = (result.quotes || []).filter(q => q.close != null);
+      // Tag 148: use adjclose (dividend/split-adjusted) instead of raw close
+      const quotes = (result.quotes || []).filter(q => (q.adjclose ?? q.close) != null);
       if (!quotes.length) { failed++; return; }
-      const latestClose = quotes[quotes.length - 1].close;
+      const latestClose = quotes[quotes.length - 1].adjclose ?? quotes[quotes.length - 1].close;
       todaysSnapshot[stock.ticker] = { close: latestClose, asOf: today, currency: result.meta && result.meta.currency };
 
       // Extend history: only add today's entry if not already there
       if (!history[stock.ticker]) history[stock.ticker] = [];
       const existing = history[stock.ticker].find(e => e.date === today);
       if (!existing) {
-        history[stock.ticker].push({ date: today, close: latestClose });
+        history[stock.ticker].push({ date: today, close: latestClose }); // stored as 'close' for backward compat
       }
       // Trim to last 400 days
       history[stock.ticker] = history[stock.ticker].slice(-400);
