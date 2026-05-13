@@ -19,9 +19,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const PICKS_DIR = path.join(__dirname, '..', 'picks-history');
-const PRICES_PATH = path.join(__dirname, '..', 'prices', 'history.json');
-const OUT_DIR = path.join(__dirname, '..', 'outputs');
+const PICKS_DIR     = path.join(__dirname, '..', 'picks-history');
+const PRICES_PATH   = path.join(__dirname, '..', 'prices', 'history.json');
+const REGIME_PATH   = path.join(__dirname, '..', 'outputs', 'macro-regime.json');
+const OUT_DIR       = path.join(__dirname, '..', 'outputs');
 
 const HORIZONS_DAYS = [7, 28, 84]; // 1w / 4w / 12w
 
@@ -76,16 +77,22 @@ function listVintages() {
     .sort();
 }
 
-function computeUniverseMedianReturn(history, asOfDate, horizonDays) {
+// Tag 138: survivor-bias fix. When the picks file has evaluatedTickers[], use that
+// list (stocks that were actually in the universe at vintage time) instead of all
+// tickers in prices/history.json (which includes stocks added later → upward bias).
+function computeUniverseMedianReturn(history, asOfDate, horizonDays, evaluatedTickers) {
   const futureDate = addDaysIso(asOfDate, horizonDays);
   const returns = [];
-  for (const ticker of Object.keys(history)) {
+  const tickerList = (evaluatedTickers && evaluatedTickers.length > 0)
+    ? evaluatedTickers
+    : Object.keys(history);
+  for (const ticker of tickerList) {
     const p0 = priceAt(history, ticker, asOfDate);
     const p1 = priceAt(history, ticker, futureDate);
     const r = returnPct(p0, p1);
     if (r != null) returns.push(r);
   }
-  return median(returns);
+  return { median: median(returns), n: returns.length, survivorBiasCorrected: !!(evaluatedTickers && evaluatedTickers.length > 0) };
 }
 
 // Tag 134 — Phase 3.2: frozen-vintage benchmark.
@@ -120,11 +127,33 @@ function computeBenchmarkReturn(history, asOfDate, horizonDays, ticker) {
   return returnPct(p0, p1);
 }
 
-function evaluateVintage(picksFile, history) {
+// Tag 139: load macro-regime lookup
+function loadMacroRegimes() {
+  const raw = loadJson(REGIME_PATH);
+  if (!raw || !raw.regimes) return null;
+  return raw.regimes; // { "YYYY-MM-DD": { regime, price, sma200 } }
+}
+
+// Tag 139: find closest regime entry for a given date (within 7 days)
+function getRegimeAt(regimes, isoDate) {
+  if (!regimes) return null;
+  if (regimes[isoDate]) return regimes[isoDate].regime;
+  // Look back up to 7 days
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date(isoDate + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    if (regimes[key]) return regimes[key].regime;
+  }
+  return null;
+}
+
+function evaluateVintage(picksFile, history, regimes) {
   const asOf = (picksFile.asOf || '').slice(0, 10);
   if (!asOf) return null;
   const today = new Date().toISOString().slice(0, 10);
-  const out = { asOf, modes: {} };
+  const macroRegime = getRegimeAt(regimes, asOf);  // Tag 139
+  const out = { asOf, macroRegime, modes: {} };
 
   for (const [mode, picks] of Object.entries(picksFile.modes || {})) {
     if (!Array.isArray(picks)) continue;
@@ -143,7 +172,9 @@ function evaluateVintage(picksFile, history) {
         const r = returnPct(p0, p1);
         if (r != null) pickReturns.push(r);
       }
-      const universeMed = computeUniverseMedianReturn(history, asOf, days);
+      // Tag 138: pass evaluatedTickers for survivor-bias-corrected universe median
+      const univResult = computeUniverseMedianReturn(history, asOf, days, picksFile.evaluatedTickers);
+      const universeMed = univResult.median;
       const frozenVintage = computeFrozenVintageMedianReturn(history, picksFile, asOf, days);
       const spyRet = computeBenchmarkReturn(history, asOf, days, 'SPY');
       const pickMed = median(pickReturns);
@@ -153,8 +184,10 @@ function evaluateVintage(picksFile, history) {
         coverage: picks.length > 0 ? Math.round(pickReturns.length / picks.length * 100) / 100 : 0,
         pickMedianReturn: pickMed,
         // Three benchmarks side-by-side. The reader picks the one they trust most.
-        universeMedianReturn: universeMed,                                          // today's survivors
-        frozenVintageMedianReturn: frozenVintage.median,                            // vintage-frozen
+        universeMedianReturn: universeMed,                                          // Tag 138: survivor-bias corrected when evaluatedTickers available
+        universeN: univResult.n,
+        survivorBiasCorrected: univResult.survivorBiasCorrected,
+        frozenVintageMedianReturn: frozenVintage.median,                            // vintage-frozen (picks only)
         frozenVintageN: frozenVintage.n,
         spyReturn: spyRet,                                                          // external benchmark
         alphaVsUniverse: (pickMed != null && universeMed != null) ? pickMed - universeMed : null,
@@ -175,6 +208,14 @@ function main() {
     console.log('No prices/history.json — cannot compute walk-forward.');
     return;
   }
+  // Tag 139: load macro-regime data (graceful if not present)
+  const regimes = loadMacroRegimes();
+  if (regimes) {
+    console.log('Macro-regime data loaded: ' + Object.keys(regimes).length + ' dates');
+  } else {
+    console.log('No macro-regime data (run scripts/macro-regime.js first to enable regime tagging)');
+  }
+
   const vintages = listVintages();
   if (vintages.length === 0) {
     console.log('No picks-history vintages.');
@@ -184,7 +225,7 @@ function main() {
   for (const fname of vintages) {
     const picks = loadJson(path.join(PICKS_DIR, fname));
     if (!picks) continue;
-    const ev = evaluateVintage(picks, history);
+    const ev = evaluateVintage(picks, history, regimes);
     if (ev) evaluations.push(ev);
   }
 
@@ -195,6 +236,7 @@ function main() {
       modes[mode] = modes[mode] || { vintages: [], summary: {} };
       modes[mode].vintages.push({
         asOf: ev.asOf,
+        macroRegime: ev.macroRegime || null,  // Tag 139
         n: modeData.n,
         horizons: modeData.horizons
       });
@@ -202,19 +244,31 @@ function main() {
   }
   // Summary: median alpha per horizon × benchmark across vintages
   // Tag 134 — Phase 3.2/3.3: now reports alpha vs three benchmarks (universe / frozen-vintage / SPY).
+  // Tag 139: also computes per-regime (BULL/BEAR/SIDEWAYS) alpha breakdown.
   for (const [mode, data] of Object.entries(modes)) {
     for (const days of HORIZONS_DAYS) {
       const key = days + 'd';
-      const collect = (field) => data.vintages
+      const collect = (field, filterFn) => data.vintages
+        .filter(v => !filterFn || filterFn(v))
         .map(v => v.horizons[key] && v.horizons[key][field])
         .filter(a => a != null && Number.isFinite(a));
       const ns = data.vintages.map(v => v.horizons[key] && v.horizons[key].n).filter(n => n != null);
+
+      // Tag 139: per-regime alpha (BULL/BEAR/SIDEWAYS)
+      const regimeAlpha = {};
+      for (const regime of ['BULL', 'BEAR', 'SIDEWAYS']) {
+        const vals = collect('alphaVsSpy', v => v.macroRegime === regime);
+        if (vals.length > 0) regimeAlpha[regime] = { medianAlphaVsSpy: median(vals), vintages: vals.length };
+      }
+
       data.summary[key] = {
         vintageCount: collect('alphaVsUniverse').length,
         medianAlphaVsUniverse: median(collect('alphaVsUniverse')),
         medianAlphaVsFrozenVintage: median(collect('alphaVsFrozenVintage')),
         medianAlphaVsSpy: median(collect('alphaVsSpy')),
         totalPicks: ns.reduce((s, n) => s + n, 0),
+        // Tag 139: alpha by macro regime (only if regime data available)
+        regimeAlpha: Object.keys(regimeAlpha).length > 0 ? regimeAlpha : undefined,
         // Backwards-compat (deprecated, prefer medianAlphaVsUniverse):
         medianAlpha: median(collect('alphaVsUniverse'))
       };
@@ -228,7 +282,7 @@ function main() {
     vintageCount: evaluations.length,
     horizonsDays: HORIZONS_DAYS,
     benchmarks: ['universe-median', 'frozen-vintage-median', 'SPY'],
-    caveat: 'Three benchmarks computed: universe-median (today\'s survivors, upward-biased), frozen-vintage-median (only tickers that appeared in that vintage\'s picks file — no look-ahead survivor selection), SPY (external US-equity index). Compare both to triangulate.',
+    caveat: 'Three benchmarks: universe-median (Tag 138: survivor-bias corrected when evaluatedTickers available, else today\'s survivors), frozen-vintage-median (only picks at vintage time), SPY (external US-equity index). Tag 139: regimeAlpha shows BULL/BEAR/SIDEWAYS alpha split.',
     modes
   };
   fs.writeFileSync(path.join(OUT_DIR, 'walk-forward.json'), JSON.stringify(outJson, null, 2));

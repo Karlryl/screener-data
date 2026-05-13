@@ -64,7 +64,8 @@ const MODULES = [
   'cashflowStatementHistory',           // OpCash, capex
   'incomeStatementHistoryQuarterly',    // quartal-rev/OpInc — für Acceleration-Detection
   'price',                              // currency, exchange
-  'assetProfile'                        // sector, industry
+  'assetProfile',                       // sector, industry
+  'insiderTransactions'                 // Tag 137: Form 4 insider buy/sell activity
 ];
 
 // ─── Logger ───────────────────────────────────────────────────────
@@ -286,6 +287,34 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   // SBC-Ratio: nicht in Default-Modules — TODO Tag-14: separater financials-Module-Pull
   const sbcRatio = null;
 
+  // Tag 137: Insider transaction activity (last 90 days, open-market buys)
+  const insiderActivity = (function() {
+    const it = yahoo.insiderTransactions;
+    const txns = it && it.transactions;
+    if (!txns || !Array.isArray(txns) || txns.length === 0) return null;
+    const cutoffMs = Date.now() - 90 * 86400 * 1000;
+    let buyCount = 0, sellCount = 0, netShares = 0, lastBuyDate = null;
+    for (const tx of txns) {
+      const ts = tx.startDate && (typeof tx.startDate === 'number' ? tx.startDate * 1000 : new Date(tx.startDate).getTime());
+      if (!ts || ts < cutoffMs) continue;
+      const text = String(tx.transactionText || '').toLowerCase();
+      const shares = (tx.shares && typeof tx.shares === 'object') ? tx.shares.raw : (tx.shares || 0);
+      // Open-market purchase: text contains "purchase" but NOT "automatic", "grant", "option", "award"
+      const isOpenBuy = /purchase/i.test(text) && !/automatic|option|grant|award|vest|exercise/i.test(text);
+      const isOpenSell = /sale|sell/i.test(text) && !/automatic/i.test(text);
+      if (isOpenBuy) {
+        buyCount++;
+        netShares += (shares || 0);
+        const d = new Date(ts).toISOString().slice(0, 10);
+        if (!lastBuyDate || d > lastBuyDate) lastBuyDate = d;
+      } else if (isOpenSell) {
+        sellCount++;
+        netShares -= Math.abs(shares || 0);
+      }
+    }
+    return { clusterBuys90d: buyCount, buyCount90d: buyCount, sellCount90d: sellCount, netShares90d: netShares, lastBuyDate };
+  })();
+
   const rcOriginal = _y(pr, 'currency') || 'USD';
   const exchangeName = _y(pr, 'exchangeName') || '';
   return {
@@ -327,7 +356,9 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     },
     annual: {
       annualRev, annualOpInc, annualNetIncome, annualGP, annualFCF, annualBalance
-    }
+    },
+    // Tag 137: insider buy/sell activity (90d window, open-market only)
+    insiderActivity: insiderActivity || null
   };
 }
 
