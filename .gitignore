@@ -6,3 +6,12 @@ node_modules/
 # Tag 133k: SEC XBRL cache lives on the runner; only _manifest.json is committed
 external-data/sec-xbrl/*.json
 !external-data/sec-xbrl/_manifest.json
+
+# Tag 134 — Phase 5.1: archive of old methods-history / picks-history / prices snapshots
+external-data/methods-history-archive/
+external-data/picks-history-archive/
+external-data/prices-archive/
+
+# Tag 134 — Phase 5.2: methodHistory subtree moved out of alert-state.json
+# (was bloating git by ~25 MB per push). Rebuildable from methods-history/.
+external-data/method-history-state.json

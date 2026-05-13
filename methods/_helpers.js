@@ -77,6 +77,8 @@ function classifySubProfile(stock) {
 }
 
 let _sectorMediansCache = null;
+let _rollingMediansCache = null;
+const ROLLING_MIN_WEEKS = 12; // require >= 12 weekly datapoints before trusting the rolling median
 function _loadSectorMedians() {
   if (_sectorMediansCache) return _sectorMediansCache;
   try {
@@ -85,10 +87,29 @@ function _loadSectorMedians() {
   } catch (e) { _sectorMediansCache = {}; }
   return _sectorMediansCache;
 }
+// Tag 134 — Phase 5.5: prefer the rolling 12-month median over the static hardcoded
+// table when the rolling history has matured (>= 12 weekly samples per sub-profile × metric).
+function _loadRollingMedians() {
+  if (_rollingMediansCache !== null) return _rollingMediansCache;
+  try {
+    const p = path.join(__dirname, 'sector-medians-rolling.json');
+    const raw = JSON.parse(fs.readFileSync(p, 'utf8'));
+    _rollingMediansCache = (raw && raw.medians) || {};
+  } catch (e) { _rollingMediansCache = {}; }
+  return _rollingMediansCache;
+}
 
 function effectiveThreshold(stock, methodId, defaultThreshold) {
   const sp = classifySubProfile(stock);
   if (!sp || !sp.id) return { threshold: defaultThreshold, source: 'default' };
+  // First try rolling (most authoritative when mature)
+  const rolling = _loadRollingMedians();
+  const rEntry = rolling[sp.id] && rolling[sp.id][methodId];
+  if (rEntry && rEntry.rolling12mMedian != null
+      && Array.isArray(rEntry.values) && rEntry.values.length >= ROLLING_MIN_WEEKS) {
+    return { threshold: rEntry.rolling12mMedian, source: 'rolling12m:' + sp.id, n: rEntry.values.length };
+  }
+  // Fall back to today's auto-computed median, then static hardcoded
   const medians = _loadSectorMedians();
   const sectorEntry = medians[sp.id];
   if (sectorEntry && sectorEntry[methodId] != null) {

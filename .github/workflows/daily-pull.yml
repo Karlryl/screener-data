@@ -160,6 +160,13 @@ jobs:
         run: node generate-dashboard.js dashboard.html
         continue-on-error: true
 
+      # Tag 134 — Phase 5.1: archive methods-history / picks-history / prices snapshots
+      # older than 60 days into external-data/*.ndjson (git-ignored).
+      # Reduces committed repo bloat. Rebuildable from snapshots on the runner.
+      - name: Archive Old Snapshots
+        run: node scripts/archive-old-snapshots.js --keep-days 60
+        continue-on-error: true
+
       # Tag 119: alert-state.json size guard (GitHub 100MB limit)
       - name: Truncate alert-state if too large
         run: |
