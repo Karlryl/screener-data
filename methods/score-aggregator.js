@@ -85,7 +85,10 @@ function normalizeMethodScore(methodResult, methodMeta) {
 
   var val = methodResult.value;
   var threshold = methodMeta && methodMeta.threshold;
-  if (val == null || threshold == null) return 0.3;
+  // Tag 152: guard non-numeric thresholds (e.g. profitability-state exports threshold:'TURNAROUND',
+  // profitability-trend exports threshold:'FLAT') — dividing by a string produces NaN which
+  // poisons weightedSum and turns any failing stock's score into NaN → silent REJECT mis-tier.
+  if (val == null || threshold == null || typeof threshold !== 'number') return 0.3;
 
   var op = (methodMeta && methodMeta.thresholdOp) || 'gte';
   var ratio;

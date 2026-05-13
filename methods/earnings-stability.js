@@ -104,5 +104,6 @@ function evaluate(stock) {
 module.exports = {
   id: ID, label: LABEL,
   description: 'OpInc+FCF positive 4/5y, max OpInc-Decline <=50%, Recovery-Test bei 30-50% Decline',
+  threshold: 0.50, thresholdOp: 'lte', unit: 'ratio',
   evaluate
 };

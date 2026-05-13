@@ -123,5 +123,6 @@ function evaluate(stock) {
 module.exports = {
   id: ID, label: LABEL,
   description: 'GM>=35% (oder >=20% mit AT>=2), OpMargin>=15% (oder >=3.5% mit AT>=2), GM-Decline asymmetrisch',
+  threshold: 0.35, thresholdOp: 'gte', unit: 'ratio',
   evaluate
 };

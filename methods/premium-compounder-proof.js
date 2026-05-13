@@ -137,5 +137,6 @@ function evaluate(stock) {
 module.exports = {
   id: ID, label: LABEL,
   description: 'Premium-Compounder-Proof (alle 6 muessen passen): Rev-CAGR>=15, OpMarg>=25, ROIC>=25, NetCash/ND<=1, FCF/NI>=80, Reinvest>=30',
+  threshold: 6, thresholdOp: 'gte', unit: 'count',
   evaluate
 };
