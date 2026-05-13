@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 /**
  * Tag 109: Modes-Report — Top-Tabs + Tabellen-Layout + Sparklines + Aktienfinder-Klick
  * =====================================================================================
@@ -17,6 +17,44 @@ const path = require('path');
 
 const Runner = require('./methods/runner.js');
 const SM = require('./methods/strategy-modes.js');
+
+const REGION_TO_COUNTRY = {
+  'Nasdaq': 'USA', 'NasdaqCM': 'USA', 'NasdaqGM': 'USA', 'NasdaqGS': 'USA',
+  'NYSE': 'USA', 'NYSE American': 'USA', 'NYSEArca': 'USA',
+  'Cboe US': 'USA', 'OTC Markets OTCPK': 'USA', 'OTC Markets OTCQX': 'USA', 'YHD': 'USA',
+  'XETRA': 'Deutschland', 'Frankfurt': 'Deutschland',
+  'LSE': 'UK',
+  'Toronto': 'Kanada',
+  'HKSE': 'Hongkong',
+  'Shanghai': 'China', 'Shenzhen': 'China',
+  'KSE': 'Südkorea', 'KOSDAQ': 'Südkorea',
+  'ASX': 'Australien',
+  'Tokyo': 'Japan',
+  'Paris': 'Frankreich',
+  'Amsterdam': 'Niederlande',
+  'Swiss': 'Schweiz',
+  'Stockholm': 'Schweden',
+  'Oslo': 'Norwegen',
+  'Copenhagen': 'Dänemark',
+  'Helsinki': 'Finnland',
+  'Milan': 'Italien',
+  'MCE': 'Spanien',
+  'Vienna': 'Österreich',
+  'Brussels': 'Belgien',
+  'Athens': 'Griechenland',
+  'Warsaw': 'Polen',
+  'Lisbon': 'Portugal',
+  'Irish': 'Irland',
+  'São Paulo': 'Brasilien',
+  'Mexico': 'Mexiko',
+  'SES': 'Singapur',
+  'Taiwan': 'Taiwan',
+  'Jakarta': 'Indonesien',
+  'Kuala Lumpur': 'Malaysia',
+  'Thailand': 'Thailand',
+  'Dubai': 'UAE',
+  'Saudi': 'Saudi-Arabien'
+};
 
 function parseArgs(argv) {
   const args = { snapshots: './snapshots', out: './modes-report.html', topN: 200 };
@@ -239,6 +277,8 @@ function renderRow(ev, i, modeId, sortMethodId, opts) {
   const ticker = (s.meta && s.meta.ticker) || '???';
   const name = (s.meta && s.meta.name) || '';
   const sector = (s.meta && s.meta.sector) || '';
+  const region = (s.meta && s.meta.region) || '';
+  const country = REGION_TO_COUNTRY[region] || region || '';
   const mcap = ev.mcap;
   const ipoYear = ev.ipoYear;
 
@@ -305,7 +345,7 @@ function renderRow(ev, i, modeId, sortMethodId, opts) {
       }
     } catch (e) { /* chips are best-effort; never block row rendering */ }
 
-    return `<div class="row" data-stock="${escHtml(JSON.stringify(stockSlim))}" data-af-url="${afUrl}" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}" data-tier="${tier||''}" data-xp="${xpTags.join(',')}">
+    return `<div class="row" data-stock="${escHtml(JSON.stringify(stockSlim))}" data-af-url="${afUrl}" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-country="${escHtml(country)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}" data-tier="${tier||''}" data-xp="${xpTags.join(',')}">
     <span class="r-rank">${String(i+1).padStart(3, '0')}</span>
     <span class="r-tk">${escHtml(ticker)}${tierBadge}${xpHtml}</span>
     <span class="r-name">${escHtml(name.slice(0, 36))}${name.length>36?'…':''}</span>
@@ -332,6 +372,15 @@ function renderModeContent(modeId, eligible, topN) {
     if (s) sectorSet.add(s);
   }
   const sectors = [...sectorSet].sort();
+
+  // Distinct countries aus eligible
+  const countrySet = new Set();
+  for (const ev of eligible) {
+    const r = ev.stock.meta && ev.stock.meta.region;
+    const c = REGION_TO_COUNTRY[r] || r;
+    if (c) countrySet.add(c);
+  }
+  const countries = [...countrySet].sort();
 
   const tabMethods = mode.core.map(c => c.id);
   // Tag 121: '__BY_SCORE__' Sub-Tab vorangestellt - Score-basierte Sicht mit Tier-Gruppierung
@@ -478,6 +527,11 @@ function renderModeContent(modeId, eligible, topN) {
         <span class="slider-val" data-mode="${modeId}" data-slider="ipo-min">${ipoMin}</span>
         <span class="f-label" style="margin-left:24px;">Branche</span>
         ${sectorPills}
+        <span class="f-label" style="margin-left:16px;">Land</span>
+        <select class="country-select" data-mode="${modeId}">
+          <option value="ALL">Alle Länder</option>
+          ${countries.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('')}
+        </select>
       </div>
       <div class="f-row">
         <span class="f-label">FCF-Marge ≥</span>
@@ -704,7 +758,7 @@ function buildHtml(evaluated, topN) {
     font-variant-numeric: tabular-nums;
   }
   .slider-sep { color: var(--paper-faint); font-size: 11px; }
-  .sec-select {
+  .sec-select, .country-select {
     background: var(--bg-2); border: 1px solid var(--hairline);
     color: var(--paper); padding: 4px 8px;
     font: inherit; font-size: 12px; cursor: pointer;
@@ -931,6 +985,8 @@ function buildHtml(evaluated, topN) {
     const ipoMin = parseFloat(root.querySelector('[data-slider="ipo-min"].range-input').value);
     const ipoActive = ipoMin > ipoDefault;
     const sector = root.querySelector('.sec-select').value;
+    const countryEl = root.querySelector('.country-select');
+    const country = countryEl ? countryEl.value : 'ALL';
     // Tag 113b: FCF-Margin und Growth Slider
     const fcfMinEl = root.querySelector('[data-slider="fcf-min"].range-input');
     const growthMinEl = root.querySelector('[data-slider="growth-min"].range-input');
@@ -942,16 +998,18 @@ function buildHtml(evaluated, topN) {
       const mcap = parseFloat(card.dataset.mcap) || 0;
       const ipo = parseFloat(card.dataset.ipo) || 0;
       const sec = card.dataset.sector || '';
+      const cty = card.dataset.country || '';
       const fcfM = parseFloat(card.dataset.fcfMargin);
       const revG = parseFloat(card.dataset.revGrowth);
       const psOk = pstate === 'ALL' || ps === pstate;
       const mcapOk = mcap >= mcapMin && mcap <= mcapMax;
       const ipoOk = !ipoActive ? true : (ipo > 0 && ipo >= ipoMin);
       const secOk = sector === 'ALL' || sec === sector;
+      const countryOk = country === 'ALL' || cty === country;
       // Wenn fcfM nicht verfuegbar (-999) und Slider gesetzt: ausblenden
       const fcfOk = (fcfMin <= -30) ? true : (Number.isFinite(fcfM) && fcfM > -100 && fcfM >= fcfMin);
       const growthOk = (growthMin <= 0) ? true : (Number.isFinite(revG) && revG > -100 && revG >= growthMin);
-      card.style.display = (psOk && mcapOk && ipoOk && secOk && fcfOk && growthOk) ? '' : 'none';
+      card.style.display = (psOk && mcapOk && ipoOk && secOk && countryOk && fcfOk && growthOk) ? '' : 'none';
     });
   }
 
@@ -1049,6 +1107,9 @@ function buildHtml(evaluated, topN) {
   document.querySelectorAll('.sec-select').forEach(sel => {
     sel.addEventListener('change', () => applyFilters(sel.dataset.mode));
   });
+  document.querySelectorAll('.country-select').forEach(sel => {
+    sel.addEventListener('change', () => applyFilters(sel.dataset.mode));
+  });
 
   document.addEventListener('click', function(e) {
     const t = e.target;
@@ -1103,6 +1164,8 @@ function buildHtml(evaluated, topN) {
         syncSliderLabel(input);
       });
       root.querySelector('.sec-select').value = 'ALL';
+      const csel = root.querySelector('.country-select');
+      if (csel) csel.value = 'ALL';
       applyFilters(mode);
     }
   });
