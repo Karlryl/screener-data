@@ -91,12 +91,45 @@ function dedupePicksByCompany(picks) {
   return Array.from(byKey.values());
 }
 
+// Tag 134 — Phase 4.1: build a per-mode { ticker -> firstSeenAt } map by reading
+// all prior vintages. Used to enrich each pick with the date it was first seen
+// in this mode (for "weeks on list" continuity and pick-stability investigation).
+function _buildFirstSeenMap(picksHistDir) {
+  const map = { HYPERGROWTH: {}, QUALITY_COMPOUNDER: {} };
+  if (!fs.existsSync(picksHistDir)) return map;
+  const files = fs.readdirSync(picksHistDir)
+    .filter(f => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
+    .sort();
+  for (const f of files) {
+    let v;
+    try { v = JSON.parse(fs.readFileSync(path.join(picksHistDir, f), 'utf8')); }
+    catch (e) { continue; }
+    const date = (v.asOf || '').slice(0, 10) || f.replace('.json', '');
+    for (const mode of Object.keys(map)) {
+      const arr = (v.modes && v.modes[mode]) || [];
+      for (const p of arr) {
+        if (!p || !p.ticker) continue;
+        if (!map[mode][p.ticker]) map[mode][p.ticker] = date;
+      }
+    }
+  }
+  return map;
+}
+
+function _weeksBetween(isoA, isoB) {
+  return Math.floor(Math.abs(new Date(isoB).getTime() - new Date(isoA).getTime()) / (7 * 86400000));
+}
+
 function main() {
   const args = parseArgs(process.argv);
   if (!fs.existsSync(args.out)) fs.mkdirSync(args.out, { recursive: true });
   console.log('Loading snapshots from', args.snapshots);
   const stocks = loadStocks(args.snapshots);
   console.log('  ' + stocks.length + ' stocks loaded');
+
+  // Tag 134 — Phase 4.1: load prior-vintage first-seen map before computing this run's picks.
+  const firstSeen = _buildFirstSeenMap(args.out);
+  const today = new Date().toISOString().slice(0, 10);
 
   const result = {
     asOf: new Date().toISOString(),
@@ -126,6 +159,12 @@ function main() {
     });
     const deduped = dedupePicksByCompany(picks);
     const top100 = deduped.slice(0, 100);
+    // Tag 134 — Phase 4.1: enrich each pick with firstSeenAt + weeksOnList
+    for (const p of top100) {
+      const seen = firstSeen[modeId][p.ticker];
+      p.firstSeenAt = seen || today;
+      p.weeksOnList = _weeksBetween(p.firstSeenAt, today);
+    }
     result.modes[modeId] = top100;
     console.log('  ' + modeId + ': ' + picks.length + ' picks -> ' + deduped.length + ' deduped -> top ' + top100.length);
   }
