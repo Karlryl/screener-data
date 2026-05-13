@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screener — Übersicht</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; background: #0d1117; color: #e6edf3; margin: 0; padding: 24px; }
+  h1 { font-size: 1.4rem; color: #58a6ff; margin-bottom: 4px; }
+  .updated { font-size: 0.8rem; color: #8b949e; margin-bottom: 32px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; text-decoration: none; color: inherit; display: block; transition: border-color .15s; }
+  .card:hover { border-color: #58a6ff; }
+  .card-title { font-size: 1rem; font-weight: 600; color: #58a6ff; margin-bottom: 6px; }
+  .card-desc { font-size: 0.82rem; color: #8b949e; line-height: 1.5; }
+  .badge { display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; margin-bottom: 10px; font-weight: 600; }
+  .badge-primary { background: #1f6feb33; color: #58a6ff; border: 1px solid #1f6feb; }
+  .badge-secondary { background: #3fb95033; color: #3fb950; border: 1px solid #3fb950; }
+  .badge-warn { background: #d2992033; color: #d29920; border: 1px solid #d29920; }
+  .section-title { font-size: 0.7rem; font-weight: 600; color: #8b949e; text-transform: uppercase; letter-spacing: .08em; margin: 28px 0 10px; }
+  .csv-link { display: inline-block; font-size: 0.8rem; color: #3fb950; text-decoration: none; margin-top: 10px; }
+  .csv-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<h1>📊 Screener — Übersicht</h1>
+<p class="updated">Aktualisiert automatisch jeden Montag (08:00 UTC). Manueller Run jederzeit via <a href="https://github.com/Karlryl/screener-data/actions/workflows/daily-pull.yml" style="color:#58a6ff;">GitHub Actions</a>.</p>
+
+<div class="section-title">Hauptreports</div>
+<div class="grid">
+  <a class="card" href="modes-report.html">
+    <div class="badge badge-primary">Primär</div>
+    <div class="card-title">Modes-Report</div>
+    <div class="card-desc">Die drei Discovery-Modi: Hypergrowth, Quality Compounder und Turnaround. Score-Matrix mit Chip-Strip pro Methode.</div>
+  </a>
+  <a class="card" href="dashboard.html">
+    <div class="badge badge-secondary">Dashboard</div>
+    <div class="card-title">Dashboard</div>
+    <div class="card-desc">Überblick + Discover-Button. Schnellzugang zu allen aktuellen Screener-Ergebnissen.</div>
+  </a>
+  <a class="card" href="diff-report.html">
+    <div class="badge badge-warn">Änderungen</div>
+    <div class="card-title">Diff-Report</div>
+    <div class="card-desc">Was hat sich seit dem letzten Run verändert? Neue Einträge, Abgänge und Metrik-Drifts.</div>
+  </a>
+  <a class="card" href="outputs/pick-diff.html">
+    <div class="badge badge-warn">Änderungen</div>
+    <div class="card-title">Pick-Diff + Jaccard</div>
+    <div class="card-desc">Welche Picks sind neu, welche sind rausgefallen und warum? Mit Jaccard-Stabilitäts-Score pro Modus.</div>
+  </a>
+</div>
+
+<div class="section-title">Analyse & Backtest</div>
+<div class="grid">
+  <a class="card" href="outputs/methodology-report.md">
+    <div class="badge badge-secondary">Backtest</div>
+    <div class="card-title">Methodology-Report</div>
+    <div class="card-desc">Walk-Forward-Performance + Method-Effectiveness. Alpha vs Universe-Median, Frozen Vintage und SPY.</div>
+  </a>
+  <a class="card" href="methods-report.html">
+    <div class="badge badge-secondary">Methoden</div>
+    <div class="card-title">Methods-Report</div>
+    <div class="card-desc">Werte-Matrix pro Stock × Methode. Alle 38 aktiven Methoden mit Pass/Fail-Details.</div>
+  </a>
+</div>
+
+<div class="section-title">Elliott-Wave Export (Excel)</div>
+<div class="grid">
+  <a class="card" href="outputs/elliott-export-HYPERGROWTH.csv">
+    <div class="badge badge-primary">CSV</div>
+    <div class="card-title">Hypergrowth — Elliott CSV</div>
+    <div class="card-desc">22 Spalten: Ticker, Sektor, Score, MCap, Growth, FCF-Margin, Drawdown, Weeks on List etc. Direkt in Excel importierbar.</div>
+  </a>
+  <a class="card" href="outputs/elliott-export-QUALITY_COMPOUNDER.csv">
+    <div class="badge badge-primary">CSV</div>
+    <div class="card-title">Quality Compounder — Elliott CSV</div>
+    <div class="card-desc">Gleiche Struktur, inkl. Banken/REITs/Versicherungen. Für Quality-Compounder-Modus.</div>
+  </a>
+</div>
+
+<div class="section-title">Links</div>
+<div style="font-size:0.82rem; color:#8b949e;">
+  <a href="https://github.com/Karlryl/screener-data" style="color:#58a6ff; margin-right:16px;">GitHub Repository</a>
+  <a href="https://github.com/Karlryl/screener-data/actions/workflows/daily-pull.yml" style="color:#58a6ff; margin-right:16px;">Workflow / Run starten</a>
+  <a href="https://github.com/Karlryl/screener-data/actions" style="color:#58a6ff;">Alle Runs</a>
+</div>
+</body>
+</html>
