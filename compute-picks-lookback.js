@@ -23,8 +23,10 @@
 const fs = require('fs');
 const path = require('path');
 let yf = null;
-try { yf = require('yahoo-finance2').default; }
-catch (e) { console.error('yahoo-finance2 nicht installiert:', e.message); process.exit(1); }
+try {
+  const YF = require('yahoo-finance2').default;
+  yf = (typeof YF === 'function') ? new YF() : YF;
+} catch (e) { console.error('yahoo-finance2 nicht installiert:', e.message); process.exit(1); }
 
 function parseArgs(argv) {
   const args = { picks: './picks-history/latest.json', out: './picks-history', benchmark: 'SPY', topN: 30 };

@@ -75,8 +75,8 @@ jobs:
         run: |
           ok=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.n_ok||0)}catch(e){console.log(0)}")
           echo "Snapshots ok: $ok"
-          if [ "$ok" -lt 1500 ]; then
-            echo "::error::Pull coverage $ok < 1500 — downstream reports would be meaningless"
+          if [ "$ok" -lt 2500 ]; then
+            echo "::error::Pull coverage $ok < 2500 — downstream reports would be meaningless"
             exit 1
           fi
 

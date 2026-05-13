@@ -34,3 +34,8 @@ external-data/method-history-state.json
 # .gitkeep keeps the directory tracked so scripts can write without mkdir.
 outputs/
 !outputs/.gitkeep
+
+# Tag 151: snapshots/ is regenerated fresh every run — no need to commit 3528 files.
+# _manifest.json is kept so the quality gate can read n_ok after a run.
+snapshots/
+!snapshots/_manifest.json

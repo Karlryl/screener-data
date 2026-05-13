@@ -286,8 +286,10 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     const std = _y(r, 'shortLongTermDebt');
     const ltd = _y(r, 'longTermDebt');
     const totalDebt = (std == null && ltd == null) ? null : (std || 0) + (ltd || 0);
-    return { totalCash: cash, totalDebt, totalAssets: _y(r, 'totalAssets') };
-  });
+    const totalAssets = _y(r, 'totalAssets');
+    if (cash == null && totalDebt == null && totalAssets == null) return null;
+    return { totalCash: cash, totalDebt, totalAssets };
+  }).filter(Boolean);
 
   // Quartalsweise Timeseries (latest first → wir flippen NICHT, Engine erwartet latest=index 0)
   const revenueQ = _arr(isHistQ, 'totalRevenue');
