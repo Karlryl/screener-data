@@ -2,3 +2,7 @@ node_modules/
 *.log
 .DS_Store
 .env
+
+# Tag 133k: SEC XBRL cache lives on the runner; only _manifest.json is committed
+external-data/sec-xbrl/*.json
+!external-data/sec-xbrl/_manifest.json

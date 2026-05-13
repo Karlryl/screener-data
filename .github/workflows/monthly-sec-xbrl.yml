@@ -1,0 +1,71 @@
+name: Monthly SEC XBRL Pull
+
+# Tag 133k: SEC company-facts pull. Runs monthly because 10-Q/K filings are quarterly.
+# Cache is git-ignored (lives on runner); only _manifest.json is committed.
+
+on:
+  schedule:
+    - cron: '0 4 1 * *'  # 04:00 UTC on the 1st of each month
+  workflow_dispatch:
+    inputs:
+      max:
+        description: 'Max tickers to pull (test runs)'
+        required: false
+        default: '0'
+
+permissions:
+  contents: write
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Pull SEC XBRL
+        run: |
+          if [ "${{ inputs.max }}" != "" ] && [ "${{ inputs.max }}" != "0" ]; then
+            node pull-sec-xbrl.js --max ${{ inputs.max }}
+          else
+            node pull-sec-xbrl.js
+          fi
+
+      - name: Commit manifest
+        run: |
+          git config user.name "sec-xbrl-bot"
+          git config user.email "sec-xbrl-bot@users.noreply.github.com"
+          git add external-data/sec-xbrl/_manifest.json
+          if git diff --staged --quiet; then
+            echo "No manifest changes to commit."
+          else
+            git commit -m "chore: sec-xbrl manifest $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            for i in 1 2 3; do
+              git pull --rebase --autostash --strategy-option theirs origin main || git rebase --abort || true
+              if git push; then
+                echo "Pushed on attempt $i"
+                exit 0
+              fi
+              sleep $((5 * i))
+            done
+            exit 1
+          fi
+
+      - name: Notify on failure
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK" ]; then exit 0; fi
+          curl -H "Content-Type: application/json" -X POST \
+            -d "{\"content\": \"⚠ SEC-XBRL pull failed at $(date -u). See: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+            "$DISCORD_WEBHOOK"
