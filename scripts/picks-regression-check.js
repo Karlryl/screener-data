@@ -1,0 +1,174 @@
+#!/usr/bin/env node
+/**
+ * Tag 133d: Picks-Regression Guard
+ * ================================
+ * Vergleicht den aktuellen `picks-history/latest.json` mit dem Median der vorherigen
+ * 4 Runs. Triggert eine harte Failure + Discord-Alert wenn die Pick-Count einer Mode
+ * um >35% nach oben oder unten driftet — fängt Method-Bugs, Threshold-Tunings und
+ * Yahoo-Drift ab, bevor sie unbemerkt in produktive Picks fließen.
+ *
+ * Override via env ALLOW_PICKS_DRIFT=1 (für legitimate Universe-Erweiterungen
+ * wie Tag 133 Discovery-Expansion).
+ *
+ * Tag 129 konform: 35% Band ist first-principles, kein single-ticker Tuning.
+ *
+ * Output:
+ *   - outputs/picks-regression-YYYY-MM-DD.json (always)
+ *   - exit 1 + Discord webhook bei Drift (außer ALLOW_PICKS_DRIFT=1)
+ */
+'use strict';
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+
+const DRIFT_THRESHOLD = 0.35;      // 35% in either direction
+const MIN_HISTORY_RUNS = 4;        // need ≥4 priors for statistical meaning
+
+const PICKS_DIR = path.join(__dirname, '..', 'picks-history');
+const OUT_DIR   = path.join(__dirname, '..', 'outputs');
+
+function loadJson(p) {
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return null; }
+}
+
+function median(values) {
+  const sorted = values.slice().sort((a, b) => a - b);
+  if (sorted.length === 0) return 0;
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function countsByMode(picksFile) {
+  if (!picksFile || !picksFile.modes) return {};
+  const out = {};
+  for (const [mode, arr] of Object.entries(picksFile.modes)) {
+    out[mode] = Array.isArray(arr) ? arr.length : 0;
+  }
+  return out;
+}
+
+/**
+ * Pure function for testability.
+ * @param {Object} latestCounts - { MODE: count }
+ * @param {Array<Object>} priorCounts - [{ MODE: count }, ...] (chronological order)
+ * @param {number} threshold - drift fraction
+ * @returns {Array<Object>} alerts [{mode, today, median, drift, direction}]
+ */
+function detectDrift(latestCounts, priorCounts, threshold) {
+  threshold = threshold == null ? DRIFT_THRESHOLD : threshold;
+  const alerts = [];
+  for (const mode of Object.keys(latestCounts)) {
+    const today = latestCounts[mode] || 0;
+    const priors = priorCounts.map(p => p[mode] || 0);
+    if (priors.length < MIN_HISTORY_RUNS) continue;
+    const med = median(priors);
+    if (med === 0 && today === 0) continue;
+    if (med === 0 && today > 0) {
+      alerts.push({ mode, today, median: 0, drift: Infinity, direction: 'up' });
+      continue;
+    }
+    const drift = (today - med) / med;
+    if (Math.abs(drift) > threshold) {
+      alerts.push({
+        mode, today, median: med,
+        drift: Math.round(drift * 1000) / 1000,
+        direction: drift > 0 ? 'up' : 'down'
+      });
+    }
+  }
+  return alerts;
+}
+
+function postDiscord(content) {
+  return new Promise(resolve => {
+    const webhook = process.env.DISCORD_WEBHOOK;
+    if (!webhook) { resolve(false); return; }
+    try {
+      const url = new URL(webhook);
+      const body = JSON.stringify({ content });
+      const req = https.request({
+        method: 'POST',
+        host: url.host,
+        path: url.pathname + url.search,
+        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
+      }, res => { res.on('data', () => {}); res.on('end', () => resolve(res.statusCode < 400)); });
+      req.on('error', () => resolve(false));
+      req.write(body); req.end();
+    } catch (e) { resolve(false); }
+  });
+}
+
+async function main() {
+  if (!fs.existsSync(PICKS_DIR)) {
+    console.log('No picks-history/ — skipping regression check.');
+    return 0;
+  }
+  const latest = loadJson(path.join(PICKS_DIR, 'latest.json'));
+  if (!latest) {
+    console.log('No picks-history/latest.json — skipping.');
+    return 0;
+  }
+  const files = fs.readdirSync(PICKS_DIR)
+    .filter(f => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
+    .sort();
+  // Drop the most recent (= today) so we compare against history, not self
+  const todayDate = (latest.asOf || '').slice(0, 10);
+  const priors = files
+    .filter(f => f.replace('.json', '') < todayDate)
+    .slice(-8) // up to last 8 weeks of history
+    .map(f => loadJson(path.join(PICKS_DIR, f)))
+    .filter(Boolean);
+
+  const latestCounts = countsByMode(latest);
+  const priorCountsList = priors.map(countsByMode);
+
+  const alerts = detectDrift(latestCounts, priorCountsList, DRIFT_THRESHOLD);
+
+  if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
+  const date = todayDate || new Date().toISOString().slice(0, 10);
+  const reportPath = path.join(OUT_DIR, 'picks-regression-' + date + '.json');
+  fs.writeFileSync(reportPath, JSON.stringify({
+    asOf: latest.asOf,
+    latestCounts,
+    priorRuns: priorCountsList.length,
+    priorMedians: Object.fromEntries(Object.keys(latestCounts).map(m =>
+      [m, median(priorCountsList.map(p => p[m] || 0))]
+    )),
+    threshold: DRIFT_THRESHOLD,
+    alerts
+  }, null, 2));
+
+  console.log('Picks-Regression Check');
+  console.log('  asOf:', latest.asOf);
+  console.log('  prior runs:', priorCountsList.length);
+  console.log('  latest counts:', JSON.stringify(latestCounts));
+  if (priorCountsList.length < MIN_HISTORY_RUNS) {
+    console.log('  Need >=' + MIN_HISTORY_RUNS + ' priors for check, have ' + priorCountsList.length + ' — passing.');
+    return 0;
+  }
+  if (alerts.length === 0) {
+    console.log('  No drift detected. OK.');
+    return 0;
+  }
+  console.log('  DRIFT DETECTED:');
+  for (const a of alerts) {
+    console.log(`    ${a.mode}: today=${a.today} vs median=${a.median} (drift=${(a.drift*100).toFixed(0)}% ${a.direction})`);
+  }
+  if (process.env.ALLOW_PICKS_DRIFT === '1') {
+    console.log('  ALLOW_PICKS_DRIFT=1 — not failing the workflow.');
+    return 0;
+  }
+  const msg = '⚠ Picks-Regression Alert (' + date + '): ' +
+    alerts.map(a => `${a.mode} ${a.direction} ${(a.drift*100).toFixed(0)}% (today=${a.today}, median=${a.median})`).join(', ');
+  await postDiscord(msg);
+  return 1;
+}
+
+module.exports = { detectDrift, median, countsByMode };
+
+if (require.main === module) {
+  main().then(code => process.exit(code || 0)).catch(e => {
+    console.error('picks-regression-check failed: ' + e.message);
+    process.exit(0); // never fail the workflow on script bug
+  });
+}

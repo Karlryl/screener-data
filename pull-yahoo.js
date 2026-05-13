@@ -24,6 +24,9 @@
 const fs = require('fs');
 const path = require('path');
 
+// Tag 133c: data-quality grading (per-snapshot A/B/C/D)
+const { gradeSnapshot } = require('./methods/data-quality.js');
+
 let YahooFinance;
 try {
   YahooFinance = require('yahoo-finance2').default;
@@ -54,18 +57,43 @@ const MODULES = [
 // ─── Logger ───────────────────────────────────────────────────────
 
 
-// Tag-87c: FX-Rates für Currency-Conversion (USD-base)
-const FX_TO_USD = {
+// Tag-87c / Tag-133b: FX-Rates für Currency-Conversion (USD-base).
+// Live-Rates aus fx-rates.json (refresh-fx.js Workflow-Step) wenn vorhanden + frisch (≤14d).
+// Fallback: hardgecodete Tabelle (kann Monate stale sein — flagged via _log WARN).
+const FX_FALLBACK = {
   USD: 1.0, EUR: 1.08, GBP: 1.27, CHF: 1.10,
   SEK: 0.095, NOK: 0.092, DKK: 0.145,
   JPY: 0.0067, HKD: 0.128, CNY: 0.139,
   AUD: 0.65, CAD: 0.74, KRW: 0.00074, INR: 0.012,
-  TWD: 0.031, BRL: 0.20, MXN: 0.058, ZAR: 0.054
+  TWD: 0.031, BRL: 0.20, MXN: 0.058, ZAR: 0.054,
+  SGD: 0.74
 };
+const FX_STALE_DAYS = 14;
+let FX_TO_USD = FX_FALLBACK;
+let FX_SOURCE = 'fallback-hardcoded';
+(function loadFx() {
+  try {
+    const fxPath = require('path').join(__dirname, 'fx-rates.json');
+    if (!require('fs').existsSync(fxPath)) return;
+    const raw = JSON.parse(require('fs').readFileSync(fxPath, 'utf8'));
+    if (!raw || !raw.rates || typeof raw.rates !== 'object') return;
+    const fetchedAt = raw.fetchedAt ? new Date(raw.fetchedAt) : null;
+    const ageDays = fetchedAt ? (Date.now() - fetchedAt.getTime()) / 86400000 : Infinity;
+    if (ageDays > FX_STALE_DAYS) {
+      console.log('[FX] fx-rates.json is ' + ageDays.toFixed(1) + 'd old — using fallback');
+      return;
+    }
+    FX_TO_USD = Object.assign({}, FX_FALLBACK, raw.rates);
+    FX_SOURCE = 'fx-rates.json @ ' + (raw.fetchedAt || 'unknown');
+    console.log('[FX] Loaded ' + Object.keys(raw.rates).length + ' rates from fx-rates.json');
+  } catch (e) {
+    console.log('[FX] fx-rates.json load failed: ' + e.message + ' — using fallback');
+  }
+})();
 function _convertToUSD(value, currency) {
   if (value == null || !currency) return value;
   const rate = FX_TO_USD[currency.toUpperCase()];
-  if (rate == null) return value;  // unknown currency, leave as is
+  if (rate == null) return value;
   return value * rate;
 }
 
@@ -420,6 +448,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         results.push({ ticker: stock.ticker, status: 'skipped-mcap', reason });
         return;  // skip this stock
       }
+      // Tag 133c: data-quality grade — A/B/C/D nach Anteil fehlender kritischer Felder.
+      // Wird in jeden Snapshot geschrieben; score-aggregator nutzt es optional (DATAQUALITY_ENFORCE=1).
+      try { canonical._quality = gradeSnapshot(canonical); }
+      catch (e) { canonical._quality = { grade: 'D', nanRatio: 1.0, missingFields: ['<grade-error>'], computedAt: new Date().toISOString() }; }
+
       const filename = `${stock.ticker.replace(/[^A-Z0-9.-]/gi, '_')}.json`;
       const outPath = path.join(outputDir, filename);
       fs.writeFileSync(outPath, JSON.stringify(canonical, null, 2));

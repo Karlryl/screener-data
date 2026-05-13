@@ -1,4 +1,8 @@
 'use strict';
+
+// Tag 133c: optional data-quality tier-cap (env-gated to keep current behavior stable).
+const { tierCapForGrade } = require('./data-quality.js');
+
 /**
  * Tag 120: Score-Aggregator
  * =========================
@@ -122,7 +126,7 @@ const SOFT_GUARD_PENALTY = {
   'working-capital-anomaly': 6      // Seasonal-Effekt oft normal
 };
 
-function computeScore(allResults, modeId, methodRegistry, failedSoftGuards) {
+function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, dataQuality) {
   var weights = SCORE_WEIGHTS[modeId];
   if (!weights) return null;
 
@@ -183,14 +187,30 @@ function computeScore(allResults, modeId, methodRegistry, failedSoftGuards) {
     tier = 'NEAR_MISS';
   }
 
-  return { 
-    score: score, 
+  // Tag 133c: data-quality tier-cap (opt-in via env DATAQUALITY_ENFORCE=1).
+  // Grade C: max NEAR_MISS. Grade D: REJECT. Default off bis Historie reift.
+  var dataQualityCapped = false;
+  if (process.env.DATAQUALITY_ENFORCE === '1' && dataQuality && dataQuality.grade) {
+    var cap = tierCapForGrade(dataQuality.grade);
+    if (cap === 'REJECT') {
+      tier = 'REJECT';
+      dataQualityCapped = true;
+    } else if (cap === 'NEAR_MISS' && (tier === 'A' || tier === 'B')) {
+      tier = 'NEAR_MISS';
+      dataQualityCapped = true;
+    }
+  }
+
+  return {
+    score: score,
     baseScore: baseScore,  // Tag 120b: Score ohne SoftGuard-Penalty
-    tier: tier, 
-    redFlags: redFlags, 
+    tier: tier,
+    redFlags: redFlags,
     softGuardPenalty: softGuardPenalty,  // Tag 120b: applied penalty
-    breakdown: breakdown, 
-    mode: modeId 
+    breakdown: breakdown,
+    mode: modeId,
+    dataQualityGrade: dataQuality && dataQuality.grade || null,  // Tag 133c
+    dataQualityCapped: dataQualityCapped                          // Tag 133c
   };
 }
 

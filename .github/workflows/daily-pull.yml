@@ -49,6 +49,12 @@ jobs:
         run: node refresh-universe.js --watchlist watchlist.json
         continue-on-error: true
 
+      # Tag 133b: FX-Rates refresh — frische Yahoo-Currency-Quotes statt hardcoded.
+      # Fix für stille mcap-Korruption bei non-USD-Tickern.
+      - name: Refresh FX-Rates
+        run: node scripts/refresh-fx.js
+        continue-on-error: true
+
       - name: Run Yahoo Pull
         run: node pull-yahoo.js --watchlist watchlist.json --output snapshots --rate-limit 2000
 
@@ -75,6 +81,15 @@ jobs:
         run: node snapshot-picks.js --snapshots snapshots --out picks-history
         continue-on-error: true
 
+      # Tag 133d: Picks-Regression Guard — Alarm wenn Pick-Count >35% von 4-Week-Median driftet.
+      # ALLOW_PICKS_DRIFT=1 für legitimate Universe-Expansion-Runs setzen.
+      - name: Picks-Regression Check
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          ALLOW_PICKS_DRIFT: ${{ vars.ALLOW_PICKS_DRIFT || '0' }}
+        run: node scripts/picks-regression-check.js
+        continue-on-error: true
+
       # Tag-35: Methods-History-Snapshot (für Backtest später)
       - name: Snapshot Methods-History
         run: node snapshot-methods-history.js --out methods-history
@@ -88,6 +103,25 @@ jobs:
       # Tag-39: Historical-Price-Pull (für Performance-Backtest)
       - name: Pull Historical Prices
         run: node pull-historical-prices.js --out prices --rate-limit 1500
+        continue-on-error: true
+
+      # Tag 133e: Walk-Forward-Performance — picks-history × prices/history.json.
+      # Berechnet 1w/4w/12w α der Modi vs Universe-Median. Survivor-biased Caveat dokumentiert.
+      - name: Walk-Forward Performance
+        run: node scripts/walk-forward-perf.js
+        continue-on-error: true
+
+      # Tag 133f: Method-Effectiveness Audit — welche Methoden korrelieren mit Forward-Return?
+      - name: Method-Effectiveness Audit
+        run: node scripts/method-effectiveness.js
+        continue-on-error: true
+
+      # Tag 133g: Pull-Stats Monitoring — Discord-Alert wenn ein Pull-Output >25% vs 4-Week-Median shrinkt.
+      - name: Pull-Stats Check
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          ALLOW_PULL_DRIFT: ${{ vars.ALLOW_PULL_DRIFT || '0' }}
+        run: node scripts/check-pull-stats.js
         continue-on-error: true
 
       # Tag-50: Watchlist-Diff-Report (zeigt Änderungen vs vorigem Run)

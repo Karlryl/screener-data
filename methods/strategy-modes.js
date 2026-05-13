@@ -210,7 +210,8 @@ function evaluateMode(stock, modeId, allResults) {
   // Hier wird der Score nur fuer Stocks berechnet die durch Hygiene durch sind.
   var scoreResult = null;
   if (ScoreAggregator) {
-    try { scoreResult = ScoreAggregator.computeScore(allResults, modeId, null, failedSoftGuards); }
+    // Tag 133c: pass stock._quality through (computeScore enforces cap only when env flag set).
+    try { scoreResult = ScoreAggregator.computeScore(allResults, modeId, null, failedSoftGuards, stock && stock._quality); }
     catch (e) { scoreResult = null; }
   }
 
@@ -230,7 +231,10 @@ function evaluateMode(stock, modeId, allResults) {
     scoreBreakdown: scoreResult ? scoreResult.breakdown : null,
     // Tag 120b: SoftGuards die ausgeloest haben - sichtbar als Warnings im UI
     failedSoftGuards: failedSoftGuards,
-    softGuardPenalty: scoreResult ? scoreResult.softGuardPenalty : 0
+    softGuardPenalty: scoreResult ? scoreResult.softGuardPenalty : 0,
+    // Tag 133c: per-snapshot data-quality
+    dataQualityGrade: (stock && stock._quality && stock._quality.grade) || null,
+    dataQualityCapped: scoreResult ? !!scoreResult.dataQualityCapped : false
   };
 }
 

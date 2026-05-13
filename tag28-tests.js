@@ -218,6 +218,150 @@ test('revenue-volatility-guard: USD large-cap with -67% YoY still FAILS', () => 
   if (r.pass) throw new Error('SPHR-pattern (-67% YoY decline) should still FAIL after Tag 124');
 });
 
+// ─── Tag 133c: data-quality grading ───────────────────────────────────
+const { gradeSnapshot, tierCapForGrade } = require('./methods/data-quality.js');
+
+function fullSnapshot() {
+  return {
+    meta: { ticker: 'TEST', sector: 'Technology', industry: 'Software' },
+    marketCap: { value: 50e9 },
+    metrics: {
+      revenueTTM: { value: 10e9 },
+      revenueGrowthYoY: { value: 25 },
+      grossMargin: { value: 70 },
+      operatingMargin: { value: 30 },
+      fcfMarginTTM: { value: 25 }
+    },
+    annual: {
+      annualRev: [{ value: 10e9 }, { value: 8e9 }, { value: 6e9 }, { value: 4e9 }],
+      annualOpInc: [{ value: 3e9 }, { value: 2e9 }, { value: 1.5e9 }],
+      annualFCF: [{ value: 2.5e9 }, { value: 1.8e9 }],
+      annualBalance: [{ totalCash: 1e9 }, { totalCash: 0.8e9 }]
+    },
+    timeseries: {
+      revenueQ: [{ value: 2.5e9 }, { value: 2.4e9 }, { value: 2.3e9 }, { value: 2.2e9 }],
+      opIncQ: [{ value: 0.7e9 }, { value: 0.6e9 }]
+    }
+  };
+}
+
+test('data-quality: fully-populated snapshot -> grade A', () => {
+  const g = gradeSnapshot(fullSnapshot());
+  if (g.grade !== 'A') throw new Error('expected A, got ' + g.grade + ' (missing=' + g.missingFields.join(',') + ')');
+  if (g.nanRatio !== 0) throw new Error('expected nanRatio=0, got ' + g.nanRatio);
+});
+
+test('data-quality: 30%-missing snapshot -> grade C (not B)', () => {
+  // Drop 4 of 10 critical-weight fields to push nanRatio to >0.30
+  const s = fullSnapshot();
+  delete s.meta.industry;
+  delete s.metrics.fcfMarginTTM;
+  delete s.metrics.operatingMargin;
+  delete s.metrics.grossMargin;
+  const g = gradeSnapshot(s);
+  if (g.grade !== 'C') throw new Error('expected C, got ' + g.grade + ' (ratio=' + g.nanRatio + ' missing=' + g.missingFields.join(',') + ')');
+});
+
+test('data-quality: heavily-empty snapshot -> grade D', () => {
+  const g = gradeSnapshot({ meta: { ticker: 'TEST' } });
+  if (g.grade !== 'D') throw new Error('expected D, got ' + g.grade + ' (ratio=' + g.nanRatio + ')');
+});
+
+test('data-quality: tierCapForGrade A/B -> null, C -> NEAR_MISS, D -> REJECT', () => {
+  if (tierCapForGrade('A') !== null) throw new Error('A should not cap');
+  if (tierCapForGrade('B') !== null) throw new Error('B should not cap');
+  if (tierCapForGrade('C') !== 'NEAR_MISS') throw new Error('C should cap NEAR_MISS');
+  if (tierCapForGrade('D') !== 'REJECT') throw new Error('D should REJECT');
+});
+
+// ─── Tag 133d: picks-regression detectDrift ───────────────────────────
+const { detectDrift } = require('./scripts/picks-regression-check.js');
+
+test('picks-regression: stable counts -> no alert', () => {
+  const latest = { HYPERGROWTH: 80, QUALITY_COMPOUNDER: 50 };
+  const priors = [
+    { HYPERGROWTH: 78, QUALITY_COMPOUNDER: 49 },
+    { HYPERGROWTH: 82, QUALITY_COMPOUNDER: 51 },
+    { HYPERGROWTH: 79, QUALITY_COMPOUNDER: 50 },
+    { HYPERGROWTH: 81, QUALITY_COMPOUNDER: 48 }
+  ];
+  const alerts = detectDrift(latest, priors, 0.35);
+  if (alerts.length !== 0) throw new Error('expected no alerts, got ' + JSON.stringify(alerts));
+});
+
+test('picks-regression: 50% drop in HYPERGROWTH -> alert', () => {
+  const latest = { HYPERGROWTH: 40, QUALITY_COMPOUNDER: 50 };
+  const priors = [
+    { HYPERGROWTH: 80, QUALITY_COMPOUNDER: 49 },
+    { HYPERGROWTH: 82, QUALITY_COMPOUNDER: 51 },
+    { HYPERGROWTH: 79, QUALITY_COMPOUNDER: 50 },
+    { HYPERGROWTH: 81, QUALITY_COMPOUNDER: 48 }
+  ];
+  const alerts = detectDrift(latest, priors, 0.35);
+  if (alerts.length !== 1) throw new Error('expected 1 alert, got ' + JSON.stringify(alerts));
+  if (alerts[0].mode !== 'HYPERGROWTH') throw new Error('wrong mode');
+  if (alerts[0].direction !== 'down') throw new Error('expected down, got ' + alerts[0].direction);
+});
+
+test('picks-regression: insufficient history (<4) -> no alert', () => {
+  const latest = { HYPERGROWTH: 200 };
+  const priors = [
+    { HYPERGROWTH: 80 },
+    { HYPERGROWTH: 82 }
+  ];
+  const alerts = detectDrift(latest, priors, 0.35);
+  if (alerts.length !== 0) throw new Error('should not alert with <4 priors');
+});
+
+test('picks-regression: 35% jump up triggers alert', () => {
+  const latest = { HYPERGROWTH: 110 };
+  const priors = [{ HYPERGROWTH: 80 }, { HYPERGROWTH: 80 }, { HYPERGROWTH: 80 }, { HYPERGROWTH: 80 }];
+  const alerts = detectDrift(latest, priors, 0.35);
+  if (alerts.length !== 1) throw new Error('expected alert: 110 vs 80 = 37.5% up');
+  if (alerts[0].direction !== 'up') throw new Error('expected up');
+});
+
+// ─── Tag 133e: walk-forward perf primitives ──────────────────────────
+const WF = require('./scripts/walk-forward-perf.js');
+
+test('walk-forward: priceAt finds nearest prior date', () => {
+  const hist = { AAPL: [
+    { date: '2026-04-01', close: 100 },
+    { date: '2026-04-05', close: 110 },
+    { date: '2026-04-10', close: 120 }
+  ]};
+  if (WF.priceAt(hist, 'AAPL', '2026-04-05') !== 110) throw new Error('exact-date lookup wrong');
+  if (WF.priceAt(hist, 'AAPL', '2026-04-07') !== 110) throw new Error('between-dates lookup should pick prior');
+  if (WF.priceAt(hist, 'AAPL', '2026-03-15') !== null) throw new Error('before-series should be null');
+});
+
+test('walk-forward: returnPct + addDaysIso work', () => {
+  if (WF.returnPct(100, 110) !== 10) throw new Error('10% return expected');
+  if (WF.returnPct(100, 90) !== -10) throw new Error('-10% return expected');
+  if (WF.returnPct(0, 100) !== null) throw new Error('div-by-0 must be null');
+  if (WF.addDaysIso('2026-05-01', 7) !== '2026-05-08') throw new Error('addDaysIso wrong');
+});
+
+test('walk-forward: evaluateVintage computes alpha vs universe-median', () => {
+  // Use dates well in the past so 7d/28d/84d horizons resolve, not "too-early"
+  const hist = {
+    AAPL: [{ date: '2025-01-01', close: 100 }, { date: '2025-01-08', close: 130 }, { date: '2025-04-01', close: 150 }], // +30% at 7d
+    MSFT: [{ date: '2025-01-01', close: 200 }, { date: '2025-01-08', close: 260 }, { date: '2025-04-01', close: 300 }], // +30% at 7d
+    XYZ:  [{ date: '2025-01-01', close: 50 },  { date: '2025-01-08', close: 50 },  { date: '2025-04-01', close: 50 }]   //   0%
+  };
+  const picks = {
+    asOf: '2025-01-01T00:00:00Z',
+    modes: { HYPERGROWTH: [{ ticker: 'AAPL' }, { ticker: 'MSFT' }] }
+  };
+  const ev = WF.evaluateVintage(picks, hist);
+  const h7 = ev.modes.HYPERGROWTH.horizons['7d'];
+  if (h7.status !== 'ok') throw new Error('expected ok, got ' + h7.status);
+  if (Math.round(h7.pickMedianReturn) !== 30) throw new Error('pick median 30% expected, got ' + h7.pickMedianReturn);
+  // universe median across all 3 tickers' 7d returns = median(30, 30, 0) = 30
+  if (Math.round(h7.universeMedianReturn) !== 30) throw new Error('universe median 30% expected, got ' + h7.universeMedianReturn);
+  if (Math.abs(h7.alpha) > 0.01) throw new Error('alpha ~0 expected (picks tied with universe), got ' + h7.alpha);
+});
+
 console.log('---------------------------');
 console.log(`Passed: ${passed}, Failed: ${failed}`);
 process.exit(failed > 0 ? 1 : 0);
