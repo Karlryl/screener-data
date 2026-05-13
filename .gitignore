@@ -29,3 +29,8 @@ external-data/prices-archive/
 # Tag 134 — Phase 5.2: methodHistory subtree moved out of alert-state.json
 # (was bloating git by ~25 MB per push). Rebuildable from methods-history/.
 external-data/method-history-state.json
+
+# Tag 150: outputs/ contains daily-regenerated reports; committed via gh-pages only.
+# .gitkeep keeps the directory tracked so scripts can write without mkdir.
+outputs/
+!outputs/.gitkeep

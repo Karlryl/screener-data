@@ -68,7 +68,7 @@ jobs:
       - name: Run Yahoo Pull
         run: node --max-old-space-size=6144 pull-yahoo.js --watchlist watchlist.json --output snapshots --rate-limit 2000
         continue-on-error: true
-        timeout-minutes: 150
+        timeout-minutes: 165
 
       # Tag 147: Quality-gate — fail hard only if coverage is too low to produce useful reports
       - name: Verify Pull Coverage
@@ -196,7 +196,7 @@ jobs:
       # older than 60 days into external-data/*.ndjson (git-ignored).
       # Reduces committed repo bloat. Rebuildable from snapshots on the runner.
       - name: Archive Old Snapshots
-        run: node scripts/archive-old-snapshots.js --keep-days 60
+        run: node scripts/archive-old-snapshots.js --keep-days 14
         continue-on-error: true
 
       # Tag 119: alert-state.json size guard (GitHub 100MB limit)
@@ -204,12 +204,10 @@ jobs:
         run: |
           if [ -f alert-state.json ]; then
             size=$(stat -c %s alert-state.json)
-            if [ $size -gt 50000000 ]; then
-              echo "alert-state.json is $size bytes — truncating methodHistory + pretty-print off"
-              node -e "const fs=require('fs');const s=JSON.parse(fs.readFileSync('alert-state.json'));s.methodHistory={};fs.writeFileSync('alert-state.json',JSON.stringify(s));console.log('post-truncate:',fs.statSync('alert-state.json').size,'bytes');"
-            else
-              echo "alert-state.json is $size bytes — within budget"
-            fi
+            # Tag 150: Always strip methodHistory key (not just when >50MB).
+            # Setting to {} was a no-op — the key survived the commit and re-grew
+            # every run. delete removes it permanently so saveState() never re-embeds it.
+            node -e "const fs=require('fs');const s=JSON.parse(fs.readFileSync('alert-state.json'));delete s.methodHistory;fs.writeFileSync('alert-state.json',JSON.stringify(s));console.log('alert-state.json stripped:',fs.statSync('alert-state.json').size,'bytes (was '+$size+')');"
           fi
 
       - name: Commit Snapshots + Alert-State
@@ -248,7 +246,7 @@ jobs:
           cp modes-report.html _site/ 2>/dev/null || true
           cp diff-report.html _site/ 2>/dev/null || true
           cp dashboard.html _site/ 2>/dev/null || true
-          cp -r outputs/ _site/outputs/ 2>/dev/null || true
+          cp -r outputs/. _site/outputs/ 2>/dev/null || true
 
           # Push to gh-pages branch (orphan-safe force push)
           cd _site
