@@ -3,6 +3,20 @@ node_modules/
 .DS_Store
 .env
 
+# ── Generated HTML artifacts ─────────────────────────────────────────
+# methods-report.html is deprecated (replaced by outputs/methodology-report.md).
+# 27 MB per run × daily commits = repo bloat. Regenerate locally with:
+#   node generate-methods-report.js (if it still exists)
+methods-report.html
+
+# dashboard.html is a supplementary view not linked from index.html.
+# Gitignored to reduce daily commit size. Still generated on the runner.
+dashboard.html
+
+# ── fundamentals-cache ───────────────────────────────────────────────
+# 28-day local cache; not needed in git history, rebuilt on each runner.
+fundamentals-cache/
+
 # Tag 133k: SEC XBRL cache lives on the runner; only _manifest.json is committed
 external-data/sec-xbrl/*.json
 !external-data/sec-xbrl/_manifest.json

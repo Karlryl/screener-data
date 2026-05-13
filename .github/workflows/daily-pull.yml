@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   pull:
@@ -212,6 +214,33 @@ jobs:
             echo "Push failed after 3 attempts"
             exit 1
           fi
+
+      # Tag 146: Deploy HTML reports to GitHub Pages (gh-pages branch).
+      # Separates generated web artifacts from the data/code on main.
+      # Deploys: index.html, modes-report.html, diff-report.html, outputs/*.html|csv|md
+      # Enable in repo Settings → Pages → Source: Deploy from branch → gh-pages / root.
+      - name: Deploy to GitHub Pages
+        if: success() || (failure() && hashFiles('modes-report.html') != '')
+        run: |
+          git config user.name "yahoo-pull-bot"
+          git config user.email "yahoo-pull-bot@users.noreply.github.com"
+
+          # Build a clean deploy directory
+          mkdir -p _site/outputs
+          cp index.html _site/ 2>/dev/null || true
+          cp modes-report.html _site/ 2>/dev/null || true
+          cp diff-report.html _site/ 2>/dev/null || true
+          cp dashboard.html _site/ 2>/dev/null || true
+          cp -r outputs/ _site/outputs/ 2>/dev/null || true
+
+          # Push to gh-pages branch (orphan-safe force push)
+          cd _site
+          git init -b gh-pages
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git add -A
+          git commit -m "deploy: screener reports $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push --force origin gh-pages
+          echo "✓ GitHub Pages deployed"
 
       - name: Notify on failure
         if: failure()
