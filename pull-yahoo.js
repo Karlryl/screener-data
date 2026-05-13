@@ -598,8 +598,18 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       results.push({ ticker: stock.ticker, status: 'ok', file: filename, revenue: revStr, growth: growthStr, completeness });
       _log('INFO', `  ✓ ${stock.ticker}: revenue=${revStr}, growth=${growthStr}, sector=${canonical.meta.sector}`);
     } catch (e) {
-      failures.push({ ticker: stock.ticker, error: e.message });
-      _log('ERROR', `  ✗ ${stock.ticker}: ${e.message}`);
+      // Tag 134 — Phase 5.3: classify error type so pull-stats-check can alert on
+      // patterns (e.g. >5% rate-limit suggests a Yahoo policy change vs >5% 404
+      // suggests universe contains dead tickers).
+      const msg = String(e.message || '');
+      let errClass = 'other';
+      if (/429|too many request|rate.?limit/i.test(msg)) errClass = 'rate-limit';
+      else if (/404|not found|invalid (cookie|crumb|symbol)|no data found/i.test(msg)) errClass = 'not-found';
+      else if (/timeout|ETIMEDOUT|ESOCKETTIMEDOUT/i.test(msg)) errClass = 'timeout';
+      else if (/ENOTFOUND|ECONNREFUSED|ECONNRESET|EAI_AGAIN|network/i.test(msg)) errClass = 'network';
+      else if (/parse|unexpected token|JSON/i.test(msg)) errClass = 'parse';
+      failures.push({ ticker: stock.ticker, error: msg, errClass });
+      _log('ERROR', `  ✗ ${stock.ticker}: [${errClass}] ${msg}`);
     }
 
     }

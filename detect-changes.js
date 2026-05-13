@@ -38,22 +38,52 @@ function _log(level, msg) { console.log(`[${_ts()}] [${level}] ${msg}`); }
 //   "fieldCoverage": { history: [], baseline: {} }   // Tag-22
 // }
 
-function loadState(statePath) {
-  // Tag-21-Robustness + Tag-29-Schema-Migration
-  const fallback = { lastRun: null, methodState: {}, fieldCoverage: { history: [], baseline: {} } };
-  if (!fs.existsSync(statePath)) return fallback;
-  let parsed;
-  try { parsed = JSON.parse(fs.readFileSync(statePath, 'utf8')); }
-  catch (e) {
-    _log('WARN', `state-file unparseable, treating as fresh: ${e.message}`);
-    return fallback;
+// Tag 134 — Phase 5.2: methodHistory subtree moved out of committed alert-state.json
+// to external-data/method-history-state.json (git-ignored).
+// Was bloating the repo by ~25 MB per push. Rebuildable from methods-history/*.
+const HISTORY_SIDECAR = path.join(__dirname, 'external-data', 'method-history-state.json');
+
+function _loadMethodHistory() {
+  if (!fs.existsSync(HISTORY_SIDECAR)) return {};
+  try {
+    const p = JSON.parse(fs.readFileSync(HISTORY_SIDECAR, 'utf8'));
+    return (p && typeof p === 'object' && p.methodHistory && typeof p.methodHistory === 'object') ? p.methodHistory : {};
+  } catch (e) {
+    _log('WARN', 'history sidecar unparseable, treating as fresh: ' + e.message);
+    return {};
   }
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return fallback;
+}
+
+function _saveMethodHistory(history) {
+  try {
+    if (!fs.existsSync(path.dirname(HISTORY_SIDECAR))) fs.mkdirSync(path.dirname(HISTORY_SIDECAR), { recursive: true });
+    fs.writeFileSync(HISTORY_SIDECAR, JSON.stringify({ lastSaved: new Date().toISOString(), methodHistory: history }));
+  } catch (e) { _log('WARN', 'failed to write history sidecar: ' + e.message); }
+}
+
+function loadState(statePath) {
+  // Tag-21-Robustness + Tag-29-Schema-Migration + Tag 134 Phase 5.2 sidecar load
+  const fallback = { lastRun: null, methodState: {}, methodHistory: {}, fieldCoverage: { history: [], baseline: {} } };
+  let parsed = null;
+  if (fs.existsSync(statePath)) {
+    try { parsed = JSON.parse(fs.readFileSync(statePath, 'utf8')); }
+    catch (e) {
+      _log('WARN', `state-file unparseable, treating as fresh: ${e.message}`);
+      parsed = null;
+    }
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) parsed = {};
+  // Tag 134 Phase 5.2: methodHistory now lives in the sidecar.
+  // Migration: if the committed alert-state.json still has an inline methodHistory
+  // (from before this change), use it as the initial sidecar value and let the next
+  // save move it out of the committed file.
+  const inlineHistory = (parsed.methodHistory && typeof parsed.methodHistory === 'object' && !Array.isArray(parsed.methodHistory)) ? parsed.methodHistory : null;
+  const sidecarHistory = _loadMethodHistory();
+  const methodHistory = Object.keys(sidecarHistory).length > 0 ? sidecarHistory : (inlineHistory || {});
   return {
     lastRun: typeof parsed.lastRun === 'string' ? parsed.lastRun : null,
     methodState: (parsed.methodState && typeof parsed.methodState === 'object' && !Array.isArray(parsed.methodState)) ? parsed.methodState : {},
-    // Tag-31: methodHistory[ticker][methodId] = [{date, value, pass}, ...]
-    methodHistory: (parsed.methodHistory && typeof parsed.methodHistory === 'object' && !Array.isArray(parsed.methodHistory)) ? parsed.methodHistory : {},
+    methodHistory,
     fieldCoverage: (parsed.fieldCoverage && typeof parsed.fieldCoverage === 'object')
       ? {
           history: Array.isArray(parsed.fieldCoverage.history) ? parsed.fieldCoverage.history : [],
@@ -64,7 +94,14 @@ function loadState(statePath) {
 }
 
 function saveState(statePath, state) {
-  fs.writeFileSync(statePath, JSON.stringify(state)); // Tag 119: no pretty-print (saves ~50% size)
+  // Tag 134 Phase 5.2: split write — methodHistory to sidecar, everything else to committed file.
+  const committed = {
+    lastRun: state.lastRun,
+    methodState: state.methodState,
+    fieldCoverage: state.fieldCoverage
+  };
+  fs.writeFileSync(statePath, JSON.stringify(committed)); // Tag 119: no pretty-print
+  _saveMethodHistory(state.methodHistory || {});
 }
 
 // ─── Diff-Detector ────────────────────────────────────────────────

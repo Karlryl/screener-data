@@ -453,6 +453,94 @@ test('walk-forward: evaluateVintage computes alpha vs universe-median', () => {
   if (Math.abs(h7.alpha) > 0.01) throw new Error('alpha ~0 expected (picks tied with universe), got ' + h7.alpha);
 });
 
+// ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
+// Pre-pull guard against silent behavior changes in score-aggregator.
+// Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the
+// output is stable. If a method's behavior changes intentionally, regen the
+// hash with ALLOW_FIXTURE_CHANGE=1 node tag28-tests.js (writes new hash to disk).
+const crypto = require('crypto');
+const SM = require('./methods/strategy-modes.js');
+const FIXTURE_HASH_PATH = require('path').join(__dirname, 'tests', 'fixture-hash.txt');
+
+function _fixtureStock() {
+  // Synthetic A-grade HG candidate. Deterministic. Currency-coherent (USD).
+  return {
+    meta: { ticker: 'FIXTURE', name: 'Fixture Co.', sector: 'Technology', industry: 'Software', region: 'US',
+            reportingCurrency: 'USD', reportingCurrencyOriginal: 'USD', fxRateApplied: 1.0 },
+    marketCap: { value: 50e9 },
+    metrics: {
+      revenueTTM: { value: 10e9 },
+      revenueGrowthYoY: { value: 38 },
+      grossMargin: { value: 72 },
+      operatingMargin: { value: 25 },
+      fcfMarginTTM: { value: 22 },
+      pe: { value: 35 }
+    },
+    annual: {
+      annualRev: [{ value: 10e9 }, { value: 7.2e9 }, { value: 5.2e9 }, { value: 3.8e9 }],
+      annualOpInc: [{ value: 2.5e9 }, { value: 1.6e9 }, { value: 1.0e9 }],
+      annualNetIncome: [{ value: 2.0e9 }, { value: 1.3e9 }, { value: 0.7e9 }],
+      annualGP: [{ value: 7.2e9 }, { value: 5.0e9 }, { value: 3.5e9 }],
+      annualFCF: [{ value: 2.2e9 }, { value: 1.4e9 }],
+      annualBalance: [{ totalCash: 5e9, totalDebt: 2e9, totalAssets: 30e9 }, { totalCash: 4e9, totalDebt: 2e9, totalAssets: 25e9 }],
+      annualSBC: [{ value: 0.5e9 }, { value: 0.4e9 }],
+      annualCapex: [{ value: 0.3e9 }, { value: 0.2e9 }]
+    },
+    timeseries: {
+      revenueQ: [{ value: 2.6e9 }, { value: 2.5e9 }, { value: 2.5e9 }, { value: 2.4e9 }],
+      opIncQ: [{ value: 0.65e9 }, { value: 0.6e9 }, { value: 0.6e9 }, { value: 0.55e9 }],
+      grossProfitQ: [{ value: 1.9e9 }, { value: 1.8e9 }],
+      netIncomeQ: [{ value: 0.5e9 }, { value: 0.5e9 }]
+    },
+    _quality: { grade: 'A', nanRatio: 0.0 }
+  };
+}
+
+function _computeFixtureHash() {
+  const stock = _fixtureStock();
+  const results = Runner.evaluateStock(stock);
+  const evHG = SM.evaluateMode(stock, 'HYPERGROWTH', results);
+  const evQC = SM.evaluateMode(stock, 'QUALITY_COMPOUNDER', results);
+  // Project to a deterministic subset: per-method pass + scoreBreakdown keys.
+  // Drop noisy floats by rounding to 4 decimals; drop messages.
+  const project = (ev) => ({
+    passed: ev.passed,
+    mustPassCount: ev.mustPassCount,
+    mustTotal: ev.mustTotal,
+    tier: ev.tier,
+    score: ev.score,
+    breakdown: Object.fromEntries(Object.entries(ev.scoreBreakdown || {}).map(([k, v]) => [k, {
+      pass: v.pass, weight: v.weight, computable: v.computable,
+      score: v.score != null ? Math.round(v.score * 10000) / 10000 : null
+    }]))
+  });
+  const projection = { HG: project(evHG), QC: project(evQC) };
+  return crypto.createHash('sha256').update(JSON.stringify(projection)).digest('hex').slice(0, 16);
+}
+
+test('fixture-hash: score-aggregator output is stable', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const computed = _computeFixtureHash();
+  if (process.env.ALLOW_FIXTURE_CHANGE === '1') {
+    if (!fs.existsSync(path.dirname(FIXTURE_HASH_PATH))) fs.mkdirSync(path.dirname(FIXTURE_HASH_PATH), { recursive: true });
+    fs.writeFileSync(FIXTURE_HASH_PATH, computed + '\n');
+    console.log('  ALLOW_FIXTURE_CHANGE=1 — wrote new hash ' + computed);
+    return;
+  }
+  if (!fs.existsSync(FIXTURE_HASH_PATH)) {
+    if (!fs.existsSync(path.dirname(FIXTURE_HASH_PATH))) fs.mkdirSync(path.dirname(FIXTURE_HASH_PATH), { recursive: true });
+    fs.writeFileSync(FIXTURE_HASH_PATH, computed + '\n');
+    console.log('  no prior fixture-hash — wrote initial ' + computed);
+    return;
+  }
+  const stored = fs.readFileSync(FIXTURE_HASH_PATH, 'utf8').trim();
+  if (stored !== computed) {
+    throw new Error('fixture-hash mismatch: stored=' + stored + ' computed=' + computed +
+      '\n   If intentional, re-run with ALLOW_FIXTURE_CHANGE=1 to update tests/fixture-hash.txt.');
+  }
+});
+
 console.log('---------------------------');
 console.log(`Passed: ${passed}, Failed: ${failed}`);
 process.exit(failed > 0 ? 1 : 0);
