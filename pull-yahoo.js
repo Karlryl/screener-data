@@ -52,7 +52,9 @@ try {
   }
 }
 
-const yf = new YahooFinance({ suppressNotices: ['yahooSurvey'], queue: { concurrency: 1 } });
+// Tag 145: concurrency raised from 1 → 8 so the internal queue doesn't serialize
+// all requests. concurrency:1 was the root cause of the 2-hour hang on 8000-stock runs.
+const yf = new YahooFinance({ suppressNotices: ['yahooSurvey'], queue: { concurrency: 8 } });
 
 // Modules die wir brauchen für canonicalInput-Mapping
 const MODULES = [
@@ -481,6 +483,17 @@ function mapFTSToQuarterly(quarterlyRows) {
 
 async function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+// Tag 145: per-ticker timeout wrapper — prevents one hanging socket from
+// freezing the entire batch. Yahoo occasionally stalls indefinitely on rate-limit
+// or network issues; without this a single stuck ticker blocks all concurrent slots.
+function _withTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`ETIMEDOUT after ${ms}ms (${label})`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 async function pullAll(watchlist, outputDir, rateLimitMs) {
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
   const results = [];
@@ -492,13 +505,16 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
 
     try {
       _log('INFO', `Pulling ${stock.ticker} (${stock.yahoo_symbol})…`);
-      const yahoo = await yf.quoteSummary(stock.yahoo_symbol, { modules: MODULES });
+      const yahoo = await _withTimeout(
+        yf.quoteSummary(stock.yahoo_symbol, { modules: MODULES }),
+        30000, stock.ticker
+      );
       const asOf = new Date().toISOString();
       const canonical = mapYahooToCanonical(yahoo, stock, asOf);
 
       // Tag 106: IPO-Datum via separates yf.quote() — quoteSummary.price hat das Feld nicht.
       try {
-        const q = await yf.quote(stock.yahoo_symbol);
+        const q = await _withTimeout(yf.quote(stock.yahoo_symbol), 15000, stock.ticker + '/quote');
         if (q && q.firstTradeDateMilliseconds) {
           const ftd = new Date(q.firstTradeDateMilliseconds);
           canonical.meta.firstTradeDate = ftd.toISOString();
@@ -531,7 +547,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         ftsQuarterlyNI = cached.payload.ftsQuarterlyNI || [];
       } else {
         // Tag-14: fundamentalsTimeSeries-Pull für annualOpInc/FCF/opIncQ.
-        const fts = await fetchFundamentalsTS(stock.yahoo_symbol);
+        const fts = await _withTimeout(fetchFundamentalsTS(stock.yahoo_symbol), 30000, stock.ticker + '/fts');
         ftsAnnual = mapFTSToAnnual(fts.annualFin, fts.annualCash);
         ftsQuarterly = mapFTSToQuarterly(fts.quarterlyFin);
         ftsBalance = mapFTSToBalance(fts.annualBs);
