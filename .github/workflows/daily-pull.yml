@@ -23,7 +23,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
 
       - name: Install dependencies
@@ -222,9 +222,6 @@ jobs:
       - name: Deploy to GitHub Pages
         if: success() || (failure() && hashFiles('modes-report.html') != '')
         run: |
-          git config user.name "yahoo-pull-bot"
-          git config user.email "yahoo-pull-bot@users.noreply.github.com"
-
           # Build a clean deploy directory
           mkdir -p _site/outputs
           cp index.html _site/ 2>/dev/null || true
@@ -236,6 +233,8 @@ jobs:
           # Push to gh-pages branch (orphan-safe force push)
           cd _site
           git init -b gh-pages
+          git config user.name "yahoo-pull-bot"
+          git config user.email "yahoo-pull-bot@users.noreply.github.com"
           git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           git add -A
           git commit -m "deploy: screener reports $(date -u +%Y-%m-%dT%H:%M:%SZ)"
