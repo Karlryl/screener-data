@@ -36,17 +36,26 @@ function median(values) {
   return sorted.length % 2 ? sorted[m] : (sorted[m - 1] + sorted[m]) / 2;
 }
 
+// Tag 134: max-staleness guard. A ticker that hasn't traded in 60+ days (suspension,
+// delisting, illiquid foreign exchange) was silently using a stale price as p0,
+// pretending the resulting return was signal. Now: drop the lookup if the chosen
+// entry is older than PRICE_MAX_STALE_DAYS calendar days from targetDate.
+const PRICE_MAX_STALE_DAYS = 7;
+function _daysBetween(isoA, isoB) {
+  return Math.abs(new Date(isoA + 'T00:00:00Z').getTime() - new Date(isoB + 'T00:00:00Z').getTime()) / 86400000;
+}
 function priceAt(history, ticker, targetDate) {
   const series = history[ticker];
   if (!Array.isArray(series) || series.length === 0) return null;
-  // series sorted by date ascending; find last entry on/before targetDate
   let chosen = null;
   for (const entry of series) {
     if (!entry || !entry.date) continue;
     if (entry.date > targetDate) break;
     chosen = entry;
   }
-  return chosen ? chosen.close : null;
+  if (!chosen) return null;
+  if (_daysBetween(chosen.date, targetDate) > PRICE_MAX_STALE_DAYS) return null;
+  return chosen.close;
 }
 
 function returnPct(p0, p1) {

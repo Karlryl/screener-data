@@ -342,6 +342,97 @@ test('walk-forward: returnPct + addDaysIso work', () => {
   if (WF.addDaysIso('2026-05-01', 7) !== '2026-05-08') throw new Error('addDaysIso wrong');
 });
 
+// ─── Tag 134: Phase 1 — currency coherence ────────────────────────────
+const PY = require('./pull-yahoo.js');
+
+test('normalizeRegion: USD → US, GBP → UK, JPY → JP, TWD → TW', () => {
+  if (PY.normalizeRegion('USD', 'NasdaqGS') !== 'US') throw new Error('USD should be US');
+  if (PY.normalizeRegion('GBP', 'London Stock Exchange') !== 'UK') throw new Error('GBP should be UK');
+  if (PY.normalizeRegion('JPY', 'Tokyo') !== 'JP') throw new Error('JPY should be JP');
+  if (PY.normalizeRegion('TWD', 'Taipei') !== 'TW') throw new Error('TWD should be TW');
+  if (PY.normalizeRegion('EUR', 'Frankfurt') !== 'EU') throw new Error('EUR should be EU');
+});
+
+test('normalizeRegion: unknown currency falls back via exchangeName', () => {
+  if (PY.normalizeRegion(null, 'NYSE') !== 'US') throw new Error('NYSE exchange → US');
+  if (PY.normalizeRegion('XXX', 'London') !== 'UK') throw new Error('London exchange → UK');
+  if (PY.normalizeRegion(null, 'Unknown Exchange 42') !== 'OTHER') throw new Error('unknown → OTHER');
+});
+
+test('_convertSnapshotToUSD: USD snapshot is unchanged numerically + tagged', () => {
+  const snap = {
+    meta: { ticker: 'AAPL', reportingCurrency: 'USD', region: 'US' },
+    marketCap: { value: 3e12 },
+    metrics: { revenueTTM: { value: 380e9 } },
+    annual: { annualRev: [{ value: 380e9 }, { value: 350e9 }], annualBalance: [{ totalCash: 30e9, totalDebt: 100e9, totalAssets: 350e9 }] },
+    timeseries: { revenueQ: [{ value: 95e9 }] }
+  };
+  PY._convertSnapshotToUSD(snap);
+  if (snap.marketCap.value !== 3e12) throw new Error('USD mcap unchanged');
+  if (snap.metrics.revenueTTM.value !== 380e9) throw new Error('USD rev unchanged');
+  if (snap.meta.fxRateApplied !== 1.0) throw new Error('USD fxRate=1.0');
+  if (snap.meta.reportingCurrencyOriginal !== 'USD') throw new Error('USD origCurrency=USD');
+});
+
+test('_convertSnapshotToUSD: TWD twin produces same ratios as USD twin', () => {
+  // Synthetic Taiwan stock: 1000B TWD mcap, 100B TWD FCF.
+  // FCF-yield should be FCF/Mcap = 0.1 = 10% regardless of currency conversion.
+  const twdRate = 0.031; // matches FX fallback
+  const twdSnap = {
+    meta: { ticker: '2345.TW', reportingCurrency: 'TWD', region: 'TW' },
+    marketCap: { value: 1000e9 },                         // 1000B TWD
+    metrics: { revenueTTM: { value: 500e9 } },
+    annual: {
+      annualFCF: [{ value: 100e9 }, { value: 80e9 }],
+      annualRev: [{ value: 500e9 }, { value: 420e9 }],
+      annualBalance: [{ totalCash: 50e9, totalDebt: 20e9, totalAssets: 800e9 }]
+    },
+    timeseries: { revenueQ: [{ value: 130e9 }] }
+  };
+  const usdSnap = {
+    meta: { ticker: 'TWIN', reportingCurrency: 'USD', region: 'US' },
+    marketCap: { value: 1000e9 * twdRate },
+    metrics: { revenueTTM: { value: 500e9 * twdRate } },
+    annual: {
+      annualFCF: [{ value: 100e9 * twdRate }, { value: 80e9 * twdRate }],
+      annualRev: [{ value: 500e9 * twdRate }, { value: 420e9 * twdRate }],
+      annualBalance: [{ totalCash: 50e9 * twdRate, totalDebt: 20e9 * twdRate, totalAssets: 800e9 * twdRate }]
+    },
+    timeseries: { revenueQ: [{ value: 130e9 * twdRate }] }
+  };
+  PY._convertSnapshotToUSD(twdSnap);
+  PY._convertSnapshotToUSD(usdSnap);
+
+  // After conversion both should have identical values.
+  if (Math.abs(twdSnap.marketCap.value - usdSnap.marketCap.value) > 1) {
+    throw new Error('mcap differs: TWD=' + twdSnap.marketCap.value + ' USD=' + usdSnap.marketCap.value);
+  }
+  if (Math.abs(twdSnap.annual.annualFCF[0].value - usdSnap.annual.annualFCF[0].value) > 1) {
+    throw new Error('annualFCF differs after conversion');
+  }
+  // FCF-yield must be currency-invariant (was the broken case).
+  const twdYield = twdSnap.annual.annualFCF[0].value / twdSnap.marketCap.value;
+  const usdYield = usdSnap.annual.annualFCF[0].value / usdSnap.marketCap.value;
+  if (Math.abs(twdYield - usdYield) > 1e-6) {
+    throw new Error('fcf-yield differs: TWD=' + twdYield.toFixed(5) + ' USD=' + usdYield.toFixed(5));
+  }
+  // And it should equal the raw TWD ratio (which is currency-invariant by construction).
+  if (Math.abs(twdYield - 0.1) > 1e-6) {
+    throw new Error('fcf-yield should be 10%, got ' + (twdYield * 100).toFixed(2) + '%');
+  }
+});
+
+test('_convertSnapshotToUSD: unknown currency leaves values + flags failure', () => {
+  const snap = {
+    meta: { ticker: 'X', reportingCurrency: 'ZZZ' },
+    marketCap: { value: 100 },
+    annual: { annualRev: [{ value: 100 }] }
+  };
+  PY._convertSnapshotToUSD(snap);
+  if (snap.marketCap.value !== 100) throw new Error('unknown currency: values unchanged');
+  if (!snap.meta.fxConversionFailed) throw new Error('fxConversionFailed flag should be set');
+});
+
 test('walk-forward: evaluateVintage computes alpha vs universe-median', () => {
   // Use dates well in the past so 7d/28d/84d horizons resolve, not "too-early"
   const hist = {
