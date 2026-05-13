@@ -12,25 +12,27 @@
  */
 
 // Tracked fields — diejenigen kritisch für Engine-Scoring.
-// Path: dot-separated. metrics.* kommt aus pull-yahoo.js canonical-input.
+// Tag 153: paths corrected to match pull-yahoo.js canonical snapshot structure.
+// Previous paths used 'metrics.*' for all fields; actual structure has annual.*/timeseries.*/meta.*
+// Those 12 wrong-path fields reported 0% coverage on every run since Tag 22.
 const TRACKED_FIELDS = [
-  'metrics.annualRev',
-  'metrics.annualOpInc',
-  'metrics.annualNetIncome',
-  'metrics.annualGrossProfit',
-  'metrics.annualFCF',
-  'metrics.quarterlyRev',
-  'metrics.quarterlyOpInc',
-  'metrics.marketCapUSD',
-  'metrics.peRatio',
-  'metrics.psRatio',
-  'metrics.sector',
-  'metrics.industry',
-  'metrics.operatingMargin',
-  'metrics.grossMargin'
+  'annual.annualRev',           // array of {value,...} — check non-empty
+  'annual.annualOpInc',
+  'annual.annualNetIncome',
+  'annual.annualGP',            // was: metrics.annualGrossProfit (field is annualGP not annualGrossProfit)
+  'annual.annualFCF',
+  'timeseries.revenueQ',        // was: metrics.quarterlyRev
+  'timeseries.opIncQ',          // was: metrics.quarterlyOpInc
+  'marketCap.value',            // was: metrics.marketCapUSD — marketCap is a _metric wrapper
+  'metrics.pe.value',           // was: metrics.peRatio — pe is a _metric wrapper
+  'metrics.priceSales.value',   // was: metrics.psRatio — priceSales is a _metric wrapper
+  'meta.sector',                // was: metrics.sector
+  'meta.industry',              // was: metrics.industry
+  'metrics.operatingMargin.value', // .value to check actual data, not just wrapper presence
+  'metrics.grossMargin.value'
 ];
 
-const HISTORY_WINDOW = 6;       // Rolling window: letzte 6 Runs für Baseline
+const HISTORY_WINDOW = 14;      // Rolling window: letzte 14 Runs für Baseline (war 6 — zu kurz bei 2 Runs/Tag)
 const DROP_THRESHOLD = 0.20;    // 20 percentage-points = Drift-Alarm
 const MIN_HISTORY_FOR_ALERT = 2; // erst nach 2 Runs vergleichen
 

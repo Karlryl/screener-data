@@ -713,8 +713,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     results,
     failures
   };
-  // Tag 147: no pretty-print — halves string allocation at 22k+ entries
-  fs.writeFileSync(path.join(outputDir, '_manifest.json'), JSON.stringify(manifest));
+  // Tag 153: write slim manifest (n_ok/n_failed only) to committed _manifest.json.
+  // Full manifest (with per-ticker results/failures) goes to gitignored _manifest-full.json.
+  // Saves ~1.4 MB per daily commit (95% of the committed file was diagnostics-only).
+  const slim = { pulled_at: manifest.pulled_at, n_total: manifest.n_total, n_ok: manifest.n_ok, n_failed: manifest.n_failed };
+  fs.writeFileSync(path.join(outputDir, '_manifest.json'), JSON.stringify(slim));
+  fs.writeFileSync(path.join(outputDir, '_manifest-full.json'), JSON.stringify(manifest));
   _log('INFO', `Pull complete: ${results.length}/${watchlist.stocks.length} ok, ${failures.length} failed`);
   return manifest;
 }
@@ -737,6 +741,13 @@ async function main() {
   if (!fs.existsSync(args.watchlist)) {
     _log('ERROR', `Watchlist not found: ${args.watchlist}`);
     process.exit(1);
+  }
+  // Tag 153: delete committed _manifest.json before the pull so a mid-run SIGKILL cannot
+  // leave yesterday's stale n_ok on disk, causing the quality gate to pass on partial data.
+  const manifestPath = path.join(args.output, '_manifest.json');
+  if (fs.existsSync(manifestPath)) {
+    try { fs.unlinkSync(manifestPath); _log('INFO', 'Deleted stale _manifest.json'); }
+    catch (e) { _log('WARN', 'Could not delete stale _manifest.json: ' + e.message); }
   }
   const watchlist = JSON.parse(fs.readFileSync(args.watchlist, 'utf8'));
   if (!watchlist.stocks || !Array.isArray(watchlist.stocks)) {

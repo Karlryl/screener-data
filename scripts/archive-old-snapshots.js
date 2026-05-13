@@ -25,9 +25,13 @@ const ROOT = path.join(__dirname, '..');
 const ARCHIVE_BASE = path.join(ROOT, 'external-data');
 
 function parseArgs(argv) {
-  const args = { keepDays: 60, dryRun: false };
+  const args = { keepDays: 14, methodsKeepDays: null, picksKeepDays: null, dryRun: false };
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--keep-days' && argv[i+1]) args.keepDays = parseInt(argv[++i], 10);
+    // Tag 153: per-directory overrides — methods-history is large (14 MB/file), picks-history
+    // is small (65 KB) but walk-forward-perf needs 84+ days of vintages.
+    else if (argv[i] === '--methods-keep-days' && argv[i+1]) args.methodsKeepDays = parseInt(argv[++i], 10);
+    else if (argv[i] === '--picks-keep-days' && argv[i+1]) args.picksKeepDays = parseInt(argv[++i], 10);
     else if (argv[i] === '--dry-run') args.dryRun = true;
   }
   return args;
@@ -91,19 +95,22 @@ function main() {
   console.log('Archive Rotation — keepDays=' + args.keepDays + (args.dryRun ? ' (dry-run)' : ''));
   ensureDir(ARCHIVE_BASE);
 
-  console.log('\nmethods-history/');
+  const methodsKeepDays = args.methodsKeepDays != null ? args.methodsKeepDays : args.keepDays;
+  const picksKeepDays = args.picksKeepDays != null ? args.picksKeepDays : args.keepDays;
+
+  console.log('\nmethods-history/ (keep=' + methodsKeepDays + 'd)');
   const mh = archiveDirByDate(
     path.join(ROOT, 'methods-history'),
     path.join(ARCHIVE_BASE, 'methods-history-archive'),
-    args.keepDays, args.dryRun
+    methodsKeepDays, args.dryRun
   );
   console.log('  total: ' + mh.archived + ' archived, ' + mh.kept + ' kept');
 
-  console.log('\npicks-history/');
+  console.log('\npicks-history/ (keep=' + picksKeepDays + 'd)');
   const ph = archiveDirByDate(
     path.join(ROOT, 'picks-history'),
     path.join(ARCHIVE_BASE, 'picks-history-archive'),
-    args.keepDays, args.dryRun
+    picksKeepDays, args.dryRun
   );
   console.log('  total: ' + ph.archived + ' archived, ' + ph.kept + ' kept');
 

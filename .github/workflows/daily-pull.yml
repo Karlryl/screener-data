@@ -10,6 +10,12 @@ permissions:
   pages: write
   id-token: write
 
+# Tag 153: serialize pushes to main — daily + monthly-sec-xbrl both push via retry-rebase.
+# On the 1st of the month both fire within ~90 min of each other; without this one silently fails.
+concurrency:
+  group: main-push
+  cancel-in-progress: false
+
 jobs:
   pull:
     runs-on: ubuntu-latest
@@ -195,8 +201,10 @@ jobs:
       # Tag 134 — Phase 5.1: archive methods-history / picks-history / prices snapshots
       # older than 60 days into external-data/*.ndjson (git-ignored).
       # Reduces committed repo bloat. Rebuildable from snapshots on the runner.
+      # Tag 153: methods-history is 14 MB/file (keep 7d = 98 MB max committed).
+      # picks-history is 65 KB/file but walk-forward-perf needs 84+ day vintages (keep 90d).
       - name: Archive Old Snapshots
-        run: node scripts/archive-old-snapshots.js --keep-days 14
+        run: node scripts/archive-old-snapshots.js --keep-days 14 --methods-keep-days 7 --picks-keep-days 90
         continue-on-error: true
 
       # Tag 119: alert-state.json size guard (GitHub 100MB limit)
@@ -237,8 +245,10 @@ jobs:
       # Separates generated web artifacts from the data/code on main.
       # Deploys: index.html, modes-report.html, diff-report.html, outputs/*.html|csv|md
       # Enable in repo Settings → Pages → Source: Deploy from branch → gh-pages / root.
+      # Tag 153: only deploy when data commit succeeded — otherwise gh-pages would show
+      # picks from today's run that never landed in main (mismatched report vs data).
       - name: Deploy to GitHub Pages
-        if: success() || (failure() && hashFiles('modes-report.html') != '')
+        if: success()
         run: |
           # Build a clean deploy directory
           mkdir -p _site/outputs
