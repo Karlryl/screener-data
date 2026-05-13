@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 /**
  * Tag 103 — Auto-Universum-Refresh
  * ==================================
@@ -52,8 +52,8 @@ const SCREENER_IDS = [
   'high_yield_bond',               // skip but kept for coverage
 ];
 
-// Tag 130: Multi-Region Pull — 14 Regionen (CN/IN/IT/NL/SE/ES neu)
-const REGIONS = ['US', 'GB', 'DE', 'FR', 'HK', 'JP', 'AU', 'CA', 'CN', 'IN', 'IT', 'NL', 'SE', 'ES'];
+// Tag 132: Multi-Region Pull — 25 Regionen (+KR/TW/BR/MX/SG/CH/DK/NO/FI/ZA/SA)
+const REGIONS = ['US', 'GB', 'DE', 'FR', 'HK', 'JP', 'AU', 'CA', 'CN', 'IN', 'IT', 'NL', 'SE', 'ES', 'KR', 'TW', 'BR', 'MX', 'SG', 'CH', 'DK', 'NO', 'FI', 'ZA', 'SA'];
 
 // Tag 131: Exchange-Code-basierter Custom-Screener (geht über curated Yahoo-Listen hinaus)
 // Paginiert über alle Stocks $1B–$500B mcap je Exchange → ~10k+ Coverage möglich
@@ -78,6 +78,16 @@ const EXCHANGE_CODES = [
   'TAI',  // Taiwan
   'ASX',  // Australia
   'TOR',  // Toronto
+  // Tag 132: Additional exchanges
+  'CPH',  // Copenhagen
+  'OSL',  // Oslo
+  'HEL',  // Helsinki
+  'SAO',  // Sao Paulo (B3)
+  'MEX',  // Mexico
+  'SGX',  // Singapore
+  'SWX',  // Swiss Exchange
+  'JNB',  // Johannesburg
+  'SAU',  // Saudi Arabia (Tadawul)
 ];
 
 async function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -198,17 +208,9 @@ async function main() {
   }
   console.log('Custom-Screener total neue Tickers: ' + customAdded);
 
-  // 2. Filter out Banks/REITs/Insurance (Modus-Logik schließt sie eh aus, kein Pull)
-  const SECTOR_EXCLUDE = /bank|insurance|financial services|capital markets|asset management|real estate|reit/i;
-  let excluded = 0;
-  for (const [sym, info] of allTickers) {
-    if (info.sector && SECTOR_EXCLUDE.test(info.sector)) {
-      allTickers.delete(sym);
-      excluded++;
-    }
-  }
-  console.log(`\nSektor-Exclude: ${excluded} (Banks/REITs/Insurance) entfernt`);
-  console.log('Distinct candidates:', allTickers.size);
+  // 2. No sector-exclude at universe level (Tag 132: modes filter sectors, not discovery)
+  // Banks/REITs/Insurance are allowed for Quality-Compounder mode.
+  console.log('Distinct candidates: ' + allTickers.size);
 
   // 3. Identify new tickers
   const newTickers = [];

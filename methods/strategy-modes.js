@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 // Tag 120: Score-Aggregator Integration (Hygiene-Filter + Investment-Score Trennung)
 var ScoreAggregator;
@@ -36,10 +36,12 @@ const SECTOR_EXCLUDE_HYPERGROWTH = [
   /healthcare plans|managed (health )?care|health insurance/i
 ];
 
-// Tag 117: Quality-Compounder erweitert â Konsens nach 5-Runden-Battle
-// Excludes: Banks/REITs/Insurance + Mining/Oil/Steel + Auto/Airlines/Utilities/Telecom
+// Tag 132: Quality-Compounder allows banks/insurance/REITs (Buffett/Smith compounders).
+// Excludes: Mining/Oil/Steel + Auto/Airlines/Utilities/Telecom (no financial sector exclude).
 const SECTOR_EXCLUDE_QC = [
-  ...SECTOR_EXCLUDE_HYPERGROWTH,
+  /\bgold\b|\bsilver\b|\bcopper\b|\bmining\b|\bmetals\b|\bcoal\b/i,
+  /oil & gas|integrated oil|exploration|drilling/i,
+  /healthcare plans|managed (health )?care|health insurance/i,
   /\bsteel\b|integrated steel|\biron\b/i,
   /auto manufacturers|automotive|car manufacturer/i,
   /airlines?|airline industry/i,
