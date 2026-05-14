@@ -509,6 +509,29 @@ function _withTimeout(promise, ms, label) {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
+// Tag 164: sort by staleness — oldest snapshots pulled first so timeouts
+// always refresh the most-stale data. Guarantees full universe coverage over ~3 days.
+// Reads only the first 300 bytes of each snapshot to extract meta.asOf without
+// parsing the full JSON — keeps overhead low even for 12k-file universes.
+function sortByStaleness(stocks, outputDir) {
+  return stocks.slice().sort((a, b) => {
+    const getAge = (ticker) => {
+      try {
+        const fp = path.join(outputDir, safeSnapshotFilename(ticker));
+        if (!fs.existsSync(fp)) return 0; // no snapshot = oldest (age=0ms = earliest epoch)
+        // Read only first 300 bytes to find asOf without parsing whole file
+        const buf = Buffer.alloc(300);
+        const fd = fs.openSync(fp, 'r');
+        fs.readSync(fd, buf, 0, 300, 0);
+        fs.closeSync(fd);
+        const m = buf.toString('utf8').match(/"asOf"\s*:\s*"([^"]+)"/);
+        return m ? new Date(m[1]).getTime() : 0;
+      } catch { return 0; }
+    };
+    return getAge(a.ticker) - getAge(b.ticker); // ascending = oldest first
+  });
+}
+
 async function pullAll(watchlist, outputDir, rateLimitMs) {
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
   const results = [];
@@ -516,15 +539,21 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // Tag-80: Parallel pulls in batches of CONCURRENCY
   const CONCURRENCY = parseInt(process.env.PULL_CONCURRENCY || '10', 10);
   _log('INFO', `Parallel pulls: ${CONCURRENCY} concurrent. Total: ${watchlist.stocks.length} stocks.`);
+  // Tag 164: sort by staleness — oldest snapshots pulled first so timeouts
+  // always refresh the most-stale data. Guarantees full universe coverage over ~3 days.
+  watchlist.stocks = sortByStaleness(watchlist.stocks, outputDir);
+  _log('INFO', `Sorted ${watchlist.stocks.length} stocks by staleness (oldest first)`);
   // Tag 154: exponential-backoff retry for rate-limit errors.
   // Yahoo 429s are transient — one retry after 10–30s usually succeeds.
   // Max 3 attempts: initial + 2 retries with 10s / 25s sleep.
+  // Tag 163: reduced timeouts (30s→12s) and delays (10s/25s→5s/12s) to unblock
+  // the worker pool faster — stalled tickers no longer hold up other workers.
   async function quoteSummaryWithRetry(symbol, label) {
-    const DELAYS = [10000, 25000];
+    const DELAYS = [5000, 12000];
     let lastErr;
     for (let attempt = 0; attempt <= DELAYS.length; attempt++) {
       try {
-        return await _withTimeout(yf.quoteSummary(symbol, { modules: MODULES }), 30000, label);
+        return await _withTimeout(yf.quoteSummary(symbol, { modules: MODULES }), 12000, label);
       } catch (e) {
         lastErr = e;
         const isRateLimit = /429|too many request|rate.?limit/i.test(String(e.message || ''));
@@ -570,7 +599,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
 
       // Tag 106: IPO-Datum via separates yf.quote() — quoteSummary.price hat das Feld nicht.
       try {
-        const q = await _withTimeout(yf.quote(stock.yahoo_symbol), 15000, stock.ticker + '/quote');
+        const q = await _withTimeout(yf.quote(stock.yahoo_symbol), 8000, stock.ticker + '/quote'); // Tag 163: 15s→8s
         if (q && q.firstTradeDateMilliseconds) {
           const ftd = new Date(q.firstTradeDateMilliseconds);
           canonical.meta.firstTradeDate = ftd.toISOString();
@@ -735,33 +764,29 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     }
 
     }
-  // Run in parallel batches with rate-limit sleep between batches.
-  // Tag 154: adaptive sleep — doubles inter-batch delay when a batch has >=50% rate-limit failures,
-  // resets toward baseline when a batch is clean. Caps at 4× base.
-  let adaptiveMs = rateLimitMs;
-  let consecutiveRateLimitBatches = 0;
-  const failuresBefore = failures.length;
-  for (let batchStart = 0; batchStart < watchlist.stocks.length; batchStart += CONCURRENCY) {
-    const batch = watchlist.stocks.slice(batchStart, batchStart + CONCURRENCY);
-    const failBefore = failures.length;
-    await Promise.all(batch.map(s => processOne(s).catch(e => _log('WARN', `Batch error ${s.ticker}: ${e.message}`))));
-    const batchFails = failures.length - failBefore;
-    const batchRateLimits = failures.slice(failBefore).filter(f => f.errClass === 'rate-limit').length;
-    if (batchStart + CONCURRENCY < watchlist.stocks.length) {
-      if (batchRateLimits >= Math.ceil(batch.length * 0.5)) {
-        consecutiveRateLimitBatches++;
-        adaptiveMs = Math.min(rateLimitMs * 4, adaptiveMs * 2);
-        _log('WARN', `Rate-limit detected in batch — sleep extended to ${adaptiveMs}ms (${consecutiveRateLimitBatches} consecutive)`);
-      } else if (consecutiveRateLimitBatches > 0) {
-        consecutiveRateLimitBatches = Math.max(0, consecutiveRateLimitBatches - 1);
-        adaptiveMs = Math.max(rateLimitMs, adaptiveMs / 1.5);
+  // Tag 163: p-limit style worker pool — each worker independently loops through tickers.
+  // A stalled ticker blocks only its own worker, not all CONCURRENCY workers.
+  // Replaces batch Promise.all which gated all workers on the slowest ticker.
+  // With 20 workers and rateLimitMs=1500ms per worker, throughput is ~13 tickers/sec.
+  // A rate-limited ticker (up to ~29s total: 12s + 5s + 12s timeouts/delays) blocks
+  // only its own slot; the other 19 workers keep pulling uninterrupted.
+  async function runWorkerPool(stocks, processOneFn, concurrency, sleepMs, writeManifestFn) {
+    let idx = 0;
+    async function worker() {
+      while (idx < stocks.length) {
+        const stock = stocks[idx++];
+        if (!stock) continue;
+        await processOneFn(stock).catch(e => _log('WARN', `Worker error ${stock.ticker}: ${e.message}`));
+        // flush manifest every 100 tickers
+        if (idx % 100 === 0) writeManifestFn();
+        if (idx < stocks.length) await _sleep(sleepMs);
       }
-      await _sleep(adaptiveMs);
-      _log('INFO', `Batch ${Math.ceil((batchStart + CONCURRENCY) / CONCURRENCY)} done (${batchStart + CONCURRENCY}/${watchlist.stocks.length}) sleep=${adaptiveMs}ms`);
     }
-    // Tag 155: flush manifest every ~100 tickers so partial progress survives a SIGKILL.
-    if ((batchStart + CONCURRENCY) % 100 < CONCURRENCY) writeManifestIncremental();
+    await Promise.all(Array.from({ length: concurrency }, () => worker()));
   }
+
+  await runWorkerPool(watchlist.stocks, processOne, CONCURRENCY, rateLimitMs, writeManifestIncremental);
+  writeManifestIncremental(); // final incremental flush before full manifest
 
   const manifest = {
     pulled_at: new Date().toISOString(),

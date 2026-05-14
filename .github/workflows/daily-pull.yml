@@ -53,10 +53,13 @@ jobs:
 
       # Tag 132: Auto-Universe-Refresh — laeuft bei jedem Run (schedule + workflow_dispatch).
       # Tag 133: Merged mit SEC EDGAR, Finnhub, Wikipedia Indices.
+      # Tag 165: OTC Markets (OTCQX/OTCQB/Expert) + NASDAQ Screener API added.
+      #          Target universe raised to 12,000+ tickers. MAX_UNIVERSE=13000 (env default).
       # FINNHUB_API_KEY: GitHub Secret (Settings → Secrets → Actions → FINNHUB_API_KEY)
       - name: Refresh Universe
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          MAX_UNIVERSE: '13000'
         run: node refresh-universe.js --watchlist watchlist.json
         continue-on-error: true
 
@@ -76,7 +79,6 @@ jobs:
         continue-on-error: true
         timeout-minutes: 165
 
-      # Tag 147: Quality-gate — fail hard only if coverage is too low to produce useful reports
       # Tag 147: Quality-gate — fail hard only if coverage is too low to produce useful reports
       # Tag 161: relative threshold — max(1800, 40% of n_total)
       # Tag 162: file-count fallback — when Yahoo Pull times out the manifest is missing/zero

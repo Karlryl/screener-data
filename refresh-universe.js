@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Tag 103 — Auto-Universum-Refresh
+ * Tag 165 — Auto-Universum-Refresh
  * ==================================
  * Pullt Yahoo-Screener für Stocks $2B–$500B Mcap weltweit
  * und merged in watchlist.json. Macht Universum dynamisch:
@@ -31,6 +31,9 @@ const { fetchFinnhubUniverse }  = require('./discovery/finnhub.js');
 const { fetchWikipediaIndices } = require('./discovery/wikipedia-indices.js');
 // Tag 135: NASDAQ Trader exchange files — all US common stocks, no auth required
 const { fetchNasdaqAll }        = require('./discovery/nasdaq-all.js');
+// Tag 165: OTC Markets (OTCQX/OTCQB/Expert) + NASDAQ Screener API — ~5k additional US tickers
+const { fetchOTCMarkets }       = require('./discovery/otc-markets.js');
+const { fetchNasdaqApiList }    = require('./discovery/nasdaq-api.js');
 
 function parseArgs(argv) {
   const args = { watchlist: './watchlist.json', out: null };
@@ -223,12 +226,16 @@ async function main() {
   // SEC EDGAR:     ~10k US-listed companies (no auth required)
   // Finnhub:       ~20k+ global stocks per exchange (needs FINNHUB_API_KEY secret)
   // Wikipedia:     S&P 500 / FTSE 100 / DAX constituents (no auth required)
-  console.log('\nDiscovery: Additional Sources (Tag 133/135)...');
+  // Tag 165: OTC Markets OTCQX/OTCQB/Expert — ~3k–5k additional US OTC tickers (no auth required)
+  // Tag 165: NASDAQ Screener API — NASDAQ/NYSE/AMEX with sector/mcap hints (no auth required)
+  console.log('\nDiscovery: Additional Sources (Tag 133/135/165)...');
   const discoverySources = await Promise.allSettled([
     fetchNasdaqAll(),
     fetchSecTickers(),
     fetchFinnhubUniverse(),
-    fetchWikipediaIndices()
+    fetchWikipediaIndices(),
+    fetchOTCMarkets(),
+    fetchNasdaqApiList()
   ]);
   for (const res of discoverySources) {
     if (res.status === 'rejected') { console.error('  Discovery source error: ' + res.reason); continue; }
@@ -237,19 +244,21 @@ async function main() {
       if (!allTickers.has(sym)) {
         allTickers.set(sym, {
           ticker: sym,
-          marketCap: null,
+          // Tag 165: carry marketCap hint from NASDAQ API when available
+          marketCap: info.marketCap || null,
           name: info.name || '',
-          sector: '',
+          sector: info.sector || '',
           exchange: info.exchange || ''
         });
       }
     }
   }
 
-  // Tag 147: Hard-cap universe by marketCap rank. Finnhub/SEC/NASDAQ add tickers
-  // without mcap filter — without this cap the universe exploded to 22k+, causing
+  // Tag 147: Hard-cap universe by marketCap rank. Finnhub/SEC/NASDAQ/OTC add tickers
+  // without mcap filter — without this cap the universe can explode to 25k+, causing
   // Node OOM and Yahoo rate-limiting in pull-yahoo.js.
-  const MAX_UNIVERSE = parseInt(process.env.MAX_UNIVERSE || '10000', 10);
+  // Tag 165: cap raised from 10000 to 13000 to accommodate OTC + NASDAQ API additions.
+  const MAX_UNIVERSE = parseInt(process.env.MAX_UNIVERSE || '13000', 10);
   if (allTickers.size > MAX_UNIVERSE) {
     const ranked = [...allTickers.entries()].sort((a, b) => (b[1].marketCap || 0) - (a[1].marketCap || 0));
     const capped = new Map(ranked.slice(0, MAX_UNIVERSE));
@@ -260,7 +269,8 @@ async function main() {
 
   // 2. No sector-exclude at universe level (Tag 132: modes filter sectors, not discovery)
   // Banks/REITs/Insurance are allowed for Quality-Compounder mode.
-  console.log('Distinct candidates after all sources: ' + allTickers.size + ' (target: 8000-10000)');
+  // Tag 165: target raised to 12k+ with OTC + NASDAQ API sources
+  console.log('Distinct candidates after all sources: ' + allTickers.size + ' (target: 12000+)');
 
   // 3. Identify new tickers
   const newTickers = [];
