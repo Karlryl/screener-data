@@ -147,13 +147,21 @@ function main() {
     .filter(s => s && s.meta && s.meta.ticker)
     .map(s => s.meta.ticker);
 
+  // Tag 168: track per-stock failures across all mode loops for pipeline health reporting
+  const _pipelineFailures = [];
+
   for (const modeId of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
     const mode = SM.MODES[modeId];
     if (!mode || mode.enabled === false) { result.modes[modeId] = []; continue; }
     const picks = [];
     for (const stock of stocks) {
-      const p = pickStockForMode(stock, modeId);
-      if (p) picks.push(p);
+      try {
+        const p = pickStockForMode(stock, modeId);
+        if (p) picks.push(p);
+      } catch (e) {
+        const ticker = (stock && stock.meta && stock.meta.ticker) || '???';
+        _pipelineFailures.push({ ticker, error: e.message });
+      }
     }
     picks.sort((a, b) => {
       const sa = a.score, sb = b.score;
@@ -187,6 +195,22 @@ function main() {
   fs.writeFileSync(outFile, JSON.stringify(result, null, 2));
   console.log('Written: ' + outFile + ' (' + evaluatedTickers.length + ' evaluated tickers)');
   fs.writeFileSync(path.join(args.out, 'latest.json'), JSON.stringify(result, null, 2));
+
+  // Tag 168: write pipeline-health report and enforce 5% threshold
+  // n_total counts stock × mode evaluations (3 modes × universe size)
+  const n_total = stocks.length * 3;
+  const n_failed = _pipelineFailures.length;
+  const n_ok = n_total - n_failed;
+  const failure_rate = n_total > 0 ? n_failed / n_total : 0;
+  const healthDir = './pipeline-health';
+  if (!fs.existsSync(healthDir)) fs.mkdirSync(healthDir, { recursive: true });
+  const healthReport = { script: 'snapshot-picks', date: today, n_total, n_ok, n_failed, failure_rate, failures: _pipelineFailures };
+  fs.writeFileSync(path.join(healthDir, 'snapshot-picks.json'), JSON.stringify(healthReport, null, 2));
+  console.log('Pipeline health: ' + n_ok + '/' + n_total + ' ok (' + (failure_rate * 100).toFixed(2) + '% failed) — threshold 5%');
+  if (failure_rate > 0.05) {
+    console.error('::error::snapshot-picks failure rate ' + (failure_rate * 100).toFixed(2) + '% exceeds 5% threshold');
+    process.exit(1);
+  }
 }
 
 if (require.main === module) main();

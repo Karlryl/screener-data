@@ -76,21 +76,31 @@ function loadStocks(dir) {
   }).filter(x => x !== null && typeof x === 'object' && !Array.isArray(x));
 }
 
-function evaluateAll(stocks) {
-  return stocks.map(stock => {
-    const allResults = Runner.evaluateStock(stock);
-    const mcap = (stock.marketCap != null && typeof stock.marketCap === 'object' && stock.marketCap.value != null)
-      ? stock.marketCap.value
-      : (typeof stock.marketCap === 'number' ? stock.marketCap : 0);
-    const ipoYear = stock.meta && stock.meta.ipoYear ? stock.meta.ipoYear : null;
-    // Tag 121: pre-compute modeEvals fuer alle 3 Modi -> cross-profile-detection
-    const modeEvals = {};
-    for (const mId of Object.keys(SM.MODES)) {
-      try { modeEvals[mId] = SM.evaluateMode(stock, mId, allResults); }
-      catch (e) { modeEvals[mId] = null; }
+// Tag 168: evaluateAll wraps per-stock processing in try/catch so a single
+// corrupt snapshot cannot kill the entire report generation. Failures are
+// tracked in _pipelineFailures (injected by main()) for health-check export.
+function evaluateAll(stocks, _pipelineFailures) {
+  const results = [];
+  for (const stock of stocks) {
+    try {
+      const allResults = Runner.evaluateStock(stock);
+      const mcap = (stock.marketCap != null && typeof stock.marketCap === 'object' && stock.marketCap.value != null)
+        ? stock.marketCap.value
+        : (typeof stock.marketCap === 'number' ? stock.marketCap : 0);
+      const ipoYear = stock.meta && stock.meta.ipoYear ? stock.meta.ipoYear : null;
+      // Tag 121: pre-compute modeEvals fuer alle 3 Modi -> cross-profile-detection
+      const modeEvals = {};
+      for (const mId of Object.keys(SM.MODES)) {
+        try { modeEvals[mId] = SM.evaluateMode(stock, mId, allResults); }
+        catch (e) { modeEvals[mId] = null; }
+      }
+      results.push({ stock, allResults, mcap, ipoYear, modeEvals });
+    } catch (e) {
+      const ticker = (stock && stock.meta && stock.meta.ticker) || '???';
+      if (_pipelineFailures) _pipelineFailures.push({ ticker, error: e.message });
     }
-    return { stock, allResults, mcap, ipoYear, modeEvals };
-  });
+  }
+  return results;
 }
 
 // Tag 121: Cross-Profile-Tags pro Stock (HG+QC, TRIPLE_PROFILE, ...)
@@ -1219,7 +1229,10 @@ function main() {
   console.log('Loading snapshots from', args.snapshots);
   const stocks = loadStocks(args.snapshots);
   console.log('  loaded', stocks.length, 'stocks');
-  let evaluated = evaluateAll(stocks);
+
+  // Tag 168: track per-stock failures for pipeline health reporting
+  const _pipelineFailures = [];
+  let evaluated = evaluateAll(stocks, _pipelineFailures);
   console.log('  evaluated all methods,', evaluated.length, 'stocks');
   evaluated = dedupeByCompany(evaluated);
   console.log('  after dedupe:', evaluated.length, 'unique companies');
@@ -1232,6 +1245,22 @@ function main() {
     const eligible = eligibleForMode(evaluated, modeId);
     const allMust = topAllMust(eligible, modeId, args.topN);
     console.log(`  ${modeId}: ${eligible.length} eligible, ${allMust.length} all-MUST-pass`);
+  }
+
+  // Tag 168: write pipeline-health report and enforce 5% threshold
+  const n_total = stocks.length;
+  const n_failed = _pipelineFailures.length;
+  const n_ok = n_total - n_failed;
+  const failure_rate = n_total > 0 ? n_failed / n_total : 0;
+  const today = new Date().toISOString().slice(0, 10);
+  const healthDir = './pipeline-health';
+  if (!fs.existsSync(healthDir)) fs.mkdirSync(healthDir, { recursive: true });
+  const healthReport = { script: 'generate-modes-report', date: today, n_total, n_ok, n_failed, failure_rate, failures: _pipelineFailures };
+  fs.writeFileSync(path.join(healthDir, 'generate-modes-report.json'), JSON.stringify(healthReport, null, 2));
+  console.log(`Pipeline health: ${n_ok}/${n_total} ok (${(failure_rate * 100).toFixed(2)}% failed) — threshold 5%`);
+  if (failure_rate > 0.05) {
+    console.error(`::error::generate-modes-report failure rate ${(failure_rate * 100).toFixed(2)}% exceeds 5% threshold`);
+    process.exit(1);
   }
 }
 

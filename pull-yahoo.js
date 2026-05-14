@@ -57,6 +57,13 @@ try {
 const _YF_CONC = parseInt(process.env.PULL_CONCURRENCY || '10', 10);
 const yf = new YahooFinance({ suppressNotices: ['yahooSurvey'], queue: { concurrency: _YF_CONC } });
 
+// Tag 166: Frequenztrennung — price-only mode for recent snapshots.
+// Tickers with existing snapshot < FUNDAMENTALS_MAX_AGE_DAYS get a cheap yf.quote()
+// update (~1s) instead of the full quoteSummary+fundamentalsTimeSeries pull (~6 calls, ~5s).
+// Composes with Tag 164 staleness-sort: oldest first → full pull, recent → price-only.
+const FUNDAMENTALS_MAX_AGE_DAYS = parseInt(process.env.FUNDAMENTALS_MAX_AGE_DAYS || '7', 10);
+const FUNDAMENTALS_MAX_AGE_MS = FUNDAMENTALS_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+
 // Modules die wir brauchen für canonicalInput-Mapping
 const MODULES = [
   'summaryDetail',                      // marketCap, priceToSalesTrailing12Months, forwardPE, trailingPE
@@ -589,9 +596,65 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     }
   }
 
+  // Tag 166: read existing snapshot's asOf to decide price-only vs full pull
+  function _getExistingSnapshotAge(ticker) {
+    try {
+      const fp = path.join(outputDir, safeSnapshotFilename(ticker));
+      if (!fs.existsSync(fp)) return null;
+      const buf = Buffer.alloc(500);
+      const fd = fs.openSync(fp, 'r');
+      fs.readSync(fd, buf, 0, 500, 0);
+      fs.closeSync(fd);
+      const m = buf.toString('utf8').match(/"asOf"\s*:\s*"([^"]+)"/);
+      if (!m) return null;
+      const age = Date.now() - new Date(m[1]).getTime();
+      return age;
+    } catch { return null; }
+  }
+
+  // Tag 166: lightweight price-only update — preserves fundamentals from previous snapshot
+  async function _priceOnlyUpdate(stock, outputDir) {
+    const fp = path.join(outputDir, safeSnapshotFilename(stock.ticker));
+    if (!fs.existsSync(fp)) throw new Error('no existing snapshot to update');
+    const existing = JSON.parse(fs.readFileSync(fp, 'utf8'));
+    const q = await _withTimeout(yf.quote(stock.yahoo_symbol), 8000, stock.ticker + '/quote-only');
+    if (!q) throw new Error('quote returned null');
+    // Update only fields that change daily
+    const newAsOf = new Date().toISOString();
+    if (existing.meta) existing.meta.asOf = newAsOf;
+    if (q.regularMarketPrice != null) {
+      existing.price = existing.price || {};
+      existing.price.regularMarketPrice = q.regularMarketPrice;
+      existing.price.currency = q.currency || existing.price.currency;
+    }
+    if (q.marketCap != null) {
+      existing.marketCap = existing.marketCap || {};
+      existing.marketCap.value = q.marketCap;
+    }
+    // Mark mode for downstream visibility
+    existing._pullMode = 'price-only';
+    existing._pullModeAt = newAsOf;
+    fs.writeFileSync(fp, JSON.stringify(existing, null, 2));
+    return { ticker: stock.ticker, status: 'price-only', mcap: q.marketCap, price: q.regularMarketPrice };
+  }
+
   async function processOne(stock) {
 
     try {
+      // Tag 166: price-only fast-path if recent snapshot exists
+      const age = _getExistingSnapshotAge(stock.ticker);
+      if (age != null && age < FUNDAMENTALS_MAX_AGE_MS) {
+        try {
+          const r = await _priceOnlyUpdate(stock, outputDir);
+          results.push(r);
+          _log('INFO', `  ✓ ${stock.ticker} [price-only]: mcap=${r.mcap}, price=${r.price}`);
+          return;
+        } catch (e) {
+          _log('WARN', `  price-only failed for ${stock.ticker}, falling through to full pull: ${e.message}`);
+          // fall through to full pull below
+        }
+      }
+
       _log('INFO', `Pulling ${stock.ticker} (${stock.yahoo_symbol})…`);
       const yahoo = await quoteSummaryWithRetry(stock.yahoo_symbol, stock.ticker);
       const asOf = new Date().toISOString();

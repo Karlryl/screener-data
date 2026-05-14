@@ -2,9 +2,12 @@
 /**
  * Tag 28 + 97c: Method-Plugin-Helpers
  * Tag 97c: wrapEvaluate() reichert Results um confidence/dataAsOf/methodType/flags an.
+ * Tag 167: effectiveThreshold() now region-aware via sector-median-lookup.js.
+ *   Priority: rolling12m → regional auto-median → global auto-median → static hardcoded.
  */
 const fs = require('fs');
 const path = require('path');
+const { lookupMedian } = require('./sector-median-lookup.js');
 
 function val(obj, p) {
   if (!obj) return null;
@@ -77,8 +80,10 @@ function classifySubProfile(stock) {
 }
 
 let _sectorMediansCache = null;
+let _autoMediansCache = null;     // Tag 167: v2 region-aware auto-medians
 let _rollingMediansCache = null;
 const ROLLING_MIN_WEEKS = 12; // require >= 12 weekly datapoints before trusting the rolling median
+
 function _loadSectorMedians() {
   if (_sectorMediansCache) return _sectorMediansCache;
   try {
@@ -87,6 +92,27 @@ function _loadSectorMedians() {
   } catch (e) { _sectorMediansCache = {}; }
   return _sectorMediansCache;
 }
+
+// Tag 167: Load v2 region-aware auto-medians. Returns the full object so
+// lookupMedian() can resolve both regional and _GLOBAL buckets.
+function _loadAutoMedians() {
+  if (_autoMediansCache !== null) return _autoMediansCache;
+  try {
+    const p = path.join(__dirname, 'sector-medians-auto.json');
+    const raw = JSON.parse(fs.readFileSync(p, 'utf8'));
+    // Accept both v2 (new) and old shape for safety
+    if (raw && raw._version === 2 && raw.byRegion) {
+      _autoMediansCache = raw; // full v2 object
+    } else if (raw && raw.medians) {
+      // Old shape: wrap into minimal v2-compatible structure for legacy fallback
+      _autoMediansCache = { _version: 2, byRegion: { _GLOBAL: raw.medians } };
+    } else {
+      _autoMediansCache = {};
+    }
+  } catch (e) { _autoMediansCache = {}; }
+  return _autoMediansCache;
+}
+
 // Tag 134 — Phase 5.5: prefer the rolling 12-month median over the static hardcoded
 // table when the rolling history has matured (>= 12 weekly samples per sub-profile × metric).
 function _loadRollingMedians() {
@@ -99,22 +125,43 @@ function _loadRollingMedians() {
   return _rollingMediansCache;
 }
 
+/**
+ * Tag 38 + 134 + 167: Effective threshold lookup priority:
+ *   1. Rolling 12m median (mature = ≥12 weekly samples) — sub-profile × metric global
+ *   2. Tag 167: Region-aware auto-median (regional bucket, if computed with ≥20 stocks)
+ *   3. Global auto-median (_GLOBAL bucket from auto-medians)
+ *   4. Static hardcoded sector-medians.json
+ *   5. Method default
+ */
 function effectiveThreshold(stock, methodId, defaultThreshold) {
   const sp = classifySubProfile(stock);
   if (!sp || !sp.id) return { threshold: defaultThreshold, source: 'default' };
-  // First try rolling (most authoritative when mature)
+
+  // --- 1. Rolling 12m (most authoritative when mature) ---
   const rolling = _loadRollingMedians();
   const rEntry = rolling[sp.id] && rolling[sp.id][methodId];
   if (rEntry && rEntry.rolling12mMedian != null
       && Array.isArray(rEntry.values) && rEntry.values.length >= ROLLING_MIN_WEEKS) {
     return { threshold: rEntry.rolling12mMedian, source: 'rolling12m:' + sp.id, n: rEntry.values.length };
   }
-  // Fall back to today's auto-computed median, then static hardcoded
+
+  // --- 2+3. Tag 167: Region-aware auto-median (regional first, then _GLOBAL) ---
+  const autoMedians = _loadAutoMedians();
+  if (autoMedians && autoMedians._version === 2) {
+    const lookup = lookupMedian(autoMedians, stock, sp.id, methodId);
+    if (lookup.value != null) {
+      return { threshold: lookup.value, source: 'auto:' + lookup.source };
+    }
+  }
+
+  // --- 4. Static hardcoded ---
   const medians = _loadSectorMedians();
   const sectorEntry = medians[sp.id];
   if (sectorEntry && sectorEntry[methodId] != null) {
     return { threshold: sectorEntry[methodId], source: 'sector:' + sp.id };
   }
+
+  // --- 5. Method default ---
   return { threshold: defaultThreshold, source: 'default' };
 }
 

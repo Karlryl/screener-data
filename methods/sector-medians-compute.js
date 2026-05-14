@@ -3,11 +3,21 @@
  * Tag 49: Auto-Compute Sektor-Medianen aus aktuellen Snapshots.
  * Wenn ≥ MIN_STOCKS_PER_SECTOR in einem Sub-Profile, nutze Live-Median.
  * Sonst Fallback auf hardcoded sector-medians.json.
+ *
+ * Tag 167: Regional calibration. Medians are now computed per (region, subProfile)
+ * pair. Output is written as v2 schema with byRegion structure PLUS a legacy-compat
+ * flat file. Methods look up region-specific thresholds first, fall back to _GLOBAL.
+ * Threshold: regional bucket needs ≥ MIN_STOCKS_PER_REGION_SECTOR stocks; otherwise
+ * only the _GLOBAL bucket is populated for that subProfile.
  */
 const fs = require('fs');
 const path = require('path');
+const { getRegion } = require('./region-mapping.js');
 
 const MIN_STOCKS_PER_SECTOR = 5;
+// Tag 167: Regional bucket requires more stocks to be trustworthy than global.
+// With < 20 stocks the median can be noisy/unrepresentative.
+const MIN_STOCKS_PER_REGION_SECTOR = 20;
 
 function median(arr) {
   if (!arr.length) return null;
@@ -16,57 +26,156 @@ function median(arr) {
   return sorted.length % 2 ? sorted[mid] : (sorted[mid-1] + sorted[mid]) / 2;
 }
 
-// Methoden die Sektor-relativ sind. Returnt Map sub-profile-id → metric-id → value-array
+// Methoden die Sektor-relativ sind.
+// Tag 167: Returns TWO maps:
+//   globalBuckets: sub-profile-id → metric-id → value-array  (all stocks, for _GLOBAL)
+//   regionalBuckets: region → sub-profile-id → metric-id → value-array
 function gatherBySubProfile(stocks, classify) {
-  const buckets = {};
+  const globalBuckets = {};
+  const regionalBuckets = {};
+
   for (const stock of stocks) {
     const sp = classify(stock);
     if (!sp || !sp.id) continue;
-    if (!buckets[sp.id]) buckets[sp.id] = { roic: [], roce: [], 'fcf-yield': [] };
-    // ROIC
+
+    // --- extract metrics ---
     const ni = stock.annual && stock.annual.annualNetIncome && stock.annual.annualNetIncome[0] && stock.annual.annualNetIncome[0].value;
     const ta = stock.annual && stock.annual.annualBalance && stock.annual.annualBalance[0] && stock.annual.annualBalance[0].totalAssets;
     const cash = stock.annual && stock.annual.annualBalance && stock.annual.annualBalance[0] && stock.annual.annualBalance[0].totalCash;
-    if (ni != null && ta != null) {
-      const ic = ta - (cash || 0);
-      if (ic > 0) buckets[sp.id].roic.push(ni / ic);
-    }
-    // ROCE
     const oi = stock.annual && stock.annual.annualOpInc && stock.annual.annualOpInc[0] && stock.annual.annualOpInc[0].value;
-    if (oi != null && ta != null) {
-      const ce = ta - (cash || 0);
-      if (ce > 0) buckets[sp.id].roce.push(oi / ce);
-    }
-    // FCF-Yield
     const fcf = stock.annual && stock.annual.annualFCF && stock.annual.annualFCF[0] && stock.annual.annualFCF[0].value;
     const mc = stock.marketCap && (typeof stock.marketCap === 'number' ? stock.marketCap : stock.marketCap.value);
+
+    // --- push into global bucket ---
+    if (!globalBuckets[sp.id]) globalBuckets[sp.id] = { roic: [], roce: [], 'fcf-yield': [] };
+    if (ni != null && ta != null) {
+      const ic = ta - (cash || 0);
+      if (ic > 0) globalBuckets[sp.id].roic.push(ni / ic);
+    }
+    if (oi != null && ta != null) {
+      const ce = ta - (cash || 0);
+      if (ce > 0) globalBuckets[sp.id].roce.push(oi / ce);
+    }
     if (fcf != null && mc != null && mc > 0) {
-      buckets[sp.id]['fcf-yield'].push(fcf / mc);
+      globalBuckets[sp.id]['fcf-yield'].push(fcf / mc);
+    }
+
+    // --- Tag 167: push into regional bucket ---
+    const region = getRegion(stock);
+    if (!regionalBuckets[region]) regionalBuckets[region] = {};
+    if (!regionalBuckets[region][sp.id]) regionalBuckets[region][sp.id] = { roic: [], roce: [], 'fcf-yield': [] };
+    if (ni != null && ta != null) {
+      const ic = ta - (cash || 0);
+      if (ic > 0) regionalBuckets[region][sp.id].roic.push(ni / ic);
+    }
+    if (oi != null && ta != null) {
+      const ce = ta - (cash || 0);
+      if (ce > 0) regionalBuckets[region][sp.id].roce.push(oi / ce);
+    }
+    if (fcf != null && mc != null && mc > 0) {
+      regionalBuckets[region][sp.id]['fcf-yield'].push(fcf / mc);
     }
   }
-  return buckets;
+
+  return { globalBuckets, regionalBuckets };
 }
 
-function computeMedians(stocks, classify) {
-  const buckets = gatherBySubProfile(stocks, classify);
+/**
+ * Compute medians from a flat bucket map (sub-profile-id → metric → value-array).
+ * Returns object keyed by spId with computed medians.
+ * minN controls the minimum sample count required.
+ */
+function _computeFromBuckets(buckets, minN) {
   const result = {};
   for (const [spId, metrics] of Object.entries(buckets)) {
-    if (spId === 'OTHER') continue;  // Tag-49: OTHER bleibt default-threshold (synthetic + edge-cases)
+    if (spId === 'OTHER') continue; // Tag-49: OTHER stays at default threshold
     result[spId] = {};
     for (const [mid, arr] of Object.entries(metrics)) {
-      if (arr.length >= MIN_STOCKS_PER_SECTOR) {
+      if (arr.length >= minN) {
         result[spId][mid] = median(arr);
         result[spId]['_n_' + mid] = arr.length;
       }
     }
+    // Remove empty sub-profiles
+    if (Object.keys(result[spId]).length === 0) delete result[spId];
   }
   return result;
 }
 
-// Merge auto-computed medians INTO sector-medians.json (live values overwrite hardcoded)
+/**
+ * Tag 167: Returns a v2 structure:
+ *   {
+ *     _version: 2,
+ *     byRegion: {
+ *       US: { SAAS: { roic: 0.15, _n_roic: 120 }, ... },
+ *       EU: { ... },
+ *       _GLOBAL: { ... }   ← always present, used as fallback
+ *     }
+ *   }
+ * Regional buckets require MIN_STOCKS_PER_REGION_SECTOR to be populated;
+ * _GLOBAL requires only MIN_STOCKS_PER_SECTOR.
+ */
+function computeMedians(stocks, classify) {
+  const { globalBuckets, regionalBuckets } = gatherBySubProfile(stocks, classify);
+
+  // _GLOBAL: all stocks pooled, lower minimum
+  const globalResult = _computeFromBuckets(globalBuckets, MIN_STOCKS_PER_SECTOR);
+
+  // Per-region: stricter minimum to avoid noisy small samples
+  const byRegion = { _GLOBAL: globalResult };
+  for (const [region, spMap] of Object.entries(regionalBuckets)) {
+    const regionResult = _computeFromBuckets(spMap, MIN_STOCKS_PER_REGION_SECTOR);
+    if (Object.keys(regionResult).length > 0) {
+      byRegion[region] = regionResult;
+    }
+  }
+
+  return { _version: 2, byRegion };
+}
+
+/**
+ * Tag 167: Returns the flat (v1 legacy) medians object from a v2 result.
+ * This is the _GLOBAL slice — same as the old computeMedians output shape.
+ * Used by writeAutoMedians (legacy file) and writeRollingMedians.
+ */
+function extractLegacyMedians(v2Result) {
+  if (v2Result && v2Result._version === 2 && v2Result.byRegion && v2Result.byRegion._GLOBAL) {
+    return v2Result.byRegion._GLOBAL;
+  }
+  // If somehow called with old flat shape, return as-is
+  return v2Result;
+}
+
+/**
+ * Write sector-medians-auto.json (new v2 region-aware schema) and
+ * sector-medians-auto-legacy.json (old flat schema for backwards compat).
+ *
+ * Tag 167: Two-file strategy keeps backwards compatibility.
+ *   sector-medians-auto.json      — v2 { _version:2, byRegion:{ US:{...}, _GLOBAL:{...} } }
+ *   sector-medians-auto-legacy.json — v1 flat { SAAS:{...}, BANK:{...} }  (= _GLOBAL slice)
+ *
+ * @param {object} autoMedians — result from computeMedians() (v2 shape)
+ */
 function writeAutoMedians(autoMedians) {
+  const ts = new Date().toISOString();
+
+  // v2 new file
   const outPath = path.join(__dirname, 'sector-medians-auto.json');
-  fs.writeFileSync(outPath, JSON.stringify({ _generatedAt: new Date().toISOString(), medians: autoMedians }, null, 2));
+  fs.writeFileSync(outPath, JSON.stringify({
+    _generatedAt: ts,
+    _version: 2,
+    byRegion: autoMedians.byRegion || {}
+  }, null, 2));
+
+  // v1 legacy file (always the _GLOBAL slice — same data as old flat output)
+  const legacyMedians = extractLegacyMedians(autoMedians);
+  const legacyPath = path.join(__dirname, 'sector-medians-auto-legacy.json');
+  fs.writeFileSync(legacyPath, JSON.stringify({
+    _generatedAt: ts,
+    _version: 1,
+    _note: 'Legacy flat schema for backwards compat. Equals _GLOBAL slice of sector-medians-auto.json.',
+    medians: legacyMedians
+  }, null, 2));
 }
 
 // Tag 133i: Rolling 12-month accumulator. Appends today's medians to a history file
@@ -74,8 +183,11 @@ function writeAutoMedians(autoMedians) {
 // Output structure:
 //   { _generatedAt, _windowDays: 365,
 //     medians: { spId: { metricId: { asOf, values: [{asOf, median, n}], rolling12mMedian } } } }
+// Tag 167: autoMedians may be v2 shape — extract legacy (_GLOBAL) slice for rolling history.
 const ROLLING_WINDOW_DAYS = 365;
 function writeRollingMedians(autoMedians) {
+  // Tag 167: Accept both v2 (new) and flat (old) shapes
+  autoMedians = extractLegacyMedians(autoMedians);
   const outPath = path.join(__dirname, 'sector-medians-rolling.json');
   const today = new Date().toISOString().slice(0, 10);
   const cutoff = (() => {
@@ -109,7 +221,11 @@ function writeRollingMedians(autoMedians) {
   return merged;
 }
 
-module.exports = { computeMedians, writeAutoMedians, writeRollingMedians, MIN_STOCKS_PER_SECTOR };
+module.exports = {
+  computeMedians, writeAutoMedians, writeRollingMedians,
+  extractLegacyMedians,
+  MIN_STOCKS_PER_SECTOR, MIN_STOCKS_PER_REGION_SECTOR
+};
 
 // CLI mode: when run directly, compute + save
 if (require.main === module) {
@@ -125,9 +241,12 @@ if (require.main === module) {
   // Tag 133i: also append to rolling 12-month history
   try { writeRollingMedians(auto); console.log('✓ rolling-medians appended (sector-medians-rolling.json)'); }
   catch (e) { console.log('rolling-medians append failed: ' + e.message); }
-  console.log('✓ auto-medians written. Sub-profiles:');
-  for (const [sp, m] of Object.entries(auto)) {
+  // Tag 167: print summary — iterate over byRegion._GLOBAL for sub-profile list
+  console.log('✓ auto-medians written (v2 region-aware). Regions: ' + Object.keys(auto.byRegion).filter(r => r !== '_GLOBAL').join(', '));
+  const globalSlice = auto.byRegion._GLOBAL || {};
+  console.log('  _GLOBAL sub-profiles:');
+  for (const [sp, m] of Object.entries(globalSlice)) {
     const metrics = Object.keys(m).filter(k => !k.startsWith('_'));
-    console.log(`  ${sp}: ${metrics.map(k => `${k}=${(m[k]*100).toFixed(1)}% (n=${m['_n_'+k]})`).join(', ')}`);
+    console.log(`    ${sp}: ${metrics.map(k => `${k}=${(m[k]*100).toFixed(1)}% (n=${m['_n_'+k]})`).join(', ')}`);
   }
 }

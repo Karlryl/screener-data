@@ -51,14 +51,24 @@ function main() {
     };
   }
 
+  // Tag 168: track per-stock failures for pipeline health reporting
+  const _pipelineFailures = [];
+
   for (const file of files) {
     let stock;
     try { stock = JSON.parse(fs.readFileSync(path.join(args.snapshots, file), 'utf8')); }
-    catch (e) { continue; }
+    catch (e) {
+      const ticker = file.replace(/\.json$/, '');
+      _pipelineFailures.push({ ticker, error: 'JSON parse error: ' + e.message });
+      continue;
+    }
     const ticker = (stock.meta && stock.meta.ticker) || file.replace(/\.json$/, '');
     let results;
     try { results = Runner.evaluateStock(stock); }
-    catch (e) { continue; }
+    catch (e) {
+      _pipelineFailures.push({ ticker, error: e.message });
+      continue;
+    }
     const compact = {};
     let computableCount = 0, passCount = 0;
     for (const [mid, r] of Object.entries(results)) {
@@ -87,5 +97,20 @@ function main() {
   fs.writeFileSync(outFile, JSON.stringify(data, null, 2));
   console.log(`✓ History-Snapshot: ${outFile}`);
   console.log(`  ${files.length} stocks, ${anyComputable} mit ≥1 computable, ${allPass} stocks pass alle Methoden`);
+
+  // Tag 168: write pipeline-health report and enforce 5% threshold
+  const n_total = files.length;
+  const n_failed = _pipelineFailures.length;
+  const n_ok = n_total - n_failed;
+  const failure_rate = n_total > 0 ? n_failed / n_total : 0;
+  const healthDir = './pipeline-health';
+  if (!fs.existsSync(healthDir)) fs.mkdirSync(healthDir, { recursive: true });
+  const healthReport = { script: 'snapshot-methods-history', date: today, n_total, n_ok, n_failed, failure_rate, failures: _pipelineFailures };
+  fs.writeFileSync(path.join(healthDir, 'snapshot-methods-history.json'), JSON.stringify(healthReport, null, 2));
+  console.log(`Pipeline health: ${n_ok}/${n_total} ok (${(failure_rate * 100).toFixed(2)}% failed) — threshold 5%`);
+  if (failure_rate > 0.05) {
+    console.error(`::error::snapshot-methods-history failure rate ${(failure_rate * 100).toFixed(2)}% exceeds 5% threshold`);
+    process.exit(1);
+  }
 }
 main();

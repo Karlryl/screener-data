@@ -75,6 +75,8 @@ jobs:
         continue-on-error: true
 
       - name: Run Yahoo Pull
+        env:
+          FUNDAMENTALS_MAX_AGE_DAYS: '7'
         run: node --max-old-space-size=6144 pull-yahoo.js --watchlist watchlist.json --output snapshots --rate-limit 2000
         continue-on-error: true
         timeout-minutes: 165
@@ -120,14 +122,20 @@ jobs:
       # Tag 100: Modes-Report (3 Discovery-Modi: Hypergrowth/Quality/Turnaround)
       # Tag 134: hard-fail. modes-report is the primary user-facing artifact;
       # silently publishing yesterday's HTML masks real breakage.
+      # Tag 168: continue-on-error — per-stock failures are soft-fail; Pipeline Health Check
+      # below enforces the 5% threshold and hard-fails if breached.
       - name: Generate Modes-Report
         run: node generate-modes-report.js --snapshots snapshots --out modes-report.html
+        continue-on-error: true
 
       # Tag 102g: Walk-Forward Picks-History — friert Mode-Picks pro Run für späteren Performance-Vergleich.
       # Tag 134: hard-fail. picks-history is the source of truth for backtest;
       # a silent gap of even one week destroys vintage continuity.
+      # Tag 168: continue-on-error — per-stock failures are soft-fail; Pipeline Health Check
+      # below enforces the 5% threshold and hard-fails if breached.
       - name: Snapshot Picks-History
         run: node snapshot-picks.js --snapshots snapshots --out picks-history
+        continue-on-error: true
 
       # Tag 133d: Picks-Regression Guard — Alarm wenn Pick-Count >35% von 4-Week-Median driftet.
       # ALLOW_PICKS_DRIFT=1 für legitimate Universe-Expansion-Runs setzen.
@@ -141,8 +149,21 @@ jobs:
       # Tag-35: Methods-History-Snapshot (für Backtest später)
       # Tag 134: hard-fail. methods-history feeds method-effectiveness which is
       # the core "is this method earning its weight?" measurement.
+      # Tag 168: continue-on-error — per-stock failures are soft-fail; Pipeline Health Check
+      # below enforces the 5% threshold and hard-fails if breached.
       - name: Snapshot Methods-History
         run: node snapshot-methods-history.js --out methods-history
+        continue-on-error: true
+
+      # Tag 168: Pipeline Health Check — aggregates per-script failure rates and
+      # alerts via Discord if any script exceeded the 5% threshold. The scripts
+      # themselves don't hard-fail anymore (Tag 168 — continue-on-error: true),
+      # but the health check IS hard-fail so an actual systemic problem still
+      # blocks downstream artifacts.
+      - name: Pipeline Health Check
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: node scripts/pipeline-health-check.js
 
       # Tag-63: Earnings-Calendar Pull
       - name: Pull Earnings-Calendar
