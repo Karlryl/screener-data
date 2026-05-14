@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 /**
  * Tag 109: Modes-Report — Top-Tabs + Tabellen-Layout + Sparklines + Aktienfinder-Klick
  * =====================================================================================

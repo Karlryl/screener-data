@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 // Tag 120: Score-Aggregator Integration (Hygiene-Filter + Investment-Score Trennung)
 var ScoreAggregator;
