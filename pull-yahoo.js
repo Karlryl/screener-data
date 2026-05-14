@@ -540,6 +540,26 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     throw lastErr;
   }
 
+  // Tag 155: incremental manifest write — flushes _manifest.json after every ~100 tickers
+  // so a mid-run SIGKILL (GitHub Actions 165-min step timeout) leaves an accurate manifest
+  // on disk reflecting snapshots actually written. Without this the downstream Verify Pull
+  // Coverage gate sees n_ok=0/n_total=0 even though hundreds of snapshot files exist.
+  function writeManifestIncremental() {
+    try {
+      const slim = {
+        pulled_at: new Date().toISOString(),
+        watchlist_version: watchlist._meta && watchlist._meta.version,
+        n_total: watchlist.stocks.length,
+        n_ok: results.length,
+        n_failed: failures.length,
+        partial: true
+      };
+      fs.writeFileSync(path.join(outputDir, '_manifest.json'), JSON.stringify(slim));
+    } catch (e) {
+      _log('WARN', `Incremental manifest write failed: ${e.message}`);
+    }
+  }
+
   async function processOne(stock) {
 
     try {
@@ -739,6 +759,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       await _sleep(adaptiveMs);
       _log('INFO', `Batch ${Math.ceil((batchStart + CONCURRENCY) / CONCURRENCY)} done (${batchStart + CONCURRENCY}/${watchlist.stocks.length}) sleep=${adaptiveMs}ms`);
     }
+    // Tag 155: flush manifest every ~100 tickers so partial progress survives a SIGKILL.
+    if ((batchStart + CONCURRENCY) % 100 < CONCURRENCY) writeManifestIncremental();
   }
 
   const manifest = {
@@ -753,7 +775,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // Tag 153: write slim manifest (n_ok/n_failed only) to committed _manifest.json.
   // Full manifest (with per-ticker results/failures) goes to gitignored _manifest-full.json.
   // Saves ~1.4 MB per daily commit (95% of the committed file was diagnostics-only).
-  const slim = { pulled_at: manifest.pulled_at, n_total: manifest.n_total, n_ok: manifest.n_ok, n_failed: manifest.n_failed };
+  // Tag 155: partial:false signals clean end-of-run write (incremental writes during loop set partial:true).
+  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_failed: manifest.n_failed, partial: false };
   fs.writeFileSync(path.join(outputDir, '_manifest.json'), JSON.stringify(slim));
   fs.writeFileSync(path.join(outputDir, '_manifest-full.json'), JSON.stringify(manifest));
   _log('INFO', `Pull complete: ${results.length}/${watchlist.stocks.length} ok, ${failures.length} failed`);

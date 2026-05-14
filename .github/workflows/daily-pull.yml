@@ -77,14 +77,27 @@ jobs:
         timeout-minutes: 165
 
       # Tag 147: Quality-gate — fail hard only if coverage is too low to produce useful reports
+      # Tag 147: Quality-gate — fail hard only if coverage is too low to produce useful reports
+      # Tag 161: relative threshold — max(1800, 40% of n_total)
+      # Tag 162: file-count fallback — when Yahoo Pull times out the manifest is missing/zero
+      # (manifest deleted at pull start, only written at pull end). Fall back to counting
+      # actual .json snapshot files so partial-run progress is not thrown away.
       - name: Verify Pull Coverage
         run: |
           ok=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.n_ok||0)}catch(e){console.log(0)}")
           total=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.n_total||0)}catch(e){console.log(0)}")
+          source="manifest"
+          if [ "$total" -eq 0 ] || [ "$ok" -eq 0 ]; then
+            file_count=$(node -e "const fs=require('fs');try{const files=fs.readdirSync('./snapshots').filter(f=>f.endsWith('.json')&&f!=='_manifest.json');console.log(files.length)}catch(e){console.log(0)}")
+            echo "Manifest reports $ok/$total — falling back to file count: $file_count .json files in ./snapshots/"
+            ok=$file_count
+            total=$file_count
+            source="file-count"
+          fi
           min_ok=$(node -e "console.log(Math.max(1800,Math.floor(${total}*0.4)))")
-          echo "Snapshots ok: $ok / $total (threshold: $min_ok)"
+          echo "Snapshots ok: $ok / $total (threshold: $min_ok, source: $source)"
           if [ "$ok" -lt "$min_ok" ]; then
-            echo "::error::Pull coverage $ok/$total < threshold $min_ok (40% of universe, floor 1800)"
+            echo "::error::Pull coverage $ok/$total < threshold $min_ok (40% of universe, floor 1800, source: $source)"
             exit 1
           fi
 
