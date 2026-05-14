@@ -22,6 +22,7 @@ function parseArgs(argv) {
 }
 
 function loadStocks(dir) {
+  if (!fs.existsSync(dir)) return [];
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
   const stocks = [];
   for (const f of files) {
@@ -52,7 +53,9 @@ function primaryMetricFor(modeId, results) {
 }
 
 function pickStockForMode(stock, modeId) {
-  const results = Runner.evaluateStock(stock);
+  let results;
+  try { results = Runner.evaluateStock(stock); }
+  catch (e) { return null; }
   const ev = SM.evaluateMode(stock, modeId, results);
   if (!ev || !ev.passed) return null;
   return {

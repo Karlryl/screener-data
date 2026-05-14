@@ -40,10 +40,10 @@ function main() {
       region: stock.meta && stock.meta.region || null,
       sector: stock.meta && stock.meta.sector || null,
       // Key inputs that most methods consume
-      marketCapUsd: stock.marketCap && stock.marketCap.value || null,
-      revenueGrowthYoY: stock.metrics && stock.metrics.revenueGrowthYoY && stock.metrics.revenueGrowthYoY.value || null,
-      fcfMarginTTM: stock.metrics && stock.metrics.fcfMarginTTM && stock.metrics.fcfMarginTTM.value || null,
-      operatingMargin: stock.metrics && stock.metrics.operatingMargin && stock.metrics.operatingMargin.value || null,
+      marketCapUsd: (stock.marketCap && stock.marketCap.value != null) ? stock.marketCap.value : null,
+      revenueGrowthYoY: (stock.metrics && stock.metrics.revenueGrowthYoY && stock.metrics.revenueGrowthYoY.value != null) ? stock.metrics.revenueGrowthYoY.value : null,
+      fcfMarginTTM: (stock.metrics && stock.metrics.fcfMarginTTM && stock.metrics.fcfMarginTTM.value != null) ? stock.metrics.fcfMarginTTM.value : null,
+      operatingMargin: (stock.metrics && stock.metrics.operatingMargin && stock.metrics.operatingMargin.value != null) ? stock.metrics.operatingMargin.value : null,
       // Series shape (useful when a Yahoo endpoint suddenly returns fewer rows)
       annualRevN: (stock.annual && Array.isArray(stock.annual.annualRev)) ? stock.annual.annualRev.length : 0,
       annualFcfN: (stock.annual && Array.isArray(stock.annual.annualFCF)) ? stock.annual.annualFCF.length : 0,
@@ -56,10 +56,13 @@ function main() {
     try { stock = JSON.parse(fs.readFileSync(path.join(args.snapshots, file), 'utf8')); }
     catch (e) { continue; }
     const ticker = (stock.meta && stock.meta.ticker) || file.replace(/\.json$/, '');
-    const results = Runner.evaluateStock(stock);
+    let results;
+    try { results = Runner.evaluateStock(stock); }
+    catch (e) { continue; }
     const compact = {};
     let computableCount = 0, passCount = 0;
     for (const [mid, r] of Object.entries(results)) {
+      if (!r) continue;
       compact[mid] = { value: r.computable ? r.value : null, pass: r.computable ? r.pass : null };
       if (r.computable) computableCount++;
       if (r.computable && r.pass) passCount++;

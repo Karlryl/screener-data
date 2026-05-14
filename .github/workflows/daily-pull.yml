@@ -215,7 +215,7 @@ jobs:
             # Tag 150: Always strip methodHistory key (not just when >50MB).
             # Setting to {} was a no-op — the key survived the commit and re-grew
             # every run. delete removes it permanently so saveState() never re-embeds it.
-            node -e "const fs=require('fs');const s=JSON.parse(fs.readFileSync('alert-state.json'));delete s.methodHistory;fs.writeFileSync('alert-state.json',JSON.stringify(s));console.log('alert-state.json stripped:',fs.statSync('alert-state.json').size,'bytes (was '+$size+')');"
+            node -e "const fs=require('fs');let s;try{s=JSON.parse(fs.readFileSync('alert-state.json','utf8'));}catch(e){console.log('alert-state.json corrupt, resetting:',e.message);s={};}delete s.methodHistory;fs.writeFileSync('alert-state.json',JSON.stringify(s));console.log('alert-state.json stripped:',fs.statSync('alert-state.json').size,'bytes (was '+$size+')');"
           fi
 
       - name: Commit Snapshots + Alert-State

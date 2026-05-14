@@ -63,8 +63,18 @@ function main() {
   const series = history[args.ticker];
 
   if (!Array.isArray(series) || series.length === 0) {
-    console.error('No price data for ' + args.ticker + ' in ' + args.history);
-    process.exit(1);
+    const outDir = path.dirname(args.out);
+    if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+    fs.writeFileSync(args.out, JSON.stringify({
+      asOf: new Date().toISOString(),
+      ticker: args.ticker,
+      error: 'no_price_data',
+      regimes: {},
+      summary: { total: 0, BULL: 0, BEAR: 0, SIDEWAYS: 0 },
+      current: null
+    }));
+    console.log('No price data for ' + args.ticker + ' — wrote empty fallback to ' + args.out);
+    process.exit(0);
   }
 
   // Sort ascending by date

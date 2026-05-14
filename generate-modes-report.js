@@ -79,7 +79,9 @@ function loadStocks(dir) {
 function evaluateAll(stocks) {
   return stocks.map(stock => {
     const allResults = Runner.evaluateStock(stock);
-    const mcap = (stock.marketCap && stock.marketCap.value) || stock.marketCap || 0;
+    const mcap = (stock.marketCap != null && typeof stock.marketCap === 'object' && stock.marketCap.value != null)
+      ? stock.marketCap.value
+      : (typeof stock.marketCap === 'number' ? stock.marketCap : 0);
     const ipoYear = stock.meta && stock.meta.ipoYear ? stock.meta.ipoYear : null;
     // Tag 121: pre-compute modeEvals fuer alle 3 Modi -> cross-profile-detection
     const modeEvals = {};
@@ -321,8 +323,8 @@ function renderCard(ev, modeId, opts) {
   const stockSlim = {
     meta: { ticker, name, sector, industry: (s.meta && s.meta.industry) || '', country: (s.meta && s.meta.country) || '', marketCap: mcap },
     timeseries: { revenueQ: ((s.timeseries && s.timeseries.revenueQ) || []).slice(0, 8) },
-    annual: { annualRev: ((s.annual && s.annual.annualRev) || []).slice(0, 5), annualOpInc: ((s.annual && s.annual.annualOpInc) || []).slice(0, 5), annualFcf: ((s.annual && s.annual.annualFcf) || []).slice(0, 5) },
-    metrics: { revenueGrowthYoY: (s.metrics && s.metrics.revenueGrowthYoY) || null }
+    annual: { annualRev: ((s.annual && s.annual.annualRev) || []).slice(0, 5), annualOpInc: ((s.annual && s.annual.annualOpInc) || []).slice(0, 5), annualFCF: ((s.annual && s.annual.annualFCF) || []).slice(0, 5) },
+    metrics: { revenueGrowthYoY: (s.metrics && s.metrics.revenueGrowthYoY && s.metrics.revenueGrowthYoY.value != null) ? s.metrics.revenueGrowthYoY.value : null }
   };
 
   return `<div class="card" data-stock="${escHtml(JSON.stringify(stockSlim))}" data-af-url="${escHtml(afUrl)}" data-prof-state="${escHtml(profState)}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-country="${escHtml(country)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}" data-tier="${escHtml(tier)}" data-name="${escHtml(name.toLowerCase())}" data-ticker="${escHtml(ticker.toLowerCase())}">
@@ -382,9 +384,9 @@ function renderRow(ev, i, modeId, sortMethodId, opts) {
     annual: {
       annualRev: ((s.annual && s.annual.annualRev) || []).slice(0, 5),
       annualOpInc: ((s.annual && s.annual.annualOpInc) || []).slice(0, 5),
-      annualFcf: ((s.annual && s.annual.annualFcf) || []).slice(0, 5)
+      annualFCF: ((s.annual && s.annual.annualFCF) || []).slice(0, 5)
     },
-    metrics: { revenueGrowthYoY: (s.metrics && s.metrics.revenueGrowthYoY) || null }
+    metrics: { revenueGrowthYoY: (s.metrics && s.metrics.revenueGrowthYoY && s.metrics.revenueGrowthYoY.value != null) ? s.metrics.revenueGrowthYoY.value : null }
   };
 
     // Tag 121: Tier + Cross-Profile-Badges
@@ -1017,7 +1019,7 @@ function buildHtml(evaluated, topN) {
     var revQ = arrVals(ts.revenueQ).slice().reverse();
     var revA = arrVals(ann.annualRev).slice().reverse();
     var oiA  = arrVals(ann.annualOpInc).slice().reverse();
-    var fcfA = arrVals(ann.annualFcf).slice().reverse();
+    var fcfA = arrVals(ann.annualFCF).slice().reverse();
     var mcap = (typeof m.marketCap === 'number') ? m.marketCap : (m.marketCap && m.marketCap.value);
     var html = '<h2>' + escHtml(m.ticker||'?') + ' &middot; ' + escHtml(m.name||'') + '</h2>';
     html += '<div class="modal-meta">' + escHtml(m.sector||'') + ' &middot; ' + escHtml(m.industry||'') + ' &middot; ' + escHtml(m.country||'') + '</div>';

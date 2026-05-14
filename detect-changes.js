@@ -100,7 +100,9 @@ function saveState(statePath, state) {
     methodState: state.methodState,
     fieldCoverage: state.fieldCoverage
   };
-  fs.writeFileSync(statePath, JSON.stringify(committed)); // Tag 119: no pretty-print
+  const tmp = statePath + '.tmp.' + process.pid;
+  fs.writeFileSync(tmp, JSON.stringify(committed)); // Tag 119: no pretty-print
+  fs.renameSync(tmp, statePath);
   _saveMethodHistory(state.methodHistory || {});
 }
 
