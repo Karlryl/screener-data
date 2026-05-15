@@ -149,6 +149,22 @@ function detectMethodDiffs(prevMethods, currResults, today) {
         });
       }
       newState[methodId] = { value: result.value, pass: isPass, lastChanged };
+    } else if (wasComputable && !isComputable) {
+      // F-GC-014 (Tag 182): emit event when a method goes computable→incomputable.
+      // Previously this transition was silent — a Yahoo schema change that broke
+      // a method's data dependency would erase buy/sell signals without any
+      // alert. Treat as a WARNING-tier diagnostic so Karl notices upstream gaps.
+      events.push({
+        methodId,
+        type: 'METHOD_INCOMPUTABLE',
+        severity: 'WARNING',
+        message: `${methodId}: was ${prev.value != null ? prev.value.toFixed(2) : '?'} (${wasPass ? 'PASS' : 'FAIL'}) → now NOT COMPUTABLE`
+      });
+      newState[methodId] = {
+        value: null, pass: false,
+        lastChanged: today,
+        wasComputable: true
+      };
     } else if (!prev && isComputable) {
       // F-SM-012: first-time observation — mark firstSeen so UI can distinguish
       // "just added to universe" from "long-term PASS/FAIL"

@@ -358,17 +358,24 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     if (!txns || !Array.isArray(txns) || txns.length === 0) return null;
     const cutoffMs = Date.now() - 90 * 86400 * 1000;
     let buyCount = 0, sellCount = 0, netShares = 0, lastBuyDate = null;
+    // F-DP-038 (Tag 182): "cluster" buys should count UNIQUE insider filers, not
+    // total transactions. A single insider buying in 5 separate transactions is
+    // momentum-noise, not a cluster signal. Previously clusterBuys90d ≡ buyCount90d
+    // which made the "cluster" name misleading. Now: dedupe by filer name.
+    const uniqueBuyFilers = new Set();
     for (const tx of txns) {
       const ts = tx.startDate && (typeof tx.startDate === 'number' ? tx.startDate * 1000 : new Date(tx.startDate).getTime());
       if (!ts || ts < cutoffMs) continue;
       const text = String(tx.transactionText || '').toLowerCase();
       const shares = (tx.shares && typeof tx.shares === 'object') ? tx.shares.raw : (tx.shares || 0);
+      const filer = String(tx.filerName || tx.filerRelation || '').trim();
       // Open-market purchase: text contains "purchase" but NOT "automatic", "grant", "option", "award"
       const isOpenBuy = /purchase/i.test(text) && !/automatic|option|grant|award|vest|exercise/i.test(text);
       const isOpenSell = /sale|sell/i.test(text) && !/automatic/i.test(text);
       if (isOpenBuy) {
         buyCount++;
         netShares += (shares || 0);
+        if (filer) uniqueBuyFilers.add(filer);
         const d = new Date(ts).toISOString().slice(0, 10);
         if (!lastBuyDate || d > lastBuyDate) lastBuyDate = d;
       } else if (isOpenSell) {
@@ -376,7 +383,13 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
         netShares -= Math.abs(shares || 0);
       }
     }
-    return { clusterBuys90d: buyCount, buyCount90d: buyCount, sellCount90d: sellCount, netShares90d: netShares, lastBuyDate };
+    return {
+      clusterBuys90d: uniqueBuyFilers.size,    // unique filers (cluster signal)
+      buyCount90d: buyCount,                    // total open-market buy transactions
+      sellCount90d: sellCount,
+      netShares90d: netShares,
+      lastBuyDate
+    };
   })();
 
   const rcOriginal = _y(pr, 'currency') || 'USD';
@@ -615,9 +628,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         return await _withTimeout(yf.quoteSummary(symbol, { modules: MODULES }), 12000, label);
       } catch (e) {
         lastErr = e;
-        const isRateLimit = /429|too many request|rate.?limit/i.test(String(e.message || ''));
-        const isTimeout = (e.constructor && e.constructor.name === 'timeout') ||
-          /timeout|ETIMEDOUT/i.test(String(e.message || ''));
+        const msg = String(e.message || '');
+        const isRateLimit = /429|too many request|rate.?limit/i.test(msg);
+        // F-DP-048 (Tag 182): previously only `timeout` literal matched. yahoo-finance2
+        // raises TimeoutError with message "Operation timed out" — the regex missed
+        // it and the request was not retried. Match name + common variants.
+        const isTimeout =
+          (e.name === 'TimeoutError') ||
+          (e.constructor && /timeout/i.test(e.constructor.name || '')) ||
+          /timeout|timed out|ETIMEDOUT|ESOCKETTIMEDOUT|EAI_AGAIN/i.test(msg);
         if ((isRateLimit || isTimeout) && attempt < DELAYS.length) {
           const delay = DELAYS[attempt];
           _log('WARN', `  ${label} rate-limited (attempt ${attempt + 1}) — retrying in ${delay / 1000}s`);
@@ -636,8 +655,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // Coverage gate sees n_ok=0/n_total=0 even though hundreds of snapshot files exist.
   // F-DP-012: boolean mutex prevents concurrent workers from racing this write.
   let _manifestWriting = false;
+  let _manifestPending = false;
+  // F-DP-039 (Tag 182): previously a concurrent call while mutex was set
+  // returned silently, losing the second flush. Boundary writes (every 100
+  // tickers) could be missed entirely. Now: if mutex set, mark pending and
+  // re-trigger a single follow-up write when the current one finishes.
   function writeManifestIncremental() {
-    if (_manifestWriting) return;
+    if (_manifestWriting) { _manifestPending = true; return; }
     _manifestWriting = true;
     try {
       const slim = {
@@ -656,6 +680,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       _log('WARN', `Incremental manifest write failed: ${e.message}`);
     } finally {
       _manifestWriting = false;
+      if (_manifestPending) {
+        _manifestPending = false;
+        // Don't recurse synchronously — defer one tick so we don't burn CPU on a tight ticker loop.
+        setImmediate(writeManifestIncremental);
+      }
     }
   }
 
@@ -701,7 +730,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     if (q.regularMarketPrice != null) {
       existing.price = existing.price || {};
       existing.price.regularMarketPrice = needsFx ? q.regularMarketPrice * fxApplied : q.regularMarketPrice;
-      existing.price.currency = q.currency || existing.price.currency;
+      // F-DP-040 (Tag 182): previously this overwrote existing.price.currency with
+      // Yahoo's live value, flipping GBp ↔ GBP and breaking the invariant against
+      // meta.reportingCurrencyOriginal. The snapshot's reporting currency is set
+      // at full-pull time and must remain stable; only update if the existing
+      // field is missing.
+      if (existing.price.currency == null) existing.price.currency = q.currency;
     }
     if (q.marketCap != null) {
       existing.marketCap = existing.marketCap || {};
@@ -710,9 +744,16 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     // Mark mode for downstream visibility
     existing._pullMode = 'price-only';
     existing._pullModeAt = newAsOf;
-    // F-DQ-009: mark quality grade as stale after price-only update so downstream knows
-    // it was not re-evaluated with updated price/mcap data.
-    if (existing._quality) existing._quality.grade = null;
+    // F-DQ-009 / F-DP-036 (Tag 182): mark quality grade as stale after price-only
+    // update so downstream knows it was not re-evaluated. Also clear stale
+    // nanRatio + missingFields — those reflected the LAST full pull and would
+    // appear "fresh" if a method consults them later.
+    if (existing._quality) {
+      existing._quality.grade = null;
+      existing._quality.nanRatio = null;
+      existing._quality.missingFields = null;
+      existing._quality.staleSincePriceOnly = newAsOf;
+    }
     // F-DP-032 (Tag 179): atomic tmp+rename — price-only path was the only snapshot
     // writer still doing direct writeFileSync, vulnerable to SIGTERM corruption on
     // CI cancellation. ~80% of daily pulls go through this fast-path.
@@ -888,7 +929,18 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // Tag 133c: data-quality grade — A/B/C/D nach Anteil fehlender kritischer Felder.
       // Wird in jeden Snapshot geschrieben; score-aggregator nutzt es optional (DATAQUALITY_ENFORCE=1).
       try { canonical._quality = gradeSnapshot(canonical); }
-      catch (e) { canonical._quality = { grade: 'D', nanRatio: 1.0, missingFields: ['<grade-error>'], computedAt: new Date().toISOString() }; }
+      catch (e) {
+        // F-DP-045 (Tag 182): previously the exception was swallowed and grade=D
+        // attributed to "data quality" — masking grader bugs as missing data.
+        // Log the actual error message so a grader regression becomes visible
+        // instead of presenting as a wave of bad-data tickers.
+        _log('WARN', `gradeSnapshot threw for ${stock.ticker}: ${e.message}`);
+        canonical._quality = {
+          grade: 'D', nanRatio: 1.0,
+          missingFields: ['<grade-error: ' + e.message + '>'],
+          computedAt: new Date().toISOString()
+        };
+      }
 
       const filename = safeSnapshotFilename(stock.ticker);
       const outPath = path.join(outputDir, filename);

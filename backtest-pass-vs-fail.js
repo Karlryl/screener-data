@@ -21,8 +21,12 @@ function parseArgs(argv) {
 }
 
 function dateAddDays(dateStr, days) {
-  const d = new Date(dateStr);
-  d.setDate(d.getDate() + days);
+  // F-GC-012 (Tag 182): `new Date(dateStr)` parses YYYY-MM-DD as UTC midnight,
+  // but `d.setDate(...)` operates in LOCAL time. On DST boundary days this
+  // produced off-by-one errors. Use UTC accessors throughout.
+  const d = new Date(dateStr + 'T00:00:00Z');
+  if (isNaN(d.getTime())) return dateStr;
+  d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
 }
 
