@@ -741,6 +741,16 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       existing.marketCap = existing.marketCap || {};
       existing.marketCap.value = needsFx ? q.marketCap * fxApplied : q.marketCap;
     }
+    // F-DQ-009 (Tag 183): price-only path previously skipped the MIN_MCAP floor —
+    // a stock that drifted below $1B post-last-full-pull stayed in the universe
+    // (survivor bias on the small-cap side). Re-check the floor here; if violated,
+    // delete the snapshot and report skipped-mcap-by-priceonly.
+    const MIN_MCAP = 1e9;
+    const mcapNow = existing.marketCap && existing.marketCap.value;
+    if (mcapNow != null && mcapNow < MIN_MCAP) {
+      try { fs.unlinkSync(fp); } catch (_) {}
+      throw new Error('price-only floor: mcap=' + (mcapNow/1e9).toFixed(2) + 'B < $' + (MIN_MCAP/1e9).toFixed(0) + 'B — snapshot removed');
+    }
     // Mark mode for downstream visibility
     existing._pullMode = 'price-only';
     existing._pullModeAt = newAsOf;
@@ -922,6 +932,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         if (legacyFilename !== filename) {
           const legacyPath = path.join(outputDir, legacyFilename);
           if (fs.existsSync(legacyPath)) { try { fs.unlinkSync(legacyPath); } catch (e) {} }
+        }
+        // F-DP-035 (Tag 183): also clean up the 28-day FTS cache. Without this,
+        // a ticker cycling around the $1B boundary gets fresh price mixed with
+        // stale fundamentals when it bumps back above.
+        const fundCachePath = path.join(__dirname, 'fundamentals-cache', filename);
+        if (fs.existsSync(fundCachePath)) {
+          try { fs.unlinkSync(fundCachePath); } catch (e) {}
         }
         results.push({ ticker: stock.ticker, status: 'skipped-mcap', reason });
         return;  // skip this stock

@@ -25,10 +25,18 @@ function evaluate(stock) {
     if (a == null) return null;
     return a - d - c;
   }
+  // F-ME-005 (Tag 183): unwrap plain numbers AND {value} envelopes uniformly.
+  // Previously rev[i] && rev[i].value treated plain-number rev[i] as undefined.
+  function _unwrap(v) {
+    if (v == null) return null;
+    if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+    if (typeof v === 'object' && Number.isFinite(v.value)) return v.value;
+    return null;
+  }
   const wcT = wcProxy(balances[0]);
   const wcT1 = wcProxy(balances[1]);
-  const revT = revs[0] && revs[0].value;
-  const revT1 = revs[1] && revs[1].value;
+  const revT = _unwrap(revs[0]);
+  const revT1 = _unwrap(revs[1]);
   if (wcT == null || wcT1 == null || revT == null || revT1 == null) {
     return H.buildResult({
       computable: false, reason: `missing values`, threshold: THRESHOLD, thresholdOp: THRESHOLD_OP

@@ -15,8 +15,18 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
-  const latest = ts[0] && ts[0].value;
-  const prev = ts[1] && ts[1].value;
+  // F-ME-004 (Tag 183): unwrap either plain number or {value: x} envelope.
+  // Previously `ts[0] && ts[0].value` returned undefined when ts[0] was a plain
+  // number (e.g. older snapshots), silently making the method incomputable for
+  // those tickers.
+  function _unwrap(v) {
+    if (v == null) return null;
+    if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+    if (typeof v === 'object' && Number.isFinite(v.value)) return v.value;
+    return null;
+  }
+  const latest = _unwrap(ts[0]);
+  const prev = _unwrap(ts[1]);
   if (latest == null || prev == null || prev <= 0) {
     return H.buildResult({
       computable: false, reason: 'missing/zero values',
