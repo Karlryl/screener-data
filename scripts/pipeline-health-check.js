@@ -34,15 +34,30 @@ for (const r of reports) {
   console.log(`  [${marker}] ${r.script}: ${r.n_ok}/${r.n_total} (${(r.failure_rate*100).toFixed(2)}% failed)`);
 }
 
-if (breached.length > 0) {
+async function _notifyAndExit() {
+  if (breached.length === 0) { process.exit(0); }
   console.error('::error::' + breached.length + ' script(s) exceeded ' + (THRESHOLD*100) + '% failure threshold');
-  // Optional Discord post
   const webhook = process.env.DISCORD_WEBHOOK;
   if (webhook) {
     const msg = '⚠ Pipeline health breach:\n' + breached.map(r => `  • ${r.script}: ${(r.failure_rate*100).toFixed(2)}% failed (${r.n_failed}/${r.n_total})`).join('\n');
-    fetch(webhook, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ content: msg }) })
-      .catch(e => console.log('Discord post failed: ' + e.message));
+    // F-SC-007 (Tag 181): previously the webhook was fire-and-forget — `process.exit`
+    // ran before the fetch promise resolved, so the very alert this step exists to
+    // surface was silently dropped. Await the fetch with a hard timeout so a hung
+    // Discord doesn't block CI indefinitely.
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 5000);
+      await fetch(webhook, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ content: msg }),
+        signal: ctrl.signal
+      });
+      clearTimeout(timer);
+    } catch (e) {
+      console.log('Discord post failed: ' + e.message);
+    }
   }
   process.exit(1);
 }
-process.exit(0);
+_notifyAndExit();

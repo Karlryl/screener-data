@@ -44,14 +44,23 @@ function parseArgs(argv) {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-function get(url, ifModifiedSince) {
+// F-SC-015 (Tag 181): cap redirect-follow to 5 hops. Previously this recursed
+// without a counter — a misconfigured SEC URL or infinite redirect chain
+// would blow the stack and crash the pull. Also drops the body of the redirect
+// response (was leaked when SEC sends large 301 pages).
+function get(url, ifModifiedSince, _redirectDepth) {
+  const depth = _redirectDepth | 0;
+  if (depth > 5) return Promise.reject(new Error('too many redirects (>5) for ' + url));
   return new Promise((resolve, reject) => {
     const headers = { 'User-Agent': USER_AGENT, 'Accept': 'application/json' };
     if (ifModifiedSince) headers['If-Modified-Since'] = ifModifiedSince;
     const req = https.get(url, { headers }, res => {
       if (res.statusCode === 304) return resolve({ notModified: true });
       if (res.statusCode === 301 || res.statusCode === 302) {
-        return get(res.headers.location, ifModifiedSince).then(resolve).catch(reject);
+        res.resume();  // drain the body so the socket can be reused
+        const nextUrl = res.headers.location;
+        if (!nextUrl) return reject(new Error('redirect without Location header'));
+        return get(nextUrl, ifModifiedSince, depth + 1).then(resolve).catch(reject);
       }
       if (res.statusCode === 404) return resolve({ notFound: true });
       if (res.statusCode !== 200) return reject(new Error('HTTP ' + res.statusCode));

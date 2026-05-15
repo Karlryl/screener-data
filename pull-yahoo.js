@@ -95,6 +95,12 @@ const FX_FALLBACK = {
 const FX_STALE_DAYS = 14;
 let FX_TO_USD = FX_FALLBACK;
 let FX_SOURCE = 'fallback-hardcoded';
+// F-DQ-003 (Tag 181): track per-currency provenance so a per-stock conversion can
+// report whether its specific rate was live or 2024-hardcoded. Without this,
+// Object.assign(FX_FALLBACK, raw.rates) for a partial-refresh leaked stale 2024
+// values into snapshots whose fxRateSource reported "live".
+const FX_PROVENANCE = {};   // key uppercase currency → 'live' | 'fallback-hardcoded'
+for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded';
 (function loadFx() {
   try {
     const fxPath = require('path').join(__dirname, 'fx-rates.json');
@@ -109,7 +115,15 @@ let FX_SOURCE = 'fallback-hardcoded';
     }
     FX_TO_USD = Object.assign({}, FX_FALLBACK, raw.rates);
     FX_SOURCE = 'fx-rates.json @ ' + (raw.fetchedAt || 'unknown');
-    console.log('[FX] Loaded ' + Object.keys(raw.rates).length + ' rates from fx-rates.json');
+    // Mark each rate that came from raw.rates as live; the rest stay as fallback.
+    for (const k of Object.keys(raw.rates)) {
+      const up = k.toUpperCase();
+      FX_PROVENANCE[up] = 'live';
+      FX_TO_USD[up] = raw.rates[k];  // ensure uppercase key lookup hits
+    }
+    console.log('[FX] Loaded ' + Object.keys(raw.rates).length + ' rates from fx-rates.json (' +
+      Object.values(FX_PROVENANCE).filter(v => v === 'live').length + ' live, ' +
+      Object.values(FX_PROVENANCE).filter(v => v === 'fallback-hardcoded').length + ' fallback)');
   } catch (e) {
     console.log('[FX] fx-rates.json load failed: ' + e.message + ' — using fallback');
   }
@@ -186,10 +200,15 @@ function _convertSnapshotToUSD(snap) {
     snap.meta.fxConverted = false; // F-DP-008: not converted
     return snap;
   }
-  // F-DP-024: warn when using hardcoded fallback rates (may be stale)
-  if (FX_SOURCE === 'fallback-hardcoded') {
-    console.warn(`FX-FALLBACK: using hardcoded 2024 rates for ${fxKey} — may be stale. Consider running refresh-fx.js`);
-    snap.meta.fxRateSource = 'hardcoded-fallback';
+  // F-DP-024 / F-DQ-003 (Tag 181): per-currency provenance — even when FX_SOURCE
+  // is fx-rates.json overall, a specific currency that wasn't in raw.rates is
+  // still on the 2024 hardcoded fallback. Report that accurately per snapshot.
+  const perCurrency = FX_PROVENANCE[fxKey] || 'fallback-hardcoded';
+  if (FX_SOURCE === 'fallback-hardcoded' || perCurrency === 'fallback-hardcoded') {
+    if (FX_SOURCE === 'fallback-hardcoded') {
+      console.warn(`FX-FALLBACK: using hardcoded 2024 rates for ${fxKey} — may be stale. Consider running refresh-fx.js`);
+    }
+    snap.meta.fxRateSource = perCurrency === 'live' ? FX_SOURCE : 'hardcoded-fallback';
   } else {
     snap.meta.fxRateSource = FX_SOURCE;
   }

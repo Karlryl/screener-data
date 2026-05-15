@@ -28,12 +28,16 @@ const WATCH_BUCKETS = new Set(['INFLECTION', 'SPEC']);
 const NO_BUY_BUCKETS = new Set(['OUT']);
 
 // Hard-Penalty-Codes die einen sofortigen Buy-Stop auslösen (auch bei A/B-Bucket).
+// F-EN-006 (Tag 181): EXCLUDE_DILUTION_EXTREME and CORPORATE_ACTION_RISK are not
+// currently emitted by the engine — kept here as forward-compatible reservations
+// for future filters. They will be matched if/when a code path emits them and
+// stay protected by isHardPenalty's prefix-/suffix-heuristic in the meantime.
 const HARD_PENALTY_CODES = new Set([
-  'EXCLUDE_CASH_RUNWAY',
-  'EXCLUDE_MCAP_LOW',
-  'EXCLUDE_DILUTION_EXTREME',
-  'SBC_EXTREME_HARD',
-  'CORPORATE_ACTION_RISK'
+  'EXCLUDE_CASH_RUNWAY',          // engine-v7.3 emits
+  'EXCLUDE_MCAP_LOW',             // engine-v7.3 emits
+  'SBC_EXTREME_HARD',             // engine-v7.3 emits
+  'EXCLUDE_DILUTION_EXTREME',     // reserved — heuristic catches anyway
+  'CORPORATE_ACTION_RISK'         // reserved — for spin-off/split risk filter
 ]);
 
 // Tag-19-Audit-P1-2-Fix: Heuristik fuer Engine-erzeugte Hard-Penalty-Codes,

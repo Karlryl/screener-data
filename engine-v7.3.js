@@ -1143,7 +1143,10 @@ function bucketFor(score, hardExcluded) {
 function passesTrackAUniverse(stock, fxRates) {
   const mcapUSD = stock.marketCap && normalize(stock.marketCap, 'USD', fxRates || {});
   const g = stock.metrics && stock.metrics.revenueGrowthYoY && stock.metrics.revenueGrowthYoY.value;
-  return mcapUSD != null && mcapUSD >= 2e9 && (g || 0) >= 40;
+  // F-EN-017 (Tag 181): `(g || 0)` collapsed null growth (= "no data") to 0
+  // (= "zero growth confirmed"), letting data-less large caps qualify as
+  // Track-A as long as mcap was big. Now: require g be a finite number ≥ 40.
+  return mcapUSD != null && mcapUSD >= 2e9 && Number.isFinite(g) && g >= 40;
 }
 function passesTrackBUniverse(stock, fxRates) {
   const mcapUSD = stock.marketCap && normalize(stock.marketCap, 'USD', fxRates || {});
