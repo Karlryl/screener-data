@@ -119,7 +119,16 @@ async function fetchScreener(id, region) {
 
 // Tag 131: Custom Exchange-Screener mit Pagination.
 // Liefert ALLE Stocks je Exchange die $1B-$500B Mcap haben — nicht nur curated Listen.
-async function fetchExchangePage(exchangeCode, minMcap, maxMcap, offset) {
+//
+// F-DP-037 (Tag 190): vorher schluckte der catch-Branch jede Yahoo-screener-Fehlermeldung
+// silent → wenn LSE/SHA/HKG einen 429 / Schema-Break hatten, fiel die exchange einfach raus
+// und coverage-gate maß gegen das geschrumpfte Universum, ohne Alarm. Jetzt:
+//   - return value ist {quotes, error}
+//   - 429-Antwort triggert ein retry-with-backoff (max 3 attempts)
+//   - error wird vom Caller geloggt & in den per-exchange-Stats summiert
+async function fetchExchangePage(exchangeCode, minMcap, maxMcap, offset, attempt) {
+  attempt = attempt || 1;
+  const MAX_ATTEMPTS = 3;
   try {
     const r = await yf.screener({
       query: {
@@ -134,9 +143,18 @@ async function fetchExchangePage(exchangeCode, minMcap, maxMcap, offset) {
       sortField: 'intradaymarketcap',
       sortType: 'DESC'
     });
-    return (r && r.quotes) || [];
+    return { quotes: (r && r.quotes) || [], error: null };
   } catch (e) {
-    return [];
+    const msg = String(e && e.message || e);
+    const is429 = /429|too many requests|rate limit/i.test(msg);
+    if (is429 && attempt < MAX_ATTEMPTS) {
+      const backoffMs = 1000 * Math.pow(2, attempt);
+      console.warn('  [' + exchangeCode + '] 429 (attempt ' + attempt + '/' + MAX_ATTEMPTS +
+        ') — backoff ' + backoffMs + 'ms');
+      await new Promise(r => setTimeout(r, backoffMs));
+      return fetchExchangePage(exchangeCode, minMcap, maxMcap, offset, attempt + 1);
+    }
+    return { quotes: [], error: msg };
   }
 }
 
@@ -188,17 +206,33 @@ async function main() {
   }
 
   // Tag 131: Custom Exchange-Screener (paginiert) — zusätzlich zu predefined Screener-Buckets.
-  // Ziel: 10k+ Stocks statt ~3500. Errors sind non-fatal (silent skip).
+  // Ziel: 10k+ Stocks statt ~3500.
   console.log('\nCustom Exchange-Screener (Tag 131)...');
   const MIN_MCAP_CUSTOM = 1e9;  // $1B+ minimum (Tag 170 reverted)
   const MAX_MCAP_CUSTOM = 500e9;
   let customAdded = 0;
+  // F-DP-037 (Tag 190): per-exchange statistics so we can surface silent
+  // breakage. Without this, a 429 or schema break on one exchange just made
+  // the exchange disappear with zero diagnostic.
+  const exchangeStats = {};
   for (const exch of EXCHANGE_CODES) {
     let offset = 0;
     let pageEmpty = false;
+    let pageErrors = 0;
+    let totalQuotes = 0;
+    let totalKept = 0;
     while (!pageEmpty) {
-      const quotes = await fetchExchangePage(exch, MIN_MCAP_CUSTOM, MAX_MCAP_CUSTOM, offset);
+      const { quotes, error } = await fetchExchangePage(exch, MIN_MCAP_CUSTOM, MAX_MCAP_CUSTOM, offset);
+      if (error) {
+        pageErrors++;
+        console.warn('  [' + exch + ' offset=' + offset + '] FAIL: ' + error);
+        // F-DP-037: don't pretend the page was empty — break to next exchange
+        // but record the error.
+        pageEmpty = true;
+        break;
+      }
       if (quotes.length === 0) { pageEmpty = true; break; }
+      totalQuotes += quotes.length;
       let kept = 0;
       for (const q of quotes) {
         if (!q || !q.symbol) continue;
@@ -216,12 +250,28 @@ async function main() {
           customAdded++;
         }
       }
+      totalKept += kept;
       if (kept > 0) console.log(`  ${exch} offset=${offset}: ${quotes.length} quotes, ${kept} new`);
       if (quotes.length < 250) { pageEmpty = true; }
       else { offset += 250; await _sleep(400); }
     }
+    exchangeStats[exch] = { totalQuotes, totalKept, pageErrors };
   }
   console.log('Custom-Screener total neue Tickers: ' + customAdded);
+  // F-DP-037: per-exchange summary + soft alert when an exchange returned 0 quotes.
+  // If a previously-productive exchange suddenly returns 0 (and no error was raised),
+  // that's the silent-shrink scenario — log it conspicuously.
+  const totalsByExch = Object.entries(exchangeStats)
+    .map(([e, s]) => `${e}=${s.totalQuotes}/${s.totalKept}n${s.pageErrors > 0 ? ' ERR:' + s.pageErrors : ''}`)
+    .join(' ');
+  console.log('  Per-exchange (totalQuotes/newKept): ' + totalsByExch);
+  const zeroQuoteExchanges = Object.entries(exchangeStats)
+    .filter(([_, s]) => s.totalQuotes === 0 && s.pageErrors === 0)
+    .map(([e]) => e);
+  if (zeroQuoteExchanges.length > 0) {
+    console.warn('[WARN] Exchanges with 0 quotes and no error (possible silent failure): ' +
+      zeroQuoteExchanges.join(', '));
+  }
 
   // Tag 133/135: Merge additional discovery sources into allTickers
   // NASDAQ-Trader: ~7k–8k US common stocks (no auth required) — Tag 135

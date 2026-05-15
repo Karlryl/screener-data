@@ -138,6 +138,7 @@ for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded
     const currencyMeta = raw.currencyMeta || {};
     const failedList = Array.isArray(raw.failed) ? raw.failed : [];
     let staleCount = 0;
+    let inFailedButFreshCount = 0;
     for (const k of Object.keys(raw.rates)) {
       const up = k.toUpperCase();
       const meta = currencyMeta[k] || currencyMeta[up] || null;
@@ -146,9 +147,10 @@ for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded
         ? (Date.now() - lastSuccess.getTime()) / 86400000
         : Infinity;
       const inFailedList = failedList.includes(k) || failedList.includes(up);
-      if (perCurAgeDays > FX_STALE_DAYS || (inFailedList && perCurAgeDays > FX_STALE_DAYS)) {
-        // Revert to FX_FALLBACK; mark provenance so snapshot-side ratios that
-        // depend on this currency can flag fxRateSource accordingly.
+      if (perCurAgeDays > FX_STALE_DAYS) {
+        // F-DP-051 / F-DQ-008: revert to FX_FALLBACK; mark provenance so
+        // snapshot-side ratios that depend on this currency can flag
+        // fxRateSource accordingly.
         if (FX_FALLBACK[up] != null) {
           FX_TO_USD[up] = FX_FALLBACK[up];
         } else {
@@ -161,13 +163,23 @@ for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded
       } else {
         FX_PROVENANCE[up] = 'live';
         FX_TO_USD[up] = raw.rates[k];  // ensure uppercase key lookup hits
+        // F-DP-034 (Tag 190): if the latest refresh-fx run failed THIS currency
+        // but last-success is still within FX_STALE_DAYS, the rate is OK for
+        // now — but worth flagging so operators see drift before it tips over
+        // into the hard stale branch.
+        if (inFailedList) {
+          inFailedButFreshCount++;
+          console.warn('[FX] ' + up + ' in failed[] of latest refresh-fx run; ' +
+            'rate still fresh (' + perCurAgeDays.toFixed(1) + 'd) — monitor');
+        }
       }
     }
     const liveCount = Object.values(FX_PROVENANCE).filter(v => v === 'live').length;
     const fallbackCount = Object.values(FX_PROVENANCE).filter(v => v === 'fallback-hardcoded').length;
     console.log('[FX] Loaded ' + Object.keys(raw.rates).length + ' rates from fx-rates.json (' +
       liveCount + ' live, ' + fallbackCount + ' fallback' +
-      (staleCount > 0 ? ', ' + staleCount + ' reverted from stale per-currency' : '') + ')');
+      (staleCount > 0 ? ', ' + staleCount + ' reverted from stale per-currency' : '') +
+      (inFailedButFreshCount > 0 ? ', ' + inFailedButFreshCount + ' in failed[] but fresh' : '') + ')');
   } catch (e) {
     console.log('[FX] fx-rates.json load failed: ' + e.message + ' — using fallback');
   }
@@ -402,13 +414,37 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     if (!txns || !Array.isArray(txns) || txns.length === 0) return null;
     const cutoffMs = Date.now() - 90 * 86400 * 1000;
     let buyCount = 0, sellCount = 0, netShares = 0, lastBuyDate = null;
+    // F-DP-053 (Tag 190): normalize startDate via dedicated helper + sanity range.
+    // Yahoo has historically passed insider startDate as either seconds, ms, or
+    // a parsed Date instance. yahoo-finance2 sometimes converts (depending on
+    // schema declaration). A silent unit flip (s vs ms) would shift every
+    // timestamp by 1000× — epoch-zero or year-50000 — and the 90d cutoff would
+    // silently drop or include the wrong set, flipping the cluster signal.
+    // Reject anything outside [2000-01-01, now+1d]; treat as missing.
+    const MIN_VALID_MS = Date.UTC(2000, 0, 1);
+    const MAX_VALID_MS = Date.now() + 86400 * 1000;
+    function _normTxTs(raw) {
+      if (raw == null) return null;
+      let ms;
+      if (raw instanceof Date) ms = raw.getTime();
+      else if (typeof raw === 'number') {
+        // Heuristic: <1e12 is seconds (1970..~5138 in s), >=1e12 is ms.
+        ms = raw < 1e12 ? raw * 1000 : raw;
+      } else {
+        const parsed = new Date(raw).getTime();
+        ms = isNaN(parsed) ? null : parsed;
+      }
+      if (ms == null || !Number.isFinite(ms)) return null;
+      if (ms < MIN_VALID_MS || ms > MAX_VALID_MS) return null;
+      return ms;
+    }
     // F-DP-038 (Tag 182): "cluster" buys should count UNIQUE insider filers, not
     // total transactions. A single insider buying in 5 separate transactions is
     // momentum-noise, not a cluster signal. Previously clusterBuys90d ≡ buyCount90d
     // which made the "cluster" name misleading. Now: dedupe by filer name.
     const uniqueBuyFilers = new Set();
     for (const tx of txns) {
-      const ts = tx.startDate && (typeof tx.startDate === 'number' ? tx.startDate * 1000 : new Date(tx.startDate).getTime());
+      const ts = _normTxTs(tx.startDate);
       if (!ts || ts < cutoffMs) continue;
       const text = String(tx.transactionText || '').toLowerCase();
       const shares = (tx.shares && typeof tx.shares === 'object') ? tx.shares.raw : (tx.shares || 0);
