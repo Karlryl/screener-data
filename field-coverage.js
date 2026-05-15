@@ -57,9 +57,21 @@ function getField(obj, path) {
 
 function isPresent(v) {
   if (v == null) return false;
-  if (Array.isArray(v) && v.length === 0) return false;
   if (v === '') return false;
   if (typeof v === 'number' && Number.isNaN(v)) return false;
+  if (Array.isArray(v)) {
+    if (v.length === 0) return false;
+    // F-DQ-005 (Tag 179): an array of all-null placeholders (Bug #26 positional
+    // alignment artifact) was previously treated as "present" because length>0,
+    // blinding drift detection to Yahoo schema gaps. Now: an array counts as
+    // present only if it contains at least one non-null finite entry.
+    return v.some(x => {
+      if (x == null) return false;
+      if (typeof x === 'number') return Number.isFinite(x);
+      if (typeof x === 'object' && 'value' in x) return Number.isFinite(x.value);
+      return true; // balance-row objects etc. count
+    });
+  }
   return true;
 }
 

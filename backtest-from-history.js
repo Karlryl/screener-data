@@ -89,6 +89,17 @@ for (const s of stocks.slice(-10).reverse()) {
   console.log('  ' + s.ticker.padEnd(8) + s.pass + '/' + s.comp + '  ' + (s.ret*100).toFixed(1) + '%');
 }
 
-fs.writeFileSync('./backtest-10w-result.json', JSON.stringify({ generatedAt: new Date().toISOString(), horizonDays: HORIZON_DAYS, thresholdPct: THRESHOLD_PCT, alphaAvg, alphaMed, passCohort: passCohort.length, failCohort: failCohort.length, stocks: stocks.sort((a,b)=>b.ret-a.ret) }, null, 2));
+// F-BT-002/F-GC-002 (Tag 179): same look-ahead bias as backtest-10-weeks.js — stamp _bias flag.
+fs.writeFileSync('./backtest-10w-result.json', JSON.stringify({
+  generatedAt: new Date().toISOString(),
+  _bias: {
+    lookAheadBias: true,
+    reason: 'methods evaluated on TODAY snapshot, returns measured retroactively',
+    preferredAlternative: 'walk-forward-perf.js (uses frozen vintage methods-history)'
+  },
+  horizonDays: HORIZON_DAYS, thresholdPct: THRESHOLD_PCT, alphaAvg, alphaMed,
+  passCohort: passCohort.length, failCohort: failCohort.length,
+  stocks: stocks.sort((a,b)=>b.ret-a.ret)
+}, null, 2));
 console.log('\n✓ Saved backtest-10w-result.json');
 console.log('\nLimitierung: Forward-Looking-Bias. Methoden-Werte sind HEUTE.');

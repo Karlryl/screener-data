@@ -74,11 +74,18 @@ function _hasMetric(m) {
 function _arrLen(arr) {
   if (!Array.isArray(arr)) return 0;
   // Bug #17: x != null passes NaN through — NaN entries count as present data.
-  // Filter both null/undefined and non-finite numeric values.
+  // F-DQ-004 (Tag 179): {value: null} envelopes are positional-alignment placeholders
+  // (Bug #26 preserves nulls to keep array indices aligned across series). They must
+  // NOT count as present data — previously `v === null` short-circuited them as
+  // "non-numeric object → count", which gamed the data-quality grade. Now: an
+  // envelope object with a `value` key is only counted when value is finite.
+  // Other objects (balance rows like {totalCash, totalDebt}) still count.
   return arr.filter(x => {
     if (x == null) return false;
-    const v = typeof x === 'number' ? x : (x && typeof x.value === 'number' ? x.value : null);
-    return v === null || Number.isFinite(v);  // non-numeric objects (balance rows) pass through
+    if (typeof x === 'number') return Number.isFinite(x);
+    if (typeof x === 'object' && 'value' in x) return Number.isFinite(x.value);
+    // Other objects (balance rows etc.) count as present
+    return true;
   }).length;
 }
 

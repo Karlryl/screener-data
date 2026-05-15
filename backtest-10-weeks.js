@@ -140,9 +140,18 @@ async function main() {
     console.log(`  ${s.ticker.padEnd(8)} ${s.pass}/${s.comp}  ${(s.ret*100).toFixed(1)}%`);
   }
 
+  // F-BT-002/F-GC-002 (Tag 179): this script evaluates methods on TODAY's snapshot
+  // and measures historical returns. That's textbook look-ahead bias — results are
+  // optimistic relative to what could've been traded. Stamp the output JSON with
+  // an explicit bias flag so any downstream consumer can detect/filter.
   // Save full result
   fs.writeFileSync('./backtest-10w-result.json', JSON.stringify({
     generatedAt: new Date().toISOString(),
+    _bias: {
+      lookAheadBias: true,
+      reason: 'methods evaluated on TODAY snapshot, returns measured retroactively',
+      preferredAlternative: 'walk-forward-perf.js (uses frozen vintage methods-history)'
+    },
     horizonDays: args.horizonDays,
     thresholdPct: args.thresholdPct,
     stocksTotal: stocks.length,
@@ -150,7 +159,8 @@ async function main() {
     failCohortSize: failCohort.length,
     passAvgReturn: passAvg, passMedianReturn: passMed,
     failAvgReturn: failAvg, failMedianReturn: failMed,
-    alphaAvg: passAvg != null && failAvg != null ? passAvg - failAvg : null,
+    // F-GC-013 (Tag 179): only compute alpha when both cohorts non-empty.
+    alphaAvg: (passAvg != null && failAvg != null && passCohort.length > 0 && failCohort.length > 0) ? passAvg - failAvg : null,
     stocks
   }, null, 2));
   console.log('\n✓ Saved to backtest-10w-result.json');

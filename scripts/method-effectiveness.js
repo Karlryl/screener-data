@@ -169,14 +169,36 @@ function main() {
       if (!file || !file.stocks) continue;
       processedNew++;
 
+      // F-BT-001 (Tag 179): use getEntryDate to shift to next trading day when the
+      // snapshot was generated pre-market-close (no timestamp on YYYY-MM-DD-only
+      // filenames → conservative assumption: shift to T+1). Previously asOf was used
+      // directly, which is same-day look-ahead bias for any intraday-generated vintage.
+      // The shifted exitDate matches: same horizon counted from the realistic entry.
+      const asOfTs = file.generatedAt || (asOf + 'T00:00:00Z');
+      const realEntryAsOf = WF.getEntryDate(asOfTs);
+      const realFutureDate = WF.addDaysIso(realEntryAsOf, days);
+
       const cacheEntries = [];
+      // F-BT-003 (Tag 179): track tickers we silently drop because of missing price
+      // data, split by their pass/fail outcome on each method. Asymmetric attrition
+      // (delisted tickers' returns excluded from one side of the cohort) systematically
+      // biases alpha. Record per-vintage counts so the audit report can flag.
+      let droppedPass = 0, droppedFail = 0, droppedTotal = 0;
       for (const [ticker, stockData] of Object.entries(file.stocks)) {
         if (!stockData || !stockData.results) continue;
         // F-PF-004: use Map-based index (O(1)) rather than O(N) linear scan
         const map = priceIndex[ticker];
-        if (!map) continue;
-        const entryDate = WF.nearestTradingDay(asOf, map) || asOf;
-        const exitDate  = WF.nearestTradingDay(futureDate, map) || futureDate;
+        if (!map) {
+          droppedTotal++;
+          // Count which side this ticker would have landed on (use any computable method)
+          for (const r of Object.values(stockData.results)) {
+            if (r && r.computable && r.pass === true) { droppedPass++; break; }
+            if (r && r.computable && r.pass === false) { droppedFail++; break; }
+          }
+          continue;
+        }
+        const entryDate = WF.nearestTradingDay(realEntryAsOf, map) || realEntryAsOf;
+        const exitDate  = WF.nearestTradingDay(realFutureDate, map) || realFutureDate;
         const p0 = map.get(entryDate) || null;
         const p1 = map.get(exitDate)  || null;
         const ret = WF.returnPct(p0, p1);
@@ -198,6 +220,14 @@ function main() {
       }
       // F-PF-009: store in cache
       cache.vintageReturns[cacheKey] = cacheEntries;
+      // F-BT-003 (Tag 179): emit attrition counts when nonzero so log shows whether
+      // delistings are tilting the cohort. Threshold-on-imbalance shows up in CI logs.
+      if (droppedTotal > 0) {
+        const imbalanceWarn = droppedPass !== droppedFail
+          ? ` IMBALANCE pass-side=${droppedPass} fail-side=${droppedFail}`
+          : '';
+        console.log(`  ${asOf}/${key}: dropped ${droppedTotal} tickers (no price data)${imbalanceWarn}`);
+      }
     }
   }
 

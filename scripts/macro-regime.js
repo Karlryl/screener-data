@@ -41,18 +41,23 @@ function parseArgs(argv) {
 
 function computeRegimes(series, maPeriod) {
   // series: [{date, close}, ...] sorted ascending (oldest first)
+  // F-SC-001 (Tag 179): regimes[D] previously used SMA from D-199..D INCLUSIVE,
+  // i.e. it incorporated day-D's close. Any backtest that filters on regimes[D]
+  // before trading on day D would consume future information. New convention:
+  // regimes[D] reflects state KNOWABLE AT OPEN OF D — i.e. SMA from D-200..D-1
+  // and price = D-1's close. Compatible with walk-forward-perf.getRegimeAt(asOf).
   const regimes = {};
   for (let i = 0; i < series.length; i++) {
-    if (i < maPeriod - 1) continue; // not enough data yet
+    if (i < maPeriod) continue; // need maPeriod prior closes (i-maPeriod .. i-1)
     let sum = 0;
-    for (let j = i - maPeriod + 1; j <= i; j++) sum += series[j].close;
+    for (let j = i - maPeriod; j < i; j++) sum += series[j].close;
     const sma = sum / maPeriod;
-    const price = series[i].close;
+    const price = series[i - 1].close;  // last *prior* close, not today's
     let regime;
     if (price > sma * BULL_MARGIN) regime = 'BULL';
     else if (price < sma * BEAR_MARGIN) regime = 'BEAR';
     else regime = 'SIDEWAYS';
-    regimes[series[i].date] = { regime, price: Math.round(price * 100) / 100, sma200: Math.round(sma * 100) / 100 };
+    regimes[series[i].date] = { regime, price: Math.round(price * 100) / 100, sma200: Math.round(sma * 100) / 100, _convention: 'sma=t-200..t-1, price=t-1' };
   }
   return regimes;
 }
