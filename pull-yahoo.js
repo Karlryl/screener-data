@@ -754,18 +754,25 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     if (_manifestWriting) { _manifestPending = true; return; }
     _manifestWriting = true;
     try {
+      // F-DP-047 (Tag 192): n_ok previously equaled results.length, but results
+      // includes 'skipped-mcap' entries where the snapshot was explicitly
+      // deleted (line ~1036). That inflated n_ok and let Verify Pull Coverage
+      // pass when actual on-disk snapshot count was much lower. Now: count
+      // only entries whose status reflects a real snapshot write.
+      const okResults = results.filter(r =>
+        r && (r.status === 'ok' || r.status === 'price-only'));
+      const skippedMcap = results.length - okResults.length;
       const slim = {
         pulled_at: new Date().toISOString(),
         watchlist_version: watchlist._meta && watchlist._meta.version,
         n_total: watchlist.stocks.length,
-        n_ok: results.length,
+        n_ok: okResults.length,
+        n_skipped_mcap: skippedMcap,
         n_failed: failures.length,
         partial: true
       };
       const mPath = path.join(outputDir, '_manifest.json');
-      const mTmp = mPath + '.tmp';
-      fs.writeFileSync(mTmp, JSON.stringify(slim));
-      fs.renameSync(mTmp, mPath);
+      writeFileAtomic(mPath, JSON.stringify(slim));
     } catch (e) {
       _log('WARN', `Incremental manifest write failed: ${e.message}`);
     } finally {
@@ -854,12 +861,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       existing._quality.missingFields = null;
       existing._quality.staleSincePriceOnly = newAsOf;
     }
-    // F-DP-032 (Tag 179): atomic tmp+rename — price-only path was the only snapshot
-    // writer still doing direct writeFileSync, vulnerable to SIGTERM corruption on
-    // CI cancellation. ~80% of daily pulls go through this fast-path.
-    const tmpFp = fp + '.tmp.' + process.pid;
-    fs.writeFileSync(tmpFp, JSON.stringify(existing, null, 2));
-    fs.renameSync(tmpFp, fp);
+    // F-DP-032 (Tag 179) → factored into lib/atomic-write.js in Tag 189.
+    // ~80% of daily pulls go through this fast-path; atomic write protects
+    // against SIGTERM corruption on CI cancellation.
+    writeFileAtomic(fp, JSON.stringify(existing, null, 2));
     return { ticker: stock.ticker, status: 'price-only', mcap: q.marketCap, price: q.regularMarketPrice };
   }
 
@@ -1060,7 +1065,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         const legacyPath = path.join(outputDir, legacyFilename);
         if (fs.existsSync(legacyPath)) { try { fs.unlinkSync(legacyPath); } catch (e) {} }
       }
-      fs.writeFileSync(outPath, JSON.stringify(canonical, null, 2));
+      // F-DP-047 (Tag 192): atomic snapshot write. Vorher: direct writeFileSync
+      // konnte unter SIGTERM (CI cancel @165min) eine truncated snapshot-Datei
+      // hinterlassen; nächste Pull-Runde liest dann eine korrupte JSON beim
+      // price-only-Check (line 801 _priceOnlyUpdate) und wirft, was die teure
+      // full-pull-Branch trotz noch-frischer Daten triggert.
+      writeFileAtomic(outPath, JSON.stringify(canonical, null, 2));
       const revStr = canonical.metrics.revenueTTM ? '$' + (canonical.metrics.revenueTTM.value / 1e9).toFixed(1) + 'B' : 'no-rev';
       const growthStr = canonical.metrics.revenueGrowthYoY ? canonical.metrics.revenueGrowthYoY.value.toFixed(1) + '%' : '-';
       // P1-Fix Tag 13: data-completeness pro Stock loggen, damit downstream-Filter
@@ -1102,10 +1112,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           if (existing && existing.meta) {
             existing.meta.delisted = true;
             existing.meta.delistedAt = new Date().toISOString();
-            // F-DP-028: use tmp+rename for atomic delisted-flag write
-            const delistedTmp = outPath + '.tmp';
-            fs.writeFileSync(delistedTmp, JSON.stringify(existing, null, 2));
-            fs.renameSync(delistedTmp, outPath);
+            // F-DP-028 → factored into writeFileAtomic (Tag 189).
+            writeFileAtomic(outPath, JSON.stringify(existing, null, 2));
             _log('INFO', `  Marked ${stock.ticker} as delisted in snapshot`);
           }
         } catch (writeErr) {
@@ -1143,11 +1151,18 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   await runWorkerPool(watchlist.stocks, processOne, CONCURRENCY, rateLimitMs, writeManifestIncremental);
   writeManifestIncremental(); // final incremental flush before full manifest
 
+  // F-DP-047 (Tag 192): same n_ok-vs-skipped-mcap fix as in the incremental
+  // writeManifestIncremental() — final manifest must agree with the snapshot
+  // count actually on disk.
+  const okResultsFinal = results.filter(r =>
+    r && (r.status === 'ok' || r.status === 'price-only'));
+  const skippedMcapFinal = results.length - okResultsFinal.length;
   const manifest = {
     pulled_at: new Date().toISOString(),
     watchlist_version: watchlist._meta && watchlist._meta.version,
     n_total: watchlist.stocks.length,
-    n_ok: results.length,
+    n_ok: okResultsFinal.length,
+    n_skipped_mcap: skippedMcapFinal,
     n_failed: failures.length,
     results,
     failures
@@ -1156,17 +1171,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // Full manifest (with per-ticker results/failures) goes to gitignored _manifest-full.json.
   // Saves ~1.4 MB per daily commit (95% of the committed file was diagnostics-only).
   // Tag 155: partial:false signals clean end-of-run write (incremental writes during loop set partial:true).
-  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_failed: manifest.n_failed, partial: false };
-  // F-DP-002: use tmp+rename for atomic manifest writes
+  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_skipped_mcap: manifest.n_skipped_mcap, n_failed: manifest.n_failed, partial: false };
+  // Tag 189: factored into writeFileAtomic helper.
   const slimPath = path.join(outputDir, '_manifest.json');
-  const slimTmp = slimPath + '.tmp';
-  fs.writeFileSync(slimTmp, JSON.stringify(slim));
-  fs.renameSync(slimTmp, slimPath);
+  writeFileAtomic(slimPath, JSON.stringify(slim));
   const fullPath = path.join(outputDir, '_manifest-full.json');
-  const fullTmp = fullPath + '.tmp';
-  fs.writeFileSync(fullTmp, JSON.stringify(manifest));
-  fs.renameSync(fullTmp, fullPath);
-  _log('INFO', `Pull complete: ${results.length}/${watchlist.stocks.length} ok, ${failures.length} failed`);
+  writeFileAtomic(fullPath, JSON.stringify(manifest));
+  _log('INFO', `Pull complete: ${okResultsFinal.length}/${watchlist.stocks.length} ok (${skippedMcapFinal} skipped-mcap), ${failures.length} failed`);
   return manifest;
 }
 

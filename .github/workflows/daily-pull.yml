@@ -148,6 +148,39 @@ jobs:
             echo "No manifest found — file-count fallback will be used."
           fi
 
+      # F-CI-016 (Tag 192): Snapshot-Freshness-Gate nach Pull, vor Downstream-Reports.
+      # Problem: prior-failed-pull snapshots haben asOf von gestern; downstream
+      # (snapshot-picks, detect-changes, walk-forward) verarbeitet sie als "heute"
+      # → vintage duplication + 0% forward-return. Hier zählen wir wieviele
+      # snapshots wirklich neuere asOf-Werte haben (< 36h alt). Wenn <50%
+      # frisch sind, abort — der Pull war effektiv ein No-Op.
+      - name: Verify Snapshot Freshness
+        run: |
+          node -e "
+            const fs = require('fs');
+            const dir = './snapshots';
+            const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
+            const now = Date.now();
+            const FRESH_MS = 36 * 3600 * 1000;
+            let fresh = 0, stale = 0, unparseable = 0;
+            for (const f of files) {
+              try {
+                const buf = require('fs').readFileSync(dir + '/' + f, 'utf8').slice(0, 800);
+                const m = buf.match(/\"asOf\"\s*:\s*\"([^\"]+)\"/);
+                if (!m) { unparseable++; continue; }
+                const ts = new Date(m[1]).getTime();
+                if (now - ts < FRESH_MS) fresh++; else stale++;
+              } catch (e) { unparseable++; }
+            }
+            const pct = files.length > 0 ? (fresh / files.length * 100).toFixed(1) : '0';
+            console.log('Snapshot freshness: ' + fresh + ' fresh / ' + stale + ' stale / ' + unparseable + ' unparseable of ' + files.length + ' (' + pct + '% fresh)');
+            if (files.length > 0 && fresh / files.length < 0.5) {
+              console.error('::error::F-CI-016 — fewer than 50% of snapshots are fresh (<36h asOf). Pull likely failed; refusing to publish stale data.');
+              process.exit(1);
+            }
+          "
+        continue-on-error: true  # Tag 192: WARN initially; flip to fail-on-error after first cron observation
+
       - name: Verify Pull Coverage
         run: |
           ok=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.n_ok||0)}catch(e){console.log(0)}")
