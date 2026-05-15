@@ -18,12 +18,17 @@ function evaluate(stock) {
     });
   }
   // SBC[0] / Rev[0]
-  const sbc = sbcArr[0] && typeof sbcArr[0] === 'object' ? sbcArr[0].value : sbcArr[0];
+  // F-ME-002 (Tag 179): SBC can be stored as a negative value in some Yahoo
+  // payloads (counter to expense convention). Without Math.abs, a -$10B SBC
+  // produces value=-0.10 which trivially passes the lte 0.15 threshold —
+  // hiding actual high SBC dilution. fcf-yield had the same fix in Tag 174 #16.
+  const sbcRaw = sbcArr[0] && typeof sbcArr[0] === 'object' ? sbcArr[0].value : sbcArr[0];
+  const sbc = sbcRaw != null && Number.isFinite(sbcRaw) ? Math.abs(sbcRaw) : null;
   const rev = revArr[0] && revArr[0].value;
   if (sbc == null || rev == null || rev <= 0) {
     return H.buildResult({
       computable: false,
-      reason: `missing/zero values: sbc=${sbc}, rev=${rev}`,
+      reason: `missing/zero values: sbc=${sbcRaw}, rev=${rev}`,
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }

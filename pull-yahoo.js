@@ -660,7 +660,16 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     if (existing.meta) existing.meta.asOf = newAsOf;
     // F-DP-007: if the snapshot was previously normalized to USD, re-apply the same FX factor
     // so price/mcap stay in USD (Yahoo quote() returns values in local currency).
-    const fxApplied = (existing.meta && existing.meta.fxRateApplied) || 1;
+    // F-DQ-002 (Tag 179): previous fxApplied=(meta.fxRateApplied||1) collapses null to 1,
+    // making a non-USD original look FX-needless if the field is ever missing. Now:
+    // refuse price-only update when original is non-USD but fxRateApplied is missing —
+    // forces a full pull which will re-derive the FX rate correctly.
+    const origCcy = existing.meta && existing.meta.reportingCurrencyOriginal;
+    const fxAppliedRaw = existing.meta && existing.meta.fxRateApplied;
+    if (origCcy && origCcy !== 'USD' && (fxAppliedRaw == null || !Number.isFinite(fxAppliedRaw))) {
+      throw new Error('price-only refused: non-USD original (' + origCcy + ') with no fxRateApplied — full pull needed');
+    }
+    const fxApplied = Number.isFinite(fxAppliedRaw) ? fxAppliedRaw : 1;
     const needsFx = fxApplied !== 1 && !(existing.meta && existing.meta.reportingCurrencyOriginal === 'USD');
     if (q.regularMarketPrice != null) {
       existing.price = existing.price || {};
@@ -677,7 +686,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     // F-DQ-009: mark quality grade as stale after price-only update so downstream knows
     // it was not re-evaluated with updated price/mcap data.
     if (existing._quality) existing._quality.grade = null;
-    fs.writeFileSync(fp, JSON.stringify(existing, null, 2));
+    // F-DP-032 (Tag 179): atomic tmp+rename — price-only path was the only snapshot
+    // writer still doing direct writeFileSync, vulnerable to SIGTERM corruption on
+    // CI cancellation. ~80% of daily pulls go through this fast-path.
+    const tmpFp = fp + '.tmp.' + process.pid;
+    fs.writeFileSync(tmpFp, JSON.stringify(existing, null, 2));
+    fs.renameSync(tmpFp, fp);
     return { ticker: stock.ticker, status: 'price-only', mcap: q.marketCap, price: q.regularMarketPrice };
   }
 
@@ -819,8 +833,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const MIN_MCAP = 1e9;       // $1B
       const MAX_MCAP = Infinity;       // Tag 101: kein Mega-Cap-Cut mehr
       const mcapVal = canonical.marketCap && canonical.marketCap.value;
-      if (mcapVal != null && (mcapVal < MIN_MCAP || mcapVal > MAX_MCAP)) {
-        const reason = mcapVal < MIN_MCAP ? `mcap=${(mcapVal/1e9).toFixed(2)}B < $${(MIN_MCAP/1e9).toFixed(0)}B (Small-Cap)` : `mcap=${(mcapVal/1e9).toFixed(0)}B > $${MAX_MCAP === Infinity ? 'Infinity' : (MAX_MCAP/1e12).toFixed(0)+'T'} (Mega-Cap)`;
+      // F-DQ-001 (Tag 179): null mcap previously short-circuited and passed through
+      // the floor — admitting stocks with missing market-cap data into the universe.
+      // Now: treat null/missing as below-floor and skip with a distinct reason.
+      const mcapMissing = (mcapVal == null);
+      const mcapOutOfRange = mcapVal != null && (mcapVal < MIN_MCAP || mcapVal > MAX_MCAP);
+      if (mcapMissing || mcapOutOfRange) {
+        const reason = mcapMissing
+          ? `mcap=null (skip; no marketCap from Yahoo)`
+          : (mcapVal < MIN_MCAP ? `mcap=${(mcapVal/1e9).toFixed(2)}B < $${(MIN_MCAP/1e9).toFixed(0)}B (Small-Cap)` : `mcap=${(mcapVal/1e9).toFixed(0)}B > $${MAX_MCAP === Infinity ? 'Infinity' : (MAX_MCAP/1e12).toFixed(0)+'T'} (Mega-Cap)`);
         _log('INFO', `  ⊘ ${stock.ticker} skipped: ${reason}`);
         // Remove existing snapshot if was previously included
         const filename = safeSnapshotFilename(stock.ticker);

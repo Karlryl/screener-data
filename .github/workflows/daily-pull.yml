@@ -73,11 +73,51 @@ jobs:
         run: node scripts/prune-watchlist.js
         continue-on-error: true
 
+      # F-CI-003 (Tag 179): Refresh Universe / Prune Watchlist run with continue-on-error.
+      # Without a sanity check, a failure leaves a stale or degenerate watchlist that
+      # silently propagates to the rest of the pipeline. Hard-fail if size dropped
+      # below 200 (manual baseline floor) — that means refresh got nothing AND prune
+      # ate too much, or watchlist.json got corrupted.
+      - name: Verify Watchlist Sanity
+        run: |
+          if [ ! -f watchlist.json ]; then
+            echo "::error::watchlist.json is missing after refresh+prune"
+            exit 1
+          fi
+          size=$(node -e "const w=JSON.parse(require('fs').readFileSync('watchlist.json','utf8'));console.log(Array.isArray(w)?w.length:Object.keys(w).length)")
+          echo "watchlist size: $size"
+          if [ "$size" -lt 200 ]; then
+            echo "::error::watchlist size $size < 200 — refresh/prune likely corrupted the universe"
+            exit 1
+          fi
+
       # Tag 133b: FX-Rates refresh — frische Yahoo-Currency-Quotes statt hardcoded.
       # Fix für stille mcap-Korruption bei non-USD-Tickern.
       - name: Refresh FX-Rates
         run: node scripts/refresh-fx.js
         continue-on-error: true
+
+      # F-CI-004 (Tag 179): fx-rates.json staleness check. If refresh-fx silently failed
+      # repeatedly, hardcoded fallbacks become source of truth which silently drifts
+      # mcap normalization. Warn (not fail) if rates are older than 7 days; only fail
+      # if rates older than 30 days (effectively unusable for cross-currency picks).
+      - name: Verify FX-Rates Freshness
+        run: |
+          if [ -f fx-rates.json ]; then
+            mtime=$(stat -c %Y fx-rates.json 2>/dev/null || echo 0)
+            now=$(date +%s)
+            age_days=$(( (now - mtime) / 86400 ))
+            echo "fx-rates.json age: ${age_days} days"
+            if [ "$age_days" -gt 30 ]; then
+              echo "::error::fx-rates.json is ${age_days} days old — refresh-fx has been failing silently"
+              exit 1
+            fi
+            if [ "$age_days" -gt 7 ]; then
+              echo "::warning::fx-rates.json is ${age_days} days old — refresh-fx may be intermittently failing"
+            fi
+          else
+            echo "::warning::fx-rates.json missing — pull-yahoo will use hardcoded fallback rates"
+          fi
 
       - name: Run Yahoo Pull
         env:
@@ -283,11 +323,21 @@ jobs:
         run: |
           if [ -f alert-state.json ]; then
             size_before=$(stat -c %s alert-state.json)
+            # F-CI-005 v2 (Tag 179): previously a JSON.parse failure silently reset
+            # alert-state.json to {} — wiping all dedup state and flooding Discord on
+            # the next detect-changes run. New behavior: on parse failure, back up
+            # the corrupt file and exit non-zero so the workflow visibly fails. We
+            # never want to silently overwrite production state.
             node -e "
               const fs = require('fs');
               let s;
               try { s = JSON.parse(fs.readFileSync('alert-state.json', 'utf8')); }
-              catch (e) { console.log('alert-state.json corrupt, resetting:', e.message); s = {}; }
+              catch (e) {
+                const backup = 'alert-state.corrupt.' + Date.now() + '.json';
+                try { fs.copyFileSync('alert-state.json', backup); } catch (_) {}
+                console.error('::error::alert-state.json is corrupt:', e.message, '(backup: ' + backup + ')');
+                process.exit(1);
+              }
               delete s.methodHistory;
               const tmp = 'alert-state.json.tmp.' + process.pid;
               fs.writeFileSync(tmp, JSON.stringify(s));
@@ -306,21 +356,37 @@ jobs:
             echo "No changes to commit."
           else
             git commit -m "chore: yahoo-pull + alert-state $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            # F-CI-001: fetch before rebase so each retry works from latest remote state.
-            # Remove '|| true' from rebase abort so failures are not silently masked.
-            # concurrency:group:main-push (above) serializes pushes so last-writer-wins
-            # via --strategy-option theirs is safe — only one push can run at a time.
+            # F-CI-001 v2 (Tag 179): the previous fallback `git rebase --abort; git reset
+            # --hard origin/main` was CRITICAL data-loss — it discarded the just-made
+            # commit, after which `git push` succeeded as a no-op and the workflow
+            # reported green while a full day of snapshots vanished. New strategy:
+            # capture the just-made commit SHA, attempt rebase, and on rebase failure
+            # abort cleanly without resetting. If push still fails after 3 retries the
+            # workflow exits non-zero so the failure is visible (Discord alert via
+            # the notify step).
+            COMMIT_SHA=$(git rev-parse HEAD)
+            echo "Local commit to publish: $COMMIT_SHA"
             for i in 1 2 3; do
               git fetch origin main
-              git rebase --autostash --strategy-option theirs origin/main || { git rebase --abort; git reset --hard origin/main; }
+              if ! git rebase --autostash --strategy-option theirs origin/main; then
+                echo "::warning::Rebase failed on attempt $i — aborting cleanly (preserves local commit)"
+                git rebase --abort || true
+                # Verify our commit is still here. If the rebase somehow lost it,
+                # cherry-pick it back from the SHA captured before the rebase.
+                if ! git rev-list HEAD | grep -q "^${COMMIT_SHA}$"; then
+                  echo "::warning::Local commit lost during rebase — restoring from $COMMIT_SHA"
+                  git reset --hard origin/main
+                  git cherry-pick "$COMMIT_SHA" || { echo "::error::cherry-pick failed"; exit 1; }
+                fi
+              fi
               if git push; then
-                echo "✓ Pushed on attempt $i"
+                echo "✓ Pushed on attempt $i (commit $(git rev-parse HEAD))"
                 exit 0
               fi
               echo "Push attempt $i failed, retrying..."
               sleep $((5 * i))
             done
-            echo "Push failed after 3 attempts"
+            echo "::error::Push failed after 3 attempts — local commit $COMMIT_SHA NOT on remote"
             exit 1
           fi
 

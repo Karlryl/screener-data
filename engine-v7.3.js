@@ -949,9 +949,13 @@ function scoreTrackA(stock, options) {
   const pen = computePenalties(stock, marketCapUSD);
   const expRisk = computeExpectationsRisk(stock);  // ChatGPT-P0-Fix-1: separate track
 
+  // F-EN-001 (Tag 179): weight sets sum to 0.95 not 1.0 — historically tuned with
+  // this 5% depression. Bucket thresholds (A>=75, B>=60) assume the depressed
+  // scale. Marking as known-tuned to prevent accidental "fix" that shifts every
+  // stock 5% upward and silently re-buckets borderline picks.
   let weights = af.applicable
-    ? { hyper: 0.30, rule: 0.25, scaling: 0.20, af: 0.20 }
-    : { hyper: 0.38, rule: 0.30, scaling: 0.27, af: 0 };
+    ? { hyper: 0.30, rule: 0.25, scaling: 0.20, af: 0.20 }   // sum=0.95 by design
+    : { hyper: 0.38, rule: 0.30, scaling: 0.27, af: 0 };     // sum=0.95 by design
 
   const coreScore =
     weights.hyper * hyper.score +

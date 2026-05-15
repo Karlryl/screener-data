@@ -954,6 +954,13 @@ ${methods.filter(m => MT_local.isCore(m.id)).map(m => {
   });
 
   // ===== MODAL DETAIL-VIEW =====
+  // F-GC-001 (Tag 179): previously concatenated data.ticker / data.name / data.sector
+  // / r.reason directly into innerHTML — Yahoo-sourced ticker names with " or <
+  // could break the modal or inject HTML. Add a client-side escape helper.
+  function escH(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
   var modal = document.getElementById('modal-overlay');
   var modalContent = document.getElementById('modal-content');
   document.querySelectorAll('tr.row-clickable').forEach(function(tr) {
@@ -961,8 +968,8 @@ ${methods.filter(m => MT_local.isCore(m.id)).map(m => {
       if (!tr.dataset.row) return;
       var data;
       try { data = JSON.parse(decodeURIComponent(tr.dataset.row)); } catch(e2) { return; }
-      var html = '<h3>' + data.ticker + ' — ' + data.name + '</h3>';
-      html += '<div class="stock-meta-row">' + data.sector + ' · MCap ' + (data.marketCap ? '$' + (data.marketCap/1e9).toFixed(1) + 'B' : '—') +
+      var html = '<h3>' + escH(data.ticker) + ' — ' + escH(data.name) + '</h3>';
+      html += '<div class="stock-meta-row">' + escH(data.sector) + ' · MCap ' + (data.marketCap ? '$' + (data.marketCap/1e9).toFixed(1) + 'B' : '—') +
               ' · Rev TTM ' + (data.revenueTTM ? '$' + (data.revenueTTM/1e9).toFixed(1) + 'B' : '—') +
               ' · Growth YoY ' + (data.growthYoY != null ? data.growthYoY.toFixed(1) + '%' : '—') + '</div>';
       html += '<table><thead><tr><th>Method</th><th>Value</th><th>Pass</th><th>Trend</th><th>Calc / Components</th></tr></thead><tbody>';
@@ -974,16 +981,16 @@ ${methods.filter(m => MT_local.isCore(m.id)).map(m => {
         if (r.components) {
           var parts = [];
           for (var ck in r.components) {
-            parts.push(ck + '=' + (typeof r.components[ck] === 'number' ? r.components[ck].toFixed(2) : r.components[ck]));
+            parts.push(escH(ck) + '=' + (typeof r.components[ck] === 'number' ? r.components[ck].toFixed(2) : escH(r.components[ck])));
           }
           if (parts.length) compStr = ' [' + parts.join(', ') + ']';
         }
         html += '<tr>'
-              + '<td class="method-name">' + mid + '</td>'
+              + '<td class="method-name">' + escH(mid) + '</td>'
               + '<td>' + (r.value != null && isFinite(r.value) ? r.value.toFixed(3) : '—') + '</td>'
               + '<td>' + (r.computable ? (r.pass ? '<span style="color:#10b981;">✓</span>' : '<span style="color:#ef4444;">✗</span>') : '—') + '</td>'
               + '<td>' + trIcon + ' (' + t.points + ' pts)' + '</td>'
-              + '<td class="calc">' + (r.reason || '') + compStr + '</td>'
+              + '<td class="calc">' + escH(r.reason || '') + compStr + '</td>'
               + '</tr>';
       }
       html += '</tbody></table>';
@@ -1011,18 +1018,19 @@ ${methods.filter(m => MT_local.isCore(m.id)).map(m => {
       if (tpRow && tpRow.dataset.row) {
         try {
           var data = JSON.parse(decodeURIComponent(tpRow.dataset.row));
-          var html = '<h3>' + data.ticker + ' — ' + data.name + '</h3>';
-          html += '<div class="stock-meta-row">' + data.sector + ' · MCap ' + (data.marketCap ? '$' + (data.marketCap/1e9).toFixed(1) + 'B' : '—') + '</div>';
+          // F-GC-001 (Tag 179): use escH helper above for the leaderboard modal too.
+          var html = '<h3>' + escH(data.ticker) + ' — ' + escH(data.name) + '</h3>';
+          html += '<div class="stock-meta-row">' + escH(data.sector) + ' · MCap ' + (data.marketCap ? '$' + (data.marketCap/1e9).toFixed(1) + 'B' : '—') + '</div>';
           html += '<table><thead><tr><th>Method</th><th>Value</th><th>Pass</th><th>Trend</th><th>Calc</th></tr></thead><tbody>';
           for (var mid in data.results) {
             var r2 = data.results[mid];
             var t2 = data.trends[mid] || { direction: 'n/a', points: 0 };
             var ti = { improving: '↑', deteriorating: '↓', stable: '·', 'n/a': '—' }[t2.direction] || '—';
-            html += '<tr><td class="method-name">' + mid + '</td>'
+            html += '<tr><td class="method-name">' + escH(mid) + '</td>'
                   + '<td>' + (r2.value != null && isFinite(r2.value) ? r2.value.toFixed(3) : '—') + '</td>'
                   + '<td>' + (r2.computable ? (r2.pass ? '<span style="color:#10b981;">✓</span>' : '<span style="color:#ef4444;">✗</span>') : '—') + '</td>'
                   + '<td>' + ti + '</td>'
-                  + '<td class="calc">' + (r2.reason || '') + '</td></tr>';
+                  + '<td class="calc">' + escH(r2.reason || '') + '</td></tr>';
           }
           html += '</tbody></table>';
           document.getElementById('modal-content').innerHTML = html;

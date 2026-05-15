@@ -11,7 +11,11 @@ function evaluate(stock) {
   const pe = (pe_val != null) ? pe_val : H.metricValue(stock, 'forwardPE');
   // Bug #4: Lynch PEG should use EPS/earnings growth, not revenue growth.
   // Prefer earningsGrowthYoY or epsGrowthYoY if available; fall back to revenueGrowthYoY.
-  const earningsGrowth = H.metricValue(stock, 'earningsGrowthYoY') || H.metricValue(stock, 'epsGrowthYoY');
+  // F-ME-009 (Tag 179): `||` falls through when earningsGrowthYoY is 0 (zero growth
+  // is valid data, not missing), defeating Bug #4. Use explicit null check.
+  const eg1 = H.metricValue(stock, 'earningsGrowthYoY');
+  const eg2 = H.metricValue(stock, 'epsGrowthYoY');
+  const earningsGrowth = eg1 != null ? eg1 : eg2;
   const growth = earningsGrowth != null ? earningsGrowth : H.metricValue(stock, 'revenueGrowthYoY');
   const growthSource = earningsGrowth != null ? 'EPS' : 'Rev';
   if (pe == null || growth == null) {

@@ -18,9 +18,19 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
-  const capexT = Math.abs(typeof capexArr[0] === 'object' && capexArr[0] !== null ? capexArr[0].value : capexArr[0]);  // Yahoo gives capex as negative number
+  // F-ME-001 (Tag 179): Math.abs(null) === 0 silently produces false-pass when capex
+  // array contains null placeholders (Bug #26 positional alignment). Unwrap first,
+  // null-check, then Math.abs only on confirmed numbers.
+  function _unwrap(v) {
+    if (v == null) return null;
+    if (typeof v === 'object') return Number.isFinite(v.value) ? v.value : null;
+    return Number.isFinite(v) ? v : null;
+  }
+  const capexT_raw = _unwrap(capexArr[0]);
+  const capexT3_raw = _unwrap(capexArr[3]);
+  const capexT = capexT_raw != null ? Math.abs(capexT_raw) : null;
+  const capexT3 = capexT3_raw != null ? Math.abs(capexT3_raw) : null;
   const revT = revArr[0] && revArr[0].value;
-  const capexT3 = Math.abs(typeof capexArr[3] === 'object' && capexArr[3] !== null ? capexArr[3].value : capexArr[3]);
   const revT3 = revArr[3] && revArr[3].value;
   if (capexT == null || revT == null || capexT3 == null || revT3 == null || revT <= 0 || revT3 <= 0) {
     return H.buildResult({

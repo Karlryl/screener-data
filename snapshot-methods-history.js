@@ -20,15 +20,18 @@ function parseArgs(argv) {
   return args;
 }
 
-// F-PF-007: async batch file loader — avoids serial fs.readFileSync across 12k+ files
+// F-PF-009 (Tag 179): the previous "async" loader wrapped fs.readFileSync in
+// Promise.all — the sync call blocks the event loop so the batch ran serially,
+// providing zero speedup. Use fs.promises.readFile to enable real parallel I/O
+// (libuv thread pool defaults to 4 workers; UV_THREADPOOL_SIZE can raise it).
 async function loadFilesAsync(dir, fileList) {
   const BATCH = 200;
   const results = [];
   for (let i = 0; i < fileList.length; i += BATCH) {
     const batch = fileList.slice(i, i + BATCH);
-    const loaded = await Promise.all(batch.map(f => {
+    const loaded = await Promise.all(batch.map(async f => {
       try {
-        const raw = fs.readFileSync(path.join(dir, f), 'utf8');
+        const raw = await fs.promises.readFile(path.join(dir, f), 'utf8');
         return { file: f, data: JSON.parse(raw), error: null };
       } catch (e) {
         return { file: f, data: null, error: e.message };

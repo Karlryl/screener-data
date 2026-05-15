@@ -77,9 +77,20 @@ function evaluate(stock) {
   }
   const X3 = opInc / assets;
 
-  // X4: Book Value of Equity / Total Debt
-  const bookEquity = assets - debtVal;
-  const X4 = bookEquity / Math.max(debtVal, assets * 0.01);
+  // X4: Book Value of Equity / Total Liabilities (Altman canonical).
+  // F-ME-008 (Tag 179): Yahoo balance does not expose totalLiab — previously this
+  // used totalDebt as proxy. That inflates X4 by 2-5x for SaaS/biotech where
+  // non-debt liabilities (deferred revenue, accrued expenses, lease liabilities)
+  // can exceed pure debt. Heuristic: estimate totalLiab ≈ totalDebt + 0.4 × (assets - debt - cash),
+  // i.e. assume 40% of non-debt-non-cash assets are financed by other liabilities.
+  // This is a rough approximation; if totalLiabilities ever becomes available in
+  // the snapshot, prefer it directly.
+  const directTotalLiab = _balanceVal(stock, 0, 'totalLiab');
+  const totalLiab = Number.isFinite(directTotalLiab) && directTotalLiab > 0
+    ? directTotalLiab
+    : (debtVal + 0.4 * Math.max(0, assets - debtVal - cashVal));
+  const bookEquity = assets - totalLiab;
+  const X4 = bookEquity / Math.max(totalLiab, assets * 0.01);
 
   const zScore = 6.56 * X1 + 3.26 * X2 + 6.72 * X3 + 1.05 * X4;
   const zone = zScore >= 2.6 ? 'SAFE' : zScore >= 1.1 ? 'GREY' : 'DISTRESS';

@@ -104,7 +104,12 @@ async function main() {
     failed,
     currencyMeta  // F-DP-010: per-currency success tracking
   };
-  fs.writeFileSync(outPath, JSON.stringify(out, null, 2));
+  // F-SM-016 (Tag 179): atomic write via tmp+rename. Previous direct writeFileSync
+  // could corrupt fx-rates.json under signal (CI cancellation) and downstream
+  // pull-yahoo would then mcap-misnormalize every non-USD ticker.
+  const tmp = outPath + '.tmp.' + process.pid;
+  fs.writeFileSync(tmp, JSON.stringify(out, null, 2));
+  fs.renameSync(tmp, outPath);
   console.log('Wrote fx-rates.json with ' + Object.keys(rates).length + ' currencies, ' + failed.length + ' failed');
   if (failed.length > CURRENCIES.length / 2) process.exit(1);
 }

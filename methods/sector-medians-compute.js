@@ -164,12 +164,21 @@ function extractLegacyMedians(v2Result) {
  *
  * @param {object} autoMedians — result from computeMedians() (v2 shape)
  */
+// F-SM-017 (Tag 179): atomic tmp+rename helper for state files. Previous direct
+// writeFileSync could corrupt sector-medians files under SIGTERM (CI cancel),
+// breaking effectiveThreshold lookup for every method on the next run.
+function _atomicWrite(filePath, json) {
+  const tmp = filePath + '.tmp.' + process.pid;
+  fs.writeFileSync(tmp, json);
+  fs.renameSync(tmp, filePath);
+}
+
 function writeAutoMedians(autoMedians) {
   const ts = new Date().toISOString();
 
   // v2 new file
   const outPath = path.join(__dirname, 'sector-medians-auto.json');
-  fs.writeFileSync(outPath, JSON.stringify({
+  _atomicWrite(outPath, JSON.stringify({
     _generatedAt: ts,
     _version: 2,
     byRegion: autoMedians.byRegion || {}
@@ -178,7 +187,7 @@ function writeAutoMedians(autoMedians) {
   // v1 legacy file (always the _GLOBAL slice — same data as old flat output)
   const legacyMedians = extractLegacyMedians(autoMedians);
   const legacyPath = path.join(__dirname, 'sector-medians-auto-legacy.json');
-  fs.writeFileSync(legacyPath, JSON.stringify({
+  _atomicWrite(legacyPath, JSON.stringify({
     _generatedAt: ts,
     _version: 1,
     _note: 'Legacy flat schema for backwards compat. Equals _GLOBAL slice of sector-medians-auto.json.',
@@ -228,7 +237,8 @@ function writeRollingMedians(autoMedians) {
     if (!currentSpIds.has(spId)) delete merged[spId];
   }
 
-  fs.writeFileSync(outPath, JSON.stringify({
+  // F-SM-017 (Tag 179): atomic write
+  _atomicWrite(outPath, JSON.stringify({
     _generatedAt: new Date().toISOString(),
     _windowDays: ROLLING_WINDOW_DAYS,
     medians: merged

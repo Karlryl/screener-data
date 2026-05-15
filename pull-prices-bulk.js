@@ -1,14 +1,36 @@
 'use strict';
 const fs = require('fs');
+const path = require('path');
 let yf;
 const YF = require('yahoo-finance2').default;
 yf = (typeof YF === 'function') ? new YF() : YF;
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+const HISTORY_PATH = './prices/history.json';
+
+// F-GC-003 (Tag 179): two concurrent CLI invocations would each load the file,
+// modify their slice, and write — overwriting each other. Now we re-read the
+// current file under a tmp+rename merge each save so concurrent writers only
+// add, never destroy each other's progress. Last-writer-wins on per-ticker
+// duplicates is acceptable since each CLI is a disjoint ticker range.
+function _safeMergeAndWrite(myUpdates) {
+  let onDisk = {};
+  if (fs.existsSync(HISTORY_PATH)) {
+    try { onDisk = JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf8')); }
+    catch (e) { console.error('history.json corrupt, starting fresh:', e.message); onDisk = {}; }
+  }
+  const merged = Object.assign({}, onDisk, myUpdates);
+  const tmp = HISTORY_PATH + '.tmp.' + process.pid;
+  fs.writeFileSync(tmp, JSON.stringify(merged, null, 2));
+  fs.renameSync(tmp, HISTORY_PATH);
+}
+
 async function main() {
   const wl = JSON.parse(fs.readFileSync('./watchlist.json', 'utf8'));
   let out = {};
-  if (fs.existsSync('./prices/history.json')) {
-    out = JSON.parse(fs.readFileSync('./prices/history.json', 'utf8'));
+  if (fs.existsSync(HISTORY_PATH)) {
+    try { out = JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf8')); }
+    catch (e) { console.error('history.json unparseable on load:', e.message); }
   }
   const startIdx = parseInt(process.argv[2] || '0', 10);
   const endIdx = Math.min(startIdx + 25, wl.stocks.length);
@@ -26,8 +48,7 @@ async function main() {
       }));
       if (quotes.length > 5) {
         out[s.ticker] = quotes;
-        // Write after each successful pull
-        fs.writeFileSync('./prices/history.json', JSON.stringify(out, null, 2));
+        _safeMergeAndWrite({ [s.ticker]: quotes });
         console.log(`${quotes.length} days [saved]`);
       } else { console.log('no data'); }
     } catch (e) { console.log(`fail: ${e.message.slice(0,40)}`); }
