@@ -65,6 +65,7 @@ module.exports = [
   { file: './stable-quarterly-growth.js' },
   { file: './quarterly-earnings-stability.js' },
   { file: './quarterly-revenue-acceleration.js' },
+  { file: './gross-margin-acceleration.js' },
   { file: './volatility-annualized.js' },
   { file: './drawdown-52w.js' },
   { file: './high-proximity-52w.js' },
