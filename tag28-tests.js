@@ -248,29 +248,32 @@ function fullSnapshot() {
   };
 }
 
-test('data-quality: fully-populated snapshot -> grade A', () => {
+test('data-quality: fully-populated snapshot -> grade A+', () => {
+  // F-DQ-007/008: new thresholds — nanRatio=0 → A+ (≤20% missing)
   const g = gradeSnapshot(fullSnapshot());
-  if (g.grade !== 'A') throw new Error('expected A, got ' + g.grade + ' (missing=' + g.missingFields.join(',') + ')');
+  if (g.grade !== 'A+') throw new Error('expected A+, got ' + g.grade + ' (missing=' + g.missingFields.join(',') + ')');
   if (g.nanRatio !== 0) throw new Error('expected nanRatio=0, got ' + g.nanRatio);
 });
 
-test('data-quality: 30%-missing snapshot -> grade C (not B)', () => {
-  // Drop 4 of 10 critical-weight fields to push nanRatio to >0.30
+test('data-quality: 30%-missing snapshot -> grade A (not C)', () => {
+  // F-DQ-007/008: drop 4 weight-1.0 fields → missingWeight=4, nanRatio=4/12.5=0.32 → A (20–40% missing)
   const s = fullSnapshot();
   delete s.meta.industry;
   delete s.metrics.fcfMarginTTM;
   delete s.metrics.operatingMargin;
   delete s.metrics.grossMargin;
   const g = gradeSnapshot(s);
-  if (g.grade !== 'C') throw new Error('expected C, got ' + g.grade + ' (ratio=' + g.nanRatio + ' missing=' + g.missingFields.join(',') + ')');
+  if (g.grade !== 'A') throw new Error('expected A, got ' + g.grade + ' (ratio=' + g.nanRatio + ' missing=' + g.missingFields.join(',') + ')');
 });
 
-test('data-quality: heavily-empty snapshot -> grade D', () => {
+test('data-quality: heavily-empty snapshot -> grade C', () => {
+  // F-DQ-007/008: D is impossible with C threshold=1.0; nearly-empty → nanRatio≈0.92 → C
   const g = gradeSnapshot({ meta: { ticker: 'TEST' } });
-  if (g.grade !== 'D') throw new Error('expected D, got ' + g.grade + ' (ratio=' + g.nanRatio + ')');
+  if (g.grade !== 'C') throw new Error('expected C, got ' + g.grade + ' (ratio=' + g.nanRatio + ')');
 });
 
-test('data-quality: tierCapForGrade A/B -> null, C -> NEAR_MISS, D -> REJECT', () => {
+test('data-quality: tierCapForGrade A+/A/B -> null, C -> NEAR_MISS, D -> REJECT', () => {
+  if (tierCapForGrade('A+') !== null) throw new Error('A+ should not cap');
   if (tierCapForGrade('A') !== null) throw new Error('A should not cap');
   if (tierCapForGrade('B') !== null) throw new Error('B should not cap');
   if (tierCapForGrade('C') !== 'NEAR_MISS') throw new Error('C should cap NEAR_MISS');

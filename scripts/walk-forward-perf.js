@@ -60,8 +60,13 @@ function buildPriceIndex(history) {
 
 // F-PF-003: Map-based O(1) lookup.  Falls back to the nearest earlier date within
 // PRICE_MAX_STALE_DAYS so the staleness guard is still enforced.
+// Backward-compat: if the caller passes a raw history object (value is an Array),
+// delegate to priceAtLegacy so existing tests and method-effectiveness callers keep working.
 function priceAt(priceIndex, ticker, targetDate) {
-  const map = priceIndex[ticker];
+  const entry = priceIndex[ticker];
+  // Backward-compat: raw history has Arrays; new index has Maps
+  if (Array.isArray(entry)) return priceAtLegacy(priceIndex, ticker, targetDate);
+  const map = entry;
   if (!map || map.size === 0) return null;
   // Exact hit (common case)
   if (map.has(targetDate)) return map.get(targetDate);
