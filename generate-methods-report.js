@@ -689,6 +689,7 @@ ${methods.filter(m => MT_local.isCore(m.id)).map(m => {
 </tr></thead>
 <tbody>${tableRows}</tbody>
 </table>
+</details>
 
 <script>
 (function() {

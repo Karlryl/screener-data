@@ -49,10 +49,13 @@ function computeTrend(history, thresholdOp) {
   // For gte methods (Rule of 40, ROIC, FCF-Yield, GM-Stability is lte): higher is better
   // Adjust trend direction based on thresholdOp
   let isImproving;
-  if (thresholdOp === 'gte') {
-    isImproving = pctChange > 0;  // rising = improving
+  // Bug #15: default must be gte-behavior (higher=improving). Prior code defaulted to lte
+  // for any non-'gte' thresholdOp, including undefined/null/string thresholds (e.g.
+  // profitability-state exports threshold:'TURNAROUND'), causing inverted trend direction.
+  if (thresholdOp === 'lte' || thresholdOp === 'lte_abs') {
+    isImproving = pctChange < 0;  // falling = improving for lte methods
   } else {
-    isImproving = pctChange < 0;  // falling = improving
+    isImproving = pctChange > 0;  // rising = improving (default / gte / unknown)
   }
   const absChange = Math.abs(pctChange);
   if (absChange < IMPROVE_PCT) {

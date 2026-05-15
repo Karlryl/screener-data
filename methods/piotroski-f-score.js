@@ -118,8 +118,10 @@ function evaluate(stock) {
   }
 
   const score = signals.filter(s => s.pass).length;
-  // Scale threshold to available signals (e.g. 6/8 = 75%, same ratio)
-  const scaledThreshold = Math.ceil(THRESHOLD * signals.length / 8);
+  // Scale threshold to available signals (e.g. 6/8 = 75%, same ratio).
+  // Bug #19: Math.ceil(6*3/8) = Math.ceil(2.25) = 3 → demands 100% pass for 3-signal case
+  // instead of intended 75%. Math.round gives 2 (correctly ~75%). Math.max(1,...) prevents 0.
+  const scaledThreshold = Math.max(1, Math.round(THRESHOLD * signals.length / 8));
   const pass = score >= scaledThreshold;
 
   return H.buildResult({

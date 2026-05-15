@@ -130,7 +130,10 @@ function evaluate(stock) {
   // Klassifikation
   let cls, reasons = [];
 
-  if (!isMaterial && yoyGrowth > 100) {
+  // Bug #18: LOW_BASE_EFFECT was only triggered when yoyGrowth > 100, so a
+  // sub-material company with 25-99% growth escaped into TRUE_HYPERGROWTH.
+  // Any immaterial company (revenue below floor) should be flagged regardless of growth rate.
+  if (!isMaterial) {
     cls = 'LOW_BASE_EFFECT';
     reasons.push('TTM-Rev=' + (ttmRev/1e6).toFixed(0) + 'M unter Material-Schwelle');
   } else if (yoyGrowth < 25) {

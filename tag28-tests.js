@@ -101,6 +101,16 @@ test('Sloan-Ratio: fail case (Tag 117: 2-year >20% chronic)', () => {
   if (r.pass) throw new Error('should fail (CHRONIC: 2y >20%)');
 });
 
+test('Earnings-Stability: fail when most-recent year has 30-50% decline (maxDeclineIdx===0)', () => {
+  // Bug #25: before fix, maxDeclineIdx===0 branch was missing — most-recent year decline 30-50%
+  // was treated as historical (recovery-test path) and could pass when no recovery was needed.
+  // opInc[0]=60, opInc[1]=100 → 40% decline at index 0 (latest year). No future recovery exists yet.
+  const s = makeStock({}, { opInc: [60, 100, 110, 115, 120], fcf: [50, 80, 90, 95, 100] }, []);
+  const r = Runner.evaluateStock(s)['earnings-stability'];
+  if (!r.computable) throw new Error('should be computable');
+  if (r.pass) throw new Error('should fail: most-recent year shows 40% decline with no recovery data yet');
+});
+
 test('Revenue-Growth-3Y: pass case (100->200 over 3y = 26% CAGR)', () => {
   const s = { annual: { annualRev: [{value:200},{value:170},{value:140},{value:100}] } };
   const r = Runner.evaluateStock(s)['revenue-growth-3y'];
@@ -451,8 +461,9 @@ test('walk-forward: evaluateVintage computes alpha vs universe-median', () => {
   // universe median across all 3 tickers' 7d returns = median(30, 30, 0) = 30
   if (Math.round(h7.universeMedianReturn) !== 30) throw new Error('universe median 30% expected, got ' + h7.universeMedianReturn);
   // alpha = pickMedian - universeMedian = 30 - 30 = 0 (picks tied with universe)
-  // Note: n<MIN_SAMPLES(10) so h7.alpha may be null; Math.abs(null)=0 which passes the check
-  if (Math.abs(h7.alpha) > 0.01) throw new Error('alpha ~0 expected (picks tied with universe), got ' + h7.alpha);
+  // Bug #24: Math.abs(null) === 0, so the old assertion was vacuously true when alpha=null (n<MIN_SAMPLES=10).
+  // Fix: only assert alpha value if non-null; null is acceptable for small samples.
+  if (h7.alpha != null && Math.abs(h7.alpha) > 0.01) throw new Error('alpha ~0 expected (picks tied with universe), got ' + h7.alpha);
 });
 
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────

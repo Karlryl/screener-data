@@ -41,14 +41,17 @@ function latestAnnual(stock, key) {
 function latestBalance(stock, field) {
   const arr = val(stock, 'annual.annualBalance');
   if (!Array.isArray(arr) || arr.length === 0) return null;
-  return arr[0] && arr[0][field];
+  // Bug #13: normalize to null (not undefined) when field is absent
+  const v = arr[0] != null ? arr[0][field] : undefined;
+  return v != null ? v : null;
 }
 
 function cagr3y(annualArr) {
   if (!Array.isArray(annualArr) || annualArr.length < 4) return null;
   const latest = annualArr[0] && (typeof annualArr[0] === 'number' ? annualArr[0] : annualArr[0].value);
   const oldest = annualArr[3] && (typeof annualArr[3] === 'number' ? annualArr[3] : annualArr[3].value);
-  if (latest == null || oldest == null || oldest <= 0) return null;
+  // Bug #14: guard latest <= 0 — fractional power of negative base yields NaN
+  if (latest == null || oldest == null || latest <= 0 || oldest <= 0) return null;
   return (Math.pow(latest / oldest, 1/3) - 1) * 100;
 }
 

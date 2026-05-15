@@ -165,7 +165,9 @@ function evaluateMode(stock, modeId, allResults) {
   if (mode.mcapFloor != null) {
     const mcRaw = stock && stock.marketCap;
     const mc = (typeof mcRaw === 'number') ? mcRaw : (mcRaw && mcRaw.value) || 0;
-    if (mc > 0 && mc < mode.mcapFloor) {
+    // Bug #22: mc > 0 guard allows stocks with missing marketCap (mc=0) to bypass the floor.
+    // A stock with no mcap data should also fail the floor check.
+    if (mc < mode.mcapFloor) {
       return { passed: false, reason: 'mcap_below_floor', mcap: mc, mcapFloor: mode.mcapFloor };
     }
   }

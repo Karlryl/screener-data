@@ -298,6 +298,12 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     if (op == null || capex == null) return null;
     return { value: op + capex };  // Yahoo capex ist negativ → echte Subtraktion
   }).filter(Boolean);
+  // Bug #23: annualOCF never written to snapshot — premium-compounder-proof check #6
+  // ((Capex+R&D)/OCF) was always computable:false. Extract OCF directly from cfHist.
+  const annualOCF = (cfHist || []).map(r => {
+    const op = _y(r, 'totalCashFromOperatingActivities');
+    return op != null ? { value: op } : null;
+  }).filter(Boolean);
   // P0-Fix Tag 13: 0+0 wenn beide undefined ist semantisch falsch — Engine sieht Debt=0 statt null.
   // Plus: Yahoo-Field-Name-Drift seit Nov 2024 — multi-fallback für cash.
   const annualBalance = (bsHist || []).map(r => {
@@ -394,7 +400,7 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       revenueQ, opIncQ, grossProfitQ
     },
     annual: {
-      annualRev, annualOpInc, annualNetIncome, annualGP, annualFCF, annualBalance
+      annualRev, annualOpInc, annualNetIncome, annualGP, annualFCF, annualOCF, annualBalance
     },
     // Tag 137: insider buy/sell activity (90d window, open-market only)
     insiderActivity: insiderActivity || null
@@ -465,20 +471,22 @@ function mapFTSToAnnual(annualRows, cashRows) {
     const ni = _ftsValue(r, 'netIncome', 'NetIncome', 'netIncomeContinuousOperations');
     annualNetIncome.push(ni != null ? { value: ni } : null);
   }
-  // FCF aus cash-flow-Module
+  // FCF + OCF aus cash-flow-Module
   const annualFCF = [];
+  const annualOCF = [];
   const cashSorted = (cashRows || []).slice().reverse();
   for (const r of cashSorted) {
+    const op = _ftsValue(r, 'operatingCashFlow', 'OperatingCashFlow');
+    if (op != null) annualOCF.push({ value: op });
     let fcf = _ftsValue(r, 'freeCashFlow', 'FreeCashFlow');
     if (fcf == null) {
       // Compute aus OpCash + CapEx wenn möglich
-      const op = _ftsValue(r, 'operatingCashFlow', 'OperatingCashFlow');
       const capex = _ftsValue(r, 'capitalExpenditure', 'CapitalExpenditure');
       if (op != null && capex != null) fcf = op + capex;  // capex ist negativ
     }
     if (fcf != null) annualFCF.push({ value: fcf });
   }
-  return { annualRev, annualOpInc, annualGP, annualNetIncome, annualFCF };
+  return { annualRev, annualOpInc, annualGP, annualNetIncome, annualFCF, annualOCF };
 }
 
 function mapFTSToBalance(bsRows) {
@@ -781,6 +789,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (ftsAnnual.annualGP.length > 0) canonical.annual.annualGP = ftsAnnual.annualGP;
       if (ftsAnnual.annualNetIncome.length > canonical.annual.annualNetIncome.length) canonical.annual.annualNetIncome = ftsAnnual.annualNetIncome;
       if (ftsAnnual.annualFCF.length > 0) canonical.annual.annualFCF = ftsAnnual.annualFCF;
+      if (ftsAnnual.annualOCF && ftsAnnual.annualOCF.length > 0) canonical.annual.annualOCF = ftsAnnual.annualOCF;
       if (ftsQuarterly.revenueQ.length > canonical.timeseries.revenueQ.length) canonical.timeseries.revenueQ = ftsQuarterly.revenueQ;
       if (ftsQuarterly.opIncQ.length > 0) canonical.timeseries.opIncQ = ftsQuarterly.opIncQ;
       if (ftsQuarterly.grossProfitQ.length > 0) canonical.timeseries.grossProfitQ = ftsQuarterly.grossProfitQ;

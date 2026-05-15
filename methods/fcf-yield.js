@@ -41,7 +41,9 @@ function evaluate(stock) {
   // SBC-Adjustment (Tag 118): wenn SBC vorhanden, abziehen
   var sbcUsed = false;
   var fcfAdj = fcf;
-  if (sbc != null && Number.isFinite(sbc) && sbc > 0) {
+  // Bug #16: sbc > 0 guard silently skips SBC when stored as negative (e.g. -500M).
+  // Math.abs() handles sign — just check non-zero.
+  if (sbc != null && Number.isFinite(sbc) && sbc !== 0) {
     fcfAdj = fcf - Math.abs(sbc);
     sbcUsed = true;
   }

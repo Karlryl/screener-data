@@ -32,14 +32,18 @@ const REGISTRY = {
   'margin-decay':               { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Erosion-detection im Detail-Modal' },
   'capex-trend':                { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Reinvestment pattern' },
   'sbc-revenue':                { type: 'DIAGNOSTIC', defaultActive: false, reason: 'SBC-Disziplin als Quality-Indikator' },
-  'working-capital-anomaly':    { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Earnings-quality red flag' },
+  // Bug #20: defaultActive:false means this method is not evaluated, but score-aggregator
+  // applies a SOFT_GUARD_PENALTY for it. Enable so the penalty is actually computable.
+  'working-capital-anomaly':    { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Earnings-quality red flag' },
   'insider-ownership':          { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Skin in the game' },
   'quarterly-earnings-stability':{ type: 'DIAGNOSTIC', defaultActive: false, reason: '8Q earnings volatility' },
   'opinc-margin-spike':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Operating margin shock detection' },
   'drawdown-52w':               { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },
   'high-proximity-52w':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },
   'volatility-annualized':      { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Risk context' },
-  'above-200d-ma':              { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Trend regime context' },
+  // Bug #21: defaultActive:false means above-200d-ma is never evaluated, but score-aggregator
+  // includes it with weight 0.05 in QUALITY_COMPOUNDER. Enable so the weight contributes.
+  'above-200d-ma':              { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Trend regime context' },
   'forward-pe':                 { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Forward estimate, not a hard signal' },
   'peg':                        { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Forward estimate, not a hard signal' },
   'ev-ebitda':                  { type: 'DIAGNOSTIC', defaultActive: false, reason: 'KomplementÃ¤r zu fcf-yield' },

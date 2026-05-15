@@ -73,7 +73,13 @@ function _hasMetric(m) {
 
 function _arrLen(arr) {
   if (!Array.isArray(arr)) return 0;
-  return arr.filter(x => x != null).length;
+  // Bug #17: x != null passes NaN through — NaN entries count as present data.
+  // Filter both null/undefined and non-finite numeric values.
+  return arr.filter(x => {
+    if (x == null) return false;
+    const v = typeof x === 'number' ? x : (x && typeof x.value === 'number' ? x.value : null);
+    return v === null || Number.isFinite(v);  // non-numeric objects (balance rows) pass through
+  }).length;
 }
 
 /**
