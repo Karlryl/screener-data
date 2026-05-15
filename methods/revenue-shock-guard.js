@@ -36,13 +36,29 @@ function _materialityFloor(stock) {
   return Math.max(10000000, 0.08*ttm, 0.0025*mcap);
 }
 
+// F-ME-025 (Tag 184): raw extractor — preserve positional alignment so window[0]
+// is the latest calendar quarter, not "latest non-null". Filter-then-index could
+// re-anchor "latest Q" to Q-1 when current Q is null between earnings releases.
+function _rawArr(stock, path) {
+  const a = H.val(stock, path);
+  if (!Array.isArray(a) || a.length === 0) return null;
+  return a.map(v => (v == null ? null : (typeof v === 'number' ? v : v.value)));
+}
+
 function evaluate(stock) {
-  let qrev = _arr(stock, 'timeseries.revenueQ');
-  if (!qrev) qrev = _arr(stock, 'quarterly.revenue') || _arr(stock, 'quarterly.totalRevenue');
+  let qrev = _rawArr(stock, 'timeseries.revenueQ');
+  if (!qrev) qrev = _rawArr(stock, 'quarterly.revenue') || _rawArr(stock, 'quarterly.totalRevenue');
   const floor = _materialityFloor(stock);
 
   if (qrev && qrev.length >= 4) {
-    const window = qrev.slice(0, 8);
+    // F-ME-025: require position 0 to be finite (latest calendar quarter present).
+    // If latest is null, the snapshot is mid-quarter or has a Yahoo gap — fall through
+    // to the annual fallback rather than misreading Q-1 as Q0.
+    if (!Number.isFinite(qrev[0])) {
+      // fall through to annual block
+    } else {
+    const windowAll = qrev.slice(0, 8);
+    const window = windowAll.filter(v => Number.isFinite(v));
     const latest = window[0];
     const prior = window.slice(1);
     if (latest <= 0) return H.buildResult({ value: 0, pass: true, computable: true, reason: 'Q0<=0', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP });
@@ -58,6 +74,7 @@ function evaluate(stock) {
       reason: 'Q0=' + latest.toFixed(0) + ' vs Q-med=' + med.toFixed(0) + ', |z|=' + absZ.toFixed(2),
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP, flags: shock ? ['REVENUE_SHOCK_QUARTERLY'] : []
     });
+    }  // close else
   }
 
   const arev = _arr(stock, 'annual.annualRev');

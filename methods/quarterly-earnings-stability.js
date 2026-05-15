@@ -22,8 +22,12 @@ function evaluate(stock) {
     const v = q && (typeof q === 'number' ? q : q.value);
     if (v != null && v > 0) positive++;
   }
-  // Scale threshold by available window length to avoid penalizing stocks with fewer than 8 quarters
-  const scaled = Math.ceil(THRESHOLD * window.length / 8);
+  // Scale threshold by available window length to avoid penalizing stocks with fewer than 8 quarters.
+  // F-ME-003 (Tag 184): Math.ceil pushed small-window stocks to stricter pass rates
+  // than the canonical 6/8 = 75% — same pattern as piotroski Bug #19. E.g. window=5
+  // → Math.ceil(3.75)=4 → 80% required, harsher than intended. Use Math.round to
+  // keep the effective rate ~75% across window sizes.
+  const scaled = Math.max(1, Math.round(THRESHOLD * window.length / 8));
   return H.buildResult({
     value: positive,
     pass: positive >= scaled,

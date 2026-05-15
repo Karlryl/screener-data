@@ -15,13 +15,23 @@ const fs = require('fs');
 
 const PATH = './watchlist.json';
 
+// F-GC-007 / F-GC-009 (Tag 184): load needs try/catch — JSON.parse of a
+// corrupted watchlist would crash with a cryptic SyntaxError. Save uses
+// atomic tmp+rename so a SIGINT during write doesn't leave a half-written
+// watchlist (lost-update protection).
 function load() {
-  return JSON.parse(fs.readFileSync(PATH, 'utf8'));
+  try { return JSON.parse(fs.readFileSync(PATH, 'utf8')); }
+  catch (e) {
+    console.error('✗ watchlist.json unreadable: ' + e.message);
+    process.exit(1);
+  }
 }
 function save(wl) {
   wl._meta = wl._meta || {};
   wl._meta.updated_at = new Date().toISOString().slice(0, 10);
-  fs.writeFileSync(PATH, JSON.stringify(wl, null, 2));
+  const tmp = PATH + '.tmp.' + process.pid;
+  fs.writeFileSync(tmp, JSON.stringify(wl, null, 2));
+  fs.renameSync(tmp, PATH);
 }
 
 function cmdList() {
@@ -47,7 +57,9 @@ function cmdAdd(ticker, opts) {
   };
   wl.stocks.push(stock);
   save(wl);
-  console.log(`✓ Added ${ticker} (${stock.name}, position=${stock.position})`);
+  // F-GC-007 (Tag 184): success message previously referenced stock.position which is
+  // never set on the add path (only track_hint is). Print track instead.
+  console.log(`✓ Added ${ticker} (${stock.name}, track=${stock.track_hint})`);
 }
 
 function cmdRemove(ticker) {

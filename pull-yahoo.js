@@ -466,7 +466,17 @@ async function fetchFundamentalsTS(symbol) {
 }
 
 function _ftsValue(row, ...keys) {
-  for (const k of keys) if (row[k] != null) return row[k];
+  // F-DP-041 (Tag 184): also try snake_case variants. Some Yahoo FTS edge nodes
+  // emit `total_revenue` instead of `totalRevenue`, etc. — previously the entire
+  // FTS payload read as null for those rows. Convert each requested key to its
+  // snake_case equivalent and try as fallback.
+  if (!row) return null;
+  for (const k of keys) {
+    if (row[k] != null) return row[k];
+    // camelCase → snake_case fallback
+    const snake = k.replace(/[A-Z]/g, m => '_' + m.toLowerCase());
+    if (snake !== k && row[snake] != null) return row[snake];
+  }
   return null;
 }
 
