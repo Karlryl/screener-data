@@ -81,7 +81,7 @@ test('Net-Debt/EBITDA: pass case (debt=10, cash=2, opInc=10 -> 8/12 = 0.67)', ()
   if (!r.pass) throw new Error('should pass');
 });
 
-test('Net-Debt/EBITDA: fail case (debt=50, opInc=10 -> 50/12 = 4.17 > 3)', () => {
+test('Net-Debt/EBITDA: fail case (debt=50, opInc=10 -> 50/12 = 4.17 > 2.5)', () => {
   const s = makeStock({}, { opInc: [10] }, [{ totalDebt: 50, totalCash: 0, totalAssets: 100 }]);
   const r = Runner.evaluateStock(s)['net-debt-ebitda'];
   if (r.pass) throw new Error('should fail');
