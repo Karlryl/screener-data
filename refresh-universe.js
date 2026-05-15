@@ -168,7 +168,7 @@ async function main() {
         if (!q || !q.symbol) continue;
         const sym = q.symbol.toUpperCase();
         const mcap = q.marketCap;
-        if (!mcap || mcap < 1e9 || mcap > 500e9) continue;  // Tag 116: $1B-$500B
+        if (!mcap || mcap < 2e9 || mcap > 500e9) continue;  // Tag 170: $2B+ (Elliott Wave universe)
         if (!allTickers.has(sym) || (allTickers.get(sym).marketCap || 0) < mcap) {
           allTickers.set(sym, {
             ticker: sym,
@@ -188,7 +188,7 @@ async function main() {
   // Tag 131: Custom Exchange-Screener (paginiert) — zusätzlich zu predefined Screener-Buckets.
   // Ziel: 10k+ Stocks statt ~3500. Errors sind non-fatal (silent skip).
   console.log('\nCustom Exchange-Screener (Tag 131)...');
-  const MIN_MCAP_CUSTOM = 1e9;
+  const MIN_MCAP_CUSTOM = 2e9;  // Tag 170: $2B+ minimum
   const MAX_MCAP_CUSTOM = 500e9;
   let customAdded = 0;
   for (const exch of EXCHANGE_CODES) {

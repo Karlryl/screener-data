@@ -127,6 +127,16 @@ function main() {
       continue;
     }
 
+    // Tag 170: prune tickers confirmed below $2B mcap threshold
+    const mcapVal = snap.marketCap && snap.marketCap.value;
+    const MIN_MCAP = 2e9;
+    if (mcapVal != null && mcapVal < MIN_MCAP) {
+      const reason = `mcap-below-2b (${(mcapVal / 1e9).toFixed(2)}B)`;
+      pruned.push({ ticker: entry.ticker, reason });
+      console.log('  PRUNE ' + entry.ticker.padEnd(10) + ' (' + reason + ')');
+      continue;
+    }
+
     // F-DP-023: use deadReason() for accurate labels instead of hardcoded 'stale+no-data'
     const reason = deadReason(snap, args.maxAgeDays);
     if (reason !== null) {

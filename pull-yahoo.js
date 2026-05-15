@@ -800,9 +800,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       }
 
       // Tag-87a: MarketCap-Filter — skip Stocks außerhalb Karl's Mid/Large-Cap-Range
-      // Tag 116: untere Schwelle von $2B auf $1B gesenkt (konsistent mit refresh-universe).
-      // Erhoeht Coverage; Karl filtert via Mcap-Slider in modes-report.
-      const MIN_MCAP = 1e9;       // $1B (vorher $2B)
+      // Tag 170: Schwelle zurück auf $2B — Karl wertet nur mcap ≥ $2B mit Elliott Waves aus.
+      // Eliminiert Micro/Small-Caps, verbessert Datenqualität, reduziert Pull-Zeit.
+      const MIN_MCAP = 2e9;       // $2B
       const MAX_MCAP = Infinity;       // Tag 101: kein Mega-Cap-Cut mehr
       const mcapVal = canonical.marketCap && canonical.marketCap.value;
       if (mcapVal != null && (mcapVal < MIN_MCAP || mcapVal > MAX_MCAP)) {
