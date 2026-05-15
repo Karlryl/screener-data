@@ -146,12 +146,10 @@ async function fetchOTCMarkets() {
 
       console.log(`  [OTC-Markets] Page ${page}: ${rows.length} rows, ${added} new symbols`);
 
-      // Stop early if we've exhausted results
+      // F-DP-017: Stop pagination only when we get an EMPTY page, not a short page.
+      // A short final page is normal for the last page of results and should not
+      // terminate pagination early (which would miss data on the last page).
       const fetched = (page - 1) * PAGE_SIZE + rows.length;
-      if (rows.length < PAGE_SIZE) {
-        console.log(`  [OTC-Markets] Page ${page}: partial page (${rows.length} < ${PAGE_SIZE}) — done`);
-        break;
-      }
       if (totalRecords !== null && fetched >= totalRecords) {
         console.log(`  [OTC-Markets] Fetched ${fetched} of ${totalRecords} — done`);
         break;

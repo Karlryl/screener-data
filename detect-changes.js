@@ -38,10 +38,10 @@ function _log(level, msg) { console.log(`[${_ts()}] [${level}] ${msg}`); }
 //   "fieldCoverage": { history: [], baseline: {} }   // Tag-22
 // }
 
-// Tag 134 — Phase 5.2: methodHistory subtree moved out of committed alert-state.json
-// to external-data/method-history-state.json (git-ignored).
-// Was bloating the repo by ~25 MB per push. Rebuildable from methods-history/*.
-const HISTORY_SIDECAR = path.join(__dirname, 'external-data', 'method-history-state.json');
+// F-SM-001: method-history-state.json is now committed at repo root (not gitignored).
+// This ensures trend signals accumulate across CI runs (GitHub runners are fresh per run).
+// F-SM-007: sidecar migration code removed — single committed file is the source of truth.
+const HISTORY_SIDECAR = path.join(__dirname, 'method-history-state.json');
 
 function _loadMethodHistory() {
   if (!fs.existsSync(HISTORY_SIDECAR)) return {};
@@ -55,15 +55,17 @@ function _loadMethodHistory() {
 }
 
 function _saveMethodHistory(history) {
+  // F-SM-002: atomic write via tmp+rename to prevent partial-write corruption on SIGKILL
   try {
-    if (!fs.existsSync(path.dirname(HISTORY_SIDECAR))) fs.mkdirSync(path.dirname(HISTORY_SIDECAR), { recursive: true });
-    fs.writeFileSync(HISTORY_SIDECAR, JSON.stringify({ lastSaved: new Date().toISOString(), methodHistory: history }));
+    const tmp = HISTORY_SIDECAR + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify({ lastSaved: new Date().toISOString(), methodHistory: history }));
+    fs.renameSync(tmp, HISTORY_SIDECAR);
   } catch (e) { _log('WARN', 'failed to write history sidecar: ' + e.message); }
 }
 
 function loadState(statePath) {
-  // Tag-21-Robustness + Tag-29-Schema-Migration + Tag 134 Phase 5.2 sidecar load
-  const fallback = { lastRun: null, methodState: {}, methodHistory: {}, fieldCoverage: { history: [], baseline: {} } };
+  // Tag-21-Robustness + Tag-29-Schema-Migration
+  // F-SM-007: simplified — no sidecar migration. Single committed history file.
   let parsed = null;
   if (fs.existsSync(statePath)) {
     try { parsed = JSON.parse(fs.readFileSync(statePath, 'utf8')); }
@@ -73,13 +75,8 @@ function loadState(statePath) {
     }
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) parsed = {};
-  // Tag 134 Phase 5.2: methodHistory now lives in the sidecar.
-  // Migration: if the committed alert-state.json still has an inline methodHistory
-  // (from before this change), use it as the initial sidecar value and let the next
-  // save move it out of the committed file.
-  const inlineHistory = (parsed.methodHistory && typeof parsed.methodHistory === 'object' && !Array.isArray(parsed.methodHistory)) ? parsed.methodHistory : null;
-  const sidecarHistory = _loadMethodHistory();
-  const methodHistory = Object.keys(sidecarHistory).length > 0 ? sidecarHistory : (inlineHistory || {});
+  // F-SM-007: methodHistory lives only in the committed sidecar file (not inline in alert-state.json).
+  const methodHistory = _loadMethodHistory();
   return {
     lastRun: typeof parsed.lastRun === 'string' ? parsed.lastRun : null,
     methodState: (parsed.methodState && typeof parsed.methodState === 'object' && !Array.isArray(parsed.methodState)) ? parsed.methodState : {},
@@ -94,16 +91,29 @@ function loadState(statePath) {
 }
 
 function saveState(statePath, state) {
-  // Tag 134 Phase 5.2: split write — methodHistory to sidecar, everything else to committed file.
+  // F-SM-003: delete methodHistory from committed alert-state (it lives in the sidecar only).
+  // F-SM-006: prune methodState entries for tickers not in current run if lastChanged > 30 days ago.
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
+  const cutoffDate = thirtyDaysAgo.toISOString().slice(0, 10);
+  const prunedMethodState = {};
+  for (const [ticker, methods] of Object.entries(state.methodState || {})) {
+    // Keep if any method was changed within 30 days
+    const hasRecentChange = Object.values(methods).some(m => m && m.lastChanged && m.lastChanged >= cutoffDate);
+    if (hasRecentChange) prunedMethodState[ticker] = methods;
+  }
   const committed = {
     lastRun: state.lastRun,
-    methodState: state.methodState,
+    methodState: prunedMethodState,
+    // F-SM-003: explicitly exclude methodHistory from committed file
     fieldCoverage: state.fieldCoverage
   };
+  // F-SM-008: write sidecar first, then committed state (sidecar failure won't skew stores)
+  _saveMethodHistory(state.methodHistory || {});
+  // Atomic write via tmp+rename (was already done; preserved from existing code)
   const tmp = statePath + '.tmp.' + process.pid;
   fs.writeFileSync(tmp, JSON.stringify(committed)); // Tag 119: no pretty-print
   fs.renameSync(tmp, statePath);
-  _saveMethodHistory(state.methodHistory || {});
 }
 
 // ─── Diff-Detector ────────────────────────────────────────────────
@@ -139,6 +149,15 @@ function detectMethodDiffs(prevMethods, currResults, today) {
         });
       }
       newState[methodId] = { value: result.value, pass: isPass, lastChanged };
+    } else if (!prev && isComputable) {
+      // F-SM-012: first-time observation — mark firstSeen so UI can distinguish
+      // "just added to universe" from "long-term PASS/FAIL"
+      newState[methodId] = {
+        value: result.value,
+        pass: isPass,
+        lastChanged: today,
+        firstSeen: true
+      };
     } else {
       // Behalte lastChanged falls vorhanden, sonst heute
       newState[methodId] = {
@@ -147,8 +166,6 @@ function detectMethodDiffs(prevMethods, currResults, today) {
         lastChanged: prev && prev.lastChanged ? prev.lastChanged : today
       };
     }
-
-    // First-time detection: wenn kein prev-state, optional FIRST_SEEN-Event (skip per default — alert-noise)
   }
   return { events, newState };
 }
@@ -194,7 +211,14 @@ async function main() {
   }
   const state = loadState(args.state);
   const today = new Date().toISOString().slice(0, 10);
-  const newState = { lastRun: new Date().toISOString(), methodState: {}, methodHistory: {}, fieldCoverage: state.fieldCoverage };
+  // F-SM-014: deep clone prior state so tickers absent from a partial pull are NOT deleted.
+  // Only entries for tickers present in the current snapshots are overwritten below.
+  const newState = {
+    lastRun: new Date().toISOString(),
+    methodState: JSON.parse(JSON.stringify(state.methodState || {})),
+    methodHistory: JSON.parse(JSON.stringify(state.methodHistory || {})),
+    fieldCoverage: state.fieldCoverage
+  };
 
   const files = fs.readdirSync(args.snapshots).filter(f => f.endsWith('.json') && f !== '_manifest.json');
   if (files.length === 0) {

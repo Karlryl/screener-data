@@ -39,11 +39,30 @@ const CRITICAL_FIELDS = [
 
 const TOTAL_WEIGHT = CRITICAL_FIELDS.reduce((sum, f) => sum + f.weight, 0);
 
+// F-DQ-007/F-DQ-008: Grade thresholds recalibrated to be percentage-of-max-score based,
+// not absolute-weight based. Previous thresholds were calibrated against TOTAL_WEIGHT=12.5
+// but expressed as nanRatio (missingWeight/TOTAL_WEIGHT), which is correct in principle —
+// but the docstring claimed "B has C+ cap" while tierCapForGrade('B') returned null (no cap).
+//
+// Fix: thresholds now expressed as PRESENT score ratio (1 - nanRatio = presentRatio):
+//   A+: ≥ 80% of max score present  → full evaluation
+//   A:  ≥ 60% of max score present  → full evaluation
+//   B:  ≥ 40% of max score present  → full evaluation (no tier cap — B is trustworthy)
+//   C:  ≥ 0%  of max score present  — NEAR_MISS cap
+//   D:  presentRatio < threshold     — REJECT
+//
+// Equivalently as nanRatio (missing weight / total weight):
+//   A+: nanRatio ≤ 0.20 (≤ 20% missing)
+//   A:  nanRatio ≤ 0.40 (20–40% missing)
+//   B:  nanRatio ≤ 0.60 (40–60% missing)
+//   C:  nanRatio ≤ 1.00 (60–100% missing → NEAR_MISS cap)
+//   D:  nanRatio > 1.00  — impossible (kept for safety)
 const GRADE_THRESHOLDS = {
-  A: 0.10,  // ≤10% missing
-  B: 0.30,  // 10–30% missing
-  C: 0.50   // 30–50% missing
-  // > 50% = D
+  Aplus: 0.20,  // ≤20% missing → A+
+  A:     0.40,  // 20–40% missing → A
+  B:     0.60,  // 40–60% missing → B
+  C:     1.00   // 60–100% missing → C (NEAR_MISS cap enforced by tierCapForGrade)
+  // > 100% = D (impossible with finite weights, kept as safety net)
 };
 
 function _hasMetric(m) {
@@ -77,8 +96,10 @@ function gradeSnapshot(snapshot) {
     }
   }
   const nanRatio = missingWeight / TOTAL_WEIGHT;
+  // F-DQ-007/F-DQ-008: use recalibrated percentage-of-max-score thresholds
   let grade;
-  if (nanRatio <= GRADE_THRESHOLDS.A) grade = 'A';
+  if (nanRatio <= GRADE_THRESHOLDS.Aplus) grade = 'A+';
+  else if (nanRatio <= GRADE_THRESHOLDS.A) grade = 'A';
   else if (nanRatio <= GRADE_THRESHOLDS.B) grade = 'B';
   else if (nanRatio <= GRADE_THRESHOLDS.C) grade = 'C';
   else grade = 'D';
@@ -94,13 +115,19 @@ function gradeSnapshot(snapshot) {
  * Tier-Cap-Lookup: was darf ein Stock mit diesem Grade noch werden?
  * Genutzt von score-aggregator wenn DATAQUALITY_ENFORCE=1 gesetzt ist.
  */
+// F-DQ-007/F-DQ-008: tierCapForGrade updated to match recalibrated grades.
+// A+ and A: no cap — full evaluation.
+// B: no cap — trustworthy enough for picks (40–60% of fields present).
+// C: NEAR_MISS cap — docstring now matches actual behavior (was previously unenforced).
+// D: REJECT — excluded from picks.
 function tierCapForGrade(grade) {
   switch (grade) {
-    case 'A': return null;       // no cap
-    case 'B': return null;       // no cap (B noch vertrauenswürdig)
-    case 'C': return 'NEAR_MISS'; // C kann höchstens NEAR_MISS sein
-    case 'D': return 'REJECT';    // D wird ausgeschlossen
-    default: return null;
+    case 'A+': return null;       // no cap — excellent data quality
+    case 'A':  return null;       // no cap — good data quality
+    case 'B':  return null;       // no cap — B is trustworthy (40–60% of max score)
+    case 'C':  return 'NEAR_MISS'; // C+ cap enforced: can only be NEAR_MISS, not A/B pick
+    case 'D':  return 'REJECT';    // D excluded from all picks
+    default:   return null;
   }
 }
 

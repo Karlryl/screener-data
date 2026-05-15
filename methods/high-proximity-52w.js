@@ -29,7 +29,17 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
-  const window = series.slice(-252);
+  // F-ME-016: detect data frequency from timestamps and scale lookback accordingly
+  let lookback52w = 252; // default: daily
+  if (series.length >= 2 && series[0].date && series[1].date) {
+    const d0 = Date.parse(series[series.length - 2].date);
+    const d1 = Date.parse(series[series.length - 1].date);
+    if (Number.isFinite(d0) && Number.isFinite(d1)) {
+      const avgDaysBetween = (d1 - d0) / (1000 * 60 * 60 * 24);
+      if (avgDaysBetween >= 4) lookback52w = 52; // weekly data
+    }
+  }
+  const window = series.slice(-lookback52w);
   const high52w = Math.max(...window.map(e => e.close));
   const current = window[window.length - 1].close;
   const distFromHigh = (high52w - current) / high52w;

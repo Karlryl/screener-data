@@ -18,7 +18,7 @@ function evaluate(stock) {
     });
   }
   // SBC[0] / Rev[0]
-  const sbc = sbcArr[0];
+  const sbc = sbcArr[0] && typeof sbcArr[0] === 'object' ? sbcArr[0].value : sbcArr[0];
   const rev = revArr[0] && revArr[0].value;
   if (sbc == null || rev == null || rev <= 0) {
     return H.buildResult({

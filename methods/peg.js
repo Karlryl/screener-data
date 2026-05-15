@@ -7,7 +7,8 @@ const THRESHOLD = 1.5;
 const THRESHOLD_OP = 'lte';
 
 function evaluate(stock) {
-  const pe = H.metricValue(stock, 'pe') || H.metricValue(stock, 'forwardPE');
+  const pe_val = H.metricValue(stock, 'pe');
+  const pe = (pe_val != null) ? pe_val : H.metricValue(stock, 'forwardPE');
   const growth = H.metricValue(stock, 'revenueGrowthYoY');
   if (pe == null || growth == null) {
     return H.buildResult({

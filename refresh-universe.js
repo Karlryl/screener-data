@@ -248,8 +248,19 @@ async function main() {
           marketCap: info.marketCap || null,
           name: info.name || '',
           sector: info.sector || '',
-          exchange: info.exchange || ''
+          exchange: info.exchange || '',
+          // F-DP-015: preserve source attribution from discovery source
+          source: info.source || 'unknown'
         });
+      } else {
+        // F-DP-015: ticker already seen — concatenate source field so attribution is not lost
+        const existing = allTickers.get(sym);
+        const newSource = info.source || 'unknown';
+        if (newSource && existing.source && existing.source !== newSource) {
+          existing.source = existing.source + ',' + newSource;
+        } else if (newSource && !existing.source) {
+          existing.source = newSource;
+        }
       }
     }
   }
@@ -260,9 +271,23 @@ async function main() {
   // Tag 165: cap raised from 10000 to 13000 to accommodate OTC + NASDAQ API additions.
   const MAX_UNIVERSE = parseInt(process.env.MAX_UNIVERSE || '13000', 10);
   if (allTickers.size > MAX_UNIVERSE) {
-    const ranked = [...allTickers.entries()].sort((a, b) => (b[1].marketCap || 0) - (a[1].marketCap || 0));
-    const capped = new Map(ranked.slice(0, MAX_UNIVERSE));
-    console.log(`Universe-Cap: ${allTickers.size} -> ${capped.size} (top ${MAX_UNIVERSE} by mcap)`);
+    // F-DP-016: null-mcap tickers (often intentional small-cap additions) were previously
+    // sorted to the bottom and silently dropped first. Fix: segregate null-mcap tickers and
+    // keep a proportional share of them alongside known-mcap tickers.
+    const withMcap    = [...allTickers.entries()].filter(([, v]) => v.marketCap != null && v.marketCap > 0);
+    const withoutMcap = [...allTickers.entries()].filter(([, v]) => !v.marketCap);
+
+    // Sort known-mcap by descending mcap
+    withMcap.sort((a, b) => b[1].marketCap - a[1].marketCap);
+
+    // Proportional share: null-mcap entries get at most 20% of MAX_UNIVERSE slots
+    const maxNullMcap    = Math.round(MAX_UNIVERSE * 0.20);
+    const maxWithMcap    = MAX_UNIVERSE - Math.min(withoutMcap.length, maxNullMcap);
+    const keptWithMcap   = withMcap.slice(0, maxWithMcap);
+    const keptNullMcap   = withoutMcap.slice(0, MAX_UNIVERSE - keptWithMcap.length);
+
+    const capped = new Map([...keptWithMcap, ...keptNullMcap]);
+    console.log(`Universe-Cap: ${allTickers.size} -> ${capped.size} (top ${maxWithMcap} by mcap + ${keptNullMcap.length} null-mcap)`);
     allTickers.clear();
     for (const [k, v] of capped) allTickers.set(k, v);
   }

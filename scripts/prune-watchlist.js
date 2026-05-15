@@ -21,15 +21,19 @@ const path = require('path');
 
 function parseArgs(argv) {
   const args = {
-    watchlist:  path.join(__dirname, '..', 'watchlist.json'),
-    snapshots:  path.join(__dirname, '..', 'snapshots'),
-    maxAgeDays: 60,
+    watchlist:      path.join(__dirname, '..', 'watchlist.json'),
+    snapshots:      path.join(__dirname, '..', 'snapshots'),
+    maxAgeDays:     60,
+    // F-DP-022: tickers with no snapshot after this many days are flagged/removed
+    pruneNoDataDays: 30,
     dryRun: false
   };
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--watchlist' && argv[i+1])   args.watchlist  = argv[++i];
     else if (argv[i] === '--snapshots' && argv[i+1]) args.snapshots = argv[++i];
     else if (argv[i] === '--max-age-days' && argv[i+1]) args.maxAgeDays = parseInt(argv[++i], 10);
+    // F-DP-022: new flag to control how long no-snapshot tickers are tolerated
+    else if (argv[i] === '--prune-no-data-days' && argv[i+1]) args.pruneNoDataDays = parseInt(argv[++i], 10);
     else if (argv[i] === '--dry-run') args.dryRun = true;
   }
   return args;
@@ -51,11 +55,19 @@ function loadSnapshot(snapshotsDir, ticker) {
   catch (e) { return null; }
 }
 
-function isDeadSnapshot(snap, maxAgeDays) {
-  if (!snap) return false; // no snapshot = not dead yet
+// F-DP-023: Returns a specific reason string rather than a boolean, so callers can use
+// accurate labels. Returns null when the ticker should be kept.
+function deadReason(snap, maxAgeDays) {
+  if (!snap) return null; // no snapshot = handled separately by no-data grace period logic
 
-  // Explicit delisted flag
-  if (snap.meta && snap.meta.delisted === true) return true;
+  // F-DP-023: Explicit delisted flag — label accurately
+  if (snap.meta && snap.meta.delisted === true) return 'delisted';
+
+  // No active quote: has a snapshot but no market cap and no recent price
+  const hasMcap   = snap.marketCap && snap.marketCap.value != null && snap.marketCap.value > 0;
+  const hasRev    = snap.annual && snap.annual.annualRev && snap.annual.annualRev.length > 0;
+  const hasSector = snap.meta && snap.meta.sector;
+  const hasPrice  = snap.meta && snap.meta.regularMarketPrice != null;
 
   // Check if snapshot is completely empty AND stale
   const fetchedAt = snap.meta && snap.meta.fetchedAt;
@@ -63,24 +75,30 @@ function isDeadSnapshot(snap, maxAgeDays) {
     const ageMs = Date.now() - new Date(fetchedAt).getTime();
     const ageDays = ageMs / 86400000;
     if (ageDays > maxAgeDays) {
-      // Has any financial data at all?
-      const hasMcap   = snap.marketCap && snap.marketCap.value != null && snap.marketCap.value > 0;
-      const hasRev    = snap.annual && snap.annual.annualRev && snap.annual.annualRev.length > 0;
-      const hasSector = snap.meta && snap.meta.sector;
-      if (!hasMcap && !hasRev && !hasSector) return true;
+      if (!hasMcap && !hasRev && !hasSector) {
+        // F-DP-023: distinguish between no-financial-data and no-active-quote
+        return hasPrice ? 'no-financial-data' : 'no-active-quote';
+      }
     }
   }
 
-  return false;
+  return null;
+}
+
+// Kept for backward compatibility — wraps deadReason
+function isDeadSnapshot(snap, maxAgeDays) {
+  return deadReason(snap, maxAgeDays) !== null;
 }
 
 function main() {
   const args = parseArgs(process.argv);
   console.log('Watchlist Auto-Prune (Tag 142)');
-  console.log('  watchlist:    ' + args.watchlist);
-  console.log('  snapshots:    ' + args.snapshots);
-  console.log('  max-age-days: ' + args.maxAgeDays);
-  console.log('  dry-run:      ' + args.dryRun);
+  console.log('  watchlist:          ' + args.watchlist);
+  console.log('  snapshots:          ' + args.snapshots);
+  console.log('  max-age-days:       ' + args.maxAgeDays);
+  // F-DP-022: show new threshold
+  console.log('  prune-no-data-days: ' + args.pruneNoDataDays);
+  console.log('  dry-run:            ' + args.dryRun);
 
   const wl = JSON.parse(fs.readFileSync(args.watchlist, 'utf8'));
   const before = wl.stocks.length;
@@ -88,11 +106,30 @@ function main() {
 
   const kept = [];
   const pruned = [];
+  const now = Date.now();
 
   for (const entry of wl.stocks) {
     const snap = loadSnapshot(args.snapshots, entry.ticker);
-    if (isDeadSnapshot(snap, args.maxAgeDays)) {
-      const reason = (snap.meta && snap.meta.delisted) ? 'delisted' : 'stale+no-data';
+
+    // F-DP-022: prune tickers with no snapshot that have been in the watchlist too long
+    if (!snap) {
+      const addedAt = entry.added_at || entry.addedAt || null;
+      if (addedAt) {
+        const ageDays = (now - new Date(addedAt).getTime()) / 86400000;
+        if (ageDays > args.pruneNoDataDays) {
+          const reason = 'no-snapshot-after-' + args.pruneNoDataDays + 'd';
+          pruned.push({ ticker: entry.ticker, reason });
+          console.log('  PRUNE ' + entry.ticker.padEnd(10) + ' (' + reason + ')');
+          continue;
+        }
+      }
+      kept.push(entry);
+      continue;
+    }
+
+    // F-DP-023: use deadReason() for accurate labels instead of hardcoded 'stale+no-data'
+    const reason = deadReason(snap, args.maxAgeDays);
+    if (reason !== null) {
       pruned.push({ ticker: entry.ticker, reason });
       console.log('  PRUNE ' + entry.ticker.padEnd(10) + ' (' + reason + ')');
     } else {

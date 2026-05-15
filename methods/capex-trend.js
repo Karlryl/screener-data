@@ -18,9 +18,9 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
-  const capexT = Math.abs(capexArr[0]);  // Yahoo gives capex as negative number
+  const capexT = Math.abs(typeof capexArr[0] === 'object' && capexArr[0] !== null ? capexArr[0].value : capexArr[0]);  // Yahoo gives capex as negative number
   const revT = revArr[0] && revArr[0].value;
-  const capexT3 = Math.abs(capexArr[3]);
+  const capexT3 = Math.abs(typeof capexArr[3] === 'object' && capexArr[3] !== null ? capexArr[3].value : capexArr[3]);
   const revT3 = revArr[3] && revArr[3].value;
   if (capexT == null || revT == null || capexT3 == null || revT3 == null || revT <= 0 || revT3 <= 0) {
     return H.buildResult({

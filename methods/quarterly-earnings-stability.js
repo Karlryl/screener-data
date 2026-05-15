@@ -22,13 +22,15 @@ function evaluate(stock) {
     const v = q && (typeof q === 'number' ? q : q.value);
     if (v != null && v > 0) positive++;
   }
+  // Scale threshold by available window length to avoid penalizing stocks with fewer than 8 quarters
+  const scaled = Math.ceil(THRESHOLD * window.length / 8);
   return H.buildResult({
     value: positive,
-    pass: positive >= THRESHOLD,
+    pass: positive >= scaled,
     computable: true,
-    components: { positiveQuarters: positive, totalQuarters: window.length },
-    reason: `${positive} / ${window.length} Quartale NI > 0`,
-    threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    components: { positiveQuarters: positive, totalQuarters: window.length, scaledThreshold: scaled },
+    reason: `${positive} / ${window.length} Quartale NI > 0 (need >=${scaled})`,
+    threshold: scaled, thresholdOp: THRESHOLD_OP
   });
 }
 

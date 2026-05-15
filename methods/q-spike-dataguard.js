@@ -46,6 +46,11 @@ function _arr(stock, path) {
   if (!Array.isArray(a)) return [];
   return a.map(v => v == null ? null : (typeof v === 'number' ? v : v.value)).filter(v => Number.isFinite(v));
 }
+function _rawArr(stock, path) {
+  const a = H.val(stock, path);
+  if (!Array.isArray(a)) return [];
+  return a.map(v => v == null ? null : (typeof v === 'number' ? v : v.value));
+}
 
 // Tag 126: Clinical-Stage-Biotech-Detection.
 // WVE-Pattern: Industry=Biotechnology + OpMargin<-100% + R&D/Rev>2.0 → Milestone-Revenue, not real product sales.
@@ -68,8 +73,11 @@ function _isSeasonalQ4Spike(stock, qVals) {
   const sectorInfo = ((stock.meta && stock.meta.sector) || '') + ' ' + ((stock.meta && stock.meta.industry) || '');
   if (!SEASONAL_SECTORS.test(sectorInfo)) return false;
   if (qVals.length < 8) return false;
-  const currentQ4Share = qVals[0] / (qVals[0] + qVals[1] + qVals[2] + qVals[3]);
-  const priorQ4Share = qVals[4] / (qVals[4] + qVals[5] + qVals[6] + qVals[7]);
+  // Guard against null values at any of the 8 positions
+  const v = qVals.slice(0, 8);
+  if (v.some(x => x == null || !Number.isFinite(x))) return false;
+  const currentQ4Share = v[0] / (v[0] + v[1] + v[2] + v[3]);
+  const priorQ4Share = v[4] / (v[4] + v[5] + v[6] + v[7]);
   return Math.abs(currentQ4Share - priorQ4Share) < 0.03;  // within 3pp = seasonal pattern
 }
 
@@ -78,8 +86,11 @@ function _isSeasonalQ4Spike(stock, qVals) {
 // In dem Fall: Spike-Konzentration ist erwartet, nicht anomal. Suppress alert für 2-3 Quartale.
 function _inLaunchInflection(qVals) {
   if (qVals.length < 8) return false;
-  const recent4 = (qVals[0] + qVals[1] + qVals[2] + qVals[3]) / 4;
-  const prior4 = (qVals[4] +qVals[5] + qVals[6] + qVals[7]) / 4;
+  // Guard against null values at any of the 8 positions
+  const v = qVals.slice(0, 8);
+  if (v.some(x => x == null || !Number.isFinite(x))) return false;
+  const recent4 = (v[0] + v[1] + v[2] + v[3]) / 4;
+  const prior4 = (v[4] + v[5] + v[6] + v[7]) / 4;
   return prior4 > 0 && recent4 / prior4 > 1.5;
 }
 
@@ -103,7 +114,8 @@ function evaluate(stock) {
     });
   }
   const yoyGrowth = H.metricValue(stock, 'revenueGrowthYoY');
-  const revQ = _arr(stock, 'timeseries.revenueQ');
+  // Use raw array for revQ to preserve positional alignment (qVals[i+4] comparisons)
+  const revQ = _rawArr(stock, 'timeseries.revenueQ');
   const oiArr = _arr(stock, 'annual.annualOpInc');
   const ttmRev = H.metricValue(stock, 'revenueTTM') || (_arr(stock, 'annual.annualRev')[0] || 0);
   const mcapField = H.val(stock, 'marketCap');
@@ -169,10 +181,12 @@ function evaluate(stock) {
   let spikeShare = null;
   let spikeSuppression = null;
   if (revQ.length >= 4) {
-    const last4 = revQ.slice(0, 4);
-    const total = last4.reduce((s, v) => s + v, 0);
-    const max = Math.max(...last4);
-    if (total > 0) spikeShare = max / total;
+    const last4 = revQ.slice(0, 4).filter(v => v != null && Number.isFinite(v));
+    if (last4.length === 4) {
+      const total = last4.reduce((s, v) => s + v, 0);
+      const max = Math.max(...last4);
+      if (total > 0) spikeShare = max / total;
+    }
     if (spikeShare != null && spikeShare > SPIKE_SHARE_HARD) {
       if (_isSeasonalQ4Spike(stock, revQ)) {
         spikeSuppression = 'seasonal_q4_pattern';

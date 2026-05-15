@@ -57,9 +57,17 @@ function evaluate(stock) {
 
   // X2: Retained Earnings proxy = sum of last 3 years net income / assets
   const niArr = stock.annual && stock.annual.annualNetIncome;
-  const ni0 = _annualVal(niArr, 0) || 0;
-  const ni1 = _annualVal(niArr, 1) || 0;
-  const ni2 = _annualVal(niArr, 2) || 0;
+  const ni0Raw = _annualVal(niArr, 0);
+  const ni1Raw = _annualVal(niArr, 1);
+  const ni2Raw = _annualVal(niArr, 2);
+  // Distinguish missing data from genuine zero: require at least 2 finite NI values
+  const niFiniteCount = [ni0Raw, ni1Raw, ni2Raw].filter(v => Number.isFinite(v)).length;
+  if (!Number.isFinite(ni0Raw) && niFiniteCount < 2) {
+    return H.buildResult({ computable: false, reason: 'insufficient NI data (need >=2 years)', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP });
+  }
+  const ni0 = Number.isFinite(ni0Raw) ? ni0Raw : 0;
+  const ni1 = Number.isFinite(ni1Raw) ? ni1Raw : 0;
+  const ni2 = Number.isFinite(ni2Raw) ? ni2Raw : 0;
   const retainedEarningsProxy = ni0 + ni1 + ni2;
   const X2 = retainedEarningsProxy / assets;
 

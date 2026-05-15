@@ -40,13 +40,19 @@ function _arr(stock, path) {
   if (!Array.isArray(a)) return [];
   return a.map(v => v == null ? null : (typeof v === 'number' ? v : v.value)).filter(v => Number.isFinite(v));
 }
+function _rawArr(stock, path) {
+  const a = H.val(stock, path);
+  if (!Array.isArray(a)) return [];
+  return a.map(v => v == null ? null : (typeof v === 'number' ? v : v.value));
+}
 
 function evaluate(stock) {
   const oiArr = _arr(stock, 'annual.annualOpInc');
-  const revQ = _arr(stock, 'timeseries.revenueQ');
-  const revY = _arr(stock, 'annual.annualRev');
+  // Use raw arrays for revQ and revY so positional YoY comparisons (revQ[i] vs revQ[i+4]) stay aligned
+  const revQ = _rawArr(stock, 'timeseries.revenueQ');
+  const revY = _rawArr(stock, 'annual.annualRev');
   const yoyGrowth = H.metricValue(stock, 'revenueGrowthYoY');
-  const ttmRev = H.metricValue(stock, 'revenueTTM') || (revY[0] || 0);
+  const ttmRev = H.metricValue(stock, 'revenueTTM') || (Number.isFinite(revY[0]) ? revY[0] : 0);
   const mcapField = H.val(stock, 'marketCap');
   const mcap = (typeof mcapField === 'number') ? mcapField : (mcapField && mcapField.value) || 0;
 
@@ -68,17 +74,19 @@ function evaluate(stock) {
     breadthOk = true;
     for (let i = 0; i < 4; i++) {
       const cur = revQ[i], prev = revQ[i + 4];
-      if (cur > 0 && prev > 0) {
+      // Skip if either value is null/NaN — positional alignment preserved
+      if (cur != null && Number.isFinite(cur) && cur > 0 && prev != null && Number.isFinite(prev) && prev > 0) {
         const g = (cur - prev) / prev;
         if (g > 0.5) strongQ++;
         if (g > 0.25) solidQ++;
       }
     }
-  } else if (revY.length >= 4) {
+  } else if (revY.filter(v => Number.isFinite(v)).length >= 4) {
     breadthOk = true; breadthSource = 'y';
     for (let i = 0; i < 3; i++) {
       const cur = revY[i], prev = revY[i + 1];
-      if (cur > 0 && prev > 0) {
+      // Skip if either value is null/NaN — positional alignment preserved
+      if (cur != null && Number.isFinite(cur) && cur > 0 && prev != null && Number.isFinite(prev) && prev > 0) {
         const g = (cur - prev) / prev;
         if (g > 0.5) strongQ++;
         if (g > 0.25) solidQ++;
@@ -111,10 +119,12 @@ function evaluate(stock) {
   // Faktor 3: Spike Concentration
   let spikeShare = null;
   if (revQ.length >= 4) {
-    const last4 = revQ.slice(0, 4);
-    const total = last4.reduce((s, v) => s + v, 0);
-    const max = Math.max(...last4);
-    if (total > 0) spikeShare = max / total;
+    const last4 = revQ.slice(0, 4).filter(v => v != null && Number.isFinite(v));
+    if (last4.length === 4) {
+      const total = last4.reduce((s, v) => s + v, 0);
+      const max = Math.max(...last4);
+      if (total > 0) spikeShare = max / total;
+    }
   }
 
   // Klassifikation

@@ -22,14 +22,24 @@ function evaluate(stock) {
   const ticker = stock && stock.meta && stock.meta.ticker;
   if (!ticker) return H.buildResult({ computable: false, reason: 'no ticker', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP });
   const series = (_loadPrices()[ticker]) || [];
-  if (series.length < 200) {
+  // F-ME-016: detect data frequency from timestamps and scale lookback accordingly
+  let lookback200d = 200; // default: daily
+  if (series.length >= 2 && series[0].date && series[1].date) {
+    const d0 = Date.parse(series[series.length - 2].date);
+    const d1 = Date.parse(series[series.length - 1].date);
+    if (Number.isFinite(d0) && Number.isFinite(d1)) {
+      const avgDaysBetween = (d1 - d0) / (1000 * 60 * 60 * 24);
+      if (avgDaysBetween >= 4) lookback200d = 40; // weekly: ~40 weeks ≈ 200 calendar days
+    }
+  }
+  if (series.length < lookback200d) {
     return H.buildResult({
-      computable: false, reason: `need ≥200 daily prices (got ${series.length})`,
+      computable: false, reason: `need ≥${lookback200d} prices (got ${series.length})`,
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
-  const last200 = series.slice(-200);
-  const ma200 = last200.reduce((s, e) => s + e.close, 0) / 200;
+  const last200 = series.slice(-lookback200d);
+  const ma200 = last200.reduce((s, e) => s + e.close, 0) / lookback200d;
   const current = series[series.length - 1].close;
   const ratio = current / ma200;
   return H.buildResult({

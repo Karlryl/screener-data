@@ -80,7 +80,17 @@ function archiveDirByDate(srcDir, archiveDir, keepDays, dryRun) {
     } else {
       fs.writeFileSync(ndjsonPath, lines);
     }
-    // Now delete the originals
+    // F-SM-013: verify the archive is readable before unlinking originals
+    // Parse the first line to confirm the write succeeded and the file is valid NDJSON
+    try {
+      const firstLine = fs.readFileSync(ndjsonPath, 'utf8').split('\n')[0];
+      if (!firstLine || firstLine.trim() === '') throw new Error('archive file is empty');
+      JSON.parse(firstLine);
+    } catch (verifyErr) {
+      console.warn('  archive verify failed for ' + ndjsonPath + ': ' + verifyErr.message + ' — skipping unlink of originals');
+      continue;
+    }
+    // Only unlink originals after successful archive verification
     for (const e of entries) {
       const orig = path.join(srcDir, e.date + '.json');
       try { fs.unlinkSync(orig); } catch (err) { console.warn('  unlink fail ' + e.date + ': ' + err.message); }

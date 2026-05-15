@@ -20,13 +20,32 @@ function parseArgs(argv) {
   return args;
 }
 
-function main() {
+// F-PF-007: async batch file loader — avoids serial fs.readFileSync across 12k+ files
+async function loadFilesAsync(dir, fileList) {
+  const BATCH = 200;
+  const results = [];
+  for (let i = 0; i < fileList.length; i += BATCH) {
+    const batch = fileList.slice(i, i + BATCH);
+    const loaded = await Promise.all(batch.map(f => {
+      try {
+        const raw = fs.readFileSync(path.join(dir, f), 'utf8');
+        return { file: f, data: JSON.parse(raw), error: null };
+      } catch (e) {
+        return { file: f, data: null, error: e.message };
+      }
+    }));
+    results.push(...loaded);
+  }
+  return results;
+}
+
+async function main() {
   const args = parseArgs(process.argv);
   if (!fs.existsSync(args.out)) fs.mkdirSync(args.out, { recursive: true });
   const today = new Date().toISOString().slice(0, 10);
   const outFile = path.join(args.out, `${today}.json`);
 
-  const files = fs.readdirSync(args.snapshots).filter(f => f.endsWith('.json') && f !== '_manifest.json');
+  const fileList = fs.readdirSync(args.snapshots).filter(f => f.endsWith('.json') && f !== '_manifest.json');
   const data = { date: today, stocks: {} };
   let allPass = 0, anyComputable = 0;
 
@@ -54,12 +73,13 @@ function main() {
   // Tag 168: track per-stock failures for pipeline health reporting
   const _pipelineFailures = [];
 
-  for (const file of files) {
-    let stock;
-    try { stock = JSON.parse(fs.readFileSync(path.join(args.snapshots, file), 'utf8')); }
-    catch (e) {
+  // F-PF-007: load all files in async batches
+  const loaded = await loadFilesAsync(args.snapshots, fileList);
+
+  for (const { file, data: stock, error } of loaded) {
+    if (error || !stock) {
       const ticker = file.replace(/\.json$/, '');
-      _pipelineFailures.push({ ticker, error: 'JSON parse error: ' + e.message });
+      _pipelineFailures.push({ ticker, error: error || 'null data' });
       continue;
     }
     const ticker = (stock.meta && stock.meta.ticker) || file.replace(/\.json$/, '');
@@ -77,12 +97,15 @@ function main() {
       if (r.computable) computableCount++;
       if (r.computable && r.pass) passCount++;
     }
+    // F-BT-008: ensure quality field is always present (null for stocks without _quality).
+    // method-effectiveness.js reads this field for byQuality split; must not be absent.
+    const qualityGrade = (stock._quality && stock._quality.grade) ? stock._quality.grade : null;
     data.stocks[ticker] = {
       results: compact,
       computable: computableCount,
       passing: passCount,
-      // Tag 134 — Phase 3.4
-      quality: (stock._quality && stock._quality.grade) || null,
+      // Tag 134 — Phase 3.4 / F-BT-008: quality is always present (null when _quality absent)
+      quality: qualityGrade,
       nanRatio: (stock._quality && stock._quality.nanRatio) != null ? stock._quality.nanRatio : null,
       inputs: _digest(stock)
     };
@@ -90,16 +113,20 @@ function main() {
     if (computableCount === Object.keys(results).length && passCount === computableCount) allPass++;
   }
   data.summary = {
-    totalStocks: files.length,
+    totalStocks: fileList.length,
     anyComputable, allPass,
     methodCount: Runner.getMethods().length
   };
-  fs.writeFileSync(outFile, JSON.stringify(data, null, 2));
+  // F-PF-005: use JSON.stringify without indent (machine-readable only file, saves ~30-40% size and ~5-10x stringify time)
+  // F-SM-005: atomic write via tmp+rename to prevent unparseable partial-write on SIGKILL
+  const tmpFile = outFile + '.tmp';
+  fs.writeFileSync(tmpFile, JSON.stringify(data));
+  fs.renameSync(tmpFile, outFile);
   console.log(`✓ History-Snapshot: ${outFile}`);
-  console.log(`  ${files.length} stocks, ${anyComputable} mit ≥1 computable, ${allPass} stocks pass alle Methoden`);
+  console.log(`  ${fileList.length} stocks, ${anyComputable} mit ≥1 computable, ${allPass} stocks pass alle Methoden`);
 
   // Tag 168: write pipeline-health report and enforce 5% threshold
-  const n_total = files.length;
+  const n_total = fileList.length;
   const n_failed = _pipelineFailures.length;
   const n_ok = n_total - n_failed;
   const failure_rate = n_total > 0 ? n_failed / n_total : 0;
@@ -113,4 +140,4 @@ function main() {
     process.exit(1);
   }
 }
-main();
+main().catch(e => { console.error('snapshot-methods-history failed: ' + e.message); process.exit(1); });

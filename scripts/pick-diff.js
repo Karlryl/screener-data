@@ -122,7 +122,8 @@ function main() {
   }
 
   // Rolling 4-week Jaccard average
-  const recentVintages = picksVintages.slice(-5); // latest + 4 priors
+  // F-BT-007: use slice(-28) for ~4 weeks of daily snapshots (was slice(-5) which is ~1 week)
+  const recentVintages = picksVintages.slice(-28); // up to 28 daily snapshots ≈ 4 calendar weeks
   diff.rollingJaccard = {};
   for (const mode of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
     const tickerSets = [];
@@ -133,6 +134,8 @@ function main() {
     const pairwise = [];
     for (let i = 1; i < tickerSets.length; i++) pairwise.push(jaccard(tickerSets[i-1], tickerSets[i]));
     diff.rollingJaccard[mode] = {
+      // F-BT-007: label reflects actual window (4w = up to 28 daily snapshots)
+      window: '4w',
       windowVintages: tickerSets.length,
       pairwiseJaccards: pairwise,
       meanJaccard: pairwise.length ? Math.round(pairwise.reduce((s, j) => s + j, 0) / pairwise.length * 1000) / 1000 : null
@@ -168,7 +171,7 @@ function main() {
     html += '<h2>' + mode + '</h2>';
     html += '<div class="sub">' +
       'Jaccard week-over-week: <span class="' + jacClass + '">' + m.jaccard + '</span> &middot; ' +
-      'Rolling 4w mean Jaccard: <span>' + (r.meanJaccard != null ? r.meanJaccard : '—') + '</span> &middot; ' +
+      'Rolling 4w mean Jaccard (28 snapshots): <span>' + (r.meanJaccard != null ? r.meanJaccard : '—') + '</span> &middot; ' +
       'today=' + m.latestN + ' &middot; ' + priorDate + '=' + m.priorN + ' &middot; ' +
       'added=<span class="added">' + m.added.length + '</span> &middot; ' +
       'removed=<span class="removed">' + m.removed.length + '</span> &middot; ' +

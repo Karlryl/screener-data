@@ -18,6 +18,11 @@ function _arrVals(stock, path) {
   if (!Array.isArray(arr)) return [];
   return arr.map(function(v){ return v == null ? null : (typeof v === 'number' ? v : v.value); }).filter(function(v){ return Number.isFinite(v); });
 }
+function _rawVals(stock, path) {
+  var arr = H.val(stock, path);
+  if (!Array.isArray(arr)) return [];
+  return arr.map(function(v){ return v == null ? null : (typeof v === 'number' ? v : v.value); });
+}
 
 function _median(arr) {
   if (!arr.length) return null;
@@ -30,20 +35,31 @@ function evaluate(stock) {
   if (!stock) {
     return H.buildResult({ computable: false, pass: false, reason: 'no stock data' });
   }
-  var capexRaw = _arrVals(stock, 'annual.annualCapex');
-  var capex = capexRaw.map(function(v){ return Math.abs(v); });
-  var ocfDirect = _arrVals(stock, 'annual.annualOCF');
-  var fcf = _arrVals(stock, 'annual.annualFCF');
-  var rnd = _arrVals(stock, 'annual.annualRnD');
+  // Use raw (positionally aligned) arrays for parallel indexing
+  var rawCapexRaw = _rawVals(stock, 'annual.annualCapex');
+  var rawCapex = rawCapexRaw.map(function(v){ return v == null ? null : Math.abs(v); });
+  var rawOcfDirect = _rawVals(stock, 'annual.annualOCF');
+  var rawFcf = _rawVals(stock, 'annual.annualFCF');
+  var rawRnd = _rawVals(stock, 'annual.annualRnD');
+  // Filtered arrays for length checks
+  var capex = rawCapex.filter(function(v){ return Number.isFinite(v); });
+  var ocfDirect = rawOcfDirect.filter(function(v){ return Number.isFinite(v); });
+  var fcf = rawFcf.filter(function(v){ return Number.isFinite(v); });
+  var rnd = rawRnd.filter(function(v){ return Number.isFinite(v); });
 
   var ocfSource;
-  var ocf;
+  var ocf, rawOcf;
   if (ocfDirect.length >= 3) {
-    ocf = ocfDirect; ocfSource = 'direct';
+    ocf = ocfDirect; rawOcf = rawOcfDirect; ocfSource = 'direct';
   } else if (fcf.length >= 3 && capex.length >= 3) {
-    var yrs = Math.min(fcf.length, capex.length);
-    ocf = [];
-    for (var i = 0; i < yrs; i++) ocf.push(fcf[i] + capex[i]);
+    // Build positionally-aligned OCF from raw arrays
+    var yrs = Math.min(rawFcf.length, rawCapex.length);
+    rawOcf = [];
+    for (var i = 0; i < yrs; i++) {
+      var fv = rawFcf[i], cv = rawCapex[i];
+      rawOcf.push((Number.isFinite(fv) && Number.isFinite(cv)) ? fv + cv : null);
+    }
+    ocf = rawOcf.filter(function(v){ return Number.isFinite(v); });
     ocfSource = 'fcf+capex';
   } else {
     return H.buildResult({
@@ -62,12 +78,12 @@ function evaluate(stock) {
   }
 
   var ratios = [];
-  var yearsAvail = Math.min(5, capex.length, ocf.length);
+  var yearsAvail = Math.min(5, rawCapex.length, rawOcf.length);
   for (var j = 0; j < yearsAvail; j++) {
-    var c = capex[j] || 0;
-    var r = (rnd[j] != null && Number.isFinite(rnd[j])) ? rnd[j] : 0;
-    var o = ocf[j];
-    if (o == null || o <= 0) continue;
+    var c = Number.isFinite(rawCapex[j]) ? rawCapex[j] : 0;
+    var r = (j < rawRnd.length && Number.isFinite(rawRnd[j])) ? rawRnd[j] : 0;
+    var o = rawOcf[j];
+    if (!Number.isFinite(o) || o <= 0) continue;
     ratios.push((c + r) / o);
   }
 

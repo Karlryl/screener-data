@@ -15,6 +15,7 @@
 // Tag 153: paths corrected to match pull-yahoo.js canonical snapshot structure.
 // Previous paths used 'metrics.*' for all fields; actual structure has annual.*/timeseries.*/meta.*
 // Those 12 wrong-path fields reported 0% coverage on every run since Tag 22.
+// F-DQ-006: added fcfMarginTTM, forwardPE, annualSBC, annualCapex, totalDebt, insiderOwnerPercent
 const TRACKED_FIELDS = [
   'annual.annualRev',           // array of {value,...} — check non-empty
   'annual.annualOpInc',
@@ -29,7 +30,14 @@ const TRACKED_FIELDS = [
   'meta.sector',                // was: metrics.sector
   'meta.industry',              // was: metrics.industry
   'metrics.operatingMargin.value', // .value to check actual data, not just wrapper presence
-  'metrics.grossMargin.value'
+  'metrics.grossMargin.value',
+  // F-DQ-006: previously missing fields — methods depend on these
+  'metrics.fcfMarginTTM.value',    // FCF margin TTM — used by fcf-yield, rule-of-40
+  'metrics.forwardPE.value',       // Forward P/E — used by forward-pe method
+  'annual.annualSBC',              // Stock-based compensation — used by sbc-revenue method
+  'annual.annualCapex',            // Capital expenditures — used by capex-trend, reinvestment-rate
+  'annual.annualBalance',          // Balance sheet (includes totalDebt) — used by altman-z, net-debt-ebitda
+  'metrics.insiderOwnerPercent.value', // Insider ownership % — used by insider-ownership method
 ];
 
 const HISTORY_WINDOW = 14;      // Rolling window: letzte 14 Runs für Baseline (war 6 — zu kurz bei 2 Runs/Tag)
@@ -75,7 +83,12 @@ function computeCoverage(snapshots) {
 // Hängt neuen Entry an History, behält nur letzte HISTORY_WINDOW.
 function updateHistory(history, newEntry) {
   const safe = Array.isArray(history) ? history : [];
-  return [...safe, newEntry].slice(-HISTORY_WINDOW);
+  const extended = [...safe, newEntry];
+  // F-SM-010: log when history is truncated due to HISTORY_WINDOW change
+  if (extended.length > HISTORY_WINDOW) {
+    console.warn('fieldCoverage: history truncated from', extended.length, 'to', HISTORY_WINDOW);
+  }
+  return extended.slice(-HISTORY_WINDOW);
 }
 
 // Baseline = Mittel aus allen Entries OHNE den aktuellen (letzten).
@@ -95,10 +108,36 @@ function computeBaseline(history) {
   return baseline;
 }
 
+// F-DQ-005: Absolute floor for coverage — below this level always alert regardless of baseline.
+const ABSOLUTE_FLOOR = 0.50;  // 50% coverage floor
+
 // Liefert Liste der Fields die signifikant gedroppt sind.
+// F-DQ-005: Also emits HIGH-severity alert for any field below ABSOLUTE_FLOOR,
+// even on cold start when baseline is unavailable (history < 2 entries).
 function detectDrift(currentCoverage, baseline) {
   const drifts = [];
+  const seenFields = new Set();
+
+  // F-DQ-005: Absolute floor check — independent of baseline, catches cold-start silent drops
   for (const field of TRACKED_FIELDS) {
+    const cur = currentCoverage[field];
+    if (typeof cur !== 'number') continue;
+    if (cur < ABSOLUTE_FLOOR) {
+      drifts.push({
+        field,
+        current:  Math.round(cur * 100) / 100,
+        baseline: typeof baseline[field] === 'number' ? Math.round(baseline[field] * 100) / 100 : null,
+        drop:     typeof baseline[field] === 'number' ? Math.round((baseline[field] - cur) * 100) / 100 : null,
+        severity: 'HIGH',
+        reason:   'below-50pct-floor'
+      });
+      seenFields.add(field);
+    }
+  }
+
+  // Standard baseline-vs-current drift detection
+  for (const field of TRACKED_FIELDS) {
+    if (seenFields.has(field)) continue; // already reported via floor check
     const cur = currentCoverage[field];
     const base = baseline[field];
     if (typeof cur !== 'number' || typeof base !== 'number') continue;
@@ -106,9 +145,11 @@ function detectDrift(currentCoverage, baseline) {
     if (drop >= DROP_THRESHOLD) {
       drifts.push({
         field,
-        current: Math.round(cur * 100) / 100,
+        current:  Math.round(cur * 100) / 100,
         baseline: Math.round(base * 100) / 100,
-        drop: Math.round(drop * 100) / 100
+        drop:     Math.round(drop * 100) / 100,
+        severity: 'MEDIUM',
+        reason:   'baseline-drop'
       });
     }
   }
@@ -120,6 +161,7 @@ module.exports = {
   HISTORY_WINDOW,
   DROP_THRESHOLD,
   MIN_HISTORY_FOR_ALERT,
+  ABSOLUTE_FLOOR,
   computeCoverage,
   updateHistory,
   computeBaseline,

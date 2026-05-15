@@ -1,13 +1,13 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 /**
- * Tag 109: Modes-Report — Top-Tabs + Tabellen-Layout + Sparklines + Aktienfinder-Klick
+ * Tag 109: Modes-Report â€” Top-Tabs + Tabellen-Layout + Sparklines + Aktienfinder-Klick
  * =====================================================================================
  * - Modi als Top-Level-Tabs (nicht mehr stacked Sections)
  * - Top-200 statt Top-50 pro Sub-Tab
  * - Compact Tabellen-Listings: ~38px pro Stock, ~20 sichtbar pro Viewport
  * - Sparkline (annual.annualRev) inline-SVG pro Stock
  * - Branchen-Filter im UI (dynamisch aus eligible-Set)
- * - Click → Aktienfinder (https://aktienfinder.net/aktie/[ticker-base])
+ * - Click â†’ Aktienfinder (https://aktienfinder.net/aktie/[ticker-base])
  * - R-of-40 + R-of-X Sub-Tabs zeigen jeweils ihren Wert prominent
  * - Anthrazit-Premium-Stil, JetBrains Mono fuer Numerics
  */
@@ -25,11 +25,11 @@ const REGION_TO_COUNTRY = {
   'XETRA': 'Deutschland', 'Frankfurt': 'Deutschland',
   'LSE': 'UK', 'Toronto': 'Kanada', 'HKSE': 'Hongkong',
   'Shanghai': 'China', 'Shenzhen': 'China',
-  'KSE': 'Südkorea', 'KOSDAQ': 'Südkorea',
+  'KSE': 'SÃ¼dkorea', 'KOSDAQ': 'SÃ¼dkorea',
   'ASX': 'Australien', 'Tokyo': 'Japan', 'Paris': 'Frankreich',
   'Amsterdam': 'Niederlande', 'Swiss': 'Schweiz', 'Stockholm': 'Schweden',
-  'Oslo': 'Norwegen', 'Copenhagen': 'Dänemark', 'Helsinki': 'Finnland',
-  'Milan': 'Italien', 'MCE': 'Spanien', 'Vienna': 'Österreich',
+  'Oslo': 'Norwegen', 'Copenhagen': 'DÃ¤nemark', 'Helsinki': 'Finnland',
+  'Milan': 'Italien', 'MCE': 'Spanien', 'Vienna': 'Ã–sterreich',
   'Brussels': 'Belgien', 'Athens': 'Griechenland', 'Warsaw': 'Polen',
   'Lisbon': 'Portugal', 'Irish': 'Irland', 'Sao Paulo': 'Brasilien',
   'Mexico': 'Mexiko', 'SES': 'Singapur', 'Taiwan': 'Taiwan',
@@ -52,7 +52,7 @@ function escHtml(s) {
 }
 
 function fmtMoney(v) {
-  if (!Number.isFinite(v)) return '—';
+  if (!Number.isFinite(v)) return 'â€”';
   if (v >= 1e12) return '$' + (v/1e12).toFixed(1) + 'T';
   if (v >= 1e9) return '$' + (v/1e9).toFixed(1) + 'B';
   if (v >= 1e6) return '$' + (v/1e6).toFixed(0) + 'M';
@@ -60,7 +60,7 @@ function fmtMoney(v) {
 }
 
 function fmtValue(v, unit) {
-  if (v == null || !Number.isFinite(v)) return '—';
+  if (v == null || !Number.isFinite(v)) return 'â€”';
   if (unit === 'percent') return v.toFixed(1) + '%';
   if (unit === 'ratio' && Math.abs(v) < 1) return (v*100).toFixed(2) + '%';
   if (typeof v === 'string') return v;
@@ -153,12 +153,15 @@ function blockedByOneMust(eligible, modeId, topN) {
   return items.slice(0, topN);
 }
 
+// F-PF-011: compile regex once at module scope instead of per-call inside dedupeByCompany
+const COMPANY_SUFFIX_REGEX = /\b(inc|corporation|corp|incorporated|company|co|ltd|limited|plc|sa|a\/s|ag|nv|holdings|holding|group|grp|sarl|spa|n\.v\.)\b/gi;
+
 function dedupeByCompany(evaluated) {
   function norm(s) {
     if (!s) return '';
     return String(s).toLowerCase()
-      .replace(/[éèêë]/g, 'e').replace(/[óòôö]/g, 'o').replace(/[áàâä]/g, 'a')
-      .replace(/\b(inc|corporation|corp|incorporated|company|co|ltd|limited|plc|sa|a\/s|ag|nv|holdings|holding|group|grp|sarl|spa|n\.v\.)\b/gi, '')
+      .replace(/[Ã©Ã¨ÃªÃ«]/g, 'e').replace(/[Ã³Ã²Ã´Ã¶]/g, 'o').replace(/[Ã¡Ã Ã¢Ã¤]/g, 'a')
+      .replace(COMPANY_SUFFIX_REGEX, '')
       .replace(/[^a-z0-9]+/g, '').trim();
   }
   const byKey = new Map();
@@ -194,13 +197,14 @@ function eligibleForMode(evaluated, modeId) {
 }
 
 function topByMethod(eligible, methodId, methodMeta, topN, modeId) {
-  // Tag 112c: Sub-Tab respektiert MUST-Filter — IONQ/MRNA fliegen ueberall raus, nicht nur in "Beste Kandidaten"
+  // Tag 112c: Sub-Tab respektiert MUST-Filter â€” IONQ/MRNA fliegen ueberall raus, nicht nur in “Beste Kandidaten”
+  // F-PF-002: use pre-computed modeEvals cache instead of re-evaluating (no fallback to SM.evaluateMode)
   const valid = eligible.filter(ev => {
     const r = ev.allResults[methodId];
     if (!(r && r.computable && Number.isFinite(r.value))) return false;
     if (modeId) {
-      const me = SM.evaluateMode(ev.stock, modeId, ev.allResults);
-      if (!me.passed) return false;
+      const me = ev.modeEvals && ev.modeEvals[modeId];
+      if (!me || !me.passed) return false;
     }
     return true;
   });
@@ -215,9 +219,10 @@ function topByMethod(eligible, methodId, methodMeta, topN, modeId) {
 
 function topAllMust(eligible, modeId, topN) {
   const mode = SM.MODES[modeId];
+  // F-PF-002: use pre-computed modeEvals cache instead of re-evaluating (no fallback to SM.evaluateMode)
   const passing = eligible.filter(ev => {
-    const me = SM.evaluateMode(ev.stock, modeId, ev.allResults);
-    return me.passed;
+    const me = ev.modeEvals && ev.modeEvals[modeId];
+    return me && me.passed;
   });
   const sortMethodId = mode && mode.defaultSortMethod;
   const sortMethodMeta = sortMethodId ? Runner.METHODS.find(m => m.id === sortMethodId) : null;
@@ -234,7 +239,7 @@ function topAllMust(eligible, modeId, topN) {
   return passing.slice(0, topN);
 }
 
-const PSTATE_LABEL = { LOSS:'Loss', TURNAROUND:'Turn', RECENT:'Recent', STABLE:'Stable', NA:'—' };
+const PSTATE_LABEL = { LOSS:'Loss', TURNAROUND:'Turn', RECENT:'Recent', STABLE:'Stable', NA:'â€”' };
 const PSTATE_CLASS = { LOSS:'pst-loss', TURNAROUND:'pst-turnaround', RECENT:'pst-recent', STABLE:'pst-stable', NA:'pst-na' };
 
 function _arrVals(arr) {
@@ -244,28 +249,31 @@ function _arrVals(arr) {
 
 function buildSparkline(stock) {
   const a = (stock.annual && stock.annual.annualRev) || [];
-  const vals = _arrVals(a).slice(0, 5).reverse(); // oldest → newest, max 5
+  const vals = _arrVals(a).slice(0, 5).reverse(); // oldest â†’ newest, max 5
   if (vals.length < 2) return '';
   const min = Math.min(...vals);
   const max = Math.max(...vals);
   const range = max - min || 1;
   const w = 56, h = 16;
-  const pts = vals.map((v, i) => {
+  // F-PF-013: use array.join instead of string concatenation in hot path
+  const ptParts = [];
+  for (let i = 0; i < vals.length; i++) {
     const x = (i / (vals.length - 1)) * w;
-    const y = h - ((v - min) / range) * h;
-    return x.toFixed(1) + ',' + y.toFixed(1);
-  }).join(' ');
+    const y = h - ((vals[i] - min) / range) * h;
+    ptParts.push(x.toFixed(1) + ',' + y.toFixed(1));
+  }
+  const pts = ptParts.join(' ');
   return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 }
 
 function aktienfinderUrl(ticker) {
-  // Tag 110: Aktienfinder hat kein einheitliches URL-Schema → Google-Site-Search nutzen
+  // Tag 110: Aktienfinder hat kein einheitliches URL-Schema â†’ Google-Site-Search nutzen
   // Top-Treffer ist meist die Aktienfinder-Aktien-Seite
   const base = ticker.split(/[.\-]/)[0];
   return 'https://www.google.com/search?q=' + encodeURIComponent('site:aktienfinder.net ' + base + ' aktie');
 }
 
-// ─── Tag 136: Complete UI redesign — card grid + sidebar filters ──────────────
+// â”€â”€â”€ Tag 136: Complete UI redesign â€” card grid + sidebar filters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function scoreColor(s) {
   if (s >= 80) return '#4ade80';
@@ -274,7 +282,7 @@ function scoreColor(s) {
   return '#f87171';
 }
 
-function renderCard(ev, modeId, opts) {
+function renderCard(ev, modeId, opts, stockDataMap) {
   const s = ev.stock;
   const ticker  = (s.meta && s.meta.ticker) || '???';
   const name    = (s.meta && s.meta.name) || '';
@@ -285,6 +293,16 @@ function renderCard(ev, modeId, opts) {
   const region  = (s.meta && s.meta.region) || '';
   const country = REGION_TO_COUNTRY[region] || region || '';
   const spark   = buildSparkline(s);
+
+  // F-PF-006: populate stockDataMap (deduplicated by ticker) instead of embedding per-card
+  if (stockDataMap && !stockDataMap[ticker]) {
+    stockDataMap[ticker] = {
+      meta: { ticker, name, sector, industry: (s.meta && s.meta.industry) || '', country: (s.meta && s.meta.country) || '', marketCap: mcap },
+      timeseries: { revenueQ: ((s.timeseries && s.timeseries.revenueQ) || []).slice(0, 8) },
+      annual: { annualRev: ((s.annual && s.annual.annualRev) || []).slice(0, 5), annualOpInc: ((s.annual && s.annual.annualOpInc) || []).slice(0, 5), annualFCF: ((s.annual && s.annual.annualFCF) || []).slice(0, 5) },
+      metrics: { revenueGrowthYoY: (s.metrics && s.metrics.revenueGrowthYoY && s.metrics.revenueGrowthYoY.value != null) ? s.metrics.revenueGrowthYoY.value : null }
+    };
+  }
 
   const psRes    = ev.allResults['profitability-state'];
   const profState = (psRes && psRes.computable && psRes.components) ? psRes.components.state : 'NA';
@@ -309,7 +327,7 @@ function renderCard(ev, modeId, opts) {
 
   const scoreBarHtml = score != null
     ? `<div class="card-score-bar"><div class="csb-track"><div class="csb-fill" style="width:${score}%;background:${scoreColor(score)}"></div></div><span class="csb-num" style="color:${scoreColor(score)}">${score}</span></div>`
-    : `<div class="card-score-bar"><div class="csb-track"><div class="csb-fill csb-na"></div></div><span class="csb-num csb-na-num">—</span></div>`;
+    : `<div class="card-score-bar"><div class="csb-track"><div class="csb-fill csb-na"></div></div><span class="csb-num csb-na-num">â€”</span></div>`;
 
   let chipsHtml = '';
   try {
@@ -327,22 +345,17 @@ function renderCard(ev, modeId, opts) {
     }
   } catch (e) { /* chips best-effort */ }
 
-  const revGrowthStr = revGrowth > -100 ? (revGrowth >= 0 ? '+' : '') + revGrowth.toFixed(0) + '%' : '—';
-  const fcfStr       = fcfMargin > -100 ? (fcfMargin >= 0 ? '+' : '') + fcfMargin.toFixed(0) + '%' : '—';
+  // F-ME-019: use null-check instead of -100 sentinel (valid revenue can shrink exactly 100%)
+  const revGrowthStr = (revGrowth != null && Number.isFinite(revGrowth)) ? (revGrowth >= 0 ? '+' : '') + revGrowth.toFixed(0) + '%' : 'â€”';
+  const fcfStr       = (fcfMargin != null && Number.isFinite(fcfMargin)) ? (fcfMargin >= 0 ? '+' : '') + fcfMargin.toFixed(0) + '%' : 'â€”';
 
-  const stockSlim = {
-    meta: { ticker, name, sector, industry: (s.meta && s.meta.industry) || '', country: (s.meta && s.meta.country) || '', marketCap: mcap },
-    timeseries: { revenueQ: ((s.timeseries && s.timeseries.revenueQ) || []).slice(0, 8) },
-    annual: { annualRev: ((s.annual && s.annual.annualRev) || []).slice(0, 5), annualOpInc: ((s.annual && s.annual.annualOpInc) || []).slice(0, 5), annualFCF: ((s.annual && s.annual.annualFCF) || []).slice(0, 5) },
-    metrics: { revenueGrowthYoY: (s.metrics && s.metrics.revenueGrowthYoY && s.metrics.revenueGrowthYoY.value != null) ? s.metrics.revenueGrowthYoY.value : null }
-  };
-
-  return `<div class="card" data-stock="${escHtml(JSON.stringify(stockSlim))}" data-af-url="${escHtml(afUrl)}" data-prof-state="${escHtml(profState)}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-country="${escHtml(country)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}" data-tier="${escHtml(tier)}" data-name="${escHtml(name.toLowerCase())}" data-ticker="${escHtml(ticker.toLowerCase())}">
+  // F-PF-006: use data-ticker (not data-stock) â€” stock data stored once in global map
+  return `<div class="card" data-ticker="${escHtml(ticker)}" data-af-url="${escHtml(afUrl)}" data-prof-state="${escHtml(profState)}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-country="${escHtml(country)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}" data-tier="${escHtml(tier)}" data-name="${escHtml(name.toLowerCase())}" data-ticker-search="${escHtml(ticker.toLowerCase())}">
   <div class="card-top">
     <span class="card-ticker">${escHtml(ticker)}</span>
     <div class="card-badges">${dqHtml}${tierBadgeHtml}${xpHtml}</div>
   </div>
-  <div class="card-name" title="${escHtml(name)}">${escHtml(name.length > 28 ? name.slice(0,27) + '…' : name)}</div>
+  <div class="card-name" title="${escHtml(name)}">${escHtml(name.length > 28 ? name.slice(0,27) + 'â€¦' : name)}</div>
   ${scoreBarHtml}
   <div class="card-row"><span class="card-sector" title="${escHtml(sector)}">${escHtml(sector.slice(0,22))}</span><span class="card-mcap">${fmtMoney(mcap)}</span></div>
   <div class="card-row card-metrics">
@@ -350,7 +363,7 @@ function renderCard(ev, modeId, opts) {
     <span class="card-metric">Rev ${revGrowthStr}</span>
     <span class="card-metric">FCF ${fcfStr}</span>
   </div>
-  <div class="card-bottom">${spark ? `<span class="card-spark">${spark}</span>` : ''}<span class="card-ipo">${ipoYear ? "'" + (ipoYear % 100).toString().padStart(2, '0') : '—'}</span></div>
+  <div class="card-bottom">${spark ? `<span class="card-spark">${spark}</span>` : ''}<span class="card-ipo">${ipoYear ? "'" + (ipoYear % 100).toString().padStart(2, '0') : 'â€”'}</span></div>
   ${chipsHtml}
 </div>`;
 }
@@ -368,7 +381,7 @@ function renderRow(ev, i, modeId, sortMethodId, opts) {
   const sortRes = sortMethodId ? ev.allResults[sortMethodId] : null;
   const sortValStr = sortRes && sortRes.computable
     ? fmtValue(sortRes.value, sortMethod && sortMethod.unit)
-    : '—';
+    : 'â€”';
 
   const psRes = ev.allResults['profitability-state'];
   const profState = (psRes && psRes.computable && psRes.components) ? psRes.components.state : 'NA';
@@ -384,20 +397,7 @@ function renderRow(ev, i, modeId, sortMethodId, opts) {
   const fcfMargin = (r40 && r40.computable && r40.components && Number.isFinite(r40.components.fcfMargin)) ? r40.components.fcfMargin : -999;
   const revGrowth = (r40 && r40.computable && r40.components && Number.isFinite(r40.components.growth)) ? r40.components.growth : -999;
 
-// Tag 114-fix: minimal stock data for modal (avoid HTML bloat)
-  const stockSlim = {
-    meta: { ticker: ticker, name: name, sector: sector,
-            industry: (s.meta && s.meta.industry) || '',
-            country: (s.meta && s.meta.country) || '',
-            marketCap: mcap },
-    timeseries: { revenueQ: ((s.timeseries && s.timeseries.revenueQ) || []).slice(0, 8) },
-    annual: {
-      annualRev: ((s.annual && s.annual.annualRev) || []).slice(0, 5),
-      annualOpInc: ((s.annual && s.annual.annualOpInc) || []).slice(0, 5),
-      annualFCF: ((s.annual && s.annual.annualFCF) || []).slice(0, 5)
-    },
-    metrics: { revenueGrowthYoY: (s.metrics && s.metrics.revenueGrowthYoY && s.metrics.revenueGrowthYoY.value != null) ? s.metrics.revenueGrowthYoY.value : null }
-  };
+// F-PF-006: stock data is now stored in the global STOCK_DATA_MAP; no per-row embedding needed
 
     // Tag 121: Tier + Cross-Profile-Badges
     const tier = (opts && opts.tier) || null;
@@ -405,10 +405,11 @@ function renderRow(ev, i, modeId, sortMethodId, opts) {
     const tierBadge = tier ? `<span class="tier-badge tier-${tier.toLowerCase()}">${tier === 'NEAR_MISS' ? 'Near' : tier}</span>` : '';
     const xpHtml = xpTags.length > 0 ? `<span class="xp-tags">${xpTags.map(t => `<span class="xp-tag">${escHtml(t)}</span>`).join('')}</span>` : '';
 
-    // Tag 133h: per-pick reason-chips. Pulls scoreBreakdown from modeEvals (compute on-demand if missing).
+    // Tag 133h: per-pick reason-chips. Pulls scoreBreakdown from modeEvals pre-computed cache.
+    // F-PF-002: use pre-computed modeEvals cache; no fallback to SM.evaluateMode in hot path.
     let chipsHtml = '';
     try {
-      const me = (ev.modeEvals && ev.modeEvals[modeId]) || SM.evaluateMode(ev.stock, modeId, ev.allResults);
+      const me = ev.modeEvals && ev.modeEvals[modeId];
       const bd = me && me.scoreBreakdown;
       const dqGrade = me && me.dataQualityGrade;
       if (bd && typeof bd === 'object') {
@@ -419,8 +420,8 @@ function renderRow(ev, i, modeId, sortMethodId, opts) {
           if (!b.computable) return `<span class="chip chip-na" title="${escHtml(lbl + ': incomputable')}">${escHtml(short)}</span>`;
           const cls = b.pass ? 'chip-pass' : 'chip-fail';
           const valStr = b.value == null ? '' : ' ' + fmtValue(b.value, meta && meta.unit);
-          const wPct = b.weight ? ' · w' + Math.round(b.weight * 100) : '';
-          return `<span class="chip ${cls}" title="${escHtml(lbl + valStr + wPct + ' · score=' + b.score)}">${escHtml(short + valStr)}</span>`;
+          const wPct = b.weight ? ' Â· w' + Math.round(b.weight * 100) : '';
+          return `<span class="chip ${cls}" title="${escHtml(lbl + valStr + wPct + ' Â· score=' + b.score)}">${escHtml(short + valStr)}</span>`;
         }).join('');
         const dqChip = dqGrade ? `<span class="chip chip-dq chip-dq-${dqGrade.toLowerCase()}" title="Data-Quality Grade">DQ ${dqGrade}</span>` : '';
         if (chips || dqChip) chipsHtml = `<div class="chip-strip">${dqChip}${chips}</div>`;
@@ -430,10 +431,10 @@ function renderRow(ev, i, modeId, sortMethodId, opts) {
     return `<div class="row" data-stock="${escHtml(JSON.stringify(stockSlim))}" data-af-url="${afUrl}" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}" data-tier="${tier||''}" data-xp="${xpTags.join(',')}">
     <span class="r-rank">${String(i+1).padStart(3, '0')}</span>
     <span class="r-tk">${escHtml(ticker)}${tierBadge}${xpHtml}</span>
-    <span class="r-name">${escHtml(name.slice(0, 36))}${name.length>36?'…':''}</span>
+    <span class="r-name">${escHtml(name.slice(0, 36))}${name.length>36?'â€¦':''}</span>
     <span class="r-sec">${escHtml(sector)}</span>
     <span class="r-state ${psClass}">${escHtml(psLabel)}<span class="r-conf">${escHtml(profConf)}</span></span>
-    <span class="r-ipo">${ipoYear ? "'"+(ipoYear%100).toString().padStart(2,'0') : '—'}</span>
+    <span class="r-ipo">${ipoYear ? "'"+(ipoYear%100).toString().padStart(2,'0') : 'â€”'}</span>
     <span class="r-spark">${spark}</span>
     <span class="r-val">${escHtml(sortValStr)}</span>
     <span class="r-mcap">${fmtMoney(mcap)}</span>
@@ -441,10 +442,10 @@ function renderRow(ev, i, modeId, sortMethodId, opts) {
   </div>`;
 }
 
-function renderModeContent(modeId, eligible, topN) {  // NEW TAG 136 redesign
+function renderModeContent(modeId, eligible, topN, stockDataMap) {  // NEW TAG 136 redesign
   const mode = SM.MODES[modeId];
   if (mode.enabled === false) {
-    return `<div class="mode-layout"><div class="mode-disabled">Modus in Phase 2 — noch nicht aktiv. Erst Hypergrowth + Quality validieren.</div></div>`;
+    return `<div class="mode-layout"><div class="mode-disabled">Modus in Phase 2 â€” noch nicht aktiv. Erst Hypergrowth + Quality validieren.</div></div>`;
   }
 
   const sectorSet = new Set();
@@ -472,16 +473,16 @@ function renderModeContent(modeId, eligible, topN) {  // NEW TAG 136 redesign
     if (evs.length === 0) return '';
     const cards = evs.map(ev => {
       const me = ev.modeEvals[modeId];
-      return renderCard(ev, modeId, { tier: me.tier, crossProfileTags: computeCrossProfileTags(ev.modeEvals, modeId) });
+      return renderCard(ev, modeId, { tier: me.tier, crossProfileTags: computeCrossProfileTags(ev.modeEvals, modeId) }, stockDataMap);
     }).join('');
     return `<div class="tier-section tier-section-${cls}"><div class="tier-header"><span>${escHtml(label)}</span><span class="tier-count">${evs.length}</span></div><div class="card-grid">${cards}</div></div>`;
   }
 
   const picksHtml = picksList.length === 0
     ? `<div class="empty">Keine Stocks mit Score-Daten.</div>`
-    : renderTierGroup('A-Tier — Score ≥ 80', groups.A, 'a') +
-      renderTierGroup('B-Tier — Score 65–79', groups.B, 'b') +
-      renderTierGroup('Near-Miss — Score 50–64', groups.NEAR_MISS, 'near') +
+    : renderTierGroup('A-Tier â€” Score â‰¥ 80', groups.A, 'a') +
+      renderTierGroup('B-Tier â€” Score 65â€“79', groups.B, 'b') +
+      renderTierGroup('Near-Miss â€” Score 50â€“64', groups.NEAR_MISS, 'near') +
       renderTierGroup('Red-Flag', groups.RED_FLAG, 'red');
 
   // Near-misses panel (blocked by 1 MUST)
@@ -500,22 +501,22 @@ function renderModeContent(modeId, eligible, topN) {  // NEW TAG 136 redesign
       const items = byMust[mustId];
       const meta = Runner.METHODS.find(m => m.id === mustId);
       const mustLabel = (meta && meta.label) || mustId;
-      const cards = items.map(item => renderCard(item.ev, modeId, { tier: item.me.tier, crossProfileTags: computeCrossProfileTags(item.ev.modeEvals, modeId) })).join('');
+      const cards = items.map(item => renderCard(item.ev, modeId, { tier: item.me.tier, crossProfileTags: computeCrossProfileTags(item.ev.modeEvals, modeId) }, stockDataMap)).join('');
       return `<div class="tier-section tier-section-blocked"><div class="tier-header"><span>Scheitert an: ${escHtml(mustLabel)}</span><span class="tier-count">${items.length}</span></div><div class="card-grid">${cards}</div></div>`;
     }).join('');
   }
 
   const sectorOptions = `<option value="ALL">Alle Branchen</option>${sectors.map(s => `<option value="${escHtml(s)}">${escHtml(s)}</option>`).join('')}`;
-  const countryOptions = `<option value="ALL">Alle Länder</option>${countries.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join("")}`;
+  const countryOptions = `<option value="ALL">Alle LÃ¤nder</option>${countries.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join("")}`;
   const picksTotal = groups.A.length + groups.B.length + groups.NEAR_MISS.length + groups.RED_FLAG.length;
 
   return `<div class="mode-layout" data-mode="${modeId}">
   <aside class="sidebar" data-mode="${modeId}" data-ipo-default="${ipoMin}">
     <div class="sb-search-wrap">
-      <input class="sb-search" type="text" placeholder="Suche Ticker / Firma…" data-mode="${modeId}" autocomplete="off" spellcheck="false">
+      <input class="sb-search" type="text" placeholder="Suche Ticker / Firmaâ€¦" data-mode="${modeId}" autocomplete="off" spellcheck="false">
     </div>
     <div class="sb-section">
-      <div class="sb-label">PROFITABILITÄT</div>
+      <div class="sb-label">PROFITABILITÃ„T</div>
       <div class="sb-pills">
         <button class="ps-btn ps-active" data-mode="${modeId}" data-pstate="ALL">Alle</button>
         <button class="ps-btn ps-stable" data-mode="${modeId}" data-pstate="STABLE">Stable</button>
@@ -525,16 +526,16 @@ function renderModeContent(modeId, eligible, topN) {  // NEW TAG 136 redesign
       </div>
     </div>
     <div class="sb-section">
-      <div class="sb-label">MARKTKAP. <span class="sb-val" data-mode="${modeId}" data-slider="mcap-min">$2B</span> → <span class="sb-val" data-mode="${modeId}" data-slider="mcap-max">$500B</span></div>
+      <div class="sb-label">MARKTKAP. <span class="sb-val" data-mode="${modeId}" data-slider="mcap-min">$2B</span> â†’ <span class="sb-val" data-mode="${modeId}" data-slider="mcap-max">$500B</span></div>
       <input type="range" class="range-input" data-mode="${modeId}" data-slider="mcap-min" min="2" max="500" step="1" value="2">
       <input type="range" class="range-input" data-mode="${modeId}" data-slider="mcap-max" min="2" max="500" step="1" value="500">
     </div>
     <div class="sb-section">
-      <div class="sb-label">WACHSTUM ≥ <span class="sb-val" data-mode="${modeId}" data-slider="growth-min">0%</span></div>
+      <div class="sb-label">WACHSTUM â‰¥ <span class="sb-val" data-mode="${modeId}" data-slider="growth-min">0%</span></div>
       <input type="range" class="range-input" data-mode="${modeId}" data-slider="growth-min" min="0" max="100" step="1" value="0">
     </div>
     <div class="sb-section">
-      <div class="sb-label">FCF-MARGE ≥ <span class="sb-val" data-mode="${modeId}" data-slider="fcf-min">-30%</span></div>
+      <div class="sb-label">FCF-MARGE â‰¥ <span class="sb-val" data-mode="${modeId}" data-slider="fcf-min">-30%</span></div>
       <input type="range" class="range-input" data-mode="${modeId}" data-slider="fcf-min" min="-30" max="50" step="1" value="-30">
     </div>
     <div class="sb-section">
@@ -572,6 +573,9 @@ function buildHtml(evaluated, topN) {
   const eligibleByMode = {};
   for (const m of modes) eligibleByMode[m] = eligibleForMode(evaluated, m);
 
+  // F-PF-006: shared stock data map â€” one entry per ticker, referenced by data-ticker on cards
+  const stockDataMap = {};
+
   const totalStocks = evaluated.length;
   const sectorExcluded = totalStocks - eligibleByMode.HYPERGROWTH.length;
   const hgPicks = topAllMust(eligibleByMode.HYPERGROWTH, 'HYPERGROWTH', 9999).length;
@@ -585,7 +589,7 @@ function buildHtml(evaluated, topN) {
   };
   const modeMeta = {
     HYPERGROWTH: 'heuristisch',
-    QUALITY_COMPOUNDER: 'literaturgestützt',
+    QUALITY_COMPOUNDER: 'literaturgestÃ¼tzt',
     TURNAROUND: 'experimentell'
   };
 
@@ -601,14 +605,17 @@ function buildHtml(evaluated, topN) {
 
   const contentsHtml = modes.map((m, i) => {
     const visible = i === 0 ? '' : 'display:none;';
-    return `<div class="mode-content-wrap" data-mode="${m}" style="${visible}">${renderModeContent(m, eligibleByMode[m], topN)}</div>`;
+    return `<div class="mode-content-wrap" data-mode="${m}" style="${visible}">${renderModeContent(m, eligibleByMode[m], topN, stockDataMap)}</div>`;
   }).join('');
+
+  // F-PF-006: serialize stockDataMap for inline script injection
+  const stockDataMapJson = JSON.stringify(stockDataMap);
 
   return `<!DOCTYPE html>
 <html lang="de"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Stock-Screener · Modes-Report</title>
+<title>Stock-Screener Â· Modes-Report</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
@@ -971,14 +978,14 @@ function buildHtml(evaluated, topN) {
   <header class="doc-header">
     <div class="eyebrow">Modes-Report &middot; ${escHtml(dateLabel)}</div>
     <h1>Drei Strategien, <em>klare</em> Story-Cards.</h1>
-    <p class="sub">Discovery-Filter über ${totalStocks.toLocaleString('de-DE')} Stocks. Banks · REITs · Insurance · Mining · Oil &amp; Gas werden automatisch ausgeschlossen. DataGuards filtern Earnings-Manipulation, Solvenz-Risiken und Reverse-Mergers. Klick auf eine Aktie öffnet Aktienfinder.</p>
+    <p class="sub">Discovery-Filter Ã¼ber ${totalStocks.toLocaleString('de-DE')} Stocks. Banks Â· REITs Â· Insurance Â· Mining Â· Oil &amp; Gas werden automatisch ausgeschlossen. DataGuards filtern Earnings-Manipulation, Solvenz-Risiken und Reverse-Mergers. Klick auf eine Aktie Ã¶ffnet Aktienfinder.</p>
   </header>
 
   <div class="status-strip">
     <div class="status-cell"><div class="status-label">Universum</div><div class="status-value">${totalStocks.toLocaleString('de-DE')}</div><div class="status-sub">Stocks gepullt</div></div>
-    <div class="status-cell"><div class="status-label">Sektor-Exclude</div><div class="status-value">${sectorExcluded.toLocaleString('de-DE')}</div><div class="status-sub">Banks · REITs · Mining</div></div>
-    <div class="status-cell"><div class="status-label">Hypergrowth</div><div class="status-value">${hgPicks}</div><div class="status-sub">erfüllen alle MUST</div></div>
-    <div class="status-cell"><div class="status-label">Quality</div><div class="status-value">${qcPicks}</div><div class="status-sub">erfüllen alle MUST</div></div>
+    <div class="status-cell"><div class="status-label">Sektor-Exclude</div><div class="status-value">${sectorExcluded.toLocaleString('de-DE')}</div><div class="status-sub">Banks Â· REITs Â· Mining</div></div>
+    <div class="status-cell"><div class="status-label">Hypergrowth</div><div class="status-value">${hgPicks}</div><div class="status-sub">erfÃ¼llen alle MUST</div></div>
+    <div class="status-cell"><div class="status-label">Quality</div><div class="status-value">${qcPicks}</div><div class="status-sub">erfÃ¼llen alle MUST</div></div>
   </div>
 
   <div class="disclaimer">
@@ -990,12 +997,16 @@ function buildHtml(evaluated, topN) {
   ${contentsHtml}
 
   <footer>
-    <div>Karl's Stock-Screener · keine Anlageberatung · Daten via Yahoo Finance</div>
+    <div>Karl's Stock-Screener Â· keine Anlageberatung Â· Daten via Yahoo Finance</div>
     <div>Generated ${escHtml(generatedAt.slice(0,16).replace('T',' '))} UTC</div>
   </footer>
 
 </div>
 
+<script>
+// F-PF-006: stock data map â€” keyed by ticker, referenced by card data-ticker attributes
+var STOCK_DATA_MAP = ${stockDataMapJson};
+</script>
 <script>
 (function() {
   function escHtml(s) {
@@ -1101,7 +1112,8 @@ function buildHtml(evaluated, topN) {
       var fcfM  = parseFloat(card.dataset.fcfMargin);
       var revG  = parseFloat(card.dataset.revGrowth);
       var cname = card.dataset.name   || '';
-      var ctick = card.dataset.ticker || '';
+      // F-PF-006: data-ticker-search holds lowercase ticker for search; data-ticker holds original for modal lookup
+      var ctick = card.dataset.tickerSearch || card.dataset.ticker || '';
       var cty   = card.dataset.country || '';
       var psOk      = pstate === 'ALL' || ps === pstate;
       var mcapOk    = mcap >= mcapMin && mcap <= mcapMax;
@@ -1204,11 +1216,14 @@ function buildHtml(evaluated, topN) {
       return;
     }
 
-    // Card click → modal
+    // Card click â†’ modal (F-PF-006: look up stock data from shared map by ticker)
     var card = t.closest && t.closest('.card');
-    if (card && card.dataset.stock) {
+    if (card && card.dataset.ticker) {
       e.preventDefault();
-      try { openStockModal(JSON.parse(card.dataset.stock), card.dataset.afUrl); } catch (err) { console.error(err); }
+      try {
+        var stock = STOCK_DATA_MAP[card.dataset.ticker];
+        if (stock) openStockModal(stock, card.dataset.afUrl);
+      } catch (err) { console.error(err); }
       return;
     }
   });
@@ -1253,11 +1268,12 @@ function main() {
   const n_ok = n_total - n_failed;
   const failure_rate = n_total > 0 ? n_failed / n_total : 0;
   const today = new Date().toISOString().slice(0, 10);
-  const healthDir = './pipeline-health';
+  // F-ME-024: use __dirname-relative path so the script works from any CWD
+  const healthDir = path.join(__dirname, 'pipeline-health');
   if (!fs.existsSync(healthDir)) fs.mkdirSync(healthDir, { recursive: true });
   const healthReport = { script: 'generate-modes-report', date: today, n_total, n_ok, n_failed, failure_rate, failures: _pipelineFailures };
   fs.writeFileSync(path.join(healthDir, 'generate-modes-report.json'), JSON.stringify(healthReport, null, 2));
-  console.log(`Pipeline health: ${n_ok}/${n_total} ok (${(failure_rate * 100).toFixed(2)}% failed) — threshold 5%`);
+  console.log(`Pipeline health: ${n_ok}/${n_total} ok (${(failure_rate * 100).toFixed(2)}% failed) â€” threshold 5%`);
   if (failure_rate > 0.05) {
     console.error(`::error::generate-modes-report failure rate ${(failure_rate * 100).toFixed(2)}% exceeds 5% threshold`);
     process.exit(1);
@@ -1266,3 +1282,5 @@ function main() {
 
 if (require.main === module) main();
 module.exports = { eligibleForMode, topByMethod, topAllMust, evaluateAll, dedupeByCompany };
+
+

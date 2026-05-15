@@ -53,6 +53,18 @@ const CURRENCY_TO_REGION_FALLBACK = {
   'INR': 'EM', 'BRL': 'EM', 'MXN': 'EM', 'ZAR': 'EM', 'TRY': 'EM', 'RUB': 'EM',
 };
 
+// F-ME-018: stock.meta.region may contain exchange display names (e.g., 'Nasdaq', 'NYSE')
+// rather than region buckets ('US', 'EU'). Normalize them here.
+const DISPLAY_NAME_TO_REGION = {
+  'Nasdaq': 'US', 'NasdaqCM': 'US', 'NasdaqGM': 'US', 'NasdaqGS': 'US',
+  'NYSE': 'US', 'NYSE American': 'US', 'NYSEArca': 'US', 'NYSE MKT': 'US',
+  'NASDAQ': 'US', 'AMEX': 'US', 'Cboe US': 'US',
+  'OTC Markets OTCPK': 'US', 'OTC Markets OTCQX': 'US',
+  'XETRA': 'EU', 'Frankfurt': 'EU', 'LSE': 'EU',
+  'Toronto': 'US', 'HKSE': 'APAC', 'ASX': 'APAC', 'Tokyo': 'APAC',
+  'Shanghai': 'APAC', 'Shenzhen': 'APAC', 'KSE': 'APAC', 'KOSDAQ': 'APAC',
+};
+
 /**
  * Resolve the region for a stock object.
  * @param {object} stock — canonical stock object
@@ -61,9 +73,17 @@ const CURRENCY_TO_REGION_FALLBACK = {
 function getRegion(stock) {
   if (!stock) return 'OTHER';
 
-  // Priority 1: explicit meta.region (if set by a future schema extension)
+  // Priority 1: explicit meta.region — but first normalize exchange display names to region buckets
   const explicitRegion = stock.meta && stock.meta.region;
-  if (explicitRegion) return explicitRegion;
+  if (explicitRegion) {
+    // If it looks like a valid region bucket already, return it
+    if (explicitRegion === 'US' || explicitRegion === 'EU' || explicitRegion === 'APAC' || explicitRegion === 'EM' || explicitRegion === 'OTHER') {
+      return explicitRegion;
+    }
+    // Otherwise try to map from display name to region bucket
+    if (DISPLAY_NAME_TO_REGION[explicitRegion]) return DISPLAY_NAME_TO_REGION[explicitRegion];
+    // Unknown value — fall through to exchange lookup rather than returning a bad bucket
+  }
 
   // Priority 2: exchange code
   const exchange = stock.meta && stock.meta.exchange;

@@ -21,6 +21,28 @@ function parseArgs(argv) {
   return args;
 }
 
+// F-PF-007: async batch loader to avoid serial fs.readFileSync across 12k+ files.
+// Processes files in batches of 200 using Promise.all for parallel I/O scheduling.
+async function loadStocksAsync(dir) {
+  if (!fs.existsSync(dir)) return [];
+  const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
+  const BATCH = 200;
+  const results = [];
+  for (let i = 0; i < files.length; i += BATCH) {
+    const batch = files.slice(i, i + BATCH);
+    const loaded = await Promise.all(batch.map(f => {
+      try {
+        const s = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+        if (s && s.meta && s.meta.ticker) return s;
+        return null;
+      } catch (e) { return null; }
+    }));
+    results.push(...loaded.filter(Boolean));
+  }
+  return results;
+}
+
+// Synchronous fallback kept for module.exports.loadStocks callers
 function loadStocks(dir) {
   if (!fs.existsSync(dir)) return [];
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
@@ -52,10 +74,15 @@ function primaryMetricFor(modeId, results) {
   return { id: sortMethod, value: r && r.computable ? r.value : null };
 }
 
-function pickStockForMode(stock, modeId) {
-  let results;
-  try { results = Runner.evaluateStock(stock); }
-  catch (e) { return null; }
+// F-PF-001: accepts pre-computed results so evaluateStock is called ONCE per stock,
+// not once per mode (was 3 calls per stock across the mode loop).
+// F-BT-009: null-safe score access — older vintages may lack score; fall back to normScore.
+function pickStockForMode(stock, modeId, results) {
+  if (!results) {
+    // Legacy path: called without pre-computed results (e.g. from external code)
+    try { results = Runner.evaluateStock(stock); }
+    catch (e) { return null; }
+  }
   const ev = SM.evaluateMode(stock, modeId, results);
   if (!ev || !ev.passed) return null;
   return {
@@ -65,7 +92,10 @@ function pickStockForMode(stock, modeId) {
     industry: stock.meta.industry || '',
     profState: getProfState(results),
     primaryMetric: primaryMetricFor(modeId, results),
-    score: (ev.score != null) ? Math.round(ev.score * 10) / 10 : null,
+    // F-BT-009: null-safe — fall back to normScore for older vintages that lacked score
+    score: (ev.score != null) ? Math.round(ev.score * 10) / 10
+         : (ev.normScore != null) ? Math.round(ev.normScore * 10) / 10
+         : null,
     marketCap: getMcap(stock),
     mustPassCount: ev.mustPassCount,
     mustTotal: ev.mustTotal
@@ -94,12 +124,33 @@ function dedupePicksByCompany(picks) {
   return Array.from(byKey.values());
 }
 
-// Tag 134 — Phase 4.1: build a per-mode { ticker -> firstSeenAt } map by reading
-// all prior vintages. Used to enrich each pick with the date it was first seen
-// in this mode (for "weeks on list" continuity and pick-stability investigation).
+// Tag 134 — Phase 4.1 / F-PF-008: build a per-mode { ticker -> firstSeenAt } map.
+// Cache stored in picks-history/_first-seen.json so we only rebuild on first run.
+// On subsequent runs, load the cache and update only new tickers from today's picks.
+const FIRST_SEEN_CACHE_FILE = '_first-seen.json';
+
+function _loadFirstSeenCache(picksHistDir) {
+  const cachePath = path.join(picksHistDir, FIRST_SEEN_CACHE_FILE);
+  if (!fs.existsSync(cachePath)) return null;
+  try { return JSON.parse(fs.readFileSync(cachePath, 'utf8')); }
+  catch (e) { return null; }
+}
+
+function _saveFirstSeenCache(picksHistDir, cache) {
+  const cachePath = path.join(picksHistDir, FIRST_SEEN_CACHE_FILE);
+  fs.writeFileSync(cachePath, JSON.stringify(cache));
+}
+
 function _buildFirstSeenMap(picksHistDir) {
-  const map = { HYPERGROWTH: {}, QUALITY_COMPOUNDER: {}, TURNAROUND: {} };
-  if (!fs.existsSync(picksHistDir)) return map;
+  const modes = ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND'];
+  // F-PF-008: try loading the incremental cache first to avoid parsing all vintage files
+  const cached = _loadFirstSeenCache(picksHistDir);
+  if (cached && modes.every(m => typeof cached[m] === 'object')) {
+    return { map: cached, fromCache: true };
+  }
+  // Full rebuild only on first run or if cache is corrupt
+  const map = modes.reduce((m, k) => { m[k] = {}; return m; }, {});
+  if (!fs.existsSync(picksHistDir)) return { map, fromCache: false };
   const files = fs.readdirSync(picksHistDir)
     .filter(f => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
     .sort();
@@ -108,7 +159,7 @@ function _buildFirstSeenMap(picksHistDir) {
     try { v = JSON.parse(fs.readFileSync(path.join(picksHistDir, f), 'utf8')); }
     catch (e) { continue; }
     const date = (v.asOf || '').slice(0, 10) || f.replace('.json', '');
-    for (const mode of Object.keys(map)) {
+    for (const mode of modes) {
       const arr = (v.modes && v.modes[mode]) || [];
       for (const p of arr) {
         if (!p || !p.ticker) continue;
@@ -116,23 +167,44 @@ function _buildFirstSeenMap(picksHistDir) {
       }
     }
   }
-  return map;
+  return { map, fromCache: false };
 }
 
 function _weeksBetween(isoA, isoB) {
   return Math.floor(Math.abs(new Date(isoB).getTime() - new Date(isoA).getTime()) / (7 * 86400000));
 }
 
-function main() {
+async function main() {
   const args = parseArgs(process.argv);
   if (!fs.existsSync(args.out)) fs.mkdirSync(args.out, { recursive: true });
   console.log('Loading snapshots from', args.snapshots);
-  const stocks = loadStocks(args.snapshots);
+
+  // F-PF-007: use async batch loader (was serial readFileSync per file)
+  const stocks = await loadStocksAsync(args.snapshots);
   console.log('  ' + stocks.length + ' stocks loaded');
 
-  // Tag 134 — Phase 4.1: load prior-vintage first-seen map before computing this run's picks.
-  const firstSeen = _buildFirstSeenMap(args.out);
+  // Tag 134 — Phase 4.1 / F-PF-008: load first-seen from cache; avoid full rebuild
+  const { map: firstSeenMap, fromCache } = _buildFirstSeenMap(args.out);
+  if (fromCache) {
+    console.log('  first-seen map: loaded from cache (_first-seen.json)');
+  } else {
+    console.log('  first-seen map: rebuilt from all vintage files (cache was absent)');
+  }
   const today = new Date().toISOString().slice(0, 10);
+
+  // F-PF-001: evaluate each stock ONCE before mode loops (was Runner.evaluateStock called
+  // once per mode per stock = 3× for 3 modes, now 1× total).
+  const _pipelineFailures = [];
+  const evaluations = new Map();
+  for (const stock of stocks) {
+    const ticker = (stock && stock.meta && stock.meta.ticker) || null;
+    if (!ticker) continue;
+    try {
+      evaluations.set(ticker, Runner.evaluateStock(stock));
+    } catch (e) {
+      _pipelineFailures.push({ ticker, error: e.message });
+    }
+  }
 
   const result = {
     asOf: new Date().toISOString(),
@@ -141,14 +213,11 @@ function main() {
     benchmarks: ['SPY', 'QQQ', 'IWM']
   };
 
-  // Tag 138: collect ALL evaluated tickers for survivor-bias-free universe median.
+  // Tag 138 / F-BT-003: collect ALL evaluated tickers for survivor-bias-free universe median.
   // Built directly from the stocks array so it's never empty even if a mode is disabled.
   const evaluatedTickers = stocks
     .filter(s => s && s.meta && s.meta.ticker)
     .map(s => s.meta.ticker);
-
-  // Tag 168: track per-stock failures across all mode loops for pipeline health reporting
-  const _pipelineFailures = [];
 
   for (const modeId of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
     const mode = SM.MODES[modeId];
@@ -156,7 +225,12 @@ function main() {
     const picks = [];
     for (const stock of stocks) {
       try {
-        const p = pickStockForMode(stock, modeId);
+        const ticker = stock && stock.meta && stock.meta.ticker;
+        if (!ticker) continue;
+        // F-PF-001: reuse pre-computed evaluation; no second call to Runner.evaluateStock
+        const results = evaluations.get(ticker);
+        if (!results) continue;
+        const p = pickStockForMode(stock, modeId, results);
         if (p) picks.push(p);
       } catch (e) {
         const ticker = (stock && stock.meta && stock.meta.ticker) || '???';
@@ -177,7 +251,7 @@ function main() {
     const deduped = dedupePicksByCompany(picks);
     const top100 = deduped.slice(0, 100);
     // Tag 134 — Phase 4.1: enrich each pick with firstSeenAt + weeksOnList
-    const modeFirstSeen = firstSeen[modeId] || {};
+    const modeFirstSeen = firstSeenMap[modeId] || {};
     for (const p of top100) {
       const seen = modeFirstSeen[p.ticker];
       p.firstSeenAt = seen || today;
@@ -187,7 +261,7 @@ function main() {
     console.log('  ' + modeId + ': ' + picks.length + ' picks -> ' + deduped.length + ' deduped -> top ' + top100.length);
   }
 
-  // Tag 138: save evaluated tickers for survivor-bias fix in walk-forward
+  // Tag 138 / F-BT-003: save evaluated tickers for survivor-bias fix in walk-forward
   result.evaluatedTickers = evaluatedTickers;
 
   const dateStr = result.asOf.slice(0, 10);
@@ -195,6 +269,22 @@ function main() {
   fs.writeFileSync(outFile, JSON.stringify(result, null, 2));
   console.log('Written: ' + outFile + ' (' + evaluatedTickers.length + ' evaluated tickers)');
   fs.writeFileSync(path.join(args.out, 'latest.json'), JSON.stringify(result, null, 2));
+
+  // F-PF-008: update first-seen cache with any newly seen tickers from this run
+  let cacheUpdated = false;
+  for (const modeId of ['HYPERGROWTH', 'QUALITY_COMPOUNDER', 'TURNAROUND']) {
+    if (!firstSeenMap[modeId]) firstSeenMap[modeId] = {};
+    for (const p of (result.modes[modeId] || [])) {
+      if (!firstSeenMap[modeId][p.ticker]) {
+        firstSeenMap[modeId][p.ticker] = p.firstSeenAt || today;
+        cacheUpdated = true;
+      }
+    }
+  }
+  if (cacheUpdated || !fromCache) {
+    _saveFirstSeenCache(args.out, firstSeenMap);
+    console.log('  first-seen cache saved');
+  }
 
   // Tag 168: write pipeline-health report and enforce 5% threshold
   // n_total counts stock × mode evaluations (3 modes × universe size)
@@ -213,5 +303,5 @@ function main() {
   }
 }
 
-if (require.main === module) main();
+if (require.main === module) main().catch(e => { console.error('snapshot-picks failed: ' + e.message); process.exit(1); });
 module.exports = { pickStockForMode, loadStocks };

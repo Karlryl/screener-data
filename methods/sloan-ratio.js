@@ -21,36 +21,40 @@ const REVIEW_THRESHOLD = 0.15;
 const FAIL_THRESHOLD = 0.20;
 const THRESHOLD_OP = 'lte_abs';
 
-function _arrVals(stock, path) {
+function _rawVals(stock, path) {
   const arr = H.val(stock, path);
   if (!Array.isArray(arr)) return [];
-  return arr.map(v => v == null ? null : (typeof v === 'number' ? v : v.value)).filter(v => Number.isFinite(v));
+  return arr.map(v => v == null ? null : (typeof v === 'number' ? v : v.value));
 }
 
 function evaluate(stock) {
   if (!stock) {
     return H.buildResult({ computable: false, pass: false, reason: 'no stock data' });
   }
-  const nis = _arrVals(stock, 'annual.annualNetIncome');
-  const fcfs = _arrVals(stock, 'annual.annualFCF');
+  // Use raw (positionally aligned) arrays so nis[i], fcfs[i], assetsArr[i] refer to the same year
+  const rawNis = _rawVals(stock, 'annual.annualNetIncome');
+  const rawFcfs = _rawVals(stock, 'annual.annualFCF');
   const assetsArr = H.val(stock, 'annual.annualBalance');
 
-  if (!nis.length || !fcfs.length || !Array.isArray(assetsArr) || !assetsArr.length) {
+  const validNis = rawNis.filter(v => Number.isFinite(v));
+  const validFcfs = rawFcfs.filter(v => Number.isFinite(v));
+
+  if (!validNis.length || !validFcfs.length || !Array.isArray(assetsArr) || !assetsArr.length) {
     return H.buildResult({
       computable: false,
-      reason: `missing inputs (nis=${nis.length} fcfs=${fcfs.length} balance=${assetsArr ? assetsArr.length : 0})`,
+      reason: `missing inputs (nis=${validNis.length} fcfs=${validFcfs.length} balance=${assetsArr ? assetsArr.length : 0})`,
       threshold: WARN_THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
 
-  // Compute Sloan per year
+  // Compute Sloan per year — zip all three arrays positionally
   const sloans = [];
-  const yearsAvailable = Math.min(nis.length, fcfs.length, assetsArr.length);
+  const yearsAvailable = Math.min(rawNis.length, rawFcfs.length, assetsArr.length);
   for (let i = 0; i < yearsAvailable; i++) {
-    const ni = nis[i];
-    const fcf = fcfs[i];
+    const ni = rawNis[i];
+    const fcf = rawFcfs[i];
     const ta = assetsArr[i] && assetsArr[i].totalAssets;
-    if (ni == null || fcf == null || !ta || ta <= 0) continue;
+    if (!Number.isFinite(ni) || !Number.isFinite(fcf) || !ta || ta <= 0) continue;
     sloans.push({ year: i, value: (ni - fcf) / ta });
   }
 

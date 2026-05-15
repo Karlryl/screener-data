@@ -28,29 +28,39 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
-  // Daily log returns
-  const window = series.slice(-252);
+  // F-ME-016: detect data frequency from timestamps and scale lookback + annualization accordingly
+  let lookback52w = 252;   // default: daily
+  let annualFactor = 252;  // sqrt(252) for daily data
+  if (series.length >= 2 && series[0].date && series[1].date) {
+    const d0 = Date.parse(series[series.length - 2].date);
+    const d1 = Date.parse(series[series.length - 1].date);
+    if (Number.isFinite(d0) && Number.isFinite(d1)) {
+      const avgDaysBetween = (d1 - d0) / (1000 * 60 * 60 * 24);
+      if (avgDaysBetween >= 4) { lookback52w = 52; annualFactor = 52; } // weekly data
+    }
+  }
+  const window = series.slice(-lookback52w);
   const returns = [];
   for (let i = 1; i < window.length; i++) {
     if (window[i].close > 0 && window[i-1].close > 0) {
       returns.push(Math.log(window[i].close / window[i-1].close));
     }
   }
-  if (returns.length < 50) {
+  if (returns.length < 30) {
     return H.buildResult({
-      computable: false, reason: `usable returns < 50`, threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+      computable: false, reason: `usable returns < 30 (got ${returns.length})`, threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
   const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
   const variance = returns.reduce((s, r) => s + (r - mean) ** 2, 0) / (returns.length - 1);
-  const dailyVol = Math.sqrt(variance);
-  const annualVol = dailyVol * Math.sqrt(252);
+  const periodVol = Math.sqrt(variance);
+  const annualVol = periodVol * Math.sqrt(annualFactor);
   return H.buildResult({
     value: annualVol,
     pass: annualVol <= THRESHOLD,
     computable: true,
-    components: { dailyVol, annualVol, n: returns.length },
-    reason: `${(annualVol*100).toFixed(1)}% annualized vol (n=${returns.length} days)`,
+    components: { periodVol, annualVol, annualFactor, n: returns.length },
+    reason: `${(annualVol*100).toFixed(1)}% annualized vol (n=${returns.length} periods, annualFactor=${annualFactor})`,
     threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
   });
 }

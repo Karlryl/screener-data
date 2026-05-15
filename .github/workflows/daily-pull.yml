@@ -25,11 +25,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # F-CI-004: full history required for git-log operations and reliable rebase
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          # F-CI-011: cache npm dependencies to save ~30-90s per run
+          cache: 'npm'
 
 
       - name: Verify Node version
@@ -86,17 +91,43 @@ jobs:
       # Tag 162: file-count fallback — when Yahoo Pull times out the manifest is missing/zero
       # (manifest deleted at pull start, only written at pull end). Fall back to counting
       # actual .json snapshot files so partial-run progress is not thrown away.
+      # F-CI-002: check manifest freshness — stale committed manifest from a prior run
+      # would declare pass even when the current pull crashed early.
+      - name: Check Manifest Freshness
+        run: |
+          if [ -f snapshots/_manifest.json ]; then
+            manifest_mtime=$(stat -c %Y snapshots/_manifest.json 2>/dev/null || echo 0)
+            four_hours_ago=$(date -d '4 hours ago' +%s 2>/dev/null || echo 0)
+            if [ "$manifest_mtime" -lt "$four_hours_ago" ]; then
+              echo "WARNING: snapshots/_manifest.json is older than 4 hours (mtime=$manifest_mtime, threshold=$four_hours_ago). Manifest may be stale from a prior run — file-count fallback will be used."
+              rm -f snapshots/_manifest.json
+            else
+              echo "Manifest is fresh (mtime=$manifest_mtime)."
+            fi
+          else
+            echo "No manifest found — file-count fallback will be used."
+          fi
+
       - name: Verify Pull Coverage
         run: |
           ok=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.n_ok||0)}catch(e){console.log(0)}")
           total=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.n_total||0)}catch(e){console.log(0)}")
           source="manifest"
+          # F-CI-012: use watchlist length as the denominator in fallback (not file_count)
+          # to avoid 100% coverage when total=file_count and ok=file_count (1800/1800 = 100%)
+          watchlist_total=$(node -e "const fs=require('fs');try{const w=JSON.parse(fs.readFileSync('./watchlist.json','utf8'));console.log(Array.isArray(w)?w.length:Object.keys(w).length)}catch(e){console.log(0)}")
           if [ "$total" -eq 0 ] || [ "$ok" -eq 0 ]; then
             file_count=$(node -e "const fs=require('fs');try{const files=fs.readdirSync('./snapshots').filter(f=>f.endsWith('.json')&&f!=='_manifest.json');console.log(files.length)}catch(e){console.log(0)}")
             echo "Manifest reports $ok/$total — falling back to file count: $file_count .json files in ./snapshots/"
             ok=$file_count
-            total=$file_count
-            source="file-count"
+            # F-CI-012: use watchlist total as denominator so 1800/13000 correctly fails the 40% gate
+            if [ "$watchlist_total" -gt 0 ]; then
+              total=$watchlist_total
+              source="file-count/watchlist-denom"
+            else
+              total=$file_count
+              source="file-count"
+            fi
           fi
           min_ok=$(node -e "console.log(Math.max(1800,Math.floor(${total}*0.4)))")
           echo "Snapshots ok: $ok / $total (threshold: $min_ok, source: $source)"
@@ -143,7 +174,10 @@ jobs:
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           ALLOW_PICKS_DRIFT: ${{ vars.ALLOW_PICKS_DRIFT || '0' }}
-        run: node scripts/picks-regression-check.js
+        run: |
+          # F-CI-007: consistent DISCORD_WEBHOOK existence check before invoking script
+          if [ -z "$DISCORD_WEBHOOK" ]; then echo "DISCORD_WEBHOOK not configured — Discord alerts disabled."; fi
+          node scripts/picks-regression-check.js
         continue-on-error: true
 
       # Tag-35: Methods-History-Snapshot (für Backtest später)
@@ -155,17 +189,9 @@ jobs:
         run: node snapshot-methods-history.js --out methods-history
         continue-on-error: true
 
-      # Tag 168: Pipeline Health Check — aggregates per-script failure rates and
-      # alerts via Discord if any script exceeded the 5% threshold. The scripts
-      # themselves don't hard-fail anymore (Tag 168 — continue-on-error: true),
-      # but the health check IS hard-fail so an actual systemic problem still
-      # blocks downstream artifacts.
-      - name: Pipeline Health Check
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: node scripts/pipeline-health-check.js
-
       # Tag-63: Earnings-Calendar Pull
+      # F-CI-005: Pipeline Health Check moved to AFTER commit so snapshots are always
+      # committed even if health check fails (prevents vintage continuity gaps).
       - name: Pull Earnings-Calendar
         env:
           EARNINGS_CONCURRENCY: '20'
@@ -218,7 +244,10 @@ jobs:
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           ALLOW_PULL_DRIFT: ${{ vars.ALLOW_PULL_DRIFT || '0' }}
-        run: node scripts/check-pull-stats.js
+        run: |
+          # F-CI-007: consistent DISCORD_WEBHOOK existence check before invoking script
+          if [ -z "$DISCORD_WEBHOOK" ]; then echo "DISCORD_WEBHOOK not configured — Discord alerts disabled."; fi
+          node scripts/check-pull-stats.js
         continue-on-error: true
 
       # Tag 133j: Method-Drift Time-Series — Sparkline-Daten für Dashboard.
@@ -245,15 +274,27 @@ jobs:
         run: node scripts/archive-old-snapshots.js --keep-days 14 --methods-keep-days 7 --picks-keep-days 90
         continue-on-error: true
 
-      # Tag 119: alert-state.json size guard (GitHub 100MB limit)
-      - name: Truncate alert-state if too large
+      # F-SM-003 / F-CI-008: Strip methodHistory from alert-state.json using a script
+      # instead of shell-interpolated inline node -e (avoids $size injection and non-atomic write).
+      # saveState() in detect-changes.js now always writes methodHistory to the committed sidecar
+      # (method-history-state.json) and never embeds it in alert-state.json. This step is a
+      # safety net that cleans up any leftover inline methodHistory from old runs.
+      - name: Strip methodHistory from alert-state
         run: |
           if [ -f alert-state.json ]; then
-            size=$(stat -c %s alert-state.json)
-            # Tag 150: Always strip methodHistory key (not just when >50MB).
-            # Setting to {} was a no-op — the key survived the commit and re-grew
-            # every run. delete removes it permanently so saveState() never re-embeds it.
-            node -e "const fs=require('fs');let s;try{s=JSON.parse(fs.readFileSync('alert-state.json','utf8'));}catch(e){console.log('alert-state.json corrupt, resetting:',e.message);s={};}delete s.methodHistory;fs.writeFileSync('alert-state.json',JSON.stringify(s));console.log('alert-state.json stripped:',fs.statSync('alert-state.json').size,'bytes (was '+$size+')');"
+            size_before=$(stat -c %s alert-state.json)
+            node -e "
+              const fs = require('fs');
+              let s;
+              try { s = JSON.parse(fs.readFileSync('alert-state.json', 'utf8')); }
+              catch (e) { console.log('alert-state.json corrupt, resetting:', e.message); s = {}; }
+              delete s.methodHistory;
+              const tmp = 'alert-state.json.tmp.' + process.pid;
+              fs.writeFileSync(tmp, JSON.stringify(s));
+              fs.renameSync(tmp, 'alert-state.json');
+            "
+            size_after=$(stat -c %s alert-state.json)
+            echo "alert-state.json stripped: ${size_after} bytes (was ${size_before} bytes)"
           fi
 
       - name: Commit Snapshots + Alert-State
@@ -265,9 +306,13 @@ jobs:
             echo "No changes to commit."
           else
             git commit -m "chore: yahoo-pull + alert-state $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            # Tag 103d fix: --autostash damit unstaged changes den rebase nicht killen
+            # F-CI-001: fetch before rebase so each retry works from latest remote state.
+            # Remove '|| true' from rebase abort so failures are not silently masked.
+            # concurrency:group:main-push (above) serializes pushes so last-writer-wins
+            # via --strategy-option theirs is safe — only one push can run at a time.
             for i in 1 2 3; do
-              git pull --rebase --autostash --strategy-option theirs origin main || git rebase --abort || true
+              git fetch origin main
+              git rebase --autostash --strategy-option theirs origin/main || { git rebase --abort; git reset --hard origin/main; }
               if git push; then
                 echo "✓ Pushed on attempt $i"
                 exit 0
@@ -278,6 +323,21 @@ jobs:
             echo "Push failed after 3 attempts"
             exit 1
           fi
+
+      # Tag 168: Pipeline Health Check — aggregates per-script failure rates and
+      # alerts via Discord if any script exceeded the 5% threshold.
+      # F-CI-005: placed AFTER commit so snapshots always land in git even if health
+      # check fails. Health check failure blocks deploy but not the data commit.
+      # The concurrency group (main-push) already prevents concurrent workflow pushes;
+      # this comment documents why --strategy-option theirs is safe here.
+      - name: Pipeline Health Check
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK" ]; then
+            echo "DISCORD_WEBHOOK not configured — health check will run without Discord alerts."
+          fi
+          node scripts/pipeline-health-check.js
 
       # Tag 146: Deploy HTML reports to GitHub Pages (gh-pages branch).
       # Separates generated web artifacts from the data/code on main.
@@ -304,8 +364,17 @@ jobs:
           git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           git add -A
           git commit -m "deploy: screener reports $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          git push --force origin gh-pages
-          echo "✓ GitHub Pages deployed"
+          # F-CI-006: retry loop for transient push failures on gh-pages
+          for i in 1 2 3; do
+            if git push --force origin gh-pages; then
+              echo "✓ GitHub Pages deployed on attempt $i"
+              exit 0
+            fi
+            echo "gh-pages push attempt $i failed, retrying..."
+            sleep $((5 * i))
+          done
+          echo "gh-pages push failed after 3 attempts"
+          exit 1
 
       - name: Notify on failure
         if: failure()

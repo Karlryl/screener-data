@@ -23,9 +23,9 @@ function val(obj, p) {
 function metricValue(stock, metricKey) {
   const m = val(stock, `metrics.${metricKey}`);
   if (m == null) return null;
-  if (typeof m === 'number') return m;
-  if (typeof m === 'object' && 'value' in m) return m.value;
-  return null;
+  const result = (typeof m === 'object' && 'value' in m) ? m.value : (typeof m === 'number' ? m : null);
+  // F-ME-015: return null for NaN/Infinity — silent NaN propagation is worse than null-check failures
+  return Number.isFinite(result) ? result : null;
 }
 
 function latestAnnual(stock, key) {

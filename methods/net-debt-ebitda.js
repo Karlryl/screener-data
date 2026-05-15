@@ -3,7 +3,9 @@ const H = require('./_helpers.js');
 
 const ID = 'net-debt-ebitda';
 const LABEL = 'Net-Debt/EBITDA';
-const THRESHOLD = 3;
+// Threshold set to 2.5: aligns with QC-mode "healthy leverage" expectation (≤2.5).
+// Red-flag rule triggers at >4.0 (score-aggregator). Range 2.5–4.0 = graduated partial score.
+const THRESHOLD = 2.5;
 const THRESHOLD_OP = 'lte';
 
 function evaluate(stock) {
@@ -51,7 +53,7 @@ function evaluate(stock) {
 
 module.exports = {
   id: ID, label: LABEL,
-  description: 'Net Debt / EBITDA ≤ 3 (EBITDA approx via OpInc × 1.2)',
+  description: 'Net Debt / EBITDA ≤ 2.5 (EBITDA approx via OpInc × 1.2)',
   threshold: THRESHOLD, thresholdOp: THRESHOLD_OP, unit: 'ratio',
   evaluate
 };

@@ -205,7 +205,11 @@ function evaluateMode(stock, modeId, allResults) {
       mustResults.push({ id: check.id, status: 'incomputable', storyHint: check.storyHint });
       continue;
     }
-    // acceptValues check (z.B. profitability-state == TURNAROUND/RECENT, profitability-trend == IMPROVING)
+    // F-ME-022: acceptValues check — mode filter takes precedence over method.pass.
+    // When acceptValues is specified, the mode requires the component value to be in the accept list,
+    // regardless of whether the method's own pass=true/false. This is intentional: the mode defines
+    // which values are acceptable for its strategy (e.g. TURNAROUND mode only accepts 'TURNAROUND' or
+    // 'RECENT' profitability-state, not 'STABLE' even though stable may pass the method's own threshold).
     // profitability-state stores result in components.state; profitability-trend in components.trend
     if (check.acceptValues && r.components) {
       const componentVal = r.components.state != null ? r.components.state : r.components.trend;

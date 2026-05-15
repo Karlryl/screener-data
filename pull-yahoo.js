@@ -160,17 +160,21 @@ function normalizeRegion(currency, exchangeName) {
 // (fcf-yield, ev/ebitda, etc.) for non-USD stocks.
 function _convertSnapshotToUSD(snap) {
   if (!snap || !snap.meta) return snap;
+  // F-DP-008: idempotency guard — if already converted, return immediately to prevent double-scaling
+  if (snap.meta.fxConverted === true) return snap;
   const origCurrency = snap.meta.reportingCurrency || 'USD';
   if (origCurrency === 'USD') {
     snap.meta.reportingCurrencyOriginal = 'USD';
     snap.meta.fxRateApplied = 1.0;
+    snap.meta.fxConverted = true;
     return snap;
   }
 
-  // Tag 148: British pence (GBp) — Yahoo quotes some UK shares in pence, not pounds.
+  // Tag 148: British pence (GBp/GBX) — Yahoo quotes some UK shares in pence, not pounds.
   // marketCap and financial values are already 100x too small relative to GBP.
   // Divide by 100 first to convert pence → pounds, then apply the GBP→USD rate.
-  const isPence = origCurrency === 'GBp';
+  // F-DQ-003: case-insensitive match including GBX variant
+  const isPence = /^GB[Xp]$/i.test(origCurrency) || origCurrency.toUpperCase() === 'GBPENCE';
   const fxKey = isPence ? 'GBP' : origCurrency.toUpperCase();
 
   const rate = FX_TO_USD[fxKey];
@@ -179,7 +183,15 @@ function _convertSnapshotToUSD(snap) {
     snap.meta.reportingCurrencyOriginal = origCurrency;
     snap.meta.fxRateApplied = null;
     snap.meta.fxConversionFailed = true;
+    snap.meta.fxConverted = false; // F-DP-008: not converted
     return snap;
+  }
+  // F-DP-024: warn when using hardcoded fallback rates (may be stale)
+  if (FX_SOURCE === 'fallback-hardcoded') {
+    console.warn(`FX-FALLBACK: using hardcoded 2024 rates for ${fxKey} — may be stale. Consider running refresh-fx.js`);
+    snap.meta.fxRateSource = 'hardcoded-fallback';
+  } else {
+    snap.meta.fxRateSource = FX_SOURCE;
   }
 
   // Combined factor: pence→pounds (÷100) then pounds→USD (*rate), or just *rate for normal currencies.
@@ -219,6 +231,8 @@ function _convertSnapshotToUSD(snap) {
   // For GBp: store the effective combined factor (pence→USD = GBP_rate/100).
   // fxRateApplied reflects what was actually multiplied so callers can reverse if needed.
   snap.meta.fxRateApplied = factor;
+  // F-DP-008: mark as converted to prevent double-scaling on subsequent calls
+  snap.meta.fxConverted = true;
   return snap;
 }
 
@@ -293,9 +307,10 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     const std = _y(r, 'shortLongTermDebt');
     const ltd = _y(r, 'longTermDebt');
     const totalDebt = (std == null && ltd == null) ? null : (std || 0) + (ltd || 0);
+    const _debtPartial = totalDebt != null && (std == null || ltd == null); // F-DQ-001
     const totalAssets = _y(r, 'totalAssets');
     if (cash == null && totalDebt == null && totalAssets == null) return null;
-    return { totalCash: cash, totalDebt, totalAssets };
+    return { totalCash: cash, totalDebt, totalAssets, ...(_debtPartial ? { _debtPartial: true } : {}) };
   }).filter(Boolean);
 
   // Quartalsweise Timeseries (latest first → wir flippen NICHT, Engine erwartet latest=index 0)
@@ -444,11 +459,11 @@ function mapFTSToAnnual(annualRows, cashRows) {
     if (rev == null) continue;  // skip leere Rows
     annualRev.push({ value: rev });
     const oi = _ftsValue(r, 'operatingIncome', 'OperatingIncome', 'totalOperatingIncomeAsReported');
-    if (oi != null) annualOpInc.push({ value: oi });
+    annualOpInc.push(oi != null ? { value: oi } : null);
     const gp = _ftsValue(r, 'grossProfit', 'GrossProfit');
-    if (gp != null) annualGP.push({ value: gp });
+    annualGP.push(gp != null ? { value: gp } : null);
     const ni = _ftsValue(r, 'netIncome', 'NetIncome', 'netIncomeContinuousOperations');
-    if (ni != null) annualNetIncome.push({ value: ni });
+    annualNetIncome.push(ni != null ? { value: ni } : null);
   }
   // FCF aus cash-flow-Module
   const annualFCF = [];
@@ -477,9 +492,10 @@ function mapFTSToBalance(bsRows) {
     const std = _ftsValue(r, 'currentDebt', 'shortLongTermDebt', 'shortTermDebt');
     const ltd = _ftsValue(r, 'longTermDebt');
     const totalDebt = (std == null && ltd == null) ? null : (std || 0) + (ltd || 0);
+    const _debtPartial = totalDebt != null && (std == null || ltd == null); // F-DQ-001
     const totalAssets = _ftsValue(r, 'totalAssets');
     if (cash == null && totalDebt == null && totalAssets == null) continue;
-    annualBalance.push({ totalCash: cash, totalDebt, totalAssets });
+    annualBalance.push({ totalCash: cash, totalDebt, totalAssets, ...(_debtPartial ? { _debtPartial: true } : {}) });
   }
   return annualBalance;
 }
@@ -494,9 +510,9 @@ function mapFTSToQuarterly(quarterlyRows) {
     if (rev == null) continue;
     revenueQ.push({ value: rev });
     const oi = _ftsValue(r, 'operatingIncome', 'OperatingIncome');
-    if (oi != null) opIncQ.push({ value: oi });
+    opIncQ.push(oi != null ? { value: oi } : null);
     const gp = _ftsValue(r, 'grossProfit', 'GrossProfit');
-    if (gp != null) grossProfitQ.push({ value: gp });
+    grossProfitQ.push(gp != null ? { value: gp } : null);
   }
   return { revenueQ, opIncQ, grossProfitQ };
 }
@@ -564,7 +580,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       } catch (e) {
         lastErr = e;
         const isRateLimit = /429|too many request|rate.?limit/i.test(String(e.message || ''));
-        if (isRateLimit && attempt < DELAYS.length) {
+        const isTimeout = (e.constructor && e.constructor.name === 'timeout') ||
+          /timeout|ETIMEDOUT/i.test(String(e.message || ''));
+        if ((isRateLimit || isTimeout) && attempt < DELAYS.length) {
           const delay = DELAYS[attempt];
           _log('WARN', `  ${label} rate-limited (attempt ${attempt + 1}) — retrying in ${delay / 1000}s`);
           await _sleep(delay);
@@ -580,7 +598,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // so a mid-run SIGKILL (GitHub Actions 165-min step timeout) leaves an accurate manifest
   // on disk reflecting snapshots actually written. Without this the downstream Verify Pull
   // Coverage gate sees n_ok=0/n_total=0 even though hundreds of snapshot files exist.
+  // F-DP-012: boolean mutex prevents concurrent workers from racing this write.
+  let _manifestWriting = false;
   function writeManifestIncremental() {
+    if (_manifestWriting) return;
+    _manifestWriting = true;
     try {
       const slim = {
         pulled_at: new Date().toISOString(),
@@ -590,9 +612,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         n_failed: failures.length,
         partial: true
       };
-      fs.writeFileSync(path.join(outputDir, '_manifest.json'), JSON.stringify(slim));
+      const mPath = path.join(outputDir, '_manifest.json');
+      const mTmp = mPath + '.tmp';
+      fs.writeFileSync(mTmp, JSON.stringify(slim));
+      fs.renameSync(mTmp, mPath);
     } catch (e) {
       _log('WARN', `Incremental manifest write failed: ${e.message}`);
+    } finally {
+      _manifestWriting = false;
     }
   }
 
@@ -622,18 +649,25 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     // Update only fields that change daily
     const newAsOf = new Date().toISOString();
     if (existing.meta) existing.meta.asOf = newAsOf;
+    // F-DP-007: if the snapshot was previously normalized to USD, re-apply the same FX factor
+    // so price/mcap stay in USD (Yahoo quote() returns values in local currency).
+    const fxApplied = (existing.meta && existing.meta.fxRateApplied) || 1;
+    const needsFx = fxApplied !== 1 && !(existing.meta && existing.meta.reportingCurrencyOriginal === 'USD');
     if (q.regularMarketPrice != null) {
       existing.price = existing.price || {};
-      existing.price.regularMarketPrice = q.regularMarketPrice;
+      existing.price.regularMarketPrice = needsFx ? q.regularMarketPrice * fxApplied : q.regularMarketPrice;
       existing.price.currency = q.currency || existing.price.currency;
     }
     if (q.marketCap != null) {
       existing.marketCap = existing.marketCap || {};
-      existing.marketCap.value = q.marketCap;
+      existing.marketCap.value = needsFx ? q.marketCap * fxApplied : q.marketCap;
     }
     // Mark mode for downstream visibility
     existing._pullMode = 'price-only';
     existing._pullModeAt = newAsOf;
+    // F-DQ-009: mark quality grade as stale after price-only update so downstream knows
+    // it was not re-evaluated with updated price/mcap data.
+    if (existing._quality) existing._quality.grade = null;
     fs.writeFileSync(fp, JSON.stringify(existing, null, 2));
     return { ticker: stock.ticker, status: 'price-only', mcap: q.marketCap, price: q.regularMarketPrice };
   }
@@ -668,24 +702,33 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           canonical.meta.firstTradeDate = ftd.toISOString();
           canonical.meta.ipoYear = ftd.getUTCFullYear();
         }
-      } catch (e) { /* IPO-Feld optional, nicht-kritisch */ }
+      } catch (e) { console.warn('IPO-DATE-FETCH:', stock.ticker, e.message); }
 
       // Tag-85: Smart-Cache — skip FTS-Pull wenn cache <28 Tage alt
+      // F-DP-025: { recursive: true } makes mkdirSync idempotent
       const cacheDir = path.join(__dirname, 'fundamentals-cache');
-      if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir, { recursive: true });
+      fs.mkdirSync(cacheDir, { recursive: true });
       const cachePath = path.join(cacheDir, safeSnapshotFilename(stock.ticker));
       const CACHE_TTL_MS = 28 * 86400 * 1000;
+      const CACHE_PARTIAL_TTL_MS = 86400 * 1000; // F-DP-005: 24h for partial results
+      const FTS_CACHE_VERSION = 1; // F-DP-019: bump when FTS schema changes
       let useCache = false;
       let cached = null;
       if (fs.existsSync(cachePath)) {
         try {
           cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
-          const age = Date.now() - new Date(cached.cachedAt).getTime();
-          if (age < CACHE_TTL_MS) useCache = true;
+          // F-DP-019: reject cache if version key is missing or differs
+          if (cached._cacheVersion !== FTS_CACHE_VERSION) {
+            cached = null;
+          } else {
+            const age = Date.now() - new Date(cached.cachedAt).getTime();
+            const ttl = cached._ftsPartial ? CACHE_PARTIAL_TTL_MS : CACHE_TTL_MS;
+            if (age < ttl) useCache = true;
+          }
         } catch (e) {}
       }
       let ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex;
-      var ftsQuarterlyNI;
+      let ftsQuarterlyNI;
       if (useCache && cached.payload) {
         ftsAnnual = cached.payload.ftsAnnual;
         ftsQuarterly = cached.payload.ftsQuarterly;
@@ -702,15 +745,25 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         ftsAnnualSBC = _ftsExtractByYear(fts.annualCash, ['stockBasedCompensation']);
         ftsAnnualCapex = _ftsExtractByYear(fts.annualCash, ['capitalExpenditure', 'capitalExpenditures']);
         // Tag-90: Quarterly NetIncome (8-Quarter-Earnings-Stability)
-        var ftsQuarterlyNI = (fts.quarterlyFin || []).slice().reverse()
+        ftsQuarterlyNI = (fts.quarterlyFin || []).slice().reverse()
           .map(r => r && r.netIncome != null ? r.netIncome : null)
           .filter(v => v != null);
+        // F-DP-005: detect partial FTS result — any module that returned empty array
+        const ftsPartial = (
+          (fts.annualFin || []).length === 0 ||
+          (fts.quarterlyFin || []).length === 0 ||
+          (fts.annualCash || []).length === 0 ||
+          (fts.annualBs || []).length === 0
+        );
         try {
           fs.writeFileSync(cachePath, JSON.stringify({
+            _cacheVersion: FTS_CACHE_VERSION,
+            _ftsPartial: ftsPartial,
             cachedAt: new Date().toISOString(),
             payload: { ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsQuarterlyNI }
           }));
         } catch (e) {}
+        if (ftsPartial) canonical._ftsPartial = true;
       }
       // Override leere annual-Arrays aus quoteSummary mit FTS-Daten wenn FTS welche hat
       if (ftsAnnual.annualRev.length > canonical.annual.annualRev.length) canonical.annual.annualRev = ftsAnnual.annualRev;
@@ -738,6 +791,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // but annual.* was local — silently corrupting fcf-yield, ev/ebitda, ROIC and every other ratio.
       try { _convertSnapshotToUSD(canonical); }
       catch (e) { _log('WARN', `  FX conversion failed for ${stock.ticker}: ${e.message}`); }
+      // F-DQ-002: skip tickers where FX conversion failed — mcap is in local currency and would
+      // pass or fail the USD mcap filter incorrectly.
+      if (canonical.meta && canonical.meta.fxConversionFailed === true) {
+        _log('INFO', `  ⊘ ${stock.ticker} skipped: fx-unknown (currency=${canonical.meta.reportingCurrencyOriginal})`);
+        failures.push({ ticker: stock.ticker, error: 'fx-unknown', errClass: 'fx-unknown' });
+        return;
+      }
 
       // Tag-87a: MarketCap-Filter — skip Stocks außerhalb Karl's Mid/Large-Cap-Range
       // Tag 116: untere Schwelle von $2B auf $1B gesenkt (konsistent mit refresh-universe).
@@ -746,7 +806,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const MAX_MCAP = Infinity;       // Tag 101: kein Mega-Cap-Cut mehr
       const mcapVal = canonical.marketCap && canonical.marketCap.value;
       if (mcapVal != null && (mcapVal < MIN_MCAP || mcapVal > MAX_MCAP)) {
-        const reason = mcapVal < MIN_MCAP ? `mcap=${(mcapVal/1e9).toFixed(2)}B < $2B (Small-Cap)` : `mcap=${(mcapVal/1e9).toFixed(0)}B > $300B (Mega-Cap)`;
+        const reason = mcapVal < MIN_MCAP ? `mcap=${(mcapVal/1e9).toFixed(2)}B < $${(MIN_MCAP/1e9).toFixed(0)}B (Small-Cap)` : `mcap=${(mcapVal/1e9).toFixed(0)}B > $${MAX_MCAP === Infinity ? 'Infinity' : (MAX_MCAP/1e12).toFixed(0)+'T'} (Mega-Cap)`;
         _log('INFO', `  ⊘ ${stock.ticker} skipped: ${reason}`);
         // Remove existing snapshot if was previously included
         const filename = safeSnapshotFilename(stock.ticker);
@@ -797,8 +857,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // patterns (e.g. >5% rate-limit suggests a Yahoo policy change vs >5% 404
       // suggests universe contains dead tickers).
       const msg = String(e.message || '');
+      // F-DP-006: surface programming errors (TypeError/ReferenceError) separately from transient Yahoo failures
       let errClass = 'other';
-      if (/429|too many request|rate.?limit/i.test(msg)) errClass = 'rate-limit';
+      if (e.constructor && (e.constructor.name === 'TypeError' || e.constructor.name === 'ReferenceError')) {
+        errClass = 'mapper-bug';
+        console.error('MAPPER-BUG', e.stack);
+      } else if (/429|too many request|rate.?limit/i.test(msg)) errClass = 'rate-limit';
       else if (/404|not found|invalid (cookie|crumb|symbol)|no data found|no fundamentals data found/i.test(msg)) errClass = 'not-found';
       else if (/timeout|ETIMEDOUT|ESOCKETTIMEDOUT/i.test(msg)) errClass = 'timeout';
       else if (/ENOTFOUND|ECONNREFUSED|ECONNRESET|EAI_AGAIN|network/i.test(msg)) errClass = 'network';
@@ -814,7 +878,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           if (existing && existing.meta) {
             existing.meta.delisted = true;
             existing.meta.delistedAt = new Date().toISOString();
-            fs.writeFileSync(outPath, JSON.stringify(existing, null, 2));
+            // F-DP-028: use tmp+rename for atomic delisted-flag write
+            const delistedTmp = outPath + '.tmp';
+            fs.writeFileSync(delistedTmp, JSON.stringify(existing, null, 2));
+            fs.renameSync(delistedTmp, outPath);
             _log('INFO', `  Marked ${stock.ticker} as delisted in snapshot`);
           }
         } catch (writeErr) {
@@ -837,11 +904,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     let idx = 0;
     async function worker() {
       while (idx < stocks.length) {
-        const stock = stocks[idx++];
+        const myIdx = idx++;
+        const stock = stocks[myIdx];
         if (!stock) continue;
         await processOneFn(stock).catch(e => _log('WARN', `Worker error ${stock.ticker}: ${e.message}`));
-        // flush manifest every 100 tickers
-        if (idx % 100 === 0) writeManifestFn();
+        // flush manifest every 100 tickers using the captured local index
+        if (myIdx > 0 && myIdx % 100 === 0) writeManifestFn();
         if (idx < stocks.length) await _sleep(sleepMs);
       }
     }
@@ -865,8 +933,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // Saves ~1.4 MB per daily commit (95% of the committed file was diagnostics-only).
   // Tag 155: partial:false signals clean end-of-run write (incremental writes during loop set partial:true).
   const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_failed: manifest.n_failed, partial: false };
-  fs.writeFileSync(path.join(outputDir, '_manifest.json'), JSON.stringify(slim));
-  fs.writeFileSync(path.join(outputDir, '_manifest-full.json'), JSON.stringify(manifest));
+  // F-DP-002: use tmp+rename for atomic manifest writes
+  const slimPath = path.join(outputDir, '_manifest.json');
+  const slimTmp = slimPath + '.tmp';
+  fs.writeFileSync(slimTmp, JSON.stringify(slim));
+  fs.renameSync(slimTmp, slimPath);
+  const fullPath = path.join(outputDir, '_manifest-full.json');
+  const fullTmp = fullPath + '.tmp';
+  fs.writeFileSync(fullTmp, JSON.stringify(manifest));
+  fs.renameSync(fullTmp, fullPath);
   _log('INFO', `Pull complete: ${results.length}/${watchlist.stocks.length} ok, ${failures.length} failed`);
   return manifest;
 }

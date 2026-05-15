@@ -5,7 +5,9 @@ name: Monthly SEC XBRL Pull
 
 on:
   schedule:
-    - cron: '0 4 1 * *'  # 04:00 UTC on the 1st of each month
+    # F-CI-003: moved from 04:00 to 08:00 UTC to avoid overlapping the daily pull
+    # (daily pull starts at 02:00 UTC with 180-min timeout — could still be running at 04:00).
+    - cron: '0 8 1 * *'  # 08:00 UTC on the 1st of each month
   workflow_dispatch:
     inputs:
       max:
@@ -44,6 +46,20 @@ jobs:
             node pull-sec-xbrl.js
           fi
 
+      # F-CI-010: Verify SEC XBRL coverage before committing manifest
+      - name: Verify SEC Coverage
+        run: |
+          if [ -f external-data/sec-xbrl/_manifest.json ]; then
+            ok=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./external-data/sec-xbrl/_manifest.json','utf8'));console.log(m.n_ok||0)}catch(e){console.log(0)}")
+            total=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./external-data/sec-xbrl/_manifest.json','utf8'));console.log(m.n_total||0)}catch(e){console.log(0)}")
+            echo "SEC XBRL coverage: $ok / $total"
+            if [ "$total" -gt 0 ] && [ "$ok" -lt 100 ]; then
+              echo "::warning::SEC XBRL coverage $ok/$total — low coverage, check pull-sec-xbrl.js output"
+            fi
+          else
+            echo "::warning::No SEC XBRL manifest found — pull may have failed"
+          fi
+
       - name: Commit manifest
         run: |
           git config user.name "sec-xbrl-bot"
@@ -53,14 +69,18 @@ jobs:
             echo "No manifest changes to commit."
           else
             git commit -m "chore: sec-xbrl manifest $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            # F-CI-001 (same pattern as daily-pull): fetch before rebase, remove '|| true'
             for i in 1 2 3; do
-              git pull --rebase --autostash --strategy-option theirs origin main || git rebase --abort || true
+              git fetch origin main
+              git rebase --autostash --strategy-option theirs origin/main || { git rebase --abort; git reset --hard origin/main; }
               if git push; then
                 echo "Pushed on attempt $i"
                 exit 0
               fi
               sleep $((5 * i))
             done
+            # F-CI-009: add missing echo before exit 1
+            echo "Push failed after 3 attempts"
             exit 1
           fi
 

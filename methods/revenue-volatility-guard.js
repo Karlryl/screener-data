@@ -62,14 +62,15 @@ function toUsdRough(value, currency) {
 function _arr(stock, path) {
   const a = H.val(stock, path);
   if (!Array.isArray(a)) return [];
-  return a.map(v => v == null ? null : (typeof v === 'number' ? v : v.value)).filter(v => Number.isFinite(v));
+  // Use raw values to preserve positional alignment for YoY comparisons (revY[i] vs revY[i+1])
+  return a.map(v => v == null ? null : (typeof v === 'number' ? v : v.value));
 }
 
 function evaluate(stock) {
   if (!stock) return H.buildResult({ computable: false, pass: false, reason: 'no stock data' });
 
   const revY = _arr(stock, 'annual.annualRev');
-  const ttmRev = H.metricValue(stock, 'revenueTTM') || revY[0] || 0;
+  const ttmRev = H.metricValue(stock, 'revenueTTM') || (Number.isFinite(revY[0]) ? revY[0] : 0);
 
   // Tag 124: Material-Schwelle in USD (currency-aware).
   // Vorher silent disable fuer non-USD Reporter (JPY/EUR/etc.) weil 100M lokal-Currency
@@ -83,10 +84,11 @@ function evaluate(stock) {
     });
   }
 
-  if (revY.length < 3) {
+  const validRevY = revY.filter(v => Number.isFinite(v));
+  if (validRevY.length < 3) {
     return H.buildResult({
       computable: false, pass: true,
-      reason: 'need >=3 annual revenue rows, got ' + revY.length
+      reason: 'need >=3 annual revenue rows, got ' + validRevY.length
     });
   }
 
@@ -95,6 +97,7 @@ function evaluate(stock) {
   // YoY[i] = (revY[i] - revY[i+1]) / revY[i+1]
   const yoyRates = [];
   for (let i = 0; i < revY.length - 1; i++) {
+    if (!Number.isFinite(revY[i]) || !Number.isFinite(revY[i+1])) continue;  // skip null/NaN
     if (revY[i+1] <= 0) continue;  // skip if denominator non-positive
     yoyRates.push({ index: i, rate: (revY[i] - revY[i+1]) / revY[i+1] });
   }

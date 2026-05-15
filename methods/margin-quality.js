@@ -16,10 +16,10 @@ const H = require('./_helpers.js');
 const ID = 'margin-quality';
 const LABEL = 'Margin-Quality';
 
-function _arrVals(stock, path) {
+function _rawVals(stock, path) {
   const arr = H.val(stock, path);
   if (!Array.isArray(arr)) return [];
-  return arr.map(v => v == null ? null : (typeof v === 'number' ? v : v.value)).filter(v => Number.isFinite(v));
+  return arr.map(v => v == null ? null : (typeof v === 'number' ? v : v.value));
 }
 
 function _median(arr) {
@@ -33,24 +33,30 @@ function evaluate(stock) {
   if (!stock) {
     return H.buildResult({ computable: false, pass: false, reason: 'no stock data' });
   }
-  const revs = _arrVals(stock, 'annual.annualRev');
-  const gps = _arrVals(stock, 'annual.annualGP');
-  const opIncs = _arrVals(stock, 'annual.annualOpInc');
+  // Use raw arrays (preserving positional alignment) instead of filtering independently
+  const rawRevs = _rawVals(stock, 'annual.annualRev');
+  const rawGps = _rawVals(stock, 'annual.annualGP');
+  const rawOpIncs = _rawVals(stock, 'annual.annualOpInc');
   const totalAssets = H.latestBalance(stock, 'totalAssets');
 
-  if (revs.length < 4 || gps.length < 4 || opIncs.length < 4) {
+  // Count valid entries per array for the minimum-data check
+  const validRevs = rawRevs.filter(v => Number.isFinite(v));
+  const validGps = rawGps.filter(v => Number.isFinite(v));
+  const validOpIncs = rawOpIncs.filter(v => Number.isFinite(v));
+
+  if (validRevs.length < 4 || validGps.length < 4 || validOpIncs.length < 4) {
     return H.buildResult({
       computable: false,
-      reason: `need >=4y annual: rev=${revs.length} gp=${gps.length} opInc=${opIncs.length}`
+      reason: `need >=4y annual: rev=${validRevs.length} gp=${validGps.length} opInc=${validOpIncs.length}`
     });
   }
 
-  // Compute GM and OpMargin per year (up to 5)
-  const yrs = Math.min(5, revs.length, gps.length, opIncs.length);
+  // Compute GM and OpMargin per year (up to 5) — zip by position, skip incomplete rows
+  const len = Math.min(5, rawRevs.length, rawGps.length, rawOpIncs.length);
   const gms = [], opMs = [];
-  for (let i = 0; i < yrs; i++) {
-    if (revs[i] > 0 && gps[i] != null) gms.push(gps[i] / revs[i]);
-    if (revs[i] > 0 && opIncs[i] != null) opMs.push(opIncs[i] / revs[i]);
+  for (let i = 0; i < len; i++) {
+    if (Number.isFinite(rawRevs[i]) && rawRevs[i] > 0 && Number.isFinite(rawGps[i])) gms.push(rawGps[i] / rawRevs[i]);
+    if (Number.isFinite(rawRevs[i]) && rawRevs[i] > 0 && Number.isFinite(rawOpIncs[i])) opMs.push(rawOpIncs[i] / rawRevs[i]);
   }
   if (gms.length < 3 || opMs.length < 3) {
     return H.buildResult({
@@ -65,7 +71,8 @@ function evaluate(stock) {
   const gmStart = gms[gms.length - 1];
 
   // Asset-Turnover for Override
-  const at = (revs[0] && totalAssets) ? revs[0] / totalAssets : null;
+  const latestRev = rawRevs[0];
+  const at = (Number.isFinite(latestRev) && latestRev > 0 && totalAssets) ? latestRev / totalAssets : null;
   const highTurnover = at != null && at >= 2.0;
 
   const reasons = [];

@@ -94,25 +94,33 @@ function normalizeMethodScore(methodResult, methodMeta) {
   if (val == null || threshold == null || typeof threshold !== 'number') return 0.3;
 
   var op = (methodMeta && methodMeta.thresholdOp) || 'gte';
+
+  // F-ME-010: guard division by zero
+  if (threshold === 0) return val > 0 ? 1.0 : 0.0;
+
   var ratio;
   if (op === 'gte') {
     ratio = val / threshold;
   } else if (op === 'lte') {
     if (val <= 0) return 0.3;
     ratio = threshold / val;
+  } else if (op === 'lte_abs') {
+    // F-ME-011: proper handling for lte_abs — graduated scoring on absolute value
+    var absVal = Math.abs(val);
+    if (threshold === 0) return absVal === 0 ? 1.0 : 0.0;
+    ratio = threshold / Math.max(absVal, 1e-10);
   } else {
     return 0.3;
   }
 
-  // Graduierte Naehe-Punkte:
-  // ratio 0.9-1.0 -> 0.7-1.0
-  // ratio 0.7-0.9 -> 0.3-0.7
-  // ratio 0.5-0.7 -> 0.1-0.3
-  // ratio <0.5    -> 0-0.1
-  if (ratio >= 0.9) return Math.min(1.0, 0.7 + (ratio - 0.9) * 3);
-  if (ratio >= 0.7) return 0.3 + (ratio - 0.7) * 2;
-  if (ratio >= 0.5) return 0.1 + (ratio - 0.5) * 1;
-  return Math.max(0, ratio * 0.2);
+  // F-ME-012: smooth graduation curve — use linear interpolation to eliminate discontinuous jumps.
+  // ratio >= 1.0 means at/above threshold (already handled by pass=true branch above)
+  // ratio 0.0-1.0: linearly interpolate from 0 to 0.99 to approach but not reach 1.0
+  // Keep the near-threshold region more granular for better scoring sensitivity.
+  if (ratio >= 0.9) return Math.min(0.99, 0.7 + (ratio - 0.9) * 2.9);  // 0.9→0.70, 1.0→0.99
+  if (ratio >= 0.7) return 0.3 + (ratio - 0.7) * 2.0;                   // 0.7→0.30, 0.9→0.70
+  if (ratio >= 0.5) return 0.1 + (ratio - 0.5) * 1.0;                   // 0.5→0.10, 0.7→0.30
+  return Math.max(0, ratio * 0.2);                                        // 0.0→0.00, 0.5→0.10
 }
 
 /**
@@ -141,6 +149,7 @@ function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, data
 
   var breakdown = {};
   var weightedSum = 0;
+  var computedWeight = 0;  // F-ME-023: only accumulate weight for computable methods
   var totalWeight = 0;
 
   for (var methodId in weights) {
@@ -149,18 +158,37 @@ function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, data
     var r = allResults[methodId];
     var meta = methodRegistry && methodRegistry[methodId];
     var s = normalizeMethodScore(r, meta);
+    var isComputable = r && r.computable;
     breakdown[methodId] = {
       score: Math.round(s * 100) / 100,
       weight: weight,
       value: r ? r.value : null,
-      computable: r ? r.computable : false,
+      computable: isComputable || false,
       pass: r ? r.pass : null
     };
-    weightedSum += s * weight;
     totalWeight += weight;
+    if (isComputable) {
+      // F-ME-023: only count weight for computable methods toward the denominator
+      computedWeight += weight;
+      weightedSum += s * weight;
+    }
   }
 
-  var normScore = totalWeight > 0 ? (weightedSum / totalWeight) * 100 : 0;
+  // F-ME-023: insufficient coverage check — require at least 40% of total weight to be computable
+  if (computedWeight === 0) {
+    return null; // no computable methods at all
+  }
+  if (computedWeight / totalWeight < 0.4) {
+    return {
+      score: null, tier: 'REJECT', redFlags: [], breakdown: breakdown,
+      mode: modeId, computable: false, reason: 'insufficient-coverage',
+      softGuardPenalty: 0, baseScore: null,
+      dataQualityGrade: null, dataQualityCapped: false
+    };
+  }
+
+  // F-ME-023: normalize against computed weight only (not total weight)
+  var normScore = (weightedSum / computedWeight) * 100;
   var baseScore = Math.round(normScore);
 
   // Tag 120b: SoftGuard-Penalty anwenden

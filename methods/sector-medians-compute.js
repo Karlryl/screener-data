@@ -85,6 +85,10 @@ function gatherBySubProfile(stocks, classify) {
  * Returns object keyed by spId with computed medians.
  * minN controls the minimum sample count required.
  */
+// Metrics where negative values invert the "above/below median" scoring logic.
+// For these, use only positive values for the scoring threshold.
+const POSITIVE_ONLY_METRICS = new Set(['roic', 'roce']);
+
 function _computeFromBuckets(buckets, minN) {
   const result = {};
   for (const [spId, metrics] of Object.entries(buckets)) {
@@ -92,7 +96,11 @@ function _computeFromBuckets(buckets, minN) {
     result[spId] = {};
     for (const [mid, arr] of Object.entries(metrics)) {
       if (arr.length >= minN) {
-        result[spId][mid] = median(arr);
+        // F-ME-008: for ratio metrics like ROIC/ROCE, only use positive values for the
+        // scoring threshold median. Negative values in loss-heavy sectors would invert
+        // the above/below-median logic. Full array length is still reported for transparency.
+        const thresholdArr = POSITIVE_ONLY_METRICS.has(mid) ? arr.filter(v => v > -0.05) : arr;
+        result[spId][mid] = thresholdArr.length >= minN ? median(thresholdArr) : median(arr);
         result[spId]['_n_' + mid] = arr.length;
       }
     }
@@ -213,6 +221,13 @@ function writeRollingMedians(autoMedians) {
       entry.asOf = today;
     }
   }
+  // F-ME-009: prune stale rolling cache entries for sub-profiles no longer in the current result.
+  // If a sector was dropped (below minN), effectiveThreshold would still prefer the stale rolling median.
+  const currentSpIds = new Set(Object.keys(autoMedians));
+  for (const spId of Object.keys(merged)) {
+    if (!currentSpIds.has(spId)) delete merged[spId];
+  }
+
   fs.writeFileSync(outPath, JSON.stringify({
     _generatedAt: new Date().toISOString(),
     _windowDays: ROLLING_WINDOW_DAYS,

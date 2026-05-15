@@ -19,6 +19,9 @@
  *   - Vintage-Tracking: nicht nur Sample-Größe sondern Anzahl distinkter
  *     Datumspunkte ausgewiesen.
  *
+ * F-PF-009: Results are cached in outputs/method-effectiveness-cache.json
+ *   keyed by (vintage_date, method_id). Only new vintages are processed each run.
+ *
  * Output:
  *   outputs/method-effectiveness.json
  *   outputs/method-effectiveness.md  — Markdown-Ranking
@@ -31,6 +34,8 @@ const WF = require('./walk-forward-perf.js');
 const METHODS_HIST_DIR = path.join(__dirname, '..', 'methods-history');
 const PRICES_PATH = path.join(__dirname, '..', 'prices', 'history.json');
 const OUT_DIR = path.join(__dirname, '..', 'outputs');
+// F-PF-009: cache file path
+const CACHE_PATH = path.join(OUT_DIR, 'method-effectiveness-cache.json');
 
 const HORIZONS_DAYS = [28, 84]; // 4w / 12w forward look-up
 const BOOTSTRAP_RESAMPLES = 200;
@@ -63,13 +68,19 @@ function _rng(seed) {
 /**
  * Bootstrap-CI for alpha = median(pass) - median(fail).
  * Returns { alpha, lo, hi } at 95% level (percentile method).
+ *
+ * F-BT-004: seed includes method name hash so methods with same group sizes
+ * get independent bootstrap sequences rather than sharing an identical RNG.
  */
-function bootstrapAlphaCI(passArr, failArr, resamples) {
+function bootstrapAlphaCI(passArr, failArr, resamples, methodName) {
   resamples = resamples || BOOTSTRAP_RESAMPLES;
   if (!passArr || !failArr || passArr.length < 2 || failArr.length < 2) {
     return { alpha: null, lo: null, hi: null };
   }
-  const rng = _rng(passArr.length * 1000 + failArr.length);
+  // F-BT-004: incorporate method name into seed to ensure independence
+  const nameHash = (methodName || '').split('').reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 0);
+  const seed = nameHash + passArr.length * 1000 + failArr.length;
+  const rng = _rng(seed);
   const alphaSamples = [];
   for (let b = 0; b < resamples; b++) {
     const p = new Array(passArr.length);
@@ -94,7 +105,18 @@ function main() {
   const files = listHistoryFiles();
   if (files.length === 0) { console.log('No methods-history files — exiting.'); return; }
 
+  // F-PF-003 / F-PF-004: build price index once for O(1) lookups
+  const priceIndex = WF.buildPriceIndex(prices);
+
   const today = new Date().toISOString().slice(0, 10);
+
+  // F-PF-009: Load existing cache so we only process new vintages
+  let cache = loadJson(CACHE_PATH);
+  if (!cache || typeof cache !== 'object' || !cache.vintageReturns) {
+    cache = { vintageReturns: {} };
+  }
+  const cachedDates = new Set(Object.keys(cache.vintageReturns));
+
   // Tag 134 — Phase 3.5: track per-quality-bucket as well as overall.
   // perMethod[methodId][horizonKey] = { pass: [], fail: [], vintages: Set<date>, byQuality: { A: {pass,fail,vintages}, ... } }
   const perMethod = {};
@@ -113,22 +135,54 @@ function main() {
     return perMethod[methodId][key];
   }
 
-  for (const fname of files) {
-    const file = loadJson(path.join(METHODS_HIST_DIR, fname));
-    if (!file || !file.stocks) continue;
-    const asOf = (file.date || fname.replace('.json', ''));
+  let processedNew = 0;
 
+  for (const fname of files) {
+    const asOf = fname.replace('.json', '');
     for (const days of HORIZONS_DAYS) {
       const futureDate = WF.addDaysIso(asOf, days);
       if (futureDate > today) continue;
       const key = days + 'd';
+      const cacheKey = asOf + '|' + key;
+
+      if (cachedDates.has(cacheKey) && cache.vintageReturns[cacheKey]) {
+        // F-PF-009: replay from cache — no file read needed
+        const cached = cache.vintageReturns[cacheKey];
+        for (const { ticker, methodId, ret, quality } of cached) {
+          const bucket = _getMethodBucket(methodId, key);
+          bucket.vintages.add(asOf);
+          // F-BT-008: quality from cache (may be null for older vintages — handle gracefully)
+          const pass = cached.find(x => x.ticker === ticker && x.methodId === methodId && x.ret === ret)?.pass;
+          if (pass == null) continue;
+          if (pass) bucket.pass.push(ret); else bucket.fail.push(ret);
+          if (quality && bucket.byQuality[quality]) {
+            const q = bucket.byQuality[quality];
+            q.vintages.add(asOf);
+            if (pass) q.pass.push(ret); else q.fail.push(ret);
+          }
+        }
+        continue;
+      }
+
+      // Not in cache: load and process the file
+      const file = loadJson(path.join(METHODS_HIST_DIR, fname));
+      if (!file || !file.stocks) continue;
+      processedNew++;
+
+      const cacheEntries = [];
       for (const [ticker, stockData] of Object.entries(file.stocks)) {
         if (!stockData || !stockData.results) continue;
-        const p0 = WF.priceAt(prices, ticker, asOf);
-        const p1 = WF.priceAt(prices, ticker, futureDate);
+        // F-PF-004: use Map-based index (O(1)) rather than O(N) linear scan
+        const map = priceIndex[ticker];
+        if (!map) continue;
+        const entryDate = WF.nearestTradingDay(asOf, map) || asOf;
+        const exitDate  = WF.nearestTradingDay(futureDate, map) || futureDate;
+        const p0 = map.get(entryDate) || null;
+        const p1 = map.get(exitDate)  || null;
         const ret = WF.returnPct(p0, p1);
         if (ret == null) continue;
-        const quality = stockData.quality; // 'A' | 'B' | 'C' | 'D' | null (older vintages pre-Phase-3.4)
+        // F-BT-008: read quality field; handle missing gracefully (null for older vintages)
+        const quality = (stockData.quality != null) ? stockData.quality : null;
         for (const [methodId, r] of Object.entries(stockData.results)) {
           if (!r || r.pass == null) continue;
           const bucket = _getMethodBucket(methodId, key);
@@ -139,13 +193,47 @@ function main() {
             q.vintages.add(asOf);
             if (r.pass) q.pass.push(ret); else q.fail.push(ret);
           }
+          cacheEntries.push({ ticker, methodId, ret, pass: r.pass, quality });
         }
+      }
+      // F-PF-009: store in cache
+      cache.vintageReturns[cacheKey] = cacheEntries;
+    }
+  }
+
+  // F-PF-009: save updated cache
+  if (processedNew > 0) {
+    if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
+    fs.writeFileSync(CACHE_PATH, JSON.stringify(cache));
+    console.log('method-effectiveness: processed ' + processedNew + ' new vintage×horizon combos, cache saved.');
+  } else {
+    console.log('method-effectiveness: all vintages served from cache.');
+  }
+
+  // NOTE: The cache replay loop above has a bug for the pass lookup — re-do it cleanly
+  // by rebuilding perMethod entirely from scratch using processed data.
+  // The cache approach above is sound for the write path; the read path for pre-cached
+  // vintages is handled below by iterating the cache entries directly.
+  // Reset perMethod and replay everything from cache for correctness:
+  for (const key of Object.keys(perMethod)) delete perMethod[key];
+  for (const [cacheKey, entries] of Object.entries(cache.vintageReturns)) {
+    const [asOf, horizonKey] = cacheKey.split('|');
+    for (const entry of entries) {
+      const { ticker, methodId, ret, pass, quality } = entry;
+      if (pass == null) continue;
+      const bucket = _getMethodBucket(methodId, horizonKey);
+      bucket.vintages.add(asOf);
+      if (pass) bucket.pass.push(ret); else bucket.fail.push(ret);
+      if (quality && bucket.byQuality[quality]) {
+        const q = bucket.byQuality[quality];
+        q.vintages.add(asOf);
+        if (pass) q.pass.push(ret); else q.fail.push(ret);
       }
     }
   }
 
   // Build summary with bootstrap CI; include quality-split (Phase 3.5).
-  function _evalGroup(group) {
+  function _evalGroup(group, methodId) {
     const passMed = median(group.pass);
     const failMed = median(group.fail);
     const insufficientVintages = group.vintages.size < MIN_VINTAGES;
@@ -153,14 +241,23 @@ function main() {
                             || group.fail.length < MIN_SAMPLES_PER_GROUP;
     const ci = (insufficientVintages || insufficientSamples)
       ? { alpha: null, lo: null, hi: null }
-      : bootstrapAlphaCI(group.pass, group.fail);
+      // F-BT-004: pass methodId into bootstrap so seed is unique per method
+      : bootstrapAlphaCI(group.pass, group.fail, BOOTSTRAP_RESAMPLES, methodId);
+    // F-BT-006: suppress point-alpha when n < MIN_SAMPLES_PER_GROUP in either group
+    const alphaVal = (insufficientSamples || passMed == null || failMed == null)
+      ? null
+      : passMed - failMed;
+    const alphaNullReason = insufficientSamples
+      ? ('insufficient_samples_n_pass=' + group.pass.length + '_n_fail=' + group.fail.length)
+      : undefined;
     return {
       passedN: group.pass.length,
       failedN: group.fail.length,
       vintages: group.vintages.size,
       medianReturnPass: passMed,
       medianReturnFail: failMed,
-      alpha: (passMed != null && failMed != null) ? passMed - failMed : null,
+      alpha: alphaVal,
+      alphaNullReason,
       ciLo95: ci.lo,
       ciHi95: ci.hi,
       evidenceGate: insufficientVintages
@@ -178,12 +275,13 @@ function main() {
       const key = days + 'd';
       const data = horizons[key];
       if (!data) { out[methodId][key] = null; continue; }
-      const overall = _evalGroup(data);
+      const overall = _evalGroup(data, methodId);
       // Quality split: only emit grades that have any data (typically A+B once Phase 3.4 has 4+ weeks of grades).
+      // F-BT-008: byQuality split works when quality field is present; gracefully empty when absent.
       const byQuality = {};
       for (const g of ['A', 'B', 'C', 'D']) {
         const q = data.byQuality[g];
-        if (q.pass.length + q.fail.length > 0) byQuality[g] = _evalGroup(q);
+        if (q.pass.length + q.fail.length > 0) byQuality[g] = _evalGroup(q, methodId + '_quality_' + g);
       }
       overall.byQuality = byQuality;
       out[methodId][key] = overall;
@@ -197,7 +295,7 @@ function main() {
     minVintages: MIN_VINTAGES,
     minSamplesPerGroup: MIN_SAMPLES_PER_GROUP,
     bootstrapResamples: BOOTSTRAP_RESAMPLES,
-    note: 'alpha = median(passing-stocks forward-return) - median(failing-stocks forward-return). CI = 95% percentile bootstrap. Methods with evidenceGate != "ok" produce no CI. Yahoo universe survivor-biased.',
+    note: 'alpha = median(passing-stocks forward-return) - median(failing-stocks forward-return). CI = 95% percentile bootstrap. Methods with evidenceGate != "ok" produce no CI. F-BT-006: alpha=null when n<' + MIN_SAMPLES_PER_GROUP + ' in either group. Yahoo universe survivor-biased. F-BT-004: bootstrap seed is per-method-unique. F-PF-009: cache in method-effectiveness-cache.json.',
     methods: out
   };
   fs.writeFileSync(path.join(OUT_DIR, 'method-effectiveness.json'), JSON.stringify(report, null, 2));
@@ -205,7 +303,8 @@ function main() {
   // Ranked markdown
   let md = '# Method Effectiveness — ' + today + '\n\n';
   md += '_alpha = median forward-return of passing stocks minus failing stocks (pp). CI = 95% percentile bootstrap._\n';
-  md += '_Yahoo universe is survivor-biased. Methods with `evidenceGate != ok` are below statistical-meaning threshold._\n\n';
+  md += '_Yahoo universe is survivor-biased. Methods with `evidenceGate != ok` are below statistical-meaning threshold._\n';
+  md += '_F-BT-006: alpha shown as "—" when n < ' + MIN_SAMPLES_PER_GROUP + ' in pass or fail group (insufficient_samples)._\n\n';
   for (const days of HORIZONS_DAYS) {
     const key = days + 'd';
     md += '## ' + days + 'd forward\n\n';
@@ -223,7 +322,9 @@ function main() {
       });
     for (const r of rows) {
       const h = r.h;
-      const alphaStr = h.alpha != null ? ((h.alpha >= 0 ? '+' : '') + h.alpha.toFixed(2) + 'pp') : '—';
+      const alphaStr = h.alpha != null
+        ? ((h.alpha >= 0 ? '+' : '') + h.alpha.toFixed(2) + 'pp')
+        : (h.alphaNullReason ? 'n<' + MIN_SAMPLES_PER_GROUP : '—');
       const ciStr = (h.ciLo95 != null && h.ciHi95 != null)
         ? `[${h.ciLo95.toFixed(2)}, ${h.ciHi95.toFixed(2)}]`
         : '—';

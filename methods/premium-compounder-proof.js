@@ -23,6 +23,11 @@ function _arrVals(stock, path) {
   if (!Array.isArray(arr)) return [];
   return arr.map(v => v == null ? null : (typeof v === 'number' ? v : v.value)).filter(v => Number.isFinite(v));
 }
+function _rawVals(stock, path) {
+  const arr = H.val(stock, path);
+  if (!Array.isArray(arr)) return [];
+  return arr.map(v => v == null ? null : (typeof v === 'number' ? v : v.value));
+}
 function _median(arr) {
   if (!arr.length) return null;
   const s = [...arr].sort((a, b) => a - b);
@@ -38,13 +43,22 @@ function evaluate(stock) {
   if (!stock) {
     return H.buildResult({ computable: false, pass: false, reason: 'no stock data' });
   }
-  const revs = _arrVals(stock, 'annual.annualRev');
-  const opIncs = _arrVals(stock, 'annual.annualOpInc');
-  const nis = _arrVals(stock, 'annual.annualNetIncome');
-  const fcfs = _arrVals(stock, 'annual.annualFCF');
-  const capex = _arrVals(stock, 'annual.annualCapex').map(Math.abs);
-  const ocf = _arrVals(stock, 'annual.annualOCF');
-  const rnd = _arrVals(stock, 'annual.annualRnD');
+  // Use raw (positionally aligned) arrays for parallel indexing
+  const rawRevs = _rawVals(stock, 'annual.annualRev');
+  const rawOpIncs = _rawVals(stock, 'annual.annualOpInc');
+  const rawNis = _rawVals(stock, 'annual.annualNetIncome');
+  const rawFcfs = _rawVals(stock, 'annual.annualFCF');
+  const rawCapex = _rawVals(stock, 'annual.annualCapex').map(v => v == null ? null : Math.abs(v));
+  const rawOcf = _rawVals(stock, 'annual.annualOCF');
+  const rawRnd = _rawVals(stock, 'annual.annualRnD');
+  // Filtered arrays for length checks and single-series use
+  const revs = rawRevs.filter(v => Number.isFinite(v));
+  const opIncs = rawOpIncs.filter(v => Number.isFinite(v));
+  const nis = rawNis.filter(v => Number.isFinite(v));
+  const fcfs = rawFcfs.filter(v => Number.isFinite(v));
+  const capex = rawCapex.filter(v => Number.isFinite(v));
+  const ocf = rawOcf.filter(v => Number.isFinite(v));
+  const rnd = rawRnd.filter(v => Number.isFinite(v));
   const totalAssets = H.latestBalance(stock, 'totalAssets');
   const totalCash = H.latestBalance(stock, 'totalCash');
   const totalDebt = H.latestBalance(stock, 'totalDebt');
@@ -61,11 +75,11 @@ function evaluate(stock) {
   checks.push({ name: 'rev5yCAGR>=15', pass: c1, val: rev5yCagr });
   if (!c1) allPass = false;
 
-  // 2. 5Y Median OpMargin >= 25%
+  // 2. 5Y Median OpMargin >= 25% — zip rawRevs × rawOpIncs positionally
   const opMs = [];
-  const yrs = Math.min(5, revs.length, opIncs.length);
+  const yrs = Math.min(5, rawRevs.length, rawOpIncs.length);
   for (let i = 0; i < yrs; i++) {
-    if (revs[i] > 0 && opIncs[i] != null) opMs.push(opIncs[i] / revs[i]);
+    if (Number.isFinite(rawRevs[i]) && rawRevs[i] > 0 && Number.isFinite(rawOpIncs[i])) opMs.push(rawOpIncs[i] / rawRevs[i]);
   }
   const opMed = _median(opMs);
   const c2 = opMed != null && opMed >= 0.25;
@@ -74,9 +88,9 @@ function evaluate(stock) {
 
   // 3. PreTax-ROIC >= 25% (latest)
   let preTaxROIC = null;
-  if (opIncs[0] != null && totalAssets != null) {
+  if (Number.isFinite(rawOpIncs[0]) && totalAssets != null) {
     const ic = totalAssets - (totalCash || 0);
-    if (ic > 0) preTaxROIC = opIncs[0] / ic;
+    if (ic > 0) preTaxROIC = rawOpIncs[0] / ic;
   }
   const c3 = preTaxROIC != null && preTaxROIC >= 0.25;
   checks.push({ name: 'preTaxROIC>=25', pass: c3, val: preTaxROIC });
@@ -87,8 +101,8 @@ function evaluate(stock) {
   let ndOverEbitda = null;
   if (totalDebt != null) {
     netCash = (totalCash || 0) - totalDebt;
-    if (opIncs[0] != null) {
-      const ebitda = opIncs[0] * 1.2;
+    if (Number.isFinite(rawOpIncs[0])) {
+      const ebitda = rawOpIncs[0] * 1.2;
       if (ebitda > 0) ndOverEbitda = (totalDebt - (totalCash || 0)) / ebitda;
     }
   }
@@ -96,25 +110,25 @@ function evaluate(stock) {
   checks.push({ name: 'netCash|ND/EBITDA<=1', pass: c4, val: ndOverEbitda });
   if (!c4) allPass = false;
 
-  // 5. 5Y Median FCF/NetIncome >= 80%
+  // 5. 5Y Median FCF/NetIncome >= 80% — zip rawFcfs × rawNis positionally
   const fcfNi = [];
-  const fNyrs = Math.min(5, fcfs.length, nis.length);
+  const fNyrs = Math.min(5, rawFcfs.length, rawNis.length);
   for (let i = 0; i < fNyrs; i++) {
-    if (nis[i] > 0 && fcfs[i] != null) fcfNi.push(fcfs[i] / nis[i]);
+    if (Number.isFinite(rawNis[i]) && rawNis[i] > 0 && Number.isFinite(rawFcfs[i])) fcfNi.push(rawFcfs[i] / rawNis[i]);
   }
   const fcfNiMed = _median(fcfNi);
   const c5 = fcfNiMed != null && fcfNiMed >= 0.80;
   checks.push({ name: 'fcf/ni>=80', pass: c5, val: fcfNiMed });
   if (!c5) allPass = false;
 
-  // 6. 5Y Median (Capex+R&D)/OCF >= 30%
+  // 6. 5Y Median (Capex+R&D)/OCF >= 30% — zip rawCapex × rawOcf × rawRnd positionally
   const reinvest = [];
-  const reYrs = Math.min(5, capex.length, ocf.length);
+  const reYrs = Math.min(5, rawCapex.length, rawOcf.length);
   for (let i = 0; i < reYrs; i++) {
-    if (ocf[i] > 0) {
-      const c = capex[i] || 0;
-      const r = (rnd[i] != null && Number.isFinite(rnd[i])) ? rnd[i] : 0;
-      reinvest.push((c + r) / ocf[i]);
+    if (Number.isFinite(rawOcf[i]) && rawOcf[i] > 0) {
+      const c = Number.isFinite(rawCapex[i]) ? rawCapex[i] : 0;
+      const r = (i < rawRnd.length && Number.isFinite(rawRnd[i])) ? rawRnd[i] : 0;
+      reinvest.push((c + r) / rawOcf[i]);
     }
   }
   const reMed = _median(reinvest);
@@ -123,8 +137,17 @@ function evaluate(stock) {
   if (!c6) allPass = false;
 
   const passing = checks.filter(c => c.pass).length;
+  const validInputCount = checks.filter(c => c.val != null).length;
+  // Require at least 3 of 6 inputs to be non-null to be considered computable
+  const REQUIRED_MIN_INPUTS = 3;
+  if (validInputCount < REQUIRED_MIN_INPUTS) {
+    return H.buildResult({
+      computable: false, pass: false,
+      reason: `insufficient inputs: only ${validInputCount}/6 non-null (need >= ${REQUIRED_MIN_INPUTS})`
+    });
+  }
   return H.buildResult({
-    computable: checks.every(c => c.val != null) || passing > 0, // computable if at least some inputs work
+    computable: true,
     pass: allPass,
     value: passing,
     components: { checks, passing, total: checks.length },

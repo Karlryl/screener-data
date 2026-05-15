@@ -26,9 +26,13 @@ external-data/methods-history-archive/
 external-data/picks-history-archive/
 external-data/prices-archive/
 
-# Tag 134 — Phase 5.2: methodHistory subtree moved out of alert-state.json
-# (was bloating git by ~25 MB per push). Rebuildable from methods-history/.
-external-data/method-history-state.json
+# Tag 134 — Phase 5.2: methodHistory subtree moved to method-history-state.json (repo root).
+# F-SM-001: file is now committed so trend signals accumulate across CI runs.
+# (Previously gitignored, which caused _loadMethodHistory to return {} every run.)
+
+# F-SM-009: prevent accidental commits of tmp files from atomic write pattern
+*.tmp
+*.tmp.*
 
 # Tag 150: outputs/ contains daily-regenerated reports; committed via gh-pages only.
 # .gitkeep keeps the directory tracked so scripts can write without mkdir.
