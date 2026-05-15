@@ -429,10 +429,23 @@ const fixtures = [
   // MNDY — monday.com (SaaS, smaller)
   // ─────────────────────────────────────────────────────────────
   {
-    // ChatGPT-P0-Fix-6: MNDY nicht blind DISQUALIFIED. SBC=28% + neg OpMargin sind
-    // WARNINGS (PROFITABILITY_NOT_ESTABLISHED, SBC_EXTREME), nicht Hard-Exclusion.
-    // Bei pre-profit-Inflection-SaaS muss Track A das zulassen.
-    expected: { subProfile: 'SAAS', track: 'A', bucketAtLeast: 'OUT', actionStatus: 'DISQUALIFIED' },
+    // F-EN-012 (Tag 188): Vorher widersprach der Comment der expected-Annahme:
+    // Comment behauptete "nicht blind DISQUALIFIED", aber actionStatus war
+    // DISQUALIFIED — das Fixture testete am eigenen Anspruch vorbei.
+    // Heutiges Verhalten: MNDY wird DISQUALIFIED (bucket=OUT bei revenueGrowth=33%
+    // < hyper-floor, plus weiche SBC-Penalty). Das ist nicht der ursprünglich
+    // intendierte Zustand (Fix-6 wollte Track-A-INFLECTION), aber der Engine-Pfad
+    // dorthin existiert noch nicht. Bis das nachgezogen wird:
+    //   - actionStatus locken wir explizit auf DISQUALIFIED (observed reality)
+    //   - reasonCodeContains 'SBC_EXTREME_WARNING' wird zum echten Guardrail:
+    //     wenn jemand die weiche SBC-Behandlung (engine-v7.3.js:749-752) zurück
+    //     zu HARD ändert, fällt der Test. Damit kann das Fixture nicht mehr
+    //     versehentlich Pre-Fix-6-Logik durchwinken.
+    expected: {
+      subProfile: 'SAAS', track: 'A',
+      actionStatus: 'DISQUALIFIED',
+      reasonCodeContains: ['SBC_EXTREME_WARNING']
+    },
     canonical: {
       identifier: { primary: 'TICKER', value: 'MNDY' },
       meta: { ticker: 'MNDY', name: 'monday.com', sector: 'Technology',

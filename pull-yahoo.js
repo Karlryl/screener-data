@@ -84,13 +84,23 @@ const MODULES = [
 // Tag-87c / Tag-133b: FX-Rates für Currency-Conversion (USD-base).
 // Live-Rates aus fx-rates.json (refresh-fx.js Workflow-Step) wenn vorhanden + frisch (≤14d).
 // Fallback: hardgecodete Tabelle (kann Monate stale sein — flagged via _log WARN).
+// F-DQ-007 (Tag 188): FX_FALLBACK expanded to match refresh-fx.js CURRENCIES list.
+// One missed CI run >14 days ago previously left TRY/IDR/EM tickers silently
+// fxConversionFailed (no rate at all → meta.fxRateApplied=null) — universe
+// effectively shrank without alarm. Hardcoded fallbacks are stale 2026-Q1 ish;
+// flagged via FX_PROVENANCE='fallback-hardcoded' so downstream code can warn.
 const FX_FALLBACK = {
   USD: 1.0, EUR: 1.08, GBP: 1.27, CHF: 1.10,
   SEK: 0.095, NOK: 0.092, DKK: 0.145,
   JPY: 0.0067, HKD: 0.128, CNY: 0.139,
   AUD: 0.65, CAD: 0.74, KRW: 0.00074, INR: 0.012,
   TWD: 0.031, BRL: 0.20, MXN: 0.058, ZAR: 0.054,
-  SGD: 0.74
+  SGD: 0.74,
+  // F-DQ-007 additions — currencies refresh-fx now fetches but FX_FALLBACK lacked.
+  PLN: 0.25, TRY: 0.029, THB: 0.029, IDR: 0.000063,
+  MYR: 0.22, PHP: 0.018, VND: 0.000040, CZK: 0.044,
+  HUF: 0.0028, RON: 0.22, AED: 0.27, SAR: 0.27,
+  QAR: 0.27, ILS: 0.27
 };
 const FX_STALE_DAYS = 14;
 let FX_TO_USD = FX_FALLBACK;
@@ -115,15 +125,47 @@ for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded
     }
     FX_TO_USD = Object.assign({}, FX_FALLBACK, raw.rates);
     FX_SOURCE = 'fx-rates.json @ ' + (raw.fetchedAt || 'unknown');
-    // Mark each rate that came from raw.rates as live; the rest stay as fallback.
+    // F-DP-051 / F-DQ-008 (Tag 188): per-currency staleness gate.
+    // refresh-fx now writes currencyMeta[c].lastSuccessAt per-currency, but the
+    // top-level fetchedAt only fails the freshness check above if EVERY currency
+    // failed >14d. If TRY/IDR/EM-currency individually has been failing for 30d
+    // while majors succeed, fetchedAt looks fresh and the stale per-currency rate
+    // is silently applied — whole EM legs mis-priced. Honor lastSuccessAt: drop
+    // rates whose per-currency last success is older than FX_STALE_DAYS so the
+    // fallback table (with provenance='fallback-hardcoded') takes over.
+    const currencyMeta = raw.currencyMeta || {};
+    const failedList = Array.isArray(raw.failed) ? raw.failed : [];
+    let staleCount = 0;
     for (const k of Object.keys(raw.rates)) {
       const up = k.toUpperCase();
-      FX_PROVENANCE[up] = 'live';
-      FX_TO_USD[up] = raw.rates[k];  // ensure uppercase key lookup hits
+      const meta = currencyMeta[k] || currencyMeta[up] || null;
+      const lastSuccess = meta && meta.lastSuccessAt ? new Date(meta.lastSuccessAt) : fetchedAt;
+      const perCurAgeDays = lastSuccess
+        ? (Date.now() - lastSuccess.getTime()) / 86400000
+        : Infinity;
+      const inFailedList = failedList.includes(k) || failedList.includes(up);
+      if (perCurAgeDays > FX_STALE_DAYS || (inFailedList && perCurAgeDays > FX_STALE_DAYS)) {
+        // Revert to FX_FALLBACK; mark provenance so snapshot-side ratios that
+        // depend on this currency can flag fxRateSource accordingly.
+        if (FX_FALLBACK[up] != null) {
+          FX_TO_USD[up] = FX_FALLBACK[up];
+        } else {
+          delete FX_TO_USD[up];  // no fallback at all → conversion will fail loudly
+        }
+        FX_PROVENANCE[up] = 'fallback-hardcoded';
+        staleCount++;
+        console.log('[FX] ' + up + ' stale (' + perCurAgeDays.toFixed(1) +
+          'd since last success) → using fallback');
+      } else {
+        FX_PROVENANCE[up] = 'live';
+        FX_TO_USD[up] = raw.rates[k];  // ensure uppercase key lookup hits
+      }
     }
+    const liveCount = Object.values(FX_PROVENANCE).filter(v => v === 'live').length;
+    const fallbackCount = Object.values(FX_PROVENANCE).filter(v => v === 'fallback-hardcoded').length;
     console.log('[FX] Loaded ' + Object.keys(raw.rates).length + ' rates from fx-rates.json (' +
-      Object.values(FX_PROVENANCE).filter(v => v === 'live').length + ' live, ' +
-      Object.values(FX_PROVENANCE).filter(v => v === 'fallback-hardcoded').length + ' fallback)');
+      liveCount + ' live, ' + fallbackCount + ' fallback' +
+      (staleCount > 0 ? ', ' + staleCount + ' reverted from stale per-currency' : '') + ')');
   } catch (e) {
     console.log('[FX] fx-rates.json load failed: ' + e.message + ' — using fallback');
   }
