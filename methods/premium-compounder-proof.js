@@ -64,7 +64,6 @@ function evaluate(stock) {
   const totalDebt = H.latestBalance(stock, 'totalDebt');
 
   const checks = [];
-  let allPass = true;
 
   // 1. 5Y Revenue CAGR >= 15%
   // Bug #10: use rawRevs[4] (positional) not revs[4] (filtered). Filtered array
@@ -73,9 +72,7 @@ function evaluate(stock) {
   if (rawRevs.length >= 5 && Number.isFinite(rawRevs[0]) && Number.isFinite(rawRevs[4])) {
     rev5yCagr = _cagr(rawRevs[0], rawRevs[4], 4); // 4-period CAGR over 5 datapoints
   }
-  const c1 = rev5yCagr != null && rev5yCagr >= 0.15;
-  checks.push({ name: 'rev5yCAGR>=15', pass: c1, val: rev5yCagr });
-  if (!c1) allPass = false;
+  checks.push({ name: 'rev5yCAGR>=15', pass: rev5yCagr != null && rev5yCagr >= 0.15, val: rev5yCagr, computable: rev5yCagr != null });
 
   // 2. 5Y Median OpMargin >= 25% — zip rawRevs × rawOpIncs positionally
   const opMs = [];
@@ -84,9 +81,7 @@ function evaluate(stock) {
     if (Number.isFinite(rawRevs[i]) && rawRevs[i] > 0 && Number.isFinite(rawOpIncs[i])) opMs.push(rawOpIncs[i] / rawRevs[i]);
   }
   const opMed = _median(opMs);
-  const c2 = opMed != null && opMed >= 0.25;
-  checks.push({ name: 'opMargMed>=25', pass: c2, val: opMed });
-  if (!c2) allPass = false;
+  checks.push({ name: 'opMargMed>=25', pass: opMed != null && opMed >= 0.25, val: opMed, computable: opMed != null });
 
   // 3. PreTax-ROIC >= 25% (latest)
   let preTaxROIC = null;
@@ -94,9 +89,7 @@ function evaluate(stock) {
     const ic = totalAssets - (totalCash || 0);
     if (ic > 0) preTaxROIC = rawOpIncs[0] / ic;
   }
-  const c3 = preTaxROIC != null && preTaxROIC >= 0.25;
-  checks.push({ name: 'preTaxROIC>=25', pass: c3, val: preTaxROIC });
-  if (!c3) allPass = false;
+  checks.push({ name: 'preTaxROIC>=25', pass: preTaxROIC != null && preTaxROIC >= 0.25, val: preTaxROIC, computable: preTaxROIC != null });
 
   // 4. Net Cash OR ND/EBITDA <= 1.0
   let netCash = null;
@@ -108,9 +101,9 @@ function evaluate(stock) {
       if (ebitda > 0) ndOverEbitda = (totalDebt - (totalCash || 0)) / ebitda;
     }
   }
+  const c4Computable = (netCash != null) || (ndOverEbitda != null);
   const c4 = (netCash != null && netCash >= 0) || (ndOverEbitda != null && ndOverEbitda <= 1.0);
-  checks.push({ name: 'netCash|ND/EBITDA<=1', pass: c4, val: ndOverEbitda });
-  if (!c4) allPass = false;
+  checks.push({ name: 'netCash|ND/EBITDA<=1', pass: c4, val: ndOverEbitda != null ? ndOverEbitda : netCash, computable: c4Computable });
 
   // 5. 5Y Median FCF/NetIncome >= 80% — zip rawFcfs × rawNis positionally
   const fcfNi = [];
@@ -119,11 +112,12 @@ function evaluate(stock) {
     if (Number.isFinite(rawNis[i]) && rawNis[i] > 0 && Number.isFinite(rawFcfs[i])) fcfNi.push(rawFcfs[i] / rawNis[i]);
   }
   const fcfNiMed = _median(fcfNi);
-  const c5 = fcfNiMed != null && fcfNiMed >= 0.80;
-  checks.push({ name: 'fcf/ni>=80', pass: c5, val: fcfNiMed });
-  if (!c5) allPass = false;
+  checks.push({ name: 'fcf/ni>=80', pass: fcfNiMed != null && fcfNiMed >= 0.80, val: fcfNiMed, computable: fcfNiMed != null });
 
-  // 6. 5Y Median (Capex+R&D)/OCF >= 30% — zip rawCapex × rawOcf × rawRnd positionally
+  // 6. 5Y Median (Capex+R&D)/OCF >= 30% — zip rawCapex × rawOcf × rawRnd positionally.
+  // Soft-N/A when OCF or RnD series are entirely missing (cache gaps for software
+  // companies). In that case check #6 is marked computable:false and excluded
+  // from the all-pass gate rather than auto-failing the entire method.
   const reinvest = [];
   const reYrs = Math.min(5, rawCapex.length, rawOcf.length);
   for (let i = 0; i < reYrs; i++) {
@@ -134,28 +128,31 @@ function evaluate(stock) {
     }
   }
   const reMed = _median(reinvest);
-  const c6 = reMed != null && reMed >= 0.30;
-  checks.push({ name: '(capex+rnd)/ocf>=30', pass: c6, val: reMed });
-  if (!c6) allPass = false;
+  const ocfAvailable = rawOcf.some(v => Number.isFinite(v) && v > 0);
+  const c6Computable = reMed != null && ocfAvailable;
+  checks.push({ name: '(capex+rnd)/ocf>=30', pass: c6Computable && reMed >= 0.30, val: reMed, computable: c6Computable });
 
+  const evaluable = checks.filter(c => c.computable);
   const passing = checks.filter(c => c.pass).length;
-  const validInputCount = checks.filter(c => c.val != null).length;
-  // Require at least 3 of 6 inputs to be non-null to be considered computable
-  const REQUIRED_MIN_INPUTS = 3;
-  if (validInputCount < REQUIRED_MIN_INPUTS) {
+  // Require at least 3 of 6 checks to be computable for the method to be usable.
+  const REQUIRED_MIN_EVALUABLE = 3;
+  if (evaluable.length < REQUIRED_MIN_EVALUABLE) {
     return H.buildResult({
       computable: false, pass: false,
-      reason: `insufficient inputs: only ${validInputCount}/6 non-null (need >= ${REQUIRED_MIN_INPUTS})`
+      reason: `insufficient inputs: only ${evaluable.length}/6 checks computable (need >= ${REQUIRED_MIN_EVALUABLE})`
     });
   }
+  // All-pass gate is over evaluable checks only; non-computable checks (e.g. #6
+  // when OCF/RnD missing from cache) are N/A rather than implicit failures.
+  const allEvaluablePass = evaluable.every(c => c.pass);
   return H.buildResult({
     computable: true,
-    pass: allPass,
+    pass: allEvaluablePass,
     value: passing,
-    components: { checks, passing, total: checks.length },
-    reason: allPass
-      ? `Premium-Proof: ${passing}/6 erfuellt`
-      : `Premium-Proof FAIL: ${passing}/6 - failed: ` + checks.filter(c => !c.pass).map(c => c.name).join(', ')
+    components: { checks, passing, evaluable: evaluable.length, total: checks.length },
+    reason: allEvaluablePass
+      ? `Premium-Proof: ${passing}/${evaluable.length} erfuellt (${checks.length - evaluable.length} N/A)`
+      : `Premium-Proof FAIL: ${passing}/${evaluable.length} - failed: ` + checks.filter(c => c.computable && !c.pass).map(c => c.name).join(', ')
   });
 }
 

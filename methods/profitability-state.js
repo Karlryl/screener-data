@@ -55,9 +55,13 @@ function _classifySource(arr, revArr) {
   }
   const yearsAvail = arr.filter(v => v != null).length;
 
-  // Cyclical-Recovery
+  // Cyclical-Recovery — requires recent year (y1) also positive.
+  // Without this guard, a genuine turnaround (y1<=0, y0>>0) with an older
+  // marginal positive (y2 small) misclassifies as STABLE/RECENT instead of TURNAROUND.
+  // PLTR example: OI = [+1414, -161, +119, -161] → recent flip dominates a small y2.
   const olderPositive = (y2 != null && y2 > 0) || (y3 != null && y3 > 0);
-  if (yearsAvail >= 3 && olderPositive && positiveCount >= Math.ceil(yearsAvail / 2)) {
+  const recentBothPositive = (y1 != null && y1 > 0);
+  if (yearsAvail >= 3 && olderPositive && recentBothPositive && positiveCount >= Math.ceil(yearsAvail / 2)) {
     return {
       state: consecutiveFromY0 >= 3 ? 'STABLE' : 'RECENT',
       persistentLoss: false

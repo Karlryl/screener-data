@@ -41,6 +41,7 @@ function evaluate(stock) {
   var rawOcfDirect = _rawVals(stock, 'annual.annualOCF');
   var rawFcf = _rawVals(stock, 'annual.annualFCF');
   var rawRnd = _rawVals(stock, 'annual.annualRnD');
+  var rawRev = _rawVals(stock, 'annual.annualRev');
   // Filtered arrays for length checks
   var capex = rawCapex.filter(function(v){ return Number.isFinite(v); });
   var ocfDirect = rawOcfDirect.filter(function(v){ return Number.isFinite(v); });
@@ -101,17 +102,40 @@ function evaluate(stock) {
   var med = _median(ratios);
   var usedRnD = rnd.length > 0;
 
+  // Asset-light fallback: when annualRnD is entirely missing from cache AND median
+  // capex/revenue < 2% (asset-light IP-heavy model — e.g. NVDA, MSFT, ASML software side),
+  // the Capex+RnD ratio dramatically understates true reinvestment (R&D booked as opex,
+  // not capitalized). For these companies we relax the threshold to 10%. Without this
+  // path, virtually every R&D-driven Quality-Compounder fails reinvestment-rate when
+  // upstream cache misses ftsAnnualRnD.
+  var capexRevMed = null;
+  if (rawRev.length >= 3 && rawCapex.length >= 3) {
+    var capexRevRatios = [];
+    var nrs = Math.min(rawRev.length, rawCapex.length);
+    for (var k = 0; k < nrs; k++) {
+      if (Number.isFinite(rawRev[k]) && rawRev[k] > 0 && Number.isFinite(rawCapex[k])) {
+        capexRevRatios.push(rawCapex[k] / rawRev[k]);
+      }
+    }
+    if (capexRevRatios.length) capexRevMed = _median(capexRevRatios);
+  }
+  var assetLight = !usedRnD && capexRevMed != null && capexRevMed < 0.02;
+  var effectiveThreshold = assetLight ? 0.10 : THRESHOLD;
+  var pass = med >= effectiveThreshold;
+
   return H.buildResult({
     computable: true,
-    pass: med >= THRESHOLD,
+    pass: pass,
     value: med,
     components: {
       median: med, ratios: ratios,
       yearsConsidered: ratios.length,
-      capexUsed: true, rndUsed: usedRnD, ocfSource: ocfSource
+      capexUsed: true, rndUsed: usedRnD, ocfSource: ocfSource,
+      assetLight: assetLight, capexRevMedian: capexRevMed,
+      effectiveThreshold: effectiveThreshold
     },
-    reason: '5Y-Median (Capex' + (usedRnD ? '+R&D' : '') + ')/OCF[' + ocfSource + '] = ' + (med*100).toFixed(1) + '% (vs ' + (THRESHOLD*100).toFixed(0) + '%, ' + ratios.length + 'y)',
-    threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    reason: '5Y-Median (Capex' + (usedRnD ? '+R&D' : '') + ')/OCF[' + ocfSource + '] = ' + (med*100).toFixed(1) + '% (vs ' + (effectiveThreshold*100).toFixed(0) + '%' + (assetLight ? ' asset-light' : '') + ', ' + ratios.length + 'y)',
+    threshold: effectiveThreshold, thresholdOp: THRESHOLD_OP
   });
 }
 
