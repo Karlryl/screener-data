@@ -66,11 +66,23 @@ function _saveMethodHistory(history) {
 function loadState(statePath) {
   // Tag-21-Robustness + Tag-29-Schema-Migration
   // F-SM-007: simplified — no sidecar migration. Single committed history file.
+  // F-SM-015 (Tag 187): when alert-state is corrupt, do NOT silently default to
+  // an empty state — that wipes all dedup baselines and causes the next run to
+  // emit a CRITICAL event per ticker × method (~186k Discord messages for a
+  // 6200-ticker universe). Back up the corrupt file and exit non-zero so the
+  // workflow visibly fails and the operator decides how to recover.
   let parsed = null;
   if (fs.existsSync(statePath)) {
     try { parsed = JSON.parse(fs.readFileSync(statePath, 'utf8')); }
     catch (e) {
-      _log('WARN', `state-file unparseable, treating as fresh: ${e.message}`);
+      const backup = statePath + '.corrupt.' + Date.now();
+      try { fs.copyFileSync(statePath, backup); } catch (_) {}
+      _log('ERROR', `alert-state.json is corrupt (${e.message}). Backup at ${backup}.`);
+      if (process.env.RESET_ALERT_STATE !== '1') {
+        _log('ERROR', 'Refusing to wipe baselines — set RESET_ALERT_STATE=1 to start fresh.');
+        process.exit(1);
+      }
+      _log('WARN', 'RESET_ALERT_STATE=1 — proceeding with empty state. Next run will flood alerts.');
       parsed = null;
     }
   }
