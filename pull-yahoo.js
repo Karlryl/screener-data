@@ -26,6 +26,8 @@ const path = require('path');
 
 // Tag 133c: data-quality grading (per-snapshot A/B/C/D)
 const { gradeSnapshot } = require('./methods/data-quality.js');
+// Tag 189: F-DP-052 — atomic FTS-cache + snapshot writes.
+const { writeFileAtomic } = require('./lib/atomic-write.js');
 
 // Tag 134: Windows reserved-name sanitization. Continental AG (`CON.DE`) collides
 // with the Windows reserved device name CON; the file can't be written on Windows,
@@ -912,7 +914,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           (fts.annualBs || []).length === 0
         );
         try {
-          fs.writeFileSync(cachePath, JSON.stringify({
+          // F-DP-052 (Tag 189): atomic FTS-cache write; worker pool can hit
+          // same ticker if a retry races, and a truncated cache fails downstream
+          // _ftsExtractByYear silently → quarterly-NI series goes empty.
+          writeFileAtomic(cachePath, JSON.stringify({
             _cacheVersion: FTS_CACHE_VERSION,
             _ftsPartial: ftsPartial,
             cachedAt: new Date().toISOString(),

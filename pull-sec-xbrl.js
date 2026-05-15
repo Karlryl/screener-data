@@ -26,6 +26,8 @@ const path = require('path');
 const https = require('https');
 
 const { fetchSecTickers } = require('./discovery/sec-tickers.js');
+// Tag 189: F-SM-023 — atomic manifest writes.
+const { writeFileAtomic } = require('./lib/atomic-write.js');
 
 const CACHE_DIR = path.join(__dirname, 'external-data', 'sec-xbrl');
 const MANIFEST_PATH = path.join(CACHE_DIR, '_manifest.json');
@@ -139,14 +141,15 @@ async function main() {
     }
     if ((pulled + skipped304) % 100 === 0 && (pulled + skipped304) > 0) {
       console.log(`  progress: pulled=${pulled} 304=${skipped304} fresh=${skippedFresh} 404=${notFound} err=${errors}`);
-      fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
+      // F-SM-023 (Tag 189): atomic — every 100-success flush, and final.
+      writeFileAtomic(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
     }
     await sleep(RATE_DELAY_MS);
   }
 
   manifest.lastRun = today;
   manifest.summary = { pulled, skipped304, skippedFresh, notFound, errors, totalKnown: tickers.size };
-  fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
+  writeFileAtomic(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
   console.log('Done. pulled=' + pulled + ' 304=' + skipped304 + ' fresh=' + skippedFresh + ' 404=' + notFound + ' err=' + errors);
 }
 

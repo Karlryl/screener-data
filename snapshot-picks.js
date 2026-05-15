@@ -11,6 +11,8 @@ const path = require('path');
 // Server-Layout: methods/ enthaelt alle methods + runner + strategy-modes
 const Runner = require('./methods/runner.js');
 const SM = require('./methods/strategy-modes.js');
+// Tag 189: atomic writes — F-SM-027 / F-SM-028 / F-GC-017.
+const { writeFileAtomic } = require('./lib/atomic-write.js');
 
 function parseArgs(argv) {
   const args = { snapshots: './snapshots', out: './picks-history' };
@@ -138,7 +140,10 @@ function _loadFirstSeenCache(picksHistDir) {
 
 function _saveFirstSeenCache(picksHistDir, cache) {
   const cachePath = path.join(picksHistDir, FIRST_SEEN_CACHE_FILE);
-  fs.writeFileSync(cachePath, JSON.stringify(cache));
+  // F-SM-027 (Tag 189): atomic — committed file consumed by every subsequent
+  // snapshot-picks run; a truncated write made _buildFirstSeenMap fall back to
+  // full rebuild + silently lost prior firstSeenAt timestamps for fresh picks.
+  writeFileAtomic(cachePath, JSON.stringify(cache));
 }
 
 function _buildFirstSeenMap(picksHistDir) {
@@ -266,9 +271,13 @@ async function main() {
 
   const dateStr = result.asOf.slice(0, 10);
   const outFile = path.join(args.out, dateStr + '.json');
-  fs.writeFileSync(outFile, JSON.stringify(result, null, 2));
+  // F-SM-028 / F-GC-017 (Tag 189): atomic vintage + latest write so a kill
+  // mid-write can't leave today's date.json truncated (downstream picks-history
+  // consumers would treat that as "vintage missing" and silently drop the
+  // window from walk-forward).
+  writeFileAtomic(outFile, JSON.stringify(result, null, 2));
   console.log('Written: ' + outFile + ' (' + evaluatedTickers.length + ' evaluated tickers)');
-  fs.writeFileSync(path.join(args.out, 'latest.json'), JSON.stringify(result, null, 2));
+  writeFileAtomic(path.join(args.out, 'latest.json'), JSON.stringify(result, null, 2));
 
   // F-PF-008: update first-seen cache with any newly seen tickers from this run
   let cacheUpdated = false;

@@ -18,6 +18,8 @@
 'use strict';
 const fs   = require('fs');
 const path = require('path');
+// Tag 189: F-SM-021 — atomic watchlist write (other writer is refresh-universe.js).
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 function parseArgs(argv) {
   const args = {
@@ -153,7 +155,8 @@ function main() {
   wl.stocks = kept;
   wl.lastAutoPrune = new Date().toISOString();
   wl.lastAutoPruneRemoved = pruned;
-  fs.writeFileSync(args.watchlist, JSON.stringify(wl, null, 2));
+  // F-SM-021 (Tag 189): same atomic-write rationale as refresh-universe.js.
+  writeFileAtomic(args.watchlist, JSON.stringify(wl, null, 2));
   console.log('\nWritten: ' + args.watchlist);
 }
 

@@ -6,6 +6,8 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+// Tag 189: F-DP-033 — atomic write factored into shared helper.
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 let YahooFinance = null;
 try { YahooFinance = require('yahoo-finance2').default; }
@@ -104,12 +106,10 @@ async function main() {
     failed,
     currencyMeta  // F-DP-010: per-currency success tracking
   };
-  // F-SM-016 (Tag 179): atomic write via tmp+rename. Previous direct writeFileSync
-  // could corrupt fx-rates.json under signal (CI cancellation) and downstream
-  // pull-yahoo would then mcap-misnormalize every non-USD ticker.
-  const tmp = outPath + '.tmp.' + process.pid;
-  fs.writeFileSync(tmp, JSON.stringify(out, null, 2));
-  fs.renameSync(tmp, outPath);
+  // F-SM-016 (Tag 179) → factored into shared lib/atomic-write.js in Tag 189
+  // (F-DP-033). Previous inline tmp+rename was correct but duplicated; helper
+  // also cleans up the tmp file on failure.
+  writeFileAtomic(outPath, JSON.stringify(out, null, 2));
   console.log('Wrote fx-rates.json with ' + Object.keys(rates).length + ' currencies, ' + failed.length + ' failed');
   if (failed.length > CURRENCIES.length / 2) process.exit(1);
 }

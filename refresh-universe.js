@@ -18,6 +18,8 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+// Tag 189: F-SM-021 / F-DP-046 — atomic watchlist write.
+const { writeFileAtomic } = require('./lib/atomic-write.js');
 let yf;
 try {
   const YF = require('yahoo-finance2').default;
@@ -324,7 +326,10 @@ async function main() {
   wlRaw.stocks.sort((a, b) => a.ticker.localeCompare(b.ticker));
   wlRaw.lastUniverseRefresh = new Date().toISOString();
 
-  fs.writeFileSync(args.out, JSON.stringify(wlRaw, null, 2));
+  // F-SM-021 / F-DP-046 (Tag 189): watchlist.json is pull-yahoo's entry point;
+  // a truncated mid-write here aborts the entire daily pull on parse-error
+  // and recovery needs a git revert.
+  writeFileAtomic(args.out, JSON.stringify(wlRaw, null, 2));
   console.log('\nWritten: ' + args.out);
   console.log('  total stocks: ' + wlRaw.stocks.length);
   console.log('  added this run: ' + newTickers.length);
