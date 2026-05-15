@@ -8,7 +8,10 @@ const H = require('./_helpers.js');
 
 const ID = 'revenue-shock-guard';
 const LABEL = 'Revenue Shock Guard';
-const THRESHOLD = 4;
+// Tag 171: Raised from 4.0 → 4.5 to eliminate false positives on genuine AI-cycle hypergrowth
+// (NVDA was scoring z=4.14 — barely above threshold — while showing consistent sequential acceleration).
+// A true revenue shock (accounting fraud, one-time event) typically has z >> 5.
+const THRESHOLD = 4.5;
 const THRESHOLD_OP = 'lte';
 
 function _median(arr) {
