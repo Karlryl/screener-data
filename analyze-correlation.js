@@ -34,8 +34,10 @@ for (const f of files) {
   tickerOrder.push(stock.meta && stock.meta.ticker);
   const r = Runner.evaluateStock(stock);
   for (const m of methods) {
+    // F-GC-011 (Tag 185): null-check res. If a method threw and runner didn't
+    // populate r[m.id], res.computable would crash. Treat missing entries as null.
     const res = r[m.id];
-    valuesByMethod[m.id].push(res.computable ? res.value : null);
+    valuesByMethod[m.id].push((res && res.computable) ? res.value : null);
   }
 }
 

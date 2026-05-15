@@ -663,18 +663,22 @@ function computeGMStability(stock) {
 function computeFCFQuality(stock) {
   const an = stock.annual || {};
   const fcf = an.annualFCF || [];
+  // F-EN-022 (Tag 185): all return paths now share the same shape (score,
+  // positiveYears, totalYears, ratio, plus optional fallback/status flags).
+  // Previously the fallback and no-data paths omitted positiveYears/totalYears,
+  // forcing downstream consumers to defensive-check every field.
   if (fcf.length < 2) {
     const ttm = getMetricValue(stock, 'fcfMarginTTM');
-    if (ttm == null) return { score: 0, status: 'no-data' };
+    if (ttm == null) return { score: 0, status: 'no-data', positiveYears: 0, totalYears: 0, ratio: null };
     let s = 0;
     if (ttm >= 25)      s = 80;
     else if (ttm >= 15) s = 60;
     else if (ttm >= 5)  s = 40;
     else if (ttm >= 0)  s = 20;
-    return { score: s, fallback: true };
+    return { score: s, fallback: true, positiveYears: 0, totalYears: 0, ratio: null };
   }
   const validFCF = fcf.filter(f => f != null && f.value != null);
-  if (validFCF.length < 2) return { score: 0, status: 'no-data' };
+  if (validFCF.length < 2) return { score: 0, status: 'no-data', positiveYears: 0, totalYears: validFCF.length, ratio: null };
   const positiveYears = validFCF.filter(f => f.value > 0).length;
   const ratio = positiveYears / validFCF.length;
   let score = 0;

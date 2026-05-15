@@ -35,11 +35,17 @@ function main() {
   console.log('═'.repeat(80));
 
   const sectorTrends = {};  // sector → array of {date, avgPassRate, count}
+  // F-GC-010 (Tag 185): historical sector mapping should come from the vintage's
+  // own `inputs.sector` field (recorded at the time the snapshot was taken),
+  // NOT today's snapshot. Retroactively applying today's sector mapping mixes
+  // re-sectorized tickers across history. Prefer info.inputs.sector, fall back
+  // to today's mapping only if the vintage didn't record one (legacy data).
   for (const f of histFiles) {
     const data = JSON.parse(fs.readFileSync(path.join(histDir, f), 'utf8'));
     const bySec = {};
     for (const [ticker, info] of Object.entries(data.stocks)) {
-      const sec = tickerToSector[ticker] || 'Unknown';
+      const vintageSector = info && info.inputs && info.inputs.sector;
+      const sec = vintageSector || tickerToSector[ticker] || 'Unknown';
       if (!bySec[sec]) bySec[sec] = { totalPass: 0, totalComp: 0, n: 0 };
       bySec[sec].totalPass += info.passing;
       bySec[sec].totalComp += info.computable;
