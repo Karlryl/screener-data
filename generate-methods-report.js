@@ -91,6 +91,7 @@ function evaluateAllStocks(args) {
       lastRow.growthYoYFromRo40  = lastRow.growthYoY;
       lastRow.fcfMarginFromRo40  = lastRow.fcfMargin;
     }
+    lastRow.grossMargin = stock.metrics && stock.metrics.grossMargin && stock.metrics.grossMargin.value || null;
   }
   return rows;
 }
@@ -349,6 +350,123 @@ function renderHTML(rows, methods) {
     return `<div class="msum"><div class="ml">${escHtml(m.label)}</div><div class="mv"><span class="pass-count">${passing}</span> / ${computable}</div><div class="mh">pass / computable (${rows.length} total)</div></div>`;
   }).join('');
 
+  // ===== KENNZAHL-RANGLISTE =====
+  const LEADERBOARD_METRICS = [
+    { id: 'rule-of-40',        label: 'Rule of 40',        threshold: 40,  better: 'high',
+      getValue: r => { const res = r.results['rule-of-40']; return (res && res.computable && Number.isFinite(res.value)) ? res.value : null; },
+      getDisplay: r => { const res = r.results['rule-of-40']; if (!res || !res.computable) return null; if (res.components && res.components.growth != null) return res.components.growth.toFixed(0) + '% + ' + res.components.fcfMargin.toFixed(0) + '% = ' + res.value.toFixed(0); return res.value.toFixed(1); }
+    },
+    { id: 'rule-of-x',         label: 'Rule of X',         threshold: 50,  better: 'high',
+      getValue: r => { const res = r.results['rule-of-x']; return (res && res.computable && Number.isFinite(res.value)) ? res.value : null; },
+      getDisplay: r => { const res = r.results['rule-of-x']; if (!res || !res.computable) return null; if (res.components && res.components.growth != null) return '1.5\xD7' + res.components.growth.toFixed(0) + ' + ' + res.components.fcfMargin.toFixed(0) + ' = ' + res.value.toFixed(0); return res.value.toFixed(1); }
+    },
+    { id: 'roic',              label: 'ROIC',              threshold: 15,  better: 'high',
+      getValue: r => { const res = r.results['roic']; return (res && res.computable && Number.isFinite(res.value)) ? res.value * 100 : null; },
+      getDisplay: r => { const res = r.results['roic']; return (res && res.computable && Number.isFinite(res.value)) ? (res.value * 100).toFixed(1) + '%' : null; }
+    },
+    { id: 'rev-growth',        label: 'Rev Growth YoY',    threshold: 20,  better: 'high',
+      getValue: r => r.growthYoYFromRo40,
+      getDisplay: r => r.growthYoYFromRo40 != null ? r.growthYoYFromRo40.toFixed(1) + '%' : null
+    },
+    { id: 'fcf-margin',        label: 'FCF Margin',        threshold: 10,  better: 'high',
+      getValue: r => r.fcfMarginFromRo40,
+      getDisplay: r => r.fcfMarginFromRo40 != null ? r.fcfMarginFromRo40.toFixed(1) + '%' : null
+    },
+    { id: 'revenue-growth-3y', label: 'Rev Growth 3Y CAGR',threshold: 25,  better: 'high',
+      getValue: r => { const res = r.results['revenue-growth-3y']; return (res && res.computable && Number.isFinite(res.value)) ? res.value : null; },
+      getDisplay: r => { const res = r.results['revenue-growth-3y']; return (res && res.computable && Number.isFinite(res.value)) ? res.value.toFixed(1) + '%' : null; }
+    },
+    { id: 'gross-margin',      label: 'Gross Margin',      threshold: 40,  better: 'high',
+      getValue: r => r.grossMargin,
+      getDisplay: r => r.grossMargin != null ? r.grossMargin.toFixed(1) + '%' : null
+    },
+    { id: 'fcf-yield',         label: 'FCF Yield',         threshold: 3,   better: 'high',
+      getValue: r => { const res = r.results['fcf-yield']; return (res && res.computable && Number.isFinite(res.value)) ? res.value * 100 : null; },
+      getDisplay: r => { const res = r.results['fcf-yield']; return (res && res.computable && Number.isFinite(res.value)) ? (res.value * 100).toFixed(2) + '%' : null; }
+    },
+    { id: 'altman-z',          label: 'Altman Z-Score',    threshold: 2.6, better: 'high',
+      getValue: r => { const res = r.results['altman-z-score']; return (res && res.computable && Number.isFinite(res.value)) ? res.value : null; },
+      getDisplay: r => { const res = r.results['altman-z-score']; return (res && res.computable && Number.isFinite(res.value)) ? res.value.toFixed(2) : null; }
+    },
+    { id: 'ev-ebitda',         label: 'EV/EBITDA',         threshold: 20,  better: 'low',
+      getValue: r => { const res = r.results['ev-ebitda']; return (res && res.computable && Number.isFinite(res.value)) ? res.value : null; },
+      getDisplay: r => { const res = r.results['ev-ebitda']; return (res && res.computable && Number.isFinite(res.value)) ? res.value.toFixed(1) + 'x' : null; }
+    },
+    { id: 'net-debt',          label: 'Net Debt/EBITDA',   threshold: 2.5, better: 'low',
+      getValue: r => { const res = r.results['net-debt-ebitda']; return (res && res.computable && Number.isFinite(res.value)) ? res.value : null; },
+      getDisplay: r => { const res = r.results['net-debt-ebitda']; return (res && res.computable && Number.isFinite(res.value)) ? res.value.toFixed(2) + 'x' : null; }
+    },
+    { id: 'peg',               label: 'PEG (Lynch)',        threshold: 1.5, better: 'low',
+      getValue: r => { const res = r.results['peg']; return (res && res.computable && Number.isFinite(res.value)) ? res.value : null; },
+      getDisplay: r => { const res = r.results['peg']; return (res && res.computable && Number.isFinite(res.value)) ? res.value.toFixed(2) : null; }
+    },
+  ];
+  const LEADERBOARD_TOP = 30;
+
+  const leaderboardData = LEADERBOARD_METRICS.map(lm => {
+    const valid = rows
+      .filter(r => lm.getValue(r) != null)
+      .map(r => ({ row: r, val: lm.getValue(r), display: lm.getDisplay(r) }));
+    if (lm.better === 'high') valid.sort((a, b) => b.val - a.val);
+    else valid.sort((a, b) => a.val - b.val);
+    return { ...lm, list: valid.slice(0, LEADERBOARD_TOP) };
+  });
+
+  function buildLeaderboardPaneHtml(lm) {
+    if (lm.list.length === 0) return '<div style="color:#64748b;padding:12px;">Keine Daten verf\xFCgbar.</div>';
+    let h = '<table class="kenntl-table"><thead><tr>'
+           + '<th style="width:32px;">#</th>'
+           + '<th style="width:70px;">Ticker</th>'
+           + '<th>Name</th>'
+           + '<th style="width:120px;">Sektor</th>'
+           + '<th style="width:140px;text-align:right;">' + escHtml(lm.label) + '</th>'
+           + '<th style="width:80px;text-align:right;">MCap</th>'
+           + '<th style="width:60px;text-align:center;">P/C</th>'
+           + '</tr></thead><tbody>';
+    for (let i = 0; i < lm.list.length; i++) {
+      const { row: r, val, display } = lm.list[i];
+      const color = metricColor(val, lm.threshold, lm.better === 'high');
+      const passRate = r.computableCount > 0 ? r.passCount + '/' + r.computableCount : '—';
+      const profState = (() => { const ps = r.results['profitability-state']; return ps && ps.computable && ps.components ? ps.components.state[0] : '?'; })();
+      const profColor = { S: '#10b981', R: '#84cc16', T: '#f59e0b', L: '#ef4444' }[profState] || '#94a3b8';
+      h += '<tr class="kenntl-row" data-ticker="' + escHtml(r.ticker) + '">'
+         + '<td style="color:#475569;font-size:11px;">' + (i+1) + '</td>'
+         + '<td><strong>' + escHtml(r.ticker) + '</strong> <span style="color:' + profColor + ';font-size:9px;font-weight:700;" title="profitability-state">' + profState + '</span></td>'
+         + '<td style="color:#94a3b8;font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml((r.name||'').slice(0,30)) + '</td>'
+         + '<td style="color:#64748b;font-size:10px;">' + escHtml((r.sector||'').slice(0,16)) + '</td>'
+         + '<td style="text-align:right;font-size:16px;font-weight:800;color:' + color + ';" title="' + escHtml(display || '') + '">' + escHtml(display || '—') + '</td>'
+         + '<td style="text-align:right;color:#64748b;font-size:10px;">' + fmtMoney(r.marketCap) + '</td>'
+         + '<td style="text-align:center;color:#94a3b8;font-size:10px;">' + passRate + '</td>'
+         + '</tr>';
+    }
+    h += '</tbody></table>';
+    return h;
+  }
+
+  const leaderboardPanesHtml = leaderboardData.map((lm, idx) => {
+    const hiddenClass = idx === 0 ? '' : ' kenntl-hidden';
+    return '<div id="kp-' + lm.id + '" class="kenntl-pane' + hiddenClass + '">' + buildLeaderboardPaneHtml(lm) + '</div>';
+  }).join('\n');
+
+  const kenntlSectionHtml = `<div class="kenntl-section">
+  <h2>Kennzahl-Rangliste — Top 30 direkt nach Kennzahl</h2>
+  <div class="kenntl-tabs">
+    <button class="kt-btn kt-active" data-metric="rule-of-40">Rule of 40</button>
+    <button class="kt-btn" data-metric="rule-of-x">Rule of X</button>
+    <button class="kt-btn" data-metric="roic">ROIC</button>
+    <button class="kt-btn" data-metric="rev-growth">Rev Growth</button>
+    <button class="kt-btn" data-metric="fcf-margin">FCF Margin</button>
+    <button class="kt-btn" data-metric="revenue-growth-3y">Rev Growth 3Y</button>
+    <button class="kt-btn" data-metric="gross-margin">Gross Margin</button>
+    <button class="kt-btn" data-metric="fcf-yield">FCF Yield</button>
+    <button class="kt-btn" data-metric="altman-z">Altman Z</button>
+    <button class="kt-btn" data-metric="ev-ebitda">EV/EBITDA ↓</button>
+    <button class="kt-btn" data-metric="net-debt">Net Debt/EBITDA ↓</button>
+    <button class="kt-btn" data-metric="peg">PEG ↓</button>
+  </div>
+  ${leaderboardPanesHtml}
+</div>`;
+
   return `<!DOCTYPE html>
 <html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Karl's Stock-Screener — Methoden-Matrix ${generatedAt}</title>
 <style>
@@ -388,25 +506,20 @@ function renderHTML(rows, methods) {
   .pcb { background: #334155; color: #cbd5e1; border: 1px solid #475569; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px; margin: 0 1px; }
   .pcb:hover { background: #475569; color: #f1f5f9; }
   tr.row-clickable { cursor: pointer; }
-  /* Metric Value Filter Bar */
-  .mvf-bar { background: #162032; border: 1px solid #334155; border-left: 3px solid #0ea5e9; padding: 12px 16px; border-radius: 6px; margin-bottom: 10px; }
-  .mvf-bar h3 { color: #f1f5f9; font-size: 13px; margin: 0 0 10px; font-weight: 700; }
-  .mvf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
-  .mvf-item { display: flex; flex-direction: column; gap: 3px; }
-  .mvf-item label { font-size: 11px; color: #94a3b8; font-weight: 600; display: flex; justify-content: space-between; }
-  .mvf-item label span.val { color: #0ea5e9; font-weight: 700; min-width: 36px; text-align: right; }
-  .mvf-item label.active-filter span.val { color: #10b981; }
-  .mvf-item label.active-filter { color: #6ee7b7; }
-  .mvf-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 2px; background: #334155; outline: none; cursor: pointer; }
-  .mvf-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #0ea5e9; cursor: pointer; }
-  .mvf-slider::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #0ea5e9; cursor: pointer; border: none; }
-  .mvf-reset { background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 3px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; margin-top: 6px; }
-  .mvf-reset:hover { background: #334155; color: #f1f5f9; }
-  .mvf-count { color: #94a3b8; font-size: 11px; margin-top: 4px; }
-  /* Deep-Dive section */
-  .deep-dive-section { background: #162032; border: 1px solid #0ea5e960; border-radius: 8px; padding: 14px 16px; margin-bottom: 22px; }
-  .deep-dive-section h2 { color: #f1f5f9; font-size: 16px; margin: 0 0 4px; }
-  .deep-dive-section .sub { margin-bottom: 10px; }
+  /* Kennzahl-Rangliste */
+  .kenntl-section { background: #0d1b2e; border: 1px solid #1d4ed8; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+  .kenntl-section h2 { color: #f1f5f9; font-size: 16px; margin: 0 0 12px; font-weight: 700; }
+  .kenntl-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .kt-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; transition: all 0.15s; }
+  .kt-btn:hover { background: #334155; color: #e2e8f0; }
+  .kt-btn.kt-active { background: #1d4ed8; color: #fff; border-color: #3b82f6; }
+  .kenntl-pane { }
+  .kenntl-hidden { display: none; }
+  .kenntl-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .kenntl-table th { background: #0f172a; color: #64748b; padding: 6px 8px; border-bottom: 2px solid #1e293b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kenntl-table td { padding: 6px 8px; border-bottom: 1px solid #0f172a; }
+  .kenntl-row { cursor: pointer; }
+  .kenntl-row:hover td { background: #1a2436; }
   /* Modal */
   .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 100; padding: 30px; overflow-y: auto; }
   .modal-overlay.open { display: block; }
@@ -424,36 +537,7 @@ function renderHTML(rows, methods) {
 
 <div class="summary">${methodSummary}</div>
 
-<!-- ===== METRIC VALUE FILTER BAR ===== -->
-<div class="mvf-bar">
-  <h3>Metric Value Filter — direkt nach Kennzahlen filtern</h3>
-  <div class="mvf-grid">
-    <div class="mvf-item">
-      <label id="mvf-ro40-label">Rule of 40 <span class="val" id="mvf-ro40-val">≥ 0</span></label>
-      <input type="range" class="mvf-slider" id="mvf-ro40" min="-50" max="150" step="5" value="-50">
-    </div>
-    <div class="mvf-item">
-      <label id="mvf-rox-label">Rule of X <span class="val" id="mvf-rox-val">≥ 0</span></label>
-      <input type="range" class="mvf-slider" id="mvf-rox" min="-50" max="200" step="5" value="-50">
-    </div>
-    <div class="mvf-item">
-      <label id="mvf-growth-label">Revenue Growth YoY <span class="val" id="mvf-growth-val">≥ 0%</span></label>
-      <input type="range" class="mvf-slider" id="mvf-growth" min="-30" max="150" step="5" value="-30">
-    </div>
-    <div class="mvf-item">
-      <label id="mvf-fcf-label">FCF Margin <span class="val" id="mvf-fcf-val">≥ 0%</span></label>
-      <input type="range" class="mvf-slider" id="mvf-fcf" min="-50" max="80" step="2" value="-50">
-    </div>
-    <div class="mvf-item">
-      <label id="mvf-roic-label">ROIC <span class="val" id="mvf-roic-val">≥ 0%</span></label>
-      <input type="range" class="mvf-slider" id="mvf-roic" min="-20" max="100" step="2" value="-20">
-    </div>
-  </div>
-  <div style="display:flex;gap:10px;align-items:center;margin-top:8px;">
-    <button class="mvf-reset" id="mvf-reset-btn">Reset All Metric Filters</button>
-    <span class="mvf-count" id="mvf-count"></span>
-  </div>
-</div>
+${kenntlSectionHtml}
 
 <!-- ===== QUICK FILTER + PROF FILTER ===== -->
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
@@ -492,13 +576,6 @@ function renderHTML(rows, methods) {
   ${methods.filter(m => MT_local.isCore(m.id) || MT_local.isDataGuard(m.id)).map(m => `<label data-filter="${m.id}"><input type="checkbox" data-method="${m.id}"> ${escHtml(m.label)}</label>`).join('')}
   <span class="filter-mode">Mode: <select id="filter-mode" style="background:#0f172a;color:#cbd5e1;border:1px solid #334155;padding:2px 6px;border-radius:3px;font-size:11px;"><option value="AND">AND</option><option value="OR">OR</option></select></span>
   <span class="filter-mode" id="visible-count">Showing all ${rows.length}</span>
-</div>
-
-<!-- ===== METRIC DEEP-DIVE ===== -->
-<div class="deep-dive-section">
-  <h2>Metric Deep-Dive — Top ${TOP_DD} per Kennzahl</h2>
-  <div class="sub">Ranking nach einzelnen Kennzahlen. Farbe: hellgrün = knapp über Schwelle, grün = deutlich drüber, orange = knapp drunter, rot = klar drunter.</div>
-  ${deepDiveHtml}
 </div>
 
 ${sectorHtml}
@@ -621,109 +698,6 @@ ${methods.filter(m => MT_local.isCore(m.id)).map(m => {
   var modeSelect = document.getElementById('filter-mode');
   var countEl = document.getElementById('visible-count');
   var totalRows = tbody.querySelectorAll('tr').length;
-
-  // ===== METRIC VALUE FILTERS =====
-  var mvfSliders = {
-    'ro40':   { el: document.getElementById('mvf-ro40'),   valEl: document.getElementById('mvf-ro40-val'),   labelEl: document.getElementById('mvf-ro40-label'),   attr: 'ro40',      min: -50, suffix: '',  label: 'Rule of 40' },
-    'rox':    { el: document.getElementById('mvf-rox'),    valEl: document.getElementById('mvf-rox-val'),    labelEl: document.getElementById('mvf-rox-label'),    attr: 'rox',       min: -50, suffix: '',  label: 'Rule of X' },
-    'growth': { el: document.getElementById('mvf-growth'), valEl: document.getElementById('mvf-growth-val'), labelEl: document.getElementById('mvf-growth-label'), attr: 'growth',    min: -30, suffix: '%', label: 'Rev Growth YoY' },
-    'fcf':    { el: document.getElementById('mvf-fcf'),    valEl: document.getElementById('mvf-fcf-val'),    labelEl: document.getElementById('mvf-fcf-label'),    attr: 'fcfmargin', min: -50, suffix: '%', label: 'FCF Margin' },
-    'roic':   { el: document.getElementById('mvf-roic'),   valEl: document.getElementById('mvf-roic-val'),   labelEl: document.getElementById('mvf-roic-label'),   attr: 'roic',      min: -20, suffix: '%', label: 'ROIC' },
-  };
-
-  function getMvfThresholds() {
-    var t = {};
-    for (var k in mvfSliders) {
-      var s = mvfSliders[k];
-      t[k] = { min: parseFloat(s.el.value), isActive: parseFloat(s.el.value) > parseFloat(s.el.min) };
-    }
-    return t;
-  }
-
-  function updateMvfLabels() {
-    var t = getMvfThresholds();
-    for (var k in mvfSliders) {
-      var s = mvfSliders[k];
-      var thresh = t[k];
-      if (thresh.isActive) {
-        s.valEl.textContent = '≥ ' + thresh.min.toFixed(0) + s.suffix;
-        s.labelEl.classList.add('active-filter');
-        s.valEl.classList.add('active-filter');
-      } else {
-        s.valEl.textContent = '(off)';
-        s.labelEl.classList.remove('active-filter');
-        s.valEl.classList.remove('active-filter');
-      }
-    }
-  }
-
-  function applyMvFilter() {
-    updateMvfLabels();
-    var t = getMvfThresholds();
-    var anyActive = Object.values ? Object.values(t).some(function(x){ return x.isActive; }) : false;
-    if (!anyActive) {
-      // clear all mv-hidden
-      document.querySelectorAll('.mv-hidden').forEach(function(el){ el.classList.remove('mv-hidden'); });
-      document.getElementById('mvf-count').textContent = '';
-      return;
-    }
-
-    var visTP = 0, totalTP = 0;
-    tpTbody.querySelectorAll('tr').forEach(function(tr) {
-      totalTP++;
-      var show = true;
-      for (var k in mvfSliders) {
-        var s = mvfSliders[k];
-        var thresh = t[k];
-        if (!thresh.isActive) continue;
-        var raw = tr.dataset[s.attr];
-        if (raw === '' || raw == null) { show = false; break; } // no data = filtered out
-        var val = parseFloat(raw);
-        if (isNaN(val) || val < thresh.min) { show = false; break; }
-      }
-      tr.classList.toggle('mv-hidden', !show);
-      if (show) visTP++;
-    });
-
-    document.querySelectorAll('.topm-row').forEach(function(tr) {
-      var show = true;
-      for (var k in mvfSliders) {
-        var s = mvfSliders[k];
-        var thresh = t[k];
-        if (!thresh.isActive) continue;
-        var raw = tr.dataset[s.attr];
-        if (raw === '' || raw == null) { show = false; break; }
-        var val = parseFloat(raw);
-        if (isNaN(val) || val < thresh.min) { show = false; break; }
-      }
-      tr.classList.toggle('mv-hidden', !show);
-    });
-
-    // Update topm-card counts
-    document.querySelectorAll('.topm-card').forEach(function(card) {
-      var total2 = card.querySelectorAll('.topm-row').length;
-      var vis2 = card.querySelectorAll('.topm-row:not(.mv-hidden):not(.prof-hidden):not(.hidden):not(.pc-hidden)').length;
-      var sum = card.querySelector('.topm-summary-count');
-      if (sum) sum.textContent = anyActive ? '(' + vis2 + '/' + total2 + ' nach Metric-Filter)' : '(top ' + total2 + ')';
-    });
-
-    document.getElementById('mvf-count').textContent = 'Top-Picks: ' + visTP + ' / ' + totalTP + ' nach Metric-Filter';
-  }
-
-  // Wire sliders
-  for (var k in mvfSliders) {
-    (function(key) {
-      mvfSliders[key].el.addEventListener('input', applyMvFilter);
-    })(k);
-  }
-  document.getElementById('mvf-reset-btn').addEventListener('click', function() {
-    for (var k in mvfSliders) {
-      var s = mvfSliders[k];
-      s.el.value = s.el.min; // reset to minimum (= off)
-    }
-    applyMvFilter();
-  });
-  updateMvfLabels(); // init display
 
   // ===== PASS/FAIL CHECKBOX FILTER =====
   function applyFilter() {
@@ -1017,6 +991,45 @@ ${methods.filter(m => MT_local.isCore(m.id)).map(m => {
     });
   });
   modal.addEventListener('click', function(e) { if (e.target === modal) modal.classList.remove('open'); });
+
+  // ===== KENNZAHL-RANGLISTE TABS =====
+  document.querySelectorAll('.kt-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.kt-btn').forEach(function(b){ b.classList.remove('kt-active'); });
+      btn.classList.add('kt-active');
+      document.querySelectorAll('.kenntl-pane').forEach(function(p){ p.classList.add('kenntl-hidden'); });
+      var pane = document.getElementById('kp-' + btn.dataset.metric);
+      if (pane) pane.classList.remove('kenntl-hidden');
+    });
+  });
+  // Leaderboard row click → open modal (lookup data from top-picks tbody)
+  document.querySelectorAll('.kenntl-row').forEach(function(tr) {
+    tr.addEventListener('click', function() {
+      var ticker = tr.dataset.ticker;
+      var tpRow = document.querySelector('#top-picks-tbody tr[data-ticker="' + ticker + '"]');
+      if (tpRow && tpRow.dataset.row) {
+        try {
+          var data = JSON.parse(decodeURIComponent(tpRow.dataset.row));
+          var html = '<h3>' + data.ticker + ' — ' + data.name + '</h3>';
+          html += '<div class="stock-meta-row">' + data.sector + ' · MCap ' + (data.marketCap ? '$' + (data.marketCap/1e9).toFixed(1) + 'B' : '—') + '</div>';
+          html += '<table><thead><tr><th>Method</th><th>Value</th><th>Pass</th><th>Trend</th><th>Calc</th></tr></thead><tbody>';
+          for (var mid in data.results) {
+            var r2 = data.results[mid];
+            var t2 = data.trends[mid] || { direction: 'n/a', points: 0 };
+            var ti = { improving: '↑', deteriorating: '↓', stable: '·', 'n/a': '—' }[t2.direction] || '—';
+            html += '<tr><td class="method-name">' + mid + '</td>'
+                  + '<td>' + (r2.value != null && isFinite(r2.value) ? r2.value.toFixed(3) : '—') + '</td>'
+                  + '<td>' + (r2.computable ? (r2.pass ? '<span style="color:#10b981;">✓</span>' : '<span style="color:#ef4444;">✗</span>') : '—') + '</td>'
+                  + '<td>' + ti + '</td>'
+                  + '<td class="calc">' + (r2.reason || '') + '</td></tr>';
+          }
+          html += '</tbody></table>';
+          document.getElementById('modal-content').innerHTML = html;
+          document.getElementById('modal-overlay').classList.add('open');
+        } catch(e) {}
+      }
+    });
+  });
 
 })();
 </script>
