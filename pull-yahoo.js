@@ -439,15 +439,16 @@ function _ftsValue(row, ...keys) {
 }
 
 // Mappt fundamentalsTimeSeries-Rows zu engine-Schema-Arrays (latest first).
+// Bug #26 fix: preserve null entries for years where the field is absent so that
+// annualSBC[i] and annualCapex[i] stay positionally aligned with annualRev[i].
+// Previously, null-year rows were silently compacted, causing year-index drift.
 function _ftsExtractByYear(rows, fieldNames) {
-  // Returns [{year: 2025, value: ...}, ...] sorted latest first
-  const sorted = (rows || []).slice().reverse();
+  const sorted = (rows || []).slice().reverse();  // oldest→latest, reverse → latest first
   const out = [];
   for (const r of sorted) {
-    if (!r) continue;
-    const v = _ftsValue(r, ...fieldNames);
-    if (v == null) continue;
-    out.push(v);
+    // Push null for empty/missing rows to preserve year-alignment
+    const v = (r != null) ? _ftsValue(r, ...fieldNames) : null;
+    out.push(v != null ? v : null);
   }
   return out;
 }
@@ -719,7 +720,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const cachePath = path.join(cacheDir, safeSnapshotFilename(stock.ticker));
       const CACHE_TTL_MS = 28 * 86400 * 1000;
       const CACHE_PARTIAL_TTL_MS = 86400 * 1000; // F-DP-005: 24h for partial results
-      const FTS_CACHE_VERSION = 1; // F-DP-019: bump when FTS schema changes
+      const FTS_CACHE_VERSION = 2; // F-DP-019: bump when FTS schema changes (v2: null-alignment fix, added annualRnD)
       let useCache = false;
       let cached = null;
       if (fs.existsSync(cachePath)) {
@@ -735,7 +736,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           }
         } catch (e) {}
       }
-      let ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex;
+      let ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD;
       let ftsQuarterlyNI;
       if (useCache && cached.payload) {
         ftsAnnual = cached.payload.ftsAnnual;
@@ -743,6 +744,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         ftsBalance = cached.payload.ftsBalance;
         ftsAnnualSBC = cached.payload.ftsAnnualSBC;
         ftsAnnualCapex = cached.payload.ftsAnnualCapex;
+        ftsAnnualRnD = cached.payload.ftsAnnualRnD || [];  // Bug #25: added in cache v2
         ftsQuarterlyNI = cached.payload.ftsQuarterlyNI || [];
       } else {
         // Tag-14: fundamentalsTimeSeries-Pull für annualOpInc/FCF/opIncQ.
@@ -752,6 +754,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         ftsBalance = mapFTSToBalance(fts.annualBs);
         ftsAnnualSBC = _ftsExtractByYear(fts.annualCash, ['stockBasedCompensation']);
         ftsAnnualCapex = _ftsExtractByYear(fts.annualCash, ['capitalExpenditure', 'capitalExpenditures']);
+        // Bug #25: annualRnD was never extracted — reinvestment-rate always computed Capex-only
+        ftsAnnualRnD = _ftsExtractByYear(fts.annualFin, ['researchAndDevelopment', 'ResearchAndDevelopment', 'researchAndDevelopmentExpenses']);
         // Tag-90: Quarterly NetIncome (8-Quarter-Earnings-Stability)
         ftsQuarterlyNI = (fts.quarterlyFin || []).slice().reverse()
           .map(r => r && r.netIncome != null ? r.netIncome : null)
@@ -768,7 +772,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
             _cacheVersion: FTS_CACHE_VERSION,
             _ftsPartial: ftsPartial,
             cachedAt: new Date().toISOString(),
-            payload: { ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsQuarterlyNI }
+            payload: { ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD, ftsQuarterlyNI }
           }));
         } catch (e) {}
         if (ftsPartial) canonical._ftsPartial = true;
@@ -784,6 +788,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       canonical.annual.annualSBC = ftsAnnualSBC;
       // Tag-44: annualCapex aus FTS hinzufügen
       canonical.annual.annualCapex = ftsAnnualCapex;
+      // Bug #25: annualRnD war nie geschrieben — reinvestment-rate nutzte immer nur Capex
+      canonical.annual.annualRnD = ftsAnnualRnD || [];
       // Tag-90: quarterlyNI in timeseries
       canonical.timeseries.netIncomeQ = (ftsQuarterlyNI || []).map(v => ({ value: v }));
       if (ftsAnnual.annualGP.length > 0) canonical.annual.annualGP = ftsAnnual.annualGP;

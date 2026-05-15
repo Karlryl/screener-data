@@ -80,7 +80,10 @@ function evaluate(stock) {
   var ratios = [];
   var yearsAvail = Math.min(5, rawCapex.length, rawOcf.length);
   for (var j = 0; j < yearsAvail; j++) {
-    var c = Number.isFinite(rawCapex[j]) ? rawCapex[j] : 0;
+    // Bug #30 fix: skip years where capex data is missing instead of substituting 0.
+    // Using 0 pulls the median reinvestment-rate down for R&D/capex-heavy companies.
+    var c = rawCapex[j];
+    if (!Number.isFinite(c)) continue;  // skip years with no capex data
     var r = (j < rawRnd.length && Number.isFinite(rawRnd[j])) ? rawRnd[j] : 0;
     var o = rawOcf[j];
     if (!Number.isFinite(o) || o <= 0) continue;

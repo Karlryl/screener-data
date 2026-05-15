@@ -23,26 +23,23 @@ const THRESHOLD_OP = 'gte';
 
 function _revenueAcceleration(stock) {
   const rq = stock && stock.timeseries && stock.timeseries.revenueQ;
-  if (!Array.isArray(rq) || rq.length < 5) return null;
+  // Bug #29 fix: require >= 8 quarters so ALL 4 growth points use true YoY
+  // (rq[i] vs rq[i+4]). With < 8 entries, some iterations fell back to QoQ
+  // (rq[i] vs rq[i+1]), mixing QoQ and YoY in the same growths array —
+  // comparing recentAvg vs priorAvg of mixed metrics is meaningless.
+  if (!Array.isArray(rq) || rq.length < 8) return null;
 
-  // Compute QoQ growth rates from most-recent to oldest
+  // Compute YoY growth for quarters i=0..3 (need rq[i+4] → indices 4..7)
   // rq[0] = most recent quarter
+  const _val = v => (v == null ? null : (typeof v === 'number' ? v : v.value));
   const growths = [];
-  for (let i = 0; i < 4 && i + 1 < rq.length; i++) {
-    const curr = rq[i] && (typeof rq[i] === 'number' ? rq[i] : rq[i].value);
-    const prev = rq[i + 1] && (typeof rq[i + 1] === 'number' ? rq[i + 1] : rq[i + 1].value);
-    if (curr == null || prev == null || prev <= 0) return null;
-    // YoY comparison: compare quarter i to same quarter 4 periods ago
-    const base = rq[i + 4] && (typeof rq[i + 4] === 'number' ? rq[i + 4] : rq[i + 4].value);
-    if (base == null || base <= 0) {
-      growths.push((curr - prev) / Math.abs(prev));
-    } else {
-      growths.push((curr - base) / Math.abs(base));
-    }
-    if (growths.length >= 4) break;
+  for (let i = 0; i < 4; i++) {
+    const curr = _val(rq[i]);
+    const base = _val(rq[i + 4]);  // same quarter, one year ago
+    if (curr == null || base == null || base <= 0) return null;
+    growths.push((curr - base) / Math.abs(base));
   }
 
-  if (growths.length < 4) return null;
   const recentAvg = (growths[0] + growths[1]) / 2;
   const priorAvg  = (growths[2] + growths[3]) / 2;
   return { accelerating: recentAvg > priorAvg, recentAvg, priorAvg };

@@ -436,7 +436,9 @@ function main() {
       }
 
       data.summary[key] = {
-        vintageCount: collect('alphaVsUniverse').length,
+        // Bug #32 fix: collect() filters nulls, so vintageCount was only counting vintages
+        // with non-null alphaVsUniverse (n >= MIN_SAMPLES). Count all status='ok' vintages.
+        vintageCount: data.vintages.filter(v => v.horizons[key] && v.horizons[key].status === 'ok').length,
         medianAlphaVsUniverse: median(collect('alphaVsUniverse')),
         medianAlphaVsFrozenVintage: median(collect('alphaVsFrozenVintage')),
         medianAlphaVsBenchmark: median(collect('alphaVsSpy')),

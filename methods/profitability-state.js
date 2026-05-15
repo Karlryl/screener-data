@@ -37,8 +37,10 @@ function _classifySource(arr, revArr) {
   const y0 = arr[0];
   if (y0 == null) return null;
 
-  // Hard LOSS: Y0 negativ
-  if (y0 <= 0) return { state: 'LOSS', persistentLoss: false };
+  // Hard LOSS: Y0 negativ. Bug #37 fix: y0 === 0 (breakeven year) must NOT be hard-LOSS
+  // — it should fall through to the TURNAROUND path (comment on line ~66 says
+  // "Y-1 negativ, Y0 positiv", implying breakeven should go to TURNAROUND, not LOSS).
+  if (y0 < 0) return { state: 'LOSS', persistentLoss: false };
 
   const y1 = arr[1], y2 = arr[2], y3 = arr[3];
 
