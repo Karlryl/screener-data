@@ -232,6 +232,13 @@ jobs:
         run: node generate-modes-report.js --snapshots snapshots --out modes-report.html
         continue-on-error: true
 
+      # Tag 198: Bloomberg 6-tab Screener dashboard (HG/QC/SMALL/R40/PRE-BREAKOUT/WATCH).
+      # New artifact alongside dashboard.html / modes-report.html / methods-report.html.
+      # continue-on-error: it's a secondary artifact; pipeline shouldn't hard-fail on it.
+      - name: Generate Screener Dashboard
+        run: node generate-screener.js --snapshots snapshots --out screener.html
+        continue-on-error: true
+
       # Tag 102g: Walk-Forward Picks-History — friert Mode-Picks pro Run für späteren Performance-Vergleich.
       # Tag 134: hard-fail. picks-history is the source of truth for backtest;
       # a silent gap of even one week destroys vintage continuity.
@@ -453,6 +460,8 @@ jobs:
           cp modes-report.html _site/ 2>/dev/null || true
           cp diff-report.html _site/ 2>/dev/null || true
           cp dashboard.html _site/ 2>/dev/null || true
+          cp screener.html _site/ 2>/dev/null || true
+          cp methods-report.html _site/ 2>/dev/null || true
           cp -r outputs/. _site/outputs/ 2>/dev/null || true
 
           # Push to gh-pages branch (orphan-safe force push)
