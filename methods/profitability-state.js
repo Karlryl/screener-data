@@ -70,7 +70,9 @@ function _classifySource(arr, revArr) {
     const recentLosses = arr.slice(0, 4).filter(v => v != null && v <= 0).map(v => Math.abs(v));
     if (recentLosses.length >= 3) {
       const sorted = recentLosses.slice().sort((a,b)=>a-b);
-      const medianLoss = sorted[Math.floor(sorted.length / 2)];
+      // Bug #5: use standard median (average of two middle elements for even-length arrays)
+      const mid = Math.floor(sorted.length / 2);
+      const medianLoss = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
       // ALNY-Pattern: Y0 unter median(prior losses) → Persistent-Loss-Override
       if (y0 < medianLoss) return { state: 'LOSS', persistentLoss: true };
       if (!marginOk) return { state: 'LOSS', persistentLoss: true };

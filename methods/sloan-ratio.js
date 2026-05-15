@@ -71,9 +71,12 @@ function evaluate(stock) {
   const absV = Math.abs(v);
 
   // Check 2-year-rule for hard-fail
+  // Bug #9: must check that years are actually adjacent (no gaps) — sloans may skip years
+  // when ni/fcf/assets are missing for a year, creating non-consecutive year indices.
   let consecutiveHigh = 0;
-  for (const s of sloans) {
-    if (Math.abs(s.value) > FAIL_THRESHOLD) consecutiveHigh++;
+  for (let k = 0; k < sloans.length; k++) {
+    if (k > 0 && sloans[k].year !== sloans[k - 1].year + 1) break; // gap — not truly consecutive
+    if (Math.abs(sloans[k].value) > FAIL_THRESHOLD) consecutiveHigh++;
     else break;
   }
 

@@ -60,12 +60,12 @@ function evaluate(stock) {
   const ni0Raw = _annualVal(niArr, 0);
   const ni1Raw = _annualVal(niArr, 1);
   const ni2Raw = _annualVal(niArr, 2);
-  // Distinguish missing data from genuine zero: require at least 2 finite NI values
-  const niFiniteCount = [ni0Raw, ni1Raw, ni2Raw].filter(v => Number.isFinite(v)).length;
-  if (!Number.isFinite(ni0Raw) && niFiniteCount < 2) {
-    return H.buildResult({ computable: false, reason: 'insufficient NI data (need >=2 years)', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP });
+  // Bug #6: ni0 (current year) is the most critical — require it to be finite.
+  // Silently substituting 0 when ni0 is missing would understate X2 by the full current-year NI.
+  if (!Number.isFinite(ni0Raw)) {
+    return H.buildResult({ computable: false, reason: 'missing current-year NI (ni0)', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP });
   }
-  const ni0 = Number.isFinite(ni0Raw) ? ni0Raw : 0;
+  const ni0 = ni0Raw;
   const ni1 = Number.isFinite(ni1Raw) ? ni1Raw : 0;
   const ni2 = Number.isFinite(ni2Raw) ? ni2Raw : 0;
   const retainedEarningsProxy = ni0 + ni1 + ni2;

@@ -7,6 +7,8 @@ const THRESHOLD = 0.10;  // CoV <= 10%
 const THRESHOLD_OP = 'lte';
 
 function _stdev(arr) {
+  // Bug #7: guard against length-1 input (variance denominator = 0)
+  if (arr.length < 2) return { mean: arr[0] || 0, std: 0 };
   const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
   const variance = arr.reduce((s, v) => s + (v - mean) ** 2, 0) / (arr.length - 1);  // sample stdev
   return { mean, std: Math.sqrt(variance) };

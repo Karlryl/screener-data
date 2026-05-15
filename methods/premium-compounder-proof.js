@@ -67,9 +67,11 @@ function evaluate(stock) {
   let allPass = true;
 
   // 1. 5Y Revenue CAGR >= 15%
+  // Bug #10: use rawRevs[4] (positional) not revs[4] (filtered). Filtered array
+  // collapses null years, making _cagr span fewer calendar years than intended.
   let rev5yCagr = null;
-  if (revs.length >= 5) {
-    rev5yCagr = _cagr(revs[0], revs[4], 4); // 4-period CAGR over 5 datapoints
+  if (rawRevs.length >= 5 && Number.isFinite(rawRevs[0]) && Number.isFinite(rawRevs[4])) {
+    rev5yCagr = _cagr(rawRevs[0], rawRevs[4], 4); // 4-period CAGR over 5 datapoints
   }
   const c1 = rev5yCagr != null && rev5yCagr >= 0.15;
   checks.push({ name: 'rev5yCAGR>=15', pass: c1, val: rev5yCagr });

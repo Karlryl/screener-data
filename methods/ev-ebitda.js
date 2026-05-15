@@ -19,6 +19,15 @@ function evaluate(stock) {
     });
   }
   const ev = mcap + totalDebt - (totalCash || 0);
+  // Bug #11: negative EV (net-cash company: cash > mcap+debt) trivially passes any positive threshold.
+  // EV/EBITDA is not meaningful when EV <= 0; mark as non-computable to avoid false pass.
+  if (ev <= 0) {
+    return H.buildResult({
+      computable: false,
+      reason: `EV <= 0 (mcap=${(mcap/1e9).toFixed(1)}B + debt=${(totalDebt/1e9).toFixed(1)}B - cash=${((totalCash||0)/1e9).toFixed(1)}B = ${(ev/1e9).toFixed(1)}B): net-cash company, EV/EBITDA not meaningful`,
+      threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    });
+  }
   const ebitda = opInc * 1.2;
   if (ebitda <= 0) {
     return H.buildResult({

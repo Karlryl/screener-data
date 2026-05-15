@@ -9,7 +9,11 @@ const THRESHOLD_OP = 'lte';
 function evaluate(stock) {
   const pe_val = H.metricValue(stock, 'pe');
   const pe = (pe_val != null) ? pe_val : H.metricValue(stock, 'forwardPE');
-  const growth = H.metricValue(stock, 'revenueGrowthYoY');
+  // Bug #4: Lynch PEG should use EPS/earnings growth, not revenue growth.
+  // Prefer earningsGrowthYoY or epsGrowthYoY if available; fall back to revenueGrowthYoY.
+  const earningsGrowth = H.metricValue(stock, 'earningsGrowthYoY') || H.metricValue(stock, 'epsGrowthYoY');
+  const growth = earningsGrowth != null ? earningsGrowth : H.metricValue(stock, 'revenueGrowthYoY');
+  const growthSource = earningsGrowth != null ? 'EPS' : 'Rev';
   if (pe == null || growth == null) {
     return H.buildResult({
       computable: false, reason: `missing pe=${pe} growth=${growth}`,
@@ -28,8 +32,8 @@ function evaluate(stock) {
     value,
     pass: value <= THRESHOLD,
     computable: true,
-    components: { pe, growthYoY: growth },
-    reason: `PE=${pe.toFixed(1)} / Growth=${growth.toFixed(1)}% → PEG=${value.toFixed(2)}`,
+    components: { pe, growthYoY: growth, growthSource },
+    reason: `PE=${pe.toFixed(1)} / ${growthSource}Growth=${growth.toFixed(1)}% → PEG=${value.toFixed(2)}`,
     threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
   });
 }

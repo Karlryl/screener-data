@@ -102,7 +102,8 @@ function normalizeMethodScore(methodResult, methodMeta) {
   if (op === 'gte') {
     ratio = val / threshold;
   } else if (op === 'lte') {
-    if (val <= 0) return 0.3;
+    // Bug #8: val<=0 is always better than any positive threshold (e.g. negative EV, net-cash)
+    if (val <= 0) return 0.99;
     ratio = threshold / val;
   } else if (op === 'lte_abs') {
     // F-ME-011: proper handling for lte_abs — graduated scoring on absolute value

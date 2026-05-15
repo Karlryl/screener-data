@@ -74,13 +74,19 @@ function evaluate(stock) {
   if (maxDecline > 0.50) {
     pass = false;
     reasons.push(`max OpInc decline ${(maxDecline*100).toFixed(0)}% > 50%`);
-  } else if (maxDecline > 0.30 && maxDeclineIdx > 0) {
-    // Recovery-test: OpInc[maxDeclineIdx-1] > OpInc[maxDeclineIdx] * 1.2 (year after decline must recover)
-    const declined = opIncWindow[maxDeclineIdx];
-    const next = opIncWindow[maxDeclineIdx - 1];  // newer than declined
-    if (!(next > declined * 1.2)) {
+  } else if (maxDecline > 0.30) {
+    if (maxDeclineIdx === 0) {
+      // Bug #2: Most-recent-year declined 30-50% — no future recovery data yet → fail
       pass = false;
-      reasons.push(`decline ${(maxDecline*100).toFixed(0)}% (30-50% range) without recovery (next=${(next/1e9).toFixed(1)}B vs ${(declined*1.2/1e9).toFixed(1)}B required)`);
+      reasons.push(`max OpInc decline ${(maxDecline*100).toFixed(0)}% (30-50%) in latest year — no recovery data yet`);
+    } else {
+      // Recovery-test: OpInc[maxDeclineIdx-1] > OpInc[maxDeclineIdx] * 1.2 (year after decline must recover)
+      const declined = opIncWindow[maxDeclineIdx];
+      const next = opIncWindow[maxDeclineIdx - 1];  // newer than declined
+      if (!(next > declined * 1.2)) {
+        pass = false;
+        reasons.push(`decline ${(maxDecline*100).toFixed(0)}% (30-50% range) without recovery (next=${(next/1e9).toFixed(1)}B vs ${(declined*1.2/1e9).toFixed(1)}B required)`);
+      }
     }
   }
 

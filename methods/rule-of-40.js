@@ -16,6 +16,14 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
+  // Bug #3: guard against decimal-vs-percent unit mismatch (both in [-1,1] → almost certainly decimals)
+  if (Math.abs(growth) <= 1 && Math.abs(fcfMargin) <= 1) {
+    return H.buildResult({
+      computable: false,
+      reason: `unit error: growth=${growth} and fcfMargin=${fcfMargin} appear to be decimals, not percent`,
+      threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    });
+  }
   const value = growth + fcfMargin;
   return H.buildResult({
     value, pass: value >= THRESHOLD, computable: true,
