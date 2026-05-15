@@ -38,6 +38,7 @@ const REGISTRY = {
   'insider-ownership':          { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Skin in the game' },
   'quarterly-earnings-stability':{ type: 'DIAGNOSTIC', defaultActive: false, reason: '8Q earnings volatility' },
   'gross-margin-acceleration':  { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 195: Pre-Breakout signal — GM improvement across 3 consecutive periods (Q preferred)' },
+  'operating-leverage':         { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 196: 3Y incremental margin ΔOI/ΔRev — quality-compounder signal' },
   'opinc-margin-spike':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Operating margin shock detection' },
   'drawdown-52w':               { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },
   'high-proximity-52w':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },
