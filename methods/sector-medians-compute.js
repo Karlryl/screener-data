@@ -213,7 +213,29 @@ function writeRollingMedians(autoMedians) {
   })();
   let prior = { medians: {} };
   if (fs.existsSync(outPath)) {
-    try { prior = JSON.parse(fs.readFileSync(outPath, 'utf8')) || { medians: {} }; } catch (e) {}
+    try {
+      prior = JSON.parse(fs.readFileSync(outPath, 'utf8')) || { medians: {} };
+    } catch (e) {
+      // F-SM-024 (Tag 191): vorher catch{} → silent 12-Monats-History-Wipe.
+      // Eine korrupte/teilgeschriebene Datei führte dazu, dass merged = {} startete
+      // und die gesamte rolling-Median-History dieses Tags überschrieb. Jetzt:
+      // - Datei zur Diagnose beiseitelegen (.corrupt-<ts>)
+      // - laut warnen, damit Operatoren das in CI-Logs sehen
+      // - mit leerem prior fortfahren (Liveness > Konsistenz an dieser Stelle —
+      //   nächste Pull-Runde baut wieder auf, und die .corrupt-Datei ist für
+      //   Forensik da).
+      const ts = new Date().toISOString().replace(/[:.]/g, '-');
+      const corruptPath = outPath + '.corrupt-' + ts;
+      try {
+        fs.renameSync(outPath, corruptPath);
+        console.warn('[rolling-medians] CORRUPT ' + outPath + ' → ' + corruptPath +
+          ' (' + e.message + ') — rolling history reset for this run.');
+      } catch (renameErr) {
+        console.warn('[rolling-medians] CORRUPT ' + outPath + ' (' + e.message +
+          ') — could not rename for forensics: ' + renameErr.message);
+      }
+      prior = { medians: {} };
+    }
   }
   const merged = prior.medians || {};
   for (const [spId, metrics] of Object.entries(autoMedians)) {

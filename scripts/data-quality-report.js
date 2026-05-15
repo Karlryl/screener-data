@@ -12,10 +12,16 @@ const fs   = require('fs');
 const path = require('path');
 
 // Import grading logic
+// F-SC-032 (Tag 191): require()-Fehler waren vorher silent → der ganze Report
+// lief mit grade='unknown' für jeden Snapshot und niemand merkte, dass das
+// data-quality.js-Modul nicht lud (Syntax-Error, fehlende Abhängigkeit, etc.).
+// Jetzt: WARN, sodass der Operator den Modul-Loader-Fehler in CI-Logs sieht.
 let gradeSnapshot;
 try {
   ({ gradeSnapshot } = require('../methods/data-quality.js'));
 } catch (e) {
+  console.warn('[data-quality-report] FAILED to require methods/data-quality.js: ' +
+    (e && e.message || e) + ' — all grades will report as "unknown" until fixed.');
   gradeSnapshot = () => ({ grade: 'unknown', nanRatio: 0, missingFields: [] });
 }
 

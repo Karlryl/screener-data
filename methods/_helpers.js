@@ -92,8 +92,23 @@ function _loadSectorMedians() {
   try {
     const p = path.join(__dirname, 'sector-medians.json');
     _sectorMediansCache = JSON.parse(fs.readFileSync(p, 'utf8'));
-  } catch (e) { _sectorMediansCache = {}; }
+  } catch (e) {
+    // F-SM-022 (Tag 191): same WARN pattern as _loadAutoMedians/_loadRollingMedians.
+    _warnMediansLoad('sector-medians.json', e);
+    _sectorMediansCache = {};
+  }
   return _sectorMediansCache;
+}
+
+// F-SM-022 (Tag 191): warn loudly on parse failure (was silent fallback).
+// Without the warning, one partial-write to a medians file silently degraded
+// every method's threshold lookup to hardcoded defaults for the rest of the
+// process — memoized, so a single corrupt read affected every snapshot in the
+// pull. Operators got zero signal. We still fall back to {} for liveness, but
+// the warning surfaces the regression in CI logs / pipeline-health.
+function _warnMediansLoad(file, err) {
+  console.warn('[medians] FAILED to load ' + file + ': ' + (err && err.message || err) +
+    ' — falling back to defaults for this process. Investigate file integrity.');
 }
 
 // Tag 167: Load v2 region-aware auto-medians. Returns the full object so
@@ -112,7 +127,10 @@ function _loadAutoMedians() {
     } else {
       _autoMediansCache = {};
     }
-  } catch (e) { _autoMediansCache = {}; }
+  } catch (e) {
+    _warnMediansLoad('sector-medians-auto.json', e);
+    _autoMediansCache = {};
+  }
   return _autoMediansCache;
 }
 
@@ -124,7 +142,10 @@ function _loadRollingMedians() {
     const p = path.join(__dirname, 'sector-medians-rolling.json');
     const raw = JSON.parse(fs.readFileSync(p, 'utf8'));
     _rollingMediansCache = (raw && raw.medians) || {};
-  } catch (e) { _rollingMediansCache = {}; }
+  } catch (e) {
+    _warnMediansLoad('sector-medians-rolling.json', e);
+    _rollingMediansCache = {};
+  }
   return _rollingMediansCache;
 }
 
