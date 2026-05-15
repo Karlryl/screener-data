@@ -162,10 +162,13 @@ function evaluate(stock) {
 
   // Check 0 (Tag 113f): Annual-Revenue-Decline — Cyclical-Rebound erkennen
   // MRNA-Pattern: annualRev geht stark rueckwaerts, aber YoY Q-vs-Q hoch wegen Tiefpunkt
-  const revY = _arr(stock, 'annual.annualRev');
+  // F-ME-007 (Tag 180): _arr() filtered nulls, so revY[3] was "the 4th non-null
+  // entry", not necessarily 3 years ago. With Bug #26 preserving nulls, _rawArr
+  // keeps positional alignment so revY[0] vs revY[3] is genuinely T vs T-3.
+  const revY_raw = _rawArr(stock, 'annual.annualRev');
   let annualDecline = null;
-  if (revY.length >= 4) {
-    const latest = revY[0], threeYrAgo = revY[3];
+  if (revY_raw.length >= 4 && Number.isFinite(revY_raw[0]) && Number.isFinite(revY_raw[3])) {
+    const latest = revY_raw[0], threeYrAgo = revY_raw[3];
     if (threeYrAgo > 0) {
       annualDecline = (latest - threeYrAgo) / threeYrAgo;
       if (latest < threeYrAgo) {
@@ -200,9 +203,12 @@ function evaluate(stock) {
   }
 
   // Check 2: OI-Severity (annualOpInc YoY-Verschlechterung)
+  // F-ME-007 (Tag 180): same alignment fix — oiArr was filtered, so oiArr[1]
+  // was "previous non-null OpInc", not necessarily Y-1. Use raw to keep position.
+  const oiArrRaw = _rawArr(stock, 'annual.annualOpInc');
   let oiSeverity = 0, oiDir = 'unknown';
-  if (oiArr.length >= 2) {
-    const y0 = oiArr[0], y1 = oiArr[1];
+  if (oiArrRaw.length >= 2 && Number.isFinite(oiArrRaw[0]) && Number.isFinite(oiArrRaw[1])) {
+    const y0 = oiArrRaw[0], y1 = oiArrRaw[1];
     if (y0 < 0 && y1 < 0 && Math.abs(y0) > Math.abs(y1) * 1.5) {
       oiDir = 'loss-expanding';
       oiSeverity = Math.abs(y0) / Math.abs(y1);

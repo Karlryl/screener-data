@@ -31,7 +31,20 @@ function escHtml(s) {
 function evaluateAllStocks(args) {
   const files = fs.readdirSync(args.snapshots).filter(f => f.endsWith('.json') && f !== '_manifest.json');
   let methodHistory = {};
-  if (fs.existsSync(args.state)) {
+  // F-SM-018 (Tag 180): methodHistory was moved to the sidecar file
+  // method-history-state.json in F-SM-007. Reading from alert-state.json
+  // now returns undefined → trend column was permanently empty. Read sidecar
+  // first, fall back to alert-state for legacy state files.
+  const sidecarPath = path.join(path.dirname(args.state), 'method-history-state.json');
+  if (fs.existsSync(sidecarPath)) {
+    try {
+      const sc = JSON.parse(fs.readFileSync(sidecarPath, 'utf8'));
+      if (sc && sc.methodHistory && typeof sc.methodHistory === 'object') {
+        methodHistory = sc.methodHistory;
+      }
+    } catch (e) { /* ignore */ }
+  }
+  if (!Object.keys(methodHistory).length && fs.existsSync(args.state)) {
     try {
       const s = JSON.parse(fs.readFileSync(args.state, 'utf8'));
       methodHistory = s.methodHistory || {};

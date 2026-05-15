@@ -74,9 +74,31 @@ function archiveDirByDate(srcDir, archiveDir, keepDays, dryRun) {
       console.log('  [dry-run] would write ' + ndjsonPath + ' (' + entries.length + ' entries)');
       continue;
     }
-    // Append-mode if file already exists (idempotency)
+    // F-SC-003 (Tag 180): append-mode without dedup → re-running on the same
+    // month duplicates entries (CI retry, manual re-archive). Now: parse the
+    // existing archive, collect already-archived dates, and only append the
+    // new ones. If all entries are already there, skip the write entirely.
+    let toWrite = entries;
     if (fs.existsSync(ndjsonPath)) {
-      fs.appendFileSync(ndjsonPath, lines);
+      const existingDates = new Set();
+      try {
+        const existingLines = fs.readFileSync(ndjsonPath, 'utf8').split('\n').filter(Boolean);
+        for (const ln of existingLines) {
+          try { const obj = JSON.parse(ln); if (obj && obj.date) existingDates.add(obj.date); } catch (_) {}
+        }
+      } catch (_) {}
+      toWrite = entries.filter(e => !existingDates.has(e.date));
+      if (toWrite.length === 0) {
+        console.log('  all ' + entries.length + ' entries already archived in ' + ndjsonPath + ' — skipping append');
+        // Still unlink originals since they're already archived
+        for (const e of entries) {
+          const orig = path.join(srcDir, e.date + '.json');
+          try { fs.unlinkSync(orig); } catch (err) { console.warn('  unlink fail ' + e.date + ': ' + err.message); }
+        }
+        continue;
+      }
+      const linesNew = toWrite.map(e => JSON.stringify({ date: e.date, ...e.content })).join('\n') + '\n';
+      fs.appendFileSync(ndjsonPath, linesNew);
     } else {
       fs.writeFileSync(ndjsonPath, lines);
     }

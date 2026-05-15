@@ -454,8 +454,15 @@ function _ftsExtractByYear(rows, fieldNames) {
 }
 
 function mapFTSToAnnual(annualRows, cashRows) {
-  // Rows kommen oldest first → wir wollen latest first
-  // Erste Row in annualRows ist meist null/incomplete-Quartal — filtere wenn keine totalRevenue.
+  // Rows kommen oldest first → wir wollen latest first.
+  // F-DP-030/031 (Tag 180): previously this skipped rows where rev==null
+  // ("filtere wenn keine totalRevenue"), but _ftsExtractByYear preserves nulls
+  // for annualSBC/Capex/RnD. The two conventions disagreed → annualRev[i] and
+  // annualSBC[i] referenced DIFFERENT calendar years whenever a row had no rev.
+  // Fix: push null placeholders here too so all annual arrays share positional
+  // alignment with annualSBC/Capex/RnD. Downstream methods already null-check.
+  // Trailing pure-null rows (no rev/oi/gp/ni at all) are trimmed to keep arrays
+  // tight — preserved nulls only matter when surrounding data exists.
   const sorted = (annualRows || []).slice().reverse();
   const annualRev = [];
   const annualOpInc = [];
@@ -463,29 +470,30 @@ function mapFTSToAnnual(annualRows, cashRows) {
   const annualNetIncome = [];
   for (const r of sorted) {
     const rev = _ftsValue(r, 'totalRevenue', 'TotalRevenue');
-    if (rev == null) continue;  // skip leere Rows
-    annualRev.push({ value: rev });
     const oi = _ftsValue(r, 'operatingIncome', 'OperatingIncome', 'totalOperatingIncomeAsReported');
-    annualOpInc.push(oi != null ? { value: oi } : null);
     const gp = _ftsValue(r, 'grossProfit', 'GrossProfit');
-    annualGP.push(gp != null ? { value: gp } : null);
     const ni = _ftsValue(r, 'netIncome', 'NetIncome', 'netIncomeContinuousOperations');
+    // Skip completely empty rows (no rev AND no derivative fields) — those add no info.
+    if (rev == null && oi == null && gp == null && ni == null) continue;
+    annualRev.push(rev != null ? { value: rev } : null);
+    annualOpInc.push(oi != null ? { value: oi } : null);
+    annualGP.push(gp != null ? { value: gp } : null);
     annualNetIncome.push(ni != null ? { value: ni } : null);
   }
-  // FCF + OCF aus cash-flow-Module
+  // FCF + OCF aus cash-flow-Module — same null-preservation convention.
   const annualFCF = [];
   const annualOCF = [];
   const cashSorted = (cashRows || []).slice().reverse();
   for (const r of cashSorted) {
     const op = _ftsValue(r, 'operatingCashFlow', 'OperatingCashFlow');
-    if (op != null) annualOCF.push({ value: op });
     let fcf = _ftsValue(r, 'freeCashFlow', 'FreeCashFlow');
     if (fcf == null) {
-      // Compute aus OpCash + CapEx wenn möglich
       const capex = _ftsValue(r, 'capitalExpenditure', 'CapitalExpenditure');
       if (op != null && capex != null) fcf = op + capex;  // capex ist negativ
     }
-    if (fcf != null) annualFCF.push({ value: fcf });
+    if (op == null && fcf == null) continue;  // skip pure-empty
+    annualOCF.push(op != null ? { value: op } : null);
+    annualFCF.push(fcf != null ? { value: fcf } : null);
   }
   return { annualRev, annualOpInc, annualGP, annualNetIncome, annualFCF, annualOCF };
 }

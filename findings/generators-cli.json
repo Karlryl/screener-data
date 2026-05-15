@@ -1,0 +1,265 @@
+{
+  "agent": "generators-cli",
+  "timestamp": "2026-05-15T19:30:00Z",
+  "files_examined": [
+    "generate-methods-report.js",
+    "generate-diff-report.js",
+    "generate-modes-report.js",
+    "generate-dashboard.js",
+    "history-cli.js",
+    "watchlist-cli.js",
+    "methods-cli.js",
+    "earnings-cli.js",
+    "backtest-from-history.js",
+    "backtest-10-weeks.js",
+    "backtest-pass-vs-fail.js",
+    "compute-picks-lookback.js",
+    "analyze-correlation.js",
+    "sector-trends.js",
+    "aktienfinder-import.js",
+    "diagnose-spec.js",
+    "tune-threshold.js",
+    "snapshot-picks.js",
+    "snapshot-methods-history.js",
+    "suggest-watchlist-additions.js",
+    "suggest-watchlist-cleanup.js",
+    "pull-earnings-dates.js",
+    "pull-historical-prices.js",
+    "pull-prices-bulk.js",
+    "pull-sec-xbrl.js",
+    "detect-changes.js"
+  ],
+  "confidence": 0.85,
+  "findings": [
+    {
+      "id": "F-GC-001",
+      "severity": "high",
+      "category": "xss",
+      "file": "generate-methods-report.js",
+      "lines": "964-967, 1014-1015",
+      "title": "Modal innerHTML uses unescaped ticker/name/sector from snapshot JSON",
+      "description": "Inside the Top-Picks modal click handler and Kennzahl-Rangliste row click handler, the inline JS does `html = '<h3>' + data.ticker + ' — ' + data.name + '</h3>'` and `'<div class=\"stock-meta-row\">' + data.sector + ...`. While `escHtml` exists on the server side, the client-side concatenation skips it. data is parsed from `tr.dataset.row` which was URI-encoded server-side JSON of {ticker,name,sector,...}. If a Yahoo `longName` ever contains an HTML/script payload (e.g. company name like `<script>alert(1)</script> Corp`), it would execute when a user clicks the row. Also r.reason at line 986 and 1025 is interpolated as `+ (r.reason || '')`. Fix: use escapeHtml() in the client-side JS (already defined in generate-dashboard.js, copy/inline it). Same XSS pattern exists in generate-dashboard.js but THAT file uses `escapeAttr` consistently for ticker/name (good).",
+      "fix_hint": "Add an `escHtml` function inline in the <script> block and wrap data.ticker, data.name, data.sector, r.reason, mid in escHtml() before concatenation."
+    },
+    {
+      "id": "F-GC-002",
+      "severity": "critical",
+      "category": "look-ahead-bias",
+      "file": "backtest-from-history.js + backtest-10-weeks.js",
+      "lines": "backtest-from-history.js:17-31, backtest-10-weeks.js:77-96",
+      "title": "Backtests use TODAY's snapshot to score, then measure historical returns",
+      "description": "Both scripts read `./snapshots/TICKER.json` (current fundamentals) and run `Runner.evaluateStock(stockData)` to compute pass-counts, then measure historical price returns over `--horizon-days`. This is canonical look-ahead bias: the method values were computed using data unavailable at the horizon-start date. Both scripts acknowledge this with a one-line console.log at the end ('Limitierung: Forward-Looking-Bias. Methoden-Werte sind HEUTE.') but the result file `backtest-10w-result.json` is still consumed downstream as if it were a valid backtest. Combined with the survivor-bias (only stocks still in watchlist are tested), the reported alpha can be substantially overstated. compute-picks-lookback.js explicitly documents the same limitation but at least writes it into the JSON.",
+      "fix_hint": "Either use methods-history/YYYY-MM-DD.json files (which DID capture point-in-time method values), or rename these scripts to `sanity-check-*` and add a top-of-file WARNING comment + tag the output JSON with isLookAheadBiased=true."
+    },
+    {
+      "id": "F-GC-003",
+      "severity": "critical",
+      "category": "race-condition",
+      "file": "pull-prices-bulk.js",
+      "lines": "10-12, 28-30",
+      "title": "Per-stock writeFileSync to shared ./prices/history.json across concurrent runs",
+      "description": "Loop body: reads the entire history.json, mutates `out[s.ticker]`, then `fs.writeFileSync('./prices/history.json', JSON.stringify(out, null, 2))` AFTER EVERY ticker. If two workflow invocations run concurrently (e.g. cron + manual trigger, or two CLI shells), they will load the same baseline and overwrite each other's updates. Net effect: silent loss of price-history. Additionally, line 28 `out[s.ticker] = quotes` REPLACES the existing 100-day window without merging into the cumulative history — so older entries beyond the 100-day pull window get truncated per run (likely intentional but undocumented).",
+      "fix_hint": "Write to a per-range tempfile and atomically rename, or use a single coordinated process. Also document or fix the slice-vs-merge behavior."
+    },
+    {
+      "id": "F-GC-004",
+      "severity": "high",
+      "category": "performance",
+      "file": "methods-cli.js",
+      "lines": "16-31, 33-41",
+      "title": "methods-cli.js list re-reads + re-evaluates every snapshot once per method",
+      "description": "`getStats(methodId)` reads `./snapshots/*.json` and calls `Runner.evaluateStock(stock)` for EVERY snapshot. It is invoked once per method in the loop at line 38. With ~30 active methods and ~12k snapshots = 360k file reads and 360k full method evaluations. On a cold disk this takes minutes, and Runner.evaluateStock is itself O(methods) so the true asymptotic cost is O(snapshots × methods²).",
+      "fix_hint": "Refactor: read each snapshot ONCE, call `Runner.evaluateStock` ONCE per snapshot, accumulate stats across all methods in a single pass."
+    },
+    {
+      "id": "F-GC-005",
+      "severity": "high",
+      "category": "performance",
+      "file": "compute-picks-lookback.js",
+      "lines": "70-107",
+      "title": "Yahoo `totalReturn` called 6 times per ticker (3 in median loop + 3 in per-pick loop)",
+      "description": "`processMode` first iterates `for (const lookback of [1,3,5]) { for (const p of top) { const r = await totalReturn(p.ticker, lookback); ... } }` (3 calls per pick = 30 × 3 = 90 Yahoo calls per mode for top 30), and then re-iterates `for (const p of top) for (const lb of [1,3,5]) ... totalReturn(...)` (another 90 calls). For 3 modes that is ~540 Yahoo API calls plus benchmark queries — easily hits rate limits and doubles runtime unnecessarily. Returns from the first loop are not cached.",
+      "fix_hint": "Cache `Map<{ticker,lookback}, return>` and look up in the second loop instead of re-pulling."
+    },
+    {
+      "id": "F-GC-006",
+      "severity": "medium",
+      "category": "dead-code-undefined-var",
+      "file": "generate-modes-report.js",
+      "lines": "372-443",
+      "title": "Legacy `renderRow` function references undefined `stockSlim`",
+      "description": "Line 431: `data-stock=\"${escHtml(JSON.stringify(stockSlim))}\"` — `stockSlim` is never declared anywhere in the file (grep confirms 1 occurrence). If any external caller invokes `renderRow`, it throws `ReferenceError: stockSlim is not defined`. The comment at line 371 marks it as 'legacy alias for backward compat'. Either remove the function or fix the variable reference.",
+      "fix_hint": "Either delete the function (no internal callers) or define `const stockSlim = { meta: s.meta, ... }` inside it."
+    },
+    {
+      "id": "F-GC-007",
+      "severity": "medium",
+      "category": "missing-try-catch",
+      "file": "watchlist-cli.js",
+      "lines": "18-25, 36-50",
+      "title": "watchlist-cli load() has no JSON-parse error handling; cmdAdd references non-existent `stock.position`",
+      "description": "(a) `load()` does plain `JSON.parse(fs.readFileSync(PATH, 'utf8'))` — a corrupt watchlist.json crashes every CLI command including `list`, with an unhelpful SyntaxError. (b) cmdAdd creates `stock` with fields `{isin, ticker, yahoo_symbol, name, track_hint}` but the success message uses `stock.position` (line 50) which is always undefined. (c) cmdImport's CSV parsing uses bare `line.split(',')` — a company name containing a comma will misalign all subsequent fields. (d) save() reads-then-writes without any locking; two simultaneous `add` invocations can lose one.",
+      "fix_hint": "Add try/catch around load(); remove or fix `position` field; use a CSV parser; consider file-level lockfile or atomic rename for save."
+    },
+    {
+      "id": "F-GC-008",
+      "severity": "medium",
+      "category": "input-validation",
+      "file": "earnings-cli.js",
+      "lines": "11-21",
+      "title": "earnings-cli.js parseInt has no NaN check; invalid --days produces Invalid Date cutoff",
+      "description": "`days = parseInt(process.argv[idx+1], 10)` with no NaN guard. If user runs `node earnings-cli.js --days abc`, `days = NaN`, then `cutoff = new Date(today.getTime() + NaN * 86400 * 1000)` = Invalid Date, all subsequent comparisons return false, output is silently empty. Same pattern in tune-threshold.js, backtest-* scripts, suggest-watchlist-cleanup.js, and several pull-* scripts (PRICE_CONCURRENCY, EARNINGS_CONCURRENCY env vars).",
+      "fix_hint": "Centralize CLI parsing: `days = Number.isFinite(parseInt(x,10)) ? parseInt(x,10) : DEFAULT`."
+    },
+    {
+      "id": "F-GC-009",
+      "severity": "medium",
+      "category": "missing-try-catch",
+      "file": "multiple",
+      "lines": "earnings-cli.js:19; backtest-from-history.js:9-10; backtest-pass-vs-fail.js:41,55; sector-trends.js:24,39; suggest-watchlist-cleanup.js:34; pull-earnings-dates.js:18; pull-prices-bulk.js:8,11; compute-picks-lookback.js:114; tune-threshold.js:30; analyze-correlation.js:25,33",
+      "title": "JSON.parse / readdirSync calls without try/catch — corrupt state crashes pipeline",
+      "description": "Many CLIs and downstream scripts call `JSON.parse(fs.readFileSync(path))` directly. A single mid-write SIGKILL on watchlist.json, earnings-calendar.json, prices/history.json, or any methods-history/*.json file produces an unparseable artifact and crashes the entire pipeline step (and via 5%-failure-rate gates, fails the whole workflow). detect-changes.js and snapshot-picks.js do this correctly; the others do not.",
+      "fix_hint": "Wrap parse calls in try/catch and log a recoverable warning instead of crashing; consider atomic-write everywhere (`tmp + rename`)."
+    },
+    {
+      "id": "F-GC-010",
+      "severity": "medium",
+      "category": "data-correctness",
+      "file": "sector-trends.js",
+      "lines": "18-29, 40-47",
+      "title": "Today's sector data retro-applied to all historical runs",
+      "description": "tickerToSector is built from CURRENT snapshots (line 19-29), then used inside the loop over methods-history files (line 42 `tickerToSector[ticker]`). For any historical date where a ticker had a different sector classification (Yahoo occasionally re-classifies), the historical run is reported under today's sector. Also, tickers that existed historically but were delisted yield 'Unknown' — survivor bias in the sector trends. Plus line 39 has no JSON.parse try/catch.",
+      "fix_hint": "Embed sector at history-snapshot time (snapshot-methods-history.js already records inputs.sector at line 60 — use that instead of the snapshots/ lookup)."
+    },
+    {
+      "id": "F-GC-011",
+      "severity": "medium",
+      "category": "missing-null-check",
+      "file": "analyze-correlation.js",
+      "lines": "36-39",
+      "title": "Accesses r[m.id].computable without null-check; runtime crash on partial evaluator results",
+      "description": "Line 38: `valuesByMethod[m.id].push(res.computable ? res.value : null)` where `res = r[m.id]`. If Runner.evaluateStock has any method that returns undefined (e.g., a future-added method registered late, or a method that throws and is swallowed somewhere upstream), the script crashes with `Cannot read properties of undefined (reading 'computable')`. tune-threshold.js (line 31) and methods-cli.js (line 25) have identical patterns.",
+      "fix_hint": "`res && res.computable ? res.value : null`."
+    },
+    {
+      "id": "F-GC-012",
+      "severity": "medium",
+      "category": "timezone-bug",
+      "file": "backtest-pass-vs-fail.js",
+      "lines": "23-27",
+      "title": "dateAddDays uses local-TZ setDate; DST transitions can drift result by ±1 day",
+      "description": "`const d = new Date(dateStr); d.setDate(d.getDate() + days); return d.toISOString().slice(0,10);` — `new Date('2024-03-15')` parses as UTC midnight, then `setDate` operates in LOCAL time. On a CI runner in a TZ with DST (Europe/Berlin), the .toISOString() output can be off by a day for some dates. Result: `targetDate` (line 57) may match the wrong day of the price series. Use UTCDate accessors throughout for date arithmetic.",
+      "fix_hint": "`d.setUTCDate(d.getUTCDate() + days)` for pure date math; or use a date library."
+    },
+    {
+      "id": "F-GC-013",
+      "severity": "medium",
+      "category": "null-deref",
+      "file": "backtest-from-history.js + backtest-10-weeks.js",
+      "lines": "backtest-from-history.js:48-63; backtest-10-weeks.js:128-131",
+      "title": "Mixed null/numeric arithmetic produces NaN in alpha computation",
+      "description": "backtest-from-history.js line 59-60: `alphaAvg = avg(passReturns) - avg(failReturns)` — `avg([])` returns null; `null - null = 0` works in JS due to coercion, but `null - 5 = -5` etc. is silently wrong. backtest-10-weeks.js line 130 has guard on passAvg/failAvg but unguarded `passMed - failMed` — if one cohort is empty in median but not in avg, prints NaN.",
+      "fix_hint": "Compute alpha only when BOTH cohorts have ≥1 sample. Same fix applied symmetrically for avg+med."
+    },
+    {
+      "id": "F-GC-014",
+      "severity": "medium",
+      "category": "missing-event",
+      "file": "detect-changes.js",
+      "lines": "121-171",
+      "title": "detectMethodDiffs emits no event when a method goes from computable to incomputable",
+      "description": "Logic only triggers METHOD_PASS_GAINED/LOST when `wasComputable && isComputable && wasPass !== isPass`. If a Yahoo schema change drops the data needed for `roic` on a previously-passing stock (computable=false), the event is silently absorbed (line 163 fallback). Karl loses a buy signal silently. Recommend adding METHOD_DATA_LOST events for the wasComputable && !isComputable case.",
+      "fix_hint": "Add an `else if (wasComputable && !isComputable)` branch that emits METHOD_DATA_LOST severity:WARNING."
+    },
+    {
+      "id": "F-GC-015",
+      "severity": "low",
+      "category": "redirect-loop",
+      "file": "pull-sec-xbrl.js",
+      "lines": "47-69",
+      "title": "https redirect handling has no max-hops counter and treats relative locations as absolute",
+      "description": "Line 53-55: on 301/302, recursively calls `get(res.headers.location, ...)`. If `res.headers.location` is a relative URL (e.g. `/CIK0000320193.json`), `https.get` will throw. If a misbehaving proxy returns a 301 loop, no depth limit means stack overflow. Also no check whether the new host is still data.sec.gov — a hijacked DNS could redirect to attacker's host with the User-Agent.",
+      "fix_hint": "Add depth counter (max 5); resolve relative URLs with URL constructor; verify final host matches whitelist."
+    },
+    {
+      "id": "F-GC-016",
+      "severity": "low",
+      "category": "path-injection",
+      "file": "pull-sec-xbrl.js",
+      "lines": "98",
+      "title": "CIK used as filename component without sanitization",
+      "description": "`const filePath = path.join(CACHE_DIR, t.cik + '.json')`. If `fetchSecTickers()` ever returns a malformed CIK like `../../../etc/passwd`, the path escapes CACHE_DIR. While `discovery/sec-tickers.js` likely cleans this, defensive sanitization should match `/^\\d{10}$/` (CIKs are always 10-digit numerics).",
+      "fix_hint": "`if (!/^\\d{1,10}$/.test(t.cik)) continue;`"
+    },
+    {
+      "id": "F-GC-017",
+      "severity": "low",
+      "category": "concurrency",
+      "file": "snapshot-picks.js",
+      "lines": "265-271",
+      "title": "Writes dateStr.json then latest.json — readers between writes get stale latest",
+      "description": "Two consecutive `fs.writeFileSync` calls. A concurrent reader of `picks-history/latest.json` (e.g. generate-dashboard.js running in parallel) can see the prior content while the dated file is the new one, or vice versa. Use atomic tmp+rename (the script already uses this pattern at line 122 of snapshot-methods-history.js).",
+      "fix_hint": "Write to .tmp files then renameSync — already the project's standard pattern."
+    },
+    {
+      "id": "F-GC-018",
+      "severity": "low",
+      "category": "memory",
+      "file": "detect-changes.js",
+      "lines": "216-221",
+      "title": "Deep JSON-stringify clone of methodHistory doubles memory for ~12k tickers",
+      "description": "`JSON.parse(JSON.stringify(state.methodHistory || {}))` clones the entire history map. For 12k tickers × ~30 methods × 12 history points, this can be tens of MB momentarily duplicated. Not a leak but spikes RSS on CI runner. A shallow merge via Object.assign would suffice since per-ticker arrays are then replaced not mutated.",
+      "fix_hint": "Use a shallow copy and only deep-clone the per-ticker entry being mutated."
+    },
+    {
+      "id": "F-GC-019",
+      "severity": "low",
+      "category": "input-validation",
+      "file": "tune-threshold.js",
+      "lines": "46-56",
+      "title": "Threshold sweep yields no variation when default threshold is 0",
+      "description": "Line 50: `const t = defaultT * (1 + pct/100)`. If the method's default threshold is 0 (e.g., a method requiring >=0), all sweep values are 0, so the sweep table is meaningless. Add a fallback `additive` sweep when defaultT is 0.",
+      "fix_hint": "`const t = defaultT === 0 ? pct/100 : defaultT * (1 + pct/100);`"
+    },
+    {
+      "id": "F-GC-020",
+      "severity": "low",
+      "category": "html-malformed",
+      "file": "generate-modes-report.js",
+      "lines": "475-478",
+      "title": "Modal stock-meta wrapper div not closed before injecting more text",
+      "description": "Line 475 in generate-dashboard.js: `parts.push('<div class=\"sub\">'+...filter(Boolean).join(' · ') || '—');` — the `|| '—'` operator binds to the entire push() expression: if filter returns '', the string `'<div...' + '' || '—'` evaluates to the (truthy) HTML div and the fallback is never used. Then line 476-477 conditionally append text but only the line 478 closes the div. If no marketCap and no quality, the formatted result still works but the joined '—' fallback never appears. Cosmetic; not a security issue.",
+      "fix_hint": "Use a temporary variable: `const inner = [...].filter(Boolean).join(' · ') || '—'; parts.push('<div class=\"sub\">' + inner);`"
+    },
+    {
+      "id": "F-GC-021",
+      "severity": "low",
+      "category": "xss-defense-in-depth",
+      "file": "generate-dashboard.js",
+      "lines": "211, 364",
+      "title": "JSON payload escape only handles `<` not `</script>` case-insensitively or other injection vectors",
+      "description": "`const dataJSON = JSON.stringify(payload).replace(/</g, '\\\\u003c');` — replaces `<` globally so `</script>` becomes `\\u003c/script>`. This is correct as the primary defense. However if any sector/name contains the literal sequence `]]>` or similar XML-CDATA escapes it's irrelevant here. The replace is fine but consider also escaping `&` and `>` for defense-in-depth (`>` matters in `<!--` HTML comments — not applicable inline-JS). Minor.",
+      "fix_hint": "No action required; consider adding `.replace(/-->/g, '--\\\\u003e')` for completeness."
+    },
+    {
+      "id": "F-GC-022",
+      "severity": "low",
+      "category": "filesystem",
+      "file": "generate-dashboard.js",
+      "lines": "64-69",
+      "title": "tickerToSnapshotPath collision: real CON.DE and a malicious `_CON.DE` would collide",
+      "description": "Reserved-name handling prepends `_` for Windows: `CON.DE → _CON.DE.json`. If a legitimate ticker `_CON.DE` ever existed (unusual but possible for warrant prefixes), the two would collide on disk. Also, regex `/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\\.|$)/i` misses `clock$`, `com0`, `lpt0`, and case-only Windows specials. Defer to pull-yahoo.js convention but document.",
+      "fix_hint": "Document the convention; assert no leading `_` in the input ticker before the prefix."
+    },
+    {
+      "id": "F-GC-023",
+      "severity": "info",
+      "category": "yahoo-schema-assumption",
+      "file": "suggest-watchlist-additions.js + pull-prices-bulk.js + pull-earnings-dates.js",
+      "lines": "suggest-watchlist-additions.js:44-46, pull-earnings-dates.js:26-30",
+      "title": "fundamentalsTimeSeries/quotes shape assumptions could fail silently on Yahoo API changes",
+      "description": "`ftsArr(rows, key)` assumes each row has a property `[key]`. If Yahoo nests it differently (e.g. `{ value: { raw: X } }`), the script returns an array of undefined silently, and downstream methods see empty arrays → incomputable but no error. Similar pattern in earnings: `d.raw * 1000` assumes Unix timestamp; if Yahoo returns ISO string, `new Date('2026-05-15' * 1000)` = Invalid Date. Add a sample-output sanity assertion per pull.",
+      "fix_hint": "After pulling, assert `quotes.length > 0 || rev.length > 0` and log a SCHEMA_WARN if not."
+    }
+  ]
+}

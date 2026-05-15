@@ -49,11 +49,26 @@ async function main() {
   }
   const today = new Date().toISOString().slice(0, 10);
 
-  // Load existing kumulative history wenn vorhanden
+  // Load existing kumulative history wenn vorhanden.
+  // F-SC-028 (Tag 180): a JSON.parse failure previously silently reset to {} and the
+  // run then overwrote the (possibly recoverable) corrupt file with one day of
+  // prices — destroying months of accumulated history. Now: back up the corrupt
+  // file, log loudly, and refuse to continue unless RESET_HISTORY=1 is explicit.
   const histPath = path.join(args.out, 'history.json');
   let history = {};
   if (fs.existsSync(histPath)) {
-    try { history = JSON.parse(fs.readFileSync(histPath, 'utf8')); } catch (e) {}
+    try {
+      history = JSON.parse(fs.readFileSync(histPath, 'utf8'));
+    } catch (e) {
+      const backup = histPath + '.corrupt.' + Date.now();
+      try { fs.copyFileSync(histPath, backup); } catch (_) {}
+      _log('ERROR', 'history.json is corrupt (' + e.message + '). Backup saved to ' + backup);
+      if (process.env.RESET_HISTORY !== '1') {
+        _log('ERROR', 'Refusing to overwrite — set RESET_HISTORY=1 to start fresh.');
+        process.exit(1);
+      }
+      _log('WARN', 'RESET_HISTORY=1 set — proceeding with empty history.');
+    }
   }
 
   const todaysSnapshot = {};

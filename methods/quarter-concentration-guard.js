@@ -14,12 +14,21 @@ function _arrVals(stock, path) {
   if (!Array.isArray(arr)) return [];
   return arr.map(function(v){ return v == null ? null : (typeof v === 'number' ? v : v.value); }).filter(function(v){ return Number.isFinite(v); });
 }
+// F-ME-006 (Tag 180): raw arrays preserve calendar alignment.
+function _rawArrVals(stock, path) {
+  var arr = H.val(stock, path);
+  if (!Array.isArray(arr)) return [];
+  return arr.map(function(v){ return v == null ? null : (typeof v === 'number' ? v : v.value); });
+}
 
 function evaluate(stock) {
   if (!stock) return H.buildResult({ computable: false, pass: false, reason: 'no stock' });
-  var qRev = _arrVals(stock, 'timeseries.revenueQ');
-  if (qRev.length < 4) {
-    return H.buildResult({ computable: false, reason: 'need >=4 Q-revs, got ' + qRev.length });
+  // F-ME-006 (Tag 180): previously _arrVals filtered nulls, so qRev[0..3] was
+  // "the last 4 non-null quarters" which mixes calendar periods when intermediate
+  // quarters are missing. Use raw + null-check on positions 0..3.
+  var qRev = _rawArrVals(stock, 'timeseries.revenueQ');
+  if (qRev.length < 4 || ![0,1,2,3].every(function(i){ return Number.isFinite(qRev[i]); })) {
+    return H.buildResult({ computable: false, reason: 'need >=4 calendar-contiguous Q-revs (got ' + qRev.length + ', any of pos 0..3 null)' });
   }
   var last4 = qRev.slice(0, 4);
   var sum = last4.reduce(function(a,b){ return a+b; }, 0);
