@@ -1503,6 +1503,75 @@ test('Tag 210b Intangible-Adjusted ROIC: GRACEFUL DEGRADE — no R&D or SG&A →
   if (!r.pass) throw new Error('22.2% ROIC should pass; got ' + r.value);
 });
 
+// ─── Tag 210c — rd-cut-guard (real-earnings-management red flag) smoke tests ─
+// DIAGNOSTIC method, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
+// Flag triggers when R&D drops >20% YoY AND op-margin expands >2pp YoY.
+
+test('Tag 210c R&D-Cut Guard: PASS — healthy company growing R&D', () => {
+  // NVDA/MSFT/PLTR archetype: R&D grows YoY, margin may also grow.
+  // R&D: 120 → 100 (i.e. rd_t=120, rd_p=100; YoY +20%). Margin: 25% → 28%.
+  // No R&D cut → no flag → PASS.
+  const s = { annual: {
+    annualRnD:   [{value: 120}, {value: 100}],
+    annualOpInc: [{value: 280}, {value: 250}],
+    annualRev:   [{value: 1000}, {value: 1000}]
+  }};
+  const r = Runner.evaluateStock(s)['rd-cut-guard'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (!r.pass) throw new Error('growing-R&D firm should pass; got flag=' + r.components.flag + ' reason=' + r.reason);
+  if (r.components.flag !== false) throw new Error('flag must be false; got ' + r.components.flag);
+  if (r.value !== 0) throw new Error('value should be 0 (no flag), got ' + r.value);
+});
+
+test('Tag 210c R&D-Cut Guard: FAIL — R&D cut >20% AND op-margin expands >2pp (real-EM pattern)', () => {
+  // The Roychowdhury 2006 pattern: R&D drops 25% YoY (150 → 110), margin
+  // jumps from 15% to 22% (+7pp). Both triggers fire → FLAG → fail.
+  const s = { annual: {
+    annualRnD:   [{value: 110}, {value: 150}],
+    annualOpInc: [{value: 220}, {value: 150}],
+    annualRev:   [{value: 1000}, {value: 1000}]
+  }};
+  const r = Runner.evaluateStock(s)['rd-cut-guard'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (r.pass) throw new Error('real-EM pattern must fail; got reason=' + r.reason);
+  if (r.components.flag !== true) throw new Error('flag must be true; got ' + r.components.flag);
+  if (!r.components.rdAbsCut) throw new Error('rdAbsCut must be true');
+  if (!r.components.marginExpanded) throw new Error('marginExpanded must be true');
+  if (r.value !== 1) throw new Error('value should be 1 (flag set), got ' + r.value);
+});
+
+test('Tag 210c R&D-Cut Guard: PASS — R&D cut alone (no margin expansion) is normal cost discipline', () => {
+  // R&D drops 25% (150 → 110) but op-margin barely moves (15% → 16%, +1pp).
+  // Below the +2pp threshold → no real-EM signal → PASS.
+  const s = { annual: {
+    annualRnD:   [{value: 110}, {value: 150}],
+    annualOpInc: [{value: 160}, {value: 150}],
+    annualRev:   [{value: 1000}, {value: 1000}]
+  }};
+  const r = Runner.evaluateStock(s)['rd-cut-guard'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (!r.pass) throw new Error('R&D cut without margin expansion should pass; got reason=' + r.reason);
+  if (r.components.flag !== false) throw new Error('flag must be false (no margin expansion)');
+  if (!r.components.rdAbsCut) throw new Error('rdAbsCut should still be true (diagnostic)');
+  if (r.components.marginExpanded) throw new Error('marginExpanded should be false');
+});
+
+test('Tag 210c R&D-Cut Guard: NOT-COMPUTABLE without 2y R&D', () => {
+  // Only 1 year of R&D → cannot compute YoY → computable=false.
+  const s = { annual: {
+    annualRnD:   [{value: 100}],
+    annualOpInc: [{value: 200}, {value: 150}],
+    annualRev:   [{value: 1000}, {value: 1000}]
+  }};
+  const r = Runner.evaluateStock(s)['rd-cut-guard'];
+  if (r.computable) throw new Error('should be computable=false without 2y R&D');
+  if (r.pass) throw new Error('incomputable result must have pass=false');
+  if (!r.reason || !/annualRnD/.test(r.reason)) throw new Error('reason should mention missing annualRnD: ' + r.reason);
+  if (!r.components || !Array.isArray(r.components.missingFields)) {
+    throw new Error('components.missingFields should be array');
+  }
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the

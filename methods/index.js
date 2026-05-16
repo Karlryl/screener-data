@@ -123,5 +123,9 @@ module.exports = [
   // Tag 210b: Mauboussin intangible-adjusted ROIC. Capitalizes R&D (5y) +
   // SG&A (3y) into invested capital; narrows software-vs-industrial gap.
   // DIAGNOSTIC, fixture-hash safe (not in SCORE_WEIGHTS).
-  { file: './intangible-adjusted-roic.js' }
+  { file: './intangible-adjusted-roic.js' },
+
+  // Tag 210c: R&D-cut guard — real-earnings-management red flag (R&D drop
+  // >20% YoY AND op-margin expand >2pp YoY). DIAGNOSTIC, fixture-hash safe.
+  { file: './rd-cut-guard.js' }
 ];
