@@ -176,6 +176,8 @@ function buildRow(stock) {
   const lossMagFail = !!(lossMag && lossMag.computable && lossMag.pass === false);
   const metricDiv = allResults['metric-divergence-guard'];
   const metricDivFail = !!(metricDiv && metricDiv.computable && metricDiv.pass === false);
+  const niVol = allResults['net-income-volatility-guard'];
+  const niVolFail = !!(niVol && niVol.computable && niVol.pass === false);
   const listing = allResults['listing-age'];
   const listingYears = (listing && listing.computable && Number.isFinite(listing.value)) ? listing.value : null;
 
@@ -232,8 +234,8 @@ function buildRow(stock) {
     gmaTrend, gmaChange,
     omaTrend, omaChange,
     revAccelDelta,
-    // Tag 199 audit gates
-    qSpikeFail, lossMagFail, metricDivFail, dqGrade, listingYears,
+    // Tag 199/200 audit gates
+    qSpikeFail, lossMagFail, metricDivFail, niVolFail, dqGrade, listingYears,
     gaapProfitable, fcfPositive,
     annual,
     results: compactResults
@@ -261,7 +263,7 @@ function classifyTabs(rows) {
     //   3. data-quality grade D → too many missing fields to trust the score
     //
     // No hardcoded tickers — these are signatures the data must satisfy.
-    const hardGated = r.qSpikeFail || r.lossMagFail || r.metricDivFail || r.dqGrade === 'D';
+    const hardGated = r.qSpikeFail || r.lossMagFail || r.metricDivFail || r.niVolFail || r.dqGrade === 'D';
 
     if (hardGated) {
       // WATCH-only entry: surface them with the reason for review, but block
@@ -270,6 +272,7 @@ function classifyTabs(rows) {
       if (r.qSpikeFail) reasons.push('Q-SPIKE');
       if (r.lossMagFail) reasons.push('LOSS>50%REV');
       if (r.metricDivFail) reasons.push('METRIC-DIV');
+      if (r.niVolFail) reasons.push('NI-VOL');
       if (r.dqGrade === 'D') reasons.push('DATA-D');
       r.watchReasons = reasons;
       tabs.WATCH.push(r);

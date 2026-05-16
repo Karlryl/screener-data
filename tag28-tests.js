@@ -559,6 +559,23 @@ test('sbc-growth-ratio: FAIL when SBC dramatically outpaces revenue', () => {
   if (r.pass) throw new Error('SBC 10x rev growth should fail');
 });
 
+test('net-income-volatility-guard: PASS on normal NI fluctuations', () => {
+  const s = makeStock({}, { netIncome: [2000, 1500, 1000, 800] }, []);
+  s.annual.annualRev = [{ value: 10000 }];
+  // max delta = 500 / rev 10000 = 0.05 → pass
+  const r = Runner.evaluateStock(s)['net-income-volatility-guard'];
+  if (!r.computable) throw new Error('should be computable');
+  if (!r.pass) throw new Error('low-vol NI should pass');
+});
+
+test('net-income-volatility-guard: FAIL on MSTR-pattern', () => {
+  const s = makeStock({}, { netIncome: [-4229, -1167, 429, -1470] }, []);
+  s.annual.annualRev = [{ value: 477 }];
+  // max delta = 3062 / 477 = 6.4 → fail
+  const r = Runner.evaluateStock(s)['net-income-volatility-guard'];
+  if (r.pass) throw new Error('MSTR-pattern NI swing should fail');
+});
+
 test('roic-trend: PASS when current ROIC > prior', () => {
   const s = makeStock({}, { netIncome: [20, 15] }, [
     { totalAssets: 100, totalCash: 20, totalDebt: 0 },   // y0 IC=80, ROIC=25%

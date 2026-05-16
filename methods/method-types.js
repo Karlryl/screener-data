@@ -48,6 +48,7 @@ const REGISTRY = {
   'revenue-acceleration-yoy':   { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 199i: this-year YoY > last-year YoY — Pre-Breakout re-acceleration signal' },
   'sbc-growth-ratio':           { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 199j: SBC growth ≤ 1.5× Rev growth — dilution-discipline signal' },
   'roic-trend':                 { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 200: ROIC YoY delta — Quality-Compounder trajectory signal' },
+  'net-income-volatility-guard':{ type: 'DATAGUARD',  defaultActive: true,  reason: 'Tag 200b: NI single-year swing > 100% of revenue — catches non-operating noise (MSTR-style)' },
   'opinc-margin-spike':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Operating margin shock detection' },
   'drawdown-52w':               { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },
   'high-proximity-52w':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },
