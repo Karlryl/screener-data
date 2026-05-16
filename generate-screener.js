@@ -599,6 +599,56 @@ table.dt td.name { font-family:var(--ui); color:var(--text-1); max-width:260px; 
 .annual td { padding:4px 8px; border-bottom:1px solid var(--border); font-family:var(--mono); text-align:right; }
 .annual td.fy { text-align:left; color:var(--text-1); }
 h3.sec { color:var(--text-0); font-size:13px; font-weight:600; margin:20px 0 6px; padding-bottom:4px; border-bottom:1px solid var(--border); text-transform:uppercase; letter-spacing:0.05em; }
+/* Tag 209e — UI quick-wins (per Tag 208 research §2.2 / §4 / §5) */
+/* Upgrade 1: active-filter breadcrumb chips */
+#active-filters { padding:6px 16px; background:var(--bg-1); border-bottom:1px solid var(--border); display:none; flex-wrap:wrap; gap:6px; align-items:center; font-size:11px; }
+#active-filters.show { display:flex; }
+#active-filters .label { color:var(--text-2); font-size:10px; text-transform:uppercase; letter-spacing:0.05em; margin-right:4px; }
+.chip { display:inline-flex; align-items:center; padding:2px 4px 2px 8px; background:var(--bg-2); border:1px solid var(--border-bright); color:var(--text-0); font-family:var(--mono); font-size:11px; }
+.chip .x { display:inline-block; margin-left:6px; padding:0 5px; cursor:pointer; color:var(--text-2); border-left:1px solid var(--border); }
+.chip .x:hover { color:var(--red); background:var(--bg-hover); }
+#active-filters .clear-all { color:var(--text-1); background:transparent; border:1px solid var(--border); padding:2px 8px; cursor:pointer; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.05em; }
+#active-filters .clear-all:hover { color:var(--red); border-color:var(--red); }
+/* Upgrade 3: print button in header */
+header button.print-btn { background:var(--bg-2); color:var(--text-1); border:1px solid var(--border); padding:6px 10px; cursor:pointer; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; }
+header button.print-btn:hover { color:var(--text-0); border-color:var(--border-bright); }
+/* Upgrade 3a: mobile responsive (≤700px) */
+@media (max-width:700px) {
+  header { flex-wrap:wrap; gap:8px; padding:8px 10px; }
+  header .search { max-width:100%; flex-basis:100%; order:3; }
+  .tabs { overflow-x:auto; white-space:nowrap; padding:0 8px; }
+  .tabs button { flex-shrink:0; min-height:36px; padding:8px 12px; }
+  .filters { padding:6px 10px; }
+  .filters select, .filters input, .filters button.f { min-height:32px; font-size:12px; padding:4px 8px; }
+  .filters input[type=number] { width:60px; }
+  .pagination button, header button.print-btn { min-height:32px; padding:6px 12px; }
+  .modal-content { margin:0; padding:12px; max-width:100%; }
+  .cards { grid-template-columns:1fr; }
+  .charts { grid-template-columns:1fr; }
+  .search-results { left:0; transform:none; width:100%; max-width:100%; top:auto; position:relative; }
+  table.dt th, table.dt td { padding:4px 6px; font-size:11px; }
+  #active-filters { padding:6px 10px; }
+}
+/* Upgrade 3b: print styles — render only the active table, light theme */
+@media print {
+  body { background:#fff; color:#000; font-size:10pt; }
+  header, .tabs, .filters, #active-filters, .pagination, .modal, .search-results { display:none !important; }
+  .summary { background:#fff; color:#000; border-bottom:1px solid #888; padding:4px 0; }
+  .summary strong { color:#000; }
+  #explainer { background:#fff; color:#333; border-bottom:1px solid #888; }
+  .table-wrap { overflow:visible; }
+  table.dt { font-size:9pt; }
+  table.dt th { background:#eee; color:#000; border-bottom:1px solid #888; position:static; }
+  table.dt td { color:#000; border-bottom:1px solid #ccc; }
+  table.dt tr.row { background:#fff !important; }
+  .pill { border:1px solid #888; color:#000 !important; background:#fff !important; }
+  .g-pos, .g-r40-excellent, .g-r40-good { color:#006622 !important; }
+  .g-neg, .g-r40-bad { color:#aa0011 !important; }
+  .g-r40-fair, .g-r40-warn { color:#885500 !important; }
+  .g-mute { color:#666 !important; }
+  /* keep SVG sparklines visible per spec */
+  svg { color-adjust:exact; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}
 `;
 
 // Client-side JS — runs in the browser, reads window.SCREENER_DATA
@@ -657,6 +707,157 @@ const CLIENT_JS = `
   // angle-bracket in a real ticker name) would otherwise corrupt the DOM
   // or silently truncate the row.
   function esc(s){ if (s == null) return ''; return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+
+  // Tag 209e Upgrade 2: conditional row tint based on dominant signal.
+  // Returns inline-style background tint (2-4% alpha) for each row. Tints
+  // stack UNDER :hover (hover background is fully opaque in CSS), so they
+  // never interfere with row-selection feedback.
+  //   RED   — any hard-gate fired OR dqGrade === 'D' (defensive flag)
+  //   GREEN — scoreHistory.deltaScore7d >= 5 (recent positive momentum)
+  //   AMBER — dqGrade === 'C' (moderate data quality)
+  //   else  — no tint (default bg)
+  function rowTint(r){
+    if (r.qSpikeFail || r.lossMagFail || r.metricDivFail || r.niVolFail
+        || r.preCommFail || r.cetFail || r.r40SanityFail || r.revShockFail
+        || r.dqGrade === 'D') {
+      return 'background:rgba(255,61,90,0.04);';
+    }
+    if (r.scoreHistory && isFinite(r.scoreHistory.deltaScore7d) && r.scoreHistory.deltaScore7d >= 5) {
+      return 'background:rgba(0,204,136,0.04);';
+    }
+    if (r.dqGrade === 'C') {
+      return 'background:rgba(255,187,51,0.04);';
+    }
+    return '';
+  }
+
+  // Tag 209e Upgrade 1: render active-filter breadcrumb chips with × removers.
+  // Each chip's data-chip identifies which filter to clear; click on .x dispatches
+  // a reset for that specific filter and triggers re-render. Hides container if
+  // no filters are active.
+  function renderActiveChips(){
+    const chips = [];
+    // State pills (only show if NOT all-on)
+    const stateKeys = Object.keys(filterState);
+    const stateOff = stateKeys.filter(k => !filterState[k]);
+    if (stateOff.length > 0 && stateOff.length < stateKeys.length) {
+      const stateOn = stateKeys.filter(k => filterState[k]);
+      chips.push({k:'state', label:'State: ' + stateOn.join('/')});
+    }
+    // Cap pills
+    const capKeys = Object.keys(filterCap);
+    const capOff = capKeys.filter(k => !filterCap[k]);
+    if (capOff.length > 0 && capOff.length < capKeys.length) {
+      const capOn = capKeys.filter(k => filterCap[k]);
+      chips.push({k:'cap', label:'Cap: ' + capOn.join('/')});
+    }
+    if (filterSector) chips.push({k:'sector', label:'Sector: ' + filterSector});
+    if (filterCountry) chips.push({k:'country', label:'Country: ' + filterCountry});
+    if (filterMinR40 !== '') chips.push({k:'minR40', label:'R40 ≥ ' + filterMinR40});
+    if (filterMaxR40 !== '') chips.push({k:'maxR40', label:'R40 ≤ ' + filterMaxR40});
+    if (filterMin !== '') chips.push({k:'tabMin', label:'Tab Min ≥ ' + filterMin});
+    if (filterIpo !== 'ALL') chips.push({k:'ipo', label:'IPO: ' + filterIpo});
+    // DQ filter — show if any of A+/A/B/C/D is off
+    const dqAll = ['A+','A','B','C','D'];
+    const dqOn = dqAll.filter(g => filterDQ[g]);
+    const dqDefault = (filterDQ['A+'] && filterDQ['A'] && filterDQ['B'] && !filterDQ['C'] && !filterDQ['D']);
+    if (!dqDefault) {
+      chips.push({k:'dq', label:'Grade: ' + (dqOn.length ? dqOn.join('/') : 'none')});
+    }
+    if (onlyGaap) chips.push({k:'gaap', label:'GAAP+'});
+    if (onlyFcf) chips.push({k:'fcf', label:'FCF+'});
+    if (sortKey !== 'auto') chips.push({k:'sort', label:'Sort: ' + sortKey});
+
+    const el = document.getElementById('active-filters');
+    if (!el) return;
+    if (chips.length === 0) {
+      el.classList.remove('show');
+      el.innerHTML = '';
+      return;
+    }
+    let html = '<span class="label">Active:</span>';
+    for (const c of chips) {
+      html += '<span class="chip" data-chip="'+c.k+'">' + esc(c.label) + '<span class="x" title="Remove filter">×</span></span>';
+    }
+    html += '<button class="clear-all" id="chipsClearAll" title="Reset all filters">Clear All</button>';
+    el.innerHTML = html;
+    el.classList.add('show');
+  }
+
+  // Per-chip reset dispatcher. Keep filter setters and UI controls in sync.
+  function clearChipFilter(key){
+    if (key === 'state') {
+      filterState = { LOSS:true, TURNAROUND:true, RECENT:true, STABLE:true, NA:true };
+      document.querySelectorAll('.filters .f-state').forEach(b => b.classList.add('on'));
+    } else if (key === 'cap') {
+      filterCap = { MICRO:true, SMALL:true, MID:true, LARGE:true, MEGA:true };
+      document.querySelectorAll('.filters .f-cap').forEach(b => b.classList.add('on'));
+    } else if (key === 'sector') {
+      filterSector = '';
+      const el = document.getElementById('fSector'); if (el) el.value = '';
+    } else if (key === 'country') {
+      filterCountry = '';
+      const el = document.getElementById('fCountry'); if (el) el.value = '';
+    } else if (key === 'minR40') {
+      filterMinR40 = '';
+      const el = document.getElementById('fMinR40'); if (el) el.value = '';
+    } else if (key === 'maxR40') {
+      filterMaxR40 = '';
+      const el = document.getElementById('fMaxR40'); if (el) el.value = '';
+    } else if (key === 'tabMin') {
+      filterMin = '';
+      const el = document.getElementById('fMin'); if (el) el.value = '';
+    } else if (key === 'ipo') {
+      filterIpo = 'ALL';
+      document.querySelectorAll('.filters .f-ipo').forEach(b => b.classList.remove('on'));
+      const allBtn = document.querySelector('.filters .f-ipo[data-ipo="ALL"]');
+      if (allBtn) allBtn.classList.add('on');
+    } else if (key === 'dq') {
+      filterDQ = { 'A+':true, 'A':true, 'B':true, 'C':false, 'D':false };
+      document.querySelectorAll('.filters .f-dq').forEach(b => {
+        const g = b.dataset.dq;
+        b.classList.toggle('on', !!filterDQ[g]);
+      });
+    } else if (key === 'gaap') {
+      onlyGaap = false;
+      const el = document.getElementById('onlyGaap'); if (el) el.checked = false;
+    } else if (key === 'fcf') {
+      onlyFcf = false;
+      const el = document.getElementById('onlyFcf'); if (el) el.checked = false;
+    } else if (key === 'sort') {
+      sortKey = 'auto';
+      const el = document.getElementById('fSort'); if (el) el.value = 'auto';
+    }
+    page = 1;
+    renderTable();
+  }
+
+  function clearAllFilters(){
+    filterState = { LOSS:true, TURNAROUND:true, RECENT:true, STABLE:true, NA:true };
+    filterCap = { MICRO:true, SMALL:true, MID:true, LARGE:true, MEGA:true };
+    filterSector = ''; filterCountry = '';
+    filterMinR40 = ''; filterMaxR40 = ''; filterMin = '';
+    filterIpo = 'ALL';
+    filterDQ = { 'A+':true, 'A':true, 'B':true, 'C':false, 'D':false };
+    onlyGaap = false; onlyFcf = false; sortKey = 'auto';
+    document.querySelectorAll('.filters .f-state').forEach(b => b.classList.add('on'));
+    document.querySelectorAll('.filters .f-cap').forEach(b => b.classList.add('on'));
+    document.querySelectorAll('.filters .f-ipo').forEach(b => b.classList.remove('on'));
+    const allBtn = document.querySelector('.filters .f-ipo[data-ipo="ALL"]');
+    if (allBtn) allBtn.classList.add('on');
+    document.querySelectorAll('.filters .f-dq').forEach(b => {
+      const g = b.dataset.dq;
+      b.classList.toggle('on', !!filterDQ[g]);
+    });
+    ['fSector','fCountry','fMinR40','fMaxR40','fMin'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    const gEl = document.getElementById('onlyGaap'); if (gEl) gEl.checked = false;
+    const fEl = document.getElementById('onlyFcf'); if (fEl) fEl.checked = false;
+    const sEl = document.getElementById('fSort'); if (sEl) sEl.value = 'auto';
+    page = 1;
+    renderTable();
+  }
 
   // ------- filter application -------
   function ipoAgeYears(r){
@@ -771,17 +972,20 @@ const CLIENT_JS = `
     const gmHtml = r.grossMargin==null ? '—' : r.grossMargin.toFixed(1)+'%';
     const opmHtml = r.opMargin==null ? '—' : '<span class="'+colorPct(r.opMargin)+'">'+r.opMargin.toFixed(1)+'%</span>';
     const fcfmHtml = r.fcfMargin==null ? '—' : '<span class="'+colorPct(r.fcfMargin)+'">'+r.fcfMargin.toFixed(1)+'%</span>';
+    // Tag 209e Upgrade 2: per-row tint based on dominant signal.
+    const tint = rowTint(r);
+    const rowOpen = '<tr class="row" style="'+tint+'" data-tk="'+esc(r.ticker)+'">';
 
     if (tab === 'HG') {
       const score = r.hgScore==null ? '—' : r.hgScore.toFixed(0);
-      return '<tr class="row" data-tk="'+esc(r.ticker)+'"><td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+r40Html+'</td><td class="num">'+growthHtml+'</td><td class="num">'+gmHtml+'</td><td class="num">'+fcfmHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
+      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+r40Html+'</td><td class="num">'+growthHtml+'</td><td class="num">'+gmHtml+'</td><td class="num">'+fcfmHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
     }
     if (tab === 'QC') {
       const score = r.qcScore==null ? '—' : r.qcScore.toFixed(0);
-      return '<tr class="row" data-tk="'+esc(r.ticker)+'"><td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+fcfmHtml+'</td><td class="num">'+opmHtml+'</td><td class="num">'+gmHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
+      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+fcfmHtml+'</td><td class="num">'+opmHtml+'</td><td class="num">'+gmHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
     }
     if (tab === 'SMALL') {
-      return '<tr class="row" data-tk="'+esc(r.ticker)+'"><td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.country)+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+r40Html+'</td><td class="num">'+gmHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
+      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.country)+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+r40Html+'</td><td class="num">'+gmHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
     }
     if (tab === 'R40') {
       // Tag 205 R40-poisoning visual warnings: red badges on the ticker cell.
@@ -795,7 +999,7 @@ const CLIENT_JS = `
       if (Number.isFinite(r.fcfMargin) && r.fcfMargin > 80) warnBadges.push('<span class="g-neg" style="font-size:9px;border:1px solid var(--red);padding:0 3px;margin-left:3px" title="FCFM '+r.fcfMargin.toFixed(0)+'% — one-time event tell">⚠ FCFM&gt;80%</span>');
       if (Number.isFinite(r.opMargin) && Number.isFinite(r.fcfMargin) && Math.abs(r.opMargin - r.fcfMargin) > 50) warnBadges.push('<span class="g-neg" style="font-size:9px;border:1px solid var(--red);padding:0 3px;margin-left:3px" title="|OpM-FCFM|='+Math.abs(r.opMargin-r.fcfMargin).toFixed(0)+'pp — phantom FCF">⚠ Margin-Div</span>');
       const tkCell = r.ticker + warnBadges.join('');
-      return '<tr class="row" data-tk="'+esc(r.ticker)+'"><td>'+(i+1)+'</td><td class="ticker">'+tkCell+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td class="num">'+r40Html+'</td><td class="num">'+growthHtml+'</td><td class="num">'+fcfmHtml+'</td><td class="num">'+opmHtml+'</td><td class="num">'+gmHtml+'</td><td>'+stateP+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
+      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+tkCell+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td class="num">'+r40Html+'</td><td class="num">'+growthHtml+'</td><td class="num">'+fcfmHtml+'</td><td class="num">'+opmHtml+'</td><td class="num">'+gmHtml+'</td><td>'+stateP+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
     }
     if (tab === 'PRE_BREAKOUT') {
       const pb = r.pbScore==null ? '—' : r.pbScore.toFixed(0);
@@ -805,7 +1009,7 @@ const CLIENT_JS = `
       if (r.omaTrend === 'accelerating') sigs.push('<span class="g-pos" title="Operating-Margin accelerating">OpM↑</span>');
       if (r.revAccelDelta != null && r.revAccelDelta > 0) sigs.push('<span class="g-pos" title="Revenue YoY accelerating +'+r.revAccelDelta.toFixed(0)+'pp">Rev↑</span>');
       const signalsHtml = sigs.length ? sigs.join(' ') : '<span class="g-mute">—</span>';
-      return '<tr class="row" data-tk="'+esc(r.ticker)+'"><td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+gmHtml+'</td><td class="num">'+r40Html+'</td><td style="font-size:10px">'+signalsHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td><td class="num">'+pb+'</td></tr>';
+      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+gmHtml+'</td><td class="num">'+r40Html+'</td><td style="font-size:10px">'+signalsHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td><td class="num">'+pb+'</td></tr>';
     }
     if (tab === 'WATCH') {
       const score = Math.max(r.hgScore||0, r.qcScore||0).toFixed(0);
@@ -815,7 +1019,7 @@ const CLIENT_JS = `
       else if (r.hgTier==='NEAR_MISS') reason = 'HG NEAR';
       else if (r.qcTier==='NEAR_MISS') reason = 'QC NEAR';
       else reason = '—';
-      return '<tr class="row" data-tk="'+esc(r.ticker)+'"><td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td style="font-size:10px">'+reason+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
+      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td style="font-size:10px">'+reason+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
     }
     return '';
   }
@@ -862,6 +1066,8 @@ const CLIENT_JS = `
     document.getElementById('pageInfo').textContent = 'Page '+page+' of '+totalPages;
     document.getElementById('prevPage').disabled = page <= 1;
     document.getElementById('nextPage').disabled = page >= totalPages;
+    // Tag 209e Upgrade 1: refresh active-filter chip bar.
+    renderActiveChips();
   }
 
   // ------- modal -------
@@ -1153,6 +1359,24 @@ const CLIENT_JS = `
     if (!e.target.closest('header')) searchResults.classList.remove('show');
   });
 
+  // Tag 209e Upgrade 1: chip-removal event wiring (delegated; chips re-render
+  // every applyFilters() pass so we can't bind per-chip listeners).
+  const chipBar = document.getElementById('active-filters');
+  if (chipBar) {
+    chipBar.addEventListener('click', e => {
+      if (e.target.id === 'chipsClearAll') { clearAllFilters(); return; }
+      if (e.target.classList && e.target.classList.contains('x')) {
+        const chip = e.target.closest('.chip');
+        if (chip && chip.dataset.chip) clearChipFilter(chip.dataset.chip);
+      }
+    });
+  }
+
+  // Tag 209e Upgrade 3: print button — uses browser print (CSS @media print
+  // hides chrome and renders the active table only).
+  const printBtn = document.getElementById('printBtn');
+  if (printBtn) printBtn.onclick = () => window.print();
+
   renderTable();
 })();
 `;
@@ -1202,6 +1426,7 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
     <input id="search" type="text" placeholder="/ Search ticker or company..." />
     <div id="searchResults" class="search-results"></div>
   </div>
+  <button id="printBtn" class="print-btn" title="Print current view">[print]</button>
 </header>
 <div class="tabs">
   <button data-tab="HG" class="active">⚡ Hypergrowth</button>
@@ -1262,6 +1487,7 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
     </select>
   </span>
 </div>
+<div id="active-filters"></div>
 <div class="summary" id="summary"></div>
 <div id="explainer" style="padding:8px 16px;background:var(--bg-1);border-bottom:1px solid var(--border);color:var(--text-1);font-size:12px;display:none;"></div>
 <div class="table-wrap"><div id="table"></div></div>
