@@ -1041,6 +1041,35 @@ test('Tag 203 score-history: prune keeps last 30 entries and stays sorted', () =
   }
 });
 
+// ─── Tag 209a — gross-profitability (Novy-Marx GP/TA) smoke tests ──────
+// DIAGNOSTIC method, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
+// Citation: Novy-Marx & Medhat 2025 (SSRN 5190788) — GP/TA >= 0.20 floor.
+
+test('Tag 209a Gross-Profitability: PASS case (GP=70, TA=100 → ratio 0.70, >= 0.20)', () => {
+  const s = { annual: {
+    annualGP:      [{value:70}],
+    annualBalance: [{ totalAssets: 100, totalCash: 0, totalDebt: 0 }]
+  }};
+  const r = Runner.evaluateStock(s)['gross-profitability'];
+  if (!r.computable) throw new Error('should be computable (gp + ta present)');
+  if (!approx(r.value, 0.70)) throw new Error('expected ratio=0.70, got ' + r.value);
+  if (!r.pass) throw new Error('0.70 must pass the 0.20 floor, got pass=' + r.pass);
+  if (r.components.gp !== 70 || r.components.totalAssets !== 100) {
+    throw new Error('components mismatch: ' + JSON.stringify(r.components));
+  }
+});
+
+test('Tag 209a Gross-Profitability: FAIL case (GP=10, TA=100 → ratio 0.10, < 0.20)', () => {
+  const s = { annual: {
+    annualGP:      [{value:10}],
+    annualBalance: [{ totalAssets: 100, totalCash: 0, totalDebt: 0 }]
+  }};
+  const r = Runner.evaluateStock(s)['gross-profitability'];
+  if (!r.computable) throw new Error('should be computable');
+  if (!approx(r.value, 0.10)) throw new Error('expected ratio=0.10, got ' + r.value);
+  if (r.pass) throw new Error('0.10 must fail the 0.20 floor, got pass=' + r.pass);
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the

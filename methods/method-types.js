@@ -73,6 +73,7 @@ const REGISTRY = {
   'r40-sanity-cap':             { type: 'DATAGUARD',  defaultActive: true,  reason: 'Tag 205: caps R40-poisoning inputs — revGrowth>150% with OpInc<0 (ONDS/BEAM) | fcfMargin>80% (one-time events) | |OpM-FCFM|>50pp (R&D-capex phantom FCF)' },
   'fcf-stability':              { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 204: FCF/Rev margin CoV ≤ 0.40 over 4y — Asness/Frazzini/Pedersen QMJ Safety pillar (lumpy-FCF detector)' },
   'operating-cashflow-coverage':{ type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 204: OCF/NI 3y mean ≥ 0.80 — earnings-quality coverage floor (Sloan-sister, cleaner inputs)' },
+  'gross-profitability':        { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 209a: Novy-Marx GP/TA >= 0.20 — durable-quality floor (SSRN 5190788 + SSRN 3877161); catches leverage-inflated ROE with weak underlying gross profitability' },
   'opinc-margin-spike':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Operating margin shock detection' },
   'drawdown-52w':               { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },
   'high-proximity-52w':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },

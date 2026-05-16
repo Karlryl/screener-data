@@ -79,6 +79,8 @@ module.exports = [
   { file: './buyback-yield.js' },
   { file: './sbc-trend.js' },
   { file: './insider-net-buying.js' },
+  // Tag 209a: Novy-Marx gross-profitability (DIAGNOSTIC, fixture-hash safe)
+  { file: './gross-profitability.js' },
   // Tag 204: earnings/cash quality diagnostics (DIAGNOSTIC, fixture-hash safe)
   { file: './fcf-stability.js' },
   { file: './operating-cashflow-coverage.js' },
