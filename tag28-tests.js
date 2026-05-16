@@ -1070,6 +1070,84 @@ test('Tag 209a Gross-Profitability: FAIL case (GP=10, TA=100 → ratio 0.10, < 0
   if (r.pass) throw new Error('0.10 must fail the 0.20 floor, got pass=' + r.pass);
 });
 
+// ─── Tag 209c — capital-allocation-quality (Mauboussin composite) smoke tests ──
+// DIAGNOSTIC composite, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
+// Composes buyback-yield + net-debt-ebitda + capex-trend + sbc-revenue.
+
+test('Tag 209c Cap-Alloc-Quality: PASS — all 4 dims clear (score=100)', () => {
+  // Buyback yield ~2% (shares 100M → 98M), net-debt/EBITDA ~0.67 (10/15),
+  // capex/rev stable, SBC=2% (0.2/10).
+  const s = {
+    annual: {
+      annualShares: [{value: 98e6}, {value: 100e6}],
+      annualRev:    [{value: 10e9}, {value: 9.5e9}, {value: 9.0e9}, {value: 8.5e9}],
+      annualOpInc:  [{value: 12.5e9}],
+      annualCapex:  [{value: 0.3e9}, {value: 0.28e9}, {value: 0.26e9}, {value: 0.25e9}],
+      annualSBC:    [{value: 0.2e9}],
+      annualBalance:[{totalDebt: 10e9, totalCash: 0, totalAssets: 100e9}]
+    }
+  };
+  const r = Runner.evaluateStock(s)['capital-allocation-quality'];
+  if (!r.computable) throw new Error('should be computable, got reason=' + r.reason);
+  if (r.components.computableDimensions !== 4) {
+    throw new Error('expected 4 dims observed, got ' + r.components.computableDimensions);
+  }
+  if (!r.pass) throw new Error('all 4 dims should pass; reason=' + r.reason);
+  if (r.value !== 100) throw new Error('expected score=100, got ' + r.value);
+});
+
+test('Tag 209c Cap-Alloc-Quality: FAIL — buyback champion levering up (score<75)', () => {
+  // The Mauboussin red flag: positive buybacks + high leverage. Buybacks
+  // pass (+25), but debt fails (50/12=4.17>2.0), capex exploding (5x>1.5),
+  // SBC=10%>5%. Score=25/100 → fail.
+  const s = {
+    annual: {
+      annualShares: [{value: 95e6}, {value: 100e6}],
+      annualRev:    [{value: 10e9}, {value: 9e9}, {value: 8e9}, {value: 7e9}],
+      annualOpInc:  [{value: 10e9}],
+      annualCapex:  [{value: 0.5e9}, {value: 0.2e9}, {value: 0.1e9}, {value: 0.07e9}],
+      annualSBC:    [{value: 1.0e9}],
+      annualBalance:[{totalDebt: 50e9, totalCash: 0, totalAssets: 100e9}]
+    }
+  };
+  const r = Runner.evaluateStock(s)['capital-allocation-quality'];
+  if (!r.computable) throw new Error('should be computable, got reason=' + r.reason);
+  if (r.components.computableDimensions !== 4) {
+    throw new Error('expected 4 dims observed, got ' + r.components.computableDimensions);
+  }
+  if (r.pass) throw new Error('buyback-with-leverage pattern must fail; score=' + r.value);
+  if (r.components.buybackContribution !== 25) {
+    throw new Error('buyback dim should pass standalone, got ' + r.components.buybackContribution);
+  }
+  if (r.components.debtContribution !== 0) {
+    throw new Error('debt dim should fail (4.17>2.0), got ' + r.components.debtContribution);
+  }
+});
+
+test('Tag 209c Cap-Alloc-Quality: PARTIAL — only 2 dims computable, scaled correctly', () => {
+  // No share-count (buyback incomputable), no 4y rev/capex (capex incomputable).
+  // Debt: 5/12=0.42→pass. SBC: 0.3/10=3%→pass. Raw=50, scaled=50*(4/2)=100→pass.
+  const s = {
+    annual: {
+      annualRev:    [{value: 10e9}],
+      annualOpInc:  [{value: 10e9}],
+      annualSBC:    [{value: 0.3e9}],
+      annualBalance:[{totalDebt: 5e9, totalCash: 0, totalAssets: 100e9}]
+    }
+  };
+  const r = Runner.evaluateStock(s)['capital-allocation-quality'];
+  if (!r.computable) throw new Error('should be computable (2/4 dims observable), reason=' + r.reason);
+  if (r.components.computableDimensions !== 2) {
+    throw new Error('expected 2 dims observed, got ' + r.components.computableDimensions);
+  }
+  if (r.components.buybackContribution !== null) throw new Error('buyback should be skipped');
+  if (r.components.capexContribution !== null) throw new Error('capex should be skipped');
+  if (r.components.debtContribution !== 25) throw new Error('debt should pass');
+  if (r.components.sbcContribution !== 25) throw new Error('sbc should pass');
+  if (r.value !== 100) throw new Error('expected scaled score=100, got ' + r.value);
+  if (!r.pass) throw new Error('2/2 passing dims should clear 75 threshold after scaling');
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the

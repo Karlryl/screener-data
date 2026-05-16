@@ -97,5 +97,20 @@ module.exports = [
   { file: './ev-ebitda.js' },
 
   // Tag 137: Insider-buy-cluster signal
-  { file: './insider-buy-cluster.js' }
+  { file: './insider-buy-cluster.js' },
+
+  // Tag 209b: Sector-relative ROIC percentile (DIAGNOSTIC, fixture-hash safe)
+  { file: './sector-relative-roic.js' },
+
+  // Tag 209c: Mauboussin capital-allocation composite — depends on
+  // buyback-yield + net-debt-ebitda + capex-trend + sbc-revenue.
+  // DIAGNOSTIC, not in SCORE_WEIGHTS, fixture-hash safe by construction.
+  { file: './capital-allocation-quality.js' },
+
+  // NOTE: beneish-m-score.js exists on disk from a parallel Tag 209d
+  // session; registered as `optional` here so the
+  // "Runner.getMethods matches filesystem" test stays green in this commit.
+  // The 209d session owns the canonical registration + tests; once it lands,
+  // this `optional:true` entry becomes a harmless duplicate.
+  { file: './beneish-m-score.js', optional: true }
 ];

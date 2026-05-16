@@ -26,6 +26,22 @@ function median(arr) {
   return sorted.length % 2 ? sorted[mid] : (sorted[mid-1] + sorted[mid]) / 2;
 }
 
+// Tag 209b: Linear-interpolation percentile (R-7 / Excel PERCENTILE default).
+// Used to enrich sector-medians files with p25/p75/p90 so methods can compute
+// sector-relative percentile rankings (e.g., "ROIC = top-quartile of SAAS").
+function percentile(arr, p) {
+  if (!arr.length) return null;
+  if (p <= 0) return arr[0];
+  if (p >= 1) return arr[arr.length - 1];
+  const sorted = [...arr].sort((a, b) => a - b);
+  const idx = p * (sorted.length - 1);
+  const lo = Math.floor(idx);
+  const hi = Math.ceil(idx);
+  if (lo === hi) return sorted[lo];
+  const frac = idx - lo;
+  return sorted[lo] * (1 - frac) + sorted[hi] * frac;
+}
+
 // Methoden die Sektor-relativ sind.
 // Tag 167: Returns TWO maps:
 //   globalBuckets: sub-profile-id → metric-id → value-array  (all stocks, for _GLOBAL)
@@ -100,8 +116,17 @@ function _computeFromBuckets(buckets, minN) {
         // scoring threshold median. Negative values in loss-heavy sectors would invert
         // the above/below-median logic. Full array length is still reported for transparency.
         const thresholdArr = POSITIVE_ONLY_METRICS.has(mid) ? arr.filter(v => v > -0.05) : arr;
-        result[spId][mid] = thresholdArr.length >= minN ? median(thresholdArr) : median(arr);
+        const useArr = thresholdArr.length >= minN ? thresholdArr : arr;
+        result[spId][mid] = median(useArr);
         result[spId]['_n_' + mid] = arr.length;
+        // Tag 209b: enrich with p25/p50/p75/p90 alongside median. Keys are prefixed
+        // with '_p..' so they coexist with existing `metricId` (median) reads.
+        // `_p50_` equals median (kept for API symmetry / explicit reads).
+        // Computed from the same filtered array as median for consistency.
+        result[spId]['_p25_' + mid] = percentile(useArr, 0.25);
+        result[spId]['_p50_' + mid] = percentile(useArr, 0.50);
+        result[spId]['_p75_' + mid] = percentile(useArr, 0.75);
+        result[spId]['_p90_' + mid] = percentile(useArr, 0.90);
       }
     }
     // Remove empty sub-profiles
@@ -271,6 +296,8 @@ function writeRollingMedians(autoMedians) {
 module.exports = {
   computeMedians, writeAutoMedians, writeRollingMedians,
   extractLegacyMedians,
+  // Tag 209b: percentile helper exported for tests + reuse by other compute paths.
+  percentile, median,
   MIN_STOCKS_PER_SECTOR, MIN_STOCKS_PER_REGION_SECTOR
 };
 

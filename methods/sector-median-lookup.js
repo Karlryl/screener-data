@@ -64,4 +64,62 @@ function lookupMedian(medians, stock, subProfileId, metricName) {
   return { value: null, source: 'not-found' };
 }
 
-module.exports = { lookupMedian };
+/**
+ * Tag 209b: Look up a sector PERCENTILE (p25/p50/p75/p90) with region-first,
+ * global fallback. Mirrors lookupMedian() but reads the '_p25_<metric>' etc.
+ * keys written by sector-medians-compute.js.
+ *
+ * @param {object} medians — full medians object (v2 region-aware shape)
+ * @param {object} stock — canonical stock object
+ * @param {string} subProfileId — e.g. 'SAAS', 'BANK'
+ * @param {string} metricName — e.g. 'roic'
+ * @param {number} pTag — one of 25, 50, 75, 90
+ * @param {number} [minN] — minimum sample count required (returns not-found if below); default 5
+ * @returns {{ value: number|null, source: string, n: number|null }}
+ */
+function lookupPercentile(medians, stock, subProfileId, metricName, pTag, minN) {
+  if (!medians) return { value: null, source: 'not-found', n: null };
+  if (![25, 50, 75, 90].includes(pTag)) {
+    return { value: null, source: 'invalid-percentile', n: null };
+  }
+  const minSamples = Number.isFinite(minN) ? minN : 5;
+  const pKey = '_p' + pTag + '_' + metricName;
+  const nKey = '_n_' + metricName;
+
+  // --- v2 schema ---
+  if (medians._version === 2 && medians.byRegion) {
+    const region = getRegion(stock);
+
+    const regionBucket = medians.byRegion[region];
+    if (regionBucket && regionBucket[subProfileId] &&
+        regionBucket[subProfileId][pKey] != null) {
+      const n = regionBucket[subProfileId][nKey];
+      if (Number.isFinite(n) && n >= minSamples) {
+        return { value: regionBucket[subProfileId][pKey], source: region + '/' + subProfileId, n };
+      }
+    }
+
+    const globalBucket = medians.byRegion['_GLOBAL'];
+    if (globalBucket && globalBucket[subProfileId] &&
+        globalBucket[subProfileId][pKey] != null) {
+      const n = globalBucket[subProfileId][nKey];
+      if (Number.isFinite(n) && n >= minSamples) {
+        return { value: globalBucket[subProfileId][pKey], source: 'GLOBAL/' + subProfileId, n };
+      }
+    }
+
+    return { value: null, source: 'not-found', n: null };
+  }
+
+  // --- v1 legacy flat schema ---
+  if (medians[subProfileId] && medians[subProfileId][pKey] != null) {
+    const n = medians[subProfileId][nKey];
+    if (Number.isFinite(n) && n >= minSamples) {
+      return { value: medians[subProfileId][pKey], source: 'legacy/' + subProfileId, n };
+    }
+  }
+
+  return { value: null, source: 'not-found', n: null };
+}
+
+module.exports = { lookupMedian, lookupPercentile };
