@@ -131,17 +131,30 @@ function buildRow(stock) {
   const omaChange = (oma && oma.computable && oma.components && Number.isFinite(oma.components.change3y))
     ? oma.components.change3y : null;
 
-  // Pre-Breakout composite score (Tag 199g, expanded):
-  //   pb_score = revGrowth/100*35 + grossMargin/100*25 + max(r40,0)/100*20
-  //            + gma bonus*10 + oma bonus*10
-  //   max 100. OM acceleration is the Damodaran-recommended highest-signal
-  //   precursor to a fixed-cost-leverage breakthrough — equal weight to GM.
+  const revAccel = allResults['revenue-acceleration-yoy'];
+  const revAccelDelta = (revAccel && revAccel.computable && Number.isFinite(revAccel.value))
+    ? revAccel.value : null;  // delta in pp (current YoY - prior YoY)
+
+  // Pre-Breakout composite score (Tag 199i — final weight distribution):
+  //   pb_score = revGrowth/100 * 25            (current-year growth)
+  //            + grossMargin/100 * 20          (margin level)
+  //            + max(r40,0)/100 * 15           (overall profitability proxy)
+  //            + gma_bonus * 10                (GM trending up)
+  //            + oma_bonus * 15                (OM trending up — Damodaran)
+  //            + revAccel_bonus * 15           (growth re-accelerating)
+  //   max 100. Total reflects the three Pre-Breakout dimensions:
+  //   growth + margin + DIRECTIONAL acceleration on both margin and growth.
   let pbScore = null;
   if (Number.isFinite(growth) && Number.isFinite(grossMargin)) {
-    const r40component = Math.max(r40Value || 0, 0) / 100 * 20;
+    const r40component = Math.max(r40Value || 0, 0) / 100 * 15;
     const gmaBonus = (gmaTrend === 'accelerating') ? 10 : (gmaTrend === 'stable' ? 4 : 0);
-    const omaBonus = (omaTrend === 'accelerating') ? 10 : (omaTrend === 'stable' ? 4 : 0);
-    pbScore = (growth / 100 * 35) + (grossMargin / 100 * 25) + r40component + gmaBonus + omaBonus;
+    const omaBonus = (omaTrend === 'accelerating') ? 15 : (omaTrend === 'stable' ? 6 : 0);
+    // revAccel bonus scales linearly with delta magnitude up to +50pp.
+    let revAccelBonus = 0;
+    if (revAccelDelta != null && revAccelDelta > 0) {
+      revAccelBonus = Math.min(15, revAccelDelta / 50 * 15);
+    }
+    pbScore = (growth / 100 * 25) + (grossMargin / 100 * 20) + r40component + gmaBonus + omaBonus + revAccelBonus;
   }
 
   // Mode scores (already on 0-100 scale, accumulated by score-aggregator)
@@ -218,6 +231,7 @@ function buildRow(stock) {
     pbScore,
     gmaTrend, gmaChange,
     omaTrend, omaChange,
+    revAccelDelta,
     // Tag 199 audit gates
     qSpikeFail, lossMagFail, metricDivFail, dqGrade, listingYears,
     gaapProfitable, fcfPositive,
