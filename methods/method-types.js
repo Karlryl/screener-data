@@ -38,7 +38,12 @@ const REGISTRY = {
   'quarterly-revenue-acceleration': { type: 'DIAGNOSTIC', defaultActive: true, reason: 'Tag 206e: latest Q rev / prior Q rev >= 1.10 (10% QoQ sequential growth)' },
 
   // --- DIAGNOSTIC - Kontext fÃ¼r Deep-Dive --------------------------
-  'rule-of-x':                  { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Alternative hypergrowth metric, redundant mit Rule-of-40' },
+  // Tag 206h (Bug-Hunt Agent F HIGH-1): defaultActive flipped to true.
+  // rule-of-x carries weight 0.10 in SCORE_WEIGHTS[HYPERGROWTH] but was
+  // defaultActive:false → any caller passing onlyDefault:true would skip
+  // it, silently zeroing 10% of the HG composite. Computing it is cheap
+  // (small calc on existing fields) so we activate by default.
+  'rule-of-x':                  { type: 'DIAGNOSTIC', defaultActive: true, reason: 'Alternative hypergrowth metric (Tag 206h: activated to honor SCORE_WEIGHTS HG=0.10)' },
   'stable-quarterly-growth':    { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Growth-pattern indicator - DataGuard-Job geht an revenue-shock-guard' },
   'margin-decay':               { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Erosion-detection im Detail-Modal' },
   'capex-trend':                { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Reinvestment pattern' },

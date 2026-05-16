@@ -236,6 +236,15 @@ function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, data
     if (modeId === 'QUALITY_COMPOUNDER') {
       var ageRes = allResults['listing-age'];
       if (ageRes && ageRes.computable && Number.isFinite(ageRes.value)) {
+        // Tag 206h (Bug-Hunt Agent F MEDIUM-7 documentation):
+        //   listing-age method threshold = 3 (minimum years for QC eligibility)
+        //   score-aggregator divisor    = 5 (full QC credit at 5+ years)
+        // The divergence is INTENTIONAL: 3y satisfies the must-eligibility gate
+        // (else the stock isn't even classified as QC by classifyTabs), but 3y
+        // of history is too thin for "premium compounder" — the linear-ramp
+        // from 60% at 3y to 100% at 5y reflects that "established compounder"
+        // requires more track record than the eligibility floor.
+        // 3y → 60% credit | 4y → 80% credit | 5y+ → 100% credit
         var ageMultiplier = Math.min(1.0, ageRes.value / 5);
         auditMultiplier *= ageMultiplier;
         auditMultiplierApplied = true;
