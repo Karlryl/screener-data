@@ -104,7 +104,10 @@ function evaluate(stock) {
   }
 
   const ratio = maxDelta / rev0;
-  const pass = ratio < THRESHOLD;
+  // Tag 206c (Bug-Hunt Agent B HIGH-5): use <= to match exported THRESHOLD_OP='lte'.
+  // Previously used strict < which contradicted the threshold operator and would
+  // also poison score-aggregator.normalizeMethodScore which trusts thresholdOp.
+  const pass = ratio <= THRESHOLD;
 
   return H.buildResult({
     value: ratio,
