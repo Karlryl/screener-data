@@ -43,6 +43,7 @@ const REGISTRY = {
   'loss-magnitude-guard':       { type: 'DATAGUARD',  defaultActive: true,  reason: 'Tag 199: hard-fails if op-loss > 50% of revenue (SOUN/IONQ pattern)' },
   'single-quarter-dependency':  { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 199: TTM growth collapses >50% without top quarter — single-Q dependency signal' },
   'listing-age':                { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 199: clean fiscal years available — used to scale QC scoring (3y floor)' },
+  'metric-divergence-guard':    { type: 'DATAGUARD',  defaultActive: true,  reason: 'Tag 199f: Yahoo TTM vs annual op-margin > 1000pp divergence = data anomaly (MSTR pattern)' },
   'opinc-margin-spike':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Operating margin shock detection' },
   'drawdown-52w':               { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },
   'high-proximity-52w':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },

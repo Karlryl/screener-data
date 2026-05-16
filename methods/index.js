@@ -71,6 +71,7 @@ module.exports = [
   { file: './loss-magnitude-guard.js' },
   { file: './single-quarter-dependency.js' },
   { file: './listing-age.js' },
+  { file: './metric-divergence-guard.js' },
   { file: './volatility-annualized.js' },
   { file: './drawdown-52w.js' },
   { file: './high-proximity-52w.js' },
