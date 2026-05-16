@@ -112,5 +112,11 @@ module.exports = [
   // Tag 209d: Beneish M-Score earnings-manipulation detector. DIAGNOSTIC until
   // pull-yahoo extends balance-sheet/IS coverage (AR/PPE/CL/LTD/SGA/Dep/OCF);
   // fixture-hash safe by construction (not in SCORE_WEIGHTS).
-  { file: './beneish-m-score.js' }
+  { file: './beneish-m-score.js' },
+
+  // Tag 210a: Ohlson O-Score logit bankruptcy probability. Sibling to Altman-Z
+  // (discriminant) — catches a different failure profile (services, low-leverage).
+  // DIAGNOSTIC until pull-yahoo extends CA/CL/totalLiab/OCF coverage; fixture-hash
+  // safe by construction (not in SCORE_WEIGHTS).
+  { file: './ohlson-o-score.js' }
 ];

@@ -1369,6 +1369,74 @@ test('Tag 209c Cap-Alloc-Quality: PARTIAL — only 2 dims computable, scaled cor
   if (!r.pass) throw new Error('2/2 passing dims should clear 75 threshold after scaling');
 });
 
+// ─── Tag 210a — ohlson-o-score (logit bankruptcy probability) smoke tests ───
+// DIAGNOSTIC method, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
+// Citation: Ohlson 1980 JAR — sibling to Altman-Z (discriminant), different
+// false-negative profile. Requires CA/CL/totalLiab/OCF — not in current snapshots,
+// so real-snapshot test asserts computable=false with diagnostic missingFields.
+
+test('Tag 210a Ohlson-O: PASS case (healthy firm, O < 0, P(bk) < 50%)', () => {
+  // Healthy mid-cap: TA=1500, TL=600 (40% leverage), CA=500, CL=300, WC=200,
+  // NI_t=120 (positive), NI_{t-1}=100 (positive), OCF=140 (strong FFO).
+  // Expected: O strongly negative (low bankruptcy probability).
+  const s = { annual: {
+    annualNetIncome: [{value: 120}, {value: 100}],
+    annualOCF:       [{value: 140}],
+    annualBalance: [
+      { totalCash: 80, totalDebt: 200, totalAssets: 1500,
+        totalLiab: 600, currentAssets: 500, currentLiabilities: 300 }
+    ]
+  }};
+  const r = Runner.evaluateStock(s)['ohlson-o-score'];
+  if (!r.computable) throw new Error('healthy firm should be computable; reason=' + r.reason);
+  if (!r.pass) throw new Error('healthy firm should pass O<0; got O=' + r.value + ' P=' + r.components.probability);
+  if (r.components.probability > 0.5) throw new Error('probability should be <0.5; got ' + r.components.probability);
+  if (r.components.X_TERM !== 0) throw new Error('TL<TA should give X=0, got X_TERM=' + r.components.X_TERM);
+  if (r.components.Y_TERM !== 0) throw new Error('both years positive NI → Y=0, got Y_TERM=' + r.components.Y_TERM);
+});
+
+test('Tag 210a Ohlson-O: FAIL case (distressed firm, O > 0, P(bk) > 50%)', () => {
+  // Distressed: TA=1000, TL=1200 (TL>TA → X=1), CA=200, CL=400 (WC=-200, neg),
+  // NI_t=-150 (loss), NI_{t-1}=-100 (Y=1), OCF=-80 (FFO/TL very negative).
+  // Expected: O > 0, P(bk) > 0.5.
+  const s = { annual: {
+    annualNetIncome: [{value: -150}, {value: -100}],
+    annualOCF:       [{value: -80}],
+    annualBalance: [
+      { totalCash: 20, totalDebt: 600, totalAssets: 1000,
+        totalLiab: 1200, currentAssets: 200, currentLiabilities: 400 }
+    ]
+  }};
+  const r = Runner.evaluateStock(s)['ohlson-o-score'];
+  if (!r.computable) throw new Error('distressed firm should still be computable; reason=' + r.reason);
+  if (r.pass) throw new Error('distressed firm should fail O<0; got O=' + r.value);
+  if (r.components.probability < 0.5) throw new Error('probability should be >0.5; got ' + r.components.probability);
+  if (r.components.X_TERM !== -1.72) throw new Error('TL>TA should give X=1 → X_TERM=-1.72, got ' + r.components.X_TERM);
+  if (r.components.Y_TERM !== 0.285) throw new Error('both years neg NI → Y=1 → Y_TERM=0.285, got ' + r.components.Y_TERM);
+  if (!/HIGH|ELEVATED/.test(r.components.zone)) throw new Error('distress should be HIGH/ELEVATED zone, got ' + r.components.zone);
+});
+
+test('Tag 210a Ohlson-O: NOT-COMPUTABLE on real-snapshot shape (missing CA/CL/totalLiab/OCF)', () => {
+  // Real snapshot pattern: balance carries only {totalCash, totalDebt, totalAssets},
+  // and annualOCF is empty/missing. Method MUST return computable=false with
+  // diagnostic missingFields, NOT silently pass or fail.
+  const s = { annual: {
+    annualNetIncome: [{value: 100}, {value: 80}],
+    annualBalance: [
+      { totalCash: 50, totalDebt: 200, totalAssets: 1500 }
+    ]
+  }};
+  const r = Runner.evaluateStock(s)['ohlson-o-score'];
+  if (r.computable) throw new Error('real-snapshot shape should be computable=false, got ' + JSON.stringify(r));
+  if (r.pass) throw new Error('incomputable result must have pass=false');
+  if (!r.reason || !/totalLiab|currentAssets|currentLiabilities|annualOCF/.test(r.reason)) {
+    throw new Error('reason should list missing fields, got: ' + r.reason);
+  }
+  if (!r.components || !Array.isArray(r.components.missingFields)) {
+    throw new Error('components.missingFields should be an array for diagnostics');
+  }
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the
