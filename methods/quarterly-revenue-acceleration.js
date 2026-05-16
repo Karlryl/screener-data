@@ -1,7 +1,11 @@
 'use strict';
 const H = require('./_helpers.js');
 
-const ID = 'quarterly-rev-acceleration';
+// Tag 206e (Bug-Hunt Agent C HIGH-3): id was truncated 'quarterly-rev-acceleration'
+// but the file is named quarterly-revenue-acceleration.js. Neither name was in
+// REGISTRY or SCORE_WEIGHTS — method was loaded but completely unread. Align id
+// to the file name and register in method-types.js.
+const ID = 'quarterly-revenue-acceleration';
 const LABEL = 'Quarterly-Rev-Acceleration';
 const THRESHOLD = 1.10;
 const THRESHOLD_OP = 'gte';

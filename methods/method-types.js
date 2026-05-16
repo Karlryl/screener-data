@@ -35,6 +35,7 @@ const REGISTRY = {
   'estimate-revision-proxy':    { type: 'CORE', defaultActive: true,  reason: 'Tag 141: positive analyst revisions / rev-acceleration proxy' },
   // Tag 206d: insider-buy-cluster (loaded since Tag 137) had no REGISTRY entry.
   'insider-buy-cluster':        { type: 'DIAGNOSTIC', defaultActive: true, reason: 'Tag 137: >=2 unique insider buyers in 90d — cluster-buy signal' },
+  'quarterly-revenue-acceleration': { type: 'DIAGNOSTIC', defaultActive: true, reason: 'Tag 206e: latest Q rev / prior Q rev >= 1.10 (10% QoQ sequential growth)' },
 
   // --- DIAGNOSTIC - Kontext fÃ¼r Deep-Dive --------------------------
   'rule-of-x':                  { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Alternative hypergrowth metric, redundant mit Rule-of-40' },
