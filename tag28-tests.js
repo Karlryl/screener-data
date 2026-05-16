@@ -629,6 +629,37 @@ test('pre-commerciality-megacap-guard: PASS for established compounder', () => {
   if (!r.pass) throw new Error('mega-cap with 50B rev must pass');
 });
 
+// Tag 201c: anchor repair — revenue-growth-3y threshold lowered to 22%
+test('Revenue-Growth-3Y: AVGO-pattern (24.4% CAGR) now passes at 22% bar', () => {
+  // 100 → 194.74 over 3y = 24.7% CAGR
+  const s = { annual: { annualRev: [{value:194.74},{value:165},{value:135},{value:100}] } };
+  const r = Runner.evaluateStock(s)['revenue-growth-3y'];
+  if (!r.computable) throw new Error('should be computable');
+  if (!r.pass) throw new Error('AVGO/NOW-style 24% CAGR should now pass after Tag 201c');
+});
+
+// Tag 201c: rule-of-40 annual-FCF fallback for MELI-pattern TTM anomaly
+test('Rule of 40: MELI-pattern (TTM negative, annual positive) uses fallback', () => {
+  const s = makeStock({ revenueGrowthYoY: 49, fcfMarginTTM: -13 });
+  // annual median ~33% margin: FCF/Rev = 10.8/32.7=33%, 7.1/21.5=33%, 4.6/14=33%, 2.5/9=28%
+  s.annual.annualRev = [{value: 32.7e9}, {value: 21.5e9}, {value: 14e9}, {value: 9e9}];
+  s.annual.annualFCF = [{value: 10.8e9}, {value: 7.1e9}, {value: 4.6e9}, {value: 2.5e9}];
+  const r = Runner.evaluateStock(s)['rule-of-40'];
+  if (!r.computable) throw new Error('should be computable');
+  if (!r.pass) throw new Error('MELI-pattern (TTM=-13, annual median ~33) should pass via fallback');
+  if (r.components.fcfMarginSource !== '3y-annual-median')
+    throw new Error('expected fallback, got source=' + r.components.fcfMarginSource);
+});
+
+test('Rule of 40: TTM positive — fallback NOT triggered (preserves fixture-hash semantics)', () => {
+  const s = makeStock({ revenueGrowthYoY: 38, fcfMarginTTM: 22 });
+  s.annual.annualRev = [{value: 10e9}, {value: 7.2e9}, {value: 5.2e9}, {value: 3.8e9}];
+  s.annual.annualFCF = [{value: 2.2e9}, {value: 1.4e9}];
+  const r = Runner.evaluateStock(s)['rule-of-40'];
+  if (r.components.fcfMarginSource !== 'TTM')
+    throw new Error('positive TTM must NOT trigger fallback');
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the

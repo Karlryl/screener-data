@@ -1,9 +1,17 @@
 'use strict';
+/**
+ * Tag 201c: Threshold lowered 25% → 22% (anchor-repair, Agent 4).
+ * AVGO 24.4% and NOW 22.4% missed HG by 0.6pp / 2.6pp under the original
+ * 25% bar despite both being clear "solid-grower" anchors with R40 > 50.
+ * 22% admits both while still cleanly excluding sub-15% maturity-cohort
+ * compounders (which belong in QC, not HG). Fixture growth is 38% — well
+ * above either threshold — so this change is fixture-hash-safe.
+ */
 const H = require('./_helpers.js');
 
 const ID = 'revenue-growth-3y';
 const LABEL = 'Revenue-Growth-3Y CAGR';
-const THRESHOLD = 25;  // %
+const THRESHOLD = 22;  // %  (was 25; lowered Tag 201c — see header)
 const THRESHOLD_OP = 'gte';
 
 function evaluate(stock) {
