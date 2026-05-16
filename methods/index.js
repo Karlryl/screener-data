@@ -75,6 +75,7 @@ module.exports = [
   { file: './operating-margin-acceleration.js' },
   { file: './revenue-acceleration-yoy.js' },
   { file: './sbc-growth-ratio.js' },
+  { file: './roic-trend.js' },
   { file: './volatility-annualized.js' },
   { file: './drawdown-52w.js' },
   { file: './high-proximity-52w.js' },

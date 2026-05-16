@@ -559,6 +559,26 @@ test('sbc-growth-ratio: FAIL when SBC dramatically outpaces revenue', () => {
   if (r.pass) throw new Error('SBC 10x rev growth should fail');
 });
 
+test('roic-trend: PASS when current ROIC > prior', () => {
+  const s = makeStock({}, { netIncome: [20, 15] }, [
+    { totalAssets: 100, totalCash: 20, totalDebt: 0 },   // y0 IC=80, ROIC=25%
+    { totalAssets: 90,  totalCash: 15, totalDebt: 0 }    // y1 IC=75, ROIC=20%
+  ]);
+  const r = Runner.evaluateStock(s)['roic-trend'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (!r.pass) throw new Error('rising ROIC should pass');
+  if (r.value < 4) throw new Error('expected ~5pp delta, got ' + r.value);
+});
+
+test('roic-trend: FAIL when ROIC drops', () => {
+  const s = makeStock({}, { netIncome: [10, 20] }, [
+    { totalAssets: 100, totalCash: 20, totalDebt: 0 },
+    { totalAssets: 100, totalCash: 20, totalDebt: 0 }
+  ]);
+  const r = Runner.evaluateStock(s)['roic-trend'];
+  if (r.pass) throw new Error('declining ROIC should fail');
+});
+
 test('single-quarter-dependency: incomputable on <8 quarters', () => {
   const s = makeStock({}, {}, []);
   s.timeseries = { revenueQ: [{ value: 100 }, { value: 80 }, { value: 60 }, { value: 40 }] };

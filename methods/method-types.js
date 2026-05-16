@@ -47,6 +47,7 @@ const REGISTRY = {
   'operating-margin-acceleration': { type: 'DIAGNOSTIC', defaultActive: true, reason: 'Tag 199g: OpM accelerating across 3y — operating-leverage breakthrough (Damodaran)' },
   'revenue-acceleration-yoy':   { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 199i: this-year YoY > last-year YoY — Pre-Breakout re-acceleration signal' },
   'sbc-growth-ratio':           { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 199j: SBC growth ≤ 1.5× Rev growth — dilution-discipline signal' },
+  'roic-trend':                 { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 200: ROIC YoY delta — Quality-Compounder trajectory signal' },
   'opinc-margin-spike':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Operating margin shock detection' },
   'drawdown-52w':               { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },
   'high-proximity-52w':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },
