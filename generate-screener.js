@@ -616,6 +616,13 @@ const CLIENT_JS = `
     return '';
   }
 
+  // Per-tab explainer text (rendered above the table when the tab activates).
+  const TAB_EXPLAINERS = {
+    'PRE_BREAKOUT': 'Companies recently turning profitable with accelerating growth. These are the future compounders — before the market prices in the quality improvement. Historical examples: PLTR (TURNAROUND→HG mid-2023), CRDO (2022), ALAB (2023).',
+    'WATCH': 'Stocks flagged by hard-gates (Q-Spike, Loss>50%Rev, Metric-Divergence, DQ-D) and NEAR_MISS tier — explicitly held out of HG/QC/SMALL/R40/PRE-BREAKOUT for human review.',
+    'SMALL': 'Market cap < $2B, revenue growth > 20%, not in LOSS state. Hunting the next CRDO/ALAB before they hit the radar.'
+  };
+
   function renderTable(){
     const filtered = applyFilters(TABS[activeTab] || []);
     const list = sortList(filtered.slice());
@@ -629,6 +636,16 @@ const CLIENT_JS = `
     for (const r of list) { if (r.r40 != null) { avgR40 += r.r40; n++; } }
     const summary = '<strong>'+list.length+'</strong> of '+(TABS[activeTab]||[]).length+' · Avg R40: '+(n>0?(avgR40/n).toFixed(1):'—')+' · Updated: '+DATA.generatedAt;
     document.getElementById('summary').innerHTML = summary;
+
+    // Tag 199m: per-tab explainer (italicized, muted color) above the table.
+    const explEl = document.getElementById('explainer');
+    const exp = TAB_EXPLAINERS[activeTab];
+    if (exp) {
+      explEl.innerHTML = '<em>' + exp + '</em>';
+      explEl.style.display = 'block';
+    } else {
+      explEl.style.display = 'none';
+    }
 
     let html = '<table class="dt"><thead><tr>';
     for (const c of cols) html += '<th'+(c.num?' class="num"':'')+' style="width:'+c.w+'px">'+c.k+'</th>';
@@ -1013,6 +1030,7 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
   </span>
 </div>
 <div class="summary" id="summary"></div>
+<div id="explainer" style="padding:8px 16px;background:var(--bg-1);border-bottom:1px solid var(--border);color:var(--text-1);font-size:12px;display:none;"></div>
 <div class="table-wrap"><div id="table"></div></div>
 <div class="pagination">
   <button id="prevPage">← Prev</button>
