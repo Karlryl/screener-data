@@ -114,9 +114,16 @@ function normalizeMethodScore(methodResult, methodMeta) {
     if (val <= 0) return 0.99;
     ratio = threshold / val;
   } else if (op === 'lte_abs') {
-    // F-ME-011: proper handling for lte_abs — graduated scoring on absolute value
+    // F-ME-011: proper handling for lte_abs — graduated scoring on absolute value.
+    // Tag 206m (Bug-Hunt Agent F LOW): the prior `if (threshold === 0)` branch
+    // was dead code — line 99's early guard `if (threshold === 0) return val > 0
+    // ? 1.0 : 0.0;` returns first, making the inner check unreachable. Removed
+    // the dead branch. Note: the early guard's `val > 0` semantics are subtly
+    // wrong for hypothetical lte_abs methods with threshold===0 (which would
+    // want `absVal === 0`), but no current method exports that combination —
+    // sloan-ratio uses lte_abs with threshold=0.10, never 0. If a future method
+    // does export lte_abs+threshold-0, gate line 99 by op first.
     var absVal = Math.abs(val);
-    if (threshold === 0) return absVal === 0 ? 1.0 : 0.0;
     ratio = threshold / Math.max(absVal, 1e-10);
   } else {
     return 0.3;
