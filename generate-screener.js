@@ -185,6 +185,12 @@ function buildRow(stock) {
   // four prior gates as defense-in-depth.
   const preComm = allResults['pre-commerciality-megacap-guard'];
   const preCommFail = !!(preComm && preComm.computable && preComm.pass === false);
+  // Tag 202: closed-end-trust pattern (industry + Rev/Assets + neg-rev signals).
+  // Catches SMT.L / HICL.L style trust noise (fair-value swings reported as
+  // "revenue" inflate Rule-of-40 to 1000%+). BRK-B passes by design — see
+  // anchor analysis in methods/closed-end-trust-guard.js header.
+  const cetGuard = allResults['closed-end-trust-guard'];
+  const cetFail  = !!(cetGuard && cetGuard.computable && cetGuard.pass === false);
   const listing = allResults['listing-age'];
   const listingYears = (listing && listing.computable && Number.isFinite(listing.value)) ? listing.value : null;
 
@@ -242,7 +248,7 @@ function buildRow(stock) {
     omaTrend, omaChange,
     revAccelDelta,
     // Tag 199/200 audit gates
-    qSpikeFail, lossMagFail, metricDivFail, niVolFail, preCommFail, dqGrade, listingYears,
+    qSpikeFail, lossMagFail, metricDivFail, niVolFail, preCommFail, cetFail, dqGrade, listingYears,
     gaapProfitable, fcfPositive,
     annual,
     results: compactResults
@@ -270,7 +276,7 @@ function classifyTabs(rows) {
     //   3. data-quality grade D → too many missing fields to trust the score
     //
     // No hardcoded tickers — these are signatures the data must satisfy.
-    const hardGated = r.qSpikeFail || r.lossMagFail || r.metricDivFail || r.niVolFail || r.preCommFail || r.dqGrade === 'D';
+    const hardGated = r.qSpikeFail || r.lossMagFail || r.metricDivFail || r.niVolFail || r.preCommFail || r.cetFail || r.dqGrade === 'D';
 
     if (hardGated) {
       // WATCH-only entry: surface them with the reason for review, but block
@@ -281,6 +287,7 @@ function classifyTabs(rows) {
       if (r.metricDivFail) reasons.push('METRIC-DIV');
       if (r.niVolFail) reasons.push('NI-VOL');
       if (r.preCommFail) reasons.push('PRE-COMM-MEGACAP');
+      if (r.cetFail) reasons.push('CLOSED-END-TRUST');
       if (r.dqGrade === 'D') reasons.push('DATA-D');
       r.watchReasons = reasons;
       tabs.WATCH.push(r);
@@ -640,7 +647,7 @@ const CLIENT_JS = `
   // Per-tab explainer text (rendered above the table when the tab activates).
   const TAB_EXPLAINERS = {
     'PRE_BREAKOUT': 'Companies recently turning profitable with accelerating growth. These are the future compounders — before the market prices in the quality improvement. Historical examples: PLTR (TURNAROUND→HG mid-2023), CRDO (2022), ALAB (2023).',
-    'WATCH': 'Stocks flagged by hard-gates (Q-Spike, Loss>50%Rev, Metric-Divergence, DQ-D) and NEAR_MISS tier — explicitly held out of HG/QC/SMALL/R40/PRE-BREAKOUT for human review.',
+    'WATCH': 'Stocks flagged by hard-gates (Q-Spike, Loss>50%Rev, Metric-Divergence, Closed-End-Trust, DQ-D) and NEAR_MISS tier — explicitly held out of HG/QC/SMALL/R40/PRE-BREAKOUT for human review.',
     'SMALL': 'Market cap < $2B, revenue growth > 20%, not in LOSS state. Hunting the next CRDO/ALAB before they hit the radar.'
   };
 
@@ -749,6 +756,7 @@ const CLIENT_JS = `
     if (r.qSpikeFail) sigBadges.push('<span style="color:var(--red);border:1px solid var(--red);padding:1px 5px;font-size:10px">Q-SPIKE</span>');
     if (r.lossMagFail) sigBadges.push('<span style="color:var(--red);border:1px solid var(--red);padding:1px 5px;font-size:10px">LOSS&gt;50%REV</span>');
     if (r.metricDivFail) sigBadges.push('<span style="color:var(--red);border:1px solid var(--red);padding:1px 5px;font-size:10px">METRIC-DIV</span>');
+    if (r.cetFail) sigBadges.push('<span style="color:var(--red);border:1px solid var(--red);padding:1px 5px;font-size:10px">TRUST</span>');
     if (r.gmaTrend === 'accelerating') sigBadges.push('<span style="color:var(--green);border:1px solid var(--green);padding:1px 5px;font-size:10px">GM↑</span>');
     if (r.omaTrend === 'accelerating') sigBadges.push('<span style="color:var(--green);border:1px solid var(--green);padding:1px 5px;font-size:10px">OpM↑</span>');
     if (r.revAccelDelta != null && r.revAccelDelta > 0) sigBadges.push('<span style="color:var(--green);border:1px solid var(--green);padding:1px 5px;font-size:10px">Rev-Accel +'+r.revAccelDelta.toFixed(0)+'pp</span>');

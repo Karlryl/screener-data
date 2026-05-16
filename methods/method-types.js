@@ -53,6 +53,7 @@ const REGISTRY = {
   'insider-net-buying':         { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 201: Net insider buys minus sells (180d) — complements cluster signal with sell-side balance' },
   'net-income-volatility-guard':{ type: 'DATAGUARD',  defaultActive: true,  reason: 'Tag 200b: NI single-year swing > 100% of revenue — catches non-operating noise (MSTR-style)' },
   'pre-commerciality-megacap-guard':{ type: 'DATAGUARD', defaultActive: true, reason: 'Tag 201b: mcap > 1B but rev < 100M — narrative-only mega-cap (QS/JOBY pattern bypassing existing gates)' },
+  'closed-end-trust-guard':     { type: 'DATAGUARD',  defaultActive: true,  reason: 'Tag 202: industry + Rev/Assets + neg-rev + FCF/Assets pattern — catches Scottish-Mortgage/HICL trust noise in R40' },
   'opinc-margin-spike':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Operating margin shock detection' },
   'drawdown-52w':               { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },
   'high-proximity-52w':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },

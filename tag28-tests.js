@@ -629,6 +629,37 @@ test('pre-commerciality-megacap-guard: PASS for established compounder', () => {
   if (!r.pass) throw new Error('mega-cap with 50B rev must pass');
 });
 
+// Tag 202: closed-end-trust guard
+test('closed-end-trust-guard: PASS on BRK-B pattern (Insurance-Diversified + 30% Rev/Assets)', () => {
+  const s = makeStock({}, { fcf: [25e9, 11e9, 30e9, 22e9] }, [{ totalAssets: 1.22e12, totalCash: 0, totalDebt: 0 }]);
+  s.meta.industry = 'Insurance - Diversified';
+  s.meta.sector   = 'Financial Services';
+  s.annual.annualRev = [{ value: 371e9 }, { value: 371e9 }, { value: 364e9 }, { value: 302e9 }];
+  const r = Runner.evaluateStock(s)['closed-end-trust-guard'];
+  if (!r.computable) throw new Error('should be computable, got: ' + r.reason);
+  if (!r.pass) throw new Error('BRK-B-pattern must pass; signals=' + r.value + ' reason=' + r.reason);
+});
+
+test('closed-end-trust-guard: FAIL on SMT.L pattern (Asset Management + neg-rev + low Rev/Assets)', () => {
+  const s = makeStock({}, { fcf: [-82e6, -62e6, -63e6, -85e6] }, [{ totalAssets: 13.7e9, totalCash: 0, totalDebt: 0 }]);
+  s.meta.industry = 'Asset Management';
+  s.meta.sector   = 'Financial Services';
+  s.annual.annualRev = [{ value: 1.24e9 }, { value: 1.38e9 }, { value: -2.91e9 }, { value: -2.54e9 }];
+  const r = Runner.evaluateStock(s)['closed-end-trust-guard'];
+  if (!r.computable) throw new Error('should be computable');
+  if (r.pass) throw new Error('SMT.L-pattern must fail; signals=' + r.value + ' reason=' + r.reason);
+});
+
+test('closed-end-trust-guard: PASS on NVDA (Technology, no signals fire)', () => {
+  const s = makeStock({}, { fcf: [96e9, 60e9, 27e9, 4e9] }, [{ totalAssets: 207e9, totalCash: 0, totalDebt: 0 }]);
+  s.meta.industry = 'Semiconductors';
+  s.meta.sector   = 'Technology';
+  s.annual.annualRev = [{ value: 216e9 }, { value: 130e9 }, { value: 61e9 }, { value: 27e9 }];
+  const r = Runner.evaluateStock(s)['closed-end-trust-guard'];
+  if (!r.computable) throw new Error('should be computable');
+  if (!r.pass) throw new Error('NVDA must pass; signals=' + r.value + ' reason=' + r.reason);
+});
+
 // Tag 201c: anchor repair — revenue-growth-3y threshold lowered to 22%
 test('Revenue-Growth-3Y: AVGO-pattern (24.4% CAGR) now passes at 22% bar', () => {
   // 100 → 194.74 over 3y = 24.7% CAGR
@@ -658,6 +689,55 @@ test('Rule of 40: TTM positive — fallback NOT triggered (preserves fixture-has
   const r = Runner.evaluateStock(s)['rule-of-40'];
   if (r.components.fcfMarginSource !== 'TTM')
     throw new Error('positive TTM must NOT trigger fallback');
+});
+
+// ─── Tag 202: High-Turnover-Retail-Tier (COST-pattern) ─────────────────
+// Pattern: AT>=3 + OpMargin-Median>=3.5% relaxes ROIC-Floor to 15% and waives 20% GM-Hard-Floor.
+// Gated by AT AND OpMargin, so software/megacap anchors (AT<1) cannot trigger it.
+
+function _retailStock() {
+  // COST-shaped synthetic: 275B rev, 77B assets → AT=3.57; GM~12.8%; OpM~3.6%; ROIC~16.5%
+  return {
+    meta: { ticker: 'RETAIL-FIX' },
+    annual: {
+      annualRev:   [{value:275e9},{value:254e9},{value:242e9},{value:227e9}],
+      annualGP:    [{value:35.3e9},{value:32.1e9},{value:29.7e9},{value:27.6e9}],
+      annualOpInc: [{value:10.4e9},{value:9.3e9},{value:8.1e9},{value:7.8e9}],
+      annualNetIncome: [{value:8e9},{value:7.4e9},{value:6.3e9},{value:5.8e9}],
+      annualBalance: [{ totalAssets: 77e9, totalCash: 14e9, totalDebt: 6e9 }]
+    }
+  };
+}
+
+test('Tag 202: QC-ROIC retail-tier — COST-pattern (ROIC=16.5%, AT=3.57, OpM~3.8%) PASSES via retail-tier', () => {
+  const r = Runner.evaluateStock(_retailStock())['quality-compounder-roic'];
+  if (!r.computable) throw new Error('should be computable');
+  if (!r.pass) throw new Error('COST-pattern should pass via high-turnover-retail-tier');
+  if (r.components.pathUsed !== 'high-turnover-retail-tier')
+    throw new Error('expected pathUsed=high-turnover-retail-tier, got ' + r.components.pathUsed);
+});
+
+test('Tag 202: Margin-Quality retail-tier — COST-pattern (GM~13%, OpM~3.6%, AT=3.57) PASSES (20% GM-floor waived)', () => {
+  const r = Runner.evaluateStock(_retailStock())['margin-quality'];
+  if (!r.computable) throw new Error('should be computable');
+  if (!r.pass) throw new Error('COST-pattern should pass via retail-tier (GM-floor waived)');
+  if (!r.components.retailTierPath) throw new Error('expected retailTierPath=true');
+});
+
+test('Tag 202: retail-tier gate is tight — AT=3 but OpM=2% does NOT trigger (still fails GM<20%)', () => {
+  // Low-quality high-AT retailer: GM=12%, OpM=2% (below 3.5% gate). Must NOT bypass GM-floor.
+  const s = {
+    meta: { ticker: 'BAD-RETAIL' },
+    annual: {
+      annualRev:   [{value:100e9},{value:90e9},{value:80e9},{value:70e9}],
+      annualGP:    [{value:12e9},{value:11e9},{value:10e9},{value:9e9}],
+      annualOpInc: [{value:2e9},{value:1.8e9},{value:1.6e9},{value:1.4e9}],
+      annualBalance: [{ totalAssets: 33e9, totalCash: 2e9 }]
+    }
+  };
+  const r = Runner.evaluateStock(s)['margin-quality'];
+  if (r.pass) throw new Error('OpM=2% (<3.5% gate) must not bypass 20% GM-floor');
+  if (r.components.retailTierPath) throw new Error('retailTierPath must be false when OpM-median < 3.5%');
 });
 
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
