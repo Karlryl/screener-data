@@ -560,9 +560,9 @@ const CLIENT_JS = `
       {k:'OpM%',w:70,num:true}, {k:'GrossM%',w:70,num:true}, {k:'State',w:80}, {k:'MCap',w:70,num:true}
     ];
     if (tab === 'PRE_BREAKOUT') return [
-      {k:'#',w:30}, {k:'Ticker',w:60}, {k:'Company',w:240}, {k:'Sector',w:120},
-      {k:'State',w:80}, {k:'RevGr%',w:70,num:true}, {k:'GrossM%',w:70,num:true},
-      {k:'R40',w:60,num:true}, {k:'GMA',w:70}, {k:'MCap',w:70,num:true}, {k:'PB-Score',w:70,num:true}
+      {k:'#',w:30}, {k:'Ticker',w:60}, {k:'Company',w:220}, {k:'Sector',w:110},
+      {k:'State',w:80}, {k:'RevGr%',w:65,num:true}, {k:'GrossM%',w:65,num:true},
+      {k:'R40',w:55,num:true}, {k:'Signals',w:95}, {k:'MCap',w:70,num:true}, {k:'PB-Score',w:70,num:true}
     ];
     if (tab === 'WATCH') return [
       {k:'#',w:30}, {k:'Ticker',w:60}, {k:'Company',w:240}, {k:'Reason',w:120},
@@ -595,8 +595,13 @@ const CLIENT_JS = `
     }
     if (tab === 'PRE_BREAKOUT') {
       const pb = r.pbScore==null ? '—' : r.pbScore.toFixed(0);
-      const gma = r.gmaTrend ? (r.gmaTrend === 'accelerating' ? '<span class="g-pos">↑ '+(r.gmaChange!=null?r.gmaChange.toFixed(1)+'pp':'')+'</span>' : (r.gmaTrend === 'decelerating' ? '<span class="g-neg">↓</span>' : '—')) : '—';
-      return '<tr class="row" data-tk="'+r.ticker+'"><td>'+(i+1)+'</td><td class="ticker">'+r.ticker+'</td><td class="name">'+r.name+'</td><td>'+r.sector+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+gmHtml+'</td><td class="num">'+r40Html+'</td><td>'+gma+'</td><td class="num">'+fmtM(r.mcap)+'</td><td class="num">'+pb+'</td></tr>';
+      // Three-signal acceleration column: GM↑ OM↑ Rev↑ — only show active ones.
+      const sigs = [];
+      if (r.gmaTrend === 'accelerating') sigs.push('<span class="g-pos" title="Gross-Margin accelerating">GM↑</span>');
+      if (r.omaTrend === 'accelerating') sigs.push('<span class="g-pos" title="Operating-Margin accelerating">OpM↑</span>');
+      if (r.revAccelDelta != null && r.revAccelDelta > 0) sigs.push('<span class="g-pos" title="Revenue YoY accelerating +'+r.revAccelDelta.toFixed(0)+'pp">Rev↑</span>');
+      const signalsHtml = sigs.length ? sigs.join(' ') : '<span class="g-mute">—</span>';
+      return '<tr class="row" data-tk="'+r.ticker+'"><td>'+(i+1)+'</td><td class="ticker">'+r.ticker+'</td><td class="name">'+r.name+'</td><td>'+r.sector+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+gmHtml+'</td><td class="num">'+r40Html+'</td><td style="font-size:10px">'+signalsHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td><td class="num">'+pb+'</td></tr>';
     }
     if (tab === 'WATCH') {
       const score = Math.max(r.hgScore||0, r.qcScore||0).toFixed(0);
@@ -688,11 +693,29 @@ const CLIENT_JS = `
     const m = document.getElementById('modal');
     const c = document.getElementById('modalContent');
 
-    // Section A: Header
+    // Section A: Header — extended with Tag 199 audit signals
     let html = '<div class="modal-header">';
     html += '<div><span class="tk">'+r.ticker+'</span> <span class="nm">'+r.name+'</span><div class="meta">'+r.sector+' · '+r.industry+' · '+r.country+'</div></div>';
     const score = activeTab==='QC' ? r.qcScore : (activeTab==='HG' ? r.hgScore : Math.max(r.hgScore||0, r.qcScore||0));
+    // Audit-signal mini-badges. Color: green for healthy, red for fail, mute for n/a.
+    const sigBadges = [];
+    if (r.dqGrade) {
+      const dqColor = r.dqGrade === 'A+' || r.dqGrade === 'A' ? 'var(--green)'
+        : r.dqGrade === 'B' ? 'var(--text-1)'
+        : r.dqGrade === 'C' ? 'var(--yellow)' : 'var(--red)';
+      sigBadges.push('<span style="color:'+dqColor+';border:1px solid '+dqColor+';padding:1px 5px;font-size:10px">DQ:'+r.dqGrade+'</span>');
+    }
+    if (r.listingYears != null) {
+      sigBadges.push('<span style="color:var(--text-1);border:1px solid var(--border);padding:1px 5px;font-size:10px">'+r.listingYears+'y data</span>');
+    }
+    if (r.qSpikeFail) sigBadges.push('<span style="color:var(--red);border:1px solid var(--red);padding:1px 5px;font-size:10px">Q-SPIKE</span>');
+    if (r.lossMagFail) sigBadges.push('<span style="color:var(--red);border:1px solid var(--red);padding:1px 5px;font-size:10px">LOSS&gt;50%REV</span>');
+    if (r.metricDivFail) sigBadges.push('<span style="color:var(--red);border:1px solid var(--red);padding:1px 5px;font-size:10px">METRIC-DIV</span>');
+    if (r.gmaTrend === 'accelerating') sigBadges.push('<span style="color:var(--green);border:1px solid var(--green);padding:1px 5px;font-size:10px">GM↑</span>');
+    if (r.omaTrend === 'accelerating') sigBadges.push('<span style="color:var(--green);border:1px solid var(--green);padding:1px 5px;font-size:10px">OpM↑</span>');
+    if (r.revAccelDelta != null && r.revAccelDelta > 0) sigBadges.push('<span style="color:var(--green);border:1px solid var(--green);padding:1px 5px;font-size:10px">Rev-Accel +'+r.revAccelDelta.toFixed(0)+'pp</span>');
     html += '<div class="meta">Score: '+(score!=null?score.toFixed(0):'—')+' · <span class="pill '+r.state+'">'+r.state+'</span> · MCap '+fmtM(r.mcap)+'</div>';
+    if (sigBadges.length) html += '<div class="meta" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;">'+sigBadges.join('')+'</div>';
     html += '<div class="right"><button id="prevC">← Prev</button><button id="closeM">✕ ESC</button><button id="nextC">Next →</button></div>';
     html += '</div>';
 
