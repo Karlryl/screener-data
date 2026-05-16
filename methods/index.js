@@ -118,5 +118,10 @@ module.exports = [
   // (discriminant) — catches a different failure profile (services, low-leverage).
   // DIAGNOSTIC until pull-yahoo extends CA/CL/totalLiab/OCF coverage; fixture-hash
   // safe by construction (not in SCORE_WEIGHTS).
-  { file: './ohlson-o-score.js' }
+  { file: './ohlson-o-score.js' },
+
+  // Tag 210b: Mauboussin intangible-adjusted ROIC. Capitalizes R&D (5y) +
+  // SG&A (3y) into invested capital; narrows software-vs-industrial gap.
+  // DIAGNOSTIC, fixture-hash safe (not in SCORE_WEIGHTS).
+  { file: './intangible-adjusted-roic.js' }
 ];

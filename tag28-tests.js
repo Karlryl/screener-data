@@ -1437,6 +1437,72 @@ test('Tag 210a Ohlson-O: NOT-COMPUTABLE on real-snapshot shape (missing CA/CL/to
   }
 });
 
+// ─── Tag 210b — intangible-adjusted-roic (Mauboussin 2024) smoke tests ──
+// DIAGNOSTIC method, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
+// Capitalizes R&D (5y) + SG&A (3y) into invested capital. Gracefully degrades
+// to nominal ROIC when R&D/SG&A both absent (asset-light fallback).
+
+test('Tag 210b Intangible-Adjusted ROIC: PASS — software profile with R&D capitalization', () => {
+  // Synthetic software firm. TA=500, cash=50 → nominalIC=450.
+  // NI=80 → nominalROIC = 80/450 = 17.8% (passes nominal floor).
+  // R&D: 100,80,60,40,20 over 5y. Capitalized = 100*1.0 + 80*0.8 + 60*0.6 + 40*0.4 + 20*0.2
+  //     = 100 + 64 + 36 + 16 + 4 = 220.
+  // adjIC = 500 + 220 + 0 - 50 = 670 → adjROIC = 80/670 = 11.9% — FAILS 15%.
+  // To make this PASS we need a more profitable firm. Use NI=120:
+  // adjROIC = 120/670 = 17.9% → PASS.
+  const s = { annual: {
+    annualNetIncome: [{value: 120}],
+    annualRnD:       [{value: 100}, {value: 80}, {value: 60}, {value: 40}, {value: 20}],
+    annualBalance:   [{ totalAssets: 500, totalCash: 50, totalDebt: 100 }]
+  }};
+  const r = Runner.evaluateStock(s)['intangible-adjusted-roic'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (!r.pass) throw new Error('software profile should pass; got adjROIC=' + r.value + ' reason=' + r.reason);
+  if (r.components.rdUsed !== true) throw new Error('rdUsed should be true with R&D present');
+  if (r.components.rdYearsUsed !== 5) throw new Error('expected 5y R&D, got ' + r.components.rdYearsUsed);
+  if (r.components.capitalizedRD !== 220) throw new Error('expected capitalizedRD=220, got ' + r.components.capitalizedRD);
+  // Cross-check: adjROIC < nominalROIC (because capitalization grows IC)
+  if (r.components.adjROIC >= r.components.nominalROIC) {
+    throw new Error('adjROIC should be < nominalROIC after capitalization; adj=' + r.components.adjROIC + ' nom=' + r.components.nominalROIC);
+  }
+});
+
+test('Tag 210b Intangible-Adjusted ROIC: FAIL — weak earnings against fat IC', () => {
+  // Low NI relative to assets. TA=1000, cash=100 → nominalIC=900.
+  // R&D: 200,150,100,50 over 4y. Cap = 200*1.0 + 150*0.8 + 100*0.6 + 50*0.4 + 0
+  //     = 200 + 120 + 60 + 20 = 400.
+  // adjIC = 1000 + 400 + 0 - 100 = 1300. NI=80 → adjROIC = 6.2% — FAIL 15%.
+  const s = { annual: {
+    annualNetIncome: [{value: 80}],
+    annualRnD:       [{value: 200}, {value: 150}, {value: 100}, {value: 50}],
+    annualBalance:   [{ totalAssets: 1000, totalCash: 100, totalDebt: 200 }]
+  }};
+  const r = Runner.evaluateStock(s)['intangible-adjusted-roic'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (r.pass) throw new Error('weak earnings should fail 15% floor; got adjROIC=' + r.value);
+  if (r.components.adjROIC >= 0.15) throw new Error('expected adjROIC < 0.15, got ' + r.components.adjROIC);
+});
+
+test('Tag 210b Intangible-Adjusted ROIC: GRACEFUL DEGRADE — no R&D or SG&A → nominal ROIC', () => {
+  // Asset-light firm without R&D/SG&A in snapshot — must NOT crash; must
+  // compute nominal ROIC (TA - cash basis) and report rdUsed/sgaUsed=false.
+  // TA=200, cash=20 → adjIC = nominalIC = 180. NI=40 → ROIC=22.2% → PASS.
+  const s = { annual: {
+    annualNetIncome: [{value: 40}],
+    annualBalance:   [{ totalAssets: 200, totalCash: 20, totalDebt: 30 }]
+  }};
+  const r = Runner.evaluateStock(s)['intangible-adjusted-roic'];
+  if (!r.computable) throw new Error('should still be computable even without R&D/SG&A; reason=' + r.reason);
+  if (r.components.rdUsed !== false) throw new Error('rdUsed must be false when R&D absent');
+  if (r.components.sgaUsed !== false) throw new Error('sgaUsed must be false when SG&A absent');
+  if (r.components.capitalizedRD !== 0) throw new Error('capitalizedRD should be 0, got ' + r.components.capitalizedRD);
+  // adjIC should equal nominalIC when no intangibles capitalized
+  if (r.components.adjIC !== r.components.nominalIC) {
+    throw new Error('adjIC=' + r.components.adjIC + ' should equal nominalIC=' + r.components.nominalIC + ' when no intangibles');
+  }
+  if (!r.pass) throw new Error('22.2% ROIC should pass; got ' + r.value);
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the
