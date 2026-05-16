@@ -25,6 +25,7 @@ const fs = require('fs');
 const path = require('path');
 const Runner = require('./methods/runner.js');
 const SM = require('./methods/strategy-modes.js');
+const DQ = require('./methods/data-quality.js');
 
 const REGION_TO_COUNTRY = {
   'Nasdaq': 'USA', 'NasdaqCM': 'USA', 'NasdaqGM': 'USA', 'NasdaqGS': 'USA',
@@ -77,6 +78,14 @@ function loadStocks(dir) {
 function arrUnwrap(arr) {
   if (!Array.isArray(arr)) return [];
   return arr.map(unwrap);
+}
+
+// Tag 199: is the latest annual entry positive? (GAAP-profit / FCF-positive helpers)
+function annual_isPositive(arr) {
+  if (!Array.isArray(arr) || arr.length === 0) return null;
+  const v = unwrap(arr[0]);
+  if (v == null) return null;
+  return v > 0;
 }
 
 // Build per-stock row with everything the dashboard needs to render.
@@ -133,6 +142,32 @@ function buildRow(stock) {
   const qcScore = modeEvals.QUALITY_COMPOUNDER && Number.isFinite(modeEvals.QUALITY_COMPOUNDER.score) ? modeEvals.QUALITY_COMPOUNDER.score : null;
   const qcTier = modeEvals.QUALITY_COMPOUNDER ? modeEvals.QUALITY_COMPOUNDER.tier : null;
 
+  // Tag 199 audit gates: per-stock disqualification signals consumed by classifyTabs.
+  //   qSpikeFail        — q-spike-dataguard pass=false (DATAGUARD HARD-FAIL)
+  //   lossMagFail       — loss-magnitude-guard pass=false (DATAGUARD HARD-FAIL)
+  //   dqGrade           — A+/A/B/C/D from data-quality module
+  //   listingYears      — clean fiscal years available
+  // These are exposed on the row so the client can also render them in
+  // tooltips and the filter UI.
+  const qSpike = allResults['q-spike-dataguard'];
+  const qSpikeFail = !!(qSpike && qSpike.computable && qSpike.pass === false);
+  const lossMag = allResults['loss-magnitude-guard'];
+  const lossMagFail = !!(lossMag && lossMag.computable && lossMag.pass === false);
+  const listing = allResults['listing-age'];
+  const listingYears = (listing && listing.computable && Number.isFinite(listing.value)) ? listing.value : null;
+
+  let dqGrade = null;
+  let dqMissing = null;
+  try {
+    const g = DQ.gradeSnapshot(stock);
+    dqGrade = g.grade;
+    dqMissing = g.missingFields;
+  } catch (e) { /* skip */ }
+
+  // Headline profitability flags (used by GAAP/FCF toggles in UI)
+  const gaapProfitable = annual_isPositive((stock.annual && stock.annual.annualNetIncome) || []);
+  const fcfPositive    = annual_isPositive((stock.annual && stock.annual.annualFCF) || []);
+
   // Annual time-series for sparklines (compact: just the numeric arrays)
   const a = stock.annual || {};
   const annual = {
@@ -161,6 +196,7 @@ function buildRow(stock) {
     sector: (stock.meta && stock.meta.sector) || '—',
     industry: (stock.meta && stock.meta.industry) || '—',
     country,
+    ipoYear: (stock.meta && Number.isFinite(stock.meta.ipoYear)) ? stock.meta.ipoYear : null,
     mcap,
     revenueTTM,
     growth, grossMargin, opMargin, fcfMargin,
@@ -171,6 +207,9 @@ function buildRow(stock) {
     qcScore, qcTier,
     pbScore,
     gmaTrend, gmaChange,
+    // Tag 199 audit gates
+    qSpikeFail, lossMagFail, dqGrade, listingYears,
+    gaapProfitable, fcfPositive,
     annual,
     results: compactResults
   };
@@ -188,26 +227,58 @@ function classifyTabs(rows) {
   const tabs = { HG: [], QC: [], SMALL: [], R40: [], PRE_BREAKOUT: [], WATCH: [] };
 
   for (const r of rows) {
+    // Tag 199 HARD GATES — stocks failing any gate land in WATCH ONLY, regardless
+    // of growth/score. This is the precision-audit step: catches SOUN, IONQ, and
+    // similar narrative-loss patterns that score-aggregator alone can't reject.
+    //
+    //   1. q-spike-dataguard fail → single-Q spike artifact
+    //   2. loss-magnitude-guard fail → op loss > 50% of revenue
+    //   3. data-quality grade D → too many missing fields to trust the score
+    //
+    // No hardcoded tickers — these are signatures the data must satisfy.
+    const hardGated = r.qSpikeFail || r.lossMagFail || r.dqGrade === 'D';
+
+    if (hardGated) {
+      // WATCH-only entry: surface them with the reason for review, but block
+      // promotion to HG/QC/SMALL/R40/PRE_BREAKOUT.
+      const reasons = [];
+      if (r.qSpikeFail) reasons.push('Q-SPIKE');
+      if (r.lossMagFail) reasons.push('LOSS>50%REV');
+      if (r.dqGrade === 'D') reasons.push('DATA-D');
+      r.watchReasons = reasons;
+      tabs.WATCH.push(r);
+      continue;
+    }
+
+    // QC requires ≥ 3 clean fiscal years (listing-age floor) — a "durable
+    // compounder" with 1-2y of history is a misclassification by construction.
+    // Soft signal: incomputable listing-age treated as eligible (avoid bad
+    // data → false-negative path).
+    const qcEligibleByAge = (r.listingYears == null) || (r.listingYears >= 3);
+    // Data-quality grade C: visible in WATCH but blocked from HG/QC/PRE-BREAKOUT.
+    const dqBlockedFromQuality = r.dqGrade === 'C';
+
     // HG: real-hypergrowth class + score available
     if (r.hgClass && (r.hgClass === 'REAL_HYPERGROWTH_ACCELERATING' || r.hgClass === 'REAL_HYPERGROWTH_BUT_LOSSY')
-        && Number.isFinite(r.hgScore)) {
+        && Number.isFinite(r.hgScore) && !dqBlockedFromQuality) {
       tabs.HG.push(r);
     }
-    // QC: tier !== REJECT and score available
-    if (Number.isFinite(r.qcScore) && r.qcTier && r.qcTier !== 'REJECT') {
+    // QC: tier !== REJECT, score available, ≥3y history, grade ≥ B
+    if (Number.isFinite(r.qcScore) && r.qcTier && r.qcTier !== 'REJECT'
+        && qcEligibleByAge && !dqBlockedFromQuality) {
       tabs.QC.push(r);
     }
     // SMALL: mcap < 2B, growth > 20%, not LOSS
     if (r.mcap > 0 && r.mcap < 2e9 && Number.isFinite(r.growth) && r.growth > 20 && r.state !== 'LOSS') {
       tabs.SMALL.push(r);
     }
-    // R40: r40 computable
+    // R40: r40 computable (also subject to hard gates above — already filtered)
     if (Number.isFinite(r.r40)) {
       tabs.R40.push(r);
     }
     // PRE-BREAKOUT: state TURNAROUND/RECENT, growth > 25%, grossMargin available
     if ((r.state === 'TURNAROUND' || r.state === 'RECENT') && Number.isFinite(r.growth) && r.growth > 25
-        && Number.isFinite(r.grossMargin) && r.grossMargin > 0) {
+        && Number.isFinite(r.grossMargin) && r.grossMargin > 0 && !dqBlockedFromQuality) {
       tabs.PRE_BREAKOUT.push(r);
     }
     // WATCH: NEAR_MISS tier in HG or QC
@@ -447,8 +518,13 @@ const CLIENT_JS = `
     }
     if (tab === 'WATCH') {
       const score = Math.max(r.hgScore||0, r.qcScore||0).toFixed(0);
-      const reason = r.hgTier==='NEAR_MISS' ? 'HG NEAR' : (r.qcTier==='NEAR_MISS' ? 'QC NEAR' : '—');
-      return '<tr class="row" data-tk="'+r.ticker+'"><td>'+(i+1)+'</td><td class="ticker">'+r.ticker+'</td><td class="name">'+r.name+'</td><td>'+reason+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
+      // Reasons priority: explicit hard-gate reasons > NEAR_MISS tier label.
+      let reason;
+      if (r.watchReasons && r.watchReasons.length) reason = r.watchReasons.join(',');
+      else if (r.hgTier==='NEAR_MISS') reason = 'HG NEAR';
+      else if (r.qcTier==='NEAR_MISS') reason = 'QC NEAR';
+      else reason = '—';
+      return '<tr class="row" data-tk="'+r.ticker+'"><td>'+(i+1)+'</td><td class="ticker">'+r.ticker+'</td><td class="name">'+r.name+'</td><td style="font-size:10px">'+reason+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
     }
     return '';
   }
