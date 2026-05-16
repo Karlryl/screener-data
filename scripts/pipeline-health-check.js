@@ -19,7 +19,11 @@ const THRESHOLD = 0.05; // 5%
 const EXPECTED_SCRIPTS = [
   { script: 'snapshot-picks',           file: 'snapshot-picks.json' },
   { script: 'snapshot-methods-history', file: 'snapshot-methods-history.json' },
-  { script: 'generate-modes-report',    file: 'generate-modes-report.json' }
+  { script: 'generate-modes-report',    file: 'generate-modes-report.json' },
+  // Tag 203: score-history feeds the dashboard's ΔScore badges + sparkline.
+  // A silent crash would slowly degrade the modal (entries age out of the
+  // 30-day window) — make it loud.
+  { script: 'snapshot-score-history',   file: 'snapshot-score-history.json' }
 ];
 
 const ensureDir = !fs.existsSync(HEALTH_DIR);

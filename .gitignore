@@ -53,3 +53,13 @@ pipeline-health/
 # Karl runs this manually to inspect borderline classifications.
 audit-classifications.js
 audit-report.json
+
+# Tag 203: score-history/ IS committed per design doc §2 (4147 tickers × 4.5 KB
+# ≈ 18.7 MB, well under the 50 MB GitHub cap). The directory is created and
+# populated by CI (snapshot-score-history step in daily-pull.yml). Do not
+# pre-populate locally — let the first cron run own the seed commit. No
+# ignore line here; this comment exists so future contributors don't add a
+# blanket `score-history/` ignore (it would silently break the dashboard's
+# ΔScore/sparkline rendering on every fresh clone). If size ever crosses
+# 50 MB (universe > 6000 tickers) revisit by capping entries to 14 for
+# tickers outside HG ∪ QC ∪ PRE_BREAKOUT (design §2 mitigation).

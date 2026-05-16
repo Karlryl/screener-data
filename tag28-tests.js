@@ -740,6 +740,114 @@ test('Tag 202: retail-tier gate is tight — AT=3 but OpM=2% does NOT trigger (s
   if (r.components.retailTierPath) throw new Error('retailTierPath must be false when OpM-median < 3.5%');
 });
 
+// ─── Tag 203 — fintech-aware OpInc fallback (pull-yahoo.js) ──────────
+// Exercises the mapYahooToCanonical fallback that fires when
+// incomeStatementHistory.operatingIncome is null for Financial-Services
+// tickers (banks, neobanks, insurance). DIAGNOSTIC ONLY — fixture-hash
+// invariant unchanged because mapYahooToCanonical is upstream of methods.
+// (PY = require('./pull-yahoo.js') is already imported earlier in this file.)
+
+test('Tag 203 OpInc-fallback: synthetic bank (sector=Financial Services, empty OpInc, populated rev+margin) derives OpInc via margin path', () => {
+  // Mimics Yahoo payload for JPM/BAC: isHist rows have totalRevenue but null
+  // operatingIncome, AND no bank line-items (totalOperatingExpenses null).
+  // operatingMargins TTM is populated (Yahoo provides it via financialData
+  // even when income-statement detail is missing).
+  const yahoo = {
+    summaryDetail: { marketCap: 800e9, trailingPE: 14, priceToSalesTrailing12Months: 4.5, forwardPE: 13 },
+    financialData: { totalRevenue: 180e9, operatingMargins: 0.43, freeCashflow: 50e9, grossMargins: 0, revenueGrowth: 0.12 },
+    defaultKeyStatistics: { heldPercentInsiders: 0.004 },
+    assetProfile: { sector: 'Financial Services', industry: 'Banks - Diversified' },
+    price: { longName: 'Synthetic Bank', currency: 'USD', exchangeName: 'NYSE' },
+    incomeStatementHistory: { incomeStatementHistory: [
+      { totalRevenue: 182e9, operatingIncome: null, netIncome: 55e9 },
+      { totalRevenue: 177e9, operatingIncome: null, netIncome: 56e9 },
+      { totalRevenue: 158e9, operatingIncome: null, netIncome: 47e9 },
+      { totalRevenue: 128e9, operatingIncome: null, netIncome: 35e9 }
+    ]},
+    incomeStatementHistoryQuarterly: { incomeStatementHistory: [] },
+    cashflowStatementHistory: { cashflowStatements: [] },
+    balanceSheetHistory: { balanceSheetStatements: [] }
+  };
+  const wl = { ticker: 'SYNBANK', isin: null };
+  const out = PY.mapYahooToCanonical(yahoo, wl, '2026-05-16T00:00:00.000Z');
+  if (out.annual.annualOpInc.length !== 4) throw new Error('expected 4 derived OpInc entries, got ' + out.annual.annualOpInc.length);
+  if (out.meta.opIncSource !== 'computed-margin') throw new Error('expected opIncSource=computed-margin, got ' + out.meta.opIncSource);
+  // 182e9 * 0.43 = 78.26e9 — derived value should match within FP tolerance.
+  const v0 = out.annual.annualOpInc[0].value;
+  if (!approx(v0, 182e9 * 0.43, 1e6)) throw new Error('first-year derived OpInc=' + v0 + ', expected ~' + (182e9*0.43));
+});
+
+test('Tag 203 OpInc-fallback: NEVER fires for non-Financial-Services (sector-gated)', () => {
+  // Same null-OpInc shape but sector=Technology — fallback must not trigger
+  // so anchor tickers (NVDA, MSFT, etc.) are unaffected.
+  const yahoo = {
+    summaryDetail: { marketCap: 3e12, trailingPE: 50, priceToSalesTrailing12Months: 30, forwardPE: 40 },
+    financialData: { totalRevenue: 60e9, operatingMargins: 0.55, freeCashflow: 30e9, grossMargins: 0.75, revenueGrowth: 1.2 },
+    defaultKeyStatistics: { heldPercentInsiders: 0.04 },
+    assetProfile: { sector: 'Technology', industry: 'Semiconductors' },
+    price: { longName: 'Synthetic Tech', currency: 'USD', exchangeName: 'NASDAQ' },
+    // Note: operatingIncome present here (rare for tech to be null) — we
+    // simulate the rare null case to prove sector gate, not data presence.
+    incomeStatementHistory: { incomeStatementHistory: [
+      { totalRevenue: 60e9, operatingIncome: null, netIncome: 30e9 }
+    ]},
+    incomeStatementHistoryQuarterly: { incomeStatementHistory: [] },
+    cashflowStatementHistory: { cashflowStatements: [] },
+    balanceSheetHistory: { balanceSheetStatements: [] }
+  };
+  const wl = { ticker: 'SYNTECH', isin: null };
+  const out = PY.mapYahooToCanonical(yahoo, wl, '2026-05-16T00:00:00.000Z');
+  // For Tech with null OpInc, annualOpInc stays empty and opIncSource is null.
+  if (out.annual.annualOpInc.length !== 0) throw new Error('Tech sector must NOT trigger fallback; got ' + out.annual.annualOpInc.length + ' entries');
+  if (out.meta.opIncSource !== null) throw new Error('expected opIncSource=null for Tech, got ' + out.meta.opIncSource);
+});
+
+// ─── Tag 203 — score-history append + prune smoke tests ──────────────
+// Exercise scripts/snapshot-score-history.js's pure logic (no fs needed).
+// DIAGNOSTIC ONLY — does not affect fixture-hash (fixture_hash_invariant.md:
+// only methods listed in SCORE_WEIGHTS feed the hash; snapshot-score-history
+// is downstream of score-aggregator).
+const SH = require('./scripts/snapshot-score-history.js');
+
+test('Tag 203 score-history: append-and-prune is idempotent on same date', () => {
+  // Two runs on the same date with different scores → second replaces first,
+  // single entry stays. Mirrors the design §3 "drop today's entry if it
+  // already exists (idempotent re-runs)" requirement.
+  const hist = { ticker: 'FAKE', schemaVersion: SH.SCHEMA_VERSION, entries: [] };
+  const e1 = { date: '2026-05-16', hgScore: 50, qcScore: 60, pbScore: 40, hgTier: 'STRONG', qcTier: 'STRONG', hgClass: null };
+  const e2 = { date: '2026-05-16', hgScore: 55, qcScore: 65, pbScore: 45, hgTier: 'STRONG', qcTier: 'STRONG', hgClass: null };
+  const after1 = SH.appendAndPrune(hist, e1);
+  if (after1.entries.length !== 1) throw new Error('first append should produce 1 entry, got ' + after1.entries.length);
+  const after2 = SH.appendAndPrune(after1, e2);
+  if (after2.entries.length !== 1) throw new Error('same-date re-append should replace, got ' + after2.entries.length + ' entries');
+  if (after2.entries[0].hgScore !== 55) throw new Error('expected latest entry to win (hgScore=55), got ' + after2.entries[0].hgScore);
+});
+
+test('Tag 203 score-history: prune keeps last 30 entries and stays sorted', () => {
+  // Push 35 entries with descending-date order → after prune, only the
+  // 30 most recent survive AND they're sorted ascending.
+  let hist = { ticker: 'FAKE', schemaVersion: SH.SCHEMA_VERSION, entries: [] };
+  // Generate 35 dates: i=1..30 → 2026-04-01..2026-04-30; i=31..35 → 2026-05-01..2026-05-05.
+  for (let i = 35; i >= 1; i--) {
+    const monthDay = i <= 30
+      ? '2026-04-' + (i < 10 ? '0' + i : i)
+      : '2026-05-' + ((i - 30) < 10 ? '0' + (i - 30) : (i - 30));
+    hist = SH.appendAndPrune(hist, { date: monthDay, hgScore: i, qcScore: null, pbScore: null, hgTier: null, qcTier: null, hgClass: null });
+  }
+  if (hist.entries.length !== SH.MAX_ENTRIES) throw new Error('expected ' + SH.MAX_ENTRIES + ' entries after prune, got ' + hist.entries.length);
+  // Verify ascending sort
+  for (let i = 1; i < hist.entries.length; i++) {
+    if (hist.entries[i].date < hist.entries[i-1].date) {
+      throw new Error('entries should be sorted ascending; failed at index ' + i + ' (' + hist.entries[i-1].date + ' > ' + hist.entries[i].date + ')');
+    }
+  }
+  // Verify oldest entry is gone (we pushed Apr-01..Apr-30 then May-01..May-05;
+  // last 30 should start no earlier than Apr-06).
+  if (hist.entries[0].date < '2026-04-06') {
+    throw new Error('prune did not drop oldest entries; oldest=' + hist.entries[0].date);
+  }
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the

@@ -245,6 +245,18 @@ jobs:
         run: node generate-screener.js --snapshots snapshots --out screener.html
         continue-on-error: true
 
+      # Tag 203: Per-Ticker Score-History (sliding 30-entry window) — feeds the
+      # screener detail modal's ΔScore badges + sparkline (Section D). Must
+      # share AUDIT_SCORE_MULTIPLIERS with the dashboard step above so stored
+      # scores match what the dashboard renders (design §4: drift here produces
+      # a permanent fake "score uplift today" artifact). continue-on-error:
+      # secondary artifact; pipeline-health-check enforces the 5% threshold.
+      - name: Snapshot Score-History
+        env:
+          AUDIT_SCORE_MULTIPLIERS: '1'
+        run: node scripts/snapshot-score-history.js --snapshots snapshots --out score-history
+        continue-on-error: true
+
       # Tag 102g: Walk-Forward Picks-History — friert Mode-Picks pro Run für späteren Performance-Vergleich.
       # Tag 134: hard-fail. picks-history is the source of truth for backtest;
       # a silent gap of even one week destroys vintage continuity.
