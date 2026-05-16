@@ -48,3 +48,8 @@ snapshots/_manifest-full.json
 # Tag 168: pipeline-health/ is transient per-run state written by the 3 pipeline scripts.
 # Consumed by scripts/pipeline-health-check.js on the same runner, not needed in git history.
 pipeline-health/
+
+# Tag 199: precision-audit tool — local-only, not committed per /audit skill spec.
+# Karl runs this manually to inspect borderline classifications.
+audit-classifications.js
+audit-report.json
