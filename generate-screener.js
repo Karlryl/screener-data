@@ -612,6 +612,45 @@ h3.sec { color:var(--text-0); font-size:13px; font-weight:600; margin:20px 0 6px
 /* Upgrade 3: print button in header */
 header button.print-btn { background:var(--bg-2); color:var(--text-1); border:1px solid var(--border); padding:6px 10px; cursor:pointer; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; }
 header button.print-btn:hover { color:var(--text-0); border-color:var(--border-bright); }
+/* Tag 210f: light-theme toggle. Sits next to [print]; same button shape. */
+header button.theme-btn { background:var(--bg-2); color:var(--text-1); border:1px solid var(--border); padding:6px 10px; cursor:pointer; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; }
+header button.theme-btn:hover { color:var(--text-0); border-color:var(--border-bright); }
+/* Tag 210f: Light theme — daylight-readable palette (Stock Rover / Koyfin style).
+   Greens/reds stay vivid (Karl's Bloomberg muscle memory: signals = saturated).
+   Only chrome colors invert; semantic colors keep their meaning. */
+body.theme-light {
+  --bg-0:#fafbfc; --bg-1:#ffffff; --bg-2:#f5f6f8; --bg-hover:#e8edf3;
+  --border:#e1e4e8; --border-bright:#c8cdd4;
+  --text-0:#1a1d23; --text-1:#5f6b7a; --text-2:#8b94a1;
+  /* Signal colors stay saturated — darken slightly for white-bg contrast,
+     but preserve the green=good / red=bad / blue=primary muscle memory. */
+  --green:#00a86b; --red:#e63946; --yellow:#d97706; --blue:#1f6feb; --purple:#6f42c1;
+}
+/* State pills — re-tint for light bg so dark badges don't sit on white. */
+body.theme-light .pill.LOSS      { background:#fde4e7; color:#a02436; border-color:#f1bcc4; }
+body.theme-light .pill.TURNAROUND{ background:#fdf0d4; color:#8b5500; border-color:#f0d9a8; }
+body.theme-light .pill.RECENT    { background:#d6f5e6; color:#006e3a; border-color:#a8e0c2; }
+body.theme-light .pill.STABLE    { background:#dbe9ff; color:#0b4ea2; border-color:#aacbf5; }
+body.theme-light .pill.NA        { background:#f0f1f3; color:var(--text-2); border-color:#dcdfe3; }
+/* R40 score colors — darker variants for white-bg legibility */
+body.theme-light .g-r40-excellent { color:#007a4c; font-weight:700; }
+body.theme-light .g-r40-good      { color:#00a86b; }
+body.theme-light .g-r40-fair      { color:#b06400; }
+body.theme-light .g-r40-warn      { color:#cc5500; }
+body.theme-light .g-r40-bad       { color:#c1162b; }
+body.theme-light .g-pos { color:#00a86b; }
+body.theme-light .g-neg { color:#c1162b; }
+/* Modal overlay — light-mode uses a softer scrim so it reads as a card over
+   a daylit page, not a punched-out black hole. */
+body.theme-light .modal { background:rgba(120,128,140,0.35); }
+/* Search results need a white surface in light mode (not the dark bg-1). */
+body.theme-light .search-results { background:#ffffff; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
+/* Sparklines: dark-mode uses #3d8fff for "trend up" — fine on light bg too
+   (decent contrast on white). The #ff3d5a for trend-down is also OK. We
+   leave the inline SVG colors alone (they're set in JS via the --blue/--red
+   semantic vars consumed elsewhere; spark() hard-codes hex which we override
+   below via the colorMap injected into window). See CLIENT_JS spark() — the
+   light-mode-aware color lookup runs at draw time. */
 /* Upgrade 3a: mobile responsive (≤700px) */
 @media (max-width:700px) {
   header { flex-wrap:wrap; gap:8px; padding:8px 10px; }
@@ -632,7 +671,7 @@ header button.print-btn:hover { color:var(--text-0); border-color:var(--border-b
 /* Upgrade 3b: print styles — render only the active table, light theme */
 @media print {
   body { background:#fff; color:#000; font-size:10pt; }
-  header, .tabs, .filters, #active-filters, .pagination, .modal, .search-results { display:none !important; }
+  header, .tabs, .filters, #active-filters, .pagination, .modal, .search-results, #themeBtn { display:none !important; }
   .summary { background:#fff; color:#000; border-bottom:1px solid #888; padding:4px 0; }
   .summary strong { color:#000; }
   #explainer { background:#fff; color:#333; border-bottom:1px solid #888; }
@@ -1377,6 +1416,30 @@ const CLIENT_JS = `
   const printBtn = document.getElementById('printBtn');
   if (printBtn) printBtn.onclick = () => window.print();
 
+  // Tag 210f: light-theme toggle. State persists in localStorage so the page
+  // remembers Karl's preference across reloads. Default = dark (Bloomberg).
+  // Button label flips between [☀] (currently dark, click to go light) and
+  // [☾] (currently light, click to go dark). No prefers-color-scheme auto-
+  // detect — Karl explicitly chose dark-by-default in the spec.
+  const themeBtn = document.getElementById('themeBtn');
+  function applyTheme(theme) {
+    if (theme === 'light') {
+      document.body.classList.add('theme-light');
+      if (themeBtn) { themeBtn.textContent = '[☾]'; themeBtn.title = 'Switch to dark theme'; }
+    } else {
+      document.body.classList.remove('theme-light');
+      if (themeBtn) { themeBtn.textContent = '[☀]'; themeBtn.title = 'Switch to light theme'; }
+    }
+  }
+  let savedTheme = 'dark';
+  try { savedTheme = localStorage.getItem('screener_theme') || 'dark'; } catch (e) { /* localStorage blocked */ }
+  applyTheme(savedTheme);
+  if (themeBtn) themeBtn.onclick = () => {
+    const next = document.body.classList.contains('theme-light') ? 'dark' : 'light';
+    applyTheme(next);
+    try { localStorage.setItem('screener_theme', next); } catch (e) { /* ignore */ }
+  };
+
   renderTable();
 })();
 `;
@@ -1427,6 +1490,7 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
     <div id="searchResults" class="search-results"></div>
   </div>
   <button id="printBtn" class="print-btn" title="Print current view">[print]</button>
+  <button id="themeBtn" class="theme-btn" title="Toggle light/dark theme">[☀]</button>
 </header>
 <div class="tabs">
   <button data-tab="HG" class="active">⚡ Hypergrowth</button>
