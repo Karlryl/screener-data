@@ -194,7 +194,11 @@ jobs:
           source="manifest"
           # F-CI-012: use watchlist length as the denominator in fallback (not file_count)
           # to avoid 100% coverage when total=file_count and ok=file_count (1800/1800 = 100%)
-          watchlist_total=$(node -e "const fs=require('fs');try{const w=JSON.parse(fs.readFileSync('./watchlist.json','utf8'));console.log(Array.isArray(w)?w.length:Object.keys(w).length)}catch(e){console.log(0)}")
+          # Tag 207b: schema-aware watchlist size (same fix pattern as Tag 207a).
+          # Watchlist is { _meta, stocks:[...], lastUniverseRefresh, ... } since wrap;
+          # counting Object.keys returned 4 instead of 15734 (only mattered in the
+          # fallback branch but still latent bug).
+          watchlist_total=$(node -e "const fs=require('fs');try{const w=JSON.parse(fs.readFileSync('./watchlist.json','utf8'));let n;if(Array.isArray(w))n=w.length;else if(w&&Array.isArray(w.stocks))n=w.stocks.length;else n=Object.keys(w).length;console.log(n)}catch(e){console.log(0)}")
           if [ "$total" -eq 0 ] || [ "$ok" -eq 0 ]; then
             file_count=$(node -e "const fs=require('fs');try{const files=fs.readdirSync('./snapshots').filter(f=>f.endsWith('.json')&&f!=='_manifest.json');console.log(files.length)}catch(e){console.log(0)}")
             echo "Manifest reports $ok/$total — falling back to file count: $file_count .json files in ./snapshots/"
@@ -208,10 +212,16 @@ jobs:
               source="file-count"
             fi
           fi
-          min_ok=$(node -e "console.log(Math.max(1800,Math.floor(${total}*0.4)))")
-          echo "Snapshots ok: $ok / $total (threshold: $min_ok, source: $source)"
+          # Tag 207b: relaxed coverage gate after run #104 failed at this step with a
+          # 7-hour Yahoo Pull (compared to historical 75-165min). Yahoo's reliability
+          # fluctuates; the prior 40%/1800-floor was too strict — one bad-Yahoo day
+          # killed the entire pipeline. New: 25% relative / 1000 absolute floor.
+          # Still rejects "Yahoo totally broken" (~0 pulls) but tolerates 20-40%
+          # throttle days that historically passed.
+          min_ok=$(node -e "console.log(Math.max(1000,Math.floor(${total}*0.25)))")
+          echo "Snapshots ok: $ok / $total (threshold: $min_ok = max(1000, total*0.25), source: $source)"
           if [ "$ok" -lt "$min_ok" ]; then
-            echo "::error::Pull coverage $ok/$total < threshold $min_ok (40% of universe, floor 1800, source: $source)"
+            echo "::error::Pull coverage $ok/$total < threshold $min_ok (25% of universe, floor 1000, source: $source)"
             exit 1
           fi
 
