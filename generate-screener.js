@@ -300,9 +300,19 @@ function classifyTabs(rows) {
         && Number.isFinite(r.hgScore) && !dqBlockedFromQuality) {
       tabs.HG.push(r);
     }
-    // QC: tier !== REJECT, score available, ≥3y history, grade ≥ B
+    // QC: tier !== REJECT, score available, ≥3y history, grade ≥ B,
+    //     AND non-shrinking revenue (Tag 201d — Agent 1 found NHY.OL/BAH/
+    //     PNDORA.CO leaking into QC despite negative growth).
+    //     A "quality compounder" by definition compounds; -3% growth means
+    //     mature/declining, which belongs in WATCH or a future "DIVIDEND"
+    //     tab — not a QC list. Threshold 0% (not 5%): we still admit flat-
+    //     growth fortresses (regulated utilities-style stable-share-buyer
+    //     compounders like AZO sometimes print 1-2% growth in down years).
+    //     Stocks with null growth (data gap) stay eligible — better to
+    //     show with a missing-data flag than silently exclude.
+    const qcGrowthFloorOK = (r.growth == null) || (r.growth >= 0);
     if (Number.isFinite(r.qcScore) && r.qcTier && r.qcTier !== 'REJECT'
-        && qcEligibleByAge && !dqBlockedFromQuality) {
+        && qcEligibleByAge && !dqBlockedFromQuality && qcGrowthFloorOK) {
       tabs.QC.push(r);
     }
     // SMALL: mcap < 2B, growth > 20%, not LOSS
