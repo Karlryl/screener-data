@@ -80,6 +80,7 @@ module.exports = [
   { file: './sbc-trend.js' },
   { file: './insider-net-buying.js' },
   { file: './net-income-volatility-guard.js' },
+  { file: './pre-commerciality-megacap-guard.js' },
   { file: './volatility-annualized.js' },
   { file: './drawdown-52w.js' },
   { file: './high-proximity-52w.js' },

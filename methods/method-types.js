@@ -52,6 +52,7 @@ const REGISTRY = {
   'sbc-trend':                  { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 201: SBC/Revenue ratio direction over 3y — slow-burn dilution-drift detector' },
   'insider-net-buying':         { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 201: Net insider buys minus sells (180d) — complements cluster signal with sell-side balance' },
   'net-income-volatility-guard':{ type: 'DATAGUARD',  defaultActive: true,  reason: 'Tag 200b: NI single-year swing > 100% of revenue — catches non-operating noise (MSTR-style)' },
+  'pre-commerciality-megacap-guard':{ type: 'DATAGUARD', defaultActive: true, reason: 'Tag 201b: mcap > 1B but rev < 100M — narrative-only mega-cap (QS/JOBY pattern bypassing existing gates)' },
   'opinc-margin-spike':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Operating margin shock detection' },
   'drawdown-52w':               { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },
   'high-proximity-52w':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },

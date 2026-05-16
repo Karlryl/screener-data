@@ -603,6 +603,32 @@ test('single-quarter-dependency: incomputable on <8 quarters', () => {
   if (r.computable) throw new Error('should be incomputable with 4 quarters');
 });
 
+// Tag 201b: pre-commerciality megacap guard
+test('pre-commerciality-megacap-guard: PASS when mcap < 1B', () => {
+  const s = makeStock({}, {}, []);
+  s.marketCap = 500e6;
+  s.annual.annualRev = [{ value: 0 }];
+  const r = Runner.evaluateStock(s)['pre-commerciality-megacap-guard'];
+  if (!r.pass) throw new Error('sub-1B mcap should pass guard');
+});
+
+test('pre-commerciality-megacap-guard: FAIL on QS-pattern (mcap>1B + rev=0)', () => {
+  const s = makeStock({}, {}, []);
+  s.marketCap = 5e9;
+  s.annual.annualRev = [{ value: 0 }];
+  const r = Runner.evaluateStock(s)['pre-commerciality-megacap-guard'];
+  if (!r.computable) throw new Error('should be computable');
+  if (r.pass) throw new Error('QS-pattern (5B mcap, 0 rev) must fail');
+});
+
+test('pre-commerciality-megacap-guard: PASS for established compounder', () => {
+  const s = makeStock({}, {}, []);
+  s.marketCap = 100e9;
+  s.annual.annualRev = [{ value: 50e9 }];
+  const r = Runner.evaluateStock(s)['pre-commerciality-megacap-guard'];
+  if (!r.pass) throw new Error('mega-cap with 50B rev must pass');
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the
