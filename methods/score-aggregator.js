@@ -91,7 +91,15 @@ function normalizeMethodScore(methodResult, methodMeta) {
   // Tag 152: guard non-numeric thresholds (e.g. profitability-state exports threshold:'TURNAROUND',
   // profitability-trend exports threshold:'FLAT') — dividing by a string produces NaN which
   // poisons weightedSum and turns any failing stock's score into NaN → silent REJECT mis-tier.
-  if (val == null || threshold == null || typeof threshold !== 'number') return 0.3;
+  // Tag 206l (Bug-Hunt Agent F MEDIUM-3): when threshold is non-numeric AND
+  // pass is EXPLICITLY false, the method has rendered a definitive negative
+  // verdict (e.g. profitability-state = LOSS when min acceptable is TURNAROUND).
+  // The previous 0.3 partial-credit fallback was too generous for such verdicts.
+  // Return 0.0 in that case. The 0.3 still applies when pass is undefined/null
+  // (genuinely ambiguous) or value is missing — preserves graceful degradation.
+  if (val == null || threshold == null || typeof threshold !== 'number') {
+    return (methodResult.pass === false) ? 0.0 : 0.3;
+  }
 
   var op = (methodMeta && methodMeta.thresholdOp) || 'gte';
 
@@ -219,7 +227,13 @@ function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, data
   //      years look.
   var auditMultiplier = 1.0;
   var auditMultiplierApplied = false;
-  if (process.env.AUDIT_SCORE_MULTIPLIERS === '1') {
+  // Tag 206l (Bug-Hunt Agent F LOW): accept multiple truthy env values.
+  // Previously strict '1' only — 'true', 'yes', 'on', 'TRUE' silently failed
+  // open (multipliers not applied), even though the user clearly intended
+  // to enable them. Standardize on the conventional env-flag truthy set.
+  var _amVal = (process.env.AUDIT_SCORE_MULTIPLIERS || '').toString().toLowerCase();
+  var _amEnabled = (_amVal === '1' || _amVal === 'true' || _amVal === 'yes' || _amVal === 'on');
+  if (_amEnabled) {
     var qSpikeRes = allResults['q-spike-dataguard'];
     if (qSpikeRes && qSpikeRes.computable && qSpikeRes.components &&
         Number.isFinite(qSpikeRes.components.spikeShare)) {

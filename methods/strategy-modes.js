@@ -164,11 +164,20 @@ function evaluateMode(stock, modeId, allResults) {
   // Tag 117: Mcap-Floor pro Mode
   if (mode.mcapFloor != null) {
     const mcRaw = stock && stock.marketCap;
-    const mc = (typeof mcRaw === 'number') ? mcRaw : (mcRaw && mcRaw.value) || 0;
+    // Tag 206l (Bug-Hunt Agent F MEDIUM-5): distinguish missing marketCap
+    // from below-floor. Previously a missing mcap collapsed to mc=0 and was
+    // reported as 'mcap_below_floor' — making it impossible for the audit
+    // pipeline to distinguish "no data" from "real failure". The two cases
+    // need different remediations: missing → pull-yahoo gap; below-floor →
+    // legitimate exclusion.
+    const mcUnwrapped = (typeof mcRaw === 'number') ? mcRaw : (mcRaw && mcRaw.value);
+    if (mcUnwrapped == null || !Number.isFinite(mcUnwrapped)) {
+      return { passed: false, reason: 'mcap_missing', mcap: null, mcapFloor: mode.mcapFloor };
+    }
     // Bug #22: mc > 0 guard allows stocks with missing marketCap (mc=0) to bypass the floor.
     // A stock with no mcap data should also fail the floor check.
-    if (mc < mode.mcapFloor) {
-      return { passed: false, reason: 'mcap_below_floor', mcap: mc, mcapFloor: mode.mcapFloor };
+    if (mcUnwrapped < mode.mcapFloor) {
+      return { passed: false, reason: 'mcap_below_floor', mcap: mcUnwrapped, mcapFloor: mode.mcapFloor };
     }
   }
 
