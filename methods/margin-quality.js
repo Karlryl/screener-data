@@ -10,6 +10,21 @@
  *
  * Diese Methode kapselt alle drei Tests in einem Composite-Filter,
  * weil sie konzeptionell zusammen gehoeren (Pricing-Power + Decline).
+ *
+ * Tag 202: High-Turnover-Retail-Tier (pattern-based, NOT sector/ticker)
+ * --------------------------------------------------------------------
+ *   - AT >= 3.0 UND OpMargin-Median >= 3.5% → 20% GM-Hard-Floor entfaellt;
+ *     Margin-Quality wird allein durch OpMargin-Median bestaetigt.
+ *   - Begruendung: Retail-Compounder (COST-Muster) haben strukturell
+ *     niedrige Bruttomargen (~13%) — das ist die Velocity-vs-Margin-
+ *     Architektur. Hoher AT (~3.5x) und stabile OpMargin sind das
+ *     echte Quality-Signal; GM ist hier kein Pricing-Power-Proxy.
+ *     Software laeuft umgekehrt (GM~70%, AT<1).
+ *   - Der GM-Decline-Test bleibt aktiv (Pricing-Power-Erosion ist
+ *     auch fuer Retail relevant), wird aber gegen den niedrigeren
+ *     Retail-GM-Median gemessen.
+ *   - Gate ist eng (AT>=3 + OpM>=3.5%) — Software-Anchor (MSFT/ASML/NVDA)
+ *     haben AT<1; Fixture-Stock hat AT=0.33 — triggern nicht.
  */
 const H = require('./_helpers.js');
 
@@ -74,16 +89,21 @@ function evaluate(stock) {
   const latestRev = rawRevs[0];
   const at = (Number.isFinite(latestRev) && latestRev > 0 && totalAssets) ? latestRev / totalAssets : null;
   const highTurnover = at != null && at >= 2.0;
+  // Tag 202: High-Turnover-Retail-Tier — AT>=3 + OpM-Median>=3.5% waives the 20% GM-Hard-Floor.
+  const retailTier = at != null && at >= 3.0 && opMargMedian >= 0.035;
 
   const reasons = [];
   let pass = true;
+  let pathUsed = 'standard';
+  if (retailTier) pathUsed = 'high-turnover-retail-tier';
+  else if (highTurnover) pathUsed = 'AT-Override';
 
-  // Hard fail GM < 20%
-  if (gmMedian < 0.20) {
+  // Hard fail GM < 20% — waived for Retail-Tier (structural low-GM business model)
+  if (gmMedian < 0.20 && !retailTier) {
     pass = false;
     reasons.push(`GM-Median ${(gmMedian*100).toFixed(0)}% < 20% (always-fail)`);
-  } else {
-    // GM-Floor
+  } else if (!retailTier) {
+    // GM-Floor (Standard or AT-Override). Retail-Tier waives GM-floor entirely.
     const gmFloorRequired = highTurnover ? 0.20 : 0.35;
     if (gmMedian < gmFloorRequired) {
       pass = false;
@@ -91,11 +111,11 @@ function evaluate(stock) {
     }
   }
 
-  // OpMargin-Floor
-  const opMarginRequired = highTurnover ? 0.035 : 0.15;
+  // OpMargin-Floor — Retail-Tier uses the same 3.5% floor as AT-Override (gate already enforced retail >=3.5%)
+  const opMarginRequired = (highTurnover || retailTier) ? 0.035 : 0.15;
   if (opMargMedian < opMarginRequired) {
     pass = false;
-    reasons.push(`OpMargin-Median ${(opMargMedian*100).toFixed(1)}% < ${(opMarginRequired*100).toFixed(1)}% (${highTurnover ? 'AT-Override' : 'Standard'})`);
+    reasons.push(`OpMargin-Median ${(opMargMedian*100).toFixed(1)}% < ${(opMarginRequired*100).toFixed(1)}% (${pathUsed})`);
   }
 
   // GM-Decline asymmetric
@@ -119,17 +139,19 @@ function evaluate(stock) {
       gmTTM,
       assetTurnover: at,
       highTurnoverPath: highTurnover,
+      retailTierPath: retailTier,
+      pathUsed,
       gmDeclineFail
     },
     reason: pass
-      ? `GM-Med=${(gmMedian*100).toFixed(0)}% OpM-Med=${(opMargMedian*100).toFixed(1)}% (${highTurnover ? 'AT-Override' : 'Std'})`
+      ? `GM-Med=${(gmMedian*100).toFixed(0)}% OpM-Med=${(opMargMedian*100).toFixed(1)}% (${pathUsed})`
       : reasons.join('; ')
   });
 }
 
 module.exports = {
   id: ID, label: LABEL,
-  description: 'GM>=35% (oder >=20% mit AT>=2), OpMargin>=15% (oder >=3.5% mit AT>=2), GM-Decline asymmetrisch',
+  description: 'GM>=35% (oder >=20% mit AT>=2), OpMargin>=15% (oder >=3.5% mit AT>=2 / AT>=3 Retail-Tier ohne GM-Floor), GM-Decline asymmetrisch',
   threshold: 0.35, thresholdOp: 'gte', unit: 'ratio',
   evaluate
 };
