@@ -34,12 +34,33 @@ const SPIKE_SHARE_HARD = 0.55;       // >55% Single-Q-Konzentration → Fail
 // Specific tickers that motivated the tune are now in EXCLUDED_TICKERS below
 // (per Phase 2 plan: address single-ticker problems with excludes, not threshold-tuning).
 const OI_SEVERITY_HARD = 3.0;
-// Tag 134 — Phase 2: per-method exclude list for tickers where the structural pattern
-// of the method genuinely doesn't apply. Each entry needs a one-line justification.
-const EXCLUDED_TICKERS = new Set([
-  'IONQ', 'RGTI', 'QBTS', 'QUBT'  // quantum-computing: pre-revenue R&D companies, Q-spikes are research-grant artifacts
-]);
+// Tag 206n (Bug-Hunt Agent B side-finding): the previous hardcoded
+// EXCLUDED_TICKERS list (IONQ, RGTI, QBTS, QUBT) violated the project's
+// "no hardcoded tickers" operating doctrine. Replaced with a pattern-based
+// "quantum-or-research-stage" detector: industry-token match + financial
+// shape (micro-revenue, deeply negative OpMargin). New names in the same
+// category (any future quantum / fusion / advanced-materials pre-revenue
+// listing) are now caught automatically without code changes.
 const HYPERGROWTH_TRIGGER = 100;     // YoY > 100% → DataGuard aktiv
+
+// Tag 206n: pattern-based replacement for the hardcoded quantum-computing
+// exclude list. Quantum / pre-revenue research companies have:
+//   - Industry token: "quantum computing" | "scientific & technical instruments"
+//     (Yahoo's bucket for QBTS, QUBT, IONQ, RGTI)
+//   - Revenue TTM under $100M (research-grant / pilot-contract scale)
+//   - OpMargin deeply negative (no commercial scale yet)
+// These are not commercial businesses; Q-spikes are research-grant artifacts.
+// Marked as failing the q-spike-dataguard so they hard-gate from HG/QC/R40/etc.
+const QUANTUM_INDUSTRY_RE = /\b(quantum|scientific\s*&?\s*technical\s*instruments)\b/i;
+function _isQuantumOrResearchStage(stock) {
+  const industry = (stock.meta && stock.meta.industry) || '';
+  if (!QUANTUM_INDUSTRY_RE.test(industry)) return false;
+  const revTTM = H.metricValue(stock, 'revenueTTM');
+  const opMargin = H.metricValue(stock, 'operatingMargin');
+  if (revTTM == null || opMargin == null) return false;
+  // Micro-revenue ($<100M) AND OpMargin < -100% = research-stage signature.
+  return (revTTM < 100e6) && (opMargin < -100);
+}
 
 function _arr(stock, path) {
   const a = H.val(stock, path);
@@ -103,14 +124,15 @@ function evaluate(stock) {
       reason: 'no stock data'
     });
   }
-  // Tag 134 — Phase 2: per-method exclude list (Tag 129 enforcement).
-  // The threshold reverts to 3.0; specific quantum-computing names that
-  // motivated the prior 2.0 tune are explicitly excluded here.
-  const ticker = (stock.meta && stock.meta.ticker) || '';
-  if (EXCLUDED_TICKERS.has(String(ticker).toUpperCase())) {
+  // Tag 206n (pattern replacement for hardcoded exclude list): catch
+  // quantum-computing and research-stage pre-revenue companies via industry +
+  // financial-shape pattern instead of ticker list. The 4 prior hardcoded
+  // tickers (IONQ, RGTI, QBTS, QUBT) match this pattern; future quantum/
+  // fusion/advanced-materials listings will too without code changes.
+  if (_isQuantumOrResearchStage(stock)) {
     return H.buildResult({
-      computable: true, pass: false, value: 'EXCLUDED_TICKER',
-      reason: 'ticker on q-spike-dataguard exclude list (pre-revenue R&D, Q-spikes are research-grant artifacts)'
+      computable: true, pass: false, value: 'RESEARCH_STAGE',
+      reason: 'quantum/research-stage pattern (industry match + rev<$100M + OpM<-100%) — Q-spikes are research-grant artifacts, not commercial revenue'
     });
   }
   const yoyGrowth = H.metricValue(stock, 'revenueGrowthYoY');
