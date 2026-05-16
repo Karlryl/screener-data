@@ -482,7 +482,11 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   let opIncSource = annualOpInc.length > 0 ? 'native' : null;
   const _sectorRaw = _y(ap, 'sector') || null;
   const _opMargRaw = _y(fd, 'operatingMargins');
-  if (annualOpInc.length === 0 && _sectorRaw === 'Financial Services') {
+  // Tag 206f (Bug-Hunt Agent D HIGH F3): Yahoo occasionally returns 'Financials'
+  // (singular) instead of 'Financial Services' for holding-co's (BX, KKR class).
+  // Strict equality missed those — fallback never ran for them.
+  const _isFinancialSector = (_sectorRaw === 'Financial Services' || _sectorRaw === 'Financials');
+  if (annualOpInc.length === 0 && _isFinancialSector) {
     const derived = _deriveOpIncForFinancials(isHist, annualRev, _opMargRaw);
     if (derived.values.length > 0 && derived.source) {
       annualOpInc = derived.values;
@@ -641,6 +645,13 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   const _tc = _y(pr, 'currency');
   const rcOriginal = (_fc && _fc !== _tc) ? _fc : (_tc || 'USD');
   const tradingCurrency = _tc || rcOriginal; // NEW: trading-quote ccy for downstream visibility
+  // Tag 206f (Bug-Hunt Agent D HIGH C2): if Yahoo returns null financialCurrency,
+  // we fall back to trading-currency — which is correct for native listings
+  // (USD/USD) but WRONG for OTC pink-sheets where annual.* may be in a third
+  // currency. Flag this case so the audit pipeline can surface affected tickers.
+  // We can't detect the actual financialCurrency without external data, but we
+  // CAN flag the uncertainty.
+  const _ccyAmbiguous = (_fc == null && _tc != null);
   const exchangeName = _y(pr, 'exchangeName') || '';
   return {
     identifier: { primary: 'ISIN', value: watchlistEntry.isin || `TICKER:${watchlistEntry.ticker}` },
@@ -666,7 +677,10 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       // Downstream methods (rule-of-40 etc.) will use the annual-FCF fallback
       // path or report computable:false. Flag preserved so audit pipeline can
       // surface affected tickers without re-deriving the bound.
-      fcfMarginTTMSuppressed
+      fcfMarginTTMSuppressed,
+      // Tag 206f: Yahoo returned no financialCurrency — we used trading
+      // currency as a best-effort proxy. Audit flag for OTC/pink-sheet edge.
+      ccyAmbiguous: _ccyAmbiguous
     },
     // Tag 134: marketCap stored in reportingCurrency at mapper level;
     // _convertSnapshotToUSD applies FX conversion uniformly across all currency-denominated fields.
@@ -1160,7 +1174,16 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const _qsOpIncNonNull = (canonical.annual.annualOpInc || []).filter(v => v != null && (typeof v !== 'object' || v.value != null)).length;
       const _ftsOpIncNonNull = (ftsAnnual.annualOpInc || []).filter(v => v != null && (typeof v !== 'object' || v.value != null)).length;
       if (_ftsOpIncNonNull > _qsOpIncNonNull) {
-        canonical.annual.annualOpInc = ftsAnnual.annualOpInc.filter(v => v != null && (typeof v !== 'object' || v.value != null));
+        // Tag 206f (Bug-Hunt Agent D HIGH F2): do NOT .filter() out nulls.
+        // mapFTSToAnnual.js pushes null placeholders for OpInc-missing rows so that
+        // annualOpInc[i] stays aligned with annualRev[i] / annualNetIncome[i] by
+        // year (F-DP-030/031). Filtering nulls re-introduces positional drift:
+        // a bank with annualRev=[10,9,8,7] and annualOpInc=[3,null,2,null]
+        // becomes [3,2] after filter — now annualOpInc[1] (=2) wrongly maps
+        // to annualRev[1] (=9, last year) instead of annualRev[2] (=8, 2y ago).
+        // Downstream methods (_rawVals helper inside reinvestment-rate / margin-
+        // quality / etc.) already tolerate nulls in-place.
+        canonical.annual.annualOpInc = ftsAnnual.annualOpInc;
         if (canonical.meta) canonical.meta.opIncSource = 'native';
       }
       // Tag-28: annualBalance aus FTS überschreiben wenn FTS mehr nicht-null Werte hat
@@ -1213,7 +1236,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         const _postOpMarg = canonical.metrics && canonical.metrics.operatingMargin && canonical.metrics.operatingMargin.value;
         // operatingMargin.value is in percent (43.741); convert back to fraction.
         const _opMargFrac = (typeof _postOpMarg === 'number' && Number.isFinite(_postOpMarg)) ? _postOpMarg / 100 : null;
-        if (_postOpIncNonNull === 0 && _postSector === 'Financial Services' && _postRev.length > 0) {
+        // Tag 206f: accept both Financial Services and Financials variant (same fix as mapper line).
+        const _postIsFinancial = (_postSector === 'Financial Services' || _postSector === 'Financials');
+        if (_postOpIncNonNull === 0 && _postIsFinancial && _postRev.length > 0) {
           const _retry = _deriveOpIncForFinancials([], _postRev, _opMargFrac);
           if (_retry.values.length > 0 && _retry.source) {
             canonical.annual.annualOpInc = _retry.values;
