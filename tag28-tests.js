@@ -1070,6 +1070,130 @@ test('Tag 209a Gross-Profitability: FAIL case (GP=10, TA=100 → ratio 0.10, < 0
   if (r.pass) throw new Error('0.10 must fail the 0.20 floor, got pass=' + r.pass);
 });
 
+// ─── Tag 209b — sector-relative-roic (sector-percentile ranking) ─────
+// DIAGNOSTIC method, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
+// Citation: Stock Rover / Simply Wall St / Tikr — peer-group percentile.
+
+test('Tag 209b percentile(): basic interpolation (R-7 / Excel PERCENTILE)', () => {
+  const { percentile } = require('./methods/sector-medians-compute.js');
+  const arr = [1, 2, 3, 4, 5];
+  if (percentile(arr, 0) !== 1) throw new Error('p0 should be 1, got ' + percentile(arr, 0));
+  if (percentile(arr, 1) !== 5) throw new Error('p100 should be 5, got ' + percentile(arr, 1));
+  if (percentile(arr, 0.5) !== 3) throw new Error('p50 should be 3, got ' + percentile(arr, 0.5));
+  if (!approx(percentile(arr, 0.25), 2.0)) throw new Error('p25 should be 2.0, got ' + percentile(arr, 0.25));
+  if (!approx(percentile(arr, 0.75), 4.0)) throw new Error('p75 should be 4.0, got ' + percentile(arr, 0.75));
+});
+
+test('Tag 209b percentile(): empty array → null', () => {
+  const { percentile } = require('./methods/sector-medians-compute.js');
+  if (percentile([], 0.5) !== null) throw new Error('empty should be null');
+});
+
+test('Tag 209b lookupPercentile(): v2 region-aware lookup hits region bucket', () => {
+  const { lookupPercentile } = require('./methods/sector-median-lookup.js');
+  const medians = {
+    _version: 2,
+    byRegion: {
+      US: { SAAS: { roic: 0.15, _p25_roic: 0.05, _p50_roic: 0.15, _p75_roic: 0.25, _p90_roic: 0.40, _n_roic: 50 } },
+      _GLOBAL: { SAAS: { roic: 0.10, _p25_roic: 0.02, _p50_roic: 0.10, _p75_roic: 0.20, _p90_roic: 0.35, _n_roic: 200 } }
+    }
+  };
+  const stock = { meta: { exchange: 'NMS', region: 'US' } };
+  const r = lookupPercentile(medians, stock, 'SAAS', 'roic', 75);
+  if (r.value !== 0.25) throw new Error('expected US p75=0.25, got ' + r.value);
+  if (!r.source.startsWith('US/')) throw new Error('expected US source, got ' + r.source);
+  if (r.n !== 50) throw new Error('expected n=50, got ' + r.n);
+});
+
+test('Tag 209b lookupPercentile(): falls back to _GLOBAL when region bucket missing', () => {
+  const { lookupPercentile } = require('./methods/sector-median-lookup.js');
+  const medians = {
+    _version: 2,
+    byRegion: {
+      _GLOBAL: { SAAS: { _p75_roic: 0.20, _n_roic: 100 } }
+    }
+  };
+  const stock = { meta: { exchange: 'TYO' } };
+  const r = lookupPercentile(medians, stock, 'SAAS', 'roic', 75);
+  if (r.value !== 0.20) throw new Error('expected GLOBAL p75=0.20, got ' + r.value);
+  if (!r.source.startsWith('GLOBAL/')) throw new Error('expected GLOBAL source, got ' + r.source);
+});
+
+test('Tag 209b lookupPercentile(): below-minN sector returns not-found', () => {
+  const { lookupPercentile } = require('./methods/sector-median-lookup.js');
+  const medians = {
+    _version: 2,
+    byRegion: {
+      _GLOBAL: { SAAS: { _p75_roic: 0.20, _n_roic: 3 } }
+    }
+  };
+  const stock = { meta: { exchange: 'NMS' } };
+  const r = lookupPercentile(medians, stock, 'SAAS', 'roic', 75, 5);
+  if (r.value !== null) throw new Error('n<5 should return null value, got ' + r.value);
+  if (r.source !== 'not-found') throw new Error('expected not-found, got ' + r.source);
+});
+
+test('Tag 209b lookupPercentile(): invalid percentile tag returns invalid-percentile', () => {
+  const { lookupPercentile } = require('./methods/sector-median-lookup.js');
+  const r = lookupPercentile({ _version: 2, byRegion: {} }, {}, 'SAAS', 'roic', 33);
+  if (r.source !== 'invalid-percentile') throw new Error('expected invalid-percentile, got ' + r.source);
+});
+
+test('Tag 209b sector-relative-roic: incomputable when stock has no annual data', () => {
+  const s = { meta: { ticker: 'EMPTY' } };
+  const r = Runner.evaluateStock(s)['sector-relative-roic'];
+  if (r.computable) throw new Error('expected computable=false for empty stock, got ' + JSON.stringify(r));
+  if (!r.reason || !/roic not computable/i.test(r.reason)) {
+    throw new Error('expected reason to mention roic not computable, got: ' + r.reason);
+  }
+});
+
+test('Tag 209b sector-relative-roic: incomputable when invested capital <= 0', () => {
+  const s = { meta: { ticker: 'NEGIC' }, annual: {
+    annualNetIncome: [{ value: 5 }],
+    annualBalance: [{ totalAssets: 20, totalCash: 50 }]
+  }};
+  const r = Runner.evaluateStock(s)['sector-relative-roic'];
+  if (r.computable) throw new Error('expected computable=false when invested cap <= 0');
+});
+
+test('Tag 209b sector-relative-roic: registered as DIAGNOSTIC + defaultActive', () => {
+  const MT = require('./methods/method-types.js');
+  if (MT.getType('sector-relative-roic') !== 'DIAGNOSTIC') {
+    throw new Error('expected DIAGNOSTIC, got ' + MT.getType('sector-relative-roic'));
+  }
+  if (!MT.isDefaultActive('sector-relative-roic')) {
+    throw new Error('expected defaultActive=true');
+  }
+});
+
+test('Tag 209b sector-relative-roic: contract — when computable, value/rank/pass consistent', () => {
+  const s = {
+    meta: { ticker: 'SAASTEST', sector: 'Technology', industry: 'Software—Application',
+            exchange: 'NMS', region: 'US' },
+    marketCap: { value: 50e9 },
+    annual: {
+      annualNetIncome: [{ value: 5e9 }],
+      annualRev: [{ value: 10e9 }],
+      annualBalance: [{ totalAssets: 30e9, totalCash: 5e9, totalDebt: 0 }]
+    }
+  };
+  const r = Runner.evaluateStock(s)['sector-relative-roic'];
+  if (r.computable) {
+    if (!(r.value >= 0 && r.value <= 100)) throw new Error('rank out of range: ' + r.value);
+    if (r.components.sectorRank !== r.value) {
+      throw new Error('sectorRank should mirror value, got ' + r.components.sectorRank + ' vs ' + r.value);
+    }
+    if (r.pass !== (r.value >= 75)) {
+      throw new Error('pass should equal (value>=75), got pass=' + r.pass + ' value=' + r.value);
+    }
+  } else {
+    if (!/percentile|peer|classif|roic/i.test(r.reason || '')) {
+      throw new Error('expected meaningful reason, got: ' + r.reason);
+    }
+  }
+});
+
 // ─── Tag 209c — capital-allocation-quality (Mauboussin composite) smoke tests ──
 // DIAGNOSTIC composite, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
 // Composes buyback-yield + net-debt-ebitda + capex-trend + sbc-revenue.
