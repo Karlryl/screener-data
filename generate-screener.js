@@ -1068,10 +1068,167 @@ const CLIENT_JS = `
     'PRE_BREAKOUT': 'Companies recently turning profitable with accelerating growth. These are the future compounders — before the market prices in the quality improvement. Historical examples: PLTR (TURNAROUND→HG mid-2023), CRDO (2022), ALAB (2023).',
     'WATCH': 'Stocks flagged by hard-gates (Q-Spike, Loss>50%Rev, Metric-Divergence, Closed-End-Trust, DQ-D) and NEAR_MISS tier — explicitly held out of HG/QC/SMALL/R40/PRE-BREAKOUT for human review.',
     'SMALL': 'Market cap < $2B, revenue growth > 20%, not in LOSS state. Hunting the next CRDO/ALAB before they hit the radar.',
-    'R40': 'Every stock with computable R40. Hard-gated (Q-Spike, Loss>50%Rev, Pre-Commerciality, Closed-End-Trust, NI-Vol, Metric-Divergence, Q-Spike-Fake hgClass, R40-Sanity-Cap, DQ-D) — but READ THE FLAGS: ⚠ FCFM>80% or ⚠ HighGrowth or ⚠ Margin-Div badges indicate one-time-effect tells even within passing stocks. Sort uses penalized R40 (raw × (1 - dq_penalty - q_spike_penalty - margin_div_penalty)).'
+    'R40': 'Every stock with computable R40. Hard-gated (Q-Spike, Loss>50%Rev, Pre-Commerciality, Closed-End-Trust, NI-Vol, Metric-Divergence, Q-Spike-Fake hgClass, R40-Sanity-Cap, DQ-D) — but READ THE FLAGS: ⚠ FCFM>80% or ⚠ HighGrowth or ⚠ Margin-Div badges indicate one-time-effect tells even within passing stocks. Sort uses penalized R40 (raw × (1 - dq_penalty - q_spike_penalty - margin_div_penalty)).',
+    'SECTOR': 'Sector heatmap. Rows = sectors (clean stocks only — WATCH-tab outliers excluded). Columns = median of each metric across the sector. Cell color is the GLOBAL percentile rank of that sector-median (green = top quartile of sectors, red = bottom). Hover a cell for N=count. GP/TA = Novy-Marx gross-profitability (annual gross profit / total assets). ROIC% = sector-relative percentile rank (0-100).'
   };
 
+  // Tag 210g: Sector-heatmap helpers — compute medians per sector across the
+  // universe of tabbed rows (everyone who appears in at least one of HG/QC/
+  // SMALL/R40/PRE_BREAKOUT). WATCH-only rows excluded (they're hard-gate
+  // outliers; including them would poison the medians). Memoised; the data
+  // is static for the lifetime of the page load.
+  let _sectorHeatmapCache = null;
+  function _median(arr) {
+    const xs = arr.filter(v => v != null && isFinite(v)).slice().sort((a,b) => a-b);
+    if (xs.length === 0) return null;
+    const mid = Math.floor(xs.length / 2);
+    return (xs.length % 2 === 0) ? (xs[mid-1] + xs[mid]) / 2 : xs[mid];
+  }
+  function _rowMetric(r, key) {
+    if (key === 'score')   return (r.hgScore != null) ? r.hgScore : r.qcScore;
+    if (key === 'r40')     return r.r40;
+    if (key === 'fcfm')    return r.fcfMargin;
+    if (key === 'growth')  return r.growth;
+    if (key === 'roicPct') {
+      const m = r.results && r.results['sector-relative-roic'];
+      return (m && m.value != null) ? m.value : null;
+    }
+    if (key === 'gpta') {
+      const m = r.results && r.results['gross-profitability'];
+      return (m && m.value != null) ? m.value : null;
+    }
+    return null;
+  }
+  function buildSectorHeatmap() {
+    if (_sectorHeatmapCache) return _sectorHeatmapCache;
+    // Universe: rows in HG/QC/SMALL/R40/PRE_BREAKOUT (clean stocks).
+    const cleanTabs = ['HG','QC','SMALL','R40','PRE_BREAKOUT'];
+    const seen = new Set();
+    const universe = [];
+    for (const t of cleanTabs) {
+      for (const r of (TABS[t] || [])) {
+        if (!seen.has(r.ticker)) { seen.add(r.ticker); universe.push(r); }
+      }
+    }
+    // Group by sector.
+    const bySector = {};
+    for (const r of universe) {
+      const s = r.sector || '—';
+      if (s === '—') continue;
+      (bySector[s] = bySector[s] || []).push(r);
+    }
+    const metrics = [
+      { k:'score',   label:'Score',    fmt:(v) => v.toFixed(0),     dir:'higher' },
+      { k:'r40',     label:'R40',      fmt:(v) => v.toFixed(1),     dir:'higher' },
+      { k:'fcfm',    label:'FCFM%',    fmt:(v) => v.toFixed(1)+'%', dir:'higher' },
+      { k:'growth',  label:'RevGr%',   fmt:(v) => v.toFixed(1)+'%', dir:'higher' },
+      { k:'roicPct', label:'ROIC%',    fmt:(v) => v.toFixed(0),     dir:'higher' },
+      { k:'gpta',    label:'GP/TA',    fmt:(v) => v.toFixed(2),     dir:'higher' }
+    ];
+    // Per-sector medians.
+    const rows = [];
+    for (const sector of Object.keys(bySector).sort()) {
+      const stocks = bySector[sector];
+      const row = { sector, n: stocks.length, vals: {} };
+      for (const m of metrics) {
+        row.vals[m.k] = _median(stocks.map(r => _rowMetric(r, m.k)));
+      }
+      rows.push(row);
+    }
+    // Cross-sector percentile rank per metric (color scale uses where THIS
+    // sector's median ranks among all sector medians for that metric).
+    for (const m of metrics) {
+      const allVals = rows.map(r => r.vals[m.k]).filter(v => v != null && isFinite(v));
+      const sorted = allVals.slice().sort((a,b) => a-b);
+      for (const r of rows) {
+        const v = r.vals[m.k];
+        if (v == null || !isFinite(v) || sorted.length < 2) {
+          r.vals['_pct_' + m.k] = null; continue;
+        }
+        // Position of v in sorted (count of values strictly less than v) /
+        // (n-1). "higher = better" mapping → green at top, red at bottom.
+        let count = 0;
+        for (const x of sorted) { if (x < v) count++; }
+        const pct = count / (sorted.length - 1);  // 0..1
+        r.vals['_pct_' + m.k] = pct;
+      }
+    }
+    _sectorHeatmapCache = { rows, metrics };
+    return _sectorHeatmapCache;
+  }
+  // Map percentile (0..1) → background color. Uses the saturation-down trick
+  // from heatmap UX research: mid-range stays near-neutral so the eye picks
+  // out extremes immediately. Same hue as the row-tint signal palette.
+  function _heatColor(pct) {
+    if (pct == null) return '';
+    // 0.0 = deep red, 0.5 = neutral, 1.0 = deep green
+    let r, g, b;
+    if (pct <= 0.5) {
+      // red → neutral
+      const t = pct / 0.5;  // 0..1
+      r = 255; g = Math.round(61 + (255-61)*t); b = Math.round(90 + (255-90)*t);
+      // alpha proportional to distance from 0.5
+      const a = (1 - pct/0.5) * 0.35;
+      return 'background:rgba(255,61,90,'+a.toFixed(2)+');';
+    } else {
+      const t = (pct - 0.5) / 0.5;
+      const a = t * 0.35;
+      return 'background:rgba(0,204,136,'+a.toFixed(2)+');';
+    }
+  }
+  function renderSectorHeatmap() {
+    const { rows, metrics } = buildSectorHeatmap();
+    if (rows.length === 0) {
+      document.getElementById('table').innerHTML = '<div style="padding:24px;color:var(--text-2);font-family:var(--mono);">No sector data — clean-stock universe is empty.</div>';
+      document.getElementById('pageInfo').textContent = '';
+      document.getElementById('prevPage').disabled = true;
+      document.getElementById('nextPage').disabled = true;
+      document.getElementById('summary').innerHTML = '<strong>0</strong> sectors · Updated: '+DATA.generatedAt;
+      return;
+    }
+    let html = '<table class="dt"><thead><tr>';
+    html += '<th style="width:200px">Sector</th>';
+    html += '<th class="num" style="width:50px">N</th>';
+    for (const m of metrics) html += '<th class="num" style="width:90px">'+m.label+'</th>';
+    html += '</tr></thead><tbody>';
+    for (const row of rows) {
+      html += '<tr class="row">';
+      html += '<td>'+esc(row.sector)+'</td>';
+      html += '<td class="num g-mute">'+row.n+'</td>';
+      for (const m of metrics) {
+        const v = row.vals[m.k];
+        const pct = row.vals['_pct_' + m.k];
+        const tint = _heatColor(pct);
+        const cell = (v == null || !isFinite(v)) ? '—' : m.fmt(v);
+        const title = 'N='+row.n+' · '+m.label+' median for '+row.sector+(pct!=null?' · sector-rank '+(pct*100).toFixed(0)+'%':'');
+        html += '<td class="num" style="'+tint+'" title="'+esc(title)+'">'+cell+'</td>';
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    document.getElementById('table').innerHTML = html;
+    document.getElementById('summary').innerHTML = '<strong>'+rows.length+'</strong> sectors · clean-stock universe · Updated: '+DATA.generatedAt;
+    document.getElementById('pageInfo').textContent = '';
+    document.getElementById('prevPage').disabled = true;
+    document.getElementById('nextPage').disabled = true;
+    // Heatmap rows are not clickable to detail modal — keep behavior clean.
+  }
+
   function renderTable(){
+    // Tag 210g: SECTOR tab bypasses the standard filter/sort/paginate pipeline.
+    // It's a pre-aggregated cross-sector view, not a stock list. We still call
+    // renderActiveChips() at the bottom so the chip bar stays in sync, but the
+    // chips don't filter the heatmap (filters target stock rows, not sectors).
+    if (activeTab === 'SECTOR') {
+      currentList = [];
+      const explEl = document.getElementById('explainer');
+      const exp = TAB_EXPLAINERS['SECTOR'];
+      if (exp) { explEl.innerHTML = '<em>' + exp + '</em>'; explEl.style.display = 'block'; }
+      else { explEl.style.display = 'none'; }
+      renderSectorHeatmap();
+      renderActiveChips();
+      return;
+    }
     const filtered = applyFilters(TABS[activeTab] || []);
     const list = sortList(filtered.slice());
     currentList = list;
@@ -1499,6 +1656,7 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
   <button data-tab="R40">📊 Rule of 40</button>
   <button data-tab="PRE_BREAKOUT">🎯 Pre-Breakout</button>
   <button data-tab="WATCH">👁 Watch</button>
+  <button data-tab="SECTOR">🌡 SECTOR</button>
 </div>
 <div class="filters">
   <span class="group"><span class="label">State:</span>
