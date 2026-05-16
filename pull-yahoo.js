@@ -400,12 +400,18 @@ function _deriveOpIncForFinancials(isHist, annualRev, operatingMarginsRaw) {
   for (const r of rows) {
     const rev = _y(r, 'totalRevenue');
     if (rev == null) { bankYearly.push(null); insYearly.push(null); continue; }
-    // Bank pattern
+    // Bank pattern.
+    // Tag 206j (Bug-Hunt Agent D MEDIUM F4): only emit a bank-derived OpInc
+    // when BOTH operatingExpenses AND provisionForCreditLosses are present.
+    // Previously `provisionForCreditLosses ?? 0` defaulted to zero, which
+    // SILENTLY OVERSTATES OpInc by 5-15% of revenue for credit-heavy banks
+    // where Yahoo omits the provision line (JPM, BAC, C class). Without the
+    // provision the bank-pattern math is incomplete — better to push null and
+    // let the insurance or margin-fallback paths handle the year.
     const opEx = _y(r, 'totalOperatingExpenses') ?? _y(r, 'operatingExpense');
     const provCL = _y(r, 'provisionForLoanLeasesAndCreditLosses')
-                ?? _y(r, 'provisionForCreditLosses')
-                ?? 0;  // many banks omit; treat absent as 0 only when opEx exists
-    if (opEx != null) {
+                ?? _y(r, 'provisionForCreditLosses');  // NO fallback to 0
+    if (opEx != null && provCL != null) {
       bankYearly.push({ value: rev - opEx - provCL });
       bankNonNull++;
     } else {
