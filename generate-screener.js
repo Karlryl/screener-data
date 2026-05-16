@@ -260,6 +260,13 @@ function buildRow(stock) {
   // anchor analysis in methods/closed-end-trust-guard.js header.
   const cetGuard = allResults['closed-end-trust-guard'];
   const cetFail  = !!(cetGuard && cetGuard.computable && cetGuard.pass === false);
+  // Tag 205: R40-sanity-cap — filters R40-poisoning input artifacts:
+  //   F1 revGrowth>150% AND OpInc<0 (ONDS/BEAM Q-spike pattern, CRDO-safe carve-out)
+  //   F2 fcfMargin>80% (one-time event tell, no anchor exceeds 50%)
+  //   F3 |OpM-FCFM|>50pp (R&D-capex phantom FCF, biotech pattern)
+  // Pattern-based, all anchors verified PASS — see methods/r40-sanity-cap.js header.
+  const r40Sanity = allResults['r40-sanity-cap'];
+  const r40SanityFail = !!(r40Sanity && r40Sanity.computable && r40Sanity.pass === false);
   const listing = allResults['listing-age'];
   const listingYears = (listing && listing.computable && Number.isFinite(listing.value)) ? listing.value : null;
 
@@ -323,8 +330,8 @@ function buildRow(stock) {
     gmaTrend, gmaChange,
     omaTrend, omaChange,
     revAccelDelta,
-    // Tag 199/200 audit gates
-    qSpikeFail, lossMagFail, metricDivFail, niVolFail, preCommFail, cetFail, dqGrade, listingYears,
+    // Tag 199/200/205 audit gates
+    qSpikeFail, lossMagFail, metricDivFail, niVolFail, preCommFail, cetFail, r40SanityFail, dqGrade, listingYears,
     gaapProfitable, fcfPositive,
     annual,
     scoreHistory,
@@ -338,6 +345,32 @@ function fmtMoney(v) {
   if (Math.abs(v) >= 1e9)  return (v/1e9).toFixed(1) + 'B';
   if (Math.abs(v) >= 1e6)  return (v/1e6).toFixed(0) + 'M';
   return v.toFixed(0);
+}
+
+// Tag 205: R40-sort penalty — pushes suspect rows down without removing them.
+// Each component caps at a known max so total ≤ 1.0 (so r40 * (1-pen) ≥ 0).
+// All anchors (NVDA/CRDO/ALAB/PLTR/MSFT) return 0 → sort unchanged for them.
+function computeR40Penalty(r) {
+  let pen = 0;
+  // Data-quality grade D: max-out (already hard-gated, defensive belt-and-
+  // suspenders in case a D-grade ever slips past). Grade C: half-weight.
+  if (r.dqGrade === 'D') pen += 0.5;
+  else if (r.dqGrade === 'C') pen += 0.25;
+  // Margin divergence: OpM vs FCFM > 30pp = phantom-FCF tell (R&D-capex
+  // pattern in biotech, working-capital-release pattern in distress sales).
+  // Anchors all run |OpM-FCFM| < 30pp → 0 contribution.
+  if (Number.isFinite(r.opMargin) && Number.isFinite(r.fcfMargin)) {
+    const div = Math.abs(r.opMargin - r.fcfMargin);
+    if (div > 30) pen += Math.min(0.2, (div - 30) / 100);  // caps at +0.2 at div=50pp
+  }
+  // High growth (>150% YoY) AND not a real-hypergrowth class → likely
+  // single-Q-spike survivor. Real-hypergrowth tags (set by hg-class) get a pass.
+  if (Number.isFinite(r.growth) && r.growth > 150
+      && r.hgClass !== 'REAL_HYPERGROWTH_ACCELERATING'
+      && r.hgClass !== 'REAL_HYPERGROWTH_BUT_LOSSY') {
+    pen += 0.3;
+  }
+  return Math.min(0.95, pen);  // cap at 0.95 — never zero-out a row entirely
 }
 
 function classifyTabs(rows) {
@@ -363,7 +396,7 @@ function classifyTabs(rows) {
     // (NVDA/MSFT/PLTR/ALAB/CRDO) have spikeShare < 45%, so the isSpikeConc gate
     // in hypergrowth-quality-class never triggers Q_SPIKE_FAKE for them.
     const hgClassFail = r.hgClass === 'Q_SPIKE_FAKE';
-    const hardGated = r.qSpikeFail || r.lossMagFail || r.metricDivFail || r.niVolFail || r.preCommFail || r.cetFail || r.dqGrade === 'D' || hgClassFail;
+    const hardGated = r.qSpikeFail || r.lossMagFail || r.metricDivFail || r.niVolFail || r.preCommFail || r.cetFail || r.r40SanityFail || r.dqGrade === 'D' || hgClassFail;
 
     if (hardGated) {
       // WATCH-only entry: surface them with the reason for review, but block
@@ -375,6 +408,7 @@ function classifyTabs(rows) {
       if (r.niVolFail) reasons.push('NI-VOL');
       if (r.preCommFail) reasons.push('PRE-COMM-MEGACAP');
       if (r.cetFail) reasons.push('CLOSED-END-TRUST');
+      if (r.r40SanityFail) reasons.push('R40-SANITY');
       if (r.dqGrade === 'D') reasons.push('DATA-D');
       if (hgClassFail) reasons.push('Q-SPIKE-FAKE');
       r.watchReasons = reasons;
@@ -433,7 +467,19 @@ function classifyTabs(rows) {
   tabs.HG.sort((a, b) => (b.hgScore || 0) - (a.hgScore || 0));
   tabs.QC.sort((a, b) => (b.qcScore || 0) - (a.qcScore || 0));
   tabs.SMALL.sort((a, b) => (b.growth || 0) - (a.growth || 0));
-  tabs.R40.sort((a, b) => (b.r40 || 0) - (a.r40 || 0));
+  // Tag 205 R40-poisoning defense (penalized sort): hard-gates already filter
+  // qSpikeFail / lossMagFail / r40SanityFail / etc., but edge-case survivors
+  // (e.g. -growth + ultra-high one-time FCF margin, large margin-divergence
+  // without crossing METRIC-DIV threshold) can still poison the top of R40.
+  // We multiply r40 by (1 - penalty) so reliable stocks (penalty=0) sort by
+  // raw r40 unchanged, while suspect-but-not-gated stocks get pushed down.
+  // Anchor safety: NVDA/CRDO/ALAB/PLTR/MSFT all carry dqGrade=A+, no q-spike,
+  // and |opMargin - fcfMargin| < 30pp → penalty=0 → sort identical for them.
+  tabs.R40.sort((a, b) => {
+    const aPen = computeR40Penalty(a);
+    const bPen = computeR40Penalty(b);
+    return ((b.r40 || 0) * (1 - bPen)) - ((a.r40 || 0) * (1 - aPen));
+  });
   tabs.PRE_BREAKOUT.sort((a, b) => (b.pbScore || 0) - (a.pbScore || 0));
   tabs.WATCH.sort((a, b) => Math.max(b.hgScore || 0, b.qcScore || 0) - Math.max(a.hgScore || 0, a.qcScore || 0));
 
@@ -707,7 +753,18 @@ const CLIENT_JS = `
       return '<tr class="row" data-tk="'+r.ticker+'"><td>'+(i+1)+'</td><td class="ticker">'+r.ticker+'</td><td class="name">'+r.name+'</td><td>'+r.country+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+r40Html+'</td><td class="num">'+gmHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
     }
     if (tab === 'R40') {
-      return '<tr class="row" data-tk="'+r.ticker+'"><td>'+(i+1)+'</td><td class="ticker">'+r.ticker+'</td><td class="name">'+r.name+'</td><td>'+r.sector+'</td><td class="num">'+r40Html+'</td><td class="num">'+growthHtml+'</td><td class="num">'+fcfmHtml+'</td><td class="num">'+opmHtml+'</td><td class="num">'+gmHtml+'</td><td>'+stateP+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
+      // Tag 205 R40-poisoning visual warnings: red badges on the ticker cell.
+      // Visual only — hard-gates do the actual filtering. These catch edge cases
+      // where a row passed gates but still has a one-time-effect tell.
+      //   ⚠ HighGrowth   : growth > 150% (often Q-spike survivor)
+      //   ⚠ FCFM>80%     : FCF margin > 80% (one-time event tell; no anchor > 50%)
+      //   ⚠ Margin-Div   : |OpM - FCFM| > 50pp (phantom FCF; R&D-capex pattern)
+      const warnBadges = [];
+      if (Number.isFinite(r.growth) && r.growth > 150) warnBadges.push('<span class="g-neg" style="font-size:9px;border:1px solid var(--red);padding:0 3px;margin-left:3px" title="Growth '+r.growth.toFixed(0)+'% — likely Q-spike">⚠ HighGr</span>');
+      if (Number.isFinite(r.fcfMargin) && r.fcfMargin > 80) warnBadges.push('<span class="g-neg" style="font-size:9px;border:1px solid var(--red);padding:0 3px;margin-left:3px" title="FCFM '+r.fcfMargin.toFixed(0)+'% — one-time event tell">⚠ FCFM&gt;80%</span>');
+      if (Number.isFinite(r.opMargin) && Number.isFinite(r.fcfMargin) && Math.abs(r.opMargin - r.fcfMargin) > 50) warnBadges.push('<span class="g-neg" style="font-size:9px;border:1px solid var(--red);padding:0 3px;margin-left:3px" title="|OpM-FCFM|='+Math.abs(r.opMargin-r.fcfMargin).toFixed(0)+'pp — phantom FCF">⚠ Margin-Div</span>');
+      const tkCell = r.ticker + warnBadges.join('');
+      return '<tr class="row" data-tk="'+r.ticker+'"><td>'+(i+1)+'</td><td class="ticker">'+tkCell+'</td><td class="name">'+r.name+'</td><td>'+r.sector+'</td><td class="num">'+r40Html+'</td><td class="num">'+growthHtml+'</td><td class="num">'+fcfmHtml+'</td><td class="num">'+opmHtml+'</td><td class="num">'+gmHtml+'</td><td>'+stateP+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
     }
     if (tab === 'PRE_BREAKOUT') {
       const pb = r.pbScore==null ? '—' : r.pbScore.toFixed(0);
@@ -736,7 +793,8 @@ const CLIENT_JS = `
   const TAB_EXPLAINERS = {
     'PRE_BREAKOUT': 'Companies recently turning profitable with accelerating growth. These are the future compounders — before the market prices in the quality improvement. Historical examples: PLTR (TURNAROUND→HG mid-2023), CRDO (2022), ALAB (2023).',
     'WATCH': 'Stocks flagged by hard-gates (Q-Spike, Loss>50%Rev, Metric-Divergence, Closed-End-Trust, DQ-D) and NEAR_MISS tier — explicitly held out of HG/QC/SMALL/R40/PRE-BREAKOUT for human review.',
-    'SMALL': 'Market cap < $2B, revenue growth > 20%, not in LOSS state. Hunting the next CRDO/ALAB before they hit the radar.'
+    'SMALL': 'Market cap < $2B, revenue growth > 20%, not in LOSS state. Hunting the next CRDO/ALAB before they hit the radar.',
+    'R40': 'Every stock with computable R40. Hard-gated (Q-Spike, Loss>50%Rev, Pre-Commerciality, Closed-End-Trust, NI-Vol, Metric-Divergence, Q-Spike-Fake hgClass, R40-Sanity-Cap, DQ-D) — but READ THE FLAGS: ⚠ FCFM>80% or ⚠ HighGrowth or ⚠ Margin-Div badges indicate one-time-effect tells even within passing stocks. Sort uses penalized R40 (raw × (1 - dq_penalty - q_spike_penalty - margin_div_penalty)).'
   };
 
   function renderTable(){

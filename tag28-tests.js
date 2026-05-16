@@ -751,6 +751,28 @@ test('closed-end-trust-guard: PASS on NVDA (Technology, no signals fire)', () =>
   if (!r.pass) throw new Error('NVDA must pass; signals=' + r.value + ' reason=' + r.reason);
 });
 
+// Tag 205: R40-sanity-cap guard
+test('r40-sanity-cap: PASS on CRDO-pattern (revGrowth=201%, OpInc>0 → carve-out)', () => {
+  const s = makeStock({ revenueGrowthYoY: 201, fcfMarginTTM: 9, operatingMargin: 9 }, { opInc: [50] }, []);
+  const r = Runner.evaluateStock(s)['r40-sanity-cap'];
+  if (!r.computable) throw new Error('should be computable');
+  if (!r.pass) throw new Error('CRDO-pattern (revGrowth=201% with positive OpInc) must pass; reason=' + r.reason);
+});
+
+test('r40-sanity-cap: FAIL on ONDS-pattern (revGrowth=629%, OpInc<0 → F1 fires)', () => {
+  const s = makeStock({ revenueGrowthYoY: 629, fcfMarginTTM: 10, operatingMargin: 5 }, { opInc: [-200] }, []);
+  const r = Runner.evaluateStock(s)['r40-sanity-cap'];
+  if (!r.computable) throw new Error('should be computable');
+  if (r.pass) throw new Error('ONDS-pattern (revGrowth=629% with negative OpInc) must fail');
+});
+
+test('r40-sanity-cap: PASS on NVDA-pattern (revGrowth=73, fcfMargin=27, opM=60 → no condition fires)', () => {
+  const s = makeStock({ revenueGrowthYoY: 73, fcfMarginTTM: 27, operatingMargin: 60 }, { opInc: [5000] }, []);
+  const r = Runner.evaluateStock(s)['r40-sanity-cap'];
+  if (!r.computable) throw new Error('should be computable');
+  if (!r.pass) throw new Error('NVDA-pattern (div=33pp < 50pp) must pass; reason=' + r.reason);
+});
+
 // Tag 201c: anchor repair — revenue-growth-3y threshold lowered to 22%
 test('Revenue-Growth-3Y: AVGO-pattern (24.4% CAGR) now passes at 22% bar', () => {
   // 100 → 194.74 over 3y = 24.7% CAGR
