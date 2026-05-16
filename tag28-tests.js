@@ -439,6 +439,97 @@ test('_convertSnapshotToUSD: unknown currency leaves values + flags failure', ()
   if (!snap.meta.fxConversionFailed) throw new Error('fxConversionFailed flag should be set');
 });
 
+// ─── Tag 204 — ADR-class currency fix (financialCurrency vs currency) ────
+// Bug #1: ADRs trade in USD but report financials in local ccy.
+// Before Tag 204, mapYahooToCanonical read price.currency only → reportingCurrency
+// matched 'USD' → _convertSnapshotToUSD early-returned → annual.* stayed in
+// local trillions, corrupting fcf-yield/ev-ebitda/p/s ~30× for TSM/BABA/etc.
+test('Tag 204 currency-fix: ADR (currency=USD, financialCurrency=TWD) → reportingCurrency=TWD', () => {
+  const yahoo = {
+    summaryDetail: { marketCap: 500e9, trailingPE: 25, priceToSalesTrailing12Months: 8, forwardPE: 22 },
+    financialData: { totalRevenue: 2.1e12, operatingMargins: 0.42, freeCashflow: 800e9, grossMargins: 0.53, revenueGrowth: 0.30 },
+    defaultKeyStatistics: { heldPercentInsiders: 0.001 },
+    assetProfile: { sector: 'Technology', industry: 'Semiconductors' },
+    price: { longName: 'Synthetic TSM-like ADR', currency: 'USD', financialCurrency: 'TWD', exchangeName: 'NYSE' },
+    incomeStatementHistory: { incomeStatementHistory: [
+      { totalRevenue: 2.1e12, operatingIncome: 880e9, netIncome: 750e9 }
+    ]},
+    incomeStatementHistoryQuarterly: { incomeStatementHistory: [] },
+    cashflowStatementHistory: { cashflowStatements: [] },
+    balanceSheetHistory: { balanceSheetStatements: [] }
+  };
+  const wl = { ticker: 'SYNADR', isin: null };
+  const out = PY.mapYahooToCanonical(yahoo, wl, '2026-05-16T00:00:00.000Z');
+  if (out.meta.reportingCurrency !== 'TWD') {
+    throw new Error('expected reportingCurrency=TWD (financialCurrency), got ' + out.meta.reportingCurrency);
+  }
+  if (out.meta.tradingCurrency !== 'USD') {
+    throw new Error('expected tradingCurrency=USD (price.currency), got ' + out.meta.tradingCurrency);
+  }
+});
+
+test('Tag 204 currency-fix: US anchor (currency=USD, financialCurrency=USD) → reportingCurrency=USD', () => {
+  // NVDA/MSFT-class: both fields are USD; behavior must be identical to pre-Tag-204.
+  const yahoo = {
+    summaryDetail: { marketCap: 3e12, trailingPE: 50, priceToSalesTrailing12Months: 30, forwardPE: 40 },
+    financialData: { totalRevenue: 60e9, operatingMargins: 0.55, freeCashflow: 30e9, grossMargins: 0.75, revenueGrowth: 1.2 },
+    defaultKeyStatistics: { heldPercentInsiders: 0.04 },
+    assetProfile: { sector: 'Technology', industry: 'Semiconductors' },
+    price: { longName: 'Synthetic NVDA-like', currency: 'USD', financialCurrency: 'USD', exchangeName: 'NASDAQ' },
+    incomeStatementHistory: { incomeStatementHistory: [ { totalRevenue: 60e9, operatingIncome: 33e9, netIncome: 30e9 } ]},
+    incomeStatementHistoryQuarterly: { incomeStatementHistory: [] },
+    cashflowStatementHistory: { cashflowStatements: [] },
+    balanceSheetHistory: { balanceSheetStatements: [] }
+  };
+  const wl = { ticker: 'SYNUS', isin: null };
+  const out = PY.mapYahooToCanonical(yahoo, wl, '2026-05-16T00:00:00.000Z');
+  if (out.meta.reportingCurrency !== 'USD') throw new Error('US anchor reportingCurrency must be USD, got ' + out.meta.reportingCurrency);
+  if (out.meta.tradingCurrency !== 'USD') throw new Error('US anchor tradingCurrency must be USD, got ' + out.meta.tradingCurrency);
+});
+
+test('Tag 204 currency-fix: EU anchor (currency=CHF, financialCurrency=CHF) → reportingCurrency=CHF (no false flip)', () => {
+  // NESN.SW/RMS.PA-class: both fields are the same local ccy → keep that ccy,
+  // do NOT regress to USD. Critical because the (_fc !== _tc) guard is what
+  // distinguishes ADRs from native non-USD listings.
+  const yahoo = {
+    summaryDetail: { marketCap: 250e9, trailingPE: 22, priceToSalesTrailing12Months: 2.5, forwardPE: 20 },
+    financialData: { totalRevenue: 90e9, operatingMargins: 0.18, freeCashflow: 12e9, grossMargins: 0.48, revenueGrowth: 0.04 },
+    defaultKeyStatistics: { heldPercentInsiders: 0.001 },
+    assetProfile: { sector: 'Consumer Defensive', industry: 'Packaged Foods' },
+    price: { longName: 'Synthetic NESN-like', currency: 'CHF', financialCurrency: 'CHF', exchangeName: 'SIX' },
+    incomeStatementHistory: { incomeStatementHistory: [ { totalRevenue: 90e9, operatingIncome: 16e9, netIncome: 11e9 } ]},
+    incomeStatementHistoryQuarterly: { incomeStatementHistory: [] },
+    cashflowStatementHistory: { cashflowStatements: [] },
+    balanceSheetHistory: { balanceSheetStatements: [] }
+  };
+  const wl = { ticker: 'SYNEU', isin: null };
+  const out = PY.mapYahooToCanonical(yahoo, wl, '2026-05-16T00:00:00.000Z');
+  if (out.meta.reportingCurrency !== 'CHF') throw new Error('EU anchor reportingCurrency must be CHF, got ' + out.meta.reportingCurrency);
+  if (out.meta.tradingCurrency !== 'CHF') throw new Error('EU anchor tradingCurrency must be CHF, got ' + out.meta.tradingCurrency);
+});
+
+test('Tag 204 currency-fix: metrics.* allow-list — revenueTTM still scaled (smoke for Fix #2)', () => {
+  // Synthetic JPY snapshot; the new enumeration must still scale metrics.revenueTTM.
+  // (Other CCY_DENOMINATED_METRICS keys are reserved but currently absent, so this
+  // test pins the only field that exists today.)
+  const snap = {
+    meta: { ticker: 'SYNJP', reportingCurrency: 'JPY', region: 'JP' },
+    marketCap: { value: 1e12 },
+    metrics: { revenueTTM: { value: 5e11 }, operatingMargin: { value: 25 } },
+    annual: { annualRev: [{ value: 5e11 }] }
+  };
+  PY._convertSnapshotToUSD(snap);
+  if (snap.meta.reportingCurrency !== 'USD') throw new Error('snap should be converted to USD');
+  // operatingMargin (a ratio, not in allow-list) must NOT be scaled
+  if (snap.metrics.operatingMargin.value !== 25) {
+    throw new Error('operatingMargin (ratio) must not be scaled; got ' + snap.metrics.operatingMargin.value);
+  }
+  // revenueTTM must be scaled (value should be much smaller than 5e11 after JPY→USD)
+  if (snap.metrics.revenueTTM.value >= 5e11) {
+    throw new Error('revenueTTM should be FX-scaled; still ' + snap.metrics.revenueTTM.value);
+  }
+});
+
 test('walk-forward: evaluateVintage computes alpha vs universe-median', () => {
   // Use dates well in the past so 7d/28d/84d horizons resolve, not "too-early"
   const hist = {
@@ -800,6 +891,62 @@ test('Tag 203 OpInc-fallback: NEVER fires for non-Financial-Services (sector-gat
   // For Tech with null OpInc, annualOpInc stays empty and opIncSource is null.
   if (out.annual.annualOpInc.length !== 0) throw new Error('Tech sector must NOT trigger fallback; got ' + out.annual.annualOpInc.length + ' entries');
   if (out.meta.opIncSource !== null) throw new Error('expected opIncSource=null for Tech, got ' + out.meta.opIncSource);
+});
+
+// ─── Tag 204 — fcf-stability + operating-cashflow-coverage smoke tests ──
+// DIAGNOSTIC methods, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
+
+test('Tag 204 FCF-Stability: PASS case (stable FCF/Rev margins, CoV << 0.40)', () => {
+  // MSFT-shape: FCF margins ~30% with low year-to-year dispersion.
+  // FCF/Rev = 30/100, 28/95, 29/92, 27/88 → margins ~0.30, ~0.295, ~0.315, ~0.307
+  // mean ≈ 0.304, σ small → CoV << 0.40.
+  const s = { annual: {
+    annualFCF: [{value:30},{value:28},{value:29},{value:27}],
+    annualRev: [{value:100},{value:95},{value:92},{value:88}]
+  }};
+  const r = Runner.evaluateStock(s)['fcf-stability'];
+  if (!r.computable) throw new Error('should be computable (4 clean pairs)');
+  if (!r.pass) throw new Error('stable margins should pass, got CoV=' + r.value);
+  if (r.value >= 0.40) throw new Error('expected CoV < 0.40, got ' + r.value);
+});
+
+test('Tag 204 FCF-Stability: FAIL case (lumpy FCF — one big year masking three weak ones)', () => {
+  // Pattern: 3 marginally-positive years + 1 spike year → CoV blows past 0.40.
+  // FCF/Rev = 40/100, 1/100, 2/100, 1/100 → margins 0.40, 0.01, 0.02, 0.01
+  // mean = 0.11, σ ≈ 0.169 → CoV ≈ 1.54 → FAIL.
+  const s = { annual: {
+    annualFCF: [{value:40},{value:1},{value:2},{value:1}],
+    annualRev: [{value:100},{value:100},{value:100},{value:100}]
+  }};
+  const r = Runner.evaluateStock(s)['fcf-stability'];
+  if (!r.computable) throw new Error('should be computable');
+  if (r.pass) throw new Error('lumpy FCF should fail, got CoV=' + r.value);
+  if (r.value <= 0.40) throw new Error('expected CoV > 0.40, got ' + r.value);
+});
+
+test('Tag 204 OCF-Coverage: PASS case (3y mean OCF/NI = 1.10, above 0.80 floor)', () => {
+  // MSFT-shape: OCF consistently exceeds NI thanks to D&A add-back.
+  // OCF/NI = 110/100, 105/95, 99/90 → ~1.10, ~1.105, ~1.10 → mean ≈ 1.10.
+  const s = { annual: {
+    annualOCF:       [{value:110},{value:105},{value:99}],
+    annualNetIncome: [{value:100},{value:95},{value:90}]
+  }};
+  const r = Runner.evaluateStock(s)['operating-cashflow-coverage'];
+  if (!r.computable) throw new Error('should be computable (3 same-sign positive pairs)');
+  if (!r.pass) throw new Error('should pass (mean ~1.10 >= 0.80), got ' + r.value);
+  if (r.value < 0.80) throw new Error('expected mean >= 0.80, got ' + r.value);
+});
+
+test('Tag 204 OCF-Coverage: FAIL case (NI inflated, OCF lagging — 3y mean ~0.50)', () => {
+  // Accrual-drift shape: company reports rising NI but cash collection trails.
+  // OCF/NI = 50/100, 45/90, 40/80 → 0.50, 0.50, 0.50 → mean = 0.50 < 0.80.
+  const s = { annual: {
+    annualOCF:       [{value:50},{value:45},{value:40}],
+    annualNetIncome: [{value:100},{value:90},{value:80}]
+  }};
+  const r = Runner.evaluateStock(s)['operating-cashflow-coverage'];
+  if (!r.computable) throw new Error('should be computable');
+  if (r.pass) throw new Error('mean 0.50 must fail 0.80 floor, got ' + r.value);
 });
 
 // ─── Tag 203 — score-history append + prune smoke tests ──────────────

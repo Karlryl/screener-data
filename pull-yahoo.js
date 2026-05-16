@@ -290,7 +290,26 @@ function _convertSnapshotToUSD(snap) {
   }
 
   if (snap.marketCap) snap.marketCap = scale(snap.marketCap);
-  if (snap.metrics && snap.metrics.revenueTTM) snap.metrics.revenueTTM = scale(snap.metrics.revenueTTM);
+  // Tag 204 (Bug #2 — architectural, LOW severity): explicit metrics.* allow-list.
+  // The previous code only scaled `metrics.revenueTTM` ad-hoc; any future
+  // currency-denominated metrics field (e.g. fcfTTM, ebitda, enterpriseValue,
+  // bookValuePerShare) would silently bypass FX conversion and stay in local ccy.
+  // We enumerate explicitly here so additions are reviewed at this single site.
+  // RATIOS (margin/growth/pe/priceSales/sbcRatio/insidersOwnership) and counts
+  // (cashRunway in months) are NOT included — they are unit-less or cancel out.
+  const CCY_DENOMINATED_METRICS = [
+    'revenueTTM',
+    'fcfTTM',            // currently absent from metrics.* but reserved
+    'ebitda',            // currently absent — reserved for future EV-EBITDA refactor
+    'enterpriseValue',   // currently absent — reserved
+    'bookValuePerShare', // currently absent — reserved
+    'cashPerShare'       // currently absent — reserved
+  ];
+  if (snap.metrics) {
+    for (const k of CCY_DENOMINATED_METRICS) {
+      if (snap.metrics[k]) snap.metrics[k] = scale(snap.metrics[k]);
+    }
+  }
   if (snap.annual) {
     for (const key of Object.keys(snap.annual)) {
       if (Array.isArray(snap.annual[key])) snap.annual[key] = snap.annual[key].map(scale);
@@ -590,7 +609,17 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     };
   })();
 
-  const rcOriginal = _y(pr, 'currency') || 'USD';
+  // Tag 204 (Bug #1): ADR-class fix — prefer price.financialCurrency over price.currency
+  // when both are present and differ. Yahoo's `price.currency` is the trading-quote ccy
+  // (TSM=USD, BABA=USD, 9988.HK=HKD) but financials are reported in the local ccy
+  // (TWD, CNY, CNY respectively). Before Tag 204, reportingCurrency was set from
+  // `price.currency` → _convertSnapshotToUSD early-returned for ADRs because origCcy
+  // matched 'USD', leaving annual.* in trillions of local ccy and corrupting
+  // fcf-yield / ev-ebitda / p/s by ~30× for the affected names.
+  const _fc = _y(pr, 'financialCurrency');
+  const _tc = _y(pr, 'currency');
+  const rcOriginal = (_fc && _fc !== _tc) ? _fc : (_tc || 'USD');
+  const tradingCurrency = _tc || rcOriginal; // NEW: trading-quote ccy for downstream visibility
   const exchangeName = _y(pr, 'exchangeName') || '';
   return {
     identifier: { primary: 'ISIN', value: watchlistEntry.isin || `TICKER:${watchlistEntry.ticker}` },
@@ -602,6 +631,7 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       region: normalizeRegion(rcOriginal, exchangeName),  // Tag 134: enum, not Yahoo string
       exchangeName: exchangeName || null,                  // Tag 134: preserved for diagnostics
       reportingCurrency: rcOriginal,                       // overwritten to 'USD' by _convertSnapshotToUSD
+      tradingCurrency,                                     // Tag 204: trading-quote ccy (may differ from reporting for ADRs)
       fetchedAt: asOf,
       filingDate: null,  // Yahoo liefert kein Filing-Datum für TTM
       firstTradeDate: null,  // wird unten aus yf.quote() gesetzt (Tag 106)
