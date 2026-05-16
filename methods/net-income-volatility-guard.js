@@ -33,6 +33,14 @@
  * Pattern-based: no hardcoded tickers. Yahoo schema is stable
  * (annualNetIncome + annualRev are first-class).
  *
+ * Banking-sector empirical check (Tag 200e — verified against snapshots):
+ *   JPM 0.07, BAC 0.03, C 0.07, WFC 0.07, BLK 0.04, GS 0.10, MS 0.06,
+ *   AXP 0.02, V 0.06, MA 0.06, BRK-B 0.32, TROW 0.04, SCHW 0.12,
+ *   PRU 0.07, MET 0.04, TRV 0.05
+ *   All 16 financial-sector compounders are FAR below threshold 1.0.
+ *   No sector exclusion is required; banks pass naturally because
+ *   their NI swings are small relative to interest income / revenue.
+ *
  * Requires ≥ 2 net-income points + positive annualRev[0].
  */
 const H = require('./_helpers.js');
