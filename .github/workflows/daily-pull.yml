@@ -234,8 +234,14 @@ jobs:
 
       # Tag 198: Bloomberg 6-tab Screener dashboard (HG/QC/SMALL/R40/PRE-BREAKOUT/WATCH).
       # New artifact alongside dashboard.html / modes-report.html / methods-report.html.
+      # Tag 199: AUDIT_SCORE_MULTIPLIERS=1 enables q-spike-penalty + listing-age
+      # multiplier in score-aggregator. Scoped to this step only — other artifacts
+      # (snapshot-picks, modes-report) keep the un-multiplied scores so the
+      # fixture-hash test in tag28-tests.js (run without env) stays stable.
       # continue-on-error: it's a secondary artifact; pipeline shouldn't hard-fail on it.
       - name: Generate Screener Dashboard
+        env:
+          AUDIT_SCORE_MULTIPLIERS: '1'
         run: node generate-screener.js --snapshots snapshots --out screener.html
         continue-on-error: true
 

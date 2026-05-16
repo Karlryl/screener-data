@@ -202,6 +202,50 @@ function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, data
   }
   var score = Math.max(0, baseScore - softGuardPenalty);
 
+  // Tag 199: Audit-precision score multipliers (opt-in via env
+  // AUDIT_SCORE_MULTIPLIERS=1 to keep fixture-hash stable until Karl
+  // explicitly opts in). Two multipliers:
+  //
+  //   1. q_spike_penalty: 0..0.5 proportional to q-spike-dataguard
+  //      spikeShare in [0.40, 0.55]. Below 0.40 → no penalty. Above
+  //      0.55 the DATAGUARD already hard-fails so we don't reach here.
+  //      score *= (1 - q_spike_penalty)
+  //
+  //   2. listing_age multiplier for QC tab only: scales score by
+  //      min(listing_age_years / 5, 1.0). 5y of clean history gets
+  //      full credit; below 5y the score is pro-rated. QC by
+  //      definition wants durable track record — a 1-2y old company
+  //      can't be a "quality compounder" no matter how strong recent
+  //      years look.
+  var auditMultiplier = 1.0;
+  var auditMultiplierApplied = false;
+  if (process.env.AUDIT_SCORE_MULTIPLIERS === '1') {
+    var qSpikeRes = allResults['q-spike-dataguard'];
+    if (qSpikeRes && qSpikeRes.computable && qSpikeRes.components &&
+        Number.isFinite(qSpikeRes.components.spikeShare)) {
+      var shareRaw = qSpikeRes.components.spikeShare;
+      // components.spikeShare is already in percent (0-100); normalize.
+      var share = shareRaw > 1 ? shareRaw / 100 : shareRaw;
+      if (share > 0.40) {
+        // Linear ramp 0.40 → 0%, 0.55 → 50%.
+        var qSpikePenalty = Math.min(0.50, (share - 0.40) * (0.50 / 0.15));
+        auditMultiplier *= (1 - qSpikePenalty);
+        auditMultiplierApplied = true;
+      }
+    }
+    if (modeId === 'QUALITY_COMPOUNDER') {
+      var ageRes = allResults['listing-age'];
+      if (ageRes && ageRes.computable && Number.isFinite(ageRes.value)) {
+        var ageMultiplier = Math.min(1.0, ageRes.value / 5);
+        auditMultiplier *= ageMultiplier;
+        auditMultiplierApplied = true;
+      }
+    }
+    if (auditMultiplierApplied) {
+      score = Math.max(0, Math.round(score * auditMultiplier));
+    }
+  }
+
   // Tier-Klassifikation
   var tier;
   if (score >= TIER_THRESHOLDS.A) tier = 'A';
