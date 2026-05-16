@@ -639,11 +639,21 @@ const CLIENT_JS = `
     return 'MEGA';
   }
   function fmtM(v){ if (v==null||!isFinite(v)) return '—'; if (Math.abs(v)>=1e12) return (v/1e12).toFixed(2)+'T'; if (Math.abs(v)>=1e9) return (v/1e9).toFixed(1)+'B'; if (Math.abs(v)>=1e6) return (v/1e6).toFixed(0)+'M'; return v.toFixed(0); }
-  function fmtP(v,d){ if (v==null||!isFinite(v)) return '—'; return (v>=0?'':'')+(v).toFixed(d==null?1:d)+'%'; }
+  // Tag 206k (Bug-Hunt Agent E MEDIUM-3): the original sign-prefix ternary
+  // was `(v>=0?'':'')` — both branches empty string, dead code. Intent was
+  // a '+' prefix for positive values so the eye can quickly scan +/− deltas.
+  function fmtP(v,d){ if (v==null||!isFinite(v)) return '—'; return (v>=0?'+':'')+(v).toFixed(d==null?1:d)+'%'; }
   function fmtN(v,d){ if (v==null||!isFinite(v)) return '—'; return v.toFixed(d==null?1:d); }
   function pct(v){ if (v==null||!isFinite(v)) return '—'; return v.toFixed(1)+'%'; }
   function colorPct(v){ if (v==null||!isFinite(v)) return 'g-mute'; return v>=0?'g-pos':'g-neg'; }
   function r40Class(v){ if (v==null) return 'g-mute'; if (v>=60) return 'g-r40-excellent'; if (v>=40) return 'g-r40-good'; if (v>=20) return 'g-r40-fair'; if (v>=0) return 'g-r40-warn'; return 'g-r40-bad'; }
+  // Tag 206k (Bug-Hunt Agent E MEDIUM-5): escape HTML special chars when
+  // dropping Yahoo-sourced strings (ticker, name, sector, industry, country)
+  // into innerHTML. Defense-in-depth: Yahoo data is generally trusted, but
+  // a compromised feed or malformed company name (e.g. an ampersand or
+  // angle-bracket in a real ticker name) would otherwise corrupt the DOM
+  // or silently truncate the row.
+  function esc(s){ if (s == null) return ''; return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 
   // ------- filter application -------
   function ipoAgeYears(r){
@@ -761,14 +771,14 @@ const CLIENT_JS = `
 
     if (tab === 'HG') {
       const score = r.hgScore==null ? '—' : r.hgScore.toFixed(0);
-      return '<tr class="row" data-tk="'+r.ticker+'"><td>'+(i+1)+'</td><td class="ticker">'+r.ticker+'</td><td class="name">'+r.name+'</td><td>'+r.sector+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+r40Html+'</td><td class="num">'+growthHtml+'</td><td class="num">'+gmHtml+'</td><td class="num">'+fcfmHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
+      return '<tr class="row" data-tk="'+esc(r.ticker)+'"><td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+r40Html+'</td><td class="num">'+growthHtml+'</td><td class="num">'+gmHtml+'</td><td class="num">'+fcfmHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
     }
     if (tab === 'QC') {
       const score = r.qcScore==null ? '—' : r.qcScore.toFixed(0);
-      return '<tr class="row" data-tk="'+r.ticker+'"><td>'+(i+1)+'</td><td class="ticker">'+r.ticker+'</td><td class="name">'+r.name+'</td><td>'+r.sector+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+fcfmHtml+'</td><td class="num">'+opmHtml+'</td><td class="num">'+gmHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
+      return '<tr class="row" data-tk="'+esc(r.ticker)+'"><td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+fcfmHtml+'</td><td class="num">'+opmHtml+'</td><td class="num">'+gmHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
     }
     if (tab === 'SMALL') {
-      return '<tr class="row" data-tk="'+r.ticker+'"><td>'+(i+1)+'</td><td class="ticker">'+r.ticker+'</td><td class="name">'+r.name+'</td><td>'+r.country+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+r40Html+'</td><td class="num">'+gmHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
+      return '<tr class="row" data-tk="'+esc(r.ticker)+'"><td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.country)+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+r40Html+'</td><td class="num">'+gmHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
     }
     if (tab === 'R40') {
       // Tag 205 R40-poisoning visual warnings: red badges on the ticker cell.
@@ -782,7 +792,7 @@ const CLIENT_JS = `
       if (Number.isFinite(r.fcfMargin) && r.fcfMargin > 80) warnBadges.push('<span class="g-neg" style="font-size:9px;border:1px solid var(--red);padding:0 3px;margin-left:3px" title="FCFM '+r.fcfMargin.toFixed(0)+'% — one-time event tell">⚠ FCFM&gt;80%</span>');
       if (Number.isFinite(r.opMargin) && Number.isFinite(r.fcfMargin) && Math.abs(r.opMargin - r.fcfMargin) > 50) warnBadges.push('<span class="g-neg" style="font-size:9px;border:1px solid var(--red);padding:0 3px;margin-left:3px" title="|OpM-FCFM|='+Math.abs(r.opMargin-r.fcfMargin).toFixed(0)+'pp — phantom FCF">⚠ Margin-Div</span>');
       const tkCell = r.ticker + warnBadges.join('');
-      return '<tr class="row" data-tk="'+r.ticker+'"><td>'+(i+1)+'</td><td class="ticker">'+tkCell+'</td><td class="name">'+r.name+'</td><td>'+r.sector+'</td><td class="num">'+r40Html+'</td><td class="num">'+growthHtml+'</td><td class="num">'+fcfmHtml+'</td><td class="num">'+opmHtml+'</td><td class="num">'+gmHtml+'</td><td>'+stateP+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
+      return '<tr class="row" data-tk="'+esc(r.ticker)+'"><td>'+(i+1)+'</td><td class="ticker">'+tkCell+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td class="num">'+r40Html+'</td><td class="num">'+growthHtml+'</td><td class="num">'+fcfmHtml+'</td><td class="num">'+opmHtml+'</td><td class="num">'+gmHtml+'</td><td>'+stateP+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
     }
     if (tab === 'PRE_BREAKOUT') {
       const pb = r.pbScore==null ? '—' : r.pbScore.toFixed(0);
@@ -792,7 +802,7 @@ const CLIENT_JS = `
       if (r.omaTrend === 'accelerating') sigs.push('<span class="g-pos" title="Operating-Margin accelerating">OpM↑</span>');
       if (r.revAccelDelta != null && r.revAccelDelta > 0) sigs.push('<span class="g-pos" title="Revenue YoY accelerating +'+r.revAccelDelta.toFixed(0)+'pp">Rev↑</span>');
       const signalsHtml = sigs.length ? sigs.join(' ') : '<span class="g-mute">—</span>';
-      return '<tr class="row" data-tk="'+r.ticker+'"><td>'+(i+1)+'</td><td class="ticker">'+r.ticker+'</td><td class="name">'+r.name+'</td><td>'+r.sector+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+gmHtml+'</td><td class="num">'+r40Html+'</td><td style="font-size:10px">'+signalsHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td><td class="num">'+pb+'</td></tr>';
+      return '<tr class="row" data-tk="'+esc(r.ticker)+'"><td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+gmHtml+'</td><td class="num">'+r40Html+'</td><td style="font-size:10px">'+signalsHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td><td class="num">'+pb+'</td></tr>';
     }
     if (tab === 'WATCH') {
       const score = Math.max(r.hgScore||0, r.qcScore||0).toFixed(0);
@@ -802,7 +812,7 @@ const CLIENT_JS = `
       else if (r.hgTier==='NEAR_MISS') reason = 'HG NEAR';
       else if (r.qcTier==='NEAR_MISS') reason = 'QC NEAR';
       else reason = '—';
-      return '<tr class="row" data-tk="'+r.ticker+'"><td>'+(i+1)+'</td><td class="ticker">'+r.ticker+'</td><td class="name">'+r.name+'</td><td style="font-size:10px">'+reason+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
+      return '<tr class="row" data-tk="'+esc(r.ticker)+'"><td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td style="font-size:10px">'+reason+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
     }
     return '';
   }
@@ -904,7 +914,7 @@ const CLIENT_JS = `
 
     // Section A: Header — extended with Tag 199 audit signals
     let html = '<div class="modal-header">';
-    html += '<div><span class="tk">'+r.ticker+'</span> <span class="nm">'+r.name+'</span><div class="meta">'+r.sector+' · '+r.industry+' · '+r.country+'</div></div>';
+    html += '<div><span class="tk">'+esc(r.ticker)+'</span> <span class="nm">'+esc(r.name)+'</span><div class="meta">'+esc(r.sector)+' · '+esc(r.industry)+' · '+esc(r.country)+'</div></div>';
     const score = activeTab==='QC' ? r.qcScore : (activeTab==='HG' ? r.hgScore : Math.max(r.hgScore||0, r.qcScore||0));
     // Audit-signal mini-badges. Color: green for healthy, red for fail, mute for n/a.
     const sigBadges = [];
