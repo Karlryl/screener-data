@@ -44,6 +44,7 @@ const REGISTRY = {
   'single-quarter-dependency':  { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 199: TTM growth collapses >50% without top quarter — single-Q dependency signal' },
   'listing-age':                { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 199: clean fiscal years available — used to scale QC scoring (3y floor)' },
   'metric-divergence-guard':    { type: 'DATAGUARD',  defaultActive: true,  reason: 'Tag 199f: Yahoo TTM vs annual op-margin > 1000pp divergence = data anomaly (MSTR pattern)' },
+  'operating-margin-acceleration': { type: 'DIAGNOSTIC', defaultActive: true, reason: 'Tag 199g: OpM accelerating across 3y — operating-leverage breakthrough (Damodaran)' },
   'opinc-margin-spike':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Operating margin shock detection' },
   'drawdown-52w':               { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },
   'high-proximity-52w':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },

@@ -126,14 +126,22 @@ function buildRow(stock) {
   const gmaChange = (gma && gma.computable && gma.components && Number.isFinite(gma.components.change3periods))
     ? gma.components.change3periods : null;
 
-  // Pre-Breakout composite score (skill spec):
-  //   pb_score = (rev_growth/100*40) + (grossMargin*30) + (max(r40,0)/100*20) + (gma bonus*10)
-  // Note: gross_margin is already in 0..100, divide by 100 first.
+  const oma = allResults['operating-margin-acceleration'];
+  const omaTrend = (oma && oma.computable && oma.components && oma.components.trend) || null;
+  const omaChange = (oma && oma.computable && oma.components && Number.isFinite(oma.components.change3y))
+    ? oma.components.change3y : null;
+
+  // Pre-Breakout composite score (Tag 199g, expanded):
+  //   pb_score = revGrowth/100*35 + grossMargin/100*25 + max(r40,0)/100*20
+  //            + gma bonus*10 + oma bonus*10
+  //   max 100. OM acceleration is the Damodaran-recommended highest-signal
+  //   precursor to a fixed-cost-leverage breakthrough — equal weight to GM.
   let pbScore = null;
   if (Number.isFinite(growth) && Number.isFinite(grossMargin)) {
     const r40component = Math.max(r40Value || 0, 0) / 100 * 20;
     const gmaBonus = (gmaTrend === 'accelerating') ? 10 : (gmaTrend === 'stable' ? 4 : 0);
-    pbScore = (growth / 100 * 40) + (grossMargin / 100 * 30) + r40component + gmaBonus;
+    const omaBonus = (omaTrend === 'accelerating') ? 10 : (omaTrend === 'stable' ? 4 : 0);
+    pbScore = (growth / 100 * 35) + (grossMargin / 100 * 25) + r40component + gmaBonus + omaBonus;
   }
 
   // Mode scores (already on 0-100 scale, accumulated by score-aggregator)
@@ -209,6 +217,7 @@ function buildRow(stock) {
     qcScore, qcTier,
     pbScore,
     gmaTrend, gmaChange,
+    omaTrend, omaChange,
     // Tag 199 audit gates
     qSpikeFail, lossMagFail, metricDivFail, dqGrade, listingYears,
     gaapProfitable, fcfPositive,
