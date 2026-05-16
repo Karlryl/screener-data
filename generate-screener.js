@@ -267,6 +267,14 @@ function buildRow(stock) {
   // Pattern-based, all anchors verified PASS — see methods/r40-sanity-cap.js header.
   const r40Sanity = allResults['r40-sanity-cap'];
   const r40SanityFail = !!(r40Sanity && r40Sanity.computable && r40Sanity.pass === false);
+  // Tag 206g (Bug-Hunt Agent E HIGH-1): revenue-shock-guard was registered as
+  // DATAGUARD since Tag 98b but never wired into the row-level hardGated chain.
+  // Its pass=false signaled silently — any robust-outlier-detected Q-revenue
+  // stock slipped through HG/QC/SMALL/R40/PRE-BREAKOUT and only got caught
+  // when mode-eval's dataGuards[] happened to include it (HYPERGROWTH only).
+  // Wire it here so all 6 tabs honor the dataguard.
+  const revShock = allResults['revenue-shock-guard'];
+  const revShockFail = !!(revShock && revShock.computable && revShock.pass === false);
   const listing = allResults['listing-age'];
   const listingYears = (listing && listing.computable && Number.isFinite(listing.value)) ? listing.value : null;
 
@@ -331,7 +339,7 @@ function buildRow(stock) {
     omaTrend, omaChange,
     revAccelDelta,
     // Tag 199/200/205 audit gates
-    qSpikeFail, lossMagFail, metricDivFail, niVolFail, preCommFail, cetFail, r40SanityFail, dqGrade, listingYears,
+    qSpikeFail, lossMagFail, metricDivFail, niVolFail, preCommFail, cetFail, r40SanityFail, revShockFail, dqGrade, listingYears,
     gaapProfitable, fcfPositive,
     annual,
     scoreHistory,
@@ -396,7 +404,8 @@ function classifyTabs(rows) {
     // (NVDA/MSFT/PLTR/ALAB/CRDO) have spikeShare < 45%, so the isSpikeConc gate
     // in hypergrowth-quality-class never triggers Q_SPIKE_FAKE for them.
     const hgClassFail = r.hgClass === 'Q_SPIKE_FAKE';
-    const hardGated = r.qSpikeFail || r.lossMagFail || r.metricDivFail || r.niVolFail || r.preCommFail || r.cetFail || r.r40SanityFail || r.dqGrade === 'D' || hgClassFail;
+    // Tag 206g: revShockFail added to hardGated chain (Agent E HIGH-1).
+    const hardGated = r.qSpikeFail || r.lossMagFail || r.metricDivFail || r.niVolFail || r.preCommFail || r.cetFail || r.r40SanityFail || r.revShockFail || r.dqGrade === 'D' || hgClassFail;
 
     if (hardGated) {
       // WATCH-only entry: surface them with the reason for review, but block
@@ -409,6 +418,7 @@ function classifyTabs(rows) {
       if (r.preCommFail) reasons.push('PRE-COMM-MEGACAP');
       if (r.cetFail) reasons.push('CLOSED-END-TRUST');
       if (r.r40SanityFail) reasons.push('R40-SANITY');
+      if (r.revShockFail) reasons.push('REV-SHOCK');
       if (r.dqGrade === 'D') reasons.push('DATA-D');
       if (hgClassFail) reasons.push('Q-SPIKE-FAKE');
       r.watchReasons = reasons;
@@ -475,10 +485,18 @@ function classifyTabs(rows) {
   // raw r40 unchanged, while suspect-but-not-gated stocks get pushed down.
   // Anchor safety: NVDA/CRDO/ALAB/PLTR/MSFT all carry dqGrade=A+, no q-spike,
   // and |opMargin - fcfMargin| < 30pp → penalty=0 → sort identical for them.
+  // Tag 206g (Bug-Hunt Agent E HIGH-4): the original multiplicative penalty
+  // `r40 * (1 - pen)` sign-flips for negative r40 values: a deep-loss SaaS
+  // with r40 = -50 and pen = 0.2 gets effective = -40, which sorts ABOVE
+  // its raw -50 — penalty incorrectly improves rank. Switch to subtractive
+  // penalty: effective_r40 = r40 - 100 * pen. Penalty always pushes down
+  // regardless of r40 sign. Anchors (pen=0) sort identically.
   tabs.R40.sort((a, b) => {
     const aPen = computeR40Penalty(a);
     const bPen = computeR40Penalty(b);
-    return ((b.r40 || 0) * (1 - bPen)) - ((a.r40 || 0) * (1 - aPen));
+    const bEff = (b.r40 == null ? -Infinity : b.r40) - 100 * bPen;
+    const aEff = (a.r40 == null ? -Infinity : a.r40) - 100 * aPen;
+    return bEff - aEff;
   });
   tabs.PRE_BREAKOUT.sort((a, b) => (b.pbScore || 0) - (a.pbScore || 0));
   tabs.WATCH.sort((a, b) => Math.max(b.hgScore || 0, b.qcScore || 0) - Math.max(a.hgScore || 0, a.qcScore || 0));
@@ -903,6 +921,11 @@ const CLIENT_JS = `
     if (r.lossMagFail) sigBadges.push('<span style="color:var(--red);border:1px solid var(--red);padding:1px 5px;font-size:10px">LOSS&gt;50%REV</span>');
     if (r.metricDivFail) sigBadges.push('<span style="color:var(--red);border:1px solid var(--red);padding:1px 5px;font-size:10px">METRIC-DIV</span>');
     if (r.cetFail) sigBadges.push('<span style="color:var(--red);border:1px solid var(--red);padding:1px 5px;font-size:10px">TRUST</span>');
+    // Tag 206g (Agent E HIGH-2): modal sigBadges parity with row-level badges.
+    if (r.niVolFail) sigBadges.push('<span style="color:var(--red);border:1px solid var(--red);padding:1px 5px;font-size:10px">NI-VOL</span>');
+    if (r.preCommFail) sigBadges.push('<span style="color:var(--red);border:1px solid var(--red);padding:1px 5px;font-size:10px">PRE-COMM</span>');
+    if (r.r40SanityFail) sigBadges.push('<span style="color:var(--red);border:1px solid var(--red);padding:1px 5px;font-size:10px">R40-SANITY</span>');
+    if (r.revShockFail) sigBadges.push('<span style="color:var(--red);border:1px solid var(--red);padding:1px 5px;font-size:10px">REV-SHOCK</span>');
     if (r.gmaTrend === 'accelerating') sigBadges.push('<span style="color:var(--green);border:1px solid var(--green);padding:1px 5px;font-size:10px">GM↑</span>');
     if (r.omaTrend === 'accelerating') sigBadges.push('<span style="color:var(--green);border:1px solid var(--green);padding:1px 5px;font-size:10px">OpM↑</span>');
     if (r.revAccelDelta != null && r.revAccelDelta > 0) sigBadges.push('<span style="color:var(--green);border:1px solid var(--green);padding:1px 5px;font-size:10px">Rev-Accel +'+r.revAccelDelta.toFixed(0)+'pp</span>');
