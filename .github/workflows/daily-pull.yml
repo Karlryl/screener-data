@@ -84,7 +84,13 @@ jobs:
             echo "::error::watchlist.json is missing after refresh+prune"
             exit 1
           fi
-          size=$(node -e "const w=JSON.parse(require('fs').readFileSync('watchlist.json','utf8'));console.log(Array.isArray(w)?w.length:Object.keys(w).length)")
+          # Tag 207a (CRITICAL CI FIX): the previous check used Object.keys(w).length
+          # when w is not an array. The watchlist schema was wrapped into
+          # { _meta, stocks: [...], lastUniverseRefresh, lastManualExpansion } — 4
+          # top-level keys — so the check counted 4 < 200 → exit 1 → all 5 most
+          # recent runs hard-failed despite 15,734 real stocks in w.stocks.
+          # Schema-aware: prefer w.stocks (current), array (legacy), Object.keys (very old).
+          size=$(node -e "const w=JSON.parse(require('fs').readFileSync('watchlist.json','utf8'));let n;if(Array.isArray(w))n=w.length;else if(w&&Array.isArray(w.stocks))n=w.stocks.length;else n=Object.keys(w).length;console.log(n)")
           echo "watchlist size: $size"
           if [ "$size" -lt 200 ]; then
             echo "::error::watchlist size $size < 200 — refresh/prune likely corrupted the universe"
