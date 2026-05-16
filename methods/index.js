@@ -79,6 +79,9 @@ module.exports = [
   { file: './buyback-yield.js' },
   { file: './sbc-trend.js' },
   { file: './insider-net-buying.js' },
+  // Tag 204: earnings/cash quality diagnostics (DIAGNOSTIC, fixture-hash safe)
+  { file: './fcf-stability.js' },
+  { file: './operating-cashflow-coverage.js' },
   { file: './net-income-volatility-guard.js' },
   { file: './pre-commerciality-megacap-guard.js' },
   { file: './closed-end-trust-guard.js' },
