@@ -75,6 +75,75 @@ function loadStocks(dir) {
   return out;
 }
 
+// Tag 203: Score-History reader. Memoised per-process so the dashboard build
+// only touches the filesystem once per ticker even though buildRow() is called
+// in a loop. Returns null if score-history is unavailable (first run, missing
+// dir, parse error) — callers must tolerate null.
+const SCORE_HISTORY_DIR = './score-history';
+const _scoreHistoryCache = new Map();
+function readScoreHistory(ticker, dir) {
+  const base = dir || SCORE_HISTORY_DIR;
+  const cacheKey = base + '::' + ticker;
+  if (_scoreHistoryCache.has(cacheKey)) return _scoreHistoryCache.get(cacheKey);
+  let result = null;
+  try {
+    const file = path.join(base, ticker + '.json');
+    if (fs.existsSync(file)) {
+      const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (parsed && Array.isArray(parsed.entries)) {
+        result = parsed;
+      }
+    }
+  } catch (e) { /* swallow — null = "no history available" */ }
+  _scoreHistoryCache.set(cacheKey, result);
+  return result;
+}
+
+// findEntryAtOrBefore: returns the most recent entry whose date is
+// on-or-before `targetIso`. Tolerates weekends/holidays/missed pulls per
+// design §5. Returns null if no entry that old exists.
+function findEntryAtOrBefore(entries, targetIso) {
+  if (!Array.isArray(entries) || entries.length === 0) return null;
+  let best = null;
+  for (const e of entries) {
+    if (!e || !e.date) continue;
+    if (e.date <= targetIso) {
+      if (best == null || e.date > best.date) best = e;
+    }
+  }
+  return best;
+}
+
+// ISO date - N days (UTC-safe).
+function _isoMinusDays(iso, n) {
+  const d = new Date(iso + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+
+// Compute { deltaScore7d, deltaScore30d, history } from a parsed history file.
+// Score basis is hgScore (matches Section D's primary axis). If hgScore is
+// null on either side of the delta, the delta returns null (renders as "—").
+function _buildScoreHistoryPayload(history, todayIso) {
+  if (!history || !Array.isArray(history.entries) || history.entries.length === 0) {
+    return { deltaScore7d: null, deltaScore30d: null, history: [] };
+  }
+  const today = findEntryAtOrBefore(history.entries, todayIso);
+  const hgToday = today && Number.isFinite(today.hgScore) ? today.hgScore : null;
+  const e7  = findEntryAtOrBefore(history.entries, _isoMinusDays(todayIso, 7));
+  const e30 = findEntryAtOrBefore(history.entries, _isoMinusDays(todayIso, 30));
+  // Don't compare an entry to itself — only emit a delta if the prior point
+  // is older than today's entry.
+  const prior7  = (e7  && today && e7.date  !== today.date) ? e7  : null;
+  const prior30 = (e30 && today && e30.date !== today.date) ? e30 : null;
+  const d7 = (hgToday != null && prior7  && Number.isFinite(prior7.hgScore))  ? hgToday - prior7.hgScore  : null;
+  const d30 = (hgToday != null && prior30 && Number.isFinite(prior30.hgScore)) ? hgToday - prior30.hgScore : null;
+  // Trim to last 30 entries for sparkline rendering — array is already sorted
+  // ascending by the snapshot script.
+  const trimmed = history.entries.slice(-30);
+  return { deltaScore7d: d7, deltaScore30d: d30, history: trimmed };
+}
+
 function arrUnwrap(arr) {
   if (!Array.isArray(arr)) return [];
   return arr.map(unwrap);
@@ -228,6 +297,13 @@ function buildRow(stock) {
     };
   }
 
+  // Tag 203: Score-history (sliding 30-entry window from snapshot-score-history.js).
+  // Drives Section D's ΔScore badges + sparkline. Null on first run / when the
+  // file is missing — client renders "—" gracefully (design §6 migration path).
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const histRaw = readScoreHistory(ticker);
+  const scoreHistory = _buildScoreHistoryPayload(histRaw, todayIso);
+
   return {
     ticker,
     name: (stock.meta && stock.meta.name) || ticker,
@@ -251,6 +327,7 @@ function buildRow(stock) {
     qSpikeFail, lossMagFail, metricDivFail, niVolFail, preCommFail, cetFail, dqGrade, listingYears,
     gaapProfitable, fcfPositive,
     annual,
+    scoreHistory,
     results: compactResults
   };
 }
@@ -276,7 +353,17 @@ function classifyTabs(rows) {
     //   3. data-quality grade D → too many missing fields to trust the score
     //
     // No hardcoded tickers — these are signatures the data must satisfy.
-    const hardGated = r.qSpikeFail || r.lossMagFail || r.metricDivFail || r.niVolFail || r.preCommFail || r.cetFail || r.dqGrade === 'D';
+    //
+    // Tag 203 (Q_SPIKE_FAKE escape): hypergrowth-quality-class' Q_SPIKE_FAKE
+    // verdict is now a hard-gate co-signal. q-spike-dataguard only fires when
+    // YoY>100% AND single-Q-share>55%; that leaves a dead-zone (e.g. 300033.SZ
+    // — YoY 40%, single-Q 49% — classified Q_SPIKE_FAKE by HG-class but slipping
+    // into QC). Using the existing classifier output costs nothing extra and
+    // closes the gap without new thresholds. Anchor safety verified: all anchors
+    // (NVDA/MSFT/PLTR/ALAB/CRDO) have spikeShare < 45%, so the isSpikeConc gate
+    // in hypergrowth-quality-class never triggers Q_SPIKE_FAKE for them.
+    const hgClassFail = r.hgClass === 'Q_SPIKE_FAKE';
+    const hardGated = r.qSpikeFail || r.lossMagFail || r.metricDivFail || r.niVolFail || r.preCommFail || r.cetFail || r.dqGrade === 'D' || hgClassFail;
 
     if (hardGated) {
       // WATCH-only entry: surface them with the reason for review, but block
@@ -289,6 +376,7 @@ function classifyTabs(rows) {
       if (r.preCommFail) reasons.push('PRE-COMM-MEGACAP');
       if (r.cetFail) reasons.push('CLOSED-END-TRUST');
       if (r.dqGrade === 'D') reasons.push('DATA-D');
+      if (hgClassFail) reasons.push('Q-SPIKE-FAKE');
       r.watchReasons = reasons;
       tabs.WATCH.push(r);
       continue;
@@ -788,10 +876,32 @@ const CLIENT_JS = `
     html += '<div class="chart"><div class="ct">FCF Margin (%)</div>'+spark(fmSeries)+'</div>';
     html += '</div>';
 
-    // Section D: Score history (placeholder — no multi-snapshot history yet)
+    // Section D: Score + Score-History (Tag 203 — sparkline + Δ7d/Δ30d badges).
+    // History data comes from r.scoreHistory = { deltaScore7d, deltaScore30d, history[] }.
+    // Render rules (design §5): green ≥ +5, red ≤ -5, mute otherwise.
+    // Falls back to placeholder text on Day-1 (history empty) so the modal
+    // never breaks when score-history hasn't been populated yet.
     html += '<h3 class="sec">Score</h3>';
     html += '<div style="font-family:var(--mono);font-size:12px;color:var(--text-1);">HG Score: '+(r.hgScore!=null?r.hgScore.toFixed(1):'—')+' ('+(r.hgTier||'—')+') &nbsp;·&nbsp; QC Score: '+(r.qcScore!=null?r.qcScore.toFixed(1):'—')+' ('+(r.qcTier||'—')+') &nbsp;·&nbsp; PB Score: '+(r.pbScore!=null?r.pbScore.toFixed(1):'—')+'</div>';
-    html += '<div style="color:var(--text-2);font-size:10px;margin-top:4px;">Score history accumulates as daily snapshots are retained (single snapshot today).</div>';
+    const sh = r.scoreHistory || { history: [], deltaScore7d: null, deltaScore30d: null };
+    function _dBadge(label, v) {
+      if (v == null || !isFinite(v)) return '<span style="color:var(--text-2);border:1px solid var(--border);padding:1px 5px;font-size:10px;margin-right:4px;">'+label+': —</span>';
+      const color = (v >= 5) ? 'var(--green)' : (v <= -5 ? 'var(--red)' : 'var(--text-1)');
+      const sign = v >= 0 ? '+' : '';
+      return '<span style="color:'+color+';border:1px solid '+color+';padding:1px 5px;font-size:10px;margin-right:4px;">'+label+': '+sign+v.toFixed(1)+'</span>';
+    }
+    html += '<div style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
+    html += _dBadge('Δ7d', sh.deltaScore7d) + _dBadge('Δ30d', sh.deltaScore30d);
+    html += '<span style="color:var(--text-2);font-size:10px;">('+(sh.history ? sh.history.length : 0)+' daily snapshots)</span>';
+    html += '</div>';
+    if (sh.history && sh.history.length >= 2) {
+      // Reuse spark() — pass hgScore series in newest-first order (spark()
+      // reverses to oldest→newest). history[] is ascending date, so reverse.
+      const hgSeries = sh.history.slice().reverse().map(e => (e && isFinite(e.hgScore)) ? e.hgScore : null);
+      html += '<div style="margin-top:6px;"><div class="chart" style="background:var(--bg-2);border:1px solid var(--border);padding:8px;display:inline-block;"><div class="ct" style="font-size:11px;color:var(--text-1);text-transform:uppercase;margin-bottom:4px;">HG Score (last '+sh.history.length+'d)</div>'+spark(hgSeries)+'</div></div>';
+    } else {
+      html += '<div style="color:var(--text-2);font-size:10px;margin-top:4px;">Score history accumulates daily (need ≥2 snapshots for sparkline).</div>';
+    }
 
     // Section E: Annual table
     html += '<h3 class="sec">Annual Financials</h3><div class="annual"><table><thead><tr><th class="fy" style="text-align:left;">FY</th><th>Revenue</th><th>RevGrowth</th><th>GrossM%</th><th>OpM%</th><th>FCFM%</th><th>NetIncM%</th></tr></thead><tbody>';
@@ -1112,4 +1222,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { buildRow, classifyTabs, renderHTML };
+module.exports = { buildRow, classifyTabs, renderHTML, readScoreHistory, findEntryAtOrBefore, _buildScoreHistoryPayload };
