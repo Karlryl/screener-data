@@ -341,6 +341,92 @@ function _arr(history, key) {
   }).filter(Boolean);
 }
 
+// ─── Tag 203: Fintech-aware OpInc fallback ────────────────────────
+// Yahoo's `incomeStatementHistory.operatingIncome` (and FTS counterpart) is
+// null for many Financial-Services tickers — banks (JPM, BAC), credit (UPST,
+// SOFI, NU), insurance (LMND) — because the bank/insurance income statement
+// uses a different chart-of-accounts (net interest income, premiums,
+// provisions). Downstream methods that depend on annualOpInc (loss-magnitude-
+// guard, metric-divergence-guard, ni-volatility-guard) then silently exit
+// `computable:false`, preventing profitable fintech (NU) from being scored.
+//
+// This helper derives a per-year OpInc estimate from fields that ARE present
+// in the canonical payload, only when:
+//   (a) sector === 'Financial Services'  (sector-gated; never fires for tech)
+//   (b) annualOpInc is empty after both quoteSummary + FTS paths
+//
+// Three derivation paths, tried in order:
+//   1. "computed-bank":      OpInc[y] = totalRev[y] − totalOpEx[y] − provisionForCreditLosses[y]
+//   2. "computed-insurance": OpInc[y] = totalRev[y] − costOfRev[y] − SG&A[y]
+//   3. "computed-margin":    OpInc[y] = totalRev[y] × (operatingMargins TTM)
+// Path 3 is the universal fallback — it works whenever Yahoo provides revenue
+// and an operatingMargin metric (almost always true), even though it folds
+// year-by-year volatility into a single TTM margin. Methods can flag this
+// as derived via `meta.opIncSource`.
+//
+// Returns { values: [{value:n}, ...]  // latest-first, _arr-compatible
+//         , source: 'computed-bank' | 'computed-insurance' | 'computed-margin' | null }
+// `null` source means no fallback was possible (annualRev empty AND no margin).
+function _deriveOpIncForFinancials(isHist, annualRev, operatingMarginsRaw) {
+  // Path 1 & 2: try per-year line-item extraction from raw isHist rows.
+  // Banks: totalRev − totalOperatingExpenses − provisionForLoanLeasesAndCreditLosses.
+  // Insurance: totalRev − costOfRevenue − sellingGeneralAdministrative.
+  // Yahoo legacy isHist rarely populates these for financials (as of 2026),
+  // but if it ever does we prefer the line-item derivation over margin × rev.
+  const rows = Array.isArray(isHist) ? isHist : [];
+  const bankYearly = [];
+  const insYearly = [];
+  let bankNonNull = 0;
+  let insNonNull = 0;
+  for (const r of rows) {
+    const rev = _y(r, 'totalRevenue');
+    if (rev == null) { bankYearly.push(null); insYearly.push(null); continue; }
+    // Bank pattern
+    const opEx = _y(r, 'totalOperatingExpenses') ?? _y(r, 'operatingExpense');
+    const provCL = _y(r, 'provisionForLoanLeasesAndCreditLosses')
+                ?? _y(r, 'provisionForCreditLosses')
+                ?? 0;  // many banks omit; treat absent as 0 only when opEx exists
+    if (opEx != null) {
+      bankYearly.push({ value: rev - opEx - provCL });
+      bankNonNull++;
+    } else {
+      bankYearly.push(null);
+    }
+    // Insurance pattern
+    const cor = _y(r, 'costOfRevenue');
+    const sga = _y(r, 'sellingGeneralAdministrative');
+    if (cor != null && sga != null) {
+      insYearly.push({ value: rev - cor - sga });
+      insNonNull++;
+    } else {
+      insYearly.push(null);
+    }
+  }
+  // Prefer the path with the most non-null derived years.
+  if (bankNonNull > 0 && bankNonNull >= insNonNull) {
+    return { values: bankYearly.filter(Boolean), source: 'computed-bank' };
+  }
+  if (insNonNull > 0) {
+    return { values: insYearly.filter(Boolean), source: 'computed-insurance' };
+  }
+
+  // Path 3 (universal): margin × revenue. operatingMarginsRaw is a fraction
+  // (Yahoo: 0.43741 = 43.741%). Skip if either input missing.
+  if (typeof operatingMarginsRaw !== 'number' || !Number.isFinite(operatingMarginsRaw)) {
+    return { values: [], source: null };
+  }
+  if (!Array.isArray(annualRev) || annualRev.length === 0) {
+    return { values: [], source: null };
+  }
+  const derived = annualRev
+    .map(r => (r && typeof r.value === 'number' && Number.isFinite(r.value))
+        ? { value: r.value * operatingMarginsRaw }
+        : null)
+    .filter(Boolean);
+  if (derived.length === 0) return { values: [], source: null };
+  return { values: derived, source: 'computed-margin' };
+}
+
 // ─── Mapper ────────────────────────────────────────────────────────
 
 function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
@@ -361,9 +447,29 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
 
   // Annual-Arrays (latest first)
   const annualRev = _arr(isHist, 'totalRevenue');
-  const annualOpInc = _arr(isHist, 'operatingIncome');
+  let annualOpInc = _arr(isHist, 'operatingIncome');
   const annualNetIncome = _arr(isHist, 'netIncome');
   const annualGP = _arr(isHist, 'grossProfit');
+
+  // Tag 203: sector-aware OpInc fallback for Financial Services.
+  // Yahoo's incomeStatementHistory.operatingIncome is null for banks (JPM,
+  // BAC), credit (UPST, SOFI, NU), and insurance (LMND) because the bank/
+  // insurance chart-of-accounts differs from industrials. Compute a per-year
+  // OpInc estimate so downstream methods (loss-magnitude-guard, ni-volatility-
+  // guard, metric-divergence-guard) become computable on profitable fintech.
+  // SECTOR-GATED: never fires for non-financial sectors. Source recorded in
+  // meta.opIncSource so methods can flag derived data. The FTS-merge in
+  // pullAll re-applies this fallback if FTS also produced empty (see line ~990).
+  let opIncSource = annualOpInc.length > 0 ? 'native' : null;
+  const _sectorRaw = _y(ap, 'sector') || null;
+  const _opMargRaw = _y(fd, 'operatingMargins');
+  if (annualOpInc.length === 0 && _sectorRaw === 'Financial Services') {
+    const derived = _deriveOpIncForFinancials(isHist, annualRev, _opMargRaw);
+    if (derived.values.length > 0 && derived.source) {
+      annualOpInc = derived.values;
+      opIncSource = derived.source;
+    }
+  }
   // Tag 202: annualRnD backfill from quoteSummary.incomeStatementHistory.
   // Bug #25 added FTS-based extraction, but Yahoo's FTS `financials` module
   // omits R&D for some tickers (ASML, V, MA, MSFT, NVDA, GOOG observed).
@@ -499,7 +605,12 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       fetchedAt: asOf,
       filingDate: null,  // Yahoo liefert kein Filing-Datum für TTM
       firstTradeDate: null,  // wird unten aus yf.quote() gesetzt (Tag 106)
-      ipoYear: null
+      ipoYear: null,
+      // Tag 203: provenance for annualOpInc. 'native' = Yahoo isHist/FTS,
+      // 'computed-bank' / 'computed-insurance' = per-year line-item derivation,
+      // 'computed-margin' = annualRev × operatingMargin TTM (universal fallback
+      // for Financial Services when line-items absent). null = no OpInc at all.
+      opIncSource
     },
     // Tag 134: marketCap stored in reportingCurrency at mapper level;
     // _convertSnapshotToUSD applies FX conversion uniformly across all currency-denominated fields.
@@ -984,7 +1095,18 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       }
       // Override leere annual-Arrays aus quoteSummary mit FTS-Daten wenn FTS welche hat
       if (ftsAnnual.annualRev.length > canonical.annual.annualRev.length) canonical.annual.annualRev = ftsAnnual.annualRev;
-      if (ftsAnnual.annualOpInc.length > 0) canonical.annual.annualOpInc = ftsAnnual.annualOpInc;
+      // Tag 203: FTS-OpInc override is now gated by non-null COUNT, not length.
+      // mapFTSToAnnual pushes null placeholders for OpInc-missing rows (bank/
+      // fintech) — without this guard a 4-null-entry FTS array would wipe out
+      // a 4-non-null derived OpInc series produced by the Financial-Services
+      // fallback in mapYahooToCanonical. Native FTS data (non-null entries)
+      // still wins as before. We also reset opIncSource accordingly.
+      const _qsOpIncNonNull = (canonical.annual.annualOpInc || []).filter(v => v != null && (typeof v !== 'object' || v.value != null)).length;
+      const _ftsOpIncNonNull = (ftsAnnual.annualOpInc || []).filter(v => v != null && (typeof v !== 'object' || v.value != null)).length;
+      if (_ftsOpIncNonNull > _qsOpIncNonNull) {
+        canonical.annual.annualOpInc = ftsAnnual.annualOpInc.filter(v => v != null && (typeof v !== 'object' || v.value != null));
+        if (canonical.meta) canonical.meta.opIncSource = 'native';
+      }
       // Tag-28: annualBalance aus FTS überschreiben wenn FTS mehr nicht-null Werte hat
       const oldBalanceUsable = (canonical.annual.annualBalance || []).filter(r => r.totalDebt != null || r.totalCash != null || r.totalAssets != null).length;
       const newBalanceUsable = ftsBalance.filter(r => r.totalDebt != null || r.totalCash != null || r.totalAssets != null).length;
@@ -1018,6 +1140,31 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (ftsQuarterly.revenueQ.length > canonical.timeseries.revenueQ.length) canonical.timeseries.revenueQ = ftsQuarterly.revenueQ;
       if (ftsQuarterly.opIncQ.length > 0) canonical.timeseries.opIncQ = ftsQuarterly.opIncQ;
       if (ftsQuarterly.grossProfitQ.length > 0) canonical.timeseries.grossProfitQ = ftsQuarterly.grossProfitQ;
+
+      // Tag 203: post-FTS sector-aware OpInc fallback. After both quoteSummary
+      // and FTS merges, if annualOpInc is still empty AND sector is Financial
+      // Services, derive an estimate from operatingMargin × annualRev. Must run
+      // BEFORE _convertSnapshotToUSD so the derived values are FX-converted
+      // alongside the rest of annual.*. Idempotent — only fires when needed.
+      // The fallback in mapYahooToCanonical already ran on quoteSummary fields,
+      // but a partial FTS merge can leave annualOpInc shorter than annualRev;
+      // this re-derivation guarantees a complete series when the metric exists.
+      try {
+        const _postSector = canonical.meta && canonical.meta.sector;
+        const _postRev = canonical.annual && canonical.annual.annualRev || [];
+        const _postOpInc = canonical.annual && canonical.annual.annualOpInc || [];
+        const _postOpIncNonNull = _postOpInc.filter(v => v != null && (typeof v !== 'object' || v.value != null)).length;
+        const _postOpMarg = canonical.metrics && canonical.metrics.operatingMargin && canonical.metrics.operatingMargin.value;
+        // operatingMargin.value is in percent (43.741); convert back to fraction.
+        const _opMargFrac = (typeof _postOpMarg === 'number' && Number.isFinite(_postOpMarg)) ? _postOpMarg / 100 : null;
+        if (_postOpIncNonNull === 0 && _postSector === 'Financial Services' && _postRev.length > 0) {
+          const _retry = _deriveOpIncForFinancials([], _postRev, _opMargFrac);
+          if (_retry.values.length > 0 && _retry.source) {
+            canonical.annual.annualOpInc = _retry.values;
+            canonical.meta.opIncSource = _retry.source;
+          }
+        }
+      } catch (e) { /* defensive — never fail the pull on fallback errors */ }
 
       // Tag 134: single-pass USD conversion across marketCap + revenueTTM + all annual/quarterly series.
       // Must run AFTER FTS overrides (FTS values are also in reporting currency) and BEFORE mcap filter
