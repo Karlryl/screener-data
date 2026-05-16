@@ -45,6 +45,8 @@ const REGISTRY = {
   'listing-age':                { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 199: clean fiscal years available — used to scale QC scoring (3y floor)' },
   'metric-divergence-guard':    { type: 'DATAGUARD',  defaultActive: true,  reason: 'Tag 199f: Yahoo TTM vs annual op-margin > 1000pp divergence = data anomaly (MSTR pattern)' },
   'operating-margin-acceleration': { type: 'DIAGNOSTIC', defaultActive: true, reason: 'Tag 199g: OpM accelerating across 3y — operating-leverage breakthrough (Damodaran)' },
+  'revenue-acceleration-yoy':   { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 199i: this-year YoY > last-year YoY — Pre-Breakout re-acceleration signal' },
+  'sbc-growth-ratio':           { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 199j: SBC growth ≤ 1.5× Rev growth — dilution-discipline signal' },
   'opinc-margin-spike':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Operating margin shock detection' },
   'drawdown-52w':               { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },
   'high-proximity-52w':         { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Setup-Kontext fÃ¼r Elliot-Analyse' },
