@@ -414,7 +414,14 @@ const CLIENT_JS = `
   let filterSector = '';
   let filterCountry = '';
   let filterMinR40 = '';
-  let filterMin = '';     // tab-specific min input
+  let filterMaxR40 = '';
+  let filterMin = '';     // tab-specific min input — auto-resets on tab switch
+  // Tag 199 audit filters
+  let filterIpo = 'ALL';  // ALL | LT1 | LT2 | LT5 | GT5
+  let filterDQ = { 'A+':true, 'A':true, 'B':true, 'C':false, 'D':false };
+  let onlyGaap = false;
+  let onlyFcf  = false;
+  let sortKey = 'auto';   // auto = tab's primary; or one of {score,r40,growth,fcfMargin,mcap,pbScore}
   let currentList = [];   // active filtered list
 
   function capBucket(mcap){
@@ -433,6 +440,13 @@ const CLIENT_JS = `
   function r40Class(v){ if (v==null) return 'g-mute'; if (v>=60) return 'g-r40-excellent'; if (v>=40) return 'g-r40-good'; if (v>=20) return 'g-r40-fair'; if (v>=0) return 'g-r40-warn'; return 'g-r40-bad'; }
 
   // ------- filter application -------
+  function ipoAgeYears(r){
+    // listingYears is the canonical signal (counts clean fiscal years).
+    // Fallback to meta.ipoYear if listing-age was incomputable.
+    if (r.listingYears != null) return r.listingYears;
+    if (r.ipoYear != null) return DATA.currentYear - r.ipoYear;
+    return null;
+  }
   function applyFilters(list){
     return list.filter(r => {
       if (!filterState[r.state]) return false;
@@ -443,6 +457,9 @@ const CLIENT_JS = `
       if (filterMinR40 !== '' && !isNaN(+filterMinR40)) {
         if (r.r40 == null || r.r40 < +filterMinR40) return false;
       }
+      if (filterMaxR40 !== '' && !isNaN(+filterMaxR40)) {
+        if (r.r40 != null && r.r40 > +filterMaxR40) return false;
+      }
       if (filterMin !== '' && !isNaN(+filterMin)) {
         const minV = +filterMin;
         if (activeTab === 'HG' && (r.r40 == null || r.r40 < minV)) return false;
@@ -451,8 +468,47 @@ const CLIENT_JS = `
         if (activeTab === 'R40' && (r.r40 == null || r.r40 < minV)) return false;
         if (activeTab === 'PRE_BREAKOUT' && (r.growth == null || r.growth < minV)) return false;
       }
+      // Tag 199 audit filters
+      if (filterIpo !== 'ALL') {
+        const age = ipoAgeYears(r);
+        if (filterIpo === 'LT1' && !(age != null && age < 1)) return false;
+        if (filterIpo === 'LT2' && !(age != null && age < 2)) return false;
+        if (filterIpo === 'LT5' && !(age != null && age < 5)) return false;
+        if (filterIpo === 'GT5' && !(age != null && age >= 5)) return false;
+      }
+      const grade = r.dqGrade || 'A+';  // unknown grade defaults to A+ to avoid silent exclusion
+      if (!filterDQ[grade]) return false;
+      if (onlyGaap && r.gaapProfitable !== true) return false;
+      if (onlyFcf && r.fcfPositive !== true) return false;
       return true;
     });
+  }
+
+  // ------- sort dispatcher -------
+  function sortList(list){
+    const tab = activeTab;
+    const key = sortKey;
+    const cmp = (a, b) => {
+      const k = key;
+      if (k === 'auto') {
+        if (tab === 'HG') return (b.hgScore||0) - (a.hgScore||0);
+        if (tab === 'QC') return (b.qcScore||0) - (a.qcScore||0);
+        if (tab === 'SMALL') return (b.growth||0) - (a.growth||0);
+        if (tab === 'R40') return (b.r40||0) - (a.r40||0);
+        if (tab === 'PRE_BREAKOUT') return (b.pbScore||0) - (a.pbScore||0);
+        if (tab === 'WATCH') return Math.max(b.hgScore||0, b.qcScore||0) - Math.max(a.hgScore||0, a.qcScore||0);
+        return 0;
+      }
+      if (k === 'score')     return Math.max(b.hgScore||0, b.qcScore||0) - Math.max(a.hgScore||0, a.qcScore||0);
+      if (k === 'r40')       return (b.r40||0) - (a.r40||0);
+      if (k === 'growth')    return (b.growth||0) - (a.growth||0);
+      if (k === 'fcfMargin') return (b.fcfMargin||0) - (a.fcfMargin||0);
+      if (k === 'mcap')      return (b.mcap||0) - (a.mcap||0);
+      if (k === 'pbScore')   return (b.pbScore||0) - (a.pbScore||0);
+      return 0;
+    };
+    list.sort(cmp);
+    return list;
   }
 
   // ------- table rendering -------
@@ -530,7 +586,8 @@ const CLIENT_JS = `
   }
 
   function renderTable(){
-    const list = applyFilters(TABS[activeTab] || []);
+    const filtered = applyFilters(TABS[activeTab] || []);
+    const list = sortList(filtered.slice());
     currentList = list;
     const cols = tabColumns(activeTab);
     const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
@@ -725,6 +782,12 @@ const CLIENT_JS = `
     b.onclick = () => {
       activeTab = b.dataset.tab;
       page = 1;
+      // Tag 199 fix: reset tab-specific Min input on tab switch — the prior
+      // value belonged to a different metric (e.g. min-R40 for HG vs min-Growth
+      // for SMALL) and would silently kill the new tab's row count.
+      filterMin = '';
+      const fMinEl = document.getElementById('fMin');
+      if (fMinEl) fMinEl.value = '';
       document.querySelectorAll('.tabs button').forEach(x => x.classList.remove('active'));
       b.classList.add('active');
       renderTable();
@@ -747,7 +810,29 @@ const CLIENT_JS = `
   document.getElementById('fSector').onchange = e => { filterSector = e.target.value; page=1; renderTable(); };
   document.getElementById('fCountry').onchange = e => { filterCountry = e.target.value; page=1; renderTable(); };
   document.getElementById('fMinR40').oninput = e => { filterMinR40 = e.target.value; page=1; renderTable(); };
+  document.getElementById('fMaxR40').oninput = e => { filterMaxR40 = e.target.value; page=1; renderTable(); };
   document.getElementById('fMin').oninput = e => { filterMin = e.target.value; page=1; renderTable(); };
+  // Tag 199: new audit filters
+  document.querySelectorAll('.filters .f-ipo').forEach(b => {
+    b.onclick = () => {
+      filterIpo = b.dataset.ipo;
+      document.querySelectorAll('.filters .f-ipo').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      page = 1; renderTable();
+    };
+  });
+  document.querySelectorAll('.filters .f-dq').forEach(b => {
+    b.onclick = () => {
+      filterDQ[b.dataset.dq] = !filterDQ[b.dataset.dq];
+      b.classList.toggle('on', filterDQ[b.dataset.dq]);
+      page = 1; renderTable();
+    };
+  });
+  const onlyGaapEl = document.getElementById('onlyGaap');
+  const onlyFcfEl = document.getElementById('onlyFcf');
+  onlyGaapEl.onchange = e => { onlyGaap = e.target.checked; page=1; renderTable(); };
+  onlyFcfEl.onchange = e => { onlyFcf = e.target.checked; page=1; renderTable(); };
+  document.getElementById('fSort').onchange = e => { sortKey = e.target.value; page=1; renderTable(); };
   document.getElementById('prevPage').onclick = () => { if (page>1) { page--; renderTable(); } };
   document.getElementById('nextPage').onclick = () => { page++; renderTable(); };
   document.getElementById('table').addEventListener('click', e => {
@@ -794,6 +879,7 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
 
   const payload = {
     generatedAt,
+    currentYear: new Date().getUTCFullYear(),
     rowsByTicker,
     tabs: tabsByTicker,
     sectors, countries
@@ -847,8 +933,35 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
   <span class="group"><span class="label">Country:</span>
     <select id="fCountry"><option value="">All</option>${countries.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('')}</select>
   </span>
-  <span class="group"><span class="label">Min R40:</span><input id="fMinR40" type="number" step="1" placeholder="—"/></span>
+  <span class="group"><span class="label">R40:</span><input id="fMinR40" type="number" step="1" placeholder="min" style="width:50px"/><input id="fMaxR40" type="number" step="1" placeholder="max" style="width:50px"/></span>
   <span class="group"><span class="label">Tab Min:</span><input id="fMin" type="number" step="1" placeholder="—"/></span>
+  <span class="group"><span class="label">IPO:</span>
+    <button class="f f-ipo on" data-ipo="ALL">All</button>
+    <button class="f f-ipo" data-ipo="LT1">&lt;1y</button>
+    <button class="f f-ipo" data-ipo="LT2">&lt;2y</button>
+    <button class="f f-ipo" data-ipo="LT5">&lt;5y</button>
+    <button class="f f-ipo" data-ipo="GT5">≥5y</button>
+  </span>
+  <span class="group"><span class="label">Grade:</span>
+    <button class="f f-dq on" data-dq="A+">A+</button>
+    <button class="f f-dq on" data-dq="A">A</button>
+    <button class="f f-dq on" data-dq="B">B</button>
+    <button class="f f-dq"    data-dq="C">C</button>
+    <button class="f f-dq"    data-dq="D">D</button>
+  </span>
+  <span class="group"><label style="color:var(--text-1);font-size:11px;cursor:pointer;"><input id="onlyGaap" type="checkbox"/> GAAP+</label></span>
+  <span class="group"><label style="color:var(--text-1);font-size:11px;cursor:pointer;"><input id="onlyFcf" type="checkbox"/> FCF+</label></span>
+  <span class="group"><span class="label">Sort:</span>
+    <select id="fSort">
+      <option value="auto">Auto (tab default)</option>
+      <option value="score">Score</option>
+      <option value="r40">Rule of 40</option>
+      <option value="growth">Rev Growth</option>
+      <option value="fcfMargin">FCF Margin</option>
+      <option value="mcap">Market Cap</option>
+      <option value="pbScore">PB-Score</option>
+    </select>
+  </span>
 </div>
 <div class="summary" id="summary"></div>
 <div class="table-wrap"><div id="table"></div></div>
