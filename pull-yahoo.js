@@ -364,6 +364,18 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   const annualOpInc = _arr(isHist, 'operatingIncome');
   const annualNetIncome = _arr(isHist, 'netIncome');
   const annualGP = _arr(isHist, 'grossProfit');
+  // Tag 202: annualRnD backfill from quoteSummary.incomeStatementHistory.
+  // Bug #25 added FTS-based extraction, but Yahoo's FTS `financials` module
+  // omits R&D for some tickers (ASML, V, MA, MSFT, NVDA, GOOG observed).
+  // The legacy `incomeStatementHistory.researchDevelopment` field is still
+  // populated for those names → use it as a primary source and let FTS
+  // override below only when FTS has strictly more non-null entries.
+  // Preserves positional alignment with annualRev (same isHist iteration).
+  // Stored as raw numbers (latest-first) to match the FTS annualRnD shape.
+  const annualRnDFromQS = (isHist || []).map(r => {
+    const v = _y(r, 'researchDevelopment');
+    return v != null ? v : null;
+  });
   // P0-Fix Tag 13: capex-fallback `|| 0` ist gefährlich.
   // NVDA hat real $35B Capex/Jahr — wegfallen lassen verfälscht FCF um Milliarden.
   // Wenn capex unknown, FCF=null statt overstated.
@@ -512,7 +524,10 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       revenueQ, opIncQ, grossProfitQ
     },
     annual: {
-      annualRev, annualOpInc, annualNetIncome, annualGP, annualFCF, annualOCF, annualBalance
+      annualRev, annualOpInc, annualNetIncome, annualGP, annualFCF, annualOCF, annualBalance,
+      // Tag 202: quoteSummary-derived RnD (primary). FTS path may overwrite below
+      // when FTS has strictly more non-null entries (see post-FTS merge in main pull).
+      annualRnD: annualRnDFromQS
     },
     // Tag 137: insider buy/sell activity (90d window, open-market only)
     insiderActivity: insiderActivity || null
@@ -979,7 +994,21 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // Tag-44: annualCapex aus FTS hinzufügen
       canonical.annual.annualCapex = ftsAnnualCapex;
       // Bug #25: annualRnD war nie geschrieben — reinvestment-rate nutzte immer nur Capex
-      canonical.annual.annualRnD = ftsAnnualRnD || [];
+      // Tag 202: prefer FTS-extracted RnD only when it has strictly more non-null
+      // entries than the quoteSummary-derived RnD already on canonical.annual.
+      // Yahoo FTS `financials` omits researchAndDevelopment for many large caps
+      // (ASML, V, MA, MSFT, NVDA, GOOG observed) — without this guard the FTS
+      // empty-array overwrites the legacy isHist values and (Capex+0)/OCF stays
+      // below the 20% reinvestment-rate gate.
+      const qsRnDNonNull = (canonical.annual.annualRnD || []).filter(v => v != null).length;
+      const ftsRnDNonNull = (ftsAnnualRnD || []).filter(v => v != null).length;
+      if (ftsRnDNonNull > qsRnDNonNull) {
+        canonical.annual.annualRnD = ftsAnnualRnD;
+      } else if (qsRnDNonNull === 0 && (ftsAnnualRnD || []).length > 0) {
+        // Both empty/null — keep FTS shape for downstream length-alignment.
+        canonical.annual.annualRnD = ftsAnnualRnD;
+      }
+      // else: keep canonical.annual.annualRnD as set by mapYahooToCanonical (quoteSummary).
       // Tag-90: quarterlyNI in timeseries
       canonical.timeseries.netIncomeQ = (ftsQuarterlyNI || []).map(v => ({ value: v }));
       if (ftsAnnual.annualGP.length > 0) canonical.annual.annualGP = ftsAnnual.annualGP;
