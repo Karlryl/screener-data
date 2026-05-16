@@ -537,9 +537,30 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   const grossProfitQ = _arr(isHistQ, 'grossProfit');
 
   // FCF-Margin TTM
+  // Tag 206b (Bug-Hunt Agent B HIGH-4): Yahoo's fcfMarginTTM is sometimes
+  // mathematically implausible — values >200% are virtually always a one-time
+  // event (asset sale, divestiture, tax-refund, REIT fair-value movement, M&A
+  // working-capital flush). Examples observed: GPT.AX 598%, ASX.AX 275%,
+  // 600816.SS 280%. Propagating these inflates R40, pbScore, score-aggregator
+  // ratios — every downstream consumer is poisoned.
+  //
+  // Pattern-based bound: |fcfMargin| > 200% is the smoking gun. Real anchors
+  // top out around 50% (MSFT 30, NVDA 27, MA 50, GOOG 25, V 50). Even
+  // CRDO/NVDA at extreme growth never exceed 50%. The 200% threshold leaves
+  // a very wide margin of safety while catching the obvious artifacts.
+  //
+  // When fcfMargin exceeds the bound, we null it (forcing downstream methods
+  // to use annual.annualFCF / annual.annualRev[0] as the fallback path —
+  // which is what rule-of-40.js Tag 201c already does). The validation array
+  // gets a structured warning so the audit pipeline can flag affected tickers.
   const fcfTTM = _y(fd, 'freeCashflow');
   const revTTM = _y(fd, 'totalRevenue');
-  const fcfMarginTTM = (fcfTTM != null && revTTM && revTTM !== 0) ? (fcfTTM / revTTM) * 100 : null;
+  let fcfMarginTTM = (fcfTTM != null && revTTM && revTTM !== 0) ? (fcfTTM / revTTM) * 100 : null;
+  let fcfMarginTTMSuppressed = false;
+  if (fcfMarginTTM != null && Math.abs(fcfMarginTTM) > 200) {
+    fcfMarginTTMSuppressed = true;
+    fcfMarginTTM = null;
+  }
 
   // SBC-Ratio: nicht in Default-Modules — TODO Tag-14: separater financials-Module-Pull
   const sbcRatio = null;
@@ -640,7 +661,12 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       // 'computed-bank' / 'computed-insurance' = per-year line-item derivation,
       // 'computed-margin' = annualRev × operatingMargin TTM (universal fallback
       // for Financial Services when line-items absent). null = no OpInc at all.
-      opIncSource
+      opIncSource,
+      // Tag 206b: fcfMarginTTM was suppressed because |raw value| > 200%.
+      // Downstream methods (rule-of-40 etc.) will use the annual-FCF fallback
+      // path or report computable:false. Flag preserved so audit pipeline can
+      // surface affected tickers without re-deriving the bound.
+      fcfMarginTTMSuppressed
     },
     // Tag 134: marketCap stored in reportingCurrency at mapper level;
     // _convertSnapshotToUSD applies FX conversion uniformly across all currency-denominated fields.
