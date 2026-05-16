@@ -466,6 +466,106 @@ test('walk-forward: evaluateVintage computes alpha vs universe-median', () => {
   if (h7.alpha != null && Math.abs(h7.alpha) > 0.01) throw new Error('alpha ~0 expected (picks tied with universe), got ' + h7.alpha);
 });
 
+// ─── Tag 199 — New audit-method smoke tests ───────────────────────────
+// Quick correctness checks for the seven methods added in the Tag 199
+// audit cycle. They guard against accidental regressions if someone
+// later touches the gating constants or value-formula in those files.
+
+test('loss-magnitude-guard: PASS when op-loss < 50% of rev', () => {
+  const s = makeStock({}, { opInc: [-200], }, []);
+  s.annual.annualRev = [{ value: 1000 }];  // ratio -0.20 → PASS
+  const r = Runner.evaluateStock(s)['loss-magnitude-guard'];
+  if (!r.computable) throw new Error('should be computable');
+  if (!r.pass) throw new Error('ratio -0.20 should pass -0.50 gate');
+});
+
+test('loss-magnitude-guard: FAIL when op-loss exceeds 50% of rev', () => {
+  const s = makeStock({}, { opInc: [-200], }, []);
+  s.annual.annualRev = [{ value: 300 }];  // ratio -0.67 → FAIL
+  const r = Runner.evaluateStock(s)['loss-magnitude-guard'];
+  if (r.pass) throw new Error('ratio -0.67 should fail -0.50 gate');
+});
+
+test('listing-age: counts consecutive non-null annualRev entries', () => {
+  const s = makeStock({}, {}, []);
+  s.annual.annualRev = [{ value: 100 }, { value: 80 }, { value: 60 }, null, { value: 40 }];
+  const r = Runner.evaluateStock(s)['listing-age'];
+  if (!r.computable) throw new Error('should be computable');
+  if (r.value !== 3) throw new Error('expected 3 consecutive clean years, got ' + r.value);
+});
+
+test('listing-age: PASS at 3y floor', () => {
+  const s = makeStock({}, {}, []);
+  s.annual.annualRev = [{ value: 100 }, { value: 80 }, { value: 60 }];
+  const r = Runner.evaluateStock(s)['listing-age'];
+  if (!r.pass) throw new Error('3y should pass 3y floor');
+});
+
+test('metric-divergence-guard: PASS when TTM and annual margins agree', () => {
+  const s = makeStock({ operatingMargin: 25 }, { opInc: [250] }, []);
+  s.annual.annualRev = [{ value: 1000 }];  // annual margin = 25%, ttm = 25 → div = 0
+  const r = Runner.evaluateStock(s)['metric-divergence-guard'];
+  if (!r.pass) throw new Error('div=0 should pass');
+});
+
+test('metric-divergence-guard: FAIL on MSTR-style divergence', () => {
+  const s = makeStock({ operatingMargin: -11641 }, { opInc: [-41] }, []);
+  s.annual.annualRev = [{ value: 477 }];  // annual margin = -8.6%, div ≈ 11633pp
+  const r = Runner.evaluateStock(s)['metric-divergence-guard'];
+  if (r.pass) throw new Error('MSTR-pattern divergence should fail');
+});
+
+test('operating-margin-acceleration: PASS when 3 consecutive years improving', () => {
+  const s = makeStock({}, {}, []);
+  s.annual.annualRev = [{ value: 100 }, { value: 100 }, { value: 100 }, { value: 100 }];
+  s.annual.annualOpInc = [{ value: 30 }, { value: 25 }, { value: 20 }, { value: 15 }];
+  const r = Runner.evaluateStock(s)['operating-margin-acceleration'];
+  if (!r.pass) throw new Error('rising OM should pass; got ' + JSON.stringify(r.value));
+  if (r.components.trend !== 'accelerating') throw new Error('trend should be accelerating');
+});
+
+test('revenue-acceleration-yoy: PASS when current YoY > prior YoY', () => {
+  const s = makeStock({}, {}, []);
+  // 200 / 100 = +100% YoY current; 100 / 90 = +11% YoY prior → delta = +89pp
+  s.annual.annualRev = [{ value: 200 }, { value: 100 }, { value: 90 }];
+  const r = Runner.evaluateStock(s)['revenue-acceleration-yoy'];
+  if (!r.pass) throw new Error('current YoY > prior should pass');
+  if (r.value < 80) throw new Error('expected ~89pp delta, got ' + r.value);
+});
+
+test('revenue-acceleration-yoy: FAIL when growth decelerates', () => {
+  const s = makeStock({}, {}, []);
+  // 110 / 100 = +10%; 100 / 50 = +100% → delta = -90pp
+  s.annual.annualRev = [{ value: 110 }, { value: 100 }, { value: 50 }];
+  const r = Runner.evaluateStock(s)['revenue-acceleration-yoy'];
+  if (r.pass) throw new Error('decelerating growth should fail');
+});
+
+test('sbc-growth-ratio: PASS when SBC grows slower than revenue', () => {
+  const s = makeStock({}, {}, []);
+  s.annual.annualRev = [{ value: 1500 }, { value: 1000 }];  // +50% growth
+  s.annual.annualSBC = [{ value: 120 }, { value: 100 }];    // +20% growth
+  // ratio = 0.20 / 0.50 = 0.40 → pass
+  const r = Runner.evaluateStock(s)['sbc-growth-ratio'];
+  if (!r.pass) throw new Error('SBC slower than rev should pass; got ' + r.value);
+});
+
+test('sbc-growth-ratio: FAIL when SBC dramatically outpaces revenue', () => {
+  const s = makeStock({}, {}, []);
+  s.annual.annualRev = [{ value: 1100 }, { value: 1000 }];  // +10% growth
+  s.annual.annualSBC = [{ value: 200 }, { value: 100 }];    // +100% growth
+  // ratio = 1.0 / 0.10 = 10 → fail (above 1.5 threshold)
+  const r = Runner.evaluateStock(s)['sbc-growth-ratio'];
+  if (r.pass) throw new Error('SBC 10x rev growth should fail');
+});
+
+test('single-quarter-dependency: incomputable on <8 quarters', () => {
+  const s = makeStock({}, {}, []);
+  s.timeseries = { revenueQ: [{ value: 100 }, { value: 80 }, { value: 60 }, { value: 40 }] };
+  const r = Runner.evaluateStock(s)['single-quarter-dependency'];
+  if (r.computable) throw new Error('should be incomputable with 4 quarters');
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the
