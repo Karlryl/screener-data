@@ -26,6 +26,16 @@ const REGISTRY = {
   'reinvestment-rate':          { type: 'CORE', defaultActive: true,  reason: 'Tag 117: QC v2 MUST 4 - Direct (Capex+RnD)/OCF >= 20%' },
   'premium-compounder-proof':   { type: 'CORE', defaultActive: true,  reason: 'Tag 117: QC v2 - 6er-Proof fuer Conditional FCF-Yield 1.5-3%' },
 
+  // Tag 206d (Bug-Hunt Agent C HIGH-2): TURNAROUND mode's SCORE_WEIGHTS references
+  // these 3 method ids; without explicit REGISTRY entries they fall back to
+  // DIAGNOSTIC + defaultActive:false, which breaks any caller passing
+  // onlyDefault:true. Surface them with correct CORE typing.
+  'altman-z-score':             { type: 'CORE', defaultActive: true,  reason: 'Tag 140: TURNAROUND solvency floor (Altman Z" > 1.1)' },
+  'piotroski-f-score':          { type: 'CORE', defaultActive: true,  reason: 'Tag 117: 9-factor fundamental signal (also TURNAROUND prefer)' },
+  'estimate-revision-proxy':    { type: 'CORE', defaultActive: true,  reason: 'Tag 141: positive analyst revisions / rev-acceleration proxy' },
+  // Tag 206d: insider-buy-cluster (loaded since Tag 137) had no REGISTRY entry.
+  'insider-buy-cluster':        { type: 'DIAGNOSTIC', defaultActive: true, reason: 'Tag 137: >=2 unique insider buyers in 90d — cluster-buy signal' },
+
   // --- DIAGNOSTIC - Kontext fÃ¼r Deep-Dive --------------------------
   'rule-of-x':                  { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Alternative hypergrowth metric, redundant mit Rule-of-40' },
   'stable-quarterly-growth':    { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Growth-pattern indicator - DataGuard-Job geht an revenue-shock-guard' },
@@ -70,8 +80,13 @@ const REGISTRY = {
 
   // --- DATAGUARD - Disqualifiziert auf Fail ------------------------
   'sloan-ratio':                { type: 'DATAGUARD', defaultActive: true, reason: 'Earnings-manipulation detector - fail = skip stock' },
-  'net-debt-ebitda':            { type: 'DATAGUARD', defaultActive: true, reason: 'Solvency floor - fail = skip stock' },
-  'asset-growth-divergence':    { type: 'DATAGUARD', defaultActive: true, reason: 'Acquired-growth detector' },
+  // Tag 206d (Bug-Hunt Agent C CRITICAL): net-debt-ebitda was tagged DATAGUARD
+  // but used as CORE — in QUALITY_COMPOUNDER MUST core[] and in SCORE_WEIGHTS QC
+  // with weight 0.10. It is never listed in any mode.dataGuards[]. Re-typed CORE.
+  'net-debt-ebitda':            { type: 'CORE', defaultActive: true, reason: 'Tag 117: QC v2 MUST — Net-Debt/EBITDA <= 2.5 (solvency floor scored, not gated)' },
+  // Tag 206d: asset-growth-divergence is in QC softGuards[] (penalty applied at score
+  // time, not hard-fail). DATAGUARD type was misleading; downgrade to DIAGNOSTIC.
+  'asset-growth-divergence':    { type: 'DIAGNOSTIC', defaultActive: true, reason: 'Tag 120b: M&A-Compounder acquired-growth detector — softGuard penalty in QC' },
   'revenue-shock-guard':        { type: 'DATAGUARD', defaultActive: true, reason: 'Robust outlier detection auf latest Q-revenue (Tag 98b)' },
   'q-spike-dataguard':          { type: 'DATAGUARD', defaultActive: true, reason: 'Tag 113: Hard-Filter Q-Spike (>55% Single-Q-Konzentration ODER OI-Severity >3x bei YoY>100%)' },
   'forecast-contamination-guard':{ type: 'DATAGUARD', defaultActive: true, reason: 'Tag 118: Yahoo annualRev[0] Forecast-Contamination Cross-Check' },
