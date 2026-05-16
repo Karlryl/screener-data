@@ -104,11 +104,13 @@ module.exports = [
   // DIAGNOSTIC, not in SCORE_WEIGHTS, fixture-hash safe by construction.
   { file: './capital-allocation-quality.js' },
 
-  // NOTE: the following two method files exist on disk from parallel
-  // Tag 209b/d sessions; registered as `optional` here so the
-  // "Runner.getMethods matches filesystem" test stays green in this commit.
-  // Each parallel session owns its canonical registration + tests; once they
-  // land, these `optional:true` entries become harmless duplicates.
+  // Tag 209b: sector-relative ROIC percentile (DIAGNOSTIC, fixture-hash safe).
+  // Owned canonically by the Tag 209b commit; left optional here in case load
+  // fails — runner enforces presence on its own.
   { file: './sector-relative-roic.js', optional: true },
-  { file: './beneish-m-score.js', optional: true }
+
+  // Tag 209d: Beneish M-Score earnings-manipulation detector. DIAGNOSTIC until
+  // pull-yahoo extends balance-sheet/IS coverage (AR/PPE/CL/LTD/SGA/Dep/OCF);
+  // fixture-hash safe by construction (not in SCORE_WEIGHTS).
+  { file: './beneish-m-score.js' }
 ];

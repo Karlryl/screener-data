@@ -1070,6 +1070,103 @@ test('Tag 209a Gross-Profitability: FAIL case (GP=10, TA=100 → ratio 0.10, < 0
   if (r.pass) throw new Error('0.10 must fail the 0.20 floor, got pass=' + r.pass);
 });
 
+// ─── Tag 209d — beneish-m-score (earnings-manipulation detector) smoke tests ──
+// DIAGNOSTIC method, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
+// Citation: Beneish, M. D. (1999). "The Detection of Earnings Manipulation."
+//           Financial Analysts Journal, 55(5), 24-36.
+// Pass gate: M < -2.22 (clean). The 8 sub-indices require AR/PPE/CL/LTD/SGA/Dep/OCF
+// which the current snapshot does NOT carry — hence default snapshots return
+// computable=false. The synthetic test stocks below supply the full input set.
+
+function _beneishSyntheticStock(opts) {
+  // Builds a 2-year stock with all Beneish fields. Defaults model a "clean" firm:
+  // flat AR/Sales ratio, stable margins, modest sales growth, depreciation rate
+  // steady, SGA tracking sales, low accruals, declining leverage. Should produce
+  // M well below -2.22.
+  const d = Object.assign({
+    sales_t: 1100, sales_p: 1000,
+    gp_t: 600, gp_p: 540,
+    ni_t: 100,
+    ocf_t: 130,
+    ar_t: 110, ar_p: 100,
+    ppe_t: 500, ppe_p: 480,
+    ca_t: 400, ca_p: 380,
+    cl_t: 200, cl_p: 220,
+    ltd_t: 100, ltd_p: 130,
+    ta_t: 1500, ta_p: 1450,
+    sga_t: 165, sga_p: 150,
+    dep_t: 50, dep_p: 48
+  }, opts || {});
+  return { annual: {
+    annualRev:           [{value:d.sales_t}, {value:d.sales_p}],
+    annualGP:            [{value:d.gp_t},    {value:d.gp_p}],
+    annualNetIncome:     [{value:d.ni_t}],
+    annualOCF:           [{value:d.ocf_t}],
+    annualSGA:           [{value:d.sga_t},   {value:d.sga_p}],
+    annualDepreciation:  [{value:d.dep_t},   {value:d.dep_p}],
+    annualBalance: [
+      { totalAssets: d.ta_t, totalCash: 0, totalDebt: d.ltd_t + d.cl_t,
+        accountsReceivable: d.ar_t, propertyPlantEquipment: d.ppe_t,
+        currentAssets: d.ca_t, currentLiabilities: d.cl_t, longTermDebt: d.ltd_t },
+      { totalAssets: d.ta_p, totalCash: 0, totalDebt: d.ltd_p + d.cl_p,
+        accountsReceivable: d.ar_p, propertyPlantEquipment: d.ppe_p,
+        currentAssets: d.ca_p, currentLiabilities: d.cl_p, longTermDebt: d.ltd_p }
+    ]
+  }};
+}
+
+test('Tag 209d Beneish-M: PASS case (clean firm → M < -2.22, zone CLEAN)', () => {
+  const s = _beneishSyntheticStock();
+  const r = Runner.evaluateStock(s)['beneish-m-score'];
+  if (!r.computable) throw new Error('should be computable, got reason=' + r.reason);
+  if (!r.pass) throw new Error('clean synthetic should pass M<' + r.threshold + ', got M=' + r.value + ' reason=' + r.reason);
+  if (r.components.zone !== 'CLEAN') throw new Error('expected zone=CLEAN, got ' + r.components.zone);
+  if (r.value > -2.22) throw new Error('clean synthetic value=' + r.value + ' expected < -2.22');
+});
+
+test('Tag 209d Beneish-M: FAIL case (channel-stuffing pattern → M > -2.22)', () => {
+  // Manipulator profile: AR exploding (DSRI=2), GM collapsing (GMI=1.25),
+  // strong sales growth (SGI=1.5), high positive accruals (TATA=0.10), rising leverage.
+  const s = _beneishSyntheticStock({
+    sales_t: 1500, sales_p: 1000,
+    gp_t: 600, gp_p: 500,
+    ni_t: 200,
+    ocf_t: 50,
+    ar_t: 300, ar_p: 100,
+    cl_t: 300, cl_p: 200,
+    ltd_t: 200, ltd_p: 130
+  });
+  const r = Runner.evaluateStock(s)['beneish-m-score'];
+  if (!r.computable) throw new Error('should be computable, got reason=' + r.reason);
+  if (r.pass) throw new Error('manipulator synthetic should fail M<-2.22, got M=' + r.value);
+  if (r.components.zone === 'CLEAN') throw new Error('manipulator should NOT be CLEAN zone, got ' + r.components.zone);
+});
+
+test('Tag 209d Beneish-M: NOT-COMPUTABLE on real-snapshot shape (missing AR/PPE/SGA/Dep/OCF)', () => {
+  // Real snapshot pattern: balance only has {totalCash, totalDebt, totalAssets}
+  // and IS lacks SGA/Depreciation/OCF. Method MUST return computable=false
+  // with a reason listing the missing fields, NOT silently pass or fail.
+  const s = { annual: {
+    annualRev:       [{value:1100},{value:1000}],
+    annualGP:        [{value:600},{value:540}],
+    annualNetIncome: [{value:100}],
+    annualFCF:       [{value:90}],
+    annualBalance: [
+      { totalCash: 50, totalDebt: 200, totalAssets: 1500 },
+      { totalCash: 40, totalDebt: 220, totalAssets: 1450 }
+    ]
+  }};
+  const r = Runner.evaluateStock(s)['beneish-m-score'];
+  if (r.computable) throw new Error('should be computable=false on real-snapshot shape, got ' + JSON.stringify(r));
+  if (r.pass) throw new Error('incomputable result must have pass=false');
+  if (!r.reason || !/accountsReceivable|propertyPlantEquipment|currentLiabilities/.test(r.reason)) {
+    throw new Error('reason should list missing fields, got: ' + r.reason);
+  }
+  if (!r.components || !Array.isArray(r.components.missingFields)) {
+    throw new Error('components.missingFields should be an array for diagnostics');
+  }
+});
+
 // ─── Tag 209b — sector-relative-roic (sector-percentile ranking) ─────
 // DIAGNOSTIC method, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
 // Citation: Stock Rover / Simply Wall St / Tikr — peer-group percentile.
