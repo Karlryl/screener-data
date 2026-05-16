@@ -640,8 +640,11 @@ const CLIENT_JS = `
   }
   function fmtM(v){ if (v==null||!isFinite(v)) return '—'; if (Math.abs(v)>=1e12) return (v/1e12).toFixed(2)+'T'; if (Math.abs(v)>=1e9) return (v/1e9).toFixed(1)+'B'; if (Math.abs(v)>=1e6) return (v/1e6).toFixed(0)+'M'; return v.toFixed(0); }
   // Tag 206k (Bug-Hunt Agent E MEDIUM-3): the original sign-prefix ternary
-  // was `(v>=0?'':'')` — both branches empty string, dead code. Intent was
+  // was (v>=0 ? "" : "") — both branches empty string, dead code. Intent was
   // a '+' prefix for positive values so the eye can quickly scan +/− deltas.
+  // NOTE: do NOT use backticks in this comment block — CLIENT_JS itself lives
+  // inside a node template-literal, so an inner backtick terminates the outer
+  // string and breaks parsing (runtime ReferenceError, found Tag 206p).
   function fmtP(v,d){ if (v==null||!isFinite(v)) return '—'; return (v>=0?'+':'')+(v).toFixed(d==null?1:d)+'%'; }
   function fmtN(v,d){ if (v==null||!isFinite(v)) return '—'; return v.toFixed(d==null?1:d); }
   function pct(v){ if (v==null||!isFinite(v)) return '—'; return v.toFixed(1)+'%'; }
