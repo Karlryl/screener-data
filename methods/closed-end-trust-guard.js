@@ -74,16 +74,31 @@ const LABEL = 'Closed-End-Trust-Guard';
 const SIGNAL_FAIL_COUNT = 2; // need 2+ signals to hard-fail
 
 // Industry tokens that, by themselves, are strong evidence (but never sufficient alone).
+// Tag 206a (Agent B finding): added REIT/real-estate/property/financial-data tokens.
+// GPT.AX (REIT - Diversified, fcfMargin 598%) leaked into R40 with 0 signals because
+// the original token list didn't include REIT/Real Estate / Property Trust.
 const TRUST_INDUSTRY_TOKENS = [
   'asset management',
   'investment trust',
   'closed-end fund',
   'closed end fund',
   'holding company',
-  'capital markets'   // some closed-end vehicles end up here
+  'capital markets',  // some closed-end vehicles end up here
+  // Tag 206a: REIT/real-estate/property-trust extensions
+  'reit',
+  'real estate',
+  'property trust',
+  // Tag 206a: financial-data exchanges (ASX.AX-class: market operators with
+  // gain/loss components in revenue line)
+  'financial data',
+  'stock exchange',
+  'exchanges'
 ];
 
-const FIN_SECTOR = 'financial services';
+// Tag 206a: extended sector match. 'Real Estate' often reports REITs separately
+// from 'Financial Services'. Both sectors get the S2/S4 pattern checks.
+const FIN_SECTOR_TOKENS = new Set(['financial services', 'real estate']);
+const FIN_SECTOR = 'financial services';  // legacy single-value (kept for backwards compat in components)
 const REV_ASSETS_FLOOR  = 0.10;   // 10% — BRK-B at 30.4% safely above
 const REV_VOL_RATIO_MAX = 3.0;    // 3x peak/trough only counts with a non-positive year
 const FCF_ASSETS_FLOOR  = 0.005;  // 0.5% — BRK-B at 2.05% safely above
@@ -117,10 +132,11 @@ function evaluate(stock) {
   // --- Signal S1: trust-flavoured industry token ---
   const s1 = TRUST_INDUSTRY_TOKENS.some(tok => industry.indexOf(tok) >= 0);
 
-  // --- Signal S2: Financial Services with low Rev/Assets ---
+  // --- Signal S2: Financial Services OR Real Estate with low Rev/Assets ---
+  // Tag 206a: expanded to FIN_SECTOR_TOKENS so REITs (Real Estate sector) qualify.
   let s2 = false;
   let revAssetsRatio = null;
-  if (sector === FIN_SECTOR && Number.isFinite(totalAssets) && totalAssets > 0 && revArr.length > 0) {
+  if (FIN_SECTOR_TOKENS.has(sector) && Number.isFinite(totalAssets) && totalAssets > 0 && revArr.length > 0) {
     revAssetsRatio = revArr[0] / totalAssets;
     s2 = revAssetsRatio < REV_ASSETS_FLOOR;
   }
@@ -139,10 +155,11 @@ function evaluate(stock) {
     s3 = hasNonPositive || (revVolRatio != null && revVolRatio > REV_VOL_RATIO_MAX && hasNonPositive);
   }
 
-  // --- Signal S4: Financial-sector FCF pass-through (anti-leverage check) ---
+  // --- Signal S4: Financial-or-Real-Estate sector FCF pass-through (anti-leverage check) ---
+  // Tag 206a: same sector expansion as S2.
   let s4 = false;
   let fcfAssetsRatio = null;
-  if (sector === FIN_SECTOR && Number.isFinite(totalAssets) && totalAssets > 0 && fcfArr.length > 0) {
+  if (FIN_SECTOR_TOKENS.has(sector) && Number.isFinite(totalAssets) && totalAssets > 0 && fcfArr.length > 0) {
     fcfAssetsRatio = fcfArr[0] / totalAssets;
     s4 = fcfAssetsRatio < FCF_ASSETS_FLOOR;
   }

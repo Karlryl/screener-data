@@ -751,6 +751,30 @@ test('closed-end-trust-guard: PASS on NVDA (Technology, no signals fire)', () =>
   if (!r.pass) throw new Error('NVDA must pass; signals=' + r.value + ' reason=' + r.reason);
 });
 
+// Tag 206a: REIT/Real-Estate token expansion (Karl's direct GPT.AX complaint)
+test('closed-end-trust-guard: FAIL on GPT.AX-pattern (REIT + Real Estate sector + low Rev/Assets)', () => {
+  // GPT.AX: REIT - Diversified, Real Estate sector, fcfMargin 598%, low rev/assets
+  const s = makeStock({}, { fcf: [200e6, 180e6, 150e6, 100e6] }, [{ totalAssets: 10e9, totalCash: 0, totalDebt: 0 }]);
+  s.meta.industry = 'REIT - Diversified';
+  s.meta.sector   = 'Real Estate';
+  s.annual.annualRev = [{ value: 250e6 }, { value: 240e6 }, { value: 220e6 }, { value: 200e6 }];  // 2.5% Rev/Assets
+  const r = Runner.evaluateStock(s)['closed-end-trust-guard'];
+  if (!r.computable) throw new Error('should be computable');
+  if (r.pass) throw new Error('GPT.AX-pattern (REIT + Real Estate + 2.5% Rev/Assets) must fail; signals=' + r.value);
+});
+
+// Tag 206a: ensure operating REIT (high Rev/Assets) still PASSES — don't over-quarantine
+test('closed-end-trust-guard: PASS on operating REIT with high Rev/Assets', () => {
+  const s = makeStock({}, { fcf: [500e6, 480e6, 450e6, 420e6] }, [{ totalAssets: 3e9, totalCash: 0, totalDebt: 0 }]);
+  s.meta.industry = 'REIT - Industrial';
+  s.meta.sector   = 'Real Estate';
+  s.annual.annualRev = [{ value: 1.5e9 }, { value: 1.4e9 }, { value: 1.3e9 }, { value: 1.2e9 }];  // 50% Rev/Assets
+  const r = Runner.evaluateStock(s)['closed-end-trust-guard'];
+  if (!r.computable) throw new Error('should be computable');
+  // S1 fires (REIT industry) but S2/S3/S4 miss → only 1 signal → PASS
+  if (!r.pass) throw new Error('operating REIT (50% Rev/Assets) must pass; signals=' + r.value);
+});
+
 // Tag 205: R40-sanity-cap guard
 test('r40-sanity-cap: PASS on CRDO-pattern (revGrowth=201%, OpInc>0 → carve-out)', () => {
   const s = makeStock({ revenueGrowthYoY: 201, fcfMarginTTM: 9, operatingMargin: 9 }, { opInc: [50] }, []);
