@@ -221,7 +221,13 @@ function _inferConfidence(result, ageDays) {
     else if (ageDays > 90) c -= 0.05;
   }
   if (result.value != null && result.threshold != null && result.threshold !== 0) {
-    const dist = Math.abs((result.value - result.threshold) / result.threshold);
+    // Tag 216c (audit F-216-03 MEDIUM fix): for lte_abs methods (e.g.
+    // sloan-ratio with threshold=0.20), "near threshold" means |value|
+    // near threshold, not raw value near threshold. Without this branch
+    // a sloan value of -0.18 was computed as dist = |-0.18-0.20|/0.20 = 1.9
+    // (far from threshold) when it's actually just at the absolute boundary.
+    const v = (result.thresholdOp === 'lte_abs') ? Math.abs(result.value) : result.value;
+    const dist = Math.abs((v - result.threshold) / result.threshold);
     if (dist < 0.05) c -= 0.1;
     else if (dist < 0.10) c -= 0.05;
   }
@@ -233,7 +239,10 @@ function _autoFlags(result, ageDays) {
   if (ageDays != null && ageDays > 180) flags.push('STALE_DATA');
   if (!result.computable) flags.push('NO_DATA');
   if (result.value != null && result.threshold != null && result.threshold !== 0) {
-    const dist = Math.abs((result.value - result.threshold) / result.threshold);
+    // Tag 216c: same lte_abs symmetric distance — keeps NEAR_THRESHOLD flag
+    // consistent with the confidence-decay logic above.
+    const v = (result.thresholdOp === 'lte_abs') ? Math.abs(result.value) : result.value;
+    const dist = Math.abs((v - result.threshold) / result.threshold);
     if (dist < 0.05) flags.push('NEAR_THRESHOLD');
   }
   return flags;
