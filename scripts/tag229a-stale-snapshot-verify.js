@@ -45,6 +45,25 @@ function getExistingSnapshotAge(ticker, outputDir) {
   } catch { return null; }
 }
 
+// Tag 230a sibling probe: pre-Tag-219c intl currency envelopes.
+function existingSnapshotMissingCurrencyNormalization(ticker, outputDir) {
+  try {
+    const fp = path.join(outputDir, safeSnapshotFilename(ticker));
+    if (!fs.existsSync(fp)) return false;
+    const s = JSON.parse(fs.readFileSync(fp, 'utf8'));
+    const m = s && s.meta;
+    if (!m) return false;
+    const A = s.annual;
+    const hasRev = A && Array.isArray(A.annualRev) && A.annualRev.length > 0;
+    if (!hasRev) return false;
+    if (m.reportingCurrency === 'USD') return false;
+    if (m.fxConverted === true) return false;
+    if (m.reportingCurrencyOriginal && typeof m.fxRateApplied === 'number' && Number.isFinite(m.fxRateApplied)) return false;
+    if (m.fxConversionFailed === true) return false;
+    return true;
+  } catch { return false; }
+}
+
 function existingSnapshotMissingTag211lFields(ticker, outputDir) {
   // Returns { stale: bool, missing: [field names] }
   try {
@@ -122,70 +141,103 @@ console.log('  → snapshots without meta.asOf return age=null and ALWAYS full-p
 
 // --- Phase 1: 30-snapshot detail print ---
 console.log('\n=== Phase 1: 30 random snapshots ===');
-console.log('ticker'.padEnd(14), '| age_d'.padEnd(8), '| would_full_pull'.padEnd(18), '| missing');
-console.log('-'.repeat(120));
+console.log('ticker'.padEnd(14), '| age_d'.padEnd(8), '| would_full_pull'.padEnd(18), '| reason'.padEnd(22), '| missing');
+console.log('-'.repeat(140));
 
 const detailSample = sample(allFiles, 30, 20260517);
-let p1_total = 0, p1_pullFull = 0, p1_staleButSkip = 0;
+let p1_total = 0, p1_pullFull = 0, p1_staleButSkip = 0, p1_ccyStale = 0;
 for (const fname of detailSample) {
   const ticker = tickerFromFile(fname);
   const age = getExistingSnapshotAge(ticker, SNAP_DIR);
   const probe = existingSnapshotMissingTag211lFields(ticker, SNAP_DIR);
-  // Replicate the EXACT gating from pull-yahoo.js line 1346-1362:
-  //   age < FUNDAMENTALS_MAX_AGE_MS && !staleSchema → price-only
+  const ccyStale = existingSnapshotMissingCurrencyNormalization(ticker, SNAP_DIR);
+  // Replicate the EXACT gating from pull-yahoo.js post-Tag-230a:
+  //   age < FUNDAMENTALS_MAX_AGE_MS && !staleSchema && !staleCurrency → price-only
   //   else → full pull
-  const wouldPriceOnly = (age != null && age < FUNDAMENTALS_MAX_AGE_MS && !probe.stale);
+  const youngEnough = age != null && age < FUNDAMENTALS_MAX_AGE_MS;
+  const wouldPriceOnly = youngEnough && !probe.stale && !ccyStale;
   const wouldFullPull = !wouldPriceOnly;
   p1_total++;
   if (wouldFullPull) p1_pullFull++;
+  if (ccyStale) p1_ccyStale++;
   // BUG CHECK: probe says stale but we'd still take price-only
-  if (probe.stale && wouldPriceOnly) p1_staleButSkip++;
+  if ((probe.stale || ccyStale) && wouldPriceOnly) p1_staleButSkip++;
   const ageDays = age != null ? (age / 86400000).toFixed(1) : 'n/a';
+  const reasons = [];
+  if (!youngEnough) reasons.push('age-stale');
+  if (probe.stale) reasons.push('tag211l');
+  if (ccyStale) reasons.push('ccy-envelope');
+  if (reasons.length === 0) reasons.push('-');
   console.log(
     ticker.padEnd(14),
     '|', ageDays.padStart(6),
     '|', (wouldFullPull ? 'FULL' : 'price-only').padEnd(16),
+    '|', reasons.join(',').padEnd(20),
     '|', probe.missing.length === 0 ? '—' : probe.missing.join(',')
   );
 }
 console.log('\nPhase 1 summary: total=' + p1_total
   + ' / would_pull_full=' + p1_pullFull
+  + ' / ccy-envelope-stale=' + p1_ccyStale
   + ' / stale_but_would_skip=' + p1_staleButSkip);
 if (p1_staleButSkip > 0) {
   console.log('!!! BUG: probe is detached from price-only gating — ' + p1_staleButSkip + ' stale snapshots would be skipped !!!');
 }
 
+// --- Phase 1b: Tag 226c-4 anchor cohort (intl tickers known to be mixed-ccy) ---
+console.log('\n=== Phase 1b: Tag 226c-4 intl anchor cohort ===');
+const intlAnchors = ['9988.HK','7203.T','HSBA.L','ASML.AS','MC.PA'];
+let intlFlagged = 0;
+for (const ticker of intlAnchors) {
+  const fp = path.join(SNAP_DIR, safeSnapshotFilename(ticker));
+  if (!fs.existsSync(fp)) { console.log('  ' + ticker.padEnd(12) + ' [snapshot-missing]'); continue; }
+  const ccyStale = existingSnapshotMissingCurrencyNormalization(ticker, SNAP_DIR);
+  const tag211lStale = existingSnapshotMissingTag211lFields(ticker, SNAP_DIR).stale;
+  if (ccyStale) intlFlagged++;
+  console.log('  ' + ticker.padEnd(12)
+    + ' ccyStale=' + (ccyStale ? 'YES' : 'no ').padEnd(3)
+    + ' tag211lStale=' + (tag211lStale ? 'YES' : 'no'));
+}
+console.log('intl anchor cohort: ' + intlFlagged + '/' + intlAnchors.length + ' flagged by new ccy probe');
+
 // --- Phase 2: 100-sample projection ---
 console.log('\n=== Phase 2: 100-snapshot projection for Run #110 ===');
 const projSample = sample(allFiles, 100, 99999999);
 let p2_total = 0, p2_pullFull = 0, p2_priceOnly = 0, p2_staleSchema = 0, p2_oldAge = 0, p2_staleButSkip = 0;
+let p2_ccyStale = 0;
 const missingCounts = {};
 for (const fname of projSample) {
   const ticker = tickerFromFile(fname);
   const age = getExistingSnapshotAge(ticker, SNAP_DIR);
   const probe = existingSnapshotMissingTag211lFields(ticker, SNAP_DIR);
-  const wouldPriceOnly = (age != null && age < FUNDAMENTALS_MAX_AGE_MS && !probe.stale);
+  const ccyStale = existingSnapshotMissingCurrencyNormalization(ticker, SNAP_DIR);
+  const wouldPriceOnly = (age != null && age < FUNDAMENTALS_MAX_AGE_MS && !probe.stale && !ccyStale);
   p2_total++;
   if (!wouldPriceOnly) p2_pullFull++; else p2_priceOnly++;
   if (probe.stale) p2_staleSchema++;
+  if (ccyStale) p2_ccyStale++;
   if (age == null || age >= FUNDAMENTALS_MAX_AGE_MS) p2_oldAge++;
-  if (probe.stale && wouldPriceOnly) p2_staleButSkip++;
+  if ((probe.stale || ccyStale) && wouldPriceOnly) p2_staleButSkip++;
   for (const f of probe.missing) missingCounts[f] = (missingCounts[f] || 0) + 1;
 }
 const fullFrac = p2_pullFull / p2_total;
 const projFullPulls = Math.round(fullFrac * total);
 const staleFrac = p2_staleSchema / p2_total;
 const projStaleSchema = Math.round(staleFrac * total);
+const ccyFrac = p2_ccyStale / p2_total;
+const projCcyStale = Math.round(ccyFrac * total);
 
 console.log('sample size           :', p2_total);
 console.log('would_price_only      :', p2_priceOnly, '(' + (100*p2_priceOnly/p2_total).toFixed(1) + '%)');
 console.log('would_full_pull       :', p2_pullFull,  '(' + (100*fullFrac).toFixed(1) + '%)');
 console.log('  of which: age-stale :', p2_oldAge);
 console.log('  of which: schema-stale (Tag 211l-flagged):', p2_staleSchema);
+console.log('  of which: ccy-envelope-stale (Tag 230a) :', p2_ccyStale);
 console.log('stale_but_would_skip  :', p2_staleButSkip, '(MUST be 0)');
 console.log('\nProjected Run #110 (universe=' + total + ' snapshots):');
 console.log('  full-pulls         ~ ' + projFullPulls);
 console.log('  schema-flagged     ~ ' + projStaleSchema);
+console.log('  ccy-envelope-flagged ~ ' + projCcyStale);
 console.log('\nMissing-field frequencies (out of ' + p2_total + ' sampled):');
 for (const k of Object.keys(missingCounts).sort((a,b) => missingCounts[b] - missingCounts[a])) {
   console.log('  ' + k.padEnd(36) + missingCounts[k] + ' (' + (100*missingCounts[k]/p2_total).toFixed(0) + '%)');

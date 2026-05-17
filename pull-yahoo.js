@@ -1267,6 +1267,56 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     } catch { return false; }
   }
 
+  // Tag 230a: catch pre-Tag-219c snapshots that carry a non-USD `reportingCurrency`
+  // but were written before `_convertSnapshotToUSD` existed (or before it ran on
+  // them). The defect (Tag 226c-4): 1,640 intl snapshots have `marketCap` in USD
+  // (Yahoo already returned USD-converted quote fields) but `revenueTTM`,
+  // `annual.*`, and `annualBalance` still in local reporting currency — every
+  // ratio (fcf-yield, ev/ebitda, ROIC, …) is silently wrong.
+  //
+  // Detection: a normalized snapshot must satisfy ONE of
+  //   (a) meta.reportingCurrency === 'USD'                (US-domiciled, no FX)
+  //   (b) meta.fxConverted === true                       (Tag 134+ marker)
+  //   (c) meta.reportingCurrencyOriginal is set AND       (older Tag 134/148
+  //       meta.fxRateApplied is a finite number            converted snapshot)
+  // If NONE of the three hold AND the snapshot has any annual data, it's a
+  // mixed-currency envelope and must be re-pulled so `_convertSnapshotToUSD`
+  // runs on the fresh canonical. Price-only-seed snapshots (no annualRev)
+  // are skipped — they'll get fundamentals + FX on their first full pull.
+  //
+  // Safe: snapshots that legitimately failed FX (meta.fxConversionFailed=true)
+  // are NOT re-flagged here — they already carry the failure marker and
+  // would just fail again. The full-pull path's existing fxConversionFailed
+  // skip filters them out cleanly.
+  function _existingSnapshotMissingCurrencyNormalization(ticker) {
+    try {
+      const fp = path.join(outputDir, safeSnapshotFilename(ticker));
+      if (!fs.existsSync(fp)) return false;
+      const raw = fs.readFileSync(fp, 'utf8');
+      const s = JSON.parse(raw);
+      const m = s && s.meta;
+      if (!m) return false;
+      // Price-only seeds (no annualRev) carry no FX-denominated series yet —
+      // leave them alone; the next full pull will normalize.
+      const A = s.annual;
+      const hasRev = A && Array.isArray(A.annualRev) && A.annualRev.length > 0;
+      if (!hasRev) return false;
+      // (a) USD reporter: no FX to apply.
+      if (m.reportingCurrency === 'USD') return false;
+      // (b) explicit Tag 134+ converted marker.
+      if (m.fxConverted === true) return false;
+      // (c) older converted snapshot: original ccy preserved AND finite rate applied.
+      if (m.reportingCurrencyOriginal
+          && typeof m.fxRateApplied === 'number'
+          && Number.isFinite(m.fxRateApplied)) return false;
+      // (d) prior FX failure — don't loop on it.
+      if (m.fxConversionFailed === true) return false;
+      // Otherwise the snapshot's annual.* + revenueTTM are in local ccy while
+      // marketCap is USD → mixed envelope, force full pull.
+      return true;
+    } catch { return false; }
+  }
+
   // Tag 166: lightweight price-only update — preserves fundamentals from previous snapshot
   async function _priceOnlyUpdate(stock, outputDir) {
     const fp = path.join(outputDir, safeSnapshotFilename(stock.ticker));
@@ -1344,10 +1394,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // be price-only-refreshed forever, keeping methods/sga-revenue-trend,
       // working-capital-trend, and ohlson-o-score at <2% coverage indefinitely.
       const age = _getExistingSnapshotAge(stock.ticker);
-      const staleSchema = (age != null && age < FUNDAMENTALS_MAX_AGE_MS)
+      const youngEnough = age != null && age < FUNDAMENTALS_MAX_AGE_MS;
+      const staleSchema = youngEnough
         ? _existingSnapshotMissingTag211lFields(stock.ticker)
         : false;
-      if (age != null && age < FUNDAMENTALS_MAX_AGE_MS && !staleSchema) {
+      // Tag 230a: separate sibling probe for mixed-currency envelopes.
+      const staleCurrency = youngEnough
+        ? _existingSnapshotMissingCurrencyNormalization(stock.ticker)
+        : false;
+      if (youngEnough && !staleSchema && !staleCurrency) {
         try {
           const r = await _priceOnlyUpdate(stock, outputDir);
           results.push(r);
@@ -1359,6 +1414,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         }
       } else if (staleSchema) {
         _log('INFO', `  ${stock.ticker} [schema-stale]: forcing full pull to backfill Tag 211l fields`);
+      } else if (staleCurrency) {
+        _log('INFO', `  ${stock.ticker} [currency-stale]: forcing full pull to normalize pre-Tag-219c FX envelope`);
       }
 
       _log('INFO', `Pulling ${stock.ticker} (${stock.yahoo_symbol})…`);
