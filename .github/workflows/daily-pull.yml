@@ -218,10 +218,20 @@ jobs:
           # killed the entire pipeline. New: 25% relative / 1000 absolute floor.
           # Still rejects "Yahoo totally broken" (~0 pulls) but tolerates 20-40%
           # throttle days that historically passed.
-          min_ok=$(node -e "console.log(Math.max(1000,Math.floor(${total}*0.25)))")
-          echo "Snapshots ok: $ok / $total (threshold: $min_ok = max(1000, total*0.25), source: $source)"
+          #
+          # Tag 215e: universe grew from ~13k (Tag 207b era) to ~19k (Tag 215 era)
+          # because refresh-universe expanded discovery (Tag 165 NASDAQ Screener API
+          # + Tag 165 OTC Markets). Same percentage-of-universe gate is now
+          # effectively tighter — Run #105/#106/#107 all delivered 3500-3700
+          # snapshots which is healthy by absolute count but only 18-19% of the
+          # bigger universe. Calibrating to ABSOLUTE 2500 + RELATIVE 18% so a
+          # 3500-snapshot pull (the historical-normal absolute count) passes
+          # regardless of universe expansion. Yahoo-totally-broken (<1000 ok)
+          # still hard-fails.
+          min_ok=$(node -e "console.log(Math.max(2500,Math.floor(${total}*0.18)))")
+          echo "Snapshots ok: $ok / $total (threshold: $min_ok = max(2500, total*0.18), source: $source)"
           if [ "$ok" -lt "$min_ok" ]; then
-            echo "::error::Pull coverage $ok/$total < threshold $min_ok (25% of universe, floor 1000, source: $source)"
+            echo "::error::Pull coverage $ok/$total < threshold $min_ok (18% of universe, floor 2500, source: $source)"
             exit 1
           fi
 
