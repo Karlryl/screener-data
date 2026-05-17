@@ -700,6 +700,14 @@ header button.print-btn:hover { color:var(--text-0); border-color:var(--border-b
 /* Tag 210f: light-theme toggle. Sits next to [print]; same button shape. */
 header button.theme-btn { background:var(--bg-2); color:var(--text-1); border:1px solid var(--border); padding:6px 10px; cursor:pointer; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; transition:color 100ms ease-out, border-color 100ms ease-out; }
 header button.theme-btn:hover { color:var(--text-0); border-color:var(--border-bright); }
+/* Tag 231b-2: data-freshness chip in header. At-a-glance staleness signal —
+   tinted by snapshot age computed client-side against the user's local date.
+   Updated: same day | Stale: 1-6 days | Old: 7+ days. Same chrome as the
+   print/theme buttons so it visually belongs in the header toolbar. */
+header .data-freshness { background:var(--bg-2); color:var(--text-1); border:1px solid var(--border); padding:6px 10px; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; cursor:default; transition:color 120ms ease-out, border-color 120ms ease-out; }
+header .data-freshness.fresh { color:var(--green); border-color:var(--green); }
+header .data-freshness.stale { color:var(--yellow); border-color:var(--yellow); }
+header .data-freshness.old   { color:var(--red); border-color:var(--red); }
 /* Tag 210f: Light theme — daylight-readable palette (Stock Rover / Koyfin style).
    Greens/reds stay vivid (Karl's Bloomberg muscle memory: signals = saturated).
    Only chrome colors invert; semantic colors keep their meaning. */
@@ -2620,6 +2628,26 @@ const CLIENT_JS = `
     try { localStorage.setItem('screener_theme', next); } catch (e) { /* ignore */ }
   };
 
+  // Tag 231b-2: tint the data-freshness chip based on snapshot age.
+  // Compares DATA.generatedAt (ISO date) to the client's local date so
+  // a stale dashboard surfaces the warning even if regenerated offline.
+  (function tintFreshness(){
+    const el = document.getElementById('dataFreshness');
+    if (!el || !DATA.generatedAt) return;
+    const gen = new Date(DATA.generatedAt + 'T00:00:00Z');
+    const today = new Date();
+    const todayUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+    const ageDays = Math.max(0, Math.floor((todayUtc - gen.getTime()) / 86400000));
+    if (!Number.isFinite(ageDays)) return;
+    let cls = 'fresh';
+    let label = 'today';
+    if (ageDays >= 7)      { cls = 'old';   label = ageDays + 'd old'; }
+    else if (ageDays >= 2) { cls = 'stale'; label = ageDays + 'd old'; }
+    else if (ageDays === 1){ cls = 'stale'; label = '1d old'; }
+    el.classList.add(cls);
+    el.title = 'Data snapshot: ' + DATA.generatedAt + ' (' + label + ')';
+  })();
+
   // Tag 226c-3: populate tab-count badges (universe size per tab). Counts
   // are static — tabs are pre-classified at HTML generation. SECTOR is the
   // heatmap view (not a stock list) so no count is appended for it.
@@ -2686,6 +2714,7 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
     <input id="search" type="text" aria-label="Search ticker or company" placeholder="/ Search ticker or company..." />
     <div id="searchResults" class="search-results" role="listbox" aria-label="Search results"></div>
   </div>
+  <span id="dataFreshness" class="data-freshness" title="Data snapshot date — green = today, amber = ≥2d stale, red = ≥7d stale" aria-label="Data freshness">DATA ${escHtml(generatedAt)}</span>
   <div class="col-toggle-wrap">
     <button id="colToggleBtn" class="col-toggle-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Toggle column visibility" title="Show/hide columns">[cols]</button>
     <div id="colPopover" class="col-popover" role="menu" aria-label="Column visibility"></div>
