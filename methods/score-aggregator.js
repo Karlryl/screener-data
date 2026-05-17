@@ -333,8 +333,15 @@ function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, data
 
   // Tag 133c: data-quality tier-cap (opt-in via env DATAQUALITY_ENFORCE=1).
   // Grade C: max NEAR_MISS. Grade D: REJECT. Default off bis Historie reift.
+  // Tag 228b-2 (audit F-227c-05 LOW fix): accept multiple truthy env values
+  // matching the AUDIT_SCORE_MULTIPLIERS pattern (Tag 206l). Previously the
+  // strict `=== '1'` check silently failed open for 'true', 'yes', 'on', 'TRUE'
+  // etc. — Karl would flip the flag expecting it to enable and the gate would
+  // quietly stay off. No production behavior change while the flag is unset.
   var dataQualityCapped = false;
-  if (process.env.DATAQUALITY_ENFORCE === '1' && dataQuality && dataQuality.grade) {
+  var _dqVal = (process.env.DATAQUALITY_ENFORCE || '').toString().toLowerCase();
+  var _dqEnabled = (_dqVal === '1' || _dqVal === 'true' || _dqVal === 'yes' || _dqVal === 'on');
+  if (_dqEnabled && dataQuality && dataQuality.grade) {
     var cap = tierCapForGrade(dataQuality.grade);
     if (cap === 'REJECT') {
       tier = 'REJECT';
