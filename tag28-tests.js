@@ -2054,6 +2054,52 @@ test('Tag 214b Capex-vs-SBC: NOT-COMPUTABLE with <2 valid years', () => {
   if (!/need >= 2/.test(r.reason)) throw new Error('reason should mention >= 2 needed; got: ' + r.reason);
 });
 
+// ─── Tag 215d — working-capital-trend (cash-cycle efficiency) smoke tests ───
+
+test('Tag 215d WC-Trend: PASS — stable cash cycle (flat WC/Rev ratio)', () => {
+  // 3y of WC ratios roughly flat at 20% of revenue → slope ~ 0 → pass.
+  const s = { annual: {
+    annualBalance: [
+      { currentAssets: 22, currentLiabilities: 2, totalAssets: 100 },
+      { currentAssets: 21, currentLiabilities: 2, totalAssets: 100 },
+      { currentAssets: 20, currentLiabilities: 2, totalAssets: 100 }
+    ],
+    annualRev: [{value: 100}, {value: 100}, {value: 100}]
+  }};
+  const r = Runner.evaluateStock(s)['working-capital-trend'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (!r.pass) throw new Error('flat WC ratio should pass; slope=' + r.value);
+});
+
+test('Tag 215d WC-Trend: FAIL — receivables/inventory bloat (rising WC/Rev)', () => {
+  // WC growing from 10% → 30% of rev. Slope = +10pp/yr >> +2pp/yr threshold.
+  const s = { annual: {
+    annualBalance: [
+      { currentAssets: 32, currentLiabilities: 2, totalAssets: 100 },
+      { currentAssets: 22, currentLiabilities: 2, totalAssets: 100 },
+      { currentAssets: 12, currentLiabilities: 2, totalAssets: 100 }
+    ],
+    annualRev: [{value: 100}, {value: 100}, {value: 100}]
+  }};
+  const r = Runner.evaluateStock(s)['working-capital-trend'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (r.pass) throw new Error('rising WC should fail; slope=' + r.value);
+  if (r.components.slope < 0.05) throw new Error('expected slope ~+10pp/yr; got ' + r.components.slope);
+});
+
+test('Tag 215d WC-Trend: NOT-COMPUTABLE without currentAssets (pre-Tag-211l snapshot)', () => {
+  const s = { annual: {
+    annualBalance: [
+      { totalAssets: 100 },
+      { totalAssets: 100 },
+      { totalAssets: 100 }
+    ],
+    annualRev: [{value: 100}, {value: 100}, {value: 100}]
+  }};
+  const r = Runner.evaluateStock(s)['working-capital-trend'];
+  if (r.computable) throw new Error('should be incomputable without currentAssets');
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the

@@ -177,5 +177,11 @@ module.exports = [
   // Tag 214b: Capex / SBC (3y avg) — real reinvestment-to-dilution ratio.
   // Mauboussin (Counterpoint 2024) flags SBC > Capex as the optical-FCF
   // pattern (true FCF systematically overstated). DIAGNOSTIC, fixture-hash safe.
-  { file: './capex-vs-sbc-quality.js' }
+  { file: './capex-vs-sbc-quality.js' },
+
+  // Tag 215d: Working-Capital / Revenue trend (3y slope) — cash-cycle
+  // efficiency. Activated by Tag 211l currentAssets/currentLiabilities.
+  // Lev & Thiagarajan (1993, JAR) fundamental signal #4 (Receivables vs Sales).
+  // DIAGNOSTIC, fixture-hash safe.
+  { file: './working-capital-trend.js' }
 ];
