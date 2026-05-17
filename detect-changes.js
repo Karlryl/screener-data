@@ -212,6 +212,31 @@ function detectMethodDiffs(prevMethods, currResults, today) {
         lastChanged: today,
         firstSeen: true
       };
+    } else if (prev && prev.wasComputable === true && !wasComputable && isComputable) {
+      // Tag 229c-1: METHOD_RECOVERED — the asymmetric counterpart of
+      // METHOD_INCOMPUTABLE. After METHOD_INCOMPUTABLE writes
+      // {value:null, pass:false, wasComputable:true}, `prev.value === null`
+      // makes wasComputable=false here. A method that goes
+      // computable → incomputable → computable previously fell into the final
+      // ELSE branch and silently wrote new state with no event — Karl lost
+      // signal on every recovery from a Yahoo schema gap. We use the sticky
+      // `prev.wasComputable` marker (set when entering METHOD_INCOMPUTABLE) to
+      // detect recovery and emit an INFO event so the upstream-gap-closed
+      // transition is observable. Severity is INFO not WARNING — a fixed gap
+      // is an opportunity flag, paralleling METHOD_PASS_NEW.
+      events.push({
+        methodId,
+        type: 'METHOD_RECOVERED',
+        severity: 'INFO',
+        message: methodId + ': recovered from NOT COMPUTABLE → value=' +
+                 (Number.isFinite(result.value) ? result.value.toFixed(2) : result.value) +
+                 ' (' + (isPass ? 'PASS' : 'FAIL') + ')'
+      });
+      newState[methodId] = {
+        value: result.value,
+        pass: isPass,
+        lastChanged: today
+      };
     } else {
       // Behalte lastChanged falls vorhanden, sonst heute
       newState[methodId] = {
