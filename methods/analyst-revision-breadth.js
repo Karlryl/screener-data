@@ -84,22 +84,38 @@ function _extractBreadth(stock) {
   // --- Shape 1: stock.external.estimateRevisions[period] ---
   // Period preference: 0q (current quarter) > +1q > 0y (FY). We pick the
   // first period that carries non-null upLast30Days/downLast30Days.
+  //
+  // Tag 211j (audit HIGH fix): null-preserving coercion. Number(null)===0
+  // would silently treat a missing window as zero up-revisions, leading
+  // to false "net4w=0" verdicts when the underlying data is missing.
+  // Yahoo regularly returns null for older windows (e.g. NVDA's
+  // downLast90Days came back as null in May 2026 live test) — we must
+  // distinguish "0 revisions" (a real signal) from "no data".
+  const _num = (v) => {
+    if (v == null) return null;
+    if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+    // Allow string-numbers via Number() but only when the result is finite.
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
   const extER = stock.external && stock.external.estimateRevisions;
   if (extER && typeof extER === 'object') {
     const periodKeys = ['0q', '+1q', '0y', '+1y'];
     for (const pk of periodKeys) {
       const row = extER[pk];
       if (!row || typeof row !== 'object') continue;
-      const u4 = Number(row.upLast30Days);
-      const d4 = Number(row.downLast30Days);
-      const u12 = Number(row.upLast90Days);
-      const d12 = Number(row.downLast90Days);
-      // Require at least the 4w window (30d) to be present and finite.
-      if (Number.isFinite(u4) && Number.isFinite(d4)) {
+      const u4 = _num(row.upLast30Days);
+      const d4 = _num(row.downLast30Days);
+      const u12 = _num(row.upLast90Days);
+      const d12 = _num(row.downLast90Days);
+      // Require at least the 4w window (30d) to be present (both up and down
+      // non-null). null+null=null is "no data"; 0+0=0 is a real "no
+      // revisions" signal and is allowed through.
+      if (u4 != null && d4 != null) {
         return {
           up4w: u4, down4w: d4,
-          up12w: Number.isFinite(u12) ? u12 : null,
-          down12w: Number.isFinite(d12) ? d12 : null,
+          up12w: u12,
+          down12w: d12,
           source: 'external.estimateRevisions.' + pk
         };
       }

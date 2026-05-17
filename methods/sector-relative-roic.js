@@ -178,7 +178,15 @@ function evaluate(stock) {
   }
 
   // --- 4. Rank within sector ---
-  const rank = _rankRoic(roicValue, p50, p75);
+  let rank = _rankRoic(roicValue, p50, p75);
+  // Tag 211j (audit MEDIUM): when running in degraded mode (synthetic
+  // p75 = p50), the _rankRoic gating "roic >= p75*1.5" trivially fires
+  // for any roic >= p50*1.5 and inflates rank to 100. That overstates
+  // confidence — we genuinely don't know if the stock is at the 90th
+  // vs 100th percentile without real p75/p90. Cap degraded rank at 90
+  // so consumers see "strong sector signal" but not "guaranteed top
+  // 1% of sector".
+  if (degraded && rank != null && rank > 90) rank = 90;
   if (rank == null) {
     return H.buildResult({
       value: roicValue,

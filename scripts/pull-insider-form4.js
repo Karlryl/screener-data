@@ -74,7 +74,9 @@ const SEC_ARCHIVE_URL = (cik, accNoDash, doc) =>
 // SEC requires a User-Agent that identifies the requester with a contact
 // (https://www.sec.gov/os/accessing-edgar-data). Hardcoded per the task
 // spec; if SEC ever complains they'll email this address before blocking.
-const USER_AGENT = 'Karl screener-data karl@example.com';
+// Tag 211j: real contact per SEC EDGAR Terms of Use — fake addresses can
+// be silently rate-limited or rejected. Karl's screener-data, public repo.
+const USER_AGENT = 'Karl Viehrig screener-data karl_viehrig@web.de';
 
 // Throttle: 8 req/sec = 125 ms inter-call delay, comfortably under SEC's
 // documented 10/sec/IP limit. Same value used by pull-sec-xbrl.js.
@@ -408,11 +410,20 @@ async function main() {
         (result.error ? ' ERR=' + result.error : ''));
     } catch (e) {
       errors++;
+      // Tag 211j (audit MEDIUM): use failedAt (NOT fetchedAt) when the
+      // pull errored — the freshness gate at line ~387 checks fetchedAt
+      // and would otherwise skip this ticker for the full TICKER_MAP_TTL_MS
+      // window even though we never got any data. Preserve any prior
+      // successful pull's fetchedAt + transactions so the cache doesn't
+      // regress on transient SEC outages.
       byTicker[ticker] = Object.assign({}, prev || {}, {
         ticker,
         cik: cikInfo.cik,
-        fetchedAt: new Date().toISOString(),
+        failedAt: new Date().toISOString(),
         lastError: e.message
+        // intentionally NOT setting fetchedAt — preserve prior successful
+        // pull's value (if any) so the cache reflects "last good fetch"
+        // and the next run retries this ticker immediately.
       });
       console.warn('  [' + ticker + '] ERROR: ' + e.message);
       // Be defensive: if too many errors in a row, the IP might be rate-
