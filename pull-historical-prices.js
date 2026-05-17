@@ -104,12 +104,16 @@ async function main() {
 
       // Extend history: only add today's entry if not already there
       if (!history[stock.ticker]) history[stock.ticker] = [];
-      const existing = history[stock.ticker].find(e => e.date === today);
-      if (!existing) {
-        history[stock.ticker].push({ date: today, close: latestClose }); // stored as 'close' for backward compat
+      // Tag 223c (audit F-222a-6 HIGH fix): replace O(N) .find() with O(1)
+      // last-element check (array is sorted ascending by date in the steady
+      // state — only today's entry can be appended). Also replace .slice(-400)
+      // (which allocates a fresh array each call) with in-place .splice when
+      // the array exceeds 400 entries. At 19k × 400 = 7.6M comparisons -> ~7.6k.
+      const arr = history[stock.ticker];
+      if (arr.length === 0 || arr[arr.length - 1].date !== today) {
+        arr.push({ date: today, close: latestClose }); // stored as 'close' for backward compat
       }
-      // Trim to last 400 days
-      history[stock.ticker] = history[stock.ticker].slice(-400);
+      if (arr.length > 400) arr.splice(0, arr.length - 400);
       ok++;
     } catch (e) {
       _log('WARN', `  ${stock.ticker} failed: ${e.message}`);
@@ -141,14 +145,20 @@ async function main() {
         const latestClose = spyQuotes[spyQuotes.length - 1].adjclose ?? spyQuotes[spyQuotes.length - 1].close;
         todaysSnapshot['SPY'] = { close: latestClose, asOf: today, currency: spyResult.meta && spyResult.meta.currency };
         if (!history['SPY']) history['SPY'] = [];
-        const existing = history['SPY'].find(e => e.date === today);
-        if (!existing) history['SPY'].push({ date: today, close: latestClose });
-        history['SPY'] = history['SPY'].slice(-400);
+        // Tag 223c (audit F-222a-9 MEDIUM fix): replace O(N²) .find() in
+        // back-fill loop (~400 quotes × 400 history entries = ~160k compares)
+        // with a single Set of known dates (O(N) total).
+        const spyKnownDates = new Set(history['SPY'].map(e => e.date));
+        if (!spyKnownDates.has(today)) {
+          history['SPY'].push({ date: today, close: latestClose });
+          spyKnownDates.add(today);
+        }
         // Back-fill all available dates from this pull (so walk-forward has enough history)
         for (const q of spyQuotes) {
           const d = (q.date instanceof Date ? q.date : new Date(q.date)).toISOString().slice(0, 10);
-          if (!history['SPY'].find(e => e.date === d)) {
+          if (!spyKnownDates.has(d)) {
             history['SPY'].push({ date: d, close: q.adjclose ?? q.close });
+            spyKnownDates.add(d);
           }
         }
         history['SPY'].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);

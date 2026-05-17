@@ -20,6 +20,13 @@ const SM = require('./methods/strategy-modes.js');
 // Tag 217e: atomic write for pipeline-health output (see line ~1275).
 const { writeFileAtomic } = require('./lib/atomic-write.js');
 
+// Tag 223c (audit F-222a-8 MEDIUM fix): O(1) method-by-id lookup map.
+// Previously Runner.METHODS.find(m => m.id === mid) was called inside per-card
+// (chips, line ~340) and per-mode (byMust, line ~438) loops — O(M) per call,
+// ~83 method-comparisons per lookup × topN × 5 modes. Build a Map once and
+// reuse for the lifetime of the process.
+const METHODS_BY_ID = new Map(Runner.METHODS.map(m => [m.id, m]));
+
 const REGION_TO_COUNTRY = {
   'Nasdaq': 'USA', 'NasdaqCM': 'USA', 'NasdaqGM': 'USA', 'NasdaqGS': 'USA',
   'NYSE': 'USA', 'NYSE American': 'USA', 'NYSEArca': 'USA',
@@ -337,7 +344,8 @@ function renderCard(ev, modeId, opts, stockDataMap) {
     const bd = me && me.scoreBreakdown;
     if (bd && typeof bd === 'object') {
       const chips = Object.entries(bd).slice(0, 8).map(([mid, b]) => {
-        const meta = Runner.METHODS.find(m => m.id === mid);
+        // Tag 223c (audit F-222a-8 MEDIUM fix): O(1) Map.get instead of O(M) .find
+        const meta = METHODS_BY_ID.get(mid);
         const lbl = (meta && meta.label) || mid;
         const short = lbl.replace(/Rule[- ]of[- ]/i, 'R').replace(/Hypergrowth /i, 'HG ').slice(0, 14);
         if (!b.computable) return `<span class="chip chip-na" title="${escHtml(lbl)}">${escHtml(short)}</span>`;
@@ -435,7 +443,8 @@ function renderModeContent(modeId, eligible, topN, stockDataMap) {  // NEW TAG 1
     }
     nearHtml = Object.keys(byMust).sort().map(mustId => {
       const items = byMust[mustId];
-      const meta = Runner.METHODS.find(m => m.id === mustId);
+      // Tag 223c (audit F-222a-8 MEDIUM fix): O(1) Map.get instead of O(M) .find
+      const meta = METHODS_BY_ID.get(mustId);
       const mustLabel = (meta && meta.label) || mustId;
       const cards = items.map(item => renderCard(item.ev, modeId, { tier: item.me.tier, crossProfileTags: computeCrossProfileTags(item.ev.modeEvals, modeId) }, stockDataMap)).join('');
       return `<div class="tier-section tier-section-blocked"><div class="tier-header"><span>Scheitert an: ${escHtml(mustLabel)}</span><span class="tier-count">${items.length}</span></div><div class="card-grid">${cards}</div></div>`;

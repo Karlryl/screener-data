@@ -444,10 +444,21 @@ function renderHTML(rows, methods) {
   }).join('');
 
   // Method-summary
+  // Tag 223c (audit F-222a-4 + F-222a-5 HIGH fix): collapse two rows.filter
+  // sweeps per method into a single forward pass. Previously M × N × 2
+  // accesses (83 × 19k × 2 ≈ 3.2M at full scale → ~7s per call, called twice
+  // in this file). Now M × N once, ~4-5× faster.
+  const _methodCounts = {};
+  for (const r of rows) {
+    for (const m of methods) {
+      const c = _methodCounts[m.id] || (_methodCounts[m.id] = { computable: 0, passing: 0 });
+      const x = r.results[m.id];
+      if (x && x.computable) { c.computable++; if (x.pass) c.passing++; }
+    }
+  }
   const methodSummary = methods.map(m => {
-    const computable = rows.filter(r => r.results[m.id].computable).length;
-    const passing = rows.filter(r => r.results[m.id].pass).length;
-    return `<div class="msum"><div class="ml">${escHtml(m.label)}</div><div class="mv"><span class="pass-count">${passing}</span> / ${computable}</div><div class="mh">pass / computable (${rows.length} total)</div></div>`;
+    const c = _methodCounts[m.id] || { computable: 0, passing: 0 };
+    return `<div class="msum"><div class="ml">${escHtml(m.label)}</div><div class="mv"><span class="pass-count">${c.passing}</span> / ${c.computable}</div><div class="mh">pass / computable (${rows.length} total)</div></div>`;
   }).join('');
 
   // ===== KENNZAHL-RANGLISTE =====
@@ -1185,10 +1196,20 @@ function main() {
   console.log(`✓ Report written: ${args.out} (${html.length} bytes)`);
   console.log('');
   console.log('Pass-counts per method:');
+  // Tag 223c (audit F-222a-4 HIGH fix): collapse two rows.filter sweeps
+  // per method into a single forward pass over rows. Previously M × N × 2
+  // accesses (83 × 19k × 2 ≈ 3.2M at full scale → ~7s). Now M × N once.
+  const passCounts = {};
+  for (const r of rows) {
+    for (const m of methods) {
+      const c = passCounts[m.id] || (passCounts[m.id] = { computable: 0, passing: 0 });
+      const x = r.results[m.id];
+      if (x && x.computable) { c.computable++; if (x.pass) c.passing++; }
+    }
+  }
   for (const m of methods) {
-    const computable = rows.filter(r => r.results[m.id].computable).length;
-    const passing = rows.filter(r => r.results[m.id].pass).length;
-    console.log(`  ${m.label.padEnd(20)} ${passing.toString().padStart(2)} / ${computable.toString().padStart(2)} pass / computable`);
+    const c = passCounts[m.id] || { computable: 0, passing: 0 };
+    console.log(`  ${m.label.padEnd(20)} ${c.passing.toString().padStart(2)} / ${c.computable.toString().padStart(2)} pass / computable`);
   }
 }
 

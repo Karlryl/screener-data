@@ -272,8 +272,17 @@ function evaluateVintage(picksFile, priceIndex, regimes) {
 
   // F-PF-003: hoist universe-median computation outside the per-mode loop (same for all modes)
   const univResultsByHorizon = {};
+  // Tag 223c (audit F-222a-7 MEDIUM fix): hoist frozen-vintage + benchmark
+  // computations too. Both depend only on (picksFile, entryDate, days) — not
+  // on the mode. F-PF-003 hoisted universeMed but missed these two. At 5 modes
+  // × 3 horizons that's 15 calls per vintage, only 3 are unique. At 19k corpus
+  // × 365 vintages: ~5.5k redundant calls saved.
+  const frozenByHorizon = {};
+  const benchByHorizon = {};
   for (const days of HORIZONS_DAYS) {
     univResultsByHorizon[days] = computeUniverseMedianReturn(priceIndex, entryDate, days, picksFile.evaluatedTickers);
+    frozenByHorizon[days] = computeFrozenVintageMedianReturn(priceIndex, picksFile, entryDate, days);
+    benchByHorizon[days]  = computeBenchmarkReturn(priceIndex, entryDate, days);
   }
 
   for (const [mode, allPicks] of Object.entries(picksFile.modes || {})) {
@@ -317,8 +326,10 @@ function evaluateVintage(picksFile, priceIndex, regimes) {
       // F-PF-003: use pre-computed universe result
       const univResult = univResultsByHorizon[days];
       const universeMed = univResult.median;
-      const frozenVintage = computeFrozenVintageMedianReturn(priceIndex, picksFile, entryDate, days);
-      const benchResult = computeBenchmarkReturn(priceIndex, entryDate, days);
+      // Tag 223c (audit F-222a-7 MEDIUM fix): reuse hoisted per-horizon
+      // computations instead of recomputing them inside the per-mode loop.
+      const frozenVintage = frozenByHorizon[days];
+      const benchResult = benchByHorizon[days];
       const pickMed = median(pickReturns);
       const n = pickReturns.length;
 

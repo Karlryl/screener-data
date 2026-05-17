@@ -285,12 +285,19 @@ async function main() {
     _log('WARN', 'orphan-method cleanup failed: ' + e.message);
   }
 
-  // F-SM-014: deep clone prior state so tickers absent from a partial pull are NOT deleted.
-  // Only entries for tickers present in the current snapshots are overwritten below.
+  // F-SM-014: prior state preserved so tickers absent from a partial pull are NOT deleted.
+  // Tag 223c (audit F-222a-3 BLOCKING fix): swapped two JSON.parse(JSON.stringify(...))
+  // deep-clones for shallow Object.assign copies. The loop below at ~line 316 reassigns
+  // newState.methodState[ticker] = tickerNewState wholesale (whole-reference swap), so
+  // structural sharing is fine — entries for current-run tickers are entirely replaced,
+  // and absent-ticker entries keep their original reference (which we never mutate
+  // because the loop only ever sets newState.methodState[ticker], never deep-edits).
+  // Same reasoning applies to methodHistory. Saves 2× full O(N) walks of 20.6 MB
+  // (~3-5s today, ~25-40s at 19k) plus multi-GB transient heap during JSON parse.
   const newState = {
     lastRun: new Date().toISOString(),
-    methodState: JSON.parse(JSON.stringify(state.methodState || {})),
-    methodHistory: JSON.parse(JSON.stringify(state.methodHistory || {})),
+    methodState: Object.assign({}, state.methodState || {}),
+    methodHistory: Object.assign({}, state.methodHistory || {}),
     fieldCoverage: state.fieldCoverage
   };
 
@@ -303,11 +310,30 @@ async function main() {
   const allEvents = [];
   const allStocks = [];
 
-  for (const file of files) {
-    const filePath = path.join(args.snapshots, file);
-    let stock;
-    try { stock = JSON.parse(fs.readFileSync(filePath, 'utf8')); }
-    catch (e) { _log('WARN', `Skip ${file}: parse error ${e.message}`); continue; }
+  // Tag 223c (audit F-222a-10 MEDIUM fix): load snapshot files in parallel
+  // batches via fs.promises.readFile (same pattern as snapshot-methods-history.js
+  // F-PF-007/009). Previously sync readFileSync over every snapshot serial =
+  // ~18s at 3.5k tickers, ~95s at 19k. With 4 libuv workers ~3-4× faster.
+  const SNAPSHOT_LOAD_BATCH = 200;
+  const loadedSnapshots = [];
+  for (let i = 0; i < files.length; i += SNAPSHOT_LOAD_BATCH) {
+    const batch = files.slice(i, i + SNAPSHOT_LOAD_BATCH);
+    const loaded = await Promise.all(batch.map(async f => {
+      try {
+        const raw = await fs.promises.readFile(path.join(args.snapshots, f), 'utf8');
+        return { file: f, stock: JSON.parse(raw), error: null };
+      } catch (e) {
+        return { file: f, stock: null, error: e.message };
+      }
+    }));
+    loadedSnapshots.push(...loaded);
+  }
+
+  for (const { file, stock, error } of loadedSnapshots) {
+    if (error || !stock) {
+      _log('WARN', `Skip ${file}: parse error ${error || 'null data'}`);
+      continue;
+    }
     allStocks.push(stock);
     const ticker = (stock.meta && stock.meta.ticker) || file.replace(/\.json$/, '');
     const results = Runner.evaluateStock(stock);

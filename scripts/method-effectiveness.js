@@ -115,6 +115,32 @@ function main() {
   if (!cache || typeof cache !== 'object' || !cache.vintageReturns) {
     cache = { vintageReturns: {} };
   }
+
+  // Tag 223c (audit F-222a-2 followup): prune cache entries older than 90 days.
+  // Vintages beyond the 84d (12w) max forward-horizon contribute no fresh data —
+  // they are pure dead weight that quadratically inflates the cache file
+  // (~800 KB/vintage at 19k × 365 days = ~290 MB unpruned) and re-replayed every
+  // run. 90 days = 84d horizon + 6 day buffer for weekend/holiday lag.
+  // Threshold lives here so the entire prune-load-save cycle is atomic
+  // (load -> prune -> proceed -> save once at end on line ~243).
+  const CACHE_RETENTION_DAYS = 90;
+  const cutoffDate = (() => {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - CACHE_RETENTION_DAYS);
+    return d.toISOString().slice(0, 10);
+  })();
+  let prunedCount = 0;
+  for (const k of Object.keys(cache.vintageReturns)) {
+    const vintageDate = k.split('|')[0];
+    if (vintageDate < cutoffDate) {
+      delete cache.vintageReturns[k];
+      prunedCount++;
+    }
+  }
+  if (prunedCount > 0) {
+    console.log('method-effectiveness: pruned ' + prunedCount + ' cache entries older than ' + CACHE_RETENTION_DAYS + ' days (cutoff ' + cutoffDate + ')');
+  }
+
   const cachedDates = new Set(Object.keys(cache.vintageReturns));
 
   // Tag 134 — Phase 3.5: track per-quality-bucket as well as overall.
@@ -238,10 +264,12 @@ function main() {
   }
 
   // F-PF-009: save updated cache
-  if (processedNew > 0) {
+  // Tag 223c: also save when prunedCount > 0 so the 90-day prune persists
+  // even when no new vintages are processed (atomic load -> prune -> save).
+  if (processedNew > 0 || prunedCount > 0) {
     if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
     fs.writeFileSync(CACHE_PATH, JSON.stringify(cache));
-    console.log('method-effectiveness: processed ' + processedNew + ' new vintage×horizon combos, cache saved.');
+    console.log('method-effectiveness: processed ' + processedNew + ' new vintage×horizon combos' + (prunedCount > 0 ? ' (' + prunedCount + ' stale entries pruned)' : '') + ', cache saved.');
   } else {
     console.log('method-effectiveness: all vintages served from cache.');
   }
