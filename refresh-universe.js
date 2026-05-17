@@ -355,7 +355,14 @@ async function main() {
   // without mcap filter — without this cap the universe can explode to 25k+, causing
   // Node OOM and Yahoo rate-limiting in pull-yahoo.js.
   // Tag 165: cap raised from 10000 to 13000 to accommodate OTC + NASDAQ API additions.
-  const MAX_UNIVERSE = parseInt(process.env.MAX_UNIVERSE || '13000', 10);
+  // Tag 227a (silent-cap audit): raised 13000 -> 25000. Today's watchlist is
+  // already 15,734 — the 13k cap was effectively dropping every newly-IPO'd
+  // ticker on the bottom rung since the cap was lower than the existing
+  // universe size. Pull-yahoo's price-only fast-path (Tag 166) keeps the
+  // per-run runtime tractable; the 20% null-mcap proportional split below
+  // already prevents OOM by keeping low-confidence discoveries bounded.
+  // Override via env MAX_UNIVERSE for tighter local-dev runs.
+  const MAX_UNIVERSE = parseInt(process.env.MAX_UNIVERSE || '25000', 10);
   if (allTickers.size > MAX_UNIVERSE) {
     // F-DP-016: null-mcap tickers (often intentional small-cap additions) were previously
     // sorted to the bottom and silently dropped first. Fix: segregate null-mcap tickers and

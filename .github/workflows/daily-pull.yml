@@ -92,12 +92,24 @@ jobs:
       # Tag 132: Auto-Universe-Refresh — laeuft bei jedem Run (schedule + workflow_dispatch).
       # Tag 133: Merged mit SEC EDGAR, Finnhub, Wikipedia Indices.
       # Tag 165: OTC Markets (OTCQX/OTCQB/Expert) + NASDAQ Screener API added.
-      #          Target universe raised to 12,000+ tickers. MAX_UNIVERSE=13000 (env default).
+      #          Target universe raised to 12,000+ tickers.
+      # Tag 227a (silent-cap audit): MAX_UNIVERSE raised 13000 -> 25000. The cap
+      # is applied to the *discovered* candidate set in refresh-universe.js (top
+      # N by mcap, plus a 20% null-mcap slice). With today's watchlist already
+      # at 15,734 — and the SEC/Finnhub/OTC sources contributing ~20-25k raw
+      # candidates per run — the 13k cap was silently dropping every newly-IPO'd
+      # ticker on the bottom rung (the existing 15.7k watchlist already exceeds
+      # the cap, so new tickers were competing for slots the cap had pre-filled).
+      # Precedent: memory `ci_coverage_gate_calibration.md` (audit Tag 215e
+      # `max(absolute, percent)` dual gate). 25k gives 2-3 years of universe-
+      # growth headroom; Node OOM is mitigated by the `--max-old-space-size=6144`
+      # on pull-yahoo.js and refresh-universe.js's own 20% null-mcap proportional
+      # split.
       # FINNHUB_API_KEY: GitHub Secret (Settings → Secrets → Actions → FINNHUB_API_KEY)
       - name: Refresh Universe
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
-          MAX_UNIVERSE: '13000'
+          MAX_UNIVERSE: '25000'
         run: node refresh-universe.js --watchlist watchlist.json
         continue-on-error: true
 
