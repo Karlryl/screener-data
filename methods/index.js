@@ -167,5 +167,10 @@ module.exports = [
   // Pedersen 2013 academic 12-month return skipping the most recent month
   // (avoids 1-month reversal). Degrades to within-window position when fewer
   // than 252 trading days are available. DIAGNOSTIC, fixture-hash safe.
-  { file: './price-momentum-12-1.js' }
+  { file: './price-momentum-12-1.js' },
+
+  // Tag 214a: SG&A/Revenue Trend (3y slope) — cost-discipline detector.
+  // Activated by Tag 211l surfacing annualSGA. Lev & Thiagarajan (1993, JAR)
+  // fundamental signal. DIAGNOSTIC, fixture-hash safe.
+  { file: './sga-revenue-trend.js' }
 ];

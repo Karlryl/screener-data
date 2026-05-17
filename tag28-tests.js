@@ -1954,6 +1954,60 @@ test('Tag 213b Price-Momentum-12-1: NOT-COMPUTABLE — too few bars (<4 months d
   if (!r.reason || !/need >= 84/.test(r.reason)) throw new Error('reason should mention need >= 84; got: ' + r.reason);
 });
 
+// ─── Tag 214a — sga-revenue-trend (cost-discipline detector) smoke tests ───
+// Activated by Tag 211l surfacing annualSGA. DIAGNOSTIC, fixture-hash safe.
+
+test('Tag 214a SGA-Revenue-Trend: PASS — disciplined operator (flat or declining ratio)', () => {
+  // SGA/Rev = 10%, 10%, 9% (latest first) → reverse to chrono [9%, 10%, 10%] → slope > 0?
+  // Wait, latest is at index 0 in the array, so latest=0.10, mid=0.10, oldest=0.09.
+  // Chrono = [0.09, 0.10, 0.10] → slope is positive but small (~+0.5pp/yr).
+  // Pass requires slope <= 0.005 (0.5pp/yr). At exactly the boundary should pass.
+  // To make it cleanly pass, use 10%, 10.4%, 10%, oldest-first chrono = [10, 10.4, 10] → slope ≈ 0 → pass.
+  const s = { annual: {
+    annualSGA: [{value: 10},  {value: 10.4}, {value: 10}],
+    annualRev: [{value: 100}, {value: 100},  {value: 100}]
+  }};
+  const r = Runner.evaluateStock(s)['sga-revenue-trend'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (!r.pass) throw new Error('flat ratio should pass; slope=' + r.value);
+  if (r.components.yearsUsed !== 3) throw new Error('expected 3 years; got ' + r.components.yearsUsed);
+});
+
+test('Tag 214a SGA-Revenue-Trend: FAIL — bloating overhead (rising ratio)', () => {
+  // Latest first: SGA = 18, 14, 10. Rev = 100, 100, 100.
+  // Ratios latest-first: 18%, 14%, 10%. Chrono: [10%, 14%, 18%] → slope = +4pp/yr.
+  // 4pp/yr >> 0.5pp/yr threshold → fail.
+  const s = { annual: {
+    annualSGA: [{value: 18}, {value: 14}, {value: 10}],
+    annualRev: [{value: 100}, {value: 100}, {value: 100}]
+  }};
+  const r = Runner.evaluateStock(s)['sga-revenue-trend'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (r.pass) throw new Error('bloating overhead must fail; slope=' + r.value);
+  if (r.components.slope < 0.03) throw new Error('expected slope ~+4pp/yr; got ' + r.components.slope);
+});
+
+test('Tag 214a SGA-Revenue-Trend: NOT-COMPUTABLE without annualSGA (pre-Tag-211l snapshot)', () => {
+  // Snapshot that has Rev but no SGA — simulating pre-Tag-211l snapshots.
+  const s = { annual: {
+    annualRev: [{value: 100}, {value: 90}, {value: 80}]
+    // annualSGA: missing
+  }};
+  const r = Runner.evaluateStock(s)['sga-revenue-trend'];
+  if (r.computable) throw new Error('should be incomputable without annualSGA');
+  if (r.pass) throw new Error('incomputable must have pass=false');
+});
+
+test('Tag 214a SGA-Revenue-Trend: NOT-COMPUTABLE with <3 valid years', () => {
+  const s = { annual: {
+    annualSGA: [{value: 10}, {value: 10}],
+    annualRev: [{value: 100}, {value: 100}]
+  }};
+  const r = Runner.evaluateStock(s)['sga-revenue-trend'];
+  if (r.computable) throw new Error('should be incomputable with only 2 years');
+  if (!/need >= 3/.test(r.reason)) throw new Error('reason should mention >= 3 needed; got: ' + r.reason);
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the
