@@ -1329,8 +1329,17 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (fs.existsSync(cachePath)) {
         try {
           cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
-          // F-DP-019: reject cache if version key is missing or differs
+          // F-DP-019: reject cache if version key is missing or differs.
+          // Tag 222b (audit Tag 221a C4 followup): the write site at line ~1405
+          // does stamp _cacheVersion correctly (verified via NVDA.json which
+          // carries _cacheVersion=2), but the bulk of legacy cache files were
+          // written before this stamp existed. They're correctly invalidated
+          // here, then re-fetched. Counter below makes the invalidation
+          // visible in the run summary — previously silent. Process-scope
+          // (var on module global) so we count across the whole pull.
           if (cached._cacheVersion !== FTS_CACHE_VERSION) {
+            if (typeof global.__ftsCacheInvalidations === 'undefined') global.__ftsCacheInvalidations = 0;
+            global.__ftsCacheInvalidations++;
             cached = null;
           } else {
             const age = Date.now() - new Date(cached.cachedAt).getTime();

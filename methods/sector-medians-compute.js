@@ -20,8 +20,15 @@ const MIN_STOCKS_PER_SECTOR = 5;
 const MIN_STOCKS_PER_REGION_SECTOR = 20;
 
 function median(arr) {
-  if (!arr.length) return null;
-  const sorted = [...arr].sort((a, b) => a - b);
+  // Tag 222b (audit Tag 221a Fix 5 defensive): filter to finite numbers only.
+  // Without this, a single NaN/null in `arr` poisons the sort order (NaN is
+  // unordered) and can produce NaN as the median, which then leaks into the
+  // sector-medians-auto.json output and silently NaN-outs every dependent
+  // method. All bucket-push sites already guard, but defence-in-depth here
+  // ensures the function itself is safe regardless of caller hygiene.
+  const finite = arr.filter(v => Number.isFinite(v));
+  if (!finite.length) return null;
+  const sorted = finite.slice().sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[mid] : (sorted[mid-1] + sorted[mid]) / 2;
 }
@@ -30,10 +37,12 @@ function median(arr) {
 // Used to enrich sector-medians files with p25/p75/p90 so methods can compute
 // sector-relative percentile rankings (e.g., "ROIC = top-quartile of SAAS").
 function percentile(arr, p) {
-  if (!arr.length) return null;
-  if (p <= 0) return arr[0];
-  if (p >= 1) return arr[arr.length - 1];
-  const sorted = [...arr].sort((a, b) => a - b);
+  // Tag 222b (audit Tag 221a Fix 5 defensive): same NaN-filter rationale as median().
+  const finite = arr.filter(v => Number.isFinite(v));
+  if (!finite.length) return null;
+  const sorted = finite.slice().sort((a, b) => a - b);
+  if (p <= 0) return sorted[0];
+  if (p >= 1) return sorted[sorted.length - 1];
   const idx = p * (sorted.length - 1);
   const lo = Math.floor(idx);
   const hi = Math.ceil(idx);
@@ -117,7 +126,13 @@ function _computeFromBuckets(buckets, minN) {
         // the above/below-median logic. Full array length is still reported for transparency.
         const thresholdArr = POSITIVE_ONLY_METRICS.has(mid) ? arr.filter(v => v > -0.05) : arr;
         const useArr = thresholdArr.length >= minN ? thresholdArr : arr;
-        result[spId][mid] = median(useArr);
+        // Tag 222b (audit Tag 221a Fix 5): skip writing any non-finite median.
+        // Even with the median()/percentile() NaN-filter above, an all-null/empty
+        // useArr now returns null — don't pollute output with null medians
+        // that downstream methods could mis-treat as a valid 0 threshold.
+        const medVal = median(useArr);
+        if (medVal === null || !Number.isFinite(medVal)) continue;
+        result[spId][mid] = medVal;
         result[spId]['_n_' + mid] = arr.length;
         // Tag 209b: enrich with p25/p50/p75/p90 alongside median. Keys are prefixed
         // with '_p..' so they coexist with existing `metricId` (median) reads.

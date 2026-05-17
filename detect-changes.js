@@ -255,6 +255,36 @@ async function main() {
   }
   const state = loadState(args.state);
   const today = new Date().toISOString().slice(0, 10);
+
+  // Tag 222b (audit Tag 221a M3 fix): one-time orphan-method cleanup.
+  // alert-state.methodState carries entries per ticker × method-id. When a
+  // method is renamed or removed (e.g. reinvestment-rate, fcf-yield,
+  // deceleration-guard, forecast-contamination-guard,
+  // quarter-concentration-guard, quarterly-rev-acceleration — 6 orphans
+  // flagged by the audit), its state entry becomes orphan noise that bloats
+  // alert-state.json (~21MB) and the diff-report. Drop any entry whose
+  // method-id is not in the live REGISTRY before processing this run.
+  try {
+    const liveMethodIds = new Set(Runner.getMethods().map(m => m.id));
+    let droppedCount = 0, tickersTouched = 0;
+    for (const [ticker, methods] of Object.entries(state.methodState || {})) {
+      if (!methods || typeof methods !== 'object') continue;
+      const before = Object.keys(methods).length;
+      for (const mid of Object.keys(methods)) {
+        if (!liveMethodIds.has(mid)) {
+          delete methods[mid];
+          droppedCount++;
+        }
+      }
+      if (Object.keys(methods).length !== before) tickersTouched++;
+    }
+    if (droppedCount > 0) {
+      _log('INFO', `orphan-method cleanup: dropped ${droppedCount} entries across ${tickersTouched} tickers (live methods: ${liveMethodIds.size})`);
+    }
+  } catch (e) {
+    _log('WARN', 'orphan-method cleanup failed: ' + e.message);
+  }
+
   // F-SM-014: deep clone prior state so tickers absent from a partial pull are NOT deleted.
   // Only entries for tickers present in the current snapshots are overwritten below.
   const newState = {

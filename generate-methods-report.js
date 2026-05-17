@@ -311,14 +311,40 @@ function renderHTML(rows, methods) {
   const TOP_PICKS_N = 200;
   const topPicksRanked = ranked.slice(0, TOP_PICKS_N);
   const stockDataMap = {};
+  // Tag 222b (audit Tag 221a F1 followup): slim each STOCK_DATA_MAP entry.
+  // Previously embedded the full results[mid] blob — which carries
+  // `threshold, thresholdOp, methodType, confidence, dataAsOf, dataAgeDays,
+  // sectorPercentile, flags` fields the modal/filter JS never reads. With
+  // 200 tickers × 80 methods, those extra fields added ~5MB to the output.
+  // Keep only what the modal + pc-filter actually consume.
   for (const r of topPicksRanked) {
-    if (!stockDataMap[r.ticker]) {
-      stockDataMap[r.ticker] = {
-        ticker: r.ticker, name: r.name, sector: r.sector,
-        marketCap: r.marketCap, growthYoY: r.growthYoY, revenueTTM: r.revenueTTM,
-        results: r.results, trends: r.trends
+    if (stockDataMap[r.ticker]) continue;
+    const slimResults = {};
+    for (const mid in r.results) {
+      const res = r.results[mid];
+      if (!res) continue;
+      // Tag 222b: truncate reason to 120 chars (was unbounded, some methods
+      // emit 500+ char explanations). Modal still shows the gist.
+      const reasonStr = res.reason ? String(res.reason).slice(0, 120) : '';
+      slimResults[mid] = {
+        value: res.value,
+        computable: res.computable,
+        pass: res.pass,
+        reason: reasonStr,
+        components: res.components
       };
     }
+    const slimTrends = {};
+    for (const mid in (r.trends || {})) {
+      const tr = r.trends[mid];
+      if (!tr) continue;
+      slimTrends[mid] = { direction: tr.direction, points: tr.points };
+    }
+    stockDataMap[r.ticker] = {
+      ticker: r.ticker, name: r.name, sector: r.sector,
+      marketCap: r.marketCap, growthYoY: r.growthYoY, revenueTTM: r.revenueTTM,
+      results: slimResults, trends: slimTrends
+    };
   }
   const topPicksRows = topPicksRanked.map((r, i) => {
     const passRatio = r.computableCount > 0 ? (r.passCount / r.computableCount) : 0;
@@ -370,20 +396,39 @@ function renderHTML(rows, methods) {
     </tr>`;
   }).join('');
 
-  const tableRows = rows.map(r => {
+  // Tag 222b (audit Tag 221a F1 followup): matrix table was the bulk of the
+  // remaining ~65MB output. With ~3528 rows × ~43 method cells each carrying
+  // a `title=` reason attribute (~15KB/row), the matrix alone was ~50MB and
+  // would grow to ~285MB at full 19k-ticker universe. Slice to TOP_MATRIX_N
+  // — matrix is meant as a "ranked exploration" surface, not a 19k dump.
+  // 300 keeps the file under 10MB; users wanting full ranking should use
+  // the top-picks table (200) plus the per-method top-50 cards above.
+  // Sort identical to ranked (pass-count desc, then computable desc, then ticker).
+  const TOP_MATRIX_N = 300;
+  const matrixRanked = [...rows].sort((a, b) => {
+    if (b.passCount !== a.passCount) return b.passCount - a.passCount;
+    if (b.computableCount !== a.computableCount) return b.computableCount - a.computableCount;
+    return a.ticker.localeCompare(b.ticker);
+  }).slice(0, TOP_MATRIX_N);
+  const tableRows = matrixRanked.map(r => {
     const methodCells = methods.map(m => {
       const result = r.results[m.id];
       if (!result.computable) {
-        return `<td class="method-cell incomputable" data-method="${m.id}" data-pass="incomputable" title="${escHtml(result.reason)}">—</td>`;
+        // Tag 222b (audit Tag 221a F1 followup): drop the per-cell `title=` reason
+        // attribute. With 500 rows × ~43 methods × ~250 bytes/title this was
+        // ~5MB of pure hover-only text. The reason string is still available
+        // via the row-click modal which reads STOCK_DATA_MAP[ticker].results.
+        return `<td class="method-cell incomputable" data-method="${m.id}" data-pass="incomputable">—</td>`;
       }
       const klass = result.pass ? 'pass' : 'fail';
       const valStr = fmtValue(result.value, m.unit);
       const trend = r.trends[m.id] || { direction: 'n/a' };
-      const trendIcon = ({ improving: '<span class="trend-up" title="improving">↑</span>',
-                          deteriorating: '<span class="trend-down" title="deteriorating">↓</span>',
-                          stable: '<span class="trend-flat" title="stable">·</span>',
+      // Tag 222b: trend icon kept but `title=` on the wrapper span dropped (icon glyph self-explains).
+      const trendIcon = ({ improving: '<span class="trend-up">↑</span>',
+                          deteriorating: '<span class="trend-down">↓</span>',
+                          stable: '<span class="trend-flat">·</span>',
                           'n/a': '' })[trend.direction] || '';
-      return `<td class="method-cell ${klass}" data-method="${m.id}" data-pass="${result.pass}" data-value="${result.value}" title="${escHtml(result.reason)} | trend=${trend.direction} (${trend.points || 0} pts)">${valStr} ${trendIcon}</td>`;
+      return `<td class="method-cell ${klass}" data-method="${m.id}" data-pass="${result.pass}" data-value="${result.value}">${valStr} ${trendIcon}</td>`;
     }).join('');
 
     const psR = r.results['profitability-state'];
@@ -684,10 +729,17 @@ ${methods.filter(m => MT_local.isCore(m.id)).map(m => {
              return '<span title="profitability-state=' + state + '" style="color:' + mm.c + ';font-size:9px;margin:0 1px;font-weight:700;">' + mm.l + '</span>';
            }
            const flags = profStateBadge(r) + flagSym('roic', 'R') + flagSym('forward-pe', 'Pe') + flagSym('sloan-ratio', 'S') + flagSym('ev-ebitda', 'E');
-           // Tag-92b: data-passes für Filter-Reaktion
-           const passMap = {};
-           for (const [mid2, res2] of Object.entries(r.results)) passMap[mid2] = res2.computable && res2.pass === true;
-           const passDataAttr = encodeURIComponent(JSON.stringify(passMap));
+           // Tag-92b: data-passes für Filter-Reaktion.
+           // Tag 222b (audit Tag 221a F1 followup): switched from
+           // URI-encoded JSON object (every method-id × bool) to a
+           // space-separated list of passing method-ids. Cuts per-row
+           // payload from ~2.8KB to ~150 bytes (× ~850 rows = ~2.3MB saved).
+           // JS filter updated to parse via .split(' ').
+           const passList = [];
+           for (const [mid2, res2] of Object.entries(r.results)) {
+             if (res2.computable && res2.pass === true) passList.push(mid2);
+           }
+           const passDataAttr = passList.join(' ');
            // Tag 98c: data-prof-state für Profitability-Filter
            const psRes = r.results['profitability-state'];
            const profState = (psRes && psRes.computable && psRes.components) ? psRes.components.state : 'NA';
@@ -733,7 +785,7 @@ ${methods.filter(m => MT_local.isCore(m.id)).map(m => {
   </div>
 </div>
 
-<details style="margin-top:30px;"><summary style="cursor:pointer;color:#f1f5f9;font-size:16px;font-weight:700;padding:12px;background:#1e293b;border:1px solid #334155;border-radius:8px;margin-bottom:8px;">Full Matrix Tabelle (klicken zum Aufklappen)</summary><table id="matrix">
+<details style="margin-top:30px;"><summary style="cursor:pointer;color:#f1f5f9;font-size:16px;font-weight:700;padding:12px;background:#1e293b;border:1px solid #334155;border-radius:8px;margin-bottom:8px;">Matrix Tabelle (Top ${TOP_MATRIX_N} nach Pass-Count, klicken zum Aufklappen)</summary><table id="matrix">
 <thead><tr>
   <th data-sort="ticker">Ticker</th>
   <th data-sort="name">Name</th>
@@ -798,9 +850,16 @@ var STOCK_DATA_MAP = ${JSON.stringify(stockDataMap).replace(/</g, '\\u003c')};
         cardTotal++;
         var show2 = true;
         if (active.length > 0) {
-          var passData = {};
-          try { passData = JSON.parse(decodeURIComponent(row.dataset.passes || '%7B%7D')); } catch(e) {}
-          var passes2 = active.map(function(m){ return passData[m] === true; });
+          // Tag 222b: data-passes is now a space-separated list of passing
+          // method-ids (was a URI-encoded JSON object). Build a Set once per
+          // row for O(1) lookups.
+          var passSet = {};
+          var raw = row.dataset.passes || '';
+          if (raw) {
+            var ids = raw.split(' ');
+            for (var i = 0; i < ids.length; i++) passSet[ids[i]] = true;
+          }
+          var passes2 = active.map(function(m){ return passSet[m] === true; });
           if (mode === 'AND') show2 = passes2.every(function(p){ return p; });
           else show2 = passes2.some(function(p){ return p; });
         }

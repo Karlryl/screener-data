@@ -32,6 +32,10 @@ function parseArgs(argv) {
     maxAgeDays:     60,
     // F-DP-022: tickers with no snapshot after this many days are flagged/removed
     pruneNoDataDays: 30,
+    // Tag 222b (audit Tag 221a C2): when true, also drop any entry whose
+    // snapshot file is missing — even if added_at is recent/absent. Off by
+    // default to prevent accidental mass-deletion (audit found 12 207 orphans).
+    pruneOrphans: false,
     dryRun: false
   };
   for (let i = 2; i < argv.length; i++) {
@@ -40,9 +44,26 @@ function parseArgs(argv) {
     else if (argv[i] === '--max-age-days' && argv[i+1]) args.maxAgeDays = parseInt(argv[++i], 10);
     // F-DP-022: new flag to control how long no-snapshot tickers are tolerated
     else if (argv[i] === '--prune-no-data-days' && argv[i+1]) args.pruneNoDataDays = parseInt(argv[++i], 10);
+    // Tag 222b: hard-prune all orphans (tickers without a snapshot file).
+    else if (argv[i] === '--prune-orphans') args.pruneOrphans = true;
     else if (argv[i] === '--dry-run') args.dryRun = true;
   }
   return args;
+}
+
+// Tag 222b (audit Tag 221a C2 fix): Yahoo uses the dash-format `ABR-PD` for
+// NYSE preferred-share series; the `$`-form (`ABR$D`) returns a 404 and wastes
+// API budget. Tag 221 added a discovery-stage filter in refresh-universe.js,
+// but 376 dollar-tickers already in watchlist.json need to be evicted on the
+// next prune run. Also drops the literal company-name entry case
+// `STMicroelectronics` (no symbol = clearly invalid) flagged in the same audit.
+function isInvalidSymbol(ticker) {
+  if (!ticker || typeof ticker !== 'string') return 'empty-symbol';
+  if (ticker.includes('$')) return 'preferred-share-dollar-form';
+  // Heuristic: a real symbol is short (≤10 chars excl. dot/dash) and has no spaces.
+  // Names like "STMicroelectronics" (15 chars, no separators) match.
+  if (ticker.length > 12 && !/[.\-:^]/.test(ticker)) return 'looks-like-company-name';
+  return null;
 }
 
 function loadSnapshot(snapshotsDir, ticker) {
@@ -95,6 +116,7 @@ function main() {
   console.log('  max-age-days:       ' + args.maxAgeDays);
   // F-DP-022: show new threshold
   console.log('  prune-no-data-days: ' + args.pruneNoDataDays);
+  console.log('  prune-orphans:      ' + args.pruneOrphans);
   console.log('  dry-run:            ' + args.dryRun);
 
   // Tag 219a (audit F-218b-05): schema-aware watchlist loader. The daily-pull
@@ -126,6 +148,16 @@ function main() {
   const now = Date.now();
 
   for (const entry of stocksArr) {
+    // Tag 222b: invalid-symbol filter — runs before snapshot lookup since
+    // these tickers will never produce a snapshot. Catches $-tickers and
+    // literal company-name entries (376 + 1 flagged by Tag 221a audit).
+    const invalidReason = isInvalidSymbol(entry.ticker);
+    if (invalidReason !== null) {
+      pruned.push({ ticker: entry.ticker, reason: invalidReason });
+      console.log('  PRUNE ' + String(entry.ticker).padEnd(10) + ' (' + invalidReason + ')');
+      continue;
+    }
+
     const snap = loadSnapshot(args.snapshots, entry.ticker);
 
     // F-DP-022: prune tickers with no snapshot that have been in the watchlist too long
@@ -139,6 +171,14 @@ function main() {
           console.log('  PRUNE ' + entry.ticker.padEnd(10) + ' (' + reason + ')');
           continue;
         }
+      }
+      // Tag 222b: --prune-orphans hard-mode — drop every entry without a
+      // snapshot regardless of added_at. Use cautiously (audit found 12 207
+      // orphans; mass-deletion is irreversible from the committed history).
+      if (args.pruneOrphans) {
+        pruned.push({ ticker: entry.ticker, reason: 'orphan-no-snapshot' });
+        console.log('  PRUNE ' + entry.ticker.padEnd(10) + ' (orphan-no-snapshot)');
+        continue;
       }
       kept.push(entry);
       continue;
