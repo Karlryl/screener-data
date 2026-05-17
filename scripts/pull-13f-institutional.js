@@ -421,6 +421,96 @@ function parseArgs(argv) {
 // group positions by issuer-name (uppercased, trimmed) AND by CUSIP. The
 // resulting by-ticker file is keyed by CUSIP with an issuer-name field so
 // downstream methods can join on either.
+//
+// Tag 226a-1: previously the issuer→ticker join used exact uppercased
+// strings, which only matched 6/26 issuers in Berkshire's 13F because of:
+//   - trailing punctuation: SEC "Apple Inc."   vs 13F "APPLE INC"
+//   - state suffixes:       SEC "BANK OF AMERICA CORP /DE/" vs 13F "BANK AMERICA CORP"
+//   - 13F abbreviations:    SEC "OCCIDENTAL PETROLEUM CORP" vs 13F "OCCIDENTAL PETE CORP"
+//   - punctuation:          SEC "Macy's, Inc." vs 13F "MACYS INC"
+//
+// The fix is a `_normName` canonicalizer applied to BOTH sides of the join:
+//   - uppercase + trim, strip CDATA, collapse spaces
+//   - drop trailing /XX/ state suffixes (DE, NEW, NV, CA, …)
+//   - strip punctuation (.,'-/&) but keep word boundaries
+//   - drop common corporate suffix tokens (INC, CORP, CO, LTD, PLC, COMPANY,
+//     HOLDINGS, GROUP, CLASS A/B/C, COM, MTN, BE)
+//   - expand 13F abbreviations (FINL→FINANCIAL, PETE→PETROLEUM, INTL→
+//     INTERNATIONAL, MGMT→MANAGEMENT, COS→COMPANIES, SVCS→SERVICES, etc.)
+//   - drop the leading filler word "OF" (BANK OF AMERICA → BANK AMERICA)
+function _normName(name) {
+  if (!name) return '';
+  let s = String(name).toUpperCase().trim();
+  // Strip CDATA wrappers if any leaked through.
+  s = s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim();
+  // Strip SEC state-suffix markers, both bounded "/DE/" form and the
+  // suffix form "INC/CA". Done before any other punctuation handling.
+  s = s.replace(/\/[A-Z]{2,5}\/?/g, ' ');
+  // Replace ampersand-as-AND BEFORE stripping punctuation (so we don't
+  // create "AMP" tokens via the entity).
+  s = s.replace(/&AMP;/g, '&').replace(/&/g, ' AND ');
+  // Delete apostrophes/quotes WITHOUT spacing (MACY'S → MACYS, not MACY S).
+  s = s.replace(/[.''"""`]/g, '');
+  // Replace remaining structural punctuation with spaces (LOUISIANA-PACIFIC
+  // → LOUISIANA PACIFIC; commas; slashes; parens).
+  s = s.replace(/[,\-\/\(\)]/g, ' ');
+  // Collapse multiple whitespace.
+  s = s.replace(/\s+/g, ' ').trim();
+  // Expand common 13F-style abbreviations. PAC→PACIFIC and FIN→FINANCIAL
+  // are intentional generalizations; risk of overstrip is low because the
+  // SEC primary name almost always uses the full form.
+  const ABBREV = {
+    'FINL': 'FINANCIAL',
+    'FIN':  'FINANCIAL',
+    'PETE': 'PETROLEUM',
+    'PETROL': 'PETROLEUM',
+    'PAC':  'PACIFIC',
+    'INTL': 'INTERNATIONAL',
+    'INTERNATL': 'INTERNATIONAL',
+    'MGMT': 'MANAGEMENT',
+    'COMM': 'COMMUNICATIONS',
+    'COMMS': 'COMMUNICATIONS',
+    'COS': 'COMPANIES',
+    'SVCS': 'SERVICES',
+    'SVC': 'SERVICES',
+    'TECH': 'TECHNOLOGY',
+    'TECHS': 'TECHNOLOGIES',
+    'INDS': 'INDUSTRIES',
+    'IND': 'INDUSTRIAL',
+    'PHARMA': 'PHARMACEUTICAL',
+    'PHARMS': 'PHARMACEUTICALS',
+    'ASSOC': 'ASSOCIATES',
+    'BANCORP': 'BANCORPORATION',
+    'BCORP': 'BANCORPORATION',
+    'HLDGS': 'HOLDINGS',
+    'HLDG': 'HOLDINGS',
+    'NATL': 'NATIONAL',
+    'SIRIUSXM': 'SIRIUS XM',
+    'AMER': 'AMERICAN',
+    'PETROCHEM': 'PETROCHEMICALS'
+  };
+  // Drop noise/suffix tokens that vary between sources but carry no
+  // identity signal. INCLUDES the lonely "IN" left behind when SEC
+  // truncates a 13F long name like "JEFFERIES FINANCIAL GROUP INC" →
+  // "JEFFERIES FINANCIAL GROUP IN" at the 28-char field limit.
+  const STRIP = new Set([
+    'INC', 'INCORPORATED', 'CORP', 'CORPORATION', 'CO', 'COMPANY',
+    'LTD', 'LIMITED', 'PLC', 'LLC', 'LP', 'LLP',
+    'HOLDINGS', 'HOLDING', 'HLDGS', 'GROUP', 'GROUPS',
+    'CLASS', 'CL', 'COM',
+    // Common 13F filler tokens
+    'MTN', 'BE', 'NEW', 'OLD',
+    // SEC 13F truncation residual ("INC" cut to "IN")
+    'IN',
+    // Country/state boilerplate that appears on some foreign-issuer 13F rows
+    'SWITZ', 'BERMUDA', 'CAYMAN', 'DE', 'CA', 'NV', 'NY',
+    // Filler glue
+    'OF', 'THE', 'AND'
+  ]);
+  const tokens = s.split(' ').map(t => ABBREV[t] || t).filter(t => t && !STRIP.has(t));
+  return tokens.join(' ');
+}
+
 function buildByTickerView(cache) {
   const byCusip = {};
   const byIssuerName = {};
@@ -429,11 +519,27 @@ function buildByTickerView(cache) {
   // against the SEC ticker→CIK map's `name` field. Loaded if available;
   // missing map → byTicker stays empty (still publish byCusip / byIssuer).
   const map = readJsonSafe(TICKER_CIK_MAP_PATH);
+  // Tag 226a-1: build canonicalized name→ticker map. When two SEC entries
+  // collide on the same canonical form (e.g. share-class duplicates GOOG /
+  // GOOGL both canonicalize to "ALPHABET"), prefer the SHORTEST ticker —
+  // typically the primary listing/most-liquid class. Berkshire's 13F lists
+  // ALPHABET once without share-class so we want to attribute that holding
+  // to a single ticker rather than randomly pick one.
+  // Also keep a legacy exact-uppercase map as a fallback — defense in depth
+  // for any oddball name the normalizer might overstrip.
   const nameToTicker = {};
+  const exactToTicker = {};
   if (map && map.byTicker) {
     for (const [ticker, info] of Object.entries(map.byTicker)) {
       if (info && info.name) {
-        nameToTicker[info.name.toUpperCase().trim()] = ticker;
+        const exact = info.name.toUpperCase().trim();
+        exactToTicker[exact] = ticker;
+        const norm = _normName(info.name);
+        if (!norm) continue;
+        const prev = nameToTicker[norm];
+        if (!prev || ticker.length < prev.length) {
+          nameToTicker[norm] = ticker;
+        }
       }
     }
   }
@@ -461,7 +567,11 @@ function buildByTickerView(cache) {
         (byIssuerName[issuer] = byIssuerName[issuer] || {
           nameOfIssuer: p.nameOfIssuer, holders: []
         }).holders.push(holding);
-        const ticker = nameToTicker[issuer];
+        // Tag 226a-1: canonicalized join, with legacy exact-uppercase
+        // match as a defense-in-depth fallback for any oddball name the
+        // normalizer might overstrip.
+        let ticker = nameToTicker[_normName(issuer)];
+        if (!ticker) ticker = exactToTicker[issuer];
         if (ticker) {
           (byTicker[ticker] = byTicker[ticker] || {
             ticker, nameOfIssuer: p.nameOfIssuer, holders: []
@@ -596,6 +706,7 @@ module.exports = {
     _normalizeSubmissions,
     findInfoTableUrl,
     pullInstitution13f,
-    BOOTSTRAP_INSTITUTIONS
+    BOOTSTRAP_INSTITUTIONS,
+    _normName  // Tag 226a-1: exposed for test coverage
   }
 };
