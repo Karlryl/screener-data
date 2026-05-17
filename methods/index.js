@@ -201,5 +201,11 @@ module.exports = [
   // broad-based ~7k-institution floor. Complements Tag 213a smart-money 13F
   // count signal. Activated by Tag 220c majorHoldersBreakdown persistence.
   // DIAGNOSTIC, fixture-hash safe.
-  { file: './institutional-density.js' }
+  { file: './institutional-density.js' },
+
+  // Tag 226c-5: Asset-Growth Anomaly — 1y total-asset YoY <= 20% (Cooper,
+  // Gulen & Schill 2008 JF 63:1609-1651). Strongest single-variable
+  // cross-section anomaly in the post-1968 US sample (~20%/yr spread
+  // between low- and high-growth quintiles). DIAGNOSTIC, fixture-hash safe.
+  { file: './asset-growth-anomaly.js' }
 ];
