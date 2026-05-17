@@ -531,7 +531,15 @@ function buildHtml(evaluated, topN) {
   const sectorExcluded = totalStocks - eligibleByMode.HYPERGROWTH.length;
   const hgPicks = topAllMust(eligibleByMode.HYPERGROWTH, 'HYPERGROWTH', 9999).length;
   const qcPicks = topAllMust(eligibleByMode.QUALITY_COMPOUNDER, 'QUALITY_COMPOUNDER', 9999).length;
-  const dateLabel = new Date(generatedAt).toLocaleDateString('de-DE', { day:'2-digit', month:'long', year:'numeric' });
+  // Tag 228b-1 (audit F-227c-07 LOW fix): force UTC formatting for the report
+  // header. Previously `toLocaleDateString` defaulted to the renderer's local
+  // timezone, so a UTC-midnight RUN_DATE_UTC (e.g. 2026-05-17T00:00:00Z) printed
+  // as "16. Mai 2026" when the report is generated locally in Europe/Berlin
+  // (UTC+1/+2). CI runs in UTC so production was unaffected, but Karl's local
+  // dev runs showed yesterday's date in the header. Pinning timeZone:'UTC' makes
+  // the dateLabel match the RUN_DATE_UTC contract regardless of where the
+  // report is rendered.
+  const dateLabel = new Date(generatedAt).toLocaleDateString('de-DE', { day:'2-digit', month:'long', year:'numeric', timeZone: 'UTC' });
 
   const modeLabels = {
     HYPERGROWTH: 'Hypergrowth',
