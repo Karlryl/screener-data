@@ -2008,6 +2008,52 @@ test('Tag 214a SGA-Revenue-Trend: NOT-COMPUTABLE with <3 valid years', () => {
   if (!/need >= 3/.test(r.reason)) throw new Error('reason should mention >= 3 needed; got: ' + r.reason);
 });
 
+// ─── Tag 214b — capex-vs-sbc-quality (real reinvestment vs dilution) smoke tests ───
+
+test('Tag 214b Capex-vs-SBC: PASS — industrial profile (capex > SBC dominant)', () => {
+  // 3y of capex ~ $5B, SBC ~ $0.5B → ratio ~ 10x. Far above 1.0 threshold.
+  const s = { annual: {
+    annualCapex: [{value: -5e9}, {value: -4.5e9}, {value: -4e9}],
+    annualSBC:   [{value: 0.5e9}, {value: 0.45e9}, {value: 0.4e9}]
+  }};
+  const r = Runner.evaluateStock(s)['capex-vs-sbc-quality'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (!r.pass) throw new Error('industrial profile must pass; score=' + r.value);
+  if (r.value < 5) throw new Error('expected high ratio ~10x; got ' + r.value);
+});
+
+test('Tag 214b Capex-vs-SBC: FAIL — SaaS-optical-FCF profile (SBC > Capex)', () => {
+  // 3y of capex ~ $0.3B, SBC ~ $1.5B → ratio ~ 0.2. Well below 1.0.
+  const s = { annual: {
+    annualCapex: [{value: -0.3e9}, {value: -0.25e9}, {value: -0.2e9}],
+    annualSBC:   [{value: 1.5e9}, {value: 1.3e9}, {value: 1.1e9}]
+  }};
+  const r = Runner.evaluateStock(s)['capex-vs-sbc-quality'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (r.pass) throw new Error('SaaS-optical profile must fail; score=' + r.value);
+  if (r.value > 0.5) throw new Error('expected low ratio < 0.5; got ' + r.value);
+});
+
+test('Tag 214b Capex-vs-SBC: NOT-COMPUTABLE without annualSBC (no stock comp)', () => {
+  // A no-SBC firm — ratio is undefined. Method emits incomputable rather than fake a pass.
+  const s = { annual: {
+    annualCapex: [{value: -5e9}, {value: -4.5e9}, {value: -4e9}],
+    annualSBC:   [{value: 0}, {value: 0}, {value: 0}]
+  }};
+  const r = Runner.evaluateStock(s)['capex-vs-sbc-quality'];
+  if (r.computable) throw new Error('zero SBC should yield incomputable');
+});
+
+test('Tag 214b Capex-vs-SBC: NOT-COMPUTABLE with <2 valid years', () => {
+  const s = { annual: {
+    annualCapex: [{value: -5e9}],
+    annualSBC:   [{value: 0.5e9}]
+  }};
+  const r = Runner.evaluateStock(s)['capex-vs-sbc-quality'];
+  if (r.computable) throw new Error('1y of data should be incomputable');
+  if (!/need >= 2/.test(r.reason)) throw new Error('reason should mention >= 2 needed; got: ' + r.reason);
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the

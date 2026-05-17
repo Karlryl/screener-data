@@ -172,5 +172,10 @@ module.exports = [
   // Tag 214a: SG&A/Revenue Trend (3y slope) — cost-discipline detector.
   // Activated by Tag 211l surfacing annualSGA. Lev & Thiagarajan (1993, JAR)
   // fundamental signal. DIAGNOSTIC, fixture-hash safe.
-  { file: './sga-revenue-trend.js' }
+  { file: './sga-revenue-trend.js' },
+
+  // Tag 214b: Capex / SBC (3y avg) — real reinvestment-to-dilution ratio.
+  // Mauboussin (Counterpoint 2024) flags SBC > Capex as the optical-FCF
+  // pattern (true FCF systematically overstated). DIAGNOSTIC, fixture-hash safe.
+  { file: './capex-vs-sbc-quality.js' }
 ];
