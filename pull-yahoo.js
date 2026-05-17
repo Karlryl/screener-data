@@ -878,6 +878,12 @@ function mapFTSToAnnual(annualRows, cashRows) {
 
 function mapFTSToBalance(bsRows) {
   // Tag-28: Pulled balance-sheet rows from fundamentalsTimeSeries → array of {totalCash, totalDebt, totalAssets}, latest first.
+  // Tag 211l: Extended with accountsReceivable, netPPE, currentAssets,
+  // currentLiabilities, totalLiabilities — unblocks beneish-m-score (Tag 209d)
+  // and ohlson-o-score (Tag 210a) which were both returning computable=false
+  // universally because these fields weren't persisted. Pattern matches the
+  // existing extraction style: nullable, multi-key-fallback, skip row if
+  // every field is null.
   const sorted = (bsRows || []).slice().reverse();
   const annualBalance = [];
   for (const r of sorted) {
@@ -889,8 +895,24 @@ function mapFTSToBalance(bsRows) {
     const totalDebt = (std == null && ltd == null) ? null : (std || 0) + (ltd || 0);
     const _debtPartial = totalDebt != null && (std == null || ltd == null); // F-DQ-001
     const totalAssets = _ftsValue(r, 'totalAssets');
+    // Tag 211l extensions (Beneish/Ohlson inputs). All nullable.
+    const accountsReceivable = _ftsValue(r, 'accountsReceivable', 'receivables');
+    const netPPE = _ftsValue(r, 'netPPE', 'propertyPlantAndEquipmentNet', 'netTangibleAssets');
+    const currentAssets = _ftsValue(r, 'currentAssets', 'totalCurrentAssets');
+    const currentLiabilities = _ftsValue(r, 'currentLiabilities', 'totalCurrentLiabilities');
+    const totalLiabilities = _ftsValue(r, 'totalLiabilitiesNetMinorityInterest', 'totalLiabilities');
     if (cash == null && totalDebt == null && totalAssets == null) continue;
-    annualBalance.push({ totalCash: cash, totalDebt, totalAssets, ...(_debtPartial ? { _debtPartial: true } : {}) });
+    annualBalance.push({
+      totalCash: cash,
+      totalDebt,
+      totalAssets,
+      accountsReceivable,
+      netPPE,
+      currentAssets,
+      currentLiabilities,
+      totalLiabilities,
+      ...(_debtPartial ? { _debtPartial: true } : {})
+    });
   }
   return annualBalance;
 }
@@ -1180,6 +1202,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         } catch (e) {}
       }
       let ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD;
+      let ftsAnnualSGA, ftsAnnualDepreciation;
       let ftsQuarterlyNI;
       if (useCache && cached.payload) {
         ftsAnnual = cached.payload.ftsAnnual;
@@ -1189,6 +1212,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         ftsAnnualCapex = cached.payload.ftsAnnualCapex;
         ftsAnnualRnD = cached.payload.ftsAnnualRnD || [];  // Bug #25: added in cache v2
         ftsQuarterlyNI = cached.payload.ftsQuarterlyNI || [];
+        // Tag 211l: SGA + Depreciation added without FTS_CACHE_VERSION bump.
+        // Old caches will return undefined → default to empty array. Stocks get
+        // these fields after their cache expires (CACHE_TTL_MS) and re-pulls.
+        ftsAnnualSGA = cached.payload.ftsAnnualSGA || [];
+        ftsAnnualDepreciation = cached.payload.ftsAnnualDepreciation || [];
       } else {
         // Tag-14: fundamentalsTimeSeries-Pull für annualOpInc/FCF/opIncQ.
         const fts = await _withTimeout(fetchFundamentalsTS(stock.yahoo_symbol), 30000, stock.ticker + '/fts');
@@ -1199,6 +1227,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         ftsAnnualCapex = _ftsExtractByYear(fts.annualCash, ['capitalExpenditure', 'capitalExpenditures']);
         // Bug #25: annualRnD was never extracted — reinvestment-rate always computed Capex-only
         ftsAnnualRnD = _ftsExtractByYear(fts.annualFin, ['researchAndDevelopment', 'ResearchAndDevelopment', 'researchAndDevelopmentExpenses']);
+        // Tag 211l: SGA (income statement) + Depreciation (cash flow) — unblocks
+        // beneish-m-score (Tag 209d) which needs SGA + Depreciation, and
+        // ohlson-o-score (Tag 210a) which needs OCF (already had). Field names
+        // verified live against NVDA: 'sellingGeneralAndAdministration' on
+        // annualFin and 'depreciationAndAmortization' on annualCash.
+        ftsAnnualSGA = _ftsExtractByYear(fts.annualFin, ['sellingGeneralAndAdministration', 'SellingGeneralAndAdministration']);
+        ftsAnnualDepreciation = _ftsExtractByYear(fts.annualCash, ['depreciationAndAmortization', 'depreciationAmortizationDepletion', 'DepreciationAndAmortization']);
         // Tag-90: Quarterly NetIncome (8-Quarter-Earnings-Stability)
         ftsQuarterlyNI = (fts.quarterlyFin || []).slice().reverse()
           .map(r => r && r.netIncome != null ? r.netIncome : null)
@@ -1218,7 +1253,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
             _cacheVersion: FTS_CACHE_VERSION,
             _ftsPartial: ftsPartial,
             cachedAt: new Date().toISOString(),
-            payload: { ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD, ftsQuarterlyNI }
+            payload: { ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD, ftsQuarterlyNI, ftsAnnualSGA, ftsAnnualDepreciation }
           }));
         } catch (e) {}
         if (ftsPartial) canonical._ftsPartial = true;
@@ -1270,6 +1305,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         canonical.annual.annualRnD = ftsAnnualRnD;
       }
       // else: keep canonical.annual.annualRnD as set by mapYahooToCanonical (quoteSummary).
+      // Tag 211l: annualSGA + annualDepreciation surfacing — only set if non-empty,
+      // mirrors the additive pattern used for annualSBC/annualCapex.
+      if ((ftsAnnualSGA || []).length > 0)          canonical.annual.annualSGA = ftsAnnualSGA;
+      if ((ftsAnnualDepreciation || []).length > 0) canonical.annual.annualDepreciation = ftsAnnualDepreciation;
       // Tag-90: quarterlyNI in timeseries
       canonical.timeseries.netIncomeQ = (ftsQuarterlyNI || []).map(v => ({ value: v }));
       if (ftsAnnual.annualGP.length > 0) canonical.annual.annualGP = ftsAnnual.annualGP;
