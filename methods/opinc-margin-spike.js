@@ -17,10 +17,21 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
-  const revT = revs[0] && revs[0].value;
-  const revT1 = revs[1] && revs[1].value;
-  const oiT = ois[0] && ois[0].value;
-  const oiT1 = ois[1] && ois[1].value;
+  // Tag 217g (audit F-217c-01 HIGH fix): use _unwrap helper to handle both
+  // {value:n} envelope and scalar shapes. Previously the bare `.value` read
+  // silently produced undefined when Yahoo upstream had ever normalized to
+  // raw numbers (which various code paths do — e.g. mapFTSToAnnual writes
+  // envelopes but some legacy paths write scalars).
+  const _unwrap = (v) => {
+    if (v == null) return null;
+    if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+    if (typeof v === 'object' && Number.isFinite(v.value)) return v.value;
+    return null;
+  };
+  const revT  = _unwrap(revs[0]);
+  const revT1 = _unwrap(revs[1]);
+  const oiT   = _unwrap(ois[0]);
+  const oiT1  = _unwrap(ois[1]);
   if (revT == null || revT1 == null || oiT == null || oiT1 == null || revT <= 0 || revT1 <= 0) {
     return H.buildResult({
       computable: false, reason: 'missing/zero values', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP

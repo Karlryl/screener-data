@@ -162,8 +162,9 @@ async function fetchNasdaqApiList() {
       for (const row of rows) {
         const rawSym = (row.symbol || row.Symbol || '').trim().toUpperCase();
         if (!rawSym) continue;
-        // Only plain US tickers (1–5 alphanumeric chars), allow class suffix like .A/.B
-        if (!/^[A-Z][A-Z0-9]{0,4}[A-Z]?$/.test(rawSym)) continue;
+        // Tag 217g (audit F-217a-01 HIGH fix): same class-share regex bug
+        // as sec-tickers.js — original regex rejected BRK.B / BF.B / BRK-B.
+        if (!/^[A-Z][A-Z0-9]{0,4}([.\-][A-Z])?$/.test(rawSym)) continue;
         if (JUNK_SUFFIX_RE.test(rawSym)) continue;
 
         const name     = (row.name || row.Name || row.companyName || '').trim();

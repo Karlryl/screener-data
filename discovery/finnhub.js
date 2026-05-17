@@ -92,6 +92,15 @@ async function fetchFinnhubUniverse() {
       console.log(`  [Finnhub] ${exchange}: ${data.length} entries, ${added} common stocks added`);
     } catch (e) {
       console.error(`  [Finnhub] ${exchange} failed: ` + e.message);
+      // Tag 217g (audit F-217a-03 HIGH fix): short-circuit after first 401.
+      // Without this, Run #107 cascaded 17 identical HTTP 401 errors (one
+      // per exchange) — each a 30s wasted attempt. If auth fails on the
+      // first exchange, every remaining call WILL also fail; bail out and
+      // let downstream pulls continue without burning the budget.
+      if (/HTTP 401/i.test(e.message)) {
+        console.error('  [Finnhub] HTTP 401 on first exchange — token invalid or missing; skipping remaining ' + (Object.keys(EXCHANGES).length - 1) + ' exchanges');
+        break;
+      }
     }
     await sleep(1100);
   }

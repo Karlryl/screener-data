@@ -1199,7 +1199,11 @@ const CLIENT_JS = `
       if (Number.isFinite(r.growth) && r.growth > 150) warnBadges.push('<span class="g-neg" style="font-size:9px;border:1px solid var(--red);padding:0 3px;margin-left:3px" title="Growth '+r.growth.toFixed(0)+'% — likely Q-spike">⚠ HighGr</span>');
       if (Number.isFinite(r.fcfMargin) && r.fcfMargin > 80) warnBadges.push('<span class="g-neg" style="font-size:9px;border:1px solid var(--red);padding:0 3px;margin-left:3px" title="FCFM '+r.fcfMargin.toFixed(0)+'% — one-time event tell">⚠ FCFM&gt;80%</span>');
       if (Number.isFinite(r.opMargin) && Number.isFinite(r.fcfMargin) && Math.abs(r.opMargin - r.fcfMargin) > 50) warnBadges.push('<span class="g-neg" style="font-size:9px;border:1px solid var(--red);padding:0 3px;margin-left:3px" title="|OpM-FCFM|='+Math.abs(r.opMargin-r.fcfMargin).toFixed(0)+'pp — phantom FCF">⚠ Margin-Div</span>');
-      const tkCell = r.ticker + warnBadges.join('');
+      // Tag 217g (audit F-217d-2 HIGH XSS-safety fix): R40 ticker cell was
+      // the only one in the file that skipped esc() on r.ticker. All current
+      // tickers happen to be metachar-free so the bug is latent, but
+      // consistency with every other tab is the right call.
+      const tkCell = esc(r.ticker) + warnBadges.join('');
       return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+tkCell+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td>'+bc(r40Html,'r40')+bc(growthHtml,'growth')+bc(fcfmHtml,'fcfMargin')+bc(opmHtml,'opMargin')+bc(gmHtml,'grossMargin')+'<td>'+stateP+'</td>'+bc(fmtM(r.mcap),'mcap')+trendCell(r,'R40')+'</tr>';
     }
     if (tab === 'PRE_BREAKOUT') {
@@ -1744,7 +1748,12 @@ const CLIENT_JS = `
     for (const h of hits) {
       const badge = h.hgClass && (h.hgClass.startsWith('REAL_HYPERGROWTH')) ? 'HG' :
                     (h.qcTier && h.qcTier !== 'REJECT' ? 'QC' : '');
-      html += '<div class="sr" data-tk="'+h.ticker+'"><strong>'+h.ticker+'</strong> '+h.name+(badge?'<span class="badge">'+badge+'</span>':'')+' <span class="badge">'+(h.hgScore!=null?'HG '+h.hgScore.toFixed(0):'')+(h.qcScore!=null?(h.hgScore!=null?' / ':'')+'QC '+h.qcScore.toFixed(0):'')+'</span></div>';
+      // Tag 217g (audit F-217d-1 HIGH XSS-safety fix): use esc() on ticker
+      // and name. 124+ stocks have '&' or "'" in name (Sun Hung Kai & Co.,
+      // AVIC Xi'an Aircraft, Goldwind Science&Technology) — without esc()
+      // they render visually broken ("&amp;") at best and could enable
+      // injection if Yahoo ever passes through angle brackets.
+      html += '<div class="sr" data-tk="'+esc(h.ticker)+'"><strong>'+esc(h.ticker)+'</strong> '+esc(h.name)+(badge?'<span class="badge">'+badge+'</span>':'')+' <span class="badge">'+(h.hgScore!=null?'HG '+h.hgScore.toFixed(0):'')+(h.qcScore!=null?(h.hgScore!=null?' / ':'')+'QC '+h.qcScore.toFixed(0):'')+'</span></div>';
     }
     searchResults.innerHTML = html || '<div class="sr">no results</div>';
     searchResults.classList.add('show');

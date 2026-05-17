@@ -10,6 +10,13 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+// Tag 217g (audit F-217a-02 HIGH fix): atomic writes for prices history.
+// pull-historical-prices.js writes prices/history.json which is the single
+// source of truth for backtest scripts and the dashboard's price-momentum
+// computation. A SIGTERM mid-write corrupts it; the existing recovery branch
+// (lines 60-75) refuses to run without RESET_HISTORY=1, which destroys
+// months of accumulated price history when triggered.
+const { writeFileAtomic } = require('./lib/atomic-write.js');
 let yf;
 try {
   const YF = require('yahoo-finance2').default;
@@ -156,8 +163,8 @@ async function main() {
     }
   }
 
-  fs.writeFileSync(path.join(args.out, `${today}.json`), JSON.stringify(todaysSnapshot, null, 2));
-  fs.writeFileSync(histPath, JSON.stringify(history, null, 2));
+  writeFileAtomic(path.join(args.out, `${today}.json`), JSON.stringify(todaysSnapshot, null, 2));
+  writeFileAtomic(histPath, JSON.stringify(history, null, 2));
   _log('INFO', `Done: ${ok}/${wl.stocks.length} ok, ${failed} failed`);
 }
 

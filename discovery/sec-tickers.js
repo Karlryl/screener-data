@@ -49,8 +49,13 @@ async function fetchSecTickers() {
       const cik = String(entry.cik_str || entry.cik || '').padStart(10, '0');
       if (!ticker) continue;
       if (/[\s\/\\]/.test(ticker)) continue;
-      // Only plain alphanumeric US tickers (1-6 chars), allow class suffix like .A, .B
-      if (!/^[A-Z][A-Z0-9]{0,4}[A-Z]?$/.test(ticker)) continue;
+      // Tag 217g (audit F-217a-01 HIGH fix): the original regex
+      // /^[A-Z][A-Z0-9]{0,4}[A-Z]?$/ rejects ALL class-share tickers
+      // despite the comment claiming "allow class suffix like .A, .B".
+      // BRK.B, BF.B, BRK-B all rejected → SEC's authoritative feed silently
+      // drops Berkshire-B and every other class-share variant. Fixed regex
+      // accepts both dot (BRK.B) and dash (BRK-B) class separators.
+      if (!/^[A-Z][A-Z0-9]{0,4}([.\-][A-Z])?$/.test(ticker)) continue;
       result.set(ticker, { ticker, name, cik, exchange: 'US', source: 'sec-edgar' });
     }
     console.log(`  [SEC] ${result.size} tickers loaded`);

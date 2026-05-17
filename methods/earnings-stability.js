@@ -16,10 +16,21 @@ const H = require('./_helpers.js');
 const ID = 'earnings-stability';
 const LABEL = 'Earnings-Stability';
 
+// Tag 217g (audit F-217b-01 HIGH fix): preserve positional year alignment.
+// The previous .filter(Number.isFinite) silently compacted arrays, so a
+// year with missing OpInc would make opInc[2] read as what was originally
+// opInc[3]. Downstream pair-iteration (i, i+1) then treated multi-year
+// gaps as one-year declines and false-failed QC compounders that had a
+// single missing-data year. Now: keep nulls in place, downstream code
+// must skip non-finite pairs explicitly.
 function _arrVals(stock, path) {
   const arr = H.val(stock, path);
   if (!Array.isArray(arr)) return [];
-  return arr.map(v => v == null ? null : (typeof v === 'number' ? v : v.value)).filter(v => Number.isFinite(v));
+  return arr.map(v => {
+    if (v == null) return null;
+    const n = (typeof v === 'number') ? v : v.value;
+    return Number.isFinite(n) ? n : null;
+  });
 }
 
 function evaluate(stock) {
@@ -29,20 +40,31 @@ function evaluate(stock) {
   const opInc = _arrVals(stock, 'annual.annualOpInc');
   const fcf = _arrVals(stock, 'annual.annualFCF');
 
-  if (opInc.length < 4 || fcf.length < 4) {
+  // Tag 217g: count OBSERVABLE (non-null) years, not array length.
+  // Arrays may contain nulls (positional alignment preserved per Tag 217g).
+  const oiObs = opInc.filter(v => v != null).length;
+  const fcfObs = fcf.filter(v => v != null).length;
+  if (oiObs < 4 || fcfObs < 4) {
     return H.buildResult({
       computable: false,
-      reason: `need >= 4 annual: opInc=${opInc.length}, fcf=${fcf.length}`
+      reason: `need >= 4 observable annual: opInc=${oiObs} (len ${opInc.length}), fcf=${fcfObs} (len ${fcf.length})`
     });
   }
 
   // Use up to 5 years
   const opIncWindow = opInc.slice(0, 5);
   const fcfWindow = fcf.slice(0, 5);
-  const oiPositive = opIncWindow.filter(v => v > 0).length;
-  const fcfPositive = fcfWindow.filter(v => v > 0).length;
-  const oiNeeded = Math.min(4, opIncWindow.length);
-  const fcfNeeded = Math.min(4, fcfWindow.length);
+  // Tag 217g: count positives + needed against NON-NULL entries only.
+  // Window arrays may now contain nulls (Tag 217g positional-alignment fix);
+  // 'needed' must be based on observable years, not array length, otherwise
+  // a 5-year window with 2 missing years gets oiNeeded=min(4,5)=4 vs
+  // oiPositive=3 (true positives out of 3 observable) → false fail.
+  const oiPositive = opIncWindow.filter(v => v != null && v > 0).length;
+  const fcfPositive = fcfWindow.filter(v => v != null && v > 0).length;
+  const oiObservable = opIncWindow.filter(v => v != null).length;
+  const fcfObservable = fcfWindow.filter(v => v != null).length;
+  const oiNeeded = Math.min(4, oiObservable);
+  const fcfNeeded = Math.min(4, fcfObservable);
 
   const reasons = [];
   let pass = true;
@@ -62,6 +84,12 @@ function evaluate(stock) {
   for (let i = 0; i < opIncWindow.length - 1; i++) {
     const newer = opIncWindow[i];
     const older = opIncWindow[i + 1];
+    // Tag 217g: skip pairs where either side is null (data missing year).
+    // Without this guard, `older > 0 && newer < older` evaluates to
+    // (null > 0)=false in JS — so null short-circuits naturally — but the
+    // intent is clearer with the explicit guard, and protects against
+    // hypothetical changes to comparison semantics.
+    if (newer == null || older == null) continue;
     if (older > 0 && newer < older) {
       const decline = (older - newer) / older;
       if (decline > maxDecline) {
@@ -83,7 +111,13 @@ function evaluate(stock) {
       // Recovery-test: OpInc[maxDeclineIdx-1] > OpInc[maxDeclineIdx] * 1.2 (year after decline must recover)
       const declined = opIncWindow[maxDeclineIdx];
       const next = opIncWindow[maxDeclineIdx - 1];  // newer than declined
-      if (!(next > declined * 1.2)) {
+      // Tag 217g: null-guard. Without this, `next > X` is null > X = false
+      // and we false-fail. If the recovery year is missing data, we can't
+      // judge recovery — emit a clear reason instead.
+      if (next == null) {
+        pass = false;
+        reasons.push(`decline ${(maxDecline*100).toFixed(0)}% (30-50% range) — recovery year missing data, cannot verify`);
+      } else if (!(next > declined * 1.2)) {
         pass = false;
         reasons.push(`decline ${(maxDecline*100).toFixed(0)}% (30-50% range) without recovery (next=${(next/1e9).toFixed(1)}B vs ${(declined*1.2/1e9).toFixed(1)}B required)`);
       }

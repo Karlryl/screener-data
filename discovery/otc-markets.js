@@ -145,8 +145,10 @@ async function fetchOTCMarkets() {
         const rawSym = row.symbol || row.ticker || row.Symbol || row.tickerSymbol || '';
         const sym = rawSym.trim().toUpperCase();
         if (!sym) continue;
-        // Only plain alphabetic US OTC tickers (1–5 chars), allow class suffix .A/.B
-        if (!/^[A-Z][A-Z0-9]{0,4}[A-Z]?$/.test(sym)) continue;
+        // Tag 217g (audit F-217a-01 HIGH fix): same class-share regex bug
+        // as sec-tickers.js / nasdaq-api.js — original regex rejected
+        // BRK.B / BF.B / BRK-B despite the comment claiming to allow them.
+        if (!/^[A-Z][A-Z0-9]{0,4}([.\-][A-Z])?$/.test(sym)) continue;
         if (JUNK_SUFFIX_RE.test(sym)) continue;
 
         const name = (row.companyName || row.name || row.CompanyName || '').trim();
