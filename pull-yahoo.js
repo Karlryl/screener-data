@@ -1217,6 +1217,56 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     } catch { return null; }
   }
 
+  // Tag 226a-2: detect snapshots that pre-date Tag 211l (annualSGA /
+  // annualDepreciation / currentAssets / currentLiabilities / totalLiabilities)
+  // or Tag 219 (annualShares). The price-only fast-path keeps a snapshot
+  // young (<7d) indefinitely by refreshing meta.asOf without touching the
+  // annual.* block — so a stock pulled before these tags would NEVER pick
+  // them up unless we force a full pull on schema detection.
+  //
+  // Cost: one ~50KB JSON.parse per ticker (only on the snapshots that pass
+  // the age gate, so ~3500 reads). Probe Tag 225d showed 0/100 random
+  // snapshots had Tag 211l fields → roughly 98% of the universe will trip
+  // this once, then settle into normal price-only cadence on subsequent runs.
+  //
+  // Constraint: must NOT bump FTS_CACHE_VERSION (per pull-yahoo invariants
+  // — many fundamentals caches are <28d old and rebuilding them all would
+  // multiply this run's Yahoo load). Instead: snapshot-level schema gate
+  // here forces the full-pull code path, which then sees the stale FTS
+  // cache lacks ftsAnnualSGA and falls through to a fresh FTS fetch via
+  // the existing `cached._cacheVersion !== FTS_CACHE_VERSION` branch (the
+  // cache file's _cacheVersion is `undefined` for pre-Tag-211l caches, so
+  // that branch already handles the FTS-cache side correctly).
+  function _existingSnapshotMissingTag211lFields(ticker) {
+    try {
+      const fp = path.join(outputDir, safeSnapshotFilename(ticker));
+      if (!fs.existsSync(fp)) return false;
+      const raw = fs.readFileSync(fp, 'utf8');
+      const s = JSON.parse(raw);
+      const A = s && s.annual;
+      if (!A) return false;
+      // If the snapshot has no annualRev at all, it's a price-only seed
+      // (no fundamentals yet). Don't force full-pull just to add Tag 211l
+      // fields — the full-pull path will eventually run via normal age
+      // expiry. We only care about snapshots that DO have annual data but
+      // are missing the newer fields.
+      const hasRev = Array.isArray(A.annualRev) && A.annualRev.length > 0;
+      if (!hasRev) return false;
+      // Tag 211l fields: annualSGA, annualDepreciation, and the extended
+      // balance-sheet rows (currentAssets/currentLiabilities/totalLiabilities).
+      const hasSGA = Array.isArray(A.annualSGA) && A.annualSGA.length > 0;
+      const hasDepr = Array.isArray(A.annualDepreciation) && A.annualDepreciation.length > 0;
+      const bal = A.annualBalance;
+      const hasCA = Array.isArray(bal) && bal[0] && Number.isFinite(bal[0].currentAssets);
+      // A snapshot is "stale-schema" if it lacks EITHER SGA/Depr OR the
+      // extended balance fields. We use AND on the balance row + OR with
+      // the income/cash items to avoid false-positives on companies that
+      // legitimately have null SGA (some financial filers) but DO have
+      // current-asset data persisted.
+      return !(hasSGA || hasDepr) || !hasCA;
+    } catch { return false; }
+  }
+
   // Tag 166: lightweight price-only update — preserves fundamentals from previous snapshot
   async function _priceOnlyUpdate(stock, outputDir) {
     const fp = path.join(outputDir, safeSnapshotFilename(stock.ticker));
@@ -1288,8 +1338,16 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
 
     try {
       // Tag 166: price-only fast-path if recent snapshot exists
+      // Tag 226a-2: but ONLY if the snapshot already carries the Tag 211l
+      // schema (annualSGA / annualDepreciation / extended balance fields).
+      // Pre-Tag-211l snapshots that pass the 7-day age gate would otherwise
+      // be price-only-refreshed forever, keeping methods/sga-revenue-trend,
+      // working-capital-trend, and ohlson-o-score at <2% coverage indefinitely.
       const age = _getExistingSnapshotAge(stock.ticker);
-      if (age != null && age < FUNDAMENTALS_MAX_AGE_MS) {
+      const staleSchema = (age != null && age < FUNDAMENTALS_MAX_AGE_MS)
+        ? _existingSnapshotMissingTag211lFields(stock.ticker)
+        : false;
+      if (age != null && age < FUNDAMENTALS_MAX_AGE_MS && !staleSchema) {
         try {
           const r = await _priceOnlyUpdate(stock, outputDir);
           results.push(r);
@@ -1299,6 +1357,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           _log('WARN', `  price-only failed for ${stock.ticker}, falling through to full pull: ${e.message}`);
           // fall through to full pull below
         }
+      } else if (staleSchema) {
+        _log('INFO', `  ${stock.ticker} [schema-stale]: forcing full pull to backfill Tag 211l fields`);
       }
 
       _log('INFO', `Pulling ${stock.ticker} (${stock.yahoo_symbol})…`);
