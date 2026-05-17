@@ -53,7 +53,17 @@ async function main() {
   const today = process.env.RUN_DATE_UTC || new Date().toISOString().slice(0, 10);
   const outFile = path.join(args.out, `${today}.json`);
 
-  const fileList = fs.readdirSync(args.snapshots).filter(f => f.endsWith('.json') && f !== '_manifest.json');
+  // Tag 227c-1 (audit F-227c-01 HIGH fix): exclude ALL '_*' files, not just
+  // _manifest.json. snapshots/ contains '_manifest.json' AND '_manifest-full.json'
+  // (introduced by pull-yahoo). The pre-Tag 220 substring-match here let
+  // _manifest-full.json through, so Runner.evaluateStock({pulled_at,...}) ran on
+  // it and the resulting fake "_manifest-full" ticker was written to every
+  // methods-history vintage since 2026-05-14 — confirmed in 2026-05-14.json and
+  // 2026-05-15.json. Polluted history feeds method-effectiveness analytics with
+  // a no-price-data ghost ticker. Mirror generate-modes-report.js's Tag 220 fix
+  // (F-GR-002 HIGH): startsWith('_') is the canonical exclusion rule because
+  // pull-yahoo never writes a stock snapshot starting with '_'.
+  const fileList = fs.readdirSync(args.snapshots).filter(f => f.endsWith('.json') && !f.startsWith('_'));
   const data = { date: today, stocks: {} };
   let allPass = 0, anyComputable = 0;
 
