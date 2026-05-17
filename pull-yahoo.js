@@ -57,7 +57,14 @@ try {
 // Tag 147: yf-queue concurrency now reads PULL_CONCURRENCY env (same as outer batch).
 // Hard-coding 8 made PULL_CONCURRENCY=20 a no-op for actual HTTP parallelism.
 const _YF_CONC = parseInt(process.env.PULL_CONCURRENCY || '10', 10);
-const yf = new YahooFinance({ suppressNotices: ['yahooSurvey'], queue: { concurrency: _YF_CONC } });
+// Tag 211c: silence yahoo-finance2 schema-validation logging (see
+// refresh-universe.js for full rationale). Constructor-level option since
+// yahoo-finance2 v3.14.x does not expose setGlobalConfig.
+const yf = new YahooFinance({
+  suppressNotices: ['yahooSurvey'],
+  queue: { concurrency: _YF_CONC },
+  validation: { logErrors: false, logOptionsErrors: false }
+});
 
 // Tag 166: Frequenztrennung — price-only mode for recent snapshots.
 // Tickers with existing snapshot < FUNDAMENTALS_MAX_AGE_DAYS get a cheap yf.quote()

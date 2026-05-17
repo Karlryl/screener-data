@@ -12,7 +12,12 @@ const { writeFileAtomic } = require('../lib/atomic-write.js');
 let YahooFinance = null;
 try { YahooFinance = require('yahoo-finance2').default; }
 catch (e) { try { YahooFinance = require('/tmp/node_modules/yahoo-finance2').default; } catch (e2) {} }
-const yf = YahooFinance ? new YahooFinance({ suppressNotices: ['yahooSurvey'] }) : null;
+// Tag 211c: silence yahoo-finance2 schema-validation logging (see
+// refresh-universe.js for full rationale).
+const yf = YahooFinance ? new YahooFinance({
+  suppressNotices: ['yahooSurvey'],
+  validation: { logErrors: false, logOptionsErrors: false }
+}) : null;
 
 // F-DP-009: Expanded currency list — added PLN, TRY, THB, IDR, MYR, PHP, VND, CZK,
 // HUF, RON, AED, SAR, QAR, ILS, ZAR (already present) and other international currencies.

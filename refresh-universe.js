@@ -23,7 +23,22 @@ const { writeFileAtomic } = require('./lib/atomic-write.js');
 let yf;
 try {
   const YF = require('yahoo-finance2').default;
-  yf = (typeof YF === 'function') ? new YF({ suppressNotices: ['yahooSurvey'] }) : YF;
+  // Tag 211c: silence yahoo-finance2 schema-validation logging.
+  // Yahoo periodically adds new response fields (e.g. impliedSharesOutstanding
+  // in May 2026); the library validates strictly and logs the ENTIRE failing
+  // payload via console.log BEFORE throwing. On the screener() endpoint that
+  // produced ~50MB of log spam per run, masking real errors (Run #104-#105
+  // diagnosis required downloading 130MB+ logs). validation.logErrors=false
+  // suppresses the noisy logger; our existing try/catch around yf.screener
+  // still converts the throw into an empty-quotes return so coverage is
+  // unaffected. Constructor-level option (setGlobalConfig is not exposed in
+  // yahoo-finance2 v3.14.x — only constructor options work).
+  yf = (typeof YF === 'function')
+    ? new YF({
+        suppressNotices: ['yahooSurvey'],
+        validation: { logErrors: false, logOptionsErrors: false }
+      })
+    : YF;
 }
 catch (e) { console.error('yahoo-finance2 nicht installiert'); process.exit(1); }
 
