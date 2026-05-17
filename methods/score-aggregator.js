@@ -163,8 +163,16 @@ const SOFT_GUARD_PENALTY = {
   'revenue-shock-guard': 7, // Tag 120d: Single-Q-Revenue-Sprung sieht oft wie Shock aus bei True-Hypergrowth (NVDA)
   'quarter-concentration-guard': 6, // Single-Q-Dominanz oft normal bei Discontinuity
   'asset-growth-divergence': 8,     // M&A-Compounder triggern das fälschlich
-  'working-capital-anomaly': 6      // Seasonal-Effekt oft normal
+  'working-capital-anomaly': 6,     // Seasonal-Effekt oft normal
+  // Tag 229d (audit F-227c-03 MEDIUM fix): net-debt-ebitda is the TURNAROUND
+  // soft-guard (strategy-modes.js:143) and was missing here, silently relying
+  // on the `|| 5` fallback. Pinned explicitly at 5 — identical effective
+  // behavior, but the registry is now self-documenting and fixture-hash safe.
+  'net-debt-ebitda': 5
 };
+
+// Tag 229d: track soft-guards we have warned about (one warn per process)
+const _warnedMissingSoftGuard = Object.create(null);
 
 function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, dataQuality) {
   var weights = SCORE_WEIGHTS[modeId];
@@ -233,7 +241,20 @@ function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, data
   if (Array.isArray(failedSoftGuards)) {
     for (var i = 0; i < failedSoftGuards.length; i++) {
       var sgId = failedSoftGuards[i];
-      softGuardPenalty += SOFT_GUARD_PENALTY[sgId] || 5;
+      // Tag 229d (audit F-227c-03 MEDIUM fix): explicit lookup with one-shot
+      // warn on missing registration. The previous `|| 5` quietly swallowed
+      // typo'd guard IDs AND a hypothetical guard explicitly weighted 0.
+      // Now: unmapped guards still get 5 (no behavior change) but emit a
+      // diagnostic log so registration drift surfaces in CI logs.
+      var p = SOFT_GUARD_PENALTY[sgId];
+      if (p == null) {
+        if (!_warnedMissingSoftGuard[sgId]) {
+          console.warn('[score-aggregator] soft-guard ' + sgId + ' has no penalty mapping; using default 5');
+          _warnedMissingSoftGuard[sgId] = true;
+        }
+        p = 5;
+      }
+      softGuardPenalty += p;
     }
   }
   var score = Math.max(0, baseScore - softGuardPenalty);
