@@ -71,7 +71,27 @@ async function main() {
       existing = prev.rates || existing;
       existingMeta = prev.currencyMeta || {};
       existingFetchedAt = prev.fetchedAt || null;
-    } catch (e) {}
+    } catch (e) {
+      // Tag 229c-3: previously `catch (e) {}` silently swallowed JSON parse
+      // errors. On a corrupt fx-rates.json (truncated write, mid-IO crash on
+      // the prior run, manual edit gone wrong), the script would proceed
+      // with empty existingMeta — wiping every currency's lastSuccessAt and
+      // resetting the per-currency staleness clock. The next pull-yahoo run
+      // would then trust live rates that look fresh (because pull-yahoo
+      // reads currencyMeta from the file we just wrote) when actually
+      // EVERY rate that failed today has been silently downgraded to "no
+      // historical success at all". Per-currency stale-detection
+      // (pull-yahoo loadFx F-DP-051) goes blind.
+      //
+      // Fix: emit GitHub-Actions error annotation + back up the corrupt file
+      // for forensics. We still proceed (fresh rates are better than no
+      // rates) but the operator sees a loud signal in CI logs and can
+      // restore the backup or refresh from git history.
+      const backup = outPath + '.corrupt.' + Date.now();
+      try { fs.copyFileSync(outPath, backup); } catch (_) {}
+      console.error('::error::fx-rates.json is corrupt (' + e.message +
+        '). Backup at ' + backup + '. Per-currency staleness history is being rebuilt from this run only.');
+    }
   }
   const rates = Object.assign({ USD: 1.0 }, existing);
   const currencyMeta = Object.assign({}, existingMeta);
