@@ -167,6 +167,37 @@ function evaluate(stock) {
     });
   }
 
+  // Tag 211 (Tag 209 audit MEDIUM fix): require at least 3 of 4 dimensions
+  // observable before emitting a pass/fail verdict. The pass threshold is
+  // score >= 75 (= 3 of 4 dims clear), so with only 2 dims the scaled
+  // arithmetic can land at 0 / 50 / 100 — those numbers are misleading
+  // because 50 looks like "half-bad capital allocation" when actually we
+  // simply lack signal on the other half. Return computable:false here
+  // instead, with a clear reason. Preserves the composite for ALAB-like
+  // post-IPO names (which often have all 4 dims) while protecting the
+  // signal on names with sparse buyback or capex history.
+  if (computableDimensions < 3) {
+    const observed = [];
+    if (buybackContribution !== null) observed.push('buyback');
+    if (debtContribution    !== null) observed.push('debt');
+    if (capexContribution   !== null) observed.push('capex');
+    if (sbcContribution     !== null) observed.push('sbc');
+    return H.buildResult({
+      computable: false,
+      reason: 'only ' + computableDimensions + '/4 capital-allocation dimensions observable ([' +
+              observed.join(', ') + ']) — need at least 3 of 4 for a reliable composite verdict',
+      components: {
+        buybackContribution, debtContribution, capexContribution, sbcContribution,
+        computableDimensions,
+        buybackYieldPct:    buybackR.computable ? buybackR.value : null,
+        netDebtEbitdaRatio: debtR.computable    ? debtR.value    : null,
+        capexTrendPass:     capexR.computable   ? capexR.pass    : null,
+        sbcRevenueFrac:     sbcR.computable     ? sbcR.value     : null
+      },
+      threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    });
+  }
+
   // Sum earned points, then scale to 0..100 based on dimensions observed.
   // E.g. 2/4 dimensions computable, both pass: 50 raw → 50 * (4/2) = 100.
   // E.g. 3/4 dimensions computable, 2 pass: 50 raw → 50 * (4/3) ≈ 66.67.

@@ -1345,9 +1345,12 @@ test('Tag 209c Cap-Alloc-Quality: FAIL — buyback champion levering up (score<7
   }
 });
 
-test('Tag 209c Cap-Alloc-Quality: PARTIAL — only 2 dims computable, scaled correctly', () => {
-  // No share-count (buyback incomputable), no 4y rev/capex (capex incomputable).
-  // Debt: 5/12=0.42→pass. SBC: 0.3/10=3%→pass. Raw=50, scaled=50*(4/2)=100→pass.
+test('Tag 211 Cap-Alloc-Quality: <3 dims observable → computable=false (audit MEDIUM fix)', () => {
+  // Tag 209 bug-hunt MEDIUM finding: 2/4-dim "scaled" score was misleading.
+  // The pass threshold is 3-of-4 dims clear, so scoring on 2 dims could land
+  // at 0/50/100 — a 50 looked like "half-bad" when really half the signal is
+  // missing. New behavior: require ≥3 dims observable; under that, emit a
+  // clean computable=false instead of a deceptive pass/fail verdict.
   const s = {
     annual: {
       annualRev:    [{value: 10e9}],
@@ -1357,16 +1360,36 @@ test('Tag 209c Cap-Alloc-Quality: PARTIAL — only 2 dims computable, scaled cor
     }
   };
   const r = Runner.evaluateStock(s)['capital-allocation-quality'];
-  if (!r.computable) throw new Error('should be computable (2/4 dims observable), reason=' + r.reason);
+  if (r.computable) throw new Error('should be computable=false with only 2/4 dims');
   if (r.components.computableDimensions !== 2) {
     throw new Error('expected 2 dims observed, got ' + r.components.computableDimensions);
   }
-  if (r.components.buybackContribution !== null) throw new Error('buyback should be skipped');
-  if (r.components.capexContribution !== null) throw new Error('capex should be skipped');
-  if (r.components.debtContribution !== 25) throw new Error('debt should pass');
-  if (r.components.sbcContribution !== 25) throw new Error('sbc should pass');
-  if (r.value !== 100) throw new Error('expected scaled score=100, got ' + r.value);
-  if (!r.pass) throw new Error('2/2 passing dims should clear 75 threshold after scaling');
+  if (!/only 2\/4/.test(r.reason)) {
+    throw new Error('reason should explain 2/4 dim shortfall, got: ' + r.reason);
+  }
+  // Sub-method diagnostic values must still be surfaced for downstream consumers.
+  if (r.components.netDebtEbitdaRatio == null) {
+    throw new Error('debt ratio should still surface even when composite is incomputable');
+  }
+});
+
+test('Tag 211 Cap-Alloc-Quality: 3 dims observable → still computable', () => {
+  // Boundary check for the audit fix: 3 of 4 dims is the new minimum.
+  // Adds 4y rev+capex so capex-trend becomes computable; buyback still skipped.
+  const s = {
+    annual: {
+      annualRev:    [{value: 10e9}, {value: 9e9}, {value: 8e9}, {value: 7e9}],
+      annualOpInc:  [{value: 10e9}],
+      annualSBC:    [{value: 0.3e9}],
+      annualCapex:  [{value: -0.5e9}, {value: -0.5e9}, {value: -0.5e9}, {value: -0.5e9}],
+      annualBalance:[{totalDebt: 5e9, totalCash: 0, totalAssets: 100e9}]
+    }
+  };
+  const r = Runner.evaluateStock(s)['capital-allocation-quality'];
+  if (!r.computable) throw new Error('3/4 dims should be computable, reason=' + r.reason);
+  if (r.components.computableDimensions !== 3) {
+    throw new Error('expected 3 dims observed, got ' + r.components.computableDimensions);
+  }
 });
 
 // ─── Tag 210a — ohlson-o-score (logit bankruptcy probability) smoke tests ───

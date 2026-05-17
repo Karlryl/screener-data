@@ -141,7 +141,31 @@ function evaluate(stock) {
     p50Source = mLookup.source + '(median-fallback)';
   }
 
-  if (p50 == null || p75Lookup.value == null) {
+  // Tag 211 (Tag 209 audit HIGH fix): when the auto-medians file pre-dates
+  // Tag 209b it has p50 (median) but no p75. Rather than returning
+  // computable:false universally — which leaves the method dead for one
+  // full daily-pull cycle until sector-medians-compute regenerates — fall
+  // back to a degraded ranking that uses only p50:
+  //     rank = 0    if roic <= 0
+  //            25   if roic < p50 * 0.5
+  //            50   if roic < p50
+  //            75   if roic >= p50    (cannot distinguish 75 vs 90/100)
+  // The top-quartile signal is weaker (we can't separate p75 from p90/100),
+  // but the method becomes useful immediately and the pass gate (rank>=75)
+  // still fires for any stock above sector median. Marked as degraded in
+  // components so consumers can detect the lower confidence.
+  let p75 = p75Lookup.value;
+  let p75Source = p75Lookup.source;
+  let degraded = false;
+  if (p75 == null && p50 != null && p50 > 0) {
+    // Synthetic p75 = p50 (so rank>=75 fires when roic>=p50). Conservative:
+    // it never inflates the rank above 75 except at the 100 ceiling.
+    p75 = p50;
+    p75Source = (p50Source || '') + '(p75-degraded)';
+    degraded = true;
+  }
+
+  if (p50 == null || p75 == null) {
     return H.buildResult({
       value: roicValue,
       computable: false,
@@ -154,13 +178,13 @@ function evaluate(stock) {
   }
 
   // --- 4. Rank within sector ---
-  const rank = _rankRoic(roicValue, p50, p75Lookup.value);
+  const rank = _rankRoic(roicValue, p50, p75);
   if (rank == null) {
     return H.buildResult({
       value: roicValue,
       computable: false,
       reason: 'sector ROIC distribution degenerate (p50 <= 0) for ' + sp.id,
-      components: { roicValue, subProfile: sp.id, sectorP50: p50, sectorP75: p75Lookup.value },
+      components: { roicValue, subProfile: sp.id, sectorP50: p50, sectorP75: p75 },
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
@@ -173,15 +197,18 @@ function evaluate(stock) {
     components: {
       roicValue,
       sectorP50: p50,
-      sectorP75: p75Lookup.value,
+      sectorP75: p75,
       sectorRank: rank,
       subProfile: sp.id,
       sectorN: p75Lookup.n,
-      thresholdSource: p75Lookup.source
+      thresholdSource: p75Source,
+      degraded
     },
     reason: 'ROIC ' + (roicValue * 100).toFixed(1) + '% vs ' + sp.id +
-            ' p50=' + (p50 * 100).toFixed(1) + '% p75=' + (p75Lookup.value * 100).toFixed(1) +
-            '% (n=' + p75Lookup.n + ') → rank=' + rank + (pass ? ' ✓ top-quartile' : ''),
+            ' p50=' + (p50 * 100).toFixed(1) + '% p75=' + (p75 * 100).toFixed(1) +
+            '% (n=' + (p75Lookup.n || '?') + ') → rank=' + rank +
+            (degraded ? ' [degraded: no p75]' : '') +
+            (pass ? ' ✓ top-quartile' : ''),
     threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
   });
 }
