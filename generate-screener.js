@@ -2407,8 +2407,31 @@ const CLIENT_JS = `
       else x.removeAttribute('aria-current');
     });
     kbdActiveIdx = -1;  // reset row cursor on tab change
+    // Tag 231b-6: persist last-viewed tab so a page reload restores the user's
+    // workflow context instead of dumping them back on HG. Skip if storage
+    // blocked (private mode / file:// w/ restrictions).
+    try { localStorage.setItem('screener_last_tab', tabKey); } catch (e) { /* ignore */ }
     renderTable();
   }
+  // Tag 231b-6: restore last-viewed tab from localStorage. Runs once at init,
+  // before the initial renderTable() call. Falls back to default HG if the
+  // stored tab no longer exists (snapshot dropped to zero, or someone
+  // hand-edited storage).
+  (function restoreLastTab(){
+    try {
+      const saved = localStorage.getItem('screener_last_tab');
+      if (saved && (TABS[saved] || saved === 'SECTOR')) {
+        activeTab = saved;
+        document.querySelectorAll('.tabs button').forEach(x => {
+          const on = x.dataset.tab === saved;
+          x.classList.toggle('active', on);
+          x.setAttribute('aria-selected', on ? 'true' : 'false');
+          if (on) x.setAttribute('aria-current', 'page');
+          else x.removeAttribute('aria-current');
+        });
+      }
+    } catch (e) { /* localStorage blocked — stay on default */ }
+  })();
   document.querySelectorAll('.tabs button').forEach(b => {
     b.onclick = () => switchToTab(b.dataset.tab);
   });
