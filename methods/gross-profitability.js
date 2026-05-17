@@ -22,6 +22,15 @@
  * preserved (per fixture_hash_invariant.md). Surfaces in detail-modal /
  * percentile views; future tag can promote into composite if desired.
  *
+ * Promotion-gate status (Tag 224b, 2026-05-17):
+ *   Tag 221b sec 4.1 listed gross-profitability as a SCORE_WEIGHTS promotion
+ *   candidate (10/10 anchors pass the 0.20 floor). The Tag 224b promotion
+ *   workflow applied a stricter margin gate (value > 0.30 on ALL anchors)
+ *   before accepting the fixture-hash change. AVGO at 0.253 is below 0.30,
+ *   so promotion was SKIPPED to preserve anchor safety. Re-evaluate after
+ *   AVGO's next earnings cycle (broadcast GP/TA expected to climb post-VMW).
+ *   Threshold 0.20 stays valid; only the SCORE_WEIGHTS bump is deferred.
+ *
  * Threshold rationale:
  *   - Novy-Marx 2013 ("The Other Side of Value") established that top-decile
  *     GP/TA names earn material premia.

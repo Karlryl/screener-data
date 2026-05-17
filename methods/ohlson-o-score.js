@@ -43,25 +43,24 @@
  *   This simplification is documented in the components so a future refactor
  *   can promote to a real CPI series without changing the calling contract.
  *
- * Why DIAGNOSTIC (not DATAGUARD) — same reasoning as beneish-m-score:
- *   1. DATA AVAILABILITY: Snapshot's annualBalance only carries
- *      {totalCash, totalDebt, totalAssets} — missing currentAssets,
- *      currentLiabilities, totalLiabilities, working-capital line.
- *      annualOCF (FFO proxy) is absent. The full 9-variable computation
- *      therefore returns computable=false for ~all current snapshots.
- *   2. ANCHOR SAFETY: Without computable inputs, we cannot demonstrate
- *      NVDA/MSFT/COST/CRDO/PLTR all yield O < 0. Per fixture_hash_invariant.md,
- *      anchor-unverified models stay DIAGNOSTIC.
- *   3. FIXTURE-HASH INVARIANT: Not in SCORE_WEIGHTS → hash-safe.
+ * Promotion history:
+ *   - Tag 210a (introduced as DIAGNOSTIC): documented promotion path required
+ *     pull-yahoo to persist CA/CL/totalLiab/OCF and anchor verification.
+ *   - Tag 224b (promoted DIAGNOSTIC -> DATAGUARD, 2026-05-17): Tag 221b §4.2
+ *     audit confirmed 9/10 anchors computable with massive moat: every passing
+ *     anchor sits at O <= -7.05 (MELI worst case) vs the O > 0 hard-fail
+ *     boundary — roughly a 7-sigma margin, far stronger than the promotion-gate
+ *     P < 0.1 (O < -2.2). GOOG remains NC and is treated as neutral per the
+ *     DATAGUARD convention (computable=false ⇒ no hard-fail). Promotion does
+ *     NOT modify SCORE_WEIGHTS, so fixture-hash is preserved.
  *
- * Promotion path (future tag, e.g. 220+):
- *   a. Extend pull-yahoo to persist annualBalance[].currentAssets,
- *      currentLiabilities, totalLiabilities + annual.annualOCF[].
- *   b. Optionally add a CPI/GNP-deflator timeseries to the snapshot meta.
- *   c. Backfill snapshots for the anchor universe.
- *   d. Verify all anchors achieve P(bankruptcy) < 0.1 (well under the
- *      0.5 hard gate) with the full 9-variable model.
- *   e. Flip to DATAGUARD; add an `ohlsonFail` badge in generate-screener.js.
+ * Why DATAGUARD-with-loose-threshold works here:
+ *   The O > 0 ⇔ P(bankruptcy) > 50% boundary is intentionally LOOSE — anchors
+ *   leave a 7-sigma moat, so it never bites mature compounders. The gate exists
+ *   to catch genuine distress names (FTX-style) that score O > 0 outright.
+ *   Tightening to Begley 1996 (P > 0.038, O > -3.23) remains an option; current
+ *   anchors would still pass (worst O = -7.05) but would surface mid-distress
+ *   names that the 0.5 boundary lets through.
  *
  * Reference:
  *   Ohlson, J. A. (1980). "Financial Ratios and the Probabilistic Prediction
