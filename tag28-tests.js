@@ -2100,6 +2100,129 @@ test('Tag 215d WC-Trend: NOT-COMPUTABLE without currentAssets (pre-Tag-211l snap
   if (r.computable) throw new Error('should be incomputable without currentAssets');
 });
 
+// ─── Tag 223a — analyst-upside (sell-side consensus soft signal) smoke tests ───
+
+test('Tag 223a analyst-upside: PASS — 20% upside, 12 analysts (>= 10% floor)', () => {
+  // Current $100, target $120 → upside +20%. Analyst count 12 >= 3.
+  const s = {
+    meta: { ticker: 'AU-PASS', regularMarketPrice: 100 },
+    metrics: {
+      targetMedianPrice:       { value: 120 },
+      numberOfAnalystOpinions: { value: 12 }
+    }
+  };
+  const r = Runner.evaluateStock(s)['analyst-upside'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (!r.pass) throw new Error('20% upside must pass; value=' + r.value);
+  if (!approx(r.value, 0.20, 0.001)) throw new Error('expected ~0.20; got ' + r.value);
+});
+
+test('Tag 223a analyst-upside: FAIL — 3% upside (below 10% floor)', () => {
+  const s = {
+    meta: { ticker: 'AU-FAIL', regularMarketPrice: 100 },
+    metrics: {
+      targetMedianPrice:       { value: 103 },
+      numberOfAnalystOpinions: { value: 8 }
+    }
+  };
+  const r = Runner.evaluateStock(s)['analyst-upside'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (r.pass) throw new Error('3% upside must fail; value=' + r.value);
+  if (!approx(r.value, 0.03, 0.001)) throw new Error('expected ~0.03; got ' + r.value);
+});
+
+test('Tag 223a analyst-upside: NOT-COMPUTABLE — only 2 analysts (below MIN_ANALYSTS=3)', () => {
+  const s = {
+    meta: { ticker: 'AU-THIN', regularMarketPrice: 100 },
+    metrics: {
+      targetMedianPrice:       { value: 150 },
+      numberOfAnalystOpinions: { value: 2 }
+    }
+  };
+  const r = Runner.evaluateStock(s)['analyst-upside'];
+  if (r.computable) throw new Error('coverage < 3 analysts should be incomputable');
+  if (!/analyst coverage too thin/.test(r.reason)) throw new Error('expected thin-coverage reason; got: ' + r.reason);
+});
+
+// ─── Tag 223a — earnings-surprise-momentum (PEAD) smoke tests ───
+
+test('Tag 223a earnings-surprise-momentum: PASS — 4 of 4 beats with 6% mean', () => {
+  // 4 quarters all positive surprises, mean = 6% — passes breadth (4>=3) and magnitude (6>=3).
+  const s = {
+    external: { earningsHistory: [
+      { quarter: '2025-06-30', surprisePercent: 4,  epsActual: 1.04, epsEstimate: 1.0 },
+      { quarter: '2025-09-30', surprisePercent: 6,  epsActual: 1.06, epsEstimate: 1.0 },
+      { quarter: '2025-12-31', surprisePercent: 7,  epsActual: 1.07, epsEstimate: 1.0 },
+      { quarter: '2026-03-31', surprisePercent: 7,  epsActual: 1.07, epsEstimate: 1.0 }
+    ]}
+  };
+  const r = Runner.evaluateStock(s)['earnings-surprise-momentum'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (!r.pass) throw new Error('4 beats + 6% mean must pass; components=' + JSON.stringify(r.components));
+  if (r.components.positiveCount !== 4) throw new Error('expected positiveCount=4; got ' + r.components.positiveCount);
+});
+
+test('Tag 223a earnings-surprise-momentum: FAIL — only 2 of 4 positive', () => {
+  // Two beats, two misses — fails breadth (2 < 3) even though mean might be positive.
+  const s = {
+    external: { earningsHistory: [
+      { quarter: '2025-06-30', surprisePercent: -5, epsActual: 0.95, epsEstimate: 1.0 },
+      { quarter: '2025-09-30', surprisePercent: 8,  epsActual: 1.08, epsEstimate: 1.0 },
+      { quarter: '2025-12-31', surprisePercent: -3, epsActual: 0.97, epsEstimate: 1.0 },
+      { quarter: '2026-03-31', surprisePercent: 6,  epsActual: 1.06, epsEstimate: 1.0 }
+    ]}
+  };
+  const r = Runner.evaluateStock(s)['earnings-surprise-momentum'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (r.pass) throw new Error('2 of 4 beats must fail breadth; got pass; components=' + JSON.stringify(r.components));
+  if (r.components.positiveCount !== 2) throw new Error('expected positiveCount=2; got ' + r.components.positiveCount);
+});
+
+test('Tag 223a earnings-surprise-momentum: NOT-COMPUTABLE without earningsHistory', () => {
+  const s = { external: {} };
+  const r = Runner.evaluateStock(s)['earnings-surprise-momentum'];
+  if (r.computable) throw new Error('absent earningsHistory should be incomputable');
+  if (!/no earningsHistory/.test(r.reason)) throw new Error('expected no-earningsHistory reason; got: ' + r.reason);
+});
+
+// ─── Tag 223a — institutional-density (Yahoo broad-holders) smoke tests ───
+
+test('Tag 223a institutional-density: PASS — 72% institutional ownership', () => {
+  const s = {
+    meta: {
+      ticker: 'ID-PASS',
+      institutionsPercentHeld: 0.72,
+      institutionsCount: 2400,
+      insidersPercentHeld: 0.04
+    }
+  };
+  const r = Runner.evaluateStock(s)['institutional-density'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (!r.pass) throw new Error('72% must pass; value=' + r.value);
+  if (!approx(r.value, 0.72, 0.001)) throw new Error('expected ~0.72; got ' + r.value);
+});
+
+test('Tag 223a institutional-density: FAIL — 35% institutional ownership (below 50% floor)', () => {
+  const s = {
+    meta: {
+      ticker: 'ID-FAIL',
+      institutionsPercentHeld: 0.35,
+      institutionsCount: 800,
+      insidersPercentHeld: 0.20
+    }
+  };
+  const r = Runner.evaluateStock(s)['institutional-density'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (r.pass) throw new Error('35% must fail; value=' + r.value);
+});
+
+test('Tag 223a institutional-density: NOT-COMPUTABLE — Yahoo returned no data', () => {
+  const s = { meta: { ticker: 'ID-NONE' } };
+  const r = Runner.evaluateStock(s)['institutional-density'];
+  if (r.computable) throw new Error('absent institutionsPercentHeld should be incomputable');
+  if (!/no meta\.institutionsPercentHeld/.test(r.reason)) throw new Error('expected no-data reason; got: ' + r.reason);
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the

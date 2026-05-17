@@ -183,5 +183,23 @@ module.exports = [
   // efficiency. Activated by Tag 211l currentAssets/currentLiabilities.
   // Lev & Thiagarajan (1993, JAR) fundamental signal #4 (Receivables vs Sales).
   // DIAGNOSTIC, fixture-hash safe.
-  { file: './working-capital-trend.js' }
+  { file: './working-capital-trend.js' },
+
+  // Tag 223a: Analyst Upside — (targetMedianPrice / currentPrice) - 1 >= 10%,
+  // requires >= 3 analysts. Damodaran consensus soft-signal. Activated by
+  // Tag 219c targetMedianPrice + numberOfAnalystOpinions persistence.
+  // DIAGNOSTIC, fixture-hash safe (not in SCORE_WEIGHTS).
+  { file: './analyst-upside.js' },
+
+  // Tag 223a: Earnings Surprise Momentum — >=3 of last 4 quarterly EPS
+  // surprises positive AND mean >= 3% (PEAD: Foster 1984, Bernard-Thomas
+  // 1989, Liu-Strong 2024). Activated by Tag 220c earningsHistory persistence.
+  // DIAGNOSTIC, fixture-hash safe.
+  { file: './earnings-surprise-momentum.js' },
+
+  // Tag 223a: Institutional Density — meta.institutionsPercentHeld >= 50%,
+  // broad-based ~7k-institution floor. Complements Tag 213a smart-money 13F
+  // count signal. Activated by Tag 220c majorHoldersBreakdown persistence.
+  // DIAGNOSTIC, fixture-hash safe.
+  { file: './institutional-density.js' }
 ];
