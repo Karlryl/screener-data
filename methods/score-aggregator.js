@@ -367,8 +367,16 @@ function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, data
     if (cap === 'REJECT') {
       tier = 'REJECT';
       dataQualityCapped = true;
-    } else if (cap === 'NEAR_MISS' && (tier === 'A' || tier === 'B')) {
-      tier = 'NEAR_MISS';
+    } else if (cap === 'NEAR_MISS') {
+      // Tag 229d-2 (audit F-227c-04 MEDIUM fix): always flag the cap as
+      // applied when grade-C maps to NEAR_MISS, even when tier is ALREADY
+      // NEAR_MISS (e.g. red-flag downgrade from line 331). The downgrade
+      // is a no-op only because the redundant cap matched the existing
+      // tier — semantically the data-quality cap WAS the binding constraint,
+      // and downstream UI/audit-trail (modes-report, screener.html data-quality
+      // badge) deserves to know that. Previously a red-flag-downgraded
+      // grade-C stock looked "only red-flagged" without the dq-cap badge.
+      if (tier === 'A' || tier === 'B') tier = 'NEAR_MISS';
       dataQualityCapped = true;
     }
   }
