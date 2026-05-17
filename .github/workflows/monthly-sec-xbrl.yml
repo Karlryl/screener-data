@@ -69,18 +69,33 @@ jobs:
             echo "No manifest changes to commit."
           else
             git commit -m "chore: sec-xbrl manifest $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            # F-CI-001 (same pattern as daily-pull): fetch before rebase, remove '|| true'
+            # Tag 218 (audit F-218c-02 HIGH fix): port the daily-pull
+            # F-CI-001 v2 (Tag 179) cherry-pick-back pattern. Previous
+            # fallback `git rebase --abort; git reset --hard origin/main`
+            # SILENTLY DISCARDED the just-made commit (the SEC-XBRL
+            # manifest update), after which `git push` succeeded as a
+            # no-op and the workflow reported green while the monthly
+            # XBRL data update vanished. New: capture commit SHA before
+            # rebase, cherry-pick it back if the rebase loses it.
+            COMMIT_SHA=$(git rev-parse HEAD)
             for i in 1 2 3; do
               git fetch origin main
-              git rebase --autostash --strategy-option theirs origin/main || { git rebase --abort; git reset --hard origin/main; }
+              if ! git rebase --autostash --strategy-option theirs origin/main; then
+                echo "::warning::Rebase failed on attempt $i — aborting cleanly (preserves local commit)"
+                git rebase --abort || true
+                if ! git rev-list HEAD | grep -q "^${COMMIT_SHA}$"; then
+                  echo "::warning::Local commit lost during rebase — restoring from $COMMIT_SHA"
+                  git reset --hard origin/main
+                  git cherry-pick "$COMMIT_SHA" || { echo "::error::cherry-pick failed"; exit 1; }
+                fi
+              fi
               if git push; then
-                echo "Pushed on attempt $i"
+                echo "Pushed on attempt $i (commit $(git rev-parse HEAD))"
                 exit 0
               fi
               sleep $((5 * i))
             done
-            # F-CI-009: add missing echo before exit 1
-            echo "Push failed after 3 attempts"
+            echo "::error::Push failed after 3 attempts"
             exit 1
           fi
 
