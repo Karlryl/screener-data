@@ -99,10 +99,23 @@ async function main() {
       // Tag 148: use adjclose (dividend/split-adjusted) instead of raw close
       const quotes = (result.quotes || []).filter(q => (q.adjclose ?? q.close) != null);
       if (!quotes.length) { failed++; return; }
-      const latestClose = quotes[quotes.length - 1].adjclose ?? quotes[quotes.length - 1].close;
+      const latestQuote = quotes[quotes.length - 1];
+      const latestClose = latestQuote.adjclose ?? latestQuote.close;
+      // Tag 231a-3 (audit HIGH fix): derive the actual trading date from the
+      // latest quote rather than using UTC `today`. Previously: on a weekend
+      // (today=Sat) the workflow would push {date:'Sat', close: Friday-price}
+      // into history — a phantom row mapping Saturday to Friday's close. When
+      // walk-forward looked up SPY at Saturday it got a real number that
+      // wasn't actually an end-of-day quote for Saturday, breaking the
+      // benchmark-canonical date pair (Tag 231a-2) for any vintage falling
+      // on a weekend/holiday. Fix: store the date the exchange actually
+      // reported, never a calendar date the market wasn't open on.
+      const latestQuoteDate = latestQuote.date
+        ? (latestQuote.date instanceof Date ? latestQuote.date : new Date(latestQuote.date)).toISOString().slice(0, 10)
+        : today;
       todaysSnapshot[stock.ticker] = { close: latestClose, asOf: today, currency: result.meta && result.meta.currency };
 
-      // Extend history: only add today's entry if not already there
+      // Extend history: only add latest trading-day entry if not already there
       if (!history[stock.ticker]) history[stock.ticker] = [];
       // Tag 223c (audit F-222a-6 HIGH fix): replace O(N) .find() with O(1)
       // last-element check (array is sorted ascending by date in the steady
@@ -110,8 +123,8 @@ async function main() {
       // (which allocates a fresh array each call) with in-place .splice when
       // the array exceeds 400 entries. At 19k × 400 = 7.6M comparisons -> ~7.6k.
       const arr = history[stock.ticker];
-      if (arr.length === 0 || arr[arr.length - 1].date !== today) {
-        arr.push({ date: today, close: latestClose }); // stored as 'close' for backward compat
+      if (arr.length === 0 || arr[arr.length - 1].date !== latestQuoteDate) {
+        arr.push({ date: latestQuoteDate, close: latestClose }); // stored as 'close' for backward compat
       }
       if (arr.length > 400) arr.splice(0, arr.length - 400);
       ok++;
@@ -142,17 +155,21 @@ async function main() {
       const spyResult = await yf.chart('SPY', { period1, period2, interval: '1d' });
       const spyQuotes = (spyResult.quotes || []).filter(q => (q.adjclose ?? q.close) != null);
       if (spyQuotes.length) {
-        const latestClose = spyQuotes[spyQuotes.length - 1].adjclose ?? spyQuotes[spyQuotes.length - 1].close;
+        const latestSpyQuote = spyQuotes[spyQuotes.length - 1];
+        const latestClose = latestSpyQuote.adjclose ?? latestSpyQuote.close;
         todaysSnapshot['SPY'] = { close: latestClose, asOf: today, currency: spyResult.meta && spyResult.meta.currency };
         if (!history['SPY']) history['SPY'] = [];
         // Tag 223c (audit F-222a-9 MEDIUM fix): replace O(N²) .find() in
         // back-fill loop (~400 quotes × 400 history entries = ~160k compares)
         // with a single Set of known dates (O(N) total).
+        // Tag 231a-3 (audit HIGH fix): rely entirely on the back-fill loop to
+        // populate dates. Previously we pre-pushed {date: today, close: latestClose}
+        // before the back-fill — if today was Saturday and latestQuote.date was
+        // Friday, we'd then have BOTH {Saturday, Friday-price} (phantom) AND
+        // {Friday, Friday-price} (real) in history. The back-fill loop below
+        // already inserts the real dated entry; the pre-push was redundant at
+        // best and date-corrupting at worst.
         const spyKnownDates = new Set(history['SPY'].map(e => e.date));
-        if (!spyKnownDates.has(today)) {
-          history['SPY'].push({ date: today, close: latestClose });
-          spyKnownDates.add(today);
-        }
         // Back-fill all available dates from this pull (so walk-forward has enough history)
         for (const q of spyQuotes) {
           const d = (q.date instanceof Date ? q.date : new Date(q.date)).toISOString().slice(0, 10);
