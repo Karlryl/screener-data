@@ -180,6 +180,22 @@ function detectMethodDiffs(prevMethods, currResults, today) {
     } else if (!prev && isComputable) {
       // F-SM-012: first-time observation — mark firstSeen so UI can distinguish
       // "just added to universe" from "long-term PASS/FAIL"
+      //
+      // Tag 216b (audit F-216-04 MEDIUM fix): emit METHOD_PASS_NEW event when
+      // the first-observed ticker is already passing. Previously this branch
+      // silently set state without alerting; Karl lost signal on newly-added
+      // universe entrants that were strong from day-1. The event is INFO
+      // severity (not WARNING) — it's an opportunity flag, not a regression.
+      if (isPass) {
+        events.push({
+          methodId,
+          type: 'METHOD_PASS_NEW',
+          severity: 'INFO',
+          message: methodId + ': first observation in universe, value=' +
+                   (Number.isFinite(result.value) ? result.value.toFixed(2) : result.value) +
+                   ' (PASS — new entrant already strong)'
+        });
+      }
       newState[methodId] = {
         value: result.value,
         pass: isPass,

@@ -299,6 +299,16 @@ function evaluateVintage(picksFile, priceIndex, regimes) {
         // F-BT-005: snap to nearest trading day
         const tEntry = nearestTradingDay(entryDate, map) || entryDate;
         const tExit  = nearestTradingDay(futureDate, map) || futureDate;
+        // Tag 216b (audit F-216-06 MEDIUM fix): walk-forward exit-price
+        // staleness was one-sided. priceAt enforces PRICE_MAX_STALE_DAYS=7
+        // backwards but nearestTradingDay(futureDate) only scans ±5 business
+        // days then silently returns futureDate as fallback. For delisted
+        // tickers that haven't traded for 30+ days, that fallback gave a
+        // stale exit price and inflated/deflated forward returns. Validate
+        // both entry and exit are within PRICE_MAX_STALE_DAYS of their
+        // intended date; otherwise drop the pick from the sample.
+        if (_daysBetween(tEntry, entryDate)  > PRICE_MAX_STALE_DAYS) continue;
+        if (_daysBetween(tExit,  futureDate) > PRICE_MAX_STALE_DAYS) continue;
         const p0 = map.get(tEntry) || null;
         const p1 = map.get(tExit)  || null;
         const r = returnPct(p0, p1);
