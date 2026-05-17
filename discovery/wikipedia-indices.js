@@ -59,6 +59,19 @@ const NOT_TICKERS = new Set([
   'MKT', 'CAP', 'VOL', 'AVG', 'MAX', 'MIN',
 ]);
 
+// F-217a-10: Whitelist of valid single-letter NYSE tickers. Single-letter tickers
+// are historically reserved on NYSE and only a handful exist at any time. Bare
+// length>=1 acceptance would flood the watchlist with table-marker garbage
+// (column letters, footnote refs). Whitelist is small enough to maintain by hand
+// and is verified against current NYSE listings (May 2026).
+//   A=Agilent, B=Barnes Group, C=Citigroup, D=Dominion, E=Eni, F=Ford,
+//   J=Jacobs Solutions, K=Kellanova, L=Loews, M=Macy's, O=Realty Income,
+//   R=Ryder, T=AT&T, U=Unity Software, V=Visa, W=Wayfair, X=US Steel, Z=Zillow
+const SINGLE_LETTER_TICKERS = new Set([
+  'A', 'B', 'C', 'D', 'E', 'F', 'J', 'K', 'L', 'M',
+  'O', 'R', 'T', 'U', 'V', 'W', 'X', 'Z',
+]);
+
 function extractTickersFromWikitext(wikitext, suffix) {
   const tickers = new Set();
   // Split into rows by table row separator
@@ -82,7 +95,8 @@ function extractTickersFromWikitext(wikitext, suffix) {
         // either preceded by $ sign, or the cell is short (<=5 chars is more likely a ticker),
         // or the surrounding row contains exchange context like 'NYSE' or 'NASDAQ'.
         // For index constituent tables the cell IS the ticker — length guard is primary filter.
-        if (clean.length < 2) continue;  // single letters are not tickers
+        // F-217a-10: allow whitelisted single-letter NYSE tickers (A, V, T, F, etc.).
+        if (clean.length < 2 && !SINGLE_LETTER_TICKERS.has(clean)) continue;
         let sym = clean;
         if (suffix && !sym.includes('.')) sym = sym + suffix;
         tickers.add(sym);

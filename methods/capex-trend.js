@@ -30,8 +30,9 @@ function evaluate(stock) {
   const capexT3_raw = _unwrap(capexArr[3]);
   const capexT = capexT_raw != null ? Math.abs(capexT_raw) : null;
   const capexT3 = capexT3_raw != null ? Math.abs(capexT3_raw) : null;
-  const revT = revArr[0] && revArr[0].value;
-  const revT3 = revArr[3] && revArr[3].value;
+  // F-217b-04: use _unwrap for rev too (envelope-or-number polymorphism)
+  const revT = _unwrap(revArr[0]);
+  const revT3 = _unwrap(revArr[3]);
   if (capexT == null || revT == null || capexT3 == null || revT3 == null || revT <= 0 || revT3 <= 0) {
     return H.buildResult({
       computable: false, reason: `missing/zero values`, threshold: THRESHOLD, thresholdOp: THRESHOLD_OP

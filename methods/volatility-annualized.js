@@ -28,15 +28,27 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
-  // F-ME-016: detect data frequency from timestamps and scale lookback + annualization accordingly
+  // F-ME-016 / F-217c-04: detect data frequency from timestamps and scale lookback + annualization accordingly.
+  // Use median of last N gaps (not just the trailing pair) so a single holiday-week
+  // gap of 7 days doesn't misclassify daily data as weekly.
   let lookback52w = 252;   // default: daily
   let annualFactor = 252;  // sqrt(252) for daily data
-  if (series.length >= 2 && series[0].date && series[1].date) {
-    const d0 = Date.parse(series[series.length - 2].date);
-    const d1 = Date.parse(series[series.length - 1].date);
-    if (Number.isFinite(d0) && Number.isFinite(d1)) {
-      const avgDaysBetween = (d1 - d0) / (1000 * 60 * 60 * 24);
-      if (avgDaysBetween >= 4) { lookback52w = 52; annualFactor = 52; } // weekly data
+  {
+    const GAP_SAMPLES = 10;
+    const gaps = [];
+    const start = Math.max(1, series.length - GAP_SAMPLES);
+    for (let i = start; i < series.length; i++) {
+      if (!series[i] || !series[i - 1] || !series[i].date || !series[i - 1].date) continue;
+      const d0 = Date.parse(series[i - 1].date);
+      const d1 = Date.parse(series[i].date);
+      if (Number.isFinite(d0) && Number.isFinite(d1) && d1 > d0) {
+        gaps.push((d1 - d0) / (1000 * 60 * 60 * 24));
+      }
+    }
+    if (gaps.length >= 3) {
+      gaps.sort((a, b) => a - b);
+      const median = gaps[Math.floor(gaps.length / 2)];
+      if (median >= 4) { lookback52w = 52; annualFactor = 52; } // weekly data
     }
   }
   const window = series.slice(-lookback52w);

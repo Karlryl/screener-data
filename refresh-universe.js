@@ -320,13 +320,19 @@ async function main() {
           source: info.source || 'unknown'
         });
       } else {
-        // F-DP-015: ticker already seen — concatenate source field so attribution is not lost
+        // F-DP-015: ticker already seen — concatenate source field so attribution is not lost.
+        // F-217a-04: dedupe via Set so re-runs / multi-source overlaps don't accumulate
+        // duplicate entries like "sec-edgar,sec-edgar,nasdaq-api".
         const existing = allTickers.get(sym);
         const newSource = info.source || 'unknown';
-        if (newSource && existing.source && existing.source !== newSource) {
-          existing.source = existing.source + ',' + newSource;
-        } else if (newSource && !existing.source) {
-          existing.source = newSource;
+        if (newSource) {
+          const sources = new Set(
+            (existing.source ? String(existing.source).split(',') : [])
+              .map(s => s.trim())
+              .filter(Boolean)
+          );
+          sources.add(newSource);
+          existing.source = Array.from(sources).join(',');
         }
       }
     }

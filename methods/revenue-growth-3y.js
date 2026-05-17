@@ -46,7 +46,7 @@ function evaluate(stock) {
 
 module.exports = {
   id: ID, label: LABEL,
-  description: 'Revenue Growth 3-Year-CAGR ≥ 25% (Hypergrowth-Konsistenz über 3 Jahre)',
+  description: 'Revenue Growth 3-Year-CAGR ≥ 22% (Hypergrowth-Konsistenz über 3 Jahre — lowered from 25% Tag 201c, see file header)',
   threshold: THRESHOLD, thresholdOp: THRESHOLD_OP, unit: 'percent',
   evaluate
 };

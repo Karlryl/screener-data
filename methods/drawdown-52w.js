@@ -43,6 +43,13 @@ function evaluate(stock) {
   const window = series.slice(-lookback52w);
   const high52w = Math.max(...window.map(e => e.close));
   const current = window[window.length - 1].close;
+  // F-217b-02: guard zero/negative high52w to avoid Infinity/NaN drawdown
+  if (!Number.isFinite(high52w) || high52w <= 0) {
+    return H.buildResult({
+      computable: false, reason: `high52w denominator <= 0 (got ${high52w})`,
+      threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    });
+  }
   const drawdown = (high52w - current) / high52w;
   return H.buildResult({
     value: drawdown,

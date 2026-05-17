@@ -786,17 +786,17 @@ const CLIENT_JS = `
     if (mcap < 200e9) return 'LARGE';
     return 'MEGA';
   }
-  function fmtM(v){ if (v==null||!isFinite(v)) return '—'; if (Math.abs(v)>=1e12) return (v/1e12).toFixed(2)+'T'; if (Math.abs(v)>=1e9) return (v/1e9).toFixed(1)+'B'; if (Math.abs(v)>=1e6) return (v/1e6).toFixed(0)+'M'; return v.toFixed(0); }
+  function fmtM(v){ if (v==null||!Number.isFinite(v)) return '—'; if (Math.abs(v)>=1e12) return (v/1e12).toFixed(2)+'T'; if (Math.abs(v)>=1e9) return (v/1e9).toFixed(1)+'B'; if (Math.abs(v)>=1e6) return (v/1e6).toFixed(0)+'M'; return v.toFixed(0); }
   // Tag 206k (Bug-Hunt Agent E MEDIUM-3): the original sign-prefix ternary
   // was (v>=0 ? "" : "") — both branches empty string, dead code. Intent was
   // a '+' prefix for positive values so the eye can quickly scan +/− deltas.
   // NOTE: do NOT use backticks in this comment block — CLIENT_JS itself lives
   // inside a node template-literal, so an inner backtick terminates the outer
   // string and breaks parsing (runtime ReferenceError, found Tag 206p).
-  function fmtP(v,d){ if (v==null||!isFinite(v)) return '—'; return (v>=0?'+':'')+(v).toFixed(d==null?1:d)+'%'; }
-  function fmtN(v,d){ if (v==null||!isFinite(v)) return '—'; return v.toFixed(d==null?1:d); }
-  function pct(v){ if (v==null||!isFinite(v)) return '—'; return v.toFixed(1)+'%'; }
-  function colorPct(v){ if (v==null||!isFinite(v)) return 'g-mute'; return v>=0?'g-pos':'g-neg'; }
+  function fmtP(v,d){ if (v==null||!Number.isFinite(v)) return '—'; return (v>=0?'+':'')+(v).toFixed(d==null?1:d)+'%'; }
+  function fmtN(v,d){ if (v==null||!Number.isFinite(v)) return '—'; return v.toFixed(d==null?1:d); }
+  function pct(v){ if (v==null||!Number.isFinite(v)) return '—'; return v.toFixed(1)+'%'; }
+  function colorPct(v){ if (v==null||!Number.isFinite(v)) return 'g-mute'; return v>=0?'g-pos':'g-neg'; }
   function r40Class(v){ if (v==null) return 'g-mute'; if (v>=60) return 'g-r40-excellent'; if (v>=40) return 'g-r40-good'; if (v>=20) return 'g-r40-fair'; if (v>=0) return 'g-r40-warn'; return 'g-r40-bad'; }
   // Tag 206k (Bug-Hunt Agent E MEDIUM-5): escape HTML special chars when
   // dropping Yahoo-sourced strings (ticker, name, sector, industry, country)
@@ -820,7 +820,7 @@ const CLIENT_JS = `
         || r.dqGrade === 'D') {
       return 'background:rgba(255,61,90,0.04);';
     }
-    if (r.scoreHistory && isFinite(r.scoreHistory.deltaScore7d) && r.scoreHistory.deltaScore7d >= 5) {
+    if (r.scoreHistory && Number.isFinite(r.scoreHistory.deltaScore7d) && r.scoreHistory.deltaScore7d >= 5) {
       return 'background:rgba(0,204,136,0.04);';
     }
     if (r.dqGrade === 'C') {
@@ -1094,7 +1094,7 @@ const CLIENT_JS = `
       const vals = [];
       for (const r of list) {
         const v = _rowMetricForBullet(r, k, tab);
-        if (v != null && isFinite(v)) vals.push({tk: r.ticker, v});
+        if (v != null && Number.isFinite(v)) vals.push({tk: r.ticker, v});
       }
       vals.sort((a,b) => a.v - b.v);
       const map = {};
@@ -1113,7 +1113,7 @@ const CLIENT_JS = `
   // span like .g-pos). pct is 0..1 or null (null → no bar, plain cell).
   function bulletCell(innerHtml, pct){
     if (innerHtml === '—' || innerHtml == null) return '<td class="num">—</td>';
-    if (pct == null || !isFinite(pct)) return '<td class="num">'+innerHtml+'</td>';
+    if (pct == null || !Number.isFinite(pct)) return '<td class="num">'+innerHtml+'</td>';
     const w = Math.max(0, Math.min(100, pct * 100));
     const color = pct >= 0.66 ? 'var(--green)' : pct >= 0.33 ? 'var(--blue)' : 'var(--text-2)';
     return '<td class="num bullet"><div class="bar" style="width:'+w.toFixed(1)+'%;background:'+color+'"></div><span class="v">'+innerHtml+'</span></td>';
@@ -1122,7 +1122,7 @@ const CLIENT_JS = `
   // values: ascending time-ordered array of numbers (oldest → newest). Returns
   // empty string when there's nothing useful to draw (graceful degrade).
   function microSpark(values, w, h){
-    const vs = (values||[]).filter(v => v != null && isFinite(v));
+    const vs = (values||[]).filter(v => v != null && Number.isFinite(v));
     if (vs.length < 2) return '';
     const min = Math.min.apply(null, vs), max = Math.max.apply(null, vs), range = (max-min) || 1;
     const pts = vs.map(function(v,i){
@@ -1144,14 +1144,14 @@ const CLIENT_JS = `
     // Δ7d: use deltaScore7d if it's the right axis (hgScore), else derive
     // from the trimmed series. For QC we look back ~7 entries (1/day).
     let delta = null;
-    if (field === 'hgScore' && sh.deltaScore7d != null && isFinite(sh.deltaScore7d)) {
+    if (field === 'hgScore' && sh.deltaScore7d != null && Number.isFinite(sh.deltaScore7d)) {
       delta = sh.deltaScore7d;
     } else if (series.length >= 2) {
       const lookback = Math.min(7, series.length - 1);
       delta = series[series.length-1] - series[series.length-1-lookback];
     }
     let badge = '';
-    if (delta != null && isFinite(delta)) {
+    if (delta != null && Number.isFinite(delta)) {
       const cls = delta >= 5 ? 'pos' : delta <= -5 ? 'neg' : 'mute';
       const sign = delta >= 0 ? '+' : '';
       badge = '<span class="d7 '+cls+'">'+sign+delta.toFixed(1)+'</span>';
@@ -1245,7 +1245,7 @@ const CLIENT_JS = `
   // is static for the lifetime of the page load.
   let _sectorHeatmapCache = null;
   function _median(arr) {
-    const xs = arr.filter(v => v != null && isFinite(v)).slice().sort((a,b) => a-b);
+    const xs = arr.filter(v => v != null && Number.isFinite(v)).slice().sort((a,b) => a-b);
     if (xs.length === 0) return null;
     const mid = Math.floor(xs.length / 2);
     return (xs.length % 2 === 0) ? (xs[mid-1] + xs[mid]) / 2 : xs[mid];
@@ -1266,7 +1266,7 @@ const CLIENT_JS = `
       // so the column reads consistently as "%" across rows. _formatRoic below
       // chooses the right printer.
       const m = r.results && r.results['sector-relative-roic'];
-      if (!m || m.value == null || !isFinite(m.value)) return null;
+      if (!m || m.value == null || !Number.isFinite(m.value)) return null;
       // Detect rank vs ratio: ranks are in [0,100], ratios in [-1,1]ish.
       // Use computable as the authoritative flag.
       if (m.computable) return m.value;       // already 0-100 rank
@@ -1318,11 +1318,11 @@ const CLIENT_JS = `
     // Cross-sector percentile rank per metric (color scale uses where THIS
     // sector's median ranks among all sector medians for that metric).
     for (const m of metrics) {
-      const allVals = rows.map(r => r.vals[m.k]).filter(v => v != null && isFinite(v));
+      const allVals = rows.map(r => r.vals[m.k]).filter(v => v != null && Number.isFinite(v));
       const sorted = allVals.slice().sort((a,b) => a-b);
       for (const r of rows) {
         const v = r.vals[m.k];
-        if (v == null || !isFinite(v) || sorted.length < 2) {
+        if (v == null || !Number.isFinite(v) || sorted.length < 2) {
           r.vals['_pct_' + m.k] = null; continue;
         }
         // Position of v in sorted (count of values strictly less than v) /
@@ -1379,7 +1379,7 @@ const CLIENT_JS = `
         const v = row.vals[m.k];
         const pct = row.vals['_pct_' + m.k];
         const tint = _heatColor(pct);
-        const cell = (v == null || !isFinite(v)) ? '—' : m.fmt(v);
+        const cell = (v == null || !Number.isFinite(v)) ? '—' : m.fmt(v);
         const title = 'N='+row.n+' · '+m.label+' median for '+row.sector+(pct!=null?' · sector-rank '+(pct*100).toFixed(0)+'%':'');
         html += '<td class="num" style="'+tint+'" title="'+esc(title)+'">'+cell+'</td>';
       }
@@ -1459,7 +1459,7 @@ const CLIENT_JS = `
   // ------- modal -------
   function spark(values, opts){
     // values newest-first; reverse for left-to-right oldest-to-newest
-    const vs = values.filter(v => v != null && isFinite(v)).slice().reverse();
+    const vs = values.filter(v => v != null && Number.isFinite(v)).slice().reverse();
     if (vs.length < 2) return '<svg width="300" height="160"><text x="150" y="80" text-anchor="middle" fill="#4a5f70" font-size="11">no data</text></svg>';
     const W = 300, H = 160, pad = 18;
     const minV = Math.min(...vs, 0);
@@ -1571,7 +1571,7 @@ const CLIENT_JS = `
     html += '<div style="font-family:var(--mono);font-size:12px;color:var(--text-1);">HG Score: '+(r.hgScore!=null?r.hgScore.toFixed(1):'—')+' ('+(r.hgTier||'—')+') &nbsp;·&nbsp; QC Score: '+(r.qcScore!=null?r.qcScore.toFixed(1):'—')+' ('+(r.qcTier||'—')+') &nbsp;·&nbsp; PB Score: '+(r.pbScore!=null?r.pbScore.toFixed(1):'—')+'</div>';
     const sh = r.scoreHistory || { history: [], deltaScore7d: null, deltaScore30d: null };
     function _dBadge(label, v) {
-      if (v == null || !isFinite(v)) return '<span style="color:var(--text-2);border:1px solid var(--border);padding:1px 5px;font-size:10px;margin-right:4px;">'+label+': —</span>';
+      if (v == null || !Number.isFinite(v)) return '<span style="color:var(--text-2);border:1px solid var(--border);padding:1px 5px;font-size:10px;margin-right:4px;">'+label+': —</span>';
       const color = (v >= 5) ? 'var(--green)' : (v <= -5 ? 'var(--red)' : 'var(--text-1)');
       const sign = v >= 0 ? '+' : '';
       return '<span style="color:'+color+';border:1px solid '+color+';padding:1px 5px;font-size:10px;margin-right:4px;">'+label+': '+sign+v.toFixed(1)+'</span>';
@@ -1583,7 +1583,7 @@ const CLIENT_JS = `
     if (sh.history && sh.history.length >= 2) {
       // Reuse spark() — pass hgScore series in newest-first order (spark()
       // reverses to oldest→newest). history[] is ascending date, so reverse.
-      const hgSeries = sh.history.slice().reverse().map(e => (e && isFinite(e.hgScore)) ? e.hgScore : null);
+      const hgSeries = sh.history.slice().reverse().map(e => (e && Number.isFinite(e.hgScore)) ? e.hgScore : null);
       html += '<div style="margin-top:6px;"><div class="chart" style="background:var(--bg-2);border:1px solid var(--border);padding:8px;display:inline-block;"><div class="ct" style="font-size:11px;color:var(--text-1);text-transform:uppercase;margin-bottom:4px;">HG Score (last '+sh.history.length+'d)</div>'+spark(hgSeries)+'</div></div>';
     } else {
       html += '<div style="color:var(--text-2);font-size:10px;margin-top:4px;">Score history accumulates daily (need ≥2 snapshots for sparkline).</div>';
@@ -1636,12 +1636,12 @@ const CLIENT_JS = `
       // Both are monotonic in the underlying ROIC, so the top-5 ordering
       // matches what the percentile would produce anyway.
       const m = x.results && x.results['sector-relative-roic'];
-      if (!m || m.value == null || !isFinite(m.value)) return -Infinity;
+      if (!m || m.value == null || !Number.isFinite(m.value)) return -Infinity;
       return m.value;
     };
     const peerGpTa = (x) => {
       const m = x.results && x.results['gross-profitability'];
-      return (m && m.value != null && isFinite(m.value)) ? m.value : null;
+      return (m && m.value != null && Number.isFinite(m.value)) ? m.value : null;
     };
     let peers = [];
     if (r.sector && r.sector !== '—' && r.mcap > 0) {
@@ -1674,8 +1674,8 @@ const CLIENT_JS = `
         const dStr = (dScore == null) ? '—' : (dScore >= 0 ? '+' : '') + dScore.toFixed(1);
         const gpta = peerGpTa(p);
         const gptaStr = (gpta == null) ? '—' : gpta.toFixed(2);
-        const r40Str = (p.r40 != null && isFinite(p.r40)) ? p.r40.toFixed(1) : '—';
-        const fcfmStr = (p.fcfMargin != null && isFinite(p.fcfMargin)) ? p.fcfMargin.toFixed(1)+'%' : '—';
+        const r40Str = (p.r40 != null && Number.isFinite(p.r40)) ? p.r40.toFixed(1) : '—';
+        const fcfmStr = (p.fcfMargin != null && Number.isFinite(p.fcfMargin)) ? p.fcfMargin.toFixed(1)+'%' : '—';
         // data-peer attribute used by the delegated click handler below.
         html += '<tr class="peer-row" data-peer="'+esc(p.ticker)+'" style="cursor:pointer;">'
           + '<td class="fy" style="text-align:left;color:var(--text-0);font-weight:600;">'+esc(p.ticker)+' <span style="color:var(--text-2);font-weight:normal;font-family:var(--ui);font-size:10px;margin-left:4px;">'+esc(p.name)+'</span></td>'

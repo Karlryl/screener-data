@@ -24,7 +24,9 @@ function evaluate(stock) {
   // hiding actual high SBC dilution. fcf-yield had the same fix in Tag 174 #16.
   const sbcRaw = sbcArr[0] && typeof sbcArr[0] === 'object' ? sbcArr[0].value : sbcArr[0];
   const sbc = sbcRaw != null && Number.isFinite(sbcRaw) ? Math.abs(sbcRaw) : null;
-  const rev = revArr[0] && revArr[0].value;
+  // F-217c-02: apply same envelope-or-number unwrap to rev (was bare envelope-only)
+  const revRaw = revArr[0] && typeof revArr[0] === 'object' ? revArr[0].value : revArr[0];
+  const rev = revRaw != null && Number.isFinite(revRaw) ? revRaw : null;
   if (sbc == null || rev == null || rev <= 0) {
     return H.buildResult({
       computable: false,

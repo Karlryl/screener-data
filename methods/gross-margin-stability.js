@@ -14,6 +14,16 @@ function _stdev(arr) {
   return { mean, std: Math.sqrt(variance) };
 }
 
+// F-217b-04: canonical envelope unwrap (matches methods/earnings-power-stability.js).
+// Previous arr[i] && arr[i].value pattern coerces bare-number entries (which appear
+// in some payload variants) to undefined, silently dropping valid data points.
+function _unwrap(v) {
+  if (v == null) return null;
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  if (typeof v === 'object' && Number.isFinite(v.value)) return v.value;
+  return null;
+}
+
 function evaluate(stock) {
   const revs = (stock && stock.annual && stock.annual.annualRev) || [];
   const gps = (stock && stock.annual && stock.annual.annualGP) || [];
@@ -26,8 +36,8 @@ function evaluate(stock) {
   }
   const margins = [];
   for (let i = 0; i < 4; i++) {
-    const r = revs[i] && revs[i].value;
-    const g = gps[i] && gps[i].value;
+    const r = _unwrap(revs[i]);
+    const g = _unwrap(gps[i]);
     if (r == null || g == null || r <= 0) continue;
     margins.push(g / r);
   }

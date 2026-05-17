@@ -41,6 +41,13 @@ function evaluate(stock) {
   const last200 = series.slice(-lookback200d);
   const ma200 = last200.reduce((s, e) => s + e.close, 0) / lookback200d;
   const current = series[series.length - 1].close;
+  // F-217b-02: guard zero/negative ma200 to avoid Infinity/NaN ratio
+  if (!Number.isFinite(ma200) || ma200 <= 0) {
+    return H.buildResult({
+      computable: false, reason: `ma200 denominator <= 0 (got ${ma200})`,
+      threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    });
+  }
   const ratio = current / ma200;
   return H.buildResult({
     value: ratio,

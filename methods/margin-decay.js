@@ -6,6 +6,15 @@ const LABEL = 'Gross-Margin Decay';
 const THRESHOLD = 1.10;  // GM[t-1] / GM[t] ≤ 1.10 = pass (kein dramatischer Decay)
 const THRESHOLD_OP = 'lte';
 
+// F-217b-04: canonical envelope unwrap (matches methods/earnings-power-stability.js).
+// Previous arr[i] && arr[i].value pattern silently drops bare-number entries.
+function _unwrap(v) {
+  if (v == null) return null;
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  if (typeof v === 'object' && Number.isFinite(v.value)) return v.value;
+  return null;
+}
+
 // Beneish GMI: wenn Gross-Margin sich um >10% verschlechtert → Pricing-Power-Verlust oder Kostenexplosion
 function evaluate(stock) {
   const revs = (stock && stock.annual && stock.annual.annualRev) || [];
@@ -17,10 +26,10 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
-  const revT = revs[0] && revs[0].value;
-  const revT1 = revs[1] && revs[1].value;
-  const gpT = gps[0] && gps[0].value;
-  const gpT1 = gps[1] && gps[1].value;
+  const revT = _unwrap(revs[0]);
+  const revT1 = _unwrap(revs[1]);
+  const gpT = _unwrap(gps[0]);
+  const gpT1 = _unwrap(gps[1]);
   if (revT == null || revT1 == null || gpT == null || gpT1 == null || revT <= 0 || revT1 <= 0) {
     return H.buildResult({
       computable: false,
