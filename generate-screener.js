@@ -692,6 +692,24 @@ body.theme-light .search-results { background:#ffffff; box-shadow:0 4px 12px rgb
    semantic vars consumed elsewhere; spark() hard-codes hex which we override
    below via the colorMap injected into window). See CLIENT_JS spark() — the
    light-mode-aware color lookup runs at draw time. */
+/* Tag 213c: Bloomberg-style command palette (Ctrl+K / Cmd+K / "/").
+   Centered modal overlay with single input + result list. Matches dark/light
+   theme via CSS vars; no theme-specific overrides needed beyond the variables. */
+.cp-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.40); z-index:200; display:none; }
+.cp-overlay.show { display:block; }
+.cp-panel { position:absolute; top:12vh; left:50%; transform:translateX(-50%); width:480px; max-width:calc(100vw - 24px); max-height:60vh; display:flex; flex-direction:column; background:var(--bg-1); border:1px solid var(--border-bright); box-shadow:0 16px 48px rgba(0,0,0,0.55); }
+.cp-input { background:var(--bg-0); color:var(--text-0); border:0; border-bottom:1px solid var(--border-bright); padding:12px 14px; font-family:var(--mono); font-size:13px; outline:none; width:100%; box-sizing:border-box; }
+.cp-input::placeholder { color:var(--text-2); }
+.cp-results { overflow:auto; max-height:calc(60vh - 50px); }
+.cp-result { padding:8px 12px; cursor:pointer; border-bottom:1px solid var(--border); font-size:12px; font-family:var(--mono); color:var(--text-0); border-left:1px solid transparent; transition:background 80ms ease-out, border-color 80ms ease-out; display:flex; align-items:center; gap:8px; }
+.cp-result:hover { background:var(--bg-hover); }
+.cp-result.selected { background:var(--bg-hover); border-left:1px solid var(--blue); }
+.cp-result .tk { font-weight:600; color:var(--text-0); }
+.cp-result .meta { color:var(--text-1); font-size:11px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cp-result .kind { display:inline-block; padding:1px 5px; font-size:10px; border:1px solid var(--border-bright); color:var(--text-1); margin-left:auto; font-family:var(--mono); }
+.cp-empty { padding:16px; text-align:center; color:var(--text-2); font-size:12px; font-style:italic; font-family:var(--ui); }
+.cp-hint { padding:6px 12px; border-top:1px solid var(--border); color:var(--text-2); font-size:10px; font-family:var(--mono); background:var(--bg-1); text-transform:uppercase; letter-spacing:0.05em; }
+body.theme-light .cp-overlay { background:rgba(40,48,60,0.30); }
 /* Upgrade 3a: mobile responsive (≤700px) */
 @media (max-width:700px) {
   header { flex-wrap:wrap; gap:8px; padding:8px 10px; }
@@ -712,7 +730,7 @@ body.theme-light .search-results { background:#ffffff; box-shadow:0 4px 12px rgb
 /* Upgrade 3b: print styles — render only the active table, light theme */
 @media print {
   body { background:#fff; color:#000; font-size:10pt; }
-  header, .tabs, .filters, #active-filters, .pagination, .modal, .search-results, #themeBtn { display:none !important; }
+  header, .tabs, .filters, #active-filters, .pagination, .modal, .search-results, #themeBtn, .cp-overlay { display:none !important; }
   .summary { background:#fff; color:#000; border-bottom:1px solid #888; padding:4px 0; }
   .summary strong { color:#000; }
   #explainer { background:#fff; color:#333; border-bottom:1px solid #888; }
@@ -1737,6 +1755,365 @@ const CLIENT_JS = `
     if (t && t.dataset.tk) { searchResults.classList.remove('show'); searchInput.value=''; showModal(t.dataset.tk); }
   });
 
+  // ------- Tag 213c/d: command palette (Ctrl+K / Cmd+K / "/") -------
+  // Bloomberg-style keyboard-first overlay. Three modes selected by prefix:
+  //   ""       fuzzy ticker / company search across ALL tabs (Enter → modal)
+  //   ">"      command mode (>tab, >filter, >preset, >theme)
+  //   "?"      help mode (lists all commands)
+  //
+  // localStorage schema (Tag 213d):
+  //   key:   "screener.preset.<NAME>"
+  //   value: JSON.stringify({
+  //            activeTab, filterSector, filterCountry, filterMinR40, filterMaxR40,
+  //            filterMin, filterIpo, filterState, filterCap, filterDQ,
+  //            onlyGaap, onlyFcf, sortKey, savedAt:ISO-string
+  //          })
+  //   index: "screener.preset.__index" → JSON array of preset names (so >preset
+  //          list / delete works without scanning all of localStorage).
+  // All storage ops wrapped in try/catch (gracefully degrade if disabled).
+  const cpOverlay  = document.getElementById('commandPalette');
+  const cpInput    = document.getElementById('cpInput');
+  const cpResults  = document.getElementById('cpResults');
+  let cpSel = 0;          // currently highlighted result index
+  let cpCurrent = [];     // last computed result list
+
+  const TAB_LABELS = {
+    HG: 'Hypergrowth', QC: 'Quality-Compounder', SMALL: 'Small Cap',
+    R40: 'Rule of 40', PRE_BREAKOUT: 'Pre-Breakout', WATCH: 'Watch', SECTOR: 'Sector Heatmap'
+  };
+  // Map common aliases → canonical tab keys (case-insensitive lookup).
+  const TAB_ALIASES = {
+    hg:'HG', hypergrowth:'HG',
+    qc:'QC', quality:'QC', 'quality-compounder':'QC', compounder:'QC',
+    small:'SMALL', smallcap:'SMALL', 'small-cap':'SMALL',
+    r40:'R40', 'rule-of-40':'R40', rule40:'R40',
+    pre:'PRE_BREAKOUT', prebreakout:'PRE_BREAKOUT', 'pre-breakout':'PRE_BREAKOUT', breakout:'PRE_BREAKOUT',
+    watch:'WATCH', watchlist:'WATCH',
+    sector:'SECTOR', heatmap:'SECTOR'
+  };
+
+  // Storage helpers — every read/write wrapped (private mode, full disk, etc.).
+  const PRESET_PREFIX = 'screener.preset.';
+  const PRESET_INDEX  = 'screener.preset.__index';
+  function presetIndex(){
+    try { const v = localStorage.getItem(PRESET_INDEX); return v ? JSON.parse(v) : []; }
+    catch (e) { return []; }
+  }
+  function presetIndexSet(arr){
+    try { localStorage.setItem(PRESET_INDEX, JSON.stringify(arr)); } catch (e) { /* ignore */ }
+  }
+  function presetSnapshot(){
+    return {
+      activeTab, filterSector, filterCountry, filterMinR40, filterMaxR40, filterMin,
+      filterIpo,
+      filterState: Object.assign({}, filterState),
+      filterCap:   Object.assign({}, filterCap),
+      filterDQ:    Object.assign({}, filterDQ),
+      onlyGaap, onlyFcf, sortKey,
+      savedAt: new Date().toISOString()
+    };
+  }
+  function presetApply(snap){
+    if (!snap) return false;
+    if (snap.activeTab && TABS[snap.activeTab]) {
+      activeTab = snap.activeTab;
+      document.querySelectorAll('.tabs button').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === activeTab);
+      });
+    }
+    if (typeof snap.filterSector === 'string') filterSector = snap.filterSector;
+    if (typeof snap.filterCountry === 'string') filterCountry = snap.filterCountry;
+    if (typeof snap.filterMinR40 !== 'undefined') filterMinR40 = snap.filterMinR40;
+    if (typeof snap.filterMaxR40 !== 'undefined') filterMaxR40 = snap.filterMaxR40;
+    if (typeof snap.filterMin !== 'undefined') filterMin = snap.filterMin;
+    if (typeof snap.filterIpo === 'string') filterIpo = snap.filterIpo;
+    if (snap.filterState) filterState = Object.assign({LOSS:true,TURNAROUND:true,RECENT:true,STABLE:true,NA:true}, snap.filterState);
+    if (snap.filterCap)   filterCap   = Object.assign({MICRO:true,SMALL:true,MID:true,LARGE:true,MEGA:true}, snap.filterCap);
+    if (snap.filterDQ)    filterDQ    = Object.assign({'A+':true,'A':true,'B':true,'C':false,'D':false}, snap.filterDQ);
+    if (typeof snap.onlyGaap === 'boolean') onlyGaap = snap.onlyGaap;
+    if (typeof snap.onlyFcf  === 'boolean') onlyFcf  = snap.onlyFcf;
+    if (typeof snap.sortKey === 'string') sortKey = snap.sortKey;
+
+    // Sync DOM controls so the visible UI matches restored state.
+    document.querySelectorAll('.filters .f-state').forEach(b => b.classList.toggle('on', !!filterState[b.dataset.state]));
+    document.querySelectorAll('.filters .f-cap').forEach(b => b.classList.toggle('on', !!filterCap[b.dataset.cap]));
+    document.querySelectorAll('.filters .f-dq').forEach(b => b.classList.toggle('on', !!filterDQ[b.dataset.dq]));
+    document.querySelectorAll('.filters .f-ipo').forEach(b => b.classList.toggle('on', b.dataset.ipo === filterIpo));
+    const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = (v == null ? '' : v); };
+    setVal('fSector', filterSector); setVal('fCountry', filterCountry);
+    setVal('fMinR40', filterMinR40); setVal('fMaxR40', filterMaxR40); setVal('fMin', filterMin);
+    const gEl = document.getElementById('onlyGaap'); if (gEl) gEl.checked = !!onlyGaap;
+    const fEl = document.getElementById('onlyFcf');  if (fEl) fEl.checked = !!onlyFcf;
+    const sEl = document.getElementById('fSort');    if (sEl) sEl.value = sortKey || 'auto';
+    page = 1;
+    renderTable();
+    return true;
+  }
+  function presetSave(name){
+    if (!name) return { ok:false, msg:'Preset name required' };
+    try {
+      localStorage.setItem(PRESET_PREFIX + name, JSON.stringify(presetSnapshot()));
+      const idx = presetIndex();
+      if (idx.indexOf(name) < 0) { idx.push(name); presetIndexSet(idx); }
+      return { ok:true, msg:'Saved preset "'+name+'"' };
+    } catch (e) { return { ok:false, msg:'Save failed (storage disabled?)' }; }
+  }
+  function presetLoad(name){
+    if (!name) return { ok:false, msg:'Preset name required' };
+    try {
+      const raw = localStorage.getItem(PRESET_PREFIX + name);
+      if (!raw) return { ok:false, msg:'No preset named "'+name+'"' };
+      const ok = presetApply(JSON.parse(raw));
+      return ok ? { ok:true, msg:'Loaded preset "'+name+'"' } : { ok:false, msg:'Preset data invalid' };
+    } catch (e) { return { ok:false, msg:'Load failed' }; }
+  }
+  function presetDelete(name){
+    if (!name) return { ok:false, msg:'Preset name required' };
+    try {
+      localStorage.removeItem(PRESET_PREFIX + name);
+      const idx = presetIndex().filter(n => n !== name);
+      presetIndexSet(idx);
+      return { ok:true, msg:'Deleted preset "'+name+'"' };
+    } catch (e) { return { ok:false, msg:'Delete failed' }; }
+  }
+
+  // Command registry — each entry has cmd (prefix), label (help-mode display),
+  // and handler(args) that returns an optional toast string.
+  const CP_COMMANDS = [
+    { cmd:'>tab',           label:'>tab <name>           Switch to tab (hg, qc, smallcap, r40, prebreakout, watch, sector)', handler:cpHandleTab },
+    { cmd:'>filter sector', label:'>filter sector <name> Set sector filter (or "clear")',                                   handler:cpHandleFilterSector },
+    { cmd:'>filter clear',  label:'>filter clear         Reset all filters',                                                 handler:cpHandleFilterClear },
+    { cmd:'>preset save',   label:'>preset save <name>   Save current filter state to localStorage',                         handler:cpHandlePresetSave },
+    { cmd:'>preset load',   label:'>preset load <name>   Restore a saved preset',                                            handler:cpHandlePresetLoad },
+    { cmd:'>preset list',   label:'>preset list          List saved presets',                                                handler:cpHandlePresetList },
+    { cmd:'>preset delete', label:'>preset delete <name> Delete a saved preset',                                             handler:cpHandlePresetDelete },
+    { cmd:'>theme light',   label:'>theme light          Switch to light theme',                                             handler:() => { try { applyTheme('light'); localStorage.setItem('screener_theme','light'); } catch(e){ applyTheme('light'); } return 'Theme: light'; } },
+    { cmd:'>theme dark',    label:'>theme dark           Switch to dark theme',                                              handler:() => { try { applyTheme('dark'); localStorage.setItem('screener_theme','dark'); } catch(e){ applyTheme('dark'); } return 'Theme: dark'; } }
+  ];
+  function cpHandleTab(arg){
+    const key = (arg || '').trim().toLowerCase().replace(/\s+/g, '');
+    const tab = TAB_ALIASES[key] || (TABS[key.toUpperCase()] ? key.toUpperCase() : null);
+    if (!tab) return 'Unknown tab: '+arg;
+    activeTab = tab; page = 1; filterMin = '';
+    const fMinEl = document.getElementById('fMin'); if (fMinEl) fMinEl.value = '';
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    renderTable();
+    return 'Tab: '+TAB_LABELS[tab];
+  }
+  function cpHandleFilterSector(arg){
+    const v = (arg || '').trim();
+    if (!v || v.toLowerCase() === 'clear') { filterSector = ''; }
+    else {
+      // Case-insensitive partial match against known sectors.
+      const opt = document.getElementById('fSector');
+      const sectors = opt ? Array.from(opt.options).map(o => o.value).filter(Boolean) : [];
+      const match = sectors.find(s => s.toLowerCase() === v.toLowerCase())
+                 || sectors.find(s => s.toLowerCase().indexOf(v.toLowerCase()) >= 0);
+      if (!match) return 'No sector matching "'+v+'"';
+      filterSector = match;
+    }
+    const el = document.getElementById('fSector'); if (el) el.value = filterSector;
+    page = 1; renderTable();
+    return filterSector ? ('Sector: '+filterSector) : 'Sector filter cleared';
+  }
+  function cpHandleFilterClear(){
+    clearAllFilters();
+    return 'All filters cleared';
+  }
+  function cpHandlePresetSave(arg){  const r = presetSave((arg||'').trim());   return r.msg; }
+  function cpHandlePresetLoad(arg){  const r = presetLoad((arg||'').trim());   return r.msg; }
+  function cpHandlePresetDelete(arg){const r = presetDelete((arg||'').trim()); return r.msg; }
+  function cpHandlePresetList(){
+    const names = presetIndex();
+    return names.length ? 'Presets: '+names.join(', ') : 'No saved presets';
+  }
+
+  // Parse the input into {cmdEntry, args}. Longest-match first so ">preset save"
+  // beats ">preset" when both prefixes exist.
+  function cpResolveCommand(text){
+    const t = text.trim();
+    if (!t.startsWith('>')) return null;
+    const sorted = CP_COMMANDS.slice().sort((a,b) => b.cmd.length - a.cmd.length);
+    for (const c of sorted) {
+      if (t === c.cmd) return { entry:c, args:'' };
+      if (t.toLowerCase().startsWith(c.cmd.toLowerCase() + ' ')) {
+        return { entry:c, args:t.slice(c.cmd.length + 1) };
+      }
+    }
+    return null;
+  }
+
+  // Build the result list for the current input value.
+  function cpQuery(text){
+    const q = (text || '').trim();
+    // Help mode
+    if (q === '?' || q.toLowerCase() === '?help') {
+      return CP_COMMANDS.map(c => ({ type:'help', label:c.label, cmd:c.cmd }));
+    }
+    // Command mode — show matching commands (live filter as user types).
+    if (q.startsWith('>')) {
+      const ql = q.toLowerCase();
+      const matches = CP_COMMANDS.filter(c =>
+        c.cmd.toLowerCase().startsWith(ql) || ql.startsWith(c.cmd.toLowerCase())
+      );
+      // If the input is a fully-formed command (e.g. ">preset list"), the
+      // command resolver finds an exact handler — surface it as an executable
+      // result so Enter runs it.
+      const resolved = cpResolveCommand(q);
+      if (resolved) {
+        return [{ type:'exec', label:'Run: '+q, resolved }]
+          .concat(matches.filter(m => m.cmd !== resolved.entry.cmd).slice(0, 6)
+                          .map(c => ({ type:'help', label:c.label, cmd:c.cmd })));
+      }
+      return matches.slice(0, 12).map(c => ({ type:'help', label:c.label, cmd:c.cmd }));
+    }
+    // Ticker / company search across ALL tabs.
+    if (!q) {
+      // Empty input → recent presets + a hint to type something.
+      const names = presetIndex().slice(0, 5);
+      return names.map(n => ({ type:'preset', name:n, label:'Load preset: '+n }));
+    }
+    const ql = q.toLowerCase();
+    const all = Object.values(ROWS);
+    const hits = [];
+    for (const r of all) {
+      const tk = r.ticker.toLowerCase();
+      const nm = (r.name || '').toLowerCase();
+      if (tk.includes(ql) || nm.includes(ql)) {
+        // Build short list of tabs this ticker appears in for the badge.
+        const tabBadges = [];
+        for (const t of Object.keys(TABS)) {
+          if (TABS[t].some(x => x.ticker === r.ticker)) tabBadges.push(t);
+        }
+        hits.push({ type:'ticker', row:r, tabBadges });
+        if (hits.length >= 30) break;
+      }
+    }
+    return hits;
+  }
+
+  function cpRender(){
+    const text = cpInput.value;
+    cpCurrent = cpQuery(text);
+    if (!cpCurrent.length) {
+      cpResults.innerHTML = '<div class="cp-empty">No matches. Try a ticker, "&gt;" for commands, or "?" for help.</div>';
+      return;
+    }
+    if (cpSel >= cpCurrent.length) cpSel = 0;
+    let html = '';
+    for (let i = 0; i < cpCurrent.length; i++) {
+      const r = cpCurrent[i];
+      const sel = i === cpSel ? ' selected' : '';
+      if (r.type === 'ticker') {
+        const tk = escHtml(r.row.ticker);
+        const nm = escHtml(r.row.name || '');
+        const badge = r.tabBadges.length ? r.tabBadges.slice(0,3).join(' ') : '';
+        html += '<div class="cp-result'+sel+'" data-idx="'+i+'">'
+              +   '<span class="tk">'+tk+'</span>'
+              +   '<span class="meta">· '+nm+'</span>'
+              +   (badge ? '<span class="kind">'+escHtml(badge)+'</span>' : '')
+              + '</div>';
+      } else if (r.type === 'help' || r.type === 'exec') {
+        html += '<div class="cp-result'+sel+'" data-idx="'+i+'">'
+              +   '<span class="meta" style="flex:1;overflow:hidden;text-overflow:ellipsis;">'+escHtml(r.label)+'</span>'
+              +   '<span class="kind">'+(r.type === 'exec' ? 'RUN' : 'CMD')+'</span>'
+              + '</div>';
+      } else if (r.type === 'preset') {
+        html += '<div class="cp-result'+sel+'" data-idx="'+i+'">'
+              +   '<span class="meta">'+escHtml(r.label)+'</span>'
+              +   '<span class="kind">PRESET</span>'
+              + '</div>';
+      }
+    }
+    cpResults.innerHTML = html;
+    // Scroll the selected row into view.
+    const selEl = cpResults.querySelector('.cp-result.selected');
+    if (selEl) selEl.scrollIntoView({ block:'nearest' });
+  }
+
+  // Tiny HTML escaper for the palette (we don't have a global one in this scope).
+  function escHtml(s){
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  function cpExecute(r){
+    if (!r) return;
+    if (r.type === 'ticker') { closePalette(); showModal(r.row.ticker); return; }
+    if (r.type === 'preset') { const res = presetLoad(r.name); cpFlash(res.msg); closePalette(); return; }
+    if (r.type === 'exec') {
+      const msg = r.resolved.entry.handler(r.resolved.args);
+      cpFlash(msg);
+      // Preset-list output and the help-mode command labels keep the palette
+      // open; everything else closes after running.
+      if (r.resolved.entry.cmd === '>preset list') { /* keep open so list stays visible */ }
+      else closePalette();
+      return;
+    }
+    if (r.type === 'help') {
+      // Pre-fill the input with the command so the user can fill in args.
+      cpInput.value = r.cmd + ' ';
+      cpSel = 0;
+      cpRender();
+      cpInput.focus();
+    }
+  }
+  // Lightweight toast — reuse the panel hint area so we don't ship a new widget.
+  function cpFlash(msg){
+    if (!msg) return;
+    const hint = cpOverlay.querySelector('.cp-hint');
+    if (!hint) return;
+    const prev = hint.textContent;
+    hint.textContent = msg;
+    setTimeout(() => { hint.textContent = prev; }, 1800);
+  }
+
+  function openPalette(){
+    cpOverlay.classList.add('show');
+    cpInput.value = '';
+    cpSel = 0;
+    cpRender();
+    // Focus after the show transition so the browser actually grabs caret.
+    setTimeout(() => cpInput.focus(), 0);
+  }
+  function closePalette(){
+    cpOverlay.classList.remove('show');
+    cpInput.value = '';
+    cpCurrent = [];
+    cpSel = 0;
+  }
+  function togglePalette(){
+    if (cpOverlay.classList.contains('show')) closePalette();
+    else openPalette();
+  }
+  // Expose to outer keydown handler (defined just below event-wiring section).
+  window._cp = { open:openPalette, close:closePalette, toggle:togglePalette };
+
+  cpInput.addEventListener('input', () => { cpSel = 0; cpRender(); });
+  cpInput.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (cpCurrent.length) { cpSel = (cpSel + 1) % cpCurrent.length; cpRender(); } }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); if (cpCurrent.length) { cpSel = (cpSel - 1 + cpCurrent.length) % cpCurrent.length; cpRender(); } }
+    else if (e.key === 'Enter') { e.preventDefault(); cpExecute(cpCurrent[cpSel]); }
+    else if (e.key === 'Escape') { e.preventDefault(); closePalette(); }
+  });
+  cpResults.addEventListener('click', e => {
+    const row = e.target.closest('.cp-result');
+    if (!row) return;
+    const idx = +row.dataset.idx;
+    if (!isNaN(idx)) cpExecute(cpCurrent[idx]);
+  });
+  // Click on the dim backdrop (outside the panel) closes the palette.
+  cpOverlay.addEventListener('click', e => {
+    if (e.target === cpOverlay) closePalette();
+  });
+  // Convenience hoisted bindings — outer keydown handler calls these by name.
+  function openPaletteRef(){ openPalette(); }
+  function closePaletteRef(){ closePalette(); }
+  function togglePaletteRef(){ togglePalette(); }
+  // Make sure outer-scope handler can call these (they're in the same closure,
+  // so just being declared above is enough — JS hoisting handles it).
+
   // ------- event wiring -------
   document.querySelectorAll('.tabs button').forEach(b => {
     b.onclick = () => {
@@ -1800,8 +2177,20 @@ const CLIENT_JS = `
     if (tr && tr.dataset.tk) showModal(tr.dataset.tk);
   });
   document.addEventListener('keydown', e => {
-    if (e.key === '/' && document.activeElement !== searchInput) { e.preventDefault(); searchInput.focus(); }
+    // Tag 213c: command palette triggers — Ctrl+K / Cmd+K (anywhere) or "/"
+    // (only when not already typing in an input). Stop propagation so we don't
+    // accidentally trigger other shortcuts in the same frame.
+    const isMod = e.ctrlKey || e.metaKey;
+    if (isMod && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      togglePalette();
+      return;
+    }
+    const tag = (document.activeElement && document.activeElement.tagName) || '';
+    const inField = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+    if (e.key === '/' && !inField) { e.preventDefault(); openPalette(); return; }
     if (e.key === 'Escape') {
+      if (document.getElementById('commandPalette').classList.contains('show')) { closePalette(); return; }
       if (searchResults.classList.contains('show')) { searchResults.classList.remove('show'); searchInput.value=''; }
       else if (document.getElementById('modal').classList.contains('show')) closeModal();
     }
@@ -1978,6 +2367,13 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
   <button id="nextPage">Next →</button>
 </div>
 <div id="modal" class="modal"><div class="modal-content" id="modalContent"></div></div>
+<div id="commandPalette" class="cp-overlay" role="dialog" aria-modal="true" aria-label="Command palette">
+  <div class="cp-panel">
+    <input id="cpInput" class="cp-input" type="text" autocomplete="off" spellcheck="false" placeholder="Search tickers, type > for commands, ? for help..." />
+    <div id="cpResults" class="cp-results"></div>
+    <div class="cp-hint">↑↓ navigate · Enter select · Esc close · Ctrl+K / Cmd+K / "/" to open</div>
+  </div>
+</div>
 <script>window.SCREENER_DATA = ${json};</script>
 <script>${CLIENT_JS}</script>
 </body>
