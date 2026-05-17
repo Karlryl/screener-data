@@ -15,6 +15,8 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+// Tag 218: atomic output writes (audit F-218b-03)
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const PICKS_DIR = path.join(__dirname, '..', 'picks-history');
 const METHODS_HIST_DIR = path.join(__dirname, '..', 'methods-history');
@@ -143,10 +145,10 @@ function main() {
   }
 
   if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
-  fs.writeFileSync(path.join(OUT_DIR, 'pick-diff-' + todayDate + '.json'), JSON.stringify(diff, null, 2));
+  writeFileAtomic(path.join(OUT_DIR, 'pick-diff-' + todayDate + '.json'), JSON.stringify(diff, null, 2));
 
   // Also overwrite the latest pointer
-  fs.writeFileSync(path.join(OUT_DIR, 'pick-diff.json'), JSON.stringify(diff, null, 2));
+  writeFileAtomic(path.join(OUT_DIR, 'pick-diff.json'), JSON.stringify(diff, null, 2));
 
   // HTML
   let html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Pick Diff — ' + todayDate + '</title>';
@@ -193,7 +195,7 @@ function main() {
     }
   }
   html += '</body></html>';
-  fs.writeFileSync(path.join(OUT_DIR, 'pick-diff.html'), html);
+  writeFileAtomic(path.join(OUT_DIR, 'pick-diff.html'), html);
 
   console.log('Pick-diff written:');
   console.log('  ' + path.join(OUT_DIR, 'pick-diff-' + todayDate + '.json'));

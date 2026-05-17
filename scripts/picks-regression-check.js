@@ -20,6 +20,8 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+// Tag 218: atomic output writes (audit F-218b-03)
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const DRIFT_THRESHOLD = 0.35;      // 35% in either direction
 const MIN_HISTORY_RUNS = 4;        // need ≥4 priors for statistical meaning
@@ -127,7 +129,7 @@ async function main() {
   if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
   const date = todayDate || new Date().toISOString().slice(0, 10);
   const reportPath = path.join(OUT_DIR, 'picks-regression-' + date + '.json');
-  fs.writeFileSync(reportPath, JSON.stringify({
+  writeFileAtomic(reportPath, JSON.stringify({
     asOf: latest.asOf,
     latestCounts,
     priorRuns: priorCountsList.length,

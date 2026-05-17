@@ -16,6 +16,8 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+// Tag 218: atomic output writes (audit F-218b-03)
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const OUT_DIR = path.join(__dirname, '..', 'outputs');
 const WALK_FWD = path.join(OUT_DIR, 'walk-forward.json');
@@ -163,7 +165,7 @@ function main() {
   md += '4. Quality-split section: once Phase 3.4 has ≥4 weeks of `_quality.grade` records, evaluate whether methods should be gated to grade-A stocks only.\n';
 
   if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
-  fs.writeFileSync(OUT_PATH, md);
+  writeFileAtomic(OUT_PATH, md);
   console.log('Methodology report written: ' + OUT_PATH);
 }
 

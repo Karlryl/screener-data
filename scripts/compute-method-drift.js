@@ -15,6 +15,8 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+// Tag 218: atomic output writes (audit F-218b-03)
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const HIST_DIR = path.join(__dirname, '..', 'methods-history');
 const OUT_PATH = path.join(__dirname, '..', 'outputs', 'method-drift.json');
@@ -63,7 +65,7 @@ function main() {
     perMethod[methodId].sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  fs.writeFileSync(OUT_PATH, JSON.stringify({
+  writeFileAtomic(OUT_PATH, JSON.stringify({
     asOf: new Date().toISOString().slice(0, 10),
     vintageCount: files.length,
     methods: perMethod
@@ -121,7 +123,7 @@ td.d { font-family: 'JetBrains Mono', monospace; color:#94a3b8; }
   <tbody>${rows}</tbody>
 </table>
 </body></html>`;
-  fs.writeFileSync(htmlPath, html);
+  writeFileAtomic(htmlPath, html);
 
   console.log('Method-drift written:');
   console.log('  ' + OUT_PATH);

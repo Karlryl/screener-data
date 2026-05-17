@@ -22,6 +22,8 @@ const fs = require('fs');
 const path = require('path');
 
 const Runner = require('../methods/runner.js');
+// Tag 218: atomic output writes (audit F-218b-03)
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const SNAP_DIR = path.join(__dirname, '..', 'snapshots');
 const PICKS_DIR = path.join(__dirname, '..', 'picks-history');
@@ -131,7 +133,7 @@ function main() {
       rows.push(cols.map(c => csvEscape(row[c])).join(','));
     }
     const outFile = path.join(OUT_DIR, 'elliott-export-' + mode + '.csv');
-    fs.writeFileSync(outFile, rows.join('\n') + '\n');
+    writeFileAtomic(outFile, rows.join('\n') + '\n');
     console.log('Wrote ' + outFile + ' (' + (rows.length - 1) + ' picks)');
   }
 }

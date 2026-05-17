@@ -23,6 +23,8 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+// Tag 218: atomic output writes (audit F-218b-03)
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const DRIFT_THRESHOLD = 0.25;
 const MIN_HISTORY_RUNS = 4;
@@ -128,9 +130,9 @@ async function main() {
   history.push(today);
   // Keep last 26 weeks
   history = history.slice(-26);
-  fs.writeFileSync(histPath, JSON.stringify(history, null, 2));
+  writeFileAtomic(histPath, JSON.stringify(history, null, 2));
 
-  fs.writeFileSync(path.join(OUT_DIR, today.asOf + '.json'), JSON.stringify(today, null, 2));
+  writeFileAtomic(path.join(OUT_DIR, today.asOf + '.json'), JSON.stringify(today, null, 2));
 
   console.log('Pull-Stats ' + today.asOf + ':');
   for (const [k, v] of Object.entries(today)) {

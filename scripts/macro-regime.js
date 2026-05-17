@@ -22,6 +22,8 @@
 'use strict';
 const fs   = require('fs');
 const path = require('path');
+// Tag 218: atomic output writes (audit F-218b-03)
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const PRICES_PATH  = path.join(__dirname, '..', 'prices', 'history.json');
 const OUT_PATH     = path.join(__dirname, '..', 'outputs', 'macro-regime.json');
@@ -70,7 +72,7 @@ function main() {
   if (!Array.isArray(series) || series.length === 0) {
     const outDir = path.dirname(args.out);
     if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-    fs.writeFileSync(args.out, JSON.stringify({
+    writeFileAtomic(args.out, JSON.stringify({
       asOf: new Date().toISOString(),
       ticker: args.ticker,
       error: 'no_price_data',
@@ -105,7 +107,7 @@ function main() {
 
   const outDir = path.dirname(args.out);
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-  fs.writeFileSync(args.out, JSON.stringify(out, null, 2));
+  writeFileAtomic(args.out, JSON.stringify(out, null, 2));
   console.log('Written: ' + args.out);
 }
 
