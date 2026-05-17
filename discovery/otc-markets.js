@@ -185,6 +185,14 @@ async function fetchOTCMarkets() {
     }
   }
 
+  // Tag 218 (audit F-217a-07 fix): warn when MAX_PAGES cap was hit AND
+  // we know there's more data — Expert Market + OTCQX+OTCQB combined can
+  // exceed 5,000 tickers, and silently truncating discovery is invisible
+  // without this warning.
+  if (totalRecords !== null && totalRecords > MAX_PAGES * PAGE_SIZE) {
+    const missed = totalRecords - MAX_PAGES * PAGE_SIZE;
+    console.warn(`  [OTC-Markets] HIT MAX_PAGES (${MAX_PAGES}) — ${missed} tickers truncated. Bump MAX_PAGES if OTC totalRecords keeps growing.`);
+  }
   console.log(`  [OTC-Markets] Total OTC tickers: ${result.size}`);
   return result;
 }
