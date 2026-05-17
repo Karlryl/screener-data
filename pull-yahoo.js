@@ -655,7 +655,15 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   // `price.currency` → _convertSnapshotToUSD early-returned for ADRs because origCcy
   // matched 'USD', leaving annual.* in trillions of local ccy and corrupting
   // fcf-yield / ev-ebitda / p/s by ~30× for the affected names.
-  const _fc = _y(pr, 'financialCurrency');
+  //
+  // Tag 219 (audit F-219c-1 CRITICAL fix): Yahoo's `price` module no longer
+  // returns `financialCurrency` (live verified 2026-05-17 on TSM/BABA/9988.HK
+  // — all return undefined). Tag 204's intent was to read it from price.
+  // The field MOVED to financialData.financialCurrency at some unknown date,
+  // making Tag 204 silently dead. ADRs again get the wrong reporting ccy and
+  // their financials are mis-FX'd by the ratio of trading-ccy to reporting-ccy.
+  // Fix: fall back to financialData.financialCurrency.
+  const _fc = _y(pr, 'financialCurrency') || _y(yahoo.financialData, 'financialCurrency');
   const _tc = _y(pr, 'currency');
   const rcOriginal = (_fc && _fc !== _tc) ? _fc : (_tc || 'USD');
   const tradingCurrency = _tc || rcOriginal; // NEW: trading-quote ccy for downstream visibility
@@ -703,7 +711,14 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       fcfMarginTTMSuppressed,
       // Tag 206f: Yahoo returned no financialCurrency — we used trading
       // currency as a best-effort proxy. Audit flag for OTC/pink-sheet edge.
-      ccyAmbiguous: _ccyAmbiguous
+      ccyAmbiguous: _ccyAmbiguous,
+      // Tag 219 (audit F5 HIGH): Yahoo ships shares fields in
+      // defaultKeyStatistics; the MODULES header lists "sharesOutstanding"
+      // but the mapper never extracted it. buyback-yield.js docstring
+      // lists meta.sharesOutstanding as a fallback that was never wired.
+      sharesOutstanding:        _y(ks, 'sharesOutstanding'),
+      floatShares:              _y(ks, 'floatShares'),
+      impliedSharesOutstanding: _y(ks, 'impliedSharesOutstanding')
     },
     // Tag 134: marketCap stored in reportingCurrency at mapper level;
     // _convertSnapshotToUSD applies FX conversion uniformly across all currency-denominated fields.
@@ -719,7 +734,17 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       cashRunway:       null,
       priceSales:       _metric(_y(sd, 'priceToSalesTrailing12Months'), SRC, CONF, asOf),
       forwardPE:        _metric(_y(sd, 'forwardPE'), SRC, CONF, asOf),
-      pe:               _metric(_y(sd, 'trailingPE'), SRC, CONF, asOf)
+      pe:               _metric(_y(sd, 'trailingPE'), SRC, CONF, asOf),
+      // Tag 219 (audit F2/F3 HIGH): Yahoo provides true EBITDA + Enterprise
+      // Value pre-computed; ev-ebitda.js currently uses opInc*1.2 heuristic
+      // and reconstructs EV from mcap+totalDebt-totalCash. Native fields are
+      // more accurate (Yahoo's EV includes minority interest + preferred).
+      ebitda:              _metric(_y(fd, 'ebitda'), SRC, CONF, asOf),
+      ebitdaMargins:       _metric(_y(fd, 'ebitdaMargins') != null ? _y(fd, 'ebitdaMargins') * 100 : null, SRC, CONF, asOf),
+      enterpriseValue:     _metric(_y(ks, 'enterpriseValue'),    SRC, CONF, asOf),
+      enterpriseToEbitda:  _metric(_y(ks, 'enterpriseToEbitda'), SRC, CONF, asOf),
+      enterpriseToRevenue: _metric(_y(ks, 'enterpriseToRevenue'),SRC, CONF, asOf),
+      beta:                _metric(_y(ks, 'beta'),               SRC, 0.8,  asOf)
     },
     external: {
       // aktienfinderScore via Bookmarklet manuell synced
@@ -1237,7 +1262,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         } catch (e) {}
       }
       let ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD;
-      let ftsAnnualSGA, ftsAnnualDepreciation;
+      let ftsAnnualSGA, ftsAnnualDepreciation, ftsAnnualShares;
       let ftsQuarterlyNI;
       if (useCache && cached.payload) {
         ftsAnnual = cached.payload.ftsAnnual;
@@ -1252,6 +1277,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // these fields after their cache expires (CACHE_TTL_MS) and re-pulls.
         ftsAnnualSGA = cached.payload.ftsAnnualSGA || [];
         ftsAnnualDepreciation = cached.payload.ftsAnnualDepreciation || [];
+        // Tag 219 (audit F4 HIGH): annualShares added — same gradual-rollout
+        // pattern as Tag 211l SGA/Depreciation.
+        ftsAnnualShares = cached.payload.ftsAnnualShares || [];
       } else {
         // Tag-14: fundamentalsTimeSeries-Pull für annualOpInc/FCF/opIncQ.
         const fts = await _withTimeout(fetchFundamentalsTS(stock.yahoo_symbol), 30000, stock.ticker + '/fts');
@@ -1269,6 +1297,18 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // annualFin and 'depreciationAndAmortization' on annualCash.
         ftsAnnualSGA = _ftsExtractByYear(fts.annualFin, ['sellingGeneralAndAdministration', 'SellingGeneralAndAdministration']);
         ftsAnnualDepreciation = _ftsExtractByYear(fts.annualCash, ['depreciationAndAmortization', 'depreciationAmortizationDepletion', 'DepreciationAndAmortization']);
+        // Tag 219 (audit F4 HIGH): shares per year — unblocks methods/buyback-yield.js
+        // which has been computable=false universally because annual.annualShares
+        // never existed. Tries dilutedAverageShares (more conservative — counts
+        // options/RSUs) first, falls back to basicAverageShares, then to FTS
+        // annualBs ordinarySharesNumber. methods/capital-allocation-quality.js
+        // will scale 4/4 instead of 3/4 once this lands.
+        ftsAnnualShares = _ftsExtractByYear(fts.annualFin,
+          ['dilutedAverageShares', 'basicAverageShares']);
+        if (!ftsAnnualShares.some(v => v != null)) {
+          ftsAnnualShares = _ftsExtractByYear(fts.annualBs,
+            ['ordinarySharesNumber', 'shareIssued']);
+        }
         // Tag-90: Quarterly NetIncome (8-Quarter-Earnings-Stability)
         ftsQuarterlyNI = (fts.quarterlyFin || []).slice().reverse()
           .map(r => r && r.netIncome != null ? r.netIncome : null)
@@ -1288,7 +1328,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
             _cacheVersion: FTS_CACHE_VERSION,
             _ftsPartial: ftsPartial,
             cachedAt: new Date().toISOString(),
-            payload: { ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD, ftsQuarterlyNI, ftsAnnualSGA, ftsAnnualDepreciation }
+            payload: { ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD, ftsQuarterlyNI, ftsAnnualSGA, ftsAnnualDepreciation, ftsAnnualShares }
           }));
         } catch (e) {}
         if (ftsPartial) canonical._ftsPartial = true;
@@ -1344,6 +1384,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // mirrors the additive pattern used for annualSBC/annualCapex.
       if ((ftsAnnualSGA || []).length > 0)          canonical.annual.annualSGA = ftsAnnualSGA;
       if ((ftsAnnualDepreciation || []).length > 0) canonical.annual.annualDepreciation = ftsAnnualDepreciation;
+      // Tag 219: shares per year — see Tag 219c agent F4 fix. Unblocks
+      // methods/buyback-yield.js + makes capital-allocation-quality 4/4.
+      if ((ftsAnnualShares || []).length > 0)       canonical.annual.annualShares = ftsAnnualShares;
       // Tag-90: quarterlyNI in timeseries
       canonical.timeseries.netIncomeQ = (ftsQuarterlyNI || []).map(v => ({ value: v }));
       if (ftsAnnual.annualGP.length > 0) canonical.annual.annualGP = ftsAnnual.annualGP;
