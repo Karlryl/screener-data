@@ -84,7 +84,8 @@ const MODULES = [
   'incomeStatementHistoryQuarterly',    // quartal-rev/OpInc — für Acceleration-Detection
   'price',                              // currency, exchange
   'assetProfile',                       // sector, industry
-  'insiderTransactions'                 // Tag 137: Form 4 insider buy/sell activity
+  'insiderTransactions',                // Tag 137: Form 4 insider buy/sell activity
+  'earningsTrend'                       // Tag 211h: epsRevisions per period — activates analyst-revision-breadth
 ];
 
 // ─── Logger ───────────────────────────────────────────────────────
@@ -713,6 +714,52 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     },
     external: {
       // aktienfinderScore via Bookmarklet manuell synced
+      // Tag 211h: estimateRevisions from yahoo.earningsTrend — activates
+      // methods/analyst-revision-breadth.js (Tag 210d) which was returning
+      // computable=false universally before this field was persisted. Keyed
+      // by Yahoo period code ('0q','+1q','0y','+1y'); the method picks the
+      // first period with non-null upLast30days/downLast30days.
+      estimateRevisions: (function() {
+        const et = yahoo.earningsTrend;
+        const trend = et && Array.isArray(et.trend) ? et.trend : null;
+        if (!trend || trend.length === 0) return null;
+        const out = {};
+        for (const t of trend) {
+          if (!t || typeof t !== 'object') continue;
+          const pk = t.period;
+          if (!pk || typeof pk !== 'string') continue;
+          const er = t.epsRevisions;
+          if (!er || typeof er !== 'object') continue;
+          // Yahoo varies casing ('upLast7days' vs 'upLast7Days'). Coalesce
+          // both spellings so the consumer sees a single normalized shape.
+          // Unwrap {value:n} envelopes if yahoo-finance2 returns wrapped.
+          const _v = (x) => {
+            if (x == null) return null;
+            if (typeof x === 'number') return Number.isFinite(x) ? x : null;
+            if (typeof x === 'object' && Number.isFinite(x.value)) return x.value;
+            return null;
+          };
+          const pick = (a, b) => {
+            const va = _v(er[a]); if (va != null) return va;
+            return _v(er[b]);
+          };
+          const row = {
+            upLast7Days:    pick('upLast7days',  'upLast7Days'),
+            downLast7Days:  pick('downLast7days','downLast7Days'),
+            upLast30Days:   pick('upLast30days', 'upLast30Days'),
+            downLast30Days: pick('downLast30days','downLast30Days'),
+            upLast60Days:   pick('upLast60days', 'upLast60Days'),
+            downLast60Days: pick('downLast60days','downLast60Days'),
+            upLast90Days:   pick('upLast90days', 'upLast90Days'),
+            downLast90Days: pick('downLast90days','downLast90Days')
+          };
+          // Only emit periods that carry at least one non-null window —
+          // saves bytes on snapshots when Yahoo returns empty epsRevisions.
+          const hasData = Object.values(row).some(v => v != null);
+          if (hasData) out[pk] = row;
+        }
+        return (Object.keys(out).length > 0) ? out : null;
+      })()
     },
     timeseries: {
       revenueQ, opIncQ, grossProfitQ
