@@ -61,3 +61,27 @@ The two stacks have drifted: two BUCKETS taxonomies, two penalty systems, two su
 - A3 (dual scoring stacks)
 - A4 (filesystem-scan loader)
 - A5 (half-baked aktienfinder integration)
+
+---
+
+## Status Update 2026-05-17 (Tag 224a)
+
+Per the Tag 222c documentation-accuracy audit (`audit-reports/2026-05-17-tag222c-documentation-audit.md` §4, findings A1 / A2 / A3): the ADR's factual claims about which functions are dead, which are kept, and why are **all still correct at HEAD**. Phase 2 (deprecation warnings) and the Tag 134 Phase 2.2 work (explicit `methods/index.js` allow-list + removal of `methods/disabled/`) are landed and verified — `engine-v7.3.js` emits the documented `[engine-v7.3 DEPRECATED] … is retired per ADR-001` warning at L928, `methods/disabled/` is gone, the registry is an allow-list, and `score-aggregator.js` is the production scorer (24 method files reference `SCORE_WEIGHTS` directly).
+
+### Phases still pending
+
+| Phase | Stated intent | Current state | Reason deferred |
+|---|---|---|---|
+| **Phase 3** | Migrate `engine-cli-tests.js` to test `score-aggregator` and `evaluateMode` directly. Then physically remove `scoreTrackA` / `scoreTrackB` exports from `engine-v7.3.js`. | `scoreTrackA` / `scoreTrackB` still exist at `engine-v7.3.js` L931+. `engine-cli-tests.js` still calls them as the workflow's pre-pull gate. The deprecation warning fires but the functions execute as before. | Rollback safety. The pre-pull gate is the workflow's only protection against shipping broken scoring code; rewriting it onto `score-aggregator` without losing the ~120 lines of Track-A/B coverage is a Phase 3 work item that has not been prioritised against shipping new methods. Estimated effort: ~half-day. |
+| **Phase 5** | Delete `score-orchestrator.js` and `diagnose-spec.js`. | Both files are still present. Neither carries a deprecation marker in its module docstring — `score-orchestrator.js`'s header still self-describes as "Single source of truth für Score-Berechnung", **the exact opposite of what this ADR retired**. `diagnose-spec.js` is unmodified. | Same rationale as Phase 3 — these files have no production callers but are referenced by `engine-cli-tests.js`. Phase 5 is gated on Phase 3 completion. |
+
+### Action items opened by this status update
+
+1. **`score-orchestrator.js` docstring header** — must be updated to mark the file deprecated per this ADR's stated intent. The current header is actively misleading to anyone discovering the file.
+2. **Phase 3 work** — schedule the `engine-cli-tests.js` migration. Until then the deprecation is partial: the warnings fire but the legacy stack remains executable and a real source of bugs (see Tag 220a A1 finding — manipulation-filters API drift was only caught because `engine-cli-tests.js` was actively exercising the legacy path).
+3. **No new ADRs** were written for Tag 75 → Tag 222 work despite ~150 tags of methodology changes (Mauboussin intangible-ROIC, Beneish, Ohlson, capital-allocation composite, Tag 211 fixture-hash invariant, Tag 218/219 atomic-write hardening, Tag 213a/213b smart-money signals). The Tag 222c audit recommends ADR-002 (fixture-hash invariant), ADR-003 (universe-discovery architecture), ADR-004 (atomic-write hardening). None has been opened.
+
+### Decision
+
+Status remains **Accepted**. Phases 3 + 5 are explicitly **deferred**, not abandoned — they will be picked up either when a real bug forces touching the legacy stack again or when a dedicated cleanup wave is scheduled. This status update closes the documentation drift surfaced by Tag 222c finding A1 / A2 / A3.
+

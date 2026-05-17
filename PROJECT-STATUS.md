@@ -1,96 +1,65 @@
-# Project Status — Karl's Stock-Screener
+# Project Status — screener-data
 
-**Last Update:** 2026-05-07 — **Tag 75 erreicht.** 23 aktive Methoden + 4 disabled (im Repo erhalten).
+**Last Update:** 2026-05-17 — **Tag 223 era.** Daily-cron discovery pipeline over ~15 700 tickers.
 
-## Aktueller Stand
+> For full context see `README.md`. For chronological history read `audit-reports/` in date order. This file is a state snapshot, capped at 100 lines.
 
-- **70 Stocks** Watchlist (kein Position-Tracking, kein Buy-Signal)
-- **23 Methoden** parallel, alle isoliert (kein Aggregat-Score)
-- **Pipeline autonom** via GitHub Actions wöchentlich (Mo 08:00 UTC) + manuelle Trigger via PAT
-- **Workflow** läuft in ~5-10 Min: Engine-Tests → Yahoo-Pull → Sektor-Median-Auto → Earnings-Calendar → Methods-Report → Diff-Report → Methods-History-Snapshot → Price-Pull
-- **Sektor-relative Schwellen** für ROIC + FCF-Yield bei 6 Sub-Profile
+## Current state
 
-## Aktive Methoden (23)
+- **Universe:** 15 734 tickers in `watchlist.json` (`{_meta, stocks:[…], lastUniverseRefresh, lastManualExpansion}` schema since Tag 207a).
+- **Methods registry:** 83 entries in `methods/index.js`; 79 typed in `methods/method-types.js` (CORE / DIAGNOSTIC / DATAGUARD). `methods/disabled/` does not exist (removed per ADR-001 Phase 2).
+- **Production scorer:** `methods/score-aggregator.js` (`SCORE_WEIGHTS` for HYPERGROWTH / QUALITY_COMPOUNDER / TURNAROUND). Tier taxonomy A / B / NEAR_MISS / REJECT.
+- **Legacy scorer:** `engine-v7.3.js` + `score-orchestrator.js` are deprecated but not deleted (Phase 3 / Phase 5 deferred — see ADR-001 status update). Still invoked by `engine-cli-tests.js` pre-pull guard.
+- **Cron:** daily `'0 2 * * *'` UTC. Wall-clock per run 2.5–4 h. `timeout-minutes: 240`.
+- **Tests:** 155/155 passing (`tag28-tests.js`) at HEAD; includes the fixture-hash invariant guarding aggregator drift.
 
-### Hypergrowth & Wachstum (5)
-rule-of-40, revenue-growth-3y, multi-year-stability, quarterly-rev-acceleration, above-200d-ma
+## Pipeline outputs (HTML)
 
-### Quality (5)
-roic, gross-margin-stability, aktienfinder-quality, multi-year-stability, opinc-margin-spike
+- `screener.html` — Bloomberg-style 6-tab dashboard (HG / QC / SMALL / R40 / PRE_BREAKOUT / WATCH); light-theme toggle; command palette `Ctrl+K`; sector heatmap; per-ticker detail modal with ΔScore sparkline.
+- `modes-report.html` — mode-grouped report (primary user-facing artifact).
+- `dashboard.html`, `diff-report.html`, `methods-report.html` — legacy / secondary reports.
+- `outputs/*.{html,csv,md}` — pick-diff, methodology, Elliott-Wave CSV export.
 
-### Bewertung (4)
-fcf-yield, forward-pe, peg, ev-ebitda
+All five HTML artifacts and the `outputs/` tree are deployed to the `gh-pages` branch each successful run.
 
-### Solvenz/Manipulation-Detektoren (7)
-net-debt-ebitda, sloan-ratio, margin-decay, sbc-revenue, capex-trend, working-capital-anomaly, opinc-margin-spike
+## Pull / analytics scripts
 
-### Skin-in-the-Game (1)
-insider-ownership
+| Script                                  | Cadence | Purpose                                              |
+|-----------------------------------------|---------|------------------------------------------------------|
+| `pull-yahoo.js`                          | daily   | Fundamentals + quotes (concurrency 8, rate 2000ms)   |
+| `pull-historical-prices.js`              | daily   | OHLCV history                                        |
+| `pull-earnings-dates.js`                 | daily   | Earnings calendar                                    |
+| `pull-sec-xbrl.js`                       | monthly | SEC financial-statement extension                    |
+| `scripts/pull-13f-institutional.js`      | quarterly | SEC 13F-HR institutional holdings                  |
+| `scripts/pull-insider-form4.js`          | daily   | SEC Form 4 insider transactions                      |
+| `scripts/refresh-fx.js`                  | daily   | Currency rates                                       |
+| `refresh-universe.js`                    | daily   | Wikipedia + SEC + NASDAQ + OTC + Finnhub             |
+| `scripts/prune-watchlist.js`             | daily   | Delist / stale-ticker prune                          |
+| `snapshot-picks.js`                      | daily   | Freeze daily picks (90d retention)                   |
+| `snapshot-methods-history.js`            | daily   | Freeze per-method pass rates (7d retention)          |
+| `scripts/snapshot-score-history.js`      | daily   | 30-entry rolling per-ticker score                    |
+| `scripts/walk-forward-perf.js`           | daily   | Picks × prices forward-return α                      |
+| `scripts/method-effectiveness.js`        | daily   | Per-method predictive power                          |
+| `scripts/methodology-report.js`          | daily   | Walk-forward + effectiveness combined                |
+| `scripts/pick-diff.js`                   | daily   | What's new, what's gone, why                         |
+| `scripts/elliott-export.js`              | daily   | CSV for downstream Elliott-Wave tool                 |
+| `scripts/archive-old-snapshots.js`       | daily   | NDJSON compaction (keep-days policy)                 |
+| `scripts/picks-regression-check.js`      | daily   | Pick-count drift Discord alert                       |
+| `scripts/check-pull-stats.js`            | daily   | Pull-output shrink Discord alert                     |
+| `scripts/pipeline-health-check.js`       | daily   | Per-script failure-rate aggregator                   |
+| `scripts/compute-method-drift.js`        | daily   | Sparkline data                                       |
+| `scripts/macro-regime.js`                | daily   | SPY 200d-MA → BULL/BEAR/SIDEWAYS                     |
 
-### Price/Trend (4)
-drawdown-52w, high-proximity-52w, volatility-annualized, above-200d-ma
+## Open architectural debt
 
-(Note: einige Methoden sind bewusst in mehreren Kategorien)
+- **ADR-001 Phase 3** (migrate `engine-cli-tests.js` to `score-aggregator`, delete `scoreTrackA`/`scoreTrackB`): not executed.
+- **ADR-001 Phase 5** (delete `score-orchestrator.js`, `diagnose-spec.js`): not executed. Both files are still present, neither carries a deprecation marker.
+- **Tag 221a data-integrity** CRITICALs C1 (Tag 211l schema not yet deployed in pull-yahoo), C2 (`external-data/aktienfinder.json={}`), C3 (2026-05-12 date gap): tracked but deferred — partially closed by Tag 222b.
+- **Beneish / Ohlson** methods: registered but `computable=false` on all snapshots until pull-yahoo extends balance-sheet / IS coverage (AR / PPE / CL / LTD / SGA / Dep / OCF).
 
-## Disabled Methoden (4, in methods/disabled/)
+## Where to read more
 
-rule-of-x, roce, magic-formula, asset-growth-divergence — Tag 61 wegen Korrelation > 0.8 mit aktiven Methoden auskommentiert. Reaktivierung trivial via mv + runner.js-Edit.
-
-## CLI-Tools
-
-| Tool | Zweck |
-|---|---|
-| `watchlist-cli.js list/add/remove/info/import/export` | Watchlist-Verwaltung |
-| `methods-cli.js list/describe ID` | Methoden-Übersicht + Live-Stats |
-| `history-cli.js TICKER` | Werte-History pro Stock |
-| `tune-threshold.js METHOD-ID` | Pass-Count bei verschiedenen Thresholds |
-| `analyze-correlation.js` | Method-Correlation-Matrix |
-| `aktienfinder-import.js path/csv` | Aktienfinder-Score-Import |
-| `earnings-cli.js [--days N]` | Stocks mit Earnings in next N Tagen |
-| `sector-trends.js` | Sektor-Pass-Rate über Zeit |
-| `suggest-watchlist-additions.js` | Universe-Scanner (Stocks die ≥N/23 pass aber nicht in WL) |
-| `suggest-watchlist-cleanup.js` | Stocks vorschlagen die konstant niedrig pass-en |
-| `backtest-pass-vs-fail.js` | Performance-Backtest 30d + 90d |
-| `methods/sector-medians-compute.js` | Sektor-Median-Auto-Compute |
-
-## Reports (HTML)
-
-- `methods-report.html` — Hauptreport mit Sektor-Distribution, Top-Picks-Ranking, Pass-Count-Quick-Filter, Filter-Presets, Modal-Detail-View, Mobile-Responsive
-- `diff-report.html` — Diff vs. vorigem Run (Pass-Count-Changes, Werte-Changes ≥20%)
-
-## Wichtige Files
-
-- `methods/` — 23 active modules + 4 disabled + runner + helpers + sector-medians (hardcoded + auto) + trend
-- `pull-yahoo.js` — Yahoo-Pull (quoteSummary + fundamentalsTimeSeries: financials + cash-flow + balance-sheet)
-- `pull-historical-prices.js` — Closing-Prices für Backtest
-- `pull-earnings-dates.js` — Earnings-Calendar-Pull
-- `detect-changes.js` — Method-Pass-Fail-Tracking + alert-state + methodHistory + field-coverage
-- `generate-methods-report.js` — Hauptreport mit Mobile-Responsive
-- `generate-diff-report.js` — Diff-vs-previous-Run
-- `snapshot-methods-history.js` — kumulative History
-- `engine-cli-tests.js` + `tag21-tests.js` + `tag22-tests.js` + `tag28-tests.js` — Test-Suite (~40 tests)
-- `engine-v7.3.js` + `score-orchestrator.js` + `manipulation-filters.js` — legacy (genutzt für Sub-Profile-Detection)
-- `.github/workflows/daily-pull.yml` — Cron-Workflow
-
-## Tag 21-75 Bilanz
-
-55 Tage Code, 23 aktive Methoden, 12 CLI-Tools, 2 HTML-Reports, autonome wöchentliche Pipeline. Karl hat in dieser Zeit 0 manuelle GitHub-Klicks gemacht — alles via PAT.
-
-Highlights:
-- Tag 28 Architektur-Pivot: weg von Aggregat-Score → Plugin-System
-- Tag 49 Sektor-Median-Auto-Compute (Council Counter#3-Antwort)
-- Tag 58 Method-Correlation-Audit + Tag 61 Konsolidierung 21→17→23 (mit Re-Erweiterung um Trend-Methoden)
-- Tag 66-70 Price-basierte Methoden (drawdown, high-proximity, volatility, 200d-MA, quarterly-acceleration)
-
-## Mögliche Tag 76+ Roadmap
-
-- **Backtest-Auswertung** sobald 4-12 Wochen Daten gesammelt sind (aktuell nur 1-2 Datenpunkte)
-- **Branch-Score-Analyse**: Stocks die in Hypergrowth-Subset top sind aber Quality-Subset durchfallen
-- **Methods-Effectiveness-Audit**: nach 3 Monaten — welche Methoden haben tatsächlich predictive power gezeigt?
-- **News/Earnings-Calls-Integration** wenn Karl externe API-Source besorgt
-- **Multi-Source-Layer (Finnhub Backup)** wenn Yahoo-Drift ein konkretes Problem wird
-- **Watchlist-Erweiterung auf 200+ stocks** wenn Pipeline-Performance es erlaubt
-
-## Zwischenspeicherung-Anker
-
-Jeder Tag committed + gepusht. Bei Session-Abbruch: neue Session öffnen, diese Datei lesen, `git clone` mit existierendem PAT (in Cowork-Memory), weiter ab nächstem pending-Tag.
+- `README.md` — architecture, modes, methods taxonomy, run instructions.
+- `docs/decisions/ADR-001-retire-track-a-b-scoring.md` — scoring-stack consolidation rationale + current status.
+- `audit-reports/` — 48 chronological audit reports (2026-05-14 → 2026-05-17). The directory tells the actual story of Tag 75 → Tag 223.
+- `.github/workflows/daily-pull.yml` — the canonical operational sequence; comments document every Tag-level change.
