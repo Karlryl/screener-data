@@ -224,5 +224,12 @@ module.exports = [
   // ROE from fragile leverage-driven ROE. 8/9 mega-cap anchors pass; CRDO
   // correctly flagged (operations still scaling). DIAGNOSTIC, fixture-hash
   // safe (not in SCORE_WEIGHTS).
-  { file: './penman-nissim-decomposition.js' }
+  { file: './penman-nissim-decomposition.js' },
+
+  // Tag 230b: Betting Against Beta — Frazzini & Pedersen 2014 JFE 111(1):1-25.
+  // Low-beta cross-section anomaly: beta <= 1.0 PASS (defensive tilt),
+  // (1.0, 1.5] BORDERLINE, > 1.5 FAIL (high-beta leverage-aversion penalty).
+  // metrics.beta sourced from Yahoo defaultKeyStatistics.beta (Tag 219).
+  // DIAGNOSTIC, fixture-hash safe (not in SCORE_WEIGHTS).
+  { file: './betting-against-beta.js' }
 ];
