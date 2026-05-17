@@ -1722,6 +1722,100 @@ test('Tag 211e FCF-Conversion-Stability: NOT-COMPUTABLE when 3+ years are losses
   if (r.components.lossYears !== 3) throw new Error('lossYears should be 3, got ' + r.components.lossYears);
 });
 
+// ─── Tag 212a — operating-leverage-margin-accel (Mauboussin 2014) smoke tests ─
+// DIAGNOSTIC method, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
+// Pass requires averaged (marginDelta / revGrowth) > 0.05 across >= 2 positive-
+// growth pairs in a 4y+ window with rev > 0 each year.
+
+test('Tag 212a Op-Leverage (Margin-Accel): PASS — compounder with expanding margins', () => {
+  // Software compounder: revenue grows ~25% per year while op-margin
+  // climbs from 10% -> 25% over 4y. Strong positive leverage.
+  // Years (latest-first): rev=[2000,1600,1280,1024], opM ~ 25%/22%/18%/14%/10%
+  const s = { annual: {
+    annualRev:   [{value: 2000}, {value: 1600}, {value: 1280}, {value: 1024}],
+    annualOpInc: [{value: 500},  {value: 352},  {value: 230},  {value: 143}]
+  }};
+  const r = Runner.evaluateStock(s)['operating-leverage-margin-accel'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (!r.pass) throw new Error('compounder must pass; reason=' + r.reason);
+  if (!(r.value > 0.05)) throw new Error('value should be > 0.05, got ' + r.value);
+  if (r.components.positiveGrowthPairs < 2) throw new Error('need >= 2 positive-growth pairs, got ' + r.components.positiveGrowthPairs);
+});
+
+test('Tag 212a Op-Leverage (Margin-Accel): FAIL — growth without leverage (margin compresses)', () => {
+  // Scale-dis-economies: rev grows 20% per year but op-margin compresses
+  // from 20% -> 10%. Negative leverage average.
+  const s = { annual: {
+    annualRev:   [{value: 2000}, {value: 1667}, {value: 1389}, {value: 1158}],
+    annualOpInc: [{value: 200},  {value: 217},  {value: 222},  {value: 232}]
+  }};
+  const r = Runner.evaluateStock(s)['operating-leverage-margin-accel'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (r.pass) throw new Error('margin-compression case must fail; reason=' + r.reason);
+  if (!(r.value <= 0.05)) throw new Error('value should be <= 0.05 (negative leverage), got ' + r.value);
+});
+
+test('Tag 212a Op-Leverage (Margin-Accel): NOT-COMPUTABLE with <4 valid years', () => {
+  const s = { annual: {
+    annualRev:   [{value: 2000}, {value: 1600}, {value: 1280}],
+    annualOpInc: [{value: 500},  {value: 352},  {value: 230}]
+  }};
+  const r = Runner.evaluateStock(s)['operating-leverage-margin-accel'];
+  if (r.computable) throw new Error('should be computable=false with only 3y');
+  if (r.pass) throw new Error('incomputable result must have pass=false');
+  if (!r.reason || !/need >= 4/.test(r.reason)) throw new Error('reason should mention need >= 4; got: ' + r.reason);
+});
+
+test('Tag 212a Op-Leverage (Margin-Accel): NOT-COMPUTABLE without enough positive-growth pairs', () => {
+  // Revenue flat/declining each year -> no positive-growth pairs above 5% floor.
+  const s = { annual: {
+    annualRev:   [{value: 1000}, {value: 1010}, {value: 1020}, {value: 1015}],
+    annualOpInc: [{value: 250},  {value: 240},  {value: 230},  {value: 220}]
+  }};
+  const r = Runner.evaluateStock(s)['operating-leverage-margin-accel'];
+  if (r.computable) throw new Error('should be computable=false with no positive-growth pairs');
+  if (!r.reason || !/positive-growth pairs/.test(r.reason)) throw new Error('reason should mention positive-growth pairs; got: ' + r.reason);
+});
+
+// ─── Tag 212b — revenue-quality-cov (QMJ Revenue Quality, 8Q QoQ CoV) smoke tests ─
+// DIAGNOSTIC method, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
+// Pass requires CoV(QoQ) < 1.5 over 8 quarters with mean QoQ != 0.
+
+test('Tag 212b Rev-Quality (QoQ CoV): PASS — smooth recurring-revenue SaaS', () => {
+  // 8 quarters of ~5% QoQ growth with tiny dispersion -> CoV well under 1.5.
+  // Latest first: each Q ~ 1.05x prior.
+  const vals = [1340, 1276, 1215, 1157, 1102, 1050, 1000, 952];
+  const s = { timeseries: {
+    revenueQ: vals.map(v => ({value: v}))
+  }};
+  const r = Runner.evaluateStock(s)['revenue-quality-cov'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (!r.pass) throw new Error('smooth-revenue case must pass; reason=' + r.reason);
+  if (!(r.components.cov < 1.5)) throw new Error('CoV should be < 1.5, got ' + r.components.cov);
+});
+
+test('Tag 212b Rev-Quality (QoQ CoV): FAIL — lumpy project-based revenue', () => {
+  // Wild QoQ swings: +50%, -30%, +60%, -25%, etc. CoV blows past 1.5.
+  const s = { timeseries: {
+    revenueQ: [{value: 1500}, {value: 1000}, {value: 1400}, {value: 900},
+               {value: 1300}, {value: 800}, {value: 1200}, {value: 750}]
+  }};
+  const r = Runner.evaluateStock(s)['revenue-quality-cov'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (r.pass) throw new Error('lumpy-revenue case must fail; reason=' + r.reason);
+  if (!(r.components.cov >= 1.5)) throw new Error('CoV should be >= 1.5, got ' + r.components.cov);
+});
+
+test('Tag 212b Rev-Quality (QoQ CoV): NOT-COMPUTABLE with <8 quarters', () => {
+  const s = { timeseries: {
+    revenueQ: [{value: 100}, {value: 95}, {value: 90}, {value: 85}, {value: 80}, {value: 75}]
+  }};
+  const r = Runner.evaluateStock(s)['revenue-quality-cov'];
+  if (r.computable) throw new Error('should be computable=false with only 6 quarters');
+  if (r.pass) throw new Error('incomputable result must have pass=false');
+  if (!r.reason || !/need >= 8/.test(r.reason)) throw new Error('reason should mention need >= 8; got: ' + r.reason);
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the

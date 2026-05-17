@@ -142,5 +142,17 @@ module.exports = [
   // Tag 211e: FCF-conversion stability — 5y geometric mean of FCF/NetIncome.
   // Multi-year persistence view of cash conversion (Damodaran / Mauboussin);
   // complements single-year sloan-ratio. DIAGNOSTIC, fixture-hash safe.
-  { file: './fcf-conversion-stability.js' }
+  { file: './fcf-conversion-stability.js' },
+
+  // Tag 212a: Operating-Leverage (Margin-Acceleration variant) — averaged
+  // pp margin / unit revenue growth across positive-growth pairs (Mauboussin
+  // 2014, Damodaran). Distinct from Tag 196 operating-leverage (single
+  // 3y incremental margin). DIAGNOSTIC, fixture-hash safe.
+  { file: './operating-leverage-margin-accel.js' },
+
+  // Tag 212b: Revenue-Quality (Quarterly QoQ CoV, 8Q) — recurring-revenue
+  // smoothness signal (Asness/Frazzini/Pedersen 2019 QMJ Revenue Quality).
+  // Sibling of Tag 113 q-spike-dataguard with statistical CoV over the whole
+  // 8Q window vs. single-Q concentration check. DIAGNOSTIC, fixture-hash safe.
+  { file: './revenue-quality-cov.js' }
 ];
