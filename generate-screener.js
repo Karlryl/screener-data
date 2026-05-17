@@ -548,6 +548,11 @@ header input:focus { border-color:var(--blue); }
 .tabs button { background:transparent; border:none; color:var(--text-1); padding:10px 14px; font-family:var(--ui); font-size:12px; cursor:pointer; border-bottom:2px solid transparent; letter-spacing:0.05em; text-transform:uppercase; transition:background 100ms ease-out, color 100ms ease-out; }
 .tabs button:hover { color:var(--text-0); background:var(--bg-hover); }
 .tabs button.active { color:var(--blue); border-bottom-color:var(--blue); }
+/* Tag 226c-3: tab-count badge — Bloomberg/Koyfin convention. Subtle muted
+   "(N)" appended to each tab so the universe size is visible at a glance
+   without entering the tab. Bumps tab info-density with one number per tab. */
+.tabs button .tc { color:var(--text-2); font-family:var(--mono); font-size:10px; margin-left:6px; font-weight:400; letter-spacing:0; text-transform:none; font-variant-numeric:tabular-nums; }
+.tabs button.active .tc { color:var(--blue); opacity:0.7; }
 .filters { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:8px 16px; background:var(--bg-1); border-bottom:1px solid var(--border); font-size:11px; }
 .filters .group { display:flex; gap:4px; align-items:center; }
 .filters .label { color:var(--text-2); margin-right:4px; text-transform:uppercase; letter-spacing:0.05em; font-size:10px; }
@@ -2596,6 +2601,22 @@ const CLIENT_JS = `
     applyTheme(next);
     try { localStorage.setItem('screener_theme', next); } catch (e) { /* ignore */ }
   };
+
+  // Tag 226c-3: populate tab-count badges (universe size per tab). Counts
+  // are static — tabs are pre-classified at HTML generation. SECTOR is the
+  // heatmap view (not a stock list) so no count is appended for it.
+  (function populateTabCounts(){
+    document.querySelectorAll('.tabs button').forEach(b => {
+      const t = b.dataset.tab;
+      if (!t || t === 'SECTOR') return;
+      const list = TABS[t] || [];
+      const span = document.createElement('span');
+      span.className = 'tc';
+      span.setAttribute('aria-label', list.length + ' stocks in this tab');
+      span.textContent = '(' + list.length + ')';
+      b.appendChild(span);
+    });
+  })();
 
   renderTable();
 })();
