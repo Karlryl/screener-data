@@ -107,10 +107,18 @@ async function main() {
       _pipelineFailures.push({ ticker, error: e.message });
       continue;
     }
+    // Tag 228b-3 (audit F-227c-06 LOW fix): the previous denominator for the
+    // allPass check used `Object.keys(results).length`, which counted methods
+    // whose result was null/falsy (skipped by `if (!r) continue`). Today
+    // runner.evaluateStock always returns a wrapped result, so no null entries
+    // appear in practice — but the moment a future method is permitted to
+    // return null, allPass would silently undercount (denominator inflated by
+    // skipped entries). Count only the methods we actually evaluated.
     const compact = {};
-    let computableCount = 0, passCount = 0;
+    let computableCount = 0, passCount = 0, totalEval = 0;
     for (const [mid, r] of Object.entries(results)) {
       if (!r) continue;
+      totalEval++;
       compact[mid] = { value: r.computable ? r.value : null, pass: r.computable ? r.pass : null };
       if (r.computable) computableCount++;
       if (r.computable && r.pass) passCount++;
@@ -128,7 +136,7 @@ async function main() {
       inputs: _digest(stock)
     };
     if (computableCount > 0) anyComputable++;
-    if (computableCount === Object.keys(results).length && passCount === computableCount) allPass++;
+    if (totalEval > 0 && computableCount === totalEval && passCount === computableCount) allPass++;
   }
   data.summary = {
     totalStocks: fileList.length,
