@@ -171,6 +171,10 @@ function evaluate(stock) {
       validYears: ratios.length,
       lossYears,
       ratios: rawRatios.map(r => Math.round(r * 10000) / 10000),
+      // Tag 225e-2d (audit LOW-2): parallel-array comparison relies on
+      // rawRatios.push and ratios.push being lockstep within the same loop
+      // body above (lines 130-139). DO NOT decouple the two pushes without
+      // switching to an explicit `floored:true` flag carried inside each entry.
       negativeRatioFloorUsed: ratios.some((r, i) => rawRatios[i] !== r),
       thresholds: { geomeanFloor: THRESHOLD, negRatioFloor: NEG_RATIO_FLOOR }
     },
