@@ -67,13 +67,15 @@ const RED_FLAG_RULES = {
   },
   EXTREME_SLOAN: {
     id: 'sloan-ratio',
-    // Tag 216a (audit F-216-05 MEDIUM fix): aligned with sloan-ratio.js
-    // FAIL_THRESHOLD = 0.20. Previously this red-flag rule only fired at
-    // |val| > 0.30 — the 20-30% band silently passed through even though
-    // sloan-ratio internally marked it as failing. Now the red flag fires
-    // whenever sloan-ratio fails (i.e. above its own threshold).
-    condition: function(val) { return Math.abs(val) > 0.20; },
-    label: 'Sloan-Ratio extrem (|>20%|)'
+    // Tag 225a (audit F-224c-02 HIGH fix): sign-aware. Tag 216a used
+    // Math.abs() which treated NEGATIVE_OK (cash > earnings = conservative
+    // accounting, a Mauboussin good-quality signal) the same as positive
+    // accrual manipulation. MELI's Sloan -20.6% triggered EXTREME_SLOAN and
+    // downgraded HG raw=100 → NEAR_MISS for months. Mirror the asymmetry
+    // Tag 221 added to sloan-ratio.js itself: only POSITIVE accruals above
+    // FAIL_THRESHOLD are a red flag; negatives are informational (NEGATIVE_OK).
+    condition: function(val) { return val > 0.20; },
+    label: 'Sloan-Ratio extrem (>20%, positive Accruals)'
   }
   // Tag 121+: Dilution-Red-Flag wenn Share-Outstanding-Daten verfuegbar
 };
