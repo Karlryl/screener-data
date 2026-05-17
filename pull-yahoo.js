@@ -679,6 +679,15 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       reportingCurrency: rcOriginal,                       // overwritten to 'USD' by _convertSnapshotToUSD
       tradingCurrency,                                     // Tag 204: trading-quote ccy (may differ from reporting for ADRs)
       fetchedAt: asOf,
+      // Tag 215j: also write `asOf` for the F-CI-016 Verify Snapshot Freshness
+      // gate. The gate scans for the `"asOf"` JSON key but pull-yahoo had only
+      // ever set `fetchedAt`. Result: every full-pull snapshot was counted as
+      // "unparseable" by the freshness gate. Run #107 showed the gate firing
+      // a WARN ('continue-on-error: true' so non-blocking) but the underlying
+      // bug needed fixing — without asOf the gate could never validate freshness
+      // correctly. Same timestamp as fetchedAt so the two are synonyms post-fix;
+      // existing consumers that read fetchedAt continue to work.
+      asOf,
       filingDate: null,  // Yahoo liefert kein Filing-Datum für TTM
       firstTradeDate: null,  // wird unten aus yf.quote() gesetzt (Tag 106)
       ipoYear: null,
