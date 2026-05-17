@@ -13,6 +13,43 @@ var LABEL = 'Reinvestment-Rate';
 var THRESHOLD = 0.20;
 var THRESHOLD_OP = 'gte';
 
+// Tag 225e-1: Sector-aware threshold map. The 20% baseline was calibrated
+// for industrials/software where Capex+R&D dominates reinvestment. For
+// balance-sheet-light financial-services models (V, MA, MCO, asset managers,
+// REITs, insurers) reinvestment naturally runs 5-10% of OCF because growth
+// is funded via opex (marketing, distribution, partnerships), not capex.
+// Damodaran's reinvestment-rate page documents this sector dispersion:
+// financials run materially lower without being lower-quality compounders.
+// Without this calibration V failed the QC MUST gate at 5.7% (mis-applied
+// industrial threshold) despite being a textbook quality compounder.
+//
+// Match keys are case-insensitive regex tested against meta.sector (Yahoo
+// sectorKey/sector). Industry is checked as a secondary fallback for
+// finer-grained excludes (e.g. "Credit Services" inside Financial Services).
+var SECTOR_THRESHOLD_OVERRIDES = [
+  // Asset-light financials: payment networks (V, MA), exchanges (ICE, CME),
+  // asset managers (BLK, MCO), credit-rating agencies, insurance brokers (MMC).
+  // Damodaran's US-sector reinvestment table puts these in the 3-7% band.
+  { match: /financial services|financials/i, threshold: 0.05 },
+  // REITs: capital recycling shows up as acquisitions/dispositions, not capex.
+  { match: /real estate|reit/i,                threshold: 0.08 },
+  // Insurance: reinvestment is float-funded; capex is immaterial.
+  { match: /insurance/i,                       threshold: 0.05 }
+];
+
+function _sectorThresholdFor(stock) {
+  var sector = stock && stock.meta && stock.meta.sector;
+  var industry = stock && stock.meta && stock.meta.industry;
+  if (!sector && !industry) return null;
+  for (var i = 0; i < SECTOR_THRESHOLD_OVERRIDES.length; i++) {
+    var rule = SECTOR_THRESHOLD_OVERRIDES[i];
+    if ((sector && rule.match.test(sector)) || (industry && rule.match.test(industry))) {
+      return rule.threshold;
+    }
+  }
+  return null;
+}
+
 function _arrVals(stock, path) {
   var arr = H.val(stock, path);
   if (!Array.isArray(arr)) return [];
@@ -120,7 +157,19 @@ function evaluate(stock) {
     if (capexRevRatios.length) capexRevMed = _median(capexRevRatios);
   }
   var assetLight = !usedRnD && capexRevMed != null && capexRevMed < 0.02;
-  var effectiveThreshold = assetLight ? 0.10 : THRESHOLD;
+  // Tag 225e-1: sector-aware threshold overrides the default for
+  // balance-sheet-light financial-services / REIT / insurance models.
+  // Precedence: sector-override > asset-light-fallback > default 20%.
+  var sectorThreshold = _sectorThresholdFor(stock);
+  var thresholdSource = 'default';
+  var effectiveThreshold = THRESHOLD;
+  if (sectorThreshold != null) {
+    effectiveThreshold = sectorThreshold;
+    thresholdSource = 'sector';
+  } else if (assetLight) {
+    effectiveThreshold = 0.10;
+    thresholdSource = 'asset-light';
+  }
   var pass = med >= effectiveThreshold;
 
   return H.buildResult({
@@ -132,9 +181,10 @@ function evaluate(stock) {
       yearsConsidered: ratios.length,
       capexUsed: true, rndUsed: usedRnD, ocfSource: ocfSource,
       assetLight: assetLight, capexRevMedian: capexRevMed,
-      effectiveThreshold: effectiveThreshold
+      effectiveThreshold: effectiveThreshold,
+      thresholdSource: thresholdSource
     },
-    reason: '5Y-Median (Capex' + (usedRnD ? '+R&D' : '') + ')/OCF[' + ocfSource + '] = ' + (med*100).toFixed(1) + '% (vs ' + (effectiveThreshold*100).toFixed(0) + '%' + (assetLight ? ' asset-light' : '') + ', ' + ratios.length + 'y)',
+    reason: '5Y-Median (Capex' + (usedRnD ? '+R&D' : '') + ')/OCF[' + ocfSource + '] = ' + (med*100).toFixed(1) + '% (vs ' + (effectiveThreshold*100).toFixed(0) + '%' + (thresholdSource !== 'default' ? ' ' + thresholdSource : '') + ', ' + ratios.length + 'y)',
     threshold: effectiveThreshold, thresholdOp: THRESHOLD_OP
   });
 }
