@@ -110,8 +110,18 @@ function saveState(statePath, state) {
   const cutoffDate = thirtyDaysAgo.toISOString().slice(0, 10);
   const prunedMethodState = {};
   for (const [ticker, methods] of Object.entries(state.methodState || {})) {
-    // Keep if any method was changed within 30 days
-    const hasRecentChange = Object.values(methods).some(m => m && m.lastChanged && m.lastChanged >= cutoffDate);
+    // Keep if any method was changed within 30 days.
+    // Tag 225e-2a (audit F-216-08): defensively normalize lastChanged to its
+    // YYYY-MM-DD prefix before lexicographic compare. Works today because
+    // detectMethodDiffs writes plain dates, but a future migration that
+    // stores full ISO timestamps or epoch ms would silently break the
+    // string-compare semantics. .slice(0,10) is no-op for already-truncated
+    // dates and correct for ISO timestamps (e.g. '2026-05-17T12:00Z' → '2026-05-17').
+    const hasRecentChange = Object.values(methods).some(m => {
+      if (!m || !m.lastChanged) return false;
+      const ts = String(m.lastChanged).slice(0, 10);
+      return ts >= cutoffDate;
+    });
     if (hasRecentChange) prunedMethodState[ticker] = methods;
   }
   const committed = {
