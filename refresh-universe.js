@@ -402,6 +402,22 @@ async function main() {
     return;
   }
 
+  // Tag 228c: source-attribution summary. F-DP-015 (Tag 169) added source-
+  // preservation through the merge pipeline, but a future regression that
+  // silently drops `info.source` would land 100% of new tickers under
+  // `auto-universe-refresh` without any other red flag (this happened in
+  // the pre-Tag-169 watchlist — 10 858 entries with no source attribution
+  // until the 2026-05-17 audit caught it). Log new-ticker counts per source
+  // before write so any zero-count for a known source is immediately visible.
+  const newBySource = {};
+  for (const info of newTickers) {
+    const src = info.source || 'auto-universe-refresh';
+    newBySource[src] = (newBySource[src] || 0) + 1;
+  }
+  const srcSummary = Object.entries(newBySource).sort((a, b) => b[1] - a[1])
+    .map(([s, n]) => `${s}=${n}`).join(' ');
+  console.log('  new-ticker source attribution: ' + srcSummary);
+
   // 4. Merge into watchlist
   for (const info of newTickers) {
     wlRaw.stocks.push({
