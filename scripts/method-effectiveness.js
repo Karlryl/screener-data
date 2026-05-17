@@ -215,18 +215,34 @@ function main() {
       // data, split by their pass/fail outcome on each method. Asymmetric attrition
       // (delisted tickers' returns excluded from one side of the cohort) systematically
       // biases alpha. Record per-vintage counts so the audit report can flag.
-      let droppedPass = 0, droppedFail = 0, droppedTotal = 0;
+      //
+      // Tag 231a-4 (audit HIGH fix): previously this counted only the first
+      // computable method's pass/fail per dropped ticker (early-`break`), which
+      // (a) over-attributed to whichever method appeared first in Object.values
+      // iteration order — non-deterministic across vintages — and (b) only
+      // counted "no price map" attrition while silently ignoring "no valid
+      // return at the snapped date" attrition (the larger cohort for delisted
+      // tickers whose maps exist but contain no relevant dates). Now: count
+      // each (ticker, method) pass/fail contribution that WOULD have been added
+      // had the price lookup succeeded, and account for both attrition modes.
+      let droppedPassContribs = 0, droppedFailContribs = 0, droppedTickers = 0;
+      const _countContribs = (stockData) => {
+        let p = 0, f = 0;
+        for (const r of Object.values(stockData.results)) {
+          if (!r || r.pass == null) continue;
+          if (r.pass) p++; else f++;
+        }
+        return { p, f };
+      };
       for (const [ticker, stockData] of Object.entries(file.stocks)) {
         if (!stockData || !stockData.results) continue;
         // F-PF-004: use Map-based index (O(1)) rather than O(N) linear scan
         const map = priceIndex[ticker];
         if (!map) {
-          droppedTotal++;
-          // Count which side this ticker would have landed on (use any computable method)
-          for (const r of Object.values(stockData.results)) {
-            if (r && r.computable && r.pass === true) { droppedPass++; break; }
-            if (r && r.computable && r.pass === false) { droppedFail++; break; }
-          }
+          droppedTickers++;
+          const c = _countContribs(stockData);
+          droppedPassContribs += c.p;
+          droppedFailContribs += c.f;
           continue;
         }
         const entryDate = WF.nearestTradingDay(realEntryAsOf, map) || realEntryAsOf;
@@ -234,7 +250,14 @@ function main() {
         const p0 = map.get(entryDate) || null;
         const p1 = map.get(exitDate)  || null;
         const ret = WF.returnPct(p0, p1);
-        if (ret == null) continue;
+        if (ret == null) {
+          // Tag 231a-4: also account for "map exists but no valid return" attrition.
+          droppedTickers++;
+          const c = _countContribs(stockData);
+          droppedPassContribs += c.p;
+          droppedFailContribs += c.f;
+          continue;
+        }
         // F-BT-008: read quality field; handle missing gracefully (null for older vintages)
         const quality = (stockData.quality != null) ? stockData.quality : null;
         for (const [methodId, r] of Object.entries(stockData.results)) {
@@ -254,11 +277,15 @@ function main() {
       cache.vintageReturns[cacheKey] = cacheEntries;
       // F-BT-003 (Tag 179): emit attrition counts when nonzero so log shows whether
       // delistings are tilting the cohort. Threshold-on-imbalance shows up in CI logs.
-      if (droppedTotal > 0) {
-        const imbalanceWarn = droppedPass !== droppedFail
-          ? ` IMBALANCE pass-side=${droppedPass} fail-side=${droppedFail}`
+      // Tag 231a-4: now counts total pass/fail CONTRIBUTIONS (sum across all methods
+      // for each dropped ticker) rather than ticker-headcount, so the imbalance
+      // figure reflects what actually got dropped from each bucket.
+      if (droppedTickers > 0) {
+        const totalContribs = droppedPassContribs + droppedFailContribs;
+        const imbalanceWarn = droppedPassContribs !== droppedFailContribs
+          ? ` IMBALANCE pass-contribs=${droppedPassContribs} fail-contribs=${droppedFailContribs}`
           : '';
-        console.log(`  ${asOf}/${key}: dropped ${droppedTotal} tickers (no price data)${imbalanceWarn}`);
+        console.log(`  ${asOf}/${key}: dropped ${droppedTickers} tickers (${totalContribs} method-contribs lost: no price data or no valid return)${imbalanceWarn}`);
       }
     }
   }
