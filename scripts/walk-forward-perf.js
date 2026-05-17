@@ -169,7 +169,25 @@ function listVintages() {
 // tickers in prices/history.json (which includes stocks added later → upward bias).
 // F-BT-003: When evaluatedTickers is missing, log a warning and return null for
 // alphaVsUniverse rather than falling back to today's survivor-biased universe.
-function computeUniverseMedianReturn(priceIndex, asOfDate, horizonDays, evaluatedTickers) {
+// Tag 231a-2 (audit HIGH fix): helper that prefers the caller-supplied canonical
+// date if the ticker's map has it; otherwise walks backward up to
+// PRICE_MAX_STALE_DAYS to find a usable close. Never scans forward (no
+// look-ahead). Returns null if no usable price exists — caller drops the
+// ticker from the cohort.
+function _priceAtCanonical(map, canonicalDate, fallbackTargetDate) {
+  if (!map || !canonicalDate) return null;
+  if (map.has(canonicalDate)) return map.get(canonicalDate);
+  // Walk backward from canonicalDate to find a usable close within stale window
+  for (let i = 1; i <= PRICE_MAX_STALE_DAYS; i++) {
+    const d = new Date(canonicalDate + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    if (map.has(key)) return map.get(key);
+  }
+  return null;
+}
+
+function computeUniverseMedianReturn(priceIndex, asOfDate, horizonDays, evaluatedTickers, canonicalDates) {
   if (!evaluatedTickers || evaluatedTickers.length === 0) {
     // F-BT-003: no evaluatedTickers in this vintage — cannot compute unbiased universe median
     return { median: null, n: 0, survivorBiasCorrected: false, missingEvaluatedTickers: true };
@@ -180,10 +198,18 @@ function computeUniverseMedianReturn(priceIndex, asOfDate, horizonDays, evaluate
   for (const ticker of evaluatedTickers) {
     const map = priceIndex[ticker];
     if (!map) continue;
-    const entryDate = nearestTradingDay(asOfDate, map) || asOfDate;
-    const exitDate  = nearestTradingDay(futureDate, map) || futureDate;
-    const p0 = map.get(entryDate) || null;
-    const p1 = map.get(exitDate)  || null;
+    let p0, p1;
+    // Tag 231a-2 (audit HIGH fix): when canonical dates are provided (benchmark-anchored),
+    // use them so every ticker is measured over the same calendar window.
+    if (canonicalDates && canonicalDates.entryDate && canonicalDates.exitDate) {
+      p0 = _priceAtCanonical(map, canonicalDates.entryDate);
+      p1 = _priceAtCanonical(map, canonicalDates.exitDate);
+    } else {
+      const entryDate = nearestTradingDay(asOfDate, map) || asOfDate;
+      const exitDate  = nearestTradingDay(futureDate, map) || futureDate;
+      p0 = map.get(entryDate) || null;
+      p1 = map.get(exitDate)  || null;
+    }
     const r = returnPct(p0, p1);
     if (r != null) returns.push(r);
   }
@@ -195,7 +221,7 @@ function computeUniverseMedianReturn(priceIndex, asOfDate, horizonDays, evaluate
 // vintage's picks file (any mode). This eliminates the "today's-survivor"
 // upward bias of computeUniverseMedianReturn — at the cost of a smaller
 // benchmark sample. Both are reported so the reader can see the gap.
-function computeFrozenVintageMedianReturn(priceIndex, vintagePicks, asOfDate, horizonDays) {
+function computeFrozenVintageMedianReturn(priceIndex, vintagePicks, asOfDate, horizonDays, canonicalDates) {
   const futureDate = addDaysIso(asOfDate, horizonDays);
   const tickersAtVintage = new Set();
   for (const arr of Object.values(vintagePicks.modes || {})) {
@@ -206,11 +232,18 @@ function computeFrozenVintageMedianReturn(priceIndex, vintagePicks, asOfDate, ho
   for (const ticker of tickersAtVintage) {
     const map = priceIndex[ticker];
     if (!map) continue;
-    // F-BT-005: snap to nearest trading day
-    const entryDate = nearestTradingDay(asOfDate, map) || asOfDate;
-    const exitDate  = nearestTradingDay(futureDate, map) || futureDate;
-    const p0 = map.get(entryDate) || null;
-    const p1 = map.get(exitDate)  || null;
+    let p0, p1;
+    // Tag 231a-2 (audit HIGH fix): canonical-date anchoring when provided.
+    if (canonicalDates && canonicalDates.entryDate && canonicalDates.exitDate) {
+      p0 = _priceAtCanonical(map, canonicalDates.entryDate);
+      p1 = _priceAtCanonical(map, canonicalDates.exitDate);
+    } else {
+      // F-BT-005: snap to nearest trading day
+      const entryDate = nearestTradingDay(asOfDate, map) || asOfDate;
+      const exitDate  = nearestTradingDay(futureDate, map) || futureDate;
+      p0 = map.get(entryDate) || null;
+      p1 = map.get(exitDate)  || null;
+    }
     const r = returnPct(p0, p1);
     if (r != null) returns.push(r);
   }
@@ -219,6 +252,13 @@ function computeFrozenVintageMedianReturn(priceIndex, vintagePicks, asOfDate, ho
 
 // Tag 134 — Phase 3.3: SPY/benchmark return.
 // F-BT-002: Falls back to QQQ if SPY is absent; emits null + warning if both are absent.
+// Tag 231a-2 (audit HIGH fix): also returns the canonical entry/exit date pair
+// the benchmark used. Callers thread these into pick/universe/frozen-vintage
+// lookups so all per-vintage returns are measured over the SAME calendar
+// window. Previously each ticker snapped to its own nearest trading day
+// (using its own sparse price map), which meant the pick return was measured
+// over (Fri, Fri+28d) while the benchmark was measured over (Mon, Mon+28d) —
+// silently injecting up to ±2 days of price-movement noise into every alpha.
 function computeBenchmarkReturn(priceIndex, asOfDate, horizonDays) {
   const candidates = ['SPY', 'QQQ', 'IWM'];
   let benchmarkTicker = null;
@@ -227,16 +267,16 @@ function computeBenchmarkReturn(priceIndex, asOfDate, horizonDays) {
   }
   if (!benchmarkTicker) {
     console.warn('[walk-forward-perf] WARNING: SPY/QQQ/IWM not in price history — alphaVsBenchmark will be null. Run pull-historical-prices.js to fix.');
-    return { ticker: null, ret: null };
+    return { ticker: null, ret: null, entryDate: null, exitDate: null };
   }
   const map = priceIndex[benchmarkTicker];
-  // F-BT-005: snap to nearest trading day
+  // F-BT-005: snap to nearest trading day (Tag 231a-1: backward-first, no look-ahead)
   const entryDate = nearestTradingDay(asOfDate, map) || asOfDate;
   const futureDate = addDaysIso(asOfDate, horizonDays);
   const exitDate   = nearestTradingDay(futureDate, map) || futureDate;
   const p0 = map.get(entryDate) || null;
   const p1 = map.get(exitDate)  || null;
-  return { ticker: benchmarkTicker, ret: returnPct(p0, p1) };
+  return { ticker: benchmarkTicker, ret: returnPct(p0, p1), entryDate, exitDate };
 }
 
 // Tag 139: load macro-regime lookup
@@ -292,10 +332,23 @@ function evaluateVintage(picksFile, priceIndex, regimes) {
   // × 365 vintages: ~5.5k redundant calls saved.
   const frozenByHorizon = {};
   const benchByHorizon = {};
+  // Tag 231a-2 (audit HIGH fix): canonical date pair per horizon, anchored to
+  // the benchmark. ALL per-vintage return measurements (pick / universe /
+  // frozen-vintage / benchmark) now share this entry/exit pair so alpha is a
+  // like-for-like comparison. Previously each ticker independently snapped to
+  // its own nearest trading day, which made the pick window and benchmark
+  // window drift by up to ±2 days for vintages whose asOf landed on a
+  // weekend or holiday — silently biasing alpha sign and magnitude.
+  const canonicalDatesByHorizon = {};
   for (const days of HORIZONS_DAYS) {
-    univResultsByHorizon[days] = computeUniverseMedianReturn(priceIndex, entryDate, days, picksFile.evaluatedTickers);
-    frozenByHorizon[days] = computeFrozenVintageMedianReturn(priceIndex, picksFile, entryDate, days);
-    benchByHorizon[days]  = computeBenchmarkReturn(priceIndex, entryDate, days);
+    const bench = computeBenchmarkReturn(priceIndex, entryDate, days);
+    benchByHorizon[days] = bench;
+    const canonical = (bench.entryDate && bench.exitDate)
+      ? { entryDate: bench.entryDate, exitDate: bench.exitDate }
+      : null;
+    canonicalDatesByHorizon[days] = canonical;
+    univResultsByHorizon[days] = computeUniverseMedianReturn(priceIndex, entryDate, days, picksFile.evaluatedTickers, canonical);
+    frozenByHorizon[days] = computeFrozenVintageMedianReturn(priceIndex, picksFile, entryDate, days, canonical);
   }
 
   for (const [mode, allPicks] of Object.entries(picksFile.modes || {})) {
@@ -312,27 +365,32 @@ function evaluateVintage(picksFile, priceIndex, regimes) {
         continue;
       }
       const pickReturns = [];
+      // Tag 231a-2 (audit HIGH fix): use the benchmark's canonical entry/exit
+      // dates so pick returns are measured over the SAME calendar window as
+      // alphaVsBenchmark. _priceAtCanonical falls back backward (no look-ahead)
+      // up to PRICE_MAX_STALE_DAYS — so the existing staleness gate is enforced
+      // by construction rather than by post-hoc filtering. When canonical
+      // dates aren't available (no benchmark in priceIndex), the legacy
+      // per-ticker nearestTradingDay path is used (preserving prior behavior).
+      const canonical = canonicalDatesByHorizon[days];
       for (const p of picks) {
         const t = p.ticker;
-        // F-BT-009: null-safe access to score (older vintages may lack it)
-        // const score = p.score != null ? p.score : p.normScore != null ? p.normScore : null; // available on p if needed
         const map = priceIndex[t];
         if (!map) continue;
-        // F-BT-005: snap to nearest trading day
-        const tEntry = nearestTradingDay(entryDate, map) || entryDate;
-        const tExit  = nearestTradingDay(futureDate, map) || futureDate;
-        // Tag 216b (audit F-216-06 MEDIUM fix): walk-forward exit-price
-        // staleness was one-sided. priceAt enforces PRICE_MAX_STALE_DAYS=7
-        // backwards but nearestTradingDay(futureDate) only scans ±5 business
-        // days then silently returns futureDate as fallback. For delisted
-        // tickers that haven't traded for 30+ days, that fallback gave a
-        // stale exit price and inflated/deflated forward returns. Validate
-        // both entry and exit are within PRICE_MAX_STALE_DAYS of their
-        // intended date; otherwise drop the pick from the sample.
-        if (_daysBetween(tEntry, entryDate)  > PRICE_MAX_STALE_DAYS) continue;
-        if (_daysBetween(tExit,  futureDate) > PRICE_MAX_STALE_DAYS) continue;
-        const p0 = map.get(tEntry) || null;
-        const p1 = map.get(tExit)  || null;
+        let p0, p1;
+        if (canonical) {
+          p0 = _priceAtCanonical(map, canonical.entryDate);
+          p1 = _priceAtCanonical(map, canonical.exitDate);
+        } else {
+          // Legacy path: no benchmark available
+          const tEntry = nearestTradingDay(entryDate, map) || entryDate;
+          const tExit  = nearestTradingDay(futureDate, map) || futureDate;
+          // Tag 216b: enforce staleness gate symmetrically on entry and exit.
+          if (_daysBetween(tEntry, entryDate)  > PRICE_MAX_STALE_DAYS) continue;
+          if (_daysBetween(tExit,  futureDate) > PRICE_MAX_STALE_DAYS) continue;
+          p0 = map.get(tEntry) || null;
+          p1 = map.get(tExit)  || null;
+        }
         const r = returnPct(p0, p1);
         if (r != null) pickReturns.push(r);
       }
@@ -553,7 +611,9 @@ module.exports = {
   median,
   addDaysIso,
   getEntryDate,
-  nearestTradingDay
+  nearestTradingDay,
+  // Tag 231a-2: exported for canonical-date callers (method-effectiveness.js)
+  _priceAtCanonical
 };
 
 if (require.main === module) {
