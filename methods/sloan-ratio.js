@@ -68,15 +68,21 @@ function evaluate(stock) {
 
   const latest = sloans[0];
   const v = latest.value;
-  const absV = Math.abs(v);
+  // Tag 221 (audit F-221b-1 anchor-safety fix): Sloan is asymmetric.
+  // POSITIVE Sloan = NI > FCF = accruals-heavy = real manipulation risk.
+  // NEGATIVE Sloan = FCF > NI = conservative accounting = GOOD signal.
+  // The previous Math.abs() logic treated both sides as bad and silently
+  // disqualified MELI (Sloan ≈ -22% from FCF/NI = 2.0× — conservative
+  // accounting, the OPPOSITE of fraud). Now: only positive direction
+  // triggers WARN/REVIEW/EXTREME/CHRONIC_FAIL. Negative direction always
+  // passes with NEGATIVE-OK flag.
+  const posV = Math.max(0, v);  // 0 if v < 0; v if v >= 0
 
-  // Check 2-year-rule for hard-fail
-  // Bug #9: must check that years are actually adjacent (no gaps) — sloans may skip years
-  // when ni/fcf/assets are missing for a year, creating non-consecutive year indices.
+  // Check 2-year-rule for hard-fail (positive direction only).
   let consecutiveHigh = 0;
   for (let k = 0; k < sloans.length; k++) {
     if (k > 0 && sloans[k].year !== sloans[k - 1].year + 1) break; // gap — not truly consecutive
-    if (Math.abs(sloans[k].value) > FAIL_THRESHOLD) consecutiveHigh++;
+    if (sloans[k].value > FAIL_THRESHOLD) consecutiveHigh++;
     else break;
   }
 
@@ -85,12 +91,14 @@ function evaluate(stock) {
   if (consecutiveHigh >= 2) {
     pass = false;
     flag = 'CHRONIC_FAIL';
-  } else if (absV > FAIL_THRESHOLD) {
+  } else if (posV > FAIL_THRESHOLD) {
     flag = 'EXTREME_SINGLE_YEAR';
-  } else if (absV > REVIEW_THRESHOLD) {
+  } else if (posV > REVIEW_THRESHOLD) {
     flag = 'REVIEW';
-  } else if (absV > WARN_THRESHOLD) {
+  } else if (posV > WARN_THRESHOLD) {
     flag = 'WARNING';
+  } else if (v < -WARN_THRESHOLD) {
+    flag = 'NEGATIVE_OK';  // conservative accounting — informational, not bad
   }
 
   return H.buildResult({

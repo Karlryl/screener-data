@@ -63,8 +63,13 @@ function evaluate(stock) {
   const fcfPositive = fcfWindow.filter(v => v != null && v > 0).length;
   const oiObservable = opIncWindow.filter(v => v != null).length;
   const fcfObservable = fcfWindow.filter(v => v != null).length;
-  const oiNeeded = Math.min(4, oiObservable);
-  const fcfNeeded = Math.min(4, fcfObservable);
+  // Tag 221 (audit F-221b-2 anchor-safety fix): scale 'needed' proportionally
+  // to observable years using the Tag-184 pattern. Previous min(4, observable)
+  // demanded 4-of-4 from 4y-history companies (PLTR/CRDO) — that's stricter
+  // than the 4-of-5 baseline for fully-historied compounders. Now: scale
+  // round(4 × observable / 5), so 5y→4, 4y→3, 3y→2.
+  const oiNeeded = Math.round(4 * oiObservable / 5);
+  const fcfNeeded = Math.round(4 * fcfObservable / 5);
 
   const reasons = [];
   let pass = true;
