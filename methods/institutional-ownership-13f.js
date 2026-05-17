@@ -30,11 +30,20 @@
  *   small (~40 institutions); even a "well-owned" name may only show 3-5 here.
  *   Raising this threshold should follow CIK-list expansion (future tag).
  *
+ * Tag 220c (audit F-219c-F6 MEDIUM): Yahoo fallback.
+ *   When the curated SEC 13F cache is missing OR the ticker isn't in it,
+ *   fall back to Yahoo's majorHoldersBreakdown.institutionsCount (broad-based,
+ *   ~all 13F-filing institutions aggregated, not curated). Priority:
+ *     1. SEC 13F cache (curated smart-money CIK list) — preferred.
+ *     2. Yahoo meta.institutionsCount — fallback, broader denominator.
+ *   The fallback is flagged via components.source so downstream consumers
+ *   can distinguish the two regimes; threshold is unchanged (>= 3) but
+ *   Yahoo's count is broader so passes are easier than from SEC source.
+ *
  * Not computable when:
- *   - sec-13f-by-ticker.json missing/unreadable (cache file not yet pulled)
- *   - cache file has no byTicker section
- *   - ticker not present in byTicker (we try meta.ticker uppercased, then
- *     yahoo_symbol uppercased, then identifier — the first hit wins)
+ *   - sec-13f-by-ticker.json missing/unreadable AND meta.institutionsCount absent
+ *   - cache file has no byTicker section AND meta.institutionsCount absent
+ *   - ticker not present in byTicker AND meta.institutionsCount absent
  *
  * NOT in SCORE_WEIGHTS -> DIAGNOSTIC-only -> fixture-hash safe by construction.
  */
@@ -93,9 +102,37 @@ function _candidateTickers(stock) {
   return out;
 }
 
+// Tag 220c (audit F-219c-F6 MEDIUM): Yahoo fallback — broad-based
+// institutionsCount from majorHoldersBreakdown. Returns the pass/fail/result
+// when Yahoo data is present, or null when it isn't (caller continues with
+// the original incomputable response).
+function _yahooFallback(stock, primaryReason) {
+  const ic = stock && stock.meta && stock.meta.institutionsCount;
+  if (ic == null || !Number.isFinite(ic) || ic <= 0) return null;
+  const pct = stock.meta.institutionsPercentHeld;
+  const pass = ic >= THRESHOLD;
+  return H.buildResult({
+    value: ic,
+    pass,
+    computable: true,
+    components: {
+      institutionsCount: ic,
+      institutionsPercentHeld: pct != null ? pct : null,
+      source: 'yahoo.majorHoldersBreakdown',
+      primaryUnavailable: primaryReason
+    },
+    reason: ic + ' institution(s) hold (Yahoo aggregate fallback; SEC 13F unavailable: ' +
+            primaryReason + ')',
+    threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+  });
+}
+
 function evaluate(stock) {
   const data = _load13F();
   if (data === false) {
+    // Try Yahoo fallback before declaring incomputable.
+    const fb = _yahooFallback(stock, 'sec-13f-by-ticker.json not available');
+    if (fb) return fb;
     return H.buildResult({
       computable: false, pass: false,
       reason: 'sec-13f-by-ticker.json not available',
@@ -129,6 +166,9 @@ function evaluate(stock) {
   // prevents UI consumers reading r.value without r.computable from seeing
   // a misleading "0 institutions" verdict.
   if (!entry) {
+    // Tag 220c: Yahoo fallback when ticker absent from curated 13F cache.
+    const fb = _yahooFallback(stock, 'ticker ' + candidates[0] + ' not in 13F cache');
+    if (fb) return fb;
     return H.buildResult({
       computable: false, pass: false,
       reason: 'ticker ' + candidates[0] + ' not in 13F cache (' + candidates.length + ' alias(es) tried)',
@@ -137,6 +177,9 @@ function evaluate(stock) {
     });
   }
   if (!Array.isArray(entry.holders) || entry.holders.length === 0) {
+    // Tag 220c: Yahoo fallback when SEC cache lists ticker but no tracked institutions.
+    const fb = _yahooFallback(stock, 'ticker present in 13F cache but zero tracked institutions');
+    if (fb) return fb;
     return H.buildResult({
       computable: false, pass: false,
       reason: 'ticker ' + matchedTicker + ' present in 13F cache but zero tracked institutions hold it',

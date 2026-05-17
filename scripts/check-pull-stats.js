@@ -30,6 +30,10 @@ const { writeFileAtomic } = require('../lib/atomic-write.js');
 // pipeline-health-check.js — the process exited before the request resolved
 // and the drift alert was silently dropped.
 const { postDiscord } = require('../lib/discord.js');
+// Tag 220c (audit F-219b-03 LOW): shared schema-aware watchlist loader.
+// Without it, a rollback to a bare-array watchlist would silently set
+// universeSize=null, disabling the drift detector forever.
+const { loadWatchlist } = require('../lib/watchlist-fs.js');
 
 const DRIFT_THRESHOLD = 0.25;
 const MIN_HISTORY_RUNS = 4;
@@ -70,8 +74,10 @@ function collectStats() {
   stats.priceTickerCount = priceHist ? Object.keys(priceHist).length : null;
 
   // Universe
-  const wl = loadJson(path.join(ROOT, 'watchlist.json'));
-  stats.universeSize = wl && Array.isArray(wl.stocks) ? wl.stocks.length : null;
+  // Tag 220c (audit F-219b-03): use shared schema-aware loader so all three
+  // historical shapes (array / wrapped / bare-object) are recognised.
+  const wl = loadWatchlist(path.join(ROOT, 'watchlist.json'));
+  stats.universeSize = wl.shape === 'invalid' ? null : wl.size;
 
   // Snapshots dir count
   const snapDir = path.join(ROOT, 'snapshots');

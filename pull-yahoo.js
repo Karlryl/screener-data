@@ -85,7 +85,15 @@ const MODULES = [
   'price',                              // currency, exchange
   'assetProfile',                       // sector, industry
   'insiderTransactions',                // Tag 137: Form 4 insider buy/sell activity
-  'earningsTrend'                       // Tag 211h: epsRevisions per period — activates analyst-revision-breadth
+  'earningsTrend',                      // Tag 211h: epsRevisions per period — activates analyst-revision-breadth
+  // Tag 220c (audit F-219c-F6 MEDIUM): majorHoldersBreakdown — institutionsPercentHeld,
+  // institutionsCount, insidersPercentHeld. Free fallback for institutional-ownership-13f
+  // when the SEC 13F by-ticker cache is missing or hasn't been refreshed yet.
+  'majorHoldersBreakdown',
+  // Tag 220c (audit F-219c-F7 MEDIUM): earningsHistory — last 4 quarters with
+  // epsActual / epsEstimate / epsDifference / surprisePercent / quarter.
+  // Exposed via stock.external.earningsHistory; no new method (data lake build).
+  'earningsHistory'
 ];
 
 // ─── Logger ───────────────────────────────────────────────────────
@@ -718,7 +726,30 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       // lists meta.sharesOutstanding as a fallback that was never wired.
       sharesOutstanding:        _y(ks, 'sharesOutstanding'),
       floatShares:              _y(ks, 'floatShares'),
-      impliedSharesOutstanding: _y(ks, 'impliedSharesOutstanding')
+      impliedSharesOutstanding: _y(ks, 'impliedSharesOutstanding'),
+      // Tag 220c (audit F-219c-F6 MEDIUM): majorHoldersBreakdown — institutional
+      // ownership data, free fallback for institutional-ownership-13f.js when the
+      // SEC 13F by-ticker cache is missing or hasn't been refreshed yet.
+      // Priority: SEC 13F cache (curated CIK list, smart-money concentrated) →
+      // Yahoo aggregate (broad-based, ~7k institutions, Form 13F-aggregated).
+      institutionsPercentHeld:  _y(yahoo.majorHoldersBreakdown, 'institutionsPercentHeld'),
+      institutionsCount:        _y(yahoo.majorHoldersBreakdown, 'institutionsCount'),
+      insidersPercentHeld:      _y(yahoo.majorHoldersBreakdown, 'insidersPercentHeld'),
+      // Tag 220c (audit F-219c-F9 LOW): mostRecentQuarter is the actual fiscal
+      // quarter-end date, a more reliable dataAsOf source than fetchedAt (which
+      // reflects API CALL time, not data time). Additive only — _dataAsOfFromStock
+      // continues to prefer meta.fetchedAt for now; methods may opt in.
+      mostRecentQuarter:        (function() {
+        const v = _y(ks, 'mostRecentQuarter');
+        if (v == null) return null;
+        if (v instanceof Date) return v.toISOString();
+        try { return new Date(v).toISOString(); } catch (_) { return null; }
+      })(),
+      // Tag 220c (audit F-219c-F11 LOW): assetProfile fields. Skip
+      // longBusinessSummary — at 200-1000 chars × ~19k stocks it would bloat
+      // snapshots by 4-20MB on disk; UI tooltip can re-fetch on demand.
+      country:                  _y(ap, 'country'),
+      fullTimeEmployees:        _y(ap, 'fullTimeEmployees')
     },
     // Tag 134: marketCap stored in reportingCurrency at mapper level;
     // _convertSnapshotToUSD applies FX conversion uniformly across all currency-denominated fields.
@@ -744,7 +775,22 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       enterpriseValue:     _metric(_y(ks, 'enterpriseValue'),    SRC, CONF, asOf),
       enterpriseToEbitda:  _metric(_y(ks, 'enterpriseToEbitda'), SRC, CONF, asOf),
       enterpriseToRevenue: _metric(_y(ks, 'enterpriseToRevenue'),SRC, CONF, asOf),
-      beta:                _metric(_y(ks, 'beta'),               SRC, 0.8,  asOf)
+      beta:                _metric(_y(ks, 'beta'),               SRC, 0.8,  asOf),
+      // Tag 220c (audit F-219c-F8 MEDIUM): financialData ratios — all already
+      // pulled in the financialData module; only the extraction was missing.
+      // None are currency-denominated (ratios + counts + analyst price targets),
+      // so no FX implication. SRC tag identifies provenance distinctly from
+      // the SRC = 'yahoo_quoteSummary' above to aid downstream filtering.
+      debtToEquity:         _metric(_y(fd, 'debtToEquity'),         'yahoo.financialData', 0.7, asOf),
+      currentRatio:         _metric(_y(fd, 'currentRatio'),         'yahoo.financialData', 0.7, asOf),
+      quickRatio:           _metric(_y(fd, 'quickRatio'),           'yahoo.financialData', 0.7, asOf),
+      returnOnEquity:       _metric(_y(fd, 'returnOnEquity') != null ? _y(fd, 'returnOnEquity') * 100 : null,  'yahoo.financialData', 0.7, asOf),
+      returnOnAssets:       _metric(_y(fd, 'returnOnAssets') != null ? _y(fd, 'returnOnAssets') * 100 : null,  'yahoo.financialData', 0.7, asOf),
+      targetMeanPrice:      _metric(_y(fd, 'targetMeanPrice'),      'yahoo.financialData', 0.7, asOf),
+      targetMedianPrice:    _metric(_y(fd, 'targetMedianPrice'),    'yahoo.financialData', 0.7, asOf),
+      numberOfAnalystOpinions: _metric(_y(fd, 'numberOfAnalystOpinions'), 'yahoo.financialData', 0.7, asOf),
+      recommendationMean:   _metric(_y(fd, 'recommendationMean'),   'yahoo.financialData', 0.7, asOf),
+      recommendationKey:    _metric(_y(fd, 'recommendationKey'),    'yahoo.financialData', 0.7, asOf)
     },
     external: {
       // aktienfinderScore via Bookmarklet manuell synced
@@ -793,6 +839,38 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
           if (hasData) out[pk] = row;
         }
         return (Object.keys(out).length > 0) ? out : null;
+      })(),
+      // Tag 220c (audit F-219c-F7 MEDIUM): earningsHistory — last 4 quarters
+      // with epsActual / epsEstimate / epsDifference / surprisePercent / quarter.
+      // Persisted as data lake (no method consumes it yet); useful future input
+      // for earnings-surprise momentum / PEAD diagnostic. Same pattern as
+      // estimateRevisions above — only emit non-empty rows.
+      earningsHistory: (function() {
+        const eh = yahoo.earningsHistory;
+        const hist = eh && Array.isArray(eh.history) ? eh.history : null;
+        if (!hist || hist.length === 0) return null;
+        const _v = (x) => {
+          if (x == null) return null;
+          if (typeof x === 'number') return Number.isFinite(x) ? x : null;
+          if (typeof x === 'object' && Number.isFinite(x.value)) return x.value;
+          if (typeof x === 'object' && Number.isFinite(x.raw)) return x.raw;
+          return null;
+        };
+        const out = [];
+        for (const q of hist) {
+          if (!q || typeof q !== 'object') continue;
+          const row = {
+            quarter:         q.quarter ? (q.quarter instanceof Date ? q.quarter.toISOString() : String(q.quarter)) : null,
+            period:          q.period || null,
+            epsActual:       _v(q.epsActual),
+            epsEstimate:     _v(q.epsEstimate),
+            epsDifference:   _v(q.epsDifference),
+            surprisePercent: _v(q.surprisePercent)
+          };
+          const hasData = row.epsActual != null || row.epsEstimate != null;
+          if (hasData) out.push(row);
+        }
+        return out.length > 0 ? out : null;
       })()
     },
     timeseries: {

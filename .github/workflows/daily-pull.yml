@@ -243,6 +243,18 @@ jobs:
 
       - name: Verify Pull Coverage
         run: |
+          # Tag 220c (audit F-219b-02 MEDIUM): honor the manifest's `partial` flag.
+          # pull-yahoo writes partial:true on every incremental flush (~100 tickers)
+          # and partial:false only on the clean final write. A SIGKILL after the
+          # last incremental flush but before the final write leaves partial:true
+          # on disk with whatever n_ok happened to be there — if that count
+          # exceeds max(2500, 18%) the coverage gate silently passes despite the
+          # run being killed mid-flight. Fail the gate before reading n_ok.
+          partial=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.partial===true?'true':'false')}catch(e){console.log('false')}")
+          if [ "$partial" = "true" ]; then
+            echo "::error::Manifest reports partial=true — pull was killed mid-flight (incremental flush, final write never ran). Coverage gate refusing to pass regardless of n_ok."
+            exit 1
+          fi
           ok=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.n_ok||0)}catch(e){console.log(0)}")
           total=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.n_total||0)}catch(e){console.log(0)}")
           source="manifest"
