@@ -612,11 +612,15 @@ table.dt td.name { font-family:var(--ui); color:var(--text-1); font-weight:400; 
 .g-pos { color:var(--green); }
 .g-neg { color:var(--red); }
 .g-mute { color:var(--text-2); }
-.pagination { padding:12px 16px; display:flex; justify-content:center; gap:12px; align-items:center; background:var(--bg-1); border-top:1px solid var(--border); font-family:var(--mono); font-size:11px; }
+/* Tag 226c-1: pagination bar pinned to viewport bottom on desktop so the
+   Prev/Next controls stay reachable while scrolling a 50-row tab. Mobile
+   keeps the natural flow (no sticky) to avoid eating ~10% of the touch
+   viewport. z-index:6 sits above sticky thead (5) but below header (10). */
+.pagination { padding:8px 16px; display:flex; justify-content:center; gap:12px; align-items:center; background:var(--bg-1); border-top:1px solid var(--border-bright); font-family:var(--mono); font-size:11px; position:sticky; bottom:0; z-index:6; box-shadow:0 -4px 12px rgba(0,0,0,0.25); }
 .pagination button { background:var(--bg-2); color:var(--text-0); border:1px solid var(--border); padding:4px 12px; cursor:pointer; font-family:var(--mono); transition:border-color 100ms ease-out, color 100ms ease-out; }
 .pagination button:hover:not(:disabled) { border-color:var(--border-bright); color:var(--blue); }
 .pagination button:disabled { color:var(--text-2); cursor:default; }
-.search-results { position:absolute; top:48px; left:50%; transform:translateX(-50%); width:480px; max-height:400px; overflow:auto; background:var(--bg-1); border:1px solid var(--border-bright); z-index:20; display:none; box-shadow:0 8px 24px rgba(0,0,0,0.45); }
+.search-results { position:absolute; top:48px; left:50%; transform:translateX(-50%); width:480px; max-height:400px; overflow:auto; background:var(--bg-1); border:1px solid var(--border-bright); z-index:60; display:none; box-shadow:0 8px 24px rgba(0,0,0,0.45); }
 .search-results.show { display:block; }
 .search-results .sr { padding:8px 12px; cursor:pointer; border-bottom:1px solid var(--border); font-size:12px; transition:background 80ms ease-out; }
 .search-results .sr:hover { background:var(--bg-hover); }
@@ -787,6 +791,9 @@ table.dt tr.row:focus-visible { outline:2px solid var(--blue); outline-offset:-2
   /* Tag 223b: drop max-height cap on mobile — let body scroll instead so
      iOS momentum scrolling stays smooth. Sticky headers gracefully degrade. */
   .table-wrap { max-height:none; }
+  /* Tag 226c-1: also drop sticky pagination on mobile — sticky bottom bars
+     eat scarce viewport on phones and the natural flow works fine. */
+  .pagination { position:static; box-shadow:none; }
 }
 /* Upgrade 3b: print styles — render only the active table, light theme */
 @media print {
