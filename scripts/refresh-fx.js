@@ -116,6 +116,19 @@ async function main() {
   // also cleans up the tmp file on failure.
   writeFileAtomic(outPath, JSON.stringify(out, null, 2));
   console.log('Wrote fx-rates.json with ' + Object.keys(rates).length + ' currencies, ' + failed.length + ' failed');
+  // Tag 218 (audit F-217a-06): also fail on critical-currency blackout. The
+  // previous 50% gate (16-of-32 failures still passes) missed the scenario
+  // where every emerging-market currency fails simultaneously (Yahoo
+  // geo-blocking, Cloudflare edge issues with EM ticker symbols). The
+  // 6-currency critical set covers the most material non-USD exposures in
+  // our universe — losing 3+ of these means non-USD pricing is unreliable.
+  if (failed.length > 0) console.warn('FX FAILED:', failed.join(','));
+  const CRITICAL = new Set(['BRL','MXN','INR','TWD','KRW','HKD']);
+  const criticalFailed = failed.filter(c => CRITICAL.has(c));
+  if (criticalFailed.length >= 3) {
+    console.error('::error::Critical FX blackout: ' + criticalFailed.length + ' of 6 critical currencies failed (' + criticalFailed.join(',') + ')');
+    process.exit(1);
+  }
   if (failed.length > CURRENCIES.length / 2) process.exit(1);
 }
 
