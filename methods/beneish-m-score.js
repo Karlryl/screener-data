@@ -34,32 +34,33 @@
  *   on the SEC's AAER fraud sample and famously flagged Enron in 1998.
  *
  * DIAGNOSTIC type (NOT a DATAGUARD hard-gate) because:
- *   1. DATA AVAILABILITY: Our current Yahoo snapshot exposes only
- *      {totalCash, totalDebt, totalAssets} on annualBalance — it does NOT
- *      persist accountsReceivable, propertyPlantEquipment, currentLiabilities,
- *      the LTD/STD split, SG&A, depreciation or operating cash flow. Until
- *      pull-yahoo is extended to surface these eight fields, this method
- *      returns computable=false for every stock. A hard-gate that is
- *      computable=false universally has no operational effect but creates
- *      future risk if it accidentally activates without anchor verification.
- *   2. ANCHOR SAFETY: With data unavailable, we cannot demonstrate that
- *      NVDA/MSFT/COST/CRDO/PLTR pass the M < -2.22 threshold. Per the
- *      project's anchor-safety rule (audit-reports/.../tag208 +
- *      fixture_hash_invariant.md), a method whose anchor-pass cannot be
- *      verified MUST stay DIAGNOSTIC.
- *   3. FIXTURE-HASH INVARIANT: DIAGNOSTIC + not in SCORE_WEIGHTS keeps the
+ *   1. ANCHOR BEHAVIOR: post-Tag-211l the method computes on every snapshot
+ *      with 2y+ of fundamentals. Live anchor results (2026-05-17):
+ *        MSFT -2.55  pass | COST -2.66 pass | META -3.02 pass | V -2.52 pass
+ *        GOOG -2.64  pass | MELI -3.13 pass
+ *        NVDA -1.14  FAIL | PLTR -1.89 FAIL | AVGO -2.10 FAIL | CRDO -1.56 FAIL
+ *      The hypergrowth bucket (NVDA/PLTR/AVGO/CRDO) systematically FAILS
+ *      because Beneish's DSRI/GMI/SGI inputs all light up when revenue
+ *      grows >30% YoY — a well-documented limitation. Demoting these names
+ *      to WATCH on a Beneish hard-gate would break the anchor-safety rule.
+ *   2. FIXTURE-HASH INVARIANT: DIAGNOSTIC + not in SCORE_WEIGHTS keeps the
  *      fixture hash stable (verified by tests/fixture-hash.txt golden test).
  *
- * Promotion path (future tag, e.g. 210+):
- *   a. Extend pull-yahoo.js mapFTSToBalance() + mapFTSToAnnual() to persist:
- *      annualBalance[].{accountsReceivable, propertyPlantEquipment,
- *                       currentLiabilities, longTermDebt}
- *      annual.annualSGA[], annual.annualDepreciation[], annual.annualOCF[]
- *   b. Backfill snapshots for the anchor universe.
- *   c. Compute M-Score for NVDA/MSFT/COST/CRDO/PLTR; confirm all pass
- *      M < -2.22 with margin >= 0.5 (away from threshold).
- *   d. Flip type to DATAGUARD, add `beneishFail` to row payload + hardGated
- *      chain in generate-screener.js, register beneishFail badge.
+ * Tag 211l + 211n activation history:
+ *   Tag 211l extended pull-yahoo's mapFTSToBalance to surface
+ *     accountsReceivable, netPPE, currentAssets, currentLiabilities,
+ *     totalLiabilitiesNetMinorityInterest
+ *   plus _ftsExtractByYear annualSGA + annualDepreciation. Tag 211n then
+ *   updated this method to read the snapshot field names (netPPE not
+ *   propertyPlantEquipment; totalDebt as substitute for longTermDebt; with
+ *   debt-free fallback to 0 when the firm carries no debt at all).
+ *
+ * Promotion path (would-be future):
+ *   a. (DONE Tag 211l) field extraction
+ *   b. (DONE Tag 211n) method field-name alignment
+ *   c. Find a hypergrowth-aware threshold tuning (e.g. weight DSRI/GMI/SGI
+ *      relative to peer-sector medians) so anchor-safety holds.
+ *   d. Only after (c) anchor-passes: flip to DATAGUARD + wire beneishFail.
  *
  * Reference:
  *   Beneish, M. D. (1999). "The Detection of Earnings Manipulation."
