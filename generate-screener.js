@@ -1590,13 +1590,35 @@ const CLIENT_JS = `
       'Score':'score','R40':'r40','RevGr%':'growth','FCFM%':'fcfMargin',
       'OpM%':'opMargin','GrossM%':'grossMargin','MCap':'mcap','PB-Score':'pbScore'
     };
+    // Tag 231b-4: header tooltips for jargon columns — surfaced via native
+    // title="" (no external lib). Click-to-sort still works; the browser shows
+    // the tooltip on hover-without-click after a short delay. Definitions
+    // mirror what the modal already explains, just compressed for hover.
+    const HEADER_TOOLTIPS = {
+      'Score':    'Mode score (0-100). HG tab = Hypergrowth mode; QC tab = Quality-Compounder mode.',
+      'R40':      'Rule of 40: Revenue YoY % + FCF Margin %. >40 healthy; >60 elite; <0 distressed. Sorted with a penalty for suspect rows (Q-spike, margin-divergence, DQ grade).',
+      'RevGr%':   'Revenue growth year-over-year (most recent TTM vs. prior TTM).',
+      'GrossM%':  'Gross margin = (Revenue - COGS) / Revenue. Quality moat indicator.',
+      'OpM%':     'Operating margin = Operating Income / Revenue.',
+      'FCFM%':    'Free-Cash-Flow margin TTM = FCF / Revenue. Cash quality, harder to manipulate than GAAP earnings.',
+      'MCap':     'Market capitalisation (shares outstanding x last close).',
+      'PB-Score': 'Pre-Breakout composite (0-100): growth + margin + R40 + acceleration bonuses. Higher = stronger inflection signal.',
+      'State':    'Profitability state: LOSS (deep loss), TURNAROUND (improving), RECENT (just hit profit), STABLE (durable profit), NA (insufficient data).',
+      'Reason':   'Why this stock was hard-gated into WATCH instead of HG/QC/SMALL/R40/PRE-BREAKOUT (e.g. Q-SPIKE, LOSS>50%REV, DATA-D).',
+      'Reasons':  'Why this stock was hard-gated into WATCH instead of HG/QC/SMALL/R40/PRE-BREAKOUT.',
+      'Trend':    'Last 30 days of mode score: sparkline + delta-7d badge.',
+      'Signals':  'Acceleration signals: GM↑ (gross-margin trending up), OpM↑ (operating-margin trending up), Rev↑ (revenue YoY re-accelerating).'
+    };
     for (const c of cols) {
       const skKey = sortKeyMap[c.k];
       const isSortable = !!skKey;
       const sortAttr = isSortable ? (sortKey === skKey ? ' aria-sort="descending"' : ' aria-sort="none"') : '';
       const cls = (c.num ? 'num ' : '') + (isSortable ? 'sortable' : '');
       const dataAttr = isSortable ? ' data-sortkey="' + skKey + '"' : '';
-      html += '<th' + (cls ? ' class="' + cls.trim() + '"' : '') + sortAttr + dataAttr
+      const tip = HEADER_TOOLTIPS[c.k];
+      const sortHint = isSortable ? ' (click to sort)' : '';
+      const titleAttr = tip ? ' title="' + esc(tip + sortHint) + '"' : (isSortable ? ' title="Click to sort by ' + esc(c.k) + '"' : '');
+      html += '<th' + (cls ? ' class="' + cls.trim() + '"' : '') + sortAttr + dataAttr + titleAttr
             + ' scope="col" style="width:' + c.w + 'px">' + c.k + '</th>';
     }
     html += '</tr></thead><tbody>';
