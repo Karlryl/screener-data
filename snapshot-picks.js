@@ -304,7 +304,9 @@ async function main() {
   const healthDir = './pipeline-health';
   if (!fs.existsSync(healthDir)) fs.mkdirSync(healthDir, { recursive: true });
   const healthReport = { script: 'snapshot-picks', date: today, n_total, n_ok, n_failed, failure_rate, failures: _pipelineFailures };
-  fs.writeFileSync(path.join(healthDir, 'snapshot-picks.json'), JSON.stringify(healthReport, null, 2));
+  // Tag 217e: atomic write (consistent with the per-pick writeFileAtomic at
+  // lines 146/278). Raw writeFileSync risked truncation on SIGKILL.
+  writeFileAtomic(path.join(healthDir, 'snapshot-picks.json'), JSON.stringify(healthReport, null, 2));
   console.log('Pipeline health: ' + n_ok + '/' + n_total + ' ok (' + (failure_rate * 100).toFixed(2) + '% failed) — threshold 5%');
   if (failure_rate > 0.05) {
     console.error('::error::snapshot-picks failure rate ' + (failure_rate * 100).toFixed(2) + '% exceeds 5% threshold');

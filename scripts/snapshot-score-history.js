@@ -206,7 +206,13 @@ async function main() {
     n_total, n_ok, n_failed, failure_rate,
     failures: failures.slice(0, 200)
   };
-  fs.writeFileSync(path.join(healthDir, 'snapshot-score-history.json'), JSON.stringify(healthReport, null, 2));
+  // Tag 217e: atomic write for the pipeline-health file. The script's
+  // per-ticker writes use writeFileAtomic (line 178) but this critical
+  // pipeline-health entry used raw writeFileSync — if the GitHub Actions
+  // runner hits the step timeout and SIGKILLs mid-write, the file could be
+  // truncated/empty, which the downstream Pipeline Health Check would treat
+  // as 'every expected script crashed' (F-CI-002). Use atomic write here too.
+  writeFileAtomic(path.join(healthDir, 'snapshot-score-history.json'), JSON.stringify(healthReport, null, 2));
   console.log('[score-history] health: ' + n_ok + '/' + n_total + ' ok (' + (failure_rate * 100).toFixed(2) + '%)');
   if (failure_rate > 0.05) {
     console.error('::error::snapshot-score-history failure rate ' + (failure_rate * 100).toFixed(2) + '% exceeds 5% threshold');

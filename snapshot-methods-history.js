@@ -10,6 +10,8 @@
 const fs = require('fs');
 const path = require('path');
 const Runner = require('./methods/runner.js');
+// Tag 217e: atomic write for pipeline-health output (see line ~140).
+const { writeFileAtomic } = require('./lib/atomic-write.js');
 
 function parseArgs(argv) {
   const args = { snapshots: './snapshots', out: './methods-history' };
@@ -136,7 +138,10 @@ async function main() {
   const healthDir = './pipeline-health';
   if (!fs.existsSync(healthDir)) fs.mkdirSync(healthDir, { recursive: true });
   const healthReport = { script: 'snapshot-methods-history', date: today, n_total, n_ok, n_failed, failure_rate, failures: _pipelineFailures };
-  fs.writeFileSync(path.join(healthDir, 'snapshot-methods-history.json'), JSON.stringify(healthReport, null, 2));
+  // Tag 217e: atomic write (was raw writeFileSync; on GitHub Actions step
+  // timeout SIGKILL mid-write the Pipeline Health Check would treat the
+  // truncated file as 'every expected script crashed').
+  writeFileAtomic(path.join(healthDir, 'snapshot-methods-history.json'), JSON.stringify(healthReport, null, 2));
   console.log(`Pipeline health: ${n_ok}/${n_total} ok (${(failure_rate * 100).toFixed(2)}% failed) — threshold 5%`);
   if (failure_rate > 0.05) {
     console.error(`::error::snapshot-methods-history failure rate ${(failure_rate * 100).toFixed(2)}% exceeds 5% threshold`);

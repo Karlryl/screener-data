@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 /**
  * Tag 109: Modes-Report â€” Top-Tabs + Tabellen-Layout + Sparklines + Aktienfinder-Klick
  * =====================================================================================
@@ -17,6 +17,8 @@ const path = require('path');
 
 const Runner = require('./methods/runner.js');
 const SM = require('./methods/strategy-modes.js');
+// Tag 217e: atomic write for pipeline-health output (see line ~1275).
+const { writeFileAtomic } = require('./lib/atomic-write.js');
 
 const REGION_TO_COUNTRY = {
   'Nasdaq': 'USA', 'NasdaqCM': 'USA', 'NasdaqGM': 'USA', 'NasdaqGS': 'USA',
@@ -1272,7 +1274,8 @@ function main() {
   const healthDir = path.join(__dirname, 'pipeline-health');
   if (!fs.existsSync(healthDir)) fs.mkdirSync(healthDir, { recursive: true });
   const healthReport = { script: 'generate-modes-report', date: today, n_total, n_ok, n_failed, failure_rate, failures: _pipelineFailures };
-  fs.writeFileSync(path.join(healthDir, 'generate-modes-report.json'), JSON.stringify(healthReport, null, 2));
+  // Tag 217e: atomic write (was raw writeFileSync).
+  writeFileAtomic(path.join(healthDir, 'generate-modes-report.json'), JSON.stringify(healthReport, null, 2));
   console.log(`Pipeline health: ${n_ok}/${n_total} ok (${(failure_rate * 100).toFixed(2)}% failed) â€” threshold 5%`);
   if (failure_rate > 0.05) {
     console.error(`::error::generate-modes-report failure rate ${(failure_rate * 100).toFixed(2)}% exceeds 5% threshold`);
