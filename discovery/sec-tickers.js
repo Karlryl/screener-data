@@ -10,11 +10,16 @@ const https = require('https');
 
 const SEC_URL = 'https://www.sec.gov/files/company_tickers.json';
 
+// Tag 215g: SEC EDGAR rejects User-Agents without a real email contact.
+// Run #107 log shows '[SEC] Failed: HTTP 403'. SEC policy requires the UA
+// header to include a real contact so they can reach the requester. Same
+// pattern as Tag 211j fix for scripts/pull-insider-form4.js.
+const USER_AGENT = 'Karl Viehrig screener-data karl_viehrig@web.de';
 function get(url) {
   return new Promise((resolve, reject) => {
     const req = https.get(url, {
       headers: {
-        'User-Agent': 'screener-data/1.0 (github.com/Karlryl/screener-data)',
+        'User-Agent': USER_AGENT,
         'Accept': 'application/json'
       }
     }, res => {
