@@ -25,7 +25,14 @@ concurrency:
 jobs:
   pull:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    # Tag 219 (Run #108 timeout post-mortem): Tag 215f's PULL_CONCURRENCY 20→8
+    # made Yahoo Pull take ~163min (was ~75-90min at conc=20 but with 7,210
+    # rate-limit fails). That eats 163/180 of the job budget, leaving only
+    # 17min for the 17 downstream steps (Pull Historical Prices alone needs
+    # ~10-20min). Run #108 SIGKILL'd 1min into Pull Historical Prices —
+    # snapshots from Yahoo Pull were never committed. Raised to 240min so
+    # the downstream chain has ~75min of breathing room.
+    timeout-minutes: 240
     env:
       # Tag 215f: lowered from 20 → 8. Run #107 produced 7,210 rate-limit
       # failures (82% of 8,769 total fails) because Yahoo's Cloudflare Edge
