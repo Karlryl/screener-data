@@ -2474,6 +2474,18 @@ const CLIENT_JS = `
       setKbdActive(kbdActiveIdx < 0 ? 0 : kbdActiveIdx - 1);
       return;
     }
+    // Tag 226c-2: Home/End jump to first/last row of the filtered list.
+    // Bloomberg muscle memory + saves a lot of j/k presses on long tabs.
+    if (e.key === 'Home') {
+      e.preventDefault();
+      setKbdActive(0);
+      return;
+    }
+    if (e.key === 'End') {
+      e.preventDefault();
+      setKbdActive((currentList && currentList.length) ? currentList.length - 1 : 0);
+      return;
+    }
     if (e.key === 'Enter' && kbdActiveIdx >= 0 && currentList[kbdActiveIdx]) {
       e.preventDefault();
       showModal(currentList[kbdActiveIdx].ticker);
@@ -2704,7 +2716,7 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
   </span>
 </div>
 <div id="active-filters"></div>
-<div class="summary" id="summary"></div>
+<div class="summary" id="summary" aria-live="polite" aria-atomic="true"></div>
 <div id="explainer" style="padding:8px 16px;background:var(--bg-1);border-bottom:1px solid var(--border);color:var(--text-1);font-size:12px;display:none;"></div>
 <div class="table-wrap"><div id="table"></div></div>
 <div class="pagination" role="navigation" aria-label="Pagination">
@@ -2728,6 +2740,7 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">Ctrl</span><span class="kbd-key">K</span></div><div class="kbd-desc">Command palette (also /)</div></div>
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">Esc</span></div><div class="kbd-desc">Close modal / clear search</div></div>
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">j</span> / <span class="kbd-key">k</span></div><div class="kbd-desc">Move row cursor down / up</div></div>
+    <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">Home</span> / <span class="kbd-key">End</span></div><div class="kbd-desc">Jump to first / last row of filtered list</div></div>
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">Enter</span></div><div class="kbd-desc">Open detail modal for active row</div></div>
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">←</span> / <span class="kbd-key">→</span></div><div class="kbd-desc">Prev / next stock (in modal)</div></div>
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">h</span></div><div class="kbd-desc">Go to Hypergrowth tab</div></div>
