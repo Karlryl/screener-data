@@ -596,11 +596,29 @@ table.dt td.num { text-align:right; font-variant-numeric:tabular-nums; }
 table.dt td.num.bullet { position:relative; overflow:hidden; }
 table.dt td.num.bullet .bar { position:absolute; left:0; top:0; bottom:0; right:12px; z-index:0; opacity:0.18; transition: width 120ms ease-out; pointer-events:none; }
 table.dt td.num.bullet .v { position:relative; z-index:1; }
-/* Tag 212d: Δ7d delta badge next to the per-row score sparkline. */
+/* Tag 212d: Δ7d delta badge next to the per-row score sparkline.
+   Tag 231b-1: each badge carries a leading ▲/▼/■ glyph as a colour-blind
+   shape cue, so direction is encoded by shape AND colour (per WCAG 1.4.1).
+   Glyph is injected via CSS ::before so the JS continues to write only the
+   numeric delta + sign — no payload growth, deterministic per class. */
 .d7 { margin-left:4px; font-size:10px; font-family:var(--mono); font-variant-numeric:tabular-nums; }
+.d7::before { display:inline-block; margin-right:2px; font-size:9px; line-height:1; }
 .d7.pos { color:var(--green); }
+.d7.pos::before { content:"\\25B2"; }
 .d7.neg { color:var(--red); }
+.d7.neg::before { content:"\\25BC"; }
 .d7.mute { color:var(--text-2); }
+.d7.mute::before { content:"\\25A0"; opacity:0.6; }
+/* Tag 231b-1: R40 tier colour-blind affordance — each tier gets a unique
+   underline texture as a non-colour cue. Solid (excellent), dotted (good),
+   wavy (fair/warn), thick (bad). Underlines are 1px so they don't shout in
+   normal viewing but become a tier discriminator for red/green CB users.
+   Numeric R40 values appear in 5 tiers across HG/QC/R40/SMALL tables. */
+.g-r40-excellent { text-decoration:underline; text-decoration-thickness:1px; text-decoration-color:currentColor; text-underline-offset:2px; }
+.g-r40-good      { text-decoration:underline dotted; text-decoration-thickness:1px; text-underline-offset:2px; }
+.g-r40-fair      { text-decoration:underline dashed; text-decoration-thickness:1px; text-underline-offset:2px; }
+.g-r40-warn      { text-decoration:underline dashed; text-decoration-thickness:1px; text-underline-offset:2px; text-decoration-color:currentColor; }
+.g-r40-bad       { text-decoration:line-through; text-decoration-thickness:1px; }
 table.dt td.ticker { color:var(--text-0); font-weight:600; }
 table.dt td.name { font-family:var(--ui); color:var(--text-1); font-weight:400; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .pill { display:inline-block; padding:1px 6px; font-size:10px; font-family:var(--mono); border:1px solid var(--border); }
