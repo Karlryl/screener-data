@@ -1816,6 +1816,144 @@ test('Tag 212b Rev-Quality (QoQ CoV): NOT-COMPUTABLE with <8 quarters', () => {
   if (!r.reason || !/need >= 8/.test(r.reason)) throw new Error('reason should mention need >= 8; got: ' + r.reason);
 });
 
+// ─── Tag 213a — institutional-ownership-13f (SEC 13F smart-money) smoke tests ─
+// DIAGNOSTIC method, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
+// Pass requires >= 3 distinct tracked institutions hold the ticker in the
+// external-data/sec-13f-by-ticker.json cache (Tag 212e). We stub the cache
+// via module-level _resetCacheForTests + monkey-patching the loader.
+const inst13fModule = require('./methods/institutional-ownership-13f.js');
+const fs = require('fs');
+const path = require('path');
+const CACHE_PATH_13F = path.join(__dirname, 'external-data', 'sec-13f-by-ticker.json');
+
+// Snapshot the on-disk cache contents so we can mutate around each test.
+function _readCacheRaw() {
+  try { return fs.readFileSync(CACHE_PATH_13F, 'utf8'); } catch (e) { return null; }
+}
+function _writeCacheRaw(s) {
+  if (s == null) { try { fs.unlinkSync(CACHE_PATH_13F); } catch (e) {} return; }
+  fs.mkdirSync(path.dirname(CACHE_PATH_13F), { recursive: true });
+  fs.writeFileSync(CACHE_PATH_13F, s);
+}
+function _stubCache(obj) {
+  _writeCacheRaw(JSON.stringify(obj));
+  inst13fModule._resetCacheForTests();
+}
+function _restoreCache(originalRaw) {
+  if (originalRaw == null) { try { fs.unlinkSync(CACHE_PATH_13F); } catch (e) {} }
+  else _writeCacheRaw(originalRaw);
+  inst13fModule._resetCacheForTests();
+}
+
+test('Tag 213a Institutional-Ownership-13F: PASS — 3+ distinct institutions hold ticker', () => {
+  const orig = _readCacheRaw();
+  try {
+    _stubCache({ updatedAt: '2026-05-17T00:00:00Z', byTicker: { TESTCO: {
+      ticker: 'TESTCO', nameOfIssuer: 'TEST CO',
+      holders: [
+        { institutionCik: '0000001', institutionName: 'Manager A', value: 100, shares: 1, shareType: 'SH' },
+        { institutionCik: '0000002', institutionName: 'Manager B', value: 200, shares: 2, shareType: 'SH' },
+        { institutionCik: '0000003', institutionName: 'Manager C', value: 300, shares: 3, shareType: 'SH' },
+        { institutionCik: '0000003', institutionName: 'Manager C', value: 50,  shares: 1, shareType: 'SH' }
+      ]
+    }}});
+    const s = { meta: { ticker: 'TESTCO' } };
+    const r = Runner.evaluateStock(s)['institutional-ownership-13f'];
+    if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+    if (!r.pass) throw new Error('3 distinct institutions must pass; reason=' + r.reason);
+    if (r.value !== 3) throw new Error('value should be 3, got ' + r.value);
+    if (r.components.institutionsHolding !== 3) throw new Error('institutionsHolding should be 3');
+    if (r.components.totalValueUSD !== 650) throw new Error('totalValueUSD should be 650, got ' + r.components.totalValueUSD);
+    if (!Array.isArray(r.components.sampleInstitutions) || r.components.sampleInstitutions.length !== 3) {
+      throw new Error('sampleInstitutions should have 3 names');
+    }
+  } finally { _restoreCache(orig); }
+});
+
+test('Tag 213a Institutional-Ownership-13F: FAIL — only 2 distinct institutions (below threshold)', () => {
+  const orig = _readCacheRaw();
+  try {
+    _stubCache({ updatedAt: '2026-05-17T00:00:00Z', byTicker: { THINCO: {
+      ticker: 'THINCO', nameOfIssuer: 'THIN CO',
+      holders: [
+        { institutionCik: '0000001', institutionName: 'Manager A', value: 100, shares: 1, shareType: 'SH' },
+        { institutionCik: '0000002', institutionName: 'Manager B', value: 200, shares: 2, shareType: 'SH' }
+      ]
+    }}});
+    const s = { meta: { ticker: 'THINCO' } };
+    const r = Runner.evaluateStock(s)['institutional-ownership-13f'];
+    if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+    if (r.pass) throw new Error('2 institutions must NOT pass threshold of 3; reason=' + r.reason);
+    if (r.value !== 2) throw new Error('value should be 2, got ' + r.value);
+  } finally { _restoreCache(orig); }
+});
+
+test('Tag 213a Institutional-Ownership-13F: NOT-COMPUTABLE — ticker missing from cache', () => {
+  const orig = _readCacheRaw();
+  try {
+    _stubCache({ updatedAt: '2026-05-17T00:00:00Z', byTicker: { OTHER: { ticker: 'OTHER', holders: [] } } });
+    const s = { meta: { ticker: 'MISSINGCO' } };
+    const r = Runner.evaluateStock(s)['institutional-ownership-13f'];
+    if (r.computable) throw new Error('should be computable=false when ticker not in cache');
+    if (r.pass) throw new Error('incomputable result must have pass=false');
+    if (!r.reason || !/not in 13F cache/.test(r.reason)) throw new Error('reason should mention not in cache; got: ' + r.reason);
+  } finally { _restoreCache(orig); }
+});
+
+// ─── Tag 213b — price-momentum-12-1 (Jegadeesh-Titman / AMP momentum) smoke tests ─
+// DIAGNOSTIC method, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
+// Pass: classic 12-1 return >= 10% with >= 252 trading days; degraded-path
+// positional score >= 0.6 when 4-12 months of history are available.
+const momModule = require('./methods/price-momentum-12-1.js');
+
+function _dailySeries(startPrice, growth, days) {
+  // Build a roughly linear daily series, oldest -> newest (matches history.json).
+  const out = [];
+  const base = new Date('2025-01-01T00:00:00Z').getTime();
+  for (let i = 0; i < days; i++) {
+    const close = startPrice * (1 + growth * (i / Math.max(days - 1, 1)));
+    const d = new Date(base + i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    out.push({ date: d, close });
+  }
+  return out;
+}
+
+test('Tag 213b Price-Momentum-12-1: PASS — strong 12-1 return on full 252d series', () => {
+  // 260 daily bars rising 40% across the window. priceLastMonth/priceOneYearAgo
+  // should be ~ +37% > 10% floor (skip-1 trims a tiny bit off the endpoint).
+  const series = _dailySeries(100, 0.40, 260);
+  const s = { meta: { ticker: 'MOMTEST_FULL' }, timeseries: { pricesHistory: series } };
+  momModule._resetCacheForTests();
+  const r = Runner.evaluateStock(s)['price-momentum-12-1'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (!r.pass) throw new Error('uptrend must pass; reason=' + r.reason);
+  if (r.components.pricesUsed !== 'monthly') throw new Error('pricesUsed should be monthly, got ' + r.components.pricesUsed);
+  if (!(r.components.ret12_1 >= 0.10)) throw new Error('ret12_1 should be >= 0.10, got ' + r.components.ret12_1);
+  if (r.components.barsUsed !== 252) throw new Error('barsUsed should be 252, got ' + r.components.barsUsed);
+});
+
+test('Tag 213b Price-Momentum-12-1: FAIL — downtrend 12-1 return below threshold', () => {
+  // 260 daily bars falling 30% — ret12_1 is negative -> fail.
+  const series = _dailySeries(100, -0.30, 260);
+  const s = { meta: { ticker: 'MOMTEST_DOWN' }, timeseries: { pricesHistory: series } };
+  momModule._resetCacheForTests();
+  const r = Runner.evaluateStock(s)['price-momentum-12-1'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (r.pass) throw new Error('downtrend must fail; reason=' + r.reason);
+  if (!(r.components.ret12_1 < 0.10)) throw new Error('ret12_1 should be < 0.10, got ' + r.components.ret12_1);
+});
+
+test('Tag 213b Price-Momentum-12-1: NOT-COMPUTABLE — too few bars (<4 months daily)', () => {
+  // 50 daily bars — below MIN_HISTORY_DAILY=84. Must be incomputable.
+  const series = _dailySeries(100, 0.20, 50);
+  const s = { meta: { ticker: 'MOMTEST_SHORT' }, timeseries: { pricesHistory: series } };
+  momModule._resetCacheForTests();
+  const r = Runner.evaluateStock(s)['price-momentum-12-1'];
+  if (r.computable) throw new Error('should be computable=false with only 50 bars');
+  if (r.pass) throw new Error('incomputable result must have pass=false');
+  if (!r.reason || !/need >= 84/.test(r.reason)) throw new Error('reason should mention need >= 84; got: ' + r.reason);
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the

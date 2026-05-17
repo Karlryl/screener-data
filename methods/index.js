@@ -154,5 +154,18 @@ module.exports = [
   // smoothness signal (Asness/Frazzini/Pedersen 2019 QMJ Revenue Quality).
   // Sibling of Tag 113 q-spike-dataguard with statistical CoV over the whole
   // 8Q window vs. single-Q concentration check. DIAGNOSTIC, fixture-hash safe.
-  { file: './revenue-quality-cov.js' }
+  { file: './revenue-quality-cov.js' },
+
+  // Tag 213a: Institutional Ownership (SEC 13F) — count of distinct tracked
+  // smart-money institutions holding the name per Tag 212e's quarterly 13F-HR
+  // cache (external-data/sec-13f-by-ticker.json). DIAGNOSTIC, fixture-hash safe.
+  // Cache is optional at load time — method returns clean computable=false when
+  // the cache file is missing, so it is safe to register unconditionally.
+  { file: './institutional-ownership-13f.js' },
+
+  // Tag 213b: Price Momentum (12-1) — Jegadeesh-Titman 1993 / Asness-Moskowitz-
+  // Pedersen 2013 academic 12-month return skipping the most recent month
+  // (avoids 1-month reversal). Degrades to within-window position when fewer
+  // than 252 trading days are available. DIAGNOSTIC, fixture-hash safe.
+  { file: './price-momentum-12-1.js' }
 ];
