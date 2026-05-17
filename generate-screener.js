@@ -560,9 +560,25 @@ header input:focus { border-color:var(--blue); }
 .filters input[type=number]:hover { border-color:var(--border-bright); }
 .summary { padding:6px 16px; background:var(--bg-0); color:var(--text-1); font-size:11px; border-bottom:1px solid var(--border); font-family:var(--mono); }
 .summary strong { color:var(--text-0); font-weight:600; }
-.table-wrap { overflow:auto; }
+/* Tag 223b: bound the table-wrap so position:sticky on thead actually pins
+   headers as the user scrolls a long list. Falls back to natural body scroll
+   on mobile (overflow visible) so iOS momentum scrolling stays smooth. */
+.table-wrap { overflow:auto; max-height:calc(100vh - 220px); }
 table.dt { width:100%; border-collapse:collapse; font-size:12px; }
-table.dt th { background:var(--bg-1); color:var(--text-1); text-align:left; padding:8px 12px; border-bottom:1px solid var(--border-bright); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; position:sticky; top:0; font-family:var(--ui); }
+/* Tag 223b: sortable column header polish (click to sort). aria-sort gets a
+   subtle indicator caret so screen readers and sighted users agree on which
+   column is the active sort axis. Headers are sticky (top:0) inside the
+   .table-wrap scroll container; z-index 5 keeps them above tinted row
+   backgrounds but below the page header (z-index 10). */
+table.dt th { background:var(--bg-1); color:var(--text-1); text-align:left; padding:8px 12px; border-bottom:1px solid var(--border-bright); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; position:sticky; top:0; z-index:5; font-family:var(--ui); }
+table.dt th.sortable { cursor:pointer; user-select:none; }
+table.dt th.sortable:hover { color:var(--text-0); background:var(--bg-hover); }
+table.dt th[aria-sort="ascending"]::after  { content:" \\25B2"; color:var(--blue); font-size:9px; }
+table.dt th[aria-sort="descending"]::after { content:" \\25BC"; color:var(--blue); font-size:9px; }
+/* Tag 223b: keyboard-active row (j/k navigation). Distinct from :hover so
+   mouse and keyboard cursors can coexist without confusion. */
+table.dt tr.row.kbd-active { background:var(--bg-hover); box-shadow:inset 3px 0 0 var(--blue); }
+table.dt tr.row.kbd-active td:first-child { color:var(--blue); font-weight:700; }
 table.dt td { padding:6px 12px; border-bottom:1px solid var(--border); font-family:var(--mono); font-weight:500; font-size:12px; }
 table.dt tr.row { cursor:pointer; transition:background 80ms ease-out; }
 table.dt tr.row:hover { background:var(--bg-hover); }
@@ -711,6 +727,47 @@ body.theme-light .search-results { background:#ffffff; box-shadow:0 4px 12px rgb
 .cp-empty { padding:16px; text-align:center; color:var(--text-2); font-size:12px; font-style:italic; font-family:var(--ui); }
 .cp-hint { padding:6px 12px; border-top:1px solid var(--border); color:var(--text-2); font-size:10px; font-family:var(--mono); background:var(--bg-1); text-transform:uppercase; letter-spacing:0.05em; }
 body.theme-light .cp-overlay { background:rgba(40,48,60,0.30); }
+/* Tag 223b: shortcuts help overlay (triggered by "?" outside any input).
+   Shares the cp-overlay scrim color so the keyboard-cursor feel is
+   consistent with the Ctrl+K palette. */
+.kbd-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:210; display:none; }
+.kbd-overlay.show { display:block; }
+.kbd-panel { position:absolute; top:10vh; left:50%; transform:translateX(-50%); width:520px; max-width:calc(100vw - 24px); max-height:80vh; overflow:auto; background:var(--bg-1); border:1px solid var(--border-bright); padding:20px 24px; box-shadow:0 16px 48px rgba(0,0,0,0.55); }
+.kbd-panel h2 { margin:0 0 12px; font-size:13px; color:var(--text-0); text-transform:uppercase; letter-spacing:0.08em; border-bottom:1px solid var(--border); padding-bottom:8px; }
+.kbd-panel .kbd-row { display:flex; align-items:baseline; gap:12px; padding:5px 0; border-bottom:1px solid var(--border); font-size:12px; }
+.kbd-panel .kbd-row:last-child { border-bottom:none; }
+.kbd-panel .kbd-keys { flex:0 0 110px; }
+.kbd-panel .kbd-desc { color:var(--text-1); font-family:var(--ui); }
+.kbd-key { display:inline-block; padding:1px 6px; margin-right:2px; background:var(--bg-2); border:1px solid var(--border-bright); border-bottom-width:2px; color:var(--text-0); font-family:var(--mono); font-size:11px; min-width:14px; text-align:center; }
+.kbd-close { position:absolute; top:10px; right:12px; background:transparent; color:var(--text-1); border:none; font-size:18px; cursor:pointer; line-height:1; padding:4px 8px; }
+.kbd-close:hover { color:var(--text-0); }
+body.theme-light .kbd-overlay { background:rgba(40,48,60,0.45); }
+
+/* Tag 223b: column-visibility popover (toggle which columns render). */
+.col-toggle-wrap { position:relative; display:inline-block; }
+.col-toggle-btn { background:var(--bg-2); color:var(--text-1); border:1px solid var(--border); padding:6px 10px; cursor:pointer; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; transition:color 100ms ease-out, border-color 100ms ease-out; }
+.col-toggle-btn:hover { color:var(--text-0); border-color:var(--border-bright); }
+.col-popover { position:absolute; top:calc(100% + 4px); right:0; min-width:200px; background:var(--bg-1); border:1px solid var(--border-bright); box-shadow:0 8px 24px rgba(0,0,0,0.45); padding:8px 0; z-index:50; display:none; }
+.col-popover.show { display:block; }
+.col-popover .col-item { display:flex; align-items:center; padding:5px 12px; cursor:pointer; font-family:var(--mono); font-size:11px; color:var(--text-0); transition:background 80ms ease-out; }
+.col-popover .col-item:hover { background:var(--bg-hover); }
+.col-popover .col-item input { margin-right:8px; cursor:pointer; }
+.col-popover .col-sep { border-top:1px solid var(--border); margin:6px 0; }
+.col-popover .col-reset { padding:5px 12px; color:var(--text-1); font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.05em; cursor:pointer; }
+.col-popover .col-reset:hover { color:var(--blue); background:var(--bg-hover); }
+
+/* Tag 223b: data error / loading state when window.SCREENER_DATA is missing. */
+.data-error { padding:40px 24px; text-align:center; color:var(--red); font-family:var(--mono); font-size:13px; background:var(--bg-1); border:1px solid var(--red); margin:24px; }
+.data-error .hint { color:var(--text-1); font-family:var(--ui); font-size:11px; margin-top:8px; }
+
+/* Tag 223b: visible focus on table rows when keyboard-navigating. */
+table.dt tr.row:focus-visible { outline:2px solid var(--blue); outline-offset:-2px; background:var(--bg-hover); }
+
+/* Tag 223b: button hover for icon-only modal nav buttons (close, prev, next)
+   already covered by .modal-header button — no extra rule needed. Add a
+   distinct close-X style so the close button reads as destructive-ish. */
+.modal-header button.close-btn:hover { color:var(--red); border-color:var(--red); }
+
 /* Upgrade 3a: mobile responsive (≤700px) */
 @media (max-width:700px) {
   header { flex-wrap:wrap; gap:8px; padding:8px 10px; }
@@ -727,11 +784,14 @@ body.theme-light .cp-overlay { background:rgba(40,48,60,0.30); }
   .search-results { left:0; transform:none; width:100%; max-width:100%; top:auto; position:relative; }
   table.dt th, table.dt td { padding:4px 6px; font-size:11px; }
   #active-filters { padding:6px 10px; }
+  /* Tag 223b: drop max-height cap on mobile — let body scroll instead so
+     iOS momentum scrolling stays smooth. Sticky headers gracefully degrade. */
+  .table-wrap { max-height:none; }
 }
 /* Upgrade 3b: print styles — render only the active table, light theme */
 @media print {
   body { background:#fff; color:#000; font-size:10pt; }
-  header, .tabs, .filters, #active-filters, .pagination, .modal, .search-results, #themeBtn, .cp-overlay { display:none !important; }
+  header, .tabs, .filters, #active-filters, .pagination, .modal, .search-results, #themeBtn, .cp-overlay, .kbd-overlay, .col-popover { display:none !important; }
   .summary { background:#fff; color:#000; border-bottom:1px solid #888; padding:4px 0; }
   .summary strong { color:#000; }
   #explainer { background:#fff; color:#333; border-bottom:1px solid #888; }
@@ -754,6 +814,14 @@ body.theme-light .cp-overlay { background:rgba(40,48,60,0.30); }
 const CLIENT_JS = `
 (function(){
   const DATA = window.SCREENER_DATA;
+  // Tag 223b: error state — if the data block is missing (corrupted output,
+  // network failure, browser blocked inline script), surface a clear message
+  // instead of throwing on the first ROWS lookup below.
+  if (!DATA || !DATA.rowsByTicker || !DATA.tabs) {
+    const tbl = document.getElementById('table');
+    if (tbl) tbl.innerHTML = '<div class="data-error">Error loading data: window.SCREENER_DATA is missing or invalid.<div class="hint">Try re-running <code>node generate-screener.js</code> or re-loading the page.</div></div>';
+    return;
+  }
   const ROWS = DATA.rowsByTicker;
   // TABS came over as { TAB: [ticker, ticker, ...] }; hydrate into row arrays for filter/render code.
   const TABS = {};
@@ -761,6 +829,25 @@ const CLIENT_JS = `
     TABS[t] = DATA.tabs[t].map(tk => ROWS[tk]).filter(Boolean);
   }
   const PAGE_SIZE = 50;
+
+  // Tag 223b: hidden-column state per tab. Loaded from localStorage; defaults
+  // to all-columns-shown. Stored as { tab: [hidden col-key, ...] }.
+  let hiddenCols = {};
+  try {
+    const raw = localStorage.getItem('screener.hiddenCols');
+    if (raw) hiddenCols = JSON.parse(raw) || {};
+  } catch (e) { /* ignore — localStorage may be blocked */ }
+  function isColHidden(tab, key) {
+    return (hiddenCols[tab] || []).indexOf(key) >= 0;
+  }
+  function setColHidden(tab, key, hidden) {
+    const list = hiddenCols[tab] || [];
+    const i = list.indexOf(key);
+    if (hidden && i < 0) list.push(key);
+    else if (!hidden && i >= 0) list.splice(i, 1);
+    hiddenCols[tab] = list;
+    try { localStorage.setItem('screener.hiddenCols', JSON.stringify(hiddenCols)); } catch (e) { /* ignore */ }
+  }
 
   let activeTab = 'HG';
   let page = 1;
@@ -876,9 +963,9 @@ const CLIENT_JS = `
     }
     let html = '<span class="label">Active:</span>';
     for (const c of chips) {
-      html += '<span class="chip" data-chip="'+c.k+'">' + esc(c.label) + '<span class="x" title="Remove filter">×</span></span>';
+      html += '<span class="chip" data-chip="'+c.k+'">' + esc(c.label) + '<span class="x" role="button" tabindex="0" aria-label="Remove filter '+esc(c.label)+'" title="Remove filter">×</span></span>';
     }
-    html += '<button class="clear-all" id="chipsClearAll" title="Reset all filters">Clear All</button>';
+    html += '<button type="button" class="clear-all" id="chipsClearAll" aria-label="Clear all filters" title="Reset all filters">Clear All</button>';
     el.innerHTML = html;
     el.classList.add('show');
   }
@@ -1176,14 +1263,18 @@ const CLIENT_JS = `
     const bc = function(innerHtml, key){ return bulletCell(innerHtml, bp(key)); };
     // Tag 209e Upgrade 2: per-row tint based on dominant signal.
     const tint = rowTint(r);
-    const rowOpen = '<tr class="row" style="'+tint+'" data-tk="'+esc(r.ticker)+'">';
+    // Tag 223b: make rows focusable; tr has implicit role=row so no role attr.
+    // aria-label kept short (ticker only) to limit per-row HTML overhead at
+    // 3,500+ rows; screen readers still announce cell content on cursor entry.
+    const rowOpen = '<tr class="row" tabindex="-1" aria-label="'+esc(r.ticker)+'" style="'+tint+'" data-tk="'+esc(r.ticker)+'">';
 
     if (tab === 'HG') {
-      const score = r.hgScore==null ? '—' : r.hgScore.toFixed(0);
+      // Tag 223b: scores standardised to 1 decimal (was .toFixed(0)).
+      const score = r.hgScore==null ? '—' : r.hgScore.toFixed(1);
       return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td>'+bc(score,'score')+'<td>'+stateP+'</td>'+bc(r40Html,'r40')+bc(growthHtml,'growth')+bc(gmHtml,'grossMargin')+bc(fcfmHtml,'fcfMargin')+bc(fmtM(r.mcap),'mcap')+trendCell(r,'HG')+'</tr>';
     }
     if (tab === 'QC') {
-      const score = r.qcScore==null ? '—' : r.qcScore.toFixed(0);
+      const score = r.qcScore==null ? '—' : r.qcScore.toFixed(1);
       return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td>'+bc(score,'score')+'<td>'+stateP+'</td>'+bc(fcfmHtml,'fcfMargin')+bc(opmHtml,'opMargin')+bc(gmHtml,'grossMargin')+bc(fmtM(r.mcap),'mcap')+trendCell(r,'QC')+'</tr>';
     }
     if (tab === 'SMALL') {
@@ -1208,7 +1299,7 @@ const CLIENT_JS = `
       return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+tkCell+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td>'+bc(r40Html,'r40')+bc(growthHtml,'growth')+bc(fcfmHtml,'fcfMargin')+bc(opmHtml,'opMargin')+bc(gmHtml,'grossMargin')+'<td>'+stateP+'</td>'+bc(fmtM(r.mcap),'mcap')+trendCell(r,'R40')+'</tr>';
     }
     if (tab === 'PRE_BREAKOUT') {
-      const pb = r.pbScore==null ? '—' : r.pbScore.toFixed(0);
+      const pb = r.pbScore==null ? '—' : r.pbScore.toFixed(1);
       // Three-signal acceleration column: GM↑ OM↑ Rev↑ — only show active ones.
       const sigs = [];
       if (r.gmaTrend === 'accelerating') sigs.push('<span class="g-pos" title="Gross-Margin accelerating">GM↑</span>');
@@ -1218,7 +1309,7 @@ const CLIENT_JS = `
       return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td>'+stateP+'</td>'+bc(growthHtml,'growth')+bc(gmHtml,'grossMargin')+bc(r40Html,'r40')+'<td style="font-size:10px">'+signalsHtml+'</td>'+bc(fmtM(r.mcap),'mcap')+bc(pb,'pbScore')+'</tr>';
     }
     if (tab === 'WATCH') {
-      const score = Math.max(r.hgScore||0, r.qcScore||0).toFixed(0);
+      const score = Math.max(r.hgScore||0, r.qcScore||0).toFixed(1);
       // Reasons priority: explicit hard-gate reasons > NEAR_MISS tier label.
       let reason;
       if (r.watchReasons && r.watchReasons.length) reason = r.watchReasons.join(',');
@@ -1299,7 +1390,7 @@ const CLIENT_JS = `
       (bySector[s] = bySector[s] || []).push(r);
     }
     const metrics = [
-      { k:'score',   label:'Score',    fmt:(v) => v.toFixed(0),     dir:'higher' },
+      { k:'score',   label:'Score',    fmt:(v) => v.toFixed(1),     dir:'higher' },
       { k:'r40',     label:'R40',      fmt:(v) => v.toFixed(1),     dir:'higher' },
       { k:'fcfm',    label:'FCFM%',    fmt:(v) => v.toFixed(1)+'%', dir:'higher' },
       { k:'growth',  label:'RevGr%',   fmt:(v) => v.toFixed(1)+'%', dir:'higher' },
@@ -1438,15 +1529,63 @@ const CLIENT_JS = `
     // everything the user is currently looking at — not just this page.
     const pctMaps = buildPercentileMaps(list, activeTab);
 
-    let html = '<table class="dt"><thead><tr>';
-    for (const c of cols) html += '<th'+(c.num?' class="num"':'')+' style="width:'+c.w+'px">'+c.k+'</th>';
+    // Tag 223b: per-column hide via CSS nth-child rules. Rows are still
+    // rendered with all cells (cheaper than rewriting six tab-specific
+    // renderRow branches) — we just hide the header + every cell at the
+    // same column index. Visible "#" column is always col 1; user toggles
+    // are 1-indexed by tabColumns().
+    let html = '';
+    const hideIdx = [];
+    for (let i = 0; i < cols.length; i++) {
+      if (isColHidden(activeTab, cols[i].k)) hideIdx.push(i + 1);
+    }
+    if (hideIdx.length) {
+      let css = '';
+      for (const ci of hideIdx) {
+        css += 'table.dt th:nth-child(' + ci + '),table.dt td:nth-child(' + ci + '){display:none}';
+      }
+      html += '<style>' + css + '</style>';
+    }
+    html += '<table class="dt"><thead><tr>';
+    // Tag 223b: sortable headers + aria-sort indicators. Click toggles sort.
+    const sortKeyMap = {
+      'Score':'score','R40':'r40','RevGr%':'growth','FCFM%':'fcfMargin',
+      'OpM%':'opMargin','GrossM%':'grossMargin','MCap':'mcap','PB-Score':'pbScore'
+    };
+    for (const c of cols) {
+      const skKey = sortKeyMap[c.k];
+      const isSortable = !!skKey;
+      const sortAttr = isSortable ? (sortKey === skKey ? ' aria-sort="descending"' : ' aria-sort="none"') : '';
+      const cls = (c.num ? 'num ' : '') + (isSortable ? 'sortable' : '');
+      const dataAttr = isSortable ? ' data-sortkey="' + skKey + '"' : '';
+      html += '<th' + (cls ? ' class="' + cls.trim() + '"' : '') + sortAttr + dataAttr
+            + ' scope="col" style="width:' + c.w + 'px">' + c.k + '</th>';
+    }
     html += '</tr></thead><tbody>';
     for (let i=0;i<slice.length;i++) html += renderRow(slice[i], (page-1)*PAGE_SIZE + i, activeTab, pctMaps);
     html += '</tbody></table>';
     // Tag 211g empty-state polish — show a centered "No matches" when filters
     // shrink the list to zero rows. Avoids a blank white expanse.
+    // Tag 223b: suggest concrete filter relaxations based on current active state.
     if (slice.length === 0) {
-      html += '<div class="empty-state"><div class="dash">—</div>No matches. Try relaxing filters.</div>';
+      const hints = [];
+      const dqAll = ['A+','A','B','C','D'];
+      const dqOn = dqAll.filter(g => filterDQ[g]);
+      if (dqOn.length < 3) hints.push('include lower data-quality grades (C, D)');
+      const stateOff = Object.keys(filterState).filter(k => !filterState[k]);
+      if (stateOff.length) hints.push('toggle on state pills: ' + stateOff.join(', '));
+      const capOff = Object.keys(filterCap).filter(k => !filterCap[k]);
+      if (capOff.length) hints.push('toggle on cap buckets: ' + capOff.join(', '));
+      if (filterSector) hints.push('clear sector filter (currently ' + filterSector + ')');
+      if (filterCountry) hints.push('clear country filter');
+      if (filterMinR40 !== '' || filterMaxR40 !== '') hints.push('clear R40 min/max');
+      if (filterMin !== '') hints.push('clear Tab Min');
+      if (onlyGaap) hints.push('uncheck GAAP+');
+      if (onlyFcf) hints.push('uncheck FCF+');
+      const hintHtml = hints.length
+        ? '<div style="margin-top:10px;font-size:11px;color:var(--text-1);font-style:normal;">Try: ' + hints.slice(0,3).join(' · ') + '</div>'
+        : '';
+      html += '<div class="empty-state"><div class="dash">—</div>No matches in ' + activeTab + ' tab.' + hintHtml + '</div>';
     }
     document.getElementById('table').innerHTML = html;
 
@@ -1535,9 +1674,14 @@ const CLIENT_JS = `
     if (r.gmaTrend === 'accelerating') sigBadges.push('<span style="color:var(--green);border:1px solid var(--green);padding:1px 5px;font-size:10px">GM↑</span>');
     if (r.omaTrend === 'accelerating') sigBadges.push('<span style="color:var(--green);border:1px solid var(--green);padding:1px 5px;font-size:10px">OpM↑</span>');
     if (r.revAccelDelta != null && r.revAccelDelta > 0) sigBadges.push('<span style="color:var(--green);border:1px solid var(--green);padding:1px 5px;font-size:10px">Rev-Accel +'+r.revAccelDelta.toFixed(0)+'pp</span>');
-    html += '<div class="meta">Score: '+(score!=null?score.toFixed(0):'—')+' · <span class="pill '+r.state+'">'+r.state+'</span> · MCap '+fmtM(r.mcap)+'</div>';
+    html += '<div class="meta">Score: '+(score!=null?score.toFixed(1):'—')+' · <span class="pill '+r.state+'">'+r.state+'</span> · MCap '+fmtM(r.mcap)+'</div>';
     if (sigBadges.length) html += '<div class="meta" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;">'+sigBadges.join('')+'</div>';
-    html += '<div class="right"><button id="prevC">← Prev</button><button id="closeM">✕ ESC</button><button id="nextC">Next →</button></div>';
+    // Tag 223b: aria-labels on icon-only modal nav buttons.
+    html += '<div class="right">'
+          + '<button id="prevC" type="button" aria-label="Previous stock (Left arrow)" title="Previous stock (Left arrow)">← Prev</button>'
+          + '<button id="closeM" type="button" class="close-btn" aria-label="Close modal (Escape)" title="Close (Esc)">✕ ESC</button>'
+          + '<button id="nextC" type="button" aria-label="Next stock (Right arrow)" title="Next stock (Right arrow)">Next →</button>'
+          + '</div>';
     html += '</div>';
 
     // Section B: Key Metric cards
@@ -1605,7 +1749,8 @@ const CLIENT_JS = `
       const fmPct = (rv && fcx!=null && rv>0) ? fcx/rv*100 : null;
       const niPct = (rv && nix!=null && rv>0) ? nix/rv*100 : null;
       const fy = 'Y-'+i;
-      html += '<tr><td class="fy">'+fy+'</td><td>'+fmtM(rv)+'</td><td>'+(grRow!=null?(grRow>=0?'+':'')+grRow.toFixed(0)+'%':'—')+'</td><td>'+(gmPct!=null?gmPct.toFixed(1)+'%':'—')+'</td><td>'+(omPct!=null?omPct.toFixed(1)+'%':'—')+'</td><td>'+(fmPct!=null?fmPct.toFixed(1)+'%':'—')+'</td><td>'+(niPct!=null?niPct.toFixed(1)+'%':'—')+'</td></tr>';
+      // Tag 223b: percentages standardised to 1 decimal across the board.
+      html += '<tr><td class="fy">'+fy+'</td><td>'+fmtM(rv)+'</td><td>'+(grRow!=null?(grRow>=0?'+':'')+grRow.toFixed(1)+'%':'—')+'</td><td>'+(gmPct!=null?gmPct.toFixed(1)+'%':'—')+'</td><td>'+(omPct!=null?omPct.toFixed(1)+'%':'—')+'</td><td>'+(fmPct!=null?fmPct.toFixed(1)+'%':'—')+'</td><td>'+(niPct!=null?niPct.toFixed(1)+'%':'—')+'</td></tr>';
     }
     html += '</tbody></table></div>';
 
@@ -1693,6 +1838,7 @@ const CLIENT_JS = `
 
     c.innerHTML = html;
     m.classList.add('show');
+    m.setAttribute('aria-hidden', 'false');
     document.getElementById('closeM').onclick = closeModal;
     document.getElementById('prevC').onclick = () => navModal(-1);
     document.getElementById('nextC').onclick = () => navModal(1);
@@ -1720,7 +1866,9 @@ const CLIENT_JS = `
   }
 
   function closeModal(){
-    document.getElementById('modal').classList.remove('show');
+    const m = document.getElementById('modal');
+    m.classList.remove('show');
+    m.setAttribute('aria-hidden', 'true');
     window._modalTk = null;
   }
   function navModal(dir){
@@ -1754,7 +1902,8 @@ const CLIENT_JS = `
       // AVIC Xi'an Aircraft, Goldwind Science&Technology) — without esc()
       // they render visually broken ("&amp;") at best and could enable
       // injection if Yahoo ever passes through angle brackets.
-      html += '<div class="sr" data-tk="'+esc(h.ticker)+'"><strong>'+esc(h.ticker)+'</strong> '+esc(h.name)+(badge?'<span class="badge">'+badge+'</span>':'')+' <span class="badge">'+(h.hgScore!=null?'HG '+h.hgScore.toFixed(0):'')+(h.qcScore!=null?(h.hgScore!=null?' / ':'')+'QC '+h.qcScore.toFixed(0):'')+'</span></div>';
+      // Tag 223b: scores now 1 decimal everywhere.
+      html += '<div class="sr" role="option" data-tk="'+esc(h.ticker)+'"><strong>'+esc(h.ticker)+'</strong> '+esc(h.name)+(badge?'<span class="badge">'+badge+'</span>':'')+' <span class="badge">'+(h.hgScore!=null?'HG '+h.hgScore.toFixed(1):'')+(h.qcScore!=null?(h.hgScore!=null?' / ':'')+'QC '+h.qcScore.toFixed(1):'')+'</span></div>';
     }
     searchResults.innerHTML = html || '<div class="sr">no results</div>';
     searchResults.classList.add('show');
@@ -2125,20 +2274,27 @@ const CLIENT_JS = `
   // so just being declared above is enough — JS hoisting handles it).
 
   // ------- event wiring -------
+  // Tag 223b: extracted into a function so the keyboard chord (g h, g q, ...)
+  // can switch tabs without simulating a click.
+  function switchToTab(tabKey) {
+    if (!TABS[tabKey] && tabKey !== 'SECTOR') return;
+    activeTab = tabKey;
+    page = 1;
+    filterMin = '';
+    const fMinEl = document.getElementById('fMin');
+    if (fMinEl) fMinEl.value = '';
+    document.querySelectorAll('.tabs button').forEach(x => {
+      const on = x.dataset.tab === tabKey;
+      x.classList.toggle('active', on);
+      x.setAttribute('aria-selected', on ? 'true' : 'false');
+      if (on) x.setAttribute('aria-current', 'page');
+      else x.removeAttribute('aria-current');
+    });
+    kbdActiveIdx = -1;  // reset row cursor on tab change
+    renderTable();
+  }
   document.querySelectorAll('.tabs button').forEach(b => {
-    b.onclick = () => {
-      activeTab = b.dataset.tab;
-      page = 1;
-      // Tag 199 fix: reset tab-specific Min input on tab switch — the prior
-      // value belonged to a different metric (e.g. min-R40 for HG vs min-Growth
-      // for SMALL) and would silently kill the new tab's row count.
-      filterMin = '';
-      const fMinEl = document.getElementById('fMin');
-      if (fMinEl) fMinEl.value = '';
-      document.querySelectorAll('.tabs button').forEach(x => x.classList.remove('active'));
-      b.classList.add('active');
-      renderTable();
-    };
+    b.onclick = () => switchToTab(b.dataset.tab);
   });
   document.querySelectorAll('.filters .f-state').forEach(b => {
     b.onclick = () => {
@@ -2183,9 +2339,71 @@ const CLIENT_JS = `
   document.getElementById('prevPage').onclick = () => { if (page>1) { page--; renderTable(); } };
   document.getElementById('nextPage').onclick = () => { page++; renderTable(); };
   document.getElementById('table').addEventListener('click', e => {
+    // Tag 223b: clickable sortable column header.
+    const th = e.target.closest('th.sortable');
+    if (th && th.dataset.sortkey) {
+      sortKey = th.dataset.sortkey;
+      const sortSel = document.getElementById('fSort');
+      if (sortSel) {
+        // Map sort axes that exist in fSort dropdown; fallback gracefully if not present.
+        const opts = Array.from(sortSel.options).map(o => o.value);
+        if (opts.indexOf(sortKey) >= 0) sortSel.value = sortKey;
+      }
+      page = 1;
+      renderTable();
+      return;
+    }
     const tr = e.target.closest('tr.row');
     if (tr && tr.dataset.tk) showModal(tr.dataset.tk);
   });
+
+  // Tag 223b: keyboard-navigation state and helpers (j/k row cursor + g chord).
+  let kbdActiveIdx = -1;  // index into currentList of the keyboard-highlighted row
+  let gChordPending = false;
+  let gChordTimer = null;
+  function clearKbdActive() {
+    document.querySelectorAll('tr.row.kbd-active').forEach(el => el.classList.remove('kbd-active'));
+  }
+  function setKbdActive(idx) {
+    if (!currentList || !currentList.length) { kbdActiveIdx = -1; return; }
+    if (idx < 0) idx = 0;
+    if (idx >= currentList.length) idx = currentList.length - 1;
+    kbdActiveIdx = idx;
+    // Page may need to change to bring this row into view.
+    const targetPage = Math.floor(idx / PAGE_SIZE) + 1;
+    if (targetPage !== page) {
+      page = targetPage;
+      renderTable();
+      // renderTable rebuilds the DOM — re-apply highlight after.
+    }
+    clearKbdActive();
+    const tk = currentList[idx].ticker;
+    const tr = document.querySelector('tr.row[data-tk="' + (window.CSS && CSS.escape ? CSS.escape(tk) : tk) + '"]');
+    if (tr) {
+      tr.classList.add('kbd-active');
+      tr.scrollIntoView({ block:'nearest' });
+    }
+  }
+  function handleGChord(ch) {
+    const map = { h:'HG', q:'QC', s:'SMALL', r:'R40', p:'PRE_BREAKOUT', w:'WATCH' };
+    const tab = map[ch];
+    if (tab) switchToTab(tab);
+  }
+
+  // Tag 223b: help overlay (?) — lists all power-user shortcuts.
+  const kbdOverlay = document.getElementById('kbdHelp');
+  function openHelp() {
+    if (kbdOverlay) { kbdOverlay.classList.add('show'); kbdOverlay.setAttribute('aria-hidden', 'false'); }
+  }
+  function closeHelp() {
+    if (kbdOverlay) { kbdOverlay.classList.remove('show'); kbdOverlay.setAttribute('aria-hidden', 'true'); }
+  }
+  const helpBtn = document.getElementById('helpBtn');
+  if (helpBtn) helpBtn.onclick = openHelp;
+  const kbdHelpClose = document.getElementById('kbdHelpClose');
+  if (kbdHelpClose) kbdHelpClose.onclick = closeHelp;
+  if (kbdOverlay) kbdOverlay.addEventListener('click', e => { if (e.target === kbdOverlay) closeHelp(); });
+
   document.addEventListener('keydown', e => {
     // Tag 213c: command palette triggers — Ctrl+K / Cmd+K (anywhere) or "/"
     // (only when not already typing in an input). Stop propagation so we don't
@@ -2200,13 +2418,59 @@ const CLIENT_JS = `
     const inField = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
     if (e.key === '/' && !inField) { e.preventDefault(); openPalette(); return; }
     if (e.key === 'Escape') {
+      if (kbdOverlay && kbdOverlay.classList.contains('show')) { closeHelp(); return; }
       if (document.getElementById('commandPalette').classList.contains('show')) { closePalette(); return; }
-      if (searchResults.classList.contains('show')) { searchResults.classList.remove('show'); searchInput.value=''; }
-      else if (document.getElementById('modal').classList.contains('show')) closeModal();
+      if (searchResults.classList.contains('show')) { searchResults.classList.remove('show'); searchInput.value=''; return; }
+      if (document.getElementById('modal').classList.contains('show')) { closeModal(); return; }
+      // Clear j/k cursor if active.
+      if (kbdActiveIdx >= 0) { kbdActiveIdx = -1; clearKbdActive(); return; }
     }
     if (document.getElementById('modal').classList.contains('show')) {
       if (e.key === 'ArrowLeft') navModal(-1);
       if (e.key === 'ArrowRight') navModal(1);
+      return;  // suppress other shortcuts while modal is open
+    }
+    // Tag 223b: power-user shortcuts. Skip when typing in inputs or when a
+    // modifier is held (avoid stealing browser shortcuts like Ctrl+J).
+    if (inField || e.altKey || e.ctrlKey || e.metaKey) return;
+
+    if (e.key === '?') {
+      e.preventDefault();
+      openHelp();
+      return;
+    }
+    // g-chord: press 'g' then a destination letter within 1s.
+    if (gChordPending) {
+      gChordPending = false;
+      if (gChordTimer) { clearTimeout(gChordTimer); gChordTimer = null; }
+      const ch = (e.key || '').toLowerCase();
+      if ('hqsrpw'.indexOf(ch) >= 0) {
+        e.preventDefault();
+        handleGChord(ch);
+        return;
+      }
+      // Unknown second char → fall through (so plain 'j'/'k' still work after a 'g' false-start).
+    }
+    if (e.key === 'g' || e.key === 'G') {
+      e.preventDefault();
+      gChordPending = true;
+      gChordTimer = setTimeout(() => { gChordPending = false; gChordTimer = null; }, 1000);
+      return;
+    }
+    if (e.key === 'j' || e.key === 'J') {
+      e.preventDefault();
+      setKbdActive(kbdActiveIdx < 0 ? 0 : kbdActiveIdx + 1);
+      return;
+    }
+    if (e.key === 'k' || e.key === 'K') {
+      e.preventDefault();
+      setKbdActive(kbdActiveIdx < 0 ? 0 : kbdActiveIdx - 1);
+      return;
+    }
+    if (e.key === 'Enter' && kbdActiveIdx >= 0 && currentList[kbdActiveIdx]) {
+      e.preventDefault();
+      showModal(currentList[kbdActiveIdx].ticker);
+      return;
     }
   });
   document.addEventListener('click', e => {
@@ -2224,12 +2488,71 @@ const CLIENT_JS = `
         if (chip && chip.dataset.chip) clearChipFilter(chip.dataset.chip);
       }
     });
+    // Tag 223b: keyboard activation for the role=button chip-× icons.
+    chipBar.addEventListener('keydown', e => {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('x')) {
+        e.preventDefault();
+        const chip = e.target.closest('.chip');
+        if (chip && chip.dataset.chip) clearChipFilter(chip.dataset.chip);
+      }
+    });
   }
 
   // Tag 209e Upgrade 3: print button — uses browser print (CSS @media print
   // hides chrome and renders the active table only).
   const printBtn = document.getElementById('printBtn');
   if (printBtn) printBtn.onclick = () => window.print();
+
+  // Tag 223b: column-visibility popover. Renders the current tab's columns
+  // (minus the always-on '#' index column) as checkboxes. Selection persists
+  // per tab via localStorage. Re-renders the table on toggle so column changes
+  // are immediate.
+  const colToggleBtn = document.getElementById('colToggleBtn');
+  const colPopover   = document.getElementById('colPopover');
+  function renderColPopover() {
+    if (!colPopover) return;
+    const cols = (typeof tabColumns === 'function') ? tabColumns(activeTab) : [];
+    if (!cols.length) { colPopover.innerHTML = '<div class="col-item" style="color:var(--text-2);">No columns for this tab.</div>'; return; }
+    let html = '';
+    for (const c of cols) {
+      if (c.k === '#') continue;  // index column always on
+      const id = 'col_' + c.k.replace(/[^A-Za-z0-9]/g, '_');
+      const checked = !isColHidden(activeTab, c.k) ? ' checked' : '';
+      html += '<label class="col-item" for="' + id + '"><input type="checkbox" id="' + id + '" data-colkey="' + c.k + '"' + checked + ' /> ' + c.k + '</label>';
+    }
+    html += '<div class="col-sep"></div><div class="col-reset" id="colResetAll">Reset (show all)</div>';
+    colPopover.innerHTML = html;
+  }
+  if (colToggleBtn && colPopover) {
+    colToggleBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = colPopover.classList.toggle('show');
+      colToggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open) renderColPopover();
+    });
+    colPopover.addEventListener('click', e => {
+      if (e.target.id === 'colResetAll') {
+        hiddenCols[activeTab] = [];
+        try { localStorage.setItem('screener.hiddenCols', JSON.stringify(hiddenCols)); } catch (err) { /* ignore */ }
+        renderColPopover();
+        renderTable();
+        return;
+      }
+    });
+    colPopover.addEventListener('change', e => {
+      const cb = e.target.closest('input[type=checkbox]');
+      if (!cb) return;
+      setColHidden(activeTab, cb.dataset.colkey, !cb.checked);
+      renderTable();
+    });
+    // Click outside closes the popover.
+    document.addEventListener('click', e => {
+      if (!colPopover.classList.contains('show')) return;
+      if (e.target.closest('.col-toggle-wrap')) return;
+      colPopover.classList.remove('show');
+      colToggleBtn.setAttribute('aria-expanded', 'false');
+    });
+  }
 
   // Tag 210f: light-theme toggle. State persists in localStorage so the page
   // remembers Karl's preference across reloads. Default = dark (Bloomberg).
@@ -2298,23 +2621,29 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
 <style>${CSS}</style>
 </head>
 <body>
-<header>
+<header role="banner">
   <span class="brand">◆ SCREENER</span>
   <div class="search" style="position:relative;">
-    <input id="search" type="text" placeholder="/ Search ticker or company..." />
-    <div id="searchResults" class="search-results"></div>
+    <label for="search" class="sr-only" style="position:absolute;left:-9999px;">Search ticker or company</label>
+    <input id="search" type="text" aria-label="Search ticker or company" placeholder="/ Search ticker or company..." />
+    <div id="searchResults" class="search-results" role="listbox" aria-label="Search results"></div>
   </div>
-  <button id="printBtn" class="print-btn" title="Print current view">[print]</button>
-  <button id="themeBtn" class="theme-btn" title="Toggle light/dark theme">[☀]</button>
+  <div class="col-toggle-wrap">
+    <button id="colToggleBtn" class="col-toggle-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Toggle column visibility" title="Show/hide columns">[cols]</button>
+    <div id="colPopover" class="col-popover" role="menu" aria-label="Column visibility"></div>
+  </div>
+  <button id="helpBtn" class="print-btn" type="button" aria-label="Show keyboard shortcuts (press ?)" title="Keyboard shortcuts (?)">[?]</button>
+  <button id="printBtn" class="print-btn" type="button" aria-label="Print current view" title="Print current view">[print]</button>
+  <button id="themeBtn" class="theme-btn" type="button" aria-label="Toggle light/dark theme" title="Toggle light/dark theme">[☀]</button>
 </header>
-<div class="tabs">
-  <button data-tab="HG" class="active">⚡ Hypergrowth</button>
-  <button data-tab="QC">🏛 Quality-Compounder</button>
-  <button data-tab="SMALL">📈 Small Cap</button>
-  <button data-tab="R40">📊 Rule of 40</button>
-  <button data-tab="PRE_BREAKOUT">🎯 Pre-Breakout</button>
-  <button data-tab="WATCH">👁 Watch</button>
-  <button data-tab="SECTOR">🌡 SECTOR</button>
+<div class="tabs" role="tablist" aria-label="Screener tabs">
+  <button data-tab="HG" class="active" role="tab" aria-current="page" aria-selected="true">⚡ Hypergrowth</button>
+  <button data-tab="QC" role="tab" aria-selected="false">🏛 Quality-Compounder</button>
+  <button data-tab="SMALL" role="tab" aria-selected="false">📈 Small Cap</button>
+  <button data-tab="R40" role="tab" aria-selected="false">📊 Rule of 40</button>
+  <button data-tab="PRE_BREAKOUT" role="tab" aria-selected="false">🎯 Pre-Breakout</button>
+  <button data-tab="WATCH" role="tab" aria-selected="false">👁 Watch</button>
+  <button data-tab="SECTOR" role="tab" aria-selected="false">🌡 SECTOR</button>
 </div>
 <div class="filters">
   <span class="group"><span class="label">State:</span>
@@ -2371,17 +2700,35 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
 <div class="summary" id="summary"></div>
 <div id="explainer" style="padding:8px 16px;background:var(--bg-1);border-bottom:1px solid var(--border);color:var(--text-1);font-size:12px;display:none;"></div>
 <div class="table-wrap"><div id="table"></div></div>
-<div class="pagination">
-  <button id="prevPage">← Prev</button>
-  <span id="pageInfo">Page 1 of 1</span>
-  <button id="nextPage">Next →</button>
+<div class="pagination" role="navigation" aria-label="Pagination">
+  <button id="prevPage" type="button" aria-label="Previous page">← Prev</button>
+  <span id="pageInfo" aria-live="polite">Page 1 of 1</span>
+  <button id="nextPage" type="button" aria-label="Next page">Next →</button>
 </div>
-<div id="modal" class="modal"><div class="modal-content" id="modalContent"></div></div>
+<div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalContent" aria-hidden="true"><div class="modal-content" id="modalContent"></div></div>
 <div id="commandPalette" class="cp-overlay" role="dialog" aria-modal="true" aria-label="Command palette">
   <div class="cp-panel">
-    <input id="cpInput" class="cp-input" type="text" autocomplete="off" spellcheck="false" placeholder="Search tickers, type > for commands, ? for help..." />
-    <div id="cpResults" class="cp-results"></div>
+    <input id="cpInput" class="cp-input" type="text" autocomplete="off" spellcheck="false" aria-label="Command palette input" placeholder="Search tickers, type > for commands, ? for help..." />
+    <div id="cpResults" class="cp-results" role="listbox" aria-label="Command palette results"></div>
     <div class="cp-hint">↑↓ navigate · Enter select · Esc close · Ctrl+K / Cmd+K / "/" to open</div>
+  </div>
+</div>
+<div id="kbdHelp" class="kbd-overlay" role="dialog" aria-modal="true" aria-labelledby="kbdHelpTitle" aria-hidden="true">
+  <div class="kbd-panel">
+    <button id="kbdHelpClose" class="kbd-close" type="button" aria-label="Close shortcuts">×</button>
+    <h2 id="kbdHelpTitle">Keyboard Shortcuts</h2>
+    <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">?</span></div><div class="kbd-desc">Show this help</div></div>
+    <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">Ctrl</span><span class="kbd-key">K</span></div><div class="kbd-desc">Command palette (also /)</div></div>
+    <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">Esc</span></div><div class="kbd-desc">Close modal / clear search</div></div>
+    <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">j</span> / <span class="kbd-key">k</span></div><div class="kbd-desc">Move row cursor down / up</div></div>
+    <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">Enter</span></div><div class="kbd-desc">Open detail modal for active row</div></div>
+    <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">←</span> / <span class="kbd-key">→</span></div><div class="kbd-desc">Prev / next stock (in modal)</div></div>
+    <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">h</span></div><div class="kbd-desc">Go to Hypergrowth tab</div></div>
+    <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">q</span></div><div class="kbd-desc">Go to Quality-Compounder tab</div></div>
+    <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">s</span></div><div class="kbd-desc">Go to Small Cap tab</div></div>
+    <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">r</span></div><div class="kbd-desc">Go to Rule of 40 tab</div></div>
+    <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">p</span></div><div class="kbd-desc">Go to Pre-Breakout tab</div></div>
+    <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">w</span></div><div class="kbd-desc">Go to Watch tab</div></div>
   </div>
 </div>
 <script>window.SCREENER_DATA = ${json};</script>
