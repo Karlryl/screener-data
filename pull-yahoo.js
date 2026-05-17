@@ -962,23 +962,43 @@ function _withTimeout(promise, ms, label) {
 // always refresh the most-stale data. Guarantees full universe coverage over ~3 days.
 // Reads only the first 300 bytes of each snapshot to extract meta.asOf without
 // parsing the full JSON — keeps overhead low even for 12k-file universes.
+//
+// Tag 218 (audit F-217a-08 perf fix): precompute ages ONCE into a Map before
+// sorting. Previous implementation called getAge() inside the sort comparator,
+// which invoked the (3-syscall) staleness probe O(N log N) times — that's
+// ~340k sync file opens for a 15k-stock universe and the same ticker's age
+// was recomputed dozens of times. Now: one O(N) precompute pass, then sort
+// reads from the cached Map in O(1).
+//
+// Also accept BOTH meta.asOf and meta.fetchedAt — pre-Tag-215j snapshots
+// only had fetchedAt; post-Tag-215j have both. Without this dual-read,
+// old snapshots looked timestamp-0 and would be pulled first wastefully.
 function sortByStaleness(stocks, outputDir) {
-  return stocks.slice().sort((a, b) => {
-    const getAge = (ticker) => {
-      try {
-        const fp = path.join(outputDir, safeSnapshotFilename(ticker));
-        if (!fs.existsSync(fp)) return 0; // no snapshot = oldest (age=0ms = earliest epoch)
-        // Read only first 300 bytes to find asOf without parsing whole file
+  const ageCache = new Map();
+  const ageRegex = /"(?:asOf|fetchedAt)"\s*:\s*"([^"]+)"/;
+  for (const stock of stocks) {
+    const ticker = stock.ticker;
+    if (ageCache.has(ticker)) continue;
+    let age = 0;
+    try {
+      const fp = path.join(outputDir, safeSnapshotFilename(ticker));
+      if (fs.existsSync(fp)) {
         const buf = Buffer.alloc(300);
         const fd = fs.openSync(fp, 'r');
         fs.readSync(fd, buf, 0, 300, 0);
         fs.closeSync(fd);
-        const m = buf.toString('utf8').match(/"asOf"\s*:\s*"([^"]+)"/);
-        return m ? new Date(m[1]).getTime() : 0;
-      } catch { return 0; }
-    };
-    return getAge(a.ticker) - getAge(b.ticker); // ascending = oldest first
-  });
+        const m = buf.toString('utf8').match(ageRegex);
+        if (m) {
+          const t = new Date(m[1]).getTime();
+          if (Number.isFinite(t)) age = t;
+        }
+      }
+    } catch {}
+    ageCache.set(ticker, age);
+  }
+  return stocks.slice().sort((a, b) =>
+    (ageCache.get(a.ticker) || 0) - (ageCache.get(b.ticker) || 0)
+  );
 }
 
 async function pullAll(watchlist, outputDir, rateLimitMs) {
