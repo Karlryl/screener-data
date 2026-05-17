@@ -803,6 +803,12 @@ table.dt tr.row:focus-visible { outline:2px solid var(--blue); outline-offset:-2
    distinct close-X style so the close button reads as destructive-ish. */
 .modal-header button.close-btn:hover { color:var(--red); border-color:var(--red); }
 
+/* Tag 231b-5: external research jump-links + ticker copy button in modal. */
+.modal-header .ext-link { display:inline-block; padding:2px 8px; background:var(--bg-2); color:var(--text-1); border:1px solid var(--border); font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.05em; text-decoration:none; cursor:pointer; transition:color 100ms ease-out, border-color 100ms ease-out; }
+.modal-header .ext-link:hover { color:var(--blue); border-color:var(--blue); }
+.modal-header button.ext-link { line-height:1.4; }
+.modal-header button.ext-link.copied { color:var(--green); border-color:var(--green); }
+
 /* Upgrade 3a: mobile responsive (≤700px) */
 @media (max-width:700px) {
   header { flex-wrap:wrap; gap:8px; padding:8px 10px; }
@@ -1736,6 +1742,29 @@ const CLIENT_JS = `
     if (r.revAccelDelta != null && r.revAccelDelta > 0) sigBadges.push('<span style="color:var(--green);border:1px solid var(--green);padding:1px 5px;font-size:10px">Rev-Accel +'+r.revAccelDelta.toFixed(0)+'pp</span>');
     html += '<div class="meta">Score: '+(score!=null?score.toFixed(1):'—')+' · <span class="pill '+r.state+'">'+r.state+'</span> · MCap '+fmtM(r.mcap)+'</div>';
     if (sigBadges.length) html += '<div class="meta" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;">'+sigBadges.join('')+'</div>';
+    // Tag 231b-5: external research jump-links + copy-to-clipboard ticker.
+    // One-click handoff to Yahoo/StockAnalysis/TradingView/SEC for deeper
+    // research without leaving the dashboard's keyboard flow. All open in a
+    // new tab (rel=noopener for security). SEC EDGAR link uses the ticker
+    // search endpoint; non-US tickers may not resolve but the link degrades
+    // gracefully (search page shows no results, user can retry).
+    // urlTicker: Yahoo accepts the raw ticker incl. exchange suffix
+    // (e.g. ASML.AS) but a few exchanges need normalization. Keep as-is.
+    const urlTk = encodeURIComponent(r.ticker);
+    const bareTk = encodeURIComponent(r.ticker.split('.')[0]);
+    const extLinks = [
+      ['Yahoo',  'https://finance.yahoo.com/quote/' + urlTk],
+      ['SA',     'https://stockanalysis.com/stocks/' + bareTk.toLowerCase() + '/'],
+      ['TV',     'https://www.tradingview.com/symbols/' + bareTk + '/'],
+      ['SEC',    'https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=' + bareTk + '&type=10-K&dateb=&owner=include&count=10']
+    ];
+    let linksHtml = '<div class="meta" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center;">';
+    linksHtml += '<button type="button" id="copyTk" class="ext-link" aria-label="Copy ticker '+esc(r.ticker)+' to clipboard" title="Copy ticker to clipboard">⧉ '+esc(r.ticker)+'</button>';
+    for (const [label, url] of extLinks) {
+      linksHtml += '<a class="ext-link" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" title="Open in '+esc(label === 'SA' ? 'StockAnalysis.com' : label === 'TV' ? 'TradingView' : label)+'">'+esc(label)+' ↗</a>';
+    }
+    linksHtml += '</div>';
+    html += linksHtml;
     // Tag 223b: aria-labels on icon-only modal nav buttons.
     html += '<div class="right">'
           + '<button id="prevC" type="button" aria-label="Previous stock (Left arrow)" title="Previous stock (Left arrow)">← Prev</button>'
@@ -1902,6 +1931,33 @@ const CLIENT_JS = `
     document.getElementById('closeM').onclick = closeModal;
     document.getElementById('prevC').onclick = () => navModal(-1);
     document.getElementById('nextC').onclick = () => navModal(1);
+    // Tag 231b-5: copy-ticker button. Uses navigator.clipboard when available
+    // (HTTPS / localhost / file:// in modern browsers) and falls back to a
+    // textarea + execCommand path for older / file:// without clipboard API.
+    const copyBtn = document.getElementById('copyTk');
+    if (copyBtn) copyBtn.onclick = () => {
+      const tk = r.ticker;
+      const done = () => {
+        const original = copyBtn.textContent;
+        copyBtn.classList.add('copied');
+        copyBtn.textContent = '✓ copied';
+        setTimeout(() => { copyBtn.classList.remove('copied'); copyBtn.textContent = original; }, 1100);
+      };
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(tk).then(done, () => fallback());
+        } else {
+          fallback();
+        }
+      } catch (e) { fallback(); }
+      function fallback() {
+        const ta = document.createElement('textarea');
+        ta.value = tk; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } catch (e) { /* give up silently */ }
+        document.body.removeChild(ta);
+      }
+    };
     // Tag 210h: peer-row click → re-open modal for that peer ticker. Uses
     // delegation on the rendered modal content so we don't need per-row
     // listeners. Click bubbles from <td> → closest tr.peer-row.
