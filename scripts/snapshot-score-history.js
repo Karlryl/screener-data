@@ -156,7 +156,8 @@ async function main() {
   const stocks = await loadSnapshotsAsync(args.snapshots);
   console.log('[score-history]   ' + stocks.length + ' stocks loaded');
 
-  const today = new Date().toISOString().slice(0, 10);
+  // Tag 219 (audit F-219b-01): prefer workflow-frozen RUN_DATE_UTC.
+  const today = process.env.RUN_DATE_UTC || new Date().toISOString().slice(0, 10);
   const failures = [];
   let written = 0, skipped = 0;
 

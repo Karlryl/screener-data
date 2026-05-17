@@ -195,7 +195,8 @@ async function main() {
   } else {
     console.log('  first-seen map: rebuilt from all vintage files (cache was absent)');
   }
-  const today = new Date().toISOString().slice(0, 10);
+  // Tag 219 (audit F-219b-01): prefer workflow-frozen RUN_DATE_UTC.
+  const today = process.env.RUN_DATE_UTC || new Date().toISOString().slice(0, 10);
 
   // F-PF-001: evaluate each stock ONCE before mode loops (was Runner.evaluateStock called
   // once per mode per stock = 3× for 3 modes, now 1× total).

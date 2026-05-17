@@ -36,6 +36,19 @@ jobs:
       # CDN-edge 429s — Tag 215f also extends to 15s/45s (see pull-yahoo.js).
       PULL_CONCURRENCY: '8'
     steps:
+      # Tag 219 (audit F-219b-01 HIGH): freeze a shared run-date at job start
+      # so all snapshot-* scripts agree on TODAY's date, even if the Yahoo
+      # pull crosses UTC midnight (~3h pull starting 22:00 UTC, finishing
+      # 01:00 UTC the next day would yield picks-history/2026-05-17.json
+      # but methods-history/2026-05-18.json — silently breaking pick-diff's
+      # findMethodFile lookup and method-effectiveness's vintage cache).
+      # Downstream snapshot-* scripts respect RUN_DATE_UTC over Date.now().
+      - name: Freeze Run Date
+        run: |
+          RUN_DATE_UTC=$(date -u +%Y-%m-%d)
+          echo "RUN_DATE_UTC=$RUN_DATE_UTC" >> $GITHUB_ENV
+          echo "Frozen run date: $RUN_DATE_UTC"
+
       - name: Checkout
         uses: actions/checkout@v4
         with:

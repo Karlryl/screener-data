@@ -47,7 +47,10 @@ async function loadFilesAsync(dir, fileList) {
 async function main() {
   const args = parseArgs(process.argv);
   if (!fs.existsSync(args.out)) fs.mkdirSync(args.out, { recursive: true });
-  const today = new Date().toISOString().slice(0, 10);
+  // Tag 219 (audit F-219b-01): prefer the workflow-frozen RUN_DATE_UTC so all
+  // snapshot-* scripts agree on TODAY even when the Yahoo pull crosses UTC
+  // midnight. Falls back to Date.now() for local-dev / manual invocations.
+  const today = process.env.RUN_DATE_UTC || new Date().toISOString().slice(0, 10);
   const outFile = path.join(args.out, `${today}.json`);
 
   const fileList = fs.readdirSync(args.snapshots).filter(f => f.endsWith('.json') && f !== '_manifest.json');
