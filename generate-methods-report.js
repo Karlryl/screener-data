@@ -12,6 +12,8 @@ const fs = require('fs');
 const path = require('path');
 const Runner = require('./methods/runner.js');
 const Trend = require('./methods/trend.js');
+// Tag 221c (audit F-GR-009 LOW fix): atomic main-output write.
+const { writeFileAtomic } = require('./lib/atomic-write.js');
 
 function parseArgs(argv) {
   const args = { snapshots: './snapshots', watchlist: './watchlist.json', state: './alert-state.json', out: './methods-report.html' };
@@ -66,14 +68,18 @@ function evaluateAllStocks(args) {
     try { stock = JSON.parse(fs.readFileSync(path.join(args.snapshots, file), 'utf8')); }
     catch (e) { continue; }
     const ticker = (stock.meta && stock.meta.ticker) || file.replace(/\.json$/, '');
+    // Tag 221c (audit F-GR-005 fix): use `?? null` instead of `|| null` so
+    // legitimate zero values (0% growth, $0 revenue for a freshly-spun
+    // entity, exactly 0 FCF margin) are preserved instead of being coerced
+    // to null and dropped from the deep-dive/leaderboard tables.
     rows.push({
       ticker,
-      name: stock.meta && stock.meta.name || ticker,
-      sector: stock.meta && stock.meta.sector || '—',
-      marketCap: stock.marketCap && stock.marketCap.value || null,
-      revenueTTM: stock.metrics && stock.metrics.revenueTTM && stock.metrics.revenueTTM.value || null,
-      growthYoY: stock.metrics && stock.metrics.revenueGrowthYoY && stock.metrics.revenueGrowthYoY.value || null,
-      fcfMargin: stock.metrics && stock.metrics.fcfMarginTTM && stock.metrics.fcfMarginTTM.value || null,
+      name: (stock.meta && stock.meta.name) || ticker,
+      sector: (stock.meta && stock.meta.sector) || '—',
+      marketCap: (stock.marketCap && stock.marketCap.value != null) ? stock.marketCap.value : null,
+      revenueTTM: (stock.metrics && stock.metrics.revenueTTM && stock.metrics.revenueTTM.value != null) ? stock.metrics.revenueTTM.value : null,
+      growthYoY: (stock.metrics && stock.metrics.revenueGrowthYoY && stock.metrics.revenueGrowthYoY.value != null) ? stock.metrics.revenueGrowthYoY.value : null,
+      fcfMargin: (stock.metrics && stock.metrics.fcfMarginTTM && stock.metrics.fcfMarginTTM.value != null) ? stock.metrics.fcfMarginTTM.value : null,
       results: Runner.evaluateStock(stock),
       // Tag-31: trend per method based on methodHistory
       trends: (() => {
@@ -114,7 +120,8 @@ function evaluateAllStocks(args) {
       lastRow.growthYoYFromRo40  = lastRow.growthYoY;
       lastRow.fcfMarginFromRo40  = lastRow.fcfMargin;
     }
-    lastRow.grossMargin = stock.metrics && stock.metrics.grossMargin && stock.metrics.grossMargin.value || null;
+    // Tag 221c (audit F-GR-005 fix): use explicit `!= null` check so zero is preserved.
+    lastRow.grossMargin = (stock.metrics && stock.metrics.grossMargin && stock.metrics.grossMargin.value != null) ? stock.metrics.grossMargin.value : null;
   }
   return rows;
 }
@@ -154,7 +161,13 @@ function metricColor(value, threshold, higherIsBetter) {
 }
 
 function renderHTML(rows, methods) {
-  const generatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+  // Tag 221c (audit F-GR-007 fix): honor RUN_DATE_UTC so all reports built
+  // in the same workflow run share the same date stamp even if the run
+  // straddles 00:00 UTC. Falls back to current time when env not set.
+  const runDate = process.env.RUN_DATE_UTC;
+  const generatedAt = runDate
+    ? runDate + ' (RUN_DATE_UTC)'
+    : new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
   // Build table headers
   const methodCols = methods.map(m =>
     `<th class="method-col" data-method="${m.id}" title="${escHtml(m.description)}">${escHtml(m.label)}<div class="threshold">${m.thresholdOp === 'gte' ? '≥' : (m.thresholdOp === 'lte' ? '≤' : '|·|≤')} ${m.threshold}</div></th>`
@@ -288,8 +301,25 @@ function renderHTML(rows, methods) {
   // producing a 267MB HTML output verified by smoke-test. At 19k tickers
   // it would exceed 1.3GB and crash artifact upload. Slice to TOP_PICKS_N
   // — the report's purpose is the top picks, not a 19k-ticker dump.
+  //
+  // Tag 221c (audit F-GR-001 followup): even after the slice, methods-report
+  // remained ~69MB because each of the 200 rows still embedded a
+  // URI-encoded JSON blob (~280KB per row of results+trends). Replaced with
+  // a shared STOCK_DATA_MAP (same pattern modes-report uses per F-PF-006)
+  // — the modal/passCount filter now reads STOCK_DATA_MAP[ticker]. Drops
+  // output to <5MB.
   const TOP_PICKS_N = 200;
   const topPicksRanked = ranked.slice(0, TOP_PICKS_N);
+  const stockDataMap = {};
+  for (const r of topPicksRanked) {
+    if (!stockDataMap[r.ticker]) {
+      stockDataMap[r.ticker] = {
+        ticker: r.ticker, name: r.name, sector: r.sector,
+        marketCap: r.marketCap, growthYoY: r.growthYoY, revenueTTM: r.revenueTTM,
+        results: r.results, trends: r.trends
+      };
+    }
+  }
   const topPicksRows = topPicksRanked.map((r, i) => {
     const passRatio = r.computableCount > 0 ? (r.passCount / r.computableCount) : 0;
     const ratioColor = passRatio >= 0.9 ? '#10b981' : passRatio >= 0.7 ? '#84cc16' : passRatio >= 0.5 ? '#f59e0b' : '#94a3b8';
@@ -320,20 +350,14 @@ function renderHTML(rows, methods) {
     const psR = r.results['profitability-state'];
     const pState = (psR && psR.computable && psR.components) ? psR.components.state : 'NA';
 
-    // Encode row data (needed for modal + pass-count filter)
-    const rowData = encodeURIComponent(JSON.stringify({
-      ticker: r.ticker, name: r.name, sector: r.sector,
-      marketCap: r.marketCap, growthYoY: r.growthYoY, revenueTTM: r.revenueTTM,
-      results: r.results, trends: r.trends
-    }));
-
+    // Tag 221c (audit F-GR-001 followup): per-row data-row blob removed —
+    // modal + passCount filter now look up STOCK_DATA_MAP[ticker].
     return `<tr class="row-clickable" data-ticker="${r.ticker}" data-prof-state="${pState}"
         data-ro40="${r.ruleOf40Value != null ? r.ruleOf40Value : ''}"
         data-rox="${r.ruleOfXValue != null ? r.ruleOfXValue : ''}"
         data-growth="${growthV != null ? growthV : ''}"
         data-fcfmargin="${fcfV != null ? fcfV : ''}"
-        data-roic="${r.roicPct != null ? r.roicPct : ''}"
-        data-row='${rowData}'>
+        data-roic="${r.roicPct != null ? r.roicPct : ''}">
       <td><strong style="color:${ratioColor};">#${i+1}</strong></td>
       <td><strong>${escHtml(r.ticker)}</strong></td>
       <td>${escHtml(r.name)}</td>
@@ -723,6 +747,13 @@ ${methods.filter(m => MT_local.isCore(m.id)).map(m => {
 </details>
 
 <script>
+// Tag 221c (audit F-GR-001 followup): shared stock-data map keyed by ticker.
+// Replaces the per-row 280KB data-row blob (267MB→<5MB output drop).
+// Closing-</script> in any string value is escaped via the \\u003c trick.
+var STOCK_DATA_MAP = ${JSON.stringify(stockDataMap).replace(/</g, '\\u003c')};
+</script>
+
+<script>
 (function() {
   var tbody = document.querySelector('#matrix tbody');
   var tpTbody = document.getElementById('top-picks-tbody');
@@ -838,7 +869,11 @@ ${methods.filter(m => MT_local.isCore(m.id)).map(m => {
     var visible = 0, total = 0;
     allRows.forEach(function(tr) {
       try {
-        var data = JSON.parse(decodeURIComponent(tr.dataset.row));
+        // Tag 221c: lookup from shared STOCK_DATA_MAP instead of decoding
+        // a per-row blob. STOCK_DATA_MAP only contains top-picks entries;
+        // matrix rows without an entry skip silently (same as before).
+        var data = STOCK_DATA_MAP[tr.dataset.ticker];
+        if (!data) return;
         var passCount = 0;
         for (var key in data.results) {
           var rr = data.results[key];
@@ -996,9 +1031,9 @@ ${methods.filter(m => MT_local.isCore(m.id)).map(m => {
   var modalContent = document.getElementById('modal-content');
   document.querySelectorAll('tr.row-clickable').forEach(function(tr) {
     tr.addEventListener('click', function(e) {
-      if (!tr.dataset.row) return;
-      var data;
-      try { data = JSON.parse(decodeURIComponent(tr.dataset.row)); } catch(e2) { return; }
+      // Tag 221c: lookup from STOCK_DATA_MAP (top-picks only).
+      var data = STOCK_DATA_MAP[tr.dataset.ticker];
+      if (!data) return;
       var html = '<h3>' + escH(data.ticker) + ' — ' + escH(data.name) + '</h3>';
       html += '<div class="stock-meta-row">' + escH(data.sector) + ' · MCap ' + (data.marketCap ? '$' + (data.marketCap/1e9).toFixed(1) + 'B' : '—') +
               ' · Rev TTM ' + (data.revenueTTM ? '$' + (data.revenueTTM/1e9).toFixed(1) + 'B' : '—') +
@@ -1041,14 +1076,14 @@ ${methods.filter(m => MT_local.isCore(m.id)).map(m => {
       if (pane) pane.classList.remove('kenntl-hidden');
     });
   });
-  // Leaderboard row click → open modal (lookup data from top-picks tbody)
+  // Leaderboard row click → open modal (lookup data from STOCK_DATA_MAP)
   document.querySelectorAll('.kenntl-row').forEach(function(tr) {
     tr.addEventListener('click', function() {
       var ticker = tr.dataset.ticker;
-      var tpRow = document.querySelector('#top-picks-tbody tr[data-ticker="' + ticker + '"]');
-      if (tpRow && tpRow.dataset.row) {
+      // Tag 221c: lookup directly from STOCK_DATA_MAP (no need to traverse DOM).
+      var data = STOCK_DATA_MAP[ticker];
+      if (data) {
         try {
-          var data = JSON.parse(decodeURIComponent(tpRow.dataset.row));
           // F-GC-001 (Tag 179): use escH helper above for the leaderboard modal too.
           var html = '<h3>' + escH(data.ticker) + ' — ' + escH(data.name) + '</h3>';
           html += '<div class="stock-meta-row">' + escH(data.sector) + ' · MCap ' + (data.marketCap ? '$' + (data.marketCap/1e9).toFixed(1) + 'B' : '—') + '</div>';
@@ -1084,7 +1119,10 @@ function main() {
   console.log(`Evaluated ${rows.length} stocks`);
   const methods = Runner.getMethods();
   const html = renderHTML(rows, methods);
-  fs.writeFileSync(args.out, html);
+  // Tag 221c (audit F-GR-009 LOW fix): atomic write — a CI cancellation
+  // mid-write previously left a half-written file that GitHub Pages then
+  // served (the file was many MB before Tag 221c's STOCK_DATA_MAP fix).
+  writeFileAtomic(args.out, html);
   console.log(`✓ Report written: ${args.out} (${html.length} bytes)`);
   console.log('');
   console.log('Pass-counts per method:');

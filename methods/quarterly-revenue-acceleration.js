@@ -5,6 +5,12 @@ const H = require('./_helpers.js');
 // but the file is named quarterly-revenue-acceleration.js. Neither name was in
 // REGISTRY or SCORE_WEIGHTS — method was loaded but completely unread. Align id
 // to the file name and register in method-types.js.
+//
+// Tag 221c (audit F-220a-03): this method intentionally does NOT use a
+// materiality check (it operates on a single QoQ ratio, not absolute revenue),
+// so it is unaffected by the engine-v7.3 isRevenueMaterial FX-mismatch bug.
+// The companion fix in engine-v7.3.js threads reportingCurrency + fxRates
+// into isRevenueMaterial for the dormant Track-A/B path.
 const ID = 'quarterly-revenue-acceleration';
 const LABEL = 'Quarterly-Rev-Acceleration';
 const THRESHOLD = 1.10;

@@ -17,6 +17,8 @@
 
 const fs = require('fs');
 const path = require('path');
+// Tag 221c (audit F-GR-009 LOW fix): atomic main-output write.
+const { writeFileAtomic } = require('./lib/atomic-write.js');
 
 const REPO_OWNER = 'Karlryl';
 const REPO_NAME = 'screener-data';
@@ -166,6 +168,8 @@ function escapeHTML(s) {
 }
 
 function renderFallback() {
+  // Tag 221c (audit F-GR-007 fix): honor RUN_DATE_UTC if set.
+  const buildStamp = process.env.RUN_DATE_UTC || new Date().toISOString().slice(0,16);
   return `<!DOCTYPE html><html lang="de"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Karl's Stock-Screener — Dashboard</title>
@@ -174,7 +178,7 @@ function renderFallback() {
 <h1>📊 Karl's Stock-Screener</h1>
 <p>Pipeline läuft. Dashboard wird beim nächsten Run gefüllt.</p>
 <p><a href="${WORKFLOW_URL}" target="_blank">▶ Discover starten</a> · <a href="${ACTIONS_URL}" target="_blank">⚙ Actions</a> · <a href="${REPO_URL}" target="_blank">📁 Repo</a></p>
-<p style="color:#64748b;font-size:11px">Last build: ${new Date().toISOString().slice(0,16)}Z</p>
+<p style="color:#64748b;font-size:11px">Last build: ${buildStamp}Z</p>
 </body></html>`;
 }
 
@@ -353,7 +357,7 @@ table.lb td.tier { text-align: right; width:42px; }
     </div>
   </section>
 
-  <div class="footer">Last build: ${new Date().toISOString().slice(0,16)} UTC · ${REPO_OWNER}/${REPO_NAME}</div>
+  <div class="footer">Last build: ${(process.env.RUN_DATE_UTC || new Date().toISOString().slice(0,16))} UTC · ${REPO_OWNER}/${REPO_NAME}</div>
 </div>
 
 <div class="modal-backdrop" id="modal" onclick="if(event.target===this)closeModal()">
@@ -402,7 +406,13 @@ function renderModes() {
     } else {
       parts.push('<table class="lb"><tbody>');
       picks.forEach((p, i) => {
-        const valFmt = p.primaryMetric ? p.primaryMetric.value.toFixed(1) : '—';
+        // Tag 221c (audit F-GR-006 MEDIUM fix): guard against
+        // p.primaryMetric being { value: null } / { value: undefined }
+        // -- .toFixed() on null/undefined throws TypeError. Picks-history
+        // is upstream-generated and nothing here guarantees value is
+        // always finite when primaryMetric exists.
+        const pmv = p.primaryMetric && p.primaryMetric.value;
+        const valFmt = (pmv != null && Number.isFinite(pmv)) ? pmv.toFixed(1) : '—';
         const tier = p.score >= 80 ? 'A' : p.score >= 65 ? 'B' : p.score >= 50 ? 'NEAR_MISS' : 'REJECT';
         parts.push('<tr>');
         parts.push('<td class="rank">'+(i+1)+'</td>');
@@ -586,7 +596,9 @@ function main() {
     html = render(picks, methodsHistory);
   }
 
-  fs.writeFileSync(outFile, html);
+  // Tag 221c (audit F-GR-009 LOW fix): atomic write to prevent
+  // half-written file being served by GitHub Pages on CI cancellation.
+  writeFileAtomic(outFile, html);
   console.log('✓ Dashboard generated: ' + outFile + ' (' + html.length + ' bytes)');
 }
 

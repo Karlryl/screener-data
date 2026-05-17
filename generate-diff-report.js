@@ -9,6 +9,8 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+// Tag 221c (audit F-GR-009 LOW fix): atomic main-output write.
+const { writeFileAtomic } = require('./lib/atomic-write.js');
 
 function parseArgs(argv) {
   const args = { history: './methods-history', out: './diff-report.html' };
@@ -32,7 +34,8 @@ function main() {
   const files = fs.readdirSync(args.history).filter(f => f.endsWith('.json')).sort();
   if (files.length < 2) {
     console.log(`Only ${files.length} history snapshot(s). Need ≥2 for diff.`);
-    fs.writeFileSync(args.out, '<html><body style="background:#0f172a;color:#e2e8f0;font-family:sans-serif;padding:30px;"><h1>Watchlist-Diff</h1><p>Need ≥2 history snapshots — currently '+files.length+'.</p></body></html>');
+    // Tag 221c (audit F-GR-009 LOW fix): atomic write.
+    writeFileAtomic(args.out, '<html><body style="background:#0f172a;color:#e2e8f0;font-family:sans-serif;padding:30px;"><h1>Watchlist-Diff</h1><p>Need ≥2 history snapshots — currently '+files.length+'.</p></body></html>');
     return;
   }
   const latest = JSON.parse(fs.readFileSync(path.join(args.history, files[files.length-1]), 'utf8'));
@@ -108,7 +111,8 @@ td{padding:8px;border-bottom:1px solid #131c2b}
   }
 
   html += '</body></html>';
-  fs.writeFileSync(args.out, html);
+  // Tag 221c (audit F-GR-009 LOW fix): atomic write.
+  writeFileAtomic(args.out, html);
   console.log(`✓ Diff-Report: ${args.out}`);
   console.log(`  ${passCountDiffs.length} pass-count changes, ${methodValueDiffs.length} value-changes ≥20%`);
 }

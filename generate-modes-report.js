@@ -371,79 +371,12 @@ function renderCard(ev, modeId, opts, stockDataMap) {
 </div>`;
 }
 
-// Legacy: keep renderRow as alias for backward compat with any external callers
-function renderRow(ev, i, modeId, sortMethodId, opts) {
-  const s = ev.stock;
-  const ticker = (s.meta && s.meta.ticker) || '???';
-  const name = (s.meta && s.meta.name) || '';
-  const sector = (s.meta && s.meta.sector) || '';
-  const mcap = ev.mcap;
-  const ipoYear = ev.ipoYear;
-
-  const sortMethod = sortMethodId ? Runner.METHODS.find(m => m.id === sortMethodId) : null;
-  const sortRes = sortMethodId ? ev.allResults[sortMethodId] : null;
-  const sortValStr = sortRes && sortRes.computable
-    ? fmtValue(sortRes.value, sortMethod && sortMethod.unit)
-    : 'â€”';
-
-  const psRes = ev.allResults['profitability-state'];
-  const profState = (psRes && psRes.computable && psRes.components) ? psRes.components.state : 'NA';
-  const profConf = (psRes && psRes.components && psRes.components.confidence) ? psRes.components.confidence.split(' ')[0] : '';
-  const psClass = PSTATE_CLASS[profState] || 'pst-na';
-  const psLabel = PSTATE_LABEL[profState] || profState;
-
-  const spark = buildSparkline(s);
-  const afUrl = aktienfinderUrl(ticker);
-
-  // Tag 113: FCF-Margin und Revenue-Growth als data-attrs fuer Filter-Slider
-  const r40 = ev.allResults['rule-of-40'];
-  const fcfMargin = (r40 && r40.computable && r40.components && Number.isFinite(r40.components.fcfMargin)) ? r40.components.fcfMargin : -999;
-  const revGrowth = (r40 && r40.computable && r40.components && Number.isFinite(r40.components.growth)) ? r40.components.growth : -999;
-
-// F-PF-006: stock data is now stored in the global STOCK_DATA_MAP; no per-row embedding needed
-
-    // Tag 121: Tier + Cross-Profile-Badges
-    const tier = (opts && opts.tier) || null;
-    const xpTags = (opts && opts.crossProfileTags) || [];
-    const tierBadge = tier ? `<span class="tier-badge tier-${tier.toLowerCase()}">${tier === 'NEAR_MISS' ? 'Near' : tier}</span>` : '';
-    const xpHtml = xpTags.length > 0 ? `<span class="xp-tags">${xpTags.map(t => `<span class="xp-tag">${escHtml(t)}</span>`).join('')}</span>` : '';
-
-    // Tag 133h: per-pick reason-chips. Pulls scoreBreakdown from modeEvals pre-computed cache.
-    // F-PF-002: use pre-computed modeEvals cache; no fallback to SM.evaluateMode in hot path.
-    let chipsHtml = '';
-    try {
-      const me = ev.modeEvals && ev.modeEvals[modeId];
-      const bd = me && me.scoreBreakdown;
-      const dqGrade = me && me.dataQualityGrade;
-      if (bd && typeof bd === 'object') {
-        const chips = Object.entries(bd).map(([mid, b]) => {
-          const meta = Runner.METHODS.find(m => m.id === mid);
-          const lbl = (meta && meta.label) || mid;
-          const short = lbl.replace(/Rule[- ]of[- ]/i, 'R').replace(/Hypergrowth /, 'HG ').slice(0, 18);
-          if (!b.computable) return `<span class="chip chip-na" title="${escHtml(lbl + ': incomputable')}">${escHtml(short)}</span>`;
-          const cls = b.pass ? 'chip-pass' : 'chip-fail';
-          const valStr = b.value == null ? '' : ' ' + fmtValue(b.value, meta && meta.unit);
-          const wPct = b.weight ? ' Â· w' + Math.round(b.weight * 100) : '';
-          return `<span class="chip ${cls}" title="${escHtml(lbl + valStr + wPct + ' Â· score=' + b.score)}">${escHtml(short + valStr)}</span>`;
-        }).join('');
-        const dqChip = dqGrade ? `<span class="chip chip-dq chip-dq-${dqGrade.toLowerCase()}" title="Data-Quality Grade">DQ ${dqGrade}</span>` : '';
-        if (chips || dqChip) chipsHtml = `<div class="chip-strip">${dqChip}${chips}</div>`;
-      }
-    } catch (e) { /* chips are best-effort; never block row rendering */ }
-
-    return `<div class="row" data-stock="${escHtml(JSON.stringify(stockSlim))}" data-af-url="${afUrl}" data-prof-state="${profState}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}" data-tier="${tier||''}" data-xp="${xpTags.join(',')}">
-    <span class="r-rank">${String(i+1).padStart(3, '0')}</span>
-    <span class="r-tk">${escHtml(ticker)}${tierBadge}${xpHtml}</span>
-    <span class="r-name">${escHtml(name.slice(0, 36))}${name.length>36?'â€¦':''}</span>
-    <span class="r-sec">${escHtml(sector)}</span>
-    <span class="r-state ${psClass}">${escHtml(psLabel)}<span class="r-conf">${escHtml(profConf)}</span></span>
-    <span class="r-ipo">${ipoYear ? "'"+(ipoYear%100).toString().padStart(2,'0') : 'â€”'}</span>
-    <span class="r-spark">${spark}</span>
-    <span class="r-val">${escHtml(sortValStr)}</span>
-    <span class="r-mcap">${fmtMoney(mcap)}</span>
-    ${chipsHtml}
-  </div>`;
-}
+// Tag 221c (audit F-GR-004 LOW fix): renderRow deleted. The function was
+// labelled "Legacy: keep as alias for backward compat" but was not exported
+// (module.exports only includes eligibleForMode, topByMethod, topAllMust,
+// evaluateAll, dedupeByCompany), never called internally, and referenced an
+// undefined `stockSlim` variable that would throw ReferenceError on first
+// invocation. Removed entirely (was F-GR-004 + earlier F-GC-006).
 
 function renderModeContent(modeId, eligible, topN, stockDataMap) {  // NEW TAG 136 redesign
   const mode = SM.MODES[modeId];
@@ -571,7 +504,13 @@ function renderModeContent(modeId, eligible, topN, stockDataMap) {  // NEW TAG 1
 }
 
 function buildHtml(evaluated, topN) {
-  const generatedAt = new Date().toISOString();
+  // Tag 221c (audit F-GR-007 fix): honor RUN_DATE_UTC so all reports built
+  // in the same workflow run share the same date stamp. Falls back to
+  // current time when env not set.
+  const runDate = process.env.RUN_DATE_UTC;
+  const generatedAt = runDate
+    ? (runDate + 'T00:00:00.000Z')
+    : new Date().toISOString();
   const modes = Object.keys(SM.MODES);
   const eligibleByMode = {};
   for (const m of modes) eligibleByMode[m] = eligibleForMode(evaluated, m);
@@ -1256,7 +1195,8 @@ function main() {
   console.log('  after dedupe:', evaluated.length, 'unique companies');
 
   const html = buildHtml(evaluated, args.topN);
-  fs.writeFileSync(args.out, html);
+  // Tag 221c (audit F-GR-009 LOW fix): atomic write for main HTML output.
+  writeFileAtomic(args.out, html);
   console.log('Wrote', args.out, '(' + (html.length/1024).toFixed(0) + ' KB)');
 
   for (const modeId of Object.keys(SM.MODES)) {
@@ -1270,7 +1210,8 @@ function main() {
   const n_failed = _pipelineFailures.length;
   const n_ok = n_total - n_failed;
   const failure_rate = n_total > 0 ? n_failed / n_total : 0;
-  const today = new Date().toISOString().slice(0, 10);
+  // Tag 221c (audit F-GR-007 fix): honor RUN_DATE_UTC for pipeline-health stamp.
+  const today = process.env.RUN_DATE_UTC || new Date().toISOString().slice(0, 10);
   // F-ME-024: use __dirname-relative path so the script works from any CWD
   const healthDir = path.join(__dirname, 'pipeline-health');
   if (!fs.existsSync(healthDir)) fs.mkdirSync(healthDir, { recursive: true });

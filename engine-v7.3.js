@@ -218,11 +218,31 @@ function normalize(metric, targetCurrency, fxRates) {
 // Relative materiality (Bug #9 + Gemini-Fix-B v7.3.1): Materialität dynamisch nach Wachstumsrate.
 // Standard: prior-period revenue ≥ max($50M, 0.5% of marketCap).
 // Hyper-growth (>100% YoY): senke Cutoff auf 0.1% Mcap (Pivot-Plays mit kleiner neuer Sparte).
-function isRevenueMaterial(prevRevenue, marketCapUSD, growthRateYoY) {
+//
+// Tag 221c (audit F-220a-03 MEDIUM fix): prevRevenue may be in the stock's
+// reporting currency (DKK/EUR/GBP) while marketCapUSD is in USD. Comparing
+// raw-currency revenue to USD market cap silently produced ratios off by the
+// FX factor (e.g. NVO DKK rev vs USD mcap was 7x off, flipping verdicts for
+// smaller-cap EU reporters). Now accepts an optional `revenueCurrency` +
+// `fxRates`; if provided and non-USD, the revenue is normalized to USD
+// before the ratio comparison. If conversion fails (rate missing), skip the
+// ratio check rather than make a silently-wrong comparison — the $50M
+// absolute floor still applies.
+function isRevenueMaterial(prevRevenue, marketCapUSD, growthRateYoY, revenueCurrency, fxRates) {
   if (prevRevenue == null) return false;
-  const absRev = Math.abs(prevRevenue);
+  let absRev = Math.abs(prevRevenue);
   if (absRev < 50e6) return false;
   if (marketCapUSD && marketCapUSD > 0) {
+    // FX-normalize revenue to USD if a non-USD currency is declared and
+    // convertible. If currency is unknown or rate missing, skip the ratio
+    // check — the absolute floor (50M, applied in the source currency)
+    // remains the only gate, which is at worst a false-positive ("material
+    // when it isn't") rather than a silently-wrong ratio.
+    if (revenueCurrency && revenueCurrency !== 'USD') {
+      const usdRev = convertCurrency(prevRevenue, revenueCurrency, 'USD', fxRates || {});
+      if (usdRev == null) return true;  // can't normalize → trust the absolute floor
+      absRev = Math.abs(usdRev);
+    }
     const cutoff = (growthRateYoY != null && growthRateYoY > 100) ? 0.001 : 0.005;
     if (absRev / marketCapUSD < cutoff) return false;
   }
@@ -472,7 +492,7 @@ function computeAktienfinderScore(stock) {
 // (No score factor. Pure flag system. Karl decides timing externally.)
 // ═══════════════════════════════════════════════════════════════
 
-function computeRevenueAcceleration(stock, marketCapUSD) {
+function computeRevenueAcceleration(stock, marketCapUSD, fxRates) {
   const ts = stock.timeseries || {};
   const rev = ts.revenueQ || [];
   const gp = ts.grossProfitQ || [];
@@ -486,10 +506,13 @@ function computeRevenueAcceleration(stock, marketCapUSD) {
 
   // Pass growth rate so hyper-growth stocks get relaxed materiality
   const growthRateForMaterial = (stock.metrics && stock.metrics.revenueGrowthYoY && stock.metrics.revenueGrowthYoY.value) || null;
-  if (!isRevenueMaterial(Q_minus4, marketCapUSD, growthRateForMaterial)) {
+  // Tag 221c (audit F-220a-03): revenue is in stock.meta.reportingCurrency,
+  // marketCapUSD is in USD — pass both so isRevenueMaterial can FX-normalize.
+  const revCur = (stock.meta && stock.meta.reportingCurrency) || null;
+  if (!isRevenueMaterial(Q_minus4, marketCapUSD, growthRateForMaterial, revCur, fxRates)) {
     return { active: false, status: 'low-base', flags: ['BUT_LOW_BASE_EFFECT'] };
   }
-  if (!isRevenueMaterial(Q_minus5, marketCapUSD, growthRateForMaterial)) {
+  if (!isRevenueMaterial(Q_minus5, marketCapUSD, growthRateForMaterial, revCur, fxRates)) {
     return { active: false, status: 'low-base-prior' };
   }
 
@@ -723,7 +746,7 @@ function computeEPSCAGR(stock) {
 // PENALTIES — Hyper-Decel-Differentiation, Currency-aware, Materiality-guarded
 // ═══════════════════════════════════════════════════════════════
 
-function computePenalties(stock, marketCapUSD) {
+function computePenalties(stock, marketCapUSD, fxRates) {
   const penalties = [];
   const codes = [];
   const m = stock.metrics || {};
@@ -802,7 +825,9 @@ function computePenalties(stock, marketCapUSD) {
   const r = an.annualRev || [];
   if (r.length >= 3) {
     const r0 = r[0].value, r1 = r[1].value, r2 = r[2].value;
-    if (isRevenueMaterial(r1, marketCapUSD) && isRevenueMaterial(r2, marketCapUSD)) {
+    // Tag 221c (audit F-220a-03): pass reportingCurrency + fxRates for FX-aware materiality.
+    const revCur2 = (stock.meta && stock.meta.reportingCurrency) || null;
+    if (isRevenueMaterial(r1, marketCapUSD, null, revCur2, fxRates) && isRevenueMaterial(r2, marketCapUSD, null, revCur2, fxRates)) {
       const lastG = (r0 - r1) / Math.abs(r1) * 100;
       const prevG = (r1 - r2) / Math.abs(r2) * 100;
       const decel = prevG - lastG;
@@ -949,8 +974,9 @@ function scoreTrackA(stock, options) {
   const ruleC = computeRuleComposite(stock);
   const scaling = computeScalingEfficiency(stock);
   const af = computeAktienfinderScore(stock);
-  const accel = computeRevenueAcceleration(stock, marketCapUSD);
-  const pen = computePenalties(stock, marketCapUSD);
+  // Tag 221c (audit F-220a-03): thread fxRates so isRevenueMaterial can FX-normalize.
+  const accel = computeRevenueAcceleration(stock, marketCapUSD, fxRates);
+  const pen = computePenalties(stock, marketCapUSD, fxRates);
   const expRisk = computeExpectationsRisk(stock);  // ChatGPT-P0-Fix-1: separate track
 
   // F-EN-001 (Tag 179): weight sets sum to 0.95 not 1.0 — historically tuned with
@@ -1066,8 +1092,9 @@ function scoreTrackB(stock, options) {
   const fcf = computeFCFQuality(stock);
   const cagr = computeEPSCAGR(stock);
   const af = computeAktienfinderScore(stock);
-  const accel = computeRevenueAcceleration(stock, marketCapUSD);
-  const pen = computePenalties(stock, marketCapUSD);
+  // Tag 221c (audit F-220a-03): thread fxRates so isRevenueMaterial can FX-normalize.
+  const accel = computeRevenueAcceleration(stock, marketCapUSD, fxRates);
+  const pen = computePenalties(stock, marketCapUSD, fxRates);
 
   let weights = af.applicable
     ? { roic: 0.22, gm: 0.20, fcf: 0.18, cagr: 0.15, af: 0.20 }
