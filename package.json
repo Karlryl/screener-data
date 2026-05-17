@@ -5,7 +5,7 @@
   "description": "Yahoo-Pull-Pipeline für Karls v7.3 Stock-Screener.",
   "main": "pull-yahoo.js",
   "scripts": {
-    "pull": "node pull-yahoo.js --watchlist watchlist.json --output snapshots --rate-limit 1500",
+    "pull": "node pull-yahoo.js --watchlist watchlist.json --output snapshots --rate-limit 2000",
     "pull:fast": "node pull-yahoo.js --watchlist watchlist.json --output snapshots --rate-limit 500",
     "pull:single": "node pull-yahoo.js --watchlist watchlist.json --output snapshots-single --rate-limit 100"
   },
