@@ -2553,6 +2553,78 @@ const CLIENT_JS = `
   const printBtn = document.getElementById('printBtn');
   if (printBtn) printBtn.onclick = () => window.print();
 
+  // Tag 231b-3: CSV export of the current filtered/sorted view.
+  // Vanilla Blob + URL.createObjectURL — no external deps. Exports the
+  // FULL filtered list (not just the current page) so the user gets every
+  // row that matches their filters. Columns mirror what's on-screen for
+  // the active tab. SECTOR tab opts out (different data shape). RFC 4180
+  // CSV: comma-separated, double-quote-wrapped, embedded quotes doubled.
+  const exportBtn = document.getElementById('exportBtn');
+  function _csvQuote(v) {
+    if (v == null) return '';
+    const s = String(v);
+    // \\n and \\r in source = single backslash in browser JS = newline/CR check.
+    if (s.indexOf(',') < 0 && s.indexOf('"') < 0 && s.indexOf('\\n') < 0 && s.indexOf('\\r') < 0) return s;
+    // NOTE: above strings look like backslash-n / backslash-r in the rendered
+    // browser JS, which JS itself parses as actual newline / CR escape codes.
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  function _csvValue(r, key, tab) {
+    if (key === 'score') {
+      const v = tab === 'QC' ? r.qcScore : (tab === 'HG' ? r.hgScore : null);
+      return v != null && Number.isFinite(v) ? v.toFixed(2) : '';
+    }
+    if (key === 'rank') return ''; // filled by caller
+    const v = r[key];
+    if (v == null) return '';
+    if (typeof v === 'number') return Number.isFinite(v) ? v.toFixed(4).replace(/\\.?0+$/, '') : '';
+    return v;
+  }
+  function exportCsv() {
+    if (activeTab === 'SECTOR') {
+      alert('CSV export not available for the SECTOR heatmap tab.');
+      return;
+    }
+    const list = currentList || [];
+    if (!list.length) {
+      alert('Nothing to export — current filtered view is empty.');
+      return;
+    }
+    // Tab-specific column maps. Keys: header label → row field name (or virtual).
+    const colMaps = {
+      'HG':           [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['Score','score'],['State','state'],['R40','r40'],['RevGr%','growth'],['GrossM%','grossMargin'],['OpM%','opMargin'],['FCFM%','fcfMargin'],['MCap','mcap'],['DQ','dqGrade']],
+      'QC':           [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['Score','score'],['State','state'],['FCFM%','fcfMargin'],['OpM%','opMargin'],['GrossM%','grossMargin'],['RevGr%','growth'],['MCap','mcap'],['DQ','dqGrade']],
+      'SMALL':        [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['State','state'],['RevGr%','growth'],['R40','r40'],['GrossM%','grossMargin'],['FCFM%','fcfMargin'],['MCap','mcap'],['DQ','dqGrade']],
+      'R40':          [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['R40','r40'],['RevGr%','growth'],['FCFM%','fcfMargin'],['OpM%','opMargin'],['GrossM%','grossMargin'],['State','state'],['MCap','mcap'],['DQ','dqGrade']],
+      'PRE_BREAKOUT': [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['State','state'],['RevGr%','growth'],['GrossM%','grossMargin'],['R40','r40'],['MCap','mcap'],['PB-Score','pbScore'],['DQ','dqGrade']],
+      'WATCH':        [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['Reasons','watchReasons'],['State','state'],['RevGr%','growth'],['MCap','mcap'],['DQ','dqGrade']]
+    };
+    const cols = colMaps[activeTab];
+    if (!cols) { alert('No CSV mapping for tab ' + activeTab); return; }
+    const lines = [];
+    lines.push(cols.map(c => _csvQuote(c[0])).join(','));
+    for (let i = 0; i < list.length; i++) {
+      const r = list[i];
+      const cells = cols.map(c => {
+        if (c[1] === 'rank') return _csvQuote(i + 1);
+        if (c[1] === 'watchReasons') return _csvQuote(Array.isArray(r.watchReasons) ? r.watchReasons.join('|') : '');
+        return _csvQuote(_csvValue(r, c[1], activeTab));
+      });
+      lines.push(cells.join(','));
+    }
+    const csv = lines.join('\\r\\n') + '\\r\\n';
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'screener-' + activeTab + '-' + DATA.generatedAt + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  if (exportBtn) exportBtn.onclick = exportCsv;
+
   // Tag 223b: column-visibility popover. Renders the current tab's columns
   // (minus the always-on '#' index column) as checkboxes. Selection persists
   // per tab via localStorage. Re-renders the table on toggle so column changes
@@ -2720,6 +2792,7 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
     <div id="colPopover" class="col-popover" role="menu" aria-label="Column visibility"></div>
   </div>
   <button id="helpBtn" class="print-btn" type="button" aria-label="Show keyboard shortcuts (press ?)" title="Keyboard shortcuts (?)">[?]</button>
+  <button id="exportBtn" class="print-btn" type="button" aria-label="Download current filtered view as CSV" title="Export current view to CSV (no external service)">[csv]</button>
   <button id="printBtn" class="print-btn" type="button" aria-label="Print current view" title="Print current view">[print]</button>
   <button id="themeBtn" class="theme-btn" type="button" aria-label="Toggle light/dark theme" title="Toggle light/dark theme">[☀]</button>
 </header>
