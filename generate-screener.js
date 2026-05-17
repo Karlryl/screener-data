@@ -64,7 +64,8 @@ function unwrap(v) {
 
 function loadStocks(dir) {
   if (!fs.existsSync(dir)) return [];
-  const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && f !== '_manifest.json');
+  // Tag 220 (audit F-GR-002 HIGH): exclude all '_*' files (was just _manifest).
+  const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
   const out = [];
   for (const f of files) {
     try {

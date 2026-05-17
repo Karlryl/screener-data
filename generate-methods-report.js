@@ -25,11 +25,21 @@ function parseArgs(argv) {
 }
 
 function escHtml(s) {
+  // Tag 220 (audit F-GR-003 HIGH fix): guard null/undefined explicitly.
+  // String(null) → 'null', String(undefined) → 'undefined' — both render
+  // literally in output. Latent today (upstream `||` guards mostly cover)
+  // but one schema change away from leaking through. Other generators
+  // (generate-modes-report.js, generate-screener.js) already guard.
+  if (s == null) return '';
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 function evaluateAllStocks(args) {
-  const files = fs.readdirSync(args.snapshots).filter(f => f.endsWith('.json') && f !== '_manifest.json');
+  // Tag 220 (audit F-GR-002 HIGH fix): filter '_*' prefix (not just
+  // _manifest.json). _manifest-full.json was being read as a phantom ticker
+  // and showing up in Top-Picks output. Same fix applies to other discovery
+  // generators (modes / screener) which use the same broken filter.
+  const files = fs.readdirSync(args.snapshots).filter(f => f.endsWith('.json') && !f.startsWith('_'));
   let methodHistory = {};
   // F-SM-018 (Tag 180): methodHistory was moved to the sidecar file
   // method-history-state.json in F-SM-007. Reading from alert-state.json
@@ -272,7 +282,15 @@ function renderHTML(rows, methods) {
   })();
 
   // --- Build Top Picks rows with key metric data attributes ---
-  const topPicksRows = ranked.map((r, i) => {
+  // Tag 220 (audit F-GR-001 CRITICAL fix): previously rendered ALL rows
+  // (~3528 today, would be ~19k at full universe). Each row embeds the
+  // entire results+trends object as URI-encoded JSON in data-row=,
+  // producing a 267MB HTML output verified by smoke-test. At 19k tickers
+  // it would exceed 1.3GB and crash artifact upload. Slice to TOP_PICKS_N
+  // — the report's purpose is the top picks, not a 19k-ticker dump.
+  const TOP_PICKS_N = 200;
+  const topPicksRanked = ranked.slice(0, TOP_PICKS_N);
+  const topPicksRows = topPicksRanked.map((r, i) => {
     const passRatio = r.computableCount > 0 ? (r.passCount / r.computableCount) : 0;
     const ratioColor = passRatio >= 0.9 ? '#10b981' : passRatio >= 0.7 ? '#84cc16' : passRatio >= 0.5 ? '#f59e0b' : '#94a3b8';
     const failedShort = r.failedMethods.length > 3
