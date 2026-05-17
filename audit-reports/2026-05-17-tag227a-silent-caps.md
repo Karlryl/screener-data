@@ -57,3 +57,11 @@ const MAX_UNIVERSE = parseInt(process.env.MAX_UNIVERSE || '25000', 10);
 ## Total Audited
 
 **15 cap candidates audited; 1 no-op fixed; 1 hidden-cap flagged (F2 — OTC `MAX_PAGES`); 13 confirmed live and well-calibrated.**
+
+---
+
+## Commit Log
+
+- **Tag 227a-1** (`15ecf52b0`) — raise `MAX_UNIVERSE` 13000 → 25000 in both workflow env and `refresh-universe.js` default.
+- **Tag 227a-final** — this report. (File content first landed in commit `9769cb167` due to a parallel-agent race with Tag 227b — the bundle is harmless; this addendum makes the final-commit marker explicit per the brief.)
+
