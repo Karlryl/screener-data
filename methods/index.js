@@ -207,5 +207,13 @@ module.exports = [
   // Gulen & Schill 2008 JF 63:1609-1651). Strongest single-variable
   // cross-section anomaly in the post-1968 US sample (~20%/yr spread
   // between low- and high-growth quintiles). DIAGNOSTIC, fixture-hash safe.
-  { file: './asset-growth-anomaly.js' }
+  { file: './asset-growth-anomaly.js' },
+
+  // Tag 227b-1: Magic Formula (Greenblatt 2005 / Gray-Carlisle 2012) —
+  // composite saturation of EBIT/EV (Earnings Yield) + EBIT/(NWC+NFA)
+  // (Return on Capital). Pass at composite >= 0.75 = top-quartile saturated
+  // rank. Mega-cap structural fail-rate is expected (1/10 anchors pass);
+  // factor targets cheap-with-decent-ROC mid-caps. DIAGNOSTIC, fixture-hash
+  // safe (not in SCORE_WEIGHTS).
+  { file: './magic-formula.js' }
 ];
