@@ -1463,6 +1463,20 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       else if (/timeout|ETIMEDOUT|ESOCKETTIMEDOUT/i.test(msg)) errClass = 'timeout';
       else if (/ENOTFOUND|ECONNREFUSED|ECONNRESET|EAI_AGAIN|network/i.test(msg)) errClass = 'network';
       else if (/parse|unexpected token|JSON/i.test(msg)) errClass = 'parse';
+      // Tag 215h: Yahoo schema-validation failures classified as not-found.
+      // Run #107 produced 637 such failures, ALL on international tickers
+      // (091990.KQ Korean, 2823.TW Taiwanese, 6502.T Japanese, 6837.HK HK,
+      // 600837.SS Chinese). Single-module probes return literal "Quote not
+      // found" / "No fundamentals data found"; the multi-module quoteSummary
+      // call gets a partially-populated response that fails the library's
+      // strict-shape validator. Empirically: these tickers do not exist in
+      // Yahoo's database for the requested region. Treat them like not-found
+      // so the snapshot gets marked delisted (instead of being retried daily
+      // and hitting the same wall). Risk acknowledged: if Yahoo ever
+      // introduces a real schema break we'd silently re-classify it as
+      // not-found — pull-stats-check should monitor the schema-vs-not-found
+      // ratio over time as a sentinel.
+      else if (/Failed Yahoo Schema validation|schema validation/i.test(msg)) errClass = 'not-found';
 
       // Tag 148: mark snapshot as delisted when Yahoo definitively rejects the symbol
       // (not-found class only — transient errors like rate-limit/timeout/network must NOT set this flag).
