@@ -202,6 +202,15 @@ async function main() {
       for (const q of quotes) {
         if (!q || !q.symbol) continue;
         const sym = q.symbol.toUpperCase();
+        // Tag 221 (audit Tag 221a): filter junk-suffix tickers. NASDAQ-Trader
+        // and some Yahoo screener responses include preferred-stock variants
+        // (ABR$D, ACP$A — 375 such entries in pre-Tag-221 watchlist) that
+        // Yahoo's quoteSummary doesn't recognize. They cycle through pull-yahoo
+        // every day eating rate-limit budget for nothing. Filter at the
+        // discovery stage so they never enter the watchlist.
+        if (/[$]/.test(sym)) continue;        // preferred-stock variants
+        if (/[/\\\s]/.test(sym)) continue;    // path-separators or whitespace = corrupt
+        if (sym.length > 12) continue;        // longer than any real ticker — likely a name
         const mcap = q.marketCap;
         if (!mcap || mcap < 1e9 || mcap > 500e9) continue;  // Tag 101: $1B+ Mid/Large-Cap universe
         if (!allTickers.has(sym) || (allTickers.get(sym).marketCap || 0) < mcap) {
@@ -252,6 +261,10 @@ async function main() {
       for (const q of quotes) {
         if (!q || !q.symbol) continue;
         const sym = q.symbol.toUpperCase();
+        // Tag 221: same junk-suffix filter as the screener-buckets loop above.
+        if (/[$]/.test(sym)) continue;
+        if (/[/\\\s]/.test(sym)) continue;
+        if (sym.length > 12) continue;
         const mcap = q.marketCap;
         if (!mcap || mcap < MIN_MCAP_CUSTOM || mcap > MAX_MCAP_CUSTOM) continue;
         if (!allTickers.has(sym) || (allTickers.get(sym).marketCap || 0) < mcap) {
