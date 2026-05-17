@@ -127,5 +127,10 @@ module.exports = [
 
   // Tag 210c: R&D-cut guard — real-earnings-management red flag (R&D drop
   // >20% YoY AND op-margin expand >2pp YoY). DIAGNOSTIC, fixture-hash safe.
-  { file: './rd-cut-guard.js' }
+  { file: './rd-cut-guard.js' },
+
+  // Tag 210d: Analyst-revision breadth (net 4w up-minus-down). Returns
+  // computable=false until pull-yahoo persists estimateRevisions; promotion
+  // path documented in method header. DIAGNOSTIC, fixture-hash safe.
+  { file: './analyst-revision-breadth.js' }
 ];
