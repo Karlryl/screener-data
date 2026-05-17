@@ -1090,12 +1090,26 @@ const CLIENT_JS = `
     if (key === 'fcfm')    return r.fcfMargin;
     if (key === 'growth')  return r.growth;
     if (key === 'roicPct') {
+      // sector-relative-roic exposes value = 0-100 rank ONLY when computable=true.
+      // When the sector-medians-auto.json file hasn't been re-populated with
+      // p75 keys (pre-Tag-209b), the method returns computable=false but still
+      // stores the raw ROIC ratio in value (.0..1). Two value spaces must NOT
+      // be mixed in the same median.
+      // Decision: when computable=true, treat value as a 0-100 rank. When false,
+      // treat value as a raw ratio and convert to a percentage (multiply by 100)
+      // so the column reads consistently as "%" across rows. _formatRoic below
+      // chooses the right printer.
       const m = r.results && r.results['sector-relative-roic'];
-      return (m && m.value != null) ? m.value : null;
+      if (!m || m.value == null || !isFinite(m.value)) return null;
+      // Detect rank vs ratio: ranks are in [0,100], ratios in [-1,1]ish.
+      // Use computable as the authoritative flag.
+      if (m.computable) return m.value;       // already 0-100 rank
+      return m.value * 100;                    // raw ratio → %
     }
     if (key === 'gpta') {
       const m = r.results && r.results['gross-profitability'];
-      return (m && m.value != null) ? m.value : null;
+      if (!m || m.value == null) return null;
+      return m.value;
     }
     return null;
   }
@@ -1430,11 +1444,93 @@ const CLIENT_JS = `
     }
     html += '</tbody></table></div>';
 
+    // Section G: Peers (Tag 210h). 5 closest peers by:
+    //   - same sector
+    //   - mcap within ±50% of subject
+    //   - sort by sector-relative-roic percentile DESC, take top 5
+    // Excludes the subject itself. Each row clickable → re-renders the modal
+    // for that peer (reuses showModal()). Falls back gracefully when the
+    // subject has no sector, zero mcap, or no qualifying peers.
+    html += '<h3 class="sec">Peers</h3>';
+    const peerRoicPct = (x) => {
+      // Sort key: prefer the 0-100 sector-rank when available (computable=true);
+      // fall back to raw ROIC ratio (still the same sector → still a sane
+      // sort within the same peer group) when the percentile data is missing
+      // (sector-medians-auto.json hasn't been re-populated after Tag 209b).
+      // Both are monotonic in the underlying ROIC, so the top-5 ordering
+      // matches what the percentile would produce anyway.
+      const m = x.results && x.results['sector-relative-roic'];
+      if (!m || m.value == null || !isFinite(m.value)) return -Infinity;
+      return m.value;
+    };
+    const peerGpTa = (x) => {
+      const m = x.results && x.results['gross-profitability'];
+      return (m && m.value != null && isFinite(m.value)) ? m.value : null;
+    };
+    let peers = [];
+    if (r.sector && r.sector !== '—' && r.mcap > 0) {
+      const lo = r.mcap * 0.5, hi = r.mcap * 1.5;
+      const all = Object.values(ROWS);
+      peers = all.filter(p =>
+        p.ticker !== r.ticker
+        && p.sector === r.sector
+        && p.mcap > 0
+        && p.mcap >= lo && p.mcap <= hi
+      );
+      peers.sort((a, b) => peerRoicPct(b) - peerRoicPct(a));
+      peers = peers.slice(0, 5);
+    }
+    if (peers.length === 0) {
+      const why = (!r.sector || r.sector === '—') ? 'no sector classification'
+        : (!(r.mcap > 0))                          ? 'no market-cap data'
+        : 'no peers in ±50% mcap band within sector';
+      html += '<div style="color:var(--text-2);font-size:11px;font-family:var(--mono);margin-top:4px;">No peers — '+why+'.</div>';
+    } else {
+      html += '<div class="annual" style="margin-top:6px;"><table><thead><tr>'
+        + '<th style="text-align:left;">Ticker</th>'
+        + '<th>MCap</th><th>R40</th><th>FCFM%</th><th>GP/TA</th><th>ΔScore</th>'
+        + '</tr></thead><tbody>';
+      const subjScore = (r.hgScore != null) ? r.hgScore : (r.qcScore != null ? r.qcScore : null);
+      for (const p of peers) {
+        const pScore = (p.hgScore != null) ? p.hgScore : (p.qcScore != null ? p.qcScore : null);
+        const dScore = (subjScore != null && pScore != null) ? (pScore - subjScore) : null;
+        const dCls = (dScore == null) ? 'g-mute' : (dScore >= 0 ? 'g-pos' : 'g-neg');
+        const dStr = (dScore == null) ? '—' : (dScore >= 0 ? '+' : '') + dScore.toFixed(1);
+        const gpta = peerGpTa(p);
+        const gptaStr = (gpta == null) ? '—' : gpta.toFixed(2);
+        const r40Str = (p.r40 != null && isFinite(p.r40)) ? p.r40.toFixed(1) : '—';
+        const fcfmStr = (p.fcfMargin != null && isFinite(p.fcfMargin)) ? p.fcfMargin.toFixed(1)+'%' : '—';
+        // data-peer attribute used by the delegated click handler below.
+        html += '<tr class="peer-row" data-peer="'+esc(p.ticker)+'" style="cursor:pointer;">'
+          + '<td class="fy" style="text-align:left;color:var(--text-0);font-weight:600;">'+esc(p.ticker)+' <span style="color:var(--text-2);font-weight:normal;font-family:var(--ui);font-size:10px;margin-left:4px;">'+esc(p.name)+'</span></td>'
+          + '<td>'+fmtM(p.mcap)+'</td>'
+          + '<td>'+r40Str+'</td>'
+          + '<td>'+fcfmStr+'</td>'
+          + '<td>'+gptaStr+'</td>'
+          + '<td class="'+dCls+'">'+dStr+'</td>'
+          + '</tr>';
+      }
+      html += '</tbody></table></div>';
+      html += '<div style="color:var(--text-2);font-size:10px;margin-top:4px;font-family:var(--mono);">Same sector · mcap ±50% · top 5 by sector-relative ROIC percentile. Click a row to navigate.</div>';
+    }
+
     c.innerHTML = html;
     m.classList.add('show');
     document.getElementById('closeM').onclick = closeModal;
     document.getElementById('prevC').onclick = () => navModal(-1);
     document.getElementById('nextC').onclick = () => navModal(1);
+    // Tag 210h: peer-row click → re-open modal for that peer ticker. Uses
+    // delegation on the rendered modal content so we don't need per-row
+    // listeners. Click bubbles from <td> → closest tr.peer-row.
+    const peerRows = c.querySelectorAll('tr.peer-row');
+    peerRows.forEach(pr => {
+      pr.addEventListener('click', () => {
+        const tk = pr.getAttribute('data-peer');
+        if (tk) showModal(tk);
+      });
+      pr.addEventListener('mouseover', () => { pr.style.background = 'var(--bg-hover)'; });
+      pr.addEventListener('mouseout',  () => { pr.style.background = ''; });
+    });
   }
 
   function closeModal(){
