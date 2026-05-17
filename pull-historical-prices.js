@@ -164,7 +164,11 @@ async function main() {
   }
 
   writeFileAtomic(path.join(args.out, `${today}.json`), JSON.stringify(todaysSnapshot, null, 2));
-  writeFileAtomic(histPath, JSON.stringify(history, null, 2));
+  // Tag 222 (audit F-222a-1 BLOCKING): drop the pretty-print indent. At 19k
+  // tickers × 400 days × ~40 bytes/entry = ~280MB single-string. V8 hard
+  // limit is 512MB per string → OOM. Compact JSON = ~80MB, well within limits.
+  // The history file is read by scripts not humans; readability not needed.
+  writeFileAtomic(histPath, JSON.stringify(history));
   _log('INFO', `Done: ${ok}/${wl.stocks.length} ok, ${failed} failed`);
 }
 

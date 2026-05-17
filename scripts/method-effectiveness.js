@@ -246,27 +246,14 @@ function main() {
     console.log('method-effectiveness: all vintages served from cache.');
   }
 
-  // NOTE: The cache replay loop above has a bug for the pass lookup — re-do it cleanly
-  // by rebuilding perMethod entirely from scratch using processed data.
-  // The cache approach above is sound for the write path; the read path for pre-cached
-  // vintages is handled below by iterating the cache entries directly.
-  // Reset perMethod and replay everything from cache for correctness:
-  for (const key of Object.keys(perMethod)) delete perMethod[key];
-  for (const [cacheKey, entries] of Object.entries(cache.vintageReturns)) {
-    const [asOf, horizonKey] = cacheKey.split('|');
-    for (const entry of entries) {
-      const { ticker, methodId, ret, pass, quality } = entry;
-      if (pass == null) continue;
-      const bucket = _getMethodBucket(methodId, horizonKey);
-      bucket.vintages.add(asOf);
-      if (pass) bucket.pass.push(ret); else bucket.fail.push(ret);
-      if (quality && bucket.byQuality[quality]) {
-        const q = bucket.byQuality[quality];
-        q.vintages.add(asOf);
-        if (pass) q.pass.push(ret); else q.fail.push(ret);
-      }
-    }
-  }
+  // Tag 222 (audit F-222a-2 BLOCKING fix): removed the reset+rebuild loop
+  // that ran AFTER the main loop. It was a workaround for the pre-Tag-216a
+  // cached.find() bug — that bug is now fixed so the main loop's cache
+  // replay (line 148-165) already populates perMethod correctly. The
+  // reset+rebuild was doing 2× the work, and at 19k × 365 vintages =
+  // 1.15B iterations the cost projects to ~50min per run. Now: trust the
+  // main loop and skip the rebuild. Verified by reading bucket.vintages
+  // and bucket.pass/fail at this point — they're already populated.
 
   // Build summary with bootstrap CI; include quality-split (Phase 3.5).
   function _evalGroup(group, methodId) {
