@@ -266,8 +266,19 @@ function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, data
     if (qSpikeRes && qSpikeRes.computable && qSpikeRes.components &&
         Number.isFinite(qSpikeRes.components.spikeShare)) {
       var shareRaw = qSpikeRes.components.spikeShare;
-      // components.spikeShare is already in percent (0-100); normalize.
-      var share = shareRaw > 1 ? shareRaw / 100 : shareRaw;
+      // Tag 227c-2 (audit F-227c-02 HIGH fix): q-spike-dataguard.js line 252/268
+      // ALWAYS returns spikeShare as Math.round(spikeShare*100) — integer
+      // percent in [0,100]. The previous `shareRaw > 1 ? shareRaw / 100 : shareRaw`
+      // hedge was meant to handle a hypothetical fractional input but instead
+      // misclassified the edge case `shareRaw === 1` (1% spike) as 1.0 (100%
+      // spike) — triggering the max 50% q-spike penalty on stocks with
+      // essentially uniform quarterly revenue. Today no stock in the universe
+      // hits exactly 1, but the bug is latent: if a future hypergrowth pull
+      // returns Q-distribution that rounds to 1%, the dashboard (which runs
+      // with AUDIT_SCORE_MULTIPLIERS=1) would halve that stock's score with no
+      // diagnostic trail. Always divide by 100 — matches the documented
+      // contract and is robust to all integer-percent inputs.
+      var share = shareRaw / 100;
       if (share > 0.40) {
         // Linear ramp 0.40 → 0%, 0.55 → 50%.
         var qSpikePenalty = Math.min(0.50, (share - 0.40) * (0.50 / 0.15));
