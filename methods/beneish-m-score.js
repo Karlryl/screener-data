@@ -126,14 +126,34 @@ function evaluate(stock) {
   const ta_p  = _balField(stock, 1, 'totalAssets');
   const ar_t  = _balField(stock, 0, 'accountsReceivable');
   const ar_p  = _balField(stock, 1, 'accountsReceivable');
-  const ppe_t = _balField(stock, 0, 'propertyPlantEquipment');
-  const ppe_p = _balField(stock, 1, 'propertyPlantEquipment');
+  // Tag 211l surfaces these as `netPPE` (Yahoo FTS native name).
+  // Backwards-compat: also accept legacy `propertyPlantEquipment` if some
+  // pull path used the older name.
+  const ppe_t = _balField(stock, 0, 'netPPE') ?? _balField(stock, 0, 'propertyPlantEquipment');
+  const ppe_p = _balField(stock, 1, 'netPPE') ?? _balField(stock, 1, 'propertyPlantEquipment');
   const ca_t  = _balField(stock, 0, 'currentAssets');
   const ca_p  = _balField(stock, 1, 'currentAssets');
   const cl_t  = _balField(stock, 0, 'currentLiabilities');
   const cl_p  = _balField(stock, 1, 'currentLiabilities');
-  const ltd_t = _balField(stock, 0, 'longTermDebt');
-  const ltd_p = _balField(stock, 1, 'longTermDebt');
+  // Tag 211l: snapshot persists `totalDebt` (Yahoo combines ST+LT internally).
+  // Beneish LVGI uses (LTD+CL)/TA — we substitute totalDebt for LTD as a
+  // conservative-leverage proxy (totalDebt >= LTD always, so leverage is
+  // slightly OVERSTATED — wrong direction for a manipulation-detector means
+  // we'd be more likely to flag a name, not less, i.e. fail-safe).
+  //
+  // Tag 211n: debt-free companies (PLTR, RDDT pre-IPO, many SaaS pure-plays)
+  // have null totalDebt because Yahoo doesn't emit zero. When BOTH balance
+  // sheets show present-but-null debt with positive totalAssets, treat as
+  // zero — debt-free is real data, not missing data. Distinguish by checking
+  // that the row HAS balance data (totalAssets > 0); only then is the null a
+  // legit zero rather than "row missing".
+  let ltd_t = _balField(stock, 0, 'longTermDebt') ?? _balField(stock, 0, 'totalDebt');
+  let ltd_p = _balField(stock, 1, 'longTermDebt') ?? _balField(stock, 1, 'totalDebt');
+  const _ltdIsTotalDebtProxy =
+    _balField(stock, 0, 'longTermDebt') == null && _balField(stock, 0, 'totalDebt') != null;
+  let _ltdIsDebtFreeProxy = false;
+  if (ltd_t == null && _balField(stock, 0, 'totalAssets') != null) { ltd_t = 0; _ltdIsDebtFreeProxy = true; }
+  if (ltd_p == null && _balField(stock, 1, 'totalAssets') != null) { ltd_p = 0; }
 
   // Income-statement extras NOT in current snapshot.
   const sga_t = _annualVal(A.annualSGA, 0);
@@ -155,10 +175,13 @@ function evaluate(stock) {
   // --- Identify which Beneish inputs are missing (transparent reason) -----
   const missingFields = [];
   if (!Number.isFinite(ar_t) || !Number.isFinite(ar_p))   missingFields.push('accountsReceivable');
-  if (!Number.isFinite(ppe_t) || !Number.isFinite(ppe_p)) missingFields.push('propertyPlantEquipment');
+  // Tag 211l: report netPPE since that's the surfaced field (with legacy
+  // propertyPlantEquipment fallback already tried above).
+  if (!Number.isFinite(ppe_t) || !Number.isFinite(ppe_p)) missingFields.push('netPPE');
   if (!Number.isFinite(ca_t) || !Number.isFinite(ca_p))   missingFields.push('currentAssets');
   if (!Number.isFinite(cl_t) || !Number.isFinite(cl_p))   missingFields.push('currentLiabilities');
-  if (!Number.isFinite(ltd_t) || !Number.isFinite(ltd_p)) missingFields.push('longTermDebt');
+  // Tag 211l: longTermDebt OR totalDebt acceptable (already coalesced above).
+  if (!Number.isFinite(ltd_t) || !Number.isFinite(ltd_p)) missingFields.push('longTermDebt/totalDebt');
   if (!Number.isFinite(sga_t) || !Number.isFinite(sga_p)) missingFields.push('annualSGA');
   if (!Number.isFinite(dep_t) || !Number.isFinite(dep_p)) missingFields.push('annualDepreciation');
   if (!Number.isFinite(ocf_t))                            missingFields.push('annualOCF');

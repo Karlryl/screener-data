@@ -119,9 +119,11 @@ function evaluate(stock) {
 
   // Balance: t (current year)
   const ta_t  = _balField(stock, 0, 'totalAssets');
-  const tl_t  = _balField(stock, 0, 'totalLiab');     // missing in snapshot
-  const ca_t  = _balField(stock, 0, 'currentAssets'); // missing in snapshot
-  const cl_t  = _balField(stock, 0, 'currentLiabilities'); // missing
+  // Tag 211l: snapshot now persists `totalLiabilities` (Yahoo's
+  // totalLiabilitiesNetMinorityInterest). Accept legacy `totalLiab` too.
+  const tl_t  = _balField(stock, 0, 'totalLiabilities') ?? _balField(stock, 0, 'totalLiab');
+  const ca_t  = _balField(stock, 0, 'currentAssets');
+  const cl_t  = _balField(stock, 0, 'currentLiabilities');
   // Working capital line — usually CA - CL. We accept either direct WC field
   // or derive from CA/CL.
   const wcDirect = _balField(stock, 0, 'workingCapital');
@@ -139,7 +141,7 @@ function evaluate(stock) {
 
   // --- Identify missing fields (transparent reason) ----------------
   const missingFields = [];
-  if (!Number.isFinite(tl_t))   missingFields.push('totalLiab');
+  if (!Number.isFinite(tl_t))   missingFields.push('totalLiabilities');
   if (!Number.isFinite(ca_t) && !Number.isFinite(wcDirect)) missingFields.push('currentAssets');
   if (!Number.isFinite(cl_t) && !Number.isFinite(wcDirect)) missingFields.push('currentLiabilities');
   if (!Number.isFinite(ffo_t)) missingFields.push('annualOCF');
@@ -159,7 +161,7 @@ function evaluate(stock) {
   const wc_t = Number.isFinite(wcDirect) ? wcDirect : (ca_t - cl_t);
 
   if (ca_t === 0) return _missing('currentAssets = 0 (division by zero in CL/CA)');
-  if (tl_t === 0) return _missing('totalLiab = 0 (division by zero in FFO/TL)');
+  if (tl_t === 0) return _missing('totalLiabilities = 0 (division by zero in FFO/TL)');
 
   // --- 9 sub-terms -------------------------------------------------
   // Size term
