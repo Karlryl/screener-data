@@ -124,22 +124,35 @@ function getEntryDate(asOf) {
 }
 
 // F-BT-005: After computing a calendar-day target date, find the nearest available
-// trading day in the price map (checks target ±1..5 business days, alternating forward
-// and backward). Returns null if no price exists within 5 days.
+// trading day in the price map. Returns null if no price exists within 5 days.
+//
+// Tag 231a-1 (audit HIGH fix): scan BACKWARD before forward.
+// The previous alternating forward-first scan introduced look-ahead bias for
+// ENTRY dates: when `targetDate` was already T+1 (the post-screener entry,
+// per `getEntryDate`), snapping forward another day pulled in T+2 returns,
+// leaking up to one additional day of future price movement into the entry
+// price. Worse, the same function is used for the BENCHMARK lookup — and
+// SPY trades every business day while thinly-traded picks may not — so the
+// pick and benchmark could resolve to different dates (pick=Friday backward
+// fallback, bench=Monday forward fallback for a Sunday target). That window
+// mismatch silently inflated/deflated alpha asymmetrically across vintages.
+// Backward-first is conservative: entry uses a known prior close, exit uses
+// the latest available close at or before the horizon — both observable at
+// the time the trade would have been placed/closed.
 function nearestTradingDay(targetDate, priceMap) {
   if (!priceMap) return null;
   if (priceMap.has(targetDate)) return targetDate;
   for (let offset = 1; offset <= 5; offset++) {
-    // Forward
-    const dFwd = new Date(targetDate + 'T00:00:00Z');
-    dFwd.setUTCDate(dFwd.getUTCDate() + offset);
-    const keyFwd = dFwd.toISOString().slice(0, 10);
-    if (priceMap.has(keyFwd)) return keyFwd;
-    // Backward
+    // Backward first (no look-ahead bias)
     const dBwd = new Date(targetDate + 'T00:00:00Z');
     dBwd.setUTCDate(dBwd.getUTCDate() - offset);
     const keyBwd = dBwd.toISOString().slice(0, 10);
     if (priceMap.has(keyBwd)) return keyBwd;
+    // Forward only if no backward match within this offset
+    const dFwd = new Date(targetDate + 'T00:00:00Z');
+    dFwd.setUTCDate(dFwd.getUTCDate() + offset);
+    const keyFwd = dFwd.toISOString().slice(0, 10);
+    if (priceMap.has(keyFwd)) return keyFwd;
   }
   return null;
 }
