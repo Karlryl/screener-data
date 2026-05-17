@@ -122,12 +122,25 @@ function evaluate(stock) {
     }
   }
 
-  if (!entry || !Array.isArray(entry.holders) || entry.holders.length === 0) {
+  // Tag 215c (audit MEDIUM-3 + LOW-1): distinguish "ticker absent from cache"
+  // from "ticker present but zero holders". Both are incomputable but the
+  // diagnostic reason differs. Also DROPPED value:0 — the other incomputable
+  // branches let buildResult clamp to null; consistency across all branches
+  // prevents UI consumers reading r.value without r.computable from seeing
+  // a misleading "0 institutions" verdict.
+  if (!entry) {
     return H.buildResult({
-      value: 0,
       computable: false, pass: false,
       reason: 'ticker ' + candidates[0] + ' not in 13F cache (' + candidates.length + ' alias(es) tried)',
-      components: { ticker: candidates[0], aliasesTried: candidates },
+      components: { ticker: candidates[0], aliasesTried: candidates, presentInCache: false },
+      threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    });
+  }
+  if (!Array.isArray(entry.holders) || entry.holders.length === 0) {
+    return H.buildResult({
+      computable: false, pass: false,
+      reason: 'ticker ' + matchedTicker + ' present in 13F cache but zero tracked institutions hold it',
+      components: { ticker: matchedTicker, presentInCache: true, holders: 0 },
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }

@@ -140,11 +140,17 @@ function evaluate(stock) {
   }
 
   // --- Identify missing fields (transparent reason) ----------------
+  // Tag 215c (audit MEDIUM-2 fix): Ohlson's CL_CA sub-term needs BOTH CA
+  // and CL independently — wcDirect (working capital) alone cannot derive
+  // CL/CA ratio. Previously the wcDirect fallback allowed the missing-field
+  // check to pass without ca/cl present, then later produced NaN in CL_CA →
+  // "O-Score not finite" error. wcDirect remains useful as a WC validator
+  // only — we still require ca_t and cl_t for the ratio term.
   const missingFields = [];
   if (!Number.isFinite(tl_t))   missingFields.push('totalLiabilities');
-  if (!Number.isFinite(ca_t) && !Number.isFinite(wcDirect)) missingFields.push('currentAssets');
-  if (!Number.isFinite(cl_t) && !Number.isFinite(wcDirect)) missingFields.push('currentLiabilities');
-  if (!Number.isFinite(ffo_t)) missingFields.push('annualOCF');
+  if (!Number.isFinite(ca_t))   missingFields.push('currentAssets');
+  if (!Number.isFinite(cl_t))   missingFields.push('currentLiabilities');
+  if (!Number.isFinite(ffo_t))  missingFields.push('annualOCF');
 
   if (missingFields.length > 0) {
     // Per spec: with current pull-yahoo coverage this fires for ~all stocks.
