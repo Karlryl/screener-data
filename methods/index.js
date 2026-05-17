@@ -215,5 +215,14 @@ module.exports = [
   // rank. Mega-cap structural fail-rate is expected (1/10 anchors pass);
   // factor targets cheap-with-decent-ROC mid-caps. DIAGNOSTIC, fixture-hash
   // safe (not in SCORE_WEIGHTS).
-  { file: './magic-formula.js' }
+  { file: './magic-formula.js' },
+
+  // Tag 227b-2: Penman-Nissim PB-ROE Decomposition — RNOA (op income after
+  // tax / NOA) >= 12% AND Debt/Equity < 1.5. Penman & Nissim 2003 RAS 8:531
+  // ("Financial Statement Analysis of Leverage and How It Informs About
+  // Profitability and Price-to-Book Ratios"). Separates durable operating
+  // ROE from fragile leverage-driven ROE. 8/9 mega-cap anchors pass; CRDO
+  // correctly flagged (operations still scaling). DIAGNOSTIC, fixture-hash
+  // safe (not in SCORE_WEIGHTS).
+  { file: './penman-nissim-decomposition.js' }
 ];
