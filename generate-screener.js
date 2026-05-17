@@ -566,6 +566,19 @@ table.dt td { padding:6px 12px; border-bottom:1px solid var(--border); font-fami
 table.dt tr.row { cursor:pointer; transition:background 80ms ease-out; }
 table.dt tr.row:hover { background:var(--bg-hover); }
 table.dt td.num { text-align:right; font-variant-numeric:tabular-nums; }
+/* Tag 212c: inline percentile-rank bullet bar behind numeric cells.
+   The .bar is absolutely positioned and z-index:0 so the number (.v)
+   sits on top. opacity:0.18 keeps the chrome subtle in both themes.
+   right:12px matches td padding so the fill stops short of the
+   right-side breathing room and the number stays readable. */
+table.dt td.num.bullet { position:relative; overflow:hidden; }
+table.dt td.num.bullet .bar { position:absolute; left:0; top:0; bottom:0; right:12px; z-index:0; opacity:0.18; transition: width 120ms ease-out; pointer-events:none; }
+table.dt td.num.bullet .v { position:relative; z-index:1; }
+/* Tag 212d: Δ7d delta badge next to the per-row score sparkline. */
+.d7 { margin-left:4px; font-size:10px; font-family:var(--mono); font-variant-numeric:tabular-nums; }
+.d7.pos { color:var(--green); }
+.d7.neg { color:var(--red); }
+.d7.mute { color:var(--text-2); }
 table.dt td.ticker { color:var(--text-0); font-weight:600; }
 table.dt td.name { font-family:var(--ui); color:var(--text-1); font-weight:400; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .pill { display:inline-block; padding:1px 6px; font-size:10px; font-family:var(--mono); border:1px solid var(--border); }
@@ -1003,12 +1016,14 @@ const CLIENT_JS = `
     if (tab === 'HG') return [
       {k:'#',w:30}, {k:'Ticker',w:60}, {k:'Company',w:240}, {k:'Sector',w:120},
       {k:'Score',w:60,num:true}, {k:'State',w:80}, {k:'R40',w:60,num:true},
-      {k:'RevGr%',w:70,num:true}, {k:'GrossM%',w:70,num:true}, {k:'FCFM%',w:70,num:true}, {k:'MCap',w:70,num:true}
+      {k:'RevGr%',w:70,num:true}, {k:'GrossM%',w:70,num:true}, {k:'FCFM%',w:70,num:true}, {k:'MCap',w:70,num:true},
+      {k:'Trend',w:75}
     ];
     if (tab === 'QC') return [
       {k:'#',w:30}, {k:'Ticker',w:60}, {k:'Company',w:240}, {k:'Sector',w:120},
       {k:'Score',w:60,num:true}, {k:'State',w:80}, {k:'FCFM%',w:70,num:true},
-      {k:'OpM%',w:70,num:true}, {k:'GrossM%',w:70,num:true}, {k:'MCap',w:70,num:true}
+      {k:'OpM%',w:70,num:true}, {k:'GrossM%',w:70,num:true}, {k:'MCap',w:70,num:true},
+      {k:'Trend',w:75}
     ];
     if (tab === 'SMALL') return [
       {k:'#',w:30}, {k:'Ticker',w:60}, {k:'Company',w:240}, {k:'Country',w:60},
@@ -1018,7 +1033,8 @@ const CLIENT_JS = `
     if (tab === 'R40') return [
       {k:'#',w:30}, {k:'Ticker',w:60}, {k:'Company',w:240}, {k:'Sector',w:120},
       {k:'R40',w:60,num:true}, {k:'RevGr%',w:70,num:true}, {k:'FCFM%',w:70,num:true},
-      {k:'OpM%',w:70,num:true}, {k:'GrossM%',w:70,num:true}, {k:'State',w:80}, {k:'MCap',w:70,num:true}
+      {k:'OpM%',w:70,num:true}, {k:'GrossM%',w:70,num:true}, {k:'State',w:80}, {k:'MCap',w:70,num:true},
+      {k:'Trend',w:75}
     ];
     if (tab === 'PRE_BREAKOUT') return [
       {k:'#',w:30}, {k:'Ticker',w:60}, {k:'Company',w:220}, {k:'Sector',w:110},
@@ -1032,27 +1048,127 @@ const CLIENT_JS = `
     return [];
   }
 
-  function renderRow(r, i, tab){
+  // Tag 212c: Per-tab numeric columns that get the inline percentile-rank
+  // bullet bar. Keys are the row-field names (or virtual keys handled below).
+  // Skip WATCH (per spec) and SECTOR (different layout). Score column resolves
+  // to hgScore/qcScore/pbScore depending on tab.
+  const BULLET_COLS = {
+    'HG':           ['score','r40','growth','grossMargin','fcfMargin','mcap'],
+    'QC':           ['score','fcfMargin','opMargin','grossMargin','mcap'],
+    'SMALL':        ['growth','r40','grossMargin','mcap'],
+    'R40':          ['r40','growth','fcfMargin','opMargin','grossMargin','mcap'],
+    'PRE_BREAKOUT': ['growth','grossMargin','r40','mcap','pbScore']
+  };
+  function _rowMetricForBullet(r, key, tab){
+    if (key === 'score') return tab === 'QC' ? r.qcScore : (tab === 'HG' ? r.hgScore : null);
+    if (key === 'mcap') return r.mcap;
+    if (key === 'pbScore') return r.pbScore;
+    return r[key];
+  }
+  // buildPercentileMaps: for each numeric column on the active tab, sort the
+  // currently filtered list and create a ticker→percentile (0..1) map. Used by
+  // bulletCell to size the inline bar. Computed once per renderTable call so
+  // we avoid O(n²) work per row.
+  function buildPercentileMaps(list, tab){
+    const keys = BULLET_COLS[tab] || [];
+    const maps = {};
+    for (const k of keys) {
+      const vals = [];
+      for (const r of list) {
+        const v = _rowMetricForBullet(r, k, tab);
+        if (v != null && isFinite(v)) vals.push({tk: r.ticker, v});
+      }
+      vals.sort((a,b) => a.v - b.v);
+      const map = {};
+      const n = vals.length;
+      if (n > 1) {
+        for (let i = 0; i < n; i++) map[vals[i].tk] = i / (n - 1);
+      } else if (n === 1) {
+        map[vals[0].tk] = 1;
+      }
+      maps[k] = map;
+    }
+    return maps;
+  }
+  // bulletCell: render a numeric <td> with a percentile bar behind the number.
+  // innerHtml is the pre-formatted number HTML (may include its own color
+  // span like .g-pos). pct is 0..1 or null (null → no bar, plain cell).
+  function bulletCell(innerHtml, pct){
+    if (innerHtml === '—' || innerHtml == null) return '<td class="num">—</td>';
+    if (pct == null || !isFinite(pct)) return '<td class="num">'+innerHtml+'</td>';
+    const w = Math.max(0, Math.min(100, pct * 100));
+    const color = pct >= 0.66 ? 'var(--green)' : pct >= 0.33 ? 'var(--blue)' : 'var(--text-2)';
+    return '<td class="num bullet"><div class="bar" style="width:'+w.toFixed(1)+'%;background:'+color+'"></div><span class="v">'+innerHtml+'</span></td>';
+  }
+  // Tag 212d: microSpark — tiny inline SVG sparkline for per-row trend column.
+  // values: ascending time-ordered array of numbers (oldest → newest). Returns
+  // empty string when there's nothing useful to draw (graceful degrade).
+  function microSpark(values, w, h){
+    const vs = (values||[]).filter(v => v != null && isFinite(v));
+    if (vs.length < 2) return '';
+    const min = Math.min.apply(null, vs), max = Math.max.apply(null, vs), range = (max-min) || 1;
+    const pts = vs.map(function(v,i){
+      return (i/(vs.length-1)*w).toFixed(1)+','+(h - (v-min)/range*h).toFixed(1);
+    }).join(' ');
+    const color = vs[vs.length-1] >= vs[0] ? 'var(--green)' : 'var(--red)';
+    return '<svg width="'+w+'" height="'+h+'" style="vertical-align:middle;display:inline-block;"><polyline points="'+pts+'" stroke="'+color+'" stroke-width="1" fill="none"/></svg>';
+  }
+  // trendCell: builds the Trend <td> for HG/QC/R40 tabs — microSpark + Δ7d
+  // badge. Source field on history entries: hgScore (HG, R40) or qcScore (QC).
+  // r40 isn't stored in score-history so the R40 tab falls back to hgScore as
+  // a correlated proxy (same momentum axis).
+  function trendCell(r, tab){
+    const sh = r.scoreHistory;
+    if (!sh || !Array.isArray(sh.history) || sh.history.length === 0) return '<td><span class="g-mute" style="font-size:10px">—</span></td>';
+    const field = tab === 'QC' ? 'qcScore' : 'hgScore';
+    const series = sh.history.map(function(e){ return (e && Number.isFinite(e[field])) ? e[field] : null; }).filter(function(v){ return v != null; });
+    const spark = microSpark(series, 60, 16);
+    // Δ7d: use deltaScore7d if it's the right axis (hgScore), else derive
+    // from the trimmed series. For QC we look back ~7 entries (1/day).
+    let delta = null;
+    if (field === 'hgScore' && sh.deltaScore7d != null && isFinite(sh.deltaScore7d)) {
+      delta = sh.deltaScore7d;
+    } else if (series.length >= 2) {
+      const lookback = Math.min(7, series.length - 1);
+      delta = series[series.length-1] - series[series.length-1-lookback];
+    }
+    let badge = '';
+    if (delta != null && isFinite(delta)) {
+      const cls = delta >= 5 ? 'pos' : delta <= -5 ? 'neg' : 'mute';
+      const sign = delta >= 0 ? '+' : '';
+      badge = '<span class="d7 '+cls+'">'+sign+delta.toFixed(1)+'</span>';
+    }
+    if (!spark && !badge) return '<td><span class="g-mute" style="font-size:10px">—</span></td>';
+    return '<td>'+spark+badge+'</td>';
+  }
+
+  function renderRow(r, i, tab, pctMaps){
+    pctMaps = pctMaps || {};
     const stateP = '<span class="pill '+r.state+'">'+r.state+'</span>';
     const r40Html = r.r40==null ? '—' : '<span class="'+r40Class(r.r40)+'">'+r.r40.toFixed(1)+'</span>';
     const growthHtml = r.growth==null ? '—' : '<span class="'+colorPct(r.growth)+'">'+r.growth.toFixed(1)+'%</span>';
     const gmHtml = r.grossMargin==null ? '—' : r.grossMargin.toFixed(1)+'%';
     const opmHtml = r.opMargin==null ? '—' : '<span class="'+colorPct(r.opMargin)+'">'+r.opMargin.toFixed(1)+'%</span>';
     const fcfmHtml = r.fcfMargin==null ? '—' : '<span class="'+colorPct(r.fcfMargin)+'">'+r.fcfMargin.toFixed(1)+'%</span>';
+    // bullet shorthand — looks up the row's percentile for the column key
+    // on the current tab. Returns full <td>...</td>. Falls back to a plain
+    // <td> when the map is missing (e.g. WATCH/SECTOR tabs that opt out).
+    const bp = function(key){ return (pctMaps[key] && pctMaps[key][r.ticker] != null) ? pctMaps[key][r.ticker] : null; };
+    const bc = function(innerHtml, key){ return bulletCell(innerHtml, bp(key)); };
     // Tag 209e Upgrade 2: per-row tint based on dominant signal.
     const tint = rowTint(r);
     const rowOpen = '<tr class="row" style="'+tint+'" data-tk="'+esc(r.ticker)+'">';
 
     if (tab === 'HG') {
       const score = r.hgScore==null ? '—' : r.hgScore.toFixed(0);
-      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+r40Html+'</td><td class="num">'+growthHtml+'</td><td class="num">'+gmHtml+'</td><td class="num">'+fcfmHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
+      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td>'+bc(score,'score')+'<td>'+stateP+'</td>'+bc(r40Html,'r40')+bc(growthHtml,'growth')+bc(gmHtml,'grossMargin')+bc(fcfmHtml,'fcfMargin')+bc(fmtM(r.mcap),'mcap')+trendCell(r,'HG')+'</tr>';
     }
     if (tab === 'QC') {
       const score = r.qcScore==null ? '—' : r.qcScore.toFixed(0);
-      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+fcfmHtml+'</td><td class="num">'+opmHtml+'</td><td class="num">'+gmHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
+      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td>'+bc(score,'score')+'<td>'+stateP+'</td>'+bc(fcfmHtml,'fcfMargin')+bc(opmHtml,'opMargin')+bc(gmHtml,'grossMargin')+bc(fmtM(r.mcap),'mcap')+trendCell(r,'QC')+'</tr>';
     }
     if (tab === 'SMALL') {
-      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.country)+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+r40Html+'</td><td class="num">'+gmHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
+      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.country)+'</td><td>'+stateP+'</td>'+bc(growthHtml,'growth')+bc(r40Html,'r40')+bc(gmHtml,'grossMargin')+bc(fmtM(r.mcap),'mcap')+'</tr>';
     }
     if (tab === 'R40') {
       // Tag 205 R40-poisoning visual warnings: red badges on the ticker cell.
@@ -1066,7 +1182,7 @@ const CLIENT_JS = `
       if (Number.isFinite(r.fcfMargin) && r.fcfMargin > 80) warnBadges.push('<span class="g-neg" style="font-size:9px;border:1px solid var(--red);padding:0 3px;margin-left:3px" title="FCFM '+r.fcfMargin.toFixed(0)+'% — one-time event tell">⚠ FCFM&gt;80%</span>');
       if (Number.isFinite(r.opMargin) && Number.isFinite(r.fcfMargin) && Math.abs(r.opMargin - r.fcfMargin) > 50) warnBadges.push('<span class="g-neg" style="font-size:9px;border:1px solid var(--red);padding:0 3px;margin-left:3px" title="|OpM-FCFM|='+Math.abs(r.opMargin-r.fcfMargin).toFixed(0)+'pp — phantom FCF">⚠ Margin-Div</span>');
       const tkCell = r.ticker + warnBadges.join('');
-      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+tkCell+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td class="num">'+r40Html+'</td><td class="num">'+growthHtml+'</td><td class="num">'+fcfmHtml+'</td><td class="num">'+opmHtml+'</td><td class="num">'+gmHtml+'</td><td>'+stateP+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
+      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+tkCell+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td>'+bc(r40Html,'r40')+bc(growthHtml,'growth')+bc(fcfmHtml,'fcfMargin')+bc(opmHtml,'opMargin')+bc(gmHtml,'grossMargin')+'<td>'+stateP+'</td>'+bc(fmtM(r.mcap),'mcap')+trendCell(r,'R40')+'</tr>';
     }
     if (tab === 'PRE_BREAKOUT') {
       const pb = r.pbScore==null ? '—' : r.pbScore.toFixed(0);
@@ -1076,7 +1192,7 @@ const CLIENT_JS = `
       if (r.omaTrend === 'accelerating') sigs.push('<span class="g-pos" title="Operating-Margin accelerating">OpM↑</span>');
       if (r.revAccelDelta != null && r.revAccelDelta > 0) sigs.push('<span class="g-pos" title="Revenue YoY accelerating +'+r.revAccelDelta.toFixed(0)+'pp">Rev↑</span>');
       const signalsHtml = sigs.length ? sigs.join(' ') : '<span class="g-mute">—</span>';
-      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+gmHtml+'</td><td class="num">'+r40Html+'</td><td style="font-size:10px">'+signalsHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td><td class="num">'+pb+'</td></tr>';
+      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td>'+stateP+'</td>'+bc(growthHtml,'growth')+bc(gmHtml,'grossMargin')+bc(r40Html,'r40')+'<td style="font-size:10px">'+signalsHtml+'</td>'+bc(fmtM(r.mcap),'mcap')+bc(pb,'pbScore')+'</tr>';
     }
     if (tab === 'WATCH') {
       const score = Math.max(r.hgScore||0, r.qcScore||0).toFixed(0);
@@ -1294,10 +1410,15 @@ const CLIENT_JS = `
       explEl.style.display = 'none';
     }
 
+    // Tag 212c: percentile-rank maps are computed over the FULL filtered list
+    // (not just the current page) so bar widths reflect each row's rank within
+    // everything the user is currently looking at — not just this page.
+    const pctMaps = buildPercentileMaps(list, activeTab);
+
     let html = '<table class="dt"><thead><tr>';
     for (const c of cols) html += '<th'+(c.num?' class="num"':'')+' style="width:'+c.w+'px">'+c.k+'</th>';
     html += '</tr></thead><tbody>';
-    for (let i=0;i<slice.length;i++) html += renderRow(slice[i], (page-1)*PAGE_SIZE + i, activeTab);
+    for (let i=0;i<slice.length;i++) html += renderRow(slice[i], (page-1)*PAGE_SIZE + i, activeTab, pctMaps);
     html += '</tbody></table>';
     // Tag 211g empty-state polish — show a centered "No matches" when filters
     // shrink the list to zero rows. Avoids a blank white expanse.
