@@ -23,12 +23,23 @@ const fxRates = {
   GBP_USD: 1.27
 };
 
+// Tag 220 (audit F-220a-02 HIGH fix): fixtures hard-coded `fetchedAt:
+// '2026-04-30'`. The engine's 120-day stale-data gate would turn the
+// entire fixture suite UNCLASSIFIABLE on ~2026-08-28, silently breaking
+// the engine-cli-tests pre-pull guard and the daily Yahoo pull with no
+// code change. Compute fetchedAt dynamically as today − 30d so the
+// fixtures stay perpetually 30 days old (well inside the 120-day cap).
+const _FIXTURE_FETCHED_AT = (() => {
+  const d = new Date(Date.now() - 30 * 86400 * 1000);
+  return d.toISOString().slice(0, 10);
+})();
+
 // Helper to build a metric in canonical form
 const m = (value, currency, confidence = 0.85) => value == null
   ? null
-  : { value, currency, source: 'fixture', confidence, asOf: '2026-04-30' };
+  : { value, currency, source: 'fixture', confidence, asOf: _FIXTURE_FETCHED_AT };
 
-const pct = (v, c = 0.85) => v == null ? null : { value: v, source: 'fixture', confidence: c, asOf: '2026-04-30' };
+const pct = (v, c = 0.85) => v == null ? null : { value: v, source: 'fixture', confidence: c, asOf: _FIXTURE_FETCHED_AT };
 
 // Quarterly series builder: [oldest, ..., newest]
 const tsRev = (arr, cur) => arr.map(v => ({ value: v, currency: cur, source: 'fixture', confidence: 0.85 }));
@@ -48,7 +59,7 @@ const fixtures = [
       identifier: { primary: 'TICKER', value: 'CRDO' },
       meta: { ticker: 'CRDO', name: 'Credo Technology Group', sector: 'Technology',
               industry: 'Semiconductors', region: 'US', reportingCurrency: 'USD',
-              fetchedAt: '2026-04-30' },
+              fetchedAt: _FIXTURE_FETCHED_AT },
       marketCap: m(15e9, 'USD'),
       metrics: {
         revenueTTM: m(900e6, 'USD'),
@@ -86,7 +97,7 @@ const fixtures = [
       identifier: { primary: 'TICKER', value: 'ALAB' },
       meta: { ticker: 'ALAB', name: 'Astera Labs', sector: 'Technology',
               industry: 'Semiconductors', region: 'US', reportingCurrency: 'USD',
-              fetchedAt: '2026-04-30' },
+              fetchedAt: _FIXTURE_FETCHED_AT },
       marketCap: m(12e9, 'USD'),
       metrics: {
         revenueTTM: m(700e6, 'USD'),
@@ -123,7 +134,7 @@ const fixtures = [
       identifier: { primary: 'ISIN', value: 'DK0062498333' },
       meta: { ticker: 'NVO', name: 'Novo Nordisk', sector: 'Healthcare',
               industry: 'Drug Manufacturers', region: 'EU', reportingCurrency: 'DKK',
-              fetchedAt: '2026-04-30' },
+              fetchedAt: _FIXTURE_FETCHED_AT },
       marketCap: m(450e9, 'USD'),  // already converted in input
       metrics: {
         revenueTTM: m(265e9, 'DKK'),
@@ -167,7 +178,7 @@ const fixtures = [
       identifier: { primary: 'TICKER', value: 'NVDA' },
       meta: { ticker: 'NVDA', name: 'NVIDIA', sector: 'Technology',
               industry: 'Semiconductors', region: 'US', reportingCurrency: 'USD',
-              fetchedAt: '2026-04-30' },
+              fetchedAt: _FIXTURE_FETCHED_AT },
       marketCap: m(2800e9, 'USD'),
       metrics: {
         revenueTTM: m(120e9, 'USD'),
@@ -214,7 +225,7 @@ const fixtures = [
       identifier: { primary: 'ISIN', value: 'DE0007030009' },
       meta: { ticker: 'RHM.DE', name: 'Rheinmetall AG', sector: 'Industrials',
               industry: 'Aerospace & Defense', region: 'EU', reportingCurrency: 'EUR',
-              fetchedAt: '2026-04-30' },
+              fetchedAt: _FIXTURE_FETCHED_AT },
       marketCap: m(45e9, 'USD'),  // ~42B EUR
       metrics: {
         revenueTTM: m(11e9, 'EUR'),
@@ -259,7 +270,7 @@ const fixtures = [
       identifier: { primary: 'TICKER', value: 'PLTR' },
       meta: { ticker: 'PLTR', name: 'Palantir Technologies', sector: 'Technology',
               industry: 'Software', region: 'US', reportingCurrency: 'USD',
-              fetchedAt: '2026-04-30' },
+              fetchedAt: _FIXTURE_FETCHED_AT },
       marketCap: m(280e9, 'USD'),
       metrics: {
         revenueTTM: m(3.5e9, 'USD'),
@@ -302,7 +313,7 @@ const fixtures = [
       identifier: { primary: 'ISIN', value: 'NL0010273215' },
       meta: { ticker: 'ASML', name: 'ASML Holding', sector: 'Technology',
               industry: 'Semiconductor Equipment & Lithography', region: 'EU', reportingCurrency: 'EUR',
-              fetchedAt: '2026-04-30' },
+              fetchedAt: _FIXTURE_FETCHED_AT },
       marketCap: m(380e9, 'USD'),
       metrics: {
         revenueTTM: m(28e9, 'EUR'),
@@ -346,7 +357,7 @@ const fixtures = [
       identifier: { primary: 'TICKER', value: 'MSFT' },
       meta: { ticker: 'MSFT', name: 'Microsoft', sector: 'Technology',
               industry: 'Software', region: 'US', reportingCurrency: 'USD',
-              fetchedAt: '2026-04-30' },
+              fetchedAt: _FIXTURE_FETCHED_AT },
       marketCap: m(3500e9, 'USD'),
       metrics: {
         revenueTTM: m(260e9, 'USD'),
@@ -390,7 +401,7 @@ const fixtures = [
       identifier: { primary: 'TICKER', value: 'META' },
       meta: { ticker: 'META', name: 'Meta Platforms', sector: 'Communication Services',
               industry: 'Internet Content', region: 'US', reportingCurrency: 'USD',
-              fetchedAt: '2026-04-30' },
+              fetchedAt: _FIXTURE_FETCHED_AT },
       marketCap: m(1400e9, 'USD'),
       metrics: {
         revenueTTM: m(155e9, 'USD'),
@@ -450,7 +461,7 @@ const fixtures = [
       identifier: { primary: 'TICKER', value: 'MNDY' },
       meta: { ticker: 'MNDY', name: 'monday.com', sector: 'Technology',
               industry: 'Software', region: 'US', reportingCurrency: 'USD',
-              fetchedAt: '2026-04-30' },
+              fetchedAt: _FIXTURE_FETCHED_AT },
       marketCap: m(13e9, 'USD'),
       metrics: {
         revenueTTM: m(950e6, 'USD'),

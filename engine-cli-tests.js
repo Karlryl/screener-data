@@ -125,10 +125,12 @@ try {
 try {
   if (typeof ScoreOrchestrator.scoreSnapshot !== 'function') throw new Error('orchestrator.scoreSnapshot missing');
   if (typeof ScoreOrchestrator.buyStatus !== 'function') throw new Error('orchestrator.buyStatus missing');
-  if (typeof ManipulationFilters.runFilters !== 'function' && typeof ManipulationFilters.applyFilters !== 'function') {
-    // accept either name
-    const keys = Object.keys(ManipulationFilters);
-    if (!keys.length) throw new Error('ManipulationFilters empty');
+  // Tag 220 (audit F-220a-01 HIGH fix): the real API is `evaluate(stock, scoreResult)`
+  // — not `runFilters` or `applyFilters`. The previous fallback to
+  // `Object.keys.length` made this assertion unfalsifiable (any module with
+  // ANY exported key passed). Pre-pull gate was theatre for this module.
+  if (typeof ManipulationFilters.evaluate !== 'function') {
+    throw new Error('ManipulationFilters.evaluate missing (Tag 220 — was previously masked by Object.keys fallback)');
   }
   console.log(green('✓') + ' Orchestrator + Filters API intact');
 } catch (e) {
