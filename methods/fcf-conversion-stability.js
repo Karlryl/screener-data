@@ -68,11 +68,24 @@ const H = require('./_helpers.js');
 
 const ID = 'fcf-conversion-stability';
 const LABEL = 'FCF-Conversion-Stability (5y geo-mean FCF/NI)';
-const THRESHOLD = 0.85;
+// Tag 215b (audit HIGH-2 fix): MSFT (0.81) and GOOG (0.79) were FAILING
+// even though docs and intent say they should PASS as quality compounders.
+// Two fixes:
+//   1. Lower threshold from 0.85 → 0.75. 0.85 was too tight for normal
+//      capex-deduction (FCF = OCF − Capex; even MSFT's Azure capex pulls FCF
+//      ~15% below NI). The textbook "FCF should equal NI long-term" is true
+//      ONLY at steady state with zero growth-capex; growing compounders
+//      undershoot legitimately.
+//   2. Cap individual ratios at 2.0 before the geomean. MELI's 4.69 (one-year
+//      blowout from working-capital seasonality) was pulling its 5y geomean
+//      above the threshold artificially. The cap normalizes upper-tail
+//      outliers WITHOUT discarding the signal that some years over-convert.
+const THRESHOLD = 0.75;
 const THRESHOLD_OP = 'gte';
 const MIN_RATIOS = 3;
 const WINDOW = 5;
 const NEG_RATIO_FLOOR = 0.01; // floor for negative-ratio years entering geomean
+const POS_RATIO_CAP = 2.0;    // cap upper-tail outliers (Tag 215b)
 
 function _unwrap(v) {
   if (v == null) return null;
@@ -116,9 +129,14 @@ function evaluate(stock) {
     if (ni <= 0) { lossYears++; continue; }
     const r = fcf / ni;
     rawRatios.push(r);
-    // Floor negative ratios at NEG_RATIO_FLOOR so the geometric mean is well-defined
-    // (geo-mean of any non-positive value is mathematically undefined / forces 0).
-    ratios.push(r > 0 ? r : NEG_RATIO_FLOOR);
+    // Tag 215b: clamp to [NEG_RATIO_FLOOR, POS_RATIO_CAP]. Negative-ratio floor
+    // keeps the geometric mean well-defined; positive cap suppresses one-year
+    // outliers (working-capital releases, one-time tax refunds) that would
+    // otherwise pull the geomean up artificially.
+    const clamped = r <= 0 ? NEG_RATIO_FLOOR
+                  : r > POS_RATIO_CAP ? POS_RATIO_CAP
+                  : r;
+    ratios.push(clamped);
   }
 
   if (ratios.length < MIN_RATIOS) {

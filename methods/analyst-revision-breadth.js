@@ -100,7 +100,14 @@ function _extractBreadth(stock) {
   };
   const extER = stock.external && stock.external.estimateRevisions;
   if (extER && typeof extER === 'object') {
-    const periodKeys = ['0q', '+1q', '0y', '+1y'];
+    // Tag 215a (audit HIGH-1 fix): period preference reordered to favor
+    // annual ('0y', '+1y') over quarterly ('0q', '+1q'). Yahoo's quarterly
+    // estimate-revision counts include only the smaller subset of analysts
+    // who explicitly publish per-quarter; the annual numbers reflect the
+    // broader consensus. Live example: MSFT 0q=-9 (fail), 0y=+19 (pass) —
+    // these aren't contradictory, they're sampling different cohorts.
+    // Annual is the more durable / larger-N signal so we prefer it.
+    const periodKeys = ['0y', '+1y', '0q', '+1q'];
     for (const pk of periodKeys) {
       const row = extER[pk];
       if (!row || typeof row !== 'object') continue;
