@@ -146,13 +146,19 @@ function main() {
       const cacheKey = asOf + '|' + key;
 
       if (cachedDates.has(cacheKey) && cache.vintageReturns[cacheKey]) {
-        // F-PF-009: replay from cache — no file read needed
+        // F-PF-009: replay from cache — no file read needed.
+        // Tag 216a (audit F-216-01 HIGH fix): the pre-existing cached.find()
+        // lookup at the third line below was non-deterministic when two
+        // (ticker, methodId) pairs produced identical ret values (e.g. two
+        // identical no-data fills) — find() returned the wrong row's pass.
+        // The cache entries already carry pass directly; destructure it from
+        // the loop variable instead of doing a lookup. Removes the
+        // self-acknowledged bug the original author flagged in a comment.
         const cached = cache.vintageReturns[cacheKey];
-        for (const { ticker, methodId, ret, quality } of cached) {
+        for (const { ticker, methodId, ret, quality, pass } of cached) {
           const bucket = _getMethodBucket(methodId, key);
           bucket.vintages.add(asOf);
           // F-BT-008: quality from cache (may be null for older vintages — handle gracefully)
-          const pass = cached.find(x => x.ticker === ticker && x.methodId === methodId && x.ret === ret)?.pass;
           if (pass == null) continue;
           if (pass) bucket.pass.push(ret); else bucket.fail.push(ret);
           if (quality && bucket.byQuality[quality]) {

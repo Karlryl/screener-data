@@ -67,8 +67,13 @@ const RED_FLAG_RULES = {
   },
   EXTREME_SLOAN: {
     id: 'sloan-ratio',
-    condition: function(val) { return Math.abs(val) > 0.30; },
-    label: 'Sloan-Ratio extrem (|>30%|)'
+    // Tag 216a (audit F-216-05 MEDIUM fix): aligned with sloan-ratio.js
+    // FAIL_THRESHOLD = 0.20. Previously this red-flag rule only fired at
+    // |val| > 0.30 — the 20-30% band silently passed through even though
+    // sloan-ratio internally marked it as failing. Now the red flag fires
+    // whenever sloan-ratio fails (i.e. above its own threshold).
+    condition: function(val) { return Math.abs(val) > 0.20; },
+    label: 'Sloan-Ratio extrem (|>20%|)'
   }
   // Tag 121+: Dilution-Red-Flag wenn Share-Outstanding-Daten verfuegbar
 };
@@ -194,7 +199,21 @@ function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, data
   if (computedWeight === 0) {
     return null; // no computable methods at all
   }
-  if (computedWeight / totalWeight < 0.4) {
+  // Tag 216a (audit F-216-02 HIGH fix): coverage threshold is mode-aware.
+  // HYPERGROWTH legitimately has fewer computable methods for recent-IPO
+  // candidates (CRDO/ALAB/PLTR-era): hypergrowth-quality-class needs 5y of
+  // data, gross-margin-stability needs 5y rolling — neither computable for
+  // a 2y-old company. With 40% threshold these names get silent REJECT even
+  // though Rule-of-40 + Rev-Growth-3Y + Profitability-State all fire and
+  // tell a coherent story. Anchor-safety rule says: never reject a known
+  // true-positive on a guard threshold. Lower HG to 30% (rule-of-40 alone
+  // is 0.25 + profitability-state 0.15 = 0.40, well above 0.30 floor;
+  // rule-of-40 + rule-of-x = 0.35 also clears).
+  // QC stays at 40% because its anchors (MSFT/COST/V) have full history.
+  // TURNAROUND stays at 40% — by definition the company has data to turn
+  // around FROM, so coverage shouldn't be sparse.
+  var minCoverage = (modeId === 'HYPERGROWTH') ? 0.30 : 0.40;
+  if (computedWeight / totalWeight < minCoverage) {
     return {
       score: null, tier: 'REJECT', redFlags: [], breakdown: breakdown,
       mode: modeId, computable: false, reason: 'insufficient-coverage',
