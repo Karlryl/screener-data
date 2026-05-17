@@ -93,7 +93,12 @@ td{padding:8px;border-bottom:1px solid #131c2b}
     html += '<table><thead><tr><th>Ticker</th><th>Vorher</th><th>Jetzt</th><th>Δ</th><th>Status</th></tr></thead><tbody>';
     for (const d of passCountDiffs) {
       const dirClass = d.status === 'IMPROVED' ? 'up' : (d.status === 'WORSENED' ? 'down' : 'flag');
-      html += `<tr><td><strong>${escHtml(d.ticker)}</strong></td><td>${d.prevPass != null ? d.prevPass : '—'}</td><td>${d.currPass}</td><td class="${dirClass}">${d.delta > 0 ? '+' : ''}${d.delta != null ? d.delta : '?'}</td><td class="${dirClass}">${d.status}</td></tr>`;
+      // Tag 225e-2c (audit F-GR-011): for NEW status d.delta is undefined so
+      // the prior template rendered "+?" — confusing UX. Show "NEW" instead.
+      const deltaTxt = d.status === 'NEW'
+        ? 'NEW'
+        : (d.delta != null ? ((d.delta > 0 ? '+' : '') + d.delta) : '—');
+      html += `<tr><td><strong>${escHtml(d.ticker)}</strong></td><td>${d.prevPass != null ? d.prevPass : '—'}</td><td>${d.currPass}</td><td class="${dirClass}">${deltaTxt}</td><td class="${dirClass}">${d.status}</td></tr>`;
     }
     html += '</tbody></table>';
   }
