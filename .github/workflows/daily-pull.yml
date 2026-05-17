@@ -179,7 +179,11 @@ jobs:
             for (const f of files) {
               try {
                 const buf = require('fs').readFileSync(dir + '/' + f, 'utf8').slice(0, 800);
-                const m = buf.match(/\"asOf\"\s*:\s*\"([^\"]+)\"/);
+                // Tag 218: match BOTH asOf and fetchedAt. Pre-Tag-215j snapshots
+                // only had fetchedAt; matching only asOf counted them all as
+                // unparseable — Tag 215j fixed the pull side but old snapshots
+                // in the repo still need backwards-compat.
+                const m = buf.match(/\"(?:asOf|fetchedAt)\"\s*:\s*\"([^\"]+)\"/);
                 if (!m) { unparseable++; continue; }
                 const ts = new Date(m[1]).getTime();
                 if (now - ts < FRESH_MS) fresh++; else stale++;
@@ -192,7 +196,12 @@ jobs:
               process.exit(1);
             }
           "
-        continue-on-error: true  # Tag 192: WARN initially; flip to fail-on-error after first cron observation
+        # Tag 218 (audit F-218c-01 HIGH): flip from continue-on-error:true to
+        # fail-on-error. Tag 192's 'WARN initially; flip later' has been dormant
+        # for months — stale pulls flowed downstream into snapshot-picks,
+        # detect-changes, walk-forward. Now combined with Tag 218 regex fix
+        # (match asOf OR fetchedAt) the gate can finally do its job.
+        continue-on-error: false
 
       - name: Verify Pull Coverage
         run: |
