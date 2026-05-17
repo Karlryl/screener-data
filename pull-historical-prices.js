@@ -14,7 +14,10 @@ let yf;
 try {
   const YF = require('yahoo-finance2').default;
   // Tag-39: yahoo-finance2 v3+ requires new instance
-  yf = (typeof YF === 'function') ? new YF() : YF;
+  // Tag 211m: silence schema-validation log spam (Tag 211c sibling fix).
+  yf = (typeof YF === 'function')
+    ? new YF({ validation: { logErrors: false, logOptionsErrors: false } })
+    : YF;
 }
 catch (e) { console.error('yahoo-finance2 not installed'); process.exit(1); }
 

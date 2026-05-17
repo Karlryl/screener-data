@@ -9,7 +9,10 @@ const fs = require('fs');
 let yf;
 try {
   const YF = require('yahoo-finance2').default;
-  yf = (typeof YF === 'function') ? new YF() : YF;
+  // Tag 211m: silence schema-validation log spam (Tag 211c sibling fix).
+  yf = (typeof YF === 'function')
+    ? new YF({ validation: { logErrors: false, logOptionsErrors: false } })
+    : YF;
 } catch (e) { console.error('yahoo-finance2 not installed'); process.exit(1); }
 
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
