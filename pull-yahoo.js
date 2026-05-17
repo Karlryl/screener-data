@@ -988,8 +988,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // Max 3 attempts: initial + 2 retries with 10s / 25s sleep.
   // Tag 163: reduced timeouts (30s→12s) and delays (10s/25s→5s/12s) to unblock
   // the worker pool faster — stalled tickers no longer hold up other workers.
+  //
+  // Tag 215f: extended retry budget to 15s/45s/90s (4 attempts total).
+  // Run #107 produced 7,210 rate-limit failures even with retry — Yahoo's
+  // Cloudflare Edge throttle needs LONGER backoff than Tag 163's 5s/12s
+  // (CDN Retry-After is typically 30-60s). Combined with PULL_CONCURRENCY 8
+  // (down from 20) this should drop the rate-limit fail rate dramatically.
   async function quoteSummaryWithRetry(symbol, label) {
-    const DELAYS = [5000, 12000];
+    const DELAYS = [15000, 45000, 90000];
     let lastErr;
     for (let attempt = 0; attempt <= DELAYS.length; attempt++) {
       try {

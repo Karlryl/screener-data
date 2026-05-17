@@ -21,7 +21,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 180
     env:
-      PULL_CONCURRENCY: '20'
+      # Tag 215f: lowered from 20 → 8. Run #107 produced 7,210 rate-limit
+      # failures (82% of 8,769 total fails) because Yahoo's Cloudflare Edge
+      # could not sustain 20 concurrent requests. With 8-way concurrency the
+      # request rate stays well under Yahoo's throttle threshold. Empirical
+      # from Tag 147 era: 8 was the original hardcoded default before being
+      # raised to 20. The Tag 163 retry budget (5s/12s) is too short for
+      # CDN-edge 429s — Tag 215f also extends to 15s/45s (see pull-yahoo.js).
+      PULL_CONCURRENCY: '8'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
