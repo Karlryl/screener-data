@@ -12,8 +12,14 @@ permissions:
 
 # Tag 153: serialize pushes to main — daily + monthly-sec-xbrl both push via retry-rebase.
 # On the 1st of the month both fire within ~90 min of each other; without this one silently fails.
+# Tag 219a (audit F-218c-03): manual workflow_dispatch runs get a per-run group so
+# operators can re-run while a scheduled pull is in flight (otherwise the manual
+# dispatch sits queued for up to 180 min waiting for the cron run, and on the
+# free-plan can be evicted entirely). Scheduled cron runs still serialize on
+# 'main-push' so daily + monthly-sec-xbrl don't clobber each other; the
+# retry-with-rebase push loop handles the race the dispatch path can introduce.
 concurrency:
-  group: main-push
+  group: ${{ github.event_name == 'workflow_dispatch' && format('manual-{0}', github.run_id) || 'main-push' }}
   cancel-in-progress: false
 
 jobs:
@@ -117,8 +123,13 @@ jobs:
       - name: Verify FX-Rates Freshness
         run: |
           if [ -f fx-rates.json ]; then
-            mtime=$(stat -c %Y fx-rates.json 2>/dev/null || echo 0)
+            # Tag 219a (audit F-218c-06): on stat failure fall back to NOW (fail-open),
+            # not 0 (epoch start / fail-closed). The outer [ -f ] already confirmed the
+            # file exists; a stat failure here is almost certainly a transient permission
+            # / race issue, and reporting the file as 600,000 days old would trip the
+            # 30-day hard-fail downstream and kill the pipeline on a transient hiccup.
             now=$(date +%s)
+            mtime=$(stat -c %Y fx-rates.json 2>/dev/null || echo "$now")
             age_days=$(( (now - mtime) / 86400 ))
             echo "fx-rates.json age: ${age_days} days"
             if [ "$age_days" -gt 30 ]; then
@@ -149,8 +160,15 @@ jobs:
       - name: Check Manifest Freshness
         run: |
           if [ -f snapshots/_manifest.json ]; then
-            manifest_mtime=$(stat -c %Y snapshots/_manifest.json 2>/dev/null || echo 0)
-            four_hours_ago=$(date -d '4 hours ago' +%s 2>/dev/null || echo 0)
+            # Tag 219a (audit F-218c-06): on stat failure fall back to NOW (fail-open),
+            # not 0 (epoch start / fail-closed). The outer [ -f ] already confirmed the
+            # file exists; if `stat` itself errors transiently, the previous `|| echo 0`
+            # would silently `rm -f` a perfectly-fresh manifest and force the file-count
+            # fallback. Keeping the manifest is the safer default — a genuinely stale
+            # manifest gets caught on the next run.
+            now=$(date +%s)
+            manifest_mtime=$(stat -c %Y snapshots/_manifest.json 2>/dev/null || echo "$now")
+            four_hours_ago=$(date -d '4 hours ago' +%s 2>/dev/null || echo "$((now - 14400))")
             if [ "$manifest_mtime" -lt "$four_hours_ago" ]; then
               echo "WARNING: snapshots/_manifest.json is older than 4 hours (mtime=$manifest_mtime, threshold=$four_hours_ago). Manifest may be stale from a prior run — file-count fallback will be used."
               rm -f snapshots/_manifest.json
@@ -300,10 +318,16 @@ jobs:
         continue-on-error: true
 
       # Tag 102g: Walk-Forward Picks-History — friert Mode-Picks pro Run für späteren Performance-Vergleich.
-      # Tag 134: hard-fail. picks-history is the source of truth for backtest;
-      # a silent gap of even one week destroys vintage continuity.
       # Tag 168: continue-on-error — per-stock failures are soft-fail; Pipeline Health Check
-      # below enforces the 5% threshold and hard-fails if breached.
+      # below enforces the 5% threshold AND F-CI-002 missing-report=100%-fail rule, so a
+      # hard crash here is still caught downstream. (Tag 134's original hard-fail semantics
+      # are preserved indirectly — see audit F-218c-08.)
+      # Tag 219a (audit F-218c-04): INTENTIONALLY does NOT set AUDIT_SCORE_MULTIPLIERS.
+      # picks-history must record un-multiplied scores so the tag28-tests fixture hash
+      # stays stable across multiplier tuning (see Tag 199 / Tag 203 design notes). The
+      # screener.html / score-history steps above DO set the env var because their job
+      # is to surface the user-visible multiplied scores. Drift here would produce a
+      # permanent fake "score uplift today" artifact — do not add the env var.
       - name: Snapshot Picks-History
         run: node snapshot-picks.js --snapshots snapshots --out picks-history
         continue-on-error: true
@@ -321,10 +345,13 @@ jobs:
         continue-on-error: true
 
       # Tag-35: Methods-History-Snapshot (für Backtest später)
-      # Tag 134: hard-fail. methods-history feeds method-effectiveness which is
-      # the core "is this method earning its weight?" measurement.
       # Tag 168: continue-on-error — per-stock failures are soft-fail; Pipeline Health Check
-      # below enforces the 5% threshold and hard-fails if breached.
+      # enforces the 5% threshold and the F-CI-002 missing-report rule. Tag 134's
+      # hard-fail semantics are preserved indirectly.
+      # Tag 219a (audit F-218c-04): INTENTIONALLY does NOT set AUDIT_SCORE_MULTIPLIERS.
+      # Same rationale as Snapshot Picks-History above — fixture-hash stability and
+      # un-multiplied scores are required for methods-history to be a meaningful
+      # backtest input.
       - name: Snapshot Methods-History
         run: node snapshot-methods-history.js --out methods-history
         continue-on-error: true

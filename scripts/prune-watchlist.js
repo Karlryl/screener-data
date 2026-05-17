@@ -20,6 +20,10 @@ const fs   = require('fs');
 const path = require('path');
 // Tag 189: F-SM-021 — atomic watchlist write (other writer is refresh-universe.js).
 const { writeFileAtomic } = require('../lib/atomic-write.js');
+// Tag 219a (audit F-218b-01): shared safeSnapshotFilename — used to live here as
+// a private copy; lifted to lib/snapshot-fs.js so all callers (prune,
+// elliott-export, regional-oos-test, pull-yahoo) share one source of truth.
+const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 
 function parseArgs(argv) {
   const args = {
@@ -39,15 +43,6 @@ function parseArgs(argv) {
     else if (argv[i] === '--dry-run') args.dryRun = true;
   }
   return args;
-}
-
-// Windows reserved filename logic (mirror of pull-yahoo.js)
-const WINDOWS_RESERVED = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i;
-function safeSnapshotFilename(ticker) {
-  const sanitized = String(ticker).replace(/[^A-Z0-9.-]/gi, '_');
-  const stem = sanitized.split('.')[0];
-  if (WINDOWS_RESERVED.test(stem)) return '_' + sanitized + '.json';
-  return sanitized + '.json';
 }
 
 function loadSnapshot(snapshotsDir, ticker) {
@@ -102,15 +97,35 @@ function main() {
   console.log('  prune-no-data-days: ' + args.pruneNoDataDays);
   console.log('  dry-run:            ' + args.dryRun);
 
-  const wl = JSON.parse(fs.readFileSync(args.watchlist, 'utf8'));
-  const before = wl.stocks.length;
+  // Tag 219a (audit F-218b-05): schema-aware watchlist loader. The daily-pull
+  // workflow's "Verify Watchlist Sanity" gate (daily-pull.yml line ~100, Tag 207a)
+  // already handles three historical shapes — Array, { stocks: [...] }, and
+  // bare-object. Prior to this fix prune-watchlist.js trusted only the middle
+  // shape and crashed (TypeError on undefined.length) on the others. The step
+  // is `continue-on-error: true` in the workflow so the prune was silently
+  // skipped — recoverable, but inconsistent with the rest of the pipeline.
+  let wl;
+  try { wl = JSON.parse(fs.readFileSync(args.watchlist, 'utf8')); }
+  catch (e) {
+    console.error('watchlist parse failed: ' + e.message + ' — skipping prune.');
+    process.exit(0);
+  }
+  let stocksArr;
+  let wrapped; // true when wl is the { stocks: [...] } object shape we can mutate in place
+  if (Array.isArray(wl)) { stocksArr = wl; wrapped = false; }
+  else if (wl && Array.isArray(wl.stocks)) { stocksArr = wl.stocks; wrapped = true; }
+  else {
+    console.error('watchlist shape unrecognised (neither array nor { stocks: [...] }) — skipping prune.');
+    process.exit(0);
+  }
+  const before = stocksArr.length;
   console.log('\nTotal before: ' + before);
 
   const kept = [];
   const pruned = [];
   const now = Date.now();
 
-  for (const entry of wl.stocks) {
+  for (const entry of stocksArr) {
     const snap = loadSnapshot(args.snapshots, entry.ticker);
 
     // F-DP-022: prune tickers with no snapshot that have been in the watchlist too long
@@ -152,9 +167,15 @@ function main() {
     return;
   }
 
-  wl.stocks = kept;
-  wl.lastAutoPrune = new Date().toISOString();
-  wl.lastAutoPruneRemoved = pruned;
+  // Tag 219a: preserve original shape on write — wrapped objects keep their
+  // sidecar fields (_meta, lastUniverseRefresh, etc.); bare arrays stay arrays.
+  if (wrapped) {
+    wl.stocks = kept;
+    wl.lastAutoPrune = new Date().toISOString();
+    wl.lastAutoPruneRemoved = pruned;
+  } else {
+    wl = kept; // legacy array shape — drop the prune-metadata fields (no place to put them)
+  }
   // F-SM-021 (Tag 189): same atomic-write rationale as refresh-universe.js.
   writeFileAtomic(args.watchlist, JSON.stringify(wl, null, 2));
   console.log('\nWritten: ' + args.watchlist);

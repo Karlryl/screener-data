@@ -24,6 +24,8 @@ const path = require('path');
 const Runner = require('../methods/runner.js');
 // Tag 218: atomic output writes (audit F-218b-03)
 const { writeFileAtomic } = require('../lib/atomic-write.js');
+// Tag 219a (audit F-218b-01): shared safeSnapshotFilename helper.
+const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 
 const SNAP_DIR = path.join(__dirname, '..', 'snapshots');
 const PICKS_DIR = path.join(__dirname, '..', 'picks-history');
@@ -31,13 +33,8 @@ const OUT_DIR = path.join(__dirname, '..', 'outputs');
 
 function loadJson(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return null; } }
 
-function _safeStem(t) { return String(t).replace(/[^A-Z0-9.-]/gi, '_'); }
-function _windowsReserved(stem) { return /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i.test(stem.split('.')[0]); }
 function loadSnapshot(ticker) {
-  const safe = _safeStem(ticker);
-  const prefix = _windowsReserved(safe) ? '_' : '';
-  const file = path.join(SNAP_DIR, prefix + safe + '.json');
-  return loadJson(file);
+  return loadJson(path.join(SNAP_DIR, safeSnapshotFilename(ticker)));
 }
 
 function _methodValue(results, mid) {

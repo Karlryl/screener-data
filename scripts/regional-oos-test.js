@@ -9,6 +9,12 @@ const fs = require('fs');
 const path = require('path');
 const Runner = require('../methods/runner.js');
 const Modes = require('../methods/strategy-modes.js');
+// Tag 219a (audit F-218b-01): use shared safeSnapshotFilename helper.
+// Previously this script did `path.join(SNAP_DIR, t + '.json')` which silently
+// skipped tickers whose snapshots are written with a `_` prefix (Windows
+// reserved names like CON) or with sanitised characters — the OOS report
+// then under-counted the HG-passing universe.
+const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 
 const SNAP_DIR = path.join(__dirname, '..', 'snapshots');
 const OUT_DIR = path.join(__dirname, '..', 'outputs');
@@ -28,7 +34,7 @@ function evaluateAll(tickers) {
   const out = [];
   for (const t of tickers) {
     let snap;
-    try { snap = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, t + '.json'), 'utf8')); }
+    try { snap = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, safeSnapshotFilename(t)), 'utf8')); }
     catch (e) { continue; }
     if (!snap.meta) continue;
     snap.quarterly = snap.quarterly || {};

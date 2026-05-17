@@ -19,9 +19,12 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
 // Tag 218: atomic output writes (audit F-218b-03)
 const { writeFileAtomic } = require('../lib/atomic-write.js');
+// Tag 219a (audit F-218b systemic): shared Discord helper. Replaces the
+// previous private fire-and-forget postDiscord (same defect Tag 181 /
+// F-SC-007 closed in pipeline-health-check.js).
+const { postDiscord } = require('../lib/discord.js');
 
 const DRIFT_THRESHOLD = 0.35;      // 35% in either direction
 const MIN_HISTORY_RUNS = 4;        // need ≥4 priors for statistical meaning
@@ -79,25 +82,6 @@ function detectDrift(latestCounts, priorCounts, threshold) {
     }
   }
   return alerts;
-}
-
-function postDiscord(content) {
-  return new Promise(resolve => {
-    const webhook = process.env.DISCORD_WEBHOOK;
-    if (!webhook) { resolve(false); return; }
-    try {
-      const url = new URL(webhook);
-      const body = JSON.stringify({ content });
-      const req = https.request({
-        method: 'POST',
-        host: url.host,
-        path: url.pathname + url.search,
-        headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
-      }, res => { res.on('data', () => {}); res.on('end', () => resolve(res.statusCode < 400)); });
-      req.on('error', () => resolve(false));
-      req.write(body); req.end();
-    } catch (e) { resolve(false); }
-  });
 }
 
 async function main() {
