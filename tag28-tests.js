@@ -1595,6 +1595,133 @@ test('Tag 210c R&D-Cut Guard: NOT-COMPUTABLE without 2y R&D', () => {
   }
 });
 
+// ─── Tag 211d — earnings-power-stability (Lepetit Safety pillar) smoke tests ─
+// DIAGNOSTIC method, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
+// Pass requires CoV(OpInc/Rev over 5y) <= 0.30 AND mean op-margin > 5%.
+
+test('Tag 211d Earnings-Power-Stability: PASS — boring stable operator (CoV<0.3, mean>5%)', () => {
+  // Mature compounder: OpM ~ 25% +/- 1pp over 5y. CoV well under 0.30.
+  const s = { annual: {
+    annualOpInc: [{value: 260}, {value: 250}, {value: 240}, {value: 250}, {value: 245}],
+    annualRev:   [{value: 1040}, {value: 1000}, {value: 960}, {value: 1000}, {value: 980}]
+  }};
+  const r = Runner.evaluateStock(s)['earnings-power-stability'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (!r.pass) throw new Error('stable operator must pass; reason=' + r.reason);
+  if (r.components.cov > 0.30) throw new Error('CoV should be <= 0.30, got ' + r.components.cov);
+  if (r.components.meanOpMargin <= 0.05) throw new Error('mean OpM should be > 5%, got ' + r.components.meanOpMargin);
+  if (r.components.yearsUsed !== 5) throw new Error('yearsUsed should be 5, got ' + r.components.yearsUsed);
+});
+
+test('Tag 211d Earnings-Power-Stability: FAIL — cyclical with high CoV', () => {
+  // Cyclical with wild margin swings: 30%, 5%, 25%, 8%, 22% — same mean ~18%
+  // but CoV is large (>0.4). mean is positive so it stays computable.
+  const s = { annual: {
+    annualOpInc: [{value: 300}, {value: 50}, {value: 250}, {value: 80}, {value: 220}],
+    annualRev:   [{value: 1000}, {value: 1000}, {value: 1000}, {value: 1000}, {value: 1000}]
+  }};
+  const r = Runner.evaluateStock(s)['earnings-power-stability'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (r.pass) throw new Error('cyclical with high CoV must fail; reason=' + r.reason);
+  if (r.components.cov <= 0.30) throw new Error('CoV should be > 0.30, got ' + r.components.cov);
+  if (r.components.covPass !== false) throw new Error('covPass should be false');
+});
+
+test('Tag 211d Earnings-Power-Stability: FAIL — stably bad (low CoV, mean OpM <= 5%)', () => {
+  // "Stably bad" trap: OpM consistently ~3% (low CoV) but below 5% floor.
+  // Must fail on the mean-margin gate, not silently pass.
+  const s = { annual: {
+    annualOpInc: [{value: 30}, {value: 32}, {value: 28}, {value: 30}, {value: 31}],
+    annualRev:   [{value: 1000}, {value: 1000}, {value: 1000}, {value: 1000}, {value: 1000}]
+  }};
+  const r = Runner.evaluateStock(s)['earnings-power-stability'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (r.pass) throw new Error('stably-bad firm must fail on mean-margin gate; reason=' + r.reason);
+  if (r.components.meanPass !== false) throw new Error('meanPass should be false (mean ~3% <= 5% floor)');
+  if (r.components.covPass !== true) throw new Error('covPass should still be true (low CoV)');
+});
+
+test('Tag 211d Earnings-Power-Stability: NOT-COMPUTABLE with <4 valid years', () => {
+  // Only 3 years of data — below MIN_YEARS=4. Must be incomputable, not failing.
+  const s = { annual: {
+    annualOpInc: [{value: 250}, {value: 240}, {value: 245}],
+    annualRev:   [{value: 1000}, {value: 1000}, {value: 1000}]
+  }};
+  const r = Runner.evaluateStock(s)['earnings-power-stability'];
+  if (r.computable) throw new Error('should be computable=false with only 3y');
+  if (r.pass) throw new Error('incomputable result must have pass=false');
+  if (!r.reason || !/need >= 4/.test(r.reason)) throw new Error('reason should mention need >= 4; got: ' + r.reason);
+});
+
+test('Tag 211d Earnings-Power-Stability: NOT-COMPUTABLE for perennially loss-making firm', () => {
+  // Pre-profit hypergrowth: mean OpM <= 0 → CoV uninformative → incomputable.
+  const s = { annual: {
+    annualOpInc: [{value: -200}, {value: -180}, {value: -150}, {value: -120}, {value: -100}],
+    annualRev:   [{value: 1000}, {value: 900}, {value: 800}, {value: 700}, {value: 600}]
+  }};
+  const r = Runner.evaluateStock(s)['earnings-power-stability'];
+  if (r.computable) throw new Error('should be computable=false when mean OpM <= 0');
+  if (!r.reason || !/mean op-margin <= 0/.test(r.reason)) throw new Error('reason should mention mean <= 0; got: ' + r.reason);
+});
+
+// ─── Tag 211e — fcf-conversion-stability (cash-quality persistence) smoke tests ─
+// DIAGNOSTIC method, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
+// Pass requires 5y geometric mean of FCF/NetIncome >= 0.85 (positive-NI years only).
+
+test('Tag 211e FCF-Conversion-Stability: PASS — high-quality cash converter (geo-mean ~ 1.0)', () => {
+  // MSFT-style: FCF ~ NI each year. Ratios all near 1.0; geomean >= 0.85.
+  const s = { annual: {
+    annualFCF:        [{value: 100}, {value: 95}, {value: 105}, {value: 100}, {value: 98}],
+    annualNetIncome:  [{value: 100}, {value: 100}, {value: 100}, {value: 100}, {value: 100}]
+  }};
+  const r = Runner.evaluateStock(s)['fcf-conversion-stability'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (!r.pass) throw new Error('high-conversion firm must pass; reason=' + r.reason);
+  if (r.components.geometricMean < 0.85) throw new Error('geomean should be >= 0.85, got ' + r.components.geometricMean);
+  if (r.components.validYears !== 5) throw new Error('validYears should be 5, got ' + r.components.validYears);
+  if (r.components.lossYears !== 0) throw new Error('lossYears should be 0, got ' + r.components.lossYears);
+});
+
+test('Tag 211e FCF-Conversion-Stability: FAIL — accrual drift (NI > FCF persistently)', () => {
+  // Earnings persistently run ahead of cash: FCF/NI ~ 0.4 each year. Geomean < 0.85.
+  const s = { annual: {
+    annualFCF:        [{value: 40}, {value: 38}, {value: 42}, {value: 35}, {value: 45}],
+    annualNetIncome:  [{value: 100}, {value: 95}, {value: 100}, {value: 90}, {value: 105}]
+  }};
+  const r = Runner.evaluateStock(s)['fcf-conversion-stability'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (r.pass) throw new Error('low-conversion firm must fail; reason=' + r.reason);
+  if (r.components.geometricMean >= 0.85) throw new Error('geomean should be < 0.85, got ' + r.components.geometricMean);
+});
+
+test('Tag 211e FCF-Conversion-Stability: FAIL — one blowout year cannot mask weak conversion (geomean resists outliers)', () => {
+  // 4 weak years (FCF/NI ~ 0.3) + 1 blowout (FCF/NI = 3.0). Arithmetic mean = 0.84
+  // would borderline-pass, but geomean is much lower → still fails. Verifies the
+  // "geometric mean resists single-year overstatement" property.
+  const s = { annual: {
+    annualFCF:        [{value: 300}, {value: 30}, {value: 35}, {value: 28}, {value: 32}],
+    annualNetIncome:  [{value: 100}, {value: 100}, {value: 100}, {value: 100}, {value: 100}]
+  }};
+  const r = Runner.evaluateStock(s)['fcf-conversion-stability'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  if (r.pass) throw new Error('one-blowout pattern must fail under geomean; reason=' + r.reason);
+  if (r.components.geometricMean >= 0.85) throw new Error('geomean should be < 0.85 despite outlier, got ' + r.components.geometricMean);
+});
+
+test('Tag 211e FCF-Conversion-Stability: NOT-COMPUTABLE when 3+ years are losses', () => {
+  // Pre-profit hypergrowth: 3 of 5 years have NI <= 0 → only 2 valid ratios <
+  // MIN_RATIOS=3 → incomputable (correctly outside the lens's domain).
+  const s = { annual: {
+    annualFCF:        [{value: 50}, {value: 60}, {value: -30}, {value: -50}, {value: -80}],
+    annualNetIncome:  [{value: 80}, {value: 70}, {value: -10}, {value: -40}, {value: -90}]
+  }};
+  const r = Runner.evaluateStock(s)['fcf-conversion-stability'];
+  if (r.computable) throw new Error('should be computable=false with only 2 positive-NI years');
+  if (r.pass) throw new Error('incomputable result must have pass=false');
+  if (!r.reason || !/need >= 3/.test(r.reason)) throw new Error('reason should mention need >= 3; got: ' + r.reason);
+  if (r.components.lossYears !== 3) throw new Error('lossYears should be 3, got ' + r.components.lossYears);
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the

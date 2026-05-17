@@ -132,5 +132,15 @@ module.exports = [
   // Tag 210d: Analyst-revision breadth (net 4w up-minus-down). Returns
   // computable=false until pull-yahoo persists estimateRevisions; promotion
   // path documented in method header. DIAGNOSTIC, fixture-hash safe.
-  { file: './analyst-revision-breadth.js' }
+  { file: './analyst-revision-breadth.js' },
+
+  // Tag 211d: Earnings-power stability — operating-margin CoV over 5y, with
+  // mean-margin floor to avoid passing "stably bad" firms. Lepetit et al.
+  // 2024 Safety pillar (SSRN 3877161). DIAGNOSTIC, fixture-hash safe.
+  { file: './earnings-power-stability.js' },
+
+  // Tag 211e: FCF-conversion stability — 5y geometric mean of FCF/NetIncome.
+  // Multi-year persistence view of cash conversion (Damodaran / Mauboussin);
+  // complements single-year sloan-ratio. DIAGNOSTIC, fixture-hash safe.
+  { file: './fcf-conversion-stability.js' }
 ];
