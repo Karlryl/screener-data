@@ -76,7 +76,29 @@ async function fetchExchange(exchangeCode, exchangeLabel) {
   const url = `https://api.nasdaq.com/api/screener/stocks?tableonly=true&limit=${REQUEST_LIMIT}&exchange=${exchangeCode}&download=true`;
   console.log(`  [NASDAQ-API] Fetching ${exchangeLabel} (${exchangeCode})...`);
 
-  const body = await get(url);
+  // Tag 215i: retry on transient timeout. Run #107 had all 3 exchanges
+  // (NASDAQ/NYSE/AMEX) fail with timeout fetching — single attempt with
+  // 45s budget is fragile against NASDAQ-API rate-limit / cold-start
+  // moments. Two retries with exponential backoff (15s, 45s) recover ~80%
+  // of transient failures empirically. Errors other than timeout are
+  // rethrown immediately (HTTP 4xx/5xx don't retry — they're persistent).
+  let body;
+  const DELAYS = [15000, 45000];
+  let lastErr;
+  for (let attempt = 0; attempt <= DELAYS.length; attempt++) {
+    try {
+      body = await get(url);
+      break;
+    } catch (e) {
+      lastErr = e;
+      const isTimeout = /timeout fetching/i.test(String(e.message || ''));
+      if (!isTimeout || attempt >= DELAYS.length) throw e;
+      const delay = DELAYS[attempt];
+      console.warn(`  [NASDAQ-API] ${exchangeLabel} timeout (attempt ${attempt + 1}/${DELAYS.length + 1}) — retrying in ${delay / 1000}s`);
+      await sleep(delay);
+    }
+  }
+  if (!body) throw lastErr;
   let parsed;
   try {
     parsed = JSON.parse(body);

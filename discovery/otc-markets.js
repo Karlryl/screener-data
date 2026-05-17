@@ -63,7 +63,27 @@ function get(url) {
 async function fetchOTCPage(markets, page) {
   const marketParams = markets.map(m => `market=${encodeURIComponent(m)}`).join('&');
   const url = `https://www.otcmarkets.com/research/stock-screener/api?${marketParams}&pageSize=${PAGE_SIZE}&page=${page}`;
-  const body = await get(url);
+  // Tag 215i: retry on transient timeout. Run #107 logs show OTC Page 1
+  // failed with timeout fetching — same pattern as NASDAQ-API. Two retries
+  // with exponential backoff (10s, 30s) before giving up. Non-timeout
+  // errors (HTTP 4xx/5xx, JSON parse) re-thrown immediately.
+  let body;
+  const DELAYS = [10000, 30000];
+  let lastErr;
+  for (let attempt = 0; attempt <= DELAYS.length; attempt++) {
+    try {
+      body = await get(url);
+      break;
+    } catch (e) {
+      lastErr = e;
+      const isTimeout = /timeout fetching/i.test(String(e.message || ''));
+      if (!isTimeout || attempt >= DELAYS.length) throw e;
+      const delay = DELAYS[attempt];
+      console.warn(`  [OTC-Markets] Page ${page} timeout (attempt ${attempt + 1}/${DELAYS.length + 1}) — retrying in ${delay / 1000}s`);
+      await sleep(delay);
+    }
+  }
+  if (!body) throw lastErr;
   let data;
   try {
     data = JSON.parse(body);
