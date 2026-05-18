@@ -490,7 +490,15 @@ jobs:
       # saveState() in detect-changes.js now always writes methodHistory to the committed sidecar
       # (method-history-state.json) and never embeds it in alert-state.json. This step is a
       # safety net that cleans up any leftover inline methodHistory from old runs.
+      #
+      # Tag 232a-2 (audit F-CI-001 HIGH): continue-on-error so a JSON.parse failure here
+      # never aborts the workflow before the "Commit Snapshots" step runs. Without this,
+      # one corrupt alert-state.json discards ~4h of fresh pulls AND becomes sticky (next
+      # day's run hits the same parse fail). The .corrupt.<ts>.json backup written below
+      # plus the failed-step Discord alert give the operator the visibility Karl wanted
+      # without sacrificing the day's snapshots.
       - name: Strip methodHistory from alert-state
+        continue-on-error: true
         run: |
           if [ -f alert-state.json ]; then
             size_before=$(stat -c %s alert-state.json)
