@@ -1469,9 +1469,24 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const CACHE_TTL_MS = 28 * 86400 * 1000;
       const CACHE_PARTIAL_TTL_MS = 86400 * 1000; // F-DP-005: 24h for partial results
       const FTS_CACHE_VERSION = 2; // F-DP-019: bump when FTS schema changes (v2: null-alignment fix, added annualRnD)
+      // Tag 232c-3 (audit F-DP-001 CRITICAL): when the schema-stale or
+      // currency-stale probe forces a full pull, ALSO bypass the FTS cache so
+      // the fetch actually retrieves fresh data with the Tag 211l/219c fields.
+      // Without this guard, the cache's pre-Tag-211l payload is re-merged into
+      // the new snapshot, the new fields stay empty, and the probe fires again
+      // on the next run — the infinite full-pull loop the F-DP-001 audit
+      // documented. Bumping FTS_CACHE_VERSION would be the cleaner invalidation
+      // but Karl's operating constraints forbid it (see fixture_hash_invariant
+      // memory). useCache=false on schema/currency-stale tickers is the
+      // alternative the audit explicitly endorsed. Cumulative effect: each
+      // successfully fully-pulled ticker gets Tag 211l fields persisted →
+      // tomorrow's probe doesn't fire on it → fast-path returns → over a few
+      // days the schema-stale set drains to ~0 and the universe lands back in
+      // the daily Yahoo Pull budget.
+      const cacheBypassReason = staleSchema ? 'schema-stale' : (staleCurrency ? 'currency-stale' : null);
       let useCache = false;
       let cached = null;
-      if (fs.existsSync(cachePath)) {
+      if (fs.existsSync(cachePath) && !cacheBypassReason) {
         try {
           cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
           // F-DP-019: reject cache if version key is missing or differs.
@@ -1492,6 +1507,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
             if (age < ttl) useCache = true;
           }
         } catch (e) {}
+      } else if (cacheBypassReason) {
+        // Track cumulative count of stale-schema/currency cache bypasses so the
+        // run summary can show progress: count goes high on first run after the
+        // fix lands, falls to ~0 once the universe has been re-pulled through.
+        if (typeof global.__ftsCacheStaleBypasses === 'undefined') global.__ftsCacheStaleBypasses = 0;
+        global.__ftsCacheStaleBypasses++;
       }
       let ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD;
       let ftsAnnualSGA, ftsAnnualDepreciation, ftsAnnualShares;
