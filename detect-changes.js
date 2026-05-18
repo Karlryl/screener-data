@@ -136,10 +136,24 @@ function saveState(statePath, state) {
     // F-SM-003: explicitly exclude methodHistory from committed file
     fieldCoverage: state.fieldCoverage
   };
-  // F-SM-008: write sidecar first, then committed state (sidecar failure won't skew stores)
-  _saveMethodHistory(state.methodHistory || {});
-  // Tag 232a-1: writeFileAtomic — same hardening rationale as _saveMethodHistory above.
+  // Tag 232c-26 (audit F-SM-005 HIGH): write alert-state FIRST, sidecar
+  // SECOND. F-SM-008's original "sidecar first" choice prevented sidecar-
+  // failure from skewing stores, but a SIGKILL between sidecar-write and
+  // alert-state-write left sidecar new + alert-state old → next run
+  // re-fires every METHOD_PASS_LOST/GAINED event for today → Discord
+  // flood (hundreds of duplicate alerts).
+  //
+  // Inverted order: SIGKILL between alert-state-write and sidecar-write
+  // leaves alert-state new + sidecar old. Next run sees no duplicate
+  // events (alert-state knows today's flips are already applied);
+  // methodHistory trend is 1-day-stale (acceptable — the sidecar
+  // accumulates over many days, missing one is recoverable). Loud-and-
+  // wrong (Discord flood) is much worse than silent-and-slightly-stale.
+  //
+  // Both writes go through writeFileAtomic (Tag 232a-1) so a half-written
+  // file on either side can't poison the other.
   writeFileAtomic(statePath, JSON.stringify(committed)); // Tag 119: no pretty-print
+  _saveMethodHistory(state.methodHistory || {});
 }
 
 // ─── Diff-Detector ────────────────────────────────────────────────
