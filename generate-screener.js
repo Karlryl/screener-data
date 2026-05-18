@@ -76,6 +76,32 @@ function loadStocks(dir) {
   return out;
 }
 
+// Tag 232b-2: module-level country flag + continent maps. Defined here (above
+// CLIENT_JS at line ~858) so the browser-side template can interpolate them via
+// ${JSON.stringify(...)}. Yahoo emits a mix of ISO codes (US/JP/DE), full names
+// ("USA"), and city/region tokens ("Dubai" / "Saudi" / "São Paulo" / "YHD" — the
+// last is an unknown placeholder). Best-effort mapping; unmapped codes get no
+// flag prefix and fail the continent filter (excluded when filter is set).
+const COUNTRY_FLAGS = {
+  US:'🇺🇸', USA:'🇺🇸', JP:'🇯🇵', CN:'🇨🇳', HK:'🇭🇰', TW:'🇹🇼', KR:'🇰🇷', IN:'🇮🇳',
+  SG:'🇸🇬', TH:'🇹🇭', ID:'🇮🇩', MY:'🇲🇾',
+  DE:'🇩🇪', UK:'🇬🇧', FR:'🇫🇷', IT:'🇮🇹', ES:'🇪🇸', NL:'🇳🇱', CH:'🇨🇭', SE:'🇸🇪',
+  NO:'🇳🇴', DK:'🇩🇰', FI:'🇫🇮', IE:'🇮🇪', AT:'🇦🇹', BE:'🇧🇪', PT:'🇵🇹', GR:'🇬🇷',
+  PL:'🇵🇱',
+  CA:'🇨🇦', MX:'🇲🇽',
+  AU:'🇦🇺', NZ:'🇳🇿',
+  'São Paulo':'🇧🇷', Saudi:'🇸🇦', Dubai:'🇦🇪'
+};
+const COUNTRY_TO_CONTINENT = {
+  US:'Americas', USA:'Americas', CA:'Americas', MX:'Americas', 'São Paulo':'Americas',
+  UK:'Europe', DE:'Europe', FR:'Europe', IT:'Europe', ES:'Europe', NL:'Europe', CH:'Europe',
+  SE:'Europe', NO:'Europe', DK:'Europe', FI:'Europe', IE:'Europe', AT:'Europe', BE:'Europe',
+  PT:'Europe', GR:'Europe', PL:'Europe',
+  JP:'Asia', CN:'Asia', HK:'Asia', TW:'Asia', KR:'Asia', IN:'Asia', SG:'Asia', TH:'Asia',
+  ID:'Asia', MY:'Asia', Saudi:'Asia', Dubai:'Asia',
+  AU:'Oceania', NZ:'Oceania'
+};
+
 // Tag 203: Score-History reader. Memoised per-process so the dashboard build
 // only touches the filesystem once per ticker even though buildRow() is called
 // in a loop. Returns null if score-history is unavailable (first run, missing
@@ -858,6 +884,9 @@ table.dt tr.row:focus-visible { outline:2px solid var(--blue); outline-offset:-2
 const CLIENT_JS = `
 (function(){
   const DATA = window.SCREENER_DATA;
+  // Tag 232b-2: country→continent map mirrored from Node-side. Used by the
+  // new continent select filter. Injected at build time via JSON.stringify.
+  const COUNTRY_TO_CONTINENT = ${JSON.stringify(COUNTRY_TO_CONTINENT)};
   // Tag 223b: error state — if the data block is missing (corrupted output,
   // network failure, browser blocked inline script), surface a clear message
   // instead of throwing on the first ROWS lookup below.
@@ -904,6 +933,10 @@ const CLIENT_JS = `
   // (NB: no inner backticks in this block — outer is a template literal, see CLIENT_JS note above.)
   let filterSectors = {};
   let filterCountry = '';
+  // Tag 232b-2: continent select (alternative to country) and a market-cap
+  // minimum in billions USD (Karl: "wie groß das market cap mindestens sein muss").
+  let filterContinent = '';
+  let filterMinMcap = '';  // value in $B; multiplied by 1e9 at filter time
   let filterMinR40 = '';
   let filterMaxR40 = '';
   let filterMin = '';     // tab-specific min input — auto-resets on tab switch
@@ -1019,6 +1052,9 @@ const CLIENT_JS = `
       chips.push({k:'sector', label:'Sector: ' + labels.join('/')});
     }
     if (filterCountry) chips.push({k:'country', label:'Country: ' + filterCountry});
+    // Tag 232b-2: continent + mcap min chips
+    if (filterContinent) chips.push({k:'continent', label:'Continent: ' + filterContinent});
+    if (filterMinMcap !== '') chips.push({k:'minMcap', label:'Cap ≥ $' + filterMinMcap + 'B'});
     if (filterMinR40 !== '') chips.push({k:'minR40', label:'R40 ≥ ' + filterMinR40});
     if (filterMaxR40 !== '') chips.push({k:'maxR40', label:'R40 ≤ ' + filterMaxR40});
     if (filterMin !== '') chips.push({k:'tabMin', label:'Tab Min ≥ ' + filterMin});
@@ -1069,10 +1105,18 @@ const CLIENT_JS = `
       document.querySelectorAll('.filters .f-cap').forEach(b => b.classList.add('on'));
     } else if (key === 'sector') {
       Object.keys(filterSectors).forEach(s => filterSectors[s] = true);
-      document.querySelectorAll('.filters .f-sec').forEach(b => b.classList.add('on'));
+      // Tag 232b-2: sector buttons replaced by checkbox popover
+      document.querySelectorAll('.filters .f-sec-cb').forEach(cb => { cb.checked = true; });
+      updateSecBtnLabel();
     } else if (key === 'country') {
       filterCountry = '';
       const el = document.getElementById('fCountry'); if (el) el.value = '';
+    } else if (key === 'continent') {
+      filterContinent = '';
+      const el = document.getElementById('fContinent'); if (el) el.value = '';
+    } else if (key === 'minMcap') {
+      filterMinMcap = '';
+      const el = document.getElementById('fMinMcap'); if (el) el.value = '';
     } else if (key === 'minR40') {
       filterMinR40 = '';
       const el = document.getElementById('fMinR40'); if (el) el.value = '';
@@ -1117,6 +1161,8 @@ const CLIENT_JS = `
     filterCap = { MICRO:true, SMALL:true, MID:true, LARGE:true, MEGA:true };
     Object.keys(filterSectors).forEach(s => filterSectors[s] = true);
     filterCountry = '';
+    filterContinent = '';
+    filterMinMcap = '';
     filterMinR40 = ''; filterMaxR40 = ''; filterMin = '';
     filterMinFcfm = ''; filterMinGrowth = '';
     filterIpoMin = ''; filterIpoMax = '';
@@ -1129,9 +1175,12 @@ const CLIENT_JS = `
       const g = b.dataset.dq;
       b.classList.toggle('on', !!filterDQ[g]);
     });
-    ['fCountry','fMinR40','fMaxR40','fMin','fMinFcfm','fMinGrowth','fIpoMin','fIpoMax'].forEach(id => {
+    ['fCountry','fContinent','fMinMcap','fMinR40','fMaxR40','fMin','fMinFcfm','fMinGrowth','fIpoMin','fIpoMax'].forEach(id => {
       const el = document.getElementById(id); if (el) el.value = '';
     });
+    // Tag 232b-2: also reset sector popover checkboxes
+    document.querySelectorAll('.filters .f-sec-cb').forEach(cb => { cb.checked = true; });
+    const secBtn = document.getElementById('secToggleBtn'); if (secBtn) secBtn.textContent = 'All ▾';
     const gEl = document.getElementById('onlyGaap'); if (gEl) gEl.checked = false;
     const fEl = document.getElementById('onlyFcf'); if (fEl) fEl.checked = false;
     const sEl = document.getElementById('fSort'); if (sEl) sEl.value = 'auto';
@@ -1157,6 +1206,16 @@ const CLIENT_JS = `
       // single-select fallthrough behavior).
       if (r.sector && filterSectors[r.sector] === false) return false;
       if (filterCountry && r.country !== filterCountry) return false;
+      // Tag 232b-2: continent filter (independent of country — set either or both).
+      if (filterContinent) {
+        const cont = r.country ? COUNTRY_TO_CONTINENT[r.country] : null;
+        if (cont !== filterContinent) return false;
+      }
+      // Tag 232b-2: market-cap minimum input in $B (Karl wants finer control than
+      // the cap buckets). Strict null exclusion to match Karl's stated intent.
+      if (filterMinMcap !== '' && !isNaN(+filterMinMcap)) {
+        if (r.mcap == null || r.mcap < (+filterMinMcap) * 1e9) return false;
+      }
       if (filterMinR40 !== '' && !isNaN(+filterMinR40)) {
         if (r.r40 == null || r.r40 < +filterMinR40) return false;
       }
@@ -1626,6 +1685,18 @@ const CLIENT_JS = `
       explEl.style.display = 'block';
     } else {
       explEl.style.display = 'none';
+    }
+
+    // Tag 232b-2: trend empty-state banner. Show whenever zero rows in the
+    // current view have a computable Δ7d delta — that's the signal Karl sees
+    // as "Trend ist leer". Two underlying causes get the same banner:
+    //   1. score-history/ dir entirely empty (no vintages on disk yet)
+    //   2. <2 vintages with a >=7d gap exist (deltas still incomputable)
+    // Banner copy explains both cases so users don't read "—" as a bug.
+    const trendBannerEl = document.getElementById('trend-empty-banner');
+    if (trendBannerEl) {
+      const hasAnyDelta = list.some(r => r.scoreHistory && Number.isFinite(r.scoreHistory.deltaScore7d));
+      trendBannerEl.style.display = (list.length > 0 && !hasAnyDelta) ? 'block' : 'none';
     }
 
     // Tag 212c: percentile-rank maps are computed over the FULL filtered list
@@ -2144,8 +2215,10 @@ const CLIENT_JS = `
   function presetSnapshot(){
     return {
       activeTab, filterCountry, filterMinR40, filterMaxR40, filterMin,
-      // Tag 232b-1: persist new filter state (sectors object + numeric inputs).
+      // Tag 232b-1/2: persist new filter state (sectors object + numeric inputs +
+      // continent + mcap min).
       filterSectors: Object.assign({}, filterSectors),
+      filterContinent, filterMinMcap,
       filterMinFcfm, filterMinGrowth, filterIpoMin, filterIpoMax,
       filterState: Object.assign({}, filterState),
       filterCap:   Object.assign({}, filterCap),
@@ -2173,6 +2246,8 @@ const CLIENT_JS = `
       Object.keys(filterSectors).forEach(s => { filterSectors[s] = (s === snap.filterSector); });
     }
     if (typeof snap.filterCountry === 'string') filterCountry = snap.filterCountry;
+    if (typeof snap.filterContinent === 'string') filterContinent = snap.filterContinent;
+    if (typeof snap.filterMinMcap !== 'undefined') filterMinMcap = snap.filterMinMcap;
     if (typeof snap.filterMinR40 !== 'undefined') filterMinR40 = snap.filterMinR40;
     if (typeof snap.filterMaxR40 !== 'undefined') filterMaxR40 = snap.filterMaxR40;
     if (typeof snap.filterMin !== 'undefined') filterMin = snap.filterMin;
@@ -2190,10 +2265,11 @@ const CLIENT_JS = `
     // Sync DOM controls so the visible UI matches restored state.
     document.querySelectorAll('.filters .f-state').forEach(b => b.classList.toggle('on', !!filterState[b.dataset.state]));
     document.querySelectorAll('.filters .f-cap').forEach(b => b.classList.toggle('on', !!filterCap[b.dataset.cap]));
-    document.querySelectorAll('.filters .f-sec').forEach(b => b.classList.toggle('on', filterSectors[b.dataset.sec] !== false));
+    document.querySelectorAll('.filters .f-sec-cb').forEach(cb => { cb.checked = filterSectors[cb.dataset.sec] !== false; });
+    if (typeof updateSecBtnLabel === 'function') updateSecBtnLabel();
     document.querySelectorAll('.filters .f-dq').forEach(b => b.classList.toggle('on', !!filterDQ[b.dataset.dq]));
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = (v == null ? '' : v); };
-    setVal('fCountry', filterCountry);
+    setVal('fCountry', filterCountry); setVal('fContinent', filterContinent); setVal('fMinMcap', filterMinMcap);
     setVal('fMinR40', filterMinR40); setVal('fMaxR40', filterMaxR40); setVal('fMin', filterMin);
     setVal('fMinFcfm', filterMinFcfm); setVal('fMinGrowth', filterMinGrowth);
     setVal('fIpoMin', filterIpoMin); setVal('fIpoMax', filterIpoMax);
@@ -2256,13 +2332,15 @@ const CLIENT_JS = `
     return 'Tab: '+TAB_LABELS[tab];
   }
   function cpHandleFilterSector(arg){
-    // Tag 232b-1: multi-select sector — "X" selects only X (others off); "clear"
-    // or empty resets all to on. Buttons are the source of truth for the sector list.
+    // Tag 232b-2: command palette adapter for the checkbox-popover sector filter.
+    // "X" selects only X (others off); "clear" or empty resets all to on. Updates
+    // both filterSectors{} state and the checkbox DOM.
     const v = (arg || '').trim();
     const secKeys = Object.keys(filterSectors);
     if (!v || v.toLowerCase() === 'clear') {
       secKeys.forEach(s => filterSectors[s] = true);
-      document.querySelectorAll('.filters .f-sec').forEach(b => b.classList.add('on'));
+      document.querySelectorAll('.filters .f-sec-cb').forEach(cb => { cb.checked = true; });
+      if (typeof updateSecBtnLabel === 'function') updateSecBtnLabel();
       page = 1; renderTable();
       return 'Sector filter cleared';
     }
@@ -2270,7 +2348,8 @@ const CLIENT_JS = `
                || secKeys.find(s => s.toLowerCase().indexOf(v.toLowerCase()) >= 0);
     if (!match) return 'No sector matching "'+v+'"';
     secKeys.forEach(s => filterSectors[s] = (s === match));
-    document.querySelectorAll('.filters .f-sec').forEach(b => b.classList.toggle('on', filterSectors[b.dataset.sec]));
+    document.querySelectorAll('.filters .f-sec-cb').forEach(cb => { cb.checked = !!filterSectors[cb.dataset.sec]; });
+    if (typeof updateSecBtnLabel === 'function') updateSecBtnLabel();
     page = 1; renderTable();
     return 'Sector: '+match;
   }
@@ -2532,19 +2611,58 @@ const CLIENT_JS = `
       page = 1; renderTable();
     };
   });
-  // Tag 232b-1: multi-select sector toggle (replaces fSector single-select).
-  // Initialize filterSectors from button DOM so the templated sector list is
-  // the single source of truth (no hardcoded sectors in JS).
-  document.querySelectorAll('.filters .f-sec').forEach(b => {
-    filterSectors[b.dataset.sec] = true;  // default all-on
-    b.onclick = () => {
-      const sec = b.dataset.sec;
-      filterSectors[sec] = !filterSectors[sec];
-      b.classList.toggle('on', filterSectors[sec]);
+  // Tag 232b-2: multi-select sector via checkbox popover (replaces b-1 toggle
+  // buttons which Karl found too cluttered). Init filterSectors from checkbox
+  // DOM so the server-templated sector list is the single source of truth.
+  function updateSecBtnLabel(){
+    const btn = document.getElementById('secToggleBtn');
+    if (!btn) return;
+    const keys = Object.keys(filterSectors);
+    const on = keys.filter(s => filterSectors[s]);
+    if (on.length === keys.length) btn.textContent = 'All ▾';
+    else if (on.length === 0) btn.textContent = '(none) ▾';
+    else if (on.length <= 2) btn.textContent = on.map(s => SECTOR_LABELS[s] || s).join(', ') + ' ▾';
+    else btn.textContent = on.length + '/' + keys.length + ' ▾';
+  }
+  document.querySelectorAll('.filters .f-sec-cb').forEach(cb => {
+    filterSectors[cb.dataset.sec] = true;  // default all-on
+    cb.addEventListener('change', () => {
+      filterSectors[cb.dataset.sec] = cb.checked;
+      updateSecBtnLabel();
       page = 1; renderTable();
-    };
+    });
+  });
+  const secToggleBtn = document.getElementById('secToggleBtn');
+  const secPopover   = document.getElementById('secPopover');
+  if (secToggleBtn && secPopover) {
+    secToggleBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = secPopover.classList.toggle('show');
+      secToggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', e => {
+      if (!secPopover.classList.contains('show')) return;
+      if (e.target.closest('.sec-popover-wrap')) return;
+      secPopover.classList.remove('show');
+      secToggleBtn.setAttribute('aria-expanded', 'false');
+    });
+  }
+  const secAllBtn  = document.getElementById('secAllBtn');
+  const secNoneBtn = document.getElementById('secNoneBtn');
+  if (secAllBtn) secAllBtn.addEventListener('click', () => {
+    Object.keys(filterSectors).forEach(s => filterSectors[s] = true);
+    document.querySelectorAll('.filters .f-sec-cb').forEach(cb => { cb.checked = true; });
+    updateSecBtnLabel(); page = 1; renderTable();
+  });
+  if (secNoneBtn) secNoneBtn.addEventListener('click', () => {
+    Object.keys(filterSectors).forEach(s => filterSectors[s] = false);
+    document.querySelectorAll('.filters .f-sec-cb').forEach(cb => { cb.checked = false; });
+    updateSecBtnLabel(); page = 1; renderTable();
   });
   document.getElementById('fCountry').onchange = e => { filterCountry = e.target.value; page=1; renderTable(); };
+  // Tag 232b-2: continent select + market-cap minimum
+  document.getElementById('fContinent').onchange = e => { filterContinent = e.target.value; page=1; renderTable(); };
+  document.getElementById('fMinMcap').oninput = e => { filterMinMcap = e.target.value; page=1; renderTable(); };
   document.getElementById('fMinR40').oninput = e => { filterMinR40 = e.target.value; page=1; renderTable(); };
   document.getElementById('fMaxR40').oninput = e => { filterMaxR40 = e.target.value; page=1; renderTable(); };
   document.getElementById('fMin').oninput = e => { filterMin = e.target.value; page=1; renderTable(); };
@@ -3011,24 +3129,33 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
     <button class="f f-cap on" data-cap="LARGE">Large</button>
     <button class="f f-cap on" data-cap="MEGA">Mega</button>
   </span>
-  <span class="group"><span class="label">Sector:</span>${sectors.map(s => {
-    const abbrev = { 'Basic Materials':'Mat','Communication Services':'Comm','Consumer Cyclical':'Cyc','Consumer Defensive':'Def','Energy':'Energy','Financial Services':'Fin','Healthcare':'Health','Industrials':'Ind','Real Estate':'Real','Technology':'Tech','Utilities':'Util' }[s] || s;
-    return `<button class="f f-sec on" data-sec="${escHtml(s)}" title="${escHtml(s)}">${escHtml(abbrev)}</button>`;
-  }).join('')}</span>
-  <span class="group"><span class="label">Country:</span>
-    <select id="fCountry"><option value="">All</option>${countries.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('')}</select>
+  <span class="group sec-popover-wrap" style="position:relative">
+    <span class="label">Sector:</span>
+    <button id="secToggleBtn" class="f" type="button" aria-expanded="false" aria-haspopup="menu" title="Multi-select sectors">All ▾</button>
+    <div id="secPopover" class="col-popover" role="menu" aria-label="Sector multi-select">${sectors.map(s => `<label class="col-item"><input type="checkbox" class="f-sec-cb" data-sec="${escHtml(s)}" checked/> ${escHtml(s)}</label>`).join('')}<div class="col-sep"></div><div class="col-reset" id="secAllBtn">Select all</div><div class="col-reset" id="secNoneBtn">Clear all</div></div>
   </span>
+  <span class="group"><span class="label">Country:</span>
+    <select id="fCountry"><option value="">All</option>${countries.map(c => {
+      const flag = COUNTRY_FLAGS[c] || '';
+      const label = (flag ? flag + ' ' : '') + c;
+      return `<option value="${escHtml(c)}">${escHtml(label)}</option>`;
+    }).join('')}</select>
+  </span>
+  <span class="group"><span class="label">Continent:</span>
+    <select id="fContinent"><option value="">All</option><option value="Americas">🌎 Americas</option><option value="Europe">🌍 Europe</option><option value="Asia">🌏 Asia</option><option value="Oceania">🇦🇺 Oceania</option><option value="Africa">🌍 Africa</option></select>
+  </span>
+  <span class="group"><span class="label" title="Market cap minimum in billions USD (e.g. 1 → only stocks ≥ $1B)">Cap≥:</span><input id="fMinMcap" type="number" step="0.1" placeholder="$B" style="width:55px"/></span>
   <span class="group"><span class="label">R40:</span><input id="fMinR40" type="number" step="1" placeholder="min" style="width:50px"/><input id="fMaxR40" type="number" step="1" placeholder="max" style="width:50px"/></span>
   <span class="group"><span class="label">Tab Min:</span><input id="fMin" type="number" step="1" placeholder="—"/></span>
   <span class="group"><span class="label">FCFM≥:</span><input id="fMinFcfm" type="number" step="0.1" placeholder="%" style="width:55px"/></span>
   <span class="group"><span class="label">Growth≥:</span><input id="fMinGrowth" type="number" step="0.1" placeholder="%" style="width:55px"/></span>
   <span class="group"><span class="label">IPO Year:</span><input id="fIpoMin" type="number" step="1" placeholder="from" style="width:60px"/><input id="fIpoMax" type="number" step="1" placeholder="to" style="width:60px"/></span>
-  <span class="group"><span class="label">Grade:</span>
-    <button class="f f-dq on" data-dq="A+">A+</button>
-    <button class="f f-dq on" data-dq="A">A</button>
-    <button class="f f-dq on" data-dq="B">B</button>
-    <button class="f f-dq"    data-dq="C">C</button>
-    <button class="f f-dq"    data-dq="D">D</button>
+  <span class="group"><span class="label" title="Data Quality grade. A+ = 95%+ of expected Yahoo fields present and clean; A/B = minor gaps; C = significant NaN/missing (e.g. balance sheet incomplete); D = unusable. Click letters to include/exclude that grade. Default: A+/A/B on, C/D off — i.e. only stocks with reliable underlying data.">DQ:</span>
+    <button class="f f-dq on" data-dq="A+" title="A+ — 95%+ field coverage, no critical gaps">A+</button>
+    <button class="f f-dq on" data-dq="A" title="A — minor field gaps, still reliable">A</button>
+    <button class="f f-dq on" data-dq="B" title="B — moderate gaps, watch for stale ratios">B</button>
+    <button class="f f-dq"    data-dq="C" title="C — significant data quality issues">C</button>
+    <button class="f f-dq"    data-dq="D" title="D — unusable; reject by design">D</button>
   </span>
   <span class="group"><label style="color:var(--text-1);font-size:11px;cursor:pointer;"><input id="onlyGaap" type="checkbox"/> GAAP+</label></span>
   <span class="group"><label style="color:var(--text-1);font-size:11px;cursor:pointer;"><input id="onlyFcf" type="checkbox"/> FCF+</label></span>
@@ -3047,6 +3174,7 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
 <div id="active-filters"></div>
 <div class="summary" id="summary" aria-live="polite" aria-atomic="true"></div>
 <div id="explainer" style="padding:8px 16px;background:var(--bg-1);border-bottom:1px solid var(--border);color:var(--text-1);font-size:12px;display:none;"></div>
+<div id="trend-empty-banner" style="display:none;padding:6px 16px;background:rgba(255,187,51,0.08);border-bottom:1px solid var(--border);color:var(--text-1);font-size:11px;">⚠ <strong>Trend column is empty</strong> — score-history accumulates from daily-pull runs. Δ7d shows after ≥7 vintages exist (after Run #110 you'll have 1; after Run #117 the Δ7d column starts populating). Once you see "—" for everyone, that's why.</div>
 <div class="table-wrap"><div id="table"></div></div>
 <div class="pagination" role="navigation" aria-label="Pagination">
   <button id="prevPage" type="button" aria-label="Previous page">← Prev</button>
@@ -3115,7 +3243,15 @@ function main() {
     if (r.country && r.country !== '—') countrySet.add(r.country);
   }
   const sectors = Array.from(sectorSet).sort();
-  const countries = Array.from(countrySet).sort();
+  // Tag 232b-2: country list ordered with US / JP / CN pinned to the top
+  // (Karl's most-watched markets), then the rest alphabetical. Flag emoji
+  // and continent mapping are in module-level COUNTRY_FLAGS / COUNTRY_TO_CONTINENT.
+  const COUNTRY_PRIORITY = ['US', 'USA', 'JP', 'CN'];
+  const countriesRaw = Array.from(countrySet);
+  const countries = [
+    ...COUNTRY_PRIORITY.filter(c => countriesRaw.includes(c)),
+    ...countriesRaw.filter(c => !COUNTRY_PRIORITY.includes(c)).sort()
+  ];
 
   const generatedAt = new Date().toISOString().slice(0, 10);
   const html = renderHTML(rows, tabs, sectors, countries, generatedAt);
