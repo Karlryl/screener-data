@@ -113,6 +113,17 @@ function normalizeMethodScore(methodResult, methodMeta) {
   // F-ME-010: guard division by zero
   if (threshold === 0) return val > 0 ? 1.0 : 0.0;
 
+  // Tag 232c-30 (audit F-ME-003 MEDIUM): alias 'lt' to 'lte' and 'gt' to 'gte'.
+  // Three DIAGNOSTIC methods export `thresholdOp:'lt'/'gt'` (strict
+  // inequalities). Pre-fix score-aggregator fell through to the generic
+  // `return 0.3;` branch — silent, latent. The moment any of those methods
+  // enters SCORE_WEIGHTS, every stock failing that method would inappropriately
+  // score 0.3 (generic) instead of being properly graduated against threshold.
+  // For graduated scoring the strict/non-strict distinction doesn't matter
+  // (we're already past the pass branch), so aliasing is exact.
+  if (op === 'lt') op = 'lte';
+  else if (op === 'gt') op = 'gte';
+
   var ratio;
   if (op === 'gte') {
     ratio = val / threshold;
