@@ -276,7 +276,21 @@ function computeBenchmarkReturn(priceIndex, asOfDate, horizonDays) {
   const exitDate   = nearestTradingDay(futureDate, map) || futureDate;
   const p0 = map.get(entryDate) || null;
   const p1 = map.get(exitDate)  || null;
-  return { ticker: benchmarkTicker, ret: returnPct(p0, p1), entryDate, exitDate };
+  // Tag 232c-27 (audit F-BT-004 HIGH): emit horizonActualDays so cross-
+  // vintage alpha aggregation can normalize windows. Pre-fix the 84d
+  // horizon could silently shorten to 79-82d when backward-snap landed
+  // on the nearest pre-holiday close (US Memorial Day, Labor Day, etc.).
+  // Comparing 79d returns vs 84d returns across vintages biased the
+  // aggregate alpha. Now the actual day-count is observable to callers.
+  let horizonActualDays = null;
+  if (entryDate && exitDate) {
+    const dEntry = new Date(entryDate + 'T00:00:00Z').getTime();
+    const dExit  = new Date(exitDate + 'T00:00:00Z').getTime();
+    if (Number.isFinite(dEntry) && Number.isFinite(dExit) && dExit >= dEntry) {
+      horizonActualDays = Math.round((dExit - dEntry) / 86400000);
+    }
+  }
+  return { ticker: benchmarkTicker, ret: returnPct(p0, p1), entryDate, exitDate, horizonActualDays, horizonNominalDays: horizonDays };
 }
 
 // Tag 139: load macro-regime lookup
