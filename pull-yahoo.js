@@ -1327,22 +1327,50 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     // Update only fields that change daily
     const newAsOf = new Date().toISOString();
     if (existing.meta) existing.meta.asOf = newAsOf;
-    // F-DP-007: if the snapshot was previously normalized to USD, re-apply the same FX factor
-    // so price/mcap stay in USD (Yahoo quote() returns values in local currency).
-    // F-DQ-002 (Tag 179): previous fxApplied=(meta.fxRateApplied||1) collapses null to 1,
-    // making a non-USD original look FX-needless if the field is ever missing. Now:
-    // refuse price-only update when original is non-USD but fxRateApplied is missing —
-    // forces a full pull which will re-derive the FX rate correctly.
+    // Tag 232a-4 (audit F-DP-002 CRITICAL): yf.quote() returns regularMarketPrice
+    // and marketCap in TRADING currency, NOT financial-reporting currency. The
+    // pre-Tag-232a-4 path multiplied by meta.fxRateApplied (the financial→USD
+    // rate); for ADRs where trading ccy != financial ccy this produced prices
+    // ~32× too small (TSM @ $200 × TWD→USD 0.031 = $6.20). Then the MIN_MCAP
+    // floor below silently unlinked the snapshot, dropping every small/mid-cap
+    // ADR from the universe on every price-only refresh (~80% of pulls).
+    //
+    // Fix: derive the TRADING rate from q.currency (Yahoo's quote response).
+    // q.currency='USD' for NYSE ADRs (TSM/BABA/NU) → factor=1 → no scaling.
+    // q.currency='HKD' for 9988.HK → factor=HKD→USD → correct scale.
+    // q.currency='GBp' for LSE pence stocks → factor=(GBP→USD)/100 → correct.
+    // Fallback to legacy fxApplied behavior when q.currency is missing.
+    //
+    // F-DQ-002 (Tag 179): refuse price-only when origCcy non-USD AND fxApplied
+    // is missing — still useful as a safety net for the rare q.currency-also-
+    // missing corner case where we'd fall back to fxApplied anyway.
     const origCcy = existing.meta && existing.meta.reportingCurrencyOriginal;
     const fxAppliedRaw = existing.meta && existing.meta.fxRateApplied;
     if (origCcy && origCcy !== 'USD' && (fxAppliedRaw == null || !Number.isFinite(fxAppliedRaw))) {
       throw new Error('price-only refused: non-USD original (' + origCcy + ') with no fxRateApplied — full pull needed');
     }
     const fxApplied = Number.isFinite(fxAppliedRaw) ? fxAppliedRaw : 1;
-    const needsFx = fxApplied !== 1 && !(existing.meta && existing.meta.reportingCurrencyOriginal === 'USD');
+    // Compute trading-currency-to-USD factor independent of fxApplied.
+    const tradingCcyRaw = (q.currency || (existing.price && existing.price.currency) || '').toString();
+    let tradingFactor;
+    if (tradingCcyRaw) {
+      const isPence = /^GB[Xp]$/i.test(tradingCcyRaw) || tradingCcyRaw.toUpperCase() === 'GBPENCE';
+      const tradingFxKey = isPence ? 'GBP' : tradingCcyRaw.toUpperCase();
+      const tradingRate = FX_TO_USD[tradingFxKey];
+      if (tradingRate != null && Number.isFinite(tradingRate)) {
+        tradingFactor = isPence ? tradingRate / 100 : tradingRate;
+      }
+    }
+    if (tradingFactor == null) {
+      // q.currency missing or unrate-able. Fall back to legacy fxApplied path —
+      // correct when trading ccy == financial ccy (the bulk of the universe),
+      // wrong only for ADRs in this corner case (which the refused-throw above
+      // catches when origCcy is also broken).
+      tradingFactor = (fxApplied !== 1 && origCcy !== 'USD') ? fxApplied : 1;
+    }
     if (q.regularMarketPrice != null) {
       existing.price = existing.price || {};
-      existing.price.regularMarketPrice = needsFx ? q.regularMarketPrice * fxApplied : q.regularMarketPrice;
+      existing.price.regularMarketPrice = q.regularMarketPrice * tradingFactor;
       // F-DP-040 (Tag 182): previously this overwrote existing.price.currency with
       // Yahoo's live value, flipping GBp ↔ GBP and breaking the invariant against
       // meta.reportingCurrencyOriginal. The snapshot's reporting currency is set
@@ -1352,7 +1380,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     }
     if (q.marketCap != null) {
       existing.marketCap = existing.marketCap || {};
-      existing.marketCap.value = needsFx ? q.marketCap * fxApplied : q.marketCap;
+      existing.marketCap.value = q.marketCap * tradingFactor;
     }
     // F-DQ-009 (Tag 183): price-only path previously skipped the MIN_MCAP floor —
     // a stock that drifted below $1B post-last-full-pull stayed in the universe
