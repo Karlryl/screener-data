@@ -505,34 +505,16 @@ jobs:
       # day's run hits the same parse fail). The .corrupt.<ts>.json backup written below
       # plus the failed-step Discord alert give the operator the visibility Karl wanted
       # without sacrificing the day's snapshots.
+      # Tag 232c-10 (audit F-SM-004 HIGH): extracted from inline `node -e` to
+      # scripts/strip-method-history.js so the strip step can route the write
+      # through lib/atomic-write (POSIX parent-dir fsync + Windows EPERM retry
+      # + writeSync partial-write loop). Prior inline path used raw
+      # fs.writeFileSync + renameSync — a SIGKILL or power-loss between the
+      # writeSync and the renameSync could leave zero-byte alert-state.json
+      # committed to main, breaking the next run's detect-changes parser.
       - name: Strip methodHistory from alert-state
         continue-on-error: true
-        run: |
-          if [ -f alert-state.json ]; then
-            size_before=$(stat -c %s alert-state.json)
-            # F-CI-005 v2 (Tag 179): previously a JSON.parse failure silently reset
-            # alert-state.json to {} — wiping all dedup state and flooding Discord on
-            # the next detect-changes run. New behavior: on parse failure, back up
-            # the corrupt file and exit non-zero so the workflow visibly fails. We
-            # never want to silently overwrite production state.
-            node -e "
-              const fs = require('fs');
-              let s;
-              try { s = JSON.parse(fs.readFileSync('alert-state.json', 'utf8')); }
-              catch (e) {
-                const backup = 'alert-state.corrupt.' + Date.now() + '.json';
-                try { fs.copyFileSync('alert-state.json', backup); } catch (_) {}
-                console.error('::error::alert-state.json is corrupt:', e.message, '(backup: ' + backup + ')');
-                process.exit(1);
-              }
-              delete s.methodHistory;
-              const tmp = 'alert-state.json.tmp.' + process.pid;
-              fs.writeFileSync(tmp, JSON.stringify(s));
-              fs.renameSync(tmp, 'alert-state.json');
-            "
-            size_after=$(stat -c %s alert-state.json)
-            echo "alert-state.json stripped: ${size_after} bytes (was ${size_before} bytes)"
-          fi
+        run: node scripts/strip-method-history.js
 
       - name: Commit Snapshots + Alert-State
         run: |
