@@ -29,6 +29,13 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+// Tag 232c-28 (audit F-SM-009 HIGH): route all state-file writes through
+// lib/atomic-write so the Tag 230c-1 durability hardening (POSIX parent-dir
+// fsync, Windows EPERM retry, partial-write loop) covers method-effectiveness
+// outputs. The cache + report writes happen post-analysis; a SIGKILL or
+// power-loss mid-write previously left a truncated JSON that the next run
+// would refuse to parse (and treat as a full re-analysis trigger).
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const WF = require('./walk-forward-perf.js');
 
 const METHODS_HIST_DIR = path.join(__dirname, '..', 'methods-history');
@@ -316,7 +323,7 @@ function main() {
   // even when no new vintages are processed (atomic load -> prune -> save).
   if (processedNew > 0 || prunedCount > 0) {
     if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
-    fs.writeFileSync(CACHE_PATH, JSON.stringify(cache));
+    writeFileAtomic(CACHE_PATH, JSON.stringify(cache));
     console.log('method-effectiveness: processed ' + processedNew + ' new vintage×horizon combos' + (prunedCount > 0 ? ' (' + prunedCount + ' stale entries pruned)' : '') + ', cache saved.');
   } else {
     console.log('method-effectiveness: all vintages served from cache.');
@@ -397,7 +404,7 @@ function main() {
     note: 'alpha = median(passing-stocks forward-return) - median(failing-stocks forward-return). CI = 95% percentile bootstrap. Methods with evidenceGate != "ok" produce no CI. F-BT-006: alpha=null when n<' + MIN_SAMPLES_PER_GROUP + ' in either group. Yahoo universe survivor-biased. F-BT-004: bootstrap seed is per-method-unique. F-PF-009: cache in method-effectiveness-cache.json.',
     methods: out
   };
-  fs.writeFileSync(path.join(OUT_DIR, 'method-effectiveness.json'), JSON.stringify(report, null, 2));
+  writeFileAtomic(path.join(OUT_DIR, 'method-effectiveness.json'), JSON.stringify(report, null, 2));
 
   // Ranked markdown
   let md = '# Method Effectiveness — ' + today + '\n\n';
@@ -432,7 +439,7 @@ function main() {
     }
     md += '\n';
   }
-  fs.writeFileSync(path.join(OUT_DIR, 'method-effectiveness.md'), md);
+  writeFileAtomic(path.join(OUT_DIR, 'method-effectiveness.md'), md);
 
   console.log('Method effectiveness:');
   console.log('  ' + path.join(OUT_DIR, 'method-effectiveness.json'));

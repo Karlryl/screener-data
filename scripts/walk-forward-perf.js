@@ -18,6 +18,11 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+// Tag 232c-28 (audit F-SM-010 HIGH): same atomic-write routing as
+// method-effectiveness.js. walk-forward.json/.md outputs are read by
+// methodology-report and snapshot-picks's regression check; a truncated
+// half-written file would propagate stale alpha numbers downstream.
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const PICKS_DIR     = path.join(__dirname, '..', 'picks-history');
 const PRICES_PATH   = path.join(__dirname, '..', 'prices', 'history.json');
@@ -570,7 +575,7 @@ function main() {
     caveat: 'Three benchmarks: universe-median (Tag 138: survivor-bias corrected when evaluatedTickers available, else null — F-BT-003), frozen-vintage-median (only picks at vintage time), SPY/QQQ/IWM (external benchmark — F-BT-002). Tag 139: regimeAlpha shows BULL/BEAR/SIDEWAYS alpha split. F-BT-006: alpha=null when n<' + MIN_SAMPLES + '.',
     modes
   };
-  fs.writeFileSync(path.join(OUT_DIR, 'walk-forward.json'), JSON.stringify(outJson, null, 2));
+  writeFileAtomic(path.join(OUT_DIR, 'walk-forward.json'), JSON.stringify(outJson, null, 2));
 
   // Markdown report
   let md = '# Walk-Forward Performance — ' + today + '\n\n';
@@ -601,7 +606,7 @@ function main() {
     }
     md += '\n';
   }
-  fs.writeFileSync(path.join(OUT_DIR, 'walk-forward.md'), md);
+  writeFileAtomic(path.join(OUT_DIR, 'walk-forward.md'), md);
 
   console.log('Walk-forward report written:');
   console.log('  ' + path.join(OUT_DIR, 'walk-forward.json'));
