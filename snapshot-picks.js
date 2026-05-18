@@ -95,8 +95,12 @@ function pickStockForMode(stock, modeId, results) {
     profState: getProfState(results),
     primaryMetric: primaryMetricFor(modeId, results),
     // F-BT-009: null-safe — fall back to normScore for older vintages that lacked score
+    // Tag 232c-22 (audit F-BT-010 LOW): score is on 0-100 scale; normScore is
+    // on 0-1 scale. Pre-fix the fallback emitted normScore as-is (e.g., 0.7
+    // where score would be 70.0), making cross-vintage comparability of the
+    // pick.score field invalid. Now multiply normScore by 100 to align scales.
     score: (ev.score != null) ? Math.round(ev.score * 10) / 10
-         : (ev.normScore != null) ? Math.round(ev.normScore * 10) / 10
+         : (ev.normScore != null) ? Math.round(ev.normScore * 1000) / 10
          : null,
     marketCap: getMcap(stock),
     mustPassCount: ev.mustPassCount,

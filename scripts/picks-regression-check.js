@@ -99,9 +99,16 @@ async function main() {
     .sort();
   // Drop the most recent (= today) so we compare against history, not self
   const todayDate = (latest.asOf || '').slice(0, 10);
+  // Tag 232c-21 (audit F-BT-009 LOW): fix doc/code mismatch. Comment said
+  // "8 weeks" but .slice(-8) takes 8 vintage files; with daily snapshots
+  // that's ~8 days, not 8 weeks. Renamed to reflect actual behavior. To
+  // get a true 8-week (~56-day) window the slice would need to be -56
+  // (or larger to allow for missing days), but the existing 8-vintage
+  // window is the actual signal the regression check has been using —
+  // keep behavior, just align the label.
   const priors = files
     .filter(f => f.replace('.json', '') < todayDate)
-    .slice(-8) // up to last 8 weeks of history
+    .slice(-8) // up to last 8 daily-vintage snapshots (= ~1.5 weeks at daily cadence)
     .map(f => loadJson(path.join(PICKS_DIR, f)))
     .filter(Boolean);
 
