@@ -18,12 +18,18 @@ const { writeFileAtomic } = require('../lib/atomic-write.js');
 // lief mit grade='unknown' für jeden Snapshot und niemand merkte, dass das
 // data-quality.js-Modul nicht lud (Syntax-Error, fehlende Abhängigkeit, etc.).
 // Jetzt: WARN, sodass der Operator den Modul-Loader-Fehler in CI-Logs sieht.
+// Tag 232c-29 (audit F-DQ-008 MEDIUM): surface the load failure as a banner
+// AT THE TOP OF THE MARKDOWN OUTPUT, not just in CI logs. Pre-fix the
+// "unknown" grades silently went into the report; an operator reading the
+// markdown saw all-zero/all-unknown counts without explanation.
 let gradeSnapshot;
+let gradeSnapshotLoadError = null;
 try {
   ({ gradeSnapshot } = require('../methods/data-quality.js'));
 } catch (e) {
+  gradeSnapshotLoadError = (e && e.message) || String(e);
   console.warn('[data-quality-report] FAILED to require methods/data-quality.js: ' +
-    (e && e.message || e) + ' — all grades will report as "unknown" until fixed.');
+    gradeSnapshotLoadError + ' — all grades will report as "unknown" until fixed.');
   gradeSnapshot = () => ({ grade: 'unknown', nanRatio: 0, missingFields: [] });
 }
 
@@ -158,6 +164,14 @@ function main() {
   lines.push('');
   lines.push('Generated: ' + now);
   lines.push('');
+  // Tag 232c-29 (audit F-DQ-008): banner when data-quality.js failed to load,
+  // so the markdown reader sees WHY all grades are "unknown".
+  if (gradeSnapshotLoadError) {
+    lines.push('> ⚠ **WARNING — `methods/data-quality.js` failed to load**: `' +
+      gradeSnapshotLoadError + '`. All snapshot grades below reported as `unknown` ' +
+      'until the underlying require error is fixed. See CI logs for the full stack trace.');
+    lines.push('');
+  }
   lines.push('## Summary');
   lines.push('');
   lines.push('| Metric | Value |');
