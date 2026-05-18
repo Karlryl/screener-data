@@ -303,6 +303,14 @@ async function main() {
   // flagged by the audit), its state entry becomes orphan noise that bloats
   // alert-state.json (~21MB) and the diff-report. Drop any entry whose
   // method-id is not in the live REGISTRY before processing this run.
+  //
+  // Tag 232c-14 (audit F-SM-006 HIGH): also clean orphan method-ids out of
+  // methodHistory (the 8.9 MB sidecar). Tag 222b only touched methodState,
+  // so methodHistory accumulated dead method-ids across delisted tickers +
+  // renamed methods — the sidecar grew unbounded over time. Per-ticker
+  // entries for tickers no longer in methodState are ALSO orphan candidates
+  // (those tickers were pruned by F-SM-006's lastChanged>30d sweep in
+  // saveState).
   try {
     const liveMethodIds = new Set(Runner.getMethods().map(m => m.id));
     let droppedCount = 0, tickersTouched = 0;
@@ -319,6 +327,30 @@ async function main() {
     }
     if (droppedCount > 0) {
       _log('INFO', `orphan-method cleanup: dropped ${droppedCount} entries across ${tickersTouched} tickers (live methods: ${liveMethodIds.size})`);
+    }
+    // Tag 232c-14: parallel cleanup of methodHistory sidecar
+    let histDroppedMethods = 0, histDroppedTickers = 0;
+    for (const ticker of Object.keys(state.methodHistory || {})) {
+      const hist = state.methodHistory[ticker];
+      if (!hist || typeof hist !== 'object') continue;
+      // Drop entire ticker if its methodState entry was pruned (lastChanged>30d
+      // per saveState's pruning — orphan history that won't ever match a
+      // diff again).
+      if (!state.methodState[ticker]) {
+        delete state.methodHistory[ticker];
+        histDroppedTickers++;
+        continue;
+      }
+      // Drop per-method history for renamed/removed methods.
+      for (const mid of Object.keys(hist)) {
+        if (!liveMethodIds.has(mid)) {
+          delete hist[mid];
+          histDroppedMethods++;
+        }
+      }
+    }
+    if (histDroppedTickers > 0 || histDroppedMethods > 0) {
+      _log('INFO', `methodHistory orphan cleanup: dropped ${histDroppedTickers} tickers + ${histDroppedMethods} method-id entries`);
     }
   } catch (e) {
     _log('WARN', 'orphan-method cleanup failed: ' + e.message);

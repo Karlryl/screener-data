@@ -102,12 +102,27 @@ function archiveDirByDate(srcDir, archiveDir, keepDays, dryRun) {
     } else {
       fs.writeFileSync(ndjsonPath, lines);
     }
-    // F-SM-013: verify the archive is readable before unlinking originals
-    // Parse the first line to confirm the write succeeded and the file is valid NDJSON
+    // F-SM-013 / Tag 232c-15 (audit F-SM-008 HIGH): verify the archive is
+    // readable AND every NEWLY-APPENDED line parses, before unlinking the
+    // originals. The prior verify only parsed FIRST line, which in append-
+    // mode (the common case) means it parsed a line from a PREVIOUS append
+    // — a tail-corruption from a SIGKILL mid-write would slip past the
+    // check, and the originals get unlinked permanently. New: parse the
+    // last N lines of the file (where N = toWrite.length) and confirm each
+    // round-trips. NDJSON is line-delimited; we use raw split + parse for
+    // tight memory use.
     try {
-      const firstLine = fs.readFileSync(ndjsonPath, 'utf8').split('\n')[0];
-      if (!firstLine || firstLine.trim() === '') throw new Error('archive file is empty');
-      JSON.parse(firstLine);
+      const raw = fs.readFileSync(ndjsonPath, 'utf8');
+      const allLines = raw.split('\n').filter(l => l.length > 0);
+      if (allLines.length === 0) throw new Error('archive file is empty');
+      JSON.parse(allLines[0]);  // first-line invariant (kept from prior verify)
+      // Verify each just-appended line round-trips. In overwrite-mode (toWrite
+      // was the only source), allLines.length === toWrite.length so checking
+      // them all happens to match the prior-overwrite-mode contract.
+      const expectedTail = Math.min(toWrite.length, allLines.length);
+      for (let i = allLines.length - expectedTail; i < allLines.length; i++) {
+        JSON.parse(allLines[i]);
+      }
     } catch (verifyErr) {
       console.warn('  archive verify failed for ' + ndjsonPath + ': ' + verifyErr.message + ' — skipping unlink of originals');
       continue;
