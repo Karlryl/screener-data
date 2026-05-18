@@ -15,7 +15,13 @@
 // Tag 153: paths corrected to match pull-yahoo.js canonical snapshot structure.
 // Previous paths used 'metrics.*' for all fields; actual structure has annual.*/timeseries.*/meta.*
 // Those 12 wrong-path fields reported 0% coverage on every run since Tag 22.
-// F-DQ-006: added fcfMarginTTM, forwardPE, annualSBC, annualCapex, totalDebt, insiderOwnerPercent
+// F-DQ-006: added fcfMarginTTM, forwardPE, annualSBC, annualCapex, totalDebt, insidersOwnership
+// Tag 232c-9 (audit F-DQ-005 HIGH): the F-DQ-006 entry was added as
+// `insiderOwnerPercent` — that name doesn't exist in any snapshot. Canonical
+// is `insidersOwnership` (verified live: NVDA.metrics.insidersOwnership =
+// 0.04). Pre-fix this tracker reported permanent 0% coverage on the field,
+// triggered the below-50%-floor HIGH alert every workflow run, contributed
+// to alert fatigue.
 const TRACKED_FIELDS = [
   'annual.annualRev',           // array of {value,...} — check non-empty
   'annual.annualOpInc',
@@ -38,7 +44,7 @@ const TRACKED_FIELDS = [
   'annual.annualCapex',            // Capital expenditures — used by capex-trend, reinvestment-rate
   'annual.annualRnD',              // Tag 202: R&D — second input to reinvestment-rate ((Capex+RnD)/OCF)
   'annual.annualBalance',          // Balance sheet (includes totalDebt) — used by altman-z, net-debt-ebitda
-  'metrics.insiderOwnerPercent.value', // Insider ownership % — used by insider-ownership method
+  'metrics.insidersOwnership.value', // Tag 232c-9: was insiderOwnerPercent (typo); canonical field name is insidersOwnership
 ];
 
 const HISTORY_WINDOW = 14;      // Rolling window: letzte 14 Runs für Baseline (war 6 — zu kurz bei 2 Runs/Tag)

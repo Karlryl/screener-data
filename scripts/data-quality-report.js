@@ -43,7 +43,7 @@ const KEY_FIELDS = [
   { label: 'annualCapex',       get: s => Array.isArray(s.annual && s.annual.annualCapex) && s.annual.annualCapex.filter(x => x != null).length > 0 },
   { label: 'revenueQ>=4',       get: s => Array.isArray(s.timeseries && s.timeseries.revenueQ) && s.timeseries.revenueQ.filter(x => x != null).length >= 4 },
   { label: 'sector',            get: s => !!(s.meta && s.meta.sector) },
-  { label: 'insiderOwner',      get: s => s.metrics && s.metrics.insiderOwnerPercent && s.metrics.insiderOwnerPercent.value != null },
+  { label: 'insiderOwner',      get: s => s.metrics && s.metrics.insidersOwnership && s.metrics.insidersOwnership.value != null }, // Tag 232c-9: was insiderOwnerPercent (typo); canonical = insidersOwnership
 ];
 
 function parseArgs(argv) {

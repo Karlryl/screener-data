@@ -62,6 +62,14 @@ function evaluateAllStocks(args) {
       methodHistory = s.methodHistory || {};
     } catch (e) { /* ignore */ }
   }
+  // Tag 232c-9 (audit F-PF-001 HIGH): cache Runner.getMethods() once outside
+  // the per-stock loop. Pre-fix, this was called twice per ticker (lines ~88
+  // for trends + ~98 for pass-count ranking) — at 3500-15000 tickers that's
+  // 7K-30K rebuilds of the methods array. getMethods() walks methods/index.js
+  // + re-validates each module, ~10-50ms each. Cumulative cost was 1-25 min
+  // per report-generator run, on a path already projected at 14.6h at 19k
+  // tickers (audit Tag 226b).
+  const cachedMethods = Runner.getMethods();
   const rows = [];
   for (const file of files) {
     let stock;
@@ -85,7 +93,7 @@ function evaluateAllStocks(args) {
       trends: (() => {
         const tickerHist = methodHistory[ticker] || {};
         const tr = {};
-        for (const m of Runner.getMethods()) {
+        for (const m of cachedMethods) {
           tr[m.id] = Trend.computeTrend(tickerHist[m.id] || [], m.thresholdOp);
         }
         return tr;
@@ -95,7 +103,7 @@ function evaluateAllStocks(args) {
     const lastRow = rows[rows.length - 1];
     let passCount = 0, computableCount = 0;
     const failedMethods = [];
-    for (const m of Runner.getMethods()) {
+    for (const m of cachedMethods) {
       const r = lastRow.results[m.id];
       if (r.computable) computableCount++;
       if (r.computable && r.pass) passCount++;

@@ -288,6 +288,34 @@ function _convertSnapshotToUSD(snap) {
   // Combined factor: pence→pounds (÷100) then pounds→USD (*rate), or just *rate for normal currencies.
   const factor = isPence ? rate / 100 : rate;
 
+  // Tag 232c-8 (audit F-DP-005 HIGH): detect the ADR pattern where Yahoo
+  // returns marketCap and price.regularMarketPrice in the TRADING currency
+  // (e.g. USD for NYSE-listed TSM/BABA/NU) while the financial reporting
+  // currency is foreign (TWD/CNY/HKD). The financial-ccy factor (`factor`
+  // above) is correct for annual/quarterly/metrics — those are in reporting
+  // currency. But scaling trading-ccy mcap/price by the financial factor
+  // produces ~32× too small numbers, then the $1B mcap floor at
+  // pull-yahoo.js:1647 silently unlinks the snapshot. Companion fix to
+  // Tag 232a-4 which closed the same gap in the price-only fast path.
+  //
+  // tradingCcy comes from snap.price.currency (Yahoo's quote response,
+  // captured by the mapper). When it differs from origCurrency, the
+  // ticker is an ADR-class and trading-fx-rate applies to mcap/price.
+  const tradingCcyRaw = (snap.price && snap.price.currency) ? String(snap.price.currency) : null;
+  let tradingFactor = factor;  // default: equals financial factor (no special handling)
+  let tradingOverride = false;
+  if (tradingCcyRaw && tradingCcyRaw.toUpperCase() !== origCurrency.toUpperCase()) {
+    const tradingPence = /^GB[Xp]$/i.test(tradingCcyRaw) || tradingCcyRaw.toUpperCase() === 'GBPENCE';
+    const tradingKey = tradingPence ? 'GBP' : tradingCcyRaw.toUpperCase();
+    const tradingRate = FX_TO_USD[tradingKey];
+    if (tradingRate != null && Number.isFinite(tradingRate)) {
+      tradingFactor = tradingPence ? tradingRate / 100 : tradingRate;
+      tradingOverride = true;
+      snap.meta.tradingCurrencyOriginal = tradingCcyRaw;
+      snap.meta.tradingFxRateApplied = tradingFactor;
+    }
+  }
+
   function scale(item) {
     if (item == null) return item;
     if (typeof item === 'number') return Number.isFinite(item) ? item * factor : item;
@@ -305,7 +333,32 @@ function _convertSnapshotToUSD(snap) {
     return out;
   }
 
-  if (snap.marketCap) snap.marketCap = scale(snap.marketCap);
+  // Tag 232c-8: dedicated scaler for trading-currency values (mcap, price).
+  // Identical math to scale() but uses tradingFactor; identity when
+  // tradingFactor === factor (the non-ADR common case, zero overhead).
+  function scaleTrading(item) {
+    if (item == null) return item;
+    if (typeof item === 'number') return Number.isFinite(item) ? item * tradingFactor : item;
+    if (typeof item !== 'object') return item;
+    if ('value' in item) {
+      const out = Object.assign({}, item);
+      if (typeof item.value === 'number' && Number.isFinite(item.value)) out.value = item.value * tradingFactor;
+      return out;
+    }
+    const out = {};
+    for (const [k, v] of Object.entries(item)) {
+      out[k] = (typeof v === 'number' && Number.isFinite(v)) ? v * tradingFactor : v;
+    }
+    return out;
+  }
+
+  // Tag 232c-8: route marketCap through the trading scaler. Equivalent to
+  // scale() when ticker is not ADR-class (tradingFactor === factor, no-op).
+  // We intentionally do NOT scale snap.price here — the pre-Tag-232c-8 code
+  // never scaled price either (price stays in trading currency by design,
+  // consumed by callers that know how to combine it with the converted mcap).
+  // Changing that invariant is out of scope for an HIGH-severity targeted fix.
+  if (snap.marketCap) snap.marketCap = scaleTrading(snap.marketCap);
   // Tag 204 (Bug #2 — architectural, LOW severity): explicit metrics.* allow-list.
   // The previous code only scaled `metrics.revenueTTM` ad-hoc; any future
   // currency-denominated metrics field (e.g. fcfTTM, ebitda, enterpriseValue,
