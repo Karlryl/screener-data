@@ -897,18 +897,47 @@ const CLIENT_JS = `
   let page = 1;
   let filterState = { LOSS:true, TURNAROUND:true, RECENT:true, STABLE:true, NA:true };
   let filterCap = { MICRO:true, SMALL:true, MID:true, LARGE:true, MEGA:true };
-  let filterSector = '';
+  // Tag 232b-1: sector filter is now multi-select (per-sector boolean, all-on default).
+  // Initialized from DOM at startup so the server-templated sectors list is the
+  // single source of truth. Karl asked for the ability to exclude e.g. Basic Materials
+  // when looking at R40 candidates; the prior single-select forced choosing one.
+  // (NB: no inner backticks in this block — outer is a template literal, see CLIENT_JS note above.)
+  let filterSectors = {};
   let filterCountry = '';
   let filterMinR40 = '';
   let filterMaxR40 = '';
   let filterMin = '';     // tab-specific min input — auto-resets on tab switch
-  // Tag 199 audit filters
-  let filterIpo = 'ALL';  // ALL | LT1 | LT2 | LT5 | GT5
+  // Tag 232b-1: persistent FCF-margin and revenue-growth minimums. Strict null-handling:
+  // a stock with r.fcfMargin == null is excluded when filterMinFcfm is set (same pattern
+  // as existing filterMinR40 below). User wanted to exclude negative-margin / weak-growth.
+  let filterMinFcfm = '';
+  let filterMinGrowth = '';
+  // Tag 232b-1: IPO filter replaced bucket buttons (LT1/LT2/LT5/GT5) with year-range
+  // inputs. Buckets removed because Karl needed precision ("nur 2020-2024 IPOs"); the
+  // <1y/<2y shortcuts didn't scale to that.
+  let filterIpoMin = '';
+  let filterIpoMax = '';
   let filterDQ = { 'A+':true, 'A':true, 'B':true, 'C':false, 'D':false };
   let onlyGaap = false;
   let onlyFcf  = false;
   let sortKey = 'auto';   // auto = tab's primary; or one of {score,r40,growth,fcfMargin,mcap,pbScore}
   let currentList = [];   // active filtered list
+
+  // Tag 232b-1: short labels for sector buttons (the full Yahoo names are too long
+  // for the filter bar; full name shown via title= tooltip).
+  const SECTOR_LABELS = {
+    'Basic Materials':         'Mat',
+    'Communication Services':  'Comm',
+    'Consumer Cyclical':       'Cyc',
+    'Consumer Defensive':      'Def',
+    'Energy':                  'Energy',
+    'Financial Services':      'Fin',
+    'Healthcare':              'Health',
+    'Industrials':             'Ind',
+    'Real Estate':             'Real',
+    'Technology':              'Tech',
+    'Utilities':               'Util'
+  };
 
   function capBucket(mcap){
     if (!mcap) return null;
@@ -981,12 +1010,28 @@ const CLIENT_JS = `
       const capOn = capKeys.filter(k => filterCap[k]);
       chips.push({k:'cap', label:'Cap: ' + capOn.join('/')});
     }
-    if (filterSector) chips.push({k:'sector', label:'Sector: ' + filterSector});
+    // Tag 232b-1: multi-select sector chip (only when partial selection)
+    const secKeys = Object.keys(filterSectors);
+    const secOff = secKeys.filter(s => !filterSectors[s]);
+    if (secKeys.length > 0 && secOff.length > 0 && secOff.length < secKeys.length) {
+      const secOn = secKeys.filter(s => filterSectors[s]);
+      const labels = secOn.map(s => SECTOR_LABELS[s] || s);
+      chips.push({k:'sector', label:'Sector: ' + labels.join('/')});
+    }
     if (filterCountry) chips.push({k:'country', label:'Country: ' + filterCountry});
     if (filterMinR40 !== '') chips.push({k:'minR40', label:'R40 ≥ ' + filterMinR40});
     if (filterMaxR40 !== '') chips.push({k:'maxR40', label:'R40 ≤ ' + filterMaxR40});
     if (filterMin !== '') chips.push({k:'tabMin', label:'Tab Min ≥ ' + filterMin});
-    if (filterIpo !== 'ALL') chips.push({k:'ipo', label:'IPO: ' + filterIpo});
+    // Tag 232b-1: new chips for FCFM/Growth/IPO-year
+    if (filterMinFcfm !== '') chips.push({k:'minFcfm', label:'FCFM ≥ ' + filterMinFcfm + '%'});
+    if (filterMinGrowth !== '') chips.push({k:'minGrowth', label:'Growth ≥ ' + filterMinGrowth + '%'});
+    if (filterIpoMin !== '' || filterIpoMax !== '') {
+      let ipoLbl = 'IPO ';
+      if (filterIpoMin !== '' && filterIpoMax !== '') ipoLbl += filterIpoMin + '-' + filterIpoMax;
+      else if (filterIpoMin !== '') ipoLbl += '≥ ' + filterIpoMin;
+      else ipoLbl += '≤ ' + filterIpoMax;
+      chips.push({k:'ipo', label: ipoLbl});
+    }
     // DQ filter — show if any of A+/A/B/C/D is off
     const dqAll = ['A+','A','B','C','D'];
     const dqOn = dqAll.filter(g => filterDQ[g]);
@@ -1023,8 +1068,8 @@ const CLIENT_JS = `
       filterCap = { MICRO:true, SMALL:true, MID:true, LARGE:true, MEGA:true };
       document.querySelectorAll('.filters .f-cap').forEach(b => b.classList.add('on'));
     } else if (key === 'sector') {
-      filterSector = '';
-      const el = document.getElementById('fSector'); if (el) el.value = '';
+      Object.keys(filterSectors).forEach(s => filterSectors[s] = true);
+      document.querySelectorAll('.filters .f-sec').forEach(b => b.classList.add('on'));
     } else if (key === 'country') {
       filterCountry = '';
       const el = document.getElementById('fCountry'); if (el) el.value = '';
@@ -1037,11 +1082,16 @@ const CLIENT_JS = `
     } else if (key === 'tabMin') {
       filterMin = '';
       const el = document.getElementById('fMin'); if (el) el.value = '';
+    } else if (key === 'minFcfm') {
+      filterMinFcfm = '';
+      const el = document.getElementById('fMinFcfm'); if (el) el.value = '';
+    } else if (key === 'minGrowth') {
+      filterMinGrowth = '';
+      const el = document.getElementById('fMinGrowth'); if (el) el.value = '';
     } else if (key === 'ipo') {
-      filterIpo = 'ALL';
-      document.querySelectorAll('.filters .f-ipo').forEach(b => b.classList.remove('on'));
-      const allBtn = document.querySelector('.filters .f-ipo[data-ipo="ALL"]');
-      if (allBtn) allBtn.classList.add('on');
+      filterIpoMin = ''; filterIpoMax = '';
+      const minEl = document.getElementById('fIpoMin'); if (minEl) minEl.value = '';
+      const maxEl = document.getElementById('fIpoMax'); if (maxEl) maxEl.value = '';
     } else if (key === 'dq') {
       filterDQ = { 'A+':true, 'A':true, 'B':true, 'C':false, 'D':false };
       document.querySelectorAll('.filters .f-dq').forEach(b => {
@@ -1065,21 +1115,21 @@ const CLIENT_JS = `
   function clearAllFilters(){
     filterState = { LOSS:true, TURNAROUND:true, RECENT:true, STABLE:true, NA:true };
     filterCap = { MICRO:true, SMALL:true, MID:true, LARGE:true, MEGA:true };
-    filterSector = ''; filterCountry = '';
+    Object.keys(filterSectors).forEach(s => filterSectors[s] = true);
+    filterCountry = '';
     filterMinR40 = ''; filterMaxR40 = ''; filterMin = '';
-    filterIpo = 'ALL';
+    filterMinFcfm = ''; filterMinGrowth = '';
+    filterIpoMin = ''; filterIpoMax = '';
     filterDQ = { 'A+':true, 'A':true, 'B':true, 'C':false, 'D':false };
     onlyGaap = false; onlyFcf = false; sortKey = 'auto';
     document.querySelectorAll('.filters .f-state').forEach(b => b.classList.add('on'));
     document.querySelectorAll('.filters .f-cap').forEach(b => b.classList.add('on'));
-    document.querySelectorAll('.filters .f-ipo').forEach(b => b.classList.remove('on'));
-    const allBtn = document.querySelector('.filters .f-ipo[data-ipo="ALL"]');
-    if (allBtn) allBtn.classList.add('on');
+    document.querySelectorAll('.filters .f-sec').forEach(b => b.classList.add('on'));
     document.querySelectorAll('.filters .f-dq').forEach(b => {
       const g = b.dataset.dq;
       b.classList.toggle('on', !!filterDQ[g]);
     });
-    ['fSector','fCountry','fMinR40','fMaxR40','fMin'].forEach(id => {
+    ['fCountry','fMinR40','fMaxR40','fMin','fMinFcfm','fMinGrowth','fIpoMin','fIpoMax'].forEach(id => {
       const el = document.getElementById(id); if (el) el.value = '';
     });
     const gEl = document.getElementById('onlyGaap'); if (gEl) gEl.checked = false;
@@ -1102,13 +1152,23 @@ const CLIENT_JS = `
       if (!filterState[r.state]) return false;
       const cb = capBucket(r.mcap);
       if (cb && !filterCap[cb]) return false;
-      if (filterSector && r.sector !== filterSector) return false;
+      // Tag 232b-1: multi-select sector — exclude only if the row's sector is
+      // explicitly off (rows with missing/null sector pass; matches existing
+      // single-select fallthrough behavior).
+      if (r.sector && filterSectors[r.sector] === false) return false;
       if (filterCountry && r.country !== filterCountry) return false;
       if (filterMinR40 !== '' && !isNaN(+filterMinR40)) {
         if (r.r40 == null || r.r40 < +filterMinR40) return false;
       }
       if (filterMaxR40 !== '' && !isNaN(+filterMaxR40)) {
         if (r.r40 != null && r.r40 > +filterMaxR40) return false;
+      }
+      // Tag 232b-1: strict-null FCF-margin / growth minimums — null is excluded.
+      if (filterMinFcfm !== '' && !isNaN(+filterMinFcfm)) {
+        if (r.fcfMargin == null || r.fcfMargin < +filterMinFcfm) return false;
+      }
+      if (filterMinGrowth !== '' && !isNaN(+filterMinGrowth)) {
+        if (r.growth == null || r.growth < +filterMinGrowth) return false;
       }
       if (filterMin !== '' && !isNaN(+filterMin)) {
         const minV = +filterMin;
@@ -1118,13 +1178,13 @@ const CLIENT_JS = `
         if (activeTab === 'R40' && (r.r40 == null || r.r40 < minV)) return false;
         if (activeTab === 'PRE_BREAKOUT' && (r.growth == null || r.growth < minV)) return false;
       }
-      // Tag 199 audit filters
-      if (filterIpo !== 'ALL') {
-        const age = ipoAgeYears(r);
-        if (filterIpo === 'LT1' && !(age != null && age < 1)) return false;
-        if (filterIpo === 'LT2' && !(age != null && age < 2)) return false;
-        if (filterIpo === 'LT5' && !(age != null && age < 5)) return false;
-        if (filterIpo === 'GT5' && !(age != null && age >= 5)) return false;
+      // Tag 232b-1: IPO-year range (replaces LT1/LT2/LT5/GT5 buckets).
+      // Null ipoYear is excluded when either bound is set.
+      if (filterIpoMin !== '' && !isNaN(+filterIpoMin)) {
+        if (r.ipoYear == null || r.ipoYear < +filterIpoMin) return false;
+      }
+      if (filterIpoMax !== '' && !isNaN(+filterIpoMax)) {
+        if (r.ipoYear == null || r.ipoYear > +filterIpoMax) return false;
       }
       const grade = r.dqGrade || 'A+';  // unknown grade defaults to A+ to avoid silent exclusion
       if (!filterDQ[grade]) return false;
@@ -1642,10 +1702,14 @@ const CLIENT_JS = `
       if (stateOff.length) hints.push('toggle on state pills: ' + stateOff.join(', '));
       const capOff = Object.keys(filterCap).filter(k => !filterCap[k]);
       if (capOff.length) hints.push('toggle on cap buckets: ' + capOff.join(', '));
-      if (filterSector) hints.push('clear sector filter (currently ' + filterSector + ')');
+      const secOffNames = Object.keys(filterSectors).filter(s => !filterSectors[s]);
+      if (secOffNames.length > 0) hints.push('include excluded sectors: ' + secOffNames.map(s => SECTOR_LABELS[s] || s).join(', '));
       if (filterCountry) hints.push('clear country filter');
       if (filterMinR40 !== '' || filterMaxR40 !== '') hints.push('clear R40 min/max');
       if (filterMin !== '') hints.push('clear Tab Min');
+      if (filterMinFcfm !== '') hints.push('lower or clear FCFM≥ filter (currently ' + filterMinFcfm + '%)');
+      if (filterMinGrowth !== '') hints.push('lower or clear Growth≥ filter (currently ' + filterMinGrowth + '%)');
+      if (filterIpoMin !== '' || filterIpoMax !== '') hints.push('widen or clear IPO-year filter');
       if (onlyGaap) hints.push('uncheck GAAP+');
       if (onlyFcf) hints.push('uncheck FCF+');
       const hintHtml = hints.length
@@ -2079,8 +2143,10 @@ const CLIENT_JS = `
   }
   function presetSnapshot(){
     return {
-      activeTab, filterSector, filterCountry, filterMinR40, filterMaxR40, filterMin,
-      filterIpo,
+      activeTab, filterCountry, filterMinR40, filterMaxR40, filterMin,
+      // Tag 232b-1: persist new filter state (sectors object + numeric inputs).
+      filterSectors: Object.assign({}, filterSectors),
+      filterMinFcfm, filterMinGrowth, filterIpoMin, filterIpoMax,
       filterState: Object.assign({}, filterState),
       filterCap:   Object.assign({}, filterCap),
       filterDQ:    Object.assign({}, filterDQ),
@@ -2096,12 +2162,24 @@ const CLIENT_JS = `
         b.classList.toggle('active', b.dataset.tab === activeTab);
       });
     }
-    if (typeof snap.filterSector === 'string') filterSector = snap.filterSector;
+    // Tag 232b-1: restore new filter state. Migrate from legacy single-select
+    // snap.filterSector string by mapping it to filterSectors{} (set the named
+    // sector on, others off) so a pre-Tag-232b preset still loads sanely.
+    if (snap.filterSectors && typeof snap.filterSectors === 'object') {
+      Object.keys(filterSectors).forEach(s => {
+        filterSectors[s] = snap.filterSectors[s] !== false;
+      });
+    } else if (typeof snap.filterSector === 'string' && snap.filterSector) {
+      Object.keys(filterSectors).forEach(s => { filterSectors[s] = (s === snap.filterSector); });
+    }
     if (typeof snap.filterCountry === 'string') filterCountry = snap.filterCountry;
     if (typeof snap.filterMinR40 !== 'undefined') filterMinR40 = snap.filterMinR40;
     if (typeof snap.filterMaxR40 !== 'undefined') filterMaxR40 = snap.filterMaxR40;
     if (typeof snap.filterMin !== 'undefined') filterMin = snap.filterMin;
-    if (typeof snap.filterIpo === 'string') filterIpo = snap.filterIpo;
+    if (typeof snap.filterMinFcfm !== 'undefined') filterMinFcfm = snap.filterMinFcfm;
+    if (typeof snap.filterMinGrowth !== 'undefined') filterMinGrowth = snap.filterMinGrowth;
+    if (typeof snap.filterIpoMin !== 'undefined') filterIpoMin = snap.filterIpoMin;
+    if (typeof snap.filterIpoMax !== 'undefined') filterIpoMax = snap.filterIpoMax;
     if (snap.filterState) filterState = Object.assign({LOSS:true,TURNAROUND:true,RECENT:true,STABLE:true,NA:true}, snap.filterState);
     if (snap.filterCap)   filterCap   = Object.assign({MICRO:true,SMALL:true,MID:true,LARGE:true,MEGA:true}, snap.filterCap);
     if (snap.filterDQ)    filterDQ    = Object.assign({'A+':true,'A':true,'B':true,'C':false,'D':false}, snap.filterDQ);
@@ -2112,11 +2190,13 @@ const CLIENT_JS = `
     // Sync DOM controls so the visible UI matches restored state.
     document.querySelectorAll('.filters .f-state').forEach(b => b.classList.toggle('on', !!filterState[b.dataset.state]));
     document.querySelectorAll('.filters .f-cap').forEach(b => b.classList.toggle('on', !!filterCap[b.dataset.cap]));
+    document.querySelectorAll('.filters .f-sec').forEach(b => b.classList.toggle('on', filterSectors[b.dataset.sec] !== false));
     document.querySelectorAll('.filters .f-dq').forEach(b => b.classList.toggle('on', !!filterDQ[b.dataset.dq]));
-    document.querySelectorAll('.filters .f-ipo').forEach(b => b.classList.toggle('on', b.dataset.ipo === filterIpo));
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = (v == null ? '' : v); };
-    setVal('fSector', filterSector); setVal('fCountry', filterCountry);
+    setVal('fCountry', filterCountry);
     setVal('fMinR40', filterMinR40); setVal('fMaxR40', filterMaxR40); setVal('fMin', filterMin);
+    setVal('fMinFcfm', filterMinFcfm); setVal('fMinGrowth', filterMinGrowth);
+    setVal('fIpoMin', filterIpoMin); setVal('fIpoMax', filterIpoMax);
     const gEl = document.getElementById('onlyGaap'); if (gEl) gEl.checked = !!onlyGaap;
     const fEl = document.getElementById('onlyFcf');  if (fEl) fEl.checked = !!onlyFcf;
     const sEl = document.getElementById('fSort');    if (sEl) sEl.value = sortKey || 'auto';
@@ -2176,20 +2256,23 @@ const CLIENT_JS = `
     return 'Tab: '+TAB_LABELS[tab];
   }
   function cpHandleFilterSector(arg){
+    // Tag 232b-1: multi-select sector — "X" selects only X (others off); "clear"
+    // or empty resets all to on. Buttons are the source of truth for the sector list.
     const v = (arg || '').trim();
-    if (!v || v.toLowerCase() === 'clear') { filterSector = ''; }
-    else {
-      // Case-insensitive partial match against known sectors.
-      const opt = document.getElementById('fSector');
-      const sectors = opt ? Array.from(opt.options).map(o => o.value).filter(Boolean) : [];
-      const match = sectors.find(s => s.toLowerCase() === v.toLowerCase())
-                 || sectors.find(s => s.toLowerCase().indexOf(v.toLowerCase()) >= 0);
-      if (!match) return 'No sector matching "'+v+'"';
-      filterSector = match;
+    const secKeys = Object.keys(filterSectors);
+    if (!v || v.toLowerCase() === 'clear') {
+      secKeys.forEach(s => filterSectors[s] = true);
+      document.querySelectorAll('.filters .f-sec').forEach(b => b.classList.add('on'));
+      page = 1; renderTable();
+      return 'Sector filter cleared';
     }
-    const el = document.getElementById('fSector'); if (el) el.value = filterSector;
+    const match = secKeys.find(s => s.toLowerCase() === v.toLowerCase())
+               || secKeys.find(s => s.toLowerCase().indexOf(v.toLowerCase()) >= 0);
+    if (!match) return 'No sector matching "'+v+'"';
+    secKeys.forEach(s => filterSectors[s] = (s === match));
+    document.querySelectorAll('.filters .f-sec').forEach(b => b.classList.toggle('on', filterSectors[b.dataset.sec]));
     page = 1; renderTable();
-    return filterSector ? ('Sector: '+filterSector) : 'Sector filter cleared';
+    return 'Sector: '+match;
   }
   function cpHandleFilterClear(){
     clearAllFilters();
@@ -2449,20 +2532,27 @@ const CLIENT_JS = `
       page = 1; renderTable();
     };
   });
-  document.getElementById('fSector').onchange = e => { filterSector = e.target.value; page=1; renderTable(); };
+  // Tag 232b-1: multi-select sector toggle (replaces fSector single-select).
+  // Initialize filterSectors from button DOM so the templated sector list is
+  // the single source of truth (no hardcoded sectors in JS).
+  document.querySelectorAll('.filters .f-sec').forEach(b => {
+    filterSectors[b.dataset.sec] = true;  // default all-on
+    b.onclick = () => {
+      const sec = b.dataset.sec;
+      filterSectors[sec] = !filterSectors[sec];
+      b.classList.toggle('on', filterSectors[sec]);
+      page = 1; renderTable();
+    };
+  });
   document.getElementById('fCountry').onchange = e => { filterCountry = e.target.value; page=1; renderTable(); };
   document.getElementById('fMinR40').oninput = e => { filterMinR40 = e.target.value; page=1; renderTable(); };
   document.getElementById('fMaxR40').oninput = e => { filterMaxR40 = e.target.value; page=1; renderTable(); };
   document.getElementById('fMin').oninput = e => { filterMin = e.target.value; page=1; renderTable(); };
-  // Tag 199: new audit filters
-  document.querySelectorAll('.filters .f-ipo').forEach(b => {
-    b.onclick = () => {
-      filterIpo = b.dataset.ipo;
-      document.querySelectorAll('.filters .f-ipo').forEach(x => x.classList.remove('on'));
-      b.classList.add('on');
-      page = 1; renderTable();
-    };
-  });
+  // Tag 232b-1: FCFM-min + Growth-min + IPO-year inputs (strict null exclusion).
+  document.getElementById('fMinFcfm').oninput = e => { filterMinFcfm = e.target.value; page=1; renderTable(); };
+  document.getElementById('fMinGrowth').oninput = e => { filterMinGrowth = e.target.value; page=1; renderTable(); };
+  document.getElementById('fIpoMin').oninput = e => { filterIpoMin = e.target.value; page=1; renderTable(); };
+  document.getElementById('fIpoMax').oninput = e => { filterIpoMax = e.target.value; page=1; renderTable(); };
   document.querySelectorAll('.filters .f-dq').forEach(b => {
     b.onclick = () => {
       filterDQ[b.dataset.dq] = !filterDQ[b.dataset.dq];
@@ -2921,21 +3011,18 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
     <button class="f f-cap on" data-cap="LARGE">Large</button>
     <button class="f f-cap on" data-cap="MEGA">Mega</button>
   </span>
-  <span class="group"><span class="label">Sector:</span>
-    <select id="fSector"><option value="">All</option>${sectors.map(s => `<option value="${escHtml(s)}">${escHtml(s)}</option>`).join('')}</select>
-  </span>
+  <span class="group"><span class="label">Sector:</span>${sectors.map(s => {
+    const abbrev = { 'Basic Materials':'Mat','Communication Services':'Comm','Consumer Cyclical':'Cyc','Consumer Defensive':'Def','Energy':'Energy','Financial Services':'Fin','Healthcare':'Health','Industrials':'Ind','Real Estate':'Real','Technology':'Tech','Utilities':'Util' }[s] || s;
+    return `<button class="f f-sec on" data-sec="${escHtml(s)}" title="${escHtml(s)}">${escHtml(abbrev)}</button>`;
+  }).join('')}</span>
   <span class="group"><span class="label">Country:</span>
     <select id="fCountry"><option value="">All</option>${countries.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('')}</select>
   </span>
   <span class="group"><span class="label">R40:</span><input id="fMinR40" type="number" step="1" placeholder="min" style="width:50px"/><input id="fMaxR40" type="number" step="1" placeholder="max" style="width:50px"/></span>
   <span class="group"><span class="label">Tab Min:</span><input id="fMin" type="number" step="1" placeholder="—"/></span>
-  <span class="group"><span class="label">IPO:</span>
-    <button class="f f-ipo on" data-ipo="ALL">All</button>
-    <button class="f f-ipo" data-ipo="LT1">&lt;1y</button>
-    <button class="f f-ipo" data-ipo="LT2">&lt;2y</button>
-    <button class="f f-ipo" data-ipo="LT5">&lt;5y</button>
-    <button class="f f-ipo" data-ipo="GT5">≥5y</button>
-  </span>
+  <span class="group"><span class="label">FCFM≥:</span><input id="fMinFcfm" type="number" step="0.1" placeholder="%" style="width:55px"/></span>
+  <span class="group"><span class="label">Growth≥:</span><input id="fMinGrowth" type="number" step="0.1" placeholder="%" style="width:55px"/></span>
+  <span class="group"><span class="label">IPO Year:</span><input id="fIpoMin" type="number" step="1" placeholder="from" style="width:60px"/><input id="fIpoMax" type="number" step="1" placeholder="to" style="width:60px"/></span>
   <span class="group"><span class="label">Grade:</span>
     <button class="f f-dq on" data-dq="A+">A+</button>
     <button class="f f-dq on" data-dq="A">A</button>
