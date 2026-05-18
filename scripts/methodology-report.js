@@ -51,15 +51,25 @@ function main() {
   if (wf && wf.modes) {
     md += '## Pick-Performance (Walk-Forward)\n\n';
     md += '_Vintages analyzed:_ **' + (wf.vintageCount || 0) + '**.\n';
-    md += '_Benchmarks: universe-median (Tag 138: survivor-bias corrected via evaluatedTickers when available) · frozen-vintage-median (no look-ahead survivor selection) · SPY (external)._\n\n';
+    // Tag 232c-17 (audit F-BT-006 MEDIUM): use canonical medianAlphaVsBenchmark
+    // instead of the deprecated medianAlphaVsSpy alias. The benchmark symbol
+    // can be SPY / QQQ / IWM depending on which fallback walk-forward-perf
+    // chose for the vintage; the "α vs SPY" label was misleading whenever
+    // it wasn't actually SPY. Re-label "α vs Benchmark" and surface the
+    // actual symbol from the data when available.
+    const benchSymbol = (wf.benchmarkSymbol || 'Benchmark');
+    md += '_Benchmarks: universe-median (Tag 138: survivor-bias corrected via evaluatedTickers when available) · frozen-vintage-median (no look-ahead survivor selection) · ' + benchSymbol + ' (external)._\n\n';
     for (const [mode, data] of Object.entries(wf.modes)) {
       md += '### ' + mode + '\n\n';
-      md += '| Horizon | n vintages | α vs SPY | α vs Frozen-Vintage | α vs Universe | total picks |\n';
+      md += '| Horizon | n vintages | α vs ' + benchSymbol + ' | α vs Frozen-Vintage | α vs Universe | total picks |\n';
       md += '|---|---|---|---|---|---|\n';
       for (const days of (wf.horizonsDays || [7, 28, 84])) {
         const s = data.summary && data.summary[days + 'd'];
         if (!s) continue;
-        md += `| ${days}d | ${s.vintageCount} | ${_fmtAlpha(s.medianAlphaVsSpy)} | ${_fmtAlpha(s.medianAlphaVsFrozenVintage)} | ${_fmtAlpha(s.medianAlphaVsUniverse)} | ${s.totalPicks} |\n`;
+        // Tag 232c-17: prefer medianAlphaVsBenchmark, fall back to medianAlphaVsSpy
+        // for older walk-forward.json that predates the rename (compat window).
+        const alphaBench = s.medianAlphaVsBenchmark != null ? s.medianAlphaVsBenchmark : s.medianAlphaVsSpy;
+        md += `| ${days}d | ${s.vintageCount} | ${_fmtAlpha(alphaBench)} | ${_fmtAlpha(s.medianAlphaVsFrozenVintage)} | ${_fmtAlpha(s.medianAlphaVsUniverse)} | ${s.totalPicks} |\n`;
       }
       md += '\n';
       // Tag 139: regime alpha breakdown
@@ -68,12 +78,13 @@ function main() {
         return s && s.regimeAlpha && Object.keys(s.regimeAlpha).length > 0;
       });
       if (hasRegime) {
-        md += '**Regime Alpha (28d, α vs SPY):** ';
+        md += '**Regime Alpha (28d, α vs ' + benchSymbol + '):** ';
         const s28 = data.summary && data.summary['28d'];
         if (s28 && s28.regimeAlpha) {
           const parts = ['BULL', 'BEAR', 'SIDEWAYS'].filter(r => s28.regimeAlpha[r]).map(r => {
             const ra = s28.regimeAlpha[r];
-            return `${r} ${_fmtAlpha(ra.medianAlphaVsSpy)} (n=${ra.vintages})`;
+            const ab = ra.medianAlphaVsBenchmark != null ? ra.medianAlphaVsBenchmark : ra.medianAlphaVsSpy;
+            return `${r} ${_fmtAlpha(ab)} (n=${ra.vintages})`;
           });
           md += parts.join(' · ') + '\n\n';
         } else {

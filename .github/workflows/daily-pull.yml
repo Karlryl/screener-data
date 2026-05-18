@@ -106,11 +106,20 @@ jobs:
       # on pull-yahoo.js and refresh-universe.js's own 20% null-mcap proportional
       # split.
       # FINNHUB_API_KEY: GitHub Secret (Settings → Secrets → Actions → FINNHUB_API_KEY)
+      # Tag 232c-18 (audit F-CI-004 MEDIUM): warn when the Finnhub secret is
+      # not set so the operator sees universe-refresh is running degraded
+      # (without Finnhub, only SEC/Wikipedia/OTC/NASDAQ sources contribute).
+      # Doesn't block the run — refresh-universe has its own fallbacks — just
+      # surfaces the silent degradation in the log.
       - name: Refresh Universe
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           MAX_UNIVERSE: '25000'
-        run: node refresh-universe.js --watchlist watchlist.json
+        run: |
+          if [ -z "$FINNHUB_API_KEY" ]; then
+            echo "::warning::FINNHUB_API_KEY not set — universe refresh will skip Finnhub source (degraded coverage). Set the secret in Settings → Secrets → Actions to enable."
+          fi
+          node refresh-universe.js --watchlist watchlist.json
         continue-on-error: true
 
       # Tag 142: Prune delisted/stale tickers before Yahoo pull

@@ -138,6 +138,14 @@ async function main() {
     if (computableCount > 0) anyComputable++;
     if (totalEval > 0 && computableCount === totalEval && passCount === computableCount) allPass++;
   }
+  // Tag 232c-16 (audit F-BT-005 MEDIUM): write generatedAt so method-
+  // effectiveness.js's fallback to `(asOf + 'T00:00:00Z')` doesn't always
+  // fire. Pre-fix, every methods-history vintage anchored at midnight UTC
+  // which silently shifted alpha computations by +T relative to walk-
+  // forward's behavior on the SAME vintage date. Now the timestamp
+  // reflects when the script actually ran (post-pull, typically late
+  // UTC) which aligns with walk-forward's anchor.
+  data.generatedAt = new Date().toISOString();
   data.summary = {
     totalStocks: fileList.length,
     anyComputable, allPass,
