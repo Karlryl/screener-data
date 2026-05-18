@@ -546,7 +546,11 @@ const CSS = `
   --text-0:#e2eaf3; --text-1:#8899aa; --text-2:#4a5f70;
   --green:#00cc88; --red:#ff3d5a; --yellow:#ffbb33; --blue:#3d8fff; --purple:#8866ff;
   --mono:'JetBrains Mono','Cascadia Code','Consolas',monospace;
-  --ui:-apple-system,'Segoe UI',Roboto,system-ui,sans-serif;
+  /* Tag 232b-3: emoji-font fallbacks in the UI chain so 🇺🇸/🇯🇵/etc.
+     render as actual flags on Windows + Chromium. Segoe UI Emoji has had
+     flag glyphs since Win11 Fluent rollout; Twemoji Mozilla covers Firefox;
+     Apple Color Emoji covers macOS/iOS; Noto Color Emoji covers Linux. */
+  --ui:-apple-system,'Segoe UI','Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji','Twemoji Mozilla',Roboto,system-ui,sans-serif;
   /* Tag 211g spacing scale (4/8/12/16/24) — use these vars in new code rather
      than hard-coded px values. Existing inline values left alone except for
      the most visible offenders. */
@@ -925,7 +929,8 @@ const CLIENT_JS = `
   let activeTab = 'HG';
   let page = 1;
   let filterState = { LOSS:true, TURNAROUND:true, RECENT:true, STABLE:true, NA:true };
-  let filterCap = { MICRO:true, SMALL:true, MID:true, LARGE:true, MEGA:true };
+  // Tag 232b-3: filterCap (MICRO/SMALL/MID/LARGE/MEGA bucket toggles) removed.
+  // The Cap≥ $B input introduced in Tag 232b-2 is the only mcap filter now.
   // Tag 232b-1: sector filter is now multi-select (per-sector boolean, all-on default).
   // Initialized from DOM at startup so the server-templated sectors list is the
   // single source of truth. Karl asked for the ability to exclude e.g. Basic Materials
@@ -1036,13 +1041,7 @@ const CLIENT_JS = `
       const stateOn = stateKeys.filter(k => filterState[k]);
       chips.push({k:'state', label:'State: ' + stateOn.join('/')});
     }
-    // Cap pills
-    const capKeys = Object.keys(filterCap);
-    const capOff = capKeys.filter(k => !filterCap[k]);
-    if (capOff.length > 0 && capOff.length < capKeys.length) {
-      const capOn = capKeys.filter(k => filterCap[k]);
-      chips.push({k:'cap', label:'Cap: ' + capOn.join('/')});
-    }
+    // Tag 232b-3: cap-bucket chip removed (filter no longer exists).
     // Tag 232b-1: multi-select sector chip (only when partial selection)
     const secKeys = Object.keys(filterSectors);
     const secOff = secKeys.filter(s => !filterSectors[s]);
@@ -1100,9 +1099,6 @@ const CLIENT_JS = `
     if (key === 'state') {
       filterState = { LOSS:true, TURNAROUND:true, RECENT:true, STABLE:true, NA:true };
       document.querySelectorAll('.filters .f-state').forEach(b => b.classList.add('on'));
-    } else if (key === 'cap') {
-      filterCap = { MICRO:true, SMALL:true, MID:true, LARGE:true, MEGA:true };
-      document.querySelectorAll('.filters .f-cap').forEach(b => b.classList.add('on'));
     } else if (key === 'sector') {
       Object.keys(filterSectors).forEach(s => filterSectors[s] = true);
       // Tag 232b-2: sector buttons replaced by checkbox popover
@@ -1158,7 +1154,7 @@ const CLIENT_JS = `
 
   function clearAllFilters(){
     filterState = { LOSS:true, TURNAROUND:true, RECENT:true, STABLE:true, NA:true };
-    filterCap = { MICRO:true, SMALL:true, MID:true, LARGE:true, MEGA:true };
+    // Tag 232b-3: filterCap removed
     Object.keys(filterSectors).forEach(s => filterSectors[s] = true);
     filterCountry = '';
     filterContinent = '';
@@ -1169,7 +1165,6 @@ const CLIENT_JS = `
     filterDQ = { 'A+':true, 'A':true, 'B':true, 'C':false, 'D':false };
     onlyGaap = false; onlyFcf = false; sortKey = 'auto';
     document.querySelectorAll('.filters .f-state').forEach(b => b.classList.add('on'));
-    document.querySelectorAll('.filters .f-cap').forEach(b => b.classList.add('on'));
     document.querySelectorAll('.filters .f-sec').forEach(b => b.classList.add('on'));
     document.querySelectorAll('.filters .f-dq').forEach(b => {
       const g = b.dataset.dq;
@@ -1199,8 +1194,7 @@ const CLIENT_JS = `
   function applyFilters(list){
     return list.filter(r => {
       if (!filterState[r.state]) return false;
-      const cb = capBucket(r.mcap);
-      if (cb && !filterCap[cb]) return false;
+      // Tag 232b-3: cap-bucket filter removed; Cap≥ input handles mcap filtering.
       // Tag 232b-1: multi-select sector — exclude only if the row's sector is
       // explicitly off (rows with missing/null sector pass; matches existing
       // single-select fallthrough behavior).
@@ -1771,8 +1765,7 @@ const CLIENT_JS = `
       if (dqOn.length < 3) hints.push('include lower data-quality grades (C, D)');
       const stateOff = Object.keys(filterState).filter(k => !filterState[k]);
       if (stateOff.length) hints.push('toggle on state pills: ' + stateOff.join(', '));
-      const capOff = Object.keys(filterCap).filter(k => !filterCap[k]);
-      if (capOff.length) hints.push('toggle on cap buckets: ' + capOff.join(', '));
+      // Tag 232b-3: cap-buckets-off hint removed; Cap≥ input is the new filter.
       const secOffNames = Object.keys(filterSectors).filter(s => !filterSectors[s]);
       if (secOffNames.length > 0) hints.push('include excluded sectors: ' + secOffNames.map(s => SECTOR_LABELS[s] || s).join(', '));
       if (filterCountry) hints.push('clear country filter');
@@ -2221,7 +2214,7 @@ const CLIENT_JS = `
       filterContinent, filterMinMcap,
       filterMinFcfm, filterMinGrowth, filterIpoMin, filterIpoMax,
       filterState: Object.assign({}, filterState),
-      filterCap:   Object.assign({}, filterCap),
+      // Tag 232b-3: filterCap dropped from preset payload
       filterDQ:    Object.assign({}, filterDQ),
       onlyGaap, onlyFcf, sortKey,
       savedAt: new Date().toISOString()
@@ -2256,7 +2249,7 @@ const CLIENT_JS = `
     if (typeof snap.filterIpoMin !== 'undefined') filterIpoMin = snap.filterIpoMin;
     if (typeof snap.filterIpoMax !== 'undefined') filterIpoMax = snap.filterIpoMax;
     if (snap.filterState) filterState = Object.assign({LOSS:true,TURNAROUND:true,RECENT:true,STABLE:true,NA:true}, snap.filterState);
-    if (snap.filterCap)   filterCap   = Object.assign({MICRO:true,SMALL:true,MID:true,LARGE:true,MEGA:true}, snap.filterCap);
+    // Tag 232b-3: filterCap restore dropped (snap.filterCap from old presets is ignored)
     if (snap.filterDQ)    filterDQ    = Object.assign({'A+':true,'A':true,'B':true,'C':false,'D':false}, snap.filterDQ);
     if (typeof snap.onlyGaap === 'boolean') onlyGaap = snap.onlyGaap;
     if (typeof snap.onlyFcf  === 'boolean') onlyFcf  = snap.onlyFcf;
@@ -2264,7 +2257,7 @@ const CLIENT_JS = `
 
     // Sync DOM controls so the visible UI matches restored state.
     document.querySelectorAll('.filters .f-state').forEach(b => b.classList.toggle('on', !!filterState[b.dataset.state]));
-    document.querySelectorAll('.filters .f-cap').forEach(b => b.classList.toggle('on', !!filterCap[b.dataset.cap]));
+    // Tag 232b-3: f-cap buttons no longer exist
     document.querySelectorAll('.filters .f-sec-cb').forEach(cb => { cb.checked = filterSectors[cb.dataset.sec] !== false; });
     if (typeof updateSecBtnLabel === 'function') updateSecBtnLabel();
     document.querySelectorAll('.filters .f-dq').forEach(b => b.classList.toggle('on', !!filterDQ[b.dataset.dq]));
@@ -2604,13 +2597,7 @@ const CLIENT_JS = `
       page = 1; renderTable();
     };
   });
-  document.querySelectorAll('.filters .f-cap').forEach(b => {
-    b.onclick = () => {
-      filterCap[b.dataset.cap] = !filterCap[b.dataset.cap];
-      b.classList.toggle('on', filterCap[b.dataset.cap]);
-      page = 1; renderTable();
-    };
-  });
+  // Tag 232b-3: f-cap click handler removed (cap buckets no longer in DOM).
   // Tag 232b-2: multi-select sector via checkbox popover (replaces b-1 toggle
   // buttons which Karl found too cluttered). Init filterSectors from checkbox
   // DOM so the server-templated sector list is the single source of truth.
@@ -3122,13 +3109,9 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
     <button class="f f-state on" data-state="STABLE">STABLE</button>
     <button class="f f-state on" data-state="NA">N/A</button>
   </span>
-  <span class="group"><span class="label">Cap:</span>
-    <button class="f f-cap on" data-cap="MICRO">Micro</button>
-    <button class="f f-cap on" data-cap="SMALL">Small</button>
-    <button class="f f-cap on" data-cap="MID">Mid</button>
-    <button class="f f-cap on" data-cap="LARGE">Large</button>
-    <button class="f f-cap on" data-cap="MEGA">Mega</button>
-  </span>
+  <!-- Tag 232b-3: MICRO/SMALL/MID/LARGE/MEGA cap-bucket toggle removed per Karl's
+       request — the Cap≥ $B input below is the only mcap filter now. -->
+
   <span class="group sec-popover-wrap" style="position:relative">
     <span class="label">Sector:</span>
     <button id="secToggleBtn" class="f" type="button" aria-expanded="false" aria-haspopup="menu" title="Multi-select sectors">All ▾</button>
