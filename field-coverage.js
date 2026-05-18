@@ -45,6 +45,19 @@ const TRACKED_FIELDS = [
   'annual.annualRnD',              // Tag 202: R&D — second input to reinvestment-rate ((Capex+RnD)/OCF)
   'annual.annualBalance',          // Balance sheet (includes totalDebt) — used by altman-z, net-debt-ebitda
   'metrics.insidersOwnership.value', // Tag 232c-9: was insiderOwnerPercent (typo); canonical field name is insidersOwnership
+  // Tag 232c-31 (audit F-DQ-002 HIGH): track Tag 211l/219/220c additions so
+  // Yahoo silently dropping any of them is detectable. Pre-fix coverage gate
+  // saw 100% on these fields because they weren't enumerated — any deprecation
+  // would have gone unnoticed for months. CRITICAL_FIELDS in methods/data-
+  // quality.js was already updated in Tag 232c-4; this is the parallel update
+  // to TRACKED_FIELDS for the coverage-history baseline.
+  'annual.annualSGA',              // Tag 211l: feeds sga-revenue-trend, beneish-m
+  'annual.annualDepreciation',     // Tag 211l: feeds ohlson-o-score
+  'annual.annualShares',           // Tag 219: feeds buyback-yield
+  'metrics.ebitda.value',          // Tag 219: feeds ev-ebitda
+  'metrics.enterpriseValue.value', // Tag 219: feeds ev-ebitda, magic-formula
+  'metrics.beta.value',            // Tag 219: feeds betting-against-beta
+  'timeseries.netIncomeQ',         // Tag 220c: feeds earnings-surprise-momentum
 ];
 
 const HISTORY_WINDOW = 14;      // Rolling window: letzte 14 Runs für Baseline (war 6 — zu kurz bei 2 Runs/Tag)
