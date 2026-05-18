@@ -67,16 +67,35 @@ function gatherBySubProfile(stocks, classify) {
   const globalBuckets = {};
   const regionalBuckets = {};
 
+  // Tag 232c-13 (audit F-DQ-007 HIGH): Tag 206f preserved positional nulls in
+  // annual arrays so methods could align fiscal years across metric series.
+  // But here, reading only annualX[0] silently drops any stock whose LATEST
+  // year happens to be null (the FTS row for the most recent fiscal year had
+  // no value for that specific metric — common for stocks with partial-year
+  // disclosures). That biased sector medians toward stocks with current-year
+  // data, against stocks with one missing field. Fix: walk the array and
+  // pick the FIRST non-null value (still latest-year-preferred, but tolerant
+  // of position-0 nulls).
+  function _firstNonNull(arr, getter) {
+    if (!Array.isArray(arr)) return null;
+    for (const row of arr) {
+      if (row == null) continue;
+      const v = getter(row);
+      if (v != null && Number.isFinite(v)) return v;
+    }
+    return null;
+  }
+
   for (const stock of stocks) {
     const sp = classify(stock);
     if (!sp || !sp.id) continue;
 
-    // --- extract metrics ---
-    const ni = stock.annual && stock.annual.annualNetIncome && stock.annual.annualNetIncome[0] && stock.annual.annualNetIncome[0].value;
-    const ta = stock.annual && stock.annual.annualBalance && stock.annual.annualBalance[0] && stock.annual.annualBalance[0].totalAssets;
-    const cash = stock.annual && stock.annual.annualBalance && stock.annual.annualBalance[0] && stock.annual.annualBalance[0].totalCash;
-    const oi = stock.annual && stock.annual.annualOpInc && stock.annual.annualOpInc[0] && stock.annual.annualOpInc[0].value;
-    const fcf = stock.annual && stock.annual.annualFCF && stock.annual.annualFCF[0] && stock.annual.annualFCF[0].value;
+    // --- extract metrics (latest non-null per metric; falls back through years) ---
+    const ni = _firstNonNull(stock.annual && stock.annual.annualNetIncome, r => r && r.value);
+    const ta = _firstNonNull(stock.annual && stock.annual.annualBalance, r => r && r.totalAssets);
+    const cash = _firstNonNull(stock.annual && stock.annual.annualBalance, r => r && r.totalCash);
+    const oi = _firstNonNull(stock.annual && stock.annual.annualOpInc, r => r && r.value);
+    const fcf = _firstNonNull(stock.annual && stock.annual.annualFCF, r => r && r.value);
     const mc = stock.marketCap && (typeof stock.marketCap === 'number' ? stock.marketCap : stock.marketCap.value);
 
     // --- push into global bucket ---

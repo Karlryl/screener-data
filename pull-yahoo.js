@@ -1448,15 +1448,30 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     // Mark mode for downstream visibility
     existing._pullMode = 'price-only';
     existing._pullModeAt = newAsOf;
-    // F-DQ-009 / F-DP-036 (Tag 182): mark quality grade as stale after price-only
-    // update so downstream knows it was not re-evaluated. Also clear stale
-    // nanRatio + missingFields — those reflected the LAST full pull and would
-    // appear "fresh" if a method consults them later.
+    // Tag 232c-12 (audit F-DQ-004 HIGH): preserve _quality.grade across price-
+    // only refreshes. Pre-fix, F-DQ-009/F-DP-036 nulled grade + nanRatio +
+    // missingFields after price-only, intending to surface "data not re-
+    // evaluated" — but score-aggregator's tier-cap check did
+    // `if (dataQuality.grade)` which silently skipped the cap on null,
+    // hollowing DATAQUALITY_ENFORCE for the ~80%-hit fast path. Price-only
+    // doesn't change FIELD presence (only price/mcap), so the grade is still
+    // VALID even though it was computed from the last full pull's snapshot
+    // shape. Keeping it preserves the dq-enforcement contract without re-
+    // grading on every price-only refresh.
+    //
+    // Still nuke nanRatio + missingFields — those were point-in-time stats
+    // that DO go stale (rolling field-coverage history evolves), so leaving
+    // them as-is would mislead the data-quality-report. The grade itself
+    // is a categorical bucket that's robust to that.
+    //
+    // staleSincePriceOnly remains as the audit signal: downstream code that
+    // needs an exact freshness anchor (rare — only inputDigest-style hashing)
+    // can branch on it.
     if (existing._quality) {
-      existing._quality.grade = null;
       existing._quality.nanRatio = null;
       existing._quality.missingFields = null;
       existing._quality.staleSincePriceOnly = newAsOf;
+      // existing._quality.grade preserved on purpose — see Tag 232c-12 above.
     }
     // F-DP-032 (Tag 179) → factored into lib/atomic-write.js in Tag 189.
     // ~80% of daily pulls go through this fast-path; atomic write protects
