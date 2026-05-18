@@ -17,9 +17,15 @@
  * (default off bis genug _quality-Historie akkumuliert ist).
  */
 
-// 10 kritische Felder (gewichtet 1.0) + 5 wichtige Felder (gewichtet 0.5).
-// Total weight = 12.5; missing weight wird gegen total normalisiert.
+// Tag 232c-4 (audit F-DQ-001 CRITICAL): extended CRITICAL_FIELDS to cover the
+// Tag 211l / 219 / 220c schema additions. Pre-fix, a snapshot missing every
+// newer field but having all 15 legacy fields graded A+, hiding the real data-
+// quality gap that the schema-stale probe in pull-yahoo.js (Tag 226a-2) was
+// firing on. Pre-fix total weight = 12.5; post-fix = 19.5 (14 new fields at
+// weight 0.5 each). GRADE_THRESHOLDS unchanged for A+/A/B; C tightened to make
+// D reachable (F-DQ-003 companion fix below).
 const CRITICAL_FIELDS = [
+  // === Legacy fields (Tag 133c era) — weight 1.0 ===
   { id: 'meta.sector',          weight: 1.0, check: s => !!(s.meta && s.meta.sector) },
   { id: 'meta.industry',        weight: 1.0, check: s => !!(s.meta && s.meta.industry) },
   { id: 'meta.ticker',          weight: 1.0, check: s => !!(s.meta && s.meta.ticker) },
@@ -30,11 +36,29 @@ const CRITICAL_FIELDS = [
   { id: 'metrics.operatingMargin', weight: 1.0, check: s => _hasMetric(s.metrics && s.metrics.operatingMargin) },
   { id: 'metrics.fcfMarginTTM', weight: 1.0, check: s => _hasMetric(s.metrics && s.metrics.fcfMarginTTM) },
   { id: 'annual.annualRev>=3',  weight: 1.0, check: s => _arrLen(s.annual && s.annual.annualRev) >= 3 },
+  // === Legacy fields (Tag 133c era) — weight 0.5 ===
   { id: 'annual.annualOpInc>=3', weight: 0.5, check: s => _arrLen(s.annual && s.annual.annualOpInc) >= 3 },
   { id: 'annual.annualFCF>=2',  weight: 0.5, check: s => _arrLen(s.annual && s.annual.annualFCF) >= 2 },
   { id: 'annual.annualBalance>=2', weight: 0.5, check: s => _arrLen(s.annual && s.annual.annualBalance) >= 2 },
   { id: 'timeseries.revenueQ>=4', weight: 0.5, check: s => _arrLen(s.timeseries && s.timeseries.revenueQ) >= 4 },
-  { id: 'timeseries.opIncQ>=2', weight: 0.5, check: s => _arrLen(s.timeseries && s.timeseries.opIncQ) >= 2 }
+  { id: 'timeseries.opIncQ>=2', weight: 0.5, check: s => _arrLen(s.timeseries && s.timeseries.opIncQ) >= 2 },
+  // === Tag 211l additions (SGA + Depreciation income/cashflow + balance fields) ===
+  { id: 'annual.annualSGA>=2',  weight: 0.5, check: s => _arrLen(s.annual && s.annual.annualSGA) >= 2 },
+  { id: 'annual.annualDepreciation>=2', weight: 0.5, check: s => _arrLen(s.annual && s.annual.annualDepreciation) >= 2 },
+  { id: 'annualBalance[0].currentAssets', weight: 0.5, check: s => _hasBalanceField(s, 'currentAssets') },
+  { id: 'annualBalance[0].currentLiabilities', weight: 0.5, check: s => _hasBalanceField(s, 'currentLiabilities') },
+  { id: 'annualBalance[0].totalLiabilities', weight: 0.5, check: s => _hasBalanceField(s, 'totalLiabilities') },
+  { id: 'annualBalance[0].accountsReceivable', weight: 0.5, check: s => _hasBalanceField(s, 'accountsReceivable') },
+  { id: 'annualBalance[0].netPPE', weight: 0.5, check: s => _hasBalanceField(s, 'netPPE') },
+  // === Tag 219 additions (shares + market-data fields for beneish/buyback/BAB) ===
+  { id: 'annual.annualShares>=2', weight: 0.5, check: s => _arrLen(s.annual && s.annual.annualShares) >= 2 },
+  { id: 'metrics.ebitda',       weight: 0.5, check: s => _hasMetric(s.metrics && s.metrics.ebitda) },
+  { id: 'metrics.enterpriseValue', weight: 0.5, check: s => _hasMetric(s.metrics && s.metrics.enterpriseValue) },
+  { id: 'metrics.beta',         weight: 0.5, check: s => _hasMetric(s.metrics && s.metrics.beta) },
+  { id: 'metrics.forwardPE',    weight: 0.5, check: s => _hasMetric(s.metrics && s.metrics.forwardPE) },
+  // === Tag 220c additions ===
+  { id: 'timeseries.netIncomeQ>=4', weight: 0.5, check: s => _arrLen(s.timeseries && s.timeseries.netIncomeQ) >= 4 },
+  { id: 'meta.earningsHistory', weight: 0.5, check: s => !!(s.meta && s.meta.earningsHistory) }
 ];
 
 const TOTAL_WEIGHT = CRITICAL_FIELDS.reduce((sum, f) => sum + f.weight, 0);
@@ -57,18 +81,36 @@ const TOTAL_WEIGHT = CRITICAL_FIELDS.reduce((sum, f) => sum + f.weight, 0);
 //   B:  nanRatio ≤ 0.60 (40–60% missing)
 //   C:  nanRatio ≤ 1.00 (60–100% missing → NEAR_MISS cap)
 //   D:  nanRatio > 1.00  — impossible (kept for safety)
+// Tag 232c-4 (audit F-DQ-003): C upper bound tightened from 1.00 to 0.85
+// so D is actually reachable (the prior 1.00 made D mathematically impossible
+// because max nanRatio = 1.0 satisfied ≤1.00, falling into C). Now >85%
+// missing → D → REJECT via tierCapForGrade. C still wide (60-85%) so
+// realistic mid-quality snapshots don't get rejected outright.
 const GRADE_THRESHOLDS = {
   Aplus: 0.20,  // ≤20% missing → A+
   A:     0.40,  // 20–40% missing → A
   B:     0.60,  // 40–60% missing → B
-  C:     1.00   // 60–100% missing → C (NEAR_MISS cap enforced by tierCapForGrade)
-  // > 100% = D (impossible with finite weights, kept as safety net)
+  C:     0.85   // 60–85% missing → C (NEAR_MISS cap); >85% → D (REJECT)
 };
 
 function _hasMetric(m) {
   if (!m) return false;
   if (typeof m === 'number') return Number.isFinite(m);
   return m.value != null && (typeof m.value !== 'number' || Number.isFinite(m.value));
+}
+
+// Tag 232c-4: check the LATEST annualBalance row for a named field. The Tag 211l
+// balance-sheet additions (currentAssets/currentLiabilities/totalLiabilities/
+// accountsReceivable/netPPE) sit per-row inside annualBalance[i], not as top-
+// level arrays. Yahoo's FTS returns null for missing line items so we require
+// a finite numeric value, not just key presence.
+function _hasBalanceField(snap, key) {
+  const bs = snap && snap.annual && snap.annual.annualBalance;
+  if (!Array.isArray(bs) || bs.length === 0) return false;
+  const row = bs[0];
+  if (!row || typeof row !== 'object') return false;
+  const v = row[key];
+  return v != null && Number.isFinite(v);
 }
 
 function _arrLen(arr) {

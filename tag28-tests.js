@@ -235,25 +235,41 @@ test('revenue-volatility-guard: USD large-cap with -67% YoY still FAILS', () => 
 const { gradeSnapshot, tierCapForGrade } = require('./methods/data-quality.js');
 
 function fullSnapshot() {
+  // Tag 232c-4: extended to include all Tag 211l / 219 / 220c critical fields
+  // so the "fully-populated → A+" test reflects the new CRITICAL_FIELDS surface.
   return {
-    meta: { ticker: 'TEST', sector: 'Technology', industry: 'Software' },
+    meta: {
+      ticker: 'TEST', sector: 'Technology', industry: 'Software',
+      earningsHistory: [{ epsActual: 1.5, epsEstimate: 1.4 }]
+    },
     marketCap: { value: 50e9 },
     metrics: {
       revenueTTM: { value: 10e9 },
       revenueGrowthYoY: { value: 25 },
       grossMargin: { value: 70 },
       operatingMargin: { value: 30 },
-      fcfMarginTTM: { value: 25 }
+      fcfMarginTTM: { value: 25 },
+      ebitda: { value: 3.5e9 },
+      enterpriseValue: { value: 60e9 },
+      beta: { value: 1.2 },
+      forwardPE: { value: 30 }
     },
     annual: {
       annualRev: [{ value: 10e9 }, { value: 8e9 }, { value: 6e9 }, { value: 4e9 }],
       annualOpInc: [{ value: 3e9 }, { value: 2e9 }, { value: 1.5e9 }],
       annualFCF: [{ value: 2.5e9 }, { value: 1.8e9 }],
-      annualBalance: [{ totalCash: 1e9 }, { totalCash: 0.8e9 }]
+      annualBalance: [
+        { totalCash: 1e9, currentAssets: 5e9, currentLiabilities: 2e9, totalLiabilities: 6e9, accountsReceivable: 1.5e9, netPPE: 3e9 },
+        { totalCash: 0.8e9, currentAssets: 4e9, currentLiabilities: 1.8e9, totalLiabilities: 5.5e9, accountsReceivable: 1.2e9, netPPE: 2.5e9 }
+      ],
+      annualSGA: [{ value: 0.8e9 }, { value: 0.7e9 }],
+      annualDepreciation: [{ value: 0.5e9 }, { value: 0.4e9 }],
+      annualShares: [{ value: 2.4e9 }, { value: 2.5e9 }]
     },
     timeseries: {
       revenueQ: [{ value: 2.5e9 }, { value: 2.4e9 }, { value: 2.3e9 }, { value: 2.2e9 }],
-      opIncQ: [{ value: 0.7e9 }, { value: 0.6e9 }]
+      opIncQ: [{ value: 0.7e9 }, { value: 0.6e9 }],
+      netIncomeQ: [{ value: 0.5e9 }, { value: 0.45e9 }, { value: 0.4e9 }, { value: 0.35e9 }]
     }
   };
 }
@@ -265,21 +281,30 @@ test('data-quality: fully-populated snapshot -> grade A+', () => {
   if (g.nanRatio !== 0) throw new Error('expected nanRatio=0, got ' + g.nanRatio);
 });
 
-test('data-quality: 30%-missing snapshot -> grade A (not C)', () => {
-  // F-DQ-007/008: drop 4 weight-1.0 fields → missingWeight=4, nanRatio=4/12.5=0.32 → A (20–40% missing)
+test('data-quality: ~30%-missing snapshot -> grade A (not C)', () => {
+  // Tag 232c-4: with CRITICAL_FIELDS extended, total weight = 19.5. Drop 5
+  // weight-1.0 fields (5/19.5 = 0.256) AND 4 weight-0.5 fields (2/19.5 = 0.103)
+  // for 0.359 total → A grade (≤0.40 missing).
   const s = fullSnapshot();
   delete s.meta.industry;
   delete s.metrics.fcfMarginTTM;
   delete s.metrics.operatingMargin;
   delete s.metrics.grossMargin;
+  delete s.metrics.revenueGrowthYoY;
+  delete s.metrics.ebitda;
+  delete s.metrics.enterpriseValue;
+  delete s.metrics.beta;
+  delete s.metrics.forwardPE;
   const g = gradeSnapshot(s);
   if (g.grade !== 'A') throw new Error('expected A, got ' + g.grade + ' (ratio=' + g.nanRatio + ' missing=' + g.missingFields.join(',') + ')');
 });
 
-test('data-quality: heavily-empty snapshot -> grade C', () => {
-  // F-DQ-007/008: D is impossible with C threshold=1.0; nearly-empty → nanRatio≈0.92 → C
+test('data-quality: heavily-empty snapshot -> grade D', () => {
+  // Tag 232c-4 (audit F-DQ-003): with C tightened to ≤0.85, an empty snapshot
+  // (only meta.ticker present) yields nanRatio ≈ 0.949 → D (was permanently
+  // unreachable under the prior C ≤ 1.00 threshold).
   const g = gradeSnapshot({ meta: { ticker: 'TEST' } });
-  if (g.grade !== 'C') throw new Error('expected C, got ' + g.grade + ' (ratio=' + g.nanRatio + ')');
+  if (g.grade !== 'D') throw new Error('expected D, got ' + g.grade + ' (ratio=' + g.nanRatio + ')');
 });
 
 test('data-quality: tierCapForGrade A+/A/B -> null, C -> NEAR_MISS, D -> REJECT', () => {
