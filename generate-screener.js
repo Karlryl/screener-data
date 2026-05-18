@@ -546,16 +546,43 @@ const CSS = `
   --text-0:#e2eaf3; --text-1:#8899aa; --text-2:#4a5f70;
   --green:#00cc88; --red:#ff3d5a; --yellow:#ffbb33; --blue:#3d8fff; --purple:#8866ff;
   --mono:'JetBrains Mono','Cascadia Code','Consolas',monospace;
-  /* Tag 232b-3: emoji-font fallbacks in the UI chain so 🇺🇸/🇯🇵/etc.
-     render as actual flags on Windows + Chromium. Segoe UI Emoji has had
-     flag glyphs since Win11 Fluent rollout; Twemoji Mozilla covers Firefox;
-     Apple Color Emoji covers macOS/iOS; Noto Color Emoji covers Linux. */
-  --ui:-apple-system,'Segoe UI','Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji','Twemoji Mozilla',Roboto,system-ui,sans-serif;
+  /* Tag 232b-4: 'Twemoji Country Flags' is loaded via @font-face below (unicode-
+     range scoped to regional indicators only). Listed FIRST so flag glyphs
+     resolve to it regardless of the rest of the chain — text glyphs fall
+     through to Segoe UI / Apple system / Roboto as before. Solves the
+     "flags don't render in Chromium on Windows" problem that the b-3
+     font-family-only fix couldn't fully address (Segoe UI Emoji does
+     ship flag glyphs since Win11 Fluent rollout but Chromium often
+     ignores font-family for native <option> elements — the b-4 country
+     popover replaces <select> with a div-based grid so font-family wins). */
+  --ui:'Twemoji Country Flags',-apple-system,'Segoe UI','Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji','Twemoji Mozilla',Roboto,system-ui,sans-serif;
   /* Tag 211g spacing scale (4/8/12/16/24) — use these vars in new code rather
      than hard-coded px values. Existing inline values left alone except for
      the most visible offenders. */
   --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-6:24px;
 }
+/* Tag 232b-4: Twemoji Country Flags font (Mozilla/Apache 2.0 — talkjs/
+   country-flag-emoji-polyfill). 30KB woff2 served from jsdelivr CDN. The
+   unicode-range scoping means this font is ONLY consulted for regional
+   indicator code-points (U+1F1E6..U+1F1FF) and the black-flag-tag-sequence
+   block — text glyphs continue resolving to Segoe UI / Apple system fonts.
+   Falls back gracefully if CDN is unreachable: regional indicators render
+   as the underlying ISO letter pair (US / JP / DE / ...), still readable. */
+@font-face {
+  font-family: 'Twemoji Country Flags';
+  unicode-range: U+1F1E6-1F1FF, U+1F3F4, U+E0062-E007F;
+  src: url('https://cdn.jsdelivr.net/npm/country-flag-emoji-polyfill@0.1/dist/TwemojiCountryFlags.woff2') format('woff2');
+  font-display: swap;
+}
+/* Country popover: 4-column grid of country chips for fast multi-select
+   without scrolling through 35+ options vertically. Reuses .col-popover
+   chrome but overrides the body to grid layout. */
+.ctry-popover { min-width:300px; max-width:520px; }
+.ctry-popover .ctry-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:2px 6px; padding:6px 12px; }
+.ctry-popover .ctry-grid label { display:flex; align-items:center; gap:4px; cursor:pointer; padding:3px 4px; font-family:var(--mono); font-size:11px; color:var(--text-0); transition:background 80ms ease-out; }
+.ctry-popover .ctry-grid label:hover { background:var(--bg-hover); }
+.ctry-popover .ctry-grid label input { margin:0; cursor:pointer; }
+.ctry-popover .ctry-grid .flag { font-size:14px; line-height:1; }
 * { box-sizing:border-box; }
 /* Tag 211g: global tabular-nums for all mono text so percent/number columns
    align vertically regardless of digit width (1 vs 4 etc). Applies to the
@@ -937,7 +964,11 @@ const CLIENT_JS = `
   // when looking at R40 candidates; the prior single-select forced choosing one.
   // (NB: no inner backticks in this block — outer is a template literal, see CLIENT_JS note above.)
   let filterSectors = {};
-  let filterCountry = '';
+  // Tag 232b-4: country filter is now multi-select (per-country bool, all-on
+  // default). Parallel to filterSectors. Driven from the new ctry-popover
+  // checkbox grid in the filter bar. Old single-select snap.filterCountry
+  // strings still load via presetApply migration.
+  let filterCountries = {};
   // Tag 232b-2: continent select (alternative to country) and a market-cap
   // minimum in billions USD (Karl: "wie groß das market cap mindestens sein muss").
   let filterContinent = '';
@@ -1050,7 +1081,14 @@ const CLIENT_JS = `
       const labels = secOn.map(s => SECTOR_LABELS[s] || s);
       chips.push({k:'sector', label:'Sector: ' + labels.join('/')});
     }
-    if (filterCountry) chips.push({k:'country', label:'Country: ' + filterCountry});
+    // Tag 232b-4: country chip only when selection is partial
+    const ctryKeys = Object.keys(filterCountries);
+    const ctryOff = ctryKeys.filter(c => !filterCountries[c]);
+    if (ctryKeys.length > 0 && ctryOff.length > 0 && ctryOff.length < ctryKeys.length) {
+      const ctryOn = ctryKeys.filter(c => filterCountries[c]);
+      const label = ctryOn.length <= 3 ? ctryOn.join('/') : (ctryOn.length + '/' + ctryKeys.length);
+      chips.push({k:'country', label:'Country: ' + label});
+    }
     // Tag 232b-2: continent + mcap min chips
     if (filterContinent) chips.push({k:'continent', label:'Continent: ' + filterContinent});
     if (filterMinMcap !== '') chips.push({k:'minMcap', label:'Cap ≥ $' + filterMinMcap + 'B'});
@@ -1105,8 +1143,9 @@ const CLIENT_JS = `
       document.querySelectorAll('.filters .f-sec-cb').forEach(cb => { cb.checked = true; });
       updateSecBtnLabel();
     } else if (key === 'country') {
-      filterCountry = '';
-      const el = document.getElementById('fCountry'); if (el) el.value = '';
+      Object.keys(filterCountries).forEach(c => filterCountries[c] = true);
+      document.querySelectorAll('.filters .f-ctry-cb').forEach(cb => { cb.checked = true; });
+      if (typeof updateCtryBtnLabel === 'function') updateCtryBtnLabel();
     } else if (key === 'continent') {
       filterContinent = '';
       const el = document.getElementById('fContinent'); if (el) el.value = '';
@@ -1156,7 +1195,7 @@ const CLIENT_JS = `
     filterState = { LOSS:true, TURNAROUND:true, RECENT:true, STABLE:true, NA:true };
     // Tag 232b-3: filterCap removed
     Object.keys(filterSectors).forEach(s => filterSectors[s] = true);
-    filterCountry = '';
+    Object.keys(filterCountries).forEach(c => filterCountries[c] = true);
     filterContinent = '';
     filterMinMcap = '';
     filterMinR40 = ''; filterMaxR40 = ''; filterMin = '';
@@ -1170,12 +1209,14 @@ const CLIENT_JS = `
       const g = b.dataset.dq;
       b.classList.toggle('on', !!filterDQ[g]);
     });
-    ['fCountry','fContinent','fMinMcap','fMinR40','fMaxR40','fMin','fMinFcfm','fMinGrowth','fIpoMin','fIpoMax'].forEach(id => {
+    ['fContinent','fMinMcap','fMinR40','fMaxR40','fMin','fMinFcfm','fMinGrowth','fIpoMin','fIpoMax'].forEach(id => {
       const el = document.getElementById(id); if (el) el.value = '';
     });
-    // Tag 232b-2: also reset sector popover checkboxes
+    // Tag 232b-2/4: reset sector + country popover checkboxes
     document.querySelectorAll('.filters .f-sec-cb').forEach(cb => { cb.checked = true; });
+    document.querySelectorAll('.filters .f-ctry-cb').forEach(cb => { cb.checked = true; });
     const secBtn = document.getElementById('secToggleBtn'); if (secBtn) secBtn.textContent = 'All ▾';
+    const ctryBtn = document.getElementById('ctryToggleBtn'); if (ctryBtn) ctryBtn.textContent = 'All ▾';
     const gEl = document.getElementById('onlyGaap'); if (gEl) gEl.checked = false;
     const fEl = document.getElementById('onlyFcf'); if (fEl) fEl.checked = false;
     const sEl = document.getElementById('fSort'); if (sEl) sEl.value = 'auto';
@@ -1199,7 +1240,8 @@ const CLIENT_JS = `
       // explicitly off (rows with missing/null sector pass; matches existing
       // single-select fallthrough behavior).
       if (r.sector && filterSectors[r.sector] === false) return false;
-      if (filterCountry && r.country !== filterCountry) return false;
+      // Tag 232b-4: multi-select country (exclude only when explicitly off).
+      if (r.country && filterCountries[r.country] === false) return false;
       // Tag 232b-2: continent filter (independent of country — set either or both).
       if (filterContinent) {
         const cont = r.country ? COUNTRY_TO_CONTINENT[r.country] : null;
@@ -1768,7 +1810,8 @@ const CLIENT_JS = `
       // Tag 232b-3: cap-buckets-off hint removed; Cap≥ input is the new filter.
       const secOffNames = Object.keys(filterSectors).filter(s => !filterSectors[s]);
       if (secOffNames.length > 0) hints.push('include excluded sectors: ' + secOffNames.map(s => SECTOR_LABELS[s] || s).join(', '));
-      if (filterCountry) hints.push('clear country filter');
+      const ctryOffNames = Object.keys(filterCountries).filter(c => !filterCountries[c]);
+      if (ctryOffNames.length > 0) hints.push('include excluded countries: ' + (ctryOffNames.length <= 5 ? ctryOffNames.join(', ') : ctryOffNames.slice(0,5).join(', ') + '... and ' + (ctryOffNames.length-5) + ' more'));
       if (filterMinR40 !== '' || filterMaxR40 !== '') hints.push('clear R40 min/max');
       if (filterMin !== '') hints.push('clear Tab Min');
       if (filterMinFcfm !== '') hints.push('lower or clear FCFM≥ filter (currently ' + filterMinFcfm + '%)');
@@ -2207,7 +2250,9 @@ const CLIENT_JS = `
   }
   function presetSnapshot(){
     return {
-      activeTab, filterCountry, filterMinR40, filterMaxR40, filterMin,
+      activeTab, filterMinR40, filterMaxR40, filterMin,
+      // Tag 232b-4: multi-select country (parallel to filterSectors)
+      filterCountries: Object.assign({}, filterCountries),
       // Tag 232b-1/2: persist new filter state (sectors object + numeric inputs +
       // continent + mcap min).
       filterSectors: Object.assign({}, filterSectors),
@@ -2238,7 +2283,15 @@ const CLIENT_JS = `
     } else if (typeof snap.filterSector === 'string' && snap.filterSector) {
       Object.keys(filterSectors).forEach(s => { filterSectors[s] = (s === snap.filterSector); });
     }
-    if (typeof snap.filterCountry === 'string') filterCountry = snap.filterCountry;
+    // Tag 232b-4: restore country multi-select. Migrate legacy single-select
+    // snap.filterCountry string to filterCountries{} same way sector did.
+    if (snap.filterCountries && typeof snap.filterCountries === 'object') {
+      Object.keys(filterCountries).forEach(c => {
+        filterCountries[c] = snap.filterCountries[c] !== false;
+      });
+    } else if (typeof snap.filterCountry === 'string' && snap.filterCountry) {
+      Object.keys(filterCountries).forEach(c => { filterCountries[c] = (c === snap.filterCountry); });
+    }
     if (typeof snap.filterContinent === 'string') filterContinent = snap.filterContinent;
     if (typeof snap.filterMinMcap !== 'undefined') filterMinMcap = snap.filterMinMcap;
     if (typeof snap.filterMinR40 !== 'undefined') filterMinR40 = snap.filterMinR40;
@@ -2262,7 +2315,10 @@ const CLIENT_JS = `
     if (typeof updateSecBtnLabel === 'function') updateSecBtnLabel();
     document.querySelectorAll('.filters .f-dq').forEach(b => b.classList.toggle('on', !!filterDQ[b.dataset.dq]));
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = (v == null ? '' : v); };
-    setVal('fCountry', filterCountry); setVal('fContinent', filterContinent); setVal('fMinMcap', filterMinMcap);
+    // Tag 232b-4: sync country popover checkboxes from restored state
+    document.querySelectorAll('.filters .f-ctry-cb').forEach(cb => { cb.checked = filterCountries[cb.dataset.ctry] !== false; });
+    if (typeof updateCtryBtnLabel === 'function') updateCtryBtnLabel();
+    setVal('fContinent', filterContinent); setVal('fMinMcap', filterMinMcap);
     setVal('fMinR40', filterMinR40); setVal('fMaxR40', filterMaxR40); setVal('fMin', filterMin);
     setVal('fMinFcfm', filterMinFcfm); setVal('fMinGrowth', filterMinGrowth);
     setVal('fIpoMin', filterIpoMin); setVal('fIpoMax', filterIpoMax);
@@ -2646,7 +2702,54 @@ const CLIENT_JS = `
     document.querySelectorAll('.filters .f-sec-cb').forEach(cb => { cb.checked = false; });
     updateSecBtnLabel(); page = 1; renderTable();
   });
-  document.getElementById('fCountry').onchange = e => { filterCountry = e.target.value; page=1; renderTable(); };
+  // Tag 232b-4: country multi-select popover (parallel to sector). Replaces
+  // the b-2 native <select> which couldn't render flag-emoji on Chromium-on-
+  // Windows AND forced single-column scrolling through 35+ options.
+  function updateCtryBtnLabel(){
+    const btn = document.getElementById('ctryToggleBtn');
+    if (!btn) return;
+    const keys = Object.keys(filterCountries);
+    const on = keys.filter(c => filterCountries[c]);
+    if (on.length === keys.length) btn.textContent = 'All ▾';
+    else if (on.length === 0) btn.textContent = '(none) ▾';
+    else if (on.length <= 3) btn.textContent = on.join(', ') + ' ▾';
+    else btn.textContent = on.length + '/' + keys.length + ' ▾';
+  }
+  document.querySelectorAll('.filters .f-ctry-cb').forEach(cb => {
+    filterCountries[cb.dataset.ctry] = true;  // default all-on
+    cb.addEventListener('change', () => {
+      filterCountries[cb.dataset.ctry] = cb.checked;
+      updateCtryBtnLabel();
+      page = 1; renderTable();
+    });
+  });
+  const ctryToggleBtn = document.getElementById('ctryToggleBtn');
+  const ctryPopover   = document.getElementById('ctryPopover');
+  if (ctryToggleBtn && ctryPopover) {
+    ctryToggleBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = ctryPopover.classList.toggle('show');
+      ctryToggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', e => {
+      if (!ctryPopover.classList.contains('show')) return;
+      if (e.target.closest('.ctry-popover-wrap')) return;
+      ctryPopover.classList.remove('show');
+      ctryToggleBtn.setAttribute('aria-expanded', 'false');
+    });
+  }
+  const ctryAllBtn  = document.getElementById('ctryAllBtn');
+  const ctryNoneBtn = document.getElementById('ctryNoneBtn');
+  if (ctryAllBtn) ctryAllBtn.addEventListener('click', () => {
+    Object.keys(filterCountries).forEach(c => filterCountries[c] = true);
+    document.querySelectorAll('.filters .f-ctry-cb').forEach(cb => { cb.checked = true; });
+    updateCtryBtnLabel(); page = 1; renderTable();
+  });
+  if (ctryNoneBtn) ctryNoneBtn.addEventListener('click', () => {
+    Object.keys(filterCountries).forEach(c => filterCountries[c] = false);
+    document.querySelectorAll('.filters .f-ctry-cb').forEach(cb => { cb.checked = false; });
+    updateCtryBtnLabel(); page = 1; renderTable();
+  });
   // Tag 232b-2: continent select + market-cap minimum
   document.getElementById('fContinent').onchange = e => { filterContinent = e.target.value; page=1; renderTable(); };
   document.getElementById('fMinMcap').oninput = e => { filterMinMcap = e.target.value; page=1; renderTable(); };
@@ -3117,12 +3220,19 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
     <button id="secToggleBtn" class="f" type="button" aria-expanded="false" aria-haspopup="menu" title="Multi-select sectors">All ▾</button>
     <div id="secPopover" class="col-popover" role="menu" aria-label="Sector multi-select">${sectors.map(s => `<label class="col-item"><input type="checkbox" class="f-sec-cb" data-sec="${escHtml(s)}" checked/> ${escHtml(s)}</label>`).join('')}<div class="col-sep"></div><div class="col-reset" id="secAllBtn">Select all</div><div class="col-reset" id="secNoneBtn">Clear all</div></div>
   </span>
-  <span class="group"><span class="label">Country:</span>
-    <select id="fCountry"><option value="">All</option>${countries.map(c => {
-      const flag = COUNTRY_FLAGS[c] || '';
-      const label = (flag ? flag + ' ' : '') + c;
-      return `<option value="${escHtml(c)}">${escHtml(label)}</option>`;
-    }).join('')}</select>
+  <span class="group ctry-popover-wrap" style="position:relative">
+    <span class="label">Country:</span>
+    <button id="ctryToggleBtn" class="f" type="button" aria-expanded="false" aria-haspopup="menu" title="Multi-select countries">All ▾</button>
+    <div id="ctryPopover" class="col-popover ctry-popover" role="menu" aria-label="Country multi-select">
+      <div class="ctry-grid">${countries.map(c => {
+        const flag = COUNTRY_FLAGS[c] || '';
+        const flagSpan = flag ? `<span class="flag">${flag}</span>` : '';
+        return `<label><input type="checkbox" class="f-ctry-cb" data-ctry="${escHtml(c)}" checked/>${flagSpan}<span>${escHtml(c)}</span></label>`;
+      }).join('')}</div>
+      <div class="col-sep"></div>
+      <div class="col-reset" id="ctryAllBtn">Select all</div>
+      <div class="col-reset" id="ctryNoneBtn">Clear all</div>
+    </div>
   </span>
   <span class="group"><span class="label">Continent:</span>
     <select id="fContinent"><option value="">All</option><option value="Americas">🌎 Americas</option><option value="Europe">🌍 Europe</option><option value="Asia">🌏 Asia</option><option value="Oceania">🇦🇺 Oceania</option><option value="Africa">🌍 Africa</option></select>
