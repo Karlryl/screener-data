@@ -1588,18 +1588,24 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // snapshot fills the schema-stale gap WITHOUT a re-fetch. Caches that
       // pre-date Tag 211l do require a fresh FTS hit — those are a smaller
       // subset (the genuine pre-Tag-211l population).
+      // Tag 232c-32 — remove the currency-stale cache-bypass entirely. The
+      // currency-stale probe (Tag 230a) is about price/marketCap envelope
+      // format, which is fixed in mapYahooToCanonical + _convertSnapshotToUSD
+      // on every full pull regardless of FTS cache use. Re-fetching FTS data
+      // for currency-stale tickers doesn't help (FTS is annual/quarterly/
+      // balance time-series, not price). With ~46% of universe currency-
+      // stale per audit Tag 230a, the unnecessary bypass added ~75 min of
+      // pure overhead — meaningful in the 165-min Yahoo Pull budget.
       if (useCache && cached && cached.payload) {
         const cacheHasTag211l =
           Array.isArray(cached.payload.ftsAnnualSGA) && cached.payload.ftsAnnualSGA.length > 0 ||
           Array.isArray(cached.payload.ftsAnnualDepreciation) && cached.payload.ftsAnnualDepreciation.length > 0;
         if (staleSchema && !cacheHasTag211l) {
           cacheBypassReason = 'schema-stale + cache-pre-Tag-211l';
-        } else if (staleCurrency) {
-          cacheBypassReason = 'currency-stale';
         }
-      } else if (staleSchema || staleCurrency) {
+      } else if (staleSchema) {
         // No cache to use anyway — re-fetch is happening regardless.
-        cacheBypassReason = staleSchema ? 'schema-stale (no cache)' : 'currency-stale (no cache)';
+        cacheBypassReason = 'schema-stale (no cache)';
       }
       if (cacheBypassReason) {
         if (typeof global.__ftsCacheStaleBypasses === 'undefined') global.__ftsCacheStaleBypasses = 0;
