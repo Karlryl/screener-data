@@ -1556,20 +1556,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // tomorrow's probe doesn't fire on it → fast-path returns → over a few
       // days the schema-stale set drains to ~0 and the universe lands back in
       // the daily Yahoo Pull budget.
-      const cacheBypassReason = staleSchema ? 'schema-stale' : (staleCurrency ? 'currency-stale' : null);
       let useCache = false;
       let cached = null;
-      if (fs.existsSync(cachePath) && !cacheBypassReason) {
+      let cacheBypassReason = null;
+      if (fs.existsSync(cachePath)) {
         try {
           cached = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
           // F-DP-019: reject cache if version key is missing or differs.
-          // Tag 222b (audit Tag 221a C4 followup): the write site at line ~1405
-          // does stamp _cacheVersion correctly (verified via NVDA.json which
-          // carries _cacheVersion=2), but the bulk of legacy cache files were
-          // written before this stamp existed. They're correctly invalidated
-          // here, then re-fetched. Counter below makes the invalidation
-          // visible in the run summary — previously silent. Process-scope
-          // (var on module global) so we count across the whole pull.
           if (cached._cacheVersion !== FTS_CACHE_VERSION) {
             if (typeof global.__ftsCacheInvalidations === 'undefined') global.__ftsCacheInvalidations = 0;
             global.__ftsCacheInvalidations++;
@@ -1580,12 +1573,38 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
             if (age < ttl) useCache = true;
           }
         } catch (e) {}
-      } else if (cacheBypassReason) {
-        // Track cumulative count of stale-schema/currency cache bypasses so the
-        // run summary can show progress: count goes high on first run after the
-        // fix lands, falls to ~0 once the universe has been re-pulled through.
+      }
+      // Tag 232c-3 (audit F-DP-001 CRITICAL) — refined Tag 232c-19:
+      // The audit's "set useCache=false when staleSchema=true" is correct
+      // intent but applying it BLINDLY to every stale-schema ticker (~98% of
+      // universe per the first run after Tag 211l rollout) forces a fresh
+      // FTS fetch on each one. At 4-10s per fresh FTS fetch × 20K tickers /
+      // 8 concurrent = far over the 165-min Yahoo Pull budget → n_ok crashes
+      // below the coverage gate, pipeline still blocked.
+      //
+      // Smarter test: bypass cache only if the CACHE ITSELF lacks the Tag
+      // 211l fields. Caches written after the Tag 211l puller rollout DO
+      // carry ftsAnnualSGA/Depreciation/Shares; re-merging those into the
+      // snapshot fills the schema-stale gap WITHOUT a re-fetch. Caches that
+      // pre-date Tag 211l do require a fresh FTS hit — those are a smaller
+      // subset (the genuine pre-Tag-211l population).
+      if (useCache && cached && cached.payload) {
+        const cacheHasTag211l =
+          Array.isArray(cached.payload.ftsAnnualSGA) && cached.payload.ftsAnnualSGA.length > 0 ||
+          Array.isArray(cached.payload.ftsAnnualDepreciation) && cached.payload.ftsAnnualDepreciation.length > 0;
+        if (staleSchema && !cacheHasTag211l) {
+          cacheBypassReason = 'schema-stale + cache-pre-Tag-211l';
+        } else if (staleCurrency) {
+          cacheBypassReason = 'currency-stale';
+        }
+      } else if (staleSchema || staleCurrency) {
+        // No cache to use anyway — re-fetch is happening regardless.
+        cacheBypassReason = staleSchema ? 'schema-stale (no cache)' : 'currency-stale (no cache)';
+      }
+      if (cacheBypassReason) {
         if (typeof global.__ftsCacheStaleBypasses === 'undefined') global.__ftsCacheStaleBypasses = 0;
         global.__ftsCacheStaleBypasses++;
+        useCache = false;
       }
       let ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD;
       let ftsAnnualSGA, ftsAnnualDepreciation, ftsAnnualShares;
