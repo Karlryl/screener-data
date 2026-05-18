@@ -92,6 +92,28 @@ const COUNTRY_FLAGS = {
   AU:'🇦🇺', NZ:'🇳🇿',
   'São Paulo':'🇧🇷', Saudi:'🇸🇦', Dubai:'🇦🇪'
 };
+// Tag 232b-5: inline-embed the Twemoji Country Flags font. The b-4 attempt
+// loaded it from jsdelivr CDN, but Karl reported flags still didn't render
+// — likely the CDN-load failed for him (file:// origin / offline / corp
+// proxy / fast page-render that beat the lazy font fetch). Inlining the
+// ~78KB woff2 as a data: URI guarantees the font is available at the
+// moment the popover opens. Adds ~104KB to screener.html (already ~24MB
+// — negligible). File at assets/TwemojiCountryFlags.woff2 is the same
+// content jsdelivr serves; if missing, falls back to "no flag font"
+// (regional indicators degrade to ISO letter pairs, which is what Karl
+// already sees — no worse than the b-4 state).
+const TWEMOJI_FLAGS_B64 = (() => {
+  try {
+    const buf = require('fs').readFileSync(
+      require('path').join(__dirname, 'assets', 'TwemojiCountryFlags.woff2')
+    );
+    return buf.toString('base64');
+  } catch (e) {
+    console.warn('[screener] assets/TwemojiCountryFlags.woff2 missing — flags will fall back to OS emoji font');
+    return '';
+  }
+})();
+
 const COUNTRY_TO_CONTINENT = {
   US:'Americas', USA:'Americas', CA:'Americas', MX:'Americas', 'São Paulo':'Americas',
   UK:'Europe', DE:'Europe', FR:'Europe', IT:'Europe', ES:'Europe', NL:'Europe', CH:'Europe',
@@ -561,18 +583,18 @@ const CSS = `
      the most visible offenders. */
   --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-6:24px;
 }
-/* Tag 232b-4: Twemoji Country Flags font (Mozilla/Apache 2.0 — talkjs/
-   country-flag-emoji-polyfill). 30KB woff2 served from jsdelivr CDN. The
-   unicode-range scoping means this font is ONLY consulted for regional
-   indicator code-points (U+1F1E6..U+1F1FF) and the black-flag-tag-sequence
-   block — text glyphs continue resolving to Segoe UI / Apple system fonts.
-   Falls back gracefully if CDN is unreachable: regional indicators render
-   as the underlying ISO letter pair (US / JP / DE / ...), still readable. */
+/* Tag 232b-5: Twemoji Country Flags font, inlined as base64 data URI.
+   b-4 used a jsdelivr CDN URL but Karl's browser fell back to ISO-letter
+   pairs anyway — likely the CDN-load lost the race against page render,
+   or file:// origin / corp proxy / offline mode broke the fetch. Inline
+   removes the network dependency entirely. unicode-range scopes the
+   font to regional indicator code-points only, so text rendering is
+   unaffected. */
 @font-face {
   font-family: 'Twemoji Country Flags';
   unicode-range: U+1F1E6-1F1FF, U+1F3F4, U+E0062-E007F;
-  src: url('https://cdn.jsdelivr.net/npm/country-flag-emoji-polyfill@0.1/dist/TwemojiCountryFlags.woff2') format('woff2');
-  font-display: swap;
+  src: url('data:font/woff2;base64,${TWEMOJI_FLAGS_B64}') format('woff2');
+  font-display: block;
 }
 /* Country popover: 4-column grid of country chips for fast multi-select
    without scrolling through 35+ options vertically. Reuses .col-popover
@@ -582,7 +604,17 @@ const CSS = `
 .ctry-popover .ctry-grid label { display:flex; align-items:center; gap:4px; cursor:pointer; padding:3px 4px; font-family:var(--mono); font-size:11px; color:var(--text-0); transition:background 80ms ease-out; }
 .ctry-popover .ctry-grid label:hover { background:var(--bg-hover); }
 .ctry-popover .ctry-grid label input { margin:0; cursor:pointer; }
-.ctry-popover .ctry-grid .flag { font-size:14px; line-height:1; }
+/* Tag 232b-5: explicit flag-capable font on .flag — the parent label uses
+   var(--mono) which has NO flag glyphs, so regional indicator pairs fell
+   back to the small ISO-letter-pair tags Karl saw. Twemoji Country Flags
+   first (loaded via @font-face above, unicode-range scoped), then OS
+   emoji fonts as fallback. The 'emoji' keyword at the end is a CSS
+   generic font family that asks the browser for its emoji font of
+   choice — last resort. */
+.ctry-popover .ctry-grid .flag {
+  font-family: 'Twemoji Country Flags', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'Twemoji Mozilla', emoji, sans-serif;
+  font-size:14px; line-height:1;
+}
 * { box-sizing:border-box; }
 /* Tag 211g: global tabular-nums for all mono text so percent/number columns
    align vertically regardless of digit width (1 vs 4 etc). Applies to the
