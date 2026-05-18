@@ -209,6 +209,17 @@ function main() {
       const asOfTs = file.generatedAt || (asOf + 'T00:00:00Z');
       const realEntryAsOf = WF.getEntryDate(asOfTs);
       const realFutureDate = WF.addDaysIso(realEntryAsOf, days);
+      // Tag 232c-20 (audit F-BT-002 HIGH): canonical-date anchoring shared
+      // with walk-forward. Pre-fix the per-ticker WF.nearestTradingDay()
+      // calls below let each ticker snap to its own nearest trading day,
+      // drifting up to ±5 days within the same pass/fail cohort. Now compute
+      // ONE entry/exit date pair from the benchmark (SPY/QQQ/IWM fallback)
+      // and use those across every ticker. Tickers whose maps lack a price
+      // at the canonical date fall back to nearestTradingDay (preserves
+      // existing behavior for the long tail of partial-history tickers).
+      const bench = WF.computeBenchmarkReturn(priceIndex, realEntryAsOf, days);
+      const canonicalEntry = (bench && bench.entryDate) || null;
+      const canonicalExit  = (bench && bench.exitDate)  || null;
 
       const cacheEntries = [];
       // F-BT-003 (Tag 179): track tickers we silently drop because of missing price
@@ -245,10 +256,20 @@ function main() {
           droppedFailContribs += c.f;
           continue;
         }
-        const entryDate = WF.nearestTradingDay(realEntryAsOf, map) || realEntryAsOf;
-        const exitDate  = WF.nearestTradingDay(realFutureDate, map) || realFutureDate;
-        const p0 = map.get(entryDate) || null;
-        const p1 = map.get(exitDate)  || null;
+        // Tag 232c-20: prefer canonical dates; fall back to per-ticker snap
+        // ONLY if the canonical dates aren't in this ticker's map (long tail
+        // of thinly-traded tickers). Use _priceAtCanonical for the per-ticker
+        // fallback so behavior matches walk-forward's resolution.
+        let p0, p1;
+        if (canonicalEntry && canonicalExit && map.has(canonicalEntry) && map.has(canonicalExit)) {
+          p0 = map.get(canonicalEntry);
+          p1 = map.get(canonicalExit);
+        } else {
+          const entryDate = WF.nearestTradingDay(realEntryAsOf, map) || realEntryAsOf;
+          const exitDate  = WF.nearestTradingDay(realFutureDate, map) || realFutureDate;
+          p0 = map.get(entryDate) || null;
+          p1 = map.get(exitDate)  || null;
+        }
         const ret = WF.returnPct(p0, p1);
         if (ret == null) {
           // Tag 231a-4: also account for "map exists but no valid return" attrition.

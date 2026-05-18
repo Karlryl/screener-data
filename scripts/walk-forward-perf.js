@@ -613,7 +613,10 @@ module.exports = {
   getEntryDate,
   nearestTradingDay,
   // Tag 231a-2: exported for canonical-date callers (method-effectiveness.js)
-  _priceAtCanonical
+  _priceAtCanonical,
+  // Tag 232c-20: export computeBenchmarkReturn so method-effectiveness can
+  // share walk-forward's canonical-date anchoring (audit F-BT-002 HIGH).
+  computeBenchmarkReturn
 };
 
 if (require.main === module) {
