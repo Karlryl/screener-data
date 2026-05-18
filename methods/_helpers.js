@@ -149,6 +149,44 @@ function _loadRollingMedians() {
   return _rollingMediansCache;
 }
 
+// Tag 232c-1: test-only hook to make the fixture-hash test stable.
+//
+// PROBLEM: effectiveThreshold() reads sector-medians-auto.json (and -rolling,
+// -static). The "Compute Sector-Medians (auto)" workflow step regenerates
+// sector-medians-auto.json daily from fresh snapshots and commits it. Because
+// the tag28-tests fixture-hash invariant runs Runner.evaluateStock() through
+// effectiveThreshold(), the hash silently drifts every workflow run — pulls
+// fail at the pre-pull "Run Method Tests" guard until someone bumps the hash
+// (audit found at least four prior bumps: Tag 178, 1b3bf2d53, Tag 211k, etc).
+//
+// FIX: tag28-tests calls _setMediansForTest({},{},{}) before computing the
+// hash and _restoreMediansFromTest(saved) after. The empty objects force
+// effectiveThreshold() through the "default" branch (step 5) deterministically
+// regardless of what sector-medians-auto.json currently contains. The hash
+// now tests the structural scoring path against fixed defaults — still catches
+// real method-logic regressions, just doesn't drift with daily data.
+//
+// Why expose this rather than an env-var guard inside _loadAutoMedians: an
+// env-var check would have to run on every effectiveThreshold() call in
+// production (~tens of thousands of calls per pull) just to support the test.
+// The setter pattern is one-shot and zero-cost in production.
+function _setMediansForTest(autoMedians, rollingMedians, sectorMedians) {
+  const saved = {
+    auto: _autoMediansCache,
+    rolling: _rollingMediansCache,
+    sector: _sectorMediansCache
+  };
+  _autoMediansCache = autoMedians;
+  _rollingMediansCache = rollingMedians;
+  _sectorMediansCache = sectorMedians;
+  return saved;
+}
+function _restoreMediansFromTest(saved) {
+  _autoMediansCache = saved.auto;
+  _rollingMediansCache = saved.rolling;
+  _sectorMediansCache = saved.sector;
+}
+
 /**
  * Tag 38 + 134 + 167: Effective threshold lookup priority:
  *   1. Rolling 12m median (mature = ≥12 weekly samples) — sub-profile × metric global
@@ -277,5 +315,7 @@ function wrapEvaluate(method, stock, opts) {
 module.exports = {
   val, metricValue, latestAnnual, latestBalance, cagr3y, buildResult,
   classifySubProfile, effectiveThreshold,
-  wrapEvaluate
+  wrapEvaluate,
+  // Tag 232c-1: test-only hooks — see _setMediansForTest above for rationale.
+  _setMediansForTest, _restoreMediansFromTest
 };

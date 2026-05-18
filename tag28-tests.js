@@ -2144,25 +2144,39 @@ function _fixtureStock() {
 }
 
 function _computeFixtureHash() {
-  const stock = _fixtureStock();
-  const results = Runner.evaluateStock(stock);
-  const evHG = SM.evaluateMode(stock, 'HYPERGROWTH', results);
-  const evQC = SM.evaluateMode(stock, 'QUALITY_COMPOUNDER', results);
-  // Project to a deterministic subset: per-method pass + scoreBreakdown keys.
-  // Drop noisy floats by rounding to 4 decimals; drop messages.
-  const project = (ev) => ({
-    passed: ev.passed,
-    mustPassCount: ev.mustPassCount,
-    mustTotal: ev.mustTotal,
-    tier: ev.tier,
-    score: ev.score,
-    breakdown: Object.fromEntries(Object.entries(ev.scoreBreakdown || {}).map(([k, v]) => [k, {
-      pass: v.pass, weight: v.weight, computable: v.computable,
-      score: v.score != null ? Math.round(v.score * 10000) / 10000 : null
-    }]))
-  });
-  const projection = { HG: project(evHG), QC: project(evQC) };
-  return crypto.createHash('sha256').update(JSON.stringify(projection)).digest('hex').slice(0, 16);
+  // Tag 232c-1: freeze sector-medians caches to empty maps so the fixture-hash
+  // does NOT drift when the workflow's "Compute Sector-Medians (auto)" step
+  // regenerates methods/sector-medians-auto.json. Without this isolation, the
+  // hash had to be manually bumped after every workflow run (see commits
+  // Tag 178, 1b3bf2d53, Tag 211k for past bumps — three is a pattern). With
+  // empty medians, effectiveThreshold() falls through to the per-method
+  // default everywhere; the hash now tests the structural scoring path
+  // against fixed defaults, which is what a golden test should do.
+  const Helpers = require('./methods/_helpers.js');
+  const saved = Helpers._setMediansForTest({}, {}, {});
+  try {
+    const stock = _fixtureStock();
+    const results = Runner.evaluateStock(stock);
+    const evHG = SM.evaluateMode(stock, 'HYPERGROWTH', results);
+    const evQC = SM.evaluateMode(stock, 'QUALITY_COMPOUNDER', results);
+    // Project to a deterministic subset: per-method pass + scoreBreakdown keys.
+    // Drop noisy floats by rounding to 4 decimals; drop messages.
+    const project = (ev) => ({
+      passed: ev.passed,
+      mustPassCount: ev.mustPassCount,
+      mustTotal: ev.mustTotal,
+      tier: ev.tier,
+      score: ev.score,
+      breakdown: Object.fromEntries(Object.entries(ev.scoreBreakdown || {}).map(([k, v]) => [k, {
+        pass: v.pass, weight: v.weight, computable: v.computable,
+        score: v.score != null ? Math.round(v.score * 10000) / 10000 : null
+      }]))
+    });
+    const projection = { HG: project(evHG), QC: project(evQC) };
+    return crypto.createHash('sha256').update(JSON.stringify(projection)).digest('hex').slice(0, 16);
+  } finally {
+    Helpers._restoreMediansFromTest(saved);
+  }
 }
 
 test('fixture-hash: score-aggregator output is stable', () => {
