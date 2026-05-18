@@ -552,16 +552,27 @@ jobs:
             # workflow exits non-zero so the failure is visible (Discord alert via
             # the notify step).
             COMMIT_SHA=$(git rev-parse HEAD)
-            echo "Local commit to publish: $COMMIT_SHA"
+            COMMIT_TREE=$(git rev-parse HEAD^{tree})
+            echo "Local commit to publish: $COMMIT_SHA (tree $COMMIT_TREE)"
             for i in 1 2 3; do
               git fetch origin main
-              if ! git rebase --autostash --strategy-option theirs origin/main; then
+              # Tag 232c-7 (audit F-CI-002 HIGH): dropped --strategy-option theirs.
+              # In rebase semantics, "theirs" = the upstream branch (origin/main),
+              # so on a content conflict the OUR change (the just-made commit's
+              # bytes) would be silently dropped. The post-rebase SHA-check only
+              # verifies the commit OBJECT survived; if the tree got rewritten,
+              # the commit looks present but its data is gone. Now: plain rebase,
+              # which exits non-zero on any conflict, triggering the abort + cherry-
+              # pick path below. ALSO: verify the tree hash matches what we just
+              # committed — catches "commit present, content silently mutated"
+              # scenarios that the prior SHA-only check missed.
+              if ! git rebase --autostash origin/main; then
                 echo "::warning::Rebase failed on attempt $i — aborting cleanly (preserves local commit)"
                 git rebase --abort || true
-                # Verify our commit is still here. If the rebase somehow lost it,
-                # cherry-pick it back from the SHA captured before the rebase.
-                if ! git rev-list HEAD | grep -q "^${COMMIT_SHA}$"; then
-                  echo "::warning::Local commit lost during rebase — restoring from $COMMIT_SHA"
+                # Verify our commit is still here AND its tree wasn't mutated.
+                NEW_TREE=$(git log -1 --format=%T "$COMMIT_SHA" 2>/dev/null || echo "MISSING")
+                if ! git rev-list HEAD | grep -q "^${COMMIT_SHA}$" || [ "$NEW_TREE" != "$COMMIT_TREE" ]; then
+                  echo "::warning::Local commit lost or mutated during rebase — restoring from $COMMIT_SHA (tree $COMMIT_TREE)"
                   git reset --hard origin/main
                   git cherry-pick "$COMMIT_SHA" || { echo "::error::cherry-pick failed"; exit 1; }
                 fi

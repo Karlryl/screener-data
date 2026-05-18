@@ -1408,7 +1408,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     // F-DP-032 (Tag 179) → factored into lib/atomic-write.js in Tag 189.
     // ~80% of daily pulls go through this fast-path; atomic write protects
     // against SIGTERM corruption on CI cancellation.
-    writeFileAtomic(fp, JSON.stringify(existing, null, 2));
+    // Tag 232c-6 (audit F-PF-002 HIGH): drop the 2-indent. Same anti-pattern
+    // as the Tag 222 OOM fix in pull-historical-prices.js. With ~20K snapshots
+    // written per pull (and this path the 80%-hit fast-path), pretty-print
+    // adds ~30-40% file size + ~5-10× stringify time. Snapshots are read by
+    // generators (machine consumers), not humans — no readability cost.
+    writeFileAtomic(fp, JSON.stringify(existing));
     return { ticker: stock.ticker, status: 'price-only', mcap: q.marketCap, price: q.regularMarketPrice };
   }
 
@@ -1757,7 +1762,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // hinterlassen; nächste Pull-Runde liest dann eine korrupte JSON beim
       // price-only-Check (line 801 _priceOnlyUpdate) und wirft, was die teure
       // full-pull-Branch trotz noch-frischer Daten triggert.
-      writeFileAtomic(outPath, JSON.stringify(canonical, null, 2));
+      // Tag 232c-6 (audit F-PF-002 HIGH): drop the 2-indent — same rationale
+      // as the price-only write above. Full-pull is the slow path (~2s/ticker
+      // with retries) so the stringify savings are smaller percentage-wise
+      // here, but consistent format across all snapshot writes simplifies
+      // downstream parsing assumptions and prevents the 267-MB methods-report
+      // class of regressions (Tag 220b).
+      writeFileAtomic(outPath, JSON.stringify(canonical));
       const revStr = canonical.metrics.revenueTTM ? '$' + (canonical.metrics.revenueTTM.value / 1e9).toFixed(1) + 'B' : 'no-rev';
       const growthStr = canonical.metrics.revenueGrowthYoY ? canonical.metrics.revenueGrowthYoY.value.toFixed(1) + '%' : '-';
       // P1-Fix Tag 13: data-completeness pro Stock loggen, damit downstream-Filter
@@ -1814,7 +1825,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
             existing.meta.delisted = true;
             existing.meta.delistedAt = new Date().toISOString();
             // F-DP-028 → factored into writeFileAtomic (Tag 189).
-            writeFileAtomic(outPath, JSON.stringify(existing, null, 2));
+            // Tag 232c-6: compact stringify; see fast-path note above.
+            writeFileAtomic(outPath, JSON.stringify(existing));
             _log('INFO', `  Marked ${stock.ticker} as delisted in snapshot`);
           }
         } catch (writeErr) {

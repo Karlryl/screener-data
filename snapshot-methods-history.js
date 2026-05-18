@@ -144,10 +144,12 @@ async function main() {
     methodCount: Runner.getMethods().length
   };
   // F-PF-005: use JSON.stringify without indent (machine-readable only file, saves ~30-40% size and ~5-10x stringify time)
-  // F-SM-005: atomic write via tmp+rename to prevent unparseable partial-write on SIGKILL
-  const tmpFile = outFile + '.tmp';
-  fs.writeFileSync(tmpFile, JSON.stringify(data));
-  fs.renameSync(tmpFile, outFile);
+  // Tag 232c-5 (audit F-SM-002 HIGH): route the methods-history vintage (the
+  // 14 MB source of truth for every backtest) through lib/atomic-write so the
+  // Tag 230c-1 durability guarantees (POSIX parent-dir fsync, Windows EPERM
+  // retry, partial-write loop) actually cover the write. Prior hand-rolled
+  // tmp+rename missed every one of those.
+  writeFileAtomic(outFile, JSON.stringify(data));
   console.log(`✓ History-Snapshot: ${outFile}`);
   console.log(`  ${fileList.length} stocks, ${anyComputable} mit ≥1 computable, ${allPass} stocks pass alle Methoden`);
 

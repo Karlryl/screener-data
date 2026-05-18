@@ -78,13 +78,19 @@ jobs:
             # XBRL data update vanished. New: capture commit SHA before
             # rebase, cherry-pick it back if the rebase loses it.
             COMMIT_SHA=$(git rev-parse HEAD)
+            COMMIT_TREE=$(git rev-parse HEAD^{tree})
             for i in 1 2 3; do
               git fetch origin main
-              if ! git rebase --autostash --strategy-option theirs origin/main; then
+              # Tag 232c-7 (audit F-CI-002 HIGH): same fix as daily-pull.yml —
+              # plain rebase (drop --strategy-option theirs which silently
+              # accepts upstream's bytes on conflict) plus a tree-hash check
+              # that catches "commit object survived, content mutated" cases.
+              if ! git rebase --autostash origin/main; then
                 echo "::warning::Rebase failed on attempt $i — aborting cleanly (preserves local commit)"
                 git rebase --abort || true
-                if ! git rev-list HEAD | grep -q "^${COMMIT_SHA}$"; then
-                  echo "::warning::Local commit lost during rebase — restoring from $COMMIT_SHA"
+                NEW_TREE=$(git log -1 --format=%T "$COMMIT_SHA" 2>/dev/null || echo "MISSING")
+                if ! git rev-list HEAD | grep -q "^${COMMIT_SHA}$" || [ "$NEW_TREE" != "$COMMIT_TREE" ]; then
+                  echo "::warning::Local commit lost or mutated during rebase — restoring from $COMMIT_SHA (tree $COMMIT_TREE)"
                   git reset --hard origin/main
                   git cherry-pick "$COMMIT_SHA" || { echo "::error::cherry-pick failed"; exit 1; }
                 fi

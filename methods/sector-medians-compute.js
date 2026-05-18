@@ -13,6 +13,14 @@
 const fs = require('fs');
 const path = require('path');
 const { getRegion } = require('./region-mapping.js');
+// Tag 232c-5 (audit F-SM-003 HIGH): route sector-medians writes through
+// lib/atomic-write so the Tag 230c-1 durability hardening (POSIX parent-dir
+// fsync, Windows EPERM retry, writeSync partial-write loop) actually covers
+// these 3 files (auto, auto-legacy, rolling) read by every method via
+// _helpers.js effectiveThreshold(). The private _atomicWrite below was
+// renamed to _atomicWriteLegacy and is kept only as a callable shim so any
+// out-of-tree caller doesn't break; new code uses writeFileAtomic directly.
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const MIN_STOCKS_PER_SECTOR = 5;
 // Tag 167: Regional bucket requires more stocks to be trustworthy than global.
@@ -204,13 +212,13 @@ function extractLegacyMedians(v2Result) {
  *
  * @param {object} autoMedians — result from computeMedians() (v2 shape)
  */
-// F-SM-017 (Tag 179): atomic tmp+rename helper for state files. Previous direct
-// writeFileSync could corrupt sector-medians files under SIGTERM (CI cancel),
-// breaking effectiveThreshold lookup for every method on the next run.
+// Tag 232c-5: _atomicWrite delegates to writeFileAtomic from lib/atomic-write.
+// Kept as a thin shim so external callers (if any) don't break, but new sites
+// in this file call writeFileAtomic directly. The lib's tmp-file fsync +
+// rename-retry + parent-dir fsync close the durability gaps the prior
+// hand-rolled tmp+rename had on Karl's Windows + OneDrive setup.
 function _atomicWrite(filePath, json) {
-  const tmp = filePath + '.tmp.' + process.pid;
-  fs.writeFileSync(tmp, json);
-  fs.renameSync(tmp, filePath);
+  writeFileAtomic(filePath, json);
 }
 
 function writeAutoMedians(autoMedians) {
