@@ -62,16 +62,28 @@ function unwrap(v) {
   return null;
 }
 
-function loadStocks(dir) {
+// Tag 232c-11 (audit F-PF-003 HIGH): async batched-concurrency snapshot read.
+// Pre-fix: serial fs.readFileSync over 3-15k+ files added 2-3 minutes per
+// generator run. snapshot-methods-history + detect-changes already used async
+// batches; modes/screener generators hadn't. 32-way concurrency scales total
+// wall-time with ~1/32 of files; sequential batching keeps memory bounded.
+async function loadStocks(dir) {
   if (!fs.existsSync(dir)) return [];
   // Tag 220 (audit F-GR-002 HIGH): exclude all '_*' files (was just _manifest).
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
+  const CONCURRENCY = 32;
   const out = [];
-  for (const f of files) {
-    try {
-      const s = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
-      if (s && typeof s === 'object' && !Array.isArray(s)) out.push(s);
-    } catch (e) { /* skip corrupt */ }
+  for (let i = 0; i < files.length; i += CONCURRENCY) {
+    const batch = files.slice(i, i + CONCURRENCY);
+    const parsed = await Promise.all(batch.map(async (f) => {
+      try {
+        const content = await fs.promises.readFile(path.join(dir, f), 'utf8');
+        return JSON.parse(content);
+      } catch (e) { return null; }
+    }));
+    for (const s of parsed) {
+      if (s !== null && typeof s === 'object' && !Array.isArray(s)) out.push(s);
+    }
   }
   return out;
 }
@@ -3339,10 +3351,11 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
 </html>`;
 }
 
-function main() {
+async function main() {
   const args = parseArgs(process.argv);
   console.log('[screener] loading snapshots from ' + args.snapshots);
-  const stocks = loadStocks(args.snapshots);
+  // Tag 232c-11: loadStocks now async (batched concurrency).
+  const stocks = await loadStocks(args.snapshots);
   console.log('[screener] loaded ' + stocks.length + ' stocks');
 
   const rows = [];
@@ -3384,6 +3397,6 @@ function main() {
   console.log('[screener] wrote ' + args.out + ' (' + (html.length/1024).toFixed(0) + ' KB)');
 }
 
-if (require.main === module) main();
+if (require.main === module) main().catch(e => { console.error('FATAL:', e); process.exit(1); });
 
 module.exports = { buildRow, classifyTabs, renderHTML, readScoreHistory, findEntryAtOrBefore, _buildScoreHistoryPayload };

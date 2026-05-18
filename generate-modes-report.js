@@ -76,14 +76,33 @@ function fmtValue(v, unit) {
   return v.toFixed(1);
 }
 
-function loadStocks(dir) {
+// Tag 232c-11 (audit F-PF-003 HIGH): async batched-concurrency snapshot read.
+// Pre-fix: serial fs.readFileSync over 3-15k+ files added 2-3 minutes per
+// generator run as the universe grew (snapshot-methods-history + detect-changes
+// already migrated to async batches per the audit; modes/screener generators
+// hadn't). With 32-way concurrency, total wall-time scales with the slowest
+// 1/32 of files (≈ 0.5-1 min) plus stringify overhead. Sequential within each
+// batch keeps memory bounded — Promise.all over all 15k files at once would
+// peak at ~1.5 GB resident.
+async function loadStocks(dir) {
   if (!fs.existsSync(dir)) return [];
   // Tag 220 (audit F-GR-002 HIGH): exclude all '_*' files (was just _manifest).
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
-  return files.map(f => {
-    try { return JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')); }
-    catch (e) { return null; }
-  }).filter(x => x !== null && typeof x === 'object' && !Array.isArray(x));
+  const CONCURRENCY = 32;
+  const out = [];
+  for (let i = 0; i < files.length; i += CONCURRENCY) {
+    const batch = files.slice(i, i + CONCURRENCY);
+    const parsed = await Promise.all(batch.map(async (f) => {
+      try {
+        const content = await fs.promises.readFile(path.join(dir, f), 'utf8');
+        return JSON.parse(content);
+      } catch (e) { return null; }
+    }));
+    for (const p of parsed) {
+      if (p !== null && typeof p === 'object' && !Array.isArray(p)) out.push(p);
+    }
+  }
+  return out;
 }
 
 // Tag 168: evaluateAll wraps per-stock processing in try/catch so a single
@@ -1198,10 +1217,11 @@ var STOCK_DATA_MAP = ${stockDataMapJson};
 </body></html>`;
 }
 
-function main() {
+async function main() {
   const args = parseArgs(process.argv);
   console.log('Loading snapshots from', args.snapshots);
-  const stocks = loadStocks(args.snapshots);
+  // Tag 232c-11: loadStocks now async (batched concurrency). main() awaits.
+  const stocks = await loadStocks(args.snapshots);
   console.log('  loaded', stocks.length, 'stocks');
 
   // Tag 168: track per-stock failures for pipeline health reporting
@@ -1242,7 +1262,7 @@ function main() {
   }
 }
 
-if (require.main === module) main();
+if (require.main === module) main().catch(e => { console.error('FATAL:', e); process.exit(1); });
 module.exports = { eligibleForMode, topByMethod, topAllMust, evaluateAll, dedupeByCompany };
 
 
