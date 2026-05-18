@@ -420,17 +420,25 @@ jobs:
       # Tag-63: Earnings-Calendar Pull
       # F-CI-005: Pipeline Health Check moved to AFTER commit so snapshots are always
       # committed even if health check fails (prevents vintage continuity gaps).
+      # Tag 232c-25 (audit F-CI-008 LOW): EARNINGS_CONCURRENCY 20→8 + per-step
+      # timeout. The Tag 215f lesson (PULL_CONCURRENCY 20→8 because Yahoo
+      # Cloudflare Edge rate-limited at 20) applies here too — same upstream
+      # API. 20-way parallelism just trades wall-time savings for retry storms.
       - name: Pull Earnings-Calendar
         env:
-          EARNINGS_CONCURRENCY: '20'
+          EARNINGS_CONCURRENCY: '8'
         run: node pull-earnings-dates.js
+        timeout-minutes: 20
         continue-on-error: true
 
       # Tag-39: Historical-Price-Pull (für Performance-Backtest)
+      # Tag 232c-25 (audit F-CI-008 LOW): PRICE_CONCURRENCY 20→8 + per-step
+      # timeout. Same Yahoo Cloudflare throttle as Yahoo Pull.
       - name: Pull Historical Prices
         env:
-          PRICE_CONCURRENCY: '20'
+          PRICE_CONCURRENCY: '8'
         run: node pull-historical-prices.js --out prices --rate-limit 1500
+        timeout-minutes: 25
         continue-on-error: true
 
       # Tag 139: Macro-Regime-Tagging — SPY 200d-MA → BULL/BEAR/SIDEWAYS

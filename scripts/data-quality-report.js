@@ -27,6 +27,21 @@ try {
   gradeSnapshot = () => ({ grade: 'unknown', nanRatio: 0, missingFields: [] });
 }
 
+// Tag 232c-23 (audit F-DQ-006 MEDIUM): align "is this array element present?"
+// with data-quality.js _arrLen. Pre-fix the report used `x != null` which
+// counts {value: null} envelopes as "present" (the envelope object itself
+// isn't null). The grader correctly only counts envelopes with finite values.
+// Result: report claimed higher coverage than grader saw — same field rendered
+// as "92%" in the report and graded as "B" by data-quality.js, confusing
+// operators. Helper below mirrors _arrLen's logic exactly.
+function _arrayElementPresent(x) {
+  if (x == null) return false;
+  if (typeof x === 'number') return Number.isFinite(x);
+  if (typeof x === 'object' && 'value' in x) return Number.isFinite(x.value);
+  // Other objects (balance rows like {totalCash, totalDebt}) count as present.
+  return true;
+}
+
 // Key fields to track coverage for in the report
 const KEY_FIELDS = [
   { label: 'marketCap',         get: s => s.marketCap && s.marketCap.value != null },
@@ -36,12 +51,12 @@ const KEY_FIELDS = [
   { label: 'operatingMargin',   get: s => s.metrics && s.metrics.operatingMargin && s.metrics.operatingMargin.value != null },
   { label: 'fcfMarginTTM',      get: s => s.metrics && s.metrics.fcfMarginTTM && s.metrics.fcfMarginTTM.value != null },
   { label: 'forwardPE',         get: s => s.metrics && s.metrics.forwardPE && s.metrics.forwardPE.value != null },
-  { label: 'annualRev>=3',      get: s => Array.isArray(s.annual && s.annual.annualRev) && s.annual.annualRev.filter(x => x != null).length >= 3 },
-  { label: 'annualFCF>=2',      get: s => Array.isArray(s.annual && s.annual.annualFCF) && s.annual.annualFCF.filter(x => x != null).length >= 2 },
-  { label: 'annualBalance>=2',  get: s => Array.isArray(s.annual && s.annual.annualBalance) && s.annual.annualBalance.filter(x => x != null).length >= 2 },
-  { label: 'annualSBC',         get: s => Array.isArray(s.annual && s.annual.annualSBC) && s.annual.annualSBC.filter(x => x != null).length > 0 },
-  { label: 'annualCapex',       get: s => Array.isArray(s.annual && s.annual.annualCapex) && s.annual.annualCapex.filter(x => x != null).length > 0 },
-  { label: 'revenueQ>=4',       get: s => Array.isArray(s.timeseries && s.timeseries.revenueQ) && s.timeseries.revenueQ.filter(x => x != null).length >= 4 },
+  { label: 'annualRev>=3',      get: s => Array.isArray(s.annual && s.annual.annualRev) && s.annual.annualRev.filter(_arrayElementPresent).length >= 3 },
+  { label: 'annualFCF>=2',      get: s => Array.isArray(s.annual && s.annual.annualFCF) && s.annual.annualFCF.filter(_arrayElementPresent).length >= 2 },
+  { label: 'annualBalance>=2',  get: s => Array.isArray(s.annual && s.annual.annualBalance) && s.annual.annualBalance.filter(_arrayElementPresent).length >= 2 },
+  { label: 'annualSBC',         get: s => Array.isArray(s.annual && s.annual.annualSBC) && s.annual.annualSBC.filter(_arrayElementPresent).length > 0 },
+  { label: 'annualCapex',       get: s => Array.isArray(s.annual && s.annual.annualCapex) && s.annual.annualCapex.filter(_arrayElementPresent).length > 0 },
+  { label: 'revenueQ>=4',       get: s => Array.isArray(s.timeseries && s.timeseries.revenueQ) && s.timeseries.revenueQ.filter(_arrayElementPresent).length >= 4 },
   { label: 'sector',            get: s => !!(s.meta && s.meta.sector) },
   { label: 'insiderOwner',      get: s => s.metrics && s.metrics.insidersOwnership && s.metrics.insidersOwnership.value != null }, // Tag 232c-9: was insiderOwnerPercent (typo); canonical = insidersOwnership
 ];

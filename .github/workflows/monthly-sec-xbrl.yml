@@ -27,18 +27,29 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
+      # Tag 232c-24 (audit F-CI-006 MEDIUM): drift correction from daily-pull.
+      # monthly-sec-xbrl was missing three hardenings present in daily-pull:
+      # (1) fetch-depth: 0 so git log + reliable rebase work (cherry-pick-back
+      # logic in the Commit manifest step needed full history), (2) cache:'npm'
+      # which saves ~30-90s per run on the package install, (3) per-step
+      # timeouts that prevent the SEC pull from eating the whole 90-min budget.
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # F-CI-006 / F-CI-004: full history for reliable rebase
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'npm'  # F-CI-006 / F-CI-011: cache npm deps
 
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
+        timeout-minutes: 5
 
       - name: Pull SEC XBRL
+        timeout-minutes: 70  # F-CI-006: bounded so it can't eat the whole 90-min job budget
         run: |
           if [ "${{ inputs.max }}" != "" ] && [ "${{ inputs.max }}" != "0" ]; then
             node pull-sec-xbrl.js --max ${{ inputs.max }}
