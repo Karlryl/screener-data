@@ -231,5 +231,19 @@ module.exports = [
   // (1.0, 1.5] BORDERLINE, > 1.5 FAIL (high-beta leverage-aversion penalty).
   // metrics.beta sourced from Yahoo defaultKeyStatistics.beta (Tag 219).
   // DIAGNOSTIC, fixture-hash safe (not in SCORE_WEIGHTS).
-  { file: './betting-against-beta.js' }
+  { file: './betting-against-beta.js' },
+
+  // Owner Earnings (Buffett 1986 BRK Annual Letter) — NI + D&A + SBC − MaintCapex − ΔWC.
+  // OE/Revenue >= 5%, ≥5y data, positive+growing all years.
+  // Maintenance capex proxy configurable via OWNER_EARNINGS_MAINT_CAPEX_METHOD env var
+  // (capex-5y-median | dna | capex-min-dna; Damodaran Investment Valuation ch. 11).
+  // DIAGNOSTIC: not in SCORE_WEIGHTS; used by buffett-criteria composite. Fixture-hash safe.
+  { file: './owner-earnings.js' },
+
+  // DCF Intrinsic Value — 3-stage owner-earnings DCF with Margin-of-Safety and
+  // hurdle-rate test per Buffett 1996 Owner's Manual + 1992 Coca-Cola valuation.
+  // Depends on owner-earnings.js (registered above). Computable only when
+  // owner-earnings is computable and market-cap / price data are available.
+  // DIAGNOSTIC: not in SCORE_WEIGHTS; fixture-hash safe by construction.
+  { file: './dcf-intrinsic-value.js' }
 ];

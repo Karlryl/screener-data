@@ -4,7 +4,11 @@
  * Konsens nach 5-Runden-Battle: Direct = 5Y Median (Capex + R&D) / OCF
  *   - Standard Quality-Compounder: >= 20%
  *   - Premium-Compounder: >= 30%
- * OCF nicht direkt im Snapshot - Fallback: OCF approximiert via FCF + Capex.
+ * OCF preferentially from annualOCF (Tag 211l direct extract); falls back to
+ * FCF+|Capex| for snapshots predating the field.
+ * Tag 232d-3: OCF.annualOCF available since Tag 211l — using FCF+Capex synthesis
+ * introduced rounding error when Yahoo's reported FCF/Capex disagreed with reported
+ * OCF by 1-5%.
  */
 var H = require('./_helpers.js');
 
@@ -85,21 +89,35 @@ function evaluate(stock) {
   var fcf = rawFcf.filter(function(v){ return Number.isFinite(v); });
   var rnd = rawRnd.filter(function(v){ return Number.isFinite(v); });
 
-  var ocfSource;
-  var ocf, rawOcf;
-  if (ocfDirect.length >= 3) {
-    ocf = ocfDirect; rawOcf = rawOcfDirect; ocfSource = 'direct';
-  } else if (fcf.length >= 3 && capex.length >= 3) {
-    // Build positionally-aligned OCF from raw arrays
-    var yrs = Math.min(rawFcf.length, rawCapex.length);
-    rawOcf = [];
-    for (var i = 0; i < yrs; i++) {
-      var fv = rawFcf[i], cv = rawCapex[i];
-      rawOcf.push((Number.isFinite(fv) && Number.isFinite(cv)) ? fv + cv : null);
+  // Tag 232d-3: build per-year OCF array preferring annualOCF[i] (reported) over
+  // FCF+|Capex| synthesis. This is more accurate than the all-or-nothing array
+  // selection because some snapshots have partial annualOCF coverage.
+  var ocfReportedCount = 0;
+  var ocfSynthesizedCount = 0;
+  var maxYrs = Math.max(rawOcfDirect.length, Math.min(rawFcf.length, rawCapex.length));
+  var rawOcf = [];
+  for (var i = 0; i < maxYrs; i++) {
+    var directVal = (i < rawOcfDirect.length) ? rawOcfDirect[i] : null;
+    if (Number.isFinite(directVal)) {
+      rawOcf.push(directVal);
+      ocfReportedCount++;
+    } else {
+      var fv = (i < rawFcf.length) ? rawFcf[i] : null;
+      var cv = (i < rawCapex.length) ? rawCapex[i] : null;
+      if (Number.isFinite(fv) && Number.isFinite(cv)) {
+        rawOcf.push(fv + cv);
+        ocfSynthesizedCount++;
+      } else {
+        rawOcf.push(null);
+      }
     }
-    ocf = rawOcf.filter(function(v){ return Number.isFinite(v); });
-    ocfSource = 'fcf+capex';
-  } else {
+  }
+  var ocf = rawOcf.filter(function(v){ return Number.isFinite(v); });
+  var ocfSource = ocfReportedCount > 0
+    ? (ocfSynthesizedCount > 0 ? 'mixed' : 'direct')
+    : 'fcf+capex';
+
+  if (ocf.length < 3) {
     return H.buildResult({
       computable: false,
       reason: 'OCF not derivable: ocfDirect=' + ocfDirect.length + ', fcf=' + fcf.length + ', capex=' + capex.length,
@@ -107,10 +125,10 @@ function evaluate(stock) {
     });
   }
 
-  if (capex.length < 3 || ocf.length < 3) {
+  if (capex.length < 3) {
     return H.buildResult({
       computable: false,
-      reason: 'need >=3 annual capex+ocf, got capex=' + capex.length + ' ocf=' + ocf.length,
+      reason: 'need >=3 annual capex data, got capex=' + capex.length,
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
@@ -180,6 +198,7 @@ function evaluate(stock) {
       median: med, ratios: ratios,
       yearsConsidered: ratios.length,
       capexUsed: true, rndUsed: usedRnD, ocfSource: ocfSource,
+      _ocfSource: { reported: ocfReportedCount, synthesized: ocfSynthesizedCount },
       assetLight: assetLight, capexRevMedian: capexRevMed,
       effectiveThreshold: effectiveThreshold,
       thresholdSource: thresholdSource
@@ -191,7 +210,7 @@ function evaluate(stock) {
 
 module.exports = {
   id: ID, label: LABEL,
-  description: 'Direct Reinvestment Rate: 5Y Median (Capex+R&D)/OCF >= 20% (OCF=FCF+Capex Fallback)',
+  description: 'Direct Reinvestment Rate: 5Y Median (Capex+R&D)/OCF >= 20% (OCF from annualOCF; FCF+|Capex| fallback)',
   threshold: THRESHOLD, thresholdOp: THRESHOLD_OP, unit: 'ratio',
   evaluate: evaluate
 };

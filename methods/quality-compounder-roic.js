@@ -18,10 +18,16 @@
  *   - Gate ist eng (AT>=3 + OpM>=3.5%) — Software-Anchor (MSFT/ASML/NVDA)
  *     haben AT<1 und triggert nicht. Fixture-Stock hat AT=0.33 — auch nicht.
  *
- * InvestedCapital = TotalAssets - TotalCash (pragmatic Yahoo-Approximation)
+ * InvestedCapital = TotalDebt + TotalEquity - Cash (Damodaran canonical; Tag 232d-4).
+ *   TotalEquity = annualBalance[0].totalEquity if present; else TotalAssets - TotalLiabilities;
+ *   else falls back to legacy TotalAssets - Cash.
  * AssetTurnover = Revenue / TotalAssets
  *
- * Yahoo-Felder: annual.annualOpInc, annual.annualBalance[0].{totalAssets,totalCash}, annual.annualRev
+ * Tag 232d-4: switched IC to Damodaran canonical (TotalDebt+Equity−Cash). Previous
+ * TotalAssets-Cash inflated IC by receivables/inventory/goodwill, depressing ROIC ~15-25%
+ * for net-cash software anchors. Damodaran Investment Valuation ch. 12.
+ *
+ * Yahoo-Felder: annual.annualOpInc, annual.annualBalance[0].{totalAssets,totalCash,totalDebt,totalEquity,totalLiabilities}, annual.annualRev
  */
 const H = require('./_helpers.js');
 
@@ -55,6 +61,7 @@ function evaluate(stock) {
   const opInc = H.latestAnnual(stock, 'annualOpInc');
   const totalAssets = H.latestBalance(stock, 'totalAssets');
   const totalCash = H.latestBalance(stock, 'totalCash');
+  const totalDebt = H.latestBalance(stock, 'totalDebt');
   const rev = H.latestAnnual(stock, 'annualRev');
 
   if (opInc == null || totalAssets == null) {
@@ -65,11 +72,29 @@ function evaluate(stock) {
     });
   }
 
-  const investedCapital = totalAssets - (totalCash || 0);
+  // Tag 232d-4: Damodaran canonical IC = TotalDebt + TotalEquity - Cash.
+  // TotalEquity lookup priority:
+  //   1. annualBalance[0].totalEquity (not yet extracted by pull-yahoo.js — null for all snapshots)
+  //   2. TotalAssets - TotalLiabilities (derived; available when annualBalance has totalLiabilities)
+  //   3. Fall back to legacy TotalAssets - Cash with _icMethod = 'assets-minus-cash-fallback'
+  let investedCapital, icMethod;
+  const totalEquityDirect = H.latestBalance(stock, 'totalEquity');
+  const totalLiabilities = H.latestBalance(stock, 'totalLiabilities');
+  const totalEquityDerived = (totalLiabilities != null) ? totalAssets - totalLiabilities : null;
+  const totalEquity = (totalEquityDirect != null) ? totalEquityDirect : totalEquityDerived;
+
+  if (totalEquity != null && totalDebt != null) {
+    investedCapital = totalDebt + totalEquity - (totalCash || 0);
+    icMethod = 'damodaran-canonical';
+  } else {
+    investedCapital = totalAssets - (totalCash || 0);
+    icMethod = 'assets-minus-cash-fallback';
+  }
+
   if (investedCapital <= 0) {
     return H.buildResult({
       computable: false,
-      reason: `invested capital <= 0`,
+      reason: `invested capital <= 0 (icMethod=${icMethod})`,
       threshold: THRESHOLD_STD, thresholdOp: THRESHOLD_OP
     });
   }
@@ -119,11 +144,14 @@ function evaluate(stock) {
       pathUsed,
       opInc,
       investedCapital,
+      _icMethod: icMethod,
       totalAssets,
       totalCash: totalCash || 0,
+      totalDebt: totalDebt || 0,
+      totalEquity: totalEquity != null ? totalEquity : undefined,
       revenue: rev
     },
-    reason: `PreTax-ROIC = ${(opInc/1e9).toFixed(1)}B / ${(investedCapital/1e9).toFixed(1)}B = ${(preTaxROIC*100).toFixed(1)}% (AT=${at != null ? at.toFixed(2) : 'n/a'}, ${pathUsed})`,
+    reason: `PreTax-ROIC = ${(opInc/1e9).toFixed(1)}B / ${(investedCapital/1e9).toFixed(1)}B = ${(preTaxROIC*100).toFixed(1)}% (AT=${at != null ? at.toFixed(2) : 'n/a'}, ${pathUsed}, IC=${icMethod})`,
     threshold: THRESHOLD_STD, thresholdOp: THRESHOLD_OP
   });
 }

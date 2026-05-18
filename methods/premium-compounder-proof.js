@@ -106,13 +106,30 @@ function evaluate(stock) {
   checks.push({ name: 'netCash|ND/EBITDA<=1', pass: c4, val: ndOverEbitda != null ? ndOverEbitda : netCash, computable: c4Computable });
 
   // 5. 5Y Median FCF/NetIncome >= 80% — zip rawFcfs × rawNis positionally
-  const fcfNi = [];
-  const fNyrs = Math.min(5, rawFcfs.length, rawNis.length);
-  for (let i = 0; i < fNyrs; i++) {
-    if (Number.isFinite(rawNis[i]) && rawNis[i] > 0 && Number.isFinite(rawFcfs[i])) fcfNi.push(rawFcfs[i] / rawNis[i]);
+  // Tag 232d-2: structural override for financials/insurance — NI includes unrealized investment
+  // gains; OCF/FCF cannot match. Damodaran Investment Valuation ch. 24 (financial services
+  // valuation special cases). Mirrors Tag 225e-1 reinvestment-rate sector override.
+  // For 'financial services' / 'insurance' sectors: substitute OperatingMargin_5y_median >= 30%.
+  const sector5 = (stock.meta && stock.meta.sector) || '';
+  const industry5 = (stock.meta && stock.meta.industry) || '';
+  const isFinancialOrInsurance = /financial services|financials|insurance/i.test(sector5) ||
+                                 /financial services|financials|insurance/i.test(industry5);
+  let test5_overrideApplied = null;
+  if (isFinancialOrInsurance) {
+    // Substitute test: 5Y Median OperatingMargin >= 30% instead of FCF/NI >= 80%
+    const opMed5 = _median(opMs);
+    test5_overrideApplied = 'financial-services-opmargin-substitute';
+    checks.push({ name: 'fcf/ni>=80[override:opMarg>=30]', pass: opMed5 != null && opMed5 >= 0.30,
+      val: opMed5, computable: opMed5 != null, test5_overrideApplied });
+  } else {
+    const fcfNi = [];
+    const fNyrs = Math.min(5, rawFcfs.length, rawNis.length);
+    for (let i = 0; i < fNyrs; i++) {
+      if (Number.isFinite(rawNis[i]) && rawNis[i] > 0 && Number.isFinite(rawFcfs[i])) fcfNi.push(rawFcfs[i] / rawNis[i]);
+    }
+    const fcfNiMed = _median(fcfNi);
+    checks.push({ name: 'fcf/ni>=80', pass: fcfNiMed != null && fcfNiMed >= 0.80, val: fcfNiMed, computable: fcfNiMed != null });
   }
-  const fcfNiMed = _median(fcfNi);
-  checks.push({ name: 'fcf/ni>=80', pass: fcfNiMed != null && fcfNiMed >= 0.80, val: fcfNiMed, computable: fcfNiMed != null });
 
   // 6. 5Y Median (Capex+R&D)/OCF >= 30% — zip rawCapex × rawOcf × rawRnd positionally.
   // Soft-N/A when OCF or RnD series are entirely missing (cache gaps for software
@@ -149,7 +166,8 @@ function evaluate(stock) {
     computable: true,
     pass: allEvaluablePass,
     value: passing,
-    components: { checks, passing, evaluable: evaluable.length, total: checks.length },
+    components: { checks, passing, evaluable: evaluable.length, total: checks.length,
+      ...(test5_overrideApplied ? { test5_overrideApplied } : {}) },
     reason: allEvaluablePass
       ? `Premium-Proof: ${passing}/${evaluable.length} erfuellt (${checks.length - evaluable.length} N/A)`
       : `Premium-Proof FAIL: ${passing}/${evaluable.length} - failed: ` + checks.filter(c => c.computable && !c.pass).map(c => c.name).join(', ')
