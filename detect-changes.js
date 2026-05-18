@@ -23,6 +23,13 @@ const path = require('path');
 const Runner = require('./methods/runner.js');
 const FieldCoverage = require('./field-coverage.js');
 const Trend = require('./methods/trend.js');
+// Tag 232a-1 (audit F-SM-001 CRITICAL): route both state writes through lib/atomic-write
+// so the Tag 230c-1 hardening (POSIX parent-dir fsync, Windows EPERM retry, partial-write
+// loop) actually covers the 21.6 MB alert-state.json and 8.9 MB method-history-state.json.
+// Before this commit, hand-rolled tmp+rename here meant Karl's Windows+OneDrive box could
+// silently lose the entire detect-changes state-delta on an EPERM scan-handle, re-firing
+// METHOD_PASS_LOST/GAINED for every flip on the next run.
+const { writeFileAtomic } = require('./lib/atomic-write.js');
 
 function _ts() { return new Date().toISOString(); }
 function _log(level, msg) { console.log(`[${_ts()}] [${level}] ${msg}`); }
@@ -55,11 +62,10 @@ function _loadMethodHistory() {
 }
 
 function _saveMethodHistory(history) {
-  // F-SM-002: atomic write via tmp+rename to prevent partial-write corruption on SIGKILL
+  // Tag 232a-1: writeFileAtomic carries the Tag 230c-1 durability guarantees the
+  // prior hand-rolled tmp+rename lacked (Windows EPERM retry + parent-dir fsync).
   try {
-    const tmp = HISTORY_SIDECAR + '.tmp';
-    fs.writeFileSync(tmp, JSON.stringify({ lastSaved: new Date().toISOString(), methodHistory: history }));
-    fs.renameSync(tmp, HISTORY_SIDECAR);
+    writeFileAtomic(HISTORY_SIDECAR, JSON.stringify({ lastSaved: new Date().toISOString(), methodHistory: history }));
   } catch (e) { _log('WARN', 'failed to write history sidecar: ' + e.message); }
 }
 
@@ -132,10 +138,8 @@ function saveState(statePath, state) {
   };
   // F-SM-008: write sidecar first, then committed state (sidecar failure won't skew stores)
   _saveMethodHistory(state.methodHistory || {});
-  // Atomic write via tmp+rename (was already done; preserved from existing code)
-  const tmp = statePath + '.tmp.' + process.pid;
-  fs.writeFileSync(tmp, JSON.stringify(committed)); // Tag 119: no pretty-print
-  fs.renameSync(tmp, statePath);
+  // Tag 232a-1: writeFileAtomic — same hardening rationale as _saveMethodHistory above.
+  writeFileAtomic(statePath, JSON.stringify(committed)); // Tag 119: no pretty-print
 }
 
 // ─── Diff-Detector ────────────────────────────────────────────────
