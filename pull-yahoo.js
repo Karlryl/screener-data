@@ -1081,7 +1081,10 @@ function mapFTSToBalance(bsRows) {
     const currentAssets = _ftsValue(r, 'currentAssets', 'totalCurrentAssets');
     const currentLiabilities = _ftsValue(r, 'currentLiabilities', 'totalCurrentLiabilities');
     const totalLiabilities = _ftsValue(r, 'totalLiabilitiesNetMinorityInterest', 'totalLiabilities');
-    if (cash == null && totalDebt == null && totalAssets == null) {
+    const totalEquity = _ftsValue(r, 'stockholdersEquity', 'commonStockEquity', 'totalEquity', 'stockholdersEquityApplicableToCommonShareholders');
+    if (cash == null && totalDebt == null && totalAssets == null &&
+        accountsReceivable == null && currentAssets == null &&
+        currentLiabilities == null && totalLiabilities == null && netPPE == null) {
       annualBalance.push(null);  // null placeholder — preserves year alignment
       continue;
     }
@@ -1094,6 +1097,7 @@ function mapFTSToBalance(bsRows) {
       currentAssets,
       currentLiabilities,
       totalLiabilities,
+      totalEquity,
       ...(_debtPartial ? { _debtPartial: true } : {})
     });
   }
@@ -1111,7 +1115,11 @@ function mapFTSToQuarterly(quarterlyRows) {
   const grossProfitQ = [];
   for (const r of sorted) {
     const rev = _ftsValue(r, 'totalRevenue', 'TotalRevenue');
-    if (rev == null) continue;
+    if (rev == null) {
+      if (Array.isArray(opIncQ)) opIncQ.push(null);
+      if (Array.isArray(grossProfitQ)) grossProfitQ.push(null);
+      continue;
+    }
     revenueQ.push({ value: rev });
     const oi = _ftsValue(r, 'operatingIncome', 'OperatingIncome');
     opIncQ.push(oi != null ? { value: oi } : null);
@@ -1161,9 +1169,9 @@ function sortByStaleness(stocks, outputDir) {
     try {
       const fp = path.join(outputDir, safeSnapshotFilename(ticker));
       if (fs.existsSync(fp)) {
-        const buf = Buffer.alloc(300);
+        const buf = Buffer.alloc(1024);
         const fd = fs.openSync(fp, 'r');
-        fs.readSync(fd, buf, 0, 300, 0);
+        fs.readSync(fd, buf, 0, 1024, 0);
         fs.closeSync(fd);
         const m = buf.toString('utf8').match(ageRegex);
         if (m) {
@@ -1655,7 +1663,21 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         ftsAnnualShares = cached.payload.ftsAnnualShares || [];
       } else {
         // Tag-14: fundamentalsTimeSeries-Pull für annualOpInc/FCF/opIncQ.
-        const fts = await _withTimeout(fetchFundamentalsTS(stock.yahoo_symbol), 30000, stock.ticker + '/fts');
+        // F-DP-003: timeout raised to 60s (4 sequential HTTP calls inside);
+        //   one retry on timeout/ECONNRESET before propagating.
+        let fts;
+        let ftsFetchFailed = false;
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            fts = await _withTimeout(fetchFundamentalsTS(stock.yahoo_symbol), 60000, stock.ticker + '/fts');
+            break;
+          } catch (e) {
+            if (attempt === 0 && (e.message.includes('timeout') || e.code === 'ECONNRESET')) continue;
+            ftsFetchFailed = true;
+            break;
+          }
+        }
+        if (ftsFetchFailed || !fts) throw new Error('FTS fetch failed for ' + stock.ticker);
         ftsAnnual = mapFTSToAnnual(fts.annualFin, fts.annualCash);
         ftsQuarterly = mapFTSToQuarterly(fts.quarterlyFin);
         ftsBalance = mapFTSToBalance(fts.annualBs);
@@ -1684,8 +1706,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         }
         // Tag-90: Quarterly NetIncome (8-Quarter-Earnings-Stability)
         ftsQuarterlyNI = (fts.quarterlyFin || []).slice().reverse()
-          .map(r => r && r.netIncome != null ? r.netIncome : null)
-          .filter(v => v != null);
+          .map(r => r && r.netIncome != null ? r.netIncome : null);
         // F-DP-005: detect partial FTS result — any module that returned empty array
         const ftsPartial = (
           (fts.annualFin || []).length === 0 ||
@@ -1703,11 +1724,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
             cachedAt: new Date().toISOString(),
             payload: { ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD, ftsQuarterlyNI, ftsAnnualSGA, ftsAnnualDepreciation, ftsAnnualShares }
           }));
-        } catch (e) {}
+        } catch (e) { _log('WARN', 'FTS cache write failed for ' + (stock && stock.ticker) + ': ' + e.message); }
         if (ftsPartial) canonical._ftsPartial = true;
       }
       // Override leere annual-Arrays aus quoteSummary mit FTS-Daten wenn FTS welche hat
-      if (ftsAnnual.annualRev.length > canonical.annual.annualRev.length) canonical.annual.annualRev = ftsAnnual.annualRev;
+      const _ftsRevNonNull = (ftsAnnual.annualRev||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
+      const _qsRevNonNull = (canonical.annual.annualRev||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
+      if (_ftsRevNonNull > _qsRevNonNull) canonical.annual.annualRev = ftsAnnual.annualRev;
       // Tag 203: FTS-OpInc override is now gated by non-null COUNT, not length.
       // mapFTSToAnnual pushes null placeholders for OpInc-missing rows (bank/
       // fintech) — without this guard a 4-null-entry FTS array would wipe out
@@ -1730,8 +1753,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         if (canonical.meta) canonical.meta.opIncSource = 'native';
       }
       // Tag-28: annualBalance aus FTS überschreiben wenn FTS mehr nicht-null Werte hat
-      const oldBalanceUsable = (canonical.annual.annualBalance || []).filter(r => r.totalDebt != null || r.totalCash != null || r.totalAssets != null).length;
-      const newBalanceUsable = ftsBalance.filter(r => r.totalDebt != null || r.totalCash != null || r.totalAssets != null).length;
+      // F-DQ-011: extend usability check to include Tag 211l fields so FTS rows that
+      // carry accountsReceivable/currentAssets/currentLiabilities/totalLiabilities/netPPE
+      // (but lack legacy totalDebt/totalCash/totalAssets) are still counted as usable.
+      // Without this, QS can win even though FTS is richer in Tag 211l data.
+      const _balanceUsable = r => r.totalDebt != null || r.totalCash != null || r.totalAssets != null ||
+        r.currentAssets != null || r.currentLiabilities != null || r.totalLiabilities != null ||
+        r.accountsReceivable != null || r.netPPE != null;
+      const oldBalanceUsable = (canonical.annual.annualBalance || []).filter(_balanceUsable).length;
+      const newBalanceUsable = ftsBalance.filter(_balanceUsable).length;
       if (newBalanceUsable > oldBalanceUsable) canonical.annual.annualBalance = ftsBalance;
       // Tag-43: annualSBC aus FTS hinzufügen
       canonical.annual.annualSBC = ftsAnnualSBC;
@@ -1763,10 +1793,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // Tag-90: quarterlyNI in timeseries
       canonical.timeseries.netIncomeQ = (ftsQuarterlyNI || []).map(v => ({ value: v }));
       if (ftsAnnual.annualGP.length > 0) canonical.annual.annualGP = ftsAnnual.annualGP;
-      if (ftsAnnual.annualNetIncome.length > canonical.annual.annualNetIncome.length) canonical.annual.annualNetIncome = ftsAnnual.annualNetIncome;
+      const _ftsNiNonNull = (ftsAnnual.annualNetIncome||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
+      const _qsNiNonNull = (canonical.annual.annualNetIncome||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
+      if (_ftsNiNonNull > _qsNiNonNull) canonical.annual.annualNetIncome = ftsAnnual.annualNetIncome;
       if (ftsAnnual.annualFCF.length > 0) canonical.annual.annualFCF = ftsAnnual.annualFCF;
       if (ftsAnnual.annualOCF && ftsAnnual.annualOCF.length > 0) canonical.annual.annualOCF = ftsAnnual.annualOCF;
-      if (ftsQuarterly.revenueQ.length > canonical.timeseries.revenueQ.length) canonical.timeseries.revenueQ = ftsQuarterly.revenueQ;
+      const _ftsRevQNonNull = (ftsQuarterly.revenueQ||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
+      const _qsRevQNonNull = (canonical.timeseries.revenueQ||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
+      if (_ftsRevQNonNull > _qsRevQNonNull) canonical.timeseries.revenueQ = ftsQuarterly.revenueQ;
       if (ftsQuarterly.opIncQ.length > 0) canonical.timeseries.opIncQ = ftsQuarterly.opIncQ;
       if (ftsQuarterly.grossProfitQ.length > 0) canonical.timeseries.grossProfitQ = ftsQuarterly.grossProfitQ;
 
@@ -1805,9 +1839,17 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       catch (e) { _log('WARN', `  FX conversion failed for ${stock.ticker}: ${e.message}`); }
       // F-DQ-002: skip tickers where FX conversion failed — mcap is in local currency and would
       // pass or fail the USD mcap filter incorrectly.
+      // F-DQ-016: mirror the skipped-mcap pattern — delete stale snapshot so it doesn't
+      // persist and get scored with wrong currency data. Track via results (status
+      // 'fx-unknown') rather than failures[] so it doesn't inflate the CI fail-ratio.
       if (canonical.meta && canonical.meta.fxConversionFailed === true) {
         _log('INFO', `  ⊘ ${stock.ticker} skipped: fx-unknown (currency=${canonical.meta.reportingCurrencyOriginal})`);
-        failures.push({ ticker: stock.ticker, error: 'fx-unknown', errClass: 'fx-unknown' });
+        const fxFilename = safeSnapshotFilename(stock.ticker);
+        const fxOutPath = path.join(outputDir, fxFilename);
+        if (fs.existsSync(fxOutPath)) {
+          try { fs.unlinkSync(fxOutPath); } catch (e) {}
+        }
+        results.push({ ticker: stock.ticker, status: 'fx-unknown', reason: `currency=${canonical.meta.reportingCurrencyOriginal}` });
         return;
       }
 
@@ -1963,10 +2005,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   async function runWorkerPool(stocks, processOneFn, concurrency, sleepMs, writeManifestFn) {
     let idx = 0;
     async function worker() {
-      while (idx < stocks.length) {
+      while (true) {
         const myIdx = idx++;
+        if (myIdx >= stocks.length) break;
         const stock = stocks[myIdx];
-        if (!stock) continue;
         await processOneFn(stock).catch(e => _log('WARN', `Worker error ${stock.ticker}: ${e.message}`));
         // flush manifest every 100 tickers using the captured local index
         if (myIdx > 0 && myIdx % 100 === 0) writeManifestFn();
@@ -2045,9 +2087,12 @@ async function main() {
   // hit the network). Counting skipped-mcap in n_total inflated the denominator and
   // made the 75% guard meaningless for large universes with many micro-cap tickers.
   const skippedMcap = (manifest.results || []).filter(r => r.status === 'skipped-mcap').length;
-  const attempted = Math.max(1, manifest.n_total - skippedMcap);
+  // F-DQ-016: exclude fx-unknown from the attempted denominator — these are not network/data
+  // failures but missing FX rates; conflating them inflates the fail-ratio and can trip CI.
+  const skippedFx = (manifest.results || []).filter(r => r.status === 'fx-unknown').length;
+  const attempted = Math.max(1, manifest.n_total - skippedMcap - skippedFx);
   const failRatio = manifest.n_failed / attempted;
-  _log('INFO', `Fail-ratio: ${(failRatio * 100).toFixed(1)}% (${manifest.n_failed} fail / ${attempted} attempted; ${skippedMcap} skipped-mcap)`);
+  _log('INFO', `Fail-ratio: ${(failRatio * 100).toFixed(1)}% (${manifest.n_failed} fail / ${attempted} attempted; ${skippedMcap} skipped-mcap, ${skippedFx} fx-unknown)`);
   // F-DP-008 (Tag 233b): mapper-bug (TypeError/ReferenceError in mapYahooToCanonical) is
   // a programming error — not a transient Yahoo failure. Even 1 means the mapper is broken
   // for some ticker shape. Exit 1 immediately so CI catches the regression before it

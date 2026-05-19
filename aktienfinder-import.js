@@ -9,6 +9,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomic } = require('./lib/atomic-write.js');
 
 function main() {
   const csvPath = process.argv[2];
@@ -32,10 +33,10 @@ function main() {
   const outPath = path.join(outDir, 'aktienfinder.json');
   let existing = {};
   if (fs.existsSync(outPath)) {
-    try { existing = JSON.parse(fs.readFileSync(outPath, 'utf8')); } catch (e) {}
+    try { existing = JSON.parse(fs.readFileSync(outPath, 'utf8')); } catch (e) { console.warn('Failed to load aktienfinder.json:', e.message); }
   }
   const merged = Object.assign(existing, data);
-  fs.writeFileSync(outPath, JSON.stringify(merged, null, 2));
+  writeFileAtomic(outPath, JSON.stringify(merged, null, 2));
   console.log(`✓ Imported ${Object.keys(data).length} aktienfinder scores → ${outPath}`);
   console.log(`  Total stocks tracked: ${Object.keys(merged).length}`);
 }

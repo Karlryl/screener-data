@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomic } = require('./lib/atomic-write.js');
 let yf;
 const YF = require('yahoo-finance2').default;
 yf = (typeof YF === 'function') ? new YF() : YF;
@@ -33,9 +34,7 @@ function _safeMergeAndWrite(myUpdates) {
     }
   }
   const merged = Object.assign({}, onDisk, myUpdates);
-  const tmp = HISTORY_PATH + '.tmp.' + process.pid;
-  fs.writeFileSync(tmp, JSON.stringify(merged, null, 2));
-  fs.renameSync(tmp, HISTORY_PATH);
+  writeFileAtomic(HISTORY_PATH, JSON.stringify(merged, null, 2));
 }
 
 async function main() {

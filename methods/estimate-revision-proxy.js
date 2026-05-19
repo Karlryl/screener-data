@@ -32,16 +32,27 @@ function _revenueAcceleration(stock) {
   // Compute YoY growth for quarters i=0..3 (need rq[i+4] → indices 4..7)
   // rq[0] = most recent quarter
   const _val = v => (v == null ? null : (typeof v === 'number' ? v : v.value));
-  const growths = [];
+  // growthSlots[i] = null if that YoY computation failed, or the growth rate if valid
+  const growthSlots = [];
   for (let i = 0; i < 4; i++) {
     const curr = _val(rq[i]);
     const base = _val(rq[i + 4]);  // same quarter, one year ago
-    if (curr == null || base == null || base <= 0) return null;
-    growths.push((curr - base) / Math.abs(base));
+    if (curr == null || base == null || base <= 0) { growthSlots.push(null); continue; }
+    growthSlots.push((curr - base) / Math.abs(base));
   }
 
-  const recentAvg = (growths[0] + growths[1]) / 2;
-  const priorAvg  = (growths[2] + growths[3]) / 2;
+  // Require at least 2 valid growth entries total to produce a meaningful comparison
+  const validCount = growthSlots.filter(v => v !== null).length;
+  if (validCount < 2) return null;
+
+  // recent = slots 0-1, prior = slots 2-3
+  const recentVals = growthSlots.slice(0, 2).filter(v => v !== null);
+  const priorVals  = growthSlots.slice(2).filter(v => v !== null);
+  // Need at least one valid entry in each half
+  if (recentVals.length === 0 || priorVals.length === 0) return null;
+
+  const recentAvg = recentVals.reduce((s, v) => s + v, 0) / recentVals.length;
+  const priorAvg  = priorVals.reduce((s, v) => s + v, 0) / priorVals.length;
   return { accelerating: recentAvg > priorAvg, recentAvg, priorAvg };
 }
 

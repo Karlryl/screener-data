@@ -51,9 +51,13 @@ function evaluate(stock) {
   // (MELI). When TTM is negative AND a 3y annual median exists and is
   // materially positive, prefer the annual median — it represents the
   // company's structural FCF generation, not a transient WC swing.
+  // F-ME-003: also require that the most recent annual FCF is positive,
+  // so we don't inflate R40 for stocks with structurally declining FCF.
   if (growth != null && fcfMargin != null && fcfMargin < 0) {
     const annualMedian = _annualFcfMarginMedian(stock);
-    if (annualMedian != null && annualMedian > 5) {
+    const annualFcfArr = (stock.annual && stock.annual.annualFCF) || [];
+    const latestAnnualFcf = _unwrap(annualFcfArr[0]);
+    if (annualMedian != null && annualMedian > 5 && latestAnnualFcf != null && latestAnnualFcf > 0) {
       fcfMargin = annualMedian;
       fcfMarginSource = '3y-annual-median';
     }

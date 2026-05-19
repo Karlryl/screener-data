@@ -35,6 +35,7 @@ function get(url) {
   return new Promise((resolve, reject) => {
     const req = https.get(url, { headers: { 'Accept': 'application/json' } }, res => {
       if (res.statusCode === 301 || res.statusCode === 302) {
+        res.resume(); // drain the body before following redirect
         return get(res.headers.location).then(resolve).catch(reject);
       }
       if (res.statusCode !== 200) return reject(new Error('HTTP ' + res.statusCode));

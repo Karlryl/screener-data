@@ -57,7 +57,10 @@ function main() {
     // chose for the vintage; the "α vs SPY" label was misleading whenever
     // it wasn't actually SPY. Re-label "α vs Benchmark" and surface the
     // actual symbol from the data when available.
-    const benchSymbol = (wf.benchmarkSymbol || 'Benchmark');
+    // wf.benchmarkSymbol does not exist in walk-forward output; field needs to be
+    // added to walk-forward-perf.js output (tracked separately). Until then, fall
+    // back to 'SPY' — the actual benchmark used by walk-forward-perf.js.
+    const benchSymbol = (wf.benchmarkSymbol || 'SPY');
     md += '_Benchmarks: universe-median (Tag 138: survivor-bias corrected via evaluatedTickers when available) · frozen-vintage-median (no look-ahead survivor selection) · ' + benchSymbol + ' (external)._\n\n';
     for (const [mode, data] of Object.entries(wf.modes)) {
       md += '### ' + mode + '\n\n';

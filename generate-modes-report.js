@@ -257,7 +257,7 @@ function topAllMust(eligible, modeId, topN) {
     return me && me.passed;
   });
   const sortMethodId = mode && mode.defaultSortMethod;
-  const sortMethodMeta = sortMethodId ? Runner.METHODS.find(m => m.id === sortMethodId) : null;
+  const sortMethodMeta = sortMethodId ? METHODS_BY_ID.get(sortMethodId) : null;
   const op = sortMethodMeta && sortMethodMeta.thresholdOp;
   if (sortMethodId) {
     passing.sort((a, b) => {
@@ -342,8 +342,8 @@ function renderCard(ev, modeId, opts, stockDataMap) {
   const psLabel  = PSTATE_LABEL[profState] || profState;
 
   const r40 = ev.allResults['rule-of-40'];
-  const fcfMargin = (r40 && r40.computable && r40.components && Number.isFinite(r40.components.fcfMargin)) ? r40.components.fcfMargin : -999;
-  const revGrowth = (r40 && r40.computable && r40.components && Number.isFinite(r40.components.growth)) ? r40.components.growth : -999;
+  const fcfMargin = (r40 && r40.computable && r40.components && Number.isFinite(r40.components.fcfMargin)) ? r40.components.fcfMargin : 'n/a';
+  const revGrowth = (r40 && r40.computable && r40.components && Number.isFinite(r40.components.growth)) ? r40.components.growth : 'n/a';
 
   const me    = (ev.modeEvals && ev.modeEvals[modeId]) || {};
   const score = (me.score != null && Number.isFinite(me.score)) ? Math.round(me.score) : null;
@@ -383,7 +383,7 @@ function renderCard(ev, modeId, opts, stockDataMap) {
   const fcfStr       = (fcfMargin != null && Number.isFinite(fcfMargin)) ? (fcfMargin >= 0 ? '+' : '') + fcfMargin.toFixed(0) + '%' : 'â€”';
 
   // F-PF-006: use data-ticker (not data-stock) â€” stock data stored once in global map
-  return `<div class="card" data-ticker="${escHtml(ticker)}" data-af-url="${escHtml(afUrl)}" data-prof-state="${escHtml(profState)}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-country="${escHtml(country)}" data-fcf-margin="${fcfMargin.toFixed(1)}" data-rev-growth="${revGrowth.toFixed(1)}" data-tier="${escHtml(tier)}" data-name="${escHtml(name.toLowerCase())}" data-ticker-search="${escHtml(ticker.toLowerCase())}">
+  return `<div class="card" data-ticker="${escHtml(ticker)}" data-af-url="${escHtml(afUrl)}" data-prof-state="${escHtml(profState)}" data-mcap="${Math.round(mcap||0)}" data-ipo="${ipoYear||0}" data-sector="${escHtml(sector)}" data-country="${escHtml(country)}" data-fcf-margin="${Number.isFinite(fcfMargin) ? fcfMargin.toFixed(1) : 'n/a'}" data-rev-growth="${Number.isFinite(revGrowth) ? revGrowth.toFixed(1) : 'n/a'}" data-tier="${escHtml(tier)}" data-name="${escHtml(name.toLowerCase())}" data-ticker-search="${escHtml(ticker.toLowerCase())}">
   <div class="card-top">
     <span class="card-ticker">${escHtml(ticker)}</span>
     <div class="card-badges">${dqHtml}${tierBadgeHtml}${xpHtml}</div>
@@ -1107,8 +1107,8 @@ var STOCK_DATA_MAP = ${stockDataMapJson};
       var ipoOk     = !ipoActive || (ipo > 0 && ipo >= ipoMin);
       var secOk     = sector === 'ALL' || sec === sector;
       var countryOk = country === 'ALL' || cty === country;
-      var fcfOk     = (fcfMin <= -30) || (Number.isFinite(fcfM) && fcfM > -100 && fcfM >= fcfMin);
-      var growthOk  = (growthMin <= 0) || (Number.isFinite(revG) && revG > -100 && revG >= growthMin);
+      var fcfOk     = (fcfMin <= -30) || card.dataset.fcfMargin === 'n/a' || (Number.isFinite(fcfM) && fcfM >= fcfMin);
+      var growthOk  = (growthMin <= 0) || card.dataset.revGrowth === 'n/a' || (Number.isFinite(revG) && revG >= growthMin);
       var searchOk  = !query || ctick.includes(query) || cname.includes(query);
       var show = psOk && mcapOk && ipoOk && secOk && countryOk && fcfOk && growthOk && searchOk;
       card.style.display = show ? '' : 'none';

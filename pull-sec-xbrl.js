@@ -122,7 +122,7 @@ async function main() {
         manifest.entries[t.cik] = { ticker: t.ticker, fetchedAt: new Date().toISOString(), notFound: true };
         notFound++;
       } else {
-        fs.writeFileSync(filePath, res.body);
+        writeFileAtomic(filePath, res.body);
         manifest.entries[t.cik] = {
           ticker: t.ticker,
           fetchedAt: new Date().toISOString(),

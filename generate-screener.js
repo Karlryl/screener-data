@@ -26,6 +26,7 @@ const path = require('path');
 const Runner = require('./methods/runner.js');
 const SM = require('./methods/strategy-modes.js');
 const DQ = require('./methods/data-quality.js');
+const { writeFileAtomic } = require('./lib/atomic-write.js');
 
 const REGION_TO_COUNTRY = {
   'Nasdaq': 'USA', 'NasdaqCM': 'USA', 'NasdaqGM': 'USA', 'NasdaqGS': 'USA',
@@ -3488,7 +3489,7 @@ async function main() {
 
   const generatedAt = new Date().toISOString().slice(0, 10);
   const html = renderHTML(rows, tabs, sectors, countries, generatedAt);
-  fs.writeFileSync(args.out, html);
+  writeFileAtomic(args.out, html);
   console.log('[screener] wrote ' + args.out + ' (' + (html.length/1024).toFixed(0) + ' KB)');
 }
 

@@ -7,11 +7,12 @@
  * gleich wie vollständige Snapshots zu behandeln (Tag 129-konform: first-principles
  * Banding, kein single-ticker Threshold-Tuning).
  *
- * Grade-Banding (nanRatio = fehlende / total kritische Felder):
- *   A: ≤ 10% fehlend  — vollständige Bewertung möglich
- *   B: 10–30% fehlend — Tier-Cap C+ zulässig
- *   C: 30–50% fehlend — Picks nur als NEAR_MISS, nicht A/B
- *   D: > 50% fehlend  — Aus Picks ausgeschlossen
+ * Grade-Banding (nanRatio = missingWeight / TOTAL_WEIGHT):
+ *   A+: ≤ 20% fehlend — vollständige Bewertung möglich
+ *   A:  20–40% fehlend — vollständige Bewertung möglich
+ *   B:  40–60% fehlend — vollständige Bewertung möglich (kein Tier-Cap)
+ *   C:  60–85% fehlend — Picks nur als NEAR_MISS
+ *   D:  > 85% fehlend  — Aus Picks ausgeschlossen (REJECT)
  *
  * Score-Aggregator-Integration ist OPT-IN via env DATAQUALITY_ENFORCE=1
  * (default off bis genug _quality-Historie akkumuliert ist).
@@ -39,7 +40,19 @@ const CRITICAL_FIELDS = [
   // === Legacy fields (Tag 133c era) — weight 0.5 ===
   { id: 'annual.annualOpInc>=3', weight: 0.5, check: s => _arrLen(s.annual && s.annual.annualOpInc) >= 3 },
   { id: 'annual.annualFCF>=2',  weight: 0.5, check: s => _arrLen(s.annual && s.annual.annualFCF) >= 2 },
-  { id: 'annual.annualBalance>=2', weight: 0.5, check: s => _arrLen(s.annual && s.annual.annualBalance) >= 2 },
+  // F-DQ-012: count a balance row as "present" only when at least one legacy
+  // field (totalCash/totalDebt/totalAssets) is a finite number. All-null rows
+  // where only Tag 211l fields are set (e.g. accountsReceivable but no totalAssets)
+  // were previously counted by _arrLen's catch-all object branch, inflating the
+  // grade and masking altman-z-score computable:false failures at runtime.
+  { id: 'annual.annualBalance>=2', weight: 0.5, check: s => {
+    const hasLegacyBalance = row => row && (
+      (typeof row.totalCash   === 'number' && isFinite(row.totalCash))   ||
+      (typeof row.totalDebt   === 'number' && isFinite(row.totalDebt))   ||
+      (typeof row.totalAssets === 'number' && isFinite(row.totalAssets))
+    );
+    return ((s.annual && s.annual.annualBalance) || []).filter(hasLegacyBalance).length >= 2;
+  } },
   { id: 'timeseries.revenueQ>=4', weight: 0.5, check: s => _arrLen(s.timeseries && s.timeseries.revenueQ) >= 4 },
   { id: 'timeseries.opIncQ>=2', weight: 0.5, check: s => _arrLen(s.timeseries && s.timeseries.opIncQ) >= 2 },
   // === Tag 211l additions (SGA + Depreciation income/cashflow + balance fields) ===

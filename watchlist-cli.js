@@ -12,6 +12,7 @@
  */
 'use strict';
 const fs = require('fs');
+const { writeFileAtomic } = require('./lib/atomic-write.js');
 
 const PATH = './watchlist.json';
 
@@ -29,9 +30,7 @@ function load() {
 function save(wl) {
   wl._meta = wl._meta || {};
   wl._meta.updated_at = new Date().toISOString().slice(0, 10);
-  const tmp = PATH + '.tmp.' + process.pid;
-  fs.writeFileSync(tmp, JSON.stringify(wl, null, 2));
-  fs.renameSync(tmp, PATH);
+  writeFileAtomic(PATH, JSON.stringify(wl, null, 2));
 }
 
 function cmdList() {

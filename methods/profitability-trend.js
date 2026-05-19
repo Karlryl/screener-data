@@ -40,8 +40,8 @@ function _classify(niArr) {
   const y1 = niArr[1];
   if (y0 == null || y1 == null) return null;
 
-  // Sign-Flip-Cases first
-  if (y0 > 0 && y1 <= 0) return 'IMPROVING';   // turnaround
+  // Sign-Flip-Cases first (require minimum $1M absolute swing for materiality)
+  if (y0 > 0 && y1 <= 0) return Math.abs(y0 - y1) > 1e6 ? 'IMPROVING' : 'FLAT';   // turnaround
   if (y0 <= 0 && y1 > 0) return 'DETERIORATING'; // erosion
 
   // Same-sign-Cases - relative change
@@ -59,7 +59,8 @@ function _classify(niArr) {
     if (absChange > Math.abs(y1) * 0.20) return 'DETERIORATING'; // loss grew by >20%
     return 'FLAT';
   }
-  // Both zero - edge case
+  // Both zero - incomputable (no meaningful trend)
+  if (y0 === 0 && y1 === 0) return null;
   return 'FLAT';
 }
 

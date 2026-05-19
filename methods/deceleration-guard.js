@@ -39,9 +39,13 @@ function evaluate(stock) {
   var prev3Avg = prev3vals.length > 0 ? prev3vals.reduce(function(a,b){ return a+b; }, 0) / prev3vals.length : null;
   var qBelowAvg = prev3Avg != null && qRev[0] < prev3Avg;
 
-  var hardFail = ttmGrowth != null && ttmGrowth >= 25 && qYoY < 10 && qBelowAvg;
+  if (ttmGrowth == null) {
+    return H.buildResult({ computable: false, reason: 'ttmGrowth null — cannot assess deceleration', threshold: 10, thresholdOp: 'gte' });
+  }
+
+  var hardFail = ttmGrowth >= 25 && qYoY < 10 && qBelowAvg;
   // Soft warning condition (not hard fail)
-  var softFail = ttmGrowth != null && qYoY < ttmGrowth - 30;
+  var softFail = qYoY < ttmGrowth - 30;
 
   var pass = !hardFail;
   var flag = hardFail ? 'HARD_DECEL' : (softFail ? 'SOFT_DECEL' : 'OK');

@@ -20,6 +20,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const ROOT = path.join(__dirname, '..');
 const ARCHIVE_BASE = path.join(ROOT, 'external-data');
@@ -45,7 +46,8 @@ function archiveDirByDate(srcDir, archiveDir, keepDays, dryRun) {
     return { archived: 0, kept: 0 };
   }
   const cutoff = (() => {
-    const d = new Date(); d.setUTCDate(d.getUTCDate() - keepDays);
+    const baseDate = process.env.RUN_DATE_UTC || new Date().toISOString().slice(0, 10);
+    const d = new Date(baseDate + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() - keepDays);
     return d.toISOString().slice(0, 10);
   })();
   const files = fs.readdirSync(srcDir)
@@ -76,18 +78,21 @@ function archiveDirByDate(srcDir, archiveDir, keepDays, dryRun) {
     }
     // F-SC-003 (Tag 180): append-mode without dedup → re-running on the same
     // month duplicates entries (CI retry, manual re-archive). Now: parse the
-    // existing archive, collect already-archived dates, and only append the
-    // new ones. If all entries are already there, skip the write entirely.
+    // existing archive into a Map keyed by date, merge new entries, and write
+    // the combined result atomically (fixes F-SM-002 non-atomic write and
+    // F-SM-003 TOCTOU race together). If all entries are already present,
+    // skip the write but still unlink originals.
+    // Build a Map of existing entries keyed by date (preserves order via insertion).
+    const merged = new Map();
     let toWrite = entries;
     if (fs.existsSync(ndjsonPath)) {
-      const existingDates = new Set();
       try {
         const existingLines = fs.readFileSync(ndjsonPath, 'utf8').split('\n').filter(Boolean);
         for (const ln of existingLines) {
-          try { const obj = JSON.parse(ln); if (obj && obj.date) existingDates.add(obj.date); } catch (_) {}
+          try { const obj = JSON.parse(ln); if (obj && obj.date) merged.set(obj.date, ln); } catch (_) {}
         }
       } catch (_) {}
-      toWrite = entries.filter(e => !existingDates.has(e.date));
+      toWrite = entries.filter(e => !merged.has(e.date));
       if (toWrite.length === 0) {
         console.log('  all ' + entries.length + ' entries already archived in ' + ndjsonPath + ' — skipping append');
         // Still unlink originals since they're already archived
@@ -97,11 +102,13 @@ function archiveDirByDate(srcDir, archiveDir, keepDays, dryRun) {
         }
         continue;
       }
-      const linesNew = toWrite.map(e => JSON.stringify({ date: e.date, ...e.content })).join('\n') + '\n';
-      fs.appendFileSync(ndjsonPath, linesNew);
-    } else {
-      fs.writeFileSync(ndjsonPath, lines);
     }
+    // Add new entries to the map, then write the full merged result atomically.
+    for (const e of toWrite) {
+      merged.set(e.date, JSON.stringify({ date: e.date, ...e.content }));
+    }
+    const mergedLines = Array.from(merged.values()).join('\n') + '\n';
+    writeFileAtomic(ndjsonPath, mergedLines);
     // F-SM-013 / Tag 232c-15 (audit F-SM-008 HIGH): verify the archive is
     // readable AND every NEWLY-APPENDED line parses, before unlinking the
     // originals. The prior verify only parsed FIRST line, which in append-

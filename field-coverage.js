@@ -42,6 +42,7 @@ const TRACKED_FIELDS = [
   'metrics.forwardPE.value',       // Forward P/E — used by forward-pe method
   'annual.annualSBC',              // Stock-based compensation — used by sbc-revenue method
   'annual.annualCapex',            // Capital expenditures — used by capex-trend, reinvestment-rate
+  'annual.annualOCF',              // sole source for ocf-based methods (e.g. reinvestment-rate OCF denominator)
   'annual.annualRnD',              // Tag 202: R&D — second input to reinvestment-rate ((Capex+RnD)/OCF)
   'annual.annualBalance',          // Balance sheet (includes totalDebt) — used by altman-z, net-debt-ebitda
   'metrics.insidersOwnership.value', // Tag 232c-9: was insiderOwnerPercent (typo); canonical field name is insidersOwnership

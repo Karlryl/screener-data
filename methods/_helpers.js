@@ -57,7 +57,7 @@ function cagr3y(annualArr) {
 
 function buildResult({ value, pass, computable, reason, components, threshold, thresholdOp }) {
   return {
-    value: value != null && Number.isFinite(value) ? value : null,
+    value: (value != null && (Number.isFinite(value) || typeof value === 'string')) ? value : null,
     pass: !!pass,
     computable: !!computable,
     reason: reason || '',

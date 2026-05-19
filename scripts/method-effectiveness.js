@@ -100,7 +100,9 @@ function bootstrapAlphaCI(passArr, failArr, resamples, methodName) {
   alphaSamples.sort((a, b) => a - b);
   if (alphaSamples.length < 10) return { alpha: null, lo: null, hi: null };
   const lo = alphaSamples[Math.floor(alphaSamples.length * 0.025)];
-  const hi = alphaSamples[Math.floor(alphaSamples.length * 0.975)];
+  // F-BT-115: use ceil-minus-1 so the upper bound is the true 97.5th percentile.
+  // Math.floor(200 * 0.975) = 195 is the 97.75th percentile (off-by-one high).
+  const hi = alphaSamples[Math.ceil(alphaSamples.length * 0.975) - 1];
   const pointAlpha = (median(passArr) != null && median(failArr) != null)
     ? median(passArr) - median(failArr) : null;
   return { alpha: pointAlpha, lo: lo, hi: hi };
@@ -173,7 +175,16 @@ function main() {
   for (const fname of files) {
     const asOf = fname.replace('.json', '');
     for (const days of HORIZONS_DAYS) {
-      const futureDate = WF.addDaysIso(asOf, days);
+      // F-BT-106: gate on the actual entry date, not the raw asOf filename date.
+      // Pre-market snapshots shift entry to T+1 via getEntryDate; using asOf means
+      // a vintage generated at 20:00 UTC on day D (EDT, pre-close) would have its
+      // maturity check applied from D instead of D+1, letting immature vintages
+      // through. Use asOf+1 as a conservative upper bound for realEntryAsOf so
+      // we never include vintages whose exit price isn't yet available.
+      // (The exact realEntryAsOf is computed after file load below — this pre-load
+      // guard uses +1 day to be safe without requiring a file read.)
+      const conservativeEntry = WF.addDaysIso(asOf, 1);
+      const futureDate = WF.addDaysIso(conservativeEntry, days);
       if (futureDate > today) continue;
       const key = days + 'd';
       const cacheKey = asOf + '|' + key;

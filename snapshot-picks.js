@@ -217,7 +217,7 @@ async function main() {
   }
 
   const result = {
-    asOf: new Date().toISOString(),
+    asOf: process.env.RUN_DATE_UTC ? process.env.RUN_DATE_UTC + 'T00:00:00.000Z' : new Date().toISOString(),
     universeSize: stocks.length,
     modes: {},
     benchmarks: ['SPY', 'QQQ', 'IWM']

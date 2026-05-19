@@ -7,8 +7,6 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 # Tag 153: serialize pushes to main — daily + monthly-sec-xbrl both push via retry-rebase.
 # On the 1st of the month both fire within ~90 min of each other; without this one silently fails.
@@ -115,6 +113,7 @@ jobs:
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           MAX_UNIVERSE: '25000'
+        timeout-minutes: 10
         run: |
           if [ -z "$FINNHUB_API_KEY" ]; then
             echo "::warning::FINNHUB_API_KEY not set — universe refresh will skip Finnhub source (degraded coverage). Set the secret in Settings → Secrets → Actions to enable."
@@ -155,6 +154,7 @@ jobs:
       # Fix für stille mcap-Korruption bei non-USD-Tickern.
       - name: Refresh FX-Rates
         run: node scripts/refresh-fx.js
+        timeout-minutes: 5
         continue-on-error: true
 
       # F-CI-004 (Tag 179): fx-rates.json staleness check. If refresh-fx silently failed
@@ -349,6 +349,7 @@ jobs:
       # Tag-49: Compute sector-medians-auto from current snapshots
       - name: Compute Sector-Medians (auto)
         run: node methods/sector-medians-compute.js ./snapshots
+        timeout-minutes: 10
         continue-on-error: true
 
       # Tag-28: Methods-Report (Werte-Matrix pro Stock × Methode)
@@ -460,11 +461,13 @@ jobs:
       # Berechnet 1w/4w/12w α der Modi vs Universe-Median. Survivor-biased Caveat dokumentiert.
       - name: Walk-Forward Performance
         run: node scripts/walk-forward-perf.js
+        timeout-minutes: 15
         continue-on-error: true
 
       # Tag 133f: Method-Effectiveness Audit — welche Methoden korrelieren mit Forward-Return?
       - name: Method-Effectiveness Audit
         run: node scripts/method-effectiveness.js
+        timeout-minutes: 10
         continue-on-error: true
 
       # Tag 134 — Phase 3.6: Methodology Report combines walk-forward + method-effectiveness
@@ -586,11 +589,15 @@ jobs:
                 git rebase --abort || true
                 # Verify our commit is still here AND its tree wasn't mutated.
                 NEW_TREE=$(git log -1 --format=%T "$COMMIT_SHA" 2>/dev/null || echo "MISSING")
-                if ! git rev-list HEAD | grep -q "^${COMMIT_SHA}$" || [ "$NEW_TREE" != "$COMMIT_TREE" ]; then
+                # F-CI-002/F-CI-003: use merge-base --is-ancestor instead of O(history) rev-list | grep
+                if ! git merge-base --is-ancestor "$COMMIT_SHA" HEAD || [ "$NEW_TREE" != "$COMMIT_TREE" ]; then
                   echo "::warning::Local commit lost or mutated during rebase — restoring from $COMMIT_SHA (tree $COMMIT_TREE)"
                   git reset --hard origin/main
                   git cherry-pick "$COMMIT_SHA" || { echo "::error::cherry-pick failed"; exit 1; }
                 fi
+              else
+                # F-CI-002: update SHA after successful rebase so subsequent iterations use the rewritten commit
+                COMMIT_SHA=$(git rev-parse HEAD)
               fi
               if git push; then
                 echo "✓ Pushed on attempt $i (commit $(git rev-parse HEAD))"
@@ -607,8 +614,9 @@ jobs:
       # alerts via Discord if any script exceeded the 5% threshold.
       # F-CI-005: placed AFTER commit so snapshots always land in git even if health
       # check fails. Health check failure blocks deploy but not the data commit.
-      # The concurrency group (main-push) already prevents concurrent workflow pushes;
-      # this comment documents why --strategy-option theirs is safe here.
+      # F-CI-008: --strategy-option theirs was dropped in Tag 232c-7; concurrent
+      # pushes ARE possible via the manual dispatch escape hatch (workflow_dispatch
+      # gets its own concurrency group, so a manual run can race a scheduled cron run).
       - name: Pipeline Health Check
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}

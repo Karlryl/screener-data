@@ -152,6 +152,11 @@ function _computeFromBuckets(buckets, minN) {
         // scoring threshold median. Negative values in loss-heavy sectors would invert
         // the above/below-median logic. Full array length is still reported for transparency.
         const thresholdArr = POSITIVE_ONLY_METRICS.has(mid) ? arr.filter(v => v > -0.05) : arr;
+        // F-ME-004: when a POSITIVE_ONLY_METRIC has fewer than minN positive values,
+        // skip writing the median entirely. The previous fallback to the full array
+        // (including deeply negative values in distressed sectors) inverted the
+        // above/below-median scoring logic, producing anti-signal thresholds.
+        if (POSITIVE_ONLY_METRICS.has(mid) && thresholdArr.length < minN) continue;
         const useArr = thresholdArr.length >= minN ? thresholdArr : arr;
         // Tag 222b (audit Tag 221a Fix 5): skip writing any non-finite median.
         // Even with the median()/percentile() NaN-filter above, an all-null/empty
@@ -347,7 +352,7 @@ module.exports = {
 if (require.main === module) {
   const Engine = require('../engine-v7.3.js');
   const snapshotDir = process.argv[2] || './snapshots';
-  const files = fs.readdirSync(snapshotDir).filter(f => f.endsWith('.json') && f !== '_manifest.json');
+  const files = fs.readdirSync(snapshotDir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
   const stocks = [];
   for (const f of files) {
     try { stocks.push(JSON.parse(fs.readFileSync(path.join(snapshotDir, f), 'utf8'))); } catch (e) {}

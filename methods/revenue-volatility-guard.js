@@ -70,7 +70,7 @@ function evaluate(stock) {
   if (!stock) return H.buildResult({ computable: false, pass: false, reason: 'no stock data' });
 
   const revY = _arr(stock, 'annual.annualRev');
-  const ttmRev = H.metricValue(stock, 'revenueTTM') || (Number.isFinite(revY[0]) ? revY[0] : 0);
+  const ttmRev = H.metricValue(stock, 'revenueTTM') ?? (Number.isFinite(revY[0]) ? revY[0] : 0);
 
   // Tag 124: Material-Schwelle in USD (currency-aware).
   // Vorher silent disable fuer non-USD Reporter (JPY/EUR/etc.) weil 100M lokal-Currency

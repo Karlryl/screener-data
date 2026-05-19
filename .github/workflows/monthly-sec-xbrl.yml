@@ -19,7 +19,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: main-push
+  group: ${{ github.event_name == 'workflow_dispatch' && format('manual-{0}', github.run_id) || 'main-push' }}
   cancel-in-progress: false
 
 jobs:
@@ -50,9 +50,13 @@ jobs:
 
       - name: Pull SEC XBRL
         timeout-minutes: 70  # F-CI-006: bounded so it can't eat the whole 90-min job budget
+        env:
+          MAX_INPUT: ${{ inputs.max }}
         run: |
-          if [ "${{ inputs.max }}" != "" ] && [ "${{ inputs.max }}" != "0" ]; then
-            node pull-sec-xbrl.js --max ${{ inputs.max }}
+          # F-CI-001: validate user-supplied max input before passing to shell to prevent injection
+          max="${MAX_INPUT:-0}"; if ! [[ "$max" =~ ^[0-9]+$ ]]; then echo "Invalid max input"; exit 1; fi
+          if [ "$max" != "" ] && [ "$max" != "0" ]; then
+            node pull-sec-xbrl.js --max "$max"
           else
             node pull-sec-xbrl.js
           fi
@@ -69,6 +73,15 @@ jobs:
             fi
           else
             echo "::warning::No SEC XBRL manifest found — pull may have failed"
+          fi
+          # F-CI-006: hard-fail on critically low coverage or missing manifest
+          if [ "${total:-0}" -gt 1000 ] && [ "${ok:-0}" -lt 500 ]; then
+            echo "CRITICAL: SEC coverage below 50% with >1000 total tickers"
+            exit 1
+          fi
+          if [ ! -f "external-data/sec-xbrl-manifest.json" ]; then
+            echo "CRITICAL: SEC manifest file missing"
+            exit 1
           fi
 
       - name: Commit manifest
@@ -100,11 +113,15 @@ jobs:
                 echo "::warning::Rebase failed on attempt $i — aborting cleanly (preserves local commit)"
                 git rebase --abort || true
                 NEW_TREE=$(git log -1 --format=%T "$COMMIT_SHA" 2>/dev/null || echo "MISSING")
-                if ! git rev-list HEAD | grep -q "^${COMMIT_SHA}$" || [ "$NEW_TREE" != "$COMMIT_TREE" ]; then
+                # F-CI-002/F-CI-003: use merge-base --is-ancestor instead of O(history) rev-list | grep
+                if ! git merge-base --is-ancestor "$COMMIT_SHA" HEAD || [ "$NEW_TREE" != "$COMMIT_TREE" ]; then
                   echo "::warning::Local commit lost or mutated during rebase — restoring from $COMMIT_SHA (tree $COMMIT_TREE)"
                   git reset --hard origin/main
                   git cherry-pick "$COMMIT_SHA" || { echo "::error::cherry-pick failed"; exit 1; }
                 fi
+              else
+                # F-CI-002: update SHA after successful rebase so subsequent iterations use the rewritten commit
+                COMMIT_SHA=$(git rev-parse HEAD)
               fi
               if git push; then
                 echo "Pushed on attempt $i (commit $(git rev-parse HEAD))"

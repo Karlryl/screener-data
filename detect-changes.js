@@ -307,7 +307,7 @@ async function main() {
     process.exit(1);
   }
   const state = loadState(args.state);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = process.env.RUN_DATE_UTC || new Date().toISOString().slice(0, 10);
 
   // Tag 222b (audit Tag 221a M3 fix): one-time orphan-method cleanup.
   // alert-state.methodState carries entries per ticker × method-id. When a
@@ -386,7 +386,7 @@ async function main() {
     fieldCoverage: state.fieldCoverage
   };
 
-  const files = fs.readdirSync(args.snapshots).filter(f => f.endsWith('.json') && f !== '_manifest.json');
+  const files = fs.readdirSync(args.snapshots).filter(f => f.endsWith('.json') && !f.startsWith('_'));
   if (files.length === 0) {
     _log('WARN', 'Keine Snapshot-Files gefunden.');
     process.exit(0);

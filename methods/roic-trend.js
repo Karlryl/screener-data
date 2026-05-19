@@ -7,7 +7,8 @@
  * year-over-year direction.
  *
  *   roic(y) = annualNetIncome[y] / investedCapital(y)
- *   where investedCapital = totalAssets - totalCash - totalDebt
+ *   where investedCapital = totalAssets - totalCash
+ *   (F-ME-001: aligned with roic.js; debt subtraction removed for consistency)
  *
  *   value    = (roic[0] - roic[1]) * 100    (pp change in latest year)
  *   pass     = value > 0                    (ROIC improved)
@@ -55,9 +56,13 @@ function _roicAtYear(stock, yearIdx) {
   // not envelopes — read directly. Be defensive about missing fields.
   const ta = Number.isFinite(bal.totalAssets) ? bal.totalAssets : null;
   const tc = Number.isFinite(bal.totalCash) ? bal.totalCash : 0;
-  const td = Number.isFinite(bal.totalDebt) ? bal.totalDebt : 0;
+  // F-ME-001: aligned IC formula with roic.js and sector-medians-compute.js.
+  // Both use IC = totalAssets - cash (Damodaran gross-assets approach).
+  // Previously roic-trend.js also subtracted totalDebt, making the two methods
+  // incommensurable for leveraged stocks. Dropped the `- totalDebt` term here
+  // to ensure consistency. Do NOT change roic.js thresholds — same formula there.
   if (ta == null) return null;
-  const invested = ta - tc - td;
+  const invested = ta - tc;
   if (invested <= 0) return null;
   return ni / invested;
 }

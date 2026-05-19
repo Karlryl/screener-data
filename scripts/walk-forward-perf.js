@@ -119,7 +119,14 @@ function addDaysIso(isoDate, days) {
 function getEntryDate(asOf) {
   const d = new Date(asOf);
   if (isNaN(d.getTime())) return asOf.slice(0, 10);
-  if (d.getUTCHours() < 21) {
+  // F-BT-104: DST-aware market-close threshold.
+  // US markets close at 21:00 UTC in EST (Nov-Mar) but 20:00 UTC in EDT (Mar-Nov).
+  // Using a hardcoded 21 incorrectly classifies post-close EDT snapshots (e.g.
+  // 20:30 UTC) as pre-market, adding a spurious 1-day entry delay in summer.
+  const month = d.getUTCMonth() + 1; // 1-12
+  const isEDT = month >= 3 && month <= 11; // approximate EDT window
+  const marketCloseUTC = isEDT ? 20 : 21;
+  if (d.getUTCHours() < marketCloseUTC) {
     // Pre-market / intraday snapshot: use next day's price
     const next = new Date(d);
     next.setUTCDate(next.getUTCDate() + 1);
@@ -179,7 +186,8 @@ function listVintages() {
 // PRICE_MAX_STALE_DAYS to find a usable close. Never scans forward (no
 // look-ahead). Returns null if no usable price exists — caller drops the
 // ticker from the cohort.
-function _priceAtCanonical(map, canonicalDate, fallbackTargetDate) {
+// F-BT-115: removed dead `fallbackTargetDate` parameter — no callsite ever passed it.
+function _priceAtCanonical(map, canonicalDate) {
   if (!map || !canonicalDate) return null;
   if (map.has(canonicalDate)) return map.get(canonicalDate);
   // Walk backward from canonicalDate to find a usable close within stale window
@@ -443,6 +451,9 @@ function evaluateVintage(picksFile, priceIndex, regimes) {
         truncated,
         coverage: picks.length > 0 ? Math.round(n / picks.length * 100) / 100 : 0,
         pickMedianReturn: pickMed,
+        // F-BT-108: expose actual calendar days between canonical entry/exit dates
+        // so cross-vintage alpha aggregation can detect shortened windows (holidays etc.)
+        horizonActualDays: benchResult.horizonActualDays != null ? benchResult.horizonActualDays : null,
         // F-BT-006: null + note when n < MIN_SAMPLES
         alpha: n >= MIN_SAMPLES ? finalAlphaVsUniverse : null,
         alphaNullReason: n < MIN_SAMPLES ? ('insufficient_samples_n=' + n) : undefined,
@@ -546,11 +557,25 @@ function main() {
         if (vals.length > 0) regimeAlpha[regime] = { medianAlphaVsBenchmark: median(vals), vintages: vals.length };
       }
 
+      // F-BT-112: count vintages that contributed a non-null alphaVsUniverse
+      const universeAlphaVals = collect('alphaVsUniverse');
+      const universeAlphaVintageCount = universeAlphaVals.length;
+      const MIN_VINTAGES_UNIVERSE = 4;
+      const rawMedianAlphaVsUniverse = median(universeAlphaVals);
+      const medianAlphaVsUniverseGated = universeAlphaVintageCount < MIN_VINTAGES_UNIVERSE
+        ? null : rawMedianAlphaVsUniverse;
+      const medianAlphaVsUniverseNote = universeAlphaVintageCount < MIN_VINTAGES_UNIVERSE
+        ? ('insufficient vintages (n=' + universeAlphaVintageCount + ')')
+        : undefined;
+
       data.summary[key] = {
         // Bug #32 fix: collect() filters nulls, so vintageCount was only counting vintages
         // with non-null alphaVsUniverse (n >= MIN_SAMPLES). Count all status='ok' vintages.
         vintageCount: data.vintages.filter(v => v.horizons[key] && v.horizons[key].status === 'ok').length,
-        medianAlphaVsUniverse: median(collect('alphaVsUniverse')),
+        // F-BT-112: gated when fewer than MIN_VINTAGES_UNIVERSE vintages contributed
+        universeAlphaVintageCount,
+        medianAlphaVsUniverse: medianAlphaVsUniverseGated,
+        medianAlphaVsUniverseNote,
         medianAlphaVsFrozenVintage: median(collect('alphaVsFrozenVintage')),
         medianAlphaVsBenchmark: median(collect('alphaVsSpy')),
         medianAlphaVsSpy: median(collect('alphaVsSpy')), // backwards-compat
@@ -558,7 +583,8 @@ function main() {
         // Tag 139: alpha by macro regime (only if regime data available)
         regimeAlpha: Object.keys(regimeAlpha).length > 0 ? regimeAlpha : undefined,
         // Backwards-compat (deprecated, prefer medianAlphaVsUniverse):
-        medianAlpha: median(collect('alphaVsUniverse'))
+        // F-BT-112: also apply the vintage gate here for consistency
+        medianAlpha: medianAlphaVsUniverseGated
       };
     }
   }
@@ -614,8 +640,9 @@ function main() {
   console.log('  vintages: ' + evaluations.length);
   for (const [mode, data] of Object.entries(modes)) {
     const s28 = data.summary['28d'];
+    // F-BT-117: label explicitly as 'α vs universe' to distinguish from SPY-relative alpha
     if (s28 && s28.medianAlpha != null) {
-      console.log('  ' + mode + ' 4w median α = ' + (s28.medianAlpha >= 0 ? '+' : '') + s28.medianAlpha.toFixed(2) + 'pp (n=' + s28.vintageCount + ')');
+      console.log('  ' + mode + ' 4w median α vs universe = ' + (s28.medianAlpha >= 0 ? '+' : '') + s28.medianAlpha.toFixed(2) + 'pp (n=' + s28.vintageCount + ')');
     }
   }
 }

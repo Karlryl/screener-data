@@ -124,14 +124,22 @@ async function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function fetchScreener(id, region) {
   region = region || 'US';
-  try {
-    const r = await yf.screener({ scrIds: id, count: 250, region: region });
-    return (r && r.quotes) || [];
-  } catch (e) {
-    // F-DP-009 (Tag 233b): log screener failures so CI can detect Yahoo screener outages.
-    // Previously silent [] returns masked 429s and schema breaks — universe shrank undetected.
-    console.warn('  [WARN] fetchScreener [' + id + '/' + region + '] failed: ' + (e && e.message || String(e)));
-    return [];
+  // F-DP-011: retry up to 3 times on 429 with linear back-off (5s, 10s).
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const r = await yf.screener({ scrIds: id, count: 250, region: region });
+      return (r && r.quotes) || [];
+    } catch (e) {
+      const is429 = (e && e.statusCode === 429) || (e && e.message && e.message.includes('429'));
+      if (is429 && attempt < 2) {
+        await _sleep((attempt + 1) * 5000);
+        continue;
+      }
+      // F-DP-009 (Tag 233b): log screener failures so CI can detect Yahoo screener outages.
+      // Previously silent [] returns masked 429s and schema breaks — universe shrank undetected.
+      console.warn('  [WARN] fetchScreener [' + id + '/' + region + '] failed: ' + (e && e.message || String(e)));
+      return [];
+    }
   }
 }
 

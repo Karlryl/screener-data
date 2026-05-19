@@ -138,7 +138,7 @@ function main() {
     }
 
     // Group by exchange
-    const exch = (s.meta && s.meta.exchange) || (s.meta && s.meta.exchangeCode) || 'Unknown';
+    const exch = (s.meta && s.meta.exchangeName) || (s.meta && s.meta.exchange) || (s.meta && s.meta.exchangeCode) || 'Unknown';
     if (!byExchange[exch]) byExchange[exch] = { count: 0, grades: { 'A+': 0, A: 0, B: 0, C: 0, D: 0, unknown: 0 } };
     byExchange[exch].count++;
     byExchange[exch].grades[grade] = (byExchange[exch].grades[grade] || 0) + 1;

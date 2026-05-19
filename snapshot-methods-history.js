@@ -166,7 +166,7 @@ async function main() {
   const n_failed = _pipelineFailures.length;
   const n_ok = n_total - n_failed;
   const failure_rate = n_total > 0 ? n_failed / n_total : 0;
-  const healthDir = './pipeline-health';
+  const healthDir = path.join(__dirname, 'pipeline-health');
   if (!fs.existsSync(healthDir)) fs.mkdirSync(healthDir, { recursive: true });
   const healthReport = { script: 'snapshot-methods-history', date: today, n_total, n_ok, n_failed, failure_rate, failures: _pipelineFailures };
   // Tag 217e: atomic write (was raw writeFileSync; on GitHub Actions step
