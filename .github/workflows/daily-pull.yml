@@ -113,7 +113,7 @@ jobs:
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           MAX_UNIVERSE: '25000'
-        timeout-minutes: 10
+        timeout-minutes: 20
         run: |
           if [ -z "$FINNHUB_API_KEY" ]; then
             echo "::warning::FINNHUB_API_KEY not set — universe refresh will skip Finnhub source (degraded coverage). Set the secret in Settings → Secrets → Actions to enable."
