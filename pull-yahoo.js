@@ -2026,6 +2026,15 @@ async function main() {
   const attempted = Math.max(1, manifest.n_total - skippedMcap);
   const failRatio = manifest.n_failed / attempted;
   _log('INFO', `Fail-ratio: ${(failRatio * 100).toFixed(1)}% (${manifest.n_failed} fail / ${attempted} attempted; ${skippedMcap} skipped-mcap)`);
+  // F-DP-008 (Tag 233b): mapper-bug (TypeError/ReferenceError in mapYahooToCanonical) is
+  // a programming error — not a transient Yahoo failure. Even 1 means the mapper is broken
+  // for some ticker shape. Exit 1 immediately so CI catches the regression before it
+  // gets absorbed into the overall fail-ratio (which only gates at >75%).
+  const mapperBugCount = (manifest.failures || []).filter(f => f.errClass === 'mapper-bug').length;
+  if (mapperBugCount > 0) {
+    _log('ERROR', `MAPPER-BUG: ${mapperBugCount} TypeError/ReferenceError in mapYahooToCanonical — programming error, not transient Yahoo failure`);
+    process.exit(1);
+  }
   process.exit(failRatio > 0.75 ? 1 : 0);
 }
 

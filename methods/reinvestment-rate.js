@@ -134,12 +134,24 @@ function evaluate(stock) {
   }
 
   var ratios = [];
+  var rndSkippedYears = 0;
   var yearsAvail = Math.min(5, rawCapex.length, rawOcf.length);
   for (var j = 0; j < yearsAvail; j++) {
     // Bug #30 fix: skip years where capex data is missing instead of substituting 0.
     // Using 0 pulls the median reinvestment-rate down for R&D/capex-heavy companies.
     var c = rawCapex[j];
     if (!Number.isFinite(c)) continue;  // skip years with no capex data
+    // F-ME-008 fix (Tag 233b): symmetric to capex treatment — when the company HAS
+    // non-null R&D in at least one year (rnd.length > 0) but this specific year is
+    // null, skip rather than substitute 0. Substituting 0 understates reinvestment
+    // for R&D-active companies with mid-window data gaps (Yahoo schema changes).
+    // Guard: use rnd (filtered non-null) not rawRnd — rawRnd can be all-null for
+    // companies Yahoo populates but always returns null (COST, V), which would
+    // wrongly skip all years and produce 0 usable ratios.
+    if (rnd.length > 0 && (j >= rawRnd.length || !Number.isFinite(rawRnd[j]))) {
+      rndSkippedYears++;
+      continue;
+    }
     var r = (j < rawRnd.length && Number.isFinite(rawRnd[j])) ? rawRnd[j] : 0;
     var o = rawOcf[j];
     if (!Number.isFinite(o) || o <= 0) continue;
@@ -197,7 +209,7 @@ function evaluate(stock) {
     components: {
       median: med, ratios: ratios,
       yearsConsidered: ratios.length,
-      capexUsed: true, rndUsed: usedRnD, ocfSource: ocfSource,
+      capexUsed: true, rndUsed: usedRnD, rndSkippedYears: rndSkippedYears, ocfSource: ocfSource,
       _ocfSource: { reported: ocfReportedCount, synthesized: ocfSynthesizedCount },
       assetLight: assetLight, capexRevMedian: capexRevMed,
       effectiveThreshold: effectiveThreshold,

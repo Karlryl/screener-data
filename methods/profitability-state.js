@@ -10,7 +10,7 @@
  *   - Bei tie/disagree: konservativ (niedrigster State im Hierarchie LOSS<TURN<RECENT<STABLE)
  *   - NI-Persistent-Loss-Override behält Veto: wenn NI-Source LOSS sagt via Persistent-Loss-Pattern, final = LOSS
  *
- * Visibility-Tag (in components.confidence): "3/3", "2/3 NI+OI", "1/3 OI" etc.
+ * Visibility-Tag (in components.sourceConfirmation): "3/3", "2/3 NI+OI", "1/3 OI" etc.
  * Macht Karl auf einen Blick sichtbar, wie bestätigt der State ist.
  */
 const H = require('./_helpers.js');
@@ -157,7 +157,7 @@ function evaluate(stock) {
     computable: true,
     components: {
       state: finalState,
-      confidence: confidenceTag,
+      sourceConfirmation: confidenceTag,
       sources: sources.map(s => s.name + '=' + s.state).join(', '),
       yearsAvailable: niArr.length,
       latestNetIncome: niArr[0]

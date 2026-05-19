@@ -128,6 +128,9 @@ async function fetchScreener(id, region) {
     const r = await yf.screener({ scrIds: id, count: 250, region: region });
     return (r && r.quotes) || [];
   } catch (e) {
+    // F-DP-009 (Tag 233b): log screener failures so CI can detect Yahoo screener outages.
+    // Previously silent [] returns masked 429s and schema breaks — universe shrank undetected.
+    console.warn('  [WARN] fetchScreener [' + id + '/' + region + '] failed: ' + (e && e.message || String(e)));
     return [];
   }
 }

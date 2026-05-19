@@ -125,7 +125,7 @@ function evaluate(stock) {
         meanFloorPct: MEAN_FLOOR_PCT
       }
     },
-    reason: positiveCount + '/' + surprises.length + ' beats, mean=' +
+    reason: positiveCount + '/' + WINDOW + ' beats, mean=' +
             mean.toFixed(1) + '% (need >=' + POSITIVE_COUNT_FLOOR + '/4 AND mean>=' +
             MEAN_FLOOR_PCT + '%)' +
             (breadthPass && !magnitudePass ? ' — breadth OK but magnitude weak' :
