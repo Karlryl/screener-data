@@ -294,6 +294,14 @@ function buildRow(stock) {
   const hgTier = modeEvals.HYPERGROWTH ? modeEvals.HYPERGROWTH.tier : null;
   const qcScore = modeEvals.QUALITY_COMPOUNDER && Number.isFinite(modeEvals.QUALITY_COMPOUNDER.score) ? modeEvals.QUALITY_COMPOUNDER.score : null;
   const qcTier = modeEvals.QUALITY_COMPOUNDER ? modeEvals.QUALITY_COMPOUNDER.tier : null;
+  // Tag 232g: Buffett mode (14-point composite + Owner-Earnings + DCF MoS).
+  // bfScore is the score-aggregator output; bfPassed is true only when all 3
+  // MUST methods pass — Buffett mode is intentionally strict (10y history,
+  // DCF MoS ≥ 25%, ALL_OF on the 14-point composite). Most stocks score
+  // partially but bfPassed=false because they fail the MoS hard-gate.
+  const bfScore = modeEvals.BUFFETT && Number.isFinite(modeEvals.BUFFETT.score) ? modeEvals.BUFFETT.score : null;
+  const bfTier = modeEvals.BUFFETT ? modeEvals.BUFFETT.tier : null;
+  const bfPassed = modeEvals.BUFFETT ? !!modeEvals.BUFFETT.passed : false;
 
   // Tag 199 audit gates: per-stock disqualification signals consumed by classifyTabs.
   //   qSpikeFail        — q-spike-dataguard pass=false (DATAGUARD HARD-FAIL)
@@ -395,6 +403,7 @@ function buildRow(stock) {
     hgClass: hgClassName,
     hgScore, hgTier,
     qcScore, qcTier,
+    bfScore, bfTier, bfPassed,
     pbScore,
     gmaTrend, gmaChange,
     omaTrend, omaChange,
@@ -443,7 +452,7 @@ function computeR40Penalty(r) {
 }
 
 function classifyTabs(rows) {
-  const tabs = { HG: [], QC: [], SMALL: [], R40: [], PRE_BREAKOUT: [], WATCH: [] };
+  const tabs = { HG: [], QC: [], BF: [], SMALL: [], R40: [], PRE_BREAKOUT: [], WATCH: [] };
 
   for (const r of rows) {
     // Tag 199 HARD GATES — stocks failing any gate land in WATCH ONLY, regardless
@@ -515,6 +524,18 @@ function classifyTabs(rows) {
         && qcEligibleByAge && !dqBlockedFromQuality && qcGrowthFloorOK) {
       tabs.QC.push(r);
     }
+    // Tag 232g: BUFFETT tab — value-compounder filter (14-point composite +
+    // Owner-Earnings + DCF MoS ≥ 25% hard-gate). The BUFFETT strategy-mode
+    // already enforces sector-exclusion, dataGuards (sloan-ratio,
+    // forecast-contamination-guard), and 10y-history floor via T1/T6/T10.
+    // Show every stock with a computable bfScore + tier !== REJECT so users
+    // can see partial-pass candidates (e.g. 9/14 tests pass but MoS missing
+    // → still informative). The bfPassed badge marks the strict winners.
+    // dqBlockedFromQuality reused: grade C blocks here too — Buffett requires
+    // pristine accounting.
+    if (Number.isFinite(r.bfScore) && r.bfTier && r.bfTier !== 'REJECT' && !dqBlockedFromQuality) {
+      tabs.BF.push(r);
+    }
     // SMALL: mcap < 2B, growth > 20%, not LOSS
     if (r.mcap > 0 && r.mcap < 2e9 && Number.isFinite(r.growth) && r.growth > 20 && r.state !== 'LOSS') {
       tabs.SMALL.push(r);
@@ -528,8 +549,8 @@ function classifyTabs(rows) {
         && Number.isFinite(r.grossMargin) && r.grossMargin > 0 && !dqBlockedFromQuality) {
       tabs.PRE_BREAKOUT.push(r);
     }
-    // WATCH: NEAR_MISS tier in HG or QC
-    if (r.hgTier === 'NEAR_MISS' || r.qcTier === 'NEAR_MISS') {
+    // WATCH: NEAR_MISS tier in HG, QC, or BUFFETT
+    if (r.hgTier === 'NEAR_MISS' || r.qcTier === 'NEAR_MISS' || r.bfTier === 'NEAR_MISS') {
       tabs.WATCH.push(r);
     }
   }
@@ -537,6 +558,14 @@ function classifyTabs(rows) {
   // Sorting per tab
   tabs.HG.sort((a, b) => (b.hgScore || 0) - (a.hgScore || 0));
   tabs.QC.sort((a, b) => (b.qcScore || 0) - (a.qcScore || 0));
+  // Tag 232g: BUFFETT — passed=true rows always sort above passed=false (rare
+  // strict winners first), then ties broken by bfScore desc.
+  tabs.BF.sort((a, b) => {
+    const ap = a.bfPassed ? 1 : 0;
+    const bp = b.bfPassed ? 1 : 0;
+    if (ap !== bp) return bp - ap;
+    return (b.bfScore || 0) - (a.bfScore || 0);
+  });
   tabs.SMALL.sort((a, b) => (b.growth || 0) - (a.growth || 0));
   // Tag 205 R40-poisoning defense (penalized sort): hard-gates already filter
   // qSpikeFail / lossMagFail / r40SanityFail / etc., but edge-case survivors
@@ -560,7 +589,7 @@ function classifyTabs(rows) {
     return bEff - aEff;
   });
   tabs.PRE_BREAKOUT.sort((a, b) => (b.pbScore || 0) - (a.pbScore || 0));
-  tabs.WATCH.sort((a, b) => Math.max(b.hgScore || 0, b.qcScore || 0) - Math.max(a.hgScore || 0, a.qcScore || 0));
+  tabs.WATCH.sort((a, b) => Math.max(b.hgScore || 0, b.qcScore || 0, b.bfScore || 0) - Math.max(a.hgScore || 0, a.qcScore || 0, a.bfScore || 0));
 
   // Embedded-JSON size guard: R40 tab is the most permissive (every stock with
   // a computable R40 qualifies) — without a cap the dashboard payload balloons
@@ -1313,6 +1342,7 @@ const CLIENT_JS = `
         const minV = +filterMin;
         if (activeTab === 'HG' && (r.r40 == null || r.r40 < minV)) return false;
         if (activeTab === 'QC' && (r.fcfMargin == null || r.fcfMargin < minV)) return false;
+        if (activeTab === 'BF' && (r.bfScore == null || r.bfScore < minV)) return false;
         if (activeTab === 'SMALL' && (r.growth == null || r.growth < minV)) return false;
         if (activeTab === 'R40' && (r.r40 == null || r.r40 < minV)) return false;
         if (activeTab === 'PRE_BREAKOUT' && (r.growth == null || r.growth < minV)) return false;
@@ -1342,13 +1372,18 @@ const CLIENT_JS = `
       if (k === 'auto') {
         if (tab === 'HG') return (b.hgScore||0) - (a.hgScore||0);
         if (tab === 'QC') return (b.qcScore||0) - (a.qcScore||0);
+        if (tab === 'BF') {
+          const ap = a.bfPassed ? 1 : 0, bp = b.bfPassed ? 1 : 0;
+          if (ap !== bp) return bp - ap;
+          return (b.bfScore||0) - (a.bfScore||0);
+        }
         if (tab === 'SMALL') return (b.growth||0) - (a.growth||0);
         if (tab === 'R40') return (b.r40||0) - (a.r40||0);
         if (tab === 'PRE_BREAKOUT') return (b.pbScore||0) - (a.pbScore||0);
-        if (tab === 'WATCH') return Math.max(b.hgScore||0, b.qcScore||0) - Math.max(a.hgScore||0, a.qcScore||0);
+        if (tab === 'WATCH') return Math.max(b.hgScore||0, b.qcScore||0, b.bfScore||0) - Math.max(a.hgScore||0, a.qcScore||0, a.bfScore||0);
         return 0;
       }
-      if (k === 'score')     return Math.max(b.hgScore||0, b.qcScore||0) - Math.max(a.hgScore||0, a.qcScore||0);
+      if (k === 'score')     return Math.max(b.hgScore||0, b.qcScore||0, b.bfScore||0) - Math.max(a.hgScore||0, a.qcScore||0, a.bfScore||0);
       if (k === 'r40')       return (b.r40||0) - (a.r40||0);
       if (k === 'growth')    return (b.growth||0) - (a.growth||0);
       if (k === 'fcfMargin') return (b.fcfMargin||0) - (a.fcfMargin||0);
@@ -1373,6 +1408,12 @@ const CLIENT_JS = `
       {k:'Score',w:60,num:true}, {k:'State',w:80}, {k:'FCFM%',w:70,num:true},
       {k:'OpM%',w:70,num:true}, {k:'GrossM%',w:70,num:true}, {k:'MCap',w:70,num:true},
       {k:'Trend',w:75}
+    ];
+    if (tab === 'BF') return [
+      {k:'#',w:30}, {k:'Ticker',w:60}, {k:'Company',w:230}, {k:'Sector',w:110},
+      {k:'Score',w:55,num:true}, {k:'14-Pt',w:55}, {k:'OE',w:40}, {k:'MoS',w:50},
+      {k:'FCFM%',w:65,num:true}, {k:'OpM%',w:65,num:true}, {k:'MCap',w:65,num:true},
+      {k:'Trend',w:70}
     ];
     if (tab === 'SMALL') return [
       {k:'#',w:30}, {k:'Ticker',w:60}, {k:'Company',w:240}, {k:'Country',w:60},
@@ -1404,12 +1445,18 @@ const CLIENT_JS = `
   const BULLET_COLS = {
     'HG':           ['score','r40','growth','grossMargin','fcfMargin','mcap'],
     'QC':           ['score','fcfMargin','opMargin','grossMargin','mcap'],
+    'BF':           ['score','fcfMargin','opMargin','mcap'],
     'SMALL':        ['growth','r40','grossMargin','mcap'],
     'R40':          ['r40','growth','fcfMargin','opMargin','grossMargin','mcap'],
     'PRE_BREAKOUT': ['growth','grossMargin','r40','mcap','pbScore']
   };
   function _rowMetricForBullet(r, key, tab){
-    if (key === 'score') return tab === 'QC' ? r.qcScore : (tab === 'HG' ? r.hgScore : null);
+    if (key === 'score') {
+      if (tab === 'QC') return r.qcScore;
+      if (tab === 'HG') return r.hgScore;
+      if (tab === 'BF') return r.bfScore;
+      return null;
+    }
     if (key === 'mcap') return r.mcap;
     if (key === 'pbScore') return r.pbScore;
     return r[key];
@@ -1462,10 +1509,12 @@ const CLIENT_JS = `
     const color = vs[vs.length-1] >= vs[0] ? 'var(--green)' : 'var(--red)';
     return '<svg width="'+w+'" height="'+h+'" style="vertical-align:middle;display:inline-block;"><polyline points="'+pts+'" stroke="'+color+'" stroke-width="1" fill="none"/></svg>';
   }
-  // trendCell: builds the Trend <td> for HG/QC/R40 tabs — microSpark + Δ7d
+  // trendCell: builds the Trend <td> for HG/QC/BF/R40 tabs — microSpark + Δ7d
   // badge. Source field on history entries: hgScore (HG, R40) or qcScore (QC).
   // r40 isn't stored in score-history so the R40 tab falls back to hgScore as
-  // a correlated proxy (same momentum axis).
+  // a correlated proxy (same momentum axis). Tag 232g: bfScore isn't in
+  // snapshot-score-history yet (would need a backfill); fall back to hgScore
+  // which approximates fundamentals momentum for the same stock.
   function trendCell(r, tab){
     const sh = r.scoreHistory;
     if (!sh || !Array.isArray(sh.history) || sh.history.length === 0) return '<td><span class="g-mute" style="font-size:10px">—</span></td>';
@@ -1520,6 +1569,26 @@ const CLIENT_JS = `
       const score = r.qcScore==null ? '—' : r.qcScore.toFixed(1);
       return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td>'+bc(score,'score')+'<td>'+stateP+'</td>'+bc(fcfmHtml,'fcfMargin')+bc(opmHtml,'opMargin')+bc(gmHtml,'grossMargin')+bc(fmtM(r.mcap),'mcap')+trendCell(r,'QC')+'</tr>';
     }
+    if (tab === 'BF') {
+      // Tag 232g: read 14-pt composite + OE pass + MoS from compactResults.
+      // buffett-criteria.value is the count of passing tests (0-14). owner-
+      // earnings.pass is the OE-positive-and-growing check. dcf-intrinsic-value
+      // .value is the discount-to-intrinsic ratio (≥0.25 = MoS pass).
+      const score = r.bfScore==null ? '—' : r.bfScore.toFixed(1);
+      const bc14 = r.results['buffett-criteria'];
+      const bc14Cell = (bc14 && bc14.computable && Number.isFinite(bc14.value))
+        ? '<span class="'+(bc14.pass?'g-pos':'g-mute')+'">'+bc14.value.toFixed(0)+'/14</span>'
+        : '<span class="g-mute">—</span>';
+      const oe = r.results['owner-earnings'];
+      const oeCell = (oe && oe.computable)
+        ? '<span class="'+(oe.pass?'g-pos':'g-neg')+'">'+(oe.pass?'✓':'✗')+'</span>'
+        : '<span class="g-mute">—</span>';
+      const dcf = r.results['dcf-intrinsic-value'];
+      const mosCell = (dcf && dcf.computable && Number.isFinite(dcf.value))
+        ? '<span class="'+(dcf.pass?'g-pos':'g-mute')+'">'+(dcf.value*100).toFixed(0)+'%</span>'
+        : '<span class="g-mute">—</span>';
+      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td>'+bc(score,'score')+'<td>'+bc14Cell+'</td><td>'+oeCell+'</td><td>'+mosCell+'</td>'+bc(fcfmHtml,'fcfMargin')+bc(opmHtml,'opMargin')+bc(fmtM(r.mcap),'mcap')+trendCell(r,'BF')+'</tr>';
+    }
     if (tab === 'SMALL') {
       return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.country)+'</td><td>'+stateP+'</td>'+bc(growthHtml,'growth')+bc(r40Html,'r40')+bc(gmHtml,'grossMargin')+bc(fmtM(r.mcap),'mcap')+'</tr>';
     }
@@ -1552,12 +1621,13 @@ const CLIENT_JS = `
       return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td>'+stateP+'</td>'+bc(growthHtml,'growth')+bc(gmHtml,'grossMargin')+bc(r40Html,'r40')+'<td style="font-size:10px">'+signalsHtml+'</td>'+bc(fmtM(r.mcap),'mcap')+bc(pb,'pbScore')+'</tr>';
     }
     if (tab === 'WATCH') {
-      const score = Math.max(r.hgScore||0, r.qcScore||0).toFixed(1);
+      const score = Math.max(r.hgScore||0, r.qcScore||0, r.bfScore||0).toFixed(1);
       // Reasons priority: explicit hard-gate reasons > NEAR_MISS tier label.
       let reason;
       if (r.watchReasons && r.watchReasons.length) reason = r.watchReasons.join(',');
       else if (r.hgTier==='NEAR_MISS') reason = 'HG NEAR';
       else if (r.qcTier==='NEAR_MISS') reason = 'QC NEAR';
+      else if (r.bfTier==='NEAR_MISS') reason = 'BF NEAR';
       else reason = '—';
       return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td style="font-size:10px">'+reason+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
     }
@@ -1566,6 +1636,7 @@ const CLIENT_JS = `
 
   // Per-tab explainer text (rendered above the table when the tab activates).
   const TAB_EXPLAINERS = {
+    'BF': 'Warren Buffett-style value-compounder filter (literaturgestützt: Berkshire Letters 1977–2024 + Hagstrom + Damodaran). 14-Punkt-Komposit (10 quantitative T1–T10: ROE, ROIC, Debt, EPS-Acceleration, FCF, OE, Margins, E/P, Hurdle Rate, One-Dollar-Premise + 3 qualitative Q1–Q3: Moat, Pricing-Power, Consistency + 1 Industrie-Exclusion X1). Owner-Earnings (Buffett 1986): NI + D&A + non-cash − Maint-Capex − ΔWC > 0 und wachsend. DCF Margin-of-Safety: ≥25% Discount-to-Intrinsic UND Hurdle-Rate ≥15% (3-Stage DCF mit Gordon-Growth Terminal). Strict-Mode: ✓ in der Passed-Spalte heißt alle 3 MUST gleichzeitig erfüllt — heute meist sehr selten, weil das Universum von Premium-Multiples dominiert wird.',
     'PRE_BREAKOUT': 'Companies recently turning profitable with accelerating growth. These are the future compounders — before the market prices in the quality improvement. Historical examples: PLTR (TURNAROUND→HG mid-2023), CRDO (2022), ALAB (2023).',
     'WATCH': 'Stocks flagged by hard-gates (Q-Spike, Loss>50%Rev, Metric-Divergence, Closed-End-Trust, DQ-D) and NEAR_MISS tier — explicitly held out of HG/QC/SMALL/R40/PRE-BREAKOUT for human review.',
     'SMALL': 'Market cap < $2B, revenue growth > 20%, not in LOSS state. Hunting the next CRDO/ALAB before they hit the radar.',
@@ -1586,7 +1657,7 @@ const CLIENT_JS = `
     return (xs.length % 2 === 0) ? (xs[mid-1] + xs[mid]) / 2 : xs[mid];
   }
   function _rowMetric(r, key) {
-    if (key === 'score')   return (r.hgScore != null) ? r.hgScore : r.qcScore;
+    if (key === 'score')   return (r.hgScore != null) ? r.hgScore : (r.qcScore != null ? r.qcScore : r.bfScore);
     if (key === 'r40')     return r.r40;
     if (key === 'fcfm')    return r.fcfMargin;
     if (key === 'growth')  return r.growth;
@@ -1617,7 +1688,7 @@ const CLIENT_JS = `
   function buildSectorHeatmap() {
     if (_sectorHeatmapCache) return _sectorHeatmapCache;
     // Universe: rows in HG/QC/SMALL/R40/PRE_BREAKOUT (clean stocks).
-    const cleanTabs = ['HG','QC','SMALL','R40','PRE_BREAKOUT'];
+    const cleanTabs = ['HG','QC','BF','SMALL','R40','PRE_BREAKOUT'];
     const seen = new Set();
     const universe = [];
     for (const t of cleanTabs) {
@@ -1931,7 +2002,10 @@ const CLIENT_JS = `
     // Section A: Header — extended with Tag 199 audit signals
     let html = '<div class="modal-header">';
     html += '<div><span class="tk">'+esc(r.ticker)+'</span> <span class="nm">'+esc(r.name)+'</span><div class="meta">'+esc(r.sector)+' · '+esc(r.industry)+' · '+esc(r.country)+'</div></div>';
-    const score = activeTab==='QC' ? r.qcScore : (activeTab==='HG' ? r.hgScore : Math.max(r.hgScore||0, r.qcScore||0));
+    const score = activeTab==='QC' ? r.qcScore
+      : activeTab==='HG' ? r.hgScore
+      : activeTab==='BF' ? r.bfScore
+      : Math.max(r.hgScore||0, r.qcScore||0, r.bfScore||0);
     // Audit-signal mini-badges. Color: green for healthy, red for fail, mute for n/a.
     const sigBadges = [];
     if (r.dqGrade) {
@@ -2017,7 +2091,7 @@ const CLIENT_JS = `
     // Falls back to placeholder text on Day-1 (history empty) so the modal
     // never breaks when score-history hasn't been populated yet.
     html += '<h3 class="sec">Score</h3>';
-    html += '<div style="font-family:var(--mono);font-size:12px;color:var(--text-1);">HG Score: '+(r.hgScore!=null?r.hgScore.toFixed(1):'—')+' ('+(r.hgTier||'—')+') &nbsp;·&nbsp; QC Score: '+(r.qcScore!=null?r.qcScore.toFixed(1):'—')+' ('+(r.qcTier||'—')+') &nbsp;·&nbsp; PB Score: '+(r.pbScore!=null?r.pbScore.toFixed(1):'—')+'</div>';
+    html += '<div style="font-family:var(--mono);font-size:12px;color:var(--text-1);">HG Score: '+(r.hgScore!=null?r.hgScore.toFixed(1):'—')+' ('+(r.hgTier||'—')+') &nbsp;·&nbsp; QC Score: '+(r.qcScore!=null?r.qcScore.toFixed(1):'—')+' ('+(r.qcTier||'—')+') &nbsp;·&nbsp; BF Score: '+(r.bfScore!=null?r.bfScore.toFixed(1):'—')+' ('+(r.bfTier||'—')+(r.bfPassed?' ✓':'')+') &nbsp;·&nbsp; PB Score: '+(r.pbScore!=null?r.pbScore.toFixed(1):'—')+'</div>';
     const sh = r.scoreHistory || { history: [], deltaScore7d: null, deltaScore30d: null };
     function _dBadge(label, v) {
       if (v == null || !Number.isFinite(v)) return '<span style="color:var(--text-2);border:1px solid var(--border);padding:1px 5px;font-size:10px;margin-right:4px;">'+label+': —</span>';
@@ -2116,9 +2190,9 @@ const CLIENT_JS = `
         + '<th style="text-align:left;">Ticker</th>'
         + '<th>MCap</th><th>R40</th><th>FCFM%</th><th>GP/TA</th><th>ΔScore</th>'
         + '</tr></thead><tbody>';
-      const subjScore = (r.hgScore != null) ? r.hgScore : (r.qcScore != null ? r.qcScore : null);
+      const subjScore = (r.hgScore != null) ? r.hgScore : (r.qcScore != null ? r.qcScore : (r.bfScore != null ? r.bfScore : null));
       for (const p of peers) {
-        const pScore = (p.hgScore != null) ? p.hgScore : (p.qcScore != null ? p.qcScore : null);
+        const pScore = (p.hgScore != null) ? p.hgScore : (p.qcScore != null ? p.qcScore : (p.bfScore != null ? p.bfScore : null));
         const dScore = (subjScore != null && pScore != null) ? (pScore - subjScore) : null;
         const dCls = (dScore == null) ? 'g-mute' : (dScore >= 0 ? 'g-pos' : 'g-neg');
         const dStr = (dScore == null) ? '—' : (dScore >= 0 ? '+' : '') + dScore.toFixed(1);
@@ -2227,7 +2301,8 @@ const CLIENT_JS = `
     let html = '';
     for (const h of hits) {
       const badge = h.hgClass && (h.hgClass.startsWith('REAL_HYPERGROWTH')) ? 'HG' :
-                    (h.qcTier && h.qcTier !== 'REJECT' ? 'QC' : '');
+                    (h.qcTier && h.qcTier !== 'REJECT' ? 'QC' :
+                    (h.bfPassed ? 'BF' : ''));
       // Tag 217g (audit F-217d-1 HIGH XSS-safety fix): use esc() on ticker
       // and name. 124+ stocks have '&' or "'" in name (Sun Hung Kai & Co.,
       // AVIC Xi'an Aircraft, Goldwind Science&Technology) — without esc()
@@ -2268,13 +2343,14 @@ const CLIENT_JS = `
   let cpCurrent = [];     // last computed result list
 
   const TAB_LABELS = {
-    HG: 'Hypergrowth', QC: 'Quality-Compounder', SMALL: 'Small Cap',
+    HG: 'Hypergrowth', QC: 'Quality-Compounder', BF: 'Buffett', SMALL: 'Small Cap',
     R40: 'Rule of 40', PRE_BREAKOUT: 'Pre-Breakout', WATCH: 'Watch', SECTOR: 'Sector Heatmap'
   };
   // Map common aliases → canonical tab keys (case-insensitive lookup).
   const TAB_ALIASES = {
     hg:'HG', hypergrowth:'HG',
     qc:'QC', quality:'QC', 'quality-compounder':'QC', compounder:'QC',
+    bf:'BF', buffett:'BF', buffet:'BF', value:'BF',
     small:'SMALL', smallcap:'SMALL', 'small-cap':'SMALL',
     r40:'R40', 'rule-of-40':'R40', rule40:'R40',
     pre:'PRE_BREAKOUT', prebreakout:'PRE_BREAKOUT', 'pre-breakout':'PRE_BREAKOUT', breakout:'PRE_BREAKOUT',
@@ -2866,7 +2942,7 @@ const CLIENT_JS = `
     }
   }
   function handleGChord(ch) {
-    const map = { h:'HG', q:'QC', s:'SMALL', r:'R40', p:'PRE_BREAKOUT', w:'WATCH' };
+    const map = { h:'HG', q:'QC', b:'BF', s:'SMALL', r:'R40', p:'PRE_BREAKOUT', w:'WATCH' };
     const tab = map[ch];
     if (tab) switchToTab(tab);
   }
@@ -3014,8 +3090,22 @@ const CLIENT_JS = `
   }
   function _csvValue(r, key, tab) {
     if (key === 'score') {
-      const v = tab === 'QC' ? r.qcScore : (tab === 'HG' ? r.hgScore : null);
+      const v = tab === 'QC' ? r.qcScore
+        : tab === 'HG' ? r.hgScore
+        : tab === 'BF' ? r.bfScore
+        : null;
       return v != null && Number.isFinite(v) ? v.toFixed(2) : '';
+    }
+    if (key === 'bf14') {
+      const m = r.results && r.results['buffett-criteria'];
+      return (m && Number.isFinite(m.value)) ? m.value.toFixed(0) : '';
+    }
+    if (key === 'bfMos') {
+      const m = r.results && r.results['dcf-intrinsic-value'];
+      return (m && Number.isFinite(m.value)) ? (m.value*100).toFixed(1) : '';
+    }
+    if (key === 'bfPassed') {
+      return r.bfPassed ? 'YES' : 'NO';
     }
     if (key === 'rank') return ''; // filled by caller
     const v = r[key];
@@ -3037,6 +3127,7 @@ const CLIENT_JS = `
     const colMaps = {
       'HG':           [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['Score','score'],['State','state'],['R40','r40'],['RevGr%','growth'],['GrossM%','grossMargin'],['OpM%','opMargin'],['FCFM%','fcfMargin'],['MCap','mcap'],['DQ','dqGrade']],
       'QC':           [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['Score','score'],['State','state'],['FCFM%','fcfMargin'],['OpM%','opMargin'],['GrossM%','grossMargin'],['RevGr%','growth'],['MCap','mcap'],['DQ','dqGrade']],
+      'BF':           [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['Score','score'],['14-Pt','bf14'],['MoS%','bfMos'],['Passed','bfPassed'],['FCFM%','fcfMargin'],['OpM%','opMargin'],['GrossM%','grossMargin'],['RevGr%','growth'],['MCap','mcap'],['DQ','dqGrade']],
       'SMALL':        [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['State','state'],['RevGr%','growth'],['R40','r40'],['GrossM%','grossMargin'],['FCFM%','fcfMargin'],['MCap','mcap'],['DQ','dqGrade']],
       'R40':          [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['R40','r40'],['RevGr%','growth'],['FCFM%','fcfMargin'],['OpM%','opMargin'],['GrossM%','grossMargin'],['State','state'],['MCap','mcap'],['DQ','dqGrade']],
       'PRE_BREAKOUT': [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['State','state'],['RevGr%','growth'],['GrossM%','grossMargin'],['R40','r40'],['MCap','mcap'],['PB-Score','pbScore'],['DQ','dqGrade']],
@@ -3242,6 +3333,7 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
 <div class="tabs" role="tablist" aria-label="Screener tabs">
   <button data-tab="HG" class="active" role="tab" aria-current="page" aria-selected="true">⚡ Hypergrowth</button>
   <button data-tab="QC" role="tab" aria-selected="false">🏛 Quality-Compounder</button>
+  <button data-tab="BF" role="tab" aria-selected="false">📜 Buffett</button>
   <button data-tab="SMALL" role="tab" aria-selected="false">📈 Small Cap</button>
   <button data-tab="R40" role="tab" aria-selected="false">📊 Rule of 40</button>
   <button data-tab="PRE_BREAKOUT" role="tab" aria-selected="false">🎯 Pre-Breakout</button>
@@ -3339,6 +3431,7 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">←</span> / <span class="kbd-key">→</span></div><div class="kbd-desc">Prev / next stock (in modal)</div></div>
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">h</span></div><div class="kbd-desc">Go to Hypergrowth tab</div></div>
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">q</span></div><div class="kbd-desc">Go to Quality-Compounder tab</div></div>
+    <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">b</span></div><div class="kbd-desc">Go to Buffett tab</div></div>
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">s</span></div><div class="kbd-desc">Go to Small Cap tab</div></div>
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">r</span></div><div class="kbd-desc">Go to Rule of 40 tab</div></div>
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">p</span></div><div class="kbd-desc">Go to Pre-Breakout tab</div></div>
