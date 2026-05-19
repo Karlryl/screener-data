@@ -323,10 +323,20 @@ jobs:
           # 3500-snapshot pull (the historical-normal absolute count) passes
           # regardless of universe expansion. Yahoo-totally-broken (<1000 ok)
           # still hard-fails.
-          min_ok=$(node -e "console.log(Math.max(2500,Math.floor(${total}*0.18)))")
-          echo "Snapshots ok: $ok / $total (threshold: $min_ok = max(2500, total*0.18), source: $source)"
+          #
+          # Tag 233: universe grew further from ~19k (Tag 215e era) to ~24k (Tag 232
+          # era, May 2026). At PULL_CONCURRENCY=8 and a 165-min budget, the pull
+          # completes ~3300 snapshots/run (sorted by staleness, so stale tickers rotate
+          # through across days). 3300/24000 = 13.8% — below the 18% gate that was
+          # calibrated when universe=19k. The absolute snapshot count is unchanged
+          # (3300-3500/run is healthy); the gate mis-fires because the denominator grew.
+          # Recalibrating to 13% so max(2500, 24000*0.13=3120) ≈ 3120 < 3300. This
+          # still hard-fails a "Yahoo totally broken" run (~0 snapshots) or a severe
+          # throttle day (<2500). Absolute floor stays at 2500.
+          min_ok=$(node -e "console.log(Math.max(2500,Math.floor(${total}*0.13)))")
+          echo "Snapshots ok: $ok / $total (threshold: $min_ok = max(2500, total*0.13), source: $source)"
           if [ "$ok" -lt "$min_ok" ]; then
-            echo "::error::Pull coverage $ok/$total < threshold $min_ok (18% of universe, floor 2500, source: $source)"
+            echo "::error::Pull coverage $ok/$total < threshold $min_ok (13% of universe, floor 2500, source: $source)"
             exit 1
           fi
 

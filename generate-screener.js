@@ -1576,8 +1576,10 @@ const CLIENT_JS = `
       // .value is the discount-to-intrinsic ratio (≥0.25 = MoS pass).
       const score = r.bfScore==null ? '—' : r.bfScore.toFixed(1);
       const bc14 = r.results['buffett-criteria'];
-      const bc14Cell = (bc14 && bc14.computable && Number.isFinite(bc14.value))
-        ? '<span class="'+(bc14.pass?'g-pos':'g-mute')+'">'+bc14.value.toFixed(0)+'/14</span>'
+      const bc14n = (bc14 && bc14.components && Number.isFinite(bc14.components.nPassed))
+        ? bc14.components.nPassed : null;
+      const bc14Cell = (bc14 && bc14.computable && bc14n != null)
+        ? '<span class="'+(bc14.pass?'g-pos':'g-mute')+'">'+bc14n+'/14</span>'
         : '<span class="g-mute">—</span>';
       const oe = r.results['owner-earnings'];
       const oeCell = (oe && oe.computable)
