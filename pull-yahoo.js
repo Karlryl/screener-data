@@ -1046,13 +1046,23 @@ function mapFTSToBalance(bsRows) {
   // Tag 211l: Extended with accountsReceivable, netPPE, currentAssets,
   // currentLiabilities, totalLiabilities — unblocks beneish-m-score (Tag 209d)
   // and ohlson-o-score (Tag 210a) which were both returning computable=false
-  // universally because these fields weren't persisted. Pattern matches the
-  // existing extraction style: nullable, multi-key-fallback, skip row if
-  // every field is null.
+  // universally because these fields weren't persisted.
+  //
+  // F-DP-003 (Tag 233c): push null placeholders for all-null rows instead of skipping.
+  // Previous `continue` caused annualBalance[i] to reference a DIFFERENT fiscal year
+  // than annualRev[i] when mapFTSToAnnual kept a row that mapFTSToBalance skipped
+  // (because each function has a different "empty row" skip condition).
+  // Pattern matches _ftsExtractByYear which always preserves positional alignment.
+  // Methods accessing annualBalance[i] must null-check each entry; if null,
+  // wrapEvaluate catches the resulting TypeError → computable:false (correct,
+  // not a wrong value from a misaligned year).
   const sorted = (bsRows || []).slice().reverse();
   const annualBalance = [];
   for (const r of sorted) {
-    if (!r) continue;
+    if (!r) {
+      annualBalance.push(null);
+      continue;
+    }
     // Yahoo FTS field names: totalAssets, cashAndCashEquivalents, shortTermDebt, longTermDebt
     const cash = _ftsValue(r, 'cashAndCashEquivalents', 'cashCashEquivalentsAndShortTermInvestments', 'cashAndShortTermInvestments');
     const std = _ftsValue(r, 'currentDebt', 'shortLongTermDebt', 'shortTermDebt');
@@ -1066,7 +1076,10 @@ function mapFTSToBalance(bsRows) {
     const currentAssets = _ftsValue(r, 'currentAssets', 'totalCurrentAssets');
     const currentLiabilities = _ftsValue(r, 'currentLiabilities', 'totalCurrentLiabilities');
     const totalLiabilities = _ftsValue(r, 'totalLiabilitiesNetMinorityInterest', 'totalLiabilities');
-    if (cash == null && totalDebt == null && totalAssets == null) continue;
+    if (cash == null && totalDebt == null && totalAssets == null) {
+      annualBalance.push(null);  // null placeholder — preserves year alignment
+      continue;
+    }
     annualBalance.push({
       totalCash: cash,
       totalDebt,
@@ -1078,6 +1091,10 @@ function mapFTSToBalance(bsRows) {
       totalLiabilities,
       ...(_debtPartial ? { _debtPartial: true } : {})
     });
+  }
+  // Trim trailing nulls — no information to contribute, keeps arrays tidy.
+  while (annualBalance.length > 0 && annualBalance[annualBalance.length - 1] === null) {
+    annualBalance.pop();
   }
   return annualBalance;
 }
