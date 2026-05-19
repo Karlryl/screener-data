@@ -372,7 +372,12 @@ function _convertSnapshotToUSD(snap) {
     'ebitda',            // currently absent — reserved for future EV-EBITDA refactor
     'enterpriseValue',   // currently absent — reserved
     'bookValuePerShare', // currently absent — reserved
-    'cashPerShare'       // currently absent — reserved
+    'cashPerShare',      // currently absent — reserved
+    // F-DP-004 / F-DQ-009 (Tag 233d): analyst price targets are in the reporting
+    // currency (same as prices). Without FX conversion they are raw GBP/EUR/etc.
+    // while currentPrice is USD → analyst-upside ratio is wrong for non-USD tickers.
+    'targetMeanPrice',
+    'targetMedianPrice'
   ];
   if (snap.metrics) {
     for (const k of CCY_DENOMINATED_METRICS) {
