@@ -146,6 +146,9 @@ function computeCrossProfileTags(modeEvals, currentModeId) {
     if (ids === 'HYPERGROWTH+QUALITY_COMPOUNDER') tags.push('HG+QC');
     else if (ids === 'HYPERGROWTH+TURNAROUND') tags.push('HG+TA');
     else if (ids === 'QUALITY_COMPOUNDER+TURNAROUND') tags.push('QC+TA');
+    else if (ids === 'BUFFETT+HYPERGROWTH') tags.push('HG+BF');
+    else if (ids === 'BUFFETT+QUALITY_COMPOUNDER') tags.push('QC+BF');
+    else if (ids === 'BUFFETT+TURNAROUND') tags.push('BF+TA');
   }
   return tags;
 }
@@ -563,17 +566,22 @@ function buildHtml(evaluated, topN) {
   const modeLabels = {
     HYPERGROWTH: 'Hypergrowth',
     QUALITY_COMPOUNDER: 'Quality-Compounder',
+    BUFFETT: 'Buffett',
     TURNAROUND: 'Turnaround'
   };
   const modeMeta = {
     HYPERGROWTH: 'heuristisch',
     QUALITY_COMPOUNDER: 'literaturgestÃ¼tzt',
+    BUFFETT: 'literaturgestÃ¼tzt',
     TURNAROUND: 'experimentell'
   };
 
   const topTabsHtml = modes.map((m, i) => {
     const cls = i === 0 ? 'top-tab-active' : '';
-    const dotClass = m === 'HYPERGROWTH' ? 'dot-hg' : m === 'QUALITY_COMPOUNDER' ? 'dot-qc' : 'dot-ta';
+    const dotClass = m === 'HYPERGROWTH' ? 'dot-hg'
+      : m === 'QUALITY_COMPOUNDER' ? 'dot-qc'
+      : m === 'BUFFETT' ? 'dot-bf'
+      : 'dot-ta';
     return `<button class="top-tab ${cls}" data-mode="${m}">
       <span class="tt-dot ${dotClass}"></span>
       <span class="tt-name">${modeLabels[m]}</span>
@@ -687,6 +695,7 @@ function buildHtml(evaluated, topN) {
   .tt-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
   .dot-hg { background: var(--champagne); }
   .dot-qc { background: var(--slate); }
+  .dot-bf { background: var(--gold); }
   .dot-ta { background: var(--sage); }
   .tt-name { font-family: 'Source Serif 4', serif; font-size: 22px; font-weight: 400; letter-spacing: -0.01em; }
   .tt-meta {
