@@ -245,5 +245,12 @@ module.exports = [
   // Depends on owner-earnings.js (registered above). Computable only when
   // owner-earnings is computable and market-cap / price data are available.
   // DIAGNOSTIC: not in SCORE_WEIGHTS; fixture-hash safe by construction.
-  { file: './dcf-intrinsic-value.js' }
+  { file: './dcf-intrinsic-value.js' },
+
+  // Buffett 14-Punkt Komposit — composite of 10 quantitative + 3 qualitative + 1
+  // industry-exclusion test (Berkshire Annual Letters 1977-2024, Hagstrom, Buffettology,
+  // Damodaran). Pass requires x1_industryExclusion + DCF Margin-of-Safety (HARD) + ≥85%
+  // test pass-rate. DIAGNOSTIC in HG/QC/TURN; MUST in BUFFETT strategy mode.
+  // Fixture-hash safe (not in HG/QC/TURN SCORE_WEIGHTS).
+  { file: './buffett-criteria.js' }
 ];

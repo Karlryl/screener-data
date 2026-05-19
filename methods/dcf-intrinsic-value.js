@@ -373,13 +373,14 @@ function evaluate(stock) {
     return H.buildResult({ computable: false, pass: false, reason: 'no stock data', threshold: DEFAULT_MOS_LOW_PRED, thresholdOp: 'gte' });
   }
 
-  // Lazy require to avoid circular dependency at module load time.
-  // owner-earnings.js may also be loaded after this module (parallel registration).
+  // Tag 232e fix: call owner-earnings DIRECTLY, not via Runner. Runner.evaluateStock
+  // iterates ALL ~80 registered methods (incl. DCF itself if recursive) — observed
+  // ~800ms/stock overhead from this pattern. Direct require is ~0.1ms and avoids
+  // re-evaluation noise. Same pattern adopted by buffett-criteria.js post-Tag-232e.
   let oeResult = null;
   try {
-    const Runner = require('./runner.js');
-    const allResults = Runner.evaluateStock(stock);
-    oeResult = allResults['owner-earnings'];
+    const OE = require('./owner-earnings.js');
+    oeResult = OE.evaluate(stock);
   } catch (e) {
     return H.buildResult({
       computable: false, pass: false,

@@ -2248,6 +2248,168 @@ test('Tag 223a institutional-density: NOT-COMPUTABLE — Yahoo returned no data'
   if (!/no meta\.institutionsPercentHeld/.test(r.reason)) throw new Error('expected no-data reason; got: ' + r.reason);
 });
 
+// ─── Tag 232e: Buffett-screener tests ───────────────────────────────
+// Buffett-criteria composite + Owner Earnings + DCF intrinsic value.
+// Sources: Berkshire Annual Letters 1977-2024, Hagstrom Tenets,
+// Mary Buffett Buffettology, Damodaran Investment Valuation.
+const OE = require('./methods/owner-earnings.js');
+const DCF = require('./methods/dcf-intrinsic-value.js');
+const BC = require('./methods/buffett-criteria.js');
+
+function _buffettSynth(overrides) {
+  // 10y of annual data, conservative-compounder profile.
+  // NI grows 8%/yr from 1.0B to ~2.1B; ROE ~22% steady; LTD modest; FCF positive growing.
+  // Designed to pass MOST Buffett tests when used as the base.
+  const years = 10;
+  const baseNI = 1.0e9;
+  const baseRev = 5.0e9;
+  const baseEquity = 4.5e9;
+  const annualNetIncome = [], annualRev = [], annualBalance = [], annualFCF = [];
+  const annualCapex = [], annualDepreciation = [], annualSBC = [], annualShares = [];
+  for (let i = 0; i < years; i++) {
+    const yrsAgo = i; // i=0 is latest
+    const ni = baseNI * Math.pow(1.08, years - 1 - yrsAgo); // grows 8%/yr
+    const rev = baseRev * Math.pow(1.10, years - 1 - yrsAgo); // grows 10%/yr
+    const eq = baseEquity * Math.pow(1.10, years - 1 - yrsAgo);
+    annualNetIncome.push({ value: ni });
+    annualRev.push({ value: rev });
+    annualFCF.push({ value: ni * 0.95 }); // FCF slightly less than NI
+    annualCapex.push({ value: -ni * 0.10 }); // 10% of NI as capex (Yahoo neg sign)
+    annualDepreciation.push({ value: ni * 0.12 });
+    annualSBC.push({ value: ni * 0.03 });
+    annualShares.push({ value: 1e9 });
+    annualBalance.push({
+      totalAssets: eq * 1.5,         // Equity ~67% of assets
+      totalEquity: eq,
+      totalLiabilities: eq * 0.5,
+      totalDebt: ni * 1.5,           // LTD < 5×NI ✓
+      totalCash: eq * 0.2,
+      currentAssets: eq * 0.6,
+      currentLiabilities: eq * 0.3
+    });
+  }
+  const annualOpInc = annualNetIncome.map(n => ({ value: n.value / 0.79 })); // pre-tax
+  const annualGP = annualNetIncome.map(n => ({ value: n.value * 4 }));
+  const annualOCF = annualFCF.map((f, i) => ({ value: f.value + Math.abs(annualCapex[i].value) }));
+  const stock = {
+    meta: { ticker: 'BUFFETT_FIX', name: 'Buffett Fixture Co.', sector: 'Consumer Defensive', industry: 'Beverages', region: 'US', reportingCurrency: 'USD', reportingCurrencyOriginal: 'USD', fxRateApplied: 1.0 },
+    marketCap: { value: 20e9 },  // P/E ~10 on latest NI ~2.1B → cheap
+    price: { regularMarketPrice: 20 },
+    metrics: {
+      revenueTTM: { value: annualRev[0].value },
+      revenueGrowthYoY: { value: 10 },
+      grossMargin: { value: 35 },
+      operatingMargin: { value: 25 },
+      fcfMarginTTM: { value: 19 },
+      pe: { value: 10 },           // E/P = 10% → way above 4.5% treasury
+      ebitda: { value: annualOpInc[0].value * 1.15 }
+    },
+    annual: { annualNetIncome, annualRev, annualOpInc, annualGP, annualFCF, annualBalance, annualCapex, annualDepreciation, annualSBC, annualShares, annualOCF },
+    timeseries: {
+      revenueQ: [annualRev[0], annualRev[0], annualRev[0], annualRev[0]].map(r => ({ value: r.value / 4 })),
+      opIncQ: [annualOpInc[0]].map(r => ({ value: r.value / 4 })),
+      netIncomeQ: [annualNetIncome[0]].map(r => ({ value: r.value / 4 }))
+    },
+    _quality: { grade: 'A', nanRatio: 0.05 }
+  };
+  // Apply overrides (deep-merge for nested keys)
+  if (overrides) {
+    for (const k of Object.keys(overrides)) {
+      if (typeof overrides[k] === 'object' && overrides[k] !== null && !Array.isArray(overrides[k]) && stock[k] && typeof stock[k] === 'object') {
+        Object.assign(stock[k], overrides[k]);
+      } else {
+        stock[k] = overrides[k];
+      }
+    }
+  }
+  return stock;
+}
+
+test('Tag 232e owner-earnings: PASS — conservative compounder, OE positive + growing', () => {
+  const s = _buffettSynth();
+  const r = OE.evaluate(s);
+  if (!r.computable) throw new Error('expected computable; reason=' + r.reason);
+  if (!r.pass) throw new Error('expected pass; nP=' + JSON.stringify(r.components));
+  if (!r.components.isPositiveAllYears) throw new Error('expected isPositiveAllYears=true');
+});
+
+test('Tag 232e owner-earnings: NOT-COMPUTABLE with <5y annual data', () => {
+  const s = _buffettSynth();
+  s.annual.annualNetIncome = s.annual.annualNetIncome.slice(0, 3);
+  s.annual.annualRev = s.annual.annualRev.slice(0, 3);
+  const r = OE.evaluate(s);
+  if (r.computable && r.pass) throw new Error('expected not-computable or fail with 3y data');
+});
+
+test('Tag 232e buffett T3 debt: PASS at LTD < 5×NI', () => {
+  const s = _buffettSynth();
+  // Default fixture: totalDebt = 1.5×NI → way under 5×
+  const r = BC.evaluate(s);
+  const t3 = r.components && r.components.t3_debt;
+  if (!t3) throw new Error('t3_debt missing in components');
+  if (!t3.pass) throw new Error('expected t3 PASS; reason=' + t3.reason);
+});
+
+test('Tag 232e buffett T3 debt: FAIL when LTD > 5×NI', () => {
+  const s = _buffettSynth();
+  // Bump debt to 10×NI on latest year
+  s.annual.annualBalance[0].totalDebt = s.annual.annualNetIncome[0].value * 10;
+  const r = BC.evaluate(s);
+  const t3 = r.components && r.components.t3_debt;
+  if (t3 && t3.pass) throw new Error('expected t3 FAIL with LTD=10×NI');
+});
+
+test('Tag 232e buffett T8 earnings-yield: PASS when E/P > Treasury', () => {
+  // P/E 10 → E/P 10% → pretax ~12.7% > 4.5% Treasury → PASS
+  const s = _buffettSynth({ metrics: { pe: { value: 10 } } });
+  const r = BC.evaluate(s);
+  const t8 = r.components && r.components.t8_earningsYieldVsTreasury;
+  if (!t8) throw new Error('t8 missing');
+  if (!t8.pass) throw new Error('expected t8 PASS with E/P=10%; reason=' + t8.reason);
+});
+
+test('Tag 232e buffett T8 earnings-yield: FAIL when E/P < Treasury', () => {
+  // P/E 60 → E/P 1.67% → pretax ~2.1% < 4.5% Treasury → FAIL
+  const s = _buffettSynth({ metrics: { pe: { value: 60 } } });
+  const r = BC.evaluate(s);
+  const t8 = r.components && r.components.t8_earningsYieldVsTreasury;
+  if (t8 && t8.pass) throw new Error('expected t8 FAIL with E/P=1.67%');
+});
+
+test('Tag 232e buffett X1 industry-exclusion: FAIL for airlines', () => {
+  const s = _buffettSynth({ meta: { ticker: 'AAL_LIKE', sector: 'Industrials', industry: 'Airlines' } });
+  const r = BC.evaluate(s);
+  const x1 = r.components && r.components.x1_industryExclusion;
+  if (!x1) throw new Error('x1 missing');
+  if (x1.pass) throw new Error('expected x1 EXCLUDED (pass:false) for airline; reason=' + x1.reason);
+  // Overall composite must fail because of industry exclusion
+  if (r.pass) throw new Error('expected composite FAIL when industry excluded');
+});
+
+test('Tag 232e buffett X1 industry-exclusion: PASS for non-excluded sector', () => {
+  // Default fixture is "Consumer Defensive / Beverages" — Buffett-friendly (KO-like)
+  const s = _buffettSynth();
+  const r = BC.evaluate(s);
+  const x1 = r.components && r.components.x1_industryExclusion;
+  if (!x1 || !x1.pass) throw new Error('expected x1 PASS for Consumer Defensive');
+});
+
+test('Tag 232e buffett-criteria: NOT-COMPUTABLE with <5y data', () => {
+  const s = _buffettSynth();
+  s.annual.annualNetIncome = s.annual.annualNetIncome.slice(0, 4);
+  s.annual.annualBalance = s.annual.annualBalance.slice(0, 4);
+  s.annual.annualRev = s.annual.annualRev.slice(0, 4);
+  const r = BC.evaluate(s);
+  if (r.computable && r.pass) throw new Error('expected incomputable OR fail with <5y data; got computable=' + r.computable + ' pass=' + r.pass);
+});
+
+test('Tag 232e buffett MoS is HARD: composite fails when DCF discount < threshold even if other tests pass', () => {
+  // Set price extremely high so MoS check fails: P/E 100 → no margin of safety possible
+  const s = _buffettSynth({ marketCap: { value: 200e9 }, price: { regularMarketPrice: 200 }, metrics: { pe: { value: 100 } } });
+  const r = BC.evaluate(s);
+  if (r.pass) throw new Error('expected composite FAIL when MoS not met; nP=' + (r.components && r.components.nPassed) + '/' + (r.components && r.components.nTests) + ' mosMet=' + (r.components && r.components.dcf && r.components.dcf.mosMet));
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the

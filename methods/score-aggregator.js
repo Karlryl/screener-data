@@ -55,6 +55,11 @@ const SCORE_WEIGHTS = {
     'piotroski-f-score': 0.15,
     'revenue-growth-3y': 0.10,
     'estimate-revision-proxy': 0.05
+  },
+  BUFFETT: {
+    'buffett-criteria': 0.50,
+    'owner-earnings': 0.20,
+    'dcf-intrinsic-value': 0.30
   }
 };
 
