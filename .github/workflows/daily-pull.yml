@@ -514,10 +514,16 @@ jobs:
       # Tag 134 — Phase 5.1: archive methods-history / picks-history / prices snapshots
       # older than 60 days into external-data/*.ndjson (git-ignored).
       # Reduces committed repo bloat. Rebuildable from snapshots on the runner.
-      # Tag 153: methods-history is 14 MB/file (keep 7d = 98 MB max committed).
+      # Tag 153: methods-history is 14 MB/file.
+      # Tag 233a (audit F-BT-007 HIGH): raised methods-keep-days 7 → 90 to match
+      # method-effectiveness cache retention (CACHE_RETENTION_DAYS=90). The prior
+      # 7d window meant the cache was the SOLE record of vintages after 8 days;
+      # cache corruption silently lost months of effectiveness history. Repo-side
+      # cost: 14MB × 90d = 1.26 GB max, but vintages are archived to
+      # external-data/*.ndjson (git-ignored) and are not kept as committed files.
       # picks-history is 65 KB/file but walk-forward-perf needs 84+ day vintages (keep 90d).
       - name: Archive Old Snapshots
-        run: node scripts/archive-old-snapshots.js --keep-days 14 --methods-keep-days 7 --picks-keep-days 90
+        run: node scripts/archive-old-snapshots.js --keep-days 14 --methods-keep-days 90 --picks-keep-days 90
         continue-on-error: true
 
       # F-SM-003 / F-CI-008: Strip methodHistory from alert-state.json using a script

@@ -186,7 +186,7 @@ function evaluate(stock) {
 
 module.exports = {
   id: ID, label: LABEL,
-  description: 'FCF/NetIncome 5y geometric mean >= 0.85 — cash-conversion persistence (Damodaran/Mauboussin)',
+  description: 'FCF/NetIncome 5y geometric mean >= 0.75 — cash-conversion persistence (Damodaran/Mauboussin)',
   threshold: THRESHOLD, thresholdOp: THRESHOLD_OP, unit: 'ratio',
   evaluate
 };

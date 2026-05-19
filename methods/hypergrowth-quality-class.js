@@ -83,19 +83,23 @@ function evaluate(stock) {
     }
   } else if (revY.filter(v => Number.isFinite(v)).length >= 4) {
     breadthOk = true; breadthSource = 'y';
+    let validPairs = 0;
     for (let i = 0; i < 3; i++) {
       const cur = revY[i], prev = revY[i + 1];
       // Skip if either value is null/NaN — positional alignment preserved
       if (cur != null && Number.isFinite(cur) && cur > 0 && prev != null && Number.isFinite(prev) && prev > 0) {
+        validPairs++;
         const g = (cur - prev) / prev;
         if (g > 0.5) strongQ++;
         if (g > 0.25) solidQ++;
       }
     }
-    if (strongQ === 3) strongQ = 4;
-    else if (strongQ === 2) strongQ = 3;
-    if (solidQ === 3) solidQ = 4;
-    else if (solidQ === 2) solidQ = 3;
+    // Scale annual pairs (max 3) onto quarterly-equivalent 0-4 scale,
+    // using actual valid pair count to avoid over-crediting null-gap years.
+    if (validPairs > 0) {
+      strongQ = Math.round(strongQ / validPairs * 4);
+      solidQ  = Math.round(solidQ  / validPairs * 4);
+    }
   }
 
   // Faktor 2: OI Direction

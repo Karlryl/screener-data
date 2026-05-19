@@ -57,10 +57,15 @@ function evaluate(stock) {
     if (!Number.isFinite(qrev[0])) {
       // fall through to annual block
     } else {
-    const windowAll = qrev.slice(0, 8);
-    const window = windowAll.filter(v => Number.isFinite(v));
-    const latest = window[0];
-    const prior = window.slice(1);
+    const latest = qrev[0];  // finite — confirmed by guard above
+    // F-ME-005: collect CONSECUTIVE prior quarters (no gap mixing).
+    // filter() reindexes across null gaps, mixing non-peer quarters into the
+    // prior window and inflating MAD, causing real shocks to slip past.
+    const prior = [];
+    for (let i = 1; i < qrev.length && prior.length < 7; i++) {
+      if (!Number.isFinite(qrev[i])) break;
+      prior.push(qrev[i]);
+    }
     if (latest <= 0) return H.buildResult({ value: 0, pass: true, computable: true, reason: 'Q0<=0', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP });
     const med = _median(prior);
     const mad = _mad(prior, med);
