@@ -1,0 +1,24 @@
+{
+  "asOf": "2026-05-21T00:00:00.000Z",
+  "latestCounts": {
+    "HYPERGROWTH": 75,
+    "QUALITY_COMPOUNDER": 98,
+    "TURNAROUND": 36
+  },
+  "priorRuns": 8,
+  "priorMedians": {
+    "HYPERGROWTH": 71.5,
+    "QUALITY_COMPOUNDER": 72,
+    "TURNAROUND": 36.5
+  },
+  "threshold": 0.35,
+  "alerts": [
+    {
+      "mode": "QUALITY_COMPOUNDER",
+      "today": 98,
+      "median": 72,
+      "drift": 0.361,
+      "direction": "up"
+    }
+  ]
+}

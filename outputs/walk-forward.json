@@ -1,0 +1,1091 @@
+{
+  "asOf": "2026-05-21",
+  "vintageCount": 11,
+  "horizonsDays": [
+    7,
+    28,
+    84
+  ],
+  "benchmarks": [
+    "SPY-preferred",
+    "QQQ-fallback",
+    "IWM-fallback",
+    "universe-median",
+    "frozen-vintage-median"
+  ],
+  "backtest_runner_note": "Historical picks used stored pass flags from snapshot date (backtest_runner_version=\"stored_pass\"). Live comparison uses today's Runner — version drift is invisible. Do not compare absolute alpha values across Runner-version boundaries.",
+  "caveat": "Three benchmarks: universe-median (Tag 138: survivor-bias corrected when evaluatedTickers available, else null — F-BT-003), frozen-vintage-median (only picks at vintage time), SPY/QQQ/IWM (external benchmark — F-BT-002). Tag 139: regimeAlpha shows BULL/BEAR/SIDEWAYS alpha split. F-BT-006: alpha=null when n<10.",
+  "modes": {
+    "HYPERGROWTH": {
+      "vintages": [
+        {
+          "asOf": "2026-05-08",
+          "macroRegime": "UNKNOWN",
+          "n": 28,
+          "n_total": 28,
+          "n_evaluated": 28,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "ok",
+              "n_total": 28,
+              "n_evaluated": 28,
+              "truncated": false,
+              "coverage": 1,
+              "pickMedianReturn": -0.09154940408287428,
+              "horizonActualDays": 1,
+              "alpha": null,
+              "universeMedianReturn": null,
+              "universeN": 0,
+              "survivorBiasCorrected": false,
+              "survivorBiasWarning": "evaluatedTickers absent in vintage — alphaVsUniverse suppressed",
+              "frozenVintageMedianReturn": 0,
+              "frozenVintageN": 92,
+              "benchmarkTicker": "SPY",
+              "benchmarkReturn": 0.04813861177809324,
+              "spyReturn": 0.04813861177809324,
+              "alphaVsUniverse": null,
+              "alphaVsFrozenVintage": -0.09154940408287428,
+              "alphaVsSpy": -0.13968801586096752,
+              "backtest_runner_version": "stored_pass"
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 28,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 28,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-09",
+          "macroRegime": "UNKNOWN",
+          "n": 34,
+          "n_total": 34,
+          "n_evaluated": 34,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "ok",
+              "n_total": 34,
+              "n_evaluated": 34,
+              "truncated": false,
+              "coverage": 1,
+              "pickMedianReturn": -0.19915274402792524,
+              "horizonActualDays": 1,
+              "alpha": null,
+              "universeMedianReturn": null,
+              "universeN": 0,
+              "survivorBiasCorrected": false,
+              "survivorBiasWarning": "evaluatedTickers absent in vintage — alphaVsUniverse suppressed",
+              "frozenVintageMedianReturn": -0.08997057208962875,
+              "frozenVintageN": 117,
+              "benchmarkTicker": "SPY",
+              "benchmarkReturn": 0.04813861177809324,
+              "spyReturn": 0.04813861177809324,
+              "alphaVsUniverse": null,
+              "alphaVsFrozenVintage": -0.10918217193829649,
+              "alphaVsSpy": -0.24729135580601846,
+              "backtest_runner_version": "stored_pass"
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 34,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 34,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-10",
+          "macroRegime": "UNKNOWN",
+          "n": 54,
+          "n_total": 54,
+          "n_evaluated": 54,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "ok",
+              "n_total": 54,
+              "n_evaluated": 54,
+              "truncated": false,
+              "coverage": 1,
+              "pickMedianReturn": -1.8371915656667308,
+              "horizonActualDays": 3,
+              "alpha": null,
+              "universeMedianReturn": null,
+              "universeN": 0,
+              "survivorBiasCorrected": false,
+              "survivorBiasWarning": "evaluatedTickers absent in vintage — alphaVsUniverse suppressed",
+              "frozenVintageMedianReturn": -0.8913159986682414,
+              "frozenVintageN": 126,
+              "benchmarkTicker": "SPY",
+              "benchmarkReturn": -1.1553756537950701,
+              "spyReturn": -1.1553756537950701,
+              "alphaVsUniverse": null,
+              "alphaVsFrozenVintage": -0.9458755669984894,
+              "alphaVsSpy": -0.6818159118716607,
+              "backtest_runner_version": "stored_pass"
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 54,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 54,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-11",
+          "macroRegime": "UNKNOWN",
+          "n": 68,
+          "n_total": 68,
+          "n_evaluated": 68,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "ok",
+              "n_total": 68,
+              "n_evaluated": 68,
+              "truncated": false,
+              "coverage": 1,
+              "pickMedianReturn": -1.354671428827435,
+              "horizonActualDays": 3,
+              "alpha": null,
+              "universeMedianReturn": null,
+              "universeN": 0,
+              "survivorBiasCorrected": false,
+              "survivorBiasWarning": "evaluatedTickers absent in vintage — alphaVsUniverse suppressed",
+              "frozenVintageMedianReturn": -0.8866979232244852,
+              "frozenVintageN": 142,
+              "benchmarkTicker": "SPY",
+              "benchmarkReturn": -1.1553756537950701,
+              "spyReturn": -1.1553756537950701,
+              "alphaVsUniverse": null,
+              "alphaVsFrozenVintage": -0.4679735056029499,
+              "alphaVsSpy": -0.19929577503236495,
+              "backtest_runner_version": "stored_pass"
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 68,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 68,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-13",
+          "macroRegime": "UNKNOWN",
+          "n": 63,
+          "n_total": 63,
+          "n_evaluated": 63,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "ok",
+              "n_total": 63,
+              "n_evaluated": 63,
+              "truncated": false,
+              "coverage": 1,
+              "pickMedianReturn": -1.8115942028985508,
+              "horizonActualDays": 3,
+              "alpha": null,
+              "universeMedianReturn": null,
+              "universeN": 0,
+              "survivorBiasCorrected": false,
+              "survivorBiasWarning": "evaluatedTickers absent in vintage — alphaVsUniverse suppressed",
+              "frozenVintageMedianReturn": -0.9596965521836488,
+              "frozenVintageN": 133,
+              "benchmarkTicker": "SPY",
+              "benchmarkReturn": -1.1553756537950701,
+              "spyReturn": -1.1553756537950701,
+              "alphaVsUniverse": null,
+              "alphaVsFrozenVintage": -0.851897650714902,
+              "alphaVsSpy": -0.6562185491034807,
+              "backtest_runner_version": "stored_pass"
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 63,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 63,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-14",
+          "macroRegime": "UNKNOWN",
+          "n": 81,
+          "n_total": 81,
+          "n_evaluated": 81,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 81,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 81,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 81,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-15",
+          "macroRegime": "UNKNOWN",
+          "n": 64,
+          "n_total": 64,
+          "n_evaluated": 64,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 64,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 64,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 64,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-17",
+          "macroRegime": "UNKNOWN",
+          "n": 88,
+          "n_total": 88,
+          "n_evaluated": 88,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 88,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 88,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 88,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-19",
+          "macroRegime": "UNKNOWN",
+          "n": 76,
+          "n_total": 76,
+          "n_evaluated": 76,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 76,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 76,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 76,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-20",
+          "macroRegime": "UNKNOWN",
+          "n": 75,
+          "n_total": 75,
+          "n_evaluated": 75,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 75,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 75,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 75,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-21",
+          "macroRegime": "UNKNOWN",
+          "n": 75,
+          "n_total": 75,
+          "n_evaluated": 75,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 75,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 75,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 75,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        }
+      ],
+      "summary": {
+        "7d": {
+          "vintageCount": 5,
+          "universeAlphaVintageCount": 0,
+          "medianAlphaVsUniverse": null,
+          "medianAlphaVsUniverseNote": "insufficient vintages (n=0)",
+          "medianAlphaVsFrozenVintage": -0.4679735056029499,
+          "medianAlphaVsBenchmark": -0.24729135580601846,
+          "medianAlphaVsSpy": -0.24729135580601846,
+          "totalPicks": 247,
+          "medianAlpha": null
+        },
+        "28d": {
+          "vintageCount": 0,
+          "universeAlphaVintageCount": 0,
+          "medianAlphaVsUniverse": null,
+          "medianAlphaVsUniverseNote": "insufficient vintages (n=0)",
+          "medianAlphaVsFrozenVintage": null,
+          "medianAlphaVsBenchmark": null,
+          "medianAlphaVsSpy": null,
+          "totalPicks": 0,
+          "medianAlpha": null
+        },
+        "84d": {
+          "vintageCount": 0,
+          "universeAlphaVintageCount": 0,
+          "medianAlphaVsUniverse": null,
+          "medianAlphaVsUniverseNote": "insufficient vintages (n=0)",
+          "medianAlphaVsFrozenVintage": null,
+          "medianAlphaVsBenchmark": null,
+          "medianAlphaVsSpy": null,
+          "totalPicks": 0,
+          "medianAlpha": null
+        }
+      }
+    },
+    "QUALITY_COMPOUNDER": {
+      "vintages": [
+        {
+          "asOf": "2026-05-08",
+          "macroRegime": "UNKNOWN",
+          "n": 65,
+          "n_total": 65,
+          "n_evaluated": 65,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "ok",
+              "n_total": 65,
+              "n_evaluated": 65,
+              "truncated": false,
+              "coverage": 1,
+              "pickMedianReturn": 0,
+              "horizonActualDays": 1,
+              "alpha": null,
+              "universeMedianReturn": null,
+              "universeN": 0,
+              "survivorBiasCorrected": false,
+              "survivorBiasWarning": "evaluatedTickers absent in vintage — alphaVsUniverse suppressed",
+              "frozenVintageMedianReturn": 0,
+              "frozenVintageN": 92,
+              "benchmarkTicker": "SPY",
+              "benchmarkReturn": 0.04813861177809324,
+              "spyReturn": 0.04813861177809324,
+              "alphaVsUniverse": null,
+              "alphaVsFrozenVintage": 0,
+              "alphaVsSpy": -0.04813861177809324,
+              "backtest_runner_version": "stored_pass"
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 65,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 65,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-09",
+          "macroRegime": "UNKNOWN",
+          "n": 86,
+          "n_total": 86,
+          "n_evaluated": 86,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "ok",
+              "n_total": 86,
+              "n_evaluated": 86,
+              "truncated": false,
+              "coverage": 1,
+              "pickMedianReturn": -0.0519866413491234,
+              "horizonActualDays": 1,
+              "alpha": null,
+              "universeMedianReturn": null,
+              "universeN": 0,
+              "survivorBiasCorrected": false,
+              "survivorBiasWarning": "evaluatedTickers absent in vintage — alphaVsUniverse suppressed",
+              "frozenVintageMedianReturn": -0.08997057208962875,
+              "frozenVintageN": 117,
+              "benchmarkTicker": "SPY",
+              "benchmarkReturn": 0.04813861177809324,
+              "spyReturn": 0.04813861177809324,
+              "alphaVsUniverse": null,
+              "alphaVsFrozenVintage": 0.03798393074050535,
+              "alphaVsSpy": -0.10012525312721664,
+              "backtest_runner_version": "stored_pass"
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 86,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 86,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-10",
+          "macroRegime": "UNKNOWN",
+          "n": 73,
+          "n_total": 73,
+          "n_evaluated": 73,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "ok",
+              "n_total": 73,
+              "n_evaluated": 73,
+              "truncated": false,
+              "coverage": 1,
+              "pickMedianReturn": -0.8257756440015002,
+              "horizonActualDays": 3,
+              "alpha": null,
+              "universeMedianReturn": null,
+              "universeN": 0,
+              "survivorBiasCorrected": false,
+              "survivorBiasWarning": "evaluatedTickers absent in vintage — alphaVsUniverse suppressed",
+              "frozenVintageMedianReturn": -0.8913159986682414,
+              "frozenVintageN": 126,
+              "benchmarkTicker": "SPY",
+              "benchmarkReturn": -1.1553756537950701,
+              "spyReturn": -1.1553756537950701,
+              "alphaVsUniverse": null,
+              "alphaVsFrozenVintage": 0.06554035466674124,
+              "alphaVsSpy": 0.32960000979356996,
+              "backtest_runner_version": "stored_pass"
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 73,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 73,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-11",
+          "macroRegime": "UNKNOWN",
+          "n": 75,
+          "n_total": 75,
+          "n_evaluated": 75,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "ok",
+              "n_total": 75,
+              "n_evaluated": 75,
+              "truncated": false,
+              "coverage": 1,
+              "pickMedianReturn": -0.8849557522123894,
+              "horizonActualDays": 3,
+              "alpha": null,
+              "universeMedianReturn": null,
+              "universeN": 0,
+              "survivorBiasCorrected": false,
+              "survivorBiasWarning": "evaluatedTickers absent in vintage — alphaVsUniverse suppressed",
+              "frozenVintageMedianReturn": -0.8866979232244852,
+              "frozenVintageN": 142,
+              "benchmarkTicker": "SPY",
+              "benchmarkReturn": -1.1553756537950701,
+              "spyReturn": -1.1553756537950701,
+              "alphaVsUniverse": null,
+              "alphaVsFrozenVintage": 0.0017421710120957279,
+              "alphaVsSpy": 0.2704199015826807,
+              "backtest_runner_version": "stored_pass"
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 75,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 75,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-13",
+          "macroRegime": "UNKNOWN",
+          "n": 71,
+          "n_total": 71,
+          "n_evaluated": 71,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "ok",
+              "n_total": 71,
+              "n_evaluated": 71,
+              "truncated": false,
+              "coverage": 1,
+              "pickMedianReturn": -0.8849557522123894,
+              "horizonActualDays": 3,
+              "alpha": null,
+              "universeMedianReturn": null,
+              "universeN": 0,
+              "survivorBiasCorrected": false,
+              "survivorBiasWarning": "evaluatedTickers absent in vintage — alphaVsUniverse suppressed",
+              "frozenVintageMedianReturn": -0.9596965521836488,
+              "frozenVintageN": 133,
+              "benchmarkTicker": "SPY",
+              "benchmarkReturn": -1.1553756537950701,
+              "spyReturn": -1.1553756537950701,
+              "alphaVsUniverse": null,
+              "alphaVsFrozenVintage": 0.07474079997125938,
+              "alphaVsSpy": 0.2704199015826807,
+              "backtest_runner_version": "stored_pass"
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 71,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 71,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-14",
+          "macroRegime": "UNKNOWN",
+          "n": 23,
+          "n_total": 23,
+          "n_evaluated": 23,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 23,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 23,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 23,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-15",
+          "macroRegime": "UNKNOWN",
+          "n": 23,
+          "n_total": 23,
+          "n_evaluated": 23,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 23,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 23,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 23,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-17",
+          "macroRegime": "UNKNOWN",
+          "n": 48,
+          "n_total": 48,
+          "n_evaluated": 48,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 48,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 48,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 48,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-19",
+          "macroRegime": "UNKNOWN",
+          "n": 100,
+          "n_total": 100,
+          "n_evaluated": 100,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 100,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 100,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 100,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-20",
+          "macroRegime": "UNKNOWN",
+          "n": 98,
+          "n_total": 98,
+          "n_evaluated": 98,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 98,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 98,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 98,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-21",
+          "macroRegime": "UNKNOWN",
+          "n": 98,
+          "n_total": 98,
+          "n_evaluated": 98,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 98,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 98,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 98,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        }
+      ],
+      "summary": {
+        "7d": {
+          "vintageCount": 5,
+          "universeAlphaVintageCount": 0,
+          "medianAlphaVsUniverse": null,
+          "medianAlphaVsUniverseNote": "insufficient vintages (n=0)",
+          "medianAlphaVsFrozenVintage": 0.03798393074050535,
+          "medianAlphaVsBenchmark": 0.2704199015826807,
+          "medianAlphaVsSpy": 0.2704199015826807,
+          "totalPicks": 370,
+          "medianAlpha": null
+        },
+        "28d": {
+          "vintageCount": 0,
+          "universeAlphaVintageCount": 0,
+          "medianAlphaVsUniverse": null,
+          "medianAlphaVsUniverseNote": "insufficient vintages (n=0)",
+          "medianAlphaVsFrozenVintage": null,
+          "medianAlphaVsBenchmark": null,
+          "medianAlphaVsSpy": null,
+          "totalPicks": 0,
+          "medianAlpha": null
+        },
+        "84d": {
+          "vintageCount": 0,
+          "universeAlphaVintageCount": 0,
+          "medianAlphaVsUniverse": null,
+          "medianAlphaVsUniverseNote": "insufficient vintages (n=0)",
+          "medianAlphaVsFrozenVintage": null,
+          "medianAlphaVsBenchmark": null,
+          "medianAlphaVsSpy": null,
+          "totalPicks": 0,
+          "medianAlpha": null
+        }
+      }
+    },
+    "TURNAROUND": {
+      "vintages": [
+        {
+          "asOf": "2026-05-14",
+          "macroRegime": "UNKNOWN",
+          "n": 59,
+          "n_total": 59,
+          "n_evaluated": 59,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 59,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 59,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 59,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-15",
+          "macroRegime": "UNKNOWN",
+          "n": 64,
+          "n_total": 64,
+          "n_evaluated": 64,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 64,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 64,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 64,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-17",
+          "macroRegime": "UNKNOWN",
+          "n": 42,
+          "n_total": 42,
+          "n_evaluated": 42,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 42,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 42,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 42,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-19",
+          "macroRegime": "UNKNOWN",
+          "n": 37,
+          "n_total": 37,
+          "n_evaluated": 37,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 37,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 37,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 37,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-20",
+          "macroRegime": "UNKNOWN",
+          "n": 36,
+          "n_total": 36,
+          "n_evaluated": 36,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 36,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 36,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 36,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        },
+        {
+          "asOf": "2026-05-21",
+          "macroRegime": "UNKNOWN",
+          "n": 36,
+          "n_total": 36,
+          "n_evaluated": 36,
+          "truncated": false,
+          "horizons": {
+            "7d": {
+              "status": "too-early",
+              "n_total": 36,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "28d": {
+              "status": "too-early",
+              "n_total": 36,
+              "n_evaluated": 0,
+              "truncated": false
+            },
+            "84d": {
+              "status": "too-early",
+              "n_total": 36,
+              "n_evaluated": 0,
+              "truncated": false
+            }
+          }
+        }
+      ],
+      "summary": {
+        "7d": {
+          "vintageCount": 0,
+          "universeAlphaVintageCount": 0,
+          "medianAlphaVsUniverse": null,
+          "medianAlphaVsUniverseNote": "insufficient vintages (n=0)",
+          "medianAlphaVsFrozenVintage": null,
+          "medianAlphaVsBenchmark": null,
+          "medianAlphaVsSpy": null,
+          "totalPicks": 0,
+          "medianAlpha": null
+        },
+        "28d": {
+          "vintageCount": 0,
+          "universeAlphaVintageCount": 0,
+          "medianAlphaVsUniverse": null,
+          "medianAlphaVsUniverseNote": "insufficient vintages (n=0)",
+          "medianAlphaVsFrozenVintage": null,
+          "medianAlphaVsBenchmark": null,
+          "medianAlphaVsSpy": null,
+          "totalPicks": 0,
+          "medianAlpha": null
+        },
+        "84d": {
+          "vintageCount": 0,
+          "universeAlphaVintageCount": 0,
+          "medianAlphaVsUniverse": null,
+          "medianAlphaVsUniverseNote": "insufficient vintages (n=0)",
+          "medianAlphaVsFrozenVintage": null,
+          "medianAlphaVsBenchmark": null,
+          "medianAlphaVsSpy": null,
+          "totalPicks": 0,
+          "medianAlpha": null
+        }
+      }
+    }
+  }
+}

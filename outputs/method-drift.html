@@ -1,0 +1,928 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Method Drift — 2026-05-21</title>
+<style>
+body { background:#0f172a; color:#e2e8f0; font-family:ui-sans-serif,system-ui,sans-serif; padding:24px; max-width:1100px; margin:0 auto; }
+h1 { font-size:22px; color:#f1f5f9; margin:0 0 6px; }
+.sub { color:#94a3b8; font-size:13px; margin-bottom:24px; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { text-align:left; padding:8px; color:#94a3b8; font-weight:500; border-bottom:1px solid #334155; }
+td { padding:8px; border-bottom:1px solid rgba(51,65,85,0.4); }
+td.m { font-family: 'JetBrains Mono', monospace; color:#cbd5e1; }
+td.n { font-family: 'JetBrains Mono', monospace; text-align:right; color:#e2e8f0; font-variant-numeric:tabular-nums; }
+td.d { font-family: 'JetBrains Mono', monospace; color:#94a3b8; }
+</style></head><body>
+<h1>Method Drift — 2026-05-21</h1>
+<div class="sub">Pass-Count pro Methode über 9 Vintage(s). Steile Bewegungen = Universe-Drift oder Method-Bug-Verdacht.</div>
+<table>
+  <thead><tr><th>Method</th><th>Trend</th><th>Last</th><th>First</th><th>Δ</th><th>Computable</th></tr></thead>
+  <tbody><tr>
+  <td class="m">above-200d-ma</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,28.0 30.0,28.0 45.0,28.0 60.0,28.0 75.0,28.0 90.0,28.0 105.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">0</td>
+  <td class="n">0</td>
+  <td class="d">· 0</td>
+  <td class="n">0%</td>
+</tr>
+<tr>
+  <td class="m">altman-z-score</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,13.8 24.0,28.0 48.0,0.0 72.0,21.8 96.0,23.9 120.0,24.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2521</td>
+  <td class="n">2646</td>
+  <td class="d">↓ 125</td>
+  <td class="n">99%</td>
+</tr>
+<tr>
+  <td class="m">analyst-revision-breadth</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,26.0 80.0,28.0 120.0,27.2" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">694</td>
+  <td class="n">763</td>
+  <td class="d">↓ 69</td>
+  <td class="n">69%</td>
+</tr>
+<tr>
+  <td class="m">analyst-upside</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 60.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">0</td>
+  <td class="n">0</td>
+  <td class="d">· 0</td>
+  <td class="n">0%</td>
+</tr>
+<tr>
+  <td class="m">asset-growth-anomaly</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 60.0,28.0 120.0,25.2" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2793</td>
+  <td class="n">2811</td>
+  <td class="d">↓ 18</td>
+  <td class="n">99%</td>
+</tr>
+<tr>
+  <td class="m">asset-growth-divergence</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,14.1 24.0,28.0 48.0,0.0 72.0,24.0 96.0,25.7 120.0,26.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2808</td>
+  <td class="n">2978</td>
+  <td class="d">↓ 170</td>
+  <td class="n">95%</td>
+</tr>
+<tr>
+  <td class="m">beneish-m-score</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,23.7 80.0,28.0 120.0,26.4" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1830</td>
+  <td class="n">2059</td>
+  <td class="d">↓ 229</td>
+  <td class="n">67%</td>
+</tr>
+<tr>
+  <td class="m">betting-against-beta</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 60.0,12.8 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2013</td>
+  <td class="n">2048</td>
+  <td class="d">↓ 35</td>
+  <td class="n">92%</td>
+</tr>
+<tr>
+  <td class="m">buffett-criteria</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 60.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">0</td>
+  <td class="n">0</td>
+  <td class="d">· 0</td>
+  <td class="n">13%</td>
+</tr>
+<tr>
+  <td class="m">buyback-yield</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,25.6 80.0,28.0 120.0,27.8" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1443</td>
+  <td class="n">1606</td>
+  <td class="d">↓ 163</td>
+  <td class="n">88%</td>
+</tr>
+<tr>
+  <td class="m">capex-trend</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,8.4 30.0,8.5 45.0,12.2 60.0,23.9 75.0,0.0 90.0,18.8 105.0,20.2 120.0,20.1" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2319</td>
+  <td class="n">2219</td>
+  <td class="d">↑ 100</td>
+  <td class="n">88%</td>
+</tr>
+<tr>
+  <td class="m">capex-vs-sbc-quality</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,26.4 80.0,28.0 120.0,27.6" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1352</td>
+  <td class="n">1542</td>
+  <td class="d">↓ 190</td>
+  <td class="n">52%</td>
+</tr>
+<tr>
+  <td class="m">capital-allocation-quality</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,11.9 80.0,23.8 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">933</td>
+  <td class="n">966</td>
+  <td class="d">↓ 33</td>
+  <td class="n">79%</td>
+</tr>
+<tr>
+  <td class="m">closed-end-trust-guard</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,26.7 80.0,28.0 120.0,27.9" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2981</td>
+  <td class="n">3424</td>
+  <td class="d">↓ 443</td>
+  <td class="n">100%</td>
+</tr>
+<tr>
+  <td class="m">dcf-intrinsic-value</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 60.0,28.0 120.0,0.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2</td>
+  <td class="n">2</td>
+  <td class="d">· 0</td>
+  <td class="n">0%</td>
+</tr>
+<tr>
+  <td class="m">deceleration-guard</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,6.8 17.1,6.8 34.3,19.0 51.4,28.0 68.6,0.0 85.7,25.6 102.9,25.9 120.0,25.8" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2320</td>
+  <td class="n">2562</td>
+  <td class="d">↓ 242</td>
+  <td class="n">70%</td>
+</tr>
+<tr>
+  <td class="m">drawdown-52w</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 15.0,0.0 30.0,2.2 45.0,10.8 60.0,22.6 75.0,17.2 90.0,28.0 105.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">35</td>
+  <td class="n">61</td>
+  <td class="d">↓ 26</td>
+  <td class="n">1%</td>
+</tr>
+<tr>
+  <td class="m">earnings-power-stability</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,25.8 80.0,27.7 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1912</td>
+  <td class="n">2081</td>
+  <td class="d">↓ 169</td>
+  <td class="n">83%</td>
+</tr>
+<tr>
+  <td class="m">earnings-stability</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,24.1 15.0,19.6 30.0,19.7 45.0,23.8 60.0,28.0 75.0,10.9 90.0,0.0 105.0,0.4 120.0,0.5" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1804</td>
+  <td class="n">1277</td>
+  <td class="d">↑ 527</td>
+  <td class="n">97%</td>
+</tr>
+<tr>
+  <td class="m">earnings-surprise-momentum</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 60.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">16</td>
+  <td class="n">16</td>
+  <td class="d">· 0</td>
+  <td class="n">59%</td>
+</tr>
+<tr>
+  <td class="m">estimate-revision-proxy</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 24.0,12.4 48.0,21.0 72.0,27.7 96.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1524</td>
+  <td class="n">2766</td>
+  <td class="d">↓ 1242</td>
+  <td class="n">63%</td>
+</tr>
+<tr>
+  <td class="m">ev-ebitda</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,23.0 15.0,18.2 30.0,18.3 45.0,23.8 60.0,28.0 75.0,0.0 90.0,8.2 105.0,8.0 120.0,8.2" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2175</td>
+  <td class="n">1659</td>
+  <td class="d">↑ 516</td>
+  <td class="n">85%</td>
+</tr>
+<tr>
+  <td class="m">fcf-conversion-stability</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,26.4 80.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1370</td>
+  <td class="n">1530</td>
+  <td class="d">↓ 160</td>
+  <td class="n">79%</td>
+</tr>
+<tr>
+  <td class="m">fcf-stability</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,26.4 80.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1310</td>
+  <td class="n">1464</td>
+  <td class="d">↓ 154</td>
+  <td class="n">95%</td>
+</tr>
+<tr>
+  <td class="m">fcf-yield</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,8.7 15.0,0.1 30.0,0.0 45.0,18.0 60.0,28.0 75.0,1.8 90.0,22.2 105.0,24.0 120.0,25.1" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1465</td>
+  <td class="n">1610</td>
+  <td class="d">↓ 145</td>
+  <td class="n">99%</td>
+</tr>
+<tr>
+  <td class="m">forecast-contamination-guard</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,22.0 17.1,22.0 34.3,0.0 51.4,25.4 68.6,17.7 85.7,27.6 102.9,27.8 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2773</td>
+  <td class="n">3022</td>
+  <td class="d">↓ 249</td>
+  <td class="n">86%</td>
+</tr>
+<tr>
+  <td class="m">forward-pe</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,10.8 15.0,0.2 30.0,0.3 45.0,0.0 60.0,27.3 75.0,12.3 90.0,27.5 105.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2194</td>
+  <td class="n">2686</td>
+  <td class="d">↓ 492</td>
+  <td class="n">71%</td>
+</tr>
+<tr>
+  <td class="m">gross-margin-acceleration</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,17.2 80.0,28.0 120.0,23.7" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">246</td>
+  <td class="n">257</td>
+  <td class="d">↓ 11</td>
+  <td class="n">81%</td>
+</tr>
+<tr>
+  <td class="m">gross-margin-stability</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,23.9 15.0,4.0 30.0,3.5 45.0,17.3 60.0,28.0 75.0,0.0 90.0,14.1 105.0,16.1 120.0,14.9" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1619</td>
+  <td class="n">1541</td>
+  <td class="d">↑ 78</td>
+  <td class="n">80%</td>
+</tr>
+<tr>
+  <td class="m">gross-profitability</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,23.8 80.0,28.0 120.0,27.8" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1347</td>
+  <td class="n">1485</td>
+  <td class="d">↓ 138</td>
+  <td class="n">82%</td>
+</tr>
+<tr>
+  <td class="m">high-proximity-52w</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 15.0,0.0 30.0,3.5 45.0,10.5 60.0,15.8 75.0,14.0 90.0,28.0 105.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">13</td>
+  <td class="n">29</td>
+  <td class="d">↓ 16</td>
+  <td class="n">1%</td>
+</tr>
+<tr>
+  <td class="m">hypergrowth-quality-class</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,22.8 30.0,24.5 45.0,9.3 60.0,16.9 75.0,0.0 90.0,8.2 105.0,8.2 120.0,8.8" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">137</td>
+  <td class="n">104</td>
+  <td class="d">↑ 33</td>
+  <td class="n">94%</td>
+</tr>
+<tr>
+  <td class="m">insider-buy-cluster</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 24.0,13.3 48.0,23.2 72.0,27.0 96.0,28.0 120.0,27.8" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">142</td>
+  <td class="n">280</td>
+  <td class="d">↓ 138</td>
+  <td class="n">57%</td>
+</tr>
+<tr>
+  <td class="m">insider-net-buying</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,24.9 80.0,28.0 120.0,26.4" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">285</td>
+  <td class="n">319</td>
+  <td class="d">↓ 34</td>
+  <td class="n">57%</td>
+</tr>
+<tr>
+  <td class="m">insider-ownership</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,22.9 30.0,23.0 45.0,0.0 60.0,15.8 75.0,13.3 90.0,17.2 105.0,17.5 120.0,17.5" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1797</td>
+  <td class="n">1370</td>
+  <td class="d">↑ 427</td>
+  <td class="n">99%</td>
+</tr>
+<tr>
+  <td class="m">institutional-density</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 60.0,28.0 120.0,21.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1632</td>
+  <td class="n">1638</td>
+  <td class="d">↓ 6</td>
+  <td class="n">99%</td>
+</tr>
+<tr>
+  <td class="m">institutional-ownership-13f</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 40.0,0.0 80.0,0.2 120.0,0.2" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">3257</td>
+  <td class="n">0</td>
+  <td class="d">↑ 3257</td>
+  <td class="n">99%</td>
+</tr>
+<tr>
+  <td class="m">intangible-adjusted-roic</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,27.3 80.0,28.0 120.0,27.3" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">186</td>
+  <td class="n">224</td>
+  <td class="d">↓ 38</td>
+  <td class="n">99%</td>
+</tr>
+<tr>
+  <td class="m">listing-age</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,26.8 80.0,28.0 120.0,27.9" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">3289</td>
+  <td class="n">3737</td>
+  <td class="d">↓ 448</td>
+  <td class="n">100%</td>
+</tr>
+<tr>
+  <td class="m">loss-magnitude-guard</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,27.0 80.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">3135</td>
+  <td class="n">3544</td>
+  <td class="d">↓ 409</td>
+  <td class="n">99%</td>
+</tr>
+<tr>
+  <td class="m">magic-formula</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 60.0,17.2 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">507</td>
+  <td class="n">520</td>
+  <td class="d">↓ 13</td>
+  <td class="n">83%</td>
+</tr>
+<tr>
+  <td class="m">margin-decay</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,10.3 30.0,10.8 45.0,12.6 60.0,20.9 75.0,0.0 90.0,19.1 105.0,20.5 120.0,19.8" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2340</td>
+  <td class="n">2224</td>
+  <td class="d">↑ 116</td>
+  <td class="n">81%</td>
+</tr>
+<tr>
+  <td class="m">margin-quality</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,14.8 15.0,4.8 30.0,4.6 45.0,17.8 60.0,28.0 75.0,0.0 90.0,19.3 105.0,21.2 120.0,21.6" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">808</td>
+  <td class="n">838</td>
+  <td class="d">↓ 30</td>
+  <td class="n">81%</td>
+</tr>
+<tr>
+  <td class="m">metric-divergence-guard</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,27.1 80.0,28.0 120.0,27.7" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">3187</td>
+  <td class="n">3612</td>
+  <td class="d">↓ 425</td>
+  <td class="n">97%</td>
+</tr>
+<tr>
+  <td class="m">net-debt-ebitda</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,21.8 15.0,15.0 30.0,15.1 45.0,15.6 60.0,28.0 75.0,5.7 90.0,0.0 105.0,1.2 120.0,1.5" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1732</td>
+  <td class="n">1404</td>
+  <td class="d">↑ 328</td>
+  <td class="n">80%</td>
+</tr>
+<tr>
+  <td class="m">net-income-volatility-guard</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,26.9 80.0,27.9 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">3068</td>
+  <td class="n">3469</td>
+  <td class="d">↓ 401</td>
+  <td class="n">97%</td>
+</tr>
+<tr>
+  <td class="m">ohlson-o-score</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,25.6 80.0,28.0 120.0,27.1" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2677</td>
+  <td class="n">3075</td>
+  <td class="d">↓ 398</td>
+  <td class="n">81%</td>
+</tr>
+<tr>
+  <td class="m">operating-cashflow-coverage</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,26.4 80.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2360</td>
+  <td class="n">2663</td>
+  <td class="d">↓ 303</td>
+  <td class="n">75%</td>
+</tr>
+<tr>
+  <td class="m">operating-leverage</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,25.1 80.0,26.7 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">894</td>
+  <td class="n">1047</td>
+  <td class="d">↓ 153</td>
+  <td class="n">55%</td>
+</tr>
+<tr>
+  <td class="m">operating-leverage-margin-accel</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,26.5 80.0,27.8 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">678</td>
+  <td class="n">813</td>
+  <td class="d">↓ 135</td>
+  <td class="n">45%</td>
+</tr>
+<tr>
+  <td class="m">operating-margin-acceleration</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,25.8 80.0,26.4 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">510</td>
+  <td class="n">599</td>
+  <td class="d">↓ 89</td>
+  <td class="n">92%</td>
+</tr>
+<tr>
+  <td class="m">opinc-margin-spike</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,19.7 30.0,19.7 45.0,19.9 60.0,26.8 75.0,0.0 90.0,10.7 105.0,11.2 120.0,11.2" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2600</td>
+  <td class="n">2142</td>
+  <td class="d">↑ 458</td>
+  <td class="n">85%</td>
+</tr>
+<tr>
+  <td class="m">owner-earnings</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 60.0,28.0 120.0,0.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1</td>
+  <td class="n">1</td>
+  <td class="d">· 0</td>
+  <td class="n">0%</td>
+</tr>
+<tr>
+  <td class="m">peg</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,22.2 30.0,21.4 45.0,0.0 60.0,22.2 75.0,14.7 90.0,23.2 105.0,23.3 120.0,23.8" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">812</td>
+  <td class="n">754</td>
+  <td class="d">↑ 58</td>
+  <td class="n">66%</td>
+</tr>
+<tr>
+  <td class="m">penman-nissim-decomposition</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 60.0,28.0 120.0,25.2" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">988</td>
+  <td class="n">1006</td>
+  <td class="d">↓ 18</td>
+  <td class="n">91%</td>
+</tr>
+<tr>
+  <td class="m">piotroski-f-score</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,25.4 24.0,28.0 48.0,0.0 72.0,15.9 96.0,16.4 120.0,17.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1219</td>
+  <td class="n">1151</td>
+  <td class="d">↑ 68</td>
+  <td class="n">99%</td>
+</tr>
+<tr>
+  <td class="m">pre-commerciality-megacap-guard</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,26.8 80.0,27.9 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">3160</td>
+  <td class="n">3572</td>
+  <td class="d">↓ 412</td>
+  <td class="n">100%</td>
+</tr>
+<tr>
+  <td class="m">premium-compounder-proof</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,28.0 30.0,28.0 45.0,28.0 60.0,28.0 75.0,1.0 90.0,0.0 105.0,0.0 120.0,0.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">27</td>
+  <td class="n">0</td>
+  <td class="d">↑ 27</td>
+  <td class="n">97%</td>
+</tr>
+<tr>
+  <td class="m">price-momentum-12-1</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 40.0,28.0 80.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">0</td>
+  <td class="n">0</td>
+  <td class="d">· 0</td>
+  <td class="n">0%</td>
+</tr>
+<tr>
+  <td class="m">profitability-state</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,21.6 30.0,21.7 45.0,0.0 60.0,24.9 75.0,15.8 90.0,24.1 105.0,24.4 120.0,24.4" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2721</td>
+  <td class="n">2582</td>
+  <td class="d">↑ 139</td>
+  <td class="n">100%</td>
+</tr>
+<tr>
+  <td class="m">profitability-trend</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,21.7 30.0,22.0 45.0,0.0 60.0,22.2 75.0,16.5 90.0,25.3 105.0,25.8 120.0,25.9" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2434</td>
+  <td class="n">2349</td>
+  <td class="d">↑ 85</td>
+  <td class="n">98%</td>
+</tr>
+<tr>
+  <td class="m">q-spike-dataguard</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,23.8 30.0,23.8 45.0,0.0 60.0,17.0 75.0,20.9 90.0,25.9 105.0,26.2 120.0,26.2" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">3301</td>
+  <td class="n">3139</td>
+  <td class="d">↑ 162</td>
+  <td class="n">100%</td>
+</tr>
+<tr>
+  <td class="m">quality-compounder-roic</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,27.4 30.0,27.4 45.0,27.9 60.0,27.2 75.0,25.1 90.0,0.0 105.0,0.6 120.0,0.7" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">754</td>
+  <td class="n">263</td>
+  <td class="d">↑ 491</td>
+  <td class="n">97%</td>
+</tr>
+<tr>
+  <td class="m">quarter-concentration-guard</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,21.9 17.1,21.9 34.3,0.0 51.4,25.3 68.6,17.4 85.7,27.6 102.9,27.9 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2783</td>
+  <td class="n">3028</td>
+  <td class="d">↓ 245</td>
+  <td class="n">86%</td>
+</tr>
+<tr>
+  <td class="m">quarterly-earnings-stability</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,28.0 30.0,28.0 45.0,28.0 60.0,4.1 75.0,0.0 90.0,6.2 105.0,6.4 120.0,6.4" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1666</td>
+  <td class="n">0</td>
+  <td class="d">↑ 1666</td>
+  <td class="n">75%</td>
+</tr>
+<tr>
+  <td class="m">quarterly-rev-acceleration</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 30.0,22.0 60.0,22.2 90.0,0.0 120.0,21.4" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">706</td>
+  <td class="n">630</td>
+  <td class="d">↑ 76</td>
+  <td class="n">72%</td>
+</tr>
+<tr>
+  <td class="m">quarterly-revenue-acceleration</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,26.4 80.0,28.0 120.0,27.4" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">645</td>
+  <td class="n">780</td>
+  <td class="d">↓ 135</td>
+  <td class="n">86%</td>
+</tr>
+<tr>
+  <td class="m">r40-sanity-cap</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,26.8 80.0,27.9 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">3133</td>
+  <td class="n">3561</td>
+  <td class="d">↓ 428</td>
+  <td class="n">100%</td>
+</tr>
+<tr>
+  <td class="m">rd-cut-guard</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,25.7 80.0,28.0 120.0,26.6" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">965</td>
+  <td class="n">1083</td>
+  <td class="d">↓ 118</td>
+  <td class="n">33%</td>
+</tr>
+<tr>
+  <td class="m">reinvestment-rate</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,8.7 15.0,0.0 30.0,0.1 45.0,22.4 60.0,28.0 75.0,7.7 90.0,11.4 105.0,11.9 120.0,12.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2314</td>
+  <td class="n">2408</td>
+  <td class="d">↓ 94</td>
+  <td class="n">80%</td>
+</tr>
+<tr>
+  <td class="m">revenue-acceleration-yoy</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,27.7 80.0,28.0 120.0,27.5" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1575</td>
+  <td class="n">1777</td>
+  <td class="d">↓ 202</td>
+  <td class="n">95%</td>
+</tr>
+<tr>
+  <td class="m">revenue-growth-3y</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,23.7 30.0,23.5 45.0,0.0 60.0,17.7 75.0,3.5 90.0,14.7 105.0,15.5 120.0,15.8" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">391</td>
+  <td class="n">301</td>
+  <td class="d">↑ 90</td>
+  <td class="n">94%</td>
+</tr>
+<tr>
+  <td class="m">revenue-quality</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,23.2 80.0,28.0 120.0,27.3" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">250</td>
+  <td class="n">290</td>
+  <td class="d">↓ 40</td>
+  <td class="n">49%</td>
+</tr>
+<tr>
+  <td class="m">revenue-quality-cov</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 40.0,28.0 80.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">0</td>
+  <td class="n">0</td>
+  <td class="d">· 0</td>
+  <td class="n">0%</td>
+</tr>
+<tr>
+  <td class="m">revenue-shock-guard</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,21.4 30.0,21.5 45.0,0.0 60.0,21.1 75.0,15.1 90.0,23.0 105.0,23.3 120.0,23.4" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">3136</td>
+  <td class="n">2887</td>
+  <td class="d">↑ 249</td>
+  <td class="n">99%</td>
+</tr>
+<tr>
+  <td class="m">revenue-volatility-guard</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,25.6 20.0,0.0 40.0,18.0 60.0,22.9 80.0,27.8 100.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2876</td>
+  <td class="n">3047</td>
+  <td class="d">↓ 171</td>
+  <td class="n">99%</td>
+</tr>
+<tr>
+  <td class="m">roic</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,27.2 30.0,27.3 45.0,0.0 60.0,5.7 75.0,1.1 90.0,4.7 105.0,5.0 120.0,5.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1196</td>
+  <td class="n">413</td>
+  <td class="d">↑ 783</td>
+  <td class="n">99%</td>
+</tr>
+<tr>
+  <td class="m">roic-trend</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,26.0 80.0,26.9 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1676</td>
+  <td class="n">1862</td>
+  <td class="d">↓ 186</td>
+  <td class="n">99%</td>
+</tr>
+<tr>
+  <td class="m">rule-of-40</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,22.3 30.0,21.2 45.0,0.0 60.0,20.2 75.0,10.7 90.0,22.5 105.0,23.3 120.0,22.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">481</td>
+  <td class="n">435</td>
+  <td class="d">↑ 46</td>
+  <td class="n">78%</td>
+</tr>
+<tr>
+  <td class="m">rule-of-x</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,22.5 30.0,21.5 45.0,0.0 60.0,18.2 75.0,14.2 90.0,22.7 105.0,23.4 120.0,22.4" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">472</td>
+  <td class="n">424</td>
+  <td class="d">↑ 48</td>
+  <td class="n">78%</td>
+</tr>
+<tr>
+  <td class="m">sbc-growth-ratio</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,26.3 80.0,27.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">849</td>
+  <td class="n">1015</td>
+  <td class="d">↓ 166</td>
+  <td class="n">41%</td>
+</tr>
+<tr>
+  <td class="m">sbc-revenue</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,21.5 15.0,0.0 30.0,0.2 45.0,14.9 60.0,21.2 75.0,7.8 90.0,27.6 105.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1652</td>
+  <td class="n">1729</td>
+  <td class="d">↓ 77</td>
+  <td class="n">53%</td>
+</tr>
+<tr>
+  <td class="m">sbc-trend</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,25.6 80.0,27.4 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">800</td>
+  <td class="n">938</td>
+  <td class="d">↓ 138</td>
+  <td class="n">51%</td>
+</tr>
+<tr>
+  <td class="m">sector-relative-roic</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,25.7 80.0,27.3 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1107</td>
+  <td class="n">1231</td>
+  <td class="d">↓ 124</td>
+  <td class="n">71%</td>
+</tr>
+<tr>
+  <td class="m">sga-revenue-trend</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,24.9 80.0,28.0 120.0,27.7" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2034</td>
+  <td class="n">2301</td>
+  <td class="d">↓ 267</td>
+  <td class="n">82%</td>
+</tr>
+<tr>
+  <td class="m">single-quarter-dependency</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 40.0,28.0 80.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">0</td>
+  <td class="n">0</td>
+  <td class="d">· 0</td>
+  <td class="n">0%</td>
+</tr>
+<tr>
+  <td class="m">sloan-ratio</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,12.4 30.0,12.6 45.0,8.0 60.0,18.9 75.0,0.0 90.0,16.6 105.0,17.5 120.0,17.6" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">3259</td>
+  <td class="n">3010</td>
+  <td class="d">↑ 249</td>
+  <td class="n">99%</td>
+</tr>
+<tr>
+  <td class="m">stable-quarterly-growth</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,23.7 15.0,17.1 30.0,16.4 45.0,0.0 60.0,21.4 75.0,15.2 90.0,26.9 105.0,27.5 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1299</td>
+  <td class="n">1402</td>
+  <td class="d">↓ 103</td>
+  <td class="n">84%</td>
+</tr>
+<tr>
+  <td class="m">volatility-annualized</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,2.2 15.0,0.0 30.0,0.0 45.0,4.3 60.0,21.5 75.0,21.5 90.0,28.0 105.0,28.0 120.0,28.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">17</td>
+  <td class="n">29</td>
+  <td class="d">↓ 12</td>
+  <td class="n">1%</td>
+</tr>
+<tr>
+  <td class="m">working-capital-anomaly</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,28.0 15.0,10.6 30.0,10.7 45.0,12.1 60.0,23.2 75.0,0.0 90.0,18.1 105.0,19.2 120.0,19.0" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">2906</td>
+  <td class="n">2734</td>
+  <td class="d">↑ 172</td>
+  <td class="n">94%</td>
+</tr>
+<tr>
+  <td class="m">working-capital-trend</td>
+  <td><svg width="120" height="28" viewBox="0 0 120 28">
+    <polyline points="0.0,0.0 40.0,24.7 80.0,28.0 120.0,26.4" fill="none" stroke="#d4b878" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg></td>
+  <td class="n">1820</td>
+  <td class="n">2068</td>
+  <td class="d">↓ 248</td>
+  <td class="n">81%</td>
+</tr></tbody>
+</table>
+</body></html>

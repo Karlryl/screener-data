@@ -1,0 +1,12 @@
+{
+  "asOf": "2026-05-21",
+  "horizonsDays": [
+    28,
+    84
+  ],
+  "minVintages": 4,
+  "minSamplesPerGroup": 10,
+  "bootstrapResamples": 200,
+  "note": "alpha = median(passing-stocks forward-return) - median(failing-stocks forward-return). CI = 95% percentile bootstrap. Methods with evidenceGate != \"ok\" produce no CI. F-BT-006: alpha=null when n<10 in either group. Yahoo universe survivor-biased. F-BT-004: bootstrap seed is per-method-unique. F-PF-009: cache in method-effectiveness-cache.json.",
+  "methods": {}
+}
