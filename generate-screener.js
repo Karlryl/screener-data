@@ -28,6 +28,16 @@ const SM = require('./methods/strategy-modes.js');
 const DQ = require('./methods/data-quality.js');
 const { writeFileAtomic } = require('./lib/atomic-write.js');
 
+// KI Infrastruktur universe — manually seeded, Phase-2-ready for machine updates.
+let KI_INFRA_CONFIG = { categories: {} };
+try { KI_INFRA_CONFIG = require('./ki-infra.json'); } catch (_) {}
+const KI_INFRA_TICKER_MAP = {};
+for (const [cat, entries] of Object.entries(KI_INFRA_CONFIG.categories || {})) {
+  for (const entry of (entries || [])) {
+    if (entry && entry.ticker) KI_INFRA_TICKER_MAP[entry.ticker.toUpperCase()] = { category: cat, name: entry.name || '', note: entry.note || '' };
+  }
+}
+
 const REGION_TO_COUNTRY = {
   'Nasdaq': 'USA', 'NasdaqCM': 'USA', 'NasdaqGM': 'USA', 'NasdaqGS': 'USA',
   'NYSE': 'USA', 'NYSE American': 'USA', 'NYSEArca': 'USA',
@@ -457,7 +467,7 @@ function computeR40Penalty(r) {
 }
 
 function classifyTabs(rows) {
-  const tabs = { HG: [], QC: [], BF: [], SMALL: [], R40: [], PRE_BREAKOUT: [], WATCH: [] };
+  const tabs = { HG: [], QC: [], BF: [], SMALL: [], R40: [], PRE_BREAKOUT: [], WATCH: [], KI_INFRA: [] };
 
   for (const r of rows) {
     // Tag 199 HARD GATES — stocks failing any gate land in WATCH ONLY, regardless
@@ -481,6 +491,15 @@ function classifyTabs(rows) {
     const hgClassFail = r.hgClass === 'Q_SPIKE_FAKE';
     // Tag 206g: revShockFail added to hardGated chain (Agent E HIGH-1).
     const hardGated = r.qSpikeFail || r.lossMagFail || r.metricDivFail || r.niVolFail || r.preCommFail || r.cetFail || r.r40SanityFail || r.revShockFail || r.dqGrade === 'D' || hgClassFail;
+
+    // KI Infrastruktur: include ALL tickers from ki-infra.json regardless of guard status.
+    // FCF-negative stocks are marked (✗) not hidden — it's a curated list, not a quality filter.
+    const kiEntry = KI_INFRA_TICKER_MAP[(r.ticker || '').toUpperCase()];
+    if (kiEntry) {
+      r.kiCategory = kiEntry.category;
+      r.kiNote = kiEntry.note;
+      tabs.KI_INFRA.push(r);
+    }
 
     if (hardGated) {
       // WATCH-only entry: surface them with the reason for review, but block
@@ -602,6 +621,15 @@ function classifyTabs(rows) {
   // to >15 MB. Cap at top 500 by R40 desc; that's still 5x the skill's
   // "≥100 entries" requirement and includes everyone meaningful.
   tabs.R40 = tabs.R40.slice(0, 500);
+
+  // KI Infrastruktur: group by category alphabetically, within category sort by rx desc (null last).
+  tabs.KI_INFRA.sort((a, b) => {
+    const catCmp = (a.kiCategory || '').localeCompare(b.kiCategory || '');
+    if (catCmp !== 0) return catCmp;
+    const aRx = a.rx != null ? a.rx : -Infinity;
+    const bRx = b.rx != null ? b.rx : -Infinity;
+    return (bRx - aRx) || _tickerCmp(a, b);
+  });
 
   return tabs;
 }
@@ -1441,6 +1469,12 @@ const CLIENT_JS = `
       {k:'#',w:30}, {k:'Ticker',w:60}, {k:'Company',w:240}, {k:'Reason',w:120},
       {k:'Score',w:60,num:true}, {k:'State',w:80}, {k:'RevGr%',w:70,num:true}, {k:'MCap',w:70,num:true}
     ];
+    if (tab === 'KI_INFRA') return [
+      {k:'#',w:30}, {k:'Ticker',w:65}, {k:'Company',w:220}, {k:'Category',w:120},
+      {k:'RX',w:60,num:true}, {k:'R40',w:60,num:true},
+      {k:'RevGr%',w:70,num:true}, {k:'FCFM%',w:70,num:true},
+      {k:'FCF+',w:50}, {k:'State',w:80}, {k:'Trend',w:75}
+    ];
     return [];
   }
 
@@ -1454,7 +1488,8 @@ const CLIENT_JS = `
     'BF':           ['score','fcfMargin','opMargin','mcap'],
     'SMALL':        ['growth','r40','grossMargin','mcap'],
     'R40':          ['r40','growth','fcfMargin','opMargin','grossMargin','mcap'],
-    'PRE_BREAKOUT': ['growth','grossMargin','r40','mcap','pbScore']
+    'PRE_BREAKOUT': ['growth','grossMargin','r40','mcap','pbScore'],
+    'KI_INFRA':     ['rx','r40','growth','fcfMargin']
   };
   function _rowMetricForBullet(r, key, tab){
     if (key === 'score') {
@@ -1463,6 +1498,7 @@ const CLIENT_JS = `
       if (tab === 'BF') return r.bfScore;
       return null;
     }
+    if (key === 'rx') return r.rx;
     if (key === 'mcap') return r.mcap;
     if (key === 'pbScore') return r.pbScore;
     return r[key];
@@ -1648,6 +1684,13 @@ const CLIENT_JS = `
       else reason = '—';
       return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td style="font-size:10px">'+reason+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
     }
+    if (tab === 'KI_INFRA') {
+      const rxHtml = r.rx == null ? '—' : '<span class="'+(r.rx >= 50 ? 'g-pos' : 'g-neg')+'">'+r.rx.toFixed(1)+'</span>';
+      const fcfPlusCell = r.fcfPositive === null ? '<td>—</td>'
+        : r.fcfPositive ? '<td class="g-pos">✓</td>'
+        : '<td class="g-neg" title="FCF-negativ — typisch für wachsende KI-Infra-Namen">✗</td>';
+      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.kiCategory||'—')+'</td>'+bc(rxHtml,'rx')+bc(r40Html,'r40')+bc(growthHtml,'growth')+bc(fcfmHtml,'fcfMargin')+fcfPlusCell+'<td>'+stateP+'</td>'+trendCell(r,'KI_INFRA')+'</tr>';
+    }
     return '';
   }
 
@@ -1658,6 +1701,7 @@ const CLIENT_JS = `
     'WATCH': 'Stocks flagged by hard-gates (Q-Spike, Loss>50%Rev, Metric-Divergence, Closed-End-Trust, DQ-D) and NEAR_MISS tier — explicitly held out of HG/QC/SMALL/R40/PRE-BREAKOUT for human review.',
     'SMALL': 'Market cap < $2B, revenue growth > 20%, not in LOSS state. Hunting the next CRDO/ALAB before they hit the radar.',
     'R40': 'Every stock with computable R40. Hard-gated (Q-Spike, Loss>50%Rev, Pre-Commerciality, Closed-End-Trust, NI-Vol, Metric-Divergence, Q-Spike-Fake hgClass, R40-Sanity-Cap, DQ-D) — but READ THE FLAGS: ⚠ FCFM>80% or ⚠ HighGrowth or ⚠ Margin-Div badges indicate one-time-effect tells even within passing stocks. Sort uses penalized R40 (raw × (1 - dq_penalty - q_spike_penalty - margin_div_penalty)).',
+    'KI_INFRA': 'KI Infrastruktur — manuell geseedete Startliste (Data Centers · Connectivity · Energy · Supply Bottlenecks). Sortiert nach Rule-of-X. FCF-negative Namen sind markiert (✗) statt versteckt. Kein automatischer Filter — Universum = ki-infra.json.',
     'SECTOR': 'Sector heatmap. Rows = sectors (clean stocks only — WATCH-tab outliers excluded). Columns = median of each metric across the sector. Cell color is the GLOBAL percentile rank of that sector-median (green = top quartile of sectors, red = bottom). Hover a cell for N=count. GP/TA = Novy-Marx gross-profitability (annual gross profit / total assets). ROIC% = sector-relative percentile rank (0-100).'
   };
 
@@ -3354,6 +3398,7 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
   <button data-tab="BF" role="tab" aria-selected="false">📜 Buffett</button>
   <button data-tab="SMALL" role="tab" aria-selected="false">📈 Small Cap</button>
   <button data-tab="R40" class="active" role="tab" aria-current="page" aria-selected="true">📊 Rule of 40</button>
+  <button data-tab="KI_INFRA" role="tab" aria-selected="false">🤖 KI Infrastruktur</button>
   <button data-tab="PRE_BREAKOUT" role="tab" aria-selected="false">🎯 Pre-Breakout</button>
   <button data-tab="WATCH" role="tab" aria-selected="false">👁 Watch</button>
   <button data-tab="SECTOR" role="tab" aria-selected="false">🌡 SECTOR</button>
