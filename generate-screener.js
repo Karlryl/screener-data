@@ -171,6 +171,22 @@ function readScoreHistory(ticker, dir) {
   return result;
 }
 
+const R40RX_HISTORY_DIR = './r40rx-history';
+const _r40rxHistoryCache = new Map();
+function readR40rxHistory(ticker) {
+  if (_r40rxHistoryCache.has(ticker)) return _r40rxHistoryCache.get(ticker);
+  let result = null;
+  try {
+    const file = path.join(R40RX_HISTORY_DIR, ticker + '.json');
+    if (fs.existsSync(file)) {
+      const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (parsed && Array.isArray(parsed.entries)) result = parsed;
+    }
+  } catch (e) { /* swallow */ }
+  _r40rxHistoryCache.set(ticker, result);
+  return result;
+}
+
 // findEntryAtOrBefore: returns the most recent entry whose date is
 // on-or-before `targetIso`. Tolerates weekends/holidays/missed pulls per
 // design §5. Returns null if no entry that old exists.
@@ -402,6 +418,10 @@ function buildRow(stock) {
   const histRaw = readScoreHistory(ticker);
   const scoreHistory = _buildScoreHistoryPayload(histRaw, todayIso);
 
+  const r40rxHistRaw = readR40rxHistory(ticker);
+  const r40rxHistory = (r40rxHistRaw && Array.isArray(r40rxHistRaw.entries))
+    ? r40rxHistRaw.entries.slice(-12) : [];
+
   return {
     ticker,
     name: (stock.meta && stock.meta.name) || ticker,
@@ -428,6 +448,7 @@ function buildRow(stock) {
     gaapProfitable, fcfPositive,
     annual,
     scoreHistory,
+    r40rxHistory,
     results: compactResults
   };
 }
@@ -1568,6 +1589,7 @@ const CLIENT_JS = `
       const qcCnt = sh.history.filter(function(e){ return e && Number.isFinite(e.qcScore); }).length;
       field = qcCnt >= hgCnt ? 'qcScore' : 'hgScore';
     }
+    else if (tab === 'R40' || tab === 'KI_INFRA') { field = 'r40'; }
     else { field = 'hgScore'; }
     const series = sh.history.map(function(e){ return (e && Number.isFinite(e[field])) ? e[field] : null; }).filter(function(v){ return v != null; });
     const spark = microSpark(series, 60, 16);
@@ -2273,6 +2295,27 @@ const CLIENT_JS = `
       }
       html += '</tbody></table></div>';
       html += '<div style="color:var(--text-2);font-size:10px;margin-top:4px;font-family:var(--mono);">Same sector · mcap ±50% · top 5 by sector-relative ROIC percentile. Click a row to navigate.</div>';
+    }
+
+    // Section H: R40/RX quarterly history table
+    const r40rxHist = (r.r40rxHistory || []).slice().reverse();
+    if (r40rxHist.length > 0) {
+      html += '<h3 class="sec">R40 / RX Historie <span style="color:var(--text-2);font-size:0.75em">(~ = Backfill-Approximation)</span></h3>';
+      html += '<div class="annual"><table><thead><tr><th class="fy" style="text-align:left">Quartal</th><th>R40</th><th>RX (1.5×)</th><th>RevGr%</th><th>FCF-M%</th></tr></thead><tbody>';
+      for (const e of r40rxHist) {
+        const approx = e.fcfMarginSource && e.fcfMarginSource !== 'TTM';
+        const approxNote = approx ? ' <span title="FCF-Margin: Jahres-Approximation, nicht TTM — Backfill-Daten" style="color:var(--text-2)">~</span>' : '';
+        const r40Color = e.r40 != null ? (e.r40 >= 40 ? 'var(--green)' : 'var(--red)') : '';
+        const rxColor  = e.rx  != null ? (e.rx  >= 50 ? 'var(--green)' : 'var(--red)') : '';
+        html += '<tr>'
+          + '<td class="fy" style="text-align:left">' + esc(e.quarter) + '</td>'
+          + '<td style="text-align:right;color:' + r40Color + '">' + (e.r40 != null ? e.r40.toFixed(1) : '—') + approxNote + '</td>'
+          + '<td style="text-align:right;color:' + rxColor  + '">' + (e.rx  != null ? e.rx.toFixed(1)  : '—') + approxNote + '</td>'
+          + '<td style="text-align:right">' + (e.growth != null ? e.growth.toFixed(1) + '%' : '—') + '</td>'
+          + '<td style="text-align:right">' + (e.fcfMargin != null ? e.fcfMargin.toFixed(1) + '%' : '—') + '</td>'
+          + '</tr>';
+      }
+      html += '</tbody></table></div>';
     }
 
     c.innerHTML = html;
