@@ -1,0 +1,20 @@
+{
+  "_meta": {
+    "description": "Tuning layer for first-class screener filters. Edit here instead of method files.",
+    "schema": "filter-config-v1"
+  },
+  "rule_of_40": {
+    "threshold": 40,
+    "note": "R40 = revenueGrowthYoY + fcfMarginTTM >= threshold"
+  },
+  "rule_of_x": {
+    "threshold": 50,
+    "multiplier": 1.5,
+    "note": "RX = multiplier * revenueGrowthYoY + fcfMarginTTM >= threshold"
+  },
+  "ui": {
+    "defaultTab": "R40",
+    "hiddenTabs": ["HG", "QC"],
+    "note": "Set hiddenTabs to [] to restore HG/QC to default view"
+  }
+}
