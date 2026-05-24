@@ -1119,6 +1119,10 @@ const CLIENT_JS = `
   let onlyFcf  = false;
   let sortKey = 'auto';   // auto = tab's primary; or one of {score,r40,growth,fcfMargin,mcap,pbScore}
   let currentList = [];   // active filtered list
+  // Tag 204b: KI_INFRA multi-select category filter. Set of category names that
+  // are currently active. Default: all 4 categories active. At least one must
+  // remain active — the click handler refuses to deactivate the last one.
+  let kiCategoryFilter = new Set(['Data Centers','Connectivity','Energy','Supply Bottlenecks']);
 
   // Tag 232b-1: short labels for sector buttons (the full Yahoo names are too long
   // for the filter bar; full name shown via title= tooltip).
@@ -1331,6 +1335,9 @@ const CLIENT_JS = `
     filterIpoMin = ''; filterIpoMax = '';
     filterDQ = { 'A+':true, 'A':true, 'B':true, 'C':false, 'D':false };
     onlyGaap = false; onlyFcf = false; sortKey = 'auto';
+    // Tag 204b: reset KI category filter to all-on
+    kiCategoryFilter = new Set(['Data Centers','Connectivity','Energy','Supply Bottlenecks']);
+    document.querySelectorAll('.filters .f-ki-cat').forEach(b => b.classList.add('on'));
     document.querySelectorAll('.filters .f-state').forEach(b => b.classList.add('on'));
     document.querySelectorAll('.filters .f-sec').forEach(b => b.classList.add('on'));
     document.querySelectorAll('.filters .f-dq').forEach(b => {
@@ -1414,6 +1421,8 @@ const CLIENT_JS = `
       if (!filterDQ[grade]) return false;
       if (onlyGaap && r.gaapProfitable !== true) return false;
       if (onlyFcf && r.fcfPositive !== true) return false;
+      // Tag 204b: KI_INFRA category filter (only applied on that tab).
+      if (activeTab === 'KI_INFRA' && r.kiCategory && !kiCategoryFilter.has(r.kiCategory)) return false;
       return true;
     });
   }
@@ -1491,10 +1500,10 @@ const CLIENT_JS = `
       {k:'Score',w:60,num:true}, {k:'State',w:80}, {k:'RevGr%',w:70,num:true}, {k:'MCap',w:70,num:true}
     ];
     if (tab === 'KI_INFRA') return [
-      {k:'#',w:30}, {k:'Ticker',w:65}, {k:'Company',w:220}, {k:'Category',w:120},
-      {k:'RX',w:60,num:true}, {k:'R40',w:60,num:true},
-      {k:'RevGr%',w:70,num:true}, {k:'FCFM%',w:70,num:true},
-      {k:'FCF+',w:50}, {k:'State',w:80}, {k:'Trend',w:75}
+      {k:'#',w:30}, {k:'Ticker',w:65}, {k:'Company',w:200}, {k:'Category',w:115},
+      {k:'RX',w:55,num:true}, {k:'R40',w:55,num:true}, {k:'R40 Trend',w:60},
+      {k:'RevGr%',w:65,num:true}, {k:'FCFM%',w:65,num:true},
+      {k:'FCF+',w:45}, {k:'State',w:75}, {k:'Note',w:140}
     ];
     return [];
   }
@@ -1711,7 +1720,19 @@ const CLIENT_JS = `
       const fcfPlusCell = r.fcfPositive === null ? '<td>—</td>'
         : r.fcfPositive ? '<td class="g-pos">✓</td>'
         : '<td class="g-neg" title="FCF-negativ — typisch für wachsende KI-Infra-Namen">✗</td>';
-      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.kiCategory||'—')+'</td>'+bc(rxHtml,'rx')+bc(r40Html,'r40')+bc(growthHtml,'growth')+bc(fcfmHtml,'fcfMargin')+fcfPlusCell+'<td>'+stateP+'</td>'+trendCell(r,'KI_INFRA')+'</tr>';
+      // R40 trend sparkline from r40rxHistory (oldest → newest)
+      const r40HistVals = (r.r40rxHistory || [])
+        .slice()
+        .sort((a,b) => (a.quarter < b.quarter ? -1 : a.quarter > b.quarter ? 1 : 0))
+        .map(e => e.r40);
+      const r40SparkHtml = r40HistVals.filter(v => v != null && Number.isFinite(v)).length >= 2
+        ? microSpark(r40HistVals, 48, 14)
+        : '—';
+      // Note column — truncated kiNote with full-text tooltip
+      const fullNote = String(r.kiNote || '');
+      const shortNote = fullNote.length > 24 ? fullNote.slice(0, 22) + '…' : fullNote;
+      const noteHtml = fullNote ? '<td style="font-size:10px;color:var(--text-1)" title="'+esc(fullNote)+'">'+esc(shortNote)+'</td>' : '<td>—</td>';
+      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.kiCategory||'—')+'</td>'+bc(rxHtml,'rx')+bc(r40Html,'r40')+'<td style="text-align:center">'+r40SparkHtml+'</td>'+bc(growthHtml,'growth')+bc(fcfmHtml,'fcfMargin')+fcfPlusCell+'<td>'+stateP+'</td>'+noteHtml+'</tr>';
     }
     return '';
   }
@@ -1912,8 +1933,12 @@ const CLIENT_JS = `
     document.getElementById('summary').innerHTML = summary;
 
     // Tag 199m: per-tab explainer (italicized, muted color) above the table.
+    // Tag 204b: append dynamic KI Infrastruktur banner (loaded/missing tickers)
+    // to the explainer text on the KI_INFRA tab. Source is the server-computed
+    // DATA.kiBanner string built from KI_INFRA_TICKER_MAP at build time.
     const explEl = document.getElementById('explainer');
-    const exp = TAB_EXPLAINERS[activeTab];
+    let exp = TAB_EXPLAINERS[activeTab];
+    if (activeTab === 'KI_INFRA' && exp && DATA.kiBanner) exp = exp + DATA.kiBanner;
     if (exp) {
       explEl.innerHTML = '<em>' + exp + '</em>';
       explEl.style.display = 'block';
@@ -1993,7 +2018,19 @@ const CLIENT_JS = `
             + ' scope="col" style="width:' + c.w + 'px">' + c.k + '</th>';
     }
     html += '</tr></thead><tbody>';
-    for (let i=0;i<slice.length;i++) html += renderRow(slice[i], (page-1)*PAGE_SIZE + i, activeTab, pctMaps);
+    // Tag 204b: KI_INFRA category subheaders — when ALL 4 categories are active,
+    // emit a header row at every category boundary so the four layers are
+    // visually grouped. Skip when any filter is active (don't bloat output).
+    let previousCategory = null;
+    const showKiHeaders = (activeTab === 'KI_INFRA' && kiCategoryFilter.size === 4);
+    for (let i=0;i<slice.length;i++) {
+      const sliceRow = slice[i];
+      if (showKiHeaders && sliceRow.kiCategory && sliceRow.kiCategory !== previousCategory) {
+        html += '<tr class="cat-header"><td colspan="12" style="background:var(--bg-2);color:var(--text-2);padding:4px 8px;font-size:10px;text-transform:uppercase;letter-spacing:0.05em;border-top:1px solid var(--border)">▼ '+esc(sliceRow.kiCategory)+'</td></tr>';
+        previousCategory = sliceRow.kiCategory;
+      }
+      html += renderRow(sliceRow, (page-1)*PAGE_SIZE + i, activeTab, pctMaps);
+    }
     html += '</tbody></table>';
     // Tag 211g empty-state polish — show a centered "No matches" when filters
     // shrink the list to zero rows. Avoids a blank white expanse.
@@ -2301,6 +2338,73 @@ const CLIENT_JS = `
     const r40rxHist = (r.r40rxHistory || []).slice().reverse();
     if (r40rxHist.length > 0) {
       html += '<h3 class="sec">R40 / RX Historie <span style="color:var(--text-2);font-size:0.75em">(~ = Backfill-Approximation)</span></h3>';
+      // Tag 204b: SVG line chart over R40 + RX history (oldest → newest).
+      // Renders above the existing table when there are ≥2 finite data points.
+      const chartData = r40rxHist.slice().reverse();  // oldest → newest for chart
+      const chartW = 480, chartH = 140, padL = 36, padR = 12, padT = 12, padB = 24;
+      const plotW = chartW - padL - padR;
+      const plotH = chartH - padT - padB;
+      const allVals = [];
+      for (const e of chartData) {
+        if (e.r40 != null && Number.isFinite(e.r40)) allVals.push(e.r40);
+        if (e.rx  != null && Number.isFinite(e.rx))  allVals.push(e.rx);
+      }
+      if (allVals.length >= 2) {
+        let yMin = Math.min.apply(null, allVals.concat([0, 40, 50]));
+        let yMax = Math.max.apply(null, allVals.concat([60]));
+        if (yMin === yMax) { yMin -= 10; yMax += 10; }
+        const pad = (yMax - yMin) * 0.08;
+        yMin -= pad; yMax += pad;
+        const yRange = yMax - yMin;
+        const n = chartData.length;
+        const xAt = i => padL + (n > 1 ? (i / (n - 1)) * plotW : plotW / 2);
+        const yAt = v => padT + plotH - ((v - yMin) / yRange) * plotH;
+        let svg = '<svg width="100%" viewBox="0 0 ' + chartW + ' ' + chartH + '" style="display:block;max-width:480px;margin-bottom:8px;background:var(--bg-2);border:1px solid var(--border)">';
+        // Threshold lines (40 green dashed, 50 purple dashed)
+        if (40 >= yMin && 40 <= yMax) {
+          const y40 = yAt(40);
+          svg += '<line x1="'+padL+'" x2="'+(chartW-padR)+'" y1="'+y40.toFixed(1)+'" y2="'+y40.toFixed(1)+'" stroke="var(--green)" stroke-width="0.5" stroke-dasharray="3,3" opacity="0.6"/>';
+          svg += '<text x="'+(chartW-padR-2)+'" y="'+(y40-2).toFixed(1)+'" text-anchor="end" font-size="9" fill="var(--green)" opacity="0.7">R40=40</text>';
+        }
+        if (50 >= yMin && 50 <= yMax) {
+          const y50 = yAt(50);
+          svg += '<line x1="'+padL+'" x2="'+(chartW-padR)+'" y1="'+y50.toFixed(1)+'" y2="'+y50.toFixed(1)+'" stroke="var(--purple)" stroke-width="0.5" stroke-dasharray="3,3" opacity="0.6"/>';
+          svg += '<text x="'+(chartW-padR-2)+'" y="'+(y50-2).toFixed(1)+'" text-anchor="end" font-size="9" fill="var(--purple)" opacity="0.7">RX=50</text>';
+        }
+        // Y axis labels (min/max/mid)
+        const yTicks = [yMin, (yMin+yMax)/2, yMax];
+        for (const yt of yTicks) {
+          svg += '<text x="'+(padL-4)+'" y="'+(yAt(yt)+3).toFixed(1)+'" text-anchor="end" font-size="9" fill="var(--text-2)">'+yt.toFixed(0)+'</text>';
+        }
+        // X axis labels (quarter)
+        for (let i = 0; i < n; i++) {
+          const ql = chartData[i].quarter || '';
+          svg += '<text x="'+xAt(i).toFixed(1)+'" y="'+(chartH-6)+'" text-anchor="middle" font-size="9" fill="var(--text-2)">'+esc(ql)+'</text>';
+        }
+        // R40 line
+        const r40Pts = chartData.map((e,i) => (e.r40!=null && Number.isFinite(e.r40)) ? xAt(i).toFixed(1)+','+yAt(e.r40).toFixed(1) : null).filter(Boolean);
+        if (r40Pts.length >= 2) svg += '<polyline points="'+r40Pts.join(' ')+'" stroke="var(--blue)" stroke-width="1.5" fill="none"/>';
+        // RX line
+        const rxPts = chartData.map((e,i) => (e.rx!=null && Number.isFinite(e.rx)) ? xAt(i).toFixed(1)+','+yAt(e.rx).toFixed(1) : null).filter(Boolean);
+        if (rxPts.length >= 2) svg += '<polyline points="'+rxPts.join(' ')+'" stroke="var(--purple)" stroke-width="1.5" fill="none"/>';
+        // Dots — filled if TTM, hollow if backfill
+        for (let i = 0; i < n; i++) {
+          const e = chartData[i];
+          const isTTM = !e.fcfMarginSource || e.fcfMarginSource === 'TTM';
+          if (e.r40 != null && Number.isFinite(e.r40)) {
+            svg += '<circle cx="'+xAt(i).toFixed(1)+'" cy="'+yAt(e.r40).toFixed(1)+'" r="3" stroke="var(--blue)" stroke-width="1" fill="'+(isTTM?'var(--blue)':'var(--bg-2)')+'"><title>R40 '+esc(e.quarter)+': '+e.r40.toFixed(1)+(isTTM?' (TTM)':' (backfill)')+'</title></circle>';
+          }
+          if (e.rx != null && Number.isFinite(e.rx)) {
+            svg += '<circle cx="'+xAt(i).toFixed(1)+'" cy="'+yAt(e.rx).toFixed(1)+'" r="3" stroke="var(--purple)" stroke-width="1" fill="'+(isTTM?'var(--purple)':'var(--bg-2)')+'"><title>RX '+esc(e.quarter)+': '+e.rx.toFixed(1)+(isTTM?' (TTM)':' (backfill)')+'</title></circle>';
+          }
+        }
+        // Legend
+        svg += '<text x="'+padL+'" y="'+(padT-2)+'" font-size="9" fill="var(--blue)">— R40</text>';
+        svg += '<text x="'+(padL+50)+'" y="'+(padT-2)+'" font-size="9" fill="var(--purple)">— RX</text>';
+        svg += '<text x="'+(padL+90)+'" y="'+(padT-2)+'" font-size="9" fill="var(--text-2)">○ Backfill · ● TTM</text>';
+        svg += '</svg>';
+        html += svg;
+      }
       html += '<div class="annual"><table><thead><tr><th class="fy" style="text-align:left">Quartal</th><th>R40</th><th>RX (1.5×)</th><th>RevGr%</th><th>FCF-M%</th></tr></thead><tbody>';
       for (const e of r40rxHist) {
         const approx = e.fcfMarginSource && e.fcfMarginSource !== 'TTM';
@@ -2841,6 +2945,9 @@ const CLIENT_JS = `
       if (on) x.setAttribute('aria-current', 'page');
       else x.removeAttribute('aria-current');
     });
+    // Tag 204b: show/hide KI category filter group based on active tab.
+    const kiCatEl = document.getElementById('kiCatGroup');
+    if (kiCatEl) kiCatEl.style.display = (tabKey === 'KI_INFRA') ? '' : 'none';
     kbdActiveIdx = -1;  // reset row cursor on tab change
     // Tag 231b-6: persist last-viewed tab so a page reload restores the user's
     // workflow context instead of dumping them back on HG. Skip if storage
@@ -2864,6 +2971,9 @@ const CLIENT_JS = `
           if (on) x.setAttribute('aria-current', 'page');
           else x.removeAttribute('aria-current');
         });
+        // Tag 204b: sync KI category filter visibility with restored tab.
+        const kiCatEl = document.getElementById('kiCatGroup');
+        if (kiCatEl) kiCatEl.style.display = (saved === 'KI_INFRA') ? '' : 'none';
       }
     } catch (e) { /* localStorage blocked — stay on default */ }
   })();
@@ -2874,6 +2984,23 @@ const CLIENT_JS = `
     b.onclick = () => {
       filterState[b.dataset.state] = !filterState[b.dataset.state];
       b.classList.toggle('on', filterState[b.dataset.state]);
+      page = 1; renderTable();
+    };
+  });
+  // Tag 204b: KI_INFRA category filter buttons. Multi-select with the constraint
+  // that at least one category must stay active — clicking the last active one
+  // is a no-op (visual button stays .on). Re-renders only when state changes.
+  document.querySelectorAll('.filters .f-ki-cat').forEach(b => {
+    b.onclick = () => {
+      const cat = b.dataset.kicat;
+      if (kiCategoryFilter.has(cat)) {
+        if (kiCategoryFilter.size <= 1) return;  // refuse to deactivate the last one
+        kiCategoryFilter.delete(cat);
+        b.classList.remove('on');
+      } else {
+        kiCategoryFilter.add(cat);
+        b.classList.add('on');
+      }
       page = 1; renderTable();
     };
   });
@@ -3397,12 +3524,23 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
   const tabsByTicker = {};
   for (const tab of Object.keys(tabs)) tabsByTicker[tab] = tabs[tab].map(r => r.ticker);
 
+  // Tag 204b: KI Infrastruktur — compute the missing-ticker delta between the
+  // seeded universe (ki-infra.json → KI_INFRA_TICKER_MAP) and the rows that
+  // actually made it into the KI_INFRA tab (had a snapshot to load).
+  const kiTotalTickers = Object.keys(KI_INFRA_TICKER_MAP);
+  const kiLoadedTickers = new Set((tabs.KI_INFRA || []).map(r => r.ticker.toUpperCase()));
+  const kiMissing = kiTotalTickers.filter(t => !kiLoadedTickers.has(t));
+  const kiBanner = kiMissing.length > 0
+    ? ' ' + (tabs.KI_INFRA || []).length + '/' + kiTotalTickers.length + ' Tickers geladen — ' + kiMissing.length + ' ohne Snapshot: ' + kiMissing.join(', ') + '.'
+    : ' ' + (tabs.KI_INFRA || []).length + '/' + kiTotalTickers.length + ' Tickers geladen.';
+
   const payload = {
     generatedAt,
     currentYear: new Date().getUTCFullYear(),
     rowsByTicker,
     tabs: tabsByTicker,
-    sectors, countries
+    sectors, countries,
+    kiBanner
   };
 
   // </script>-break-out guard — escape forward slash in any embedded "</"
@@ -3453,6 +3591,15 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
     <button class="f f-state on" data-state="RECENT">RECENT</button>
     <button class="f f-state on" data-state="STABLE">STABLE</button>
     <button class="f f-state on" data-state="NA">N/A</button>
+  </span>
+  <!-- Tag 204b: KI Infrastruktur category filter — only visible when KI_INFRA tab
+       is active (toggled via .show class by switchToTab). 4 layers, multi-select,
+       at-least-one-active enforced by click handler. -->
+  <span class="group ki-cat-group" id="kiCatGroup" style="display:none"><span class="label">Layer:</span>
+    <button class="f f-ki-cat on" data-kicat="Data Centers" type="button">Data Centers</button>
+    <button class="f f-ki-cat on" data-kicat="Connectivity" type="button">Connectivity</button>
+    <button class="f f-ki-cat on" data-kicat="Energy" type="button">Energy</button>
+    <button class="f f-ki-cat on" data-kicat="Supply Bottlenecks" type="button">Supply Bottlenecks</button>
   </span>
   <!-- Tag 232b-3: MICRO/SMALL/MID/LARGE/MEGA cap-bucket toggle removed per Karl's
        request — the Cap≥ $B input below is the only mcap filter now. -->
