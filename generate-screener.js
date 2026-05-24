@@ -1032,7 +1032,7 @@ const CLIENT_JS = `
     try { localStorage.setItem('screener.hiddenCols', JSON.stringify(hiddenCols)); } catch (e) { /* ignore */ }
   }
 
-  let activeTab = 'HG';
+  let activeTab = 'R40';
   let page = 1;
   let filterState = { LOSS:true, TURNAROUND:true, RECENT:true, STABLE:true, NA:true };
   // Tag 232b-3: filterCap (MICRO/SMALL/MID/LARGE/MEGA bucket toggles) removed.
@@ -3348,11 +3348,12 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
   <button id="themeBtn" class="theme-btn" type="button" aria-label="Toggle light/dark theme" title="Toggle light/dark theme">[☀]</button>
 </header>
 <div class="tabs" role="tablist" aria-label="Screener tabs">
-  <button data-tab="HG" class="active" role="tab" aria-current="page" aria-selected="true">⚡ Hypergrowth</button>
-  <button data-tab="QC" role="tab" aria-selected="false">🏛 Quality-Compounder</button>
+  <!-- HG/QC hidden from default view — remove data-hidden + style to restore -->
+  <button data-tab="HG" data-hidden="true" role="tab" aria-selected="false" style="display:none">⚡ Hypergrowth</button>
+  <button data-tab="QC" data-hidden="true" role="tab" aria-selected="false" style="display:none">🏛 Quality-Compounder</button>
   <button data-tab="BF" role="tab" aria-selected="false">📜 Buffett</button>
   <button data-tab="SMALL" role="tab" aria-selected="false">📈 Small Cap</button>
-  <button data-tab="R40" role="tab" aria-selected="false">📊 Rule of 40</button>
+  <button data-tab="R40" class="active" role="tab" aria-current="page" aria-selected="true">📊 Rule of 40</button>
   <button data-tab="PRE_BREAKOUT" role="tab" aria-selected="false">🎯 Pre-Breakout</button>
   <button data-tab="WATCH" role="tab" aria-selected="false">👁 Watch</button>
   <button data-tab="SECTOR" role="tab" aria-selected="false">🌡 SECTOR</button>
