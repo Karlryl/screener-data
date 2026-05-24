@@ -14,12 +14,15 @@
  *     fcfMargin  = annualFCF[i] != null ? (annualFCF[i] / annualRev[i]) * 100 : null
  *     r40        = revGrowth + (fcfMargin || 0)
  *     rx         = 1.5 * revGrowth + (fcfMargin || 0)
- *     quarter    = "${currentYear - i}-Q4"   (annual approximation)
- *     date       = "${currentYear - i}-12-31"
+ *     quarter    = "${currentYear - 1 - i}-Q4"   (annual approximation;
+ *                  annualRev[0] is last COMPLETED fiscal year, not the future)
+ *     date       = "${currentYear - 1 - i}-12-31"
  *   Skips: null revenue, zero prior-year revenue, |revGrowth| > 500
  *
- * Merge policy: NEVER overwrites quarters already present in the history file
- * (safe to re-run; live snapshot-r40rx entries are preserved).
+ * Merge policy: drops ALL existing 'annual-backfill' entries (their quarter labels
+ * may be stale from prior buggy runs) and rewrites them from current annual data.
+ * TTM entries from snapshot-r40rx-history.js are preserved; if a TTM entry and a
+ * backfill entry collide on the same quarter, TTM wins. Safe to re-run.
  *
  * FCF source tag: "annual-backfill" — UI renders ~ prefix for approximate entries.
  *
@@ -29,7 +32,7 @@
 const fs   = require('fs');
 const path = require('path');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
-const { appendAndPrune, SCHEMA_VERSION, MAX_QUARTERS } = require('./snapshot-r40rx-history.js');
+const { SCHEMA_VERSION, MAX_QUARTERS } = require('./snapshot-r40rx-history.js');
 
 const CURRENT_YEAR = new Date().getUTCFullYear();
 const MAX_YEARS    = 4;                 // look back at most 4 completed years
@@ -101,7 +104,9 @@ function computeAnnualEntries(stock) {
     const r40 = Math.round((g + (fm != null ? fm : 0)) * 10) / 10;
     const rx  = Math.round((1.5 * g + (fm != null ? fm : 0)) * 10) / 10;
 
-    const year    = CURRENT_YEAR - i;
+    // annualRev[0] is the most recently REPORTED fiscal year (last COMPLETED year),
+    // never the current/future year. So i=0 → CURRENT_YEAR - 1.
+    const year    = CURRENT_YEAR - 1 - i;
     const quarter = year + '-Q4';
     const date    = year + '-12-31';
 
@@ -160,19 +165,32 @@ async function main() {
       const entries = computeAnnualEntries(stock);
       if (entries.length === 0) { skipped++; continue; }
 
-      const history        = readHistoryFile(args.out, ticker);
-      const existingQSet   = new Set((history.entries || []).map(e => e.quarter));
+      const history = readHistoryFile(args.out, ticker);
 
-      // Only backfill quarters not already present (never clobber live snapshots)
-      const newEntries = entries.filter(e => !existingQSet.has(e.quarter));
-      if (newEntries.length === 0) { skipped++; continue; }
+      // Drop ALL existing backfill entries (they may have stale/buggy quarter labels);
+      // preserve TTM entries from live snapshot-r40rx-history runs.
+      // (null source = legacy entry from before the source tag existed → treat as TTM)
+      const preservedEntries = (history.entries || []).filter(e =>
+        e.fcfMarginSource === 'TTM' || !e.fcfMarginSource
+      );
 
-      let current = history;
-      for (const entry of newEntries) {
-        current = appendAndPrune(current, entry);
+      // Merge preserved TTM + freshly computed backfill; dedupe by quarter,
+      // with TTM winning over backfill when both exist for the same quarter.
+      const byQuarter = new Map();
+      for (const e of preservedEntries.concat(entries)) {
+        const existing = byQuarter.get(e.quarter);
+        if (!existing) { byQuarter.set(e.quarter, e); continue; }
+        const eIsTTM        = e.fcfMarginSource === 'TTM' || !e.fcfMarginSource;
+        const existingIsTTM = existing.fcfMarginSource === 'TTM' || !existing.fcfMarginSource;
+        if (eIsTTM && !existingIsTTM) byQuarter.set(e.quarter, e);
       }
 
-      writeFileAtomic(path.join(args.out, ticker + '.json'), JSON.stringify(current));
+      const final = Array.from(byQuarter.values())
+        .sort((a, b) => (a.quarter < b.quarter ? -1 : a.quarter > b.quarter ? 1 : 0));
+      const trimmed = final.length > MAX_QUARTERS ? final.slice(final.length - MAX_QUARTERS) : final;
+
+      const next = Object.assign({}, history, { entries: trimmed, schemaVersion: SCHEMA_VERSION });
+      writeFileAtomic(path.join(args.out, ticker + '.json'), JSON.stringify(next));
       written++;
     } catch (e) {
       failed++;
