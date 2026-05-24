@@ -1,33 +1,50 @@
 #!/usr/bin/env node
 /**
- * One-time backfill: compute historical R40/RX from existing snapshots.
+ * Historical R40/RX Backfill from Annual Data
+ * =============================================
+ * Generates approximate annual historical R40/RX entries from each stock's
+ * annual data arrays. Provides 4-5 years of point-in-time annual snapshots
+ * so the "R40/RX Historie" table is populated without waiting for daily
+ * forward-banking snapshots.
  *
- * Uses timeseries.revenueQ for historical revenue (up to 8Q) and annual
- * FCF data as a margin proxy. Writes backfill entries to r40rx-history/
- * ONLY for quarters not already present (safe to re-run).
+ * Algorithm (per stock):
+ *   annualRev[i], annualFCF[i] — index 0 = most recent fiscal year
+ *   For i = 0..min(len-2, 4):
+ *     revGrowth  = (annualRev[i] - annualRev[i+1]) / |annualRev[i+1]| * 100
+ *     fcfMargin  = annualFCF[i] != null ? (annualFCF[i] / annualRev[i]) * 100 : null
+ *     r40        = revGrowth + (fcfMargin || 0)
+ *     rx         = 1.5 * revGrowth + (fcfMargin || 0)
+ *     quarter    = "${currentYear - i}-Q4"   (annual approximation)
+ *     date       = "${currentYear - i}-12-31"
+ *   Skips: null revenue, zero prior-year revenue, |revGrowth| > 500
  *
- * FCF margin for backfilled entries uses annual FCF/revenue as an approximation
- * (tagged fcfMarginSource:'annual-approx') because per-quarter FCF is not
- * in the snapshot. Live forward-banked entries (from snapshot-r40rx-history.js)
- * use the exact same definition as the live filter (fcfMarginSource:'TTM').
+ * Merge policy: NEVER overwrites quarters already present in the history file
+ * (safe to re-run; live snapshot-r40rx entries are preserved).
+ *
+ * FCF source tag: "annual-backfill" — UI renders ~ prefix for approximate entries.
  *
  * Run: node scripts/backfill-r40rx-history.js [--snapshots ./snapshots] [--out ./r40rx-history]
  */
 'use strict';
-const fs = require('fs');
+const fs   = require('fs');
 const path = require('path');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
-const { appendAndPrune, isoToQuarter, SCHEMA_VERSION } = require('./snapshot-r40rx-history.js');
+const { appendAndPrune, SCHEMA_VERSION, MAX_QUARTERS } = require('./snapshot-r40rx-history.js');
+
+const CURRENT_YEAR = new Date().getUTCFullYear();
+const MAX_YEARS    = 4;                 // look back at most 4 completed years
+const GROWTH_CAP   = 500;              // skip obviously-garbage data
 
 function parseArgs(argv) {
   const args = { snapshots: './snapshots', out: './r40rx-history' };
   for (let i = 2; i < argv.length; i++) {
-    if (argv[i] === '--snapshots' && argv[i+1]) args.snapshots = argv[++i];
-    else if (argv[i] === '--out' && argv[i+1]) args.out = argv[++i];
+    if (argv[i] === '--snapshots' && argv[i + 1]) args.snapshots = argv[++i];
+    else if (argv[i] === '--out'       && argv[i + 1]) args.out       = argv[++i];
   }
   return args;
 }
 
+/** Unwrap Yahoo-finance snapshot value: { value: N } | N | null → number|null */
 function unwrap(v) {
   if (v == null) return null;
   if (typeof v === 'number') return Number.isFinite(v) ? v : null;
@@ -35,102 +52,135 @@ function unwrap(v) {
   return null;
 }
 
-function arrayIndexToApproxQuarter(fetchedAt, i) {
-  const dateStr = fetchedAt ? fetchedAt.slice(0, 10) : new Date().toISOString().slice(0, 10);
-  const d = new Date(dateStr + 'T00:00:00Z');
-  d.setUTCMonth(d.getUTCMonth() - i * 3);
-  return isoToQuarter(d.toISOString().slice(0, 10));
-}
-
-function computeHistoricalEntries(stock) {
-  const fetchedAt = stock.meta && stock.meta.fetchedAt;
-  const ts = stock.timeseries || {};
-  const annual = stock.annual || {};
-
-  const revQ = Array.isArray(ts.revenueQ) ? ts.revenueQ.map(unwrap) : [];
-  const annualFCF = Array.isArray(annual.annualFCF) ? annual.annualFCF.map(unwrap) : [];
-  const annualRev = Array.isArray(annual.annualRev) ? annual.annualRev.map(unwrap) : [];
-
-  const annualFcfMargins = [];
-  for (let y = 0; y < Math.min(annualFCF.length, annualRev.length, 4); y++) {
-    const f = annualFCF[y], r = annualRev[y];
-    annualFcfMargins.push((f != null && r != null && r > 0) ? (f / r) * 100 : null);
-  }
-
-  const entries = [];
-  for (let i = 0; i < 4 && i + 4 < revQ.length; i++) {
-    const qRev = revQ[i];
-    const priorRev = revQ[i + 4];
-    if (qRev == null || priorRev == null || priorRev === 0) continue;
-    const growth = (qRev - priorRev) / Math.abs(priorRev) * 100;
-    if (Math.abs(growth) <= 1) continue;
-
-    const fcfMargin = annualFcfMargins[Math.min(i, annualFcfMargins.length - 1)];
-    if (fcfMargin == null) continue;
-
-    const r40 = Math.round((growth + fcfMargin) * 10) / 10;
-    const rx  = Math.round((1.5 * growth + fcfMargin) * 10) / 10;
-    const quarter = arrayIndexToApproxQuarter(fetchedAt, i);
-    entries.push({
-      quarter,
-      date: fetchedAt ? fetchedAt.slice(0, 10) : new Date().toISOString().slice(0, 10),
-      r40, rx,
-      growth: Math.round(growth * 10) / 10,
-      fcfMargin: Math.round(fcfMargin * 10) / 10,
-      fcfMarginSource: 'annual-approx'
-    });
-  }
-  return entries;
-}
-
 function readHistoryFile(outDir, ticker) {
   const file = path.join(outDir, ticker + '.json');
   if (!fs.existsSync(file)) return { ticker, schemaVersion: SCHEMA_VERSION, entries: [] };
   try {
     const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
-    if (!parsed || parsed.schemaVersion !== SCHEMA_VERSION) return { ticker, schemaVersion: SCHEMA_VERSION, entries: [] };
+    if (!parsed || parsed.schemaVersion !== SCHEMA_VERSION) {
+      return { ticker, schemaVersion: SCHEMA_VERSION, entries: [] };
+    }
     return { ticker, schemaVersion: SCHEMA_VERSION, entries: Array.isArray(parsed.entries) ? parsed.entries : [] };
-  } catch (e) { return { ticker, schemaVersion: SCHEMA_VERSION, entries: [] }; }
+  } catch (e) {
+    return { ticker, schemaVersion: SCHEMA_VERSION, entries: [] };
+  }
+}
+
+/**
+ * Compute historical entries from annual arrays.
+ * Returns an array of entry objects (may be empty).
+ */
+function computeAnnualEntries(stock) {
+  const annual = stock.annual || {};
+  const rawRev = Array.isArray(annual.annualRev) ? annual.annualRev : [];
+  const rawFCF = Array.isArray(annual.annualFCF) ? annual.annualFCF : [];
+
+  const annualRev = rawRev.map(unwrap);
+  const annualFCF = rawFCF.map(unwrap);
+
+  const entries = [];
+  const maxI = Math.min(annualRev.length - 2, MAX_YEARS - 1);
+
+  for (let i = 0; i <= maxI; i++) {
+    const rev     = annualRev[i];
+    const revPrior = annualRev[i + 1];
+
+    // Guard: need valid revenue in both years
+    if (rev == null || revPrior == null || revPrior === 0) continue;
+
+    const revGrowth = (rev - revPrior) / Math.abs(revPrior) * 100;
+
+    // Guard: skip garbage / placeholder data
+    if (Math.abs(revGrowth) > GROWTH_CAP) continue;
+
+    const fcf       = annualFCF[i] != null ? annualFCF[i] : null;
+    const fcfMargin = (fcf != null && rev !== 0) ? (fcf / rev) * 100 : null;
+
+    const g   = Math.round(revGrowth * 10) / 10;
+    const fm  = fcfMargin != null ? Math.round(fcfMargin * 10) / 10 : null;
+    const r40 = Math.round((g + (fm != null ? fm : 0)) * 10) / 10;
+    const rx  = Math.round((1.5 * g + (fm != null ? fm : 0)) * 10) / 10;
+
+    const year    = CURRENT_YEAR - i;
+    const quarter = year + '-Q4';
+    const date    = year + '-12-31';
+
+    entries.push({
+      quarter,
+      date,
+      r40,
+      rx,
+      growth: g,
+      fcfMargin: fm,
+      fcfMarginSource: 'annual-backfill'
+    });
+  }
+
+  return entries;
+}
+
+async function loadSnapshotsAsync(dir) {
+  const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
+  const BATCH  = 32;
+  const stocks = [];
+  for (let i = 0; i < files.length; i += BATCH) {
+    const batch = files.slice(i, i + BATCH);
+    const loaded = await Promise.all(batch.map(async f => {
+      try {
+        const raw   = await fs.promises.readFile(path.join(dir, f), 'utf8');
+        const stock = JSON.parse(raw);
+        return (stock && stock.meta && stock.meta.ticker) ? stock : null;
+      } catch (e) { return null; }
+    }));
+    stocks.push(...loaded.filter(Boolean));
+  }
+  return stocks;
 }
 
 async function main() {
   const args = parseArgs(process.argv);
   if (!fs.existsSync(args.out)) fs.mkdirSync(args.out, { recursive: true });
 
-  if (!fs.existsSync(args.snapshots)) { console.error('snapshots dir not found: ' + args.snapshots); process.exit(1); }
-  const files = fs.readdirSync(args.snapshots).filter(f => f.endsWith('.json') && !f.startsWith('_'));
-  console.log('[backfill] processing ' + files.length + ' snapshots');
+  if (!fs.existsSync(args.snapshots)) {
+    console.error('[backfill] snapshots dir not found: ' + args.snapshots);
+    process.exit(1);
+  }
 
-  let filled = 0, skipped = 0, failed = 0;
-  for (const f of files) {
-    let stock;
-    try { stock = JSON.parse(fs.readFileSync(path.join(args.snapshots, f), 'utf8')); } catch (e) { failed++; continue; }
-    const ticker = stock && stock.meta && stock.meta.ticker;
+  console.log('[backfill] loading snapshots from ' + args.snapshots + ' ...');
+  const stocks = await loadSnapshotsAsync(args.snapshots);
+  console.log('[backfill] stocks=' + stocks.length);
+
+  let written = 0, skipped = 0, failed = 0;
+
+  for (const stock of stocks) {
+    const ticker = stock.meta && stock.meta.ticker;
     if (!ticker) { skipped++; continue; }
 
-    const historical = computeHistoricalEntries(stock);
-    if (historical.length === 0) { skipped++; continue; }
+    try {
+      const entries = computeAnnualEntries(stock);
+      if (entries.length === 0) { skipped++; continue; }
 
-    const history = readHistoryFile(args.out, ticker);
-    const existingQuarters = new Set((history.entries || []).map(e => e.quarter));
+      const history        = readHistoryFile(args.out, ticker);
+      const existingQSet   = new Set((history.entries || []).map(e => e.quarter));
 
-    let changed = false;
-    let current = history;
-    for (const entry of historical) {
-      if (existingQuarters.has(entry.quarter)) continue;
-      current = appendAndPrune(current, entry);
-      changed = true;
-    }
+      // Only backfill quarters not already present (never clobber live snapshots)
+      const newEntries = entries.filter(e => !existingQSet.has(e.quarter));
+      if (newEntries.length === 0) { skipped++; continue; }
 
-    if (changed) {
+      let current = history;
+      for (const entry of newEntries) {
+        current = appendAndPrune(current, entry);
+      }
+
       writeFileAtomic(path.join(args.out, ticker + '.json'), JSON.stringify(current));
-      filled++;
-    } else {
-      skipped++;
+      written++;
+    } catch (e) {
+      failed++;
+      if (failed <= 10) console.error('[backfill] ERROR ' + ticker + ': ' + e.message);
     }
   }
 
-  console.log('[backfill] filled=' + filled + ' skipped=' + skipped + ' failed=' + failed);
+  console.log('[backfill] stocks=' + stocks.length + ' written=' + written + ' skipped=' + skipped + ' failed=' + failed);
 }
 
 if (require.main === module) {

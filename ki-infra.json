@@ -1,20 +1,54 @@
 {
   "_meta": {
-    "version": "1.0",
+    "version": "2.0",
     "schema": "ki-infra-v1",
     "updated_at": "2026-05-24",
-    "updated_by": "manual",
-    "note": "Phase 2: this file will be machine-updated by automated research refresh. Keep category keys stable."
+    "updated_by": "seed-v2",
+    "note": "Phase 2: manual seed covering all 4 AI infrastructure layers"
   },
   "categories": {
+    "Data Centers": [
+      { "ticker": "NBIS", "name": "Nebius Group", "note": "AI cloud platform, GPU clusters for AI training" },
+      { "ticker": "CRWV", "name": "CoreWeave", "note": "Specialized GPU cloud for AI workloads" },
+      { "ticker": "IREN", "name": "IREN", "note": "AI data center & Bitcoin mining infrastructure" },
+      { "ticker": "ORCL", "name": "Oracle", "note": "Cloud infrastructure + OCI for AI compute" },
+      { "ticker": "SMCI", "name": "Super Micro Computer", "note": "GPU server systems for AI data centers" },
+      { "ticker": "DELL", "name": "Dell Technologies", "note": "AI server infrastructure, PowerEdge GPU servers" },
+      { "ticker": "HPE", "name": "Hewlett Packard Enterprise", "note": "AI infrastructure, servers" },
+      { "ticker": "VRT", "name": "Vertiv Holdings", "note": "Data center power & thermal management" },
+      { "ticker": "EQIX", "name": "Equinix", "note": "Global data center colocation for AI workloads" }
+    ],
     "Connectivity": [
-      { "ticker": "ALAB", "name": "Astera Labs", "note": "PCIe/CXL connectivity for AI clusters" },
-      { "ticker": "CRDO", "name": "Credo Technology", "note": "Active electrical cables, SerDes for hyperscalers" }
+      { "ticker": "ALAB", "name": "Astera Labs", "note": "PCIe/CXL connectivity fabric for AI clusters" },
+      { "ticker": "CRDO", "name": "Credo Technology", "note": "Active electrical cables, SerDes for hyperscalers" },
+      { "ticker": "AAOI", "name": "Applied Optoelectronics", "note": "Optical transceivers for AI data center interconnects" },
+      { "ticker": "LITE", "name": "Lumentum", "note": "Optical components for AI networking" },
+      { "ticker": "COHR", "name": "Coherent", "note": "Optical & electronic components for AI networks" },
+      { "ticker": "CSCO", "name": "Cisco Systems", "note": "AI networking infrastructure, Ethernet for AI clusters" },
+      { "ticker": "ANET", "name": "Arista Networks", "note": "High-speed Ethernet switches for AI/ML clusters" },
+      { "ticker": "MRVL", "name": "Marvell Technology", "note": "Custom silicon, optical DSPs for AI networks" },
+      { "ticker": "CIEN", "name": "Ciena", "note": "Optical networking for AI-scale data centers" }
     ],
     "Energy": [
-      { "ticker": "BE", "name": "Bloom Energy", "note": "Solid oxide fuel cells for data center power" }
+      { "ticker": "BE", "name": "Bloom Energy", "note": "Solid oxide fuel cells for data center power" },
+      { "ticker": "OKLO", "name": "Oklo", "note": "Advanced small nuclear reactors for data centers" },
+      { "ticker": "FLNC", "name": "Fluence Energy", "note": "Grid-scale energy storage for AI data centers" },
+      { "ticker": "EOSE", "name": "Eos Energy", "note": "Long-duration zinc battery storage" },
+      { "ticker": "NRG", "name": "NRG Energy", "note": "Power generation for hyperscale data centers" },
+      { "ticker": "CEG", "name": "Constellation Energy", "note": "Nuclear power supply for hyperscalers (MSFT deal)" },
+      { "ticker": "VST", "name": "Vistra Energy", "note": "Nuclear + gas power for AI data center demand" }
     ],
-    "Data Centers": [],
-    "Supply Bottlenecks": []
+    "Supply Bottlenecks": [
+      { "ticker": "WOLF", "name": "Wolfspeed", "note": "SiC power semiconductors for AI power conversion" },
+      { "ticker": "AXTI", "name": "AXT Inc", "note": "Compound semiconductor substrates (GaAs, InP, Ge)" },
+      { "ticker": "IQE", "name": "IQE", "note": "Epitaxial wafers for compound semiconductors" },
+      { "ticker": "NVDA", "name": "NVIDIA", "note": "GPU monopoly — the core AI compute chip" },
+      { "ticker": "AMD", "name": "AMD", "note": "CPU/GPU for AI training and inference" },
+      { "ticker": "AVGO", "name": "Broadcom", "note": "Custom AI chips (TPUs for Google), AI networking ASICs" },
+      { "ticker": "TSM", "name": "TSMC", "note": "Leading-edge foundry for all AI chips" },
+      { "ticker": "ASML", "name": "ASML", "note": "EUV lithography — bottleneck for advanced chip production" },
+      { "ticker": "ONTO", "name": "Onto Innovation", "note": "Semiconductor process control for advanced nodes" },
+      { "ticker": "ACLS", "name": "Axcelis Technologies", "note": "Ion implant equipment for power semiconductors" }
+    ]
   }
 }
