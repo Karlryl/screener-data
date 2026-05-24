@@ -144,7 +144,23 @@ function computeEntryForStock(stock, today) {
   const hgClass = (hgClassRes && hgClassRes.computable && hgClassRes.components && hgClassRes.components.class) || null;
   const pbScoreRaw = _computePbScore(stock, allResults);
   const pbScore = (pbScoreRaw != null && Number.isFinite(pbScoreRaw)) ? Math.round(pbScoreRaw * 100) / 100 : null;
-  return { date: today, hgScore, qcScore, pbScore, hgTier, qcTier, hgClass };
+
+  // R40/RX banking: use the same allResults so FCF margin source (TTM vs 3y-annual-median)
+  // is IDENTICAL to what rule-of-40.js uses for the live filter. fcfMarginSource tracks
+  // which definition was used — history MUST match live filter definition exactly.
+  const r40Res = allResults['rule-of-40'];
+  const r40 = (r40Res && r40Res.computable && Number.isFinite(r40Res.value))
+    ? Math.round(r40Res.value * 10) / 10 : null;
+  const rxRes = allResults['rule-of-x'];
+  const rx = (rxRes && rxRes.computable && Number.isFinite(rxRes.value))
+    ? Math.round(rxRes.value * 10) / 10 : null;
+  const growth = (r40Res && r40Res.computable && r40Res.components && r40Res.components.growth != null)
+    ? Math.round(r40Res.components.growth * 10) / 10 : null;
+  const fcfMargin = (r40Res && r40Res.computable && r40Res.components && r40Res.components.fcfMargin != null)
+    ? Math.round(r40Res.components.fcfMargin * 10) / 10 : null;
+  const fcfMarginSource = (r40Res && r40Res.components && r40Res.components.fcfMarginSource) || 'TTM';
+
+  return { date: today, hgScore, qcScore, pbScore, hgTier, qcTier, hgClass, r40, rx, growth, fcfMargin, fcfMarginSource };
 }
 
 async function main() {
@@ -169,7 +185,8 @@ async function main() {
       // Skip writing if every score is null AND no tier — nothing useful to
       // record. This avoids creating files for stocks that can't be evaluated.
       if (entry.hgScore == null && entry.qcScore == null && entry.pbScore == null
-          && entry.hgTier == null && entry.qcTier == null) {
+          && entry.hgTier == null && entry.qcTier == null
+          && entry.r40 == null && entry.rx == null) {
         skipped++;
         continue;
       }
