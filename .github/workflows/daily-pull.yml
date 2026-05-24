@@ -389,6 +389,12 @@ jobs:
         run: node scripts/snapshot-score-history.js --snapshots snapshots --out score-history
         continue-on-error: true
 
+      - name: Snapshot R40/RX History (quarterly)
+        env:
+          AUDIT_SCORE_MULTIPLIERS: '1'
+        run: node scripts/snapshot-r40rx-history.js --snapshots snapshots --out r40rx-history
+        continue-on-error: true
+
       # Tag 102g: Walk-Forward Picks-History — friert Mode-Picks pro Run für späteren Performance-Vergleich.
       # Tag 168: continue-on-error — per-stock failures are soft-fail; Pipeline Health Check
       # below enforces the 5% threshold AND F-CI-002 missing-report=100%-fail rule, so a
