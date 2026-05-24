@@ -246,6 +246,9 @@ function buildRow(stock) {
   const r40 = allResults['rule-of-40'];
   const r40Value = (r40 && r40.computable && Number.isFinite(r40.value)) ? r40.value : null;
 
+  const rx = allResults['rule-of-x'];
+  const rxValue = (rx && rx.computable && Number.isFinite(rx.value)) ? rx.value : null;
+
   const ps = allResults['profitability-state'];
   const state = (ps && ps.computable && ps.components && ps.components.state) || 'NA';
 
@@ -400,6 +403,7 @@ function buildRow(stock) {
     revenueTTM,
     growth, grossMargin, opMargin, fcfMargin,
     r40: r40Value,
+    rx: rxValue,
     state,
     hgClass: hgClassName,
     hgScore, hgTier,
@@ -556,18 +560,19 @@ function classifyTabs(rows) {
     }
   }
 
-  // Sorting per tab
-  tabs.HG.sort((a, b) => (b.hgScore || 0) - (a.hgScore || 0));
-  tabs.QC.sort((a, b) => (b.qcScore || 0) - (a.qcScore || 0));
+  // Sorting per tab — ticker is secondary key for deterministic ordering on score ties.
+  const _tickerCmp = (a, b) => (a.ticker || '').localeCompare(b.ticker || '');
+  tabs.HG.sort((a, b) => ((b.hgScore || 0) - (a.hgScore || 0)) || _tickerCmp(a, b));
+  tabs.QC.sort((a, b) => ((b.qcScore || 0) - (a.qcScore || 0)) || _tickerCmp(a, b));
   // Tag 232g: BUFFETT — passed=true rows always sort above passed=false (rare
   // strict winners first), then ties broken by bfScore desc.
   tabs.BF.sort((a, b) => {
     const ap = a.bfPassed ? 1 : 0;
     const bp = b.bfPassed ? 1 : 0;
     if (ap !== bp) return bp - ap;
-    return (b.bfScore || 0) - (a.bfScore || 0);
+    return ((b.bfScore || 0) - (a.bfScore || 0)) || _tickerCmp(a, b);
   });
-  tabs.SMALL.sort((a, b) => (b.growth || 0) - (a.growth || 0));
+  tabs.SMALL.sort((a, b) => ((b.growth || 0) - (a.growth || 0)) || _tickerCmp(a, b));
   // Tag 205 R40-poisoning defense (penalized sort): hard-gates already filter
   // qSpikeFail / lossMagFail / r40SanityFail / etc., but edge-case survivors
   // (e.g. -growth + ultra-high one-time FCF margin, large margin-divergence
@@ -587,10 +592,10 @@ function classifyTabs(rows) {
     const bPen = computeR40Penalty(b);
     const bEff = (b.r40 == null ? -Infinity : b.r40) - 100 * bPen;
     const aEff = (a.r40 == null ? -Infinity : a.r40) - 100 * aPen;
-    return bEff - aEff;
+    return (bEff - aEff) || _tickerCmp(a, b);
   });
-  tabs.PRE_BREAKOUT.sort((a, b) => (b.pbScore || 0) - (a.pbScore || 0));
-  tabs.WATCH.sort((a, b) => Math.max(b.hgScore || 0, b.qcScore || 0, b.bfScore || 0) - Math.max(a.hgScore || 0, a.qcScore || 0, a.bfScore || 0));
+  tabs.PRE_BREAKOUT.sort((a, b) => ((b.pbScore || 0) - (a.pbScore || 0)) || _tickerCmp(a, b));
+  tabs.WATCH.sort((a, b) => (Math.max(b.hgScore || 0, b.qcScore || 0, b.bfScore || 0) - Math.max(a.hgScore || 0, a.qcScore || 0, a.bfScore || 0)) || _tickerCmp(a, b));
 
   // Embedded-JSON size guard: R40 tab is the most permissive (every stock with
   // a computable R40 qualifies) — without a cap the dashboard payload balloons
@@ -1519,7 +1524,15 @@ const CLIENT_JS = `
   function trendCell(r, tab){
     const sh = r.scoreHistory;
     if (!sh || !Array.isArray(sh.history) || sh.history.length === 0) return '<td><span class="g-mute" style="font-size:10px">—</span></td>';
-    const field = tab === 'QC' ? 'qcScore' : 'hgScore';
+    // BF: bfScore not in score-history yet; use whichever of hgScore/qcScore is more populated
+    let field;
+    if (tab === 'QC') { field = 'qcScore'; }
+    else if (tab === 'BF') {
+      const hgCnt = sh.history.filter(function(e){ return e && Number.isFinite(e.hgScore); }).length;
+      const qcCnt = sh.history.filter(function(e){ return e && Number.isFinite(e.qcScore); }).length;
+      field = qcCnt >= hgCnt ? 'qcScore' : 'hgScore';
+    }
+    else { field = 'hgScore'; }
     const series = sh.history.map(function(e){ return (e && Number.isFinite(e[field])) ? e[field] : null; }).filter(function(v){ return v != null; });
     const spark = microSpark(series, 60, 16);
     // Δ7d: use deltaScore7d if it's the right axis (hgScore), else derive
@@ -1572,13 +1585,14 @@ const CLIENT_JS = `
     }
     if (tab === 'BF') {
       // Tag 232g: read 14-pt composite + OE pass + MoS from compactResults.
-      // buffett-criteria.value is the count of passing tests (0-14). owner-
-      // earnings.pass is the OE-positive-and-growing check. dcf-intrinsic-value
-      // .value is the discount-to-intrinsic ratio (≥0.25 = MoS pass).
+      // buffett-criteria.value is Math.round(passRate*100) — 0-100 percent scale.
+      // Derive nPassed = round(value/100 * 14); compactResults has no components.
+      // owner-earnings.pass is the OE-positive-and-growing check.
+      // dcf-intrinsic-value.value is discount-to-intrinsic ratio 0-1 (≥0.25 = MoS pass).
       const score = r.bfScore==null ? '—' : r.bfScore.toFixed(1);
       const bc14 = r.results['buffett-criteria'];
-      const bc14n = (bc14 && bc14.components && Number.isFinite(bc14.components.nPassed))
-        ? bc14.components.nPassed : null;
+      const bc14n = (bc14 && bc14.computable && bc14.value != null)
+        ? Math.round(bc14.value / 100 * 14) : null;
       const bc14Cell = (bc14 && bc14.computable && bc14n != null)
         ? '<span class="'+(bc14.pass?'g-pos':'g-mute')+'">'+bc14n+'/14</span>'
         : '<span class="g-mute">—</span>';
