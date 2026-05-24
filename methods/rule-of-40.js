@@ -12,8 +12,17 @@ const H = require('./_helpers.js');
 
 const ID = 'rule-of-40';
 const LABEL = 'Rule of 40';
-const THRESHOLD = 40;
 const THRESHOLD_OP = 'gte';
+
+// Load threshold from filter-config.json if present; fall back to hardcoded 40.
+// This preserves fixture-hash stability when config is absent (CI default state).
+let THRESHOLD = 40;
+try {
+  const cfg = require('../filter-config.json');
+  if (cfg && cfg.rule_of_40 && typeof cfg.rule_of_40.threshold === 'number') {
+    THRESHOLD = cfg.rule_of_40.threshold;
+  }
+} catch (_) { /* config absent — use hardcoded default */ }
 
 function _unwrap(v) {
   if (v == null) return null;
