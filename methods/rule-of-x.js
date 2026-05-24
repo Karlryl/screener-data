@@ -3,8 +3,18 @@ const H = require('./_helpers.js');
 
 const ID = 'rule-of-x';
 const LABEL = 'Rule-of-X';
-const THRESHOLD = 50;
 const THRESHOLD_OP = 'gte';
+
+// Load threshold and multiplier from filter-config.json if present; fall back to hardcoded values.
+let THRESHOLD = 50;
+let MULTIPLIER = 1.5;
+try {
+  const cfg = require('../filter-config.json');
+  if (cfg && cfg.rule_of_x) {
+    if (typeof cfg.rule_of_x.threshold === 'number') THRESHOLD = cfg.rule_of_x.threshold;
+    if (typeof cfg.rule_of_x.multiplier === 'number') MULTIPLIER = cfg.rule_of_x.multiplier;
+  }
+} catch (_) { /* config absent — use hardcoded defaults */ }
 
 function evaluate(stock) {
   const growth = H.metricValue(stock, 'revenueGrowthYoY');
@@ -24,11 +34,11 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
-  const value = 1.5 * growth + fcfMargin;
+  const value = MULTIPLIER * growth + fcfMargin;
   return H.buildResult({
     value, pass: value >= THRESHOLD, computable: true,
-    components: { growth, fcfMargin, multiplier: 1.5 },
-    reason: '1.5×' + growth.toFixed(0) + ' + ' + fcfMargin.toFixed(0) + ' = ' + value.toFixed(0),
+    components: { growth, fcfMargin, multiplier: MULTIPLIER },
+    reason: MULTIPLIER + '×' + growth.toFixed(0) + ' + ' + fcfMargin.toFixed(0) + ' = ' + value.toFixed(0),
     threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
   });
 }
