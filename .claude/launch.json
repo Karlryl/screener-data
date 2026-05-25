@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Yahoo Pull (normal)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "pull"],
+      "port": null
+    },
+    {
+      "name": "Yahoo Pull (fast)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "pull:fast"],
+      "port": null
+    },
+    {
+      "name": "Yahoo Pull (single)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "pull:single"],
+      "port": null
+    }
+  ]
+}

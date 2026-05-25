@@ -10,12 +10,17 @@
  *  volume." — Warren Buffett, 1986 BRK Annual Letter (the passage Berkshire
  *  shareholders "should care about").
  *
- * Formula (per letter + Hagstrom "The Warren Buffett Way" Tenet 5 — Financial):
+ * Formula (per Buffett 1986 letter, verbatim):
  *   Owner Earnings = Net Income
- *                  + D&A  (non-cash amortisation adds back)
- *                  + SBC  (stock-based comp — non-cash dilution proxy)
- *                  − Maintenance Capex
+ *                  + D&A  (non-cash amortisation — Buffett's item (b))
+ *                  − Maintenance Capex  (Buffett's item (c): plant/equipment to
+ *                    maintain long-term competitive position and unit volume)
  *                  − ΔWorking Capital  (cash absorbed by WC growth)
+ *
+ * SBC is NOT included: Buffett's 1986 formula does not add back stock-based
+ * compensation. SBC is a real economic cost (dilutes shareholders) and should
+ * reduce owner earnings, not inflate them. It was formerly added here but
+ * removed in the 2026-05 audit to align with the original Buffett formula.
  *
  * Maintenance Capex proxy per Damodaran "Investment Valuation" ch. 11:
  *   Three configurable modes via OWNER_EARNINGS_MAINT_CAPEX_METHOD env var.
@@ -35,7 +40,7 @@ const ID = 'owner-earnings';
 const LABEL = 'Owner Earnings (Buffett 1986)';
 const THRESHOLD_DEFAULT = 0.05;   // OE/Revenue margin >= 5% to pass
 const THRESHOLD_OP = 'gte';
-const MIN_YEARS = 5;              // require >= 5 computable years (Buffett criterion)
+const MIN_YEARS = 4;              // require >= 4 computable years (Yahoo FTS provides max 4y of NI)
 
 // Valid modes for maintenance capex proxy (Damodaran ch. 11)
 const MAINT_CAPEX_METHODS = ['capex-5y-median', 'dna', 'capex-min-dna'];
@@ -185,10 +190,9 @@ function evaluate(stock) {
 
   // --- Compute Owner Earnings for each year ---
   // Determine loop bound: align across all series, up to 10 years
-  const maxLen = Math.min(10,
-    rawNI.length,
-    Math.max(rawDna.length, 1),   // D&A optional; don't cut series at zero
-  );
+  // D&A is optional (missing → 0 per Buffett formula); do NOT limit maxLen by
+  // rawDna.length or we silently cap to 1y when D&A is absent from Yahoo FTS.
+  const maxLen = Math.min(10, rawNI.length);
 
   const annualOwnerEarnings = [];
   const maintCapexValues    = [];
@@ -204,9 +208,6 @@ function evaluate(stock) {
 
     // D&A (b1) — add back non-cash charge; treat missing as 0 (conservative)
     const dna = (i < rawDna.length && Number.isFinite(rawDna[i])) ? rawDna[i] : 0;
-
-    // SBC (b2) — add back non-cash dilution proxy; treat missing as 0
-    const sbc = (i < rawSBC.length && Number.isFinite(rawSBC[i])) ? rawSBC[i] : 0;
 
     // Maintenance Capex (c) — per Damodaran ch. 11 proxy
     const mCap = _computeMaintCapex(rawAbsCapex, rawDna, i, maintCapexMethod, capex5yMedian);
@@ -227,8 +228,8 @@ function evaluate(stock) {
       deltaWC = wcCur - wcPrev;  // positive = WC increased = cash absorbed
     }
 
-    // Owner Earnings = NI + D&A + SBC − MaintenanceCapex − ΔWC
-    const oe = ni + dna + sbc - mCap - deltaWC;
+    // Owner Earnings = NI + D&A − MaintenanceCapex − ΔWC  (Buffett 1986)
+    const oe = ni + dna - mCap - deltaWC;
 
     annualOwnerEarnings.push(oe);
     maintCapexValues.push(mCap);

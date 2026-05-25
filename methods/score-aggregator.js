@@ -33,20 +33,20 @@ const SCORE_WEIGHTS = {
   HYPERGROWTH: {
     'rule-of-40': 0.25,
     'rule-of-x': 0.10,
-    'revenue-growth-3y': 0.25,
+    'revenue-growth-3y': 0.15,   // was 0.25 — revenue triple-counted via R40+RoX+rev-3y; redistributed
     'gross-margin-stability': 0.10,
-    'profitability-state': 0.15,
-    'hypergrowth-quality-class': 0.15
+    'profitability-state': 0.20, // was 0.15
+    'hypergrowth-quality-class': 0.20  // was 0.15
   },
   QUALITY_COMPOUNDER: {
     'quality-compounder-roic': 0.25,
-    'earnings-stability': 0.15,
+    'earnings-stability': 0.20,  // was 0.15 — absorbs above-200d-ma weight
     'margin-quality': 0.20,
     'reinvestment-rate': 0.15,
     'net-debt-ebitda': 0.10,
     'premium-compounder-proof': 0.05,
-    'fcf-yield': 0.05,
-    'above-200d-ma': 0.05
+    'fcf-yield': 0.05
+    // above-200d-ma removed: technical price signal has no place in fundamental quality score
   },
   TURNAROUND: {
     'profitability-state': 0.25,

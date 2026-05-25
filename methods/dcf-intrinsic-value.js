@@ -48,12 +48,12 @@ const DEFAULT_MOS_HIGH_PRED       = 0.25;    // 25% margin-of-safety (predictabl
 const DEFAULT_MOS_LOW_PRED        = 0.50;    // 50% margin-of-safety (all others)
 const DEFAULT_HURDLE_RATE         = 0.15;    // 15% projected annual return hurdle
 const DEFAULT_TERMINAL_GROWTH     = 0.025;   // 2.5% perpetuity growth (≈ long-run GDP)
-const DEFAULT_S1_YEARS            = 10;      // Stage-1 high-growth duration
-const DEFAULT_S2_YEARS            = 10;      // Stage-2 transition duration
+const DEFAULT_S1_YEARS            = 7;       // Stage-1 high-growth duration (was 10 — 10+10=20y inflated IV)
+const DEFAULT_S2_YEARS            = 5;       // Stage-2 transition duration (was 10)
 const GROWTH1_CLAMP_MIN           = -0.05;   // Buffett: don't model persistent contraction
-const GROWTH1_CLAMP_MAX           = 0.25;    // Buffett: high growth destroys value if costs > returns
+const GROWTH1_CLAMP_MAX           = 0.15;    // growth cap (was 0.25 — 25% × 20y produced IV >> MCap for most stocks)
 const GROWTH1_DEFAULT             = 0.08;    // median mid-cap fundamental growth proxy (Damodaran survey)
-const MIN_OE_YEARS                = 5;       // minimum OE history to run DCF meaningfully
+const MIN_OE_YEARS                = 4;       // minimum OE history to run DCF meaningfully (matches OE MIN_YEARS)
 
 function _envNum(key, fallback) {
   const v = parseFloat(process.env[key]);
@@ -235,6 +235,25 @@ function _compute(stock, oeComponents) {
     });
   }
 
+  // Currency-integrity guard: MCap is always returned in USD by Yahoo's API,
+  // but annual.* data is in the reporting currency of the filing. For OLD
+  // snapshots (fxConverted !== true), the annual arrays were never converted
+  // to USD — OE is in local currency while MCap is in USD, making OE/MCap
+  // 7x-159x too high and producing meaningless IV for non-USD reporters.
+  // Only compute DCF when the snapshot is reliably in USD:
+  //   (a) genuine USD reporters (reportingCurrency === 'USD')
+  //   (b) properly FX-converted snapshots (fxConverted === true)
+  const _snapMeta = stock.meta || {};
+  const _reportingCcy = _snapMeta.reportingCurrency || 'USD';
+  const _fxConverted  = _snapMeta.fxConverted === true;
+  if (_reportingCcy !== 'USD' && !_fxConverted) {
+    return H.buildResult({
+      computable: false, pass: false,
+      reason: `DCF skipped — annual data in ${_reportingCcy} (snapshot not FX-converted); re-pull to enable DCF for non-USD stocks`,
+      threshold: P.mosLowPred, thresholdOp: 'gte'
+    });
+  }
+
   // --- Growth rate: clamp cagrOE5y to [-5%, 25%] ---
   // Buffett: "Growth is an input to value, not an end in itself."
   // Any historical CAGR outside [-5%, 25%] is statistically unreliable for
@@ -269,13 +288,9 @@ function _compute(stock, oeComponents) {
       sharesOutstanding = currentMcap / currentPrice;
     }
   }
-  if (!Number.isFinite(sharesOutstanding) || sharesOutstanding <= 0) {
-    return H.buildResult({
-      computable: false, pass: false,
-      reason: 'sharesOutstanding not derivable (no annualShares + no price)',
-      threshold: P.mosLowPred, thresholdOp: 'gte'
-    });
-  }
+  // sharesOutstanding is only needed for intrinsicValuePerShare display — not a hard
+  // requirement. Many non-US stocks lack a price field; MoS and hurdle-rate use
+  // intrinsicTotal vs currentMcap (both in USD) and don't need per-share data.
 
   // --- DCF computation ---
   const { pvStage1, pvStage2, pvTerminal, intrinsicTotal, oeEndS1, oeEndS2 } =
@@ -289,11 +304,15 @@ function _compute(stock, oeComponents) {
     });
   }
 
-  const intrinsicValuePerShare = intrinsicTotal / sharesOutstanding;
+  const intrinsicValuePerShare = (Number.isFinite(sharesOutstanding) && sharesOutstanding > 0)
+    ? intrinsicTotal / sharesOutstanding : null;
 
   // --- Discount to intrinsic ---
-  // Positive = below intrinsic (good); negative = above intrinsic (overvalued)
-  const discountToIntrinsicPercent = ((intrinsicTotal - currentMcap) / intrinsicTotal) * 100;
+  // Positive = below intrinsic (good); negative = above intrinsic (overvalued).
+  // Stored as a ratio (0-1) so normalizeMethodScore compares correctly against
+  // threshold (mos = 0.25 or 0.50). Rendering layer multiplies by 100 for display.
+  const discountToIntrinsicRatio   = (intrinsicTotal - currentMcap) / intrinsicTotal;
+  const discountToIntrinsicPercent = discountToIntrinsicRatio * 100;  // for components / reason strings
 
   // --- Predictability & Margin of Safety ---
   const predictClass  = _classifyPredictability(stock);
@@ -320,7 +339,7 @@ function _compute(stock, oeComponents) {
   return H.buildResult({
     computable: true,
     pass,
-    value: discountToIntrinsicPercent,   // positive = below intrinsic, sortable
+    value: discountToIntrinsicRatio,   // ratio 0-1: positive = below intrinsic; threshold=mos (0.25/0.50)
     reason: reasonParts.join('; '),
     threshold: mos,
     thresholdOp: 'gte',

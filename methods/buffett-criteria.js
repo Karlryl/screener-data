@@ -35,7 +35,7 @@ const LABEL = 'Buffett 14-Punkt Komposit';
 const PASS_THRESHOLD_DEFAULT = 0.85;   // 85% of tests must pass
 const TREASURY_YIELD_DEFAULT = 0.045;  // 4.5% 10y Treasury (env: BUFFETT_TREASURY_YIELD_10Y)
 const CORP_TAX_RATE = 0.21;            // US federal corporate tax rate
-const MIN_YEARS_REQUIRED = 5;         // minimum years for computable result
+const MIN_YEARS_REQUIRED = 4;         // minimum years for computable result (Yahoo FTS max is 4y)
 
 // --------------------------------------------------------------------------
 // Internal helpers
@@ -287,34 +287,40 @@ function _testT4_EPSGrowth(stock) {
   }
 
   const valid = series.filter(v => Number.isFinite(v));
-  if (valid.length < 7) {
-    return { pass: false, cagr7y: null, cagr3y: null, isAccelerating: false,
-      reason: `only ${valid.length} EPS-computable years, need ≥7 for 7y CAGR` };
+  if (valid.length < 4) {
+    return { pass: false, cagrLong: null, cagrShort: null, isAccelerating: false,
+      reason: `only ${valid.length} EPS-computable years, need ≥4` };
   }
 
-  // series is newest-first; valid[0]=latest, valid[6]=7y-ago (if 7 entries)
-  const latest  = valid[0];
-  const three   = valid[3];  // 3y ago (index 3 = year[-3])
-  const seven   = valid[6];  // 7y ago (index 6 = year[-7])
+  // Adaptive window: long period up to 7y back, short period up to 3y back.
+  // With Yahoo's max 4y, nLong=3 periods and nShort=2 periods.
+  const nLong  = Math.min(valid.length - 1, 7);
+  const nShort = Math.min(3, nLong - 1);         // at least 1 less than nLong
 
-  const cagr7y = _cagr(latest, seven, 7);
-  const cagr3y = _cagr(latest, three, 3);
+  const latest     = valid[0];
+  const oldestLong = valid[nLong];                // nLong periods ago
+  const oldestShort = valid[nShort];              // nShort periods ago
 
-  if (cagr7y == null || cagr3y == null) {
-    return { pass: false, cagr7y, cagr3y, isAccelerating: false,
+  const cagrLong  = _cagr(latest, oldestLong,  nLong);
+  const cagrShort = nShort >= 2 ? _cagr(latest, oldestShort, nShort) : null;
+
+  if (cagrLong == null) {
+    return { pass: false, cagrLong, cagrShort, isAccelerating: false,
       reason: 'CAGR undefined (negative EPS in base year)' };
   }
 
-  const growthOk = cagr7y > 0.07;
-  const isAccelerating = cagr3y > cagr7y;
-  const pass = growthOk && isAccelerating;
+  const growthOk = cagrLong > 0.07;
+  // Acceleration check only when short window has ≥2 periods and is computable.
+  const isAccelerating = (cagrShort != null) ? cagrShort > cagrLong : null;
+  const accelOk = (isAccelerating === null) || isAccelerating;
+  const pass = growthOk && accelOk;
 
   let reason;
-  if (!growthOk) reason = `7y EPS CAGR ${(cagr7y * 100).toFixed(1)}% ≤ 7%`;
-  else if (!isAccelerating) reason = `3y CAGR ${(cagr3y * 100).toFixed(1)}% ≤ 7y CAGR ${(cagr7y * 100).toFixed(1)}% (decelerating)`;
-  else reason = `7y CAGR ${(cagr7y * 100).toFixed(1)}%, 3y CAGR ${(cagr3y * 100).toFixed(1)}%, accelerating`;
+  if (!growthOk) reason = `${nLong}y EPS CAGR ${(cagrLong * 100).toFixed(1)}% ≤ 7%`;
+  else if (!accelOk) reason = `${nShort}y CAGR ${(cagrShort * 100).toFixed(1)}% ≤ ${nLong}y CAGR ${(cagrLong * 100).toFixed(1)}% (decelerating)`;
+  else reason = `${nLong}y CAGR ${(cagrLong * 100).toFixed(1)}%${cagrShort != null ? ', ' + nShort + 'y CAGR ' + (cagrShort * 100).toFixed(1) + '%, accelerating' : ' (acceleration N/A — short window)'}`;
 
-  return { pass, cagr7y, cagr3y, isAccelerating, reason };
+  return { pass, cagrLong, cagrShort, isAccelerating, reason };
 }
 
 // --------------------------------------------------------------------------
@@ -326,9 +332,9 @@ function _testT5_FCF(stock) {
   const valid  = rawFCF.filter(v => Number.isFinite(v));
   const n      = Math.min(10, valid.length);
 
-  if (n < 5) {
+  if (n < 4) {
     return { pass: false, isPositiveEveryYear: false, cagrFCF: null,
-      reason: `only ${n} FCF years (need ≥5)` };
+      reason: `only ${n} FCF years (need ≥4)` };
   }
 
   const slice = valid.slice(0, n);
@@ -385,7 +391,14 @@ function _testT7_Margins(stock) {
   }
 
   const opMarginMedian = _median(margins);
-  const industryMedian = 0.15;  // absolute fallback when no sector data
+  // Sector-relative floor: low-margin industries operate on thin spreads by nature.
+  // Using a flat 15% excluded all retail/distribution stocks regardless of quality.
+  const industryStr = (stock && stock.meta && stock.meta.industry) || '';
+  const LOW_MARGIN_RE = /retail|wholesale|grocery|drug store|distributor|supermarket|food.*store/i;
+  const MED_MARGIN_RE = /restaurant|hospitality|airline|shipping|transport/i;
+  const industryMedian = LOW_MARGIN_RE.test(industryStr) ? 0.05
+    : MED_MARGIN_RE.test(industryStr) ? 0.08
+    : 0.10;  // default floor (was 0.15 — too high for most non-tech businesses)
 
   const aboveIndustry = opMarginMedian != null && opMarginMedian > industryMedian;
   const maxM = Math.max(...margins);
@@ -510,8 +523,9 @@ function _testT10_OneDollar(stock) {
     reason = 'retained5y ≤ 0 — capital destruction';
     proxyMethod = 'negative-retained';
   } else {
-    proxyMethod = 'pass-on-missing-pe';
-    reason = 'One-Dollar test: P/E missing — pass (no false-fail)';
+    proxyMethod = 'fail-on-missing-pe';
+    pass = false;
+    reason = 'One-Dollar test: P/E missing — cannot verify capital allocation';
   }
 
   return { pass, retained5y, mvChange5yProxy, proxyMethod, reason };
@@ -532,17 +546,18 @@ function _testQ1_Moat(stock) {
   }
 
   const avgROIC = valid.slice(0, n).reduce((s, v) => s + v, 0) / n;
-  // Industry median ROIC fallback: 0.10 (soft floor per Damodaran);
-  // buffett-criteria keeps it simple (no sub-profile lookup in DIAGNOSTIC method)
-  const industryMedianROIC     = 0.10;
-  const industryMedianPlus5pp  = industryMedianROIC + 0.05;
+  // Moat requires ROIC materially above cost of capital.
+  // T2 already tests avgROIC > 15%; Q1 uses a higher bar (20%) to distinguish
+  // "decent returns" from "durable competitive advantage" (Damodaran).
+  const industryMedianROIC    = 0.10;
+  const industryMedianPlus10pp = industryMedianROIC + 0.10;  // 20% — was +5pp=15% (same as T2)
 
-  const pass = avgROIC > industryMedianPlus5pp;
+  const pass = avgROIC > industryMedianPlus10pp;
   const reason = pass
-    ? `avg ROIC ${(avgROIC * 100).toFixed(1)}% > industry+5pp ${(industryMedianPlus5pp * 100).toFixed(0)}%`
-    : `avg ROIC ${(avgROIC * 100).toFixed(1)}% ≤ industry+5pp ${(industryMedianPlus5pp * 100).toFixed(0)}%`;
+    ? `avg ROIC ${(avgROIC * 100).toFixed(1)}% > moat threshold ${(industryMedianPlus10pp * 100).toFixed(0)}%`
+    : `avg ROIC ${(avgROIC * 100).toFixed(1)}% ≤ moat threshold ${(industryMedianPlus10pp * 100).toFixed(0)}%`;
 
-  return { pass, avgROIC, industryMedianPlus5pp, reason };
+  return { pass, avgROIC, industryMedianPlus10pp, reason };
 }
 
 // --------------------------------------------------------------------------
@@ -769,8 +784,8 @@ function evaluate(stock) {
   return H.buildResult({
     computable: true,
     pass,
-    value: Math.round(passRate * 100),  // 0-100 for sorting
-    threshold: threshold,
+    value: Math.round(passRate * 100),  // 0-100 percent for sorting
+    threshold: Math.round(threshold * 100),  // 85 — same scale as value so normalizeMethodScore ratios correctly
     thresholdOp: 'gte',
     reason,
     components: {
