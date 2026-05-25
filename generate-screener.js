@@ -1119,10 +1119,11 @@ const CLIENT_JS = `
   let onlyFcf  = false;
   let sortKey = 'auto';   // auto = tab's primary; or one of {score,r40,growth,fcfMargin,mcap,pbScore}
   let currentList = [];   // active filtered list
-  // Tag 204b: KI_INFRA multi-select category filter. Set of category names that
-  // are currently active. Default: all 4 categories active. At least one must
-  // remain active — the click handler refuses to deactivate the last one.
-  let kiCategoryFilter = new Set(['Data Centers','Connectivity','Energy','Supply Bottlenecks']);
+  // Tag 204b/204d: KI_INFRA multi-select category filter. Set of category names that
+  // are currently active. Default: all 6 categories active (Tag 204d expanded from 4 to 6:
+  // added Power & Cooling + Packaging & Semicap). At least one must remain active —
+  // the click handler refuses to deactivate the last one.
+  let kiCategoryFilter = new Set(['Data Centers','Connectivity','Energy','Power & Cooling','Supply Bottlenecks','Packaging & Semicap']);
 
   // Tag 232b-1: short labels for sector buttons (the full Yahoo names are too long
   // for the filter bar; full name shown via title= tooltip).
@@ -1335,8 +1336,8 @@ const CLIENT_JS = `
     filterIpoMin = ''; filterIpoMax = '';
     filterDQ = { 'A+':true, 'A':true, 'B':true, 'C':false, 'D':false };
     onlyGaap = false; onlyFcf = false; sortKey = 'auto';
-    // Tag 204b: reset KI category filter to all-on
-    kiCategoryFilter = new Set(['Data Centers','Connectivity','Energy','Supply Bottlenecks']);
+    // Tag 204b/204d: reset KI category filter to all-on (6 layers)
+    kiCategoryFilter = new Set(['Data Centers','Connectivity','Energy','Power & Cooling','Supply Bottlenecks','Packaging & Semicap']);
     document.querySelectorAll('.filters .f-ki-cat').forEach(b => b.classList.add('on'));
     document.querySelectorAll('.filters .f-state').forEach(b => b.classList.add('on'));
     document.querySelectorAll('.filters .f-sec').forEach(b => b.classList.add('on'));
@@ -1744,7 +1745,7 @@ const CLIENT_JS = `
     'WATCH': 'Stocks flagged by hard-gates (Q-Spike, Loss>50%Rev, Metric-Divergence, Closed-End-Trust, DQ-D) and NEAR_MISS tier — explicitly held out of HG/QC/SMALL/R40/PRE-BREAKOUT for human review.',
     'SMALL': 'Market cap < $2B, revenue growth > 20%, not in LOSS state. Hunting the next CRDO/ALAB before they hit the radar.',
     'R40': 'Every stock with computable R40. Hard-gated (Q-Spike, Loss>50%Rev, Pre-Commerciality, Closed-End-Trust, NI-Vol, Metric-Divergence, Q-Spike-Fake hgClass, R40-Sanity-Cap, DQ-D) — but READ THE FLAGS: ⚠ FCFM>80% or ⚠ HighGrowth or ⚠ Margin-Div badges indicate one-time-effect tells even within passing stocks. Sort uses penalized R40 (raw × (1 - dq_penalty - q_spike_penalty - margin_div_penalty)).',
-    'KI_INFRA': 'KI Infrastruktur — manuell geseedete Startliste (Data Centers · Connectivity · Energy · Supply Bottlenecks). Sortiert nach Rule-of-X. FCF-negative Namen sind markiert (✗) statt versteckt. Kein automatischer Filter — Universum = ki-infra.json.',
+    'KI_INFRA': 'KI Infrastruktur — manuell geseedete Startliste (Data Centers · Connectivity · Energy · Power & Cooling · Supply Bottlenecks · Packaging & Semicap). Sortiert nach Rule-of-X. FCF-negative Namen sind markiert (✗) statt versteckt. Kein automatischer Filter — Universum = ki-infra.json.',
     'SECTOR': 'Sector heatmap. Rows = sectors (clean stocks only — WATCH-tab outliers excluded). Columns = median of each metric across the sector. Cell color is the GLOBAL percentile rank of that sector-median (green = top quartile of sectors, red = bottom). Hover a cell for N=count. GP/TA = Novy-Marx gross-profitability (annual gross profit / total assets). ROIC% = sector-relative percentile rank (0-100).'
   };
 
@@ -2018,11 +2019,11 @@ const CLIENT_JS = `
             + ' scope="col" style="width:' + c.w + 'px">' + c.k + '</th>';
     }
     html += '</tr></thead><tbody>';
-    // Tag 204b: KI_INFRA category subheaders — when ALL 4 categories are active,
-    // emit a header row at every category boundary so the four layers are
+    // Tag 204b/204d: KI_INFRA category subheaders — when ALL 6 categories are active,
+    // emit a header row at every category boundary so the six layers are
     // visually grouped. Skip when any filter is active (don't bloat output).
     let previousCategory = null;
-    const showKiHeaders = (activeTab === 'KI_INFRA' && kiCategoryFilter.size === 4);
+    const showKiHeaders = (activeTab === 'KI_INFRA' && kiCategoryFilter.size === 6);
     for (let i=0;i<slice.length;i++) {
       const sliceRow = slice[i];
       if (showKiHeaders && sliceRow.kiCategory && sliceRow.kiCategory !== previousCategory) {
@@ -3592,14 +3593,17 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
     <button class="f f-state on" data-state="STABLE">STABLE</button>
     <button class="f f-state on" data-state="NA">N/A</button>
   </span>
-  <!-- Tag 204b: KI Infrastruktur category filter — only visible when KI_INFRA tab
-       is active (toggled via .show class by switchToTab). 4 layers, multi-select,
+  <!-- Tag 204b/204d: KI Infrastruktur category filter — only visible when KI_INFRA tab
+       is active (toggled via .show class by switchToTab). 6 layers (Tag 204d expanded
+       from 4 → 6: added Power & Cooling + Packaging & Semicap), multi-select,
        at-least-one-active enforced by click handler. -->
   <span class="group ki-cat-group" id="kiCatGroup" style="display:none"><span class="label">Layer:</span>
     <button class="f f-ki-cat on" data-kicat="Data Centers" type="button">Data Centers</button>
     <button class="f f-ki-cat on" data-kicat="Connectivity" type="button">Connectivity</button>
     <button class="f f-ki-cat on" data-kicat="Energy" type="button">Energy</button>
+    <button class="f f-ki-cat on" data-kicat="Power &amp; Cooling" type="button">Power &amp; Cooling</button>
     <button class="f f-ki-cat on" data-kicat="Supply Bottlenecks" type="button">Supply Bottlenecks</button>
+    <button class="f f-ki-cat on" data-kicat="Packaging &amp; Semicap" type="button">Packaging &amp; Semicap</button>
   </span>
   <!-- Tag 232b-3: MICRO/SMALL/MID/LARGE/MEGA cap-bucket toggle removed per Karl's
        request — the Cap≥ $B input below is the only mcap filter now. -->
