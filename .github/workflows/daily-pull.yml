@@ -184,6 +184,20 @@ jobs:
             echo "::warning::fx-rates.json missing — pull-yahoo will use hardcoded fallback rates"
           fi
 
+      # Workstream A1: SEC EDGAR Form-4 daily insider pull (index-driven).
+      # Reads SEC's daily form index, keeps Form-4 rows whose issuer CIK is on
+      # the watchlist, fetches each hit's submission .txt, parses out insider
+      # transactions, and merges P-buys/sales into external-data/sec-form4-cache.json.
+      # Runs BEFORE the Yahoo pull so the cache is committed in the same run.
+      # continue-on-error: SEC outages / rate-limits must not block the Yahoo
+      # pipeline; the cache is resumable and picks up missed dates next run.
+      - name: Pull Insider Form-4 (daily)
+        env:
+          DAYS: '5'
+        run: node scripts/pull-insider-form4-daily.js
+        timeout-minutes: 30
+        continue-on-error: true
+
       - name: Run Yahoo Pull
         env:
           FUNDAMENTALS_MAX_AGE_DAYS: '7'

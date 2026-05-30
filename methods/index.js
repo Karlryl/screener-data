@@ -99,6 +99,15 @@ module.exports = [
   // Tag 137: Insider-buy-cluster signal
   { file: './insider-buy-cluster.js' },
 
+  // Workstream A2: Insider-Conviction-Score — open-market (Form 4 'P') buy
+  // conviction gate for the INSIDER_BUYING tab. Reads external-data/
+  // sec-form4-cache.json (keyed by ticker) at module load; returns clean
+  // computable=false when the cache file or ticker entry is absent. P-only,
+  // $25k floor, net-of-non-10b5-1-sells, role/cluster/price-location/holdings/
+  // opportunistic sub-scores, time-decayed. DIAGNOSTIC, fixture-hash safe
+  // (not in any SCORE_WEIGHTS).
+  { file: './insider-conviction-score.js' },
+
   // Tag 209c: Mauboussin capital-allocation composite — depends on
   // buyback-yield + net-debt-ebitda + capex-trend + sbc-revenue.
   // DIAGNOSTIC, not in SCORE_WEIGHTS, fixture-hash safe by construction.

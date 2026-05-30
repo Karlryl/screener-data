@@ -35,6 +35,13 @@ const REGISTRY = {
   'estimate-revision-proxy':    { type: 'CORE', defaultActive: true,  reason: 'Tag 141: positive analyst revisions / rev-acceleration proxy' },
   // Tag 206d: insider-buy-cluster (loaded since Tag 137) had no REGISTRY entry.
   'insider-buy-cluster':        { type: 'DIAGNOSTIC', defaultActive: true, reason: 'Tag 137: >=2 unique insider buyers in 90d — cluster-buy signal' },
+  // Workstream A2: Insider-Conviction-Score — SEC Form-4 open-market-buy
+  // conviction gate for the INSIDER_BUYING tab. P-only (A/M excluded), $25k
+  // floor, net-of-non-10b5-1-sells, role/cluster/price-location/holdings/
+  // opportunistic sub-scores, time-decayed. Lakonishok & Lee 2001 RFS;
+  // Cohen-Malloy-Pomorski 2012 JF (routine vs opportunistic). pass = hard-gate.
+  // DIAGNOSTIC, NOT in any SCORE_WEIGHTS → fixture-hash safe.
+  'insider-conviction-score':   { type: 'DIAGNOSTIC', defaultActive: true, reason: 'Workstream A2: SEC Form-4 open-market-buy conviction score; hard-gates the INSIDER_BUYING tab (>=1 P-buy/90d, >=$25k, net positive ex-10b5-1 sells, filing lag <=90d).' },
   'quarterly-revenue-acceleration': { type: 'DIAGNOSTIC', defaultActive: true, reason: 'Tag 206e: latest Q rev / prior Q rev >= 1.10 (10% QoQ sequential growth)' },
 
   // --- DIAGNOSTIC - Kontext fÃ¼r Deep-Dive --------------------------

@@ -2410,6 +2410,193 @@ test('Tag 232e buffett MoS is HARD: composite fails when DCF discount < threshol
   if (r.pass) throw new Error('expected composite FAIL when MoS not met; nP=' + (r.components && r.components.nPassed) + '/' + (r.components && r.components.nTests) + ' mosMet=' + (r.components && r.components.dcf && r.components.dcf.mosMet));
 });
 
+// ─── Workstream A2: Insider-Conviction-Score ──────────────────────────
+// DIAGNOSTIC method, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
+// Uses the injectable _evaluateWithTxns(stock, txns, nowMs, historyOpt) with a
+// FIXED nowMs and hand-built txn arrays so dates/score are deterministic and
+// independent of Date.now() / the real external-data cache file.
+const ICS = require('./methods/insider-conviction-score.js');
+const ICS_NOW = Date.parse('2026-05-29T00:00:00Z'); // fixed reference point
+
+// Helper: a date N days before ICS_NOW, as YYYY-MM-DD.
+function icsDaysAgo(n) {
+  return new Date(ICS_NOW - n * 86400000).toISOString().slice(0, 10);
+}
+function icsStock(metrics) {
+  // metrics object lets a test inject currentPrice / fiftyTwoWeekLow/High.
+  const m = {};
+  for (const [k, v] of Object.entries(metrics || {})) m[k] = { value: v };
+  return { meta: { ticker: 'TEST' }, metrics: m };
+}
+
+test('insider-conviction: CEO cluster buy (3 insiders incl CEO) → gate pass, high score', () => {
+  const txns = [
+    { transactionDate: icsDaysAgo(10), transactionCode: 'P', acquiredDisposed: 'A',
+      transactionShares: 1000, transactionPricePerShare: 50,
+      reportingPersonName: 'Jane CEO',
+      reportingPersonRelationship: { isOfficer: true, isDirector: true, officerTitle: 'Chief Executive Officer' },
+      sharesOwnedFollowingTransaction: 1000, filingDate: icsDaysAgo(9) },
+    { transactionDate: icsDaysAgo(12), transactionCode: 'P', acquiredDisposed: 'A',
+      transactionShares: 800, transactionPricePerShare: 50,
+      reportingPersonName: 'Bob CFO',
+      reportingPersonRelationship: { isOfficer: true, officerTitle: 'Chief Financial Officer' },
+      sharesOwnedFollowingTransaction: 800, filingDate: icsDaysAgo(11) },
+    { transactionDate: icsDaysAgo(20), transactionCode: 'P', acquiredDisposed: 'A',
+      transactionShares: 700, transactionPricePerShare: 50,
+      reportingPersonName: 'Carol Director',
+      reportingPersonRelationship: { isDirector: true },
+      sharesOwnedFollowingTransaction: 700, filingDate: icsDaysAgo(19) }
+  ];
+  // Price near 52w-low to maximize conviction.
+  const s = icsStock({ currentPrice: 50, fiftyTwoWeekLow: 48, fiftyTwoWeekHigh: 100 });
+  const r = ICS._evaluateWithTxns(s, txns, ICS_NOW);
+  if (!r.computable) throw new Error('should be computable');
+  if (!r.pass) throw new Error('hard gate should pass; reason=' + r.reason);
+  if (r.components.gatePassed !== true) throw new Error('gatePassed must be true');
+  if (r.components.clusterCount !== 3) throw new Error('expected 3 distinct insiders, got ' + r.components.clusterCount);
+  if (r.components.topBuyerRole !== 'CEO/Chair') throw new Error('top buyer should be CEO/Chair, got ' + r.components.topBuyerRole);
+  if (r.value <= 50) throw new Error('expected score > 50, got ' + r.value);
+});
+
+test('insider-conviction: single small-but->$25k buy → cluster=1 (5 pts), modest score', () => {
+  const txns = [
+    { transactionDate: icsDaysAgo(15), transactionCode: 'P', acquiredDisposed: 'A',
+      transactionShares: 600, transactionPricePerShare: 50, // $30k
+      reportingPersonName: 'Solo Director',
+      reportingPersonRelationship: { isDirector: true },
+      sharesOwnedFollowingTransaction: 600, filingDate: icsDaysAgo(14) }
+  ];
+  const s = icsStock({}); // no price → conviction middle band
+  const r = ICS._evaluateWithTxns(s, txns, ICS_NOW);
+  if (!r.computable) throw new Error('should be computable');
+  if (!r.pass) throw new Error('single $30k director buy should pass gate; reason=' + r.reason);
+  if (r.components.clusterCount !== 1) throw new Error('expected cluster=1');
+  if (r.components.breakdown.cluster !== 5) throw new Error('cluster=1 → 5 pts, got ' + r.components.breakdown.cluster);
+  if (r.value >= 70) throw new Error('single-insider score should be modest (<70), got ' + r.value);
+});
+
+test('insider-conviction: token buy (<$25k) → gate fail', () => {
+  const txns = [
+    { transactionDate: icsDaysAgo(5), transactionCode: 'P', acquiredDisposed: 'A',
+      transactionShares: 100, transactionPricePerShare: 50, // $5k < 25k
+      reportingPersonName: 'Tiny Buyer',
+      reportingPersonRelationship: { isDirector: true },
+      sharesOwnedFollowingTransaction: 100, filingDate: icsDaysAgo(4) }
+  ];
+  const r = ICS._evaluateWithTxns(icsStock({}), txns, ICS_NOW);
+  if (!r.computable) throw new Error('should be computable');
+  if (r.pass) throw new Error('token buy < $25k must fail gate');
+  if (r.components.gatePassed !== false) throw new Error('gatePassed must be false');
+  if (r.components.gateDetail.buyValueFloor !== false) throw new Error('buyValueFloor gate should be false');
+});
+
+test('insider-conviction: pure award (only code A) → computable, no P-buy, gate fail', () => {
+  const txns = [
+    { transactionDate: icsDaysAgo(8), transactionCode: 'A', acquiredDisposed: 'A',
+      transactionShares: 5000, transactionPricePerShare: 0,
+      reportingPersonName: 'Granted Exec',
+      reportingPersonRelationship: { isOfficer: true, officerTitle: 'Chief Executive Officer' },
+      sharesOwnedFollowingTransaction: 5000, filingDate: icsDaysAgo(7) },
+    { transactionDate: icsDaysAgo(8), transactionCode: 'M', acquiredDisposed: 'A',
+      transactionShares: 2000, transactionPricePerShare: 1,
+      reportingPersonName: 'Exercise Exec',
+      reportingPersonRelationship: { isOfficer: true },
+      sharesOwnedFollowingTransaction: 2000, filingDate: icsDaysAgo(7) }
+  ];
+  const r = ICS._evaluateWithTxns(icsStock({}), txns, ICS_NOW);
+  if (!r.computable) throw new Error('should be computable');
+  if (r.pass) throw new Error('award/exercise only must fail gate (no P-buy)');
+  if (r.components.buyCount90d !== 0) throw new Error('A/M must not count as buys; got ' + r.components.buyCount90d);
+  if (r.components.gateDetail.hasBuy !== false) throw new Error('hasBuy gate should be false');
+});
+
+test('insider-conviction: net-negative (non-10b5-1 sells) → gate fail', () => {
+  const txns = [
+    { transactionDate: icsDaysAgo(10), transactionCode: 'P', acquiredDisposed: 'A',
+      transactionShares: 600, transactionPricePerShare: 50, // $30k buy
+      reportingPersonName: 'Buyer Exec',
+      reportingPersonRelationship: { isOfficer: true, isDirector: true },
+      sharesOwnedFollowingTransaction: 600, filingDate: icsDaysAgo(9) },
+    { transactionDate: icsDaysAgo(11), transactionCode: 'S', acquiredDisposed: 'D',
+      transactionShares: 4000, transactionPricePerShare: 50, // $200k sell, NOT 10b5-1
+      reportingPersonName: 'Seller Exec',
+      reportingPersonRelationship: { isOfficer: true },
+      sharesOwnedFollowingTransaction: 1000, filingDate: icsDaysAgo(10) }
+  ];
+  const r = ICS._evaluateWithTxns(icsStock({}), txns, ICS_NOW);
+  if (!r.computable) throw new Error('should be computable');
+  if (r.pass) throw new Error('net-negative (buys $30k vs sells $200k) must fail gate');
+  if (r.components.gateDetail.netPositive !== false) throw new Error('netPositive gate should be false');
+  if (r.components.aggSellValue90d !== 200000) throw new Error('expected sell value 200000, got ' + r.components.aggSellValue90d);
+});
+
+test('insider-conviction: 10b5-1-flagged sells excluded → net positive → gate can pass', () => {
+  const txns = [
+    { transactionDate: icsDaysAgo(10), transactionCode: 'P', acquiredDisposed: 'A',
+      transactionShares: 600, transactionPricePerShare: 50, // $30k buy
+      reportingPersonName: 'Buyer Exec',
+      reportingPersonRelationship: { isOfficer: true, isDirector: true },
+      sharesOwnedFollowingTransaction: 600, filingDate: icsDaysAgo(9) },
+    { transactionDate: icsDaysAgo(11), transactionCode: 'S', acquiredDisposed: 'D',
+      transactionShares: 4000, transactionPricePerShare: 50, // $200k sell, 10b5-1 → excluded
+      reportingPersonName: 'Seller Exec', isTenB5One: true,
+      reportingPersonRelationship: { isOfficer: true },
+      sharesOwnedFollowingTransaction: 1000, filingDate: icsDaysAgo(10) }
+  ];
+  const r = ICS._evaluateWithTxns(icsStock({}), txns, ICS_NOW);
+  if (!r.computable) throw new Error('should be computable');
+  if (!r.pass) throw new Error('10b5-1 sells excluded → net positive → gate should pass; reason=' + r.reason);
+  if (r.components.aggSellValue90d !== 0) throw new Error('10b5-1 sells must be excluded from sell sum, got ' + r.components.aggSellValue90d);
+  if (r.components.netValue90d !== 30000) throw new Error('net should be +30000, got ' + r.components.netValue90d);
+});
+
+test('insider-conviction: no cache entry for ticker → computable:false (via public evaluate)', () => {
+  // Real cache file is absent in the test env → evaluate() must degrade gracefully.
+  const r = ICS.evaluate({ meta: { ticker: 'NOSUCHTICKER' }, metrics: {} });
+  if (r.computable) throw new Error('missing cache/ticker must be computable:false');
+  if (r.pass) throw new Error('incomputable must not pass');
+});
+
+test('insider-conviction: filing lag > 90d on most-recent buy → gate fail', () => {
+  const txns = [
+    { transactionDate: icsDaysAgo(10), transactionCode: 'P', acquiredDisposed: 'A',
+      transactionShares: 1000, transactionPricePerShare: 50, // $50k buy
+      reportingPersonName: 'Late Filer',
+      reportingPersonRelationship: { isOfficer: true, isDirector: true },
+      sharesOwnedFollowingTransaction: 1000,
+      // txn 10d ago; filing 85d in the future → lag ≈ 95d (> 90d gate).
+      filingDate: new Date(ICS_NOW + 85 * 86400000).toISOString().slice(0, 10) }
+  ];
+  const r = ICS._evaluateWithTxns(icsStock({}), txns, ICS_NOW);
+  if (!r.computable) throw new Error('should be computable');
+  if (r.pass) throw new Error('filing lag > 90d should fail gate');
+  if (r.components.gateDetail.filingLagOk !== false) throw new Error('filingLagOk gate should be false');
+});
+
+test('insider-conviction: routine filer (history present) → 0 routine pts vs opportunistic 10', () => {
+  // Same insider bought in May of each of the prior 3 years → routine.
+  const buyMs = ICS_NOW - 15 * 86400000; // mid-May 2026
+  const txns = [
+    { transactionDate: new Date(buyMs).toISOString().slice(0, 10), transactionCode: 'P', acquiredDisposed: 'A',
+      transactionShares: 1000, transactionPricePerShare: 50,
+      reportingPersonName: 'Routine Director',
+      reportingPersonRelationship: { isDirector: true },
+      sharesOwnedFollowingTransaction: 1000, filingDate: icsDaysAgo(14) }
+  ];
+  const routineHist = { byTicker: { TEST: { byPerson: { 'Routine Director': { months: ['2025-05', '2024-05', '2023-05'] } } } } };
+  const rRoutine = ICS._evaluateWithTxns(icsStock({}), txns, ICS_NOW, routineHist);
+  if (rRoutine.components.breakdown.routine !== 0) throw new Error('routine filer should get 0 routine pts, got ' + rRoutine.components.breakdown.routine);
+
+  // No history → partial 5 points (opportunistic-but-unproven).
+  const rNoHist = ICS._evaluateWithTxns(icsStock({}), txns, ICS_NOW, false);
+  if (rNoHist.components.breakdown.routine !== 5) throw new Error('no-history should get partial 5 pts, got ' + rNoHist.components.breakdown.routine);
+
+  // History present but insider NOT routine → full 10 points.
+  const oppHist = { byTicker: { TEST: { byPerson: { 'Routine Director': { months: ['2025-01', '2024-08'] } } } } };
+  const rOpp = ICS._evaluateWithTxns(icsStock({}), txns, ICS_NOW, oppHist);
+  if (rOpp.components.breakdown.routine !== 10) throw new Error('opportunistic-with-history should get 10 pts, got ' + rOpp.components.breakdown.routine);
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the

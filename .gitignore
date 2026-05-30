@@ -21,6 +21,17 @@ fundamentals-cache/
 external-data/sec-xbrl/*.json
 !external-data/sec-xbrl/_manifest.json
 
+# Workstream A1: backfill-form345.js downloads + extracts quarterly form345
+# zips here, then deletes them per-quarter. Ignore the staging dir so a
+# crash mid-extract never commits a multi-MB zip / TSV dump.
+external-data/tmp/
+# Workstream A1: deep insider history (8 quarters of every Form-3/4/5 txn for
+# watchlist issuers) is ~70 MB/quarter → ~500 MB full. It's a runner-side /
+# local bootstrap feeding the routine-vs-opportunistic feature, rebuildable
+# from the SEC quarterly datasets — do NOT commit it. The lightweight 180-day
+# daily cache (sec-form4-cache.json) IS committed.
+external-data/sec-form4-history.json
+
 # Tag 134 — Phase 5.1: archive of old methods-history / picks-history / prices snapshots
 external-data/methods-history-archive/
 external-data/picks-history-archive/

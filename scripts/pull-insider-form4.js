@@ -217,6 +217,21 @@ function _innerValue(xml) {
 function parseForm4Xml(xml) {
   const txns = [];
 
+  // Tag A1: issuer-level fields parsed once and attached to every txn for
+  // downstream convenience.
+  //   issuerTradingSymbol — <issuer><issuerTradingSymbol>SYM</issuerTradingSymbol>
+  //   isTenB5One — 10b5-1 trading-plan indicator. True if the submission
+  //     carries the structured <aff10b5One>1</aff10b5One> (or `true`) flag,
+  //     OR if any footnote text mentions a "10b5-1" / "10b5 1" plan (some
+  //     filers note the plan in free-text footnotes rather than the
+  //     structured element). Default false.
+  const issuerBlock = _extractFirst(xml, 'issuer') || '';
+  const issuerTradingSymbol =
+    _innerValue(_extractFirst(issuerBlock, 'issuerTradingSymbol')) || null;
+  const isTenB5One =
+    /<aff10b5One>\s*(1|true)\b/i.test(xml) ||
+    /10b5-?\s?1/i.test(_extractFirst(xml, 'footnotes') || '');
+
   // Reporting person — first <reportingOwner> block carries the name and
   // the relationship flags (officer / director / 10% owner).
   const ownerBlock = _extractFirst(xml, 'reportingOwner') || '';
@@ -242,6 +257,11 @@ function parseForm4Xml(xml) {
     const acqDisp = _innerValue(_extractFirst(amounts, 'transactionAcquiredDisposedCode'));
     const shares = sharesRaw != null ? parseFloat(sharesRaw) : null;
     const price = priceRaw != null ? parseFloat(priceRaw) : null;
+    // Tag A1: post-transaction holdings —
+    //   <postTransactionAmounts><sharesOwnedFollowingTransaction><value>N</value>
+    const postBlock = _extractFirst(block, 'postTransactionAmounts') || '';
+    const ownedRaw = _innerValue(_extractFirst(postBlock, 'sharesOwnedFollowingTransaction'));
+    const owned = ownedRaw != null ? parseFloat(ownedRaw) : null;
     if (!dateRaw || !codeRaw) continue;
     txns.push({
       transactionDate: dateRaw,
@@ -249,8 +269,11 @@ function parseForm4Xml(xml) {
       acquiredDisposed: acqDisp || null, // A=acquired, D=disposed
       transactionShares: Number.isFinite(shares) ? shares : null,
       transactionPricePerShare: Number.isFinite(price) ? price : null,
+      sharesOwnedFollowingTransaction: Number.isFinite(owned) ? owned : null,
       reportingPersonName: personName,
-      reportingPersonRelationship: relationship
+      reportingPersonRelationship: relationship,
+      issuerTradingSymbol: issuerTradingSymbol,
+      isTenB5One: isTenB5One
     });
   }
   return txns;

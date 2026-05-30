@@ -377,6 +377,23 @@ function buildRow(stock) {
   const listing = allResults['listing-age'];
   const listingYears = (listing && listing.computable && Number.isFinite(listing.value)) ? listing.value : null;
 
+  // Workstream A3: Insider-Conviction-Score (DIAGNOSTIC) drives the INSIDER_BUYING tab.
+  // compactResults (below) drops `.components`, so flatten the fields the tab + modal
+  // need directly onto the row here (mirrors r40Value/state/hgScore flattening).
+  const ics = allResults['insider-conviction-score'];
+  const icsComp = (ics && ics.computable && ics.components) ? ics.components : null;
+  const insiderGate = !!(ics && ics.computable && ics.pass);
+  const insiderScore = (ics && ics.computable && Number.isFinite(ics.value)) ? ics.value : null;
+  const insiderCluster = icsComp && Number.isFinite(icsComp.clusterCount) ? icsComp.clusterCount : null;
+  const insiderTopRole = (icsComp && icsComp.topBuyerRole) || null;
+  const insiderTopName = (icsComp && icsComp.topBuyerName) || null;
+  const insiderNet90d = icsComp && Number.isFinite(icsComp.netValue90d) ? icsComp.netValue90d : null;
+  const insiderAggBuy90d = icsComp && Number.isFinite(icsComp.aggBuyValue90d) ? icsComp.aggBuyValue90d : null;
+  const insiderLastBuy = (icsComp && icsComp.lastBuyDate) || null;
+  const insiderDecay = icsComp && Number.isFinite(icsComp.decayMultiplier) ? icsComp.decayMultiplier : null;
+  const insiderBreakdown = (icsComp && icsComp.breakdown) || null;
+  const insiderRecentBuys = (icsComp && Array.isArray(icsComp.recentBuys)) ? icsComp.recentBuys : [];
+
   let dqGrade = null;
   let dqMissing = null;
   try {
@@ -445,6 +462,9 @@ function buildRow(stock) {
     revAccelDelta,
     // Tag 199/200/205 audit gates
     qSpikeFail, lossMagFail, metricDivFail, niVolFail, preCommFail, cetFail, r40SanityFail, revShockFail, dqGrade, listingYears,
+    // Workstream A3: Insider-Buying tab fields (flattened from insider-conviction-score components)
+    insiderGate, insiderScore, insiderCluster, insiderTopRole, insiderTopName,
+    insiderNet90d, insiderAggBuy90d, insiderLastBuy, insiderDecay, insiderBreakdown, insiderRecentBuys,
     gaapProfitable, fcfPositive,
     annual,
     scoreHistory,
@@ -488,7 +508,7 @@ function computeR40Penalty(r) {
 }
 
 function classifyTabs(rows) {
-  const tabs = { HG: [], QC: [], BF: [], SMALL: [], R40: [], PRE_BREAKOUT: [], WATCH: [], KI_INFRA: [] };
+  const tabs = { HG: [], QC: [], BF: [], SMALL: [], R40: [], PRE_BREAKOUT: [], WATCH: [], KI_INFRA: [], INSIDER_BUYING: [] };
 
   for (const r of rows) {
     // Tag 199 HARD GATES — stocks failing any gate land in WATCH ONLY, regardless
@@ -520,6 +540,14 @@ function classifyTabs(rows) {
       r.kiCategory = kiEntry.category;
       r.kiNote = kiEntry.note;
       tabs.KI_INFRA.push(r);
+    }
+
+    // Workstream A3: INSIDER_BUYING is data-driven and independent of the WATCH
+    // hard-gate logic. A stock can be hardGated for HG/QC yet still show real
+    // SEC Form-4 open-market buying — push it whenever the insider hard-gate
+    // passed, regardless of guard status (mirrors KI_INFRA's unconditional push).
+    if (r.insiderGate === true) {
+      tabs.INSIDER_BUYING.push(r);
     }
 
     if (hardGated) {
@@ -651,6 +679,9 @@ function classifyTabs(rows) {
     const bRx = b.rx != null ? b.rx : -Infinity;
     return (bRx - aRx) || _tickerCmp(a, b);
   });
+
+  // Workstream A3: INSIDER_BUYING — conviction score desc, ticker tiebreak.
+  tabs.INSIDER_BUYING.sort((a, b) => ((b.insiderScore || 0) - (a.insiderScore || 0)) || _tickerCmp(a, b));
 
   return tabs;
 }
@@ -1445,6 +1476,7 @@ const CLIENT_JS = `
         if (tab === 'SMALL') return (b.growth||0) - (a.growth||0);
         if (tab === 'R40') return (b.r40||0) - (a.r40||0);
         if (tab === 'PRE_BREAKOUT') return (b.pbScore||0) - (a.pbScore||0);
+        if (tab === 'INSIDER_BUYING') return (b.insiderScore||0) - (a.insiderScore||0);
         if (tab === 'WATCH') return Math.max(b.hgScore||0, b.qcScore||0, b.bfScore||0) - Math.max(a.hgScore||0, a.qcScore||0, a.bfScore||0);
         return 0;
       }
@@ -1454,6 +1486,7 @@ const CLIENT_JS = `
       if (k === 'fcfMargin') return (b.fcfMargin||0) - (a.fcfMargin||0);
       if (k === 'mcap')      return (b.mcap||0) - (a.mcap||0);
       if (k === 'pbScore')   return (b.pbScore||0) - (a.pbScore||0);
+      if (k === 'insiderScore') return (b.insiderScore||0) - (a.insiderScore||0);
       return 0;
     };
     list.sort(cmp);
@@ -1506,6 +1539,11 @@ const CLIENT_JS = `
       {k:'RevGr%',w:65,num:true}, {k:'FCFM%',w:65,num:true},
       {k:'FCF+',w:45}, {k:'State',w:75}, {k:'Note',w:140}
     ];
+    if (tab === 'INSIDER_BUYING') return [
+      {k:'#',w:30}, {k:'Ticker',w:65}, {k:'Company',w:230},
+      {k:'Score',w:60,num:true}, {k:'Cluster',w:65,num:true}, {k:'Top-Buyer-Role',w:130},
+      {k:'Net$90d',w:80,num:true}, {k:'LastBuy',w:90}, {k:'R40',w:55,num:true}, {k:'State',w:80}
+    ];
     return [];
   }
 
@@ -1520,7 +1558,8 @@ const CLIENT_JS = `
     'SMALL':        ['growth','r40','grossMargin','mcap'],
     'R40':          ['r40','growth','fcfMargin','opMargin','grossMargin','mcap'],
     'PRE_BREAKOUT': ['growth','grossMargin','r40','mcap','pbScore'],
-    'KI_INFRA':     ['rx','r40','growth','fcfMargin']
+    'KI_INFRA':     ['rx','r40','growth','fcfMargin'],
+    'INSIDER_BUYING': ['insiderScore','r40']
   };
   function _rowMetricForBullet(r, key, tab){
     if (key === 'score') {
@@ -1532,6 +1571,7 @@ const CLIENT_JS = `
     if (key === 'rx') return r.rx;
     if (key === 'mcap') return r.mcap;
     if (key === 'pbScore') return r.pbScore;
+    if (key === 'insiderScore') return r.insiderScore;
     return r[key];
   }
   // buildPercentileMaps: for each numeric column on the active tab, sort the
@@ -1735,6 +1775,23 @@ const CLIENT_JS = `
       const noteHtml = fullNote ? '<td style="font-size:10px;color:var(--text-1)" title="'+esc(fullNote)+'">'+esc(shortNote)+'</td>' : '<td>—</td>';
       return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.kiCategory||'—')+'</td>'+bc(rxHtml,'rx')+bc(r40Html,'r40')+'<td style="text-align:center">'+r40SparkHtml+'</td>'+bc(growthHtml,'growth')+bc(fcfmHtml,'fcfMargin')+fcfPlusCell+'<td>'+stateP+'</td>'+noteHtml+'</tr>';
     }
+    if (tab === 'INSIDER_BUYING') {
+      // Score badge color-scaled by conviction score (0..100): green high, blue mid, muted low.
+      const sc = r.insiderScore;
+      let scoreHtml;
+      if (sc == null || !Number.isFinite(sc)) {
+        scoreHtml = '—';
+      } else {
+        const scStyle = sc >= 66 ? 'color:var(--green)' : sc >= 33 ? 'color:var(--blue)' : 'color:var(--text-2)';
+        scoreHtml = '<span style="'+scStyle+'">'+sc.toFixed(0)+'</span>';
+      }
+      const clusterHtml = (r.insiderCluster == null || !Number.isFinite(r.insiderCluster)) ? '—' : String(r.insiderCluster);
+      const roleHtml = r.insiderTopRole ? esc(r.insiderTopRole) : '—';
+      const netHtml = (r.insiderNet90d == null || !Number.isFinite(r.insiderNet90d)) ? '—'
+        : '<span class="'+(r.insiderNet90d >= 0 ? 'g-pos' : 'g-neg')+'">'+(r.insiderNet90d < 0 ? '-$' : '$')+fmtM(Math.abs(r.insiderNet90d))+'</span>';
+      const lastBuyHtml = r.insiderLastBuy ? esc(r.insiderLastBuy) : '—';
+      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td>'+bc(scoreHtml,'insiderScore')+'<td class="num">'+clusterHtml+'</td><td style="font-size:11px">'+roleHtml+'</td><td class="num">'+netHtml+'</td><td style="font-size:11px">'+lastBuyHtml+'</td>'+bc(r40Html,'r40')+'<td>'+stateP+'</td></tr>';
+    }
     return '';
   }
 
@@ -1746,6 +1803,7 @@ const CLIENT_JS = `
     'SMALL': 'Market cap < $2B, revenue growth > 20%, not in LOSS state. Hunting the next CRDO/ALAB before they hit the radar.',
     'R40': 'Every stock with computable R40. Hard-gated (Q-Spike, Loss>50%Rev, Pre-Commerciality, Closed-End-Trust, NI-Vol, Metric-Divergence, Q-Spike-Fake hgClass, R40-Sanity-Cap, DQ-D) — but READ THE FLAGS: ⚠ FCFM>80% or ⚠ HighGrowth or ⚠ Margin-Div badges indicate one-time-effect tells even within passing stocks. Sort uses penalized R40 (raw × (1 - dq_penalty - q_spike_penalty - margin_div_penalty)).',
     'KI_INFRA': 'KI Infrastruktur — manuell geseedete Startliste (Data Centers · Connectivity · Energy · Power & Cooling · Supply Bottlenecks · Packaging & Semicap). Sortiert nach Rule-of-X. FCF-negative Namen sind markiert (✗) statt versteckt. Kein automatischer Filter — Universum = ki-infra.json.',
+    'INSIDER_BUYING': 'Insider-Buying — SEC Form 4 Offenmarkt-Käufe (NUR Transaktions-Code P; Awards/Optionsausübungen A/M ausgeschlossen) im 90-Tage-Fenster. Conviction-Score 0–100 (literaturgestützt: Lakonishok & Lee 2001, Cohen-Malloy-Pomorski 2012): Rolle des größten Käufers (CEO/CFO/Director, 0–25) · Cluster-Breite = Anzahl verschiedener Insider (0–25) · Conviction/Preis-Position relativ zur 52-Wochen-Spanne (0–20) · Käufe als % des bestehenden Bestands (0–20) · opportunistisch vs. routinemäßig (0–10). Zeit-Decay nach Alter des jüngsten Kaufs (≤30T ×1,0 · 31–90T ×0,7 · 91–180T ×0,4). Hard-Gate (alle vier nötig): ≥1 P-Kauf, aggregierter Kaufwert ≥ $25k, netto-positiv (Käufe > Nicht-10b5-1-Verkäufe), Filing-Verzögerung ≤ 90 Tage. Datengetrieben & unabhängig von den WATCH-Hard-Gates — ein Titel kann hier auftauchen, auch wenn er für HG/QC hart-gegated ist. Sortiert nach Score absteigend.',
     'SECTOR': 'Sector heatmap. Rows = sectors (clean stocks only — WATCH-tab outliers excluded). Columns = median of each metric across the sector. Cell color is the GLOBAL percentile rank of that sector-median (green = top quartile of sectors, red = bottom). Hover a cell for N=count. GP/TA = Novy-Marx gross-profitability (annual gross profit / total assets). ROIC% = sector-relative percentile rank (0-100).'
   };
 
@@ -1763,6 +1821,7 @@ const CLIENT_JS = `
   }
   function _rowMetric(r, key) {
     if (key === 'score')   return (r.hgScore != null) ? r.hgScore : (r.qcScore != null ? r.qcScore : r.bfScore);
+    if (key === 'insiderScore') return r.insiderScore;
     if (key === 'r40')     return r.r40;
     if (key === 'fcfm')    return r.fcfMargin;
     if (key === 'growth')  return r.growth;
@@ -2421,6 +2480,44 @@ const CLIENT_JS = `
           + '</tr>';
       }
       html += '</tbody></table></div>';
+    }
+
+    // Section I (Workstream A3): Insider Activity — SEC Form 4 open-market buys.
+    // Only render when an insider conviction score exists for this row.
+    if (r.insiderScore != null && Number.isFinite(r.insiderScore)) {
+      html += '<h3 class="sec">Insider Activity <span style="color:var(--text-2);font-size:0.75em">(SEC Form 4 · Code P · 90 Tage)</span></h3>';
+      // Score breakdown sub-scores (role/cluster/conviction/holdings/routine) + decayed total.
+      const bd = r.insiderBreakdown || {};
+      const sub = function(lbl, v, max){
+        const val = (v != null && Number.isFinite(v)) ? v : null;
+        return '<div class="card"><div class="lbl">'+lbl+'</div><div class="v">'+(val!=null?val:'—')+(max?'<span style="color:var(--text-2);font-size:0.6em"> / '+max+'</span>':'')+'</div></div>';
+      };
+      html += '<div class="cards">';
+      html += '<div class="card"><div class="lbl">Conviction-Score</div><div class="v" style="color:'+(r.insiderScore>=66?'var(--green)':r.insiderScore>=33?'var(--blue)':'var(--text-1)')+'">'+r.insiderScore.toFixed(0)+'</div><div class="sub">'+(r.insiderDecay!=null?'Decay ×'+r.insiderDecay:'')+'</div></div>';
+      html += sub('Rolle', bd.role, 25);
+      html += sub('Cluster', bd.cluster, 25);
+      html += sub('Conviction', bd.conviction, 20);
+      html += sub('% Holdings', bd.holdings, 20);
+      html += sub('Opportun.', bd.routine, 10);
+      html += '</div>';
+      // Recent buys table.
+      const buys = Array.isArray(r.insiderRecentBuys) ? r.insiderRecentBuys : [];
+      if (buys.length > 0) {
+        html += '<div class="annual"><table><thead><tr>'
+          + '<th class="fy" style="text-align:left">Datum</th><th style="text-align:left">Insider</th>'
+          + '<th style="text-align:left">Rolle</th><th>Shares</th><th>$</th><th>Code</th></tr></thead><tbody>';
+        for (const b of buys) {
+          html += '<tr>'
+            + '<td class="fy" style="text-align:left">' + esc(b.date || '—') + '</td>'
+            + '<td style="text-align:left">' + esc(b.name || '—') + '</td>'
+            + '<td style="text-align:left;font-size:11px">' + esc(b.role || '—') + '</td>'
+            + '<td style="text-align:right">' + (Number.isFinite(b.shares) ? fmtM(b.shares) : '—') + '</td>'
+            + '<td style="text-align:right;color:var(--green)">' + (Number.isFinite(b.value) ? '$' + fmtM(b.value) : '—') + '</td>'
+            + '<td style="text-align:center">' + esc(b.code || 'P') + '</td>'
+            + '</tr>';
+        }
+        html += '</tbody></table></div>';
+      }
     }
 
     c.innerHTML = html;
@@ -3581,6 +3678,7 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
   <button data-tab="SMALL" role="tab" aria-selected="false">📈 Small Cap</button>
   <button data-tab="R40" class="active" role="tab" aria-current="page" aria-selected="true">📊 Rule of 40</button>
   <button data-tab="KI_INFRA" role="tab" aria-selected="false">🤖 KI Infrastruktur</button>
+  <button data-tab="INSIDER_BUYING" role="tab" aria-selected="false">🟢 Insider-Buying</button>
   <button data-tab="PRE_BREAKOUT" role="tab" aria-selected="false">🎯 Pre-Breakout</button>
   <button data-tab="WATCH" role="tab" aria-selected="false">👁 Watch</button>
   <button data-tab="SECTOR" role="tab" aria-selected="false">🌡 SECTOR</button>
