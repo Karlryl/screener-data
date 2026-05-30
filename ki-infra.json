@@ -1,10 +1,10 @@
 {
   "_meta": {
-    "version": "3.0",
+    "version": "3.1",
     "schema": "ki-infra-v1",
-    "updated_at": "2026-05-25",
-    "updated_by": "research-report-2026-05-25",
-    "note": "Tag 204d: 6-layer expansion from KI-Infrastruktur-Bericht (CoreWeave-Layer through Advanced Packaging). Source: AI-Infrastruktur-Stack-Zulieferer-2026-05-25.md by Karl."
+    "updated_at": "2026-05-30",
+    "updated_by": "workstream-c-ai-infra-2026-05-30",
+    "note": "Tag 204d: 6-layer expansion from KI-Infrastruktur-Bericht (CoreWeave-Layer through Advanced Packaging). Source: AI-Infrastruktur-Stack-Zulieferer-2026-05-25.md by Karl. — Workstream C (2026-05-30): +2 neue Layer (On-Site Power, Storage), Ausbau Data Centers/Power & Cooling/Supply Bottlenecks/Packaging & Semicap inkl. internationaler Namen (BESI.AS, .HK, .T, .TW, .KS, .DE, .PA). 6 Prune-Kandidaten (CSCO/INTC/HPE/MXL/FCX/NNE) markiert für manuelle Entscheidung."
   },
   "categories": {
     "Data Centers": [
@@ -25,8 +25,10 @@
       { "ticker": "STRL", "name": "Sterling Infrastructure", "note": "Site-Development/Elektro, Backlog +131%" },
       { "ticker": "DELL", "name": "Dell Technologies", "note": "AI-Server-OEM, Backlog $43B" },
       { "ticker": "SMCI", "name": "Super Micro Computer", "note": "AI-Server/Liquid-Rack-OEM" },
-      { "ticker": "HPE", "name": "Hewlett Packard Enterprise", "note": "AI-Server-OEM" },
-      { "ticker": "PENG", "name": "Penguin Solutions", "note": "AI-Cluster-Integration, >60% Umsatz AI" }
+      { "ticker": "HPE", "name": "Hewlett Packard Enterprise", "note": "AI-Server-OEM ⚠PRUNE-KANDIDAT: marginale AI-Exposure (Entscheidung manuell)", "pruneCandidate": true },
+      { "ticker": "PENG", "name": "Penguin Solutions", "note": "AI-Cluster-Integration, >60% Umsatz AI" },
+      { "ticker": "AMKR", "name": "Amkor Technology", "note": "OSAT-Marktführer (West), Advanced-Packaging/Test für AI-Beschleuniger" },
+      { "ticker": "2317.TW", "name": "Foxconn (Hon Hai)", "note": "Größter AI-Server/Rack-ODM, baut GB200/GB300-Systeme für Hyperscaler" }
     ],
     "Connectivity": [
       { "ticker": "COHR", "name": "Coherent", "note": "Transceiver + InP-Laser (vert. integ.), $2B Nvidia-Equity" },
@@ -41,8 +43,8 @@
       { "ticker": "ANET", "name": "Arista Networks", "note": "AI-Ethernet-Switches, $2.71B (+35%)" },
       { "ticker": "CIEN", "name": "Ciena", "note": "Kohärente Optik/DCI" },
       { "ticker": "POET", "name": "POET Technologies", "note": "Silicon-Photonics-Interposer, vorkommerziell — spekulativ" },
-      { "ticker": "CSCO", "name": "Cisco Systems", "note": "AI-Networking, Ethernet für AI-Cluster" },
-      { "ticker": "MXL", "name": "MaxLinear", "note": "Mixed-Signal/Connectivity, +673% (12M)" }
+      { "ticker": "CSCO", "name": "Cisco Systems", "note": "AI-Networking, Ethernet für AI-Cluster ⚠PRUNE-KANDIDAT: marginale AI-Exposure (Entscheidung manuell)", "pruneCandidate": true },
+      { "ticker": "MXL", "name": "MaxLinear", "note": "Mixed-Signal/Connectivity, +673% (12M) ⚠PRUNE-KANDIDAT: marginale AI-Exposure (Entscheidung manuell)", "pruneCandidate": true }
     ],
     "Energy": [
       { "ticker": "GEV", "name": "GE Vernova", "note": "Gasturbinen + Grid, GT-Backlog 100 GW, $163B total" },
@@ -52,7 +54,7 @@
       { "ticker": "NRG", "name": "NRG Energy", "note": "IPP (Gas), ~25 GW post LS-Power" },
       { "ticker": "OKLO", "name": "Oklo", "note": "SMR-Entwickler, ~18 GW Pipeline (Switch/Equinix), vorrevenue" },
       { "ticker": "SMR", "name": "NuScale Power", "note": "SMR-Entwickler, erster NRC-zertifiziert, vorrevenue" },
-      { "ticker": "NNE", "name": "Nano Nuclear", "note": "Microreactor, Supermicro-MoU, ~$569M Cash" },
+      { "ticker": "NNE", "name": "Nano Nuclear", "note": "Microreactor, Supermicro-MoU, ~$569M Cash ⚠PRUNE-KANDIDAT: marginale AI-Exposure (Entscheidung manuell)", "pruneCandidate": true },
       { "ticker": "BWXT", "name": "BWX Technologies", "note": "Nuklear-Komponenten, US-Navy + SMR" },
       { "ticker": "LEU", "name": "Centrus Energy", "note": "HALEU-Brennstoff, Backlog $3.8B (West-Monopol)" },
       { "ticker": "CCJ", "name": "Cameco", "note": "Uran + 49% Westinghouse" },
@@ -74,18 +76,32 @@
       { "ticker": "MOD", "name": "Modine Manufacturing", "note": "CDU/Chiller/Thermal, DC ~25% Umsatz" },
       { "ticker": "JCI", "name": "Johnson Controls", "note": "HVAC/Chiller, DC-getrieben" },
       { "ticker": "TT", "name": "Trane Technologies", "note": "Chiller + LiquidStack (Übernahme 2026)" },
-      { "ticker": "SPXC", "name": "SPX Technologies", "note": "Cooling Towers, DC ~$312M (+50%)" }
+      { "ticker": "SPXC", "name": "SPX Technologies", "note": "Cooling Towers, DC ~$312M (+50%)" },
+      { "ticker": "PH", "name": "Parker Hannifin", "note": "Motion/Thermal-Management, Liquid-Cooling-Komponenten für AI-Racks" },
+      { "ticker": "ECL", "name": "Ecolab", "note": "Wasseraufbereitung/Kühlwasser-Chemie für Datacenter-Kühlsysteme" },
+      { "ticker": "AEIS", "name": "Advanced Energy Industries", "note": "Präzisions-Stromversorgung für RZ + Halbleiterfertigung" },
+      { "ticker": "HUBB", "name": "Hubbell", "note": "Elektrische Infrastruktur/Grid-Komponenten, RZ-Stromverteilung" },
+      { "ticker": "FLEX", "name": "Flex", "note": "EMS + Power/Rack-Integration, DC-Power-Pods (Anord-Mardix)" },
+      { "ticker": "JBL", "name": "Jabil", "note": "EMS + Liquid-Cooling/Power-Module-Fertigung für AI-Server" },
+      { "ticker": "2308.TW", "name": "Delta Electronics", "note": "Globaler Marktführer Power-Supplies/Cooling für AI-Server-Racks" },
+      { "ticker": "SU.PA", "name": "Schneider Electric", "note": "Datacenter-Power-Management/Switchgear (APC), end-to-end RZ-Infrastruktur" }
     ],
     "Supply Bottlenecks": [
       { "ticker": "WOLF", "name": "Wolfspeed", "note": "SiC-Wafer & Power-Devices (post-Chapter-11)" },
       { "ticker": "AXTI", "name": "AXT Inc", "note": "InP/GaAs/Ge-Substrate (West), Backlog >$100M" },
       { "ticker": "MU", "name": "Micron Technology", "note": "HBM/DRAM, HBM-Kapazität 2026 ausverkauft" },
       { "ticker": "MP", "name": "MP Materials", "note": "NdPr-Magnete/Seltene Erden, US-Reg. größter Aktionär" },
-      { "ticker": "FCX", "name": "Freeport-McMoRan", "note": "Kupfer (DC-Verkabelung), ~50.000t/Hyperscale-Anlage" },
+      { "ticker": "FCX", "name": "Freeport-McMoRan", "note": "Kupfer (DC-Verkabelung), ~50.000t/Hyperscale-Anlage ⚠PRUNE-KANDIDAT: marginale AI-Exposure (Entscheidung manuell)", "pruneCandidate": true },
       { "ticker": "NVDA", "name": "NVIDIA", "note": "GPU-Monopol — der core AI-Compute-Chip" },
       { "ticker": "AMD", "name": "Advanced Micro Devices", "note": "CPU/GPU für AI Training + Inference" },
       { "ticker": "TSM", "name": "Taiwan Semiconductor", "note": "Leading-edge Foundry für alle AI-Chips" },
-      { "ticker": "INTC", "name": "Intel", "note": "x86 CPU + Foundry, AI-Server-CPUs" }
+      { "ticker": "INTC", "name": "Intel", "note": "x86 CPU + Foundry, AI-Server-CPUs ⚠PRUNE-KANDIDAT: marginale AI-Exposure (Entscheidung manuell)", "pruneCandidate": true },
+      { "ticker": "STM", "name": "STMicroelectronics", "note": "Power-/Analog-Semis (SiC), Stromversorgung für AI-Hardware" },
+      { "ticker": "POWI", "name": "Power Integrations", "note": "Hochspannungs-Power-ICs, Effizienz für RZ-Netzteile" },
+      { "ticker": "LIN", "name": "Linde", "note": "Industriegase (Spezialgase) für Halbleiter-/Wafer-Fertigung" },
+      { "ticker": "APD", "name": "Air Products", "note": "Industriegase/Elektronik-Spezialgase für Chipfertigung" },
+      { "ticker": "IFX.DE", "name": "Infineon", "note": "Power-Semis (Server-Stromversorgung), Engpass-Komponente für AI-Racks" },
+      { "ticker": "4063.T", "name": "Shin-Etsu Chemical", "note": "Weltgrößter Silizium-Wafer-Hersteller, Substrat-Engpass für AI-Chips" }
     ],
     "Packaging & Semicap": [
       { "ticker": "KLIC", "name": "Kulicke & Soffa", "note": "TCB-Bonding → Hybrid-Bonding-Pfad" },
@@ -102,7 +118,23 @@
       { "ticker": "ARM", "name": "Arm Holdings", "note": "Neoverse-Datacenter CPU/IP" },
       { "ticker": "APH", "name": "Amphenol", "note": "High-Speed-Connectors, IT-Datacom 36-38%" },
       { "ticker": "GLW", "name": "Corning", "note": "Glasfaser-Backbone" },
-      { "ticker": "ACLS", "name": "Axcelis Technologies", "note": "Ion-Implant für Power-Semis" }
+      { "ticker": "ACLS", "name": "Axcelis Technologies", "note": "Ion-Implant für Power-Semis" },
+      { "ticker": "BESI.AS", "name": "BESI", "note": "Hybrid-Bonding-/Die-Attach-Equipment, Schlüssel für Advanced Packaging (HBM/Chiplets)" },
+      { "ticker": "0522.HK", "name": "ASMPT", "note": "Advanced-Packaging/TCB-/Hybrid-Bonding-Equipment für AI-Chips" },
+      { "ticker": "6857.T", "name": "Advantest", "note": "ATE-Marktführer, HBM-/SoC-Testsysteme für AI-Beschleuniger" },
+      { "ticker": "6146.T", "name": "Disco", "note": "Wafer-Dicing/Grinding-Monopolist, kritisch für Advanced Packaging" },
+      { "ticker": "3037.TW", "name": "Unimicron", "note": "ABF-Substrate/High-End-PCBs für GPU-/AI-Beschleuniger-Packages" }
+    ],
+    "On-Site Power": [
+      { "ticker": "CAT", "name": "Caterpillar", "note": "Großmotoren/Gensets für RZ-Notstrom + Prime-Power (on-site)" },
+      { "ticker": "CMI", "name": "Cummins", "note": "Diesel-/Gas-Gensets + Power-Systems für Datacenter-On-Site-Power" },
+      { "ticker": "GNRC", "name": "Generac", "note": "Backup-/Prime-Power-Gensets, on-site Stromversorgung für RZ. siehe Energy: GEV/BWXT/OKLO" }
+    ],
+    "Storage": [
+      { "ticker": "SNDK", "name": "SanDisk", "note": "NAND-Flash/Enterprise-SSD, Speicher für AI-Trainings-/Inferenz-Datasets" },
+      { "ticker": "WDC", "name": "Western Digital", "note": "HDD/Nearline-Storage für Hyperscale-AI-Datacenter" },
+      { "ticker": "PSTG", "name": "Pure Storage", "note": "All-Flash-Enterprise-Storage, Hyperscaler-Design-Win für AI-Workloads" },
+      { "ticker": "000660.KS", "name": "SK Hynix", "note": "HBM-Marktführer + Enterprise-NAND/DRAM, zentraler AI-Memory-Lieferant" }
     ]
   }
 }
