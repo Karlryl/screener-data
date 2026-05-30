@@ -55,6 +55,11 @@ const REGISTRY = {
   'margin-decay':               { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Erosion-detection im Detail-Modal' },
   'capex-trend':                { type: 'DIAGNOSTIC', defaultActive: false, reason: 'Reinvestment pattern' },
   'sbc-revenue':                { type: 'DIAGNOSTIC', defaultActive: false, reason: 'SBC-Disziplin als Quality-Indikator' },
+  // Workstream B: SBC-adjusted Rule-of-40 — value = revenueGrowthYoY + (fcfMarginTTM − SBC%/rev) >= 40.
+  // Penalizes optical FCF inflated by stock-based comp; components.sbcInflationFlag set when
+  // FCF margin exceeds EBITDA margin (metrics.ebitdaMargins) by >15pp (optical-FCF tell, e.g. Okta).
+  // DIAGNOSTIC, NOT in any SCORE_WEIGHTS → fixture-hash safe.
+  'rule-of-40-sbc-adjusted':    { type: 'DIAGNOSTIC', defaultActive: true, reason: 'Workstream B: SBC-adjusted Rule-of-40 (growth + FCF-margin net of SBC%/rev); flags FCF-vs-EBITDA-margin gap >15pp as optical-FCF tell' },
   // Bug #20: defaultActive:false means this method is not evaluated, but score-aggregator
   // applies a SOFT_GUARD_PENALTY for it. Enable so the penalty is actually computable.
   'working-capital-anomaly':    { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Earnings-quality red flag' },

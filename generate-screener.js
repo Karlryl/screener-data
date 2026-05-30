@@ -439,6 +439,19 @@ function buildRow(stock) {
   const r40rxHistory = (r40rxHistRaw && Array.isArray(r40rxHistRaw.entries))
     ? r40rxHistRaw.entries.slice(-12) : [];
 
+  // Workstream B: rule-of-40-sbc-adjusted (DIAGNOSTIC) — flatten the components
+  // we need onto the row, since compactResults below drops `.components`.
+  //   r40SbcAdjusted   = growth + (fcfMargin − SBC%ofRev)  (SBC-adjusted R40)
+  //   sbcInflationFlag = (fcfMargin − ebitdaMargin) > 15pp  (optical-FCF tell)
+  //   fcfVsEbitdaGapPp = fcfMargin − ebitdaMargin in pp     (the gap itself)
+  const sbcAdj = allResults['rule-of-40-sbc-adjusted'];
+  const sbcAdjComp = (sbcAdj && sbcAdj.components) ? sbcAdj.components : null;
+  const r40SbcAdjusted = (sbcAdj && sbcAdj.computable && Number.isFinite(sbcAdj.value))
+    ? Math.round(sbcAdj.value * 100) / 100 : null;
+  const sbcInflationFlag = !!(sbcAdjComp && sbcAdjComp.sbcInflationFlag);
+  const fcfVsEbitdaGapPp = (sbcAdjComp && Number.isFinite(sbcAdjComp.fcfVsEbitdaGapPp))
+    ? Math.round(sbcAdjComp.fcfVsEbitdaGapPp * 10) / 10 : null;
+
   return {
     ticker,
     name: (stock.meta && stock.meta.name) || ticker,
@@ -466,6 +479,8 @@ function buildRow(stock) {
     insiderGate, insiderScore, insiderCluster, insiderTopRole, insiderTopName,
     insiderNet90d, insiderAggBuy90d, insiderLastBuy, insiderDecay, insiderBreakdown, insiderRecentBuys,
     gaapProfitable, fcfPositive,
+    // Workstream B: SBC-adjusted R40 diagnostic fields (flattened from components)
+    r40SbcAdjusted, sbcInflationFlag, fcfVsEbitdaGapPp,
     annual,
     scoreHistory,
     r40rxHistory,
@@ -613,9 +628,29 @@ function classifyTabs(rows) {
     if (r.mcap > 0 && r.mcap < 2e9 && Number.isFinite(r.growth) && r.growth > 20 && r.state !== 'LOSS') {
       tabs.SMALL.push(r);
     }
-    // R40: r40 computable (also subject to hard gates above — already filtered)
+    // R40: r40 computable (also subject to hard gates above — already filtered).
+    // Workstream B — MULTI-QUARTER DURABILITY GATE (Q-spike tightening):
+    // McKinsey finds firms clear Rule-of-40 in only ~16% of years, so a single
+    // TTM print over 40 is weak evidence of durability. Require R40 ≥ 40 in
+    // ≥3 of the last 4 quarters (from r40rxHistory) to ENTER the R40 tab. Rows
+    // with <4 quarterly entries fall back to the TTM rule but are flagged
+    // r40InsufficientHistory (unproven durability). Number.isFinite(r.r40) is a
+    // base precondition in both branches.
     if (Number.isFinite(r.r40)) {
-      tabs.R40.push(r);
+      const hist = Array.isArray(r.r40rxHistory) ? r.r40rxHistory : [];
+      const last4 = hist.slice(-4);
+      if (last4.length >= 4) {
+        const qPass = last4.filter(e => e && Number.isFinite(e.r40) && e.r40 >= 40).length;
+        if (qPass >= 3) {
+          r.r40Durable = true;
+          tabs.R40.push(r);
+        }
+        // else: one-quarter spike, not durable — excluded from R40.
+      } else {
+        // <4 quarterly entries: TTM-only inclusion, durability unproven.
+        r.r40InsufficientHistory = true;
+        tabs.R40.push(r);
+      }
     }
     // PRE-BREAKOUT: state TURNAROUND/RECENT, growth > 25%, grossMargin available
     if ((r.state === 'TURNAROUND' || r.state === 'RECENT') && Number.isFinite(r.growth) && r.growth > 25
@@ -1728,6 +1763,16 @@ const CLIENT_JS = `
       if (Number.isFinite(r.growth) && r.growth > 150) warnBadges.push('<span class="g-neg" style="font-size:9px;border:1px solid var(--red);padding:0 3px;margin-left:3px" title="Growth '+r.growth.toFixed(0)+'% — likely Q-spike">⚠ HighGr</span>');
       if (Number.isFinite(r.fcfMargin) && r.fcfMargin > 80) warnBadges.push('<span class="g-neg" style="font-size:9px;border:1px solid var(--red);padding:0 3px;margin-left:3px" title="FCFM '+r.fcfMargin.toFixed(0)+'% — one-time event tell">⚠ FCFM&gt;80%</span>');
       if (Number.isFinite(r.opMargin) && Number.isFinite(r.fcfMargin) && Math.abs(r.opMargin - r.fcfMargin) > 50) warnBadges.push('<span class="g-neg" style="font-size:9px;border:1px solid var(--red);padding:0 3px;margin-left:3px" title="|OpM-FCFM|='+Math.abs(r.opMargin-r.fcfMargin).toFixed(0)+'pp — phantom FCF">⚠ Margin-Div</span>');
+      // Workstream B: SBC-inflation tell — FCF−EBITDA gap > 15pp means reported
+      // FCF is optically inflated by stock-based comp add-back (cash-flow SBC
+      // add-back not reflected in EBITDA). Margin-driven R40 = value-trap risk.
+      if (r.sbcInflationFlag) {
+        const gapNote = Number.isFinite(r.fcfVsEbitdaGapPp) ? ' ('+r.fcfVsEbitdaGapPp.toFixed(1)+'pp)' : '';
+        warnBadges.push('<span class="g-neg" style="font-size:9px;border:1px solid var(--red);padding:0 3px;margin-left:3px" title="FCF−EBITDA gap >15pp'+gapNote+' — SBC-inflated FCF">⚠SBC</span>');
+      }
+      // Workstream B: TTM-only durability flag — <4 quarters of R40 history, so
+      // the durability gate could not be applied (TTM print only, unproven).
+      if (r.r40InsufficientHistory) warnBadges.push('<span class="g-mute" style="font-size:9px;border:1px solid var(--border-bright);padding:0 3px;margin-left:3px" title="nur TTM — <4 Quartale Historie">TTM?</span>');
       // Tag 217g (audit F-217d-2 HIGH XSS-safety fix): R40 ticker cell was
       // the only one in the file that skipped esc() on r.ticker. All current
       // tickers happen to be metachar-free so the bug is latent, but
@@ -2398,6 +2443,26 @@ const CLIENT_JS = `
     const r40rxHist = (r.r40rxHistory || []).slice().reverse();
     if (r40rxHist.length > 0) {
       html += '<h3 class="sec">R40 / RX Historie <span style="color:var(--text-2);font-size:0.75em">(~ = Backfill-Approximation)</span></h3>';
+      // Workstream B: SBC-adjusted R40 next to the vanilla TTM R40. The adjusted
+      // figure subtracts SBC-as-%-of-revenue from the FCF margin, so it strips
+      // the optical-FCF benefit of stock-based comp add-back. When the
+      // SBC-inflation flag is set (FCF−EBITDA gap >15pp), call it out as a tell.
+      {
+        const vanilla = (r.r40 != null && Number.isFinite(r.r40)) ? r.r40.toFixed(1) : '—';
+        const vanillaColor = (r.r40 != null) ? r40Class(r.r40) : '';
+        const adj = (r.r40SbcAdjusted != null && Number.isFinite(r.r40SbcAdjusted)) ? r.r40SbcAdjusted.toFixed(1) : '—';
+        const adjColor = (r.r40SbcAdjusted != null) ? (r.r40SbcAdjusted >= 40 ? 'var(--green)' : 'var(--red)') : 'var(--text-2)';
+        html += '<div class="meta" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:12px;">';
+        html += '<span>R40 (TTM): <span class="'+vanillaColor+'" style="font-weight:600">'+vanilla+'</span></span>';
+        html += '<span>R40 (SBC-adj.): <span style="color:'+adjColor+';font-weight:600">'+adj+'</span></span>';
+        if (r.fcfVsEbitdaGapPp != null && Number.isFinite(r.fcfVsEbitdaGapPp)) {
+          html += '<span style="color:var(--text-2)">FCF−EBITDA: '+(r.fcfVsEbitdaGapPp>=0?'+':'')+r.fcfVsEbitdaGapPp.toFixed(1)+'pp</span>';
+        }
+        if (r.sbcInflationFlag) {
+          html += '<span style="color:var(--red);border:1px solid var(--red);padding:1px 5px;font-size:10px" title="FCF−EBITDA gap >15pp — SBC-inflated FCF">⚠ SBC-inflated FCF</span>';
+        }
+        html += '</div>';
+      }
       // Tag 204b: SVG line chart over R40 + RX history (oldest → newest).
       // Renders above the existing table when there are ≥2 finite data points.
       const chartData = r40rxHist.slice().reverse();  // oldest → newest for chart
@@ -2480,6 +2545,62 @@ const CLIENT_JS = `
           + '</tr>';
       }
       html += '</tbody></table></div>';
+
+      // Workstream B: R40-TREND DECOMPOSITION — for each consecutive quarter
+      // pair, split ΔR40 into its Δgrowth and Δmargin contributions. R40 rising
+      // because growth accelerates (GREEN) is healthier than R40 rising purely
+      // because FCF margin expanded while growth went flat/negative (YELLOW =
+      // value-trap risk: the "40" is being held up by cost-cutting / SBC-inflated
+      // margin, not demand). Oldest → newest. Needs ≥2 entries.
+      const decompSeq = r40rxHist.slice().reverse();  // oldest → newest
+      if (decompSeq.length >= 2) {
+        html += '<h4 class="sec" style="font-size:12px;margin-top:10px;margin-bottom:4px">R40-Trend Decomposition <span style="color:var(--text-2);font-size:0.85em">(ΔGrowth vs ΔMargin → ΔR40)</span></h4>';
+        html += '<div class="annual"><table><thead><tr>'
+          + '<th class="fy" style="text-align:left">Quartal</th>'
+          + '<th style="text-align:right">ΔGrowth</th>'
+          + '<th style="text-align:right">ΔMargin</th>'
+          + '<th style="text-align:right">ΔR40</th>'
+          + '<th style="text-align:left">Treiber</th>'
+          + '</tr></thead><tbody>';
+        for (let k = 1; k < decompSeq.length; k++) {
+          const cur = decompSeq[k];
+          const prev = decompSeq[k-1];
+          const dGrowth = (Number.isFinite(cur.growth) && Number.isFinite(prev.growth)) ? (cur.growth - prev.growth) : null;
+          const dMargin = (Number.isFinite(cur.fcfMargin) && Number.isFinite(prev.fcfMargin)) ? (cur.fcfMargin - prev.fcfMargin) : null;
+          const dR40 = (Number.isFinite(cur.r40) && Number.isFinite(prev.r40)) ? (cur.r40 - prev.r40) : null;
+          // Driver classification:
+          //   GREEN  = R40 rose and growth-driven (Δgrowth ≥ Δmargin)
+          //   YELLOW = R40 rose but purely margin-driven (Δmargin > Δgrowth and
+          //            growth flat/negative) — value-trap risk
+          let driverLabel = '—';
+          let driverColor = 'var(--text-2)';
+          if (dR40 != null && dR40 > 0 && dGrowth != null && dMargin != null) {
+            if (dGrowth >= dMargin) {
+              driverLabel = 'Growth-getrieben';
+              driverColor = 'var(--green)';
+            } else if (dMargin > dGrowth && dGrowth <= 0) {
+              driverLabel = 'Margin-getrieben ⚠';
+              driverColor = 'var(--yellow)';
+            } else {
+              driverLabel = 'gemischt';
+              driverColor = 'var(--text-1)';
+            }
+          } else if (dR40 != null && dR40 <= 0) {
+            driverLabel = 'rückläufig';
+            driverColor = 'var(--red)';
+          }
+          const fmtD = v => (v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(1));
+          const dR40Color = dR40 == null ? '' : (dR40 > 0 ? 'var(--green)' : dR40 < 0 ? 'var(--red)' : 'var(--text-2)');
+          html += '<tr>'
+            + '<td class="fy" style="text-align:left">' + esc((prev.quarter||'?') + '→' + (cur.quarter||'?')) + '</td>'
+            + '<td style="text-align:right">' + fmtD(dGrowth) + (dGrowth!=null?'pp':'') + '</td>'
+            + '<td style="text-align:right">' + fmtD(dMargin) + (dMargin!=null?'pp':'') + '</td>'
+            + '<td style="text-align:right;color:' + dR40Color + '">' + fmtD(dR40) + '</td>'
+            + '<td style="text-align:left;color:' + driverColor + ';font-size:11px">' + driverLabel + '</td>'
+            + '</tr>';
+        }
+        html += '</tbody></table></div>';
+      }
     }
 
     // Section I (Workstream A3): Insider Activity — SEC Form 4 open-market buys.

@@ -60,6 +60,10 @@ module.exports = [
   { file: './sloan-ratio.js' },
   { file: './capex-trend.js' },
   { file: './sbc-revenue.js' },
+  // Workstream B: SBC-adjusted Rule-of-40 — penalizes optical FCF inflated by
+  // stock-based comp and flags the FCF-vs-EBITDA-margin gap (optical-FCF tell,
+  // e.g. Okta). DIAGNOSTIC, NOT in any SCORE_WEIGHTS → fixture-hash safe.
+  { file: './rule-of-40-sbc-adjusted.js' },
   { file: './margin-decay.js' },
   { file: './opinc-margin-spike.js' },
   { file: './stable-quarterly-growth.js' },

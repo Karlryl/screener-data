@@ -2597,6 +2597,115 @@ test('insider-conviction: routine filer (history present) → 0 routine pts vs o
   if (rOpp.components.breakdown.routine !== 10) throw new Error('opportunistic-with-history should get 10 pts, got ' + rOpp.components.breakdown.routine);
 });
 
+// ─── Workstream B: Rule-of-40 (SBC-adjusted) + rule-of-x retune ───────
+// DIAGNOSTIC method, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
+// rule-of-x retune (filter-config 2.0/58) DOES move the fixture-hash (rule-of-x
+// carries weight in HG) — that rebaseline is intentional for this workstream.
+
+test('rule-of-40-sbc-adjusted: clean case (growth 30, fcf 20, SBC 5% rev) -> value 45, pass', () => {
+  const s = makeStock({ revenueGrowthYoY: 30, fcfMarginTTM: 20 }, {}, []);
+  s.annual.annualSBC = [{ value: 50 }];
+  s.annual.annualRev = [{ value: 1000 }];  // SBC = 5% of rev
+  const r = Runner.evaluateStock(s)['rule-of-40-sbc-adjusted'];
+  if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
+  // 30 + (20 - 5) = 45
+  if (!approx(r.value, 45)) throw new Error('value=' + r.value + ' (expected 45)');
+  if (!r.pass) throw new Error('45 >= 40 should pass');
+  if (!approx(r.components.sbcPctOfRevenue, 5)) throw new Error('sbcPct=' + r.components.sbcPctOfRevenue);
+  if (!approx(r.components.adjustedFcfMargin, 15)) throw new Error('adjFcf=' + r.components.adjustedFcfMargin);
+});
+
+test('rule-of-40-sbc-adjusted: SBC drag flips pass (growth 25, fcf 18, SBC 10% rev -> 33 fail)', () => {
+  const s = makeStock({ revenueGrowthYoY: 25, fcfMarginTTM: 18 }, {}, []);
+  s.annual.annualSBC = [{ value: 100 }];
+  s.annual.annualRev = [{ value: 1000 }];  // SBC = 10% of rev
+  const r = Runner.evaluateStock(s)['rule-of-40-sbc-adjusted'];
+  if (!r.computable) throw new Error('should be computable');
+  // adjusted = 25 + (18 - 10) = 33 → fail; vanilla R40 would be 25+18=43 → pass
+  if (!approx(r.value, 33)) throw new Error('value=' + r.value + ' (expected 33)');
+  if (r.pass) throw new Error('33 < 40 should fail — SBC adjustment must bite');
+  // Prove vanilla R40 passes the same stock (the adjustment is what flips it)
+  const vanilla = Runner.evaluateStock(s)['rule-of-40'];
+  if (!vanilla.pass) throw new Error('vanilla R40 (43) should still pass — sanity for the contrast');
+});
+
+test('rule-of-40-sbc-adjusted: SBC-inflation flag fires when FCF-EBITDA gap > 15pp', () => {
+  const s = makeStock({ revenueGrowthYoY: 30, fcfMarginTTM: 25, ebitdaMargins: 5 }, {}, []);
+  s.annual.annualSBC = [{ value: 30 }];
+  s.annual.annualRev = [{ value: 1000 }];
+  const r = Runner.evaluateStock(s)['rule-of-40-sbc-adjusted'];
+  if (!r.computable) throw new Error('should be computable');
+  if (r.components.sbcInflationFlag !== true) {
+    throw new Error('gap = 25 - 5 = 20pp > 15 → flag should be true; got ' + JSON.stringify(r.components));
+  }
+  if (!approx(r.components.fcfVsEbitdaGapPp, 20)) throw new Error('gap=' + r.components.fcfVsEbitdaGapPp);
+});
+
+test('rule-of-40-sbc-adjusted: no SBC-inflation flag when FCF-EBITDA gap < 15pp', () => {
+  const s = makeStock({ revenueGrowthYoY: 30, fcfMarginTTM: 25, ebitdaMargins: 18 }, {}, []);
+  s.annual.annualSBC = [{ value: 30 }];
+  s.annual.annualRev = [{ value: 1000 }];
+  const r = Runner.evaluateStock(s)['rule-of-40-sbc-adjusted'];
+  if (!r.computable) throw new Error('should be computable');
+  if (r.components.sbcInflationFlag !== false) {
+    throw new Error('gap = 25 - 18 = 7pp < 15 → flag should be false; got ' + r.components.sbcInflationFlag);
+  }
+});
+
+test('rule-of-40-sbc-adjusted: ebitda unavailable -> flag false + documented reason', () => {
+  const s = makeStock({ revenueGrowthYoY: 30, fcfMarginTTM: 25 }, {}, []);
+  s.annual.annualSBC = [{ value: 30 }];
+  s.annual.annualRev = [{ value: 1000 }];
+  const r = Runner.evaluateStock(s)['rule-of-40-sbc-adjusted'];
+  if (!r.computable) throw new Error('should still be computable (flag is independent of pass)');
+  if (r.components.sbcInflationFlag !== false) throw new Error('no ebitda → flag must be false');
+  if (r.components.ebitdaSource !== 'ebitda-unavailable') {
+    throw new Error("expected ebitdaSource='ebitda-unavailable', got " + r.components.ebitdaSource);
+  }
+});
+
+test('rule-of-40-sbc-adjusted: ebitda margin computed from ebitda/revenueTTM fallback', () => {
+  // No ebitdaMargins metric, but absolute ebitda + revenueTTM present → 50/1000 = 5%
+  const s = makeStock({ revenueGrowthYoY: 30, fcfMarginTTM: 25, ebitda: 50, revenueTTM: 1000 }, {}, []);
+  s.annual.annualSBC = [{ value: 30 }];
+  s.annual.annualRev = [{ value: 1000 }];
+  const r = Runner.evaluateStock(s)['rule-of-40-sbc-adjusted'];
+  if (!r.computable) throw new Error('should be computable');
+  if (!approx(r.components.ebitdaMargin, 5)) throw new Error('ebitdaMargin=' + r.components.ebitdaMargin);
+  // gap = 25 - 5 = 20 > 15 → flag true
+  if (r.components.sbcInflationFlag !== true) throw new Error('computed ebitda margin gap 20pp should flag');
+});
+
+test('rule-of-40-sbc-adjusted: not computable when growth missing', () => {
+  const s = makeStock({ fcfMarginTTM: 20 }, {}, []);
+  s.annual.annualSBC = [{ value: 50 }];
+  s.annual.annualRev = [{ value: 1000 }];
+  const r = Runner.evaluateStock(s)['rule-of-40-sbc-adjusted'];
+  if (r.computable) throw new Error('should be incomputable when growth missing');
+});
+
+test('rule-of-40-sbc-adjusted: not computable when SBC/rev missing', () => {
+  const s = makeStock({ revenueGrowthYoY: 30, fcfMarginTTM: 20 }, {}, []);
+  const r = Runner.evaluateStock(s)['rule-of-40-sbc-adjusted'];
+  if (r.computable) throw new Error('should be incomputable when annualSBC/annualRev absent');
+});
+
+test('rule-of-x retune: 2.0×20 + 10 = 50 < 58 -> fail (new threshold took effect)', () => {
+  const s = makeStock({ revenueGrowthYoY: 20, fcfMarginTTM: 10 });
+  const r = Runner.evaluateStock(s)['rule-of-x'];
+  if (!r.computable) throw new Error('should be computable');
+  if (!approx(r.value, 50)) throw new Error('value=' + r.value + ' (expected 2.0*20+10=50)');
+  if (r.pass) throw new Error('50 < 58 should fail under retuned config');
+});
+
+test('rule-of-x retune: 2.0×30 + 10 = 70 >= 58 -> pass', () => {
+  const s = makeStock({ revenueGrowthYoY: 30, fcfMarginTTM: 10 });
+  const r = Runner.evaluateStock(s)['rule-of-x'];
+  if (!r.computable) throw new Error('should be computable');
+  if (!approx(r.value, 70)) throw new Error('value=' + r.value + ' (expected 2.0*30+10=70)');
+  if (!r.pass) throw new Error('70 >= 58 should pass');
+});
+
 // ─── Tag 134 — Phase 5.4: Fixture-Hash Golden Test ────────────────────
 // Pre-pull guard against silent behavior changes in score-aggregator.
 // Re-evaluates a fixed synthetic stock and asserts the SHA256 hash of the

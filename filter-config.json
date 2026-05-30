@@ -8,9 +8,9 @@
     "note": "R40 = revenueGrowthYoY + fcfMarginTTM >= threshold"
   },
   "rule_of_x": {
-    "threshold": 50,
-    "multiplier": 1.5,
-    "note": "RX = multiplier * revenueGrowthYoY + fcfMarginTTM >= threshold"
+    "threshold": 58,
+    "multiplier": 2.0,
+    "note": "RX = 2.0 * revenueGrowthYoY + fcfMarginTTM >= 58 (Bessemer Rule-of-X multiplier 2.0-2.3x; growth weighted ~2x FCF margin)"
   },
   "ui": {
     "defaultTab": "R40",
