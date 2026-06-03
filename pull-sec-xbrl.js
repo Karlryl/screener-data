@@ -29,7 +29,12 @@ const { fetchSecTickers } = require('./discovery/sec-tickers.js');
 // Tag 189: F-SM-023 — atomic manifest writes.
 const { writeFileAtomic } = require('./lib/atomic-write.js');
 
-const CACHE_DIR = path.join(__dirname, 'external-data', 'sec-xbrl');
+// Cache location is overridable via SEC_XBRL_CACHE_DIR so a full local pull
+// (~15GB across ~10k tickers) can be written OUTSIDE a cloud-synced folder.
+// The repo lives under OneDrive; the in-repo default would otherwise upload
+// the whole companyfacts corpus to the cloud. CI leaves the env unset and so
+// keeps the original in-repo path (only _manifest.json is committed anyway).
+const CACHE_DIR = process.env.SEC_XBRL_CACHE_DIR || path.join(__dirname, 'external-data', 'sec-xbrl');
 const MANIFEST_PATH = path.join(CACHE_DIR, '_manifest.json');
 // SEC EDGAR Terms of Use REQUIRE a User-Agent carrying a real contact. A
 // contactless UA (the old 'screener-data/1.0 (github.com/...)') is silently
