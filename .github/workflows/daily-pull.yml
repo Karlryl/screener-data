@@ -201,6 +201,11 @@ jobs:
       - name: Run Yahoo Pull
         env:
           FUNDAMENTALS_MAX_AGE_DAYS: '7'
+          # 2026-06: market-cap floor lowered $1B → $800M so the universe covers
+          # the broader US small/mid-cap set (per user "screen all US companies").
+          # Must match the local fill-pull floor, else this daily pull would
+          # re-purge $800M–$1B names on their next staleness refresh.
+          MIN_MCAP_USD: '800000000'
         run: node --max-old-space-size=6144 pull-yahoo.js --watchlist watchlist.json --output snapshots --rate-limit 2000
         continue-on-error: true
         timeout-minutes: 165

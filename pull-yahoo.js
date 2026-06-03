@@ -73,6 +73,17 @@ const yf = new YahooFinance({
 const FUNDAMENTALS_MAX_AGE_DAYS = parseInt(process.env.FUNDAMENTALS_MAX_AGE_DAYS || '7', 10);
 const FUNDAMENTALS_MAX_AGE_MS = FUNDAMENTALS_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
 
+// Market-cap floor (USD). Env-configurable so a wider universe sweep — e.g.
+// "screen every US company" — can lower it without a code edit, and so the
+// local fill-pull and the daily CI pull stay consistent (otherwise CI's $1B
+// floor would re-purge sub-$1B names on the next staleness refresh). Default
+// $1B preserves prior behaviour. Set MIN_MCAP_USD in dollars, e.g.
+// 800000000 = $800M. Used by BOTH the price-only floor and the full-pull floor.
+const MIN_MCAP_USD = (() => {
+  const v = parseFloat(process.env.MIN_MCAP_USD || '');
+  return (Number.isFinite(v) && v >= 0) ? v : 1e9;
+})();
+
 // Modules die wir brauchen für canonicalInput-Mapping
 const MODULES = [
   'summaryDetail',                      // marketCap, priceToSalesTrailing12Months, forwardPE, trailingPE
@@ -1469,7 +1480,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     // a stock that drifted below $1B post-last-full-pull stayed in the universe
     // (survivor bias on the small-cap side). Re-check the floor here; if violated,
     // delete the snapshot and report skipped-mcap-by-priceonly.
-    const MIN_MCAP = 1e9;
+    const MIN_MCAP = MIN_MCAP_USD;
     const mcapNow = existing.marketCap && existing.marketCap.value;
     if (mcapNow != null && mcapNow < MIN_MCAP) {
       try { fs.unlinkSync(fp); } catch (_) {}
@@ -1855,7 +1866,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
 
       // Tag-87a: MarketCap-Filter — skip Stocks außerhalb Karl's Mid/Large-Cap-Range
       // Tag 170 (reverted): $1B min — Mid-Cap coverage preserved per user decision.
-      const MIN_MCAP = 1e9;       // $1B
+      const MIN_MCAP = MIN_MCAP_USD;   // env-configurable (MIN_MCAP_USD), default $1B
       const MAX_MCAP = Infinity;       // Tag 101: kein Mega-Cap-Cut mehr
       const mcapVal = canonical.marketCap && canonical.marketCap.value;
       // F-DQ-001 (Tag 179): null mcap previously short-circuited and passed through
