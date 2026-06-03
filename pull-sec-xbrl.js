@@ -31,7 +31,15 @@ const { writeFileAtomic } = require('./lib/atomic-write.js');
 
 const CACHE_DIR = path.join(__dirname, 'external-data', 'sec-xbrl');
 const MANIFEST_PATH = path.join(CACHE_DIR, '_manifest.json');
-const USER_AGENT = 'screener-data/1.0 (github.com/Karlryl/screener-data)';
+// SEC EDGAR Terms of Use REQUIRE a User-Agent carrying a real contact. A
+// contactless UA (the old 'screener-data/1.0 (github.com/...)') is silently
+// served HTTP 403 by data.sec.gov — empirically confirmed: contactless → 403,
+// with-contact → 200. This is the SAME defect Tag 211j fixed in
+// pull-insider-form4.js and pull-13f-institutional.js; pull-sec-xbrl.js was
+// missed and so the monthly XBRL pull returned err=51/pulled=0 on every run
+// (the 51-error abort gate at the pull loop tripped on 51 consecutive 403s).
+// Keep this string identical to the other two SEC scripts.
+const USER_AGENT = 'Karl Viehrig screener-data karl_viehrig@web.de';
 const RATE_DELAY_MS = 125;       // 8 req/sec (under SEC 10/sec limit)
 const STALE_DAYS = 90;           // re-pull after 90 days (typical 10-Q cycle)
 

@@ -48,6 +48,13 @@ jobs:
         run: npm ci --no-audit --no-fund
         timeout-minutes: 5
 
+      # Fail fast (ms) if any SEC puller regresses to a contactless User-Agent,
+      # which SEC silently 403s. This is the static guard for the 2026-06
+      # pull-sec-xbrl.js fix; without it the regression only surfaces as an
+      # err=N/pulled=0 storm mid-pull.
+      - name: Guard SEC User-Agent
+        run: node tests/sec-user-agent-test.js
+
       - name: Pull SEC XBRL
         timeout-minutes: 70  # F-CI-006: bounded so it can't eat the whole 90-min job budget
         env:
@@ -55,34 +62,56 @@ jobs:
         run: |
           # F-CI-001: validate user-supplied max input before passing to shell to prevent injection
           max="${MAX_INPUT:-0}"; if ! [[ "$max" =~ ^[0-9]+$ ]]; then echo "Invalid max input"; exit 1; fi
-          if [ "$max" != "" ] && [ "$max" != "0" ]; then
-            node pull-sec-xbrl.js --max "$max"
-          else
-            node pull-sec-xbrl.js
-          fi
+          # A full pull of ~9,900 tickers is infeasible: companyfacts averages
+          # ~4 MB/ticker → ~41 GB download and ~115 min at the 8 req/s SEC limit,
+          # blowing BOTH the 70-min step timeout and the runner disk. The cache
+          # is git-ignored (ephemeral per runner) so coverage cannot accumulate
+          # across runs anyway. Bound each scheduled run to a disk/time-safe
+          # slice; request a larger run manually via the workflow_dispatch `max`
+          # input. 1500 tickers ≈ 6 GB transient / ~18 min.
+          if [ "$max" = "0" ] || [ "$max" = "" ]; then max=1500; fi
+          node pull-sec-xbrl.js --max "$max"
 
-      # F-CI-010: Verify SEC XBRL coverage before committing manifest
+      # F-CI-010: Verify SEC XBRL coverage before committing manifest.
+      # Rewritten (2026-06): the previous version was guaranteed to fail every
+      # run for two independent reasons —
+      #   (1) it read m.n_ok / m.n_total, keys pull-sec-xbrl.js never writes
+      #       (the manifest carries m.summary.{pulled,skipped304,skippedFresh,
+      #       notFound,errors,totalKnown}), so coverage was always "0 / 0";
+      #   (2) the hard-fail checked `! -f external-data/sec-xbrl-manifest.json`
+      #       (top-level, hyphenated) which is never created — the real manifest
+      #       is external-data/sec-xbrl/_manifest.json (subdir, underscore).
+      # Both are fixed here. The gate now keys off the ERROR RATE rather than a
+      # fixed full-universe coverage target (the pull is bounded per run), so it
+      # still catches the all-403 collapse (err=51/pulled=0) that the contactless
+      # User-Agent used to produce, while passing a healthy bounded pull.
       - name: Verify SEC Coverage
         run: |
-          if [ -f external-data/sec-xbrl/_manifest.json ]; then
-            ok=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./external-data/sec-xbrl/_manifest.json','utf8'));console.log(m.n_ok||0)}catch(e){console.log(0)}")
-            total=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./external-data/sec-xbrl/_manifest.json','utf8'));console.log(m.n_total||0)}catch(e){console.log(0)}")
-            echo "SEC XBRL coverage: $ok / $total"
-            if [ "$total" -gt 0 ] && [ "$ok" -lt 100 ]; then
-              echo "::warning::SEC XBRL coverage $ok/$total — low coverage, check pull-sec-xbrl.js output"
-            fi
-          else
-            echo "::warning::No SEC XBRL manifest found — pull may have failed"
-          fi
-          # F-CI-006: hard-fail on critically low coverage or missing manifest
-          if [ "${total:-0}" -gt 1000 ] && [ "${ok:-0}" -lt 500 ]; then
-            echo "CRITICAL: SEC coverage below 50% with >1000 total tickers"
-            exit 1
-          fi
-          if [ ! -f "external-data/sec-xbrl-manifest.json" ]; then
-            echo "CRITICAL: SEC manifest file missing"
-            exit 1
-          fi
+          node -e "
+            const fs = require('fs');
+            let m = null;
+            try { m = JSON.parse(fs.readFileSync('./external-data/sec-xbrl/_manifest.json','utf8')); } catch (e) {}
+            if (!m || !m.summary) {
+              console.log('::error::SEC XBRL manifest missing or has no summary — pull failed');
+              process.exit(1);
+            }
+            const s = m.summary;
+            const pulled = s.pulled||0, c304 = s.skipped304||0, fresh = s.skippedFresh||0;
+            const nf = s.notFound||0, err = s.errors||0, total = s.totalKnown||0;
+            const ok = pulled + c304 + fresh;          // successfully covered
+            const attempted = ok + nf + err;           // real fetch attempts
+            console.log('SEC XBRL: pulled=' + pulled + ' 304=' + c304 + ' fresh=' + fresh +
+                        ' 404=' + nf + ' err=' + err + ' / totalKnown=' + total);
+            console.log('coverage: ok=' + ok + ' attempted=' + attempted);
+            if (attempted > 0 && err / attempted > 0.5) {
+              console.log('::error::error rate ' + err + '/' + attempted +
+                          ' >50% — pull is failing (check User-Agent / SEC 403)');
+              process.exit(1);
+            }
+            if (ok < 50) {
+              console.log('::warning::only ' + ok + ' tickers covered this run');
+            }
+          "
 
       - name: Commit manifest
         run: |
