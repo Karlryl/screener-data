@@ -4006,10 +4006,38 @@ async function main() {
       asOf: generatedAt
     });
   }
-  r40Latest.sort((a, b) => b.r40 - a.r40);  // best R40 first; stable, human-diffable
+  // ── Merge with the existing r40-latest.json so the export stays COMPLETE ─────
+  // across runs. The daily CI rotates ~3.3k tickers/day over a ~24k universe, so
+  // any single run only re-derives a SUBSET of snapshots — a plain overwrite
+  // would drop every ticker not pulled that day (exactly why NVDA/PLTR vanished
+  // from the daily CI-built screener.html). Instead: keep prior entries, overlay
+  // the tickers refreshed this run, and prune entries whose asOf is older than
+  // the rotation horizon so delisted names eventually fall out. Result: findash
+  // always sees a complete file, each ticker as fresh as its last pull. The file
+  // is git-tracked, so the merged result persists run-to-run.
   const r40OutPath = path.join(__dirname, 'r40-latest.json');
-  writeFileAtomic(r40OutPath, JSON.stringify(r40Latest, null, 2) + '\n');
-  console.log('[screener] wrote ' + r40OutPath + ' (' + r40Latest.length + ' R40 results)');
+  const R40_LATEST_MAX_AGE_DAYS = 60;
+  const cutoffStr = (() => {
+    const d = new Date(); d.setUTCDate(d.getUTCDate() - R40_LATEST_MAX_AGE_DAYS);
+    return d.toISOString().slice(0, 10);
+  })();
+  const byTicker = new Map();
+  try {
+    const prior = JSON.parse(fs.readFileSync(r40OutPath, 'utf8'));
+    if (Array.isArray(prior)) {
+      for (const e of prior) {
+        // keep a prior entry only if it is recent enough; this-run tickers
+        // overwrite it below regardless of age.
+        if (e && e.ticker && typeof e.asOf === 'string' && e.asOf >= cutoffStr) byTicker.set(e.ticker, e);
+      }
+    }
+  } catch (_) { /* first run / missing file — start from this run only */ }
+  const freshCount = r40Latest.length;
+  for (const e of r40Latest) byTicker.set(e.ticker, e);   // overlay tickers refreshed this run
+  const merged = Array.from(byTicker.values()).sort((a, b) => b.r40 - a.r40);  // best R40 first
+  writeFileAtomic(r40OutPath, JSON.stringify(merged, null, 2) + '\n');
+  console.log('[screener] wrote ' + r40OutPath + ' (' + merged.length + ' R40 results; ' +
+              freshCount + ' refreshed this run, prior kept back to ' + cutoffStr + ')');
 }
 
 if (require.main === module) main().catch(e => { console.error('FATAL:', e); process.exit(1); });
