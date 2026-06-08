@@ -3964,6 +3964,52 @@ async function main() {
   const html = renderHTML(rows, tabs, sectors, countries, generatedAt);
   writeFileAtomic(args.out, html);
   console.log('[screener] wrote ' + args.out + ' (' + (html.length/1024).toFixed(0) + ' KB)');
+
+  // ── r40-latest.json — stable export for downstream consumers (findash) ──────
+  // A flat, sorted array of FINISHED Rule-of-40 / Rule-of-X verdicts. findash
+  // reads this in preference to the per-ticker r40rx-history/ files. The pass
+  // flags come straight from the canonical methods (which read filter-config.json:
+  // R40 = growth + fcfMargin ≥ 40, RX = 2.0×growth + fcfMargin ≥ 58), so there is
+  // no threshold drift — r40Pass/rxPass always match the screener's own verdict.
+  // fcfMargin is exposed under both names (fcfMargin + marginPct) so the consumer
+  // can read either. Written next to this script at a fixed path.
+  const round2 = (v) => (v == null || !Number.isFinite(v)) ? null : Math.round(v * 100) / 100;
+  const r40Latest = [];
+  for (const r of rows) {
+    if (r.r40 == null) continue;  // only rows with a computed Rule-of-40 result
+    // Honor the SAME hard-gates the screener applies before a row may enter the
+    // R40 tab (mirrors `hardGated` in classifyTabs): q-spike / loss-magnitude /
+    // metric-divergence / NI-volatility / pre-commerciality / closed-end-trust /
+    // R40-sanity / revenue-shock data-guards, data-quality grade D, and the
+    // Q_SPIKE_FAKE hg-class verdict. These reject R40-poisoning artifacts (e.g. a
+    // micro-cap printing 29000% "growth" off a single-quarter base). Excluding
+    // them keeps r40-latest.json to FINISHED, trustworthy results — the same set
+    // the screener itself is willing to show as Rule-of-40 candidates, so r40Pass
+    // (r40 ≥ 40) and rxPass (rx ≥ 58) are clean verdicts that match the values.
+    const hardGated = r.qSpikeFail || r.lossMagFail || r.metricDivFail || r.niVolFail
+      || r.preCommFail || r.cetFail || r.r40SanityFail || r.revShockFail
+      || r.dqGrade === 'D' || r.hgClass === 'Q_SPIKE_FAKE';
+    if (hardGated) continue;
+    const r40Res = r.results && r.results['rule-of-40'];
+    const rxRes  = r.results && r.results['rule-of-x'];
+    r40Latest.push({
+      ticker: r.ticker,
+      name: r.name,
+      growth: round2(r.growth),
+      fcfMargin: round2(r.fcfMargin),   // canonical FCF-margin value …
+      marginPct: round2(r.fcfMargin),   // … same value, exposed as marginPct too
+      marginType: 'FCF',
+      r40: round2(r.r40),
+      rx: round2(r.rx),
+      r40Pass: !!(r40Res && r40Res.computable && r40Res.pass),
+      rxPass:  !!(rxRes  && rxRes.computable  && rxRes.pass),
+      asOf: generatedAt
+    });
+  }
+  r40Latest.sort((a, b) => b.r40 - a.r40);  // best R40 first; stable, human-diffable
+  const r40OutPath = path.join(__dirname, 'r40-latest.json');
+  writeFileAtomic(r40OutPath, JSON.stringify(r40Latest, null, 2) + '\n');
+  console.log('[screener] wrote ' + r40OutPath + ' (' + r40Latest.length + ' R40 results)');
 }
 
 if (require.main === module) main().catch(e => { console.error('FATAL:', e); process.exit(1); });
