@@ -38,6 +38,14 @@ if (end < 0) { console.error('SCREENER_DATA terminator not found in ' + htmlPath
 const DATA = JSON.parse(html.slice(start, end));
 const rows = DATA.rowsByTicker || {};
 const asOf = (DATA.generatedAt || '').slice(0, 10);
+// F-04: refuse to write entries with an empty/short asOf. generate-screener.js's
+// merge prunes any entry whose asOf < (today - 60d); an empty '' sorts below every
+// real date, so a bad asOf here would make the NEXT daily run silently delete every
+// ticker this script wrote. Fail loud instead of corrupting the export.
+if (!/^\d{4}-\d{2}-\d{2}$/.test(asOf)) {
+  console.error('generatedAt missing/malformed in SCREENER_DATA (asOf="' + asOf + '") — refusing to write. Source: ' + htmlPath);
+  process.exit(1);
+}
 
 const round2 = (v) => (v == null || !Number.isFinite(v)) ? null : Math.round(v * 100) / 100;
 const out = [];
@@ -65,7 +73,12 @@ for (const t of Object.keys(rows)) {
     asOf
   });
 }
-out.sort((a, b) => b.r40 - a.r40);
+// F-01: null-safe sort (mirror generate-screener.js) — avoid NaN ordering.
+out.sort((a, b) => {
+  const ar = Number.isFinite(a.r40) ? a.r40 : -Infinity;
+  const br = Number.isFinite(b.r40) ? b.r40 : -Infinity;
+  return (br - ar) || (a.ticker < b.ticker ? -1 : a.ticker > b.ticker ? 1 : 0);
+});
 fs.writeFileSync(outPath, JSON.stringify(out, null, 2) + '\n');
 console.log('wrote ' + outPath + ' (' + out.length + ' R40 results, asOf ' + asOf +
             ', source ' + path.basename(htmlPath) + ')');

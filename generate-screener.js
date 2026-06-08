@@ -3975,6 +3975,7 @@ async function main() {
   // can read either. Written next to this script at a fixed path.
   const round2 = (v) => (v == null || !Number.isFinite(v)) ? null : Math.round(v * 100) / 100;
   const r40Latest = [];
+  const hardGatedTickers = new Set();  // F-02: tickers newly hard-gated this run, pruned from the merge below
   for (const r of rows) {
     if (r.r40 == null) continue;  // only rows with a computed Rule-of-40 result
     // Honor the SAME hard-gates the screener applies before a row may enter the
@@ -3989,7 +3990,7 @@ async function main() {
     const hardGated = r.qSpikeFail || r.lossMagFail || r.metricDivFail || r.niVolFail
       || r.preCommFail || r.cetFail || r.r40SanityFail || r.revShockFail
       || r.dqGrade === 'D' || r.hgClass === 'Q_SPIKE_FAKE';
-    if (hardGated) continue;
+    if (hardGated) { hardGatedTickers.add(r.ticker); continue; }
     const r40Res = r.results && r.results['rule-of-40'];
     const rxRes  = r.results && r.results['rule-of-x'];
     r40Latest.push({
@@ -4017,8 +4018,12 @@ async function main() {
   // is git-tracked, so the merged result persists run-to-run.
   const r40OutPath = path.join(__dirname, 'r40-latest.json');
   const R40_LATEST_MAX_AGE_DAYS = 60;
+  // F-03: derive the prune cutoff from `generatedAt` (not a second `new Date()`),
+  // so the horizon is consistent with the asOf stamps written this run even if the
+  // process crosses UTC midnight between the two clock reads.
   const cutoffStr = (() => {
-    const d = new Date(); d.setUTCDate(d.getUTCDate() - R40_LATEST_MAX_AGE_DAYS);
+    const d = new Date(generatedAt + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() - R40_LATEST_MAX_AGE_DAYS);
     return d.toISOString().slice(0, 10);
   })();
   const byTicker = new Map();
@@ -4032,9 +4037,19 @@ async function main() {
       }
     }
   } catch (_) { /* first run / missing file — start from this run only */ }
+  // F-02: drop any ticker that became hard-gated THIS run. The overlay loop below
+  // only adds non-gated tickers, so without this a freshly-detected data artifact
+  // (e.g. a new q-spike) would keep its poisoned prior entry until the 60d prune.
+  for (const t of hardGatedTickers) byTicker.delete(t);
   const freshCount = r40Latest.length;
   for (const e of r40Latest) byTicker.set(e.ticker, e);   // overlay tickers refreshed this run
-  const merged = Array.from(byTicker.values()).sort((a, b) => b.r40 - a.r40);  // best R40 first
+  // F-01: null-safe sort — `b.r40 - a.r40` yields NaN (undefined order) if a kept
+  // prior entry ever has a null r40; treat null as -Infinity and tie-break on ticker.
+  const merged = Array.from(byTicker.values()).sort((a, b) => {
+    const ar = Number.isFinite(a.r40) ? a.r40 : -Infinity;
+    const br = Number.isFinite(b.r40) ? b.r40 : -Infinity;
+    return (br - ar) || (a.ticker < b.ticker ? -1 : a.ticker > b.ticker ? 1 : 0);
+  });
   writeFileAtomic(r40OutPath, JSON.stringify(merged, null, 2) + '\n');
   console.log('[screener] wrote ' + r40OutPath + ' (' + merged.length + ' R40 results; ' +
               freshCount + ' refreshed this run, prior kept back to ' + cutoffStr + ')');

@@ -1768,9 +1768,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // carry accountsReceivable/currentAssets/currentLiabilities/totalLiabilities/netPPE
       // (but lack legacy totalDebt/totalCash/totalAssets) are still counted as usable.
       // Without this, QS can win even though FTS is richer in Tag 211l data.
-      const _balanceUsable = r => r.totalDebt != null || r.totalCash != null || r.totalAssets != null ||
+      // F-001 fix: guard `r != null` first. mapFTSToBalance pushes explicit null
+      // placeholder rows for all-empty balance years (year-alignment), and a plain
+      // `r.totalDebt` deref on those threw "Cannot read properties of null (reading
+      // 'totalDebt')" — the [mapper-bug] that silently dropped the whole ticker's
+      // snapshot. Short-circuit on null so placeholder rows count as not-usable.
+      const _balanceUsable = r => r != null && (r.totalDebt != null || r.totalCash != null || r.totalAssets != null ||
         r.currentAssets != null || r.currentLiabilities != null || r.totalLiabilities != null ||
-        r.accountsReceivable != null || r.netPPE != null;
+        r.accountsReceivable != null || r.netPPE != null);
       const oldBalanceUsable = (canonical.annual.annualBalance || []).filter(_balanceUsable).length;
       const newBalanceUsable = ftsBalance.filter(_balanceUsable).length;
       if (newBalanceUsable > oldBalanceUsable) canonical.annual.annualBalance = ftsBalance;
