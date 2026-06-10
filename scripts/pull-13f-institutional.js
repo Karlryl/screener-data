@@ -89,6 +89,13 @@ const MAX_POSITIONS_PER_FILING = 20000;
 // Verified via https://efts.sec.gov/LATEST/search-index?forms=13F-HR&q=<name>
 // where possible; CIKs marked PLACEHOLDER need verification before the data
 // is trusted downstream.
+// F-008 (audit 2026-06-08): all rows previously marked "(placeholder)" carried
+// GUESSED CIKs — most reused another institution's CIK (the first-wins de-dupe
+// silently dropped them), but 0001029160 was actually fetched under the wrong
+// name ("Citigroup Inc (placeholder)") and ExxonMobil is not a 13F institution
+// at all. Every placeholder row + Exxon removed; the remaining CIKs were all
+// entered as real, intended filers. To re-add an institution, verify the CIK
+// via https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&type=13F-HR first.
 const BOOTSTRAP_INSTITUTIONS = [
   { cik: '0001067983', name: 'Berkshire Hathaway Inc' },
   { cik: '0001364742', name: 'BlackRock Inc' },
@@ -98,12 +105,10 @@ const BOOTSTRAP_INSTITUTIONS = [
   { cik: '0000886982', name: 'Goldman Sachs Group Inc' },
   { cik: '0000019617', name: 'JPMorgan Chase & Co' },
   { cik: '0000070858', name: 'Bank of America Corp' },
-  { cik: '0001029160', name: 'Citigroup Inc (placeholder)' },
   { cik: '0000831001', name: 'Citigroup Inc' },
   { cik: '0001037389', name: 'Renaissance Technologies LLC' },
   { cik: '0001350694', name: 'Bridgewater Associates LP' },
   { cik: '0001423053', name: 'Citadel Advisors LLC' },
-  { cik: '0001029160', name: 'Two Sigma Investments LP (placeholder)' },
   { cik: '0001179392', name: 'Two Sigma Investments LP' },
   { cik: '0001027796', name: 'Soros Fund Management LLC' },
   { cik: '0001061768', name: 'Tudor Investment Corp' },
@@ -116,30 +121,22 @@ const BOOTSTRAP_INSTITUTIONS = [
   { cik: '0001056831', name: 'Coatue Management LLC' },
   { cik: '0001517137', name: 'Viking Global Investors LP' },
   { cik: '0001633313', name: 'Baupost Group LLC' },
-  { cik: '0001037389', name: 'D. E. Shaw & Co LP (placeholder)' },
   { cik: '0001009207', name: 'D. E. Shaw & Co LP' },
-  { cik: '0001656456', name: 'AQR Capital Management LLC (placeholder)' },
   { cik: '0001167557', name: 'AQR Capital Management LLC' },
   { cik: '0000898437', name: 'Wellington Management Group LLP' },
   { cik: '0000315066', name: 'Fidelity Management & Research (FMR LLC)' },
   { cik: '0000200217', name: 'T. Rowe Price Group Inc' },
   { cik: '0000354204', name: 'Capital Research Global Investors' },
-  { cik: '0000034088', name: 'ExxonMobil (placeholder — not an institution)' },
-  { cik: '0001029160', name: 'PRIMECAP Management Co (placeholder)' },
   { cik: '0000810893', name: 'PRIMECAP Management Co' },
-  { cik: '0000884144', name: 'Sequoia Capital (placeholder)' },
   { cik: '0001112520', name: 'Sequoia Fund Inc' },
   { cik: '0001364750', name: 'Susquehanna International Group LLP' },
-  { cik: '0001135730', name: 'Millennium Management LLC (placeholder)' },
   { cik: '0001273087', name: 'Millennium Management LLC' },
   { cik: '0001553733', name: 'Point72 Asset Management LP' },
   { cik: '0001603466', name: 'Element Capital Management LLC' },
   { cik: '0001602119', name: 'Balyasny Asset Management LP' },
-  { cik: '0001364742', name: 'Norges Bank (placeholder — Norway sovereign)' },
   { cik: '0001262039', name: 'Dodge & Cox' },
   { cik: '0000093750', name: 'Franklin Resources Inc' },
-  { cik: '0000832988', name: 'Invesco Ltd' },
-  { cik: '0000895421', name: 'UBS Group AG (placeholder — overlaps Morgan Stanley row)' }
+  { cik: '0000832988', name: 'Invesco Ltd' }
 ];
 
 // ─── Tiny utils ─────────────────────────────────────────────────────────

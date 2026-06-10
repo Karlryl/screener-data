@@ -305,6 +305,37 @@ function _withinLookback(filingDateStr, lookbackDays) {
   return (Date.now() - t) <= lookbackDays * 86400000;
 }
 
+// F-007 (audit 2026-06-08): `filings.recent` holds only the most recent ~1000
+// filings. For high-volume issuers that spans LESS than the lookback window —
+// Form 4s older than the block were silently dropped, biasing the insider
+// signal toward filing-heavy periods. When the oldest `recent` row is still
+// inside the window, pull the paginated older pages (filings.files[]) that
+// overlap the window and append their rows. Page fetches are best-effort:
+// a failed page leaves the recent rows usable.
+async function _filingsCoveringLookback(subJson, lookbackDays) {
+  let rows = _normalizeSubmissions(subJson);
+  const files = (subJson && subJson.filings && Array.isArray(subJson.filings.files))
+    ? subJson.filings.files : [];
+  if (files.length === 0 || rows.length === 0) return rows;
+  const oldestRecent = rows[rows.length - 1] && rows[rows.length - 1].filingDate;
+  // recent already reaches past the window → nothing older needed
+  if (!oldestRecent || !_withinLookback(oldestRecent, lookbackDays)) return rows;
+  for (const fmeta of files) {
+    if (!fmeta || !fmeta.name) continue;
+    // skip pages whose newest filing predates the window entirely
+    if (fmeta.filingTo && !_withinLookback(fmeta.filingTo, lookbackDays)) continue;
+    try {
+      const pageRes = await httpGet('https://data.sec.gov/submissions/' + fmeta.name);
+      await sleep(RATE_DELAY_MS);
+      if (pageRes.notFound || !pageRes.body) continue;
+      const pageJson = JSON.parse(pageRes.body);
+      // older pages carry the parallel arrays at top level (same shape as `recent`)
+      rows = rows.concat(_normalizeSubmissions({ filings: { recent: pageJson } }));
+    } catch (e) { /* best-effort — recent rows still usable */ }
+  }
+  return rows;
+}
+
 // ─── Per-ticker pull ────────────────────────────────────────────────────
 async function pullTickerForm4(ticker, cikInfo) {
   const cik = cikInfo.cik;
@@ -318,7 +349,9 @@ async function pullTickerForm4(ticker, cikInfo) {
   try { subJson = JSON.parse(subRes.body); }
   catch (e) { return { transactions: [], error: 'submissions-parse: ' + e.message }; }
 
-  const filings = _normalizeSubmissions(subJson)
+  // F-007: cover the FULL lookback window, following pagination when needed.
+  const allRows = await _filingsCoveringLookback(subJson, FORM4_LOOKBACK_DAYS);
+  const filings = allRows
     .filter(f => f.form === '4' && _withinLookback(f.filingDate, FORM4_LOOKBACK_DAYS));
 
   const transactions = [];

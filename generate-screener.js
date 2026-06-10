@@ -636,7 +636,12 @@ function classifyTabs(rows) {
     // with <4 quarterly entries fall back to the TTM rule but are flagged
     // r40InsufficientHistory (unproven durability). Number.isFinite(r.r40) is a
     // base precondition in both branches.
-    if (Number.isFinite(r.r40)) {
+    // F-05 (audit 2026-06-08): R40 was the only quality tab WITHOUT the dqGrade-C
+    // block — and r40-latest.json exports the R40 tab as a "trusted" array to
+    // findash. A C grade means 60-85% of critical fields are missing; consistent
+    // with HG/QC/BF/PRE_BREAKOUT, such rows no longer enter R40 (still visible
+    // in WATCH via tier caps).
+    if (Number.isFinite(r.r40) && !dqBlockedFromQuality) {
       const hist = Array.isArray(r.r40rxHistory) ? r.r40rxHistory : [];
       const last4 = hist.slice(-4);
       if (last4.length >= 4) {

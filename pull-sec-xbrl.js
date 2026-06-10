@@ -46,6 +46,7 @@ const MANIFEST_PATH = path.join(CACHE_DIR, '_manifest.json');
 // Keep this string identical to the other two SEC scripts.
 const USER_AGENT = 'Karl Viehrig screener-data karl_viehrig@web.de';
 const RATE_DELAY_MS = 125;       // 8 req/sec (under SEC 10/sec limit)
+const RATE_LIMIT_BACKOFF_MS = 30000; // F-006: pause after an HTTP 429 before continuing
 const STALE_DAYS = 90;           // re-pull after 90 days (typical 10-Q cycle)
 
 function parseArgs(argv) {
@@ -78,7 +79,13 @@ function get(url, ifModifiedSince, _redirectDepth) {
         return get(nextUrl, ifModifiedSince, depth + 1).then(resolve).catch(reject);
       }
       if (res.statusCode === 404) return resolve({ notFound: true });
-      if (res.statusCode !== 200) return reject(new Error('HTTP ' + res.statusCode));
+      if (res.statusCode !== 200) {
+        // F-006 (audit 2026-06-08): carry the status code so the pull loop can
+        // distinguish a transient 429 rate-limit from real errors.
+        const err = new Error('HTTP ' + res.statusCode);
+        err.statusCode = res.statusCode;
+        return reject(err);
+      }
       const chunks = [];
       res.on('data', c => chunks.push(c));
       res.on('end', () => resolve({
@@ -113,7 +120,7 @@ async function main() {
     return d.toISOString();
   })();
 
-  let pulled = 0, skipped304 = 0, skippedFresh = 0, notFound = 0, errors = 0;
+  let pulled = 0, skipped304 = 0, skippedFresh = 0, notFound = 0, errors = 0, rateLimited = 0;
   const entries = Object.values(Object.fromEntries(tickers));
   const todo = entries.slice(0, args.max);
 
@@ -145,6 +152,22 @@ async function main() {
         pulled++;
       }
     } catch (e) {
+      // F-006 (audit 2026-06-08): a 429 rate-limit burst used to burn the 50-error
+      // abort budget — one burst meant pulled=0 for the whole monthly run. 429s now
+      // back off and do NOT count toward the abort gate; fetchedAt is deliberately
+      // NOT refreshed so the next run retries the CIK. A separate generous cap
+      // still aborts if SEC keeps 429ing the entire run (politeness).
+      if (e && e.statusCode === 429) {
+        rateLimited++;
+        console.warn(`  429 rate-limited on CIK${t.cik} — backing off ${RATE_LIMIT_BACKOFF_MS / 1000}s (${rateLimited} so far)`);
+        manifest.entries[t.cik] = Object.assign({}, prior, { lastError: 'HTTP 429 (rate-limited, will retry next run)' });
+        await sleep(RATE_LIMIT_BACKOFF_MS);
+        if (rateLimited > 200) {
+          console.error('Persistent 429s (>200) — aborting run, SEC is throttling us.');
+          break;
+        }
+        continue;
+      }
       errors++;
       manifest.entries[t.cik] = Object.assign({}, prior, { fetchedAt: new Date().toISOString(), lastError: e.message });
       if (errors > 50) {
@@ -161,9 +184,9 @@ async function main() {
   }
 
   manifest.lastRun = today;
-  manifest.summary = { pulled, skipped304, skippedFresh, notFound, errors, totalKnown: tickers.size };
+  manifest.summary = { pulled, skipped304, skippedFresh, notFound, errors, rateLimited, totalKnown: tickers.size };
   writeFileAtomic(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
-  console.log('Done. pulled=' + pulled + ' 304=' + skipped304 + ' fresh=' + skippedFresh + ' 404=' + notFound + ' err=' + errors);
+  console.log('Done. pulled=' + pulled + ' 304=' + skipped304 + ' fresh=' + skippedFresh + ' 404=' + notFound + ' err=' + errors + ' 429=' + rateLimited);
 }
 
 if (require.main === module) {
