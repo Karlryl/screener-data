@@ -63,7 +63,23 @@ const _YF_CONC = parseInt(process.env.PULL_CONCURRENCY || '10', 10);
 const yf = new YahooFinance({
   suppressNotices: ['yahooSurvey'],
   queue: { concurrency: _YF_CONC },
-  validation: { logErrors: false, logOptionsErrors: false }
+  validation: { logErrors: false, logOptionsErrors: false },
+  // Quick-Win 2026-06-10 (improvement plan): yahoo-finance2 emits a per-call
+  // logger.warn that the legacy quoteSummary statement submodules are empty
+  // since Nov 2024. We know — the FTS merge IS the primary source — and at
+  // 15.7k tickers/run that one warning drowns the pull log. It bypasses
+  // suppressNotices (plain logger.warn, not a notice), so filter exactly this
+  // message at the logger layer; everything else passes through unchanged.
+  logger: {
+    info: (...a) => console.log(...a),
+    warn: (...a) => {
+      if (typeof a[0] === 'string' && a[0].includes('have provided almost no data since Nov 2024')) return;
+      console.warn(...a);
+    },
+    error: (...a) => console.error(...a),
+    debug: () => {},
+    dir: (obj, opts) => console.dir(obj, opts)
+  }
 });
 
 // Tag 166: Frequenztrennung — price-only mode for recent snapshots.

@@ -1,6 +1,9 @@
 # Project Status — screener-data
 
-**Last Update:** 2026-05-17 — **Tag 223 era.** Daily-cron discovery pipeline over ~15 700 tickers.
+**Last Update:** 2026-06-10 — **Tag 239 era.** Daily-cron discovery pipeline over ~15 700 tickers.
+Alle 19 deferred Audit-Findings vom 2026-06-08 aufgelöst (Tag 237–239, siehe
+`audit-reports/2026-06-10.md`); screener.html UI-Redesign (CSS-Token-Layer);
+priorisierter Verbesserungsplan in `docs/IMPROVEMENT-PLAN-2026-06-10.md`.
 
 > For full context see `README.md`. For chronological history read `audit-reports/` in date order. This file is a state snapshot, capped at 100 lines.
 
@@ -11,7 +14,7 @@
 - **Production scorer:** `methods/score-aggregator.js` (`SCORE_WEIGHTS` for HYPERGROWTH / QUALITY_COMPOUNDER / TURNAROUND). Tier taxonomy A / B / NEAR_MISS / REJECT.
 - **Legacy scorer:** `engine-v7.3.js` + `score-orchestrator.js` are deprecated but not deleted (Phase 3 / Phase 5 deferred — see ADR-001 status update). Still invoked by `engine-cli-tests.js` pre-pull guard.
 - **Cron:** daily `'0 2 * * *'` UTC. Wall-clock per run 2.5–4 h. `timeout-minutes: 240`.
-- **Tests:** 155/155 passing (`tag28-tests.js`) at HEAD; includes the fixture-hash invariant guarding aggregator drift.
+- **Tests:** 184/184 passing (`tag28-tests.js`) at HEAD; includes the fixture-hash invariant guarding aggregator drift. Plus `engine-cli-tests.js` 10/10 and `tests/integration-anchor-test.js` 10/10 anchors.
 
 ## Pipeline outputs (HTML)
 
