@@ -729,11 +729,22 @@ function classifyTabs(rows) {
 // CSS — Bloomberg terminal styled, no rounded corners on data cells.
 // Embedded as a single template literal; no external CSS.
 const CSS = `
+/* 2026-06-10 redesign: modern-terminal restyle. Every selector and functional
+   property (display toggles, sticky, z-index, print) is preserved 1:1 from the
+   Bloomberg-era stylesheet — only the visual layer changed: refined slate
+   palette, radius + shadow tokens, softer hairlines, pill chips, layered
+   surfaces. Identity stays "dark terminal", finish moves to Koyfin/Linear. */
 :root {
-  --bg-0:#080b0f; --bg-1:#0d1117; --bg-2:#131a24; --bg-hover:#1a2535;
-  --border:#1e2d3d; --border-bright:#2a4060;
-  --text-0:#e2eaf3; --text-1:#8899aa; --text-2:#4a5f70;
-  --green:#00cc88; --red:#ff3d5a; --yellow:#ffbb33; --blue:#3d8fff; --purple:#8866ff;
+  --bg-0:#05080d; --bg-1:#0b111a; --bg-2:#121b27; --bg-hover:#1b2738;
+  --border:#1b2838; --border-bright:#2e4a6e;
+  --text-0:#e8eef7; --text-1:#93a4b8; --text-2:#566a80;
+  --green:#00d492; --red:#ff4d6a; --yellow:#f5b83d; --blue:#4d9fff; --purple:#8b7cf6;
+  --accent-grad:linear-gradient(135deg,var(--blue),var(--purple));
+  /* radius + elevation tokens (2026-06-10 redesign) */
+  --r-s:4px; --r-m:8px; --r-l:12px; --r-full:999px;
+  --shadow-1:0 2px 8px rgba(0,0,0,0.35);
+  --shadow-2:0 12px 40px rgba(0,0,0,0.50);
+  --ring:0 0 0 3px rgba(77,159,255,0.22);
   --mono:'JetBrains Mono','Cascadia Code','Consolas',monospace;
   /* Tag 232b-4: 'Twemoji Country Flags' is loaded via @font-face below (unicode-
      range scoped to regional indicators only). Listed FIRST so flag glyphs
@@ -744,7 +755,7 @@ const CSS = `
      ship flag glyphs since Win11 Fluent rollout but Chromium often
      ignores font-family for native <option> elements — the b-4 country
      popover replaces <select> with a div-based grid so font-family wins). */
-  --ui:'Twemoji Country Flags',-apple-system,'Segoe UI','Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji','Twemoji Mozilla',Roboto,system-ui,sans-serif;
+  --ui:'Twemoji Country Flags','Inter',-apple-system,'Segoe UI','Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji','Twemoji Mozilla',Roboto,system-ui,sans-serif;
   /* Tag 211g spacing scale (4/8/12/16/24) — use these vars in new code rather
      than hard-coded px values. Existing inline values left alone except for
      the most visible offenders. */
@@ -795,15 +806,15 @@ body { margin:0; background:var(--bg-0); color:var(--text-0); font-family:var(--
 button:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focus-visible, tr.peer-row:focus-visible, tr.row:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
 /* Suppress legacy outlines that conflict with the new ring */
 button:focus:not(:focus-visible) { outline:none; }
-header { position:sticky; top:0; z-index:10; background:var(--bg-1); border-bottom:1px solid var(--border-bright); padding:10px 16px; display:flex; align-items:center; gap:16px; }
-header .brand { font-weight:700; color:var(--blue); letter-spacing:0.08em; font-size:13px; }
+header { position:sticky; top:0; z-index:10; background:rgba(11,17,26,0.88); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:10px 16px; display:flex; align-items:center; gap:16px; }
+header .brand { font-weight:800; letter-spacing:0.08em; font-size:13px; background:var(--accent-grad); -webkit-background-clip:text; background-clip:text; color:transparent; }
 header .search { flex:1; max-width:480px; }
-header input { width:100%; background:var(--bg-2); border:1px solid var(--border); color:var(--text-0); padding:6px 10px; font-family:var(--mono); font-size:12px; outline:none; transition:border-color 100ms ease-out; }
-header input:focus { border-color:var(--blue); }
-.tabs { display:flex; gap:0; padding:0 16px; background:var(--bg-1); border-bottom:1px solid var(--border); }
-.tabs button { background:transparent; border:none; color:var(--text-1); padding:10px 14px; font-family:var(--ui); font-size:12px; cursor:pointer; border-bottom:2px solid transparent; letter-spacing:0.05em; text-transform:uppercase; transition:background 100ms ease-out, color 100ms ease-out; }
+header input { width:100%; background:var(--bg-2); border:1px solid var(--border); border-radius:var(--r-m); color:var(--text-0); padding:7px 12px; font-family:var(--mono); font-size:12px; outline:none; transition:border-color 120ms ease-out, box-shadow 120ms ease-out; }
+header input:focus { border-color:var(--blue); box-shadow:var(--ring); }
+.tabs { display:flex; gap:2px; padding:6px 16px 0; background:var(--bg-1); border-bottom:1px solid var(--border); }
+.tabs button { background:transparent; border:none; color:var(--text-1); padding:9px 14px; font-family:var(--ui); font-size:12px; font-weight:600; cursor:pointer; border-bottom:2px solid transparent; border-radius:var(--r-m) var(--r-m) 0 0; letter-spacing:0.05em; text-transform:uppercase; transition:background 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out; }
 .tabs button:hover { color:var(--text-0); background:var(--bg-hover); }
-.tabs button.active { color:var(--blue); border-bottom-color:var(--blue); }
+.tabs button.active { color:var(--blue); border-bottom-color:var(--blue); background:linear-gradient(180deg, rgba(77,159,255,0.08), transparent); }
 /* Tag 226c-3: tab-count badge — Bloomberg/Koyfin convention. Subtle muted
    "(N)" appended to each tab so the universe size is visible at a glance
    without entering the tab. Bumps tab info-density with one number per tab. */
@@ -812,12 +823,12 @@ header input:focus { border-color:var(--blue); }
 .filters { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:8px 16px; background:var(--bg-1); border-bottom:1px solid var(--border); font-size:11px; }
 .filters .group { display:flex; gap:4px; align-items:center; }
 .filters .label { color:var(--text-2); margin-right:4px; text-transform:uppercase; letter-spacing:0.05em; font-size:10px; }
-.filters button.f { background:var(--bg-2); color:var(--text-1); border:1px solid var(--border); padding:3px 8px; font-family:var(--mono); font-size:11px; cursor:pointer; transition:background 100ms ease-out, color 100ms ease-out, border-color 100ms ease-out; }
+.filters button.f { background:var(--bg-2); color:var(--text-1); border:1px solid var(--border); border-radius:var(--r-full); padding:3px 10px; font-family:var(--mono); font-size:11px; cursor:pointer; transition:background 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out; }
 .filters button.f:hover { color:var(--text-0); border-color:var(--border-bright); }
-.filters button.f.on { background:var(--bg-hover); color:var(--text-0); border-color:var(--border-bright); }
-.filters select { background:var(--bg-2); color:var(--text-0); border:1px solid var(--border); padding:3px 6px; font-family:var(--ui); font-size:11px; transition:border-color 100ms ease-out; }
+.filters button.f.on { background:rgba(77,159,255,0.14); color:var(--blue); border-color:rgba(77,159,255,0.45); }
+.filters select { background:var(--bg-2); color:var(--text-0); border:1px solid var(--border); border-radius:var(--r-s); padding:3px 6px; font-family:var(--ui); font-size:11px; transition:border-color 120ms ease-out; }
 .filters select:hover { border-color:var(--border-bright); }
-.filters input[type=number] { background:var(--bg-2); color:var(--text-0); border:1px solid var(--border); padding:3px 6px; font-family:var(--mono); font-size:11px; width:70px; transition:border-color 100ms ease-out; }
+.filters input[type=number] { background:var(--bg-2); color:var(--text-0); border:1px solid var(--border); border-radius:var(--r-s); padding:3px 6px; font-family:var(--mono); font-size:11px; width:70px; transition:border-color 120ms ease-out; }
 .filters input[type=number]:hover { border-color:var(--border-bright); }
 .summary { padding:6px 16px; background:var(--bg-0); color:var(--text-1); font-size:11px; border-bottom:1px solid var(--border); font-family:var(--mono); }
 .summary strong { color:var(--text-0); font-weight:600; }
@@ -831,7 +842,7 @@ table.dt { width:100%; border-collapse:collapse; font-size:12px; }
    column is the active sort axis. Headers are sticky (top:0) inside the
    .table-wrap scroll container; z-index 5 keeps them above tinted row
    backgrounds but below the page header (z-index 10). */
-table.dt th { background:var(--bg-1); color:var(--text-1); text-align:left; padding:8px 12px; border-bottom:1px solid var(--border-bright); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; position:sticky; top:0; z-index:5; font-family:var(--ui); }
+table.dt th { background:var(--bg-1); color:var(--text-1); text-align:left; padding:9px 12px; border-bottom:1px solid var(--border-bright); font-weight:600; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; position:sticky; top:0; z-index:5; font-family:var(--ui); }
 table.dt th.sortable { cursor:pointer; user-select:none; }
 table.dt th.sortable:hover { color:var(--text-0); background:var(--bg-hover); }
 table.dt th[aria-sort="ascending"]::after  { content:" \\25B2"; color:var(--blue); font-size:9px; }
@@ -840,8 +851,12 @@ table.dt th[aria-sort="descending"]::after { content:" \\25BC"; color:var(--blue
    mouse and keyboard cursors can coexist without confusion. */
 table.dt tr.row.kbd-active { background:var(--bg-hover); box-shadow:inset 3px 0 0 var(--blue); }
 table.dt tr.row.kbd-active td:first-child { color:var(--blue); font-weight:700; }
-table.dt td { padding:6px 12px; border-bottom:1px solid var(--border); font-family:var(--mono); font-weight:500; font-size:12px; }
+table.dt td { padding:7px 12px; border-bottom:1px solid var(--border); font-family:var(--mono); font-weight:500; font-size:12px; }
 table.dt tr.row { cursor:pointer; transition:background 80ms ease-out; }
+/* subtle zebra: keeps long rows scannable without visual noise.
+   :where() zeroes the selector's specificity so hover / kbd-active /
+   focus-visible state backgrounds (0-3-2) always win on even rows. */
+table.dt :where(tbody tr.row:nth-child(even)) { background:rgba(255,255,255,0.015); }
 table.dt tr.row:hover { background:var(--bg-hover); }
 table.dt td.num { text-align:right; font-variant-numeric:tabular-nums; }
 /* Tag 212c: inline percentile-rank bullet bar behind numeric cells.
@@ -877,7 +892,7 @@ table.dt td.num.bullet .v { position:relative; z-index:1; }
 .g-r40-bad       { text-decoration:line-through; text-decoration-thickness:1px; }
 table.dt td.ticker { color:var(--text-0); font-weight:600; }
 table.dt td.name { font-family:var(--ui); color:var(--text-1); font-weight:400; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.pill { display:inline-block; padding:1px 6px; font-size:10px; font-family:var(--mono); border:1px solid var(--border); }
+.pill { display:inline-block; padding:1px 8px; font-size:10px; font-family:var(--mono); border:1px solid var(--border); border-radius:var(--r-full); }
 .pill.LOSS      { background:#3a1118; color:#ff7a8e; border-color:#5a1b25; }
 .pill.TURNAROUND{ background:#3a2a08; color:#ffbb33; border-color:#5a4010; }
 .pill.RECENT    { background:#0e2a1e; color:#00cc88; border-color:#1a4a36; }
@@ -895,33 +910,35 @@ table.dt td.name { font-family:var(--ui); color:var(--text-1); font-weight:400; 
    Prev/Next controls stay reachable while scrolling a 50-row tab. Mobile
    keeps the natural flow (no sticky) to avoid eating ~10% of the touch
    viewport. z-index:6 sits above sticky thead (5) but below header (10). */
-.pagination { padding:8px 16px; display:flex; justify-content:center; gap:12px; align-items:center; background:var(--bg-1); border-top:1px solid var(--border-bright); font-family:var(--mono); font-size:11px; position:sticky; bottom:0; z-index:6; box-shadow:0 -4px 12px rgba(0,0,0,0.25); }
-.pagination button { background:var(--bg-2); color:var(--text-0); border:1px solid var(--border); padding:4px 12px; cursor:pointer; font-family:var(--mono); transition:border-color 100ms ease-out, color 100ms ease-out; }
+.pagination { padding:8px 16px; display:flex; justify-content:center; gap:12px; align-items:center; background:rgba(11,17,26,0.92); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); border-top:1px solid var(--border); font-family:var(--mono); font-size:11px; position:sticky; bottom:0; z-index:6; box-shadow:0 -4px 16px rgba(0,0,0,0.30); }
+.pagination button { background:var(--bg-2); color:var(--text-0); border:1px solid var(--border); border-radius:var(--r-m); padding:4px 14px; cursor:pointer; font-family:var(--mono); transition:border-color 120ms ease-out, color 120ms ease-out; }
 .pagination button:hover:not(:disabled) { border-color:var(--border-bright); color:var(--blue); }
 .pagination button:disabled { color:var(--text-2); cursor:default; }
-.search-results { position:absolute; top:48px; left:50%; transform:translateX(-50%); width:480px; max-height:400px; overflow:auto; background:var(--bg-1); border:1px solid var(--border-bright); z-index:60; display:none; box-shadow:0 8px 24px rgba(0,0,0,0.45); }
+.search-results { position:absolute; top:48px; left:50%; transform:translateX(-50%); width:480px; max-height:400px; overflow:auto; background:var(--bg-1); border:1px solid var(--border-bright); border-radius:var(--r-l); z-index:60; display:none; box-shadow:var(--shadow-2); }
 .search-results.show { display:block; }
 .search-results .sr { padding:8px 12px; cursor:pointer; border-bottom:1px solid var(--border); font-size:12px; transition:background 80ms ease-out; }
 .search-results .sr:hover { background:var(--bg-hover); }
-.search-results .sr .badge { display:inline-block; margin-left:6px; padding:1px 5px; font-size:10px; font-family:var(--mono); border:1px solid var(--border); color:var(--text-1); }
-.modal { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:100; display:none; overflow:auto; opacity:0; transition:opacity 120ms ease-out; }
+.search-results .sr .badge { display:inline-block; margin-left:6px; padding:1px 7px; font-size:10px; font-family:var(--mono); border:1px solid var(--border); border-radius:var(--r-full); color:var(--text-1); }
+.modal { position:fixed; inset:0; background:rgba(2,5,9,0.78); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); z-index:100; display:none; overflow:auto; opacity:0; transition:opacity 140ms ease-out; }
 .modal.show { display:block; opacity:1; }
-.modal-content { max-width:1100px; margin:24px auto; background:var(--bg-0); border:1px solid var(--border-bright); padding:24px; box-shadow:0 12px 48px rgba(0,0,0,0.5); }
+.modal-content { max-width:1100px; margin:24px auto; background:var(--bg-0); border:1px solid var(--border-bright); border-radius:var(--r-l); padding:24px; box-shadow:var(--shadow-2); animation:modalIn 160ms ease-out; }
+@keyframes modalIn { from { transform:translateY(8px) scale(0.99); opacity:0.6; } to { transform:none; opacity:1; } }
+@media (prefers-reduced-motion:reduce) { .modal-content { animation:none; } }
 .modal-header { display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; padding-bottom:12px; border-bottom:1px solid var(--border); }
 .modal-header .tk { font-size:24px; font-weight:700; color:var(--text-0); letter-spacing:0.02em; }
 .modal-header .nm { font-size:14px; color:var(--text-1); font-weight:400; }
 .modal-header .meta { color:var(--text-2); font-size:11px; font-family:var(--mono); }
 .modal-header .right { margin-left:auto; display:flex; gap:8px; }
-.modal-header button { background:var(--bg-2); color:var(--text-0); border:1px solid var(--border); padding:4px 10px; cursor:pointer; font-family:var(--mono); font-size:11px; transition:border-color 100ms ease-out, color 100ms ease-out; }
+.modal-header button { background:var(--bg-2); color:var(--text-0); border:1px solid var(--border); border-radius:var(--r-m); padding:4px 10px; cursor:pointer; font-family:var(--mono); font-size:11px; transition:border-color 120ms ease-out, color 120ms ease-out; }
 .modal-header button:hover { border-color:var(--border-bright); color:var(--blue); }
 .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:16px 0; }
-.card { background:var(--bg-1); border:1px solid var(--border); padding:12px 16px; transition:border-color 120ms ease-out; }
-.card:hover { border-color:var(--border-bright); }
+.card { background:var(--bg-1); border:1px solid var(--border); border-radius:var(--r-m); padding:12px 16px; transition:border-color 140ms ease-out, transform 140ms ease-out, box-shadow 140ms ease-out; }
+.card:hover { border-color:var(--border-bright); transform:translateY(-1px); box-shadow:var(--shadow-1); }
 .card .lbl { font-size:10px; color:var(--text-2); text-transform:uppercase; letter-spacing:0.08em; font-weight:500; }
 .card .v { font-size:26px; font-family:var(--mono); font-weight:600; color:var(--text-0); margin-top:8px; letter-spacing:-0.02em; }
 .card .sub { font-size:11px; color:var(--text-1); margin-top:4px; font-family:var(--mono); }
 .charts { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin:16px 0; }
-.chart { background:var(--bg-2); border:1px solid var(--border); padding:8px; transition:border-color 120ms ease-out; }
+.chart { background:var(--bg-2); border:1px solid var(--border); border-radius:var(--r-m); padding:8px; transition:border-color 140ms ease-out; }
 .chart:hover { border-color:var(--border-bright); }
 .chart .ct { font-size:11px; color:var(--text-1); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px; }
 .scorecard table { width:100%; border-collapse:collapse; font-size:11px; margin-top:8px; }
@@ -944,23 +961,23 @@ h3.sec { color:var(--text-0); font-size:14px; font-weight:600; margin:24px 0 8px
 #active-filters { padding:6px 16px; background:var(--bg-1); border-bottom:1px solid var(--border); display:none; flex-wrap:wrap; gap:6px; align-items:center; font-size:11px; }
 #active-filters.show { display:flex; }
 #active-filters .label { color:var(--text-2); font-size:10px; text-transform:uppercase; letter-spacing:0.05em; margin-right:4px; }
-.chip { display:inline-flex; align-items:center; padding:2px 4px 2px 8px; background:var(--bg-2); border:1px solid var(--border-bright); color:var(--text-0); font-family:var(--mono); font-size:11px; transition:border-color 100ms ease-out; }
+.chip { display:inline-flex; align-items:center; padding:2px 4px 2px 10px; background:var(--bg-2); border:1px solid var(--border-bright); border-radius:var(--r-full); color:var(--text-0); font-family:var(--mono); font-size:11px; transition:border-color 120ms ease-out; }
 .chip:hover { border-color:var(--blue); }
 .chip .x { display:inline-block; margin-left:6px; padding:0 5px; cursor:pointer; color:var(--text-2); border-left:1px solid var(--border); transition:color 100ms ease-out, background 100ms ease-out; }
 .chip .x:hover { color:var(--red); background:var(--bg-hover); }
 #active-filters .clear-all { color:var(--text-1); background:transparent; border:1px solid var(--border); padding:2px 8px; cursor:pointer; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.05em; transition:color 100ms ease-out, border-color 100ms ease-out; }
 #active-filters .clear-all:hover { color:var(--red); border-color:var(--red); }
 /* Upgrade 3: print button in header */
-header button.print-btn { background:var(--bg-2); color:var(--text-1); border:1px solid var(--border); padding:6px 10px; cursor:pointer; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; transition:color 100ms ease-out, border-color 100ms ease-out; }
+header button.print-btn { background:var(--bg-2); color:var(--text-1); border:1px solid var(--border); border-radius:var(--r-m); padding:6px 10px; cursor:pointer; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; transition:color 120ms ease-out, border-color 120ms ease-out; }
 header button.print-btn:hover { color:var(--text-0); border-color:var(--border-bright); }
 /* Tag 210f: light-theme toggle. Sits next to [print]; same button shape. */
-header button.theme-btn { background:var(--bg-2); color:var(--text-1); border:1px solid var(--border); padding:6px 10px; cursor:pointer; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; transition:color 100ms ease-out, border-color 100ms ease-out; }
+header button.theme-btn { background:var(--bg-2); color:var(--text-1); border:1px solid var(--border); border-radius:var(--r-m); padding:6px 10px; cursor:pointer; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; transition:color 120ms ease-out, border-color 120ms ease-out; }
 header button.theme-btn:hover { color:var(--text-0); border-color:var(--border-bright); }
 /* Tag 231b-2: data-freshness chip in header. At-a-glance staleness signal —
    tinted by snapshot age computed client-side against the user's local date.
    Updated: same day | Stale: 1-6 days | Old: 7+ days. Same chrome as the
    print/theme buttons so it visually belongs in the header toolbar. */
-header .data-freshness { background:var(--bg-2); color:var(--text-1); border:1px solid var(--border); padding:6px 10px; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; cursor:default; transition:color 120ms ease-out, border-color 120ms ease-out; }
+header .data-freshness { background:var(--bg-2); color:var(--text-1); border:1px solid var(--border); border-radius:var(--r-full); padding:6px 12px; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; cursor:default; transition:color 120ms ease-out, border-color 120ms ease-out; }
 header .data-freshness.fresh { color:var(--green); border-color:var(--green); }
 header .data-freshness.stale { color:var(--yellow); border-color:var(--yellow); }
 header .data-freshness.old   { color:var(--red); border-color:var(--red); }
@@ -968,13 +985,21 @@ header .data-freshness.old   { color:var(--red); border-color:var(--red); }
    Greens/reds stay vivid (Karl's Bloomberg muscle memory: signals = saturated).
    Only chrome colors invert; semantic colors keep their meaning. */
 body.theme-light {
-  --bg-0:#fafbfc; --bg-1:#ffffff; --bg-2:#f5f6f8; --bg-hover:#e8edf3;
-  --border:#e1e4e8; --border-bright:#c8cdd4;
-  --text-0:#1a1d23; --text-1:#5f6b7a; --text-2:#8b94a1;
+  --bg-0:#f6f8fa; --bg-1:#ffffff; --bg-2:#f0f3f7; --bg-hover:#e7edf5;
+  --border:#e3e8ef; --border-bright:#c9d2de;
+  --text-0:#171c24; --text-1:#5b6878; --text-2:#8794a3;
   /* Signal colors stay saturated — darken slightly for white-bg contrast,
      but preserve the green=good / red=bad / blue=primary muscle memory. */
-  --green:#00a86b; --red:#e63946; --yellow:#d97706; --blue:#1f6feb; --purple:#6f42c1;
+  --green:#079e6a; --red:#dd3349; --yellow:#c46d04; --blue:#1f6feb; --purple:#6f42c1;
+  --ring:0 0 0 3px rgba(31,111,235,0.18);
+  --shadow-1:0 2px 8px rgba(20,30,50,0.08);
+  --shadow-2:0 12px 40px rgba(20,30,50,0.16);
 }
+/* light theme: translucent chrome surfaces follow the light palette */
+body.theme-light header { background:rgba(255,255,255,0.88); }
+body.theme-light .pagination { background:rgba(255,255,255,0.92); }
+body.theme-light table.dt :where(tbody tr.row:nth-child(even)) { background:rgba(15,30,60,0.018); }
+body.theme-light ::selection { background:rgba(31,111,235,0.18); }
 /* State pills — re-tint for light bg so dark badges don't sit on white. */
 body.theme-light .pill.LOSS      { background:#fde4e7; color:#a02436; border-color:#f1bcc4; }
 body.theme-light .pill.TURNAROUND{ background:#fdf0d4; color:#8b5500; border-color:#f0d9a8; }
@@ -1005,7 +1030,7 @@ body.theme-light .search-results { background:#ffffff; box-shadow:0 4px 12px rgb
    theme via CSS vars; no theme-specific overrides needed beyond the variables. */
 .cp-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.40); z-index:200; display:none; }
 .cp-overlay.show { display:block; }
-.cp-panel { position:absolute; top:12vh; left:50%; transform:translateX(-50%); width:480px; max-width:calc(100vw - 24px); max-height:60vh; display:flex; flex-direction:column; background:var(--bg-1); border:1px solid var(--border-bright); box-shadow:0 16px 48px rgba(0,0,0,0.55); }
+.cp-panel { position:absolute; top:12vh; left:50%; transform:translateX(-50%); width:480px; max-width:calc(100vw - 24px); max-height:60vh; display:flex; flex-direction:column; background:var(--bg-1); border:1px solid var(--border-bright); border-radius:var(--r-l); overflow:hidden; box-shadow:var(--shadow-2); }
 .cp-input { background:var(--bg-0); color:var(--text-0); border:0; border-bottom:1px solid var(--border-bright); padding:12px 14px; font-family:var(--mono); font-size:13px; outline:none; width:100%; box-sizing:border-box; }
 .cp-input::placeholder { color:var(--text-2); }
 .cp-results { overflow:auto; max-height:calc(60vh - 50px); }
@@ -1023,22 +1048,22 @@ body.theme-light .cp-overlay { background:rgba(40,48,60,0.30); }
    consistent with the Ctrl+K palette. */
 .kbd-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:210; display:none; }
 .kbd-overlay.show { display:block; }
-.kbd-panel { position:absolute; top:10vh; left:50%; transform:translateX(-50%); width:520px; max-width:calc(100vw - 24px); max-height:80vh; overflow:auto; background:var(--bg-1); border:1px solid var(--border-bright); padding:20px 24px; box-shadow:0 16px 48px rgba(0,0,0,0.55); }
+.kbd-panel { position:absolute; top:10vh; left:50%; transform:translateX(-50%); width:520px; max-width:calc(100vw - 24px); max-height:80vh; overflow:auto; background:var(--bg-1); border:1px solid var(--border-bright); border-radius:var(--r-l); padding:20px 24px; box-shadow:var(--shadow-2); }
 .kbd-panel h2 { margin:0 0 12px; font-size:13px; color:var(--text-0); text-transform:uppercase; letter-spacing:0.08em; border-bottom:1px solid var(--border); padding-bottom:8px; }
 .kbd-panel .kbd-row { display:flex; align-items:baseline; gap:12px; padding:5px 0; border-bottom:1px solid var(--border); font-size:12px; }
 .kbd-panel .kbd-row:last-child { border-bottom:none; }
 .kbd-panel .kbd-keys { flex:0 0 110px; }
 .kbd-panel .kbd-desc { color:var(--text-1); font-family:var(--ui); }
-.kbd-key { display:inline-block; padding:1px 6px; margin-right:2px; background:var(--bg-2); border:1px solid var(--border-bright); border-bottom-width:2px; color:var(--text-0); font-family:var(--mono); font-size:11px; min-width:14px; text-align:center; }
+.kbd-key { display:inline-block; padding:1px 6px; margin-right:2px; background:var(--bg-2); border:1px solid var(--border-bright); border-bottom-width:2px; border-radius:var(--r-s); color:var(--text-0); font-family:var(--mono); font-size:11px; min-width:14px; text-align:center; }
 .kbd-close { position:absolute; top:10px; right:12px; background:transparent; color:var(--text-1); border:none; font-size:18px; cursor:pointer; line-height:1; padding:4px 8px; }
 .kbd-close:hover { color:var(--text-0); }
 body.theme-light .kbd-overlay { background:rgba(40,48,60,0.45); }
 
 /* Tag 223b: column-visibility popover (toggle which columns render). */
 .col-toggle-wrap { position:relative; display:inline-block; }
-.col-toggle-btn { background:var(--bg-2); color:var(--text-1); border:1px solid var(--border); padding:6px 10px; cursor:pointer; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; transition:color 100ms ease-out, border-color 100ms ease-out; }
+.col-toggle-btn { background:var(--bg-2); color:var(--text-1); border:1px solid var(--border); border-radius:var(--r-m); padding:6px 10px; cursor:pointer; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.05em; transition:color 120ms ease-out, border-color 120ms ease-out; }
 .col-toggle-btn:hover { color:var(--text-0); border-color:var(--border-bright); }
-.col-popover { position:absolute; top:calc(100% + 4px); right:0; min-width:200px; background:var(--bg-1); border:1px solid var(--border-bright); box-shadow:0 8px 24px rgba(0,0,0,0.45); padding:8px 0; z-index:50; display:none; }
+.col-popover { position:absolute; top:calc(100% + 4px); right:0; min-width:200px; background:var(--bg-1); border:1px solid var(--border-bright); border-radius:var(--r-m); box-shadow:var(--shadow-2); padding:8px 0; z-index:50; display:none; }
 .col-popover.show { display:block; }
 .col-popover .col-item { display:flex; align-items:center; padding:5px 12px; cursor:pointer; font-family:var(--mono); font-size:11px; color:var(--text-0); transition:background 80ms ease-out; }
 .col-popover .col-item:hover { background:var(--bg-hover); }
@@ -1064,6 +1089,15 @@ table.dt tr.row:focus-visible { outline:2px solid var(--blue); outline-offset:-2
 .modal-header .ext-link:hover { color:var(--blue); border-color:var(--blue); }
 .modal-header button.ext-link { line-height:1.4; }
 .modal-header button.ext-link.copied { color:var(--green); border-color:var(--green); }
+
+/* 2026-06-10 redesign: themed scrollbars (scoped to the scroll containers that
+   actually matter — table, popovers, modal, palette) + selection color. */
+::selection { background:rgba(77,159,255,0.30); }
+.table-wrap, .modal, .search-results, .cp-results, .kbd-panel, .col-popover, body { scrollbar-width:thin; scrollbar-color:var(--border-bright) transparent; }
+.table-wrap::-webkit-scrollbar, .modal::-webkit-scrollbar, .search-results::-webkit-scrollbar, .cp-results::-webkit-scrollbar, .col-popover::-webkit-scrollbar, .kbd-panel::-webkit-scrollbar, body::-webkit-scrollbar { width:10px; height:10px; }
+.table-wrap::-webkit-scrollbar-thumb, .modal::-webkit-scrollbar-thumb, .search-results::-webkit-scrollbar-thumb, .cp-results::-webkit-scrollbar-thumb, .col-popover::-webkit-scrollbar-thumb, .kbd-panel::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb { background:var(--border); border-radius:var(--r-full); }
+.table-wrap::-webkit-scrollbar-thumb:hover, body::-webkit-scrollbar-thumb:hover { background:var(--border-bright); }
+.data-error { border-radius:var(--r-m); }
 
 /* Upgrade 3a: mobile responsive (≤700px) */
 @media (max-width:700px) {
