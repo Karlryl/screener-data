@@ -24,6 +24,12 @@ function evaluate(stock) {
   }
   // Tag 232d-1: prefer real D&A from annualDepreciation (Tag 211l field).
   // Math.abs() because Yahoo sometimes reports D&A as positive, sometimes signed.
+  // F-NY-002 (audit 2026-06-08): totalDebt may be a partial sum (one debt component
+  // absent in the Yahoo balance row — the mapper sets _debtPartial). The sum is kept
+  // (absence usually means a genuine 0), but the approximation is surfaced here so
+  // reports and reviewers can see when the ratio may be understated.
+  const _bal0 = stock && stock.annual && Array.isArray(stock.annual.annualBalance) ? stock.annual.annualBalance[0] : null;
+  const debtPartialFlag = !!(_bal0 && _bal0._debtPartial);
   const rawDA = H.latestAnnual(stock, 'annualDepreciation');
   const hasRealDA = rawDA != null && Number.isFinite(rawDA);
   const depreciation = hasRealDA ? Math.abs(rawDA) : null;
@@ -43,6 +49,7 @@ function evaluate(stock) {
         components: { netDebt, ebitda, totalDebt, totalCash: totalCash || 0, opInc, distressedFlag: true,
           approximationFlag: !hasRealDA, _ebitdaSource: ebitdaSource,
           ...(!hasRealDA ? { _ebitdaApproximated: true } : {}),
+          ...(debtPartialFlag ? { debtPartialFlag: true } : {}),
           approxReason: 'EBITDA<=0 with positive net-debt — synthetic ratio=999' },
         reason: `EBITDA <= 0 (opInc=${(opInc/1e9).toFixed(1)}B) with netDebt=${(netDebt/1e9).toFixed(1)}B — DISTRESSED`,
         threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
@@ -68,6 +75,7 @@ function evaluate(stock) {
       approximationFlag: !hasRealDA,
       _ebitdaSource: ebitdaSource,
       ...(!hasRealDA ? { _ebitdaApproximated: true } : {}),
+      ...(debtPartialFlag ? { debtPartialFlag: true } : {}),
       approxReason: hasRealDA ? undefined : 'EBITDA approximated as OpInc x 1.2 (D&A synthesized)'
     },
     reason: `(${(totalDebt/1e9).toFixed(1)}B - ${((totalCash||0)/1e9).toFixed(1)}B) / ${(ebitda/1e9).toFixed(1)}B = ${value.toFixed(2)} [EBITDA ${ebitdaSource}]`,

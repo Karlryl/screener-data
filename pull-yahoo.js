@@ -261,6 +261,22 @@ function _convertSnapshotToUSD(snap) {
   if (snap.meta.fxConverted === true) return snap;
   const origCurrency = snap.meta.reportingCurrency || 'USD';
   if (origCurrency === 'USD') {
+    // F-NY-004 (audit 2026-06-08): 'USD' here may be a GUESS — when Yahoo returns
+    // no financialCurrency, the mapper falls back to the trading currency and sets
+    // ccyAmbiguous. For OTC/pink-sheet listings that combination almost always
+    // means a foreign issuer whose financials are in a third currency (NEXHY→EUR,
+    // RKWAF→DKK observed live): annual.* would stay local-ccy while marketCap is
+    // USD — a silent mixed-currency snapshot. Fail closed instead: flag
+    // fxConversionFailed so the pull loop skips the ticker (3 of 4680 snapshots
+    // affected as of 2026-06-10). Exchange-listed tickers (NYSE/NASDAQ) keep the
+    // USD assumption — US filers report USD.
+    if (snap.meta.ccyAmbiguous === true && /otc|pnk|pink/i.test(snap.meta.exchangeName || '')) {
+      snap.meta.reportingCurrencyOriginal = 'USD?';
+      snap.meta.fxRateApplied = null;
+      snap.meta.fxConversionFailed = true;
+      snap.meta.fxConverted = false;
+      return snap;
+    }
     snap.meta.reportingCurrencyOriginal = 'USD';
     snap.meta.fxRateApplied = 1.0;
     snap.meta.fxConverted = true;
@@ -513,11 +529,15 @@ function _deriveOpIncForFinancials(isHist, annualRev, operatingMarginsRaw) {
     }
   }
   // Prefer the path with the most non-null derived years.
+  // F-004 (audit 2026-06-08): keep null placeholders — .filter(Boolean) compressed
+  // the array, so annualOpInc[i] referenced a DIFFERENT fiscal year than
+  // annualRev[i] for any bank/insurer with a gap year (JPM/BAC/NU/SOFI pattern).
+  // Same alignment rule as the FTS path (F-DP-003); consumers null-check entries.
   if (bankNonNull > 0 && bankNonNull >= insNonNull) {
-    return { values: bankYearly.filter(Boolean), source: 'computed-bank' };
+    return { values: bankYearly, source: 'computed-bank' };
   }
   if (insNonNull > 0) {
-    return { values: insYearly.filter(Boolean), source: 'computed-insurance' };
+    return { values: insYearly, source: 'computed-insurance' };
   }
 
   // Path 3 (universal): margin × revenue. operatingMarginsRaw is a fraction
@@ -531,9 +551,10 @@ function _deriveOpIncForFinancials(isHist, annualRev, operatingMarginsRaw) {
   const derived = annualRev
     .map(r => (r && typeof r.value === 'number' && Number.isFinite(r.value))
         ? { value: r.value * operatingMarginsRaw }
-        : null)
-    .filter(Boolean);
-  if (derived.length === 0) return { values: [], source: null };
+        : null);
+  // F-004: null placeholders preserved here too (same mechanism as the bank/
+  // insurance paths above) — emptiness now means "no non-null entry".
+  if (!derived.some(Boolean)) return { values: [], source: null };
   return { values: derived, source: 'computed-margin' };
 }
 
@@ -619,6 +640,12 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
               ?? _y(r, 'cashAndShortTermInvestments');
     const std = _y(r, 'shortLongTermDebt');
     const ltd = _y(r, 'longTermDebt');
+    // F-NY-002 (audit 2026-06-08, decided 2026-06-10): absence-as-zero summing is
+    // KEPT deliberately — 12.4% of live snapshots carry _debtPartial (568/4589),
+    // almost always a genuinely absent current-debt line item; nulling totalDebt
+    // when either component is missing would destroy leverage data for all of them.
+    // The understatement risk is surfaced instead: _debtPartial is persisted and
+    // net-debt-ebitda exposes it as debtPartialFlag in its components.
     const totalDebt = (std == null && ltd == null) ? null : (std || 0) + (ltd || 0);
     const _debtPartial = totalDebt != null && (std == null || ltd == null); // F-DQ-001
     const totalAssets = _y(r, 'totalAssets');
@@ -1083,6 +1110,8 @@ function mapFTSToBalance(bsRows) {
     const cash = _ftsValue(r, 'cashAndCashEquivalents', 'cashCashEquivalentsAndShortTermInvestments', 'cashAndShortTermInvestments');
     const std = _ftsValue(r, 'currentDebt', 'shortLongTermDebt', 'shortTermDebt');
     const ltd = _ftsValue(r, 'longTermDebt');
+    // F-NY-002: absence-as-zero kept deliberately — see the quoteSummary-mapper
+    // twin site for the full rationale (12.4% of snapshots are _debtPartial).
     const totalDebt = (std == null && ltd == null) ? null : (std || 0) + (ltd || 0);
     const _debtPartial = totalDebt != null && (std == null || ltd == null); // F-DQ-001
     const totalAssets = _ftsValue(r, 'totalAssets');
@@ -1124,18 +1153,28 @@ function mapFTSToQuarterly(quarterlyRows) {
   const revenueQ = [];
   const opIncQ = [];
   const grossProfitQ = [];
+  // F-002 (audit 2026-06-08): a null-revenue row must keep its placeholder in ALL
+  // three series. Previously revenueQ was skipped (`continue`) while opIncQ/
+  // grossProfitQ got a null pushed — every null-rev row shifted revenueQ left
+  // relative to its siblings AND broke the qRev[i] vs qRev[i+4] same-quarter-YoY
+  // assumption in quarterly methods (deceleration-guard, q-spike-dataguard,
+  // revenue-acceleration-yoy). Null placeholders preserve calendar positions;
+  // consumers finite-check each entry (Bug #26 / F-DP-003 pattern).
   for (const r of sorted) {
     const rev = _ftsValue(r, 'totalRevenue', 'TotalRevenue');
-    if (rev == null) {
-      if (Array.isArray(opIncQ)) opIncQ.push(null);
-      if (Array.isArray(grossProfitQ)) grossProfitQ.push(null);
-      continue;
-    }
-    revenueQ.push({ value: rev });
+    revenueQ.push(rev != null ? { value: rev } : null);
     const oi = _ftsValue(r, 'operatingIncome', 'OperatingIncome');
     opIncQ.push(oi != null ? { value: oi } : null);
     const gp = _ftsValue(r, 'grossProfit', 'GrossProfit');
     grossProfitQ.push(gp != null ? { value: gp } : null);
+  }
+  // Trim trailing all-null quarters (oldest) — no information to contribute;
+  // mirrors mapFTSToBalance's trailing-null trim.
+  while (revenueQ.length > 0 &&
+         revenueQ[revenueQ.length - 1] == null &&
+         opIncQ[opIncQ.length - 1] == null &&
+         grossProfitQ[grossProfitQ.length - 1] == null) {
+    revenueQ.pop(); opIncQ.pop(); grossProfitQ.pop();
   }
   return { revenueQ, opIncQ, grossProfitQ };
 }
@@ -1807,7 +1846,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // methods/buyback-yield.js + makes capital-allocation-quality 4/4.
       if ((ftsAnnualShares || []).length > 0)       canonical.annual.annualShares = ftsAnnualShares;
       // Tag-90: quarterlyNI in timeseries
-      canonical.timeseries.netIncomeQ = (ftsQuarterlyNI || []).map(v => ({ value: v }));
+      // F-NY-001 (audit 2026-06-08): nulls were wrapped as {value:null}, so length-
+      // based "computable" checks saw N entries that could be entirely empty. Keep
+      // RAW null placeholders instead (Bug #26 pattern): positional alignment stays,
+      // but finite-counting (_arrLen) and v!=null checks now see the truth.
+      canonical.timeseries.netIncomeQ = (ftsQuarterlyNI || []).map(v => v != null ? { value: v } : null);
       if (ftsAnnual.annualGP.length > 0) canonical.annual.annualGP = ftsAnnual.annualGP;
       const _ftsNiNonNull = (ftsAnnual.annualNetIncome||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
       const _qsNiNonNull = (canonical.annual.annualNetIncome||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
@@ -1816,9 +1859,19 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (ftsAnnual.annualOCF && ftsAnnual.annualOCF.length > 0) canonical.annual.annualOCF = ftsAnnual.annualOCF;
       const _ftsRevQNonNull = (ftsQuarterly.revenueQ||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
       const _qsRevQNonNull = (canonical.timeseries.revenueQ||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
-      if (_ftsRevQNonNull > _qsRevQNonNull) canonical.timeseries.revenueQ = ftsQuarterly.revenueQ;
-      if (ftsQuarterly.opIncQ.length > 0) canonical.timeseries.opIncQ = ftsQuarterly.opIncQ;
-      if (ftsQuarterly.grossProfitQ.length > 0) canonical.timeseries.grossProfitQ = ftsQuarterly.grossProfitQ;
+      // F-010 (audit 2026-06-08): opIncQ/grossProfitQ must come from the SAME source
+      // as revenueQ. Previously FTS opIncQ/grossProfitQ overwrote unconditionally —
+      // when quoteSummary kept revenueQ, methods zipped QS revenue quarters against
+      // FTS opInc quarters (different windows/lengths → wrong-quarter ratios). The
+      // three series now move as one unit: FTS wins revenueQ → FTS siblings replace
+      // QS siblings (even when empty, to avoid stale cross-source leftovers); QS
+      // keeps revenueQ → QS siblings stay. Trade-off: a ticker whose opIncQ only
+      // exists in the losing source goes incomputable instead of misaligned.
+      if (_ftsRevQNonNull > _qsRevQNonNull) {
+        canonical.timeseries.revenueQ = ftsQuarterly.revenueQ;
+        canonical.timeseries.opIncQ = ftsQuarterly.opIncQ;
+        canonical.timeseries.grossProfitQ = ftsQuarterly.grossProfitQ;
+      }
 
       // Tag 203: post-FTS sector-aware OpInc fallback. After both quoteSummary
       // and FTS merges, if annualOpInc is still empty AND sector is Financial
