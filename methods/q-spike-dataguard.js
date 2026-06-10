@@ -139,7 +139,11 @@ function evaluate(stock) {
   // Use raw array for revQ to preserve positional alignment (qVals[i+4] comparisons)
   const revQ = _rawArr(stock, 'timeseries.revenueQ');
   const oiArr = _arr(stock, 'annual.annualOpInc');
-  const ttmRev = H.metricValue(stock, 'revenueTTM') || (_arr(stock, 'annual.annualRev')[0] || 0);
+  // BUG-01 (audit 2026-06-08): `||` treated a legitimate revenueTTM === 0 as missing
+  // and silently switched to the annual fallback — flipping the materiality decision
+  // for true zero-revenue companies. Fall back only when TTM is genuinely absent.
+  const ttmRevRaw = H.metricValue(stock, 'revenueTTM');
+  const ttmRev = Number.isFinite(ttmRevRaw) ? ttmRevRaw : (_arr(stock, 'annual.annualRev')[0] || 0);
   const mcapField = H.val(stock, 'marketCap');
   const mcap = (typeof mcapField === 'number') ? mcapField : (mcapField && mcapField.value) || 0;
 

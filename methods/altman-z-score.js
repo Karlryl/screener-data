@@ -85,7 +85,12 @@ function evaluate(stock) {
   // i.e. assume 40% of non-debt-non-cash assets are financed by other liabilities.
   // This is a rough approximation; if totalLiabilities ever becomes available in
   // the snapshot, prefer it directly.
-  const directTotalLiab = _balanceVal(stock, 0, 'totalLiab');
+  // BUG-02 (audit 2026-06-08): post-Tag-211l snapshots write `totalLiabilities`, not
+  // the legacy `totalLiab` key — reading only the legacy key meant the 40%-heuristic
+  // ALWAYS fired on fresh snapshots, understating Z″ by ~0.3-0.5 and producing false
+  // DISTRESS classifications in TURNAROUND mode. Prefer the real field (same coalesce
+  // pattern as ohlson-o-score); keep legacy key + heuristic as fallbacks.
+  const directTotalLiab = _balanceVal(stock, 0, 'totalLiabilities') ?? _balanceVal(stock, 0, 'totalLiab');
   const totalLiab = Number.isFinite(directTotalLiab) && directTotalLiab > 0
     ? directTotalLiab
     : (debtVal + 0.4 * Math.max(0, assets - debtVal - cashVal));

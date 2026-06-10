@@ -52,7 +52,10 @@ function evaluate(stock) {
   const revQ = _rawArr(stock, 'timeseries.revenueQ');
   const revY = _rawArr(stock, 'annual.annualRev');
   const yoyGrowth = H.metricValue(stock, 'revenueGrowthYoY');
-  const ttmRev = H.metricValue(stock, 'revenueTTM') || (Number.isFinite(revY[0]) ? revY[0] : 0);
+  // BUG-09 (audit 2026-06-08): same `||`-falsy-zero bug as q-spike-dataguard (BUG-01) —
+  // a legitimate revenueTTM === 0 must not silently switch to the annual fallback.
+  const ttmRevRaw = H.metricValue(stock, 'revenueTTM');
+  const ttmRev = Number.isFinite(ttmRevRaw) ? ttmRevRaw : (Number.isFinite(revY[0]) ? revY[0] : 0);
   const mcapField = H.val(stock, 'marketCap');
   const mcap = (typeof mcapField === 'number') ? mcapField : (mcapField && mcapField.value) || 0;
 

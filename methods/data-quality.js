@@ -107,9 +107,14 @@ const GRADE_THRESHOLDS = {
 };
 
 function _hasMetric(m) {
-  if (!m) return false;
+  // F-NY-005 (audit 2026-06-08): a non-numeric .value (e.g. the string 'N/A') counted
+  // as "present" and inflated the DQ grade — methods consuming the field would still
+  // see unusable data. Require a finite number explicitly. Also fixes the falsy-zero
+  // edge: a raw numeric 0 (`!m` was true) now counts as present.
+  if (m == null) return false;
   if (typeof m === 'number') return Number.isFinite(m);
-  return m.value != null && (typeof m.value !== 'number' || Number.isFinite(m.value));
+  if (typeof m !== 'object') return false;
+  return typeof m.value === 'number' && Number.isFinite(m.value);
 }
 
 // Tag 232c-4: check the LATEST annualBalance row for a named field. The Tag 211l
@@ -195,7 +200,10 @@ function tierCapForGrade(grade) {
     case 'B':  return null;       // no cap — B is trustworthy (40–60% of max score)
     case 'C':  return 'NEAR_MISS'; // C+ cap enforced: can only be NEAR_MISS, not A/B pick
     case 'D':  return 'REJECT';    // D excluded from all picks
-    default:   return null;
+    // F-NY-012 (audit 2026-06-08): unknown grade strings fell through to `null`
+    // (no cap) — fail-OPEN: a typo'd or future grade silently granted full
+    // evaluation. Unknown grades are now fail-CLOSED.
+    default:   return 'REJECT';
   }
 }
 

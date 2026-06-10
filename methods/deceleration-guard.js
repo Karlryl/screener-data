@@ -34,8 +34,16 @@ function evaluate(stock) {
   var qYoY = qRev[4] > 0 ? ((qRev[0] - qRev[4]) / qRev[4]) * 100 : null;
   if (qYoY == null) return H.buildResult({ computable: false, reason: 'qYoY n/a' });
 
-  // prev3Avg: use positions 1-3 only if they are finite
-  var prev3vals = [qRev[1], qRev[2], qRev[3]].filter(function(v){ return Number.isFinite(v); });
+  // BUG-11 (audit 2026-06-08): filtering out null quarters averaged NON-consecutive
+  // quarters (e.g. Q-1 & Q-3 when Q-2 is null) — comparing Q0 against a mix of stale
+  // quarters produced false HARD_DECEL, and as a DATAGUARD that excludes the stock
+  // entirely. Only average the consecutive run of finite quarters immediately
+  // preceding Q0; stop at the first gap.
+  var prev3vals = [];
+  for (var pi = 1; pi <= 3; pi++) {
+    if (!Number.isFinite(qRev[pi])) break;
+    prev3vals.push(qRev[pi]);
+  }
   var prev3Avg = prev3vals.length > 0 ? prev3vals.reduce(function(a,b){ return a+b; }, 0) / prev3vals.length : null;
   var qBelowAvg = prev3Avg != null && qRev[0] < prev3Avg;
 

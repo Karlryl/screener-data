@@ -67,7 +67,14 @@ const SCORE_WEIGHTS = {
 const RED_FLAG_RULES = {
   HIGH_DEBT: {
     id: 'net-debt-ebitda',
-    condition: function(val) { return val > 4.0; },
+    // BUG-08 (audit 2026-06-08): when EBITDA is synthesized as OpInc×1.2 (no real
+    // D&A in the snapshot), the ratio is understated by ~17% — a true >4.0 leverage
+    // reads as ~3.3 and the red flag silently never fired. Compensate by lowering
+    // the trigger to 4.0/1.2 ≈ 3.33 when the method reports approximationFlag.
+    condition: function(val, result) {
+      var approx = !!(result && result.components && result.components.approximationFlag);
+      return val > (approx ? 4.0 / 1.2 : 4.0);
+    },
     label: 'Net-Debt/EBITDA >4.0'
   },
   EXTREME_SLOAN: {
@@ -358,7 +365,9 @@ function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, data
     if (!Object.prototype.hasOwnProperty.call(RED_FLAG_RULES, flagId)) continue;
     var rule = RED_FLAG_RULES[flagId];
     var fr = allResults[rule.id];
-    if (fr && fr.computable && fr.value != null && rule.condition(fr.value)) {
+    // BUG-08: pass the full method result so rules can inspect components
+    // (HIGH_DEBT needs approximationFlag). Single-arg rules ignore the extra param.
+    if (fr && fr.computable && fr.value != null && rule.condition(fr.value, fr)) {
       redFlags.push({ id: flagId, label: rule.label, value: fr.value });
     }
   }

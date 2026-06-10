@@ -62,7 +62,13 @@ function evaluate(stock) {
   // company's structural FCF generation, not a transient WC swing.
   // F-ME-003: also require that the most recent annual FCF is positive,
   // so we don't inflate R40 for stocks with structurally declining FCF.
-  if (growth != null && fcfMargin != null && fcfMargin < 0) {
+  // F-06 (audit 2026-06-08): the fallback must not fire for STRUCTURALLY negative FCF.
+  // F-ME-003 already requires the latest annual FCF to be positive; additionally cap
+  // the TTM deficit at -20pp — beyond that the negative TTM is no longer plausible
+  // working-capital noise (MELI's repair case is -12.9pp) and substituting the annual
+  // median would inflate R40 enough to flip FAIL→PASS for structurally FCF-negative
+  // stocks. Treat such a TTM as real and let R40 fail.
+  if (growth != null && fcfMargin != null && fcfMargin < 0 && fcfMargin > -20) {
     const annualMedian = _annualFcfMarginMedian(stock);
     const annualFcfArr = (stock.annual && stock.annual.annualFCF) || [];
     const latestAnnualFcf = _unwrap(annualFcfArr[0]);

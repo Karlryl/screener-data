@@ -84,12 +84,28 @@ function evaluate(stock) {
   checks.push({ name: 'opMargMed>=25', pass: opMed != null && opMed >= 0.25, val: opMed, computable: opMed != null });
 
   // 3. PreTax-ROIC >= 25% (latest)
+  // BUG-06 (audit 2026-06-08): this check used the legacy IC (TotalAssets − Cash)
+  // while quality-compounder-roic moved to Damodaran canonical IC (Debt + Equity −
+  // Cash, Tag 232d-4) — the same stock could pass one method and fail the other on
+  // identical data. Use the same lookup priority: totalEquity direct → derived
+  // (Assets − Liabilities) → legacy Assets − Cash fallback.
   let preTaxROIC = null;
+  let icMethod = 'assets-minus-cash-fallback';
   if (Number.isFinite(rawOpIncs[0]) && totalAssets != null) {
-    const ic = totalAssets - (totalCash || 0);
+    const totalEquityDirect = H.latestBalance(stock, 'totalEquity');
+    const totalLiabilities = H.latestBalance(stock, 'totalLiabilities');
+    const totalEquity = (totalEquityDirect != null) ? totalEquityDirect
+      : (totalLiabilities != null ? totalAssets - totalLiabilities : null);
+    let ic;
+    if (totalEquity != null && totalDebt != null) {
+      ic = totalDebt + totalEquity - (totalCash || 0);
+      icMethod = 'damodaran-canonical';
+    } else {
+      ic = totalAssets - (totalCash || 0);
+    }
     if (ic > 0) preTaxROIC = rawOpIncs[0] / ic;
   }
-  checks.push({ name: 'preTaxROIC>=25', pass: preTaxROIC != null && preTaxROIC >= 0.25, val: preTaxROIC, computable: preTaxROIC != null });
+  checks.push({ name: 'preTaxROIC>=25', pass: preTaxROIC != null && preTaxROIC >= 0.25, val: preTaxROIC, computable: preTaxROIC != null, icMethod });
 
   // 4. Net Cash OR ND/EBITDA <= 1.0
   let netCash = null;
