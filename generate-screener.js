@@ -2812,20 +2812,17 @@ const CLIENT_JS = `
   let cpSel = 0;          // currently highlighted result index
   let cpCurrent = [];     // last computed result list
 
+  // Tag 243: only the three remaining tabs are addressable from the command
+  // palette. Labels/aliases for removed tabs (HG/QC/BF/PRE_BREAKOUT/WATCH/SECTOR)
+  // were dropped so a palette query can no longer jump to a tab with no button.
   const TAB_LABELS = {
-    HG: 'Hypergrowth', QC: 'Quality-Compounder', BF: 'Buffett', SMALL: 'Small Cap',
-    R40: 'Rule of 40', PRE_BREAKOUT: 'Pre-Breakout', WATCH: 'Watch', SECTOR: 'Sector Heatmap'
+    SMALL: 'Small Cap', R40: 'Rule of 40', KI_INFRA: 'KI Infrastruktur'
   };
   // Map common aliases → canonical tab keys (case-insensitive lookup).
   const TAB_ALIASES = {
-    hg:'HG', hypergrowth:'HG',
-    qc:'QC', quality:'QC', 'quality-compounder':'QC', compounder:'QC',
-    bf:'BF', buffett:'BF', buffet:'BF', value:'BF',
     small:'SMALL', smallcap:'SMALL', 'small-cap':'SMALL',
     r40:'R40', 'rule-of-40':'R40', rule40:'R40',
-    pre:'PRE_BREAKOUT', prebreakout:'PRE_BREAKOUT', 'pre-breakout':'PRE_BREAKOUT', breakout:'PRE_BREAKOUT',
-    watch:'WATCH', watchlist:'WATCH',
-    sector:'SECTOR', heatmap:'SECTOR'
+    ki:'KI_INFRA', kiinfra:'KI_INFRA', 'ki-infra':'KI_INFRA', infra:'KI_INFRA', ai:'KI_INFRA'
   };
 
   // Storage helpers — every read/write wrapped (private mode, full disk, etc.).
@@ -2857,7 +2854,11 @@ const CLIENT_JS = `
   }
   function presetApply(snap){
     if (!snap) return false;
-    if (snap.activeTab && TABS[snap.activeTab]) {
+    // Tag 243: a preset saved while on a now-removed tab must not jump there
+    // (orphan view). Require both embedded data and a live button; else keep
+    // the current (default R40) tab.
+    if (snap.activeTab && TABS[snap.activeTab] &&
+        document.querySelector('.tabs button[data-tab="' + snap.activeTab + '"]')) {
       activeTab = snap.activeTab;
       document.querySelectorAll('.tabs button').forEach(b => {
         b.classList.toggle('active', b.dataset.tab === activeTab);
@@ -3224,7 +3225,11 @@ const CLIENT_JS = `
   (function restoreLastTab(){
     try {
       const saved = localStorage.getItem('screener_last_tab');
-      if (saved && (TABS[saved] || saved === 'SECTOR')) {
+      // Tag 243: only restore a saved tab that still has a visible button. A tab
+      // removed from the bar (or a stale value) would otherwise load as an orphan
+      // view with no way back via the tab bar — fall through to the R40 default.
+      const savedHasButton = saved && document.querySelector('.tabs button[data-tab="' + saved + '"]');
+      if (saved && savedHasButton && TABS[saved]) {
         activeTab = saved;
         document.querySelectorAll('.tabs button').forEach(x => {
           const on = x.dataset.tab === saved;
@@ -3835,17 +3840,15 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
   <button id="themeBtn" class="theme-btn" type="button" aria-label="Toggle light/dark theme" title="Toggle light/dark theme">[☀]</button>
 </header>
 <div class="tabs" role="tablist" aria-label="Screener tabs">
-  <!-- HG/QC hidden from default view — remove data-hidden + style to restore -->
-  <button data-tab="HG" data-hidden="true" role="tab" aria-selected="false" style="display:none">⚡ Hypergrowth</button>
-  <button data-tab="QC" data-hidden="true" role="tab" aria-selected="false" style="display:none">🏛 Quality-Compounder</button>
-  <button data-tab="BF" role="tab" aria-selected="false">📜 Buffett</button>
+  <!-- Tag 243: tab bar reduced to the three Karl actually uses — Small Cap,
+       Rule-of-40, KI-Infrastruktur. HG, QC, Buffett, Insider-Buying,
+       Pre-Breakout, Watch and the Sector heatmap were removed on request.
+       The scoring engine and build-time classification are UNTOUCHED — every
+       removed tab can be re-added here as a single <button> line without any
+       recomputation (the row data is still embedded). -->
   <button data-tab="SMALL" role="tab" aria-selected="false">📈 Small Cap</button>
   <button data-tab="R40" class="active" role="tab" aria-current="page" aria-selected="true">📊 Rule of 40</button>
   <button data-tab="KI_INFRA" role="tab" aria-selected="false">🤖 KI Infrastruktur</button>
-  <button data-tab="INSIDER_BUYING" role="tab" aria-selected="false">🟢 Insider-Buying</button>
-  <button data-tab="PRE_BREAKOUT" role="tab" aria-selected="false">🎯 Pre-Breakout</button>
-  <button data-tab="WATCH" role="tab" aria-selected="false">👁 Watch</button>
-  <button data-tab="SECTOR" role="tab" aria-selected="false">🌡 SECTOR</button>
 </div>
 <div class="filters">
   <span class="group"><span class="label">State:</span>
