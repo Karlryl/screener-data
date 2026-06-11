@@ -255,6 +255,27 @@ function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, data
     };
   }
 
+  // F-ME-103 (audit 2026-06-11): TURNAROUND is fundamentally a profitability-
+  // recovery thesis — profitability-state + profitability-trend carry half the
+  // mode weight (0.50). The coverage gate above (40%) can pass on the remaining
+  // 0.50 (altman + piotroski + rev-growth + estimate) alone, letting a stock reach
+  // Tier A with ZERO profitability signal — the single thing TURNAROUND exists to
+  // measure. Require at least one profitability method computable; else REJECT as
+  // essential-signal-missing. Fixtures + anchors carry full data (both computable),
+  // so this guard never fires there → fixture hash + anchor outcomes unchanged.
+  if (modeId === 'TURNAROUND') {
+    var _ps = allResults['profitability-state'];
+    var _pt = allResults['profitability-trend'];
+    if (!((_ps && _ps.computable) || (_pt && _pt.computable))) {
+      return {
+        score: null, tier: 'REJECT', redFlags: [], breakdown: breakdown,
+        mode: modeId, computable: false, reason: 'turnaround-no-profitability-signal',
+        softGuardPenalty: 0, baseScore: null,
+        dataQualityGrade: null, dataQualityCapped: false
+      };
+    }
+  }
+
   // F-ME-023: normalize against computed weight only (not total weight)
   var normScore = (weightedSum / computedWeight) * 100;
   var baseScore = Math.round(normScore);

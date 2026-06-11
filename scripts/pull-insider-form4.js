@@ -320,10 +320,19 @@ async function _filingsCoveringLookback(subJson, lookbackDays) {
   const oldestRecent = rows[rows.length - 1] && rows[rows.length - 1].filingDate;
   // recent already reaches past the window → nothing older needed
   if (!oldestRecent || !_withinLookback(oldestRecent, lookbackDays)) return rows;
+  // F-F4-003 (audit 2026-06-11): hard cap on older-page fetches per ticker. The
+  // window-overlap skip (filingTo) normally bounds this, but a CIK with malformed/
+  // missing filingTo metadata could otherwise walk every historical page. The
+  // 180d window needs at most ~1-2 extra 1000-filing pages even for the busiest
+  // filers, so 4 is generous insurance against a runaway request loop.
+  const MAX_OLDER_PAGES = 4;
+  let pagesFetched = 0;
   for (const fmeta of files) {
     if (!fmeta || !fmeta.name) continue;
     // skip pages whose newest filing predates the window entirely
     if (fmeta.filingTo && !_withinLookback(fmeta.filingTo, lookbackDays)) continue;
+    if (pagesFetched >= MAX_OLDER_PAGES) break;
+    pagesFetched++;
     try {
       const pageRes = await httpGet('https://data.sec.gov/submissions/' + fmeta.name);
       await sleep(RATE_DELAY_MS);
