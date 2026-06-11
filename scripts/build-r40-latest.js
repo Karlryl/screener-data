@@ -53,9 +53,13 @@ for (const t of Object.keys(rows)) {
   const r = rows[t];
   if (!r || r.r40 == null) continue;  // only rows with a computed Rule-of-40 result
   // Same hard-gates as classifyTabs: reject R40-poisoning data artifacts.
+  // F-R40-001 (audit 2026-06-11): dqGrade C added here too — this sister builder
+  // (used when reconstructing r40-latest.json from a committed screener.html) must
+  // match generate-screener.js's export gate, or a rebuild would silently re-admit
+  // the grade-C rows the live path now excludes.
   const hardGated = r.qSpikeFail || r.lossMagFail || r.metricDivFail || r.niVolFail
     || r.preCommFail || r.cetFail || r.r40SanityFail || r.revShockFail
-    || r.dqGrade === 'D' || r.hgClass === 'Q_SPIKE_FAKE';
+    || r.dqGrade === 'D' || r.dqGrade === 'C' || r.hgClass === 'Q_SPIKE_FAKE';
   if (hardGated) continue;
   const r40Res = r.results && r.results['rule-of-40'];
   const rxRes  = r.results && r.results['rule-of-x'];

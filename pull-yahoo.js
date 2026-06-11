@@ -1003,24 +1003,27 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
 // Yahoo's incomeStatementHistory Submodule liefern seit Nov 2024 fast nichts.
 // fundamentalsTimeSeries ist die neue API mit annual + quarterly Income/CashFlow.
 
-async function fetchFundamentalsTS(symbol) {
+async function fetchFundamentalsTS(symbol, signal) {
   // Period: 5y back, jetzt
   const period1 = new Date(Date.now() - 5 * 365 * 86400 * 1000);
   const period2 = new Date();
   const out = { annualFin: [], quarterlyFin: [], annualCash: [], annualBs: [] };
+  // F-PY-102: thread the abort signal into every FTS fetch so a wrapper timeout
+  // cancels the in-flight request and frees the yahoo-finance2 queue slot.
+  const mo = signal ? { fetchOptions: { signal } } : undefined;
   // Defensive: jeder Aufruf eigener try/catch, Teilausfall darf nicht alles töten.
   try {
-    out.annualFin = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'annual', module: 'financials' });
+    out.annualFin = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'annual', module: 'financials' }, mo);
   } catch (e) { _log('WARN', `  fundamentalsTimeSeries annual financials failed for ${symbol}: ${e.message}`); }
   try {
-    out.quarterlyFin = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'quarterly', module: 'financials' });
+    out.quarterlyFin = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'quarterly', module: 'financials' }, mo);
   } catch (e) { _log('WARN', `  fundamentalsTimeSeries quarterly financials failed for ${symbol}: ${e.message}`); }
   try {
-    out.annualCash = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'annual', module: 'cash-flow' });
+    out.annualCash = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'annual', module: 'cash-flow' }, mo);
   } catch (e) { _log('WARN', `  fundamentalsTimeSeries annual cash-flow failed for ${symbol}: ${e.message}`); }
   // Tag-28: Balance-Sheet via fundamentalsTimeSeries (für ROIC/Sloan/Net-Debt-EBITDA).
   try {
-    out.annualBs = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'annual', module: 'balance-sheet' });
+    out.annualBs = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'annual', module: 'balance-sheet' }, mo);
   } catch (e) { _log('WARN', `  fundamentalsTimeSeries annual balance-sheet failed for ${symbol}: ${e.message}`); }
   return out;
 }
@@ -1082,18 +1085,29 @@ function mapFTSToAnnual(annualRows, cashRows) {
     annualGP.push(gp != null ? { value: gp } : null);
     annualNetIncome.push(ni != null ? { value: ni } : null);
   }
-  // FCF + OCF aus cash-flow-Module — same null-preservation convention.
+  // FCF + OCF aus cash-flow-Module.
+  // F-DP-101 (audit 2026-06-11): the old `continue` on pure-empty rows COMPACTED
+  // annualOCF/annualFCF, while annualCapex is built null-preservingly by
+  // _ftsExtractByYear over the SAME cashRows. reinvestment-rate (a QC MUST-gate)
+  // zips annualCapex[j] against annualOCF[j] positionally — a single OCF-empty
+  // mid-window year shifted every older OCF entry by one, pairing capex with the
+  // wrong fiscal year's OCF. Now push a null placeholder for empty rows (no
+  // `continue`), so annualOCF/annualFCF stay index-aligned with annualCapex and
+  // annualBalance. Consumers already finite-filter, so their filtered results are
+  // unchanged; only the cross-array positional alignment is fixed. (Currently
+  // ~0 live incidence because Yahoo's missing year is almost always the oldest —
+  // but the mechanism is real and fragile; same null-preservation rule as
+  // mapFTSToBalance/mapFTSToQuarterly.)
   const annualFCF = [];
   const annualOCF = [];
   const cashSorted = (cashRows || []).slice().reverse();
   for (const r of cashSorted) {
-    const op = _ftsValue(r, 'operatingCashFlow', 'OperatingCashFlow');
-    let fcf = _ftsValue(r, 'freeCashFlow', 'FreeCashFlow');
-    if (fcf == null) {
+    const op = (r != null) ? _ftsValue(r, 'operatingCashFlow', 'OperatingCashFlow') : null;
+    let fcf = (r != null) ? _ftsValue(r, 'freeCashFlow', 'FreeCashFlow') : null;
+    if (fcf == null && r != null) {
       const capex = _ftsValue(r, 'capitalExpenditure', 'CapitalExpenditure');
       if (op != null && capex != null) fcf = op + capex;  // capex ist negativ
     }
-    if (op == null && fcf == null) continue;  // skip pure-empty
     annualOCF.push(op != null ? { value: op } : null);
     annualFCF.push(fcf != null ? { value: fcf } : null);
   }
@@ -1210,6 +1224,28 @@ function _withTimeout(promise, ms, label) {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
+// F-PY-102 (audit 2026-06-11): the plain Promise.race above stops WAITING for a
+// hung request but does NOT cancel it — yahoo-finance2 runs every fetch inside an
+// internal concurrency queue (queue.concurrency), so a timed-out call keeps its
+// queue slot occupied (a "zombie") until the socket finally dies. Under Yahoo
+// throttling every call exceeds the timeout, the queue fills with zombies, and the
+// retry-on-timeout path stacks fresh jobs behind them → throughput collapse (the
+// real mechanism behind the documented F-003 429-storms). This variant drives an
+// AbortController: `makePromise(signal)` must forward the signal to yahoo-finance2
+// via its moduleOptions.fetchOptions, so firing the timeout actually aborts the
+// underlying fetch and frees the queue slot immediately.
+function _withAbortTimeout(makePromise, ms, label) {
+  const ac = new AbortController();
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      try { ac.abort(); } catch (_) {}
+      reject(new Error(`ETIMEDOUT after ${ms}ms (${label})`));
+    }, ms);
+  });
+  return Promise.race([makePromise(ac.signal), timeout]).finally(() => clearTimeout(timer));
+}
+
 // Tag 164: sort by staleness — oldest snapshots pulled first so timeouts
 // always refresh the most-stale data. Guarantees full universe coverage over ~3 days.
 // Reads only the first 300 bytes of each snapshot to extract meta.asOf without
@@ -1280,7 +1316,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     let lastErr;
     for (let attempt = 0; attempt <= DELAYS.length; attempt++) {
       try {
-        return await _withTimeout(yf.quoteSummary(symbol, { modules: MODULES }), 12000, label);
+        // F-PY-102: pass the abort signal through moduleOptions.fetchOptions so a
+        // timeout cancels the fetch and frees the yahoo-finance2 queue slot.
+        return await _withAbortTimeout(
+          (signal) => yf.quoteSummary(symbol, { modules: MODULES }, { fetchOptions: { signal } }),
+          12000, label);
       } catch (e) {
         lastErr = e;
         const msg = String(e.message || '');
@@ -1471,7 +1511,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     const fp = path.join(outputDir, safeSnapshotFilename(stock.ticker));
     if (!fs.existsSync(fp)) throw new Error('no existing snapshot to update');
     const existing = JSON.parse(fs.readFileSync(fp, 'utf8'));
-    const q = await _withTimeout(yf.quote(stock.yahoo_symbol), 8000, stock.ticker + '/quote-only');
+    const q = await _withAbortTimeout((signal) => yf.quote(stock.yahoo_symbol, undefined, { fetchOptions: { signal } }), 8000, stock.ticker + '/quote-only'); // F-PY-102: abortable
     if (!q) throw new Error('quote returned null');
     // Update only fields that change daily
     const newAsOf = new Date().toISOString();
@@ -1622,7 +1662,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
 
       // Tag 106: IPO-Datum via separates yf.quote() — quoteSummary.price hat das Feld nicht.
       try {
-        const q = await _withTimeout(yf.quote(stock.yahoo_symbol), 8000, stock.ticker + '/quote'); // Tag 163: 15s→8s
+        const q = await _withAbortTimeout((signal) => yf.quote(stock.yahoo_symbol, undefined, { fetchOptions: { signal } }), 8000, stock.ticker + '/quote'); // Tag 163: 15s→8s; F-PY-102: abortable
         if (q && q.firstTradeDateMilliseconds) {
           const ftd = new Date(q.firstTradeDateMilliseconds);
           canonical.meta.firstTradeDate = ftd.toISOString();
@@ -1735,7 +1775,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         let ftsFetchFailed = false;
         for (let attempt = 0; attempt < 2; attempt++) {
           try {
-            fts = await _withTimeout(fetchFundamentalsTS(stock.yahoo_symbol), 60000, stock.ticker + '/fts');
+            fts = await _withAbortTimeout((signal) => fetchFundamentalsTS(stock.yahoo_symbol, signal), 60000, stock.ticker + '/fts'); // F-PY-102: abortable
             break;
           } catch (e) {
             if (attempt === 0 && (e.message.includes('timeout') || e.code === 'ECONNRESET')) continue;

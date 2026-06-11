@@ -639,8 +639,12 @@ function classifyTabs(rows) {
     // F-05 (audit 2026-06-08): R40 was the only quality tab WITHOUT the dqGrade-C
     // block — and r40-latest.json exports the R40 tab as a "trusted" array to
     // findash. A C grade means 60-85% of critical fields are missing; consistent
-    // with HG/QC/BF/PRE_BREAKOUT, such rows no longer enter R40 (still visible
-    // in WATCH via tier caps).
+    // with HG/QC/BF/PRE_BREAKOUT, such rows no longer enter R40.
+    // F-R40-002 (audit 2026-06-11): a row that qualified ONLY for R40 and is now
+    // blocked here disappears from the dashboard entirely UNLESS it is also a
+    // NEAR_MISS in HG/QC/BF (the WATCH-tab condition). It does NOT reliably land
+    // in WATCH (that needs DATAQUALITY_ENFORCE to cap the tier) — and that is the
+    // intended outcome: a 60-85%-missing snapshot is not a trustworthy R40 pick.
     if (Number.isFinite(r.r40) && !dqBlockedFromQuality) {
       const hist = Array.isArray(r.r40rxHistory) ? r.r40rxHistory : [];
       const last4 = hist.slice(-4);
@@ -4026,9 +4030,14 @@ async function main() {
     // them keeps r40-latest.json to FINISHED, trustworthy results — the same set
     // the screener itself is willing to show as Rule-of-40 candidates, so r40Pass
     // (r40 ≥ 40) and rxPass (rx ≥ 58) are clean verdicts that match the values.
+    // F-R40-001 (audit 2026-06-11): the Tag-239 F-05 fix only reached the R40 TAB
+    // gate (classifyTabs), not THIS export — so the "trusted" findash array still
+    // admitted dqGrade-C rows (60-85% of critical fields missing). Mirror the tab
+    // gate's `dqBlockedFromQuality` here too: grade C is hard-gated out of the
+    // export, identical to D. Now the export and the on-screen R40 tab agree.
     const hardGated = r.qSpikeFail || r.lossMagFail || r.metricDivFail || r.niVolFail
       || r.preCommFail || r.cetFail || r.r40SanityFail || r.revShockFail
-      || r.dqGrade === 'D' || r.hgClass === 'Q_SPIKE_FAKE';
+      || r.dqGrade === 'D' || r.dqGrade === 'C' || r.hgClass === 'Q_SPIKE_FAKE';
     if (hardGated) { hardGatedTickers.add(r.ticker); continue; }
     const r40Res = r.results && r.results['rule-of-40'];
     const rxRes  = r.results && r.results['rule-of-x'];
