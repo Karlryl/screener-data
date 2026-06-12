@@ -483,6 +483,8 @@ function buildRow(stock) {
     r40SbcAdjusted, sbcInflationFlag, fcfVsEbitdaGapPp,
     annual,
     scoreHistory,
+    // Tag 244: top weighted drivers/drags behind the headline score (modal §D).
+    scoreDrivers: computeScoreDrivers(modeEvals),
     r40rxHistory,
     results: compactResults
   };
@@ -522,8 +524,74 @@ function computeR40Penalty(r) {
   return Math.min(0.95, pen);  // cap at 0.95 — never zero-out a row entirely
 }
 
+// Tag 244: Score-Erklärbarkeit ("warum dieser Score"). Picks a row's headline
+// mode (highest computable score) and derives the top weighted contributors
+// (points earned) and drags (points left on the table) from the score-aggregator
+// breakdown that evaluateMode already returns but buildRow otherwise drops. Pure
+// presentation — no scoring logic is touched, so the aggregator fixture-hash
+// (tag28-tests) is unaffected.
+function computeScoreDrivers(modeEvals) {
+  let best = null;
+  for (const mId of Object.keys(modeEvals || {})) {
+    const ev = modeEvals[mId];
+    if (!ev || !ev.scoreBreakdown || !Number.isFinite(ev.score)) continue;
+    if (!best || ev.score > best.score) {
+      best = {
+        mode: mId,
+        score: ev.score,
+        tier: ev.tier || null,
+        bd: ev.scoreBreakdown,
+        redFlags: Array.isArray(ev.redFlags) ? ev.redFlags : [],
+        softGuardPenalty: Number.isFinite(ev.softGuardPenalty) ? ev.softGuardPenalty : 0
+      };
+    }
+  }
+  if (!best) return null;
+
+  // computedWeight mirrors score-aggregator: only computable methods count toward
+  // the denominator, so per-method contributions sum to the actual base score.
+  let computedWeight = 0;
+  for (const mid in best.bd) {
+    const b = best.bd[mid];
+    if (b && b.computable && Number.isFinite(b.weight)) computedWeight += b.weight;
+  }
+  if (!(computedWeight > 0)) return null;
+
+  const drivers = [];
+  for (const mid in best.bd) {
+    const b = best.bd[mid];
+    if (!b || !b.computable || !Number.isFinite(b.weight) || !Number.isFinite(b.score)) continue;
+    const earned = (b.score * b.weight / computedWeight) * 100;       // points contributed
+    const lost   = ((1 - b.score) * b.weight / computedWeight) * 100; // points left on the table
+    drivers.push({
+      id: mid,
+      earned: Math.round(earned * 10) / 10,
+      lost: Math.round(lost * 10) / 10
+    });
+  }
+  if (!drivers.length) return null;
+
+  // A method is a net driver when it earned more than it left on the table, and a
+  // net drag otherwise — so the same method never appears in both lists.
+  const positives = drivers.slice().filter(d => d.earned > d.lost)
+    .sort((a, b) => b.earned - a.earned).slice(0, 3);
+  const negatives = drivers.slice().filter(d => d.lost > d.earned && d.lost > 0.05)
+    .sort((a, b) => b.lost - a.lost).slice(0, 3);
+  const redFlags = best.redFlags.map(f => f && f.label).filter(Boolean);
+
+  return {
+    mode: best.mode,
+    score: best.score,
+    tier: best.tier,
+    positives,
+    negatives,
+    redFlags,
+    softGuardPenalty: best.softGuardPenalty
+  };
+}
+
 function classifyTabs(rows) {
-  const tabs = { HG: [], QC: [], BF: [], SMALL: [], R40: [], PRE_BREAKOUT: [], WATCH: [], KI_INFRA: [], INSIDER_BUYING: [] };
+  const tabs = { HG: [], QC: [], BF: [], SMALL: [], R40: [], PRE_BREAKOUT: [], WATCH: [], KI_INFRA: [], INSIDER_BUYING: [], R40_DURABLE: [] };
 
   for (const r of rows) {
     // Tag 199 HARD GATES — stocks failing any gate land in WATCH ONLY, regardless
@@ -660,6 +728,30 @@ function classifyTabs(rows) {
         r.r40InsufficientHistory = true;
         tabs.R40.push(r);
       }
+        // 4-Quarter Rule-of-40 DURABILITY category (display-layer; reuses last4 from above).
+        // Durable = strong R40 across >=3 of the last 4 available history periods — a
+        // long-term quality signal, the opposite of a one-quarter spike. Score and
+        // provenance are pure functions of r40rxHistory; no engine/method involved.
+        if (last4.length >= 4) {
+          const v = last4.map(e => (e && Number.isFinite(e.r40)) ? e.r40 : null);
+          if (v.every(x => x !== null)) {
+            const passStreak = v.filter(x => x >= 40).length;
+            const floor = Math.min(v[0], v[1], v[2], v[3]);
+            let wi = 0; for (let i = 1; i < 4; i++) { if (v[i] < v[wi]) wi = i; }
+            const durScore = Math.round((100 * (passStreak / 4) - Math.max(0, 40 - floor)) * 10) / 10;
+            const ttmCount = last4.filter(e => e && e.fcfMarginSource === 'TTM').length;
+            const prov = ttmCount >= 4 ? 'TTM' : (ttmCount >= 1 ? 'MIXED' : 'ANNUAL');
+            r.r40DurScore     = durScore;
+            r.r40PassStreak   = passStreak;
+            r.r40Floor4       = Math.round(floor * 100) / 100;
+            r.r40FloorQuarter = (last4[wi] && last4[wi].quarter) || null;
+            r.r40DurProvenance = prov;
+            if (passStreak >= 3) {
+              r.r40DurableTab = true;
+              tabs.R40_DURABLE.push(r);
+            }
+          }
+        }
     }
     // PRE-BREAKOUT: state TURNAROUND/RECENT, growth > 25%, grossMargin available
     if ((r.state === 'TURNAROUND' || r.state === 'RECENT') && Number.isFinite(r.growth) && r.growth > 25
@@ -714,6 +806,15 @@ function classifyTabs(rows) {
   // to >15 MB. Cap at top 500 by R40 desc; that's still 5x the skill's
   // "≥100 entries" requirement and includes everyone meaningful.
   tabs.R40 = tabs.R40.slice(0, 500);
+
+  const _provRank = p => (p === 'TTM' ? 0 : (p === 'MIXED' ? 1 : 2));
+  tabs.R40_DURABLE.sort((a, b) =>
+       ((b.r40DurScore || 0) - (a.r40DurScore || 0))
+    || ((b.r40PassStreak || 0) - (a.r40PassStreak || 0))
+    || ((b.r40Floor4 == null ? -Infinity : b.r40Floor4) - (a.r40Floor4 == null ? -Infinity : a.r40Floor4))
+    || (_provRank(a.r40DurProvenance) - _provRank(b.r40DurProvenance))
+    || _tickerCmp(a, b));
+  tabs.R40_DURABLE = tabs.R40_DURABLE.slice(0, 500);
 
   // KI Infrastruktur: group by category alphabetically, within category sort by rx desc (null last).
   tabs.KI_INFRA.sort((a, b) => {
@@ -1553,6 +1654,7 @@ const CLIENT_JS = `
         }
         if (tab === 'SMALL') return (b.growth||0) - (a.growth||0);
         if (tab === 'R40') return (b.r40||0) - (a.r40||0);
+        if (tab === 'R40_DURABLE') return (b.r40DurScore||0) - (a.r40DurScore||0);
         if (tab === 'PRE_BREAKOUT') return (b.pbScore||0) - (a.pbScore||0);
         if (tab === 'INSIDER_BUYING') return (b.insiderScore||0) - (a.insiderScore||0);
         if (tab === 'WATCH') return Math.max(b.hgScore||0, b.qcScore||0, b.bfScore||0) - Math.max(a.hgScore||0, a.qcScore||0, a.bfScore||0);
@@ -1565,6 +1667,9 @@ const CLIENT_JS = `
       if (k === 'mcap')      return (b.mcap||0) - (a.mcap||0);
       if (k === 'pbScore')   return (b.pbScore||0) - (a.pbScore||0);
       if (k === 'insiderScore') return (b.insiderScore||0) - (a.insiderScore||0);
+      if (k === 'r40DurScore') return (b.r40DurScore||0) - (a.r40DurScore||0);
+      if (k === 'r40Floor4') return (b.r40Floor4||0) - (a.r40Floor4||0);
+      if (k === 'r40PassStreak') return (b.r40PassStreak||0) - (a.r40PassStreak||0);
       return 0;
     };
     list.sort(cmp);
@@ -1602,6 +1707,12 @@ const CLIENT_JS = `
       {k:'OpM%',w:70,num:true}, {k:'GrossM%',w:70,num:true}, {k:'State',w:80}, {k:'MCap',w:70,num:true},
       {k:'Trend',w:75}
     ];
+    if (tab === 'R40_DURABLE') return [
+      {k:'#',w:30}, {k:'Ticker',w:60}, {k:'Company',w:200}, {k:'Sector',w:110},
+      {k:'DurScore',w:70,num:true}, {k:'Streak',w:50}, {k:'Floor',w:55,num:true},
+      {k:'R40',w:55,num:true}, {k:'Prov',w:55}, {k:'RevGr%',w:65,num:true},
+      {k:'FCFM%',w:65,num:true}, {k:'State',w:75}, {k:'MCap',w:65,num:true}, {k:'Trend',w:70}
+    ];
     if (tab === 'PRE_BREAKOUT') return [
       {k:'#',w:30}, {k:'Ticker',w:60}, {k:'Company',w:220}, {k:'Sector',w:110},
       {k:'State',w:80}, {k:'RevGr%',w:65,num:true}, {k:'GrossM%',w:65,num:true},
@@ -1637,7 +1748,8 @@ const CLIENT_JS = `
     'R40':          ['r40','growth','fcfMargin','opMargin','grossMargin','mcap'],
     'PRE_BREAKOUT': ['growth','grossMargin','r40','mcap','pbScore'],
     'KI_INFRA':     ['rx','r40','growth','fcfMargin'],
-    'INSIDER_BUYING': ['insiderScore','r40']
+    'INSIDER_BUYING': ['insiderScore','r40'],
+    'R40_DURABLE': ['r40DurScore','r40Floor4','r40','growth','fcfMargin','mcap']
   };
   function _rowMetricForBullet(r, key, tab){
     if (key === 'score') {
@@ -1650,6 +1762,8 @@ const CLIENT_JS = `
     if (key === 'mcap') return r.mcap;
     if (key === 'pbScore') return r.pbScore;
     if (key === 'insiderScore') return r.insiderScore;
+    if (key === 'r40DurScore') return r.r40DurScore;
+    if (key === 'r40Floor4') return r.r40Floor4;
     return r[key];
   }
   // buildPercentileMaps: for each numeric column on the active tab, sort the
@@ -1717,7 +1831,7 @@ const CLIENT_JS = `
       const qcCnt = sh.history.filter(function(e){ return e && Number.isFinite(e.qcScore); }).length;
       field = qcCnt >= hgCnt ? 'qcScore' : 'hgScore';
     }
-    else if (tab === 'R40' || tab === 'KI_INFRA') { field = 'r40'; }
+    else if (tab === 'R40' || tab === 'KI_INFRA' || tab === 'R40_DURABLE') { field = 'r40'; }
     else { field = 'hgScore'; }
     const series = sh.history.map(function(e){ return (e && Number.isFinite(e[field])) ? e[field] : null; }).filter(function(v){ return v != null; });
     const spark = microSpark(series, 60, 16);
@@ -1823,6 +1937,34 @@ const CLIENT_JS = `
       const tkCell = esc(r.ticker) + warnBadges.join('');
       return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+tkCell+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td>'+bc(r40Html,'r40')+bc(growthHtml,'growth')+bc(fcfmHtml,'fcfMargin')+bc(opmHtml,'opMargin')+bc(gmHtml,'grossMargin')+'<td>'+stateP+'</td>'+bc(fmtM(r.mcap),'mcap')+trendCell(r,'R40')+'</tr>';
     }
+    if (tab === 'R40_DURABLE') {
+      const durScoreHtml = (r.r40DurScore == null) ? '—' : r.r40DurScore.toFixed(1);
+      const streakCls = (r.r40PassStreak === 4) ? 'g-pos' : 'g-mute';
+      const streakHtml = (r.r40PassStreak == null) ? '—'
+        : '<span class="' + streakCls + '" title="Schwächstes Quartal: ' + esc(r.r40FloorQuarter || '?') + '">' + r.r40PassStreak + '/4</span>';
+      const floorHtml = (r.r40Floor4 == null) ? '—'
+        : '<span class="' + r40Class(r.r40Floor4) + '">' + r.r40Floor4.toFixed(1) + '</span>';
+      const provMap = { TTM: 'g-pos', MIXED: 'g-mute', ANNUAL: 'g-mute' };
+      const provHtml = r.r40DurProvenance
+        ? '<span class="badge ' + (provMap[r.r40DurProvenance] || 'g-mute') + '">' + esc(r.r40DurProvenance) + '</span>'
+        : '—';
+      return rowOpen
+        + '<td>' + (i+1) + '</td>'
+        + '<td class="ticker">' + esc(r.ticker) + '</td>'
+        + '<td class="name">' + esc(r.name) + '</td>'
+        + '<td>' + esc(r.sector || '') + '</td>'
+        + bc(durScoreHtml, 'r40DurScore')
+        + '<td>' + streakHtml + '</td>'
+        + bc(floorHtml, 'r40Floor4')
+        + bc(r40Html, 'r40')
+        + '<td>' + provHtml + '</td>'
+        + bc(growthHtml, 'growth')
+        + bc(fcfmHtml, 'fcfMargin')
+        + '<td>' + stateP + '</td>'
+        + bc(fmtM(r.mcap), 'mcap')
+        + trendCell(r, 'R40_DURABLE')
+        + '</tr>';
+    }
     if (tab === 'PRE_BREAKOUT') {
       const pb = r.pbScore==null ? '—' : r.pbScore.toFixed(1);
       // Three-signal acceleration column: GM↑ OM↑ Rev↑ — only show active ones.
@@ -1892,6 +2034,7 @@ const CLIENT_JS = `
     'R40': 'Every stock with computable R40. Hard-gated (Q-Spike, Loss>50%Rev, Pre-Commerciality, Closed-End-Trust, NI-Vol, Metric-Divergence, Q-Spike-Fake hgClass, R40-Sanity-Cap, DQ-D) — but READ THE FLAGS: ⚠ FCFM>80% or ⚠ HighGrowth or ⚠ Margin-Div badges indicate one-time-effect tells even within passing stocks. Sort uses penalized R40 (raw × (1 - dq_penalty - q_spike_penalty - margin_div_penalty)).',
     'KI_INFRA': 'KI Infrastruktur — manuell geseedete Startliste (Data Centers · Connectivity · Energy · Power & Cooling · Supply Bottlenecks · Packaging & Semicap). Sortiert nach Rule-of-X. FCF-negative Namen sind markiert (✗) statt versteckt. Kein automatischer Filter — Universum = ki-infra.json.',
     'INSIDER_BUYING': 'Insider-Buying — SEC Form 4 Offenmarkt-Käufe (NUR Transaktions-Code P; Awards/Optionsausübungen A/M ausgeschlossen) im 90-Tage-Fenster. Conviction-Score 0–100 (literaturgestützt: Lakonishok & Lee 2001, Cohen-Malloy-Pomorski 2012): Rolle des größten Käufers (CEO/CFO/Director, 0–25) · Cluster-Breite = Anzahl verschiedener Insider (0–25) · Conviction/Preis-Position relativ zur 52-Wochen-Spanne (0–20) · Käufe als % des bestehenden Bestands (0–20) · opportunistisch vs. routinemäßig (0–10). Zeit-Decay nach Alter des jüngsten Kaufs (≤30T ×1,0 · 31–90T ×0,7 · 91–180T ×0,4). Hard-Gate (alle vier nötig): ≥1 P-Kauf, aggregierter Kaufwert ≥ $25k, netto-positiv (Käufe > Nicht-10b5-1-Verkäufe), Filing-Verzögerung ≤ 90 Tage. Datengetrieben & unabhängig von den WATCH-Hard-Gates — ein Titel kann hier auftauchen, auch wenn er für HG/QC hart-gegated ist. Sortiert nach Score absteigend.',
+    'R40_DURABLE': 'Durable Rule-of-40: Firmen, die in mindestens 3 der letzten 4 verfügbaren Perioden ein starkes Rule-of-40 (≥40) hielten — ein Langfrist-/Qualitätssignal, das Gegenteil eines Einmal-Quartals-Spikes. DurScore belohnt, wie viele der 4 Perioden ≥40 lagen, und zieht einen Abzug ab, wenn die schwächste Periode unter 40 fiel (Floor). Streak 4/4 = jede der 4 Perioden ≥40. Prov-Badge: Heute bestehen die „4 Quartale" meist aus 3 zurückliegenden Geschäftsjahren plus aktuellem TTM (MIXED) — also Mehrjahres-Beständigkeit; sobald täglich TTM-Snapshots auflaufen, wird dasselbe Maß automatisch zu echter Quartals-Beständigkeit (TTM) ohne Code-Änderung. Es gelten dieselben Hard-Gates wie im Rule-of-40-Tab.',
     'SECTOR': 'Sector heatmap. Rows = sectors (clean stocks only — WATCH-tab outliers excluded). Columns = median of each metric across the sector. Cell color is the GLOBAL percentile rank of that sector-median (green = top quartile of sectors, red = bottom). Hover a cell for N=count. GP/TA = Novy-Marx gross-profitability (annual gross profit / total assets). ROIC% = sector-relative percentile rank (0-100).'
   };
 
@@ -2132,7 +2275,8 @@ const CLIENT_JS = `
     // Tag 223b: sortable headers + aria-sort indicators. Click toggles sort.
     const sortKeyMap = {
       'Score':'score','R40':'r40','RevGr%':'growth','FCFM%':'fcfMargin',
-      'OpM%':'opMargin','GrossM%':'grossMargin','MCap':'mcap','PB-Score':'pbScore'
+      'OpM%':'opMargin','GrossM%':'grossMargin','MCap':'mcap','PB-Score':'pbScore',
+      'DurScore':'r40DurScore','Floor':'r40Floor4','Streak':'r40PassStreak'
     };
     // Tag 231b-4: header tooltips for jargon columns — surfaced via native
     // title="" (no external lib). Click-to-sort still works; the browser shows
@@ -2151,7 +2295,11 @@ const CLIENT_JS = `
       'Reason':   'Why this stock was hard-gated into WATCH instead of HG/QC/SMALL/R40/PRE-BREAKOUT (e.g. Q-SPIKE, LOSS>50%REV, DATA-D).',
       'Reasons':  'Why this stock was hard-gated into WATCH instead of HG/QC/SMALL/R40/PRE-BREAKOUT.',
       'Trend':    'Last 30 days of mode score: sparkline + delta-7d badge.',
-      'Signals':  'Acceleration signals: GM↑ (gross-margin trending up), OpM↑ (operating-margin trending up), Rev↑ (revenue YoY re-accelerating).'
+      'Signals':  'Acceleration signals: GM↑ (gross-margin trending up), OpM↑ (operating-margin trending up), Rev↑ (revenue YoY re-accelerating).',
+      'DurScore': 'Durabilitäts-Score über 4 Perioden: 100 × (Anzahl Perioden ≥40 / 4) minus Abzug wenn Floor unter 40.',
+      'Floor':    'Schwächstes der 4 R40-Werte in den letzten 4 verfügbaren Perioden.',
+      'Streak':   'Wie viele der 4 Perioden ein R40 ≥40 hatten (max 4/4).',
+      'Prov':     'Datenbasis: TTM = alle 4 Einträge aus TTM-Snapshots; MIXED = Kombination TTM + Jahreswerte; ANNUAL = nur Jahreswerte.'
     };
     for (const c of cols) {
       const skKey = sortKeyMap[c.k];
@@ -2360,6 +2508,31 @@ const CLIENT_JS = `
     // never breaks when score-history hasn't been populated yet.
     html += '<h3 class="sec">Score</h3>';
     html += '<div style="font-family:var(--mono);font-size:12px;color:var(--text-1);">HG Score: '+(r.hgScore!=null?r.hgScore.toFixed(1):'—')+' ('+(r.hgTier||'—')+') &nbsp;·&nbsp; QC Score: '+(r.qcScore!=null?r.qcScore.toFixed(1):'—')+' ('+(r.qcTier||'—')+') &nbsp;·&nbsp; BF Score: '+(r.bfScore!=null?r.bfScore.toFixed(1):'—')+' ('+(r.bfTier||'—')+(r.bfPassed?' ✓':'')+') &nbsp;·&nbsp; PB Score: '+(r.pbScore!=null?r.pbScore.toFixed(1):'—')+'</div>';
+    // Tag 244: Score-Erklärbarkeit ("warum dieser Score") — top weighted drivers
+    // and drags for the headline mode, derived server-side from the aggregator
+    // breakdown (r.scoreDrivers). Renders nothing when no mode produced a
+    // computable score (e.g. insufficient coverage / pure-WATCH names).
+    const sd = r.scoreDrivers;
+    if (sd && ((sd.positives && sd.positives.length) || (sd.negatives && sd.negatives.length))) {
+      const _modeLbl = {HYPERGROWTH:'HG',QUALITY_COMPOUNDER:'QC',TURNAROUND:'TURN',BUFFETT:'BF'}[sd.mode] || sd.mode;
+      const _drvLine = function(label, items, color, sign, key){
+        if (!items || !items.length) return '';
+        let s = '<div style="font-family:var(--mono);font-size:11px;margin-bottom:3px;line-height:1.7;"><span style="color:var(--text-2);display:inline-block;width:70px;">'+label+'</span>';
+        s += items.map(function(d){ return '<span style="color:'+color+';margin-right:10px;white-space:nowrap;">'+esc(d.id)+' '+sign+Number(d[key]).toFixed(1)+'</span>'; }).join('');
+        return s + '</div>';
+      };
+      html += '<div style="margin-top:8px;padding:8px 10px;background:var(--bg-2);border:1px solid var(--border);border-radius:4px;">';
+      html += '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-2);margin-bottom:6px;">Warum dieser Score · '+_modeLbl+' '+(sd.score!=null?sd.score:'—')+' ('+(sd.tier||'—')+')</div>';
+      html += _drvLine('Treiber +', sd.positives, 'var(--green)', '+', 'earned');
+      html += _drvLine('Bremser −', sd.negatives, 'var(--red)', '−', 'lost');
+      if (sd.redFlags && sd.redFlags.length) {
+        html += '<div style="font-family:var(--mono);font-size:11px;color:var(--red);margin-top:4px;">⚑ '+sd.redFlags.map(esc).join(' · ')+'</div>';
+      }
+      if (sd.softGuardPenalty > 0) {
+        html += '<div style="font-family:var(--mono);font-size:10px;color:var(--text-2);margin-top:2px;">SoftGuard-Penalty: −'+sd.softGuardPenalty+'</div>';
+      }
+      html += '</div>';
+    }
     const sh = r.scoreHistory || { history: [], deltaScore7d: null, deltaScore30d: null };
     function _dBadge(label, v) {
       if (v == null || !Number.isFinite(v)) return '<span style="color:var(--text-2);border:1px solid var(--border);padding:1px 5px;font-size:10px;margin-right:4px;">'+label+': —</span>';
@@ -2816,13 +2989,14 @@ const CLIENT_JS = `
   // palette. Labels/aliases for removed tabs (HG/QC/BF/PRE_BREAKOUT/WATCH/SECTOR)
   // were dropped so a palette query can no longer jump to a tab with no button.
   const TAB_LABELS = {
-    SMALL: 'Small Cap', R40: 'Rule of 40', KI_INFRA: 'KI Infrastruktur'
+    SMALL: 'Small Cap', R40: 'Rule of 40', KI_INFRA: 'KI Infrastruktur', R40_DURABLE: 'Durable R40'
   };
   // Map common aliases → canonical tab keys (case-insensitive lookup).
   const TAB_ALIASES = {
     small:'SMALL', smallcap:'SMALL', 'small-cap':'SMALL',
     r40:'R40', 'rule-of-40':'R40', rule40:'R40',
-    ki:'KI_INFRA', kiinfra:'KI_INFRA', 'ki-infra':'KI_INFRA', infra:'KI_INFRA', ai:'KI_INFRA'
+    ki:'KI_INFRA', kiinfra:'KI_INFRA', 'ki-infra':'KI_INFRA', infra:'KI_INFRA', ai:'KI_INFRA',
+    durable:'R40_DURABLE', 'durable-r40':'R40_DURABLE', r40d:'R40_DURABLE', '4q':'R40_DURABLE'
   };
 
   // Storage helpers — every read/write wrapped (private mode, full disk, etc.).
@@ -3849,6 +4023,7 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
   <button data-tab="SMALL" role="tab" aria-selected="false">📈 Small Cap</button>
   <button data-tab="R40" class="active" role="tab" aria-current="page" aria-selected="true">📊 Rule of 40</button>
   <button data-tab="KI_INFRA" role="tab" aria-selected="false">🤖 KI Infrastruktur</button>
+  <button data-tab="R40_DURABLE" role="tab" aria-selected="false">🏆 Durable R40</button>
 </div>
 <div class="filters">
   <span class="group"><span class="label">State:</span>
