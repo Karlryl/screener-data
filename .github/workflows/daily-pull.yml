@@ -667,6 +667,12 @@ jobs:
           cp diff-report.html _site/ 2>/dev/null || true
           cp dashboard.html _site/ 2>/dev/null || true
           cp screener.html _site/ 2>/dev/null || true
+          # Tag 246: ship the lazy-loaded heavy payload next to screener.html so
+          # the dashboard's modal fetch('screener-detail.json') resolves same-origin
+          # on gh-pages. Regenerated each run by generate-screener.js; gitignored on
+          # main (avoids ~44 MB/day history bloat) but MUST be deployed here or every
+          # detail modal 404s on the live site.
+          cp screener-detail.json _site/ 2>/dev/null || true
           cp methods-report.html _site/ 2>/dev/null || true
           cp -r outputs/. _site/outputs/ 2>/dev/null || true
 

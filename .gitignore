@@ -74,3 +74,12 @@ audit-report.json
 # ΔScore/sparkline rendering on every fresh clone). If size ever crosses
 # 50 MB (universe > 6000 tickers) revisit by capping entries to 14 for
 # tickers outside HG ∪ QC ∪ PRE_BREAKOUT (design §2 mitigation).
+
+# Tag 246: screener-detail.json is the lazy-loaded heavy per-row payload
+# (results/scoreHistory/r40rxHistory/scoreDrivers/annual, ~44 MB) split out of
+# screener.html (#5 data-slice: 50 MB → ~5 MB initial load). It is regenerated
+# every run by generate-screener.js and deployed to gh-pages via the daily-pull
+# "Deploy to GitHub Pages" step (cp screener-detail.json _site/) — NOT committed
+# to main, to avoid ~44 MB/day of git-history bloat. The dashboard fetches it
+# lazily on first modal open; main only carries the slim screener.html.
+screener-detail.json

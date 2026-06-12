@@ -1265,6 +1265,32 @@ const CLIENT_JS = `
     return;
   }
   const ROWS = DATA.rowsByTicker;
+  // C1: detail lazy-load cache — _detailPromise memoises the single 43 MB fetch;
+  // _detailLoaded tracks which tickers have been merged so re-opens are instant.
+  let _detailPromise = null;
+  const _detailLoaded = new Set();
+  function loadDetail() {
+    if (_detailPromise) return _detailPromise;
+    _detailPromise = fetch('screener-detail.json', {cache: 'force-cache'})
+      .then(function(res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function(detail) {
+        for (const tk in detail) {
+          const row = ROWS[tk];
+          if (!row) continue;
+          Object.assign(row, detail[tk]);
+          _detailLoaded.add(tk);
+        }
+        return detail;
+      })
+      .catch(function(err) {
+        _detailPromise = null;
+        throw err;
+      });
+    return _detailPromise;
+  }
   // TABS came over as { TAB: [ticker, ticker, ...] }; hydrate into row arrays for filter/render code.
   const TABS = {};
   for (const t of Object.keys(DATA.tabs)) {
@@ -1393,7 +1419,7 @@ const CLIENT_JS = `
         || r.dqGrade === 'D') {
       return 'background:rgba(255,61,90,0.04);';
     }
-    if (r.scoreHistory && Number.isFinite(r.scoreHistory.deltaScore7d) && r.scoreHistory.deltaScore7d >= 5) {
+    if (Number.isFinite(r.deltaScore7d) && r.deltaScore7d >= 5) {
       return 'background:rgba(0,204,136,0.04);';
     }
     if (r.dqGrade === 'C') {
@@ -1821,25 +1847,29 @@ const CLIENT_JS = `
   // snapshot-score-history yet (would need a backfill); fall back to hgScore
   // which approximates fundamentals momentum for the same stock.
   function trendCell(r, tab){
-    const sh = r.scoreHistory;
-    if (!sh || !Array.isArray(sh.history) || sh.history.length === 0) return '<td><span class="g-mute" style="font-size:10px">—</span></td>';
-    // BF: bfScore not in score-history yet; use whichever of hgScore/qcScore is more populated
-    let field;
-    if (tab === 'QC') { field = 'qcScore'; }
-    else if (tab === 'BF') {
-      const hgCnt = sh.history.filter(function(e){ return e && Number.isFinite(e.hgScore); }).length;
-      const qcCnt = sh.history.filter(function(e){ return e && Number.isFinite(e.qcScore); }).length;
-      field = qcCnt >= hgCnt ? 'qcScore' : 'hgScore';
+    // C2: use r.trendSpark proxy (pre-built series) and r.deltaScore7d scalar.
+    const ts = r.trendSpark;
+    if (!ts || typeof ts !== 'object') return '<td><span class="g-mute" style="font-size:10px">—</span></td>';
+    // Pick series by tab — same logic as before, but from the proxy object.
+    let series;
+    if (tab === 'QC') {
+      series = ts.qc;
+    } else if (tab === 'BF') {
+      // BF: whichever of hg/qc is more populated
+      const hgLen = (ts.hg || []).length;
+      const qcLen = (ts.qc || []).length;
+      series = qcLen >= hgLen ? ts.qc : ts.hg;
+    } else if (tab === 'R40' || tab === 'KI_INFRA' || tab === 'R40_DURABLE') {
+      series = ts.r40;
+    } else {
+      series = ts.hg;
     }
-    else if (tab === 'R40' || tab === 'KI_INFRA' || tab === 'R40_DURABLE') { field = 'r40'; }
-    else { field = 'hgScore'; }
-    const series = sh.history.map(function(e){ return (e && Number.isFinite(e[field])) ? e[field] : null; }).filter(function(v){ return v != null; });
+    if (!series || series.length === 0) return '<td><span class="g-mute" style="font-size:10px">—</span></td>';
     const spark = microSpark(series, 60, 16);
-    // Δ7d: use deltaScore7d if it's the right axis (hgScore), else derive
-    // from the trimmed series. For QC we look back ~7 entries (1/day).
+    // Δ7d badge — use the pre-hoisted scalar; fall back to series delta.
     let delta = null;
-    if (field === 'hgScore' && sh.deltaScore7d != null && Number.isFinite(sh.deltaScore7d)) {
-      delta = sh.deltaScore7d;
+    if (r.deltaScore7d != null && Number.isFinite(r.deltaScore7d)) {
+      delta = r.deltaScore7d;
     } else if (series.length >= 2) {
       const lookback = Math.min(7, series.length - 1);
       delta = series[series.length-1] - series[series.length-1-lookback];
@@ -1889,20 +1919,17 @@ const CLIENT_JS = `
       // Derive nPassed = round(value/100 * 14); compactResults has no components.
       // owner-earnings.pass is the OE-positive-and-growing check.
       // dcf-intrinsic-value.value is discount-to-intrinsic ratio 0-1 (≥0.25 = MoS pass).
+      // C5: read from r.bfProxy (pre-computed light proxy, no r.results access needed)
       const score = r.bfScore==null ? '—' : r.bfScore.toFixed(1);
-      const bc14 = r.results['buffett-criteria'];
-      const bc14n = (bc14 && bc14.computable && bc14.value != null)
-        ? Math.round(bc14.value / 100 * 14) : null;
-      const bc14Cell = (bc14 && bc14.computable && bc14n != null)
-        ? '<span class="'+(bc14.pass?'g-pos':'g-mute')+'">'+bc14n+'/14</span>'
+      const bp = r.bfProxy || {};
+      const bc14Cell = (bp.bc14Computable && bp.bc14n != null)
+        ? '<span class="'+(bp.bc14Pass?'g-pos':'g-mute')+'">'+bp.bc14n+'/14</span>'
         : '<span class="g-mute">—</span>';
-      const oe = r.results['owner-earnings'];
-      const oeCell = (oe && oe.computable)
-        ? '<span class="'+(oe.pass?'g-pos':'g-neg')+'">'+(oe.pass?'✓':'✗')+'</span>'
+      const oeCell = bp.oeComputable
+        ? '<span class="'+(bp.oePass?'g-pos':'g-neg')+'">'+(bp.oePass?'✓':'✗')+'</span>'
         : '<span class="g-mute">—</span>';
-      const dcf = r.results['dcf-intrinsic-value'];
-      const mosCell = (dcf && dcf.computable && Number.isFinite(dcf.value))
-        ? '<span class="'+(dcf.pass?'g-pos':'g-mute')+'">'+(dcf.value*100).toFixed(0)+'%</span>'
+      const mosCell = bp.mosComputable
+        ? '<span class="'+(bp.mosPass?'g-pos':'g-mute')+'">'+(bp.mosValue*100).toFixed(0)+'%</span>'
         : '<span class="g-mute">—</span>';
       return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td>'+bc(score,'score')+'<td>'+bc14Cell+'</td><td>'+oeCell+'</td><td>'+mosCell+'</td>'+bc(fcfmHtml,'fcfMargin')+bc(opmHtml,'opMargin')+bc(fmtM(r.mcap),'mcap')+trendCell(r,'BF')+'</tr>';
     }
@@ -1991,11 +2018,8 @@ const CLIENT_JS = `
       const fcfPlusCell = r.fcfPositive === null ? '<td>—</td>'
         : r.fcfPositive ? '<td class="g-pos">✓</td>'
         : '<td class="g-neg" title="FCF-negativ — typisch für wachsende KI-Infra-Namen">✗</td>';
-      // R40 trend sparkline from r40rxHistory (oldest → newest)
-      const r40HistVals = (r.r40rxHistory || [])
-        .slice()
-        .sort((a,b) => (a.quarter < b.quarter ? -1 : a.quarter > b.quarter ? 1 : 0))
-        .map(e => e.r40);
+      // C4: R40 trend sparkline — use pre-built r.r40Spark proxy (already sorted asc, nulls kept)
+      const r40HistVals = r.r40Spark || [];
       const r40SparkHtml = r40HistVals.filter(v => v != null && Number.isFinite(v)).length >= 2
         ? microSpark(r40HistVals, 48, 14)
         : '—';
@@ -2066,17 +2090,17 @@ const CLIENT_JS = `
       // treat value as a raw ratio and convert to a percentage (multiply by 100)
       // so the column reads consistently as "%" across rows. _formatRoic below
       // chooses the right printer.
-      const m = r.results && r.results['sector-relative-roic'];
-      if (!m || m.value == null || !Number.isFinite(m.value)) return null;
-      // Detect rank vs ratio: ranks are in [0,100], ratios in [-1,1]ish.
-      // Use computable as the authoritative flag.
-      if (m.computable) return m.value;       // already 0-100 rank
-      return m.value * 100;                    // raw ratio → %
+      // C7: use r.roicSort proxy (roicValue + roicComputable embedded for all rows)
+      const rs = r.roicSort;
+      if (!rs || rs.roicValue == null || !Number.isFinite(rs.roicValue)) return null;
+      if (rs.roicComputable) return rs.roicValue;   // already 0-100 rank
+      return rs.roicValue * 100;                     // raw ratio → %
     }
     if (key === 'gpta') {
-      const m = r.results && r.results['gross-profitability'];
-      if (!m || m.value == null) return null;
-      return m.value;
+      // C7: use r.roicSort.gpta proxy
+      const rs = r.roicSort;
+      if (!rs || rs.gpta == null) return null;
+      return rs.gpta;
     }
     return null;
   }
@@ -2245,7 +2269,7 @@ const CLIENT_JS = `
     // Banner copy explains both cases so users don't read "—" as a bug.
     const trendBannerEl = document.getElementById('trend-empty-banner');
     if (trendBannerEl) {
-      const hasAnyDelta = list.some(r => r.scoreHistory && Number.isFinite(r.scoreHistory.deltaScore7d));
+      const hasAnyDelta = list.some(r => Number.isFinite(r.deltaScore7d));
       trendBannerEl.style.display = (list.length > 0 && !hasAnyDelta) ? 'block' : 'none';
     }
 
@@ -2408,12 +2432,39 @@ const CLIENT_JS = `
     return svg;
   }
 
-  function showModal(ticker){
+  // C8: thin showModal wrapper — handles file:// detection, lazy detail loading,
+  // and degraded-modal fallback. The actual rendering is in renderModal().
+  function showModal(ticker) {
     const r = ROWS[ticker];
     if (!r) return;
     window._modalTk = ticker;
     const m = document.getElementById('modal');
     const c = document.getElementById('modalContent');
+    m.classList.add('show');
+    m.setAttribute('aria-hidden', 'false');
+    if (location.protocol === 'file:') {
+      renderModal(ticker, {degraded: true});
+      return;
+    }
+    if (_detailLoaded.has(ticker)) {
+      renderModal(ticker);
+      return;
+    }
+    c.innerHTML = '<div style="padding:24px;color:var(--text-1)">lädt…</div>';
+    loadDetail()
+      .then(function() { renderModal(ticker); })
+      .catch(function() { renderModal(ticker, {degraded: true}); });
+  }
+
+  function renderModal(ticker, opts){
+    opts = opts || {};
+    const r = ROWS[ticker];
+    if (!r) return;
+    const m = document.getElementById('modal');
+    const c = document.getElementById('modalContent');
+
+    // M1: null-guard r.annual for degraded/file:// path
+    const an = r.annual || {rev:[], gp:[], opInc:[], fcf:[], netIncome:[]};
 
     // Section A: Header — extended with Tag 199 audit signals
     let html = '<div class="modal-header">';
@@ -2478,10 +2529,15 @@ const CLIENT_JS = `
           + '</div>';
     html += '</div>';
 
+    // C8: degraded-mode note for file:// (detail not available without webserver)
+    if (opts.degraded) {
+      html += '<div style="background:rgba(255,187,51,0.1);border:1px solid var(--yellow);padding:8px 12px;font-size:11px;font-family:var(--mono);color:var(--text-1);margin-bottom:8px;">Detaildaten benötigen einen Webserver (gh-pages / localhost:8123) — file:// blockiert den Abruf. Scores, Sparklines und Proxies sind verfügbar; Scorecard, Score-History, R40-Historie und Jahresabschlüsse werden nach dem ersten Laden gecacht.</div>';
+    }
+
     // Section B: Key Metric cards
     html += '<div class="cards">';
     const yoyDelta = (a, b) => (a!=null && b!=null && b!==0) ? (((a/b)-1)*100).toFixed(1)+'%' : '—';
-    const revPrev = r.annual.rev[1];
+    const revPrev = an.rev[1];
     html += '<div class="card"><div class="lbl">Revenue TTM</div><div class="v">'+fmtM(r.revenueTTM)+'</div><div class="sub">YoY '+(r.growth!=null?r.growth.toFixed(1)+'%':'—')+'</div></div>';
     html += '<div class="card"><div class="lbl">Rev Growth YoY</div><div class="v">'+(r.growth!=null?(r.growth>=0?'+':'')+r.growth.toFixed(1)+'%':'—')+'</div><div class="sub">—</div></div>';
     html += '<div class="card"><div class="lbl">Gross Margin</div><div class="v">'+(r.grossMargin!=null?r.grossMargin.toFixed(1)+'%':'—')+'</div><div class="sub">'+(r.gmaTrend?r.gmaTrend:'—')+(r.gmaChange!=null?' '+(r.gmaChange>=0?'+':'')+r.gmaChange.toFixed(1)+'pp':'')+'</div></div>';
@@ -2491,11 +2547,12 @@ const CLIENT_JS = `
     html += '</div>';
 
     // Section C: Sparklines (revenue bar, gross margin %, op margin %, fcf margin %)
-    const gmSeries = r.annual.rev.map((rv,i)=>{ const g = r.annual.gp[i]; return (rv && g && rv>0) ? (g/rv*100) : null; });
-    const omSeries = r.annual.rev.map((rv,i)=>{ const o = r.annual.opInc[i]; return (rv && o!=null && rv>0) ? (o/rv*100) : null; });
-    const fmSeries = r.annual.rev.map((rv,i)=>{ const f = r.annual.fcf[i]; return (rv && f!=null && rv>0) ? (f/rv*100) : null; });
+    // M1: use "an" (null-guarded alias for r.annual) throughout Section C
+    const gmSeries = an.rev.map((rv,i)=>{ const g = an.gp[i]; return (rv && g && rv>0) ? (g/rv*100) : null; });
+    const omSeries = an.rev.map((rv,i)=>{ const o = an.opInc[i]; return (rv && o!=null && rv>0) ? (o/rv*100) : null; });
+    const fmSeries = an.rev.map((rv,i)=>{ const f = an.fcf[i]; return (rv && f!=null && rv>0) ? (f/rv*100) : null; });
     html += '<h3 class="sec">Annual Trends</h3><div class="charts">';
-    html += '<div class="chart"><div class="ct">Revenue ($)</div>'+spark(r.annual.rev, {bar:true, fmt:fmtM})+'</div>';
+    html += '<div class="chart"><div class="ct">Revenue ($)</div>'+spark(an.rev, {bar:true, fmt:fmtM})+'</div>';
     html += '<div class="chart"><div class="ct">Gross Margin (%)</div>'+spark(gmSeries)+'</div>';
     html += '<div class="chart"><div class="ct">Operating Margin (%)</div>'+spark(omSeries)+'</div>';
     html += '<div class="chart"><div class="ct">FCF Margin (%)</div>'+spark(fmSeries)+'</div>';
@@ -2554,15 +2611,16 @@ const CLIENT_JS = `
     }
 
     // Section E: Annual table
+    // M1: use "an" (null-guarded alias) for Section E annual table
     html += '<h3 class="sec">Annual Financials</h3><div class="annual"><table><thead><tr><th class="fy" style="text-align:left;">FY</th><th>Revenue</th><th>RevGrowth</th><th>GrossM%</th><th>OpM%</th><th>FCFM%</th><th>NetIncM%</th></tr></thead><tbody>';
-    for (let i=0;i<r.annual.rev.length;i++){
-      const rv = r.annual.rev[i];
-      const rvPrev = r.annual.rev[i+1];
+    for (let i=0;i<an.rev.length;i++){
+      const rv = an.rev[i];
+      const rvPrev = an.rev[i+1];
       const grRow = (rv!=null && rvPrev!=null && rvPrev!==0) ? ((rv/rvPrev-1)*100) : null;
-      const gpx = r.annual.gp[i];
-      const opx = r.annual.opInc[i];
-      const fcx = r.annual.fcf[i];
-      const nix = r.annual.netIncome[i];
+      const gpx = an.gp[i];
+      const opx = an.opInc[i];
+      const fcx = an.fcf[i];
+      const nix = an.netIncome[i];
       const gmPct = (rv && gpx!=null && rv>0) ? gpx/rv*100 : null;
       const omPct = (rv && opx!=null && rv>0) ? opx/rv*100 : null;
       const fmPct = (rv && fcx!=null && rv>0) ? fcx/rv*100 : null;
@@ -2573,11 +2631,12 @@ const CLIENT_JS = `
     }
     html += '</tbody></table></div>';
 
-    // Section F: Full method scorecard
+    // Section F: Full method scorecard — M2: null-guard r.results for degraded path
     html += '<h3 class="sec">Method Scorecard</h3><div class="scorecard"><table><tbody>';
-    const methodIds = Object.keys(r.results).sort();
+    const methodIds = Object.keys(r.results || {}).sort();
     for (const mid of methodIds) {
       const m = r.results[mid];
+      if (!m) continue;
       const ic = !m.computable ? '⚪' : (m.pass ? '✅' : '❌');
       const cls = !m.computable ? 'na' : (m.pass ? 'ok' : 'fail');
       const val = m.value != null ? m.value : '—';
@@ -2593,20 +2652,15 @@ const CLIENT_JS = `
     // for that peer (reuses showModal()). Falls back gracefully when the
     // subject has no sector, zero mcap, or no qualifying peers.
     html += '<h3 class="sec">Peers</h3>';
+    // C9: use embedded roicSort proxy for peers — works without fetching each peer's detail
     const peerRoicPct = (x) => {
-      // Sort key: prefer the 0-100 sector-rank when available (computable=true);
-      // fall back to raw ROIC ratio (still the same sector → still a sane
-      // sort within the same peer group) when the percentile data is missing
-      // (sector-medians-auto.json hasn't been re-populated after Tag 209b).
-      // Both are monotonic in the underlying ROIC, so the top-5 ordering
-      // matches what the percentile would produce anyway.
-      const m = x.results && x.results['sector-relative-roic'];
-      if (!m || m.value == null || !Number.isFinite(m.value)) return -Infinity;
-      return m.value;
+      const rs = x.roicSort;
+      if (!rs || rs.roicValue == null || !Number.isFinite(rs.roicValue)) return -Infinity;
+      return rs.roicValue;
     };
     const peerGpTa = (x) => {
-      const m = x.results && x.results['gross-profitability'];
-      return (m && m.value != null && Number.isFinite(m.value)) ? m.value : null;
+      const rs = x.roicSort;
+      return (rs && rs.gpta != null && Number.isFinite(rs.gpta)) ? rs.gpta : null;
     };
     let peers = [];
     if (r.sector && r.sector !== '—' && r.mcap > 0) {
@@ -2858,8 +2912,6 @@ const CLIENT_JS = `
     }
 
     c.innerHTML = html;
-    m.classList.add('show');
-    m.setAttribute('aria-hidden', 'false');
     document.getElementById('closeM').onclick = closeModal;
     document.getElementById('prevC').onclick = () => navModal(-1);
     document.getElementById('nextC').onclick = () => navModal(1);
@@ -3769,12 +3821,14 @@ const CLIENT_JS = `
       return v != null && Number.isFinite(v) ? v.toFixed(2) : '';
     }
     if (key === 'bf14') {
-      const m = r.results && r.results['buffett-criteria'];
-      return (m && Number.isFinite(m.value)) ? m.value.toFixed(0) : '';
+      // C6: use bfProxy.bc14Value (raw 0-100 scale, same as m.value was)
+      const bp = r.bfProxy;
+      return (bp && Number.isFinite(bp.bc14Value)) ? bp.bc14Value.toFixed(0) : '';
     }
     if (key === 'bfMos') {
-      const m = r.results && r.results['dcf-intrinsic-value'];
-      return (m && Number.isFinite(m.value)) ? (m.value*100).toFixed(1) : '';
+      // C6: use bfProxy.mosValue (raw ratio 0-1; *100 for % display, same as before)
+      const bp = r.bfProxy;
+      return (bp && Number.isFinite(bp.mosValue)) ? (bp.mosValue*100).toFixed(1) : '';
     }
     if (key === 'bfPassed') {
       return r.bfPassed ? 'YES' : 'NO';
@@ -3954,9 +4008,75 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
   for (const tab of Object.keys(tabs)) {
     for (const r of tabs[tab]) tabbedTickers.add(r.ticker);
   }
+
+  // S1: Helper to build light proxy fields from heavy data at generate time.
+  // This lets the client table/signal/csv render paths work without the heavy
+  // fields, which are externalized to screener-detail.json.
+  const round1 = v => (v == null || !Number.isFinite(v)) ? null : Math.round(v * 10) / 10;
+  function buildProxies(r) {
+    // trendSpark: pre-built series for trendCell (hg/qc/r40 axes)
+    const sh = r.scoreHistory;
+    const trendSpark = {};
+    if (sh && Array.isArray(sh.history) && sh.history.length > 0) {
+      const hgSeries = sh.history.map(e => (e && Number.isFinite(e.hgScore)) ? round1(e.hgScore) : null).filter(v => v != null);
+      const qcSeries = sh.history.map(e => (e && Number.isFinite(e.qcScore)) ? round1(e.qcScore) : null).filter(v => v != null);
+      const r40Series = sh.history.map(e => (e && Number.isFinite(e.r40)) ? round1(e.r40) : null).filter(v => v != null);
+      if (hgSeries.length > 0) trendSpark.hg = hgSeries;
+      if (qcSeries.length > 0) trendSpark.qc = qcSeries;
+      if (r40Series.length > 0) trendSpark.r40 = r40Series;
+    }
+
+    // deltaScore7d: top-level scalar for rowTint + trendCell Δ badge + banner
+    const deltaScore7d = (sh && Number.isFinite(sh.deltaScore7d)) ? round1(sh.deltaScore7d) : null;
+
+    // r40Spark: pre-built KI_INFRA R40 sparkline series (keep nulls for >=2-finite check)
+    const byQuarterAsc = (a, b) => (a.quarter < b.quarter ? -1 : a.quarter > b.quarter ? 1 : 0);
+    const r40Spark = (r.r40rxHistory || []).slice().sort(byQuarterAsc)
+      .slice(-12)
+      .map(e => (e.r40 != null && Number.isFinite(e.r40)) ? round1(e.r40) : null);
+
+    // bfProxy: pre-computed Buffett-tab cell values + raw CSV values
+    const bc = (r.results || {})['buffett-criteria'];
+    const oe = (r.results || {})['owner-earnings'];
+    const dcf = (r.results || {})['dcf-intrinsic-value'];
+    const bc14Computable = !!(bc && bc.computable);
+    const bc14n = (bc14Computable && bc.value != null && Number.isFinite(bc.value))
+      ? Math.round(bc.value / 100 * 14) : null;
+    const bfProxy = {
+      bc14n,
+      bc14Pass: bc14Computable ? !!bc.pass : null,
+      bc14Computable,
+      bc14Value: (bc && Number.isFinite(bc.value)) ? bc.value : null,  // raw 0-100, for CSV bf14
+      oeComputable: !!(oe && oe.computable),
+      oePass: (oe && oe.computable) ? !!oe.pass : null,
+      mosComputable: !!(dcf && dcf.computable && Number.isFinite(dcf.value)),
+      mosPass: (dcf && dcf.computable) ? !!dcf.pass : null,
+      mosValue: (dcf && Number.isFinite(dcf.value)) ? dcf.value : null  // raw ratio 0-1, for CSV bfMos
+    };
+
+    // roicSort: SECTOR heatmap + modal peers (embedded for ALL rows)
+    const srr = (r.results || {})['sector-relative-roic'];
+    const gp  = (r.results || {})['gross-profitability'];
+    const roicSort = {
+      roicValue: (srr && Number.isFinite(srr.value)) ? srr.value : null,
+      roicComputable: !!(srr && srr.computable),
+      gpta: (gp && Number.isFinite(gp.value)) ? gp.value : null
+    };
+
+    return { trendSpark, deltaScore7d, r40Spark, bfProxy, roicSort };
+  }
+
+  // S2: Non-mutating strip — detailByTicker holds the heavy fields,
+  // rowsByTicker holds the light fields + proxies.
+  // DO NOT delete from r — the rows[] array is reused by the r40-latest
+  // export AFTER renderHTML at ~4200 (reads r.results['rule-of-40'] etc).
+  const detailByTicker = {};
   const rowsByTicker = {};
   for (const r of rows) {
-    if (tabbedTickers.has(r.ticker)) rowsByTicker[r.ticker] = r;
+    if (!tabbedTickers.has(r.ticker)) continue;
+    const { results, scoreHistory, r40rxHistory, scoreDrivers, annual, ...light } = r;
+    rowsByTicker[r.ticker] = { ...light, ...buildProxies(r) };
+    detailByTicker[r.ticker] = { results, scoreHistory, r40rxHistory, scoreDrivers, annual };
   }
   // tabs[tab] contains references — JSON.stringify deep-clones, so each tabbed
   // stock appears twice (once in rowsByTicker, once in its tab array(s)).
@@ -3987,7 +4107,8 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
   // </script>-break-out guard — escape forward slash in any embedded "</"
   // sequence so a malformed company name can't terminate the data block.
   const json = JSON.stringify(payload).replace(/<\//g, '<\\/');
-  return `<!DOCTYPE html>
+  // S3: return {html, detail} so main() can write screener-detail.json separately.
+  const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -4139,6 +4260,9 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
 <script>${CLIENT_JS}</script>
 </body>
 </html>`;
+  // S3: return both the HTML string and the detail object so main() can write
+  // screener-detail.json next to screener.html.
+  return { html, detail: detailByTicker };
 }
 
 async function main() {
@@ -4182,9 +4306,12 @@ async function main() {
   ];
 
   const generatedAt = new Date().toISOString().slice(0, 10);
-  const html = renderHTML(rows, tabs, sectors, countries, generatedAt);
+  const { html, detail } = renderHTML(rows, tabs, sectors, countries, generatedAt);
   writeFileAtomic(args.out, html);
+  const detailPath = path.join(path.dirname(args.out), 'screener-detail.json');
+  writeFileAtomic(detailPath, JSON.stringify(detail));
   console.log('[screener] wrote ' + args.out + ' (' + (html.length/1024).toFixed(0) + ' KB)');
+  console.log('[screener] wrote ' + detailPath + ' (detail)');
 
   // ── r40-latest.json — stable export for downstream consumers (findash) ──────
   // A flat, sorted array of FINISHED Rule-of-40 / Rule-of-X verdicts. findash
