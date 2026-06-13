@@ -195,16 +195,34 @@ function _restoreMediansFromTest(saved) {
  *   4. Static hardcoded sector-medians.json
  *   5. Method default
  */
+// F-ME-202 (MED): per-metric hard floors for the effective gate. fcf-yield uses the
+// sector MEDIAN as a binary pass gate with no positive-only guard, so a median below
+// the intended 5% FCF-yield floor (live HARDWARE was ~1.1%) lets ~half of every sector
+// pass. Clamp the gate so it never drops below the method's canonical static floor.
+// Applied ONLY to listed metrics — other metrics keep raw median behavior.
+const EFFECTIVE_THRESHOLD_FLOORS = {
+  'fcf-yield': 0.05  // canonical static THRESHOLD from methods/fcf-yield.js
+};
+
+function _applyEffectiveFloor(methodId, result) {
+  const floor = EFFECTIVE_THRESHOLD_FLOORS[methodId];
+  if (floor == null) return result;
+  if (result.threshold == null || result.threshold < floor) {
+    return { threshold: floor, source: (result.source || 'unknown') + '+floored>=' + floor };
+  }
+  return result;
+}
+
 function effectiveThreshold(stock, methodId, defaultThreshold) {
   const sp = classifySubProfile(stock);
-  if (!sp || !sp.id) return { threshold: defaultThreshold, source: 'default' };
+  if (!sp || !sp.id) return _applyEffectiveFloor(methodId, { threshold: defaultThreshold, source: 'default' });
 
   // --- 1. Rolling 12m (most authoritative when mature) ---
   const rolling = _loadRollingMedians();
   const rEntry = rolling[sp.id] && rolling[sp.id][methodId];
   if (rEntry && rEntry.rolling12mMedian != null
       && Array.isArray(rEntry.values) && rEntry.values.length >= ROLLING_MIN_WEEKS) {
-    return { threshold: rEntry.rolling12mMedian, source: 'rolling12m:' + sp.id, n: rEntry.values.length };
+    return _applyEffectiveFloor(methodId, { threshold: rEntry.rolling12mMedian, source: 'rolling12m:' + sp.id, n: rEntry.values.length });
   }
 
   // --- 2+3. Tag 167: Region-aware auto-median (regional first, then _GLOBAL) ---
@@ -212,7 +230,7 @@ function effectiveThreshold(stock, methodId, defaultThreshold) {
   if (autoMedians && autoMedians._version === 2) {
     const lookup = lookupMedian(autoMedians, stock, sp.id, methodId);
     if (lookup.value != null) {
-      return { threshold: lookup.value, source: 'auto:' + lookup.source };
+      return _applyEffectiveFloor(methodId, { threshold: lookup.value, source: 'auto:' + lookup.source });
     }
   }
 
@@ -220,11 +238,11 @@ function effectiveThreshold(stock, methodId, defaultThreshold) {
   const medians = _loadSectorMedians();
   const sectorEntry = medians[sp.id];
   if (sectorEntry && sectorEntry[methodId] != null) {
-    return { threshold: sectorEntry[methodId], source: 'sector:' + sp.id };
+    return _applyEffectiveFloor(methodId, { threshold: sectorEntry[methodId], source: 'sector:' + sp.id });
   }
 
   // --- 5. Method default ---
-  return { threshold: defaultThreshold, source: 'default' };
+  return _applyEffectiveFloor(methodId, { threshold: defaultThreshold, source: 'default' });
 }
 
 // --- Tag 97c: Extended Plugin-Interface --------------------------

@@ -2,7 +2,7 @@ name: Daily Yahoo Pull
 
 on:
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '17 2 * * 2-6'
   workflow_dispatch: {}
 
 permissions:
@@ -301,7 +301,7 @@ jobs:
           # incomplete updates degrade gracefully instead of polluting aggregates.
           partial=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.partial===true?'true':'false')}catch(e){console.log('false')}")
           if [ "$partial" = "true" ]; then
-            echo "::warning::Manifest reports partial=true — pull was killed mid-flight. Letting the coverage gate (n_ok ≥ max(2500, 18%)) decide."
+            echo "::warning::Manifest reports partial=true — pull was killed mid-flight. Letting the coverage gate (n_ok ≥ max(2500, 13%)) decide."
           fi
           ok=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.n_ok||0)}catch(e){console.log(0)}")
           total=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.n_total||0)}catch(e){console.log(0)}")

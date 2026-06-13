@@ -94,38 +94,43 @@ function gatherBySubProfile(stocks, classify) {
     const ni = _firstNonNull(stock.annual && stock.annual.annualNetIncome, r => r && r.value);
     const ta = _firstNonNull(stock.annual && stock.annual.annualBalance, r => r && r.totalAssets);
     const cash = _firstNonNull(stock.annual && stock.annual.annualBalance, r => r && r.totalCash);
-    const oi = _firstNonNull(stock.annual && stock.annual.annualOpInc, r => r && r.value);
     const fcf = _firstNonNull(stock.annual && stock.annual.annualFCF, r => r && r.value);
+    // F-ME-203: the fcf-yield method (methods/fcf-yield.js) gates on the
+    // SBC-ADJUSTED yield (fcfAdj = fcf - |annualSBC|, when SBC present), so the
+    // sector median used as its threshold must be built from the SAME metric.
+    // Previously the bucket used raw FCF, diverging write vs read definitions.
+    const sbc = _firstNonNull(stock.annual && stock.annual.annualSBC, r => r && r.value);
     const mc = stock.marketCap && (typeof stock.marketCap === 'number' ? stock.marketCap : stock.marketCap.value);
 
+    // F-ME-203: mirror fcf-yield.js exactly — subtract |SBC| when finite & non-zero.
+    let fcfAdj = fcf;
+    if (fcf != null && sbc != null && Number.isFinite(sbc) && sbc !== 0) {
+      fcfAdj = fcf - Math.abs(sbc);
+    }
+
+    // F-ME-205: roce medians were computed/written but consumed by no method
+    // (no method has id 'roce'; effectiveThreshold/lookup key off method ids).
+    // Dropped from gather/compute path as dead code.
     // --- push into global bucket ---
-    if (!globalBuckets[sp.id]) globalBuckets[sp.id] = { roic: [], roce: [], 'fcf-yield': [] };
+    if (!globalBuckets[sp.id]) globalBuckets[sp.id] = { roic: [], 'fcf-yield': [] };
     if (ni != null && ta != null) {
       const ic = ta - (cash || 0);
       if (ic > 0) globalBuckets[sp.id].roic.push(ni / ic);
     }
-    if (oi != null && ta != null) {
-      const ce = ta - (cash || 0);
-      if (ce > 0) globalBuckets[sp.id].roce.push(oi / ce);
-    }
-    if (fcf != null && mc != null && mc > 0) {
-      globalBuckets[sp.id]['fcf-yield'].push(fcf / mc);
+    if (fcfAdj != null && mc != null && mc > 0) {
+      globalBuckets[sp.id]['fcf-yield'].push(fcfAdj / mc);
     }
 
     // --- Tag 167: push into regional bucket ---
     const region = getRegion(stock);
     if (!regionalBuckets[region]) regionalBuckets[region] = {};
-    if (!regionalBuckets[region][sp.id]) regionalBuckets[region][sp.id] = { roic: [], roce: [], 'fcf-yield': [] };
+    if (!regionalBuckets[region][sp.id]) regionalBuckets[region][sp.id] = { roic: [], 'fcf-yield': [] };
     if (ni != null && ta != null) {
       const ic = ta - (cash || 0);
       if (ic > 0) regionalBuckets[region][sp.id].roic.push(ni / ic);
     }
-    if (oi != null && ta != null) {
-      const ce = ta - (cash || 0);
-      if (ce > 0) regionalBuckets[region][sp.id].roce.push(oi / ce);
-    }
-    if (fcf != null && mc != null && mc > 0) {
-      regionalBuckets[region][sp.id]['fcf-yield'].push(fcf / mc);
+    if (fcfAdj != null && mc != null && mc > 0) {
+      regionalBuckets[region][sp.id]['fcf-yield'].push(fcfAdj / mc);
     }
   }
 
@@ -165,7 +170,10 @@ function _computeFromBuckets(buckets, minN) {
         const medVal = median(useArr);
         if (medVal === null || !Number.isFinite(medVal)) continue;
         result[spId][mid] = medVal;
-        result[spId]['_n_' + mid] = arr.length;
+        // F-ME-204: report the count of the array actually used for the
+        // median/percentile (useArr, post-filter), not the full pre-filter
+        // array length — the latter overstated the effective sample size.
+        result[spId]['_n_' + mid] = useArr.length;
         // Tag 209b: enrich with p25/p50/p75/p90 alongside median. Keys are prefixed
         // with '_p..' so they coexist with existing `metricId` (median) reads.
         // `_p50_` equals median (kept for API symmetry / explicit reads).

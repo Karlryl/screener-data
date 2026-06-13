@@ -27,6 +27,10 @@ const Runner = require('./methods/runner.js');
 const SM = require('./methods/strategy-modes.js');
 const DQ = require('./methods/data-quality.js');
 const { writeFileAtomic } = require('./lib/atomic-write.js');
+// F-SM-004: route per-ticker history-file reads through the shared safe helper
+// so a ticker written under the safe-stem (e.g. CON → _CON.json) is found
+// instead of being silently missed by raw `ticker + '.json'`.
+const { safeSnapshotFilename } = require('./lib/snapshot-fs.js');
 
 // KI Infrastruktur universe — manually seeded, Phase-2-ready for machine updates.
 let KI_INFRA_CONFIG = { categories: {} };
@@ -159,7 +163,7 @@ function readScoreHistory(ticker, dir) {
   if (_scoreHistoryCache.has(cacheKey)) return _scoreHistoryCache.get(cacheKey);
   let result = null;
   try {
-    const file = path.join(base, ticker + '.json');
+    const file = path.join(base, safeSnapshotFilename(ticker));
     if (fs.existsSync(file)) {
       const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
       if (parsed && Array.isArray(parsed.entries)) {
@@ -177,7 +181,7 @@ function readR40rxHistory(ticker) {
   if (_r40rxHistoryCache.has(ticker)) return _r40rxHistoryCache.get(ticker);
   let result = null;
   try {
-    const file = path.join(R40RX_HISTORY_DIR, ticker + '.json');
+    const file = path.join(R40RX_HISTORY_DIR, safeSnapshotFilename(ticker));
     if (fs.existsSync(file)) {
       const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
       if (parsed && Array.isArray(parsed.entries)) result = parsed;

@@ -48,6 +48,12 @@ async function totalReturn(symbol, lookbackYears) {
   try {
     const hist = await yf.historical(symbol, { period1: past, period2: now, interval: '1mo' });
     if (!Array.isArray(hist) || hist.length < 2) return null;
+    // F-BT-016(a): reject short-history series. If the first available bar is far
+    // from period1 (the requested lookback start), the stock didn't trade for the
+    // full window — labelling its return as "Ny" would mislabel a shorter horizon.
+    // Allow ~30d slack (monthly bars + listing/alignment jitter).
+    const firstDate = hist[0].date instanceof Date ? hist[0].date : new Date(hist[0].date);
+    if (Math.abs(firstDate.getTime() - past.getTime()) > 45 * 86400 * 1000) return null;
     const first = hist[0].adjClose || hist[0].close;
     const last = hist[hist.length - 1].adjClose || hist[hist.length - 1].close;
     if (!first || !last) return null;
@@ -67,13 +73,25 @@ async function processMode(modeId, picks, benchmark, topN) {
   const top = picks.slice(0, topN);
   console.log(`\n━━━ ${modeId} — Top-${top.length} Picks ━━━`);
   const stats = { mode: modeId, count: top.length, benchmarks: {}, picks: [] };
-  for (const lookback of [1, 3, 5]) {
-    const returns = [];
-    for (const p of top) {
-      const r = await totalReturn(p.ticker, lookback);
-      returns.push(r);
+
+  // F-BT-016(b): compute each pick's 1/3/5Y returns exactly ONCE, then derive
+  // both the per-pick rows and the cohort medians from the same numbers.
+  // Previously the median loop and the per-pick loop each fetched every ticker,
+  // doubling Yahoo calls and risking inconsistent median vs. per-pick values.
+  const rowsByLookback = { 1: [], 3: [], 5: [] };
+  for (const p of top) {
+    const row = { ticker: p.ticker, name: p.name, profState: p.profState, sector: p.sector };
+    for (const lb of [1, 3, 5]) {
+      const r = await totalReturn(p.ticker, lb);
+      row[`r${lb}y`] = r;
+      rowsByLookback[lb].push(r);
       await _sleep(150);
     }
+    stats.picks.push(row);
+  }
+
+  for (const lookback of [1, 3, 5]) {
+    const returns = rowsByLookback[lookback];
     const med = median(returns);
     const computed = returns.filter(x => Number.isFinite(x)).length;
     stats[`r${lookback}y`] = { median: med, count: computed, total: top.length };
@@ -94,16 +112,6 @@ async function processMode(modeId, picks, benchmark, topN) {
       console.log(`  → Outperformance vs ${benchmark} (${lookback}Y): ${pct(op)}${op > 0 ? ' ✓' : ' ✗'}`);
       stats[`outperf${lookback}y`] = op;
     }
-  }
-  // Per-pick
-  for (const p of top) {
-    const row = { ticker: p.ticker, name: p.name, profState: p.profState, sector: p.sector };
-    for (const lb of [1, 3, 5]) {
-      const r = await totalReturn(p.ticker, lb);
-      row[`r${lb}y`] = r;
-      await _sleep(120);
-    }
-    stats.picks.push(row);
   }
   return stats;
 }

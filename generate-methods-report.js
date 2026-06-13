@@ -36,7 +36,7 @@ function escHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-function evaluateAllStocks(args) {
+async function evaluateAllStocks(args) {
   // Tag 220 (audit F-GR-002 HIGH fix): filter '_*' prefix (not just
   // _manifest.json). _manifest-full.json was being read as a phantom ticker
   // and showing up in Top-Picks output. Same fix applies to other discovery
@@ -71,10 +71,22 @@ function evaluateAllStocks(args) {
   // tickers (audit Tag 226b).
   const cachedMethods = Runner.getMethods();
   const rows = [];
-  for (const file of files) {
-    let stock;
-    try { stock = JSON.parse(fs.readFileSync(path.join(args.snapshots, file), 'utf8')); }
-    catch (e) { continue; }
+  // F-PF-005 (perf): batched fs.promises.readFile (CONCURRENCY=32) instead of
+  // a serial blocking readFileSync loop. Mirrors generate-modes-report.js
+  // loadStocks(). Sequential within each batch keeps memory bounded; parse
+  // failures are skipped (was `catch { continue }` in the old serial loop).
+  const CONCURRENCY = 32;
+  for (let i = 0; i < files.length; i += CONCURRENCY) {
+    const batch = files.slice(i, i + CONCURRENCY);
+    const parsed = await Promise.all(batch.map(async (file) => {
+      try {
+        const content = await fs.promises.readFile(path.join(args.snapshots, file), 'utf8');
+        return { file, stock: JSON.parse(content) };
+      } catch (e) { return null; }
+    }));
+    for (const entry of parsed) {
+      if (!entry) continue;
+      const { file, stock } = entry;
     const ticker = (stock.meta && stock.meta.ticker) || file.replace(/\.json$/, '');
     // Tag 221c (audit F-GR-005 fix): use `?? null` instead of `|| null` so
     // legitimate zero values (0% growth, $0 revenue for a freshly-spun
@@ -130,6 +142,7 @@ function evaluateAllStocks(args) {
     }
     // Tag 221c (audit F-GR-005 fix): use explicit `!= null` check so zero is preserved.
     lastRow.grossMargin = (stock.metrics && stock.metrics.grossMargin && stock.metrics.grossMargin.value != null) ? stock.metrics.grossMargin.value : null;
+    }
   }
   return rows;
 }
@@ -223,10 +236,14 @@ function renderHTML(rows, methods) {
   const methodTopLists = {};
   // Tag 98f: nur CORE-Methoden + disqualified-Stocks raus aus Discovery-Cards
   const MT_local = require('./methods/method-types.js');
+  // F-PF-004 (perf): precompute the small set of DataGuard method ids ONCE
+  // instead of walking Object.entries(r.results) + isDataGuard() per row.
+  const dataGuardIds = methods.filter(m => MT_local.isDataGuard(m.id)).map(m => m.id);
   const discoveryRows = rows.filter(r => {
     // disqualified durch DataGuard? Pruefen ob irgendein DATAGUARD pass=false hat
-    for (const [mid, res] of Object.entries(r.results)) {
-      if (MT_local.isDataGuard(mid) && res.computable === true && res.pass === false) return false;
+    for (const mid of dataGuardIds) {
+      const res = r.results[mid];
+      if (res && res.computable === true && res.pass === false) return false;
     }
     return true;
   });
@@ -457,9 +474,12 @@ function renderHTML(rows, methods) {
   // accesses (83 × 19k × 2 ≈ 3.2M at full scale → ~7s per call, called twice
   // in this file). Now M × N once, ~4-5× faster.
   const _methodCounts = {};
+  // F-PF-006 (perf): pre-init counts once instead of a lazy-init branch per
+  // row*method pair; inner loop becomes a plain increment.
+  for (const m of methods) _methodCounts[m.id] = { computable: 0, passing: 0 };
   for (const r of rows) {
     for (const m of methods) {
-      const c = _methodCounts[m.id] || (_methodCounts[m.id] = { computable: 0, passing: 0 });
+      const c = _methodCounts[m.id];
       const x = r.results[m.id];
       if (x && x.computable) { c.computable++; if (x.pass) c.passing++; }
     }
@@ -1190,10 +1210,10 @@ var STOCK_DATA_MAP = ${JSON.stringify(stockDataMap).replace(/</g, '\\u003c')};
 </body></html>`;
 }
 
-function main() {
+async function main() {
   const args = parseArgs(process.argv);
   console.log(`Loading snapshots from ${args.snapshots}...`);
-  const rows = evaluateAllStocks(args);
+  const rows = await evaluateAllStocks(args);
   console.log(`Evaluated ${rows.length} stocks`);
   const methods = Runner.getMethods();
   const html = renderHTML(rows, methods);
@@ -1221,4 +1241,4 @@ function main() {
   }
 }
 
-main();
+main().catch(e => { console.error('FATAL:', e); process.exit(1); });

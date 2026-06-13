@@ -23,14 +23,29 @@ const { writeFileAtomic } = require('../lib/atomic-write.js');
 // "unknown" grades silently went into the report; an operator reading the
 // markdown saw all-zero/all-unknown counts without explanation.
 let gradeSnapshot;
+// F-DQ-004: reuse the grader's scalar-metric presence predicate so the report
+// and grader share ONE definition of "present" (finite-number test), instead
+// of the report's prior divergent `.value != null` check.
+let _hasMetric;
 let gradeSnapshotLoadError = null;
 try {
-  ({ gradeSnapshot } = require('../methods/data-quality.js'));
+  ({ gradeSnapshot, _hasMetric } = require('../methods/data-quality.js'));
 } catch (e) {
   gradeSnapshotLoadError = (e && e.message) || String(e);
   console.warn('[data-quality-report] FAILED to require methods/data-quality.js: ' +
     gradeSnapshotLoadError + ' — all grades will report as "unknown" until fixed.');
   gradeSnapshot = () => ({ grade: 'unknown', nanRatio: 0, missingFields: [] });
+}
+// Fallback mirror of methods/data-quality.js _hasMetric for the (rare) case the
+// module failed to load — keeps the report runnable instead of crashing on the
+// undefined predicate. Mirrors the grader's finite-number test exactly.
+if (typeof _hasMetric !== 'function') {
+  _hasMetric = function (m) {
+    if (m == null) return false;
+    if (typeof m === 'number') return Number.isFinite(m);
+    if (typeof m !== 'object') return false;
+    return typeof m.value === 'number' && Number.isFinite(m.value);
+  };
 }
 
 // Tag 232c-23 (audit F-DQ-006 MEDIUM): align "is this array element present?"
@@ -50,13 +65,13 @@ function _arrayElementPresent(x) {
 
 // Key fields to track coverage for in the report
 const KEY_FIELDS = [
-  { label: 'marketCap',         get: s => s.marketCap && s.marketCap.value != null },
-  { label: 'revenueTTM',        get: s => s.metrics && s.metrics.revenueTTM && s.metrics.revenueTTM.value != null },
-  { label: 'revenueGrowthYoY',  get: s => s.metrics && s.metrics.revenueGrowthYoY && s.metrics.revenueGrowthYoY.value != null },
-  { label: 'grossMargin',       get: s => s.metrics && s.metrics.grossMargin && s.metrics.grossMargin.value != null },
-  { label: 'operatingMargin',   get: s => s.metrics && s.metrics.operatingMargin && s.metrics.operatingMargin.value != null },
-  { label: 'fcfMarginTTM',      get: s => s.metrics && s.metrics.fcfMarginTTM && s.metrics.fcfMarginTTM.value != null },
-  { label: 'forwardPE',         get: s => s.metrics && s.metrics.forwardPE && s.metrics.forwardPE.value != null },
+  { label: 'marketCap',         get: s => _hasMetric(s.marketCap) },
+  { label: 'revenueTTM',        get: s => _hasMetric(s.metrics && s.metrics.revenueTTM) },
+  { label: 'revenueGrowthYoY',  get: s => _hasMetric(s.metrics && s.metrics.revenueGrowthYoY) },
+  { label: 'grossMargin',       get: s => _hasMetric(s.metrics && s.metrics.grossMargin) },
+  { label: 'operatingMargin',   get: s => _hasMetric(s.metrics && s.metrics.operatingMargin) },
+  { label: 'fcfMarginTTM',      get: s => _hasMetric(s.metrics && s.metrics.fcfMarginTTM) },
+  { label: 'forwardPE',         get: s => _hasMetric(s.metrics && s.metrics.forwardPE) },
   { label: 'annualRev>=3',      get: s => Array.isArray(s.annual && s.annual.annualRev) && s.annual.annualRev.filter(_arrayElementPresent).length >= 3 },
   { label: 'annualFCF>=2',      get: s => Array.isArray(s.annual && s.annual.annualFCF) && s.annual.annualFCF.filter(_arrayElementPresent).length >= 2 },
   { label: 'annualBalance>=2',  get: s => Array.isArray(s.annual && s.annual.annualBalance) && s.annual.annualBalance.filter(_arrayElementPresent).length >= 2 },
@@ -64,7 +79,7 @@ const KEY_FIELDS = [
   { label: 'annualCapex',       get: s => Array.isArray(s.annual && s.annual.annualCapex) && s.annual.annualCapex.filter(_arrayElementPresent).length > 0 },
   { label: 'revenueQ>=4',       get: s => Array.isArray(s.timeseries && s.timeseries.revenueQ) && s.timeseries.revenueQ.filter(_arrayElementPresent).length >= 4 },
   { label: 'sector',            get: s => !!(s.meta && s.meta.sector) },
-  { label: 'insiderOwner',      get: s => s.metrics && s.metrics.insidersOwnership && s.metrics.insidersOwnership.value != null }, // Tag 232c-9: was insiderOwnerPercent (typo); canonical = insidersOwnership
+  { label: 'insiderOwner',      get: s => _hasMetric(s.metrics && s.metrics.insidersOwnership) }, // Tag 232c-9: was insiderOwnerPercent (typo); canonical = insidersOwnership
 ];
 
 function parseArgs(argv) {

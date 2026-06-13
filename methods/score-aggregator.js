@@ -141,7 +141,14 @@ function normalizeMethodScore(methodResult, methodMeta) {
     ratio = val / threshold;
   } else if (op === 'lte') {
     // Bug #8: val<=0 is always better than any positive threshold (e.g. negative EV, net-cash)
-    if (val <= 0) return 0.99;
+    // F-ME-201 (HIGH): only award the near-full-credit shortcut when the method did
+    // NOT render an explicit negative verdict. earnings-stability returns
+    // value=maxDecline=0 (val<=0) even when it FAILED its positive-years requirement
+    // (pass===false); without this gate a failing 20%-weight QC input scored ~0.99.
+    // We're already past the pass===true branch (returns 1.0), so here pass is either
+    // false (explicit fail → don't reward) or undefined/null (no verdict → reward as before).
+    if (val <= 0 && methodResult.pass !== false) return 0.99;
+    if (val <= 0) return 0.0;  // explicit fail with val<=0 → no credit
     ratio = threshold / val;
   } else if (op === 'lte_abs') {
     // F-ME-011: proper handling for lte_abs — graduated scoring on absolute value.

@@ -59,6 +59,12 @@ const TRACKED_FIELDS = [
   'metrics.enterpriseValue.value', // Tag 219: feeds ev-ebitda, magic-formula
   'metrics.beta.value',            // Tag 219: feeds betting-against-beta
   'timeseries.netIncomeQ',         // Tag 220c: feeds earnings-surprise-momentum
+  // F-DQ-005: previously-omitted consumed metrics — track so Yahoo dropping any
+  // of them is detectable instead of silently passing the coverage gate at 100%.
+  'metrics.targetMeanPrice.value', // analyst target price — consumed downstream
+  'metrics.returnOnEquity.value',  // ROE — consumed downstream
+  'metrics.enterpriseToEbitda.value', // EV/EBITDA ratio — consumed downstream
+  'meta.sharesOutstanding',        // shares outstanding — consumed downstream
 ];
 
 const HISTORY_WINDOW = 14;      // Rolling window: letzte 14 Runs für Baseline (war 6 — zu kurz bei 2 Runs/Tag)

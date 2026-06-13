@@ -212,5 +212,9 @@ module.exports = {
   tierCapForGrade,
   CRITICAL_FIELDS,
   GRADE_THRESHOLDS,
-  TOTAL_WEIGHT
+  TOTAL_WEIGHT,
+  // F-DQ-004: export the canonical scalar-metric presence predicate so the
+  // data-quality report reuses the grader's finite-number test instead of its
+  // own divergent `.value != null` check. One definition of "present".
+  _hasMetric
 };

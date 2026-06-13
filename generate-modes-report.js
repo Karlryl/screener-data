@@ -157,16 +157,16 @@ function computeCrossProfileTags(modeEvals, currentModeId) {
 // Filtert NUR Hygiene-Layer (sector + mcap + DataGuards), nicht passed/MUSTs.
 // Sortiert nach modus-spezifischem Score, gibt Tier-Info zurueck.
 function topByScore(eligible, modeId, topN) {
-  const valid = eligible.filter(ev => {
+  // F-PF-003: decorate-sort-undecorate so each element's score is read once
+  // (cached in a local wrapper) instead of twice per comparison. No mutation of
+  // the ev objects; comparison result is unchanged (descending by score).
+  const valid = [];
+  for (const ev of eligible) {
     const me = ev.modeEvals && ev.modeEvals[modeId];
-    return me && me.score != null;  // Score muss berechenbar sein (Hygiene durch)
-  });
-  valid.sort((a, b) => {
-    const sa = a.modeEvals[modeId].score;
-    const sb = b.modeEvals[modeId].score;
-    return sb - sa;  // descending
-  });
-  return valid.slice(0, topN);
+    if (me && me.score != null) valid.push({ ev, score: me.score });
+  }
+  valid.sort((a, b) => b.score - a.score);  // descending
+  return valid.slice(0, topN).map(w => w.ev);
 }
 
 // Tag 121b: Stocks die Hygiene durch + genau EINEN CORE-MUST verfehlen.
@@ -191,8 +191,22 @@ const COMPANY_SUFFIX_REGEX = /\b(inc|corporation|corp|incorporated|company|co|lt
 function dedupeByCompany(evaluated) {
   function norm(s) {
     if (!s) return '';
-    return String(s).toLowerCase()
-      .replace(/[Ã©Ã¨ÃªÃ«]/g, 'e').replace(/[Ã³Ã²Ã´Ã¶]/g, 'o').replace(/[Ã¡Ã Ã¢Ã¤]/g, 'a')
+    let str = String(s).toLowerCase();
+    // F-PF-010: single accent pass + pure-ASCII fast-path. Previously three
+    // separate full-string regex scans mapped the accent families to e/o/a;
+    // this folds them into one scan via a lookup callback, and pure-ASCII
+    // names (the common case) skip accent handling entirely. Output is
+    // byte-for-byte equivalent to the old norm (verified across the e/o/a
+    // accent classes, the lone mojibake lead byte, and non-mapped accents).
+    if (/[^\x00-\x7f]/.test(str)) {
+      str = str.replace(/[Ã©¨ª«³²´¶¡ ¢¤]/g, function (c) {
+        var cp = c.codePointAt(0);
+        if (cp === 0xb3 || cp === 0xb2 || cp === 0xb4 || cp === 0xb6) return 'o';
+        if (cp === 0xa1 || cp === 0xa0 || cp === 0xa2 || cp === 0xa4) return 'a';
+        return 'e'; // 0xc3 (lead byte), 0xa9, 0xa8, 0xaa, 0xab
+      });
+    }
+    return str
       .replace(COMPANY_SUFFIX_REGEX, '')
       .replace(/[^a-z0-9]+/g, '').trim();
   }
@@ -270,6 +284,22 @@ function topAllMust(eligible, modeId, topN) {
   }
   return passing.slice(0, topN);
 }
+
+// F-PF-003: count-only variant of topAllMust's passing set. Avoids the
+// full-set sort that topAllMust(...,9999) incurred when the result was only
+// used for .length. Returns the same count as topAllMust(...,Infinity).length.
+function countAllMustPass(eligible, modeId) {
+  let n = 0;
+  for (const ev of eligible) {
+    const me = ev.modeEvals && ev.modeEvals[modeId];
+    if (me && me.passed) n++;
+  }
+  return n;
+}
+
+// F-PF-002: buildHtml stashes the per-mode eligible + all-MUST-pass counts it
+// already computes here so main() can log them without recomputing.
+let _lastModeStats = null;
 
 const PSTATE_LABEL = { LOSS:'Loss', TURNAROUND:'Turn', RECENT:'Recent', STABLE:'Stable', NA:'â€”' };
 const PSTATE_CLASS = { LOSS:'pst-loss', TURNAROUND:'pst-turnaround', RECENT:'pst-recent', STABLE:'pst-stable', NA:'pst-na' };
@@ -546,13 +576,21 @@ function buildHtml(evaluated, topN) {
   const eligibleByMode = {};
   for (const m of modes) eligibleByMode[m] = eligibleForMode(evaluated, m);
 
+  // F-PF-002: stash per-mode eligible + all-MUST-pass counts for main()'s log,
+  // reusing the eligibleByMode sets computed above instead of recomputing them.
+  const modeStats = {};
+  for (const m of modes) {
+    modeStats[m] = { eligible: eligibleByMode[m].length, allMustPass: countAllMustPass(eligibleByMode[m], m) };
+  }
+  _lastModeStats = modeStats;
+
   // F-PF-006: shared stock data map â€” one entry per ticker, referenced by data-ticker on cards
   const stockDataMap = {};
 
   const totalStocks = evaluated.length;
   const sectorExcluded = totalStocks - eligibleByMode.HYPERGROWTH.length;
-  const hgPicks = topAllMust(eligibleByMode.HYPERGROWTH, 'HYPERGROWTH', 9999).length;
-  const qcPicks = topAllMust(eligibleByMode.QUALITY_COMPOUNDER, 'QUALITY_COMPOUNDER', 9999).length;
+  const hgPicks = modeStats.HYPERGROWTH.allMustPass;
+  const qcPicks = modeStats.QUALITY_COMPOUNDER.allMustPass;
   // Tag 228b-1 (audit F-227c-07 LOW fix): force UTC formatting for the report
   // header. Previously `toLocaleDateString` defaulted to the renderer's local
   // timezone, so a UTC-midnight RUN_DATE_UTC (e.g. 2026-05-17T00:00:00Z) printed
@@ -1245,10 +1283,13 @@ async function main() {
   writeFileAtomic(args.out, html);
   console.log('Wrote', args.out, '(' + (html.length/1024).toFixed(0) + ' KB)');
 
+  // F-PF-002: reuse the per-mode counts buildHtml already computed instead of
+  // recomputing eligibleForMode + topAllMust per mode purely to log them. The
+  // logged all-MUST-pass count keeps topAllMust's topN cap: min(passing, topN).
   for (const modeId of Object.keys(SM.MODES)) {
-    const eligible = eligibleForMode(evaluated, modeId);
-    const allMust = topAllMust(eligible, modeId, args.topN);
-    console.log(`  ${modeId}: ${eligible.length} eligible, ${allMust.length} all-MUST-pass`);
+    const st = _lastModeStats[modeId];
+    const allMustCount = Math.min(st.allMustPass, args.topN);
+    console.log(`  ${modeId}: ${st.eligible} eligible, ${allMustCount} all-MUST-pass`);
   }
 
   // Tag 168: write pipeline-health report and enforce 5% threshold

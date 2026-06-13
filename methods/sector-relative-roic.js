@@ -183,10 +183,13 @@ function evaluate(stock) {
   // p75 = p50), the _rankRoic gating "roic >= p75*1.5" trivially fires
   // for any roic >= p50*1.5 and inflates rank to 100. That overstates
   // confidence — we genuinely don't know if the stock is at the 90th
-  // vs 100th percentile without real p75/p90. Cap degraded rank at 90
-  // so consumers see "strong sector signal" but not "guaranteed top
-  // 1% of sector".
-  if (degraded && rank != null && rank > 90) rank = 90;
+  // vs 100th percentile without real p75/p90.
+  // F-ME-206: with the synthetic p75=p50, "roic >= p75" also fires for any
+  // roic >= p50 and ranks 90 even for roic in [p50, 1.5*p50) — again
+  // overstating confidence (we cannot distinguish p75 from p90/100 without
+  // a real p75). Cap degraded rank at 75 for any roic >= p50: the pass gate
+  // (rank>=75) still fires, but consumers don't see an inflated 90/100.
+  if (degraded && rank != null && rank > 75) rank = 75;
   if (rank == null) {
     return H.buildResult({
       value: roicValue,

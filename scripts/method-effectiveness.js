@@ -119,6 +119,24 @@ function main() {
 
   const today = new Date().toISOString().slice(0, 10);
 
+  // F-BT-001 (fail-loud freshness): abort if the newest price is stale. Shares the
+  // exact helper + threshold with walk-forward-perf.js. Healthy data is unaffected.
+  const newestPriceDate = WF.maxPriceDate(prices);
+  if (!newestPriceDate) {
+    console.error('::error::[method-effectiveness] prices/history.json contains no dated entries — cannot validate freshness.');
+    console.error('[method-effectiveness] F-BT-001: no max price date found; aborting.');
+    process.exit(1);
+  }
+  const priceStalenessBizDays = WF.businessDaysSince(newestPriceDate, today);
+  if (priceStalenessBizDays > WF.MAX_PRICE_STALENESS_BUSINESS_DAYS) {
+    console.error('::error::[method-effectiveness] F-BT-001: price history is stale — newest price '
+      + newestPriceDate + ' is ' + priceStalenessBizDays + ' business days old (max allowed '
+      + WF.MAX_PRICE_STALENESS_BUSINESS_DAYS + '). Run pull-historical-prices.js. Aborting to avoid silently wrong forward returns.');
+    console.error('[method-effectiveness] newest price date: ' + newestPriceDate + ', today: ' + today
+      + ', staleness(business days): ' + priceStalenessBizDays);
+    process.exit(1);
+  }
+
   // F-PF-009: Load existing cache so we only process new vintages
   let cache = loadJson(CACHE_PATH);
   if (!cache || typeof cache !== 'object' || !cache.vintageReturns) {

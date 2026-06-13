@@ -56,16 +56,43 @@ function _loadMethodHistory() {
     const p = JSON.parse(fs.readFileSync(HISTORY_SIDECAR, 'utf8'));
     return (p && typeof p === 'object' && p.methodHistory && typeof p.methodHistory === 'object') ? p.methodHistory : {};
   } catch (e) {
-    _log('WARN', 'history sidecar unparseable, treating as fresh: ' + e.message);
+    // F-SM-003 (audit, state-safety): mirror the alert-state corruption guard in
+    // loadState. Do NOT silently reset to {} — that wipes all accumulated trend
+    // history and (worse) lets _saveMethodHistory overwrite the committed sidecar
+    // with empty data this run. Back up the corrupt file and exit non-zero so the
+    // workflow visibly fails, UNLESS RESET_METHOD_HISTORY=1 explicitly opts in.
+    const backup = HISTORY_SIDECAR + '.corrupt.' + Date.now();
+    try { fs.copyFileSync(HISTORY_SIDECAR, backup); } catch (_) {}
+    _log('ERROR', `method-history-state.json is corrupt (${e.message}). Backup at ${backup}.`);
+    if (process.env.RESET_METHOD_HISTORY !== '1') {
+      _log('ERROR', 'Refusing to wipe trend history — set RESET_METHOD_HISTORY=1 to start fresh.');
+      process.exit(1);
+    }
+    _log('WARN', 'RESET_METHOD_HISTORY=1 — proceeding with empty history. Trend signals reset.');
     return {};
   }
 }
 
-function _saveMethodHistory(history) {
+function _saveMethodHistory(history, liveTickers) {
   // Tag 232a-1: writeFileAtomic carries the Tag 230c-1 durability guarantees the
   // prior hand-rolled tmp+rename lacked (Windows EPERM retry + parent-dir fsync).
+  //
+  // F-SM-006 (audit): apply the live-methodState-ticker filter at WRITE time so the
+  // committed sidecar can never contain tickers that alert-state dropped. Previously
+  // orphan history tickers were only pruned at READ time on the *next* run (lines in
+  // the cleanup block keyed on state.methodState[ticker]), so a single committed pair
+  // always had the sidecar one run ahead — and if that next run failed, the two files
+  // diverged permanently. liveTickers is the exact ticker set committed to alert-state
+  // (saveState's prunedMethodState keys), keeping the two committed files in lock-step.
+  let toWrite = history;
+  if (liveTickers instanceof Set) {
+    toWrite = {};
+    for (const ticker of Object.keys(history || {})) {
+      if (liveTickers.has(ticker)) toWrite[ticker] = history[ticker];
+    }
+  }
   try {
-    writeFileAtomic(HISTORY_SIDECAR, JSON.stringify({ lastSaved: new Date().toISOString(), methodHistory: history }));
+    writeFileAtomic(HISTORY_SIDECAR, JSON.stringify({ lastSaved: new Date().toISOString(), methodHistory: toWrite }));
   } catch (e) { _log('WARN', 'failed to write history sidecar: ' + e.message); }
 }
 
@@ -153,7 +180,9 @@ function saveState(statePath, state) {
   // Both writes go through writeFileAtomic (Tag 232a-1) so a half-written
   // file on either side can't poison the other.
   writeFileAtomic(statePath, JSON.stringify(committed)); // Tag 119: no pretty-print
-  _saveMethodHistory(state.methodHistory || {});
+  // F-SM-006: filter the sidecar to the exact ticker set committed to alert-state
+  // (prunedMethodState keys) so the two committed files never diverge.
+  _saveMethodHistory(state.methodHistory || {}, new Set(Object.keys(prunedMethodState)));
 }
 
 // ─── Diff-Detector ────────────────────────────────────────────────

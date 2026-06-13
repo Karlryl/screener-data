@@ -26,6 +26,10 @@ const path = require('path');
 const Runner = require('../methods/runner.js');
 const SM = require('../methods/strategy-modes.js');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
+// F-SM-004: route per-ticker history filenames through the shared safe helper
+// so reads/writes match the snapshot-naming convention (Windows-reserved
+// prefix + sanitisation) instead of raw `ticker + '.json'`.
+const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 
 const SCHEMA_VERSION = 1;
 const MAX_ENTRIES = 30;
@@ -97,7 +101,7 @@ async function loadSnapshotsAsync(dir) {
 // shape. Missing file → fresh container. Schema-version mismatch → reset entries
 // (gracefully — the dashboard will show "—" until a new history accumulates).
 function readHistoryFile(outDir, ticker) {
-  const file = path.join(outDir, ticker + '.json');
+  const file = path.join(outDir, safeSnapshotFilename(ticker));
   if (!fs.existsSync(file)) {
     return { ticker, schemaVersion: SCHEMA_VERSION, entries: [] };
   }
@@ -192,7 +196,7 @@ async function main() {
       }
       const history = readHistoryFile(args.out, ticker);
       const next = appendAndPrune(history, entry);
-      const outPath = path.join(args.out, ticker + '.json');
+      const outPath = path.join(args.out, safeSnapshotFilename(ticker));
       writeFileAtomic(outPath, JSON.stringify(next));
       written++;
     } catch (e) {

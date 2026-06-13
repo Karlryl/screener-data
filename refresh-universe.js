@@ -124,7 +124,9 @@ async function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function fetchScreener(id, region) {
   region = region || 'US';
-  // F-DP-011: retry up to 3 times on 429 with linear back-off (5s, 10s).
+  // F-DP-011 / F-DP-010: 3 attempts total, i.e. up to 2 retries on 429 with linear
+  // back-off (5s before attempt 1, 10s before attempt 2). The final attempt (2) is
+  // not retried — on its failure we fall through and log.
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const r = await yf.screener({ scrIds: id, count: 250, region: region });
@@ -137,7 +139,10 @@ async function fetchScreener(id, region) {
       }
       // F-DP-009 (Tag 233b): log screener failures so CI can detect Yahoo screener outages.
       // Previously silent [] returns masked 429s and schema breaks — universe shrank undetected.
-      console.warn('  [WARN] fetchScreener [' + id + '/' + region + '] failed: ' + (e && e.message || String(e)));
+      // F-DP-010: distinguish a rate-limit exhaustion (all retries spent on 429) from
+      // other failures, so CI can tell "Yahoo throttled us" apart from a schema/outage break.
+      const cause = is429 ? '429 rate-limit exhausted after ' + (attempt + 1) + ' attempts' : (e && e.message || String(e));
+      console.warn('  [WARN] fetchScreener [' + id + '/' + region + '] failed: ' + cause);
       return [];
     }
   }

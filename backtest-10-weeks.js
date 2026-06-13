@@ -145,7 +145,11 @@ async function main() {
   // optimistic relative to what could've been traded. Stamp the output JSON with
   // an explicit bias flag so any downstream consumer can detect/filter.
   // Save full result
-  fs.writeFileSync('./backtest-10w-result.json', JSON.stringify({
+  // F-BT-013: use a distinct output filename. backtest-from-history.js writes
+  // ./backtest-10w-result.json with a DIFFERENT schema; sharing the name made
+  // whichever ran last silently clobber the other. This script now writes its
+  // own file so both schemas coexist.
+  fs.writeFileSync('./backtest-10-weeks.json', JSON.stringify({
     generatedAt: new Date().toISOString(),
     _bias: {
       lookAheadBias: true,
@@ -163,7 +167,7 @@ async function main() {
     alphaAvg: (passAvg != null && failAvg != null && passCohort.length > 0 && failCohort.length > 0) ? passAvg - failAvg : null,
     stocks
   }, null, 2));
-  console.log('\n✓ Saved to backtest-10w-result.json');
+  console.log('\n✓ Saved to backtest-10-weeks.json');
   console.log('\nLimitierung: Forward-Looking-Bias. Methoden-Werte sind HEUTE.');
   console.log('Bei stable fundamentals (kein Q-Earnings) ist das okay. Bei volatilen Hypergrowth aber nicht.');
 }

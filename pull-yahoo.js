@@ -168,7 +168,15 @@ for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded
       console.log('[FX] fx-rates.json is ' + ageDays.toFixed(1) + 'd old — using fallback');
       return;
     }
-    FX_TO_USD = Object.assign({}, FX_FALLBACK, raw.rates);
+    // F-DP-008: raw.rates may carry verbatim casing (e.g. "Eur", "gbp") while
+    // every lookup uppercases the currency (FX_TO_USD[ccy.toUpperCase()]). An
+    // Object.assign of raw.rates verbatim leaves lower/mixed-case keys that the
+    // uppercased reads never hit — the rate is silently ignored and the value
+    // falls through to FX_FALLBACK (or stale). Seed the table uppercased.
+    FX_TO_USD = Object.assign({}, FX_FALLBACK);
+    for (const [k, rate] of Object.entries(raw.rates)) {
+      FX_TO_USD[k.toUpperCase()] = rate;
+    }
     FX_SOURCE = 'fx-rates.json @ ' + (raw.fetchedAt || 'unknown');
     // F-DP-051 / F-DQ-008 (Tag 188): per-currency staleness gate.
     // refresh-fx now writes currencyMeta[c].lastSuccessAt per-currency, but the
@@ -227,13 +235,6 @@ for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded
     console.log('[FX] fx-rates.json load failed: ' + e.message + ' — using fallback');
   }
 })();
-function _convertToUSD(value, currency) {
-  if (value == null || !currency) return value;
-  const rate = FX_TO_USD[currency.toUpperCase()];
-  if (rate == null) return value;
-  return value * rate;
-}
-
 // Tag 134: stable region enum derived from currency + exchangeName.
 // Replaces the prior bug where meta.region held Yahoo's raw exchangeName
 // like "NasdaqGS" / "Frankfurt", which the engine then compared against
@@ -415,16 +416,21 @@ function _convertSnapshotToUSD(snap) {
     'ebitda',            // currently absent — reserved for future EV-EBITDA refactor
     'enterpriseValue',   // currently absent — reserved
     'bookValuePerShare', // currently absent — reserved
-    'cashPerShare',      // currently absent — reserved
-    // F-DP-004 / F-DQ-009 (Tag 233d): analyst price targets are in the reporting
-    // currency (same as prices). Without FX conversion they are raw GBP/EUR/etc.
-    // while currentPrice is USD → analyst-upside ratio is wrong for non-USD tickers.
-    'targetMeanPrice',
-    'targetMedianPrice'
+    'cashPerShare'       // currently absent — reserved
   ];
   if (snap.metrics) {
     for (const k of CCY_DENOMINATED_METRICS) {
       if (snap.metrics[k]) snap.metrics[k] = scale(snap.metrics[k]);
+    }
+    // F-DQ-001 (Tag 233d): analyst price targets are quoted in TRADING currency
+    // (same as `price`/`marketCap`), NOT the financial-reporting currency. Route
+    // them through scaleTrading() (tradingFactor), mirroring how marketCap is
+    // handled — scale()'s reporting `factor` mis-prices targets for ADR-class
+    // tickers where tradingFactor !== factor. (Non-ADR: tradingFactor === factor,
+    // so this is a no-op; the analyst-upside ratio vs currentPrice stays correct.)
+    const CCY_DENOMINATED_TRADING_METRICS = ['targetMeanPrice', 'targetMedianPrice'];
+    for (const k of CCY_DENOMINATED_TRADING_METRICS) {
+      if (snap.metrics[k]) snap.metrics[k] = scaleTrading(snap.metrics[k]);
     }
   }
   if (snap.annual) {
@@ -2137,7 +2143,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         await processOneFn(stock).catch(e => _log('WARN', `Worker error ${stock.ticker}: ${e.message}`));
         // flush manifest every 100 tickers using the captured local index
         if (myIdx > 0 && myIdx % 100 === 0) writeManifestFn();
-        if (idx < stocks.length) await _sleep(sleepMs);
+        // F-DP-002: gate on this worker's OWN myIdx, not the shared `idx`.
+        // The shared `idx` is already advanced by the other (concurrency-1)
+        // workers, so `idx < stocks.length` went false while THIS worker still
+        // had tail tickers to throttle — the last ~concurrency pulls skipped
+        // their rate-limit sleep. Sleep when this worker will take another
+        // ticket (myIdx + concurrency < length); the final loop iteration that
+        // breaks on myIdx>=length never reaches here.
+        if (myIdx + concurrency < stocks.length) await _sleep(sleepMs);
       }
     }
     await Promise.all(Array.from({ length: concurrency }, () => worker()));
