@@ -291,6 +291,18 @@ function detectMethodDiffs(prevMethods, currResults, today) {
         pass: isPass,
         lastChanged: prev && prev.lastChanged ? prev.lastChanged : today
       };
+      // NEW-6 (2026-06-13 audit): preserve the sticky `wasComputable` marker
+      // across MULTIPLE consecutive incomputable runs. METHOD_INCOMPUTABLE
+      // (branch above) sets wasComputable:true on the transition run, but on a
+      // 2nd-consecutive incomputable run prev.value===null makes wasComputable
+      // (line 199) false, so none of the early branches match and execution
+      // falls here — which previously rewrote state WITHOUT the marker, silently
+      // erasing it. The eventual recovery then failed the prev.wasComputable===true
+      // check and emitted no METHOD_RECOVERED event, defeating Tag 229c-1 for any
+      // gap lasting 2+ runs (the common case given multi-day Yahoo data gaps).
+      if (!isComputable && prev && prev.wasComputable === true) {
+        newState[methodId].wasComputable = true;
+      }
     }
   }
   return { events, newState };

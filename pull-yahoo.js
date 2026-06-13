@@ -345,7 +345,17 @@ function _convertSnapshotToUSD(snap) {
   // tradingCcy comes from snap.price.currency (Yahoo's quote response,
   // captured by the mapper). When it differs from origCurrency, the
   // ticker is an ADR-class and trading-fx-rate applies to mcap/price.
-  const tradingCcyRaw = (snap.price && snap.price.currency) ? String(snap.price.currency) : null;
+  // NEW-2/NEW-3 (2026-06-13 audit): snap.price is ONLY present on the
+  // price-only fast-path; the full-pull mapper never builds snap.price, so
+  // tradingCcyRaw was always null on full pulls and the ADR trading-factor
+  // override (and the F-DQ-001 analyst-target fix that depends on it) were
+  // dead — ADR marketCap/targets were silently scaled by the reporting-ccy
+  // factor (~32× off for TWD-reporting ADRs like TSM). Fall back to
+  // snap.meta.tradingCurrency (mapper line 814), which carries the trading
+  // quote currency on every full pull.
+  const tradingCcyRaw = (snap.price && snap.price.currency)
+    ? String(snap.price.currency)
+    : ((snap.meta && snap.meta.tradingCurrency) ? String(snap.meta.tradingCurrency) : null);
   let tradingFactor = factor;  // default: equals financial factor (no special handling)
   let tradingOverride = false;
   if (tradingCcyRaw && tradingCcyRaw.toUpperCase() !== origCurrency.toUpperCase()) {
@@ -435,6 +445,12 @@ function _convertSnapshotToUSD(snap) {
   }
   if (snap.annual) {
     for (const key of Object.keys(snap.annual)) {
+      // NEW-4 (2026-06-13 audit): annualShares is a unit-less share COUNT, not a
+      // currency amount. FX-scaling it inflated absolute share counts by the FX
+      // factor for non-USD reporters (corrupting dcf-intrinsic-value's per-share
+      // math) and desynced it from the unscaled meta.sharesOutstanding. YoY-ratio
+      // consumers cancel the factor and are unaffected either way. Skip scaling.
+      if (key === 'annualShares') continue;
       if (Array.isArray(snap.annual[key])) snap.annual[key] = snap.annual[key].map(scale);
     }
   }
