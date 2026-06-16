@@ -1,0 +1,649 @@
+{
+  "baselineId": "saas-v1.0-degraded-2026-06-16",
+  "frozenAt": "2026-06-16",
+  "formula": "system_app_software v1.0 — DEGRADED 3-axis {A1 .66, A3 .22, A4 .12} (A2 Forward-Book NOT-READY / 0% coverage)",
+  "source": "outputs/court-results.json :: bucket system_app_software",
+  "degraded": true,
+  "degradedNote": "A2 Forward-Book 0% Coverage lokal -> Readiness-Gate. Gewicht auf {A1 .66, A3 .22, A4 .12}. KEIN court-Score.",
+  "universeSize": 44,
+  "collapseSpearman": 0.3,
+  "priceAnchorStatus": "PENDING — t0 entry prices NOT yet captured. prices/history.json ends 2026-05-17 (stale). Iteration 1 must pull close on/after 2026-06-16 for evaluatedTickers + SPY/QQQ/IWM, then forward returns = price[t0+h]/price[t0]-1.",
+  "preRegistration": {
+    "metric": [
+      "rank_ic_spearman",
+      "top_decile_minus_universe_median_fwd_return"
+    ],
+    "horizonsDays": [
+      28,
+      84
+    ],
+    "survivorshipKey": "evaluatedTickers",
+    "antiGaming": "Ranking frozen BEFORE any formula change. Forward-return window is an intrinsic holdout. Generating agents must never tune on the eval slice. A new SaaS version must STRICTLY beat this baseline's forward metric to count as 'besser'.",
+    "honestLimitation": "No SaaS PIT vintage history exists pre-freeze; this is the first frozen point. No SaaS measure delta is computable until ~2026-07-14 (28d) / ~2026-09-08 (84d). This is the forward-paper-test default — honest but slow."
+  },
+  "anchors": {
+    "growth": {
+      "median": 0.19305,
+      "mad": 0.05185000000000001,
+      "n": 44
+    },
+    "gm": {
+      "median": 0.7573000000000001,
+      "mad": 0.06569999999999993,
+      "n": 44
+    },
+    "opMargin": {
+      "median": 0.008499999999999999,
+      "mad": 0.1279,
+      "n": 44
+    },
+    "roicMinusWacc": {
+      "median": -0.07479999999999999,
+      "mad": 0.06000000000000001,
+      "n": 21
+    }
+  },
+  "anchorAssertionSnapshot": [
+    {
+      "ticker": "DDOG",
+      "rank": 12,
+      "score": 56.5
+    },
+    {
+      "ticker": "CRWD",
+      "rank": 31,
+      "score": 38.4
+    },
+    {
+      "ticker": "PLTR",
+      "rank": 3,
+      "score": 78.8
+    },
+    {
+      "ticker": "APP",
+      "rank": 1,
+      "score": 99
+    },
+    {
+      "ticker": "GEN",
+      "rank": 2,
+      "score": 79.1
+    }
+  ],
+  "ranking": [
+    {
+      "rank": 1,
+      "ticker": "APP",
+      "score": 99,
+      "membershipClass": "In",
+      "axisS": {
+        "A1-Growth": 1,
+        "A3-GM": 0.82,
+        "A3-OpMargin": 1,
+        "A4-ROIC-WACC": 1
+      }
+    },
+    {
+      "rank": 2,
+      "ticker": "GEN",
+      "score": 79.1,
+      "membershipClass": "Borderline",
+      "axisS": {
+        "A1-Growth": 0.52,
+        "A3-GM": 0.25,
+        "A3-OpMargin": 0.97,
+        "A4-ROIC-WACC": 0.87
+      }
+    },
+    {
+      "rank": 3,
+      "ticker": "PLTR",
+      "score": 78.8,
+      "membershipClass": "In",
+      "axisS": {
+        "A1-Growth": 0.99,
+        "A3-GM": 0.56,
+        "A3-OpMargin": 0.91,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 4,
+      "ticker": "DUOL",
+      "score": 70.8,
+      "membershipClass": "Borderline",
+      "axisS": {
+        "A1-Growth": 0.89,
+        "A3-GM": -0.32,
+        "A3-OpMargin": 0.54,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 5,
+      "ticker": "HNGE",
+      "score": 66.8,
+      "membershipClass": "In",
+      "axisS": {
+        "A1-Growth": 0.98,
+        "A3-GM": 0.36,
+        "A3-OpMargin": -1,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 6,
+      "ticker": "FIG",
+      "score": 66,
+      "membershipClass": "In",
+      "axisS": {
+        "A1-Growth": 0.92,
+        "A3-GM": 0.56,
+        "A3-OpMargin": -1,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 7,
+      "ticker": "CWAN",
+      "score": 65.8,
+      "membershipClass": "In",
+      "axisS": {
+        "A1-Growth": 1,
+        "A3-GM": -0.67,
+        "A3-OpMargin": -0.09,
+        "A4-ROIC-WACC": -0.16
+      }
+    },
+    {
+      "rank": 8,
+      "ticker": "AVPT",
+      "score": 62.6,
+      "membershipClass": "Borderline",
+      "axisS": {
+        "A1-Growth": 0.51,
+        "A3-GM": -0.16,
+        "A3-OpMargin": 0.33,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 9,
+      "ticker": "KVYO",
+      "score": 61.9,
+      "membershipClass": "Borderline",
+      "axisS": {
+        "A1-Growth": 0.72,
+        "A3-GM": -0.1,
+        "A3-OpMargin": -0.3,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 10,
+      "ticker": "RBRK",
+      "score": 61.5,
+      "membershipClass": "In",
+      "axisS": {
+        "A1-Growth": 0.97,
+        "A3-GM": 0.39,
+        "A3-OpMargin": -0.87,
+        "A4-ROIC-WACC": -1
+      }
+    },
+    {
+      "rank": 11,
+      "ticker": "ZETA",
+      "score": 56.9,
+      "membershipClass": "Borderline",
+      "axisS": {
+        "A1-Growth": 0.65,
+        "A3-GM": -0.89,
+        "A3-OpMargin": 0.07,
+        "A4-ROIC-WACC": 0.07
+      }
+    },
+    {
+      "rank": 12,
+      "ticker": "DDOG",
+      "score": 56.5,
+      "membershipClass": "Borderline",
+      "axisS": {
+        "A1-Growth": 0.55,
+        "A3-GM": 0.38,
+        "A3-OpMargin": -0.1,
+        "A4-ROIC-WACC": -0.21
+      }
+    },
+    {
+      "rank": 13,
+      "ticker": "GTLB",
+      "score": 55.1,
+      "membershipClass": "Borderline",
+      "axisS": {
+        "A1-Growth": 0.45,
+        "A3-GM": 0.8,
+        "A3-OpMargin": -0.38,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 14,
+      "ticker": "ADSK",
+      "score": 53.9,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.13,
+        "A3-GM": 0.9,
+        "A3-OpMargin": 0.83,
+        "A4-ROIC-WACC": 0.98
+      }
+    },
+    {
+      "rank": 15,
+      "ticker": "FICO",
+      "score": 52.8,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.25,
+        "A3-GM": 0.55,
+        "A3-OpMargin": 0.98,
+        "A4-ROIC-WACC": 1
+      }
+    },
+    {
+      "rank": 16,
+      "ticker": "ALKT",
+      "score": 51.9,
+      "membershipClass": "Borderline",
+      "axisS": {
+        "A1-Growth": 0.76,
+        "A3-GM": -0.94,
+        "A3-OpMargin": -0.52,
+        "A4-ROIC-WACC": -0.56
+      }
+    },
+    {
+      "rank": 17,
+      "ticker": "FTNT",
+      "score": 51.3,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.36,
+        "A3-GM": 0.42,
+        "A3-OpMargin": 0.9,
+        "A4-ROIC-WACC": 1
+      }
+    },
+    {
+      "rank": 18,
+      "ticker": "CVLT",
+      "score": 50.9,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.03,
+        "A3-GM": 0.47,
+        "A3-OpMargin": 0.38,
+        "A4-ROIC-WACC": 0.62
+      }
+    },
+    {
+      "rank": 19,
+      "ticker": "CLBT",
+      "score": 49.6,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.06,
+        "A3-GM": 0.67,
+        "A3-OpMargin": 0.57,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 20,
+      "ticker": "CDNS",
+      "score": 48,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.37,
+        "A3-GM": 0.77,
+        "A3-OpMargin": 0.9,
+        "A4-ROIC-WACC": 0.88
+      }
+    },
+    {
+      "rank": 21,
+      "ticker": "APPF",
+      "score": 47.1,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": 0.03,
+        "A3-GM": -0.82,
+        "A3-OpMargin": 0.63,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 22,
+      "ticker": "CSGP",
+      "score": 46.9,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.05,
+        "A3-GM": 0.29,
+        "A3-OpMargin": -0.15,
+        "A4-ROIC-WACC": -0.19
+      }
+    },
+    {
+      "rank": 23,
+      "ticker": "FROG",
+      "score": 46,
+      "membershipClass": "Borderline",
+      "axisS": {
+        "A1-Growth": 0.34,
+        "A3-GM": 0.1,
+        "A3-OpMargin": -0.7,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 24,
+      "ticker": "WAY",
+      "score": 45.4,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.21,
+        "A3-GM": -0.61,
+        "A3-OpMargin": 0.79,
+        "A4-ROIC-WACC": 0.2
+      }
+    },
+    {
+      "rank": 25,
+      "ticker": "GWRE",
+      "score": 43.9,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": 0.24,
+        "A3-GM": -0.85,
+        "A3-OpMargin": 0.12,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 26,
+      "ticker": "TTAN",
+      "score": 43.6,
+      "membershipClass": "Borderline",
+      "axisS": {
+        "A1-Growth": 0.37,
+        "A3-GM": -0.49,
+        "A3-OpMargin": -0.7,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 27,
+      "ticker": "APPN",
+      "score": 43,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.11,
+        "A3-GM": -0.29,
+        "A3-OpMargin": -0.04,
+        "A4-ROIC-WACC": -0.12
+      }
+    },
+    {
+      "rank": 28,
+      "ticker": "DT",
+      "score": 42.7,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.04,
+        "A3-GM": 0.5,
+        "A3-OpMargin": 0.54,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 29,
+      "ticker": "BRZE",
+      "score": 42,
+      "membershipClass": "Borderline",
+      "axisS": {
+        "A1-Growth": 0.36,
+        "A3-GM": -0.67,
+        "A3-OpMargin": -0.76,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 30,
+      "ticker": "AI",
+      "score": 41.3,
+      "membershipClass": "Borderline",
+      "axisS": {
+        "A1-Growth": 0.42,
+        "A3-GM": -0.89,
+        "A3-OpMargin": -1,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 31,
+      "ticker": "CRWD",
+      "score": 38.4,
+      "membershipClass": "Borderline",
+      "axisS": {
+        "A1-Growth": 0.18,
+        "A3-GM": -0.1,
+        "A3-OpMargin": -0.33,
+        "A4-ROIC-WACC": -0.5
+      }
+    },
+    {
+      "rank": 32,
+      "ticker": "AGYS",
+      "score": 37.9,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.25,
+        "A3-GM": -0.85,
+        "A3-OpMargin": 0.55,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 33,
+      "ticker": "SDGR",
+      "score": 36.7,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": 0.29,
+        "A3-GM": -0.96,
+        "A3-OpMargin": -1,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 34,
+      "ticker": "CGNT",
+      "score": 36.4,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.37,
+        "A3-GM": -0.3,
+        "A3-OpMargin": 0.12,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 35,
+      "ticker": "FRSH",
+      "score": 35.2,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.21,
+        "A3-GM": 0.71,
+        "A3-OpMargin": 0.04,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 36,
+      "ticker": "DOCS",
+      "score": 33.5,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.43,
+        "A3-GM": 0.85,
+        "A3-OpMargin": 0.92,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 37,
+      "ticker": "DV",
+      "score": 32.2,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.38,
+        "A3-GM": 0.55,
+        "A3-OpMargin": 0.44,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 38,
+      "ticker": "LSPD",
+      "score": 29,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.38,
+        "A3-GM": -1,
+        "A3-OpMargin": -0.56,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 39,
+      "ticker": "ESTC",
+      "score": 28.3,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.17,
+        "A3-GM": -0.13,
+        "A3-OpMargin": -0.22,
+        "A4-ROIC-WACC": -0.39
+      }
+    },
+    {
+      "rank": 40,
+      "ticker": "QTWO",
+      "score": 27.8,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.37,
+        "A3-GM": -0.97,
+        "A3-OpMargin": 0.22,
+        "A4-ROIC-WACC": 0.19
+      }
+    },
+    {
+      "rank": 41,
+      "ticker": "PCOR",
+      "score": 26.8,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.32,
+        "A3-GM": 0.35,
+        "A3-OpMargin": -0.46,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 42,
+      "ticker": "BILL",
+      "score": 23.9,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.41,
+        "A3-GM": 0.49,
+        "A3-OpMargin": -0.3,
+        "A4-ROIC-WACC": -0.24
+      }
+    },
+    {
+      "rank": 43,
+      "ticker": "AMPL",
+      "score": 21.3,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.33,
+        "A3-GM": -0.16,
+        "A3-OpMargin": -0.89,
+        "A4-ROIC-WACC": 0
+      }
+    },
+    {
+      "rank": 44,
+      "ticker": "FSLY",
+      "score": 14,
+      "membershipClass": "Out",
+      "axisS": {
+        "A1-Growth": -0.32,
+        "A3-GM": -0.94,
+        "A3-OpMargin": -0.75,
+        "A4-ROIC-WACC": -0.67
+      }
+    }
+  ],
+  "evaluatedTickers": [
+    "APP",
+    "GEN",
+    "PLTR",
+    "DUOL",
+    "HNGE",
+    "FIG",
+    "CWAN",
+    "AVPT",
+    "KVYO",
+    "RBRK",
+    "ZETA",
+    "DDOG",
+    "GTLB",
+    "ADSK",
+    "FICO",
+    "ALKT",
+    "FTNT",
+    "CVLT",
+    "CLBT",
+    "CDNS",
+    "APPF",
+    "CSGP",
+    "FROG",
+    "WAY",
+    "GWRE",
+    "TTAN",
+    "APPN",
+    "DT",
+    "BRZE",
+    "AI",
+    "CRWD",
+    "AGYS",
+    "SDGR",
+    "CGNT",
+    "FRSH",
+    "DOCS",
+    "DV",
+    "LSPD",
+    "ESTC",
+    "QTWO",
+    "PCOR",
+    "BILL",
+    "AMPL",
+    "FSLY"
+  ]
+}
