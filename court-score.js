@@ -18,9 +18,9 @@
 const fs = require('fs');
 const path = require('path');
 const ROOT = __dirname;
-const CAND = path.join(ROOT, 'outputs', 'court-candidates.json');
+const CAND = process.env.COURT_CAND_OUT || path.join(ROOT, 'outputs', 'court-candidates.json');
 const BUCK = path.join(ROOT, 'outputs', 'court-buckets.json');
-const OUT = path.join(ROOT, 'outputs', 'court-results.json');
+const OUT = process.env.COURT_OUT || path.join(ROOT, 'outputs', 'court-results.json'); // env-Override → Test/Verify-Harness schreibt isoliert (Re-Court-Auflage: keine geteilten Outputs racen)
 
 const median = xs => { const s = xs.filter(v => v != null && isFinite(v)).sort((a, b) => a - b); if (!s.length) return null; const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 const mad = xs => { const md = median(xs); if (md == null) return null; const d = median(xs.map(v => Math.abs(v - md))); return d; };
@@ -35,10 +35,22 @@ function sAxis(raw, med, m, k) {
   return Math.tanh(z / k); // [-1,1]
 }
 
-// Spearman-Rangkorrelation (für Kollaps-Detektor)
+// Spearman-Rangkorrelation (für Kollaps-Detektor) — TIE-AVERAGED Ränge (order-stabil; Re-Court-Auflage:
+// ohne Mittel-Rang war rhoDom reihenfolge-abhängig 0.68–0.86 bei durS-Ties MXL=AMBA=-1).
 function spearman(a, b) {
   const n = a.length; if (n < 3) return null;
-  const rank = arr => { const idx = arr.map((v, i) => [v, i]).sort((x, y) => x[0] - y[0]); const r = Array(arr.length); idx.forEach(([, i], k) => r[i] = k + 1); return r; };
+  const rank = arr => {
+    const idx = arr.map((v, i) => [v, i]).sort((x, y) => x[0] - y[0]);
+    const r = Array(arr.length);
+    let i = 0;
+    while (i < idx.length) {
+      let j = i; while (j + 1 < idx.length && idx[j + 1][0] === idx[i][0]) j++;
+      const avg = (i + j) / 2 + 1; // Mittel der Ränge (i+1 … j+1) für gleiche Werte
+      for (let k = i; k <= j; k++) r[idx[k][1]] = avg;
+      i = j + 1;
+    }
+    return r;
+  };
   const ra = rank(a), rb = rank(b);
   const ma = ra.reduce((s, v) => s + v, 0) / n, mb = rb.reduce((s, v) => s + v, 0) / n;
   let num = 0, da = 0, db = 0;
@@ -220,7 +232,9 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (_ioFlag === 'inorganic') L.push(`M&A-inorganic-flow(pay${pct(_ioRec.paymentsToRev).trim()},dGW${pct(_ioRec.deltaGoodwillPctRev).trim()},rpoG${pct(_ioRec.rpoGrowthYoY).trim()})`);
     else if (_ioFlag === 'ambiguous') L.push('M&A-flow-high(book-NULL,ambiguous)');
     else if (_ioFlag === null && INORGANIC_FALLBACK.has(m.ticker)) L.push('M&A-growth(P_auth-blind,hardcoded-fallback)');
-    if (m.flags && m.flags.includes('insufficient-8q-history')) L.push('8q-approx');
+    if (m.flags && m.flags.includes('thin-durability')) L.push('thin-durability');           // Durability aus <4 YoY (annual Fallback) — ersetzt irreführende 8q-approx-Lampe (v3 nutzt SEC-Quartals-YoY)
+    if (m.durSource === 'sec-quarterly' && m.durWinN != null && m.durWinN < 12) L.push('short-durability-window'); // 4<=winN<12: NICHT 12Q-vergleichbar (ALAB 7Q, ARM 8Q) — Re-Court-Disclosure
+    if (m.durability != null && Math.abs(m.durability) > 2) L.push('near-zero-median-amplified'); // |med|+floor bläht durRaw auf wenn median≈0 (z.B. MXL -3.65); tanh sättigt -> Rang ok, Rohwert-Artefakt offengelegt
     if (m.flags && m.flags.includes('short-annual-history')) L.push('short-hist');
     L.push('P_auth=no-data');
     if (F.degraded) L.push('A2-missing-degraded');
@@ -231,15 +245,38 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     }
   }
 
-  // Kollaps-Detektor: Spearman(Score, Dominanz-Block-Score)
+  // Kollaps-Detektor + Durability-Dominanz-Guard (Spec §5 L88: harte Re-Gewichtung bei Kollaps, nicht nur Lampe).
+  // Veröffentlicht BEIDE Maße jeden Lauf (Re-Court-Auflage „decompose WHICH block collapses"):
+  //   collapseSpearman = Spearman(Score, GM+Durability-Block);  rhoDomAxisDurability = Spearman(Score, Durability allein).
+  // spearman() ist tie-averaged → order-stabil. Backstop feuert rhoDom > T=0.90 → deterministischer ≤50%-Haircut.
   const ranked = members.filter(m => m.score != null);
-  let collapse = null;
+  let collapse = null, rhoDomAxis = null, collapseReweight = null;
   if (ranked.length >= 3) {
     const total = ranked.map(m => m.score);
     const block = ranked.map(m => F.dominantBlock.reduce((s, key) => {
       const ax = F.axes.find(a => a.key === key); return s + (ax ? (m.axisS[ax.name] || 0) : 0);
     }, 0));
     collapse = spearman(total, block);
+    const durAx = F.axes.find(a => a.key === 'durability');
+    if (durAx) {
+      rhoDomAxis = spearman(total, ranked.map(m => m.axisS[durAx.name] || 0));
+      const T = 0.90;
+      if (rhoDomAxis != null && rhoDomAxis > T) {
+        const hf = clip((rhoDomAxis - T) / (1 - T), 0, 1) * 0.5; // ≤50% Haircut
+        const wDur = durAx.w * (1 - hf), freed = durAx.w - wDur;
+        const otherWsum = F.axes.filter(a => a.key !== 'durability').reduce((s, a) => s + a.w, 0);
+        for (const m of ranked) {
+          let core = 0;
+          for (const a of F.axes) {
+            const w = a.key === 'durability' ? wDur : a.w + freed * (a.w / otherWsum);
+            core += w * ((m.axisS[a.name] || 0) + 1) / 2;
+          }
+          m.score = Math.round(Math.max(0, 100 * core - (m.pDil || 0)) * 10) / 10; // pAuth=0
+          m.lamps.push('collapse-reweight-applied');
+        }
+        collapseReweight = { axis: 'durability', rhoDomAxis: Math.round(rhoDomAxis * 100) / 100, threshold: T, haircutFrac: Math.round(hf * 1000) / 1000, wDurBefore: durAx.w, wDurAfter: Math.round(wDur * 1000) / 1000, note: 'pro-rata redistribution slightly re-couples score to growth/gm/accel when active' };
+      }
+    }
   }
 
   members.sort((a, b) => b.score - a.score);
@@ -248,6 +285,8 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     universeSize: members.length,
     anchors: stats, anchorsA2: statsA2,
     collapseSpearman: collapse == null ? null : Math.round(collapse * 100) / 100,
+    rhoDomAxisDurability: rhoDomAxis == null ? null : Math.round(rhoDomAxis * 100) / 100,
+    collapseReweight,
     members,
   };
 }

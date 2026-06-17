@@ -17,7 +17,7 @@ const path = require('path');
 
 const ROOT = __dirname;
 const CACHE = path.join(ROOT, 'fundamentals-cache');
-const OUT = path.join(ROOT, 'outputs', 'court-candidates.json');
+const OUT = process.env.COURT_CAND_OUT || path.join(ROOT, 'outputs', 'court-candidates.json'); // env-Override für isolierten Test/Verify-Lauf (Re-Court-Auflage)
 
 // --- robuste Feld-Helfer (Format ist gemischt: ftsAnnual.* = [{value}], Rest = [num]) ---
 function num(x) {
@@ -118,11 +118,38 @@ for (const file of files) {
   const scaleRevM = revLatest / 1e6;
   const capexPct = (capex[0] != null && revA[0]) ? capex[0] / revA[0] : null;
 
-  // Durability (Fabless A_dur): Persistenz = Median(g)/MAD(g) über verfügbare Jahre
+  // Annual YoY-Reihe (newest-first) — weiterhin Quelle für die Acceleration-Achse.
   const gSeriesA = yoySeries(revA);
-  const durMed = median(gSeriesA);
-  const durMad = mad(gSeriesA);
-  const durability = (durMad != null && durMad > 0) ? durMed / durMad : null;
+
+  // --- Durability v3 (Fabless A_dur) — Iteration 10 Retrial: age-neutral quarterly persistence ---
+  // Quelle: SEC-Quartals-YoY (payload.ftsQuarterly.revQYoYsec, newest-first) bevorzugt; sonst annual YoY Fallback.
+  //   durRaw = (median(gW) − λ·downsideDrawdown(gW)) / (|median(gW)| + floor)
+  //   gW = letzte W=12 YoY (Window-Cap = Recency-Hauptkontrolle gegen Alt-Zyklen → NVDA-Fix).
+  //   downsideDrawdown: recency-gewichtet rho^i (i=0 = neuestes), Gewichte auf Mittel 1 über die Below-Menge
+  //   renormiert (= LÄNGEN-NEUTRAL), normiert durch ÷COUNT-below (NICHT ÷n). scale-normalisiert durch (|median|+floor).
+  //   WARUM v3: v2 (median/MAD bzw. median−downsideDev über 3 annual YoY) war Court-DENIED — n=3 degenerierte
+  //   zu (median,min), dominierte den Score (ρ0.976), war scale-/längen-gekoppelt (Ledger Eintrag 19).
+  //   STRIKT alters-neutral: reine Funktion des YoY-Fensters; KEIN dCred/Längen-Term. Konstanten [TODO-CAL].
+  const DUR_W = 12, DUR_RHO = 0.9, DUR_LAMBDA = 1.0, DUR_FLOOR = 0.10;
+  const revQYoYsec = arr(p.ftsQuarterly && p.ftsQuarterly.revQYoYsec); // SEC-Quartals-YoY, newest-first
+  const gYoYDur = (revQYoYsec.length >= 4 ? revQYoYsec : gSeriesA).slice(0, DUR_W);
+  const durMed = median(gYoYDur);
+  let durDD = null, durCountBelow = 0;
+  if (durMed != null) {
+    const below = [];
+    for (let i = 0; i < gYoYDur.length; i++) if (gYoYDur[i] != null && isFinite(gYoYDur[i]) && gYoYDur[i] < durMed) below.push(i);
+    durCountBelow = below.length;
+    if (!below.length) durDD = 0;
+    else {
+      const rawW = below.map(i => Math.pow(DUR_RHO, i));
+      const wmean = rawW.reduce((a, v) => a + v, 0) / rawW.length;
+      let ss = 0; below.forEach((i, k) => { const w = rawW[k] / wmean; ss += w * (gYoYDur[i] - durMed) ** 2; });
+      durDD = Math.sqrt(ss / below.length);
+    }
+  }
+  const durability = (durMed != null && durDD != null) ? (durMed - DUR_LAMBDA * durDD) / (Math.abs(durMed) + DUR_FLOOR) : null;
+  const durWinN = gYoYDur.length;
+  const durSource = revQYoYsec.length >= 4 ? 'sec-quarterly' : 'annual-fallback';
 
   // Acceleration (Fabless A_acc): jüngstes YoY - vorheriges YoY
   const accel = (gSeriesA.length >= 2) ? gSeriesA[0] - gSeriesA[1] : null;
@@ -134,7 +161,7 @@ for (const file of files) {
   const flags = [];
   if (j._ftsPartial) flags.push('fts-partial');
   if (revA.length < 4) flags.push('short-annual-history');
-  if (revQ.length < 8) flags.push('insufficient-8q-history');
+  if (durWinN < 4) flags.push('thin-durability'); // Durability aus <4 YoY (annual Fallback) — nur Warnung, kein Score-Eingriff
 
   // --- Vorfilter (profitabilitäts-frei) ---
   if (growth == null || growth < F.minGrowth) continue;
@@ -149,7 +176,8 @@ for (const file of files) {
     gm: round(gm), fcfMargin: round(fcfMargin), opMargin: round(opMargin), niMargin: round(niMargin),
     sbcPct: round(sbcPct), netShareGrowth: round(netShareGrowth),
     scaleRevM: Math.round(scaleRevM), ppeAssets: round(ppeAssets), capexPct: round(capexPct),
-    durability: round(durability), durMed: round(durMed), durMad: round(durMad), accel: round(accel),
+    durability: round(durability), durMed: round(durMed), durDD: round(durDD),
+    durCountBelow, durWinN, durSource, accel: round(accel),
     roicProxy: round(roicProxy),
     nAnnualRev: revA.length, nQRev: revQ.length,
     flags,
