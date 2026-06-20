@@ -224,11 +224,7 @@ function pickPriorLatest(unitArr, latestEnd) {
   return valid[0] ? { val: valid[0].val, end: valid[0].end } : null;
 }
 
-function safe(n, denom) {
-  if (n == null || denom == null || denom === 0) return null;
-  return Math.round((n / denom) * 10000) / 10000;
-}
-
+// audit F-A-2026-06-21: removed dead helper safe() — defined, never called, duplicate of pct().
 function pct(n, denom) {
   if (n == null || denom == null || denom === 0) return null;
   return Math.round((n / denom) * 10000) / 10000;
