@@ -31,7 +31,12 @@ function main() {
   const recent = files.slice(-args.minRuns);
   const tickerStats = {};
   for (const f of recent) {
-    const data = JSON.parse(fs.readFileSync(path.join(histDir, f), 'utf8'));
+    // audit F-A-2026-06-21: guard per-file so one corrupt/truncated methods-history file
+    // is skipped with a warning instead of aborting the whole cleanup run.
+    let data;
+    try { data = JSON.parse(fs.readFileSync(path.join(histDir, f), 'utf8')); }
+    catch (e) { console.warn('[skip] ' + f + ': unreadable/corrupt (' + e.message + ')'); continue; }
+    if (!data || !data.stocks) { console.warn('[skip] ' + f + ': no stocks'); continue; }
     for (const [ticker, info] of Object.entries(data.stocks)) {
       if (!tickerStats[ticker]) tickerStats[ticker] = { passes: [], comps: [] };
       tickerStats[ticker].passes.push(info.passing);
