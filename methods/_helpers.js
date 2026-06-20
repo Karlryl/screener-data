@@ -67,12 +67,15 @@ function buildResult({ value, pass, computable, reason, components, threshold, t
   };
 }
 
-// Tag-38: Sub-Profile-Klassifikation (delegiert an Engine v7.3)
+// Tag-38 / ADR-001 Phase 3: Sub-Profile-Klassifikation. Quelle ist jetzt
+// lib/sub-profile.js (verbatim aus der retired engine-v7.3.js extrahiert),
+// nicht mehr die gelöschte Track-A/B-Engine. Verhindert: stiller Bruch des
+// Live-Pfads, der bisher über die deprecated Engine lief.
 let _subProfileCache = null;
 function _getEngine() {
   if (_subProfileCache) return _subProfileCache;
   try {
-    _subProfileCache = require('../engine-v7.3.js');
+    _subProfileCache = require('../lib/sub-profile.js');
     return _subProfileCache;
   } catch (e) { return null; }
 }

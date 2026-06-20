@@ -358,7 +358,7 @@ module.exports = {
 
 // CLI mode: when run directly, compute + save
 if (require.main === module) {
-  const Engine = require('../engine-v7.3.js');
+  const Engine = require('../lib/sub-profile.js'); // ADR-001 Phase 3: classifySubProfile lives in lib/ now
   const snapshotDir = process.argv[2] || './snapshots';
   const files = fs.readdirSync(snapshotDir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
   const stocks = [];
