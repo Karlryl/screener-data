@@ -184,7 +184,9 @@ function renderFallback() {
 
 function render(picks, methodsHistory) {
   const asOf = picks && picks.asOf ? picks.asOf.slice(0,16).replace('T',' ') + 'Z' : '—';
-  const universeSize = picks && picks.universeSize ? picks.universeSize : (methodsHistory && methodsHistory.summary && methodsHistory.summary.totalStocks) || 0;
+  // audit F-A-2026-06-21: a legitimate universeSize of 0 is falsy and fell through to
+  // methods totalStocks; use a finite check so 0 renders as 0.
+  const universeSize = (picks && Number.isFinite(picks.universeSize)) ? picks.universeSize : ((methodsHistory && methodsHistory.summary && methodsHistory.summary.totalStocks) || 0);
   const methodCount = methodsHistory && methodsHistory.summary && methodsHistory.summary.methodCount || 0;
 
   const nameMap = buildTickerNameMap(picks);

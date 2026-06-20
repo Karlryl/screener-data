@@ -17,6 +17,9 @@ const fs = require('fs');
 const path = require('path');
 // Tag 218: atomic output writes (audit F-218b-03)
 const { writeFileAtomic } = require('../lib/atomic-write.js');
+// audit F-A-2026-06-21: escape dynamic values (tickers, method-ids) before HTML interpolation —
+// a symbol containing & < > " would otherwise corrupt the markup (stored-markup / XSS).
+const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const PICKS_DIR = path.join(__dirname, '..', 'picks-history');
 const METHODS_HIST_DIR = path.join(__dirname, '..', 'methods-history');
@@ -182,14 +185,14 @@ function main() {
 
     if (m.added.length > 0) {
       html += '<h3 class="added">+ Added (' + m.added.length + ')</h3>';
-      html += '<div class="mono">' + m.added.map(t => '<span class="added">' + t + '</span>').join(' ') + '</div>';
+      html += '<div class="mono">' + m.added.map(t => '<span class="added">' + esc(t) + '</span>').join(' ') + '</div>';
     }
     if (m.removed.length > 0) {
       html += '<h3 class="removed">− Removed (' + m.removed.length + ')</h3>';
       html += '<table><thead><tr><th>Ticker</th><th>Why dropped (method-flips)</th></tr></thead><tbody>';
       for (const r of m.removed) {
-        const why = r.flippedMethods.length > 0 ? r.flippedMethods.join('; ') : '<i style="color:#94a3b8">no method-flip detected — likely universe-pruning or score-cap</i>';
-        html += '<tr><td class="mono removed">' + r.ticker + '</td><td><span class="reason">' + why + '</span></td></tr>';
+        const why = r.flippedMethods.length > 0 ? r.flippedMethods.map(esc).join('; ') : '<i style="color:#94a3b8">no method-flip detected — likely universe-pruning or score-cap</i>';
+        html += '<tr><td class="mono removed">' + esc(r.ticker) + '</td><td><span class="reason">' + why + '</span></td></tr>';
       }
       html += '</tbody></table>';
     }
