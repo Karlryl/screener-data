@@ -38,8 +38,24 @@ function main() {
     writeFileAtomic(args.out, '<html><body style="background:#0f172a;color:#e2e8f0;font-family:sans-serif;padding:30px;"><h1>Watchlist-Diff</h1><p>Need ≥2 history snapshots — currently '+files.length+'.</p></body></html>');
     return;
   }
-  const latest = JSON.parse(fs.readFileSync(path.join(args.history, files[files.length-1]), 'utf8'));
-  const previous = JSON.parse(fs.readFileSync(path.join(args.history, files[files.length-2]), 'utf8'));
+  // audit F-A-2026-06-21: guard parse + .stocks shape so a truncated/old-schema snapshot
+  // writes a visible error report instead of throwing — the workflow's continue-on-error
+  // would otherwise silently leave a stale diff-report.html deployed.
+  const _errHtml = (msg) => '<html><body style="background:#0f172a;color:#e2e8f0;font-family:sans-serif;padding:30px;"><h1>Watchlist-Diff</h1><p>Error: ' + msg + '</p></body></html>';
+  let latest, previous;
+  try {
+    latest = JSON.parse(fs.readFileSync(path.join(args.history, files[files.length-1]), 'utf8'));
+    previous = JSON.parse(fs.readFileSync(path.join(args.history, files[files.length-2]), 'utf8'));
+  } catch (e) {
+    console.error('::error::[generate-diff-report] cannot parse latest/previous snapshot: ' + e.message);
+    writeFileAtomic(args.out, _errHtml('could not parse snapshots — ' + e.message));
+    return;
+  }
+  if (!latest || !latest.stocks || !previous || !previous.stocks) {
+    console.error('::error::[generate-diff-report] snapshot missing .stocks');
+    writeFileAtomic(args.out, _errHtml('snapshot missing .stocks.'));
+    return;
+  }
 
   const passCountDiffs = [];      // {ticker, prevPass, currPass}
   const methodValueDiffs = [];    // {ticker, methodId, prev, curr, delta}

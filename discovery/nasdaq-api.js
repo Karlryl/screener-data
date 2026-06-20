@@ -182,6 +182,11 @@ async function fetchNasdaqApiList() {
             source:    'nasdaq-api'
           });
           added++;
+        } else {
+          // audit F-A-2026-06-21: don't silently discard the marketCap hint for a ticker an
+          // earlier source already found — backfill it if that entry has none.
+          const existing = result.get(rawSym);
+          if (existing && existing.marketCap == null && mcap != null) existing.marketCap = mcap;
         }
       }
 
