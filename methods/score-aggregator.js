@@ -100,15 +100,49 @@ const RED_FLAG_RULES = {
   // Tag 121+: Dilution-Red-Flag wenn Share-Outstanding-Daten verfuegbar
 };
 
+// SAT (audit 2026-06-20): graduated-pass for the CONTINUOUS QC quality methods. Without it,
+// normalizeMethodScore returns exactly 1.0 for ANY pass, so a method cleared by a wide margin scores
+// the same as one barely passing -> the QC score saturates and cannot discriminate "excellent" from
+// "ok" (measured: 5 of 7 QC methods returned 1.0 for every quality name). With it, a pass earns a
+// floor of 0.80 plus up to 0.20 for the margin above threshold. OPT-IN allowlist: only continuous
+// metrics graduate; count/categorical methods (premium-compounder-proof, profitability-state/trend,
+// hypergrowth-quality-class, piotroski, earnings-stability) and ALL HG/TURNAROUND methods stay binary
+// (return 1.0). Only QC-weighted methods are listed, so HG/TURNAROUND scores are byte-identical.
+const GRADUATED_PASS_FLOOR = 0.80;
+const GRADUATED_PASS = {
+  'quality-compounder-roic': { mode: 'excess', band: 1.0 },   // ROIC at 2x threshold (~40%) -> full credit
+  'margin-quality':          { mode: 'excess', band: 1.0 },
+  'reinvestment-rate':       { mode: 'excess', band: 2.0 },   // noisier -> wider band before full credit
+  'net-debt-ebitda':         { mode: 'headroom' }             // lte: lower leverage earns more credit
+};
+
+function gradedPassScore(methodResult, methodMeta, methodId) {
+  var cfg = methodId && GRADUATED_PASS[methodId];
+  if (!cfg) return 1.0;  // not allowlisted -> binary pass (categorical/count/HG/TURNAROUND)
+  var v = methodResult.value;
+  var th = methodResult.threshold != null ? methodResult.threshold : (methodMeta && methodMeta.threshold);
+  if (v == null || typeof th !== 'number' || th === 0) return 1.0;  // cannot graduate -> full pass
+  var frac;
+  if (cfg.mode === 'headroom') {
+    // lte: net-cash / negative / 999-sentinel -> full credit; else how far below the threshold.
+    if (v <= 0 || v >= 900) return 1.0;
+    frac = Math.max(0, Math.min(1, (th - v) / th));
+  } else {
+    // excess (gte): how far above threshold, scaled by the per-method band.
+    frac = Math.max(0, Math.min(1, (v / th - 1) / cfg.band));
+  }
+  return GRADUATED_PASS_FLOOR + (1 - GRADUATED_PASS_FLOOR) * frac;
+}
+
 /**
  * Normalisiert ein Method-Result auf 0-1 Score-Punkt.
  * - pass=true                                   -> 1.0
  * - pass=false aber computable, near threshold  -> 0.1-0.7 graduiert
  * - nicht computable                             -> 0
  */
-function normalizeMethodScore(methodResult, methodMeta) {
+function normalizeMethodScore(methodResult, methodMeta, methodId) {
   if (!methodResult || !methodResult.computable) return 0;
-  if (methodResult.pass) return 1.0;
+  if (methodResult.pass) return gradedPassScore(methodResult, methodMeta, methodId);
 
   var val = methodResult.value;
   // Tag 155: prefer per-result threshold (e.g. piotroski scaledThreshold) over module-level meta.
@@ -232,7 +266,7 @@ function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, data
     var weight = weights[methodId];
     var r = allResults[methodId];
     var meta = methodRegistry && methodRegistry[methodId];
-    var s = normalizeMethodScore(r, meta);
+    var s = normalizeMethodScore(r, meta, methodId);
     var isComputable = r && r.computable;
     breakdown[methodId] = {
       score: Math.round(s * 100) / 100,
