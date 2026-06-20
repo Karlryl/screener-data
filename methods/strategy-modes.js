@@ -87,7 +87,7 @@ const MODES = {
     ],
     // Tag 121c: q-spike-dataguard zurueck zu HARD (IONQ-Fix). NVDA bleibt sichtbar weil
     // sein OI nicht dramatisch expandiert (NVDA q-spike=pass, IONQ q-spike=fail OI-Severity 2.7x).
-    dataGuards: ['sloan-ratio', 'forecast-contamination-guard', 'q-spike-dataguard', 'revenue-volatility-guard'],
+    dataGuards: ['sloan-ratio', 'forecast-contamination-guard', 'q-spike-dataguard', 'revenue-volatility-guard', 'closed-end-trust-guard'],
     // Tag 120d: revenue-shock-guard NACHTRAEGLICH in softGuards (war Hauptursache NVDA in HG nicht sichtbar)
     softGuards: ['revenue-shock-guard', 'quarter-concentration-guard', 'deceleration-guard'],
     excludeSectors: SECTOR_EXCLUDE_HYPERGROWTH,
@@ -113,7 +113,10 @@ const MODES = {
       { id: 'net-debt-ebitda', required: true, weight: 'must', storyHint: 'Net-Debt/EBITDA <= 2.5' },
       { id: 'above-200d-ma', required: false, weight: 'prefer', storyHint: 'positiver Trend' }
     ],
-    dataGuards: ['sloan-ratio', 'forecast-contamination-guard'],
+    // DG03-01/02 (audit 2026-06-20): wire universal anomaly guards that were typed DATAGUARD but
+    // gated nothing (the generic type-based path is dead). Verified universe false-positive on
+    // QC-quality names ~0%; anchors clean. Guards only reject when computable && pass===false.
+    dataGuards: ['sloan-ratio', 'forecast-contamination-guard', 'loss-magnitude-guard', 'metric-divergence-guard', 'net-income-volatility-guard', 'pre-commerciality-megacap-guard', 'closed-end-trust-guard'],
     // Tag 120b: Soft-Guards - M&A-Compounder + Seasonal-Businesses-Fix
     softGuards: ['asset-growth-divergence', 'working-capital-anomaly'],
     softWarnings: [],
@@ -143,7 +146,8 @@ const MODES = {
       // Tag 141: Estimate-Revision-Proxy als prefer-Signal
       { id: 'estimate-revision-proxy', required: false, weight: 'prefer', storyHint: 'positive Revisionen / Rev-Beschleunigung' }
     ],
-    dataGuards: ['sloan-ratio', 'revenue-shock-guard'],
+    // DG03-01/02 (audit 2026-06-20): wire universal anomaly guards (see QC note).
+    dataGuards: ['sloan-ratio', 'revenue-shock-guard', 'loss-magnitude-guard', 'metric-divergence-guard', 'net-income-volatility-guard', 'closed-end-trust-guard'],
     softGuards: ['net-debt-ebitda'],
     excludeSectors: SECTOR_EXCLUDE_HYPERGROWTH,
     // Tag 140: enabled (Phase 2 abgeschlossen)

@@ -82,7 +82,7 @@ const REGISTRY = {
   'net-income-volatility-guard':{ type: 'DATAGUARD',  defaultActive: true,  reason: 'Tag 200b: NI single-year swing > 100% of revenue — catches non-operating noise (MSTR-style)' },
   'pre-commerciality-megacap-guard':{ type: 'DATAGUARD', defaultActive: true, reason: 'Tag 201b: mcap > 1B but rev < 100M — narrative-only mega-cap (QS/JOBY pattern bypassing existing gates)' },
   'closed-end-trust-guard':     { type: 'DATAGUARD',  defaultActive: true,  reason: 'Tag 202: industry + Rev/Assets + neg-rev + FCF/Assets pattern — catches Scottish-Mortgage/HICL trust noise in R40' },
-  'r40-sanity-cap':             { type: 'DATAGUARD',  defaultActive: true,  reason: 'Tag 205: caps R40-poisoning inputs — revGrowth>150% with OpInc<0 (ONDS/BEAM) | fcfMargin>80% (one-time events) | |OpM-FCFM|>50pp (R&D-capex phantom FCF)' },
+  'r40-sanity-cap':             { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 205: caps R40-poisoning inputs — revGrowth>150% with OpInc<0 (ONDS/BEAM) | fcfMargin>80% (one-time events) | |OpM-FCFM|>50pp (R&D-capex phantom FCF)' },
   'fcf-stability':              { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 204: FCF/Rev margin CoV ≤ 0.40 over 4y — Asness/Frazzini/Pedersen QMJ Safety pillar (lumpy-FCF detector)' },
   'operating-cashflow-coverage':{ type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 204: OCF/NI 3y mean ≥ 0.80 — earnings-quality coverage floor (Sloan-sister, cleaner inputs)' },
   'gross-profitability':        { type: 'DIAGNOSTIC', defaultActive: true,  reason: 'Tag 209a: Novy-Marx GP/TA >= 0.20 — durable-quality floor (SSRN 5190788 + SSRN 3877161); catches leverage-inflated ROE with weak underlying gross profitability' },
@@ -132,8 +132,8 @@ const REGISTRY = {
   'revenue-shock-guard':        { type: 'DATAGUARD', defaultActive: true, reason: 'Robust outlier detection auf latest Q-revenue (Tag 98b)' },
   'q-spike-dataguard':          { type: 'DATAGUARD', defaultActive: true, reason: 'Tag 113: Hard-Filter Q-Spike (>55% Single-Q-Konzentration ODER OI-Severity >3x bei YoY>100%)' },
   'forecast-contamination-guard':{ type: 'DATAGUARD', defaultActive: true, reason: 'Tag 118: Yahoo annualRev[0] Forecast-Contamination Cross-Check' },
-  'quarter-concentration-guard': { type: 'DATAGUARD', defaultActive: true, reason: 'Tag 118: Single-Q-Konzentration <=50% (Hypergrowth-spezifisch)' },
-  'deceleration-guard':         { type: 'DATAGUARD', defaultActive: true, reason: 'Tag 118: Q-YoY << TTM-Growth Deceleration (Hypergrowth)' },
+  'quarter-concentration-guard': { type: 'DIAGNOSTIC', defaultActive: true, reason: 'Tag 118: Single-Q-Konzentration <=50% (Hypergrowth-spezifisch)' },
+  'deceleration-guard':         { type: 'DIAGNOSTIC', defaultActive: true, reason: 'Tag 118: Q-YoY << TTM-Growth Deceleration (Hypergrowth)' },
   'revenue-volatility-guard':   { type: 'DATAGUARD', defaultActive: true, reason: 'Tag 121e: Faengt SPHR-Pattern - lumpy Annual-Revenue mit -25%+ Single-Year-Decline' },
 };
 
