@@ -147,6 +147,12 @@ function normalizeMethodScore(methodResult, methodMeta) {
   var ratio;
   if (op === 'gte') {
     ratio = val / threshold;
+    // FC-01 (HIGH, audit 2026-06-20): gte mirror of the lte F-ME-201 guard. A multi-criteria
+    // method (e.g. margin-quality exports value=gmMedian) can FAIL on a NON-exported dimension
+    // (operating-margin floor / GM-decline) while its exported value still clears threshold
+    // (ratio >= 1). The exported value is then NOT the binding constraint, so a definitive FAIL
+    // must score 0 — not ride the graduation curve up to ~0.99. (pass===true already returned 1.0.)
+    if (methodResult.pass === false && ratio >= 1.0) return 0.0;
   } else if (op === 'lte') {
     // Bug #8: val<=0 is always better than any positive threshold (e.g. negative EV, net-cash)
     // F-ME-201 (HIGH): only award the near-full-credit shortcut when the method did
