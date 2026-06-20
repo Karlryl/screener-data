@@ -48,6 +48,14 @@ const HORIZONS_DAYS = [28, 84]; // 4w / 12w forward look-up
 const BOOTSTRAP_RESAMPLES = 200;
 const MIN_VINTAGES = 4;        // need ≥4 distinct dates per method for stat meaning
 const MIN_SAMPLES_PER_GROUP = 10; // ≥10 stocks in each (pass / fail) group
+// F-EVAL-2026-06-20 (eval-oracle hardening). These gate the evidenceGate so the
+// audit stops certifying contaminated cohorts as "ok":
+const CACHE_SCHEMA_VERSION = 2;       // bump discards a pre-fix cache whose entries lack
+                                      // `matured` and may hold manufactured 0-day-window zeros.
+const CANONICAL_FRAC_MIN = 0.80;      // ≥80% of contributions must resolve via the shared
+                                      // canonical entry/exit dates (not per-ticker snap drift).
+const MAX_PLAUSIBLE_MEDIAN_28D = 50;  // percent; guardrail vs a future units/compounding blow-up
+const MAX_PLAUSIBLE_MEDIAN_84D = 120; // percent (real 28d data maxes ~5.6%, so this never trips today).
 
 function loadJson(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return null; } }
 
@@ -139,8 +147,13 @@ function main() {
 
   // F-PF-009: Load existing cache so we only process new vintages
   let cache = loadJson(CACHE_PATH);
-  if (!cache || typeof cache !== 'object' || !cache.vintageReturns) {
-    cache = { vintageReturns: {} };
+  // F-EVAL-2026-06-20: discard a pre-fix cache. Old entries lack the `matured`
+  // flag and may carry manufactured zeros from 0-day (entryDate===exitDate)
+  // windows; replaying them would keep contaminating medianReturnFail for up to
+  // CACHE_RETENTION_DAYS. A schema bump forces a clean one-time rebuild.
+  if (!cache || typeof cache !== 'object' || !cache.vintageReturns
+      || cache.schemaVersion !== CACHE_SCHEMA_VERSION) {
+    cache = { schemaVersion: CACHE_SCHEMA_VERSION, vintageReturns: {} };
   }
 
   // Tag 223c (audit F-222a-2 followup): prune cache entries older than 90 days.
@@ -177,12 +190,12 @@ function main() {
   function _getMethodBucket(methodId, key) {
     perMethod[methodId] = perMethod[methodId] || {};
     perMethod[methodId][key] = perMethod[methodId][key] || {
-      pass: [], fail: [], vintages: new Set(),
+      pass: [], fail: [], vintages: new Set(), matured: 0, total: 0,
       byQuality: {
-        A: { pass: [], fail: [], vintages: new Set() },
-        B: { pass: [], fail: [], vintages: new Set() },
-        C: { pass: [], fail: [], vintages: new Set() },
-        D: { pass: [], fail: [], vintages: new Set() }
+        A: { pass: [], fail: [], vintages: new Set(), matured: 0, total: 0 },
+        B: { pass: [], fail: [], vintages: new Set(), matured: 0, total: 0 },
+        C: { pass: [], fail: [], vintages: new Set(), matured: 0, total: 0 },
+        D: { pass: [], fail: [], vintages: new Set(), matured: 0, total: 0 }
       }
     };
     return perMethod[methodId][key];
@@ -217,16 +230,20 @@ function main() {
         // the loop variable instead of doing a lookup. Removes the
         // self-acknowledged bug the original author flagged in a comment.
         const cached = cache.vintageReturns[cacheKey];
-        for (const { ticker, methodId, ret, quality, pass } of cached) {
+        for (const { ticker, methodId, ret, quality, pass, matured } of cached) {
           const bucket = _getMethodBucket(methodId, key);
           bucket.vintages.add(asOf);
           // F-BT-008: quality from cache (may be null for older vintages — handle gracefully)
           if (pass == null) continue;
           if (pass) bucket.pass.push(ret); else bucket.fail.push(ret);
+          // F-EVAL-2026-06-20: maturation accounting mirrors the fresh-load path so
+          // canonicalFrac is computable for the dominant (cached) population.
+          bucket.total++; if (matured) bucket.matured++;
           if (quality && bucket.byQuality[quality]) {
             const q = bucket.byQuality[quality];
             q.vintages.add(asOf);
             if (pass) q.pass.push(ret); else q.fail.push(ret);
+            q.total++; if (matured) q.matured++;
           }
         }
         continue;
@@ -296,19 +313,24 @@ function main() {
         // ONLY if the canonical dates aren't in this ticker's map (long tail
         // of thinly-traded tickers). Use _priceAtCanonical for the per-ticker
         // fallback so behavior matches walk-forward's resolution.
-        let p0, p1;
+        let p0, p1, matured = false;
         if (canonicalEntry && canonicalExit && map.has(canonicalEntry) && map.has(canonicalExit)) {
-          p0 = map.get(canonicalEntry);
-          p1 = map.get(canonicalExit);
+          // F-EVAL-2026-06-20: a 0-day window (entry===exit) yields p0===p1 -> ret 0,
+          // a MANUFACTURED zero that floods the fail bucket and drags medianReturnFail
+          // to exactly 0 (16 of 83 ok-methods affected pre-fix). Drop it like missing data.
+          if (canonicalEntry === canonicalExit) { p0 = null; p1 = null; }
+          else { p0 = map.get(canonicalEntry); p1 = map.get(canonicalExit); matured = true; }
         } else {
           const entryDate = WF.nearestTradingDay(realEntryAsOf, map) || realEntryAsOf;
           const exitDate  = WF.nearestTradingDay(realFutureDate, map) || realFutureDate;
-          p0 = map.get(entryDate) || null;
-          p1 = map.get(exitDate)  || null;
+          // F-EVAL-2026-06-20: same 0-day-window guard on the per-ticker fallback path.
+          if (entryDate === exitDate) { p0 = null; p1 = null; }
+          else { p0 = map.get(entryDate) || null; p1 = map.get(exitDate) || null; }
         }
         const ret = WF.returnPct(p0, p1);
         if (ret == null) {
           // Tag 231a-4: also account for "map exists but no valid return" attrition.
+          // (Also covers the dropped 0-day windows above.)
           droppedTickers++;
           const c = _countContribs(stockData);
           droppedPassContribs += c.p;
@@ -322,12 +344,16 @@ function main() {
           const bucket = _getMethodBucket(methodId, key);
           bucket.vintages.add(asOf);
           if (r.pass) bucket.pass.push(ret); else bucket.fail.push(ret);
+          // F-EVAL-2026-06-20: track whether this contribution resolved via the shared
+          // canonical dates (matured) vs a per-ticker nearest-day snap, for canonicalFrac.
+          bucket.total++; if (matured) bucket.matured++;
           if (quality && bucket.byQuality[quality]) {
             const q = bucket.byQuality[quality];
             q.vintages.add(asOf);
             if (r.pass) q.pass.push(ret); else q.fail.push(ret);
+            q.total++; if (matured) q.matured++;
           }
-          cacheEntries.push({ ticker, methodId, ret, pass: r.pass, quality });
+          cacheEntries.push({ ticker, methodId, ret, pass: r.pass, quality, matured });
         }
       }
       // F-PF-009: store in cache
@@ -368,38 +394,53 @@ function main() {
   // and bucket.pass/fail at this point — they're already populated.
 
   // Build summary with bootstrap CI; include quality-split (Phase 3.5).
-  function _evalGroup(group, methodId) {
+  function _evalGroup(group, methodId, horizonDays) {
     const passMed = median(group.pass);
     const failMed = median(group.fail);
+    const canonicalFrac = (group.total > 0) ? (group.matured / group.total) : 0;
+    const plausBound = (horizonDays >= 84) ? MAX_PLAUSIBLE_MEDIAN_84D : MAX_PLAUSIBLE_MEDIAN_28D;
     const insufficientVintages = group.vintages.size < MIN_VINTAGES;
     const insufficientSamples = group.pass.length < MIN_SAMPLES_PER_GROUP
                             || group.fail.length < MIN_SAMPLES_PER_GROUP;
-    const ci = (insufficientVintages || insufficientSamples)
-      ? { alpha: null, lo: null, hi: null }
+    // F-EVAL-2026-06-20: an exact-0 median over a full cohort is the manufactured-zero
+    // signature (0-day snap windows). The resolution-level guard above should prevent
+    // it; gate defensively in case a residual slips through.
+    const degenerateZero = (failMed === 0 && group.fail.length >= MIN_SAMPLES_PER_GROUP)
+                        || (passMed === 0 && group.pass.length >= MIN_SAMPLES_PER_GROUP);
+    // Guardrail against a future units/compounding blow-up (real 28d data maxes ~5.6%).
+    const implausible = (passMed != null && Math.abs(passMed) > plausBound)
+                     || (failMed != null && Math.abs(failMed) > plausBound);
+    // Most contributions must share the canonical entry/exit window, not per-ticker snaps.
+    const unmatured = canonicalFrac < CANONICAL_FRAC_MIN;
+    const evidenceGate =
+        insufficientVintages ? 'insufficient-vintages-need-' + MIN_VINTAGES
+      : insufficientSamples  ? 'insufficient-samples-need-' + MIN_SAMPLES_PER_GROUP + '-per-group'
+      : degenerateZero       ? 'degenerate-zero-returns'
+      : implausible          ? 'implausible-median-return'
+      : unmatured            ? 'unmatured-nearest-day-snapped'
+      :                        'ok';
+    const ok = (evidenceGate === 'ok');
+    // F-EVAL-2026-06-20: tie BOTH alpha and the bootstrap CI to the gate, so a
+    // contaminated method can never carry a ciLo95>0 that lands it in
+    // methodology-report's "significant positive alpha — earn their weight" table.
+    const ci = ok
       // F-BT-004: pass methodId into bootstrap so seed is unique per method
-      : bootstrapAlphaCI(group.pass, group.fail, BOOTSTRAP_RESAMPLES, methodId);
-    // F-BT-006: suppress point-alpha when n < MIN_SAMPLES_PER_GROUP in either group
-    const alphaVal = (insufficientSamples || passMed == null || failMed == null)
-      ? null
-      : passMed - failMed;
-    const alphaNullReason = insufficientSamples
-      ? ('insufficient_samples_n_pass=' + group.pass.length + '_n_fail=' + group.fail.length)
-      : undefined;
+      ? bootstrapAlphaCI(group.pass, group.fail, BOOTSTRAP_RESAMPLES, methodId)
+      : { alpha: null, lo: null, hi: null };
+    const alphaVal = ok ? (passMed - failMed) : null;
+    const alphaNullReason = ok ? undefined : evidenceGate;
     return {
       passedN: group.pass.length,
       failedN: group.fail.length,
       vintages: group.vintages.size,
+      canonicalFrac: Number(canonicalFrac.toFixed(3)),
       medianReturnPass: passMed,
       medianReturnFail: failMed,
       alpha: alphaVal,
       alphaNullReason,
       ciLo95: ci.lo,
       ciHi95: ci.hi,
-      evidenceGate: insufficientVintages
-        ? 'insufficient-vintages-need-' + MIN_VINTAGES
-        : insufficientSamples
-          ? 'insufficient-samples-need-' + MIN_SAMPLES_PER_GROUP + '-per-group'
-          : 'ok'
+      evidenceGate
     };
   }
 
@@ -410,19 +451,25 @@ function main() {
       const key = days + 'd';
       const data = horizons[key];
       if (!data) { out[methodId][key] = null; continue; }
-      const overall = _evalGroup(data, methodId);
+      const overall = _evalGroup(data, methodId, days);
       // Quality split: only emit grades that have any data (typically A+B once Phase 3.4 has 4+ weeks of grades).
       // F-BT-008: byQuality split works when quality field is present; gracefully empty when absent.
       const byQuality = {};
       for (const g of ['A', 'B', 'C', 'D']) {
         const q = data.byQuality[g];
-        if (q.pass.length + q.fail.length > 0) byQuality[g] = _evalGroup(q, methodId + '_quality_' + g);
+        if (q.pass.length + q.fail.length > 0) byQuality[g] = _evalGroup(q, methodId + '_quality_' + g, days);
       }
       overall.byQuality = byQuality;
       out[methodId][key] = overall;
     }
   }
 
+  // F-EVAL-2026-06-20: fail loud on an empty result rather than writing an empty
+  // "ok" artifact that downstream consumers would treat as a clean run.
+  if (Object.keys(out).length === 0) {
+    console.error('::error::[method-effectiveness] no methods produced any evaluable horizon — refusing to write an empty artifact.');
+    process.exit(1);
+  }
   if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
   const report = {
     asOf: today,
@@ -486,5 +533,5 @@ function main() {
 module.exports = { median, bootstrapAlphaCI };
 
 if (require.main === module) {
-  try { main(); } catch (e) { console.error('method-effectiveness failed: ' + e.message); process.exit(0); }
+  try { main(); } catch (e) { console.error('::error::[method-effectiveness] failed: ' + ((e && e.stack) || (e && e.message) || e)); process.exit(1); }
 }

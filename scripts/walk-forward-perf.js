@@ -854,5 +854,5 @@ module.exports = {
 };
 
 if (require.main === module) {
-  try { main(); } catch (e) { console.error('walk-forward-perf failed: ' + e.message); process.exit(0); }
+  try { main(); } catch (e) { console.error('::error::[walk-forward-perf] failed: ' + ((e && e.stack) || (e && e.message) || e)); process.exit(1); }
 }
