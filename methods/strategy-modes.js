@@ -123,23 +123,9 @@ const MODES = {
     defaultSortMethod: 'quality-compounder-roic'
   },
 
-  BUFFETT: {
-    id: 'BUFFETT',
-    label: 'Buffett',
-    description: 'Warren Buffett-style: hochwertiger Compounder zu Margin-of-Safety-Discount. 14-Punkt-Komposit-Filter (10 quantitativ, 3 qualitativ, 1 Industrie-Exclusion).',
-    evidence: 'literaturgestuetzt',
-    evidenceLabel: 'Berkshire Annual Letters 1977-2024 + Hagstrom The Warren Buffett Way + Mary Buffett Buffettology + Damodaran Investment Valuation',
-    core: [
-      { id: 'buffett-criteria', required: true, weight: 'must', storyHint: '14-Punkt Buffett-Komposit (ROE, ROIC, Debt, EPS-Acceleration, FCF, OE, Margins, E/P, Hurdle Rate, One-Dollar, Moat, Pricing-Power, Consistency, Industry-Exclusion)' },
-      { id: 'owner-earnings', required: true, weight: 'must', storyHint: 'Buffett 1986 Owner Earnings >0 + wachsend' },
-      { id: 'dcf-intrinsic-value', required: true, weight: 'must', storyHint: 'DCF/MoS 25-50% Discount AND Hurdle Rate ≥15%' }
-    ],
-    dataGuards: ['sloan-ratio', 'forecast-contamination-guard'],
-    softGuards: [],
-    excludeSectors: SECTOR_EXCLUDE_DEFAULT,
-    storyTemplate: '{ticker} – Buffett: {coreSummary}. {warnings}',
-    defaultSortMethod: 'buffett-criteria'
-  },
+  // BUFFETT mode removed (audit 2026-06-20): value+quality mode whose MUSTs included
+  // dcf-intrinsic-value (margin-of-safety = price-relative valuation), violating the
+  // quality-only mandate. Feature fully removed (mode + dashboard tab + the 3 methods).
 
   TURNAROUND: {
     id: 'TURNAROUND',

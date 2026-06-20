@@ -64,12 +64,11 @@ const SCORE_WEIGHTS = {
     'piotroski-f-score': 0.15,
     'revenue-growth-3y': 0.10,
     'estimate-revision-proxy': 0.05
-  },
-  BUFFETT: {
-    'buffett-criteria': 0.50,
-    'owner-earnings': 0.20,
-    'dcf-intrinsic-value': 0.30
   }
+  // BUFFETT mode removed (audit 2026-06-20): it was a value+quality mode whose score rode on
+  // dcf-intrinsic-value (margin-of-safety / discount-to-intrinsic) — a price-relative VALUATION bet,
+  // which violates the quality-only mandate (valuation is external via Elliott waves). Feature
+  // fully removed (mode + dashboard tab + buffett-criteria/owner-earnings/dcf-intrinsic-value).
 };
 
 // Red-Flag-Trigger: Markierung fuer Red-Flag-Section, plus Tier-Downgrade.

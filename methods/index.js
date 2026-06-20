@@ -244,26 +244,10 @@ module.exports = [
   // (1.0, 1.5] BORDERLINE, > 1.5 FAIL (high-beta leverage-aversion penalty).
   // metrics.beta sourced from Yahoo defaultKeyStatistics.beta (Tag 219).
   // DIAGNOSTIC, fixture-hash safe (not in SCORE_WEIGHTS).
-  { file: './betting-against-beta.js' },
+  { file: './betting-against-beta.js' }
 
-  // Owner Earnings (Buffett 1986 BRK Annual Letter) — NI + D&A + SBC − MaintCapex − ΔWC.
-  // OE/Revenue >= 5%, ≥5y data, positive+growing all years.
-  // Maintenance capex proxy configurable via OWNER_EARNINGS_MAINT_CAPEX_METHOD env var
-  // (capex-5y-median | dna | capex-min-dna; Damodaran Investment Valuation ch. 11).
-  // DIAGNOSTIC: not in SCORE_WEIGHTS; used by buffett-criteria composite. Fixture-hash safe.
-  { file: './owner-earnings.js' },
-
-  // DCF Intrinsic Value — 3-stage owner-earnings DCF with Margin-of-Safety and
-  // hurdle-rate test per Buffett 1996 Owner's Manual + 1992 Coca-Cola valuation.
-  // Depends on owner-earnings.js (registered above). Computable only when
-  // owner-earnings is computable and market-cap / price data are available.
-  // DIAGNOSTIC: not in SCORE_WEIGHTS; fixture-hash safe by construction.
-  { file: './dcf-intrinsic-value.js' },
-
-  // Buffett 14-Punkt Komposit — composite of 10 quantitative + 3 qualitative + 1
-  // industry-exclusion test (Berkshire Annual Letters 1977-2024, Hagstrom, Buffettology,
-  // Damodaran). Pass requires x1_industryExclusion + DCF Margin-of-Safety (HARD) + ≥85%
-  // test pass-rate. DIAGNOSTIC in HG/QC/TURN; MUST in BUFFETT strategy mode.
-  // Fixture-hash safe (not in HG/QC/TURN SCORE_WEIGHTS).
-  { file: './buffett-criteria.js' }
+  // BUFFETT removed (audit 2026-06-20): owner-earnings.js, dcf-intrinsic-value.js and
+  // buffett-criteria.js were registered ONLY for the BUFFETT value+quality mode/tab, whose
+  // score rode on DCF margin-of-safety (price-relative valuation) — against the quality-only
+  // mandate. Mode, dashboard tab, the 3 method files and their tag28 tests were all removed.
 ];

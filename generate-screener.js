@@ -2111,7 +2111,7 @@ const CLIENT_JS = `
   function buildSectorHeatmap() {
     if (_sectorHeatmapCache) return _sectorHeatmapCache;
     // Universe: rows in HG/QC/SMALL/R40/PRE_BREAKOUT (clean stocks).
-    const cleanTabs = ['HG','QC','BF','SMALL','R40','PRE_BREAKOUT'];
+    const cleanTabs = ['HG','QC','SMALL','R40','PRE_BREAKOUT'];  // BUFFETT removed (audit 2026-06-20)
     const seen = new Set();
     const universe = [];
     for (const t of cleanTabs) {
@@ -3670,7 +3670,7 @@ const CLIENT_JS = `
     }
   }
   function handleGChord(ch) {
-    const map = { h:'HG', q:'QC', b:'BF', s:'SMALL', r:'R40', p:'PRE_BREAKOUT', w:'WATCH' };
+    const map = { h:'HG', q:'QC', s:'SMALL', r:'R40', p:'PRE_BREAKOUT', w:'WATCH' };  // BUFFETT removed (audit 2026-06-20)
     const tab = map[ch];
     if (tab) switchToTab(tab);
   }
@@ -4253,7 +4253,6 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">←</span> / <span class="kbd-key">→</span></div><div class="kbd-desc">Prev / next stock (in modal)</div></div>
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">h</span></div><div class="kbd-desc">Go to Hypergrowth tab</div></div>
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">q</span></div><div class="kbd-desc">Go to Quality-Compounder tab</div></div>
-    <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">b</span></div><div class="kbd-desc">Go to Buffett tab</div></div>
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">s</span></div><div class="kbd-desc">Go to Small Cap tab</div></div>
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">r</span></div><div class="kbd-desc">Go to Rule of 40 tab</div></div>
     <div class="kbd-row"><div class="kbd-keys"><span class="kbd-key">g</span> <span class="kbd-key">p</span></div><div class="kbd-desc">Go to Pre-Breakout tab</div></div>
