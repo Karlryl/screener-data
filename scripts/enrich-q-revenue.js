@@ -20,6 +20,9 @@
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
+// F-A-2026-06-21 (audit): route the cache write through the repo's atomic writer so a
+// SIGKILL/CI-timeout mid-write can't truncate a court-screen input file (Pattern D).
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const ZIP_PATH = 'C:/Users/Karlr/AppData/Local/sec-xbrl-cache/companyfacts.zip';
 const CACHE = path.join(__dirname, '..', 'fundamentals-cache');
@@ -177,7 +180,7 @@ function main() {
       j.payload.ftsQuarterly = j.payload.ftsQuarterly || {};
       j.payload.ftsQuarterly.revQYoYsec = newestFirst;
       j.payload.ftsQuarterly.revQYoYsecMeta = { source: 'sec-companyfacts', concept: conceptUsed, cik: entry.cik, yoyPairsAvail: yoy.length, latestEnd: bestLatestEnd, script: 'enrich-q-revenue.js' };
-      fs.writeFileSync(cacheFile, JSON.stringify(j));
+      writeFileAtomic(cacheFile, JSON.stringify(j));
       wrote++;
       console.log(`${ticker.padEnd(6)} concept=${conceptUsed} avail=${String(yoy.length).padStart(2)} stored=${newestFirst.length} latest=${bestLatestEnd}  YoY(newest-first)=${JSON.stringify(newestFirst.slice(0, 6).map(v => Math.round(v * 100) + '%'))}`);
     }

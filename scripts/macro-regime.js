@@ -66,7 +66,11 @@ function computeRegimes(series, maPeriod) {
 
 function main() {
   const args = parseArgs(process.argv);
-  const history = JSON.parse(fs.readFileSync(args.history, 'utf8'));
+  // F-A-2026-06-21 (audit): guard the parse so a missing/corrupt prices file fails the
+  // daily-pull step with a clear diagnostic instead of an opaque JSON.parse stack trace.
+  let history;
+  try { history = JSON.parse(fs.readFileSync(args.history, 'utf8')); }
+  catch (e) { console.error('::error::[macro-regime] cannot read/parse ' + args.history + ': ' + e.message); process.exit(1); }
   const series = history[args.ticker];
 
   if (!Array.isArray(series) || series.length === 0) {
