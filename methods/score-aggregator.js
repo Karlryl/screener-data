@@ -44,8 +44,17 @@ const SCORE_WEIGHTS = {
     'margin-quality': 0.20,
     'reinvestment-rate': 0.15,
     'net-debt-ebitda': 0.10,
-    'premium-compounder-proof': 0.05,
-    'fcf-yield': 0.05
+    'premium-compounder-proof': 0.05
+    // fcf-yield removed (audit 2026-06-20): FCF/MarketCap is a VALUATION (cheap/expensive) signal —
+    // it moves with share price, business unchanged — so it has no place in a quality-only score.
+    // Owner mandate: the score measures quality only; valuation is done externally via Elliott waves.
+    // computeScore normalizes by computedWeight, so deleting the line redistributes its 0.05
+    // PROPORTIONALLY across the remaining 6 methods (no magic numbers, no threshold-discipline issue).
+    // Empirical (4.7k snapshots): QC discrimination sd 22.68 -> 23.39, migration mostly upward; the
+    // down-movers are exactly the cheap names that were getting a quality bonus for being cheap.
+    // Rejected alternative: routing the 0.05 to premium-compounder-proof — it LOWERED discrimination
+    // (sd 22.55) and down-tiered 174 names (premium-proof is a punitive 6/6 gate most names fail).
+    // fcf-yield stays a DIAGNOSTIC/'prefer' display signal (strategy-modes.js QC core[]), just unscored.
     // above-200d-ma removed: technical price signal has no place in fundamental quality score
   },
   TURNAROUND: {

@@ -77,18 +77,29 @@ function evaluate(stock) {
   //   1. annualBalance[0].totalEquity (not yet extracted by pull-yahoo.js — null for all snapshots)
   //   2. TotalAssets - TotalLiabilities (derived; available when annualBalance has totalLiabilities)
   //   3. Fall back to legacy TotalAssets - Cash with _icMethod = 'assets-minus-cash-fallback'
-  let investedCapital, icMethod;
+  let investedCapital, icMethod, icDegenerate = false;
   const totalEquityDirect = H.latestBalance(stock, 'totalEquity');
   const totalLiabilities = H.latestBalance(stock, 'totalLiabilities');
   const totalEquityDerived = (totalLiabilities != null) ? totalAssets - totalLiabilities : null;
   const totalEquity = (totalEquityDirect != null) ? totalEquityDirect : totalEquityDerived;
 
-  if (totalEquity != null && totalDebt != null) {
-    investedCapital = totalDebt + totalEquity - (totalCash || 0);
+  const canonicalAvailable = (totalEquity != null && totalDebt != null);
+  const canonicalIC = canonicalAvailable ? (totalDebt + totalEquity - (totalCash || 0)) : null;
+
+  // BUG-fix (audit 2026-06-20): aggressive buyback champions (AZO, BBWI, HD, MCD, SBUX) carry
+  // NEGATIVE book equity, which collapses the Damodaran canonical IC (= Debt + Equity − Cash) toward
+  // zero and inflates ROIC = OpInc/IC into the 60-70% range (AZO read 70.6%) — an accounting artifact
+  // of buybacks, not a real return on the operating capital base. When equity is negative (or the
+  // canonical IC is non-positive) the book-value IC is degenerate; fall back to the always-positive
+  // assets-minus-cash base, yielding a conservative ROIC. Structural, multi-ticker, multi-sector →
+  // consistent with threshold-discipline (no numeric screening threshold changed).
+  if (canonicalAvailable && totalEquity >= 0 && canonicalIC > 0) {
+    investedCapital = canonicalIC;
     icMethod = 'damodaran-canonical';
   } else {
     investedCapital = totalAssets - (totalCash || 0);
-    icMethod = 'assets-minus-cash-fallback';
+    icMethod = canonicalAvailable ? 'assets-minus-cash-degenerate-equity' : 'assets-minus-cash-fallback';
+    icDegenerate = canonicalAvailable;
   }
 
   if (investedCapital <= 0) {
@@ -145,6 +156,7 @@ function evaluate(stock) {
       opInc,
       investedCapital,
       _icMethod: icMethod,
+      _icDegenerate: icDegenerate,
       totalAssets,
       totalCash: totalCash || 0,
       totalDebt: totalDebt || 0,

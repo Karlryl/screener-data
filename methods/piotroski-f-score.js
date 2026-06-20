@@ -47,6 +47,12 @@ function evaluate(stock) {
   const ni0 = _annualVal(stock.annual && stock.annual.annualNetIncome, 0);
   const ni1 = _annualVal(stock.annual && stock.annual.annualNetIncome, 1);
   const fcf0 = _annualVal(stock.annual && stock.annual.annualFCF, 0);
+  // BUG-fix (audit 2026-06-20): Piotroski's CFO and accrual signals are defined on OPERATING cash
+  // flow, not FCF. Using FCF (= OCF - capex) systematically docks capex-heavy reinvesting recoveries
+  // — the exact TURNAROUND archetype. annualOCF is persisted in ~86% of snapshots. Prefer it; fall
+  // back to FCF only when OCF is absent.
+  const ocf0 = _annualVal(stock.annual && stock.annual.annualOCF, 0);
+  const cfo0 = (ocf0 != null) ? ocf0 : fcf0;
   const rev0 = _annualVal(stock.annual && stock.annual.annualRev, 0);
   const rev1 = _annualVal(stock.annual && stock.annual.annualRev, 1);
   const gp0  = _annualVal(stock.annual && stock.annual.annualGP, 0);
@@ -64,9 +70,9 @@ function evaluate(stock) {
     signals.push({ name: 'roa_positive', pass: roa0 > 0, roa0 });
   }
 
-  // 2. CFO > 0 (FCF proxy)
-  if (fcf0 != null) {
-    signals.push({ name: 'cfo_positive', pass: fcf0 > 0 });
+  // 2. CFO > 0 (operating cash flow; FCF fallback)
+  if (cfo0 != null) {
+    signals.push({ name: 'cfo_positive', pass: cfo0 > 0 });
   }
 
   // 3. ΔROA > 0
@@ -76,9 +82,9 @@ function evaluate(stock) {
     signals.push({ name: 'delta_roa', pass: roa0 > roa1 });
   }
 
-  // 4. Accruals: FCF/Assets > ROA (cash earnings > accrual earnings)
-  if (fcf0 != null && ni0 != null) {
-    const cfoRatio = fcf0 / assets0;
+  // 4. Accruals: CFO/Assets > ROA (cash earnings > accrual earnings)
+  if (cfo0 != null && ni0 != null) {
+    const cfoRatio = cfo0 / assets0;
     const roa0 = ni0 / assets0;
     signals.push({ name: 'accruals', pass: cfoRatio > roa0 });
   }

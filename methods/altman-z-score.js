@@ -47,12 +47,26 @@ function evaluate(stock) {
     return H.buildResult({ computable: false, reason: 'no totalAssets', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP });
   }
 
-  // X1: Working Capital proxy = (cash - short-term portion of debt) / assets
-  // Approximate: cash represents liquid assets, short-term debt ≈ 30% of total debt
   const cashVal = cash || 0;
   const debtVal = totalDebt || 0;
-  const shortTermDebtProxy = debtVal * 0.3;
-  const workingCapital = cashVal - shortTermDebtProxy;
+
+  // X1: Working Capital / Total Assets.
+  // BUG-fix (audit 2026-06-20): prefer REAL working capital (currentAssets - currentLiabilities),
+  // persisted in ~76% of snapshots (Tag 211l). The legacy `cash - 0.3*debt` proxy mis-states X1 —
+  // it overstates working capital for cash-rich firms (ignores real current liabilities) and
+  // understates it where short-term liabilities exceed 30% of total debt — mis-classifying solvency
+  // on the 0.20-weight TURNAROUND must-gate. Fall back to the proxy only when the real current
+  // accounts are absent. Altman's X1 is canonically (CA - CL) / TA.
+  const curAssets = _balanceVal(stock, 0, 'currentAssets');
+  const curLiab = _balanceVal(stock, 0, 'currentLiabilities');
+  let workingCapital, wcSource;
+  if (Number.isFinite(curAssets) && Number.isFinite(curLiab)) {
+    workingCapital = curAssets - curLiab;
+    wcSource = 'real-current-accounts';
+  } else {
+    workingCapital = cashVal - debtVal * 0.3;  // legacy proxy fallback
+    wcSource = 'cash-minus-stdebt-proxy';
+  }
   const X1 = workingCapital / assets;
 
   // X2: Retained Earnings proxy = sum of last 3 years net income / assets
@@ -108,7 +122,7 @@ function evaluate(stock) {
     threshold: THRESHOLD,
     thresholdOp: THRESHOLD_OP,
     reason: `Z″=${zScore.toFixed(2)} (${zone}): X1=${X1.toFixed(2)}, X2=${X2.toFixed(2)}, X3=${X3.toFixed(2)}, X4=${X4.toFixed(2)}`,
-    components: { zScore, zone, X1, X2, X3, X4, assets, debtVal, cashVal }
+    components: { zScore, zone, X1, X2, X3, X4, assets, debtVal, cashVal, workingCapital, wcSource }
   });
 }
 
