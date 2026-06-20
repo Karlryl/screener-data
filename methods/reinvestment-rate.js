@@ -135,6 +135,7 @@ function evaluate(stock) {
 
   var ratios = [];
   var rndSkippedYears = 0;
+  var negOcfYears = 0;
   var yearsAvail = Math.min(5, rawCapex.length, rawOcf.length);
   for (var j = 0; j < yearsAvail; j++) {
     // Bug #30 fix: skip years where capex data is missing instead of substituting 0.
@@ -154,7 +155,10 @@ function evaluate(stock) {
     }
     var r = (j < rawRnd.length && Number.isFinite(rawRnd[j])) ? rawRnd[j] : 0;
     var o = rawOcf[j];
-    if (!Number.isFinite(o) || o <= 0) continue;
+    // FC-02 (audit 2026-06-20): count cash-burn years instead of silently dropping them; a missing
+    // (null) OCF year is a data gap, NOT a cash-burn signal, so it is skipped without counting.
+    if (Number.isFinite(o) && o <= 0) { negOcfYears++; continue; }
+    if (!Number.isFinite(o)) continue;
     ratios.push((c + r) / o);
   }
 
@@ -201,6 +205,11 @@ function evaluate(stock) {
     thresholdSource = 'asset-light';
   }
   var pass = med >= effectiveThreshold;
+  // FC-02 (audit 2026-06-20): a reinvestment COMPOUNDER generates operating cash every year.
+  // Silently dropping negative-OCF years let intermittent cash-burners pass on a flattering subset.
+  // Require at most 1 cash-burn year in the lookback; 2+ -> not a consistent compounder -> fail.
+  var ocfConsistent = negOcfYears < 2;
+  if (!ocfConsistent) pass = false;
 
   return H.buildResult({
     computable: true,
@@ -209,6 +218,7 @@ function evaluate(stock) {
     components: {
       median: med, ratios: ratios,
       yearsConsidered: ratios.length,
+      negOcfYears: negOcfYears, ocfConsistent: ocfConsistent,
       capexUsed: true, rndUsed: usedRnD, rndSkippedYears: rndSkippedYears, ocfSource: ocfSource,
       _ocfSource: { reported: ocfReportedCount, synthesized: ocfSynthesizedCount },
       assetLight: assetLight, capexRevMedian: capexRevMed,
