@@ -1,0 +1,217 @@
+{
+  "baselineId": "medtech-v1.3-2026-06-20",
+  "frozenAt": "2026-06-20",
+  "formula": "medtech_devices v1.3 — absolute-anchor (normTableId medtech-norms-2026-06-20) × REL z/MAD, blendScore beta=0.6. Court-DENIED-4:1 DECELERATION remediation: the v1.2 growth axis input was deceleration-blind (pure backward blend 0.6*CAGR+0.4*median inflated decelerating names above their current organic rate and bypassed the gateOpen floor). v1.3 FIX: (I) growthOrganic = min(latestOrganicYoY, blend) — primary axis input can never read above the current organic rate; blend retained only as a secondary backward DURABILITY signal (growthBlend). (II) gateOpen floor (growth>=0.15) evaluated on latestOrganicYoY → INSP (13.6%) drops off the shortlist. (III) deceleration + trailing-window-growth advisory lamps + regression gates. (VI) current-year-only lamp for <2 organic years (GMED). (VII) FY-reconciliation hard-assert. Inherited v1.2: (A SI-5) full-universe, (B) winsorized-growth gate, (C SI-4) Out-class score=null + excluded[], (D) deal-year-exclusion, (F) coverage-null lamp, (G SI-3) comparabilityNote. Konstanten [TODO-CAL]. SaaS/Fabless byte-identical to _parity-baseline-pre-v13.",
+  "source": "outputs/court-results.json :: bucket medtech_devices",
+  "normTableId": "medtech-norms-2026-06-20",
+  "classifiedCount": 61,
+  "scoredCount": 61,
+  "universeSize": 61,
+  "headlineShortlistSize": 7,
+  "normsRecheckNote": "Fix-A re-check vs FULL 61-name universe (organic-winsorized growth / gm / opMargin percentiles): growth floor 0.15 ≈ p72 (target p70-80 ✓), elite 0.29 > p90(0.216) = genuine outlier tier; gm floor 0.55 ≈ p42, elite 0.70 ≈ p82; eff floor 0.08 ≈ p37, elite 0.25 > p90(0.207). Norms remain economically grounded (growth = binding axis, floor in target band) → NOT adjusted; frozen absolute-anchor table kept intact (changing it would needlessly perturb the court-PASSED SI-2 path).",
+  "forwardFitness": {
+    "calendarGated": true,
+    "metric": [
+      "rank_ic_spearman",
+      "top_n_minus_universe_median_fwd_return"
+    ],
+    "horizonsDays": [
+      28,
+      84
+    ],
+    "windowEnds": {
+      "d28": "~2026-07-18",
+      "d84": "~2026-09-12"
+    },
+    "survivorshipKey": "evaluatedTickers",
+    "antiGaming": "gateOpen-Ranking am Ship-Tag (vor jeder weiteren medtech-Änderung) eingefroren. Forward-Fenster = intrinsischer Holdout; Eval erst NACH Kalender-Gate. Erzeugende Agenten dürfen NIE auf dem Eval-Slice tunen. Eine neue medtech-Version gilt nur als „besser\", wenn sie diese Forward-Metrik STRIKT schlägt.",
+    "honestLimitation": "N=7 gateOpen-Namen ist klein — Rank-IC/Kohorten-Spread haben Richtungs-, nicht starke statistische Aussagekraft. Primärer Wert: Pre-Registration-Disziplin + Beitrag zur gepoolten Cross-Formel-Fitness."
+  },
+  "anchors": {
+    "growth": {
+      "median": 0.06845527073729896,
+      "mad": 0.0604154083452316,
+      "n": 61
+    },
+    "gm": {
+      "median": 0.5984,
+      "mad": 0.0937,
+      "n": 61
+    },
+    "opLeverage": {
+      "median": 0.2437,
+      "mad": 0.27269999999999994,
+      "n": 61
+    },
+    "opMargin": {
+      "median": 0.1284,
+      "mad": 0.07300000000000001,
+      "n": 61
+    },
+    "gmTrend": {
+      "median": 0.0032,
+      "mad": 0.019799999999999998,
+      "n": 61
+    },
+    "rdProductivity": {
+      "median": 1.2408,
+      "mad": 0.5915999999999999,
+      "n": 31
+    }
+  },
+  "comparabilityNote": "absKaliber in [0,1] = cross-bucket-comparable absolute scale (normTableId 'medtech-norms-2026-06-20'); the REL/core component is bucket-relative (cross-sectional z/MAD) and NOT cross-bucket comparable. blendScore mixes both (beta=0.6).",
+  "priceAnchorStatus": "CAPTURED — t0-Close je Ticker eingefroren. Forward-Return = close[t0+h]/close[t0]-1.",
+  "ranking": [
+    {
+      "order": 1,
+      "ticker": "PODD",
+      "score": 85.7,
+      "membershipClass": "In",
+      "absKaliber": 0.875,
+      "growthOrganic": 0.2854,
+      "latestOrganicYoY": 0.3073,
+      "growthBlend": 0.2854,
+      "decelerating": false,
+      "currentYearOnly": false,
+      "dealYearExcluded": false,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 2,
+      "ticker": "TMDX",
+      "score": 72.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.694,
+      "growthOrganic": 0.3713,
+      "latestOrganicYoY": 0.3713,
+      "growthBlend": 0.8495,
+      "decelerating": true,
+      "currentYearOnly": false,
+      "dealYearExcluded": false,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 3,
+      "ticker": "ISRG",
+      "score": 62.6,
+      "membershipClass": "In",
+      "absKaliber": 0.545,
+      "growthOrganic": 0.1733,
+      "latestOrganicYoY": 0.2051,
+      "growthBlend": 0.1733,
+      "decelerating": false,
+      "currentYearOnly": false,
+      "dealYearExcluded": false,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 4,
+      "ticker": "BSX",
+      "score": 61.6,
+      "membershipClass": "In",
+      "absKaliber": 0.517,
+      "growthOrganic": 0.1697,
+      "latestOrganicYoY": 0.1987,
+      "growthBlend": 0.1697,
+      "decelerating": false,
+      "currentYearOnly": false,
+      "dealYearExcluded": false,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 5,
+      "ticker": "GMED",
+      "score": 59.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.452,
+      "growthOrganic": 0.1665,
+      "latestOrganicYoY": 0.1665,
+      "growthBlend": 0.1665,
+      "decelerating": false,
+      "currentYearOnly": true,
+      "dealYearExcluded": true,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 6,
+      "ticker": "PEN",
+      "score": 55.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.404,
+      "growthOrganic": 0.175,
+      "latestOrganicYoY": 0.175,
+      "growthBlend": 0.18,
+      "decelerating": true,
+      "currentYearOnly": false,
+      "dealYearExcluded": false,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 7,
+      "ticker": "DXCM",
+      "score": 45.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.291,
+      "growthOrganic": 0.156,
+      "latestOrganicYoY": 0.156,
+      "growthBlend": 0.1645,
+      "decelerating": true,
+      "currentYearOnly": false,
+      "dealYearExcluded": false,
+      "belowAbsoluteFloor": false
+    }
+  ],
+  "evaluatedTickers": [
+    "PODD",
+    "TMDX",
+    "ISRG",
+    "BSX",
+    "GMED",
+    "PEN",
+    "DXCM"
+  ],
+  "priceAnchors": {
+    "PODD": {
+      "date": "2026-06-12",
+      "close": 149.6999969482422
+    },
+    "TMDX": {
+      "date": "2026-06-15",
+      "close": 75.4800033569336
+    },
+    "ISRG": {
+      "date": "2026-06-12",
+      "close": 411.05999755859375
+    },
+    "BSX": {
+      "date": "2026-06-12",
+      "close": 46.90999984741211
+    },
+    "GMED": {
+      "date": "2026-06-15",
+      "close": 77.31999969482422
+    },
+    "PEN": {
+      "date": "2026-06-15",
+      "close": 318.2099914550781
+    },
+    "DXCM": {
+      "date": "2026-06-12",
+      "close": 75.37000274658203
+    },
+    "SPY": {
+      "date": "2026-06-12",
+      "close": 741.75
+    },
+    "QQQ": {
+      "date": "2026-06-15",
+      "close": 744
+    },
+    "IWM": {
+      "date": "2026-06-15",
+      "close": 294.6400146484375
+    },
+    "XLV": null,
+    "IHI": null
+  }
+}

@@ -2648,4 +2648,18 @@ test('fixture-hash: score-aggregator output is stable', () => {
 
 console.log('---------------------------');
 console.log(`Passed: ${passed}, Failed: ${failed}`);
+
+// ─── PINNED-COUNT ASSERTION (Härtung 1, 2026-06-20) ────────────────────────
+// 184 → 174: legitime Entfernung von BUFFETT-Tests, commit 463e9010c, 2026-06-20.
+// Wenn die Anzahl bestandener Tests != 174: laut fehlschlagen.
+// Das sperrt jede künftige stille Test-Addition oder -Entfernung ein.
+const PINNED_PASS = 174;
+if (passed !== PINNED_PASS) {
+  console.error(
+    `\nPINNED-COUNT VIOLATION: tag28 expected ${PINNED_PASS} passing — ` +
+    `BUFFETT removed 2026-06-20 (commit 463e9010c); a different count means a silent add/drop, investigate. ` +
+    `Got: ${passed}`
+  );
+  process.exit(1);
+}
 process.exit(failed > 0 ? 1 : 0);

@@ -14,7 +14,7 @@ priorisierter Verbesserungsplan in `docs/IMPROVEMENT-PLAN-2026-06-10.md`.
 - **Production scorer:** `methods/score-aggregator.js` (`SCORE_WEIGHTS` for HYPERGROWTH / QUALITY_COMPOUNDER / TURNAROUND). Tier taxonomy A / B / NEAR_MISS / REJECT.
 - **Legacy scorer:** `engine-v7.3.js` + `score-orchestrator.js` are deprecated but not deleted (Phase 3 / Phase 5 deferred — see ADR-001 status update). Still invoked by `engine-cli-tests.js` pre-pull guard.
 - **Cron:** daily `'0 2 * * *'` UTC. Wall-clock per run 2.5–4 h. `timeout-minutes: 240`.
-- **Tests:** 184/184 passing (`tag28-tests.js`) at HEAD; includes the fixture-hash invariant guarding aggregator drift. Plus `engine-cli-tests.js` 10/10 and `tests/integration-anchor-test.js` 10/10 anchors.
+- **Tests:** 174/174 passing (`tag28-tests.js`) at HEAD; includes the fixture-hash invariant guarding aggregator drift. Plus `engine-cli-tests.js` 10/10 and `tests/integration-anchor-test.js` 10/10 anchors. (184→174: BUFFETT entfernt, commit 463e9010c, 2026-06-20)
 
 ## Pipeline outputs (HTML)
 

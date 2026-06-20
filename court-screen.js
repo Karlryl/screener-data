@@ -16,6 +16,30 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = __dirname;
+
+// Medtech-Bypass: Industry-Set aus Snapshots aufbauen (keine sector-Info in fundamentals-cache)
+// Dieser Set wird NUR für den asset-light-Gate-Bypass genutzt; die eigentliche Bucket-Klassifikation
+// bleibt in court-buckets.json (deterministisch, SI-5).
+const SNAP_DIR = path.join(ROOT, 'snapshots');
+const MEDTECH_INDUSTRIES = new Set(['Medical Devices', 'Medical Instruments & Supplies']);
+const medtechTickers = new Set();
+const snapMarketCap = new Map(); // ticker -> marketCap.value
+const snapRnD = new Map(); // ticker -> annualRnD array
+if (fs.existsSync(SNAP_DIR)) {
+  for (const f of fs.readdirSync(SNAP_DIR)) {
+    if (!f.endsWith('.json') || /\./.test(f.replace(/\.json$/, ''))) continue;
+    try {
+      const sn = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, f), 'utf8'));
+      const t = (sn.meta && sn.meta.ticker) || f.replace(/\.json$/, '');
+      if (sn.meta && sn.meta.sector === 'Healthcare' && MEDTECH_INDUSTRIES.has(sn.meta.industry)) {
+        medtechTickers.add(t);
+      }
+      if (sn.marketCap && sn.marketCap.value != null) snapMarketCap.set(t, sn.marketCap.value);
+      if (sn.annual && Array.isArray(sn.annual.annualRnD)) snapRnD.set(t, sn.annual.annualRnD.map(v => (v == null ? null : Number(v))).filter(v => v != null && isFinite(v)));
+    } catch {}
+  }
+}
+
 const CACHE = path.join(ROOT, 'fundamentals-cache');
 const OUT = process.env.COURT_CAND_OUT || path.join(ROOT, 'outputs', 'court-candidates.json'); // env-Override für isolierten Test/Verify-Lauf (Re-Court-Auflage)
 
@@ -163,13 +187,62 @@ for (const file of files) {
   if (revA.length < 4) flags.push('short-annual-history');
   if (durWinN < 4) flags.push('thin-durability'); // Durability aus <4 YoY (annual Fallback) — nur Warnung, kein Score-Eingriff
 
+  // Medtech-spezifische Achsen (für alle Ticker; null für Nicht-Medtech/fehlende Daten)
+  // gmTrend: mean(letzte2 GM) - mean(erste2 GM) [aus annualGP/annualRev, newest-first]
+  let gmTrend = null;
+  if (gpA.length >= 4 && revA.length >= 4) {
+    const gm0 = gpA[0] / revA[0], gm1 = gpA[1] / revA[1];
+    const gm2 = gpA[2] / revA[2], gm3 = gpA[3] / revA[3];
+    gmTrend = (gm0 + gm1) / 2 - (gm2 + gm3) / 2;
+  } else if (gpA.length >= 3 && revA.length >= 3) {
+    const gm0 = gpA[0] / revA[0], gm1 = gpA[1] / revA[1], gm2 = gpA[2] / revA[2];
+    gmTrend = (gm0 + gm1) / 2 - ((gm1 + gm2) / 2);
+  } else if (gpA.length >= 2 && revA.length >= 2) {
+    gmTrend = (gpA[0] / revA[0]) - (gpA[1] / revA[1]);
+  }
+  // opLeverage: incremental ΔOpInc/ΔRev (neuestes Paar)
+  let opLeverage = null;
+  if (opA.length >= 2 && revA.length >= 2 && revA[0] !== revA[1]) {
+    const dRev = revA[0] - revA[1];
+    const dOp = opA[0] - opA[1];
+    if (dRev !== 0) opLeverage = dOp / dRev;
+  }
+  // rdProductivity (neutral wenn kein R&D)
+  const rdA = arr(p.ftsAnnual && p.ftsAnnual.annualRnD);
+  const snapRnDArr = snapRnD.get(ticker) || [];
+  const bestRnD = rdA.length > 0 ? rdA : snapRnDArr;
+  const rdProductivity = (growth != null && bestRnD.length > 0 && revA[0] && bestRnD[0] > 0)
+    ? growth / (bestRnD[0] / revA[0]) : null;
+  // marketCap (snapshot bevorzugt für TTM-Aktualität)
+  const marketCapVal = snapMarketCap.get(ticker) || null;
+
   // --- Vorfilter (profitabilitäts-frei) ---
-  if (growth == null || growth < F.minGrowth) continue;
-  if (gm == null || gm < F.minGM) continue;
-  if (scaleRevM < F.minRevM) continue;
-  if (ppeAssets == null || ppeAssets > F.maxPpeAssets) continue;
+  // v1.2 Fix A (SI-5 UNIVERSE FIX): Medtech ist KAPITALINTENSIV von Natur aus. Der asset-light/
+  // ppeAssets-Gate UND die Growth/GM/Scale-Floors haben ~38 von 61 klassifizierten Medtech-Namen
+  // STILL gedroppt (inkl. Large-Caps MDT/SYK/ABT/EW/BDX/ZBH). FINAL DECISION: Medtech wird KOMPLETT
+  // vom asset-light-Gate ausgenommen und ALLE klassifizierten Medtech-Namen werden ins Universum
+  // (cross-sektionale Mediane) + Scoring admittiert — nur milde Daten-Sanity bleibt.
+  // Large-Caps kommen rein (für Perzentil-Anker), fallen aber am Growth-Floor (gateOpen) → NICHT auf
+  // der Shortlist (korrekt). NICHT-Medtech-Pfad bleibt BYTE-IDENTISCH (Parität SaaS/Fabless).
+  const isMedtech = medtechTickers.has(ticker);
+  if (isMedtech) {
+    // Milde Daten-Sanity: growth/gm/rev müssen vorhanden + endlich sein (keine ökonomischen Floors).
+    if (growth == null || !isFinite(growth)) continue;
+    if (gm == null || !isFinite(gm)) continue;
+    // (Scale-Floor, GM-Floor, Growth-Floor, ppeAssets-Gate, MIN-BASE alle ENTFERNT für Medtech —
+    //  der Growth-Floor wirkt jetzt über das gateOpen/membership-Gate in court-score.js, nicht als stiller Drop.)
+  } else {
+    if (growth == null || growth < F.minGrowth) continue;
+    if (gm == null || gm < F.minGM) continue;
+    if (scaleRevM < F.minRevM) continue;
+    if (ppeAssets == null || ppeAssets > F.maxPpeAssets) continue;
+  }
 
   stats.passed++;
+  // v1.2 Fix D: Medtech-only annual revenue YoY series (newest-first) für die DEAL-YEAR-EXCLUSION
+  // Growth-Metrik in court-score.js. Additiv/medtech-only → KEIN Feld auf Nicht-Medtech-Records (Parität).
+  // Index i = YoY[i] (rev[i]/rev[i+1]-1); aligned mit goodwillHistory[i] (beide newest-first annual).
+  const medtechExtra = isMedtech ? { revYoYMedtech: gSeriesA.map(round) } : {};
   candidates.push({
     ticker,
     growth: round(growth), growth_annual: round(gAnnual), growth_q: round(gQ),
@@ -181,6 +254,9 @@ for (const file of files) {
     roicProxy: round(roicProxy),
     nAnnualRev: revA.length, nQRev: revQ.length,
     flags,
+    gmTrend: round(gmTrend), opLeverage: round(opLeverage), rdProductivity: round(rdProductivity),
+    marketCap: marketCapVal,
+    ...medtechExtra,
   });
 }
 

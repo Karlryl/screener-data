@@ -18,6 +18,11 @@
 const fs = require('fs');
 const path = require('path');
 const ROOT = __dirname;
+const { absKaliber, blendScore, gateOpen, normTableId: getNormTableId } = require('./lib/absolute-anchor');
+// Medtech M&A snapshot (advisory lamps; object keyed by ticker)
+const maMedtechRaw = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'ma-rpo-snapshot-medtech.json'), 'utf8')); } catch { return {}; } })();
+// Remove _header key
+const maMedtechByTicker = new Map(Object.entries(maMedtechRaw).filter(([k]) => k !== '_header'));
 const CAND = process.env.COURT_CAND_OUT || path.join(ROOT, 'outputs', 'court-candidates.json');
 const BUCK = path.join(ROOT, 'outputs', 'court-buckets.json');
 const OUT = process.env.COURT_OUT || path.join(ROOT, 'outputs', 'court-results.json'); // env-Override → Test/Verify-Harness schreibt isoliert (Re-Court-Auflage: keine geteilten Outputs racen)
@@ -101,6 +106,33 @@ const FORMULAS = {
     degraded: false,
     a2Note: 'A2 = additive forward-book-DEMAND axis (0.65*credibility(rpoPrior)*s(rpoGrowthYoY) + 0.35*credibility(rpoLatest)*s(rpoToRev)). It rewards a building forward book and refuses to reward a flat one; it BREAKS the flat-book anchor-inversion (GEN: 21% M&A flow + 1.3% RPO growth -> #2 -> #7). It is NOT a standalone organic-vs-inorganic detector: a roll-up whose acquired deferred-revenue book inflates reported RPO (e.g. BRZE) reads as forward demand here; the M&A-flow control remains the SEPARATE inorganicFlag lamp. Continuous base-credibility gates (B0=$50M,B1=$300M) neutralise small-base artefacts (WAY/SDGR) and never punish a small/absent book. CAVEATS [TODO-CAL + disclosed]: GEN ranks below FIG/DUOL/HNGE robustly across wA2 in [0.33,0.50] & GW>=0.57; GEN ranks below DDOG (the weakest cohort member) for wA2>=~0.34 & GW>=~0.61, and is co-ranked with DDOG (within ~0.1-1.2pt) at the wA2<=0.34 / low-GW (0.57-0.64) corner — the ship point GW=0.65,wA2=0.35 sits safely inside the holding region (grid-verified 204/216 cells in wA2[0.33,0.50]xGW[0.57,0.68]; 12 edge-corner co-ranks: 8 at wA2=0.33, 4 at wA2=0.34). below-median RPO-growth yields negative sA2 (cross-sectional relative read, not absolute); names with null rpoPrior (CWAN) escape the growth test (neutral, lamp-only); RPO-concept-heterogeneity — 8/44 substitute DeferredRevenue/ContractWithCustomerLiability for true RemainingPerformanceObligation (understate forward book vs true-RPO reporters; the level-anchor mixes concepts; empirically contained at ship — proxy names land near-neutral — but the load-bearing assumption most likely to break under recalibration/universe-expansion). verified-DESIGN not -instance; forward-fitness calendar-gated ~2026-07-14.',
   },
+  medtech_devices: {
+    label: 'Medtech-Devices v1.3 (absolute-anchor, deceleration-aware organic growth min(latest,blend), deal-year-exclusion, full-universe SI-5)',
+    membership: { g: { c: 0.10, s: 0.05 }, gm: { c: 0.45, s: 0.08 }, scaleLog: { c: log10(300), s: 0.5 } },
+    axes: [
+      { key: 'growth',         name: 'Growth',     k: 2.0, w: 0.45 },
+      { key: 'gm',             name: 'GM-Level',   k: 1.5, w: 0.20 },
+      { key: 'opLeverage',     name: 'OpLeverage', k: 1.0, w: 0.15 },
+      { key: 'opMargin',       name: 'OpMargin',   k: 1.5, w: 0.12 },
+      { key: 'gmTrend',        name: 'GM-Trend',   k: 1.0, w: 0.04 },
+      { key: 'rdProductivity', name: 'RD-Prod',    k: 1.5, w: 0.04 },
+    ],
+    dilCap: 8, dilStart: 0.05, dilRange: 0.20,
+    stages: [
+      { name: 'S3-High-Margin', test: f => f >= 0.20 },
+      { name: 'S2-FCF-positiv', test: f => f >= 0.08 },
+      { name: 'S1-Approaching', test: f => f >= -0.05 },
+      { name: 'S0-Land-Grab',   test: () => true },
+    ],
+    dominantBlock: ['gm', 'opMargin'],
+    degraded: false,
+    normTableId: 'medtech-norms-2026-06-20',
+    // v1.1: M&A-jump-in-window lamp + growthAdj discount + ALMR growth cap [TODO-CAL]
+    // v1.2: deal-year-exclusion replaces magnitude-discount; full-universe SI-5; Out-class score=null
+    // v1.3: DECELERATION-AWARE growth — growthOrganic = min(latestOrganicYoY, 0.6*CAGR+0.4*median blend);
+    //       the blend is a BACKWARD durability view only; gateOpen floor evaluated on latestOrganicYoY.
+    a2Note: 'v1.3 (Court-DENIED-4:1 remediation): the v1.2 medtech GROWTH AXIS INPUT was DECELERATION-BLIND — growthOrganic was the pure backward blend 0.6*CAGR_3y + 0.4*median(trailing organic YoY) on the HEAVIEST axis (growth w=0.45). It INFLATED decelerating names above their current organic rate and SILENTLY BYPASSED the gateOpen floor (growth>=0.15): INSP latest organic YoY 13.6% (<15% floor) read as 30% blend → cleared gate → shortlist #3 with no deal; TMDX latest 37% read as 85% → #2. v1.3 FIX: the medtech growth axis uses growthOrganic = min(latest-organic-YoY, multi-year blend), so a decelerating name can NEVER read above its current organic rate; the multi-year blend (0.6*CAGR+0.4*median over deal-year-excluded organic years) is retained ONLY as a SECONDARY backward DURABILITY signal (persisted growthBlend), never the primary axis input. (II) the hard gateOpen floor (growth>=0.15) is evaluated EXPLICITLY on latestOrganicYoY (the current organic rate), not the blend — so INSP (13.6%) now DROPS off the headlineShortlist. (III) deceleration LAMP when latestOrganicYoY < median(prior organic years); trailing-window-growth advisory lamp when blend diverges from latestOrganicYoY by >~50%. (VI) deal-year-excluded names left with <2 organic years (GMED) get a current-year-only LAMP (the 0.6/0.4 blend did NOT run) and use the single current-year organic YoY explicitly. (VII) FY-reconciliation HARD ASSERT: when a deal-year drop occurs, cache revLatest and SEC annualRevenue must reconcile within 15% or scoring FAILS LOUD (the unlabeled revYoY series and goodwillHistory[].end could otherwise be on different fiscal calendars). Inherited v1.2 fixes: (A SI-5) full-universe (classifiedCount===scoredCount); (B) winsorized organic growth (cap 1.0) → no ALMR 195% leak; (C SI-4) Out-class score=null + excluded[]; (D) deal-year-exclusion (drop YoY of any year whose goodwill jumped >=25% of rev + 1 catch-up year); (F) M&A-coverage-null lamp; (G SI-3) comparabilityNote; (H) baseline frozen. Constants [TODO-CAL]: DEAL_JUMP_THRESH 0.25, W_CAGR 0.6, W_MEDIAN 0.4, CATCH_UP_YEARS 1 [TODO-CAL: widening goodwill/rev history window could retain >=2 organic years for GMED], FY_RECON_TOL 0.15. Additive/parity-safe: SaaS/Fabless byte-identical to _parity-baseline-pre-v13.',
+  },
 };
 
 const WACC = 0.09; // [TODO-CAL] grober Proxy für A4
@@ -155,6 +187,114 @@ function stageOf(formula, fcf) {
   return 'unknown';
 }
 
+// --- v1.3 (Court-DENIED-4:1 remediation): DECELERATION-AWARE organic growth metric (medtech-only) ---
+// v1.2 war Court-DENIED 4:1 wegen eines DECELERATION-BLINDEN Growth-Inputs: growthOrganic war der reine
+// rückwärtsgewandte Blend 0.6*CAGR_3y + 0.4*median(trailing organic YoY). Auf der SCHWERSTEN Achse
+// (Growth w=0.45) hat der Blend dezelerierende Namen ÜBER ihre aktuelle organische Rate INFLATIERT und das
+// gateOpen-Floor (growth>=0.15) STILL UMGANGEN: INSP latest organic YoY 0.136 (<0.15) → Blend 0.2986 → Gate
+// auf → Shortlist; TMDX latest 37% → Blend 85% → #2.
+//
+// v1.3 FATALER FIX (Bedingung I): growthOrganic = min(latestOrganicYoY, blend).
+//   - latestOrganicYoY = die JÜNGSTE deal-bereinigte YoY (kleinster Index, der NICHT vom Deal-Year-Exclusion
+//     gedroppt wurde und endlich ist) = die AKTUELLE organische Rate.
+//   - blend = 0.6*CAGR(verbleibende organische YoY) + 0.4*median(verbleibende organische YoY)
+//     bleibt als SEKUNDÄRES 'durability'-Signal erhalten (result.blend), ist aber NICHT mehr der primäre
+//     Achsen-Input. Durch das min() kann ein dezelerierender Name NIE über seiner aktuellen organischen Rate
+//     gelesen werden → das gateOpen-Floor (Bedingung II) wird auf latestOrganicYoY scharf, weil
+//     growthOrganic=min(latest,blend)<=latest gilt.
+//
+// Deal-Year-Exclusion (aus v1.2 übernommen): wenn das Goodwill in einem Jahr Y um >= 0.25*Revenue gesprungen
+// ist (transformationaler Deal), wird die YoY DIESES Jahres UND des Folgejahres (Catch-up) GEDROPPT.
+// FY-Reconciliation (Bedingung VII): index-basiertes Droppen ist nur sicher, wenn yoySeries (fundamentals-
+// cache, KEINE Periodenlabels) und goodwillHistory (SEC, mit .end) auf derselben Fiskal-Achse liegen. Wir
+// reconcilen über die Revenue-Skala (cache revLatest vs SEC snapAnnualRevenue): divergieren sie um mehr als
+// FY_RECON_TOL, FAILT die Funktion LAUT (kein stilles Droppen des falschen Jahres für einen künftigen Ticker).
+// Alle Konstanten [TODO-CAL]: DEAL_JUMP_THRESH (0.25), w_CAGR (0.6), w_median (0.4), CATCH_UP_YEARS (1).
+const DEAL_JUMP_THRESH = 0.25;   // [TODO-CAL] goodwill-Sprung >= 25% von Revenue = transformationaler Deal-Jahr
+const W_CAGR = 0.6, W_MEDIAN = 0.4; // [TODO-CAL] Blend CAGR_3y vs median(trailing YoY) — jetzt SEKUNDÄR (durability), nicht primär
+const CATCH_UP_YEARS = 1;        // [TODO-CAL] zusätzlich gedroppte Folge-YoY (erstes volles inorganisches Jahr)
+const FY_RECON_TOL = 0.15;       // [TODO-CAL] max |cacheRev/snapRev - 1| bevor index-aligned Drop als unsicher LAUT failt (VII)
+function computeMedtechOrganicGrowth(yoySeries, goodwillHistory, revLatest, fallbackGrowth, opts) {
+  // yoySeries: newest-first YoY-Reihe (rev[i]/rev[i+1]-1). goodwillHistory: [{val,end}] newest-first.
+  // Beide newest-first annual → Index i in yoySeries entspricht goodwill-Sprung goodwillHistory[i] vs [i+1].
+  // opts: { ticker, snapAnnualRev } für die FY-Reconciliation (VII).
+  // Returns { growth (=min(latest,blend)), latestOrganicYoY, blend, organicYears, droppedIdx, dealYearExcluded,
+  //           shortHistory, currentYearOnly, decelerating }.
+  const result = {
+    growth: fallbackGrowth, latestOrganicYoY: null, blend: null, organicYears: 0, droppedIdx: [],
+    dealYearExcluded: false, shortHistory: false, currentYearOnly: false, decelerating: false,
+  };
+  if (!Array.isArray(yoySeries) || yoySeries.length === 0) return result;
+  // Deal-Jahr-Indizes via goodwill-Sprung (nur wenn coverage vorhanden)
+  const dropIdx = new Set();
+  if (Array.isArray(goodwillHistory) && goodwillHistory.length >= 2 && revLatest != null && revLatest > 0) {
+    for (let i = 0; i < goodwillHistory.length - 1; i++) {
+      const newer = goodwillHistory[i] ? goodwillHistory[i].val : null;
+      const older = goodwillHistory[i + 1] ? goodwillHistory[i + 1].val : null;
+      if (newer == null || older == null) continue;
+      const jump = (newer - older) / revLatest;
+      if (jump >= DEAL_JUMP_THRESH) {
+        // goodwill-Sprung [i]->[i+1] (Jahr i) → YoY-Index i ist das Deal-Jahr; +CATCH_UP_YEARS Folge-Jahre (kleinere Indizes = neuer)
+        for (let k = 0; k <= CATCH_UP_YEARS; k++) { const idx = i - k; if (idx >= 0) dropIdx.add(idx); }
+        result.dealYearExcluded = true;
+      }
+    }
+  }
+  // (VII) FY-RECONCILIATION HARD ASSERT: NUR wenn ein Index tatsächlich gedroppt wird (sonst ist eine
+  // FY-Fehlausrichtung harmlos). yoySeries trägt keine Periodenlabels → wir reconcilen über die Revenue-Skala.
+  // Wenn cache-revLatest und SEC-snapAnnualRev um mehr als FY_RECON_TOL divergieren, ist die Index-Ausrichtung
+  // (goodwillHistory[i] vs yoySeries[i]) NICHT verlässlich → LAUT failen statt das falsche Jahr zu droppen.
+  if (dropIdx.size > 0 && opts && opts.snapAnnualRev != null && revLatest != null && opts.snapAnnualRev > 0 && revLatest > 0) {
+    const ratio = revLatest / opts.snapAnnualRev;
+    if (Math.abs(ratio - 1) > FY_RECON_TOL) {
+      throw new Error(
+        `FY-Reconciliation FAILED for ${opts.ticker || '?'}: deal-year exclusion would drop index ` +
+        `${[...dropIdx].join(',')} but cache revLatest (${Math.round(revLatest)}) and SEC annualRevenue ` +
+        `(${Math.round(opts.snapAnnualRev)}) diverge by ${((ratio - 1) * 100).toFixed(1)}% (> ${FY_RECON_TOL * 100}% tol). ` +
+        `goodwillHistory[].end and the (unlabeled) revYoY series are likely on different fiscal calendars — ` +
+        `index-aligned dropping is unsafe. Fix the snapshot/cache alignment before scoring this ticker.`
+      );
+    }
+  }
+  // latestOrganicYoY = jüngste (kleinster Index) NICHT gedroppte endliche YoY = aktuelle organische Rate.
+  let latest = null;
+  for (let i = 0; i < yoySeries.length; i++) {
+    const v = yoySeries[i];
+    if (!dropIdx.has(i) && v != null && isFinite(v)) { latest = v; break; }
+  }
+  result.latestOrganicYoY = latest;
+  const organic = yoySeries.filter((v, i) => !dropIdx.has(i) && v != null && isFinite(v));
+  result.droppedIdx = [...dropIdx];
+  result.organicYears = organic.length;
+  if (organic.length === 0) { result.shortHistory = true; return result; } // keine organischen Jahre → fallback growth
+  const med = median(organic);
+  // blend = 0.6*CAGR(organic) + 0.4*median(organic) — SEKUNDÄRES durability-Signal (nicht mehr primär).
+  let blend;
+  if (organic.length < 2) {
+    // <2 organische Jahre (z.B. GMED nach NuVasive-Exclusion): current-year-only — der Blend lief NICHT
+    // (kein 0.6/0.4-Mittel über >=2 Jahre). blend == latest == der eine organische Wert.
+    result.shortHistory = true;
+    result.currentYearOnly = true;
+    blend = med; // == latest (einziger organischer Wert)
+  } else {
+    // CAGR über die verbleibenden organischen YoY: (Π(1+yoy))^(1/n) - 1 (geometrisches Mittel)
+    const prod = organic.reduce((p, v) => p * (1 + v), 1);
+    const cagr = Math.pow(prod, 1 / organic.length) - 1;
+    blend = W_CAGR * cagr + W_MEDIAN * med;
+  }
+  result.blend = blend;
+  // (I) FATALER FIX: primärer Achsen-Input = min(latestOrganicYoY, blend). Ein dezelerierender Name liest
+  // NIE über seiner aktuellen organischen Rate. (latest kann null sein, wenn alle nicht-gedroppten YoY non-finite
+  // wären — hier nicht möglich, da organic.length>0 ⇒ latest gesetzt. Defensive: dann blend.)
+  result.growth = (latest != null) ? Math.min(latest, blend) : blend;
+  // (III) Deceleration-Flag: aktuelle Rate < median der ÄLTEREN organischen Jahre (prior = organic ohne das jüngste).
+  if (latest != null && organic.length >= 2) {
+    const priorMed = median(organic.slice(1)); // organic ist newest-first über die retained Indizes
+    if (priorMed != null && latest < priorMed) result.decelerating = true;
+  }
+  return result;
+}
+
 const results = {};
 for (const [bucket, F] of Object.entries(FORMULAS)) {
   // Mitglieder + abgeleitete Felder; Winsorize krasse Datenfehler (für robuste Stats)
@@ -175,16 +315,62 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     // Winsorize für Statistik (nicht für Anzeige): kaputte accel/growth begrenzen
     m._growth = c.growth == null ? null : clip(c.growth, -0.9, 5);
     m._accel = c.accel == null ? null : clip(c.accel, -5, 5);
+    // v1.2 Fix E (PARITY FIELD-LEAK FIX): _growthMedtech / _growthMedtechAdj sind MEDTECH-ONLY-
+    // Intermediates und werden NUR im medtech-Zweig (unten) als Member-Felder gesetzt. Sie werden NIE
+    // mehr auf SaaS/Fabless-Member geschrieben → deren persistierte JSON-Bytes bleiben identisch zu den
+    // court-PASSED-Formeln (_parity-baseline-pre-medtech == _parity-baseline-pre-v12 für SaaS/Fabless).
     members.push(m);
   }
-  // Roh-Achswerte für Stats: nutze winsorisierte für growth/accel
-  const rawOf = (m, key) => key === 'growth' ? m._growth : key === 'accel' ? m._accel : m[key];
+  // --- v1.3 (Fix D-evolved + Fix E): Medtech DECELERATION-AWARE organic-growth PRE-PASS ---
+  // Wird VOR den Stats gerechnet, weil die cross-sektionalen Anker (Median/MAD) auf der organischen,
+  // winsorisierten Growth-Metrik beruhen müssen. Alle Intermediates sind MEDTECH-LOKAL (Fix E): sie werden
+  // NUR auf medtech-Membern gesetzt → SaaS/Fabless-Member-JSON bleibt byte-identisch.
+  // v1.3: growthOrganic = min(latestOrganicYoY, blend) (deceleration-aware, Bedingung I) statt nur Blend.
+  if (bucket === 'medtech_devices') {
+    for (const m of members) {
+      const maRecMt = maMedtechByTicker.get(m.ticker);
+      const gwHist = maRecMt ? maRecMt.goodwillHistory : null;
+      const revLatest = m.scaleRevM != null ? m.scaleRevM * 1e6 : null;
+      const snapAnnualRev = maRecMt && maRecMt.annualRevenue != null ? maRecMt.annualRevenue : null; // SEC FY-Rev für VII-Recon
+      const org = computeMedtechOrganicGrowth(m.revYoYMedtech, gwHist, revLatest, m._growth, { ticker: m.ticker, snapAnnualRev });
+      // _growthMedtech = deceleration-aware organische Growth-Metrik = min(latest,blend), DANN winsorisiert auf 1.0
+      // (small-base-Artefakt-Schutz, ALMR). Dies ist der PRIMÄRE Achsen-Input (Stats + Scoring + Gate).
+      const organicWins = org.growth == null ? null : Math.min(org.growth, 1.0);
+      m._growthMedtech = organicWins;
+      m._growthMedtechAdj = organicWins; // Fix D ersetzt den v1.1-Magnitude-Discount → kein separater Adj-Pfad mehr
+      // (II) latestOrganicYoY = aktuelle organische Rate; das gateOpen-Floor (growth>=0.15) wird HIERAUF scharf.
+      m._latestOrganicYoY = org.latestOrganicYoY;
+      m._growthBlend = org.blend; // SEKUNDÄRES durability-Signal (rückwärts), NICHT der Achsen-Input
+      m._organicYears = org.organicYears;
+      m._dealYearExcluded = org.dealYearExcluded;
+      m._shortOrganicHistory = org.shortHistory;
+      m._currentYearOnly = org.currentYearOnly; // (VI) <2 organische Jahre → kein 0.6/0.4-Blend gelaufen
+      m._decelerating = org.decelerating;       // (III) aktuelle Rate < median(prior organic years)
+      m.growthOrganic = org.growth == null ? null : Math.round(org.growth * 10000) / 10000; // persisted für Audit/Anzeige
+      m.latestOrganicYoY = org.latestOrganicYoY == null ? null : Math.round(org.latestOrganicYoY * 10000) / 10000; // persisted
+      m.growthBlend = org.blend == null ? null : Math.round(org.blend * 10000) / 10000; // persisted (durability view)
+    }
+  }
+
+  // Roh-Achswerte für Stats (cross-sectional Median/MAD): nutze winsorisierte Werte
+  // For medtech growth: use _growthMedtech (Fix D organic + winsorize at 1.0) for Stats AND scoring (Fix D
+  // ersetzt den separaten _growthMedtechAdj-Discount-Pfad; beide sind nun identisch = organic-winsorized).
+  const rawOfStats = (m, key) => {
+    if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtech : m._growth;
+    if (key === 'accel') return m._accel;
+    return m[key];
+  };
+  const rawOf = (m, key) => {
+    if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtechAdj : m._growth;
+    if (key === 'accel') return m._accel;
+    return m[key];
+  };
 
   // Cross-sectional Anker (Median) + MAD je Achse über das Bucket-Universum
   const stats = {};
   for (const ax of F.axes) {
     if (ax.key === 'a2Forward') continue; // composite axis -> anchors computed separately (statsA2)
-    const vals = members.map(m => rawOf(m, ax.key)).filter(v => v != null && isFinite(v));
+    const vals = members.map(m => rawOfStats(m, ax.key)).filter(v => v != null && isFinite(v));
     stats[ax.key] = { median: median(vals), mad: mad(vals), n: vals.length };
   }
   // A2 forward-book cross-sectional anchors (only when the bucket has the a2Forward axis)
@@ -197,7 +383,11 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
   // Score je Mitglied
   for (const m of members) {
     // Membership-Gate
-    const mg = logistic(m.growth, F.membership.g.c, F.membership.g.s);
+    // v1.2 Fix B (ALMR LEAK FIX): Für MEDTECH nutzt das Membership-Growth-Gate die WINSORISIERTE/organische
+    // Growth (_growthMedtech, cap 1.0) statt RAW growth — sonst leakt ALMR mit RAW 195% trotz $74M-Mini-Scale
+    // einen hohen Gate-Wert. Nicht-Medtech: unverändert RAW m.growth (Parität SaaS/Fabless).
+    const mGate = (bucket === 'medtech_devices' && m._growthMedtech != null) ? m._growthMedtech : m.growth;
+    const mg = logistic(mGate, F.membership.g.c, F.membership.g.s);
     const mGM = logistic(m.gm, F.membership.gm.c, F.membership.gm.s);
     const mSc = logistic(log10(Math.max(m.scaleRevM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
     const M = mg * mGM * mSc;
@@ -218,8 +408,27 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     const pDil = clip(((m.sbcPct == null ? 0 : m.sbcPct) - F.dilStart) / F.dilRange, 0, 1) * F.dilCap;
     const pAuth = 0; // keine M&A-Daten lokal
     m.pDil = Math.round(pDil * 10) / 10;
-    m.score = Math.max(0, 100 * core - pDil - pAuth);
-    m.score = Math.round(m.score * 10) / 10;
+    if (bucket === 'medtech_devices') {
+      // Fix B: absKaliber nutzt die WINSORISIERTE/deceleration-aware organische Growth (_growthMedtech = min(latest,blend),
+      // cap 1.0), NICHT die RAW growth — sonst öffnet ALMR mit RAW 195% das Gate trotz Mini-Scale.
+      const gAbs = m._growthMedtech != null ? m._growthMedtech : (m.growth || 0); // Score-Achse: deceleration-aware min()
+      // (II) gateOpen-FLOOR scharf auf der AKTUELLEN organischen Rate (latestOrganicYoY), NICHT auf dem
+      // rückwärtsgewandten Blend. Da growthOrganic=min(latest,blend)<=latest gilt, ist das Gate auf _growthMedtech
+      // bereits floor-safe — wir machen es hier aber EXPLIZIT: das harte Floor (growth>=0.15) liest die aktuelle Rate.
+      // Fallback auf _growthMedtech, falls latestOrganicYoY null (keine organische YoY vorhanden).
+      const gGateFloor = m._latestOrganicYoY != null ? m._latestOrganicYoY : gAbs;
+      const absK = absKaliber({ growth: gAbs, gm: m.gm, opMargin: m.opMargin }, 'medtech_devices', { growth: 0.45, gm: 0.30, eff: 0.25 });
+      m.absKaliber = Math.round(absK * 1000) / 1000;
+      const rawScore = Math.round(Math.max(0, blendScore(absK, core, 0.6) - pDil) * 10) / 10;
+      m.belowAbsoluteFloor = !gateOpen({ growth: gGateFloor, gm: m.gm || 0, opMargin: m.opMargin || 0, fcfMargin: m.fcfMargin || 0 }, 'medtech_devices');
+      // Fix C (SI-4): Out-Class-Namen bekommen score=null (kein irreführender Rang im Headline).
+      //   gateOpen=true UND membership!='Out' → headlineShortlist (Fix B: Out-Class kann NIE Shortlist sein).
+      //   belowAbsoluteFloor (gate zu, membership ok) bleibt gelistet, geflaggt, NICHT auf der Shortlist.
+      m.score = m.membershipClass === 'Out' ? null : rawScore;
+      m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
+    } else {
+      m.score = Math.round(Math.max(0, 100 * core - pDil - pAuth) * 10) / 10;
+    }
     m.stage = stageOf(F, m.fcfMargin);
 
     // Lampen
@@ -239,6 +448,56 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     L.push('P_auth=no-data');
     if (F.degraded) L.push('A2-missing-degraded');
     if (m.conf === 'low') L.push('class-low-conf');
+    // Medtech M&A lamps (advisory, STOCK+FLOW+JUMP+COVERAGE)
+    if (bucket === 'medtech_devices') {
+      const maRec = maMedtechByTicker.get(m.ticker);
+      if (maRec) {
+        const rev = m.scaleRevM * 1e6;
+        const goodwillToRev = (maRec.goodwillLatest != null && rev > 0) ? maRec.goodwillLatest / rev : null;
+        m.goodwillToRev = goodwillToRev != null ? Math.round(goodwillToRev * 1000) / 1000 : null;
+        // Fix F (COVERAGE-NULL LAMP): goodwill=null darf NICHT still als „kein M&A" durchgehen — explizit flaggen.
+        if (maRec.goodwillLatest == null) L.push('M&A-coverage-null');
+        if (maRec.deltaGoodwillPctRev != null && maRec.deltaGoodwillPctRev >= 0.05) L.push('M&A-inorganic-flow');
+        if (goodwillToRev != null && goodwillToRev >= 0.80) L.push('M&A-built-stock');
+        // M&A-jump-in-window LAMP (advisory) bleibt: 3-Jahr-Goodwill-Sprung >=25% von Rev.
+        // Fix D: KEIN Magnitude-Discount mehr — stattdessen deal-year-exclusion (siehe growthOrganic/dealYearExcluded).
+        const maxJump = maRec.maxGoodwillJumpPctRev;
+        if (maxJump != null && maxJump >= 0.25) {
+          L.push(`M&A-jump-in-window(maxJump${pct(maxJump).trim()},deal-yr-excluded${m._dealYearExcluded ? '=yes' : '=no'})`);
+          m.maxGoodwillJumpPctRev = Math.round(maxJump * 1000) / 1000;
+        }
+      } else {
+        // Kein Snapshot-Row für diesen Ticker → ebenfalls coverage-null (Daten fehlen sichtbar, nicht still 'no M&A').
+        L.push('M&A-coverage-null');
+      }
+      // (VI) <2 organische Jahre nach Deal-Year-Exclusion: 'current-year-only' (NICHT 'short-organic-history',
+      // das implizierte fälschlich, der 0.6/0.4-Blend sei über >=2 Jahre gelaufen). Der single current-year
+      // organic YoY wird explizit als growthOrganic genutzt (growthOrganic == latestOrganicYoY == growthBlend).
+      if (m._currentYearOnly) {
+        L.push(`current-year-only(single-organic-yr,growthOrganic=${pct(m.growthOrganic).trim()})`);
+      } else if (m._shortOrganicHistory) {
+        // shortHistory ohne currentYearOnly = 0 organische Jahre (alle gedroppt) → fallback-growth.
+        L.push('short-organic-history(deal-year-excluded,no-organic-yr)');
+      }
+      // (III) Deceleration-LAMP: aktuelle organische Rate < median der älteren organischen Jahre.
+      if (m._decelerating) {
+        L.push(`decelerating(latest${pct(m.latestOrganicYoY).trim()}<prior-median)`);
+      }
+      // (V) trailing-window-growth ADVISORY: Blend (rückwärts durability) divergiert > ~50% von der aktuellen Rate.
+      // |blend/latest - 1| > 0.5 (oder absolut > 0.5, falls latest ~0). Offenlegung, dass headline X% != blend Y%.
+      if (m._latestOrganicYoY != null && m._growthBlend != null) {
+        const lat = m._latestOrganicYoY, bl = m._growthBlend;
+        const diverges = (Math.abs(lat) > 1e-9)
+          ? Math.abs(bl / lat - 1) > 0.5
+          : Math.abs(bl - lat) > 0.5;
+        if (diverges) L.push(`trailing-window-growth(headline${pct(lat).trim()} vs blend${pct(bl).trim()})`);
+      }
+      if (m.nAnnualRev != null && m.nAnnualRev < 3) L.push('short-history');
+      if (m.rdProductivity == null) L.push('rd-missing');
+      if (m.belowAbsoluteFloor) L.push('below-abs-floor');
+      if (m.membershipClass === 'Out') L.push('membership-Out(excluded-from-headline)'); // Fix C disclosure
+      m.normTableId = getNormTableId('medtech_devices');
+    }
     m.lamps = L;
     if (_ioFlag === 'inorganic') {
       m.degradedRankBias = `upward — A1 headline growth is M&A-flow-heavy (recent acquisition cash ${pct(_ioRec.paymentsToRev).trim()} of rev, goodwill +${pct(_ioRec.deltaGoodwillPctRev).trim()}) while forward book is flat (rpoGrowth ${pct(_ioRec.rpoGrowthYoY).trim()}); degraded-mode rank over-states growth quality pending an A2/organic-growth axis.`;
@@ -279,9 +538,21 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     }
   }
 
-  members.sort((a, b) => b.score - a.score);
-  results[bucket] = {
+  // Null-sicherer Sort (Fix C): Out-Class-Member (medtech) haben score=null → ans Ende sortiert.
+  // PARITÄT: Für SaaS/Fabless ist score NIE null → der Vergleich verhält sich identisch zum alten
+  // `b.score - a.score`; der Ticker-Tiebreak greift nur bei exakten Score-Gleichständen, die im
+  // court-PASSED-Baseline-Run nicht auftreten (verifiziert per byte-parity test). Medtech-only Verhalten.
+  if (bucket === 'medtech_devices') {
+    const scoreKey = m => (m.score == null ? -Infinity : m.score);
+    members.sort((a, b) => scoreKey(b) - scoreKey(a) || a.ticker.localeCompare(b.ticker));
+  } else {
+    members.sort((a, b) => b.score - a.score); // unverändert (Parität)
+  }
+
+  // Basis-Result (byte-identisch zur court-PASSED-Form für SaaS/Fabless).
+  const R = {
     label: F.label, degraded: F.degraded, degradedNote: F.degradedNote || null, a2Note: F.a2Note || null,
+    normTableId: F.normTableId || null,
     universeSize: members.length,
     anchors: stats, anchorsA2: statsA2,
     collapseSpearman: collapse == null ? null : Math.round(collapse * 100) / 100,
@@ -289,35 +560,55 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     collapseReweight,
     members,
   };
+  // Medtech-only Zusatzfelder (Fix A/C/G) — NUR auf dem medtech-Bucket, damit SaaS/Fabless-JSON byte-identisch bleibt.
+  if (bucket === 'medtech_devices') {
+    // Fix A (SI-5): classifiedCount vs scoredCount → stille Drops werden laut (Test failt bei Mismatch).
+    R.classifiedCount = cls.filter(c => c.bucket === bucket).length;
+    R.scoredCount = members.length;
+    // Fix G (SI-3 NOTE): absKaliber cross-bucket-comparable; REL ist bucket-relativ.
+    R.comparabilityNote = `absKaliber in [0,1] = cross-bucket-comparable absolute scale (normTableId '${getNormTableId('medtech_devices')}'); the REL/core component is bucket-relative (cross-sectional z/MAD) and NOT cross-bucket comparable. blendScore mixes both (beta=0.6).`;
+    // Fix C (SI-4): excluded[] = Out-Class-Namen, getrennt von den ranked headline members.
+    R.excluded = members.filter(m => m.membershipClass === 'Out');
+  }
+  results[bucket] = R;
 }
 
-fs.writeFileSync(OUT, JSON.stringify(results, null, 2));
-
-// --- Ausgabe ---
-for (const [bucket, R] of Object.entries(results)) {
-  console.log('\n' + '='.repeat(90));
-  console.log(`### ${R.label}`);
-  console.log(`Universum: ${R.universeSize} Namen | Kollaps-Detektor Spearman(Score, Quality-Block) = ${R.collapseSpearman}`);
-  if (R.degraded) console.log(`⚠ DEGRADIERT: ${R.degradedNote}`);
-  const F = FORMULAS[bucket];
-  // MEMBERSHIP-GATE greift jetzt: nur In + Borderline sind rankbare Picks; Out separat gelistet.
-  const ranked = R.members.filter(m => m.membershipClass !== 'Out');
-  const outClass = R.members.filter(m => m.membershipClass === 'Out').sort((a, b) => b.score - a.score);
-  for (const st of F.stages) {
-    const inStage = ranked.filter(m => m.stage === st.name);
-    if (!inStage.length) continue;
-    console.log(`\n  --- Stage: ${st.name} (${inStage.length}, membership-gated) ---`);
-    console.log('  TICKER  Score  Memb(cls)   g     gm    fcf   SBC%  Pdil  ' + F.axes.map(a => a.name).join(' ') + '  Lampen');
-    for (const m of inStage.slice(0, 10)) {
-      const axes = F.axes.map(a => String(m.axisS[a.name]).padStart(5)).join(' ');
-      console.log(`  ${m.ticker.padEnd(7)} ${String(m.score).padStart(5)}  ${String(m.membership).padStart(4)}(${m.membershipClass[0]})  ${pct(m.growth)} ${pct(m.gm)} ${pct(m.fcfMargin)} ${pct(m.sbcPct)} ${String(m.pDil).padStart(4)}  ${axes}  ${m.lamps.join(',')}`);
-    }
-  }
-  if (outClass.length) {
-    console.log(`\n  --- Out-Klasse (Membership-Gate ausgeschlossen, ${outClass.length}) ---`);
-    console.log('  ' + outClass.map(m => `${m.ticker}(${m.membership}, score ${m.score})`).join(' · '));
-  }
-  console.log(`  [removed pre-score (skeptiker-kill): ${[...KILL].join(', ')}]`);
-}
 function pct(x) { return (x == null ? '—' : (x * 100).toFixed(0) + '%').padStart(5); }
-console.log(`\n-> ${OUT}`);
+
+// --- Export: computeMedtechOrganicGrowth für Unit-Tests (Härtung 2, 2026-06-20) ---
+module.exports = { computeMedtechOrganicGrowth };
+
+// --- require.main-Guard (Härtung 2): Write + Ausgabe NUR wenn direkt als Skript ausgeführt ---
+// `require('./court-score.js')` gibt nur den Export zurück und schreibt NICHT outputs/court-results.json.
+// `node court-score.js` schreibt und gibt aus (unverändert).
+if (require.main === module) {
+  fs.writeFileSync(OUT, JSON.stringify(results, null, 2));
+
+  // --- Ausgabe ---
+  for (const [bucket, R] of Object.entries(results)) {
+    console.log('\n' + '='.repeat(90));
+    console.log(`### ${R.label}`);
+    console.log(`Universum: ${R.universeSize} Namen | Kollaps-Detektor Spearman(Score, Quality-Block) = ${R.collapseSpearman}`);
+    if (R.degraded) console.log(`⚠ DEGRADIERT: ${R.degradedNote}`);
+    const F = FORMULAS[bucket];
+    // MEMBERSHIP-GATE greift jetzt: nur In + Borderline sind rankbare Picks; Out separat gelistet.
+    const ranked = R.members.filter(m => m.membershipClass !== 'Out');
+    const outClass = R.members.filter(m => m.membershipClass === 'Out').sort((a, b) => (b.score == null ? -Infinity : b.score) - (a.score == null ? -Infinity : a.score));
+    for (const st of F.stages) {
+      const inStage = ranked.filter(m => m.stage === st.name);
+      if (!inStage.length) continue;
+      console.log(`\n  --- Stage: ${st.name} (${inStage.length}, membership-gated) ---`);
+      console.log('  TICKER  Score  Memb(cls)   g     gm    fcf   SBC%  Pdil  ' + F.axes.map(a => a.name).join(' ') + '  Lampen');
+      for (const m of inStage.slice(0, 10)) {
+        const axes = F.axes.map(a => String(m.axisS[a.name]).padStart(5)).join(' ');
+        console.log(`  ${m.ticker.padEnd(7)} ${String(m.score).padStart(5)}  ${String(m.membership).padStart(4)}(${m.membershipClass[0]})  ${pct(m.growth)} ${pct(m.gm)} ${pct(m.fcfMargin)} ${pct(m.sbcPct)} ${String(m.pDil).padStart(4)}  ${axes}  ${m.lamps.join(',')}`);
+      }
+    }
+    if (outClass.length) {
+      console.log(`\n  --- Out-Klasse (Membership-Gate ausgeschlossen, ${outClass.length}) ---`);
+      console.log('  ' + outClass.map(m => `${m.ticker}(${m.membership}, score ${m.score})`).join(' · '));
+    }
+    console.log(`  [removed pre-score (skeptiker-kill): ${[...KILL].join(', ')}]`);
+  }
+  console.log(`\n-> ${OUT}`);
+}
