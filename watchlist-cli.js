@@ -53,6 +53,9 @@ function cmdAdd(ticker, opts) {
     yahoo_symbol: opts.yahoo || ticker,
     name: opts.name || ticker,
     track_hint: opts.track || 'A',
+    // audit F-A-2026-06-21: record add-time so prune-watchlist's no-snapshot grace
+    // period (it reads entry.added_at) can actually fire for CLI-added tickers.
+    added_at: new Date().toISOString(),
   };
   wl.stocks.push(stock);
   save(wl);

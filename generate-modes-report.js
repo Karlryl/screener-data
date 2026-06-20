@@ -51,7 +51,7 @@ function parseArgs(argv) {
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--snapshots' && argv[i+1]) args.snapshots = argv[++i];
     else if (argv[i] === '--out' && argv[i+1]) args.out = argv[++i];
-    else if (argv[i] === '--top' && argv[i+1]) args.topN = parseInt(argv[++i]);
+    else if (argv[i] === '--top' && argv[i+1]) { const n = parseInt(argv[++i], 10); if (Number.isFinite(n) && n > 0) args.topN = n; } // audit F-A-2026-06-21: guard NaN/radix so a bad --top can't empty the report
   }
   return args;
 }

@@ -24,7 +24,7 @@ const EXCHANGES = {
   'AX': '.AX',  // Australia (ASX)
   'KS': '.KS',  // Korea Exchange
   'TW': '.TW',  // Taiwan (TWSE)
-  'SP': '.SI',  // Singapore (Yahoo uses .SI)
+  'SI': '.SI',  // Singapore — Finnhub exchange code is SI (not SP); Yahoo suffix .SI. (audit F-A-2026-06-21)
   'SW': '.SW',  // Switzerland (SIX)
   'OL': '.OL',  // Oslo (Oslo Bors)
   'CO': '.CO',  // Copenhagen
