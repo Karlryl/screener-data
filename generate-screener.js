@@ -328,6 +328,10 @@ function buildRow(stock) {
   const hgTier = modeEvals.HYPERGROWTH ? modeEvals.HYPERGROWTH.tier : null;
   const qcScore = modeEvals.QUALITY_COMPOUNDER && Number.isFinite(modeEvals.QUALITY_COMPOUNDER.score) ? modeEvals.QUALITY_COMPOUNDER.score : null;
   const qcTier = modeEvals.QUALITY_COMPOUNDER ? modeEvals.QUALITY_COMPOUNDER.tier : null;
+  // CC-01 (audit 2026-06-20): flatten the MUST-gate result so classifyTabs can require a pick to
+  // actually PASS its mode's musts, not merely clear the score tier on saturated passing methods.
+  const hgPassed = !!(modeEvals.HYPERGROWTH && modeEvals.HYPERGROWTH.passed);
+  const qcPassed = !!(modeEvals.QUALITY_COMPOUNDER && modeEvals.QUALITY_COMPOUNDER.passed);
   // Tag 232g: Buffett mode (14-point composite + Owner-Earnings + DCF MoS).
   // bfScore is the score-aggregator output; bfPassed is true only when all 3
   // MUST methods pass — Buffett mode is intentionally strict (10y history,
@@ -472,6 +476,7 @@ function buildRow(stock) {
     hgClass: hgClassName,
     hgScore, hgTier,
     qcScore, qcTier,
+    hgPassed, qcPassed,
     bfScore, bfTier, bfPassed,
     pbScore,
     gmaTrend, gmaChange,
@@ -665,8 +670,11 @@ function classifyTabs(rows) {
     const dqBlockedFromQuality = r.dqGrade === 'C';
 
     // HG: real-hypergrowth class + score available
-    if (r.hgClass && (r.hgClass === 'REAL_HYPERGROWTH_ACCELERATING' || r.hgClass === 'REAL_HYPERGROWTH_BUT_LOSSY')
-        && Number.isFinite(r.hgScore) && !dqBlockedFromQuality) {
+    // CC-01 (audit 2026-06-20): a pick must also PASS the HG MUST-gate (r.hgPassed), not just clear
+    // the class/score on saturated passing methods. must-failing-but-high-scoring names go to WATCH.
+    const hgWouldPick = !!(r.hgClass && (r.hgClass === 'REAL_HYPERGROWTH_ACCELERATING' || r.hgClass === 'REAL_HYPERGROWTH_BUT_LOSSY')
+        && Number.isFinite(r.hgScore) && !dqBlockedFromQuality);
+    if (hgWouldPick && r.hgPassed) {
       tabs.HG.push(r);
     }
     // QC: tier !== REJECT, score available, ≥3y history, grade ≥ B,
@@ -680,8 +688,10 @@ function classifyTabs(rows) {
     //     Stocks with null growth (data gap) stay eligible — better to
     //     show with a missing-data flag than silently exclude.
     const qcGrowthFloorOK = (r.growth == null) || (r.growth >= 0);
-    if (Number.isFinite(r.qcScore) && r.qcTier && r.qcTier !== 'REJECT'
-        && qcEligibleByAge && !dqBlockedFromQuality && qcGrowthFloorOK) {
+    // CC-01: enforce the QC MUST-gate (r.qcPassed), not tier alone.
+    const qcWouldPick = !!(Number.isFinite(r.qcScore) && r.qcTier && r.qcTier !== 'REJECT'
+        && qcEligibleByAge && !dqBlockedFromQuality && qcGrowthFloorOK);
+    if (qcWouldPick && r.qcPassed) {
       tabs.QC.push(r);
     }
     // Tag 232g: BUFFETT tab — value-compounder filter (14-point composite +
@@ -762,8 +772,10 @@ function classifyTabs(rows) {
         && Number.isFinite(r.grossMargin) && r.grossMargin > 0 && !dqBlockedFromQuality) {
       tabs.PRE_BREAKOUT.push(r);
     }
-    // WATCH: NEAR_MISS tier in HG, QC, or BUFFETT
-    if (r.hgTier === 'NEAR_MISS' || r.qcTier === 'NEAR_MISS' || r.bfTier === 'NEAR_MISS') {
+    // WATCH: NEAR_MISS tier in HG/QC, OR a would-be HG/QC pick that FAILS its MUST-gate
+    // (CC-01: must-failing high-scorers land here instead of silently vanishing from the dashboard).
+    if (r.hgTier === 'NEAR_MISS' || r.qcTier === 'NEAR_MISS'
+        || (hgWouldPick && !r.hgPassed) || (qcWouldPick && !r.qcPassed)) {
       tabs.WATCH.push(r);
     }
   }
