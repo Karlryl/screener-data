@@ -19,7 +19,7 @@ const fs = require('fs');
 const path = require('path');
 const ROOT = __dirname;
 const CAND = process.env.COURT_CAND_OUT || path.join(ROOT, 'outputs', 'court-candidates.json');
-const BUCK = path.join(ROOT, 'outputs', 'court-buckets.json');
+const BUCK = process.env.COURT_BUCK || path.join(ROOT, 'outputs', 'court-buckets.json'); // audit F-A-2026-06-21: env-Override (mirror COURT_CAND_OUT/COURT_OUT) → Test-Harness erzeugt deterministische Buckets im isolierten Temp-Dir; ohne ihn lehnte der Gate auf einem undeklarierten, von keinem Skript erzeugten Shared-Artefakt
 const OUT = process.env.COURT_OUT || path.join(ROOT, 'outputs', 'court-results.json'); // env-Override → Test/Verify-Harness schreibt isoliert (Re-Court-Auflage: keine geteilten Outputs racen)
 
 const median = xs => { const s = xs.filter(v => v != null && isFinite(v)).sort((a, b) => a - b); if (!s.length) return null; const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
@@ -128,7 +128,17 @@ function computeA2Forward(rec, sA2stats) {
 const readJson = p => JSON.parse(fs.readFileSync(p, 'utf8').replace(/^﻿/, ''));
 const candDoc = readJson(CAND);
 const byTicker = new Map(candDoc.candidates.map(c => [c.ticker, c]));
-const buckDoc = readJson(BUCK);
+// audit F-A-2026-06-21: fail loudly with a named error instead of a raw ENOENT — court-buckets.json
+// has no producer script in the repo, so a missing file must point the operator at the classification workflow.
+let buckDoc;
+try {
+  buckDoc = readJson(BUCK);
+} catch (e) {
+  if (e && e.code === 'ENOENT') {
+    throw new Error(`court-buckets.json missing — run classification workflow first (expected at ${BUCK}; set COURT_BUCK to override)`);
+  }
+  throw e;
+}
 const cls = Array.isArray(buckDoc) ? buckDoc : (buckDoc.classifications || []);
 const bucketOf = new Map(cls.map(c => [c.t, c.bucket]));
 const confOf = new Map(cls.map(c => [c.t, c.confidence]));

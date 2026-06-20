@@ -15,7 +15,9 @@ const fs   = require('fs');
 const path = require('path');
 
 const wf = require('../scripts/walk-forward-perf.js');
-const { buildPriceIndex, addDaysIso, maxPriceDate, businessDaysSince } = wf;
+// audit F-A-2026-06-21: import getEntryDate so measure mirrors walk-forward's
+// pre-close next-day shift — prevents same-day look-ahead (F-BT-001/F-BT-007).
+const { buildPriceIndex, addDaysIso, maxPriceDate, businessDaysSince, getEntryDate } = wf;
 
 const { classify, resolveWindow } = require('./lib/forward-returns.js');
 const { rankIC, cohortSpread, hitRate, quintileMonotonicity } = require('./lib/metrics.js');
@@ -77,7 +79,17 @@ function main() {
 
   // 4. Reference timestamps
   const frozenAt   = baseline.frozenAt; // e.g. "2026-06-16"
-  const t0Iso      = frozenAt + 'T00:00:00Z';
+  // audit F-A-2026-06-21: prevents same-day look-ahead — mirror walk-forward
+  // getEntryDate pre-close shift. Prefer the vintage's full asOf timestamp when
+  // present (so a real post-close snapshot keeps the same day and a pre-close one
+  // defers to the next day); fall back to frozenAt (date-only). For a date-only
+  // value getEntryDate sees 00:00:00Z (< 21:00 close) and conservatively defers
+  // entry to the next calendar day, never anchoring on the same intraday move the
+  // screener couldn't have transacted at. The benchmark's nearestTradingDay then
+  // snaps this to the canonical entry trading day downstream in resolveWindow.
+  const asOfRaw    = baseline.asOf || frozenAt;
+  const entryAnchor = getEntryDate(asOfRaw); // YYYY-MM-DD, post pre-close shift
+  const t0Iso      = entryAnchor + 'T00:00:00Z';
   const newestPrice = maxPriceDate(history);
   const dataFreshnessBusinessDays = businessDaysSince(newestPrice, frozenAt);
 
@@ -86,7 +98,11 @@ function main() {
   const horizonResults = {};
 
   for (const horizon of horizons) {
-    const exitTarget = addDaysIso(frozenAt, horizon);
+    // audit F-A-2026-06-21: anchor the exit window on the look-ahead-safe entry
+    // anchor (post getEntryDate shift), not the raw frozenAt — keeps the pending
+    // staleness check and the reported neededThrough consistent with the entry
+    // date actually fed into resolveWindow, preventing same-day look-ahead.
+    const exitTarget = addDaysIso(entryAnchor, horizon);
 
     // Check staleness first
     if (isHorizonPending(newestPrice, t0Iso, horizon, addDaysIso)) {

@@ -1849,6 +1849,13 @@ test('Tag 212b Rev-Quality (QoQ CoV): NOT-COMPUTABLE with <8 quarters', () => {
 const inst13fModule = require('./methods/institutional-ownership-13f.js');
 const fs = require('fs');
 const path = require('path');
+// audit F-A-2026-06-21: route 13F-cache writes through the same tmp+rename
+// helper the production pullers use (lib/atomic-write.js → walk-forward-perf.js:24)
+// so an interrupted write (SIGKILL / CI timeout) can't truncate the real 85KB
+// external-data/sec-13f-by-ticker.json. The method reads this exact hardcoded
+// path, so the round-trip must stay on-disk; making the write atomic is the
+// in-scope mitigation. Prevents: non-atomic-write-truncates-production-cache.
+const { writeFileAtomic } = require('./lib/atomic-write.js');
 const CACHE_PATH_13F = path.join(__dirname, 'external-data', 'sec-13f-by-ticker.json');
 
 // Snapshot the on-disk cache contents so we can mutate around each test.
@@ -1858,7 +1865,11 @@ function _readCacheRaw() {
 function _writeCacheRaw(s) {
   if (s == null) { try { fs.unlinkSync(CACHE_PATH_13F); } catch (e) {} return; }
   fs.mkdirSync(path.dirname(CACHE_PATH_13F), { recursive: true });
-  fs.writeFileSync(CACHE_PATH_13F, s);
+  // audit F-A-2026-06-21: atomic tmp+rename instead of raw writeFileSync — a
+  // crash mid-write now leaves the original cache intact, and _restoreCache's
+  // write of the snapshot is likewise crash-safe. Prevents:
+  // partial-write-leaves-truncated-real-cache-on-process-kill.
+  writeFileAtomic(CACHE_PATH_13F, s);
 }
 function _stubCache(obj) {
   _writeCacheRaw(JSON.stringify(obj));

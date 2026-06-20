@@ -372,7 +372,10 @@ async function main() {
         rpoLatest = (cr ? cr.val : 0) + (nr ? nr.val : 0);
         const crP = pickPriorAnnual(ccCurrUnits);
         const nrP = pickPriorAnnual(ccNonUnits);
-        rpoPrior = ((crP || nrP)) ? ((crP ? crP.val : 0) + (nrP ? nrP.val : 0)) : null;
+        // audit F-A-2026-06-21: prevents phantom YoY from asymmetric Curr/Noncurr coverage —
+        // only compute prior from the SAME components used in rpoLatest; null if any are missing.
+        rpoPrior = ((!cr || crP) && (!nr || nrP))
+          ? ((cr ? crP.val : 0) + (nr ? nrP.val : 0)) : null;
         rpoConcept = 'ContractWithCustomerLiability(Curr+Noncurr)';
       }
     }
@@ -403,7 +406,10 @@ async function main() {
         rpoLatest = (cr ? cr.val : 0) + (nr ? nr.val : 0);
         const crP = pickPriorAnnual(drCurrUnits);
         const nrP = pickPriorAnnual(drNonUnits);
-        rpoPrior = ((crP || nrP)) ? ((crP ? crP.val : 0) + (nrP ? nrP.val : 0)) : null;
+        // audit F-A-2026-06-21: prevents phantom YoY from asymmetric Curr/Noncurr coverage —
+        // only compute prior from the SAME components used in rpoLatest; null if any are missing.
+        rpoPrior = ((!cr || crP) && (!nr || nrP))
+          ? ((cr ? crP.val : 0) + (nr ? nrP.val : 0)) : null;
         rpoConcept = 'DeferredRevenue(Curr+Noncurr)';
       }
     }

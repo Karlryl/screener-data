@@ -65,7 +65,10 @@ function tierAtLeast(actual, min) {
 function evaluateAnchor(ticker, exp) {
   const fp = path.join(SNAP_DIR, ticker + '.json');
   if (!fs.existsSync(fp)) {
-    return { ticker, status: 'SKIP', reason: 'snapshot-missing', modes: [] };
+    // audit F-A-2026-06-21: carry expectedMinTier on the SKIP path too — the render
+    // does r.expectedMinTier.padEnd(...) unconditionally and crashed when an anchor
+    // snapshot was missing in a fresh checkout. Prevents: skip-path-undefined-field-crash.
+    return { ticker, status: 'SKIP', reason: 'snapshot-missing', expectedMinTier: exp.tierMin, modes: [] };
   }
   const stock = JSON.parse(fs.readFileSync(fp, 'utf8'));
   const allResults = Runner.evaluateStock(stock);

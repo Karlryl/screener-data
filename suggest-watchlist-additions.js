@@ -15,6 +15,11 @@ try {
 } catch (e) { console.error('yahoo-finance2 not installed'); process.exit(1); }
 
 const Runner = require('./methods/runner.js');
+// audit F-A-2026-06-21: reuse the real puller's USD/FX normalizer instead of a
+// divergent minimal copy — prevents non-USD candidates being scored on
+// un-normalized magnitudes (mirrors pull-yahoo _convertSnapshotToUSD; see
+// Tag 134 mixed-currency corruption).
+const { _convertSnapshotToUSD } = require('./pull-yahoo.js');
 
 function parseArgs(argv) {
   const args = { universe: './universe-candidates.txt', threshold: 10, watchlist: './watchlist.json', rateLimit: 1500 };
@@ -46,7 +51,9 @@ async function pullStock(ticker) {
     }
     const _val = (v) => v != null ? { value: v } : null;
 
-    const rev = ftsArr(annualFin, 'totalRevenue').map(v => ({ value: v, currency: 'USD' }));
+    // audit F-A-2026-06-21: was hardcoded currency:'USD' regardless of issuer ccy.
+    // Drop the bogus tag; _convertSnapshotToUSD scales annual.* by meta.reportingCurrency.
+    const rev = ftsArr(annualFin, 'totalRevenue').map(v => ({ value: v }));
     const opInc = ftsArr(annualFin, 'operatingIncome').map(v => ({ value: v }));
     const ni = ftsArr(annualFin, 'netIncome').map(v => ({ value: v }));
     const gp = ftsArr(annualFin, 'grossProfit').map(v => ({ value: v }));
@@ -69,8 +76,27 @@ async function pullStock(ticker) {
     const ap = ks.assetProfile || {};
     const pr = ks.price || {};
 
+    // audit F-A-2026-06-21: derive reporting/trading currency like pull-yahoo's
+    // mapper (lines 808-818) so _convertSnapshotToUSD can FX-normalize this
+    // snapshot. Prevents non-USD candidates being scored on un-normalized
+    // magnitudes (mirrors pull-yahoo _convertSnapshotToUSD; see Tag 134
+    // mixed-currency corruption). financialCurrency moved to financialData;
+    // ADR trading-ccy (price.currency) may differ from reporting ccy.
+    const _fc = pr.financialCurrency || fd.financialCurrency;
+    const _tc = pr.currency;
+    const rcOriginal = (_fc && _fc !== _tc) ? _fc : (_tc || 'USD');
+    const tradingCurrency = _tc || rcOriginal;
+    const ccyAmbiguous = (_fc == null && _tc != null);
+
     return {
-      meta: { ticker, name: pr.longName || ticker, sector: ap.sector, industry: ap.industry },
+      meta: {
+        ticker, name: pr.longName || ticker, sector: ap.sector, industry: ap.industry,
+        // audit F-A-2026-06-21: currency meta consumed by _convertSnapshotToUSD.
+        reportingCurrency: rcOriginal,
+        tradingCurrency,
+        exchangeName: pr.exchangeName || null,
+        ccyAmbiguous
+      },
       marketCap: pr.marketCap ? { value: pr.marketCap } : null,
       metrics: {
         revenueTTM: fd.totalRevenue ? { value: fd.totalRevenue } : null,
@@ -111,9 +137,17 @@ async function main() {
   const results = [];
   for (const t of candidates) {
     process.stdout.write(`  ${t}... `);
-    const stock = await pullStock(t);
+    let stock = await pullStock(t);
     await sleep(args.rateLimit);
     if (!stock) { console.log('skip (no data)'); continue; }
+    // audit F-A-2026-06-21: run the candidate through the IDENTICAL USD/FX
+    // normalization the watchlist snapshots get, before scoring with the same
+    // engine — prevents apples-to-oranges scoring on un-normalized magnitudes
+    // (mirrors pull-yahoo _convertSnapshotToUSD; see Tag 134 mixed-currency
+    // corruption). Fail closed on unconvertible currencies (unknown FX rate or
+    // ambiguous OTC issuer) rather than scoring a mixed-currency snapshot.
+    stock = _convertSnapshotToUSD(stock);
+    if (stock.meta && stock.meta.fxConversionFailed) { console.log('skip (fx conversion failed)'); continue; }
     const r = Runner.evaluateStock(stock);
     let pass = 0, comp = 0;
     for (const x of Object.values(r)) { if (x.computable) comp++; if (x.computable && x.pass) pass++; }
