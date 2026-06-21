@@ -51,6 +51,25 @@ function evaluate(stock) {
     });
   }
 
+  // audit F-A-2026-06-21: prevents CAGR spread computed across mismatched fiscal
+  // windows when one series has a gap year the other lacks. annualRev (income
+  // statement) and annualBalance (balance sheet) are built from independent Yahoo
+  // modules / QS->FTS overrides and carry NO per-entry fiscal-year label — index
+  // is the only alignment. _cagr2y reads positional [0]/[2] from each array
+  // independently, so if the two series have different year coverage the spread
+  // subtracts CAGRs measured over different windows and fires/clears the 8-point
+  // M&A red-flag on a miscomputed value. A length divergence is the only
+  // structurally-detectable symptom of that desync; refuse to score it rather
+  // than emit a silent false signal. Equal-length aligned series (the normal
+  // mega-cap case) are unaffected — same indices, same result as before.
+  if (revArr.length !== balArr.length) {
+    return H.buildResult({
+      computable: false,
+      reason: `annualRev (${revArr.length}) and annualBalance (${balArr.length}) length mismatch — fiscal-year alignment cannot be verified (no period labels); spread would compare different windows`,
+      threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    });
+  }
+
   // Extract totalAssets from annualBalance entries
   const assetArr = balArr.map(b => (b && b.totalAssets != null ? b.totalAssets : null));
   const assetArrClean = assetArr.slice(0, 3);

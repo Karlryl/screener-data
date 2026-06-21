@@ -31,10 +31,32 @@ function _annualVal(arr, idx) {
   return null;
 }
 
+// audit F-A-2026-06-21: prevents NaN/garbage balance field surviving as a truthy value.
+// Mirrors the finite-guarded _balField used in beneish/ohlson/penman: a present-but-non-finite
+// field (NaN, envelope object, string) must collapse to null so it cannot later be masked to 0
+// by `|| 0`, which would inflate X1/X4 into a false SAFE on the 0.20-weight TURNAROUND gate.
 function _balanceVal(stock, idx, field) {
   const arr = stock && stock.annual && stock.annual.annualBalance;
   if (!Array.isArray(arr) || arr.length <= idx) return null;
-  return arr[idx] && arr[idx][field];
+  const row = arr[idx];
+  if (!row) return null;
+  const v = row[field];
+  return Number.isFinite(v) ? v : null;
+}
+
+// audit F-A-2026-06-21: distinguishes a genuinely-absent balance field (key missing / null —
+// a debt-free firm may legitimately have no debt field) from present-but-non-finite garbage
+// (NaN/Infinity/envelope). Only the latter must hard-stop the method; the former keeps the
+// existing documented coalesce-to-0 behavior so healthy debt-free names are unaffected.
+function _isGarbage(stock, idx, field) {
+  const arr = stock && stock.annual && stock.annual.annualBalance;
+  if (!Array.isArray(arr) || arr.length <= idx) return false;
+  const row = arr[idx];
+  if (!row) return false;
+  if (!(field in row)) return false;        // key absent → treat as legitimately missing
+  const v = row[field];
+  if (v == null) return false;              // explicit null/undefined → legitimately missing
+  return !Number.isFinite(v);               // present but not a finite number → garbage
 }
 
 function evaluate(stock) {
@@ -45,6 +67,19 @@ function evaluate(stock) {
 
   if (assets == null || assets <= 0) {
     return H.buildResult({ computable: false, reason: 'no totalAssets', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP });
+  }
+
+  // audit F-A-2026-06-21: prevents NaN/garbage debt or cash being masked to 0 by `|| 0`,
+  // which treats missing leverage as 'no debt' (the most favorable solvency assumption) and
+  // flips a distressed name to a false SAFE pass. A present-but-non-finite balance field is
+  // corrupt data, not a debt-free firm — refuse to score it. A genuinely-absent field still
+  // coalesces to 0 below (unchanged behavior for real debt-free names and healthy mega-caps,
+  // whose debt/cash fields are finite numbers on good data).
+  if (_isGarbage(stock, 0, 'totalDebt')) {
+    return H.buildResult({ computable: false, reason: 'non-finite totalDebt', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP });
+  }
+  if (_isGarbage(stock, 0, 'totalCash')) {
+    return H.buildResult({ computable: false, reason: 'non-finite totalCash', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP });
   }
 
   const cashVal = cash || 0;

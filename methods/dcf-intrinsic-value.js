@@ -20,10 +20,16 @@
  * Discount rate floored at Buffett's stated ~9-10% risk floor (1996 Owner's Manual);
  * we use 9% as the floor, matching Buffett's Berkshire hurdle.
  *
- * Growth clamped to [-0.05, 0.25] before stage-1 computation:
+ * Growth clamped to [-0.05, 0.15] before stage-1 computation (see GROWTH1_CLAMP_MIN/MAX;
+ * tightened from the old [-0.05, 0.25] when S1/S2 were shortened to 7+5 = 12y — the wide
+ * cap over a 20y horizon produced IV >> MCap for most stocks):
  *   "Growth is an input to value, not an end in itself. Growth can destroy value
  *    when a business earns sub-standard returns on incremental capital." (Buffett, 1992).
  *   Any historical CAGR outside this range is noise that would make the DCF meaningless.
+ *   Explicit modelled horizon: Stage 1 = 7y, Stage 2 = 5y, then Gordon perpetuity.
+ * audit F-A-2026-06-21: stale doc comment — header said [-5%,25%] over a 10y projection
+ *   while code clamps to GROWTH1_CLAMP_MAX=0.15 over S1_YEARS=7 (+S2_YEARS=5); a reviewer
+ *   trusting the prose would mis-predict IV magnitude on a BUFFETT-scored method.
  *
  * Margin-of-Safety (MoS):
  *   - High-predictability proxy (earnings-stability + low margin volatility): 25% MoS
@@ -254,10 +260,14 @@ function _compute(stock, oeComponents) {
     });
   }
 
-  // --- Growth rate: clamp cagrOE5y to [-5%, 25%] ---
+  // --- Growth rate: clamp cagrOE5y to [GROWTH1_CLAMP_MIN, GROWTH1_CLAMP_MAX] = [-5%, 15%] ---
+  // audit F-A-2026-06-21: stale doc comment — this block previously said [-5%, 25%] over a
+  //   "10-year forward projection"; the actual clamp is GROWTH1_CLAMP_MAX=0.15 over the
+  //   S1_YEARS=7 (+S2_YEARS=5 = 12y) horizon. Behaviour-preserving wording fix only —
+  //   prevents a reviewer mis-predicting IV magnitude on a BUFFETT-scored method.
   // Buffett: "Growth is an input to value, not an end in itself."
-  // Any historical CAGR outside [-5%, 25%] is statistically unreliable for
-  // a 10-year forward projection; use the mid-cap baseline instead.
+  // Any historical CAGR outside [-5%, 15%] is statistically unreliable for
+  // the 12-year (7+5) forward projection; use the mid-cap baseline instead.
   let growth1 = GROWTH1_DEFAULT;
   if (Number.isFinite(oeComponents.cagrOE5y)) {
     growth1 = Math.max(GROWTH1_CLAMP_MIN, Math.min(GROWTH1_CLAMP_MAX, oeComponents.cagrOE5y));

@@ -184,8 +184,9 @@ function _testT1_ROE(stock) {
 // T2 — ROIC trend over 10y
 // Hagstrom Tenet 8; Damodaran Investment Valuation ch. 12
 // --------------------------------------------------------------------------
-function _testT2_ROIC(stock) {
-  const roics = _computeAnnualROIC(stock);  // newest first
+function _testT2_ROIC(stock, precomputedROICs) {
+  // audit F-A-2026-06-21: prevents double ROIC recompute per stock (T2 + Q1 share input)
+  const roics = Array.isArray(precomputedROICs) ? precomputedROICs : _computeAnnualROIC(stock);  // newest first
   const valid  = roics.filter(v => Number.isFinite(v));
   const yearsUsed = valid.length;
 
@@ -420,7 +421,10 @@ function _testT7_Margins(stock) {
 // Buffett 1996 Owner's Manual ("opportunity cost is government bonds"); Hagstrom Tenet 11
 // --------------------------------------------------------------------------
 function _testT8_EarningsYield(stock) {
-  const treasuryYield = parseFloat(process.env.BUFFETT_TREASURY_YIELD_10Y) || TREASURY_YIELD_DEFAULT;
+  // audit F-A-2026-06-21: prevents env value 0 from being discarded by falsy || default
+  // (a legitimately configured 0% treasury yield must not silently fall back to 4.5%).
+  const _ty = parseFloat(process.env.BUFFETT_TREASURY_YIELD_10Y);
+  const treasuryYield = Number.isFinite(_ty) ? _ty : TREASURY_YIELD_DEFAULT;
 
   // E/P = 1 / P/E  OR  NI / MarketCap
   let earningsYield = null;
@@ -486,18 +490,28 @@ function _testT10_OneDollar(stock) {
   const pe       = _toNum(peRaw);
 
   const window = 5;
-  const ni5    = _finite(rawNI.slice(0, window));
+
+  // audit F-A-2026-06-21: prevents subtracting dividend[year_k] from netIncome[year_j]
+  // after independent filtering. rawNI and rawDiv are compressed independently, so the
+  // old `rawDiv[i]` indexed by the *finite-filtered* ni5 position paired a dividend with
+  // the wrong fiscal year — which can flip retained5y's sign for borderline payers
+  // (false "capital destruction" fail or false pass). Pair NI and dividend by their
+  // ORIGINAL fiscal index, skipping years where NI is non-finite. Healthy mega-caps have
+  // strongly positive retained earnings, so this realignment does not move their verdict.
+  const ni5 = [];
+  let retained5y = 0;
+  for (let i = 0; i < Math.min(window, rawNI.length); i++) {
+    const ni = rawNI[i];
+    if (!Number.isFinite(ni)) continue;
+    ni5.push(ni);
+    const div = (rawDiv.length > i && Number.isFinite(rawDiv[i])) ? Math.abs(rawDiv[i]) : 0;
+    retained5y += ni - div;
+  }
+
   if (ni5.length < 3) {
     return { pass: true, retained5y: null, mvChange5yProxy: null,
       proxyMethod: 'pass-on-missing-data',
       reason: 'One-Dollar test: insufficient data — pass (no false-fail)' };
-  }
-
-  // Retained = NI - Dividends (per year; if div data missing, assume 0 payout)
-  let retained5y = 0;
-  for (let i = 0; i < ni5.length; i++) {
-    const div = (rawDiv.length > i && Number.isFinite(rawDiv[i])) ? Math.abs(rawDiv[i]) : 0;
-    retained5y += ni5[i] - div;
   }
 
   // Market value change proxy: NI growth × P/E
@@ -535,13 +549,17 @@ function _testT10_OneDollar(stock) {
 // Q1 — Moat proxy (ROIC > industry + 5pp)
 // Buffett 1999 Letter ("durable competitive advantage"); Damodaran ch. 14
 // --------------------------------------------------------------------------
-function _testQ1_Moat(stock) {
-  const roics = _computeAnnualROIC(stock);
+function _testQ1_Moat(stock, precomputedROICs) {
+  // audit F-A-2026-06-21: prevents double ROIC recompute per stock (T2 + Q1 share input)
+  const roics = Array.isArray(precomputedROICs) ? precomputedROICs : _computeAnnualROIC(stock);
   const valid  = _finite(roics);
   const n      = Math.min(10, valid.length);
 
   if (n < 3) {
-    return { pass: false, avgROIC: null, industryMedianPlus5pp: null,
+    // audit F-A-2026-06-21: prevents component-key drift across return paths
+    // (insufficient-data path used industryMedianPlus5pp while the computed path
+    // emits industryMedianPlus10pp — readers got undefined in downstream reports).
+    return { pass: false, avgROIC: null, industryMedianPlus10pp: null,
       reason: `only ${n} ROIC years (need ≥3 for moat test)` };
   }
 
@@ -693,12 +711,18 @@ function evaluate(stock) {
   const niValid  = rawNI.filter(v => Number.isFinite(v)).length;
   const balValid = Array.isArray(rawBal) ? rawBal.filter(r => r != null).length : 0;
 
-  if (niValid < MIN_YEARS_REQUIRED && balValid < MIN_YEARS_REQUIRED) {
+  // audit F-A-2026-06-21: prevents scoring the 14-pt composite when one required
+  // series (NI or balance) is absent. The majority of tests need BOTH earnings and
+  // balance history, so the hard gate must trip if EITHER is below the minimum (OR),
+  // not only when both are (the old AND let half-blind evaluations through and then
+  // emit a confident-looking 0-100 score). Healthy mega-caps carry ≥4y of both, so
+  // this does not affect them.
+  if (niValid < MIN_YEARS_REQUIRED || balValid < MIN_YEARS_REQUIRED) {
     return H.buildResult({
       computable: false, pass: false,
       reason: `fewer than ${MIN_YEARS_REQUIRED}y data — Buffett rules require multi-year track record`,
       threshold: PASS_THRESHOLD_DEFAULT, thresholdOp: 'gte',
-      components: { insufficientDataReason: 'both annualNetIncome and annualBalance < 5y' }
+      components: { insufficientDataReason: `annualNetIncome or annualBalance < ${MIN_YEARS_REQUIRED}y` }
     });
   }
 
@@ -720,8 +744,11 @@ function evaluate(stock) {
   } catch (e) { /* dcf load/eval failed — delegate test will not-pass */ }
 
   // --- Run all tests ---
+  // audit F-A-2026-06-21: prevents double ROIC recompute per stock — compute the
+  // annual-ROIC array once and share it between T2 (trend) and Q1 (moat).
+  const sharedROICs = _computeAnnualROIC(stock);
   const t1  = _testT1_ROE(stock);
-  const t2  = _testT2_ROIC(stock);
+  const t2  = _testT2_ROIC(stock, sharedROICs);
   const t3  = _testT3_Debt(stock);
   const t4  = _testT4_EPSGrowth(stock);
   const t5  = _testT5_FCF(stock);
@@ -730,7 +757,7 @@ function evaluate(stock) {
   const t8  = _testT8_EarningsYield(stock);
   const t9  = _testT9_HurdleRate(dcfResult);
   const t10 = _testT10_OneDollar(stock);
-  const q1  = _testQ1_Moat(stock);
+  const q1  = _testQ1_Moat(stock, sharedROICs);
   const q2  = _testQ2_PricingPower(stock);
   const q3  = _testQ3_ConsistentOps(stock);
   const x1  = _testX1_IndustryExclusion(stock);
@@ -752,7 +779,33 @@ function evaluate(stock) {
     discountToIntrinsicPct: (dcfResult && dcfResult.components && dcfResult.components.discountToIntrinsicPercent) || null
   };
 
-  const threshold = parseFloat(process.env.BUFFETT_PASS_THRESHOLD) || PASS_THRESHOLD_DEFAULT;
+  // audit F-A-2026-06-21: prevents swallowed DCF error from masquerading as a valuation FAIL.
+  // MoS is a HARD pass requirement, but a missing/load-failed/not-computable DCF must not be
+  // reported as a genuine "expensive — MoS not met" FAIL (which silently removes qualifying
+  // names in BUFFETT MUST-mode with a misleading reason). Distinguish "could not value it"
+  // from "valued and too expensive" by returning computable:false in the former case.
+  // Healthy mega-caps have a computable DCF, so this branch is not taken for them.
+  const dcfComputable = !!(dcfResult && dcfResult.computable);
+  if (!dcfComputable) {
+    return H.buildResult({
+      computable: false, pass: false,
+      reason: 'DCF (dcf-intrinsic-value) not computable — Margin-of-Safety unknown (not a valuation FAIL)',
+      threshold: Math.round(PASS_THRESHOLD_DEFAULT * 100), thresholdOp: 'gte',
+      components: {
+        mosUnknown: true,
+        dcf,
+        nTests, nPassed, passRate,
+        dataYearsAvailable: Math.max(niValid, balValid),
+        insufficientDataReason: null
+      }
+    });
+  }
+
+  // audit F-A-2026-06-21: prevents env value 0 from being discarded by falsy || default
+  // (an intentionally configured 0 threshold for a diagnostic/let-everything-through run
+  // must not silently snap back to 0.85). Unset/NaN still falls back to the default.
+  const _pt = parseFloat(process.env.BUFFETT_PASS_THRESHOLD);
+  const threshold = Number.isFinite(_pt) ? _pt : PASS_THRESHOLD_DEFAULT;
 
   // Hard requirements (per spec):
   const industryOk  = x1.pass;

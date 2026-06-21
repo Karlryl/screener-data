@@ -69,6 +69,35 @@ function _validSurprise(row) {
   return Number.isFinite(v) ? v : null;
 }
 
+// audit F-A-2026-06-21: surprisePercent units mismatch — pull-yahoo.js persists
+// Yahoo quoteSummary surprisePercent.raw VERBATIM, and Yahoo delivers that field
+// as a RATIO (0.0408 for a +4.08% beat), not as a percent. The doc/fixtures use
+// the percent convention (4.0 = +4%) and the magnitude floor MEAN_FLOOR_PCT=3 is
+// percent-scaled, so on real pulled data mean (~0.04) can never clear 3 and the
+// magnitude gate is dead — the PEAD diagnostic silently never passes regardless
+// of how strongly a name beats. Failure mode prevented: a ratio-scaled surprise
+// (0.04) being compared against a percent-scaled floor (3) and always failing.
+//
+// We normalize to the percent scale the floors expect by detecting which scale a
+// window is in from its own magnitude, rather than rewriting the floors to ratio
+// (which would mis-scale the percent-convention fixtures/doc and any percent-fed
+// caller). Real EPS surprises are almost always within +/-100%, so a ratio window
+// has max |v| well below the SCALE_BOUNDARY while a meaningful percent window sits
+// above it. Sign-based breadth (v>0) is scale-invariant and unaffected either way.
+const SCALE_BOUNDARY = 1; // |surprise| at/under 1 in the window => treat as ratio (<=100% beat); scale x100 to percent
+
+function _toPercentScale(surprises) {
+  if (surprises.length === 0) return surprises;
+  // Largest absolute beat in the window decides the scale for the whole window
+  // (mixing scales within one Yahoo earningsHistory block does not occur — the
+  // puller writes every row through the same _v unwrap).
+  let maxAbs = 0;
+  for (const v of surprises) { const a = Math.abs(v); if (a > maxAbs) maxAbs = a; }
+  // maxAbs <= 1 => ratio scale (e.g. 0.04 = 4%). maxAbs == 0 (all-flat) stays as-is.
+  const isRatio = maxAbs > 0 && maxAbs <= SCALE_BOUNDARY;
+  return isRatio ? surprises.map(v => v * 100) : surprises;
+}
+
 function evaluate(stock) {
   const hist = stock && stock.external && stock.external.earningsHistory;
   if (!Array.isArray(hist) || hist.length === 0) {
@@ -83,9 +112,14 @@ function evaluate(stock) {
   // Yahoo orders earningsHistory chronologically (oldest first). Take the
   // LAST WINDOW (most recent) and filter to valid surprise readings.
   const lastN = hist.slice(-WINDOW);
-  const surprises = lastN
+  const rawSurprises = lastN
     .map(_validSurprise)
     .filter(v => v != null);
+  // audit F-A-2026-06-21: normalize Yahoo's ratio-scaled surprisePercent (0.04)
+  // up to the percent scale (4) the magnitude floor/large-beat bar assume, so the
+  // gate is not silently dead on real data. Percent-scaled inputs pass through
+  // unchanged (max |v| > 1), keeping the documented convention and fixtures intact.
+  const surprises = _toPercentScale(rawSurprises);
 
   if (surprises.length < MIN_QUARTERS) {
     return H.buildResult({

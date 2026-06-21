@@ -15,8 +15,17 @@
  *     all?" — basic respectability filter that rules out pump-and-dump
  *     retail-only micro-caps, regardless of WHICH institutions are in.
  *
- * Formula:
- *   composite = institutionsPercentHeld * 100  (just rescaled to %)
+ * Emitted value (UNIT: ratio, NOT percent):
+ *   value = institutionsPercentHeld  (the raw 0.0..1.0 fraction of float)
+ *   This matches module.exports.unit:'ratio' and THRESHOLD=0.50 (also a
+ *   ratio), so the gate `pct >= THRESHOLD` is a ratio-vs-ratio comparison.
+ *   The reason string multiplies by 100 for HUMAN-READABLE DISPLAY ONLY
+ *   ('% of float'); that display scaling is cosmetic and never fed back
+ *   into value/threshold.
+ *   // audit F-A-2026-06-21: prevents a 100x unit-mismatch — the old header
+ *   // claimed `composite = pct * 100` (a percent), but no such variable
+ *   // exists and emitting pct*100 would make every stock clear the 0.50
+ *   // ratio gate. Value stays the ratio; do NOT rescale it to percent.
  *
  * Pass threshold: institutionsPercentHeld >= 0.50 (>=50% of float
  *   institutionally owned). At this threshold the price discovery is
@@ -83,6 +92,10 @@ function evaluate(stock) {
 
   const pass = pct >= THRESHOLD;
   return H.buildResult({
+    // audit F-A-2026-06-21: value is the RAW RATIO (0.0..1.0), unit:'ratio',
+    // compared against THRESHOLD=0.50 (also a ratio). Prevents a 100x
+    // unit-mismatch — do NOT change this to pct*100 (that would put value on a
+    // 0..100 scale against a 0.50 gate and pass every stock).
     value: Math.round(pct * 10000) / 10000,
     pass,
     computable: true,

@@ -51,12 +51,23 @@ function evaluate(stock) {
   }
   const revArr = (stock.annual && stock.annual.annualRev) || [];
 
-  // Count consecutive non-null fiscal years starting from latest. Stop on
-  // first null/NaN to avoid counting padded positions as real history.
+  // Count consecutive non-null fiscal years. annualRev is latest-first, so a
+  // null at index 0 means only the LATEST FY is missing (not-yet-filed /
+  // restated) — not that the company has no history. Skip any leading nulls,
+  // then count the consecutive non-null run; an internal null still stops the
+  // count (oldest-end padding stays excluded as before).
+  // audit F-A-2026-06-21: prevents a single missing/late latest-FY revenue from
+  // zeroing the clean-year count for a long-established company (which would
+  // force its QC multiplier to 0 and flip pass false on a data artifact).
   let cleanYears = 0;
+  let started = false;
   for (const entry of revArr) {
     const v = _unwrap(entry);
-    if (v == null) break;
+    if (v == null) {
+      if (started) break; // internal null after real data → stop (padding)
+      continue;           // leading null (missing latest FY) → skip, keep looking
+    }
+    started = true;
     cleanYears++;
   }
 

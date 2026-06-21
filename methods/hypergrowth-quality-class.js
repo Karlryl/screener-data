@@ -183,6 +183,19 @@ function evaluate(stock) {
     }
   }
 
+  // audit F-A-2026-06-21: prevent annual-only breadth (breadthSource==='y') from
+  // earning the full REAL_HYPERGROWTH_ACCELERATING rank. Faktor 3 (spikeShare) is an
+  // intrinsically quarterly metric (max-Q / sum-of-trailing-4Q) and stays null whenever
+  // revQ.length < 4, so the annual fallback path classifies on only 2 of the 3 promised
+  // factors and cannot detect a single-quarter spike — the core fake-hypergrowth signal.
+  // Cap a 2-factor annual classification at REAL_HYPERGROWTH_BUT_LOSSY (rank 4) so it still
+  // passes (value>=4) but does not claim the top, fully-validated 3-factor tier.
+  // Behavior-preserving: rank 4 and rank 5 both pass and normalize identically downstream.
+  if (breadthSource === 'y' && spikeShare == null && cls === 'REAL_HYPERGROWTH_ACCELERATING') {
+    cls = 'REAL_HYPERGROWTH_BUT_LOSSY';
+    reasons.push('annual-only Breadth ohne Q-Spike-Check — auf BUT_LOSSY begrenzt (reduced confidence)');
+  }
+
   const value = RANK[cls];
   const pass = value >= 4;  // REAL_HYPERGROWTH_BUT_LOSSY oder besser
 

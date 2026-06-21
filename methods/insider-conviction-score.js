@@ -286,7 +286,13 @@ function _evaluateWithTxns(stock, txns, nowMs, historyOpt) {
     const filingMs = _parseDate(mostRecentBuy.t.filingDate);
     if (filingMs != null) {
       const lagDays = (filingMs - mostRecentBuy.tMs) / DAY_MS;
-      gate4 = lagDays <= MAX_FILING_LAG_DAYS;
+      // audit F-A-2026-06-21: prevents filing-before-transaction (negative lag)
+      // data errors from clearing the timeliness gate. SEC Form 4 must be filed
+      // AFTER the transaction (§16(a) 2-business-day rule), so a filingDate
+      // earlier than the transactionDate is a corrupt/mis-parsed record; the
+      // upper-bound-only check (lagDays <= 90) silently passed such records.
+      // Valid data always has lagDays >= 0, so healthy filings are unaffected.
+      gate4 = lagDays >= 0 && lagDays <= MAX_FILING_LAG_DAYS;
     }
   }
   const gatePassed = gate1 && gate2 && gate3 && gate4;
