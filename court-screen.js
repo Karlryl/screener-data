@@ -59,6 +59,38 @@ try {
   for (const c of cls) if (c && c.bucket === 'diagnostics_lst' && c.t) dlstTickers.add(c.t);
 } catch {}
 
+// --- D&LST FISCAL-YEAR ALIGNMENT (Fix A) ---
+// Die cache annualRev (continuing-ops) trägt KEINE Perioden-End-Daten. Der dlst-Snapshot
+// (data/ma-rpo-snapshot-dlst.json) trägt revenueHistory[{val,end}] (TOTAL-ops) MIT FY-End-Datum.
+// Wir derivieren das Fiskaljahr jeder cache-annualRev[i] per WERT-MATCH gegen revenueHistory:
+// wo continuing-ops == total-ops (die jüngsten Jahre vor Divestituren) matcht der Wert exakt und
+// liefert das FY; wo die Reihen divergieren (Spin/Divestitur-Jahre) gibt es KEINEN Match → FY=null
+// (unalignbar). So kann die Deal-Jahr-Exklusion in court-score.js FISKALJAHR-genau statt
+// index-positional matchen (Fix A). DLST-only; additiv → Parität SaaS/Fabless/Medtech bleibt.
+const dlstRevHistByTicker = new Map(); // ticker -> [{val, year}] newest-first (aus dlst-Snapshot)
+try {
+  const dlstSnap = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'ma-rpo-snapshot-dlst.json'), 'utf8'));
+  for (const [t, rec] of Object.entries(dlstSnap)) {
+    if (t === '_header' || !rec || !Array.isArray(rec.revenueHistory)) continue;
+    const rh = rec.revenueHistory
+      .map(e => (e && e.val != null && e.end) ? { val: Number(e.val), year: Number(String(e.end).slice(0, 4)) } : null)
+      .filter(e => e && isFinite(e.val) && isFinite(e.year));
+    if (rh.length) dlstRevHistByTicker.set(t, rh);
+  }
+} catch {}
+// fiscalYearsForRev(revA, ticker): pro cache-annualRev-Wert das FY per Wert-Match (exakt) gegen den
+// Snapshot. Kein Match → null (Reihe an dem Index unalignbar). Toleranz 0 (Werte sind identische SEC-
+// Zahlen wo continuing==total). Bei mehrdeutigem Match (gleicher Wert in zwei Jahren) → erstes (neuestes).
+function fiscalYearsForRev(revVals, ticker) {
+  const rh = dlstRevHistByTicker.get(ticker);
+  if (!Array.isArray(rh) || !Array.isArray(revVals)) return revVals.map(() => null);
+  return revVals.map(v => {
+    if (v == null || !isFinite(v)) return null;
+    const hit = rh.find(e => e.val === v);
+    return hit ? hit.year : null;
+  });
+}
+
 // --- robuste Feld-Helfer (Format ist gemischt: ftsAnnual.* = [{value}], Rest = [num]) ---
 function num(x) {
   if (x == null) return null;
@@ -263,7 +295,12 @@ for (const file of files) {
   // v0 D&LST: annual revenue YoY series (newest-first) für die DEAL-YEAR-EXCLUSION Growth-Metrik in
   // court-score.js. Additiv/dlst-only → KEIN Feld auf Nicht-D&LST-Records (Parität SaaS/Fabless/Medtech).
   // Index i = YoY[i] (rev[i]/rev[i+1]-1); aligned mit goodwillHistory[i] (beide newest-first annual).
-  const dlstExtra = isDlst ? { revYoYDlst: gSeriesA.map(round) } : {};
+  // revYoYDlstYears[i] = Fiskaljahr des NEUEREN Endpunkts von YoY[i] (= year of revA[i]), per Wert-Match
+  // gegen den dlst-Snapshot (Fix A). null wo unalignbar (divergierendes continuing/total-ops-Jahr).
+  // Index-aligned mit revYoYDlst (beide haben gSeriesA.length Einträge; revA[i] ist der neuere Endpunkt).
+  const dlstExtra = isDlst
+    ? { revYoYDlst: gSeriesA.map(round), revYoYDlstYears: fiscalYearsForRev(revA, ticker).slice(0, gSeriesA.length) }
+    : {};
   candidates.push({
     ticker,
     growth: round(growth), growth_annual: round(gAnnual), growth_q: round(gQ),

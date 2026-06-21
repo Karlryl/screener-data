@@ -347,15 +347,30 @@ function computeMedtechOrganicGrowth(yoySeries, goodwillHistory, revLatest, fall
 // (Spec §4 Bug-Fix 1). Negative ΔGoodwill = Impairment → NIE als Deal-Sprung gelesen (Bug-Fix 2).
 const DEAL_JUMP_THRESH_DLST = 0.15; // [TODO-CAL] Anpassung 1
 const BLEND_YOY_FLOOR = -0.15;      // [TODO-CAL] Anpassung 2: per-year YoY-Floor NUR für den Blend-Median
-function computeDlstOrganicGrowth(yoySeries, gwHist, revHist, revLatest, fallbackGrowth) {
+function computeDlstOrganicGrowth(yoySeries, gwHist, revHist, revLatest, fallbackGrowth, yoyYears) {
   // yoySeries: newest-first YoY (rev[i]/rev[i+1]-1). gwHist/revHist: [{val,end}] newest-first (dlst-Snapshot).
-  // Returns { growth (=min(latest,blendFloored)), latestOrganicYoY, blend, organicYears, droppedIdx,
-  //           dealYearExcluded, shortHistory, currentYearOnly, decelerating }.
+  // yoyYears: newest-first Fiskaljahr (period-end year) JEDES YoY-Eintrags (neuerer Endpunkt), per Wert-Match
+  //   in court-screen.js gegen den Snapshot derived; null wo unalignbar (continuing≠total ops Divestitur-Jahr).
+  // FIX A (cross-source FY-alignment): die Deal-Jahr-Exklusion matcht das Goodwill-Sprung-Jahr (gwHist[i].end-
+  //   year, TOTAL-ops Quelle) per FISKALJAHR an den passenden YoY-Eintrag (cache continuing-ops Quelle), NICHT
+  //   index-positional. Wo die Reihen an älteren Indizes divergieren (Divestitur/Spin), entfernte der alte
+  //   positionale Drop das FALSCHE cache-YoY-Jahr (RGEN/AZTA/DHR/ILMN/RVTY). Findet ein Sprung-Jahr KEINEN
+  //   passenden YoY-Eintrag (Deal außerhalb des YoY-Fensters ODER Reihe an dem Jahr unalignbar/null) → KEIN
+  //   Drop, stattdessen dealExclusionUnaligned-Lampe + volle Reihe.
+  // FIX B (dealYearExcluded-Ehrlichkeit): dealYearExcluded=true NUR wenn TATSÄCHLICH ein YoY-Jahr gedroppt
+  //   wurde (ein gematchtes Fiskaljahr entfernt). Ein Sprung außerhalb des Fensters setzt es NICHT mehr true.
   const result = {
     growth: fallbackGrowth, latestOrganicYoY: null, blend: null, organicYears: 0, droppedIdx: [],
-    dealYearExcluded: false, shortHistory: false, currentYearOnly: false, decelerating: false,
+    dealYearExcluded: false, dealExclusionUnaligned: false, shortHistory: false, currentYearOnly: false, decelerating: false,
   };
   if (!Array.isArray(yoySeries) || yoySeries.length === 0) return result;
+  const years = Array.isArray(yoyYears) ? yoyYears : [];
+  // yearToIdx: Fiskaljahr -> YoY-Index (nur eindeutige, nicht-null Jahre; neuestes gewinnt bei Duplikat).
+  const yearToIdx = new Map();
+  for (let i = 0; i < yoySeries.length; i++) {
+    const y = years[i];
+    if (y != null && isFinite(y) && !yearToIdx.has(y)) yearToIdx.set(y, i);
+  }
   const dropIdx = new Set();
   if (Array.isArray(gwHist) && gwHist.length >= 2) {
     for (let i = 0; i < gwHist.length - 1; i++) {
@@ -369,12 +384,24 @@ function computeDlstOrganicGrowth(yoySeries, gwHist, revHist, revLatest, fallbac
                   : (revLatest != null && revLatest > 0 ? revLatest : null);
       if (yrRev == null || yrRev <= 0) continue;
       const jump = delta / yrRev;
-      if (jump >= DEAL_JUMP_THRESH_DLST) {
-        for (let k = 0; k <= CATCH_UP_YEARS; k++) { const idx = i - k; if (idx >= 0) dropIdx.add(idx); }
-        result.dealYearExcluded = true;
+      if (jump < DEAL_JUMP_THRESH_DLST) continue;
+      // (Fix A) Fiskaljahr des Sprungs = period-end-year von gwHist[i] (das neuere Jahr des delta-Paars).
+      const dealYearRaw = gwHist[i] && gwHist[i].end ? Number(String(gwHist[i].end).slice(0, 4)) : null;
+      if (dealYearRaw == null || !isFinite(dealYearRaw)) { result.dealExclusionUnaligned = true; continue; }
+      // (Fix A) Das DEAL-JAHR SELBST muss im YoY-Fenster alignbar sein. Ist es das NICHT (Deal außerhalb des
+      // YoY-Fensters ODER continuing≠total-ops Divestitur-Jahr → year=null), dann wird NICHTS gedroppt — auch
+      // KEIN Catch-up-Jahr (sonst würde, wie bei RGEN's 2023-Deal, fälschlich das 2024-YoY als „erstes volles
+      // inorganisches Jahr" gekappt, obwohl der Deal gar nicht bestätigt im Fenster liegt). Stattdessen Lampe.
+      if (!yearToIdx.has(dealYearRaw)) { result.dealExclusionUnaligned = true; continue; }
+      // Deal-Jahr (alignbar) + CATCH_UP_YEARS Folge-Jahre (neuere Jahre = höheres FY) per FISKALJAHR droppen.
+      for (let k = 0; k <= CATCH_UP_YEARS; k++) {
+        const fy = dealYearRaw + k;
+        if (yearToIdx.has(fy)) dropIdx.add(yearToIdx.get(fy));
       }
     }
   }
+  // (Fix B) Ehrlichkeit: dealYearExcluded=true GENAU DANN, wenn mindestens ein YoY-Jahr entfernt wurde.
+  result.dealYearExcluded = dropIdx.size > 0;
   let latest = null;
   for (let i = 0; i < yoySeries.length; i++) {
     const v = yoySeries[i];
@@ -472,13 +499,14 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       const gwHist = maRec ? maRec.goodwillHistory : null;
       const revHist = maRec ? maRec.revenueHistory : null;
       const revLatest = m.scaleRevM != null ? m.scaleRevM * 1e6 : null;
-      const org = computeDlstOrganicGrowth(m.revYoYDlst, gwHist, revHist, revLatest, m._growth);
+      const org = computeDlstOrganicGrowth(m.revYoYDlst, gwHist, revHist, revLatest, m._growth, m.revYoYDlstYears);
       const organicWins = org.growth == null ? null : Math.min(org.growth, 1.0); // small-base-Artefakt-Schutz
       m._growthDlst = organicWins;
       m._latestOrganicYoY = org.latestOrganicYoY;
       m._growthBlend = org.blend;
       m._organicYears = org.organicYears;
       m._dealYearExcluded = org.dealYearExcluded;
+      m._dealExclusionUnaligned = org.dealExclusionUnaligned; // (Fix A) Sprung-Jahr nicht per FY alignbar
       m._shortOrganicHistory = org.shortHistory;
       m._currentYearOnly = org.currentYearOnly;
       m._decelerating = org.decelerating;
@@ -584,7 +612,11 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       // So schwingt eine FCF-Haaresbreite die Achse nicht mehr ~2.5 Punkte. Einseitig (nur positiver z wird
       // getapert; negativer z bleibt unangetastet) — das Pooling-Artefakt (Cash-Burn-dx über-scort) bleibt
       // unterdrückt, weil unter floor-band weiterhin 0 erzwungen wird. DLST-only.
-      if (bucket === 'diagnostics_lst' && ax.key === 'effDlst' && s > 0) {
+      // (Fix D) Der Taper unterdrückt ein FCF-SPEZIFISCHES Pooling-Artefakt (Cash-Burn-dx über-scort, weil
+      // der eff-Floor ein FCF-Floor ist). Ist die eff-Quelle ein opMargin-FALLBACK (effSource !== 'fcfMargin',
+      // d.h. fcf null ODER >15pp unter OpM), dann ist m._effDlst KEINE FCF-Marge → der Taper darf NICHT gegen
+      // den FCF-Floor gaten. SKIP. (Aktuell nutzen alle 29 Namen fcfMargin → no-op; defensiv.)
+      if (bucket === 'diagnostics_lst' && ax.key === 'effDlst' && s > 0 && m.effSource === 'fcfMargin') {
         const effFloor = (NORMS[(m._cohort === 'tools' ? 'diagnostics_lst_tools' : 'diagnostics_lst_dx')].eff || {}).floor;
         const EFF_TAPER_BAND = 0.04; // [TODO-CAL] Breite des stetigen Übergangsbands unter dem eff-Floor
         if (effFloor != null) {
@@ -757,6 +789,10 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
           L.push(`deal-year-jump(maxJump${pct(maxJump).trim()},deal-yr-excluded${m._dealYearExcluded ? '=yes' : '=no'})`);
           m.maxGoodwillJumpPctRev = Math.round(maxJump * 1000) / 1000;
         }
+        // (Fix A) deal-exclusion-unaligned: ein detektierter Goodwill-Sprung konnte NICHT per Fiskaljahr an die
+        // cache-YoY-Reihe gematcht werden (Deal außerhalb des YoY-Fensters ODER continuing≠total-ops Divestitur-
+        // Jahr) → KEIN YoY-Jahr gedroppt, volle Reihe genutzt (statt index-positional das falsche Jahr zu kappen).
+        if (m._dealExclusionUnaligned) L.push('deal-exclusion-unaligned(jump-fy-not-in-yoy-window,full-series-used)');
       } else {
         L.push('M&A-coverage-null');
         L.push('cum-payments-coverage-null');
@@ -942,8 +978,9 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
 
 function pct(x) { return (x == null ? '—' : (x * 100).toFixed(0) + '%').padStart(5); }
 
-// --- Export: computeMedtechOrganicGrowth für Unit-Tests (Härtung 2, 2026-06-20) ---
-module.exports = { computeMedtechOrganicGrowth };
+// --- Export: computeMedtechOrganicGrowth + computeDlstOrganicGrowth für Unit-Tests ---
+// (computeDlstOrganicGrowth: Fix A FY-Alignment + Fix B dealYearExcluded-Ehrlichkeit, 2026-06-21)
+module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth };
 
 // --- require.main-Guard (Härtung 2): Write + Ausgabe NUR wenn direkt als Skript ausgeführt ---
 // `require('./court-score.js')` gibt nur den Export zurück und schreibt NICHT outputs/court-results.json.

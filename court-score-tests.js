@@ -659,6 +659,89 @@ test('Unit computeMedtechOrganicGrowth (d): FY-Reconciliation wirft NICHT bei gu
   assert(!threw, 'FY-Reconciliation darf bei gutem Rev-Match (<15%) NICHT failen');
 });
 
+// =================== FIX A/B (2026-06-21): computeDlstOrganicGrowth FY-Alignment + dealYearExcluded-Ehrlichkeit ===
+// Direkte Funktions-Unit-Tests des fiskaljahr-bewussten Deal-Jahr-Ausschlusses (Cross-Source-Misalignment).
+const { computeDlstOrganicGrowth: cDOG } = require('./court-score.js');
+assert(typeof cDOG === 'function', 'computeDlstOrganicGrowth nicht exportiert');
+
+test('Unit cDOG (Fix A): FY-Match — Deal-Jahr im YoY-Fenster droppt das RICHTIGE Jahr + Catch-up (nicht index-positional)', () => {
+  // YoY newest-first; Jahre [2025,2024,2023,2022]. EINZIGER Goodwill-Sprung im Fiskaljahr 2023 (>=0.15*rev).
+  // Erwartung (FY-aware): Deal-Jahr 2023 (Index 2) + Catch-up-Jahr 2024 (Index 1, dealYear+1) gedroppt.
+  // KEIN index-positionaler Drop: Index 0 (2025) und 3 (2022) bleiben organisch.
+  const yoy = [0.30, 0.05, -0.40, 0.10];  // [2025, 2024, 2023(Deal/rot), 2022]
+  const years = [2025, 2024, 2023, 2022];
+  const gwHist = [
+    { val: 200e6, end: '2025-12-31' },    // 2025: +5M
+    { val: 195e6, end: '2024-12-31' },    // 2024: +15M
+    { val: 180e6, end: '2023-12-31' },    // 2023: +130M vs 2022 → 130/300=0.43 >= 0.15 DEAL
+    { val: 50e6,  end: '2022-12-31' },
+  ];
+  const revHist = [
+    { val: 300e6, end: '2025-12-31' }, { val: 300e6, end: '2024-12-31' },
+    { val: 300e6, end: '2023-12-31' }, { val: 280e6, end: '2022-12-31' },
+  ];
+  const r = cDOG(yoy, gwHist, revHist, 300e6, 0.05, years);
+  // FY 2023 (Index 2) = Deal-Jahr; FY 2024 (Index 1) = Catch-up (dealYear+1). Beide gedroppt.
+  assert(r.droppedIdx.includes(2), `Index 2 (FY 2023, Deal) sollte gedroppt sein, droppedIdx=${JSON.stringify(r.droppedIdx)}`);
+  assert(r.droppedIdx.includes(1), `Index 1 (FY 2024, Catch-up) sollte gedroppt sein, droppedIdx=${JSON.stringify(r.droppedIdx)}`);
+  assert(!r.droppedIdx.includes(0) && !r.droppedIdx.includes(3), `Index 0 (2025) + 3 (2022) bleiben organisch — droppedIdx=${JSON.stringify(r.droppedIdx)}`);
+  assert(r.dealYearExcluded === true, 'dealYearExcluded sollte true sein (Jahre wurden gedroppt)');
+  assert(r.dealExclusionUnaligned === false, 'aligned → unaligned sollte false sein');
+  // Das gedroppte -0.40 (2023) darf NICHT in der organischen Reihe sein → latest=0.30 (2025).
+  assert(Math.abs(r.latestOrganicYoY - 0.30) < 1e-9, `latest sollte 0.30 sein, ist ${r.latestOrganicYoY}`);
+});
+
+test('Unit cDOG (Fix A): UNALIGNED — Deal-Jahr außerhalb des YoY-Fensters droppt KEIN Jahr + setzt Lampe', () => {
+  // Synthetischer misaligned Name (RGEN-Muster): Deal im Fiskaljahr 2021, aber YoY-Fenster nur [2025,2024,null].
+  // Das index-positionale alte Verhalten hätte das falsche Jahr gekappt; FY-aware darf NICHTS droppen.
+  const yoy = [0.16, 0.01, -0.21];        // [2025, 2024, 2023c(unalignbar)]
+  const years = [2025, 2024, null];       // Index 2 unalignbar (continuing≠total-ops Divestitur)
+  const gwHist = [
+    { val: 1114e6, end: '2025-12-31' },
+    { val: 1030e6, end: '2024-12-31' },
+    { val: 987e6,  end: '2023-12-31' },   // 2023-Sprung +131M; FY 2023 NICHT im {2025,2024}-Fenster
+    { val: 855e6,  end: '2022-12-31' },
+    { val: 860e6,  end: '2021-12-31' },
+    { val: 618e6,  end: '2020-12-31' },   // 2021-Sprung +242M; FY 2021 NICHT im Fenster
+  ];
+  const revHist = [
+    { val: 738e6, end: '2025-12-31' }, { val: 634e6, end: '2024-12-31' }, { val: 638e6, end: '2023-12-31' },
+    { val: 801e6, end: '2022-12-31' }, { val: 670e6, end: '2021-12-31' }, { val: 366e6, end: '2020-12-31' },
+  ];
+  const r = cDOG(yoy, gwHist, revHist, 738e6, 0.05, years);
+  assert(r.droppedIdx.length === 0, `KEIN Jahr darf gedroppt werden (unalignbar), droppedIdx=${JSON.stringify(r.droppedIdx)}`);
+  assert(r.dealYearExcluded === false, 'dealYearExcluded MUSS false sein (Fix B: kein Jahr tatsächlich gedroppt)');
+  assert(r.dealExclusionUnaligned === true, 'dealExclusionUnaligned MUSS true sein (Sprung nicht FY-alignbar)');
+  assert(r.organicYears === 3, `volle Reihe (3 Jahre) genutzt, ist ${r.organicYears}`);
+});
+
+test('Unit cDOG (Fix B): dealYearExcluded-Ehrlichkeit — Sprung ohne YoY-Match setzt dealYearExcluded NICHT true', () => {
+  // Sprung im Fiskaljahr 2022, YoY-Fenster nur [2025,2024,2023]. 2022 nicht im Fenster → kein Drop, kein =yes.
+  const yoy = [0.05, 0.04, 0.03];
+  const years = [2025, 2024, 2023];
+  const gwHist = [
+    { val: 100e6, end: '2025-12-31' }, { val: 100e6, end: '2024-12-31' }, { val: 100e6, end: '2023-12-31' },
+    { val: 100e6, end: '2022-12-31' }, { val: 10e6, end: '2021-12-31' },  // 2022-Sprung +90M = 0.9*rev DEAL, FY 2022 außerhalb
+  ];
+  const revHist = [
+    { val: 100e6, end: '2025-12-31' }, { val: 100e6, end: '2024-12-31' }, { val: 100e6, end: '2023-12-31' },
+    { val: 100e6, end: '2022-12-31' }, { val: 100e6, end: '2021-12-31' },
+  ];
+  const r = cDOG(yoy, gwHist, revHist, 100e6, 0.05, years);
+  assert(r.dealYearExcluded === false, `Fix B: deal-yr-excluded muss =no sein (0 YoY-Jahre gedroppt), droppedIdx=${JSON.stringify(r.droppedIdx)}`);
+  assert(r.dealExclusionUnaligned === true, 'Sprung außerhalb Fenster → unaligned-Lampe');
+});
+
+test('Unit cDOG (Fix A): impairment (negativer ΔGoodwill) ist KEIN Deal-Sprung (Bug-Fix 2 erhalten)', () => {
+  const yoy = [0.10, 0.12];
+  const years = [2025, 2024];
+  const gwHist = [{ val: 50e6, end: '2025-12-31' }, { val: 500e6, end: '2024-12-31' }]; // ΔGW negativ = Impairment
+  const revHist = [{ val: 300e6, end: '2025-12-31' }, { val: 300e6, end: '2024-12-31' }];
+  const r = cDOG(yoy, gwHist, revHist, 300e6, 0.05, years);
+  assert(r.droppedIdx.length === 0, 'Impairment darf kein Jahr droppen');
+  assert(r.dealYearExcluded === false && r.dealExclusionUnaligned === false, 'kein Deal → keine Lampen');
+});
+
 // =================== DIAGNOSTICS_LST BUCKET TESTS (v0/v1.0, cohort-aware dx|tools) ===================
 
 const dlst = doc.diagnostics_lst;
@@ -675,6 +758,48 @@ test('diagnostics_lst: SI-5 classifiedCount === scoredCount (KEINE stillen Drops
   assert(dlst.classifiedCount === dlst.scoredCount, `stille Drops: ${dlst.classifiedCount} !== ${dlst.scoredCount}`);
   assert(dlst.scoredCount === DL.length, `scoredCount ${dlst.scoredCount} !== members.length ${DL.length}`);
   assert(dlst.scoredCount === 29, `dlst sollte alle 29 Namen scoren, ist ${dlst.scoredCount}`);
+});
+
+test('diagnostics_lst Fix B (live): dealYearExcluded-Ehrlichkeit — kein Name trägt deal-yr-excluded=yes ohne tatsächlich gedropptes Jahr', () => {
+  // dealYearExcluded=yes MUSS implizieren, dass die Reihe gegenüber der vollen Reihe verkürzt wurde
+  // (organicYears < verfügbare endliche YoY). Sonst ist die Lampe unehrlich (Fix B).
+  for (const m of DL) {
+    if (m._dealYearExcluded === true || (Array.isArray(m.lamps) && m.lamps.some(l => /deal-yr-excluded=yes/.test(l)))) {
+      const finiteYoY = Array.isArray(m.revYoYDlst) ? m.revYoYDlst.filter(v => v != null && isFinite(v)).length : 0;
+      assert(m._organicYears < finiteYoY,
+        `${m.ticker}: deal-yr-excluded=yes, aber organicYears(${m._organicYears}) >= finite YoY(${finiteYoY}) → kein Jahr gedroppt (unehrlich)`);
+    }
+  }
+});
+
+test('diagnostics_lst Fix B (live): die 7 historischen „falsch-yes"-Namen tragen jetzt deal-yr-excluded=no', () => {
+  // VCYT/EXAS/NEO/AVTR/CRL/DHR/TMO hatten deal-yr-excluded=yes bei 0 tatsächlich gedroppten YoY-Jahren.
+  for (const t of ['VCYT', 'EXAS', 'NEO', 'AVTR', 'CRL', 'DHR', 'TMO']) {
+    const m = dlfind(t);
+    if (!m) continue; // Name evtl. nicht im Universum → skip
+    const jumpLamp = (m.lamps || []).find(l => /deal-year-jump/.test(l));
+    if (jumpLamp) assert(/deal-yr-excluded=no/.test(jumpLamp), `${t} deal-year-jump-Lampe sollte =no tragen, ist '${jumpLamp}'`);
+  }
+});
+
+test('diagnostics_lst Fix A (live): RGEN nutzt die volle Reihe (organicYears>1) + unaligned-Lampe statt index-positionalem Falsch-Drop', () => {
+  const rgen = dlfind('RGEN');
+  if (rgen) {
+    // Vorher (Bug): index-positional gedroppt → organicYears=1. Nachher: unalignbar → volle Reihe genutzt.
+    assert(rgen._organicYears > 1, `RGEN organicYears sollte >1 sein (volle Reihe), ist ${rgen._organicYears}`);
+    assert(rgen._dealYearExcluded === false, 'RGEN: kein YoY-Jahr per FY gematcht → dealYearExcluded=false (Fix B)');
+    assert(rgen._dealExclusionUnaligned === true, 'RGEN: Sprung-Jahr nicht FY-alignbar → unaligned-Lampe (Fix A)');
+    assert((rgen.lamps || []).some(l => /deal-exclusion-unaligned/.test(l)), 'RGEN: deal-exclusion-unaligned-Lampe fehlt');
+  }
+});
+
+test('diagnostics_lst Fix A (live): revYoYDlstYears ist index-aligned mit revYoYDlst (gleiche Länge)', () => {
+  for (const m of DL) {
+    if (Array.isArray(m.revYoYDlst) && Array.isArray(m.revYoYDlstYears)) {
+      assert(m.revYoYDlst.length === m.revYoYDlstYears.length,
+        `${m.ticker}: revYoYDlst(${m.revYoYDlst.length}) != revYoYDlstYears(${m.revYoYDlstYears.length})`);
+    }
+  }
 });
 
 test('diagnostics_lst: cohort-Tags (dx | tools) auf jedem Member + cohortCounts korrekt', () => {
@@ -1027,7 +1152,7 @@ test('PARITÄT (dlst-Addition): SaaS+Fabless+Medtech byte/deep-identisch zu _par
 test('PARITÄT (dlst-Addition): KEIN dlst-only Feld auf SaaS/Fabless/Medtech-Membern (Leak-Guard)', () => {
   for (const b of ['system_app_software', 'fabless_semi', 'medtech_devices']) {
     for (const m of doc[b].members) {
-      for (const leak of ['_growthDlst', '_effDlst', '_capexNeg', 'effDlst', 'effSource', 'cohort', 'cumDeltaGoodwillPctRev', 'cumPaymentsToRev']) {
+      for (const leak of ['_growthDlst', '_effDlst', '_capexNeg', 'effDlst', 'effSource', 'cohort', 'cumDeltaGoodwillPctRev', 'cumPaymentsToRev', 'revYoYDlst', 'revYoYDlstYears', '_dealExclusionUnaligned']) {
         assert(!(leak in m), `${b}/${m.ticker} hat dlst-only Feld '${leak}' geleakt (Parität verletzt)`);
       }
     }

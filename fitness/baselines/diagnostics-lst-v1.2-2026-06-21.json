@@ -13,7 +13,7 @@
   "classifiedCount": 29,
   "scoredCount": 29,
   "universeSize": 29,
-  "headlineShortlistSize": 4,
+  "headlineShortlistSize": 3,
   "scoreScope": "intra-bucket",
   "crossBucketComparableField": "absKaliber",
   "forwardFitness": {
@@ -32,12 +32,12 @@
     },
     "survivorshipKey": "evaluatedTickers",
     "antiGaming": "gateOpen-Ranking am Remediations-Tag (vor jeder weiteren dlst-Änderung) eingefroren. Forward-Fenster = intrinsischer Holdout; Eval erst NACH Kalender-Gate. Erzeugende Agenten dürfen NIE auf dem Eval-Slice tunen. Eine neue dlst-Version gilt nur als „besser\", wenn sie diese Forward-Metrik STRIKT schlägt.",
-    "honestLimitation": "N=4 gateOpen-Namen ist klein (cohort-split macht n pro Kohorte noch dünner) — Rank-IC/Kohorten-Spread haben Richtungs-, nicht starke statistische Aussagekraft. Primärer Wert: Pre-Registration-Disziplin."
+    "honestLimitation": "N=3 gateOpen-Namen ist klein (cohort-split macht n pro Kohorte noch dünner) — Rank-IC/Kohorten-Spread haben Richtungs-, nicht starke statistische Aussagekraft. Primärer Wert: Pre-Registration-Disziplin."
   },
   "anchors": {
     "growth": {
-      "median": 0.0699,
-      "mad": 0.09019999999999999,
+      "median": 0.041194348183518525,
+      "mad": 0.06522626775866684,
       "n": 29
     },
     "gm": {
@@ -81,8 +81,8 @@
     },
     "tools": {
       "growth": {
-        "median": 0.014286528239236998,
-        "mad": 0.03227588269231389,
+        "median": -0.00021916540735450354,
+        "mad": 0.027905856062841725,
         "n": 17
       },
       "gm": {
@@ -109,7 +109,7 @@
       "order": 1,
       "ticker": "MEDP",
       "cohort": "tools",
-      "score": 64.6,
+      "score": 64.7,
       "demoted": false,
       "membershipClass": "Borderline",
       "absKaliber": 0.546,
@@ -150,38 +150,13 @@
       "scorePreHaircut": 65.3,
       "decelerating": true,
       "chronicAcquirer": true,
-      "dealYearExcluded": true,
+      "dealYearExcluded": false,
       "goodwillToRev": 1.483,
       "cumPaymentsToRev": 0.293,
       "belowAbsoluteFloor": false
     },
     {
       "order": 3,
-      "ticker": "RGEN",
-      "cohort": "tools",
-      "score": 42.8,
-      "demoted": false,
-      "membershipClass": "Borderline",
-      "absKaliber": 0.263,
-      "scoreScope": "intra-bucket",
-      "growthOrganic": 0.1636,
-      "latestOrganicYoY": 0.1636,
-      "growthBlend": 0.1636,
-      "gm": 0.5232,
-      "opMargin": 0.0563,
-      "fcfMargin": 0.1242,
-      "effDlst": 0.1242,
-      "effSource": "fcfMargin",
-      "scorePreHaircut": null,
-      "decelerating": false,
-      "chronicAcquirer": true,
-      "dealYearExcluded": true,
-      "goodwillToRev": 1.51,
-      "cumPaymentsToRev": 0.165,
-      "belowAbsoluteFloor": false
-    },
-    {
-      "order": 4,
       "ticker": "EXAS",
       "cohort": "dx",
       "score": 42.6,
@@ -200,7 +175,7 @@
       "scorePreHaircut": null,
       "decelerating": false,
       "chronicAcquirer": true,
-      "dealYearExcluded": true,
+      "dealYearExcluded": false,
       "goodwillToRev": 0.729,
       "cumPaymentsToRev": 0.041,
       "belowAbsoluteFloor": false
@@ -209,7 +184,6 @@
   "evaluatedTickers": [
     "MEDP",
     "VCYT",
-    "RGEN",
     "EXAS"
   ],
   "priceAnchors": {
@@ -220,10 +194,6 @@
     "VCYT": {
       "date": "2026-05-17",
       "close": 38.47999954223633
-    },
-    "RGEN": {
-      "date": "2026-06-12",
-      "close": 130.58999633789062
     },
     "EXAS": {
       "date": "2026-05-17",
