@@ -60,7 +60,10 @@ async function main() {
       const r = await yf.chart(s.yahoo_symbol, { period1, period2, interval: '1d' });
       const quotes = (r.quotes || []).filter(q => q.close != null).map(q => ({
         date: (q.date instanceof Date ? q.date.toISOString().slice(0,10) : String(q.date).slice(0,10)),
-        close: q.close
+        // bug-fix (audit 2026-06-21): store the split/dividend-ADJUSTED close to match
+        // pull-historical-prices.js — both write the shared prices/history.json, so raw close here
+        // injected a phantom jump across splits for bulk-touched tickers.
+        close: q.adjclose != null ? q.adjclose : q.close
       }));
       if (quotes.length > 5) {
         out[s.ticker] = quotes;
