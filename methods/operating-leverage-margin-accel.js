@@ -97,7 +97,7 @@ function evaluate(stock) {
     const rev = _unwrap(revArr[i]);
     const oi  = _unwrap(oiArr[i]);
     if (rev == null || oi == null || rev <= 0) continue;
-    years.push({ rev, oi, opMargin: oi / rev });
+    years.push({ rev, oi, opMargin: oi / rev, idx: i });
   }
 
   if (years.length < MIN_YEARS) {
@@ -114,6 +114,9 @@ function evaluate(stock) {
   for (let i = 0; i < years.length - 1; i++) {
     const newer = years[i];
     const older = years[i + 1];
+    // bug-fix (audit 2026-06-21): only pair ADJACENT calendar years — invalid years were compacted
+    // out of years[], so years[i]/years[i+1] could straddle a dropped year and inflate the 1y growth.
+    if (older.idx !== newer.idx + 1) continue;
     const revGrowth = (newer.rev - older.rev) / older.rev;
     if (!Number.isFinite(revGrowth) || revGrowth <= POS_GROWTH_FLOOR) continue;
     const marginDelta = newer.opMargin - older.opMargin;

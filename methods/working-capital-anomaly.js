@@ -42,9 +42,12 @@ function evaluate(stock) {
       computable: false, reason: `missing values`, threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
-  if (wcT1 <= 0 || revT1 <= 0) {
+  // bug-fix (audit 2026-06-21): also guard wcT <= 0 (current WC-proxy non-positive). A negative
+  // current proxy made wcGrowth negative -> ratio negative -> trivial pass, silently missing a WC
+  // sign-flip. The ratio is uninterpretable when either endpoint is non-positive -> incomputable.
+  if (wcT <= 0 || wcT1 <= 0 || revT1 <= 0) {
     return H.buildResult({
-      computable: false, reason: `wcT1 or revT1 <= 0`, threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+      computable: false, reason: `wcT/wcT1/revT1 <= 0 (WC-ratio undefined)`, threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
   const wcGrowth = wcT / wcT1;
