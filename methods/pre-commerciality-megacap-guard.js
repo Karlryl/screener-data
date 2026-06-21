@@ -60,6 +60,24 @@ function evaluate(stock) {
   const mcap = _unwrap(stock.marketCap);
   const revArr = (stock.annual && stock.annual.annualRev) || [];
   const rev0 = _unwrap(revArr[0]);
+  // BUG-fix (audit 2026-06-21): a NULL latest-year revenue is a Yahoo data gap, NOT proof of
+  // pre-commerciality. Use the best available revenue basis — annualRev[0], else the first finite
+  // later annual year, else metrics.revenueTTM — before judging. Genuine pre-revenue names report
+  // 0 (finite), which still fails the floor below; only a TOTAL absence of any revenue figure is
+  // treated as "cannot judge" (guard inactive) rather than a hard fail. Prevents DG-03 wiring from
+  // ejecting a fully-commercial QC name on a single missing-latest-year-revenue snapshot.
+  let revBasis = rev0;
+  let revSource = 'annualRev[0]';
+  if (revBasis == null) {
+    for (let i = 1; i < revArr.length; i++) {
+      const v = _unwrap(revArr[i]);
+      if (v != null) { revBasis = v; revSource = 'annualRev[' + i + ']'; break; }
+    }
+  }
+  if (revBasis == null) {
+    const ttmRev = _unwrap(stock.metrics && stock.metrics.revenueTTM);
+    if (ttmRev != null) { revBasis = ttmRev; revSource = 'revenueTTM'; }
+  }
 
   // mcap is the precondition — without it, no judgement.
   if (mcap == null || mcap <= 0) {
@@ -84,25 +102,31 @@ function evaluate(stock) {
     });
   }
 
-  // Above mcap floor: revenue must exist AND clear the floor.
-  const failsForNullRev = (rev0 == null);
-  const failsForLowRev  = (rev0 != null && rev0 < REV_FLOOR);
-  const pass = !(failsForNullRev || failsForLowRev);
+  // Above mcap floor: a revenue figure must exist AND clear the floor. No revenue figure anywhere
+  // (all annual years null + no TTM) -> cannot judge -> guard inactive (computable:false), NOT a fail.
+  if (revBasis == null) {
+    return H.buildResult({
+      computable: false,
+      reason: 'mcap ' + (mcap/1e9).toFixed(2) + 'B but no revenue figure (annualRev all null, no revenueTTM) — guard inactive',
+      threshold: REV_FLOOR, thresholdOp: 'gte'
+    });
+  }
+  const pass = revBasis >= REV_FLOOR;
 
   return H.buildResult({
-    value: rev0 == null ? -1 : rev0,
+    value: revBasis,
     pass,
     computable: true,
     components: {
-      mcap, rev0,
+      mcap, rev0, revBasis, revSource,
       mcapFloor: MCAP_FLOOR,
       revFloor: REV_FLOOR,
       applied: true,
-      failureReason: pass ? null : (failsForNullRev ? 'rev0-null' : 'rev0-below-floor')
+      failureReason: pass ? null : 'rev-below-floor'
     },
     reason: pass
-      ? 'mcap ' + (mcap/1e9).toFixed(2) + 'B + rev ' + (rev0/1e6).toFixed(0) + 'M ≥ floor — pass'
-      : 'mcap ' + (mcap/1e9).toFixed(2) + 'B + rev ' + (rev0 == null ? 'null' : (rev0/1e6).toFixed(0) + 'M') +
+      ? 'mcap ' + (mcap/1e9).toFixed(2) + 'B + rev ' + (revBasis/1e6).toFixed(0) + 'M (' + revSource + ') >= floor — pass'
+      : 'mcap ' + (mcap/1e9).toFixed(2) + 'B + rev ' + (revBasis/1e6).toFixed(0) + 'M (' + revSource + ')' +
         ' < ' + (REV_FLOOR/1e6).toFixed(0) + 'M floor — narrative-only mega-cap pattern',
     threshold: REV_FLOOR, thresholdOp: 'gte'
   });
