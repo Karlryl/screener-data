@@ -33,8 +33,11 @@ function latestAnnual(stock, key) {
   if (!Array.isArray(arr) || arr.length === 0) return null;
   const v = arr[0];
   if (v == null) return null;
-  if (typeof v === 'number') return v;
-  if (typeof v === 'object' && 'value' in v) return v.value;
+  // Bug-fix (audit 2026-06-21): reject NaN/Infinity (mirror metricValue F-ME-015). A NaN passthrough
+  // makes a CORE method compute value=NaN -> pass=false/computable=true -> it scores 0 (definitive
+  // fail) AND counts toward the coverage denominator, instead of being excluded as incomputable.
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  if (typeof v === 'object' && 'value' in v) return Number.isFinite(v.value) ? v.value : null;
   return null;
 }
 
@@ -42,8 +45,9 @@ function latestBalance(stock, field) {
   const arr = val(stock, 'annual.annualBalance');
   if (!Array.isArray(arr) || arr.length === 0) return null;
   // Bug #13: normalize to null (not undefined) when field is absent
+  // Bug-fix (audit 2026-06-21): reject NaN/Infinity too (Bug #13 only normalized undefined/null).
   const v = arr[0] != null ? arr[0][field] : undefined;
-  return v != null ? v : null;
+  return Number.isFinite(v) ? v : null;
 }
 
 function cagr3y(annualArr) {
@@ -51,7 +55,9 @@ function cagr3y(annualArr) {
   const latest = annualArr[0] && (typeof annualArr[0] === 'number' ? annualArr[0] : annualArr[0].value);
   const oldest = annualArr[3] && (typeof annualArr[3] === 'number' ? annualArr[3] : annualArr[3].value);
   // Bug #14: guard latest <= 0 — fractional power of negative base yields NaN
-  if (latest == null || oldest == null || latest <= 0 || oldest <= 0) return null;
+  // Bug-fix (audit 2026-06-21): NaN passes both the ==null and <=0 checks (NaN<=0 is false), so
+  // a NaN input would flow into Math.pow and return NaN — guard finiteness explicitly.
+  if (!Number.isFinite(latest) || !Number.isFinite(oldest) || latest <= 0 || oldest <= 0) return null;
   return (Math.pow(latest / oldest, 1/3) - 1) * 100;
 }
 
