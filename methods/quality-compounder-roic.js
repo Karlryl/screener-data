@@ -144,6 +144,14 @@ function evaluate(stock) {
     pathUsed = 'high-turnover-retail-tier';
   }
 
+  // bug-fix (audit 2026-06-21): export the EFFECTIVE pass threshold (0.20 std / 0.17 AT-override /
+  // 0.15 retail-tier) so SAT's gradedPassScore graduates the ROIC margin against the bar the method
+  // actually used — not always 0.20, which under-credited override/retail-tier passers. Mirrors
+  // reinvestment-rate.js exporting its effectiveThreshold.
+  const effectiveThreshold = pathUsed === 'high-turnover-retail-tier' ? THRESHOLD_RETAIL_TIER
+    : pathUsed === 'high-turnover-override' ? THRESHOLD_OVERRIDE
+    : THRESHOLD_STD;
+
   return H.buildResult({
     computable: true,
     pass,
@@ -164,7 +172,7 @@ function evaluate(stock) {
       revenue: rev
     },
     reason: `PreTax-ROIC = ${(opInc/1e9).toFixed(1)}B / ${(investedCapital/1e9).toFixed(1)}B = ${(preTaxROIC*100).toFixed(1)}% (AT=${at != null ? at.toFixed(2) : 'n/a'}, ${pathUsed}, IC=${icMethod})`,
-    threshold: THRESHOLD_STD, thresholdOp: THRESHOLD_OP
+    threshold: effectiveThreshold, thresholdOp: THRESHOLD_OP
   });
 }
 

@@ -49,7 +49,11 @@ function _classifySource(arr, revArr) {
   let consecutiveFromY0 = 0;
   let counting = true;
   for (const v of arr) {
-    if (v == null) break;
+    // bug-fix (audit 2026-06-21): skip interior null years (data gaps) — do NOT break. break aborted
+    // the positive-year count at the first gap while yearsAvail (below) counts all non-null years, so a
+    // fully-positive STABLE firm with one missing year mis-classified as RECENT. Matches the sibling
+    // convention in earnings-stability.js. A null is a gap; only a negative breaks the consecutive run.
+    if (v == null) continue;
     if (v > 0) { positiveCount++; if (counting) consecutiveFromY0++; }
     else counting = false;
   }
