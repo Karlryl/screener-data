@@ -5,6 +5,17 @@
  * Output: prices/YYYY-MM-DD.json mit { ticker: { close, asOf } } (latest only)
  * Plus: prices-history.json (kumulativ) — ticker → array of {date, close}
  *
+ * audit F-A-2026-06-21: conflicting price semantics (raw close vs adjusted close
+ * under the same `close` key). CANONICAL CONTRACT for prices/history.json and the
+ * per-day prices/<date>.json: the `close` field stores the ADJUSTED close
+ * (split/dividend-adjusted, `adjclose ?? close`), standardized in Tag 148 and
+ * consumed by walk-forward-perf.js (which reads `e.close` blindly). This is the
+ * single source of truth — any OTHER writer of these files (e.g. pull-prices-bulk.js)
+ * MUST write the same adjusted-close semantic, NOT the raw close, or the two pullers
+ * will silently mix raw and adjusted prices into one series and corrupt returns.
+ * (pull-prices-bulk.js is a separate file and is fixed there; this note documents the
+ * contract this entrypoint owns and standardizes on.)
+ *
  * Run: node pull-historical-prices.js [--watchlist watchlist.json] [--out prices/]
  */
 'use strict';
@@ -54,8 +65,12 @@ async function main() {
     { ticker: 'QQQ', yahoo_symbol: 'QQQ', name: 'Invesco QQQ (Nasdaq-100)', added_via: 'benchmark' },
     { ticker: 'IWM', yahoo_symbol: 'IWM', name: 'iShares Russell 2000', added_via: 'benchmark' }
   ];
+  // audit F-A-2026-06-21: duplicate benchmark row — dedupe case-insensitively so a
+  // watchlist entry like 'spy' (lowercase) or a benchmark whose ticker differs only in
+  // case can't slip past the exact-match guard and get processed twice under a divergent
+  // ticker key. b.ticker is already upper-case in BENCHMARKS above.
   for (const b of BENCHMARKS) {
-    if (!wl.stocks.find(s => s.ticker === b.ticker)) wl.stocks.unshift(b);
+    if (!wl.stocks.some(s => (s.ticker || '').toUpperCase() === b.ticker)) wl.stocks.unshift(b);
   }
   const today = new Date().toISOString().slice(0, 10);
 
@@ -113,9 +128,15 @@ async function main() {
       const latestQuoteDate = latestQuote.date
         ? (latestQuote.date instanceof Date ? latestQuote.date : new Date(latestQuote.date)).toISOString().slice(0, 10)
         : today;
-      todaysSnapshot[stock.ticker] = { close: latestClose, asOf: today, currency: result.meta && result.meta.currency };
+      // audit F-A-2026-06-21: weekend phantom-date — per-day snapshot now stamps the
+      // real exchange trading date (latestQuoteDate, Tag 231a-3) instead of the calendar
+      // run date `today`. On a Saturday/holiday run the prices/<date>.json file previously
+      // labeled Friday's adjclose as asOf=Saturday, re-introducing the exact Sat→Fri
+      // phantom-date mapping the history array was fixed to avoid. We keep the run date
+      // explicitly as `pulledOn` for provenance.
+      todaysSnapshot[stock.ticker] = { close: latestClose, asOf: latestQuoteDate, pulledOn: today, currency: result.meta && result.meta.currency };
 
-      // Extend history: only add latest trading-day entry if not already there
+      // Extend history: back-fill the full fetched series, not just the latest day.
       if (!history[stock.ticker]) history[stock.ticker] = [];
       // Tag 223c (audit F-222a-6 HIGH fix): replace O(N) .find() with O(1)
       // last-element check (array is sorted ascending by date in the steady
@@ -123,9 +144,25 @@ async function main() {
       // (which allocates a fresh array each call) with in-place .splice when
       // the array exceeds 400 entries. At 19k × 400 = 7.6M comparisons -> ~7.6k.
       const arr = history[stock.ticker];
-      if (arr.length === 0 || arr[arr.length - 1].date !== latestQuoteDate) {
-        arr.push({ date: latestQuoteDate, close: latestClose }); // stored as 'close' for backward compat
+      // audit F-A-2026-06-21: under-length series → null forward-return → survivorship-like
+      // exclusion. Previously processOne fetched 400 days but appended ONLY the single
+      // latest quote, so any freshly-discovered ticker had a 1-point history and grew by
+      // 1/day — walk-forward had near-zero history for most of the universe and silently
+      // dropped those tickers (null forward returns). Mirror the SPY back-fill (lines
+      // below): insert every fetched quote whose date isn't already present, then sort+trim.
+      // One-time this fills history for the whole universe; steady-state it's a no-op append.
+      const knownDates = new Set(arr.map(e => e.date));
+      let changed = false;
+      for (const q of quotes) {
+        const d = (q.date instanceof Date ? q.date : new Date(q.date)).toISOString().slice(0, 10);
+        const c = q.adjclose ?? q.close; // store adjusted close (split/dividend-adjusted), same semantic as Tag 148
+        if (!knownDates.has(d)) {
+          arr.push({ date: d, close: c }); // 'close' key holds ADJUSTED close (Tag 148); kept for backward compat
+          knownDates.add(d);
+          changed = true;
+        }
       }
+      if (changed) arr.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
       if (arr.length > 400) arr.splice(0, arr.length - 400);
       ok++;
     } catch (e) {
@@ -144,21 +181,36 @@ async function main() {
   }
 
 
-  // Tag 134 — Phase 3.3 (guarantee): always ensure SPY is in history, even if the
-  // benchmark-injection above was a no-op (e.g. history.json pre-dates that fix).
-  // Only pull if SPY is missing from history OR missing from today's snapshot.
-  if (!history['SPY'] || !todaysSnapshot['SPY']) {
+  // Tag 134 — Phase 3.3 (guarantee): always ensure each benchmark is in history,
+  // even if the benchmark-injection above was a no-op (e.g. history.json pre-dates
+  // that fix). Only pull a benchmark if it is missing from history OR missing from
+  // today's snapshot.
+  // audit F-A-2026-06-21: single-point benchmark → invalid alpha. The dedicated
+  // back-fill was hardcoded to SPY only; QQQ and IWM (both listed in BENCHMARKS and
+  // unshifted into the watchlist) flowed solely through processOne and — before the
+  // per-ticker back-fill fix above — accumulated a 1-point series. alpha-vs-QQQ/IWM in
+  // walk-forward was therefore computed against a single-day benchmark. Generalize the
+  // guarantee loop over the whole BENCHMARKS array so every benchmark gets a full series.
+  for (const bench of BENCHMARKS) {
+    const sym = bench.yahoo_symbol;
+    const key = bench.ticker;
+    if (history[key] && todaysSnapshot[key]) continue;
     try {
-      _log('INFO', 'SPY not in history — pulling dedicated SPY benchmark...');
+      _log('INFO', `${key} not in history — pulling dedicated ${key} benchmark...`);
       const period1 = new Date(Date.now() - 400 * 86400 * 1000);
       const period2 = new Date();
-      const spyResult = await yf.chart('SPY', { period1, period2, interval: '1d' });
-      const spyQuotes = (spyResult.quotes || []).filter(q => (q.adjclose ?? q.close) != null);
-      if (spyQuotes.length) {
-        const latestSpyQuote = spyQuotes[spyQuotes.length - 1];
-        const latestClose = latestSpyQuote.adjclose ?? latestSpyQuote.close;
-        todaysSnapshot['SPY'] = { close: latestClose, asOf: today, currency: spyResult.meta && spyResult.meta.currency };
-        if (!history['SPY']) history['SPY'] = [];
+      const benchResult = await yf.chart(sym, { period1, period2, interval: '1d' });
+      const benchQuotes = (benchResult.quotes || []).filter(q => (q.adjclose ?? q.close) != null);
+      if (benchQuotes.length) {
+        const latestBenchQuote = benchQuotes[benchQuotes.length - 1];
+        const latestClose = latestBenchQuote.adjclose ?? latestBenchQuote.close;
+        // audit F-A-2026-06-21: weekend phantom-date (see processOne) — stamp the real
+        // exchange trading date, not the calendar run date, in the per-day snapshot.
+        const latestBenchDate = latestBenchQuote.date
+          ? (latestBenchQuote.date instanceof Date ? latestBenchQuote.date : new Date(latestBenchQuote.date)).toISOString().slice(0, 10)
+          : today;
+        todaysSnapshot[key] = { close: latestClose, asOf: latestBenchDate, pulledOn: today, currency: benchResult.meta && benchResult.meta.currency };
+        if (!history[key]) history[key] = [];
         // Tag 223c (audit F-222a-9 MEDIUM fix): replace O(N²) .find() in
         // back-fill loop (~400 quotes × 400 history entries = ~160k compares)
         // with a single Set of known dates (O(N) total).
@@ -169,24 +221,24 @@ async function main() {
         // {Friday, Friday-price} (real) in history. The back-fill loop below
         // already inserts the real dated entry; the pre-push was redundant at
         // best and date-corrupting at worst.
-        const spyKnownDates = new Set(history['SPY'].map(e => e.date));
+        const benchKnownDates = new Set(history[key].map(e => e.date));
         // Back-fill all available dates from this pull (so walk-forward has enough history)
-        for (const q of spyQuotes) {
+        for (const q of benchQuotes) {
           const d = (q.date instanceof Date ? q.date : new Date(q.date)).toISOString().slice(0, 10);
-          if (!spyKnownDates.has(d)) {
-            history['SPY'].push({ date: d, close: q.adjclose ?? q.close });
-            spyKnownDates.add(d);
+          if (!benchKnownDates.has(d)) {
+            history[key].push({ date: d, close: q.adjclose ?? q.close }); // 'close' key = ADJUSTED close (Tag 148)
+            benchKnownDates.add(d);
           }
         }
-        history['SPY'].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
-        history['SPY'] = history['SPY'].slice(-400);
+        history[key].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+        history[key] = history[key].slice(-400);
         ok++;
-        _log('INFO', `SPY dedicated pull: ${history['SPY'].length} history entries`);
+        _log('INFO', `${key} dedicated pull: ${history[key].length} history entries`);
       } else {
-        _log('WARN', 'SPY dedicated pull returned no quotes');
+        _log('WARN', `${key} dedicated pull returned no quotes`);
       }
     } catch (e) {
-      _log('WARN', `SPY dedicated pull failed: ${e.message}`);
+      _log('WARN', `${key} dedicated pull failed: ${e.message}`);
     }
   }
 

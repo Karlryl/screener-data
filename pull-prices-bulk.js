@@ -53,9 +53,18 @@ async function main() {
       const period1 = new Date(Date.now() - 100 * 86400 * 1000);
       const period2 = new Date();
       const r = await yf.chart(s.yahoo_symbol, { period1, period2, interval: '1d' });
-      const quotes = (r.quotes || []).filter(q => q.close != null).map(q => ({
+      // audit F-A-2026-06-21: prevents silent data-integrity corruption from two
+      // pullers writing CONFLICTING price semantics under the same `close` key into
+      // the same prices/history.json. This bulk puller previously stored the RAW
+      // close (q.close), while the workflow entrypoint pull-historical-prices.js
+      // (Tag 148) and the downstream consumer walk-forward-perf.js both treat the
+      // `close` field as the dividend/split-ADJUSTED close (q.adjclose ?? q.close).
+      // Mixing raw and adjusted closes for the same ticker silently distorts return
+      // calculations. Align with the entrypoint: store adjusted close, kept under
+      // the `close` key for backward compat with existing history.json + consumers.
+      const quotes = (r.quotes || []).filter(q => (q.adjclose ?? q.close) != null).map(q => ({
         date: (q.date instanceof Date ? q.date.toISOString().slice(0,10) : String(q.date).slice(0,10)),
-        close: q.close
+        close: (q.adjclose ?? q.close)
       }));
       if (quotes.length > 5) {
         // audit F-A-2026-06-21: dropped the dead `out[s.ticker] = quotes;` write —
