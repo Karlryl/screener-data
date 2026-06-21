@@ -363,7 +363,10 @@ if (require.main === module) {
   const files = fs.readdirSync(snapshotDir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
   const stocks = [];
   for (const f of files) {
-    try { stocks.push(JSON.parse(fs.readFileSync(path.join(snapshotDir, f), 'utf8'))); } catch (e) {}
+    // bug-fix (audit 2026-06-21): warn instead of silently swallowing — a batch of truncated/partial-
+    // write snapshots would otherwise shrink the median sample with zero operator signal.
+    try { stocks.push(JSON.parse(fs.readFileSync(path.join(snapshotDir, f), 'utf8'))); }
+    catch (e) { console.warn('[sector-medians-compute] skipped unreadable snapshot ' + f + ': ' + e.message); }
   }
   const auto = computeMedians(stocks, (s) => Engine.classifySubProfile(s));
   writeAutoMedians(auto);

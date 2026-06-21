@@ -150,9 +150,12 @@ function evaluate(stock) {
     const minPos = absVals.filter(v => v > 0).reduce((a, b) => Math.min(a, b), Infinity);
     const maxAbs = absVals.reduce((a, b) => Math.max(a, b), 0);
     revVolRatio = (minPos > 0 && Number.isFinite(minPos)) ? maxAbs / minPos : null;
-    // Fire if any rev year ≤ 0 (impossible for operating business),
-    // OR peak/trough > 3x AND we saw a non-positive year (lumpy + negative).
-    s3 = hasNonPositive || (revVolRatio != null && revVolRatio > REV_VOL_RATIO_MAX && hasNonPositive);
+    // Fire if any rev year <= 0 (impossible for an operating business — the gain/loss-accounting
+    // smoking gun). bug-fix (audit 2026-06-21): the old "OR (revVol>3x AND hasNonPositive)" clause
+    // was DEAD — its hasNonPositive term is already covered by the leading hasNonPositive, so
+    // REV_VOL_RATIO_MAX never affected the verdict. Reduced to the operative condition; revVolRatio
+    // stays in components as a diagnostic only. Behavior-neutral.
+    s3 = hasNonPositive;
   }
 
   // --- Signal S4: Financial-or-Real-Estate sector FCF pass-through (anti-leverage check) ---
