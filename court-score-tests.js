@@ -659,6 +659,381 @@ test('Unit computeMedtechOrganicGrowth (d): FY-Reconciliation wirft NICHT bei gu
   assert(!threw, 'FY-Reconciliation darf bei gutem Rev-Match (<15%) NICHT failen');
 });
 
+// =================== DIAGNOSTICS_LST BUCKET TESTS (v0/v1.0, cohort-aware dx|tools) ===================
+
+const dlst = doc.diagnostics_lst;
+const DL = dlst ? dlst.members : [];
+const dlfind = t => DL.find(m => m.ticker === t);
+
+test('diagnostics_lst: bucket existiert + label nennt cohort-aware', () => {
+  assert(dlst && Array.isArray(dlst.members), 'diagnostics_lst bucket fehlt');
+  assert(/cohort-aware/i.test(dlst.label || ''), `label sollte cohort-aware nennen: ${dlst.label}`);
+});
+
+test('diagnostics_lst: SI-5 classifiedCount === scoredCount (KEINE stillen Drops)', () => {
+  assert(dlst.classifiedCount != null && dlst.scoredCount != null, 'classifiedCount/scoredCount fehlen');
+  assert(dlst.classifiedCount === dlst.scoredCount, `stille Drops: ${dlst.classifiedCount} !== ${dlst.scoredCount}`);
+  assert(dlst.scoredCount === DL.length, `scoredCount ${dlst.scoredCount} !== members.length ${DL.length}`);
+  assert(dlst.scoredCount === 29, `dlst sollte alle 29 Namen scoren, ist ${dlst.scoredCount}`);
+});
+
+test('diagnostics_lst: cohort-Tags (dx | tools) auf jedem Member + cohortCounts korrekt', () => {
+  for (const m of DL) assert(m.cohort === 'dx' || m.cohort === 'tools', `${m.ticker} cohort ungültig: ${m.cohort}`);
+  assert(dlst.cohortCounts && dlst.cohortCounts.dx === 12 && dlst.cohortCounts.tools === 17,
+    `cohortCounts sollte {dx:12,tools:17} sein, ist ${JSON.stringify(dlst.cohortCounts)}`);
+  // Spot-checks aus der Spec
+  assert(dlfind('IDXX').cohort === 'dx', 'IDXX sollte dx sein');
+  assert(dlfind('TMO').cohort === 'tools', 'TMO sollte tools sein');
+});
+
+test('diagnostics_lst: SI-3 comparabilityNote + normTableId + per-cohort anchors', () => {
+  assert(dlst.normTableId === 'dlst-norms-2026-06-20', `normTableId falsch: ${dlst.normTableId}`);
+  assert(dlst.comparabilityNote && /cohort/i.test(dlst.comparabilityNote) && /PER COHORT/i.test(dlst.comparabilityNote),
+    'comparabilityNote sollte per-cohort REL erklären');
+  assert(dlst.anchorsByCohort && dlst.anchorsByCohort.dx && dlst.anchorsByCohort.tools,
+    'anchorsByCohort (dx + tools) fehlt');
+  // pro-Kohorte verschiedene Mediane → Beweis, dass NICHT gepoolt wird (dx-GM > tools-GM)
+  const dxGm = dlst.anchorsByCohort.dx.gm, toolsGm = dlst.anchorsByCohort.tools.gm;
+  assert(dxGm && toolsGm && dxGm.median != null && toolsGm.median != null, 'GM-Mediane je Kohorte fehlen');
+});
+
+test('diagnostics_lst: SI-4 Out-class score=null + excluded[] (kein irreführender Rang)', () => {
+  assert(Array.isArray(dlst.excluded), 'dlst.excluded[] fehlt');
+  for (const m of dlst.excluded) {
+    assert(m.membershipClass === 'Out', `excluded ${m.ticker} sollte Out sein, ist ${m.membershipClass}`);
+    assert(m.score === null, `excluded ${m.ticker} score sollte null sein, ist ${m.score}`);
+  }
+  for (const m of DL) {
+    if (m.membershipClass === 'Out') assert(m.score === null, `${m.ticker} Out-class score sollte null sein, ist ${m.score}`);
+    else assert(Number.isFinite(m.score) && m.score >= 0, `${m.ticker} Score ungültig: ${m.score}`);
+  }
+});
+
+test('diagnostics_lst: gateOpen-Floor scharf auf latestOrganicYoY (>=0.15) für headlineShortlist', () => {
+  const headline = DL.filter(m => m.headlineShortlist);
+  assert(headline.length >= 3 && headline.length <= 20, `headline count ${headline.length} nicht in [3,20]`);
+  for (const m of headline) {
+    assert(m.latestOrganicYoY != null && m.latestOrganicYoY >= 0.15 - 1e-9,
+      `${m.ticker} headline aber latestOrganicYoY ${m.latestOrganicYoY} < 0.15 (Floor-Bypass!)`);
+  }
+  // KEIN Name mit latestOrganicYoY < 0.15 auf der Shortlist
+  for (const m of DL) {
+    if (m.latestOrganicYoY != null && m.latestOrganicYoY < 0.15) {
+      assert(m.headlineShortlist === false, `${m.ticker} latest ${m.latestOrganicYoY}<0.15 aber headlineShortlist`);
+    }
+  }
+});
+
+test('diagnostics_lst: NO BACK-LOADING — growthOrganic <= latestOrganicYoY (deceleration-safe min())', () => {
+  for (const m of DL) {
+    if (m.growthOrganic != null && m.latestOrganicYoY != null) {
+      assert(m.growthOrganic <= m.latestOrganicYoY + 1e-9,
+        `${m.ticker} growthOrganic ${m.growthOrganic} > latestOrganicYoY ${m.latestOrganicYoY} (Back-Loading; min() verletzt)`);
+    }
+  }
+});
+
+// =================== v1.1 REMEDIATION (Court v1.0 DENIED → v1.1 Fixes A-F) ===================
+
+test('diagnostics_lst v1.1 Fix A: KEIN headlineShortlist-Name mit growthOrganic < 0.15 (Gate liest growthOrganic, NICHT uncapped latest)', () => {
+  // FATAL-Fix A: das gateOpen-Growth-Floor MUSS die deceleration-sichere growthOrganic = min(latest,blend)
+  // lesen (wie die Score-Achse), NICHT die rohe latestOrganicYoY. Sonst leakt ADPT (latest 54.8%, organic 10.6%).
+  const headline = DL.filter(m => m.headlineShortlist);
+  assert(headline.length > 0, 'kein headlineShortlist-Name vorhanden');
+  for (const m of headline) {
+    assert(m.growthOrganic != null && m.growthOrganic >= 0.15 - 1e-9,
+      `${m.ticker} ist headlineShortlist aber growthOrganic ${m.growthOrganic} < 0.15 (Gate-Floor-Bypass — Fix A verletzt)`);
+  }
+  // ADPT-spezifisch: latest 54.8% > 0.15 ABER growthOrganic 10.6% < 0.15 → MUSS off-shortlist sein.
+  const adpt = dlfind('ADPT');
+  if (adpt) {
+    assert(adpt.growthOrganic < 0.15, `ADPT growthOrganic sollte <0.15 sein (decelerating), ist ${adpt.growthOrganic}`);
+    assert(adpt.headlineShortlist === false, `ADPT (organic ${adpt.growthOrganic}<0.15, latest ${adpt.latestOrganicYoY}) darf NICHT auf der Shortlist sein (Fix A)`);
+  }
+});
+
+test('diagnostics_lst v1.1 Fix B: Gate-Effizienz-Arme lesen TRUE opMargin (Arm 1/RoX) UND FCF (Arm 2) UNABHÄNGIG — kein Slot-Poisoning', () => {
+  // FATAL-Fix B: vorher floss der FCF-primäre Proxy (effForAbs) in den opMargin-Slot → Arm 3 (Rule-of-X,
+  // (growth+opMargin)>=0.30) lief auf FCF statt opMargin. FIX: opMargin-Slot = echter opMargin, fcfMargin-Slot = FCF.
+  // Wir replizieren effGatePass mit den ECHTEN Feldern und verlangen, dass belowAbsoluteFloor exakt dazu passt.
+  const { NORMS, gateOpen } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  for (const m of DL) {
+    const cohortNorm = m.cohort === 'tools' ? 'diagnostics_lst_tools' : 'diagnostics_lst_dx';
+    const g = m.growthOrganic, gm = m.gm == null ? 0 : m.gm;
+    const opM = m.opMargin == null ? 0 : m.opMargin;        // TRUE opMargin in den opMargin-Slot
+    const fcf = m.fcfMargin == null ? (m.effDlst == null ? 0 : m.effDlst) : m.fcfMargin; // FCF in den fcfMargin-Slot
+    const expectOpen = gateOpen({ growth: g, gm, opMargin: opM, fcfMargin: fcf }, cohortNorm);
+    assert(m.belowAbsoluteFloor === !expectOpen,
+      `${m.ticker} belowAbsoluteFloor=${m.belowAbsoluteFloor} aber TRUE-slot gateOpen=${expectOpen} (Slot-Poisoning — Fix B verletzt)`);
+  }
+  // NTRA-spezifisch: echte RoX (growth+opMargin) ~22.5% < 30% UND FCF 3.3% < 5% → MUSS belowAbsoluteFloor sein.
+  const ntra = dlfind('NTRA');
+  if (ntra) {
+    const rox = ntra.growthOrganic + (ntra.opMargin || 0);
+    assert(rox < 0.30, `NTRA true RoX (growth+opMargin) sollte <0.30 sein, ist ${rox.toFixed(3)} (opMargin ${ntra.opMargin})`);
+    assert((ntra.fcfMargin || 0) < 0.05, `NTRA FCF sollte <0.05 sein, ist ${ntra.fcfMargin}`);
+    assert(ntra.belowAbsoluteFloor === true, `NTRA (RoX ${rox.toFixed(3)}<0.30, FCF<0.05) MUSS belowAbsoluteFloor sein (Fix B)`);
+    assert(ntra.headlineShortlist === false, 'NTRA darf NICHT auf der Shortlist sein (Fix B)');
+  }
+});
+
+test('diagnostics_lst v1.1 Fix B: opMargin-Slot ist der ECHTE opMargin, nicht der FCF-Proxy (NTRA opMargin != effDlst)', () => {
+  // Beweist, dass das Gate NICHT mehr effDlst (FCF-Proxy) als opMargin missbraucht: für mindestens einen Namen
+  // divergiert opMargin materiell von effDlst (FCF), und das Gate-Ergebnis folgt dem ECHTEN opMargin.
+  const ntra = dlfind('NTRA');
+  if (ntra) {
+    assert(ntra.opMargin != null && ntra.effDlst != null && Math.abs(ntra.opMargin - ntra.effDlst) > 0.10,
+      `NTRA opMargin (${ntra.opMargin}) und effDlst/FCF (${ntra.effDlst}) sollten materiell divergieren (Beweis: getrennte Slots)`);
+  }
+});
+
+test('diagnostics_lst v1.2 Fix 2: eff-REL-Taper — positiver eff-REL-z STETIG getapert über [floor-band, floor]; 0 unter dem Band, voll ab dem Floor', () => {
+  // Cohort-Pooling-Artefakt: dx-Median eff ~0 (Cash-Burner) → ein dx-Name mit kleinem positivem FCF bekäme
+  // sonst einen großen positiven eff-REL-z rein aus der schwachen Kohorte. v1.2 ersetzt den HARTEN v1.1-Clamp
+  // (s->0 bei FCF<floor, +2.5pt-Cliff) durch einen STETIGEN Taper über [floor-band, floor], band 0.04.
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  const BAND = 0.04;
+  for (const m of DL) {
+    const effFloor = NORMS[m.cohort === 'tools' ? 'diagnostics_lst_tools' : 'diagnostics_lst_dx'].eff.floor;
+    const effAx = m.axisS ? m.axisS['Eff-FCF'] : null;
+    if (effAx == null) continue;
+    assert(Number.isFinite(effAx), `${m.ticker} eff-REL-Achse ist NaN/Inf (Taper-Bug): ${effAx}`);
+    // (a) UNTER dem Band (oder effDlst null): KEIN positiver eff-REL-Kredit → Artefakt weiterhin unterdrückt.
+    if (m.effDlst == null || m.effDlst <= effFloor - BAND) {
+      assert(effAx <= 0 + 1e-9,
+        `${m.ticker} effDlst ${m.effDlst} <= floor-band ${(effFloor-BAND).toFixed(3)} aber eff-REL ${effAx} > 0 (Artefakt-Unterdrückung verletzt)`);
+    }
+  }
+  // CDNA (dx, FCF ~9.3% IM Band [0.06,0.10)) ist jetzt STETIG getapert: positiv aber kleiner als der volle z —
+  // KEIN Sprung mehr an haarscharfen FCF-Unterschieden. WGS/NTRA (FCF ~3.3% UNTER dem Band) bleiben auf 0.
+  const cdna = dlfind('CDNA');
+  if (cdna && cdna.axisS && cdna.axisS['Eff-FCF'] != null && cdna.effDlst != null && cdna.effDlst > 0.06 && cdna.effDlst < 0.10) {
+    assert(cdna.axisS['Eff-FCF'] > 0, `CDNA (FCF ${cdna.effDlst} im Taper-Band) sollte positiven getaperten eff-REL haben, ist ${cdna.axisS['Eff-FCF']}`);
+  }
+  for (const t of ['WGS', 'NTRA']) {
+    const m = dlfind(t);
+    if (m && m.axisS && m.axisS['Eff-FCF'] != null && m.effDlst != null && m.effDlst <= 0.06) {
+      assert(m.axisS['Eff-FCF'] <= 0 + 1e-9, `${t} (FCF ${m.effDlst} unter Taper-Band) sollte eff-REL 0 sein, ist ${m.axisS['Eff-FCF']}`);
+    }
+  }
+});
+
+test('diagnostics_lst v1.2 Fix 3: chronic-acquirer + decelerating Name (VCYT) — echter Score-Haircut, gezeigter Score UNTER bestem nicht-demoviertem Headline-Namen, Leiter monoton', () => {
+  const headline = DL.filter(m => m.headlineShortlist);
+  assert(headline.length > 0, 'keine Headline');
+  // members sind nach (gehaircutetem) Score sortiert → headline[0] ist der #1-Conviction-Pick.
+  const top = headline[0];
+  assert(!top.headlineDemoted, `#1-Headline ${top.ticker} ist demoted — ein demovierter Name darf nicht #1 sein`);
+  // Bester nicht-demovierter Headline-Score (das ist der ehrliche Spitzen-Pick).
+  const nonDemoted = headline.filter(m => !m.headlineDemoted && m.score != null);
+  const maxNonDemoted = Math.max(...nonDemoted.map(m => m.score));
+  // Jeder demovierte Name: VETO/HAIRCUT-Lampe + demotionNote + ECHTER Score-Haircut (gezeigter Score < best non-demoted) + scorePreHaircut erhalten.
+  const demoted = headline.filter(m => m.headlineDemoted);
+  for (const m of demoted) {
+    assert(m.lamps.some(l => /chronic-acquirer\+decelerating-HAIRCUT/.test(l)),
+      `${m.ticker} demoted aber HAIRCUT-Lampe fehlt`);
+    assert(m.demotionNote && /Fix 3|SCORE-HAIRCUT/.test(m.demotionNote), `${m.ticker} demotionNote fehlt`);
+    assert(m.scorePreHaircut != null && m.scorePreHaircut >= m.score,
+      `${m.ticker} scorePreHaircut (${m.scorePreHaircut}) sollte >= gehaircutetem score (${m.score}) sein`);
+    assert(m.score < maxNonDemoted,
+      `${m.ticker} gezeigter Score ${m.score} muss UNTER bestem nicht-demoviertem Headline-Score ${maxNonDemoted} liegen (Display-Honesty Fix 3)`);
+    const idx = headline.indexOf(m);
+    assert(idx > 0, `${m.ticker} ist demoted aber auf Position #${idx + 1} (muss hinter mind. einem Namen stehen)`);
+  }
+  // VCYT-spezifisch: chronic-acquirer + decelerating → demoted, NICHT #1, und gezeigter Score < MEDP.
+  const vcyt = dlfind('VCYT');
+  if (vcyt && vcyt.headlineShortlist) {
+    assert(vcyt.headlineDemoted === true, `VCYT (chronic-acquirer + decelerating) MUSS demoted sein (Fix 3)`);
+    assert(headline[0].ticker !== 'VCYT', `VCYT darf NICHT #1 sein (Fix 3)`);
+    const medp = dlfind('MEDP');
+    if (medp && medp.headlineShortlist) {
+      assert(vcyt.score < medp.score, `VCYT gezeigter Score ${vcyt.score} muss < MEDP ${medp.score} sein (Display-Honesty Fix 3)`);
+    }
+  }
+  // LEITER MONOTON: die headlineShortlist-Scores in Sort-Reihenfolge sind nicht-steigend.
+  for (let i = 1; i < headline.length; i++) {
+    assert(headline[i - 1].score >= headline[i].score - 1e-9,
+      `Headline-Leiter nicht monoton: ${headline[i-1].ticker} ${headline[i-1].score} < ${headline[i].ticker} ${headline[i].score}`);
+  }
+});
+
+test('diagnostics_lst v1.1 Fix D: cross-bucket-Disclosure — scoreScope=intra-bucket + crossBucketComparableField=absKaliber', () => {
+  assert(dlst.scoreScope === 'intra-bucket', `R.scoreScope sollte 'intra-bucket' sein, ist ${dlst.scoreScope}`);
+  assert(dlst.crossBucketComparableField === 'absKaliber', `R.crossBucketComparableField sollte 'absKaliber' sein`);
+  assert(/CROSS-BUCKET|cross-bucket/.test(dlst.comparabilityNote) && /absKaliber/.test(dlst.comparabilityNote),
+    'comparabilityNote sollte die cross-bucket-Disclosure (absKaliber) enthalten');
+  for (const m of DL) {
+    assert(m.scoreScope === 'intra-bucket', `${m.ticker} scoreScope fehlt/falsch`);
+    assert(m.crossBucketComparableField === 'absKaliber', `${m.ticker} crossBucketComparableField fehlt/falsch`);
+    assert(m.absKaliber != null, `${m.ticker} absKaliber (cross-bucket-comparable) fehlt`);
+  }
+});
+
+test('diagnostics_lst v1.1 Fix F: MEDP (tools CRO, growth 20%, FCF 27%, RoX 41%) wird durch gm-Floor-Rekalibrierung legitim admittiert', () => {
+  const medp = dlfind('MEDP');
+  assert(medp, 'MEDP fehlt');
+  assert(medp.growthOrganic >= 0.15, `MEDP growthOrganic ${medp.growthOrganic} sollte >=0.15 sein`);
+  assert(medp.gm >= 0.28 && medp.gm < 0.38, `MEDP gm ${medp.gm} sollte im [0.28,0.38)-Band liegen (Fix-1-Begünstigter)`);
+  assert(medp.belowAbsoluteFloor === false, 'MEDP sollte das Gate passieren (Fix 1), ist belowAbsoluteFloor');
+  assert(medp.headlineShortlist === true, 'MEDP sollte auf der Shortlist sein (Fix 1)');
+});
+
+test('diagnostics_lst v1.2 Fix 1: tools-GM-Floor auf 0.28 re-anchored → MEDP hat ECHTES Headroom (>=1.5pp), Floor nicht overfit auf MEDPs gm', () => {
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  const floor = NORMS.diagnostics_lst_tools.gm.floor;
+  assert(floor === 0.28, `tools gm-floor sollte 0.28 sein (Fix 1), ist ${floor}`);
+  const medp = dlfind('MEDP');
+  assert(medp, 'MEDP fehlt');
+  const headroom = medp.gm - floor;
+  assert(headroom >= 0.015, `MEDP gm ${medp.gm} sollte >=1.5pp über dem Floor ${floor} liegen (kein 6bp-Overfit), Headroom ${(headroom*100).toFixed(2)}pp`);
+});
+
+test('diagnostics_lst v1.2 Fix 1: ±2pp GM-Perturbation lässt MEDP headlineShortlist-Mitgliedschaft UNVERÄNDERT (robust gegen kleine GM-Revision)', () => {
+  // Re-Court-Forderung: die Headline-Mitgliedschaft von MEDP muss robust gegen eine ±2pp GM-Bewegung sein.
+  // Wir reproduzieren das gateOpen-GM-Floor-Verhalten direkt aus den live NORMS (gateOpen ist deterministisch
+  // und rein) und prüfen, dass MEDP bei gm±0.02 das GM-Floor-Gate weiterhin passiert.
+  const { NORMS, gateOpen } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  const medp = dlfind('MEDP');
+  assert(medp, 'MEDP fehlt');
+  assert(medp.cohort === 'tools', `MEDP sollte cohort=tools sein, ist ${medp.cohort}`);
+  // Baseline: MEDP ist live auf der Shortlist + passiert das Gate.
+  assert(medp.headlineShortlist === true && medp.belowAbsoluteFloor === false, 'MEDP-Baseline nicht auf Shortlist');
+  // Gate-Inputs aus dem live Member (growthOrganic, eff via fcf/opMargin) — nur gm wird perturbiert.
+  const baseRec = {
+    growth: medp.growthOrganic,
+    opMargin: medp.opMargin != null ? medp.opMargin : 0,
+    fcfMargin: medp.fcfMargin != null ? medp.fcfMargin : 0,
+  };
+  for (const d of [-0.02, +0.02]) {
+    const open = gateOpen({ ...baseRec, gm: medp.gm + d }, 'diagnostics_lst_tools');
+    assert(open === true,
+      `MEDP gm±2pp (gm ${medp.gm}${d>=0?'+':''}${d} = ${(medp.gm+d).toFixed(4)}) sollte das gateOpen weiterhin passieren — Headline-Mitgliedschaft NICHT robust gegen ±2pp GM-Move`);
+  }
+});
+
+test('diagnostics_lst v1.1 Fix F: IDXX bleibt HONEST draußen (growthOrganic <0.15 — echte Rate, kein Artefakt)', () => {
+  const idxx = dlfind('IDXX');
+  assert(idxx, 'IDXX fehlt');
+  assert(idxx.growthOrganic < 0.15, `IDXX growthOrganic ${idxx.growthOrganic} sollte <0.15 sein (echte Rate)`);
+  assert(idxx.headlineShortlist === false, 'IDXX gehört NICHT auf die Shortlist (fällt am echten Growth-Floor, korrekt für einen Growth-Screen)');
+});
+
+test('diagnostics_lst: efficiency = FCF primär, opMargin-Fallback bei >15pp-Distortion oder fcf-null', () => {
+  for (const m of DL) {
+    if (m.effSource == null) continue;
+    if (m.effSource === 'fcfMargin') {
+      assert(m.fcfMargin == null || m.effDlst == null || Math.abs(m.effDlst - m.fcfMargin) < 1e-4,
+        `${m.ticker} effSource=fcfMargin aber effDlst ${m.effDlst} != fcfMargin ${m.fcfMargin}`);
+    } else {
+      // Fallback → effDlst == opMargin
+      assert(m.opMargin == null || m.effDlst == null || Math.abs(m.effDlst - m.opMargin) < 1e-4,
+        `${m.ticker} effSource=${m.effSource} aber effDlst ${m.effDlst} != opMargin ${m.opMargin}`);
+    }
+  }
+});
+
+test('diagnostics_lst: cohort-aware GM-NORM — dx gm-floor .50, tools gm-floor .30 (v1.1 Fix F) (normTableId pro Member)', () => {
+  for (const m of DL) {
+    assert(m.normTableId === 'dlst-norms-2026-06-20', `${m.ticker} normTableId falsch: ${m.normTableId}`);
+  }
+  // v1.2 Fix 1: NORM-Tabelle hat den tools-GM-Floor auf 0.28 re-anchored (Service-/CRO-Class, war v1.1: 0.30).
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  assert(NORMS.diagnostics_lst_dx.gm.floor === 0.50, `dx gm-floor sollte 0.50 sein, ist ${NORMS.diagnostics_lst_dx.gm.floor}`);
+  assert(NORMS.diagnostics_lst_tools.gm.floor === 0.28, `tools gm-floor sollte 0.28 sein (Fix 1), ist ${NORMS.diagnostics_lst_tools.gm.floor}`);
+});
+
+test('diagnostics_lst: chronic-acquirer Lampe feuert (gw/rev>1.0 OR cumDeltaGW/rev>0.40)', () => {
+  // Mindestens ein Serial-Acquirer-Signal im Universum (VCYT/RGEN/EXAS/NEO haben hohe goodwill/rev oder cumDelta).
+  const any = DL.some(m => m.lamps.some(l => l.startsWith('chronic-acquirer')));
+  assert(any, 'mindestens ein chronic-acquirer-Lampe sollte feuern');
+  // Konsistenz: wenn Lampe da, muss eine der Schwellen erfüllt sein
+  for (const m of DL) {
+    if (m.lamps.some(l => l.startsWith('chronic-acquirer'))) {
+      const gwHi = m.goodwillToRev != null && m.goodwillToRev > 1.0;
+      const cumHi = m.cumDeltaGoodwillPctRev != null && m.cumDeltaGoodwillPctRev > 0.40;
+      assert(gwHi || cumHi, `${m.ticker} chronic-acquirer-Lampe aber gw/rev=${m.goodwillToRev} cumDelta=${m.cumDeltaGoodwillPctRev}`);
+    }
+  }
+});
+
+test('diagnostics_lst: cum-payments Lampe nur wenn cumPaymentsToRev > 0.15', () => {
+  for (const m of DL) {
+    const payLamp = m.lamps.find(l => l.startsWith('cum-payments(')); // NICHT cum-payments-coverage-null
+    if (payLamp) {
+      assert(m.cumPaymentsToRev != null && m.cumPaymentsToRev > 0.15,
+        `${m.ticker} cum-payments-Lampe aber cumPaymentsToRev=${m.cumPaymentsToRev} <= 0.15`);
+    }
+  }
+});
+
+test('diagnostics_lst: cyclicality-Lampe ist cohort-aware (tools=watch-wave-turn, dx=genuine-concern)', () => {
+  for (const m of DL) {
+    const cyc = m.lamps.find(l => l.startsWith('cyclicality'));
+    if (cyc) {
+      if (m.cohort === 'tools') assert(/watch-wave-turn/.test(cyc), `${m.ticker} tools cyclicality sollte watch-wave-turn sein: ${cyc}`);
+      else assert(/genuine-concern/.test(cyc), `${m.ticker} dx cyclicality sollte genuine-concern sein: ${cyc}`);
+    }
+  }
+});
+
+test('diagnostics_lst: R&D + shares DEFERRED → coverage-null Lampen, NIE Penalty (graceful degrade)', () => {
+  // Jeder Member trägt shares-missing(deferred) (shares-Serie nicht hydratisiert) → KEINE Strafe.
+  for (const m of DL) {
+    assert(m.lamps.some(l => l.startsWith('shares-missing(deferred')), `${m.ticker} sollte shares-missing(deferred) tragen`);
+  }
+  // Wenn rd-missing, dann als deferred/no-penalty markiert (kein Score-Eingriff).
+  for (const m of DL) {
+    const rd = m.lamps.find(l => l.startsWith('rd-missing'));
+    if (rd) assert(/deferred,no-penalty/.test(rd), `${m.ticker} rd-missing sollte deferred,no-penalty sein: ${rd}`);
+  }
+});
+
+test('diagnostics_lst: SI-6 frozen baseline v1.2 existiert + supersedes v1.1 + Demotion-aware Ranking + Score-Haircut', () => {
+  const p = path.join(ROOT, 'fitness', 'baselines', 'diagnostics-lst-v1.2-2026-06-21.json');
+  assert(fs.existsSync(p), 'SI-6 frozen v1.2 baseline fehlt');
+  const b = JSON.parse(fs.readFileSync(p, 'utf8'));
+  assert(b.baselineId === 'diagnostics-lst-v1.2-2026-06-21' && b.frozenAt === '2026-06-21', 'baseline-Meta falsch');
+  assert(b.supersedes && /v1\.1-2026-06-21/.test(b.supersedes), 'supersedes-Vermerk (v1.1) fehlt');
+  assert(Array.isArray(b.ranking) && b.ranking.length > 0, 'baseline-ranking leer');
+  assert(b.normTableId === 'dlst-norms-2026-06-20', 'baseline normTableId falsch');
+  // Das eingefrorene Ranking muss exakt der aktuellen demotion-aware Headline entsprechen (kein Drift beim Freeze).
+  const headline = DL.filter(m => m.headlineShortlist && m.score != null);
+  assert(b.ranking.length === headline.length, `baseline-ranking len ${b.ranking.length} != live headline ${headline.length}`);
+  assert(b.ranking[0].ticker === headline[0].ticker, `baseline #1 ${b.ranking[0].ticker} != live #1 ${headline[0].ticker}`);
+  assert(b.ranking[0].demoted === false, 'baseline #1 darf nicht demoted sein');
+  // Monotone Leiter im eingefrorenen Ranking (Display-Honesty Fix 3).
+  for (let i = 1; i < b.ranking.length; i++) {
+    assert(b.ranking[i - 1].score >= b.ranking[i].score - 1e-9, `baseline-ranking nicht monoton bei ${b.ranking[i].ticker}`);
+  }
+  // VCYT (falls in der Headline) muss im baseline demoted=true UND gehaircuteten Score unter #1 tragen.
+  const vcytRow = b.ranking.find(r => r.ticker === 'VCYT');
+  if (vcytRow) {
+    assert(vcytRow.demoted === true, 'VCYT im baseline muss demoted=true tragen (Fix 3)');
+    assert(vcytRow.score < b.ranking[0].score, `VCYT baseline-score ${vcytRow.score} muss < #1 ${b.ranking[0].score} sein (Fix 3)`);
+  }
+});
+
+// =================== PARITÄT: 3 PRIOR BUCKETS byte-/deep-identisch nach dlst-Addition ===================
+
+test('PARITÄT (dlst-Addition): SaaS+Fabless+Medtech byte/deep-identisch zu _parity-baseline-pre-dlst.json', () => {
+  const baseline = JSON.parse(fs.readFileSync(path.join(ROOT, 'outputs', '_parity-baseline-pre-dlst.json'), 'utf8'));
+  for (const b of ['system_app_software', 'fabless_semi', 'medtech_devices']) {
+    const got = JSON.stringify(doc[b]);
+    const exp = JSON.stringify(baseline[b]);
+    assert(got === exp, `${b} bucket NICHT byte-identisch zur pre-dlst-Baseline (len got=${got.length} exp=${exp.length}) — dlst-Addition hat einen Pfad geleakt`);
+  }
+});
+
+test('PARITÄT (dlst-Addition): KEIN dlst-only Feld auf SaaS/Fabless/Medtech-Membern (Leak-Guard)', () => {
+  for (const b of ['system_app_software', 'fabless_semi', 'medtech_devices']) {
+    for (const m of doc[b].members) {
+      for (const leak of ['_growthDlst', '_effDlst', '_capexNeg', 'effDlst', 'effSource', 'cohort', 'cumDeltaGoodwillPctRev', 'cumPaymentsToRev']) {
+        assert(!(leak in m), `${b}/${m.ticker} hat dlst-only Feld '${leak}' geleakt (Parität verletzt)`);
+      }
+    }
+  }
+});
+
 // Temp-Outputs aufräumen (Harness-Isolation: Produktions-Artefakte bleiben unberührt)
 try { fs.unlinkSync(CAND_TEST); } catch {}
 try { fs.unlinkSync(RESULTS); } catch {}

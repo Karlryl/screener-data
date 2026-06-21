@@ -1,0 +1,247 @@
+{
+  "baselineId": "diagnostics-lst-v1.2-2026-06-21",
+  "supersedes": "diagnostics-lst-v1.1-2026-06-21 (Re-Court 2 PASS / 1 DENY — quality hardening: GM-floor overfit, eff-REL clamp cliff, demoted-score display dishonesty, hardcoded disclosure-drift)",
+  "frozenAt": "2026-06-21",
+  "formula": "diagnostics_lst v1.2 — cohort-aware (dx | tools) absolute-anchor (normTableId dlst-norms-2026-06-20: dx gm .50/.65, tools gm .28/.58 [v1.2 Fix 1 TODO-CAL: tools-floor re-anchored .30->.28 to a defensible CRO/service-class threshold — service-model tools structurally run ~28-33% GM; .30 was overfit to MEDP gm 0.3006 (6bp clearance), .28 gives MEDP ~2.1pp real headroom and admits NO new name]) × REL z/MAD computed PER COHORT (dx vs dx, tools vs tools), blendScore beta=0.6, absWeights {growth .40, gm .20, eff .40}. Growth = deceleration-safe min(latestOrganicYoY, 0.6*CAGR_3y+0.4*median organic YoY); deal-year-exclusion threshold 0.15*rev (per-year revenue denominator), blend-median per-year floor -15% (latest uncapped). Fix A: gateOpen floor (growth>=0.15) AND the Rule-of-X arm read growthOrganic=min(latest,blend) (NOT uncapped latest). Fix B: gate eff-arms read TRUE opMargin (arm1 + RoX arm3) and FCF (arm2) in SEPARATE slots (no slot-poisoning). v1.2 Fix 2: eff-REL axis CONTINUOUS TAPER (replaces v1.1 hard s->0 clamp) — positive eff-REL z linearly scaled 0 at FCF<=floor-band to full at FCF>=floor (band 0.04, [TODO-CAL]); removes the ~2.5pt CDNA(0.093)->0 vs EXAS(0.110)->0.33 discontinuity; below floor-band still forced to 0 so the cohort-pooling cash-burn artifact stays suppressed. Efficiency = FCF-margin primary, opMargin fallback (>15pp distortion or fcf-null). v1.2 Fix 3: chronic-acquirer (gw/rev>1.0 OR cumDeltaGW/rev>0.40) + decelerating => shortlist DEMOTION + REAL SCORE HAIRCUT (CHRONIC_DECEL_HAIRCUT 12% [TODO-CAL], capped below the best non-demoted headline score) so the DISPLAYED score matches the rank (VCYT shown score now < MEDP; scorePreHaircut retained for audit). Fix D: blended score is INTRA-BUCKET only; absKaliber is the only cross-bucket-comparable measure (scoreScope + crossBucketComparableField on every member). v1.2 Fix 4: comparabilityNote GM strings INTERPOLATED from live NORMS (no hardcoded drift). Lamps: chronic-acquirer, cum-payments (>0.15), goodwill-impairment, deal-year-jump, cyclicality (per cohort), recurring-mix advisory, deceleration. R&D + shares DEFERRED -> coverage-null lamps, never penalized. Konstanten [TODO-CAL]. SaaS/Fabless/Medtech byte-identical to _parity-baseline-pre-dlst.",
+  "source": "outputs/court-results.json :: bucket diagnostics_lst",
+  "normTableId": "dlst-norms-2026-06-20",
+  "cohortAware": true,
+  "cohortCounts": {
+    "dx": 12,
+    "tools": 17
+  },
+  "classifiedCount": 29,
+  "scoredCount": 29,
+  "universeSize": 29,
+  "headlineShortlistSize": 4,
+  "scoreScope": "intra-bucket",
+  "crossBucketComparableField": "absKaliber",
+  "forwardFitness": {
+    "calendarGated": true,
+    "metric": [
+      "rank_ic_spearman",
+      "top_n_minus_universe_median_fwd_return"
+    ],
+    "horizonsDays": [
+      28,
+      84
+    ],
+    "windowEnds": {
+      "d28": "~2026-07-19",
+      "d84": "~2026-09-13"
+    },
+    "survivorshipKey": "evaluatedTickers",
+    "antiGaming": "gateOpen-Ranking am Remediations-Tag (vor jeder weiteren dlst-Änderung) eingefroren. Forward-Fenster = intrinsischer Holdout; Eval erst NACH Kalender-Gate. Erzeugende Agenten dürfen NIE auf dem Eval-Slice tunen. Eine neue dlst-Version gilt nur als „besser\", wenn sie diese Forward-Metrik STRIKT schlägt.",
+    "honestLimitation": "N=4 gateOpen-Namen ist klein (cohort-split macht n pro Kohorte noch dünner) — Rank-IC/Kohorten-Spread haben Richtungs-, nicht starke statistische Aussagekraft. Primärer Wert: Pre-Registration-Disziplin."
+  },
+  "anchors": {
+    "growth": {
+      "median": 0.0699,
+      "mad": 0.09019999999999999,
+      "n": 29
+    },
+    "gm": {
+      "median": 0.5232,
+      "mad": 0.12139999999999995,
+      "n": 29
+    },
+    "effDlst": {
+      "median": 0.1099,
+      "mad": 0.10089999999999999,
+      "n": 29
+    },
+    "capexNeg": {
+      "median": -0.0356,
+      "mad": 0.0154,
+      "n": 29
+    }
+  },
+  "anchorsByCohort": {
+    "dx": {
+      "growth": {
+        "median": 0.13326030797109267,
+        "mad": 0.0456376973866626,
+        "n": 12
+      },
+      "gm": {
+        "median": 0.64605,
+        "mad": 0.053149999999999975,
+        "n": 12
+      },
+      "effDlst": {
+        "median": 0.001550000000000001,
+        "mad": 0.20855,
+        "n": 12
+      },
+      "capexNeg": {
+        "median": -0.0346,
+        "mad": 0.01525,
+        "n": 12
+      }
+    },
+    "tools": {
+      "growth": {
+        "median": 0.014286528239236998,
+        "mad": 0.03227588269231389,
+        "n": 17
+      },
+      "gm": {
+        "median": 0.5072,
+        "mad": 0.08389999999999997,
+        "n": 17
+      },
+      "effDlst": {
+        "median": 0.1412,
+        "mad": 0.0657,
+        "n": 17
+      },
+      "capexNeg": {
+        "median": -0.0356,
+        "mad": 0.011500000000000003,
+        "n": 17
+      }
+    }
+  },
+  "comparabilityNote": "cohort-aware bucket (dx | tools). absKaliber in [0,1] = cross-bucket-comparable absolute scale (cohort-specific GM norm under normTableId 'dlst-norms-2026-06-20': dx gm .50/.65, tools gm .28/.58); the REL/core component is cross-sectional z/MAD computed PER COHORT (dx vs dx, tools vs tools) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6, absWeights {growth .40, gm .20, eff .40}). Efficiency = FCF-margin primary, opMargin fallback (>15pp distortion or fcf-null). R&D + shares DEFERRED → coverage-null lamps, never penalized. v1.1 Fix D (CROSS-BUCKET DISCLOSURE): the blended 0-100 'score' is INTRA-BUCKET ONLY — it mixes a 40% per-cohort REL component and is NOT comparable across buckets. Comparing a dlst name against a medtech name on the blended ladder is a FALSE comparison. The ONLY cross-bucket-comparable measure is 'absKaliber' (each member carries scoreScope='intra-bucket' + crossBucketComparableField='absKaliber').",
+  "priceAnchorStatus": "CAPTURED — t0-Close je Ticker eingefroren. Forward-Return = close[t0+h]/close[t0]-1.",
+  "ranking": [
+    {
+      "order": 1,
+      "ticker": "MEDP",
+      "cohort": "tools",
+      "score": 64.6,
+      "demoted": false,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.546,
+      "scoreScope": "intra-bucket",
+      "growthOrganic": 0.1997,
+      "latestOrganicYoY": 0.1997,
+      "growthBlend": 0.2006,
+      "gm": 0.3006,
+      "opMargin": 0.2114,
+      "fcfMargin": 0.2695,
+      "effDlst": 0.2695,
+      "effSource": "fcfMargin",
+      "scorePreHaircut": null,
+      "decelerating": true,
+      "chronicAcquirer": false,
+      "dealYearExcluded": false,
+      "goodwillToRev": 0.262,
+      "cumPaymentsToRev": null,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 2,
+      "ticker": "VCYT",
+      "cohort": "dx",
+      "score": 57.5,
+      "demoted": true,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.613,
+      "scoreScope": "intra-bucket",
+      "growthOrganic": 0.1601,
+      "latestOrganicYoY": 0.1601,
+      "growthBlend": 0.2092,
+      "gm": 0.701,
+      "opMargin": 0.1514,
+      "fcfMargin": 0.2449,
+      "effDlst": 0.2449,
+      "effSource": "fcfMargin",
+      "scorePreHaircut": 65.3,
+      "decelerating": true,
+      "chronicAcquirer": true,
+      "dealYearExcluded": true,
+      "goodwillToRev": 1.483,
+      "cumPaymentsToRev": 0.293,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 3,
+      "ticker": "RGEN",
+      "cohort": "tools",
+      "score": 42.8,
+      "demoted": false,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.263,
+      "scoreScope": "intra-bucket",
+      "growthOrganic": 0.1636,
+      "latestOrganicYoY": 0.1636,
+      "growthBlend": 0.1636,
+      "gm": 0.5232,
+      "opMargin": 0.0563,
+      "fcfMargin": 0.1242,
+      "effDlst": 0.1242,
+      "effSource": "fcfMargin",
+      "scorePreHaircut": null,
+      "decelerating": false,
+      "chronicAcquirer": true,
+      "dealYearExcluded": true,
+      "goodwillToRev": 1.51,
+      "cumPaymentsToRev": 0.165,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 4,
+      "ticker": "EXAS",
+      "cohort": "dx",
+      "score": 42.6,
+      "demoted": false,
+      "membershipClass": "In",
+      "absKaliber": 0.27,
+      "scoreScope": "intra-bucket",
+      "growthOrganic": 0.1663,
+      "latestOrganicYoY": 0.1769,
+      "growthBlend": 0.1663,
+      "gm": 0.6969,
+      "opMargin": -0.0613,
+      "fcfMargin": 0.1099,
+      "effDlst": 0.1099,
+      "effSource": "fcfMargin",
+      "scorePreHaircut": null,
+      "decelerating": false,
+      "chronicAcquirer": true,
+      "dealYearExcluded": true,
+      "goodwillToRev": 0.729,
+      "cumPaymentsToRev": 0.041,
+      "belowAbsoluteFloor": false
+    }
+  ],
+  "evaluatedTickers": [
+    "MEDP",
+    "VCYT",
+    "RGEN",
+    "EXAS"
+  ],
+  "priceAnchors": {
+    "MEDP": {
+      "date": "2026-06-15",
+      "close": 467.5
+    },
+    "VCYT": {
+      "date": "2026-05-17",
+      "close": 38.47999954223633
+    },
+    "RGEN": {
+      "date": "2026-06-12",
+      "close": 130.58999633789062
+    },
+    "EXAS": {
+      "date": "2026-05-17",
+      "close": 104.91000366210938
+    },
+    "SPY": {
+      "date": "2026-06-12",
+      "close": 741.75
+    },
+    "QQQ": {
+      "date": "2026-06-15",
+      "close": 744
+    },
+    "IWM": {
+      "date": "2026-06-15",
+      "close": 294.6400146484375
+    },
+    "XLV": null,
+    "IHI": null
+  }
+}

@@ -43,6 +43,22 @@ if (fs.existsSync(SNAP_DIR)) {
 const CACHE = path.join(ROOT, 'fundamentals-cache');
 const OUT = process.env.COURT_CAND_OUT || path.join(ROOT, 'outputs', 'court-candidates.json'); // env-Override für isolierten Test/Verify-Lauf (Re-Court-Auflage)
 
+// --- diagnostics_lst (D&LST) Universum-Bypass ---
+// ADDITIV (parity-safe): das D&LST-Universum (Diagnostics & Research + Life-Science-Tools, n=29) ist wie
+// Medtech NICHT durchgehend asset-light (Tools/Instruments-Namen haben hohe PPE) und enthält Large-Caps
+// (TMO/DHR/A) für die cross-sektionalen Perzentil-Anker. Wir nehmen exakt die in court-buckets.json als
+// `diagnostics_lst` klassifizierten Ticker vom asset-light/ppe-Gate + den ökonomischen Floors aus (analog
+// medtech, Fix A SI-5: keine stillen Drops → classifiedCount===scoredCount in court-score.js). Die Quelle
+// ist die DETERMINISTISCHE Klassifikation (court-buckets.json), NICHT eine Industry-Heuristik — so kommt
+// genau dieses Set rein und der Nicht-D&LST/Nicht-Medtech-Pfad bleibt BYTE-IDENTISCH (Parität SaaS/Fabless).
+const BUCK = path.join(ROOT, 'outputs', 'court-buckets.json');
+const dlstTickers = new Set();
+try {
+  const bd = JSON.parse(fs.readFileSync(BUCK, 'utf8'));
+  const cls = Array.isArray(bd) ? bd : (bd.classifications || []);
+  for (const c of cls) if (c && c.bucket === 'diagnostics_lst' && c.t) dlstTickers.add(c.t);
+} catch {}
+
 // --- robuste Feld-Helfer (Format ist gemischt: ftsAnnual.* = [{value}], Rest = [num]) ---
 function num(x) {
   if (x == null) return null;
@@ -225,12 +241,13 @@ for (const file of files) {
   // Large-Caps kommen rein (für Perzentil-Anker), fallen aber am Growth-Floor (gateOpen) → NICHT auf
   // der Shortlist (korrekt). NICHT-Medtech-Pfad bleibt BYTE-IDENTISCH (Parität SaaS/Fabless).
   const isMedtech = medtechTickers.has(ticker);
-  if (isMedtech) {
+  const isDlst = dlstTickers.has(ticker);
+  if (isMedtech || isDlst) {
     // Milde Daten-Sanity: growth/gm/rev müssen vorhanden + endlich sein (keine ökonomischen Floors).
+    // Medtech UND D&LST sind kapitalintensiv/Large-Cap-haltig → asset-light/ppe-Gate + ökonomische Floors
+    // ENTFERNT (Fix A SI-5: kein stiller Drop). Der Growth-Floor wirkt über gateOpen in court-score.js.
     if (growth == null || !isFinite(growth)) continue;
     if (gm == null || !isFinite(gm)) continue;
-    // (Scale-Floor, GM-Floor, Growth-Floor, ppeAssets-Gate, MIN-BASE alle ENTFERNT für Medtech —
-    //  der Growth-Floor wirkt jetzt über das gateOpen/membership-Gate in court-score.js, nicht als stiller Drop.)
   } else {
     if (growth == null || growth < F.minGrowth) continue;
     if (gm == null || gm < F.minGM) continue;
@@ -243,6 +260,10 @@ for (const file of files) {
   // Growth-Metrik in court-score.js. Additiv/medtech-only → KEIN Feld auf Nicht-Medtech-Records (Parität).
   // Index i = YoY[i] (rev[i]/rev[i+1]-1); aligned mit goodwillHistory[i] (beide newest-first annual).
   const medtechExtra = isMedtech ? { revYoYMedtech: gSeriesA.map(round) } : {};
+  // v0 D&LST: annual revenue YoY series (newest-first) für die DEAL-YEAR-EXCLUSION Growth-Metrik in
+  // court-score.js. Additiv/dlst-only → KEIN Feld auf Nicht-D&LST-Records (Parität SaaS/Fabless/Medtech).
+  // Index i = YoY[i] (rev[i]/rev[i+1]-1); aligned mit goodwillHistory[i] (beide newest-first annual).
+  const dlstExtra = isDlst ? { revYoYDlst: gSeriesA.map(round) } : {};
   candidates.push({
     ticker,
     growth: round(growth), growth_annual: round(gAnnual), growth_q: round(gQ),
@@ -257,6 +278,7 @@ for (const file of files) {
     gmTrend: round(gmTrend), opLeverage: round(opLeverage), rdProductivity: round(rdProductivity),
     marketCap: marketCapVal,
     ...medtechExtra,
+    ...dlstExtra,
   });
 }
 
