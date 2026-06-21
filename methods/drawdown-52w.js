@@ -29,17 +29,11 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
-  // F-ME-016: detect data frequency from timestamps and scale lookback accordingly
-  // daily: avg ~1 calendar day between entries; weekly: avg ~5-8 days
-  let lookback52w = 252; // default: daily
-  if (series.length >= 2 && series[0].date && series[1].date) {
-    const d0 = Date.parse(series[series.length - 2].date);
-    const d1 = Date.parse(series[series.length - 1].date);
-    if (Number.isFinite(d0) && Number.isFinite(d1)) {
-      const avgDaysBetween = (d1 - d0) / (1000 * 60 * 60 * 24);
-      if (avgDaysBetween >= 4) lookback52w = 52; // weekly data
-    }
-  }
+  // bug-fix (audit 2026-06-21): use the robust median-of-last-10-gaps frequency detector. The old
+  // trailing-pair test (and its guard that checked series[0]/[1] but read [len-2]/[len-1])
+  // misclassified daily data as weekly after a single post-holiday gap, shrinking the 52w window to
+  // 52 bars (~2.5 months) and flipping the verdict for ~229 tickers (e.g. NOVO-B.CO 39% DD read as 5%).
+  const lookback52w = H.seriesLookback(series, 252, 52);
   const window = series.slice(-lookback52w);
   const high52w = Math.max(...window.map(e => e.close));
   const current = window[window.length - 1].close;

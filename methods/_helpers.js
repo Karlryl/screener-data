@@ -339,9 +339,30 @@ function wrapEvaluate(method, stock, opts) {
   });
 }
 
+// Detect a price-series' frequency from the MEDIAN of the last 10 gaps (robust to a single
+// post-holiday gap) and return the appropriate lookback window. Daily -> dailyN; weekly
+// (median gap >= 4 calendar days) -> weeklyN. Replaces the fragile trailing-pair test that
+// misclassified daily data as weekly after any long-weekend pull (bug-fix audit 2026-06-21).
+function seriesLookback(series, dailyN, weeklyN) {
+  if (!Array.isArray(series) || series.length < 2) return dailyN;
+  const gaps = [];
+  const start = Math.max(1, series.length - 10);
+  for (let i = start; i < series.length; i++) {
+    if (!series[i] || !series[i - 1] || !series[i].date || !series[i - 1].date) continue;
+    const d0 = Date.parse(series[i - 1].date);
+    const d1 = Date.parse(series[i].date);
+    if (Number.isFinite(d0) && Number.isFinite(d1) && d1 > d0) gaps.push((d1 - d0) / 86400000);
+  }
+  if (gaps.length >= 3) {
+    gaps.sort((a, b) => a - b);
+    if (gaps[Math.floor(gaps.length / 2)] >= 4) return weeklyN;
+  }
+  return dailyN;
+}
+
 module.exports = {
   val, metricValue, latestAnnual, latestBalance, cagr3y, buildResult,
-  classifySubProfile, effectiveThreshold,
+  classifySubProfile, effectiveThreshold, seriesLookback,
   wrapEvaluate,
   // Tag 232c-1: test-only hooks — see _setMediansForTest above for rationale.
   _setMediansForTest, _restoreMediansFromTest

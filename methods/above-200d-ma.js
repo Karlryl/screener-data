@@ -22,16 +22,9 @@ function evaluate(stock) {
   const ticker = stock && stock.meta && stock.meta.ticker;
   if (!ticker) return H.buildResult({ computable: false, reason: 'no ticker', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP });
   const series = (_loadPrices()[ticker]) || [];
-  // F-ME-016: detect data frequency from timestamps and scale lookback accordingly
-  let lookback200d = 200; // default: daily
-  if (series.length >= 2 && series[0].date && series[1].date) {
-    const d0 = Date.parse(series[series.length - 2].date);
-    const d1 = Date.parse(series[series.length - 1].date);
-    if (Number.isFinite(d0) && Number.isFinite(d1)) {
-      const avgDaysBetween = (d1 - d0) / (1000 * 60 * 60 * 24);
-      if (avgDaysBetween >= 4) lookback200d = 40; // weekly: ~40 weeks ≈ 200 calendar days
-    }
-  }
+  // bug-fix (audit 2026-06-21): robust median-of-last-10-gaps frequency detector (see drawdown-52w).
+  // The old trailing-pair test misclassified daily data as weekly after a post-holiday gap (~229 tickers).
+  const lookback200d = H.seriesLookback(series, 200, 40);
   if (series.length < lookback200d) {
     return H.buildResult({
       computable: false, reason: `need ≥${lookback200d} prices (got ${series.length})`,
