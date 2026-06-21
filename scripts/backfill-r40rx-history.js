@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 /**
+ * ONE-SHOT / TOOLING — NOT wired into daily-pull.yml, monthly-sec-xbrl.yml, or
+ * package.json scripts. Run manually only. (audit F-A-2026-06-21: prevents the
+ * live-vs-tooling boundary being misread — this file reads like live code but
+ * never executes in CI.)
+ *
  * Historical R40/RX Backfill from Annual Data
  * =============================================
  * Generates approximate annual historical R40/RX entries from each stock's
@@ -61,11 +66,22 @@ function readHistoryFile(outDir, ticker) {
   try {
     const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
     if (!parsed || parsed.schemaVersion !== SCHEMA_VERSION) {
+      // audit F-A-2026-06-21: silent schema-mismatch reset wiping accumulated TTM
+      // quarters — mirror snapshot-score-history.js and surface the destructive
+      // reset in CI logs instead of resetting entries with no trace.
+      console.log('::warning::r40rx-history schema reset for ' + ticker +
+                  ' (found v' + (parsed && parsed.schemaVersion) +
+                  ', expected v' + SCHEMA_VERSION + ') — preserved TTM entries dropped');
       return { ticker, schemaVersion: SCHEMA_VERSION, entries: [] };
     }
     return { ticker, schemaVersion: SCHEMA_VERSION, entries: Array.isArray(parsed.entries) ? parsed.entries : [] };
   } catch (e) {
-    return { ticker, schemaVersion: SCHEMA_VERSION, entries: [] };
+    // audit F-A-2026-06-21: silent parse-failure reset overwriting a recoverable
+    // file — warn AND flag parseFailed so main() can skip the write rather than
+    // clobbering a file that failed to parse this run but may be fixable.
+    console.log('::warning::failed to parse r40rx-history/' + ticker + '.json: ' +
+                e.message + ' — skipping write to avoid overwriting recoverable file');
+    return { ticker, schemaVersion: SCHEMA_VERSION, entries: [], parseFailed: true };
   }
 }
 
@@ -166,6 +182,10 @@ async function main() {
       if (entries.length === 0) { skipped++; continue; }
 
       const history = readHistoryFile(args.out, ticker);
+
+      // audit F-A-2026-06-21: don't overwrite a file that failed to parse this run —
+      // skipping leaves the recoverable on-disk file intact instead of clobbering it.
+      if (history.parseFailed) { skipped++; continue; }
 
       // Drop ALL existing backfill entries (they may have stale/buggy quarter labels);
       // preserve TTM entries from live snapshot-r40rx-history runs.

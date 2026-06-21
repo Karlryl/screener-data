@@ -60,6 +60,11 @@ const F = {
   minGrowth: 0.12,    // Hypergrowth-Vorfilter (weit; finales Gate ist weich in Schritt 2)
 };
 
+// audit F-A-2026-06-21: guards truncated/empty cache from producing a silent empty candidate set
+if (!fs.existsSync(CACHE)) {
+  console.error('fundamentals-cache missing — run the pull first (' + CACHE + ')');
+  throw new Error('fundamentals-cache missing — run the pull first');
+}
 const files = fs.readdirSync(CACHE).filter(f => f.endsWith('.json') && !/\./.test(f.replace(/\.json$/, '')));
 
 const candidates = [];
@@ -96,9 +101,13 @@ for (const file of files) {
   if (revLatest == null || revLatest <= 0) { stats.noRev++; continue; }
 
   // Growth: annual bevorzugt (matcht Spec-Anker), sonst quartals-YoY
+  // audit F-A-2026-06-21: prevents annual-vs-quarterly growth-definition mixing in cross-sectional z and accel-absence demotion of young names
   const gAnnual = (revA[0] != null && revA[1] != null && revA[1] > 0) ? revA[0] / revA[1] - 1 : null;
   const gQ = (revQ.length >= 5 && revQ[4] > 0) ? revQ[0] / revQ[4] - 1 : null;
   const growth = gAnnual != null ? gAnnual : gQ;
+  // Record which growth definition fed `growth`, so Schritt 2 can compute anchors per-source
+  // (mirrors durSource) instead of z-scoring an annual/quarterly-mixed universe.
+  const growthSource = gAnnual != null ? 'annual' : (gQ != null ? 'quarterly' : null);
 
   // Gross-Margin
   const gm = (gpA[0] != null && revA[0]) ? gpA[0] / revA[0]
@@ -152,7 +161,20 @@ for (const file of files) {
   const durSource = revQYoYsec.length >= 4 ? 'sec-quarterly' : 'annual-fallback';
 
   // Acceleration (Fabless A_acc): jüngstes YoY - vorheriges YoY
-  const accel = (gSeriesA.length >= 2) ? gSeriesA[0] - gSeriesA[1] : null;
+  // audit F-A-2026-06-21: prevents annual-vs-quarterly growth-definition mixing in cross-sectional z and accel-absence demotion of young names
+  // Quarterly-YoY-acceleration fallback mirrors the durability source-selection (revQYoYsec):
+  // young names with <2 annual YoY are no longer silently neutralised (accel=null).
+  let accel, accelSource;
+  if (gSeriesA.length >= 2) {
+    accel = gSeriesA[0] - gSeriesA[1];
+    accelSource = 'annual';
+  } else if (revQYoYsec.length >= 2) {
+    accel = revQYoYsec[0] - revQYoYsec[1];
+    accelSource = 'sec-quarterly';
+  } else {
+    accel = null;
+    accelSource = null;
+  }
 
   // ROIC-Proxy (SaaS A4): NOPAT/InvestedCapital (WACC fehlt -> in Schritt 2 grob)
   const ic = (bal0.totalDebt != null && bal0.totalEquity != null) ? (bal0.totalDebt + bal0.totalEquity) : null;
@@ -172,12 +194,12 @@ for (const file of files) {
   stats.passed++;
   candidates.push({
     ticker,
-    growth: round(growth), growth_annual: round(gAnnual), growth_q: round(gQ),
+    growth: round(growth), growth_annual: round(gAnnual), growth_q: round(gQ), growthSource,
     gm: round(gm), fcfMargin: round(fcfMargin), opMargin: round(opMargin), niMargin: round(niMargin),
     sbcPct: round(sbcPct), netShareGrowth: round(netShareGrowth),
     scaleRevM: Math.round(scaleRevM), ppeAssets: round(ppeAssets), capexPct: round(capexPct),
     durability: round(durability), durMed: round(durMed), durDD: round(durDD),
-    durCountBelow, durWinN, durSource, accel: round(accel),
+    durCountBelow, durWinN, durSource, accel: round(accel), accelSource,
     roicProxy: round(roicProxy),
     nAnnualRev: revA.length, nQRev: revQ.length,
     flags,
@@ -187,8 +209,33 @@ for (const file of files) {
 function round(x) { return (x == null || !isFinite(x)) ? null : Math.round(x * 10000) / 10000; }
 
 candidates.sort((a, b) => (b.growth || 0) - (a.growth || 0));
+
+// audit F-A-2026-06-21: guards truncated/empty cache from producing a silent empty candidate set
+// A partial/empty cache must fail loudly, not silently emit an empty screen.
+if (stats.parsed === 0) {
+  console.error(`fundamentals-cache parsed 0 of ${stats.total} files — cache is empty or truncated`);
+  throw new Error('fundamentals-cache empty/truncated — no fundamentals parsed');
+}
+if (stats.passed === 0) {
+  console.error(`Vorfilter passed 0 of ${stats.parsed} parsed names — refusing to write an empty candidate set`);
+  throw new Error('empty candidate set — 0 names passed the membership pre-filter');
+}
+
+// audit F-A-2026-06-21: prevents a non-deterministic wall-clock timestamp from re-breaking the determinism gate
+// `new Date && undefined` previously dropped the field silently (undefined is omitted by JSON.stringify).
+// Derive a snapshot-stable as-of: explicit COURT_ASOF env wins, else newest cache-file mtime.
+let generatedFromCacheAt = process.env.COURT_ASOF || null;
+if (!generatedFromCacheAt) {
+  let newestMtime = 0;
+  for (const file of files) {
+    try { const m = fs.statSync(path.join(CACHE, file)).mtimeMs; if (m > newestMtime) newestMtime = m; }
+    catch { /* skip unreadable file */ }
+  }
+  if (newestMtime > 0) generatedFromCacheAt = new Date(newestMtime).toISOString();
+}
+
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
-fs.writeFileSync(OUT, JSON.stringify({ generatedFromCacheAt: new Date && undefined, filter: F, stats, count: candidates.length, candidates }, null, 2));
+fs.writeFileSync(OUT, JSON.stringify({ generatedFromCacheAt, filter: F, stats, count: candidates.length, candidates }, null, 2));
 
 console.log('=== court-screen Schritt 1 ===');
 console.log(stats);

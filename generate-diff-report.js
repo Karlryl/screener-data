@@ -119,12 +119,18 @@ td{padding:8px;border-bottom:1px solid #131c2b}
     html += '</tbody></table>';
   }
 
-  html += `<h2>Methoden-Werte-Changes ≥ 20% (${methodValueDiffs.length})</h2>`;
+  // audit F-A-2026-06-21: sort+slice once into a named const (copy via [...] so the
+  // source array is not mutated in place during render) and report "top N of M" so the
+  // heading count matches the rows actually shown — prevents heading/row mismatch.
+  const topMethodValueDiffs = [...methodValueDiffs]
+    .sort((a, b) => Math.abs(b.deltaPct) - Math.abs(a.deltaPct))
+    .slice(0, 50);
+  html += `<h2>Methoden-Werte-Changes ≥ 20% (top ${Math.min(50, methodValueDiffs.length)} of ${methodValueDiffs.length})</h2>`;
   if (methodValueDiffs.length === 0) {
     html += `<p class="sub">Keine größeren Werte-Changes.</p>`;
   } else {
     html += '<table><thead><tr><th>Ticker</th><th>Method</th><th>Vorher</th><th>Jetzt</th><th>ΔPct</th><th>Pass-Flip</th></tr></thead><tbody>';
-    for (const d of methodValueDiffs.sort((a,b)=>Math.abs(b.deltaPct)-Math.abs(a.deltaPct)).slice(0,50)) {
+    for (const d of topMethodValueDiffs) {
       const dirClass = d.deltaPct > 0 ? 'up' : 'down';
       html += `<tr><td><strong>${escHtml(d.ticker)}</strong></td><td>${escHtml(d.methodId)}</td><td>${d.prev != null ? d.prev.toFixed(2) : '—'}</td><td>${d.curr != null ? d.curr.toFixed(2) : '—'}</td><td class="${dirClass}">${d.deltaPct > 0 ? '+' : ''}${d.deltaPct.toFixed(0)}%</td><td>${d.flipped ? '<span class="flag">YES</span>' : ''}</td></tr>`;
     }

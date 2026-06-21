@@ -21,7 +21,26 @@
 const fs = require('fs');
 const path = require('path');
 
-const Runner = require('../methods/runner.js');
+// audit F-A-2026-06-21: only the 4 price-derived methods this export reads are
+// loaded/evaluated — not the full 60+ method battery via runner.js. Prevents
+// wasted whole-battery evaluation (and the heavy registry load that requiring
+// runner.js triggers) per pick for 4 values. Each method is run in its own
+// try/catch so a single throwing price method degrades to a blank cell instead
+// of aborting the whole export — mirroring runner.js wrapEvaluate() resilience.
+const PRICE_METHODS = [
+  require('../methods/above-200d-ma.js'),
+  require('../methods/high-proximity-52w.js'),
+  require('../methods/drawdown-52w.js'),
+  require('../methods/volatility-annualized.js')
+];
+function evaluatePriceMethods(snap) {
+  const out = {};
+  for (const m of PRICE_METHODS) {
+    try { out[m.id] = m.evaluate(snap); }
+    catch (e) { out[m.id] = { computable: false, value: null, reason: 'error: ' + e.message }; }
+  }
+  return out;
+}
 // Tag 218: atomic output writes (audit F-218b-03)
 const { writeFileAtomic } = require('../lib/atomic-write.js');
 // Tag 219a (audit F-218b-01): shared safeSnapshotFilename helper.
@@ -77,9 +96,13 @@ function main() {
   for (const [mode, picks] of Object.entries(latest.modes)) {
     if (!Array.isArray(picks) || picks.length === 0) continue;
     const rows = [cols.join(',')];
+    // audit F-A-2026-06-21: count snapshot-miss rows so silently-degraded
+    // (blank-technicals) rows are visible in logs instead of failing silently.
+    let snapMisses = 0;
     for (const p of picks) {
       const snap = loadSnapshot(p.ticker);
       if (!snap) {
+        snapMisses++;
         // Still emit a row with the picks-history fields, even if snapshot can't be loaded.
         const row = {
           ticker: p.ticker, name: p.name || '', sector: p.sector || '', industry: p.industry || '',
@@ -95,7 +118,8 @@ function main() {
         rows.push(cols.map(c => csvEscape(row[c])).join(','));
         continue;
       }
-      const results = Runner.evaluateStock(snap);
+      // audit F-A-2026-06-21: targeted price-only evaluation (see top of file).
+      const results = evaluatePriceMethods(snap);
       const above200 = _methodValue(results, 'above-200d-ma');
       const highProx = _methodValue(results, 'high-proximity-52w');
       const drawdown = _methodValue(results, 'drawdown-52w');
@@ -131,7 +155,10 @@ function main() {
     }
     const outFile = path.join(OUT_DIR, 'elliott-export-' + mode + '.csv');
     writeFileAtomic(outFile, rows.join('\n') + '\n');
-    console.log('Wrote ' + outFile + ' (' + (rows.length - 1) + ' picks)');
+    // audit F-A-2026-06-21: surface snapshot-miss tally instead of silently
+    // degrading rows with blank technicals.
+    console.log('Wrote ' + outFile + ' (' + (rows.length - 1) + ' picks'
+      + (snapMisses > 0 ? ', ' + snapMisses + ' with missing snapshot' : '') + ')');
   }
 }
 

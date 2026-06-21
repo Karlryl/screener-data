@@ -684,11 +684,21 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     // when either component is missing would destroy leverage data for all of them.
     // The understatement risk is surfaced instead: _debtPartial is persisted and
     // net-debt-ebitda exposes it as debtPartialFlag in its components.
+    // audit F-A-2026-06-21: the _debtPartial flag's consumer-contract risk —
+    // it is a boolean that says NOTHING about which leg is missing, so every
+    // downstream method must individually opt in to size the understatement and
+    // most don't. Hardening (summing itself is out-of-scope / forbidden to change):
+    // also persist _debtPartialReason so consumers can tell a missing current-debt
+    // line (usually benign) from a missing long-term-debt line (materially
+    // understates leverage). Failure mode prevented: silent leverage
+    // understatement going unsized because the partial-debt signal carried no
+    // direction.
     const totalDebt = (std == null && ltd == null) ? null : (std || 0) + (ltd || 0);
     const _debtPartial = totalDebt != null && (std == null || ltd == null); // F-DQ-001
+    const _debtPartialReason = _debtPartial ? (std == null ? 'no-current-debt' : 'no-long-term-debt') : null; // audit F-A-2026-06-21
     const totalAssets = _y(r, 'totalAssets');
     if (cash == null && totalDebt == null && totalAssets == null) return null;
-    return { totalCash: cash, totalDebt, totalAssets, ...(_debtPartial ? { _debtPartial: true } : {}) };
+    return { totalCash: cash, totalDebt, totalAssets, ...(_debtPartial ? { _debtPartial: true, _debtPartialReason } : {}) };
   }).filter(Boolean);
 
   // Quartalsweise Timeseries (latest first → wir flippen NICHT, Engine erwartet latest=index 0)
@@ -1164,8 +1174,12 @@ function mapFTSToBalance(bsRows) {
     const ltd = _ftsValue(r, 'longTermDebt');
     // F-NY-002: absence-as-zero kept deliberately — see the quoteSummary-mapper
     // twin site for the full rationale (12.4% of snapshots are _debtPartial).
+    // audit F-A-2026-06-21: mirror the twin site's _debtPartialReason so the
+    // partial-debt signal carries direction (which leg is missing) — same
+    // consumer-contract failure mode (unsized leverage understatement).
     const totalDebt = (std == null && ltd == null) ? null : (std || 0) + (ltd || 0);
     const _debtPartial = totalDebt != null && (std == null || ltd == null); // F-DQ-001
+    const _debtPartialReason = _debtPartial ? (std == null ? 'no-current-debt' : 'no-long-term-debt') : null; // audit F-A-2026-06-21
     const totalAssets = _ftsValue(r, 'totalAssets');
     // Tag 211l extensions (Beneish/Ohlson inputs). All nullable.
     const accountsReceivable = _ftsValue(r, 'accountsReceivable', 'receivables');
@@ -1190,7 +1204,7 @@ function mapFTSToBalance(bsRows) {
       currentLiabilities,
       totalLiabilities,
       totalEquity,
-      ...(_debtPartial ? { _debtPartial: true } : {})
+      ...(_debtPartial ? { _debtPartial: true, _debtPartialReason } : {}) // audit F-A-2026-06-21: persist which debt leg is absent
     });
   }
   // Trim trailing nulls — no information to contribute, keeps arrays tidy.
@@ -1235,16 +1249,12 @@ function mapFTSToQuarterly(quarterlyRows) {
 
 async function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// Tag 145: per-ticker timeout wrapper — prevents one hanging socket from
-// freezing the entire batch. Yahoo occasionally stalls indefinitely on rate-limit
-// or network issues; without this a single stuck ticker blocks all concurrent slots.
-function _withTimeout(promise, ms, label) {
-  let timer;
-  const timeout = new Promise((_, reject) => {
-    timer = setTimeout(() => reject(new Error(`ETIMEDOUT after ${ms}ms (${label})`)), ms);
-  });
-  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
-}
+// audit F-A-2026-06-21: _withTimeout removed — dead code fully superseded by
+// _withAbortTimeout (F-PY-102). The non-aborting Promise.race variant left
+// timed-out yahoo-finance2 calls occupying their queue slot as zombies; every
+// call site (quoteSummaryWithRetry, quote, FTS) already uses _withAbortTimeout.
+// Failure mode prevented: a stray future call site re-using the non-cancelling
+// wrapper and re-introducing the queue-zombie throughput collapse.
 
 // F-PY-102 (audit 2026-06-11): the plain Promise.race above stops WAITING for a
 // hung request but does NOT cancel it — yahoo-finance2 runs every fetch inside an
@@ -1448,12 +1458,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // the existing `cached._cacheVersion !== FTS_CACHE_VERSION` branch (the
   // cache file's _cacheVersion is `undefined` for pre-Tag-211l caches, so
   // that branch already handles the FTS-cache side correctly).
-  function _existingSnapshotMissingTag211lFields(ticker) {
+  // audit F-A-2026-06-21: accepts an already-parsed snapshot object instead of
+  // re-reading+re-parsing the file. The schema-stale and currency-stale probes
+  // plus _priceOnlyUpdate previously each did a full readFileSync+JSON.parse —
+  // 3× parse per fast-path ticker on the ~80%-hit price-only path. Single parse
+  // is now shared across all three (see processOne). Failure mode prevented:
+  // wasteful triple-parse CPU/IO blowup on the hottest code path.
+  function _existingSnapshotMissingTag211lFields(s) {
     try {
-      const fp = path.join(outputDir, safeSnapshotFilename(ticker));
-      if (!fs.existsSync(fp)) return false;
-      const raw = fs.readFileSync(fp, 'utf8');
-      const s = JSON.parse(raw);
+      if (!s) return false;
       const A = s && s.annual;
       if (!A) return false;
       // If the snapshot has no annualRev at all, it's a price-only seed
@@ -1499,12 +1512,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // are NOT re-flagged here — they already carry the failure marker and
   // would just fail again. The full-pull path's existing fxConversionFailed
   // skip filters them out cleanly.
-  function _existingSnapshotMissingCurrencyNormalization(ticker) {
+  // audit F-A-2026-06-21: accepts an already-parsed snapshot object (see the
+  // schema probe twin above) — shares the single parse done in processOne
+  // instead of a second readFileSync+JSON.parse. Failure mode prevented:
+  // redundant parse on the fast-path ticker.
+  function _existingSnapshotMissingCurrencyNormalization(s) {
     try {
-      const fp = path.join(outputDir, safeSnapshotFilename(ticker));
-      if (!fs.existsSync(fp)) return false;
-      const raw = fs.readFileSync(fp, 'utf8');
-      const s = JSON.parse(raw);
+      if (!s) return false;
       const m = s && s.meta;
       if (!m) return false;
       // Price-only seeds (no annualRev) carry no FX-denominated series yet —
@@ -1529,10 +1543,18 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   }
 
   // Tag 166: lightweight price-only update — preserves fundamentals from previous snapshot
-  async function _priceOnlyUpdate(stock, outputDir) {
+  // audit F-A-2026-06-21: accepts an optional pre-parsed snapshot (preParsed) so
+  // the fast-path doesn't parse the file a THIRD time after the schema/currency
+  // probes already parsed it. Falls back to read+parse when called without one
+  // (preserves the original contract for any other caller). Failure mode
+  // prevented: triple JSON.parse per fast-path ticker.
+  async function _priceOnlyUpdate(stock, outputDir, preParsed) {
     const fp = path.join(outputDir, safeSnapshotFilename(stock.ticker));
-    if (!fs.existsSync(fp)) throw new Error('no existing snapshot to update');
-    const existing = JSON.parse(fs.readFileSync(fp, 'utf8'));
+    let existing = preParsed;
+    if (existing == null) {
+      if (!fs.existsSync(fp)) throw new Error('no existing snapshot to update');
+      existing = JSON.parse(fs.readFileSync(fp, 'utf8'));
+    }
     const q = await _withAbortTimeout((signal) => yf.quote(stock.yahoo_symbol, undefined, { fetchOptions: { signal } }), 8000, stock.ticker + '/quote-only'); // F-PY-102: abortable
     if (!q) throw new Error('quote returned null');
     // Update only fields that change daily
@@ -1654,16 +1676,28 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // working-capital-trend, and ohlson-o-score at <2% coverage indefinitely.
       const age = _getExistingSnapshotAge(stock.ticker);
       const youngEnough = age != null && age < FUNDAMENTALS_MAX_AGE_MS;
+      // audit F-A-2026-06-21: parse the young snapshot ONCE here and share the
+      // object across both staleness probes AND _priceOnlyUpdate. Previously
+      // each of the three did its own readFileSync+JSON.parse → 3× parse per
+      // fast-path ticker (the ~80%-hit path). Failure mode prevented: redundant
+      // triple parse of every young snapshot.
+      let _parsedSnapshot = null;
+      if (youngEnough) {
+        try {
+          const _fp = path.join(outputDir, safeSnapshotFilename(stock.ticker));
+          if (fs.existsSync(_fp)) _parsedSnapshot = JSON.parse(fs.readFileSync(_fp, 'utf8'));
+        } catch (_) { _parsedSnapshot = null; }
+      }
       const staleSchema = youngEnough
-        ? _existingSnapshotMissingTag211lFields(stock.ticker)
+        ? _existingSnapshotMissingTag211lFields(_parsedSnapshot)
         : false;
       // Tag 230a: separate sibling probe for mixed-currency envelopes.
       const staleCurrency = youngEnough
-        ? _existingSnapshotMissingCurrencyNormalization(stock.ticker)
+        ? _existingSnapshotMissingCurrencyNormalization(_parsedSnapshot)
         : false;
       if (youngEnough && !staleSchema && !staleCurrency) {
         try {
-          const r = await _priceOnlyUpdate(stock, outputDir);
+          const r = await _priceOnlyUpdate(stock, outputDir, _parsedSnapshot);
           results.push(r);
           _log('INFO', `  ✓ ${stock.ticker} [price-only]: mcap=${r.mcap}, price=${r.price}`);
           return;
@@ -1855,10 +1889,41 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         } catch (e) { _log('WARN', 'FTS cache write failed for ' + (stock && stock.ticker) + ': ' + e.message); }
         if (ftsPartial) canonical._ftsPartial = true;
       }
+      // audit F-A-2026-06-21: the FTS-vs-quoteSummary merge below was 7 copies of
+      // the same per-field "FTS wins iff it has more data" comparison, each with a
+      // slightly different filter predicate (count vs length) and override
+      // condition — the structural source of the year-index-drift bug class
+      // (annualGP even used a bare .length>0, NOT the non-null count its siblings
+      // use). Extracted into two helpers so every field uses identical semantics.
+      // Failure mode prevented: divergent per-field predicates silently letting a
+      // sparser FTS array overwrite a richer QS array (or vice-versa), drifting
+      // the year index between annualRev / annualOpInc / annualGP / annualNetIncome.
+      //
+      // _nonNullCount: counts entries that hold an actual value (handles both raw
+      // numbers and {value:n} wrappers, the two shapes these arrays carry).
+      const _nonNullCount = arr => (arr || []).filter(v => v != null && (v.value != null || typeof v === 'number')).length;
+      // mergePreferRicher: returns ftsArr iff it is strictly richer than qsArr.
+      //   mode:'count'  → compare non-null element counts (preserves null-placeholder
+      //                   year alignment; the correct default for value series).
+      //   mode:'length' → compare raw array lengths (legacy behaviour for series
+      //                   where mapFTSToAnnual emits no null placeholders).
+      const mergePreferRicher = (qsArr, ftsArr, opts) => {
+        const mode = (opts && opts.mode) || 'count';
+        if (mode === 'length') {
+          return (ftsArr || []).length > 0 ? ftsArr : qsArr;
+        }
+        return _nonNullCount(ftsArr) > _nonNullCount(qsArr) ? ftsArr : qsArr;
+      };
+      // mergeQuarterTriplet: moves revenueQ + opIncQ + grossProfitQ as ONE unit so
+      // the three quarter series always come from the SAME source (F-010). Picks
+      // the source whose revenueQ has more non-null quarters; siblings follow
+      // unconditionally (even if empty) to avoid stale cross-source leftovers.
+      const mergeQuarterTriplet = (qsTrip, ftsTrip) => (
+        _nonNullCount(ftsTrip.revenueQ) > _nonNullCount(qsTrip.revenueQ) ? ftsTrip : qsTrip
+      );
+
       // Override leere annual-Arrays aus quoteSummary mit FTS-Daten wenn FTS welche hat
-      const _ftsRevNonNull = (ftsAnnual.annualRev||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
-      const _qsRevNonNull = (canonical.annual.annualRev||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
-      if (_ftsRevNonNull > _qsRevNonNull) canonical.annual.annualRev = ftsAnnual.annualRev;
+      canonical.annual.annualRev = mergePreferRicher(canonical.annual.annualRev, ftsAnnual.annualRev, { mode: 'count' }); // audit F-A-2026-06-21: year-index drift (rev)
       // Tag 203: FTS-OpInc override is now gated by non-null COUNT, not length.
       // mapFTSToAnnual pushes null placeholders for OpInc-missing rows (bank/
       // fintech) — without this guard a 4-null-entry FTS array would wipe out
@@ -2053,6 +2118,22 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         };
       }
 
+      // audit F-A-2026-06-21: emit a snapshot-level count of how many annual-
+      // balance years carry an absence-as-zero (partial) totalDebt. The per-row
+      // _debtPartial flag alone forces every downstream method to opt in to
+      // notice the understatement; a meta-level tally lets score-aggregator
+      // tier-cap on the magnitude of the gap without re-walking the array.
+      // Failure mode prevented: leverage-based scores silently trusting
+      // understated totalDebt across multiple years with no aggregate signal.
+      try {
+        const _bal = (canonical.annual && canonical.annual.annualBalance) || [];
+        const _understatedYears = _bal.filter(b => b && b._debtPartial === true).length;
+        if (_understatedYears > 0) {
+          canonical.meta = canonical.meta || {};
+          canonical.meta._debtUnderstatedYears = _understatedYears;
+        }
+      } catch (_) { /* non-fatal: meta tally is advisory only */ }
+
       const filename = safeSnapshotFilename(stock.ticker);
       const outPath = path.join(outputDir, filename);
       // Tag 134: migrate from legacy un-sanitized name (one-time)
@@ -2103,20 +2184,22 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       else if (/timeout|ETIMEDOUT|ESOCKETTIMEDOUT/i.test(msg)) errClass = 'timeout';
       else if (/ENOTFOUND|ECONNREFUSED|ECONNRESET|EAI_AGAIN|network/i.test(msg)) errClass = 'network';
       else if (/parse|unexpected token|JSON/i.test(msg)) errClass = 'parse';
-      // Tag 215h: Yahoo schema-validation failures classified as not-found.
-      // Run #107 produced 637 such failures, ALL on international tickers
-      // (091990.KQ Korean, 2823.TW Taiwanese, 6502.T Japanese, 6837.HK HK,
-      // 600837.SS Chinese). Single-module probes return literal "Quote not
-      // found" / "No fundamentals data found"; the multi-module quoteSummary
-      // call gets a partially-populated response that fails the library's
-      // strict-shape validator. Empirically: these tickers do not exist in
-      // Yahoo's database for the requested region. Treat them like not-found
-      // so the snapshot gets marked delisted (instead of being retried daily
-      // and hitting the same wall). Risk acknowledged: if Yahoo ever
-      // introduces a real schema break we'd silently re-classify it as
-      // not-found — pull-stats-check should monitor the schema-vs-not-found
-      // ratio over time as a sentinel.
-      else if (/Failed Yahoo Schema validation|schema validation/i.test(msg)) errClass = 'not-found';
+      // audit F-A-2026-06-21: Yahoo schema-validation failures get their OWN
+      // 'schema-fail' class and are NO LONGER reclassified as not-found.
+      // Prevents valid international tickers with partial-but-valid payloads
+      // from being permanently marked delisted (survivorship attrition of
+      // non-US names). Tag 215h originally folded these into not-found so the
+      // snapshot got delisted — but the multi-module quoteSummary call only
+      // failing the library's strict-shape validator does NOT prove the symbol
+      // is gone; many of these are real, listed, internationally-domiciled
+      // companies whose payload is merely incomplete for one requested region.
+      // 'schema-fail' is still counted in `failures` (so pull-stats-check can
+      // monitor the schema-vs-not-found ratio as the sentinel Tag 215h intended)
+      // but does NOT enter the delisted branch below → the ticker is retried on
+      // the next run instead of being silently dropped from the universe.
+      // The delisted flag is reserved for the unambiguous not-found regex above
+      // (literal 404 / "no data found" / "invalid symbol").
+      else if (/Failed Yahoo Schema validation|schema validation/i.test(msg)) errClass = 'schema-fail';
 
       // Tag 148: mark snapshot as delisted when Yahoo definitively rejects the symbol
       // (not-found class only — transient errors like rate-limit/timeout/network must NOT set this flag).

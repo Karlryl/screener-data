@@ -57,10 +57,14 @@ function main() {
     // chose for the vintage; the "α vs SPY" label was misleading whenever
     // it wasn't actually SPY. Re-label "α vs Benchmark" and surface the
     // actual symbol from the data when available.
-    // wf.benchmarkSymbol does not exist in walk-forward output; field needs to be
-    // added to walk-forward-perf.js output (tracked separately). Until then, fall
-    // back to 'SPY' — the actual benchmark used by walk-forward-perf.js.
-    const benchSymbol = (wf.benchmarkSymbol || 'SPY');
+    // audit F-A-2026-06-21: prevent claiming an unverifiable benchmark symbol.
+    // wf.benchmarkSymbol does not exist in walk-forward-perf.js output (it emits
+    // medianAlphaVsBenchmark/medianAlphaVsSpy but no symbol field), so the old
+    // `wf.benchmarkSymbol || 'SPY'` fallback was ALWAYS 'SPY' even when the
+    // walk-forward used QQQ/IWM. Only surface a concrete symbol if the data
+    // actually carries one; otherwise use the neutral label 'Benchmark' so the
+    // report never asserts a benchmark it cannot verify.
+    const benchSymbol = (wf.benchmarkSymbol || 'Benchmark');
     md += '_Benchmarks: universe-median (Tag 138: survivor-bias corrected via evaluatedTickers when available) · frozen-vintage-median (no look-ahead survivor selection) · ' + benchSymbol + ' (external)._\n\n';
     for (const [mode, data] of Object.entries(wf.modes)) {
       md += '### ' + mode + '\n\n';

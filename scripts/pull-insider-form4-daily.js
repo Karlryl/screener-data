@@ -209,9 +209,12 @@ function buildMaps() {
 function parseDailyForm4Rows(text) {
   const rows = [];
   const lines = text.split(/\r?\n/);
-  const re = /^4\s+.+?\s+(\d+)\s+(\d{8})\s+(edgar\/data\/\d+\/([0-9-]+)\.txt)\s*$/;
+  // audit F-A-2026-06-21: prevents silent loss of Form 4/A amendments that the
+  // quarterly backfill keeps (daily-vs-history cache divergence). Accept the
+  // optional '/A' amendment suffix in both the fast-path prefilter and regex.
+  const re = /^4(\/A)?\s+.+?\s+(\d+)\s+(\d{8})\s+(edgar\/data\/\d+\/([0-9-]+)\.txt)\s*$/;
   for (const line of lines) {
-    if (line.charAt(0) !== '4') continue;       // FormType column starts with '4'
+    if (line.charAt(0) !== '4') continue;       // FormType column starts with '4' (covers '4' and '4/A')
     const m = re.exec(line);
     if (!m) continue;
     rows.push({

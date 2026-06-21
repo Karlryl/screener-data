@@ -69,10 +69,35 @@ async function fetchFinnhubUniverse() {
   }
   console.log('  [Finnhub] Fetching symbols for ' + Object.keys(EXCHANGES).length + ' exchanges...');
 
+  // audit F-A-2026-06-21: mirror nasdaq-api/otc-markets Tag-215i retry —
+  // prevents a single transient timeout/429 from silently dropping a whole
+  // exchange. Exponential backoff (5s, 20s) recovers transient rate-limit /
+  // network blips before giving up.
+  const RETRY_DELAYS = [5000, 20000];
+  let firstExchange = true;
   for (const [exchange, suffix] of Object.entries(EXCHANGES)) {
     try {
       const url = `https://finnhub.io/api/v1/stock/symbol?exchange=${exchange}&token=${token}`;
-      const body = await get(url);
+      // audit F-A-2026-06-21: retry transient timeout / HTTP 429 with backoff
+      // instead of dropping the exchange on the first blip. Persistent errors
+      // (HTTP 401/403, JSON parse) are rethrown immediately — no point retrying.
+      let body;
+      let lastErr;
+      for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
+        try {
+          body = await get(url);
+          break;
+        } catch (e) {
+          lastErr = e;
+          const transient = /timeout/i.test(String(e.message || '')) || /HTTP 429/i.test(String(e.message || ''));
+          if (!transient || attempt >= RETRY_DELAYS.length) throw e;
+          const delay = RETRY_DELAYS[attempt];
+          console.warn(`  [Finnhub] ${exchange} ${e.message} (attempt ${attempt + 1}/${RETRY_DELAYS.length + 1}) — retrying in ${delay / 1000}s`);
+          await sleep(delay);
+        }
+      }
+      if (body === undefined) throw lastErr;
+      firstExchange = false;
       const data = JSON.parse(body);
       if (!Array.isArray(data)) {
         console.log(`  [Finnhub] ${exchange}: unexpected response`);
@@ -98,8 +123,14 @@ async function fetchFinnhubUniverse() {
       // per exchange) — each a 30s wasted attempt. If auth fails on the
       // first exchange, every remaining call WILL also fail; bail out and
       // let downstream pulls continue without burning the budget.
-      if (/HTTP 401/i.test(e.message)) {
-        console.error('  [Finnhub] HTTP 401 on first exchange — token invalid or missing; skipping remaining ' + (Object.keys(EXCHANGES).length - 1) + ' exchanges');
+      //
+      // audit F-A-2026-06-21: broaden the early-bail to 403 (auth/plan) and
+      // persistent 429 (rate-limit) on the first exchange too — prevents the
+      // full 16-exchange * (retries + 1.1s) budget being burned on an
+      // auth/rate-limit storm. A persistent 401/403/429 on call #1 means every
+      // remaining exchange will fail identically; stop and let siblings run.
+      if (firstExchange && /HTTP (401|403|429)/i.test(e.message)) {
+        console.error(`  [Finnhub] ${e.message} on first exchange — token/plan invalid or rate-limited; skipping remaining ` + (Object.keys(EXCHANGES).length - 1) + ' exchanges');
         break;
       }
     }

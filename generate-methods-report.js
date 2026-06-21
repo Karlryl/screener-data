@@ -101,18 +101,36 @@ async function evaluateAllStocks(args) {
       growthYoY: (stock.metrics && stock.metrics.revenueGrowthYoY && stock.metrics.revenueGrowthYoY.value != null) ? stock.metrics.revenueGrowthYoY.value : null,
       fcfMargin: (stock.metrics && stock.metrics.fcfMarginTTM && stock.metrics.fcfMarginTTM.value != null) ? stock.metrics.fcfMarginTTM.value : null,
       results: Runner.evaluateStock(stock),
-      // Tag-31: trend per method based on methodHistory
-      trends: (() => {
-        const tickerHist = methodHistory[ticker] || {};
+      // Tag-31: trend per method based on methodHistory.
+      // audit F-A-2026-06-21: prevents wasted-work — trends were eagerly
+      // computed for ALL N rows (3500-19000) but only ~300-500 (top-picks ∪
+      // matrix slices) are ever rendered; the rest were built then discarded.
+      // Replace the eager object with a lazy, memoized `trends` getter so
+      // Trend.computeTrend runs only for the tickers actually accessed during
+      // rendering. Output shape (r.trends[m.id]) is unchanged.
+      _trendsCache: null
+    });
+    // Tag-36: Pass-Count-Ranking
+    const lastRow = rows[rows.length - 1];
+    // audit F-A-2026-06-21: lazy trend computation. Define a memoized `trends`
+    // accessor that computes Trend.computeTrend for this ticker only on first
+    // access (rendering touches r.trends for the top-picks + matrix rows only).
+    // Avoids building+discarding a full trends object for every one of the
+    // N rows. tickerHist is captured by reference (no copy).
+    const tickerHist = methodHistory[ticker] || {};
+    Object.defineProperty(lastRow, 'trends', {
+      enumerable: true,
+      configurable: true,
+      get() {
+        if (this._trendsCache) return this._trendsCache;
         const tr = {};
         for (const m of cachedMethods) {
           tr[m.id] = Trend.computeTrend(tickerHist[m.id] || [], m.thresholdOp);
         }
+        this._trendsCache = tr;
         return tr;
-      })()
+      }
     });
-    // Tag-36: Pass-Count-Ranking
-    const lastRow = rows[rows.length - 1];
     let passCount = 0, computableCount = 0;
     const failedMethods = [];
     for (const m of cachedMethods) {
@@ -136,9 +154,16 @@ async function evaluateAllStocks(args) {
     if (ro40 && ro40.computable && ro40.components) {
       lastRow.growthYoYFromRo40  = ro40.components.growth  != null ? ro40.components.growth  : lastRow.growthYoY;
       lastRow.fcfMarginFromRo40  = ro40.components.fcfMargin != null ? ro40.components.fcfMargin : lastRow.fcfMargin;
+      // audit F-A-2026-06-21: capture the R40 FCF-margin source so the 'FCF
+      // Margin' columns can flag when the displayed value is R40's 3y-annual-
+      // median fallback (rule-of-40.js sets fcfMarginSource='3y-annual-median'
+      // when shallow-negative TTM is replaced) rather than the TTM FCF margin.
+      // Prevents silently reporting a fallback figure as if it were TTM.
+      lastRow.fcfMarginSource    = ro40.components.fcfMarginSource || 'TTM';
     } else {
       lastRow.growthYoYFromRo40  = lastRow.growthYoY;
       lastRow.fcfMarginFromRo40  = lastRow.fcfMargin;
+      lastRow.fcfMarginSource    = 'TTM';
     }
     // Tag 221c (audit F-GR-005 fix): use explicit `!= null` check so zero is preserved.
     lastRow.grossMargin = (stock.metrics && stock.metrics.grossMargin && stock.metrics.grossMargin.value != null) ? stock.metrics.grossMargin.value : null;
@@ -277,8 +302,12 @@ function renderHTML(rows, methods) {
   ];
   const TOP_DD = 10;
   // Build top-10 per metric (only computable)
+  // audit F-A-2026-06-21: rank over discoveryRows (DataGuard-disqualified
+  // stocks excluded), matching the Top-N-per-Method cards and making the
+  // header's "N disqualified by DataGuards" count consistent with the ranked
+  // tables — previously the deep-dive still surfaced disqualified names.
   const deepDiveLists = deepDiveMetrics.map(dm => {
-    const sorted = rows
+    const sorted = discoveryRows
       .filter(r => r[dm.key] != null && Number.isFinite(r[dm.key]))
       .sort((a, b) => dm.higherIsBetter ? b[dm.key] - a[dm.key] : a[dm.key] - b[dm.key])
       .slice(0, TOP_DD);
@@ -310,8 +339,12 @@ function renderHTML(rows, methods) {
         }
         const v = entry[dm.key];
         const color = metricColor(v, dm.threshold, dm.higherIsBetter);
+        // audit F-A-2026-06-21: flag the FCF-Margin deep-dive value when it is
+        // R40's 3y-annual-median fallback (entry.fcfMarginSource != 'TTM'), so
+        // the column does not silently present a fallback figure as TTM.
+        const ddMed = dm.key === 'fcfMarginFromRo40' && entry.fcfMarginSource && entry.fcfMarginSource !== 'TTM';
         h += '<td><strong style="color:#e2e8f0;">' + escHtml(entry.ticker) + '</strong></td>';
-        h += '<td style="text-align:right;color:' + color + ';font-weight:700;">' + fmtMetric(v, dm) + '</td>';
+        h += '<td style="text-align:right;color:' + color + ';font-weight:700;"' + (ddMed ? ' title="~med: R40 3y-annual-median fallback, not TTM"' : '') + '>' + escHtml(fmtMetric(v, dm)) + (ddMed ? ' <span style="color:#94a3b8;font-weight:400;font-size:9px;">~med</span>' : '') + '</td>';
       }
       h += '</tr>';
     }
@@ -393,8 +426,11 @@ function renderHTML(rows, methods) {
 
     const growthV = r.growthYoYFromRo40;
     const fcfV    = r.fcfMarginFromRo40;
+    // audit F-A-2026-06-21: flag fallback-sourced FCF margin so the cell does
+    // not silently present R40's 3y-annual-median as TTM FCF margin.
+    const fcfMed  = r.fcfMarginSource && r.fcfMarginSource !== 'TTM';
     const growthDisplay = growthV != null ? growthV.toFixed(1) + '%' : '—';
-    const fcfDisplay    = fcfV   != null ? fcfV.toFixed(1) + '%'    : '—';
+    const fcfDisplay    = fcfV   != null ? fcfV.toFixed(1) + '%' + (fcfMed ? ' ~med' : '') : '—';
     const growthColor   = growthV != null ? metricColor(growthV, 20, true) : '#94a3b8';
     const fcfColor      = fcfV   != null ? metricColor(fcfV, 10, true)   : '#94a3b8';
 
@@ -416,7 +452,7 @@ function renderHTML(rows, methods) {
       <td>${escHtml(r.sector)}</td>
       <td style="font-weight:700;font-size:12px;color:${ro40Color};" title="growth + FCF margin = Rule of 40">${escHtml(ro40Display)}</td>
       <td style="color:${growthColor};font-weight:600;">${escHtml(growthDisplay)}</td>
-      <td style="color:${fcfColor};font-weight:600;">${escHtml(fcfDisplay)}</td>
+      <td style="color:${fcfColor};font-weight:600;"${fcfMed ? ' title="~med: R40 3y-annual-median fallback, not TTM FCF margin"' : ''}>${escHtml(fcfDisplay)}</td>
       <td style="color:#fca5a5;font-size:11px;">${escHtml(failedShort) || '<span style="color:#10b981;">— alle pass —</span>'}</td>
     </tr>`;
   }).join('');
@@ -509,7 +545,10 @@ function renderHTML(rows, methods) {
     },
     { id: 'fcf-margin',        label: 'FCF Margin',        threshold: 10,  better: 'high',
       getValue: r => r.fcfMarginFromRo40,
-      getDisplay: r => r.fcfMarginFromRo40 != null ? r.fcfMarginFromRo40.toFixed(1) + '%' : null
+      // audit F-A-2026-06-21: append '~med' when the value is R40's
+      // 3y-annual-median fallback, not TTM FCF margin — keeps the R40-consistent
+      // ranking but flags that the displayed figure is not a TTM measurement.
+      getDisplay: r => r.fcfMarginFromRo40 != null ? r.fcfMarginFromRo40.toFixed(1) + '%' + (r.fcfMarginSource && r.fcfMarginSource !== 'TTM' ? ' ~med' : '') : null
     },
     { id: 'revenue-growth-3y', label: 'Rev Growth 3Y CAGR',threshold: 25,  better: 'high',
       getValue: r => { const res = r.results['revenue-growth-3y']; return (res && res.computable && Number.isFinite(res.value)) ? res.value : null; },
@@ -542,8 +581,12 @@ function renderHTML(rows, methods) {
   ];
   const LEADERBOARD_TOP = 30;
 
+  // audit F-A-2026-06-21: rank the Kennzahl-Rangliste over discoveryRows
+  // (DataGuard-disqualified stocks excluded) so disqualified names no longer
+  // appear in the leaderboards while the header reports them as "disqualified".
+  // Makes the header count and the ranked tables agree (finding 06).
   const leaderboardData = LEADERBOARD_METRICS.map(lm => {
-    const valid = rows
+    const valid = discoveryRows
       .filter(r => lm.getValue(r) != null)
       .map(r => ({ row: r, val: lm.getValue(r), display: lm.getDisplay(r) }));
     if (lm.better === 'high') valid.sort((a, b) => b.val - a.val);

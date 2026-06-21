@@ -31,40 +31,58 @@ const METHOD_IDS = [
 const ANCHORS = ['NVDA', 'MSFT', 'PLTR', 'CRDO', 'MELI', 'AVGO', 'ASML', 'V', 'MA', 'COST'];
 
 const SAMPLE_TARGET = 500;
+// audit F-A-2026-06-21: only iterate methods that actually loaded, so a skipped
+// (renamed/missing) method file can't crash downstream loops with undefined.evaluate.
+const LOADED_METHOD_IDS = [];
 
 const methods = {};
 for (const id of METHOD_IDS) {
   const fileGuess = path.join(ROOT, 'methods', id + '.js');
-  if (!fs.existsSync(fileGuess)) { console.error('missing method file', id); process.exit(1); }
+  // audit F-A-2026-06-21: skip-and-warn instead of process.exit(1) so a renamed/
+  // removed method file doesn't hard-abort the whole probe (dead-code / robustness).
+  if (!fs.existsSync(fileGuess)) { console.error('missing method file (skipping):', id); continue; }
   methods[id] = require(fileGuess);
+  LOADED_METHOD_IDS.push(id);
 }
 
 // Build the universe — random sample + always-anchor tickers.
 const allFiles = fs.readdirSync(SNAP_DIR).filter(f => f.endsWith('.json'));
 const total = allFiles.length;
-const rate = SAMPLE_TARGET / total;
 // Deterministic LCG so repeated runs sample identically
 let _seed = 20260517;
 function rand() { _seed = (_seed * 1103515245 + 12345) | 0; return ((_seed >>> 0) % 1e9) / 1e9; }
 
+// audit F-A-2026-06-21: replace Bernoulli (rand() < rate) sampling — whose
+// realized size was binomial(total, 500/total) and drifted off the 500 target —
+// with a deterministic Fisher–Yates shuffle that pins the non-anchor sample to
+// exactly (SAMPLE_TARGET - anchorsPresent). Removes the silent sample-size bias.
 const sampleSet = new Set();
-for (const f of allFiles) { if (rand() < rate) sampleSet.add(f); }
-for (const a of ANCHORS) {
-  const fn = a + '.json';
-  if (allFiles.includes(fn)) sampleSet.add(fn);
+const anchorFiles = ANCHORS.map(a => a + '.json').filter(fn => allFiles.includes(fn));
+for (const fn of anchorFiles) sampleSet.add(fn);
+
+const nonAnchorPool = allFiles.filter(fn => !sampleSet.has(fn));
+for (let i = nonAnchorPool.length - 1; i > 0; i--) {
+  const j = Math.floor(rand() * (i + 1));
+  const tmp = nonAnchorPool[i]; nonAnchorPool[i] = nonAnchorPool[j]; nonAnchorPool[j] = tmp;
 }
+const nonAnchorTake = Math.max(0, Math.min(nonAnchorPool.length, SAMPLE_TARGET - sampleSet.size));
+for (let i = 0; i < nonAnchorTake; i++) sampleSet.add(nonAnchorPool[i]);
 
 console.error('universe total=' + total + '  sampled=' + sampleSet.size);
 
 // Per-method aggregates
 const agg = {};
-for (const id of METHOD_IDS) {
+for (const id of LOADED_METHOD_IDS) {
   agg[id] = {
     computableN: 0,
     notComputableN: 0,
     passN: 0,
     failN: 0,
     values: [],
+    // audit F-A-2026-06-21: track degraded-path values separately so they don't
+    // pollute the proper-path quintile distribution (incompatible value scales).
+    degradedValues: [],
+    degradedN: 0,
     anchorComputable: 0,
     anchorMap: {},
     sampleErrors: 0,
@@ -82,7 +100,7 @@ for (const fname of sampleSet) {
   const isAnchor = ANCHORS.includes(ticker);
   processed++;
 
-  for (const id of METHOD_IDS) {
+  for (const id of LOADED_METHOD_IDS) {
     const m = methods[id];
     let res;
     try { res = m.evaluate(stock); }
@@ -99,7 +117,18 @@ for (const fname of sampleSet) {
     }
     agg[id].computableN++;
     if (res.pass === true) agg[id].passN++; else if (res.pass === false) agg[id].failN++;
-    if (Number.isFinite(res.value)) agg[id].values.push(res.value);
+    // audit F-A-2026-06-21: route degraded-path values (declared via
+    // components.pricesUsed === 'degraded52w', a 0..1 positional score) into a
+    // separate bucket so they don't blend with proper-path return ratios in the
+    // quintile distribution (data-integrity: mixed value scales).
+    const pricesUsed = res.components && res.components.pricesUsed;
+    const isDegraded = typeof pricesUsed === 'string' && /degraded/i.test(pricesUsed);
+    if (Number.isFinite(res.value)) {
+      if (isDegraded) { agg[id].degradedValues.push(res.value); agg[id].degradedN++; }
+      else agg[id].values.push(res.value);
+    } else if (isDegraded) {
+      agg[id].degradedN++;
+    }
     if (isAnchor) {
       agg[id].anchorComputable++;
       agg[id].anchorMap[ticker] = { computable: true, value: res.value, pass: res.pass };
@@ -124,11 +153,14 @@ const report = {
   methods: {}
 };
 
-for (const id of METHOD_IDS) {
+for (const id of LOADED_METHOD_IDS) {
   const a = agg[id];
   const n = a.computableN + a.notComputableN;
   const coverage = n > 0 ? a.computableN / n : 0;
   const passRate = a.computableN > 0 ? a.passN / a.computableN : 0;
+  // audit F-A-2026-06-21: quintiles computed over proper-path values ONLY;
+  // degraded-path values (different scale) are quantiled separately so the two
+  // populations are never blended into a single misleading distribution.
   const vals = a.values.slice().sort((x, y) => x - y);
   const q = {
     p10: quantile(vals, 0.10),
@@ -136,6 +168,14 @@ for (const id of METHOD_IDS) {
     p50: quantile(vals, 0.50),
     p80: quantile(vals, 0.80),
     p90: quantile(vals, 0.90)
+  };
+  const degradedVals = a.degradedValues.slice().sort((x, y) => x - y);
+  const degradedQuintiles = {
+    p10: quantile(degradedVals, 0.10),
+    p20: quantile(degradedVals, 0.20),
+    p50: quantile(degradedVals, 0.50),
+    p80: quantile(degradedVals, 0.80),
+    p90: quantile(degradedVals, 0.90)
   };
   report.methods[id] = {
     label: methods[id].label,
@@ -148,6 +188,12 @@ for (const id of METHOD_IDS) {
     failN: a.failN,
     passRate: passRate,
     quintiles: q,
+    // audit F-A-2026-06-21: proper-path sample count + degraded-path metrics
+    // surfaced so consumers can discount/segment percentiles (mixed value scales).
+    properN: a.values.length,
+    degradedN: a.degradedN,
+    degradedValueN: a.degradedValues.length,
+    degradedQuintiles: degradedQuintiles,
     sampleErrors: a.sampleErrors,
     errExamples: a.errExamples,
     anchorComputable: a.anchorComputable,
@@ -166,13 +212,13 @@ function classify(r) {
   return flags;
 }
 
-for (const id of METHOD_IDS) report.methods[id].flags = classify(report.methods[id]);
+for (const id of LOADED_METHOD_IDS) report.methods[id].flags = classify(report.methods[id]);
 
 if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
 fs.writeFileSync(path.join(OUT_DIR, 'tag225d-effectiveness.json'), JSON.stringify(report, null, 2));
 
 // Pretty print to console
-for (const id of METHOD_IDS) {
+for (const id of LOADED_METHOD_IDS) {
   const r = report.methods[id];
   console.log(id.padEnd(36) +
     ' cov=' + (r.coverage*100).toFixed(1).padStart(5) + '%' +
@@ -183,6 +229,9 @@ for (const id of METHOD_IDS) {
     ' p80=' + (r.quintiles.p80 != null ? r.quintiles.p80.toFixed(3) : '—').padStart(7) +
     ' flags=' + (r.flags.join(',') || '-')
   );
+  // audit F-A-2026-06-21: warn when degraded-path values exist so quintiles above
+  // (proper-path only) are read in context and not mistaken for the full population.
+  if (r.degradedN > 0) console.log('  DEGRADED ' + r.degradedN + ' value(s) excluded from quintiles (separate scale)');
   if (r.sampleErrors > 0) console.log('  ERR ' + r.sampleErrors + ' e.g. ' + r.errExamples.join(' | '));
 }
 console.log('written: outputs/tag225d-effectiveness.json');

@@ -64,26 +64,40 @@ function computeRegimes(series, maPeriod) {
   return regimes;
 }
 
+// audit F-A-2026-06-21: write the present-but-empty regime output and exit 0,
+// so a missing/corrupt prices file degrades gracefully instead of throwing and
+// failing the daily-pull workflow step.
+function writeEmptyFallback(args) {
+  const outDir = path.dirname(args.out);
+  if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+  writeFileAtomic(args.out, JSON.stringify({
+    asOf: new Date().toISOString(),
+    ticker: args.ticker,
+    error: 'no_price_data',
+    regimes: {},
+    summary: { total: 0, BULL: 0, BEAR: 0, SIDEWAYS: 0 },
+    current: null
+  }));
+}
+
 function main() {
   const args = parseArgs(process.argv);
-  // F-A-2026-06-21 (audit): guard the parse so a missing/corrupt prices file fails the
-  // daily-pull step with a clear diagnostic instead of an opaque JSON.parse stack trace.
+  // audit F-A-2026-06-21: unguarded JSON.parse of a missing/corrupt prices file
+  // threw and failed the daily-pull job. Guard the read+parse and on failure emit
+  // the same empty fallback the empty-series branch produces, then exit 0.
   let history;
-  try { history = JSON.parse(fs.readFileSync(args.history, 'utf8')); }
-  catch (e) { console.error('::error::[macro-regime] cannot read/parse ' + args.history + ': ' + e.message); process.exit(1); }
+  try {
+    history = JSON.parse(fs.readFileSync(args.history, 'utf8'));
+  } catch (e) {
+    console.error('[macro-regime] cannot read/parse ' + args.history + ': ' + e.message + ' — writing empty fallback');
+    writeEmptyFallback(args);
+    console.log('No price data for ' + args.ticker + ' — wrote empty fallback to ' + args.out);
+    process.exit(0);
+  }
   const series = history[args.ticker];
 
   if (!Array.isArray(series) || series.length === 0) {
-    const outDir = path.dirname(args.out);
-    if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-    writeFileAtomic(args.out, JSON.stringify({
-      asOf: new Date().toISOString(),
-      ticker: args.ticker,
-      error: 'no_price_data',
-      regimes: {},
-      summary: { total: 0, BULL: 0, BEAR: 0, SIDEWAYS: 0 },
-      current: null
-    }));
+    writeEmptyFallback(args);
     console.log('No price data for ' + args.ticker + ' — wrote empty fallback to ' + args.out);
     process.exit(0);
   }

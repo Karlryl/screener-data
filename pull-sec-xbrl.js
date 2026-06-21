@@ -121,7 +121,21 @@ async function main() {
   })();
 
   let pulled = 0, skipped304 = 0, skippedFresh = 0, notFound = 0, errors = 0, rateLimited = 0;
-  const entries = Object.values(Object.fromEntries(tickers));
+  // audit F-A-2026-06-21: direct Map->array; the old Object.fromEntries(...)/
+  // Object.values round-trip silently collapsed duplicate keys and was a no-op
+  // rebuild of what [...values()] yields directly.
+  const entries = [...tickers.values()];
+  // audit F-A-2026-06-21: when --max truncates the run, prioritize the LEAST
+  // recently fetched CIKs (oldest fetchedAt first, never-fetched = oldest).
+  // The old `.slice(0, max)` took the head of insertion order, so partial runs
+  // re-pulled the same prefix forever and the tail of the list was never reached.
+  if (Number.isFinite(args.max) && args.max < entries.length) {
+    entries.sort((a, b) => {
+      const fa = (a.cik && manifest.entries[a.cik] && manifest.entries[a.cik].fetchedAt) || '';
+      const fb = (b.cik && manifest.entries[b.cik] && manifest.entries[b.cik].fetchedAt) || '';
+      return fa < fb ? -1 : fa > fb ? 1 : 0;
+    });
+  }
   const todo = entries.slice(0, args.max);
 
   for (const t of todo) {

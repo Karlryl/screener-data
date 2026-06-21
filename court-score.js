@@ -107,7 +107,12 @@ const WACC = 0.09; // [TODO-CAL] grober Proxy für A4
 
 // --- Skeptiker-Welle-2-Befunde, deterministisch eingebaut ---
 const KILL = new Set(['PS', 'RDVT', 'ADEA', 'OMDA', 'TEM', 'KMTS']); // verifiziert: Ticker-Mismatch / falscher Sektor / Daten-Fehler
-const INORGANIC_FALLBACK = new Set(['GEN', 'AVGO']);                 // hardcoded fallback: AVGO in fabless_semi has no snapshot row; GEN covered by data-driven rule but kept here for safety
+// audit F-A-2026-06-21: removed hardcoded INORGANIC_FALLBACK set (GEN/AVGO) — name-level overrides reintroduce
+// exactly the hardcoded exclusions inorganicFlag() was built to replace. GEN is already covered by the
+// data-driven rule; AVGO (and any other snapshot-missing high-growth fabless name) is now caught structurally
+// below via a coverage-absence lamp keyed on missing M&A/RPO data, not on the ticker. Self-maintains as the
+// snapshot universe grows.
+const FABLESS_GROWTH_FLOOR = 0.25;                                   // headline growth above which missing M&A/RPO coverage is worth flagging (mirrors fabless_semi membership g.c)
 const MEGACAP_REVM = 15000;                                          // > $15B Umsatz = Mega-Cap (Fabless: vom Small-Cap-Kern trennen)
 
 // --- A2 forward-book-demand axis (v1.1) — additive, composite; constants [TODO-CAL] ---
@@ -168,7 +173,7 @@ function stageOf(formula, fcf) {
 const results = {};
 for (const [bucket, F] of Object.entries(FORMULAS)) {
   // Mitglieder + abgeleitete Felder; Winsorize krasse Datenfehler (für robuste Stats)
-  const seen = new Set();
+  const seen = new Map(); // audit F-A-2026-06-21: Map (not Set) so the kept record is reachable to log dropped duplicates
   const members = [];
   for (const [t, b] of bucketOf) {
     if (b !== bucket) continue;
@@ -177,14 +182,19 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (!c) continue;
     if (c.gm != null && c.gm > 1.0) continue;        // GM>100% = unmöglich (Daten-Fehler) -> hard reject
     // dedupe identische Foreign-OTC-Doppellistings (gleiche gm+rev)
-    const fp = `${c.gm}|${c.scaleRevM}`;
-    if (seen.has(fp)) continue; seen.add(fp);
+    // audit F-A-2026-06-21: fp collision on (gm,revM) silently drops a distinct issuer — gm is rounded to
+    // 4 decimals and scaleRevM to integer $M, so two genuinely different companies can share that key. Match
+    // on MORE fields (gm AND revM AND growth AND fcfMargin) so only true co-listings collide, and emit an
+    // auditable 'deduped-duplicate-listing' lamp on the kept record so any dropped name is traceable.
+    const fp = `${c.gm}|${c.scaleRevM}|${c.growth}|${c.fcfMargin}`;
+    if (seen.has(fp)) { const k = seen.get(fp); if (k) (k._dupDropped = k._dupDropped || []).push(t); continue; }
     const m = { ...c, conf: confOf.get(t) };
     m.roicMinusWacc = (c.roicProxy != null) ? c.roicProxy - WACC : null;
     m.opMargin = c.opMargin;
     // Winsorize für Statistik (nicht für Anzeige): kaputte accel/growth begrenzen
     m._growth = c.growth == null ? null : clip(c.growth, -0.9, 5);
     m._accel = c.accel == null ? null : clip(c.accel, -5, 5);
+    seen.set(fp, m); // audit F-A-2026-06-21: register the kept record so any later collision attaches its dropped ticker here
     members.push(m);
   }
   // Roh-Achswerte für Stats: nutze winsorisierte für growth/accel
@@ -234,6 +244,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
 
     // Lampen
     const L = [];
+    if (m._dupDropped && m._dupDropped.length) L.push(`deduped-duplicate-listing(${m._dupDropped.join(',')})`); // audit F-A-2026-06-21: makes silently-dropped fp-collision names auditable
     if (m.sbcPct != null && m.sbcPct > 0.50) L.push('IPO-SBC-distortion');
     else if (m.sbcPct != null && m.sbcPct > 0.15) L.push('SBC>15%');
     if (m.scaleRevM > MEGACAP_REVM) L.push('mega-cap');
@@ -241,7 +252,11 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     const _ioRec = maRpoByTicker.get(m.ticker);
     if (_ioFlag === 'inorganic') L.push(`M&A-inorganic-flow(pay${pct(_ioRec.paymentsToRev).trim()},dGW${pct(_ioRec.deltaGoodwillPctRev).trim()},rpoG${pct(_ioRec.rpoGrowthYoY).trim()})`);
     else if (_ioFlag === 'ambiguous') L.push('M&A-flow-high(book-NULL,ambiguous)');
-    else if (_ioFlag === null && INORGANIC_FALLBACK.has(m.ticker)) L.push('M&A-growth(P_auth-blind,hardcoded-fallback)');
+    // audit F-A-2026-06-21: structural replacement for the hardcoded GEN/AVGO fallback — a high-growth
+    // fabless_semi member with NO M&A/RPO snapshot row (coverage absence) gets a generic coverage-missing
+    // lamp keyed on the data gap, not on the ticker. Prevents the hardcoded-ticker exclusion failure mode and
+    // self-maintains: any future snapshot-missing high-growth name is flagged automatically.
+    else if (_ioFlag === null && bucket === 'fabless_semi' && m.growth != null && m.growth >= FABLESS_GROWTH_FLOOR) L.push('M&A-coverage-missing(P_auth-blind)');
     if (m.flags && m.flags.includes('thin-durability')) L.push('thin-durability');           // Durability aus <4 YoY (annual Fallback) — ersetzt irreführende 8q-approx-Lampe (v3 nutzt SEC-Quartals-YoY)
     if (m.durSource === 'sec-quarterly' && m.durWinN != null && m.durWinN < 12) L.push('short-durability-window'); // 4<=winN<12: NICHT 12Q-vergleichbar (ALAB 7Q, ARM 8Q) — Re-Court-Disclosure
     if (m.durability != null && Math.abs(m.durability) > 2) L.push('near-zero-median-amplified'); // |med|+floor bläht durRaw auf wenn median≈0 (z.B. MXL -3.65); tanh sättigt -> Rang ok, Rohwert-Artefakt offengelegt

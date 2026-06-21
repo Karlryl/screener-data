@@ -53,7 +53,11 @@ function loadTickerFile(filePath) {
   const raw = fs.readFileSync(filePath, 'utf8').trim();
   // JSON array or newline-delimited
   if (raw.startsWith('[')) {
-    return JSON.parse(raw);
+    const arr = JSON.parse(raw);
+    // audit F-A-2026-06-21: coerce/drop non-string & object-shaped JSON elements
+    // identically to the newline branch — prevents non-string values flowing into
+    // yf.chart() and history[ticker] keys, corrupting the store.
+    return arr.map(t => (typeof t === 'string' ? t : (t && t.ticker) || '').trim()).filter(Boolean);
   }
   return raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 }

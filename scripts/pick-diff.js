@@ -41,7 +41,9 @@ function listMethodsVintages() {
     .sort();
 }
 
-// Jaccard distance = |A ∩ B| / |A ∪ B|. 1.0 = identical, 0.0 = no overlap.
+// audit F-A-2026-06-21: comment said "Jaccard distance" but the code returns the Jaccard
+// similarity (index) — prevents a misleading-doc failure mode (distance would be 1 - this).
+// Jaccard similarity (index) = |A ∩ B| / |A ∪ B|. 1.0 = identical, 0.0 = no overlap.
 function jaccard(setA, setB) {
   const a = new Set(setA), b = new Set(setB);
   if (a.size === 0 && b.size === 0) return 1.0;
@@ -62,11 +64,22 @@ function whyDropped(ticker, priorMethodsFile, todayMethodsFile) {
   const prior = (priorMethodsFile && priorMethodsFile.stocks && priorMethodsFile.stocks[ticker] && priorMethodsFile.stocks[ticker].results) || {};
   const today = (todayMethodsFile && todayMethodsFile.stocks && todayMethodsFile.stocks[ticker] && todayMethodsFile.stocks[ticker].results) || {};
   const flips = [];
-  for (const mid of Object.keys(prior)) {
+  // audit F-A-2026-06-21: iterate the UNION of prior+today method ids, not just prior's keys —
+  // prevents the "method newly added since prior that flips a pick out is never reported" failure
+  // mode (the old prior-keyed loop + `if (!pr || !tr) continue;` made such methods invisible).
+  for (const mid of new Set([...Object.keys(prior), ...Object.keys(today)])) {
     const pr = prior[mid], tr = today[mid];
-    if (!pr || !tr) continue;
-    if (pr.pass === true && tr.pass === false) flips.push(mid + ' (was pass, now fail)');
-    else if (pr.pass === true && tr.pass == null) flips.push(mid + ' (was pass, now incomputable)');
+    if (pr && tr) {
+      if (pr.pass === true && tr.pass === false) flips.push(mid + ' (was pass, now fail)');
+      else if (pr.pass === true && tr.pass == null) flips.push(mid + ' (was pass, now incomputable)');
+    } else if (!pr && tr) {
+      // method present today but absent in prior — only a "flip out" if it now fails
+      if (tr.pass === false) flips.push(mid + ' (newly present, now fail)');
+      else if (tr.pass == null) flips.push(mid + ' (newly present, incomputable)');
+    } else if (pr && !tr) {
+      // method existed in prior but is gone today — was a passing gate, now absent
+      if (pr.pass === true) flips.push(mid + ' (was pass, now absent)');
+    }
   }
   return flips;
 }
