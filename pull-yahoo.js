@@ -490,13 +490,22 @@ function _metric(value, source, confidence, asOf) {
   return { value, source, confidence, asOf };
 }
 
+// bug-fix (audit 2026-06-21): trim only TRAILING nulls, preserving interior null years so sibling
+// annual arrays stay positionally aligned (methods zip annualRev[i] with annualOpInc[i]/annualFCF[i]
+// /annualOCF[i] by index). The old .filter(Boolean) compacted nulls per-array, desyncing the index
+// across fields. Matches the FTS path (_ftsExtractByYear) and annualRnD, which already null-preserve.
+function _trimTrailingNull(mapped) {
+  let end = mapped.length;
+  while (end > 0 && mapped[end - 1] == null) end--;
+  return mapped.slice(0, end);
+}
+
 function _arr(history, key) {
   if (!Array.isArray(history)) return [];
-  return history.map(r => {
+  return _trimTrailingNull(history.map(r => {
     const v = _y(r, key);
-    if (v == null) return null;
-    return { value: v };
-  }).filter(Boolean);
+    return v == null ? null : { value: v };
+  }));
 }
 
 // ─── Tag 203: Fintech-aware OpInc fallback ────────────────────────
@@ -658,21 +667,21 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   // P0-Fix Tag 13: capex-fallback `|| 0` ist gefährlich.
   // NVDA hat real $35B Capex/Jahr — wegfallen lassen verfälscht FCF um Milliarden.
   // Wenn capex unknown, FCF=null statt overstated.
-  const annualFCF = (cfHist || []).map(r => {
+  const annualFCF = _trimTrailingNull((cfHist || []).map(r => {
     const op = _y(r, 'totalCashFromOperatingActivities');
     const capex = _y(r, 'capitalExpenditures');
-    if (op == null || capex == null) return null;
+    if (op == null || capex == null) return null;  // interior null preserved (positional alignment)
     return { value: op + capex };  // Yahoo capex ist negativ → echte Subtraktion
-  }).filter(Boolean);
+  }));
   // Bug #23: annualOCF never written to snapshot — premium-compounder-proof check #6
   // ((Capex+R&D)/OCF) was always computable:false. Extract OCF directly from cfHist.
-  const annualOCF = (cfHist || []).map(r => {
+  const annualOCF = _trimTrailingNull((cfHist || []).map(r => {
     const op = _y(r, 'totalCashFromOperatingActivities');
-    return op != null ? { value: op } : null;
-  }).filter(Boolean);
+    return op != null ? { value: op } : null;  // interior null preserved (positional alignment)
+  }));
   // P0-Fix Tag 13: 0+0 wenn beide undefined ist semantisch falsch — Engine sieht Debt=0 statt null.
   // Plus: Yahoo-Field-Name-Drift seit Nov 2024 — multi-fallback für cash.
-  const annualBalance = (bsHist || []).map(r => {
+  const annualBalance = _trimTrailingNull((bsHist || []).map(r => {
     const cash = _y(r, 'cash')
               ?? _y(r, 'cashAndCashEquivalents')
               ?? _y(r, 'cashAndShortTermInvestments');
@@ -687,9 +696,9 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     const totalDebt = (std == null && ltd == null) ? null : (std || 0) + (ltd || 0);
     const _debtPartial = totalDebt != null && (std == null || ltd == null); // F-DQ-001
     const totalAssets = _y(r, 'totalAssets');
-    if (cash == null && totalDebt == null && totalAssets == null) return null;
+    if (cash == null && totalDebt == null && totalAssets == null) return null;  // interior null preserved
     return { totalCash: cash, totalDebt, totalAssets, ...(_debtPartial ? { _debtPartial: true } : {}) };
-  }).filter(Boolean);
+  }));
 
   // Quartalsweise Timeseries (latest first → wir flippen NICHT, Engine erwartet latest=index 0)
   const revenueQ = _arr(isHistQ, 'totalRevenue');
