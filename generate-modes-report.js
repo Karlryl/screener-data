@@ -188,9 +188,18 @@ function blockedByOneMust(eligible, modeId, topN) {
   for (const ev of eligible) {
     const me = ev.modeEvals && ev.modeEvals[modeId];
     if (!me || me.passed || !me.mustResults) continue;
-    const failed = me.mustResults.filter(m => m.status === 'fail');
-    if (failed.length !== 1) continue;  // genau 1 MUST fail
-    items.push({ ev: ev, me: me, failedMust: failed[0] });
+    // audit F-A-2026-06-21: count 'incomputable' MUSTs as blocking barriers, not
+    // just 'fail'. Failure mode prevented: incomputable-MUST hidden as a clean
+    // one-barrier near-miss. In strategy-modes.js a MUST resolves to
+    // pass/fail/incomputable, and allMustPass requires mustPassCount===mustChecks
+    // .length — so an incomputable MUST also blocks passing. The old filter
+    // (status==='fail' only) treated a stock blocked by 1 fail + N incomputable as
+    // a single-barrier miss, mislabeling multi-barrier stocks in the Near-Miss
+    // panel. Require exactly ONE blocking barrier (the panel's "one threshold
+    // away" intent); a fail+incomputable combo has two barriers and is excluded.
+    const blocking = me.mustResults.filter(m => m.status === 'fail' || m.status === 'incomputable');
+    if (blocking.length !== 1) continue;  // genau 1 blockierende Barriere (fail ODER incomputable)
+    items.push({ ev: ev, me: me, failedMust: blocking[0] });
   }
   items.sort(function(a, b) { return (b.me.score || 0) - (a.me.score || 0); });
   return items.slice(0, topN);
@@ -221,21 +230,84 @@ function dedupeByCompany(evaluated) {
       .replace(COMPANY_SUFFIX_REGEX, '')
       .replace(/[^a-z0-9]+/g, '').trim();
   }
+  // audit F-A-2026-06-21: collision-resistant key + data/mcap-driven tiebreak.
+  // Failure mode prevented: survivorship asymmetry — distinct or larger FOREIGN
+  // companies silently dropped by a name-collision on a heavily stripped key plus
+  // an UNCONDITIONAL US-listing preference. Two fixes:
+  //   (1) Key discriminator: norm(name) alone collapses very different companies
+  //       (accent-folded, suffix-stripped, alnum-only). Append a sector tag and an
+  //       order-of-magnitude mcap bucket so genuinely distinct issuers that fold to
+  //       the same name string don't merge, while true cross-listings of the SAME
+  //       company (same name + sector + mcap magnitude) still collapse.
+  //   (2) Tiebreak: prefer the listing with more populated annual/timeseries data,
+  //       then higher mcap, and use US-preference ONLY as a final tiebreak when data
+  //       completeness and mcap are comparable — instead of dropping a larger/richer
+  //       foreign listing purely on nationality.
+  // FX note: marketCap is already normalized to USD at ingest (pull-yahoo.js sets
+  // meta.reportingCurrency='USD' and meta.fxRateApplied), so the mcap comparison is
+  // USD-vs-USD. For snapshots where FX conversion failed (meta.fxConversionFailed /
+  // fxRateApplied==null) the value is still raw local currency and is NOT comparable;
+  // we treat such mcap as unreliable (usdMcap()→null) so it neither sets the magnitude
+  // bucket nor wins the mcap tiebreak by an out-of-unit value.
+  function usdMcap(ev) {
+    const meta = (ev.stock && ev.stock.meta) || {};
+    // fxConversionFailed leaves the value in local currency → not USD-comparable.
+    if (meta.fxConversionFailed === true) return null;
+    // Converted snapshots carry reportingCurrency='USD'+fxRateApplied; native-USD
+    // snapshots (US listings) have no FX meta at all. Reject only an explicit
+    // non-USD reportingCurrency (defensive — should not occur post-conversion).
+    if (meta.reportingCurrency != null && meta.reportingCurrency !== 'USD') return null;
+    const m = ev.mcap;
+    return (typeof m === 'number' && Number.isFinite(m) && m > 0) ? m : null;
+  }
+  function mcapBucket(ev) {
+    const m = usdMcap(ev);
+    return m == null ? 'x' : String(Math.round(Math.log10(m)));
+  }
+  // Count populated annual + quarterly data points so the richer listing wins.
+  function dataScore(ev) {
+    const s = ev.stock || {};
+    const a = s.annual || {};
+    const t = s.timeseries || {};
+    return _arrVals(a.annualRev).length + _arrVals(a.annualOpInc).length +
+           _arrVals(a.annualFCF).length + _arrVals(t.revenueQ).length;
+  }
   const byKey = new Map();
+  const merges = [];
   for (const ev of evaluated) {
     const name = (ev.stock.meta && ev.stock.meta.name) || '';
     const ticker = (ev.stock.meta && ev.stock.meta.ticker) || '';
-    const key = norm(name) || ticker.split(/[.\-]/)[0].toLowerCase();
-    if (!key) continue;
+    const sector = ((ev.stock.meta && ev.stock.meta.sector) || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+    const nameKey = norm(name) || ticker.split(/[.\-]/)[0].toLowerCase();
+    if (!nameKey) continue;
+    // Discriminate by sector + mcap order-of-magnitude so name collisions between
+    // distinct issuers do not merge (true cross-listings share all three).
+    const key = nameKey + '|' + sector + '|' + mcapBucket(ev);
     const existing = byKey.get(key);
     if (!existing) { byKey.set(key, ev); continue; }
+    // Tiebreak between two listings of the same company.
+    const evData = dataScore(ev), exData = dataScore(existing);
+    const evMcap = usdMcap(ev) || 0, exMcap = usdMcap(existing) || 0;
     const evIsUS = !/\./.test(ticker);
-    const exIsUS = !/\./.test(existing.stock.meta.ticker);
+    const exIsUS = !/\./.test((existing.stock.meta && existing.stock.meta.ticker) || '');
     let keep;
-    if (evIsUS && !exIsUS) keep = ev;
-    else if (!evIsUS && exIsUS) keep = existing;
-    else keep = (ev.mcap || 0) >= (existing.mcap || 0) ? ev : existing;
+    if (evData !== exData) keep = evData > exData ? ev : existing;          // richer data wins
+    else if (evMcap !== exMcap) keep = evMcap > exMcap ? ev : existing;     // then higher USD mcap
+    else if (evIsUS !== exIsUS) keep = evIsUS ? ev : existing;              // US only as final tiebreak
+    else keep = ev;
+    const dropped = keep === ev ? existing : ev;
+    merges.push({
+      key,
+      kept: (keep.stock.meta && keep.stock.meta.ticker) || '?',
+      dropped: (dropped.stock.meta && dropped.stock.meta.ticker) || '?'
+    });
     byKey.set(key, keep);
+  }
+  // Make attrition auditable: log every merged pair so dropped foreign listings
+  // are not invisible (previously a silent drop).
+  if (merges.length > 0) {
+    console.log(`[dedupeByCompany] merged ${merges.length} cross-listing(s):`);
+    for (const m of merges) console.log(`  ${m.key} — kept ${m.kept}, dropped ${m.dropped}`);
   }
   return [...byKey.values()];
 }

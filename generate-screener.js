@@ -32,6 +32,54 @@ const { writeFileAtomic } = require('./lib/atomic-write.js');
 // instead of being silently missed by raw `ticker + '.json'`.
 const { safeSnapshotFilename } = require('./lib/snapshot-fs.js');
 
+// audit F-A-2026-06-21: FX-rates table (USD-per-unit), the SAME fx-rates.json the
+// pull-yahoo mapper uses for its USD normalization. Loaded read-only so the
+// market-cap gates can normalize the handful of snapshots whose marketCap was
+// NOT converted to USD at pull time (meta.fxConverted !== true / fxConversionFailed)
+// instead of comparing a raw local-currency figure (JPY/EUR/HKD/KRW) against USD
+// constants. Never invents a rate: if the currency is missing from the table we
+// flag the row (mcapCurrencyUnknown) rather than guess.
+let FX_RATES_USD = {};
+try {
+  const _fxRaw = require('./fx-rates.json');
+  if (_fxRaw && _fxRaw.rates && typeof _fxRaw.rates === 'object') {
+    for (const [k, v] of Object.entries(_fxRaw.rates)) {
+      if (typeof v === 'number' && Number.isFinite(v) && v > 0) FX_RATES_USD[k.toUpperCase()] = v;
+    }
+  }
+} catch (_) { /* fx-rates.json absent — USD-already-converted snapshots still resolve */ }
+
+// audit F-A-2026-06-21: resolve a snapshot's market cap to USD using the snapshot's
+// OWN reported FX state (written by pull-yahoo's _convertSnapshotToUSD), falling back
+// to the shared fx-rates.json table only when the snapshot was left unconverted.
+// Returns { usd: <number|null>, unknown: <bool> }. usd=null + unknown=true means the
+// USD value is genuinely unreachable for this row, so callers must NOT compare its
+// raw cap against USD thresholds.
+function resolveMcapUsd(stock, rawMcap) {
+  if (!Number.isFinite(rawMcap) || rawMcap <= 0) return { usd: rawMcap, unknown: false };
+  const meta = (stock && stock.meta) || {};
+  // Common path: pull-yahoo already normalized marketCap to USD in place
+  // (fxConverted === true, reportingCurrency === 'USD'). The raw figure IS USD.
+  if (meta.fxConverted === true || meta.reportingCurrency === 'USD') {
+    return { usd: rawMcap, unknown: false };
+  }
+  // Unconverted snapshot: marketCap is still in its local reporting currency.
+  // Convert here using the same fx-rates.json table the mapper uses. Prefer the
+  // trading currency for the cap (mcap is quoted in trading ccy), else the
+  // reporting currency original.
+  const ccyRaw = meta.tradingCurrencyOriginal || meta.reportingCurrencyOriginal
+    || meta.reportingCurrency || meta.tradingCurrency || null;
+  if (!ccyRaw) return { usd: null, unknown: true };
+  const ccy = String(ccyRaw).toUpperCase();
+  if (ccy === 'USD') return { usd: rawMcap, unknown: false };
+  // British pence (GBp/GBX/GBPENCE): 100 pence = 1 GBP, then GBP→USD.
+  const isPence = /^GB[XP]$/.test(ccy) || ccy === 'GBPENCE';
+  const fxKey = isPence ? 'GBP' : ccy;
+  const rate = FX_RATES_USD[fxKey];
+  if (rate == null) return { usd: null, unknown: true };
+  return { usd: rawMcap * (isPence ? rate / 100 : rate), unknown: false };
+}
+
 // KI Infrastruktur universe — manually seeded, Phase-2-ready for machine updates.
 let KI_INFRA_CONFIG = { categories: {} };
 try { KI_INFRA_CONFIG = require('./ki-infra.json'); } catch (_) {}
@@ -279,6 +327,15 @@ function buildRow(stock) {
   }
 
   const mcap = unwrap(stock.marketCap) || 0;
+  // audit F-A-2026-06-21: prevents raw local-currency caps (JPY/EUR/HKD/KRW etc.)
+  // being compared against USD thresholds. mcap is displayed as-is, but the $2B
+  // SMALL gate and the client Cap≥ filter must use the USD-normalized figure.
+  // mcapCurrencyUnknown=true marks rows whose USD cap is genuinely unreachable
+  // (unconverted snapshot + currency missing from fx-rates.json) so those rows are
+  // excluded from cap thresholds rather than silently mis-bucketed.
+  const _mcapUsdRes = resolveMcapUsd(stock, mcap);
+  const mcapUsd = _mcapUsdRes.usd;
+  const mcapCurrencyUnknown = _mcapUsdRes.unknown;
   const region = (stock.meta && stock.meta.region) || '';
   const country = REGION_TO_COUNTRY[region] || region || '—';
 

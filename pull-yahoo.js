@@ -1603,12 +1603,36 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     }
     if (q.regularMarketPrice != null) {
       existing.price = existing.price || {};
-      existing.price.regularMarketPrice = q.regularMarketPrice * tradingFactor;
+      // audit F-A-2026-06-21: prevented failure mode — "price-field currency
+      // drifts between full-pull and price-only refreshes". The price-only path
+      // converts price to USD (`* tradingFactor`), while the full-pull mapper
+      // never builds snap.price and _convertSnapshotToUSD deliberately leaves any
+      // price in trading currency (see lines ~411-414). So consumers reading
+      // existing.price.regularMarketPrice could not tell whether the number was
+      // USD (after a price-only refresh) or trading-ccy/absent (after a full
+      // pull). We fix the invariant to "stored regularMarketPrice is USD" (the
+      // behavior price-only already had and downstream price-only consumers rely
+      // on) and record it explicitly in meta so consumers interpret the field
+      // from meta.priceCurrency instead of guessing — closing the drift.
+      const usdPrice = q.regularMarketPrice * tradingFactor;
+      if (!Number.isFinite(usdPrice)) {
+        // Never write a non-finite price; that would corrupt the invariant just
+        // asserted (USD numeric). Refuse the fast-path so a full pull recomputes.
+        throw new Error('price-only refused: non-finite USD price (raw=' + q.regularMarketPrice + ', tradingFactor=' + tradingFactor + ')');
+      }
+      existing.price.regularMarketPrice = usdPrice;
+      // audit F-A-2026-06-21: assert + record the price unit on write so the
+      // field is self-describing and the full-pull/price-only ambiguity is gone.
+      existing.price.currencyUnit = 'USD';
+      existing.meta = existing.meta || {};
+      existing.meta.priceCurrency = 'USD';
       // F-DP-040 (Tag 182): previously this overwrote existing.price.currency with
       // Yahoo's live value, flipping GBp ↔ GBP and breaking the invariant against
       // meta.reportingCurrencyOriginal. The snapshot's reporting currency is set
       // at full-pull time and must remain stable; only update if the existing
-      // field is missing.
+      // field is missing. NOTE: price.currency is the ORIGINAL trading-quote ccy
+      // (provenance of the raw quote); the stored regularMarketPrice number is in
+      // USD per meta.priceCurrency — these are intentionally distinct.
       if (existing.price.currency == null) existing.price.currency = q.currency;
     }
     if (q.marketCap != null) {
@@ -2229,27 +2253,54 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // Tag 163: p-limit style worker pool — each worker independently loops through tickers.
   // A stalled ticker blocks only its own worker, not all CONCURRENCY workers.
   // Replaces batch Promise.all which gated all workers on the slowest ticker.
-  // With 20 workers and rateLimitMs=1500ms per worker, throughput is ~13 tickers/sec.
   // A rate-limited ticker (up to ~29s total: 12s + 5s + 12s timeouts/delays) blocks
-  // only its own slot; the other 19 workers keep pulling uninterrupted.
+  // only its own slot; the other workers keep pulling uninterrupted.
+  //
+  // audit F-A-2026-06-21: GLOBAL request-spacing gate (prevented failure mode:
+  // anti-429 throttle defeated by concurrency — effective request rate was
+  // concurrency × the intended rate). The old per-worker `_sleep(sleepMs)` after
+  // every ticker meant each of the CONCURRENCY workers independently spaced ITS
+  // OWN pulls by rateLimitMs, so aggregate issue rate was ~concurrency/rateLimitMs
+  // req/s (e.g. 20 / 1.5s ≈ 13 req/s) — the 1500ms "rate limit" was never a global
+  // request spacing and Yahoo saw bursts that tripped 429s. Fix: a single shared
+  // `nextSlotAt` timestamp that every worker advances atomically (Node is single-
+  // threaded; the read-modify-write below has no await between read and write, so
+  // no two workers can claim the same slot). Each worker reserves the next slot
+  // BEFORE issuing its request and sleeps until then, guaranteeing the MINIMUM
+  // spacing between consecutive Yahoo requests across ALL workers is exactly
+  // sleepMs, decoupled from concurrency. `concurrency` now governs only how many
+  // requests may be in flight at once; the gate governs the issue rate. The
+  // per-worker post-request sleep is removed to avoid double-counting.
   async function runWorkerPool(stocks, processOneFn, concurrency, sleepMs, writeManifestFn) {
     let idx = 0;
+    // Shared leaky-bucket gate: timestamp (ms) at which the next request may issue.
+    let nextSlotAt = 0;
+    // Reserve the next global issue slot atomically and wait for it. The
+    // read-of-nextSlotAt + write-back is synchronous (no await between), so
+    // concurrent workers serialize through it and each gets a distinct slot
+    // spaced sleepMs apart. Slots never bunch up in the future faster than
+    // wall-clock when the pipeline is request-bound, and the Math.max(now,…)
+    // keeps the gate from accumulating debt when a worker stalls on a slow pull.
+    async function acquireSlot() {
+      if (!(sleepMs > 0)) return; // throttle disabled → no spacing
+      const now = Date.now();
+      const slot = Math.max(now, nextSlotAt);
+      nextSlotAt = slot + sleepMs;
+      const waitMs = slot - now;
+      if (waitMs > 0) await _sleep(waitMs);
+    }
     async function worker() {
       while (true) {
         const myIdx = idx++;
         if (myIdx >= stocks.length) break;
         const stock = stocks[myIdx];
+        // audit F-A-2026-06-21: gate issue-rate globally BEFORE the request
+        // instead of sleeping per-worker AFTER it. This is what makes sleepMs a
+        // true global spacing rather than a per-worker one.
+        await acquireSlot();
         await processOneFn(stock).catch(e => _log('WARN', `Worker error ${stock.ticker}: ${e.message}`));
         // flush manifest every 100 tickers using the captured local index
         if (myIdx > 0 && myIdx % 100 === 0) writeManifestFn();
-        // F-DP-002: gate on this worker's OWN myIdx, not the shared `idx`.
-        // The shared `idx` is already advanced by the other (concurrency-1)
-        // workers, so `idx < stocks.length` went false while THIS worker still
-        // had tail tickers to throttle — the last ~concurrency pulls skipped
-        // their rate-limit sleep. Sleep when this worker will take another
-        // ticket (myIdx + concurrency < length); the final loop iteration that
-        // breaks on myIdx>=length never reaches here.
-        if (myIdx + concurrency < stocks.length) await _sleep(sleepMs);
       }
     }
     await Promise.all(Array.from({ length: concurrency }, () => worker()));

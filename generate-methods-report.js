@@ -71,6 +71,15 @@ async function evaluateAllStocks(args) {
   // tickers (audit Tag 226b).
   const cachedMethods = Runner.getMethods();
   const rows = [];
+  // audit F-A-2026-06-21: track tickers already turned into a row so a second
+  // snapshot file resolving to the SAME ticker (e.g. a dual-listing or a
+  // re-listed BRK-B.json / BRK.B.json where meta.ticker is identical) does not
+  // silently produce a duplicate row. Prevents cross-listing ticker collision
+  // overwriting STOCK_DATA_MAP / modal detail: without this, both files build
+  // distinct <tr data-ticker=...> rows but the later one clobbers the earlier
+  // in stockDataMap, so the modal/pc-filter reads one ticker's data for two
+  // visually distinct rows. Warn-and-keep-first (no hardcoded ticker excludes).
+  const seenTickers = new Set();
   // F-PF-005 (perf): batched fs.promises.readFile (CONCURRENCY=32) instead of
   // a serial blocking readFileSync loop. Mirrors generate-modes-report.js
   // loadStocks(). Sequential within each batch keeps memory bounded; parse
@@ -88,6 +97,16 @@ async function evaluateAllStocks(args) {
       if (!entry) continue;
       const { file, stock } = entry;
     const ticker = (stock.meta && stock.meta.ticker) || file.replace(/\.json$/, '');
+    // audit F-A-2026-06-21: prevents cross-listing ticker collision overwriting
+    // STOCK_DATA_MAP / modal detail. If a prior snapshot file already produced a
+    // row for this exact ticker, warn-and-keep-first instead of pushing a second
+    // row (which would render as a separate <tr data-ticker> yet clobber the
+    // first ticker's STOCK_DATA_MAP entry and capture the wrong methodHistory).
+    if (seenTickers.has(ticker)) {
+      console.warn(`⚠ Duplicate ticker '${ticker}' from ${file} — keeping first snapshot, skipping this one.`);
+      continue;
+    }
+    seenTickers.add(ticker);
     // Tag 221c (audit F-GR-005 fix): use `?? null` instead of `|| null` so
     // legitimate zero values (0% growth, $0 revenue for a freshly-spun
     // entity, exactly 0 FCF margin) are preserved instead of being coerced
@@ -649,7 +668,12 @@ function renderHTML(rows, methods) {
   ${leaderboardPanesHtml}
 </div>`;
 
-  return `<!DOCTYPE html>
+  // audit F-A-2026-06-21: assign the HTML to a local instead of returning it
+  // inline, so renderHTML can also hand back the per-method pass/computable
+  // counts (_methodCounts) it already swept. Prevents the duplicate O(M×N)
+  // pass-count sweep on the 19k-ticker critical path: main() reuses these
+  // counts for its console summary instead of recomputing from scratch.
+  const html = `<!DOCTYPE html>
 <html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Karl's Stock-Screener — Methoden-Matrix ${generatedAt}</title>
 <style>
   body { font-family: ui-sans-serif, system-ui, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 24px; line-height: 1.4; }
@@ -1251,6 +1275,10 @@ var STOCK_DATA_MAP = ${JSON.stringify(stockDataMap).replace(/</g, '\\u003c')};
 </script>
 
 </body></html>`;
+  // audit F-A-2026-06-21: return the precomputed per-method counts alongside
+  // the HTML so main() reuses them (single source of truth) instead of
+  // re-running the same nested rows×methods loop just to print the summary.
+  return { html, methodCounts: _methodCounts };
 }
 
 async function main() {
@@ -1259,7 +1287,10 @@ async function main() {
   const rows = await evaluateAllStocks(args);
   console.log(`Evaluated ${rows.length} stocks`);
   const methods = Runner.getMethods();
-  const html = renderHTML(rows, methods);
+  // audit F-A-2026-06-21: destructure the precomputed per-method counts from
+  // renderHTML and reuse them below — avoids a second full O(M×N) pass-count
+  // sweep over the (up to 19k-ticker × ~83-method) universe just for logging.
+  const { html, methodCounts } = renderHTML(rows, methods);
   // Tag 221c (audit F-GR-009 LOW fix): atomic write — a CI cancellation
   // mid-write previously left a half-written file that GitHub Pages then
   // served (the file was many MB before Tag 221c's STOCK_DATA_MAP fix).
@@ -1267,17 +1298,11 @@ async function main() {
   console.log(`✓ Report written: ${args.out} (${html.length} bytes)`);
   console.log('');
   console.log('Pass-counts per method:');
-  // Tag 223c (audit F-222a-4 HIGH fix): collapse two rows.filter sweeps
-  // per method into a single forward pass over rows. Previously M × N × 2
-  // accesses (83 × 19k × 2 ≈ 3.2M at full scale → ~7s). Now M × N once.
-  const passCounts = {};
-  for (const r of rows) {
-    for (const m of methods) {
-      const c = passCounts[m.id] || (passCounts[m.id] = { computable: 0, passing: 0 });
-      const x = r.results[m.id];
-      if (x && x.computable) { c.computable++; if (x.pass) c.passing++; }
-    }
-  }
+  // audit F-A-2026-06-21: reuse the counts already computed inside renderHTML
+  // (returned as methodCounts) instead of re-running the identical nested
+  // rows×methods sweep here. Prevents the duplicate O(M×N) pass-count sweep on
+  // the 19k-ticker critical path (was ~3.2M result-object accesses done twice).
+  const passCounts = methodCounts || {};
   for (const m of methods) {
     const c = passCounts[m.id] || { computable: 0, passing: 0 };
     console.log(`  ${m.label.padEnd(20)} ${c.passing.toString().padStart(2)} / ${c.computable.toString().padStart(2)} pass / computable`);

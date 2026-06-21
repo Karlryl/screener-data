@@ -1845,39 +1845,63 @@ test('Tag 212b Rev-Quality (QoQ CoV): NOT-COMPUTABLE with <8 quarters', () => {
 // DIAGNOSTIC method, NOT in SCORE_WEIGHTS → fixture-hash invariant safe.
 // Pass requires >= 3 distinct tracked institutions hold the ticker in the
 // external-data/sec-13f-by-ticker.json cache (Tag 212e). We stub the cache
-// via module-level _resetCacheForTests + monkey-patching the loader.
+// via module-level _resetCacheForTests + an in-memory fs read-patch (no real
+// file I/O — see the F-A-2026-06-21 note below).
 const inst13fModule = require('./methods/institutional-ownership-13f.js');
 const fs = require('fs');
 const path = require('path');
-// audit F-A-2026-06-21: route 13F-cache writes through the same tmp+rename
-// helper the production pullers use (lib/atomic-write.js → walk-forward-perf.js:24)
-// so an interrupted write (SIGKILL / CI timeout) can't truncate the real 85KB
-// external-data/sec-13f-by-ticker.json. The method reads this exact hardcoded
-// path, so the round-trip must stay on-disk; making the write atomic is the
-// in-scope mitigation. Prevents: non-atomic-write-truncates-production-cache.
-const { writeFileAtomic } = require('./lib/atomic-write.js');
+// audit F-A-2026-06-21: these tests no longer touch the real production cache
+// (external-data/sec-13f-by-ticker.json, ~85KB, defaultActive + read by the very
+// next pipeline step in daily-pull.yml). Previously they overwrote — and on a
+// read-error/absent-file start even fs.unlinkSync'd — the live file inside a
+// stub→restore window, so a crash/timeout could leave a 1-entry stub or delete
+// the production cache outright. We now serve the stub entirely from memory by
+// monkey-patching fs.existsSync/fs.readFileSync ONLY for the cache path; the real
+// file is never written, deleted, or even read. Prevents:
+//   tests-corrupting-or-deleting-the-real-13F-production-cache.
 const CACHE_PATH_13F = path.join(__dirname, 'external-data', 'sec-13f-by-ticker.json');
 
-// Snapshot the on-disk cache contents so we can mutate around each test.
-function _readCacheRaw() {
-  try { return fs.readFileSync(CACHE_PATH_13F, 'utf8'); } catch (e) { return null; }
+// Resolve to a canonical form so a patched lookup matches regardless of how the
+// method module joins its own __dirname-relative path.
+function _isCachePath(p) {
+  if (typeof p !== 'string') return false;
+  try { return path.resolve(p) === path.resolve(CACHE_PATH_13F); } catch (e) { return false; }
 }
-function _writeCacheRaw(s) {
-  if (s == null) { try { fs.unlinkSync(CACHE_PATH_13F); } catch (e) {} return; }
-  fs.mkdirSync(path.dirname(CACHE_PATH_13F), { recursive: true });
-  // audit F-A-2026-06-21: atomic tmp+rename instead of raw writeFileSync — a
-  // crash mid-write now leaves the original cache intact, and _restoreCache's
-  // write of the snapshot is likewise crash-safe. Prevents:
-  // partial-write-leaves-truncated-real-cache-on-process-kill.
-  writeFileAtomic(CACHE_PATH_13F, s);
+
+const _realExistsSync = fs.existsSync;
+const _realReadFileSync = fs.readFileSync;
+let _stubRaw = null; // in-memory stub payload (string) or null when no stub active
+
+function _installCacheStub(raw) {
+  _stubRaw = raw;
+  fs.existsSync = function (p) {
+    if (_isCachePath(p)) return _stubRaw != null;
+    return _realExistsSync.apply(fs, arguments);
+  };
+  fs.readFileSync = function (p) {
+    if (_isCachePath(p)) {
+      if (_stubRaw == null) { const e = new Error('ENOENT: stubbed 13F cache absent'); e.code = 'ENOENT'; throw e; }
+      return _stubRaw;
+    }
+    return _realReadFileSync.apply(fs, arguments);
+  };
 }
+function _uninstallCacheStub() {
+  _stubRaw = null;
+  fs.existsSync = _realExistsSync;
+  fs.readFileSync = _realReadFileSync;
+}
+
+// Retained for call-site compatibility: tests still do `const orig = _readCacheRaw()`
+// then `_restoreCache(orig)`. Both now operate purely on the in-memory patch and
+// NEVER read, write, or unlink the real cache file.
+function _readCacheRaw() { return _stubRaw; }
 function _stubCache(obj) {
-  _writeCacheRaw(JSON.stringify(obj));
+  _installCacheStub(JSON.stringify(obj));
   inst13fModule._resetCacheForTests();
 }
-function _restoreCache(originalRaw) {
-  if (originalRaw == null) { try { fs.unlinkSync(CACHE_PATH_13F); } catch (e) {} }
-  else _writeCacheRaw(originalRaw);
+function _restoreCache(/* originalRaw */) {
+  _uninstallCacheStub();
   inst13fModule._resetCacheForTests();
 }
 
@@ -2806,11 +2830,21 @@ test('fixture-hash: score-aggregator output is stable', () => {
     console.log('  ALLOW_FIXTURE_CHANGE=1 — wrote new hash ' + computed);
     return;
   }
+  // audit F-A-2026-06-21: do NOT self-heal a missing golden file in normal mode.
+  // Previously this branch wrote tests/fixture-hash.txt and returned (PASS), which
+  // means a deleted/absent baseline silently disarms the score-aggregator
+  // determinism guard in CI — any regression would slip through because there was
+  // nothing to diff against. Now we FAIL loudly and require an explicit, operator-
+  // initiated seeding via ALLOW_FIXTURE_CHANGE=1. (Only this absent-file branch
+  // changes; _computeFixtureHash, the projection, the hash, and the mismatch
+  // comparison are untouched, so the gate's computed value cannot drift.)
+  // Prevents: missing-golden-file-silently-disables-determinism-regression-guard.
   if (!fs.existsSync(FIXTURE_HASH_PATH)) {
-    if (!fs.existsSync(path.dirname(FIXTURE_HASH_PATH))) fs.mkdirSync(path.dirname(FIXTURE_HASH_PATH), { recursive: true });
-    fs.writeFileSync(FIXTURE_HASH_PATH, computed + '\n');
-    console.log('  no prior fixture-hash — wrote initial ' + computed);
-    return;
+    throw new Error('fixture-hash golden file missing: ' + FIXTURE_HASH_PATH +
+      '\n   The determinism baseline is absent — refusing to auto-seed it, because that' +
+      '\n   would silently pass and disarm the regression guard in CI.' +
+      '\n   Seed it ONCE intentionally with: ALLOW_FIXTURE_CHANGE=1 node tag28-tests.js' +
+      '\n   then commit tests/fixture-hash.txt so CI always has a real baseline to diff.');
   }
   const stored = fs.readFileSync(FIXTURE_HASH_PATH, 'utf8').trim();
   if (stored !== computed) {
