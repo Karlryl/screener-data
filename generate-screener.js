@@ -4384,7 +4384,11 @@ async function main() {
   // the rotation horizon so delisted names eventually fall out. Result: findash
   // always sees a complete file, each ticker as fresh as its last pull. The file
   // is git-tracked, so the merged result persists run-to-run.
-  const r40OutPath = path.join(__dirname, 'r40-latest.json');
+  // bug-fix (audit 2026-06-21): derive r40-latest.json from the --out directory (like
+  // screener-detail.json at line ~4326) instead of hardcoding __dirname. The hardcoded path made
+  // every dry-run (--out to a temp dir) silently merge into and overwrite the REAL repo-root
+  // r40-latest.json that findash consumes. Production (--out screener.html in repo root) is unchanged.
+  const r40OutPath = path.join(path.dirname(args.out), 'r40-latest.json');
   const R40_LATEST_MAX_AGE_DAYS = 60;
   // F-03: derive the prune cutoff from `generatedAt` (not a second `new Date()`),
   // so the horizon is consistent with the asOf stamps written this run even if the
