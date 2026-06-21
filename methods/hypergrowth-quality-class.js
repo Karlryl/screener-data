@@ -100,8 +100,11 @@ function evaluate(stock) {
     // Scale annual pairs (max 3) onto quarterly-equivalent 0-4 scale,
     // using actual valid pair count to avoid over-crediting null-gap years.
     if (validPairs > 0) {
-      strongQ = Math.round(strongQ / validPairs * 4);
-      solidQ  = Math.round(solidQ  / validPairs * 4);
+      // bug-fix (audit 2026-06-21): floor, not round — Math.round(2/3*4)=Math.round(2.67)=3 credited
+      // a 2-of-3 (67%) annual breadth as if it met the >=3 (75%-equivalent) isBroadGrowth bar. floor
+      // requires genuine 75%+ breadth (3-of-3 annual -> 4) before a name counts as broad-based growth.
+      strongQ = Math.floor(strongQ / validPairs * 4);
+      solidQ  = Math.floor(solidQ  / validPairs * 4);
     }
   }
 
