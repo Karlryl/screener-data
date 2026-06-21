@@ -51,6 +51,7 @@ function evaluate(stock) {
   const rawCapex = _rawVals(stock, 'annual.annualCapex').map(v => v == null ? null : Math.abs(v));
   const rawOcf = _rawVals(stock, 'annual.annualOCF');
   const rawRnd = _rawVals(stock, 'annual.annualRnD');
+  const rawDA = _rawVals(stock, 'annual.annualDepreciation');
   // Filtered arrays for length checks and single-series use
   const revs = rawRevs.filter(v => Number.isFinite(v));
   const opIncs = rawOpIncs.filter(v => Number.isFinite(v));
@@ -113,7 +114,11 @@ function evaluate(stock) {
   if (totalDebt != null) {
     netCash = (totalCash || 0) - totalDebt;
     if (Number.isFinite(rawOpIncs[0])) {
-      const ebitda = rawOpIncs[0] * 1.2;
+      // bug-fix (audit 2026-06-21, CORR-02): prefer real D&A (annualDepreciation) for EBITDA instead
+      // of the OpInc*1.2 proxy, which systematically understated EBITDA for high-D&A industrials/REITs
+      // and false-failed this all-pass check. Mirrors net-debt-ebitda.js; proxy only when D&A absent.
+      const da0 = rawDA[0];
+      const ebitda = (Number.isFinite(da0) && da0 !== 0) ? rawOpIncs[0] + Math.abs(da0) : rawOpIncs[0] * 1.2;
       if (ebitda > 0) ndOverEbitda = (totalDebt - (totalCash || 0)) / ebitda;
     }
   }
