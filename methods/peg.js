@@ -2,22 +2,25 @@
 const H = require('./_helpers.js');
 
 const ID = 'peg';
-const LABEL = 'PEG (Lynch)';
+// audit F-A-2026-06-22: prevents mislabeling a revenue-growth ratio as earnings-PEG,
+// which under-prices margin-dilutive growth. The pipeline (pull-yahoo.js) produces ONLY
+// revenueGrowthYoY — there are zero producer sites for earningsGrowthYoY/epsGrowthYoY —
+// so the old earnings-growth preference chain was dead code and this metric was always
+// P/E ÷ revenue-growth despite the 'Lynch PEG' label. Relabeled to reflect actual semantics.
+// (Numeric value, threshold and pass/fail are unchanged: still pe / revenueGrowthYoY.)
+const LABEL = 'P/Rev-Growth';
 const THRESHOLD = 1.5;
 const THRESHOLD_OP = 'lte';
 
 function evaluate(stock) {
   const pe_val = H.metricValue(stock, 'pe');
   const pe = (pe_val != null) ? pe_val : H.metricValue(stock, 'forwardPE');
-  // Bug #4: Lynch PEG should use EPS/earnings growth, not revenue growth.
-  // Prefer earningsGrowthYoY or epsGrowthYoY if available; fall back to revenueGrowthYoY.
-  // F-ME-009 (Tag 179): `||` falls through when earningsGrowthYoY is 0 (zero growth
-  // is valid data, not missing), defeating Bug #4. Use explicit null check.
-  const eg1 = H.metricValue(stock, 'earningsGrowthYoY');
-  const eg2 = H.metricValue(stock, 'epsGrowthYoY');
-  const earningsGrowth = eg1 != null ? eg1 : eg2;
-  const growth = earningsGrowth != null ? earningsGrowth : H.metricValue(stock, 'revenueGrowthYoY');
-  const growthSource = earningsGrowth != null ? 'EPS' : 'Rev';
+  // audit F-A-2026-06-22: earningsGrowthYoY/epsGrowthYoY are never produced by the
+  // pipeline, so the former preference chain (eg1/eg2 -> earningsGrowth) was inert and
+  // growthSource was always 'Rev'. Removed the dead branch and read revenueGrowthYoY
+  // directly so the code no longer pretends to use earnings growth it can never see.
+  const growth = H.metricValue(stock, 'revenueGrowthYoY');
+  const growthSource = 'Rev';
   if (pe == null || growth == null) {
     return H.buildResult({
       computable: false, reason: `missing pe=${pe} growth=${growth}`,
@@ -43,8 +46,10 @@ function evaluate(stock) {
 }
 
 module.exports = {
+  // audit F-A-2026-06-22: description no longer claims Lynch-PEG / earnings semantics;
+  // the ratio is P/E ÷ revenue growth (the only growth the pipeline produces).
   id: ID, label: LABEL,
-  description: 'PEG (P/E ÷ Growth) ≤ 1.5 (Lynch)',
+  description: 'P/E ÷ Revenue-Growth ≤ 1.5',
   threshold: THRESHOLD, thresholdOp: THRESHOLD_OP, unit: 'ratio',
   evaluate
 };

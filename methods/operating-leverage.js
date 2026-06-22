@@ -49,18 +49,55 @@ function evaluate(stock) {
     });
   }
 
-  const rev0 = _unwrap(revArr[0]);
-  const rev3 = _unwrap(revArr[3]);
-  const oi0 = _unwrap(oiArr[0]);
-  const oi3 = _unwrap(oiArr[3]);
+  // audit F-A-2026-06-22: prevents misaligned-interior-null corruption.
+  // Previously rev0/rev3/oi0/oi3 read fixed indices [0] and [3] directly, gated
+  // only by revArr.length < 4. With an interior null (e.g. revArr = [v, null, v, v],
+  // a documented schema shape) [0] and [3] still unwrap to finite numbers, so the
+  // span silently crossed a dropped year (a "3-fiscal-year" delta actually covering
+  // 4 calendar years), and if rev/oi arrays had nulls in DIFFERENT slots the method
+  // paired OI from one fiscal year against Rev from another. Collect aligned finite
+  // (rev, oi) tuples retaining the source fiscal index (like
+  // operating-leverage-margin-accel.js), then take the newest and 4th-newest of the
+  // ALIGNED set and confirm they are exactly 3 fiscal years apart before computing
+  // the leverage ratio.
+  const horizon = Math.min(revArr.length, oiArr.length);
+  const aligned = [];
+  for (let i = 0; i < horizon; i++) {
+    const rev = _unwrap(revArr[i]);
+    const oi = _unwrap(oiArr[i]);
+    if (rev == null || oi == null) continue;
+    aligned.push({ rev, oi, srcIdx: i });
+  }
 
-  if (rev0 == null || rev3 == null || oi0 == null || oi3 == null) {
+  if (aligned.length < 4) {
     return H.buildResult({
       computable: false,
-      reason: 'missing values: rev0=' + rev0 + ' rev3=' + rev3 + ' oi0=' + oi0 + ' oi3=' + oi3,
+      reason: 'need ≥ 4 aligned (rev,OpInc) points; got ' + aligned.length +
+              ' after dropping interior nulls (rev=' + revArr.length + ' oi=' + oiArr.length + ')',
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
+
+  const newest = aligned[0];
+  const fourth = aligned[3];
+
+  // audit F-A-2026-06-22: contiguity guard against a gapped window. The endpoints
+  // must span exactly 3 fiscal years (srcIdx 0..3 on clean data); if interior nulls
+  // pushed the 4th-newest aligned point beyond fiscal index 3, the delta would cover
+  // more than 3 fiscal years and overstate/understate the leverage ratio.
+  if (newest.srcIdx !== 0 || fourth.srcIdx - newest.srcIdx !== 3) {
+    return H.buildResult({
+      computable: false,
+      reason: 'non-contiguous 3y window: aligned endpoints at fiscal idx ' +
+              newest.srcIdx + '..' + fourth.srcIdx + ' (need 0..3, no interior gaps)',
+      threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    });
+  }
+
+  const rev0 = newest.rev;
+  const rev3 = fourth.rev;
+  const oi0 = newest.oi;
+  const oi3 = fourth.oi;
 
   // ΔRev must be positive and ≥ 10% of base. Negative or near-zero growth
   // makes the ratio either meaningless (division near zero) or invertedly

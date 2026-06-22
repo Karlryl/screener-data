@@ -23,6 +23,18 @@ const REGION_RULES = {
   JP: /\.T$/, AU: /\.AX$/, KR: /\.KS$|\.KQ$/, US: /^[A-Z]{1,5}$/
 };
 
+// audit F-A-2026-06-22: proper median (filters non-finite, sorts ascending,
+// averages the two middle values for even length). Prevents the failure mode
+// where "Median-R40" was just list[floor(n/2)] on a DESCENDING-sorted list —
+// that returned the lower-middle element (e.g. the smaller of two, or the
+// lower-middle of four), not the true median, skewing the regional OOS report.
+function median(values) {
+  const sorted = values.filter(v => Number.isFinite(v)).sort((a, b) => a - b);
+  if (sorted.length === 0) return null;
+  const m = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[m] : (sorted[m - 1] + sorted[m]) / 2;
+}
+
 function classifyRegion(ticker) {
   for (const [region, regex] of Object.entries(REGION_RULES)) {
     if (regex.test(ticker)) return region;
@@ -77,7 +89,8 @@ function main() {
   for (const r of ['US', 'JP', 'AU', 'KR', 'OTHER']) {
     const list = byRegion[r];
     if (list.length === 0) { md += '| ' + r + ' | 0 | - | - |\n'; continue; }
-    const top = list[0].r40, med = list[Math.floor(list.length/2)].r40;
+    // audit F-A-2026-06-22: use true median instead of mid-index of a sorted list.
+    const top = list[0].r40, med = median(list.map(p => p.r40));
     md += '| ' + r + ' | ' + list.length + ' | ' + top.toFixed(1) + ' | ' + med.toFixed(1) + ' |\n';
   }
   md += '\n## Top-20 pro Region\n\n';

@@ -18,11 +18,7 @@ const H = require('./_helpers.js');
 const ID = 'premium-compounder-proof';
 const LABEL = 'Premium-Compounder-Proof';
 
-function _arrVals(stock, path) {
-  const arr = H.val(stock, path);
-  if (!Array.isArray(arr)) return [];
-  return arr.map(v => v == null ? null : (typeof v === 'number' ? v : v.value)).filter(v => Number.isFinite(v));
-}
+// audit F-A-2026-06-22: removed unused local _arrVals() (zero call sites; prevents dead-code drift). Only _rawVals is used below.
 function _rawVals(stock, path) {
   const arr = H.val(stock, path);
   if (!Array.isArray(arr)) return [];
@@ -35,7 +31,9 @@ function _median(arr) {
   return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
 }
 function _cagr(latest, oldest, years) {
-  if (oldest == null || oldest <= 0 || latest == null) return null;
+  // audit F-A-2026-06-22: added latest<=0 guard (matches _helpers.cagr3y) — prevents NaN from
+  // fractional power of non-positive latest revenue (sign-flipped/mis-mapped FTS row).
+  if (oldest == null || oldest <= 0 || latest == null || latest <= 0) return null;
   return Math.pow(latest / oldest, 1/years) - 1;
 }
 
@@ -113,7 +111,10 @@ function evaluate(stock) {
   if (totalDebt != null) {
     netCash = (totalCash || 0) - totalDebt;
     if (Number.isFinite(rawOpIncs[0])) {
-      const ebitda = rawOpIncs[0] * 1.2;
+      // audit F-A-2026-06-22: mirror net-debt-ebitda.js (Tag 232d-1) — prefer real D&A.
+      // prevents: ND/EBITDA divergence vs net-debt-ebitda.js (1.2x understates leverage ~17%, esp. Industrials/REITs).
+      const rawDA = H.latestAnnual(stock, 'annualDepreciation');
+      const ebitda = (rawDA != null && Number.isFinite(rawDA)) ? rawOpIncs[0] + Math.abs(rawDA) : rawOpIncs[0] * 1.2;
       if (ebitda > 0) ndOverEbitda = (totalDebt - (totalCash || 0)) / ebitda;
     }
   }
@@ -182,6 +183,12 @@ function evaluate(stock) {
     computable: true,
     pass: allEvaluablePass,
     value: passing,
+    // audit F-A-2026-06-22: grade the graduated fail-score against the EVALUABLE count, not the
+    // static 6. score-aggregator.normalizeMethodScore (pass=false, gte branch) does ratio=value/threshold
+    // and prefers result.threshold over module meta. Passing threshold=evaluable.length here
+    // prevents: N/A checks inflating the score denominator (passing/6) and under-crediting
+    // data-incomplete compounders. (Pass-case still returns 1.0 in the aggregator regardless.)
+    threshold: evaluable.length, thresholdOp: 'gte',
     components: { checks, passing, evaluable: evaluable.length, total: checks.length,
       ...(test5_overrideApplied ? { test5_overrideApplied } : {}) },
     reason: allEvaluablePass

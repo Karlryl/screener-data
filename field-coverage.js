@@ -151,22 +151,39 @@ function computeBaseline(history) {
 const ABSOLUTE_FLOOR = 0.50;  // 50% coverage floor
 
 // Liefert Liste der Fields die signifikant gedroppt sind.
-// F-DQ-005: Also emits HIGH-severity alert for any field below ABSOLUTE_FLOOR,
-// even on cold start when baseline is unavailable (history < 2 entries).
+// F-DQ-005: emits a HIGH-severity floor alert for fields below ABSOLUTE_FLOOR.
+// audit F-A-2026-06-22: the floor is now relative — it only fires for a field whose
+// own baseline proves it normally clears the floor (baseline >= ABSOLUTE_FLOOR &&
+// cur < ABSOLUTE_FLOOR). On cold start (no baseline) the floor is suppressed, so
+// legitimately-sparse fields no longer trigger HIGH alerts (alert-fatigue fix).
 function detectDrift(currentCoverage, baseline) {
   const drifts = [];
   const seenFields = new Set();
 
-  // F-DQ-005: Absolute floor check — independent of baseline, catches cold-start silent drops
+  // audit F-A-2026-06-22: prevents alert fatigue from structurally-sparse fields.
+  // The old absolute floor fired a HIGH 'below-50pct-floor' alert for ANY tracked
+  // field below 50% coverage "independent of baseline ... even on cold start".
+  // But many TRACKED_FIELDS (forwardPE, targetMeanPrice, insidersOwnership,
+  // annualSBC, ...) are legitimately absent for most non-US/small-cap/non-covered
+  // names across the ~25k universe, so they sit permanently under 50% — re-creating
+  // the exact alert-fatigue this file's header (:19-24) documents fixing.
+  // Floor is now RELATIVE to each field's own established baseline: only fire the
+  // HIGH alert when a field that HISTORICALLY sat at/above the floor drops below it.
+  // On cold start (no numeric baseline) the floor is suppressed entirely — a field
+  // that is merely structurally sparse is never escalated.
   for (const field of TRACKED_FIELDS) {
     const cur = currentCoverage[field];
     if (typeof cur !== 'number') continue;
+    const base = baseline[field];
+    // Only escalate fields whose own baseline proves they normally clear the floor.
+    if (typeof base !== 'number') continue;          // cold start / no baseline → suppress
+    if (base < ABSOLUTE_FLOOR) continue;             // structurally-sparse field → never floor-alert
     if (cur < ABSOLUTE_FLOOR) {
       drifts.push({
         field,
         current:  Math.round(cur * 100) / 100,
-        baseline: typeof baseline[field] === 'number' ? Math.round(baseline[field] * 100) / 100 : null,
-        drop:     typeof baseline[field] === 'number' ? Math.round((baseline[field] - cur) * 100) / 100 : null,
+        baseline: Math.round(base * 100) / 100,
+        drop:     Math.round((base - cur) * 100) / 100,
         severity: 'HIGH',
         reason:   'below-50pct-floor'
       });

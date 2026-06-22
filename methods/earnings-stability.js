@@ -67,7 +67,15 @@ function evaluate(stock) {
   // to observable years using the Tag-184 pattern. Previous min(4, observable)
   // demanded 4-of-4 from 4y-history companies (PLTR/CRDO) — that's stricter
   // than the 4-of-5 baseline for fully-historied compounders. Now: scale
-  // round(4 × observable / 5), so 5y→4, 4y→3, 3y→2.
+  // round(4 × observable / 5), so 5y→4, 4y→3.
+  // audit F-A-2026-06-22: prevents contradictory >=4 gate vs 3y-needed scaling
+  // silently dropping 3y-history compounders. The >=4 observable gate (line 47)
+  // returns computable:false before this scaling can ever see a 3-observable-year
+  // stock, so a "3y→2" branch is unreachable; the comment previously advertised
+  // behavior the gate forbids. Comment corrected to match the enforced gate;
+  // behavior (and all anchor pass/fail) unchanged. If 3y compounders should be
+  // scored, that is a deliberate min-history policy change to the line-47 gate,
+  // not a comment fix — left out here to preserve scoring behavior.
   const oiNeeded = Math.round(4 * oiObservable / 5);
   const fcfNeeded = Math.round(4 * fcfObservable / 5);
 

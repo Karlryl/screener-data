@@ -54,6 +54,13 @@ function lookupMedian(medians, stock, subProfileId, metricName) {
   }
 
   // --- v1 legacy flat schema: { SAAS: { roic: 0.15 }, ... } ---
+  // audit F-A-2026-06-22: retained intentionally — both production loaders
+  // (_helpers.js:_loadAutoMedians, sector-relative-roic.js:_loadAutoMedians)
+  // normalize to v2 ({ _version: 2, byRegion: {...} }) or {} before calling this
+  // helper, so this branch is unreachable from production scoring. It exists
+  // solely for direct/test callers that pass a raw flat object. Prevented
+  // failure mode: silently breaking such callers (and masking the dead-code
+  // status) if the branch were pruned without first migrating those fixtures.
   if (medians[subProfileId] && medians[subProfileId][metricName] != null) {
     return {
       value: medians[subProfileId][metricName],
@@ -112,6 +119,11 @@ function lookupPercentile(medians, stock, subProfileId, metricName, pTag, minN) 
   }
 
   // --- v1 legacy flat schema ---
+  // audit F-A-2026-06-22: retained intentionally — same rationale as the v1
+  // branch in lookupMedian(): production loaders normalize to v2 or {} before
+  // calling this helper, so this branch is unreachable in production and serves
+  // only direct/test callers passing a raw flat object. Prevented failure mode:
+  // silently breaking those callers if the branch were pruned outright.
   if (medians[subProfileId] && medians[subProfileId][pKey] != null) {
     const n = medians[subProfileId][nKey];
     if (Number.isFinite(n) && n >= minSamples) {

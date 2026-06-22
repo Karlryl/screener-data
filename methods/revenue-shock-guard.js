@@ -14,6 +14,26 @@ const LABEL = 'Revenue Shock Guard';
 const THRESHOLD = 4.5;
 const THRESHOLD_OP = 'lte';
 
+// audit F-A-2026-06-22: prevents tier-dependent shock detection when prior-period MAD is zero.
+// When prior revenues are identical (MAD==0, common for flat histories), the robust z-score is
+// undefined. Previously the annual branch hard-coded a magic `99` sentinel for ratio>5 (so 5.01x
+// and 50x scored identically, no graduation) while the quarterly branch silently used z=0 (never
+// shocked), so the two code paths treated the same degenerate condition inconsistently. Both branches
+// now share this single relative-jump fallback: SHOCK_RATIO_WHEN_NO_DISPERSION is the latest/median
+// ratio above which a zero-dispersion jump is treated as a shock, and _zeroDispersionZ() maps the
+// ratio onto a graduated pseudo-z (still gated by the materiality floor downstream), so larger jumps
+// yield larger |z| instead of a flat sentinel.
+const SHOCK_RATIO_WHEN_NO_DISPERSION = 5;
+function _zeroDispersionZ(latest, med) {
+  // Only meaningful for a positive prior level and a positive jump.
+  if (!(med > 0) || !(latest > med)) return 0;
+  const ratio = latest / med;
+  if (ratio <= SHOCK_RATIO_WHEN_NO_DISPERSION) return 0;
+  // Graduated pseudo-z just above THRESHOLD at the ratio cutoff, growing with the jump so a
+  // 5.01x and a 50x jump are no longer identical. Replaces the flat `99` sentinel.
+  return THRESHOLD + (ratio - SHOCK_RATIO_WHEN_NO_DISPERSION);
+}
+
 function _median(arr) {
   const s = arr.slice().sort((a,b)=>a-b);
   const n = s.length;
@@ -69,7 +89,9 @@ function evaluate(stock) {
     if (latest <= 0) return H.buildResult({ value: 0, pass: true, computable: true, reason: 'Q0<=0', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP });
     const med = _median(prior);
     const mad = _mad(prior, med);
-    const z = (mad > 0) ? (latest - med) / (1.4826 * mad) : 0;
+    // audit F-A-2026-06-22: prevents tier-dependent shock detection when prior-period MAD is zero
+    // — share the same relative-jump fallback the annual branch uses instead of silently using z=0.
+    const z = (mad > 0) ? (latest - med) / (1.4826 * mad) : _zeroDispersionZ(latest, med);
     const absZ = Math.abs(z);
     const jump = latest - med;
     const shock = absZ > THRESHOLD && jump > floor;
@@ -89,7 +111,10 @@ function evaluate(stock) {
     if (y0 <= 0) return H.buildResult({ value: 0, pass: true, computable: true, reason: 'Y0<=0', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP });
     const med = _median(prior);
     const mad = _mad(prior, med);
-    const z = (mad > 0) ? (y0 - med) / (1.4826 * mad) : (med > 0 && y0 / med > 5 ? 99 : 0);
+    // audit F-A-2026-06-22: prevents tier-dependent shock detection when prior-period MAD is zero
+    // — replace the magic `99` sentinel with the shared graduated relative-jump fallback so a 5.01x
+    // and a 50x jump no longer score identically and the annual/quarterly paths stay consistent.
+    const z = (mad > 0) ? (y0 - med) / (1.4826 * mad) : _zeroDispersionZ(y0, med);
     const absZ = Math.abs(z);
     const jump = y0 - med;
     const shock = absZ > THRESHOLD && jump > floor;

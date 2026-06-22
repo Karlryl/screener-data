@@ -105,7 +105,15 @@ function evaluate(stock) {
     const ocf = _unwrap(ocfArr[i]);
     const ni  = _unwrap(niArr[i]);
     if (ocf == null || ni == null) { skipped.push({ i, why: 'null' }); continue; }
-    if (ocf <= 0 || ni <= 0)        { skipped.push({ i, why: 'sign' }); continue; }
+    // audit F-A-2026-06-22: prevents upward-biased coverage mean from silently
+    // dropping the primary failure mode (NI>0 while OCF<=0 — strong reported
+    // earnings with zero/negative operating cash). Excluding it would hide the
+    // exact earnings-quality red flag this method advertises; instead score it
+    // as coverage 0 (no cash backing the profit) and include it in the mean.
+    // Only truly non-informative years (NI<=0: a loss year, where OCF/NI is a
+    // recovery signal not a quality signal) remain skipped.
+    if (ni <= 0) { skipped.push({ i, why: 'sign' }); continue; }
+    if (ocf <= 0) { ratios.push(0); continue; }
     ratios.push(ocf / ni);
   }
   if (ratios.length < MIN_PAIRS) {

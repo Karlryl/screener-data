@@ -48,6 +48,19 @@ function _unwrap(v) {
 function _roicAtYear(stock, yearIdx) {
   const niArr = (stock.annual && stock.annual.annualNetIncome) || [];
   const balArr = (stock.annual && stock.annual.annualBalance) || [];
+  // audit F-A-2026-06-22: prevents NI/balance index drift from independent
+  // filter(Boolean) compaction misdating ROIC YoY delta. annualNetIncome
+  // (pull-yahoo _arr) and annualBalance (quoteSummary path) are each compacted
+  // with their own .filter(Boolean), dropping null years independently — and
+  // FTS-merge can replace one series' source without the other. Entries carry
+  // no fiscalYear stamp, so positional alignment across the two series is NOT
+  // guaranteed: niArr[i] and balArr[i] may describe different calendar years
+  // whenever either source has a hole, silently misdating roic0/roic1 and the
+  // (roic0-roic1) delta. Without per-year keys to align on, the only sound
+  // guard is to require equal length before index-pairing; on a length
+  // mismatch we cannot trust the pairing → bail to incomputable. Healthy
+  // mega-caps with full, equal-length series are unaffected.
+  if (niArr.length !== balArr.length) return null;
   if (niArr.length <= yearIdx || balArr.length <= yearIdx) return null;
   const ni = _unwrap(niArr[yearIdx]);
   const bal = balArr[yearIdx];

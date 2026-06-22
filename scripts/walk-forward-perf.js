@@ -112,6 +112,14 @@ function buildPriceIndex(history) {
 // PRICE_MAX_STALE_DAYS so the staleness guard is still enforced.
 // Backward-compat: if the caller passes a raw history object (value is an Array),
 // delegate to priceAtLegacy so existing tests and method-effectiveness callers keep working.
+// audit F-A-2026-06-22: @internal — dead production path. Repo-wide grep shows NO
+// production caller (walk-forward's main loop, method-effectiveness.js and
+// fitness/forward-returns.js all resolve prices via _priceAtCanonical /
+// nearestTradingDay). Only tag28-tests.js still calls WF.priceAt, so the export is
+// kept solely to satisfy that test — do not rely on it from new code; the canonical
+// resolution path is _priceAtCanonical. Failure mode prevented by this note: a future
+// caller wiring up a SECOND, divergent price-resolution path that silently disagrees
+// with the canonical staleness gate.
 function priceAt(priceIndex, ticker, targetDate) {
   const entry = priceIndex[ticker];
   // Backward-compat: raw history has Arrays; new index has Maps
@@ -133,6 +141,9 @@ function priceAt(priceIndex, ticker, targetDate) {
 // Legacy wrapper kept for callers that pass the raw history object (e.g. method-effectiveness
 // which imports this module). It builds a per-call mini-index — not fast, but correct.
 // Those callers should migrate to buildPriceIndex + priceAt(index, ...) for performance.
+// audit F-A-2026-06-22: @internal — reachable in production only via priceAt's
+// backward-compat delegation, and priceAt itself has no production caller (see note
+// above). Effectively test-only today; kept exported for tag28-tests.js parity.
 function priceAtLegacy(history, ticker, targetDate) {
   const series = history[ticker];
   if (!Array.isArray(series) || series.length === 0) return null;
@@ -511,11 +522,17 @@ function evaluateVintage(picksFile, priceIndex, regimes) {
       const n = pickReturns.length;
 
       // F-BT-006: suppress alpha when n < MIN_SAMPLES
-      const alphaVsUniverse = (n >= MIN_SAMPLES && pickMed != null && universeMed != null)
+      // audit F-A-2026-06-22: prevents publishing alpha against a thin benchmark leg.
+      // Previously every alpha gated ONLY on the pick count `n`, so a universe or
+      // frozen-vintage median computed from <MIN_SAMPLES tickers could still be
+      // subtracted to form a headline alpha. Gate each alpha on BOTH legs.
+      const alphaVsUniverse = (n >= MIN_SAMPLES && univResult.n >= MIN_SAMPLES && pickMed != null && universeMed != null)
         ? pickMed - universeMed : null;
-      const alphaVsFrozenVintage = (n >= MIN_SAMPLES && pickMed != null && frozenVintage.median != null)
+      const alphaVsFrozenVintage = (n >= MIN_SAMPLES && frozenVintage.n >= MIN_SAMPLES && pickMed != null && frozenVintage.median != null)
         ? pickMed - frozenVintage.median : null;
       const benchRet = benchResult.ret;
+      // audit F-A-2026-06-22: benchmark is a single instrument (SPY/QQQ/IWM), so its
+      // 'n samples' is meaningless — `n` here is the pick count only, by design.
       const alphaVsBenchmark = (n >= MIN_SAMPLES && pickMed != null && benchRet != null)
         ? pickMed - benchRet : null;
 

@@ -33,7 +33,16 @@ function _annualVal(arr, idx) {
 function _balanceVal(stock, idx, field) {
   const arr = stock && stock.annual && stock.annual.annualBalance;
   if (!Array.isArray(arr) || arr.length <= idx) return null;
-  return arr[idx] && arr[idx][field];
+  // audit F-A-2026-06-22: finite-guard balance reads exactly like beneish/ohlson _balField.
+  // Prevents failure mode: a NaN/Infinity balance field (e.g. totalDebt:NaN) was returned raw and,
+  // because `NaN != null` is true, slipped past every `x != null` signal guard below. That added a
+  // phantom signal that always scored 0 (NaN comparisons are false), corrupting both the F-score and
+  // the scaled threshold (signals.length inflated) — the 0.15-weight TURNAROUND input. Returning null
+  // for non-finite values excludes such fields from signals.length and from the comparisons.
+  const row = arr[idx];
+  if (!row) return null;
+  const v = row[field];
+  return Number.isFinite(v) ? v : null;
 }
 
 function evaluate(stock) {

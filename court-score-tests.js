@@ -153,14 +153,45 @@ test('fabless-unit: LÄNGEN-NEUTRAL — gleiche recent-12-Shape, andere Gesamthi
   assert(Math.abs(_durV3(young) - _durV3(old)) < 1e-12, `Längen-Neutralität verletzt: young ${_durV3(young)} vs old ${_durV3(old)}`);
 });
 
-test('fabless-unit: AGE-NEUTRAL — durV3 hängt NUR vom recent-12-Fenster ab, nicht von älterer/längerer Historie', () => {
-  // Substantiv (Re-Court-Auflage, ersetzt die f(x)===f(x)-Tautologie): Daten JENSEITS des Fensters dürfen
-  // durV3 NICHT ändern (kein Längen-/Alters-Term), Änderung INNERHALB des Fensters MUSS sie ändern (nicht degeneriert).
-  const base = [0.5,0.4,0.3,0.6,0.2,0.5,0.4,0.3,0.5,0.4,0.6,0.3]; // 12 newest-first
-  const olderTailDiffers = base.concat([9, 9, 9]);                 // „älteres" Unternehmen, identisches recent-12
-  assert(_durV3(base) === _durV3(olderTailDiffers), 'ältere Historie jenseits W=12 darf durV3 NICHT ändern (kein Alters-/Längen-Leck)');
-  const withinWindowDiffers = base.slice(); withinWindowDiffers[1] = -0.9;
-  assert(_durV3(base) !== _durV3(withinWindowDiffers), 'Änderung INNERHALB des Fensters MUSS durV3 ändern (Metrik nicht degeneriert)');
+test('fabless-unit: Fenster-Konfinierung NUR oberhalb W=12 — kurze (<12Q) Namen sind NICHT längen-vergleichbar (ehrliche Disclosure statt Tautologie)', () => {
+  // audit F-A-2026-06-22: verhindert die Tautologie-Fehlannahme „durV3 ist alters-/längen-neutral".
+  //   ALTER BUG (ersetzt): base hatte bereits 12 Elemente -> base.concat([9,9,9]) wurde von slice(0,_WCAP=12)
+  //   IMMER verworfen -> die Gleichheits-Assertion war für JEDEN angehängten Wert trivial wahr und prüfte NICHTS
+  //   im genau dem Kurz-Historien-Regime (winN<12), das die Metrik zu fixen behauptet. Tatsächlich IST durV3 dort
+  //   historien-gekoppelt: ein 3-Quartals-Name [0.5,0.4,0.3]=>0.6, derselbe + Tail [.,.,.,9,9,9]=>0.084.
+  // (A) Konfinierung gilt NUR oberhalb des vollen Fensters: ab >=12 Elementen ändert älterer Tail nichts.
+  const full = [0.5,0.4,0.3,0.6,0.2,0.5,0.4,0.3,0.5,0.4,0.6,0.3]; // genau 12 newest-first (volles Fenster)
+  const fullPlusOlder = full.concat([9, 9, 9]);                    // Tail liegt JENSEITS W=12 -> verworfen
+  assert(_durV3(full) === _durV3(fullPlusOlder), 'bei winN>=12 darf Historie jenseits W=12 durV3 NICHT ändern (Window-Cap)');
+  // (B) UNTERHALB des Fensters ist die Metrik NICHT längen-neutral — und das ist EHRLICH, nicht zu „neutralisieren":
+  //   ein 6-Quartals-Name wird AUSSCHLIESSLICH aus seinen 6 Quartalen gerechnet; käme älterer Tail hinzu, fiele er INS
+  //   Fenster und MUSS durV3 verschieben. Eine Neutralitäts-Assertion hier wäre wieder die alte Tautologie.
+  const young6 = [0.6,0.5,0.4,0.5,0.3,0.4];                        // junger Name, nur 6Q (winN=6<12)
+  const sliceOnly6 = young6.slice(0, _WCAP);                       // slice ändert <12-Reihen nicht -> identische Eingabe
+  assert(_durV3(young6) === _durV3(sliceOnly6), 'durV3 eines 6Q-Namens wird NUR aus diesen 6 Quartalen gerechnet');
+  const young6PlusTail = young6.concat([-0.9, -0.8, 0.1]);          // diese „ältere" Historie liegt INNERHALB W=12
+  assert(_durV3(young6) !== _durV3(young6PlusTail), 'bei winN<12 MUSS zusätzliche Historie durV3 ändern -> kurze Namen sind NICHT 12Q-längen-vergleichbar (ehrliche Nicht-Neutralität)');
+  // (C) Metrik nicht degeneriert: eine Änderung INNERHALB des Fensters muss durV3 verschieben.
+  const withinWindowDiffers = full.slice(); withinWindowDiffers[1] = -0.9;
+  assert(_durV3(full) !== _durV3(withinWindowDiffers), 'Änderung INNERHALB des Fensters MUSS durV3 ändern (Metrik nicht degeneriert)');
+});
+
+test('fabless: short-durability-window-Lampe feuert für winN<12 & diese Namen sind als NICHT-voll-vergleichbar markiert (Re-Court-Disclosure)', () => {
+  // audit F-A-2026-06-22: verhindert die stille Falschbehauptung „alle fabless-Namen sind 12Q-längen-vergleichbar".
+  //   Die Metrik ist für winN<12 nachweislich NICHT längen-neutral (siehe Fenster-Konfinierungs-Test); deshalb MUSS
+  //   die Disclosure-Lampe greifen, statt eine nicht existente Neutralität zu behaupten. Gilt court-score.js:261 ein:
+  //   jeder sec-quarterly-Member mit durWinN<12 trägt 'short-durability-window'; volle (winN>=12) NICHT.
+  const shortWin = FM.filter(m => m.durSource === 'sec-quarterly' && m.durWinN != null && m.durWinN < 12);
+  for (const m of shortWin) {
+    assert(Array.isArray(m.lamps) && m.lamps.includes('short-durability-window'),
+      `${m.ticker} (winN=${m.durWinN}<12) MUSS 'short-durability-window' lampen (nicht 12Q-vergleichbar), lamps=${JSON.stringify(m.lamps)}`);
+  }
+  for (const m of FM) {
+    if (m.durSource === 'sec-quarterly' && m.durWinN != null && m.durWinN >= 12) {
+      assert(!(m.lamps || []).includes('short-durability-window'),
+        `${m.ticker} (winN=${m.durWinN}>=12) darf NICHT 'short-durability-window' lampen (voll vergleichbar)`);
+    }
+  }
 });
 
 test('fabless-unit: beschleunigende all-positive Reihe NICHT bestraft (durRaw > 0); anhaltender Decline < 0', () => {

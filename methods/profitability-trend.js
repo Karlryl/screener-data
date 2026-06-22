@@ -27,21 +27,39 @@ const LABEL = 'Profitability Trend';
 const THRESHOLD = 'FLAT';
 const THRESHOLD_OP = 'gte';
 
+// audit F-A-2026-06-22: materiality for sign-flip swings is scaled relative to
+// revenue (consistent with profitability-state's MARGINAL_REV_PCT=0.02), not a
+// fixed absolute floor — prevents fixed $1M swing floor mis-scaling sign-flip
+// materiality across micro-/mega-cap.
+const SWING_FLOOR = 1e6;        // absolute floor ($1M) for tiny-revenue / missing-rev cases
+const SWING_REV_PCT = 0.02;     // 2% of revenue, mirrors profitability-state MARGINAL_REV_PCT
+
 function _getNetIncomeArr(stock) {
   const arr = H.val(stock, 'annual.annualNetIncome');
   if (!Array.isArray(arr) || arr.length === 0) return null;
   return arr.map(v => (v == null ? null : (typeof v === 'number' ? v : v.value)));
 }
 
-function _classify(niArr) {
+function _getRevenueArr(stock) {
+  const arr = H.val(stock, 'annual.annualRev');
+  if (!Array.isArray(arr) || arr.length === 0) return null;
+  return arr.map(v => (v == null ? null : (typeof v === 'number' ? v : v.value)));
+}
+
+function _classify(niArr, revArr) {
   // Brauchen mindestens Y-0 und Y-1 für Trend.
   if (!niArr || niArr.length < 2) return null;
   const y0 = niArr[0];
   const y1 = niArr[1];
   if (y0 == null || y1 == null) return null;
 
-  // Sign-Flip-Cases first (require minimum $1M absolute swing for materiality)
-  if (y0 > 0 && y1 <= 0) return Math.abs(y0 - y1) > 1e6 ? 'IMPROVING' : 'FLAT';   // turnaround
+  // Sign-Flip-Cases first. Materiality threshold scales with company size.
+  // audit F-A-2026-06-22: prevents fixed $1M swing floor mis-scaling sign-flip
+  // materiality across micro-/mega-cap — a real micro-cap turnaround was judged
+  // FLAT while mega-cap rounding noise was judged IMPROVING.
+  const rev = revArr && revArr[0] != null && revArr[0] > 0 ? revArr[0] : null;
+  const swingThreshold = rev ? Math.max(SWING_FLOOR, rev * SWING_REV_PCT) : SWING_FLOOR;
+  if (y0 > 0 && y1 <= 0) return Math.abs(y0 - y1) > swingThreshold ? 'IMPROVING' : 'FLAT';   // turnaround
   if (y0 <= 0 && y1 > 0) return 'DETERIORATING'; // erosion
 
   // Same-sign-Cases - relative change
@@ -73,7 +91,8 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
-  const trend = _classify(niArr);
+  const revArr = _getRevenueArr(stock);
+  const trend = _classify(niArr, revArr);
   if (trend == null) {
     return H.buildResult({
       computable: false,

@@ -91,6 +91,31 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
+  // audit F-A-2026-06-22: prevents labelling a multi-year asset growth as 1y when
+  // annualBalance has an interior gap year. annualBalance entries carry NO per-entry
+  // fiscal-year/date label (pull-yahoo.js builds {totalAssets,...} only); positional
+  // index is the SOLE alignment contract, and an interior gap year is represented by
+  // a null placeholder at that index (pull-yahoo.js:1168/1194). Therefore balArr[0]
+  // and balArr[1] are consecutive reporting periods IFF BOTH are non-null rows. If
+  // balArr[1] (or balArr[0]) is a null placeholder, the real prior year sits at
+  // balArr[2] and computing growth across the gap would emit a 2-year rate
+  // mislabelled as 1y. We refuse to score that case (computable:false) rather than
+  // silently jump the gap. We must NOT skip the placeholder to balArr[2]: with no
+  // dates we cannot verify a 1-year span, so jumping would re-introduce the exact
+  // mislabel this guard prevents. (Cf. the reverted length-guard in
+  // asset-growth-divergence.js — over-gating valid series is also a failure mode;
+  // this guard fires ONLY on a genuine interior null, never on clean consecutive
+  // rows, so healthy mega-cap anchors are unaffected.)
+  const gap0 = (balArr[0] == null);
+  const gap1 = (balArr[1] == null);
+  if (gap0 || gap1) {
+    return H.buildResult({
+      computable: false,
+      reason: 'interior annualBalance gap — cannot confirm balArr[0]/[1] are consecutive years'
+        + ' (balArr[0]=' + (gap0 ? 'null' : 'row') + ' balArr[1]=' + (gap1 ? 'null' : 'row') + ')',
+      threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    });
+  }
   const ta0 = (balArr[0] && Number.isFinite(balArr[0].totalAssets)) ? balArr[0].totalAssets : null;
   const ta1 = (balArr[1] && Number.isFinite(balArr[1].totalAssets)) ? balArr[1].totalAssets : null;
   if (ta0 == null || ta1 == null) {

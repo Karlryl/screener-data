@@ -55,6 +55,15 @@ const ID = 'institutional-ownership-13f';
 const LABEL = 'Institutional Ownership (13F)';
 const THRESHOLD = 3;
 const THRESHOLD_OP = 'gte';
+// audit F-A-2026-06-22: regime-specific floor for the Yahoo broad-based fallback.
+// Prevents data-integrity failure mode A-methods-insider-institutional-02:
+// the curated-CIK THRESHOLD (3) is deliberately low because the SEC bootstrap
+// list is only ~40 tracked smart-money institutions. Yahoo's institutionsCount
+// is the BROAD count across ~all ~7,000 13F filers — comparing it to >=3 makes
+// the fallback trivially pass for nearly every real ticker (signal collapse).
+// A broad-count "well-owned" floor is far higher; calibrated so that the
+// fallback still distinguishes thinly-held names but no longer rubber-stamps.
+const YAHOO_FALLBACK_THRESHOLD = 100;
 const CACHE_PATH = path.join(__dirname, '..', 'external-data', 'sec-13f-by-ticker.json');
 
 // Module-level lazy loader, same pattern as sector-relative-roic._loadAutoMedians().
@@ -110,7 +119,11 @@ function _yahooFallback(stock, primaryReason) {
   const ic = stock && stock.meta && stock.meta.institutionsCount;
   if (ic == null || !Number.isFinite(ic) || ic <= 0) return null;
   const pct = stock.meta.institutionsPercentHeld;
-  const pass = ic >= THRESHOLD;
+  // audit F-A-2026-06-22: prevents broad ~7k-filer count from trivially clearing
+  // a bar calibrated for a ~40-name curated CIK list. The broad-based Yahoo
+  // institutionsCount must be measured against its own regime floor
+  // (YAHOO_FALLBACK_THRESHOLD), NOT the curated SEC THRESHOLD (3).
+  const pass = ic >= YAHOO_FALLBACK_THRESHOLD;
   return H.buildResult({
     value: ic,
     pass,
@@ -119,11 +132,15 @@ function _yahooFallback(stock, primaryReason) {
       institutionsCount: ic,
       institutionsPercentHeld: pct != null ? pct : null,
       source: 'yahoo.majorHoldersBreakdown',
+      // audit F-A-2026-06-22: surface the regime-specific gate so downstream
+      // consumers don't misread this against the curated SEC threshold of 3.
+      thresholdRegime: 'yahoo-broad',
       primaryUnavailable: primaryReason
     },
-    reason: ic + ' institution(s) hold (Yahoo aggregate fallback; SEC 13F unavailable: ' +
+    reason: ic + ' institution(s) hold (Yahoo aggregate fallback, broad ~7k-filer ' +
+            'count; floor >= ' + YAHOO_FALLBACK_THRESHOLD + '; SEC 13F unavailable: ' +
             primaryReason + ')',
-    threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    threshold: YAHOO_FALLBACK_THRESHOLD, thresholdOp: THRESHOLD_OP
   });
 }
 

@@ -354,6 +354,19 @@ function buildStory(stock, modeEval, allResults, modeRef) {
     }
   }
 
+  // audit F-A-2026-06-22: prevents silent soft-guard failures — Karl must see
+  // revenue-shock/deceleration/quarter-concentration warnings in the story, not
+  // just a hidden score penalty. evaluateMode already collected the triggered
+  // softGuards in modeEval.failedSoftGuards (and applied the score penalty); they
+  // were never surfaced as human-readable text because buildStory only iterated
+  // mode.softWarnings (empty in every mode) and mode.dataGuards. Score/pass-fail
+  // untouched — this only appends to the warnings string.
+  if (Array.isArray(modeEval.failedSoftGuards)) {
+    for (const sgId of modeEval.failedSoftGuards) {
+      warnings.push(SOFT_WARNING_TEXT[sgId] || (sgId + ' auffaellig'));
+    }
+  }
+
   // Bewertung-Hinweis bei Hypergrowth (oft teuer)
   if (modeEval.mode === 'HYPERGROWTH') {
     const fcfY = allResults['fcf-yield'];
@@ -386,6 +399,13 @@ function buildStory(stock, modeEval, allResults, modeRef) {
  *   - COVID_RECOVERY: earnings-stability von must→prefer (Pandemic-Dip fuer 1-2 Jahre)
  *
  * Per-Profile modulation ist nicht-destruktiv (mutiert MODES.QUALITY_COMPOUNDER nicht).
+ *
+ * audit F-A-2026-06-22: DORMANT — PROFILES und applyProfile() sind exportiert, werden
+ * aber von KEINEM Entrypoint aufgerufen (generate-screener.js, generate-modes-report.js,
+ * snapshot-picks.js, scripts/*, workflows). Es existieren keine live M_AND_A / ASSET_HEAVY /
+ * COVID_RECOVERY Varianten. Banner verhindert die Fehlannahme, dass QC-Profile-Overrides
+ * aktives Verhalten sind. Verdrahtung in die Report-Generatoren ist absichtlich NICHT hier
+ * gemacht (cross-file, ausserhalb dieses SCORING-Files) — siehe Folge-Task. Nicht loeschen.
  */
 const PROFILES = {
   M_AND_A: {

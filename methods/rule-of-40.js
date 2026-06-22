@@ -85,8 +85,21 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
-  // Bug #3: guard against decimal-vs-percent unit mismatch (both in [-1,1] → almost certainly decimals)
-  if (Math.abs(growth) <= 1 && Math.abs(fcfMargin) <= 1) {
+  // Bug #3: guard against decimal-vs-percent unit mismatch.
+  // audit F-A-2026-06-22: prevents false unit-error rejection of genuinely near-flat
+  // percent inputs. Upstream guarantees percent units (pull-yahoo.js:615 revGrowthYoY =
+  // revGrowth*100, :728 fcfMarginTTM = (fcfTTM/revTTM)*100), so a real low-growth value/
+  // utility name (e.g. growth=+0.8%, fcfMargin=+0.5%) legitimately has BOTH terms in
+  // [-1,1] yet is NOT corrupt — the old `|growth|<=1 && |fcfMargin|<=1` heuristic wrongly
+  // declared it a unit error and marked it non-computable. Tighten to the actual
+  // decimal-corruption signature: a divided-by-100 pair (e.g. 0.38 + 0.22) sums to a
+  // combined R40 well under 2, whereas a near-flat-but-real percent pair we want to keep
+  // computable (and let it simply FAIL R40). Only flag when the combined value is below
+  // that floor AND at least one input is non-zero. Fixture cases (50+10, 15+10, 25+25,
+  // 38+22) are all far outside this window → fixture-hash-safe.
+  if (Math.abs(growth) < 1 && Math.abs(fcfMargin) < 1
+      && Math.abs(growth) + Math.abs(fcfMargin) < 1
+      && (growth !== 0 || fcfMargin !== 0)) {
     return H.buildResult({
       computable: false,
       reason: `unit error: growth=${growth} and fcfMargin=${fcfMargin} appear to be decimals, not percent`,

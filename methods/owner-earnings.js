@@ -134,8 +134,11 @@ function _computeMaintCapex(rawAbsCapex, rawDna, i, mode, capex5yMedian) {
  *   annualOwnerEarnings, maintCapexMethod, maintCapexValues,
  *   avgOE5y, cagrOE5y, isPositiveAllYears, isGrowing, yearsWithData
  *
- * Pass = (OE_latest/Rev_latest >= threshold) AND (yearsWithData >= 5)
+ * Pass = (OE_latest/Rev_latest >= threshold) AND (yearsWithData >= MIN_YEARS, i.e. >=4)
  *        AND (isPositiveAllYears) AND (isGrowing)
+ * audit F-A-2026-06-22: JSDoc said ">=5" but the runtime gate is MIN_YEARS=4
+ * (Yahoo FTS provides max 4y of NI). Aligned to the actual gate — prevents
+ * pass-gate/description disagreement on a BUFFETT-scored method.
  *
  * @param {object} stock - snapshot object (Runner convention)
  * @returns {object} H.buildResult output
@@ -153,7 +156,9 @@ function evaluate(stock) {
   // --- Extract raw series (newest first, envelope-aware) ---
   const rawNI     = _rawEnvelopeVals(stock, 'annual.annualNetIncome');  // Net Income (a)
   const rawDna    = _rawEnvelopeVals(stock, 'annual.annualDepreciation'); // D&A (b1), plain numbers
-  const rawSBC    = _rawEnvelopeVals(stock, 'annual.annualSBC');          // SBC non-cash (b2), plain numbers
+  // audit F-A-2026-06-22: rawSBC read removed — SBC was dropped from the formula
+  // in the 2026-05 audit (see header) and was never used. Prevents the dead read
+  // implying SBC is still part of Owner Earnings (description/formula disagreement).
   const rawCapex  = _rawEnvelopeVals(stock, 'annual.annualCapex');        // raw capex (Yahoo: negative)
   const rawRev    = _rawEnvelopeVals(stock, 'annual.annualRev');          // Revenue (for OE margin)
   const rawBal    = H.val(stock, 'annual.annualBalance');                 // [{currentAssets, currentLiabilities}, ...]
@@ -346,7 +351,10 @@ function evaluate(stock) {
 
 module.exports = {
   id: ID, label: LABEL,
-  description: 'Buffett (1986) Owner Earnings = NI + D&A + SBC − MaintCapex − ΔWC; OE/Rev >= 5%, ≥5y, positive+growing',
+  // audit F-A-2026-06-22: dropped "+ SBC" (code computes NI + D&A − MaintCapex − ΔWC,
+  // SBC removed in 2026-05 audit) and "≥5y" → "≥4y" to match MIN_YEARS=4 gate.
+  // Prevents pass-gate/description disagreement on a BUFFETT-scored method.
+  description: 'Buffett (1986) Owner Earnings = NI + D&A − MaintCapex − ΔWC; OE/Rev >= 5%, ≥4y, positive+growing',
   threshold: THRESHOLD_DEFAULT, thresholdOp: THRESHOLD_OP, unit: 'ratio',
   evaluate
 };

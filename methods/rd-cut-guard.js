@@ -87,7 +87,11 @@ function evaluate(stock) {
   const rev_p = _annualVal(A.annualRev, 1);
 
   const missing = [];
-  if (!Number.isFinite(rd_t) || rd_t <= 0)   missing.push('annualRnD[0]');
+  // audit F-A-2026-06-22: allow rd_t==0 so a full R&D elimination (the strongest
+  // real-EM signal, rdYoY=-100%) is detected rather than silently dropped as
+  // missing data. Only reject non-finite or negative (nonsensical) current R&D;
+  // rd_p>0 remains required as the YoY denominator.
+  if (!Number.isFinite(rd_t) || rd_t < 0)    missing.push('annualRnD[0]');
   if (!Number.isFinite(rd_p) || rd_p <= 0)   missing.push('annualRnD[1]');
   if (!Number.isFinite(oi_t))                missing.push('annualOpInc[0]');
   if (!Number.isFinite(oi_p))                missing.push('annualOpInc[1]');

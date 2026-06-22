@@ -167,8 +167,75 @@ function isDisqualifiedByDataGuards(resultsMap) {
   return { disqualified: false };
 }
 
+// audit F-A-2026-06-22: prevents a scored/penalized method silently contributing 0
+// because it was not in the evaluated set (onlyDefault/filterType callers in
+// runner.evaluateStock skip any method that is not isDefaultActive, and
+// strategy-modes/score-aggregator only apply weight/soft-guard penalty when the
+// method's result is actually present). Generalizes the per-method Bug #20
+// (working-capital-anomaly) and Bug #21 (above-200d-ma) inline fixes into a
+// startup invariant: every id referenced by SCORE_WEIGHTS[*] or
+// SOFT_GUARD_PENALTY MUST be REGISTRY-registered AND defaultActive, else its
+// weight/penalty is silently dropped under onlyDefault evaluation. We LOG
+// LOUDLY (index.js "fail loudly" philosophy) rather than throw: throwing here
+// would crash the whole pipeline — including healthy anchors — and the current
+// BUFFETT weights legitimately reference methods that are registered only via
+// the runtime loader, not this static REGISTRY. Logging surfaces registration
+// drift in CI without altering any scoring path or anchor outcome.
+function validateScoringRegistration() {
+  let SCORE_WEIGHTS, SOFT_GUARD_PENALTY;
+  try {
+    // score-aggregator depends only on data-quality.js (no path back to
+    // method-types.js), so this require introduces no circular dependency.
+    const agg = require('./score-aggregator.js');
+    SCORE_WEIGHTS = agg.SCORE_WEIGHTS;
+    SOFT_GUARD_PENALTY = agg.SOFT_GUARD_PENALTY;
+  } catch (e) {
+    // Never let the invariant check itself break module load.
+    return [];
+  }
+
+  const violations = [];
+  const check = (methodId, source) => {
+    if (!REGISTRY[methodId]) {
+      violations.push(source + ' references "' + methodId + '" which is NOT in REGISTRY (getType falls back to DIAGNOSTIC + defaultActive:false → silently contributes 0 under onlyDefault)');
+    } else if (REGISTRY[methodId].defaultActive !== true) {
+      violations.push(source + ' references "' + methodId + '" which is registered but defaultActive:false → silently contributes 0 weight/penalty under onlyDefault');
+    }
+  };
+
+  if (SCORE_WEIGHTS && typeof SCORE_WEIGHTS === 'object') {
+    for (const modeId in SCORE_WEIGHTS) {
+      if (!Object.prototype.hasOwnProperty.call(SCORE_WEIGHTS, modeId)) continue;
+      const w = SCORE_WEIGHTS[modeId];
+      for (const methodId in w) {
+        if (!Object.prototype.hasOwnProperty.call(w, methodId)) continue;
+        check(methodId, 'SCORE_WEIGHTS[' + modeId + ']');
+      }
+    }
+  }
+  if (SOFT_GUARD_PENALTY && typeof SOFT_GUARD_PENALTY === 'object') {
+    for (const methodId in SOFT_GUARD_PENALTY) {
+      if (!Object.prototype.hasOwnProperty.call(SOFT_GUARD_PENALTY, methodId)) continue;
+      check(methodId, 'SOFT_GUARD_PENALTY');
+    }
+  }
+
+  if (violations.length > 0) {
+    console.error('[method-types] SCORING-REGISTRATION INVARIANT VIOLATED — ' +
+      'these scored/penalized methods would silently contribute 0 under onlyDefault evaluation:\n  - ' +
+      violations.join('\n  - '));
+  }
+  return violations;
+}
+
+// Run the invariant once at module load (startup), loudly but non-fatally.
+validateScoringRegistration();
+
 module.exports = {
   METHOD_TYPES, REGISTRY, DISABLED,
   getType, isCore, isDiagnostic, isDataGuard, isDefaultActive, isDisabled,
-  isDisqualifiedByDataGuards
+  isDisqualifiedByDataGuards,
+  // audit F-A-2026-06-22: exported so a test/CI step can assert the
+  // scoring-registration invariant returns [] (no silent-drop violations).
+  validateScoringRegistration
 };

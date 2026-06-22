@@ -113,10 +113,34 @@ function evaluate(stock) {
   for (const y of yoyRates) {
     if (worstDecline == null || y.rate < worstDecline.rate) worstDecline = y;
   }
-  if (worstDecline && worstDecline.rate < SINGLE_YEAR_DECLINE_THRESHOLD) {
+  // audit F-A-2026-06-22: prevents single stale-year dip from culling re-accelerating
+  // compounders (survivorship attrition). Previously ANY YoY-decline < -25% anywhere in
+  // the window — including the OLDEST pre-IPO/ramp transition — hard-disqualified the stock
+  // from the entire universe (DATAGUARD pass:false + computable:true). A re-accelerating
+  // compounder with one stale dip (e.g. rev [1200,900,1100,300] oldest→newest) was
+  // permanently culled. Now we only FAIL when the dip is material, i.e.:
+  //   (a) >=2 distinct decline years (genuinely lumpy/volatile history), OR
+  //   (b) the single decline is RECENT (newest or 1y-ago transition, index 0 or 1).
+  // A single decline located in the OLDEST transition is exempted when the series is
+  // otherwise monotone non-declining toward the latest (only one decline year total) —
+  // that is a maturing ramp, not the SPHR-style lumpy pattern this guard targets.
+  const declineYears = yoyRates.filter(y => y.rate < SINGLE_YEAR_DECLINE_THRESHOLD);
+  const oldestTransitionIndex = revY.length - 2; // largest possible YoY index = oldest pair
+  let failOnDecline = false;
+  if (declineYears.length >= 2) {
+    failOnDecline = true; // multiple decline years = genuinely volatile, keep failing
+  } else if (declineYears.length === 1) {
+    const d = declineYears[0];
+    const isRecent = d.index <= 1;
+    const isOldestStale = d.index === oldestTransitionIndex;
+    // Fail a lone decline only if it is recent and not merely the stale oldest pair.
+    failOnDecline = isRecent && !isOldestStale;
+  }
+  if (failOnDecline) {
+    const d = declineYears.length >= 2 ? worstDecline : declineYears[0];
     return H.buildResult({
       computable: true, pass: false, value: 'VOLATILE',
-      reason: 'Annual-Revenue-Drop ' + Math.round(worstDecline.rate*100) + '% (Year ' + worstDecline.index + '), Hypergrowth implausibel',
+      reason: 'Annual-Revenue-Drop ' + Math.round(d.rate*100) + '% (Year ' + d.index + ', declineYears=' + declineYears.length + '), Hypergrowth implausibel',
       threshold: SINGLE_YEAR_DECLINE_THRESHOLD, thresholdOp: 'gte'
     });
   }

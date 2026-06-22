@@ -274,7 +274,11 @@ function evaluate(stock) {
             (pos * 100).toFixed(1) + '% of [' + lo.toFixed(2) + ', ' + hi.toFixed(2) +
             '] window (' + window.length + (weekly ? 'w' : 'd') + ' available, floor >= ' +
             (DEGRADED_RANGE_PASS * 100).toFixed(0) + '%)',
-    threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    // audit F-A-2026-06-22: prevents positional degraded value (position-in-range [0,1])
+    // being graded against the 12-1 return floor (0.10). value=pos is a positional fraction,
+    // so the emitted threshold/thresholdOp must describe the positional metric, not the
+    // return floor — keeps value and threshold in the same units for any downstream re-grader.
+    threshold: DEGRADED_RANGE_PASS, thresholdOp: 'gte'
   });
 }
 

@@ -39,17 +39,43 @@ function _loadAllMethods() {
 
 const METHODS = _loadAllMethods();
 
+// audit F-A-2026-06-22: prevents per-stock re-classification — method types are
+// process-static; avoids O(universe×methods) redundant REGISTRY lookups.
+// Precompute each method's type/isCore/isDefaultActive ONCE after load so
+// evaluateStock no longer calls MT.getType/MT.isDefaultActive per stock and no
+// longer does two post-hoc Object.keys(results).filter() re-scans of the
+// universe (~4,739 OK stocks × ~70 methods of pure repeated REGISTRY hashing).
+// Behavior-identical: precomputed `type` equals MT.getType(m.id) (same value
+// previously passed to wrapEvaluate) and `isCore` equals MT.isCore(m.id).
+const METHODS_META = METHODS.map(m => ({
+  method: m,
+  type: MT.getType(m.id),
+  isCore: MT.isCore(m.id),
+  isDefaultActive: MT.isDefaultActive(m.id)
+}));
+
 function evaluateStock(stock, opts) {
   opts = opts || {};
   const filterType = opts.type || null;
   const onlyDefault = opts.onlyDefault === true;
 
   const results = {};
-  for (const m of METHODS) {
-    const methodType = MT.getType(m.id);
+  // audit F-A-2026-06-22: iterate precomputed META and tally core counts inline,
+  // matching the old two-pass Object.keys(results).filter() exactly — only
+  // methods actually evaluated (added to `results`) are counted, and pass is read
+  // from the just-computed result.
+  let coreCount = 0;
+  let coreCountPass = 0;
+  for (const meta of METHODS_META) {
+    const methodType = meta.type;
     if (filterType && methodType !== filterType) continue;
-    if (onlyDefault && !MT.isDefaultActive(m.id)) continue;
-    results[m.id] = H.wrapEvaluate(m, stock, { methodType });
+    if (onlyDefault && !meta.isDefaultActive) continue;
+    const res = H.wrapEvaluate(meta.method, stock, { methodType });
+    results[meta.method.id] = res;
+    if (meta.isCore) {
+      coreCount++;
+      if (res.pass) coreCountPass++;
+    }
   }
 
   const dq = MT.isDisqualifiedByDataGuards(results);
@@ -58,8 +84,8 @@ function evaluateStock(stock, opts) {
     results,
     disqualified: dq.disqualified,
     disqualifiedBy: dq.disqualified ? dq.methodId : null,
-    coreCount: Object.keys(results).filter(id => MT.isCore(id)).length,
-    coreCountPass: Object.keys(results).filter(id => MT.isCore(id) && results[id].pass).length
+    coreCount,
+    coreCountPass
   };
 }
 
