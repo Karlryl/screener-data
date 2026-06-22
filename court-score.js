@@ -698,7 +698,12 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.score = m.membershipClass === 'Out' ? null : rawScore;
       m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
     } else {
-      m.score = Math.round(Math.max(0, 100 * core - pDil - pAuth) * 10) / 10;
+      // audit/fix (gauntlet E3): SI-4 für saas/fabless — Out-Class-Member bekommen score=null (kein
+      // irreführender Headline-Rang), exakt wie medtech/dlst (m.score = membershipClass==='Out' ? null : rawScore).
+      // Davor scorte der generische Zweig JEDES Mitglied (nie null). saas hat 25 Out-Class-Large-Caps
+      // (CDNS/ADSK/FICO/FTNT/...), fabless 0 → das Nullen ist eine BEWUSSTE Governance-Anhebung, kein Drift.
+      const rawScore = Math.round(Math.max(0, 100 * core - pDil - pAuth) * 10) / 10;
+      m.score = m.membershipClass === 'Out' ? null : rawScore;
     }
     m.stage = stageOf(F, m.fcfMargin);
 
@@ -935,7 +940,12 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     const scoreKey = m => (m.score == null ? -Infinity : m.score);
     members.sort((a, b) => scoreKey(b) - scoreKey(a) || a.ticker.localeCompare(b.ticker));
   } else {
-    members.sort((a, b) => b.score - a.score); // unverändert (Parität)
+    // audit/fix (gauntlet E3): SI-4 null-sicherer Sort für saas/fabless (Out-Class hat jetzt score=null).
+    // Spiegelt medtech/dlst (scoreKey: null → -Infinity ans Ende, Ticker-Tiebreak). Für In/Borderline
+    // (score!=null) verhält sich der Vergleich identisch zum alten `b.score - a.score` → die gerankten
+    // Headline-Namen behalten ihre exakte Reihenfolge; nur die genullten Out-Class-Namen wandern ans Ende.
+    const scoreKey = m => (m.score == null ? -Infinity : m.score);
+    members.sort((a, b) => scoreKey(b) - scoreKey(a) || a.ticker.localeCompare(b.ticker));
   }
 
   // Basis-Result (byte-identisch zur court-PASSED-Form für SaaS/Fabless).
@@ -985,6 +995,23 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.crossBucketComparableField = 'absKaliber';
     }
     // SI-4: excluded[] = Out-Class-Namen.
+    R.excluded = members.filter(m => m.membershipClass === 'Out');
+  }
+  // audit/fix (gauntlet E3): saas/fabless SI-4/SI-5-Retrofit — spiegelt medtech/dlst exakt.
+  // NUR auf den beiden Buckets gesetzt; medtech/dlst haben ihre eigenen Blöcke oben. Diese Felder
+  // wurden in die saas/fabless-Parity-Baselines re-gefroren (BEWUSSTER Governance-Bless, kein Drift):
+  //   SI-5: classifiedCount === scoredCount → stille (UNbeabsichtigte) Drops werden laut (Test failt).
+  //   SI-4: excluded[] = Out-Class-Namen (score=null oben), getrennt von den ranked headline members.
+  if (bucket === 'system_app_software' || bucket === 'fabless_semi') {
+    // SI-5 KILL-AWARE: anders als medtech/dlst (deren classified-Set KEINE KILL-Member enthält) tragen
+    // saas/fabless skeptiker-verifizierte KILL-Removals (PS/RDVT/ADEA/OMDA/TEM/KMTS — Ticker-Mismatch/
+    // falscher Sektor/Datenfehler, siehe KILL-Set + fabless-Anti-Kontaminations-Guard-Test). Diese sind
+    // BEABSICHTIGT „accounted for", also aus classifiedCount ausgeschlossen — sonst meldete der Assert
+    // 5/1 FALSCH-POSITIVE „stille Drops". classifiedCount zählt damit jeden NICHT-gekillten klassifizierten
+    // Record; bleibt ein nicht-gekillter Record je still ungescored (dedup-Kollision/fehlende candidate-Row/
+    // gm>1.0), gilt classifiedCount>scoredCount und der SI-5-Assert feuert wie vorgesehen.
+    R.classifiedCount = cls.filter(c => c.bucket === bucket && !KILL.has(c.t)).length;
+    R.scoredCount = members.length;
     R.excluded = members.filter(m => m.membershipClass === 'Out');
   }
   results[bucket] = R;

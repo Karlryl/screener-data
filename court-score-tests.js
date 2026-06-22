@@ -74,10 +74,21 @@ test('GEN demoviert (>=#4) mit negativer A2 (flat book)', () => {
   assert(g.axisS['A2-Forward'] < 0, `GEN A2 sollte negativ sein (flat book), ist ${g.axisS['A2-Forward']}`);
 });
 
-test('additive A2 kann keinen Namen nullen: alle Scores finite >=0, min>0', () => {
-  for (const m of M) assert(Number.isFinite(m.score) && m.score >= 0, `${m.ticker} Score ungültig: ${m.score}`);
-  const min = Math.min(...M.map(m => m.score));
-  assert(min > 0, `min Score sollte >0 sein (additive Achse nullt nicht), ist ${min}`);
+// audit/fix (gauntlet E3): SI-4-Retrofit — Out-Class-Member bekommen jetzt score=null (wie medtech/dlst),
+// daher prüft dieser Test (vormals „alle Scores finite>0") jetzt: score=null NUR für Out-class, sonst finite>=0,
+// und der MIN ÜBER DIE GERANKTEN (nicht-Out) Namen ist >0 — die additive A2-Achse nullt weiterhin keinen
+// gerankten Namen. Spiegelt den medtech-Test 'KEIN Score NaN/negativ (score=null nur für Out-class erlaubt)'.
+test('SI-4: score=null nur für Out-class; gerankte Scores finite >=0, min>0 (additive A2 nullt keinen Headline-Namen)', () => {
+  for (const m of M) {
+    if (m.membershipClass === 'Out') {
+      assert(m.score === null, `${m.ticker} Out-class score sollte null sein (SI-4), ist ${m.score}`);
+    } else {
+      assert(Number.isFinite(m.score) && m.score >= 0, `${m.ticker} Score ungültig: ${m.score}`);
+    }
+  }
+  const ranked = M.filter(m => m.score != null).map(m => m.score);
+  const min = Math.min(...ranked);
+  assert(min > 0, `min Score der gerankten Namen sollte >0 sein (additive Achse nullt nicht), ist ${min}`);
 });
 
 // ===================== FABLESS-SEMI DURABILITY v3 (Iteration 10 Retrial) =====================
@@ -175,6 +186,40 @@ test('fabless: universeSize === 8 & KEIN KILL-Ticker im Cohort (Anti-Kontaminati
   for (const k of ['KMTS', 'PS', 'RDVT', 'ADEA', 'OMDA', 'TEM']) {
     assert(!FM.some(m => m.ticker === k), `KILL-Ticker ${k} darf NICHT im fabless-Cohort sein (skeptiker-verifizierte Entfernung)`);
   }
+});
+
+// audit/fix (gauntlet E3): SI-4/SI-5-Retrofit für saas/fabless — spiegelt die medtech/dlst-Tests.
+test('SI-5 (saas): classifiedCount === scoredCount (KEINE stillen Drops im saas-Universum)', () => {
+  assert(saas.classifiedCount != null && saas.scoredCount != null, 'classifiedCount/scoredCount fehlen im saas-Bucket');
+  assert(saas.classifiedCount === saas.scoredCount, `stille Drops: classifiedCount ${saas.classifiedCount} !== scoredCount ${saas.scoredCount}`);
+  assert(saas.scoredCount === M.length, `scoredCount ${saas.scoredCount} !== members.length ${M.length}`);
+});
+
+test('SI-5 (fabless): classifiedCount === scoredCount (KEINE stillen Drops im fabless-Universum)', () => {
+  assert(fab.classifiedCount != null && fab.scoredCount != null, 'classifiedCount/scoredCount fehlen im fabless-Bucket');
+  assert(fab.classifiedCount === fab.scoredCount, `stille Drops: classifiedCount ${fab.classifiedCount} !== scoredCount ${fab.scoredCount}`);
+  assert(fab.scoredCount === FM.length, `scoredCount ${fab.scoredCount} !== members.length ${FM.length}`);
+});
+
+test('SI-4 (saas): Out-class score=null + excluded[] (kein irreführender Rang)', () => {
+  assert(Array.isArray(saas.excluded), 'saas.excluded[] fehlt (SI-4)');
+  for (const m of saas.excluded) {
+    assert(m.membershipClass === 'Out', `excluded[] enthält ${m.ticker} mit membershipClass ${m.membershipClass} (sollte Out)`);
+    assert(m.score === null, `excluded[] ${m.ticker} score sollte null sein, ist ${m.score}`);
+  }
+  // die gerankten (score!=null) Member sind alle membership != Out.
+  const ranked = M.filter(m => m.score != null);
+  for (const m of ranked) assert(m.membershipClass !== 'Out', `ranked member ${m.ticker} ist Out-class mit Score (SI-4 verletzt)`);
+});
+
+test('SI-4 (fabless): Out-class score=null + excluded[] (im aktuellen Universum 0 Out-Member → excluded[] leer)', () => {
+  assert(Array.isArray(fab.excluded), 'fabless.excluded[] fehlt (SI-4)');
+  for (const m of fab.excluded) {
+    assert(m.membershipClass === 'Out', `excluded[] ${m.ticker} sollte Out sein, ist ${m.membershipClass}`);
+    assert(m.score === null, `excluded[] ${m.ticker} score sollte null sein, ist ${m.score}`);
+  }
+  const ranked = FM.filter(m => m.score != null);
+  for (const m of ranked) assert(m.membershipClass !== 'Out', `ranked member ${m.ticker} ist Out-class mit Score (SI-4 verletzt)`);
 });
 
 test('Determinismus: VOLLE Kette (court-screen + court-score) byte-identisch über Läufe (isolierte Outputs)', () => {
