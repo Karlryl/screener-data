@@ -20,7 +20,7 @@
  *   X = 1 if TL > TA else 0  (insolvency indicator)
  *   Y = 1 if NI < 0 in BOTH t and t-1 else 0  (two-year-loss indicator)
  *   FFO = Funds From Operations ≈ Operating Cash Flow (annualOCF when present)
- *   GNP_price_index = constant 1.0 (2010 base) — see "GNP simplification" note.
+ *   GNP_price_index = PROVISIONAL constant 14e6 — see "GNP deflation" note.
  *
  * Bankruptcy probability:
  *   P(bankruptcy) = 1 / (1 + exp(-O))
@@ -30,18 +30,25 @@
  * as a more conservative gate, but 0.5 keeps the method anchor-safe and
  * symmetric with Beneish/Altman bands.
  *
- * GNP simplification:
- *   Ohlson's original SIZE term deflates total assets by a GNP price index
- *   (1968=1.00 base). For long-cross-section cap-comparability we'd need
- *   a yearly CPI/GNP-deflator timeseries that the snapshot does not carry.
- *   We use a constant GNP_price_index = 1.0 (2010 normalization). The
- *   resulting bias is:
- *     - For TA ~ $1B (typical mid-cap), log(1e9/1.0) ≈ 20.7
- *     - True deflator at 2010-base ≈ 1.0 today, ≈ 0.5 in 1968 → effect
- *       on the -0.407*log term is small (<0.3 in O), order-of-magnitude
- *       irrelevant for the 0.5-probability decision boundary.
- *   This simplification is documented in the components so a future refactor
- *   can promote to a real CPI series without changing the calling contract.
+ * GNP deflation (audit/fix gauntlet A5):
+ *   Ohlson's original SIZE term, -0.407*log(TA / GNP_price_index), expects
+ *   total assets expressed in GNP-deflated $-MILLIONS (1968 base), NOT raw
+ *   USD. The prior constant 1.0 was the un-deflated SIZE-term failure mode:
+ *   it fed raw USD straight into log(), making SIZE uniformly ~6.7 too
+ *   negative (log(1e9) vs log(1e9/14e6)), which biased every O downward —
+ *   i.e. uniformly "too safe" / too-optimistic on bankruptcy risk.
+ *
+ *   The replacement constant 14e6 maps raw USD -> Ohlson 1980 units:
+ *     /1e6 (USD -> $millions) × ~14 (cumulative 1968->today GNP deflator).
+ *
+ *   *** PROVISIONAL / UNCALIBRATED ***
+ *   14e6 is a coarse single scalar, NOT a fitted yearly CPI/GNP series. It
+ *   is good enough to remove the order-of-magnitude SIZE bias for diagnostic
+ *   reporting, but it is NOT calibration-grade: if this constant were ever
+ *   promoted to a hard gate it fails ~25.6% of the large-cap universe at
+ *   O > 0 (false-distress). Promotion would require a real per-year deflator
+ *   timeseries and a re-anchor pass. Until then the method stays DIAGNOSTIC
+ *   (see method-types.js) and the constant must be treated as a placeholder.
  *
  * Promotion history:
  *   - Tag 210a (introduced as DIAGNOSTIC): documented promotion path required
@@ -75,9 +82,15 @@ const LABEL = 'Ohlson O-Score';
 const THRESHOLD = 0;
 const THRESHOLD_OP = 'lt';
 
-// GNP price index — see header "GNP simplification" note. Constant 1.0 keeps
-// the size term log(TA/GNP_pi) ≈ log(TA), with documented small bias.
-const GNP_PRICE_INDEX = 1.0;
+// GNP price index — see header "GNP deflation" note.
+// audit/fix (gauntlet A5): the prior value 1.0 was the un-deflated SIZE-term
+// failure mode — it fed raw USD into log(TA/GNP_pi), biasing every O ~6.7 too
+// low (uniformly "too safe"). 14e6 maps raw USD -> Ohlson 1980 GNP-scaled
+// $millions ( /1e6 to millions × ~14 cumulative 1968->today GNP deflator).
+// PROVISIONAL / UNCALIBRATED: coarse single scalar, not a fitted yearly series;
+// fails ~25.6% of the large-cap universe at O>0 if ever promoted to a hard gate.
+// Method stays DIAGNOSTIC until a real per-year deflator + re-anchor lands.
+const GNP_PRICE_INDEX = 14e6;
 
 function _unwrap(v) {
   if (v == null) return null;

@@ -1424,15 +1424,16 @@ test('Tag 211 Cap-Alloc-Quality: 3 dims observable → still computable', () => 
 // so real-snapshot test asserts computable=false with diagnostic missingFields.
 
 test('Tag 210a Ohlson-O: PASS case (healthy firm, O < 0, P(bk) < 50%)', () => {
-  // Healthy mid-cap: TA=1500, TL=600 (40% leverage), CA=500, CL=300, WC=200,
-  // NI_t=120 (positive), NI_{t-1}=100 (positive), OCF=140 (strong FFO).
-  // Expected: O strongly negative (low bankruptcy probability).
+  // Realistic raw-USD large-cap (deflator GNP_PRICE_INDEX=14e6 in play):
+  // TA=$80B, TL=$32B (40% leverage), CA=$30B, CL=$18B (WC=+$12B),
+  // NI_t=$9B (positive), NI_{t-1}=$7.5B (positive), OCF=$12B (strong FFO).
+  // Expected under deflator: O=-3.598, P(bk)=2.66%, zone=LOW.
   const s = { annual: {
-    annualNetIncome: [{value: 120}, {value: 100}],
-    annualOCF:       [{value: 140}],
+    annualNetIncome: [{value: 9e9}, {value: 7.5e9}],
+    annualOCF:       [{value: 12e9}],
     annualBalance: [
-      { totalCash: 80, totalDebt: 200, totalAssets: 1500,
-        totalLiab: 600, currentAssets: 500, currentLiabilities: 300 }
+      { totalCash: 6e9, totalDebt: 20e9, totalAssets: 80e9,
+        totalLiab: 32e9, currentAssets: 30e9, currentLiabilities: 18e9 }
     ]
   }};
   const r = Runner.evaluateStock(s)['ohlson-o-score'];
@@ -1444,15 +1445,16 @@ test('Tag 210a Ohlson-O: PASS case (healthy firm, O < 0, P(bk) < 50%)', () => {
 });
 
 test('Tag 210a Ohlson-O: FAIL case (distressed firm, O > 0, P(bk) > 50%)', () => {
-  // Distressed: TA=1000, TL=1200 (TL>TA → X=1), CA=200, CL=400 (WC=-200, neg),
-  // NI_t=-150 (loss), NI_{t-1}=-100 (Y=1), OCF=-80 (FFO/TL very negative).
-  // Expected: O > 0, P(bk) > 0.5.
+  // Realistic raw-USD distressed large-cap (deflator GNP_PRICE_INDEX=14e6 in play):
+  // TA=$10B, TL=$13B (TL>TA → X=1), CA=$2.5B, CL=$5B (WC=-$2.5B, neg),
+  // NI_t=-$2B (loss), NI_{t-1}=-$1.2B (Y=1), OCF=-$0.9B (FFO/TL very negative).
+  // Expected under deflator: O=3.649, P(bk)=97.47%, zone=HIGH.
   const s = { annual: {
-    annualNetIncome: [{value: -150}, {value: -100}],
-    annualOCF:       [{value: -80}],
+    annualNetIncome: [{value: -2e9}, {value: -1.2e9}],
+    annualOCF:       [{value: -0.9e9}],
     annualBalance: [
-      { totalCash: 20, totalDebt: 600, totalAssets: 1000,
-        totalLiab: 1200, currentAssets: 200, currentLiabilities: 400 }
+      { totalCash: 0.3e9, totalDebt: 8e9, totalAssets: 10e9,
+        totalLiab: 13e9, currentAssets: 2.5e9, currentLiabilities: 5e9 }
     ]
   }};
   const r = Runner.evaluateStock(s)['ohlson-o-score'];
