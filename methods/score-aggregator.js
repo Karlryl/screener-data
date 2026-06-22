@@ -425,6 +425,19 @@ function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, data
         auditMultiplierApplied = true;
       }
     }
+    // audit/fix (gauntlet D4): thin-HISTORY haircut for HYPERGROWTH, mirroring the
+    // QC multiplier but with a /3 ramp (3y = the documented HG eligibility floor;
+    // /5 would re-break recent-IPO true-positives the 0.30 coverage floor admits).
+    // computeScore normalizes by computedWeight only, so a thin-history HG name can
+    // otherwise score as favorably as a full-history peer.
+    if (modeId === 'HYPERGROWTH') {
+      var ageResHG = allResults['listing-age'];
+      if (ageResHG && ageResHG.computable && Number.isFinite(ageResHG.value)) {
+        var ageMultHG = Math.min(1.0, ageResHG.value / 3); // full credit at 3y; 2y->0.67, 1y->0.33
+        auditMultiplier *= ageMultHG;
+        auditMultiplierApplied = true;
+      }
+    }
     if (auditMultiplierApplied) {
       score = Math.max(0, Math.round(score * auditMultiplier));
     }
