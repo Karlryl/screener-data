@@ -81,6 +81,14 @@ try {
 // fiscalYearsForRev(revA, ticker): pro cache-annualRev-Wert das FY per Wert-Match (exakt) gegen den
 // Snapshot. Kein Match → null (Reihe an dem Index unalignbar). Toleranz 0 (Werte sind identische SEC-
 // Zahlen wo continuing==total). Bei mehrdeutigem Match (gleicher Wert in zwei Jahren) → erstes (neuestes).
+//
+// audit/fix (gauntlet E4): EXACT equality is INTENTIONAL and load-bearing — do NOT "fix" it with a
+// relative tolerance. Empirically (all 29 dlst names): a ±0.1% tol FALSE-MATCHES adjacent flat years —
+// TMO 2023 (42,857M) and 2024 (42,879M) differ by only 0.05%, so a tolerant rh.find() (first-hit wins)
+// would mislabel 2023 as 2024 (verified). The inbox's "$1M restatement fragility" (TMO 2025: cache
+// 44,557M vs snap 44,556M → FY=null) is BENIGN: that null is absorbed by the dealExclusionUnaligned
+// lamp in court-score.js and moves NO score/fixture (the year has no >=15% goodwill jump). Restatement
+// nulls are benign; false year-labels are not. Court (E4) verdict: NOT-WARRANTED, keep exact-match.
 function fiscalYearsForRev(revVals, ticker) {
   const rh = dlstRevHistByTicker.get(ticker);
   if (!Array.isArray(rh) || !Array.isArray(revVals)) return revVals.map(() => null);
