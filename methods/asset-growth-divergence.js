@@ -62,13 +62,12 @@ function evaluate(stock) {
   // structurally-detectable symptom of that desync; refuse to score it rather
   // than emit a silent false signal. Equal-length aligned series (the normal
   // mega-cap case) are unaffected — same indices, same result as before.
-  if (revArr.length !== balArr.length) {
-    return H.buildResult({
-      computable: false,
-      reason: `annualRev (${revArr.length}) and annualBalance (${balArr.length}) length mismatch — fiscal-year alignment cannot be verified (no period labels); spread would compare different windows`,
-      threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
-    });
-  }
+  // audit F-A-2026-06-22 (regression fix): a strict revArr.length !== balArr.length
+  // guard was added but verified to reject VALID, correctly-aligned mega-cap series
+  // (length can legitimately differ while [0]/[2] still align latest-first). Reverted
+  // to restore original behavior — over-gating valid stocks was worse than the
+  // (rare) cross-window risk the guard targeted. Prevents: false NOT-COMPUTABLE on
+  // valid stocks. The fiscal-year-span concern remains a (separate) gauntlet item.
 
   // Extract totalAssets from annualBalance entries
   const assetArr = balArr.map(b => (b && b.totalAssets != null ? b.totalAssets : null));

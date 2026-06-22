@@ -411,8 +411,19 @@ function main() {
           cacheEntries.push({ ticker, methodId, ret, pass: r.pass, quality, matured });
         }
       }
-      // F-PF-009: store in cache
-      cache.vintageReturns[cacheKey] = cacheEntries;
+      // F-PF-009: store in cache.
+      // audit F-A-2026-06-22 (regression fix): the replay path reads a HEADER object
+      // ({entries, realEntryAsOf, droppedTickers, droppedPass, droppedFail}); the write
+      // had stored a bare array, so replay hit `cachedHeader.entries`===undefined and
+      // crashed on the 2nd run. Write the matching header shape. Prevents: cache
+      // read/write shape mismatch crashing every cached vintage.
+      cache.vintageReturns[cacheKey] = {
+        entries: cacheEntries,
+        realEntryAsOf,
+        droppedTickers,
+        droppedPass: droppedPassContribs,
+        droppedFail: droppedFailContribs,
+      };
       // F-BT-003 (Tag 179): emit attrition counts when nonzero so log shows whether
       // delistings are tilting the cohort. Threshold-on-imbalance shows up in CI logs.
       // Tag 231a-4: now counts total pass/fail CONTRIBUTIONS (sum across all methods
