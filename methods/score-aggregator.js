@@ -367,8 +367,10 @@ function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, data
   //      0.55 the DATAGUARD already hard-fails so we don't reach here.
   //      score *= (1 - q_spike_penalty)
   //
-  //   2. listing_age multiplier for QC tab only: scales score by
-  //      min(listing_age_years / 5, 1.0). 5y of clean history gets
+  //   2. fiscal-history-depth multiplier for QC tab only: scales score by
+  //      min(clean_fiscal_years / 5, 1.0) — value is the listing-age method's
+  //      count of consecutive non-null annual-revenue years (history DEPTH),
+  //      NOT calendar/IPO age (gauntlet A4). 5y of clean history gets
   //      full credit; below 5y the score is pro-rated. QC by
   //      definition wants durable track record — a 1-2y old company
   //      can't be a "quality compounder" no matter how strong recent

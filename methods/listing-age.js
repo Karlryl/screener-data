@@ -30,7 +30,14 @@
 const H = require('./_helpers.js');
 
 const ID = 'listing-age';
-const LABEL = 'Listing-Age (years)';
+// audit/fix (gauntlet A4): LABEL renamed from 'Listing-Age (years)' to reflect
+// what .value actually measures — consecutive non-null annual-revenue years
+// (clean fiscal-history DEPTH), NOT calendar age. The Court (max severity)
+// DENIED the proposed switch to ipoAgeYears (empirically a regression: it
+// haircuts 272 genuine compounders and hands full QC-maturity credit to
+// clean=0 ETFs). ipoAgeYears stays a diagnostic cross-check only. Display-only
+// rename, zero numeric/score impact.
+const LABEL = 'Fiscal-History Depth (years)';
 const THRESHOLD = 3;
 const THRESHOLD_OP = 'gte';
 const NOW_YEAR = new Date().getUTCFullYear();

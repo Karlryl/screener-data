@@ -152,6 +152,18 @@ function evaluate(stock) {
 module.exports = {
   id: ID, label: LABEL,
   description: 'GM>=35% (oder >=20% mit AT>=2), OpMargin>=15% (oder >=3.5% mit AT>=2 / AT>=3 Retail-Tier ohne GM-Floor), GM-Decline asymmetrisch',
+  // audit/fix (gauntlet A6): 0.35 is NOT just display metadata — it is CONSUMED
+  // in live QC scoring as the graduated-pass denominator (score-aggregator.js
+  // gradedPassScore ~:123) and the FC-01 fail-guard divisor (~:189) for the
+  // 0.20-weight QC margin-quality method. DO NOT change or null it: nulling
+  // makes gradedPass return 1.0 for every pass (deletes graduation), lowering it
+  // inflates/saturates QC scores and silently re-tiers borderline names — and
+  // the fixture-hash will NOT catch it (margin-quality is incomputable on the
+  // golden fixture). The conditional FAIL-side floors (0.20 AT-Override / waived
+  // Retail-Tier + OpMargin floor + GM-decline) live in evaluate(); they are
+  // branch logic, deliberately NOT encoded into this scalar. 0.35 is the correct
+  // economic anchor (2x35% GM = full graduated credit). Court verdict: DENIED any
+  // value change; comment-only.
   threshold: 0.35, thresholdOp: 'gte', unit: 'ratio',
   evaluate
 };
