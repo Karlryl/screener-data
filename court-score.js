@@ -207,6 +207,20 @@ const cohortOf = new Map(cls.filter(c => c.cohort).map(c => [c.t, c.cohort]));
 // M&A/RPO snapshot (data-driven inorganic detection; 44 SaaS names; 400-day-freshness->NULL baked in)
 const maRpoByTicker = new Map(readJson(path.join(ROOT, 'data', 'ma-rpo-snapshot.json')).map(r => [r.ticker, r]));
 
+// audit/fix (gauntlet C5): US-Listing-Side-File (von court-screen.js geschrieben) für den
+// GENERATIVEN Anti-Leak-Assert. Map ticker -> {country, region, exchangeName, reportingCurrency, isUS}.
+// Bewusst SEPARAT von den candidate/member-Records → Member-JSON bleibt byte-identisch (Parität).
+// TOLERANT: fehlt die Datei (z.B. isolierter Unit-Test ohne frischen Screen-Lauf), bleibt die Map
+// leer und die Asserts no-op'en (sie können dann strukturell nichts prüfen, brechen aber NICHTS).
+const LISTING_PATH = process.env.COURT_LISTING_OUT
+  || (CAND.endsWith('.json') ? CAND.replace(/court-candidates([^/\\]*)\.json$/, 'court-listing$1.json') : path.join(ROOT, 'outputs', 'court-listing.json'));
+const listingByTicker = new Map();
+try {
+  const ld = readJson(LISTING_PATH);
+  const obj = ld && ld.listings ? ld.listings : (ld || {});
+  for (const [t, rec] of Object.entries(obj)) listingByTicker.set(t, rec);
+} catch { /* Side-File fehlt → Asserts no-op (siehe oben) */ }
+
 // Data-driven inorganic-growth flag (replaces the hardcoded INORGANIC set). Deterministic (no Date/random).
 // 'inorganic' = recent M&A FLOW >=15% of rev AND forward book flat (rpoGrowthYoY < 15%) -> growth is bought, not built.
 // 'ambiguous' = high flow but RPO unknown. 'clean' = organic (low flow, or high flow WITH a building book). null = no snapshot coverage -> hardcoded fallback.
@@ -978,14 +992,85 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
 
 function pct(x) { return (x == null ? '—' : (x * 100).toFixed(0) + '%').padStart(5); }
 
+// audit/fix (gauntlet C5): MARQUEE US-Namen, die NIEMALS aus dem Universum exiliert werden dürfen
+// (Schutz gegen FAILURE MODE 1 — vintage-A exile: ein naiver country-Filter würde Vintage-A-Namen mit
+// meta.country=undefined still droppen). Pro implementiertem Bucket offensichtliche US-Flaggschiffe, die
+// (a) in court-buckets.json in DIESEN Bucket klassifiziert UND (b) bestätigt US-Listing sind. WICHTIG: nur
+// Namen, die das Hypergrowth-Vorfilter (growth>=12%, court-screen.js) tatsächlich passieren — Mega-Caps wie
+// MSFT/CRM/QCOM wachsen darunter und sind LEGITIM nicht im Bucket (kein Exil-Bug). Mehrere hier (NVDA/AVGO/
+// MDT/SYK/TMO/IDXX/ISRG) sind Vintage A (country=undefined) → genau die, die ein naiver Filter exilieren würde.
+// Der Assert prüft PRÄSENZ im gescorten Universum (members[]), NICHT Abwesenheit aus excluded[] — denn
+// excluded[]==membership-Out (Large-Caps am Growth-Floor) ist DESIGN-konform, kein Exil (ABT/BSX/DHR/A liegen
+// korrekt in excluded[] und MÜSSEN dennoch im Universum=members[] sein).
+const MARQUEE_US = {
+  system_app_software: ['DDOG', 'CRWD'],
+  fabless_semi: ['NVDA', 'AVGO', 'AMD'],
+  medtech_devices: ['MDT', 'SYK', 'ABT', 'BSX', 'ISRG'],
+  diagnostics_lst: ['TMO', 'DHR', 'IDXX', 'A'],
+};
+
+// assertNoForeignLeak(results, listing): GENERATIVER Anti-Leak-Property-Assert (KEINE N-Namen-Whitelist).
+// Spiegelt den SI-5-fail-loud-Stil (classifiedCount===scoredCount). Wirft, sobald IRGENDEIN klassifizierter
+// (bucket-zugewiesener, gescorter) Record laut Side-File meta.country GESETZT UND != "United States" hat
+// UND NICHT als US-Primary-Listing erkannt ist (listing.isUS === false). So fängt der Assert STRUKTURELL
+// jeden foreign-primary-ADR-Leak (FAILURE MODE 2 — z.B. BTI/ABEV/FMX/CNI/CP mit region UK/EM/CA), ohne
+// die verifizierten US-Primary-Inversions (ARM/ESTC/INMD…: country!=US, aber isUS===true via region="US")
+// fälschlich zu treffen. TOLERANT: fehlt das Side-File (leere Map), no-op (kann nichts prüfen).
+// audit/fix (gauntlet C5): failure modes = vintage-A exile (marquee-Assert) + foreign-ADR leak (dieser Assert).
+function assertNoForeignLeak(resultsObj, listing) {
+  if (!listing || listing.size === 0) return; // Side-File fehlt → strukturell nicht prüfbar, nichts brechen
+  // (1) GENERATIVER Anti-Leak-Assert: kein gescorter Record mit country SET != US, der kein US-Listing ist.
+  const leaks = [];
+  for (const [bucket, R] of Object.entries(resultsObj)) {
+    if (!R || !Array.isArray(R.members)) continue;
+    for (const m of R.members) {
+      const L = listing.get(m.ticker);
+      if (!L) continue; // kein Snapshot-Meta → kann nichts behaupten (Vintage-A ohne Eintrag: tolerant)
+      const c = L.country;
+      if (c != null && c !== 'United States' && L.isUS === false) {
+        leaks.push(`${m.ticker}[${c}/${L.region}] in ${bucket}`);
+      }
+    }
+  }
+  if (leaks.length) {
+    throw new Error(`ANTI-LEAK ASSERT (gauntlet C5): foreign-country record(s) leaked into a scored bucket — `
+      + `meta.country gesetzt UND != "United States" UND kein US-Listing: ${leaks.join(', ')}. `
+      + `Klassifizierer in court-screen.js (isUSListing) muss diese ausschließen — NICHT suppressen.`);
+  }
+  // (2) MARQUEE fail-loud Assert: jedes klassifizierte+US Flaggschiff MUSS im gescorten Universum
+  //     (members[]) auftauchen — andernfalls wurde es STILL aus dem Universum exiliert (FAILURE MODE 1,
+  //     vintage-A exile). Präsenz in In- ODER Out-Klasse (excluded[]) ist beides ok; FEHLEN ist der Bug.
+  //     Tolerant: ist ein Marquee-Name gar nicht im Snapshot-Listing oder als !US markiert, überspringen
+  //     (dann ist er legitim nicht klassifiziert/kein US-Listing, kein Exil).
+  const marqueeViolations = [];
+  for (const [bucket, names] of Object.entries(MARQUEE_US)) {
+    const R = resultsObj[bucket];
+    if (!R || !Array.isArray(R.members)) continue;
+    const memberSet = new Set(R.members.map(m => m.ticker));
+    for (const t of names) {
+      const L = listing.get(t);
+      if (!L || L.isUS !== true) continue; // kein bestätigtes US-Listing → keine Exil-Behauptung
+      if (!memberSet.has(t)) marqueeViolations.push(`${t} (marquee ${bucket}) fehlt im gescorten Universum`);
+    }
+  }
+  if (marqueeViolations.length) {
+    throw new Error(`MARQUEE ASSERT (gauntlet C5): US-Flaggschiff(e) aus dem Universum exiliert (vintage-A exile): `
+      + `${marqueeViolations.join(', ')}.`);
+  }
+}
+
 // --- Export: computeMedtechOrganicGrowth + computeDlstOrganicGrowth für Unit-Tests ---
 // (computeDlstOrganicGrowth: Fix A FY-Alignment + Fix B dealYearExcluded-Ehrlichkeit, 2026-06-21)
-module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth };
+// + assertNoForeignLeak (gauntlet C5) für direkten Property-Test.
+module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak };
 
 // --- require.main-Guard (Härtung 2): Write + Ausgabe NUR wenn direkt als Skript ausgeführt ---
 // `require('./court-score.js')` gibt nur den Export zurück und schreibt NICHT outputs/court-results.json.
 // `node court-score.js` schreibt und gibt aus (unverändert).
 if (require.main === module) {
+  // audit/fix (gauntlet C5): fail-loud VOR dem Write — ein foreign-country-Leak (FAILURE MODE 2) oder ein
+  // exiliertes US-Marquee (FAILURE MODE 1) wirft hier, bevor outputs geschrieben/Picks promotet werden.
+  assertNoForeignLeak(results, listingByTicker);
   fs.writeFileSync(OUT, JSON.stringify(results, null, 2));
 
   // --- Ausgabe ---

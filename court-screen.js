@@ -25,17 +25,123 @@ const MEDTECH_INDUSTRIES = new Set(['Medical Devices', 'Medical Instruments & Su
 const medtechTickers = new Set();
 const snapMarketCap = new Map(); // ticker -> marketCap.value
 const snapRnD = new Map(); // ticker -> annualRnD array
+
+// ===========================================================================
+// VINTAGE-TOLERANT US-LISTING CLASSIFIER  (audit/fix gauntlet C5)
+// ===========================================================================
+// audit/fix (gauntlet C5): die snapshots/<T>.json existieren in ZWEI Vintages
+//   - Vintage A (älter): meta.country=undefined, meta.region = Exchange-Code
+//       ("NYSE"/"NasdaqGS"…) ODER Region-/Ländercode ("US"/"CN"), kein annualShares.
+//   - Vintage B (neuer): meta.country="United States", meta.region="US".
+// FAILURE MODE 1 (vintage-A exile): ein naiver `meta.country !== "United States"`
+//   Filter exiliert die GESAMTE Vintage A still (~halbes Universum inkl. RTX/LMT/
+//   UNP/ITW…) — die fallen raus, weil ihr country undefined ist.
+// FAILURE MODE 2 (foreign-ADR leak): ein USD/Exchange-only Filter LÄSST foreign-
+//   primary ADRs durch (BTI/ABEV/FMX/CNI/CP), die USD an US-Börsen handeln und die
+//   Kohorten-NORMS+REL vergiften. Diese tragen meta.region = HEIMATMARKT-Code
+//   ("UK"/"EM"/"CA"), NICHT "US" — daran sind sie strukturell erkennbar.
+//
+// US-Exchange-Whitelist (gilt für region ODER exchangeName in Vintage A/B).
+const US_EXCHANGE_WHITELIST = new Set([
+  'NYSE', 'NasdaqGS', 'NasdaqGM', 'NasdaqCM', 'NYSEArca', 'BATS',
+  'NYSE American', 'AMEX', 'Cboe US', 'Nasdaq', 'US',
+]);
+// Foreign-Exchange-/Region-Codes, die NIE US sind (OTC/Pink + Heimatmarkt-Regionen
+// der foreign-primary ADRs). region∈{UK,EM,CA,EU,CN,TW,…} ⇒ kein US-Primary.
+const NON_US_EXCHANGE_BLACKLIST = new Set([
+  'OTC Markets OTCPK', 'OTC Markets OTCQX', 'OTC', 'PNK', 'Other OTC',
+  'YHD', // Yahoo-Placeholder/delisted-stale — kein verlässliches US-Listing-Signal
+]);
+// Ticker-Suffixe ausländischer Primärbörsen (ADR/Foreign-Listing-Guard).
+const FOREIGN_SUFFIX_RE = /\.(HK|SW|TO|L|PA|DE|AX|SS|SZ|T|V|MI|MC|AS|BR|ST|HE|OL|VI|F|SA|MX|TW|KS|KQ|NS|BO)$/i;
+// audit/fix (gauntlet C5): EXPLIZITE, VERIFIZIERTE Allowlist echter US-PRIMARY-
+// INVERSIONS — Firmen mit ausländischem Domizil (meta.country != US) aber echter
+// US-Primärnotierung. Yahoo flaggt diese mit meta.region="US"; der country-Guard
+// würde sie sonst fälschlich exilieren. MINIMAL halten — nur Namen, die als
+// US-Primary verifiziert sind und im Universum vorkommen. region="US" deckt die
+// 8 aktuell gescorten Inversions (ARM/CLBT/ESTC/CGNT/LSPD/BLCO/INMD/SNN) generativ
+// ab; diese Liste ist NUR für echte US-Primary-Namen mit region != "US".
+const US_PRIMARY_INVERSION_ALLOWLIST = new Set([
+  'STVN', // Stevanato Group — Italy-domiciled, NYSE-primary, USD; region="EU" (kein US-Code), aber US-Primary
+  // Kandidaten aus der Spec (nur aufnehmen, falls real im Universum + region != "US"):
+  // 'ETN','ALLE','AER','CNH','RTO','CMPR' — derzeit region="US" ⇒ schon generativ erfasst, NICHT nötig.
+]);
+
+// isUSListing(meta, ticker, name): vintage-toleranter US-Listing-Klassifizierer.
+// TRUE wenn:
+//   (a) meta.country === "United States", ODER
+//   (b) meta.country UNSET (undefined/null) UND region/exchangeName auf der
+//       US-Exchange-Whitelist (Vintage A), ODER
+//   (c) US-PRIMARY-INVERSION: country SET != US, ABER Yahoo-region="US" (oder auf
+//       der expliziten Allowlist) UND US-Exchange UND USD-Reporting.
+// FALSE (Guards) bei: OTC/Pink; ausländischen Ticker-Suffixen; reportingCurrency
+//   gesetzt und != "USD"; country SET != US ohne US-Primary-Signal (foreign ADR).
+function isUSListing(meta, ticker, name) {
+  meta = meta || {};
+  const country = meta.country;
+  const region = meta.region == null ? null : String(meta.region);
+  const exch = meta.exchangeName == null ? null : String(meta.exchangeName);
+  const rc = meta.reportingCurrency == null ? null : String(meta.reportingCurrency);
+
+  // Guard 1: ausländisches Ticker-Suffix (.HK/.SW/.TO/.L/.PA/.DE/.AX/.SS/.SZ/.T …) ⇒ foreign primary.
+  if (ticker && FOREIGN_SUFFIX_RE.test(String(ticker))) return false;
+  // Guard 2: explizit ausländische/OTC Region ODER Exchange ⇒ kein US-Listing.
+  if (region && NON_US_EXCHANGE_BLACKLIST.has(region)) return false;
+  if (exch && NON_US_EXCHANGE_BLACKLIST.has(exch)) return false;
+  // Guard 3: reportingCurrency gesetzt und != USD ⇒ foreign primary.
+  if (rc && rc !== 'USD') return false;
+
+  // (a) Domizil USA ⇒ US.
+  if (country === 'United States') return true;
+
+  const onUSExchange = (region && US_EXCHANGE_WHITELIST.has(region)) || (exch && US_EXCHANGE_WHITELIST.has(exch));
+
+  // COUNTRY-DOMICILE-GUARD: ein GESETZTES country != "United States" schließt IMMER
+  // aus — AUSSER es ist eine verifizierte US-Primary-Inversion (region="US" auf
+  // US-Exchange + USD, ODER auf der expliziten Allowlist).
+  if (country != null && country !== 'United States') {
+    // audit/fix (gauntlet C5, red-team): gate the inversion on region==='US' — the
+    // STRUCTURAL US-primary signal Yahoo sets. Keying on onUSExchange alone leaked
+    // every foreign ADR trading USD on NYSE/Nasdaq (BTI/ABEV/FMX/CNI/CP carry
+    // region=UK/EM/CA, NOT "US"). region="US" keeps genuine inversions (ARM/ESTC/
+    // INMD) true; STVN (region="EU") stays covered by the explicit allowlist.
+    const isUSPrimaryInversion =
+      (region === 'US' && onUSExchange && (rc === 'USD' || rc == null)) ||
+      US_PRIMARY_INVERSION_ALLOWLIST.has(String(ticker));
+    return !!isUSPrimaryInversion;
+  }
+
+  // (b) country UNSET (Vintage A): US-Exchange-Whitelist auf region/exchangeName.
+  if (country == null) {
+    return !!onUSExchange;
+  }
+  return false;
+}
+
+// usListingByTicker: Side-Map ticker -> {country, region, exchangeName, reportingCurrency, isUS}.
+// Wird als outputs/court-listing.json geschrieben (env-Override court-listing) und von
+// court-score.js für den GENERATIVEN Anti-Leak-Assert gelesen. Bewusst KEIN Feld auf den
+// candidate-Records → court-candidates.json + alle Member-JSON bleiben BYTE-IDENTISCH (Parität).
+const usListingByTicker = new Map();
 if (fs.existsSync(SNAP_DIR)) {
   for (const f of fs.readdirSync(SNAP_DIR)) {
     if (!f.endsWith('.json') || /\./.test(f.replace(/\.json$/, ''))) continue;
     try {
       const sn = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, f), 'utf8'));
-      const t = (sn.meta && sn.meta.ticker) || f.replace(/\.json$/, '');
-      if (sn.meta && sn.meta.sector === 'Healthcare' && MEDTECH_INDUSTRIES.has(sn.meta.industry)) {
+      const m = sn.meta || {};
+      const t = m.ticker || f.replace(/\.json$/, '');
+      if (m.sector === 'Healthcare' && MEDTECH_INDUSTRIES.has(m.industry)) {
         medtechTickers.add(t);
       }
       if (sn.marketCap && sn.marketCap.value != null) snapMarketCap.set(t, sn.marketCap.value);
       if (sn.annual && Array.isArray(sn.annual.annualRnD)) snapRnD.set(t, sn.annual.annualRnD.map(v => (v == null ? null : Number(v))).filter(v => v != null && isFinite(v)));
+      usListingByTicker.set(t, {
+        country: m.country == null ? null : m.country,
+        region: m.region == null ? null : m.region,
+        exchangeName: m.exchangeName == null ? null : m.exchangeName,
+        reportingCurrency: m.reportingCurrency == null ? null : m.reportingCurrency,
+        isUS: isUSListing(m, t, m.longName || m.shortName || ''),
+      });
     } catch {}
   }
 }
@@ -333,6 +439,18 @@ candidates.sort((a, b) => (b.growth || 0) - (a.growth || 0));
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, JSON.stringify({ generatedFromCacheAt: new Date && undefined, filter: F, stats, count: candidates.length, candidates }, null, 2));
 
+// audit/fix (gauntlet C5): US-Listing-Side-File für den GENERATIVEN Anti-Leak-Assert in
+// court-score.js. SEPARATE Datei (NICHT in den candidate-Records) → court-candidates.json + alle
+// Member-JSON bleiben byte-identisch zu den Parity-Baselines. env-Override court-listing leitet
+// auf die isolierten Test-Outputs (Re-Court-Auflage: keine geteilten Artefakte racen).
+const LISTING_OUT = process.env.COURT_LISTING_OUT
+  || (OUT.endsWith('.json') ? OUT.replace(/court-candidates([^/\\]*)\.json$/, 'court-listing$1.json') : path.join(ROOT, 'outputs', 'court-listing.json'));
+const listingObj = {};
+for (const [t, rec] of usListingByTicker) listingObj[t] = rec;
+try {
+  fs.writeFileSync(LISTING_OUT, JSON.stringify({ generatedAt: undefined, count: usListingByTicker.size, listings: listingObj }, null, 2));
+} catch {}
+
 console.log('=== court-screen Schritt 1 ===');
 console.log(stats);
 console.log(`KANDIDATEN nach Vorfilter: ${candidates.length}`);
@@ -345,3 +463,7 @@ for (const c of candidates.slice(0, 30)) {
   );
 }
 function fmt(x) { return (x == null ? '—' : (x * 100).toFixed(0) + '%').padStart(6); }
+
+// Export für Unit-Tests / Wiederverwendung (court-score.js liest die Side-File, requirt dieses
+// Skript NICHT — der require würde den ganzen Screen-Lauf erneut triggern). Nur Hilfsfunktion + Consts.
+module.exports = { isUSListing, US_PRIMARY_INVERSION_ALLOWLIST, US_EXCHANGE_WHITELIST };
