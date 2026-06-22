@@ -26,6 +26,7 @@ const path = require('path');
 const Runner = require('./methods/runner.js');
 const SM = require('./methods/strategy-modes.js');
 const DQ = require('./methods/data-quality.js');
+const { computePbScore } = require('./lib/pb-score.js');
 const { writeFileAtomic } = require('./lib/atomic-write.js');
 // F-SM-004: route per-ticker history-file reads through the shared safe helper
 // so a ticker written under the safe-stem (e.g. CON → _CON.json) is found
@@ -381,19 +382,17 @@ function buildRow(stock) {
   //   strict max 100. Caps prevent CRDO-level extremes (yoy=201, r40=217) from
   //   inflating pbScore to 136+. The signals are already binary above ~100 —
   //   "extremely fast growth" doesn't get extra credit over "very fast growth".
-  let pbScore = null;
-  if (Number.isFinite(growth) && Number.isFinite(grossMargin)) {
-    const growthC = Math.min(100, Math.max(0, growth));
-    const gmC     = Math.min(100, Math.max(0, grossMargin));
-    const r40C    = Math.min(100, Math.max(0, r40Value || 0));
-    const gmaBonus = (gmaTrend === 'accelerating') ? 10 : (gmaTrend === 'stable' ? 4 : 0);
-    const omaBonus = (omaTrend === 'accelerating') ? 15 : (omaTrend === 'stable' ? 6 : 0);
-    let revAccelBonus = 0;
-    if (revAccelDelta != null && revAccelDelta > 0) {
-      revAccelBonus = Math.min(15, revAccelDelta / 50 * 15);
-    }
-    pbScore = (growthC / 100 * 25) + (gmC / 100 * 20) + (r40C / 100 * 15) + gmaBonus + omaBonus + revAccelBonus;
-  }
+  // Tag 200c: formula now lives in lib/pb-score.js (single source of truth,
+  // shared with scripts/snapshot-score-history.js). Returns null when growth or
+  // grossMargin is not finite — same as the former inline guard.
+  const pbScore = computePbScore({
+    growth,
+    grossMargin,
+    r40: r40Value,
+    gmaTrend,
+    omaTrend,
+    revAccelDelta,
+  });
 
   // Mode scores (already on 0-100 scale, accumulated by score-aggregator)
   const hgScore = modeEvals.HYPERGROWTH && Number.isFinite(modeEvals.HYPERGROWTH.score) ? modeEvals.HYPERGROWTH.score : null;
