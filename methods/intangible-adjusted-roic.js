@@ -18,7 +18,23 @@
  *                    where weight_i = (3 - i) / 3 for i in {0..2}
  *   adjIC          = totalAssets + capitalizedRD + capitalizedSGA
  *                    - cash - currentLiabilitiesNonInterest
- *   adjROIC        = NI / adjIC
+ *   adjNOPAT       = NI
+ *                    + (currentRD  - amortRD)  * (1 - TAX_RATE)   [if R&D used]
+ *                    + (currentSGA - amortSGA) * (1 - TAX_RATE)   [if SG&A used]
+ *                    where amortRD  = (Σ in-window annualRnD) / RD_AMORT_YEARS
+ *                          amortSGA = (Σ in-window annualSGA) / SGA_AMORT_YEARS
+ *                    (straight-line: each capitalized year amortizes 1/N per year,
+ *                     so current-period amortization = sum-of-window / N)
+ *   adjROIC        = adjNOPAT / adjIC
+ *
+ * audit/fix (gauntlet D3, QRC-03): previously adjROIC = NI / adjIC. This double-
+ * penalized R&D-heavy firms — the denominator capitalized R&D/SG&A INTO invested
+ * capital while the numerator stayed RAW net income (which already fully expensed
+ * the current-year R&D). R&D was thus removed from earnings AND added to the
+ * capital base, mechanically dragging adjROIC BELOW nominal — the exact opposite
+ * of the method's purpose. Fix: add the current-period R&D/SG&A expense back to
+ * NOPAT and subtract only the straight-line amortization, both after-tax. When
+ * no R&D and no SG&A are present, adjNOPAT collapses to NI and adjROIC == nominal.
  *
  * Pass threshold: adjROIC >= 0.15 (Mauboussin's "durable quality" cutoff for
  * global mega-caps; lower than nominal ROIC's 15% because IC is larger).
@@ -26,10 +42,11 @@
  * Graceful degradation — what we ship vs. what's missing in snapshots:
  *   - annualRnD: Tag 202 backfilled this into snapshots; coverage is partial.
  *     If annualRnD has at least 1 year of data → use it (5y window if available).
- *   - annualSGA: NOT in current snapshots. When absent we proceed RD-only and
- *     mark sgaUsed=false in components. This is a documented simplification;
- *     for asset-light software firms the SGA term is a smaller second-order
- *     adjustment compared to R&D capitalization.
+ *   - annualSGA: surfaced into snapshots since Tag 211l (pull-yahoo.js:1930);
+ *     coverage is partial. When present we capitalize it (3y window) and apply
+ *     the SG&A add-back symmetrically with R&D. When absent we proceed RD-only
+ *     and mark sgaUsed=false in components. For asset-light software firms the
+ *     SGA term is a smaller second-order adjustment compared to R&D.
  *   - currentLiabilities-non-interest: NOT in snapshot. We use 0 as the
  *     "non-interest CL" subtraction — this slightly inflates adjIC (because
  *     true IC = TA - cash - non-interest CL), making the test marginally
@@ -62,11 +79,15 @@ const H = require('./_helpers.js');
 
 const ID = 'intangible-adjusted-roic';
 const LABEL = 'Intangible-Adjusted ROIC';
-const THRESHOLD = 0.15;
+const THRESHOLD = 0.15;   // Mauboussin durable-quality floor. NOTE: a separate
+                          // calibration decision (lowering to 0.12) is open but
+                          // deliberately NOT made here — keep 0.15 unchanged.
 const THRESHOLD_OP = 'gte';
 
 const RD_AMORT_YEARS = 5;
 const SGA_AMORT_YEARS = 3;
+const TAX_RATE = 0.21;    // US statutory post-TCJA; codebase convention,
+                          // cf. penman-nissim-decomposition.js:114.
 
 function _unwrap(v) {
   if (v == null) return null;
@@ -92,21 +113,26 @@ function _balField(stock, idx, field) {
  * weight_i = (windowYears - i) / windowYears for i in {0..windowYears-1}.
  * Newest year gets full weight; oldest gets 1/N. Years beyond the window
  * are ignored. Missing/null years are treated as 0 (no expense that year).
- * Returns { sum, yearsUsed } — yearsUsed is the count of finite contributions.
+ * Returns { sum, windowSum, yearsUsed } — sum is the weighted capitalized stock,
+ * windowSum is the UNWEIGHTED sum of the same finite in-window years (used to
+ * derive straight-line current-period amortization = windowSum / windowYears),
+ * and yearsUsed is the count of finite contributions.
  */
 function _capitalize(arr, windowYears) {
   let sum = 0;
+  let windowSum = 0;
   let yearsUsed = 0;
-  if (!Array.isArray(arr)) return { sum, yearsUsed };
+  if (!Array.isArray(arr)) return { sum, windowSum, yearsUsed };
   const horizon = Math.min(arr.length, windowYears);
   for (let i = 0; i < horizon; i++) {
     const v = _unwrap(arr[i]);
     if (!Number.isFinite(v) || v <= 0) continue;
     const w = (windowYears - i) / windowYears;
     sum += v * w;
+    windowSum += v;
     yearsUsed++;
   }
-  return { sum, yearsUsed };
+  return { sum, windowSum, yearsUsed };
 }
 
 function evaluate(stock) {
@@ -166,7 +192,29 @@ function evaluate(stock) {
     });
   }
 
-  const adjROIC = ni_t / adjIC;
+  // --- Numerator: intangible-adjusted NOPAT ------------------------
+  // audit/fix (gauntlet D3, QRC-03): raw-NI numerator vs capitalized
+  // denominator = double-penalty. NI already fully expensed this year's R&D/SG&A.
+  // To match the capitalized IC, add the current-period expense back to NOPAT
+  // and subtract only the straight-line amortization, both after-tax. Straight-
+  // line: each capitalized year amortizes 1/N per year, so current-period total
+  // amortization = (Σ in-window expense) / N — derived from the SAME in-window
+  // slices/weights _capitalize iterates (rndCap.windowSum / RD_AMORT_YEARS etc.).
+  const amortRD  = rndCap.windowSum / RD_AMORT_YEARS;
+  const amortSGA = sgaCap.windowSum / SGA_AMORT_YEARS;
+  const currentRDraw  = _annualVal(A.annualRnD, 0);
+  const currentSGAraw = _annualVal(A.annualSGA, 0);
+  const currentRD  = Number.isFinite(currentRDraw)  && currentRDraw  > 0 ? currentRDraw  : 0;
+  const currentSGA = Number.isFinite(currentSGAraw) && currentSGAraw > 0 ? currentSGAraw : 0;
+
+  // Graceful-degrade invariant: when there is NO R&D and NO SG&A
+  // (both yearsUsed==0), adjEarnings collapses EXACTLY to ni_t, so
+  // adjROIC == nominalROIC unchanged (DEGRADE smoke test depends on this).
+  const adjEarnings = ni_t
+    + (rndCap.yearsUsed > 0 ? (currentRD  - amortRD)  * (1 - TAX_RATE) : 0)
+    + (sgaCap.yearsUsed > 0 ? (currentSGA - amortSGA) * (1 - TAX_RATE) : 0);
+
+  const adjROIC = adjEarnings / adjIC;
 
   if (!Number.isFinite(adjROIC)) {
     return H.buildResult({
@@ -206,7 +254,10 @@ function evaluate(stock) {
       sgaYearsUsed: sgaCap.yearsUsed,
       rdUsed,
       sgaUsed,
-      netIncome: ni_t
+      netIncome: ni_t,
+      adjNOPAT: Math.round(adjEarnings * 100) / 100,
+      amortRD: Math.round(amortRD),
+      amortSGA: Math.round(amortSGA)
     },
     reason: reasonBits.join(', ') + ' (floor ' + (THRESHOLD * 100) + '%)',
     threshold: THRESHOLD, thresholdOp: THRESHOLD_OP

@@ -1494,12 +1494,13 @@ test('Tag 210a Ohlson-O: NOT-COMPUTABLE on real-snapshot shape (missing CA/CL/to
 
 test('Tag 210b Intangible-Adjusted ROIC: PASS — software profile with R&D capitalization', () => {
   // Synthetic software firm. TA=500, cash=50 → nominalIC=450.
-  // NI=80 → nominalROIC = 80/450 = 17.8% (passes nominal floor).
+  // NI=120 → nominalROIC = 120/450 = 26.7%.
   // R&D: 100,80,60,40,20 over 5y. Capitalized = 100*1.0 + 80*0.8 + 60*0.6 + 40*0.4 + 20*0.2
-  //     = 100 + 64 + 36 + 16 + 4 = 220.
-  // adjIC = 500 + 220 + 0 - 50 = 670 → adjROIC = 80/670 = 11.9% — FAILS 15%.
-  // To make this PASS we need a more profitable firm. Use NI=120:
-  // adjROIC = 120/670 = 17.9% → PASS.
+  //     = 100 + 64 + 36 + 16 + 4 = 220.  adjIC = 500 + 220 + 0 - 50 = 670.
+  // gauntlet-D3 fix (numerator): adjNOPAT = NI + (currentRD - amortRD)*(1-0.21).
+  //   amortRD = (100+80+60+40+20)/5 = 300/5 = 60; currentRD = 100.
+  //   adjNOPAT = 120 + (100-60)*0.79 = 120 + 31.6 = 151.6.
+  // adjROIC = 151.6 / 670 = 22.63% → PASS 15%.
   const s = { annual: {
     annualNetIncome: [{value: 120}],
     annualRnD:       [{value: 100}, {value: 80}, {value: 60}, {value: 40}, {value: 20}],
@@ -1511,17 +1512,27 @@ test('Tag 210b Intangible-Adjusted ROIC: PASS — software profile with R&D capi
   if (r.components.rdUsed !== true) throw new Error('rdUsed should be true with R&D present');
   if (r.components.rdYearsUsed !== 5) throw new Error('expected 5y R&D, got ' + r.components.rdYearsUsed);
   if (r.components.capitalizedRD !== 220) throw new Error('expected capitalizedRD=220, got ' + r.components.capitalizedRD);
-  // Cross-check: adjROIC < nominalROIC (because capitalization grows IC)
-  if (r.components.adjROIC >= r.components.nominalROIC) {
-    throw new Error('adjROIC should be < nominalROIC after capitalization; adj=' + r.components.adjROIC + ' nom=' + r.components.nominalROIC);
+  if (r.components.adjROIC !== 0.2263) throw new Error('expected adjROIC=0.2263, got ' + r.components.adjROIC);
+  if (r.components.adjNOPAT !== 151.6) throw new Error('expected adjNOPAT=151.6, got ' + r.components.adjNOPAT);
+  if (r.components.amortRD !== 60) throw new Error('expected amortRD=60, got ' + r.components.amortRD);
+  // gauntlet-D3 fix: the numerator now adds back the after-tax net R&D investment,
+  // so adjNOPAT > NI whenever current R&D exceeds straight-line amortization (a
+  // growing-R&D firm). The old "adjROIC < nominalROIC" assertion ENCODED the bug
+  // (raw NI over a capitalized denominator) and is removed. Correct invariant:
+  // adjNOPAT exceeds raw NI for a firm investing more in R&D than it amortizes.
+  if (!(r.components.adjNOPAT > r.components.netIncome)) {
+    throw new Error('adjNOPAT should exceed raw NI for a growing-R&D firm; adjNOPAT=' + r.components.adjNOPAT + ' NI=' + r.components.netIncome);
   }
 });
 
 test('Tag 210b Intangible-Adjusted ROIC: FAIL — weak earnings against fat IC', () => {
   // Low NI relative to assets. TA=1000, cash=100 → nominalIC=900.
   // R&D: 200,150,100,50 over 4y. Cap = 200*1.0 + 150*0.8 + 100*0.6 + 50*0.4 + 0
-  //     = 200 + 120 + 60 + 20 = 400.
-  // adjIC = 1000 + 400 + 0 - 100 = 1300. NI=80 → adjROIC = 6.2% — FAIL 15%.
+  //     = 200 + 120 + 60 + 20 = 400.  adjIC = 1000 + 400 + 0 - 100 = 1300.
+  // gauntlet-D3 fix (numerator): amortRD = (200+150+100+50)/5 = 500/5 = 100; currentRD = 200.
+  //   adjNOPAT = 80 + (200-100)*0.79 = 80 + 79 = 159.
+  // adjROIC = 159/1300 = 12.23% — still FAILS 15% (a clear fail even after the
+  // numerator add-back, because the firm earns too little against its fat IC).
   const s = { annual: {
     annualNetIncome: [{value: 80}],
     annualRnD:       [{value: 200}, {value: 150}, {value: 100}, {value: 50}],
@@ -1531,6 +1542,7 @@ test('Tag 210b Intangible-Adjusted ROIC: FAIL — weak earnings against fat IC',
   if (!r.computable) throw new Error('should be computable; reason=' + r.reason);
   if (r.pass) throw new Error('weak earnings should fail 15% floor; got adjROIC=' + r.value);
   if (r.components.adjROIC >= 0.15) throw new Error('expected adjROIC < 0.15, got ' + r.components.adjROIC);
+  if (r.components.adjROIC !== 0.1223) throw new Error('expected adjROIC=0.1223, got ' + r.components.adjROIC);
 });
 
 test('Tag 210b Intangible-Adjusted ROIC: GRACEFUL DEGRADE — no R&D or SG&A → nominal ROIC', () => {
