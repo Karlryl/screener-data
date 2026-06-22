@@ -228,9 +228,12 @@ function parseForm4Xml(xml) {
   const issuerBlock = _extractFirst(xml, 'issuer') || '';
   const issuerTradingSymbol =
     _innerValue(_extractFirst(issuerBlock, 'issuerTradingSymbol')) || null;
+  // audit/fix: scan ALL <footnotes> blocks, not just the first. _extractFirst
+  // returned only all[0], so a 10b5-1 plan mention in a LATER footnotes block
+  // was missed (false isTenB5One=false → mislabelled discretionary trade).
   const isTenB5One =
     /<aff10b5One>\s*(1|true)\b/i.test(xml) ||
-    /10b5-?\s?1/i.test(_extractFirst(xml, 'footnotes') || '');
+    /10b5-?\s?1/i.test(_extractAll(xml, 'footnotes').join(' '));
 
   // Reporting person — first <reportingOwner> block carries the name and
   // the relationship flags (officer / director / 10% owner).
@@ -459,6 +462,29 @@ async function main() {
     }
     try {
       const result = await pullTickerForm4(ticker, cikInfo);
+      if (result.error) {
+        // audit/fix: soft errors (submissions-404 / submissions-parse) returned
+        // WITHOUT throwing must NOT get a fresh fetchedAt — otherwise the 24h
+        // freshness gate (line ~454) skips this ticker for a full TTL window
+        // even though we got NO data. Mirror the thrown-error path below: stamp
+        // failedAt, preserve any prior successful pull's fetchedAt so the next
+        // run retries this ticker immediately. Like the thrown-error path, we
+        // also do NOT overwrite transactions: a transient 404/parse-error must
+        // not clobber a prior successful pull's cached insider transactions
+        // (red-team A1: asymmetric data-loss vs the catch path otherwise).
+        errors++;
+        byTicker[ticker] = Object.assign({}, prev || {}, {
+          ticker,
+          cik: cikInfo.cik,
+          name: cikInfo.name,
+          failedAt: new Date().toISOString(),
+          error: result.error
+          // intentionally NOT setting fetchedAt or transactions — preserve any
+          // prior successful pull's values (mirrors the thrown-error path).
+        });
+        console.warn('  [' + ticker + '] soft-error: ' + result.error);
+        continue;
+      }
       byTicker[ticker] = {
         ticker,
         cik: cikInfo.cik,
