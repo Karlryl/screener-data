@@ -1,27 +1,18 @@
 'use strict';
 const H = require('./_helpers.js');
-const fs = require('fs');
-const path = require('path');
 
 const ID = 'high-proximity-52w';
 const LABEL = '52w-High Proximity';
 const THRESHOLD = 0.05;  // current price within 5% of 52w high = pass
 const THRESHOLD_OP = 'lte';
-const PRICES_HISTORY = path.join(__dirname, '..', 'prices', 'history.json');
 
-let _cache = null;
-function _loadPrices() {
-  if (_cache !== null) return _cache;
-  if (!fs.existsSync(PRICES_HISTORY)) { _cache = {}; return _cache; }
-  try { _cache = JSON.parse(fs.readFileSync(PRICES_HISTORY, 'utf8')); }
-  catch (e) { _cache = {}; }
-  return _cache;
-}
+// audit SCORE-HIGH-1: use the shared price-history loader (single ~70MB parse
+// across all five DIAGNOSTIC price methods) instead of a private per-method cache.
 
 function evaluate(stock) {
   const ticker = stock && stock.meta && stock.meta.ticker;
   if (!ticker) return H.buildResult({ computable: false, reason: 'no ticker', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP });
-  const prices = _loadPrices();
+  const prices = H.loadPriceHistory();
   const series = prices[ticker];
   if (!series || series.length < 30) {
     return H.buildResult({

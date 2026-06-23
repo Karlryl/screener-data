@@ -91,6 +91,28 @@ function classifySubProfile(stock) {
   try { return E.classifySubProfile(stock); } catch (e) { return null; }
 }
 
+// audit SCORE-HIGH-1: single shared price-history loader. Previously five DIAGNOSTIC
+// price methods (above-200d-ma, high-proximity-52w, drawdown-52w, volatility-annualized,
+// price-momentum-12-1) each parsed the ~70MB prices/history.json into their own
+// module-level cache — up to 5 deserialized copies resident at once. This loads/parses
+// ONCE into a single cache shared by all of them. FAIL-SOFT to {} on missing/corrupt
+// file (matches the four _loadPrices callers' existing {} contract; price-momentum's
+// downstream `cache && typeof cache === 'object'` check treats {} identically to its
+// old `false` — zero matches over an empty object → same {series:[],source:null}).
+const _PRICES_HISTORY_PATH = path.join(__dirname, '..', 'prices', 'history.json');
+let _priceHistoryCache = null;
+function loadPriceHistory() {
+  if (_priceHistoryCache !== null) return _priceHistoryCache;
+  if (!fs.existsSync(_PRICES_HISTORY_PATH)) { _priceHistoryCache = {}; return _priceHistoryCache; }
+  try { _priceHistoryCache = JSON.parse(fs.readFileSync(_PRICES_HISTORY_PATH, 'utf8')); }
+  catch (e) { _priceHistoryCache = {}; }
+  if (!_priceHistoryCache || typeof _priceHistoryCache !== 'object') _priceHistoryCache = {};
+  return _priceHistoryCache;
+}
+// test-only hook: reset the shared price-history cache (mirrors the per-method
+// _resetCacheForTests seams that previously reset each private cache).
+function _resetPriceHistoryForTests() { _priceHistoryCache = null; }
+
 let _sectorMediansCache = null;
 let _autoMediansCache = null;     // Tag 167: v2 region-aware auto-medians
 let _rollingMediansCache = null;
@@ -364,6 +386,8 @@ module.exports = {
   val, metricValue, latestAnnual, latestBalance, cagr3y, buildResult,
   classifySubProfile, effectiveThreshold, seriesLookback,
   wrapEvaluate,
+  // audit SCORE-HIGH-1: shared price-history loader (single ~70MB parse).
+  loadPriceHistory, _resetPriceHistoryForTests,
   // Tag 232c-1: test-only hooks — see _setMediansForTest above for rationale.
   _setMediansForTest, _restoreMediansFromTest
 };

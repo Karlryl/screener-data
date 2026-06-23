@@ -1,27 +1,18 @@
 'use strict';
 const H = require('./_helpers.js');
-const fs = require('fs');
-const path = require('path');
 
 const ID = 'above-200d-ma';
 const LABEL = 'Above 200-Day MA';
 const THRESHOLD = 1.0;  // current >= MA
 const THRESHOLD_OP = 'gte';
-const PRICES_HISTORY = path.join(__dirname, '..', 'prices', 'history.json');
 
-let _cache = null;
-function _loadPrices() {
-  if (_cache !== null) return _cache;
-  if (!fs.existsSync(PRICES_HISTORY)) { _cache = {}; return _cache; }
-  try { _cache = JSON.parse(fs.readFileSync(PRICES_HISTORY, 'utf8')); }
-  catch (e) { _cache = {}; }
-  return _cache;
-}
+// audit SCORE-HIGH-1: use the shared price-history loader (single ~70MB parse
+// across all five DIAGNOSTIC price methods) instead of a private per-method cache.
 
 function evaluate(stock) {
   const ticker = stock && stock.meta && stock.meta.ticker;
   if (!ticker) return H.buildResult({ computable: false, reason: 'no ticker', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP });
-  const series = (_loadPrices()[ticker]) || [];
+  const series = (H.loadPriceHistory()[ticker]) || [];
   // bug-fix (audit 2026-06-21): robust median-of-last-10-gaps frequency detector (see drawdown-52w).
   // The old trailing-pair test misclassified daily data as weekly after a post-holiday gap (~229 tickers).
   const lookback200d = H.seriesLookback(series, 200, 40);

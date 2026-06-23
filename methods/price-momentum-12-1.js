@@ -21,8 +21,10 @@
  * Data source priority:
  *   1. stock.timeseries.pricesHistory (per-stock daily-close series)
  *   2. stock.external.priceHistory12m (per-stock annotated 12m series)
- *   3. Module-level load of ../prices/history.json (project-wide cache;
- *      same loader pattern as above-200d-ma / volatility-annualized)
+ *   3. Module-level load of ../prices/history.json via the shared
+ *      H.loadPriceHistory() loader (audit SCORE-HIGH-1: single ~70MB parse
+ *      shared with above-200d-ma / volatility-annualized / drawdown-52w /
+ *      high-proximity-52w, instead of 5 independent module-level caches)
  *   4. Degraded fallback: positioning within window's [min,max] range
  *      when we have only short history (>= ~4 months).
  *
@@ -56,15 +58,12 @@
  *
  * NOT in SCORE_WEIGHTS -> DIAGNOSTIC-only -> fixture-hash safe by construction.
  */
-const fs = require('fs');
-const path = require('path');
 const H = require('./_helpers.js');
 
 const ID = 'price-momentum-12-1';
 const LABEL = 'Price Momentum (12-1)';
 const THRESHOLD = 0.10;
 const THRESHOLD_OP = 'gte';
-const PRICES_HISTORY = path.join(__dirname, '..', 'prices', 'history.json');
 
 // Frequency-aware lookback constants. Daily defaults; weekly halved/scaled.
 const LOOKBACK_FULL_DAILY = 252;   // ~12 trading months
@@ -75,18 +74,11 @@ const SKIP_RECENT_WEEKLY   = 4;
 const MIN_HISTORY_WEEKLY   = 17;
 const DEGRADED_RANGE_PASS  = 0.6;
 
-let _historyCache = null;
-function _loadHistory() {
-  if (_historyCache !== null) return _historyCache;
-  try {
-    if (!fs.existsSync(PRICES_HISTORY)) { _historyCache = false; return _historyCache; }
-    _historyCache = JSON.parse(fs.readFileSync(PRICES_HISTORY, 'utf8'));
-    if (!_historyCache || typeof _historyCache !== 'object') _historyCache = false;
-  } catch (e) {
-    _historyCache = false;
-  }
-  return _historyCache;
-}
+// audit SCORE-HIGH-1: project-wide price cache now comes from the shared
+// H.loadPriceHistory() (single ~70MB parse across all five DIAGNOSTIC price
+// methods). It fails soft to {} (not the old `false`); the Priority-3 consumer
+// below guards with `cache && typeof cache === 'object'`, and an empty object
+// yields zero ticker matches → identical {series:[],source:null} result.
 
 function _candidateTickers(stock) {
   const out = [];
@@ -141,8 +133,8 @@ function _getSeries(stock) {
     const s = _normalizeSeries(stock.external.priceHistory12m);
     if (s.length > 0) return { series: s, source: 'external.priceHistory12m' };
   }
-  // Priority 3: project-wide cache by ticker
-  const cache = _loadHistory();
+  // Priority 3: project-wide cache by ticker (audit SCORE-HIGH-1: shared loader)
+  const cache = H.loadPriceHistory();
   if (cache && typeof cache === 'object') {
     for (const t of _candidateTickers(stock)) {
       if (Array.isArray(cache[t])) {
@@ -287,5 +279,9 @@ module.exports = {
   description: '12-month price return skipping last month >= 10% (Jegadeesh-Titman 1993, Asness/Moskowitz/Pedersen 2013); degrades to within-window position when <252d history',
   threshold: THRESHOLD, thresholdOp: THRESHOLD_OP, unit: 'ratio',
   evaluate,
-  _resetCacheForTests: function () { _historyCache = null; }
+  // audit SCORE-HIGH-1: the project-wide price cache is now shared in _helpers.js,
+  // so the reset seam delegates there (the tag28 momentum tests inject via
+  // stock.timeseries.pricesHistory and never touch the shared cache, but keep the
+  // seam intact for any caller that does).
+  _resetCacheForTests: function () { H._resetPriceHistoryForTests(); }
 };
