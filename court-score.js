@@ -1404,17 +1404,20 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
       M = mg * mGpa * mSc;
     } else if (F.materials) {
-      // materials membership: same gpa(quality)×growth×scale logistic as industrials/staples/consdisc (gpa
-      // stands in for the gm pillar — materials has no gm axis; gm membership center is the cohort gpa.floor).
-      // Spin-off-guarded/NOT_READY growth (a price-windfall rebound off a deflated base) or pre-revenue gpa land
-      // low. $1B+ marketCap is the classifier gate. marginStability is NOT a membership input (a scored axis only).
-      const gGate = m._mtGrowth != null ? m._mtGrowth : -1;             // null growth (spinoff/NOT_READY) → low
+      // materials membership: GP/assets(quality) × scale logistic. GROWTH IS NOT A MEMBERSHIP INPUT
+      // (QUALITY-ONLY — mirrors the energy_quality remediation: a commodity-cyclical's revenue growth is
+      // commodity-β, never a quality signal; gating the headline on growth is PRO-CYCLICAL and inverts the
+      // bucket's own quality-only absKaliber, dropping high-absKaliber through-cycle compounders off the
+      // headline while admitting peak-cycle names). The gpa pillar (gm membership center = cohort gpa.floor)
+      // stands in as the quality gate. $1B+ marketCap is the classifier gate. marginStability is NOT a
+      // membership input (a scored axis only).
+      // audit/fix (re-court materials headline-inversion 2026-06-23): removed the growth factor (mg) from M —
+      // membership is now QUALITY-ONLY (gpa×scale), exactly as energy_quality was already remediated.
       const gpaGate = m._mtGpa != null ? m._mtGpa : -1;                 // null gpa → low
       const scaleM = (m.marketCap != null && isFinite(m.marketCap)) ? m.marketCap / 1e6 : (m.scaleRevM || 1); // $1B+ marketCap
-      const mg = logistic(gGate, F.membership.g.c, F.membership.g.s);
       const mGpa = logistic(gpaGate, F.membership.gm.c, F.membership.gm.s);
       const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
-      M = mg * mGpa * mSc;
+      M = mGpa * mSc;
     } else if (F.energy) {
       // energy membership: ROCE(quality) × FCF-positivity × scale logistic. GROWTH IS NOT A MEMBERSHIP INPUT
       // (QUALITY-ONLY — a commodity-cyclical's revenue growth is commodity-β, never a quality signal). The
@@ -1663,16 +1666,21 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.absUsedAxes = ak.usedAxes;          // audit: which axes survived coverage-renorm
       m.absDroppedAxes = ak.droppedAxes;    // audit: NOT_READY/ISSUANCE/SPINOFF drops
       const rawScore = Math.round(Math.max(0, blendScore(ak.absK, core, 0.6)) * 10) / 10; // pDil=0 (issuance is a SCORED axis)
-      // SI-1 shortlist-cut (Spec §6): growthInput >= growth.floor (0.00) AND gpa >= gpa.floor (cohort) AND
-      // marginStability >= marginStability.floor (0.0, always passes when present — the pricing-power signal is
-      // CONTINUOUS, never a hard eligibility gate, per the Court ruling §0). A spin-off-guarded/NOT_READY growth
-      // or missing gpa/marginStability fails the floor (not the gate crashing) → belowAbsoluteFloor, listed but
-      // off the shortlist. NOT a score-kill (REL/score path runs).
+      // SI-1 shortlist-cut: gpa >= gpa.floor (cohort) AND marginStability >= marginStability.floor (0.0, always
+      // passes when present — the pricing-power signal is CONTINUOUS, never a hard eligibility gate, per the
+      // Court ruling §0). A missing gpa/marginStability fails the floor (not the gate crashing) →
+      // belowAbsoluteFloor, listed but off the shortlist. NOT a score-kill (REL/score path runs).
+      // audit/fix (re-court materials headline-inversion 2026-06-23): removed the growthOk term from the
+      // absolute-floor headline gate — QUALITY-ONLY (gpa×marginStability), exactly as energy_quality's floor is
+      // roce/fcfMargin/gpa with NO growth term. The growth term was the SAME pro-cyclical inversion as the
+      // membership growth factor: it knocked high-absKaliber through-cycle compounders (CF NOT_READY:growth,
+      // BCC/UFPI/SMG growth-below-floor) off the headline while admitting lower-absKaliber peak-cycle names whose
+      // recent growth happened to clear the floor. Growth remains a SCORED axis (w .18); it just no longer gates
+      // the headline.
       const norm = NORMS[cohortNorm];
-      const gateGrowthOk = (m._mtGrowth != null) && (m._mtGrowth >= norm.growth.floor);
       const gateGpaOk = (m._mtGpa != null) && (m._mtGpa >= norm.gpa.floor);
       const gateMsOk = (m._mtMarginStability != null) && (m._mtMarginStability >= norm.marginStability.floor);
-      m.belowAbsoluteFloor = !(gateGrowthOk && gateGpaOk && gateMsOk);
+      m.belowAbsoluteFloor = !(gateGpaOk && gateMsOk);
       // audit/fix (re-court materials_quality DENIAL — Spec §1/§5 pre-revenue SI-4 hard-exclude): a materials
       // name with NO real revenue (EMAT annualRev=[], a $4.3B revenue-less shell; LWLG $236k; the revLatest=0
       // shells CNL/NG/PPTA/UAN/NEU) is a pre-revenue exploration/shell name → score=null + excluded[] with reason

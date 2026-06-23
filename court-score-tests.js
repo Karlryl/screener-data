@@ -1835,6 +1835,33 @@ test('materials §6 MARQUEE: all 15 marquees classified+scored across the two co
   assertMaterialsMarquee(doc); // throws on collapse / foreign-control leak
 });
 
+test('materials HEADLINE-SURVIVAL (re-court headline-inversion fix 2026-06-23): high-absKaliber quality leaders survive ONTO headlineShortlist, not just classified', () => {
+  // The re-court found the materials headline gate (membership growth factor + absolute-floor growthOk term) was
+  // PRO-CYCLICAL: it dropped high-absKaliber through-cycle QUALITY compounders off the headline because their recent
+  // growth was negative/low, while admitting peak-cycle names whose growth happened to clear the floor. This bucket
+  // is QUALITY-ONLY — the headline gate must NOT use growth (mirrors the energy_quality remediation). This assert is
+  // a HEADLINE-SURVIVAL guard (not merely classification): the named marquee quality leaders must appear on the
+  // headlineShortlist after scoring, with finite scores. Regression-locks the fix against re-introducing a growth gate.
+  const byTicker = t => [...MP, ...MC].find(m => m.ticker === t);
+  // CF Industries = the #1 marquee quality leader (absK ~0.78, the highest-absKaliber commodity name); its growth
+  // is NOT_READY (coverage-renorm dropped), so the OLD growth gate buried it — it MUST now headline.
+  // USLM (lime, pricingpower) + the pricingpower quality cohort (NGVT/CBT) were membership-Out under the old gate.
+  const survivors = ['CF', 'BCC', 'UFPI', 'NGVT', 'CBT', 'USLM'];
+  for (const t of survivors) {
+    const m = byTicker(t);
+    assert(m, `${t} (marquee quality leader) nicht in materials gefunden`);
+    assert(m.membershipClass !== 'Out', `${t} darf nach dem Quality-only-Fix NICHT mehr membership-Out sein, ist ${m.membershipClass}`);
+    assert(m.belowAbsoluteFloor === false, `${t} darf nach dem Quality-only-Fix NICHT mehr belowAbsoluteFloor sein (Growth-Gate entfernt), ist ${m.belowAbsoluteFloor}`);
+    assert(m.headlineShortlist === true, `${t} (absK ${m.absKaliber}) MUSS auf der materials headlineShortlist erscheinen (Headline-Survival), ist ${m.headlineShortlist}`);
+    assert(Number.isFinite(m.score) && m.score > 0, `${t} sollte einen finiten Score >0 haben, ist ${m.score}`);
+  }
+  // QUALITY-ORDER guard: the #1 commodity headline name by absKaliber must BE CF (the marquee leader), i.e. no
+  // lower-absKaliber peak-cycle name outranks it on the headline — proves the pro-cyclical inversion is gone.
+  const cmdHeadline = MC.filter(m => m.headlineShortlist && m.absKaliber != null).sort((a, b) => b.absKaliber - a.absKaliber);
+  assert(cmdHeadline.length > 0 && cmdHeadline[0].ticker === 'CF',
+    `commodity headline top-absKaliber name sollte CF sein (Quality-only), ist ${cmdHeadline[0] && cmdHeadline[0].ticker}`);
+});
+
 test('materials SI-5: classifiedCount === scoredCount + excludedCount (BEIDE Kohorten, fail-loud)', () => {
   for (const [name, R] of [['pricingpower', mtP], ['commodity', mtC]]) {
     assert(R.classifiedCount != null && R.scoredCount != null && R.excludedCount != null, `${name} SI-5 counts fehlen`);

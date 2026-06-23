@@ -12,7 +12,7 @@
     "materials_pricingpower": {
       "normTableId": "materials_pricingpower-norms-2026-06-22",
       "classifiedCount": 40,
-      "scoredCount": 19,
+      "scoredCount": 38,
       "universeSize": 40,
       "anchors": {
         "gpa": {
@@ -46,7 +46,7 @@
     "materials_commodity": {
       "normTableId": "materials_commodity-norms-2026-06-22",
       "classifiedCount": 55,
-      "scoredCount": 24,
+      "scoredCount": 49,
       "universeSize": 55,
       "anchors": {
         "gpa": {
@@ -79,8 +79,8 @@
     }
   },
   "classifiedCount": 95,
-  "scoredCount": 43,
-  "headlineShortlistSize": 33,
+  "scoredCount": 87,
+  "headlineShortlistSize": 79,
   "scoreScope": "intra-bucket",
   "crossBucketComparableField": "absKaliber",
   "forwardFitness": {
@@ -99,7 +99,7 @@
     },
     "survivorshipKey": "evaluatedTickers",
     "antiGaming": "gateOpen-Ranking am Ship-Tag (vor jeder weiteren Bucket-Änderung) eingefroren. Forward-Fenster = intrinsischer Holdout; Eval erst NACH Kalender-Gate. Erzeugende Agenten dürfen NIE auf dem Eval-Slice tunen. Eine neue Bucket-Version gilt nur als „besser\", wenn sie diese Forward-Metrik STRIKT schlägt.",
-    "honestLimitation": "N=33 gateOpen-Namen (cohort-split macht n pro Kohorte noch dünner) — Rank-IC/Kohorten-Spread haben Richtungs-, nicht starke statistische Aussagekraft. Primärer Wert: Pre-Registration-Disziplin + Beitrag zur gepoolten Cross-Formel-Fitness."
+    "honestLimitation": "N=79 gateOpen-Namen (cohort-split macht n pro Kohorte noch dünner) — Rank-IC/Kohorten-Spread haben Richtungs-, nicht starke statistische Aussagekraft. Primärer Wert: Pre-Registration-Disziplin + Beitrag zur gepoolten Cross-Formel-Fitness."
   },
   "priceAnchorStatus": "CAPTURED — t0-Close je Ticker eingefroren. Forward-Return = close[t0+h]/close[t0]-1.",
   "benchmarkAnchorNote": "Broad-market SPY/QQQ/IWM in prices/history.json; Sektor-ETF (XLB) i.d.R. NICHT im Screener-Universe-History → null bis ein künftiger Pull ihn aufnimmt (kein Holdout-Defekt).",
@@ -109,30 +109,57 @@
       "ticker": "WDFC",
       "cohort": "materials_pricingpower",
       "score": 80.3,
-      "membershipClass": "Borderline",
+      "membershipClass": "In",
       "absKaliber": 0.806,
       "belowAbsoluteFloor": false
     },
     {
       "order": 2,
-      "ticker": "SSD",
+      "ticker": "CF",
       "cohort": "materials_commodity",
-      "score": 73.7,
-      "membershipClass": "Borderline",
-      "absKaliber": 0.741,
+      "score": 75.6,
+      "membershipClass": "In",
+      "absKaliber": 0.78,
       "belowAbsoluteFloor": false
     },
     {
       "order": 3,
-      "ticker": "SHW",
-      "cohort": "materials_pricingpower",
-      "score": 72.9,
-      "membershipClass": "Borderline",
-      "absKaliber": 0.737,
+      "ticker": "RS",
+      "cohort": "materials_commodity",
+      "score": 75.5,
+      "membershipClass": "In",
+      "absKaliber": 0.747,
       "belowAbsoluteFloor": false
     },
     {
       "order": 4,
+      "ticker": "SSD",
+      "cohort": "materials_commodity",
+      "score": 73.7,
+      "membershipClass": "In",
+      "absKaliber": 0.741,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 5,
+      "ticker": "SHW",
+      "cohort": "materials_pricingpower",
+      "score": 72.9,
+      "membershipClass": "In",
+      "absKaliber": 0.737,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 6,
+      "ticker": "BCC",
+      "cohort": "materials_commodity",
+      "score": 72,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.725,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 7,
       "ticker": "NWPX",
       "cohort": "materials_commodity",
       "score": 70.7,
@@ -141,7 +168,7 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 5,
+      "order": 8,
       "ticker": "TGLS",
       "cohort": "materials_pricingpower",
       "score": 70.3,
@@ -150,16 +177,34 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 6,
+      "order": 9,
+      "ticker": "UFPI",
+      "cohort": "materials_commodity",
+      "score": 69.5,
+      "membershipClass": "In",
+      "absKaliber": 0.692,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 10,
+      "ticker": "SMG",
+      "cohort": "materials_commodity",
+      "score": 69,
+      "membershipClass": "In",
+      "absKaliber": 0.686,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 11,
       "ticker": "CTVA",
       "cohort": "materials_commodity",
       "score": 68.7,
-      "membershipClass": "Borderline",
+      "membershipClass": "In",
       "absKaliber": 0.652,
       "belowAbsoluteFloor": false
     },
     {
-      "order": 7,
+      "order": 12,
       "ticker": "AU",
       "cohort": "materials_commodity",
       "score": 67.9,
@@ -168,7 +213,7 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 8,
+      "order": 13,
       "ticker": "OR",
       "cohort": "materials_commodity",
       "score": 67,
@@ -177,34 +222,70 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 9,
+      "order": 14,
+      "ticker": "NGVT",
+      "cohort": "materials_pricingpower",
+      "score": 66.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.694,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 15,
+      "ticker": "CBT",
+      "cohort": "materials_pricingpower",
+      "score": 66.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.675,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 16,
       "ticker": "RPM",
       "cohort": "materials_pricingpower",
       "score": 66.3,
-      "membershipClass": "Borderline",
+      "membershipClass": "In",
       "absKaliber": 0.68,
       "belowAbsoluteFloor": false
     },
     {
-      "order": 10,
+      "order": 17,
+      "ticker": "SLVM",
+      "cohort": "materials_commodity",
+      "score": 65.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.653,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 18,
+      "ticker": "IOSP",
+      "cohort": "materials_pricingpower",
+      "score": 64.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.646,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 19,
       "ticker": "ECL",
       "cohort": "materials_pricingpower",
       "score": 63.9,
-      "membershipClass": "Borderline",
+      "membershipClass": "In",
       "absKaliber": 0.676,
       "belowAbsoluteFloor": false
     },
     {
-      "order": 11,
+      "order": 20,
       "ticker": "CRH",
       "cohort": "materials_pricingpower",
       "score": 63.8,
-      "membershipClass": "Borderline",
+      "membershipClass": "In",
       "absKaliber": 0.628,
       "belowAbsoluteFloor": false
     },
     {
-      "order": 12,
+      "order": 21,
       "ticker": "NEM",
       "cohort": "materials_commodity",
       "score": 63.7,
@@ -213,7 +294,7 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 13,
+      "order": 22,
       "ticker": "AUGO",
       "cohort": "materials_commodity",
       "score": 63.2,
@@ -222,7 +303,25 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 14,
+      "order": 23,
+      "ticker": "WS",
+      "cohort": "materials_commodity",
+      "score": 62.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.602,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 24,
+      "ticker": "FUL",
+      "cohort": "materials_pricingpower",
+      "score": 62.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.62,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 25,
       "ticker": "BCPC",
       "cohort": "materials_pricingpower",
       "score": 62,
@@ -231,16 +330,16 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 15,
+      "order": 26,
       "ticker": "HWKN",
       "cohort": "materials_pricingpower",
       "score": 61.4,
-      "membershipClass": "Borderline",
+      "membershipClass": "In",
       "absKaliber": 0.633,
       "belowAbsoluteFloor": false
     },
     {
-      "order": 16,
+      "order": 27,
       "ticker": "CMP",
       "cohort": "materials_commodity",
       "score": 61.3,
@@ -249,7 +348,7 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 17,
+      "order": 28,
       "ticker": "MTRN",
       "cohort": "materials_commodity",
       "score": 61.2,
@@ -258,16 +357,16 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 18,
+      "order": 29,
       "ticker": "FCX",
       "cohort": "materials_commodity",
       "score": 60.2,
-      "membershipClass": "Borderline",
+      "membershipClass": "In",
       "absKaliber": 0.573,
       "belowAbsoluteFloor": false
     },
     {
-      "order": 19,
+      "order": 30,
       "ticker": "SXT",
       "cohort": "materials_pricingpower",
       "score": 59.7,
@@ -276,7 +375,52 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 20,
+      "order": 31,
+      "ticker": "AXTA",
+      "cohort": "materials_pricingpower",
+      "score": 58.4,
+      "membershipClass": "In",
+      "absKaliber": 0.616,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 32,
+      "ticker": "FMC",
+      "cohort": "materials_commodity",
+      "score": 58.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.56,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 33,
+      "ticker": "ESI",
+      "cohort": "materials_pricingpower",
+      "score": 57.8,
+      "membershipClass": "In",
+      "absKaliber": 0.593,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 34,
+      "ticker": "KWR",
+      "cohort": "materials_pricingpower",
+      "score": 55.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.583,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 35,
+      "ticker": "PPG",
+      "cohort": "materials_pricingpower",
+      "score": 55.6,
+      "membershipClass": "In",
+      "absKaliber": 0.621,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 36,
       "ticker": "EXP",
       "cohort": "materials_pricingpower",
       "score": 55.2,
@@ -285,7 +429,16 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 21,
+      "order": 37,
+      "ticker": "CE",
+      "cohort": "materials_commodity",
+      "score": 54.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.523,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 38,
       "ticker": "ODC",
       "cohort": "materials_pricingpower",
       "score": 54.3,
@@ -294,7 +447,7 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 22,
+      "order": 39,
       "ticker": "KALU",
       "cohort": "materials_commodity",
       "score": 53,
@@ -303,7 +456,7 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 23,
+      "order": 40,
       "ticker": "HL",
       "cohort": "materials_commodity",
       "score": 51.6,
@@ -312,16 +465,43 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 24,
+      "order": 41,
       "ticker": "LIN",
       "cohort": "materials_pricingpower",
       "score": 51.3,
-      "membershipClass": "Borderline",
+      "membershipClass": "In",
       "absKaliber": 0.519,
       "belowAbsoluteFloor": false
     },
     {
-      "order": 25,
+      "order": 42,
+      "ticker": "EMN",
+      "cohort": "materials_pricingpower",
+      "score": 51,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.526,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 43,
+      "ticker": "MTX",
+      "cohort": "materials_pricingpower",
+      "score": 50.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.494,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 44,
+      "ticker": "ECVT",
+      "cohort": "materials_pricingpower",
+      "score": 50.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.511,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 45,
       "ticker": "NGD",
       "cohort": "materials_commodity",
       "score": 49.6,
@@ -330,7 +510,7 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 26,
+      "order": 46,
       "ticker": "VMC",
       "cohort": "materials_pricingpower",
       "score": 49.3,
@@ -339,7 +519,25 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 27,
+      "order": 47,
+      "ticker": "MEOH",
+      "cohort": "materials_commodity",
+      "score": 48.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.468,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 48,
+      "ticker": "STLD",
+      "cohort": "materials_commodity",
+      "score": 48.6,
+      "membershipClass": "In",
+      "absKaliber": 0.458,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 49,
       "ticker": "IAUX",
       "cohort": "materials_commodity",
       "score": 47.9,
@@ -348,16 +546,61 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 28,
+      "order": 50,
+      "ticker": "GPRE",
+      "cohort": "materials_commodity",
+      "score": 47.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.453,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 51,
+      "ticker": "USLM",
+      "cohort": "materials_pricingpower",
+      "score": 46.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.554,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 52,
+      "ticker": "AVNT",
+      "cohort": "materials_pricingpower",
+      "score": 46.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.525,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 53,
+      "ticker": "IFF",
+      "cohort": "materials_pricingpower",
+      "score": 46.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.49,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 54,
       "ticker": "SSRM",
       "cohort": "materials_commodity",
       "score": 46.2,
-      "membershipClass": "Borderline",
+      "membershipClass": "In",
       "absKaliber": 0.465,
       "belowAbsoluteFloor": false
     },
     {
-      "order": 29,
+      "order": 55,
+      "ticker": "NUE",
+      "cohort": "materials_commodity",
+      "score": 46.1,
+      "membershipClass": "In",
+      "absKaliber": 0.436,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 56,
       "ticker": "KNF",
       "cohort": "materials_pricingpower",
       "score": 45.7,
@@ -366,7 +609,61 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 30,
+      "order": 57,
+      "ticker": "CENX",
+      "cohort": "materials_commodity",
+      "score": 44.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.437,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 58,
+      "ticker": "APD",
+      "cohort": "materials_pricingpower",
+      "score": 44.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.455,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 59,
+      "ticker": "SGML",
+      "cohort": "materials_commodity",
+      "score": 43.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.429,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 60,
+      "ticker": "REX",
+      "cohort": "materials_commodity",
+      "score": 43.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.435,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 61,
+      "ticker": "ASH",
+      "cohort": "materials_pricingpower",
+      "score": 43.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.465,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 62,
+      "ticker": "MLM",
+      "cohort": "materials_pricingpower",
+      "score": 42.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.421,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 63,
       "ticker": "RGLD",
       "cohort": "materials_commodity",
       "score": 42.3,
@@ -375,7 +672,43 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 31,
+      "order": 64,
+      "ticker": "MOS",
+      "cohort": "materials_commodity",
+      "score": 41.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.432,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 65,
+      "ticker": "OLN",
+      "cohort": "materials_commodity",
+      "score": 41.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.418,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 66,
+      "ticker": "HUN",
+      "cohort": "materials_commodity",
+      "score": 40.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.39,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 67,
+      "ticker": "DD",
+      "cohort": "materials_pricingpower",
+      "score": 38.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.437,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 68,
       "ticker": "CDE",
       "cohort": "materials_commodity",
       "score": 37.6,
@@ -384,7 +717,52 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 32,
+      "order": 69,
+      "ticker": "DOW",
+      "cohort": "materials_commodity",
+      "score": 35.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.362,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 70,
+      "ticker": "HCC",
+      "cohort": "materials_commodity",
+      "score": 34.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.346,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 71,
+      "ticker": "SCL",
+      "cohort": "materials_pricingpower",
+      "score": 33.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.359,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 72,
+      "ticker": "AMR",
+      "cohort": "materials_commodity",
+      "score": 31.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.314,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 73,
+      "ticker": "CC",
+      "cohort": "materials_pricingpower",
+      "score": 31.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.323,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 74,
       "ticker": "MUX",
       "cohort": "materials_commodity",
       "score": 29.7,
@@ -393,54 +771,144 @@
       "belowAbsoluteFloor": false
     },
     {
-      "order": 33,
+      "order": 75,
+      "ticker": "AA",
+      "cohort": "materials_commodity",
+      "score": 29.3,
+      "membershipClass": "In",
+      "absKaliber": 0.264,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 76,
       "ticker": "PRM",
       "cohort": "materials_pricingpower",
       "score": 28.9,
       "membershipClass": "Borderline",
       "absKaliber": 0.3,
       "belowAbsoluteFloor": false
+    },
+    {
+      "order": 77,
+      "ticker": "CLMT",
+      "cohort": "materials_pricingpower",
+      "score": 26.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.274,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 78,
+      "ticker": "METC",
+      "cohort": "materials_commodity",
+      "score": 11.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.073,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 79,
+      "ticker": "UAMY",
+      "cohort": "materials_commodity",
+      "score": 8.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.069,
+      "belowAbsoluteFloor": false
     }
   ],
   "evaluatedTickers": [
     "WDFC",
+    "CF",
+    "RS",
     "SSD",
     "SHW",
+    "BCC",
     "NWPX",
     "TGLS",
+    "UFPI",
+    "SMG",
     "CTVA",
     "AU",
     "OR",
+    "NGVT",
+    "CBT",
     "RPM",
+    "SLVM",
+    "IOSP",
     "ECL",
     "CRH",
     "NEM",
     "AUGO",
+    "WS",
+    "FUL",
     "BCPC",
     "HWKN",
     "CMP",
     "MTRN",
     "FCX",
     "SXT",
+    "AXTA",
+    "FMC",
+    "ESI",
+    "KWR",
+    "PPG",
     "EXP",
+    "CE",
     "ODC",
     "KALU",
     "HL",
     "LIN",
+    "EMN",
+    "MTX",
+    "ECVT",
     "NGD",
     "VMC",
+    "MEOH",
+    "STLD",
     "IAUX",
+    "GPRE",
+    "USLM",
+    "AVNT",
+    "IFF",
     "SSRM",
+    "NUE",
     "KNF",
+    "CENX",
+    "APD",
+    "SGML",
+    "REX",
+    "ASH",
+    "MLM",
     "RGLD",
+    "MOS",
+    "OLN",
+    "HUN",
+    "DD",
     "CDE",
+    "DOW",
+    "HCC",
+    "SCL",
+    "AMR",
+    "CC",
     "MUX",
-    "PRM"
+    "AA",
+    "PRM",
+    "CLMT",
+    "METC",
+    "UAMY"
   ],
   "priceAnchors": {
     "WDFC": {
       "date": "2026-06-12",
       "close": 223.00999450683594
+    },
+    "CF": {
+      "date": "2026-06-12",
+      "close": 109.4800033569336
+    },
+    "RS": {
+      "date": "2026-06-15",
+      "close": 405.9200134277344
     },
     "SSD": {
       "date": "2026-06-12",
@@ -450,6 +918,10 @@
       "date": "2026-06-12",
       "close": 317.29998779296875
     },
+    "BCC": {
+      "date": "2026-06-15",
+      "close": 71.58999633789062
+    },
     "NWPX": {
       "date": "2026-06-12",
       "close": 128.85000610351562
@@ -457,6 +929,14 @@
     "TGLS": {
       "date": "2026-06-15",
       "close": 43.880001068115234
+    },
+    "UFPI": {
+      "date": "2026-06-12",
+      "close": 84.55999755859375
+    },
+    "SMG": {
+      "date": "2026-06-12",
+      "close": 61.66999816894531
     },
     "CTVA": {
       "date": "2026-06-15",
@@ -470,9 +950,25 @@
       "date": "2026-06-15",
       "close": 36.15999984741211
     },
+    "NGVT": {
+      "date": "2026-06-15",
+      "close": 72.43000030517578
+    },
+    "CBT": {
+      "date": "2026-06-12",
+      "close": 87.6500015258789
+    },
     "RPM": {
       "date": "2026-06-12",
       "close": 107.05000305175781
+    },
+    "SLVM": {
+      "date": "2026-06-15",
+      "close": 41.02000045776367
+    },
+    "IOSP": {
+      "date": "2026-06-15",
+      "close": 85.11000061035156
     },
     "ECL": {
       "date": "2026-06-12",
@@ -489,6 +985,14 @@
     "AUGO": {
       "date": "2026-06-12",
       "close": 60.88999938964844
+    },
+    "WS": {
+      "date": "2026-06-12",
+      "close": 43.45000076293945
+    },
+    "FUL": {
+      "date": "2026-05-17",
+      "close": 58.060001373291016
     },
     "BCPC": {
       "date": "2026-06-12",
@@ -514,9 +1018,33 @@
       "date": "2026-06-12",
       "close": 124.11000061035156
     },
+    "AXTA": {
+      "date": "2026-05-17",
+      "close": 26.809999465942383
+    },
+    "FMC": {
+      "date": "2026-06-12",
+      "close": 11.850000381469727
+    },
+    "ESI": {
+      "date": "2026-06-15",
+      "close": 45.08000183105469
+    },
+    "KWR": {
+      "date": "2026-06-12",
+      "close": 144.4600067138672
+    },
+    "PPG": {
+      "date": "2026-06-12",
+      "close": 119.33999633789062
+    },
     "EXP": {
       "date": "2026-06-15",
       "close": 217.9600067138672
+    },
+    "CE": {
+      "date": "2026-06-12",
+      "close": 53.47999954223633
     },
     "ODC": {
       "date": "2026-06-12",
@@ -534,6 +1062,18 @@
       "date": "2026-06-12",
       "close": 523.5700073242188
     },
+    "EMN": {
+      "date": "2026-06-15",
+      "close": 75.27999877929688
+    },
+    "MTX": {
+      "date": "2026-06-12",
+      "close": 78.12000274658203
+    },
+    "ECVT": {
+      "date": "2026-06-15",
+      "close": 12.970000267028809
+    },
     "NGD": {
       "date": "2026-05-17",
       "close": 9.079999923706055
@@ -542,33 +1082,137 @@
       "date": "2026-06-12",
       "close": 286.4700012207031
     },
+    "MEOH": {
+      "date": "2026-06-12",
+      "close": 59.38999938964844
+    },
+    "STLD": {
+      "date": "2026-06-12",
+      "close": 282.760009765625
+    },
     "IAUX": {
       "date": "2026-06-15",
       "close": 1.559999942779541
+    },
+    "GPRE": {
+      "date": "2026-06-12",
+      "close": 15
+    },
+    "USLM": {
+      "date": "2026-06-12",
+      "close": 108.38999938964844
+    },
+    "AVNT": {
+      "date": "2026-06-12",
+      "close": 37.7599983215332
+    },
+    "IFF": {
+      "date": "2026-06-12",
+      "close": 78.2699966430664
     },
     "SSRM": {
       "date": "2026-06-12",
       "close": 27.229999542236328
     },
+    "NUE": {
+      "date": "2026-06-12",
+      "close": 266.3500061035156
+    },
     "KNF": {
       "date": "2026-06-15",
       "close": 80.81999969482422
+    },
+    "CENX": {
+      "date": "2026-06-12",
+      "close": 61.189998626708984
+    },
+    "APD": {
+      "date": "2026-06-12",
+      "close": 281.6199951171875
+    },
+    "SGML": {
+      "date": "2026-06-15",
+      "close": 15.399999618530273
+    },
+    "REX": {
+      "date": "2026-06-12",
+      "close": 43.939998626708984
+    },
+    "ASH": {
+      "date": "2026-06-12",
+      "close": 64.9800033569336
+    },
+    "MLM": {
+      "date": "2026-06-15",
+      "close": 588.8900146484375
     },
     "RGLD": {
       "date": "2026-06-12",
       "close": 207.57000732421875
     },
+    "MOS": {
+      "date": "2026-06-12",
+      "close": 22.690000534057617
+    },
+    "OLN": {
+      "date": "2026-06-12",
+      "close": 25.1299991607666
+    },
+    "HUN": {
+      "date": "2026-05-17",
+      "close": 13.699999809265137
+    },
+    "DD": {
+      "date": "2026-06-12",
+      "close": 48.2599983215332
+    },
     "CDE": {
       "date": "2026-06-12",
       "close": 17.200000762939453
+    },
+    "DOW": {
+      "date": "2026-06-15",
+      "close": 33.22999954223633
+    },
+    "HCC": {
+      "date": "2026-06-15",
+      "close": 95.88999938964844
+    },
+    "SCL": {
+      "date": "2026-05-17",
+      "close": 49.189998626708984
+    },
+    "AMR": {
+      "date": "2026-06-15",
+      "close": 190.2899932861328
+    },
+    "CC": {
+      "date": "2026-06-15",
+      "close": 22.43000030517578
     },
     "MUX": {
       "date": "2026-06-12",
       "close": 18.90999984741211
     },
+    "AA": {
+      "date": "2026-06-15",
+      "close": 64.16000366210938
+    },
     "PRM": {
       "date": "2026-05-17",
       "close": 33.22999954223633
+    },
+    "CLMT": {
+      "date": "2026-06-12",
+      "close": 34.41999816894531
+    },
+    "METC": {
+      "date": "2026-05-17",
+      "close": 14.510000228881836
+    },
+    "UAMY": {
+      "date": "2026-06-12",
+      "close": 7.039999961853027
     },
     "SPY": {
       "date": "2026-06-12",
