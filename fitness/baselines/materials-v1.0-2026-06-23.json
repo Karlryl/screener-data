@@ -1,0 +1,587 @@
+{
+  "baselineId": "materials-v1.0-2026-06-23",
+  "bucket": "materials_quality",
+  "frozenAt": "2026-06-23",
+  "formula": "materials_quality CORE — absolute-anchor (per-cohort frozen NORMS, see cohorts.*.normTableId) × per-cohort REL z/MAD (n>=15 else THIN_REL ABS-only beta=1), blendScore beta=0.6, linear weighted-q with sum-preserving coverage-renorm (missing axis DROPPED+renormed, never 0-imputed). SI-4 out-of-class → score=null+excluded[]; SI-5 fail-loud (classifiedCount===scoredCount+excludedCount); marquee + generative anti-leak asserts; PRE-REVENUE/SHELL SI-4 gate. Shipped CORE + independent Re-Court PASS on loop/formel-haertung. Konstanten [TODO-CAL].",
+  "source": "outputs/court-results.json :: materials_pricingpower + materials_commodity",
+  "cohortsFrozen": [
+    "materials_pricingpower",
+    "materials_commodity"
+  ],
+  "cohorts": {
+    "materials_pricingpower": {
+      "normTableId": "materials_pricingpower-norms-2026-06-22",
+      "classifiedCount": 40,
+      "scoredCount": 19,
+      "universeSize": 40,
+      "anchors": {
+        "gpa": {
+          "median": 0.19985,
+          "mad": 0.0751,
+          "n": 40
+        },
+        "marginStability": {
+          "median": 0.8717999999999999,
+          "mad": 0.04615000000000008,
+          "n": 40
+        },
+        "growth": {
+          "median": -0.02665,
+          "mad": 0.04335,
+          "n": 40
+        },
+        "assetGrowthPenalty": {
+          "median": -0.05345,
+          "mad": 0.069,
+          "n": 40
+        },
+        "netIssuance": {
+          "median": 0.00275,
+          "mad": 0.00665,
+          "n": 24
+        }
+      },
+      "comparabilityNote": "materials_quality materials_pricingpower (pricing-power-vs-commodity cohort). absKaliber in [0,1] = cross-bucket-comparable absolute scale (5-axis weighted-q over the cohort NORMS 'materials_pricingpower-norms-2026-06-22': gpa .09/.34, marginStability .00/1.00 (identity-clip inverse-CV pricing-power proxy), growth .00/.18, assetGrowthPenalty -.40/.00, netIssuance -.10/.03; weights {gpa .30, marginStability .20, growth .18, assetGrowthPenalty .18, netIssuance .14}; anti-commodity pillar gpa+marginStability+assetGrowthPenalty=.68 ≫ growth .18 — QUALITY-ONLY, a price-windfall spike cannot top-score). COVERAGE-RENORM drops any NOT_READY/null axis (incl. ISSUANCE_NOT_READY on the ~57% of names lacking annualShares, NOT_READY:marginstability on <3 opMargin points, and SPINOFF_REBASE) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6). WALLS always-on: CYCLE_WALL/COSTCURVE_BLIND/INVENTORY_BLIND/BYPRODUCT_BLIND/BACKLOG_FUTURE. The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison."
+    },
+    "materials_commodity": {
+      "normTableId": "materials_commodity-norms-2026-06-22",
+      "classifiedCount": 55,
+      "scoredCount": 24,
+      "universeSize": 55,
+      "anchors": {
+        "gpa": {
+          "median": 0.1248,
+          "mad": 0.0673,
+          "n": 53
+        },
+        "marginStability": {
+          "median": 0.54745,
+          "mad": 0.2479,
+          "n": 50
+        },
+        "growth": {
+          "median": -0.050949999999999995,
+          "mad": 0.09465000000000001,
+          "n": 44
+        },
+        "assetGrowthPenalty": {
+          "median": -0.0704,
+          "mad": 0.1082,
+          "n": 55
+        },
+        "netIssuance": {
+          "median": -0.0555,
+          "mad": 0.07239999999999999,
+          "n": 32
+        }
+      },
+      "comparabilityNote": "materials_quality materials_commodity (pricing-power-vs-commodity cohort). absKaliber in [0,1] = cross-bucket-comparable absolute scale (5-axis weighted-q over the cohort NORMS 'materials_commodity-norms-2026-06-22': gpa .01/.31, marginStability .00/1.00 (identity-clip inverse-CV pricing-power proxy), growth .00/.18, assetGrowthPenalty -.40/.00, netIssuance -.10/.03; weights {gpa .30, marginStability .20, growth .18, assetGrowthPenalty .18, netIssuance .14}; anti-commodity pillar gpa+marginStability+assetGrowthPenalty=.68 ≫ growth .18 — QUALITY-ONLY, a price-windfall spike cannot top-score). COVERAGE-RENORM drops any NOT_READY/null axis (incl. ISSUANCE_NOT_READY on the ~57% of names lacking annualShares, NOT_READY:marginstability on <3 opMargin points, and SPINOFF_REBASE) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6). WALLS always-on: CYCLE_WALL/COSTCURVE_BLIND/INVENTORY_BLIND/BYPRODUCT_BLIND/BACKLOG_FUTURE. The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison."
+    }
+  },
+  "classifiedCount": 95,
+  "scoredCount": 43,
+  "headlineShortlistSize": 33,
+  "scoreScope": "intra-bucket",
+  "crossBucketComparableField": "absKaliber",
+  "forwardFitness": {
+    "calendarGated": true,
+    "metric": [
+      "rank_ic_spearman",
+      "top_n_minus_universe_median_fwd_return"
+    ],
+    "horizonsDays": [
+      28,
+      84
+    ],
+    "windowEnds": {
+      "d28": "~2026-07-21",
+      "d84": "~2026-09-15"
+    },
+    "survivorshipKey": "evaluatedTickers",
+    "antiGaming": "gateOpen-Ranking am Ship-Tag (vor jeder weiteren Bucket-Änderung) eingefroren. Forward-Fenster = intrinsischer Holdout; Eval erst NACH Kalender-Gate. Erzeugende Agenten dürfen NIE auf dem Eval-Slice tunen. Eine neue Bucket-Version gilt nur als „besser\", wenn sie diese Forward-Metrik STRIKT schlägt.",
+    "honestLimitation": "N=33 gateOpen-Namen (cohort-split macht n pro Kohorte noch dünner) — Rank-IC/Kohorten-Spread haben Richtungs-, nicht starke statistische Aussagekraft. Primärer Wert: Pre-Registration-Disziplin + Beitrag zur gepoolten Cross-Formel-Fitness."
+  },
+  "priceAnchorStatus": "CAPTURED — t0-Close je Ticker eingefroren. Forward-Return = close[t0+h]/close[t0]-1.",
+  "benchmarkAnchorNote": "Broad-market SPY/QQQ/IWM in prices/history.json; Sektor-ETF (XLB) i.d.R. NICHT im Screener-Universe-History → null bis ein künftiger Pull ihn aufnimmt (kein Holdout-Defekt).",
+  "ranking": [
+    {
+      "order": 1,
+      "ticker": "WDFC",
+      "cohort": "materials_pricingpower",
+      "score": 80.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.806,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 2,
+      "ticker": "SSD",
+      "cohort": "materials_commodity",
+      "score": 73.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.741,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 3,
+      "ticker": "SHW",
+      "cohort": "materials_pricingpower",
+      "score": 72.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.737,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 4,
+      "ticker": "NWPX",
+      "cohort": "materials_commodity",
+      "score": 70.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.67,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 5,
+      "ticker": "TGLS",
+      "cohort": "materials_pricingpower",
+      "score": 70.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.742,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 6,
+      "ticker": "CTVA",
+      "cohort": "materials_commodity",
+      "score": 68.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.652,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 7,
+      "ticker": "AU",
+      "cohort": "materials_commodity",
+      "score": 67.9,
+      "membershipClass": "In",
+      "absKaliber": 0.707,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 8,
+      "ticker": "OR",
+      "cohort": "materials_commodity",
+      "score": 67,
+      "membershipClass": "In",
+      "absKaliber": 0.69,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 9,
+      "ticker": "RPM",
+      "cohort": "materials_pricingpower",
+      "score": 66.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.68,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 10,
+      "ticker": "ECL",
+      "cohort": "materials_pricingpower",
+      "score": 63.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.676,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 11,
+      "ticker": "CRH",
+      "cohort": "materials_pricingpower",
+      "score": 63.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.628,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 12,
+      "ticker": "NEM",
+      "cohort": "materials_commodity",
+      "score": 63.7,
+      "membershipClass": "In",
+      "absKaliber": 0.633,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 13,
+      "ticker": "AUGO",
+      "cohort": "materials_commodity",
+      "score": 63.2,
+      "membershipClass": "In",
+      "absKaliber": 0.625,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 14,
+      "ticker": "BCPC",
+      "cohort": "materials_pricingpower",
+      "score": 62,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.628,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 15,
+      "ticker": "HWKN",
+      "cohort": "materials_pricingpower",
+      "score": 61.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.633,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 16,
+      "ticker": "CMP",
+      "cohort": "materials_commodity",
+      "score": 61.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.567,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 17,
+      "ticker": "MTRN",
+      "cohort": "materials_commodity",
+      "score": 61.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.575,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 18,
+      "ticker": "FCX",
+      "cohort": "materials_commodity",
+      "score": 60.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.573,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 19,
+      "ticker": "SXT",
+      "cohort": "materials_pricingpower",
+      "score": 59.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.62,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 20,
+      "ticker": "EXP",
+      "cohort": "materials_pricingpower",
+      "score": 55.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.538,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 21,
+      "ticker": "ODC",
+      "cohort": "materials_pricingpower",
+      "score": 54.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.606,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 22,
+      "ticker": "KALU",
+      "cohort": "materials_commodity",
+      "score": 53,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.493,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 23,
+      "ticker": "HL",
+      "cohort": "materials_commodity",
+      "score": 51.6,
+      "membershipClass": "In",
+      "absKaliber": 0.516,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 24,
+      "ticker": "LIN",
+      "cohort": "materials_pricingpower",
+      "score": 51.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.519,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 25,
+      "ticker": "NGD",
+      "cohort": "materials_commodity",
+      "score": 49.6,
+      "membershipClass": "In",
+      "absKaliber": 0.479,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 26,
+      "ticker": "VMC",
+      "cohort": "materials_pricingpower",
+      "score": 49.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.482,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 27,
+      "ticker": "IAUX",
+      "cohort": "materials_commodity",
+      "score": 47.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.493,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 28,
+      "ticker": "SSRM",
+      "cohort": "materials_commodity",
+      "score": 46.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.465,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 29,
+      "ticker": "KNF",
+      "cohort": "materials_pricingpower",
+      "score": 45.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.436,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 30,
+      "ticker": "RGLD",
+      "cohort": "materials_commodity",
+      "score": 42.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.391,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 31,
+      "ticker": "CDE",
+      "cohort": "materials_commodity",
+      "score": 37.6,
+      "membershipClass": "In",
+      "absKaliber": 0.351,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 32,
+      "ticker": "MUX",
+      "cohort": "materials_commodity",
+      "score": 29.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.28,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 33,
+      "ticker": "PRM",
+      "cohort": "materials_pricingpower",
+      "score": 28.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.3,
+      "belowAbsoluteFloor": false
+    }
+  ],
+  "evaluatedTickers": [
+    "WDFC",
+    "SSD",
+    "SHW",
+    "NWPX",
+    "TGLS",
+    "CTVA",
+    "AU",
+    "OR",
+    "RPM",
+    "ECL",
+    "CRH",
+    "NEM",
+    "AUGO",
+    "BCPC",
+    "HWKN",
+    "CMP",
+    "MTRN",
+    "FCX",
+    "SXT",
+    "EXP",
+    "ODC",
+    "KALU",
+    "HL",
+    "LIN",
+    "NGD",
+    "VMC",
+    "IAUX",
+    "SSRM",
+    "KNF",
+    "RGLD",
+    "CDE",
+    "MUX",
+    "PRM"
+  ],
+  "priceAnchors": {
+    "WDFC": {
+      "date": "2026-06-12",
+      "close": 223.00999450683594
+    },
+    "SSD": {
+      "date": "2026-06-12",
+      "close": 193.07000732421875
+    },
+    "SHW": {
+      "date": "2026-06-12",
+      "close": 317.29998779296875
+    },
+    "NWPX": {
+      "date": "2026-06-12",
+      "close": 128.85000610351562
+    },
+    "TGLS": {
+      "date": "2026-06-15",
+      "close": 43.880001068115234
+    },
+    "CTVA": {
+      "date": "2026-06-15",
+      "close": 75.70999908447266
+    },
+    "AU": {
+      "date": "2026-05-17",
+      "close": 92.23999786376953
+    },
+    "OR": {
+      "date": "2026-06-15",
+      "close": 36.15999984741211
+    },
+    "RPM": {
+      "date": "2026-06-12",
+      "close": 107.05000305175781
+    },
+    "ECL": {
+      "date": "2026-06-12",
+      "close": 265.4100036621094
+    },
+    "CRH": {
+      "date": "2026-06-12",
+      "close": 106.4800033569336
+    },
+    "NEM": {
+      "date": "2026-06-12",
+      "close": 100.2300033569336
+    },
+    "AUGO": {
+      "date": "2026-06-12",
+      "close": 60.88999938964844
+    },
+    "BCPC": {
+      "date": "2026-06-12",
+      "close": 165.0399932861328
+    },
+    "HWKN": {
+      "date": "2026-06-12",
+      "close": 158.33999633789062
+    },
+    "CMP": {
+      "date": "2026-06-12",
+      "close": 31.459999084472656
+    },
+    "MTRN": {
+      "date": "2026-06-12",
+      "close": 247.25999450683594
+    },
+    "FCX": {
+      "date": "2026-06-15",
+      "close": 70.12999725341797
+    },
+    "SXT": {
+      "date": "2026-06-12",
+      "close": 124.11000061035156
+    },
+    "EXP": {
+      "date": "2026-06-15",
+      "close": 217.9600067138672
+    },
+    "ODC": {
+      "date": "2026-06-12",
+      "close": 94.44999694824219
+    },
+    "KALU": {
+      "date": "2026-06-12",
+      "close": 190.6300048828125
+    },
+    "HL": {
+      "date": "2026-06-12",
+      "close": 15.289999961853027
+    },
+    "LIN": {
+      "date": "2026-06-12",
+      "close": 523.5700073242188
+    },
+    "NGD": {
+      "date": "2026-05-17",
+      "close": 9.079999923706055
+    },
+    "VMC": {
+      "date": "2026-06-12",
+      "close": 286.4700012207031
+    },
+    "IAUX": {
+      "date": "2026-06-15",
+      "close": 1.559999942779541
+    },
+    "SSRM": {
+      "date": "2026-06-12",
+      "close": 27.229999542236328
+    },
+    "KNF": {
+      "date": "2026-06-15",
+      "close": 80.81999969482422
+    },
+    "RGLD": {
+      "date": "2026-06-12",
+      "close": 207.57000732421875
+    },
+    "CDE": {
+      "date": "2026-06-12",
+      "close": 17.200000762939453
+    },
+    "MUX": {
+      "date": "2026-06-12",
+      "close": 18.90999984741211
+    },
+    "PRM": {
+      "date": "2026-05-17",
+      "close": 33.22999954223633
+    },
+    "SPY": {
+      "date": "2026-06-12",
+      "close": 741.75
+    },
+    "QQQ": {
+      "date": "2026-06-15",
+      "close": 744
+    },
+    "IWM": {
+      "date": "2026-06-15",
+      "close": 294.6400146484375
+    },
+    "XLB": null
+  }
+}

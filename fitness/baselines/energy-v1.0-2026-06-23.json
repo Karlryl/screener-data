@@ -1,0 +1,1084 @@
+{
+  "baselineId": "energy-v1.0-2026-06-23",
+  "bucket": "energy_quality",
+  "frozenAt": "2026-06-23",
+  "formula": "energy_quality CORE — absolute-anchor (per-cohort frozen NORMS, see cohorts.*.normTableId) × per-cohort REL z/MAD (n>=15 else THIN_REL ABS-only beta=1), blendScore beta=0.6, linear weighted-q with sum-preserving coverage-renorm (missing axis DROPPED+renormed, never 0-imputed). SI-4 out-of-class → score=null+excluded[]; SI-5 fail-loud (classifiedCount===scoredCount+excludedCount); marquee + generative anti-leak asserts; PRE-REVENUE/SHELL SI-4 gate. Shipped CORE + independent Re-Court PASS on loop/formel-haertung. Konstanten [TODO-CAL].",
+  "source": "outputs/court-results.json :: energy_upstream + energy_midstream + energy_services",
+  "cohortsFrozen": [
+    "energy_upstream",
+    "energy_midstream",
+    "energy_services"
+  ],
+  "cohorts": {
+    "energy_upstream": {
+      "normTableId": "energy_upstream-norms-2026-06-23",
+      "classifiedCount": 32,
+      "scoredCount": 27,
+      "universeSize": 32,
+      "anchors": {
+        "roce": {
+          "median": 0.093,
+          "mad": 0.028999999999999998,
+          "n": 31
+        },
+        "fcfMargin": {
+          "median": 0.15755000000000002,
+          "mad": 0.0767,
+          "n": 32
+        },
+        "assetGrowthPenalty": {
+          "median": -0.0493,
+          "mad": 0.046099999999999995,
+          "n": 31
+        },
+        "gpa": {
+          "median": 0.131,
+          "mad": 0.0421,
+          "n": 31
+        },
+        "netIssuance": {
+          "median": -0.0294,
+          "mad": 0.032100000000000004,
+          "n": 21
+        }
+      },
+      "comparabilityNote": "energy_quality energy_upstream (through-cycle quality tier upstream/midstream/services). absKaliber in [0,1] = cross-bucket-comparable absolute scale (5-axis weighted-q over the cohort NORMS 'energy_upstream-norms-2026-06-23': roce .02/.16 (opInc/assets, the through-cycle capital-return PILLAR), fcfMargin -.03/.30 (FCF/rev, capital discipline), gpa .06/.25, assetGrowthPenalty -.40/.00, netIssuance -.10/.03; weights {roce .30, fcfMargin .22, assetGrowthPenalty .18, gpa .16, netIssuance .14}; capital-discipline pillar roce+fcfMargin+assetGrowthPenalty=.70 — GROWTH IS NOT A SCORED AXIS, so a commodity-price windfall cannot top-score; QUALITY-ONLY, no commodity-price bets). COVERAGE-RENORM drops any NOT_READY/null axis (incl. ISSUANCE_NOT_READY on the ~50% of names lacking annualShares) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6). WALLS always-on: CYCLE_WALL/THROUGH_CYCLE_WALL/COMMODITY_BETA/RESERVE_BLIND. The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison."
+    },
+    "energy_midstream": {
+      "normTableId": "energy_midstream-norms-2026-06-23",
+      "classifiedCount": 26,
+      "scoredCount": 23,
+      "universeSize": 26,
+      "anchors": {
+        "roce": {
+          "median": 0.08574999999999999,
+          "mad": 0.03085,
+          "n": 26
+        },
+        "fcfMargin": {
+          "median": 0.0646,
+          "mad": 0.047200000000000006,
+          "n": 24
+        },
+        "assetGrowthPenalty": {
+          "median": -0.04675,
+          "mad": 0.055099999999999996,
+          "n": 26
+        },
+        "gpa": {
+          "median": 0.1231,
+          "mad": 0.039099999999999996,
+          "n": 25
+        },
+        "netIssuance": {
+          "median": 0,
+          "mad": 0.0112,
+          "n": 15
+        }
+      },
+      "comparabilityNote": "energy_quality energy_midstream (through-cycle quality tier upstream/midstream/services). absKaliber in [0,1] = cross-bucket-comparable absolute scale (5-axis weighted-q over the cohort NORMS 'energy_midstream-norms-2026-06-23': roce .02/.22 (opInc/assets, the through-cycle capital-return PILLAR), fcfMargin .00/.38 (FCF/rev, capital discipline), gpa .06/.24, assetGrowthPenalty -.40/.00, netIssuance -.10/.03; weights {roce .30, fcfMargin .22, assetGrowthPenalty .18, gpa .16, netIssuance .14}; capital-discipline pillar roce+fcfMargin+assetGrowthPenalty=.70 — GROWTH IS NOT A SCORED AXIS, so a commodity-price windfall cannot top-score; QUALITY-ONLY, no commodity-price bets). COVERAGE-RENORM drops any NOT_READY/null axis (incl. ISSUANCE_NOT_READY on the ~50% of names lacking annualShares) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6). WALLS always-on: CYCLE_WALL/THROUGH_CYCLE_WALL/COMMODITY_BETA/DCF_COVERAGE_BLIND. The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison."
+    },
+    "energy_services": {
+      "normTableId": "energy_services-norms-2026-06-23",
+      "classifiedCount": 27,
+      "scoredCount": 20,
+      "universeSize": 27,
+      "anchors": {
+        "roce": {
+          "median": 0.0627,
+          "mad": 0.03705,
+          "n": 26
+        },
+        "fcfMargin": {
+          "median": 0.0771,
+          "mad": 0.050100000000000006,
+          "n": 25
+        },
+        "assetGrowthPenalty": {
+          "median": -0.0761,
+          "mad": 0.0689,
+          "n": 27
+        },
+        "gpa": {
+          "median": 0.1278,
+          "mad": 0.0369,
+          "n": 27
+        },
+        "netIssuance": {
+          "median": -0.0394,
+          "mad": 0.052399999999999995,
+          "n": 13
+        }
+      },
+      "comparabilityNote": "energy_quality energy_services (through-cycle quality tier upstream/midstream/services). absKaliber in [0,1] = cross-bucket-comparable absolute scale (5-axis weighted-q over the cohort NORMS 'energy_services-norms-2026-06-23': roce .00/.13 (opInc/assets, the through-cycle capital-return PILLAR), fcfMargin -.02/.24 (FCF/rev, capital discipline), gpa .06/.21, assetGrowthPenalty -.40/.00, netIssuance -.10/.03; weights {roce .30, fcfMargin .22, assetGrowthPenalty .18, gpa .16, netIssuance .14}; capital-discipline pillar roce+fcfMargin+assetGrowthPenalty=.70 — GROWTH IS NOT A SCORED AXIS, so a commodity-price windfall cannot top-score; QUALITY-ONLY, no commodity-price bets). COVERAGE-RENORM drops any NOT_READY/null axis (incl. ISSUANCE_NOT_READY on the ~50% of names lacking annualShares) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6). WALLS always-on: CYCLE_WALL/THROUGH_CYCLE_WALL/COMMODITY_BETA. The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison."
+    }
+  },
+  "classifiedCount": 85,
+  "scoredCount": 70,
+  "headlineShortlistSize": 66,
+  "scoreScope": "intra-bucket",
+  "crossBucketComparableField": "absKaliber",
+  "forwardFitness": {
+    "calendarGated": true,
+    "metric": [
+      "rank_ic_spearman",
+      "top_n_minus_universe_median_fwd_return"
+    ],
+    "horizonsDays": [
+      28,
+      84
+    ],
+    "windowEnds": {
+      "d28": "~2026-07-21",
+      "d84": "~2026-09-15"
+    },
+    "survivorshipKey": "evaluatedTickers",
+    "antiGaming": "gateOpen-Ranking am Ship-Tag (vor jeder weiteren Bucket-Änderung) eingefroren. Forward-Fenster = intrinsischer Holdout; Eval erst NACH Kalender-Gate. Erzeugende Agenten dürfen NIE auf dem Eval-Slice tunen. Eine neue Bucket-Version gilt nur als „besser\", wenn sie diese Forward-Metrik STRIKT schlägt.",
+    "honestLimitation": "N=66 gateOpen-Namen (cohort-split macht n pro Kohorte noch dünner) — Rank-IC/Kohorten-Spread haben Richtungs-, nicht starke statistische Aussagekraft. Primärer Wert: Pre-Registration-Disziplin + Beitrag zur gepoolten Cross-Formel-Fitness."
+  },
+  "priceAnchorStatus": "CAPTURED — t0-Close je Ticker eingefroren. Forward-Return = close[t0+h]/close[t0]-1.",
+  "benchmarkAnchorNote": "Broad-market SPY/QQQ/IWM in prices/history.json; Sektor-ETF (XLE) i.d.R. NICHT im Screener-Universe-History → null bis ein künftiger Pull ihn aufnimmt (kein Holdout-Defekt).",
+  "ranking": [
+    {
+      "order": 1,
+      "ticker": "MGY",
+      "cohort": "energy_upstream",
+      "score": 88.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.927,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 2,
+      "ticker": "CQP",
+      "cohort": "energy_midstream",
+      "score": 87.8,
+      "membershipClass": "In",
+      "absKaliber": 0.875,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 3,
+      "ticker": "BSM",
+      "cohort": "energy_upstream",
+      "score": 87.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.92,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 4,
+      "ticker": "WHD",
+      "cohort": "energy_services",
+      "score": 87.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.924,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 5,
+      "ticker": "APA",
+      "cohort": "energy_upstream",
+      "score": 83.1,
+      "membershipClass": "In",
+      "absKaliber": 0.828,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 6,
+      "ticker": "FLOC",
+      "cohort": "energy_services",
+      "score": 82.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.826,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 7,
+      "ticker": "USAC",
+      "cohort": "energy_services",
+      "score": 81.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.817,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 8,
+      "ticker": "GPOR",
+      "cohort": "energy_upstream",
+      "score": 81,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.848,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 9,
+      "ticker": "HESM",
+      "cohort": "energy_midstream",
+      "score": 80.4,
+      "membershipClass": "In",
+      "absKaliber": 0.834,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 10,
+      "ticker": "TDW",
+      "cohort": "energy_services",
+      "score": 78.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.833,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 11,
+      "ticker": "EOG",
+      "cohort": "energy_upstream",
+      "score": 76.9,
+      "membershipClass": "In",
+      "absKaliber": 0.815,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 12,
+      "ticker": "AM",
+      "cohort": "energy_midstream",
+      "score": 76.4,
+      "membershipClass": "In",
+      "absKaliber": 0.738,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 13,
+      "ticker": "HAL",
+      "cohort": "energy_services",
+      "score": 76.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.771,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 14,
+      "ticker": "KGS",
+      "cohort": "energy_services",
+      "score": 74.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.736,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 15,
+      "ticker": "LNG",
+      "cohort": "energy_midstream",
+      "score": 70.9,
+      "membershipClass": "In",
+      "absKaliber": 0.685,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 16,
+      "ticker": "OII",
+      "cohort": "energy_services",
+      "score": 68.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.721,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 17,
+      "ticker": "DVN",
+      "cohort": "energy_upstream",
+      "score": 67.5,
+      "membershipClass": "In",
+      "absKaliber": 0.687,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 18,
+      "ticker": "RRC",
+      "cohort": "energy_upstream",
+      "score": 67.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.688,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 19,
+      "ticker": "INVX",
+      "cohort": "energy_services",
+      "score": 67.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.672,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 20,
+      "ticker": "BKR",
+      "cohort": "energy_services",
+      "score": 66.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.668,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 21,
+      "ticker": "WES",
+      "cohort": "energy_midstream",
+      "score": 66.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.675,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 22,
+      "ticker": "AROC",
+      "cohort": "energy_services",
+      "score": 62.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.642,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 23,
+      "ticker": "SLB",
+      "cohort": "energy_services",
+      "score": 61.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.63,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 24,
+      "ticker": "EXE",
+      "cohort": "energy_upstream",
+      "score": 61.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.624,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 25,
+      "ticker": "LB",
+      "cohort": "energy_services",
+      "score": 61.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.623,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 26,
+      "ticker": "TPL",
+      "cohort": "energy_upstream",
+      "score": 60.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.641,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 27,
+      "ticker": "LPG",
+      "cohort": "energy_midstream",
+      "score": 59.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.572,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 28,
+      "ticker": "NGL",
+      "cohort": "energy_midstream",
+      "score": 59.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.542,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 29,
+      "ticker": "NOG",
+      "cohort": "energy_upstream",
+      "score": 59.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.602,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 30,
+      "ticker": "NOV",
+      "cohort": "energy_services",
+      "score": 58.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.581,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 31,
+      "ticker": "MPLX",
+      "cohort": "energy_midstream",
+      "score": 57.7,
+      "membershipClass": "In",
+      "absKaliber": 0.561,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 32,
+      "ticker": "CTRA",
+      "cohort": "energy_upstream",
+      "score": 56.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.606,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 33,
+      "ticker": "INSW",
+      "cohort": "energy_midstream",
+      "score": 55.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.519,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 34,
+      "ticker": "VTOL",
+      "cohort": "energy_services",
+      "score": 55,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.573,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 35,
+      "ticker": "AR",
+      "cohort": "energy_upstream",
+      "score": 54.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.572,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 36,
+      "ticker": "TRGP",
+      "cohort": "energy_midstream",
+      "score": 54.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.514,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 37,
+      "ticker": "CRC",
+      "cohort": "energy_upstream",
+      "score": 53.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.569,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 38,
+      "ticker": "NFG",
+      "cohort": "energy_upstream",
+      "score": 52.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.554,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 39,
+      "ticker": "CNX",
+      "cohort": "energy_upstream",
+      "score": 51.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.557,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 40,
+      "ticker": "PR",
+      "cohort": "energy_upstream",
+      "score": 51.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.55,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 41,
+      "ticker": "DTM",
+      "cohort": "energy_midstream",
+      "score": 50.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.536,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 42,
+      "ticker": "COP",
+      "cohort": "energy_upstream",
+      "score": 50.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.528,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 43,
+      "ticker": "SM",
+      "cohort": "energy_upstream",
+      "score": 50.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.547,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 44,
+      "ticker": "KMI",
+      "cohort": "energy_midstream",
+      "score": 50.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.458,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 45,
+      "ticker": "XOM",
+      "cohort": "energy_upstream",
+      "score": 50.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.523,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 46,
+      "ticker": "XPRO",
+      "cohort": "energy_services",
+      "score": 50,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.502,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 47,
+      "ticker": "RES",
+      "cohort": "energy_services",
+      "score": 49.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.514,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 48,
+      "ticker": "GLP",
+      "cohort": "energy_midstream",
+      "score": 49.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.51,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 49,
+      "ticker": "MTDR",
+      "cohort": "energy_upstream",
+      "score": 48.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.526,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 50,
+      "ticker": "EQT",
+      "cohort": "energy_upstream",
+      "score": 47.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.516,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 51,
+      "ticker": "OKE",
+      "cohort": "energy_midstream",
+      "score": 47.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.428,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 52,
+      "ticker": "EPD",
+      "cohort": "energy_midstream",
+      "score": 47.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.449,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 53,
+      "ticker": "KRP",
+      "cohort": "energy_upstream",
+      "score": 45.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.499,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 54,
+      "ticker": "OXY",
+      "cohort": "energy_upstream",
+      "score": 45,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.466,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 55,
+      "ticker": "HLX",
+      "cohort": "energy_services",
+      "score": 41.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.403,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 56,
+      "ticker": "WMB",
+      "cohort": "energy_midstream",
+      "score": 41.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.386,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 57,
+      "ticker": "MNR",
+      "cohort": "energy_upstream",
+      "score": 41,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.414,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 58,
+      "ticker": "GEL",
+      "cohort": "energy_midstream",
+      "score": 38.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.37,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 59,
+      "ticker": "CVX",
+      "cohort": "energy_upstream",
+      "score": 35.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.388,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 60,
+      "ticker": "ET",
+      "cohort": "energy_midstream",
+      "score": 34,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.366,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 61,
+      "ticker": "EE",
+      "cohort": "energy_midstream",
+      "score": 30,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.252,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 62,
+      "ticker": "LBRT",
+      "cohort": "energy_services",
+      "score": 29.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.302,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 63,
+      "ticker": "HP",
+      "cohort": "energy_services",
+      "score": 29,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.307,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 64,
+      "ticker": "KNTK",
+      "cohort": "energy_midstream",
+      "score": 26.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.247,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 65,
+      "ticker": "PAGP",
+      "cohort": "energy_midstream",
+      "score": 25.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.252,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 66,
+      "ticker": "SUNC",
+      "cohort": "energy_midstream",
+      "score": 7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.046,
+      "belowAbsoluteFloor": false
+    }
+  ],
+  "evaluatedTickers": [
+    "MGY",
+    "CQP",
+    "BSM",
+    "WHD",
+    "APA",
+    "FLOC",
+    "USAC",
+    "GPOR",
+    "HESM",
+    "TDW",
+    "EOG",
+    "AM",
+    "HAL",
+    "KGS",
+    "LNG",
+    "OII",
+    "DVN",
+    "RRC",
+    "INVX",
+    "BKR",
+    "WES",
+    "AROC",
+    "SLB",
+    "EXE",
+    "LB",
+    "TPL",
+    "LPG",
+    "NGL",
+    "NOG",
+    "NOV",
+    "MPLX",
+    "CTRA",
+    "INSW",
+    "VTOL",
+    "AR",
+    "TRGP",
+    "CRC",
+    "NFG",
+    "CNX",
+    "PR",
+    "DTM",
+    "COP",
+    "SM",
+    "KMI",
+    "XOM",
+    "XPRO",
+    "RES",
+    "GLP",
+    "MTDR",
+    "EQT",
+    "OKE",
+    "EPD",
+    "KRP",
+    "OXY",
+    "HLX",
+    "WMB",
+    "MNR",
+    "GEL",
+    "CVX",
+    "ET",
+    "EE",
+    "LBRT",
+    "HP",
+    "KNTK",
+    "PAGP",
+    "SUNC"
+  ],
+  "priceAnchors": {
+    "MGY": {
+      "date": "2026-06-15",
+      "close": 27.079999923706055
+    },
+    "CQP": {
+      "date": "2026-06-12",
+      "close": 63.189998626708984
+    },
+    "BSM": {
+      "date": "2026-06-15",
+      "close": 13.630000114440918
+    },
+    "WHD": {
+      "date": "2026-06-15",
+      "close": 58.06999969482422
+    },
+    "APA": {
+      "date": "2026-06-12",
+      "close": 37.02000045776367
+    },
+    "FLOC": {
+      "date": "2026-06-12",
+      "close": 23.729999542236328
+    },
+    "USAC": {
+      "date": "2026-06-15",
+      "close": 26.040000915527344
+    },
+    "GPOR": {
+      "date": "2026-06-15",
+      "close": 161.58999633789062
+    },
+    "HESM": {
+      "date": "2026-06-15",
+      "close": 37.459999084472656
+    },
+    "TDW": {
+      "date": "2026-06-12",
+      "close": 76.91000366210938
+    },
+    "EOG": {
+      "date": "2026-06-12",
+      "close": 136.64999389648438
+    },
+    "AM": {
+      "date": "2026-06-15",
+      "close": 21.329999923706055
+    },
+    "HAL": {
+      "date": "2026-06-12",
+      "close": 39.599998474121094
+    },
+    "KGS": {
+      "date": "2026-06-15",
+      "close": 69.25
+    },
+    "LNG": {
+      "date": "2026-06-15",
+      "close": 235.25
+    },
+    "OII": {
+      "date": "2026-06-12",
+      "close": 39.38999938964844
+    },
+    "DVN": {
+      "date": "2026-06-12",
+      "close": 44.9900016784668
+    },
+    "RRC": {
+      "date": "2026-06-12",
+      "close": 38.59000015258789
+    },
+    "INVX": {
+      "date": "2026-06-15",
+      "close": 28.170000076293945
+    },
+    "BKR": {
+      "date": "2026-06-12",
+      "close": 63.13999938964844
+    },
+    "WES": {
+      "date": "2026-06-15",
+      "close": 43.959999084472656
+    },
+    "AROC": {
+      "date": "2026-06-12",
+      "close": 36.61000061035156
+    },
+    "SLB": {
+      "date": "2026-06-12",
+      "close": 56.18000030517578
+    },
+    "EXE": {
+      "date": "2026-06-15",
+      "close": 87.9000015258789
+    },
+    "LB": {
+      "date": "2026-06-12",
+      "close": 69.29000091552734
+    },
+    "TPL": {
+      "date": "2026-06-12",
+      "close": 378.9100036621094
+    },
+    "LPG": {
+      "date": "2026-06-15",
+      "close": 43.029998779296875
+    },
+    "NGL": {
+      "date": "2026-06-12",
+      "close": 16.540000915527344
+    },
+    "NOG": {
+      "date": "2026-06-12",
+      "close": 20.790000915527344
+    },
+    "NOV": {
+      "date": "2026-06-15",
+      "close": 20.520000457763672
+    },
+    "MPLX": {
+      "date": "2026-05-17",
+      "close": 54.77000045776367
+    },
+    "CTRA": {
+      "date": "2026-05-17",
+      "close": 32.560001373291016
+    },
+    "INSW": {
+      "date": "2026-05-17",
+      "close": 84.58000183105469
+    },
+    "VTOL": {
+      "date": "2026-06-15",
+      "close": 43.130001068115234
+    },
+    "AR": {
+      "date": "2026-06-15",
+      "close": 34.029998779296875
+    },
+    "TRGP": {
+      "date": "2026-06-12",
+      "close": 272.6000061035156
+    },
+    "CRC": {
+      "date": "2026-06-15",
+      "close": 56.59000015258789
+    },
+    "NFG": {
+      "date": "2026-06-12",
+      "close": 77.55000305175781
+    },
+    "CNX": {
+      "date": "2026-06-12",
+      "close": 33.150001525878906
+    },
+    "PR": {
+      "date": "2026-06-15",
+      "close": 18.899999618530273
+    },
+    "DTM": {
+      "date": "2026-06-15",
+      "close": 140.69000244140625
+    },
+    "COP": {
+      "date": "2026-06-12",
+      "close": 116.9800033569336
+    },
+    "SM": {
+      "date": "2026-06-12",
+      "close": 31.149999618530273
+    },
+    "KMI": {
+      "date": "2026-06-12",
+      "close": 31.940000534057617
+    },
+    "XOM": {
+      "date": "2026-06-12",
+      "close": 147.00999450683594
+    },
+    "XPRO": {
+      "date": "2026-06-15",
+      "close": 15.670000076293945
+    },
+    "RES": {
+      "date": "2026-06-12",
+      "close": 7.190000057220459
+    },
+    "GLP": {
+      "date": "2026-06-12",
+      "close": 47.130001068115234
+    },
+    "MTDR": {
+      "date": "2026-06-15",
+      "close": 51.380001068115234
+    },
+    "EQT": {
+      "date": "2026-06-12",
+      "close": 51.939998626708984
+    },
+    "OKE": {
+      "date": "2026-06-12",
+      "close": 90.58999633789062
+    },
+    "EPD": {
+      "date": "2026-06-15",
+      "close": 36.5
+    },
+    "KRP": {
+      "date": "2026-06-15",
+      "close": 14.819999694824219
+    },
+    "OXY": {
+      "date": "2026-06-12",
+      "close": 56.540000915527344
+    },
+    "HLX": {
+      "date": "2026-06-12",
+      "close": 9.739999771118164
+    },
+    "WMB": {
+      "date": "2026-06-12",
+      "close": 72.08000183105469
+    },
+    "MNR": {
+      "date": "2026-05-17",
+      "close": 14.449999809265137
+    },
+    "GEL": {
+      "date": "2026-06-15",
+      "close": 14.4399995803833
+    },
+    "CVX": {
+      "date": "2026-06-12",
+      "close": 187.22000122070312
+    },
+    "ET": {
+      "date": "2026-06-12",
+      "close": 19.06999969482422
+    },
+    "EE": {
+      "date": "2026-06-15",
+      "close": 35.040000915527344
+    },
+    "LBRT": {
+      "date": "2026-06-15",
+      "close": 28.06999969482422
+    },
+    "HP": {
+      "date": "2026-06-12",
+      "close": 39.25
+    },
+    "KNTK": {
+      "date": "2026-06-15",
+      "close": 45.720001220703125
+    },
+    "PAGP": {
+      "date": "2026-06-15",
+      "close": 23.8799991607666
+    },
+    "SUNC": {
+      "date": "2026-06-12",
+      "close": 66.5199966430664
+    },
+    "SPY": {
+      "date": "2026-06-12",
+      "close": 741.75
+    },
+    "QQQ": {
+      "date": "2026-06-15",
+      "close": 744
+    },
+    "IWM": {
+      "date": "2026-06-15",
+      "close": 294.6400146484375
+    },
+    "XLE": null
+  }
+}

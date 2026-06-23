@@ -1,0 +1,741 @@
+{
+  "baselineId": "staples-v1.0-2026-06-23",
+  "bucket": "consumer_staples_compounder",
+  "frozenAt": "2026-06-23",
+  "formula": "consumer_staples_compounder CORE — absolute-anchor (per-cohort frozen NORMS, see cohorts.*.normTableId) × per-cohort REL z/MAD (n>=15 else THIN_REL ABS-only beta=1), blendScore beta=0.6, linear weighted-q with sum-preserving coverage-renorm (missing axis DROPPED+renormed, never 0-imputed). SI-4 out-of-class → score=null+excluded[]; SI-5 fail-loud (classifiedCount===scoredCount+excludedCount); marquee + generative anti-leak asserts; PRE-REVENUE/SHELL SI-4 gate. Shipped CORE + independent Re-Court PASS on loop/formel-haertung. Konstanten [TODO-CAL].",
+  "source": "outputs/court-results.json :: staples_branded + staples_distribution",
+  "cohortsFrozen": [
+    "staples_branded",
+    "staples_distribution"
+  ],
+  "cohorts": {
+    "staples_branded": {
+      "normTableId": "staples_branded-norms-2026-06-21",
+      "classifiedCount": 52,
+      "scoredCount": 41,
+      "universeSize": 52,
+      "anchors": {
+        "gpa": {
+          "median": 0.28369999999999995,
+          "mad": 0.09384999999999995,
+          "n": 52
+        },
+        "growth": {
+          "median": 0.019450000000000002,
+          "mad": 0.0425,
+          "n": 52
+        },
+        "assetGrowthPenalty": {
+          "median": -0.019049999999999997,
+          "mad": 0.042100000000000005,
+          "n": 52
+        },
+        "netIssuance": {
+          "median": 0.00035,
+          "mad": 0.00935,
+          "n": 22
+        },
+        "eff": {
+          "median": 0.1262,
+          "mad": 0.0413,
+          "n": 51
+        }
+      },
+      "comparabilityNote": "consumer_staples_compounder staples_branded (economic-model cohort: margin-driven branded vs turns-driven distribution). absKaliber in [0,1] = cross-bucket-comparable absolute scale (5-axis weighted-q over the cohort NORMS 'staples_branded-norms-2026-06-21': gpa .15/.60, growth .00/.18, assetGrowthPenalty -.40/.00, netIssuance -.05/.03, eff .05/.27; weights {gpa .36, growth .18, assetGrowthPenalty .18, netIssuance .12, eff .16}); COVERAGE-RENORM drops any NOT_READY/null axis (incl. ISSUANCE_NOT_READY on the ~58% of names lacking annualShares, and SPINOFF_REBASE) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6). WALLS always-on: VOLUME_PRICE_BLIND/MA_PROXY_ONLY/INVENTORY_BLIND/CYCLE_WALL. The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison."
+    },
+    "staples_distribution": {
+      "normTableId": "staples_distribution-norms-2026-06-21",
+      "classifiedCount": 23,
+      "scoredCount": 18,
+      "universeSize": 23,
+      "anchors": {
+        "gpa": {
+          "median": 0.4951,
+          "mad": 0.09209999999999996,
+          "n": 23
+        },
+        "growth": {
+          "median": 0.0289,
+          "mad": 0.0452,
+          "n": 23
+        },
+        "assetGrowthPenalty": {
+          "median": -0.0377,
+          "mad": 0.0543,
+          "n": 23
+        },
+        "netIssuance": {
+          "median": 0.0001,
+          "mad": 0.0114,
+          "n": 9
+        },
+        "eff": {
+          "median": 0.0306,
+          "mad": 0.009499999999999998,
+          "n": 23
+        }
+      },
+      "comparabilityNote": "consumer_staples_compounder staples_distribution (economic-model cohort: margin-driven branded vs turns-driven distribution). absKaliber in [0,1] = cross-bucket-comparable absolute scale (5-axis weighted-q over the cohort NORMS 'staples_distribution-norms-2026-06-21': gpa .10/.66, growth .00/.18, assetGrowthPenalty -.40/.00, netIssuance -.05/.03, eff .01/.09; weights {gpa .36, growth .18, assetGrowthPenalty .18, netIssuance .12, eff .16}); COVERAGE-RENORM drops any NOT_READY/null axis (incl. ISSUANCE_NOT_READY on the ~58% of names lacking annualShares, and SPINOFF_REBASE) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6). WALLS always-on: VOLUME_PRICE_BLIND/MA_PROXY_ONLY/INVENTORY_BLIND/CYCLE_WALL. The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison."
+    }
+  },
+  "classifiedCount": 75,
+  "scoredCount": 59,
+  "headlineShortlistSize": 44,
+  "scoreScope": "intra-bucket",
+  "crossBucketComparableField": "absKaliber",
+  "forwardFitness": {
+    "calendarGated": true,
+    "metric": [
+      "rank_ic_spearman",
+      "top_n_minus_universe_median_fwd_return"
+    ],
+    "horizonsDays": [
+      28,
+      84
+    ],
+    "windowEnds": {
+      "d28": "~2026-07-21",
+      "d84": "~2026-09-15"
+    },
+    "survivorshipKey": "evaluatedTickers",
+    "antiGaming": "gateOpen-Ranking am Ship-Tag (vor jeder weiteren Bucket-Änderung) eingefroren. Forward-Fenster = intrinsischer Holdout; Eval erst NACH Kalender-Gate. Erzeugende Agenten dürfen NIE auf dem Eval-Slice tunen. Eine neue Bucket-Version gilt nur als „besser\", wenn sie diese Forward-Metrik STRIKT schlägt.",
+    "honestLimitation": "N=44 gateOpen-Namen (cohort-split macht n pro Kohorte noch dünner) — Rank-IC/Kohorten-Spread haben Richtungs-, nicht starke statistische Aussagekraft. Primärer Wert: Pre-Registration-Disziplin + Beitrag zur gepoolten Cross-Formel-Fitness."
+  },
+  "priceAnchorStatus": "CAPTURED — t0-Close je Ticker eingefroren. Forward-Return = close[t0+h]/close[t0]-1.",
+  "benchmarkAnchorNote": "Broad-market SPY/QQQ/IWM in prices/history.json; Sektor-ETF (XLP) i.d.R. NICHT im Screener-Universe-History → null bis ein künftiger Pull ihn aufnimmt (kein Holdout-Defekt).",
+  "ranking": [
+    {
+      "order": 1,
+      "ticker": "COKE",
+      "cohort": "staples_branded",
+      "score": 89.3,
+      "membershipClass": "In",
+      "absKaliber": 0.898,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 2,
+      "ticker": "BRBR",
+      "cohort": "staples_branded",
+      "score": 80.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.841,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 3,
+      "ticker": "SFM",
+      "cohort": "staples_distribution",
+      "score": 79.8,
+      "membershipClass": "In",
+      "absKaliber": 0.828,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 4,
+      "ticker": "CL",
+      "cohort": "staples_branded",
+      "score": 77.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.757,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 5,
+      "ticker": "FIZZ",
+      "cohort": "staples_branded",
+      "score": 75.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.716,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 6,
+      "ticker": "IPAR",
+      "cohort": "staples_branded",
+      "score": 68.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.698,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 7,
+      "ticker": "CLX",
+      "cohort": "staples_branded",
+      "score": 68.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.658,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 8,
+      "ticker": "MNST",
+      "cohort": "staples_branded",
+      "score": 67,
+      "membershipClass": "In",
+      "absKaliber": 0.642,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 9,
+      "ticker": "PM",
+      "cohort": "staples_branded",
+      "score": 64.6,
+      "membershipClass": "In",
+      "absKaliber": 0.632,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 10,
+      "ticker": "KR",
+      "cohort": "staples_distribution",
+      "score": 63.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.634,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 11,
+      "ticker": "WMT",
+      "cohort": "staples_distribution",
+      "score": 63.7,
+      "membershipClass": "In",
+      "absKaliber": 0.65,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 12,
+      "ticker": "WMK",
+      "cohort": "staples_distribution",
+      "score": 63.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.626,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 13,
+      "ticker": "OLLI",
+      "cohort": "staples_distribution",
+      "score": 58.8,
+      "membershipClass": "In",
+      "absKaliber": 0.682,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 14,
+      "ticker": "BJ",
+      "cohort": "staples_distribution",
+      "score": 58.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.603,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 15,
+      "ticker": "DG",
+      "cohort": "staples_distribution",
+      "score": 57.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.595,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 16,
+      "ticker": "CHD",
+      "cohort": "staples_branded",
+      "score": 57,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.515,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 17,
+      "ticker": "SYY",
+      "cohort": "staples_distribution",
+      "score": 56.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.586,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 18,
+      "ticker": "CHEF",
+      "cohort": "staples_distribution",
+      "score": 56.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.607,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 19,
+      "ticker": "PG",
+      "cohort": "staples_branded",
+      "score": 56.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.516,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 20,
+      "ticker": "PEP",
+      "cohort": "staples_branded",
+      "score": 55.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.54,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 21,
+      "ticker": "ELF",
+      "cohort": "staples_branded",
+      "score": 54.5,
+      "membershipClass": "In",
+      "absKaliber": 0.528,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 22,
+      "ticker": "FLO",
+      "cohort": "staples_branded",
+      "score": 54.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.55,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 23,
+      "ticker": "USFD",
+      "cohort": "staples_distribution",
+      "score": 53.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.562,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 24,
+      "ticker": "IMKTA",
+      "cohort": "staples_distribution",
+      "score": 52.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.55,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 25,
+      "ticker": "COST",
+      "cohort": "staples_distribution",
+      "score": 51.4,
+      "membershipClass": "In",
+      "absKaliber": 0.554,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 26,
+      "ticker": "KO",
+      "cohort": "staples_branded",
+      "score": 50.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.48,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 27,
+      "ticker": "COCO",
+      "cohort": "staples_branded",
+      "score": 49.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.468,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 28,
+      "ticker": "MZTI",
+      "cohort": "staples_branded",
+      "score": 48.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.463,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 29,
+      "ticker": "SMPL",
+      "cohort": "staples_branded",
+      "score": 47.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.43,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 30,
+      "ticker": "SJM",
+      "cohort": "staples_branded",
+      "score": 46.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.403,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 31,
+      "ticker": "PSMT",
+      "cohort": "staples_distribution",
+      "score": 46.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.508,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 32,
+      "ticker": "HSY",
+      "cohort": "staples_branded",
+      "score": 44.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.416,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 33,
+      "ticker": "CPB",
+      "cohort": "staples_branded",
+      "score": 43.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.408,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 34,
+      "ticker": "JJSF",
+      "cohort": "staples_branded",
+      "score": 43.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.408,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 35,
+      "ticker": "PRMB",
+      "cohort": "staples_branded",
+      "score": 42.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.408,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 36,
+      "ticker": "KDP",
+      "cohort": "staples_branded",
+      "score": 40.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.374,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 37,
+      "ticker": "PPC",
+      "cohort": "staples_branded",
+      "score": 37.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.327,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 38,
+      "ticker": "MKC",
+      "cohort": "staples_branded",
+      "score": 37.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.335,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 39,
+      "ticker": "TR",
+      "cohort": "staples_branded",
+      "score": 34.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.325,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 40,
+      "ticker": "LW",
+      "cohort": "staples_branded",
+      "score": 34.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.313,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 41,
+      "ticker": "PFGC",
+      "cohort": "staples_distribution",
+      "score": 33.9,
+      "membershipClass": "In",
+      "absKaliber": 0.366,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 42,
+      "ticker": "POST",
+      "cohort": "staples_branded",
+      "score": 32.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.308,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 43,
+      "ticker": "MDLZ",
+      "cohort": "staples_branded",
+      "score": 30.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.283,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 44,
+      "ticker": "CELH",
+      "cohort": "staples_branded",
+      "score": 25.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.189,
+      "belowAbsoluteFloor": false
+    }
+  ],
+  "evaluatedTickers": [
+    "COKE",
+    "BRBR",
+    "SFM",
+    "CL",
+    "FIZZ",
+    "IPAR",
+    "CLX",
+    "MNST",
+    "PM",
+    "KR",
+    "WMT",
+    "WMK",
+    "OLLI",
+    "BJ",
+    "DG",
+    "CHD",
+    "SYY",
+    "CHEF",
+    "PG",
+    "PEP",
+    "ELF",
+    "FLO",
+    "USFD",
+    "IMKTA",
+    "COST",
+    "KO",
+    "COCO",
+    "MZTI",
+    "SMPL",
+    "SJM",
+    "PSMT",
+    "HSY",
+    "CPB",
+    "JJSF",
+    "PRMB",
+    "KDP",
+    "PPC",
+    "MKC",
+    "TR",
+    "LW",
+    "PFGC",
+    "POST",
+    "MDLZ",
+    "CELH"
+  ],
+  "priceAnchors": {
+    "COKE": {
+      "date": "2026-06-12",
+      "close": 187.88999938964844
+    },
+    "BRBR": {
+      "date": "2026-05-17",
+      "close": 9.6899995803833
+    },
+    "SFM": {
+      "date": "2026-06-15",
+      "close": 85.38999938964844
+    },
+    "CL": {
+      "date": "2026-06-12",
+      "close": 89.44999694824219
+    },
+    "FIZZ": {
+      "date": "2026-06-12",
+      "close": 36.939998626708984
+    },
+    "IPAR": {
+      "date": "2026-06-12",
+      "close": 100.9800033569336
+    },
+    "CLX": {
+      "date": "2026-06-12",
+      "close": 96.81999969482422
+    },
+    "MNST": {
+      "date": "2026-06-15",
+      "close": 93.2300033569336
+    },
+    "PM": {
+      "date": "2026-06-12",
+      "close": 184.3000030517578
+    },
+    "KR": {
+      "date": "2026-06-12",
+      "close": 64.70999908447266
+    },
+    "WMT": {
+      "date": "2026-06-12",
+      "close": 121.04000091552734
+    },
+    "WMK": {
+      "date": "2026-06-12",
+      "close": 82.62999725341797
+    },
+    "OLLI": {
+      "date": "2026-06-15",
+      "close": 85
+    },
+    "BJ": {
+      "date": "2026-06-15",
+      "close": 90.20999908447266
+    },
+    "DG": {
+      "date": "2026-06-12",
+      "close": 114.80000305175781
+    },
+    "CHD": {
+      "date": "2026-06-12",
+      "close": 97.55999755859375
+    },
+    "SYY": {
+      "date": "2026-06-12",
+      "close": 79.19000244140625
+    },
+    "CHEF": {
+      "date": "2026-06-12",
+      "close": 90.75
+    },
+    "PG": {
+      "date": "2026-06-12",
+      "close": 149.61000061035156
+    },
+    "PEP": {
+      "date": "2026-06-12",
+      "close": 144.27000427246094
+    },
+    "ELF": {
+      "date": "2026-06-15",
+      "close": 63.9900016784668
+    },
+    "FLO": {
+      "date": "2026-06-12",
+      "close": 7.789999961853027
+    },
+    "USFD": {
+      "date": "2026-06-15",
+      "close": 93.44000244140625
+    },
+    "IMKTA": {
+      "date": "2026-06-12",
+      "close": 92.01000213623047
+    },
+    "COST": {
+      "date": "2026-06-12",
+      "close": 982.3499755859375
+    },
+    "KO": {
+      "date": "2026-06-12",
+      "close": 82.09000396728516
+    },
+    "COCO": {
+      "date": "2026-06-15",
+      "close": 82.8499984741211
+    },
+    "MZTI": {
+      "date": "2026-06-12",
+      "close": 111.61000061035156
+    },
+    "SMPL": {
+      "date": "2026-06-15",
+      "close": 12.510000228881836
+    },
+    "SJM": {
+      "date": "2026-06-12",
+      "close": 116.48999786376953
+    },
+    "PSMT": {
+      "date": "2026-06-12",
+      "close": 182.3000030517578
+    },
+    "HSY": {
+      "date": "2026-06-12",
+      "close": 181.66000366210938
+    },
+    "CPB": {
+      "date": "2026-06-12",
+      "close": 22.809999465942383
+    },
+    "JJSF": {
+      "date": "2026-06-12",
+      "close": 79.56999969482422
+    },
+    "PRMB": {
+      "date": "2026-05-17",
+      "close": 23.18000030517578
+    },
+    "KDP": {
+      "date": "2026-05-17",
+      "close": 28.93000030517578
+    },
+    "PPC": {
+      "date": "2026-06-12",
+      "close": 30.06999969482422
+    },
+    "MKC": {
+      "date": "2026-06-12",
+      "close": 48.95000076293945
+    },
+    "TR": {
+      "date": "2026-06-12",
+      "close": 38.880001068115234
+    },
+    "LW": {
+      "date": "2026-06-15",
+      "close": 45.41999816894531
+    },
+    "PFGC": {
+      "date": "2026-06-15",
+      "close": 104.0999984741211
+    },
+    "POST": {
+      "date": "2026-06-12",
+      "close": 93.13999938964844
+    },
+    "MDLZ": {
+      "date": "2026-06-12",
+      "close": 62.9900016784668
+    },
+    "CELH": {
+      "date": "2026-06-12",
+      "close": 29.18000030517578
+    },
+    "SPY": {
+      "date": "2026-06-12",
+      "close": 741.75
+    },
+    "QQQ": {
+      "date": "2026-06-15",
+      "close": 744
+    },
+    "IWM": {
+      "date": "2026-06-15",
+      "close": 294.6400146484375
+    },
+    "XLP": null
+  }
+}

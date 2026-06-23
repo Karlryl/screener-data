@@ -1,0 +1,619 @@
+{
+  "baselineId": "consdisc-v1.0-2026-06-23",
+  "bucket": "consdisc_expansion",
+  "frozenAt": "2026-06-23",
+  "formula": "consdisc_expansion CORE — absolute-anchor (per-cohort frozen NORMS, see cohorts.*.normTableId) × per-cohort REL z/MAD (n>=15 else THIN_REL ABS-only beta=1), blendScore beta=0.6, linear weighted-q with sum-preserving coverage-renorm (missing axis DROPPED+renormed, never 0-imputed). SI-4 out-of-class → score=null+excluded[]; SI-5 fail-loud (classifiedCount===scoredCount+excludedCount); marquee + generative anti-leak asserts; PRE-REVENUE/SHELL SI-4 gate. Shipped CORE + independent Re-Court PASS on loop/formel-haertung. Konstanten [TODO-CAL].",
+  "source": "outputs/court-results.json :: consdisc_store + consdisc_light",
+  "cohortsFrozen": [
+    "consdisc_store",
+    "consdisc_light"
+  ],
+  "cohorts": {
+    "consdisc_store": {
+      "normTableId": "consdisc_store-norms-2026-06-21",
+      "classifiedCount": 53,
+      "scoredCount": 45,
+      "universeSize": 53,
+      "anchors": {
+        "gpa": {
+          "median": 0.4962,
+          "mad": 0.13290000000000002,
+          "n": 53
+        },
+        "growth": {
+          "median": 0.0498,
+          "mad": 0.03370000000000001,
+          "n": 53
+        },
+        "assetGrowthPenalty": {
+          "median": -0.0723,
+          "mad": 0.050600000000000006,
+          "n": 53
+        },
+        "eff": {
+          "median": 0.0779,
+          "mad": 0.0327,
+          "n": 53
+        }
+      },
+      "comparabilityNote": "consdisc_expansion consdisc_store (asset-intensity cohort: asset-light Internet-Retail vs store/real-estate-heavy retail+restaurants). absKaliber in [0,1] = cross-bucket-comparable absolute scale (4-axis weighted-q over the cohort NORMS 'consdisc_store-norms-2026-06-21': gpa .21/.85, growth .04/.22, assetGrowthPenalty -.30/.00, eff .02/.18; weights {gpa .40, growth .25, assetGrowthPenalty .20, eff .15}) THEN a POST-SUM share-dilution haircut (absK*(1-clip(shareCAGR,0,.06)/.06*.10) — issuance >=6%/yr → 10% haircut, buybacks no bonus). COVERAGE-RENORM drops any NOT_READY/null axis and renormalizes survivors to Σ=1.0 — no fake-neutral impute. blendScore mixes ABS+REL (β=0.6); the REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. WALLS always-on: LEASE_DISTORTED/INVENTORY_BLIND. The 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison."
+    },
+    "consdisc_light": {
+      "normTableId": "consdisc_light-norms-2026-06-21",
+      "classifiedCount": 10,
+      "scoredCount": 10,
+      "universeSize": 10,
+      "anchors": {
+        "gpa": {
+          "median": 0.65035,
+          "mad": 0.20339999999999997,
+          "n": 10
+        },
+        "growth": {
+          "median": 0.09440000000000001,
+          "mad": 0.04240000000000001,
+          "n": 10
+        },
+        "assetGrowthPenalty": {
+          "median": -0.13305,
+          "mad": 0.09515000000000001,
+          "n": 10
+        },
+        "eff": {
+          "median": 0.07605,
+          "mad": 0.04925000000000001,
+          "n": 10
+        }
+      },
+      "comparabilityNote": "consdisc_expansion consdisc_light (asset-intensity cohort: asset-light Internet-Retail vs store/real-estate-heavy retail+restaurants). absKaliber in [0,1] = cross-bucket-comparable absolute scale (4-axis weighted-q over the cohort NORMS 'consdisc_light-norms-2026-06-21': gpa .42/.95, growth .04/.22, assetGrowthPenalty -.30/.00, eff .02/.18; weights {gpa .40, growth .25, assetGrowthPenalty .20, eff .15}) THEN a POST-SUM share-dilution haircut (absK*(1-clip(shareCAGR,0,.06)/.06*.10) — issuance >=6%/yr → 10% haircut, buybacks no bonus). COVERAGE-RENORM drops any NOT_READY/null axis and renormalizes survivors to Σ=1.0 — no fake-neutral impute. ABS-ONLY (β=1, REL suppressed — thin-n n<15, §1.3 honest thin-n; an honest within-segment caliber beats a fake-clean REL across the lease-distorted pool). WALLS always-on: INVENTORY_BLIND (NOT lease-distorted — the point of the split). The 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison."
+    }
+  },
+  "classifiedCount": 63,
+  "scoredCount": 55,
+  "headlineShortlistSize": 36,
+  "scoreScope": "intra-bucket",
+  "crossBucketComparableField": "absKaliber",
+  "forwardFitness": {
+    "calendarGated": true,
+    "metric": [
+      "rank_ic_spearman",
+      "top_n_minus_universe_median_fwd_return"
+    ],
+    "horizonsDays": [
+      28,
+      84
+    ],
+    "windowEnds": {
+      "d28": "~2026-07-21",
+      "d84": "~2026-09-15"
+    },
+    "survivorshipKey": "evaluatedTickers",
+    "antiGaming": "gateOpen-Ranking am Ship-Tag (vor jeder weiteren Bucket-Änderung) eingefroren. Forward-Fenster = intrinsischer Holdout; Eval erst NACH Kalender-Gate. Erzeugende Agenten dürfen NIE auf dem Eval-Slice tunen. Eine neue Bucket-Version gilt nur als „besser\", wenn sie diese Forward-Metrik STRIKT schlägt.",
+    "honestLimitation": "N=36 gateOpen-Namen (cohort-split macht n pro Kohorte noch dünner) — Rank-IC/Kohorten-Spread haben Richtungs-, nicht starke statistische Aussagekraft. Primärer Wert: Pre-Registration-Disziplin + Beitrag zur gepoolten Cross-Formel-Fitness."
+  },
+  "priceAnchorStatus": "CAPTURED — t0-Close je Ticker eingefroren. Forward-Return = close[t0+h]/close[t0]-1.",
+  "benchmarkAnchorNote": "Broad-market SPY/QQQ/IWM in prices/history.json; Sektor-ETF (XLY) i.d.R. NICHT im Screener-Universe-History → null bis ein künftiger Pull ihn aufnimmt (kein Holdout-Defekt).",
+  "ranking": [
+    {
+      "order": 1,
+      "ticker": "DECK",
+      "cohort": "consdisc_store",
+      "score": 85.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.821,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 2,
+      "ticker": "WINA",
+      "cohort": "consdisc_store",
+      "score": 79.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.748,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 3,
+      "ticker": "DPZ",
+      "cohort": "consdisc_store",
+      "score": 78.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.743,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 4,
+      "ticker": "ANF",
+      "cohort": "consdisc_store",
+      "score": 71.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.675,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 5,
+      "ticker": "WING",
+      "cohort": "consdisc_store",
+      "score": 71.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.675,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 6,
+      "ticker": "CART",
+      "cohort": "consdisc_light",
+      "score": 67.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.675,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 7,
+      "ticker": "LULU",
+      "cohort": "consdisc_store",
+      "score": 62.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.584,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 8,
+      "ticker": "BKE",
+      "cohort": "consdisc_store",
+      "score": 61.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.566,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 9,
+      "ticker": "ULTA",
+      "cohort": "consdisc_store",
+      "score": 58,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.528,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 10,
+      "ticker": "LQDT",
+      "cohort": "consdisc_light",
+      "score": 57.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.577,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 11,
+      "ticker": "BOBS",
+      "cohort": "consdisc_store",
+      "score": 56.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.538,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 12,
+      "ticker": "CHWY",
+      "cohort": "consdisc_light",
+      "score": 56.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.567,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 13,
+      "ticker": "EAT",
+      "cohort": "consdisc_store",
+      "score": 55.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.552,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 14,
+      "ticker": "EYE",
+      "cohort": "consdisc_store",
+      "score": 52.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.468,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 15,
+      "ticker": "RVLV",
+      "cohort": "consdisc_light",
+      "score": 51.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.513,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 16,
+      "ticker": "CMG",
+      "cohort": "consdisc_store",
+      "score": 47.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.43,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 17,
+      "ticker": "FIVE",
+      "cohort": "consdisc_store",
+      "score": 47.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.492,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 18,
+      "ticker": "ROST",
+      "cohort": "consdisc_store",
+      "score": 46.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.416,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 19,
+      "ticker": "TJX",
+      "cohort": "consdisc_store",
+      "score": 46,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.419,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 20,
+      "ticker": "YUM",
+      "cohort": "consdisc_store",
+      "score": 45.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.425,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 21,
+      "ticker": "URBN",
+      "cohort": "consdisc_store",
+      "score": 43.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.412,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 22,
+      "ticker": "SVV",
+      "cohort": "consdisc_store",
+      "score": 43,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.393,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 23,
+      "ticker": "BURL",
+      "cohort": "consdisc_store",
+      "score": 41.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.385,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 24,
+      "ticker": "CAKE",
+      "cohort": "consdisc_store",
+      "score": 40.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.371,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 25,
+      "ticker": "SHAK",
+      "cohort": "consdisc_store",
+      "score": 40.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.4,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 26,
+      "ticker": "BOOT",
+      "cohort": "consdisc_store",
+      "score": 40,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.391,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 27,
+      "ticker": "EBAY",
+      "cohort": "consdisc_light",
+      "score": 39.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.395,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 28,
+      "ticker": "TSCO",
+      "cohort": "consdisc_store",
+      "score": 38.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.359,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 29,
+      "ticker": "RH",
+      "cohort": "consdisc_store",
+      "score": 37.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.339,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 30,
+      "ticker": "VSCO",
+      "cohort": "consdisc_store",
+      "score": 35,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.326,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 31,
+      "ticker": "CAVA",
+      "cohort": "consdisc_store",
+      "score": 32.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.326,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 32,
+      "ticker": "TXRH",
+      "cohort": "consdisc_store",
+      "score": 31.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.291,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 33,
+      "ticker": "FND",
+      "cohort": "consdisc_store",
+      "score": 28.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.263,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 34,
+      "ticker": "CASY",
+      "cohort": "consdisc_store",
+      "score": 25.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.206,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 35,
+      "ticker": "DKS",
+      "cohort": "consdisc_store",
+      "score": 18.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.137,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 36,
+      "ticker": "AMZN",
+      "cohort": "consdisc_light",
+      "score": 15.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.153,
+      "belowAbsoluteFloor": false
+    }
+  ],
+  "evaluatedTickers": [
+    "DECK",
+    "WINA",
+    "DPZ",
+    "ANF",
+    "WING",
+    "CART",
+    "LULU",
+    "BKE",
+    "ULTA",
+    "LQDT",
+    "BOBS",
+    "CHWY",
+    "EAT",
+    "EYE",
+    "RVLV",
+    "CMG",
+    "FIVE",
+    "ROST",
+    "TJX",
+    "YUM",
+    "URBN",
+    "SVV",
+    "BURL",
+    "CAKE",
+    "SHAK",
+    "BOOT",
+    "EBAY",
+    "TSCO",
+    "RH",
+    "VSCO",
+    "CAVA",
+    "TXRH",
+    "FND",
+    "CASY",
+    "DKS",
+    "AMZN"
+  ],
+  "priceAnchors": {
+    "DECK": {
+      "date": "2026-06-12",
+      "close": 113.83000183105469
+    },
+    "WINA": {
+      "date": "2026-06-12",
+      "close": 400.6199951171875
+    },
+    "DPZ": {
+      "date": "2026-06-12",
+      "close": 321.8900146484375
+    },
+    "ANF": {
+      "date": "2026-06-15",
+      "close": 91.0999984741211
+    },
+    "WING": {
+      "date": "2026-06-15",
+      "close": 166.22000122070312
+    },
+    "CART": {
+      "date": "2026-06-12",
+      "close": 41.244998931884766
+    },
+    "LULU": {
+      "date": "2026-06-12",
+      "close": 118.7699966430664
+    },
+    "BKE": {
+      "date": "2026-06-12",
+      "close": 45.290000915527344
+    },
+    "ULTA": {
+      "date": "2026-06-12",
+      "close": 467.739990234375
+    },
+    "LQDT": {
+      "date": "2026-06-12",
+      "close": 37.939998626708984
+    },
+    "BOBS": {
+      "date": "2026-06-12",
+      "close": 13.729999542236328
+    },
+    "CHWY": {
+      "date": "2026-06-15",
+      "close": 19.34000015258789
+    },
+    "EAT": {
+      "date": "2026-06-12",
+      "close": 159.32000732421875
+    },
+    "EYE": {
+      "date": "2026-06-15",
+      "close": 17.959999084472656
+    },
+    "RVLV": {
+      "date": "2026-06-15",
+      "close": 20.770000457763672
+    },
+    "CMG": {
+      "date": "2026-06-12",
+      "close": 32.22999954223633
+    },
+    "FIVE": {
+      "date": "2026-06-15",
+      "close": 193.9199981689453
+    },
+    "ROST": {
+      "date": "2026-06-12",
+      "close": 240.1300048828125
+    },
+    "TJX": {
+      "date": "2026-06-12",
+      "close": 168.41000366210938
+    },
+    "YUM": {
+      "date": "2026-06-15",
+      "close": 154.6699981689453
+    },
+    "URBN": {
+      "date": "2026-06-12",
+      "close": 77
+    },
+    "SVV": {
+      "date": "2026-06-15",
+      "close": 10.140000343322754
+    },
+    "BURL": {
+      "date": "2026-06-15",
+      "close": 336.6000061035156
+    },
+    "CAKE": {
+      "date": "2026-06-12",
+      "close": 75.27999877929688
+    },
+    "SHAK": {
+      "date": "2026-06-15",
+      "close": 58.400001525878906
+    },
+    "BOOT": {
+      "date": "2026-06-15",
+      "close": 165.8800048828125
+    },
+    "EBAY": {
+      "date": "2026-06-12",
+      "close": 108.61000061035156
+    },
+    "TSCO": {
+      "date": "2026-06-12",
+      "close": 31.25
+    },
+    "RH": {
+      "date": "2026-06-15",
+      "close": 148.1199951171875
+    },
+    "VSCO": {
+      "date": "2026-06-12",
+      "close": 78.87999725341797
+    },
+    "CAVA": {
+      "date": "2026-06-15",
+      "close": 89.5199966430664
+    },
+    "TXRH": {
+      "date": "2026-06-12",
+      "close": 167.86000061035156
+    },
+    "FND": {
+      "date": "2026-06-15",
+      "close": 53.130001068115234
+    },
+    "CASY": {
+      "date": "2026-06-12",
+      "close": 895.1400146484375
+    },
+    "DKS": {
+      "date": "2026-06-12",
+      "close": 220.99000549316406
+    },
+    "AMZN": {
+      "date": "2026-06-12",
+      "close": 238.5500030517578
+    },
+    "SPY": {
+      "date": "2026-06-12",
+      "close": 741.75
+    },
+    "QQQ": {
+      "date": "2026-06-15",
+      "close": 744
+    },
+    "IWM": {
+      "date": "2026-06-15",
+      "close": 294.6400146484375
+    },
+    "XLY": null
+  }
+}
