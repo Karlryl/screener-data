@@ -1235,6 +1235,142 @@ test('PARITÄT (dlst-Addition): KEIN dlst-only Feld auf SaaS/Fabless/Medtech-Mem
   }
 });
 
+// =================== INDUSTRIALS_COMPOUNDER (CORE) BUCKET TESTS (v1, two cohorts heavy|light) ===========
+// Spec formula-design-industrials-compounder-v1-2026-06-21.md. industrials is a SEPARATE court bucket
+// (disjoint from saas/fabless/medtech/dlst and from the tag28 SCORE_WEIGHTS projection). NEW code keyed by
+// the new cohort strings → the 4 prior buckets stay byte-identical (covered by the parity tests above).
+const indH = doc.industrials_heavy;
+const indL = doc.industrials_light;
+const IH = indH ? indH.members : [];
+const IL = indL ? indL.members : [];
+
+test('industrials: both cohort buckets exist (heavy + light) with members', () => {
+  assert(indH && Array.isArray(indH.members) && IH.length > 0, 'industrials_heavy bucket fehlt/leer');
+  assert(indL && Array.isArray(indL.members) && IL.length > 0, 'industrials_light bucket fehlt/leer');
+  assert(/Industrials-Compounder v1/.test(indH.label || ''), `heavy label sollte v1 nennen: ${indH.label}`);
+});
+
+test('industrials §6.2b MARQUEE: all 16 marquees classified+scored across the two cohorts (fail-loud guard)', () => {
+  const MARQUEE = ['RTX', 'LMT', 'NOC', 'UNP', 'NSC', 'WM', 'RSG', 'ITW', 'PH', 'ETN', 'GD', 'EMR', 'CAT', 'DE', 'BA', 'GE'];
+  const scored = new Set([...IH, ...IL].map(m => m.ticker));
+  const missing = MARQUEE.filter(t => !scored.has(t));
+  assert(missing.length === 0, `MARQUEE COVERAGE FAIL — nicht klassifiziert/gescort: ${missing.join(', ')}`);
+  // the assertIndustrialsMarquee export must also pass on the live results (direct property test).
+  const { assertIndustrialsMarquee } = require('./court-score.js');
+  assert(typeof assertIndustrialsMarquee === 'function', 'assertIndustrialsMarquee nicht exportiert');
+  assertIndustrialsMarquee(doc); // throws on collapse
+});
+
+test('industrials SI-5: classifiedCount === scoredCount + excludedCount (BEIDE Kohorten, fail-loud)', () => {
+  for (const [name, R] of [['heavy', indH], ['light', indL]]) {
+    assert(R.classifiedCount != null && R.scoredCount != null && R.excludedCount != null,
+      `${name} SI-5 counts fehlen`);
+    assert(R.classifiedCount === R.scoredCount + R.excludedCount,
+      `${name} SI-5 mismatch: classified ${R.classifiedCount} !== scored ${R.scoredCount} + excluded ${R.excludedCount}`);
+  }
+  // corrected-pool target counts (Spec §6.6): heavy 165 / light 141.
+  assert(indH.classifiedCount === 165, `heavy classified sollte 165 sein, ist ${indH.classifiedCount}`);
+  assert(indL.classifiedCount === 141, `light classified sollte 141 sein, ist ${indL.classifiedCount}`);
+});
+
+test('industrials: a heavy + a light marquee member scored finite (CAT heavy, WM light)', () => {
+  const cat = IH.find(m => m.ticker === 'CAT');
+  assert(cat && Number.isFinite(cat.score) && cat.score > 0, `CAT (heavy) sollte finiten Score >0 haben, ist ${cat && cat.score}`);
+  assert(cat.absKaliber != null && cat.absKaliber > 0, `CAT absKaliber sollte >0 sein, ist ${cat && cat.absKaliber}`);
+  const wm = IL.find(m => m.ticker === 'WM');
+  assert(wm && Number.isFinite(wm.score) && wm.score > 0, `WM (light) sollte finiten Score >0 haben, ist ${wm && wm.score}`);
+});
+
+test('industrials SI-4: excluded-industry name (Airlines AAL) is NOT classified into either cohort', () => {
+  // Excluded industries (Airlines/Marine Shipping/Conglomerates/Airports) → classifier returns null → never
+  // enter court-buckets → absent from both industrials universes (SI-4: out-of-class is null+excluded, never 0).
+  const inUniverse = [...IH, ...IL].some(m => m.ticker === 'AAL');
+  assert(!inUniverse, 'AAL (Airlines, excluded industry) darf NICHT im industrials-Universum sein (SI-4)');
+});
+
+test('industrials SI-4: Out-class / below-floor members carry score=null in excluded[] (kein irreführender Rang)', () => {
+  for (const [name, R] of [['heavy', indH], ['light', indL]]) {
+    assert(Array.isArray(R.excluded), `${name} excluded[] fehlt (SI-4)`);
+    for (const m of R.excluded) assert(m.score === null, `${name} excluded ${m.ticker} score sollte null sein, ist ${m.score}`);
+    // ranked (score!=null) members are all membership != Out.
+    for (const m of R.members) {
+      if (m.score != null) assert(m.membershipClass !== 'Out', `${name} ranked ${m.ticker} ist Out mit Score (SI-4)`);
+    }
+  }
+});
+
+test('industrials: COVERAGE-RENORM — Vintage-A names (RTX/ITW, no annualShares) drop Axis E + renorm to 4 axes', () => {
+  // The load-bearing coverage-renorm path (Spec §6.4/§7-#13): ~57% of names lack annualShares → ISSUANCE_NOT_READY.
+  for (const t of ['RTX', 'ITW', 'WM', 'UNP']) {
+    const m = [...IH, ...IL].find(x => x.ticker === t);
+    if (!m) continue;
+    assert(Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.includes('netIssuance'),
+      `${t} (Vintage-A, no annualShares) sollte netIssuance droppen, droppedAxes=${JSON.stringify(m.absDroppedAxes)}`);
+    assert(m.lamps.includes('ISSUANCE_NOT_READY'), `${t} sollte ISSUANCE_NOT_READY lampen`);
+    assert(m.absUsedAxes.length === 4, `${t} sollte 4 Achsen nutzen (E gedroppt), ist ${m.absUsedAxes.length}`);
+  }
+  // Axis-E coverage disclosure matches the corrected-pool figures (Spec §2.2/§6.6: heavy 95, light 78).
+  assert(indH.issuanceCoverage && indH.issuanceCoverage.scored === 95, `heavy issuance scored sollte 95 sein, ist ${indH.issuanceCoverage && indH.issuanceCoverage.scored}`);
+  assert(indL.issuanceCoverage && indL.issuanceCoverage.scored === 78, `light issuance scored sollte 78 sein, ist ${indL.issuanceCoverage && indL.issuanceCoverage.scored}`);
+});
+
+test('industrials §4.3 SPIN-OFF GUARD: GE routed to NOT_READY:growth (spin-off rebound never scored as organic)', () => {
+  const ge = IH.find(m => m.ticker === 'GE');
+  assert(ge != null, 'GE nicht im heavy-Universum');
+  assert(ge.lamps.includes('SPINOFF_REBASE') && ge.lamps.includes('NOT_READY:growth'),
+    `GE sollte SPINOFF_REBASE + NOT_READY:growth lampen; Lampen: ${ge.lamps}`);
+  assert(ge.growthInput == null, `GE growthInput sollte null sein (Axis A gedroppt), ist ${ge.growthInput}`);
+  assert(Array.isArray(ge.absDroppedAxes) && ge.absDroppedAxes.includes('growth'), 'GE sollte growth-Achse droppen (renorm)');
+});
+
+test('industrials §4.1 DEAL-MASK: AXON/BE deal-masked (sign-aware positive jump); CAT NOT masked', () => {
+  for (const t of ['AXON', 'BE']) {
+    const m = [...IH, ...IL].find(x => x.ticker === t);
+    if (m) assert(m.lamps.includes('DEAL_MASKED'), `${t} sollte DEAL_MASKED lampen (asset+rev jump); Lampen: ${m.lamps}`);
+  }
+  const cat = IH.find(m => m.ticker === 'CAT');
+  if (cat) assert(!cat.lamps.includes('DEAL_MASKED'), 'CAT sollte NICHT deal-masked sein (rev jump <15%)');
+});
+
+test('industrials: always-on WALLS lamps on every member (CYCLE_WALL/INVENTORY_BLIND/UNBILLED_BLIND/BACKLOG_FUTURE)', () => {
+  for (const m of [...IH, ...IL]) {
+    for (const wall of ['CYCLE_WALL', 'INVENTORY_BLIND', 'UNBILLED_BLIND', 'BACKLOG_FUTURE']) {
+      assert(m.lamps.includes(wall), `${m.ticker} fehlt always-on Wall-Lampe ${wall}`);
+    }
+  }
+});
+
+test('industrials SI-3: normTableId + cohort + comparabilityNote (absKaliber cross-bucket, REL intra-bucket)', () => {
+  assert(indH.normTableId === 'industrials_heavy-norms-2026-06-21', `heavy normTableId falsch: ${indH.normTableId}`);
+  assert(indL.normTableId === 'industrials_light-norms-2026-06-21', `light normTableId falsch: ${indL.normTableId}`);
+  for (const R of [indH, indL]) {
+    assert(R.comparabilityNote && /absKaliber/.test(R.comparabilityNote) && /COVERAGE-RENORM/.test(R.comparabilityNote),
+      'comparabilityNote sollte absKaliber + COVERAGE-RENORM erklären');
+    assert(R.scoreScope === 'intra-bucket' && R.crossBucketComparableField === 'absKaliber', 'SI-3 cross-bucket-Marker fehlen');
+  }
+});
+
+test('industrials: spot-check — ITW/CTAS mid-high, pre-revenue ACHR floored (Out/score=null)', () => {
+  const itw = IH.find(m => m.ticker === 'ITW');
+  assert(itw && itw.score != null && itw.score >= 50, `ITW (high GP/assets compounder) sollte mid-high (>=50) sein, ist ${itw && itw.score}`);
+  const ctas = IL.find(m => m.ticker === 'CTAS');
+  assert(ctas && ctas.score != null && ctas.score >= 50, `CTAS (asset-light services) sollte mid-high sein, ist ${ctas && ctas.score}`);
+  const achr = IH.find(m => m.ticker === 'ACHR');
+  assert(achr != null, 'ACHR muss im Universum sein (SI-5: alle klassifizierten admittiert)');
+  assert(achr.score === null, `ACHR (pre-revenue, gpa/growth/eff NOT_READY) sollte score=null sein, ist ${achr.score}`);
+  assert(achr.absKaliber === 0, `ACHR absKaliber sollte 0 sein (alle Quality-Achsen gedroppt), ist ${achr.absKaliber}`);
+});
+
+test('industrials PARITÄT: KEIN industrials-only Feld auf SaaS/Fabless/Medtech/D&LST-Membern (Leak-Guard)', () => {
+  for (const b of ['system_app_software', 'fabless_semi', 'medtech_devices', 'diagnostics_lst']) {
+    for (const m of doc[b].members) {
+      for (const leak of ['ind', 'gpa', 'assetGrowth', 'netShareIssuance', 'effInd', 'growthInput', 'absUsedAxes', 'absDroppedAxes', '_indGpa', '_indGrowth', '_indEff']) {
+        assert(!(leak in m), `${b}/${m.ticker} hat industrials-only Feld '${leak}' geleakt (Parität verletzt)`);
+      }
+    }
+  }
+});
+
 // Temp-Outputs aufräumen (Harness-Isolation: Produktions-Artefakte bleiben unberührt)
 try { fs.unlinkSync(CAND_TEST); } catch {}
 try { fs.unlinkSync(RESULTS); } catch {}

@@ -18,7 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const ROOT = __dirname;
-const { absKaliber, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
+const { absKaliber, absKaliberIndustrials, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
 // Medtech M&A snapshot (advisory lamps; object keyed by ticker)
 const maMedtechRaw = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'ma-rpo-snapshot-medtech.json'), 'utf8')); } catch { return {}; } })();
 // Remove _header key
@@ -137,6 +137,63 @@ const FORMULAS = {
     // v1.3: DECELERATION-AWARE growth — growthOrganic = min(latestOrganicYoY, 0.6*CAGR+0.4*median blend);
     //       the blend is a BACKWARD durability view only; gateOpen floor evaluated on latestOrganicYoY.
     a2Note: 'v1.3 (Court-DENIED-4:1 remediation): the v1.2 medtech GROWTH AXIS INPUT was DECELERATION-BLIND — growthOrganic was the pure backward blend 0.6*CAGR_3y + 0.4*median(trailing organic YoY) on the HEAVIEST axis (growth w=0.45). It INFLATED decelerating names above their current organic rate and SILENTLY BYPASSED the gateOpen floor (growth>=0.15): INSP latest organic YoY 13.6% (<15% floor) read as 30% blend → cleared gate → shortlist #3 with no deal; TMDX latest 37% read as 85% → #2. v1.3 FIX: the medtech growth axis uses growthOrganic = min(latest-organic-YoY, multi-year blend), so a decelerating name can NEVER read above its current organic rate; the multi-year blend (0.6*CAGR+0.4*median over deal-year-excluded organic years) is retained ONLY as a SECONDARY backward DURABILITY signal (persisted growthBlend), never the primary axis input. (II) the hard gateOpen floor (growth>=0.15) is evaluated EXPLICITLY on latestOrganicYoY (the current organic rate), not the blend — so INSP (13.6%) now DROPS off the headlineShortlist. (III) deceleration LAMP when latestOrganicYoY < median(prior organic years); trailing-window-growth advisory lamp when blend diverges from latestOrganicYoY by >~50%. (VI) deal-year-excluded names left with <2 organic years (GMED) get a current-year-only LAMP (the 0.6/0.4 blend did NOT run) and use the single current-year organic YoY explicitly. (VII) FY-reconciliation HARD ASSERT: when a deal-year drop occurs, cache revLatest and SEC annualRevenue must reconcile within 15% or scoring FAILS LOUD (the unlabeled revYoY series and goodwillHistory[].end could otherwise be on different fiscal calendars). Inherited v1.2 fixes: (A SI-5) full-universe (classifiedCount===scoredCount); (B) winsorized organic growth (cap 1.0) → no ALMR 195% leak; (C SI-4) Out-class score=null + excluded[]; (D) deal-year-exclusion (drop YoY of any year whose goodwill jumped >=25% of rev + 1 catch-up year); (F) M&A-coverage-null lamp; (G SI-3) comparabilityNote; (H) baseline frozen. Constants [TODO-CAL]: DEAL_JUMP_THRESH 0.25, W_CAGR 0.6, W_MEDIAN 0.4, CATCH_UP_YEARS 1 [TODO-CAL: widening goodwill/rev history window could retain >=2 organic years for GMED], FY_RECON_TOL 0.15. Additive/parity-safe: SaaS/Fabless byte-identical to _parity-baseline-pre-v13.',
+  },
+  // ===========================================================================
+  // industrials_compounder (CORE) — TWO cohorts by asset-intensity (Spec v1 2026-06-21).
+  // ===========================================================================
+  // 5 SCORED axes (gpa/growth/assetGrowthPenalty/netIssuance/eff), §3 weights {0.34,0.22,0.18,0.12,0.14}.
+  // absKaliberIndustrials = weighted-q over the 5 axes reading the cohort NORMS with COVERAGE-RENORM (drop
+  // any NOT_READY/null axis incl. ISSUANCE_NOT_READY/SPINOFF_REBASE, renormalize survivors to Σ=1.0). REL z/MAD
+  // per-cohort (each is its own bucket, n≫15). blend score=100*(0.6*ABS+0.4*REL), β=0.6. RAW inputs come from
+  // m.ind.* (court-screen snapshot extraction; deal-mask + spin-off guard applied UPSTREAM). The inverted axes
+  // (assetGrowthPenalty/netIssuance) negate the raw for BOTH the q-input AND the cross-sectional REL z (higher
+  // q = better → REL must agree in sign). industrials = NEW code keyed by the new cohort strings; existing
+  // buckets (medtech/dlst/saas/fabless) are BYTE-IDENTICAL (their paths untouched).
+  industrials_heavy: {
+    label: 'Industrials-Compounder v1 (heavy: capital-goods/A&D/electrical; absolute-anchor, GP/assets pillar, cyclicality-floored deal-masked growth, spin-off guard, asset-growth+net-issuance discipline, coverage-renorm)',
+    membership: { g: { c: 0.00, s: 0.06 }, gm: { c: 0.10, s: 0.08 }, scaleLog: { c: log10(1000), s: 0.6 } },
+    axes: [
+      { key: 'gpa',                name: 'GP/Assets',  k: 1.5, w: 0.34 },
+      { key: 'growth',             name: 'Growth',     k: 2.0, w: 0.22 },
+      { key: 'assetGrowthPenalty', name: 'AssetGrowth', k: 1.5, w: 0.18 },
+      { key: 'netIssuance',        name: 'NetIssuance', k: 1.5, w: 0.12 },
+      { key: 'eff',                name: 'Eff-OpFcf',  k: 1.5, w: 0.14 },
+    ],
+    dilCap: 0, dilStart: 0.05, dilRange: 0.20, // net-issuance is a SCORED axis (E); no separate SBC penalty.
+    stages: [
+      { name: 'S3-Cash-Compounder', test: f => f >= 0.20 },
+      { name: 'S2-FCF-positiv',     test: f => f >= 0.08 },
+      { name: 'S1-Approaching',     test: f => f >= -0.05 },
+      { name: 'S0-Cyclical-Trough', test: () => true },
+    ],
+    dominantBlock: ['gpa', 'eff'],
+    degraded: false,
+    normTableId: 'industrials_heavy-norms-2026-06-21',
+    industrials: true, cohortKey: 'industrials_heavy',
+    a2Note: 'industrials_compounder v1 (Spec formula-design-industrials-compounder-v1-2026-06-21.md, Court-PASSED). CORE quality-compounder + cyclical overlay. 5 SCORED axes via absKaliberIndustrials: GP/assets (Novy-Marx, w .34, cohort-specific norm), organic growth (w .22, deal-masked §4.1 + cyclicality blend-floor §4.2 + spin-off re-baselining guard §4.3 applied UPSTREAM → NOT_READY:growth), asset-growth penalty (Cooper-Gulen-Schill, w .18, q(-assetGrowth)), net-share-issuance penalty (Pontiff-Woodgate, w .12, q(-NSI); ~57% coverage — Vintage-A snapshots carry no annualShares → DROP+renorm+ISSUANCE_NOT_READY, the load-bearing coverage-renorm path), op-weighted efficiency (0.60*opMargin+0.40*fcfMargin, w .14, cohort-specific norm). COVERAGE-RENORM: any NOT_READY/null axis is dropped and surviving weights renormalize to Σ=1.0 (no fake-neutral impute). score=100*(0.6*absKaliber+0.4*REL), β=0.6, REL per-cohort (n=165≫15). WALLS (always-on lamps): CYCLE_WALL (~4y history, no normalized-10y-ROIC), INVENTORY_BLIND (no inventory line), UNBILLED_BLIND (no contract-asset line), BACKLOG_FUTURE (no book-to-bill/RPO → Axis F future BONUS, weight 0). SI-4 out-of-class (excluded industry / non-US / <$1B) → score=null + excluded[]; SI-5 classifiedCount===scoredCount+excludedCount fail-loud; marquee assert (RTX/LMT/NOC/UNP/NSC/WM/RSG/ITW/PH/ETN/GD/EMR/CAT/DE/BA/GE) fail-loud. Disclosed: Axis E ~57% coverage (data-vintage gap, not a formula flaw); ZTO operational-ADR leak (1/141 light, MAD-robust). Additive/parity-safe: saas/fabless/medtech/dlst byte-identical. Constants frozen §6.5.',
+  },
+  industrials_light: {
+    label: 'Industrials-Compounder v1 (light: services/rail/freight/waste/distribution; absolute-anchor, GP/assets pillar, cyclicality-floored deal-masked growth, spin-off guard, asset-growth+net-issuance discipline, coverage-renorm)',
+    membership: { g: { c: 0.00, s: 0.06 }, gm: { c: 0.18, s: 0.10 }, scaleLog: { c: log10(1000), s: 0.6 } },
+    axes: [
+      { key: 'gpa',                name: 'GP/Assets',  k: 1.5, w: 0.34 },
+      { key: 'growth',             name: 'Growth',     k: 2.0, w: 0.22 },
+      { key: 'assetGrowthPenalty', name: 'AssetGrowth', k: 1.5, w: 0.18 },
+      { key: 'netIssuance',        name: 'NetIssuance', k: 1.5, w: 0.12 },
+      { key: 'eff',                name: 'Eff-OpFcf',  k: 1.5, w: 0.14 },
+    ],
+    dilCap: 0, dilStart: 0.05, dilRange: 0.20,
+    stages: [
+      { name: 'S3-Cash-Compounder', test: f => f >= 0.20 },
+      { name: 'S2-FCF-positiv',     test: f => f >= 0.08 },
+      { name: 'S1-Approaching',     test: f => f >= -0.05 },
+      { name: 'S0-Cyclical-Trough', test: () => true },
+    ],
+    dominantBlock: ['gpa', 'eff'],
+    degraded: false,
+    normTableId: 'industrials_light-norms-2026-06-21',
+    industrials: true, cohortKey: 'industrials_light',
+    a2Note: 'industrials_compounder v1 light cohort (asset-light services / recurring-revenue / EPC / distribution; rail = asset-heavy residual §7-#7). Same 5-axis absKaliberIndustrials engine + coverage-renorm as industrials_heavy; cohort-specific gpa (.09/.48) + eff (.02/.20) norms; growth/assetGrowthPenalty/netIssuance anchors shared. n=141≫15 → full ABS+REL blend. ZTO (Chinese Integrated-Freight ADR) is the disclosed single-name residual leak (1/141, linear q floors it, MAD-robust). See industrials_heavy.a2Note for the full mechanism. Additive/parity-safe; constants frozen §6.5.',
   },
   diagnostics_lst: {
     label: 'Diagnostics-&-Life-Science-Tools v0 (cohort-aware dx|tools, absolute-anchor, deceleration-aware organic growth, FCF-efficiency, chronic-acquirer lamps)',
@@ -461,10 +518,17 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (KILL.has(t)) continue;                       // skeptiker-verifizierte Entfernung
     const c = byTicker.get(t);
     if (!c) continue;
-    if (c.gm != null && c.gm > 1.0) continue;        // GM>100% = unmöglich (Daten-Fehler) -> hard reject
-    // dedupe identische Foreign-OTC-Doppellistings (gleiche gm+rev)
-    const fp = `${c.gm}|${c.scaleRevM}`;
-    if (seen.has(fp)) continue; seen.add(fp);
+    // industrials_compounder (CORE): the deterministic classifier already deduped (IND_DEDUPE_DROP, §1.4) and
+    // court-buckets carries ONE entry per ticker; the gm>1.0 reject + the gm|scaleRevM fingerprint dedup are
+    // NOT applicable (gm is not an industrials axis, and pre-revenue names share the degenerate fp 'null|0',
+    // which would falsely drop NNE/EVEX/etc. and break SI-5). Skip both for industrials; all other buckets
+    // BYTE-IDENTICAL.
+    if (!F.industrials) {
+      if (c.gm != null && c.gm > 1.0) continue;        // GM>100% = unmöglich (Daten-Fehler) -> hard reject
+      // dedupe identische Foreign-OTC-Doppellistings (gleiche gm+rev)
+      const fp = `${c.gm}|${c.scaleRevM}`;
+      if (seen.has(fp)) continue; seen.add(fp);
+    }
     const m = { ...c, conf: confOf.get(t) };
     m.roicMinusWacc = (c.roicProxy != null) ? c.roicProxy - WACC : null;
     m.opMargin = c.opMargin;
@@ -543,11 +607,45 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m._capexNeg = (m.capexPct == null || !isFinite(m.capexPct)) ? null : -Math.abs(m.capexPct);
     }
   }
+  // --- industrials_compounder (CORE) PRE-PASS: lift the 5 RAW axis inputs from m.ind onto the member ---
+  // All intermediates are INDUSTRIALS-LOCAL → saas/fabless/medtech/dlst member JSON byte-identical (parity).
+  // The inverted axes (assetGrowthPenalty/netIssuance) store the NEGATED raw as the axis value, so the
+  // cross-sectional REL z (higher = better) agrees in sign with the ABS q-input. null raw → axis DROP (the
+  // coverage-renorm in absKaliberIndustrials handles it; REL sAxis returns 0=neutral for null).
+  if (F.industrials) {
+    for (const m of members) {
+      const i = m.ind || {};
+      m._indGpa = (i.gpa != null && isFinite(i.gpa)) ? i.gpa : null;
+      m._indGrowth = (i.growth != null && isFinite(i.growth)) ? i.growth : null;          // deal-masked + spinoff-guarded UPSTREAM
+      m._indAssetGrowthPenalty = (i.assetGrowth != null && isFinite(i.assetGrowth)) ? -i.assetGrowth : null; // q(-AG) direction
+      m._indNetIssuance = (i.netShareIssuance != null && isFinite(i.netShareIssuance)) ? -i.netShareIssuance : null; // q(-NSI) direction
+      m._indEff = (i.eff != null && isFinite(i.eff)) ? i.eff : null;
+      // persisted audit fields (rounded)
+      m.gpa = m._indGpa == null ? null : Math.round(m._indGpa * 10000) / 10000;
+      m.assetGrowth = (i.assetGrowth != null && isFinite(i.assetGrowth)) ? Math.round(i.assetGrowth * 10000) / 10000 : null;
+      m.netShareIssuance = (i.netShareIssuance != null && isFinite(i.netShareIssuance)) ? Math.round(i.netShareIssuance * 10000) / 10000 : null;
+      m.effInd = m._indEff == null ? null : Math.round(m._indEff * 10000) / 10000;
+      m.growthInput = m._indGrowth == null ? null : Math.round(m._indGrowth * 10000) / 10000;
+      m.cohort = i.cohort || F.cohortKey;
+    }
+  }
 
   // Roh-Achswerte für Stats (cross-sectional Median/MAD): nutze winsorisierte Werte
   // For medtech growth: use _growthMedtech (Fix D organic + winsorize at 1.0) for Stats AND scoring (Fix D
   // ersetzt den separaten _growthMedtechAdj-Discount-Pfad; beide sind nun identisch = organic-winsorized).
+  // industrials axis-key -> member field (REL z/MAD reads the SAME signed values as the ABS q-input).
+  const indRaw = (m, key) => {
+    switch (key) {
+      case 'gpa': return m._indGpa;
+      case 'growth': return m._indGrowth;
+      case 'assetGrowthPenalty': return m._indAssetGrowthPenalty;
+      case 'netIssuance': return m._indNetIssuance;
+      case 'eff': return m._indEff;
+      default: return m[key];
+    }
+  };
   const rawOfStats = (m, key) => {
+    if (F.industrials) return indRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtech : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -555,6 +653,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     return m[key];
   };
   const rawOf = (m, key) => {
+    if (F.industrials) return indRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtechAdj : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -608,13 +707,27 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     // v1.2 Fix B (ALMR LEAK FIX): Für MEDTECH nutzt das Membership-Growth-Gate die WINSORISIERTE/organische
     // Growth (_growthMedtech, cap 1.0) statt RAW growth — sonst leakt ALMR mit RAW 195% trotz $74M-Mini-Scale
     // einen hohen Gate-Wert. Nicht-Medtech: unverändert RAW m.growth (Parität SaaS/Fabless).
-    const mGate = (bucket === 'medtech_devices' && m._growthMedtech != null) ? m._growthMedtech
-                : (bucket === 'diagnostics_lst' && m._growthDlst != null) ? m._growthDlst
-                : m.growth;
-    const mg = logistic(mGate, F.membership.g.c, F.membership.g.s);
-    const mGM = logistic(m.gm, F.membership.gm.c, F.membership.gm.s);
-    const mSc = logistic(log10(Math.max(m.scaleRevM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
-    const M = mg * mGM * mSc;
+    // industrials membership (CORE): the asset-intensity cohort split + the $1B classifier gate already define
+    // the universe; membership here is the gpa(quality)×growth×scale logistic, with gpa standing in for the gm
+    // pillar (industrials has no gm axis). Pre-revenue names (gpa/growth null) land Borderline/Out honestly.
+    let M;
+    if (F.industrials) {
+      const gGate = m._indGrowth != null ? m._indGrowth : -1;           // null growth (spinoff/NOT_READY) → low
+      const gpaGate = m._indGpa != null ? m._indGpa : -1;               // null gpa (pre-revenue) → low
+      const scaleM = (m.marketCap != null && isFinite(m.marketCap)) ? m.marketCap / 1e6 : (m.scaleRevM || 1); // $1B+ marketCap
+      const mg = logistic(gGate, F.membership.g.c, F.membership.g.s);
+      const mGpa = logistic(gpaGate, F.membership.gm.c, F.membership.gm.s);
+      const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
+      M = mg * mGpa * mSc;
+    } else {
+      const mGate = (bucket === 'medtech_devices' && m._growthMedtech != null) ? m._growthMedtech
+                  : (bucket === 'diagnostics_lst' && m._growthDlst != null) ? m._growthDlst
+                  : m.growth;
+      const mg = logistic(mGate, F.membership.g.c, F.membership.g.s);
+      const mGM = logistic(m.gm, F.membership.gm.c, F.membership.gm.s);
+      const mSc = logistic(log10(Math.max(m.scaleRevM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
+      M = mg * mGM * mSc;
+    }
     m.membership = Math.round(M * 100) / 100;
     m.membershipClass = M >= 0.66 ? 'In' : M >= 0.20 ? 'Borderline' : 'Out';
 
@@ -715,6 +828,32 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
         cohortNorm);
       m.score = m.membershipClass === 'Out' ? null : rawScore;
       m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
+    } else if (F.industrials) {
+      // industrials_compounder (CORE): absKaliberIndustrials = 5-axis weighted-q with COVERAGE-RENORM reading
+      // the cohort NORMS (the load-bearing renorm fires on ~57% of names lacking annualShares + GE-type spinoffs).
+      const cohortNorm = F.cohortKey; // 'industrials_heavy' | 'industrials_light'
+      const indRec = {
+        gpa: m._indGpa, growth: m._indGrowth,
+        assetGrowth: (m.ind && m.ind.assetGrowth != null && isFinite(m.ind.assetGrowth)) ? m.ind.assetGrowth : null,
+        netShareIssuance: (m.ind && m.ind.netShareIssuance != null && isFinite(m.ind.netShareIssuance)) ? m.ind.netShareIssuance : null,
+        eff: m._indEff,
+      };
+      const ak = absKaliberIndustrials(indRec, cohortNorm);
+      m.absKaliber = Math.round(ak.absK * 1000) / 1000;
+      m.absUsedAxes = ak.usedAxes;          // audit: which axes survived coverage-renorm
+      m.absDroppedAxes = ak.droppedAxes;    // audit: NOT_READY/ISSUANCE/SPINOFF drops
+      const rawScore = Math.round(Math.max(0, blendScore(ak.absK, core, 0.6)) * 10) / 10; // pDil=0 (issuance is a SCORED axis)
+      // SI-1 shortlist-cut (Spec §6.1): growthInput >= growth.floor (0.00) AND gpa >= gpa.floor (cohort) AND
+      // efficiency floor met. A spin-off-guarded/NOT_READY growth or missing gpa fails the floor (not the gate
+      // crashing) → belowAbsoluteFloor, listed but off the shortlist. NOT a score-kill (REL/score path runs).
+      const norm = NORMS[cohortNorm];
+      const gateGrowthOk = (m._indGrowth != null) && (m._indGrowth >= norm.growth.floor);
+      const gateGpaOk = (m._indGpa != null) && (m._indGpa >= norm.gpa.floor);
+      const gateEffOk = (m._indEff != null) && (m._indEff >= norm.eff.floor);
+      m.belowAbsoluteFloor = !(gateGrowthOk && gateGpaOk && gateEffOk);
+      m.score = m.membershipClass === 'Out' ? null : rawScore;
+      m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
+      m.stage = stageOf(F, m.fcfMargin);
     } else {
       // audit/fix (gauntlet E3): SI-4 für saas/fabless — Out-Class-Member bekommen score=null (kein
       // irreführender Headline-Rang), exakt wie medtech/dlst (m.score = membershipClass==='Out' ? null : rawScore).
@@ -887,6 +1026,26 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       }
       m.normTableId = getNormTableId(cohortNorm);
     }
+    // industrials_compounder (CORE) lamps (Spec §5): advisory, never silent score-kills. The per-name
+    // upstream lamps (NOT_READY:gpa/growth/eff/assetgrowth, ISSUANCE_NOT_READY, SPINOFF_REBASE, DEAL_MASKED,
+    // STALE:growth, DILUTION_HIGH, MARGIN_NEGATIVE) were collected in court-screen (m.ind.lamps); the four
+    // WALLS are always-on per the frozen NORMS.lamps. THIN_REL never fires (both cohorts n≫15).
+    if (F.industrials) {
+      const il = (m.ind && Array.isArray(m.ind.lamps)) ? m.ind.lamps : [];
+      for (const lamp of il) if (!L.includes(lamp)) L.push(lamp);
+      // always-on WALLS (Spec §2.3/§5)
+      L.push('CYCLE_WALL');           // only ~4y history; no normalized-10y-ROIC
+      L.push('INVENTORY_BLIND');      // no inventory line ⇒ channel-overbuild/DIO uncomputable
+      L.push('UNBILLED_BLIND');       // no contract-asset line ⇒ unbilled-AR cash-quality uncomputable
+      L.push('BACKLOG_FUTURE');       // no book-to-bill/RPO → Axis F future BONUS (weight 0), not scored
+      if (m.belowAbsoluteFloor) L.push('below-abs-floor');
+      if (m.membershipClass === 'Out') L.push('membership-Out(excluded-from-headline)');
+      if (Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.length) L.push(`coverage-renorm(dropped:${m.absDroppedAxes.join('+')})`);
+      m.cohort = F.cohortKey;
+      m.normTableId = getNormTableId(F.cohortKey);
+      m.scoreScope = 'intra-bucket';
+      m.crossBucketComparableField = 'absKaliber';
+    }
     m.lamps = L;
     if (_ioFlag === 'inorganic') {
       m.degradedRankBias = `upward — A1 headline growth is M&A-flow-heavy (recent acquisition cash ${pct(_ioRec.paymentsToRev).trim()} of rev, goodwill +${pct(_ioRec.deltaGoodwillPctRev).trim()}) while forward book is flat (rpoGrowth ${pct(_ioRec.rpoGrowthYoY).trim()}); degraded-mode rank over-states growth quality pending an A2/organic-growth axis.`;
@@ -961,6 +1120,10 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
   } else if (bucket === 'medtech_devices') {
     const scoreKey = m => (m.score == null ? -Infinity : m.score);
     members.sort((a, b) => scoreKey(b) - scoreKey(a) || a.ticker.localeCompare(b.ticker));
+  } else if (F.industrials) {
+    // industrials null-safe sort: Out-class (score=null) → end, ticker tiebreak (deterministic).
+    const scoreKey = m => (m.score == null ? -Infinity : m.score);
+    members.sort((a, b) => scoreKey(b) - scoreKey(a) || a.ticker.localeCompare(b.ticker));
   } else {
     // audit/fix (gauntlet E3): SI-4 null-sicherer Sort für saas/fabless (Out-Class hat jetzt score=null).
     // Spiegelt medtech/dlst (scoreKey: null → -Infinity ans Ende, Ticker-Tiebreak). Für In/Borderline
@@ -1019,6 +1182,40 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     // SI-4: excluded[] = Out-Class-Namen.
     R.excluded = members.filter(m => m.membershipClass === 'Out');
   }
+  // industrials_compounder (CORE)-only Zusatzfelder (SI-3/4/5/6) — NUR auf den industrials-Buckets gesetzt
+  // → saas/fabless/medtech/dlst-JSON byte-identisch (Parität).
+  if (F.industrials) {
+    // SI-5 (Spec §6.2): classifiedCount === scoredCount + excludedCount (fail-loud). The court-buckets
+    // classifier assigns ONLY industrials_{heavy,light} (excluded industries / non-US / <$1B return null →
+    // never enter court-buckets), so every classified name reaches members[]. excludedCount = the SI-4
+    // out-of-class names that DID enter members but score=null (membership-Out). classifiedCount counts the
+    // court-buckets entries for this cohort; scoredCount = ranked (score!=null); excludedCount = score=null.
+    R.classifiedCount = cls.filter(c => c.bucket === bucket).length;
+    R.excluded = members.filter(m => m.score == null);
+    R.excludedCount = R.excluded.length;
+    R.scoredCount = members.filter(m => m.score != null).length;
+    // SI-5 fail-loud ONLY when run as a script (require.main) — a bare require('./court-score.js') (unit-test
+    // import, no fresh screen) reads whatever outputs/court-candidates.json exists and must not crash the
+    // require. The hard identity is asserted by court-score-tests.js on the freshly-regenerated isolated run.
+    // (Mirrors saas/fabless/medtech/dlst: those set the counts here, the throwing assert lives in the test.)
+    if (require.main === module && R.classifiedCount !== R.scoredCount + R.excludedCount) {
+      throw new Error(`SI-5 mismatch ${bucket}: classifiedCount ${R.classifiedCount} !== scoredCount ${R.scoredCount} + excludedCount ${R.excludedCount}`);
+    }
+    R.normTableId = getNormTableId(F.cohortKey);
+    R.cohort = F.cohortKey;
+    R.scoreScope = 'intra-bucket';
+    R.crossBucketComparableField = 'absKaliber';
+    const n = NORMS[F.cohortKey];
+    const fmt = x => (x == null ? '—' : x.toFixed(2).replace(/^0\./, '.').replace(/^-0\./, '-.'));
+    R.comparabilityNote = `industrials_compounder ${F.cohortKey} (asset-intensity cohort). absKaliber in [0,1] = cross-bucket-comparable absolute scale (5-axis weighted-q over the cohort NORMS '${getNormTableId(F.cohortKey)}': gpa ${fmt(n.gpa.floor)}/${fmt(n.gpa.elite)}, growth ${fmt(n.growth.floor)}/${fmt(n.growth.elite)}, assetGrowthPenalty ${fmt(n.assetGrowthPenalty.floor)}/${fmt(n.assetGrowthPenalty.elite)}, netIssuance ${fmt(n.netIssuance.floor)}/${fmt(n.netIssuance.elite)}, eff ${fmt(n.eff.floor)}/${fmt(n.eff.elite)}; weights {gpa .34, growth .22, assetGrowthPenalty .18, netIssuance .12, eff .14}); COVERAGE-RENORM drops any NOT_READY/null axis (incl. ISSUANCE_NOT_READY on the ~57% of names lacking annualShares, and SPINOFF_REBASE) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6). WALLS always-on: CYCLE_WALL/INVENTORY_BLIND/UNBILLED_BLIND/BACKLOG_FUTURE. The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison.`;
+    R.crossBucketComparableNote = 'Use members[].absKaliber (absolute [0,1] caliber) for cross-bucket comparison; members[].score (blended 0-100) is intra-bucket ONLY (mixes per-cohort REL, beta=0.6).';
+    R.walls = ['CYCLE_WALL', 'INVENTORY_BLIND', 'UNBILLED_BLIND', 'BACKLOG_FUTURE'];
+    // Axis-E coverage disclosure (Spec §7-#13): how many names took the ISSUANCE_NOT_READY drop+renorm path.
+    R.issuanceCoverage = {
+      scored: members.filter(m => m.netShareIssuance != null).length,
+      dropped: members.filter(m => m.netShareIssuance == null).length,
+    };
+  }
   // audit/fix (gauntlet E3): saas/fabless SI-4/SI-5-Retrofit — spiegelt medtech/dlst exakt.
   // NUR auf den beiden Buckets gesetzt; medtech/dlst haben ihre eigenen Blöcke oben. Diese Felder
   // wurden in die saas/fabless-Parity-Baselines re-gefroren (BEWUSSTER Governance-Bless, kein Drift):
@@ -1072,6 +1269,14 @@ function assertNoForeignLeak(resultsObj, listing) {
   const leaks = [];
   for (const [bucket, R] of Object.entries(resultsObj)) {
     if (!R || !Array.isArray(R.members)) continue;
+    // industrials_compounder (CORE) EXEMPTION: industrials membership is governed by the FROZEN spec classifier
+    // (scripts/classify-industrials.js, §6.2 vintage-tolerant isUSListing) which DELIBERATELY admits USD/NYSE
+    // foreign-domiciled industrials whose primary listing is US (the §1.2 inversion clause: ETN/ALLE/AER + the
+    // USD/NYSE Canadian/EU rails CNI/CP/CDLR/ATS/CAE/MDA/STN/FER), governed instead by the §6.2b marquee
+    // assert + SI-5. The C5 listing.isUS flag uses court-screen's STRICTER test (region==='US' only) for the
+    // saas/fabless/medtech/dlst buckets and would false-positive on the spec's intended industrials pool.
+    // The §1.2/§7-#12 leak policy (ZTO disclosed) is the industrials governance — not this cross-bucket guard.
+    if (bucket === 'industrials_heavy' || bucket === 'industrials_light') continue;
     for (const m of R.members) {
       const L = listing.get(m.ticker);
       if (!L) continue; // kein Snapshot-Meta → kann nichts behaupten (Vintage-A ohne Eintrag: tolerant)
@@ -1108,10 +1313,28 @@ function assertNoForeignLeak(resultsObj, listing) {
   }
 }
 
+// --- industrials_compounder (CORE) MARQUEE-COVERAGE assert (Spec §6.2b, fail-loud) ---
+// SI-5 identity alone does NOT catch the v0 killshot (a silently-dropped name is consistently absent from
+// BOTH classified and scored counts, so the identity still balances). The frozen marquee watchlist must each
+// be classified into one of the two industrials cohorts AND reach the scored universe (members[]) — else the
+// run DIES LOUD. This is the regression guard that would have caught the v0 country bug.
+const INDUSTRIALS_MARQUEE = Object.freeze(['RTX', 'LMT', 'NOC', 'UNP', 'NSC', 'WM', 'RSG', 'ITW', 'PH', 'ETN', 'GD', 'EMR', 'CAT', 'DE', 'BA', 'GE']);
+function assertIndustrialsMarquee(resultsObj) {
+  const H = resultsObj.industrials_heavy, Lt = resultsObj.industrials_light;
+  if (!H && !Lt) return; // industrials not in this run (e.g. isolated unit test) → tolerant no-op
+  const scored = new Set();
+  for (const R of [H, Lt]) if (R && Array.isArray(R.members)) for (const m of R.members) scored.add(m.ticker);
+  const missing = INDUSTRIALS_MARQUEE.filter(t => !scored.has(t));
+  if (missing.length) {
+    throw new Error('MARQUEE COVERAGE FAIL (Spec §6.2b) — industrials universe collapsed, these bona-fide '
+      + 'US large-caps were not classified/scored: ' + missing.join(', '));
+  }
+}
+
 // --- Export: computeMedtechOrganicGrowth + computeDlstOrganicGrowth für Unit-Tests ---
 // (computeDlstOrganicGrowth: Fix A FY-Alignment + Fix B dealYearExcluded-Ehrlichkeit, 2026-06-21)
-// + assertNoForeignLeak (gauntlet C5) für direkten Property-Test.
-module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak };
+// + assertNoForeignLeak (gauntlet C5) + assertIndustrialsMarquee (Spec §6.2b) für direkten Property-Test.
+module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE };
 
 // --- require.main-Guard (Härtung 2): Write + Ausgabe NUR wenn direkt als Skript ausgeführt ---
 // `require('./court-score.js')` gibt nur den Export zurück und schreibt NICHT outputs/court-results.json.
@@ -1120,6 +1343,9 @@ if (require.main === module) {
   // audit/fix (gauntlet C5): fail-loud VOR dem Write — ein foreign-country-Leak (FAILURE MODE 2) oder ein
   // exiliertes US-Marquee (FAILURE MODE 1) wirft hier, bevor outputs geschrieben/Picks promotet werden.
   assertNoForeignLeak(results, listingByTicker);
+  // industrials_compounder (CORE) §6.2b: the 16-name marquee watchlist must each be classified+scored, else
+  // the industrials universe silently collapsed (the v0 country-filter killshot regression guard).
+  assertIndustrialsMarquee(results);
   fs.writeFileSync(OUT, JSON.stringify(results, null, 2));
 
   // --- Ausgabe ---
