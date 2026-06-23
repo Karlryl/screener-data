@@ -205,7 +205,10 @@ const confOf = new Map(cls.map(c => [c.t, c.confidence]));
 // GM-NORM + die PER-KOHORTE cross-sektionalen REL-Stats (Spec §1: dx z-scored gegen dx, tools gegen tools).
 const cohortOf = new Map(cls.filter(c => c.cohort).map(c => [c.t, c.cohort]));
 // M&A/RPO snapshot (data-driven inorganic detection; 44 SaaS names; 400-day-freshness->NULL baked in)
-const maRpoByTicker = new Map(readJson(path.join(ROOT, 'data', 'ma-rpo-snapshot.json')).map(r => [r.ticker, r]));
+// audit COURT-5: guarded read mirroring the medtech/dlst sibling snapshots (lines ~23/~29). A missing or
+// corrupt ma-rpo-snapshot.json must NOT abort the court run or any require('./court-score.js') — it degrades
+// to an empty Map (all consumers null-guard maRpoByTicker.get(...): inorganicFlag, computeA2Forward, statsA2).
+const maRpoByTicker = (() => { try { return new Map(readJson(path.join(ROOT, 'data', 'ma-rpo-snapshot.json')).map(r => [r.ticker, r])); } catch { return new Map(); } })();
 
 // audit/fix (gauntlet C5): US-Listing-Side-File (von court-screen.js geschrieben) für den
 // GENERATIVEN Anti-Leak-Assert. Map ticker -> {country, region, exchangeName, reportingCurrency, isUS}.
@@ -559,6 +562,12 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     return m[key];
   };
 
+  // audit COURT-1 (disclosed limitation): these cross-sectional anchors (median/MAD below, and the per-axis
+  // sAxis z-scoring at the scoring loop) are computed on ONE source-MIXED pooled value per axis — the growth/
+  // accel inputs (rawOfStats/rawOf) pool annual + quarterly growth and acceleration into a single number; this
+  // code never reads growthSource/accelSource to partition the anchors. The court-screen.js:294-296 comment
+  // promises Schritt-2 computes anchors PER growthSource/accelSource — that per-source partitioning is
+  // ASPIRATIONAL / NOT YET IMPLEMENTED here (it would require a court re-run). Anchors are pooled, not per-source.
   // Cross-sectional Anker (Median) + MAD je Achse über das Bucket-Universum
   const stats = {};
   for (const ax of F.axes) {
@@ -589,6 +598,10 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     return { gMed: median(gv), gMad: mad(gv), lMed: median(lv), lMad: mad(lv), gn: gv.length, ln: lv.length };
   })() : null;
 
+  // audit COURT-4: bucket-local map ticker -> {axisName: full-precision s}. Kept OFF the member objects so it
+  // is never serialized into court-results.json (member JSON stays byte-identical to the parity baselines);
+  // only the collapse-reweight backstop consumes it, to recompute core from full-precision (not 2-dp) axis values.
+  const axisSrawByTicker = new Map();
   // Score je Mitglied
   for (const m of members) {
     // Membership-Gate
@@ -610,6 +623,10 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     // D&LST: die z/MAD-Anker kommen aus der Kohorte des Members (dx vs dx, tools vs tools), nicht gepoolt.
     const axStats = (F.cohortAware && statsByCohort[m._cohort]) ? statsByCohort[m._cohort] : stats;
     let core = 0; m.axisS = {};
+    // audit COURT-4: full-precision s cached in a parallel map NOT attached to m (so it is never serialized
+    // into court-results.json → member JSON stays byte-identical to the parity baselines). The collapse-
+    // reweight backstop (below) reads axisSraw instead of the 2-dp display axisS to avoid leaking rounding error.
+    const axisSraw = {}; axisSrawByTicker.set(m.ticker, axisSraw);
     for (const ax of F.axes) {
       let s = ax.key === 'a2Forward'
         ? (m._a2 == null ? 0 : m._a2)                                  // composite forward-book axis (already a blended s in [-1,1])
@@ -645,6 +662,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
           // fcf >= effFloor: voller positiver eff-REL-z (echte Effizienz relativ belohnt, unverändert)
         }
       }
+      axisSraw[ax.name] = s; // audit COURT-4: full-precision s for the collapse-reweight backstop (axisS below is 2-dp DISPLAY only, NOT serialized)
       m.axisS[ax.name] = Math.round(s * 100) / 100;
       core += ax.w * (s + 1) / 2;
     }
@@ -897,9 +915,13 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
         const otherWsum = F.axes.filter(a => a.key !== 'durability').reduce((s, a) => s + a.w, 0);
         for (const m of ranked) {
           let core = 0;
+          const raw = axisSrawByTicker.get(m.ticker); // audit COURT-4: full-precision axis values for this member
           for (const a of F.axes) {
             const w = a.key === 'durability' ? wDur : a.w + freed * (a.w / otherWsum);
-            core += w * ((m.axisS[a.name] || 0) + 1) / 2;
+            // audit COURT-4: recompute from FULL-PRECISION axisSraw (fallback to 2-dp axisS) so the backstop,
+            // when it fires, does not leak the display-rounding error into the overwritten score.
+            const sRaw = (raw && raw[a.name] != null) ? raw[a.name] : (m.axisS[a.name] || 0);
+            core += w * (sRaw + 1) / 2;
           }
           m.score = Math.round(Math.max(0, 100 * core - (m.pDil || 0)) * 10) / 10; // pAuth=0
           m.lamps.push('collapse-reweight-applied');
