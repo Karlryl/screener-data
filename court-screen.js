@@ -190,6 +190,13 @@ const mtCohortByTicker = new Map(); // ticker -> 'materials_pricingpower' | 'mat
 // `en` → all other candidate JSON byte-identical.
 const enCohortByTicker = new Map(); // ticker -> 'energy_upstream' | 'energy_midstream' | 'energy_services'
 const ENERGY_COHORTS = new Set(['energy_upstream', 'energy_midstream', 'energy_services']);
+// pharma_commercial CORE bucket (Spec formula-design-pharma_court-v0-2026-06-22.md).
+// ADDITIV/parity-safe: exactly the court-buckets.json `pharma_{branded,biopharma,specialty}` tickers are admitted
+// past the asset-light/growth pre-filter (analog medtech/dlst/industrials/staples/consdisc/materials/energy,
+// Fix A SI-5: no silent drops). The 3 RAW axis inputs {growth, gm, eff} are extracted from snapshots/<T>.json,
+// attached as ONE pharma-only field `ph` → all other candidate JSON byte-identical.
+const phCohortByTicker = new Map(); // ticker -> 'pharma_branded' | 'pharma_biopharma' | 'pharma_specialty'
+const PHARMA_COHORTS = new Set(['pharma_branded', 'pharma_biopharma', 'pharma_specialty']);
 try {
   const bd = JSON.parse(fs.readFileSync(BUCK, 'utf8'));
   const cls = Array.isArray(bd) ? bd : (bd.classifications || []);
@@ -200,6 +207,7 @@ try {
     if (c && (c.bucket === 'consdisc_store' || c.bucket === 'consdisc_light') && c.t) cdCohortByTicker.set(c.t, c.bucket);
     if (c && (c.bucket === 'materials_pricingpower' || c.bucket === 'materials_commodity') && c.t) mtCohortByTicker.set(c.t, c.bucket);
     if (c && ENERGY_COHORTS.has(c.bucket) && c.t) enCohortByTicker.set(c.t, c.bucket);
+    if (c && PHARMA_COHORTS.has(c.bucket) && c.t) phCohortByTicker.set(c.t, c.bucket);
   }
 } catch {}
 
@@ -1036,6 +1044,157 @@ function buildEnergyAxes(ticker, cohort) {
   };
 }
 
+// ===========================================================================
+// pharma_commercial (CORE) — 3-axis RAW extraction from snapshots (Spec §2-§5)
+// ===========================================================================
+// ADDITIV/parity-safe: only fires for tickers in phCohortByTicker (court-buckets pharma_{branded,biopharma,
+// specialty}). Reads snapshots/<T>.json `annual.*` (NEWEST-FIRST) — the canonical pool the deterministic
+// classifier and the re-frozen cohort NORMS were calibrated on. Same dual-shape num() extractor as materials/energy.
+//
+// 3 SCORED axes {growth, gm, eff} — the SAME axis set as the medtech/dlst absKaliber() path, but with the materials/
+// energy coverage-renorm engine (absKaliberPharma) and these pharma-specific reads:
+//   growth = deal-masked organic blend min(latest clean YoY, 0.6*latest + 0.4*median(clean)), WINSORIZED at cap 1.0
+//            (a near-zero-base launch-spike — ARWR $3.5M->$829M = +13954% — clipped at +100%); fully-masked
+//            serial-acquirer (CPRX, every YoY a deal year) -> null -> NOT_READY:growth (axis DROP+renorm).
+//   gm     = annualGP[0]/annualRev[0] (pricing-power); a no-GP royalty name (RPRX/ARWR annualGP=[null,null]) ->
+//            null -> axis DROP (coverage-renorm, NOT 0-imputed).
+//   eff    = annualFCF[0]/annualRev[0] PRIMARY, OpM fallback when FCF null OR >15pp below OpM (R&D fully-expensed
+//            distorts OpM; branded structurally FCF-rich).
+// M&A: the design re-points M&A onto INTANGIBLES/IPR&D, but the LOCAL snapshot annualBalance carries ONLY
+// {totalCash,totalDebt,totalAssets} (NO intangibles/goodwill/IPR&D) and data/ma-rpo-snapshot-pharma.json is ABSENT.
+// So pharma decontaminates growth with the SAME LOCAL totalAssets-jump deal-mask as industrials/materials/energy
+// (sign-aware). The intangible-amortization-drag/ipr&d lamps (which need the absent external join) are OMITTED and
+// disclosed (court-score MA_INTANGIBLE_BLIND wall). Net-share-issuance not scored (Vintage-A lacks annualShares) ->
+// DILUTION_HIGH advisory lamp only where computable.
+//
+// Frozen constants (Spec §3/§4):
+const PH_DEAL_MASK = { assetJump: 0.25, revJump: 0.15 };       // §4.1 LOCAL M&A proxy; BOTH required; sign-aware (positive only)
+const PH_SPINOFF = { dropYoY: -0.25, baseFrac: 0.85 };         // §4 spin-off/divestiture re-baselining guard
+const PH_GROWTH_BLEND = { wLatest: 0.60, wTrend: 0.40 };       // §3-A min(latest, 0.6*latest + 0.4*median clean YoY)
+const PH_GROWTH_CAP = 1.0;                                     // §3 winsorize a near-zero-base launch-spike at +100%
+const PH_EFF_FALLBACK_GAP = 0.15;                              // FCF-primary -> OpM fallback when FCF >15pp below OpM
+
+// §4 spin-off / divestiture re-baselining guard (EXACT JS, mirrors materials/energy).
+function spinoffRebaselineGuardPharma(revNewestFirst) {
+  const r = revNewestFirst.filter(v => v != null && isFinite(v) && v > 0);
+  if (r.length < 3) return false;
+  const chron = r.slice().reverse();                       // oldest -> newest
+  const yoy = [];
+  for (let i = 1; i < chron.length; i++) yoy.push((chron[i] - chron[i - 1]) / Math.abs(chron[i - 1]));
+  const hasBigDrop = yoy.some(y => y <= PH_SPINOFF.dropYoY);
+  const latestYoY = (r[0] - r[1]) / Math.abs(r[1]);
+  const latestPositive = latestYoY > 0;
+  const stillBelowBase = r[0] < PH_SPINOFF.baseFrac * Math.max(...r);
+  return hasBigDrop && latestPositive && stillBelowBase;
+}
+
+// snapshot annual cache for pharma tickers only (avoid re-reading + keep the parity path untouched).
+const phSnapAnnual = new Map(); // ticker -> snapshot.annual object
+if (phCohortByTicker.size && fs.existsSync(SNAP_DIR)) {
+  for (const t of phCohortByTicker.keys()) {
+    try {
+      const sn = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, t + '.json'), 'utf8'));
+      if (sn && sn.annual) phSnapAnnual.set(t, sn.annual);
+    } catch {}
+  }
+}
+
+// buildPharmaAxes(ticker, cohort) -> the 3 RAW axis inputs + lamps/audit, or null if no snapshot.
+function buildPharmaAxes(ticker, cohort) {
+  const a = phSnapAnnual.get(ticker);
+  if (!a) return null;
+  const revA = (a.annualRev || []).map(num);                  // NEWEST-FIRST, object-wrapped {value}
+  const gpA = (a.annualGP || []).map(num);
+  const opA = (a.annualOpInc || []).map(num);
+  const fcfA = (a.annualFCF || []).map(num);
+  const bal = Array.isArray(a.annualBalance) ? a.annualBalance : [];
+  const taA = bal.map(b => (b && b.totalAssets != null && isFinite(b.totalAssets)) ? b.totalAssets : null);
+  const lamps = [];
+
+  // --- Axis B: gross margin = annualGP[0]/annualRev[0] (null on a no-GP royalty name -> DROP+renorm) ---
+  let gm = null;
+  if (gpA[0] != null && revA[0] != null && revA[0] > 0) gm = gpA[0] / revA[0];
+  else lamps.push('NOT_READY:gm');
+
+  // --- Axis C: efficiency = FCF-margin PRIMARY, OpM fallback (FCF null OR >15pp below OpM) ---
+  let eff = null;
+  const fcfM = (fcfA[0] != null && revA[0] != null && revA[0] > 0) ? fcfA[0] / revA[0] : null;
+  const opM = (opA[0] != null && revA[0] != null && revA[0] > 0) ? opA[0] / revA[0] : null;
+  if (fcfM != null && !(opM != null && fcfM < opM - PH_EFF_FALLBACK_GAP)) eff = fcfM;
+  else if (opM != null) eff = opM;
+  else if (fcfM != null) eff = fcfM;
+  if (eff == null) lamps.push('NOT_READY:eff');
+
+  // --- Axis A: organic growth (deal-mask §4.1 + spin-off guard §4 UPSTREAM, winsorized, cliff-aware blend §3-A) ---
+  let growthInput = null;
+  let dealMasked = false, spinoffRebase = false, staleGrowth = false;
+  if (spinoffRebaselineGuardPharma(revA)) {
+    spinoffRebase = true;
+    lamps.push('SPINOFF_REBASE');
+    lamps.push('NOT_READY:growth');                          // route Axis A drop+renorm upstream
+  } else {
+    const cleanYoY = [];
+    for (let i = 0; i < revA.length - 1; i++) {
+      const rNew = revA[i], rOld = revA[i + 1];
+      if (rNew == null || rOld == null || rOld <= 0) continue;
+      const revG = rNew / rOld - 1;
+      const taNew = taA[i], taOld = taA[i + 1];
+      const assetG = (taNew != null && taOld != null && taOld > 0) ? (taNew - taOld) / taOld : null;
+      const masked = (assetG != null && assetG >= PH_DEAL_MASK.assetJump && revG >= PH_DEAL_MASK.revJump);
+      if (masked) { dealMasked = true; continue; }
+      cleanYoY.push(revG);
+    }
+    if (cleanYoY.length === 0) {
+      lamps.push('NOT_READY:growth');                        // no clean YoY (fully deal-masked) -> DROP Axis A + renorm
+    } else {
+      // STALE:growth if the latest annual year (revA[0]) was itself deal-masked (organic read is aged).
+      if (dealMasked) {
+        const rNew0 = revA[0], rOld0 = revA[1];
+        const taNew0 = taA[0], taOld0 = taA[1];
+        if (rNew0 != null && rOld0 != null && rOld0 > 0 && taNew0 != null && taOld0 != null && taOld0 > 0) {
+          const revG0 = rNew0 / rOld0 - 1, assetG0 = (taNew0 - taOld0) / taOld0;
+          if (assetG0 >= PH_DEAL_MASK.assetJump && revG0 >= PH_DEAL_MASK.revJump) staleGrowth = true;
+        }
+      }
+      let g;
+      if (cleanYoY.length === 1) {
+        g = cleanYoY[0];                                     // only 1 clean YoY -> single YoY (ABS-honest)
+      } else {
+        // cliff-aware blend = min(latest clean YoY, 0.6*latest + 0.4*median(clean YoYs)) — damps a launch-spike,
+        // keeps an honest red read on a genuine decline (the patent-cliff signal).
+        const sorted = cleanYoY.slice().sort((x, y) => x - y);
+        const med = sorted.length % 2 ? sorted[(sorted.length - 1) / 2] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2;
+        const blend = PH_GROWTH_BLEND.wLatest * cleanYoY[0] + PH_GROWTH_BLEND.wTrend * med;
+        g = Math.min(cleanYoY[0], blend);
+      }
+      // winsorize: a near-zero-base launch-spike (ARWR +13954%) clipped at +100% (mirrors medtech growth cap).
+      growthInput = Math.max(-0.95, Math.min(PH_GROWTH_CAP, g));
+      if (staleGrowth) lamps.push('STALE:growth');
+    }
+  }
+  if (dealMasked) lamps.push('DEAL_MASKED');
+
+  // advisory lamps (Spec §5)
+  if (growthInput != null && growthInput < 0) lamps.push('REVENUE_DECLINE');                 // genuine organic decline (patent-cliff proxy)
+  if (opM != null && opM < 0) lamps.push('MARGIN_NEGATIVE');
+  lamps.push('PATENT_CLIFF_WALL');                                                            // always-on: LOE-concentration uncomputable from companyfacts
+  lamps.push('MA_INTANGIBLE_BLIND');                                                          // always-on: intangible/IPR&D M&A signal needs the absent external join
+
+  // pre-revenue facts for the court-score.js SI-4 floor (the materials lesson — a revenue-less shell must NOT be
+  // scored: the gm/eff axes are undefined/explosive on near-zero revenue). The classifier's commercial gate
+  // already deferred the clinical-stage names; this is the belt-and-suspenders floor.
+  const revLatest = revA.find(v => v != null && isFinite(v));
+  return {
+    cohort,
+    growth: round(growthInput), gm: round(gm), eff: round(eff),
+    fcfMargin: round(fcfM), opMargin: round(opM),
+    dealMasked, spinoffRebase, staleGrowth,
+    revLatest: (revLatest == null ? null : round(revLatest)),
+    nAnnualRev: revA.filter(v => v != null).length,
+    lamps,
+  };
+}
+
 // --- robuste Feld-Helfer (Format ist gemischt: ftsAnnual.* = [{value}], Rest = [num]) ---
 function num(x) {
   if (x == null) return null;
@@ -1115,7 +1274,11 @@ for (const file of files) {
   // with a thin CACHE row (its 5 SCORED axes come from the SNAPSHOT via buildEnergyAxes, not the cache). Bypasses
   // the cache-based early gates below. Non-energy path: BYTE-IDENTICAL.
   const enCohortEarly = (enCohortByTicker.get(ticker) && enSnapAnnual.has(ticker)) ? enCohortByTicker.get(ticker) : null;
-  const coreEarly = indCohortEarly || stpCohortEarly || cdCohortEarly || mtCohortEarly || enCohortEarly;
+  // pharma_commercial (CORE): same SI-5 rule — a court-buckets-classified pharma name MUST reach the universe even
+  // with a thin CACHE row (its 3 SCORED axes come from the SNAPSHOT via buildPharmaAxes, not the cache). Bypasses
+  // the cache-based early gates below. Non-pharma path: BYTE-IDENTICAL.
+  const phCohortEarly = (phCohortByTicker.get(ticker) && phSnapAnnual.has(ticker)) ? phCohortByTicker.get(ticker) : null;
+  const coreEarly = indCohortEarly || stpCohortEarly || cdCohortEarly || mtCohortEarly || enCohortEarly || phCohortEarly;
   const p = j.payload || {};
   if (!j.payload && !coreEarly) continue;
   if (j._ftsPartial) stats.partial++;
@@ -1269,6 +1432,7 @@ for (const file of files) {
   const cdCohort = cdCohortByTicker.get(ticker) || null;
   const mtCohort = mtCohortByTicker.get(ticker) || null;
   const enCohort = enCohortByTicker.get(ticker) || null;
+  const phCohort = phCohortByTicker.get(ticker) || null;
   if (indCohort) {
     // industrials_compounder (CORE): admit EVERY court-buckets-classified industrials name into the universe
     // (cross-sectional cohort percentiles + SI-5 classifiedCount===scoredCount). NO asset-light/growth/gm
@@ -1301,6 +1465,12 @@ for (const file of files) {
     // heavy PP&E by nature; the SI-1 shortlist-cut lives in court-score.js). 5 axes come from the snapshot annual
     // arrays (buildEnergyAxes). Sole sanity: a parseable snapshot annual block exists.
     if (!enSnapAnnual.has(ticker)) continue;
+  } else if (phCohort) {
+    // pharma_commercial (CORE): identical admission policy — admit EVERY court-buckets-classified pharma name into
+    // the universe (cross-sectional cohort percentiles + SI-5). NO asset-light/growth/gm pre-filter (the SI-1
+    // shortlist-cut lives in court-score.js; the commercial gate already ran in the classifier). 3 axes come from
+    // the snapshot annual arrays (buildPharmaAxes). Sole sanity: a parseable snapshot annual block exists.
+    if (!phSnapAnnual.has(ticker)) continue;
   } else if (isMedtech || isDlst) {
     // Milde Daten-Sanity: growth/gm/rev müssen vorhanden + endlich sein (keine ökonomischen Floors).
     // Medtech UND D&LST sind kapitalintensiv/Large-Cap-haltig → asset-light/ppe-Gate + ökonomische Floors
@@ -1348,6 +1518,10 @@ for (const file of files) {
   // field `en` (deal-mask + spin-off guard + COMMODITY_BETA_SUSPECT windfall lamp applied UPSTREAM; axis B = ROCE,
   // axis C = FCF-margin; GROWTH NOT scored). Additiv → KEIN Feld auf Nicht-Energy-Records (Parität).
   const enExtra = enCohort ? { en: buildEnergyAxes(ticker, enCohort) } : {};
+  // pharma_commercial (CORE): the 3 RAW axis inputs {growth, gm, eff} from the snapshot annual arrays, attached as
+  // ONE pharma-only field `ph` (deal-mask + spin-off guard + winsorize applied UPSTREAM; LOCAL totalAssets-jump M&A
+  // proxy; intangible/IPR&D lamps OMITTED — MA_INTANGIBLE_BLIND). Additiv → KEIN Feld auf Nicht-Pharma-Records (Parität).
+  const phExtra = phCohort ? { ph: buildPharmaAxes(ticker, phCohort) } : {};
   candidates.push({
     ticker,
     growth: round(growth), growth_annual: round(gAnnual), growth_q: round(gQ), growthSource,
@@ -1368,6 +1542,7 @@ for (const file of files) {
     ...cdExtra,
     ...mtExtra,
     ...enExtra,
+    ...phExtra,
   });
 }
 

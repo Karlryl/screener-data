@@ -18,7 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const ROOT = __dirname;
-const { absKaliber, absKaliberIndustrials, absKaliberStaples, absKaliberConsDisc, absKaliberMaterials, absKaliberEnergy, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
+const { absKaliber, absKaliberIndustrials, absKaliberStaples, absKaliberConsDisc, absKaliberMaterials, absKaliberEnergy, absKaliberPharma, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
 // Medtech M&A snapshot (advisory lamps; object keyed by ticker)
 const maMedtechRaw = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'ma-rpo-snapshot-medtech.json'), 'utf8')); } catch { return {}; } })();
 // Remove _header key
@@ -459,6 +459,83 @@ const FORMULAS = {
     energy: true, cohortKey: 'energy_services',
     a2Note: 'energy_quality v0 services cohort (Oil & Gas Equipment & Services + Drilling — SLB/BKR/HAL/RIG/NBR/VAL/NOV/HP; Drilling folded into E&S, n=7, the leveraged-driller signal the cohort exposes, cannot stand alone). Same 5-axis absKaliberEnergy engine + coverage-renorm as energy_upstream; cohort-specific roce (.00/.13 — live p10 0.1% / p90 12.3%, the LOWEST-ROCE tier: capital-intensive leveraged drillers), fcfMargin (-.02/.24), gpa (.06/.21); assetGrowthPenalty/netIssuance SHARED. n=27 classified / 25 scored (NEXT/SOC pre-revenue SI-4-excluded). The SLB US-primary marquee (Schlumberger Limited — foreign-NAME \\bLimited\\b but NYSE-primary) is admitted via the name-verified US_PRIMARY_ALLOWLIST. See energy_upstream.a2Note for the full mechanism + the QUALITY-ONLY (no growth axis) guarantee + the pre-revenue SI-4 exclusion (the materials lesson) + marquee/foreign-control asserts. Additive/parity-safe; constants frozen §6.',
   },
+  // ===========================================================================
+  // pharma_commercial (CORE) — THREE cohorts by COMMERCIAL-STAGE QUALITY tier (deterministic GICS-industry split:
+  // branded/biopharma/specialty). Spec formula-design-pharma_court-v0-2026-06-22.md (Council->Court DESIGN-PASS v0,
+  // NEEDS-REVISION — NORMS recomputed-live-then-frozen 2026-06-23 on the CLEAN commercial pool; the CORE gate).
+  // 3 SCORED axes {growth, gm, eff} via the NEW engine absKaliberPharma (coverage-renorm; the medtech/dlst 3-axis
+  // absKaliber() path is BYTE-UNTOUCHED). Weights {growth .45, gm .20, eff .35}: growth LEADS (the cliff-aware
+  // organic read separates LLY/NBIX/HALO from the patent-cliff field PFE/BMY/VTRS), gm low (.20) so the
+  // categorically-different cohort GM structures don't dominate, eff (.35) FCF-primary (R&D fully-expensed distorts
+  // OpM; branded structurally FCF-rich). branded n=10<15 -> THIN_REL (ABS-only, beta=1.0); biopharma 22 / specialty
+  // 14 full ABS+REL blend. RAW inputs from m.ph.* (court-screen buildPharmaAxes; deal-mask + winsorize + spin-off
+  // guard applied UPSTREAM). growth/gm/eff floor/elite cohort-specific. M&A: LOCAL totalAssets-jump deal-mask only
+  // (the design's intangible/IPR&D re-pointing needs the ABSENT external companyfacts join → intangible-amortization-
+  // drag/ipr&d lamps OMITTED, disclosed MA_INTANGIBLE_BLIND). pharma = NEW code keyed by the new cohort strings;
+  // existing buckets (medtech/dlst/saas/fabless/industrials/staples/consdisc/materials/energy) are BYTE-IDENTICAL.
+  pharma_branded: {
+    label: 'Pharma-Commercial v0 (branded: drug manufacturers - general; mature mega-cap, cliff-exposed; absolute-anchor, cliff-aware organic growth, gross-margin pricing-power, FCF-efficiency, THIN_REL ABS-only, PATENT_CLIFF_WALL/MA_INTANGIBLE_BLIND)',
+    membership: { g: { c: 0.00, s: 0.06 }, gm: { c: 0.50, s: 0.10 }, scaleLog: { c: log10(1000), s: 0.6 } },
+    axes: [
+      { key: 'growth', name: 'Growth',   k: 2.0, w: 0.45 },
+      { key: 'gm',     name: 'GM-Level', k: 1.5, w: 0.20 },
+      { key: 'eff',    name: 'Eff-FCF',  k: 1.5, w: 0.35 },
+    ],
+    dilCap: 0, dilStart: 0.05, dilRange: 0.20, // net-issuance not a scored axis (Vintage-A lacks annualShares); no SBC penalty
+    stages: [
+      { name: 'S3-Cash-Compounder', test: f => f >= 0.20 },
+      { name: 'S2-FCF-positiv',     test: f => f >= 0.08 },
+      { name: 'S1-Approaching',     test: f => f >= -0.05 },
+      { name: 'S0-Cliff-Exposed',   test: () => true },
+    ],
+    dominantBlock: ['growth', 'eff'],
+    degraded: false,
+    normTableId: 'pharma_branded-norms-2026-06-23',
+    pharma: true, cohortKey: 'pharma_branded',
+    a2Note: 'pharma_commercial v0 branded cohort (Spec formula-design-pharma_court-v0-2026-06-22.md, Council->Court DESIGN-PASS v0 NEEDS-REVISION; NORMS RECOMPUTED LIVE on the CLEAN post-commercial-gate vintage-tolerant US pool 2026-06-23 THEN frozen — the CORE gate). Drug Manufacturers - General (ABBV/AMGN/BIIB/BMY/GILD/JNJ/LLY/MRK/OGN/PFE); mature mega-cap, 66-79% GM, FCF-generative, serial-acquirer, patent-cliff-exposed. SCORE = COMMERCIAL-STAGE BUSINESS QUALITY ONLY, never valuation. 3 SCORED axes via absKaliberPharma: organic growth (cliff-aware blend min(latest clean YoY, .6*latest+.4*median), deal-masked §4.1 + spin-off guard + winsorize cap 1.0 UPSTREAM → NOT_READY:growth on a fully-masked acquirer; w .45, cohort-specific norm .00/.12, FLOOR 0.00 not 0.15 — a 0.15 gate would wrongly reject AMGN 10%/GILD 2%/MRK 1% legit compounders, branded is mature + cliff-exposed; latest UNCAPPED-below so a genuine decline scores low = correct cliff read), gross margin annualGP/annualRev (pricing-power; w .20 LOW so the margin split doesn\'t dominate; cohort-specific .66/.79), efficiency FCF-margin primary OpM-fallback (R&D fully-expensed distorts OpM, branded structurally FCF-rich; w .35, cohort-specific .10/.33). COVERAGE-RENORM: any NOT_READY/null axis (fully-deal-masked growth, no-GP royalty gm) dropped, survivors renormalize to Σ=1.0 (no fake-neutral impute). THIN_REL: n=10<15 → ABS-only (beta=1.0), REL suppressed (re-pooling branded+biopharma REJECTED — merges incompatible 73% vs 84% median-GM structures; ABS-only on a clean 10 is honest + SI-correct). score=100*(1.0*absKaliber) for branded (ABS-only). WALLS (always-on lamps): PATENT_CLIFF_WALL (LOE-concentration — which % rev loses exclusivity in 3-5y, MRK/Keytruda 2028, ABBV/Humira — NOT derivable from companyfacts; honest organic scoring + REVENUE_DECLINE lamp as forward proxy), MA_INTANGIBLE_BLIND (the design re-points M&A onto intangibles/IPR&D, but the LOCAL snapshot annualBalance carries only {totalCash,totalDebt,totalAssets} and data/ma-rpo-snapshot-pharma.json is ABSENT — pulling the network EDGAR join is forbidden — so M&A decontamination uses the LOCAL totalAssets-jump deal-mask only; the intangible-amortization-drag/ipr&d-acquirer lamps are SHIPPED OMITTED, disclosed coverage limitation), THIN_REL. SI-4 out-of-class (non-pharma HC industry / non-US per the §1.2 country-domicile guard + FOREIGN_NAME + PHARMA_FOREIGN_DROP / <$1B / pre-commercial-clinical per the §1.4 commercial gate → never enter court-buckets; pre-revenue shell with <2 annual-rev OR revLatest<$1M → score=null + excluded[] OUT_OF_SEGMENT:preexploration, the materials lesson) → score=null + excluded[]; SI-5 classifiedCount===scoredCount+excludedCount fail-loud; marquee assert (LLY/MRK/PFE/ABBV/BMY/AMGN/GILD/JNJ/VRTX/REGN/BIIB/INCY/JAZZ/EXEL/NBIX/VTRS) fail-loud + GENERATIVE anti-leak + FOREIGN_CONTROL positive-control (AZN/NVS/NVO/SNY/TAK/BNTX/ARGX/GMAB/ALKS/GSK/RHHBY/BHC must NOT classify). Disclosed (Spec §8): pre-revenue/clinical-stage biotech (MRNA/BBIO/INSM/RARE/SRPT/IONS) EXCLUDED by the §1.4 profitability commercial gate (sign-separated, future special-track); foreign primaries (AZN/NVS/NVO/SNY/TAK/BNTX/ARGX/GMAB) EXCLUDED; net-share-issuance NOT a scored axis (Vintage-A lacks annualShares → DILUTION_HIGH advisory only); the JAZZ US-primary marquee (Jazz Pharmaceuticals plc, foreign-NAME but NasdaqGS-primary) admitted via the name-verified US_PRIMARY_ALLOWLIST. Additive/parity-safe. Constants frozen.',
+  },
+  pharma_biopharma: {
+    label: 'Pharma-Commercial v0 (biopharma: biotechnology + commercial gate; single/dual-franchise biologics, higher growth, organic; absolute-anchor, cliff-aware organic growth, gross-margin, FCF-efficiency, PATENT_CLIFF_WALL/MA_INTANGIBLE_BLIND)',
+    membership: { g: { c: 0.05, s: 0.06 }, gm: { c: 0.64, s: 0.10 }, scaleLog: { c: log10(1000), s: 0.6 } },
+    axes: [
+      { key: 'growth', name: 'Growth',   k: 2.0, w: 0.45 },
+      { key: 'gm',     name: 'GM-Level', k: 1.5, w: 0.20 },
+      { key: 'eff',    name: 'Eff-FCF',  k: 1.5, w: 0.35 },
+    ],
+    dilCap: 0, dilStart: 0.05, dilRange: 0.20,
+    stages: [
+      { name: 'S3-Cash-Compounder', test: f => f >= 0.20 },
+      { name: 'S2-FCF-positiv',     test: f => f >= 0.08 },
+      { name: 'S1-Approaching',     test: f => f >= -0.05 },
+      { name: 'S0-Pre-FCF',         test: () => true },
+    ],
+    dominantBlock: ['growth', 'eff'],
+    degraded: false,
+    normTableId: 'pharma_biopharma-norms-2026-06-23',
+    pharma: true, cohortKey: 'pharma_biopharma',
+    a2Note: 'pharma_commercial v0 biopharma cohort (Biotechnology ∧ §1.4 commercial gate: VRTX/REGN/INCY/EXEL/ALNY/HALO/HRMY/CPRX/BMRN/JAZZ/RPRX/PTCT/TGTX +…). Single/dual-franchise biologics, 64-96% GM, higher growth, more organic. Same 3-axis absKaliberPharma engine + coverage-renorm as pharma_branded; cohort-specific growth (.05/.30 — floor 0.05; live p90 68.9% launch-spike-inflated → elite capped .30), gm (.64/.96 — wide, commercial-biotech tiers; REL discriminates), eff (.05/.42). n=22 → full ABS+REL blend (β=0.6), NO thin-n regime. The no-GP royalty names (RPRX/ARWR annualGP=[null,null]) DROP the gm axis via coverage-renorm (score on growth+eff). See pharma_branded.a2Note for the full axis/SI/wall mechanism (PATENT_CLIFF_WALL/MA_INTANGIBLE_BLIND, the LOCAL-data M&A deal-mask + omitted intangible lamps, the §1.4 commercial gate deferring cash-burning clinical names, the pre-revenue SI-4 floor) + marquee/foreign-control asserts. Additive/parity-safe; constants frozen.',
+  },
+  pharma_specialty: {
+    label: 'Pharma-Commercial v0 (specialty: drug manufacturers - specialty & generic + commercial gate; generic<->specialty-branded, wide GM band; absolute-anchor, cliff-aware organic growth, gross-margin, FCF-efficiency, PATENT_CLIFF_WALL/MA_INTANGIBLE_BLIND)',
+    membership: { g: { c: 0.00, s: 0.06 }, gm: { c: 0.36, s: 0.12 }, scaleLog: { c: log10(1000), s: 0.6 } },
+    axes: [
+      { key: 'growth', name: 'Growth',   k: 2.0, w: 0.45 },
+      { key: 'gm',     name: 'GM-Level', k: 1.5, w: 0.20 },
+      { key: 'eff',    name: 'Eff-FCF',  k: 1.5, w: 0.35 },
+    ],
+    dilCap: 0, dilStart: 0.05, dilRange: 0.20,
+    stages: [
+      { name: 'S3-Cash-Compounder', test: f => f >= 0.20 },
+      { name: 'S2-FCF-positiv',     test: f => f >= 0.08 },
+      { name: 'S1-Approaching',     test: f => f >= -0.05 },
+      { name: 'S0-Generic-Margin',  test: () => true },
+    ],
+    dominantBlock: ['growth', 'eff'],
+    degraded: false,
+    normTableId: 'pharma_specialty-norms-2026-06-23',
+    pharma: true, cohortKey: 'pharma_specialty',
+    a2Note: 'pharma_commercial v0 specialty cohort (Drug Manufacturers - Specialty & Generic ∧ §1.4 commercial gate: NBIX/UTHR/ZTS/ELAN/SUPN/VTRS/AMRX/PAHC/PBH/ANIP/INDV/LNTH/BCRX/HIMS). Heterogeneous generic<->specialty-branded, GM 35-95% (VTRS 35% generic <-> NBIX/UTHR 88-98% specialty — the WIDE GM band is REAL, so gm must be per-cohort REL, never a hard gate; elite .92). Same 3-axis absKaliberPharma engine + coverage-renorm as pharma_branded; cohort-specific growth (.00/.12 — floor 0.00 mature generics, p90 inflated → elite capped .12), gm (.36/.92 — the WIDE band INTENTIONAL), eff (.05/.34). n=14 → thin-but-sufficient, full ABS+REL blend (mirrors energy_midstream n=26 documented headroom; 14 is bordering, β=0.6 holds MAD-robust). See pharma_branded.a2Note for the full mechanism + the QUALITY-ONLY guarantee + marquee/foreign-control asserts. Additive/parity-safe; constants frozen.',
+  },
   diagnostics_lst: {
     label: 'Diagnostics-&-Life-Science-Tools v0 (cohort-aware dx|tools, absolute-anchor, deceleration-aware organic growth, FCF-efficiency, chronic-acquirer lamps)',
     membership: { g: { c: 0.10, s: 0.05 }, gm: { c: 0.40, s: 0.10 }, scaleLog: { c: log10(300), s: 0.5 } },
@@ -508,6 +585,13 @@ const MT_MIN_REVENUE = 1e6; // $1M latest-annual-revenue floor for a materials n
 // and the shell tops the cohort. To be SCORED an energy name needs >=2 non-null annual revenue points AND a latest
 // revenue >= EN_MIN_REVENUE ($1M). $1M against the $1B+ marketCap classifier gate is unambiguously pre-revenue.
 const EN_MIN_REVENUE = 1e6; // $1M latest-annual-revenue floor for an energy name to be SCORED (else preexploration)
+
+// pharma_commercial (CORE) pre-revenue SI-4 floor (the materials lesson — DO NOT SKIP): the §1.4 commercial gate in
+// classify-pharma.js already DEFERS the cash-burning clinical-stage names (rev<$500M OR negative cash) so they never
+// enter court-buckets; this is the belt-and-suspenders floor catching any revenue-less shell that slipped in. To be
+// SCORED a pharma name needs >=2 non-null annual revenue points AND a latest revenue >= PH_MIN_REVENUE ($1M) — the
+// gm/eff axes are undefined/explosive on near-zero revenue. SI-4 score=null + excluded[] OUT_OF_SEGMENT:preexploration.
+const PH_MIN_REVENUE = 1e6; // $1M latest-annual-revenue floor for a pharma name to be SCORED (else preexploration)
 
 // --- Skeptiker-Welle-2-Befunde, deterministisch eingebaut ---
 const KILL = new Set(['PS', 'RDVT', 'ADEA', 'OMDA', 'TEM', 'KMTS']); // verifiziert: Ticker-Mismatch / falscher Sektor / Daten-Fehler
@@ -1014,6 +1098,25 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.cohort = i.cohort || F.cohortKey;
     }
   }
+  // --- pharma_commercial (CORE) PRE-PASS: lift the 3 RAW axis inputs from m.ph onto the member ---
+  // All intermediates are PHARMA-LOCAL → all other buckets' member JSON byte-identical (parity). NONE inverted
+  // (growth/gm/eff are higher=better directly; no assetGrowth/netIssuance discipline axes — Vintage-A lacks
+  // annualShares and the M&A signal is the upstream deal-mask on growth). null raw → axis DROP (coverage-renorm in
+  // absKaliberPharma; REL sAxis returns 0=neutral for null). Mirrors the materials/energy pre-pass with {growth,
+  // gm, eff} as the axes.
+  if (F.pharma) {
+    for (const m of members) {
+      const i = m.ph || {};
+      m._phGrowth = (i.growth != null && isFinite(i.growth)) ? i.growth : null;  // deal-masked + winsorized + spinoff-guarded UPSTREAM
+      m._phGm = (i.gm != null && isFinite(i.gm)) ? i.gm : null;                  // null on a no-GP royalty name -> DROP
+      m._phEff = (i.eff != null && isFinite(i.eff)) ? i.eff : null;             // FCF-margin primary, OpM fallback (precomputed upstream)
+      // persisted audit fields (rounded)
+      m.growthInput = m._phGrowth == null ? null : Math.round(m._phGrowth * 10000) / 10000;
+      m.gmPharma = m._phGm == null ? null : Math.round(m._phGm * 10000) / 10000;
+      m.effPharma = m._phEff == null ? null : Math.round(m._phEff * 10000) / 10000;
+      m.cohort = i.cohort || F.cohortKey;
+    }
+  }
 
   // Roh-Achswerte für Stats (cross-sectional Median/MAD): nutze winsorisierte Werte
   // For medtech growth: use _growthMedtech (Fix D organic + winsorize at 1.0) for Stats AND scoring (Fix D
@@ -1073,12 +1176,23 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       default: return m[key];
     }
   };
+  // pharma_commercial (CORE): 3 axis-keys {growth, gm, eff} (NONE inverted) → mirror indRaw on the m._ph* fields.
+  // The REL z/MAD reads the SAME signed values as the ABS q-input (higher=better directly).
+  const phRaw = (m, key) => {
+    switch (key) {
+      case 'growth': return m._phGrowth;
+      case 'gm': return m._phGm;
+      case 'eff': return m._phEff;
+      default: return m[key];
+    }
+  };
   const rawOfStats = (m, key) => {
     if (F.industrials) return indRaw(m, key);
     if (F.staples) return stpRaw(m, key);
     if (F.consdisc) return cdRaw(m, key);
     if (F.materials) return mtRaw(m, key);
     if (F.energy) return enRaw(m, key);
+    if (F.pharma) return phRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtech : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -1091,6 +1205,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (F.consdisc) return cdRaw(m, key);
     if (F.materials) return mtRaw(m, key);
     if (F.energy) return enRaw(m, key);
+    if (F.pharma) return phRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtechAdj : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -1202,6 +1317,20 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       const mFcf = logistic(fcfGate, F.membership.g.c, F.membership.g.s);       // FCF-positivity (>=0 center)
       const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
       M = mRoce * mFcf * mSc;
+    } else if (F.pharma) {
+      // pharma membership: gm(quality) × growth × scale logistic (pharma HAS a gm axis, unlike industrials/energy).
+      // The gm pillar is the cohort gm.floor center; the growth gate uses the deal-masked/winsorized _phGrowth
+      // (a cliff-collapsing name reads its genuine negative organic rate → lands low/Borderline = correct). A
+      // NOT_READY:growth name (fully-deal-masked acquirer like CPRX) reads -1 → low membership BUT still scored on
+      // gm+eff (coverage-renorm) — membership-Out only suppresses the headline rank, never the absKaliber. $1B+
+      // marketCap is the classifier gate. The §1.4 commercial gate already ran in the classifier.
+      const gGate = m._phGrowth != null ? m._phGrowth : -1;            // null growth (NOT_READY) → low
+      const gmGate = m._phGm != null ? m._phGm : -1;                   // null gm (no-GP royalty) → low
+      const scaleM = (m.marketCap != null && isFinite(m.marketCap)) ? m.marketCap / 1e6 : (m.scaleRevM || 1); // $1B+ marketCap
+      const mg = logistic(gGate, F.membership.g.c, F.membership.g.s);
+      const mGM = logistic(gmGate, F.membership.gm.c, F.membership.gm.s);
+      const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
+      M = mg * mGM * mSc;
     } else {
       const mGate = (bucket === 'medtech_devices' && m._growthMedtech != null) ? m._growthMedtech
                   : (bucket === 'diagnostics_lst' && m._growthDlst != null) ? m._growthDlst
@@ -1477,6 +1606,42 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
         m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
       }
       m.stage = stageOf(F, m._enFcfMargin);
+    } else if (F.pharma) {
+      // pharma_commercial (CORE): absKaliberPharma = 3-axis weighted-q {growth, gm, eff} with COVERAGE-RENORM
+      // reading the cohort NORMS. The renorm fires on a fully-deal-masked acquirer (NOT_READY:growth) and a no-GP
+      // royalty name (RPRX/ARWR gm null). NONE inverted (growth/gm/eff higher=better directly).
+      const cohortNorm = F.cohortKey; // 'pharma_branded' | 'pharma_biopharma' | 'pharma_specialty'
+      const phRec = { growth: m._phGrowth, gm: m._phGm, eff: m._phEff };
+      const ak = absKaliberPharma(phRec, cohortNorm);
+      m.absKaliber = Math.round(ak.absK * 1000) / 1000;
+      m.absUsedAxes = ak.usedAxes;          // audit: which axes survived coverage-renorm
+      m.absDroppedAxes = ak.droppedAxes;    // audit: NOT_READY drops
+      const norm = NORMS[cohortNorm];
+      // THIN_REL: branded n=10<15 → ABS-only (beta=1.0, norm.rel.suppressed); biopharma/specialty β=0.6 blend.
+      const beta = (norm.rel && norm.rel.suppressed) ? 1.0 : 0.6;
+      const rawScore = Math.round(Math.max(0, blendScore(ak.absK, core, beta)) * 10) / 10; // pDil=0 (net-issuance not a scored axis)
+      // SI-1 shortlist-cut (Spec §6): growth >= growth.floor (cohort, 0.00 for branded/specialty) AND gm >= gm.floor
+      // (cohort) AND eff >= eff.floor (cohort). A NOT_READY/missing axis fails the floor (not the gate crashing) →
+      // belowAbsoluteFloor, listed but off the shortlist. NOT a score-kill (REL/score path runs independently).
+      const gateGrowthOk = (m._phGrowth != null) && (m._phGrowth >= norm.growth.floor);
+      const gateGmOk = (m._phGm != null) && (m._phGm >= norm.gm.floor);
+      const gateEffOk = (m._phEff != null) && (m._phEff >= norm.eff.floor);
+      m.belowAbsoluteFloor = !(gateGrowthOk && gateGmOk && gateEffOk);
+      // PRE-REVENUE SI-4 hard-exclude (the materials lesson — the §1.4 commercial gate already deferred the
+      // clinical-stage names in the classifier; this is the belt-and-suspenders floor). SCORED requires >=2 non-null
+      // annual rev points AND revLatest >= PH_MIN_REVENUE ($1M) — verifies NO revenue-less shell can top a cohort.
+      const phRev = m.ph || {};
+      const preRevenue = !(phRev.nAnnualRev != null && phRev.nAnnualRev >= 2
+        && phRev.revLatest != null && isFinite(phRev.revLatest) && phRev.revLatest >= PH_MIN_REVENUE);
+      if (preRevenue) {
+        m.exclusionReason = 'OUT_OF_SEGMENT:preexploration';
+        m.score = null;                                 // SI-4: lands in excluded[]
+        m.headlineShortlist = false;
+      } else {
+        m.score = m.membershipClass === 'Out' ? null : rawScore;
+        m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
+      }
+      m.stage = stageOf(F, m._phEff);
     } else {
       // audit/fix (gauntlet E3): SI-4 für saas/fabless — Out-Class-Member bekommen score=null (kein
       // irreführender Headline-Rang), exakt wie medtech/dlst (m.score = membershipClass==='Out' ? null : rawScore).
@@ -1750,6 +1915,29 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       // cohort-specific blind WALL (Spec §4): upstream RESERVE_BLIND, midstream DCF_COVERAGE_BLIND
       if (F.cohortKey === 'energy_upstream') L.push('RESERVE_BLIND');         // no reserves/RRR/F&D/PV-10/breakeven line
       else if (F.cohortKey === 'energy_midstream') L.push('DCF_COVERAGE_BLIND'); // distribution-coverage uncomputable
+      if (m.belowAbsoluteFloor) L.push('below-abs-floor');
+      if (m.membershipClass === 'Out') L.push('membership-Out(excluded-from-headline)');
+      if (Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.length) L.push(`coverage-renorm(dropped:${m.absDroppedAxes.join('+')})`);
+      m.cohort = F.cohortKey;
+      m.normTableId = getNormTableId(F.cohortKey);
+      m.scoreScope = 'intra-bucket';
+      m.crossBucketComparableField = 'absKaliber';
+    }
+    // pharma_commercial (CORE) lamps (Spec §5): advisory, never silent score-kills. Per-name upstream lamps
+    // (NOT_READY:growth/gm/eff, SPINOFF_REBASE, DEAL_MASKED, STALE:growth, REVENUE_DECLINE, MARGIN_NEGATIVE) +
+    // the always-on WALLS (PATENT_CLIFF_WALL + MA_INTANGIBLE_BLIND) are collected in court-screen (m.ph.lamps); the
+    // WALLS are re-asserted here per the design §5 so every member carries them even if the upstream record was thin.
+    if (F.pharma) {
+      const pl = (m.ph && Array.isArray(m.ph.lamps)) ? m.ph.lamps : [];
+      for (const lamp of pl) if (!L.includes(lamp)) L.push(lamp);
+      // pre-revenue SI-4 exclusion as an explicit lamp (the materials lesson).
+      if (m.exclusionReason === 'OUT_OF_SEGMENT:preexploration' && !L.includes('OUT_OF_SEGMENT:preexploration')) L.push('OUT_OF_SEGMENT:preexploration');
+      // always-on WALLS (Spec §5) — re-asserted (idempotent: court-screen already pushed them; dedup via includes)
+      if (!L.includes('PATENT_CLIFF_WALL')) L.push('PATENT_CLIFF_WALL'); // LOE-concentration uncomputable from companyfacts
+      if (!L.includes('MA_INTANGIBLE_BLIND')) L.push('MA_INTANGIBLE_BLIND'); // intangible/IPR&D M&A signal needs the ABSENT external join
+      // THIN_REL on the branded cohort (n=10<15 → ABS-only, beta=1.0)
+      const norm = NORMS[F.cohortKey];
+      if (norm.rel && norm.rel.suppressed && !L.includes('THIN_REL')) L.push('THIN_REL');
       if (m.belowAbsoluteFloor) L.push('below-abs-floor');
       if (m.membershipClass === 'Out') L.push('membership-Out(excluded-from-headline)');
       if (Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.length) L.push(`coverage-renorm(dropped:${m.absDroppedAxes.join('+')})`);
@@ -2052,6 +2240,38 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       dropped: members.filter(m => m.netShareIssuance == null).length,
     };
   }
+  // pharma_commercial (CORE)-only Zusatzfelder (SI-3/4/5/6) — NUR auf den pharma-Buckets gesetzt → alle anderen
+  // Buckets byte-identisch (Parität). Mirrors the energy block; 3 axes {growth, gm, eff}, NO inverted discipline axes.
+  if (F.pharma) {
+    // SI-5 (Spec §6): classifiedCount === scoredCount + excludedCount (fail-loud). The classifier assigns ONLY the
+    // §1.4-commercial pharma_{branded,biopharma,specialty} (non-pharma HC industries / non-US per the country-domicile
+    // guard + FOREIGN hardening / <$1B / pre-commercial-clinical return null → never enter court-buckets), so every
+    // classified name reaches members[]. excludedCount = SI-4 pre-revenue names that entered members but score=null.
+    R.classifiedCount = cls.filter(c => c.bucket === bucket).length;
+    R.excluded = members.filter(m => m.score == null);
+    R.excludedCount = R.excluded.length;
+    R.scoredCount = members.filter(m => m.score != null).length;
+    if (require.main === module && R.classifiedCount !== R.scoredCount + R.excludedCount) {
+      throw new Error(`SI-5 mismatch ${bucket}: classifiedCount ${R.classifiedCount} !== scoredCount ${R.scoredCount} + excludedCount ${R.excludedCount}`);
+    }
+    R.normTableId = getNormTableId(F.cohortKey);
+    R.cohort = F.cohortKey;
+    R.scoreScope = 'intra-bucket';
+    R.crossBucketComparableField = 'absKaliber';
+    const n = NORMS[F.cohortKey];
+    const fmt = x => (x == null ? '—' : x.toFixed(2).replace(/^0\./, '.').replace(/^-0\./, '-.'));
+    const thinRel = !!(n.rel && n.rel.suppressed);
+    R.comparabilityNote = `pharma_commercial ${F.cohortKey} (commercial-stage quality tier branded/biopharma/specialty). absKaliber in [0,1] = cross-bucket-comparable absolute scale (3-axis weighted-q over the cohort NORMS '${getNormTableId(F.cohortKey)}': growth ${fmt(n.growth.floor)}/${fmt(n.growth.elite)} (cliff-aware organic, deal-masked + winsorized UPSTREAM), gm ${fmt(n.gm.floor)}/${fmt(n.gm.elite)} (annualGP/annualRev pricing-power), eff ${fmt(n.eff.floor)}/${fmt(n.eff.elite)} (FCF-margin primary, OpM fallback); weights {growth .45, gm .20, eff .35}; growth LEADS — the cliff-aware organic read separates compounders from the patent-cliff field). COVERAGE-RENORM drops any NOT_READY/null axis (fully-deal-masked growth, no-GP royalty gm) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. ${thinRel ? 'THIN_REL: n<15 → ABS-only (beta=1.0), REL suppressed; score=100*absKaliber.' : 'The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable; blendScore mixes both (beta=0.6).'} WALLS always-on: PATENT_CLIFF_WALL (LOE-concentration uncomputable from companyfacts), MA_INTANGIBLE_BLIND (the design's intangible/IPR&D M&A signal needs the ABSENT external companyfacts join — pulling the network is forbidden — so M&A decontamination uses the LOCAL totalAssets-jump deal-mask only; the intangible-amortization-drag/ipr&d-acquirer lamps are SHIPPED OMITTED, disclosed coverage limitation)${thinRel ? '/THIN_REL' : ''}. The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison.`;
+    R.crossBucketComparableNote = 'Use members[].absKaliber (absolute [0,1] caliber) for cross-bucket comparison; members[].score (blended 0-100) is intra-bucket ONLY (branded ABS-only beta=1.0; biopharma/specialty mix per-cohort REL beta=0.6).';
+    R.walls = ['PATENT_CLIFF_WALL', 'MA_INTANGIBLE_BLIND'].concat(thinRel ? ['THIN_REL'] : []);
+    // Axis coverage disclosure: how many names dropped the gm axis (no-GP royalty) or the growth axis (fully deal-masked).
+    R.axisCoverage = {
+      gmScored: members.filter(m => m._phGm != null).length,
+      gmDropped: members.filter(m => m._phGm == null).length,
+      growthScored: members.filter(m => m._phGrowth != null).length,
+      growthDropped: members.filter(m => m._phGrowth == null).length,
+    };
+  }
   // audit/fix (gauntlet E3): saas/fabless SI-4/SI-5-Retrofit — spiegelt medtech/dlst exakt.
   // NUR auf den beiden Buckets gesetzt; medtech/dlst haben ihre eigenen Blöcke oben. Diese Felder
   // wurden in die saas/fabless-Parity-Baselines re-gefroren (BEWUSSTER Governance-Bless, kein Drift):
@@ -2150,6 +2370,15 @@ function assertNoForeignLeak(resultsObj, listing) {
     // the snapshot meta via the spec classifier, NOT the C5 court-listing.isUS flag (which uses court-screen's
     // looser region==='US' test and would false-flag the allowlisted SLB US-primary the spec deliberately admits).
     if (bucket === 'energy_upstream' || bucket === 'energy_midstream' || bucket === 'energy_services') continue;
+    // pharma_commercial (CORE) EXEMPTION: pharma membership is governed by the FROZEN spec v0 classifier
+    // (scripts/classify-pharma.js, §1.2 country-domicile guard — STRICTER than court-screen's: country set != US ->
+    // exclude unconditionally; FOREIGN_NAME legal-form regex; the 5-letter pink-sheet ADR rule; the frozen
+    // PHARMA_FOREIGN_DROP set; and a name-verified US_PRIMARY_ALLOWLIST = {JAZZ} for the verified US-PRIMARY
+    // foreign-NAME flagship the design NAMES as a marquee). It is governed instead by the §6 marquee assert + the
+    // pharma-native generative country assert (assertPharmaNoForeignLeak) + the FOREIGN_CONTROL positive-control
+    // (assertPharmaMarquee) below — all reading the snapshot meta via the spec classifier, NOT the C5 court-listing.
+    // isUS flag (which uses court-screen's looser region==='US' test and would false-flag the allowlisted JAZZ).
+    if (bucket === 'pharma_branded' || bucket === 'pharma_biopharma' || bucket === 'pharma_specialty') continue;
     for (const m of R.members) {
       const L = listing.get(m.ticker);
       if (!L) continue; // kein Snapshot-Meta → kann nichts behaupten (Vintage-A ohne Eintrag: tolerant)
@@ -2432,11 +2661,74 @@ function assertEnergyNoForeignLeak(resultsObj, listing) {
   }
 }
 
+// --- pharma_commercial (CORE) MARQUEE-COVERAGE assert (Spec §6, fail-loud) ---
+// SI-5 identity alone does NOT catch a silent universe collapse (a dropped name is consistently absent from BOTH
+// classified and scored counts). The frozen marquee watchlist must each be classified into one of the three pharma
+// cohorts AND reach the scored universe (members[]) — else the run DIES LOUD (the regression guard against the
+// vintage/country/commercial-gate collapse). 1+ name from each cohort (LLY/MRK/PFE/ABBV/BMY/AMGN/GILD/JNJ +BIIB
+// branded; VRTX/REGN/INCY/JAZZ/EXEL biopharma; NBIX/VTRS specialty).
+const PHARMA_MARQUEE = Object.freeze(['LLY', 'MRK', 'PFE', 'ABBV', 'BMY', 'AMGN', 'GILD', 'JNJ',
+  'VRTX', 'REGN', 'BIIB', 'INCY', 'JAZZ', 'EXEL', 'NBIX', 'VTRS']);
+// FOREIGN_CONTROL positive-control (§1.2/§9): the foreign-primary leak the §1.2 hardening (country-domicile guard +
+// FOREIGN_NAME regex + 5-letter-ADR rule + PHARMA_FOREIGN_DROP) must keep OUT — the single largest classification
+// risk in this bucket. Catches a regression that drops a guard.
+const PHARMA_FOREIGN_CONTROL = Object.freeze(['AZN', 'NVS', 'NVO', 'SNY', 'TAK', 'BNTX', 'ARGX', 'GMAB',
+  'ALKS', 'GSK', 'RHHBY', 'BHC']);
+// The name-verified US-PRIMARY foreign-NAME flagship the spec classifier DELIBERATELY admits (JAZZ = Jazz
+// Pharmaceuticals plc, Ireland-domiciled Vintage-A NasdaqGS-primary). It carries a foreign NAME (\bplc\b) but IS a
+// genuine US primary → the generative country anti-leak assert must EXEMPT it (mirrors classify-pharma's
+// US_PRIMARY_ALLOWLIST and materials/energy MATERIALS_US_PRIMARY_ALLOWLIST {CRH,LIN} / ENERGY {SLB}).
+const PHARMA_US_PRIMARY_ALLOWLIST = Object.freeze(['JAZZ']);
+function assertPharmaMarquee(resultsObj) {
+  const B = resultsObj.pharma_branded, BP = resultsObj.pharma_biopharma, S = resultsObj.pharma_specialty;
+  if (!B && !BP && !S) return; // pharma not in this run (e.g. isolated unit test) → tolerant no-op
+  const scored = new Set();
+  for (const R of [B, BP, S]) if (R && Array.isArray(R.members)) for (const m of R.members) scored.add(m.ticker);
+  const missing = PHARMA_MARQUEE.filter(t => !scored.has(t));
+  if (missing.length) {
+    throw new Error('MARQUEE COVERAGE FAIL (Spec §6) — pharma universe collapsed, these bona-fide '
+      + 'US commercial pharma large-caps were not classified/scored: ' + missing.join(', '));
+  }
+  // FOREIGN_CONTROL: the foreign primaries must NOT have reached a pharma cohort.
+  const leakedControl = PHARMA_FOREIGN_CONTROL.filter(t => scored.has(t));
+  if (leakedControl.length) {
+    throw new Error('FOREIGN-CONTROL FAIL (Spec §1.2/§9) — a foreign-primary pharma name leaked into a '
+      + 'cohort: ' + leakedControl.join(', '));
+  }
+}
+// assertPharmaNoForeignLeak(results, listing): GENERATIVE property test reading the snapshot meta.country (via the
+// court-listing side-file) DIRECTLY — independent of the C5 isUS flag. Throws if ANY scored pharma record carries
+// meta.country set AND != "United States" EXCEPT the name-verified US_PRIMARY_ALLOWLIST (JAZZ — foreign-NAME but a
+// genuine US primary the spec admits by design). Tolerant: missing side-file → no-op.
+function assertPharmaNoForeignLeak(resultsObj, listing) {
+  if (!listing || listing.size === 0) return;
+  const allow = new Set(PHARMA_US_PRIMARY_ALLOWLIST);
+  const leaks = [];
+  for (const bucket of ['pharma_branded', 'pharma_biopharma', 'pharma_specialty']) {
+    const R = resultsObj[bucket];
+    if (!R || !Array.isArray(R.members)) continue;
+    for (const m of R.members) {
+      if (allow.has(m.ticker)) continue; // verified US-primary inversion (JAZZ) — admitted by design
+      const L = listing.get(m.ticker);
+      if (!L) continue; // no snapshot meta → can't assert (Vintage-A without entry: tolerant)
+      if (L.country != null && L.country !== 'United States') {
+        leaks.push(`${m.ticker}[${L.country}/${L.region}] in ${bucket}`);
+      }
+    }
+  }
+  if (leaks.length) {
+    throw new Error('PHARMA ANTI-LEAK ASSERT (Spec §1.2 GENERATIVE property test): foreign-country record(s) '
+      + 'leaked into a scored pharma cohort — meta.country set AND != "United States" (and not on the verified '
+      + 'US_PRIMARY_ALLOWLIST): ' + leaks.join(', ')
+      + '. The v0 country-domicile guard (classify-pharma.js isUSListing) must exclude these — NOT suppress.');
+  }
+}
+
 // --- Export: computeMedtechOrganicGrowth + computeDlstOrganicGrowth für Unit-Tests ---
 // (computeDlstOrganicGrowth: Fix A FY-Alignment + Fix B dealYearExcluded-Ehrlichkeit, 2026-06-21)
 // + assertNoForeignLeak (gauntlet C5) + assertIndustrialsMarquee + assertStaplesMarquee +
 //   assertStaplesNoForeignLeak (Spec §6.2b) für direkten Property-Test.
-module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL, assertConsdiscMarquee, assertConsdiscNoForeignLeak, CONSDISC_MARQUEE, CONSDISC_EXCLUDE_CONTROL, assertMaterialsMarquee, assertMaterialsNoForeignLeak, MATERIALS_MARQUEE, MATERIALS_FOREIGN_CONTROL, MATERIALS_US_PRIMARY_ALLOWLIST, assertEnergyMarquee, assertEnergyNoForeignLeak, ENERGY_MARQUEE, ENERGY_FOREIGN_CONTROL, ENERGY_US_PRIMARY_ALLOWLIST };
+module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL, assertConsdiscMarquee, assertConsdiscNoForeignLeak, CONSDISC_MARQUEE, CONSDISC_EXCLUDE_CONTROL, assertMaterialsMarquee, assertMaterialsNoForeignLeak, MATERIALS_MARQUEE, MATERIALS_FOREIGN_CONTROL, MATERIALS_US_PRIMARY_ALLOWLIST, assertEnergyMarquee, assertEnergyNoForeignLeak, ENERGY_MARQUEE, ENERGY_FOREIGN_CONTROL, ENERGY_US_PRIMARY_ALLOWLIST, assertPharmaMarquee, assertPharmaNoForeignLeak, PHARMA_MARQUEE, PHARMA_FOREIGN_CONTROL, PHARMA_US_PRIMARY_ALLOWLIST };
 
 // --- require.main-Guard (Härtung 2): Write + Ausgabe NUR wenn direkt als Skript ausgeführt ---
 // `require('./court-score.js')` gibt nur den Export zurück und schreibt NICHT outputs/court-results.json.
@@ -2467,6 +2759,11 @@ if (require.main === module) {
   // allowlist exempted), else the energy universe collapsed/leaked (the §0 NEEDS-REVISION regression guard).
   assertEnergyMarquee(results);
   assertEnergyNoForeignLeak(results, listingByTicker);
+  // pharma_commercial (CORE) §6: the 16-name marquee must each be classified+scored + the foreign-primary FOREIGN_
+  // CONTROL must stay out + the GENERATIVE country anti-leak property test must hold (with the JAZZ US-primary
+  // allowlist exempted), else the pharma universe collapsed/leaked.
+  assertPharmaMarquee(results);
+  assertPharmaNoForeignLeak(results, listingByTicker);
   fs.writeFileSync(OUT, JSON.stringify(results, null, 2));
 
   // --- Ausgabe ---

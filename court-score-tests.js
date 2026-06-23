@@ -2174,6 +2174,205 @@ test('energy PARITÄT: KEIN energy-only Feld auf den anderen Buckets (Leak-Guard
   }
 });
 
+// =================== PHARMA_COMMERCIAL (CORE) BUCKET TESTS (v0, three cohorts branded|biopharma|specialty) =====
+// Spec formula-design-pharma_court-v0-2026-06-22.md (Council->Court DESIGN-PASS v0 NEEDS-REVISION; NORMS recomputed-
+// live-then-frozen 2026-06-23 on the CLEAN commercial pool). pharma is a SEPARATE court bucket (disjoint from the 10
+// prior CORE/projection buckets). NEW code keyed by the new cohort strings → the prior buckets stay byte-identical
+// (parity tests above). 3 SCORED axes {growth, gm, eff} via the PARALLEL engine absKaliberPharma (coverage-renorm;
+// the medtech/dlst 3-axis absKaliber() path is BYTE-UNTOUCHED). growth LEADS (.45). branded n=10<15 → THIN_REL
+// (ABS-only, beta=1.0). M&A: LOCAL totalAssets-jump deal-mask (the design's intangible/IPR&D re-pointing needs the
+// ABSENT external companyfacts join → intangible lamps OMITTED, disclosed MA_INTANGIBLE_BLIND wall).
+const phB = doc.pharma_branded;
+const phBP = doc.pharma_biopharma;
+const phS = doc.pharma_specialty;
+const PB = phB ? phB.members : [];
+const PBP = phBP ? phBP.members : [];
+const PS_ = phS ? phS.members : [];
+
+test('pharma: all three cohort buckets exist (branded + biopharma + specialty) with members', () => {
+  assert(phB && Array.isArray(phB.members) && PB.length > 0, 'pharma_branded bucket fehlt/leer');
+  assert(phBP && Array.isArray(phBP.members) && PBP.length > 0, 'pharma_biopharma bucket fehlt/leer');
+  assert(phS && Array.isArray(phS.members) && PS_.length > 0, 'pharma_specialty bucket fehlt/leer');
+  assert(/Pharma-Commercial v0/.test(phB.label || ''), `branded label sollte v0 nennen: ${phB.label}`);
+});
+
+test('pharma §6 MARQUEE: all 16 marquees classified+scored across the three cohorts (fail-loud guard)', () => {
+  const MARQUEE = ['LLY', 'MRK', 'PFE', 'ABBV', 'BMY', 'AMGN', 'GILD', 'JNJ', 'VRTX', 'REGN', 'BIIB', 'INCY', 'JAZZ', 'EXEL', 'NBIX', 'VTRS'];
+  const scored = new Set([...PB, ...PBP, ...PS_].map(m => m.ticker));
+  const missing = MARQUEE.filter(t => !scored.has(t));
+  assert(missing.length === 0, `MARQUEE COVERAGE FAIL — nicht klassifiziert/gescort: ${missing.join(', ')}`);
+  const { assertPharmaMarquee } = require('./court-score.js');
+  assert(typeof assertPharmaMarquee === 'function', 'assertPharmaMarquee nicht exportiert');
+  assertPharmaMarquee(doc); // throws on collapse / foreign-control leak
+});
+
+test('pharma SI-5: classifiedCount === scoredCount + excludedCount (ALLE 3 Kohorten, fail-loud)', () => {
+  for (const [name, R] of [['branded', phB], ['biopharma', phBP], ['specialty', phS]]) {
+    assert(R.classifiedCount != null && R.scoredCount != null && R.excludedCount != null, `${name} SI-5 counts fehlen`);
+    assert(R.classifiedCount === R.scoredCount + R.excludedCount,
+      `${name} SI-5 mismatch: classified ${R.classifiedCount} !== scored ${R.scoredCount} + excluded ${R.excludedCount}`);
+  }
+  // Live-recomputed CLEAN commercial counts 2026-06-23: branded 10, biopharma 22, specialty 14.
+  assert(phB.classifiedCount === 10, `branded classified sollte 10 sein, ist ${phB.classifiedCount}`);
+  assert(phBP.classifiedCount === 22, `biopharma classified sollte 22 sein, ist ${phBP.classifiedCount}`);
+  assert(phS.classifiedCount === 14, `specialty classified sollte 14 sein, ist ${phS.classifiedCount}`);
+});
+
+test('pharma: every cohort marquee scored finite; growth/gm/eff axes present on the top names', () => {
+  for (const [name, members, marq] of [['branded', PB, ['LLY', 'GILD', 'ABBV', 'AMGN']], ['biopharma', PBP, ['VRTX', 'REGN', 'INCY', 'EXEL']], ['specialty', PS_, ['NBIX', 'UTHR', 'ZTS']]]) {
+    const hit = marq.map(t => members.find(x => x.ticker === t)).filter(Boolean);
+    assert(hit.some(m => Number.isFinite(m.score) && m.score > 0), `${name}: kein ${marq.join('/')} mit finitem Score >0`);
+  }
+});
+
+// THE materials-bug guard (Spec §9 analog): the TOP name of EACH cohort must be a real, COMMERCIAL-STAGE quality
+// pharma name — NOT a pre-revenue biotech shell, NOT a patent-cliff collapsing name mis-scored to the top. A
+// pre-revenue shell carries score=null (SI-4) and can never be the scored top; a cliff name reads its genuine
+// negative organic growth and sinks.
+test('pharma MANDATORY regression: TOP-by-score of each cohort is a real commercial-stage pharma quality name, NOT a pre-revenue shell, NOT a cliff-collapsing name mis-scored', () => {
+  const KNOWN_QUALITY = new Set(['LLY', 'GILD', 'ABBV', 'AMGN', 'HALO', 'HRMY', 'EXEL', 'INCY', 'VRTX', 'BCRX', 'UTHR', 'NBIX', 'ZTS']);
+  // patent-cliff names that MUST NOT be the scored top of their cohort (genuine organic decline → low score).
+  const CLIFF_NAMES = new Set(['PFE', 'BMY', 'OGN', 'VTRS']);
+  for (const [name, members] of [['branded', PB], ['biopharma', PBP], ['specialty', PS_]]) {
+    const ranked = members.filter(m => m.score != null && isFinite(m.score)).sort((a, b) => b.score - a.score);
+    assert(ranked.length > 0, `${name}: keine gescorten Namen`);
+    const top = ranked[0];
+    assert(top.exclusionReason !== 'OUT_OF_SEGMENT:preexploration', `${name} TOP ${top.ticker} darf KEIN pre-revenue shell sein`);
+    assert(!CLIFF_NAMES.has(top.ticker), `${name} TOP ${top.ticker} ist ein patent-cliff-Name — mis-scored an die Spitze (materials-bug)`);
+    assert(KNOWN_QUALITY.has(top.ticker), `${name} TOP sollte ein bekannter Quality-Name sein, ist ${top.ticker}`);
+    // the cliff names, where present + scored, must sit in the BOTTOM half of their cohort (low organic read).
+    for (const c of CLIFF_NAMES) {
+      const idx = ranked.findIndex(m => m.ticker === c);
+      if (idx >= 0) assert(idx >= Math.floor(ranked.length / 2), `${name} cliff-Name ${c} sollte in der unteren Hälfte ranken (idx ${idx}/${ranked.length})`);
+    }
+  }
+});
+
+test('pharma §1.2/§9 FOREIGN-CONTROL + GENERATIVE anti-leak: foreign primaries absent; JAZZ allowlisted', () => {
+  const { assertPharmaNoForeignLeak, PHARMA_FOREIGN_CONTROL, PHARMA_US_PRIMARY_ALLOWLIST } = require('./court-score.js');
+  const scored = new Set([...PB, ...PBP, ...PS_].map(m => m.ticker));
+  // FOREIGN_CONTROL positive-control: AZN/NVS/NVO/SNY/TAK/BNTX/ARGX/GMAB/ALKS/GSK/RHHBY/BHC must NOT be scored.
+  const leaked = PHARMA_FOREIGN_CONTROL.filter(t => scored.has(t));
+  assert(leaked.length === 0, `FOREIGN-CONTROL FAIL — foreign primary leaked: ${leaked.join(', ')}`);
+  // JAZZ (Jazz Pharmaceuticals plc, Ireland-domiciled NasdaqGS-primary) IS admitted via the US_PRIMARY_ALLOWLIST.
+  assert(PHARMA_US_PRIMARY_ALLOWLIST.includes('JAZZ'), 'JAZZ sollte auf dem US_PRIMARY_ALLOWLIST sein');
+  assert(scored.has('JAZZ'), 'JAZZ (US-primary marquee) sollte gescort sein');
+  // GENERATIVE country anti-leak (reads the snapshot meta via the listing side-file) must hold.
+  assert(typeof assertPharmaNoForeignLeak === 'function', 'assertPharmaNoForeignLeak nicht exportiert');
+  let listing = new Map();
+  try {
+    const lp = (CAND_TEST.replace(/_court-candidates([^/\\]*)\.json$/, '_court-listing$1.json'));
+    const ld = JSON.parse(fs.readFileSync(lp, 'utf8'));
+    const obj = ld && ld.listings ? ld.listings : (ld || {});
+    for (const [t, rec] of Object.entries(obj)) listing.set(t, rec);
+  } catch {}
+  assertPharmaNoForeignLeak(doc, listing); // throws on a country-set foreign leak (JAZZ exempt)
+});
+
+test('pharma SI-4 PRE-REVENUE (the materials lesson): the commercial gate defers cash-burning clinical names; any zero-rev shell EXCLUDED, never scored, never top', () => {
+  // the §1.4 commercial gate ran in the classifier — known cash-burning clinical names (MRNA/BBIO/INSM/RARE/SRPT/
+  // IONS) must NOT be in ANY pharma cohort at all (they never entered court-buckets).
+  const scored = new Set([...PB, ...PBP, ...PS_].map(m => m.ticker));
+  for (const t of ['MRNA', 'BBIO', 'INSM', 'RARE', 'SRPT', 'IONS', 'AXSM', 'MDGL']) {
+    assert(!scored.has(t), `cash-burning clinical name ${t} sollte vom §1.4 commercial gate deferred sein (nicht in court-buckets)`);
+  }
+  // any name that DID enter members but is pre-revenue carries score=null (SI-4 OUT_OF_SEGMENT:preexploration).
+  for (const m of [...PB, ...PBP, ...PS_]) {
+    if (m.exclusionReason === 'OUT_OF_SEGMENT:preexploration') {
+      assert(m.score == null, `${m.ticker} pre-revenue sollte score=null tragen, hat ${m.score}`);
+    }
+  }
+});
+
+test('pharma SI-4: Out-class / pre-revenue members carry score=null in excluded[] (kein irreführender Rang)', () => {
+  for (const [name, R] of [['branded', phB], ['biopharma', phBP], ['specialty', phS]]) {
+    assert(Array.isArray(R.excluded), `${name} excluded[] fehlt`);
+    for (const m of R.excluded) assert(m.score == null, `${name}/${m.ticker} in excluded[] sollte score=null haben, hat ${m.score}`);
+  }
+});
+
+test('pharma: THREE scored axes {growth, gm, eff} (NOT roce/marginStability); weights sum to 1.0; growth LEADS', () => {
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  for (const b of ['pharma_branded', 'pharma_biopharma', 'pharma_specialty']) {
+    const w = NORMS[b].weights;
+    const keys = Object.keys(w).sort().join(',');
+    assert(keys === 'eff,gm,growth', `${b} sollte die 3 pharma-Achsen {growth,gm,eff} tragen, hat ${keys}`);
+    assert(!('roce' in w) && !('marginStability' in w) && !('assetGrowthPenalty' in w), `${b} darf KEINE roce/marginStability/assetGrowthPenalty-Achse haben`);
+    const sum = Object.values(w).reduce((s, v) => s + v, 0);
+    assert(Math.abs(sum - 1.0) < 1e-9, `${b} weights sollten Σ=1.0 sein, sind ${sum}`);
+    assert(w.growth === 0.45 && w.gm === 0.20 && w.eff === 0.35, `${b} weights sollten {growth .45, gm .20, eff .35} sein`);
+    assert(w.growth > w.eff && w.eff > w.gm, `${b} growth sollte führen (.45 > eff .35 > gm .20)`);
+  }
+});
+
+test('pharma: growth/gm/eff cohort-keyed; branded THIN_REL (n<15 ABS-only); growth floor 0.00 branded/specialty, 0.05 biopharma', () => {
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  const B = NORMS.pharma_branded, BP = NORMS.pharma_biopharma, S = NORMS.pharma_specialty;
+  // gm elite is cohort-specific (branded 66-79 narrow, biopharma/specialty wide).
+  assert(B.gm.elite === 0.79 && BP.gm.elite === 0.96 && S.gm.elite === 0.92,
+    `gm elite sollte branded .79 / biopharma .96 / specialty .92 sein, ist ${B.gm.elite}/${BP.gm.elite}/${S.gm.elite}`);
+  // growth floor 0.00 for branded/specialty (mature + cliff-exposed), 0.05 for biopharma.
+  assert(B.growth.floor === 0.00 && S.growth.floor === 0.00 && BP.growth.floor === 0.05,
+    `growth floor sollte branded/specialty .00 / biopharma .05 sein`);
+  // branded THIN_REL: rel.suppressed=true, beta=1.0 (ABS-only on n=10<15).
+  assert(B.rel && B.rel.suppressed === true && B.rel.beta === 1.0, 'branded sollte THIN_REL (rel.suppressed, beta=1.0) sein');
+  assert(!(BP.rel && BP.rel.suppressed) && !(S.rel && S.rel.suppressed), 'biopharma/specialty sollten NICHT THIN_REL sein (full ABS+REL)');
+});
+
+test('pharma: always-on WALLS on every member (PATENT_CLIFF_WALL + MA_INTANGIBLE_BLIND); branded carries THIN_REL', () => {
+  for (const [b, members, thinRel] of [['branded', PB, true], ['biopharma', PBP, false], ['specialty', PS_, false]]) {
+    for (const m of members) {
+      for (const w of ['PATENT_CLIFF_WALL', 'MA_INTANGIBLE_BLIND']) {
+        assert(Array.isArray(m.lamps) && m.lamps.includes(w), `${b}/${m.ticker} fehlt WALL-Lampe ${w}`);
+      }
+    }
+    // bucket-level walls disclosure
+    const R = b === 'branded' ? phB : b === 'biopharma' ? phBP : phS;
+    assert(Array.isArray(R.walls) && R.walls.includes('PATENT_CLIFF_WALL') && R.walls.includes('MA_INTANGIBLE_BLIND'), `${b} R.walls fehlt`);
+    assert(R.walls.includes('THIN_REL') === thinRel, `${b} R.walls THIN_REL sollte ${thinRel} sein`);
+  }
+});
+
+test('pharma SI-3: normTableId + cohort + comparabilityNote (absKaliber cross-bucket, REL intra-bucket, MA_INTANGIBLE_BLIND disclosed)', () => {
+  for (const [name, R] of [['branded', phB], ['biopharma', phBP], ['specialty', phS]]) {
+    assert(/pharma_(branded|biopharma|specialty)-norms-2026-06-23/.test(R.normTableId || ''), `${name} normTableId fehlt/falsch: ${R.normTableId}`);
+    assert(R.cohort === `pharma_${name}`, `${name} cohort falsch: ${R.cohort}`);
+    assert(/growth/i.test(R.comparabilityNote || '') && /MA_INTANGIBLE_BLIND/i.test(R.comparabilityNote || ''), `${name} comparabilityNote sollte growth + MA_INTANGIBLE_BLIND nennen`);
+    assert(R.scoreScope === 'intra-bucket' && R.crossBucketComparableField === 'absKaliber', `${name} SI-3 scope/field fehlt`);
+  }
+});
+
+test('pharma-unit: absKaliberPharma 3-axis coverage-renorm (gm-drop renorm Σ=1.0; growth-drop; all-null → 0)', () => {
+  const { absKaliberPharma } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  // full 3 axes
+  const full = absKaliberPharma({ growth: 0.10, gm: 0.75, eff: 0.25 }, 'pharma_branded');
+  assert(full.usedAxes.length === 3 && full.droppedAxes.length === 0, `full sollte 3 Achsen nutzen, hat ${full.usedAxes.length}`);
+  assert(Math.abs(Object.values(full.renormWeights).reduce((s, v) => s + v, 0) - 1.0) < 1e-9, 'renormWeights sollten Σ=1.0');
+  // gm-drop (no-GP royalty name RPRX/ARWR) → growth+eff renormalize
+  const dropGm = absKaliberPharma({ growth: 0.16, gm: null, eff: 0.50 }, 'pharma_biopharma');
+  assert(dropGm.droppedAxes.includes('gm') && dropGm.usedAxes.length === 2, 'gm-drop sollte 2 Achsen lassen');
+  assert(Math.abs(Object.values(dropGm.renormWeights).reduce((s, v) => s + v, 0) - 1.0) < 1e-9, 'renorm Σ=1.0 nach gm-drop');
+  // growth-drop (fully deal-masked acquirer CPRX) → gm+eff renormalize
+  const dropG = absKaliberPharma({ growth: null, gm: 0.85, eff: 0.35 }, 'pharma_specialty');
+  assert(dropG.droppedAxes.includes('growth') && dropG.usedAxes.length === 2, 'growth-drop sollte 2 Achsen lassen');
+  // all-null → 0 (pathological, no fake-neutral)
+  const allNull = absKaliberPharma({ growth: null, gm: null, eff: null }, 'pharma_branded');
+  assert(allNull.absK === 0 && allNull.usedAxes.length === 0, 'all-null sollte absK=0 ergeben');
+});
+
+test('pharma PARITÄT: KEIN pharma-only Feld auf den anderen Buckets (Leak-Guard)', () => {
+  // TRULY pharma-exclusive fields (ph/gmPharma/effPharma/_ph*). The shared names (growthInput/absUsedAxes/
+  // absDroppedAxes/cohort/absKaliber) legitimately exist on industrials/materials/energy members.
+  for (const b of ['system_app_software', 'fabless_semi', 'medtech_devices', 'diagnostics_lst', 'industrials_heavy', 'industrials_light', 'staples_branded', 'staples_distribution', 'consdisc_store', 'consdisc_light', 'materials_pricingpower', 'materials_commodity', 'energy_upstream', 'energy_midstream', 'energy_services']) {
+    if (!doc[b]) continue;
+    for (const m of doc[b].members) {
+      for (const leak of ['ph', 'gmPharma', 'effPharma', '_phGrowth', '_phGm', '_phEff']) {
+        assert(!(leak in m), `${b}/${m.ticker} hat pharma-only Feld '${leak}' geleakt (Parität verletzt)`);
+      }
+    }
+  }
+});
+
 // Temp-Outputs aufräumen (Harness-Isolation: Produktions-Artefakte bleiben unberührt)
 try { fs.unlinkSync(CAND_TEST); } catch {}
 try { fs.unlinkSync(RESULTS); } catch {}
