@@ -97,7 +97,13 @@ function evaluate(stock) {
     const rev = _unwrap(revArr[i]);
     const oi  = _unwrap(oiArr[i]);
     if (rev == null || oi == null || rev <= 0) continue;
-    years.push({ rev, oi, opMargin: oi / rev, idx: i });
+    // audit F-A-2026-06-22 (+ audit 2026-06-21): retain source (fiscal) index so
+    // pairs that straddle a dropped (null/neg-rev) year are NOT treated as
+    // calendar-adjacent. Invalid years are compacted out of years[], so without
+    // srcIdx a gap-merge makes one "consecutive pair" span two fiscal years,
+    // inflating revGrowth (two years of growth counted as one) and diluting the
+    // leverage average with a mis-annualized data point.
+    years.push({ rev, oi, opMargin: oi / rev, srcIdx: i });
   }
 
   if (years.length < MIN_YEARS) {
@@ -114,9 +120,12 @@ function evaluate(stock) {
   for (let i = 0; i < years.length - 1; i++) {
     const newer = years[i];
     const older = years[i + 1];
-    // bug-fix (audit 2026-06-21): only pair ADJACENT calendar years — invalid years were compacted
-    // out of years[], so years[i]/years[i+1] could straddle a dropped year and inflate the 1y growth.
-    if (older.idx !== newer.idx + 1) continue;
+    // bug-fix (audit 2026-06-21 + audit F-A-2026-06-22): only form a pair from two
+    // CALENDAR-adjacent fiscal years (source-index diff == 1). Invalid years were
+    // compacted out of years[], so years[i]/years[i+1] could straddle a dropped
+    // year; without this check a gap-merge silently fuses two periods into one
+    // "pair", inflating the 1y revGrowth and polluting the averaged leverage signal.
+    if (older.srcIdx - newer.srcIdx !== 1) continue;
     const revGrowth = (newer.rev - older.rev) / older.rev;
     if (!Number.isFinite(revGrowth) || revGrowth <= POS_GROWTH_FLOOR) continue;
     const marginDelta = newer.opMargin - older.opMargin;

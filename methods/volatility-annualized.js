@@ -22,9 +22,14 @@ function evaluate(stock) {
   const ticker = stock && stock.meta && stock.meta.ticker;
   if (!ticker) return H.buildResult({ computable: false, reason: 'no ticker', threshold: THRESHOLD, thresholdOp: THRESHOLD_OP });
   const series = (_loadPrices()[ticker]) || [];
-  if (series.length < 60) {
+  const MIN_RETURNS = 30;
+  // audit F-A-2026-06-22: prevents the daily-sized 60-bar floor rejecting valid weekly series with >=30 returns.
+  // Cheap "is there any usable data" guard only; the real statistical floor (MIN_RETURNS) is applied
+  // AFTER frequency detection so weekly series with 52-59 bars (>=30 weekly returns) are not pre-rejected
+  // by a gate sized for daily data. A series can never yield >=30 returns with fewer than MIN_RETURNS+1 bars.
+  if (series.length < MIN_RETURNS + 1) {
     return H.buildResult({
-      computable: false, reason: `need ≥ 60 daily prices (got ${series.length})`,
+      computable: false, reason: `need ≥ ${MIN_RETURNS + 1} prices (got ${series.length})`,
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
@@ -58,9 +63,9 @@ function evaluate(stock) {
       returns.push(Math.log(window[i].close / window[i-1].close));
     }
   }
-  if (returns.length < 30) {
+  if (returns.length < MIN_RETURNS) {
     return H.buildResult({
-      computable: false, reason: `usable returns < 30 (got ${returns.length})`, threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+      computable: false, reason: `usable returns < ${MIN_RETURNS} (got ${returns.length})`, threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
   const mean = returns.reduce((a, b) => a + b, 0) / returns.length;

@@ -62,10 +62,14 @@ for (const expected of EXPECTED_SCRIPTS) {
   }
 }
 
-const breached = reports.filter(r => r.failure_rate > THRESHOLD);
+// F-A-2026-06-21 (audit): a malformed report with a missing/non-numeric failure_rate
+// made `undefined > THRESHOLD` === false and slipped through the gate. Treat a
+// non-finite failure_rate as a breach (the report itself is broken).
+const _isBreach = (r) => !Number.isFinite(r.failure_rate) || r.failure_rate > THRESHOLD;
+const breached = reports.filter(_isBreach);
 console.log('Pipeline health summary:');
 for (const r of reports) {
-  const marker = r.failure_rate > THRESHOLD ? 'BREACH' : 'OK';
+  const marker = _isBreach(r) ? 'BREACH' : 'OK';
   console.log(`  [${marker}] ${r.script}: ${r.n_ok}/${r.n_total} (${(r.failure_rate*100).toFixed(2)}% failed)`);
 }
 

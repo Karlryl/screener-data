@@ -202,7 +202,13 @@ async function main() {
   console.log('  watchlist: ' + args.watchlist);
 
   const wlRaw = JSON.parse(fs.readFileSync(args.watchlist, 'utf8'));
-  const existing = new Set(wlRaw.stocks.map(s => s.ticker.toUpperCase()));
+  // audit F-A-2026-06-21: a single watchlist row with a null/undefined ticker
+  // would throw TypeError on .toUpperCase() and abort the entire universe
+  // refresh (one bad row -> frozen universe). Drop ticker-less rows from the
+  // existing-set instead of crashing.
+  const existing = new Set(
+    wlRaw.stocks.map(s => s.ticker).filter(Boolean).map(t => t.toUpperCase())
+  );
   console.log('  current size: ' + existing.size);
 
   // 1. Pull all screener-buckets x regions in parallel
@@ -341,7 +347,11 @@ async function main() {
         allTickers.set(sym, {
           ticker: sym,
           // Tag 165: carry marketCap hint from NASDAQ API when available
-          marketCap: info.marketCap || null,
+          // audit F-A-2026-06-21: coerce non-finite/NaN/Infinity/<=0 marketCap
+          // hints to null on ingest. A bad source value of Infinity would sort
+          // to the top of the rank-cap (line ~390) and crowd out real names;
+          // null routes it correctly into the bounded null-mcap bucket.
+          marketCap: (Number.isFinite(info.marketCap) && info.marketCap > 0) ? info.marketCap : null,
           name: info.name || '',
           sector: info.sector || '',
           exchange: info.exchange || '',
@@ -436,6 +446,10 @@ async function main() {
 
   // 4. Merge into watchlist
   for (const info of newTickers) {
+    // audit F-A-2026-06-21: skip any discovery-source entry without a ticker
+    // so a ticker-less row can never reach the null-unsafe sort below and
+    // freeze the whole universe refresh.
+    if (!info.ticker) continue;
     wlRaw.stocks.push({
       ticker: info.ticker,
       yahoo_symbol: info.ticker,
@@ -446,7 +460,10 @@ async function main() {
       added_at: new Date().toISOString()
     });
   }
-  wlRaw.stocks.sort((a, b) => a.ticker.localeCompare(b.ticker));
+  // audit F-A-2026-06-21: null-safe sort key — a single null/undefined ticker
+  // (from a pre-existing bad watchlist row) would throw on .localeCompare and
+  // abort the refresh after the merge work was already done.
+  wlRaw.stocks.sort((a, b) => (a.ticker || '').localeCompare(b.ticker || ''));
   wlRaw.lastUniverseRefresh = new Date().toISOString();
 
   // F-SM-021 / F-DP-046 (Tag 189): watchlist.json is pull-yahoo's entry point;

@@ -119,10 +119,21 @@ function evaluate(stock) {
   const rawRevs = _rawVals(stock, 'annual.annualRev');
   const rawOpIncs = _rawVals(stock, 'annual.annualOpInc');
   const opMs = [];
-  const ylen = Math.min(5, rawRevs.length, rawOpIncs.length);
-  for (let i = 0; i < ylen; i++) {
-    if (Number.isFinite(rawRevs[i]) && rawRevs[i] > 0 && Number.isFinite(rawOpIncs[i])) {
-      opMs.push(rawOpIncs[i] / rawRevs[i]);
+  // audit F-A-2026-06-22: prevents cross-year Rev/OpInc pairing inflating/deflating
+  // retail-tier opMargin median. _rawVals preserves position but annualRev/annualOpInc
+  // can arrive via different extraction paths (QS filter(Boolean)-compacted vs FTS
+  // null-preserved). When lengths differ the arrays are not year-aligned, so positional
+  // pairing (rawRevs[i]/rawOpIncs[i]) would mix different fiscal years. Fail-soft: only
+  // pair when both arrays are positionally aligned (equal length).
+  if (rawRevs.length === rawOpIncs.length) {
+    const ylen = Math.min(5, rawRevs.length);
+    for (let i = 0; i < ylen; i++) {
+      // audit F-A-2026-06-22: skip the pair when either side is null (missing year)
+      // rather than relying on Number.isFinite of a possibly-misaligned element.
+      if (rawRevs[i] != null && rawOpIncs[i] != null
+          && Number.isFinite(rawRevs[i]) && rawRevs[i] > 0 && Number.isFinite(rawOpIncs[i])) {
+        opMs.push(rawOpIncs[i] / rawRevs[i]);
+      }
     }
   }
   const opMarginMedian = opMs.length >= 3 ? _median(opMs) : null;

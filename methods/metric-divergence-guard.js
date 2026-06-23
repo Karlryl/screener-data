@@ -54,6 +54,21 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
+  // audit F-A-2026-06-22: prevents tautological pass when annual op-income was
+  // back-derived from the TTM operating margin. When meta.opIncSource is
+  // 'computed-margin', pull-yahoo set annualOpInc[y] = annualRev[y] ×
+  // operatingMargins(TTM) (pull-yahoo.js path 3), so annualMargin =
+  // oi0/rev0*100 == operatingMargins*100 == ttmMargin and divergence == 0
+  // ALWAYS. The annual-vs-TTM comparison is non-independent — the guard would
+  // structurally pass every such snapshot, blind to real metric breakage.
+  const opIncSource = stock.meta && stock.meta.opIncSource;
+  if (opIncSource === 'computed-margin') {
+    return H.buildResult({
+      computable: false,
+      reason: 'annualOpInc derived from TTM margin (opIncSource=computed-margin) — divergence undefined',
+      threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    });
+  }
   const ttmMargin = H.metricValue(stock, 'operatingMargin');
   const revArr = (stock.annual && stock.annual.annualRev) || [];
   const oiArr = (stock.annual && stock.annual.annualOpInc) || [];

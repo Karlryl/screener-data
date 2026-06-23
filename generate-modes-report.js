@@ -51,7 +51,7 @@ function parseArgs(argv) {
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--snapshots' && argv[i+1]) args.snapshots = argv[++i];
     else if (argv[i] === '--out' && argv[i+1]) args.out = argv[++i];
-    else if (argv[i] === '--top' && argv[i+1]) args.topN = parseInt(argv[++i]);
+    else if (argv[i] === '--top' && argv[i+1]) { const n = parseInt(argv[++i], 10); if (Number.isFinite(n) && n > 0) args.topN = n; } // audit F-A-2026-06-21: guard NaN/radix so a bad --top can't empty the report
   }
   return args;
 }
@@ -68,13 +68,7 @@ function fmtMoney(v) {
   return '$' + v.toFixed(0);
 }
 
-function fmtValue(v, unit) {
-  if (v == null || !Number.isFinite(v)) return 'â€”';
-  if (unit === 'percent') return v.toFixed(1) + '%';
-  if (unit === 'ratio' && Math.abs(v) < 1) return (v*100).toFixed(2) + '%';
-  if (typeof v === 'string') return v;
-  return v.toFixed(1);
-}
+// audit F-A-2026-06-21: dead-code removal — fmtValue had zero call sites.
 
 // Tag 232c-11 (audit F-PF-003 HIGH): async batched-concurrency snapshot read.
 // Pre-fix: serial fs.readFileSync over 3-15k+ files added 2-3 minutes per
@@ -84,7 +78,7 @@ function fmtValue(v, unit) {
 // 1/32 of files (≈ 0.5-1 min) plus stringify overhead. Sequential within each
 // batch keeps memory bounded — Promise.all over all 15k files at once would
 // peak at ~1.5 GB resident.
-async function loadStocks(dir) {
+async function loadStocks(dir, _loadStats) {
   if (!fs.existsSync(dir)) return [];
   // Tag 220 (audit F-GR-002 HIGH): exclude all '_*' files (was just _manifest).
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
@@ -96,7 +90,15 @@ async function loadStocks(dir) {
       try {
         const content = await fs.promises.readFile(path.join(dir, f), 'utf8');
         return JSON.parse(content);
-      } catch (e) { return null; }
+      } catch (e) {
+        // audit F-A-2026-06-21: surface silent snapshot read/parse drops.
+        // Previously a corrupt/unreadable snapshot was returned as null with
+        // zero logging and never reached the pipeline-health gate. Count it and
+        // warn so CI logs show which file failed and the health JSON reflects it.
+        if (_loadStats) _loadStats.parseErrors++;
+        console.warn(`[loadStocks] snapshot read/parse failed: ${f} — ${e.message}`);
+        return null;
+      }
     }));
     for (const p of parsed) {
       if (p !== null && typeof p === 'object' && !Array.isArray(p)) out.push(p);
@@ -108,7 +110,7 @@ async function loadStocks(dir) {
 // Tag 168: evaluateAll wraps per-stock processing in try/catch so a single
 // corrupt snapshot cannot kill the entire report generation. Failures are
 // tracked in _pipelineFailures (injected by main()) for health-check export.
-function evaluateAll(stocks, _pipelineFailures) {
+function evaluateAll(stocks, _pipelineFailures, _evalStats) {
   const results = [];
   for (const stock of stocks) {
     try {
@@ -121,7 +123,16 @@ function evaluateAll(stocks, _pipelineFailures) {
       const modeEvals = {};
       for (const mId of Object.keys(SM.MODES)) {
         try { modeEvals[mId] = SM.evaluateMode(stock, mId, allResults); }
-        catch (e) { modeEvals[mId] = null; }
+        catch (e) {
+          // audit F-A-2026-06-21: surface silent per-mode eval failures.
+          // Previously a thrown mode evaluation became a null mode with no record,
+          // invisible to the 5% health gate. Count it and warn with ticker+mode so
+          // a systemic mode-level break shows up in CI logs and the health JSON.
+          modeEvals[mId] = null;
+          if (_evalStats) _evalStats.modeEvalErrors++;
+          const tk = (stock && stock.meta && stock.meta.ticker) || '???';
+          console.warn(`[evaluateAll] mode eval failed: ${tk} / ${mId} — ${e.message}`);
+        }
       }
       results.push({ stock, allResults, mcap, ipoYear, modeEvals });
     } catch (e) {
@@ -177,9 +188,18 @@ function blockedByOneMust(eligible, modeId, topN) {
   for (const ev of eligible) {
     const me = ev.modeEvals && ev.modeEvals[modeId];
     if (!me || me.passed || !me.mustResults) continue;
-    const failed = me.mustResults.filter(m => m.status === 'fail');
-    if (failed.length !== 1) continue;  // genau 1 MUST fail
-    items.push({ ev: ev, me: me, failedMust: failed[0] });
+    // audit F-A-2026-06-21: count 'incomputable' MUSTs as blocking barriers, not
+    // just 'fail'. Failure mode prevented: incomputable-MUST hidden as a clean
+    // one-barrier near-miss. In strategy-modes.js a MUST resolves to
+    // pass/fail/incomputable, and allMustPass requires mustPassCount===mustChecks
+    // .length — so an incomputable MUST also blocks passing. The old filter
+    // (status==='fail' only) treated a stock blocked by 1 fail + N incomputable as
+    // a single-barrier miss, mislabeling multi-barrier stocks in the Near-Miss
+    // panel. Require exactly ONE blocking barrier (the panel's "one threshold
+    // away" intent); a fail+incomputable combo has two barriers and is excluded.
+    const blocking = me.mustResults.filter(m => m.status === 'fail' || m.status === 'incomputable');
+    if (blocking.length !== 1) continue;  // genau 1 blockierende Barriere (fail ODER incomputable)
+    items.push({ ev: ev, me: me, failedMust: blocking[0] });
   }
   items.sort(function(a, b) { return (b.me.score || 0) - (a.me.score || 0); });
   return items.slice(0, topN);
@@ -210,35 +230,107 @@ function dedupeByCompany(evaluated) {
       .replace(COMPANY_SUFFIX_REGEX, '')
       .replace(/[^a-z0-9]+/g, '').trim();
   }
+  // audit F-A-2026-06-21: collision-resistant key + data/mcap-driven tiebreak.
+  // Failure mode prevented: survivorship asymmetry — distinct or larger FOREIGN
+  // companies silently dropped by a name-collision on a heavily stripped key plus
+  // an UNCONDITIONAL US-listing preference. Two fixes:
+  //   (1) Key discriminator: norm(name) alone collapses very different companies
+  //       (accent-folded, suffix-stripped, alnum-only). Append a sector tag and an
+  //       order-of-magnitude mcap bucket so genuinely distinct issuers that fold to
+  //       the same name string don't merge, while true cross-listings of the SAME
+  //       company (same name + sector + mcap magnitude) still collapse.
+  //   (2) Tiebreak: prefer the listing with more populated annual/timeseries data,
+  //       then higher mcap, and use US-preference ONLY as a final tiebreak when data
+  //       completeness and mcap are comparable — instead of dropping a larger/richer
+  //       foreign listing purely on nationality.
+  // FX note: marketCap is already normalized to USD at ingest (pull-yahoo.js sets
+  // meta.reportingCurrency='USD' and meta.fxRateApplied), so the mcap comparison is
+  // USD-vs-USD. For snapshots where FX conversion failed (meta.fxConversionFailed /
+  // fxRateApplied==null) the value is still raw local currency and is NOT comparable;
+  // we treat such mcap as unreliable (usdMcap()→null) so it neither sets the magnitude
+  // bucket nor wins the mcap tiebreak by an out-of-unit value.
+  function usdMcap(ev) {
+    const meta = (ev.stock && ev.stock.meta) || {};
+    // fxConversionFailed leaves the value in local currency → not USD-comparable.
+    if (meta.fxConversionFailed === true) return null;
+    // Converted snapshots carry reportingCurrency='USD'+fxRateApplied; native-USD
+    // snapshots (US listings) have no FX meta at all. Reject only an explicit
+    // non-USD reportingCurrency (defensive — should not occur post-conversion).
+    if (meta.reportingCurrency != null && meta.reportingCurrency !== 'USD') return null;
+    const m = ev.mcap;
+    return (typeof m === 'number' && Number.isFinite(m) && m > 0) ? m : null;
+  }
+  function mcapBucket(ev) {
+    const m = usdMcap(ev);
+    return m == null ? 'x' : String(Math.round(Math.log10(m)));
+  }
+  // Count populated annual + quarterly data points so the richer listing wins.
+  function dataScore(ev) {
+    const s = ev.stock || {};
+    const a = s.annual || {};
+    const t = s.timeseries || {};
+    return _arrVals(a.annualRev).length + _arrVals(a.annualOpInc).length +
+           _arrVals(a.annualFCF).length + _arrVals(t.revenueQ).length;
+  }
   const byKey = new Map();
+  const merges = [];
   for (const ev of evaluated) {
     const name = (ev.stock.meta && ev.stock.meta.name) || '';
     const ticker = (ev.stock.meta && ev.stock.meta.ticker) || '';
-    const key = norm(name) || ticker.split(/[.\-]/)[0].toLowerCase();
-    if (!key) continue;
+    const sector = ((ev.stock.meta && ev.stock.meta.sector) || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+    const nameKey = norm(name) || ticker.split(/[.\-]/)[0].toLowerCase();
+    if (!nameKey) continue;
+    // Discriminate by sector + mcap order-of-magnitude so name collisions between
+    // distinct issuers do not merge (true cross-listings share all three).
+    const key = nameKey + '|' + sector + '|' + mcapBucket(ev);
     const existing = byKey.get(key);
     if (!existing) { byKey.set(key, ev); continue; }
+    // Tiebreak between two listings of the same company.
+    const evData = dataScore(ev), exData = dataScore(existing);
+    const evMcap = usdMcap(ev) || 0, exMcap = usdMcap(existing) || 0;
     const evIsUS = !/\./.test(ticker);
-    const exIsUS = !/\./.test(existing.stock.meta.ticker);
+    const exIsUS = !/\./.test((existing.stock.meta && existing.stock.meta.ticker) || '');
     let keep;
-    if (evIsUS && !exIsUS) keep = ev;
-    else if (!evIsUS && exIsUS) keep = existing;
-    else keep = (ev.mcap || 0) >= (existing.mcap || 0) ? ev : existing;
+    if (evData !== exData) keep = evData > exData ? ev : existing;          // richer data wins
+    else if (evMcap !== exMcap) keep = evMcap > exMcap ? ev : existing;     // then higher USD mcap
+    else if (evIsUS !== exIsUS) keep = evIsUS ? ev : existing;              // US only as final tiebreak
+    else keep = ev;
+    const dropped = keep === ev ? existing : ev;
+    merges.push({
+      key,
+      kept: (keep.stock.meta && keep.stock.meta.ticker) || '?',
+      dropped: (dropped.stock.meta && dropped.stock.meta.ticker) || '?'
+    });
     byKey.set(key, keep);
+  }
+  // Make attrition auditable: log every merged pair so dropped foreign listings
+  // are not invisible (previously a silent drop).
+  if (merges.length > 0) {
+    console.log(`[dedupeByCompany] merged ${merges.length} cross-listing(s):`);
+    for (const m of merges) console.log(`  ${m.key} — kept ${m.kept}, dropped ${m.dropped}`);
   }
   return [...byKey.values()];
 }
 
+// audit F-A-2026-06-21: derive eligibility from the cached modeEval instead of
+// re-running SM.isExcludedBySector + the dataGuard reject loop here. evaluateMode
+// (methods/strategy-modes.js) is the single arbiter of the hygiene layer; this
+// re-implementation could silently drift from it (e.g. it omitted mcapFloor —
+// see audit A-08). A modeEval that early-returned on any hygiene reason has no
+// score; reject exactly those reasons so eligibility tracks the arbiter.
+const HYGIENE_REJECT_REASONS = new Set([
+  'unknown_mode', 'mode_disabled', 'sector_excluded',
+  'mcap_missing', 'mcap_below_floor', 'dataguard_fail'
+]);
 function eligibleForMode(evaluated, modeId) {
   const mode = SM.MODES[modeId];
   if (mode.enabled === false) return [];
   return evaluated.filter(ev => {
-    if (SM.isExcludedBySector(ev.stock, mode)) return false;
-    for (const guardId of mode.dataGuards) {
-      const r = ev.allResults[guardId];
-      if (r && r.computable === true && r.pass === false) return false;
-    }
-    return true;
+    const me = ev.modeEvals && ev.modeEvals[modeId];
+    // A null modeEval means SM.evaluateMode threw (already counted/warned in
+    // evaluateAll) — treat as ineligible rather than silently passing hygiene.
+    if (!me) return false;
+    return !HYGIENE_REJECT_REASONS.has(me.reason);
   });
 }
 
@@ -456,13 +548,18 @@ function renderModeContent(modeId, eligible, topN, stockDataMap) {  // NEW TAG 1
 
   // Picks panel (tier groups)
   const picksList = topByScore(eligible, modeId, topN);
-  const groups = { A: [], B: [], NEAR_MISS: [], RED_FLAG: [] };
+  // audit F-A-2026-06-21: exhaustive, honest buckets. The old final `else`
+  // funneled tier==='REJECT', tier===null, and any unexpected tier into
+  // NEAR_MISS — mislabeling REJECT/untiered stocks under the "Score 50-64"
+  // header. Gate NEAR_MISS on the exact tier and give REJECT its own bucket.
+  const groups = { A: [], B: [], NEAR_MISS: [], RED_FLAG: [], REJECT: [] };
   for (const ev of picksList) {
     const me = ev.modeEvals[modeId];
     if (me.redFlags && me.redFlags.length > 0) groups.RED_FLAG.push(ev);
     else if (me.tier === 'A') groups.A.push(ev);
     else if (me.tier === 'B') groups.B.push(ev);
-    else groups.NEAR_MISS.push(ev);
+    else if (me.tier === 'NEAR_MISS') groups.NEAR_MISS.push(ev);
+    else groups.REJECT.push(ev);  // REJECT / null / unexpected tier
   }
 
   function renderTierGroup(label, evs, cls) {
@@ -479,7 +576,9 @@ function renderModeContent(modeId, eligible, topN, stockDataMap) {  // NEW TAG 1
     : renderTierGroup('A-Tier â€” Score â‰¥ 80', groups.A, 'a') +
       renderTierGroup('B-Tier â€” Score 65â€“79', groups.B, 'b') +
       renderTierGroup('Near-Miss â€” Score 50â€“64', groups.NEAR_MISS, 'near') +
-      renderTierGroup('Red-Flag', groups.RED_FLAG, 'red');
+      renderTierGroup('Red-Flag', groups.RED_FLAG, 'red') +
+      // audit F-A-2026-06-21: REJECT/untiered no longer hidden inside Near-Miss.
+      renderTierGroup('Reject â€” Score < 50 / untiered', groups.REJECT, 'reject');
 
   // Near-misses panel (blocked by 1 MUST)
   const nearList = blockedByOneMust(eligible, modeId, topN);
@@ -588,7 +687,11 @@ function buildHtml(evaluated, topN) {
   const stockDataMap = {};
 
   const totalStocks = evaluated.length;
-  const sectorExcluded = totalStocks - eligibleByMode.HYPERGROWTH.length;
+  // audit F-A-2026-06-21: compute pure sector exclusion explicitly via
+  // isExcludedBySector, not `total - eligibleByMode.HYPERGROWTH`. The eligible
+  // set also drops failed-dataGuard stocks, so the old derivation over-counted
+  // "Sektor-Exclude" with HG-dataguard rejects mislabeled as sector exclusions.
+  const sectorExcluded = totalStocks - evaluated.filter(ev => !SM.isExcludedBySector(ev.stock, SM.MODES.HYPERGROWTH)).length;
   const hgPicks = modeStats.HYPERGROWTH.allMustPass;
   const qcPicks = modeStats.QUALITY_COMPOUNDER.allMustPass;
   // Tag 228b-1 (audit F-227c-07 LOW fix): force UTC formatting for the report
@@ -1267,13 +1370,17 @@ var STOCK_DATA_MAP = ${stockDataMapJson};
 async function main() {
   const args = parseArgs(process.argv);
   console.log('Loading snapshots from', args.snapshots);
+  // audit F-A-2026-06-21: track inner (file-level + mode-level) swallows so the
+  // health gate sees more than just the outer per-stock catch.
+  const _loadStats = { parseErrors: 0 };
+  const _evalStats = { modeEvalErrors: 0 };
   // Tag 232c-11: loadStocks now async (batched concurrency). main() awaits.
-  const stocks = await loadStocks(args.snapshots);
+  const stocks = await loadStocks(args.snapshots, _loadStats);
   console.log('  loaded', stocks.length, 'stocks');
 
   // Tag 168: track per-stock failures for pipeline health reporting
   const _pipelineFailures = [];
-  let evaluated = evaluateAll(stocks, _pipelineFailures);
+  let evaluated = evaluateAll(stocks, _pipelineFailures, _evalStats);
   console.log('  evaluated all methods,', evaluated.length, 'stocks');
   evaluated = dedupeByCompany(evaluated);
   console.log('  after dedupe:', evaluated.length, 'unique companies');
@@ -1293,8 +1400,13 @@ async function main() {
   }
 
   // Tag 168: write pipeline-health report and enforce 5% threshold
-  const n_total = stocks.length;
-  const n_failed = _pipelineFailures.length;
+  // audit F-A-2026-06-21: parse errors drop files before they reach `stocks`,
+  // so include them in the effective universe and the failed count, otherwise a
+  // wave of corrupt snapshots silently shrinks `stocks` and the rate stays 0%.
+  const n_parse_errors = _loadStats.parseErrors;
+  const n_mode_eval_errors = _evalStats.modeEvalErrors;
+  const n_total = stocks.length + n_parse_errors;
+  const n_failed = _pipelineFailures.length + n_parse_errors;
   const n_ok = n_total - n_failed;
   const failure_rate = n_total > 0 ? n_failed / n_total : 0;
   // Tag 221c (audit F-GR-007 fix): honor RUN_DATE_UTC for pipeline-health stamp.
@@ -1302,12 +1414,23 @@ async function main() {
   // F-ME-024: use __dirname-relative path so the script works from any CWD
   const healthDir = path.join(__dirname, 'pipeline-health');
   if (!fs.existsSync(healthDir)) fs.mkdirSync(healthDir, { recursive: true });
-  const healthReport = { script: 'generate-modes-report', date: today, n_total, n_ok, n_failed, failure_rate, failures: _pipelineFailures };
+  // audit F-A-2026-06-21: expose inner-swallow counters in the health JSON so
+  // file-level and mode-level failures are visible to CI, not just the outer catch.
+  const healthReport = { script: 'generate-modes-report', date: today, n_total, n_ok, n_failed, failure_rate, n_parse_errors, n_mode_eval_errors, failures: _pipelineFailures };
   // Tag 217e: atomic write (was raw writeFileSync).
   writeFileAtomic(path.join(healthDir, 'generate-modes-report.json'), JSON.stringify(healthReport, null, 2));
   console.log(`Pipeline health: ${n_ok}/${n_total} ok (${(failure_rate * 100).toFixed(2)}% failed) â€” threshold 5%`);
+  // audit F-A-2026-06-21: mode-eval errors are per-(stock x mode); factor them
+  // into the gate so a systemic mode-level break trips CI instead of vanishing.
+  const mode_eval_total = stocks.length * Object.keys(SM.MODES).length;
+  const mode_eval_rate = mode_eval_total > 0 ? n_mode_eval_errors / mode_eval_total : 0;
+  console.log(`Inner swallows: parseErrors=${n_parse_errors}, modeEvalErrors=${n_mode_eval_errors} (${(mode_eval_rate * 100).toFixed(2)}% of mode evals)`);
   if (failure_rate > 0.05) {
     console.error(`::error::generate-modes-report failure rate ${(failure_rate * 100).toFixed(2)}% exceeds 5% threshold`);
+    process.exit(1);
+  }
+  if (mode_eval_rate > 0.05) {
+    console.error(`::error::generate-modes-report mode-eval failure rate ${(mode_eval_rate * 100).toFixed(2)}% exceeds 5% threshold`);
     process.exit(1);
   }
 }

@@ -113,7 +113,32 @@ function _safeEvaluate(method, stock) {
   }
 }
 
-function evaluate(stock) {
+// audit F-A-2026-06-22: failure mode prevented — composite diverging from
+// standalone results + O(n) duplicate sub-evaluations across the universe.
+// When the runner supplies its already-computed per-stock result map
+// (`allResults`, keyed by method id — see methods/runner.js evaluateStock),
+// consume the dependency's existing result instead of re-running its full
+// evaluate(). The runner registers buyback-yield/net-debt-ebitda/capex-trend/
+// sbc-revenue (index.js) BEFORE this composite, so their results are already
+// present in that map; re-running evaluate() here both duplicated work for
+// every stock in the universe AND risked the composite reading a different
+// value than the rest of the pipeline. We only fall back to _safeEvaluate when
+// the map is absent (current production runner passes one arg) or the specific
+// dependency result is missing/malformed — so this is behavior-identical today
+// and becomes a pure win the moment the runner plumbs allResults through.
+function _resolveDep(allResults, id, method, stock) {
+  if (allResults && typeof allResults === 'object') {
+    const pre = allResults[id];
+    // A usable pre-computed result must at least carry the computable flag the
+    // scoring logic below reads; anything malformed falls back to a fresh run.
+    if (pre && typeof pre === 'object' && typeof pre.computable === 'boolean') {
+      return pre;
+    }
+  }
+  return _safeEvaluate(method, stock);
+}
+
+function evaluate(stock, allResults) {
   if (!stock) {
     return H.buildResult({
       computable: false, pass: false, reason: 'no stock data',
@@ -121,11 +146,12 @@ function evaluate(stock) {
     });
   }
 
-  // --- Run each sub-method ---
-  const buybackR  = _safeEvaluate(buybackYield, stock);
-  const debtR     = _safeEvaluate(netDebtEbitda, stock);
-  const capexR    = _safeEvaluate(capexTrend, stock);
-  const sbcR      = _safeEvaluate(sbcRevenue, stock);
+  // --- Resolve each sub-method (reuse runner-computed results when available,
+  //     else evaluate fresh — see _resolveDep / audit F-A-2026-06-22) ---
+  const buybackR  = _resolveDep(allResults, 'buyback-yield',    buybackYield,  stock);
+  const debtR     = _resolveDep(allResults, 'net-debt-ebitda',  netDebtEbitda, stock);
+  const capexR    = _resolveDep(allResults, 'capex-trend',      capexTrend,    stock);
+  const sbcR      = _resolveDep(allResults, 'sbc-revenue',      sbcRevenue,    stock);
 
   // --- Score each dimension (null = incomputable, contributes 0 to sum
   //     but reduces the divisor so the final score scales correctly) ---

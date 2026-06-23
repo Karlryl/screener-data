@@ -50,6 +50,18 @@ function evaluate(stock) {
       computable: false, reason: `wcT/wcT1/revT1 <= 0 (WC-ratio undefined)`, threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
+  // audit F-A-2026-06-22: prevents failure mode: negative current WC proxy flips
+  // growth ratio negative and trivially passes the <=1.3 manipulation gate.
+  // wcT1 is already guaranteed > 0 above; require wcT > 0 too so the growth ratio
+  // (and therefore value) stays sign-meaningful. wcT<=0 (cash > assets-debt) or a
+  // sign-flip between years makes wcGrowth negative -> value negative -> false pass.
+  if (wcT <= 0) {
+    return H.buildResult({
+      computable: false,
+      reason: `WC proxy non-positive / sign-flip — growth ratio undefined (wcT=${wcT})`,
+      threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    });
+  }
   const wcGrowth = wcT / wcT1;
   const salesGrowth = revT / revT1;
   if (salesGrowth <= 0) {

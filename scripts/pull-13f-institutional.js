@@ -76,6 +76,16 @@ const RATE_DELAY_MS = 125;
 // natural cadence.
 const DEFAULT_MAX_AGE_DAYS = 100;
 
+// audit F-A-2026-06-22: retry TTLs for FAILED pulls. A soft-error (or thrown)
+// pull must NOT be treated fresh for the full quarter (DEFAULT_MAX_AGE_DAYS) —
+// that starves the by-ticker view for ~100 days. Transient failures (404 on a
+// specific info table, parse failure, timeout, rate-limit) retry quickly; a
+// genuinely permanent failure (CIK has no 13F-HR filings at all / submissions
+// 404) backs off harder to spare SEC, but still re-checks long before the
+// fresh TTL so a CIK that begins filing 13F is eventually picked up.
+const ERROR_RETRY_DAYS = 3;
+const PERMANENT_ERROR_RETRY_DAYS = 30;
+
 // Per-institution position-count sanity ceiling. BlackRock / Vanguard 13F
 // filings can list 5,000+ positions; we cap parsing at 20,000 to keep cache
 // size bounded and reject obviously-corrupt filings without OOM risk.
@@ -218,12 +228,29 @@ function _num(s) {
   return Number.isFinite(n) ? n : null;
 }
 
-function parse13fXml(xml) {
-  if (!xml || typeof xml !== 'string') return [];
+// audit F-A-2026-06-22: prevents silent truncation of large 13F books going
+// undetected downstream. Returns the parsed positions PLUS truncation
+// telemetry: when the MAX_POSITIONS_PER_FILING cap trips on a large filer
+// (Vanguard/BlackRock 5,000+ positions) the result now carries
+// `truncated: true` along with `blocksSeen`/`positionsParsed` so the cap is
+// recorded in the cache entry and a WARN is logged, rather than the position
+// list being silently cut with no flag.
+function _parse13fXmlDetailed(xml) {
+  if (!xml || typeof xml !== 'string') {
+    return { positions: [], truncated: false, blocksSeen: 0, positionsParsed: 0 };
+  }
   const blocks = _extractAll(xml, 'infoTable');
+  const blocksSeen = blocks.length;
   const positions = [];
+  let truncated = false;
   for (const block of blocks) {
-    if (positions.length >= MAX_POSITIONS_PER_FILING) break;
+    if (positions.length >= MAX_POSITIONS_PER_FILING) {
+      truncated = true;
+      console.warn('  [WARN] 13F info table truncated at MAX_POSITIONS_PER_FILING=' +
+        MAX_POSITIONS_PER_FILING + ' (blocksSeen=' + blocksSeen +
+        '); position list capped — large filer underreported');
+      break;
+    }
     try {
       const nameOfIssuer = _text(_extractFirst(block, 'nameOfIssuer'));
       const titleOfClass = _text(_extractFirst(block, 'titleOfClass'));
@@ -253,7 +280,14 @@ function parse13fXml(xml) {
       continue;
     }
   }
-  return positions;
+  return { positions, truncated, blocksSeen, positionsParsed: positions.length };
+}
+
+// Backward-compatible thin wrapper: returns the bare positions array (the
+// public contract relied on by tests/13f-test.js, which asserts Array.isArray
+// and .length). Internal callers use _parse13fXmlDetailed for truncation meta.
+function parse13fXml(xml) {
+  return _parse13fXmlDetailed(xml).positions;
 }
 
 // ─── Submissions index helpers ──────────────────────────────────────────
@@ -336,52 +370,148 @@ async function pullInstitution13f(cik, displayName) {
   }
   // Pick the latest by filingDate (lexicographic on ISO YYYY-MM-DD is fine).
   f13s.sort((a, b) => (b.filingDate || '').localeCompare(a.filingDate || ''));
-  const latest = f13s[0];
-  const accNoDash = (latest.accessionNumber || '').replace(/-/g, '');
-  if (!accNoDash) {
-    return { positions: [], name, error: 'no-accession-number' };
+
+  // audit F-A-2026-06-22: prevents a partial 13F-HR/A restatement from
+  // replacing the full holdings book. An amendment (13F-HR/A) is frequently
+  // filed AFTER the original 13F-HR to correct or add a SINGLE position; its
+  // information_table can legitimately contain only the changed rows. Picking
+  // it purely by latest filingDate would silently drop most of the book.
+  //
+  // Strategy:
+  //   - identify the newest ORIGINAL 13F-HR as the base (full book).
+  //   - if the newest filing overall is a /A, fetch BOTH the /A and the base.
+  //     Use the /A's book only when it is within a sane ratio of the base
+  //     (>= AMENDMENT_MIN_RATIO of the base position count). Otherwise treat
+  //     the /A as a partial restatement and MERGE its rows onto the base book
+  //     (amendment rows win on CUSIP+class+putCall identity).
+  //   - record amendmentOf + a low-position-count flag so downstream can audit.
+  const AMENDMENT_MIN_RATIO = 0.5;
+  const newest = f13s[0];
+  const baseFiling = f13s.find(f => f.form === '13F-HR') || null;
+
+  // Fetch helper: resolve + download + parse one filing's info table.
+  async function _fetchPositions(filing) {
+    const acc = (filing.accessionNumber || '').replace(/-/g, '');
+    if (!acc) return { error: 'no-accession-number' };
+    const url = await findInfoTableUrl(paddedCik, acc);
+    if (!url) return { error: 'no-information-table-found' };
+    let res;
+    try { res = await httpGet(url); }
+    catch (e) { await sleep(RATE_DELAY_MS); return { error: 'info-table-fetch: ' + e.message }; }
+    await sleep(RATE_DELAY_MS);
+    if (res.notFound || !res.body) return { error: 'info-table-404' };
+    const parsed = _parse13fXmlDetailed(res.body);
+    return { positions: parsed.positions, truncated: parsed.truncated,
+             blocksSeen: parsed.blocksSeen, positionsParsed: parsed.positionsParsed,
+             infoTableUrl: url };
   }
 
-  const infoTableUrl = await findInfoTableUrl(paddedCik, accNoDash);
-  if (!infoTableUrl) {
+  // Common case: newest filing is an original 13F-HR (or there is no /A at
+  // all) — behave exactly as before, no extra fetch.
+  if (newest.form === '13F-HR') {
+    const r = await _fetchPositions(newest);
+    if (r.error) {
+      return { positions: [], name, filingDate: newest.filingDate,
+               accessionNumber: newest.accessionNumber, error: r.error };
+    }
     return {
-      positions: [],
+      positions: r.positions,
       name,
-      filingDate: latest.filingDate,
-      accessionNumber: latest.accessionNumber,
-      error: 'no-information-table-found'
+      filingDate: newest.filingDate,
+      accessionNumber: newest.accessionNumber,
+      infoTableUrl: r.infoTableUrl,
+      form: newest.form,
+      truncated: r.truncated || false,
+      blocksSeen: r.blocksSeen,
+      positionsParsed: r.positionsParsed
     };
   }
-  let xmlRes;
-  try { xmlRes = await httpGet(infoTableUrl); }
-  catch (e) {
-    await sleep(RATE_DELAY_MS);
+
+  // Newest filing is a 13F-HR/A amendment.
+  const amend = await _fetchPositions(newest);
+  if (amend.error) {
+    return { positions: [], name, filingDate: newest.filingDate,
+             accessionNumber: newest.accessionNumber, form: newest.form, error: amend.error };
+  }
+  // No prior original 13F-HR to compare against — accept the /A as-is but flag it.
+  if (!baseFiling || baseFiling.accessionNumber === newest.accessionNumber) {
     return {
-      positions: [],
+      positions: amend.positions,
       name,
-      filingDate: latest.filingDate,
-      accessionNumber: latest.accessionNumber,
-      error: 'info-table-fetch: ' + e.message
+      filingDate: newest.filingDate,
+      accessionNumber: newest.accessionNumber,
+      infoTableUrl: amend.infoTableUrl,
+      form: newest.form,
+      amendmentOf: null,
+      lowPositionAmendment: amend.positions.length === 0,
+      truncated: amend.truncated || false,
+      blocksSeen: amend.blocksSeen,
+      positionsParsed: amend.positionsParsed
     };
   }
-  await sleep(RATE_DELAY_MS);
-  if (xmlRes.notFound || !xmlRes.body) {
+
+  const base = await _fetchPositions(baseFiling);
+  if (base.error) {
+    // Can't validate against the base — fall back to the /A but flag it.
     return {
-      positions: [],
+      positions: amend.positions,
       name,
-      filingDate: latest.filingDate,
-      accessionNumber: latest.accessionNumber,
-      error: 'info-table-404'
+      filingDate: newest.filingDate,
+      accessionNumber: newest.accessionNumber,
+      infoTableUrl: amend.infoTableUrl,
+      form: newest.form,
+      amendmentOf: baseFiling.accessionNumber,
+      lowPositionAmendment: true,
+      baseFetchError: base.error,
+      truncated: amend.truncated || false,
+      blocksSeen: amend.blocksSeen,
+      positionsParsed: amend.positionsParsed
     };
   }
-  const positions = parse13fXml(xmlRes.body);
+
+  const baseCount = base.positions.length;
+  const amendCount = amend.positions.length;
+  const ratioOk = baseCount === 0 ? true : (amendCount / baseCount) >= AMENDMENT_MIN_RATIO;
+
+  if (ratioOk) {
+    // The /A is a full-book restatement — use it directly.
+    return {
+      positions: amend.positions,
+      name,
+      filingDate: newest.filingDate,
+      accessionNumber: newest.accessionNumber,
+      infoTableUrl: amend.infoTableUrl,
+      form: newest.form,
+      amendmentOf: baseFiling.accessionNumber,
+      lowPositionAmendment: false,
+      truncated: amend.truncated || false,
+      blocksSeen: amend.blocksSeen,
+      positionsParsed: amend.positionsParsed
+    };
+  }
+
+  // Partial restatement: merge the /A rows onto the base book so we don't drop
+  // the rest of the holdings. Amendment rows win on identity (cusip|class|putCall).
+  const _key = pos => [pos.cusip || '', pos.titleOfClass || '', pos.putCall || ''].join('|');
+  const merged = new Map();
+  for (const pos of base.positions) merged.set(_key(pos), pos);
+  for (const pos of amend.positions) merged.set(_key(pos), pos);
   return {
-    positions,
+    positions: Array.from(merged.values()),
     name,
-    filingDate: latest.filingDate,
-    accessionNumber: latest.accessionNumber,
-    infoTableUrl,
-    form: latest.form
+    filingDate: newest.filingDate,
+    accessionNumber: newest.accessionNumber,
+    infoTableUrl: amend.infoTableUrl,
+    form: newest.form,
+    amendmentOf: baseFiling.accessionNumber,
+    amendmentMerged: true,
+    lowPositionAmendment: true,
+    amendmentPositionCount: amendCount,
+    basePositionCount: baseCount,
+    // Truncation flag reflects either side hitting the cap.
+    truncated: (amend.truncated || base.truncated) || false,
+    blocksSeen: base.blocksSeen,
+    positionsParsed: base.positionsParsed
   };
 }
 
@@ -546,11 +676,22 @@ function buildByTickerView(cache) {
     for (const p of entry.positions) {
       const cusip = (p.cusip || '').toUpperCase().trim();
       const issuer = (p.nameOfIssuer || '').toUpperCase().trim();
+      // audit F-A-2026-06-22: prevents the thousands-vs-dollars unit-confusion
+      // failure mode that understated totalValueUSD 1000x. The SEC 13F `value`
+      // field is reported in THOUSANDS of USD; emit the unit explicitly at the
+      // data boundary so no downstream reader can re-introduce the ambiguity.
+      // `value` (legacy, thousands) is retained for backward-compat with the
+      // existing consumer that still reads it; new consumers should read
+      // `valueUSD` (whole dollars) which is the unambiguous field.
+      const valueThousandsUSD = p.value;
+      const valueUSD = Number.isFinite(p.value) ? p.value * 1000 : null;
       const holding = {
         institutionCik: instCik,
         institutionName: entry.name || null,
         filingDate: entry.filingDate || null,
-        value: p.value,
+        value: p.value,              // DEPRECATED alias of valueThousandsUSD (thousands USD)
+        valueThousandsUSD,           // explicit unit: thousands of USD (raw SEC schema)
+        valueUSD,                    // derived whole-dollar value (valueThousandsUSD * 1000)
         shares: p.sshPrnamt,
         shareType: p.sshPrnamtType,
         putCall: p.putCall
@@ -615,39 +756,111 @@ async function main() {
   for (const t of targets) {
     const cik = t.cik;
     const prev = byInstitution[cik];
-    if (prev && prev.fetchedAt &&
+    // audit F-A-2026-06-22: freshness gate keys on fetchedAt for SUCCESSFUL
+    // pulls only. A soft-errored entry (see below) carries `nextRetryAt`
+    // instead of a fresh fetchedAt, so it is retried on its own short cadence
+    // rather than being treated fresh for the full 100-day TTL.
+    if (prev && prev.fetchedAt && !prev.error &&
         (Date.now() - new Date(prev.fetchedAt).getTime()) < maxAgeMs) {
       skippedFresh++;
       totalPositions += Array.isArray(prev.positions) ? prev.positions.length : 0;
       continue;
     }
+    // Soft-errored entry not yet due for retry → skip without re-hitting SEC.
+    if (prev && prev.error && prev.nextRetryAt &&
+        Date.now() < new Date(prev.nextRetryAt).getTime()) {
+      skippedFresh++;
+      // Preserve any prior SUCCESSFUL positions in the running total.
+      totalPositions += Array.isArray(prev.positions) ? prev.positions.length : 0;
+      continue;
+    }
     try {
       const r = await pullInstitution13f(cik, t.name);
-      byInstitution[cik] = {
-        cik,
-        name: r.name || t.name || null,
-        fetchedAt: new Date().toISOString(),
-        filingDate: r.filingDate || null,
-        accessionNumber: r.accessionNumber || null,
-        form: r.form || null,
-        infoTableUrl: r.infoTableUrl || null,
-        positions: r.positions || [],
-        error: r.error || null
-      };
-      fetched++;
-      totalPositions += (r.positions || []).length;
-      console.log('  [' + cik + '] ' + (r.name || t.name || '?') +
-        ' filing=' + (r.filingDate || '?') +
-        ' positions=' + (r.positions || []).length +
-        (r.error ? ' ERR=' + r.error : ''));
+      if (r.error) {
+        // audit F-A-2026-06-22: prevents soft-error (return-not-throw) pulls
+        // being cached fresh and starving the by-ticker view for a quarter.
+        // pullInstitution13f RETURNS (does not throw) on the common failure
+        // cases (submissions-404, no-13f-hr-filings, parse-fail, info-table
+        // 404/fetch). The catch block below is therefore never reached for
+        // them; without this branch the entry would be written with a fresh
+        // fetchedAt and skipped by the freshness gate for the full 100-day
+        // TTL. Instead: stamp failedAt (NOT fetchedAt), set a retry TTL, and
+        // PRESERVE any prior successful positions/fetchedAt/filing metadata.
+        errors++;
+        // A genuine non-13F CIK (no 13F-HR filings ever, or submissions 404)
+        // is effectively permanent — back off harder so we don't re-hit SEC
+        // every run — but still far short of the 100-day fresh TTL so a CIK
+        // that later starts filing is picked up. Everything else is transient.
+        const permanent = (r.error === 'no-13f-hr-filings' || r.error === 'submissions-404');
+        const retryDays = permanent ? PERMANENT_ERROR_RETRY_DAYS : ERROR_RETRY_DAYS;
+        const nowIso = new Date().toISOString();
+        byInstitution[cik] = Object.assign({}, prev || {}, {
+          cik,
+          name: r.name || (prev && prev.name) || t.name || null,
+          // Keep the last SUCCESSFUL data so the by-ticker view doesn't go
+          // dark for this institution on a transient soft error.
+          fetchedAt: (prev && prev.fetchedAt) || null,
+          filingDate: (prev && prev.filingDate) || null,
+          accessionNumber: (prev && prev.accessionNumber) || null,
+          form: (prev && prev.form) || null,
+          infoTableUrl: (prev && prev.infoTableUrl) || null,
+          positions: (prev && Array.isArray(prev.positions)) ? prev.positions : [],
+          error: r.error,
+          failedAt: nowIso,
+          nextRetryAt: new Date(Date.now() + retryDays * 86400000).toISOString(),
+          errorPermanent: permanent
+        });
+        totalPositions += (byInstitution[cik].positions || []).length;
+        console.warn('  [' + cik + '] ' + (r.name || t.name || '?') +
+          ' SOFT-ERR=' + r.error + ' (failedAt; retry in ' + retryDays + 'd' +
+          (permanent ? ', permanent' : '') + '; prior positions preserved=' +
+          (byInstitution[cik].positions || []).length + ')');
+      } else {
+        byInstitution[cik] = {
+          cik,
+          name: r.name || t.name || null,
+          fetchedAt: new Date().toISOString(),
+          filingDate: r.filingDate || null,
+          accessionNumber: r.accessionNumber || null,
+          form: r.form || null,
+          infoTableUrl: r.infoTableUrl || null,
+          positions: r.positions || [],
+          error: null,
+          // audit F-A-2026-06-22: persist truncation + amendment provenance so
+          // silent MAX_POSITIONS_PER_FILING truncation and partial 13F-HR/A
+          // restatements are recorded in the cache and auditable downstream.
+          truncated: r.truncated || false,
+          blocksSeen: (r.blocksSeen != null) ? r.blocksSeen : null,
+          positionsParsed: (r.positionsParsed != null) ? r.positionsParsed : null,
+          amendmentOf: r.amendmentOf || null,
+          amendmentMerged: r.amendmentMerged || false,
+          lowPositionAmendment: r.lowPositionAmendment || false
+        };
+        fetched++;
+        totalPositions += (r.positions || []).length;
+        console.log('  [' + cik + '] ' + (r.name || t.name || '?') +
+          ' filing=' + (r.filingDate || '?') +
+          ' positions=' + (r.positions || []).length +
+          (r.truncated ? ' TRUNCATED' : '') +
+          (r.amendmentMerged ? ' AMEND-MERGED(' + (r.amendmentOf || '?') + ')' :
+            (r.amendmentOf ? ' AMEND(' + r.amendmentOf + ')' : '')));
+      }
     } catch (e) {
       errors++;
       // Tag 211j errored-pull pattern: write failedAt (NOT fetchedAt) so
       // the freshness gate retries this institution on the next run.
       // Preserve any prior successful pull's data.
+      // audit F-A-2026-06-22: also set `error` + `nextRetryAt` so the updated
+      // freshness gate (which skips errored entries only until nextRetryAt)
+      // treats a thrown error identically to a soft-error — a transient throw
+      // (timeout, 403, network) retries on the short cadence, never the
+      // 100-day fresh TTL.
       byInstitution[cik] = Object.assign({}, prev || {}, {
         cik,
+        error: 'thrown: ' + e.message,
         failedAt: new Date().toISOString(),
+        nextRetryAt: new Date(Date.now() + ERROR_RETRY_DAYS * 86400000).toISOString(),
+        errorPermanent: false,
         lastError: e.message
       });
       console.warn('  [' + cik + '] ERROR: ' + e.message);
@@ -704,6 +917,8 @@ module.exports = {
     findInfoTableUrl,
     pullInstitution13f,
     BOOTSTRAP_INSTITUTIONS,
-    _normName  // Tag 226a-1: exposed for test coverage
+    _normName,  // Tag 226a-1: exposed for test coverage
+    // audit F-A-2026-06-22: exposed so truncation telemetry is testable.
+    _parse13fXmlDetailed
   }
 };

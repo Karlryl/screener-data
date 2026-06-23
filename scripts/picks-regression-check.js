@@ -2,8 +2,11 @@
 /**
  * Tag 133d: Picks-Regression Guard
  * ================================
- * Vergleicht den aktuellen `picks-history/latest.json` mit dem Median der vorherigen
- * 4 Runs. Triggert eine harte Failure + Discord-Alert wenn die Pick-Count einer Mode
+ * Vergleicht den aktuellen `picks-history/latest.json` mit dem Median der letzten
+ * PRIOR_WINDOW (= 8) Vintage-Snapshots (~1.5 Wochen bei täglicher Kadenz; siehe
+ * PRIOR_WINDOW-Konstante). MIN_HISTORY_RUNS (= 4) ist nur die Mindestschwelle,
+ * unter der die Drift-Prüfung mangels Statistik aussetzt — nicht die Fenstergröße.
+ * Triggert eine harte Failure + Discord-Alert wenn die Pick-Count einer Mode
  * um >35% nach oben oder unten driftet — fängt Method-Bugs, Threshold-Tunings und
  * Yahoo-Drift ab, bevor sie unbemerkt in produktive Picks fließen.
  *
@@ -27,7 +30,10 @@ const { writeFileAtomic } = require('../lib/atomic-write.js');
 const { postDiscord } = require('../lib/discord.js');
 
 const DRIFT_THRESHOLD = 0.35;      // 35% in either direction
-const MIN_HISTORY_RUNS = 4;        // need ≥4 priors for statistical meaning
+const MIN_HISTORY_RUNS = 4;        // floor: need ≥4 priors for statistical meaning
+// audit F-A-2026-06-21: single source of truth for the comparison window so the
+// docstring and the .slice() below cannot drift apart again (doc/behavior mismatch).
+const PRIOR_WINDOW = 8;            // last 8 daily-vintage snapshots (~1.5 weeks at daily cadence)
 
 const PICKS_DIR = path.join(__dirname, '..', 'picks-history');
 const OUT_DIR   = path.join(__dirname, '..', 'outputs');
@@ -69,7 +75,10 @@ function detectDrift(latestCounts, priorCounts, threshold) {
     const med = median(priors);
     if (med === 0 && today === 0) continue;
     if (med === 0 && today > 0) {
-      alerts.push({ mode, today, median: 0, drift: Infinity, direction: 'up' });
+      // audit F-A-2026-06-21: never store Infinity here — JSON.stringify(Infinity)
+      // serializes to null and silently drops the most extreme drift signal (0 -> N)
+      // from the persisted report. Represent the unbounded case explicitly instead.
+      alerts.push({ mode, today, median: 0, drift: null, driftKind: 'from-zero', direction: 'up' });
       continue;
     }
     const drift = (today - med) / med;
@@ -77,6 +86,7 @@ function detectDrift(latestCounts, priorCounts, threshold) {
       alerts.push({
         mode, today, median: med,
         drift: Math.round(drift * 1000) / 1000,
+        driftKind: 'finite', // audit F-A-2026-06-21: distinguishes finite drift from the 'from-zero' unbounded case
         direction: drift > 0 ? 'up' : 'down'
       });
     }
@@ -108,7 +118,7 @@ async function main() {
   // keep behavior, just align the label.
   const priors = files
     .filter(f => f.replace('.json', '') < todayDate)
-    .slice(-8) // up to last 8 daily-vintage snapshots (= ~1.5 weeks at daily cadence)
+    .slice(-PRIOR_WINDOW) // audit F-A-2026-06-21: use shared PRIOR_WINDOW so docstring & window stay in sync (doc/behavior mismatch)
     .map(f => loadJson(path.join(PICKS_DIR, f)))
     .filter(Boolean);
 

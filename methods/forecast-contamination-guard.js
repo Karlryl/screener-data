@@ -41,6 +41,14 @@ function evaluate(stock) {
     return H.buildResult({ computable: false, pass: false, reason: 'no stock data' });
   }
   var annualRev = _arrVals(stock, 'annual.annualRev');
+  // audit F-A-2026-06-21: prevents using a stale prior-year annual revenue as
+  // annualLatest when Yahoo has not yet populated the most recent fiscal year
+  // (leading-null compression). _arrVals strips AND compresses nulls, so a
+  // leading null in annual.annualRev silently shifts annualRev[0] to the PRIOR
+  // year — deflating the ratio and masking real forecast-contamination. The
+  // quarterly side already preserves calendar alignment via _rawArrVals (F-ME-006);
+  // mirror that here by reading the raw leading entry and requiring it finite.
+  var annualRevRaw = _rawArrVals(stock, 'annual.annualRev');
   // F-ME-006 (Tag 180): preserve positional alignment for q4Sum calendar coherence.
   var qRev = _rawArrVals(stock, 'timeseries.revenueQ');
 
@@ -51,7 +59,19 @@ function evaluate(stock) {
     });
   }
 
-  var annualLatest = annualRev[0];
+  // audit F-A-2026-06-21: leading-null annualRev would put a prior-year figure
+  // at annualRevRaw[0]; the raw[0] period must match the latest-fiscal-year
+  // intent of the ratio. If the most recent annual slot is null, the comparison
+  // is period-mismatched — fall back to incomputable rather than compute a
+  // misleading divergence ratio.
+  if (annualRevRaw.length < 1 || !Number.isFinite(annualRevRaw[0])) {
+    return H.buildResult({
+      computable: false,
+      reason: 'latest annual revenue is null (leading-null) — would use stale prior-year annual, period-mismatched ratio'
+    });
+  }
+
+  var annualLatest = annualRevRaw[0];
   // F-ME-006: require all 4 most-recent quarters non-null. If any is null (Yahoo
   // schema gap), the sum mixes calendar quarters and the divergence ratio
   // misleads — fall back to incomputable.

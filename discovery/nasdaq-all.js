@@ -19,10 +19,26 @@ const https = require('https');
 const NASDAQ_LISTED = 'https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt';
 const OTHER_LISTED  = 'https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt';
 
-// Symbols ending in these suffixes are almost always not common stock:
-// W = warrant, R = right, U = unit, P = preferred, Z = miscellaneous
-// We allow symbols with dots (e.g. BRK.B) but reject multi-char junk suffixes.
-const JUNK_SUFFIX_RE = /[WRU]$|\.WS$|\.WT$|\.WI$|\.RT$|\.UN$|\.U$/i;
+// Symbols with these *delimited* suffixes are almost always not common stock:
+// .WS/.WT/.WI = warrant, .RT = right, .UN/.U = unit.
+// We allow symbols with dots (e.g. BRK.B) but reject these multi-char junk suffixes.
+// audit F-A-2026-06-21: removed the bare `[WRU]$` alternative — it matched ANY symbol
+// whose last character is W/R/U with no delimiter, wrongly filtering NU/BKU/EW/ARW-class
+// common stocks as warrants. Warrants/rights/units are now detected via Security Name.
+const JUNK_SUFFIX_RE = /\.WS$|\.WT$|\.WI$|\.RT$|\.UN$|\.U$/i;
+
+// audit F-A-2026-06-21: prevents NU/BKU/EW-class common stocks being filtered as warrants.
+// Centralized name-based filter for the warrant/right/unit security types that the lossy
+// suffix regex was meant to catch — keyed off the structured Security Name column instead.
+const JUNK_NAME_RE = /\b(?:warrant|right|unit)s?\b/i;
+
+// audit F-A-2026-06-21: single shared filter so nasdaqlisted/otherlisted stay in sync and
+// neither path reintroduces the bare-letter-suffix bug.
+function isJunkSecurity(symbol, name) {
+  if (JUNK_SUFFIX_RE.test(symbol)) return true;
+  if (name && JUNK_NAME_RE.test(name)) return true;
+  return false;
+}
 
 function get(url) {
   return new Promise((resolve, reject) => {
@@ -67,7 +83,8 @@ function parseNasdaqListed(text) {
     const testIssue  = (parts[3] || '').trim();
     const etf        = (parts[6] || '').trim();
     if (!symbol || testIssue === 'Y' || etf === 'Y') continue;
-    if (JUNK_SUFFIX_RE.test(symbol)) continue;
+    // audit F-A-2026-06-21: shared filter; no longer drops common stocks ending in W/R/U.
+    if (isJunkSecurity(symbol, name)) continue;
     result.set(symbol, { ticker: symbol, name, exchange: 'NASDAQ', source: 'nasdaq-trader' });
   }
   return result;
@@ -94,7 +111,8 @@ function parseOtherListed(text) {
     if (!symbol || testIssue === 'Y' || etf === 'Y') continue;
     // Skip OTC Bulletin Board (V) — Yahoo Finance rarely has data for these
     if (exchange === 'V') continue;
-    if (JUNK_SUFFIX_RE.test(symbol)) continue;
+    // audit F-A-2026-06-21: shared filter; no longer drops common stocks ending in W/R/U.
+    if (isJunkSecurity(symbol, name)) continue;
     const exchName = exchange === 'N' ? 'NYSE'
       : exchange === 'A' ? 'NYSE American'
       : exchange === 'P' ? 'NYSE Arca'

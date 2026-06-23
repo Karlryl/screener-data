@@ -27,8 +27,13 @@ function computeTrend(history, thresholdOp) {
     return { direction: 'n/a', delta: null, points: pts.length };
   }
   // Compare median-of-recent-3 vs median-of-older
-  const recent = pts.slice(-3);
-  const older = pts.slice(0, -3);
+  // audit F-A-2026-06-22: prevents documented 3-point minimum silently requiring 4 points
+  // due to recent=slice(-3) consuming the whole window. At exactly 3 points the older
+  // slice would be empty -> 'n/a', contradicting MIN_FOR_TREND=3. Split last-1 vs first-2
+  // for the n===3 case only; n>=4 keeps the original recent-3 / older split unchanged.
+  const recentCount = pts.length === 3 ? 1 : 3;
+  const recent = pts.slice(-recentCount);
+  const older = pts.slice(0, -recentCount);
   if (older.length === 0) {
     return { direction: 'n/a', delta: null, points: pts.length };
   }

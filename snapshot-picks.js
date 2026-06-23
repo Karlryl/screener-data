@@ -59,9 +59,11 @@ function loadStocks(dir) {
 }
 
 function getMcap(stock) {
+  // audit F-A-2026-06-21: guard NaN (typeof NaN === 'number') so a non-finite marketCap
+  // doesn't propagate into pick output — matches the Number.isFinite check strategy-modes uses.
   const m = stock.marketCap || (stock.meta && stock.meta.marketCap);
-  if (typeof m === 'number') return m;
-  if (m && typeof m === 'object' && 'value' in m) return m.value;
+  if (typeof m === 'number') return Number.isFinite(m) ? m : null;
+  if (m && typeof m === 'object' && Number.isFinite(m.value)) return m.value;
   return null;
 }
 

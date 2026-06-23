@@ -38,8 +38,16 @@ function modePicks(vintage, mode) {
 
 function isGood(vintage) {
   if (!vintage || !vintage.modes || !Array.isArray(vintage.evaluatedTickers)) return false;
-  // Need at least one mode whose picks carry a numeric score (older vintages lacked it).
-  return MODES.some(md => { const p = modePicks(vintage, md); return p && p[0] && p[0].score != null; });
+  // audit F-A-2026-06-21: require a mode to carry MULTIPLE numeric-scored picks, not just
+  // picks[0] — guards against a vintage whose first pick happens to have a score while the
+  // rest are null (would have been wrongly accepted, then produce a degenerate 1-row ranking).
+  const MIN_SCORED = 3;
+  return MODES.some(md => {
+    const p = modePicks(vintage, md);
+    if (!Array.isArray(p)) return false;
+    const scored = p.filter(x => x && x.score != null).length;
+    return scored >= Math.min(MIN_SCORED, p.length);
+  });
 }
 
 // Pick t0: explicit CLI arg wins; else the OLDEST good vintage (deterministic readdir sort).
@@ -54,7 +62,15 @@ if (argDate) {
   frozenAt = argDate;
 } else {
   for (const f of files) {
-    const v = JSON.parse(fs.readFileSync(path.join(PH_DIR, f), 'utf8'));
+    // audit F-A-2026-06-21: a single corrupt YYYY-MM-DD.json must not abort the whole
+    // freeze — skip-with-warn on parse failure (mirrors loadJson in walk-forward-perf.js).
+    let v;
+    try {
+      v = JSON.parse(fs.readFileSync(path.join(PH_DIR, f), 'utf8'));
+    } catch (e) {
+      console.warn('[freeze-full] skipping unparseable vintage ' + f + ' — ' + e.message);
+      continue;
+    }
     if (isGood(v)) { frozenAt = f.replace('.json', ''); vintage = v; break; }
   }
   if (!vintage) { console.error('[freeze-full] no picks-history vintage has modes+score+evaluatedTickers'); process.exit(1); }
@@ -62,6 +78,22 @@ if (argDate) {
 
 const evaluatedTickers = vintage.evaluatedTickers;
 const universeSize = vintage.universeSize || evaluatedTickers.length;
+
+// audit F-A-2026-06-21: omitting vintage.asOf and per-name scores structurally blocked
+// measure.js from fixing entry-look-ahead (A-fitness-03, needs the full asOf timestamp,
+// not just the date) and from computing universe-wide IC (A-fitness-04, needs a score
+// per evaluated name, not just the ~100 picks). Persist both additively below.
+// Build the per-ticker score map from every mode's picks (the only place scores live).
+const evaluatedScores = {};
+for (const md of MODES) {
+  const p = modePicks(vintage, md);
+  if (!Array.isArray(p)) continue;
+  for (const pick of p) {
+    if (pick && pick.ticker && pick.score != null && evaluatedScores[pick.ticker] == null) {
+      evaluatedScores[pick.ticker] = pick.score;
+    }
+  }
+}
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 const written = [];
@@ -78,6 +110,9 @@ for (const mode of MODES) {
   const baseline = {
     baselineId,
     frozenAt,
+    // audit F-A-2026-06-21: full vintage timestamp (date-only frozenAt loses intraday
+    // precision) so measure.js can build t0 without entry-look-ahead (A-fitness-03).
+    asOf: vintage.asOf != null ? vintage.asOf : null,
     mode,
     source: 'picks-history/' + frozenAt + '.json :: modes.' + mode,
     degraded: false,
@@ -96,6 +131,9 @@ for (const mode of MODES) {
     },
     ranking,
     evaluatedTickers,
+    // audit F-A-2026-06-21: per-name scores for the full universe so measure.js can
+    // compute universe-wide rank-IC (A-fitness-04), not just rank-correlate the ~100 picks.
+    evaluatedScores,
   };
   const out = path.join(OUT_DIR, baselineId + '.json');
   fs.writeFileSync(out, JSON.stringify(baseline, null, 2));

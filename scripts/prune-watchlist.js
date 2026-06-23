@@ -62,7 +62,11 @@ function isInvalidSymbol(ticker) {
   if (ticker.includes('$')) return 'preferred-share-dollar-form';
   // Heuristic: a real symbol is short (≤10 chars excl. dot/dash) and has no spaces.
   // Names like "STMicroelectronics" (15 chars, no separators) match.
-  if (ticker.length > 12 && !/[.\-:^]/.test(ticker)) return 'looks-like-company-name';
+  // audit F-A-2026-06-21: require a lowercase letter (real symbols are all-caps) and
+  // treat space as a separator, so the rule only catches mixed-case company-name
+  // entries like "STMicroelectronics" and spares legitimate long all-caps symbols
+  // from destructive (writeFileAtomic) eviction.
+  if (ticker.length > 12 && /[a-z]/.test(ticker) && !/[.\-:^ ]/.test(ticker)) return 'looks-like-company-name';
   return null;
 }
 

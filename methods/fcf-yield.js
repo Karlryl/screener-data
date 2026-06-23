@@ -12,6 +12,18 @@
  */
 var H = require('./_helpers.js');
 
+// audit F-A-2026-06-21: NaN/Infinity marketCap propagating to a false-FAIL
+// instead of clean incomputable. Mirrors the sibling _unwrap shape
+// (magic-formula.js / pre-commerciality-megacap-guard.js): returns null unless
+// the value (or its .value envelope) is a finite number, so the downstream
+// `mcap == null` branch routes a non-finite marketCap to computable:false.
+function _unwrap(v) {
+  if (v == null) return null;
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  if (typeof v === 'object' && Number.isFinite(v.value)) return v.value;
+  return null;
+}
+
 var ID = 'fcf-yield';
 var LABEL = 'FCF-Yield (SBC-adj)';
 var THRESHOLD = 0.05;
@@ -20,7 +32,10 @@ var THRESHOLD_OP = 'gte';
 function evaluate(stock) {
   var fcf = H.latestAnnual(stock, 'annualFCF');
   var sbc = H.latestAnnual(stock, 'annualSBC');
-  var mcap = stock && stock.marketCap && (typeof stock.marketCap === 'number' ? stock.marketCap : stock.marketCap.value);
+  // audit F-A-2026-06-21: finite-checked unwrap prevents a NaN/Infinity marketCap
+  // (FX-conversion edge / value:NaN envelope) from yielding value=NaN, which
+  // buildResult silently nulls into a false FAIL rather than a clean NO_DATA flag.
+  var mcap = _unwrap(stock && stock.marketCap);
   var eff = H.effectiveThreshold(stock, ID, THRESHOLD);
 
   if (fcf == null || mcap == null) {

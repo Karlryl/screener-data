@@ -33,9 +33,15 @@ function parseArgs(argv) {
 }
 
 function isoToQuarter(iso) {
-  const month = parseInt(iso.slice(5, 7), 10);
+  // audit F-A-2026-06-21: validate the ISO date. A malformed RUN_DATE_UTC previously
+  // yielded month=NaN -> 'YYYY-QNaN', poisoning every history key for the day. Fail loud.
+  const s = String(iso);
+  const month = parseInt(s.slice(5, 7), 10);
+  if (!Number.isFinite(month) || month < 1 || month > 12) {
+    throw new Error('isoToQuarter: invalid ISO date "' + iso + '"');
+  }
   const q = Math.ceil(month / 3);
-  return iso.slice(0, 4) + '-Q' + q;
+  return s.slice(0, 4) + '-Q' + q;
 }
 
 async function loadSnapshotsAsync(dir) {

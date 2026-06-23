@@ -86,6 +86,12 @@ function evaluate(stock) {
 
   const maxYears = Math.min(WINDOW, capexArr.length, sbcArr.length);
   const ratios = [];
+  // audit F-A-2026-06-22: track the source fiscal-year index per ratio so
+  // "latest" reporting reflects the true most-recent VALID year, not
+  // ratios[0]. Failure mode prevented: labeling a skipped-year-adjusted
+  // ratio as latest-year (e.g. a firm that stopped issuing stock has SBC=0
+  // in year 0, so ratios[0] would otherwise be year 1 mislabeled "latest").
+  const yearIndices = [];
   for (let i = 0; i < maxYears; i++) {
     const cx  = _unwrap(capexArr[i]);
     const sbc = _unwrap(sbcArr[i]);
@@ -94,6 +100,7 @@ function evaluate(stock) {
     const asbc = Math.abs(sbc);
     if (acx === 0 || asbc === 0) continue;     // ratio undefined
     ratios.push(acx / asbc);
+    yearIndices.push(i);
   }
 
   if (ratios.length < MIN_YEARS) {
@@ -110,9 +117,17 @@ function evaluate(stock) {
   // "any year fails").
   const score = ratios.reduce((s, r) => s + r, 0) / ratios.length;
   const pass = score >= THRESHOLD;
+  // audit F-A-2026-06-22: report the FIRST VALID year's ratio with its true
+  // fiscal-year index instead of unconditionally calling ratios[0] "latest".
+  // Failure mode prevented: mislabeling a skipped-year-adjusted ratio as the
+  // latest-year ratio when year 0 was skipped (SBC=0 or capex=0).
+  const firstValidYearIdx = yearIndices[0];
+  const firstValidLabel = firstValidYearIdx === 0
+    ? 'latest=' + ratios[0].toFixed(2)
+    : 'firstValid(y' + firstValidYearIdx + ')=' + ratios[0].toFixed(2);
   const reason = 'capex/SBC=' + score.toFixed(2) +
                  ' (' + ratios.length + 'y avg' +
-                 ', latest=' + ratios[0].toFixed(2) + ')' +
+                 ', ' + firstValidLabel + ')' +
                  (pass ? ' [real reinvestment dominant]'
                        : ' [SBC dilution > capex — true FCF understated]');
 
@@ -124,7 +139,13 @@ function evaluate(stock) {
       score,
       ratios,
       yearsUsed: ratios.length,
-      latestRatio: ratios[0]
+      // audit F-A-2026-06-22: firstValidRatio + its fiscal-year index;
+      // latestRatio retained only when year 0 is genuinely the first valid
+      // year (else null) so downstream consumers cannot read a skipped-year
+      // ratio as the latest-year value.
+      firstValidRatio: ratios[0],
+      firstValidYearIndex: firstValidYearIdx,
+      latestRatio: firstValidYearIdx === 0 ? ratios[0] : null
     },
     reason,
     threshold: THRESHOLD, thresholdOp: THRESHOLD_OP

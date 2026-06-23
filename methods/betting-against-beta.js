@@ -139,7 +139,7 @@ function evaluate(stock) {
       ? 'beta ' + beta.toFixed(2) + ' in (' + THRESHOLD.toFixed(1) + ', ' + BORDERLINE_CEILING.toFixed(1) + '] (BORDERLINE — soft fail)'
       : 'beta ' + beta.toFixed(2) + ' > ' + BORDERLINE_CEILING.toFixed(1) + ' (high-beta — BAB penalty)';
 
-  return H.buildResult({
+  const result = H.buildResult({
     value: Math.round(beta * 10000) / 10000,
     pass,
     computable: true,
@@ -152,6 +152,14 @@ function evaluate(stock) {
     reason,
     threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
   });
+  // audit F-A-2026-06-21: surface BORDERLINE on the top-level result.flags channel.
+  // wrapEvaluate (_helpers.js) reads raw.flags, NOT raw.components.flag, and buildResult's
+  // destructured signature silently strips an unknown `flags` key — so the (1.0,1.5] soft-fail
+  // signal was invisible to the dashboard/detail-modal. Attach AFTER buildResult, matching the
+  // house idiom in rule-of-40-sbc-adjusted.js. Prevents: BORDERLINE soft-fail being undetectable
+  // downstream (operator mis-reads a 1.1-beta soft fail as a 2.2-beta hard fail).
+  if (borderline) result.flags = ['BORDERLINE'];
+  return result;
 }
 
 module.exports = {

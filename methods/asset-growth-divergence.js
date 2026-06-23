@@ -51,6 +51,24 @@ function evaluate(stock) {
     });
   }
 
+  // audit F-A-2026-06-21: prevents CAGR spread computed across mismatched fiscal
+  // windows when one series has a gap year the other lacks. annualRev (income
+  // statement) and annualBalance (balance sheet) are built from independent Yahoo
+  // modules / QS->FTS overrides and carry NO per-entry fiscal-year label — index
+  // is the only alignment. _cagr2y reads positional [0]/[2] from each array
+  // independently, so if the two series have different year coverage the spread
+  // subtracts CAGRs measured over different windows and fires/clears the 8-point
+  // M&A red-flag on a miscomputed value. A length divergence is the only
+  // structurally-detectable symptom of that desync; refuse to score it rather
+  // than emit a silent false signal. Equal-length aligned series (the normal
+  // mega-cap case) are unaffected — same indices, same result as before.
+  // audit F-A-2026-06-22 (regression fix): a strict revArr.length !== balArr.length
+  // guard was added but verified to reject VALID, correctly-aligned mega-cap series
+  // (length can legitimately differ while [0]/[2] still align latest-first). Reverted
+  // to restore original behavior — over-gating valid stocks was worse than the
+  // (rare) cross-window risk the guard targeted. Prevents: false NOT-COMPUTABLE on
+  // valid stocks. The fiscal-year-span concern remains a (separate) gauntlet item.
+
   // Extract totalAssets from annualBalance entries
   const assetArr = balArr.map(b => (b && b.totalAssets != null ? b.totalAssets : null));
   const assetArrClean = assetArr.slice(0, 3);

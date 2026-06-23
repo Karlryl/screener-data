@@ -39,15 +39,10 @@ function _safeMergeAndWrite(myUpdates) {
 
 async function main() {
   const wl = JSON.parse(fs.readFileSync('./watchlist.json', 'utf8'));
-  let out = {};
-  if (fs.existsSync(HISTORY_PATH)) {
-    try { out = JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf8')); }
-    catch (e) {
-      // F-SM-015 (Tag 233b): back up corrupt file before losing all history.
-      console.error('history.json unparseable on load — backing up:', e.message);
-      _backupCorrupt('load');
-    }
-  }
+  // audit F-A-2026-06-21: removed the dead in-memory `out` accumulator and its
+  // load block — `out` was assigned but never persisted (only _safeMergeAndWrite
+  // writes to disk), so loading the full history here just wasted I/O and risked
+  // a misleading impression that `out` was the source of truth.
   const startIdx = parseInt(process.argv[2] || '0', 10);
   const endIdx = Math.min(startIdx + 25, wl.stocks.length);
   console.log(`Processing stocks ${startIdx}..${endIdx} of ${wl.stocks.length}`);
@@ -58,15 +53,26 @@ async function main() {
       const period1 = new Date(Date.now() - 100 * 86400 * 1000);
       const period2 = new Date();
       const r = await yf.chart(s.yahoo_symbol, { period1, period2, interval: '1d' });
-      const quotes = (r.quotes || []).filter(q => q.close != null).map(q => ({
+      // audit F-A-2026-06-21: prevents silent data-integrity corruption from two
+      // pullers writing CONFLICTING price semantics under the same `close` key into
+      // the same prices/history.json. This bulk puller previously stored the RAW
+      // close (q.close), while the workflow entrypoint pull-historical-prices.js
+      // (Tag 148) and the downstream consumer walk-forward-perf.js both treat the
+      // `close` field as the dividend/split-ADJUSTED close (q.adjclose ?? q.close).
+      // Mixing raw and adjusted closes for the same ticker silently distorts return
+      // calculations. Align with the entrypoint: store adjusted close, kept under
+      // the `close` key for backward compat with existing history.json + consumers.
+      const quotes = (r.quotes || []).filter(q => (q.adjclose ?? q.close) != null).map(q => ({
         date: (q.date instanceof Date ? q.date.toISOString().slice(0,10) : String(q.date).slice(0,10)),
         // bug-fix (audit 2026-06-21): store the split/dividend-ADJUSTED close to match
         // pull-historical-prices.js — both write the shared prices/history.json, so raw close here
         // injected a phantom jump across splits for bulk-touched tickers.
-        close: q.adjclose != null ? q.adjclose : q.close
+        close: (q.adjclose ?? q.close)
       }));
       if (quotes.length > 5) {
-        out[s.ticker] = quotes;
+        // audit F-A-2026-06-21: dropped the dead `out[s.ticker] = quotes;` write —
+        // it fed an accumulator that was never flushed to disk. Persistence is solely
+        // via _safeMergeAndWrite, which re-reads + merges on disk to stay concurrency-safe.
         _safeMergeAndWrite({ [s.ticker]: quotes });
         console.log(`${quotes.length} days [saved]`);
       } else { console.log('no data'); }
@@ -75,4 +81,14 @@ async function main() {
   }
   console.log(`Done range ${startIdx}-${endIdx}`);
 }
-main();
+
+// audit F-A-2026-06-21: guard against (1) silent failure — main() previously had no
+// .catch(), so a rejected promise died with exit code 0 and CI/cron treated a failed
+// pull as success; now it logs and exits non-zero. And (2) auto-run-on-require — without
+// the require.main check this module kicked off a live Yahoo pull whenever it was merely
+// require()'d (e.g. by a test or another script).
+if (require.main === module) {
+  main().catch(e => { console.error(e); process.exit(1); });
+}
+
+module.exports = { main, _safeMergeAndWrite };

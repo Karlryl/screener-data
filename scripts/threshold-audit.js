@@ -44,8 +44,13 @@ const DISCIPLINE_KEYWORDS = [
 ];
 
 function sh(cmd) {
+  // audit F-A-2026-06-22: distinguish a failed git invocation from genuinely
+  // empty output. Returning '' on catch (old behavior) let a broken `git log`
+  // (not a repo / bad --since / detached HEAD) masquerade as "no commits",
+  // producing a false-green pass even under --strict. Return null on failure
+  // so the caller can tell the two apart.
   try { return execSync(cmd, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }); }
-  catch (e) { return ''; }
+  catch (e) { return null; }
 }
 
 function isExempt(commitMessage) {
@@ -53,22 +58,61 @@ function isExempt(commitMessage) {
 }
 
 function findNumericChanges(diffText) {
-  // Match lines that change a numeric literal in a top-level `const NAME = X`.
+  // Match lines that change a numeric literal in a threshold assignment.
   // Both - and + lines, where the literal differs.
+  // audit F-A-2026-06-22: the old matcher only caught top-level
+  // `const NAME = <number>` and silently exempted the dominant pattern —
+  // object-property / exported thresholds like `threshold: 0.10` (e.g.
+  // price-momentum-12-1.js `module.exports = { ..., threshold: 0.12 }`).
+  // A tune of `threshold: 0.10 -> 0.15` slipped past the discipline check
+  // entirely. We now also match `NAME: <number>` property assignments. The
+  // assignment "key" we compare across -/+ lines is normalized so the
+  // `const NAME =` form and the `NAME:` form are both keyed on their
+  // identifier (and the const form ignores indentation).
   const changes = [];
+  if (typeof diffText !== 'string') return changes;
+  const NUM = '[+-]?\\d+(?:\\.\\d+)?(?:e[+-]?\\d+)?';
+  // const NAME = <number>   (any indentation; export-block consts included)
+  const constRe = new RegExp('^([+-])\\s*const\\s+(\\w+)\\s*=\\s*(' + NUM + ')([^;]*;?)');
+  // NAME: <number>          (object-property / exports-block thresholds)
+  const propRe = new RegExp('^([+-])(\\s*)(\\w+)\\s*:\\s*(' + NUM + ')\\s*,?\\s*$');
+
+  // Parse a diff body line into a normalized assignment descriptor, or null.
+  function parse(line, sign) {
+    let m = constRe.exec(line);
+    if (m && m[1] === sign) {
+      return { key: 'const ' + m[2], value: m[3], display: 'const ' + m[2] + ' = ' };
+    }
+    m = propRe.exec(line);
+    if (m && m[1] === sign) {
+      return { key: 'prop ' + m[3], value: m[4], display: m[3] + ': ' };
+    }
+    return null;
+  }
+
   const lines = diffText.split('\n');
   for (let i = 0; i < lines.length - 1; i++) {
-    const m1 = /^-(\s*const\s+\w+\s*=\s*)([+-]?\d+(?:\.\d+)?(?:e[+-]?\d+)?)([^;]*;?)/.exec(lines[i]);
-    const m2 = /^\+(\s*const\s+\w+\s*=\s*)([+-]?\d+(?:\.\d+)?(?:e[+-]?\d+)?)([^;]*;?)/.exec(lines[i+1]);
-    if (m1 && m2 && m1[1].trim() === m2[1].trim() && m1[2] !== m2[2]) {
-      changes.push({ from: m1[2], to: m2[2], line: m2[1].trim() });
+    const a = parse(lines[i], '-');
+    const b = parse(lines[i + 1], '+');
+    if (a && b && a.key === b.key && a.value !== b.value) {
+      changes.push({ from: a.value, to: b.value, line: b.display.trim() });
     }
   }
   return changes;
 }
 
 function main() {
-  const commits = sh(`git log --since="${SINCE}" --pretty=format:%H -- methods/`).trim().split('\n').filter(Boolean);
+  // audit F-A-2026-06-22: treat a failed `git log` as an error, not as
+  // "no commits". Previously sh() returned '' on failure and this code
+  // reported "No commits" and passed green — even under --strict — whenever
+  // git itself broke (not a repo, bad --since syntax, detached state). sh()
+  // now returns null on failure; surface it loudly and fail under --strict.
+  const commitsRaw = sh(`git log --since="${SINCE}" --pretty=format:%H -- methods/`);
+  if (commitsRaw === null) {
+    console.error('::error::git log failed (not a repo, bad --since, or git error) — cannot audit thresholds');
+    return STRICT ? 1 : 0;
+  }
+  const commits = commitsRaw.trim().split('\n').filter(Boolean);
   if (commits.length === 0) {
     console.log('No commits touching methods/ since ' + SINCE);
     return 0;
@@ -78,8 +122,12 @@ function main() {
 
   const violations = [];
   for (const sha of commits) {
-    const message = sh(`git log -1 --format=%B ${sha}`);
-    const diff = sh(`git show --pretty="" --unified=0 ${sha} -- methods/`);
+    // audit F-A-2026-06-22: sh() may now return null on a failed git call;
+    // coerce per-commit results to '' so a single broken lookup degrades to
+    // "no keyword / no changes" for that commit instead of throwing on
+    // .split()/.test() and aborting the whole audit.
+    const message = sh(`git log -1 --format=%B ${sha}`) || '';
+    const diff = sh(`git show --pretty="" --unified=0 ${sha} -- methods/`) || '';
     const changes = findNumericChanges(diff);
     if (changes.length === 0) continue;
     const exempt = isExempt(message);

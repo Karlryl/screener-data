@@ -30,11 +30,14 @@ const { writeFileAtomic } = require('../lib/atomic-write.js');
 // so reads/writes match the snapshot-naming convention (Windows-reserved
 // prefix + sanitisation) instead of raw `ticker + '.json'`.
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
+const { computePbScore } = require('../lib/pb-score.js');
 
 const SCHEMA_VERSION = 1;
 const MAX_ENTRIES = 30;
-// Mirror generate-screener.js' pbScore formula so stored history matches the
-// dashboard's pb-score basis.
+// pbScore formula now lives in lib/pb-score.js (single source of truth,
+// shared with generate-screener.js). This wrapper only derives the same inputs
+// from (stock, allResults) that the formula needs, then delegates — keeping the
+// stored history byte-identical to the dashboard's pb-score basis.
 function _unwrap(v) {
   if (v == null) return null;
   if (typeof v === 'number') return Number.isFinite(v) ? v : null;
@@ -45,7 +48,6 @@ function _unwrap(v) {
 function _computePbScore(stock, allResults) {
   const growth = _unwrap(stock.metrics && stock.metrics.revenueGrowthYoY);
   const grossMargin = _unwrap(stock.metrics && stock.metrics.grossMargin);
-  if (!Number.isFinite(growth) || !Number.isFinite(grossMargin)) return null;
   const r40 = allResults['rule-of-40'];
   const r40Value = (r40 && r40.computable && Number.isFinite(r40.value)) ? r40.value : null;
   const gma = allResults['gross-margin-acceleration'];
@@ -56,16 +58,14 @@ function _computePbScore(stock, allResults) {
   const revAccelDelta = (revAccel && revAccel.computable && Number.isFinite(revAccel.value))
     ? revAccel.value : null;
 
-  const growthC = Math.min(100, Math.max(0, growth));
-  const gmC     = Math.min(100, Math.max(0, grossMargin));
-  const r40C    = Math.min(100, Math.max(0, r40Value || 0));
-  const gmaBonus = (gmaTrend === 'accelerating') ? 10 : (gmaTrend === 'stable' ? 4 : 0);
-  const omaBonus = (omaTrend === 'accelerating') ? 15 : (omaTrend === 'stable' ? 6 : 0);
-  let revAccelBonus = 0;
-  if (revAccelDelta != null && revAccelDelta > 0) {
-    revAccelBonus = Math.min(15, revAccelDelta / 50 * 15);
-  }
-  return (growthC / 100 * 25) + (gmC / 100 * 20) + (r40C / 100 * 15) + gmaBonus + omaBonus + revAccelBonus;
+  return computePbScore({
+    growth,
+    grossMargin,
+    r40: r40Value,
+    gmaTrend,
+    omaTrend,
+    revAccelDelta,
+  });
 }
 
 function parseArgs(argv) {

@@ -185,10 +185,13 @@ function pickPriorAnnual(unitArr) {
   for (let i = latestIdx + 1; i < annuals.length; i++) {
     const t = new Date(annuals[i].end).getTime();
     const diffDays = (latestTime - t) / 86400000;
-    if (diffDays >= 270 && diffDays <= 550) return { val: annuals[i].val, end: annuals[i].end, form: annuals[i].form };
+    if (diffDays >= 270 && diffDays <= 550) {
+      return { val: annuals[i].val, end: annuals[i].end, form: annuals[i].form, gapDays: Math.round(diffDays) };
+    }
   }
-  // Fallback: just take the next one
-  if (annuals[latestIdx + 1]) return { val: annuals[latestIdx+1].val, end: annuals[latestIdx+1].end, form: annuals[latestIdx+1].form };
+  // audit F-A-2026-06-21: dropped unconditional annuals[latestIdx+1] fallback — it paired
+  // latest/prior from non-adjacent fiscal years (gap >550d), corrupting deltaGoodwillYoY with a
+  // multi-year delta. Return null rather than a wrong-interval pair so downstream sees no YoY.
   return null;
 }
 
@@ -224,11 +227,7 @@ function pickPriorLatest(unitArr, latestEnd) {
   return valid[0] ? { val: valid[0].val, end: valid[0].end } : null;
 }
 
-function safe(n, denom) {
-  if (n == null || denom == null || denom === 0) return null;
-  return Math.round((n / denom) * 10000) / 10000;
-}
-
+// audit F-A-2026-06-21: removed dead helper safe() — defined, never called, duplicate of pct().
 function pct(n, denom) {
   if (n == null || denom == null || denom === 0) return null;
   return Math.round((n / denom) * 10000) / 10000;
@@ -275,7 +274,11 @@ async function main() {
     if (!zipEntry) {
       console.warn(`  [WARN] ${ticker} (CIK ${cik}): not in zip as '${zipName}' — checking keys...`);
       // Debug: show a few nearby keys
-      const nearby = [...cdIndex.keys()].filter(k => k.includes(cik.slice(4))).slice(0,3);
+      // audit F-A-2026-06-21: was cik.slice(4) — dropped the first 4 chars of the 10-digit
+      // zero-padded CIK (e.g. '0001234567' -> '234567'), matching wrong/truncated archive keys.
+      // Match on the full padded CIK and the un-padded numeric form actually present in some archives.
+      const cikUnpadded = cik.replace(/^0+/, '');
+      const nearby = [...cdIndex.keys()].filter(k => k.includes(cik) || k.includes(cikUnpadded)).slice(0,3);
       if (nearby.length) console.warn('    nearby keys:', nearby.join(', '));
       results.push({ ticker, cik, error: 'not_in_zip', coverage: { goodwill: 'absent', payments: 'absent', rpo: 'absent' } });
       continue;
@@ -376,7 +379,10 @@ async function main() {
         rpoLatest = (cr ? cr.val : 0) + (nr ? nr.val : 0);
         const crP = pickPriorAnnual(ccCurrUnits);
         const nrP = pickPriorAnnual(ccNonUnits);
-        rpoPrior = ((crP || nrP)) ? ((crP ? crP.val : 0) + (nrP ? nrP.val : 0)) : null;
+        // audit F-A-2026-06-21: prevents phantom YoY from asymmetric Curr/Noncurr coverage —
+        // only compute prior from the SAME components used in rpoLatest; null if any are missing.
+        rpoPrior = ((!cr || crP) && (!nr || nrP))
+          ? ((cr ? crP.val : 0) + (nr ? nrP.val : 0)) : null;
         rpoConcept = 'ContractWithCustomerLiability(Curr+Noncurr)';
       }
     }
@@ -407,7 +413,10 @@ async function main() {
         rpoLatest = (cr ? cr.val : 0) + (nr ? nr.val : 0);
         const crP = pickPriorAnnual(drCurrUnits);
         const nrP = pickPriorAnnual(drNonUnits);
-        rpoPrior = ((crP || nrP)) ? ((crP ? crP.val : 0) + (nrP ? nrP.val : 0)) : null;
+        // audit F-A-2026-06-21: prevents phantom YoY from asymmetric Curr/Noncurr coverage —
+        // only compute prior from the SAME components used in rpoLatest; null if any are missing.
+        rpoPrior = ((!cr || crP) && (!nr || nrP))
+          ? ((cr ? crP.val : 0) + (nr ? nrP.val : 0)) : null;
         rpoConcept = 'DeferredRevenue(Curr+Noncurr)';
       }
     }

@@ -41,6 +41,16 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
+  // audit F-A-2026-06-21: guard non-finite latest close. A missing/NaN current
+  // price made ratio NaN, and `NaN >= THRESHOLD` is false — so a stock with
+  // corrupt/absent latest-price data was returned as a definitive computable
+  // FAIL instead of non-computable. Treat missing latest price as no-data.
+  if (!Number.isFinite(current)) {
+    return H.buildResult({
+      computable: false, reason: `latest close not finite (got ${current})`,
+      threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    });
+  }
   const ratio = current / ma200;
   return H.buildResult({
     value: ratio,

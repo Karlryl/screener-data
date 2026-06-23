@@ -17,6 +17,9 @@ const fs = require('fs');
 const path = require('path');
 // Tag 218: atomic output writes (audit F-218b-03)
 const { writeFileAtomic } = require('../lib/atomic-write.js');
+// audit F-A-2026-06-21: escape dynamic values (tickers, method-ids) before HTML interpolation —
+// a symbol containing & < > " would otherwise corrupt the markup (stored-markup / XSS).
+const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const PICKS_DIR = path.join(__dirname, '..', 'picks-history');
 const METHODS_HIST_DIR = path.join(__dirname, '..', 'methods-history');
@@ -38,7 +41,9 @@ function listMethodsVintages() {
     .sort();
 }
 
-// Jaccard distance = |A ∩ B| / |A ∪ B|. 1.0 = identical, 0.0 = no overlap.
+// audit F-A-2026-06-21: comment said "Jaccard distance" but the code returns the Jaccard
+// similarity (index) — prevents a misleading-doc failure mode (distance would be 1 - this).
+// Jaccard similarity (index) = |A ∩ B| / |A ∪ B|. 1.0 = identical, 0.0 = no overlap.
 function jaccard(setA, setB) {
   const a = new Set(setA), b = new Set(setB);
   if (a.size === 0 && b.size === 0) return 1.0;
@@ -59,11 +64,22 @@ function whyDropped(ticker, priorMethodsFile, todayMethodsFile) {
   const prior = (priorMethodsFile && priorMethodsFile.stocks && priorMethodsFile.stocks[ticker] && priorMethodsFile.stocks[ticker].results) || {};
   const today = (todayMethodsFile && todayMethodsFile.stocks && todayMethodsFile.stocks[ticker] && todayMethodsFile.stocks[ticker].results) || {};
   const flips = [];
-  for (const mid of Object.keys(prior)) {
+  // audit F-A-2026-06-21: iterate the UNION of prior+today method ids, not just prior's keys —
+  // prevents the "method newly added since prior that flips a pick out is never reported" failure
+  // mode (the old prior-keyed loop + `if (!pr || !tr) continue;` made such methods invisible).
+  for (const mid of new Set([...Object.keys(prior), ...Object.keys(today)])) {
     const pr = prior[mid], tr = today[mid];
-    if (!pr || !tr) continue;
-    if (pr.pass === true && tr.pass === false) flips.push(mid + ' (was pass, now fail)');
-    else if (pr.pass === true && tr.pass == null) flips.push(mid + ' (was pass, now incomputable)');
+    if (pr && tr) {
+      if (pr.pass === true && tr.pass === false) flips.push(mid + ' (was pass, now fail)');
+      else if (pr.pass === true && tr.pass == null) flips.push(mid + ' (was pass, now incomputable)');
+    } else if (!pr && tr) {
+      // method present today but absent in prior — only a "flip out" if it now fails
+      if (tr.pass === false) flips.push(mid + ' (newly present, now fail)');
+      else if (tr.pass == null) flips.push(mid + ' (newly present, incomputable)');
+    } else if (pr && !tr) {
+      // method existed in prior but is gone today — was a passing gate, now absent
+      if (pr.pass === true) flips.push(mid + ' (was pass, now absent)');
+    }
   }
   return flips;
 }
@@ -182,14 +198,14 @@ function main() {
 
     if (m.added.length > 0) {
       html += '<h3 class="added">+ Added (' + m.added.length + ')</h3>';
-      html += '<div class="mono">' + m.added.map(t => '<span class="added">' + t + '</span>').join(' ') + '</div>';
+      html += '<div class="mono">' + m.added.map(t => '<span class="added">' + esc(t) + '</span>').join(' ') + '</div>';
     }
     if (m.removed.length > 0) {
       html += '<h3 class="removed">− Removed (' + m.removed.length + ')</h3>';
       html += '<table><thead><tr><th>Ticker</th><th>Why dropped (method-flips)</th></tr></thead><tbody>';
       for (const r of m.removed) {
-        const why = r.flippedMethods.length > 0 ? r.flippedMethods.join('; ') : '<i style="color:#94a3b8">no method-flip detected — likely universe-pruning or score-cap</i>';
-        html += '<tr><td class="mono removed">' + r.ticker + '</td><td><span class="reason">' + why + '</span></td></tr>';
+        const why = r.flippedMethods.length > 0 ? r.flippedMethods.map(esc).join('; ') : '<i style="color:#94a3b8">no method-flip detected — likely universe-pruning or score-cap</i>';
+        html += '<tr><td class="mono removed">' + esc(r.ticker) + '</td><td><span class="reason">' + why + '</span></td></tr>';
       }
       html += '</tbody></table>';
     }

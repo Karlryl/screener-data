@@ -38,7 +38,11 @@ const JUNK_SUFFIX_RE = /[WRU]$|\.WS$|\.WT$|\.WI$|\.RT$|\.UN$|\.U$/i;
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-function get(url) {
+// audit F-A-2026-06-21: cap redirect chain depth (mirrors sec-tickers.js Tag 229c-2)
+// to prevent an infinite redirect loop from hanging the puller indefinitely.
+const MAX_REDIRECTS = 5;
+
+function get(url, redirectsLeft = MAX_REDIRECTS) {
   return new Promise((resolve, reject) => {
     const req = https.get(url, {
       headers: {
@@ -49,10 +53,32 @@ function get(url) {
         'Referer': 'https://www.nasdaq.com/'
       }
     }, res => {
-      if (res.statusCode === 301 || res.statusCode === 302) {
-        return get(res.headers.location).then(resolve).catch(reject);
+      // audit F-A-2026-06-21: harden redirect handling — prevents a relative
+      // Location triggering ERR_INVALID_URL (which silently zeroes an exchange),
+      // a socket leak from an undrained 3xx body, and unhandled 307/308 redirects.
+      if (res.statusCode === 301 || res.statusCode === 302 ||
+          res.statusCode === 307 || res.statusCode === 308) {
+        const loc = res.headers.location;
+        // Drain the redirect response body so the socket can be reused/freed.
+        res.resume();
+        if (!loc) {
+          return reject(new Error('HTTP ' + res.statusCode + ' with no Location header from ' + url));
+        }
+        if (redirectsLeft <= 0) {
+          return reject(new Error('too many redirects fetching ' + url));
+        }
+        let nextUrl;
+        try {
+          // Resolve Location against the current URL so a relative redirect
+          // (e.g. "/path") does not blow up https.get with ERR_INVALID_URL.
+          nextUrl = new URL(loc, url).toString();
+        } catch (e) {
+          return reject(new Error('invalid redirect Location "' + loc + '" from ' + url));
+        }
+        return get(nextUrl, redirectsLeft - 1).then(resolve).catch(reject);
       }
       if (res.statusCode !== 200) {
+        res.resume(); // audit F-A-2026-06-21: drain non-200 body to avoid socket leak
         return reject(new Error('HTTP ' + res.statusCode + ' from ' + url));
       }
       const chunks = [];
@@ -182,6 +208,11 @@ async function fetchNasdaqApiList() {
             source:    'nasdaq-api'
           });
           added++;
+        } else {
+          // audit F-A-2026-06-21: don't silently discard the marketCap hint for a ticker an
+          // earlier source already found — backfill it if that entry has none.
+          const existing = result.get(rawSym);
+          if (existing && existing.marketCap == null && mcap != null) existing.marketCap = mcap;
         }
       }
 

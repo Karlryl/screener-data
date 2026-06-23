@@ -26,11 +26,60 @@ const path = require('path');
 const Runner = require('./methods/runner.js');
 const SM = require('./methods/strategy-modes.js');
 const DQ = require('./methods/data-quality.js');
+const { computePbScore } = require('./lib/pb-score.js');
 const { writeFileAtomic } = require('./lib/atomic-write.js');
 // F-SM-004: route per-ticker history-file reads through the shared safe helper
 // so a ticker written under the safe-stem (e.g. CON → _CON.json) is found
 // instead of being silently missed by raw `ticker + '.json'`.
 const { safeSnapshotFilename } = require('./lib/snapshot-fs.js');
+
+// audit F-A-2026-06-21: FX-rates table (USD-per-unit), the SAME fx-rates.json the
+// pull-yahoo mapper uses for its USD normalization. Loaded read-only so the
+// market-cap gates can normalize the handful of snapshots whose marketCap was
+// NOT converted to USD at pull time (meta.fxConverted !== true / fxConversionFailed)
+// instead of comparing a raw local-currency figure (JPY/EUR/HKD/KRW) against USD
+// constants. Never invents a rate: if the currency is missing from the table we
+// flag the row (mcapCurrencyUnknown) rather than guess.
+let FX_RATES_USD = {};
+try {
+  const _fxRaw = require('./fx-rates.json');
+  if (_fxRaw && _fxRaw.rates && typeof _fxRaw.rates === 'object') {
+    for (const [k, v] of Object.entries(_fxRaw.rates)) {
+      if (typeof v === 'number' && Number.isFinite(v) && v > 0) FX_RATES_USD[k.toUpperCase()] = v;
+    }
+  }
+} catch (_) { /* fx-rates.json absent — USD-already-converted snapshots still resolve */ }
+
+// audit F-A-2026-06-21: resolve a snapshot's market cap to USD using the snapshot's
+// OWN reported FX state (written by pull-yahoo's _convertSnapshotToUSD), falling back
+// to the shared fx-rates.json table only when the snapshot was left unconverted.
+// Returns { usd: <number|null>, unknown: <bool> }. usd=null + unknown=true means the
+// USD value is genuinely unreachable for this row, so callers must NOT compare its
+// raw cap against USD thresholds.
+function resolveMcapUsd(stock, rawMcap) {
+  if (!Number.isFinite(rawMcap) || rawMcap <= 0) return { usd: rawMcap, unknown: false };
+  const meta = (stock && stock.meta) || {};
+  // Common path: pull-yahoo already normalized marketCap to USD in place
+  // (fxConverted === true, reportingCurrency === 'USD'). The raw figure IS USD.
+  if (meta.fxConverted === true || meta.reportingCurrency === 'USD') {
+    return { usd: rawMcap, unknown: false };
+  }
+  // Unconverted snapshot: marketCap is still in its local reporting currency.
+  // Convert here using the same fx-rates.json table the mapper uses. Prefer the
+  // trading currency for the cap (mcap is quoted in trading ccy), else the
+  // reporting currency original.
+  const ccyRaw = meta.tradingCurrencyOriginal || meta.reportingCurrencyOriginal
+    || meta.reportingCurrency || meta.tradingCurrency || null;
+  if (!ccyRaw) return { usd: null, unknown: true };
+  const ccy = String(ccyRaw).toUpperCase();
+  if (ccy === 'USD') return { usd: rawMcap, unknown: false };
+  // British pence (GBp/GBX/GBPENCE): 100 pence = 1 GBP, then GBP→USD.
+  const isPence = /^GB[XP]$/.test(ccy) || ccy === 'GBPENCE';
+  const fxKey = isPence ? 'GBP' : ccy;
+  const rate = FX_RATES_USD[fxKey];
+  if (rate == null) return { usd: null, unknown: true };
+  return { usd: rawMcap * (isPence ? rate / 100 : rate), unknown: false };
+}
 
 // KI Infrastruktur universe — manually seeded, Phase-2-ready for machine updates.
 let KI_INFRA_CONFIG = { categories: {} };
@@ -83,11 +132,22 @@ function unwrap(v) {
 // batches; modes/screener generators hadn't. 32-way concurrency scales total
 // wall-time with ~1/32 of files; sequential batching keeps memory bounded.
 async function loadStocks(dir) {
-  if (!fs.existsSync(dir)) return [];
+  if (!fs.existsSync(dir)) {
+    const empty = [];
+    // audit F-A-2026-06-21: tally counts even on the no-dir path so main()'s
+    // run-level gate (mass-load-failure shipping a thinned universe) sees a
+    // consistent shape instead of undefined.
+    empty.loadStats = { totalFiles: 0, parsed: 0, parseFailed: 0 };
+    return empty;
+  }
   // Tag 220 (audit F-GR-002 HIGH): exclude all '_*' files (was just _manifest).
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
   const CONCURRENCY = 32;
   const out = [];
+  // audit F-A-2026-06-21: count read/parse failures instead of only silently
+  // dropping them — a mass parse failure (corrupt write, truncated batch, FS
+  // glitch) must not pass as a healthy run that ships a thinned universe.
+  let parseFailed = 0;
   for (let i = 0; i < files.length; i += CONCURRENCY) {
     const batch = files.slice(i, i + CONCURRENCY);
     const parsed = await Promise.all(batch.map(async (f) => {
@@ -98,8 +158,12 @@ async function loadStocks(dir) {
     }));
     for (const s of parsed) {
       if (s !== null && typeof s === 'object' && !Array.isArray(s)) out.push(s);
+      else parseFailed++;
     }
   }
+  // audit F-A-2026-06-21: expose load tally to main() without changing the
+  // array's iterable shape or .length (downstream consumers are unaffected).
+  out.loadStats = { totalFiles: files.length, parsed: out.length, parseFailed };
   return out;
 }
 
@@ -264,6 +328,15 @@ function buildRow(stock) {
   }
 
   const mcap = unwrap(stock.marketCap) || 0;
+  // audit F-A-2026-06-21: prevents raw local-currency caps (JPY/EUR/HKD/KRW etc.)
+  // being compared against USD thresholds. mcap is displayed as-is, but the $2B
+  // SMALL gate and the client Cap≥ filter must use the USD-normalized figure.
+  // mcapCurrencyUnknown=true marks rows whose USD cap is genuinely unreachable
+  // (unconverted snapshot + currency missing from fx-rates.json) so those rows are
+  // excluded from cap thresholds rather than silently mis-bucketed.
+  const _mcapUsdRes = resolveMcapUsd(stock, mcap);
+  const mcapUsd = _mcapUsdRes.usd;
+  const mcapCurrencyUnknown = _mcapUsdRes.unknown;
   const region = (stock.meta && stock.meta.region) || '';
   const country = REGION_TO_COUNTRY[region] || region || '—';
 
@@ -309,19 +382,17 @@ function buildRow(stock) {
   //   strict max 100. Caps prevent CRDO-level extremes (yoy=201, r40=217) from
   //   inflating pbScore to 136+. The signals are already binary above ~100 —
   //   "extremely fast growth" doesn't get extra credit over "very fast growth".
-  let pbScore = null;
-  if (Number.isFinite(growth) && Number.isFinite(grossMargin)) {
-    const growthC = Math.min(100, Math.max(0, growth));
-    const gmC     = Math.min(100, Math.max(0, grossMargin));
-    const r40C    = Math.min(100, Math.max(0, r40Value || 0));
-    const gmaBonus = (gmaTrend === 'accelerating') ? 10 : (gmaTrend === 'stable' ? 4 : 0);
-    const omaBonus = (omaTrend === 'accelerating') ? 15 : (omaTrend === 'stable' ? 6 : 0);
-    let revAccelBonus = 0;
-    if (revAccelDelta != null && revAccelDelta > 0) {
-      revAccelBonus = Math.min(15, revAccelDelta / 50 * 15);
-    }
-    pbScore = (growthC / 100 * 25) + (gmC / 100 * 20) + (r40C / 100 * 15) + gmaBonus + omaBonus + revAccelBonus;
-  }
+  // Tag 200c: formula now lives in lib/pb-score.js (single source of truth,
+  // shared with scripts/snapshot-score-history.js). Returns null when growth or
+  // grossMargin is not finite — same as the former inline guard.
+  const pbScore = computePbScore({
+    growth,
+    grossMargin,
+    r40: r40Value,
+    gmaTrend,
+    omaTrend,
+    revAccelDelta,
+  });
 
   // Mode scores (already on 0-100 scale, accumulated by score-aggregator)
   const hgScore = modeEvals.HYPERGROWTH && Number.isFinite(modeEvals.HYPERGROWTH.score) ? modeEvals.HYPERGROWTH.score : null;
@@ -1370,6 +1441,11 @@ const CLIENT_JS = `
   let onlyGaap = false;
   let onlyFcf  = false;
   let sortKey = 'auto';   // auto = tab's primary; or one of {score,r40,growth,fcfMargin,mcap,pbScore}
+  // audit F-A-2026-06-21: track sort DIRECTION so column sort is not descending-only.
+  // Comparators below are written descending ('b - a'); sortDir flips them to asc when
+  // requested. Prevents the bug where aria-sort never renders 'ascending' and clicking
+  // an already-sorted header was a no-op (no toggle).
+  let sortDir = 'desc';   // 'asc' | 'desc'
   let currentList = [];   // active filtered list
   // Tag 204b/204d: KI_INFRA multi-select category filter. Set of category names that
   // are currently active. Default: all 6 categories active (Tag 204d expanded from 4 to 6:
@@ -1570,6 +1646,7 @@ const CLIENT_JS = `
       const el = document.getElementById('onlyFcf'); if (el) el.checked = false;
     } else if (key === 'sort') {
       sortKey = 'auto';
+      sortDir = 'desc';  // audit F-A-2026-06-21: reset direction with the sort chip
       const el = document.getElementById('fSort'); if (el) el.value = 'auto';
     }
     page = 1;
@@ -1587,7 +1664,7 @@ const CLIENT_JS = `
     filterMinFcfm = ''; filterMinGrowth = '';
     filterIpoMin = ''; filterIpoMax = '';
     filterDQ = { 'A+':true, 'A':true, 'B':true, 'C':false, 'D':false };
-    onlyGaap = false; onlyFcf = false; sortKey = 'auto';
+    onlyGaap = false; onlyFcf = false; sortKey = 'auto'; sortDir = 'desc';  // audit F-A-2026-06-21: reset sort direction with full filter reset
     // Tag 204b/204d: reset KI category filter to all-on (6 layers)
     kiCategoryFilter = new Set(['Data Centers','Connectivity','Energy','Power & Cooling','Supply Bottlenecks','Packaging & Semicap']);
     document.querySelectorAll('.filters .f-ki-cat').forEach(b => b.classList.add('on'));
@@ -1684,7 +1761,10 @@ const CLIENT_JS = `
   function sortList(list){
     const tab = activeTab;
     const key = sortKey;
-    const cmp = (a, b) => {
+    // audit F-A-2026-06-21: direction sign — all base comparators below sort
+    // descending ('b - a'); multiply by -1 for ascending so the toggle works.
+    const dirSign = sortDir === 'asc' ? -1 : 1;
+    const baseCmp = (a, b) => {
       const k = key;
       if (k === 'auto') {
         if (tab === 'HG') return (b.hgScore||0) - (a.hgScore||0);
@@ -1714,6 +1794,8 @@ const CLIENT_JS = `
       if (k === 'r40PassStreak') return (b.r40PassStreak||0) - (a.r40PassStreak||0);
       return 0;
     };
+    // audit F-A-2026-06-21: apply direction sign to the descending base comparator.
+    const cmp = (a, b) => baseCmp(a, b) * dirSign;
     list.sort(cmp);
     return list;
   }
@@ -2344,7 +2426,12 @@ const CLIENT_JS = `
     for (const c of cols) {
       const skKey = sortKeyMap[c.k];
       const isSortable = !!skKey;
-      const sortAttr = isSortable ? (sortKey === skKey ? ' aria-sort="descending"' : ' aria-sort="none"') : '';
+      // audit F-A-2026-06-21: reflect actual sortDir so the active column can render
+      // aria-sort="ascending" (the existing th[aria-sort="ascending"] CSS caret was
+      // previously unreachable because only 'descending' was ever emitted).
+      const sortAttr = isSortable
+        ? (sortKey === skKey ? ' aria-sort="' + (sortDir === 'asc' ? 'ascending' : 'descending') + '"' : ' aria-sort="none"')
+        : '';
       const cls = (c.num ? 'num ' : '') + (isSortable ? 'sortable' : '');
       const dataAttr = isSortable ? ' data-sortkey="' + skKey + '"' : '';
       const tip = HEADER_TOOLTIPS[c.k];
@@ -2552,8 +2639,9 @@ const CLIENT_JS = `
 
     // Section B: Key Metric cards
     html += '<div class="cards">';
-    const yoyDelta = (a, b) => (a!=null && b!=null && b!==0) ? (((a/b)-1)*100).toFixed(1)+'%' : '—';
-    const revPrev = an.rev[1];
+    // audit F-A-2026-06-21: removed dead yoyDelta() helper and unused revPrev local
+    // (never referenced — the Revenue TTM card uses r.growth; the annual table
+    // computes grRow inline). Prevents dead-code drift / false "YoY is wired" reads.
     html += '<div class="card"><div class="lbl">Revenue TTM</div><div class="v">'+fmtM(r.revenueTTM)+'</div><div class="sub">YoY '+(r.growth!=null?r.growth.toFixed(1)+'%':'—')+'</div></div>';
     html += '<div class="card"><div class="lbl">Rev Growth YoY</div><div class="v">'+(r.growth!=null?(r.growth>=0?'+':'')+r.growth.toFixed(1)+'%':'—')+'</div><div class="sub">—</div></div>';
     html += '<div class="card"><div class="lbl">Gross Margin</div><div class="v">'+(r.grossMargin!=null?r.grossMargin.toFixed(1)+'%':'—')+'</div><div class="sub">'+(r.gmaTrend?r.gmaTrend:'—')+(r.gmaChange!=null?' '+(r.gmaChange>=0?'+':'')+r.gmaChange.toFixed(1)+'pp':'')+'</div></div>';
@@ -2918,7 +3006,7 @@ const CLIENT_JS = `
             + '<td class="fy" style="text-align:left">' + esc(b.date || '—') + '</td>'
             + '<td style="text-align:left">' + esc(b.name || '—') + '</td>'
             + '<td style="text-align:left;font-size:11px">' + esc(b.role || '—') + '</td>'
-            + '<td style="text-align:right">' + (Number.isFinite(b.shares) ? fmtM(b.shares) : '—') + '</td>'
+            + '<td style="text-align:right">' + (Number.isFinite(b.shares) ? Math.round(b.shares).toLocaleString() : '—') + '</td>'  /* audit F-A-2026-06-21: share COUNT formatted as a plain thousands-separated integer; fmtM (T/B/M $-magnitude suffixes) is for monetary columns only — share-count vs dollar-magnitude conflation */
             + '<td style="text-align:right;color:var(--green)">' + (Number.isFinite(b.value) ? '$' + fmtM(b.value) : '—') + '</td>'
             + '<td style="text-align:center">' + esc(b.code || 'P') + '</td>'
             + '</tr>';
@@ -3090,7 +3178,7 @@ const CLIENT_JS = `
       filterState: Object.assign({}, filterState),
       // Tag 232b-3: filterCap dropped from preset payload
       filterDQ:    Object.assign({}, filterDQ),
-      onlyGaap, onlyFcf, sortKey,
+      onlyGaap, onlyFcf, sortKey, sortDir,  // audit F-A-2026-06-21: persist sort direction with the preset
       savedAt: new Date().toISOString()
     };
   }
@@ -3140,6 +3228,8 @@ const CLIENT_JS = `
     if (typeof snap.onlyGaap === 'boolean') onlyGaap = snap.onlyGaap;
     if (typeof snap.onlyFcf  === 'boolean') onlyFcf  = snap.onlyFcf;
     if (typeof snap.sortKey === 'string') sortKey = snap.sortKey;
+    // audit F-A-2026-06-21: restore sort direction (older presets lack it → default desc)
+    sortDir = (snap.sortDir === 'asc') ? 'asc' : 'desc';
 
     // Sync DOM controls so the visible UI matches restored state.
     document.querySelectorAll('.filters .f-state').forEach(b => b.classList.toggle('on', !!filterState[b.dataset.state]));
@@ -3632,14 +3722,19 @@ const CLIENT_JS = `
   const onlyFcfEl = document.getElementById('onlyFcf');
   onlyGaapEl.onchange = e => { onlyGaap = e.target.checked; page=1; renderTable(); };
   onlyFcfEl.onchange = e => { onlyFcf = e.target.checked; page=1; renderTable(); };
-  document.getElementById('fSort').onchange = e => { sortKey = e.target.value; page=1; renderTable(); };
+  document.getElementById('fSort').onchange = e => { sortKey = e.target.value; sortDir = 'desc'; /* audit F-A-2026-06-21: dropdown sort resets direction to desc */ page=1; renderTable(); };
   document.getElementById('prevPage').onclick = () => { if (page>1) { page--; renderTable(); } };
   document.getElementById('nextPage').onclick = () => { page++; renderTable(); };
   document.getElementById('table').addEventListener('click', e => {
     // Tag 223b: clickable sortable column header.
     const th = e.target.closest('th.sortable');
     if (th && th.dataset.sortkey) {
-      sortKey = th.dataset.sortkey;
+      // audit F-A-2026-06-21: clicking the already-active column toggles asc/desc;
+      // clicking a new column selects it and resets to 'desc'. Previously the key
+      // was set but direction never flipped, so re-clicking a sorted header was a no-op.
+      const nextKey = th.dataset.sortkey;
+      if (sortKey === nextKey) sortDir = (sortDir === 'desc' ? 'asc' : 'desc');
+      else { sortKey = nextKey; sortDir = 'desc'; }
       const sortSel = document.getElementById('fSort');
       if (sortSel) {
         // Map sort axes that exist in fSort dropdown; fallback gracefully if not present.
@@ -4285,20 +4380,55 @@ async function main() {
   console.log('[screener] loading snapshots from ' + args.snapshots);
   // Tag 232c-11: loadStocks now async (batched concurrency).
   const stocks = await loadStocks(args.snapshots);
-  console.log('[screener] loaded ' + stocks.length + ' stocks');
+  const loadStats = stocks.loadStats || { totalFiles: stocks.length, parsed: stocks.length, parseFailed: 0 };
+  console.log('[screener] loaded ' + stocks.length + ' stocks' +
+              (loadStats.parseFailed ? ' (' + loadStats.parseFailed + ' read/parse-failed of ' + loadStats.totalFiles + ' files)' : ''));
 
   const rows = [];
+  let buildSkipped = 0;
   for (const s of stocks) {
     try {
       const r = buildRow(s);
       if (r) rows.push(r);
     } catch (e) {
       // Tag 198: swallow per-stock errors so one bad snapshot doesn't kill the build.
+      buildSkipped++;  // audit F-A-2026-06-21: tally per-stock build failures for the run-level gate
       const tk = (s && s.meta && s.meta.ticker) || '???';
       console.warn('[screener] skip ' + tk + ': ' + e.message);
     }
   }
   console.log('[screener] built ' + rows.length + ' rows');
+
+  // audit F-A-2026-06-21: run-level sanity gate — prevents catch-and-swallow at
+  // every layer (parse failures, per-stock build throws) from silently shipping a
+  // thinned/empty universe as a green (exit-0) run. Per-item resilience is kept,
+  // but a MASS failure must fail loudly so CI catches it instead of publishing a
+  // gutted screener.html. Two independent trip-wires:
+  //   1. read/parse failures exceed 5% of the files on disk, OR
+  //   2. >20% of loaded snapshots throw during buildRow().
+  const FAIL_RATIO = 0.05;          // >5% of files unreadable/unparseable
+  const BUILD_FAIL_RATIO = 0.20;    // >20% of loaded stocks fail to build a row
+  const parseFailRatio = loadStats.totalFiles > 0 ? loadStats.parseFailed / loadStats.totalFiles : 0;
+  const buildFailRatio = stocks.length > 0 ? buildSkipped / stocks.length : 0;
+  const gateFailures = [];
+  if (loadStats.totalFiles > 0 && parseFailRatio > FAIL_RATIO) {
+    gateFailures.push('read/parse-fail ratio ' + (parseFailRatio * 100).toFixed(1) + '% > ' +
+                      (FAIL_RATIO * 100).toFixed(0) + '% (' + loadStats.parseFailed + '/' + loadStats.totalFiles + ' files)');
+  }
+  if (stocks.length > 0 && buildFailRatio > BUILD_FAIL_RATIO) {
+    gateFailures.push('buildRow-fail ratio ' + (buildFailRatio * 100).toFixed(1) + '% > ' +
+                      (BUILD_FAIL_RATIO * 100).toFixed(0) + '% (' + buildSkipped + '/' + stocks.length + ' stocks)');
+  }
+  // A universe that collapses to zero usable rows despite files being present is
+  // always a hard failure — never publish an empty screener over a good one.
+  if (loadStats.totalFiles > 0 && rows.length === 0) {
+    gateFailures.push('zero rows built from ' + loadStats.totalFiles + ' snapshot files');
+  }
+  if (gateFailures.length) {
+    console.error('[screener] ABORT — run-level sanity gate tripped, refusing to ship a thinned universe:');
+    for (const g of gateFailures) console.error('[screener]   - ' + g);
+    process.exit(1);
+  }
 
   const tabs = classifyTabs(rows);
   for (const t of Object.keys(tabs)) console.log('[screener] tab ' + t + ': ' + tabs[t].length);

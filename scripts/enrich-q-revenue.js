@@ -20,6 +20,9 @@
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
+// F-A-2026-06-21 (audit): route the cache write through the repo's atomic writer so a
+// SIGKILL/CI-timeout mid-write can't truncate a court-screen input file (Pattern D).
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const ZIP_PATH = 'C:/Users/Karlr/AppData/Local/sec-xbrl-cache/companyfacts.zip';
 const CACHE = path.join(__dirname, '..', 'fundamentals-cache');
@@ -110,6 +113,14 @@ function isQuarterlyPoint(u) {
   const days = (new Date(u.end) - new Date(u.start)) / 86400000;
   return days >= 80 && days <= 110;
 }
+// audit F-A-2026-06-21: an FY/annual point is the ~365-day 10-K YTD figure. The discrete-Q4
+// extractor (isQuarterlyPoint) deliberately excludes it; we capture it separately so Q4 can be
+// reconstructed by subtraction (annual − Q1 − Q2 − Q3) rather than left as a permanent hole.
+function isAnnualPoint(u) {
+  if (!u.start || !u.end) return false;
+  const days = (new Date(u.end) - new Date(u.start)) / 86400000;
+  return days >= 340 && days <= 400;
+}
 function extractQuarterlyPoints(unitArr) {
   if (!Array.isArray(unitArr)) return [];
   const quarterly = unitArr.filter(u => u && u.val != null && u.end && isQuarterlyPoint(u));
@@ -117,6 +128,30 @@ function extractQuarterlyPoints(unitArr) {
   for (const u of quarterly) {
     const ex = byEnd.get(u.end);
     if (!ex || (u.accn || '') > (ex.accn || '')) byEnd.set(u.end, u);
+  }
+  // audit F-A-2026-06-21: prevents the systematic Q4-missing failure mode — without this the
+  // YoY series has an annual hole (no q_t finds a ~365d-prior Q4 partner), thinning durability.
+  // Reconstruct each missing discrete Q4 by subtraction, strictly within this single concept's
+  // unit array (no cross-concept mixing). For an annual (~365d) point we sum the three discrete
+  // quarters whose ends fall inside its (start, end] window; only when ALL THREE exist do we
+  // synthesize Q4 = annual − (Q1+Q2+Q3). If any prior is absent we leave the hole rather than guess.
+  const annuals = new Map();
+  for (const u of unitArr) {
+    if (!u || u.val == null || !u.start || !u.end || !isAnnualPoint(u)) continue;
+    const ex = annuals.get(u.end);
+    if (!ex || (u.accn || '') > (ex.accn || '')) annuals.set(u.end, u);
+  }
+  for (const a of annuals.values()) {
+    if (byEnd.has(a.end)) continue; // a real (e.g. 10-Q) discrete Q4 already exists — don't clobber it
+    const aStart = new Date(a.start).getTime(), aEnd = new Date(a.end).getTime();
+    const priors = [];
+    for (const q of byEnd.values()) {
+      const qEnd = new Date(q.end).getTime();
+      if (qEnd > aStart && qEnd < aEnd) priors.push(q);
+    }
+    if (priors.length !== 3) continue; // need exactly Q1+Q2+Q3 of this fiscal year, else skip
+    const sum123 = priors.reduce((s, q) => s + q.val, 0);
+    byEnd.set(a.end, { end: a.end, val: a.val - sum123, accn: a.accn });
   }
   return [...byEnd.values()].sort((a, b) => a.end < b.end ? -1 : a.end > b.end ? 1 : 0).map(u => ({ end: u.end, val: u.val }));
 }
@@ -177,7 +212,7 @@ function main() {
       j.payload.ftsQuarterly = j.payload.ftsQuarterly || {};
       j.payload.ftsQuarterly.revQYoYsec = newestFirst;
       j.payload.ftsQuarterly.revQYoYsecMeta = { source: 'sec-companyfacts', concept: conceptUsed, cik: entry.cik, yoyPairsAvail: yoy.length, latestEnd: bestLatestEnd, script: 'enrich-q-revenue.js' };
-      fs.writeFileSync(cacheFile, JSON.stringify(j));
+      writeFileAtomic(cacheFile, JSON.stringify(j));
       wrote++;
       console.log(`${ticker.padEnd(6)} concept=${conceptUsed} avail=${String(yoy.length).padStart(2)} stored=${newestFirst.length} latest=${bestLatestEnd}  YoY(newest-first)=${JSON.stringify(newestFirst.slice(0, 6).map(v => Math.round(v * 100) + '%'))}`);
     }

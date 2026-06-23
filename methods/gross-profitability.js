@@ -88,6 +88,31 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
+  // audit F-A-2026-06-22: prevents mismatched-period GP/TA ratio.
+  // annualGP and annualBalance are two INDEPENDENTLY-built, independently-sourced
+  // arrays (pull-yahoo: annualGP can be overwritten from FTS on a bare `.length>0`
+  // at line ~2021, while annualBalance is overwritten via a non-null-count compare
+  // at line ~1987 — different predicates, different source rows). Both are
+  // "latest-first", so [0] is meant to be the newest fiscal year in each. The QS
+  // path (_arr) uses `.filter(Boolean)` which COMPACTS leading nulls, whereas
+  // annualBalance preserves leading-null placeholders for year-alignment. If the
+  // GP array carries MORE periods than the balance array, GP[0] necessarily refers
+  // to a NEWER fiscal year than balance[0] (or the GP array was front-compacted),
+  // so gp/ta would silently divide a GP from one fiscal year by total-assets from
+  // another. Healthy filers have annualGP.length <= annualBalance.length (the
+  // balance array commonly carries one extra OLDER trailing year — verified across
+  // all anchors incl. COST/V at balLen=gpLen+1, which is benign trailing-edge, not
+  // newest-edge drift). When GP is longer, the newest-period equality at index 0 is
+  // no longer guaranteed: refuse to compute rather than emit a cross-period ratio.
+  if (gpArr.length > balArr.length) {
+    return H.buildResult({
+      computable: false,
+      reason: 'GP/balance period misalignment: annualGP has more years (' +
+              gpArr.length + ') than annualBalance (' + balArr.length +
+              ') — [0] may reference different fiscal years',
+      threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    });
+  }
   const gp = _unwrap(gpArr[0]);
   const bal = balArr[0];
   // annualBalance entries are plain objects {totalCash, totalDebt, totalAssets}.

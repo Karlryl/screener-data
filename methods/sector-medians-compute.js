@@ -27,6 +27,17 @@ const MIN_STOCKS_PER_SECTOR = 5;
 // With < 20 stocks the median can be noisy/unrepresentative.
 const MIN_STOCKS_PER_REGION_SECTOR = 20;
 
+// audit F-A-2026-06-22 (A-methods-infra-modes-sectors-11): invested-capital floor
+// for the ROIC bucket. ic = totalAssets - cash with only `ic > 0` lets a cash-rich
+// firm whose non-cash assets are tiny produce a near-zero denominator, so ni/ic
+// explodes into a huge finite ROIC that survives every downstream filter and
+// inflates the sector p75/p90 ranked against by sector-relative-roic. Requiring
+// ic to be a meaningful fraction of total assets excludes only those degenerate
+// net-cash micro-IC firms; healthy operating companies have ic well above this.
+// Prevented failure mode: near-zero invested-capital producing artifact ROIC that
+// inflates sector p75/p90.
+const IC_MIN_FRACTION = 0.05;
+
 function median(arr) {
   // Tag 222b (audit Tag 221a Fix 5 defensive): filter to finite numbers only.
   // Without this, a single NaN/null in `arr` poisons the sort order (NaN is
@@ -115,7 +126,10 @@ function gatherBySubProfile(stocks, classify) {
     if (!globalBuckets[sp.id]) globalBuckets[sp.id] = { roic: [], 'fcf-yield': [] };
     if (ni != null && ta != null) {
       const ic = ta - (cash || 0);
-      if (ic > 0) globalBuckets[sp.id].roic.push(ni / ic);
+      // audit F-A-2026-06-22 (A-methods-infra-modes-sectors-11): require ic to be a
+      // meaningful fraction of total assets, not merely > 0. Prevents near-zero
+      // invested-capital from producing artifact ROIC that inflates sector p75/p90.
+      if (ic > 0 && ta > 0 && ic >= IC_MIN_FRACTION * ta) globalBuckets[sp.id].roic.push(ni / ic);
     }
     if (fcfAdj != null && mc != null && mc > 0) {
       globalBuckets[sp.id]['fcf-yield'].push(fcfAdj / mc);
@@ -127,7 +141,10 @@ function gatherBySubProfile(stocks, classify) {
     if (!regionalBuckets[region][sp.id]) regionalBuckets[region][sp.id] = { roic: [], 'fcf-yield': [] };
     if (ni != null && ta != null) {
       const ic = ta - (cash || 0);
-      if (ic > 0) regionalBuckets[region][sp.id].roic.push(ni / ic);
+      // audit F-A-2026-06-22 (A-methods-infra-modes-sectors-11): mirror the global
+      // bucket's invested-capital floor here too. Prevents near-zero invested-capital
+      // from producing artifact ROIC that inflates regional sector p75/p90.
+      if (ic > 0 && ta > 0 && ic >= IC_MIN_FRACTION * ta) regionalBuckets[region][sp.id].roic.push(ni / ic);
     }
     if (fcfAdj != null && mc != null && mc > 0) {
       regionalBuckets[region][sp.id]['fcf-yield'].push(fcfAdj / mc);

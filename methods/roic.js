@@ -19,6 +19,27 @@ function evaluate(stock) {
       threshold: eff.threshold, thresholdOp: THRESHOLD_OP
     });
   }
+  // audit F-A-2026-06-22: prevents NaN/Infinity balance fields (corrupt/schema-drifted
+  // snapshot) producing a phantom computable FAIL instead of computable:false.
+  // latestBalance() only null-checks (no Number.isFinite), so a non-finite totalAssets
+  // slips past the null guard above; NaN<=0 / Infinity arithmetic then yields value=NaN,
+  // which buildResult nulls while still returning computable:true, pass:false.
+  if (!Number.isFinite(totalAssets) || !Number.isFinite(netIncome)) {
+    return H.buildResult({
+      computable: false,
+      reason: `non-finite inputs: netIncome=${netIncome}, totalAssets=${totalAssets}`,
+      threshold: eff.threshold, thresholdOp: THRESHOLD_OP
+    });
+  }
+  // audit F-A-2026-06-22: a non-finite (but non-null) totalCash would corrupt
+  // investedCapital (Infinity||0 stays Infinity); null/absent still falls back to 0.
+  if (totalCash != null && !Number.isFinite(totalCash)) {
+    return H.buildResult({
+      computable: false,
+      reason: `non-finite totalCash=${totalCash}`,
+      threshold: eff.threshold, thresholdOp: THRESHOLD_OP
+    });
+  }
   const investedCapital = totalAssets - (totalCash || 0);
   if (investedCapital <= 0) {
     return H.buildResult({

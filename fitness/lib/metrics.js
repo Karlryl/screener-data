@@ -131,10 +131,10 @@ function hitRate(rankingEntries, returnByTicker, cohortN) {
 /**
  * quintileMonotonicity(rankingEntries, returnByTicker)
  * Split into 5 quintiles by score (Q1=top), compute each quintile's mean return.
- * monotoneScore = fraction of adjacent pairs where higher quintile mean >= lower quintile mean.
+ * monotoneScore = fraction of adjacent pairs where higher quintile mean > lower quintile mean (strict).
  * @param {Array<{ticker:string, score:number}>} rankingEntries
  * @param {Object<string,number>} returnByTicker
- * @returns {{ quintileMeans:number[]|null, monotoneScore:number|null }}
+ * @returns {{ quintileMeans:number[]|null, monotoneScore:number|null, tieRate:number|null, spread:number|null }}
  */
 function quintileMonotonicity(rankingEntries, returnByTicker) {
   // Filter to entries with finite returns
@@ -150,7 +150,7 @@ function quintileMonotonicity(rankingEntries, returnByTicker) {
     });
 
   if (usable.length < 5) {
-    return { quintileMeans: null, monotoneScore: null };
+    return { quintileMeans: null, monotoneScore: null, tieRate: null, spread: null };
   }
 
   const n = usable.length;
@@ -163,15 +163,23 @@ function quintileMonotonicity(rankingEntries, returnByTicker) {
     quintileMeans.push(mean);
   }
 
-  // monotoneScore: # of adjacent pairs (q, q+1) where quintileMeans[q] >= quintileMeans[q+1]
+  // monotoneScore: # of adjacent pairs (q, q+1) where quintileMeans[q] > quintileMeans[q+1]
   // Q1 (index 0) is top quintile (should have highest return for a good model)
+  // audit F-A-2026-06-21: strict > so a flat (no-signal) quintile profile does not
+  // score as perfectly monotone — a degenerate all-equal model now scores 0, not 1.0.
   let monotone = 0;
+  let ties = 0;
   for (let i = 0; i < 4; i++) {
-    if (quintileMeans[i] >= quintileMeans[i + 1]) monotone++;
+    if (quintileMeans[i] > quintileMeans[i + 1]) monotone++;
+    else if (quintileMeans[i] === quintileMeans[i + 1]) ties++;
   }
   const monotoneScore = monotone / 4;
+  // audit F-A-2026-06-21: expose tieRate + Q1-minus-Q5 spread so callers can detect a
+  // no-discriminative-power profile (high tieRate / ~0 spread) that monotoneScore alone hides.
+  const tieRate = ties / 4;
+  const spread = quintileMeans[0] - quintileMeans[4];
 
-  return { quintileMeans, monotoneScore };
+  return { quintileMeans, monotoneScore, tieRate, spread };
 }
 
 module.exports = { rankIC, cohortSpread, hitRate, quintileMonotonicity, _median };

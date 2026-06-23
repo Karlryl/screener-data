@@ -65,8 +65,23 @@ function _extract(stock) {
     if (buys == null && sells == null) return null;
     const b = buys || 0;
     const s = sells || 0;
-    return { net: b - s, period: '90d-fallback', source: 'insiderActivity',
-             buys: b, sells: s, netShares90d: _num(act.netShares90d) };
+    const countDelta = b - s;
+    // audit F-A-2026-06-21: prevents false-accumulate verdict when few large
+    // sells outweigh many tiny buys (transaction-count != share-volume). The
+    // producer (pull-yahoo insiderActivity) already computes netShares90d as the
+    // SIGNED open-market share volume (buys add shares, sells subtract |shares|),
+    // whereas buyCount90d/sellCount90d are mere transaction COUNTS. Netting the
+    // counts defeats this method's own stated failure mode (2 small buys vs 15
+    // large sells nets +1 count -> PASS while insiders are dumping in size).
+    // Prefer the signed share volume for the verdict when present; keep the
+    // count delta only as context/tiebreak. Fall back to the count delta solely
+    // when netShares90d is absent (older caches), and flag the degraded basis.
+    const netShares90d = _num(act.netShares90d);
+    const usingShareVolume = netShares90d != null;
+    const net = usingShareVolume ? netShares90d : countDelta;
+    return { net, period: '90d-fallback', source: 'insiderActivity',
+             basis: usingShareVolume ? 'netShares' : 'txnCountDelta',
+             buys: b, sells: s, countDelta, netShares90d };
   }
   return null;
 }
@@ -88,9 +103,18 @@ function evaluate(stock) {
   }
   const { net, period, source } = extracted;
   const components = { netBuys: net, period, source };
+  // audit F-A-2026-06-21: expose the basis (signed share volume vs raw
+  // transaction-count delta) so a reviewer can see WHICH quantity drove the
+  // verdict and never mistakes a count delta for share-volume conviction.
+  if (extracted.basis != null) components.basis = extracted.basis;
   if (extracted.buys != null) components.buys = extracted.buys;
   if (extracted.sells != null) components.sells = extracted.sells;
+  if (extracted.countDelta != null) components.countDelta = extracted.countDelta;
   if (extracted.netShares90d != null) components.netShares90d = extracted.netShares90d;
+
+  const basisNote = extracted.basis === 'txnCountDelta'
+    ? ' [netShares90d unavailable, using transaction-count delta]'
+    : (extracted.basis === 'netShares' ? ' [signed share volume]' : '');
 
   return H.buildResult({
     value: net,
@@ -99,6 +123,7 @@ function evaluate(stock) {
     components,
     reason: 'net insider activity (' + period + ') = ' +
             (net >= 0 ? '+' : '') + net + ' (source: ' + source + ')' +
+            basisNote +
             (period === '90d-fallback' ? ' [180d data unavailable, using 90d]' : ''),
     threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
   });

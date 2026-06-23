@@ -71,6 +71,15 @@ async function evaluateAllStocks(args) {
   // tickers (audit Tag 226b).
   const cachedMethods = Runner.getMethods();
   const rows = [];
+  // audit F-A-2026-06-21: track tickers already turned into a row so a second
+  // snapshot file resolving to the SAME ticker (e.g. a dual-listing or a
+  // re-listed BRK-B.json / BRK.B.json where meta.ticker is identical) does not
+  // silently produce a duplicate row. Prevents cross-listing ticker collision
+  // overwriting STOCK_DATA_MAP / modal detail: without this, both files build
+  // distinct <tr data-ticker=...> rows but the later one clobbers the earlier
+  // in stockDataMap, so the modal/pc-filter reads one ticker's data for two
+  // visually distinct rows. Warn-and-keep-first (no hardcoded ticker excludes).
+  const seenTickers = new Set();
   // F-PF-005 (perf): batched fs.promises.readFile (CONCURRENCY=32) instead of
   // a serial blocking readFileSync loop. Mirrors generate-modes-report.js
   // loadStocks(). Sequential within each batch keeps memory bounded; parse
@@ -88,6 +97,16 @@ async function evaluateAllStocks(args) {
       if (!entry) continue;
       const { file, stock } = entry;
     const ticker = (stock.meta && stock.meta.ticker) || file.replace(/\.json$/, '');
+    // audit F-A-2026-06-21: prevents cross-listing ticker collision overwriting
+    // STOCK_DATA_MAP / modal detail. If a prior snapshot file already produced a
+    // row for this exact ticker, warn-and-keep-first instead of pushing a second
+    // row (which would render as a separate <tr data-ticker> yet clobber the
+    // first ticker's STOCK_DATA_MAP entry and capture the wrong methodHistory).
+    if (seenTickers.has(ticker)) {
+      console.warn(`⚠ Duplicate ticker '${ticker}' from ${file} — keeping first snapshot, skipping this one.`);
+      continue;
+    }
+    seenTickers.add(ticker);
     // Tag 221c (audit F-GR-005 fix): use `?? null` instead of `|| null` so
     // legitimate zero values (0% growth, $0 revenue for a freshly-spun
     // entity, exactly 0 FCF margin) are preserved instead of being coerced
@@ -101,18 +120,36 @@ async function evaluateAllStocks(args) {
       growthYoY: (stock.metrics && stock.metrics.revenueGrowthYoY && stock.metrics.revenueGrowthYoY.value != null) ? stock.metrics.revenueGrowthYoY.value : null,
       fcfMargin: (stock.metrics && stock.metrics.fcfMarginTTM && stock.metrics.fcfMarginTTM.value != null) ? stock.metrics.fcfMarginTTM.value : null,
       results: Runner.evaluateStock(stock),
-      // Tag-31: trend per method based on methodHistory
-      trends: (() => {
-        const tickerHist = methodHistory[ticker] || {};
+      // Tag-31: trend per method based on methodHistory.
+      // audit F-A-2026-06-21: prevents wasted-work — trends were eagerly
+      // computed for ALL N rows (3500-19000) but only ~300-500 (top-picks ∪
+      // matrix slices) are ever rendered; the rest were built then discarded.
+      // Replace the eager object with a lazy, memoized `trends` getter so
+      // Trend.computeTrend runs only for the tickers actually accessed during
+      // rendering. Output shape (r.trends[m.id]) is unchanged.
+      _trendsCache: null
+    });
+    // Tag-36: Pass-Count-Ranking
+    const lastRow = rows[rows.length - 1];
+    // audit F-A-2026-06-21: lazy trend computation. Define a memoized `trends`
+    // accessor that computes Trend.computeTrend for this ticker only on first
+    // access (rendering touches r.trends for the top-picks + matrix rows only).
+    // Avoids building+discarding a full trends object for every one of the
+    // N rows. tickerHist is captured by reference (no copy).
+    const tickerHist = methodHistory[ticker] || {};
+    Object.defineProperty(lastRow, 'trends', {
+      enumerable: true,
+      configurable: true,
+      get() {
+        if (this._trendsCache) return this._trendsCache;
         const tr = {};
         for (const m of cachedMethods) {
           tr[m.id] = Trend.computeTrend(tickerHist[m.id] || [], m.thresholdOp);
         }
+        this._trendsCache = tr;
         return tr;
-      })()
+      }
     });
-    // Tag-36: Pass-Count-Ranking
-    const lastRow = rows[rows.length - 1];
     let passCount = 0, computableCount = 0;
     const failedMethods = [];
     for (const m of cachedMethods) {
@@ -136,9 +173,16 @@ async function evaluateAllStocks(args) {
     if (ro40 && ro40.computable && ro40.components) {
       lastRow.growthYoYFromRo40  = ro40.components.growth  != null ? ro40.components.growth  : lastRow.growthYoY;
       lastRow.fcfMarginFromRo40  = ro40.components.fcfMargin != null ? ro40.components.fcfMargin : lastRow.fcfMargin;
+      // audit F-A-2026-06-21: capture the R40 FCF-margin source so the 'FCF
+      // Margin' columns can flag when the displayed value is R40's 3y-annual-
+      // median fallback (rule-of-40.js sets fcfMarginSource='3y-annual-median'
+      // when shallow-negative TTM is replaced) rather than the TTM FCF margin.
+      // Prevents silently reporting a fallback figure as if it were TTM.
+      lastRow.fcfMarginSource    = ro40.components.fcfMarginSource || 'TTM';
     } else {
       lastRow.growthYoYFromRo40  = lastRow.growthYoY;
       lastRow.fcfMarginFromRo40  = lastRow.fcfMargin;
+      lastRow.fcfMarginSource    = 'TTM';
     }
     // Tag 221c (audit F-GR-005 fix): use explicit `!= null` check so zero is preserved.
     lastRow.grossMargin = (stock.metrics && stock.metrics.grossMargin && stock.metrics.grossMargin.value != null) ? stock.metrics.grossMargin.value : null;
@@ -277,8 +321,12 @@ function renderHTML(rows, methods) {
   ];
   const TOP_DD = 10;
   // Build top-10 per metric (only computable)
+  // audit F-A-2026-06-21: rank over discoveryRows (DataGuard-disqualified
+  // stocks excluded), matching the Top-N-per-Method cards and making the
+  // header's "N disqualified by DataGuards" count consistent with the ranked
+  // tables — previously the deep-dive still surfaced disqualified names.
   const deepDiveLists = deepDiveMetrics.map(dm => {
-    const sorted = rows
+    const sorted = discoveryRows
       .filter(r => r[dm.key] != null && Number.isFinite(r[dm.key]))
       .sort((a, b) => dm.higherIsBetter ? b[dm.key] - a[dm.key] : a[dm.key] - b[dm.key])
       .slice(0, TOP_DD);
@@ -310,8 +358,12 @@ function renderHTML(rows, methods) {
         }
         const v = entry[dm.key];
         const color = metricColor(v, dm.threshold, dm.higherIsBetter);
+        // audit F-A-2026-06-21: flag the FCF-Margin deep-dive value when it is
+        // R40's 3y-annual-median fallback (entry.fcfMarginSource != 'TTM'), so
+        // the column does not silently present a fallback figure as TTM.
+        const ddMed = dm.key === 'fcfMarginFromRo40' && entry.fcfMarginSource && entry.fcfMarginSource !== 'TTM';
         h += '<td><strong style="color:#e2e8f0;">' + escHtml(entry.ticker) + '</strong></td>';
-        h += '<td style="text-align:right;color:' + color + ';font-weight:700;">' + fmtMetric(v, dm) + '</td>';
+        h += '<td style="text-align:right;color:' + color + ';font-weight:700;"' + (ddMed ? ' title="~med: R40 3y-annual-median fallback, not TTM"' : '') + '>' + escHtml(fmtMetric(v, dm)) + (ddMed ? ' <span style="color:#94a3b8;font-weight:400;font-size:9px;">~med</span>' : '') + '</td>';
       }
       h += '</tr>';
     }
@@ -393,8 +445,11 @@ function renderHTML(rows, methods) {
 
     const growthV = r.growthYoYFromRo40;
     const fcfV    = r.fcfMarginFromRo40;
+    // audit F-A-2026-06-21: flag fallback-sourced FCF margin so the cell does
+    // not silently present R40's 3y-annual-median as TTM FCF margin.
+    const fcfMed  = r.fcfMarginSource && r.fcfMarginSource !== 'TTM';
     const growthDisplay = growthV != null ? growthV.toFixed(1) + '%' : '—';
-    const fcfDisplay    = fcfV   != null ? fcfV.toFixed(1) + '%'    : '—';
+    const fcfDisplay    = fcfV   != null ? fcfV.toFixed(1) + '%' + (fcfMed ? ' ~med' : '') : '—';
     const growthColor   = growthV != null ? metricColor(growthV, 20, true) : '#94a3b8';
     const fcfColor      = fcfV   != null ? metricColor(fcfV, 10, true)   : '#94a3b8';
 
@@ -416,7 +471,7 @@ function renderHTML(rows, methods) {
       <td>${escHtml(r.sector)}</td>
       <td style="font-weight:700;font-size:12px;color:${ro40Color};" title="growth + FCF margin = Rule of 40">${escHtml(ro40Display)}</td>
       <td style="color:${growthColor};font-weight:600;">${escHtml(growthDisplay)}</td>
-      <td style="color:${fcfColor};font-weight:600;">${escHtml(fcfDisplay)}</td>
+      <td style="color:${fcfColor};font-weight:600;"${fcfMed ? ' title="~med: R40 3y-annual-median fallback, not TTM FCF margin"' : ''}>${escHtml(fcfDisplay)}</td>
       <td style="color:#fca5a5;font-size:11px;">${escHtml(failedShort) || '<span style="color:#10b981;">— alle pass —</span>'}</td>
     </tr>`;
   }).join('');
@@ -509,7 +564,10 @@ function renderHTML(rows, methods) {
     },
     { id: 'fcf-margin',        label: 'FCF Margin',        threshold: 10,  better: 'high',
       getValue: r => r.fcfMarginFromRo40,
-      getDisplay: r => r.fcfMarginFromRo40 != null ? r.fcfMarginFromRo40.toFixed(1) + '%' : null
+      // audit F-A-2026-06-21: append '~med' when the value is R40's
+      // 3y-annual-median fallback, not TTM FCF margin — keeps the R40-consistent
+      // ranking but flags that the displayed figure is not a TTM measurement.
+      getDisplay: r => r.fcfMarginFromRo40 != null ? r.fcfMarginFromRo40.toFixed(1) + '%' + (r.fcfMarginSource && r.fcfMarginSource !== 'TTM' ? ' ~med' : '') : null
     },
     { id: 'revenue-growth-3y', label: 'Rev Growth 3Y CAGR',threshold: 25,  better: 'high',
       getValue: r => { const res = r.results['revenue-growth-3y']; return (res && res.computable && Number.isFinite(res.value)) ? res.value : null; },
@@ -542,8 +600,12 @@ function renderHTML(rows, methods) {
   ];
   const LEADERBOARD_TOP = 30;
 
+  // audit F-A-2026-06-21: rank the Kennzahl-Rangliste over discoveryRows
+  // (DataGuard-disqualified stocks excluded) so disqualified names no longer
+  // appear in the leaderboards while the header reports them as "disqualified".
+  // Makes the header count and the ranked tables agree (finding 06).
   const leaderboardData = LEADERBOARD_METRICS.map(lm => {
-    const valid = rows
+    const valid = discoveryRows
       .filter(r => lm.getValue(r) != null)
       .map(r => ({ row: r, val: lm.getValue(r), display: lm.getDisplay(r) }));
     if (lm.better === 'high') valid.sort((a, b) => b.val - a.val);
@@ -606,7 +668,12 @@ function renderHTML(rows, methods) {
   ${leaderboardPanesHtml}
 </div>`;
 
-  return `<!DOCTYPE html>
+  // audit F-A-2026-06-21: assign the HTML to a local instead of returning it
+  // inline, so renderHTML can also hand back the per-method pass/computable
+  // counts (_methodCounts) it already swept. Prevents the duplicate O(M×N)
+  // pass-count sweep on the 19k-ticker critical path: main() reuses these
+  // counts for its console summary instead of recomputing from scratch.
+  const html = `<!DOCTYPE html>
 <html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Karl's Stock-Screener — Methoden-Matrix ${generatedAt}</title>
 <style>
   body { font-family: ui-sans-serif, system-ui, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; padding: 24px; line-height: 1.4; }
@@ -1208,6 +1275,10 @@ var STOCK_DATA_MAP = ${JSON.stringify(stockDataMap).replace(/</g, '\\u003c')};
 </script>
 
 </body></html>`;
+  // audit F-A-2026-06-21: return the precomputed per-method counts alongside
+  // the HTML so main() reuses them (single source of truth) instead of
+  // re-running the same nested rows×methods loop just to print the summary.
+  return { html, methodCounts: _methodCounts };
 }
 
 async function main() {
@@ -1216,7 +1287,10 @@ async function main() {
   const rows = await evaluateAllStocks(args);
   console.log(`Evaluated ${rows.length} stocks`);
   const methods = Runner.getMethods();
-  const html = renderHTML(rows, methods);
+  // audit F-A-2026-06-21: destructure the precomputed per-method counts from
+  // renderHTML and reuse them below — avoids a second full O(M×N) pass-count
+  // sweep over the (up to 19k-ticker × ~83-method) universe just for logging.
+  const { html, methodCounts } = renderHTML(rows, methods);
   // Tag 221c (audit F-GR-009 LOW fix): atomic write — a CI cancellation
   // mid-write previously left a half-written file that GitHub Pages then
   // served (the file was many MB before Tag 221c's STOCK_DATA_MAP fix).
@@ -1224,17 +1298,11 @@ async function main() {
   console.log(`✓ Report written: ${args.out} (${html.length} bytes)`);
   console.log('');
   console.log('Pass-counts per method:');
-  // Tag 223c (audit F-222a-4 HIGH fix): collapse two rows.filter sweeps
-  // per method into a single forward pass over rows. Previously M × N × 2
-  // accesses (83 × 19k × 2 ≈ 3.2M at full scale → ~7s). Now M × N once.
-  const passCounts = {};
-  for (const r of rows) {
-    for (const m of methods) {
-      const c = passCounts[m.id] || (passCounts[m.id] = { computable: 0, passing: 0 });
-      const x = r.results[m.id];
-      if (x && x.computable) { c.computable++; if (x.pass) c.passing++; }
-    }
-  }
+  // audit F-A-2026-06-21: reuse the counts already computed inside renderHTML
+  // (returned as methodCounts) instead of re-running the identical nested
+  // rows×methods sweep here. Prevents the duplicate O(M×N) pass-count sweep on
+  // the 19k-ticker critical path (was ~3.2M result-object accesses done twice).
+  const passCounts = methodCounts || {};
   for (const m of methods) {
     const c = passCounts[m.id] || { computable: 0, passing: 0 };
     console.log(`  ${m.label.padEnd(20)} ${c.passing.toString().padStart(2)} / ${c.computable.toString().padStart(2)} pass / computable`);

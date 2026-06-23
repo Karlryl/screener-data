@@ -125,6 +125,10 @@ async function fetchOTCMarkets() {
   console.log('  [OTC-Markets] Fetching OTCQX, OTCQB, Expert tiers (Tag 165)...');
 
   let totalRecords = null;
+  // audit F-A-2026-06-21: track per-page failures so a partial OTC pull is
+  // detectable by the aggregator (mirrors refresh-universe.js F-DP-037
+  // zero-quote alert) instead of being hidden behind a lone console.error.
+  let pageErrors = 0;
 
   for (let page = 1; page <= MAX_PAGES; page++) {
     try {
@@ -143,7 +147,11 @@ async function fetchOTCMarkets() {
       let added = 0;
       for (const row of rows) {
         // Field names vary: symbol / ticker / Symbol / tickerSymbol
-        const rawSym = row.symbol || row.ticker || row.Symbol || row.tickerSymbol || '';
+        // audit F-A-2026-06-21: prevents non-string symbol field crashing the
+        // page and truncating OTC pagination — a numeric symbol (e.g. an
+        // Expert-Market numeric placeholder) is truthy so `|| ''` won't fire,
+        // and (12345).trim is not a function. Coerce via String() defensively.
+        const rawSym = String(row.symbol ?? row.ticker ?? row.Symbol ?? row.tickerSymbol ?? '');
         const sym = rawSym.trim().toUpperCase();
         if (!sym) continue;
         // Tag 217g (audit F-217a-01 HIGH fix): same class-share regex bug
@@ -181,8 +189,15 @@ async function fetchOTCMarkets() {
       await sleep(PAGE_DELAY_MS);
     } catch (e) {
       console.error(`  [OTC-Markets] Page ${page} failed: ${e.message}`);
-      // Non-fatal: stop pagination for this batch but keep what we have
-      break;
+      // audit F-A-2026-06-21: prevents one bad page truncating the entire OTC
+      // tail. A single transient error (HTTP 5xx, JSON-parse) on an
+      // intermediate page used to `break` and silently drop all remaining
+      // pages (~3000 tickers). fetchOTCPage already retries timeouts; for any
+      // other error, skip just the bad page and continue to the next so the
+      // tail still gets fetched.
+      pageErrors++;
+      await sleep(PAGE_DELAY_MS);
+      continue;
     }
   }
 
@@ -193,6 +208,12 @@ async function fetchOTCMarkets() {
   if (totalRecords !== null && totalRecords > MAX_PAGES * PAGE_SIZE) {
     const missed = totalRecords - MAX_PAGES * PAGE_SIZE;
     console.warn(`  [OTC-Markets] HIT MAX_PAGES (${MAX_PAGES}) — ${missed} tickers truncated. Bump MAX_PAGES if OTC totalRecords keeps growing.`);
+  }
+  // audit F-A-2026-06-21: surface page failures so a partial OTC pull is
+  // visible to the aggregator/operator rather than silently returning a Map
+  // missing pages. Loud warning mirrors the zero-quote alert pattern.
+  if (pageErrors > 0) {
+    console.warn(`  [OTC-Markets] WARNING: ${pageErrors} page(s) failed and were skipped — OTC universe is PARTIAL (${result.size} tickers). Some symbols may be missing.`);
   }
   console.log(`  [OTC-Markets] Total OTC tickers: ${result.size}`);
   return result;

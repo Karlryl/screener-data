@@ -53,6 +53,18 @@ const TIER_STYLE = {
   REJECT:    { bg: '#475569', fg: '#0f172a', label: 'R'  }
 };
 
+// audit F-A-2026-06-21: single source of truth for the tier cutoff ladder.
+// Previously the 80/65/50 thresholds were duplicated as inline ternaries in
+// renderModes and openDetail, free to drift apart. Defined once here and the
+// SAME function body is injected verbatim into the client payload below.
+const TIER_THRESHOLDS = { A: 80, B: 65, NEAR_MISS: 50 };
+function scoreToTier(score) {
+  return score >= TIER_THRESHOLDS.A ? 'A'
+       : score >= TIER_THRESHOLDS.B ? 'B'
+       : score >= TIER_THRESHOLDS.NEAR_MISS ? 'NEAR_MISS'
+       : 'REJECT';
+}
+
 // ----------- IO helpers -----------
 function safeRead(p) { try { return fs.readFileSync(p, 'utf8'); } catch (e) { return null; } }
 function safeJSON(p) { const t = safeRead(p); if (!t) return null; try { return JSON.parse(t); } catch (e) { return null; } }
@@ -70,10 +82,12 @@ function tickerToSnapshotPath(ticker) {
   return path.join(SNAPSHOTS_DIR, fn);
 }
 
-function readSnapshotMeta(ticker) {
-  const s = safeJSON(tickerToSnapshotPath(ticker));
-  if (!s) return null;
-  const m = s.meta || {};
+// audit F-A-2026-06-21: prevents O(tickers) double disk-read+JSON.parse of the
+// SAME snapshot per ticker. readSnapshotMeta/readQuarterly now derive from an
+// already-parsed snapshot object passed by the caller (buildDetailIndex reads once).
+function readSnapshotMeta(snap) {
+  if (!snap) return null;
+  const m = snap.meta || {};
   return {
     name: m.name || m.longName || m.shortName || null,
     sector: m.sector || null,
@@ -81,11 +95,10 @@ function readSnapshotMeta(ticker) {
   };
 }
 
-// Read quarterly data for a single ticker — used by modal detail
-function readQuarterly(ticker) {
-  const s = safeJSON(tickerToSnapshotPath(ticker));
-  if (!s) return null;
-  const ts = s.timeseries || {};
+// Read quarterly data from an already-parsed snapshot — used by modal detail
+function readQuarterly(snap) {
+  if (!snap) return null;
+  const ts = snap.timeseries || {};
   function pluck(arr) {
     if (!Array.isArray(arr)) return null;
     return arr.slice(0, 4).map(v => v == null ? null : (typeof v === 'number' ? v : v.value));
@@ -146,12 +159,16 @@ function buildDetailIndex(picks, methodsHistory, metricLeaderboards, nameMap) {
   for (const ticker of tickers) {
     const mh = methodsHistory && methodsHistory.stocks && methodsHistory.stocks[ticker];
     if (!mh) { details[ticker] = { results: {}, inputs: null, quarterly: null, meta: nameMap[ticker] || null }; continue; }
+    // audit F-A-2026-06-21: read+parse each snapshot ONCE; both quarterly and
+    // meta derive from the same parsed object (was up to two independent
+    // safeJSON reads of the same file per ticker — readQuarterly + readSnapshotMeta).
+    const snap = safeJSON(tickerToSnapshotPath(ticker));
     details[ticker] = {
       results: mh.results || {},
       inputs: mh.inputs || null,
       quality: mh.quality || null,
-      quarterly: readQuarterly(ticker),
-      meta: nameMap[ticker] || readSnapshotMeta(ticker) || null
+      quarterly: readQuarterly(snap),
+      meta: nameMap[ticker] || readSnapshotMeta(snap) || null
     };
   }
   return details;
@@ -184,8 +201,26 @@ function renderFallback() {
 
 function render(picks, methodsHistory) {
   const asOf = picks && picks.asOf ? picks.asOf.slice(0,16).replace('T',' ') + 'Z' : '—';
-  const universeSize = picks && picks.universeSize ? picks.universeSize : (methodsHistory && methodsHistory.summary && methodsHistory.summary.totalStocks) || 0;
+  // audit F-A-2026-06-21: a legitimate universeSize of 0 is falsy and fell through to
+  // methods totalStocks; use a finite check so 0 renders as 0.
+  const universeSize = (picks && Number.isFinite(picks.universeSize)) ? picks.universeSize : ((methodsHistory && methodsHistory.summary && methodsHistory.summary.totalStocks) || 0);
   const methodCount = methodsHistory && methodsHistory.summary && methodsHistory.summary.methodCount || 0;
+
+  // audit F-A-2026-06-21: picks (latest.json) and methods-history are loaded from
+  // independent sources. If their dates disagree the dashboard would silently blend
+  // today's mode-picks/scores with a stale methods snapshot (leaderboards + detail
+  // modal) while presenting picks.asOf as the single authoritative 'Stand'. Compare
+  // the two dates and, on mismatch, warn + surface a visible banner instead.
+  const picksDate = (picks && picks.asOf) ? String(picks.asOf).slice(0, 10) : null;
+  const methodsDate = (methodsHistory && methodsHistory.date) ? String(methodsHistory.date).slice(0, 10) : null;
+  let staleBanner = '';
+  if (picksDate && methodsDate && picksDate !== methodsDate) {
+    console.warn('⚠ Date mismatch: mode-picks Stand ' + picksDate + ' vs Kennzahlen Stand ' + methodsDate + ' — dashboard blends two snapshots.');
+    staleBanner = '<div style="background:#7c2d12;color:#fed7aa;border:1px solid #c2410c;border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:13px">'
+      + '⚠ Datenstände weichen ab: <strong>Mode-Picks Stand ' + escapeHTML(picksDate) + '</strong> · '
+      + '<strong>Kennzahlen Stand ' + escapeHTML(methodsDate) + '</strong>. Leaderboards und Detail-Ansicht nutzen die Kennzahlen-Daten.'
+      + '</div>';
+  }
 
   const nameMap = buildTickerNameMap(picks);
 
@@ -324,7 +359,7 @@ table.lb td.tier { text-align: right; width:42px; }
       <a href="${REPO_URL}" target="_blank">📁 Repo</a>
     </div>
   </header>
-
+  ${staleBanner}
   <div class="tabs" id="tabs">
     <button class="tab active" data-tab="modes">🎯 Top per Modus</button>
     <button class="tab" data-tab="metrics">📐 Top per Kennzahl</button>
@@ -369,6 +404,11 @@ const DATA = ${dataJSON};
 const MODE_DEFS = ${JSON.stringify(MODE_DEFINITIONS)};
 const TIER_STYLE = ${JSON.stringify(TIER_STYLE)};
 const METRIC_DEFS = ${JSON.stringify(METRIC_LEADERBOARDS)};
+// audit F-A-2026-06-21: client tiering injected from the single server-side
+// source (TIER_THRESHOLDS + scoreToTier) so the dashboard cannot drift from
+// the canonical 80/65/50 ladder.
+const TIER_THRESHOLDS = ${JSON.stringify(TIER_THRESHOLDS)};
+${scoreToTier.toString()}
 
 function fmt(value, kind) {
   if (value == null || !Number.isFinite(value)) return '—';
@@ -413,7 +453,8 @@ function renderModes() {
         // always finite when primaryMetric exists.
         const pmv = p.primaryMetric && p.primaryMetric.value;
         const valFmt = (pmv != null && Number.isFinite(pmv)) ? pmv.toFixed(1) : '—';
-        const tier = p.score >= 80 ? 'A' : p.score >= 65 ? 'B' : p.score >= 50 ? 'NEAR_MISS' : 'REJECT';
+        // audit F-A-2026-06-21: use shared scoreToTier instead of a duplicated ternary.
+        const tier = scoreToTier(p.score);
         parts.push('<tr>');
         parts.push('<td class="rank">'+(i+1)+'</td>');
         parts.push('<td class="tk"><button onclick="openDetail(\\''+p.ticker.replace(/'/g,"\\\\'")+'\\')">'+escapeAttr(p.ticker)+'</button></td>');
@@ -464,15 +505,32 @@ function escapeAttr(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// audit F-A-2026-06-21: prevents sparkline/table x-axis misalignment. Callers
+// now pass the SAME ordered, null-preserving array the table renders (no internal
+// reverse). Each slot keeps its fixed x-position (i / arr.length-1) so a missing
+// quarter leaves a gap instead of rescaling the whole series onto fewer columns.
+// Consecutive finite points are joined; nulls break the polyline.
 function renderSparkline(arr, width, height, color) {
   if (!arr || arr.length < 2) return '';
-  const vals = arr.slice().reverse().filter(v => v != null && Number.isFinite(v));
-  if (vals.length < 2) return '';
-  const min = Math.min(...vals), max = Math.max(...vals);
+  const finite = arr.filter(v => v != null && Number.isFinite(v));
+  if (finite.length < 2) return '';
+  const min = Math.min(...finite), max = Math.max(...finite);
   const range = max - min || 1;
-  const step = width / (vals.length - 1);
-  const pts = vals.map((v, i) => i*step + ',' + (height - ((v - min) / range) * height).toFixed(1)).join(' ');
-  return '<svg class="spark" width="'+width+'" height="'+height+'" viewBox="0 0 '+width+' '+height+'"><polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="1.5"/></svg>';
+  const step = width / (arr.length - 1);
+  // Build polyline segments, breaking at null/NaN gaps so x stays column-aligned.
+  const segments = [];
+  let cur = [];
+  arr.forEach((v, i) => {
+    if (v == null || !Number.isFinite(v)) { if (cur.length) { segments.push(cur); cur = []; } return; }
+    cur.push(i*step + ',' + (height - ((v - min) / range) * height).toFixed(1));
+  });
+  if (cur.length) segments.push(cur);
+  const lines = segments
+    .filter(seg => seg.length >= 2)
+    .map(seg => '<polyline points="'+seg.join(' ')+'" fill="none" stroke="'+color+'" stroke-width="1.5"/>')
+    .join('');
+  if (!lines) return '';
+  return '<svg class="spark" width="'+width+'" height="'+height+'" viewBox="0 0 '+width+' '+height+'">'+lines+'</svg>';
 }
 
 function openDetail(ticker) {
@@ -496,7 +554,8 @@ function openDetail(ticker) {
     const picks = DATA.modePicks[m.id] || [];
     const inPick = picks.find(p => p.ticker === ticker);
     if (inPick) {
-      const tier = inPick.score >= 80 ? 'A' : inPick.score >= 65 ? 'B' : inPick.score >= 50 ? 'NEAR_MISS' : 'REJECT';
+      // audit F-A-2026-06-21: use shared scoreToTier instead of a duplicated ternary.
+      const tier = scoreToTier(inPick.score);
       modeStatus.push('<span style="margin-right:14px"><strong style="color:'+m.color+'">'+m.icon+' '+m.label+'</strong> · Score '+inPick.score+' · '+tierBadge(tier)+'</span>');
     }
   }
@@ -525,7 +584,9 @@ function openDetail(ticker) {
         const display = arr.slice(0, 4).reverse();
         parts.push('<tr><td>'+label+'</td>');
         for (const v of display) parts.push('<td>'+(v == null ? '—' : fmt(v, 'usd'))+'</td>');
-        parts.push('<td>'+renderSparkline(arr.slice(0,4), 70, 18, color)+'</td>');
+        // audit F-A-2026-06-21: feed the sparkline the SAME reversed, null-preserving
+        // array as the table cells so the trend line aligns column-for-column with the numbers.
+        parts.push('<td>'+renderSparkline(display, 70, 18, color)+'</td>');
         parts.push('</tr>');
       }
       parts.push('</tbody></table>');

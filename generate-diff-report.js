@@ -38,8 +38,24 @@ function main() {
     writeFileAtomic(args.out, '<html><body style="background:#0f172a;color:#e2e8f0;font-family:sans-serif;padding:30px;"><h1>Watchlist-Diff</h1><p>Need ≥2 history snapshots — currently '+files.length+'.</p></body></html>');
     return;
   }
-  const latest = JSON.parse(fs.readFileSync(path.join(args.history, files[files.length-1]), 'utf8'));
-  const previous = JSON.parse(fs.readFileSync(path.join(args.history, files[files.length-2]), 'utf8'));
+  // audit F-A-2026-06-21: guard parse + .stocks shape so a truncated/old-schema snapshot
+  // writes a visible error report instead of throwing — the workflow's continue-on-error
+  // would otherwise silently leave a stale diff-report.html deployed.
+  const _errHtml = (msg) => '<html><body style="background:#0f172a;color:#e2e8f0;font-family:sans-serif;padding:30px;"><h1>Watchlist-Diff</h1><p>Error: ' + msg + '</p></body></html>';
+  let latest, previous;
+  try {
+    latest = JSON.parse(fs.readFileSync(path.join(args.history, files[files.length-1]), 'utf8'));
+    previous = JSON.parse(fs.readFileSync(path.join(args.history, files[files.length-2]), 'utf8'));
+  } catch (e) {
+    console.error('::error::[generate-diff-report] cannot parse latest/previous snapshot: ' + e.message);
+    writeFileAtomic(args.out, _errHtml('could not parse snapshots — ' + e.message));
+    return;
+  }
+  if (!latest || !latest.stocks || !previous || !previous.stocks) {
+    console.error('::error::[generate-diff-report] snapshot missing .stocks');
+    writeFileAtomic(args.out, _errHtml('snapshot missing .stocks.'));
+    return;
+  }
 
   const passCountDiffs = [];      // {ticker, prevPass, currPass}
   const methodValueDiffs = [];    // {ticker, methodId, prev, curr, delta}
@@ -103,12 +119,18 @@ td{padding:8px;border-bottom:1px solid #131c2b}
     html += '</tbody></table>';
   }
 
-  html += `<h2>Methoden-Werte-Changes ≥ 20% (${methodValueDiffs.length})</h2>`;
+  // audit F-A-2026-06-21: sort+slice once into a named const (copy via [...] so the
+  // source array is not mutated in place during render) and report "top N of M" so the
+  // heading count matches the rows actually shown — prevents heading/row mismatch.
+  const topMethodValueDiffs = [...methodValueDiffs]
+    .sort((a, b) => Math.abs(b.deltaPct) - Math.abs(a.deltaPct))
+    .slice(0, 50);
+  html += `<h2>Methoden-Werte-Changes ≥ 20% (top ${Math.min(50, methodValueDiffs.length)} of ${methodValueDiffs.length})</h2>`;
   if (methodValueDiffs.length === 0) {
     html += `<p class="sub">Keine größeren Werte-Changes.</p>`;
   } else {
     html += '<table><thead><tr><th>Ticker</th><th>Method</th><th>Vorher</th><th>Jetzt</th><th>ΔPct</th><th>Pass-Flip</th></tr></thead><tbody>';
-    for (const d of methodValueDiffs.sort((a,b)=>Math.abs(b.deltaPct)-Math.abs(a.deltaPct)).slice(0,50)) {
+    for (const d of topMethodValueDiffs) {
       const dirClass = d.deltaPct > 0 ? 'up' : 'down';
       html += `<tr><td><strong>${escHtml(d.ticker)}</strong></td><td>${escHtml(d.methodId)}</td><td>${d.prev != null ? d.prev.toFixed(2) : '—'}</td><td>${d.curr != null ? d.curr.toFixed(2) : '—'}</td><td class="${dirClass}">${d.deltaPct > 0 ? '+' : ''}${d.deltaPct.toFixed(0)}%</td><td>${d.flipped ? '<span class="flag">YES</span>' : ''}</td></tr>`;
     }

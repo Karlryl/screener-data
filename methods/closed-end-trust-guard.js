@@ -100,7 +100,11 @@ const TRUST_INDUSTRY_TOKENS = [
 const FIN_SECTOR_TOKENS = new Set(['financial services', 'real estate']);
 const FIN_SECTOR = 'financial services';  // legacy single-value (kept for backwards compat in components)
 const REV_ASSETS_FLOOR  = 0.10;   // 10% — BRK-B at 30.4% safely above
-const REV_VOL_RATIO_MAX = 3.0;    // 3x peak/trough only counts with a non-positive year
+const REV_VOL_RATIO_MAX = 3.0;    // 3x peak/trough required for the lumpy-collapse path
+// audit F-A-2026-06-21: a positive year below this fraction of peak counts as a "collapse"
+// (consistent with the 3x ratio gate). Used only on the non-monotone path, so it never
+// touches a monotone-growth anchor whose low year is just its historical starting base.
+const REV_COLLAPSE_FRAC = 1 / 3;
 const FCF_ASSETS_FLOOR  = 0.005;  // 0.5% — BRK-B at 2.05% safely above
 
 function _unwrap(v) {
@@ -141,7 +145,7 @@ function evaluate(stock) {
     s2 = revAssetsRatio < REV_ASSETS_FLOOR;
   }
 
-  // --- Signal S3: gain/loss-accounting smoking gun (neg or zero rev year) ---
+  // --- Signal S3: gain/loss-accounting smoking gun (neg/zero year, or lumpy collapse) ---
   let s3 = false;
   let revVolRatio = null;
   if (revArr.length >= 2) {
@@ -150,12 +154,32 @@ function evaluate(stock) {
     const minPos = absVals.filter(v => v > 0).reduce((a, b) => Math.min(a, b), Infinity);
     const maxAbs = absVals.reduce((a, b) => Math.max(a, b), 0);
     revVolRatio = (minPos > 0 && Number.isFinite(minPos)) ? maxAbs / minPos : null;
-    // Fire if any rev year <= 0 (impossible for an operating business — the gain/loss-accounting
-    // smoking gun). bug-fix (audit 2026-06-21): the old "OR (revVol>3x AND hasNonPositive)" clause
-    // was DEAD — its hasNonPositive term is already covered by the leading hasNonPositive, so
-    // REV_VOL_RATIO_MAX never affected the verdict. Reduced to the operative condition; revVolRatio
-    // stays in components as a diagnostic only. Behavior-neutral.
-    s3 = hasNonPositive;
+    // Both audits (loop/formel-haertung + program/audit-hardening, 2026-06-21) independently
+    // diagnosed the old `hasNonPositive || (revVolRatio > MAX && hasNonPositive)` clause as DEAD:
+    // by the absorption law `A || (B && A) === A`, the volatility term could never change s3, so
+    // REV_VOL_RATIO_MAX never affected the verdict and S3 collapsed to "any year ≤ 0".
+    //
+    // audit F-A-2026-06-21 (A-methods-guards-quality-03): rather than just delete the dead term,
+    // revive its INTENT. The collapse to "any year ≤ 0" never caught the documented case: a trust
+    // whose gain/loss "revenue" swings wildly but never prints strictly negative (gain years + a
+    // near-zero/collapsed year). FAILURE MODE PREVENTED: such a lumpy-but-never-negative trust
+    // scoring only 1 signal and leaking into R40.
+    //
+    // Decouple the volatility path so it fires on its own, but gate it on a NON-MONOTONE collapse
+    // (a near-zero positive year that is NOT just a growth company's low starting base) so that
+    // monotone-growing operating businesses with a high peak/trough ratio (NVDA 8.0x, CRDO 4.1x —
+    // newest year highest) are never caught. Anchors verified s3=false across all snapshots.
+    let monotoneGrowth = true; // newest-first: every newer year ≥ the next-older year ⇒ pure growth
+    for (let i = 0; i < revArr.length - 1; i++) {
+      if (!(revArr[i] >= revArr[i + 1])) { monotoneGrowth = false; break; }
+    }
+    const hasNearZeroYear = maxAbs > 0 &&
+      absVals.some(v => v > 0 && v < REV_COLLAPSE_FRAC * maxAbs);
+    const lumpyCollapse = revVolRatio != null && revVolRatio > REV_VOL_RATIO_MAX &&
+      !monotoneGrowth && hasNearZeroYear;
+    // Fire if any rev year ≤ 0 (impossible for an operating business),
+    // OR peak/trough > 3x with a non-monotone near-zero collapse (lumpy gain/loss revenue).
+    s3 = hasNonPositive || lumpyCollapse;
   }
 
   // --- Signal S4: Financial-or-Real-Estate sector FCF pass-through (anti-leverage check) ---

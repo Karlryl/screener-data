@@ -19,14 +19,16 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const SNAP_DIR = path.join(ROOT, 'snapshots');
 
-// --- inlined copies of pull-yahoo.js helpers (lines ~1205, ~1240) ---
-const WINDOWS_RESERVED = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i;
-function safeSnapshotFilename(ticker) {
-  const sanitized = String(ticker).replace(/[^A-Z0-9.-]/gi, '_');
-  const stem = sanitized.split('.')[0];
-  if (WINDOWS_RESERVED.test(stem)) return '_' + sanitized + '.json';
-  return sanitized + '.json';
-}
+// audit F-A-2026-06-22: import the canonical safeSnapshotFilename from
+// lib/snapshot-fs.js instead of re-inlining a 4th copy. Prevents a silent
+// verification-value lapse: the inlined copy here was an older, narrower
+// variant (missing the CONIN$/CONOUT$ reserved names AND the empty-/dotted-stem
+// `_` prefixing that the live writer+reader use). For tickers like `.DE` or
+// `CONIN$` the harness would compute a different on-disk filename than the real
+// snapshot, then fs.existsSync → false → treat the snapshot as missing and
+// report a WRONG stale/full-pull result for those tickers. Sharing the one
+// helper keeps the harness's filename mapping bit-identical to production.
+const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 
 const FUNDAMENTALS_MAX_AGE_DAYS = parseInt(process.env.FUNDAMENTALS_MAX_AGE_DAYS || '7', 10);
 const FUNDAMENTALS_MAX_AGE_MS = FUNDAMENTALS_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
@@ -81,9 +83,15 @@ function existingSnapshotMissingTag211lFields(ticker, outputDir) {
     const hasCA = Array.isArray(bal) && bal[0] && Number.isFinite(bal[0].currentAssets);
     const hasCL = Array.isArray(bal) && bal[0] && Number.isFinite(bal[0].currentLiabilities);
     const hasTL = Array.isArray(bal) && bal[0] && Number.isFinite(bal[0].totalLiabilities);
-    // Tag 219 fields, also part of the schema gate per the comment block:
+    // audit F-A-2026-06-22: DIAGNOSTIC-ONLY fields — these do NOT participate in
+    // the stale gate. The actual gate is `!(hasSGA || hasDepr) || !hasCA` (see
+    // probeWouldFlag below, mirroring pull-yahoo.js). annualShares and the three
+    // quote-summary fields are surfaced solely into `missing[]` for reporting;
+    // the prior comment wrongly implied they were "part of the schema gate",
+    // which would mislead a reader into thinking a missing annualShares /
+    // targetMedianPrice forces a full pull (it does not).
     const hasShares = Array.isArray(A.annualShares) && A.annualShares.length > 0;
-    // Tag 219 quote-summary fields surfaced into the snapshot:
+    // Tag 219 quote-summary fields surfaced into the snapshot (diagnostic-only):
     const hasTgtMed = Number.isFinite(s && s.financialData && s.financialData.targetMedianPrice);
     const hasEarnHist = s && (s.earningsHistory != null);
     const hasMHB = s && (s.majorHoldersBreakdown != null);

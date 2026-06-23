@@ -50,7 +50,17 @@ const MIN_VINTAGES = 4;        // need ≥4 distinct dates per method for stat m
 const MIN_SAMPLES_PER_GROUP = 10; // ≥10 stocks in each (pass / fail) group
 // F-EVAL-2026-06-20 (eval-oracle hardening). These gate the evidenceGate so the
 // audit stops certifying contaminated cohorts as "ok":
-const CACHE_SCHEMA_VERSION = 2;       // bump discards a pre-fix cache whose entries lack
+// audit F-A-2026-06-21: bumped 2→3. The cache entry shape changed from a bare
+// Array of contributions to a header object { entries, droppedPass, droppedFail,
+// droppedTickers, realEntryAsOf } so that (a) the delisting-bias attrition
+// imbalance warning can be re-emitted on cache replay instead of vanishing
+// forever once a vintage is cached (prevents: asymmetric-attrition diagnostic
+// going silent for cached vintages), and (b) `matured` can be RECOMPUTED on
+// replay from current benchmark/price data rather than replaying a frozen
+// first-touch flag (prevents: canonicalFrac gate keying off stale benchmark
+// availability). Bumping forces a clean one-time rebuild into the new shape.
+// (This is CACHE_SCHEMA_VERSION, NOT FTS_CACHE_VERSION — bumping is allowed.)
+const CACHE_SCHEMA_VERSION = 3;       // bump discards a pre-fix cache whose entries lack
                                       // `matured` and may hold manufactured 0-day-window zeros.
 const CANONICAL_FRAC_MIN = 0.80;      // ≥80% of contributions must resolve via the shared
                                       // canonical entry/exit dates (not per-ticker snap drift).
@@ -210,13 +220,24 @@ function main() {
       // Pre-market snapshots shift entry to T+1 via getEntryDate; using asOf means
       // a vintage generated at 20:00 UTC on day D (EDT, pre-close) would have its
       // maturity check applied from D instead of D+1, letting immature vintages
-      // through. Use asOf+1 as a conservative upper bound for realEntryAsOf so
-      // we never include vintages whose exit price isn't yet available.
-      // (The exact realEntryAsOf is computed after file load below — this pre-load
-      // guard uses +1 day to be safe without requiring a file read.)
-      const conservativeEntry = WF.addDaysIso(asOf, 1);
-      const futureDate = WF.addDaysIso(conservativeEntry, days);
-      if (futureDate > today) continue;
+      // through.
+      //
+      // audit F-A-2026-06-21: prevents pre-gate desyncing from getEntryDate
+      // threshold → look-ahead (too loose) or corpus shrink (too tight). The
+      // earlier +1 pre-gate demanded asOf+1+days ≤ today, which DROPPED a
+      // genuinely-mature post-close vintage (getEntryDate returns asOf+0 when
+      // generatedAt ≥ 21:00 UTC) on the single day where asOf+days == today —
+      // an over-conservative corpus shrink. Fix: make the pre-load gate a pure
+      // *lower-bound* skip using the EARLIEST possible real entry (asOf+0), so
+      // it can only ever drop vintages that are immature under every entry
+      // assumption. The exact maturity is then re-checked post-load against the
+      // real getEntryDate-derived realFutureDate (below) / the persisted
+      // realEntryAsOf on cache replay — so loosening here can NOT introduce
+      // look-ahead. Keep this +0 in lockstep with getEntryDate's 21:00-UTC
+      // post-close threshold; both must change together.
+      const earliestEntry = asOf; // asOf+0 = earliest entry getEntryDate can return
+      const earliestFutureDate = WF.addDaysIso(earliestEntry, days);
+      if (earliestFutureDate > today) continue;
       const key = days + 'd';
       const cacheKey = asOf + '|' + key;
 
@@ -229,15 +250,34 @@ function main() {
         // The cache entries already carry pass directly; destructure it from
         // the loop variable instead of doing a lookup. Removes the
         // self-acknowledged bug the original author flagged in a comment.
-        const cached = cache.vintageReturns[cacheKey];
-        for (const { ticker, methodId, ret, quality, pass, matured } of cached) {
+        const cachedHeader = cache.vintageReturns[cacheKey];
+        const cachedEntries = cachedHeader.entries;
+        // audit F-A-2026-06-21: recompute the canonical entry/exit dates for this
+        // vintage from CURRENT benchmark/price data (prevents: canonicalFrac gate
+        // keying off first-touch benchmark availability). `matured` is no longer
+        // replayed from the frozen flag — a vintage first processed when SPY was
+        // absent/short stored matured=false permanently even after history.json
+        // later gained a full benchmark series. Re-deriving here makes the gate a
+        // pure function of present data. Falls back to the persisted realEntryAsOf
+        // so we never read the (uncached) vintage file.
+        const replayEntryAsOf = cachedHeader.realEntryAsOf || asOf;
+        const replayBench = WF.computeBenchmarkReturn(priceIndex, replayEntryAsOf, days);
+        const replayCanonEntry = (replayBench && replayBench.entryDate) || null;
+        const replayCanonExit  = (replayBench && replayBench.exitDate)  || null;
+        const replayCanonOk = !!(replayCanonEntry && replayCanonExit
+                                 && replayCanonEntry !== replayCanonExit);
+        for (const { ticker, methodId, ret, quality, pass } of cachedEntries) {
           const bucket = _getMethodBucket(methodId, key);
           bucket.vintages.add(asOf);
           // F-BT-008: quality from cache (may be null for older vintages — handle gracefully)
           if (pass == null) continue;
           if (pass) bucket.pass.push(ret); else bucket.fail.push(ret);
-          // F-EVAL-2026-06-20: maturation accounting mirrors the fresh-load path so
-          // canonicalFrac is computable for the dominant (cached) population.
+          // audit F-A-2026-06-21: recompute `matured` from current data (prevents:
+          // canonicalFrac stale-benchmark gate). A contribution is mature iff the
+          // shared canonical entry/exit dates exist in THIS ticker's current map.
+          const map = priceIndex[ticker];
+          const matured = !!(replayCanonOk && map
+                             && map.has(replayCanonEntry) && map.has(replayCanonExit));
           bucket.total++; if (matured) bucket.matured++;
           if (quality && bucket.byQuality[quality]) {
             const q = bucket.byQuality[quality];
@@ -245,6 +285,21 @@ function main() {
             if (pass) q.pass.push(ret); else q.fail.push(ret);
             q.total++; if (matured) q.matured++;
           }
+        }
+        // audit F-A-2026-06-21: re-emit the delisting-bias attrition imbalance
+        // warning on replay (prevents: asymmetric-attrition diagnostic vanishing
+        // forever once a vintage is cached). Pre-fix, droppedPass/Fail accounting
+        // lived only in the fresh-load branch, so with CACHE_RETENTION_DAYS=90 and
+        // a daily cron every vintage was fresh exactly once and silent thereafter.
+        const dropTk = cachedHeader.droppedTickers || 0;
+        if (dropTk > 0) {
+          const dropPass = cachedHeader.droppedPass || 0;
+          const dropFail = cachedHeader.droppedFail || 0;
+          const totalContribs = dropPass + dropFail;
+          const imbalanceWarn = dropPass !== dropFail
+            ? ` IMBALANCE pass-contribs=${dropPass} fail-contribs=${dropFail}`
+            : '';
+          console.log(`  ${asOf}/${key} (cached): dropped ${dropTk} tickers (${totalContribs} method-contribs lost: no price data or no valid return)${imbalanceWarn}`);
         }
         continue;
       }
@@ -356,8 +411,19 @@ function main() {
           cacheEntries.push({ ticker, methodId, ret, pass: r.pass, quality, matured });
         }
       }
-      // F-PF-009: store in cache
-      cache.vintageReturns[cacheKey] = cacheEntries;
+      // F-PF-009: store in cache.
+      // audit F-A-2026-06-22 (regression fix): the replay path reads a HEADER object
+      // ({entries, realEntryAsOf, droppedTickers, droppedPass, droppedFail}); the write
+      // had stored a bare array, so replay hit `cachedHeader.entries`===undefined and
+      // crashed on the 2nd run. Write the matching header shape. Prevents: cache
+      // read/write shape mismatch crashing every cached vintage.
+      cache.vintageReturns[cacheKey] = {
+        entries: cacheEntries,
+        realEntryAsOf,
+        droppedTickers,
+        droppedPass: droppedPassContribs,
+        droppedFail: droppedFailContribs,
+      };
       // F-BT-003 (Tag 179): emit attrition counts when nonzero so log shows whether
       // delistings are tilting the cohort. Threshold-on-imbalance shows up in CI logs.
       // Tag 231a-4: now counts total pass/fail CONTRIBUTIONS (sum across all methods

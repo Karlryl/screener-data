@@ -119,7 +119,9 @@ function main() {
   console.log('');
 
   const history = loadJson(PRICES_PATH);
-  if (!history) { console.error('FATAL: no prices/history.json'); process.exit(0); }
+  // F-A-2026-06-21 (audit): exit(0) on a FATAL missing-prices path masked a failed
+  // backtest run as success in CI. Fail loud so the workflow surfaces it.
+  if (!history) { console.error('::error::[tag229b-backtest] FATAL: no prices/history.json'); process.exit(1); }
   const priceIndex = buildPriceIndex(history);
   console.log('Price index built: ' + Object.keys(priceIndex).length + ' tickers');
 

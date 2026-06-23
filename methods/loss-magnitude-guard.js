@@ -73,13 +73,24 @@ function evaluate(stock) {
 
   const ratio = oi0 / rev0;
   const pass = ratio >= THRESHOLD;
+  // audit F-A-2026-06-22: prevents presenting TTM-margin-derived OpInc as an
+  // independent annual loss ratio. When pull-yahoo synthesized annualOpInc via
+  // path 3 (operatingMargins_TTM × annualRev, meta.opIncSource==='computed-margin'),
+  // oi0/rev0 algebraically collapses back to the TTM operating margin — it is NOT
+  // an independent annual reading. We surface this provenance via an additive
+  // components flag + reason disclosure so the Deep-Dive modal/reason string can
+  // label the figure TTM-derived. Behavior-preserving: value/pass/computable are
+  // untouched (this guard's anchors, incl. Financial-Services V, keep their verdict).
+  const opIncDerived = !!(stock.meta && stock.meta.opIncSource === 'computed-margin');
+  const reason = 'OpInc/Rev = ' + (oi0/1e6).toFixed(0) + 'M / ' + (rev0/1e6).toFixed(0) + 'M = ' +
+            (ratio*100).toFixed(0) + '% (gate: ≥ ' + (THRESHOLD*100).toFixed(0) + '%)' +
+            (opIncDerived ? ' [OpInc TTM-margin-derived, not independent annual]' : '');
   return H.buildResult({
     value: ratio,
     pass,
     computable: true,
-    components: { rev0, oi0, ratio },
-    reason: 'OpInc/Rev = ' + (oi0/1e6).toFixed(0) + 'M / ' + (rev0/1e6).toFixed(0) + 'M = ' +
-            (ratio*100).toFixed(0) + '% (gate: ≥ ' + (THRESHOLD*100).toFixed(0) + '%)',
+    components: { rev0, oi0, ratio, opIncDerived },
+    reason,
     threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
   });
 }
