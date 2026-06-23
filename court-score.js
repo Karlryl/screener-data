@@ -18,7 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const ROOT = __dirname;
-const { absKaliber, absKaliberIndustrials, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
+const { absKaliber, absKaliberIndustrials, absKaliberStaples, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
 // Medtech M&A snapshot (advisory lamps; object keyed by ticker)
 const maMedtechRaw = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'ma-rpo-snapshot-medtech.json'), 'utf8')); } catch { return {}; } })();
 // Remove _header key
@@ -194,6 +194,63 @@ const FORMULAS = {
     normTableId: 'industrials_light-norms-2026-06-21',
     industrials: true, cohortKey: 'industrials_light',
     a2Note: 'industrials_compounder v1 light cohort (asset-light services / recurring-revenue / EPC / distribution; rail = asset-heavy residual §7-#7). Same 5-axis absKaliberIndustrials engine + coverage-renorm as industrials_heavy; cohort-specific gpa (.09/.48) + eff (.02/.20) norms; growth/assetGrowthPenalty/netIssuance anchors shared. n=141≫15 → full ABS+REL blend. ZTO (Chinese Integrated-Freight ADR) is the disclosed single-name residual leak (1/141, linear q floors it, MAD-robust). See industrials_heavy.a2Note for the full mechanism. Additive/parity-safe; constants frozen §6.5.',
+  },
+  // ===========================================================================
+  // consumer_staples_compounder (CORE) — TWO cohorts by ECONOMIC MODEL (margin-driven branded vs
+  // turns-driven distribution). Spec formula-design-consumer-staples-compounder-v1-2026-06-21.md (Court
+  // DESIGN-PASS 4/4). MIRRORS the industrials path: 5 SCORED axes (gpa/growth/assetGrowthPenalty/netIssuance/
+  // eff) via absKaliberStaples (the same weighted-q + coverage-renorm engine), but staples weights
+  // {gpa .36, growth .18, assetGrowthPenalty .18, netIssuance .12, eff .16} (STRONG profitability+discipline
+  // pillar 0.66 ≫ growth 0.18). REL z/MAD per-cohort (each its own bucket, n≫15). blend score=100*(0.6*ABS+
+  // 0.4*REL), β=0.6. RAW inputs from m.stp.* (court-screen snapshot extraction; deal-mask + spin-off guard
+  // applied UPSTREAM). The inverted axes (assetGrowthPenalty/netIssuance) negate the raw for BOTH the q-input
+  // AND the cross-sectional REL z. staples = NEW code keyed by the new cohort strings; existing buckets
+  // (medtech/dlst/saas/fabless/industrials) are BYTE-IDENTICAL.
+  staples_branded: {
+    label: 'Consumer-Staples-Compounder v1 (branded: packaged-food/household/beverages/tobacco/confectioners; absolute-anchor, GP/assets pillar, deal-masked spin-off-guarded growth, asset-growth+net-issuance discipline, op-weighted efficiency, coverage-renorm, VOLUME_PRICE_BLIND)',
+    membership: { g: { c: 0.00, s: 0.05 }, gm: { c: 0.15, s: 0.08 }, scaleLog: { c: log10(1000), s: 0.6 } },
+    axes: [
+      { key: 'gpa',                name: 'GP/Assets',  k: 1.5, w: 0.36 },
+      { key: 'growth',             name: 'Growth',     k: 2.0, w: 0.18 },
+      { key: 'assetGrowthPenalty', name: 'AssetGrowth', k: 1.5, w: 0.18 },
+      { key: 'netIssuance',        name: 'NetIssuance', k: 1.5, w: 0.12 },
+      { key: 'eff',                name: 'Eff-OpFcf',  k: 1.5, w: 0.16 },
+    ],
+    dilCap: 0, dilStart: 0.05, dilRange: 0.20, // net-issuance is a SCORED axis (E); no separate SBC penalty.
+    stages: [
+      { name: 'S3-Cash-Compounder', test: f => f >= 0.20 },
+      { name: 'S2-FCF-positiv',     test: f => f >= 0.08 },
+      { name: 'S1-Approaching',     test: f => f >= -0.05 },
+      { name: 'S0-Defensive',       test: () => true },
+    ],
+    dominantBlock: ['gpa', 'eff'],
+    degraded: false,
+    normTableId: 'staples_branded-norms-2026-06-21',
+    staples: true, cohortKey: 'staples_branded',
+    a2Note: 'consumer_staples_compounder v1 branded cohort (Spec formula-design-consumer-staples-compounder-v1-2026-06-21.md, Court DESIGN-PASS 4/4). Margin-driven brand-moat businesses (packaged food, household & personal, non-alcoholic + brewers, tobacco, confectioners, wineries & distilleries). 5 SCORED axes via absKaliberStaples: GP/assets (Novy-Marx, w .36, the load-bearing pillar, cohort-specific norm .15/.60), organic growth (w .18, deal-masked §4.1 + spin-off re-baselining guard §4.2 applied UPSTREAM → NOT_READY:growth; STAPLES-LOW elite 0.18; blend 0.60*latest + 0.40*MEDIAN(recent clean YoYs)), asset-growth penalty (Cooper-Gulen-Schill, w .18, q(-assetGrowth)), net-share-issuance penalty (Pontiff-Woodgate, w .12, q(-NSI); ~42% coverage — Vintage-A snapshots carry no annualShares → DROP+renorm+ISSUANCE_NOT_READY, the load-bearing coverage-renorm path on the MAJORITY of names), op-weighted efficiency (0.60*opMargin+0.40*fcfMargin, w .16, cohort-specific norm .05/.27). COVERAGE-RENORM: any NOT_READY/null axis dropped, survivors renormalize to Σ=1.0 (no fake-neutral impute). score=100*(0.6*absKaliber+0.4*REL), β=0.6, REL per-cohort (n=52≫15). WALLS (always-on lamps): VOLUME_PRICE_BLIND (the decisive volume-vs-price/mix split has NO us-gaap tag — uncomputable, MANUAL field, NEVER faked), MA_PROXY_ONLY (no goodwill line ⇒ totalAssets-jump proxy), INVENTORY_BLIND (no inventory line), CYCLE_WALL (~4y history, no normalized-10y-ROIC). SI-4 out-of-class (excluded industry Education / non-US per the v1 country-domicile guard / foreign-primary / <$1B) → score=null + excluded[]; SI-5 classifiedCount===scoredCount+excludedCount fail-loud; marquee assert (PG/KO/PEP/COST/WMT/MDLZ/CL/MO/PM) fail-loud + GENERATIVE anti-leak (no classified rec with meta.country set != US) + FOREIGN_CONTROL positive-control (KOF/RLX/DOLE/HLF/NOMD must NOT classify). Disclosed: Axis E ~42% coverage (data-vintage gap); the classifier leans on the company NAME (FOREIGN_NAME legal-form regex + 1-name residual RLX) for the undefined-country foreign-primary sub-class. Additive/parity-safe. Constants frozen §6.5.',
+  },
+  staples_distribution: {
+    label: 'Consumer-Staples-Compounder v1 (distribution: discount stores/food distribution/grocery/farm products; absolute-anchor, GP/assets pillar [turns-driven INVERSION], deal-masked spin-off-guarded growth, asset-growth+net-issuance discipline, op-weighted efficiency, coverage-renorm, VOLUME_PRICE_BLIND)',
+    membership: { g: { c: 0.00, s: 0.05 }, gm: { c: 0.10, s: 0.08 }, scaleLog: { c: log10(1000), s: 0.6 } },
+    axes: [
+      { key: 'gpa',                name: 'GP/Assets',  k: 1.5, w: 0.36 },
+      { key: 'growth',             name: 'Growth',     k: 2.0, w: 0.18 },
+      { key: 'assetGrowthPenalty', name: 'AssetGrowth', k: 1.5, w: 0.18 },
+      { key: 'netIssuance',        name: 'NetIssuance', k: 1.5, w: 0.12 },
+      { key: 'eff',                name: 'Eff-OpFcf',  k: 1.5, w: 0.16 },
+    ],
+    dilCap: 0, dilStart: 0.05, dilRange: 0.20,
+    stages: [
+      { name: 'S3-Cash-Compounder', test: f => f >= 0.20 },
+      { name: 'S2-FCF-positiv',     test: f => f >= 0.08 },
+      { name: 'S1-Approaching',     test: f => f >= -0.05 },
+      { name: 'S0-Defensive',       test: () => true },
+    ],
+    dominantBlock: ['gpa', 'eff'],
+    degraded: false,
+    normTableId: 'staples_distribution-norms-2026-06-21',
+    staples: true, cohortKey: 'staples_distribution',
+    a2Note: 'consumer_staples_compounder v1 distribution cohort (turns-driven razor-thin-margin retailers/grocers/distributors/processors: discount stores, food distribution, grocery stores, farm products). Same 5-axis absKaliberStaples engine + coverage-renorm as staples_branded; cohort-specific gpa (.10/.66 — the GP/assets INVERSION: distrib p50 49.5% > branded p50 28.4% because clubs/grocers turn assets 4-8× at razor-thin gross MARGIN) + eff (.01/.09 — op-margin p50 3.8%, ~3.8× below branded) norms; growth/assetGrowthPenalty/netIssuance anchors shared. n=23≫15 → full ABS+REL blend. Farm Products / agribusiness (TSN/ADM/BG/ANDE) cluster at the GP/assets floor (~7-16%, CYCLE_WALL) — the linear q floors them honestly without a sub-cohort (which would fall below n≥15). CALM egg-price op-margin spike is the disclosed outlier the MAD-robust REL absorbs. See staples_branded.a2Note for the full mechanism + walls + asserts. Additive/parity-safe; constants frozen §6.5.',
   },
   diagnostics_lst: {
     label: 'Diagnostics-&-Life-Science-Tools v0 (cohort-aware dx|tools, absolute-anchor, deceleration-aware organic growth, FCF-efficiency, chronic-acquirer lamps)',
@@ -629,6 +686,28 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.cohort = i.cohort || F.cohortKey;
     }
   }
+  // --- consumer_staples_compounder (CORE) PRE-PASS: lift the 5 RAW axis inputs from m.stp onto the member ---
+  // All intermediates are STAPLES-LOCAL → saas/fabless/medtech/dlst/industrials member JSON byte-identical
+  // (parity). The inverted axes (assetGrowthPenalty/netIssuance) store the NEGATED raw, so the REL z (higher
+  // = better) agrees in sign with the ABS q-input. null raw → axis DROP (coverage-renorm in absKaliberStaples;
+  // REL sAxis returns 0=neutral for null). Mirrors the industrials pre-pass exactly.
+  if (F.staples) {
+    for (const m of members) {
+      const i = m.stp || {};
+      m._stpGpa = (i.gpa != null && isFinite(i.gpa)) ? i.gpa : null;
+      m._stpGrowth = (i.growth != null && isFinite(i.growth)) ? i.growth : null;          // deal-masked + spinoff-guarded UPSTREAM
+      m._stpAssetGrowthPenalty = (i.assetGrowth != null && isFinite(i.assetGrowth)) ? -i.assetGrowth : null; // q(-AG) direction
+      m._stpNetIssuance = (i.netShareIssuance != null && isFinite(i.netShareIssuance)) ? -i.netShareIssuance : null; // q(-NSI) direction
+      m._stpEff = (i.eff != null && isFinite(i.eff)) ? i.eff : null;
+      // persisted audit fields (rounded)
+      m.gpa = m._stpGpa == null ? null : Math.round(m._stpGpa * 10000) / 10000;
+      m.assetGrowth = (i.assetGrowth != null && isFinite(i.assetGrowth)) ? Math.round(i.assetGrowth * 10000) / 10000 : null;
+      m.netShareIssuance = (i.netShareIssuance != null && isFinite(i.netShareIssuance)) ? Math.round(i.netShareIssuance * 10000) / 10000 : null;
+      m.effStp = m._stpEff == null ? null : Math.round(m._stpEff * 10000) / 10000;
+      m.growthInput = m._stpGrowth == null ? null : Math.round(m._stpGrowth * 10000) / 10000;
+      m.cohort = i.cohort || F.cohortKey;
+    }
+  }
 
   // Roh-Achswerte für Stats (cross-sectional Median/MAD): nutze winsorisierte Werte
   // For medtech growth: use _growthMedtech (Fix D organic + winsorize at 1.0) for Stats AND scoring (Fix D
@@ -644,8 +723,20 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       default: return m[key];
     }
   };
+  // consumer_staples_compounder (CORE): same 5 axis-keys as industrials → mirror indRaw on the m._stp* fields.
+  const stpRaw = (m, key) => {
+    switch (key) {
+      case 'gpa': return m._stpGpa;
+      case 'growth': return m._stpGrowth;
+      case 'assetGrowthPenalty': return m._stpAssetGrowthPenalty;
+      case 'netIssuance': return m._stpNetIssuance;
+      case 'eff': return m._stpEff;
+      default: return m[key];
+    }
+  };
   const rawOfStats = (m, key) => {
     if (F.industrials) return indRaw(m, key);
+    if (F.staples) return stpRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtech : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -654,6 +745,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
   };
   const rawOf = (m, key) => {
     if (F.industrials) return indRaw(m, key);
+    if (F.staples) return stpRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtechAdj : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -714,6 +806,16 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (F.industrials) {
       const gGate = m._indGrowth != null ? m._indGrowth : -1;           // null growth (spinoff/NOT_READY) → low
       const gpaGate = m._indGpa != null ? m._indGpa : -1;               // null gpa (pre-revenue) → low
+      const scaleM = (m.marketCap != null && isFinite(m.marketCap)) ? m.marketCap / 1e6 : (m.scaleRevM || 1); // $1B+ marketCap
+      const mg = logistic(gGate, F.membership.g.c, F.membership.g.s);
+      const mGpa = logistic(gpaGate, F.membership.gm.c, F.membership.gm.s);
+      const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
+      M = mg * mGpa * mSc;
+    } else if (F.staples) {
+      // staples membership: same gpa(quality)×growth×scale logistic as industrials (gpa stands in for the gm
+      // pillar — staples has no gm axis). Spin-off-guarded/NOT_READY growth or pre-revenue gpa land low.
+      const gGate = m._stpGrowth != null ? m._stpGrowth : -1;           // null growth (spinoff/NOT_READY) → low
+      const gpaGate = m._stpGpa != null ? m._stpGpa : -1;               // null gpa → low
       const scaleM = (m.marketCap != null && isFinite(m.marketCap)) ? m.marketCap / 1e6 : (m.scaleRevM || 1); // $1B+ marketCap
       const mg = logistic(gGate, F.membership.g.c, F.membership.g.s);
       const mGpa = logistic(gpaGate, F.membership.gm.c, F.membership.gm.s);
@@ -850,6 +952,32 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       const gateGrowthOk = (m._indGrowth != null) && (m._indGrowth >= norm.growth.floor);
       const gateGpaOk = (m._indGpa != null) && (m._indGpa >= norm.gpa.floor);
       const gateEffOk = (m._indEff != null) && (m._indEff >= norm.eff.floor);
+      m.belowAbsoluteFloor = !(gateGrowthOk && gateGpaOk && gateEffOk);
+      m.score = m.membershipClass === 'Out' ? null : rawScore;
+      m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
+      m.stage = stageOf(F, m.fcfMargin);
+    } else if (F.staples) {
+      // consumer_staples_compounder (CORE): absKaliberStaples = 5-axis weighted-q with COVERAGE-RENORM reading
+      // the cohort NORMS (the load-bearing renorm fires on the ~58% of names lacking annualShares + KVUE-type spinoffs).
+      const cohortNorm = F.cohortKey; // 'staples_branded' | 'staples_distribution'
+      const stpRec = {
+        gpa: m._stpGpa, growth: m._stpGrowth,
+        assetGrowth: (m.stp && m.stp.assetGrowth != null && isFinite(m.stp.assetGrowth)) ? m.stp.assetGrowth : null,
+        netShareIssuance: (m.stp && m.stp.netShareIssuance != null && isFinite(m.stp.netShareIssuance)) ? m.stp.netShareIssuance : null,
+        eff: m._stpEff,
+      };
+      const ak = absKaliberStaples(stpRec, cohortNorm);
+      m.absKaliber = Math.round(ak.absK * 1000) / 1000;
+      m.absUsedAxes = ak.usedAxes;          // audit: which axes survived coverage-renorm
+      m.absDroppedAxes = ak.droppedAxes;    // audit: NOT_READY/ISSUANCE/SPINOFF drops
+      const rawScore = Math.round(Math.max(0, blendScore(ak.absK, core, 0.6)) * 10) / 10; // pDil=0 (issuance is a SCORED axis)
+      // SI-1 shortlist-cut (Spec §6.1): growthInput >= growth.floor (0.00) AND gpa >= gpa.floor (cohort) AND
+      // efficiency floor met. A spin-off-guarded/NOT_READY growth or missing gpa fails the floor (not the gate
+      // crashing) → belowAbsoluteFloor, listed but off the shortlist. NOT a score-kill (REL/score path runs).
+      const norm = NORMS[cohortNorm];
+      const gateGrowthOk = (m._stpGrowth != null) && (m._stpGrowth >= norm.growth.floor);
+      const gateGpaOk = (m._stpGpa != null) && (m._stpGpa >= norm.gpa.floor);
+      const gateEffOk = (m._stpEff != null) && (m._stpEff >= norm.eff.floor);
       m.belowAbsoluteFloor = !(gateGrowthOk && gateGpaOk && gateEffOk);
       m.score = m.membershipClass === 'Out' ? null : rawScore;
       m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
@@ -1046,6 +1174,26 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.scoreScope = 'intra-bucket';
       m.crossBucketComparableField = 'absKaliber';
     }
+    // consumer_staples_compounder (CORE) lamps (Spec §5): advisory, never silent score-kills. Per-name upstream
+    // lamps (NOT_READY:gpa/growth/eff/assetgrowth, ISSUANCE_NOT_READY, SPINOFF_REBASE, DEAL_MASKED, STALE:growth,
+    // DILUTION_HIGH, MARGIN_NEGATIVE, SBC_HIGH, IMPAIRMENT_BLIND) collected in court-screen (m.stp.lamps); the
+    // four WALLS are always-on per the frozen NORMS.lamps. THIN_REL never fires (branded n=52, distrib n=23).
+    if (F.staples) {
+      const sl = (m.stp && Array.isArray(m.stp.lamps)) ? m.stp.lamps : [];
+      for (const lamp of sl) if (!L.includes(lamp)) L.push(lamp);
+      // always-on WALLS (Spec §2.3/§5)
+      L.push('VOLUME_PRICE_BLIND');   // the decisive volume-vs-price/mix split has no us-gaap tag — MANUAL field, NEVER faked
+      L.push('MA_PROXY_ONLY');        // no goodwill line ⇒ M&A via totalAssets-jump proxy only
+      L.push('INVENTORY_BLIND');      // no inventory line ⇒ DIO / WC-cycle uncomputable
+      L.push('CYCLE_WALL');           // only ~4y history; inflation-pricing + agri commodity cycles not normalizable
+      if (m.belowAbsoluteFloor) L.push('below-abs-floor');
+      if (m.membershipClass === 'Out') L.push('membership-Out(excluded-from-headline)');
+      if (Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.length) L.push(`coverage-renorm(dropped:${m.absDroppedAxes.join('+')})`);
+      m.cohort = F.cohortKey;
+      m.normTableId = getNormTableId(F.cohortKey);
+      m.scoreScope = 'intra-bucket';
+      m.crossBucketComparableField = 'absKaliber';
+    }
     m.lamps = L;
     if (_ioFlag === 'inorganic') {
       m.degradedRankBias = `upward — A1 headline growth is M&A-flow-heavy (recent acquisition cash ${pct(_ioRec.paymentsToRev).trim()} of rev, goodwill +${pct(_ioRec.deltaGoodwillPctRev).trim()}) while forward book is flat (rpoGrowth ${pct(_ioRec.rpoGrowthYoY).trim()}); degraded-mode rank over-states growth quality pending an A2/organic-growth axis.`;
@@ -1216,6 +1364,35 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       dropped: members.filter(m => m.netShareIssuance == null).length,
     };
   }
+  // consumer_staples_compounder (CORE)-only Zusatzfelder (SI-3/4/5/6) — NUR auf den staples-Buckets gesetzt
+  // → saas/fabless/medtech/dlst/industrials-JSON byte-identisch (Parität). Mirrors the industrials block.
+  if (F.staples) {
+    // SI-5 (Spec §6.2): classifiedCount === scoredCount + excludedCount (fail-loud). The classifier assigns
+    // ONLY staples_{branded,distribution} (excluded industries / non-US / foreign-primary / <$1B return null →
+    // never enter court-buckets), so every classified name reaches members[]. excludedCount = SI-4 out-of-class
+    // names that entered members but score=null (membership-Out). classifiedCount = court-buckets entries.
+    R.classifiedCount = cls.filter(c => c.bucket === bucket).length;
+    R.excluded = members.filter(m => m.score == null);
+    R.excludedCount = R.excluded.length;
+    R.scoredCount = members.filter(m => m.score != null).length;
+    if (require.main === module && R.classifiedCount !== R.scoredCount + R.excludedCount) {
+      throw new Error(`SI-5 mismatch ${bucket}: classifiedCount ${R.classifiedCount} !== scoredCount ${R.scoredCount} + excludedCount ${R.excludedCount}`);
+    }
+    R.normTableId = getNormTableId(F.cohortKey);
+    R.cohort = F.cohortKey;
+    R.scoreScope = 'intra-bucket';
+    R.crossBucketComparableField = 'absKaliber';
+    const n = NORMS[F.cohortKey];
+    const fmt = x => (x == null ? '—' : x.toFixed(2).replace(/^0\./, '.').replace(/^-0\./, '-.'));
+    R.comparabilityNote = `consumer_staples_compounder ${F.cohortKey} (economic-model cohort: margin-driven branded vs turns-driven distribution). absKaliber in [0,1] = cross-bucket-comparable absolute scale (5-axis weighted-q over the cohort NORMS '${getNormTableId(F.cohortKey)}': gpa ${fmt(n.gpa.floor)}/${fmt(n.gpa.elite)}, growth ${fmt(n.growth.floor)}/${fmt(n.growth.elite)}, assetGrowthPenalty ${fmt(n.assetGrowthPenalty.floor)}/${fmt(n.assetGrowthPenalty.elite)}, netIssuance ${fmt(n.netIssuance.floor)}/${fmt(n.netIssuance.elite)}, eff ${fmt(n.eff.floor)}/${fmt(n.eff.elite)}; weights {gpa .36, growth .18, assetGrowthPenalty .18, netIssuance .12, eff .16}); COVERAGE-RENORM drops any NOT_READY/null axis (incl. ISSUANCE_NOT_READY on the ~58% of names lacking annualShares, and SPINOFF_REBASE) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6). WALLS always-on: VOLUME_PRICE_BLIND/MA_PROXY_ONLY/INVENTORY_BLIND/CYCLE_WALL. The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison.`;
+    R.crossBucketComparableNote = 'Use members[].absKaliber (absolute [0,1] caliber) for cross-bucket comparison; members[].score (blended 0-100) is intra-bucket ONLY (mixes per-cohort REL, beta=0.6).';
+    R.walls = ['VOLUME_PRICE_BLIND', 'MA_PROXY_ONLY', 'INVENTORY_BLIND', 'CYCLE_WALL'];
+    // Axis-E coverage disclosure (Spec §2.2/§7-#3): how many names took the ISSUANCE_NOT_READY drop+renorm path.
+    R.issuanceCoverage = {
+      scored: members.filter(m => m.netShareIssuance != null).length,
+      dropped: members.filter(m => m.netShareIssuance == null).length,
+    };
+  }
   // audit/fix (gauntlet E3): saas/fabless SI-4/SI-5-Retrofit — spiegelt medtech/dlst exakt.
   // NUR auf den beiden Buckets gesetzt; medtech/dlst haben ihre eigenen Blöcke oben. Diese Felder
   // wurden in die saas/fabless-Parity-Baselines re-gefroren (BEWUSSTER Governance-Bless, kein Drift):
@@ -1277,6 +1454,14 @@ function assertNoForeignLeak(resultsObj, listing) {
     // saas/fabless/medtech/dlst buckets and would false-positive on the spec's intended industrials pool.
     // The §1.2/§7-#12 leak policy (ZTO disclosed) is the industrials governance — not this cross-bucket guard.
     if (bucket === 'industrials_heavy' || bucket === 'industrials_light') continue;
+    // consumer_staples_compounder (CORE) EXEMPTION: staples membership is governed by the FROZEN spec v1
+    // classifier (scripts/classify-staples.js, §1.2 COUNTRY-DOMICILE-GUARD isUSListing — STRICTER than
+    // court-screen's: country set != US -> exclude unconditionally; FOREIGN_NAME legal-form regex; 1-name
+    // residual RLX). It is governed instead by the §6.2b assertStaplesMarquee + the staples-native generative
+    // country assert + the FOREIGN_CONTROL positive-control (assertStaplesForeignControl) below — all of which
+    // read the snapshot meta directly, NOT the C5 court-listing.isUS flag (which uses court-screen's looser
+    // region==='US' test and could disagree with the spec classifier on the staples pool).
+    if (bucket === 'staples_branded' || bucket === 'staples_distribution') continue;
     for (const m of R.members) {
       const L = listing.get(m.ticker);
       if (!L) continue; // kein Snapshot-Meta → kann nichts behaupten (Vintage-A ohne Eintrag: tolerant)
@@ -1331,10 +1516,62 @@ function assertIndustrialsMarquee(resultsObj) {
   }
 }
 
+// --- consumer_staples_compounder (CORE) MARQUEE-COVERAGE assert (Spec §6.2b, fail-loud) ---
+// The frozen marquee watchlist must each be classified into one of the two staples cohorts AND reach the
+// scored universe (members[]) — else the run DIES LOUD (the regression guard that would have caught the v0
+// foreign-primary leak collapsing the universe).
+const STAPLES_MARQUEE = Object.freeze(['PG', 'KO', 'PEP', 'COST', 'WMT', 'MDLZ', 'CL', 'MO', 'PM']);
+// GENERATIVE anti-leak property test (§6.2b): NO classified staples record may carry meta.country set != US.
+// FOREIGN_CONTROL positive-control (§6.2b): the undefined-country foreign primaries the classifier's
+// FOREIGN_NAME regex + residual set must keep OUT (the property test cannot see them — they have no country).
+const STAPLES_FOREIGN_CONTROL = Object.freeze(['KOF', 'RLX', 'DOLE', 'HLF', 'NOMD']);
+function assertStaplesMarquee(resultsObj) {
+  const B = resultsObj.staples_branded, D = resultsObj.staples_distribution;
+  if (!B && !D) return; // staples not in this run (e.g. isolated unit test) → tolerant no-op
+  const scored = new Set();
+  for (const R of [B, D]) if (R && Array.isArray(R.members)) for (const m of R.members) scored.add(m.ticker);
+  const missing = STAPLES_MARQUEE.filter(t => !scored.has(t));
+  if (missing.length) {
+    throw new Error('MARQUEE COVERAGE FAIL (Spec §6.2b) — staples universe collapsed, these bona-fide '
+      + 'US staples were not classified/scored: ' + missing.join(', '));
+  }
+  // (1) FOREIGN_CONTROL: KOF/RLX/DOLE/HLF/NOMD must NOT have reached a staples cohort.
+  const leakedControl = STAPLES_FOREIGN_CONTROL.filter(t => scored.has(t));
+  if (leakedControl.length) {
+    throw new Error('FOREIGN-CONTROL FAIL (Spec §6.2b) — undefined-country foreign primary leaked into a '
+      + 'staples cohort: ' + leakedControl.join(', '));
+  }
+}
+// assertStaplesNoForeignLeak(results, listing): GENERATIVE property test reading the snapshot meta.country
+// (via the court-listing side-file) DIRECTLY — independent of the C5 isUS flag. Throws if ANY scored staples
+// record carries meta.country set AND != "United States" (the BTI/ABEV/FMX/CCEP/MICC/AGRO/FDP country-set
+// class). Tolerant: missing side-file → no-op (structurally unprovable, breaks nothing).
+function assertStaplesNoForeignLeak(resultsObj, listing) {
+  if (!listing || listing.size === 0) return;
+  const leaks = [];
+  for (const bucket of ['staples_branded', 'staples_distribution']) {
+    const R = resultsObj[bucket];
+    if (!R || !Array.isArray(R.members)) continue;
+    for (const m of R.members) {
+      const L = listing.get(m.ticker);
+      if (!L) continue; // no snapshot meta → can't assert (Vintage-A without entry: tolerant)
+      if (L.country != null && L.country !== 'United States') {
+        leaks.push(`${m.ticker}[${L.country}/${L.region}] in ${bucket}`);
+      }
+    }
+  }
+  if (leaks.length) {
+    throw new Error('STAPLES ANTI-LEAK ASSERT (Spec §6.2b GENERATIVE property test): foreign-country record(s) '
+      + 'leaked into a scored staples cohort — meta.country set AND != "United States": ' + leaks.join(', ')
+      + '. The v1 country-domicile guard (classify-staples.js isUSListing) must exclude these — NOT suppress.');
+  }
+}
+
 // --- Export: computeMedtechOrganicGrowth + computeDlstOrganicGrowth für Unit-Tests ---
 // (computeDlstOrganicGrowth: Fix A FY-Alignment + Fix B dealYearExcluded-Ehrlichkeit, 2026-06-21)
-// + assertNoForeignLeak (gauntlet C5) + assertIndustrialsMarquee (Spec §6.2b) für direkten Property-Test.
-module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE };
+// + assertNoForeignLeak (gauntlet C5) + assertIndustrialsMarquee + assertStaplesMarquee +
+//   assertStaplesNoForeignLeak (Spec §6.2b) für direkten Property-Test.
+module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL };
 
 // --- require.main-Guard (Härtung 2): Write + Ausgabe NUR wenn direkt als Skript ausgeführt ---
 // `require('./court-score.js')` gibt nur den Export zurück und schreibt NICHT outputs/court-results.json.
@@ -1346,6 +1583,10 @@ if (require.main === module) {
   // industrials_compounder (CORE) §6.2b: the 16-name marquee watchlist must each be classified+scored, else
   // the industrials universe silently collapsed (the v0 country-filter killshot regression guard).
   assertIndustrialsMarquee(results);
+  // consumer_staples_compounder (CORE) §6.2b: the 9-name marquee + FOREIGN_CONTROL positive-control + the
+  // GENERATIVE country anti-leak property test must all hold, else the staples universe collapsed/leaked.
+  assertStaplesMarquee(results);
+  assertStaplesNoForeignLeak(results, listingByTicker);
   fs.writeFileSync(OUT, JSON.stringify(results, null, 2));
 
   // --- Ausgabe ---

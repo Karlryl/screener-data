@@ -1371,6 +1371,176 @@ test('industrials PARITÄT: KEIN industrials-only Feld auf SaaS/Fabless/Medtech/
   }
 });
 
+// =================== CONSUMER_STAPLES_COMPOUNDER (CORE) BUCKET TESTS (v1, two cohorts branded|distribution) ===
+// Spec formula-design-consumer-staples-compounder-v1-2026-06-21.md (Court DESIGN-PASS 4/4). staples is a
+// SEPARATE court bucket (disjoint from saas/fabless/medtech/dlst/industrials and from the tag28 projection).
+// NEW code keyed by the new cohort strings → the 5 prior buckets stay byte-identical (parity tests above).
+const stpB = doc.staples_branded;
+const stpD = doc.staples_distribution;
+const SB = stpB ? stpB.members : [];
+const SD = stpD ? stpD.members : [];
+
+test('staples: both cohort buckets exist (branded + distribution) with members', () => {
+  assert(stpB && Array.isArray(stpB.members) && SB.length > 0, 'staples_branded bucket fehlt/leer');
+  assert(stpD && Array.isArray(stpD.members) && SD.length > 0, 'staples_distribution bucket fehlt/leer');
+  assert(/Consumer-Staples-Compounder v1/.test(stpB.label || ''), `branded label sollte v1 nennen: ${stpB.label}`);
+});
+
+test('staples §6.2b MARQUEE: all 9 marquees classified+scored across the two cohorts (fail-loud guard)', () => {
+  const MARQUEE = ['PG', 'KO', 'PEP', 'COST', 'WMT', 'MDLZ', 'CL', 'MO', 'PM'];
+  const scored = new Set([...SB, ...SD].map(m => m.ticker));
+  const missing = MARQUEE.filter(t => !scored.has(t));
+  assert(missing.length === 0, `MARQUEE COVERAGE FAIL — nicht klassifiziert/gescort: ${missing.join(', ')}`);
+  // the assertStaplesMarquee export must also pass on the live results (direct property test).
+  const { assertStaplesMarquee } = require('./court-score.js');
+  assert(typeof assertStaplesMarquee === 'function', 'assertStaplesMarquee nicht exportiert');
+  assertStaplesMarquee(doc); // throws on collapse / foreign-control leak
+});
+
+test('staples SI-5: classifiedCount === scoredCount + excludedCount (BEIDE Kohorten, fail-loud)', () => {
+  for (const [name, R] of [['branded', stpB], ['distribution', stpD]]) {
+    assert(R.classifiedCount != null && R.scoredCount != null && R.excludedCount != null, `${name} SI-5 counts fehlen`);
+    assert(R.classifiedCount === R.scoredCount + R.excludedCount,
+      `${name} SI-5 mismatch: classified ${R.classifiedCount} !== scored ${R.scoredCount} + excluded ${R.excludedCount}`);
+  }
+  // clean v1-pool target counts (Spec §6.6): branded 52 / distribution 23 (both n≥15).
+  assert(stpB.classifiedCount === 52, `branded classified sollte 52 sein, ist ${stpB.classifiedCount}`);
+  assert(stpD.classifiedCount === 23, `distribution classified sollte 23 sein, ist ${stpD.classifiedCount}`);
+});
+
+test('staples: a branded + a distribution marquee member scored finite (PG/MO branded, COST/WMT distribution)', () => {
+  for (const t of ['PG', 'MO']) {
+    const m = SB.find(x => x.ticker === t);
+    assert(m && Number.isFinite(m.score) && m.score > 0, `${t} (branded) sollte finiten Score >0 haben, ist ${m && m.score}`);
+    assert(m.absKaliber != null && m.absKaliber > 0, `${t} absKaliber sollte >0 sein, ist ${m && m.absKaliber}`);
+  }
+  for (const t of ['COST', 'WMT']) {
+    const m = SD.find(x => x.ticker === t);
+    assert(m && Number.isFinite(m.score) && m.score > 0, `${t} (distribution) sollte finiten Score >0 haben, ist ${m && m.score}`);
+  }
+});
+
+test('staples §6.2b GENERATIVE anti-leak + FOREIGN_CONTROL: leakers + KOF/RLX/DOLE/HLF/NOMD absent from cohorts', () => {
+  const scored = new Set([...SB, ...SD].map(m => m.ticker));
+  // country-set leakers (BTI/ABEV/FMX/CCEP/MICC/AGRO/FDP) — generative country assert kills these.
+  for (const t of ['BTI', 'ABEV', 'FMX', 'CCEP', 'MICC', 'AGRO', 'FDP']) {
+    assert(!scored.has(t), `${t} (foreign-country primary) darf NICHT in einer staples-Kohorte sein (generativer Anti-Leak)`);
+  }
+  // undefined-country foreign primaries (FOREIGN_NAME regex + residual) — FOREIGN_CONTROL positive-control.
+  for (const t of ['KOF', 'RLX', 'DOLE', 'HLF', 'NOMD']) {
+    assert(!scored.has(t), `${t} (undefined-country foreign primary) darf NICHT klassifiziert sein (FOREIGN_CONTROL §6.2b)`);
+  }
+  // the assertStaplesNoForeignLeak export must pass on the live results (direct property test).
+  const { assertStaplesNoForeignLeak } = require('./court-score.js');
+  assert(typeof assertStaplesNoForeignLeak === 'function', 'assertStaplesNoForeignLeak nicht exportiert');
+  // a fresh listing side-file exists from the isolated screen run (TEST_ENV COURT_LISTING_OUT path).
+  let listing = new Map();
+  try {
+    const lp = (CAND_TEST.replace(/_court-candidates([^/\\]*)\.json$/, '_court-listing$1.json'));
+    const ld = JSON.parse(fs.readFileSync(lp, 'utf8'));
+    const obj = ld && ld.listings ? ld.listings : (ld || {});
+    for (const [t, rec] of Object.entries(obj)) listing.set(t, rec);
+  } catch {}
+  assertStaplesNoForeignLeak(doc, listing); // throws on any country-set != US leak
+});
+
+test('staples SI-4: excluded-industry name (Education COUR) is NOT classified into either cohort', () => {
+  const inUniverse = [...SB, ...SD].some(m => m.ticker === 'COUR');
+  assert(!inUniverse, 'COUR (Education & Training Services, hard-excluded) darf NICHT im staples-Universum sein (SI-4)');
+});
+
+test('staples SI-4: Out-class / below-floor members carry score=null in excluded[] (kein irreführender Rang)', () => {
+  for (const [name, R] of [['branded', stpB], ['distribution', stpD]]) {
+    assert(Array.isArray(R.excluded), `${name} excluded[] fehlt (SI-4)`);
+    for (const m of R.excluded) assert(m.score === null, `${name} excluded ${m.ticker} score sollte null sein, ist ${m.score}`);
+    for (const m of R.members) {
+      if (m.score != null) assert(m.membershipClass !== 'Out', `${name} ranked ${m.ticker} ist Out mit Score (SI-4)`);
+    }
+  }
+});
+
+test('staples: COVERAGE-RENORM — Vintage-A names (PG/KO/WMT/COST, no annualShares) drop Axis E + renorm to 4 axes', () => {
+  // The load-bearing coverage-renorm path (Spec §2.2/§6.4/§7-#3): ~58% of names lack annualShares → ISSUANCE_NOT_READY.
+  for (const t of ['PG', 'KO', 'WMT', 'COST']) {
+    const m = [...SB, ...SD].find(x => x.ticker === t);
+    if (!m) continue;
+    assert(Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.includes('netIssuance'),
+      `${t} (Vintage-A, no annualShares) sollte netIssuance droppen, droppedAxes=${JSON.stringify(m.absDroppedAxes)}`);
+    assert(m.lamps.includes('ISSUANCE_NOT_READY'), `${t} sollte ISSUANCE_NOT_READY lampen`);
+    assert(m.absUsedAxes.length === 4, `${t} sollte 4 Achsen nutzen (E gedroppt), ist ${m.absUsedAxes.length}`);
+  }
+  // Axis-E coverage disclosure matches the clean-pool figures (Spec §2.2/§6.6: branded 22/52, distrib 9/23).
+  assert(stpB.issuanceCoverage && stpB.issuanceCoverage.scored === 22, `branded issuance scored sollte 22 sein, ist ${stpB.issuanceCoverage && stpB.issuanceCoverage.scored}`);
+  assert(stpD.issuanceCoverage && stpD.issuanceCoverage.scored === 9, `distribution issuance scored sollte 9 sein, ist ${stpD.issuanceCoverage && stpD.issuanceCoverage.scored}`);
+});
+
+test('staples §4.1 DEAL-MASK: at least one acquirer deal-masked (sign-aware positive jump)', () => {
+  const masked = [...SB, ...SD].filter(m => m.lamps.includes('DEAL_MASKED')).map(m => m.ticker);
+  assert(masked.length > 0, `mindestens ein Name sollte DEAL_MASKED tragen (acquirer asset+rev jump); keiner gefunden`);
+});
+
+test('staples: always-on WALLS lamps on every member (VOLUME_PRICE_BLIND/MA_PROXY_ONLY/INVENTORY_BLIND/CYCLE_WALL)', () => {
+  for (const m of [...SB, ...SD]) {
+    for (const wall of ['VOLUME_PRICE_BLIND', 'MA_PROXY_ONLY', 'INVENTORY_BLIND', 'CYCLE_WALL']) {
+      assert(m.lamps.includes(wall), `${m.ticker} fehlt always-on Wall-Lampe ${wall}`);
+    }
+  }
+});
+
+test('staples SI-3: normTableId + cohort + comparabilityNote (absKaliber cross-bucket, REL intra-bucket)', () => {
+  assert(stpB.normTableId === 'staples_branded-norms-2026-06-21', `branded normTableId falsch: ${stpB.normTableId}`);
+  assert(stpD.normTableId === 'staples_distribution-norms-2026-06-21', `distribution normTableId falsch: ${stpD.normTableId}`);
+  for (const R of [stpB, stpD]) {
+    assert(R.comparabilityNote && /absKaliber/.test(R.comparabilityNote) && /COVERAGE-RENORM/.test(R.comparabilityNote),
+      'comparabilityNote sollte absKaliber + COVERAGE-RENORM erklären');
+    assert(R.scoreScope === 'intra-bucket' && R.crossBucketComparableField === 'absKaliber', 'SI-3 cross-bucket-Marker fehlen');
+  }
+});
+
+test('staples: GP/assets INVERSION cohort-keyed — distribution gpa-elite (.66) > branded gpa-elite (.60); eff floors differ', () => {
+  // The empirically-forced split (Spec §1.4/§3): turns-driven distribution posts HIGHER GP/assets at razor-thin
+  // op-margin → cohort-specific norms (a shared norm would invert the quality ranking). Read live from NORMS.
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  assert(NORMS.staples_branded.gpa.elite === 0.60 && NORMS.staples_distribution.gpa.elite === 0.66,
+    `gpa-elites: branded ${NORMS.staples_branded.gpa.elite} / distrib ${NORMS.staples_distribution.gpa.elite} (distrib > branded erwartet)`);
+  assert(NORMS.staples_branded.eff.floor === 0.05 && NORMS.staples_distribution.eff.floor === 0.01,
+    `eff-floors: branded ${NORMS.staples_branded.eff.floor} / distrib ${NORMS.staples_distribution.eff.floor} (cohort-keyed, ~5x op-margin gap)`);
+  // weights identical across cohorts (STRONG pillar 0.66 ≫ growth 0.18), sum to 1.0.
+  for (const b of ['staples_branded', 'staples_distribution']) {
+    const w = NORMS[b].weights;
+    const sum = w.gpa + w.growth + w.assetGrowthPenalty + w.netIssuance + w.eff;
+    assert(Math.abs(sum - 1.0) < 1e-9, `${b} weights summieren nicht auf 1.0, ist ${sum}`);
+    assert(w.gpa === 0.36 && w.growth === 0.18 && w.netIssuance === 0.12, `${b} weights falsch: ${JSON.stringify(w)}`);
+  }
+});
+
+test('staples-unit: absKaliberStaples coverage-renorm — E-drop renormalizes survivors to Σ=1.0; all-null → 0', () => {
+  const { absKaliberStaples } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  // full coverage → all 5 axes used, weights sum 1.0
+  const full = absKaliberStaples({ gpa: 0.30, growth: 0.05, assetGrowth: 0.02, netShareIssuance: -0.01, eff: 0.15 }, 'staples_branded');
+  assert(full.usedAxes.length === 5 && full.droppedAxes.length === 0, `full coverage: 5 axes erwartet, ist ${full.usedAxes.length}`);
+  assert(Math.abs(Object.values(full.renormWeights).reduce((a, b) => a + b, 0) - 1.0) < 1e-9, 'full renormWeights summieren nicht auf 1.0');
+  // Vintage-A: netShareIssuance null → Axis E dropped, survivors renorm to Σ=1.0 (no fake-neutral impute)
+  const dropE = absKaliberStaples({ gpa: 0.30, growth: 0.05, assetGrowth: 0.02, netShareIssuance: null, eff: 0.15 }, 'staples_distribution');
+  assert(dropE.usedAxes.length === 4 && dropE.droppedAxes.includes('netIssuance'), `E-drop: 4 axes erwartet, dropped=${JSON.stringify(dropE.droppedAxes)}`);
+  assert(Math.abs(Object.values(dropE.renormWeights).reduce((a, b) => a + b, 0) - 1.0) < 1e-9, 'E-drop renormWeights summieren nicht auf 1.0');
+  // pathological: every axis null → absK 0 (last-resort net, never NaN)
+  const allNull = absKaliberStaples({ gpa: null, growth: null, assetGrowth: null, netShareIssuance: null, eff: null }, 'staples_branded');
+  assert(allNull.absK === 0, `all-null absK sollte 0 sein, ist ${allNull.absK}`);
+});
+
+test('staples PARITÄT: KEIN staples-only Feld auf SaaS/Fabless/Medtech/D&LST/Industrials-Membern (Leak-Guard)', () => {
+  // Only TRULY staples-exclusive fields (stp/effStp/_stp*); the shared 5-axis field names (gpa/assetGrowth/
+  // netShareIssuance/growthInput/absUsedAxes/absDroppedAxes) legitimately exist on industrials members.
+  for (const b of ['system_app_software', 'fabless_semi', 'medtech_devices', 'diagnostics_lst', 'industrials_heavy', 'industrials_light']) {
+    for (const m of doc[b].members) {
+      for (const leak of ['stp', 'effStp', '_stpGpa', '_stpGrowth', '_stpEff', '_stpAssetGrowthPenalty', '_stpNetIssuance']) {
+        assert(!(leak in m), `${b}/${m.ticker} hat staples-only Feld '${leak}' geleakt (Parität verletzt)`);
+      }
+    }
+  }
+});
+
 // Temp-Outputs aufräumen (Harness-Isolation: Produktions-Artefakte bleiben unberührt)
 try { fs.unlinkSync(CAND_TEST); } catch {}
 try { fs.unlinkSync(RESULTS); } catch {}
