@@ -101,17 +101,31 @@ function classifySubProfile(stock) {
 // old `false` — zero matches over an empty object → same {series:[],source:null}).
 const _PRICES_HISTORY_PATH = path.join(__dirname, '..', 'prices', 'history.json');
 let _priceHistoryCache = null;
+let _warnedPriceHistoryLoad = false; // audit/fix (gauntlet LOW-01): one-time warn guard
 function loadPriceHistory() {
   if (_priceHistoryCache !== null) return _priceHistoryCache;
   if (!fs.existsSync(_PRICES_HISTORY_PATH)) { _priceHistoryCache = {}; return _priceHistoryCache; }
   try { _priceHistoryCache = JSON.parse(fs.readFileSync(_PRICES_HISTORY_PATH, 'utf8')); }
-  catch (e) { _priceHistoryCache = {}; }
+  catch (e) {
+    // audit/fix (gauntlet LOW-01): was a silent empty catch — a corrupt/partial
+    // prices/history.json would silently zero ALL five price diagnostics (above-200d-ma,
+    // high-proximity-52w, drawdown-52w, volatility-annualized, price-momentum-12-1) with
+    // zero operator signal. Mirror the _warnMediansLoad one-time-warn pattern so the
+    // regression surfaces in CI logs / pipeline-health. Still fail-soft to {} for liveness.
+    if (!_warnedPriceHistoryLoad) {
+      _warnedPriceHistoryLoad = true;
+      console.warn('[prices] FAILED to load prices/history.json (corrupt/missing): ' +
+        (e && e.message || e) + ' — all price diagnostics zeroed for this process. ' +
+        'Investigate file integrity.');
+    }
+    _priceHistoryCache = {};
+  }
   if (!_priceHistoryCache || typeof _priceHistoryCache !== 'object') _priceHistoryCache = {};
   return _priceHistoryCache;
 }
 // test-only hook: reset the shared price-history cache (mirrors the per-method
 // _resetCacheForTests seams that previously reset each private cache).
-function _resetPriceHistoryForTests() { _priceHistoryCache = null; }
+function _resetPriceHistoryForTests() { _priceHistoryCache = null; _warnedPriceHistoryLoad = false; }
 
 let _sectorMediansCache = null;
 let _autoMediansCache = null;     // Tag 167: v2 region-aware auto-medians

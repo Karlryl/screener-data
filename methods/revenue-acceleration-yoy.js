@@ -55,10 +55,26 @@ function evaluate(stock) {
   const r0 = _unwrap(revArr[0]);
   const r1 = _unwrap(revArr[1]);
   const r2 = _unwrap(revArr[2]);
-  if (r0 == null || r1 == null || r2 == null || r1 <= 0 || r2 <= 0) {
+  // audit/fix (gauntlet LOW-29): reject non-positive latest revenue (r0<=0
+  // makes YoY meaningless), in addition to the existing r1<=0 / r2<=0 guards.
+  if (r0 == null || r1 == null || r2 == null || r0 <= 0 || r1 <= 0 || r2 <= 0) {
     return H.buildResult({
       computable: false,
       reason: 'invalid rev[0..2] = ' + r0 + ', ' + r1 + ', ' + r2,
+      threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    });
+  }
+  // audit/fix (gauntlet LOW-29): materiality floor — a tiny trough denominator
+  // (e.g. r1=1 vs r0=200) manufactures an absurd YoY spike (+19900pp). Require
+  // each denominator to be ≥ 1% of the latest revenue r0; below that, the YoY is
+  // not meaningful, so return computable:false (trough-denominator) rather than
+  // a fabricated spike.
+  const MATERIALITY = 0.01 * r0;
+  if (r1 < MATERIALITY || r2 < MATERIALITY) {
+    return H.buildResult({
+      computable: false,
+      reason: 'trough-denominator: rev[1..2] = ' + r1 + ', ' + r2 +
+              ' below 1% of latest rev[0] = ' + r0,
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
