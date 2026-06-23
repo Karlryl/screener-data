@@ -2924,6 +2924,250 @@ test('financials_banks PARITÄT: KEIN banks-only Feld auf den anderen Buckets (L
   }
 });
 
+// ===========================================================================
+// equity_reits (CORE court bucket) — ONE equity-REIT through-cycle quality cohort. Court gauntlet DESIGN
+// (BUILD_WITH_CAVEATS / court REVISE 2026-06-24). 4 SCORED axes {opMargin, ffoAssets, revG3, ndGA} via the PARALLEL
+// engine absKaliberReits (coverage-renorm; the 21 existing CORE/court buckets BYTE-UNTOUCHED — parity guard below +
+// the tag28 fixture-hash gate). The COURT-REQUIRED revisions: (0) hard-separate mortgage REITs; (1) {value}-unwrap the
+// FLOW fields + typeof-number assert; (2) FFO gains-on-sale guard caps SPG; (3) top-tier-no-FFO DROP+renorm disclosure;
+// (4) always-on BLIND walls; (5) US-primary de-ADR classifier. The economic SHELL gate excludes FRMI/MRP/JAN/BXDC.
+// ===========================================================================
+const reR = doc.equity_reits;
+const RE_ = reR ? reR.members : [];
+
+test('equity_reits: bucket exists with members; label nennt v0 + REIT quality', () => {
+  assert(reR && Array.isArray(reR.members) && RE_.length > 0, 'equity_reits bucket fehlt/leer');
+  assert(/Equity-REITs v0/.test(reR.label || ''), `label sollte v0 nennen: ${reR.label}`);
+  assert(/NOI|FFO|REIT/i.test(reR.label || ''), 'label sollte NOI/FFO/REIT nennen');
+});
+
+test('equity_reits MARQUEE: O/PLD/VICI/SPG/EXR/EGP/CTRE classify+score AND survive to a sane rank (fail-loud)', () => {
+  const MARQUEE = ['O', 'PLD', 'VICI', 'SPG', 'EXR', 'EGP', 'CTRE'];
+  const scored = RE_.filter(m => m.score != null);
+  const scoredSet = new Set(scored.map(m => m.ticker));
+  const missing = MARQUEE.filter(t => !scoredSet.has(t));
+  assert(missing.length === 0, `MARQUEE COVERAGE FAIL — nicht klassifiziert/gescort: ${missing.join(', ')}`);
+  const ranked = scored.slice().sort((a, b) => b.score - a.score);
+  for (const t of MARQUEE) {
+    const rank = ranked.findIndex(m => m.ticker === t) + 1;
+    assert(rank > 0 && rank <= Math.ceil(ranked.length * 0.90), `${t} rank ${rank}/${ranked.length} — Flaggschiff ins unterste Dezil exiliert (Vintage-collapse-Regression)`);
+  }
+  const { assertReitsMarquee } = require('./court-score.js');
+  assert(typeof assertReitsMarquee === 'function', 'assertReitsMarquee nicht exportiert');
+  assertReitsMarquee(doc); // throws on collapse / mortgage-control leak
+});
+
+test('equity_reits SI-5: classifiedCount === scoredCount + excludedCount (fail-loud identity)', () => {
+  assert(reR.classifiedCount != null && reR.scoredCount != null && reR.excludedCount != null, 'SI-5 counts fehlen');
+  assert(reR.classifiedCount === reR.scoredCount + reR.excludedCount,
+    `SI-5 mismatch: classified ${reR.classifiedCount} !== scored ${reR.scoredCount} + excluded ${reR.excludedCount}`);
+  // Live-recomputed CLEAN de-ADRd + deduped count 2026-06-24: 114 classified (mortgage REITs hard-separated OUT).
+  assert(reR.classifiedCount === 114, `classified sollte 114 sein (de-ADRd + mortgage-separated), ist ${reR.classifiedCount}`);
+});
+
+test('equity_reits HARD-SEPARATION: NO mortgage REIT (NLY/AGNC/STWD/ABR/RITM/BXMT/...) in the cohort (court rev #0)', () => {
+  const { assertReitsNoMortgageLeak, REITS_MORTGAGE_CONTROL, REIT_MORTGAGE_DENY } = require('./court-score.js');
+  const allTk = new Set(RE_.map(m => m.ticker));
+  const leaked = REITS_MORTGAGE_CONTROL.filter(t => allTk.has(t));
+  assert(leaked.length === 0, `MORTGAGE-CONTROL FAIL — mortgage REIT(s) in der Kohorte: ${leaked.join(', ')}`);
+  for (const t of ['NLY', 'AGNC', 'STWD', 'ABR', 'RITM', 'BXMT', 'CIM', 'DX', 'EFC', 'LADR', 'ARI', 'ARR', 'ORC', 'TWO']) {
+    assert(REIT_MORTGAGE_DENY.has(t), `${t} sollte im REIT_MORTGAGE_DENY-Set sein`);
+    assert(!allTk.has(t), `${t} (mortgage REIT) darf NICHT in der equity_reits-Kohorte sein (court rev #0)`);
+  }
+  assert(typeof assertReitsNoMortgageLeak === 'function', 'assertReitsNoMortgageLeak nicht exportiert');
+  let listing = new Map();
+  try {
+    const lp = (CAND_TEST.replace(/_court-candidates([^/\\]*)\.json$/, '_court-listing$1.json'));
+    const ld = JSON.parse(fs.readFileSync(lp, 'utf8'));
+    const obj = ld && ld.listings ? ld.listings : (ld || {});
+    for (const [t, rec] of Object.entries(obj)) listing.set(t, rec);
+  } catch {}
+  assertReitsNoMortgageLeak(doc, listing); // throws on a mortgage-DENY/country-set leak; country=undefined US REITs tolerated
+});
+
+test('equity_reits anti-leak: the assert does NOT throw on country=undefined US REITs (O/VICI/PLD/TRNO)', () => {
+  // court revision #5: O/VICI/PLD/TRNO carry country=undefined and MUST be admitted+scored (the anti-leak must NOT be
+  // keyed on country!=US, which would throw on them). Verify they are scored, not excluded.
+  for (const t of ['O', 'VICI', 'PLD', 'TRNO']) {
+    const m = RE_.find(x => x.ticker === t);
+    assert(m != null, `${t} (country=undefined US REIT) sollte in der Kohorte sein`);
+    assert(m.score != null && isFinite(m.score), `${t} sollte gescort sein (score!=null), hat ${m.score}`);
+  }
+});
+
+test('equity_reits {value}-unwrap (court rev #1): the FLOW fields produce NUMERIC axes, not NaN', () => {
+  // The annualRev/OpInc/NetIncome/Depreciation are {value}-WRAPPED; without unwrap every axis would be NaN. Verify the
+  // marquees carry finite numeric axis values (opMargin from annualOpInc[0]/annualRev[0], both wrapped).
+  for (const t of ['O', 'VICI', 'PLD', 'EXR', 'EGP', 'CTRE']) {
+    const m = RE_.find(x => x.ticker === t);
+    assert(m != null, `${t} fehlt`);
+    assert(m.opMarginReit != null && typeof m.opMarginReit === 'number' && isFinite(m.opMarginReit),
+      `${t} opMargin sollte eine endliche Zahl sein (NICHT NaN — {value}-unwrap), ist ${m.opMarginReit}`);
+    assert(m.netDebtToAssets != null && typeof m.netDebtToAssets === 'number' && isFinite(m.netDebtToAssets),
+      `${t} netDebtToAssets sollte eine endliche Zahl sein, ist ${m.netDebtToAssets}`);
+  }
+  // EXR/EGP carry a FFO axis (annualDepreciation present) — also wrapped, must be numeric.
+  for (const t of ['EXR', 'EGP']) {
+    const m = RE_.find(x => x.ticker === t);
+    assert(m.ffoAssets != null && typeof m.ffoAssets === 'number' && isFinite(m.ffoAssets),
+      `${t} ffoAssets sollte eine endliche Zahl sein, ist ${m.ffoAssets}`);
+  }
+});
+
+test('equity_reits FFO-gains guard (court rev #2): SPG ((NI+dep)/OCF=1.49) carries FFO_GAINS_INFLATED + capped FFO', () => {
+  const spg = RE_.find(m => m.ticker === 'SPG');
+  assert(spg != null, 'SPG sollte in der Kohorte sein');
+  assert(spg.score != null, 'SPG sollte gescort sein');
+  assert(Array.isArray(spg.lamps) && spg.lamps.includes('FFO_GAINS_INFLATED'),
+    'SPG sollte den FFO_GAINS_INFLATED-Lamp tragen (gains-on-sale-infliertes FFO gecappt)');
+  // the capped FFO must be sane (positive, finite) — the sanity bound min(NI+dep, OCF+dep)/assets applied.
+  assert(spg.ffoAssets != null && isFinite(spg.ffoAssets) && spg.ffoAssets > 0, `SPG ffoAssets sollte gecappt + sane sein, ist ${spg.ffoAssets}`);
+});
+
+test('equity_reits TOP-TIER-NO-FFO disclosure (court rev #3): VICI/O/PLD/TRNO ffoAssets DROPPED + renorm, NOT hidden', () => {
+  for (const t of ['VICI', 'O', 'PLD', 'TRNO']) {
+    const m = RE_.find(x => x.ticker === t);
+    assert(m != null, `${t} fehlt`);
+    assert(m.ffoAssets == null, `${t} sollte ffoAssets=null haben (annualDepreciation absent), hat ${m.ffoAssets}`);
+    assert(m.score != null && isFinite(m.score), `${t} sollte trotzdem gescort sein (auf opMargin+revG3+ndGA renormed)`);
+    assert(Array.isArray(m.absUsedAxes) && !m.absUsedAxes.includes('ffoAssets'), `${t} sollte ffoAssets NICHT in usedAxes haben`);
+    assert(Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.includes('ffoAssets'), `${t} sollte ffoAssets in droppedAxes haben`);
+    assert(m.absUsedAxes.length >= 2, `${t} sollte auf den anderen Achsen scoren (>=2 usedAxes)`);
+    assert(m.lamps.includes('FFO_COVERAGE_PARTIAL'), `${t} sollte FFO_COVERAGE_PARTIAL lamp tragen`);
+  }
+  // bucket-level coverage disclosure.
+  assert(reR.ffoCoverage != null && reR.ffoCoverage.dropped > 0, 'ffoCoverage (DROP disclosure) fehlt/leer');
+});
+
+test('equity_reits SHELL SI-4 (court found FRMI/MRP/JAN/BXDC): <3 positive-revenue-years / no balance sheet excluded (score=null)', () => {
+  for (const t of ['FRMI', 'MRP', 'JAN', 'BXDC']) {
+    const m = RE_.find(x => x.ticker === t);
+    if (!m) continue; // (CMRF is excluded a-fortiori at classification as an OTC pink-sheet name → not in members at all)
+    assert(m.score === null, `${t} (shell, <3 positive-rev-years) sollte score=null haben, hat ${m.score}`);
+    assert(m.exclusionReason === 'OUT_OF_SEGMENT:shell', `${t} sollte OUT_OF_SEGMENT:shell sein, ist ${m.exclusionReason}`);
+  }
+  // CMRF is NOT classified into equity_reits (OTC pink-sheet non-traded REIT → de-ADR/OTC guard at classification).
+  assert(!RE_.some(m => m.ticker === 'CMRF'), 'CMRF (OTC pink-sheet) darf NICHT in der equity_reits-Kohorte sein');
+  // every excluded member has score=null (SI-4: never a misleading 0/headline rank).
+  assert(Array.isArray(reR.excluded), 'excluded[] fehlt');
+  for (const m of reR.excluded) assert(m.score == null, `${m.ticker} in excluded[] sollte score=null haben, hat ${m.score}`);
+});
+
+test('equity_reits CBL thin-axis: survives the shell gate (3 rev-years) but thin (only ndGA) → membership-Out, NOT shell-excluded', () => {
+  const cbl = RE_.find(m => m.ticker === 'CBL');
+  if (cbl) {
+    // CBL is NOT a shell (3 positive-revenue-years) — it is a thin-axis distressed retail REIT (only ndGA computable).
+    assert(cbl.exclusionReason !== 'OUT_OF_SEGMENT:shell', 'CBL ist KEIN shell (3 rev-years) — darf NICHT OUT_OF_SEGMENT:shell sein');
+    // it took the coverage-renorm thin-axis path (opMargin/ffoAssets/revG3 dropped).
+    assert(Array.isArray(cbl.absDroppedAxes) && cbl.absDroppedAxes.includes('opMargin'),
+      'CBL sollte opMargin gedroppt haben (thin-axis coverage-renorm)');
+    assert(cbl.lamps.some(l => /coverage-renorm/.test(l)), 'CBL sollte einen coverage-renorm-Lamp tragen (thin-axis)');
+  }
+});
+
+test('equity_reits: top names sane (quality triple-net/industrial/specialty/healthcare REITs, NOT a shell/mortgage)', () => {
+  const ranked = RE_.filter(m => m.score != null && isFinite(m.score)).sort((a, b) => b.score - a.score);
+  assert(ranked.length > 0, 'keine gescorten REIT-Namen');
+  const top = ranked[0];
+  // the replicated top set: VICI/O/PLD/TRNO/EXR/EGP/CTRE/EPRT/OHI/LTC + the marquees (triple-net/industrial/specialty/healthcare).
+  const KNOWN_QUALITY = new Set(['VICI', 'O', 'PLD', 'TRNO', 'EXR', 'EGP', 'CTRE', 'EPRT', 'OHI', 'LTC', 'ADC', 'NNN', 'WPC', 'STAG', 'REXR', 'AMT', 'PSA']);
+  assert(top.exclusionReason !== 'OUT_OF_SEGMENT:shell', `TOP ${top.ticker} darf KEIN shell sein`);
+  assert(KNOWN_QUALITY.has(top.ticker), `TOP sollte ein bekannter Quality-REIT sein, ist ${top.ticker}`);
+  // no mortgage REIT scored at all (positive-control inside the ranked set).
+  const MORTGAGE = new Set(['NLY', 'AGNC', 'STWD', 'ABR', 'RITM', 'BXMT', 'CIM']);
+  const leaked = ranked.filter(m => MORTGAGE.has(m.ticker));
+  assert(leaked.length === 0, `mortgage REIT(s) gescort: ${leaked.map(m => m.ticker).join(', ')}`);
+});
+
+test('equity_reits: FOUR scored axes {opMargin, ffoAssets, revG3, ndGA}; weights Σ=1.0; opMargin+ffoAssets the pillar', () => {
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  const w = NORMS.equity_reits.weights;
+  const keys = Object.keys(w).sort().join(',');
+  assert(keys === 'ffoAssets,ndGA,opMargin,revG3', `4 Achsen erwartet, hat ${keys}`);
+  for (const forbidden of ['gpa', 'gm', 'fcfMargin', 'netIssuance', 'roce', 'assetGrowthPenalty']) {
+    assert(!(forbidden in w), `${forbidden} darf KEINE gewichtete REIT-Achse sein`);
+  }
+  const sum = Object.values(w).reduce((s, v) => s + v, 0);
+  assert(Math.abs(sum - 1.0) < 1e-9, `weights sollten Σ=1.0 sein, sind ${sum}`);
+  assert(w.opMargin === 0.30 && w.ffoAssets === 0.30 && w.revG3 === 0.25 && w.ndGA === 0.15,
+    'weights sollten {opMargin .30, ffoAssets .30, revG3 .25, ndGA .15} sein');
+  // opMargin+ffoAssets the profitability pillar (.60); ndGA .15 the GENEROUS leverage-discipline tiebreaker (smallest).
+  assert((w.opMargin + w.ffoAssets) === 0.60, 'opMargin+ffoAssets sollten den .60 Profitabilitäts-Pillar bilden');
+  assert(w.ndGA <= Math.min(w.opMargin, w.ffoAssets, w.revG3), 'ndGA sollte das kleinste Achsengewicht (GENEROUS discipline) sein');
+});
+
+test('equity_reits: NORMS frozen-id + recomputed anchors (opMargin .08/.54, ffoAssets .023/.094, revG3 .00/.17, ndGA -.60/-.29)', () => {
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  const n = NORMS.equity_reits;
+  assert(n.id === 'reits-norms-2026-06-24', `norm id falsch: ${n.id}`);
+  assert(n.opMargin.floor === 0.08 && n.opMargin.elite === 0.54, `opMargin sollte .08/.54 sein, ist ${n.opMargin.floor}/${n.opMargin.elite}`);
+  assert(n.ffoAssets.floor === 0.023 && n.ffoAssets.elite === 0.094, 'ffoAssets sollte .023/.094 sein');
+  assert(n.revG3.floor === 0.00 && n.revG3.elite === 0.17, 'revG3 sollte .00/.17 sein');
+  // ndGA is the INVERTED leverage-discipline axis: q(-ndGA), floor -.60 (60% net-debt/assets worst), elite -.29 (29% best).
+  assert(n.ndGA.floor === -0.60 && n.ndGA.elite === -0.29, 'ndGA sollte -.60/-.29 sein (INVERTED leverage discipline)');
+  assert(n.ndGA.elite > n.ndGA.floor, 'ndGA floor<elite (monotone Skala)');
+  assert(n.ffoGainsGuard && n.ffoGainsGuard.ratioCap === 1.2, 'ffoGainsGuard.ratioCap sollte 1.2 sein (court rev #2)');
+  // n=114 >= REL_MIN_N=15 → full ABS+REL blend (β=0.6), NOT THIN_REL.
+  assert(n.rel && n.rel.minN === 15 && n.rel.beta === 0.6, 'reits sollte full ABS+REL (beta .6, minN 15) sein');
+});
+
+test('equity_reits-unit: absKaliberReits 4-axis coverage-renorm (ffoAssets-drop renorm Σ=1.0; all-null → 0; ndGA INVERTED)', () => {
+  const { absKaliberReits } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  // full 4 axes (elite REIT): high NOI margin, high FFO yield, strong rent growth, low leverage (ndGA .29).
+  const full = absKaliberReits({ opMargin: 0.54, ffoAssets: 0.094, revG3: 0.17, ndGA: 0.29 }, 'equity_reits');
+  assert(full.usedAxes.length === 4 && full.droppedAxes.length === 0, `full sollte 4 Achsen nutzen, hat ${full.usedAxes.length}`);
+  assert(Math.abs(Object.values(full.renormWeights).reduce((s, v) => s + v, 0) - 1.0) < 1e-9, 'renormWeights Σ=1.0');
+  assert(full.absK > 0.95, `elite REIT sollte absK~1.0 ergeben, hat ${full.absK}`);
+  // ndGA is INVERTED + LEVEL-scored: low net-debt/assets (.29) must score HIGHER than over-levered (.60), all else equal.
+  const lowLev = absKaliberReits({ opMargin: 0.40, ffoAssets: 0.06, revG3: 0.10, ndGA: 0.29 }, 'equity_reits');
+  const highLev = absKaliberReits({ opMargin: 0.40, ffoAssets: 0.06, revG3: 0.10, ndGA: 0.60 }, 'equity_reits');
+  assert(lowLev.absK > highLev.absK, 'Niedrige Leverage (.29) sollte HÖHER scoren als Over-Levered (.60) — ndGA ist INVERTED');
+  // GENEROUS: a name at ~.29 scores elite on ndGA, ~.60 floor (only the over-levered lose points).
+  const { q, NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  assert(q(-0.29, NORMS.equity_reits.ndGA) >= 0.99, 'ndGA .29 sollte elite (q~1) scoren');
+  assert(q(-0.60, NORMS.equity_reits.ndGA) <= 0.01, 'ndGA .60 sollte floor (q~0) scoren');
+  // ffoAssets-drop (VICI/O/PLD/TRNO-like, annualDepreciation null) → 3 axes renormalize to Σ=1.0 (NEVER imputed)
+  const dropFfo = absKaliberReits({ opMargin: 0.48, ffoAssets: null, revG3: 0.18, ndGA: 0.35 }, 'equity_reits');
+  assert(dropFfo.droppedAxes.includes('ffoAssets') && dropFfo.usedAxes.length === 3, 'ffoAssets-drop sollte 3 Achsen lassen');
+  assert(Math.abs(Object.values(dropFfo.renormWeights).reduce((s, v) => s + v, 0) - 1.0) < 1e-9, 'renorm Σ=1.0 nach ffoAssets-drop');
+  // all-null → 0 (pathological shell, no fake-neutral)
+  const allNull = absKaliberReits({ opMargin: null, ffoAssets: null, revG3: null, ndGA: null }, 'equity_reits');
+  assert(allNull.absK === 0 && allNull.usedAxes.length === 0, 'all-null sollte absK=0 ergeben');
+});
+
+test('equity_reits: always-on BLIND walls on every member (SAME_STORE_NOI/OCCUPANCY/NAV_PREMIUM/AFFO/FFO_GAINS)', () => {
+  for (const m of RE_) {
+    for (const wall of ['SAME_STORE_NOI_BLIND', 'OCCUPANCY_BLIND', 'NAV_PREMIUM_BLIND', 'AFFO_MAINT_CAPEX_BLIND', 'FFO_GAINS_BLIND']) {
+      assert(Array.isArray(m.lamps) && m.lamps.includes(wall), `${m.ticker} fehlt BLIND-wall ${wall}`);
+    }
+  }
+  assert(Array.isArray(reR.walls) && reR.walls.includes('NAV_PREMIUM_BLIND'), 'reR.walls fehlt NAV_PREMIUM_BLIND');
+});
+
+test('equity_reits SI-3: normTableId + cohort + comparabilityNote (absKaliber cross-bucket, ndGA INVERTED + FFO disclosures)', () => {
+  assert(reR.normTableId === 'reits-norms-2026-06-24', `normTableId fehlt/falsch: ${reR.normTableId}`);
+  assert(reR.cohort === 'equity_reits', `cohort falsch: ${reR.cohort}`);
+  assert(/opMargin/i.test(reR.comparabilityNote || '') && /NAV_PREMIUM_BLIND/i.test(reR.comparabilityNote || ''),
+    'comparabilityNote sollte opMargin + NAV_PREMIUM_BLIND nennen');
+  assert(/INVERTED|lower net-debt/i.test(reR.comparabilityNote || ''), 'comparabilityNote sollte die ndGA-INVERTED-Richtung disclosen');
+  assert(/FFO_COVERAGE_PARTIAL|top-tier|renormed/i.test(reR.comparabilityNote || ''), 'comparabilityNote sollte die top-tier-no-FFO DROP disclosen');
+  assert(/HARD-SEPARAT|Mortgage/i.test(reR.comparabilityNote || ''), 'comparabilityNote sollte die mortgage-Hard-Separation disclosen');
+  assert(reR.scoreScope === 'intra-bucket' && reR.crossBucketComparableField === 'absKaliber', 'SI-3 scope/field fehlt');
+});
+
+test('equity_reits PARITÄT: KEIN reits-only Feld auf den anderen Buckets (Leak-Guard)', () => {
+  // TRULY reits-exclusive fields (re/opMarginReit/ffoAssets/revG3/netDebtToAssets/_re*). The shared names
+  // (absUsedAxes/absDroppedAxes/cohort/absKaliber) legitimately exist on other CORE members.
+  for (const b of ['system_app_software', 'fabless_semi', 'medtech_devices', 'diagnostics_lst', 'industrials_heavy', 'industrials_light', 'staples_branded', 'staples_distribution', 'consdisc_store', 'consdisc_light', 'materials_pricingpower', 'materials_commodity', 'energy_upstream', 'energy_midstream', 'energy_services', 'pharma_branded', 'pharma_biopharma', 'pharma_specialty', 'it_services', 'financials_banks']) {
+    if (!doc[b]) continue;
+    for (const m of doc[b].members) {
+      for (const leak of ['re', 'opMarginReit', 'ffoAssets', 'revG3', 'netDebtToAssets', '_reOpMargin', '_reFfoAssets', '_reRevG3', '_reNdGADisc']) {
+        assert(!(leak in m), `${b}/${m.ticker} hat reits-only Feld '${leak}' geleakt (Parität verletzt)`);
+      }
+    }
+  }
+});
+
 // Temp-Outputs aufräumen (Harness-Isolation: Produktions-Artefakte bleiben unberührt)
 try { fs.unlinkSync(CAND_TEST); } catch {}
 try { fs.unlinkSync(RESULTS); } catch {}

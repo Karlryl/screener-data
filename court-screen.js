@@ -212,6 +212,15 @@ const ITSERVICES_COHORTS = new Set(['it_services']);
 // candidate JSON byte-identical. FCF/OCF are NEVER extracted as axes (economically meaningless for banks).
 const bkCohortByTicker = new Map(); // ticker -> 'financials_banks'
 const BANKS_COHORTS = new Set(['financials_banks']);
+// equity_reits CORE court bucket (court gauntlet DESIGN, BUILD_WITH_CAVEATS / court REVISE 2026-06-24).
+// ADDITIV/parity-safe: exactly the court-buckets.json `equity_reits` tickers are admitted past the asset-light/
+// growth pre-filter (analog the other CORE buckets, Fix A SI-5: no silent drops). The 4 RAW axis inputs
+// {opMargin, ffoAssets, revG3, ndGA} are extracted from snapshots/<T>.json annual.* — the FLOW fields
+// (annualRev/OpInc/NetIncome/Depreciation) are {value}-WRAPPED (court revision #1: MUST unwrap before arithmetic),
+// annualBalance.{totalAssets,totalDebt,totalCash} are RAW — attached as ONE reits-only field `re` -> all other
+// candidate JSON byte-identical. 'REIT - Mortgage' is HARD-SEPARATED OUT in the classifier (never reaches here).
+const reCohortByTicker = new Map(); // ticker -> 'equity_reits'
+const REITS_COHORTS = new Set(['equity_reits']);
 try {
   const bd = JSON.parse(fs.readFileSync(BUCK, 'utf8'));
   const cls = Array.isArray(bd) ? bd : (bd.classifications || []);
@@ -225,6 +234,7 @@ try {
     if (c && PHARMA_COHORTS.has(c.bucket) && c.t) phCohortByTicker.set(c.t, c.bucket);
     if (c && ITSERVICES_COHORTS.has(c.bucket) && c.t) itCohortByTicker.set(c.t, c.bucket);
     if (c && BANKS_COHORTS.has(c.bucket) && c.t) bkCohortByTicker.set(c.t, c.bucket);
+    if (c && REITS_COHORTS.has(c.bucket) && c.t) reCohortByTicker.set(c.t, c.bucket);
   }
 } catch {}
 
@@ -1503,6 +1513,142 @@ function buildBankAxes(ticker, cohort) {
   };
 }
 
+// ===========================================================================
+// equity_reits (CORE) — 4-axis RAW extraction from snapshots (court DESIGN 2026-06-24)
+// ===========================================================================
+// ADDITIV/parity-safe: only fires for tickers in reCohortByTicker (court-buckets equity_reits). Reads snapshots/
+// <T>.json `annual.*` (NEWEST-FIRST) — the canonical pool the deterministic classifier + the re-frozen cohort NORMS
+// were calibrated on.
+//
+// COURT REVISION #1 — THE {value} UNWRAP (the single concrete implementation defect): the FLOW fields
+// (annualRev/annualOpInc/annualNetIncome/annualDepreciation) are WRAPPED OBJECTS {value:N}, NOT raw numbers, while
+// annualBalance.{totalAssets,totalDebt,totalCash} ARE raw. Every axis formula MUST unwrap via reUnwrap() before
+// arithmetic, else all axes silently NaN. A build-time assert (reAssertNumeric) verifies every extracted axis value is
+// typeof number.
+//
+// 4 SCORED axes {opMargin, ffoAssets, revG3, ndGA} via the NEW engine absKaliberReits (coverage-renorm). opMargin/
+// ffoAssets/revG3 NON-inverted (higher=better); ndGA passed RAW (the engine negates it for the inverted, LEVEL-scored
+// leverage-discipline axis q(-ndGA) — lower net-debt/assets is better). ffoAssets DROP+renorm when annualDepreciation
+// absent (~52% of pool incl. the top-tier VICI/O/PLD/TRNO) -> FFO_COVERAGE_PARTIAL lamp; NEVER imputed (court rev #3).
+// COURT REVISION #2 — FFO GAINS-ON-SALE GUARD: FFO ≈ NI + D&A omits the subtraction of gains-on-property-sales
+// (no field exists), inflating sale-active large-caps (SPG ffo/ocf = 1.49). When (NI+dep)/OCF > 1.2 the ffoAssets
+// observation is gains-inflated -> cap it via the sanity bound (use min(NI+dep, OCF+dep) in the numerator) +
+// FFO_GAINS_INFLATED lamp. always-on BLIND walls (court revision #4): the most important REIT value-drivers carry NO
+// local signal (SAME_STORE_NOI/OCCUPANCY/NAV_PREMIUM/AFFO_MAINT_CAPEX/FFO_GAINS).
+// FFO gains-on-sale guard threshold (court revision #2; mirrors NORMS.equity_reits.ffoGainsGuard.ratioCap = 1.2 —
+// kept as a local frozen constant here, the same pattern as IT_DEAL_MASK/IT_RPE_CAP, so the screen build needs no
+// lib/absolute-anchor require). (NI+dep)/OCF > ratioCap -> the FFO is gains-on-sale-inflated -> cap + flag.
+const REIT_FFO_GUARD = Object.freeze({ ratioCap: 1.2 });
+
+// {value}-unwrap for the WRAPPED flow fields (court revision #1). Raw numbers pass through; {value} objects unwrap.
+function reUnwrap(x) {
+  if (x == null) return null;
+  if (typeof x === 'number') return isFinite(x) ? x : null;
+  if (typeof x === 'object' && x.value != null && isFinite(x.value)) return x.value;
+  return null;
+}
+// build-time assert: an extracted axis value must be typeof number (catches a silent {value}-NaN regression).
+function reAssertNumeric(ticker, key, v) {
+  if (v == null) return;                                          // null = legitimately dropped axis (coverage-renorm)
+  if (typeof v !== 'number' || !isFinite(v)) {
+    throw new Error(`equity_reits {value}-unwrap FAIL (court revision #1): ${ticker} axis '${key}' is ${typeof v} (${JSON.stringify(v)}), expected a finite number — the {value}-wrapped flow field was not unwrapped`);
+  }
+}
+
+// snapshot annual cache for reit tickers only (avoid re-reading + keep the parity path untouched).
+const reSnapAnnual = new Map(); // ticker -> snapshot.annual object
+if (reCohortByTicker.size && fs.existsSync(SNAP_DIR)) {
+  for (const t of reCohortByTicker.keys()) {
+    try {
+      const sn = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, t + '.json'), 'utf8'));
+      if (sn && sn.annual) reSnapAnnual.set(t, sn.annual);
+    } catch {}
+  }
+}
+
+// buildReitAxes(ticker, cohort) -> the 4 RAW axis inputs + lamps/audit, or null if no snapshot.
+// opMargin = annualOpInc[0]/annualRev[0] (NOI-margin proxy); ffoAssets = (NI[0]+dep[0])/totalAssets[0] (FFO yield;
+// null+FFO_COVERAGE_PARTIAL when dep absent; gains-guard caps when (NI+dep)/OCF>1.2); revG3 = (rev[0]/rev[3])^(1/3)-1
+// (rent-base 3y CAGR; null+REVG3_THIN when <4 rev years); ndGA = (totalDebt[0]-totalCash[0])/totalAssets[0] (RAW;
+// engine negates -> inverted leverage discipline). Shell facts (positive-revenue-year count + totalAssets[0]) surfaced
+// for the court-score.js SI-4 SHELL gate. ALL flow fields {value}-unwrapped + asserted numeric (court revision #1).
+function buildReitAxes(ticker, cohort) {
+  const a = reSnapAnnual.get(ticker);
+  if (!a) return null;
+  const rev = (a.annualRev || []).map(reUnwrap);                 // NEWEST-FIRST, {value}-WRAPPED -> unwrap
+  const op = (a.annualOpInc || []).map(reUnwrap);                // {value}-WRAPPED
+  const ni = (a.annualNetIncome || []).map(reUnwrap);           // {value}-WRAPPED
+  const dep = (a.annualDepreciation || []).map(reUnwrap);       // {value}-WRAPPED; ABSENT for top-tier VICI/O/PLD/TRNO
+  const ocf = (a.annualOCF || []).map(reUnwrap);                // {value}-WRAPPED; for the FFO-gains guard only
+  const bal = Array.isArray(a.annualBalance) ? a.annualBalance : [];
+  const ta = bal.map(b => (b && b.totalAssets != null && isFinite(b.totalAssets)) ? b.totalAssets : null);   // RAW
+  const td = bal.map(b => (b && b.totalDebt != null && isFinite(b.totalDebt)) ? b.totalDebt : null);         // RAW
+  const tc = bal.map(b => (b && b.totalCash != null && isFinite(b.totalCash)) ? b.totalCash : null);         // RAW
+  const lamps = [];
+
+  // --- Axis R1: NOI-margin proxy = annualOpInc[0]/annualRev[0] ---
+  let opMargin = null;
+  if (op[0] != null && rev[0] != null && rev[0] > 0) opMargin = op[0] / rev[0];
+  else lamps.push('NOT_READY:opmargin');
+
+  // --- Axis R2: FFO yield on asset base = (NI[0] + dep[0]) / totalAssets[0]; FFO-gains guard (court revision #2) ---
+  let ffoAssets = null;
+  if (ni[0] != null && dep[0] != null && ta[0] != null && ta[0] > 0) {
+    let ffoNum = ni[0] + dep[0];
+    // FFO GAINS-ON-SALE GUARD: FFO=NI+D&A omits the gains-on-sale subtraction (no field). When (NI+dep)/OCF > ratioCap
+    // (1.2) the FFO is gains-inflated (SPG ffo/ocf=1.49) -> cap the numerator at the OCF+dep sanity bound + flag.
+    const cap = (REIT_FFO_GUARD && REIT_FFO_GUARD.ratioCap) ? REIT_FFO_GUARD.ratioCap : 1.2;
+    if (ocf[0] != null && ocf[0] > 0 && ffoNum / ocf[0] > cap) {
+      ffoNum = Math.min(ffoNum, ocf[0] + dep[0]);                // sanity bound: FFO cannot exceed OCF + D&A
+      lamps.push('FFO_GAINS_INFLATED');                          // court revision #2: gains-on-sale-inflated FFO capped
+    }
+    ffoAssets = ffoNum / ta[0];
+  } else {
+    lamps.push('FFO_COVERAGE_PARTIAL');                          // dep absent (~52% incl. VICI/O/PLD/TRNO) -> DROP+renorm (court rev #3)
+  }
+
+  // --- Axis R3: rent-base 3y CAGR = (rev[0]/rev[3])^(1/3)-1 (<4 rev years -> DROP+renorm + REVG3_THIN) ---
+  let revG3 = null;
+  if (rev[0] != null && rev[3] != null && rev[3] > 0 && rev[0] > 0) revG3 = Math.pow(rev[0] / rev[3], 1 / 3) - 1;
+  else lamps.push('REVG3_THIN');
+
+  // --- Axis R4: net-debt/assets = (totalDebt[0]-totalCash[0])/totalAssets[0] (RAW; engine negates -> discipline) ---
+  let ndGA = null;
+  if (ta[0] != null && ta[0] > 0 && td[0] != null && tc[0] != null) ndGA = (td[0] - tc[0]) / ta[0];
+  else lamps.push('NOT_READY:leverage');
+
+  // --- always-on BLIND disclosure walls (court revision #4) — the most important REIT value-drivers carry NO local signal ---
+  lamps.push('SAME_STORE_NOI_BLIND');     // same-store NOI growth (the organic-quality gold standard) ABSENT
+  lamps.push('OCCUPANCY_BLIND');          // physical / economic occupancy ABSENT
+  lamps.push('NAV_PREMIUM_BLIND');        // NAV premium/discount ABSENT (and it is VALUATION — excluded by design)
+  lamps.push('AFFO_MAINT_CAPEX_BLIND');   // maintenance-vs-growth capex split ABSENT -> AFFO approximate (FFO is the proxy)
+  lamps.push('FFO_GAINS_BLIND');          // gains-on-property-sales subtraction ABSENT -> FFO over-states for sale-active names
+
+  // build-time {value}-unwrap assert (court revision #1): every extracted axis value must be a finite number (or null).
+  reAssertNumeric(ticker, 'opMargin', opMargin);
+  reAssertNumeric(ticker, 'ffoAssets', ffoAssets);
+  reAssertNumeric(ticker, 'revG3', revG3);
+  reAssertNumeric(ticker, 'ndGA', ndGA);
+
+  // pre-revenue / shell facts for the court-score.js SI-4 SHELL gate (court found FRMI/MRP/JAN/BXDC/CMRF must be shell-
+  // excluded): a name with <3 positive-revenue-years OR no totalAssets[0] is a shell that CANNOT be scored (axes
+  // undefined/explosive). The economic SHELL gate keys on positiveRevYears>=3 + totalAssets[0]>0.
+  const positiveRevYears = rev.filter(v => v != null && isFinite(v) && v > 0).length;
+  const revLatest = rev.find(v => v != null && isFinite(v));
+  return {
+    cohort,
+    opMargin: round(opMargin),
+    ffoAssets: round(ffoAssets),
+    revG3: round(revG3),
+    ndGA: round(ndGA),
+    positiveRevYears,
+    revLatest: (revLatest == null ? null : round(revLatest)),
+    totalAssetsLatest: (ta[0] == null ? null : round(ta[0])),
+    ffoCoverage: (ffoAssets != null),
+    lamps,
+  };
+}
+
 // --- robuste Feld-Helfer (Format ist gemischt: ftsAnnual.* = [{value}], Rest = [num]) ---
 function num(x) {
   if (x == null) return null;
@@ -1595,7 +1741,11 @@ for (const file of files) {
   // below would otherwise DROP every bank); its 4 SCORED axes come from the SNAPSHOT (buildBankAxes) annualNetIncome +
   // annualBalance, not the cache. Bypasses the cache-based early gates. Non-banks path: BYTE-IDENTICAL.
   const bkCohortEarly = (bkCohortByTicker.get(ticker) && bkSnapAnnual.has(ticker)) ? bkCohortByTicker.get(ticker) : null;
-  const coreEarly = indCohortEarly || stpCohortEarly || cdCohortEarly || mtCohortEarly || enCohortEarly || phCohortEarly || itCohortEarly || bkCohortEarly;
+  // equity_reits (CORE): same SI-5 rule — a court-buckets-classified equity-REIT name MUST reach the universe even with
+  // a thin CACHE row. Its 4 SCORED axes come from the SNAPSHOT (buildReitAxes) annual.* arrays, not the cache. Bypasses
+  // the cache-based early gates. Non-reits path: BYTE-IDENTICAL.
+  const reCohortEarly = (reCohortByTicker.get(ticker) && reSnapAnnual.has(ticker)) ? reCohortByTicker.get(ticker) : null;
+  const coreEarly = indCohortEarly || stpCohortEarly || cdCohortEarly || mtCohortEarly || enCohortEarly || phCohortEarly || itCohortEarly || bkCohortEarly || reCohortEarly;
   const p = j.payload || {};
   if (!j.payload && !coreEarly) continue;
   if (j._ftsPartial) stats.partial++;
@@ -1752,6 +1902,7 @@ for (const file of files) {
   const phCohort = phCohortByTicker.get(ticker) || null;
   const itCohort = itCohortByTicker.get(ticker) || null;
   const bkCohort = bkCohortByTicker.get(ticker) || null;
+  const reCohort = reCohortByTicker.get(ticker) || null;
   if (indCohort) {
     // industrials_compounder (CORE): admit EVERY court-buckets-classified industrials name into the universe
     // (cross-sectional cohort percentiles + SI-5 classifiedCount===scoredCount). NO asset-light/growth/gm
@@ -1804,6 +1955,14 @@ for (const file of files) {
     // the snapshot annualNetIncome + annualBalance arrays (buildBankAxes). Sole sanity: a parseable snapshot annual
     // block exists (else SI-5 classifiedCount===scoredCount+excludedCount would mismatch silently).
     if (!bkSnapAnnual.has(ticker)) continue;
+  } else if (reCohort) {
+    // equity_reits (CORE): identical admission policy — admit EVERY court-buckets-classified equity-REIT name into the
+    // universe (cross-sectional cohort percentiles + SI-5). NO asset-light/growth/gm pre-filter — REITs are heavy real-
+    // property by nature (the asset-light/ppe gate would drop EVERY REIT); the de-ADR + size + mortgage-separation gate
+    // already ran in the classifier, and the SI-1 shortlist-cut + economic SHELL gate live in court-score.js. 4 axes come
+    // from the snapshot annual.* arrays (buildReitAxes). Sole sanity: a parseable snapshot annual block exists (else SI-5
+    // classifiedCount===scoredCount+excludedCount would mismatch silently).
+    if (!reSnapAnnual.has(ticker)) continue;
   } else if (isMedtech || isDlst) {
     // Milde Daten-Sanity: growth/gm/rev müssen vorhanden + endlich sein (keine ökonomischen Floors).
     // Medtech UND D&LST sind kapitalintensiv/Large-Cap-haltig → asset-light/ppe-Gate + ökonomische Floors
@@ -1864,6 +2023,11 @@ for (const file of files) {
   // DROP+renorm + always-on CREDIT_QUALITY/NIM/EFFICIENCY/CET1/DEPOSIT_FRANCHISE BLIND walls). FCF/OCF NEVER read.
   // Additiv → KEIN Feld auf Nicht-Banks-Records (Parität alle übrigen Buckets).
   const bkExtra = bkCohort ? { bk: buildBankAxes(ticker, bkCohort) } : {};
+  // equity_reits (CORE): the 4 RAW axis inputs {opMargin, ffoAssets, revG3, ndGA} from the snapshot annual.* arrays,
+  // attached as ONE reits-only field `re` ({value}-unwrap + typeof-number assert + FFO-gains guard applied UPSTREAM;
+  // ffoAssets DROP+renorm when dep absent; always-on SAME_STORE_NOI/OCCUPANCY/NAV_PREMIUM/AFFO/FFO_GAINS BLIND walls).
+  // Additiv → KEIN Feld auf Nicht-REIT-Records (Parität alle übrigen Buckets).
+  const reExtra = reCohort ? { re: buildReitAxes(ticker, reCohort) } : {};
   candidates.push({
     ticker,
     growth: round(growth), growth_annual: round(gAnnual), growth_q: round(gQ), growthSource,
@@ -1887,6 +2051,7 @@ for (const file of files) {
     ...phExtra,
     ...itExtra,
     ...bkExtra,
+    ...reExtra,
   });
 }
 

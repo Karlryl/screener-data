@@ -18,7 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const ROOT = __dirname;
-const { absKaliber, absKaliberIndustrials, absKaliberStaples, absKaliberConsDisc, absKaliberMaterials, absKaliberEnergy, absKaliberPharma, absKaliberItServices, absKaliberBanks, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
+const { absKaliber, absKaliberIndustrials, absKaliberStaples, absKaliberConsDisc, absKaliberMaterials, absKaliberEnergy, absKaliberPharma, absKaliberItServices, absKaliberBanks, absKaliberReits, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
 // Medtech M&A snapshot (advisory lamps; object keyed by ticker)
 const maMedtechRaw = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'ma-rpo-snapshot-medtech.json'), 'utf8')); } catch { return {}; } })();
 // Remove _header key
@@ -605,6 +605,42 @@ const FORMULAS = {
     banks: true, cohortKey: 'financials_banks',
     a2Note: 'financials_banks v0 (court gauntlet DESIGN, BUILD_WITH_CAVEATS / court REVISE 2026-06-23; NORMS RECOMPUTED LIVE on the FINAL de-ADRd + deduped US pool 2026-06-23 THEN frozen — the CORE gate). ONE deposit-funded US-bank cohort: Financial Services ∧ industry in {Banks - Regional, Banks - Diversified} ∧ US-listing (DE-ADRd country-domicile guard + FOREIGN_NAME + BANK_FOREIGN_DROP DENY set + positive US-primary test) ∧ >=$1B, deduped. Live: 128 classified (after de-ADRing the 16 foreign megabank ADRs RY/TD/SAN/UBS/MUFG/SMFG/MFG/IBN/ITUB/NU/NWG/BSBR/KB/SHG/WF/BMA + dropping 4 preferred/dual-class/legacy dupes KEY-PK/WFC-PC/FCNCB/BK); 127 scored, 1 SI-4-excluded (MCHB shell — no balance sheet). SCORE = THROUGH-CYCLE BUSINESS QUALITY ONLY, never a credit-cycle bet (the CREDIT_QUALITY_BLIND wall). 4 SCORED axes via absKaliberBanks: roaThruCycle = mean of available annualNetIncome[i]/totalAssets[i] over i=0..3 (the 4y-avg through-cycle damper, w .50, norm .0070/.0164 = live p10 0.70% / p90 1.64%; the LEAD pillar), capitalAdequacy = totalEquity[0]/totalAssets[0] (CET1 surrogate, w .25, norm .084/.137 = live p10 8.9% / p90 13.9%; ~45% of the pool incl. JPM/WFC/PNC/USB carry NULL totalEquity → DROP+renorm + CAPADEQ_DROPPED, NEVER imputed — the court revision #4 case), assetGrowthDiscipline = q(-assetGrowthYoY) (a PENALTY, w .18, norm -.40/.00; assetGrowthYoY = totalAssets[0]/totalAssets[1]-1; balance-sheet ballooning at the cycle peak = credit-quality DESTROYER, so ZERO asset growth is elite and rapid growth is penalized — the CORRECT sign for banks, the OPPOSITE of utilities/REITs; live -ag p10 -0.258 / p90 -0.001 confirms the sign), earningsDurability = min(NI avail)/max(NI avail) over >=3 years when max>0 (w .07, norm .185/.863; LOW weight + BLIND-walled — only ~4 post-2020 years, no real credit cycle). FCF/OCF are HARD-EXCLUDED from all axes (economically meaningless for banks — JPM annualFCF[0] = -$147.8B); annualGP is structurally 0 and annualOpInc is empty for banks (DROPPED). COVERAGE-RENORM: any NOT_READY/null axis dropped, survivors renormalize to Σ=1.0 (no fake-neutral impute) — the load-bearing capitalAdequacy DROP path on the marquees. score=100*(0.6*absKaliber+0.4*REL), β=0.6, REL per-cohort (n=128≫15). WALLS (always-on lamps, court revision #5): CREDIT_QUALITY_BLIND (NPLs/net charge-offs/loan-loss provisions ABSENT — the single most important bank dimension; the score cannot see asset quality), NIM_BLIND (net interest margin absent), EFFICIENCY_RATIO_BLIND (cost/income ratio absent), CET1_BLIND (regulatory CET1/RWA absent — capitalAdequacy is a raw equity/assets surrogate, not Basel), DEPOSIT_FRANCHISE_BLIND (deposit mix/cost-of-funds absent). SI-4 out-of-class (non-bank industry / non-US per the de-ADRd guard / foreign-megabank ADR / <$1B → never enter court-buckets; SHELL with no positive annualNetIncome in any year OR totalAssets[0] null/<=0 → score=null + excluded[] OUT_OF_SEGMENT:shell, the materials/energy lesson adapted to the revenue-less bank schema) → score=null + excluded[]; SI-5 classifiedCount===scoredCount+excludedCount fail-loud; marquee assert (JPM/PNC/USB/MTB/EWBC/CFR/FITB classify AND survive to a sane rank) fail-loud + foreign-DENY anti-leak (a classified record in the known-foreign DENY set throws — NOT keyed on country!=US, which would wrongly throw on the legitimate country=undefined US banks JPM/PNC/USB/MTB). DISCLOSURE (court revision #4): capitalAdequacy is INVISIBLE on JPM/WFC/PNC/USB (totalEquity absent) — they score on the other 3 axes via coverage-renorm, surfaced as the CAPADEQ_DROPPED lamp. Additive/parity-safe. Constants frozen 2026-06-23.',
   },
+  // equity_reits (CORE court bucket) — ONE equity-REIT through-cycle quality cohort. Court gauntlet DESIGN
+  // (BUILD_WITH_CAVEATS / court REVISE, 2026-06-24; NORMS RECOMPUTED LIVE on the FINAL de-ADR'd + deduped US pool
+  // 2026-06-24, n=114 — the 14 'REIT - Mortgage' names HARD-SEPARATED OUT — THEN frozen — the CORE gate). 4 SCORED axes
+  // {opMargin, ffoAssets, revG3, ndGA} via the NEW engine absKaliberReits (coverage-renorm; the 21 existing CORE/court
+  // buckets are BYTE-UNTOUCHED). Weights {opMargin .30, ffoAssets .30, revG3 .25, ndGA .15}: opMargin+ffoAssets the
+  // profitability pillar (.60); ndGA .15 the GENEROUS leverage-discipline tiebreaker. RAW inputs from m.re.* (court-
+  // screen buildReitAxes; {value}-unwrap + typeof-number assert + FFO-gains guard applied UPSTREAM). equity_reits = NEW
+  // code keyed by the new cohort string; all existing buckets BYTE-IDENTICAL.
+  equity_reits: {
+    label: 'Equity-REITs v0 (equity REITs; through-cycle quality: NOI-margin, FFO-yield on assets, rent-base 3y CAGR, leverage discipline (net-debt/assets INVERTED); absolute-anchor; SAME_STORE_NOI_BLIND/OCCUPANCY_BLIND/NAV_PREMIUM_BLIND/AFFO_MAINT_CAPEX_BLIND/FFO_GAINS_BLIND)',
+    // REL cross-sectional z/MAD axes mirror the ABS axes (sign-aligned: ndGA reads the NEGATED net-debt/assets upstream
+    // so higher=better, same as the ABS inverted q-input). Weights mirror the absKaliberReits weights.
+    // membership = opMargin(quality) × scale (QUALITY-ONLY, mirrors materials/energy/banks): gm.c = opMargin.floor
+    // (0.08, the quality center), gm.s = 0.20 (a floor-to-elite-spread scale); g is UNUSED (no growth/FCF membership
+    // gate for REITs — revG3 is an axis, not a gate, and a low-growth triple-net is still high quality); scaleLog
+    // center = log10($1B).
+    membership: { g: { c: 0.00, s: 0.06 }, gm: { c: 0.08, s: 0.20 }, scaleLog: { c: log10(1000), s: 0.6 } },
+    axes: [
+      { key: 'opMargin',  name: 'NOI-Margin',     k: 1.5, w: 0.30 },
+      { key: 'ffoAssets', name: 'FFO-Yield',      k: 1.5, w: 0.30 },
+      { key: 'revG3',     name: 'RentBase-3yCAGR', k: 1.5, w: 0.25 },
+      { key: 'ndGAdisc',  name: 'LeverageDisc',   k: 1.5, w: 0.15 },
+    ],
+    dilCap: 0, dilStart: 0.05, dilRange: 0.20, // no separate share-issuance penalty axis for REITs (not a scored dimension here).
+    stages: [
+      { name: 'S3-Elite-NOI',   test: f => f >= 0.45 },
+      { name: 'S2-Strong-NOI',  test: f => f >= 0.27 },
+      { name: 'S1-Adequate',    test: f => f >= 0.08 },
+      { name: 'S0-Sub-Floor',   test: () => true },
+    ],
+    dominantBlock: ['opMargin', 'ffoAssets'],
+    degraded: false,
+    normTableId: 'reits-norms-2026-06-24',
+    reits: true, cohortKey: 'equity_reits',
+    a2Note: 'equity_reits v0 (court gauntlet DESIGN, BUILD_WITH_CAVEATS / court REVISE 2026-06-24; NORMS RECOMPUTED LIVE on the FINAL de-ADRd + deduped US pool 2026-06-24 THEN frozen — the CORE gate). ONE equity-REIT cohort: Real Estate ∧ industry in {REIT - Retail, Office, Industrial, Residential, Diversified, Healthcare Facilities, Specialty, Hotel & Motel} ∧ US-listing (DE-ADRd country-domicile guard + FOREIGN_NAME + positive US-primary test) ∧ >=$1B, deduped. THE HARD SEPARATION (court revision #0): REIT - Mortgage is a DIFFERENT ANIMAL (book-value/leverage/dividend-sustainability, not FFO/NOI) — the 14 US >=$1B mortgage REITs (NLY/AGNC/STWD/ABR/RITM/BXMT/CIM/DX/EFC/LADR/ARI/ARR/ORC/TWO) are CLASSIFIED OUT (never enter equity_reits), a documented exclusion (MORTGAGE_REIT_EXCLUDED). Live: 114 classified; 109 scored, 5 excluded (4 economic SHELLs BXDC/FRMI/MRP/JAN — <3 positive-revenue-years or no balance sheet — PLUS CBL, a below-absolute-floor membership-Out distressed-retail name whose newest annualRev=0 leaves only ndGA computable, NOT a shell; CMRF excluded a-fortiori at classification as an OTC pink-sheet non-traded REIT). SCORE = THROUGH-CYCLE BUSINESS QUALITY ONLY, never valuation (the NAV_PREMIUM_BLIND wall). 4 SCORED axes via absKaliberReits: opMargin = annualOpInc[0]/annualRev[0] (NOI-margin proxy, w .30, norm .08/.54 = live p10 8% / p90 54%), ffoAssets = (annualNetIncome[0]+annualDepreciation[0])/totalAssets[0] (FFO yield on asset base, w .30, norm .023/.094 = live p10 2.3% / p90 9.4%; ~52% of the pool lack annualDepreciation incl. the top-tier VICI/O/PLD/TRNO → DROP+renorm + FFO_COVERAGE_PARTIAL, NEVER imputed — court revision #3), revG3 = (annualRev[0]/annualRev[3])^(1/3)-1 (rent-base 3y CAGR, w .25, norm .00/.17; floor 0 = no credit for contraction), ndGA leverage discipline = q(-((totalDebt[0]-totalCash[0])/totalAssets[0])) (INVERTED + LEVEL-scored, w .15, norm -.60/-.29 = a name at ~29% net-debt/assets scores elite, ~60% floor; GENEROUS so only the OVER-levered lose points — this is LEVEL discipline, NOT the industrials asset-GROWTH penalty). COURT REVISION #1 (the single concrete implementation defect): the FLOW fields (annualRev/OpInc/NetIncome/Depreciation) are {value}-WRAPPED objects, NOT raw numbers (annualBalance.* ARE raw) — every axis unwraps via reUnwrap() before arithmetic + a build-time typeof-number assert, else all axes silently NaN. COURT REVISION #2 (FFO gains-on-sale guard): FFO ≈ NI+D&A omits the gains-on-property-sales subtraction (no field), inflating sale-active large-caps (SPG ffo/ocf = 1.49); when (NI+dep)/OCF > 1.2 the ffoAssets observation is capped at the OCF+D&A sanity bound + FFO_GAINS_INFLATED lamp; residual disclosed FFO_GAINS_BLIND. COVERAGE-RENORM: any NOT_READY/null axis dropped, survivors renormalize to Σ=1.0 (no fake-neutral impute) — the load-bearing ffoAssets DROP path on the top-tier names. score=100*(0.6*absKaliber+0.4*REL), β=0.6, REL per-cohort (n=114≫15). WALLS (always-on lamps, court revision #4): SAME_STORE_NOI_BLIND (same-store NOI growth — the organic-quality gold standard — ABSENT), OCCUPANCY_BLIND (physical/economic occupancy absent), NAV_PREMIUM_BLIND (NAV premium/discount absent; and it is VALUATION — excluded by design), AFFO_MAINT_CAPEX_BLIND (maintenance-vs-growth capex split absent → AFFO approximate, FFO is the headline proxy), FFO_GAINS_BLIND (gains-on-sale subtraction absent → FFO over-states for sale-active names). TOP-TIER-NO-FFO DISCLOSURE (court revision #3): the headline FFO metric is absent for several top names (VICI/O/PLD/TRNO lack annualDepreciation) — they are scored on opMargin+revG3+ndGA renormed, surfaced as the FFO_COVERAGE_PARTIAL lamp; NOT silently hidden. SI-4 out-of-class (non-equity-REIT industry incl. REIT - Mortgage / non-US per the de-ADRd guard / <$1B → never enter court-buckets; economic SHELL with <3 positive-revenue-years OR totalAssets[0] null/<=0 → score=null + excluded[] OUT_OF_SEGMENT:shell, the materials/energy lesson adapted to the REIT schema) → score=null + excluded[]; SI-5 classifiedCount===scoredCount+excludedCount fail-loud; marquee assert (O/PLD/VICI/SPG/EXR/EGP/CTRE classify AND survive to a sane rank) fail-loud + mortgage-REIT anti-leak (a classified record in the known mortgage-REIT set throws). Additive/parity-safe. Constants frozen 2026-06-24.',
+  },
   diagnostics_lst: {
     label: 'Diagnostics-&-Life-Science-Tools v0 (cohort-aware dx|tools, absolute-anchor, deceleration-aware organic growth, FCF-efficiency, chronic-acquirer lamps)',
     membership: { g: { c: 0.10, s: 0.05 }, gm: { c: 0.40, s: 0.10 }, scaleLog: { c: log10(300), s: 0.5 } },
@@ -682,6 +718,20 @@ const IT_MIN_REVENUE = 1e6; // $1M latest-annual-revenue floor for an it_service
 // The SI-5 block asserts NO classified member is in this set — keyed on the foreign-DENY SIGNAL, NOT on country!=US
 // (which would wrongly throw on the legitimate country=undefined US banks JPM/PNC/USB/MTB that carry undefined country).
 const BANK_FOREIGN_DENY = new Set(['IBN', 'ITUB', 'BSBR', 'BMA', 'KB', 'SHG', 'WF', 'MFG', 'MUFG', 'SMFG', 'RY', 'TD', 'SAN', 'UBS', 'NWG', 'NU']);
+
+// equity_reits (CORE) economic SHELL gate (the materials/energy/banks pre-revenue lesson ADAPTED to the REIT schema):
+// a REIT with <3 positive-revenue-years OR no totalAssets[0] (no balance sheet) is a pre-operating shell that CANNOT
+// be scored — the opMargin/ffoAssets/revG3 axes are undefined/explosive on near-zero revenue, so coverage-renorm
+// would degenerate (the court found FRMI/MRP/JAN/BXDC must be shell-excluded; CBL is a thin-axis survivor at exactly 3
+// positive-revenue-years). SI-4 EXCLUDE → score=null + excluded[] OUT_OF_SEGMENT:shell, NEVER scored 0. The reit-axis
+// extractor surfaces m.re.positiveRevYears + m.re.totalAssetsLatest for exactly this gate.
+const REIT_MIN_POSITIVE_REV_YEARS = 3; // >=3 positive-revenue-years required for a REIT to be SCORED (else shell)
+
+// equity_reits (CORE) MORTGAGE-REIT anti-leak set (court revision #0): the known mortgage REITs the hard-separation
+// must keep OUT of equity_reits (mirrors the classifier's REIT_MORTGAGE_CONTROL). The SI-5 block asserts NO classified
+// member is in this set — mortgage REITs are a different animal (book-value/leverage, not FFO/NOI) and scoring one with
+// the equity-REIT axes is economically meaningless.
+const REIT_MORTGAGE_DENY = new Set(['NLY', 'AGNC', 'STWD', 'ABR', 'RITM', 'BXMT', 'CIM', 'DX', 'EFC', 'LADR', 'ARI', 'ARR', 'ORC', 'TWO']);
 
 // --- Skeptiker-Welle-2-Befunde, deterministisch eingebaut ---
 const KILL = new Set(['PS', 'RDVT', 'ADEA', 'OMDA', 'TEM', 'KMTS']); // verifiziert: Ticker-Mismatch / falscher Sektor / Daten-Fehler
@@ -1023,7 +1073,11 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     // and EVERY bank carries a NULL cache gm + null/0 cache scaleRevM (banks have no revenue line) → ALL banks share
     // the degenerate fp 'null|null', which would wrongly drop all-but-one and break SI-5. Skip the gm-reject + fp-dedupe
     // for banks too; all other buckets BYTE-IDENTICAL.
-    if (!F.industrials && !F.consdisc && !F.materials && !F.energy && !F.banks) {
+    // equity_reits (CORE): same rationale as banks/energy — the classifier already deduped, gm is not a REIT axis
+    // (opMargin/ffoAssets are the pillars), and snapshot-sourced REIT names carry a null cache gm + null/0 cache
+    // scaleRevM sharing the degenerate fp 'null|0/null' (would falsely drop names + break SI-5). Skip the gm-reject +
+    // fp-dedupe for reits too; all other buckets BYTE-IDENTICAL.
+    if (!F.industrials && !F.consdisc && !F.materials && !F.energy && !F.banks && !F.reits) {
       if (c.gm != null && c.gm > 1.0) continue;        // GM>100% = unmöglich (Daten-Fehler) -> hard reject
       // dedupe identische Foreign-OTC-Doppellistings (gleiche gm+rev)
       const fp = `${c.gm}|${c.scaleRevM}`;
@@ -1289,6 +1343,28 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.cohort = i.cohort || F.cohortKey;
     }
   }
+  // --- equity_reits (CORE) PRE-PASS: lift the 4 RAW axis inputs from m.re onto the member ---
+  // All intermediates are REITS-LOCAL → all other buckets' member JSON byte-identical (parity). opMargin/ffoAssets/
+  // revG3 are NOT inverted (higher=better directly); ndGAdisc stores the NEGATED raw net-debt/assets so the REL z
+  // (higher=better) AGREES IN SIGN with the ABS inverted q-input (lower net-debt/assets = best). null raw → axis DROP
+  // (coverage-renorm in absKaliberReits; REL sAxis returns 0=neutral for null). The ffoAssets NULL case (~52% of the
+  // pool incl. the top-tier VICI/O/PLD/TRNO lacking annualDepreciation) is the load-bearing DROP path. The FFO-gains
+  // guard already capped the ffoAssets observation UPSTREAM (court revision #2). Mirrors the banks pre-pass.
+  if (F.reits) {
+    for (const m of members) {
+      const i = m.re || {};
+      m._reOpMargin = (i.opMargin != null && isFinite(i.opMargin)) ? i.opMargin : null;
+      m._reFfoAssets = (i.ffoAssets != null && isFinite(i.ffoAssets)) ? i.ffoAssets : null;       // null -> DROP+renorm (FFO_COVERAGE_PARTIAL)
+      m._reRevG3 = (i.revG3 != null && isFinite(i.revG3)) ? i.revG3 : null;
+      m._reNdGADisc = (i.ndGA != null && isFinite(i.ndGA)) ? -i.ndGA : null;                       // q(-ndGA) direction (inverted leverage discipline)
+      // persisted audit fields (rounded)
+      m.opMarginReit = m._reOpMargin == null ? null : Math.round(m._reOpMargin * 10000) / 10000;
+      m.ffoAssets = m._reFfoAssets == null ? null : Math.round(m._reFfoAssets * 10000) / 10000;
+      m.revG3 = m._reRevG3 == null ? null : Math.round(m._reRevG3 * 10000) / 10000;
+      m.netDebtToAssets = (i.ndGA != null && isFinite(i.ndGA)) ? Math.round(i.ndGA * 10000) / 10000 : null;
+      m.cohort = i.cohort || F.cohortKey;
+    }
+  }
 
   // Roh-Achswerte für Stats (cross-sectional Median/MAD): nutze winsorisierte Werte
   // For medtech growth: use _growthMedtech (Fix D organic + winsorize at 1.0) for Stats AND scoring (Fix D
@@ -1384,6 +1460,18 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       default: return m[key];
     }
   };
+  // equity_reits (CORE): 4 axis-keys {opMargin, ffoAssets, revG3, ndGAdisc}; opMargin/ffoAssets/revG3 NON-inverted,
+  // ndGAdisc inverted (stored negated in m._reNdGADisc) → mirror bkRaw on the m._re* fields. The REL z/MAD reads the
+  // SAME signed values as the ABS q-input.
+  const reRaw = (m, key) => {
+    switch (key) {
+      case 'opMargin': return m._reOpMargin;
+      case 'ffoAssets': return m._reFfoAssets;
+      case 'revG3': return m._reRevG3;
+      case 'ndGAdisc': return m._reNdGADisc;
+      default: return m[key];
+    }
+  };
   const rawOfStats = (m, key) => {
     if (F.industrials) return indRaw(m, key);
     if (F.staples) return stpRaw(m, key);
@@ -1393,6 +1481,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (F.pharma) return phRaw(m, key);
     if (F.itservices) return itRaw(m, key);
     if (F.banks) return bkRaw(m, key);
+    if (F.reits) return reRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtech : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -1408,6 +1497,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (F.pharma) return phRaw(m, key);
     if (F.itservices) return itRaw(m, key);
     if (F.banks) return bkRaw(m, key);
+    if (F.reits) return reRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtechAdj : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -1562,6 +1652,19 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       const mRoa = logistic(roaGate, F.membership.gm.c, F.membership.gm.s);   // quality pillar (roaThruCycle.floor center)
       const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
       M = mRoa * mSc;
+    } else if (F.reits) {
+      // equity_reits membership: opMargin(quality) × scale logistic. QUALITY-ONLY (mirrors banks/materials/energy):
+      // REITs have NO revenue-growth membership gate (revG3 is a scored axis, not a gate — a low-growth triple-net is
+      // still high quality), so the NOI-margin pillar stands in for the quality gate (gm membership center is the
+      // opMargin.floor, .08). ffoAssets is NOT a membership input (it is NULL on the top-tier VICI/O/PLD/TRNO — gating
+      // on it would wrongly knock them Out). $1B+ marketCap is the classifier gate. A shell (opMargin null) reads -1 →
+      // low membership, but the economic SHELL SI-4 gate is what actually excludes it (membership-Out only suppresses
+      // the headline rank, never absKaliber).
+      const opGate = m._reOpMargin != null ? m._reOpMargin : -1;        // null opMargin (shell) → low
+      const scaleM = (m.marketCap != null && isFinite(m.marketCap)) ? m.marketCap / 1e6 : (m.scaleRevM || 1); // $1B+ marketCap
+      const mOp = logistic(opGate, F.membership.gm.c, F.membership.gm.s);     // quality pillar (opMargin.floor center)
+      const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
+      M = mOp * mSc;
     } else {
       const mGate = (bucket === 'medtech_devices' && m._growthMedtech != null) ? m._growthMedtech
                   : (bucket === 'diagnostics_lst' && m._growthDlst != null) ? m._growthDlst
@@ -1961,6 +2064,49 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
         m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
       }
       m.stage = stageOf(F, m._bkRoa);
+    } else if (F.reits) {
+      // equity_reits (CORE): absKaliberReits = 4-axis weighted-q {opMargin, ffoAssets, revG3, ndGA} with COVERAGE-RENORM
+      // reading the cohort NORMS. opMargin/ffoAssets/revG3 NON-inverted; ndGA inverted (the engine negates the RAW
+      // net-debt/assets itself, so pass the RAW signed value, mirroring banks assetGrowthYoY). The load-bearing renorm
+      // fires on ~52% of names lacking annualDepreciation (FFO_COVERAGE_PARTIAL — incl. the top-tier VICI/O/PLD/TRNO) +
+      // any NOT_READY axis. The FFO-gains guard already capped the ffoAssets observation UPSTREAM (court revision #2).
+      const cohortNorm = F.cohortKey; // 'equity_reits'
+      const reRec = {
+        opMargin: m._reOpMargin, ffoAssets: m._reFfoAssets, revG3: m._reRevG3,
+        ndGA: (m.re && m.re.ndGA != null && isFinite(m.re.ndGA)) ? m.re.ndGA : null,
+      };
+      const ak = absKaliberReits(reRec, cohortNorm);
+      m.absKaliber = Math.round(ak.absK * 1000) / 1000;
+      m.absUsedAxes = ak.usedAxes;          // audit: which axes survived coverage-renorm (e.g. ffoAssets-dropped on VICI/O/PLD/TRNO)
+      m.absDroppedAxes = ak.droppedAxes;    // audit: FFO_COVERAGE_PARTIAL / REVG3_THIN / NOT_READY drops
+      // n=114 ≫ minN 15 → full ABS+REL blend (β=0.6). THIN_REL guard kept for structural parity (if a future re-court
+      // narrows the cohort below 15 → ABS-only β=1.0); never fires at the live count (members.length=114).
+      const norm = NORMS[cohortNorm];
+      const reThin = !!(norm.rel && norm.rel.minN != null && members.length < norm.rel.minN);
+      const beta = reThin ? 1.0 : 0.6;
+      if (reThin) m._thinRel = true;
+      const rawScore = Math.round(Math.max(0, blendScore(ak.absK, core, beta)) * 10) / 10; // pDil=0 (net-issuance not a REIT axis)
+      // SI-1 shortlist-cut: opMargin >= opMargin.floor (the NOI-margin quality pillar). A NOT_READY/missing opMargin
+      // fails the floor → belowAbsoluteFloor, listed but off the shortlist. NOT a score-kill (REL/score path runs
+      // independently). ffoAssets is NOT a hard headline gate (it is null on the top-tier VICI/O/PLD/TRNO — gating on it
+      // would wrongly knock them off the headline).
+      const gateOpOk = (m._reOpMargin != null) && (m._reOpMargin >= norm.opMargin.floor);
+      m.belowAbsoluteFloor = !gateOpOk;
+      // economic SHELL SI-4 hard-exclude (the materials/energy/banks lesson adapted to the REIT schema): a REIT with
+      // <3 positive-revenue-years OR no totalAssets[0] (e.g. BXDC/FRMI/MRP/JAN) is a shell that CANNOT be scored (axes
+      // undefined). score=null + excluded[] OUT_OF_SEGMENT:shell, NEVER scored 0. DETERMINISTIC, independent of membership.
+      const re = m.re || {};
+      const isShell = !(re.positiveRevYears != null && re.positiveRevYears >= REIT_MIN_POSITIVE_REV_YEARS
+        && re.totalAssetsLatest != null && isFinite(re.totalAssetsLatest) && re.totalAssetsLatest > 0);
+      if (isShell) {
+        m.exclusionReason = 'OUT_OF_SEGMENT:shell';
+        m.score = null;                                 // SI-4: lands in excluded[]
+        m.headlineShortlist = false;
+      } else {
+        m.score = m.membershipClass === 'Out' ? null : rawScore;
+        m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
+      }
+      m.stage = stageOf(F, m._reOpMargin);
     } else {
       // audit/fix (gauntlet E3): SI-4 für saas/fabless — Out-Class-Member bekommen score=null (kein
       // irreführender Headline-Rang), exakt wie medtech/dlst (m.score = membershipClass==='Out' ? null : rawScore).
@@ -2306,6 +2452,28 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       if (m.exclusionReason === 'OUT_OF_SEGMENT:shell' && !L.includes('OUT_OF_SEGMENT:shell')) L.push('OUT_OF_SEGMENT:shell');
       // always-on BLIND WALLS (court revision #5) — re-asserted (idempotent: court-screen already pushed them; dedup).
       for (const wall of ['CREDIT_QUALITY_BLIND', 'NIM_BLIND', 'EFFICIENCY_RATIO_BLIND', 'CET1_BLIND', 'DEPOSIT_FRANCHISE_BLIND']) {
+        if (!L.includes(wall)) L.push(wall);
+      }
+      if (m.belowAbsoluteFloor) L.push('below-abs-floor');
+      if (m.membershipClass === 'Out') L.push('membership-Out(excluded-from-headline)');
+      if (Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.length) L.push(`coverage-renorm(dropped:${m.absDroppedAxes.join('+')})`);
+      m.cohort = F.cohortKey;
+      m.normTableId = getNormTableId(F.cohortKey);
+      m.scoreScope = 'intra-bucket';
+      m.crossBucketComparableField = 'absKaliber';
+    }
+    // equity_reits (CORE) lamps (court DESIGN): advisory, never silent score-kills. Per-name upstream lamps
+    // (FFO_COVERAGE_PARTIAL, FFO_GAINS_INFLATED, REVG3_THIN, NOT_READY:opmargin/leverage) + the always-on BLIND WALLS
+    // (SAME_STORE_NOI/OCCUPANCY/NAV_PREMIUM/AFFO_MAINT_CAPEX/FFO_GAINS) are collected in court-screen (m.re.lamps); the
+    // WALLS are re-asserted here so every member carries them even if the upstream record was thin. FFO_COVERAGE_PARTIAL
+    // is the court-revision-#3 top-tier-no-FFO disclosure (VICI/O/PLD/TRNO scored on opMargin+revG3+ndGA renormed).
+    if (F.reits) {
+      const rl = (m.re && Array.isArray(m.re.lamps)) ? m.re.lamps : [];
+      for (const lamp of rl) if (!L.includes(lamp)) L.push(lamp);
+      // economic SHELL SI-4 exclusion as an explicit lamp (the materials/energy/banks lesson adapted to the REIT schema).
+      if (m.exclusionReason === 'OUT_OF_SEGMENT:shell' && !L.includes('OUT_OF_SEGMENT:shell')) L.push('OUT_OF_SEGMENT:shell');
+      // always-on BLIND WALLS (court revision #4) — re-asserted (idempotent: court-screen already pushed them; dedup).
+      for (const wall of ['SAME_STORE_NOI_BLIND', 'OCCUPANCY_BLIND', 'NAV_PREMIUM_BLIND', 'AFFO_MAINT_CAPEX_BLIND', 'FFO_GAINS_BLIND']) {
         if (!L.includes(wall)) L.push(wall);
       }
       if (m.belowAbsoluteFloor) L.push('below-abs-floor');
@@ -2714,6 +2882,46 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     R.capitalAdequacyCoverage = {
       scored: members.filter(m => m.capitalAdequacy != null).length,
       dropped: members.filter(m => m.capitalAdequacy == null).length,   // ~45% incl. JPM/WFC/PNC/USB (totalEquity absent)
+    };
+  }
+  // equity_reits (CORE court bucket)-only Zusatzfelder (SI-3/4/5/6) — NUR auf dem equity_reits-Bucket gesetzt → alle
+  // anderen Buckets byte-identisch (Parität). Mirrors the banks block; 4 axes {opMargin, ffoAssets, revG3, ndGA}.
+  if (F.reits) {
+    // SI-5: classifiedCount === scoredCount + excludedCount (fail-loud). The classifier assigns ONLY equity_reits
+    // (non-equity-REIT industry incl. REIT - Mortgage / non-US per the de-ADRd guard / <$1B / OTC pink-sheet return null
+    // → never enter court-buckets), so every classified name reaches members[]. excludedCount = SI-4 SHELL names
+    // (<3 positive-revenue-years / no balance sheet, e.g. BXDC/FRMI/MRP/JAN) that entered members but score=null.
+    R.classifiedCount = cls.filter(c => c.bucket === bucket).length;
+    R.excluded = members.filter(m => m.score == null);
+    R.excludedCount = R.excluded.length;
+    R.scoredCount = members.filter(m => m.score != null).length;
+    if (require.main === module && R.classifiedCount !== R.scoredCount + R.excludedCount) {
+      throw new Error(`SI-5 mismatch ${bucket}: classifiedCount ${R.classifiedCount} !== scoredCount ${R.scoredCount} + excludedCount ${R.excludedCount}`);
+    }
+    // MORTGAGE-REIT anti-leak assert (court revision #0): a classified member whose ticker is in the known mortgage-REIT
+    // DENY set is a hard-separation regression (mortgage REITs are a different animal — book-value/leverage, not FFO/NOI)
+    // → fail-loud.
+    if (require.main === module) {
+      const leaked = members.filter(m => REIT_MORTGAGE_DENY.has(m.ticker));
+      if (leaked.length) {
+        throw new Error('MORTGAGE-REIT ANTI-LEAK FAIL (court revision #0) — mortgage REIT(s) reached equity_reits: '
+          + leaked.map(m => m.ticker).join(', '));
+      }
+    }
+    R.normTableId = getNormTableId(F.cohortKey);
+    R.cohort = F.cohortKey;
+    R.scoreScope = 'intra-bucket';
+    R.crossBucketComparableField = 'absKaliber';
+    const n = NORMS[F.cohortKey];
+    const fmt = x => (x == null ? '—' : x.toFixed(4).replace(/^0\./, '.').replace(/^-0\./, '-.'));
+    R.comparabilityNote = `equity_reits ${F.cohortKey} (equity-REIT through-cycle quality cohort: the eight property types Retail/Office/Industrial/Residential/Diversified/Healthcare/Specialty/Hotel; REIT - Mortgage HARD-SEPARATED OUT — a different animal). absKaliber in [0,1] = cross-bucket-comparable absolute scale (4-axis weighted-q over the cohort NORMS '${getNormTableId(F.cohortKey)}': opMargin ${fmt(n.opMargin.floor)}/${fmt(n.opMargin.elite)} (annualOpInc/annualRev NOI-margin proxy), ffoAssets ${fmt(n.ffoAssets.floor)}/${fmt(n.ffoAssets.elite)} ((NI+D&A)/totalAssets FFO yield; ~52% lack annualDepreciation incl. the top-tier VICI/O/PLD/TRNO → DROP+renorm, NEVER imputed — the headline FFO metric is absent for several top names; they are scored on opMargin+revG3+ndGA renormed, FFO_COVERAGE_PARTIAL), revG3 ${fmt(n.revG3.floor)}/${fmt(n.revG3.elite)} ((rev[0]/rev[3])^(1/3)-1 rent-base 3y CAGR), ndGA leverage discipline ${fmt(n.ndGA.floor)}/${fmt(n.ndGA.elite)} (q(-net-debt/assets) INVERTED + LEVEL-scored — lower net-debt/assets is better, ~29% scores elite / ~60% floor, GENEROUS so only the OVER-levered lose points; NOT the industrials asset-GROWTH penalty); weights {opMargin .30, ffoAssets .30, revG3 .25, ndGA .15}. FFO ≈ NI+D&A omits the gains-on-property-sales subtraction (no field) → the FFO-GAINS GUARD caps the ffoAssets observation when (NI+dep)/OCF > 1.2 (gains-inflated, e.g. SPG ffo/ocf 1.49), FFO_GAINS_INFLATED + residual FFO_GAINS_BLIND. COVERAGE-RENORM drops any NOT_READY/null axis (the load-bearing ffoAssets DROP on ~52% of the pool) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6, n=114≫15). WALLS always-on: SAME_STORE_NOI_BLIND (same-store NOI growth absent — the organic-quality gold standard), OCCUPANCY_BLIND, NAV_PREMIUM_BLIND (and it is VALUATION — excluded by design), AFFO_MAINT_CAPEX_BLIND (maintenance-capex split absent → AFFO approximate), FFO_GAINS_BLIND. The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison.`;
+    R.crossBucketComparableNote = 'Use members[].absKaliber (absolute [0,1] caliber) for cross-bucket comparison; members[].score (blended 0-100) is intra-bucket ONLY (mixes per-cohort REL, beta=0.6).';
+    R.walls = ['SAME_STORE_NOI_BLIND', 'OCCUPANCY_BLIND', 'NAV_PREMIUM_BLIND', 'AFFO_MAINT_CAPEX_BLIND', 'FFO_GAINS_BLIND'];
+    // ffoAssets DROP+renorm coverage disclosure (court revision #3): how many names took the FFO_COVERAGE_PARTIAL path
+    // (annualDepreciation absent → ffoAssets dropped, scored on opMargin+revG3+ndGA renormed).
+    R.ffoCoverage = {
+      scored: members.filter(m => m.ffoAssets != null).length,
+      dropped: members.filter(m => m.ffoAssets == null).length,         // ~52% incl. VICI/O/PLD/TRNO (annualDepreciation absent)
     };
   }
   // audit/fix (gauntlet E3): saas/fabless SI-4/SI-5-Retrofit — spiegelt medtech/dlst exakt.
@@ -3297,11 +3505,65 @@ function assertBanksNoForeignLeak(resultsObj, listing) {
   }
 }
 
+// --- equity_reits (CORE court bucket) MARQUEE-COVERAGE + mortgage-REIT anti-leak assert (court DESIGN, fail-loud) ---
+// The 7-name marquee must each be classified AND survive to a SANE rank (not exiled to the bottom). The court named
+// O/PLD/VICI/SPG/EXR/EGP/CTRE (quality triple-net/industrial/specialty/healthcare REITs spanning the property types).
+const REITS_MARQUEE = Object.freeze(['O', 'PLD', 'VICI', 'SPG', 'EXR', 'EGP', 'CTRE']);
+// mortgage-REIT positive-control (court revision #0): the mortgage REITs the hard-separation must keep OUT. Catches a
+// regression that re-admits the REIT - Mortgage industry. Mirrors the classifier's REIT_MORTGAGE_CONTROL.
+const REITS_MORTGAGE_CONTROL = Object.freeze(['NLY', 'AGNC', 'STWD', 'ABR', 'RITM', 'BXMT', 'CIM', 'DX', 'EFC',
+  'LADR', 'ARI', 'ARR', 'ORC', 'TWO']);
+function assertReitsMarquee(resultsObj) {
+  const R = resultsObj.equity_reits;
+  if (!R) return; // equity_reits not in this run (e.g. isolated unit test) → tolerant no-op
+  // marquee must reach the SCORED universe (classified + survived to a sane rank, NOT shell/membership-excluded).
+  const scored = new Set();
+  if (Array.isArray(R.members)) for (const m of R.members) if (m.score != null) scored.add(m.ticker);
+  const missing = REITS_MARQUEE.filter(t => !scored.has(t));
+  if (missing.length) {
+    throw new Error('MARQUEE COVERAGE FAIL (equity_reits DESIGN) — REIT universe collapsed, these bona-fide '
+      + 'US equity-REIT large-caps were not classified/scored: ' + missing.join(', '));
+  }
+  // mortgage-REIT positive-control: the mortgage REITs must NOT have reached the cohort (classified OR scored).
+  const allTk = new Set();
+  if (Array.isArray(R.members)) for (const m of R.members) allTk.add(m.ticker);
+  const leakedControl = REITS_MORTGAGE_CONTROL.filter(t => allTk.has(t));
+  if (leakedControl.length) {
+    throw new Error('MORTGAGE-CONTROL FAIL (equity_reits hard-separation DESIGN) — a mortgage REIT leaked into the '
+      + 'equity_reits cohort: ' + leakedControl.join(', '));
+  }
+}
+// assertReitsNoMortgageLeak(results, listing): GENERATIVE property test. A scored record whose ticker is in the
+// mortgage-REIT DENY set, OR a record with a country SET to a non-US country, is a leak (the de-ADRd guard +
+// hard-separation must exclude them). country=undefined US REITs (O/VICI/PLD/TRNO) are TOLERATED (the positive
+// US-primary test admitted only US-primary undefined-country names).
+function assertReitsNoMortgageLeak(resultsObj, listing) {
+  const R = resultsObj.equity_reits;
+  if (!R || !Array.isArray(R.members)) return;
+  const deny = new Set(REIT_MORTGAGE_DENY);
+  const leaks = [];
+  for (const m of R.members) {
+    if (deny.has(m.ticker)) { leaks.push(`${m.ticker}[mortgage-REIT-DENY-set]`); continue; }   // the mortgage-DENY signal
+    if (!listing || listing.size === 0) continue;
+    const L = listing.get(m.ticker);
+    if (!L) continue; // no snapshot meta → can't assert (country=undefined US REITs: TOLERATED, never throws)
+    if (L.country != null && L.country !== 'United States') {
+      leaks.push(`${m.ticker}[${L.country}/${L.region}]`);   // a country-SET non-US foreigner (de-ADR guard regression)
+    }
+  }
+  if (leaks.length) {
+    throw new Error('EQUITY_REITS ANTI-LEAK ASSERT (court revision #0/#5 — mortgage hard-separation + de-ADRd guard): '
+      + 'leaked record(s) in the equity_reits cohort: ' + leaks.join(', ')
+      + '. The classifier (classify-reits.js) must exclude mortgage REITs + non-US-primary names. NOTE: country=undefined '
+      + 'US REITs (O/VICI/PLD/TRNO) are TOLERATED by design — admitted via the positive US-primary test.');
+  }
+}
+
 // --- Export: computeMedtechOrganicGrowth + computeDlstOrganicGrowth für Unit-Tests ---
 // (computeDlstOrganicGrowth: Fix A FY-Alignment + Fix B dealYearExcluded-Ehrlichkeit, 2026-06-21)
 // + assertNoForeignLeak (gauntlet C5) + assertIndustrialsMarquee + assertStaplesMarquee +
 //   assertStaplesNoForeignLeak (Spec §6.2b) für direkten Property-Test.
-module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL, assertConsdiscMarquee, assertConsdiscNoForeignLeak, CONSDISC_MARQUEE, CONSDISC_EXCLUDE_CONTROL, assertMaterialsMarquee, assertMaterialsNoForeignLeak, MATERIALS_MARQUEE, MATERIALS_FOREIGN_CONTROL, MATERIALS_US_PRIMARY_ALLOWLIST, assertEnergyMarquee, assertEnergyNoForeignLeak, ENERGY_MARQUEE, ENERGY_FOREIGN_CONTROL, ENERGY_US_PRIMARY_ALLOWLIST, assertPharmaMarquee, assertPharmaNoForeignLeak, PHARMA_MARQUEE, PHARMA_FOREIGN_CONTROL, PHARMA_US_PRIMARY_ALLOWLIST, assertItServicesMarquee, assertItServicesNoForeignLeak, ITSERVICES_MARQUEE, ITSERVICES_CONTAM_CONTROL, ITSERVICES_US_PRIMARY_ALLOWLIST, assertBanksMarquee, assertBanksNoForeignLeak, BANKS_MARQUEE, BANKS_FOREIGN_CONTROL, BANK_FOREIGN_DENY };
+module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL, assertConsdiscMarquee, assertConsdiscNoForeignLeak, CONSDISC_MARQUEE, CONSDISC_EXCLUDE_CONTROL, assertMaterialsMarquee, assertMaterialsNoForeignLeak, MATERIALS_MARQUEE, MATERIALS_FOREIGN_CONTROL, MATERIALS_US_PRIMARY_ALLOWLIST, assertEnergyMarquee, assertEnergyNoForeignLeak, ENERGY_MARQUEE, ENERGY_FOREIGN_CONTROL, ENERGY_US_PRIMARY_ALLOWLIST, assertPharmaMarquee, assertPharmaNoForeignLeak, PHARMA_MARQUEE, PHARMA_FOREIGN_CONTROL, PHARMA_US_PRIMARY_ALLOWLIST, assertItServicesMarquee, assertItServicesNoForeignLeak, ITSERVICES_MARQUEE, ITSERVICES_CONTAM_CONTROL, ITSERVICES_US_PRIMARY_ALLOWLIST, assertBanksMarquee, assertBanksNoForeignLeak, BANKS_MARQUEE, BANKS_FOREIGN_CONTROL, BANK_FOREIGN_DENY, assertReitsMarquee, assertReitsNoMortgageLeak, REITS_MARQUEE, REITS_MORTGAGE_CONTROL, REIT_MORTGAGE_DENY };
 
 // --- require.main-Guard (Härtung 2): Write + Ausgabe NUR wenn direkt als Skript ausgeführt ---
 // `require('./court-score.js')` gibt nur den Export zurück und schreibt NICHT outputs/court-results.json.
@@ -3348,6 +3610,12 @@ if (require.main === module) {
   // admitted by the positive US-primary test), else the bank universe collapsed/leaked (the de-ADR killshot guard).
   assertBanksMarquee(results);
   assertBanksNoForeignLeak(results, listingByTicker);
+  // equity_reits (CORE court bucket) DESIGN: the 7-name marquee must each be classified+scored (survive to a sane rank)
+  // + the mortgage-REIT positive-control must stay out (court revision #0 hard-separation) + the GENERATIVE anti-leak
+  // property test must hold (mortgage-DENY signal + country-set; country=undefined US REITs O/VICI/PLD/TRNO tolerated),
+  // else the REIT universe collapsed/leaked.
+  assertReitsMarquee(results);
+  assertReitsNoMortgageLeak(results, listingByTicker);
   fs.writeFileSync(OUT, JSON.stringify(results, null, 2));
 
   // --- Ausgabe ---
