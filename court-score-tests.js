@@ -1749,6 +1749,216 @@ test('consdisc PARITÄT: KEIN consdisc-only Feld auf SaaS/Fabless/Medtech/D&LST/
   }
 });
 
+// =================== MATERIALS_QUALITY (CORE) BUCKET TESTS (v0, two cohorts pricingpower|commodity) ======
+// Spec formula-design-materials_quality-v0-2026-06-22.md (Court DESIGN-PASS v0; NORMS recomputed-live-then-
+// frozen 2026-06-22). materials is a SEPARATE court bucket (disjoint from the 7 prior CORE/projection buckets).
+// NEW code keyed by the new cohort strings → the 7 prior buckets stay byte-identical (parity tests above).
+// DISTINCT: axis C is MARGINSTABILITY (inverse-CV pricing-power proxy, identity-clip {0,1}) instead of eff;
+// scored via the PARALLEL engine absKaliberMaterials. QUALITY-ONLY (anti-commodity pillar gpa+marginStability+
+// assetGrowthPenalty = 0.68 ≫ growth 0.18 — a price-windfall spike cannot top-score).
+const mtP = doc.materials_pricingpower;
+const mtC = doc.materials_commodity;
+const MP = mtP ? mtP.members : [];
+const MC = mtC ? mtC.members : [];
+
+test('materials: both cohort buckets exist (pricingpower + commodity) with members', () => {
+  assert(mtP && Array.isArray(mtP.members) && MP.length > 0, 'materials_pricingpower bucket fehlt/leer');
+  assert(mtC && Array.isArray(mtC.members) && MC.length > 0, 'materials_commodity bucket fehlt/leer');
+  assert(/Materials-Quality v0/.test(mtP.label || ''), `pricingpower label sollte v0 nennen: ${mtP.label}`);
+});
+
+test('materials §6 MARQUEE: all 15 marquees classified+scored across the two cohorts (fail-loud guard)', () => {
+  const MARQUEE = ['LIN', 'APD', 'VMC', 'MLM', 'SHW', 'ECL', 'PPG', 'CRH', 'RPM', 'NEM', 'NUE', 'FCX', 'DOW', 'CF', 'ALB'];
+  const scored = new Set([...MP, ...MC].map(m => m.ticker));
+  const missing = MARQUEE.filter(t => !scored.has(t));
+  assert(missing.length === 0, `MARQUEE COVERAGE FAIL — nicht klassifiziert/gescort: ${missing.join(', ')}`);
+  const { assertMaterialsMarquee } = require('./court-score.js');
+  assert(typeof assertMaterialsMarquee === 'function', 'assertMaterialsMarquee nicht exportiert');
+  assertMaterialsMarquee(doc); // throws on collapse / foreign-control leak
+});
+
+test('materials SI-5: classifiedCount === scoredCount + excludedCount (BEIDE Kohorten, fail-loud)', () => {
+  for (const [name, R] of [['pricingpower', mtP], ['commodity', mtC]]) {
+    assert(R.classifiedCount != null && R.scoredCount != null && R.excludedCount != null, `${name} SI-5 counts fehlen`);
+    assert(R.classifiedCount === R.scoredCount + R.excludedCount,
+      `${name} SI-5 mismatch: classified ${R.classifiedCount} !== scored ${R.scoredCount} + excluded ${R.excludedCount}`);
+  }
+  // Live-recomputed counts 2026-06-22: pricingpower 40, commodity 55 — both n>>15 (full ABS+REL blend, no thin-n).
+  assert(mtP.classifiedCount >= 15, `pricingpower classified sollte >= 15 sein (full-blend), ist ${mtP.classifiedCount}`);
+  assert(mtC.classifiedCount >= 15, `commodity classified sollte >= 15 sein (full-blend), ist ${mtC.classifiedCount}`);
+});
+
+test('materials: a pricingpower compounder marquee scored finite (SHW/RPM/ECL/CRH), peak miner present (NEM/FCX)', () => {
+  // at least one of the specialty-chem compounders must score finite (>0) — the design's HIGH expectation.
+  const ppHigh = ['SHW', 'RPM', 'ECL', 'CRH'].map(t => MP.find(x => x.ticker === t)).filter(Boolean);
+  assert(ppHigh.some(m => Number.isFinite(m.score) && m.score > 0), 'kein SHW/RPM/ECL/CRH mit finitem Score >0');
+  for (const t of ['NEM', 'FCX']) {
+    const m = MC.find(x => x.ticker === t);
+    assert(m && m.absKaliber != null, `${t} (commodity) sollte mit absKaliber präsent sein, ist ${m && m.absKaliber}`);
+  }
+});
+
+test('materials MANDATORY regression (Spec §7-5): compounder margin-stability HIGH, riders self-floor LOW', () => {
+  // The decisive sector-unique live regression: specialty compounders max marginStability (~0.85+); the
+  // commodity-rider ALB (lithium, in pricingpower by industry-string) self-floors to ~0.0 — sinks WITHOUT
+  // recohorting (the §0/§2-C verified separation, the empirical refutation of the hard eligibility gate).
+  const ms = t => { const m = [...MP, ...MC].find(x => x.ticker === t); return m ? m.marginStability : null; };
+  for (const t of ['SHW', 'MLM', 'CRH', 'APD', 'RPM']) {
+    assert(ms(t) != null && ms(t) >= 0.80, `${t} marginStability sollte >=0.80 sein (compounder), ist ${ms(t)}`);
+  }
+  // ALB self-floors (lithium rider in pricingpower) — the disclosed within-cohort floor.
+  assert(ms('ALB') != null && ms('ALB') <= 0.20, `ALB marginStability sollte <=0.20 sein (rider self-floor), ist ${ms('ALB')}`);
+  // No peak miner tops its cohort: the highest-absKaliber commodity name must NOT be a pure gold/precious peak
+  // windfall name with low marginStability (industry-string cohorting + cohort-gpa + capped growth is the guard).
+  const top = MC.filter(m => m.score != null).sort((a, b) => b.score - a.score)[0];
+  assert(top && top.ticker !== 'NEM', `commodity top pick sollte kein Gold-Peak-Name (NEM) sein, ist ${top && top.ticker}`);
+});
+
+test('materials §6 FOREIGN-CONTROL + GENERATIVE anti-leak: foreign-primary miners absent; CRH/LIN allowlisted', () => {
+  const scored = new Set([...MP, ...MC].map(m => m.ticker));
+  for (const t of ['RIO', 'VALE', 'SCCO', 'PKX', 'KGC', 'WPM', 'PAAS', 'SVM', 'BHP', 'CX', 'MT', 'AEM', 'JHX', 'NTR', 'SSL']) {
+    assert(!scored.has(t), `${t} (foreign-primary miner) darf NICHT klassifiziert sein (FOREIGN-CONTROL §6)`);
+  }
+  // CRH/LIN ARE admitted (verified US-primary inversions on the allowlist) — they MUST be present.
+  for (const t of ['CRH', 'LIN']) assert(scored.has(t), `${t} (US-primary allowlist) sollte klassifiziert sein`);
+  // the assertMaterialsNoForeignLeak export must pass on the live results (direct property test), exempting CRH/LIN.
+  const { assertMaterialsNoForeignLeak } = require('./court-score.js');
+  assert(typeof assertMaterialsNoForeignLeak === 'function', 'assertMaterialsNoForeignLeak nicht exportiert');
+  let listing = new Map();
+  try {
+    const lp = (CAND_TEST.replace(/_court-candidates([^/\\]*)\.json$/, '_court-listing$1.json'));
+    const ld = JSON.parse(fs.readFileSync(lp, 'utf8'));
+    const obj = ld && ld.listings ? ld.listings : (ld || {});
+    for (const [t, rec] of Object.entries(obj)) listing.set(t, rec);
+  } catch {}
+  assertMaterialsNoForeignLeak(doc, listing); // throws on any non-allowlisted country-set != US leak
+});
+
+test('materials SI-4: Out-class / below-floor members carry score=null in excluded[] (kein irreführender Rang)', () => {
+  for (const [name, R] of [['pricingpower', mtP], ['commodity', mtC]]) {
+    assert(Array.isArray(R.excluded), `${name} excluded[] fehlt (SI-4)`);
+    for (const m of R.excluded) assert(m.score === null, `${name} excluded ${m.ticker} score sollte null sein, ist ${m.score}`);
+    for (const m of R.members) {
+      if (m.score != null) assert(m.membershipClass !== 'Out', `${name} ranked ${m.ticker} ist Out mit Score (SI-4)`);
+    }
+  }
+});
+
+// audit/fix (re-court materials_quality DENIAL — Spec §1/§5 pre-revenue SI-4 hard-exclude). Regression guard:
+// a materials name with NO real revenue (EMAT annualRev=[], a $4.3B revenue-less shell; LWLG $236k micro) MUST
+// be SI-4 EXCLUDED (score=null + excluded[] with reason OUT_OF_SEGMENT:preexploration), NOT scored — else the
+// coverage-renorm concentrates the absK on the surviving discipline axes and the shell tops the cohort (the
+// re-court finding: EMAT absKaliber 0.899 ranked #1 in materials_commodity). Asserts the named pre-revenue
+// shells are gone from scored members AND that the new commodity top pick is a real-revenue name.
+test('materials SI-4 PRE-REVENUE (re-court): EMAT/LWLG-type zero/near-zero-rev shells EXCLUDED (OUT_OF_SEGMENT:preexploration), not scored', () => {
+  const all = [...MP, ...MC];
+  // (a) the named pre-revenue shells must NOT be in scored members of EITHER cohort.
+  for (const t of ['EMAT', 'LWLG']) {
+    const m = all.find(x => x.ticker === t);
+    if (m) assert(m.score === null, `${t} (pre-revenue shell) darf NICHT gescored sein (SI-4), score=${m.score}`);
+  }
+  // (b) where present, they carry the explicit OUT_OF_SEGMENT:preexploration reason + lamp + sit in excluded[].
+  for (const [name, R] of [['pricingpower', mtP], ['commodity', mtC]]) {
+    for (const t of ['EMAT', 'LWLG']) {
+      const m = R.members.find(x => x.ticker === t);
+      if (!m) continue;
+      assert(m.exclusionReason === 'OUT_OF_SEGMENT:preexploration',
+        `${name}/${t} sollte exclusionReason OUT_OF_SEGMENT:preexploration tragen, ist ${m.exclusionReason}`);
+      assert(Array.isArray(m.lamps) && m.lamps.includes('OUT_OF_SEGMENT:preexploration'),
+        `${name}/${t} sollte die OUT_OF_SEGMENT:preexploration-Lampe tragen`);
+      assert(R.excluded.some(x => x.ticker === t), `${name}/${t} sollte in excluded[] liegen (SI-4)`);
+    }
+  }
+  // (c) the new materials_commodity TOP pick (by absKaliber) is a real-revenue name, NOT a shell: it carries a
+  // finite score AND a latest revenue (mt.revLatest) >= $1M, and is not EMAT. Proves the shell no longer leads.
+  const cTop = MC.filter(m => m.score != null).sort((a, b) => b.absKaliber - a.absKaliber)[0];
+  assert(cTop && cTop.ticker !== 'EMAT', `commodity top-by-absKaliber darf nicht EMAT (shell) sein, ist ${cTop && cTop.ticker}`);
+  assert(cTop && cTop.mt && cTop.mt.revLatest != null && cTop.mt.revLatest >= 1e6,
+    `commodity top ${cTop && cTop.ticker} sollte echte Revenue (>=$1M) tragen, revLatest=${cTop && cTop.mt && cTop.mt.revLatest}`);
+  // (d) NO scored member in either cohort has revLatest below the $1M floor (the pre-revenue cut held universally).
+  for (const m of all) {
+    if (m.score != null) assert(m.mt && m.mt.revLatest != null && m.mt.revLatest >= 1e6,
+      `gescorter Name ${m.ticker} hat revLatest < $1M (pre-revenue leak), revLatest=${m.mt && m.mt.revLatest}`);
+  }
+});
+
+test('materials: FIVE scored axes incl. marginStability (NOT eff); anti-commodity pillar weights sum to 1.0', () => {
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  for (const b of ['materials_pricingpower', 'materials_commodity']) {
+    const w = NORMS[b].weights;
+    const keys = Object.keys(w).sort().join(',');
+    assert(keys === 'assetGrowthPenalty,gpa,growth,marginStability,netIssuance',
+      `${b} sollte die 5 materials-Achsen tragen (marginStability statt eff), hat ${keys}`);
+    assert(!('eff' in w), `${b} darf KEINE eff-Achse haben (materials nutzt marginStability)`);
+    const sum = Object.values(w).reduce((s, v) => s + v, 0);
+    assert(Math.abs(sum - 1.0) < 1e-9, `${b} weights sollten Σ=1.0 sein, sind ${sum}`);
+    // anti-commodity pillar gpa+marginStability+assetGrowthPenalty = 0.68 >> growth 0.18 (QUALITY-ONLY guard)
+    const pillar = w.gpa + w.marginStability + w.assetGrowthPenalty;
+    assert(Math.abs(pillar - 0.68) < 1e-9, `${b} anti-commodity pillar sollte 0.68 sein, ist ${pillar}`);
+    assert(w.growth < pillar, `${b} growth (${w.growth}) muss UNTER dem Pillar (${pillar}) liegen (price-windfall cap)`);
+  }
+});
+
+test('materials: GP/assets cohort-keyed (peak-windfall floor) — commodity floor (.01) < pricingpower floor (.09)', () => {
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  const pp = NORMS.materials_pricingpower.gpa, cm = NORMS.materials_commodity.gpa;
+  assert(pp.floor === 0.09 && pp.elite === 0.34, `pricingpower gpa sollte .09/.34 sein, ist ${pp.floor}/${pp.elite}`);
+  assert(cm.floor === 0.01 && cm.elite === 0.31, `commodity gpa sollte .01/.31 sein, ist ${cm.floor}/${cm.elite}`);
+  // marginStability/growth/assetGrowthPenalty/netIssuance anchors SHARED across cohorts.
+  assert(NORMS.materials_pricingpower.marginStability.elite === NORMS.materials_commodity.marginStability.elite, 'marginStability anchor sollte shared sein');
+  assert(NORMS.materials_pricingpower.growth.elite === NORMS.materials_commodity.growth.elite, 'growth anchor sollte shared sein');
+});
+
+test('materials: always-on WALLS lamps on every member (CYCLE_WALL/COSTCURVE_BLIND/INVENTORY_BLIND/BYPRODUCT_BLIND/BACKLOG_FUTURE)', () => {
+  for (const m of [...MP, ...MC]) {
+    for (const w of ['CYCLE_WALL', 'COSTCURVE_BLIND', 'INVENTORY_BLIND', 'BYPRODUCT_BLIND', 'BACKLOG_FUTURE']) {
+      assert(Array.isArray(m.lamps) && m.lamps.includes(w), `${m.ticker} fehlt WALL-Lampe ${w}`);
+    }
+    assert(!m.lamps.includes('THIN_REL'), `${m.ticker} sollte KEINE THIN_REL haben (beide Kohorten n>>15)`);
+  }
+});
+
+test('materials SI-3: normTableId + cohort + comparabilityNote (absKaliber cross-bucket, REL intra-bucket)', () => {
+  for (const [name, R] of [['pricingpower', mtP], ['commodity', mtC]]) {
+    assert(/materials_(pricingpower|commodity)-norms-2026-06-22/.test(R.normTableId || ''), `${name} normTableId fehlt/falsch: ${R.normTableId}`);
+    assert(R.cohort === `materials_${name}`, `${name} cohort falsch: ${R.cohort}`);
+    assert(/marginStability/.test(R.comparabilityNote || ''), `${name} comparabilityNote sollte marginStability nennen`);
+    assert(R.scoreScope === 'intra-bucket' && R.crossBucketComparableField === 'absKaliber', `${name} SI-3 scope/field fehlt`);
+  }
+});
+
+test('materials-unit: absKaliberMaterials 5-axis coverage-renorm (E-drop renorm Σ=1.0; marginStability-drop; all-null → 0)', () => {
+  const { absKaliberMaterials } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  // full 5 axes
+  const full = absKaliberMaterials({ gpa: 0.20, marginStability: 0.88, growth: 0.03, assetGrowth: 0.05, netShareIssuance: -0.005 }, 'materials_pricingpower');
+  assert(full.usedAxes.length === 5 && full.droppedAxes.length === 0, `full sollte 5 Achsen nutzen, hat ${full.usedAxes.length}`);
+  const sumW = Object.values(full.renormWeights).reduce((s, v) => s + v, 0);
+  assert(Math.abs(sumW - 1.0) < 1e-9, `renormWeights sollten Σ=1.0, sind ${sumW}`);
+  // ISSUANCE_NOT_READY drop (no annualShares) → 4 axes renormalize
+  const dropE = absKaliberMaterials({ gpa: 0.20, marginStability: 0.88, growth: 0.03, assetGrowth: 0.05, netShareIssuance: null }, 'materials_commodity');
+  assert(dropE.droppedAxes.includes('netIssuance') && dropE.usedAxes.length === 4, 'netIssuance-drop sollte 4 Achsen lassen');
+  assert(Math.abs(Object.values(dropE.renormWeights).reduce((s, v) => s + v, 0) - 1.0) < 1e-9, 'renorm Σ=1.0 nach E-drop');
+  // NOT_READY:marginstability drop (<3 opMargin points) → 4 axes
+  const dropMs = absKaliberMaterials({ gpa: 0.20, marginStability: null, growth: 0.03, assetGrowth: 0.05, netShareIssuance: -0.005 }, 'materials_pricingpower');
+  assert(dropMs.droppedAxes.includes('marginStability') && dropMs.usedAxes.length === 4, 'marginStability-drop sollte 4 Achsen lassen');
+  // all-null → 0 (pathological, no fake-neutral)
+  const allNull = absKaliberMaterials({ gpa: null, marginStability: null, growth: null, assetGrowth: null, netShareIssuance: null }, 'materials_pricingpower');
+  assert(allNull.absK === 0 && allNull.usedAxes.length === 0, 'all-null sollte absK=0 ergeben');
+});
+
+test('materials PARITÄT: KEIN materials-only Feld auf den 7 anderen Buckets (Leak-Guard)', () => {
+  // Only TRULY materials-exclusive fields (mt/marginStability/_mt*); the shared axis names (gpa/assetGrowth/
+  // growthInput/absUsedAxes/absDroppedAxes/netShareIssuance) legitimately exist on industrials/staples members.
+  for (const b of ['system_app_software', 'fabless_semi', 'medtech_devices', 'diagnostics_lst', 'industrials_heavy', 'industrials_light', 'staples_branded', 'staples_distribution', 'consdisc_store', 'consdisc_light']) {
+    if (!doc[b]) continue;
+    for (const m of doc[b].members) {
+      for (const leak of ['mt', 'marginStability', '_mtGpa', '_mtMarginStability', '_mtGrowth', '_mtAssetGrowthPenalty', '_mtNetIssuance']) {
+        assert(!(leak in m), `${b}/${m.ticker} hat materials-only Feld '${leak}' geleakt (Parität verletzt)`);
+      }
+    }
+  }
+});
+
 // Temp-Outputs aufräumen (Harness-Isolation: Produktions-Artefakte bleiben unberührt)
 try { fs.unlinkSync(CAND_TEST); } catch {}
 try { fs.unlinkSync(RESULTS); } catch {}

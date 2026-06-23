@@ -18,7 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const ROOT = __dirname;
-const { absKaliber, absKaliberIndustrials, absKaliberStaples, absKaliberConsDisc, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
+const { absKaliber, absKaliberIndustrials, absKaliberStaples, absKaliberConsDisc, absKaliberMaterials, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
 // Medtech M&A snapshot (advisory lamps; object keyed by ticker)
 const maMedtechRaw = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'ma-rpo-snapshot-medtech.json'), 'utf8')); } catch { return {}; } })();
 // Remove _header key
@@ -309,6 +309,68 @@ const FORMULAS = {
     consdisc: true, cohortKey: 'consdisc_light', beta: 1.0, absOnly: true,
     a2Note: 'consdisc_expansion v1 light cohort (asset-light Internet Retail only; un-leased fulfillment/3P-logistics denominator → cohort-specific GP/assets norm .42/.95, higher floor/elite than store). Same 4-axis absKaliberConsDisc engine + coverage-renorm + post-sum dilution haircut as consdisc_store; growth/eff/assetGrowthPenalty anchors SHARED (statistically indistinguishable across cohorts). THIN-N (§1.3): n<15 → ABS-ONLY (β=1, REL suppressed, THIN_REL always on) — we do NOT pool light into the store REL to manufacture n>=15 (that would re-introduce the lease-distorted cross-cohort comparison the Court killed in F1). An honest ABS-only score for the light names beats a fake-clean REL across a known-distorted pool; the ABS NORMS are recalibrated on the light-cohort distribution so ABS-only stays a faithful within-segment read. WALLS (always-on lamps): INVENTORY_BLIND (no inventory line). NOT lease-distorted (the whole point of the split — no LEASE_DISTORTED lamp). See consdisc_store.a2Note for the full axis/dilution/SI mechanism. Additive/parity-safe; constants frozen §6.2.',
   },
+  // ===========================================================================
+  // materials_quality (CORE) — TWO cohorts by PRICING-POWER vs COMMODITY (deterministic GICS-industry split).
+  // Spec formula-design-materials_quality-v0-2026-06-22.md (Court DESIGN-PASS v0; NORMS recomputed-live-then-
+  // frozen 2026-06-22 — the CORE gate). MIRRORS the industrials/staples path: 5 SCORED axes via the PARALLEL
+  // engine absKaliberMaterials, BUT axis C is MARGINSTABILITY (an inverse-CV pricing-power proxy, identity-clip
+  // {0,1}) instead of eff — so NOT a delegate to absKaliberIndustrials (whose 5th axis key is `eff`). Weights
+  // {gpa .30, marginStability .20, growth .18, assetGrowthPenalty .18, netIssuance .14}: the anti-commodity
+  // pillar gpa+marginStability+assetGrowthPenalty = 0.68 structurally dominates; growth capped at .18 BELOW the
+  // pillar (the guarantee that a price-windfall revenue/margin spike cannot manufacture a top score —
+  // QUALITY-ONLY, no commodity-price bets). REL z/MAD per-cohort (each its own bucket, n≫15: pricingpower 40,
+  // commodity 55). blend score=100*(0.6*ABS+0.4*REL), β=0.6. RAW inputs from m.mt.* (court-screen snapshot
+  // extraction; deal-mask + spin-off/super-cycle guard applied UPSTREAM). The inverted axes (assetGrowthPenalty/
+  // netIssuance) negate the raw for BOTH the q-input AND the cross-sectional REL z. gpa floor/elite is the ONLY
+  // cohort-specific anchor (asset-intensity + peak-windfall GP differ); marginStability/growth/assetGrowthPenalty/
+  // netIssuance SHARED. materials = NEW code keyed by the new cohort strings; existing buckets (medtech/dlst/
+  // saas/fabless/industrials/staples/consdisc) are BYTE-IDENTICAL.
+  materials_pricingpower: {
+    label: 'Materials-Quality v0 (pricingpower: specialty chemicals/gases + building materials/aggregates; absolute-anchor, GP/assets pillar, margin-stability pricing-power proxy, price-windfall-capped deal-masked spin-off-guarded growth, asset-growth+net-issuance discipline, coverage-renorm, COSTCURVE_BLIND)',
+    membership: { g: { c: 0.00, s: 0.06 }, gm: { c: 0.09, s: 0.08 }, scaleLog: { c: log10(1000), s: 0.6 } },
+    axes: [
+      { key: 'gpa',                name: 'GP/Assets',  k: 1.5, w: 0.30 },
+      { key: 'marginStability',    name: 'MarginStab', k: 1.5, w: 0.20 },
+      { key: 'growth',             name: 'Growth',     k: 2.0, w: 0.18 },
+      { key: 'assetGrowthPenalty', name: 'AssetGrowth', k: 1.5, w: 0.18 },
+      { key: 'netIssuance',        name: 'NetIssuance', k: 1.5, w: 0.14 },
+    ],
+    dilCap: 0, dilStart: 0.05, dilRange: 0.20, // net-issuance is a SCORED axis (E); no separate SBC penalty.
+    stages: [
+      { name: 'S3-Cash-Compounder', test: f => f >= 0.20 },
+      { name: 'S2-FCF-positiv',     test: f => f >= 0.08 },
+      { name: 'S1-Approaching',     test: f => f >= -0.05 },
+      { name: 'S0-Cyclical-Trough', test: () => true },
+    ],
+    dominantBlock: ['gpa', 'marginStability'],
+    degraded: false,
+    normTableId: 'materials_pricingpower-norms-2026-06-22',
+    materials: true, cohortKey: 'materials_pricingpower',
+    a2Note: 'materials_quality v0 pricingpower cohort (Spec formula-design-materials_quality-v0-2026-06-22.md, Court DESIGN-PASS v0; NORMS RECOMPUTED LIVE on the corrected vintage-tolerant US pool 2026-06-22 THEN frozen — the CORE gate). Specialty Chemicals (gases LIN/APD, coatings SHW/PPG/ECL/RPM) + Building Materials (aggregates VMC/MLM, lime USLM, CRH); compounders earn spot≈normalized. SCORE = BUSINESS QUALITY ONLY, never valuation, never a commodity-price bet. 5 SCORED axes via absKaliberMaterials: GP/assets (Novy-Marx through-cycle-ROIC surrogate, the LEAST price-sensitive profitability signal — does NOT spike at a commodity peak the way op/net-margin does; w .30, cohort-specific norm .09/.34), margin stability (inverse-CV pricing-power proxy clip01(1−stdev(opM)/max(|mean(opM)|,.02)) over >=3 annual opMargin points, w .20, identity-clip {0,1}, CONTINUOUS not a gate — the Court killed the hard band<=10pp eligibility gate that false-negated USLM/false-positived LYB), organic growth (w .18 capped BELOW the discipline pillar; deal-masked §4.1 + spin-off/super-cycle re-baselining guard §4.2 UPSTREAM → NOT_READY:growth; 50/50 latest/min-floor blend §3-A — a Materials revenue spike is price not volume; elite .18 reachable only by genuine secular volume growth), asset-growth penalty (Cooper-Gulen-Schill, w .18, q(-assetGrowth) {-.40/0} — kills the serial peak-acquirer levering up to buy reserves at the top), net-share-issuance penalty (Pontiff-Woodgate, w .14, q(-NSI); ~57% coverage — Vintage-A snapshots carry no annualShares → DROP+renorm+ISSUANCE_NOT_READY, the load-bearing coverage-renorm path). ANTI-COMMODITY PILLAR gpa+marginStability+assetGrowthPenalty = 0.68 ≫ growth 0.18 (the QUALITY-ONLY guarantee: a price-windfall revenue/margin spike cannot top-score). COVERAGE-RENORM: any NOT_READY/null axis dropped, survivors renormalize to Σ=1.0 (no fake-neutral impute). score=100*(0.6*absKaliber+0.4*REL), β=0.6, REL per-cohort (n=40≫15). WALLS (always-on lamps): CYCLE_WALL (~4y history, no normalized-10y-ROIC — GP/assets is the through-cycle PROXY), COSTCURVE_BLIND (AISC/C1 cash-cost survival metric untagged in Yahoo → Axis F future BONUS weight 0, NEVER faked), INVENTORY_BLIND (no inventory line), BYPRODUCT_BLIND (by-product credits make C1 a price artifact), BACKLOG_FUTURE (gases take-or-pay backlog absent from snapshots → 0-weight bonus). SI-4 out-of-class (excluded industry / non-US per the §6 country-domicile guard + FOREIGN_NAME + FOREIGN_PRIMARY_RESIDUAL / <$1B) → score=null + excluded[]; SI-5 classifiedCount===scoredCount+excludedCount fail-loud; marquee assert (LIN/APD/VMC/MLM/SHW/ECL/PPG/CRH/RPM/NEM/NUE/FCX/DOW/CF/ALB) fail-loud + GENERATIVE anti-leak + FOREIGN_CONTROL positive-control (RIO/VALE/SCCO/PKX/KGC/WPM/PAAS/SVM/BHP/CX/MT/AEM/JHX/NTR/SSL must NOT classify). Disclosed (Spec §8): the "Specialty Chemicals" GICS string is the contamination vector (LYB/ALB/SQM commodity-ish sit there with SHW/PPG) — handled by the CONTINUOUS marginStability + capped growth (ALB self-floors marginStability ~0.0, LYB ~0.61), NOT a per-name remap (which would break SI-5); the US-primary marquees LIN(Linde plc)/CRH(plc Ireland) are admitted via the name-verified US_PRIMARY_ALLOWLIST (the deterministic resolution of the v0 design\'s only internal tension — its marquee list vs its FOREIGN_NAME/country-set guards). Additive/parity-safe. Constants frozen §6.',
+  },
+  materials_commodity: {
+    label: 'Materials-Quality v0 (commodity: gold/metals & mining/steel/basic chemicals/agri-inputs/aluminum/etc.; deep-cyclical price-takers; absolute-anchor, GP/assets pillar [peak-windfall-floored], margin-stability proxy, price-windfall-capped growth, asset-growth+net-issuance discipline, coverage-renorm, COSTCURVE_BLIND)',
+    membership: { g: { c: 0.00, s: 0.06 }, gm: { c: 0.01, s: 0.08 }, scaleLog: { c: log10(1000), s: 0.6 } },
+    axes: [
+      { key: 'gpa',                name: 'GP/Assets',  k: 1.5, w: 0.30 },
+      { key: 'marginStability',    name: 'MarginStab', k: 1.5, w: 0.20 },
+      { key: 'growth',             name: 'Growth',     k: 2.0, w: 0.18 },
+      { key: 'assetGrowthPenalty', name: 'AssetGrowth', k: 1.5, w: 0.18 },
+      { key: 'netIssuance',        name: 'NetIssuance', k: 1.5, w: 0.14 },
+    ],
+    dilCap: 0, dilStart: 0.05, dilRange: 0.20,
+    stages: [
+      { name: 'S3-Cash-Compounder', test: f => f >= 0.20 },
+      { name: 'S2-FCF-positiv',     test: f => f >= 0.08 },
+      { name: 'S1-Approaching',     test: f => f >= -0.05 },
+      { name: 'S0-Cyclical-Trough', test: () => true },
+    ],
+    dominantBlock: ['gpa', 'marginStability'],
+    degraded: false,
+    normTableId: 'materials_commodity-norms-2026-06-22',
+    materials: true, cohortKey: 'materials_commodity',
+    a2Note: 'materials_quality v0 commodity cohort (deep-cyclical price-takers: Gold, Other Industrial Metals & Mining, basic Chemicals, Steel, Other Precious Metals & Mining, Agricultural Inputs, Copper, Silver, Aluminum, Lumber & Wood Production, Coking Coal, Paper & Paper Products). Same 5-axis absKaliberMaterials engine + coverage-renorm as materials_pricingpower; cohort-specific gpa (.01/.31 — the PEAK-WINDFALL floor: commodity p90 31.2% nearly EQUALS pricingpower p90 33.6% because gold/mining peak GP/assets bleeds through, so a SHARED anchor would reward a peak miner\'s GP as "quality"; cohort-specific is MANDATORY, the empirical refutation of a single shared anchor); marginStability/growth/assetGrowthPenalty/netIssuance anchors SHARED. n=55≫15 → full ABS+REL blend. The split is NOT a free pass: a peak gold miner scores LOW on its own merits (low marginStability, mediocre cohort-gpa once the heavy PP&E denominator is in, growth = damped price spike). Disclosed (Spec §8-#3): marginStability cannot stand alone (FCX copper-plateau ~0.92) — industry-string cohorting is the PRIMARY guard; FCX is sunk by cohort placement + cohort-gpa + capped growth, not by stability. See materials_pricingpower.a2Note for the full mechanism + walls + asserts. Additive/parity-safe; constants frozen §6.',
+  },
   diagnostics_lst: {
     label: 'Diagnostics-&-Life-Science-Tools v0 (cohort-aware dx|tools, absolute-anchor, deceleration-aware organic growth, FCF-efficiency, chronic-acquirer lamps)',
     membership: { g: { c: 0.10, s: 0.05 }, gm: { c: 0.40, s: 0.10 }, scaleLog: { c: log10(300), s: 0.5 } },
@@ -338,6 +400,17 @@ const FORMULAS = {
 };
 
 const WACC = 0.09; // [TODO-CAL] grober Proxy für A4
+
+// audit/fix (re-court materials_quality DENIAL — Spec §1/§5 pre-revenue SI-4 exclusion):
+// a materials name with NO real revenue is a pre-revenue exploration/shell name (EMAT annualRev=[] $4.3B revenue-
+// less shell; LWLG $236k micro) and MUST be SI-4 EXCLUDED (score=null + excluded[], reason OUT_OF_SEGMENT:
+// preexploration), NEVER scored — the gpa/marginStability axes are undefined/explosive on near-zero revenue, so
+// coverage-renorm wrongly concentrates the absK on the surviving discipline axes (EMAT's assetGrowthPenalty=1.0
+// from an asset COLLAPSE) and the shell tops the cohort. To be SCORED a materials name needs >=2 non-null annual
+// revenue points AND a latest revenue >= MT_MIN_REVENUE ($1M). $1M against the $1B+ marketCap classifier gate is
+// unambiguously pre-revenue; the lowest legitimately-scored materials name (ALM ~$23.5M) clears it with huge
+// headroom, so no real name is touched. Mirrors how the other buckets route out-of-class names to excluded[].
+const MT_MIN_REVENUE = 1e6; // $1M latest-annual-revenue floor for a materials name to be SCORED (else preexploration)
 
 // --- Skeptiker-Welle-2-Befunde, deterministisch eingebaut ---
 const KILL = new Set(['PS', 'RDVT', 'ADEA', 'OMDA', 'TEM', 'KMTS']); // verifiziert: Ticker-Mismatch / falscher Sektor / Daten-Fehler
@@ -641,7 +714,10 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     // and court-buckets carries ONE entry per ticker; gm is not a consdisc axis (gpa is the quality pillar) and
     // pre-revenue/thin names can share the degenerate fp 'null|0', which would falsely drop names and break SI-5.
     // Skip the gm-reject + fp-dedupe for consdisc too. All other buckets (incl. staples) BYTE-IDENTICAL.
-    if (!F.industrials && !F.consdisc) {
+    // materials_quality (CORE): same rationale — classifier already deduped, gm is not a materials axis (gpa is
+    // the quality pillar), and snapshot-sourced names carry a null cache gm sharing the degenerate fp 'null|0'
+    // (would falsely drop names + break SI-5). Skip the gm-reject + fp-dedupe for materials too.
+    if (!F.industrials && !F.consdisc && !F.materials) {
       if (c.gm != null && c.gm > 1.0) continue;        // GM>100% = unmöglich (Daten-Fehler) -> hard reject
       // dedupe identische Foreign-OTC-Doppellistings (gleiche gm+rev)
       const fp = `${c.gm}|${c.scaleRevM}`;
@@ -792,6 +868,29 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.cohort = i.cohort || F.cohortKey;
     }
   }
+  // --- materials_quality (CORE) PRE-PASS: lift the 5 RAW axis inputs from m.mt onto the member ---
+  // All intermediates are MATERIALS-LOCAL → all other buckets' member JSON byte-identical (parity). The
+  // inverted axes (assetGrowthPenalty/netIssuance) store the NEGATED raw, so the REL z (higher = better) agrees
+  // in sign with the ABS q-input. marginStability is NOT inverted (higher=better directly). null raw → axis
+  // DROP (coverage-renorm in absKaliberMaterials; REL sAxis returns 0=neutral for null). Mirrors the
+  // industrials/staples pre-pass with the marginStability axis replacing eff.
+  if (F.materials) {
+    for (const m of members) {
+      const i = m.mt || {};
+      m._mtGpa = (i.gpa != null && isFinite(i.gpa)) ? i.gpa : null;
+      m._mtMarginStability = (i.marginStability != null && isFinite(i.marginStability)) ? i.marginStability : null; // NOT inverted
+      m._mtGrowth = (i.growth != null && isFinite(i.growth)) ? i.growth : null;          // deal-masked + spinoff-guarded UPSTREAM
+      m._mtAssetGrowthPenalty = (i.assetGrowth != null && isFinite(i.assetGrowth)) ? -i.assetGrowth : null; // q(-AG) direction
+      m._mtNetIssuance = (i.netShareIssuance != null && isFinite(i.netShareIssuance)) ? -i.netShareIssuance : null; // q(-NSI) direction
+      // persisted audit fields (rounded)
+      m.gpa = m._mtGpa == null ? null : Math.round(m._mtGpa * 10000) / 10000;
+      m.marginStability = m._mtMarginStability == null ? null : Math.round(m._mtMarginStability * 10000) / 10000;
+      m.assetGrowth = (i.assetGrowth != null && isFinite(i.assetGrowth)) ? Math.round(i.assetGrowth * 10000) / 10000 : null;
+      m.netShareIssuance = (i.netShareIssuance != null && isFinite(i.netShareIssuance)) ? Math.round(i.netShareIssuance * 10000) / 10000 : null;
+      m.growthInput = m._mtGrowth == null ? null : Math.round(m._mtGrowth * 10000) / 10000;
+      m.cohort = i.cohort || F.cohortKey;
+    }
+  }
 
   // Roh-Achswerte für Stats (cross-sectional Median/MAD): nutze winsorisierte Werte
   // For medtech growth: use _growthMedtech (Fix D organic + winsorize at 1.0) for Stats AND scoring (Fix D
@@ -828,10 +927,22 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       default: return m[key];
     }
   };
+  // materials_quality (CORE): 5 axis-keys, axis C = marginStability (NOT eff) → mirror indRaw on the m._mt* fields.
+  const mtRaw = (m, key) => {
+    switch (key) {
+      case 'gpa': return m._mtGpa;
+      case 'marginStability': return m._mtMarginStability;
+      case 'growth': return m._mtGrowth;
+      case 'assetGrowthPenalty': return m._mtAssetGrowthPenalty;
+      case 'netIssuance': return m._mtNetIssuance;
+      default: return m[key];
+    }
+  };
   const rawOfStats = (m, key) => {
     if (F.industrials) return indRaw(m, key);
     if (F.staples) return stpRaw(m, key);
     if (F.consdisc) return cdRaw(m, key);
+    if (F.materials) return mtRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtech : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -842,6 +953,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (F.industrials) return indRaw(m, key);
     if (F.staples) return stpRaw(m, key);
     if (F.consdisc) return cdRaw(m, key);
+    if (F.materials) return mtRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtechAdj : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -923,6 +1035,18 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       // NOT_READY growth or pre-revenue gpa land low. $1B+ marketCap is the classifier gate.
       const gGate = m._cdGrowth != null ? m._cdGrowth : -1;             // null growth (NOT_READY) → low
       const gpaGate = m._cdGpa != null ? m._cdGpa : -1;                 // null gpa → low
+      const scaleM = (m.marketCap != null && isFinite(m.marketCap)) ? m.marketCap / 1e6 : (m.scaleRevM || 1); // $1B+ marketCap
+      const mg = logistic(gGate, F.membership.g.c, F.membership.g.s);
+      const mGpa = logistic(gpaGate, F.membership.gm.c, F.membership.gm.s);
+      const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
+      M = mg * mGpa * mSc;
+    } else if (F.materials) {
+      // materials membership: same gpa(quality)×growth×scale logistic as industrials/staples/consdisc (gpa
+      // stands in for the gm pillar — materials has no gm axis; gm membership center is the cohort gpa.floor).
+      // Spin-off-guarded/NOT_READY growth (a price-windfall rebound off a deflated base) or pre-revenue gpa land
+      // low. $1B+ marketCap is the classifier gate. marginStability is NOT a membership input (a scored axis only).
+      const gGate = m._mtGrowth != null ? m._mtGrowth : -1;             // null growth (spinoff/NOT_READY) → low
+      const gpaGate = m._mtGpa != null ? m._mtGpa : -1;                 // null gpa → low
       const scaleM = (m.marketCap != null && isFinite(m.marketCap)) ? m.marketCap / 1e6 : (m.scaleRevM || 1); // $1B+ marketCap
       const mg = logistic(gGate, F.membership.g.c, F.membership.g.s);
       const mGpa = logistic(gpaGate, F.membership.gm.c, F.membership.gm.s);
@@ -1119,6 +1243,49 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.belowAbsoluteFloor = !(gateGrowthOk && gateGpaOk && gateEffOk);
       m.score = m.membershipClass === 'Out' ? null : rawScore;
       m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
+      m.stage = stageOf(F, m.fcfMargin);
+    } else if (F.materials) {
+      // materials_quality (CORE): absKaliberMaterials = 5-axis weighted-q with COVERAGE-RENORM reading the
+      // cohort NORMS (axis C = marginStability, the inverse-CV pricing-power proxy; identity-clip {0,1}). The
+      // load-bearing renorm fires on ~57% of names lacking annualShares + spin-off/super-cycle rebases.
+      const cohortNorm = F.cohortKey; // 'materials_pricingpower' | 'materials_commodity'
+      const mtRec = {
+        gpa: m._mtGpa, marginStability: m._mtMarginStability, growth: m._mtGrowth,
+        assetGrowth: (m.mt && m.mt.assetGrowth != null && isFinite(m.mt.assetGrowth)) ? m.mt.assetGrowth : null,
+        netShareIssuance: (m.mt && m.mt.netShareIssuance != null && isFinite(m.mt.netShareIssuance)) ? m.mt.netShareIssuance : null,
+      };
+      const ak = absKaliberMaterials(mtRec, cohortNorm);
+      m.absKaliber = Math.round(ak.absK * 1000) / 1000;
+      m.absUsedAxes = ak.usedAxes;          // audit: which axes survived coverage-renorm
+      m.absDroppedAxes = ak.droppedAxes;    // audit: NOT_READY/ISSUANCE/SPINOFF drops
+      const rawScore = Math.round(Math.max(0, blendScore(ak.absK, core, 0.6)) * 10) / 10; // pDil=0 (issuance is a SCORED axis)
+      // SI-1 shortlist-cut (Spec §6): growthInput >= growth.floor (0.00) AND gpa >= gpa.floor (cohort) AND
+      // marginStability >= marginStability.floor (0.0, always passes when present — the pricing-power signal is
+      // CONTINUOUS, never a hard eligibility gate, per the Court ruling §0). A spin-off-guarded/NOT_READY growth
+      // or missing gpa/marginStability fails the floor (not the gate crashing) → belowAbsoluteFloor, listed but
+      // off the shortlist. NOT a score-kill (REL/score path runs).
+      const norm = NORMS[cohortNorm];
+      const gateGrowthOk = (m._mtGrowth != null) && (m._mtGrowth >= norm.growth.floor);
+      const gateGpaOk = (m._mtGpa != null) && (m._mtGpa >= norm.gpa.floor);
+      const gateMsOk = (m._mtMarginStability != null) && (m._mtMarginStability >= norm.marginStability.floor);
+      m.belowAbsoluteFloor = !(gateGrowthOk && gateGpaOk && gateMsOk);
+      // audit/fix (re-court materials_quality DENIAL — Spec §1/§5 pre-revenue SI-4 hard-exclude): a materials
+      // name with NO real revenue (EMAT annualRev=[], a $4.3B revenue-less shell; LWLG $236k; the revLatest=0
+      // shells CNL/NG/PPTA/UAN/NEU) is a pre-revenue exploration/shell name → score=null + excluded[] with reason
+      // OUT_OF_SEGMENT:preexploration, NOT scored. This is DETERMINISTIC and independent of the membership gate
+      // (which only caught EMAT incidentally via Out-class; absKaliber=0.899 would have ranked it #1 if membership
+      // had passed). SCORED requires >=2 non-null annual rev points AND revLatest >= MT_MIN_REVENUE ($1M).
+      const mtRev = m.mt || {};
+      const preRevenue = !(mtRev.nAnnualRev != null && mtRev.nAnnualRev >= 2
+        && mtRev.revLatest != null && isFinite(mtRev.revLatest) && mtRev.revLatest >= MT_MIN_REVENUE);
+      if (preRevenue) {
+        m.exclusionReason = 'OUT_OF_SEGMENT:preexploration';
+        m.score = null;                                 // SI-4: lands in excluded[] (members.filter score==null)
+        m.headlineShortlist = false;
+      } else {
+        m.score = m.membershipClass === 'Out' ? null : rawScore;
+        m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
+      }
       m.stage = stageOf(F, m.fcfMargin);
     } else {
       // audit/fix (gauntlet E3): SI-4 für saas/fabless — Out-Class-Member bekommen score=null (kein
@@ -1344,6 +1511,29 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       if (wallCfg.leaseDistorted) L.push('LEASE_DISTORTED');   // GP/assets denom carries ASC-842 ROU (store-only, common-mode)
       if (wallCfg.inventoryBlind) L.push('INVENTORY_BLIND');   // no inventory line ⇒ DIO/markdown uncomputable
       if (F.absOnly) L.push('THIN_REL');                        // light n<15 → ABS-only (β=1), REL suppressed (§1.3)
+      if (m.belowAbsoluteFloor) L.push('below-abs-floor');
+      if (m.membershipClass === 'Out') L.push('membership-Out(excluded-from-headline)');
+      if (Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.length) L.push(`coverage-renorm(dropped:${m.absDroppedAxes.join('+')})`);
+      m.cohort = F.cohortKey;
+      m.normTableId = getNormTableId(F.cohortKey);
+      m.scoreScope = 'intra-bucket';
+      m.crossBucketComparableField = 'absKaliber';
+    }
+    // materials_quality (CORE) lamps (Spec §5): advisory, never silent score-kills. Per-name upstream lamps
+    // (NOT_READY:gpa/marginstability/growth/assetgrowth, ISSUANCE_NOT_READY, SPINOFF_REBASE, DEAL_MASKED,
+    // STALE:growth, DILUTION_HIGH, MARGIN_NEGATIVE) collected in court-screen (m.mt.lamps); the five WALLS are
+    // always-on per the frozen NORMS.lamps. THIN_REL never fires (pricingpower n=40, commodity n=55, both >>15).
+    if (F.materials) {
+      const ml = (m.mt && Array.isArray(m.mt.lamps)) ? m.mt.lamps : [];
+      for (const lamp of ml) if (!L.includes(lamp)) L.push(lamp);
+      // audit/fix (re-court): surface the pre-revenue SI-4 exclusion as an explicit lamp (Spec §1/§5).
+      if (m.exclusionReason === 'OUT_OF_SEGMENT:preexploration' && !L.includes('OUT_OF_SEGMENT:preexploration')) L.push('OUT_OF_SEGMENT:preexploration');
+      // always-on WALLS (Spec §5) — QUALITY-ONLY, no commodity-price bet is ever scored
+      L.push('CYCLE_WALL');           // only ~4y history; no normalized-10y-ROIC (GP/assets is the through-cycle PROXY)
+      L.push('COSTCURVE_BLIND');      // AISC/C1 cash-cost survival metric untagged in Yahoo → Axis F future BONUS (weight 0), NEVER faked
+      L.push('INVENTORY_BLIND');      // no inventory line ⇒ channel/stockpile uncomputable
+      L.push('BYPRODUCT_BLIND');      // by-product credits make C1 a price artifact
+      L.push('BACKLOG_FUTURE');       // gases take-or-pay backlog absent from snapshots → 0-weight bonus
       if (m.belowAbsoluteFloor) L.push('below-abs-floor');
       if (m.membershipClass === 'Out') L.push('membership-Out(excluded-from-headline)');
       if (Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.length) L.push(`coverage-renorm(dropped:${m.absDroppedAxes.join('+')})`);
@@ -1582,6 +1772,40 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       noSignal: members.filter(m => m.shareCAGR == null).length,    // Vintage-A: no haircut (neutral, not punitive)
     };
   }
+  // materials_quality (CORE)-only Zusatzfelder (SI-3/4/5/6) — NUR auf den materials-Buckets gesetzt → alle
+  // anderen Buckets byte-identisch (Parität). Mirrors the industrials/staples blocks; axis C = marginStability.
+  if (F.materials) {
+    // SI-5 (Spec §6): classifiedCount === scoredCount + excludedCount (fail-loud). The classifier assigns ONLY
+    // materials_{pricingpower,commodity} (excluded industries / non-US per the country-domicile guard + FOREIGN_
+    // hardening / <$1B return null → never enter court-buckets), so every classified name reaches members[].
+    // excludedCount = SI-4 out-of-class names that entered members but score=null. classifiedCount = court-buckets entries.
+    R.classifiedCount = cls.filter(c => c.bucket === bucket).length;
+    R.excluded = members.filter(m => m.score == null);
+    R.excludedCount = R.excluded.length;
+    R.scoredCount = members.filter(m => m.score != null).length;
+    if (require.main === module && R.classifiedCount !== R.scoredCount + R.excludedCount) {
+      throw new Error(`SI-5 mismatch ${bucket}: classifiedCount ${R.classifiedCount} !== scoredCount ${R.scoredCount} + excludedCount ${R.excludedCount}`);
+    }
+    R.normTableId = getNormTableId(F.cohortKey);
+    R.cohort = F.cohortKey;
+    R.scoreScope = 'intra-bucket';
+    R.crossBucketComparableField = 'absKaliber';
+    const n = NORMS[F.cohortKey];
+    const fmt = x => (x == null ? '—' : x.toFixed(2).replace(/^0\./, '.').replace(/^-0\./, '-.'));
+    R.comparabilityNote = `materials_quality ${F.cohortKey} (pricing-power-vs-commodity cohort). absKaliber in [0,1] = cross-bucket-comparable absolute scale (5-axis weighted-q over the cohort NORMS '${getNormTableId(F.cohortKey)}': gpa ${fmt(n.gpa.floor)}/${fmt(n.gpa.elite)}, marginStability ${fmt(n.marginStability.floor)}/${fmt(n.marginStability.elite)} (identity-clip inverse-CV pricing-power proxy), growth ${fmt(n.growth.floor)}/${fmt(n.growth.elite)}, assetGrowthPenalty ${fmt(n.assetGrowthPenalty.floor)}/${fmt(n.assetGrowthPenalty.elite)}, netIssuance ${fmt(n.netIssuance.floor)}/${fmt(n.netIssuance.elite)}; weights {gpa .30, marginStability .20, growth .18, assetGrowthPenalty .18, netIssuance .14}; anti-commodity pillar gpa+marginStability+assetGrowthPenalty=.68 ≫ growth .18 — QUALITY-ONLY, a price-windfall spike cannot top-score). COVERAGE-RENORM drops any NOT_READY/null axis (incl. ISSUANCE_NOT_READY on the ~57% of names lacking annualShares, NOT_READY:marginstability on <3 opMargin points, and SPINOFF_REBASE) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6). WALLS always-on: CYCLE_WALL/COSTCURVE_BLIND/INVENTORY_BLIND/BYPRODUCT_BLIND/BACKLOG_FUTURE. The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison.`;
+    R.crossBucketComparableNote = 'Use members[].absKaliber (absolute [0,1] caliber) for cross-bucket comparison; members[].score (blended 0-100) is intra-bucket ONLY (mixes per-cohort REL, beta=0.6).';
+    R.walls = ['CYCLE_WALL', 'COSTCURVE_BLIND', 'INVENTORY_BLIND', 'BYPRODUCT_BLIND', 'BACKLOG_FUTURE'];
+    // Axis-E coverage disclosure (Spec §2.2/§5): how many names took the ISSUANCE_NOT_READY drop+renorm path.
+    R.issuanceCoverage = {
+      scored: members.filter(m => m.netShareIssuance != null).length,
+      dropped: members.filter(m => m.netShareIssuance == null).length,
+    };
+    // Axis-C coverage disclosure: how many names have a computable marginStability (>=3 opMargin points).
+    R.marginStabilityCoverage = {
+      scored: members.filter(m => m.marginStability != null).length,
+      dropped: members.filter(m => m.marginStability == null).length,
+    };
+  }
   // audit/fix (gauntlet E3): saas/fabless SI-4/SI-5-Retrofit — spiegelt medtech/dlst exakt.
   // NUR auf den beiden Buckets gesetzt; medtech/dlst haben ihre eigenen Blöcke oben. Diese Felder
   // wurden in die saas/fabless-Parity-Baselines re-gefroren (BEWUSSTER Governance-Bless, kein Drift):
@@ -1661,6 +1885,16 @@ function assertNoForeignLeak(resultsObj, listing) {
     // mixed-vintage live pool the consdisc cohort is LARGER than the spec's 2026-06-08 recompute (genuine US
     // discretionary large-caps the smaller pool omitted) — that is honest pool growth, not a leak.
     if (bucket === 'consdisc_store' || bucket === 'consdisc_light') continue;
+    // materials_quality (CORE) EXEMPTION: materials membership is governed by the FROZEN spec v0 classifier
+    // (scripts/classify-materials.js, §6 country-domicile guard — STRICTER than court-screen's: country set
+    // != US -> exclude unconditionally; FOREIGN_NAME legal-form regex; FOREIGN_PRIMARY_RESIDUAL = RIO/SCCO/PKX/
+    // KGC/WPM/PAAS/SVM; and a name-verified US_PRIMARY_ALLOWLIST = {CRH,LIN} for the verified US-PRIMARY
+    // foreign-domiciled compounders the design NAMES as marquees). It is governed instead by the §6 marquee
+    // assert + the materials-native generative country assert (assertMaterialsNoForeignLeak) + the FOREIGN_
+    // CONTROL positive-control (assertMaterialsMarquee) below — all reading the snapshot meta via the spec
+    // classifier, NOT the C5 court-listing.isUS flag (which uses court-screen's looser region==='US' test and
+    // would false-flag the allowlisted CRH/LIN US-primaries the spec deliberately admits).
+    if (bucket === 'materials_pricingpower' || bucket === 'materials_commodity') continue;
     for (const m of R.members) {
       const L = listing.get(m.ticker);
       if (!L) continue; // kein Snapshot-Meta → kann nichts behaupten (Vintage-A ohne Eintrag: tolerant)
@@ -1819,11 +2053,73 @@ function assertConsdiscNoForeignLeak(resultsObj, listing) {
   }
 }
 
+// --- materials_quality (CORE) MARQUEE-COVERAGE assert (Spec §6, fail-loud) ---
+// SI-5 identity alone does NOT catch a silent universe collapse (a dropped name is consistently absent from
+// BOTH classified and scored counts, so the identity still balances). The frozen marquee watchlist must each
+// be classified into one of the two materials cohorts AND reach the scored universe (members[]) — else the run
+// DIES LOUD (the regression guard against the country-vintage collapse). 1+ name from each cohort
+// (LIN/APD/VMC/MLM/SHW/ECL/PPG/CRH/RPM/ALB pricingpower; NEM/NUE/FCX/DOW/CF commodity).
+const MATERIALS_MARQUEE = Object.freeze(['LIN', 'APD', 'VMC', 'MLM', 'SHW', 'ECL', 'PPG', 'CRH', 'RPM', 'NEM', 'NUE', 'FCX', 'DOW', 'CF', 'ALB']);
+// FOREIGN_CONTROL positive-control (§6/§8-#8): the foreign-primary miner leak the §6 hardening (country-domicile
+// guard + FOREIGN_NAME regex + FOREIGN_PRIMARY_RESIDUAL) must keep OUT — the single largest classification risk
+// in this bucket. Catches a regression that drops a guard.
+const MATERIALS_FOREIGN_CONTROL = Object.freeze(['RIO', 'VALE', 'SCCO', 'PKX', 'KGC', 'WPM', 'PAAS', 'SVM',
+  'BHP', 'CX', 'MT', 'AEM', 'JHX', 'NTR', 'SSL']);
+// The name-verified US-PRIMARY foreign-domiciled compounders the spec classifier DELIBERATELY admits (CRH plc
+// Ireland-domiciled NYSE-primary; LIN Linde plc Vintage-A NasdaqGS-primary). These carry a foreign country/name
+// but ARE genuine US primaries → the generative country anti-leak assert must EXEMPT them (mirrors the
+// classifier's US_PRIMARY_ALLOWLIST and court-screen's US_PRIMARY_INVERSION_ALLOWLIST/STVN pattern).
+const MATERIALS_US_PRIMARY_ALLOWLIST = Object.freeze(['CRH', 'LIN']);
+function assertMaterialsMarquee(resultsObj) {
+  const P = resultsObj.materials_pricingpower, C = resultsObj.materials_commodity;
+  if (!P && !C) return; // materials not in this run (e.g. isolated unit test) → tolerant no-op
+  const scored = new Set();
+  for (const R of [P, C]) if (R && Array.isArray(R.members)) for (const m of R.members) scored.add(m.ticker);
+  const missing = MATERIALS_MARQUEE.filter(t => !scored.has(t));
+  if (missing.length) {
+    throw new Error('MARQUEE COVERAGE FAIL (Spec §6) — materials universe collapsed, these bona-fide '
+      + 'US materials large-caps were not classified/scored: ' + missing.join(', '));
+  }
+  // FOREIGN_CONTROL: the foreign-primary miners must NOT have reached a materials cohort.
+  const leakedControl = MATERIALS_FOREIGN_CONTROL.filter(t => scored.has(t));
+  if (leakedControl.length) {
+    throw new Error('FOREIGN-CONTROL FAIL (Spec §6/§8-#8) — a foreign-primary miner leaked into a '
+      + 'materials cohort: ' + leakedControl.join(', '));
+  }
+}
+// assertMaterialsNoForeignLeak(results, listing): GENERATIVE property test reading the snapshot meta.country
+// (via the court-listing side-file) DIRECTLY — independent of the C5 isUS flag. Throws if ANY scored materials
+// record carries meta.country set AND != "United States" EXCEPT the name-verified US_PRIMARY_ALLOWLIST (CRH/LIN
+// — foreign-domiciled but genuine US primaries the spec admits by design). Tolerant: missing side-file → no-op.
+function assertMaterialsNoForeignLeak(resultsObj, listing) {
+  if (!listing || listing.size === 0) return;
+  const allow = new Set(MATERIALS_US_PRIMARY_ALLOWLIST);
+  const leaks = [];
+  for (const bucket of ['materials_pricingpower', 'materials_commodity']) {
+    const R = resultsObj[bucket];
+    if (!R || !Array.isArray(R.members)) continue;
+    for (const m of R.members) {
+      if (allow.has(m.ticker)) continue; // verified US-primary inversion (CRH/LIN) — admitted by design
+      const L = listing.get(m.ticker);
+      if (!L) continue; // no snapshot meta → can't assert (Vintage-A without entry: tolerant)
+      if (L.country != null && L.country !== 'United States') {
+        leaks.push(`${m.ticker}[${L.country}/${L.region}] in ${bucket}`);
+      }
+    }
+  }
+  if (leaks.length) {
+    throw new Error('MATERIALS ANTI-LEAK ASSERT (Spec §6 GENERATIVE property test): foreign-country record(s) '
+      + 'leaked into a scored materials cohort — meta.country set AND != "United States" (and not on the verified '
+      + 'US_PRIMARY_ALLOWLIST): ' + leaks.join(', ')
+      + '. The v0 country-domicile guard (classify-materials.js isUSListing) must exclude these — NOT suppress.');
+  }
+}
+
 // --- Export: computeMedtechOrganicGrowth + computeDlstOrganicGrowth für Unit-Tests ---
 // (computeDlstOrganicGrowth: Fix A FY-Alignment + Fix B dealYearExcluded-Ehrlichkeit, 2026-06-21)
 // + assertNoForeignLeak (gauntlet C5) + assertIndustrialsMarquee + assertStaplesMarquee +
 //   assertStaplesNoForeignLeak (Spec §6.2b) für direkten Property-Test.
-module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL, assertConsdiscMarquee, assertConsdiscNoForeignLeak, CONSDISC_MARQUEE, CONSDISC_EXCLUDE_CONTROL };
+module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL, assertConsdiscMarquee, assertConsdiscNoForeignLeak, CONSDISC_MARQUEE, CONSDISC_EXCLUDE_CONTROL, assertMaterialsMarquee, assertMaterialsNoForeignLeak, MATERIALS_MARQUEE, MATERIALS_FOREIGN_CONTROL, MATERIALS_US_PRIMARY_ALLOWLIST };
 
 // --- require.main-Guard (Härtung 2): Write + Ausgabe NUR wenn direkt als Skript ausgeführt ---
 // `require('./court-score.js')` gibt nur den Export zurück und schreibt NICHT outputs/court-results.json.
@@ -1844,6 +2140,11 @@ if (require.main === module) {
   // else the consdisc universe collapsed/leaked.
   assertConsdiscMarquee(results);
   assertConsdiscNoForeignLeak(results, listingByTicker);
+  // materials_quality (CORE) §6: the 15-name marquee must each be classified+scored + the foreign-primary
+  // miner FOREIGN_CONTROL must stay out + the GENERATIVE country anti-leak property test must hold (with the
+  // CRH/LIN US-primary allowlist exempted), else the materials universe collapsed/leaked.
+  assertMaterialsMarquee(results);
+  assertMaterialsNoForeignLeak(results, listingByTicker);
   fs.writeFileSync(OUT, JSON.stringify(results, null, 2));
 
   // --- Ausgabe ---
