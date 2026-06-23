@@ -403,14 +403,9 @@ function buildRow(stock) {
   // actually PASS its mode's musts, not merely clear the score tier on saturated passing methods.
   const hgPassed = !!(modeEvals.HYPERGROWTH && modeEvals.HYPERGROWTH.passed);
   const qcPassed = !!(modeEvals.QUALITY_COMPOUNDER && modeEvals.QUALITY_COMPOUNDER.passed);
-  // Tag 232g: Buffett mode (14-point composite + Owner-Earnings + DCF MoS).
-  // bfScore is the score-aggregator output; bfPassed is true only when all 3
-  // MUST methods pass — Buffett mode is intentionally strict (10y history,
-  // DCF MoS ≥ 25%, ALL_OF on the 14-point composite). Most stocks score
-  // partially but bfPassed=false because they fail the MoS hard-gate.
-  const bfScore = modeEvals.BUFFETT && Number.isFinite(modeEvals.BUFFETT.score) ? modeEvals.BUFFETT.score : null;
-  const bfTier = modeEvals.BUFFETT ? modeEvals.BUFFETT.tier : null;
-  const bfPassed = modeEvals.BUFFETT ? !!modeEvals.BUFFETT.passed : false;
+  // BUFFETT mode + its BF dashboard tab removed (audit 2026-06-20): the mode and
+  // its method files (buffett-criteria / owner-earnings / dcf-intrinsic-value) were
+  // deleted, so bfScore/bfTier/bfPassed and the BF tab are gone entirely.
 
   // Tag 199 audit gates: per-stock disqualification signals consumed by classifyTabs.
   //   qSpikeFail        — q-spike-dataguard pass=false (DATAGUARD HARD-FAIL)
@@ -548,7 +543,6 @@ function buildRow(stock) {
     hgScore, hgTier,
     qcScore, qcTier,
     hgPassed, qcPassed,
-    bfScore, bfTier, bfPassed,
     pbScore,
     gmaTrend, gmaChange,
     omaTrend, omaChange,
@@ -671,7 +665,7 @@ function computeScoreDrivers(modeEvals) {
 }
 
 function classifyTabs(rows) {
-  const tabs = { HG: [], QC: [], BF: [], SMALL: [], R40: [], PRE_BREAKOUT: [], WATCH: [], KI_INFRA: [], INSIDER_BUYING: [], R40_DURABLE: [] };
+  const tabs = { HG: [], QC: [], SMALL: [], R40: [], PRE_BREAKOUT: [], WATCH: [], KI_INFRA: [], INSIDER_BUYING: [], R40_DURABLE: [] };
 
   for (const r of rows) {
     // Tag 199 HARD GATES — stocks failing any gate land in WATCH ONLY, regardless
@@ -765,18 +759,6 @@ function classifyTabs(rows) {
     if (qcWouldPick && r.qcPassed) {
       tabs.QC.push(r);
     }
-    // Tag 232g: BUFFETT tab — value-compounder filter (14-point composite +
-    // Owner-Earnings + DCF MoS ≥ 25% hard-gate). The BUFFETT strategy-mode
-    // already enforces sector-exclusion, dataGuards (sloan-ratio,
-    // forecast-contamination-guard), and 10y-history floor via T1/T6/T10.
-    // Show every stock with a computable bfScore + tier !== REJECT so users
-    // can see partial-pass candidates (e.g. 9/14 tests pass but MoS missing
-    // → still informative). The bfPassed badge marks the strict winners.
-    // dqBlockedFromQuality reused: grade C blocks here too — Buffett requires
-    // pristine accounting.
-    if (Number.isFinite(r.bfScore) && r.bfTier && r.bfTier !== 'REJECT' && !dqBlockedFromQuality) {
-      tabs.BF.push(r);
-    }
     // SMALL: mcap < 2B, growth > 20%, not LOSS
     if (r.mcap > 0 && r.mcap < 2e9 && Number.isFinite(r.growth) && r.growth > 20 && r.state !== 'LOSS') {
       tabs.SMALL.push(r);
@@ -792,10 +774,10 @@ function classifyTabs(rows) {
     // F-05 (audit 2026-06-08): R40 was the only quality tab WITHOUT the dqGrade-C
     // block — and r40-latest.json exports the R40 tab as a "trusted" array to
     // findash. A C grade means 60-85% of critical fields are missing; consistent
-    // with HG/QC/BF/PRE_BREAKOUT, such rows no longer enter R40.
+    // with HG/QC/PRE_BREAKOUT, such rows no longer enter R40.
     // F-R40-002 (audit 2026-06-11): a row that qualified ONLY for R40 and is now
     // blocked here disappears from the dashboard entirely UNLESS it is also a
-    // NEAR_MISS in HG/QC/BF (the WATCH-tab condition). It does NOT reliably land
+    // NEAR_MISS in HG/QC (the WATCH-tab condition). It does NOT reliably land
     // in WATCH (that needs DATAQUALITY_ENFORCE to cap the tier) — and that is the
     // intended outcome: a 60-85%-missing snapshot is not a trustworthy R40 pick.
     if (Number.isFinite(r.r40) && !dqBlockedFromQuality) {
@@ -855,14 +837,6 @@ function classifyTabs(rows) {
   const _tickerCmp = (a, b) => (a.ticker || '').localeCompare(b.ticker || '');
   tabs.HG.sort((a, b) => ((b.hgScore || 0) - (a.hgScore || 0)) || _tickerCmp(a, b));
   tabs.QC.sort((a, b) => ((b.qcScore || 0) - (a.qcScore || 0)) || _tickerCmp(a, b));
-  // Tag 232g: BUFFETT — passed=true rows always sort above passed=false (rare
-  // strict winners first), then ties broken by bfScore desc.
-  tabs.BF.sort((a, b) => {
-    const ap = a.bfPassed ? 1 : 0;
-    const bp = b.bfPassed ? 1 : 0;
-    if (ap !== bp) return bp - ap;
-    return ((b.bfScore || 0) - (a.bfScore || 0)) || _tickerCmp(a, b);
-  });
   tabs.SMALL.sort((a, b) => ((b.growth || 0) - (a.growth || 0)) || _tickerCmp(a, b));
   // Tag 205 R40-poisoning defense (penalized sort): hard-gates already filter
   // qSpikeFail / lossMagFail / r40SanityFail / etc., but edge-case survivors
@@ -886,7 +860,7 @@ function classifyTabs(rows) {
     return (bEff - aEff) || _tickerCmp(a, b);
   });
   tabs.PRE_BREAKOUT.sort((a, b) => ((b.pbScore || 0) - (a.pbScore || 0)) || _tickerCmp(a, b));
-  tabs.WATCH.sort((a, b) => (Math.max(b.hgScore || 0, b.qcScore || 0, b.bfScore || 0) - Math.max(a.hgScore || 0, a.qcScore || 0, a.bfScore || 0)) || _tickerCmp(a, b));
+  tabs.WATCH.sort((a, b) => (Math.max(b.hgScore || 0, b.qcScore || 0) - Math.max(a.hgScore || 0, a.qcScore || 0)) || _tickerCmp(a, b));
 
   // Embedded-JSON size guard: R40 tab is the most permissive (every stock with
   // a computable R40 qualifies) — without a cap the dashboard payload balloons
@@ -1734,7 +1708,6 @@ const CLIENT_JS = `
         const minV = +filterMin;
         if (activeTab === 'HG' && (r.r40 == null || r.r40 < minV)) return false;
         if (activeTab === 'QC' && (r.fcfMargin == null || r.fcfMargin < minV)) return false;
-        if (activeTab === 'BF' && (r.bfScore == null || r.bfScore < minV)) return false;
         if (activeTab === 'SMALL' && (r.growth == null || r.growth < minV)) return false;
         if (activeTab === 'R40' && (r.r40 == null || r.r40 < minV)) return false;
         if (activeTab === 'PRE_BREAKOUT' && (r.growth == null || r.growth < minV)) return false;
@@ -1769,20 +1742,15 @@ const CLIENT_JS = `
       if (k === 'auto') {
         if (tab === 'HG') return (b.hgScore||0) - (a.hgScore||0);
         if (tab === 'QC') return (b.qcScore||0) - (a.qcScore||0);
-        if (tab === 'BF') {
-          const ap = a.bfPassed ? 1 : 0, bp = b.bfPassed ? 1 : 0;
-          if (ap !== bp) return bp - ap;
-          return (b.bfScore||0) - (a.bfScore||0);
-        }
         if (tab === 'SMALL') return (b.growth||0) - (a.growth||0);
         if (tab === 'R40') return (b.r40||0) - (a.r40||0);
         if (tab === 'R40_DURABLE') return (b.r40DurScore||0) - (a.r40DurScore||0);
         if (tab === 'PRE_BREAKOUT') return (b.pbScore||0) - (a.pbScore||0);
         if (tab === 'INSIDER_BUYING') return (b.insiderScore||0) - (a.insiderScore||0);
-        if (tab === 'WATCH') return Math.max(b.hgScore||0, b.qcScore||0, b.bfScore||0) - Math.max(a.hgScore||0, a.qcScore||0, a.bfScore||0);
+        if (tab === 'WATCH') return Math.max(b.hgScore||0, b.qcScore||0) - Math.max(a.hgScore||0, a.qcScore||0);
         return 0;
       }
-      if (k === 'score')     return Math.max(b.hgScore||0, b.qcScore||0, b.bfScore||0) - Math.max(a.hgScore||0, a.qcScore||0, a.bfScore||0);
+      if (k === 'score')     return Math.max(b.hgScore||0, b.qcScore||0) - Math.max(a.hgScore||0, a.qcScore||0);
       if (k === 'r40')       return (b.r40||0) - (a.r40||0);
       if (k === 'growth')    return (b.growth||0) - (a.growth||0);
       if (k === 'fcfMargin') return (b.fcfMargin||0) - (a.fcfMargin||0);
@@ -1813,12 +1781,6 @@ const CLIENT_JS = `
       {k:'Score',w:60,num:true}, {k:'State',w:80}, {k:'FCFM%',w:70,num:true},
       {k:'OpM%',w:70,num:true}, {k:'GrossM%',w:70,num:true}, {k:'MCap',w:70,num:true},
       {k:'Trend',w:75}
-    ];
-    if (tab === 'BF') return [
-      {k:'#',w:30}, {k:'Ticker',w:60}, {k:'Company',w:230}, {k:'Sector',w:110},
-      {k:'Score',w:55,num:true}, {k:'14-Pt',w:55}, {k:'OE',w:40}, {k:'MoS',w:50},
-      {k:'FCFM%',w:65,num:true}, {k:'OpM%',w:65,num:true}, {k:'MCap',w:65,num:true},
-      {k:'Trend',w:70}
     ];
     if (tab === 'SMALL') return [
       {k:'#',w:30}, {k:'Ticker',w:60}, {k:'Company',w:240}, {k:'Country',w:60},
@@ -1867,7 +1829,6 @@ const CLIENT_JS = `
   const BULLET_COLS = {
     'HG':           ['score','r40','growth','grossMargin','fcfMargin','mcap'],
     'QC':           ['score','fcfMargin','opMargin','grossMargin','mcap'],
-    'BF':           ['score','fcfMargin','opMargin','mcap'],
     'SMALL':        ['growth','r40','grossMargin','mcap'],
     'R40':          ['r40','growth','fcfMargin','opMargin','grossMargin','mcap'],
     'PRE_BREAKOUT': ['growth','grossMargin','r40','mcap','pbScore'],
@@ -1879,7 +1840,6 @@ const CLIENT_JS = `
     if (key === 'score') {
       if (tab === 'QC') return r.qcScore;
       if (tab === 'HG') return r.hgScore;
-      if (tab === 'BF') return r.bfScore;
       return null;
     }
     if (key === 'rx') return r.rx;
@@ -1938,12 +1898,10 @@ const CLIENT_JS = `
     const color = vs[vs.length-1] >= vs[0] ? 'var(--green)' : 'var(--red)';
     return '<svg width="'+w+'" height="'+h+'" style="vertical-align:middle;display:inline-block;"><polyline points="'+pts+'" stroke="'+color+'" stroke-width="1" fill="none"/></svg>';
   }
-  // trendCell: builds the Trend <td> for HG/QC/BF/R40 tabs — microSpark + Δ7d
+  // trendCell: builds the Trend <td> for HG/QC/R40 tabs — microSpark + Δ7d
   // badge. Source field on history entries: hgScore (HG, R40) or qcScore (QC).
   // r40 isn't stored in score-history so the R40 tab falls back to hgScore as
-  // a correlated proxy (same momentum axis). Tag 232g: bfScore isn't in
-  // snapshot-score-history yet (would need a backfill); fall back to hgScore
-  // which approximates fundamentals momentum for the same stock.
+  // a correlated proxy (same momentum axis).
   function trendCell(r, tab){
     // C2: use r.trendSpark proxy (pre-built series) and r.deltaScore7d scalar.
     const ts = r.trendSpark;
@@ -1952,11 +1910,6 @@ const CLIENT_JS = `
     let series;
     if (tab === 'QC') {
       series = ts.qc;
-    } else if (tab === 'BF') {
-      // BF: whichever of hg/qc is more populated
-      const hgLen = (ts.hg || []).length;
-      const qcLen = (ts.qc || []).length;
-      series = qcLen >= hgLen ? ts.qc : ts.hg;
     } else if (tab === 'R40' || tab === 'KI_INFRA' || tab === 'R40_DURABLE') {
       series = ts.r40;
     } else {
@@ -2010,26 +1963,6 @@ const CLIENT_JS = `
     if (tab === 'QC') {
       const score = r.qcScore==null ? '—' : r.qcScore.toFixed(1);
       return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td>'+bc(score,'score')+'<td>'+stateP+'</td>'+bc(fcfmHtml,'fcfMargin')+bc(opmHtml,'opMargin')+bc(gmHtml,'grossMargin')+bc(fmtM(r.mcap),'mcap')+trendCell(r,'QC')+'</tr>';
-    }
-    if (tab === 'BF') {
-      // Tag 232g: read 14-pt composite + OE pass + MoS from compactResults.
-      // buffett-criteria.value is Math.round(passRate*100) — 0-100 percent scale.
-      // Derive nPassed = round(value/100 * 14); compactResults has no components.
-      // owner-earnings.pass is the OE-positive-and-growing check.
-      // dcf-intrinsic-value.value is discount-to-intrinsic ratio 0-1 (≥0.25 = MoS pass).
-      // C5: read from r.bfProxy (pre-computed light proxy, no r.results access needed)
-      const score = r.bfScore==null ? '—' : r.bfScore.toFixed(1);
-      const bp = r.bfProxy || {};
-      const bc14Cell = (bp.bc14Computable && bp.bc14n != null)
-        ? '<span class="'+(bp.bc14Pass?'g-pos':'g-mute')+'">'+bp.bc14n+'/14</span>'
-        : '<span class="g-mute">—</span>';
-      const oeCell = bp.oeComputable
-        ? '<span class="'+(bp.oePass?'g-pos':'g-neg')+'">'+(bp.oePass?'✓':'✗')+'</span>'
-        : '<span class="g-mute">—</span>';
-      const mosCell = bp.mosComputable
-        ? '<span class="'+(bp.mosPass?'g-pos':'g-mute')+'">'+(bp.mosValue*100).toFixed(0)+'%</span>'
-        : '<span class="g-mute">—</span>';
-      return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td>'+bc(score,'score')+'<td>'+bc14Cell+'</td><td>'+oeCell+'</td><td>'+mosCell+'</td>'+bc(fcfmHtml,'fcfMargin')+bc(opmHtml,'opMargin')+bc(fmtM(r.mcap),'mcap')+trendCell(r,'BF')+'</tr>';
     }
     if (tab === 'SMALL') {
       return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.country)+'</td><td>'+stateP+'</td>'+bc(growthHtml,'growth')+bc(r40Html,'r40')+bc(gmHtml,'grossMargin')+bc(fmtM(r.mcap),'mcap')+'</tr>';
@@ -2101,13 +2034,12 @@ const CLIENT_JS = `
       return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td>'+esc(r.sector)+'</td><td>'+stateP+'</td>'+bc(growthHtml,'growth')+bc(gmHtml,'grossMargin')+bc(r40Html,'r40')+'<td style="font-size:10px">'+signalsHtml+'</td>'+bc(fmtM(r.mcap),'mcap')+bc(pb,'pbScore')+'</tr>';
     }
     if (tab === 'WATCH') {
-      const score = Math.max(r.hgScore||0, r.qcScore||0, r.bfScore||0).toFixed(1);
+      const score = Math.max(r.hgScore||0, r.qcScore||0).toFixed(1);
       // Reasons priority: explicit hard-gate reasons > NEAR_MISS tier label.
       let reason;
       if (r.watchReasons && r.watchReasons.length) reason = r.watchReasons.join(',');
       else if (r.hgTier==='NEAR_MISS') reason = 'HG NEAR';
       else if (r.qcTier==='NEAR_MISS') reason = 'QC NEAR';
-      else if (r.bfTier==='NEAR_MISS') reason = 'BF NEAR';
       else reason = '—';
       return rowOpen+'<td>'+(i+1)+'</td><td class="ticker">'+esc(r.ticker)+'</td><td class="name">'+esc(r.name)+'</td><td style="font-size:10px">'+reason+'</td><td class="num">'+score+'</td><td>'+stateP+'</td><td class="num">'+growthHtml+'</td><td class="num">'+fmtM(r.mcap)+'</td></tr>';
     }
@@ -2156,7 +2088,6 @@ const CLIENT_JS = `
     // Namen verfehlen systematisch die wenigen kohorten-tragenden Gewinner.
     'HG': 'Hypergrowth-Qualitätsliste — KEIN Kaufsignal, sondern Qualitäts-Konfidenz (nicht erwartete Rendite; der spätere Gewinner kann ein B-Tier-Name sein). Streuungs-Hinweis fürs Depot: ~15–25 dieser Namen breit über verschiedene Sektoren halten, grob gleichgewichtet — nicht die Top-3–5 zu einem Portfolio kollabieren. Floor: nicht unter ~10–15 Einzelnamen (Einzelaktien-Endwert ist lognormal, Median << Mittel — zu wenige Namen verfehlen systematisch die wenigen Gewinner, die die Kohorte tragen). Ceiling: über ~30 konvergierst du zum Index, den du schlagen willst (der Top-X-Vorteil ist ein 2020–25-Mega-Cap-Artefakt, kein struktureller Premium).',
     'QC': 'Quality-Compounder-Liste — KEIN Kaufsignal, sondern Qualitäts-Konfidenz (nicht erwartete Rendite). Streuungs-Hinweis fürs Depot: ~15–25 dieser Namen breit über verschiedene Sektoren halten, grob gleichgewichtet — nicht die Top-3–5 konzentrieren. Floor: nicht unter ~10–15 Einzelnamen (lognormaler Median << Mittel → wenige Namen verfehlen systematisch die kohorten-tragenden Gewinner). Ceiling: über ~30 konvergierst du zum Index. Keine TOP_N-Kappung auf dem Screen — bewusste Designentscheidung; die Liste zeigt alle Namen, die die Mode-Gates bestehen.',
-    'BF': 'Warren Buffett-style value-compounder filter (literaturgestützt: Berkshire Letters 1977–2024 + Hagstrom + Damodaran). 14-Punkt-Komposit (10 quantitative T1–T10: ROE, ROIC, Debt, EPS-Acceleration, FCF, OE, Margins, E/P, Hurdle Rate, One-Dollar-Premise + 3 qualitative Q1–Q3: Moat, Pricing-Power, Consistency + 1 Industrie-Exclusion X1). Owner-Earnings (Buffett 1986): NI + D&A + non-cash − Maint-Capex − ΔWC > 0 und wachsend. DCF Margin-of-Safety: ≥25% Discount-to-Intrinsic UND Hurdle-Rate ≥15% (3-Stage DCF mit Gordon-Growth Terminal). Strict-Mode: ✓ in der Passed-Spalte heißt alle 3 MUST gleichzeitig erfüllt — heute meist sehr selten, weil das Universum von Premium-Multiples dominiert wird.',
     'PRE_BREAKOUT': 'Companies recently turning profitable with accelerating growth. These are the future compounders — before the market prices in the quality improvement. Historical examples: PLTR (TURNAROUND→HG mid-2023), CRDO (2022), ALAB (2023).',
     'WATCH': 'Stocks flagged by hard-gates (Q-Spike, Loss>50%Rev, Metric-Divergence, Closed-End-Trust, DQ-D) and NEAR_MISS tier — explicitly held out of HG/QC/SMALL/R40/PRE-BREAKOUT for human review.',
     'SMALL': 'Market cap < $2B, revenue growth > 20%, not in LOSS state. Hunting the next CRDO/ALAB before they hit the radar.',
@@ -2180,7 +2111,7 @@ const CLIENT_JS = `
     return (xs.length % 2 === 0) ? (xs[mid-1] + xs[mid]) / 2 : xs[mid];
   }
   function _rowMetric(r, key) {
-    if (key === 'score')   return (r.hgScore != null) ? r.hgScore : (r.qcScore != null ? r.qcScore : r.bfScore);
+    if (key === 'score')   return (r.hgScore != null) ? r.hgScore : (r.qcScore != null ? r.qcScore : null);
     if (key === 'insiderScore') return r.insiderScore;
     if (key === 'r40')     return r.r40;
     if (key === 'fcfm')    return r.fcfMargin;
@@ -2581,8 +2512,7 @@ const CLIENT_JS = `
     html += '<div><span class="tk">'+esc(r.ticker)+'</span> <span class="nm">'+esc(r.name)+'</span><div class="meta">'+esc(r.sector)+' · '+esc(r.industry)+' · '+esc(r.country)+'</div></div>';
     const score = activeTab==='QC' ? r.qcScore
       : activeTab==='HG' ? r.hgScore
-      : activeTab==='BF' ? r.bfScore
-      : Math.max(r.hgScore||0, r.qcScore||0, r.bfScore||0);
+      : Math.max(r.hgScore||0, r.qcScore||0);
     // Audit-signal mini-badges. Color: green for healthy, red for fail, mute for n/a.
     const sigBadges = [];
     if (r.dqGrade) {
@@ -2675,14 +2605,14 @@ const CLIENT_JS = `
     // Falls back to placeholder text on Day-1 (history empty) so the modal
     // never breaks when score-history hasn't been populated yet.
     html += '<h3 class="sec">Score</h3>';
-    html += '<div style="font-family:var(--mono);font-size:12px;color:var(--text-1);">HG Score: '+(r.hgScore!=null?r.hgScore.toFixed(1):'—')+' ('+(r.hgTier||'—')+') &nbsp;·&nbsp; QC Score: '+(r.qcScore!=null?r.qcScore.toFixed(1):'—')+' ('+(r.qcTier||'—')+') &nbsp;·&nbsp; BF Score: '+(r.bfScore!=null?r.bfScore.toFixed(1):'—')+' ('+(r.bfTier||'—')+(r.bfPassed?' ✓':'')+') &nbsp;·&nbsp; PB Score: '+(r.pbScore!=null?r.pbScore.toFixed(1):'—')+'</div>';
+    html += '<div style="font-family:var(--mono);font-size:12px;color:var(--text-1);">HG Score: '+(r.hgScore!=null?r.hgScore.toFixed(1):'—')+' ('+(r.hgTier||'—')+') &nbsp;·&nbsp; QC Score: '+(r.qcScore!=null?r.qcScore.toFixed(1):'—')+' ('+(r.qcTier||'—')+') &nbsp;·&nbsp; PB Score: '+(r.pbScore!=null?r.pbScore.toFixed(1):'—')+'</div>';
     // Tag 244: Score-Erklärbarkeit ("warum dieser Score") — top weighted drivers
     // and drags for the headline mode, derived server-side from the aggregator
     // breakdown (r.scoreDrivers). Renders nothing when no mode produced a
     // computable score (e.g. insufficient coverage / pure-WATCH names).
     const sd = r.scoreDrivers;
     if (sd && ((sd.positives && sd.positives.length) || (sd.negatives && sd.negatives.length))) {
-      const _modeLbl = {HYPERGROWTH:'HG',QUALITY_COMPOUNDER:'QC',TURNAROUND:'TURN',BUFFETT:'BF'}[sd.mode] || sd.mode;
+      const _modeLbl = {HYPERGROWTH:'HG',QUALITY_COMPOUNDER:'QC',TURNAROUND:'TURN'}[sd.mode] || sd.mode;
       const _drvLine = function(label, items, color, sign, key){
         if (!items || !items.length) return '';
         let s = '<div style="font-family:var(--mono);font-size:11px;margin-bottom:3px;line-height:1.7;"><span style="color:var(--text-2);display:inline-block;width:70px;">'+label+'</span>';
@@ -2796,9 +2726,9 @@ const CLIENT_JS = `
         + '<th style="text-align:left;">Ticker</th>'
         + '<th>MCap</th><th>R40</th><th>FCFM%</th><th>GP/TA</th><th>ΔScore</th>'
         + '</tr></thead><tbody>';
-      const subjScore = (r.hgScore != null) ? r.hgScore : (r.qcScore != null ? r.qcScore : (r.bfScore != null ? r.bfScore : null));
+      const subjScore = (r.hgScore != null) ? r.hgScore : (r.qcScore != null ? r.qcScore : null);
       for (const p of peers) {
-        const pScore = (p.hgScore != null) ? p.hgScore : (p.qcScore != null ? p.qcScore : (p.bfScore != null ? p.bfScore : null));
+        const pScore = (p.hgScore != null) ? p.hgScore : (p.qcScore != null ? p.qcScore : null);
         const dScore = (subjScore != null && pScore != null) ? (pScore - subjScore) : null;
         const dCls = (dScore == null) ? 'g-mute' : (dScore >= 0 ? 'g-pos' : 'g-neg');
         const dStr = (dScore == null) ? '—' : (dScore >= 0 ? '+' : '') + dScore.toFixed(1);
@@ -3107,8 +3037,7 @@ const CLIENT_JS = `
     let html = '';
     for (const h of hits) {
       const badge = h.hgClass && (h.hgClass.startsWith('REAL_HYPERGROWTH')) ? 'HG' :
-                    (h.qcTier && h.qcTier !== 'REJECT' ? 'QC' :
-                    (h.bfPassed ? 'BF' : ''));
+                    (h.qcTier && h.qcTier !== 'REJECT' ? 'QC' : '');
       // Tag 217g (audit F-217d-1 HIGH XSS-safety fix): use esc() on ticker
       // and name. 124+ stocks have '&' or "'" in name (Sun Hung Kai & Co.,
       // AVIC Xi'an Aircraft, Goldwind Science&Technology) — without esc()
@@ -3934,22 +3863,8 @@ const CLIENT_JS = `
     if (key === 'score') {
       const v = tab === 'QC' ? r.qcScore
         : tab === 'HG' ? r.hgScore
-        : tab === 'BF' ? r.bfScore
         : null;
       return v != null && Number.isFinite(v) ? v.toFixed(2) : '';
-    }
-    if (key === 'bf14') {
-      // C6: use bfProxy.bc14Value (raw 0-100 scale, same as m.value was)
-      const bp = r.bfProxy;
-      return (bp && Number.isFinite(bp.bc14Value)) ? bp.bc14Value.toFixed(0) : '';
-    }
-    if (key === 'bfMos') {
-      // C6: use bfProxy.mosValue (raw ratio 0-1; *100 for % display, same as before)
-      const bp = r.bfProxy;
-      return (bp && Number.isFinite(bp.mosValue)) ? (bp.mosValue*100).toFixed(1) : '';
-    }
-    if (key === 'bfPassed') {
-      return r.bfPassed ? 'YES' : 'NO';
     }
     if (key === 'rank') return ''; // filled by caller
     const v = r[key];
@@ -3971,7 +3886,6 @@ const CLIENT_JS = `
     const colMaps = {
       'HG':           [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['Score','score'],['State','state'],['R40','r40'],['RevGr%','growth'],['GrossM%','grossMargin'],['OpM%','opMargin'],['FCFM%','fcfMargin'],['MCap','mcap'],['DQ','dqGrade']],
       'QC':           [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['Score','score'],['State','state'],['FCFM%','fcfMargin'],['OpM%','opMargin'],['GrossM%','grossMargin'],['RevGr%','growth'],['MCap','mcap'],['DQ','dqGrade']],
-      'BF':           [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['Score','score'],['14-Pt','bf14'],['MoS%','bfMos'],['Passed','bfPassed'],['FCFM%','fcfMargin'],['OpM%','opMargin'],['GrossM%','grossMargin'],['RevGr%','growth'],['MCap','mcap'],['DQ','dqGrade']],
       'SMALL':        [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['State','state'],['RevGr%','growth'],['R40','r40'],['GrossM%','grossMargin'],['FCFM%','fcfMargin'],['MCap','mcap'],['DQ','dqGrade']],
       'R40':          [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['R40','r40'],['RevGr%','growth'],['FCFM%','fcfMargin'],['OpM%','opMargin'],['GrossM%','grossMargin'],['State','state'],['MCap','mcap'],['DQ','dqGrade']],
       'PRE_BREAKOUT': [['Rank','rank'],['Ticker','ticker'],['Company','name'],['Sector','sector'],['Country','country'],['State','state'],['RevGr%','growth'],['GrossM%','grossMargin'],['R40','r40'],['MCap','mcap'],['PB-Score','pbScore'],['DQ','dqGrade']],
@@ -4153,25 +4067,6 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
       .slice(-12)
       .map(e => (e.r40 != null && Number.isFinite(e.r40)) ? round1(e.r40) : null);
 
-    // bfProxy: pre-computed Buffett-tab cell values + raw CSV values
-    const bc = (r.results || {})['buffett-criteria'];
-    const oe = (r.results || {})['owner-earnings'];
-    const dcf = (r.results || {})['dcf-intrinsic-value'];
-    const bc14Computable = !!(bc && bc.computable);
-    const bc14n = (bc14Computable && bc.value != null && Number.isFinite(bc.value))
-      ? Math.round(bc.value / 100 * 14) : null;
-    const bfProxy = {
-      bc14n,
-      bc14Pass: bc14Computable ? !!bc.pass : null,
-      bc14Computable,
-      bc14Value: (bc && Number.isFinite(bc.value)) ? bc.value : null,  // raw 0-100, for CSV bf14
-      oeComputable: !!(oe && oe.computable),
-      oePass: (oe && oe.computable) ? !!oe.pass : null,
-      mosComputable: !!(dcf && dcf.computable && Number.isFinite(dcf.value)),
-      mosPass: (dcf && dcf.computable) ? !!dcf.pass : null,
-      mosValue: (dcf && Number.isFinite(dcf.value)) ? dcf.value : null  // raw ratio 0-1, for CSV bfMos
-    };
-
     // roicSort: SECTOR heatmap + modal peers (embedded for ALL rows)
     const srr = (r.results || {})['sector-relative-roic'];
     const gp  = (r.results || {})['gross-profitability'];
@@ -4181,7 +4076,7 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
       gpta: (gp && Number.isFinite(gp.value)) ? gp.value : null
     };
 
-    return { trendSpark, deltaScore7d, r40Spark, bfProxy, roicSort };
+    return { trendSpark, deltaScore7d, r40Spark, roicSort };
   }
 
   // S2: Non-mutating strip — detailByTicker holds the heavy fields,
@@ -4254,11 +4149,13 @@ function renderHTML(rows, tabs, sectors, countries, generatedAt) {
 </header>
 <div class="tabs" role="tablist" aria-label="Screener tabs">
   <!-- Tag 243: tab bar reduced to the three Karl actually uses — Small Cap,
-       Rule-of-40, KI-Infrastruktur. HG, QC, Buffett, Insider-Buying,
+       Rule-of-40, KI-Infrastruktur. HG, QC, Insider-Buying,
        Pre-Breakout, Watch and the Sector heatmap were removed on request.
-       The scoring engine and build-time classification are UNTOUCHED — every
-       removed tab can be re-added here as a single <button> line without any
-       recomputation (the row data is still embedded). -->
+       (The BUFFETT/BF tab + its mode/methods were deleted entirely in the
+       2026-06-20 audit — not just hidden here.) The scoring engine and
+       build-time classification are UNTOUCHED — every removed tab here can be
+       re-added as a single <button> line without any recomputation (the row
+       data is still embedded). -->
   <button data-tab="SMALL" role="tab" aria-selected="false">📈 Small Cap</button>
   <button data-tab="R40" class="active" role="tab" aria-current="page" aria-selected="true">📊 Rule of 40</button>
   <button data-tab="KI_INFRA" role="tab" aria-selected="false">🤖 KI Infrastruktur</button>
