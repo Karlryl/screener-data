@@ -1,0 +1,1924 @@
+{
+  "_header": {
+    "generatedFor": "diagnostics_lst",
+    "anchorDate": "2026-06-21",
+    "freshnessCutoffDate": "2025-05-17",
+    "generatedAt": "2026-06-20T23:22:49.212Z",
+    "cikSource": "network",
+    "tickerCount": 29,
+    "goodwillCoveragePct": 93.1,
+    "paymentsCoveragePct": 65.5,
+    "note": "Fix1: per-year revenue denominator for deltaGoodwill/rev; Fix2: negative deltaGoodwill clamped as impairment (impairmentFlag), excluded from maxJump+cumDelta; cumPaymentsToRev sums positive payments only"
+  },
+  "A": {
+    "cik": "0001090872",
+    "goodwillHistory": [
+      {
+        "val": 4473000000,
+        "end": "2025-10-31"
+      },
+      {
+        "val": 4477000000,
+        "end": "2024-10-31"
+      },
+      {
+        "val": 3960000000,
+        "end": "2023-10-31"
+      },
+      {
+        "val": 3952000000,
+        "end": "2022-10-31"
+      },
+      {
+        "val": 3975000000,
+        "end": "2021-10-31"
+      },
+      {
+        "val": 3602000000,
+        "end": "2020-10-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 6948000000,
+        "end": "2025-10-31"
+      },
+      {
+        "val": 6510000000,
+        "end": "2024-10-31"
+      },
+      {
+        "val": 6833000000,
+        "end": "2023-10-31"
+      },
+      {
+        "val": 6848000000,
+        "end": "2022-10-31"
+      },
+      {
+        "val": 6319000000,
+        "end": "2021-10-31"
+      },
+      {
+        "val": 5339000000,
+        "end": "2020-10-31"
+      }
+    ],
+    "goodwillLatest": 4473000000,
+    "goodwillToRev": 0.6438,
+    "maxGoodwillJumpPctRev": 0.0794,
+    "maxJumpYearIndex": 1,
+    "cumDeltaGoodwillPctRev": 0.1396,
+    "cumPaymentsToRev": 0.0389,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 6948000000
+  },
+  "ADPT": {
+    "cik": "0001478320",
+    "goodwillHistory": [
+      {
+        "val": 118972000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 118972000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 118972000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 118972000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 118972000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 118972000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 276976000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 178957000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 170276000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 185308000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 154344000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 98382000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 118972000,
+    "goodwillToRev": 0.4295,
+    "maxGoodwillJumpPctRev": 0,
+    "maxJumpYearIndex": 0,
+    "cumDeltaGoodwillPctRev": 0,
+    "cumPaymentsToRev": null,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": false
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": null,
+    "annualRevenue": 276976000
+  },
+  "AVTR": {
+    "cik": "0001722482",
+    "goodwillHistory": [
+      {
+        "val": 4986900000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 5539200000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 5716700000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 5652600000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 5341100000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 2860200000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 6552200000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 6783600000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 6967200000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 7512400000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 7386100000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 6393600000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 4986900000,
+    "goodwillToRev": 0.7611,
+    "maxGoodwillJumpPctRev": 0.3359,
+    "maxJumpYearIndex": 4,
+    "cumDeltaGoodwillPctRev": 0.3866,
+    "cumPaymentsToRev": null,
+    "impairmentFlag": true,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": false
+    },
+    "revConcept": "Revenues",
+    "payConcept": null,
+    "annualRevenue": 6552200000
+  },
+  "AZTA": {
+    "cik": "0000933974",
+    "goodwillHistory": [
+      {
+        "val": 702395000,
+        "end": "2025-09-30"
+      },
+      {
+        "val": 691409000,
+        "end": "2024-09-30"
+      },
+      {
+        "val": 784339000,
+        "end": "2023-09-30"
+      },
+      {
+        "val": 513623000,
+        "end": "2022-09-30"
+      },
+      {
+        "val": 469356000,
+        "end": "2021-09-30"
+      },
+      {
+        "val": 501536000,
+        "end": "2020-09-30"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 593821000,
+        "end": "2025-09-30"
+      },
+      {
+        "val": 656323000,
+        "end": "2024-09-30"
+      },
+      {
+        "val": 665072000,
+        "end": "2023-09-30"
+      },
+      {
+        "val": 555498000,
+        "end": "2022-09-30"
+      },
+      {
+        "val": 513703000,
+        "end": "2021-09-30"
+      },
+      {
+        "val": 897273000,
+        "end": "2020-09-30"
+      }
+    ],
+    "goodwillLatest": 702395000,
+    "goodwillToRev": 1.1828,
+    "maxGoodwillJumpPctRev": 0.407,
+    "maxJumpYearIndex": 2,
+    "cumDeltaGoodwillPctRev": 0.5052,
+    "cumPaymentsToRev": 0.1602,
+    "impairmentFlag": true,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 593821000
+  },
+  "BIO": {
+    "cik": "0000012208",
+    "goodwillHistory": [
+      {
+        "val": 579800000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 410500000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 413569000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 406488000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 347343000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 291916000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 2583200000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 2566500000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 2671300000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 2802200000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 2922500000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 2545600000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 579800000,
+    "goodwillToRev": 0.2245,
+    "maxGoodwillJumpPctRev": 0.0655,
+    "maxJumpYearIndex": 0,
+    "cumDeltaGoodwillPctRev": 0.1083,
+    "cumPaymentsToRev": null,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": false
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": null,
+    "annualRevenue": 2583200000
+  },
+  "BRKR": {
+    "cik": "0001109354",
+    "goodwillHistory": [
+      {
+        "val": 1547700000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 1507300000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 582600000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 457600000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 339500000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 320400000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 3436500000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 3366400000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 2964500000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 2530700000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 2417900000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 1987500000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 1547700000,
+    "goodwillToRev": 0.4504,
+    "maxGoodwillJumpPctRev": 0.2747,
+    "maxJumpYearIndex": 1,
+    "cumDeltaGoodwillPctRev": 0.3833,
+    "cumPaymentsToRev": 0.1321,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 3436500000
+  },
+  "CDNA": {
+    "cik": "0001217234",
+    "goodwillHistory": [
+      {
+        "val": 40336000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 40336000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 40336000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 37523000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 36983000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 23857000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 379805000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 333785000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 280324000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 321793000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 296397000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 192194000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 40336000,
+    "goodwillToRev": 0.1062,
+    "maxGoodwillJumpPctRev": 0.0443,
+    "maxJumpYearIndex": 4,
+    "cumDeltaGoodwillPctRev": 0.056,
+    "cumPaymentsToRev": 0.0126,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 379805000
+  },
+  "CRL": {
+    "cik": "0001100682",
+    "goodwillHistory": [
+      {
+        "val": 2764253000,
+        "end": "2025-12-27"
+      },
+      {
+        "val": 2846608000,
+        "end": "2024-12-28"
+      },
+      {
+        "val": 3095045000,
+        "end": "2023-12-30"
+      },
+      {
+        "val": 2849903000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 2711881000,
+        "end": "2021-12-25"
+      },
+      {
+        "val": 1809168000,
+        "end": "2020-12-26"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 4015382000,
+        "end": "2025-12-27"
+      },
+      {
+        "val": 4049989000,
+        "end": "2024-12-28"
+      },
+      {
+        "val": 4129409000,
+        "end": "2023-12-30"
+      },
+      {
+        "val": 3976060000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 3540160000,
+        "end": "2021-12-25"
+      },
+      {
+        "val": 2923933000,
+        "end": "2020-12-26"
+      }
+    ],
+    "goodwillLatest": 2764253000,
+    "goodwillToRev": 0.6884,
+    "maxGoodwillJumpPctRev": 0.255,
+    "maxJumpYearIndex": 4,
+    "cumDeltaGoodwillPctRev": 0.3491,
+    "cumPaymentsToRev": 0.097,
+    "impairmentFlag": true,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 4015382000
+  },
+  "DHR": {
+    "cik": "0000313616",
+    "goodwillHistory": [
+      {
+        "val": 43151000000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 40497000000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 41608000000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 39752000000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 41184000000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 35420000000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 24568000000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 23875000000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 23890000000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 31471000000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 29453000000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 22284000000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 43151000000,
+    "goodwillToRev": 1.7564,
+    "maxGoodwillJumpPctRev": 0.1957,
+    "maxJumpYearIndex": 4,
+    "cumDeltaGoodwillPctRev": 0.3814,
+    "cumPaymentsToRev": 0.249,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 24568000000
+  },
+  "EXAS": {
+    "cik": "0001124140",
+    "goodwillHistory": [
+      {
+        "val": 2368048000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 2366676000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 2367120000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 2346040000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 2335172000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 1237672000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 3246990000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 2758867000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 2499766000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 2084279000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 1767087000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 1491391000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 2368048000,
+    "goodwillToRev": 0.7293,
+    "maxGoodwillJumpPctRev": 0.6211,
+    "maxJumpYearIndex": 4,
+    "cumDeltaGoodwillPctRev": 0.6351,
+    "cumPaymentsToRev": 0.0414,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 3246990000
+  },
+  "GH": {
+    "cik": "0001576280",
+    "goodwillHistory": [
+      {
+        "val": 77257000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 3290000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 3290000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 3290000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 3290000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 3290000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 982021000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 739016000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 563948000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 449538000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 373653000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 286730000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 77257000,
+    "goodwillToRev": 0.0787,
+    "maxGoodwillJumpPctRev": 0.0753,
+    "maxJumpYearIndex": 0,
+    "cumDeltaGoodwillPctRev": 0.0753,
+    "cumPaymentsToRev": 0.0195,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "Revenues",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 982021000
+  },
+  "GRAL": {
+    "cik": "0001699031",
+    "goodwillHistory": [],
+    "revenueHistory": [
+      {
+        "val": 147172000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 125595000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 93105000,
+        "end": "2023-12-31"
+      }
+    ],
+    "goodwillLatest": null,
+    "goodwillToRev": null,
+    "maxGoodwillJumpPctRev": null,
+    "maxJumpYearIndex": null,
+    "cumDeltaGoodwillPctRev": null,
+    "cumPaymentsToRev": null,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": false,
+      "payments": false
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": null,
+    "annualRevenue": 147172000
+  },
+  "IDXX": {
+    "cik": "0000874716",
+    "goodwillHistory": [
+      {
+        "val": 414004000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 405100000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 365961000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 361795000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 359345000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 243347000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 4303702000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 3897504000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 3660953000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 3367324000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 3215360000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 2706655000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 414004000,
+    "goodwillToRev": 0.0962,
+    "maxGoodwillJumpPctRev": 0.0361,
+    "maxJumpYearIndex": 4,
+    "cumDeltaGoodwillPctRev": 0.05,
+    "cumPaymentsToRev": 0.0124,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 4303702000
+  },
+  "ILMN": {
+    "cik": "0001110803",
+    "goodwillHistory": [
+      {
+        "val": 1113000000,
+        "end": "2025-12-28"
+      },
+      {
+        "val": 1113000000,
+        "end": "2024-12-29"
+      },
+      {
+        "val": 2545000000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 7113000000,
+        "end": "2022-01-02"
+      },
+      {
+        "val": 897000000,
+        "end": "2021-01-03"
+      },
+      {
+        "val": 824000000,
+        "end": "2019-12-29"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 4343000000,
+        "end": "2025-12-28"
+      },
+      {
+        "val": 4372000000,
+        "end": "2024-12-29"
+      },
+      {
+        "val": 4504000000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 4526000000,
+        "end": "2022-01-02"
+      },
+      {
+        "val": 3239000000,
+        "end": "2021-01-03"
+      },
+      {
+        "val": 3543000000,
+        "end": "2019-12-29"
+      }
+    ],
+    "goodwillLatest": 1113000000,
+    "goodwillToRev": 0.2563,
+    "maxGoodwillJumpPctRev": 1.3734,
+    "maxJumpYearIndex": 3,
+    "cumDeltaGoodwillPctRev": 1.3959,
+    "cumPaymentsToRev": 0.1085,
+    "impairmentFlag": true,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 4343000000
+  },
+  "IQV": {
+    "cik": "0001478242",
+    "goodwillHistory": [
+      {
+        "val": 16616000000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 14710000000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 14567000000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 13921000000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 13301000000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 12654000000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 16310000000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 15405000000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 14984000000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 14410000000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 13874000000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 11359000000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 16616000000,
+    "goodwillToRev": 1.0188,
+    "maxGoodwillJumpPctRev": 0.1169,
+    "maxJumpYearIndex": 0,
+    "cumDeltaGoodwillPctRev": 0.2589,
+    "cumPaymentsToRev": 0.0727,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 16310000000
+  },
+  "MEDP": {
+    "cik": "0001668397",
+    "goodwillHistory": [
+      {
+        "val": 662396000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 662396000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 662396000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 662396000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 662396000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 662396000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 2530234000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 2109054000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 1885842000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 1459996000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 1142377000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 925925000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 662396000,
+    "goodwillToRev": 0.2618,
+    "maxGoodwillJumpPctRev": 0,
+    "maxJumpYearIndex": 0,
+    "cumDeltaGoodwillPctRev": 0,
+    "cumPaymentsToRev": null,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": false
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": null,
+    "annualRevenue": 2530234000
+  },
+  "MTD": {
+    "cik": "0001037646",
+    "goodwillHistory": [
+      {
+        "val": 739225000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 668914000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 670108000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 660170000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 648622000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 550270000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 4026399000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 3872361000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 3788309000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 3919709000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 3717930000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 3085177000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 739225000,
+    "goodwillToRev": 0.1836,
+    "maxGoodwillJumpPctRev": 0.0265,
+    "maxJumpYearIndex": 4,
+    "cumDeltaGoodwillPctRev": 0.0495,
+    "cumPaymentsToRev": 0.0167,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "Revenues",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 4026399000
+  },
+  "NEO": {
+    "cik": "0001077183",
+    "goodwillHistory": [
+      {
+        "val": 524344000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 522766000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 522766000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 522766000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 527115000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 211083000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 727332000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 660566000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 591643000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 509728000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 484329000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 444448000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 524344000,
+    "goodwillToRev": 0.7209,
+    "maxGoodwillJumpPctRev": 0.6525,
+    "maxJumpYearIndex": 4,
+    "cumDeltaGoodwillPctRev": 0.6547,
+    "cumPaymentsToRev": 0.1354,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "RevenueFromContractWithCustomerIncludingAssessedTax",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 727332000
+  },
+  "NEOG": {
+    "cik": "0000711377",
+    "goodwillHistory": [
+      {
+        "val": 1064902000,
+        "end": "2025-05-31"
+      },
+      {
+        "val": 2135632000,
+        "end": "2024-05-31"
+      },
+      {
+        "val": 2137496000,
+        "end": "2023-05-31"
+      },
+      {
+        "val": 142704000,
+        "end": "2022-05-31"
+      },
+      {
+        "val": 131476000,
+        "end": "2021-05-31"
+      },
+      {
+        "val": 110340000,
+        "end": "2020-05-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 894661000,
+        "end": "2025-05-31"
+      },
+      {
+        "val": 924222000,
+        "end": "2024-05-31"
+      },
+      {
+        "val": 822447000,
+        "end": "2023-05-31"
+      },
+      {
+        "val": 527159000,
+        "end": "2022-05-31"
+      },
+      {
+        "val": 468459000,
+        "end": "2021-05-31"
+      },
+      {
+        "val": 418170000,
+        "end": "2020-05-31"
+      }
+    ],
+    "goodwillLatest": 1064902000,
+    "goodwillToRev": 1.1903,
+    "maxGoodwillJumpPctRev": 2.4254,
+    "maxJumpYearIndex": 2,
+    "cumDeltaGoodwillPctRev": 2.4918,
+    "cumPaymentsToRev": 0.0253,
+    "impairmentFlag": true,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 894661000
+  },
+  "NTRA": {
+    "cik": "0001604821",
+    "goodwillHistory": [
+      {
+        "val": 141070000,
+        "end": "2025-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 2306113000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 1696911000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 1082571000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 820222000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 625486000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 391005000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 141070000,
+    "goodwillToRev": 0.0612,
+    "maxGoodwillJumpPctRev": null,
+    "maxJumpYearIndex": null,
+    "cumDeltaGoodwillPctRev": null,
+    "cumPaymentsToRev": 0.0036,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 2306113000
+  },
+  "OPK": {
+    "cik": "0000944809",
+    "goodwillHistory": [
+      {
+        "val": 484289000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 529252000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 598260000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 595851000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 520601000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 680602000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 606879000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 713142000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 863495000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 1004196000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 1774718000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 1435413000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 484289000,
+    "goodwillToRev": 0.798,
+    "maxGoodwillJumpPctRev": 0.0749,
+    "maxJumpYearIndex": 3,
+    "cumDeltaGoodwillPctRev": 0.0777,
+    "cumPaymentsToRev": null,
+    "impairmentFlag": true,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": false
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": null,
+    "annualRevenue": 606879000
+  },
+  "PSNL": {
+    "cik": "0001527753",
+    "goodwillHistory": [],
+    "revenueHistory": [
+      {
+        "val": 69648000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 84614000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 73481000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 65047000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 85494000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 78648000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": null,
+    "goodwillToRev": null,
+    "maxGoodwillJumpPctRev": null,
+    "maxJumpYearIndex": null,
+    "cumDeltaGoodwillPctRev": null,
+    "cumPaymentsToRev": null,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": false,
+      "payments": false
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": null,
+    "annualRevenue": 69648000
+  },
+  "RGEN": {
+    "cik": "0000730272",
+    "goodwillHistory": [
+      {
+        "val": 1114408000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 1030995000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 987120000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 855513000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 860362000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 618305000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 738256000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 634439000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 638764000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 801536000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 670534000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 366260000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 1114408000,
+    "goodwillToRev": 1.5095,
+    "maxGoodwillJumpPctRev": 0.361,
+    "maxJumpYearIndex": 4,
+    "cumDeltaGoodwillPctRev": 0.7492,
+    "cumPaymentsToRev": 0.1654,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "RevenueFromContractWithCustomerIncludingAssessedTax",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 738256000
+  },
+  "RVTY": {
+    "cik": "0000031791",
+    "goodwillHistory": [
+      {
+        "val": 6613493000,
+        "end": "2025-12-28"
+      },
+      {
+        "val": 6463619000,
+        "end": "2024-12-29"
+      },
+      {
+        "val": 6533550000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 7416584000,
+        "end": "2022-01-02"
+      },
+      {
+        "val": 3447114000,
+        "end": "2021-01-03"
+      },
+      {
+        "val": 3111227000,
+        "end": "2019-12-29"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 2856051000,
+        "end": "2025-12-28"
+      },
+      {
+        "val": 2755026000,
+        "end": "2024-12-29"
+      },
+      {
+        "val": 2750571000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 5067169000,
+        "end": "2022-01-02"
+      },
+      {
+        "val": 3782745000,
+        "end": "2021-01-03"
+      },
+      {
+        "val": 2883673000,
+        "end": "2019-12-29"
+      }
+    ],
+    "goodwillLatest": 6613493000,
+    "goodwillToRev": 2.3156,
+    "maxGoodwillJumpPctRev": 0.7834,
+    "maxJumpYearIndex": 3,
+    "cumDeltaGoodwillPctRev": 0.9247,
+    "cumPaymentsToRev": null,
+    "impairmentFlag": true,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": false
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": null,
+    "annualRevenue": 2856051000
+  },
+  "TMO": {
+    "cik": "0000097745",
+    "goodwillHistory": [
+      {
+        "val": 49362000000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 45853000000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 44020000000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 41196000000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 41924000000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 26041000000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 44556000000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 42879000000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 42857000000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 44915000000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 39211000000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 32218000000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 49362000000,
+    "goodwillToRev": 1.1079,
+    "maxGoodwillJumpPctRev": 0.4051,
+    "maxJumpYearIndex": 4,
+    "cumDeltaGoodwillPctRev": 0.5925,
+    "cumPaymentsToRev": 0.1229,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 44556000000
+  },
+  "TWST": {
+    "cik": "0001581280",
+    "goodwillHistory": [
+      {
+        "val": 82195000,
+        "end": "2025-09-30"
+      },
+      {
+        "val": 85811000,
+        "end": "2024-09-30"
+      },
+      {
+        "val": 85811000,
+        "end": "2023-09-30"
+      },
+      {
+        "val": 85811000,
+        "end": "2022-09-30"
+      },
+      {
+        "val": 22434000,
+        "end": "2021-09-30"
+      },
+      {
+        "val": 1138000,
+        "end": "2020-09-30"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 376572000,
+        "end": "2025-09-30"
+      },
+      {
+        "val": 312974000,
+        "end": "2024-09-30"
+      },
+      {
+        "val": 245109000,
+        "end": "2023-09-30"
+      },
+      {
+        "val": 203565000,
+        "end": "2022-09-30"
+      },
+      {
+        "val": 132333000,
+        "end": "2021-09-30"
+      },
+      {
+        "val": 90100000,
+        "end": "2020-09-30"
+      }
+    ],
+    "goodwillLatest": 82195000,
+    "goodwillToRev": 0.2183,
+    "maxGoodwillJumpPctRev": 0.3113,
+    "maxJumpYearIndex": 3,
+    "cumDeltaGoodwillPctRev": 0.4722,
+    "cumPaymentsToRev": null,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": false
+    },
+    "revConcept": "RevenueFromContractWithCustomerIncludingAssessedTax",
+    "payConcept": null,
+    "annualRevenue": 376572000
+  },
+  "VCYT": {
+    "cik": "0001384101",
+    "goodwillHistory": [
+      {
+        "val": 767154000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 745800000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 702984000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 695891000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 707904000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 2725000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 517145000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 445764000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 361051000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 296536000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 219514000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 117483000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 767154000,
+    "goodwillToRev": 1.4834,
+    "maxGoodwillJumpPctRev": 3.2125,
+    "maxJumpYearIndex": 4,
+    "cumDeltaGoodwillPctRev": 3.3695,
+    "cumPaymentsToRev": 0.2934,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 517145000
+  },
+  "WAT": {
+    "cik": "0001000697",
+    "goodwillHistory": [
+      {
+        "val": 1340081000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 1295720000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 1305446000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 430328000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 437865000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 444362000,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 3165286000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 2958387000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 2956416000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 2971956000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 2785874000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 2365365000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 1340081000,
+    "goodwillToRev": 0.4234,
+    "maxGoodwillJumpPctRev": 0.296,
+    "maxJumpYearIndex": 2,
+    "cumDeltaGoodwillPctRev": 0.31,
+    "cumPaymentsToRev": 0.0813,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": true
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+    "annualRevenue": 3165286000
+  },
+  "WGS": {
+    "cik": "0001818331",
+    "goodwillHistory": [
+      {
+        "val": 13520000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 0,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 0,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 0,
+        "end": "2020-12-31"
+      }
+    ],
+    "revenueHistory": [
+      {
+        "val": 427539000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 305450000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 202566000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 234694000,
+        "end": "2022-12-31"
+      },
+      {
+        "val": 212195000,
+        "end": "2021-12-31"
+      },
+      {
+        "val": 179322000,
+        "end": "2020-12-31"
+      }
+    ],
+    "goodwillLatest": 13520000,
+    "goodwillToRev": 0.0316,
+    "maxGoodwillJumpPctRev": 0.0316,
+    "maxJumpYearIndex": 0,
+    "cumDeltaGoodwillPctRev": 0.0316,
+    "cumPaymentsToRev": null,
+    "impairmentFlag": false,
+    "coverageFlags": {
+      "goodwill": true,
+      "payments": false
+    },
+    "revConcept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "payConcept": null,
+    "annualRevenue": 427539000
+  }
+}
