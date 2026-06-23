@@ -18,7 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const ROOT = __dirname;
-const { absKaliber, absKaliberIndustrials, absKaliberStaples, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
+const { absKaliber, absKaliberIndustrials, absKaliberStaples, absKaliberConsDisc, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
 // Medtech M&A snapshot (advisory lamps; object keyed by ticker)
 const maMedtechRaw = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'ma-rpo-snapshot-medtech.json'), 'utf8')); } catch { return {}; } })();
 // Remove _header key
@@ -251,6 +251,63 @@ const FORMULAS = {
     normTableId: 'staples_distribution-norms-2026-06-21',
     staples: true, cohortKey: 'staples_distribution',
     a2Note: 'consumer_staples_compounder v1 distribution cohort (turns-driven razor-thin-margin retailers/grocers/distributors/processors: discount stores, food distribution, grocery stores, farm products). Same 5-axis absKaliberStaples engine + coverage-renorm as staples_branded; cohort-specific gpa (.10/.66 — the GP/assets INVERSION: distrib p50 49.5% > branded p50 28.4% because clubs/grocers turn assets 4-8× at razor-thin gross MARGIN) + eff (.01/.09 — op-margin p50 3.8%, ~3.8× below branded) norms; growth/assetGrowthPenalty/netIssuance anchors shared. n=23≫15 → full ABS+REL blend. Farm Products / agribusiness (TSN/ADM/BG/ANDE) cluster at the GP/assets floor (~7-16%, CYCLE_WALL) — the linear q floors them honestly without a sub-cohort (which would fall below n≥15). CALM egg-price op-margin spike is the disclosed outlier the MAD-robust REL absorbs. See staples_branded.a2Note for the full mechanism + walls + asserts. Additive/parity-safe; constants frozen §6.5.',
+  },
+  // ===========================================================================
+  // consdisc_expansion (CORE) — TWO cohorts by ASSET-INTENSITY (asset-light Internet-Retail vs store/
+  // real-estate-heavy retail+restaurants). Spec formula-design-consumer-disc-expansion-v1-2026-06-21.md
+  // (Court FINAL DESIGN-PASS 4/4). DISTINCT from industrials/staples: FOUR scored axes (gpa/growth/
+  // assetGrowthPenalty/eff) via absKaliberConsDisc, weights {gpa .40, growth .25, assetGrowthPenalty .20,
+  // eff .15} (STRONG pillar gpa+assetGrowth = 0.60 ≫ growth 0.25). Share dilution is NOT a 5th axis — it is
+  // a POST-SUM bounded haircut on absKaliber (shareCAGR, §3). REL z/MAD per-cohort. PER-COHORT β: store
+  // (n≫15) blends score=100*(0.6*ABS+0.4*REL), β=0.6; LIGHT (n<15, thin-REL) runs ABS-ONLY score=100*ABS,
+  // β=1, THIN_REL always on (§1.3 — an honest ABS-only score beats a fake-clean REL across the lease-
+  // distorted pool). RAW inputs from m.cd.* (court-screen snapshot extraction; deal-mask applied UPSTREAM).
+  // The inverted axis (assetGrowthPenalty) negates the raw for BOTH the q-input AND the cross-sectional REL z.
+  // consdisc = NEW code keyed by the new cohort strings; existing buckets (medtech/dlst/saas/fabless/
+  // industrials/staples) are BYTE-IDENTICAL.
+  consdisc_store: {
+    label: 'Consumer-Disc-Expansion v1 (store: specialty/apparel/footwear/home-improvement retail + restaurants; absolute-anchor, GP/assets pillar, deal-masked cyc-floored annual growth, Cooper-Gulen-Schill asset-growth penalty, Mohanram fcf-weighted efficiency, post-sum dilution haircut, coverage-renorm, LEASE_DISTORTED)',
+    membership: { g: { c: 0.04, s: 0.06 }, gm: { c: 0.21, s: 0.10 }, scaleLog: { c: log10(1000), s: 0.6 } },
+    axes: [
+      { key: 'gpa',                name: 'GP/Assets',  k: 1.5, w: 0.40 },
+      { key: 'growth',             name: 'Growth',     k: 2.0, w: 0.25 },
+      { key: 'assetGrowthPenalty', name: 'AssetGrowth', k: 1.5, w: 0.20 },
+      { key: 'eff',                name: 'Eff-FcfOp',  k: 1.5, w: 0.15 },
+    ],
+    dilCap: 0, dilStart: 0.05, dilRange: 0.20, // share dilution is a POST-SUM absKaliber haircut (§3), no separate SBC penalty.
+    stages: [
+      { name: 'S3-Cash-Compounder', test: f => f >= 0.20 },
+      { name: 'S2-FCF-positiv',     test: f => f >= 0.08 },
+      { name: 'S1-Approaching',     test: f => f >= -0.05 },
+      { name: 'S0-Expansion',       test: () => true },
+    ],
+    dominantBlock: ['gpa', 'assetGrowthPenalty'],
+    degraded: false,
+    normTableId: 'consdisc_store-norms-2026-06-21',
+    consdisc: true, cohortKey: 'consdisc_store', beta: 0.6,
+    a2Note: 'consdisc_expansion v1 store cohort (Spec formula-design-consumer-disc-expansion-v1-2026-06-21.md, Court FINAL DESIGN-PASS 4/4). Asset-light Internet-Retail split OFF into consdisc_light; this cohort = store/real-estate-heavy specialty/apparel/footwear/home-improvement retail + restaurants (large capitalized ASC-842 ROU lease assets in the GP/assets denominator — common-mode WITHIN the cohort, the F1 lease-bias fix). 4 SCORED axes via absKaliberConsDisc: GP/assets (Novy-Marx, w .40, the load-bearing pillar, cohort-specific norm .21/.85), organic growth (w .25, deal-masked §4.1 [assetJump>=0.25 AND revJump>=0.20] + cyclicality blend 0.70*latest clean YoY + 0.30*2y CAGR §4.2, annual-sourced D1, elite 0.22), asset-growth penalty (Cooper-Gulen-Schill, w .20, q(-assetGrowth) {-0.30/0.00}; the heart of the edge — scored, never masked), Mohanram fcf-weighted efficiency (0.60*fcfMargin+0.40*opMargin, w .15, cohort-shared norm .02/.18). STRONG pillar gpa+assetGrowth=0.60 ≫ growth 0.25 (F2). DILUTION HAIRCUT (§3, NOT a 5th axis): absK*(1-clip(shareCAGR,0,0.06)/0.06*0.10) — net issuance >=6%/yr -> 10% absolute-score haircut, buybacks no bonus. COVERAGE-RENORM: any NOT_READY/null axis dropped, survivors renormalize to Σ=1.0 (no fake-neutral impute). score=100*(0.6*absKaliber+0.4*REL), β=0.6, REL per-cohort (n>=31>=15). WALLS (always-on lamps): LEASE_DISTORTED (GP/assets denominator carries capitalized ASC-842 ROU — common-mode within cohort, not lease-adjustable from data, the only honest fix is the split), INVENTORY_BLIND (no inventory line ⇒ DIO/markdown uncomputable, the single biggest data wall). SI-4 out-of-class (excluded industry [auto-OEM ROIC=2.6% value trap, hotel/gaming/grocery] / non-US per country-domicile guard / foreign-primary / <$1B) → score=null + excluded[]; SI-5 classifiedCount===scoredCount+excludedCount fail-loud; marquee assert (AMZN/EBAY/ETSY/HD/CMG/DPZ/DRI/DECK/BBY/CAVA) fail-loud + foreign-exclude positive-control (JD/PDD/RERE/MELI/YUMC/ONON/QSR/BABA must NOT classify). Additive/parity-safe. Constants frozen §6.2.',
+  },
+  consdisc_light: {
+    label: 'Consumer-Disc-Expansion v1 (light: Internet Retail; asset-light un-leased denominator; absolute-anchor, GP/assets pillar, deal-masked cyc-floored annual growth, Cooper-Gulen-Schill asset-growth penalty, Mohanram fcf-weighted efficiency, post-sum dilution haircut, coverage-renorm, THIN_REL ABS-only)',
+    membership: { g: { c: 0.04, s: 0.06 }, gm: { c: 0.42, s: 0.10 }, scaleLog: { c: log10(1000), s: 0.6 } },
+    axes: [
+      { key: 'gpa',                name: 'GP/Assets',  k: 1.5, w: 0.40 },
+      { key: 'growth',             name: 'Growth',     k: 2.0, w: 0.25 },
+      { key: 'assetGrowthPenalty', name: 'AssetGrowth', k: 1.5, w: 0.20 },
+      { key: 'eff',                name: 'Eff-FcfOp',  k: 1.5, w: 0.15 },
+    ],
+    dilCap: 0, dilStart: 0.05, dilRange: 0.20,
+    stages: [
+      { name: 'S3-Cash-Compounder', test: f => f >= 0.20 },
+      { name: 'S2-FCF-positiv',     test: f => f >= 0.08 },
+      { name: 'S1-Approaching',     test: f => f >= -0.05 },
+      { name: 'S0-Expansion',       test: () => true },
+    ],
+    dominantBlock: ['gpa', 'assetGrowthPenalty'],
+    degraded: false,
+    normTableId: 'consdisc_light-norms-2026-06-21',
+    consdisc: true, cohortKey: 'consdisc_light', beta: 1.0, absOnly: true,
+    a2Note: 'consdisc_expansion v1 light cohort (asset-light Internet Retail only; un-leased fulfillment/3P-logistics denominator → cohort-specific GP/assets norm .42/.95, higher floor/elite than store). Same 4-axis absKaliberConsDisc engine + coverage-renorm + post-sum dilution haircut as consdisc_store; growth/eff/assetGrowthPenalty anchors SHARED (statistically indistinguishable across cohorts). THIN-N (§1.3): n<15 → ABS-ONLY (β=1, REL suppressed, THIN_REL always on) — we do NOT pool light into the store REL to manufacture n>=15 (that would re-introduce the lease-distorted cross-cohort comparison the Court killed in F1). An honest ABS-only score for the light names beats a fake-clean REL across a known-distorted pool; the ABS NORMS are recalibrated on the light-cohort distribution so ABS-only stays a faithful within-segment read. WALLS (always-on lamps): INVENTORY_BLIND (no inventory line). NOT lease-distorted (the whole point of the split — no LEASE_DISTORTED lamp). See consdisc_store.a2Note for the full axis/dilution/SI mechanism. Additive/parity-safe; constants frozen §6.2.',
   },
   diagnostics_lst: {
     label: 'Diagnostics-&-Life-Science-Tools v0 (cohort-aware dx|tools, absolute-anchor, deceleration-aware organic growth, FCF-efficiency, chronic-acquirer lamps)',
@@ -580,7 +637,11 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     // NOT applicable (gm is not an industrials axis, and pre-revenue names share the degenerate fp 'null|0',
     // which would falsely drop NNE/EVEX/etc. and break SI-5). Skip both for industrials; all other buckets
     // BYTE-IDENTICAL.
-    if (!F.industrials) {
+    // consdisc_expansion (CORE): same rationale as industrials — the deterministic classifier already deduped
+    // and court-buckets carries ONE entry per ticker; gm is not a consdisc axis (gpa is the quality pillar) and
+    // pre-revenue/thin names can share the degenerate fp 'null|0', which would falsely drop names and break SI-5.
+    // Skip the gm-reject + fp-dedupe for consdisc too. All other buckets (incl. staples) BYTE-IDENTICAL.
+    if (!F.industrials && !F.consdisc) {
       if (c.gm != null && c.gm > 1.0) continue;        // GM>100% = unmöglich (Daten-Fehler) -> hard reject
       // dedupe identische Foreign-OTC-Doppellistings (gleiche gm+rev)
       const fp = `${c.gm}|${c.scaleRevM}`;
@@ -708,6 +769,29 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.cohort = i.cohort || F.cohortKey;
     }
   }
+  // --- consdisc_expansion (CORE) PRE-PASS: lift the 4 RAW axis inputs + shareCAGR from m.cd onto the member ---
+  // All intermediates are CONSDISC-LOCAL → saas/fabless/medtech/dlst/industrials/staples member JSON
+  // byte-identical (parity). The inverted axis (assetGrowthPenalty) stores the NEGATED raw, so the REL z
+  // (higher = better) agrees in sign with the ABS q-input. null raw → axis DROP (coverage-renorm in
+  // absKaliberConsDisc; REL sAxis returns 0=neutral for null). FOUR axes (no netIssuance axis); shareCAGR
+  // feeds the POST-SUM dilution haircut, NOT a scored axis.
+  if (F.consdisc) {
+    for (const m of members) {
+      const i = m.cd || {};
+      m._cdGpa = (i.gpa != null && isFinite(i.gpa)) ? i.gpa : null;
+      m._cdGrowth = (i.growth != null && isFinite(i.growth)) ? i.growth : null;            // deal-masked + cyc-floored UPSTREAM
+      m._cdAssetGrowthPenalty = (i.assetGrowth != null && isFinite(i.assetGrowth)) ? -i.assetGrowth : null; // q(-AG) direction
+      m._cdEff = (i.eff != null && isFinite(i.eff)) ? i.eff : null;
+      m._cdShareCAGR = (i.shareCAGR != null && isFinite(i.shareCAGR)) ? i.shareCAGR : null; // dilution haircut input (NOT scored)
+      // persisted audit fields (rounded)
+      m.gpa = m._cdGpa == null ? null : Math.round(m._cdGpa * 10000) / 10000;
+      m.assetGrowth = (i.assetGrowth != null && isFinite(i.assetGrowth)) ? Math.round(i.assetGrowth * 10000) / 10000 : null;
+      m.shareCAGR = m._cdShareCAGR == null ? null : Math.round(m._cdShareCAGR * 10000) / 10000;
+      m.effCd = m._cdEff == null ? null : Math.round(m._cdEff * 10000) / 10000;
+      m.growthInput = m._cdGrowth == null ? null : Math.round(m._cdGrowth * 10000) / 10000;
+      m.cohort = i.cohort || F.cohortKey;
+    }
+  }
 
   // Roh-Achswerte für Stats (cross-sectional Median/MAD): nutze winsorisierte Werte
   // For medtech growth: use _growthMedtech (Fix D organic + winsorize at 1.0) for Stats AND scoring (Fix D
@@ -734,9 +818,20 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       default: return m[key];
     }
   };
+  // consdisc_expansion (CORE): FOUR axis-keys (no netIssuance) → mirror indRaw/stpRaw on the m._cd* fields.
+  const cdRaw = (m, key) => {
+    switch (key) {
+      case 'gpa': return m._cdGpa;
+      case 'growth': return m._cdGrowth;
+      case 'assetGrowthPenalty': return m._cdAssetGrowthPenalty;
+      case 'eff': return m._cdEff;
+      default: return m[key];
+    }
+  };
   const rawOfStats = (m, key) => {
     if (F.industrials) return indRaw(m, key);
     if (F.staples) return stpRaw(m, key);
+    if (F.consdisc) return cdRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtech : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -746,6 +841,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
   const rawOf = (m, key) => {
     if (F.industrials) return indRaw(m, key);
     if (F.staples) return stpRaw(m, key);
+    if (F.consdisc) return cdRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtechAdj : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -816,6 +912,17 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       // pillar — staples has no gm axis). Spin-off-guarded/NOT_READY growth or pre-revenue gpa land low.
       const gGate = m._stpGrowth != null ? m._stpGrowth : -1;           // null growth (spinoff/NOT_READY) → low
       const gpaGate = m._stpGpa != null ? m._stpGpa : -1;               // null gpa → low
+      const scaleM = (m.marketCap != null && isFinite(m.marketCap)) ? m.marketCap / 1e6 : (m.scaleRevM || 1); // $1B+ marketCap
+      const mg = logistic(gGate, F.membership.g.c, F.membership.g.s);
+      const mGpa = logistic(gpaGate, F.membership.gm.c, F.membership.gm.s);
+      const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
+      M = mg * mGpa * mSc;
+    } else if (F.consdisc) {
+      // consdisc membership: same gpa(quality)×growth×scale logistic as industrials/staples (gpa stands in for
+      // the gm pillar — consdisc has no gm axis; gm membership center is the cohort gpa.floor). Deal-masked/
+      // NOT_READY growth or pre-revenue gpa land low. $1B+ marketCap is the classifier gate.
+      const gGate = m._cdGrowth != null ? m._cdGrowth : -1;             // null growth (NOT_READY) → low
+      const gpaGate = m._cdGpa != null ? m._cdGpa : -1;                 // null gpa → low
       const scaleM = (m.marketCap != null && isFinite(m.marketCap)) ? m.marketCap / 1e6 : (m.scaleRevM || 1); // $1B+ marketCap
       const mg = logistic(gGate, F.membership.g.c, F.membership.g.s);
       const mGpa = logistic(gpaGate, F.membership.gm.c, F.membership.gm.s);
@@ -978,6 +1085,37 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       const gateGrowthOk = (m._stpGrowth != null) && (m._stpGrowth >= norm.growth.floor);
       const gateGpaOk = (m._stpGpa != null) && (m._stpGpa >= norm.gpa.floor);
       const gateEffOk = (m._stpEff != null) && (m._stpEff >= norm.eff.floor);
+      m.belowAbsoluteFloor = !(gateGrowthOk && gateGpaOk && gateEffOk);
+      m.score = m.membershipClass === 'Out' ? null : rawScore;
+      m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
+      m.stage = stageOf(F, m.fcfMargin);
+    } else if (F.consdisc) {
+      // consdisc_expansion (CORE): absKaliberConsDisc = 4-axis weighted-q with COVERAGE-RENORM + a POST-SUM
+      // dilution haircut (shareCAGR), reading the cohort NORMS. PER-COHORT β: store β=0.6 (full ABS+REL blend,
+      // n>=31>=15); light β=1.0 ABS-ONLY (n<15, REL suppressed, THIN_REL — §1.3 honest thin-n). With β=1 the
+      // blendScore ignores `core` (REL) → score=100*absK, the faithful within-segment caliber read.
+      const cohortNorm = F.cohortKey; // 'consdisc_store' | 'consdisc_light'
+      const cdRec = {
+        gpa: m._cdGpa, growth: m._cdGrowth,
+        assetGrowth: (m.cd && m.cd.assetGrowth != null && isFinite(m.cd.assetGrowth)) ? m.cd.assetGrowth : null,
+        eff: m._cdEff,
+        shareCAGR: m._cdShareCAGR,
+      };
+      const ak = absKaliberConsDisc(cdRec, cohortNorm);
+      m.absKaliber = Math.round(ak.absK * 1000) / 1000;
+      m.absKaliberPreDilution = Math.round(ak.absKPreDilution * 1000) / 1000; // audit: caliber before share-dilution haircut
+      m.dilutionHaircut = Math.round(ak.dilutionHaircut * 1000) / 1000;       // audit: applied haircut fraction [0,maxHaircut]
+      m.absUsedAxes = ak.usedAxes;          // audit: which axes survived coverage-renorm
+      m.absDroppedAxes = ak.droppedAxes;    // audit: NOT_READY/null drops
+      const beta = (F.beta != null) ? F.beta : 0.6; // light=1.0 (ABS-only), store=0.6
+      const rawScore = Math.round(Math.max(0, blendScore(ak.absK, core, beta)) * 10) / 10; // share dilution already in absK
+      // SI-1 shortlist-cut (Spec §6.1): growthInput >= growth.floor (0.04) AND gpa >= gpa.floor (cohort) AND
+      // efficiency floor met. A NOT_READY growth or missing gpa fails the floor (not the gate crashing) →
+      // belowAbsoluteFloor, listed but off the shortlist. NOT a score-kill (REL/score path runs).
+      const norm = NORMS[cohortNorm];
+      const gateGrowthOk = (m._cdGrowth != null) && (m._cdGrowth >= norm.growth.floor);
+      const gateGpaOk = (m._cdGpa != null) && (m._cdGpa >= norm.gpa.floor);
+      const gateEffOk = (m._cdEff != null) && (m._cdEff >= norm.eff.floor);
       m.belowAbsoluteFloor = !(gateGrowthOk && gateGpaOk && gateEffOk);
       m.score = m.membershipClass === 'Out' ? null : rawScore;
       m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
@@ -1194,6 +1332,26 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.scoreScope = 'intra-bucket';
       m.crossBucketComparableField = 'absKaliber';
     }
+    // consdisc_expansion (CORE) lamps (Spec §5): advisory, never silent score-kills. Per-name upstream lamps
+    // (NOT_READY:gpa/growth/eff/assetgrowth, ISSUANCE_NOT_READY, DEAL_MASKED, STALE:growth, DILUTION_HIGH,
+    // MARGIN_NEGATIVE) collected in court-screen (m.cd.lamps); the always-on WALLS come from the frozen
+    // NORMS.lamps (LEASE_DISTORTED store-only, INVENTORY_BLIND both). THIN_REL fires for the light cohort
+    // (n<15 → ABS-only, β=1) per the §1.3 honest thin-n policy.
+    if (F.consdisc) {
+      const cl = (m.cd && Array.isArray(m.cd.lamps)) ? m.cd.lamps : [];
+      for (const lamp of cl) if (!L.includes(lamp)) L.push(lamp);
+      const wallCfg = NORMS[F.cohortKey].lamps || {};
+      if (wallCfg.leaseDistorted) L.push('LEASE_DISTORTED');   // GP/assets denom carries ASC-842 ROU (store-only, common-mode)
+      if (wallCfg.inventoryBlind) L.push('INVENTORY_BLIND');   // no inventory line ⇒ DIO/markdown uncomputable
+      if (F.absOnly) L.push('THIN_REL');                        // light n<15 → ABS-only (β=1), REL suppressed (§1.3)
+      if (m.belowAbsoluteFloor) L.push('below-abs-floor');
+      if (m.membershipClass === 'Out') L.push('membership-Out(excluded-from-headline)');
+      if (Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.length) L.push(`coverage-renorm(dropped:${m.absDroppedAxes.join('+')})`);
+      m.cohort = F.cohortKey;
+      m.normTableId = getNormTableId(F.cohortKey);
+      m.scoreScope = 'intra-bucket';
+      m.crossBucketComparableField = 'absKaliber';
+    }
     m.lamps = L;
     if (_ioFlag === 'inorganic') {
       m.degradedRankBias = `upward — A1 headline growth is M&A-flow-heavy (recent acquisition cash ${pct(_ioRec.paymentsToRev).trim()} of rev, goodwill +${pct(_ioRec.deltaGoodwillPctRev).trim()}) while forward book is flat (rpoGrowth ${pct(_ioRec.rpoGrowthYoY).trim()}); degraded-mode rank over-states growth quality pending an A2/organic-growth axis.`;
@@ -1393,6 +1551,37 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       dropped: members.filter(m => m.netShareIssuance == null).length,
     };
   }
+  // consdisc_expansion (CORE)-only Zusatzfelder (SI-3/4/5/6) — NUR auf den consdisc-Buckets gesetzt
+  // → saas/fabless/medtech/dlst/industrials/staples-JSON byte-identisch (Parität). Mirrors the industrials/
+  // staples blocks, with the consdisc deltas: 4 axes (no netIssuance), per-cohort β, dilution-coverage disclosure.
+  if (F.consdisc) {
+    R.classifiedCount = cls.filter(c => c.bucket === bucket).length;
+    R.excluded = members.filter(m => m.score == null);
+    R.excludedCount = R.excluded.length;
+    R.scoredCount = members.filter(m => m.score != null).length;
+    if (require.main === module && R.classifiedCount !== R.scoredCount + R.excludedCount) {
+      throw new Error(`SI-5 mismatch ${bucket}: classifiedCount ${R.classifiedCount} !== scoredCount ${R.scoredCount} + excludedCount ${R.excludedCount}`);
+    }
+    R.normTableId = getNormTableId(F.cohortKey);
+    R.cohort = F.cohortKey;
+    R.scoreScope = 'intra-bucket';
+    R.crossBucketComparableField = 'absKaliber';
+    R.betaMode = (F.beta != null ? F.beta : 0.6);        // store 0.6 (ABS+REL blend) / light 1.0 (ABS-only, thin-REL)
+    R.absOnly = !!F.absOnly;
+    const n = NORMS[F.cohortKey];
+    const fmt = x => (x == null ? '—' : x.toFixed(2).replace(/^0\./, '.').replace(/^-0\./, '-.'));
+    const blendDesc = F.absOnly
+      ? `ABS-ONLY (β=1, REL suppressed — thin-n n<15, §1.3 honest thin-n; an honest within-segment caliber beats a fake-clean REL across the lease-distorted pool)`
+      : `blendScore mixes ABS+REL (β=${R.betaMode}); the REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable`;
+    R.comparabilityNote = `consdisc_expansion ${F.cohortKey} (asset-intensity cohort: asset-light Internet-Retail vs store/real-estate-heavy retail+restaurants). absKaliber in [0,1] = cross-bucket-comparable absolute scale (4-axis weighted-q over the cohort NORMS '${getNormTableId(F.cohortKey)}': gpa ${fmt(n.gpa.floor)}/${fmt(n.gpa.elite)}, growth ${fmt(n.growth.floor)}/${fmt(n.growth.elite)}, assetGrowthPenalty ${fmt(n.assetGrowthPenalty.floor)}/${fmt(n.assetGrowthPenalty.elite)}, eff ${fmt(n.eff.floor)}/${fmt(n.eff.elite)}; weights {gpa .40, growth .25, assetGrowthPenalty .20, eff .15}) THEN a POST-SUM share-dilution haircut (absK*(1-clip(shareCAGR,0,.06)/.06*.10) — issuance >=6%/yr → 10% haircut, buybacks no bonus). COVERAGE-RENORM drops any NOT_READY/null axis and renormalizes survivors to Σ=1.0 — no fake-neutral impute. ${blendDesc}. WALLS always-on: ${F.cohortKey === 'consdisc_store' ? 'LEASE_DISTORTED/INVENTORY_BLIND' : 'INVENTORY_BLIND (NOT lease-distorted — the point of the split)'}. The 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison.`;
+    R.crossBucketComparableNote = 'Use members[].absKaliber (absolute [0,1] caliber, post-dilution) for cross-bucket comparison; members[].score (0-100) is intra-bucket ONLY' + (F.absOnly ? ' (ABS-only, β=1)' : ' (mixes per-cohort REL, β=0.6)') + '.';
+    R.walls = F.cohortKey === 'consdisc_store' ? ['LEASE_DISTORTED', 'INVENTORY_BLIND'] : ['INVENTORY_BLIND'];
+    // Dilution-haircut coverage disclosure (Spec §2.2/§3): how many names have a shareCAGR (Vintage-B annualShares).
+    R.dilutionCoverage = {
+      withSignal: members.filter(m => m.shareCAGR != null).length,
+      noSignal: members.filter(m => m.shareCAGR == null).length,    // Vintage-A: no haircut (neutral, not punitive)
+    };
+  }
   // audit/fix (gauntlet E3): saas/fabless SI-4/SI-5-Retrofit — spiegelt medtech/dlst exakt.
   // NUR auf den beiden Buckets gesetzt; medtech/dlst haben ihre eigenen Blöcke oben. Diese Felder
   // wurden in die saas/fabless-Parity-Baselines re-gefroren (BEWUSSTER Governance-Bless, kein Drift):
@@ -1462,6 +1651,16 @@ function assertNoForeignLeak(resultsObj, listing) {
     // read the snapshot meta directly, NOT the C5 court-listing.isUS flag (which uses court-screen's looser
     // region==='US' test and could disagree with the spec classifier on the staples pool).
     if (bucket === 'staples_branded' || bucket === 'staples_distribution') continue;
+    // consdisc_expansion (CORE) EXEMPTION: consdisc membership is governed by the FROZEN spec v1 classifier
+    // (scripts/classify-consdisc.js, §1.2 COUNTRY-DOMICILE-GUARD isUSListing — STRICTER than court-screen's:
+    // country set != US -> exclude unconditionally; FOREIGN_NAME legal-form regex; the verified Vintage-A
+    // foreign-primary residual JD/PDD/RERE/MELI/YUMC/ONON/QSR). It is governed instead by the §6.2b
+    // assertConsdiscMarquee (marquee + foreign-exclude positive-control) below, which reads the snapshot meta
+    // directly via the classifier, NOT the C5 court-listing.isUS flag (which uses court-screen's looser
+    // region==='US' test and could disagree with the spec classifier on the consdisc pool). Disclosed: on the
+    // mixed-vintage live pool the consdisc cohort is LARGER than the spec's 2026-06-08 recompute (genuine US
+    // discretionary large-caps the smaller pool omitted) — that is honest pool growth, not a leak.
+    if (bucket === 'consdisc_store' || bucket === 'consdisc_light') continue;
     for (const m of R.members) {
       const L = listing.get(m.ticker);
       if (!L) continue; // kein Snapshot-Meta → kann nichts behaupten (Vintage-A ohne Eintrag: tolerant)
@@ -1567,11 +1766,64 @@ function assertStaplesNoForeignLeak(resultsObj, listing) {
   }
 }
 
+// --- consdisc_expansion (CORE) MARQUEE-COVERAGE assert (Spec §6.1/FINAL, fail-loud) ---
+// The frozen marquee watchlist must each be classified into one of the two consdisc cohorts AND reach the
+// scored universe (members[]) — else the run DIES LOUD (the regression guard against the v0 marketCap-object
+// killshot that collapsed the universe to empty). 1+ name from each cohort (AMZN/EBAY/ETSY light; the rest store).
+const CONSDISC_MARQUEE = Object.freeze(['AMZN', 'EBAY', 'ETSY', 'HD', 'CMG', 'DPZ', 'DRI', 'DECK', 'BBY', 'CAVA']);
+// FOREIGN/EXCLUDE positive-control (§1.1/§1.2): auto-OEM value trap + hotel/gaming industry-excludes AND the
+// Vintage-A foreign primaries the FOREIGN_PRIMARY_RESIDUAL/FOREIGN_NAME guards must keep OUT (the FAILURE-MODE-2
+// ADR leak the country guard cannot see on Vintage-A undefined-country snapshots).
+const CONSDISC_EXCLUDE_CONTROL = Object.freeze(['TSLA', 'GM', 'F', 'MAR', 'HLT', 'LVS', 'WYNN', 'AN', 'KMX',
+  'JD', 'PDD', 'RERE', 'MELI', 'YUMC', 'ONON', 'QSR', 'BABA']);
+function assertConsdiscMarquee(resultsObj) {
+  const S = resultsObj.consdisc_store, Lt = resultsObj.consdisc_light;
+  if (!S && !Lt) return; // consdisc not in this run (e.g. isolated unit test) → tolerant no-op
+  const scored = new Set();
+  for (const R of [S, Lt]) if (R && Array.isArray(R.members)) for (const m of R.members) scored.add(m.ticker);
+  const missing = CONSDISC_MARQUEE.filter(t => !scored.has(t));
+  if (missing.length) {
+    throw new Error('MARQUEE COVERAGE FAIL (Spec §6.1) — consdisc universe collapsed, these bona-fide '
+      + 'US consumer-discretionary names were not classified/scored: ' + missing.join(', '));
+  }
+  // EXCLUDE-CONTROL: auto-OEM/hotel/gaming + foreign primaries must NOT have reached a consdisc cohort.
+  const leakedControl = CONSDISC_EXCLUDE_CONTROL.filter(t => scored.has(t));
+  if (leakedControl.length) {
+    throw new Error('EXCLUDE-CONTROL FAIL (Spec §1.1/§1.2) — a hard-excluded industry name or foreign primary '
+      + 'leaked into a consdisc cohort: ' + leakedControl.join(', '));
+  }
+}
+// assertConsdiscNoForeignLeak(results, listing): GENERATIVE property test reading the snapshot meta.country
+// (via the court-listing side-file) DIRECTLY — independent of the C5 isUS flag. Throws if ANY scored consdisc
+// record carries meta.country set AND != "United States" (the country-set foreign class). Tolerant: missing
+// side-file → no-op. (The Vintage-A foreign primaries with country=undefined are caught by the EXCLUDE-CONTROL
+// positive-control above, since the generative country test cannot see them — they have no country.)
+function assertConsdiscNoForeignLeak(resultsObj, listing) {
+  if (!listing || listing.size === 0) return;
+  const leaks = [];
+  for (const bucket of ['consdisc_store', 'consdisc_light']) {
+    const R = resultsObj[bucket];
+    if (!R || !Array.isArray(R.members)) continue;
+    for (const m of R.members) {
+      const L = listing.get(m.ticker);
+      if (!L) continue; // no snapshot meta → can't assert (Vintage-A without entry: tolerant)
+      if (L.country != null && L.country !== 'United States') {
+        leaks.push(`${m.ticker}[${L.country}/${L.region}] in ${bucket}`);
+      }
+    }
+  }
+  if (leaks.length) {
+    throw new Error('CONSDISC ANTI-LEAK ASSERT (Spec §6.1 GENERATIVE property test): foreign-country record(s) '
+      + 'leaked into a scored consdisc cohort — meta.country set AND != "United States": ' + leaks.join(', ')
+      + '. The v1 country-domicile guard (classify-consdisc.js isUSListing) must exclude these — NOT suppress.');
+  }
+}
+
 // --- Export: computeMedtechOrganicGrowth + computeDlstOrganicGrowth für Unit-Tests ---
 // (computeDlstOrganicGrowth: Fix A FY-Alignment + Fix B dealYearExcluded-Ehrlichkeit, 2026-06-21)
 // + assertNoForeignLeak (gauntlet C5) + assertIndustrialsMarquee + assertStaplesMarquee +
 //   assertStaplesNoForeignLeak (Spec §6.2b) für direkten Property-Test.
-module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL };
+module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL, assertConsdiscMarquee, assertConsdiscNoForeignLeak, CONSDISC_MARQUEE, CONSDISC_EXCLUDE_CONTROL };
 
 // --- require.main-Guard (Härtung 2): Write + Ausgabe NUR wenn direkt als Skript ausgeführt ---
 // `require('./court-score.js')` gibt nur den Export zurück und schreibt NICHT outputs/court-results.json.
@@ -1587,6 +1839,11 @@ if (require.main === module) {
   // GENERATIVE country anti-leak property test must all hold, else the staples universe collapsed/leaked.
   assertStaplesMarquee(results);
   assertStaplesNoForeignLeak(results, listingByTicker);
+  // consdisc_expansion (CORE) §6.1: the marquee watchlist must each be classified+scored + the auto-OEM/
+  // foreign-primary EXCLUDE-CONTROL must stay out + the GENERATIVE country anti-leak property test must hold,
+  // else the consdisc universe collapsed/leaked.
+  assertConsdiscMarquee(results);
+  assertConsdiscNoForeignLeak(results, listingByTicker);
   fs.writeFileSync(OUT, JSON.stringify(results, null, 2));
 
   // --- Ausgabe ---

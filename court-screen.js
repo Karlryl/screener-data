@@ -171,6 +171,12 @@ const indCohortByTicker = new Map(); // ticker -> 'industrials_heavy' | 'industr
 // drops). The 5 RAW axis inputs are extracted from snapshots/<T>.json, attached as ONE staples-only field
 // `stp` → SaaS/Fabless/Medtech/D&LST/Industrials candidate JSON byte-identical.
 const stpCohortByTicker = new Map(); // ticker -> 'staples_branded' | 'staples_distribution'
+// consdisc_expansion CORE bucket (Spec formula-design-consumer-disc-expansion-v1-2026-06-21.md).
+// ADDITIV/parity-safe: exactly the court-buckets.json `consdisc_store`/`consdisc_light` tickers are admitted
+// past the asset-light/growth pre-filter (analog medtech/dlst/industrials/staples, Fix A SI-5: no silent
+// drops). The 4 RAW axis inputs + shareCAGR are extracted from snapshots/<T>.json, attached as ONE
+// consdisc-only field `cd` → SaaS/Fabless/Medtech/D&LST/Industrials/Staples candidate JSON byte-identical.
+const cdCohortByTicker = new Map(); // ticker -> 'consdisc_store' | 'consdisc_light'
 try {
   const bd = JSON.parse(fs.readFileSync(BUCK, 'utf8'));
   const cls = Array.isArray(bd) ? bd : (bd.classifications || []);
@@ -178,6 +184,7 @@ try {
     if (c && c.bucket === 'diagnostics_lst' && c.t) dlstTickers.add(c.t);
     if (c && (c.bucket === 'industrials_heavy' || c.bucket === 'industrials_light') && c.t) indCohortByTicker.set(c.t, c.bucket);
     if (c && (c.bucket === 'staples_branded' || c.bucket === 'staples_distribution') && c.t) stpCohortByTicker.set(c.t, c.bucket);
+    if (c && (c.bucket === 'consdisc_store' || c.bucket === 'consdisc_light') && c.t) cdCohortByTicker.set(c.t, c.bucket);
   }
 } catch {}
 
@@ -554,6 +561,145 @@ function buildStaplesAxes(ticker, cohort) {
   };
 }
 
+// ===========================================================================
+// consdisc_expansion (CORE) — 4-axis RAW extraction + shareCAGR from snapshots (Spec §2-§4)
+// ===========================================================================
+// ADDITIV/parity-safe: only fires for tickers in cdCohortByTicker (court-buckets consdisc_{store,light}).
+// Reads snapshots/<T>.json `annual.*` (NEWEST-FIRST) — the canonical pool the deterministic classifier and the
+// re-frozen cohort NORMS were calibrated on. Same dual-shape num() extractor as industrials/staples.
+//
+// DISTINCT from industrials/staples: FOUR scored axes (gpa/growth/assetGrowth/eff) — net-share-issuance is
+// NOT a 5th axis; instead share dilution is a SEPARATE shareCAGR (geometric, up to 3 clean years) fed to the
+// POST-SUM dilution haircut in absKaliberConsDisc. growth blend = 0.70*latest_clean_YoY + 0.30*revCAGR_2y
+// (cyclicality damper, §3-A/§4.2). eff = 0.60*fcfMargin + 0.40*opMargin (FCF-weighted, Mohanram, §3-C).
+// deal-mask revJump 0.20 (vs industrials/staples 0.15). NO spin-off guard (the spec has none for consdisc).
+//
+// Frozen constants (Spec §6.2):
+const CD_DEAL_MASK = { assetJump: 0.25, revJump: 0.20 };       // §4.1 BOTH required; sign-aware (positive only)
+const CD_GROWTH_BLEND = { wYoY: 0.70, wCagr2y: 0.30 };         // §3-A/§4.2 0.70*latest clean YoY + 0.30*2y CAGR
+const CD_EFF_MIX = { wFcf: 0.60, wOp: 0.40 };                  // §3-C Axis C FCF-weighted (Mohanram cash primacy)
+const CD_DILUTION = { cap: 0.06, maxHaircut: 0.10, lampAt: 0.03 }; // §3 dilution post-multiplier + DILUTION_HIGH lamp
+
+// snapshot annual cache for consdisc tickers only (avoid re-reading + keep the parity path untouched).
+const cdSnapAnnual = new Map(); // ticker -> snapshot.annual object
+if (cdCohortByTicker.size && fs.existsSync(SNAP_DIR)) {
+  for (const t of cdCohortByTicker.keys()) {
+    try {
+      const sn = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, t + '.json'), 'utf8'));
+      if (sn && sn.annual) cdSnapAnnual.set(t, sn.annual);
+    } catch {}
+  }
+}
+
+// buildConsdiscAxes(ticker, cohort) -> the 4 RAW axis inputs + shareCAGR + lamps/audit, or null if no snapshot.
+// gpa = annualGP[0]/totalAssets[0]; growthInput = 0.70*latest_clean_YoY + 0.30*revCAGR_2y with the §4.1
+// deal-mask applied UPSTREAM (mask year t iff assetGrowth_t>=0.25 AND revGrowth_t>=0.20; step back to prior
+// clean YoY; no clean YoY -> growth=null + NOT_READY:growth); assetGrowth = latest TA delta (never masked);
+// eff = 0.60*fcfMargin + 0.40*opMargin (fcf null -> opMargin only, coverage-norm); shareCAGR = geometric
+// annualShares CAGR over up to 3 clean years (<2 non-null -> null, no haircut, ISSUANCE_NOT_READY lamp).
+function buildConsdiscAxes(ticker, cohort) {
+  const a = cdSnapAnnual.get(ticker);
+  if (!a) return null;
+  const revA = (a.annualRev || []).map(num);                  // NEWEST-FIRST, object-wrapped {value}
+  const gpA = (a.annualGP || []).map(num);
+  const opA = (a.annualOpInc || []).map(num);
+  const fcfA = (a.annualFCF || []).map(num);
+  const bal = Array.isArray(a.annualBalance) ? a.annualBalance : [];
+  const taA = bal.map(b => (b && b.totalAssets != null && isFinite(b.totalAssets)) ? b.totalAssets : null);
+  // annualShares: RAW number array, Vintage-B only. <2 non-null -> no dilution signal + ISSUANCE_NOT_READY.
+  const sharesAll = Array.isArray(a.annualShares) ? a.annualShares.map(num) : [];
+  const lamps = [];
+
+  // --- Axis B: GP/assets ---
+  let gpa = null;
+  if (gpA[0] != null && taA[0] != null && taA[0] > 0) gpa = gpA[0] / taA[0];
+  else lamps.push('NOT_READY:gpa');
+
+  // --- Axis D: asset-growth (real latest delta; never masked) ---
+  let assetGrowth = null;
+  if (taA[0] != null && taA[1] != null && taA[1] !== 0) assetGrowth = (taA[0] - taA[1]) / taA[1];
+  else lamps.push('NOT_READY:assetgrowth');
+
+  // --- Dilution: shareCAGR = (shares[0]/shares[k])^(1/k) - 1 over up to 3 clean years (NOT a scored axis) ---
+  let shareCAGR = null;
+  const sharesNN = sharesAll.filter(v => v != null && isFinite(v) && v > 0);
+  if (sharesNN.length >= 2) {
+    const k = Math.min(3, sharesNN.length - 1);               // up to 3y horizon
+    const s0 = sharesNN[0], sk = sharesNN[k];
+    if (s0 > 0 && sk > 0) shareCAGR = Math.pow(s0 / sk, 1 / k) - 1;
+  } else {
+    lamps.push('ISSUANCE_NOT_READY');                         // Vintage-A: no annualShares field (no haircut, neutral)
+  }
+
+  // --- Axis C: efficiency = 0.60*fcfMargin + 0.40*opMargin (fcf null -> opMargin only; coverage-norm) ---
+  let eff = null;
+  const rev0 = revA[0];
+  if (rev0 != null && rev0 > 0) {
+    const opMargin = (opA[0] != null) ? opA[0] / rev0 : null;
+    const fcfMargin = (fcfA[0] != null) ? fcfA[0] / rev0 : null;
+    if (opMargin != null && fcfMargin != null) eff = CD_EFF_MIX.wFcf * fcfMargin + CD_EFF_MIX.wOp * opMargin;
+    else if (fcfMargin != null) eff = fcfMargin;
+    else if (opMargin != null) eff = opMargin;
+  }
+  if (eff == null) lamps.push('NOT_READY:eff');
+
+  // --- Axis A: organic growth (deal-mask §4.1 UPSTREAM, cyclicality blend §3-A/§4.2) ---
+  // YoY series newest-first: revA[i]/revA[i+1]-1; deal-mask year t iff assetGrowth_t>=0.25 AND revGrowth_t>=0.20.
+  let growthInput = null;
+  let dealMasked = false, staleGrowth = false;
+  const cleanYoY = [];
+  for (let i = 0; i < revA.length - 1; i++) {
+    const rNew = revA[i], rOld = revA[i + 1];
+    if (rNew == null || rOld == null || rOld <= 0) continue;
+    const revG = rNew / rOld - 1;
+    const taNew = taA[i], taOld = taA[i + 1];
+    const assetG = (taNew != null && taOld != null && taOld > 0) ? (taNew - taOld) / taOld : null;
+    const masked = (assetG != null && assetG >= CD_DEAL_MASK.assetJump && revG >= CD_DEAL_MASK.revJump);
+    if (masked) { dealMasked = true; continue; }
+    cleanYoY.push(revG);
+  }
+  if (cleanYoY.length === 0) {
+    lamps.push('NOT_READY:growth');                           // no clean YoY -> DROP Axis A + renorm
+  } else {
+    // STALE:growth if the latest annual year (revA[0]) was itself deal-masked (organic read is aged).
+    if (dealMasked) {
+      const rNew0 = revA[0], rOld0 = revA[1];
+      const taNew0 = taA[0], taOld0 = taA[1];
+      if (rNew0 != null && rOld0 != null && rOld0 > 0 && taNew0 != null && taOld0 != null && taOld0 > 0) {
+        const revG0 = rNew0 / rOld0 - 1, assetG0 = (taNew0 - taOld0) / taOld0;
+        if (assetG0 >= CD_DEAL_MASK.assetJump && revG0 >= CD_DEAL_MASK.revJump) staleGrowth = true;
+      }
+    }
+    // revCAGR_2y from the clean revenue series (2y geometric); fall back to single clean YoY if <3 clean revs.
+    const cleanRev = revA.filter(v => v != null && isFinite(v) && v > 0); // newest-first
+    let cagr2y = null;
+    if (cleanRev.length >= 3 && cleanRev[2] > 0) cagr2y = Math.pow(cleanRev[0] / cleanRev[2], 1 / 2) - 1;
+    const latestClean = cleanYoY[0];
+    if (cagr2y != null) growthInput = CD_GROWTH_BLEND.wYoY * latestClean + CD_GROWTH_BLEND.wCagr2y * cagr2y;
+    else growthInput = latestClean;                           // <3 clean revs -> single clean YoY (ABS-honest)
+    if (staleGrowth) lamps.push('STALE:growth');
+  }
+  if (dealMasked) lamps.push('DEAL_MASKED');
+
+  // advisory capital-discipline lamps (Spec §5)
+  if (shareCAGR != null && shareCAGR >= CD_DILUTION.lampAt) lamps.push('DILUTION_HIGH'); // net issuance >= 3%
+  if (rev0 != null && rev0 > 0) {
+    const opM = (opA[0] != null) ? opA[0] / rev0 : null;
+    const fcfM = (fcfA[0] != null) ? fcfA[0] / rev0 : null;
+    if (opM != null && opM < 0 && fcfM != null && fcfM < 0) lamps.push('MARGIN_NEGATIVE');
+  }
+
+  return {
+    cohort,
+    gpa: round(gpa), growth: round(growthInput), assetGrowth: round(assetGrowth),
+    eff: round(eff), shareCAGR: round(shareCAGR),
+    dealMasked, staleGrowth,
+    nAnnualRev: revA.filter(v => v != null).length,
+    sharesCoverage: sharesNN.length,
+    lamps,
+  };
+}
+
 // --- robuste Feld-Helfer (Format ist gemischt: ftsAnnual.* = [{value}], Rest = [num]) ---
 function num(x) {
   if (x == null) return null;
@@ -621,7 +767,11 @@ for (const file of files) {
   // the universe even with a thin CACHE row (its 5 SCORED axes come from the SNAPSHOT via buildStaplesAxes,
   // not the cache). Bypasses the cache-based early gates below. Non-staples path: BYTE-IDENTICAL.
   const stpCohortEarly = (stpCohortByTicker.get(ticker) && stpSnapAnnual.has(ticker)) ? stpCohortByTicker.get(ticker) : null;
-  const coreEarly = indCohortEarly || stpCohortEarly;
+  // consdisc_expansion (CORE): same SI-5 rule — a court-buckets-classified consdisc name MUST reach the
+  // universe even with a thin CACHE row (its 4 SCORED axes come from the SNAPSHOT via buildConsdiscAxes,
+  // not the cache). Bypasses the cache-based early gates below. Non-consdisc path: BYTE-IDENTICAL.
+  const cdCohortEarly = (cdCohortByTicker.get(ticker) && cdSnapAnnual.has(ticker)) ? cdCohortByTicker.get(ticker) : null;
+  const coreEarly = indCohortEarly || stpCohortEarly || cdCohortEarly;
   const p = j.payload || {};
   if (!j.payload && !coreEarly) continue;
   if (j._ftsPartial) stats.partial++;
@@ -772,6 +922,7 @@ for (const file of files) {
   const isDlst = dlstTickers.has(ticker);
   const indCohort = indCohortByTicker.get(ticker) || null;
   const stpCohort = stpCohortByTicker.get(ticker) || null;
+  const cdCohort = cdCohortByTicker.get(ticker) || null;
   if (indCohort) {
     // industrials_compounder (CORE): admit EVERY court-buckets-classified industrials name into the universe
     // (cross-sectional cohort percentiles + SI-5 classifiedCount===scoredCount). NO asset-light/growth/gm
@@ -785,6 +936,13 @@ for (const file of files) {
     // pre-filter (staples carry heavy brand-PPE; SI-1 shortlist-cut lives in court-score.js). 5 axes come
     // from the snapshot annual arrays (buildStaplesAxes). Sole sanity: a parseable snapshot annual block exists.
     if (!stpSnapAnnual.has(ticker)) continue;
+  } else if (cdCohort) {
+    // consdisc_expansion (CORE): identical admission policy — admit EVERY court-buckets-classified consdisc
+    // name into the universe (cross-sectional cohort percentiles + SI-5). NO asset-light/growth/gm pre-filter
+    // (store-heavy retail carries large capitalized ASC-842 ROU lease assets; SI-1 shortlist-cut lives in
+    // court-score.js). 4 axes + shareCAGR come from the snapshot annual arrays (buildConsdiscAxes). Sole
+    // sanity: a parseable snapshot annual block exists.
+    if (!cdSnapAnnual.has(ticker)) continue;
   } else if (isMedtech || isDlst) {
     // Milde Daten-Sanity: growth/gm/rev müssen vorhanden + endlich sein (keine ökonomischen Floors).
     // Medtech UND D&LST sind kapitalintensiv/Large-Cap-haltig → asset-light/ppe-Gate + ökonomische Floors
@@ -820,6 +978,10 @@ for (const file of files) {
   // staples-only field `stp` (deal-mask + spin-off guard applied UPSTREAM). Additiv → KEIN Feld auf
   // Nicht-Staples-Records (Parität SaaS/Fabless/Medtech/D&LST/Industrials).
   const stpExtra = stpCohort ? { stp: buildStaplesAxes(ticker, stpCohort) } : {};
+  // consdisc_expansion (CORE): the 4 RAW axis inputs + shareCAGR from the snapshot annual arrays, attached as
+  // ONE consdisc-only field `cd` (deal-mask applied UPSTREAM). Additiv → KEIN Feld auf Nicht-Consdisc-Records
+  // (Parität SaaS/Fabless/Medtech/D&LST/Industrials/Staples).
+  const cdExtra = cdCohort ? { cd: buildConsdiscAxes(ticker, cdCohort) } : {};
   candidates.push({
     ticker,
     growth: round(growth), growth_annual: round(gAnnual), growth_q: round(gQ), growthSource,
@@ -837,6 +999,7 @@ for (const file of files) {
     ...dlstExtra,
     ...indExtra,
     ...stpExtra,
+    ...cdExtra,
   });
 }
 

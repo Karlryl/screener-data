@@ -1541,6 +1541,214 @@ test('staples PARITÄT: KEIN staples-only Feld auf SaaS/Fabless/Medtech/D&LST/In
   }
 });
 
+// =================== CONSDISC_EXPANSION (CORE) BUCKET TESTS (v1, two cohorts store|light) ============
+// Spec formula-design-consumer-disc-expansion-v1-2026-06-21.md (Court FINAL DESIGN-PASS 4/4). consdisc is a
+// SEPARATE court bucket (disjoint from saas/fabless/medtech/dlst/industrials/staples + the tag28 projection).
+// NEW code keyed by the new cohort strings → the 6 prior buckets stay byte-identical (parity tests above).
+// DISTINCT: FOUR scored axes (gpa/growth/assetGrowthPenalty/eff) + a POST-SUM dilution haircut (NOT a 5th axis);
+// PER-COHORT β (store 0.6 ABS+REL blend; light n<15 ABS-only β=1, THIN_REL).
+const cdS = doc.consdisc_store;
+const cdL = doc.consdisc_light;
+const CS = cdS ? cdS.members : [];
+const CL = cdL ? cdL.members : [];
+
+test('consdisc: both cohort buckets exist (store + light) with members', () => {
+  assert(cdS && Array.isArray(cdS.members) && CS.length > 0, 'consdisc_store bucket fehlt/leer');
+  assert(cdL && Array.isArray(cdL.members) && CL.length > 0, 'consdisc_light bucket fehlt/leer');
+  assert(/Consumer-Disc-Expansion v1/.test(cdS.label || ''), `store label sollte v1 nennen: ${cdS.label}`);
+});
+
+test('consdisc §6.1 MARQUEE: all marquees classified+scored across the two cohorts (fail-loud guard)', () => {
+  const MARQUEE = ['AMZN', 'EBAY', 'ETSY', 'HD', 'CMG', 'DPZ', 'DRI', 'DECK', 'BBY', 'CAVA'];
+  const scored = new Set([...CS, ...CL].map(m => m.ticker));
+  const missing = MARQUEE.filter(t => !scored.has(t));
+  assert(missing.length === 0, `MARQUEE COVERAGE FAIL — nicht klassifiziert/gescort: ${missing.join(', ')}`);
+  // the assertConsdiscMarquee export must also pass on the live results (direct property test).
+  const { assertConsdiscMarquee } = require('./court-score.js');
+  assert(typeof assertConsdiscMarquee === 'function', 'assertConsdiscMarquee nicht exportiert');
+  assertConsdiscMarquee(doc); // throws on collapse / exclude-control leak
+});
+
+test('consdisc SI-5: classifiedCount === scoredCount + excludedCount (BEIDE Kohorten, fail-loud)', () => {
+  for (const [name, R] of [['store', cdS], ['light', cdL]]) {
+    assert(R.classifiedCount != null && R.scoredCount != null && R.excludedCount != null, `${name} SI-5 counts fehlen`);
+    assert(R.classifiedCount === R.scoredCount + R.excludedCount,
+      `${name} SI-5 mismatch: classified ${R.classifiedCount} !== scored ${R.scoredCount} + excluded ${R.excludedCount}`);
+  }
+  // Live-pool counts (LARGER than the spec's 2026-06-08 31/8 recompute — honest mixed-vintage pool growth,
+  // genuine US discretionary large-caps the smaller pool omitted; foreign primaries excluded). store >= 31,
+  // light >= 8, light still < 15 (THIN_REL regime preserved). The exact spec frozen target was 31/8.
+  assert(cdS.classifiedCount >= 31, `store classified sollte >= 31 sein, ist ${cdS.classifiedCount}`);
+  assert(cdL.classifiedCount >= 8 && cdL.classifiedCount < 15, `light classified sollte [8,15) sein (thin-n), ist ${cdL.classifiedCount}`);
+});
+
+test('consdisc: a store + a light marquee member scored finite (DECK/HD store, AMZN/EBAY light)', () => {
+  for (const t of ['DECK', 'HD']) {
+    const m = CS.find(x => x.ticker === t);
+    assert(m && Number.isFinite(m.score) && m.score > 0, `${t} (store) sollte finiten Score >0 haben, ist ${m && m.score}`);
+    assert(m.absKaliber != null && m.absKaliber > 0, `${t} absKaliber sollte >0 sein, ist ${m && m.absKaliber}`);
+  }
+  for (const t of ['AMZN', 'EBAY']) {
+    const m = CL.find(x => x.ticker === t);
+    assert(m && Number.isFinite(m.score) && m.score > 0, `${t} (light) sollte finiten Score >0 haben, ist ${m && m.score}`);
+  }
+});
+
+test('consdisc §1.1/§1.2 EXCLUDE-CONTROL: auto-OEM/hotel/gaming + foreign primaries absent from cohorts', () => {
+  const scored = new Set([...CS, ...CL].map(m => m.ticker));
+  // industry hard-excludes (auto-OEM value trap + hotel/gaming/auto-dealer)
+  for (const t of ['TSLA', 'GM', 'F', 'MAR', 'HLT', 'LVS', 'WYNN', 'AN', 'KMX']) {
+    assert(!scored.has(t), `${t} (hard-excluded industry) darf NICHT in einer consdisc-Kohorte sein (SI-4)`);
+  }
+  // Vintage-A foreign primaries (FOREIGN_PRIMARY_RESIDUAL / FOREIGN_NAME guards) — FAILURE-MODE-2 ADR leak.
+  for (const t of ['JD', 'PDD', 'RERE', 'MELI', 'YUMC', 'ONON', 'QSR', 'BABA']) {
+    assert(!scored.has(t), `${t} (foreign primary) darf NICHT klassifiziert sein (EXCLUDE-CONTROL §1.2)`);
+  }
+  // the assertConsdiscNoForeignLeak export must pass on the live results (direct property test).
+  const { assertConsdiscNoForeignLeak } = require('./court-score.js');
+  assert(typeof assertConsdiscNoForeignLeak === 'function', 'assertConsdiscNoForeignLeak nicht exportiert');
+  let listing = new Map();
+  try {
+    const lp = (CAND_TEST.replace(/_court-candidates([^/\\]*)\.json$/, '_court-listing$1.json'));
+    const ld = JSON.parse(fs.readFileSync(lp, 'utf8'));
+    const obj = ld && ld.listings ? ld.listings : (ld || {});
+    for (const [t, rec] of Object.entries(obj)) listing.set(t, rec);
+  } catch {}
+  assertConsdiscNoForeignLeak(doc, listing); // throws on any country-set != US leak
+});
+
+test('consdisc SI-4: Out-class / below-floor members carry score=null in excluded[] (kein irreführender Rang)', () => {
+  for (const [name, R] of [['store', cdS], ['light', cdL]]) {
+    assert(Array.isArray(R.excluded), `${name} excluded[] fehlt (SI-4)`);
+    for (const m of R.excluded) assert(m.score === null, `${name} excluded ${m.ticker} score sollte null sein, ist ${m.score}`);
+    for (const m of R.members) {
+      if (m.score != null) assert(m.membershipClass !== 'Out', `${name} ranked ${m.ticker} ist Out mit Score (SI-4)`);
+    }
+  }
+});
+
+test('consdisc: FOUR scored axes (NO netIssuance axis) + post-sum dilution haircut on absKaliber', () => {
+  // The 4-axis distinction (Spec §3): gpa/growth/assetGrowthPenalty/eff, weights summing to 1.0; share
+  // dilution is a POST-SUM multiplier, NOT a 5th weighted axis.
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  for (const b of ['consdisc_store', 'consdisc_light']) {
+    const w = NORMS[b].weights;
+    assert(w.netIssuance === undefined, `${b} darf KEINE netIssuance-Gewichtung haben (4 Achsen)`);
+    const sum = w.gpa + w.growth + w.assetGrowthPenalty + w.eff;
+    assert(Math.abs(sum - 1.0) < 1e-9, `${b} 4-Achs-Gewichte summieren nicht auf 1.0, ist ${sum}`);
+    assert(w.gpa === 0.40 && w.growth === 0.25 && w.assetGrowthPenalty === 0.20 && w.eff === 0.15,
+      `${b} weights falsch: ${JSON.stringify(w)}`);
+  }
+  // a name with net issuance carries a dilutionHaircut <= 0.10; absKaliber <= absKaliberPreDilution.
+  const all = [...CS, ...CL];
+  const diluted = all.filter(m => m.dilutionHaircut != null && m.dilutionHaircut > 0);
+  assert(diluted.length > 0, 'mindestens ein Name sollte einen Dilution-Haircut tragen (shareCAGR > 0)');
+  for (const m of diluted) {
+    assert(m.dilutionHaircut <= 0.10 + 1e-9, `${m.ticker} Haircut > maxHaircut 0.10: ${m.dilutionHaircut}`);
+    assert(m.absKaliber <= m.absKaliberPreDilution + 1e-9, `${m.ticker} absKaliber > preDilution (Haircut nicht angewandt)`);
+  }
+});
+
+test('consdisc §8-#9: AMZN moderated (heavy Axis-D asset-growth penalty), NOT a top light pick', () => {
+  const amzn = CL.find(m => m.ticker === 'AMZN');
+  assert(amzn, 'AMZN fehlt im light-Universum');
+  assert(!amzn.lamps.includes('DEAL_MASKED'), 'AMZN sollte NICHT deal-masked sein (rev <20%, §4.1)');
+  assert(amzn.assetGrowth != null && amzn.assetGrowth > 0.25, `AMZN assetGrowth sollte hoch sein (~+31%), ist ${amzn.assetGrowth}`);
+  const lightRanked = CL.filter(m => m.score != null).sort((a, b) => b.score - a.score);
+  const amznRank = lightRanked.findIndex(m => m.ticker === 'AMZN') + 1;
+  assert(amznRank > lightRanked.length / 2, `AMZN sollte unterhalb der light-Median-Rangstufe liegen (moderiert), Rang ${amznRank}/${lightRanked.length}`);
+});
+
+test('consdisc §4.1 DEAL-MASK: DKS deal-masked (Foot Locker +66% assets +28% rev); CMG NOT masked', () => {
+  const dks = CS.find(m => m.ticker === 'DKS');
+  const cmg = CS.find(m => m.ticker === 'CMG');
+  assert(dks && dks.lamps.includes('DEAL_MASKED'), 'DKS sollte DEAL_MASKED tragen (asset+rev jump beide über Schwelle)');
+  assert(cmg && !cmg.lamps.includes('DEAL_MASKED'), 'CMG sollte NICHT deal-masked sein (clean compounder)');
+});
+
+test('consdisc: light cohort ABS-ONLY (β=1, THIN_REL); store full ABS+REL blend (β=0.6)', () => {
+  assert(cdL.betaMode === 1.0 && cdL.absOnly === true, `light sollte β=1 ABS-only sein, β=${cdL.betaMode} absOnly=${cdL.absOnly}`);
+  assert(cdS.betaMode === 0.6 && cdS.absOnly === false, `store sollte β=0.6 blend sein, β=${cdS.betaMode} absOnly=${cdS.absOnly}`);
+  // light: every member carries THIN_REL; ABS-only means score === 100*absKaliber (REL ignored).
+  for (const m of CL) {
+    assert(m.lamps.includes('THIN_REL'), `${m.ticker} (light) sollte THIN_REL tragen`);
+    if (m.score != null) assert(Math.abs(m.score - 100 * m.absKaliber) < 0.15,
+      `${m.ticker} (light, ABS-only) score sollte ~100*absKaliber sein: score=${m.score} 100*aK=${100 * m.absKaliber}`);
+  }
+});
+
+test('consdisc: always-on WALLS — LEASE_DISTORTED store-only, INVENTORY_BLIND both (the §1.2 split point)', () => {
+  for (const m of CS) {
+    assert(m.lamps.includes('LEASE_DISTORTED'), `${m.ticker} (store) fehlt LEASE_DISTORTED`);
+    assert(m.lamps.includes('INVENTORY_BLIND'), `${m.ticker} (store) fehlt INVENTORY_BLIND`);
+  }
+  for (const m of CL) {
+    assert(!m.lamps.includes('LEASE_DISTORTED'), `${m.ticker} (light) darf NICHT LEASE_DISTORTED tragen (un-leased denom, §1.2)`);
+    assert(m.lamps.includes('INVENTORY_BLIND'), `${m.ticker} (light) fehlt INVENTORY_BLIND`);
+  }
+  assert(JSON.stringify(cdS.walls) === JSON.stringify(['LEASE_DISTORTED', 'INVENTORY_BLIND']), `store walls falsch: ${JSON.stringify(cdS.walls)}`);
+  assert(JSON.stringify(cdL.walls) === JSON.stringify(['INVENTORY_BLIND']), `light walls falsch: ${JSON.stringify(cdL.walls)}`);
+});
+
+test('consdisc SI-3: normTableId + cohort + comparabilityNote (absKaliber cross-bucket, REL/ABS-only intra-bucket)', () => {
+  assert(cdS.normTableId === 'consdisc_store-norms-2026-06-21', `store normTableId falsch: ${cdS.normTableId}`);
+  assert(cdL.normTableId === 'consdisc_light-norms-2026-06-21', `light normTableId falsch: ${cdL.normTableId}`);
+  for (const R of [cdS, cdL]) {
+    assert(R.comparabilityNote && /absKaliber/.test(R.comparabilityNote) && /COVERAGE-RENORM/.test(R.comparabilityNote),
+      'comparabilityNote sollte absKaliber + COVERAGE-RENORM erklären');
+    assert(R.scoreScope === 'intra-bucket' && R.crossBucketComparableField === 'absKaliber', 'SI-3 cross-bucket-Marker fehlen');
+  }
+  assert(/ABS-ONLY/.test(cdL.comparabilityNote), 'light comparabilityNote sollte ABS-ONLY (thin-n) offenlegen');
+});
+
+test('consdisc: GP/assets cohort-keyed — light gpa floor/elite (.42/.95) > store (.21/.85) (un-leased denominator)', () => {
+  // The §1.2 lease-distortion isolation: light's un-leased denominator posts higher GP/assets → cohort-specific
+  // norm (a shared norm would mis-rank). growth/eff/assetGrowthPenalty SHARED across cohorts. Read live from NORMS.
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  assert(NORMS.consdisc_store.gpa.floor === 0.21 && NORMS.consdisc_store.gpa.elite === 0.85,
+    `store gpa norm falsch: ${JSON.stringify(NORMS.consdisc_store.gpa)}`);
+  assert(NORMS.consdisc_light.gpa.floor === 0.42 && NORMS.consdisc_light.gpa.elite === 0.95,
+    `light gpa norm falsch: ${JSON.stringify(NORMS.consdisc_light.gpa)}`);
+  // shared anchors
+  for (const b of ['consdisc_store', 'consdisc_light']) {
+    assert(NORMS[b].growth.floor === 0.04 && NORMS[b].growth.elite === 0.22, `${b} growth norm sollte shared .04/.22 sein`);
+    assert(NORMS[b].eff.floor === 0.02 && NORMS[b].eff.elite === 0.18, `${b} eff norm sollte shared .02/.18 sein`);
+    assert(NORMS[b].assetGrowthPenalty.floor === -0.30 && NORMS[b].assetGrowthPenalty.elite === 0.00, `${b} assetGrowthPenalty sollte shared -.30/.00 sein`);
+  }
+});
+
+test('consdisc-unit: absKaliberConsDisc 4-axis coverage-renorm + dilution haircut (E-drop renorm Σ=1.0; 6% issuance → 10% hc; all-null → 0)', () => {
+  const { absKaliberConsDisc } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  // full coverage, buyback → no haircut, 4 axes used
+  const full = absKaliberConsDisc({ gpa: 0.50, growth: 0.10, assetGrowth: 0.05, eff: 0.10, shareCAGR: -0.02 }, 'consdisc_store');
+  assert(full.usedAxes.length === 4 && full.droppedAxes.length === 0, `full coverage: 4 axes erwartet, ist ${full.usedAxes.length}`);
+  assert(full.dilutionHaircut === 0, `buyback sollte 0 Haircut sein, ist ${full.dilutionHaircut}`);
+  assert(Math.abs(Object.values(full.renormWeights).reduce((a, b) => a + b, 0) - 1.0) < 1e-9, 'full renormWeights summieren nicht auf 1.0');
+  // 6% net issuance → exactly maxHaircut 10%
+  const dil = absKaliberConsDisc({ gpa: 0.50, growth: 0.10, assetGrowth: 0.05, eff: 0.10, shareCAGR: 0.06 }, 'consdisc_store');
+  assert(Math.abs(dil.dilutionHaircut - 0.10) < 1e-9, `6% issuance sollte 10% Haircut sein, ist ${dil.dilutionHaircut}`);
+  assert(Math.abs(dil.absK - dil.absKPreDilution * 0.90) < 1e-9, 'absK sollte preDilution*0.90 sein (10% Haircut)');
+  // growth dropped (NOT_READY) → renorm to 3 axes, Σ=1.0
+  const dropG = absKaliberConsDisc({ gpa: 0.50, growth: null, assetGrowth: 0.05, eff: 0.10, shareCAGR: null }, 'consdisc_light');
+  assert(dropG.usedAxes.length === 3 && dropG.droppedAxes.includes('growth'), `growth-drop: 3 axes erwartet, dropped=${JSON.stringify(dropG.droppedAxes)}`);
+  assert(Math.abs(Object.values(dropG.renormWeights).reduce((a, b) => a + b, 0) - 1.0) < 1e-9, 'growth-drop renormWeights summieren nicht auf 1.0');
+  // pathological: every axis null → absK 0 (last-resort net, never NaN)
+  const allNull = absKaliberConsDisc({ gpa: null, growth: null, assetGrowth: null, eff: null, shareCAGR: 0.5 }, 'consdisc_store');
+  assert(allNull.absK === 0, `all-null absK sollte 0 sein, ist ${allNull.absK}`);
+});
+
+test('consdisc PARITÄT: KEIN consdisc-only Feld auf SaaS/Fabless/Medtech/D&LST/Industrials/Staples-Membern (Leak-Guard)', () => {
+  // Only TRULY consdisc-exclusive fields (cd/effCd/shareCAGR/_cd*); the shared axis field names (gpa/assetGrowth/
+  // growthInput/absUsedAxes/absDroppedAxes) legitimately exist on industrials/staples members.
+  for (const b of ['system_app_software', 'fabless_semi', 'medtech_devices', 'diagnostics_lst', 'industrials_heavy', 'industrials_light', 'staples_branded', 'staples_distribution']) {
+    for (const m of doc[b].members) {
+      for (const leak of ['cd', 'effCd', 'shareCAGR', 'dilutionHaircut', 'absKaliberPreDilution', '_cdGpa', '_cdGrowth', '_cdEff', '_cdAssetGrowthPenalty', '_cdShareCAGR']) {
+        assert(!(leak in m), `${b}/${m.ticker} hat consdisc-only Feld '${leak}' geleakt (Parität verletzt)`);
+      }
+    }
+  }
+});
+
 // Temp-Outputs aufräumen (Harness-Isolation: Produktions-Artefakte bleiben unberührt)
 try { fs.unlinkSync(CAND_TEST); } catch {}
 try { fs.unlinkSync(RESULTS); } catch {}
