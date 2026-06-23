@@ -411,16 +411,21 @@ function computeScore(allResults, modeId, methodRegistry, failedSoftGuards, data
     if (modeId === 'QUALITY_COMPOUNDER') {
       var ageRes = allResults['listing-age'];
       if (ageRes && ageRes.computable && Number.isFinite(ageRes.value)) {
-        // Tag 206h (Bug-Hunt Agent F MEDIUM-7 documentation):
-        //   listing-age method threshold = 3 (minimum years for QC eligibility)
-        //   score-aggregator divisor    = 5 (full QC credit at 5+ years)
-        // The divergence is INTENTIONAL: 3y satisfies the must-eligibility gate
-        // (else the stock isn't even classified as QC by classifyTabs), but 3y
-        // of history is too thin for "premium compounder" — the linear-ramp
-        // from 60% at 3y to 100% at 5y reflects that "established compounder"
-        // requires more track record than the eligibility floor.
-        // 3y → 60% credit | 4y → 80% credit | 5y+ → 100% credit
-        var ageMultiplier = Math.min(1.0, ageRes.value / 5);
+        // audit/fix (gauntlet SCORE-HIGH-5): divisor 5 -> 4 (DATA-CEILING correction).
+        //   ageRes.value = listing-age cleanYears = count of consecutive non-null
+        //   annualRev entries. Yahoo/FTS returns at most 4 annual rows (pull window
+        //   ~5y but only 4 fiscal years materialize), so EMPIRICALLY (4588 snapshots)
+        //   ZERO stocks ever reach cleanYears>=5: the old /5 "100% at 5y+" tier was
+        //   mathematically UNREACHABLE and 98% of the QC universe got a flat 0.80
+        //   multiplier (a uniform 20% haircut with no discrimination — MSFT/COST/V,
+        //   all 4 clean years, were silently capped at 0.80). /4 makes full credit
+        //   achievable at the 4y data ceiling while still ramping down genuine
+        //   thin-history names. The 3y QC-eligibility floor (listing-age threshold)
+        //   is unchanged; this only fixes the unreachable full-credit tier.
+        //   3y → 75% credit | 4y → 100% credit  (was 60%/80%, capped, never 100%)
+        // (env-gated by AUDIT_SCORE_MULTIPLIERS, so the flagless fixture hash is
+        //  unaffected; validated WITH the env against the QC anchors.)
+        var ageMultiplier = Math.min(1.0, ageRes.value / 4);
         auditMultiplier *= ageMultiplier;
         auditMultiplierApplied = true;
       }
