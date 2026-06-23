@@ -26,8 +26,18 @@ function evaluate(stock) {
       threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
     });
   }
-  // Bug #3: guard against decimal-vs-percent unit mismatch (both in [-1,1] → almost certainly decimals)
-  if (Math.abs(growth) <= 1 && Math.abs(fcfMargin) <= 1) {
+  // Bug #3: guard against decimal-vs-percent unit mismatch.
+  // audit/fix (gauntlet LOW-33): align decimal-corruption detection with the fixed
+  // rule-of-40.js (see methods/rule-of-40.js:100-102). The old weaker signature
+  // `|growth|<=1 && |fcfMargin|<=1` wrongly flagged genuinely near-flat percent inputs
+  // (e.g. growth=+0.8%, fcfMargin=+0.5%) — both in [-1,1] yet real, not corrupt — as a
+  // unit error and marked them non-computable. Upstream guarantees percent units
+  // (pull-yahoo.js), so only flag the actual divided-by-100 signature: both terms in
+  // (-1,1) AND their combined magnitude below 1 AND at least one input non-zero. A
+  // near-flat-but-real percent pair stays computable (and simply FAILs Rule-of-X).
+  if (Math.abs(growth) < 1 && Math.abs(fcfMargin) < 1
+      && Math.abs(growth) + Math.abs(fcfMargin) < 1
+      && (growth !== 0 || fcfMargin !== 0)) {
     return H.buildResult({
       computable: false,
       reason: `unit error: growth=${growth} and fcfMargin=${fcfMargin} appear to be decimals, not percent`,
