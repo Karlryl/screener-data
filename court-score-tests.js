@@ -2713,6 +2713,217 @@ test('it_services PARITÄT: KEIN it_services-only Feld auf den anderen Buckets (
   }
 });
 
+// ===========================================================================
+// financials_banks (CORE court bucket) — ONE deposit-funded US-bank cohort. Court gauntlet DESIGN (BUILD_WITH_CAVEATS
+// / court REVISE 2026-06-23). 4 SCORED axes {roaThruCycle, capitalAdequacy, assetGrowthDiscipline, earningsDurability}
+// via the PARALLEL engine absKaliberBanks (coverage-renorm; the 20 existing CORE/court buckets BYTE-UNTOUCHED — parity
+// guard below + the tag28 fixture-hash gate). The COURT-REQUIRED revisions: (1) de-ADR the foreign megabanks; (2)
+// anti-leak keyed on the foreign-DENY SIGNAL NOT country!=US; (4) capitalAdequacy DROP+renorm on null-totalEquity
+// marquees; (5) always-on BLIND walls. CREDIT_QUALITY_BLIND discloses the most important absent dimension.
+// ===========================================================================
+const bkR = doc.financials_banks;
+const BK_ = bkR ? bkR.members : [];
+
+test('financials_banks: bucket exists with members; label nennt v0 + through-cycle bank quality', () => {
+  assert(bkR && Array.isArray(bkR.members) && BK_.length > 0, 'financials_banks bucket fehlt/leer');
+  assert(/Financials-Banks v0/.test(bkR.label || ''), `label sollte v0 nennen: ${bkR.label}`);
+  assert(/through-cycle|ROA|capital/i.test(bkR.label || ''), 'label sollte through-cycle/ROA/capital nennen');
+});
+
+test('financials_banks MARQUEE: JPM/PNC/USB/MTB/EWBC/CFR/FITB classify+score AND survive to a sane rank (fail-loud)', () => {
+  const MARQUEE = ['JPM', 'PNC', 'USB', 'MTB', 'EWBC', 'CFR', 'FITB'];
+  const scored = BK_.filter(m => m.score != null);
+  const scoredSet = new Set(scored.map(m => m.ticker));
+  const missing = MARQUEE.filter(t => !scoredSet.has(t));
+  assert(missing.length === 0, `MARQUEE COVERAGE FAIL — nicht klassifiziert/gescort: ${missing.join(', ')}`);
+  // "sane rank" = inside the scored universe, never exiled to the very bottom decile.
+  const ranked = scored.slice().sort((a, b) => b.score - a.score);
+  for (const t of MARQUEE) {
+    const rank = ranked.findIndex(m => m.ticker === t) + 1;
+    assert(rank > 0 && rank <= Math.ceil(ranked.length * 0.90), `${t} rank ${rank}/${ranked.length} — Flaggschiff ins unterste Dezil exiliert (Vintage-collapse-Regression)`);
+  }
+  const { assertBanksMarquee } = require('./court-score.js');
+  assert(typeof assertBanksMarquee === 'function', 'assertBanksMarquee nicht exportiert');
+  assertBanksMarquee(doc); // throws on collapse / foreign-control leak
+});
+
+test('financials_banks SI-5: classifiedCount === scoredCount + excludedCount (fail-loud identity)', () => {
+  assert(bkR.classifiedCount != null && bkR.scoredCount != null && bkR.excludedCount != null, 'SI-5 counts fehlen');
+  assert(bkR.classifiedCount === bkR.scoredCount + bkR.excludedCount,
+    `SI-5 mismatch: classified ${bkR.classifiedCount} !== scored ${bkR.scoredCount} + excluded ${bkR.excludedCount}`);
+  // Live-recomputed CLEAN de-ADRd + deduped count 2026-06-23: 128 classified.
+  assert(bkR.classifiedCount === 128, `classified sollte 128 sein (de-ADRd + deduped), ist ${bkR.classifiedCount}`);
+});
+
+test('financials_banks de-ADR: NO foreign megabank ADR (IBN/ITUB/MUFG/SMFG/RY/TD/SAN/UBS/NU/...) in the cohort', () => {
+  const { assertBanksNoForeignLeak, BANKS_FOREIGN_CONTROL, BANK_FOREIGN_DENY } = require('./court-score.js');
+  const allTk = new Set(BK_.map(m => m.ticker));
+  // the foreign-megabank ADRs the de-ADR hardening must keep OUT (court revision #1).
+  const leaked = BANKS_FOREIGN_CONTROL.filter(t => allTk.has(t));
+  assert(leaked.length === 0, `FOREIGN-CONTROL FAIL — foreign megabank ADR(s) in der Kohorte: ${leaked.join(', ')}`);
+  // the explicit DENY set the court named MUST all be absent.
+  for (const t of ['IBN', 'ITUB', 'BSBR', 'BMA', 'KB', 'SHG', 'WF', 'MFG', 'MUFG', 'SMFG', 'RY', 'TD', 'SAN', 'UBS', 'NWG', 'NU']) {
+    assert(BANK_FOREIGN_DENY.has(t), `${t} sollte im BANK_FOREIGN_DENY-Set sein`);
+    assert(!allTk.has(t), `${t} (foreign megabank ADR) darf NICHT in der Kohorte sein`);
+  }
+  // GENERATIVE anti-leak keyed on the foreign-DENY SIGNAL (NOT country!=US — country=undefined US banks are tolerated).
+  assert(typeof assertBanksNoForeignLeak === 'function', 'assertBanksNoForeignLeak nicht exportiert');
+  let listing = new Map();
+  try {
+    const lp = (CAND_TEST.replace(/_court-candidates([^/\\]*)\.json$/, '_court-listing$1.json'));
+    const ld = JSON.parse(fs.readFileSync(lp, 'utf8'));
+    const obj = ld && ld.listings ? ld.listings : (ld || {});
+    for (const [t, rec] of Object.entries(obj)) listing.set(t, rec);
+  } catch {}
+  assertBanksNoForeignLeak(doc, listing); // throws on a foreign-DENY/country-set leak; country=undefined US banks tolerated
+});
+
+test('financials_banks anti-leak: the assert does NOT throw on country=undefined US banks (JPM/PNC/USB/MTB)', () => {
+  // CRITICAL court revision #2: JPM/PNC/USB/MTB carry country=undefined and MUST be admitted+scored (the anti-leak
+  // must NOT be keyed on country!=US, which would throw on them). Verify they are scored, not excluded.
+  for (const t of ['JPM', 'PNC', 'USB', 'MTB']) {
+    const m = BK_.find(x => x.ticker === t);
+    assert(m != null, `${t} (country=undefined US bank) sollte in der Kohorte sein`);
+    assert(m.score != null && isFinite(m.score), `${t} sollte gescort sein (score!=null), hat ${m.score}`);
+  }
+});
+
+test('financials_banks capitalAdequacy DROP+renorm: a null-totalEquity marquee (JPM/WFC/PNC) still scores on the other 3 axes', () => {
+  // court revision #4: capitalAdequacy is INVISIBLE on JPM/WFC/PNC/USB (totalEquity absent ~45% of pool). They MUST
+  // still score via coverage-renorm on roaThruCycle+assetGrowthDiscipline+earningsDurability, NEVER imputed.
+  let foundDrop = false;
+  for (const t of ['JPM', 'WFC', 'PNC', 'USB']) {
+    const m = BK_.find(x => x.ticker === t);
+    if (!m) continue;
+    if (m.capitalAdequacy == null) {
+      foundDrop = true;
+      assert(m.score != null && isFinite(m.score), `${t} (capitalAdequacy null) sollte trotzdem gescort sein`);
+      assert(Array.isArray(m.absUsedAxes) && !m.absUsedAxes.includes('capitalAdequacy'), `${t} sollte capitalAdequacy NICHT in usedAxes haben`);
+      assert(Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.includes('capitalAdequacy'), `${t} sollte capitalAdequacy in droppedAxes haben`);
+      assert(m.absUsedAxes.length >= 2, `${t} sollte auf den anderen Achsen scoren (>=2 usedAxes)`);
+      assert(m.lamps.includes('CAPADEQ_DROPPED'), `${t} sollte CAPADEQ_DROPPED lamp tragen`);
+    }
+  }
+  assert(foundDrop, 'mindestens ein null-totalEquity Marquee (JPM/WFC/PNC/USB) sollte den DROP+renorm-Pfad demonstrieren');
+  // bucket-level coverage disclosure.
+  assert(bkR.capitalAdequacyCoverage != null && bkR.capitalAdequacyCoverage.dropped > 0, 'capitalAdequacyCoverage (DROP disclosure) fehlt/leer');
+});
+
+test('financials_banks SHELL SI-4: a no-balance-sheet / no-positive-NI name is excluded (score=null), NEVER scored 0', () => {
+  // MCHB (Mechanics Bancorp) carries annualBalance=[] (no totalAssets[0]) → SHELL gate → OUT_OF_SEGMENT:shell.
+  const mchb = BK_.find(m => m.ticker === 'MCHB');
+  if (mchb) {
+    assert(mchb.score === null, `MCHB (shell, no balance sheet) sollte score=null haben, hat ${mchb.score}`);
+    assert(mchb.exclusionReason === 'OUT_OF_SEGMENT:shell', `MCHB sollte OUT_OF_SEGMENT:shell sein, ist ${mchb.exclusionReason}`);
+  }
+  // every excluded member has score=null (SI-4: never a misleading 0/headline rank).
+  assert(Array.isArray(bkR.excluded), 'excluded[] fehlt');
+  for (const m of bkR.excluded) assert(m.score == null, `${m.ticker} in excluded[] sollte score=null haben, hat ${m.score}`);
+});
+
+test('financials_banks: top names sane (high-ROA well-capitalized disciplined banks, NOT a shell/foreign ADR)', () => {
+  const ranked = BK_.filter(m => m.score != null && isFinite(m.score)).sort((a, b) => b.score - a.score);
+  assert(ranked.length > 0, 'keine gescorten bank-Namen');
+  const top = ranked[0];
+  // the court's replicated top set: WABC/HOMB/OZK/OFG/RBCAA/CASH/CHCO/BANF + the marquees.
+  const KNOWN_QUALITY = new Set(['WABC', 'HOMB', 'OZK', 'OFG', 'RBCAA', 'CASH', 'CHCO', 'BANF', 'CBC', 'CBSH', 'TBBK', 'EWBC', 'CATY', 'PRK', 'SRCE', 'CVBF', 'BFC']);
+  assert(top.exclusionReason !== 'OUT_OF_SEGMENT:shell', `TOP ${top.ticker} darf KEIN shell sein`);
+  assert(KNOWN_QUALITY.has(top.ticker), `TOP sollte ein bekannter Quality-Bank sein, ist ${top.ticker}`);
+  // the top name should have elite-ish ROA (the lead axis w=.50) and not be ballooning the balance sheet.
+  assert(top.roaThruCycle != null && top.roaThruCycle >= 0.013, `TOP ${top.ticker} sollte hohe through-cycle ROA tragen (>=1.3%), hat ${top.roaThruCycle}`);
+  // no foreign ADR scored at all (positive-control inside the ranked set).
+  const FOREIGN = new Set(['IBN', 'ITUB', 'MUFG', 'SMFG', 'RY', 'TD', 'SAN', 'UBS', 'NU', 'HSBC', 'BBVA']);
+  const leaked = ranked.filter(m => FOREIGN.has(m.ticker));
+  assert(leaked.length === 0, `foreign ADR(s) gescort: ${leaked.map(m => m.ticker).join(', ')}`);
+});
+
+test('financials_banks: FOUR scored axes {roaThruCycle, capitalAdequacy, assetGrowthDiscipline, earningsDurability}; weights Σ=1.0; roaThruCycle LEADS', () => {
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  const w = NORMS.financials_banks.weights;
+  const keys = Object.keys(w).sort().join(',');
+  assert(keys === 'assetGrowthDiscipline,capitalAdequacy,earningsDurability,roaThruCycle', `4 Achsen erwartet, hat ${keys}`);
+  // FCF/OCF/gpa must NOT be weight keys (hard-excluded / structurally absent for banks).
+  for (const forbidden of ['fcfMargin', 'fcf', 'ocf', 'gpa', 'opMargin', 'growth']) {
+    assert(!(forbidden in w), `${forbidden} darf KEINE gewichtete Bank-Achse sein`);
+  }
+  const sum = Object.values(w).reduce((s, v) => s + v, 0);
+  assert(Math.abs(sum - 1.0) < 1e-9, `weights sollten Σ=1.0 sein, sind ${sum}`);
+  assert(w.roaThruCycle === 0.50 && w.capitalAdequacy === 0.25 && w.assetGrowthDiscipline === 0.18 && w.earningsDurability === 0.07,
+    'weights sollten {roaThruCycle .50, capitalAdequacy .25, assetGrowthDiscipline .18, earningsDurability .07} sein');
+  // roaThruCycle .50 is the LEAD: the single largest axis weight (a 50/50 split between the through-cycle ROA pillar
+  // and the {capital, discipline, durability} triad). earningsDurability .07 is the small blind-walled tiebreaker.
+  assert(w.roaThruCycle >= Math.max(w.capitalAdequacy, w.assetGrowthDiscipline, w.earningsDurability), 'roaThruCycle sollte das größte Achsengewicht (LEAD) sein');
+  assert(w.roaThruCycle >= (w.capitalAdequacy + w.assetGrowthDiscipline + w.earningsDurability), 'roaThruCycle (.50) sollte >= der Summe der anderen drei sein (LEAD-Pillar)');
+  assert(w.roaThruCycle > w.capitalAdequacy && w.capitalAdequacy > w.assetGrowthDiscipline && w.assetGrowthDiscipline > w.earningsDurability, 'monotone Achsen-Hierarchie roa>cap>disc>dur');
+});
+
+test('financials_banks: NORMS frozen-id + recomputed anchors (roa .0070/.0164, cap .084/.137, assetGrowthDisc -.40/.00, dur .185/.863)', () => {
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  const n = NORMS.financials_banks;
+  assert(n.id === 'banks-norms-2026-06-23', `norm id falsch: ${n.id}`);
+  assert(n.roaThruCycle.floor === 0.0070 && n.roaThruCycle.elite === 0.0164, `roaThruCycle sollte .0070/.0164 sein, ist ${n.roaThruCycle.floor}/${n.roaThruCycle.elite}`);
+  assert(n.capitalAdequacy.floor === 0.084 && n.capitalAdequacy.elite === 0.137, 'capitalAdequacy sollte .084/.137 sein');
+  // assetGrowthDiscipline is the PENALTY axis: elite=0.00 (zero growth best), floor=-0.40 (40% ballooning worst).
+  assert(n.assetGrowthDiscipline.floor === -0.40 && n.assetGrowthDiscipline.elite === 0.00, 'assetGrowthDiscipline sollte -.40/.00 sein (PENALTY)');
+  assert(n.assetGrowthDiscipline.elite > n.assetGrowthDiscipline.floor, 'assetGrowthDiscipline floor<elite (monotone Skala)');
+  assert(n.earningsDurability.floor === 0.185 && n.earningsDurability.elite === 0.863, 'earningsDurability sollte .185/.863 sein');
+  // n=128 >= REL_MIN_N=15 → full ABS+REL blend (β=0.6), NOT THIN_REL.
+  assert(n.rel && n.rel.minN === 15 && n.rel.beta === 0.6, 'banks sollte full ABS+REL (beta .6, minN 15) sein');
+});
+
+test('financials_banks-unit: absKaliberBanks 4-axis coverage-renorm (capitalAdequacy-drop renorm Σ=1.0; all-null → 0; assetGrowth PENALTY)', () => {
+  const { absKaliberBanks } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  // full 4 axes (elite bank): high ROA, well-capitalized, zero asset growth, durable earnings.
+  const full = absKaliberBanks({ roaThruCycle: 0.0164, capitalAdequacy: 0.137, assetGrowthYoY: 0.00, earningsDurability: 0.863 }, 'financials_banks');
+  assert(full.usedAxes.length === 4 && full.droppedAxes.length === 0, `full sollte 4 Achsen nutzen, hat ${full.usedAxes.length}`);
+  assert(Math.abs(Object.values(full.renormWeights).reduce((s, v) => s + v, 0) - 1.0) < 1e-9, 'renormWeights Σ=1.0');
+  assert(full.absK > 0.95, `elite bank sollte absK~1.0 ergeben, hat ${full.absK}`);
+  // assetGrowthDiscipline is the PENALTY: zero asset growth must score HIGHER than 40% ballooning, all else equal.
+  const disc = absKaliberBanks({ roaThruCycle: 0.012, capitalAdequacy: 0.11, assetGrowthYoY: 0.00, earningsDurability: 0.7 }, 'financials_banks');
+  const balloon = absKaliberBanks({ roaThruCycle: 0.012, capitalAdequacy: 0.11, assetGrowthYoY: 0.40, earningsDurability: 0.7 }, 'financials_banks');
+  assert(disc.absK > balloon.absK, 'Null-Asset-Wachstum (disc) sollte HÖHER scoren als 40%-Ballooning — assetGrowthDiscipline ist eine PENALTY');
+  // capitalAdequacy-drop (JPM-like, totalEquity null) → 3 axes renormalize to Σ=1.0 (NEVER imputed)
+  const dropCap = absKaliberBanks({ roaThruCycle: 0.013, capitalAdequacy: null, assetGrowthYoY: 0.06, earningsDurability: 0.63 }, 'financials_banks');
+  assert(dropCap.droppedAxes.includes('capitalAdequacy') && dropCap.usedAxes.length === 3, 'capitalAdequacy-drop sollte 3 Achsen lassen');
+  assert(Math.abs(Object.values(dropCap.renormWeights).reduce((s, v) => s + v, 0) - 1.0) < 1e-9, 'renorm Σ=1.0 nach capitalAdequacy-drop');
+  // all-null → 0 (pathological shell, no fake-neutral)
+  const allNull = absKaliberBanks({ roaThruCycle: null, capitalAdequacy: null, assetGrowthYoY: null, earningsDurability: null }, 'financials_banks');
+  assert(allNull.absK === 0 && allNull.usedAxes.length === 0, 'all-null sollte absK=0 ergeben');
+});
+
+test('financials_banks: always-on BLIND walls on every member (CREDIT_QUALITY/NIM/EFFICIENCY/CET1/DEPOSIT_FRANCHISE)', () => {
+  for (const m of BK_) {
+    for (const wall of ['CREDIT_QUALITY_BLIND', 'NIM_BLIND', 'EFFICIENCY_RATIO_BLIND', 'CET1_BLIND', 'DEPOSIT_FRANCHISE_BLIND']) {
+      assert(Array.isArray(m.lamps) && m.lamps.includes(wall), `${m.ticker} fehlt BLIND-wall ${wall}`);
+    }
+  }
+  // bucket-level walls disclosure.
+  assert(Array.isArray(bkR.walls) && bkR.walls.includes('CREDIT_QUALITY_BLIND'), 'bkR.walls fehlt CREDIT_QUALITY_BLIND');
+});
+
+test('financials_banks SI-3: normTableId + cohort + comparabilityNote (absKaliber cross-bucket, CREDIT_QUALITY_BLIND + assetGrowth PENALTY disclosed)', () => {
+  assert(bkR.normTableId === 'banks-norms-2026-06-23', `normTableId fehlt/falsch: ${bkR.normTableId}`);
+  assert(bkR.cohort === 'financials_banks', `cohort falsch: ${bkR.cohort}`);
+  assert(/roaThruCycle/i.test(bkR.comparabilityNote || '') && /CREDIT_QUALITY_BLIND/i.test(bkR.comparabilityNote || ''),
+    'comparabilityNote sollte roaThruCycle + CREDIT_QUALITY_BLIND nennen');
+  assert(/PENALTY|opposite of util/i.test(bkR.comparabilityNote || ''), 'comparabilityNote sollte die assetGrowth-PENALTY-Richtung disclosen');
+  assert(/HARD-EXCLUDED|FCF/i.test(bkR.comparabilityNote || ''), 'comparabilityNote sollte den FCF/OCF-Ausschluss disclosen');
+  assert(bkR.scoreScope === 'intra-bucket' && bkR.crossBucketComparableField === 'absKaliber', 'SI-3 scope/field fehlt');
+});
+
+test('financials_banks PARITÄT: KEIN banks-only Feld auf den anderen Buckets (Leak-Guard)', () => {
+  // TRULY banks-exclusive fields (bk/roaThruCycle/capitalAdequacy/assetGrowthYoY/earningsDurability/_bk*). The shared
+  // names (absUsedAxes/absDroppedAxes/cohort/absKaliber) legitimately exist on other CORE members.
+  for (const b of ['system_app_software', 'fabless_semi', 'medtech_devices', 'diagnostics_lst', 'industrials_heavy', 'industrials_light', 'staples_branded', 'staples_distribution', 'consdisc_store', 'consdisc_light', 'materials_pricingpower', 'materials_commodity', 'energy_upstream', 'energy_midstream', 'energy_services', 'pharma_branded', 'pharma_biopharma', 'pharma_specialty', 'it_services']) {
+    if (!doc[b]) continue;
+    for (const m of doc[b].members) {
+      for (const leak of ['bk', 'roaThruCycle', 'capitalAdequacy', 'assetGrowthYoY', 'earningsDurability', '_bkRoa', '_bkCapAdequacy', '_bkAssetGrowthDisc', '_bkEarningsDurability']) {
+        assert(!(leak in m), `${b}/${m.ticker} hat banks-only Feld '${leak}' geleakt (Parität verletzt)`);
+      }
+    }
+  }
+});
+
 // Temp-Outputs aufräumen (Harness-Isolation: Produktions-Artefakte bleiben unberührt)
 try { fs.unlinkSync(CAND_TEST); } catch {}
 try { fs.unlinkSync(RESULTS); } catch {}

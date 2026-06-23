@@ -204,6 +204,14 @@ const PHARMA_COHORTS = new Set(['pharma_branded', 'pharma_biopharma', 'pharma_sp
 // itservices-only field `it` -> all other candidate JSON byte-identical.
 const itCohortByTicker = new Map(); // ticker -> 'it_services'
 const ITSERVICES_COHORTS = new Set(['it_services']);
+// financials_banks CORE court bucket (court gauntlet DESIGN, BUILD_WITH_CAVEATS / court REVISE 2026-06-23).
+// ADDITIV/parity-safe: exactly the court-buckets.json `financials_banks` tickers are admitted past the asset-light/
+// growth pre-filter (analog the other CORE buckets, Fix A SI-5: no silent drops). The 4 RAW axis inputs
+// {roaThruCycle, capitalAdequacy, assetGrowthYoY, earningsDurability} are extracted from snapshots/<T>.json
+// annualNetIncome + annualBalance.{totalAssets,totalEquity}, attached as ONE banks-only field `bk` -> all other
+// candidate JSON byte-identical. FCF/OCF are NEVER extracted as axes (economically meaningless for banks).
+const bkCohortByTicker = new Map(); // ticker -> 'financials_banks'
+const BANKS_COHORTS = new Set(['financials_banks']);
 try {
   const bd = JSON.parse(fs.readFileSync(BUCK, 'utf8'));
   const cls = Array.isArray(bd) ? bd : (bd.classifications || []);
@@ -216,6 +224,7 @@ try {
     if (c && ENERGY_COHORTS.has(c.bucket) && c.t) enCohortByTicker.set(c.t, c.bucket);
     if (c && PHARMA_COHORTS.has(c.bucket) && c.t) phCohortByTicker.set(c.t, c.bucket);
     if (c && ITSERVICES_COHORTS.has(c.bucket) && c.t) itCohortByTicker.set(c.t, c.bucket);
+    if (c && BANKS_COHORTS.has(c.bucket) && c.t) bkCohortByTicker.set(c.t, c.bucket);
   }
 } catch {}
 
@@ -1393,6 +1402,107 @@ function buildItServicesAxes(ticker, cohort) {
   };
 }
 
+// ===========================================================================
+// financials_banks (CORE) — 4-axis RAW extraction from snapshots (court DESIGN 2026-06-23)
+// ===========================================================================
+// ADDITIV/parity-safe: only fires for tickers in bkCohortByTicker (court-buckets financials_banks). Reads snapshots/
+// <T>.json `annual.*` (NEWEST-FIRST) — the canonical pool the deterministic classifier + the re-frozen cohort NORMS
+// were calibrated on. Same dual-shape num() extractor (annualNetIncome is {value}-wrapped; annualBalance[].totalAssets/
+// totalEquity are raw numbers).
+//
+// 4 SCORED axes {roaThruCycle, capitalAdequacy, assetGrowthYoY, earningsDurability} via the NEW engine absKaliberBanks
+// (coverage-renorm). roaThruCycle/capitalAdequacy/earningsDurability NON-inverted (higher=better); assetGrowthYoY is
+// passed RAW (the engine negates it for the inverted assetGrowthDiscipline penalty axis). FCF/OCF/GP/OpInc are NEVER
+// extracted (annualGP structurally 0, annualOpInc empty, annualFCF/OCF economically meaningless for banks — JPM
+// annualFCF[0] = -$147.8B). capitalAdequacy DROP+renorm when totalEquity null (~45% of pool incl. JPM/WFC/PNC) ->
+// CAPADEQ_DROPPED lamp; NEVER imputed. always-on BLIND walls (court revision #5): the most important bank dimensions
+// carry NO local signal.
+function snBankAnnual(annual) {
+  const a = annual || {};
+  const ni = (a.annualNetIncome || []).map(num);             // NEWEST-FIRST, object-wrapped {value}
+  const bal = Array.isArray(a.annualBalance) ? a.annualBalance : [];
+  const ta = bal.map(b => (b && b.totalAssets != null && isFinite(b.totalAssets)) ? b.totalAssets : null);
+  const teq = bal.map(b => (b && b.totalEquity != null && isFinite(b.totalEquity)) ? b.totalEquity : null);
+  return { ni, ta, teq };
+}
+
+// snapshot annual cache for bank tickers only (avoid re-reading + keep the parity path untouched).
+const bkSnapAnnual = new Map(); // ticker -> snapshot.annual object
+if (bkCohortByTicker.size && fs.existsSync(SNAP_DIR)) {
+  for (const t of bkCohortByTicker.keys()) {
+    try {
+      const sn = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, t + '.json'), 'utf8'));
+      if (sn && sn.annual) bkSnapAnnual.set(t, sn.annual);
+    } catch {}
+  }
+}
+
+// buildBankAxes(ticker, cohort) -> the 4 RAW axis inputs + lamps/audit, or null if no snapshot.
+// roaThruCycle = mean of available NI[i]/totalAssets[i] over i=0..3 (through-cycle damper); capitalAdequacy =
+// totalEquity[0]/totalAssets[0] (null -> DROP+renorm + CAPADEQ_DROPPED); assetGrowthYoY = totalAssets[0]/totalAssets[1]-1
+// (engine negates it -> assetGrowthDiscipline penalty); earningsDurability = min(NI avail)/max(NI avail) when max>0 and
+// >=3 yrs (else null + DURABILITY_THIN). Shell facts (revLatest surrogate = NI presence, totalAssets[0]) surfaced for
+// the court-score.js SI-4 SHELL gate. FCF/OCF NEVER read.
+function buildBankAxes(ticker, cohort) {
+  const a = bkSnapAnnual.get(ticker);
+  if (!a) return null;
+  const { ni, ta, teq } = snBankAnnual(a);
+  const lamps = [];
+
+  // --- Axis B1: through-cycle ROA = mean of available NI[i]/totalAssets[i] over i=0..3 (4y-avg damper) ---
+  let roaThruCycle = null;
+  const roas = [];
+  for (let i = 0; i < 4; i++) {
+    if (ni[i] != null && ta[i] != null && ta[i] > 0) roas.push(ni[i] / ta[i]);
+  }
+  if (roas.length) roaThruCycle = roas.reduce((s, x) => s + x, 0) / roas.length;
+  else lamps.push('NOT_READY:roa');
+
+  // --- Axis B2: capital adequacy = totalEquity[0]/totalAssets[0] (CET1 surrogate; null -> DROP+renorm, NEVER imputed) ---
+  let capitalAdequacy = null;
+  if (teq[0] != null && ta[0] != null && ta[0] > 0) capitalAdequacy = teq[0] / ta[0];
+  else lamps.push('CAPADEQ_DROPPED');   // totalEquity absent (~45% of pool incl. JPM/WFC/PNC) -> coverage-renorm on the other 3 axes
+
+  // --- Axis B3: asset-growth YoY = totalAssets[0]/totalAssets[1]-1 (RAW; engine negates -> discipline PENALTY) ---
+  let assetGrowthYoY = null;
+  if (ta[0] != null && ta[1] != null && ta[1] > 0) assetGrowthYoY = ta[0] / ta[1] - 1;
+  else lamps.push('NOT_READY:assetgrowth');
+
+  // --- Axis B4: earnings durability = min(NI)/max(NI) over >=3 available years when max>0 (LOW weight, BLIND-walled) ---
+  let earningsDurability = null;
+  const niAvail = ni.filter(v => v != null && isFinite(v));
+  if (niAvail.length >= 3) {
+    const mx = Math.max(...niAvail), mn = Math.min(...niAvail);
+    if (mx > 0) earningsDurability = mn / mx;
+    else lamps.push('DURABILITY_THIN');   // all-non-positive max -> undefined ratio (a loss-year cohort)
+  } else {
+    lamps.push('DURABILITY_THIN');        // <3 NI years (young listing) -> DROP+renorm
+  }
+
+  // --- always-on BLIND disclosure walls (court revision #5) — the most important bank dimensions carry NO local signal ---
+  lamps.push('CREDIT_QUALITY_BLIND');     // NPLs / net charge-offs / loan-loss provisions ABSENT (the single most important bank dimension)
+  lamps.push('NIM_BLIND');                // net interest margin ABSENT
+  lamps.push('EFFICIENCY_RATIO_BLIND');   // cost/income efficiency ratio ABSENT
+  lamps.push('CET1_BLIND');               // regulatory CET1 / RWA ABSENT — capitalAdequacy is a raw equity/assets surrogate, not Basel
+  lamps.push('DEPOSIT_FRANCHISE_BLIND');  // deposit mix / cost-of-funds / non-interest-bearing share ABSENT
+
+  // pre-revenue / shell facts for the court-score.js SI-4 SHELL gate (a name with no positive NI in any year OR no
+  // balance sheet must NOT be scored: the roa/capitalAdequacy/assetGrowth axes are undefined on it).
+  const anyPositiveNI = niAvail.some(v => v > 0);
+  return {
+    cohort,
+    roaThruCycle: round(roaThruCycle),
+    capitalAdequacy: round(capitalAdequacy),
+    assetGrowthYoY: round(assetGrowthYoY),
+    earningsDurability: round(earningsDurability),
+    nAnnualNI: niAvail.length,
+    anyPositiveNI,
+    totalAssetsLatest: (ta[0] == null ? null : round(ta[0])),
+    equityCoverage: (capitalAdequacy != null),
+    lamps,
+  };
+}
+
 // --- robuste Feld-Helfer (Format ist gemischt: ftsAnnual.* = [{value}], Rest = [num]) ---
 function num(x) {
   if (x == null) return null;
@@ -1480,7 +1590,12 @@ for (const file of files) {
   // with a thin CACHE row (its 5 SCORED axes come from the SNAPSHOT via buildItServicesAxes, not the cache).
   // Bypasses the cache-based early gates below. Non-it_services path: BYTE-IDENTICAL.
   const itCohortEarly = (itCohortByTicker.get(ticker) && itSnapByTicker.has(ticker)) ? itCohortByTicker.get(ticker) : null;
-  const coreEarly = indCohortEarly || stpCohortEarly || cdCohortEarly || mtCohortEarly || enCohortEarly || phCohortEarly || itCohortEarly;
+  // financials_banks (CORE): same SI-5 rule — a court-buckets-classified bank name MUST reach the universe even with
+  // a thin/empty CACHE row. Banks have NO annualRev (the cache revLatest is null -> the noRev/noBalance early gates
+  // below would otherwise DROP every bank); its 4 SCORED axes come from the SNAPSHOT (buildBankAxes) annualNetIncome +
+  // annualBalance, not the cache. Bypasses the cache-based early gates. Non-banks path: BYTE-IDENTICAL.
+  const bkCohortEarly = (bkCohortByTicker.get(ticker) && bkSnapAnnual.has(ticker)) ? bkCohortByTicker.get(ticker) : null;
+  const coreEarly = indCohortEarly || stpCohortEarly || cdCohortEarly || mtCohortEarly || enCohortEarly || phCohortEarly || itCohortEarly || bkCohortEarly;
   const p = j.payload || {};
   if (!j.payload && !coreEarly) continue;
   if (j._ftsPartial) stats.partial++;
@@ -1636,6 +1751,7 @@ for (const file of files) {
   const enCohort = enCohortByTicker.get(ticker) || null;
   const phCohort = phCohortByTicker.get(ticker) || null;
   const itCohort = itCohortByTicker.get(ticker) || null;
+  const bkCohort = bkCohortByTicker.get(ticker) || null;
   if (indCohort) {
     // industrials_compounder (CORE): admit EVERY court-buckets-classified industrials name into the universe
     // (cross-sectional cohort percentiles + SI-5 classifiedCount===scoredCount). NO asset-light/growth/gm
@@ -1680,6 +1796,14 @@ for (const file of files) {
     // shortlist-cut lives in court-score.js; the contamination gate already ran in the classifier). 5 axes come
     // from the snapshot annual arrays (buildItServicesAxes). Sole sanity: a parseable snapshot annual block exists.
     if (!itSnapByTicker.has(ticker)) continue;
+  } else if (bkCohort) {
+    // financials_banks (CORE): identical admission policy — admit EVERY court-buckets-classified bank name into the
+    // universe (cross-sectional cohort percentiles + SI-5). NO asset-light/growth/gm pre-filter — banks have NO revenue/
+    // gross-margin line at all (the final else-branch growth/gm/ppe gates would drop EVERY bank); the de-ADR + size gate
+    // already ran in the classifier, and the SI-1 shortlist-cut + SHELL gate live in court-score.js. 4 axes come from
+    // the snapshot annualNetIncome + annualBalance arrays (buildBankAxes). Sole sanity: a parseable snapshot annual
+    // block exists (else SI-5 classifiedCount===scoredCount+excludedCount would mismatch silently).
+    if (!bkSnapAnnual.has(ticker)) continue;
   } else if (isMedtech || isDlst) {
     // Milde Daten-Sanity: growth/gm/rev müssen vorhanden + endlich sein (keine ökonomischen Floors).
     // Medtech UND D&LST sind kapitalintensiv/Large-Cap-haltig → asset-light/ppe-Gate + ökonomische Floors
@@ -1735,6 +1859,11 @@ for (const file of files) {
   // annual arrays, attached as ONE itservices-only field `it` (deal-mask + spin-off guard applied UPSTREAM; RPE
   // advisory + PEOPLE_LEVERAGE_BLIND lamps). Additiv → KEIN Feld auf Nicht-IT-Services-Records (Parität).
   const itExtra = itCohort ? { it: buildItServicesAxes(ticker, itCohort) } : {};
+  // financials_banks (CORE): the 4 RAW axis inputs {roaThruCycle, capitalAdequacy, assetGrowthYoY, earningsDurability}
+  // from the snapshot annualNetIncome + annualBalance arrays, attached as ONE banks-only field `bk` (capitalAdequacy
+  // DROP+renorm + always-on CREDIT_QUALITY/NIM/EFFICIENCY/CET1/DEPOSIT_FRANCHISE BLIND walls). FCF/OCF NEVER read.
+  // Additiv → KEIN Feld auf Nicht-Banks-Records (Parität alle übrigen Buckets).
+  const bkExtra = bkCohort ? { bk: buildBankAxes(ticker, bkCohort) } : {};
   candidates.push({
     ticker,
     growth: round(growth), growth_annual: round(gAnnual), growth_q: round(gQ), growthSource,
@@ -1757,6 +1886,7 @@ for (const file of files) {
     ...enExtra,
     ...phExtra,
     ...itExtra,
+    ...bkExtra,
   });
 }
 

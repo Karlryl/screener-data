@@ -18,7 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const ROOT = __dirname;
-const { absKaliber, absKaliberIndustrials, absKaliberStaples, absKaliberConsDisc, absKaliberMaterials, absKaliberEnergy, absKaliberPharma, absKaliberItServices, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
+const { absKaliber, absKaliberIndustrials, absKaliberStaples, absKaliberConsDisc, absKaliberMaterials, absKaliberEnergy, absKaliberPharma, absKaliberItServices, absKaliberBanks, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
 // Medtech M&A snapshot (advisory lamps; object keyed by ticker)
 const maMedtechRaw = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'ma-rpo-snapshot-medtech.json'), 'utf8')); } catch { return {}; } })();
 // Remove _header key
@@ -570,6 +570,41 @@ const FORMULAS = {
     itservices: true, cohortKey: 'it_services',
     a2Note: 'it_services v0 (Spec formula-design-special_tracks-v0-2026-06-22.md PART B, Council->Court DESIGN-PASS v0; NORMS RECOMPUTED LIVE on the CLEAN de-contaminated vintage-tolerant US pool 2026-06-23 THEN frozen — the CORE gate). ONE de-contaminated people-leverage / low-capital-compounding cohort: Information Technology Services (the exact Yahoo industry string) ∧ Technology ∧ US (country-domicile guard + US_PRIMARY_ALLOWLIST {ACN,G,INFY,GLOB}) ∧ >=$1B ∧ NOT contamination-gated. Live: raw 38 US >=$1B; net 22 after the §B.1 contamination gate excludes the 8 economic-gate contaminants (CIFR/APLD/BBAI/KEEL/SHAZ/CHRN crypto-miners/AI-shells opMargin<0; CDW/INGM hardware distributors RPE>$700k) + the colo fallback (VNET) + the foreign primaries (GIB/GDS/MGRT). SCORE = LOW-CAPITAL-COMPOUNDING BUSINESS QUALITY. 5 SCORED axes via absKaliberItServices: GP/assets (Novy-Marx STRONG — THE asset-light low-capital-compounding proxy, the LEAD axis, w .34, norm .05/.45 = live p10 16.2% / p90 46.1%; floor .05 honors the goodwill-heavy roll-up CACI gpa 8.8% — floored honestly via the linear q, no special case), FCF-margin annualFCF/annualRev (cash conversion = the people-leverage payoff, Mohanram; w .24, .00/.18), operating margin annualOpInc/annualRev (pricing power vs wage inflation; w .18, .02/.18 — level NOT a hard gate, the India-offshore-vs-Western GM inversion means level mis-ranks), organic growth (deal-masked §B.5 + spin-off guarded UPSTREAM, 0.60*latest+0.40*min blend; w .14, .00/.15 — IT-services mid-single-digit through-cycle, capped BELOW the discipline pillar so a roll-up growth spike cannot top-score), net-share-issuance penalty (Pontiff-Woodgate STRONG, w .10, q(-NSI) {-.10/.03}, buyback=elite = the compounder signature; ~50% coverage — Vintage-A lacks annualShares → DROP+renorm+ISSUANCE_NOT_READY). CAPITAL-DISCIPLINE+PROFITABILITY PILLAR gpa+fcfMargin+netIssuance = .68 ≫ growth .14. COVERAGE-RENORM: any NOT_READY/null axis dropped, survivors renormalize to Σ=1.0 (no fake-neutral impute). score=100*(0.6*absKaliber+0.4*REL), β=0.6, REL per-cohort (n=22≫15). THE KEY DESIGN MOVE (§B.2): revenue-per-employee is NOT a scored axis (weight 0.00) — raw RPE is INVERTED on the live cohort (sorting RPE-descending puts the capital-intensive contaminants CIFR/INGM/CDW at the TOP and the genuine elite ACN/EPAM/GLOB/CTSH at the BOTTOM), so RPE is used ONLY as the classifier contamination gate (RPE>$700k) + an advisory RPE_ADVISORY flag. WALLS (always-on lamps): PEOPLE_LEVERAGE_BLIND (the FEASIBILITY DISCLOSURE — mirrors medtech MA_INTANGIBLE_BLIND: the 3 best direct people-leverage signals book-to-bill/utilization/attrition carry NO us-gaap tag and are ABSENT; headcount IS present locally but only ~55% coverage and raw RPE is INVERTED + therefore NOT scored — so NO axis directly measures people-leverage; the score leans on people-leverage-VIA-asset-efficiency gpa), BACKLOG_FUTURE/UTILIZATION_FUTURE/ATTRITION_FUTURE (0-weight future BONUS, verified absent), CYCLE_WALL (~4y history), INVENTORY_BLIND, PEOPLE_DATA_PARTIAL (headcount ~55% coverage). SI-4 out-of-class (non-IT-services tech industry / non-US per the country-domicile guard + FOREIGN hardening / <$1B / contamination-gated → never enter court-buckets; pre-revenue shell with <2 annual-rev OR revLatest<$1M → score=null + excluded[] OUT_OF_SEGMENT:preexploration, the materials lesson) → score=null + excluded[]; SI-5 classifiedCount===scoredCount+excludedCount fail-loud; marquee assert (ACN/CTSH/EPAM/CACI/INFY/G/EXLS/IBM/GLOB/CNXC/DXC/BR/FIS/JKHY/IT/INOD) fail-loud + GENERATIVE anti-leak + CONTAM/FOREIGN positive-control (CIFR/APLD/BBAI/KEEL/SHAZ/CHRN/CDW/INGM/VNET/GIB/GDS/MGRT must NOT classify). FEASIBILITY VERDICT: headcount IS present locally → the design itself (§B.2 RPE INVERTED) prescribes the low-capital-compounding axes as the scored signal with RPE as gate+flag only; the people-leverage omission is disclosed via the always-on PEOPLE_LEVERAGE_BLIND lamp. The ACN/G/GLOB US-primary foreign-domiciled marquees (Accenture plc Ireland / Genpact Ltd Bermuda / Globant S.A. Luxembourg, all NYSE-primary) + INFY (Infosys Ltd Vintage-A) are admitted via the name-verified US_PRIMARY_ALLOWLIST. Additive/parity-safe. Constants frozen §B.4.',
   },
+  // financials_banks (CORE court bucket) — ONE deposit-funded US-bank cohort by THROUGH-CYCLE QUALITY. Court gauntlet
+  // DESIGN (BUILD_WITH_CAVEATS / court REVISE, 2026-06-23; NORMS RECOMPUTED LIVE on the FINAL de-ADR'd + deduped US
+  // pool 2026-06-23, n=128, THEN frozen — the CORE gate). 4 SCORED axes {roaThruCycle, capitalAdequacy,
+  // assetGrowthDiscipline, earningsDurability} via the NEW engine absKaliberBanks (coverage-renorm; the 20 existing
+  // CORE/court buckets are BYTE-UNTOUCHED). Weights {roaThruCycle .50, capitalAdequacy .25, assetGrowthDiscipline .18,
+  // earningsDurability .07}: roaThruCycle .50 dominates; the blind-walled young earningsDurability .07 is a small
+  // tiebreaker. RAW inputs from m.bk.* (court-screen buildBankAxes; FCF/OCF/GP/OpInc NEVER read for banks). financials_
+  // banks = NEW code keyed by the new cohort string; all existing buckets BYTE-IDENTICAL.
+  financials_banks: {
+    label: 'Financials-Banks v0 (deposit-funded US banks; through-cycle quality: 4y-avg ROA, capital adequacy, asset-growth DISCIPLINE penalty, earnings durability; absolute-anchor; CREDIT_QUALITY_BLIND/NIM_BLIND/CET1_BLIND/EFFICIENCY_RATIO_BLIND/DEPOSIT_FRANCHISE_BLIND)',
+    // REL cross-sectional z/MAD axes mirror the ABS axes (sign-aligned: assetGrowthDisc reads the NEGATED assetGrowthYoY
+    // upstream so higher=better, same as the ABS penalty). Weights mirror the absKaliberBanks weights.
+    // membership = roaThruCycle(quality) × scale (QUALITY-ONLY, mirrors materials/energy): gm.c = roaThruCycle.floor
+    // (0.007, the quality center), gm.s = 0.006 (a ~floor-to-elite-spread scale so a floor-ROA bank reads ~0.5 and an
+    // elite ~1.64% reads In); g is UNUSED (no growth/FCF membership gate for banks); scaleLog center = log10($1B).
+    membership: { g: { c: 0.00, s: 0.06 }, gm: { c: 0.0070, s: 0.0060 }, scaleLog: { c: log10(1000), s: 0.6 } },
+    axes: [
+      { key: 'roaThruCycle',          name: 'ROA-ThruCycle',     k: 1.5, w: 0.50 },
+      { key: 'capitalAdequacy',       name: 'CapitalAdequacy',   k: 1.5, w: 0.25 },
+      { key: 'assetGrowthDisc',       name: 'AssetGrowthDisc',   k: 1.5, w: 0.18 },
+      { key: 'earningsDurability',    name: 'EarningsDurability', k: 1.5, w: 0.07 },
+    ],
+    dilCap: 0, dilStart: 0.05, dilRange: 0.20, // no separate share-issuance penalty axis for banks (not a scored dimension here).
+    stages: [
+      { name: 'S3-Elite-ROA',   test: f => f >= 0.0150 },
+      { name: 'S2-Strong-ROA',  test: f => f >= 0.0110 },
+      { name: 'S1-Adequate',    test: f => f >= 0.0070 },
+      { name: 'S0-Sub-Floor',   test: () => true },
+    ],
+    dominantBlock: ['roaThruCycle', 'capitalAdequacy'],
+    degraded: false,
+    normTableId: 'banks-norms-2026-06-23',
+    banks: true, cohortKey: 'financials_banks',
+    a2Note: 'financials_banks v0 (court gauntlet DESIGN, BUILD_WITH_CAVEATS / court REVISE 2026-06-23; NORMS RECOMPUTED LIVE on the FINAL de-ADRd + deduped US pool 2026-06-23 THEN frozen — the CORE gate). ONE deposit-funded US-bank cohort: Financial Services ∧ industry in {Banks - Regional, Banks - Diversified} ∧ US-listing (DE-ADRd country-domicile guard + FOREIGN_NAME + BANK_FOREIGN_DROP DENY set + positive US-primary test) ∧ >=$1B, deduped. Live: 128 classified (after de-ADRing the 16 foreign megabank ADRs RY/TD/SAN/UBS/MUFG/SMFG/MFG/IBN/ITUB/NU/NWG/BSBR/KB/SHG/WF/BMA + dropping 4 preferred/dual-class/legacy dupes KEY-PK/WFC-PC/FCNCB/BK); 127 scored, 1 SI-4-excluded (MCHB shell — no balance sheet). SCORE = THROUGH-CYCLE BUSINESS QUALITY ONLY, never a credit-cycle bet (the CREDIT_QUALITY_BLIND wall). 4 SCORED axes via absKaliberBanks: roaThruCycle = mean of available annualNetIncome[i]/totalAssets[i] over i=0..3 (the 4y-avg through-cycle damper, w .50, norm .0070/.0164 = live p10 0.70% / p90 1.64%; the LEAD pillar), capitalAdequacy = totalEquity[0]/totalAssets[0] (CET1 surrogate, w .25, norm .084/.137 = live p10 8.9% / p90 13.9%; ~45% of the pool incl. JPM/WFC/PNC/USB carry NULL totalEquity → DROP+renorm + CAPADEQ_DROPPED, NEVER imputed — the court revision #4 case), assetGrowthDiscipline = q(-assetGrowthYoY) (a PENALTY, w .18, norm -.40/.00; assetGrowthYoY = totalAssets[0]/totalAssets[1]-1; balance-sheet ballooning at the cycle peak = credit-quality DESTROYER, so ZERO asset growth is elite and rapid growth is penalized — the CORRECT sign for banks, the OPPOSITE of utilities/REITs; live -ag p10 -0.258 / p90 -0.001 confirms the sign), earningsDurability = min(NI avail)/max(NI avail) over >=3 years when max>0 (w .07, norm .185/.863; LOW weight + BLIND-walled — only ~4 post-2020 years, no real credit cycle). FCF/OCF are HARD-EXCLUDED from all axes (economically meaningless for banks — JPM annualFCF[0] = -$147.8B); annualGP is structurally 0 and annualOpInc is empty for banks (DROPPED). COVERAGE-RENORM: any NOT_READY/null axis dropped, survivors renormalize to Σ=1.0 (no fake-neutral impute) — the load-bearing capitalAdequacy DROP path on the marquees. score=100*(0.6*absKaliber+0.4*REL), β=0.6, REL per-cohort (n=128≫15). WALLS (always-on lamps, court revision #5): CREDIT_QUALITY_BLIND (NPLs/net charge-offs/loan-loss provisions ABSENT — the single most important bank dimension; the score cannot see asset quality), NIM_BLIND (net interest margin absent), EFFICIENCY_RATIO_BLIND (cost/income ratio absent), CET1_BLIND (regulatory CET1/RWA absent — capitalAdequacy is a raw equity/assets surrogate, not Basel), DEPOSIT_FRANCHISE_BLIND (deposit mix/cost-of-funds absent). SI-4 out-of-class (non-bank industry / non-US per the de-ADRd guard / foreign-megabank ADR / <$1B → never enter court-buckets; SHELL with no positive annualNetIncome in any year OR totalAssets[0] null/<=0 → score=null + excluded[] OUT_OF_SEGMENT:shell, the materials/energy lesson adapted to the revenue-less bank schema) → score=null + excluded[]; SI-5 classifiedCount===scoredCount+excludedCount fail-loud; marquee assert (JPM/PNC/USB/MTB/EWBC/CFR/FITB classify AND survive to a sane rank) fail-loud + foreign-DENY anti-leak (a classified record in the known-foreign DENY set throws — NOT keyed on country!=US, which would wrongly throw on the legitimate country=undefined US banks JPM/PNC/USB/MTB). DISCLOSURE (court revision #4): capitalAdequacy is INVISIBLE on JPM/WFC/PNC/USB (totalEquity absent) — they score on the other 3 axes via coverage-renorm, surfaced as the CAPADEQ_DROPPED lamp. Additive/parity-safe. Constants frozen 2026-06-23.',
+  },
   diagnostics_lst: {
     label: 'Diagnostics-&-Life-Science-Tools v0 (cohort-aware dx|tools, absolute-anchor, deceleration-aware organic growth, FCF-efficiency, chronic-acquirer lamps)',
     membership: { g: { c: 0.10, s: 0.05 }, gm: { c: 0.40, s: 0.10 }, scaleLog: { c: log10(300), s: 0.5 } },
@@ -633,6 +668,20 @@ const PH_MIN_REVENUE = 1e6; // $1M latest-annual-revenue floor for a pharma name
 // a latest revenue >= IT_MIN_REVENUE ($1M) — the gpa/fcfMargin/opMargin axes are undefined/explosive on near-zero
 // revenue. SI-4 score=null + excluded[] OUT_OF_SEGMENT:preexploration.
 const IT_MIN_REVENUE = 1e6; // $1M latest-annual-revenue floor for an it_services name to be SCORED (else preexploration)
+
+// financials_banks (CORE) SHELL gate (the materials/energy pre-revenue lesson ADAPTED to the revenue-less bank schema):
+// banks have NO revenue line, so the SI-4 shell test keys on EARNINGS PRESENCE + a BALANCE SHEET, not a revenue floor.
+// A bank with no positive annualNetIncome in ANY available year (a perennial-loss shell) OR no totalAssets[0] (no
+// balance sheet — e.g. MCHB, a freshly-listed name with annualBalance=[]) is a shell that CANNOT be scored: the
+// roaThruCycle/capitalAdequacy/assetGrowthDiscipline axes are all undefined on it, so coverage-renorm would degenerate.
+// SI-4 EXCLUDE → score=null + excluded[] OUT_OF_SEGMENT:shell, NEVER scored 0. The bank-axis extractor surfaces
+// m.bk.anyPositiveNI + m.bk.totalAssetsLatest for exactly this gate.
+
+// financials_banks (CORE) FOREIGN-DENY anti-leak set (court revision #2): the known foreign-megabank ADRs whose
+// US-listed ADR shares country=undefined with the legitimate US banks (mirrors the classifier's BANK_FOREIGN_DROP).
+// The SI-5 block asserts NO classified member is in this set — keyed on the foreign-DENY SIGNAL, NOT on country!=US
+// (which would wrongly throw on the legitimate country=undefined US banks JPM/PNC/USB/MTB that carry undefined country).
+const BANK_FOREIGN_DENY = new Set(['IBN', 'ITUB', 'BSBR', 'BMA', 'KB', 'SHG', 'WF', 'MFG', 'MUFG', 'SMFG', 'RY', 'TD', 'SAN', 'UBS', 'NWG', 'NU']);
 
 // --- Skeptiker-Welle-2-Befunde, deterministisch eingebaut ---
 const KILL = new Set(['PS', 'RDVT', 'ADEA', 'OMDA', 'TEM', 'KMTS']); // verifiziert: Ticker-Mismatch / falscher Sektor / Daten-Fehler
@@ -969,7 +1018,12 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     // energy_quality (CORE): same rationale — classifier already deduped, gm is not an energy axis (roce/fcfMargin
     // are the pillars), and snapshot-sourced energy names carry a null cache gm sharing the degenerate fp 'null|0'
     // (would falsely drop names + break SI-5). Skip the gm-reject + fp-dedupe for energy too.
-    if (!F.industrials && !F.consdisc && !F.materials && !F.energy) {
+    // financials_banks (CORE): same rationale as industrials/energy — the deterministic classifier already deduped
+    // (BANK_DEDUPE_DROP: KEY-PK/WFC-PC/FCNCB/BK), gm is not a bank axis (roaThruCycle/capitalAdequacy are the pillars),
+    // and EVERY bank carries a NULL cache gm + null/0 cache scaleRevM (banks have no revenue line) → ALL banks share
+    // the degenerate fp 'null|null', which would wrongly drop all-but-one and break SI-5. Skip the gm-reject + fp-dedupe
+    // for banks too; all other buckets BYTE-IDENTICAL.
+    if (!F.industrials && !F.consdisc && !F.materials && !F.energy && !F.banks) {
       if (c.gm != null && c.gm > 1.0) continue;        // GM>100% = unmöglich (Daten-Fehler) -> hard reject
       // dedupe identische Foreign-OTC-Doppellistings (gleiche gm+rev)
       const fp = `${c.gm}|${c.scaleRevM}`;
@@ -1213,6 +1267,28 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.cohort = i.cohort || F.cohortKey;
     }
   }
+  // --- financials_banks (CORE) PRE-PASS: lift the 4 RAW axis inputs from m.bk onto the member ---
+  // All intermediates are BANKS-LOCAL → all other buckets' member JSON byte-identical (parity). roaThruCycle/
+  // capitalAdequacy/earningsDurability are NOT inverted (higher=better directly); assetGrowthDiscipline stores the
+  // NEGATED raw assetGrowthYoY so the REL z (higher=better) AGREES IN SIGN with the ABS penalty q-input (zero/negative
+  // asset growth = best). null raw → axis DROP (coverage-renorm in absKaliberBanks; REL sAxis returns 0=neutral for
+  // null). The capitalAdequacy NULL case (~45% of the pool incl. JPM/WFC/PNC) is the load-bearing DROP path. FCF/OCF
+  // are NEVER lifted (not bank axes). Mirrors the energy pre-pass with the banks axis set.
+  if (F.banks) {
+    for (const m of members) {
+      const i = m.bk || {};
+      m._bkRoa = (i.roaThruCycle != null && isFinite(i.roaThruCycle)) ? i.roaThruCycle : null;
+      m._bkCapAdequacy = (i.capitalAdequacy != null && isFinite(i.capitalAdequacy)) ? i.capitalAdequacy : null;       // null -> DROP+renorm (CAPADEQ_DROPPED)
+      m._bkAssetGrowthDisc = (i.assetGrowthYoY != null && isFinite(i.assetGrowthYoY)) ? -i.assetGrowthYoY : null;     // q(-AG) direction (penalty)
+      m._bkEarningsDurability = (i.earningsDurability != null && isFinite(i.earningsDurability)) ? i.earningsDurability : null;
+      // persisted audit fields (rounded)
+      m.roaThruCycle = m._bkRoa == null ? null : Math.round(m._bkRoa * 10000) / 10000;
+      m.capitalAdequacy = m._bkCapAdequacy == null ? null : Math.round(m._bkCapAdequacy * 10000) / 10000;
+      m.assetGrowthYoY = (i.assetGrowthYoY != null && isFinite(i.assetGrowthYoY)) ? Math.round(i.assetGrowthYoY * 10000) / 10000 : null;
+      m.earningsDurability = m._bkEarningsDurability == null ? null : Math.round(m._bkEarningsDurability * 10000) / 10000;
+      m.cohort = i.cohort || F.cohortKey;
+    }
+  }
 
   // Roh-Achswerte für Stats (cross-sectional Median/MAD): nutze winsorisierte Werte
   // For medtech growth: use _growthMedtech (Fix D organic + winsorize at 1.0) for Stats AND scoring (Fix D
@@ -1295,6 +1371,19 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       default: return m[key];
     }
   };
+  // financials_banks (CORE): 4 axis-keys {roaThruCycle, capitalAdequacy, assetGrowthDisc, earningsDurability};
+  // roaThruCycle/capitalAdequacy/earningsDurability NON-inverted, assetGrowthDisc inverted (stored negated in
+  // m._bkAssetGrowthDisc) → mirror enRaw/itRaw on the m._bk* fields. The REL z/MAD reads the SAME signed values as
+  // the ABS q-input.
+  const bkRaw = (m, key) => {
+    switch (key) {
+      case 'roaThruCycle': return m._bkRoa;
+      case 'capitalAdequacy': return m._bkCapAdequacy;
+      case 'assetGrowthDisc': return m._bkAssetGrowthDisc;
+      case 'earningsDurability': return m._bkEarningsDurability;
+      default: return m[key];
+    }
+  };
   const rawOfStats = (m, key) => {
     if (F.industrials) return indRaw(m, key);
     if (F.staples) return stpRaw(m, key);
@@ -1303,6 +1392,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (F.energy) return enRaw(m, key);
     if (F.pharma) return phRaw(m, key);
     if (F.itservices) return itRaw(m, key);
+    if (F.banks) return bkRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtech : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -1317,6 +1407,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (F.energy) return enRaw(m, key);
     if (F.pharma) return phRaw(m, key);
     if (F.itservices) return itRaw(m, key);
+    if (F.banks) return bkRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtechAdj : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -1459,6 +1550,18 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       const mGpa = logistic(gpaGate, F.membership.gm.c, F.membership.gm.s);
       const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
       M = mg * mGpa * mSc;
+    } else if (F.banks) {
+      // financials_banks membership: roaThruCycle(quality) × scale logistic. QUALITY-ONLY (mirrors materials/energy):
+      // banks have NO revenue/gm line, so there is no growth or gm membership input — the through-cycle ROA pillar
+      // stands in for the quality gate (gm membership center is the roaThruCycle.floor, .007), and capitalAdequacy is
+      // NOT a membership input (it is NULL on the marquees JPM/WFC/PNC/USB — gating on it would wrongly knock them
+      // Out). $1B+ marketCap is the classifier gate. A NOT_READY:roa shell (MCHB) reads -1 → low membership, but the
+      // SHELL SI-4 gate is what actually excludes it (membership-Out only suppresses the headline rank, never absKaliber).
+      const roaGate = m._bkRoa != null ? m._bkRoa : -1;                 // null roa (shell) → low
+      const scaleM = (m.marketCap != null && isFinite(m.marketCap)) ? m.marketCap / 1e6 : (m.scaleRevM || 1); // $1B+ marketCap
+      const mRoa = logistic(roaGate, F.membership.gm.c, F.membership.gm.s);   // quality pillar (roaThruCycle.floor center)
+      const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
+      M = mRoa * mSc;
     } else {
       const mGate = (bucket === 'medtech_devices' && m._growthMedtech != null) ? m._growthMedtech
                   : (bucket === 'diagnostics_lst' && m._growthDlst != null) ? m._growthDlst
@@ -1814,6 +1917,50 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
         m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
       }
       m.stage = stageOf(F, m._itFcfMargin);
+    } else if (F.banks) {
+      // financials_banks (CORE): absKaliberBanks = 4-axis weighted-q {roaThruCycle, capitalAdequacy,
+      // assetGrowthDiscipline, earningsDurability} with COVERAGE-RENORM reading the cohort NORMS. roaThruCycle/
+      // capitalAdequacy/earningsDurability NON-inverted; assetGrowthDiscipline inverted (the engine negates the RAW
+      // assetGrowthYoY itself, so pass the RAW signed value, mirroring energy/industrials assetGrowth). The
+      // load-bearing renorm fires on ~45% of names lacking totalEquity (CAPADEQ_DROPPED — incl. JPM/WFC/PNC/USB) +
+      // any NOT_READY axis. FCF/OCF are NEVER passed (not bank axes).
+      const cohortNorm = F.cohortKey; // 'financials_banks'
+      const bkRec = {
+        roaThruCycle: m._bkRoa, capitalAdequacy: m._bkCapAdequacy, earningsDurability: m._bkEarningsDurability,
+        assetGrowthYoY: (m.bk && m.bk.assetGrowthYoY != null && isFinite(m.bk.assetGrowthYoY)) ? m.bk.assetGrowthYoY : null,
+      };
+      const ak = absKaliberBanks(bkRec, cohortNorm);
+      m.absKaliber = Math.round(ak.absK * 1000) / 1000;
+      m.absUsedAxes = ak.usedAxes;          // audit: which axes survived coverage-renorm (e.g. capitalAdequacy-dropped on JPM/WFC/PNC)
+      m.absDroppedAxes = ak.droppedAxes;    // audit: CAPADEQ_DROPPED / NOT_READY / DURABILITY_THIN drops
+      // n=128 ≫ minN 15 → full ABS+REL blend (β=0.6). THIN_REL guard kept for structural parity (if a future re-court
+      // narrows the cohort below 15 → ABS-only β=1.0); never fires at the live count (members.length=128).
+      const norm = NORMS[cohortNorm];
+      const bkThin = !!(norm.rel && norm.rel.minN != null && members.length < norm.rel.minN);
+      const beta = bkThin ? 1.0 : 0.6;
+      if (bkThin) m._thinRel = true;
+      const rawScore = Math.round(Math.max(0, blendScore(ak.absK, core, beta)) * 10) / 10; // pDil=0 (net-issuance not a bank axis)
+      // SI-1 shortlist-cut: roaThruCycle >= roaThruCycle.floor (the lead through-cycle quality pillar). A
+      // NOT_READY/missing roa fails the floor (not the gate crashing) → belowAbsoluteFloor, listed but off the
+      // shortlist. NOT a score-kill (REL/score path runs independently). capitalAdequacy is NOT a hard headline gate
+      // (it is null on the marquees JPM/WFC/PNC — gating on it would wrongly knock them off the headline).
+      const gateRoaOk = (m._bkRoa != null) && (m._bkRoa >= norm.roaThruCycle.floor);
+      m.belowAbsoluteFloor = !gateRoaOk;
+      // SHELL SI-4 hard-exclude (the materials/energy lesson ADAPTED to the revenue-less bank schema): a bank with NO
+      // positive annualNetIncome in any year OR no totalAssets[0] (no balance sheet — e.g. MCHB) is a shell that
+      // CANNOT be scored (all axes undefined). score=null + excluded[] OUT_OF_SEGMENT:shell, NEVER scored 0.
+      // DETERMINISTIC and independent of the membership gate.
+      const bk = m.bk || {};
+      const isShell = !(bk.anyPositiveNI === true && bk.totalAssetsLatest != null && isFinite(bk.totalAssetsLatest) && bk.totalAssetsLatest > 0);
+      if (isShell) {
+        m.exclusionReason = 'OUT_OF_SEGMENT:shell';
+        m.score = null;                                 // SI-4: lands in excluded[]
+        m.headlineShortlist = false;
+      } else {
+        m.score = m.membershipClass === 'Out' ? null : rawScore;
+        m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
+      }
+      m.stage = stageOf(F, m._bkRoa);
     } else {
       // audit/fix (gauntlet E3): SI-4 für saas/fabless — Out-Class-Member bekommen score=null (kein
       // irreführender Headline-Rang), exakt wie medtech/dlst (m.score = membershipClass==='Out' ? null : rawScore).
@@ -2136,6 +2283,29 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       // PEOPLE_LEVERAGE_BLIND is THE feasibility disclosure (mirrors medtech MA_INTANGIBLE_BLIND): RPE inverted+not-
       // scored + book-to-bill/utilization/attrition absent → NO axis directly measures people-leverage.
       for (const wall of ['PEOPLE_LEVERAGE_BLIND', 'BACKLOG_FUTURE', 'UTILIZATION_FUTURE', 'ATTRITION_FUTURE', 'CYCLE_WALL', 'INVENTORY_BLIND']) {
+        if (!L.includes(wall)) L.push(wall);
+      }
+      if (m.belowAbsoluteFloor) L.push('below-abs-floor');
+      if (m.membershipClass === 'Out') L.push('membership-Out(excluded-from-headline)');
+      if (Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.length) L.push(`coverage-renorm(dropped:${m.absDroppedAxes.join('+')})`);
+      m.cohort = F.cohortKey;
+      m.normTableId = getNormTableId(F.cohortKey);
+      m.scoreScope = 'intra-bucket';
+      m.crossBucketComparableField = 'absKaliber';
+    }
+    // financials_banks (CORE) lamps (court DESIGN §5): advisory, never silent score-kills. Per-name upstream lamps
+    // (NOT_READY:roa/assetgrowth, CAPADEQ_DROPPED, DURABILITY_THIN) + the always-on BLIND WALLS (CREDIT_QUALITY_BLIND /
+    // NIM_BLIND / EFFICIENCY_RATIO_BLIND / CET1_BLIND / DEPOSIT_FRANCHISE_BLIND) are collected in court-screen
+    // (m.bk.lamps); the WALLS are re-asserted here so every member carries them even if the upstream record was thin.
+    // CREDIT_QUALITY_BLIND is THE feasibility disclosure — the most important bank dimension (NPLs/charge-offs/
+    // provisions) is absent, so the score cannot see asset quality (the court's BUILD_WITH_CAVEATS condition).
+    if (F.banks) {
+      const bl = (m.bk && Array.isArray(m.bk.lamps)) ? m.bk.lamps : [];
+      for (const lamp of bl) if (!L.includes(lamp)) L.push(lamp);
+      // SHELL SI-4 exclusion as an explicit lamp (the materials/energy lesson adapted to the revenue-less bank schema).
+      if (m.exclusionReason === 'OUT_OF_SEGMENT:shell' && !L.includes('OUT_OF_SEGMENT:shell')) L.push('OUT_OF_SEGMENT:shell');
+      // always-on BLIND WALLS (court revision #5) — re-asserted (idempotent: court-screen already pushed them; dedup).
+      for (const wall of ['CREDIT_QUALITY_BLIND', 'NIM_BLIND', 'EFFICIENCY_RATIO_BLIND', 'CET1_BLIND', 'DEPOSIT_FRANCHISE_BLIND']) {
         if (!L.includes(wall)) L.push(wall);
       }
       if (m.belowAbsoluteFloor) L.push('below-abs-floor');
@@ -2504,6 +2674,46 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     R.peopleDataCoverage = {
       withHeadcount: members.filter(m => m.revPerEmployee != null).length,
       withoutHeadcount: members.filter(m => m.revPerEmployee == null).length,
+    };
+  }
+  // financials_banks (CORE court bucket)-only Zusatzfelder (SI-3/4/5/6) — NUR auf dem financials_banks-Bucket gesetzt
+  // → alle anderen Buckets byte-identisch (Parität). Mirrors the it_services block; 4 axes {roaThruCycle,
+  // capitalAdequacy, assetGrowthDiscipline, earningsDurability}.
+  if (F.banks) {
+    // SI-5: classifiedCount === scoredCount + excludedCount (fail-loud). The classifier assigns ONLY financials_banks
+    // (non-bank industry / non-US per the de-ADRd country-domicile guard + FOREIGN_NAME + BANK_FOREIGN_DROP / <$1B /
+    // preferred-dual-class-dupe return null → never enter court-buckets), so every classified name reaches members[].
+    // excludedCount = SI-4 SHELL names (no positive NI / no balance sheet, e.g. MCHB) that entered members but score=null.
+    R.classifiedCount = cls.filter(c => c.bucket === bucket).length;
+    R.excluded = members.filter(m => m.score == null);
+    R.excludedCount = R.excluded.length;
+    R.scoredCount = members.filter(m => m.score != null).length;
+    if (require.main === module && R.classifiedCount !== R.scoredCount + R.excludedCount) {
+      throw new Error(`SI-5 mismatch ${bucket}: classifiedCount ${R.classifiedCount} !== scoredCount ${R.scoredCount} + excludedCount ${R.excludedCount}`);
+    }
+    // FOREIGN-DENY anti-leak assert (court revision #2): assert on the foreign-DENY SIGNAL, NEVER on country!=US (that
+    // would throw on the legitimate country=undefined US banks JPM/PNC/USB/MTB). A classified member whose ticker is in
+    // the known foreign-megabank DENY set is a de-ADR regression → fail-loud.
+    if (require.main === module) {
+      const leaked = members.filter(m => BANK_FOREIGN_DENY.has(m.ticker));
+      if (leaked.length) {
+        throw new Error('FOREIGN-DENY ANTI-LEAK FAIL (court revision #2) — foreign megabank ADR(s) reached financials_banks: '
+          + leaked.map(m => m.ticker).join(', '));
+      }
+    }
+    R.normTableId = getNormTableId(F.cohortKey);
+    R.cohort = F.cohortKey;
+    R.scoreScope = 'intra-bucket';
+    R.crossBucketComparableField = 'absKaliber';
+    const n = NORMS[F.cohortKey];
+    const fmt = x => (x == null ? '—' : x.toFixed(4).replace(/^0\./, '.').replace(/^-0\./, '-.'));
+    R.comparabilityNote = `financials_banks ${F.cohortKey} (deposit-funded US-bank through-cycle quality cohort: Banks - Regional + Diversified). absKaliber in [0,1] = cross-bucket-comparable absolute scale (4-axis weighted-q over the cohort NORMS '${getNormTableId(F.cohortKey)}': roaThruCycle ${fmt(n.roaThruCycle.floor)}/${fmt(n.roaThruCycle.elite)} (4y-avg NI/totalAssets, the through-cycle LEAD pillar), capitalAdequacy ${fmt(n.capitalAdequacy.floor)}/${fmt(n.capitalAdequacy.elite)} (totalEquity/totalAssets CET1 surrogate; ~45% NULL incl. JPM/WFC/PNC → DROP+renorm, NEVER imputed), assetGrowthDiscipline ${fmt(n.assetGrowthDiscipline.floor)}/${fmt(n.assetGrowthDiscipline.elite)} (q(-assetGrowthYoY) PENALTY — zero balance-sheet growth is elite, ballooning penalized; the CORRECT sign for banks, opposite of utils/REITs), earningsDurability ${fmt(n.earningsDurability.floor)}/${fmt(n.earningsDurability.elite)} (min/max NI over >=3y, LOW weight, BLIND-walled); weights {roaThruCycle .50, capitalAdequacy .25, assetGrowthDiscipline .18, earningsDurability .07}. FCF/OCF are HARD-EXCLUDED (economically meaningless for banks — JPM annualFCF[0]=-$147.8B). COVERAGE-RENORM drops any NOT_READY/null axis (the load-bearing capitalAdequacy DROP on ~45% of the pool) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6, n=128≫15). WALLS always-on: CREDIT_QUALITY_BLIND (NPLs/charge-offs/provisions absent — the single most important bank dimension), NIM_BLIND, EFFICIENCY_RATIO_BLIND, CET1_BLIND (regulatory RWA absent — capitalAdequacy is a raw equity/assets surrogate), DEPOSIT_FRANCHISE_BLIND. The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison.`;
+    R.crossBucketComparableNote = 'Use members[].absKaliber (absolute [0,1] caliber) for cross-bucket comparison; members[].score (blended 0-100) is intra-bucket ONLY (mixes per-cohort REL, beta=0.6).';
+    R.walls = ['CREDIT_QUALITY_BLIND', 'NIM_BLIND', 'EFFICIENCY_RATIO_BLIND', 'CET1_BLIND', 'DEPOSIT_FRANCHISE_BLIND'];
+    // capitalAdequacy DROP+renorm coverage disclosure (court revision #4): how many names took the CAPADEQ_DROPPED path.
+    R.capitalAdequacyCoverage = {
+      scored: members.filter(m => m.capitalAdequacy != null).length,
+      dropped: members.filter(m => m.capitalAdequacy == null).length,   // ~45% incl. JPM/WFC/PNC/USB (totalEquity absent)
     };
   }
   // audit/fix (gauntlet E3): saas/fabless SI-4/SI-5-Retrofit — spiegelt medtech/dlst exakt.
@@ -3031,11 +3241,67 @@ function assertItServicesNoForeignLeak(resultsObj, listing) {
   }
 }
 
+// --- financials_banks (CORE court bucket) MARQUEE-COVERAGE + foreign-DENY anti-leak assert (court DESIGN, fail-loud) ---
+// The 7-name marquee must each be classified AND survive to a SANE rank (not exiled to the bottom). The court named
+// JPM/PNC/USB/MTB (the money-center / super-regional core, all country=undefined US banks) + EWBC/CFR/FITB.
+const BANKS_MARQUEE = Object.freeze(['JPM', 'PNC', 'USB', 'MTB', 'EWBC', 'CFR', 'FITB']);
+// foreign-megabank-ADR DENY positive-control (court revision #1/#2): the foreign primaries the de-ADR hardening must
+// keep OUT. Catches a regression that drops a guard (country-domicile / FOREIGN_NAME / BANK_FOREIGN_DROP). Mirrors the
+// classifier's BANK_FOREIGN_CONTROL. HSBC/BBVA/BMO/BNS/ING/Barclays are caught by the country-set rule.
+const BANKS_FOREIGN_CONTROL = Object.freeze(['IBN', 'ITUB', 'BSBR', 'BMA', 'KB', 'SHG', 'WF', 'MFG', 'MUFG', 'SMFG',
+  'RY', 'TD', 'SAN', 'UBS', 'NWG', 'NU', 'HSBC', 'BBVA', 'BMO', 'BNS', 'ING', 'BCS', 'LYG', 'HDB', 'BBD', 'NTB']);
+function assertBanksMarquee(resultsObj) {
+  const R = resultsObj.financials_banks;
+  if (!R) return; // financials_banks not in this run (e.g. isolated unit test) → tolerant no-op
+  // marquee must reach the SCORED universe (classified + survived to a sane rank, NOT shell/membership-excluded).
+  const scored = new Set();
+  if (Array.isArray(R.members)) for (const m of R.members) if (m.score != null) scored.add(m.ticker);
+  const missing = BANKS_MARQUEE.filter(t => !scored.has(t));
+  if (missing.length) {
+    throw new Error('MARQUEE COVERAGE FAIL (financials_banks DESIGN) — bank universe collapsed, these bona-fide '
+      + 'US deposit-funded large-cap banks were not classified/scored: ' + missing.join(', '));
+  }
+  // foreign-DENY positive-control: the foreign-megabank ADRs must NOT have reached the cohort (classified OR scored).
+  const allTk = new Set();
+  if (Array.isArray(R.members)) for (const m of R.members) allTk.add(m.ticker);
+  const leakedControl = BANKS_FOREIGN_CONTROL.filter(t => allTk.has(t));
+  if (leakedControl.length) {
+    throw new Error('FOREIGN-CONTROL FAIL (financials_banks de-ADR DESIGN) — a foreign-megabank ADR leaked into the '
+      + 'financials_banks cohort: ' + leakedControl.join(', '));
+  }
+}
+// assertBanksNoForeignLeak(results, listing): GENERATIVE property test reading the snapshot meta.country (via the
+// court-listing side-file) DIRECTLY. Per court revision #2 it must NOT assert "country != US" (that throws on the
+// legitimate country=undefined US banks JPM/PNC/USB/MTB). It asserts on the foreign-DENY SIGNAL instead: a scored
+// record whose ticker is in the foreign-DENY set, OR a record with a country SET to a non-US country. country=undefined
+// is TOLERATED (the positive US-primary test in the classifier already admitted only US-primary undefined-country names).
+function assertBanksNoForeignLeak(resultsObj, listing) {
+  const R = resultsObj.financials_banks;
+  if (!R || !Array.isArray(R.members)) return;
+  const deny = new Set(BANK_FOREIGN_DENY);
+  const leaks = [];
+  for (const m of R.members) {
+    if (deny.has(m.ticker)) { leaks.push(`${m.ticker}[foreign-DENY-set]`); continue; }   // the foreign-DENY signal (NOT country!=US)
+    if (!listing || listing.size === 0) continue;
+    const L = listing.get(m.ticker);
+    if (!L) continue; // no snapshot meta → can't assert (country=undefined US banks: TOLERATED, never throws)
+    if (L.country != null && L.country !== 'United States') {
+      leaks.push(`${m.ticker}[${L.country}/${L.region}]`);   // a country-SET non-US foreigner (de-ADR guard regression)
+    }
+  }
+  if (leaks.length) {
+    throw new Error('FINANCIALS_BANKS ANTI-LEAK ASSERT (court revision #2 — keyed on the foreign-DENY SIGNAL, NOT '
+      + 'country!=US): foreign record(s) leaked into the financials_banks cohort: ' + leaks.join(', ')
+      + '. The de-ADRd country-domicile guard (classify-banks.js isUSListing) must exclude these. NOTE: country=undefined '
+      + 'US banks (JPM/PNC/USB/MTB) are TOLERATED by design — they are admitted via the positive US-primary test.');
+  }
+}
+
 // --- Export: computeMedtechOrganicGrowth + computeDlstOrganicGrowth für Unit-Tests ---
 // (computeDlstOrganicGrowth: Fix A FY-Alignment + Fix B dealYearExcluded-Ehrlichkeit, 2026-06-21)
 // + assertNoForeignLeak (gauntlet C5) + assertIndustrialsMarquee + assertStaplesMarquee +
 //   assertStaplesNoForeignLeak (Spec §6.2b) für direkten Property-Test.
-module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL, assertConsdiscMarquee, assertConsdiscNoForeignLeak, CONSDISC_MARQUEE, CONSDISC_EXCLUDE_CONTROL, assertMaterialsMarquee, assertMaterialsNoForeignLeak, MATERIALS_MARQUEE, MATERIALS_FOREIGN_CONTROL, MATERIALS_US_PRIMARY_ALLOWLIST, assertEnergyMarquee, assertEnergyNoForeignLeak, ENERGY_MARQUEE, ENERGY_FOREIGN_CONTROL, ENERGY_US_PRIMARY_ALLOWLIST, assertPharmaMarquee, assertPharmaNoForeignLeak, PHARMA_MARQUEE, PHARMA_FOREIGN_CONTROL, PHARMA_US_PRIMARY_ALLOWLIST, assertItServicesMarquee, assertItServicesNoForeignLeak, ITSERVICES_MARQUEE, ITSERVICES_CONTAM_CONTROL, ITSERVICES_US_PRIMARY_ALLOWLIST };
+module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL, assertConsdiscMarquee, assertConsdiscNoForeignLeak, CONSDISC_MARQUEE, CONSDISC_EXCLUDE_CONTROL, assertMaterialsMarquee, assertMaterialsNoForeignLeak, MATERIALS_MARQUEE, MATERIALS_FOREIGN_CONTROL, MATERIALS_US_PRIMARY_ALLOWLIST, assertEnergyMarquee, assertEnergyNoForeignLeak, ENERGY_MARQUEE, ENERGY_FOREIGN_CONTROL, ENERGY_US_PRIMARY_ALLOWLIST, assertPharmaMarquee, assertPharmaNoForeignLeak, PHARMA_MARQUEE, PHARMA_FOREIGN_CONTROL, PHARMA_US_PRIMARY_ALLOWLIST, assertItServicesMarquee, assertItServicesNoForeignLeak, ITSERVICES_MARQUEE, ITSERVICES_CONTAM_CONTROL, ITSERVICES_US_PRIMARY_ALLOWLIST, assertBanksMarquee, assertBanksNoForeignLeak, BANKS_MARQUEE, BANKS_FOREIGN_CONTROL, BANK_FOREIGN_DENY };
 
 // --- require.main-Guard (Härtung 2): Write + Ausgabe NUR wenn direkt als Skript ausgeführt ---
 // `require('./court-score.js')` gibt nur den Export zurück und schreibt NICHT outputs/court-results.json.
@@ -3076,6 +3342,12 @@ if (require.main === module) {
   // ACN/G/GLOB/INFY US-primary allowlist exempted), else the it_services universe collapsed/leaked.
   assertItServicesMarquee(results);
   assertItServicesNoForeignLeak(results, listingByTicker);
+  // financials_banks (CORE court bucket) DESIGN: the 7-name marquee must each be classified+scored (survive to a sane
+  // rank) + the foreign-megabank-ADR DENY positive-control must stay out + the foreign-DENY anti-leak property test
+  // must hold (keyed on the foreign-DENY SIGNAL, NOT country!=US — country=undefined US banks JPM/PNC/USB/MTB are
+  // admitted by the positive US-primary test), else the bank universe collapsed/leaked (the de-ADR killshot guard).
+  assertBanksMarquee(results);
+  assertBanksNoForeignLeak(results, listingByTicker);
   fs.writeFileSync(OUT, JSON.stringify(results, null, 2));
 
   // --- Ausgabe ---
