@@ -69,6 +69,16 @@ function evaluate(stock) {
   // (rare) cross-window risk the guard targeted. Prevents: false NOT-COMPUTABLE on
   // valid stocks. The fiscal-year-span concern remains a (separate) gauntlet item.
 
+  // MED-02 (calibration-council 2026-06-23, LEAVE-AS-IS, hash-neutral): an adversary proposed
+  // adding "computable:false if any revArr[0..2] is null" (mirroring asset-growth-anomaly.js),
+  // arguing an interior null compresses the timeline so [0]/[2] would span 3y mislabeled as 2y.
+  // That premise is FALSE for this data model: annual arrays preserve POSITIONAL nulls (Tag 206f;
+  // _firstNonNull exists precisely because even index-0 can be null), so index === fiscal-year and
+  // [0]/[2] is a true 2y span regardless of a null at [1]. Such a guard would OVER-GATE valid
+  // positional-FY series — the same mistake as the reverted F-A-2026-06-22 length guard above.
+  // Empirically 0/4553 live names have an interior null at revArr[1] with [0]&[2] present, so the
+  // case is also absent in practice. Left as-is by design.
+
   // Extract totalAssets from annualBalance entries
   const assetArr = balArr.map(b => (b && b.totalAssets != null ? b.totalAssets : null));
   const assetArrClean = assetArr.slice(0, 3);

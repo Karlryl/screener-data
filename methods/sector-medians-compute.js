@@ -87,6 +87,15 @@ function gatherBySubProfile(stocks, classify) {
   // data, against stocks with one missing field. Fix: walk the array and
   // pick the FIRST non-null value (still latest-year-preferred, but tolerant
   // of position-0 nulls).
+  // MED-27 (calibration-council 2026-06-23, COMMENT-DOCUMENT, hash-neutral): this COMPUTE side
+  // intentionally walks past index-0 nulls (Tag 232c-13), while the per-stock CONSUMERS read
+  // STRICT arr[0] (sector-relative-roic.js _computeRoic -> H.latestAnnual/latestBalance, and
+  // roic.js CORE). A stock whose latest slot is null therefore contributes its prior-year value to
+  // the sector bucket but is itself returned computable:false (an eligibility gap, NOT a wrong
+  // rank — the consumer bails before ranking). Kept asymmetric on purpose: strict arr[0] is the
+  // shared NaN-hardened convention across per-stock methods; only this batch median build is
+  // lenient. No fixture-hash impact (sector-relative-roic is DIAGNOSTIC; medians are stubbed empty
+  // in the hash test).
   function _firstNonNull(arr, getter) {
     if (!Array.isArray(arr)) return null;
     for (const row of arr) {
@@ -173,6 +182,17 @@ function _computeFromBuckets(buckets, minN) {
         // F-ME-008: for ratio metrics like ROIC/ROCE, only use positive values for the
         // scoring threshold median. Negative values in loss-heavy sectors would invert
         // the above/below-median logic. Full array length is still reported for transparency.
+        // LOW-38 (calibration-council 2026-06-23, COMMENT-DOCUMENT, hash-neutral): the set name
+        // POSITIVE_ONLY_METRICS is LOOSE — this is a near-breakeven TOLERANCE band, NOT strictly
+        // positive. The -0.05 keeps slightly-unprofitable firms (ROIC in [-5%,0)) in the sample so
+        // the median reflects the sector's central tendency, while excluding the deeply-negative
+        // distressed tail that would invert above/below-median scoring (F-ME-008). CAVEAT: this band
+        // does NOT fully close the anti-signal F-ME-004 guards against — a sector dominated by firms
+        // in [-5%,0) could still yield a NEGATIVE median surviving minN, and roic/roce have no entry
+        // in EFFECTIVE_THRESHOLD_FLOORS (_helpers.js), so such a negative threshold would reach
+        // roic.js unfloored. Not triggered by current live data (0 in-band roic/roce medians). A
+        // strict v>0 would close the hole but bias the median/p50/p75 upward; the -0.05 band is the
+        // chosen tradeoff. Adjudicated COMMENT (not FIX) to avoid biasing the threshold upward.
         const thresholdArr = POSITIVE_ONLY_METRICS.has(mid) ? arr.filter(v => v > -0.05) : arr;
         // F-ME-004: when a POSITIVE_ONLY_METRIC has fewer than minN positive values,
         // skip writing the median entirely. The previous fallback to the full array
@@ -344,6 +364,13 @@ function writeRollingMedians(autoMedians) {
       // de-duplicate today's entry on re-run
       entry.values = entry.values.filter(v => v.asOf !== today && v.asOf >= cutoff);
       entry.values.push({ asOf: today, median: val, n });
+      // LOW-39 (calibration-council 2026-06-23, COMMENT-DOCUMENT, hash-neutral): intentional
+      // UNWEIGHTED median of the daily sector-medians. n is stored per entry for transparency but
+      // deliberately NOT used as a weight — there is no canonical weighted-median-of-medians, and
+      // the daily universe is roughly stable day-to-day so the daily medians already cluster. The
+      // plain median is the more robust day-to-day smoother. Do not 'fix' to n-weighting unless you
+      // can show a specific wrong rolling12mMedian threshold (consumed in _helpers.js
+      // effectiveThreshold) results from the unweighted form.
       const med = median(entry.values.map(v => v.median).filter(Number.isFinite));
       entry.rolling12mMedian = med;
       entry.asOf = today;
