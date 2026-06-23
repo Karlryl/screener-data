@@ -1537,6 +1537,77 @@ test('staples §4.1 DEAL-MASK: at least one acquirer deal-masked (sign-aware pos
   assert(masked.length > 0, `mindestens ein Name sollte DEAL_MASKED tragen (acquirer asset+rev jump); keiner gefunden`);
 });
 
+// ===========================================================================
+// §4.1b REVENUE-DISCONTINUITY DATA-ARTIFACT GUARD (re-court MAJOR fix, COKE corrupt-revenue defect)
+// COKE's snapshot annualRev mixes scales → a fake +218% latest YoY while total assets FELL. The §4.1 deal-mask
+// (assetG>=0.25 AND revG>=0.15 BOTH required) MISSES it because assets did not rise. The §4.1b guard catches a
+// single-year revenue MULTIPLE (revG>=1.00, i.e. >2x in one year) that is NOT asset-backed → drops that YoY +
+// SUSPECT_REVENUE lamp, so a pure data artifact can NO LONGER top the cohort headline ("junk tops the bucket").
+// ===========================================================================
+test('staples §4.1b ARTIFACT GUARD (live): COKE no longer tops staples_branded; flagged SUSPECT_REVENUE; growth sane', () => {
+  const coke = SB.find(m => m.ticker === 'COKE');
+  assert(coke, 'COKE fehlt im staples_branded cohort');
+  // (1) the corrupt +218% growth artifact is neutralized → a plausible mid-single-digit organic read
+  assert(coke.growthInput != null && isFinite(coke.growthInput) && coke.growthInput < 0.25,
+    `COKE growthInput sollte SANE (<0.25, war ~1.34 korrupt) sein, ist ${coke.growthInput}`);
+  // (2) the artifact is FLAGGED (advisory, never a silent score-kill)
+  assert(coke.lamps.includes('SUSPECT_REVENUE'), `COKE sollte SUSPECT_REVENUE-Lampe tragen, lamps=${JSON.stringify(coke.lamps)}`);
+  assert(coke.stp && coke.stp.revArtifact === true, `COKE stp.revArtifact sollte true sein, ist ${coke.stp && coke.stp.revArtifact}`);
+  // (3) COKE is NO LONGER the #1 headline name — a data artifact must not top the bucket (iron rule)
+  const scored = SB.filter(m => m.score != null).sort((a, b) => b.score - a.score);
+  assert(scored[0].ticker !== 'COKE', `COKE darf NICHT #1 im staples_branded headline sein, ist ${scored[0].ticker}`);
+  // (4) the new #1 is a genuine quality staple (not a corrupt-data name)
+  assert(scored[0].score != null && isFinite(scored[0].score) && !scored[0].lamps.includes('SUSPECT_REVENUE'),
+    `neues #1 (${scored[0].ticker}) sollte ein sauberer Qualitätsname OHNE SUSPECT_REVENUE sein`);
+});
+
+test('staples §4.1b ARTIFACT GUARD: fires ONLY on implausible non-asset-backed rev jumps (no legit hyper-grower mis-flagged)', () => {
+  // Across BOTH cohorts the guard must be surgical: it should flag the corrupt COKE artifact but NOT a genuine
+  // asset-backed hyper-grower (CELH doubled revenue +101.7% WITH assetG +0.257 → asset-backed → SPARED).
+  const flagged = [...SB, ...SD].filter(m => m.stp && m.stp.revArtifact === true).map(m => m.ticker);
+  assert(flagged.includes('COKE'), `COKE (corrupt) sollte vom Artifact-Guard erfasst sein; flagged=${JSON.stringify(flagged)}`);
+  const celh = [...SB, ...SD].find(m => m.ticker === 'CELH');
+  if (celh) assert(!(celh.stp && celh.stp.revArtifact === true),
+    `CELH (echter asset-backed Hyper-Grower) darf NICHT als Artefakt geflaggt werden`);
+  // legitimate growers keep their honest growthInput (no clamp): max revG well below the 1.0 (2x) multiple
+  for (const t of ['BRBR', 'MNST', 'ELF', 'PRMB', 'FIZZ']) {
+    const m = SB.find(x => x.ticker === t);
+    if (m) assert(!(m.stp && m.stp.revArtifact === true), `${t} (legit grower) darf NICHT als Artefakt geflaggt werden`);
+  }
+  // every flagged name carries the advisory lamp and a FINITE score (advisory, never a silent kill)
+  for (const t of flagged) {
+    const m = [...SB, ...SD].find(x => x.ticker === t);
+    assert(m.lamps.includes('SUSPECT_REVENUE'), `${t} revArtifact aber keine SUSPECT_REVENUE-Lampe`);
+    assert(m.score != null && isFinite(m.score), `${t} SUSPECT_REVENUE darf den Score NICHT nullen (advisory only), score=${m.score}`);
+  }
+});
+
+test('staples-unit §4.1b: a synthetic 3x non-asset-backed revenue jump clamps the growth axis (artifact dropped, not blended)', () => {
+  // Locks the guard PREDICATE + its downstream effect on absKaliberStaples, independent of the live snapshot.
+  // The guard (court-screen buildStaplesAxes §4.1b) drops a YoY where revG>=1.00 AND assetG<0.25; the remaining
+  // clean YoYs feed the median blend. Here we exercise the engine with BOTH the corrupt-blended growth and the
+  // post-guard growth to prove the artifact, if NOT dropped, would dominate — and that dropping it neutralizes it.
+  const { absKaliberStaples } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  // synthetic corrupt series: rev [4.0, 1.0, 0.93, 0.90] (×4 latest jump = +300%), assets FELL (not asset-backed)
+  const revMult = 4.0 / 1.0 - 1;                 // +300% latest YoY (>= 1.00 artifact threshold)
+  const assetG = -0.10;                          // assets FELL → NOT asset-backed → artifact, not a deal
+  const isArtifact = (revMult >= 1.00) && !(assetG >= 0.25);
+  assert(isArtifact, 'synthetic +300% non-asset-backed jump MUSS als Artefakt klassifizieren');
+  // clean YoYs after dropping the artifact: [1.0/0.93-1, 0.93/0.90-1] ≈ [0.075, 0.033] → median blend ~0.058
+  const cleanYoY = [1.0 / 0.93 - 1, 0.93 / 0.90 - 1];
+  const sane = 0.60 * cleanYoY[0] + 0.40 * ((cleanYoY[0] + cleanYoY[1]) / 2);
+  // corrupt-if-not-guarded blend would be 0.60*3.0 + 0.40*median([3.0,0.075,0.033]) ≈ 1.83 (axis maxed to 1.0)
+  const corrupt = 0.60 * revMult + 0.40 * cleanYoY[0]; // a conservative lower bound on the corrupt blend
+  const recSane = { gpa: 0.30, growth: sane, assetGrowth: assetG, netShareIssuance: null, eff: 0.15 };
+  const recCorrupt = { gpa: 0.30, growth: corrupt, assetGrowth: assetG, netShareIssuance: null, eff: 0.15 };
+  const aSane = absKaliberStaples(recSane, 'staples_branded');
+  const aCorrupt = absKaliberStaples(recCorrupt, 'staples_branded');
+  assert(aCorrupt.absK > aSane.absK + 0.05,
+    `der ungeguardte Artefakt-Wert MÜSSTE die absKaliber inflationieren (corrupt ${aCorrupt.absK.toFixed(3)} vs guarded ${aSane.absK.toFixed(3)})`);
+  // the guarded growth maps to a NON-saturated growth axis (the artifact would saturate it to elite)
+  assert(sane < 0.25, `geguardte synthetic growth sollte sane (<0.25) sein, ist ${sane}`);
+});
+
 test('staples: always-on WALLS lamps on every member (VOLUME_PRICE_BLIND/MA_PROXY_ONLY/INVENTORY_BLIND/CYCLE_WALL)', () => {
   for (const m of [...SB, ...SD]) {
     for (const wall of ['VOLUME_PRICE_BLIND', 'MA_PROXY_ONLY', 'INVENTORY_BLIND', 'CYCLE_WALL']) {

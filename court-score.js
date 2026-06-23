@@ -2011,8 +2011,8 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.crossBucketComparableField = 'absKaliber';
     }
     // consumer_staples_compounder (CORE) lamps (Spec §5): advisory, never silent score-kills. Per-name upstream
-    // lamps (NOT_READY:gpa/growth/eff/assetgrowth, ISSUANCE_NOT_READY, SPINOFF_REBASE, DEAL_MASKED, STALE:growth,
-    // DILUTION_HIGH, MARGIN_NEGATIVE, SBC_HIGH, IMPAIRMENT_BLIND) collected in court-screen (m.stp.lamps); the
+    // lamps (NOT_READY:gpa/growth/eff/assetgrowth, ISSUANCE_NOT_READY, SPINOFF_REBASE, DEAL_MASKED, SUSPECT_REVENUE,
+    // STALE:growth, DILUTION_HIGH, MARGIN_NEGATIVE, SBC_HIGH, IMPAIRMENT_BLIND) collected in court-screen (m.stp.lamps); the
     // four WALLS are always-on per the frozen NORMS.lamps. THIN_REL never fires (branded n=52, distrib n=23).
     if (F.staples) {
       const sl = (m.stp && Array.isArray(m.stp.lamps)) ? m.stp.lamps : [];

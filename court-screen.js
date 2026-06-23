@@ -429,6 +429,15 @@ function buildIndustrialsAxes(ticker, cohort) {
 //
 // Frozen constants (Spec §6.5):
 const STP_DEAL_MASK = { assetJump: 0.25, revJump: 0.15 };       // §4.1 BOTH required; sign-aware (positive only)
+// §4.1b revenue-discontinuity DATA-ARTIFACT guard (re-court MAJOR fix): a single-year revenue MULTIPLE that is
+// physically implausible for a mature staple (revenue MORE THAN DOUBLES in one year, revG>=1.00) WITHOUT any
+// asset backing (assetG below the deal-mask assetJump → not an acquisition/buildout) is a scale/units data
+// artifact, NOT organic growth. The §4.1 deal-mask cannot catch it (it requires assetG>=0.25 too), so a corrupt
+// revenue series (e.g. COKE annualRev mixing scales → fake +218% YoY while total assets FELL) would otherwise top
+// the cohort = "junk tops the bucket". Such a YoY is DROPPED from the clean set (treated like a masked year) +
+// SUSPECT_REVENUE lamp. Genuine asset-backed hyper-growers (CELH +101.7% with assetG +0.257) are SPARED because
+// they are asset-backed; sub-double organic growers (ELF/BRBR/MNST/PRMB max revG<0.30) never approach the multiple.
+const STP_REV_ARTIFACT = { revMult: 1.00 };                    // §4.1b revG>=1.00 (>2x in one year) AND not asset-backed = artifact
 const STP_SPINOFF = { dropYoY: -0.25, baseFrac: 0.85 };        // §4.2 big drop + positive latest + base<85% of peak
 const STP_GROWTH_BLEND = { wLatest: 0.60, wMedian: 0.40 };     // §3 Axis A: 0.60*latest + 0.40*MEDIAN(recent clean YoYs)
 const STP_EFF_MIX = { wOp: 0.60, wFcf: 0.40 };                 // §3 Axis C op-weighted (WC-cycle/impairment distort FCF)
@@ -521,9 +530,9 @@ function buildStaplesAxes(ticker, cohort) {
   }
   if (eff == null) lamps.push('NOT_READY:eff');
 
-  // --- Axis A: organic growth (deal-mask §4.1 + spin-off guard §4.2 UPSTREAM, MEDIAN blend §3) ---
+  // --- Axis A: organic growth (deal-mask §4.1 + rev-artifact guard §4.1b + spin-off guard §4.2 UPSTREAM, MEDIAN blend §3) ---
   let growthInput = null;
-  let dealMasked = false, spinoffRebase = false, staleGrowth = false;
+  let dealMasked = false, spinoffRebase = false, staleGrowth = false, revArtifact = false;
   if (spinoffRebaselineGuardStaples(revA)) {
     spinoffRebase = true;
     lamps.push('SPINOFF_REBASE');
@@ -538,8 +547,15 @@ function buildStaplesAxes(ticker, cohort) {
       const assetG = (taNew != null && taOld != null && taOld > 0) ? (taNew - taOld) / taOld : null;
       const masked = (assetG != null && assetG >= STP_DEAL_MASK.assetJump && revG >= STP_DEAL_MASK.revJump);
       if (masked) { dealMasked = true; continue; }
+      // §4.1b revenue-discontinuity DATA-ARTIFACT: revenue MORE THAN DOUBLES in one year (revG>=1.00) but the
+      // jump is NOT asset-backed (assetG missing or below the deal-mask assetJump) → implausible scale/units
+      // artifact, drop the YoY (acquisitions are already caught by `masked` above; this catches the corrupt-data
+      // case the deal-mask misses because assets did NOT rise).
+      const artifact = (revG >= STP_REV_ARTIFACT.revMult && !(assetG != null && assetG >= STP_DEAL_MASK.assetJump));
+      if (artifact) { revArtifact = true; continue; }
       cleanYoY.push(revG);
     }
+    if (revArtifact) lamps.push('SUSPECT_REVENUE');          // §4.1b advisory: an implausible non-asset-backed rev jump was dropped
     if (cleanYoY.length === 0) {
       lamps.push('NOT_READY:growth');                        // no clean YoY -> DROP Axis A + renorm
     } else {
@@ -585,7 +601,7 @@ function buildStaplesAxes(ticker, cohort) {
     cohort,
     gpa: round(gpa), growth: round(growthInput), assetGrowth: round(assetGrowth),
     netShareIssuance: round(netShareIssuance), eff: round(eff),
-    dealMasked, spinoffRebase, staleGrowth,
+    dealMasked, spinoffRebase, staleGrowth, revArtifact,
     nAnnualRev: revA.filter(v => v != null).length,
     sharesCoverage: sharesNN.length,
     lamps,
