@@ -1959,6 +1959,221 @@ test('materials PARITÄT: KEIN materials-only Feld auf den 7 anderen Buckets (Le
   }
 });
 
+// =================== ENERGY_QUALITY (CORE) BUCKET TESTS (v0, three cohorts upstream|midstream|services) =====
+// Spec formula-design-energy_quality-v0-2026-06-22.md (Council->Court DESIGN-PASS v0 NEEDS-REVISION; NORMS
+// recomputed-live-then-frozen 2026-06-23 on the CLEAN pool). energy is a SEPARATE court bucket (disjoint from the
+// 9 prior CORE/projection buckets). NEW code keyed by the new cohort strings → the prior buckets stay byte-identical
+// (parity tests above). DISTINCT: axis B is ROCE (opInc/totalAssets, the through-cycle capital-return pillar) and
+// axis C is FCF-MARGIN (annualFCF/annualRev) — neither is industrials `eff` nor materials `marginStability`; scored
+// via the PARALLEL engine absKaliberEnergy. QUALITY-ONLY: GROWTH IS NOT A SCORED AXIS (capital-discipline pillar
+// roce+fcfMargin+assetGrowthPenalty = 0.70 — a commodity-price windfall cannot top-score).
+const enU = doc.energy_upstream;
+const enM = doc.energy_midstream;
+const enS = doc.energy_services;
+const EU = enU ? enU.members : [];
+const EM = enM ? enM.members : [];
+const ES = enS ? enS.members : [];
+
+test('energy: all three cohort buckets exist (upstream + midstream + services) with members', () => {
+  assert(enU && Array.isArray(enU.members) && EU.length > 0, 'energy_upstream bucket fehlt/leer');
+  assert(enM && Array.isArray(enM.members) && EM.length > 0, 'energy_midstream bucket fehlt/leer');
+  assert(enS && Array.isArray(enS.members) && ES.length > 0, 'energy_services bucket fehlt/leer');
+  assert(/Energy-Quality v0/.test(enU.label || ''), `upstream label sollte v0 nennen: ${enU.label}`);
+});
+
+test('energy §6 MARQUEE: all 15 marquees classified+scored across the three cohorts (fail-loud guard)', () => {
+  const MARQUEE = ['XOM', 'CVX', 'COP', 'EOG', 'OXY', 'DVN', 'EPD', 'ET', 'KMI', 'WMB', 'OKE', 'MPLX', 'SLB', 'HAL', 'BKR'];
+  const scored = new Set([...EU, ...EM, ...ES].map(m => m.ticker));
+  const missing = MARQUEE.filter(t => !scored.has(t));
+  assert(missing.length === 0, `MARQUEE COVERAGE FAIL — nicht klassifiziert/gescort: ${missing.join(', ')}`);
+  const { assertEnergyMarquee } = require('./court-score.js');
+  assert(typeof assertEnergyMarquee === 'function', 'assertEnergyMarquee nicht exportiert');
+  assertEnergyMarquee(doc); // throws on collapse / foreign-control leak
+});
+
+test('energy SI-5: classifiedCount === scoredCount + excludedCount (ALLE 3 Kohorten, fail-loud)', () => {
+  for (const [name, R] of [['upstream', enU], ['midstream', enM], ['services', enS]]) {
+    assert(R.classifiedCount != null && R.scoredCount != null && R.excludedCount != null, `${name} SI-5 counts fehlen`);
+    assert(R.classifiedCount === R.scoredCount + R.excludedCount,
+      `${name} SI-5 mismatch: classified ${R.classifiedCount} !== scored ${R.scoredCount} + excluded ${R.excludedCount}`);
+  }
+  // Live-recomputed CLEAN counts 2026-06-23: upstream 32, midstream 26, services 27 — all n>=15 (full ABS+REL blend).
+  assert(enU.classifiedCount >= 15, `upstream classified sollte >= 15 sein (full-blend), ist ${enU.classifiedCount}`);
+  assert(enM.classifiedCount >= 15, `midstream classified sollte >= 15 sein (full-blend), ist ${enM.classifiedCount}`);
+  assert(enS.classifiedCount >= 15, `services classified sollte >= 15 sein (full-blend), ist ${enS.classifiedCount}`);
+});
+
+test('energy: every cohort marquee scored finite; ROCE/FCF pillars present on the top names', () => {
+  // at least one marquee from each cohort must score finite (>0).
+  for (const [name, members, marq] of [['upstream', EU, ['XOM', 'COP', 'EOG', 'DVN']], ['midstream', EM, ['EPD', 'KMI', 'WMB', 'MPLX']], ['services', ES, ['SLB', 'HAL', 'BKR']]]) {
+    const hit = marq.map(t => members.find(x => x.ticker === t)).filter(Boolean);
+    assert(hit.some(m => Number.isFinite(m.score) && m.score > 0), `${name}: kein ${marq.join('/')} mit finitem Score >0`);
+  }
+});
+
+// THE materials-bug guard (Spec §7-5 analog): the TOP name of EACH cohort must be a real, quality, through-cycle
+// name — NOT a revenue-less shell, NOT a single-year commodity-windfall spike. A peak-windfall name is flagged
+// COMMODITY_BETA_SUSPECT; a shell carries score=null (pre-revenue) and can never be the scored top.
+test('energy MANDATORY regression: TOP-by-score of each cohort is a real quality name, NOT a shell, NOT a price-spike', () => {
+  for (const [name, members] of [['upstream', EU], ['midstream', EM], ['services', ES]]) {
+    const scored = members.filter(m => m.score != null).sort((a, b) => b.score - a.score);
+    assert(scored.length > 0, `${name}: keine gescorten Namen`);
+    const top = scored[0];
+    // (a) the top name carries real revenue (>= $1M) — not a pre-revenue shell.
+    assert(top.en && top.en.revLatest != null && top.en.revLatest >= 1e6,
+      `${name} top ${top.ticker} sollte echte Revenue (>=$1M) tragen, revLatest=${top.en && top.en.revLatest}`);
+    assert(top.exclusionReason !== 'OUT_OF_SEGMENT:preexploration', `${name} top ${top.ticker} darf kein pre-revenue shell sein`);
+    // (b) the top name is NOT flagged COMMODITY_BETA_SUSPECT (a price-windfall year must not lead the cohort).
+    assert(!(top.lamps || []).includes('COMMODITY_BETA_SUSPECT'),
+      `${name} top ${top.ticker} darf NICHT COMMODITY_BETA_SUSPECT sein (single-year price-spike darf nicht führen)`);
+    // (c) the top name has a real through-cycle ROCE pillar (the load-bearing axis is present + positive).
+    assert(top.roce != null && isFinite(top.roce) && top.roce > 0,
+      `${name} top ${top.ticker} sollte eine positive ROCE tragen (through-cycle quality), ist ${top.roce}`);
+  }
+});
+
+test('energy §0/§6 FOREIGN-CONTROL + GENERATIVE anti-leak: foreign primaries absent; SLB allowlisted', () => {
+  const scored = new Set([...EU, ...EM, ...ES].map(m => m.ticker));
+  for (const t of ['BP', 'SHEL', 'TTE', 'CNQ', 'CVE', 'ENB', 'EQNR', 'E', 'IMO', 'SU', 'PBR', 'TRP', 'YPF', 'VET', 'NAT', 'TK', 'TNK']) {
+    assert(!scored.has(t), `${t} (foreign primary) darf NICHT klassifiziert sein (FOREIGN-CONTROL §0/§6)`);
+  }
+  // SLB IS admitted (verified US-primary inversion on the allowlist) — it MUST be present.
+  assert(scored.has('SLB'), 'SLB (US-primary allowlist) sollte klassifiziert sein');
+  const { assertEnergyNoForeignLeak } = require('./court-score.js');
+  assert(typeof assertEnergyNoForeignLeak === 'function', 'assertEnergyNoForeignLeak nicht exportiert');
+  let listing = new Map();
+  try {
+    const lp = (CAND_TEST.replace(/_court-candidates([^/\\]*)\.json$/, '_court-listing$1.json'));
+    const ld = JSON.parse(fs.readFileSync(lp, 'utf8'));
+    const obj = ld && ld.listings ? ld.listings : (ld || {});
+    for (const [t, rec] of Object.entries(obj)) listing.set(t, rec);
+  } catch {}
+  assertEnergyNoForeignLeak(doc, listing); // throws on any non-allowlisted country-set != US leak
+});
+
+test('energy SI-4 PRE-REVENUE (the materials lesson): zero/near-zero-rev shells EXCLUDED, never scored, never top', () => {
+  const all = [...EU, ...EM, ...ES];
+  // (a) every pre-revenue name carries score=null + the OUT_OF_SEGMENT:preexploration reason + lamp + sits in excluded[].
+  for (const [name, R] of [['upstream', enU], ['midstream', enM], ['services', enS]]) {
+    for (const m of R.members) {
+      if (m.exclusionReason === 'OUT_OF_SEGMENT:preexploration') {
+        assert(m.score === null, `${name}/${m.ticker} (pre-revenue) darf NICHT gescored sein, score=${m.score}`);
+        assert(Array.isArray(m.lamps) && m.lamps.includes('OUT_OF_SEGMENT:preexploration'),
+          `${name}/${m.ticker} sollte die OUT_OF_SEGMENT:preexploration-Lampe tragen`);
+        assert(R.excluded.some(x => x.ticker === m.ticker), `${name}/${m.ticker} sollte in excluded[] liegen (SI-4)`);
+      }
+    }
+  }
+  // (b) NO scored member in any cohort has revLatest below the $1M floor (the pre-revenue cut held universally) —
+  //     verifies NO revenue-less shell can top a cohort (the explicit materials-bug regression guard).
+  for (const m of all) {
+    if (m.score != null) assert(m.en && m.en.revLatest != null && m.en.revLatest >= 1e6,
+      `gescorter Name ${m.ticker} hat revLatest < $1M (pre-revenue leak), revLatest=${m.en && m.en.revLatest}`);
+  }
+});
+
+test('energy SI-4: Out-class / pre-revenue members carry score=null in excluded[] (kein irreführender Rang)', () => {
+  for (const [name, R] of [['upstream', enU], ['midstream', enM], ['services', enS]]) {
+    assert(Array.isArray(R.excluded), `${name} excluded[] fehlt (SI-4)`);
+    for (const m of R.excluded) assert(m.score === null, `${name} excluded ${m.ticker} score sollte null sein, ist ${m.score}`);
+    for (const m of R.members) {
+      if (m.score != null) assert(m.membershipClass !== 'Out', `${name} ranked ${m.ticker} ist Out mit Score (SI-4)`);
+    }
+  }
+});
+
+test('energy: FIVE scored axes incl. roce+fcfMargin (NOT eff/marginStability); NO growth axis; weights sum to 1.0', () => {
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  for (const b of ['energy_upstream', 'energy_midstream', 'energy_services']) {
+    const w = NORMS[b].weights;
+    const keys = Object.keys(w).sort().join(',');
+    assert(keys === 'assetGrowthPenalty,fcfMargin,gpa,netIssuance,roce',
+      `${b} sollte die 5 energy-Achsen tragen (roce/fcfMargin statt eff/marginStability), hat ${keys}`);
+    assert(!('eff' in w) && !('marginStability' in w), `${b} darf KEINE eff/marginStability-Achse haben`);
+    assert(!('growth' in w), `${b} darf KEINE growth-Achse haben (QUALITY-ONLY: growth ist kein scored axis)`);
+    const sum = Object.values(w).reduce((s, v) => s + v, 0);
+    assert(Math.abs(sum - 1.0) < 1e-9, `${b} weights sollten Σ=1.0 sein, sind ${sum}`);
+    // capital-discipline pillar roce+fcfMargin+assetGrowthPenalty = 0.70 (the QUALITY-ONLY guarantee, no growth term)
+    const pillar = w.roce + w.fcfMargin + w.assetGrowthPenalty;
+    assert(Math.abs(pillar - 0.70) < 1e-9, `${b} capital-discipline pillar sollte 0.70 sein, ist ${pillar}`);
+  }
+});
+
+test('energy: roce/fcfMargin/gpa cohort-keyed; assetGrowthPenalty/netIssuance SHARED', () => {
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  const U = NORMS.energy_upstream, M = NORMS.energy_midstream, S = NORMS.energy_services;
+  // roce elite is cohort-specific (midstream toll-road tier > upstream > services leveraged-driller tier).
+  assert(U.roce.elite === 0.16 && M.roce.elite === 0.22 && S.roce.elite === 0.13,
+    `roce elite sollte upstream .16 / midstream .22 / services .13 sein, ist ${U.roce.elite}/${M.roce.elite}/${S.roce.elite}`);
+  // assetGrowthPenalty + netIssuance anchors SHARED across cohorts.
+  assert(U.assetGrowthPenalty.floor === M.assetGrowthPenalty.floor && M.assetGrowthPenalty.floor === S.assetGrowthPenalty.floor, 'assetGrowthPenalty anchor sollte shared sein');
+  assert(U.netIssuance.elite === M.netIssuance.elite && M.netIssuance.elite === S.netIssuance.elite, 'netIssuance anchor sollte shared sein');
+});
+
+test('energy: always-on WALLS on every member (CYCLE_WALL/THROUGH_CYCLE_WALL/COMMODITY_BETA + cohort-specific blind)', () => {
+  for (const [b, members, cohortWall] of [['upstream', EU, 'RESERVE_BLIND'], ['midstream', EM, 'DCF_COVERAGE_BLIND'], ['services', ES, null]]) {
+    for (const m of members) {
+      for (const w of ['CYCLE_WALL', 'THROUGH_CYCLE_WALL', 'COMMODITY_BETA']) {
+        assert(Array.isArray(m.lamps) && m.lamps.includes(w), `${b}/${m.ticker} fehlt WALL-Lampe ${w}`);
+      }
+      if (cohortWall) assert(m.lamps.includes(cohortWall), `${b}/${m.ticker} fehlt cohort-WALL ${cohortWall}`);
+      assert(!m.lamps.includes('THIN_REL'), `${b}/${m.ticker} sollte KEINE THIN_REL haben (alle Kohorten n>=15)`);
+    }
+  }
+});
+
+test('energy COMMODITY-WINDFALL guard (Spec §3.5): COMMODITY_BETA_SUSPECT exists as an advisory flag, never a score-kill', () => {
+  const all = [...EU, ...EM, ...ES];
+  const flagged = all.filter(m => (m.lamps || []).includes('COMMODITY_BETA_SUSPECT'));
+  // the windfall guard must be WIRED (at least exists on the lamp vocabulary) — and where it fires it must NOT
+  // null a score (advisory only; the score is commodity-β-immune by construction, not by suppression).
+  for (const m of flagged) {
+    if (m.exclusionReason !== 'OUT_OF_SEGMENT:preexploration' && m.membershipClass !== 'Out') {
+      assert(m.score != null && isFinite(m.score), `${m.ticker} COMMODITY_BETA_SUSPECT darf den Score NICHT nullen (advisory only), score=${m.score}`);
+    }
+  }
+});
+
+test('energy SI-3: normTableId + cohort + comparabilityNote (absKaliber cross-bucket, REL intra-bucket, growth-not-scored)', () => {
+  for (const [name, R] of [['upstream', enU], ['midstream', enM], ['services', enS]]) {
+    assert(/energy_(upstream|midstream|services)-norms-2026-06-23/.test(R.normTableId || ''), `${name} normTableId fehlt/falsch: ${R.normTableId}`);
+    assert(R.cohort === `energy_${name}`, `${name} cohort falsch: ${R.cohort}`);
+    assert(/roce/i.test(R.comparabilityNote || '') && /GROWTH IS NOT A SCORED AXIS/i.test(R.comparabilityNote || ''), `${name} comparabilityNote sollte roce + GROWTH-NOT-SCORED nennen`);
+    assert(R.scoreScope === 'intra-bucket' && R.crossBucketComparableField === 'absKaliber', `${name} SI-3 scope/field fehlt`);
+  }
+});
+
+test('energy-unit: absKaliberEnergy 5-axis coverage-renorm (E-drop renorm Σ=1.0; roce-drop; all-null → 0)', () => {
+  const { absKaliberEnergy } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  // full 5 axes
+  const full = absKaliberEnergy({ roce: 0.10, fcfMargin: 0.15, gpa: 0.14, assetGrowth: 0.03, netShareIssuance: -0.01 }, 'energy_upstream');
+  assert(full.usedAxes.length === 5 && full.droppedAxes.length === 0, `full sollte 5 Achsen nutzen, hat ${full.usedAxes.length}`);
+  assert(Math.abs(Object.values(full.renormWeights).reduce((s, v) => s + v, 0) - 1.0) < 1e-9, 'renormWeights sollten Σ=1.0');
+  // ISSUANCE_NOT_READY drop (Vintage-A no annualShares) → 4 axes renormalize
+  const dropE = absKaliberEnergy({ roce: 0.10, fcfMargin: 0.15, gpa: 0.14, assetGrowth: 0.03, netShareIssuance: null }, 'energy_midstream');
+  assert(dropE.droppedAxes.includes('netIssuance') && dropE.usedAxes.length === 4, 'netIssuance-drop sollte 4 Achsen lassen');
+  assert(Math.abs(Object.values(dropE.renormWeights).reduce((s, v) => s + v, 0) - 1.0) < 1e-9, 'renorm Σ=1.0 nach E-drop');
+  // NOT_READY:roce drop → 4 axes
+  const dropR = absKaliberEnergy({ roce: null, fcfMargin: 0.15, gpa: 0.14, assetGrowth: 0.03, netShareIssuance: -0.01 }, 'energy_services');
+  assert(dropR.droppedAxes.includes('roce') && dropR.usedAxes.length === 4, 'roce-drop sollte 4 Achsen lassen');
+  // all-null → 0 (pathological, no fake-neutral)
+  const allNull = absKaliberEnergy({ roce: null, fcfMargin: null, gpa: null, assetGrowth: null, netShareIssuance: null }, 'energy_upstream');
+  assert(allNull.absK === 0 && allNull.usedAxes.length === 0, 'all-null sollte absK=0 ergeben');
+});
+
+test('energy PARITÄT: KEIN energy-only Feld auf den anderen Buckets (Leak-Guard)', () => {
+  // Only TRULY energy-exclusive fields (en/roce/fcfMarginEn/_en*); the shared axis names (gpa/assetGrowth/
+  // netShareIssuance/absUsedAxes/absDroppedAxes) legitimately exist on industrials/staples/materials members.
+  for (const b of ['system_app_software', 'fabless_semi', 'medtech_devices', 'diagnostics_lst', 'industrials_heavy', 'industrials_light', 'staples_branded', 'staples_distribution', 'consdisc_store', 'consdisc_light', 'materials_pricingpower', 'materials_commodity']) {
+    if (!doc[b]) continue;
+    for (const m of doc[b].members) {
+      for (const leak of ['en', 'roce', 'fcfMarginEn', '_enRoce', '_enFcfMargin', '_enGpa', '_enAssetGrowthPenalty', '_enNetIssuance']) {
+        assert(!(leak in m), `${b}/${m.ticker} hat energy-only Feld '${leak}' geleakt (Parität verletzt)`);
+      }
+    }
+  }
+});
+
 // Temp-Outputs aufräumen (Harness-Isolation: Produktions-Artefakte bleiben unberührt)
 try { fs.unlinkSync(CAND_TEST); } catch {}
 try { fs.unlinkSync(RESULTS); } catch {}

@@ -183,6 +183,13 @@ const cdCohortByTicker = new Map(); // ticker -> 'consdisc_store' | 'consdisc_li
 // Fix A SI-5: no silent drops). The 5 RAW axis inputs are extracted from snapshots/<T>.json, attached as ONE
 // materials-only field `mt` → all other candidate JSON byte-identical.
 const mtCohortByTicker = new Map(); // ticker -> 'materials_pricingpower' | 'materials_commodity'
+// energy_quality CORE bucket (Spec formula-design-energy_quality-v0-2026-06-22.md).
+// ADDITIV/parity-safe: exactly the court-buckets.json `energy_{upstream,midstream,services}` tickers are admitted
+// past the asset-light/growth pre-filter (analog medtech/dlst/industrials/staples/consdisc/materials, Fix A SI-5:
+// no silent drops). The 5 RAW axis inputs are extracted from snapshots/<T>.json, attached as ONE energy-only field
+// `en` → all other candidate JSON byte-identical.
+const enCohortByTicker = new Map(); // ticker -> 'energy_upstream' | 'energy_midstream' | 'energy_services'
+const ENERGY_COHORTS = new Set(['energy_upstream', 'energy_midstream', 'energy_services']);
 try {
   const bd = JSON.parse(fs.readFileSync(BUCK, 'utf8'));
   const cls = Array.isArray(bd) ? bd : (bd.classifications || []);
@@ -192,6 +199,7 @@ try {
     if (c && (c.bucket === 'staples_branded' || c.bucket === 'staples_distribution') && c.t) stpCohortByTicker.set(c.t, c.bucket);
     if (c && (c.bucket === 'consdisc_store' || c.bucket === 'consdisc_light') && c.t) cdCohortByTicker.set(c.t, c.bucket);
     if (c && (c.bucket === 'materials_pricingpower' || c.bucket === 'materials_commodity') && c.t) mtCohortByTicker.set(c.t, c.bucket);
+    if (c && ENERGY_COHORTS.has(c.bucket) && c.t) enCohortByTicker.set(c.t, c.bucket);
   }
 } catch {}
 
@@ -890,6 +898,144 @@ function buildMaterialsAxes(ticker, cohort) {
   };
 }
 
+// ===========================================================================
+// energy_quality (CORE) — 5-axis RAW extraction from snapshots (Spec §2-§5)
+// ===========================================================================
+// ADDITIV/parity-safe: only fires for tickers in enCohortByTicker (court-buckets energy_{upstream,midstream,services}).
+// Reads snapshots/<T>.json `annual.*` (NEWEST-FIRST) — the canonical pool the deterministic classifier and the
+// re-frozen cohort NORMS were calibrated on. Same dual-shape num() extractor as materials.
+//
+// DISTINCT from every other CORE bucket: axis B is ROCE (opInc/totalAssets, the through-cycle capital-return
+// pillar) and axis C is FCF-MARGIN (annualFCF/annualRev, the discipline arm that survives Vintage A) — neither is
+// industrials `eff` nor materials `marginStability`. GROWTH IS NOT A SCORED AXIS (a commodity-cyclical never earns
+// a positive growth credit — QUALITY-ONLY). The deal-mask + spin-off guard + the COMMODITY-WINDFALL guard
+// (COMMODITY_BETA_SUSPECT: revYoY>+25% AND assetGrowth<+10% => revenue jumped without the asset base growing =
+// price not volume) fire as advisory lamps ONLY (never a score-kill) — the score is commodity-β-immune BY
+// CONSTRUCTION (asset-scaled profitability + no growth axis), so the windfall guard is a transparency flag.
+//
+// Frozen constants (Spec §3/§5):
+const EN_DEAL_MASK = { assetJump: 0.25, revJump: 0.15 };       // §3.1 deal-mask trigger (growth NOT scored; mask feeds lamps/context)
+const EN_SPINOFF = { dropYoY: -0.25, baseFrac: 0.85 };         // §3.4 spin-off/divestiture re-baselining guard
+const EN_WINDFALL = { revYoY: 0.25, assetG: 0.10 };            // §3.5 COMMODITY_BETA_SUSPECT: rev jumped without asset base
+
+// §3.4 spin-off / divestiture re-baselining guard (EXACT JS, mirrors materials). Low-stakes here (growth not
+// scored) but protects the deal/cyclicality context-read from a post-divestiture rebound misread.
+function spinoffRebaselineGuardEnergy(revNewestFirst) {
+  const r = revNewestFirst.filter(v => v != null && isFinite(v) && v > 0);
+  if (r.length < 3) return false;
+  const chron = r.slice().reverse();                       // oldest -> newest
+  const yoy = [];
+  for (let i = 1; i < chron.length; i++) yoy.push((chron[i] - chron[i - 1]) / Math.abs(chron[i - 1]));
+  const hasBigDrop = yoy.some(y => y <= EN_SPINOFF.dropYoY);
+  const latestYoY = (r[0] - r[1]) / Math.abs(r[1]);
+  const latestPositive = latestYoY > 0;
+  const stillBelowBase = r[0] < EN_SPINOFF.baseFrac * Math.max(...r);
+  return hasBigDrop && latestPositive && stillBelowBase;
+}
+
+// snapshot annual cache for energy tickers only (avoid re-reading + keep the parity path untouched).
+const enSnapAnnual = new Map(); // ticker -> snapshot.annual object
+if (enCohortByTicker.size && fs.existsSync(SNAP_DIR)) {
+  for (const t of enCohortByTicker.keys()) {
+    try {
+      const sn = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, t + '.json'), 'utf8'));
+      if (sn && sn.annual) enSnapAnnual.set(t, sn.annual);
+    } catch {}
+  }
+}
+
+// buildEnergyAxes(ticker, cohort) -> the 5 RAW axis inputs + lamps/audit, or null if no snapshot.
+// roce = annualOpInc[0]/totalAssets[0]; fcfMargin = annualFCF[0]/annualRev[0]; gpa = annualGP[0]/totalAssets[0];
+// assetGrowth = latest TA delta (NEVER masked — the discipline penalty SHOULD fire on the cycle-top reserve-grab);
+// netShareIssuance = latest annualShares YoY (<2 non-null -> null + ISSUANCE_NOT_READY for drop+renorm). GROWTH is
+// NOT a scored axis (only the deal-mask trigger + COMMODITY_BETA_SUSPECT windfall lamp read the revenue series).
+function buildEnergyAxes(ticker, cohort) {
+  const a = enSnapAnnual.get(ticker);
+  if (!a) return null;
+  const revA = (a.annualRev || []).map(num);                  // NEWEST-FIRST, object-wrapped {value}
+  const gpA = (a.annualGP || []).map(num);
+  const opA = (a.annualOpInc || []).map(num);
+  const fcfA = (a.annualFCF || []).map(num);
+  const bal = Array.isArray(a.annualBalance) ? a.annualBalance : [];
+  const taA = bal.map(b => (b && b.totalAssets != null && isFinite(b.totalAssets)) ? b.totalAssets : null);
+  const sharesAll = Array.isArray(a.annualShares) ? a.annualShares.map(num) : [];
+  const lamps = [];
+
+  // --- Axis B: ROCE surrogate = opInc/totalAssets (the through-cycle capital-return pillar) ---
+  let roce = null;
+  if (opA[0] != null && taA[0] != null && taA[0] > 0) roce = opA[0] / taA[0];
+  else lamps.push('NOT_READY:roce');
+
+  // --- Axis C: FCF margin = annualFCF/annualRev (capital discipline; FULL-coverage arm) ---
+  let fcfMargin = null;
+  if (fcfA[0] != null && revA[0] != null && revA[0] > 0) fcfMargin = fcfA[0] / revA[0];
+  else lamps.push('NOT_READY:fcfmargin');
+
+  // --- Axis B2: GP/assets (Novy-Marx profitability) ---
+  let gpa = null;
+  if (gpA[0] != null && taA[0] != null && taA[0] > 0) gpa = gpA[0] / taA[0];
+  else lamps.push('NOT_READY:gpa');
+
+  // --- Axis D: asset-growth (real latest delta; NEVER masked — fires on the cycle-top reserve-grab) ---
+  let assetGrowth = null;
+  if (taA[0] != null && taA[1] != null && taA[1] !== 0) assetGrowth = (taA[0] - taA[1]) / taA[1];
+  else lamps.push('NOT_READY:assetgrowth');
+
+  // --- Axis E: net-share-issuance (latest YoY; <2 non-null -> DROP + renorm; equity-funded reserve grabs punished) ---
+  let netShareIssuance = null;
+  const sharesNN = sharesAll.filter(v => v != null && isFinite(v));
+  if (sharesNN.length >= 2) {
+    let s0 = null, s1 = null;
+    for (const v of sharesAll) { if (v != null && isFinite(v)) { if (s0 == null) s0 = v; else { s1 = v; break; } } }
+    if (s0 != null && s1 != null && s1 !== 0) netShareIssuance = (s0 - s1) / s1;
+    else { netShareIssuance = null; lamps.push('ISSUANCE_NOT_READY'); }
+  } else {
+    lamps.push('ISSUANCE_NOT_READY');                         // Vintage-A: no annualShares field (~50% of the pool)
+  }
+
+  // --- deal-mask + spin-off guard + COMMODITY_BETA_SUSPECT (advisory only; growth NOT scored) ---
+  let dealMasked = false, spinoffRebase = false;
+  // latest revenue YoY (for the deal-mask trigger + the windfall lamp — NOT a scored growth credit)
+  let latestRevYoY = null;
+  if (revA[0] != null && revA[1] != null && revA[1] > 0) latestRevYoY = revA[0] / revA[1] - 1;
+  if (spinoffRebaselineGuardEnergy(revA)) { spinoffRebase = true; lamps.push('SPINOFF_REBASE'); }
+  if (latestRevYoY != null && assetGrowth != null
+    && latestRevYoY >= EN_DEAL_MASK.revJump && assetGrowth >= EN_DEAL_MASK.assetJump) {
+    dealMasked = true; lamps.push('DEAL_MASKED');             // §3.1 acquirer ballooning the asset base at the cycle top
+  }
+  // §3.5 COMMODITY_BETA_SUSPECT: revenue jumped >+25% WITHOUT the asset base growing (<+10%) = price, not volume.
+  // Advisory FLAG only (the score is commodity-β-immune by construction) — surfaces the price-windfall year.
+  if (latestRevYoY != null && assetGrowth != null
+    && latestRevYoY > EN_WINDFALL.revYoY && assetGrowth < EN_WINDFALL.assetG) {
+    lamps.push('COMMODITY_BETA_SUSPECT');
+  }
+
+  // advisory capital-discipline lamps (Spec §4)
+  if (netShareIssuance != null && (-netShareIssuance) >= 0.03) lamps.push('DILUTION_HIGH'); // issuance >= 3%
+  const rev0 = revA[0];
+  if (rev0 != null && rev0 > 0) {
+    const opM = (opA[0] != null) ? opA[0] / rev0 : null;
+    const fcfM = (fcfA[0] != null) ? fcfA[0] / rev0 : null;
+    if (opM != null && opM < 0 && fcfM != null && fcfM < 0) lamps.push('MARGIN_NEGATIVE'); // op & fcf both <0 = trough burn
+  }
+
+  // pre-revenue facts for the court-score.js SI-4 exclusion (the materials lesson — a revenue-less pre-exploration
+  // shell must NOT be scored: the roce/fcfMargin/gpa axes are undefined/explosive on near-zero revenue and the
+  // coverage-renorm would wrongly concentrate the absK on the surviving discipline axes and let the shell top the
+  // cohort). `revLatest` = latest non-null annual revenue; `nAnnualRev` = non-null annual revenue points.
+  const revLatest = revA.find(v => v != null && isFinite(v));
+  return {
+    cohort,
+    roce: round(roce), fcfMargin: round(fcfMargin), gpa: round(gpa),
+    assetGrowth: round(assetGrowth), netShareIssuance: round(netShareIssuance),
+    dealMasked, spinoffRebase, latestRevYoY: round(latestRevYoY),
+    revLatest: (revLatest == null ? null : round(revLatest)),
+    nAnnualRev: revA.filter(v => v != null).length,
+    sharesCoverage: sharesNN.length,
+    lamps,
+  };
+}
+
 // --- robuste Feld-Helfer (Format ist gemischt: ftsAnnual.* = [{value}], Rest = [num]) ---
 function num(x) {
   if (x == null) return null;
@@ -965,7 +1111,11 @@ for (const file of files) {
   // universe even with a thin CACHE row (its 5 SCORED axes come from the SNAPSHOT via buildMaterialsAxes,
   // not the cache). Bypasses the cache-based early gates below. Non-materials path: BYTE-IDENTICAL.
   const mtCohortEarly = (mtCohortByTicker.get(ticker) && mtSnapAnnual.has(ticker)) ? mtCohortByTicker.get(ticker) : null;
-  const coreEarly = indCohortEarly || stpCohortEarly || cdCohortEarly || mtCohortEarly;
+  // energy_quality (CORE): same SI-5 rule — a court-buckets-classified energy name MUST reach the universe even
+  // with a thin CACHE row (its 5 SCORED axes come from the SNAPSHOT via buildEnergyAxes, not the cache). Bypasses
+  // the cache-based early gates below. Non-energy path: BYTE-IDENTICAL.
+  const enCohortEarly = (enCohortByTicker.get(ticker) && enSnapAnnual.has(ticker)) ? enCohortByTicker.get(ticker) : null;
+  const coreEarly = indCohortEarly || stpCohortEarly || cdCohortEarly || mtCohortEarly || enCohortEarly;
   const p = j.payload || {};
   if (!j.payload && !coreEarly) continue;
   if (j._ftsPartial) stats.partial++;
@@ -1118,6 +1268,7 @@ for (const file of files) {
   const stpCohort = stpCohortByTicker.get(ticker) || null;
   const cdCohort = cdCohortByTicker.get(ticker) || null;
   const mtCohort = mtCohortByTicker.get(ticker) || null;
+  const enCohort = enCohortByTicker.get(ticker) || null;
   if (indCohort) {
     // industrials_compounder (CORE): admit EVERY court-buckets-classified industrials name into the universe
     // (cross-sectional cohort percentiles + SI-5 classifiedCount===scoredCount). NO asset-light/growth/gm
@@ -1144,6 +1295,12 @@ for (const file of files) {
     // (materials is heavy PP&E by nature; the SI-1 shortlist-cut lives in court-score.js). 5 axes come from
     // the snapshot annual arrays (buildMaterialsAxes). Sole sanity: a parseable snapshot annual block exists.
     if (!mtSnapAnnual.has(ticker)) continue;
+  } else if (enCohort) {
+    // energy_quality (CORE): identical admission policy — admit EVERY court-buckets-classified energy name into
+    // the universe (cross-sectional cohort percentiles + SI-5). NO asset-light/growth/gm pre-filter (energy is
+    // heavy PP&E by nature; the SI-1 shortlist-cut lives in court-score.js). 5 axes come from the snapshot annual
+    // arrays (buildEnergyAxes). Sole sanity: a parseable snapshot annual block exists.
+    if (!enSnapAnnual.has(ticker)) continue;
   } else if (isMedtech || isDlst) {
     // Milde Daten-Sanity: growth/gm/rev müssen vorhanden + endlich sein (keine ökonomischen Floors).
     // Medtech UND D&LST sind kapitalintensiv/Large-Cap-haltig → asset-light/ppe-Gate + ökonomische Floors
@@ -1187,6 +1344,10 @@ for (const file of files) {
   // materials-only field `mt` (deal-mask + spin-off/super-cycle guard applied UPSTREAM; marginStability is the
   // inverse-CV pricing-power proxy). Additiv → KEIN Feld auf Nicht-Materials-Records (Parität).
   const mtExtra = mtCohort ? { mt: buildMaterialsAxes(ticker, mtCohort) } : {};
+  // energy_quality (CORE): the 5 RAW axis inputs from the snapshot annual arrays, attached as ONE energy-only
+  // field `en` (deal-mask + spin-off guard + COMMODITY_BETA_SUSPECT windfall lamp applied UPSTREAM; axis B = ROCE,
+  // axis C = FCF-margin; GROWTH NOT scored). Additiv → KEIN Feld auf Nicht-Energy-Records (Parität).
+  const enExtra = enCohort ? { en: buildEnergyAxes(ticker, enCohort) } : {};
   candidates.push({
     ticker,
     growth: round(growth), growth_annual: round(gAnnual), growth_q: round(gQ), growthSource,
@@ -1206,6 +1367,7 @@ for (const file of files) {
     ...stpExtra,
     ...cdExtra,
     ...mtExtra,
+    ...enExtra,
   });
 }
 
