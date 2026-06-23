@@ -138,6 +138,13 @@ module.exports = [
   // DIAGNOSTIC, fixture-hash safe (not in SCORE_WEIGHTS).
   { file: './intangible-adjusted-roic.js' },
 
+  // Special-Track A (gauntlet, 2026-06-22): pre-revenue biotech SURVIVABILITY
+  // diagnostic (cash-runway / burn / dilution). NOT a quality score — the SI-4
+  // destination for clinical-stage biotech (bimodal returns, no percentile rank).
+  // Returns computable=false outside the Healthcare∧Biotech∧US∧pre-revenue cohort.
+  // DIAGNOSTIC, not in SCORE_WEIGHTS → fixture-hash safe by construction.
+  { file: './biotech-survivability-diagnostic.js' },
+
   // Tag 210c: R&D-cut guard — real-earnings-management red flag (R&D drop
   // >20% YoY AND op-margin expand >2pp YoY). DIAGNOSTIC, fixture-hash safe.
   { file: './rd-cut-guard.js' },
