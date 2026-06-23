@@ -41,6 +41,18 @@ function evaluate(stock) {
     });
   }
 
+  // audit/fix (gauntlet MED-10): a PRESENT but non-positive Yahoo enterpriseToEbitda means
+  // Yahoo's own EBITDA (or EV) is <= 0 — EV/EBITDA is not meaningful. Do NOT fall through to the
+  // opInc*1.2 proxy, which would fabricate a positive EBITDA and let the name falsely PASS,
+  // contradicting Yahoo's own number. Mirror the ev<=0 / ebitda<=0 non-computable branches below.
+  if (yahooRatio != null && yahooRatio <= 0) {
+    return H.buildResult({
+      computable: false,
+      reason: 'Yahoo enterpriseToEbitda=' + yahooRatio.toFixed(1) + ' <= 0 (negative EBITDA/EV per Yahoo) — EV/EBITDA not meaningful',
+      threshold: THRESHOLD, thresholdOp: THRESHOLD_OP
+    });
+  }
+
   // Fallback: manual reconstruction with opInc*1.2 heuristic.
   const mcap = stock && stock.marketCap && (typeof stock.marketCap === 'number' ? stock.marketCap : stock.marketCap.value);
   const totalDebt = H.latestBalance(stock, 'totalDebt');
