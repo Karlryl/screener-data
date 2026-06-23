@@ -696,27 +696,54 @@ const DEAL_JUMP_THRESH = 0.25;   // [TODO-CAL] goodwill-Sprung >= 25% von Revenu
 const W_CAGR = 0.6, W_MEDIAN = 0.4; // [TODO-CAL] Blend CAGR_3y vs median(trailing YoY) — jetzt SEKUNDÄR (durability), nicht primär
 const CATCH_UP_YEARS = 1;        // [TODO-CAL] zusätzlich gedroppte Folge-YoY (erstes volles inorganisches Jahr)
 const FY_RECON_TOL = 0.15;       // [TODO-CAL] max |cacheRev/snapRev - 1| bevor index-aligned Drop als unsicher LAUT failt (VII)
-function computeMedtechOrganicGrowth(yoySeries, goodwillHistory, revLatest, fallbackGrowth, opts) {
+const MT_IMPAIRMENT_THRESH = 0.05; // audit/fix (gauntlet C6): negativer ΔGoodwill >= 5% von dem-Jahr-Rev = Impairment-Lampe (mirror dlst Fix 2)
+function computeMedtechOrganicGrowth(yoySeries, goodwillHistory, revHist, revLatest, fallbackGrowth, opts) {
   // yoySeries: newest-first YoY-Reihe (rev[i]/rev[i+1]-1). goodwillHistory: [{val,end}] newest-first.
-  // Beide newest-first annual → Index i in yoySeries entspricht goodwill-Sprung goodwillHistory[i] vs [i+1].
+  // revHist: [{val,end}] newest-first per-Jahr-Revenue (aus dem medtech-Snapshot, LOKAL aus annualRev rekonstruiert).
+  // Beide (goodwillHistory + revHist) sind SAME-SOURCE index-aligned mit yoySeries: revYoYMedtech[i]=rev[i]/rev[i+1]-1
+  // wird in court-screen.js aus demselben annualRev gebaut, das revHist[i].val trägt → revHist[i] ist exakt die
+  // Revenue des neueren Jahres des Sprungs goodwillHistory[i] vs [i+1].
   // opts: { ticker, snapAnnualRev } für die FY-Reconciliation (VII).
   // Returns { growth (=min(latest,blend)), latestOrganicYoY, blend, organicYears, droppedIdx, dealYearExcluded,
-  //           shortHistory, currentYearOnly, decelerating }.
+  //           impairmentFlag, shortHistory, currentYearOnly, decelerating }.
+  //
+  // audit/fix (gauntlet C6): SIGN-SEPARATED DECONTAMINATION (Ledger 26 — bringt medtech auf die dlst-Behandlung).
+  //   VORHER (v1.3): EIN-SEITIG — jump = (newer-older)/revLatest, gemasked NUR wenn jump >= 0.25 über EINEM
+  //   einzigen revLatest-Skalar. Ein NEGATIVER Goodwill-Move (Impairment/Divestitur) fiel still durch (jump<0.25)
+  //   und wurde WEDER geflaggt NOCH ehrlich offengelegt; und ein älteres Deal-Jahr wurde gegen die FALSCHE (neueste)
+  //   Revenue-Skala gemessen (small-base-Verzerrung bei stark gewachsenen Namen wie GMED/TMDX).
+  //   JETZT (v1.4): wie dlst — (a) PER-JAHR-Revenue-Denominator revHist[i] (Fallback revLatest); (b) SIGN-SEPARIERT:
+  //   delta <= 0 ist KEIN Deal-Sprung, sondern wird als Impairment GEFLAGGT (>=5% von dem-Jahr-Rev → impairmentFlag),
+  //   NICHT still gedroppt; nur POSITIVE Akquisitions-Sprünge >= 0.25 werden deal-masked.
   const result = {
     growth: fallbackGrowth, latestOrganicYoY: null, blend: null, organicYears: 0, droppedIdx: [],
-    dealYearExcluded: false, shortHistory: false, currentYearOnly: false, decelerating: false,
+    dealYearExcluded: false, impairmentFlag: false, shortHistory: false, currentYearOnly: false, decelerating: false,
   };
   if (!Array.isArray(yoySeries) || yoySeries.length === 0) return result;
   // Deal-Jahr-Indizes via goodwill-Sprung (nur wenn coverage vorhanden)
   const dropIdx = new Set();
-  if (Array.isArray(goodwillHistory) && goodwillHistory.length >= 2 && revLatest != null && revLatest > 0) {
+  if (Array.isArray(goodwillHistory) && goodwillHistory.length >= 2) {
     for (let i = 0; i < goodwillHistory.length - 1; i++) {
       const newer = goodwillHistory[i] ? goodwillHistory[i].val : null;
       const older = goodwillHistory[i + 1] ? goodwillHistory[i + 1].val : null;
       if (newer == null || older == null) continue;
-      const jump = (newer - older) / revLatest;
+      const delta = newer - older;
+      // audit/fix (gauntlet C6): PER-JAHR-Revenue-Denominator — revHist[i] (das neuere Jahr des Sprungs),
+      // Fallback revLatest (mirror dlst Bug-Fix 1). NICHT der eine revLatest-Skalar für alle Jahre.
+      const yrRev = (Array.isArray(revHist) && revHist[i] && revHist[i].val != null && revHist[i].val > 0)
+        ? revHist[i].val
+        : (revLatest != null && revLatest > 0 ? revLatest : null);
+      if (yrRev == null) continue;
+      if (delta <= 0) {
+        // audit/fix (gauntlet C6): NEGATIVER Move = Impairment/Divestitur → KEIN Deal-Sprung (mirror dlst Bug-Fix 2).
+        // FLAGGEN statt still droppen: >= 5% von dem-Jahr-Rev setzt impairmentFlag (offengelegt via Lampe).
+        if (Math.abs(delta) / yrRev >= MT_IMPAIRMENT_THRESH) result.impairmentFlag = true;
+        continue;
+      }
+      const jump = delta / yrRev;
       if (jump >= DEAL_JUMP_THRESH) {
-        // goodwill-Sprung [i]->[i+1] (Jahr i) → YoY-Index i ist das Deal-Jahr; +CATCH_UP_YEARS Folge-Jahre (kleinere Indizes = neuer)
+        // POSITIVER Sprung >= 0.25: goodwill-Sprung [i]->[i+1] (Jahr i) → YoY-Index i ist das Deal-Jahr;
+        // +CATCH_UP_YEARS Folge-Jahre (kleinere Indizes = neuer).
         for (let k = 0; k <= CATCH_UP_YEARS; k++) { const idx = i - k; if (idx >= 0) dropIdx.add(idx); }
         result.dealYearExcluded = true;
       }
@@ -928,9 +955,12 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     for (const m of members) {
       const maRecMt = maMedtechByTicker.get(m.ticker);
       const gwHist = maRecMt ? maRecMt.goodwillHistory : null;
+      // audit/fix (gauntlet C6): per-Jahr-Revenue-Denominator (revenueHistory aus dem medtech-Snapshot, LOKAL
+      // aus annualRev rekonstruiert) — index-aligned mit gwHist + revYoYMedtech (alle same-source newest-first).
+      const revHist = maRecMt ? maRecMt.revenueHistory : null;
       const revLatest = m.scaleRevM != null ? m.scaleRevM * 1e6 : null;
       const snapAnnualRev = maRecMt && maRecMt.annualRevenue != null ? maRecMt.annualRevenue : null; // SEC FY-Rev für VII-Recon
-      const org = computeMedtechOrganicGrowth(m.revYoYMedtech, gwHist, revLatest, m._growth, { ticker: m.ticker, snapAnnualRev });
+      const org = computeMedtechOrganicGrowth(m.revYoYMedtech, gwHist, revHist, revLatest, m._growth, { ticker: m.ticker, snapAnnualRev });
       // _growthMedtech = deceleration-aware organische Growth-Metrik = min(latest,blend), DANN winsorisiert auf 1.0
       // (small-base-Artefakt-Schutz, ALMR). Dies ist der PRIMÄRE Achsen-Input (Stats + Scoring + Gate).
       const organicWins = org.growth == null ? null : Math.min(org.growth, 1.0);
@@ -941,6 +971,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m._growthBlend = org.blend; // SEKUNDÄRES durability-Signal (rückwärts), NICHT der Achsen-Input
       m._organicYears = org.organicYears;
       m._dealYearExcluded = org.dealYearExcluded;
+      m._impairmentFlag = org.impairmentFlag; // audit/fix (gauntlet C6): negativer ΔGoodwill geflaggt (nicht still gedroppt)
       m._shortOrganicHistory = org.shortHistory;
       m._currentYearOnly = org.currentYearOnly; // (VI) <2 organische Jahre → kein 0.6/0.4-Blend gelaufen
       m._decelerating = org.decelerating;       // (III) aktuelle Rate < median(prior organic years)
@@ -1687,6 +1718,10 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
           L.push(`M&A-jump-in-window(maxJump${pct(maxJump).trim()},deal-yr-excluded${m._dealYearExcluded ? '=yes' : '=no'})`);
           m.maxGoodwillJumpPctRev = Math.round(maxJump * 1000) / 1000;
         }
+        // audit/fix (gauntlet C6): Goodwill-Impairment-Lampe (mirror dlst Bug-Fix 2). Ein NEGATIVER ΔGoodwill
+        // (Impairment/Divestitur) >= 5% von dem-Jahr-Rev wird jetzt GEFLAGGT statt still aus dem organischen
+        // Wachstum gedroppt. Sign-separiert: nur positive Akquisitions-Sprünge werden deal-masked.
+        if (m._impairmentFlag === true) L.push('goodwill-impairment(neg-deltaGW-clamped)');
       } else {
         // Kein Snapshot-Row für diesen Ticker → ebenfalls coverage-null (Daten fehlen sichtbar, nicht still 'no M&A').
         L.push('M&A-coverage-null');

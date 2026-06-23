@@ -565,7 +565,27 @@ test('medtech: PODD ohne M&A-Lampe', () => {
   if (m) {
     assert(!m.lamps.includes('M&A-inorganic-flow'), 'PODD sollte keine M&A-inorganic-flow Lampe haben');
     assert(!m.lamps.includes('M&A-built-stock'), 'PODD sollte keine M&A-built-stock Lampe haben');
+    assert(!m.lamps.some(l => l.startsWith('goodwill-impairment')), 'PODD (organisch) sollte KEINE Impairment-Lampe haben');
   }
+});
+
+// audit/fix (gauntlet C6): SIGN-SEPARATED DECONTAMINATION live-Tests (medtech impairment jetzt GEFLAGGT, nicht still gedroppt).
+test('medtech C6: AVNS goodwill-impairment GEFLAGGT (negativer ΔGoodwill, nicht still gedroppt)', () => {
+  // AVNS hat einen großen Goodwill-Impairment (FY2024 ~ -49.5% von Rev) — unter dem alten EIN-SEITIGEN Pfad fiel der
+  // negative Move still durch; jetzt sign-separiert → Impairment-Lampe + _impairmentFlag.
+  const m = (med.members || []).concat(med.excluded || []).find(x => x.ticker === 'AVNS');
+  assert(m != null, 'AVNS nicht im medtech-Universum (members oder excluded)');
+  assert(m._impairmentFlag === true, `AVNS sollte _impairmentFlag=true tragen (echter Goodwill-Impairment), ist ${m._impairmentFlag}`);
+  assert(Array.isArray(m.lamps) && m.lamps.some(l => l.startsWith('goodwill-impairment')),
+    `AVNS sollte goodwill-impairment-Lampe tragen; Lampen: ${m.lamps}`);
+});
+
+test('medtech C6: mindestens ein medtech-Name trägt goodwill-impairment (Sign-Separation live)', () => {
+  const all = (med.members || []).concat(med.excluded || []);
+  const flagged = all.filter(m => Array.isArray(m.lamps) && m.lamps.some(l => l.startsWith('goodwill-impairment')));
+  assert(flagged.length >= 1, 'mindestens ein medtech-Name sollte die goodwill-impairment-Lampe tragen (C6 Sign-Separation)');
+  // Ehrlichkeit: jeder geflaggte Name trägt auch das _impairmentFlag (Lampe und Flag konsistent).
+  for (const m of flagged) assert(m._impairmentFlag === true, `${m.ticker} hat Impairment-Lampe aber _impairmentFlag=${m._impairmentFlag}`);
 });
 
 // =================== MEDTECH v1.1 TESTS (Court-DENIED Remediation) ===================
@@ -673,7 +693,8 @@ assert(typeof cMOG === 'function', 'computeMedtechOrganicGrowth nicht exportiert
 test('Unit computeMedtechOrganicGrowth (a): decelerating → min() wählt latest (latest<blend)', () => {
   // latest=0.37, blend wird höher sein (prior years ~0.85) → min → 0.37
   const yoySeries = [0.37, 0.85, 0.90, 0.80]; // newest-first; keine Deal-Years
-  const result = cMOG(yoySeries, null, null, null, {});
+  // C6: 3. Arg ist jetzt revHist (per-Jahr-Revenue); null → Fallback revLatest (hier null, keine gw-coverage)
+  const result = cMOG(yoySeries, null, null, null, null, {});
   assert(result.latestOrganicYoY != null, 'latestOrganicYoY sollte gesetzt sein');
   assert(Math.abs(result.latestOrganicYoY - 0.37) < 1e-9, `latestOrganicYoY sollte 0.37 sein, ist ${result.latestOrganicYoY}`);
   assert(result.growth <= result.latestOrganicYoY + 1e-9, `growth (${result.growth}) darf nicht über latestOrganicYoY (${result.latestOrganicYoY}) liegen`);
@@ -686,7 +707,8 @@ test('Unit computeMedtechOrganicGrowth (a): decelerating → min() wählt latest
 test('Unit computeMedtechOrganicGrowth (b): accelerating → min() wählt blend (blend<latest)', () => {
   // latest=0.85, prior years niedrig → blend < latest → min wählt blend
   const yoySeries = [0.85, 0.20, 0.15, 0.18]; // newest-first; stark beschleunigend
-  const result = cMOG(yoySeries, null, null, null, {});
+  // C6: 3. Arg ist jetzt revHist (per-Jahr-Revenue); null → Fallback revLatest
+  const result = cMOG(yoySeries, null, null, null, null, {});
   assert(result.latestOrganicYoY != null, 'latestOrganicYoY sollte gesetzt sein');
   assert(Math.abs(result.latestOrganicYoY - 0.85) < 1e-9, `latestOrganicYoY sollte 0.85 sein, ist ${result.latestOrganicYoY}`);
   assert(result.blend != null, 'blend sollte gesetzt sein');
@@ -708,7 +730,8 @@ test('Unit computeMedtechOrganicGrowth (c): FY-Reconciliation wirft LAUT bei Dea
   const snapAnnualRev = 500e6; // 100% Divergenz > 15% → muss laut failen
   let threw = false;
   try {
-    cMOG(yoySeries, goodwillHistory, revLatest, null, { ticker: 'TEST_ASSERT', snapAnnualRev });
+    // C6: revHist=null → Fallback revLatest (1000M); Deal-Jahr-Drop fires (0.40 jump) → FY-Recon-Assert aktiv
+    cMOG(yoySeries, goodwillHistory, null, revLatest, null, { ticker: 'TEST_ASSERT', snapAnnualRev });
     threw = false;
   } catch (e) {
     threw = true;
@@ -728,11 +751,46 @@ test('Unit computeMedtechOrganicGrowth (d): FY-Reconciliation wirft NICHT bei gu
   const snapAnnualRev = 1050e6; // 5% Abweichung → innerhalb 15% → kein Throw
   let threw = false;
   try {
-    cMOG(yoySeries, goodwillHistory, revLatest, null, { ticker: 'TEST_OK', snapAnnualRev });
+    // C6: revHist=null → Fallback revLatest (1000M)
+    cMOG(yoySeries, goodwillHistory, null, revLatest, null, { ticker: 'TEST_OK', snapAnnualRev });
   } catch (e) {
     threw = true;
   }
   assert(!threw, 'FY-Reconciliation darf bei gutem Rev-Match (<15%) NICHT failen');
+});
+
+// audit/fix (gauntlet C6): SIGN-SEPARATED DECONTAMINATION unit-tests (Ledger 26 — medtech auf dlst-Behandlung).
+test('Unit cMOG (C6): NEGATIVER ΔGoodwill = Impairment-FLAG, KEIN Deal-Sprung (sign-separiert, mirror dlst Bug-Fix 2)', () => {
+  const yoySeries = [0.05, 0.08, 0.06]; // keine echten Deal-Years
+  // gwHist: Goodwill FÄLLT 500M->100M (Impairment/Divestitur) = -400M; rev-Jahr 1000M → |−40%| >= 5%
+  const goodwillHistory = [
+    { val: 100e6, end: '2025' }, // newer (gefallen)
+    { val: 500e6, end: '2024' }, // older
+    { val: 520e6, end: '2023' },
+  ];
+  const revHist = [{ val: 1000e6, end: '2025' }, { val: 1000e6, end: '2024' }, { val: 1000e6, end: '2023' }];
+  const r = cMOG(yoySeries, goodwillHistory, revHist, 1000e6, null, { ticker: 'TEST_IMP' });
+  assert(r.impairmentFlag === true, `negativer ΔGoodwill >=5% sollte impairmentFlag=true setzen, ist ${r.impairmentFlag}`);
+  assert(r.dealYearExcluded === false, `Impairment ist KEIN Deal-Sprung → dealYearExcluded muss false sein, ist ${r.dealYearExcluded}`);
+  assert(r.droppedIdx.length === 0, `Impairment darf KEIN YoY-Jahr droppen (sign-separiert), droppedIdx=${r.droppedIdx}`);
+});
+
+test('Unit cMOG (C6): per-Jahr-Revenue-Denominator — älteres Deal-Jahr gegen DAS-Jahr-Rev (nicht revLatest)', () => {
+  // Ein Name, der von 200M auf 1000M Rev gewachsen ist. Ein älteres Deal-Jahr (Goodwill +60M) war damals
+  // 60/200 = 30% von Rev (>=25% → mask), aber nur 60/1000 = 6% gegen revLatest (KEIN mask). Per-Jahr ist korrekt.
+  const yoySeries = [0.10, 0.10, 0.40]; // index 2 = das ältere (gewachsene) Jahr
+  const goodwillHistory = [
+    { val: 100e6, end: '2025' },
+    { val: 100e6, end: '2024' },
+    { val: 100e6, end: '2023' }, // newer des Sprungs index 2
+    { val: 40e6,  end: '2022' }, // older → delta=+60M
+  ];
+  const revHistPerYear = [{ val: 1000e6, end: '2025' }, { val: 900e6, end: '2024' }, { val: 200e6, end: '2023' }, { val: 140e6, end: '2022' }];
+  const rPerYear = cMOG(yoySeries, goodwillHistory, revHistPerYear, 1000e6, null, { ticker: 'TEST_PY' });
+  assert(rPerYear.dealYearExcluded === true, `per-Jahr (60/200=30%>=25%) sollte das Deal-Jahr maskieren, dealYearExcluded=${rPerYear.dealYearExcluded}`);
+  // Gegenprobe: ohne revHist (revLatest-Fallback 1000M) wäre 60/1000=6% → KEIN mask
+  const rRevLatest = cMOG(yoySeries, goodwillHistory, null, 1000e6, null, { ticker: 'TEST_RL' });
+  assert(rRevLatest.dealYearExcluded === false, `revLatest-Fallback (60/1000=6%) sollte NICHT maskieren, dealYearExcluded=${rRevLatest.dealYearExcluded}`);
 });
 
 // =================== FIX A/B (2026-06-21): computeDlstOrganicGrowth FY-Alignment + dealYearExcluded-Ehrlichkeit ===

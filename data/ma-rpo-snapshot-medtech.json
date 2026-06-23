@@ -8,7 +8,7 @@
     "tickerCount": 67,
     "goodwillCoveragePct": 74.6,
     "paymentsCoveragePct": 35.8,
-    "note": "v1.1: maxGoodwillJumpPctRev (3yr window) + goodwillHistory added; delta-goodwill primary inorganic proxy; payments control-only (35.8% cov expected)"
+    "note": "v1.4: revenueHistory[{val,end}] added (LOCAL reconstruction from snapshots/<T>.json annual.annualRev, .end from goodwillHistory[i].end) for per-year goodwill-jump denominator, mirroring dlst snapshot shape (Fix 1). v1.1 fields retained: maxGoodwillJumpPctRev (3yr window) + goodwillHistory; delta-goodwill primary inorganic proxy; payments control-only."
   },
   "ABT": {
     "cik": "0000001800",
@@ -46,7 +46,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 44328000000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 41950000000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 40109000000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 43653000000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "AHCO": {
     "cik": "0001725255",
@@ -84,7 +102,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 3244857000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 3260975000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 3200177000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 2970595000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "ALC": {
     "cik": "0001167379",
@@ -105,7 +141,25 @@
       "goodwill": false,
       "payments": false
     },
-    "staleFlag": true
+    "staleFlag": true,
+    "revenueHistory": [
+      {
+        "val": 10401000000,
+        "end": null
+      },
+      {
+        "val": 9911000000,
+        "end": null
+      },
+      {
+        "val": 9455000000,
+        "end": null
+      },
+      {
+        "val": 8717000000,
+        "end": null
+      }
+    ]
   },
   "ALGN": {
     "cik": "0001097149",
@@ -143,7 +197,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 4034964000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 3999012000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 3862260000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 3734635000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "ALMR": {
     "cik": "0002104204",
@@ -164,7 +236,17 @@
       "goodwill": false,
       "payments": false
     },
-    "staleFlag": null
+    "staleFlag": null,
+    "revenueHistory": [
+      {
+        "val": 74211000,
+        "end": null
+      },
+      {
+        "val": 25142000,
+        "end": null
+      }
+    ]
   },
   "AORT": {
     "cik": "0000784199",
@@ -202,7 +284,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 441330000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 388537000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 354004000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 313789000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "ATEC": {
     "cik": "0001350653",
@@ -240,7 +340,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 764155000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 611562000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 482262000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 350867000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "ATR": {
     "cik": "0000896622",
@@ -278,7 +396,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 3777181000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 3582890000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 3487450000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 3322249000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "ATRC": {
     "cik": "0001323885",
@@ -316,7 +452,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 534528000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 465307000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 399245000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 330379000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "AVNS": {
     "cik": "0001606498",
@@ -354,7 +508,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 701200000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 687800000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 673300000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 820000000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "AXGN": {
     "cik": "0000805928",
@@ -375,7 +547,25 @@
       "goodwill": false,
       "payments": false
     },
-    "staleFlag": true
+    "staleFlag": true,
+    "revenueHistory": [
+      {
+        "val": 225208000,
+        "end": null
+      },
+      {
+        "val": 187338000,
+        "end": null
+      },
+      {
+        "val": 159012000,
+        "end": null
+      },
+      {
+        "val": 138584000,
+        "end": null
+      }
+    ]
   },
   "BAX": {
     "cik": "0000010456",
@@ -413,7 +603,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 11244000000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 10636000000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 14813000000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 15113000000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "BDX": {
     "cik": "0000010795",
@@ -451,7 +659,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 21840000000,
+        "end": "2025-09-30"
+      },
+      {
+        "val": 20245000000,
+        "end": "2024-09-30"
+      },
+      {
+        "val": 19372000000,
+        "end": "2023-09-30"
+      },
+      {
+        "val": 18870000000,
+        "end": "2022-09-30"
+      }
+    ]
   },
   "BFLY": {
     "cik": "0001804176",
@@ -472,7 +698,25 @@
       "goodwill": false,
       "payments": false
     },
-    "staleFlag": null
+    "staleFlag": null,
+    "revenueHistory": [
+      {
+        "val": 97610000,
+        "end": null
+      },
+      {
+        "val": 82056000,
+        "end": null
+      },
+      {
+        "val": 65900000,
+        "end": null
+      },
+      {
+        "val": 73390000,
+        "end": null
+      }
+    ]
   },
   "BIO-B": {
     "cik": "0000012208",
@@ -510,7 +754,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 2583200000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 2566500000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 2671262000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 2802249000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "BLCO": {
     "cik": "0001860742",
@@ -548,7 +810,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 5101000000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 4791000000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 4146000000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 3768000000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "BLFS": {
     "cik": "0000834365",
@@ -586,7 +866,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 96214000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 82254000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 143271000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 161759000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "BSX": {
     "cik": "0000885725",
@@ -624,7 +922,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 20074000000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 16747000000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 14240000000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 12682000000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "CNMD": {
     "cik": "0000816956",
@@ -662,7 +978,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 1374724000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 1307015000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 1244744000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 1045472000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "COO": {
     "cik": "0000711404",
@@ -700,7 +1034,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 4092400000,
+        "end": "2025-10-31"
+      },
+      {
+        "val": 3895400000,
+        "end": "2024-10-31"
+      },
+      {
+        "val": 3593200000,
+        "end": "2023-10-31"
+      },
+      {
+        "val": 3308400000,
+        "end": "2022-10-31"
+      }
+    ]
   },
   "DXCM": {
     "cik": "0001093557",
@@ -738,7 +1090,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 4662000000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 4033000000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 3622300000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 2909800000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "ENOV": {
     "cik": "0001420800",
@@ -776,7 +1146,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 2248049000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 2107623000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 1707197000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 1563101000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "ESTA": {
     "cik": "0001688757",
@@ -814,7 +1202,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 211076000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 166025000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 165151000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 161700000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "EW": {
     "cik": "0001099800",
@@ -852,7 +1258,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 6067600000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 5439500000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 6004800000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 5382400000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "GEHC": {
     "cik": "0001932393",
@@ -890,7 +1314,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 20625000000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 19672000000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 19552000000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 18341000000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "GKOS": {
     "cik": "0001192448",
@@ -928,7 +1370,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 507442000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 383481000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 314711000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 282862000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "GMED": {
     "cik": "0001237831",
@@ -966,7 +1426,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 2938931000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 2519355000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 1568476000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 1022843000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "HAE": {
     "cik": "0000313143",
@@ -1004,7 +1482,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 1334027000,
+        "end": "2026-03-28"
+      },
+      {
+        "val": 1360824000,
+        "end": "2025-03-29"
+      },
+      {
+        "val": 1309055000,
+        "end": "2024-03-30"
+      },
+      {
+        "val": 1168660000,
+        "end": "2023-04-01"
+      }
+    ]
   },
   "IART": {
     "cik": "0000917520",
@@ -1042,7 +1538,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 1635245000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 1610527000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 1541573000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 1557666000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "ICUI": {
     "cik": "0000883984",
@@ -1080,7 +1594,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 2212299000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 2382046000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 2259126000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 2279997000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "INMD": {
     "cik": "0001742692",
@@ -1101,7 +1633,25 @@
       "goodwill": false,
       "payments": false
     },
-    "staleFlag": null
+    "staleFlag": null,
+    "revenueHistory": [
+      {
+        "val": 370495000,
+        "end": null
+      },
+      {
+        "val": 394818000,
+        "end": null
+      },
+      {
+        "val": 492048000,
+        "end": null
+      },
+      {
+        "val": 454271000,
+        "end": null
+      }
+    ]
   },
   "INSP": {
     "cik": "0001609550",
@@ -1122,7 +1672,25 @@
       "goodwill": false,
       "payments": false
     },
-    "staleFlag": null
+    "staleFlag": null,
+    "revenueHistory": [
+      {
+        "val": 911981000,
+        "end": null
+      },
+      {
+        "val": 802804000,
+        "end": null
+      },
+      {
+        "val": 624799000,
+        "end": null
+      },
+      {
+        "val": 407856000,
+        "end": null
+      }
+    ]
   },
   "IRMD": {
     "cik": "0001325618",
@@ -1143,7 +1711,25 @@
       "goodwill": false,
       "payments": false
     },
-    "staleFlag": null
+    "staleFlag": null,
+    "revenueHistory": [
+      {
+        "val": 83814000,
+        "end": null
+      },
+      {
+        "val": 73242120,
+        "end": null
+      },
+      {
+        "val": 65562300,
+        "end": null
+      },
+      {
+        "val": 53303150,
+        "end": null
+      }
+    ]
   },
   "IRTC": {
     "cik": "0001388658",
@@ -1181,7 +1767,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 747138000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 591839000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 492681000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 410921000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "ISRG": {
     "cik": "0001035267",
@@ -1219,7 +1823,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 10064700000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 8352100000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 7124100000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 6222200000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "ITGR": {
     "cik": "0001114483",
@@ -1257,7 +1879,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 1853637000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 1716596000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 1596673000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 1376096000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "KMTS": {
     "cik": "0001877184",
@@ -1278,7 +1918,21 @@
       "goodwill": false,
       "payments": false
     },
-    "staleFlag": null
+    "staleFlag": null,
+    "revenueHistory": [
+      {
+        "val": 59815000,
+        "end": null
+      },
+      {
+        "val": 27814000,
+        "end": null
+      },
+      {
+        "val": 7630000,
+        "end": null
+      }
+    ]
   },
   "LIVN": {
     "cik": "0001639691",
@@ -1316,7 +1970,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 1388100000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 1253400000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 1153500000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 1021800000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "LMAT": {
     "cik": "0001158895",
@@ -1354,7 +2026,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 249602000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 219863000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 193484000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 161651000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "MASI": {
     "cik": "0000937556",
@@ -1392,7 +2082,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 1526900000,
+        "end": "2026-01-03"
+      },
+      {
+        "val": 2094400000,
+        "end": "2024-12-28"
+      },
+      {
+        "val": 2048100000,
+        "end": "2023-12-30"
+      },
+      {
+        "val": 2035800000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "MDLN": {
     "cik": "0002046386",
@@ -1426,7 +2134,17 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 28432000000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 25507000000,
+        "end": "2024-12-31"
+      }
+    ]
   },
   "MDT": {
     "cik": "0001613103",
@@ -1447,7 +2165,25 @@
       "goodwill": false,
       "payments": false
     },
-    "staleFlag": true
+    "staleFlag": true,
+    "revenueHistory": [
+      {
+        "val": 33537000000,
+        "end": null
+      },
+      {
+        "val": 32364000000,
+        "end": null
+      },
+      {
+        "val": 31227000000,
+        "end": null
+      },
+      {
+        "val": 31686000000,
+        "end": null
+      }
+    ]
   },
   "MMED": {
     "cik": "0002062583",
@@ -1468,7 +2204,21 @@
       "goodwill": false,
       "payments": false
     },
-    "staleFlag": true
+    "staleFlag": true,
+    "revenueHistory": [
+      {
+        "val": 2715000000,
+        "end": null
+      },
+      {
+        "val": 2469000000,
+        "end": null
+      },
+      {
+        "val": 2245000000,
+        "end": null
+      }
+    ]
   },
   "MMSI": {
     "cik": "0000856982",
@@ -1506,7 +2256,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 1515906000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 1356514000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 1257366000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 1150981000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "NVCR": {
     "cik": "0001645113",
@@ -1527,7 +2295,25 @@
       "goodwill": false,
       "payments": false
     },
-    "staleFlag": null
+    "staleFlag": null,
+    "revenueHistory": [
+      {
+        "val": 655353000,
+        "end": null
+      },
+      {
+        "val": 605220000,
+        "end": null
+      },
+      {
+        "val": 509338000,
+        "end": null
+      },
+      {
+        "val": 537840000,
+        "end": null
+      }
+    ]
   },
   "NVST": {
     "cik": "0001757073",
@@ -1565,7 +2351,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 2719500000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 2510600000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 2566500000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 2569100000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "PEN": {
     "cik": "0001321732",
@@ -1603,7 +2407,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 1403665000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 1194615000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 1058522000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 847133000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "PHG": {
     "cik": "0000313216",
@@ -1624,7 +2446,25 @@
       "goodwill": false,
       "payments": false
     },
-    "staleFlag": null
+    "staleFlag": null,
+    "revenueHistory": [
+      {
+        "val": 20783124760.2,
+        "end": null
+      },
+      {
+        "val": 21001048071.3,
+        "end": null
+      },
+      {
+        "val": 21173522135.7,
+        "end": null
+      },
+      {
+        "val": 20774967203.1,
+        "end": null
+      }
+    ]
   },
   "PLSE": {
     "cik": "0001625101",
@@ -1662,7 +2502,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 350000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 0,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 700000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 1418000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "PODD": {
     "cik": "0001145197",
@@ -1700,7 +2558,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 2708100000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 2071600000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 1697100000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 1305300000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "PRCT": {
     "cik": "0001588978",
@@ -1721,7 +2597,25 @@
       "goodwill": false,
       "payments": false
     },
-    "staleFlag": null
+    "staleFlag": null,
+    "revenueHistory": [
+      {
+        "val": 308054000,
+        "end": null
+      },
+      {
+        "val": 224498000,
+        "end": null
+      },
+      {
+        "val": 136191000,
+        "end": null
+      },
+      {
+        "val": 75014000,
+        "end": null
+      }
+    ]
   },
   "QDEL": {
     "cik": "0001906324",
@@ -1759,7 +2653,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 2730200000,
+        "end": "2025-12-28"
+      },
+      {
+        "val": 2782900000,
+        "end": "2024-12-29"
+      },
+      {
+        "val": 2997800000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 3266000000,
+        "end": "2022-01-02"
+      }
+    ]
   },
   "RMD": {
     "cik": "0000943819",
@@ -1797,7 +2709,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 5146327000,
+        "end": "2025-06-30"
+      },
+      {
+        "val": 4685297000,
+        "end": "2024-06-30"
+      },
+      {
+        "val": 4222993000,
+        "end": "2023-06-30"
+      },
+      {
+        "val": 3578127000,
+        "end": "2022-06-30"
+      }
+    ]
   },
   "SNN": {
     "cik": "0000845982",
@@ -1818,7 +2748,25 @@
       "goodwill": false,
       "payments": false
     },
-    "staleFlag": null
+    "staleFlag": null,
+    "revenueHistory": [
+      {
+        "val": 6164000000,
+        "end": null
+      },
+      {
+        "val": 5810000000,
+        "end": null
+      },
+      {
+        "val": 5549000000,
+        "end": null
+      },
+      {
+        "val": 5215000000,
+        "end": null
+      }
+    ]
   },
   "SOLV": {
     "cik": "0001964738",
@@ -1856,7 +2804,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 8325000000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 8254000000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 8197000000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 8130000000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "STAA": {
     "cik": "0000718937",
@@ -1894,7 +2860,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 239442000,
+        "end": "2026-01-02"
+      },
+      {
+        "val": 313901000,
+        "end": "2024-12-27"
+      },
+      {
+        "val": 322415000,
+        "end": "2023-12-29"
+      },
+      {
+        "val": 284391000,
+        "end": "2022-12-30"
+      }
+    ]
   },
   "STE": {
     "cik": "0001757898",
@@ -1932,7 +2916,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 5935900000,
+        "end": "2026-03-31"
+      },
+      {
+        "val": 5459515000,
+        "end": "2025-03-31"
+      },
+      {
+        "val": 5500000000,
+        "end": "2024-03-31"
+      },
+      {
+        "val": 4957839000,
+        "end": "2023-03-31"
+      }
+    ]
   },
   "STVN": {
     "cik": "0001849853",
@@ -1953,7 +2955,25 @@
       "goodwill": false,
       "payments": false
     },
-    "staleFlag": null
+    "staleFlag": null,
+    "revenueHistory": [
+      {
+        "val": 1382472855.3899999,
+        "end": null
+      },
+      {
+        "val": 1286563291.2,
+        "end": null
+      },
+      {
+        "val": 1264887496.62,
+        "end": null
+      },
+      {
+        "val": 1146369845.61,
+        "end": null
+      }
+    ]
   },
   "SYK": {
     "cik": "0000310764",
@@ -1991,7 +3011,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 25116000000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 22595000000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 20498000000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 18449000000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "TFX": {
     "cik": "0000096943",
@@ -2029,7 +3067,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 1983700000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 3047324000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 2974489000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 2791041000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "TMDX": {
     "cik": "0001756262",
@@ -2063,7 +3119,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 605494000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 441540000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 241623000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 93459000,
+        "end": null
+      }
+    ]
   },
   "TNDM": {
     "cik": "0001438133",
@@ -2084,7 +3158,25 @@
       "goodwill": false,
       "payments": false
     },
-    "staleFlag": null
+    "staleFlag": null,
+    "revenueHistory": [
+      {
+        "val": 1014736000,
+        "end": null
+      },
+      {
+        "val": 940203000,
+        "end": null
+      },
+      {
+        "val": 747718000,
+        "end": null
+      },
+      {
+        "val": 801217000,
+        "end": null
+      }
+    ]
   },
   "UFPT": {
     "cik": "0000914156",
@@ -2122,7 +3214,25 @@
       "goodwill": true,
       "payments": true
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 602797000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 504421000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 400072000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 353792000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "WRBY": {
     "cik": "0001504776",
@@ -2143,7 +3253,25 @@
       "goodwill": false,
       "payments": false
     },
-    "staleFlag": null
+    "staleFlag": null,
+    "revenueHistory": [
+      {
+        "val": 871905000,
+        "end": null
+      },
+      {
+        "val": 771315000,
+        "end": null
+      },
+      {
+        "val": 669765000,
+        "end": null
+      },
+      {
+        "val": 598112000,
+        "end": null
+      }
+    ]
   },
   "WST": {
     "cik": "0000105770",
@@ -2181,7 +3309,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 3074100000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 2893200000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 2949800000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 2886900000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "XRAY": {
     "cik": "0000818479",
@@ -2219,7 +3365,25 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 3680000000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 3793000000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 3965000000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 3922000000,
+        "end": "2022-12-31"
+      }
+    ]
   },
   "ZBH": {
     "cik": "0001136869",
@@ -2257,6 +3421,24 @@
       "goodwill": true,
       "payments": false
     },
-    "staleFlag": false
+    "staleFlag": false,
+    "revenueHistory": [
+      {
+        "val": 8231500000,
+        "end": "2025-12-31"
+      },
+      {
+        "val": 7678600000,
+        "end": "2024-12-31"
+      },
+      {
+        "val": 7394200000,
+        "end": "2023-12-31"
+      },
+      {
+        "val": 6939900000,
+        "end": "2022-12-31"
+      }
+    ]
   }
 }
