@@ -114,6 +114,47 @@ function balanceAt(stock, idx, field) {
 }
 
 function evaluate(stock) {
+  // --- §A.1 COHORT GATE (activation 2026-06-23) ---
+  // This DIAGNOSTIC is meaningful ONLY for the pre-revenue clinical-biotech cohort. The generic
+  // prod runner (runner.evaluateStock onlyDefault) has no cohort concept, so — now that this method
+  // is defaultActive — it self-scopes here to stop a profitable NON-biotech from being labeled
+  // SELF_FUNDING (the OCF>=0 SELF_FUNDING escape below is intended ONLY for a biotech that turned
+  // self-funding, not for AAPL). Mirrors closed-end-trust-guard self-scoping via meta.industry.
+  // Outside the cohort -> computable:false OUT_OF_COHORT (never a faked tier). Cohort (spec
+  // formula-design-special_tracks-v0 §A.1): Healthcare ∧ Biotechnology ∧ US-listed ∧
+  // marketCap>=$200M ∧ latestAnnualRev<$50M. The court-score classifier remains the cohort authority
+  // for the buckets; this self-gate only governs the standalone methods/ DIAGNOSTIC.
+  {
+    const meta = (stock && stock.meta) || {};
+    const country = meta.country;
+    const mcRaw = H.val(stock, 'marketCap');
+    const mcGate = (mcRaw != null && typeof mcRaw === 'object' && 'value' in mcRaw)
+      ? (Number.isFinite(mcRaw.value) ? mcRaw.value : null)
+      : (Number.isFinite(mcRaw) ? mcRaw : null);
+    let latestRev = null;
+    const revArr = stock && stock.annual && stock.annual.annualRev;
+    if (Array.isArray(revArr)) {
+      for (let i = 0; i < revArr.length; i++) { const v = annualAt(revArr, i); if (v != null) { latestRev = v; break; } }
+    }
+    const revForGate = latestRev == null ? 0 : latestRev; // truly pre-revenue (no rev data) => 0 => in cohort
+    const inCohort =
+      meta.sector === 'Healthcare' &&
+      meta.industry === 'Biotechnology' &&
+      (country == null || country === 'United States') &&   // US-listing-lite (vintage-A US names carry null country)
+      mcGate != null && mcGate >= 200e6 &&
+      revForGate < 50e6;
+    if (!inCohort) {
+      return H.buildResult({
+        value: null,
+        pass: false,
+        computable: false,           // OUT_OF_COHORT: withheld, never faked
+        threshold: THRESHOLD, thresholdOp: THRESHOLD_OP,
+        reason: 'OUT_OF_COHORT: biotech-survivability applies only to Healthcare∧Biotechnology∧US∧marketCap>=$200M∧latestRev<$50M (spec §A.1) — not computed for this name',
+        components: { diagnosticId: DIAG.id, stage: 'OUT_OF_COHORT', tier: null, runwayQ: null, dilutionTier: null, lamps: [] },
+      });
+    }
+  }
+
   const a = (stock && stock.annual) || {};
   const ocf0 = annualAt(a.annualOCF, 0);
   const mc = H.val(stock, 'marketCap');
