@@ -18,7 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const ROOT = __dirname;
-const { absKaliber, absKaliberIndustrials, absKaliberStaples, absKaliberConsDisc, absKaliberMaterials, absKaliberEnergy, absKaliberPharma, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
+const { absKaliber, absKaliberIndustrials, absKaliberStaples, absKaliberConsDisc, absKaliberMaterials, absKaliberEnergy, absKaliberPharma, absKaliberItServices, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
 // Medtech M&A snapshot (advisory lamps; object keyed by ticker)
 const maMedtechRaw = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'ma-rpo-snapshot-medtech.json'), 'utf8')); } catch { return {}; } })();
 // Remove _header key
@@ -536,6 +536,40 @@ const FORMULAS = {
     pharma: true, cohortKey: 'pharma_specialty',
     a2Note: 'pharma_commercial v0 specialty cohort (Drug Manufacturers - Specialty & Generic ∧ §1.4 commercial gate: NBIX/UTHR/ZTS/ELAN/SUPN/VTRS/AMRX/PAHC/PBH/ANIP/INDV/LNTH/BCRX/HIMS). Heterogeneous generic<->specialty-branded, GM 35-95% (VTRS 35% generic <-> NBIX/UTHR 88-98% specialty — the WIDE GM band is REAL, so gm must be per-cohort REL, never a hard gate; elite .92). Same 3-axis absKaliberPharma engine + coverage-renorm as pharma_branded; cohort-specific growth (.00/.12 — floor 0.00 mature generics, p90 inflated → elite capped .12), gm (.36/.92 — the WIDE band INTENTIONAL), eff (.05/.34). n=14 → thin-but-sufficient, full ABS+REL blend (mirrors energy_midstream n=26 documented headroom; 14 is bordering, β=0.6 holds MAD-robust). See pharma_branded.a2Note for the full mechanism + the QUALITY-ONLY guarantee + marquee/foreign-control asserts. Additive/parity-safe; constants frozen.',
   },
+  // ===========================================================================
+  // it_services (CORE) — ONE de-contaminated people-leverage / low-capital-compounding quality cohort (Special-Track
+  // B). Spec formula-design-special_tracks-v0-2026-06-22.md PART B (Council->Court DESIGN-PASS v0; NORMS recomputed-
+  // live-then-frozen 2026-06-23 on the CLEAN de-contaminated pool; the CORE gate). 5 SCORED axes {gpa, fcfMargin,
+  // opMargin, growth, netIssuance} via the NEW engine absKaliberItServices (coverage-renorm; the 12 existing CORE
+  // buckets are BYTE-UNTOUCHED). Weights {gpa .34, fcfMargin .24, opMargin .18, growth .14, netIssuance .10}: the
+  // capital-discipline+profitability pillar gpa+fcfMargin+netIssuance = .68 ≫ growth .14 (a low-capital compounder,
+  // not a growth chase). RAW inputs from m.it.* (court-screen buildItServicesAxes; deal-mask + spin-off guard applied
+  // UPSTREAM). n=22 de-contaminated → full ABS+REL blend (β=0.6). it_services = NEW code keyed by the new cohort
+  // string; existing buckets (medtech/dlst/saas/fabless/industrials/staples/consdisc/materials/energy/pharma) are
+  // BYTE-IDENTICAL.
+  it_services: {
+    label: 'IT-Services v0 (people-leverage / low-capital-compounding: Information Technology Services; asset-light consulting/SI/BPO compounders; absolute-anchor, GP/assets asset-light proxy, FCF cash-conversion, op-margin pricing-power, organic growth, net-issuance discipline; PEOPLE_LEVERAGE_BLIND/CYCLE_WALL/BACKLOG_FUTURE)',
+    membership: { g: { c: 0.00, s: 0.06 }, gm: { c: 0.05, s: 0.10 }, scaleLog: { c: log10(1000), s: 0.6 } },
+    axes: [
+      { key: 'gpa',         name: 'GP/Assets',   k: 1.5, w: 0.34 },
+      { key: 'fcfMargin',   name: 'FCF-Margin',  k: 1.5, w: 0.24 },
+      { key: 'opMargin',    name: 'OpMargin',    k: 1.5, w: 0.18 },
+      { key: 'growth',      name: 'Growth',      k: 2.0, w: 0.14 },
+      { key: 'netIssuance', name: 'NetIssuance', k: 1.5, w: 0.10 },
+    ],
+    dilCap: 0, dilStart: 0.05, dilRange: 0.20, // net-issuance is a SCORED axis (T5); no separate SBC penalty.
+    stages: [
+      { name: 'S3-Cash-Compounder', test: f => f >= 0.20 },
+      { name: 'S2-FCF-positiv',     test: f => f >= 0.08 },
+      { name: 'S1-Approaching',     test: f => f >= -0.05 },
+      { name: 'S0-Low-Margin',      test: () => true },
+    ],
+    dominantBlock: ['gpa', 'fcfMargin'],
+    degraded: false,
+    normTableId: 'it-services-norms-2026-06-23',
+    itservices: true, cohortKey: 'it_services',
+    a2Note: 'it_services v0 (Spec formula-design-special_tracks-v0-2026-06-22.md PART B, Council->Court DESIGN-PASS v0; NORMS RECOMPUTED LIVE on the CLEAN de-contaminated vintage-tolerant US pool 2026-06-23 THEN frozen — the CORE gate). ONE de-contaminated people-leverage / low-capital-compounding cohort: Information Technology Services (the exact Yahoo industry string) ∧ Technology ∧ US (country-domicile guard + US_PRIMARY_ALLOWLIST {ACN,G,INFY,GLOB}) ∧ >=$1B ∧ NOT contamination-gated. Live: raw 38 US >=$1B; net 22 after the §B.1 contamination gate excludes the 8 economic-gate contaminants (CIFR/APLD/BBAI/KEEL/SHAZ/CHRN crypto-miners/AI-shells opMargin<0; CDW/INGM hardware distributors RPE>$700k) + the colo fallback (VNET) + the foreign primaries (GIB/GDS/MGRT). SCORE = LOW-CAPITAL-COMPOUNDING BUSINESS QUALITY. 5 SCORED axes via absKaliberItServices: GP/assets (Novy-Marx STRONG — THE asset-light low-capital-compounding proxy, the LEAD axis, w .34, norm .05/.45 = live p10 16.2% / p90 46.1%; floor .05 honors the goodwill-heavy roll-up CACI gpa 8.8% — floored honestly via the linear q, no special case), FCF-margin annualFCF/annualRev (cash conversion = the people-leverage payoff, Mohanram; w .24, .00/.18), operating margin annualOpInc/annualRev (pricing power vs wage inflation; w .18, .02/.18 — level NOT a hard gate, the India-offshore-vs-Western GM inversion means level mis-ranks), organic growth (deal-masked §B.5 + spin-off guarded UPSTREAM, 0.60*latest+0.40*min blend; w .14, .00/.15 — IT-services mid-single-digit through-cycle, capped BELOW the discipline pillar so a roll-up growth spike cannot top-score), net-share-issuance penalty (Pontiff-Woodgate STRONG, w .10, q(-NSI) {-.10/.03}, buyback=elite = the compounder signature; ~50% coverage — Vintage-A lacks annualShares → DROP+renorm+ISSUANCE_NOT_READY). CAPITAL-DISCIPLINE+PROFITABILITY PILLAR gpa+fcfMargin+netIssuance = .68 ≫ growth .14. COVERAGE-RENORM: any NOT_READY/null axis dropped, survivors renormalize to Σ=1.0 (no fake-neutral impute). score=100*(0.6*absKaliber+0.4*REL), β=0.6, REL per-cohort (n=22≫15). THE KEY DESIGN MOVE (§B.2): revenue-per-employee is NOT a scored axis (weight 0.00) — raw RPE is INVERTED on the live cohort (sorting RPE-descending puts the capital-intensive contaminants CIFR/INGM/CDW at the TOP and the genuine elite ACN/EPAM/GLOB/CTSH at the BOTTOM), so RPE is used ONLY as the classifier contamination gate (RPE>$700k) + an advisory RPE_ADVISORY flag. WALLS (always-on lamps): PEOPLE_LEVERAGE_BLIND (the FEASIBILITY DISCLOSURE — mirrors medtech MA_INTANGIBLE_BLIND: the 3 best direct people-leverage signals book-to-bill/utilization/attrition carry NO us-gaap tag and are ABSENT; headcount IS present locally but only ~55% coverage and raw RPE is INVERTED + therefore NOT scored — so NO axis directly measures people-leverage; the score leans on people-leverage-VIA-asset-efficiency gpa), BACKLOG_FUTURE/UTILIZATION_FUTURE/ATTRITION_FUTURE (0-weight future BONUS, verified absent), CYCLE_WALL (~4y history), INVENTORY_BLIND, PEOPLE_DATA_PARTIAL (headcount ~55% coverage). SI-4 out-of-class (non-IT-services tech industry / non-US per the country-domicile guard + FOREIGN hardening / <$1B / contamination-gated → never enter court-buckets; pre-revenue shell with <2 annual-rev OR revLatest<$1M → score=null + excluded[] OUT_OF_SEGMENT:preexploration, the materials lesson) → score=null + excluded[]; SI-5 classifiedCount===scoredCount+excludedCount fail-loud; marquee assert (ACN/CTSH/EPAM/CACI/INFY/G/EXLS/IBM/GLOB/CNXC/DXC/BR/FIS/JKHY/IT/INOD) fail-loud + GENERATIVE anti-leak + CONTAM/FOREIGN positive-control (CIFR/APLD/BBAI/KEEL/SHAZ/CHRN/CDW/INGM/VNET/GIB/GDS/MGRT must NOT classify). FEASIBILITY VERDICT: headcount IS present locally → the design itself (§B.2 RPE INVERTED) prescribes the low-capital-compounding axes as the scored signal with RPE as gate+flag only; the people-leverage omission is disclosed via the always-on PEOPLE_LEVERAGE_BLIND lamp. The ACN/G/GLOB US-primary foreign-domiciled marquees (Accenture plc Ireland / Genpact Ltd Bermuda / Globant S.A. Luxembourg, all NYSE-primary) + INFY (Infosys Ltd Vintage-A) are admitted via the name-verified US_PRIMARY_ALLOWLIST. Additive/parity-safe. Constants frozen §B.4.',
+  },
   diagnostics_lst: {
     label: 'Diagnostics-&-Life-Science-Tools v0 (cohort-aware dx|tools, absolute-anchor, deceleration-aware organic growth, FCF-efficiency, chronic-acquirer lamps)',
     membership: { g: { c: 0.10, s: 0.05 }, gm: { c: 0.40, s: 0.10 }, scaleLog: { c: log10(300), s: 0.5 } },
@@ -592,6 +626,13 @@ const EN_MIN_REVENUE = 1e6; // $1M latest-annual-revenue floor for an energy nam
 // SCORED a pharma name needs >=2 non-null annual revenue points AND a latest revenue >= PH_MIN_REVENUE ($1M) — the
 // gm/eff axes are undefined/explosive on near-zero revenue. SI-4 score=null + excluded[] OUT_OF_SEGMENT:preexploration.
 const PH_MIN_REVENUE = 1e6; // $1M latest-annual-revenue floor for a pharma name to be SCORED (else preexploration)
+
+// it_services (CORE) PRE-REVENUE SI-4 floor (the materials/energy lesson). classify-itservices.js already excludes
+// the negative-opMargin AI-shells via the contamination gate; this is the belt-and-suspenders floor catching any
+// revenue-less shell that slipped in. To be SCORED an it_services name needs >=2 non-null annual revenue points AND
+// a latest revenue >= IT_MIN_REVENUE ($1M) — the gpa/fcfMargin/opMargin axes are undefined/explosive on near-zero
+// revenue. SI-4 score=null + excluded[] OUT_OF_SEGMENT:preexploration.
+const IT_MIN_REVENUE = 1e6; // $1M latest-annual-revenue floor for an it_services name to be SCORED (else preexploration)
 
 // --- Skeptiker-Welle-2-Befunde, deterministisch eingebaut ---
 const KILL = new Set(['PS', 'RDVT', 'ADEA', 'OMDA', 'TEM', 'KMTS']); // verifiziert: Ticker-Mismatch / falscher Sektor / Daten-Fehler
@@ -1148,6 +1189,30 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.cohort = i.cohort || F.cohortKey;
     }
   }
+  // --- it_services (CORE) PRE-PASS: lift the 5 RAW axis inputs from m.it onto the member ---
+  // All intermediates are IT-SERVICES-LOCAL → all other buckets' member JSON byte-identical (parity). gpa/fcfMargin/
+  // opMargin/growth are NOT inverted (higher=better directly); netIssuance stores the NEGATED raw so the REL z
+  // (higher=better) agrees in sign with the ABS q-input. null raw → axis DROP (coverage-renorm in absKaliberItServices;
+  // REL sAxis returns 0=neutral for null). REVENUE-PER-EMPLOYEE is NOT lifted as a scored axis (§B.2 RPE inverted,
+  // weight 0.00 — gate + advisory flag only). Mirrors the energy pre-pass with the it_services axis set.
+  if (F.itservices) {
+    for (const m of members) {
+      const i = m.it || {};
+      m._itGpa = (i.gpa != null && isFinite(i.gpa)) ? i.gpa : null;
+      m._itFcfMargin = (i.fcfMargin != null && isFinite(i.fcfMargin)) ? i.fcfMargin : null;
+      m._itOpMargin = (i.opMargin != null && isFinite(i.opMargin)) ? i.opMargin : null;
+      m._itGrowth = (i.growth != null && isFinite(i.growth)) ? i.growth : null; // deal-masked + spinoff-guarded UPSTREAM
+      m._itNetIssuance = (i.netShareIssuance != null && isFinite(i.netShareIssuance)) ? -i.netShareIssuance : null; // q(-NSI) direction
+      // persisted audit fields (rounded)
+      m.gpa = m._itGpa == null ? null : Math.round(m._itGpa * 10000) / 10000;
+      m.fcfMarginIt = m._itFcfMargin == null ? null : Math.round(m._itFcfMargin * 10000) / 10000;
+      m.opMarginIt = m._itOpMargin == null ? null : Math.round(m._itOpMargin * 10000) / 10000;
+      m.growthInput = m._itGrowth == null ? null : Math.round(m._itGrowth * 10000) / 10000;
+      m.netShareIssuance = (i.netShareIssuance != null && isFinite(i.netShareIssuance)) ? Math.round(i.netShareIssuance * 10000) / 10000 : null;
+      m.revPerEmployee = (i.revPerEmployee != null && isFinite(i.revPerEmployee)) ? i.revPerEmployee : null; // §B.2 advisory only (NOT scored)
+      m.cohort = i.cohort || F.cohortKey;
+    }
+  }
 
   // Roh-Achswerte für Stats (cross-sectional Median/MAD): nutze winsorisierte Werte
   // For medtech growth: use _growthMedtech (Fix D organic + winsorize at 1.0) for Stats AND scoring (Fix D
@@ -1217,6 +1282,19 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       default: return m[key];
     }
   };
+  // it_services (CORE): 5 axis-keys {gpa, fcfMargin, opMargin, growth, netIssuance}; gpa/fcfMargin/opMargin/growth
+  // NON-inverted, netIssuance inverted (stored negated in m._itNetIssuance) → mirror enRaw on the m._it* fields. The
+  // REL z/MAD reads the SAME signed values as the ABS q-input.
+  const itRaw = (m, key) => {
+    switch (key) {
+      case 'gpa': return m._itGpa;
+      case 'fcfMargin': return m._itFcfMargin;
+      case 'opMargin': return m._itOpMargin;
+      case 'growth': return m._itGrowth;
+      case 'netIssuance': return m._itNetIssuance;
+      default: return m[key];
+    }
+  };
   const rawOfStats = (m, key) => {
     if (F.industrials) return indRaw(m, key);
     if (F.staples) return stpRaw(m, key);
@@ -1224,6 +1302,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (F.materials) return mtRaw(m, key);
     if (F.energy) return enRaw(m, key);
     if (F.pharma) return phRaw(m, key);
+    if (F.itservices) return itRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtech : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -1237,6 +1316,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (F.materials) return mtRaw(m, key);
     if (F.energy) return enRaw(m, key);
     if (F.pharma) return phRaw(m, key);
+    if (F.itservices) return itRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtechAdj : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -1362,6 +1442,20 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       const mGM = logistic(gmGate, F.membership.gm.c, F.membership.gm.s);
       const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
       M = mg * mGM * mSc;
+    } else if (F.itservices) {
+      // it_services membership: gpa(quality) × growth × scale logistic (gpa is the asset-light low-capital-
+      // compounding quality pillar — it stands in for the gm pillar; gm membership center is the gpa.floor). The
+      // growth gate uses the deal-masked _itGrowth (a NOT_READY:growth fully-deal-masked acquirer reads -1 → low
+      // membership BUT still scored on gpa/fcfMargin/opMargin/netIssuance via coverage-renorm — membership-Out only
+      // suppresses the headline rank, never the absKaliber). $1B+ marketCap is the classifier gate; the contamination
+      // gate already ran in the classifier. opMargin/fcfMargin/netIssuance are NOT membership inputs (scored axes only).
+      const gGate = m._itGrowth != null ? m._itGrowth : -1;            // null growth (NOT_READY/spinoff) → low
+      const gpaGate = m._itGpa != null ? m._itGpa : -1;                // null gpa → low
+      const scaleM = (m.marketCap != null && isFinite(m.marketCap)) ? m.marketCap / 1e6 : (m.scaleRevM || 1); // $1B+ marketCap
+      const mg = logistic(gGate, F.membership.g.c, F.membership.g.s);
+      const mGpa = logistic(gpaGate, F.membership.gm.c, F.membership.gm.s);
+      const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
+      M = mg * mGpa * mSc;
     } else {
       const mGate = (bucket === 'medtech_devices' && m._growthMedtech != null) ? m._growthMedtech
                   : (bucket === 'diagnostics_lst' && m._growthDlst != null) ? m._growthDlst
@@ -1673,6 +1767,45 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
         m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
       }
       m.stage = stageOf(F, m._phEff);
+    } else if (F.itservices) {
+      // it_services (CORE): absKaliberItServices = 5-axis weighted-q {gpa, fcfMargin, opMargin, growth, netIssuance}
+      // with COVERAGE-RENORM reading the cohort NORMS. gpa/fcfMargin/opMargin/growth NON-inverted; netIssuance
+      // inverted (the negated raw is in m._itNetIssuance — but absKaliberItServices re-negates the RAW netShareIssuance
+      // itself, so pass the RAW signed value, mirroring energy/industrials). The renorm fires on ~50% of names lacking
+      // annualShares (ISSUANCE_NOT_READY) + any NOT_READY axis. RPE is NOT an axis (§B.2 inverted, gate+flag only).
+      const cohortNorm = F.cohortKey; // 'it_services'
+      const itRec = {
+        gpa: m._itGpa, fcfMargin: m._itFcfMargin, opMargin: m._itOpMargin, growth: m._itGrowth,
+        netShareIssuance: (m.it && m.it.netShareIssuance != null && isFinite(m.it.netShareIssuance)) ? m.it.netShareIssuance : null,
+      };
+      const ak = absKaliberItServices(itRec, cohortNorm);
+      m.absKaliber = Math.round(ak.absK * 1000) / 1000;
+      m.absUsedAxes = ak.usedAxes;          // audit: which axes survived coverage-renorm
+      m.absDroppedAxes = ak.droppedAxes;    // audit: NOT_READY/ISSUANCE drops
+      const rawScore = Math.round(Math.max(0, blendScore(ak.absK, core, 0.6)) * 10) / 10; // pDil=0 (issuance is a SCORED axis)
+      // SI-1 shortlist-cut (§B.3): gpa >= gpa.floor (the lead asset-light quality pillar) AND fcfMargin >= fcfMargin.
+      // floor AND opMargin >= opMargin.floor. A NOT_READY/missing axis fails the floor (not the gate crashing) →
+      // belowAbsoluteFloor, listed but off the shortlist. NOT a score-kill (REL/score path runs independently).
+      const norm = NORMS[cohortNorm];
+      const gateGpaOk = (m._itGpa != null) && (m._itGpa >= norm.gpa.floor);
+      const gateFcfOk = (m._itFcfMargin != null) && (m._itFcfMargin >= norm.fcfMargin.floor);
+      const gateOpOk = (m._itOpMargin != null) && (m._itOpMargin >= norm.opMargin.floor);
+      m.belowAbsoluteFloor = !(gateGpaOk && gateFcfOk && gateOpOk);
+      // PRE-REVENUE SI-4 hard-exclude (the materials/energy lesson — the contamination gate already removed the
+      // negative-opMargin AI-shells in the classifier; this is the belt-and-suspenders floor). SCORED requires >=2
+      // non-null annual rev points AND revLatest >= IT_MIN_REVENUE ($1M) — verifies NO revenue-less shell can top.
+      const itRev = m.it || {};
+      const preRevenue = !(itRev.nAnnualRev != null && itRev.nAnnualRev >= 2
+        && itRev.revLatest != null && isFinite(itRev.revLatest) && itRev.revLatest >= IT_MIN_REVENUE);
+      if (preRevenue) {
+        m.exclusionReason = 'OUT_OF_SEGMENT:preexploration';
+        m.score = null;                                 // SI-4: lands in excluded[]
+        m.headlineShortlist = false;
+      } else {
+        m.score = m.membershipClass === 'Out' ? null : rawScore;
+        m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
+      }
+      m.stage = stageOf(F, m._itFcfMargin);
     } else {
       // audit/fix (gauntlet E3): SI-4 für saas/fabless — Out-Class-Member bekommen score=null (kein
       // irreführender Headline-Rang), exakt wie medtech/dlst (m.score = membershipClass==='Out' ? null : rawScore).
@@ -1973,6 +2106,30 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       // THIN_REL on the branded cohort (n=10<15 → ABS-only, beta=1.0)
       const norm = NORMS[F.cohortKey];
       if (norm.rel && norm.rel.suppressed && !L.includes('THIN_REL')) L.push('THIN_REL');
+      if (m.belowAbsoluteFloor) L.push('below-abs-floor');
+      if (m.membershipClass === 'Out') L.push('membership-Out(excluded-from-headline)');
+      if (Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.length) L.push(`coverage-renorm(dropped:${m.absDroppedAxes.join('+')})`);
+      m.cohort = F.cohortKey;
+      m.normTableId = getNormTableId(F.cohortKey);
+      m.scoreScope = 'intra-bucket';
+      m.crossBucketComparableField = 'absKaliber';
+    }
+    // it_services (CORE) lamps (Spec PART B §B.7): advisory, never silent score-kills. Per-name upstream lamps
+    // (NOT_READY:gpa/fcfmargin/opmargin/growth, ISSUANCE_NOT_READY, SPINOFF_REBASE, DEAL_MASKED, STALE:growth,
+    // RPE_ADVISORY/RPE_HIGH_FLAG, DILUTION_HIGH, PEOPLE_DATA_PARTIAL) + the always-on WALLS (PEOPLE_LEVERAGE_BLIND +
+    // BACKLOG_FUTURE/UTILIZATION_FUTURE/ATTRITION_FUTURE + CYCLE_WALL) are collected in court-screen (m.it.lamps); the
+    // WALLS are re-asserted here per §B.7 so every member carries them even if the upstream record was thin.
+    if (F.itservices) {
+      const itl = (m.it && Array.isArray(m.it.lamps)) ? m.it.lamps : [];
+      for (const lamp of itl) if (!L.includes(lamp)) L.push(lamp);
+      // pre-revenue SI-4 exclusion as an explicit lamp (the materials lesson).
+      if (m.exclusionReason === 'OUT_OF_SEGMENT:preexploration' && !L.includes('OUT_OF_SEGMENT:preexploration')) L.push('OUT_OF_SEGMENT:preexploration');
+      // always-on WALLS (§B.6/§B.7) — re-asserted (idempotent: court-screen already pushed them; dedup via includes).
+      // PEOPLE_LEVERAGE_BLIND is THE feasibility disclosure (mirrors medtech MA_INTANGIBLE_BLIND): RPE inverted+not-
+      // scored + book-to-bill/utilization/attrition absent → NO axis directly measures people-leverage.
+      for (const wall of ['PEOPLE_LEVERAGE_BLIND', 'BACKLOG_FUTURE', 'UTILIZATION_FUTURE', 'ATTRITION_FUTURE', 'CYCLE_WALL', 'INVENTORY_BLIND']) {
+        if (!L.includes(wall)) L.push(wall);
+      }
       if (m.belowAbsoluteFloor) L.push('below-abs-floor');
       if (m.membershipClass === 'Out') L.push('membership-Out(excluded-from-headline)');
       if (Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.length) L.push(`coverage-renorm(dropped:${m.absDroppedAxes.join('+')})`);
@@ -2307,6 +2464,40 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       growthDropped: members.filter(m => m._phGrowth == null).length,
     };
   }
+  // it_services (CORE)-only Zusatzfelder (SI-3/4/5/6) — NUR auf dem it_services-Bucket gesetzt → alle anderen Buckets
+  // byte-identisch (Parität). Mirrors the energy block; 5 axes {gpa, fcfMargin, opMargin, growth, netIssuance}.
+  if (F.itservices) {
+    // SI-5 (Spec §B.1): classifiedCount === scoredCount + excludedCount (fail-loud). The classifier assigns ONLY
+    // it_services (non-IT-services tech industries / non-US per the country-domicile guard + FOREIGN hardening / <$1B /
+    // contamination-gated return null → never enter court-buckets), so every classified name reaches members[].
+    // excludedCount = SI-4 pre-revenue names that entered members but score=null.
+    R.classifiedCount = cls.filter(c => c.bucket === bucket).length;
+    R.excluded = members.filter(m => m.score == null);
+    R.excludedCount = R.excluded.length;
+    R.scoredCount = members.filter(m => m.score != null).length;
+    if (require.main === module && R.classifiedCount !== R.scoredCount + R.excludedCount) {
+      throw new Error(`SI-5 mismatch ${bucket}: classifiedCount ${R.classifiedCount} !== scoredCount ${R.scoredCount} + excludedCount ${R.excludedCount}`);
+    }
+    R.normTableId = getNormTableId(F.cohortKey);
+    R.cohort = F.cohortKey;
+    R.scoreScope = 'intra-bucket';
+    R.crossBucketComparableField = 'absKaliber';
+    const n = NORMS[F.cohortKey];
+    const fmt = x => (x == null ? '—' : x.toFixed(2).replace(/^0\./, '.').replace(/^-0\./, '-.'));
+    R.comparabilityNote = `it_services ${F.cohortKey} (people-leverage / low-capital-compounding cohort: Information Technology Services consulting/SI/BPO). absKaliber in [0,1] = cross-bucket-comparable absolute scale (5-axis weighted-q over the cohort NORMS '${getNormTableId(F.cohortKey)}': gpa ${fmt(n.gpa.floor)}/${fmt(n.gpa.elite)} (GP/assets, the asset-light low-capital-compounding proxy, the LEAD axis), fcfMargin ${fmt(n.fcfMargin.floor)}/${fmt(n.fcfMargin.elite)} (cash conversion), opMargin ${fmt(n.opMargin.floor)}/${fmt(n.opMargin.elite)} (pricing power), growth ${fmt(n.growth.floor)}/${fmt(n.growth.elite)} (organic, deal-masked UPSTREAM), netIssuance ${fmt(n.netIssuance.floor)}/${fmt(n.netIssuance.elite)} (q(-NSI), buyback=elite); weights {gpa .34, fcfMargin .24, opMargin .18, growth .14, netIssuance .10}; capital-discipline+profitability pillar gpa+fcfMargin+netIssuance=.68 ≫ growth .14. REVENUE-PER-EMPLOYEE IS NOT A SCORED AXIS (§B.2 — INVERTED on the live cohort, used only as the classifier contamination gate + an advisory flag, weight 0.00). COVERAGE-RENORM drops any NOT_READY/null axis (incl. ISSUANCE_NOT_READY on the ~50% of names lacking annualShares, SPINOFF_REBASE) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6). WALLS always-on: PEOPLE_LEVERAGE_BLIND (the FEASIBILITY DISCLOSURE — book-to-bill/utilization/attrition absent + RPE inverted+not-scored → NO axis directly measures people-leverage; the score leans on people-leverage-VIA-asset-efficiency gpa; mirrors medtech MA_INTANGIBLE_BLIND), BACKLOG_FUTURE/UTILIZATION_FUTURE/ATTRITION_FUTURE, CYCLE_WALL, INVENTORY_BLIND, PEOPLE_DATA_PARTIAL (headcount ~55% coverage). The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison.`;
+    R.crossBucketComparableNote = 'Use members[].absKaliber (absolute [0,1] caliber) for cross-bucket comparison; members[].score (blended 0-100) is intra-bucket ONLY (mixes per-cohort REL, beta=0.6).';
+    R.walls = ['PEOPLE_LEVERAGE_BLIND', 'BACKLOG_FUTURE', 'UTILIZATION_FUTURE', 'ATTRITION_FUTURE', 'CYCLE_WALL', 'INVENTORY_BLIND', 'PEOPLE_DATA_PARTIAL'];
+    // Axis-T5 coverage disclosure (§B.3): how many names took the ISSUANCE_NOT_READY drop+renorm path.
+    R.issuanceCoverage = {
+      scored: members.filter(m => m.netShareIssuance != null).length,
+      dropped: members.filter(m => m.netShareIssuance == null).length,
+    };
+    // §B.2/§B.6 people-data coverage disclosure: how many names carry headcount (RPE advisory computable).
+    R.peopleDataCoverage = {
+      withHeadcount: members.filter(m => m.revPerEmployee != null).length,
+      withoutHeadcount: members.filter(m => m.revPerEmployee == null).length,
+    };
+  }
   // audit/fix (gauntlet E3): saas/fabless SI-4/SI-5-Retrofit — spiegelt medtech/dlst exakt.
   // NUR auf den beiden Buckets gesetzt; medtech/dlst haben ihre eigenen Blöcke oben. Diese Felder
   // wurden in die saas/fabless-Parity-Baselines re-gefroren (BEWUSSTER Governance-Bless, kein Drift):
@@ -2414,6 +2605,17 @@ function assertNoForeignLeak(resultsObj, listing) {
     // (assertPharmaMarquee) below — all reading the snapshot meta via the spec classifier, NOT the C5 court-listing.
     // isUS flag (which uses court-screen's looser region==='US' test and would false-flag the allowlisted JAZZ).
     if (bucket === 'pharma_branded' || bucket === 'pharma_biopharma' || bucket === 'pharma_specialty') continue;
+    // it_services (CORE) EXEMPTION: it_services membership is governed by the FROZEN spec classifier (scripts/
+    // classify-itservices.js, PART B §B.1 country-domicile guard — STRICTER than court-screen's: country set != US ->
+    // exclude unconditionally; FOREIGN_NAME legal-form regex; the 5-letter pink-sheet ADR rule; and a name-verified
+    // US_PRIMARY_ALLOWLIST = {ACN,G,INFY,GLOB} for the verified US-PRIMARY / design-marquee foreign-domiciled flagships
+    // — Accenture plc Ireland / Genpact Ltd Bermuda / Globant S.A. Luxembourg, all NYSE-primary, + Infosys Ltd
+    // Vintage-A). It is governed instead by the §B.1 marquee assert + the it_services-native generative country assert
+    // (assertItServicesNoForeignLeak) + the CONTAM/FOREIGN positive-control (assertItServicesMarquee) below — all
+    // reading the snapshot meta via the spec classifier, NOT the C5 court-listing.isUS flag (which uses court-screen's
+    // looser region==='US' test; note ACN/G/GLOB carry isUS===true via region==='US' so even C5 would not flag them,
+    // but the exemption keeps the governance consistent with the other 6 CORE buckets and the allowlist explicit).
+    if (bucket === 'it_services') continue;
     for (const m of R.members) {
       const L = listing.get(m.ticker);
       if (!L) continue; // kein Snapshot-Meta → kann nichts behaupten (Vintage-A ohne Eintrag: tolerant)
@@ -2759,11 +2961,73 @@ function assertPharmaNoForeignLeak(resultsObj, listing) {
   }
 }
 
+// --- it_services (CORE) MARQUEE-COVERAGE + CONTAM/FOREIGN positive-control assert (Spec PART B §B.1, fail-loud) ---
+// SI-5 identity alone does NOT catch a silent universe collapse (a dropped name is consistently absent from BOTH
+// classified and scored counts). The frozen marquee watchlist must each be classified into it_services AND reach the
+// scored universe (members[]) — else the run DIES LOUD (the regression guard against the country-vintage-collapse +
+// an over-aggressive contamination gate). Spans the elite people-businesses + the US-primary foreign-domiciled
+// flagships (ACN/G/GLOB via the allowlist; INFY Vintage-A).
+const ITSERVICES_MARQUEE = Object.freeze(['ACN', 'CTSH', 'EPAM', 'CACI', 'INFY', 'G', 'EXLS',
+  'IBM', 'GLOB', 'CNXC', 'DXC', 'BR', 'FIS', 'JKHY', 'IT', 'INOD']);
+// CONTAM/FOREIGN positive-control (PART B §B.1 GATE 1 + Universe safety): the contaminants the economic gate / the
+// NON_PEOPLE_EXCLUDE fallback / the country-domicile guard must keep OUT — the single largest classification risk in
+// this bucket. Catches a regression that drops the gate, the fallback, or a guard.
+const ITSERVICES_CONTAM_CONTROL = Object.freeze(['CIFR', 'APLD', 'BBAI', 'KEEL', 'SHAZ', 'CHRN', 'CDW', 'INGM',
+  'VNET', 'GIB', 'GDS', 'MGRT']);
+// The name-verified US-PRIMARY / design-marquee foreign-domiciled flagships the spec classifier DELIBERATELY admits
+// (ACN Accenture plc Ireland-NYSE-primary; G Genpact Ltd Bermuda-NYSE-primary; GLOB Globant S.A. Luxembourg-NYSE-
+// primary; INFY Infosys Ltd Vintage-A NYSE). They carry a foreign country/NAME but ARE genuine US primaries → the
+// generative country anti-leak assert must EXEMPT them (mirrors classify-itservices's US_PRIMARY_ALLOWLIST and
+// materials/energy/pharma {CRH,LIN}/{SLB}/{JAZZ}).
+const ITSERVICES_US_PRIMARY_ALLOWLIST = Object.freeze(['ACN', 'G', 'GLOB', 'INFY']);
+function assertItServicesMarquee(resultsObj) {
+  const R = resultsObj.it_services;
+  if (!R) return; // it_services not in this run (e.g. isolated unit test) → tolerant no-op
+  const scored = new Set();
+  if (Array.isArray(R.members)) for (const m of R.members) scored.add(m.ticker);
+  const missing = ITSERVICES_MARQUEE.filter(t => !scored.has(t));
+  if (missing.length) {
+    throw new Error('MARQUEE COVERAGE FAIL (Spec PART B §B.1) — it_services universe collapsed, these bona-fide '
+      + 'US people-leverage / low-capital-compounding large-caps were not classified/scored: ' + missing.join(', '));
+  }
+  // CONTAM/FOREIGN-CONTROL: the contaminants + foreign primaries must NOT have reached the it_services cohort.
+  const leakedControl = ITSERVICES_CONTAM_CONTROL.filter(t => scored.has(t));
+  if (leakedControl.length) {
+    throw new Error('CONTAM/FOREIGN-CONTROL FAIL (Spec PART B §B.1) — a contaminant / foreign-primary name leaked '
+      + 'into the it_services cohort: ' + leakedControl.join(', '));
+  }
+}
+// assertItServicesNoForeignLeak(results, listing): GENERATIVE property test reading the snapshot meta.country (via
+// the court-listing side-file) DIRECTLY — independent of the C5 isUS flag. Throws if ANY scored it_services record
+// carries meta.country set AND != "United States" EXCEPT the name-verified US_PRIMARY_ALLOWLIST (ACN/G/GLOB/INFY —
+// foreign-domiciled/NAME but genuine US primaries the spec admits by design). Tolerant: missing side-file → no-op.
+function assertItServicesNoForeignLeak(resultsObj, listing) {
+  if (!listing || listing.size === 0) return;
+  const allow = new Set(ITSERVICES_US_PRIMARY_ALLOWLIST);
+  const R = resultsObj.it_services;
+  if (!R || !Array.isArray(R.members)) return;
+  const leaks = [];
+  for (const m of R.members) {
+    if (allow.has(m.ticker)) continue; // verified US-primary inversion (ACN/G/GLOB/INFY) — admitted by design
+    const L = listing.get(m.ticker);
+    if (!L) continue; // no snapshot meta → can't assert (Vintage-A without entry: tolerant)
+    if (L.country != null && L.country !== 'United States') {
+      leaks.push(`${m.ticker}[${L.country}/${L.region}] in it_services`);
+    }
+  }
+  if (leaks.length) {
+    throw new Error('IT_SERVICES ANTI-LEAK ASSERT (Spec PART B §B.1 GENERATIVE property test): foreign-country '
+      + 'record(s) leaked into the scored it_services cohort — meta.country set AND != "United States" (and not on '
+      + 'the verified US_PRIMARY_ALLOWLIST): ' + leaks.join(', ')
+      + '. The country-domicile guard (classify-itservices.js isUSListing) must exclude these — NOT suppress.');
+  }
+}
+
 // --- Export: computeMedtechOrganicGrowth + computeDlstOrganicGrowth für Unit-Tests ---
 // (computeDlstOrganicGrowth: Fix A FY-Alignment + Fix B dealYearExcluded-Ehrlichkeit, 2026-06-21)
 // + assertNoForeignLeak (gauntlet C5) + assertIndustrialsMarquee + assertStaplesMarquee +
 //   assertStaplesNoForeignLeak (Spec §6.2b) für direkten Property-Test.
-module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL, assertConsdiscMarquee, assertConsdiscNoForeignLeak, CONSDISC_MARQUEE, CONSDISC_EXCLUDE_CONTROL, assertMaterialsMarquee, assertMaterialsNoForeignLeak, MATERIALS_MARQUEE, MATERIALS_FOREIGN_CONTROL, MATERIALS_US_PRIMARY_ALLOWLIST, assertEnergyMarquee, assertEnergyNoForeignLeak, ENERGY_MARQUEE, ENERGY_FOREIGN_CONTROL, ENERGY_US_PRIMARY_ALLOWLIST, assertPharmaMarquee, assertPharmaNoForeignLeak, PHARMA_MARQUEE, PHARMA_FOREIGN_CONTROL, PHARMA_US_PRIMARY_ALLOWLIST };
+module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL, assertConsdiscMarquee, assertConsdiscNoForeignLeak, CONSDISC_MARQUEE, CONSDISC_EXCLUDE_CONTROL, assertMaterialsMarquee, assertMaterialsNoForeignLeak, MATERIALS_MARQUEE, MATERIALS_FOREIGN_CONTROL, MATERIALS_US_PRIMARY_ALLOWLIST, assertEnergyMarquee, assertEnergyNoForeignLeak, ENERGY_MARQUEE, ENERGY_FOREIGN_CONTROL, ENERGY_US_PRIMARY_ALLOWLIST, assertPharmaMarquee, assertPharmaNoForeignLeak, PHARMA_MARQUEE, PHARMA_FOREIGN_CONTROL, PHARMA_US_PRIMARY_ALLOWLIST, assertItServicesMarquee, assertItServicesNoForeignLeak, ITSERVICES_MARQUEE, ITSERVICES_CONTAM_CONTROL, ITSERVICES_US_PRIMARY_ALLOWLIST };
 
 // --- require.main-Guard (Härtung 2): Write + Ausgabe NUR wenn direkt als Skript ausgeführt ---
 // `require('./court-score.js')` gibt nur den Export zurück und schreibt NICHT outputs/court-results.json.
@@ -2799,6 +3063,11 @@ if (require.main === module) {
   // allowlist exempted), else the pharma universe collapsed/leaked.
   assertPharmaMarquee(results);
   assertPharmaNoForeignLeak(results, listingByTicker);
+  // it_services (CORE) §B.1: the 16-name marquee must each be classified+scored + the contaminant/foreign-primary
+  // CONTAM/FOREIGN-CONTROL must stay out + the GENERATIVE country anti-leak property test must hold (with the
+  // ACN/G/GLOB/INFY US-primary allowlist exempted), else the it_services universe collapsed/leaked.
+  assertItServicesMarquee(results);
+  assertItServicesNoForeignLeak(results, listingByTicker);
   fs.writeFileSync(OUT, JSON.stringify(results, null, 2));
 
   // --- Ausgabe ---

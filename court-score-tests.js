@@ -2431,6 +2431,190 @@ test('pharma PARITÄT: KEIN pharma-only Feld auf den anderen Buckets (Leak-Guard
   }
 });
 
+// ===========================================================================
+// it_services (CORE) — Special-Track B. ONE de-contaminated people-leverage / low-capital-compounding cohort.
+// Spec formula-design-special_tracks-v0-2026-06-22.md PART B. 5 SCORED axes {gpa, fcfMargin, opMargin, growth,
+// netIssuance} via the PARALLEL engine absKaliberItServices (coverage-renorm; the 12 existing CORE buckets are
+// BYTE-UNTOUCHED — parity tests above + the tag28 fixture-hash gate). RPE is NOT scored (§B.2 inverted, weight 0.00,
+// gate+flag only); PEOPLE_LEVERAGE_BLIND discloses the omission (mirrors medtech MA_INTANGIBLE_BLIND).
+// ===========================================================================
+const itR = doc.it_services;
+const IT_ = itR ? itR.members : [];
+
+test('it_services: bucket exists with members; label nennt v0 + people-leverage', () => {
+  assert(itR && Array.isArray(itR.members) && IT_.length > 0, 'it_services bucket fehlt/leer');
+  assert(/IT-Services v0/.test(itR.label || ''), `label sollte v0 nennen: ${itR.label}`);
+  assert(/people-leverage|low-capital/i.test(itR.label || ''), `label sollte people-leverage/low-capital nennen`);
+});
+
+test('it_services §B.1 MARQUEE: all 16 marquees classified+scored (fail-loud guard)', () => {
+  const MARQUEE = ['ACN', 'CTSH', 'EPAM', 'CACI', 'INFY', 'G', 'EXLS', 'IBM', 'GLOB', 'CNXC', 'DXC', 'BR', 'FIS', 'JKHY', 'IT', 'INOD'];
+  const scored = new Set(IT_.map(m => m.ticker));
+  const missing = MARQUEE.filter(t => !scored.has(t));
+  assert(missing.length === 0, `MARQUEE COVERAGE FAIL — nicht klassifiziert/gescort: ${missing.join(', ')}`);
+  const { assertItServicesMarquee } = require('./court-score.js');
+  assert(typeof assertItServicesMarquee === 'function', 'assertItServicesMarquee nicht exportiert');
+  assertItServicesMarquee(doc); // throws on collapse / contam/foreign-control leak
+});
+
+test('it_services SI-5: classifiedCount === scoredCount + excludedCount (fail-loud); n=22 de-contaminated', () => {
+  assert(itR.classifiedCount != null && itR.scoredCount != null && itR.excludedCount != null, 'SI-5 counts fehlen');
+  assert(itR.classifiedCount === itR.scoredCount + itR.excludedCount,
+    `SI-5 mismatch: classified ${itR.classifiedCount} !== scored ${itR.scoredCount} + excluded ${itR.excludedCount}`);
+  // Live-recomputed CLEAN de-contaminated count 2026-06-23: 22.
+  assert(itR.classifiedCount === 22, `classified sollte 22 sein, ist ${itR.classifiedCount}`);
+});
+
+// THE materials-bug guard: the TOP-by-score must be a real elite people-leverage / low-capital compounder
+// (ACN/CTSH/EXLS/JKHY/IT-class), NOT a crypto-miner shell, NOT a capital-intensive hardware distributor.
+test('it_services MANDATORY regression: TOP-by-score is a real quality compounder, NOT a contaminant/shell', () => {
+  const KNOWN_QUALITY = new Set(['ACN', 'CTSH', 'EPAM', 'EXLS', 'JKHY', 'IT', 'G', 'IBM', 'BR', 'INOD', 'CNXC', 'GLOB']);
+  // the contaminants the gate removed must NEVER appear (let alone top).
+  const CONTAM = new Set(['CIFR', 'APLD', 'BBAI', 'KEEL', 'SHAZ', 'CHRN', 'CDW', 'INGM', 'VNET', 'GIB', 'GDS', 'MGRT']);
+  const ranked = IT_.filter(m => m.score != null && isFinite(m.score)).sort((a, b) => b.score - a.score);
+  assert(ranked.length > 0, 'keine gescorten it_services-Namen');
+  const top = ranked[0];
+  assert(top.exclusionReason !== 'OUT_OF_SEGMENT:preexploration', `TOP ${top.ticker} darf KEIN pre-revenue shell sein`);
+  assert(!CONTAM.has(top.ticker), `TOP ${top.ticker} ist ein Kontaminant — gate hat versagt (the inverted-RPE bug)`);
+  assert(KNOWN_QUALITY.has(top.ticker), `TOP sollte ein bekannter Quality-Compounder sein, ist ${top.ticker}`);
+  // no contaminant scored at all.
+  const scored = new Set(IT_.map(m => m.ticker));
+  const leaked = [...CONTAM].filter(t => scored.has(t));
+  assert(leaked.length === 0, `Kontaminant(en) in der Kohorte: ${leaked.join(', ')}`);
+});
+
+test('it_services §B.1 CONTAM/FOREIGN-CONTROL + GENERATIVE anti-leak: contaminants/foreign absent; ACN/G/GLOB/INFY allowlisted', () => {
+  const { assertItServicesNoForeignLeak, ITSERVICES_CONTAM_CONTROL, ITSERVICES_US_PRIMARY_ALLOWLIST } = require('./court-score.js');
+  const scored = new Set(IT_.map(m => m.ticker));
+  // CONTAM/FOREIGN positive-control: the contaminants + foreign primaries must NOT be scored.
+  const leaked = ITSERVICES_CONTAM_CONTROL.filter(t => scored.has(t));
+  assert(leaked.length === 0, `CONTAM/FOREIGN-CONTROL FAIL — leaked: ${leaked.join(', ')}`);
+  // the US-primary foreign-domiciled flagships ARE admitted via the allowlist + scored.
+  for (const t of ['ACN', 'G', 'GLOB', 'INFY']) {
+    assert(ITSERVICES_US_PRIMARY_ALLOWLIST.includes(t), `${t} sollte auf dem US_PRIMARY_ALLOWLIST sein`);
+    assert(scored.has(t), `${t} (US-primary marquee) sollte gescort sein`);
+  }
+  // GENERATIVE country anti-leak (reads the snapshot meta via the listing side-file) must hold.
+  assert(typeof assertItServicesNoForeignLeak === 'function', 'assertItServicesNoForeignLeak nicht exportiert');
+  let listing = new Map();
+  try {
+    const lp = (CAND_TEST.replace(/_court-candidates([^/\\]*)\.json$/, '_court-listing$1.json'));
+    const ld = JSON.parse(fs.readFileSync(lp, 'utf8'));
+    const obj = ld && ld.listings ? ld.listings : (ld || {});
+    for (const [t, rec] of Object.entries(obj)) listing.set(t, rec);
+  } catch {}
+  assertItServicesNoForeignLeak(doc, listing); // throws on a country-set foreign leak (ACN/G/GLOB/INFY exempt)
+});
+
+test('it_services: FIVE scored axes {gpa, fcfMargin, opMargin, growth, netIssuance}; weights Σ=1.0; gpa LEADS; RPE NOT an axis', () => {
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  const w = NORMS.it_services.weights;
+  const keys = Object.keys(w).sort().join(',');
+  assert(keys === 'fcfMargin,gpa,growth,netIssuance,opMargin', `it_services sollte die 5 Achsen tragen, hat ${keys}`);
+  // RPE is NOT a scored axis (§B.2 inverted) — must not be a weight key; the flag-only marker must be set.
+  assert(!('rpe' in w) && !('revPerEmployee' in w), 'RPE darf KEINE gewichtete Achse sein (§B.2 inverted)');
+  assert(NORMS.it_services.rpeFlagOnly === true, 'NORMS.it_services.rpeFlagOnly sollte true sein (RPE gate+flag only)');
+  const sum = Object.values(w).reduce((s, v) => s + v, 0);
+  assert(Math.abs(sum - 1.0) < 1e-9, `weights sollten Σ=1.0 sein, sind ${sum}`);
+  assert(w.gpa === 0.34 && w.fcfMargin === 0.24 && w.opMargin === 0.18 && w.growth === 0.14 && w.netIssuance === 0.10,
+    `weights sollten {gpa .34, fcfMargin .24, opMargin .18, growth .14, netIssuance .10} sein`);
+  // the capital-discipline+profitability pillar gpa+fcfMargin+netIssuance = .68 ≫ growth .14.
+  assert((w.gpa + w.fcfMargin + w.netIssuance) > w.growth * 4, 'das Disziplin-/Profitabilitäts-Pillar sollte growth dominieren');
+});
+
+test('it_services: NORMS frozen-id + gpa floor .05 (CACI goodwill-floor) / elite .45; full ABS+REL (n=22>=15)', () => {
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  const n = NORMS.it_services;
+  assert(n.id === 'it-services-norms-2026-06-23', `norm id falsch: ${n.id}`);
+  assert(n.gpa.floor === 0.05 && n.gpa.elite === 0.45, `gpa sollte .05/.45 sein, ist ${n.gpa.floor}/${n.gpa.elite}`);
+  assert(n.fcfMargin.floor === 0.00 && n.fcfMargin.elite === 0.18, 'fcfMargin sollte .00/.18 sein');
+  assert(n.opMargin.floor === 0.02 && n.opMargin.elite === 0.18, 'opMargin sollte .02/.18 sein');
+  assert(n.growth.floor === 0.00 && n.growth.elite === 0.15, 'growth sollte .00/.15 sein');
+  assert(n.netIssuance.floor === -0.10 && n.netIssuance.elite === 0.03, 'netIssuance sollte -.10/.03 sein');
+  // n=22 >= REL_MIN_N=15 → full ABS+REL blend, NOT THIN_REL.
+  assert(n.rel && n.rel.minN === 15 && n.rel.beta === 0.6 && !n.rel.suppressed, 'it_services sollte full ABS+REL (beta .6, n=22) sein');
+});
+
+test('it_services: always-on PEOPLE_LEVERAGE_BLIND wall on every member (the feasibility disclosure)', () => {
+  for (const m of IT_) {
+    assert(Array.isArray(m.lamps) && m.lamps.includes('PEOPLE_LEVERAGE_BLIND'), `${m.ticker} fehlt PEOPLE_LEVERAGE_BLIND wall`);
+    // the 3 best people-leverage signals are disclosed as absent (future BONUS).
+    for (const w of ['BACKLOG_FUTURE', 'UTILIZATION_FUTURE', 'ATTRITION_FUTURE', 'CYCLE_WALL']) {
+      assert(m.lamps.includes(w), `${m.ticker} fehlt future/wall-Lampe ${w}`);
+    }
+  }
+  // bucket-level walls disclosure.
+  assert(Array.isArray(itR.walls) && itR.walls.includes('PEOPLE_LEVERAGE_BLIND'), 'itR.walls fehlt PEOPLE_LEVERAGE_BLIND');
+  assert(itR.peopleDataCoverage != null, 'itR.peopleDataCoverage (headcount coverage disclosure) fehlt');
+});
+
+test('it_services: RPE is computed as an advisory flag (NOT scored) where headcount present; absent → PEOPLE_DATA_PARTIAL', () => {
+  // §B.2: RPE surfaced as info only. ACN/CTSH/EPAM/GLOB (headcount present) carry revPerEmployee + RPE_ADVISORY.
+  for (const t of ['ACN', 'CTSH', 'EPAM', 'GLOB', 'G', 'EXLS']) {
+    const m = IT_.find(x => x.ticker === t);
+    if (!m) continue;
+    assert(m.revPerEmployee != null && isFinite(m.revPerEmployee), `${t} sollte einen RPE-Advisory-Wert tragen (headcount present)`);
+    assert(m.lamps.includes('RPE_ADVISORY'), `${t} sollte RPE_ADVISORY-Flag tragen`);
+    // CRITICAL §B.2: the elite (ACN/EPAM/GLOB low RPE) must NOT be penalized for low RPE — they score HIGH.
+    // (a sanity that RPE is genuinely not in the score: low-RPE elite outranks would-be-high-RPE contaminants,
+    //  which are gated out entirely. Here just assert the advisory value exists and the score ignores it.)
+  }
+  // names without headcount carry PEOPLE_DATA_PARTIAL.
+  for (const m of IT_) {
+    if (m.revPerEmployee == null) assert(m.lamps.includes('PEOPLE_DATA_PARTIAL'), `${m.ticker} (kein headcount) sollte PEOPLE_DATA_PARTIAL tragen`);
+  }
+});
+
+test('it_services SI-4: Out-class / pre-revenue members carry score=null in excluded[]', () => {
+  assert(Array.isArray(itR.excluded), 'excluded[] fehlt');
+  for (const m of itR.excluded) assert(m.score == null, `${m.ticker} in excluded[] sollte score=null haben, hat ${m.score}`);
+});
+
+test('it_services SI-3: normTableId + cohort + comparabilityNote (absKaliber cross-bucket, PEOPLE_LEVERAGE_BLIND disclosed)', () => {
+  assert(itR.normTableId === 'it-services-norms-2026-06-23', `normTableId fehlt/falsch: ${itR.normTableId}`);
+  assert(itR.cohort === 'it_services', `cohort falsch: ${itR.cohort}`);
+  assert(/gpa/i.test(itR.comparabilityNote || '') && /PEOPLE_LEVERAGE_BLIND/i.test(itR.comparabilityNote || ''),
+    'comparabilityNote sollte gpa + PEOPLE_LEVERAGE_BLIND nennen');
+  assert(/REVENUE-PER-EMPLOYEE IS NOT A SCORED AXIS|INVERTED/i.test(itR.comparabilityNote || ''),
+    'comparabilityNote sollte die RPE-not-scored-Entscheidung disclosen');
+  assert(itR.scoreScope === 'intra-bucket' && itR.crossBucketComparableField === 'absKaliber', 'SI-3 scope/field fehlt');
+});
+
+test('it_services-unit: absKaliberItServices 5-axis coverage-renorm (netIssuance-drop renorm Σ=1.0; all-null → 0; netIssuance inverted)', () => {
+  const { absKaliberItServices } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  // full 5 axes (ACN-like): netShareIssuance NEGATIVE (buyback) → q(-NSI) high.
+  const full = absKaliberItServices({ gpa: 0.34, fcfMargin: 0.156, opMargin: 0.156, growth: 0.07, netShareIssuance: -0.01 }, 'it_services');
+  assert(full.usedAxes.length === 5 && full.droppedAxes.length === 0, `full sollte 5 Achsen nutzen, hat ${full.usedAxes.length}`);
+  assert(Math.abs(Object.values(full.renormWeights).reduce((s, v) => s + v, 0) - 1.0) < 1e-9, 'renormWeights Σ=1.0');
+  // netIssuance is INVERTED: a buyback (NSI<0) must score HIGHER than dilution (NSI>0), all else equal.
+  const buyback = absKaliberItServices({ gpa: 0.30, fcfMargin: 0.10, opMargin: 0.10, growth: 0.05, netShareIssuance: -0.05 }, 'it_services');
+  const dilute = absKaliberItServices({ gpa: 0.30, fcfMargin: 0.10, opMargin: 0.10, growth: 0.05, netShareIssuance: 0.10 }, 'it_services');
+  assert(buyback.absK > dilute.absK, 'ein Rückkauf (NSI<0) sollte HÖHER scoren als Verwässerung (NSI>0) — netIssuance ist invertiert');
+  // netIssuance-drop (Vintage-A no annualShares) → 4 axes renormalize to Σ=1.0
+  const dropNsi = absKaliberItServices({ gpa: 0.55, fcfMargin: 0.18, opMargin: 0.18, growth: 0.05, netShareIssuance: null }, 'it_services');
+  assert(dropNsi.droppedAxes.includes('netIssuance') && dropNsi.usedAxes.length === 4, 'netIssuance-drop sollte 4 Achsen lassen');
+  assert(Math.abs(Object.values(dropNsi.renormWeights).reduce((s, v) => s + v, 0) - 1.0) < 1e-9, 'renorm Σ=1.0 nach netIssuance-drop');
+  // growth-drop (fully deal-masked acquirer INOD) → 4 axes renormalize
+  const dropG = absKaliberItServices({ gpa: 0.59, fcfMargin: 0.14, opMargin: 0.16, growth: null, netShareIssuance: 0.09 }, 'it_services');
+  assert(dropG.droppedAxes.includes('growth') && dropG.usedAxes.length === 4, 'growth-drop sollte 4 Achsen lassen');
+  // all-null → 0 (pathological, no fake-neutral)
+  const allNull = absKaliberItServices({ gpa: null, fcfMargin: null, opMargin: null, growth: null, netShareIssuance: null }, 'it_services');
+  assert(allNull.absK === 0 && allNull.usedAxes.length === 0, 'all-null sollte absK=0 ergeben');
+});
+
+test('it_services PARITÄT: KEIN it_services-only Feld auf den anderen Buckets (Leak-Guard)', () => {
+  // TRULY it_services-exclusive fields (it/fcfMarginIt/opMarginIt/revPerEmployee/_it*). The shared names (gpa/
+  // growthInput/netShareIssuance/absUsedAxes/absDroppedAxes/cohort/absKaliber) legitimately exist on other CORE members.
+  for (const b of ['system_app_software', 'fabless_semi', 'medtech_devices', 'diagnostics_lst', 'industrials_heavy', 'industrials_light', 'staples_branded', 'staples_distribution', 'consdisc_store', 'consdisc_light', 'materials_pricingpower', 'materials_commodity', 'energy_upstream', 'energy_midstream', 'energy_services', 'pharma_branded', 'pharma_biopharma', 'pharma_specialty']) {
+    if (!doc[b]) continue;
+    for (const m of doc[b].members) {
+      for (const leak of ['it', 'fcfMarginIt', 'opMarginIt', 'revPerEmployee', '_itGpa', '_itFcfMargin', '_itOpMargin', '_itGrowth', '_itNetIssuance']) {
+        assert(!(leak in m), `${b}/${m.ticker} hat it_services-only Feld '${leak}' geleakt (Parität verletzt)`);
+      }
+    }
+  }
+});
+
 // Temp-Outputs aufräumen (Harness-Isolation: Produktions-Artefakte bleiben unberührt)
 try { fs.unlinkSync(CAND_TEST); } catch {}
 try { fs.unlinkSync(RESULTS); } catch {}

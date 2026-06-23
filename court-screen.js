@@ -197,6 +197,13 @@ const ENERGY_COHORTS = new Set(['energy_upstream', 'energy_midstream', 'energy_s
 // attached as ONE pharma-only field `ph` → all other candidate JSON byte-identical.
 const phCohortByTicker = new Map(); // ticker -> 'pharma_branded' | 'pharma_biopharma' | 'pharma_specialty'
 const PHARMA_COHORTS = new Set(['pharma_branded', 'pharma_biopharma', 'pharma_specialty']);
+// it_services CORE bucket (Spec formula-design-special_tracks-v0-2026-06-22.md PART B).
+// ADDITIV/parity-safe: exactly the court-buckets.json `it_services` tickers are admitted past the asset-light/
+// growth pre-filter (analog the other CORE buckets, Fix A SI-5: no silent drops). The 5 RAW axis inputs
+// {gpa, fcfMargin, opMargin, growth, netIssuance} are extracted from snapshots/<T>.json, attached as ONE
+// itservices-only field `it` -> all other candidate JSON byte-identical.
+const itCohortByTicker = new Map(); // ticker -> 'it_services'
+const ITSERVICES_COHORTS = new Set(['it_services']);
 try {
   const bd = JSON.parse(fs.readFileSync(BUCK, 'utf8'));
   const cls = Array.isArray(bd) ? bd : (bd.classifications || []);
@@ -208,6 +215,7 @@ try {
     if (c && (c.bucket === 'materials_pricingpower' || c.bucket === 'materials_commodity') && c.t) mtCohortByTicker.set(c.t, c.bucket);
     if (c && ENERGY_COHORTS.has(c.bucket) && c.t) enCohortByTicker.set(c.t, c.bucket);
     if (c && PHARMA_COHORTS.has(c.bucket) && c.t) phCohortByTicker.set(c.t, c.bucket);
+    if (c && ITSERVICES_COHORTS.has(c.bucket) && c.t) itCohortByTicker.set(c.t, c.bucket);
   }
 } catch {}
 
@@ -1195,6 +1203,180 @@ function buildPharmaAxes(ticker, cohort) {
   };
 }
 
+// ===========================================================================
+// it_services (CORE) — 5-axis RAW extraction from snapshots (Spec PART B §B.3-§B.5)
+// ===========================================================================
+// ADDITIV/parity-safe: only fires for tickers in itCohortByTicker (court-buckets it_services). Reads snapshots/
+// <T>.json `annual.*` (NEWEST-FIRST) — the canonical pool the deterministic classifier and the re-frozen cohort
+// NORMS were calibrated on. Same dual-shape num() extractor as the other CORE buckets.
+//
+// 5 SCORED axes {gpa, fcfMargin, opMargin, growth, netIssuance} via the NEW engine absKaliberItServices (coverage-
+// renorm). gpa/fcfMargin/opMargin/growth NON-inverted (higher=better); netIssuance inverted q(-NSI). The people-
+// leverage thesis is carried by people-leverage-VIA-asset-efficiency (gpa lead) — revenue-per-employee is NOT a
+// scored axis (§B.2 RPE INVERTED, weight 0.00; used only as the classifier contamination gate + an advisory flag;
+// PEOPLE_LEVERAGE_BLIND disclosed). M&A: the consulting/SI/BPO cohort are SERIAL ACQUIRERS (Accenture ~40 tuck-ins/
+// yr) — no goodwill line in the LOCAL schema → totalAssets-jump deal-mask on the GROWTH axis only (sign-aware,
+// positive jumps only); gpa/fcfMargin/opMargin/netIssuance are NEVER masked (the discipline penalties SHOULD fire
+// hardest in the deal year). Spin-off/divestiture re-baselining guard ports from industrials (DXC has divested
+// heavily). netIssuance ~50% coverage (Vintage-A lacks annualShares) → DROP+renorm+ISSUANCE_NOT_READY.
+//
+// Frozen constants (Spec §B.3/§B.5):
+const IT_DEAL_MASK = { assetJump: 0.25, revJump: 0.15 };       // §B.5 serial-acquirer totalAssets-jump proxy; BOTH required; sign-aware (positive only)
+const IT_SPINOFF = { dropYoY: -0.25, baseFrac: 0.85 };         // §B.5 spin-off/divestiture re-baselining guard
+const IT_GROWTH_BLEND = { wLatest: 0.60, wFloor: 0.40 };       // §B.3 0.60*latest clean YoY + 0.40*min(recent clean YoYs)
+const IT_RPE_CAP = 700e3;                                      // §B.2 RPE advisory threshold (NOT scored; capital-intensive distributor flag)
+
+// §B.5 spin-off / divestiture re-baselining guard (EXACT JS, mirrors industrials/energy). Operates on annualRev
+// newest-first. Fires -> Axis growth routed to NOT_READY:growth UPSTREAM (a permanent-level-shift rebound off a
+// shrunken base is never scored as organic).
+function spinoffRebaselineGuardItServices(revNewestFirst) {
+  const r = revNewestFirst.filter(v => v != null && isFinite(v) && v > 0);
+  if (r.length < 3) return false;
+  const chron = r.slice().reverse();                       // oldest -> newest
+  const yoy = [];
+  for (let i = 1; i < chron.length; i++) yoy.push((chron[i] - chron[i - 1]) / Math.abs(chron[i - 1]));
+  const hasBigDrop = yoy.some(y => y <= IT_SPINOFF.dropYoY);
+  const latestYoY = (r[0] - r[1]) / Math.abs(r[1]);
+  const latestPositive = latestYoY > 0;
+  const stillBelowBase = r[0] < IT_SPINOFF.baseFrac * Math.max(...r);
+  return hasBigDrop && latestPositive && stillBelowBase;
+}
+
+// snapshot annual cache for it_services tickers only (avoid re-reading + keep the parity path untouched). Keep the
+// FULL snapshot (not just .annual) because the RPE advisory needs meta.fullTimeEmployees.
+const itSnapByTicker = new Map(); // ticker -> { annual, fullTimeEmployees }
+if (itCohortByTicker.size && fs.existsSync(SNAP_DIR)) {
+  for (const t of itCohortByTicker.keys()) {
+    try {
+      const sn = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, t + '.json'), 'utf8'));
+      if (sn && sn.annual) itSnapByTicker.set(t, { annual: sn.annual, fullTimeEmployees: (sn.meta && sn.meta.fullTimeEmployees != null && isFinite(sn.meta.fullTimeEmployees)) ? sn.meta.fullTimeEmployees : null });
+    } catch {}
+  }
+}
+
+// buildItServicesAxes(ticker, cohort) -> the 5 RAW axis inputs + lamps/audit, or null if no snapshot.
+// gpa = annualGP[0]/totalAssets[0]; fcfMargin = annualFCF[0]/annualRev[0]; opMargin = annualOpInc[0]/annualRev[0];
+// growth = §B.3 0.60*latest_clean_YoY + 0.40*min(recent clean YoYs) with the §B.5 deal-mask + spin-off guard applied
+// UPSTREAM (-> growth=null + NOT_READY:growth when fired); netShareIssuance = latest annualShares YoY (<2 non-null ->
+// null + ISSUANCE_NOT_READY for drop+renorm). PEOPLE_LEVERAGE_BLIND + the RPE advisory flag are always-on lamps.
+function buildItServicesAxes(ticker, cohort) {
+  const snap = itSnapByTicker.get(ticker);
+  if (!snap) return null;
+  const a = snap.annual;
+  const revA = (a.annualRev || []).map(num);                  // NEWEST-FIRST, object-wrapped {value}
+  const gpA = (a.annualGP || []).map(num);
+  const opA = (a.annualOpInc || []).map(num);
+  const fcfA = (a.annualFCF || []).map(num);
+  const bal = Array.isArray(a.annualBalance) ? a.annualBalance : [];
+  const taA = bal.map(b => (b && b.totalAssets != null && isFinite(b.totalAssets)) ? b.totalAssets : null);
+  const sharesAll = Array.isArray(a.annualShares) ? a.annualShares.map(num) : [];
+  const lamps = [];
+
+  // --- Axis T1: GP/assets (Novy-Marx; the asset-light low-capital-compounding proxy, the lead axis) ---
+  let gpa = null;
+  if (gpA[0] != null && taA[0] != null && taA[0] > 0) gpa = gpA[0] / taA[0];
+  else lamps.push('NOT_READY:gpa');
+
+  // --- Axis T2: FCF margin = annualFCF/annualRev (cash conversion = people-leverage payoff) ---
+  let fcfMargin = null;
+  if (fcfA[0] != null && revA[0] != null && revA[0] > 0) fcfMargin = fcfA[0] / revA[0];
+  else lamps.push('NOT_READY:fcfmargin');
+
+  // --- Axis T3: operating margin = annualOpInc/annualRev (pricing power vs wage inflation) ---
+  let opMargin = null;
+  if (opA[0] != null && revA[0] != null && revA[0] > 0) opMargin = opA[0] / revA[0];
+  else lamps.push('NOT_READY:opmargin');
+
+  // --- Axis T5: net-share-issuance (latest YoY; <2 non-null -> DROP + ISSUANCE_NOT_READY renorm) ---
+  let netShareIssuance = null;
+  const sharesNN = sharesAll.filter(v => v != null && isFinite(v));
+  if (sharesNN.length >= 2) {
+    let s0 = null, s1 = null;
+    for (const v of sharesAll) { if (v != null && isFinite(v)) { if (s0 == null) s0 = v; else { s1 = v; break; } } }
+    if (s0 != null && s1 != null && s1 !== 0) netShareIssuance = (s0 - s1) / s1;
+    else { netShareIssuance = null; lamps.push('ISSUANCE_NOT_READY'); }
+  } else {
+    lamps.push('ISSUANCE_NOT_READY');                         // Vintage-A: no annualShares field (~50% of the pool)
+  }
+
+  // --- Axis T4: organic growth (deal-mask §B.5 + spin-off guard §B.5 UPSTREAM, min-floor blend §B.3) ---
+  let growthInput = null;
+  let dealMasked = false, spinoffRebase = false, staleGrowth = false;
+  if (spinoffRebaselineGuardItServices(revA)) {
+    spinoffRebase = true;
+    lamps.push('SPINOFF_REBASE');
+    lamps.push('NOT_READY:growth');                          // route Axis T4 drop+renorm upstream
+  } else {
+    const cleanYoY = [];
+    for (let i = 0; i < revA.length - 1; i++) {
+      const rNew = revA[i], rOld = revA[i + 1];
+      if (rNew == null || rOld == null || rOld <= 0) continue;
+      const revG = rNew / rOld - 1;
+      const taNew = taA[i], taOld = taA[i + 1];
+      const assetG = (taNew != null && taOld != null && taOld > 0) ? (taNew - taOld) / taOld : null;
+      const masked = (assetG != null && assetG >= IT_DEAL_MASK.assetJump && revG >= IT_DEAL_MASK.revJump);
+      if (masked) { dealMasked = true; continue; }            // §B.5 only POSITIVE jumps masked (sign-aware)
+      cleanYoY.push(revG);
+    }
+    if (cleanYoY.length === 0) {
+      lamps.push('NOT_READY:growth');                        // no clean YoY (fully deal-masked) -> DROP Axis T4 + renorm
+    } else {
+      if (dealMasked) {
+        const rNew0 = revA[0], rOld0 = revA[1];
+        const taNew0 = taA[0], taOld0 = taA[1];
+        if (rNew0 != null && rOld0 != null && rOld0 > 0 && taNew0 != null && taOld0 != null && taOld0 > 0) {
+          const revG0 = rNew0 / rOld0 - 1, assetG0 = (taNew0 - taOld0) / taOld0;
+          if (assetG0 >= IT_DEAL_MASK.assetJump && revG0 >= IT_DEAL_MASK.revJump) staleGrowth = true;
+        }
+      }
+      if (cleanYoY.length === 1) {
+        growthInput = cleanYoY[0];                           // only 1 clean YoY -> single YoY (ABS-honest)
+      } else {
+        // blend = 0.60*latest clean YoY + 0.40*min(recent clean YoYs) — through-cycle damper (mirrors industrials)
+        growthInput = IT_GROWTH_BLEND.wLatest * cleanYoY[0] + IT_GROWTH_BLEND.wFloor * Math.min(...cleanYoY);
+      }
+      if (staleGrowth) lamps.push('STALE:growth');
+    }
+  }
+  if (dealMasked) lamps.push('DEAL_MASKED');
+
+  // --- §B.2 RPE advisory (NOT scored; INVERTED on the live cohort — flag only) + RPE_DECOUPLING risk lamp ---
+  let revPerEmployee = null;
+  const emp = snap.fullTimeEmployees;
+  if (emp != null && emp > 0 && revA[0] != null) {
+    revPerEmployee = revA[0] / emp;
+    lamps.push('RPE_ADVISORY');                              // RPE surfaced as info, never scored (§B.2 inverted)
+    if (revPerEmployee > IT_RPE_CAP) lamps.push('RPE_HIGH_FLAG'); // would have been gated; advisory if it slipped in
+  } else {
+    lamps.push('PEOPLE_DATA_PARTIAL');                       // headcount absent for this name (~45% of the cohort)
+  }
+
+  // --- always-on disclosure walls (Spec §B.6/§B.7) ---
+  lamps.push('PEOPLE_LEVERAGE_BLIND');   // §B.0/§B.2/§B.6: book-to-bill/utilization/attrition absent; RPE inverted+not-scored — NO axis directly measures people-leverage (mirrors medtech MA_INTANGIBLE_BLIND)
+  lamps.push('BACKLOG_FUTURE');          // §B.6: book-to-bill / RPO — 0 us-gaap token hits → future BONUS, weight 0
+  lamps.push('UTILIZATION_FUTURE');      // §B.6: billable-hours utilization — absent
+  lamps.push('ATTRITION_FUTURE');        // §B.6: workforce attrition — absent
+  lamps.push('CYCLE_WALL');              // §B.7: ~4y history, no through-cycle normalization
+
+  // advisory discipline lamps (Spec §B.7)
+  if (netShareIssuance != null && (-netShareIssuance) <= -0.03) lamps.push('DILUTION_HIGH'); // issuance >= 3%
+
+  // pre-revenue facts for the court-score.js SI-4 floor (the materials/energy lesson — a revenue-less shell must NOT
+  // be scored: the gpa/fcfMargin/opMargin axes are undefined/explosive on near-zero revenue).
+  const revLatest = revA.find(v => v != null && isFinite(v));
+  return {
+    cohort,
+    gpa: round(gpa), fcfMargin: round(fcfMargin), opMargin: round(opMargin),
+    growth: round(growthInput), netShareIssuance: round(netShareIssuance),
+    revPerEmployee: (revPerEmployee == null ? null : Math.round(revPerEmployee)),
+    dealMasked, spinoffRebase, staleGrowth,
+    revLatest: (revLatest == null ? null : round(revLatest)),
+    nAnnualRev: revA.filter(v => v != null).length,
+    sharesCoverage: sharesNN.length,
+    lamps,
+  };
+}
+
 // --- robuste Feld-Helfer (Format ist gemischt: ftsAnnual.* = [{value}], Rest = [num]) ---
 function num(x) {
   if (x == null) return null;
@@ -1278,7 +1460,11 @@ for (const file of files) {
   // with a thin CACHE row (its 3 SCORED axes come from the SNAPSHOT via buildPharmaAxes, not the cache). Bypasses
   // the cache-based early gates below. Non-pharma path: BYTE-IDENTICAL.
   const phCohortEarly = (phCohortByTicker.get(ticker) && phSnapAnnual.has(ticker)) ? phCohortByTicker.get(ticker) : null;
-  const coreEarly = indCohortEarly || stpCohortEarly || cdCohortEarly || mtCohortEarly || enCohortEarly || phCohortEarly;
+  // it_services (CORE): same SI-5 rule — a court-buckets-classified it_services name MUST reach the universe even
+  // with a thin CACHE row (its 5 SCORED axes come from the SNAPSHOT via buildItServicesAxes, not the cache).
+  // Bypasses the cache-based early gates below. Non-it_services path: BYTE-IDENTICAL.
+  const itCohortEarly = (itCohortByTicker.get(ticker) && itSnapByTicker.has(ticker)) ? itCohortByTicker.get(ticker) : null;
+  const coreEarly = indCohortEarly || stpCohortEarly || cdCohortEarly || mtCohortEarly || enCohortEarly || phCohortEarly || itCohortEarly;
   const p = j.payload || {};
   if (!j.payload && !coreEarly) continue;
   if (j._ftsPartial) stats.partial++;
@@ -1433,6 +1619,7 @@ for (const file of files) {
   const mtCohort = mtCohortByTicker.get(ticker) || null;
   const enCohort = enCohortByTicker.get(ticker) || null;
   const phCohort = phCohortByTicker.get(ticker) || null;
+  const itCohort = itCohortByTicker.get(ticker) || null;
   if (indCohort) {
     // industrials_compounder (CORE): admit EVERY court-buckets-classified industrials name into the universe
     // (cross-sectional cohort percentiles + SI-5 classifiedCount===scoredCount). NO asset-light/growth/gm
@@ -1471,6 +1658,12 @@ for (const file of files) {
     // shortlist-cut lives in court-score.js; the commercial gate already ran in the classifier). 3 axes come from
     // the snapshot annual arrays (buildPharmaAxes). Sole sanity: a parseable snapshot annual block exists.
     if (!phSnapAnnual.has(ticker)) continue;
+  } else if (itCohort) {
+    // it_services (CORE): identical admission policy — admit EVERY court-buckets-classified it_services name into
+    // the universe (cross-sectional cohort percentiles + SI-5). NO asset-light/growth/gm pre-filter (the SI-1
+    // shortlist-cut lives in court-score.js; the contamination gate already ran in the classifier). 5 axes come
+    // from the snapshot annual arrays (buildItServicesAxes). Sole sanity: a parseable snapshot annual block exists.
+    if (!itSnapByTicker.has(ticker)) continue;
   } else if (isMedtech || isDlst) {
     // Milde Daten-Sanity: growth/gm/rev müssen vorhanden + endlich sein (keine ökonomischen Floors).
     // Medtech UND D&LST sind kapitalintensiv/Large-Cap-haltig → asset-light/ppe-Gate + ökonomische Floors
@@ -1522,6 +1715,10 @@ for (const file of files) {
   // ONE pharma-only field `ph` (deal-mask + spin-off guard + winsorize applied UPSTREAM; LOCAL totalAssets-jump M&A
   // proxy; intangible/IPR&D lamps OMITTED — MA_INTANGIBLE_BLIND). Additiv → KEIN Feld auf Nicht-Pharma-Records (Parität).
   const phExtra = phCohort ? { ph: buildPharmaAxes(ticker, phCohort) } : {};
+  // it_services (CORE): the 5 RAW axis inputs {gpa, fcfMargin, opMargin, growth, netIssuance} from the snapshot
+  // annual arrays, attached as ONE itservices-only field `it` (deal-mask + spin-off guard applied UPSTREAM; RPE
+  // advisory + PEOPLE_LEVERAGE_BLIND lamps). Additiv → KEIN Feld auf Nicht-IT-Services-Records (Parität).
+  const itExtra = itCohort ? { it: buildItServicesAxes(ticker, itCohort) } : {};
   candidates.push({
     ticker,
     growth: round(growth), growth_annual: round(gAnnual), growth_q: round(gQ), growthSource,
@@ -1543,6 +1740,7 @@ for (const file of files) {
     ...mtExtra,
     ...enExtra,
     ...phExtra,
+    ...itExtra,
   });
 }
 
