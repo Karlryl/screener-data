@@ -1,0 +1,1555 @@
+{
+  "baselineId": "financials_banks-v1.0-2026-06-24",
+  "bucket": "financials_banks",
+  "frozenAt": "2026-06-24",
+  "formula": "financials_banks CORE — through-cycle quality; absKaliberBanks 4 axes roaThruCycle .50 / capitalAdequacy(eq/assets) .25 (DROP+renorm) / assetGrowthDiscipline .18 (q(-assetGrowthYoY) PENALTY) / earningsDurability .07; FCF/OCF hard-excluded; credit-quality/NIM/efficiency/CET1 BLIND walls. de-ADRd US-primary.",
+  "source": "outputs/court-results.json :: financials_banks",
+  "normTableId": "banks-norms-2026-06-23",
+  "classifiedCount": 128,
+  "scoredCount": 125,
+  "excludedCount": 3,
+  "headlineShortlistSize": 114,
+  "scoreScope": "intra-bucket",
+  "crossBucketComparableField": "absKaliber",
+  "forwardFitness": {
+    "calendarGated": true,
+    "metric": [
+      "rank_ic_spearman",
+      "top_n_minus_universe_median_fwd_return"
+    ],
+    "horizonsDays": [
+      28,
+      84
+    ],
+    "windowEnds": {
+      "d28": "~2026-07-22",
+      "d84": "~2026-09-16"
+    },
+    "survivorshipKey": "evaluatedTickers",
+    "antiGaming": "gateOpen-Ranking am Ship-Tag (vor jeder weiteren Bucket-Änderung) eingefroren. Forward-Fenster = intrinsischer Holdout; Eval erst NACH Kalender-Gate. Erzeugende Agenten dürfen NIE auf dem Eval-Slice tunen.",
+    "honestLimitation": "N=114 — Rank-IC/Spread haben Richtungs-, nicht starke statistische Aussagekraft. Primärer Wert: Pre-Registration-Disziplin + Beitrag zur gepoolten Cross-Formel-Fitness."
+  },
+  "anchors": {
+    "roaThruCycle": {
+      "median": 0.0107,
+      "mad": 0.0022000000000000006,
+      "n": 127
+    },
+    "capitalAdequacy": {
+      "median": 0.1179,
+      "mad": 0.012699999999999989,
+      "n": 71
+    },
+    "assetGrowthDisc": {
+      "median": -0.0479,
+      "mad": 0.038,
+      "n": 127
+    },
+    "earningsDurability": {
+      "median": 0.7038,
+      "mad": 0.1089,
+      "n": 127
+    }
+  },
+  "comparabilityNote": "financials_banks financials_banks (deposit-funded US-bank through-cycle quality cohort: Banks - Regional + Diversified). absKaliber in [0,1] = cross-bucket-comparable absolute scale (4-axis weighted-q over the cohort NORMS 'banks-norms-2026-06-23': roaThruCycle .0070/.0164 (4y-avg NI/totalAssets, the through-cycle LEAD pillar), capitalAdequacy .0840/.1370 (totalEquity/totalAssets CET1 surrogate; ~45% NULL incl. JPM/WFC/PNC → DROP+renorm, NEVER imputed), assetGrowthDiscipline -.4000/.0000 (q(-assetGrowthYoY) PENALTY — zero balance-sheet growth is elite, ballooning penalized; the CORRECT sign for banks, opposite of utils/REITs), earningsDurability .1850/.8630 (min/max NI over >=3y, LOW weight, BLIND-walled); weights {roaThruCycle .50, capitalAdequacy .25, assetGrowthDiscipline .18, earningsDurability .07}. FCF/OCF are HARD-EXCLUDED (economically meaningless for banks — JPM annualFCF[0]=-$147.8B). COVERAGE-RENORM drops any NOT_READY/null axis (the load-bearing capitalAdequacy DROP on ~45% of the pool) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6, n=128≫15). WALLS always-on: CREDIT_QUALITY_BLIND (NPLs/charge-offs/provisions absent — the single most important bank dimension), NIM_BLIND, EFFICIENCY_RATIO_BLIND, CET1_BLIND (regulatory RWA absent — capitalAdequacy is a raw equity/assets surrogate), DEPOSIT_FRANCHISE_BLIND. The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison.",
+  "priceAnchorStatus": "PARTIAL — fehlende t0-Preise: BNY",
+  "benchmarkAnchorNote": "Broad-market SPY/QQQ/IWM in prices/history.json; Sektor-ETF (KBE) i.d.R. NICHT im Screener-Universe-History → null bis ein künftiger Pull ihn aufnimmt (kein Holdout-Defekt).",
+  "ranking": [
+    {
+      "order": 1,
+      "ticker": "WABC",
+      "score": 91.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.98,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 2,
+      "ticker": "RBCAA",
+      "score": 90.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.932,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 3,
+      "ticker": "CASH",
+      "score": 89.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.916,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 4,
+      "ticker": "BFC",
+      "score": 88.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.903,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 5,
+      "ticker": "HOMB",
+      "score": 88.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.959,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 6,
+      "ticker": "OZK",
+      "score": 86.3,
+      "membershipClass": "In",
+      "absKaliber": 0.949,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 7,
+      "ticker": "CBC",
+      "score": 86,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.901,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 8,
+      "ticker": "PRK",
+      "score": 85.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.907,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 9,
+      "ticker": "CHCO",
+      "score": 85.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.896,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 10,
+      "ticker": "SRCE",
+      "score": 85.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.9,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 11,
+      "ticker": "OFG",
+      "score": 84.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.942,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 12,
+      "ticker": "CVBF",
+      "score": 84.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.841,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 13,
+      "ticker": "TBBK",
+      "score": 82.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.917,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 14,
+      "ticker": "BANF",
+      "score": 82.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.884,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 15,
+      "ticker": "CBSH",
+      "score": 82.3,
+      "membershipClass": "In",
+      "absKaliber": 0.861,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 16,
+      "ticker": "FFIN",
+      "score": 81.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.884,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 17,
+      "ticker": "SFBS",
+      "score": 81.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.851,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 18,
+      "ticker": "IBOC",
+      "score": 81,
+      "membershipClass": "In",
+      "absKaliber": 0.88,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 19,
+      "ticker": "STBA",
+      "score": 81,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.838,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 20,
+      "ticker": "FBP",
+      "score": 80.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.839,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 21,
+      "ticker": "HBT",
+      "score": 79,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.793,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 22,
+      "ticker": "EWBC",
+      "score": 78.8,
+      "membershipClass": "In",
+      "absKaliber": 0.848,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 23,
+      "ticker": "ABCB",
+      "score": 78.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.792,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 24,
+      "ticker": "CTBI",
+      "score": 77.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.798,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 25,
+      "ticker": "CATY",
+      "score": 76.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.781,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 26,
+      "ticker": "BY",
+      "score": 74.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.745,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 27,
+      "ticker": "HWC",
+      "score": 73.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.751,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 28,
+      "ticker": "LKFN",
+      "score": 73.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.762,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 29,
+      "ticker": "PB",
+      "score": 73.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.732,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 30,
+      "ticker": "PFBC",
+      "score": 73.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.799,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 31,
+      "ticker": "RF",
+      "score": 72.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.734,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 32,
+      "ticker": "AX",
+      "score": 71.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.792,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 33,
+      "ticker": "FCF",
+      "score": 71.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.727,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 34,
+      "ticker": "PEBO",
+      "score": 71.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.717,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 35,
+      "ticker": "MBIN",
+      "score": 70.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.732,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 36,
+      "ticker": "FFBC",
+      "score": 70.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.728,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 37,
+      "ticker": "FCNCA",
+      "score": 69.5,
+      "membershipClass": "In",
+      "absKaliber": 0.728,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 38,
+      "ticker": "WSFS",
+      "score": 69.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.704,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 39,
+      "ticker": "FRME",
+      "score": 69.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.698,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 40,
+      "ticker": "NIC",
+      "score": 69,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.704,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 41,
+      "ticker": "TCBK",
+      "score": 68.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.693,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 42,
+      "ticker": "OSBC",
+      "score": 68.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.705,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 43,
+      "ticker": "GABC",
+      "score": 68.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.682,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 44,
+      "ticker": "QCRH",
+      "score": 67.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.704,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 45,
+      "ticker": "SYBT",
+      "score": 67,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.707,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 46,
+      "ticker": "LC",
+      "score": 66.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.705,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 47,
+      "ticker": "BANR",
+      "score": 65.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.656,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 48,
+      "ticker": "EFSC",
+      "score": 64.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.675,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 49,
+      "ticker": "UBSI",
+      "score": 62.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.662,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 50,
+      "ticker": "FNB",
+      "score": 61.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.634,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 51,
+      "ticker": "MTB",
+      "score": 61.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.622,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 52,
+      "ticker": "FSUN",
+      "score": 59.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.629,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 53,
+      "ticker": "PNFP",
+      "score": 59.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.626,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 54,
+      "ticker": "JPM",
+      "score": 57.3,
+      "membershipClass": "In",
+      "absKaliber": 0.607,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 55,
+      "ticker": "NBHC",
+      "score": 57.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.577,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 56,
+      "ticker": "FHB",
+      "score": 56.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.574,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 57,
+      "ticker": "FMBH",
+      "score": 54.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.574,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 58,
+      "ticker": "UCB",
+      "score": 54.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.564,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 59,
+      "ticker": "BOKF",
+      "score": 54.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.567,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 60,
+      "ticker": "CBU",
+      "score": 53.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.566,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 61,
+      "ticker": "HFWA",
+      "score": 53.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.55,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 62,
+      "ticker": "PNC",
+      "score": 52.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.535,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 63,
+      "ticker": "FHN",
+      "score": 52.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.542,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 64,
+      "ticker": "FITB",
+      "score": 51.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.525,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 65,
+      "ticker": "OBK",
+      "score": 51.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.525,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 66,
+      "ticker": "FIBK",
+      "score": 51,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.519,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 67,
+      "ticker": "FBNC",
+      "score": 50.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.543,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 68,
+      "ticker": "CFR",
+      "score": 50.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.49,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 69,
+      "ticker": "FULT",
+      "score": 50.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.521,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 70,
+      "ticker": "UVSP",
+      "score": 49.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.512,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 71,
+      "ticker": "WAL",
+      "score": 49.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.525,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 72,
+      "ticker": "WBS",
+      "score": 47.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.499,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 73,
+      "ticker": "CCB",
+      "score": 47,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.508,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 74,
+      "ticker": "WAFD",
+      "score": 46.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.462,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 75,
+      "ticker": "AMAL",
+      "score": 45.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.472,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 76,
+      "ticker": "NBTB",
+      "score": 45.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.477,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 77,
+      "ticker": "ZION",
+      "score": 44.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.448,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 78,
+      "ticker": "INDB",
+      "score": 43.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.434,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 79,
+      "ticker": "WTFC",
+      "score": 43.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.469,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 80,
+      "ticker": "STEL",
+      "score": 43.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.432,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 81,
+      "ticker": "BUSE",
+      "score": 43.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.434,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 82,
+      "ticker": "PFS",
+      "score": 41.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.43,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 83,
+      "ticker": "USB",
+      "score": 41.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.419,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 84,
+      "ticker": "HBAN",
+      "score": 41.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.465,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 85,
+      "ticker": "TOWN",
+      "score": 41.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.44,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 86,
+      "ticker": "GBCI",
+      "score": 40.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.46,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 87,
+      "ticker": "SSB",
+      "score": 40.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.372,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 88,
+      "ticker": "BHRB",
+      "score": 39.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.42,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 89,
+      "ticker": "BPOP",
+      "score": 39.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.399,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 90,
+      "ticker": "TMP",
+      "score": 39.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.404,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 91,
+      "ticker": "MCB",
+      "score": 39,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.419,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 92,
+      "ticker": "TRMK",
+      "score": 38.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.389,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 93,
+      "ticker": "WSBC",
+      "score": 38,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.383,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 94,
+      "ticker": "FBK",
+      "score": 37.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.411,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 95,
+      "ticker": "AUB",
+      "score": 37.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.378,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 96,
+      "ticker": "VLY",
+      "score": 36,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.364,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 97,
+      "ticker": "CFG",
+      "score": 35.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.383,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 98,
+      "ticker": "COLB",
+      "score": 32.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.354,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 99,
+      "ticker": "WFC",
+      "score": 31.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.349,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 100,
+      "ticker": "ONB",
+      "score": 30.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.292,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 101,
+      "ticker": "NWBI",
+      "score": 29.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.311,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 102,
+      "ticker": "BAC",
+      "score": 29.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.315,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 103,
+      "ticker": "CUBI",
+      "score": 26.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.309,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 104,
+      "ticker": "TCBI",
+      "score": 26.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.246,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 105,
+      "ticker": "TFIN",
+      "score": 25.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.253,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 106,
+      "ticker": "OCFC",
+      "score": 25,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.264,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 107,
+      "ticker": "RNST",
+      "score": 24.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.211,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 108,
+      "ticker": "UMBF",
+      "score": 23.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.208,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 109,
+      "ticker": "BNY",
+      "score": 23.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.288,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 110,
+      "ticker": "BOH",
+      "score": 22.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.236,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 111,
+      "ticker": "CNOB",
+      "score": 21.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.237,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 112,
+      "ticker": "LOB",
+      "score": 21.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.25,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 113,
+      "ticker": "SBCF",
+      "score": 17.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.139,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 114,
+      "ticker": "BBT",
+      "score": 14.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.156,
+      "belowAbsoluteFloor": false
+    }
+  ],
+  "evaluatedTickers": [
+    "WABC",
+    "RBCAA",
+    "CASH",
+    "BFC",
+    "HOMB",
+    "OZK",
+    "CBC",
+    "PRK",
+    "CHCO",
+    "SRCE",
+    "OFG",
+    "CVBF",
+    "TBBK",
+    "BANF",
+    "CBSH",
+    "FFIN",
+    "SFBS",
+    "IBOC",
+    "STBA",
+    "FBP",
+    "HBT",
+    "EWBC",
+    "ABCB",
+    "CTBI",
+    "CATY",
+    "BY",
+    "HWC",
+    "LKFN",
+    "PB",
+    "PFBC",
+    "RF",
+    "AX",
+    "FCF",
+    "PEBO",
+    "MBIN",
+    "FFBC",
+    "FCNCA",
+    "WSFS",
+    "FRME",
+    "NIC",
+    "TCBK",
+    "OSBC",
+    "GABC",
+    "QCRH",
+    "SYBT",
+    "LC",
+    "BANR",
+    "EFSC",
+    "UBSI",
+    "FNB",
+    "MTB",
+    "FSUN",
+    "PNFP",
+    "JPM",
+    "NBHC",
+    "FHB",
+    "FMBH",
+    "UCB",
+    "BOKF",
+    "CBU",
+    "HFWA",
+    "PNC",
+    "FHN",
+    "FITB",
+    "OBK",
+    "FIBK",
+    "FBNC",
+    "CFR",
+    "FULT",
+    "UVSP",
+    "WAL",
+    "WBS",
+    "CCB",
+    "WAFD",
+    "AMAL",
+    "NBTB",
+    "ZION",
+    "INDB",
+    "WTFC",
+    "STEL",
+    "BUSE",
+    "PFS",
+    "USB",
+    "HBAN",
+    "TOWN",
+    "GBCI",
+    "SSB",
+    "BHRB",
+    "BPOP",
+    "TMP",
+    "MCB",
+    "TRMK",
+    "WSBC",
+    "FBK",
+    "AUB",
+    "VLY",
+    "CFG",
+    "COLB",
+    "WFC",
+    "ONB",
+    "NWBI",
+    "BAC",
+    "CUBI",
+    "TCBI",
+    "TFIN",
+    "OCFC",
+    "RNST",
+    "UMBF",
+    "BNY",
+    "BOH",
+    "CNOB",
+    "LOB",
+    "SBCF",
+    "BBT"
+  ],
+  "priceAnchors": {
+    "WABC": {
+      "date": "2026-06-12",
+      "close": 58.150001525878906
+    },
+    "RBCAA": {
+      "date": "2026-06-12",
+      "close": 87.66000366210938
+    },
+    "CASH": {
+      "date": "2026-06-12",
+      "close": 84.16999816894531
+    },
+    "BFC": {
+      "date": "2026-06-12",
+      "close": 145.16000366210938
+    },
+    "HOMB": {
+      "date": "2026-06-12",
+      "close": 28.25
+    },
+    "OZK": {
+      "date": "2026-06-12",
+      "close": 52.099998474121094
+    },
+    "CBC": {
+      "date": "2026-06-12",
+      "close": 28.790000915527344
+    },
+    "PRK": {
+      "date": "2026-05-17",
+      "close": 163.83999633789062
+    },
+    "CHCO": {
+      "date": "2026-06-12",
+      "close": 130.75999450683594
+    },
+    "SRCE": {
+      "date": "2026-06-12",
+      "close": 78.5199966430664
+    },
+    "OFG": {
+      "date": "2026-06-12",
+      "close": 48.060001373291016
+    },
+    "CVBF": {
+      "date": "2026-06-12",
+      "close": 21.229999542236328
+    },
+    "TBBK": {
+      "date": "2026-06-12",
+      "close": 57.459999084472656
+    },
+    "BANF": {
+      "date": "2026-06-12",
+      "close": 116.2699966430664
+    },
+    "CBSH": {
+      "date": "2026-06-12",
+      "close": 55.81999969482422
+    },
+    "FFIN": {
+      "date": "2026-06-12",
+      "close": 33.650001525878906
+    },
+    "SFBS": {
+      "date": "2026-06-15",
+      "close": 81.05999755859375
+    },
+    "IBOC": {
+      "date": "2026-06-12",
+      "close": 76.52999877929688
+    },
+    "STBA": {
+      "date": "2026-06-12",
+      "close": 47.849998474121094
+    },
+    "FBP": {
+      "date": "2026-06-12",
+      "close": 25.5
+    },
+    "HBT": {
+      "date": "2026-06-15",
+      "close": 29.989999771118164
+    },
+    "EWBC": {
+      "date": "2026-06-12",
+      "close": 132.6300048828125
+    },
+    "ABCB": {
+      "date": "2026-06-12",
+      "close": 88.94999694824219
+    },
+    "CTBI": {
+      "date": "2026-06-12",
+      "close": 70.6500015258789
+    },
+    "CATY": {
+      "date": "2026-06-12",
+      "close": 60.97999954223633
+    },
+    "BY": {
+      "date": "2026-06-15",
+      "close": 35.02000045776367
+    },
+    "HWC": {
+      "date": "2026-06-12",
+      "close": 72.5
+    },
+    "LKFN": {
+      "date": "2026-06-12",
+      "close": 61.83000183105469
+    },
+    "PB": {
+      "date": "2026-06-12",
+      "close": 72.06999969482422
+    },
+    "PFBC": {
+      "date": "2026-06-12",
+      "close": 101.61000061035156
+    },
+    "RF": {
+      "date": "2026-06-12",
+      "close": 29.270000457763672
+    },
+    "AX": {
+      "date": "2026-05-17",
+      "close": 83.18000030517578
+    },
+    "FCF": {
+      "date": "2026-06-12",
+      "close": 19.90999984741211
+    },
+    "PEBO": {
+      "date": "2026-06-12",
+      "close": 36.599998474121094
+    },
+    "MBIN": {
+      "date": "2026-06-15",
+      "close": 49.16999816894531
+    },
+    "FFBC": {
+      "date": "2026-06-12",
+      "close": 32.29999923706055
+    },
+    "FCNCA": {
+      "date": "2026-06-12",
+      "close": 2108.610107421875
+    },
+    "WSFS": {
+      "date": "2026-06-12",
+      "close": 75.23999786376953
+    },
+    "FRME": {
+      "date": "2026-06-12",
+      "close": 42.09000015258789
+    },
+    "NIC": {
+      "date": "2026-06-15",
+      "close": 146.63999938964844
+    },
+    "TCBK": {
+      "date": "2026-06-12",
+      "close": 52.63999938964844
+    },
+    "OSBC": {
+      "date": "2026-06-15",
+      "close": 22.010000228881836
+    },
+    "GABC": {
+      "date": "2026-06-12",
+      "close": 45.90999984741211
+    },
+    "QCRH": {
+      "date": "2026-06-12",
+      "close": 96.33000183105469
+    },
+    "SYBT": {
+      "date": "2026-06-12",
+      "close": 75.26000213623047
+    },
+    "LC": {
+      "date": "2026-06-15",
+      "close": 18.450000762939453
+    },
+    "BANR": {
+      "date": "2026-06-15",
+      "close": 65.87000274658203
+    },
+    "EFSC": {
+      "date": "2026-06-12",
+      "close": 63.85000228881836
+    },
+    "UBSI": {
+      "date": "2026-06-12",
+      "close": 45.650001525878906
+    },
+    "FNB": {
+      "date": "2026-06-12",
+      "close": 18.639999389648438
+    },
+    "MTB": {
+      "date": "2026-06-12",
+      "close": 231.8800048828125
+    },
+    "FSUN": {
+      "date": "2026-06-15",
+      "close": 36.279998779296875
+    },
+    "PNFP": {
+      "date": "2026-06-12",
+      "close": 96.36000061035156
+    },
+    "JPM": {
+      "date": "2026-06-12",
+      "close": 320.7200012207031
+    },
+    "NBHC": {
+      "date": "2026-06-15",
+      "close": 42.91999816894531
+    },
+    "FHB": {
+      "date": "2026-06-15",
+      "close": 28.200000762939453
+    },
+    "FMBH": {
+      "date": "2026-06-12",
+      "close": 46.66999816894531
+    },
+    "UCB": {
+      "date": "2026-06-12",
+      "close": 34.380001068115234
+    },
+    "BOKF": {
+      "date": "2026-06-12",
+      "close": 134.61000061035156
+    },
+    "CBU": {
+      "date": "2026-06-12",
+      "close": 65.70999908447266
+    },
+    "HFWA": {
+      "date": "2026-06-12",
+      "close": 29.040000915527344
+    },
+    "PNC": {
+      "date": "2026-06-12",
+      "close": 237.66000366210938
+    },
+    "FHN": {
+      "date": "2026-06-12",
+      "close": 25.139999389648438
+    },
+    "FITB": {
+      "date": "2026-06-12",
+      "close": 54.72999954223633
+    },
+    "OBK": {
+      "date": "2026-06-15",
+      "close": 49.279998779296875
+    },
+    "FIBK": {
+      "date": "2026-06-12",
+      "close": 37.11000061035156
+    },
+    "FBNC": {
+      "date": "2026-06-12",
+      "close": 61.779998779296875
+    },
+    "CFR": {
+      "date": "2026-06-12",
+      "close": 148
+    },
+    "FULT": {
+      "date": "2026-05-17",
+      "close": 20.649999618530273
+    },
+    "UVSP": {
+      "date": "2026-06-12",
+      "close": 42.58000183105469
+    },
+    "WAL": {
+      "date": "2026-06-12",
+      "close": 83.66999816894531
+    },
+    "WBS": {
+      "date": "2026-06-12",
+      "close": 73.91000366210938
+    },
+    "CCB": {
+      "date": "2026-06-15",
+      "close": 71.04000091552734
+    },
+    "WAFD": {
+      "date": "2026-06-12",
+      "close": 37.06999969482422
+    },
+    "AMAL": {
+      "date": "2026-06-15",
+      "close": 43.68000030517578
+    },
+    "NBTB": {
+      "date": "2026-06-12",
+      "close": 48.18000030517578
+    },
+    "ZION": {
+      "date": "2026-06-12",
+      "close": 67.25
+    },
+    "INDB": {
+      "date": "2026-06-12",
+      "close": 83.2699966430664
+    },
+    "WTFC": {
+      "date": "2026-06-12",
+      "close": 159.25999450683594
+    },
+    "STEL": {
+      "date": "2026-06-15",
+      "close": 38.33000183105469
+    },
+    "BUSE": {
+      "date": "2026-06-12",
+      "close": 28.790000915527344
+    },
+    "PFS": {
+      "date": "2026-06-12",
+      "close": 23.520000457763672
+    },
+    "USB": {
+      "date": "2026-06-12",
+      "close": 58.939998626708984
+    },
+    "HBAN": {
+      "date": "2026-06-12",
+      "close": 17.520000457763672
+    },
+    "TOWN": {
+      "date": "2026-06-12",
+      "close": 35.66999816894531
+    },
+    "GBCI": {
+      "date": "2026-06-12",
+      "close": 49.95000076293945
+    },
+    "SSB": {
+      "date": "2026-06-15",
+      "close": 97.5999984741211
+    },
+    "BHRB": {
+      "date": "2026-06-12",
+      "close": 67.08000183105469
+    },
+    "BPOP": {
+      "date": "2026-06-12",
+      "close": 160.9499969482422
+    },
+    "TMP": {
+      "date": "2026-06-12",
+      "close": 92.0199966430664
+    },
+    "MCB": {
+      "date": "2026-06-15",
+      "close": 94.76000213623047
+    },
+    "TRMK": {
+      "date": "2026-06-12",
+      "close": 45.90999984741211
+    },
+    "WSBC": {
+      "date": "2026-06-15",
+      "close": 36.08000183105469
+    },
+    "FBK": {
+      "date": "2026-06-15",
+      "close": 53.779998779296875
+    },
+    "AUB": {
+      "date": "2026-06-15",
+      "close": 39.54999923706055
+    },
+    "VLY": {
+      "date": "2026-06-12",
+      "close": 14.520000457763672
+    },
+    "CFG": {
+      "date": "2026-06-15",
+      "close": 66.6500015258789
+    },
+    "COLB": {
+      "date": "2026-06-12",
+      "close": 31.309999465942383
+    },
+    "WFC": {
+      "date": "2026-06-12",
+      "close": 83.7300033569336
+    },
+    "ONB": {
+      "date": "2026-06-12",
+      "close": 25.139999389648438
+    },
+    "NWBI": {
+      "date": "2026-06-15",
+      "close": 14.550000190734863
+    },
+    "BAC": {
+      "date": "2026-06-12",
+      "close": 56.02000045776367
+    },
+    "CUBI": {
+      "date": "2026-06-15",
+      "close": 76.47000122070312
+    },
+    "TCBI": {
+      "date": "2026-06-12",
+      "close": 101.51000213623047
+    },
+    "TFIN": {
+      "date": "2026-06-15",
+      "close": 74.7699966430664
+    },
+    "OCFC": {
+      "date": "2026-06-12",
+      "close": 18.600000381469727
+    },
+    "RNST": {
+      "date": "2026-06-12",
+      "close": 42.810001373291016
+    },
+    "UMBF": {
+      "date": "2026-06-12",
+      "close": 135.3699951171875
+    },
+    "BNY": null,
+    "BOH": {
+      "date": "2026-06-12",
+      "close": 80.25
+    },
+    "CNOB": {
+      "date": "2026-06-12",
+      "close": 32.77000045776367
+    },
+    "LOB": {
+      "date": "2026-06-15",
+      "close": 38.33000183105469
+    },
+    "SBCF": {
+      "date": "2026-06-12",
+      "close": 31.890003204345703
+    },
+    "BBT": {
+      "date": "2026-06-15",
+      "close": 29.790000915527344
+    },
+    "SPY": {
+      "date": "2026-06-12",
+      "close": 741.75
+    },
+    "QQQ": {
+      "date": "2026-06-15",
+      "close": 744
+    },
+    "IWM": {
+      "date": "2026-06-15",
+      "close": 294.6400146484375
+    },
+    "KBE": null
+  }
+}

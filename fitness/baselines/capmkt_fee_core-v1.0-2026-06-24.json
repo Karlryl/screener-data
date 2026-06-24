@@ -1,0 +1,856 @@
+{
+  "baselineId": "capmkt_fee_core-v1.0-2026-06-24",
+  "bucket": "capmkt_fee_core",
+  "frozenAt": "2026-06-24",
+  "formula": "capmkt_fee_core CORE — asset-light fee quality; absKaliberCapmkt 4 axes opMargin .30 / opMarginStability(1-CV) .30 / fcfMargin .25 / netIssuance .15; 4-arm economic fee-gate (fund-float / RIC / BDC-loan-book / crypto-miner) so genuine fee compounders lead.",
+  "source": "outputs/court-results.json :: capmkt_fee_core",
+  "normTableId": "capmkt-norms-2026-06-24",
+  "classifiedCount": 84,
+  "scoredCount": 66,
+  "excludedCount": 18,
+  "headlineShortlistSize": 60,
+  "scoreScope": "intra-bucket",
+  "crossBucketComparableField": "absKaliber",
+  "forwardFitness": {
+    "calendarGated": true,
+    "metric": [
+      "rank_ic_spearman",
+      "top_n_minus_universe_median_fwd_return"
+    ],
+    "horizonsDays": [
+      28,
+      84
+    ],
+    "windowEnds": {
+      "d28": "~2026-07-22",
+      "d84": "~2026-09-16"
+    },
+    "survivorshipKey": "evaluatedTickers",
+    "antiGaming": "gateOpen-Ranking am Ship-Tag (vor jeder weiteren Bucket-Änderung) eingefroren. Forward-Fenster = intrinsischer Holdout; Eval erst NACH Kalender-Gate. Erzeugende Agenten dürfen NIE auf dem Eval-Slice tunen.",
+    "honestLimitation": "N=60 — Rank-IC/Spread haben Richtungs-, nicht starke statistische Aussagekraft. Primärer Wert: Pre-Registration-Disziplin + Beitrag zur gepoolten Cross-Formel-Fitness."
+  },
+  "anchors": {
+    "opMargin": {
+      "median": 0.2373,
+      "mad": 0.14590000000000003,
+      "n": 67
+    },
+    "opMarginStability": {
+      "median": 0.9731,
+      "mad": 0.026900000000000035,
+      "n": 65
+    },
+    "fcfMargin": {
+      "median": 0.1998,
+      "mad": 0.15180000000000002,
+      "n": 81
+    },
+    "netIssuanceDisc": {
+      "median": -0.00165,
+      "mad": 0.0508,
+      "n": 36
+    }
+  },
+  "comparabilityNote": "capmkt_fee_core capmkt_fee_core (asset-light fee-business through-cycle quality cohort: exchanges/rating/index-data/asset-managers/brokers). absKaliber in [0,1] = cross-bucket-comparable absolute scale (4-axis weighted-q over the cohort NORMS 'capmkt-norms-2026-06-24': opMargin -.0100/.5000 (annualOpInc/annualRev level, the fee-franchise pricing power), opMarginStability .0000/1.0000 (1-CV(opMargin) identity-clip, a through-cycle pricing-durability proxy; ~18% null → DROP+renorm), fcfMargin -.2300/.5200 (annualFCF/annualRev cash conversion), netIssuance -.0800/.1200 (q(-net-share-issuance) INVERTED, buyback=elite; ~54% lack annualShares → DROP+renorm, NEVER imputed); weights {opMargin .30, opMarginStability .30, fcfMargin .25, netIssuance .15}. THE ECONOMIC FEE-GATE (court revision #1 + RE-COURT 2026-06-24, FOUR arms) removed 71 artifacts at classification: fcfMargin>1.0 FUND_FLOAT (KYN/APO/IBKR; 16) + niMargin>=0.95 RIC_PASSTHROUGH (40-Act closed-end funds NMZ/NUV/TY/ADX/GAB; 39) + BDC_SPREAD_LOAN_BOOK (RE-COURT — the DENIAL cause: 11 leveraged-spread-lender BDCs OBDC/GSBD/TSLX/MSDL/FSK/GBDC/OTF/ARCC/BXSL/CSWC/HTGC that had topped the contaminated cohort; revToAssets∈[.05,.16] ∧ totalDebt=null ∧ liabilities/equity∈[.7,2.0] regulated-BDC signature; spares Carlyle/CG at TL/TE 3.83) + CRYPTO_MINER_NON_FEE (RE-COURT — 5 commodity miners CLSK/HIVE/MARA/RIOT/WULF; opMargin<0 all years ∧ mean NI/FCF margins <-.20; spares COIN/HOOD/CG/BWIN) — EXCLUDE-not-cap because each is a different animal. COUNTRY NORMALIZE (court revision #2): the country=undefined US names MSCI/MCO/ICE/NDAQ/KKR are RETAINED via the positive US-primary test (US exchange + USD + no foreign legal-form name). COVERAGE-RENORM drops any NOT_READY/null axis (the load-bearing netIssuance DROP on ~57% of the pool) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6, n=84≫15). WALLS always-on: AUM_FLOW_BLIND (AUM net flows / organic AUM growth — the fee-engine fuel — absent), FEE_RATE_BLIND (fee-rate/take-rate compression absent), RECURRING_MIX_BLIND (recurring vs transactional/performance-fee mix absent), BDC_SPREAD_BLIND (now largely MOOT — the 11 BDCs are hard-gated OUT by arm 3, not scored — kept as a structural disclosure for future borderline lenders). The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison.",
+  "priceAnchorStatus": "CAPTURED — t0-Close je Ticker eingefroren. Forward-Return = close[t0+h]/close[t0]-1.",
+  "benchmarkAnchorNote": "Broad-market SPY/QQQ/IWM in prices/history.json; Sektor-ETF (IAI) i.d.R. NICHT im Screener-Universe-History → null bis ein künftiger Pull ihn aufnimmt (kein Holdout-Defekt).",
+  "ranking": [
+    {
+      "order": 1,
+      "ticker": "BAM",
+      "score": 94.4,
+      "membershipClass": "In",
+      "absKaliber": 0.972,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 2,
+      "ticker": "MSCI",
+      "score": 90.3,
+      "membershipClass": "In",
+      "absKaliber": 0.975,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 3,
+      "ticker": "CME",
+      "score": 88.9,
+      "membershipClass": "In",
+      "absKaliber": 0.911,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 4,
+      "ticker": "ICE",
+      "score": 84.8,
+      "membershipClass": "In",
+      "absKaliber": 0.939,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 5,
+      "ticker": "BRO",
+      "score": 84.1,
+      "membershipClass": "In",
+      "absKaliber": 0.875,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 6,
+      "ticker": "CBOE",
+      "score": 82.8,
+      "membershipClass": "In",
+      "absKaliber": 0.847,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 7,
+      "ticker": "TW",
+      "score": 80,
+      "membershipClass": "In",
+      "absKaliber": 0.919,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 8,
+      "ticker": "NDAQ",
+      "score": 79.6,
+      "membershipClass": "In",
+      "absKaliber": 0.903,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 9,
+      "ticker": "BX",
+      "score": 78.3,
+      "membershipClass": "In",
+      "absKaliber": 0.795,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 10,
+      "ticker": "ARES",
+      "score": 77.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.797,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 11,
+      "ticker": "MKTX",
+      "score": 76.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.864,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 12,
+      "ticker": "HLNE",
+      "score": 75.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.887,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 13,
+      "ticker": "AMP",
+      "score": 75.3,
+      "membershipClass": "In",
+      "absKaliber": 0.772,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 14,
+      "ticker": "MCO",
+      "score": 73.5,
+      "membershipClass": "In",
+      "absKaliber": 0.862,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 15,
+      "ticker": "BLK",
+      "score": 72.2,
+      "membershipClass": "In",
+      "absKaliber": 0.747,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 16,
+      "ticker": "GLXY",
+      "score": 71.9,
+      "membershipClass": "In",
+      "absKaliber": 0.751,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 17,
+      "ticker": "VCTR",
+      "score": 71.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.834,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 18,
+      "ticker": "AJG",
+      "score": 70.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.743,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 19,
+      "ticker": "VIRT",
+      "score": 70.6,
+      "membershipClass": "In",
+      "absKaliber": 0.837,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 20,
+      "ticker": "SPGI",
+      "score": 69.3,
+      "membershipClass": "In",
+      "absKaliber": 0.808,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 21,
+      "ticker": "FDS",
+      "score": 68.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.702,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 22,
+      "ticker": "EVR",
+      "score": 68.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.696,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 23,
+      "ticker": "NP",
+      "score": 66,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.76,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 24,
+      "ticker": "WT",
+      "score": 65,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.766,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 25,
+      "ticker": "AMG",
+      "score": 64.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.668,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 26,
+      "ticker": "MRSH",
+      "score": 61.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.645,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 27,
+      "ticker": "TROW",
+      "score": 61.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.735,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 28,
+      "ticker": "CRVL",
+      "score": 61.2,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.651,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 29,
+      "ticker": "OPY",
+      "score": 60.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.632,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 30,
+      "ticker": "APAM",
+      "score": 59.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.622,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 31,
+      "ticker": "SEIC",
+      "score": 59,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.706,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 32,
+      "ticker": "FHI",
+      "score": 58.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.611,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 33,
+      "ticker": "GSHD",
+      "score": 57.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.599,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 34,
+      "ticker": "CNS",
+      "score": 56.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.578,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 35,
+      "ticker": "ERIE",
+      "score": 55.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.589,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 36,
+      "ticker": "BEN",
+      "score": 55.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.589,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 37,
+      "ticker": "PJT",
+      "score": 55.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.671,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 38,
+      "ticker": "HOOD",
+      "score": 55.2,
+      "membershipClass": "In",
+      "absKaliber": 0.56,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 39,
+      "ticker": "GS",
+      "score": 53.8,
+      "membershipClass": "In",
+      "absKaliber": 0.557,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 40,
+      "ticker": "JEF",
+      "score": 53.7,
+      "membershipClass": "In",
+      "absKaliber": 0.646,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 41,
+      "ticker": "BGC",
+      "score": 53.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.577,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 42,
+      "ticker": "HLI",
+      "score": 52.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.617,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 43,
+      "ticker": "AAMI",
+      "score": 50.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.54,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 44,
+      "ticker": "TRU",
+      "score": 50.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.617,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 45,
+      "ticker": "EQH",
+      "score": 50.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.534,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 46,
+      "ticker": "OWL",
+      "score": 47.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.521,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 47,
+      "ticker": "MORN",
+      "score": 45.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.549,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 48,
+      "ticker": "CRBG",
+      "score": 44.3,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.478,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 49,
+      "ticker": "GOLD",
+      "score": 43.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.462,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 50,
+      "ticker": "MC",
+      "score": 40.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.42,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 51,
+      "ticker": "LPLA",
+      "score": 31.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.422,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 52,
+      "ticker": "LAZ",
+      "score": 31.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.346,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 53,
+      "ticker": "LIFE",
+      "score": 29.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.323,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 54,
+      "ticker": "SNEX",
+      "score": 28,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.362,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 55,
+      "ticker": "FIGR",
+      "score": 24.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.254,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 56,
+      "ticker": "AB",
+      "score": 20.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.166,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 57,
+      "ticker": "KKR",
+      "score": 16.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.158,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 58,
+      "ticker": "PWP",
+      "score": 16.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.157,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 59,
+      "ticker": "MIAX",
+      "score": 14.6,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.156,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 60,
+      "ticker": "DXYZ",
+      "score": 10.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.011,
+      "belowAbsoluteFloor": false
+    }
+  ],
+  "evaluatedTickers": [
+    "BAM",
+    "MSCI",
+    "CME",
+    "ICE",
+    "BRO",
+    "CBOE",
+    "TW",
+    "NDAQ",
+    "BX",
+    "ARES",
+    "MKTX",
+    "HLNE",
+    "AMP",
+    "MCO",
+    "BLK",
+    "GLXY",
+    "VCTR",
+    "AJG",
+    "VIRT",
+    "SPGI",
+    "FDS",
+    "EVR",
+    "NP",
+    "WT",
+    "AMG",
+    "MRSH",
+    "TROW",
+    "CRVL",
+    "OPY",
+    "APAM",
+    "SEIC",
+    "FHI",
+    "GSHD",
+    "CNS",
+    "ERIE",
+    "BEN",
+    "PJT",
+    "HOOD",
+    "GS",
+    "JEF",
+    "BGC",
+    "HLI",
+    "AAMI",
+    "TRU",
+    "EQH",
+    "OWL",
+    "MORN",
+    "CRBG",
+    "GOLD",
+    "MC",
+    "LPLA",
+    "LAZ",
+    "LIFE",
+    "SNEX",
+    "FIGR",
+    "AB",
+    "KKR",
+    "PWP",
+    "MIAX",
+    "DXYZ"
+  ],
+  "priceAnchors": {
+    "BAM": {
+      "date": "2026-06-15",
+      "close": 48.189998626708984
+    },
+    "MSCI": {
+      "date": "2026-06-12",
+      "close": 599.1199951171875
+    },
+    "CME": {
+      "date": "2026-06-12",
+      "close": 269.5299987792969
+    },
+    "ICE": {
+      "date": "2026-06-12",
+      "close": 140.00999450683594
+    },
+    "BRO": {
+      "date": "2026-06-12",
+      "close": 59.9900016784668
+    },
+    "CBOE": {
+      "date": "2026-06-12",
+      "close": 294.9100036621094
+    },
+    "TW": {
+      "date": "2026-06-15",
+      "close": 101.7300033569336
+    },
+    "NDAQ": {
+      "date": "2026-05-17",
+      "close": 91.05999755859375
+    },
+    "BX": {
+      "date": "2026-06-12",
+      "close": 122.79000091552734
+    },
+    "ARES": {
+      "date": "2026-06-15",
+      "close": 135.36000061035156
+    },
+    "MKTX": {
+      "date": "2026-06-12",
+      "close": 120.88999938964844
+    },
+    "HLNE": {
+      "date": "2026-06-15",
+      "close": 81.98999786376953
+    },
+    "AMP": {
+      "date": "2026-06-12",
+      "close": 459.1300048828125
+    },
+    "MCO": {
+      "date": "2026-06-12",
+      "close": 447.8500061035156
+    },
+    "BLK": {
+      "date": "2026-06-12",
+      "close": 1032
+    },
+    "GLXY": {
+      "date": "2026-06-12",
+      "close": 33.36000061035156
+    },
+    "VCTR": {
+      "date": "2026-06-15",
+      "close": 85.97000122070312
+    },
+    "AJG": {
+      "date": "2026-06-12",
+      "close": 218.69000244140625
+    },
+    "VIRT": {
+      "date": "2026-06-15",
+      "close": 57.70000076293945
+    },
+    "SPGI": {
+      "date": "2026-06-12",
+      "close": 418.9100036621094
+    },
+    "FDS": {
+      "date": "2026-06-15",
+      "close": 235.86000061035156
+    },
+    "EVR": {
+      "date": "2026-06-12",
+      "close": 357.3800048828125
+    },
+    "NP": {
+      "date": "2026-06-12",
+      "close": 27.399999618530273
+    },
+    "WT": {
+      "date": "2026-06-12",
+      "close": 17.969999313354492
+    },
+    "AMG": {
+      "date": "2026-06-15",
+      "close": 352.92999267578125
+    },
+    "MRSH": {
+      "date": "2026-06-12",
+      "close": 168.67999267578125
+    },
+    "TROW": {
+      "date": "2026-06-12",
+      "close": 108.34000396728516
+    },
+    "CRVL": {
+      "date": "2026-06-12",
+      "close": 60.34000015258789
+    },
+    "OPY": {
+      "date": "2026-06-12",
+      "close": 103.41000366210938
+    },
+    "APAM": {
+      "date": "2026-06-15",
+      "close": 36.060001373291016
+    },
+    "SEIC": {
+      "date": "2026-06-12",
+      "close": 89.4000015258789
+    },
+    "FHI": {
+      "date": "2026-06-15",
+      "close": 58.209999084472656
+    },
+    "GSHD": {
+      "date": "2026-06-15",
+      "close": 36.04999923706055
+    },
+    "CNS": {
+      "date": "2026-06-12",
+      "close": 77.05000305175781
+    },
+    "ERIE": {
+      "date": "2026-06-15",
+      "close": 224.0399932861328
+    },
+    "BEN": {
+      "date": "2026-06-12",
+      "close": 32.130001068115234
+    },
+    "PJT": {
+      "date": "2026-06-15",
+      "close": 156.3699951171875
+    },
+    "HOOD": {
+      "date": "2026-06-15",
+      "close": 98.12000274658203
+    },
+    "GS": {
+      "date": "2026-06-12",
+      "close": 1062.75
+    },
+    "JEF": {
+      "date": "2026-06-12",
+      "close": 61.65999984741211
+    },
+    "BGC": {
+      "date": "2026-06-12",
+      "close": 11.850000381469727
+    },
+    "HLI": {
+      "date": "2026-06-15",
+      "close": 139.8300018310547
+    },
+    "AAMI": {
+      "date": "2026-06-15",
+      "close": 80.56999969482422
+    },
+    "TRU": {
+      "date": "2026-06-15",
+      "close": 67.30999755859375
+    },
+    "EQH": {
+      "date": "2026-06-15",
+      "close": 45.20000076293945
+    },
+    "OWL": {
+      "date": "2026-06-15",
+      "close": 9.609999656677246
+    },
+    "MORN": {
+      "date": "2026-06-12",
+      "close": 175.22000122070312
+    },
+    "CRBG": {
+      "date": "2026-06-15",
+      "close": 29.459999084472656
+    },
+    "GOLD": {
+      "date": "2026-06-15",
+      "close": 43.65999984741211
+    },
+    "MC": {
+      "date": "2026-06-15",
+      "close": 69.08999633789062
+    },
+    "LPLA": {
+      "date": "2026-06-12",
+      "close": 295.6600036621094
+    },
+    "LAZ": {
+      "date": "2026-06-12",
+      "close": 43.720001220703125
+    },
+    "LIFE": {
+      "date": "2026-06-12",
+      "close": 15.609999656677246
+    },
+    "SNEX": {
+      "date": "2026-06-12",
+      "close": 130.69000244140625
+    },
+    "FIGR": {
+      "date": "2026-05-17",
+      "close": 43.279998779296875
+    },
+    "AB": {
+      "date": "2026-06-12",
+      "close": 36.439998626708984
+    },
+    "KKR": {
+      "date": "2026-06-12",
+      "close": 96.23999786376953
+    },
+    "PWP": {
+      "date": "2026-06-15",
+      "close": 16.010000228881836
+    },
+    "MIAX": {
+      "date": "2026-06-12",
+      "close": 43.290000915527344
+    },
+    "DXYZ": {
+      "date": "2026-06-12",
+      "close": 28.969999313354492
+    },
+    "SPY": {
+      "date": "2026-06-12",
+      "close": 741.75
+    },
+    "QQQ": {
+      "date": "2026-06-15",
+      "close": 744
+    },
+    "IWM": {
+      "date": "2026-06-15",
+      "close": 294.6400146484375
+    },
+    "IAI": null
+  }
+}
