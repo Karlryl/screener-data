@@ -18,7 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const ROOT = __dirname;
-const { absKaliber, absKaliberIndustrials, absKaliberStaples, absKaliberConsDisc, absKaliberMaterials, absKaliberEnergy, absKaliberPharma, absKaliberItServices, absKaliberBanks, absKaliberReits, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
+const { absKaliber, absKaliberIndustrials, absKaliberStaples, absKaliberConsDisc, absKaliberMaterials, absKaliberEnergy, absKaliberPharma, absKaliberItServices, absKaliberBanks, absKaliberReits, absKaliberCapmkt, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
 // Medtech M&A snapshot (advisory lamps; object keyed by ticker)
 const maMedtechRaw = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'ma-rpo-snapshot-medtech.json'), 'utf8')); } catch { return {}; } })();
 // Remove _header key
@@ -641,6 +641,42 @@ const FORMULAS = {
     reits: true, cohortKey: 'equity_reits',
     a2Note: 'equity_reits v0 (court gauntlet DESIGN, BUILD_WITH_CAVEATS / court REVISE 2026-06-24; NORMS RECOMPUTED LIVE on the FINAL de-ADRd + deduped US pool 2026-06-24 THEN frozen — the CORE gate). ONE equity-REIT cohort: Real Estate ∧ industry in {REIT - Retail, Office, Industrial, Residential, Diversified, Healthcare Facilities, Specialty, Hotel & Motel} ∧ US-listing (DE-ADRd country-domicile guard + FOREIGN_NAME + positive US-primary test) ∧ >=$1B, deduped. THE HARD SEPARATION (court revision #0): REIT - Mortgage is a DIFFERENT ANIMAL (book-value/leverage/dividend-sustainability, not FFO/NOI) — the 14 US >=$1B mortgage REITs (NLY/AGNC/STWD/ABR/RITM/BXMT/CIM/DX/EFC/LADR/ARI/ARR/ORC/TWO) are CLASSIFIED OUT (never enter equity_reits), a documented exclusion (MORTGAGE_REIT_EXCLUDED). Live: 114 classified; 109 scored, 5 excluded (4 economic SHELLs BXDC/FRMI/MRP/JAN — <3 positive-revenue-years or no balance sheet — PLUS CBL, a below-absolute-floor membership-Out distressed-retail name whose newest annualRev=0 leaves only ndGA computable, NOT a shell; CMRF excluded a-fortiori at classification as an OTC pink-sheet non-traded REIT). SCORE = THROUGH-CYCLE BUSINESS QUALITY ONLY, never valuation (the NAV_PREMIUM_BLIND wall). 4 SCORED axes via absKaliberReits: opMargin = annualOpInc[0]/annualRev[0] (NOI-margin proxy, w .30, norm .08/.54 = live p10 8% / p90 54%), ffoAssets = (annualNetIncome[0]+annualDepreciation[0])/totalAssets[0] (FFO yield on asset base, w .30, norm .023/.094 = live p10 2.3% / p90 9.4%; ~52% of the pool lack annualDepreciation incl. the top-tier VICI/O/PLD/TRNO → DROP+renorm + FFO_COVERAGE_PARTIAL, NEVER imputed — court revision #3), revG3 = (annualRev[0]/annualRev[3])^(1/3)-1 (rent-base 3y CAGR, w .25, norm .00/.17; floor 0 = no credit for contraction), ndGA leverage discipline = q(-((totalDebt[0]-totalCash[0])/totalAssets[0])) (INVERTED + LEVEL-scored, w .15, norm -.60/-.29 = a name at ~29% net-debt/assets scores elite, ~60% floor; GENEROUS so only the OVER-levered lose points — this is LEVEL discipline, NOT the industrials asset-GROWTH penalty). COURT REVISION #1 (the single concrete implementation defect): the FLOW fields (annualRev/OpInc/NetIncome/Depreciation) are {value}-WRAPPED objects, NOT raw numbers (annualBalance.* ARE raw) — every axis unwraps via reUnwrap() before arithmetic + a build-time typeof-number assert, else all axes silently NaN. COURT REVISION #2 (FFO gains-on-sale guard): FFO ≈ NI+D&A omits the gains-on-property-sales subtraction (no field), inflating sale-active large-caps (SPG ffo/ocf = 1.49); when (NI+dep)/OCF > 1.2 the ffoAssets observation is capped at the OCF+D&A sanity bound + FFO_GAINS_INFLATED lamp; residual disclosed FFO_GAINS_BLIND. COVERAGE-RENORM: any NOT_READY/null axis dropped, survivors renormalize to Σ=1.0 (no fake-neutral impute) — the load-bearing ffoAssets DROP path on the top-tier names. score=100*(0.6*absKaliber+0.4*REL), β=0.6, REL per-cohort (n=114≫15). WALLS (always-on lamps, court revision #4): SAME_STORE_NOI_BLIND (same-store NOI growth — the organic-quality gold standard — ABSENT), OCCUPANCY_BLIND (physical/economic occupancy absent), NAV_PREMIUM_BLIND (NAV premium/discount absent; and it is VALUATION — excluded by design), AFFO_MAINT_CAPEX_BLIND (maintenance-vs-growth capex split absent → AFFO approximate, FFO is the headline proxy), FFO_GAINS_BLIND (gains-on-sale subtraction absent → FFO over-states for sale-active names). TOP-TIER-NO-FFO DISCLOSURE (court revision #3): the headline FFO metric is absent for several top names (VICI/O/PLD/TRNO lack annualDepreciation) — they are scored on opMargin+revG3+ndGA renormed, surfaced as the FFO_COVERAGE_PARTIAL lamp; NOT silently hidden. SI-4 out-of-class (non-equity-REIT industry incl. REIT - Mortgage / non-US per the de-ADRd guard / <$1B → never enter court-buckets; economic SHELL with <3 positive-revenue-years OR totalAssets[0] null/<=0 → score=null + excluded[] OUT_OF_SEGMENT:shell, the materials/energy lesson adapted to the REIT schema) → score=null + excluded[]; SI-5 classifiedCount===scoredCount+excludedCount fail-loud; marquee assert (O/PLD/VICI/SPG/EXR/EGP/CTRE classify AND survive to a sane rank) fail-loud + mortgage-REIT anti-leak (a classified record in the known mortgage-REIT set throws). Additive/parity-safe. Constants frozen 2026-06-24.',
   },
+  // capmkt_fee_core (CORE court bucket) — ONE asset-light FEE-business cohort by THROUGH-CYCLE FEE-FRANCHISE QUALITY.
+  // Court gauntlet DESIGN (BUILD_WITH_CAVEATS / court REVISE, 2026-06-24; NORMS RECOMPUTED LIVE on the FINAL de-ADR'd +
+  // fee-gated + deduped US pool 2026-06-24, n=100, THEN frozen — the CORE gate). 4 SCORED axes {opMargin,
+  // opMarginStability, fcfMargin, netIssuance} via the NEW engine absKaliberCapmkt (coverage-renorm; the 22 existing
+  // CORE/court buckets are BYTE-UNTOUCHED). Weights {opMargin .30, opMarginStability .30, fcfMargin .25, netIssuance
+  // .15}: the margin-quality pillar opMargin+opMarginStability = .60 dominates; the partial-coverage netIssuance .15 is
+  // the smallest weight. RAW inputs from m.cm.* (court-screen buildCapmktAxes; {value}-unwrap + 1-CV stability + the
+  // ECONOMIC FEE-GATE applied UPSTREAM at classification). capmkt_fee_core = NEW code keyed by the new cohort string;
+  // all existing buckets BYTE-IDENTICAL.
+  capmkt_fee_core: {
+    label: 'CapMkt-Fee-Core v0 (asset-light fee businesses — exchanges/rating/index-data/asset-managers/brokers; through-cycle fee-franchise quality: operating-margin LEVEL, operating-margin STABILITY (1-CV), FCF-margin, net-issuance discipline; absolute-anchor; AUM_FLOW_BLIND/FEE_RATE_BLIND/RECURRING_MIX_BLIND/BDC_SPREAD_BLIND)',
+    // REL cross-sectional z/MAD axes mirror the ABS axes (sign-aligned: netIssuance reads the NEGATED net-share-issuance
+    // upstream so higher=better, same as the ABS inverted q-input). Weights mirror the absKaliberCapmkt weights.
+    // membership = opMargin(quality) × scale (QUALITY-ONLY, mirrors banks/reits): gm.c = opMargin.floor (RE-FROZEN to
+    // -0.01 on the de-BDC'd + de-mined clean pool, the quality center), gm.s = 0.40 (a floor-to-elite-spread scale); g
+    // is UNUSED (no growth/FCF membership gate — a low-growth exchange is still high quality); scaleLog = log10($1B).
+    membership: { g: { c: 0.00, s: 0.06 }, gm: { c: -0.01, s: 0.40 }, scaleLog: { c: log10(1000), s: 0.6 } },
+    axes: [
+      { key: 'opMargin',          name: 'OpMargin-Level',  k: 1.5, w: 0.30 },
+      { key: 'opMarginStability', name: 'OpMargin-Stab',   k: 1.5, w: 0.30 },
+      { key: 'fcfMargin',         name: 'FCF-Margin',      k: 1.5, w: 0.25 },
+      { key: 'netIssuanceDisc',   name: 'NetIssuanceDisc', k: 1.5, w: 0.15 },
+    ],
+    dilCap: 0, dilStart: 0.05, dilRange: 0.20, // net-issuance IS a scored axis here (not a separate post-sum penalty).
+    stages: [
+      { name: 'S3-Elite-OpMargin',  test: f => f >= 0.50 },
+      { name: 'S2-Strong-OpMargin', test: f => f >= 0.30 },
+      { name: 'S1-Adequate',        test: f => f >= 0.00 },
+      { name: 'S0-Sub-Floor',       test: () => true },
+    ],
+    dominantBlock: ['opMargin', 'opMarginStability'],
+    degraded: false,
+    normTableId: 'capmkt-norms-2026-06-24',
+    capmkt: true, cohortKey: 'capmkt_fee_core',
+    a2Note: 'capmkt_fee_core v0 (court gauntlet DESIGN, BUILD_WITH_CAVEATS / court REVISE 2026-06-24 + RE-COURT 2026-06-24 DENIED-for-BDC-contamination -> 2 new fee-gate arms; NORMS RE-FROZEN LIVE on the FINAL de-ADRd + fee-gated + DE-BDCd + DE-MINED + deduped US pool 2026-06-24 THEN frozen — the CORE gate). ONE asset-light FEE-business cohort: Financial Services ∧ industry in {Asset Management, Capital Markets, Financial Data & Stock Exchanges, Insurance Brokers} ∧ US-listing (DE-ADRd country-domicile guard + FOREIGN_NAME + positive US-primary test) ∧ >=$1B, deduped, MINUS the economic fee-gate. Live: 84 classified; SCORE = THROUGH-CYCLE FEE-FRANCHISE QUALITY ONLY, never AUM direction / market levels. THE ECONOMIC FEE-GATE (court revision #1 + RE-COURT, applied at classification — classify-capmkt.js): a FOUR-arm ECONOMIC gate (NOT a name list) excludes 71 names — (1) FUND_FLOAT_PASSTHROUGH fcfMargin=annualFCF[0]/annualRev[0]>1.0 (a real fee business cannot FCF more than its revenue — KYN 8.80 / APO 1.62 / IBKR 2.56 / PDO 9.19; 16 names), (2) RIC_PASSTHROUGH niMargin=annualNetIncome[0]/annualRev[0]>=0.95 (a 40-Act closed-end fund drops ~all investment income to NI — NMZ/NUV/TY/ADX/GAB niMargin .97-1.00; live genuine-fee max niMargin is APO .76 so .95 has ZERO false positives; 39 names), (3) BDC_SPREAD_LOAN_BOOK (RE-COURT — the DENIAL cause: the original top-5 were 4 leveraged-spread-lender BDCs while CME/MSCI/ICE sat at ranks 6-14) revToAssets=annualRev[0]/annualBalance[0].totalAssets ∈[.05,.16] ∧ totalDebt===null ∧ totalLiabilities/totalEquity ∈[.7,2.0] (the regulated ~2:1 BDC asset-coverage signature; catches all 11 BDCs OBDC/GSBD/TSLX/MSDL/FSK/GBDC/OTF/ARCC/BXSL/CSWC/HTGC with ZERO genuine-fee false positives — the leverage CEILING 2.0 spares the alt-manager holdco Carlyle/CG at TL/TE 3.83; 11 names), (4) CRYPTO_MINER_NON_FEE (RE-COURT) opMargin<0 in EVERY available year ∧ mean NI margin AND mean FCF margin both <-.20 (5 commodity bitcoin-miners CLSK/HIVE/MARA/RIOT/WULF mislabeled into Capital Markets that polluted the REL anchors; opMargin strips volatile crypto mark-to-market; SPARES COIN +.13 FCF / HOOD positive recent opMargin / CG +.15 mean NI / BWIN near-break-even; 5 names). EXCLUDE-not-cap is the cleaner economic treatment (a fund/float vehicle, BDC loan-book, or commodity miner is a DIFFERENT ANIMAL, like a mortgage REIT vs equity REIT — score-capping would still pollute the cohort REL anchors). Verified: KYN/TIGR/APO/IBKR + 39 CEFs + 11 BDCs + 5 miners OUT; the genuine fee compounders CME/MSCI/ICE now LEAD the cohort. 4 SCORED axes via absKaliberCapmkt: opMargin = annualOpInc[0]/annualRev[0] (fee-franchise pricing power, w .30, norm -.01/.50 = clean-pool p10 -1.3% / p90 50.2%), opMarginStability = 1-CV(opMargin over available years) where CV=stdev/|mean|, clamp [0,1] (a through-cycle pricing-durability proxy, w .30, identity-clip norm 0/1; cov ~65/84), fcfMargin = annualFCF[0]/annualRev[0] (cash conversion, w .25, norm -.23/.52 = clean-pool p10 -22.7% / p90 51.9%), netIssuance = q(-((annualShares[0]-annualShares[1])/annualShares[1])) (Pontiff-Woodgate discipline, INVERTED, buyback=elite, w .15, norm -.08/.12; ~43% coverage → DROP+renorm + ISSUANCE_NOT_READY, NEVER imputed). COUNTRY NORMALIZE (court revision #2): snapshots carry country===undefined (NOT null) for the Vintage-A US names; the classify-in test treats undefined === US-primary (US exchange + USD + no foreign legal-form name), so MSCI/MCO/ICE/NDAQ/KKR are RETAINED; the anti-leak assert keys on the foreign-DENY SIGNAL, NOT country!=US. COVERAGE-RENORM: any NOT_READY/null axis dropped, survivors renormalize to Σ=1.0 (no fake-neutral impute) — the load-bearing netIssuance DROP path on ~57% of the pool. score=100*(0.6*absKaliber+0.4*REL), β=0.6, REL per-cohort (n=84≫15). WALLS (always-on lamps): AUM_FLOW_BLIND (AUM net flows / organic AUM growth — the fee-engine fuel — ABSENT), FEE_RATE_BLIND (fee rate / take-rate compression absent), RECURRING_MIX_BLIND (recurring vs transactional/performance-fee mix absent), BDC_SPREAD_BLIND (now largely MOOT — the 11 BDCs are hard-gated OUT by arm 3, not scored — kept always-on as a structural disclosure for any future borderline lender the economic gate misses). SI-4 out-of-class (non-fee industry / non-US per the de-ADRd guard / <$1B / fee-gated → never enter court-buckets; economic SHELL with <2 positive-revenue-years OR no revenue → score=null + excluded[] OUT_OF_SEGMENT:shell) → score=null + excluded[]; SI-5 classifiedCount===scoredCount+excludedCount fail-loud; marquee assert (SPGI/MCO/MSCI/ICE/NDAQ/CBOE/BLK/AJG/BRO classify AND survive to a sane rank) fail-loud + fee-gate/foreign anti-leak (a classified record in the fund-float/BDC/miner DENY set or a country-SET foreigner throws). Additive/parity-safe. Constants frozen 2026-06-24.',
+  },
   diagnostics_lst: {
     label: 'Diagnostics-&-Life-Science-Tools v0 (cohort-aware dx|tools, absolute-anchor, deceleration-aware organic growth, FCF-efficiency, chronic-acquirer lamps)',
     membership: { g: { c: 0.10, s: 0.05 }, gm: { c: 0.40, s: 0.10 }, scaleLog: { c: log10(300), s: 0.5 } },
@@ -732,6 +768,25 @@ const REIT_MIN_POSITIVE_REV_YEARS = 3; // >=3 positive-revenue-years required fo
 // member is in this set — mortgage REITs are a different animal (book-value/leverage, not FFO/NOI) and scoring one with
 // the equity-REIT axes is economically meaningless.
 const REIT_MORTGAGE_DENY = new Set(['NLY', 'AGNC', 'STWD', 'ABR', 'RITM', 'BXMT', 'CIM', 'DX', 'EFC', 'LADR', 'ARI', 'ARR', 'ORC', 'TWO']);
+
+// capmkt_fee_core (CORE) economic SHELL gate (the materials/energy/reits pre-revenue lesson ADAPTED to the fee-business
+// schema): a fee name with <2 positive-revenue-years OR no latest revenue is a pre-operating shell that CANNOT be
+// scored — the opMargin/fcfMargin axes are undefined/explosive on near-zero revenue, so coverage-renorm would
+// degenerate. SI-4 EXCLUDE → score=null + excluded[] OUT_OF_SEGMENT:shell, NEVER scored 0. The capmkt-axis extractor
+// surfaces m.cm.positiveRevYears + m.cm.revLatest for exactly this gate.
+const CAPMKT_MIN_POSITIVE_REV_YEARS = 2; // >=2 positive-revenue-years required for a fee name to be SCORED (else shell)
+
+// capmkt_fee_core (CORE) FEE-GATE DENY positive-control (court revision #1 + RE-COURT 2026-06-24): the known fee-gated
+// artifacts the economic fee-gate must keep OUT (mirrors the classifier's CAPMKT_FEEGATE_CONTROL/BDC/MINER controls).
+// The SI-5 block asserts NO classified member is in this set — a leak means a fee-gate arm regressed. KYN/PDO closed-
+// end funds; APO/IBKR fcfMargin>1 float; the named NAV-pass-through CEFs; the 11 BDC spread-lenders (RE-COURT arm 3,
+// BDC_SPREAD_LOAN_BOOK — the DENIAL cause); the 5 crypto miners (RE-COURT arm 4, CRYPTO_MINER_NON_FEE). CG/COIN/HOOD/
+// BWIN are NOT here — they are genuine fee businesses the gate SPARES (verified retained).
+const CAPMKT_FEEGATE_DENY = new Set([
+  'KYN', 'PDO', 'APO', 'IBKR', 'NMZ', 'NUV', 'TY', 'ADX', 'GAB', 'GDV', 'BDJ', 'NAD', 'TIGR',
+  'OBDC', 'GSBD', 'TSLX', 'MSDL', 'FSK', 'GBDC', 'OTF', 'ARCC', 'BXSL', 'CSWC', 'HTGC',   // RE-COURT arm 3: BDC_SPREAD_LOAN_BOOK
+  'CLSK', 'HIVE', 'MARA', 'RIOT', 'WULF',                                                 // RE-COURT arm 4: CRYPTO_MINER_NON_FEE
+]);
 
 // --- Skeptiker-Welle-2-Befunde, deterministisch eingebaut ---
 const KILL = new Set(['PS', 'RDVT', 'ADEA', 'OMDA', 'TEM', 'KMTS']); // verifiziert: Ticker-Mismatch / falscher Sektor / Daten-Fehler
@@ -1077,7 +1132,12 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     // (opMargin/ffoAssets are the pillars), and snapshot-sourced REIT names carry a null cache gm + null/0 cache
     // scaleRevM sharing the degenerate fp 'null|0/null' (would falsely drop names + break SI-5). Skip the gm-reject +
     // fp-dedupe for reits too; all other buckets BYTE-IDENTICAL.
-    if (!F.industrials && !F.consdisc && !F.materials && !F.energy && !F.banks && !F.reits) {
+    // capmkt_fee_core (CORE): same rationale as banks/reits — the classifier already deduped (economic-fingerprint +
+    // CAPMKT_DEDUPE_DROP), gm is not a fee axis (opMargin/opMarginStability are the pillars), and fee businesses carry
+    // a null cache gm sharing the degenerate fp 'null|<scaleRevM>' (two fee names with no cache gm + same scaleRevM
+    // would wrongly collide → falsely drop names + break SI-5). Skip the gm-reject + fp-dedupe for capmkt too; all
+    // other buckets BYTE-IDENTICAL.
+    if (!F.industrials && !F.consdisc && !F.materials && !F.energy && !F.banks && !F.reits && !F.capmkt) {
       if (c.gm != null && c.gm > 1.0) continue;        // GM>100% = unmöglich (Daten-Fehler) -> hard reject
       // dedupe identische Foreign-OTC-Doppellistings (gleiche gm+rev)
       const fp = `${c.gm}|${c.scaleRevM}`;
@@ -1365,6 +1425,27 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.cohort = i.cohort || F.cohortKey;
     }
   }
+  // --- capmkt_fee_core (CORE) PRE-PASS: lift the 4 RAW axis inputs from m.cm onto the member ---
+  // All intermediates are CAPMKT-LOCAL → all other buckets' member JSON byte-identical (parity). opMargin/
+  // opMarginStability/fcfMargin are NOT inverted (higher=better directly); netIssuanceDisc stores the NEGATED raw
+  // net-share-issuance so the REL z (higher=better) AGREES IN SIGN with the ABS inverted q-input (buyback = best).
+  // null raw → axis DROP (coverage-renorm in absKaliberCapmkt; REL sAxis returns 0=neutral for null). The netIssuance
+  // NULL case (~54% of the pool lacking annualShares) is the load-bearing DROP path. Mirrors the it_services pre-pass.
+  if (F.capmkt) {
+    for (const m of members) {
+      const i = m.cm || {};
+      m._cmOpMargin = (i.opMargin != null && isFinite(i.opMargin)) ? i.opMargin : null;
+      m._cmOpMarginStability = (i.opMarginStability != null && isFinite(i.opMarginStability)) ? i.opMarginStability : null;
+      m._cmFcfMargin = (i.fcfMargin != null && isFinite(i.fcfMargin)) ? i.fcfMargin : null;
+      m._cmNetIssuanceDisc = (i.netIssuance != null && isFinite(i.netIssuance)) ? -i.netIssuance : null;   // q(-NSI) direction
+      // persisted audit fields (rounded)
+      m.opMarginCapmkt = m._cmOpMargin == null ? null : Math.round(m._cmOpMargin * 10000) / 10000;
+      m.opMarginStability = m._cmOpMarginStability == null ? null : Math.round(m._cmOpMarginStability * 10000) / 10000;
+      m.fcfMarginCapmkt = m._cmFcfMargin == null ? null : Math.round(m._cmFcfMargin * 10000) / 10000;
+      m.netShareIssuance = (i.netIssuance != null && isFinite(i.netIssuance)) ? Math.round(i.netIssuance * 10000) / 10000 : null;
+      m.cohort = i.cohort || F.cohortKey;
+    }
+  }
 
   // Roh-Achswerte für Stats (cross-sectional Median/MAD): nutze winsorisierte Werte
   // For medtech growth: use _growthMedtech (Fix D organic + winsorize at 1.0) for Stats AND scoring (Fix D
@@ -1472,6 +1553,18 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       default: return m[key];
     }
   };
+  // capmkt_fee_core (CORE): 4 axis-keys {opMargin, opMarginStability, fcfMargin, netIssuanceDisc}; opMargin/
+  // opMarginStability/fcfMargin NON-inverted, netIssuanceDisc inverted (stored negated in m._cmNetIssuanceDisc) →
+  // mirror reRaw on the m._cm* fields. The REL z/MAD reads the SAME signed values as the ABS q-input.
+  const cmRaw = (m, key) => {
+    switch (key) {
+      case 'opMargin': return m._cmOpMargin;
+      case 'opMarginStability': return m._cmOpMarginStability;
+      case 'fcfMargin': return m._cmFcfMargin;
+      case 'netIssuanceDisc': return m._cmNetIssuanceDisc;
+      default: return m[key];
+    }
+  };
   const rawOfStats = (m, key) => {
     if (F.industrials) return indRaw(m, key);
     if (F.staples) return stpRaw(m, key);
@@ -1482,6 +1575,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (F.itservices) return itRaw(m, key);
     if (F.banks) return bkRaw(m, key);
     if (F.reits) return reRaw(m, key);
+    if (F.capmkt) return cmRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtech : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -1498,6 +1592,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (F.itservices) return itRaw(m, key);
     if (F.banks) return bkRaw(m, key);
     if (F.reits) return reRaw(m, key);
+    if (F.capmkt) return cmRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtechAdj : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -1661,6 +1756,19 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       // low membership, but the economic SHELL SI-4 gate is what actually excludes it (membership-Out only suppresses
       // the headline rank, never absKaliber).
       const opGate = m._reOpMargin != null ? m._reOpMargin : -1;        // null opMargin (shell) → low
+      const scaleM = (m.marketCap != null && isFinite(m.marketCap)) ? m.marketCap / 1e6 : (m.scaleRevM || 1); // $1B+ marketCap
+      const mOp = logistic(opGate, F.membership.gm.c, F.membership.gm.s);     // quality pillar (opMargin.floor center)
+      const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
+      M = mOp * mSc;
+    } else if (F.capmkt) {
+      // capmkt_fee_core membership: opMargin(quality) × scale logistic. QUALITY-ONLY (mirrors banks/reits): fee
+      // businesses have no growth membership gate — the operating-margin pillar stands in for the quality gate (gm
+      // membership center is the opMargin.floor, -.22). opMarginStability/fcfMargin are NOT membership inputs (a name
+      // can be null on either via coverage-renorm). $1B+ marketCap is the classifier gate. A shell (opMargin null AND
+      // fcfMargin null) reads -1 → low membership, but the economic SHELL SI-4 gate is what actually excludes it
+      // (membership-Out only suppresses the headline rank, never absKaliber). A BDC with opMargin null but fcfMargin
+      // present (OCSL) reads -1 here → membership-Out (off the headline shortlist) but still SCORED on its other axes.
+      const opGate = m._cmOpMargin != null ? m._cmOpMargin : -1;        // null opMargin → low
       const scaleM = (m.marketCap != null && isFinite(m.marketCap)) ? m.marketCap / 1e6 : (m.scaleRevM || 1); // $1B+ marketCap
       const mOp = logistic(opGate, F.membership.gm.c, F.membership.gm.s);     // quality pillar (opMargin.floor center)
       const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
@@ -2107,6 +2215,49 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
         m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
       }
       m.stage = stageOf(F, m._reOpMargin);
+    } else if (F.capmkt) {
+      // capmkt_fee_core (CORE): absKaliberCapmkt = 4-axis weighted-q {opMargin, opMarginStability, fcfMargin,
+      // netIssuance} with COVERAGE-RENORM reading the cohort NORMS. opMargin/opMarginStability/fcfMargin NON-inverted;
+      // netIssuance inverted (the engine negates the RAW net-share-issuance itself, so pass the RAW signed value,
+      // mirroring banks assetGrowthYoY / reits ndGA). The load-bearing renorm fires on ~54% of names lacking
+      // annualShares (ISSUANCE_NOT_READY) + any NOT_READY axis. The ECONOMIC FEE-GATE already removed the fund-float
+      // artifacts UPSTREAM at classification (court revision #1).
+      const cohortNorm = F.cohortKey; // 'capmkt_fee_core'
+      const cmRec = {
+        opMargin: m._cmOpMargin, opMarginStability: m._cmOpMarginStability, fcfMargin: m._cmFcfMargin,
+        netShareIssuance: (m.cm && m.cm.netIssuance != null && isFinite(m.cm.netIssuance)) ? m.cm.netIssuance : null,
+      };
+      const ak = absKaliberCapmkt(cmRec, cohortNorm);
+      m.absKaliber = Math.round(ak.absK * 1000) / 1000;
+      m.absUsedAxes = ak.usedAxes;          // audit: which axes survived coverage-renorm (e.g. netIssuance-dropped on ~54% lacking annualShares)
+      m.absDroppedAxes = ak.droppedAxes;    // audit: ISSUANCE_NOT_READY / STABILITY_THIN / NOT_READY drops
+      // n=100 ≫ minN 15 → full ABS+REL blend (β=0.6). THIN_REL guard kept for structural parity (if a future re-court
+      // narrows the cohort below 15 → ABS-only β=1.0); never fires at the live count (members.length=100).
+      const norm = NORMS[cohortNorm];
+      const cmThin = !!(norm.rel && norm.rel.minN != null && members.length < norm.rel.minN);
+      const beta = cmThin ? 1.0 : 0.6;
+      if (cmThin) m._thinRel = true;
+      const rawScore = Math.round(Math.max(0, blendScore(ak.absK, core, beta)) * 10) / 10; // pDil=0 (net-issuance IS an axis)
+      // SI-1 shortlist-cut: opMargin >= opMargin.floor (the operating-margin quality pillar). A NOT_READY/missing
+      // opMargin fails the floor → belowAbsoluteFloor, listed but off the shortlist. NOT a score-kill (REL/score path
+      // runs independently). fcfMargin/netIssuance are NOT hard headline gates (null on coverage-renorm names).
+      const gateOpOk = (m._cmOpMargin != null) && (m._cmOpMargin >= norm.opMargin.floor);
+      m.belowAbsoluteFloor = !gateOpOk;
+      // economic SHELL SI-4 hard-exclude (the materials/energy/reits lesson adapted to the fee schema): a fee name with
+      // <2 positive-revenue-years OR no latest revenue is a shell that CANNOT be scored (axes undefined/explosive).
+      // score=null + excluded[] OUT_OF_SEGMENT:shell, NEVER scored 0. DETERMINISTIC, independent of membership.
+      const cm = m.cm || {};
+      const isShell = !(cm.positiveRevYears != null && cm.positiveRevYears >= CAPMKT_MIN_POSITIVE_REV_YEARS
+        && cm.revLatest != null && isFinite(cm.revLatest) && cm.revLatest > 0);
+      if (isShell) {
+        m.exclusionReason = 'OUT_OF_SEGMENT:shell';
+        m.score = null;                                 // SI-4: lands in excluded[]
+        m.headlineShortlist = false;
+      } else {
+        m.score = m.membershipClass === 'Out' ? null : rawScore;
+        m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
+      }
+      m.stage = stageOf(F, m._cmOpMargin);
     } else {
       // audit/fix (gauntlet E3): SI-4 für saas/fabless — Out-Class-Member bekommen score=null (kein
       // irreführender Headline-Rang), exakt wie medtech/dlst (m.score = membershipClass==='Out' ? null : rawScore).
@@ -2474,6 +2625,29 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       if (m.exclusionReason === 'OUT_OF_SEGMENT:shell' && !L.includes('OUT_OF_SEGMENT:shell')) L.push('OUT_OF_SEGMENT:shell');
       // always-on BLIND WALLS (court revision #4) — re-asserted (idempotent: court-screen already pushed them; dedup).
       for (const wall of ['SAME_STORE_NOI_BLIND', 'OCCUPANCY_BLIND', 'NAV_PREMIUM_BLIND', 'AFFO_MAINT_CAPEX_BLIND', 'FFO_GAINS_BLIND']) {
+        if (!L.includes(wall)) L.push(wall);
+      }
+      if (m.belowAbsoluteFloor) L.push('below-abs-floor');
+      if (m.membershipClass === 'Out') L.push('membership-Out(excluded-from-headline)');
+      if (Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.length) L.push(`coverage-renorm(dropped:${m.absDroppedAxes.join('+')})`);
+      m.cohort = F.cohortKey;
+      m.normTableId = getNormTableId(F.cohortKey);
+      m.scoreScope = 'intra-bucket';
+      m.crossBucketComparableField = 'absKaliber';
+    }
+    // capmkt_fee_core (CORE) lamps (court DESIGN): advisory, never silent score-kills. Per-name upstream lamps
+    // (NOT_READY:opmargin/fcfmargin, STABILITY_THIN, ISSUANCE_NOT_READY) + the always-on BLIND WALLS (AUM_FLOW/
+    // FEE_RATE/RECURRING_MIX/BDC_SPREAD) are collected in court-screen (m.cm.lamps); the WALLS are re-asserted here so
+    // every member carries them even if the upstream record was thin. BDC_SPREAD_BLIND is the court-revision-#1
+    // disclosed residual (the surviving externally-managed BDCs earn spread income indistinguishable from a true fee
+    // franchise on local data — real operating lenders, scored honestly but flagged).
+    if (F.capmkt) {
+      const cl = (m.cm && Array.isArray(m.cm.lamps)) ? m.cm.lamps : [];
+      for (const lamp of cl) if (!L.includes(lamp)) L.push(lamp);
+      // economic SHELL SI-4 exclusion as an explicit lamp (the materials/energy/reits lesson adapted to the fee schema).
+      if (m.exclusionReason === 'OUT_OF_SEGMENT:shell' && !L.includes('OUT_OF_SEGMENT:shell')) L.push('OUT_OF_SEGMENT:shell');
+      // always-on BLIND WALLS — re-asserted (idempotent: court-screen already pushed them; dedup).
+      for (const wall of ['AUM_FLOW_BLIND', 'FEE_RATE_BLIND', 'RECURRING_MIX_BLIND', 'BDC_SPREAD_BLIND']) {
         if (!L.includes(wall)) L.push(wall);
       }
       if (m.belowAbsoluteFloor) L.push('below-abs-floor');
@@ -2922,6 +3096,46 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     R.ffoCoverage = {
       scored: members.filter(m => m.ffoAssets != null).length,
       dropped: members.filter(m => m.ffoAssets == null).length,         // ~52% incl. VICI/O/PLD/TRNO (annualDepreciation absent)
+    };
+  }
+  // capmkt_fee_core (CORE court bucket)-only Zusatzfelder (SI-3/4/5/6) — NUR auf dem capmkt_fee_core-Bucket gesetzt →
+  // alle anderen Buckets byte-identisch (Parität). Mirrors the reits block; 4 axes {opMargin, opMarginStability,
+  // fcfMargin, netIssuance}.
+  if (F.capmkt) {
+    // SI-5: classifiedCount === scoredCount + excludedCount (fail-loud). The classifier assigns ONLY capmkt_fee_core
+    // (non-fee industry / non-US per the de-ADRd guard / <$1B / fee-gated (fcfMargin>1.0 or niMargin>=0.95) return null
+    // → never enter court-buckets), so every classified name reaches members[]. excludedCount = SI-4 SHELL names
+    // (<2 positive-revenue-years / no revenue) that entered members but score=null.
+    R.classifiedCount = cls.filter(c => c.bucket === bucket).length;
+    R.excluded = members.filter(m => m.score == null);
+    R.excludedCount = R.excluded.length;
+    R.scoredCount = members.filter(m => m.score != null).length;
+    if (require.main === module && R.classifiedCount !== R.scoredCount + R.excludedCount) {
+      throw new Error(`SI-5 mismatch ${bucket}: classifiedCount ${R.classifiedCount} !== scoredCount ${R.scoredCount} + excludedCount ${R.excludedCount}`);
+    }
+    // FEE-GATE / FOREIGN anti-leak assert (court revision #1/#2): a classified member whose ticker is in the known
+    // fund-float / closed-end-fund DENY set is a fee-gate regression → fail-loud. (The country-SET foreign anti-leak is
+    // the generative assertCapmktNoForeignLeak below; here we assert on the fee-gate DENY SIGNAL.)
+    if (require.main === module) {
+      const leaked = members.filter(m => CAPMKT_FEEGATE_DENY.has(m.ticker));
+      if (leaked.length) {
+        throw new Error('FEE-GATE ANTI-LEAK FAIL (court revision #1) — fund-float / closed-end-fund pass-through artifact(s) reached capmkt_fee_core: '
+          + leaked.map(m => m.ticker).join(', '));
+      }
+    }
+    R.normTableId = getNormTableId(F.cohortKey);
+    R.cohort = F.cohortKey;
+    R.scoreScope = 'intra-bucket';
+    R.crossBucketComparableField = 'absKaliber';
+    const n = NORMS[F.cohortKey];
+    const fmt = x => (x == null ? '—' : x.toFixed(4).replace(/^0\./, '.').replace(/^-0\./, '-.'));
+    R.comparabilityNote = `capmkt_fee_core ${F.cohortKey} (asset-light fee-business through-cycle quality cohort: exchanges/rating/index-data/asset-managers/brokers). absKaliber in [0,1] = cross-bucket-comparable absolute scale (4-axis weighted-q over the cohort NORMS '${getNormTableId(F.cohortKey)}': opMargin ${fmt(n.opMargin.floor)}/${fmt(n.opMargin.elite)} (annualOpInc/annualRev level, the fee-franchise pricing power), opMarginStability ${fmt(n.opMarginStability.floor)}/${fmt(n.opMarginStability.elite)} (1-CV(opMargin) identity-clip, a through-cycle pricing-durability proxy; ~18% null → DROP+renorm), fcfMargin ${fmt(n.fcfMargin.floor)}/${fmt(n.fcfMargin.elite)} (annualFCF/annualRev cash conversion), netIssuance ${fmt(n.netIssuance.floor)}/${fmt(n.netIssuance.elite)} (q(-net-share-issuance) INVERTED, buyback=elite; ~54% lack annualShares → DROP+renorm, NEVER imputed); weights {opMargin .30, opMarginStability .30, fcfMargin .25, netIssuance .15}. THE ECONOMIC FEE-GATE (court revision #1 + RE-COURT 2026-06-24, FOUR arms) removed 71 artifacts at classification: fcfMargin>1.0 FUND_FLOAT (KYN/APO/IBKR; 16) + niMargin>=0.95 RIC_PASSTHROUGH (40-Act closed-end funds NMZ/NUV/TY/ADX/GAB; 39) + BDC_SPREAD_LOAN_BOOK (RE-COURT — the DENIAL cause: 11 leveraged-spread-lender BDCs OBDC/GSBD/TSLX/MSDL/FSK/GBDC/OTF/ARCC/BXSL/CSWC/HTGC that had topped the contaminated cohort; revToAssets∈[.05,.16] ∧ totalDebt=null ∧ liabilities/equity∈[.7,2.0] regulated-BDC signature; spares Carlyle/CG at TL/TE 3.83) + CRYPTO_MINER_NON_FEE (RE-COURT — 5 commodity miners CLSK/HIVE/MARA/RIOT/WULF; opMargin<0 all years ∧ mean NI/FCF margins <-.20; spares COIN/HOOD/CG/BWIN) — EXCLUDE-not-cap because each is a different animal. COUNTRY NORMALIZE (court revision #2): the country=undefined US names MSCI/MCO/ICE/NDAQ/KKR are RETAINED via the positive US-primary test (US exchange + USD + no foreign legal-form name). COVERAGE-RENORM drops any NOT_READY/null axis (the load-bearing netIssuance DROP on ~57% of the pool) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6, n=84≫15). WALLS always-on: AUM_FLOW_BLIND (AUM net flows / organic AUM growth — the fee-engine fuel — absent), FEE_RATE_BLIND (fee-rate/take-rate compression absent), RECURRING_MIX_BLIND (recurring vs transactional/performance-fee mix absent), BDC_SPREAD_BLIND (now largely MOOT — the 11 BDCs are hard-gated OUT by arm 3, not scored — kept as a structural disclosure for future borderline lenders). The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison.`;
+    R.crossBucketComparableNote = 'Use members[].absKaliber (absolute [0,1] caliber) for cross-bucket comparison; members[].score (blended 0-100) is intra-bucket ONLY (mixes per-cohort REL, beta=0.6).';
+    R.walls = ['AUM_FLOW_BLIND', 'FEE_RATE_BLIND', 'RECURRING_MIX_BLIND', 'BDC_SPREAD_BLIND'];
+    // netIssuance DROP+renorm coverage disclosure: how many names took the ISSUANCE_NOT_READY path (annualShares absent).
+    R.netIssuanceCoverage = {
+      scored: members.filter(m => m.netShareIssuance != null).length,
+      dropped: members.filter(m => m.netShareIssuance == null).length,   // ~54% (annualShares absent on Vintage-A)
     };
   }
   // audit/fix (gauntlet E3): saas/fabless SI-4/SI-5-Retrofit — spiegelt medtech/dlst exakt.
@@ -3559,11 +3773,79 @@ function assertReitsNoMortgageLeak(resultsObj, listing) {
   }
 }
 
+// --- capmkt_fee_core (CORE court bucket) MARQUEE-COVERAGE + fee-gate/foreign anti-leak assert (court DESIGN, fail-loud) ---
+// The 9-name marquee must each be classified AND survive to a SANE rank (not exiled to the bottom). The court named
+// SPGI/MCO/MSCI/ICE/NDAQ/CBOE (exchanges + rating/data) + BLK (asset manager) + AJG/BRO (insurance brokers).
+const CAPMKT_MARQUEE = Object.freeze(['SPGI', 'MCO', 'MSCI', 'ICE', 'NDAQ', 'CBOE', 'BLK', 'AJG', 'BRO']);
+// fee-gate positive-control (court revision #1 + RE-COURT 2026-06-24): the fund-float / closed-end-fund / BDC /
+// crypto-miner artifacts the economic fee-gate must keep OUT. Catches a regression that drops a fee-gate arm.
+const CAPMKT_FEEGATE_CONTROL = Object.freeze([
+  'KYN', 'TIGR', 'PDO', 'APO', 'IBKR', 'NMZ', 'NUV', 'TY', 'ADX', 'GAB', 'GDV', 'BDJ', 'NAD',
+  'OBDC', 'GSBD', 'TSLX', 'MSDL', 'FSK', 'GBDC', 'OTF', 'ARCC', 'BXSL', 'CSWC', 'HTGC',   // RE-COURT arm 3: BDC_SPREAD_LOAN_BOOK
+  'CLSK', 'HIVE', 'MARA', 'RIOT', 'WULF',                                                 // RE-COURT arm 4: CRYPTO_MINER_NON_FEE
+]);
+// country-undefined-US positive-control (court revision #2): the country=undefined US names that MUST be RETAINED.
+// Catches a regression that re-keys the classify-in on country!=US (which would wrongly drop these).
+const CAPMKT_UNDEF_US_CONTROL = Object.freeze(['MSCI', 'MCO', 'ICE', 'NDAQ', 'KKR']);
+function assertCapmktMarquee(resultsObj) {
+  const R = resultsObj.capmkt_fee_core;
+  if (!R) return; // capmkt_fee_core not in this run (e.g. isolated unit test) → tolerant no-op
+  // marquee must reach the SCORED universe (classified + survived to a sane rank, NOT shell/membership-excluded).
+  const scored = new Set();
+  if (Array.isArray(R.members)) for (const m of R.members) if (m.score != null) scored.add(m.ticker);
+  const missing = CAPMKT_MARQUEE.filter(t => !scored.has(t));
+  if (missing.length) {
+    throw new Error('MARQUEE COVERAGE FAIL (capmkt_fee_core DESIGN) — fee-business universe collapsed, these bona-fide '
+      + 'US asset-light fee large-caps were not classified/scored: ' + missing.join(', '));
+  }
+  // fee-gate positive-control: the fund-float artifacts must NOT have reached the cohort (classified OR scored).
+  const allTk = new Set();
+  if (Array.isArray(R.members)) for (const m of R.members) allTk.add(m.ticker);
+  const leakedControl = CAPMKT_FEEGATE_CONTROL.filter(t => allTk.has(t));
+  if (leakedControl.length) {
+    throw new Error('FEE-GATE CONTROL FAIL (capmkt_fee_core court revision #1) — a fund-float / closed-end-fund '
+      + 'pass-through artifact leaked into the capmkt_fee_core cohort: ' + leakedControl.join(', '));
+  }
+  // country-undefined-US positive-control: MSCI/MCO/ICE/NDAQ/KKR must be RETAINED (classified + scored).
+  const droppedUndefUS = CAPMKT_UNDEF_US_CONTROL.filter(t => !scored.has(t));
+  if (droppedUndefUS.length) {
+    throw new Error('COUNTRY-UNDEF-US FAIL (capmkt_fee_core court revision #2) — country=undefined US name(s) wrongly '
+      + 'dropped from the capmkt_fee_core cohort: ' + droppedUndefUS.join(', ')
+      + '. The classify-in must treat country===undefined === US-primary (US exchange + USD + no foreign legal-form name).');
+  }
+}
+// assertCapmktNoForeignLeak(results, listing): GENERATIVE property test. A scored record whose ticker is in the
+// fee-gate DENY set, OR a record with a country SET to a non-US country, is a leak (the de-ADRd guard + fee-gate must
+// exclude them). country=undefined US names (MSCI/MCO/ICE/NDAQ/KKR) are TOLERATED (admitted via the positive
+// US-primary test — keyed on the foreign-DENY SIGNAL, NOT country!=US, per court revision #2).
+function assertCapmktNoForeignLeak(resultsObj, listing) {
+  const R = resultsObj.capmkt_fee_core;
+  if (!R || !Array.isArray(R.members)) return;
+  const deny = new Set(CAPMKT_FEEGATE_DENY);
+  const leaks = [];
+  for (const m of R.members) {
+    if (deny.has(m.ticker)) { leaks.push(`${m.ticker}[fee-gate-DENY-set]`); continue; }   // the fee-gate DENY signal
+    if (!listing || listing.size === 0) continue;
+    const L = listing.get(m.ticker);
+    if (!L) continue; // no snapshot meta → can't assert (country=undefined US names: TOLERATED, never throws)
+    if (L.country != null && L.country !== 'United States') {
+      leaks.push(`${m.ticker}[${L.country}/${L.region}]`);   // a country-SET non-US foreigner (de-ADR guard regression)
+    }
+  }
+  if (leaks.length) {
+    throw new Error('CAPMKT_FEE_CORE ANTI-LEAK ASSERT (court revision #1/#2 — fee-gate + de-ADRd guard, keyed on the '
+      + 'fee-gate DENY SIGNAL + country-SET, NOT country!=US): leaked record(s) in the capmkt_fee_core cohort: '
+      + leaks.join(', ') + '. The classifier (classify-capmkt.js) must exclude fund-float artifacts + non-US-primary '
+      + 'names. NOTE: country=undefined US names (MSCI/MCO/ICE/NDAQ/KKR) are TOLERATED by design — the positive '
+      + 'US-primary test.');
+  }
+}
+
 // --- Export: computeMedtechOrganicGrowth + computeDlstOrganicGrowth für Unit-Tests ---
 // (computeDlstOrganicGrowth: Fix A FY-Alignment + Fix B dealYearExcluded-Ehrlichkeit, 2026-06-21)
 // + assertNoForeignLeak (gauntlet C5) + assertIndustrialsMarquee + assertStaplesMarquee +
 //   assertStaplesNoForeignLeak (Spec §6.2b) für direkten Property-Test.
-module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL, assertConsdiscMarquee, assertConsdiscNoForeignLeak, CONSDISC_MARQUEE, CONSDISC_EXCLUDE_CONTROL, assertMaterialsMarquee, assertMaterialsNoForeignLeak, MATERIALS_MARQUEE, MATERIALS_FOREIGN_CONTROL, MATERIALS_US_PRIMARY_ALLOWLIST, assertEnergyMarquee, assertEnergyNoForeignLeak, ENERGY_MARQUEE, ENERGY_FOREIGN_CONTROL, ENERGY_US_PRIMARY_ALLOWLIST, assertPharmaMarquee, assertPharmaNoForeignLeak, PHARMA_MARQUEE, PHARMA_FOREIGN_CONTROL, PHARMA_US_PRIMARY_ALLOWLIST, assertItServicesMarquee, assertItServicesNoForeignLeak, ITSERVICES_MARQUEE, ITSERVICES_CONTAM_CONTROL, ITSERVICES_US_PRIMARY_ALLOWLIST, assertBanksMarquee, assertBanksNoForeignLeak, BANKS_MARQUEE, BANKS_FOREIGN_CONTROL, BANK_FOREIGN_DENY, assertReitsMarquee, assertReitsNoMortgageLeak, REITS_MARQUEE, REITS_MORTGAGE_CONTROL, REIT_MORTGAGE_DENY };
+module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL, assertConsdiscMarquee, assertConsdiscNoForeignLeak, CONSDISC_MARQUEE, CONSDISC_EXCLUDE_CONTROL, assertMaterialsMarquee, assertMaterialsNoForeignLeak, MATERIALS_MARQUEE, MATERIALS_FOREIGN_CONTROL, MATERIALS_US_PRIMARY_ALLOWLIST, assertEnergyMarquee, assertEnergyNoForeignLeak, ENERGY_MARQUEE, ENERGY_FOREIGN_CONTROL, ENERGY_US_PRIMARY_ALLOWLIST, assertPharmaMarquee, assertPharmaNoForeignLeak, PHARMA_MARQUEE, PHARMA_FOREIGN_CONTROL, PHARMA_US_PRIMARY_ALLOWLIST, assertItServicesMarquee, assertItServicesNoForeignLeak, ITSERVICES_MARQUEE, ITSERVICES_CONTAM_CONTROL, ITSERVICES_US_PRIMARY_ALLOWLIST, assertBanksMarquee, assertBanksNoForeignLeak, BANKS_MARQUEE, BANKS_FOREIGN_CONTROL, BANK_FOREIGN_DENY, assertReitsMarquee, assertReitsNoMortgageLeak, REITS_MARQUEE, REITS_MORTGAGE_CONTROL, REIT_MORTGAGE_DENY, assertCapmktMarquee, assertCapmktNoForeignLeak, CAPMKT_MARQUEE, CAPMKT_FEEGATE_CONTROL, CAPMKT_UNDEF_US_CONTROL, CAPMKT_FEEGATE_DENY };
 
 // --- require.main-Guard (Härtung 2): Write + Ausgabe NUR wenn direkt als Skript ausgeführt ---
 // `require('./court-score.js')` gibt nur den Export zurück und schreibt NICHT outputs/court-results.json.
@@ -3616,6 +3898,12 @@ if (require.main === module) {
   // else the REIT universe collapsed/leaked.
   assertReitsMarquee(results);
   assertReitsNoMortgageLeak(results, listingByTicker);
+  // capmkt_fee_core (CORE court bucket) DESIGN: the 9-name marquee must each be classified+scored (survive to a sane
+  // rank) + the fund-float fee-gate positive-control must stay out (court revision #1) + the country-undefined US
+  // names MSCI/MCO/ICE/NDAQ/KKR must be retained (court revision #2) + the GENERATIVE anti-leak property test must
+  // hold (fee-gate DENY signal + country-set; country=undefined US names tolerated), else the universe collapsed/leaked.
+  assertCapmktMarquee(results);
+  assertCapmktNoForeignLeak(results, listingByTicker);
   fs.writeFileSync(OUT, JSON.stringify(results, null, 2));
 
   // --- Ausgabe ---

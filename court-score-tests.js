@@ -3168,6 +3168,273 @@ test('equity_reits PARITÄT: KEIN reits-only Feld auf den anderen Buckets (Leak-
   }
 });
 
+// ===========================================================================
+// capmkt_fee_core (CORE court bucket) — ONE asset-light FEE-business cohort. Court gauntlet DESIGN (BUILD_WITH_CAVEATS /
+// court REVISE 2026-06-24). 4 SCORED axes {opMargin, opMarginStability, fcfMargin, netIssuance} via the PARALLEL engine
+// absKaliberCapmkt (coverage-renorm; the 22 existing CORE/court buckets BYTE-UNTOUCHED — parity guard below + the tag28
+// fixture-hash gate). The COURT-REQUIRED revisions: (1) the ECONOMIC FEE-GATE (fcfMargin>1.0 FUND_FLOAT / niMargin>=0.95
+// RIC_PASSTHROUGH) excludes KYN/TIGR/APO/IBKR + the 39 closed-end funds; (2) COUNTRY NORMALIZE — the country=undefined
+// US names MSCI/MCO/ICE/NDAQ/KKR are RETAINED via the positive US-primary test; (3) netIssuance DROP+renorm on ~54%
+// coverage. The economic SHELL gate excludes <2-positive-revenue-year names; the negative-opMargin miners + null-opMargin
+// custody/BDC names are membership-Out (off the headline) — the disclosed BDC_SPREAD_BLIND residual.
+// ===========================================================================
+const cmR = doc.capmkt_fee_core;
+const CM_ = cmR ? cmR.members : [];
+
+test('capmkt_fee_core: bucket exists with members; label nennt v0 + fee-business quality', () => {
+  assert(cmR && Array.isArray(cmR.members) && CM_.length > 0, 'capmkt_fee_core bucket fehlt/leer');
+  assert(/CapMkt-Fee-Core v0/.test(cmR.label || ''), `label sollte v0 nennen: ${cmR.label}`);
+  assert(/fee|exchange|margin/i.test(cmR.label || ''), 'label sollte fee/exchange/margin nennen');
+});
+
+test('capmkt_fee_core MARQUEE: SPGI/MCO/MSCI/ICE/NDAQ/CBOE/BLK/AJG/BRO classify+score AND survive to a sane rank (fail-loud)', () => {
+  const MARQUEE = ['SPGI', 'MCO', 'MSCI', 'ICE', 'NDAQ', 'CBOE', 'BLK', 'AJG', 'BRO'];
+  const scored = CM_.filter(m => m.score != null);
+  const scoredSet = new Set(scored.map(m => m.ticker));
+  const missing = MARQUEE.filter(t => !scoredSet.has(t));
+  assert(missing.length === 0, `MARQUEE COVERAGE FAIL — nicht klassifiziert/gescort: ${missing.join(', ')}`);
+  const ranked = scored.slice().sort((a, b) => b.score - a.score);
+  for (const t of MARQUEE) {
+    const rank = ranked.findIndex(m => m.ticker === t) + 1;
+    assert(rank > 0 && rank <= Math.ceil(ranked.length * 0.90), `${t} rank ${rank}/${ranked.length} — Flaggschiff ins unterste Dezil exiliert (Vintage-collapse-Regression)`);
+  }
+  const { assertCapmktMarquee } = require('./court-score.js');
+  assert(typeof assertCapmktMarquee === 'function', 'assertCapmktMarquee nicht exportiert');
+  assertCapmktMarquee(doc); // throws on collapse / fee-gate-control leak / dropped country-undef US
+});
+
+test('capmkt_fee_core SI-5: classifiedCount === scoredCount + excludedCount (fail-loud identity)', () => {
+  assert(cmR.classifiedCount != null && cmR.scoredCount != null && cmR.excludedCount != null, 'SI-5 counts fehlen');
+  assert(cmR.classifiedCount === cmR.scoredCount + cmR.excludedCount,
+    `SI-5 mismatch: classified ${cmR.classifiedCount} !== scored ${cmR.scoredCount} + excluded ${cmR.excludedCount}`);
+  // RE-COURT 2026-06-24 CLEAN de-ADRd + fee-gated + DE-BDCd + DE-MINED + deduped count: 84 classified (71 fee-gated
+  // OUT incl. 11 BDC_SPREAD_LOAN_BOOK + 5 CRYPTO_MINER_NON_FEE; PS data-conflict drop).
+  assert(cmR.classifiedCount === 84, `classified sollte 84 sein (de-ADRd + fee-gated + de-BDCd + de-mined + deduped), ist ${cmR.classifiedCount}`);
+});
+
+test('capmkt_fee_core FEE-GATE (court rev #1 + RE-COURT): funds/BDCs/miners NOT in cohort; CG/COIN/HOOD SPARED; NOT top-quartile', () => {
+  const { assertCapmktNoForeignLeak, CAPMKT_FEEGATE_CONTROL, CAPMKT_FEEGATE_DENY } = require('./court-score.js');
+  const allTk = new Set(CM_.map(m => m.ticker));
+  // arm 1/2 fund-float + closed-end funds; arm 3 the 11 BDC spread-lenders (RE-COURT DENIAL cause); arm 4 the 5 miners.
+  for (const t of ['KYN', 'TIGR', 'APO', 'IBKR', 'PDO', 'NMZ', 'NUV', 'TY', 'ADX', 'GAB', 'GDV', 'BDJ', 'NAD',
+    'OBDC', 'GSBD', 'TSLX', 'MSDL', 'FSK', 'GBDC', 'OTF', 'ARCC', 'BXSL', 'CSWC', 'HTGC',
+    'CLSK', 'HIVE', 'MARA', 'RIOT', 'WULF']) {
+    assert(CAPMKT_FEEGATE_DENY.has(t), `${t} sollte im CAPMKT_FEEGATE_DENY-Set sein`);
+    assert(!allTk.has(t), `${t} (fee-gated artifact: fund-float/RIC/BDC/miner) darf NICHT in der capmkt_fee_core-Kohorte sein`);
+  }
+  // EDGE CASES the gate MUST SPARE (genuine fee businesses the re-court required retained): the alt-manager Carlyle
+  // (CG, TL/TE 3.83 above the BDC leverage ceiling; mean NI margin +.15 above the miner cut) and the legitimate
+  // exchange/broker fee businesses COIN (positive FCF) / HOOD (positive recent opMargin).
+  for (const t of ['CG', 'COIN', 'HOOD']) {
+    assert(allTk.has(t), `${t} (genuine fee business) MUSS in der Kohorte SEIN — der Gate darf es NICHT fälschlich gaten (re-court edge case)`);
+    assert(!CAPMKT_FEEGATE_DENY.has(t), `${t} darf NICHT im DENY-Set sein (es ist ein echtes Fee-Business)`);
+  }
+  const leaked = CAPMKT_FEEGATE_CONTROL.filter(t => allTk.has(t));
+  assert(leaked.length === 0, `FEE-GATE CONTROL FAIL — fund-float artifact(s) in der Kohorte: ${leaked.join(', ')}`);
+  // the court's explicit verification: no fcfMargin>1 name ranks in the top quartile — none can, they are not classified.
+  const ranked = CM_.filter(m => m.score != null).sort((a, b) => b.score - a.score);
+  const q1 = Math.ceil(ranked.length / 4);
+  for (let i = 0; i < q1; i++) {
+    const m = ranked[i];
+    assert(!CAPMKT_FEEGATE_DENY.has(m.ticker), `${m.ticker} (fund-float) darf NICHT im Top-Quartil ranken (rank ${i + 1})`);
+    // belt-and-suspenders: no top-quartile name carries an fcfMargin>1 (a real fee biz cannot FCF more than revenue).
+    if (m.cm && m.cm.fcfMargin != null) assert(m.cm.fcfMargin <= 1.0, `${m.ticker} Top-Quartil fcfMargin ${m.cm.fcfMargin} > 1.0 (fund-float artifact leaked)`);
+  }
+  assert(typeof assertCapmktNoForeignLeak === 'function', 'assertCapmktNoForeignLeak nicht exportiert');
+  let listing = new Map();
+  try {
+    const lp = (CAND_TEST.replace(/_court-candidates([^/\\]*)\.json$/, '_court-listing$1.json'));
+    const ld = JSON.parse(fs.readFileSync(lp, 'utf8'));
+    const obj = ld && ld.listings ? ld.listings : (ld || {});
+    for (const [t, rec] of Object.entries(obj)) listing.set(t, rec);
+  } catch {}
+  assertCapmktNoForeignLeak(doc, listing); // throws on a fee-gate-DENY/country-set leak; country=undefined US names tolerated
+});
+
+test('capmkt_fee_core COUNTRY NORMALIZE (court rev #2): country=undefined US names MSCI/MCO/ICE/NDAQ/KKR RETAINED+scored', () => {
+  // court revision #2: these carry country===undefined (NOT null) and MUST be admitted+scored (the classify-in must
+  // treat undefined === US-primary; the anti-leak must NOT be keyed on country!=US, which would wrongly drop them).
+  for (const t of ['MSCI', 'MCO', 'ICE', 'NDAQ', 'KKR']) {
+    const m = CM_.find(x => x.ticker === t);
+    assert(m != null, `${t} (country=undefined US name) sollte in der Kohorte sein (court rev #2)`);
+    assert(m.score != null && isFinite(m.score), `${t} sollte gescort sein (score!=null), hat ${m.score}`);
+  }
+  const { CAPMKT_UNDEF_US_CONTROL } = require('./court-score.js');
+  const scoredSet = new Set(CM_.filter(m => m.score != null).map(m => m.ticker));
+  const dropped = CAPMKT_UNDEF_US_CONTROL.filter(t => !scoredSet.has(t));
+  assert(dropped.length === 0, `COUNTRY-UNDEF-US FAIL — wrongly dropped: ${dropped.join(', ')}`);
+});
+
+test('capmkt_fee_core {value}-unwrap: the FLOW fields produce NUMERIC axes, not NaN', () => {
+  // annualRev/OpInc/FCF may be {value}-WRAPPED; without unwrap the axes would be NaN. Verify the marquees carry finite numerics.
+  for (const t of ['MSCI', 'MCO', 'ICE', 'NDAQ', 'CBOE', 'CME', 'BLK']) {
+    const m = CM_.find(x => x.ticker === t);
+    assert(m != null, `${t} fehlt`);
+    assert(m.opMarginCapmkt != null && typeof m.opMarginCapmkt === 'number' && isFinite(m.opMarginCapmkt),
+      `${t} opMargin sollte eine endliche Zahl sein (NICHT NaN — {value}-unwrap), ist ${m.opMarginCapmkt}`);
+    assert(m.fcfMarginCapmkt != null && typeof m.fcfMarginCapmkt === 'number' && isFinite(m.fcfMarginCapmkt),
+      `${t} fcfMargin sollte eine endliche Zahl sein, ist ${m.fcfMarginCapmkt}`);
+  }
+});
+
+test('capmkt_fee_core netIssuance DROP+renorm (~54% lack annualShares): a null-shares marquee scores on the other 3 axes', () => {
+  // MSCI/MCO/ICE/NDAQ lack annualShares (Vintage-A) → netIssuance DROPPED + renorm onto opMargin+opMarginStability+
+  // fcfMargin, NEVER imputed. Verify the DROP path + bucket-level coverage disclosure.
+  for (const t of ['MSCI', 'ICE', 'NDAQ']) {
+    const m = CM_.find(x => x.ticker === t);
+    assert(m != null, `${t} fehlt`);
+    assert(m.netShareIssuance == null, `${t} sollte netShareIssuance=null haben (annualShares absent), hat ${m.netShareIssuance}`);
+    assert(m.score != null && isFinite(m.score), `${t} sollte trotzdem gescort sein (auf den anderen 3 Achsen renormed)`);
+    assert(Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.includes('netIssuance'), `${t} sollte netIssuance in droppedAxes haben`);
+    assert(Array.isArray(m.absUsedAxes) && !m.absUsedAxes.includes('netIssuance'), `${t} sollte netIssuance NICHT in usedAxes haben`);
+  }
+  assert(cmR.netIssuanceCoverage != null && cmR.netIssuanceCoverage.dropped > 0, 'netIssuanceCoverage (DROP disclosure) fehlt/leer');
+});
+
+test('capmkt_fee_core SHELL/membership SI-4: excluded[] all score=null; crypto miners HARD-GATED OUT (not in cohort)', () => {
+  // every excluded member has score=null (SI-4: never a misleading 0/headline rank).
+  assert(Array.isArray(cmR.excluded), 'excluded[] fehlt');
+  for (const m of cmR.excluded) assert(m.score == null, `${m.ticker} in excluded[] sollte score=null haben, hat ${m.score}`);
+  // RE-COURT 2026-06-24: the pure crypto MINERS (CLSK/HIVE/MARA/RIOT/WULF) are now ECONOMICALLY GATED OUT at
+  // classification (CRYPTO_MINER_NON_FEE arm) — they no longer enter the cohort AT ALL (not merely membership-Out),
+  // so they cannot pollute the REL anchors. Verify they are absent from BOTH the scored members and excluded[].
+  const allTk = new Set(CM_.map(m => m.ticker));
+  const exTk = new Set((cmR.excluded || []).map(m => m.ticker));
+  for (const t of ['CLSK', 'HIVE', 'MARA', 'RIOT', 'WULF']) {
+    assert(!allTk.has(t), `${t} (crypto miner) darf NICHT in der capmkt_fee_core-Kohorte sein (CRYPTO_MINER_NON_FEE gate)`);
+    assert(!exTk.has(t), `${t} (crypto miner) sollte UPSTREAM gegated sein (gar nicht klassifiziert), nicht in excluded[]`);
+  }
+});
+
+test('capmkt_fee_core: top names sane (genuine fee compounders MSCI/ICE/NDAQ/CBOE/MCO/CME/exchanges/AMs, NOT a fund/miner/BDC/shell)', () => {
+  const ranked = CM_.filter(m => m.score != null && isFinite(m.score)).sort((a, b) => b.score - a.score);
+  assert(ranked.length > 0, 'keine gescorten capmkt-Namen');
+  const top = ranked[0];
+  assert(top.exclusionReason !== 'OUT_OF_SEGMENT:shell', `TOP ${top.ticker} darf KEIN shell sein`);
+  // the genuine fee-franchise / operating-financial top set (exchanges + rating/data + alt-managers + brokers). After
+  // the RE-COURT the 11 BDCs are HARD-GATED OUT (no longer a "disclosed residual" in the cohort). NOT a closed-end
+  // fund, NOT a crypto miner, NOT a BDC spread-lender, NOT a NAV-pass-through artifact.
+  const KNOWN_FEE = new Set(['MSCI', 'MCO', 'ICE', 'NDAQ', 'CBOE', 'SPGI', 'CME', 'MKTX', 'TW', 'FDS', 'MORN', 'TRU',
+    'BLK', 'BRO', 'AJG', 'MRSH', 'BAM', 'BX', 'ARES', 'TROW', 'VIRT', 'HLI', 'EVR', 'VCTR', 'CRVL', 'ERIE', 'GSHD', 'CG']);
+  assert(KNOWN_FEE.has(top.ticker), `TOP sollte ein bekannter Fee/Financial-Name sein, ist ${top.ticker}`);
+  // the marquee data/exchange names must be in the upper half (genuine high-margin fee franchises).
+  for (const t of ['MSCI', 'ICE', 'NDAQ']) {
+    const rank = ranked.findIndex(m => m.ticker === t) + 1;
+    assert(rank > 0 && rank <= Math.ceil(ranked.length / 2), `${t} (genuine fee compounder) sollte in der oberen Hälfte ranken, ist ${rank}/${ranked.length}`);
+  }
+});
+
+// RE-COURT 2026-06-24 — THE TEST THAT SHOULD HAVE CAUGHT THE CONTAMINATION. The original build's top-5 were 4 BDCs
+// (leveraged spread-lenders) while the genuine fee compounders CME/MSCI/ICE sat at ranks 6-14 — the max-severity
+// re-court DENIED the bucket for exactly this. This test asserts the inversion is FIXED: >=2 of {CME,MSCI,ICE} are in
+// the TOP-5, AND ZERO BDCs appear in the top-5 (ideally top-10). Tighten here so the contamination can never recur.
+test('capmkt_fee_core RE-COURT: genuine fee compounders (>=2 of CME/MSCI/ICE) in TOP-5; ZERO BDC in top-5/top-10', () => {
+  const ranked = CM_.filter(m => m.score != null && isFinite(m.score)).sort((a, b) => b.score - a.score);
+  assert(ranked.length >= 10, `Kohorte sollte >=10 gescorte Namen haben, hat ${ranked.length}`);
+  const top5 = ranked.slice(0, 5).map(m => m.ticker);
+  const top10 = ranked.slice(0, 10).map(m => m.ticker);
+  // (a) genuine fee compounders LEAD: at least 2 of CME/MSCI/ICE in the top-5.
+  const COMPOUNDERS = ['CME', 'MSCI', 'ICE'];
+  const inTop5 = COMPOUNDERS.filter(t => top5.includes(t));
+  assert(inTop5.length >= 2, `mind. 2 von CME/MSCI/ICE sollten im TOP-5 sein — top5=[${top5.join(', ')}], gefunden: [${inTop5.join(', ')}]`);
+  // (b) ZERO BDC spread-lenders in the top-5 (the contamination signature) — and ideally none in the top-10.
+  const BDCS = ['OBDC', 'GSBD', 'TSLX', 'MSDL', 'FSK', 'GBDC', 'OTF', 'ARCC', 'BXSL', 'CSWC', 'HTGC'];
+  const bdcTop5 = BDCS.filter(t => top5.includes(t));
+  const bdcTop10 = BDCS.filter(t => top10.includes(t));
+  assert(bdcTop5.length === 0, `KEIN BDC darf im TOP-5 sein (Kontamination) — gefunden: [${bdcTop5.join(', ')}] in top5=[${top5.join(', ')}]`);
+  assert(bdcTop10.length === 0, `KEIN BDC darf im TOP-10 sein — gefunden: [${bdcTop10.join(', ')}]`);
+  // belt: the BDCs are GATED OUT entirely (not even classified) — verify they are absent from the scored cohort.
+  const scoredSet = new Set(ranked.map(m => m.ticker));
+  const leakedBDC = BDCS.filter(t => scoredSet.has(t));
+  assert(leakedBDC.length === 0, `BDC spread-lender(s) in der gescorten Kohorte (BDC_SPREAD_LOAN_BOOK regressed): ${leakedBDC.join(', ')}`);
+});
+
+test('capmkt_fee_core: FOUR scored axes {opMargin, opMarginStability, fcfMargin, netIssuance}; weights Σ=1.0; margin pillar .60', () => {
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  const w = NORMS.capmkt_fee_core.weights;
+  const keys = Object.keys(w).sort().join(',');
+  assert(keys === 'fcfMargin,netIssuance,opMargin,opMarginStability', `4 Achsen erwartet, hat ${keys}`);
+  for (const forbidden of ['gpa', 'gm', 'growth', 'roce', 'ffoAssets', 'assetGrowthPenalty', 'roaThruCycle']) {
+    assert(!(forbidden in w), `${forbidden} darf KEINE gewichtete capmkt-Achse sein`);
+  }
+  const sum = Object.values(w).reduce((s, v) => s + v, 0);
+  assert(Math.abs(sum - 1.0) < 1e-9, `weights sollten Σ=1.0 sein, sind ${sum}`);
+  assert(w.opMargin === 0.30 && w.opMarginStability === 0.30 && w.fcfMargin === 0.25 && w.netIssuance === 0.15,
+    'weights sollten {opMargin .30, opMarginStability .30, fcfMargin .25, netIssuance .15} sein');
+  // opMargin+opMarginStability the margin-quality pillar (.60); netIssuance .15 the smallest (partial coverage).
+  assert((w.opMargin + w.opMarginStability) === 0.60, 'opMargin+opMarginStability sollten den .60 Margin-Quality-Pillar bilden');
+  assert(w.netIssuance <= Math.min(w.opMargin, w.opMarginStability, w.fcfMargin), 'netIssuance sollte das kleinste Achsengewicht sein');
+});
+
+test('capmkt_fee_core: NORMS frozen-id + RE-FROZEN anchors (opMargin -.01/.50, stab 0/1, fcfMargin -.23/.52, netIss -.08/.12)', () => {
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  const n = NORMS.capmkt_fee_core;
+  assert(n.id === 'capmkt-norms-2026-06-24', `norm id falsch: ${n.id}`);
+  // RE-COURT 2026-06-24: anchors RE-FROZEN on the de-BDC'd + de-mined clean pool (n=84). De-mining lifted the
+  // opMargin floor from the contaminated -.27 to -.01 and the fcfMargin floor from -.67 to -.23.
+  assert(n.opMargin.floor === -0.01 && n.opMargin.elite === 0.50, `opMargin sollte -.01/.50 sein, ist ${n.opMargin.floor}/${n.opMargin.elite}`);
+  assert(n.opMarginStability.floor === 0.0 && n.opMarginStability.elite === 1.0, 'opMarginStability sollte identity-clip 0/1 sein');
+  assert(n.fcfMargin.floor === -0.23 && n.fcfMargin.elite === 0.52, 'fcfMargin sollte -.23/.52 sein');
+  // netIssuance is the INVERTED discipline axis: q(-NSI), floor -.08 (dilution p10), elite .12 (buyback p90).
+  assert(n.netIssuance.floor === -0.08 && n.netIssuance.elite === 0.12, 'netIssuance sollte -.08/.12 sein (INVERTED discipline)');
+  assert(n.netIssuance.elite > n.netIssuance.floor, 'netIssuance floor<elite (monotone Skala)');
+  // n=84 >= REL_MIN_N=15 → full ABS+REL blend (β=0.6), NOT THIN_REL.
+  assert(n.rel && n.rel.minN === 15 && n.rel.beta === 0.6, 'capmkt sollte full ABS+REL (beta .6, minN 15) sein');
+});
+
+test('capmkt_fee_core-unit: absKaliberCapmkt 4-axis coverage-renorm (netIssuance-drop renorm Σ=1.0; all-null → 0; stability identity)', () => {
+  const { absKaliberCapmkt } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  // full 4 axes (elite fee biz): at/above the re-frozen elite anchors (opMargin .50, fcfMargin .52, buyback p90 .12).
+  const full = absKaliberCapmkt({ opMargin: 0.50, opMarginStability: 1.0, fcfMargin: 0.52, netShareIssuance: -0.12 }, 'capmkt_fee_core');
+  assert(full.usedAxes.length === 4 && full.droppedAxes.length === 0, `full sollte 4 Achsen nutzen, hat ${full.usedAxes.length}`);
+  assert(Math.abs(Object.values(full.renormWeights).reduce((s, v) => s + v, 0) - 1.0) < 1e-9, 'renormWeights Σ=1.0');
+  assert(full.absK > 0.95, `elite fee biz sollte absK~1.0 ergeben, hat ${full.absK}`);
+  // netIssuance is INVERTED: a buyback (negative NSI) must score HIGHER than dilution, all else equal.
+  const buyback = absKaliberCapmkt({ opMargin: 0.40, opMarginStability: 1.0, fcfMargin: 0.30, netShareIssuance: -0.05 }, 'capmkt_fee_core');
+  const dilution = absKaliberCapmkt({ opMargin: 0.40, opMarginStability: 1.0, fcfMargin: 0.30, netShareIssuance: 0.10 }, 'capmkt_fee_core');
+  assert(buyback.absK > dilution.absK, 'Buyback (negative NSI) sollte HÖHER scoren als Dilution — netIssuance ist INVERTED');
+  // netIssuance-drop (MSCI/ICE-like, annualShares null) → 3 axes renormalize to Σ=1.0 (NEVER imputed)
+  const dropNsi = absKaliberCapmkt({ opMargin: 0.55, opMarginStability: 0.99, fcfMargin: 0.47, netShareIssuance: null }, 'capmkt_fee_core');
+  assert(dropNsi.droppedAxes.includes('netIssuance') && dropNsi.usedAxes.length === 3, 'netIssuance-drop sollte 3 Achsen lassen');
+  assert(Math.abs(Object.values(dropNsi.renormWeights).reduce((s, v) => s + v, 0) - 1.0) < 1e-9, 'renorm Σ=1.0 nach netIssuance-drop');
+  // all-null → 0 (pathological shell, no fake-neutral)
+  const allNull = absKaliberCapmkt({ opMargin: null, opMarginStability: null, fcfMargin: null, netShareIssuance: null }, 'capmkt_fee_core');
+  assert(allNull.absK === 0 && allNull.usedAxes.length === 0, 'all-null sollte absK=0 ergeben');
+});
+
+test('capmkt_fee_core: always-on BLIND walls on every member (AUM_FLOW/FEE_RATE/RECURRING_MIX/BDC_SPREAD)', () => {
+  for (const m of CM_) {
+    for (const wall of ['AUM_FLOW_BLIND', 'FEE_RATE_BLIND', 'RECURRING_MIX_BLIND', 'BDC_SPREAD_BLIND']) {
+      assert(Array.isArray(m.lamps) && m.lamps.includes(wall), `${m.ticker} fehlt BLIND-wall ${wall}`);
+    }
+  }
+  assert(Array.isArray(cmR.walls) && cmR.walls.includes('BDC_SPREAD_BLIND'), 'cmR.walls fehlt BDC_SPREAD_BLIND');
+});
+
+test('capmkt_fee_core SI-3: normTableId + cohort + comparabilityNote (absKaliber cross-bucket, fee-gate + country-normalize disclosed)', () => {
+  assert(cmR.normTableId === 'capmkt-norms-2026-06-24', `normTableId fehlt/falsch: ${cmR.normTableId}`);
+  assert(cmR.cohort === 'capmkt_fee_core', `cohort falsch: ${cmR.cohort}`);
+  assert(/opMargin/i.test(cmR.comparabilityNote || '') && /BDC_SPREAD_BLIND/i.test(cmR.comparabilityNote || ''),
+    'comparabilityNote sollte opMargin + BDC_SPREAD_BLIND nennen');
+  assert(/FUND_FLOAT|RIC_PASSTHROUGH|fee-gate|fcfMargin>1/i.test(cmR.comparabilityNote || ''), 'comparabilityNote sollte die FEE-GATE disclosen');
+  assert(/undefined|US-primary|MSCI/i.test(cmR.comparabilityNote || ''), 'comparabilityNote sollte die country-normalize disclosen');
+  assert(cmR.scoreScope === 'intra-bucket' && cmR.crossBucketComparableField === 'absKaliber', 'SI-3 scope/field fehlt');
+});
+
+test('capmkt_fee_core PARITÄT: KEIN capmkt-only Feld auf den anderen Buckets (Leak-Guard)', () => {
+  // TRULY capmkt-exclusive fields (cm/opMarginCapmkt/opMarginStability/fcfMarginCapmkt/netShareIssuance/_cm*). The
+  // shared names (absUsedAxes/absDroppedAxes/cohort/absKaliber) legitimately exist on other CORE members. NOTE:
+  // opMarginStability is capmkt-exclusive HERE but 'opMargin' (bare) is a shared field — guard only the capmkt-suffixed ones.
+  for (const b of ['system_app_software', 'fabless_semi', 'medtech_devices', 'diagnostics_lst', 'industrials_heavy', 'industrials_light', 'staples_branded', 'staples_distribution', 'consdisc_store', 'consdisc_light', 'materials_pricingpower', 'materials_commodity', 'energy_upstream', 'energy_midstream', 'energy_services', 'pharma_branded', 'pharma_biopharma', 'pharma_specialty', 'it_services', 'financials_banks', 'equity_reits']) {
+    if (!doc[b]) continue;
+    for (const m of doc[b].members) {
+      for (const leak of ['cm', 'opMarginCapmkt', 'opMarginStability', 'fcfMarginCapmkt', '_cmOpMargin', '_cmOpMarginStability', '_cmFcfMargin', '_cmNetIssuanceDisc']) {
+        assert(!(leak in m), `${b}/${m.ticker} hat capmkt-only Feld '${leak}' geleakt (Parität verletzt)`);
+      }
+    }
+  }
+});
+
 // Temp-Outputs aufräumen (Harness-Isolation: Produktions-Artefakte bleiben unberührt)
 try { fs.unlinkSync(CAND_TEST); } catch {}
 try { fs.unlinkSync(RESULTS); } catch {}

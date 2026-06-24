@@ -221,6 +221,15 @@ const BANKS_COHORTS = new Set(['financials_banks']);
 // candidate JSON byte-identical. 'REIT - Mortgage' is HARD-SEPARATED OUT in the classifier (never reaches here).
 const reCohortByTicker = new Map(); // ticker -> 'equity_reits'
 const REITS_COHORTS = new Set(['equity_reits']);
+// capmkt_fee_core CORE court bucket (court gauntlet DESIGN, BUILD_WITH_CAVEATS / court REVISE 2026-06-24).
+// ADDITIV/parity-safe: exactly the court-buckets.json `capmkt_fee_core` tickers are admitted past the asset-light/
+// growth pre-filter (analog the other CORE buckets, Fix A SI-5: no silent drops). The 4 RAW axis inputs
+// {opMargin, opMarginStability, fcfMargin, netIssuance} are extracted from snapshots/<T>.json annual.* — the FLOW
+// fields (annualRev/OpInc/FCF/NetIncome) MAY be {value}-WRAPPED, annualShares is a raw-number array — attached as ONE
+// capmkt-only field `cm` -> all other candidate JSON byte-identical. The fee-gate (fcfMargin>1.0 / niMargin>=0.95) +
+// de-ADR country guard already ran in the classifier; out-of-class names never reach here.
+const cmCohortByTicker = new Map(); // ticker -> 'capmkt_fee_core'
+const CAPMKT_COHORTS = new Set(['capmkt_fee_core']);
 try {
   const bd = JSON.parse(fs.readFileSync(BUCK, 'utf8'));
   const cls = Array.isArray(bd) ? bd : (bd.classifications || []);
@@ -235,6 +244,7 @@ try {
     if (c && ITSERVICES_COHORTS.has(c.bucket) && c.t) itCohortByTicker.set(c.t, c.bucket);
     if (c && BANKS_COHORTS.has(c.bucket) && c.t) bkCohortByTicker.set(c.t, c.bucket);
     if (c && REITS_COHORTS.has(c.bucket) && c.t) reCohortByTicker.set(c.t, c.bucket);
+    if (c && CAPMKT_COHORTS.has(c.bucket) && c.t) cmCohortByTicker.set(c.t, c.bucket);
   }
 } catch {}
 
@@ -1649,6 +1659,114 @@ function buildReitAxes(ticker, cohort) {
   };
 }
 
+// ===========================================================================
+// capmkt_fee_core (CORE) — 4-axis RAW extraction from snapshots (court DESIGN 2026-06-24)
+// ===========================================================================
+// ADDITIV/parity-safe: only fires for tickers in cmCohortByTicker (court-buckets capmkt_fee_core). Reads snapshots/
+// <T>.json `annual.*` (NEWEST-FIRST) — the canonical pool the deterministic classifier + the re-frozen cohort NORMS
+// were calibrated on. The FLOW fields (annualRev/OpInc/FCF/NetIncome) MAY be {value}-WRAPPED; annualShares is a
+// raw-number array. Same dual-shape cmUnwrap() extractor used for all axes.
+//
+// 4 SCORED axes {opMargin, opMarginStability, fcfMargin, netIssuance} via the NEW engine absKaliberCapmkt (coverage-
+// renorm). opMargin/opMarginStability/fcfMargin NON-inverted (higher=better); netIssuance passed RAW (the engine
+// negates it for the inverted q(-NSI) discipline axis). opMarginStability = 1 - CV(opMargin over available years),
+// CV=stdev/|mean|, clamp [0,1] (a through-cycle pricing-durability proxy, fed as an already-clipped 0..1 observation).
+// netIssuance = -((annualShares[0]-annualShares[1])/annualShares[1]); null (~54% lack annualShares) -> DROP+renorm +
+// ISSUANCE_NOT_READY, NEVER imputed. The ECONOMIC FEE-GATE (fcfMargin>1.0 / niMargin>=0.95) already ran at
+// classification, so the screen only ever sees genuine operating fee businesses. always-on BLIND walls: the most
+// important fee-franchise dimensions (AUM flows / fee-rate / recurring-mix / BDC-spread) carry NO local signal.
+
+// {value}-unwrap for the WRAPPED flow fields. Raw numbers pass through; {value} objects unwrap (mirrors reUnwrap).
+function cmUnwrap(x) {
+  if (x == null) return null;
+  if (typeof x === 'number') return isFinite(x) ? x : null;
+  if (typeof x === 'object' && x.value != null && isFinite(x.value)) return x.value;
+  return null;
+}
+
+// snapshot annual cache for capmkt tickers only (avoid re-reading + keep the parity path untouched).
+const cmSnapAnnual = new Map(); // ticker -> snapshot.annual object
+if (cmCohortByTicker.size && fs.existsSync(SNAP_DIR)) {
+  for (const t of cmCohortByTicker.keys()) {
+    try {
+      const sn = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, t + '.json'), 'utf8'));
+      if (sn && sn.annual) cmSnapAnnual.set(t, sn.annual);
+    } catch {}
+  }
+}
+
+// buildCapmktAxes(ticker, cohort) -> the 4 RAW axis inputs + lamps/audit, or null if no snapshot.
+// opMargin = annualOpInc[0]/annualRev[0] (fee-franchise pricing power); opMarginStability = 1-CV(opMargin avail years)
+// clamp[0,1] (null+STABILITY_THIN when <2 opMargin years); fcfMargin = annualFCF[0]/annualRev[0]; netIssuance =
+// -((annualShares[0]-annualShares[1])/annualShares[1]) (RAW; engine negates -> discipline; null+ISSUANCE_NOT_READY
+// when <2 share years). Shell facts (positive-revenue-year count + revLatest) surfaced for the court-score.js SI-4
+// SHELL gate. ALL flow fields {value}-unwrapped.
+function buildCapmktAxes(ticker, cohort) {
+  const a = cmSnapAnnual.get(ticker);
+  if (!a) return null;
+  const rev = (a.annualRev || []).map(cmUnwrap);                 // NEWEST-FIRST, may be {value}-WRAPPED
+  const op = (a.annualOpInc || []).map(cmUnwrap);                // may be {value}-WRAPPED
+  const fcf = (a.annualFCF || []).map(cmUnwrap);                 // may be {value}-WRAPPED
+  const sh = (a.annualShares || []).map(cmUnwrap);              // raw-number array (~46% coverage)
+  const lamps = [];
+
+  // --- Axis C1: operating-margin LEVEL = annualOpInc[0]/annualRev[0] ---
+  let opMargin = null;
+  if (op[0] != null && rev[0] != null && rev[0] > 0) opMargin = op[0] / rev[0];
+  else lamps.push('NOT_READY:opmargin');
+
+  // --- Axis C2: operating-margin STABILITY = 1 - CV(opMargin over available years), CV=stdev/|mean|, clamp [0,1] ---
+  let opMarginStability = null;
+  const opMs = [];
+  for (let i = 0; i < rev.length; i++) {
+    if (op[i] != null && rev[i] != null && rev[i] > 0) opMs.push(op[i] / rev[i]);
+  }
+  if (opMs.length >= 2) {
+    const mean = opMs.reduce((s, x) => s + x, 0) / opMs.length;
+    if (mean !== 0) {
+      const variance = opMs.reduce((s, x) => s + (x - mean) * (x - mean), 0) / opMs.length;
+      const cv = Math.sqrt(variance) / Math.abs(mean);
+      opMarginStability = Math.max(0, Math.min(1, 1 - cv));   // already-clipped [0,1] observation
+    } else {
+      lamps.push('STABILITY_THIN');   // zero-mean opMargin -> CV undefined -> DROP+renorm
+    }
+  } else {
+    lamps.push('STABILITY_THIN');     // <2 opMargin years -> DROP+renorm
+  }
+
+  // --- Axis C3: FCF margin = annualFCF[0]/annualRev[0] (fund-float >1.0 already gated out at classification) ---
+  let fcfMargin = null;
+  if (fcf[0] != null && rev[0] != null && rev[0] > 0) fcfMargin = fcf[0] / rev[0];
+  else lamps.push('NOT_READY:fcfmargin');
+
+  // --- Axis C4: net-share-issuance = -((shares[0]-shares[1])/shares[1]) (RAW; engine negates -> discipline) ---
+  let netIssuance = null;
+  if (sh[0] != null && sh[1] != null && sh[1] > 0) netIssuance = -((sh[0] - sh[1]) / sh[1]);
+  else lamps.push('ISSUANCE_NOT_READY');   // ~54% lack annualShares -> DROP+renorm, NEVER imputed
+
+  // --- always-on BLIND disclosure walls — the most important fee-franchise dimensions carry NO local signal ---
+  lamps.push('AUM_FLOW_BLIND');         // assets-under-management net flows / organic AUM growth (the fee-engine fuel) ABSENT
+  lamps.push('FEE_RATE_BLIND');         // fee rate / take-rate compression (the secular margin threat) ABSENT
+  lamps.push('RECURRING_MIX_BLIND');    // recurring/subscription vs transactional/performance-fee revenue mix ABSENT
+  lamps.push('BDC_SPREAD_BLIND');       // surviving BDCs: spread/interest income vs true fee franchise indistinguishable on local data (court rev #1 residual)
+
+  // pre-revenue / shell facts for the court-score.js SI-4 SHELL gate: a name with <2 positive-revenue-years is a shell
+  // that CANNOT be scored (the opMargin/fcfMargin axes are undefined/explosive on near-zero revenue).
+  const positiveRevYears = rev.filter(v => v != null && isFinite(v) && v > 0).length;
+  const revLatest = rev.find(v => v != null && isFinite(v));
+  return {
+    cohort,
+    opMargin: round(opMargin),
+    opMarginStability: round(opMarginStability),
+    fcfMargin: round(fcfMargin),
+    netIssuance: round(netIssuance),
+    positiveRevYears,
+    revLatest: (revLatest == null ? null : round(revLatest)),
+    nAnnualOpM: opMs.length,
+    lamps,
+  };
+}
+
 // --- robuste Feld-Helfer (Format ist gemischt: ftsAnnual.* = [{value}], Rest = [num]) ---
 function num(x) {
   if (x == null) return null;
@@ -1745,7 +1863,11 @@ for (const file of files) {
   // a thin CACHE row. Its 4 SCORED axes come from the SNAPSHOT (buildReitAxes) annual.* arrays, not the cache. Bypasses
   // the cache-based early gates. Non-reits path: BYTE-IDENTICAL.
   const reCohortEarly = (reCohortByTicker.get(ticker) && reSnapAnnual.has(ticker)) ? reCohortByTicker.get(ticker) : null;
-  const coreEarly = indCohortEarly || stpCohortEarly || cdCohortEarly || mtCohortEarly || enCohortEarly || phCohortEarly || itCohortEarly || bkCohortEarly || reCohortEarly;
+  // capmkt_fee_core (CORE): same SI-5 rule — a court-buckets-classified fee-business name MUST reach the universe even
+  // with a thin CACHE row. Its 4 SCORED axes come from the SNAPSHOT (buildCapmktAxes) annual.* arrays, not the cache.
+  // Bypasses the cache-based early gates. Non-capmkt path: BYTE-IDENTICAL.
+  const cmCohortEarly = (cmCohortByTicker.get(ticker) && cmSnapAnnual.has(ticker)) ? cmCohortByTicker.get(ticker) : null;
+  const coreEarly = indCohortEarly || stpCohortEarly || cdCohortEarly || mtCohortEarly || enCohortEarly || phCohortEarly || itCohortEarly || bkCohortEarly || reCohortEarly || cmCohortEarly;
   const p = j.payload || {};
   if (!j.payload && !coreEarly) continue;
   if (j._ftsPartial) stats.partial++;
@@ -1903,6 +2025,7 @@ for (const file of files) {
   const itCohort = itCohortByTicker.get(ticker) || null;
   const bkCohort = bkCohortByTicker.get(ticker) || null;
   const reCohort = reCohortByTicker.get(ticker) || null;
+  const cmCohort = cmCohortByTicker.get(ticker) || null;
   if (indCohort) {
     // industrials_compounder (CORE): admit EVERY court-buckets-classified industrials name into the universe
     // (cross-sectional cohort percentiles + SI-5 classifiedCount===scoredCount). NO asset-light/growth/gm
@@ -1963,6 +2086,14 @@ for (const file of files) {
     // from the snapshot annual.* arrays (buildReitAxes). Sole sanity: a parseable snapshot annual block exists (else SI-5
     // classifiedCount===scoredCount+excludedCount would mismatch silently).
     if (!reSnapAnnual.has(ticker)) continue;
+  } else if (cmCohort) {
+    // capmkt_fee_core (CORE): identical admission policy — admit EVERY court-buckets-classified fee-business name into
+    // the universe (cross-sectional cohort percentiles + SI-5). NO asset-light/growth/gm pre-filter — fee businesses
+    // span exchanges/data/asset-managers/brokers (the asset-light/ppe gate is moot, the gm line is structurally absent
+    // for many); the de-ADR + size + fee-gate already ran in the classifier, and the SI-1 shortlist-cut + economic
+    // SHELL gate live in court-score.js. 4 axes come from the snapshot annual.* arrays (buildCapmktAxes). Sole sanity:
+    // a parseable snapshot annual block exists (else SI-5 classifiedCount===scoredCount+excludedCount mismatch silently).
+    if (!cmSnapAnnual.has(ticker)) continue;
   } else if (isMedtech || isDlst) {
     // Milde Daten-Sanity: growth/gm/rev müssen vorhanden + endlich sein (keine ökonomischen Floors).
     // Medtech UND D&LST sind kapitalintensiv/Large-Cap-haltig → asset-light/ppe-Gate + ökonomische Floors
@@ -2028,6 +2159,11 @@ for (const file of files) {
   // ffoAssets DROP+renorm when dep absent; always-on SAME_STORE_NOI/OCCUPANCY/NAV_PREMIUM/AFFO/FFO_GAINS BLIND walls).
   // Additiv → KEIN Feld auf Nicht-REIT-Records (Parität alle übrigen Buckets).
   const reExtra = reCohort ? { re: buildReitAxes(ticker, reCohort) } : {};
+  // capmkt_fee_core (CORE): the 4 RAW axis inputs {opMargin, opMarginStability, fcfMargin, netIssuance} from the
+  // snapshot annual.* arrays, attached as ONE capmkt-only field `cm` ({value}-unwrap; 1-CV opMargin stability;
+  // netIssuance DROP+renorm when annualShares absent; always-on AUM_FLOW/FEE_RATE/RECURRING_MIX/BDC_SPREAD BLIND
+  // walls). Additiv → KEIN Feld auf Nicht-Capmkt-Records (Parität alle übrigen Buckets).
+  const cmExtra = cmCohort ? { cm: buildCapmktAxes(ticker, cmCohort) } : {};
   candidates.push({
     ticker,
     growth: round(growth), growth_annual: round(gAnnual), growth_q: round(gQ), growthSource,
@@ -2052,6 +2188,7 @@ for (const file of files) {
     ...itExtra,
     ...bkExtra,
     ...reExtra,
+    ...cmExtra,
   });
 }
 
