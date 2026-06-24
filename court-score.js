@@ -940,6 +940,14 @@ function stageOf(formula, fcf) {
 // FY_RECON_TOL, FAILT die Funktion LAUT (kein stilles Droppen des falschen Jahres für einen künftigen Ticker).
 // Alle Konstanten [TODO-CAL]: DEAL_JUMP_THRESH (0.25), w_CAGR (0.6), w_median (0.4), CATCH_UP_YEARS (1).
 const DEAL_JUMP_THRESH = 0.25;   // [TODO-CAL] goodwill-Sprung >= 25% von Revenue = transformationaler Deal-Jahr
+// UNIVERSAL revenue-artifact guard (re-court defense-in-depth, mirrors court-screen.js SUSPECT_REV_MULT):
+// a single-year revG >= +300% (revenue >4x in one year) is — regardless of sector — a scale/units/currency/
+// restatement DATA artifact (no $1B+ company quadruples revenue in one year). EMPIRICAL clean gap [3.42x ALAB
+// (top legit) .. 7.38x ONDS (lowest artifact)]; 4.0x threshold (revG>=3.00) sits dead-center. The offending YoY
+// is DROPPED from the organic blend (like a deal-year) + a SUSPECT_REVENUE_MULTIPLE lamp is raised; ADVISORY +
+// growth-axis only. Applies to medtech_devices + diagnostics_lst (which compute organic growth here, not in
+// court-screen) and to the saas/fabless generic-growth pre-pass below.
+const SUSPECT_REV_MULT_THR = 3.00; // revG >= +300% (>4x single-year) = scale/units/currency/restatement artifact
 const W_CAGR = 0.6, W_MEDIAN = 0.4; // [TODO-CAL] Blend CAGR_3y vs median(trailing YoY) — jetzt SEKUNDÄR (durability), nicht primär
 const CATCH_UP_YEARS = 1;        // [TODO-CAL] zusätzlich gedroppte Folge-YoY (erstes volles inorganisches Jahr)
 const FY_RECON_TOL = 0.15;       // [TODO-CAL] max |cacheRev/snapRev - 1| bevor index-aligned Drop als unsicher LAUT failt (VII)
@@ -965,10 +973,17 @@ function computeMedtechOrganicGrowth(yoySeries, goodwillHistory, revHist, revLat
   const result = {
     growth: fallbackGrowth, latestOrganicYoY: null, blend: null, organicYears: 0, droppedIdx: [],
     dealYearExcluded: false, impairmentFlag: false, shortHistory: false, currentYearOnly: false, decelerating: false,
+    revArtifactMult: false,
   };
   if (!Array.isArray(yoySeries) || yoySeries.length === 0) return result;
   // Deal-Jahr-Indizes via goodwill-Sprung (nur wenn coverage vorhanden)
   const dropIdx = new Set();
+  // UNIVERSAL revenue-artifact guard: any YoY >= +300% (>4x in one year) is a scale/units/currency artifact —
+  // dropped like a deal-year (independent of goodwill coverage) + flag for the SUSPECT_REVENUE_MULTIPLE lamp.
+  for (let i = 0; i < yoySeries.length; i++) {
+    const v = yoySeries[i];
+    if (v != null && isFinite(v) && v >= SUSPECT_REV_MULT_THR) { dropIdx.add(i); result.revArtifactMult = true; }
+  }
   if (Array.isArray(goodwillHistory) && goodwillHistory.length >= 2) {
     for (let i = 0; i < goodwillHistory.length - 1; i++) {
       const newer = goodwillHistory[i] ? goodwillHistory[i].val : null;
@@ -1078,6 +1093,7 @@ function computeDlstOrganicGrowth(yoySeries, gwHist, revHist, revLatest, fallbac
   const result = {
     growth: fallbackGrowth, latestOrganicYoY: null, blend: null, organicYears: 0, droppedIdx: [],
     dealYearExcluded: false, dealExclusionUnaligned: false, shortHistory: false, currentYearOnly: false, decelerating: false,
+    revArtifactMult: false,
   };
   if (!Array.isArray(yoySeries) || yoySeries.length === 0) return result;
   const years = Array.isArray(yoyYears) ? yoyYears : [];
@@ -1088,6 +1104,14 @@ function computeDlstOrganicGrowth(yoySeries, gwHist, revHist, revLatest, fallbac
     if (y != null && isFinite(y) && !yearToIdx.has(y)) yearToIdx.set(y, i);
   }
   const dropIdx = new Set();
+  // UNIVERSAL revenue-artifact guard: any YoY >= +300% (>4x) is a scale/units/currency artifact — dropped
+  // (independent of goodwill coverage) + flagged. NOT counted as a deal-year (dealYearExcluded below counts
+  // only goodwill-driven drops) — a scale artifact is a data corruption, not an acquisition.
+  const suspectIdx = new Set();
+  for (let i = 0; i < yoySeries.length; i++) {
+    const v = yoySeries[i];
+    if (v != null && isFinite(v) && v >= SUSPECT_REV_MULT_THR) { dropIdx.add(i); suspectIdx.add(i); result.revArtifactMult = true; }
+  }
   if (Array.isArray(gwHist) && gwHist.length >= 2) {
     for (let i = 0; i < gwHist.length - 1; i++) {
       const newer = gwHist[i] ? gwHist[i].val : null;
@@ -1116,8 +1140,9 @@ function computeDlstOrganicGrowth(yoySeries, gwHist, revHist, revLatest, fallbac
       }
     }
   }
-  // (Fix B) Ehrlichkeit: dealYearExcluded=true GENAU DANN, wenn mindestens ein YoY-Jahr entfernt wurde.
-  result.dealYearExcluded = dropIdx.size > 0;
+  // (Fix B) Ehrlichkeit: dealYearExcluded=true GENAU DANN, wenn mindestens ein YoY-Jahr per GOODWILL-Sprung
+  // entfernt wurde (suspect-multiple-Drops zählen NICHT als Deal-Jahr — sie sind Daten-Artefakte, kein M&A).
+  result.dealYearExcluded = [...dropIdx].some(i => !suspectIdx.has(i));
   let latest = null;
   for (let i = 0; i < yoySeries.length; i++) {
     const v = yoySeries[i];
@@ -1236,6 +1261,9 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m._shortOrganicHistory = org.shortHistory;
       m._currentYearOnly = org.currentYearOnly; // (VI) <2 organische Jahre → kein 0.6/0.4-Blend gelaufen
       m._decelerating = org.decelerating;       // (III) aktuelle Rate < median(prior organic years)
+      // UNIVERSAL guard: implausible >4x YoY dropped → SUSPECT_REVENUE_MULTIPLE lamp. PARITY: only set the field
+      // when it actually fires (zero current medtech names) so the persisted JSON stays byte-identical to baseline.
+      if (org.revArtifactMult) m._revArtifactMult = true;
       m.growthOrganic = org.growth == null ? null : Math.round(org.growth * 10000) / 10000; // persisted für Audit/Anzeige
       m.latestOrganicYoY = org.latestOrganicYoY == null ? null : Math.round(org.latestOrganicYoY * 10000) / 10000; // persisted
       m.growthBlend = org.blend == null ? null : Math.round(org.blend * 10000) / 10000; // persisted (durability view)
@@ -1261,6 +1289,9 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m._shortOrganicHistory = org.shortHistory;
       m._currentYearOnly = org.currentYearOnly;
       m._decelerating = org.decelerating;
+      // UNIVERSAL guard: implausible >4x YoY dropped → SUSPECT_REVENUE_MULTIPLE lamp. PARITY: only set on fire
+      // (zero current dlst names) so the persisted JSON stays byte-identical to the pre-dlst/frozen baseline.
+      if (org.revArtifactMult) m._revArtifactMult = true;
       m.growthOrganic = org.growth == null ? null : Math.round(org.growth * 10000) / 10000;
       m.latestOrganicYoY = org.latestOrganicYoY == null ? null : Math.round(org.latestOrganicYoY * 10000) / 10000;
       m.growthBlend = org.blend == null ? null : Math.round(org.blend * 10000) / 10000;
@@ -1275,6 +1306,34 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.effSource = effSrc;
       // capexNeg: niedrigere Capex-Intensität = besser → negiert, damit höher=besser für die z/MAD-Achse.
       m._capexNeg = (m.capexPct == null || !isFinite(m.capexPct)) ? null : -Math.abs(m.capexPct);
+    }
+  }
+  // --- saas/fabless UNIVERSAL revenue-artifact PRE-PASS (re-court defense-in-depth) ---
+  // saas/semi score the growth axis directly off m._growth (= generic gAnnual = latest annual YoY). If that
+  // latest YoY is an implausible >4x multiple (scale/units/currency artifact), DROP it and fall back to the next
+  // clean annual YoY from the persisted revYoYSaasSemi series (newest-first); no clean year → null (the growth
+  // axis is dropped + coverage-renormed downstream, like a NOT_READY name). ADVISORY + growth-axis only. All
+  // intermediates are saas/semi-LOCAL → medtech/dlst/court-screen-bucket member JSON byte-identical (parity).
+  if (bucket === 'system_app_software' || bucket === 'fabless_semi') {
+    for (const m of members) {
+      m._revArtifactMult = false;
+      if (m._growth != null && isFinite(m._growth) && m._growth >= SUSPECT_REV_MULT_THR) {
+        m._revArtifactMult = true;
+        // fall back to the next clean (<threshold) finite annual YoY from the series; else null.
+        let repl = null;
+        const series = Array.isArray(m.revYoYSaasSemi) ? m.revYoYSaasSemi : [];
+        for (const v of series) {
+          if (v != null && isFinite(v) && v < SUSPECT_REV_MULT_THR) { repl = v; break; }
+        }
+        m._growth = repl;                         // dropped artifact → next clean year (or null → axis DROP)
+        m.growthOrganic = repl == null ? null : Math.round(repl * 10000) / 10000; // persisted audit view (only when guard fired)
+      }
+      // PARITY: revYoYSaasSemi is a TRANSIENT guard input (court-screen → here). Drop it from the member so the
+      // persisted saas/fabless JSON stays byte-identical to the frozen pre-v12/pre-dlst baselines when the guard
+      // does NOT fire (it fires on zero current names). _revArtifactMult (false on all current names) is a plain
+      // boolean that the older baselines' member objects also tolerate — but to be byte-safe, only keep it on fire.
+      delete m.revYoYSaasSemi;
+      if (m._revArtifactMult === false) delete m._revArtifactMult;
     }
   }
   // --- industrials_compounder (CORE) PRE-PASS: lift the 5 RAW axis inputs from m.ind onto the member ---
@@ -2439,6 +2498,10 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     L.push('P_auth=no-data');
     if (F.degraded) L.push('A2-missing-degraded');
     if (m.conf === 'low') L.push('class-low-conf');
+    // UNIVERSAL revenue-artifact guard (re-court defense-in-depth): medtech/dlst/saas/semi compute growth HERE
+    // (not in court-screen), so the SUSPECT_REVENUE_MULTIPLE lamp is raised here when an implausible >4x single-
+    // year YoY was dropped from the growth axis. (court-screen buckets carry the same lamp via m.<bk>.lamps below.)
+    if (m._revArtifactMult === true) L.push('SUSPECT_REVENUE_MULTIPLE');
     // Medtech M&A lamps (advisory, STOCK+FLOW+JUMP+COVERAGE)
     if (bucket === 'medtech_devices') {
       const maRec = maMedtechByTicker.get(m.ticker);

@@ -876,6 +876,68 @@ test('Unit cDOG (Fix A): impairment (negativer ΔGoodwill) ist KEIN Deal-Sprung 
   assert(r.dealYearExcluded === false && r.dealExclusionUnaligned === false, 'kein Deal → keine Lampen');
 });
 
+// =================== UNIVERSAL revenue-artifact guard (re-court defense-in-depth, threshold 4.0x = revG>=3.00) ===
+// A single-year revG >= +300% (>4x in one year) is a scale/units/currency/restatement artifact regardless of
+// sector → DROPPED from the growth blend + SUSPECT_REVENUE_MULTIPLE lamp. A legit high-grower BELOW the
+// threshold is untouched. Calibrated clean gap: highest legit ALAB 3.42x (+242%) ≪ lowest artifact ONDS 7.38x.
+test('Unit guard (medtech): >threshold single-year jump (+500%) DROPPED from blend + revArtifactMult flag', () => {
+  // yoySeries newest-first: a +500% (6x) artifact at index 1, surrounded by clean organic years.
+  const yoySeries = [0.18, 5.00, 0.22, 0.15]; // index 1 = 600% jump = artifact
+  const r = cMOG(yoySeries, null, null, null, null, {});
+  assert(r.revArtifactMult === true, `revArtifactMult sollte true sein (5.00 >= 3.00), ist ${r.revArtifactMult}`);
+  // organic years = the 3 clean YoY (artifact index 1 dropped); blend/growth must NOT reflect the 500% jump.
+  assert(r.organicYears === 3, `organicYears sollte 3 sein (Artefakt-Jahr gedroppt), ist ${r.organicYears}`);
+  assert(r.growth != null && r.growth < 1.0, `growth (${r.growth}) darf nicht den 500%-Sprung tragen (muss aus den clean Jahren stammen)`);
+  assert(Math.abs(r.latestOrganicYoY - 0.18) < 1e-9, `latestOrganicYoY sollte 0.18 sein (Artefakt war nicht der jüngste), ist ${r.latestOrganicYoY}`);
+});
+
+test('Unit guard (medtech): legit high-grower BELOW threshold (+242% = ALAB-like 3.42x) UNTOUCHED, no flag', () => {
+  // 2.42 = +242% (3.42x) is the highest LEGIT single-year jump in the calibrated universe → must survive.
+  const yoySeries = [0.40, 2.42, 0.45, 0.50]; // 2.42 < 3.00 threshold → kept
+  const r = cMOG(yoySeries, null, null, null, null, {});
+  assert(r.revArtifactMult === false, `revArtifactMult sollte false sein (2.42 < 3.00), ist ${r.revArtifactMult}`);
+  assert(r.organicYears === 4, `organicYears sollte 4 sein (nichts gedroppt), ist ${r.organicYears}`);
+});
+
+test('Unit guard (dlst): >threshold jump DROPPED + revArtifactMult; NICHT als Deal-Jahr gezählt', () => {
+  const yoy = [0.20, 4.50, 0.15];      // index 1 = +450% (5.5x) artifact
+  const years = [2025, 2024, 2023];
+  const r = cDOG(yoy, null, null, 300e6, 0.05, years); // keine goodwill-coverage → nur der Artefakt-Drop
+  assert(r.revArtifactMult === true, `revArtifactMult sollte true sein, ist ${r.revArtifactMult}`);
+  assert(r.droppedIdx.includes(1), `Artefakt-Index 1 sollte gedroppt sein, droppedIdx=${JSON.stringify(r.droppedIdx)}`);
+  assert(r.dealYearExcluded === false, `Scale-Artefakt ist KEIN Deal-Jahr (dealYearExcluded muss false bleiben), ist ${r.dealYearExcluded}`);
+});
+
+test('Unit guard (dlst): legit grower below threshold untouched, kein Flag', () => {
+  const yoy = [0.30, 2.90, 0.25];      // 2.90 = +290% < 3.00 → behalten
+  const years = [2025, 2024, 2023];
+  const r = cDOG(yoy, null, null, 300e6, 0.05, years);
+  assert(r.revArtifactMult === false, `revArtifactMult sollte false sein (2.90 < 3.00), ist ${r.revArtifactMult}`);
+  assert(r.droppedIdx.length === 0, `nichts darf gedroppt werden, droppedIdx=${JSON.stringify(r.droppedIdx)}`);
+});
+
+test('Live: SUSPECT_REVENUE_MULTIPLE feuert NUR auf genuine Artefakte (bottom-of-bucket, score null/niedrig), KEIN Top-Name', () => {
+  // Sammle alle Member über alle Buckets, die die Lampe tragen.
+  const firing = [];
+  for (const b of Object.keys(doc)) {
+    const v = doc[b]; if (!v || !Array.isArray(v.members)) continue;
+    for (const m of v.members) {
+      if (Array.isArray(m.lamps) && m.lamps.includes('SUSPECT_REVENUE_MULTIPLE')) firing.push({ b, t: m.ticker, score: m.score });
+    }
+  }
+  // Mindestens ein bekanntes Artefakt muss feuern (TE, die Re-Court-Auslöser-Klasse; near-zero-base scale jump).
+  assert(firing.some(f => f.t === 'TE'), `TE (256x scale artifact) sollte SUSPECT_REVENUE_MULTIPLE tragen; firing=${JSON.stringify(firing.map(f=>f.t))}`);
+  // KEIN feuernder Name darf ein Headline-Name sein: jeder Treffer ist score=null ODER bottom-tier (<25).
+  for (const f of firing) {
+    assert(f.score == null || f.score < 25, `${f.b}/${f.t} feuert SUSPECT_REVENUE_MULTIPLE aber hat einen nicht-bottom Score ${f.score} — möglicher Fehlalarm auf einem legit Grower`);
+  }
+  // Positive-control: bekannte legit Hyper-Grower (ALAB 3.42x, NVDA, CRDO, CELH) dürfen die Lampe NIE tragen.
+  const fireSet = new Set(firing.map(f => f.t));
+  for (const legit of ['ALAB', 'NVDA', 'CRDO', 'CELH', 'COKE']) {
+    assert(!fireSet.has(legit), `${legit} ist ein legit Grower (bzw. von einem komplementären Guard abgedeckt) und darf SUSPECT_REVENUE_MULTIPLE NICHT tragen`);
+  }
+});
+
 // =================== DIAGNOSTICS_LST BUCKET TESTS (v0/v1.0, cohort-aware dx|tools) ===================
 
 const dlst = doc.diagnostics_lst;

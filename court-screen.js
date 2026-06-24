@@ -240,11 +240,17 @@ const CAPMKT_COHORTS = new Set(['capmkt_fee_core']);
 // sinks the commodity contract-mfg / loss tail off-headline, and the SI-4 SHELL gate excludes the revenue-less shells).
 const thwCohortByTicker = new Map(); // ticker -> 'tech_hardware_quality'
 const TECHHW_COHORTS = new Set(['tech_hardware_quality']);
+// saas/fabless (generic-path growth-scored buckets): the universal revenue-artifact guard runs on the LATEST
+// annual YoY (their growth axis = generic gAnnual). To let the guard drop+fall-back, persist the annual YoY
+// SERIES on saas/semi members ONLY (additive → no field on any other bucket; parity-safe).
+const saasSemiTickers = new Set(); // ticker -> system_app_software | fabless_semi member
+const SAASSEMI_COHORTS = new Set(['system_app_software', 'fabless_semi']);
 try {
   const bd = JSON.parse(fs.readFileSync(BUCK, 'utf8'));
   const cls = Array.isArray(bd) ? bd : (bd.classifications || []);
   for (const c of cls) {
     if (c && c.bucket === 'diagnostics_lst' && c.t) dlstTickers.add(c.t);
+    if (c && SAASSEMI_COHORTS.has(c.bucket) && c.t) saasSemiTickers.add(c.t);
     if (c && (c.bucket === 'industrials_heavy' || c.bucket === 'industrials_light') && c.t) indCohortByTicker.set(c.t, c.bucket);
     if (c && (c.bucket === 'staples_branded' || c.bucket === 'staples_distribution') && c.t) stpCohortByTicker.set(c.t, c.bucket);
     if (c && (c.bucket === 'consdisc_store' || c.bucket === 'consdisc_light') && c.t) cdCohortByTicker.set(c.t, c.bucket);
@@ -297,6 +303,32 @@ function fiscalYearsForRev(revVals, ticker) {
     const hit = rh.find(e => e.val === v);
     return hit ? hit.year : null;
   });
+}
+
+// ===========================================================================
+// UNIVERSAL revenue-artifact guard (re-court defense-in-depth) — SHARED across all growth-scored buckets.
+// ===========================================================================
+// A single-year revenue MULTIPLE that is physically implausible for a $1B+ company (revenue jumps to >4x in
+// ONE year, i.e. revG >= +300%) is — REGARDLESS OF SECTOR — almost certainly a SCALE / UNITS / CURRENCY /
+// restatement DATA artifact, not organic or M&A growth. No $1B+ company organically (nor via typical M&A)
+// quadruples revenue in a single year. This is the SECTOR-NEUTRAL companion to the staples §4.1b asset-backed
+// guard: the asset-backing heuristic does NOT generalize (a non-asset-backed jump is LEGITIMATE in materials/
+// energy commodity spikes, asset-light pharma drug launches, it_services/saas asset-light hypergrowth), but an
+// IMPLAUSIBLE MULTIPLE is a universal red flag. EMPIRICAL CALIBRATION (2026-06-24, all 585 US >=$1B growth-
+// scored names): the highest LEGITIMATE single-year jump is ALAB +242% (3.42x, genuine AI-infra hypergrowth);
+// the lowest scale ARTIFACT is ONDS +638% (7.38x, $7M->51M near-zero base). The CLEAN GAP [3.42x .. 7.38x] is
+// empty — a 4.0x threshold (revG>=3.00) sits dead-center, catching 4 near-zero-base artifacts (TE 256.7x,
+// ASTS 16.1x, ASPI 9.6x, ONDS 7.4x — all already bottom-of-bucket junk) while SPARING every legitimate grower
+// (ALAB 3.42x, AMPX 3.02x, NVDA 2.26x, CRDO 2.26x, COKE 3.19x...). COKE's 3.19x scale artifact is BELOW this
+// universal threshold BY DESIGN — it is caught by the COMPLEMENTARY staples asset-backed guard (revG>=1.0 AND
+// not asset-backed), which catches the lower-multiple non-asset-backed staples case the universal guard misses.
+// ADVISORY + GROWTH-AXIS-ONLY: a YoY exceeding the threshold is DROPPED from the growth blend (the remaining
+// clean years are used; if none remain -> NOT_READY:growth like a fully-masked name) + a SUSPECT_REVENUE_MULTIPLE
+// lamp is raised. The name is NEVER excluded; no other axis is touched.
+const SUSPECT_REV_MULT = { revG: 3.00 };                       // universal: single-year revG >= +300% (>4x) = scale/units/currency/restatement artifact
+function suspectRevMultiple(revG, threshold) {
+  const t = (threshold == null) ? SUSPECT_REV_MULT.revG : threshold;
+  return revG != null && isFinite(revG) && revG >= t;
 }
 
 // ===========================================================================
@@ -395,7 +427,7 @@ function buildIndustrialsAxes(ticker, cohort) {
   // --- Axis A: organic growth (deal-mask §4.1 + spin-off guard §4.3 UPSTREAM, cyclicality blend-floor §4.2) ---
   // YoY series newest-first: revA[i]/revA[i+1]-1; deal-mask a year iff assetGrowth_t>=0.25 AND revGrowth_t>=0.15.
   let growthInput = null;
-  let dealMasked = false, spinoffRebase = false, staleGrowth = false;
+  let dealMasked = false, spinoffRebase = false, staleGrowth = false, revArtifactMult = false;
   if (spinoffRebaselineGuard(revA)) {
     spinoffRebase = true;
     lamps.push('SPINOFF_REBASE');
@@ -410,10 +442,15 @@ function buildIndustrialsAxes(ticker, cohort) {
       // asset jump for the SAME fiscal year t (taA[i] vs taA[i+1]); positive-only conjunction.
       const taNew = taA[i], taOld = taA[i + 1];
       const assetG = (taNew != null && taOld != null && taOld > 0) ? (taNew - taOld) / taOld : null;
+      // UNIVERSAL revenue-artifact guard FIRST: an implausible single-year multiple (>4x) is a scale/units/
+      // currency artifact even when assets coincidentally grew (a SPAC cash-raise inflates assets the same year),
+      // so it is checked BEFORE the deal-mask — no $1B+ company quadruples revenue via M&A in one year either.
+      if (suspectRevMultiple(revG)) { revArtifactMult = true; continue; }
       const masked = (assetG != null && assetG >= IND_DEAL_MASK.assetJump && revG >= IND_DEAL_MASK.revJump);
       if (masked) { dealMasked = true; continue; }
       cleanYoY.push(revG);
     }
+    if (revArtifactMult) lamps.push('SUSPECT_REVENUE_MULTIPLE');
     if (cleanYoY.length === 0) {
       // no clean YoY -> DROP Axis A + renorm
       lamps.push('NOT_READY:growth');
@@ -453,7 +490,7 @@ function buildIndustrialsAxes(ticker, cohort) {
     cohort,
     gpa: round(gpa), growth: round(growthInput), assetGrowth: round(assetGrowth),
     netShareIssuance: round(netShareIssuance), eff: round(eff),
-    dealMasked, spinoffRebase, staleGrowth,
+    dealMasked, spinoffRebase, staleGrowth, revArtifactMult,
     nAnnualRev: revA.filter(v => v != null).length,
     sharesCoverage: sharesNN.length,
     lamps,
@@ -572,7 +609,7 @@ function buildStaplesAxes(ticker, cohort) {
 
   // --- Axis A: organic growth (deal-mask §4.1 + rev-artifact guard §4.1b + spin-off guard §4.2 UPSTREAM, MEDIAN blend §3) ---
   let growthInput = null;
-  let dealMasked = false, spinoffRebase = false, staleGrowth = false, revArtifact = false;
+  let dealMasked = false, spinoffRebase = false, staleGrowth = false, revArtifact = false, revArtifactMult = false;
   if (spinoffRebaselineGuardStaples(revA)) {
     spinoffRebase = true;
     lamps.push('SPINOFF_REBASE');
@@ -585,16 +622,22 @@ function buildStaplesAxes(ticker, cohort) {
       const revG = rNew / rOld - 1;
       const taNew = taA[i], taOld = taA[i + 1];
       const assetG = (taNew != null && taOld != null && taOld > 0) ? (taNew - taOld) / taOld : null;
+      // UNIVERSAL revenue-artifact guard: an implausible single-year multiple (>4x) is a scale/units/currency
+      // artifact regardless of asset-backing — checked BEFORE the deal-mask so even an apparently-asset-backed
+      // 4x jump is dropped (no $1B+ company quadruples revenue organically or via typical M&A in one year).
+      if (suspectRevMultiple(revG)) { revArtifactMult = true; continue; }
       const masked = (assetG != null && assetG >= STP_DEAL_MASK.assetJump && revG >= STP_DEAL_MASK.revJump);
       if (masked) { dealMasked = true; continue; }
       // §4.1b revenue-discontinuity DATA-ARTIFACT: revenue MORE THAN DOUBLES in one year (revG>=1.00) but the
       // jump is NOT asset-backed (assetG missing or below the deal-mask assetJump) → implausible scale/units
       // artifact, drop the YoY (acquisitions are already caught by `masked` above; this catches the corrupt-data
-      // case the deal-mask misses because assets did NOT rise).
+      // case the deal-mask misses because assets did NOT rise). COMPLEMENTARY to the universal guard above: this
+      // catches the LOWER-multiple non-asset-backed staples case (COKE 3.19x, assets fell) the universal misses.
       const artifact = (revG >= STP_REV_ARTIFACT.revMult && !(assetG != null && assetG >= STP_DEAL_MASK.assetJump));
       if (artifact) { revArtifact = true; continue; }
       cleanYoY.push(revG);
     }
+    if (revArtifactMult) lamps.push('SUSPECT_REVENUE_MULTIPLE'); // universal: implausible >4x single-year multiple dropped
     if (revArtifact) lamps.push('SUSPECT_REVENUE');          // §4.1b advisory: an implausible non-asset-backed rev jump was dropped
     if (cleanYoY.length === 0) {
       lamps.push('NOT_READY:growth');                        // no clean YoY -> DROP Axis A + renorm
@@ -641,7 +684,7 @@ function buildStaplesAxes(ticker, cohort) {
     cohort,
     gpa: round(gpa), growth: round(growthInput), assetGrowth: round(assetGrowth),
     netShareIssuance: round(netShareIssuance), eff: round(eff),
-    dealMasked, spinoffRebase, staleGrowth, revArtifact,
+    dealMasked, spinoffRebase, staleGrowth, revArtifact, revArtifactMult,
     nAnnualRev: revA.filter(v => v != null).length,
     sharesCoverage: sharesNN.length,
     lamps,
@@ -733,7 +776,7 @@ function buildConsdiscAxes(ticker, cohort) {
   // --- Axis A: organic growth (deal-mask §4.1 UPSTREAM, cyclicality blend §3-A/§4.2) ---
   // YoY series newest-first: revA[i]/revA[i+1]-1; deal-mask year t iff assetGrowth_t>=0.25 AND revGrowth_t>=0.20.
   let growthInput = null;
-  let dealMasked = false, staleGrowth = false;
+  let dealMasked = false, staleGrowth = false, revArtifactMult = false;
   const cleanYoY = [];
   for (let i = 0; i < revA.length - 1; i++) {
     const rNew = revA[i], rOld = revA[i + 1];
@@ -741,10 +784,14 @@ function buildConsdiscAxes(ticker, cohort) {
     const revG = rNew / rOld - 1;
     const taNew = taA[i], taOld = taA[i + 1];
     const assetG = (taNew != null && taOld != null && taOld > 0) ? (taNew - taOld) / taOld : null;
+    // UNIVERSAL revenue-artifact guard FIRST (before the deal-mask): an implausible single-year multiple (>4x) is
+    // a scale/units/currency corruption even when assets coincidentally grew, and not a one-year acquisition.
+    if (suspectRevMultiple(revG)) { revArtifactMult = true; continue; }
     const masked = (assetG != null && assetG >= CD_DEAL_MASK.assetJump && revG >= CD_DEAL_MASK.revJump);
     if (masked) { dealMasked = true; continue; }
     cleanYoY.push(revG);
   }
+  if (revArtifactMult) lamps.push('SUSPECT_REVENUE_MULTIPLE');
   if (cleanYoY.length === 0) {
     lamps.push('NOT_READY:growth');                           // no clean YoY -> DROP Axis A + renorm
   } else {
@@ -758,12 +805,14 @@ function buildConsdiscAxes(ticker, cohort) {
       }
     }
     // revCAGR_2y from the clean revenue series (2y geometric); fall back to single clean YoY if <3 clean revs.
+    // When the universal artifact guard fired, the raw rev levels span a corrupt jump → skip CAGR (would re-import
+    // the artifact via cleanRev[0]/cleanRev[2]) and use the single latest clean YoY instead.
     const cleanRev = revA.filter(v => v != null && isFinite(v) && v > 0); // newest-first
     let cagr2y = null;
-    if (cleanRev.length >= 3 && cleanRev[2] > 0) cagr2y = Math.pow(cleanRev[0] / cleanRev[2], 1 / 2) - 1;
+    if (!revArtifactMult && cleanRev.length >= 3 && cleanRev[2] > 0) cagr2y = Math.pow(cleanRev[0] / cleanRev[2], 1 / 2) - 1;
     const latestClean = cleanYoY[0];
     if (cagr2y != null) growthInput = CD_GROWTH_BLEND.wYoY * latestClean + CD_GROWTH_BLEND.wCagr2y * cagr2y;
-    else growthInput = latestClean;                           // <3 clean revs -> single clean YoY (ABS-honest)
+    else growthInput = latestClean;                           // <3 clean revs OR artifact -> single clean YoY (ABS-honest)
     if (staleGrowth) lamps.push('STALE:growth');
   }
   if (dealMasked) lamps.push('DEAL_MASKED');
@@ -780,7 +829,7 @@ function buildConsdiscAxes(ticker, cohort) {
     cohort,
     gpa: round(gpa), growth: round(growthInput), assetGrowth: round(assetGrowth),
     eff: round(eff), shareCAGR: round(shareCAGR),
-    dealMasked, staleGrowth,
+    dealMasked, staleGrowth, revArtifactMult,
     nAnnualRev: revA.filter(v => v != null).length,
     sharesCoverage: sharesNN.length,
     lamps,
@@ -904,7 +953,7 @@ function buildMaterialsAxes(ticker, cohort) {
 
   // --- Axis A: organic growth (deal-mask §4.1 + spin-off/super-cycle guard §4.2 UPSTREAM, 50/50 min-floor §3-A) ---
   let growthInput = null;
-  let dealMasked = false, spinoffRebase = false, staleGrowth = false;
+  let dealMasked = false, spinoffRebase = false, staleGrowth = false, revArtifactMult = false;
   if (spinoffRebaselineGuardMaterials(revA)) {
     spinoffRebase = true;
     lamps.push('SPINOFF_REBASE');
@@ -917,10 +966,15 @@ function buildMaterialsAxes(ticker, cohort) {
       const revG = rNew / rOld - 1;
       const taNew = taA[i], taOld = taA[i + 1];
       const assetG = (taNew != null && taOld != null && taOld > 0) ? (taNew - taOld) / taOld : null;
+      // UNIVERSAL revenue-artifact guard FIRST (before the deal-mask): an implausible single-year multiple (>4x)
+      // is a scale/units/currency corruption even when assets coincidentally grew — a commodity PRICE spike is
+      // legitimate and sub-4x; a >4x jump is not a price move and not a real one-year acquisition.
+      if (suspectRevMultiple(revG)) { revArtifactMult = true; continue; }
       const masked = (assetG != null && assetG >= MT_DEAL_MASK.assetJump && revG >= MT_DEAL_MASK.revJump);
       if (masked) { dealMasked = true; continue; }
       cleanYoY.push(revG);
     }
+    if (revArtifactMult) lamps.push('SUSPECT_REVENUE_MULTIPLE');
     if (cleanYoY.length === 0) {
       lamps.push('NOT_READY:growth');                        // no clean YoY -> DROP Axis A + renorm
     } else {
@@ -961,7 +1015,7 @@ function buildMaterialsAxes(ticker, cohort) {
     cohort,
     gpa: round(gpa), marginStability: round(marginStability), growth: round(growthInput),
     assetGrowth: round(assetGrowth), netShareIssuance: round(netShareIssuance),
-    dealMasked, spinoffRebase, staleGrowth,
+    dealMasked, spinoffRebase, staleGrowth, revArtifactMult,
     revLatest: (revLatest == null ? null : round(revLatest)),
     nAnnualRev: revA.filter(v => v != null).length,
     nOpMargin: opMargins.length,
@@ -1191,7 +1245,7 @@ function buildPharmaAxes(ticker, cohort) {
 
   // --- Axis A: organic growth (deal-mask §4.1 + spin-off guard §4 UPSTREAM, winsorized, cliff-aware blend §3-A) ---
   let growthInput = null;
-  let dealMasked = false, spinoffRebase = false, staleGrowth = false;
+  let dealMasked = false, spinoffRebase = false, staleGrowth = false, revArtifactMult = false;
   if (spinoffRebaselineGuardPharma(revA)) {
     spinoffRebase = true;
     lamps.push('SPINOFF_REBASE');
@@ -1204,10 +1258,15 @@ function buildPharmaAxes(ticker, cohort) {
       const revG = rNew / rOld - 1;
       const taNew = taA[i], taOld = taA[i + 1];
       const assetG = (taNew != null && taOld != null && taOld > 0) ? (taNew - taOld) / taOld : null;
+      // UNIVERSAL revenue-artifact guard FIRST (before the deal-mask): an implausible single-year multiple (>4x)
+      // is a scale/units/currency corruption even when assets coincidentally grew — a legit asset-light drug
+      // launch ramps fast but sub-4x; a >4x single-year jump is a data artifact, not a one-year acquisition.
+      if (suspectRevMultiple(revG)) { revArtifactMult = true; continue; }
       const masked = (assetG != null && assetG >= PH_DEAL_MASK.assetJump && revG >= PH_DEAL_MASK.revJump);
       if (masked) { dealMasked = true; continue; }
       cleanYoY.push(revG);
     }
+    if (revArtifactMult) lamps.push('SUSPECT_REVENUE_MULTIPLE');
     if (cleanYoY.length === 0) {
       lamps.push('NOT_READY:growth');                        // no clean YoY (fully deal-masked) -> DROP Axis A + renorm
     } else {
@@ -1252,7 +1311,7 @@ function buildPharmaAxes(ticker, cohort) {
     cohort,
     growth: round(growthInput), gm: round(gm), eff: round(eff),
     fcfMargin: round(fcfM), opMargin: round(opM),
-    dealMasked, spinoffRebase, staleGrowth,
+    dealMasked, spinoffRebase, staleGrowth, revArtifactMult,
     revLatest: (revLatest == null ? null : round(revLatest)),
     nAnnualRev: revA.filter(v => v != null).length,
     lamps,
@@ -1357,7 +1416,7 @@ function buildItServicesAxes(ticker, cohort) {
 
   // --- Axis T4: organic growth (deal-mask §B.5 + spin-off guard §B.5 UPSTREAM, min-floor blend §B.3) ---
   let growthInput = null;
-  let dealMasked = false, spinoffRebase = false, staleGrowth = false;
+  let dealMasked = false, spinoffRebase = false, staleGrowth = false, revArtifactMult = false;
   if (spinoffRebaselineGuardItServices(revA)) {
     spinoffRebase = true;
     lamps.push('SPINOFF_REBASE');
@@ -1370,10 +1429,15 @@ function buildItServicesAxes(ticker, cohort) {
       const revG = rNew / rOld - 1;
       const taNew = taA[i], taOld = taA[i + 1];
       const assetG = (taNew != null && taOld != null && taOld > 0) ? (taNew - taOld) / taOld : null;
+      // UNIVERSAL revenue-artifact guard FIRST (before the deal-mask): an implausible single-year multiple (>4x)
+      // is a scale/units/currency corruption even when assets coincidentally grew — asset-light SI/consulting
+      // hypergrowth is sub-4x; a >4x single-year jump is a data artifact, not a one-year acquisition.
+      if (suspectRevMultiple(revG)) { revArtifactMult = true; continue; }
       const masked = (assetG != null && assetG >= IT_DEAL_MASK.assetJump && revG >= IT_DEAL_MASK.revJump);
       if (masked) { dealMasked = true; continue; }            // §B.5 only POSITIVE jumps masked (sign-aware)
       cleanYoY.push(revG);
     }
+    if (revArtifactMult) lamps.push('SUSPECT_REVENUE_MULTIPLE');
     if (cleanYoY.length === 0) {
       lamps.push('NOT_READY:growth');                        // no clean YoY (fully deal-masked) -> DROP Axis T4 + renorm
     } else {
@@ -1425,7 +1489,7 @@ function buildItServicesAxes(ticker, cohort) {
     gpa: round(gpa), fcfMargin: round(fcfMargin), opMargin: round(opMargin),
     growth: round(growthInput), netShareIssuance: round(netShareIssuance),
     revPerEmployee: (revPerEmployee == null ? null : Math.round(revPerEmployee)),
-    dealMasked, spinoffRebase, staleGrowth,
+    dealMasked, spinoffRebase, staleGrowth, revArtifactMult,
     revLatest: (revLatest == null ? null : round(revLatest)),
     nAnnualRev: revA.filter(v => v != null).length,
     sharesCoverage: sharesNN.length,
@@ -1529,7 +1593,7 @@ function buildTechHwAxes(ticker, cohort) {
 
   // --- Axis H4: organic growth (deal-mask + spin-off guard UPSTREAM, min-floor blend) ---
   let growthInput = null;
-  let dealMasked = false, spinoffRebase = false, staleGrowth = false;
+  let dealMasked = false, spinoffRebase = false, staleGrowth = false, revArtifactMult = false;
   if (spinoffRebaselineGuardTechHw(revA)) {
     spinoffRebase = true;
     lamps.push('SPINOFF_REBASE');
@@ -1542,10 +1606,16 @@ function buildTechHwAxes(ticker, cohort) {
       const revG = rNew / rOld - 1;
       const taNew = taA[i], taOld = taA[i + 1];
       const assetG = (taNew != null && taOld != null && taOld > 0) ? (taNew - taOld) / taOld : null;
+      // UNIVERSAL revenue-artifact guard FIRST (before the deal-mask): an implausible single-year multiple (>4x)
+      // is a scale/units/pre-rev-ramp artifact even when assets coincidentally grew — catches the near-zero-base
+      // SPAC-era hardware ramps ASTS 16.1x / ONDS 7.4x whose cash-raise inflated assets the same year (the deal-
+      // mask would otherwise eat them as "M&A"), which are not $1B-scale organic growth and not real acquisitions.
+      if (suspectRevMultiple(revG)) { revArtifactMult = true; continue; }
       const masked = (assetG != null && assetG >= THW_DEAL_MASK.assetJump && revG >= THW_DEAL_MASK.revJump);
       if (masked) { dealMasked = true; continue; }            // only POSITIVE jumps masked (sign-aware)
       cleanYoY.push(revG);
     }
+    if (revArtifactMult) lamps.push('SUSPECT_REVENUE_MULTIPLE');
     if (cleanYoY.length === 0) {
       lamps.push('NOT_READY:growth');                        // no clean YoY (fully deal-masked) -> DROP Axis H4 + renorm
     } else {
@@ -1584,7 +1654,7 @@ function buildTechHwAxes(ticker, cohort) {
     cohort,
     gpa: round(gpa), fcfMargin: round(fcfMargin), opMargin: round(opMargin),
     growth: round(growthInput), netShareIssuance: round(netShareIssuance),
-    dealMasked, spinoffRebase, staleGrowth,
+    dealMasked, spinoffRebase, staleGrowth, revArtifactMult,
     revLatest: (revLatest == null ? null : round(revLatest)),
     nAnnualRev: revA.filter(v => v != null).length,
     anyPosRev, anyTotalAssets,
@@ -2305,6 +2375,11 @@ for (const file of files) {
   const dlstExtra = isDlst
     ? { revYoYDlst: gSeriesA.map(round), revYoYDlstYears: fiscalYearsForRev(revA, ticker).slice(0, gSeriesA.length) }
     : {};
+  // saas/fabless: annual revenue YoY series (newest-first) for the UNIVERSAL revenue-artifact guard in
+  // court-score.js (their growth axis = generic gAnnual = gSeriesA[0]; the guard drops an implausible-multiple
+  // latest YoY and falls back to the next clean year). Additive/saas-semi-only → KEIN Feld auf anderen Buckets
+  // (Parität Medtech/D&LST/court-screen-buckets). Index i = YoY[i] (rev[i]/rev[i+1]-1), newest-first.
+  const saasSemiExtra = saasSemiTickers.has(ticker) ? { revYoYSaasSemi: gSeriesA.map(round) } : {};
   // industrials_compounder (CORE): the 5 RAW axis inputs from the snapshot annual arrays, attached as ONE
   // industrials-only field `ind` (deal-mask + spin-off guard applied UPSTREAM). Additiv → KEIN Feld auf
   // Nicht-Industrials-Records (Parität SaaS/Fabless/Medtech/D&LST).
@@ -2368,6 +2443,7 @@ for (const file of files) {
     marketCap: marketCapVal,
     ...medtechExtra,
     ...dlstExtra,
+    ...saasSemiExtra,
     ...indExtra,
     ...stpExtra,
     ...cdExtra,
