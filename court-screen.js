@@ -332,6 +332,42 @@ function suspectRevMultiple(revG, threshold) {
 }
 
 // ===========================================================================
+// UNIVERSAL currency-mix guard (INFY-class snapshot corruption) — SHARED across all annual-block buckets.
+// ===========================================================================
+// A snapshot is CURRENCY-CORRUPT when a SUBSET of its annual fields is reported in a foreign (much larger)
+// currency while the rest are in the meta.reportingCurrency — i.e. the ratio axes whose numerator and
+// denominator land in DIFFERENT currencies become garbage (a USD/INR margin collapses to ~1/FX ≈ 1%, a
+// foreign-currency numerator over a USD denominator explodes to ~FX×ratio). The canonical case (court QA,
+// it_services): INFY (Infosys ADR) carries meta.reportingCurrency='USD' but annualRev (~1.79 TRILLION) and
+// annualNetIncome (~294B) are in INR (~88.6× USD) while annualOpInc/annualGP/annualFCF/annualBalance/marketCap
+// are USD. This makes opMargin=annualOpInc/annualRev (USD/INR) and fcfMargin=annualFCF/annualRev (USD/INR)
+// physically impossible (~0.2%) and drags the it_services REL cohort medians ~1.3pp on fcfMargin/opMargin.
+//
+// THE SIGNAL (currency-agnostic, ticker-free, NO reportingCurrency dependence — a wrong meta tag is exactly the
+// corruption): a HARD STRUCTURAL-ORDERING VIOLATION between two same-block fields at FX scale in the SCORED
+// (latest, index-0) year. Net income can NEVER exceed gross profit (NI = GP − opex − …, opex ≥ 0); operating
+// income can NEVER exceed gross profit (OpInc = GP − SG&A − …). So annualNetIncome[0]/annualGP[0] (or
+// annualOpInc[0]/annualGP[0]) > a modest bound is structurally impossible — UNLESS the numerator and
+// denominator are in different currencies. EMPIRICAL CALIBRATION (2026-06-24, all 1237 classified US names
+// with an annual block, scored-year [0] only): the highest LEGITIMATE NI/GP is RYN 3.02 / GFL 2.80 / XP 2.50
+// (partial/depreciation-inclusive gross-profit accounting in lessors/REITs/foreign-brokers); INFY sits at
+// 48.4 (= FX 88.6 × real net/gross 0.547). The CLEAN GAP [3.02 .. 48.4] is empty — a 10× threshold sits
+// dead-center (3.3× slack above the legit max, 4.8× slack below INFY). Checking ONLY the scored year [0] is
+// deliberate and load-bearing: the court computes every margin from index [0], the REL anchor pool is built
+// from index-[0] margins, and an isolated bad HISTORICAL-year value (e.g. BAM's year-3 annualGP=37M stale
+// point, NI/GP=51.8 there but 0.77 at [0]) is NEVER scored and must NOT trip the guard (verified: a whole-
+// series scan false-positives BAM; a scored-year scan isolates INFY uniquely).
+const CURRENCY_MIX = { niOverGp: 10, opOverGp: 10 };           // structural-impossibility FX-scale thresholds (scored year [0])
+// currencyMixSuspect(gp0, op0, ni0): latest-year annual GROSS PROFIT, OPERATING INCOME, NET INCOME (numbers or
+// null). Returns { suspect, arm, ratio } — suspect=true iff a same-block ordering violation at FX scale fires.
+function currencyMixSuspect(gp0, op0, ni0) {
+  if (gp0 == null || !isFinite(gp0) || gp0 <= 0) return { suspect: false };
+  if (ni0 != null && isFinite(ni0) && ni0 > 0 && ni0 / gp0 >= CURRENCY_MIX.niOverGp) return { suspect: true, arm: 'NI_GG_GP', ratio: ni0 / gp0 };
+  if (op0 != null && isFinite(op0) && op0 > 0 && op0 / gp0 >= CURRENCY_MIX.opOverGp) return { suspect: true, arm: 'OP_GG_GP', ratio: op0 / gp0 };
+  return { suspect: false };
+}
+
+// ===========================================================================
 // industrials_compounder (CORE) — 5-axis RAW extraction from snapshots (Spec §2-§4)
 // ===========================================================================
 // ADDITIV/parity-safe: only fires for tickers in indCohortByTicker (court-buckets industrials_{heavy,light}).
@@ -387,7 +423,13 @@ function buildIndustrialsAxes(ticker, cohort) {
   const taA = bal.map(b => (b && b.totalAssets != null && isFinite(b.totalAssets)) ? b.totalAssets : null);
   // annualShares: RAW number array, Vintage-B only. <2 non-null -> Axis E DROP + ISSUANCE_NOT_READY.
   const sharesAll = Array.isArray(a.annualShares) ? a.annualShares.map(num) : [];
+  const niA = (a.annualNetIncome || []).map(num);
   const lamps = [];
+
+  // --- UNIVERSAL currency-mix guard (INFY-class): scored-year [0] same-block ordering violation at FX scale ---
+  const ccMix = currencyMixSuspect(gpA[0], opA[0], niA[0]);
+  const currencySuspect = ccMix.suspect;
+  if (currencySuspect) lamps.push('CURRENCY_SUSPECT');           // withheld + dropped from REL anchor DOWNSTREAM (court-score.js)
 
   // --- Axis B: GP/assets ---
   let gpa = null;
@@ -491,6 +533,7 @@ function buildIndustrialsAxes(ticker, cohort) {
     gpa: round(gpa), growth: round(growthInput), assetGrowth: round(assetGrowth),
     netShareIssuance: round(netShareIssuance), eff: round(eff),
     dealMasked, spinoffRebase, staleGrowth, revArtifactMult,
+    ...(currencySuspect ? { currencySuspect: true, currencySuspectArm: ccMix.arm, currencySuspectRatio: round(ccMix.ratio) } : {}), // additive ONLY when fired -> clean records byte-identical (parity)
     nAnnualRev: revA.filter(v => v != null).length,
     sharesCoverage: sharesNN.length,
     lamps,
@@ -571,7 +614,13 @@ function buildStaplesAxes(ticker, cohort) {
   // annualShares: RAW number array, Vintage-B only. <2 non-null -> Axis E DROP + ISSUANCE_NOT_READY.
   const sharesAll = Array.isArray(a.annualShares) ? a.annualShares.map(num) : [];
   const sbcAll = Array.isArray(a.annualSBC) ? a.annualSBC.map(num) : []; // BONUS dilution tell (NOT scored)
+  const niA = (a.annualNetIncome || []).map(num);
   const lamps = [];
+
+  // --- UNIVERSAL currency-mix guard (INFY-class): scored-year [0] same-block ordering violation at FX scale ---
+  const ccMix = currencyMixSuspect(gpA[0], opA[0], niA[0]);
+  const currencySuspect = ccMix.suspect;
+  if (currencySuspect) lamps.push('CURRENCY_SUSPECT');           // withheld + dropped from REL anchor DOWNSTREAM (court-score.js)
 
   // --- Axis B: GP/assets ---
   let gpa = null;
@@ -673,7 +722,6 @@ function buildStaplesAxes(ticker, cohort) {
     if (sbc0 != null && (sbc0 / rev0) > sbcThresh) lamps.push('SBC_HIGH');
   }
   // IMPAIRMENT_BLIND advisory (§4.3/§5): large negative net-income YoY coincident with revenue/asset decline.
-  const niA = (a.annualNetIncome || []).map(num);
   if (niA[0] != null && niA[1] != null && niA[1] !== 0 && (niA[0] - niA[1]) / Math.abs(niA[1]) <= -0.25) {
     const revDown = (revA[0] != null && revA[1] != null && revA[1] > 0) ? (revA[0] / revA[1] - 1) < 0 : false;
     const taDown = (taA[0] != null && taA[1] != null && taA[1] > 0) ? (taA[0] / taA[1] - 1) < 0 : false;
@@ -685,6 +733,7 @@ function buildStaplesAxes(ticker, cohort) {
     gpa: round(gpa), growth: round(growthInput), assetGrowth: round(assetGrowth),
     netShareIssuance: round(netShareIssuance), eff: round(eff),
     dealMasked, spinoffRebase, staleGrowth, revArtifact, revArtifactMult,
+    ...(currencySuspect ? { currencySuspect: true, currencySuspectArm: ccMix.arm, currencySuspectRatio: round(ccMix.ratio) } : {}), // additive ONLY when fired -> clean records byte-identical (parity)
     nAnnualRev: revA.filter(v => v != null).length,
     sharesCoverage: sharesNN.length,
     lamps,
@@ -738,7 +787,13 @@ function buildConsdiscAxes(ticker, cohort) {
   const taA = bal.map(b => (b && b.totalAssets != null && isFinite(b.totalAssets)) ? b.totalAssets : null);
   // annualShares: RAW number array, Vintage-B only. <2 non-null -> no dilution signal + ISSUANCE_NOT_READY.
   const sharesAll = Array.isArray(a.annualShares) ? a.annualShares.map(num) : [];
+  const niA = (a.annualNetIncome || []).map(num);
   const lamps = [];
+
+  // --- UNIVERSAL currency-mix guard (INFY-class): scored-year [0] same-block ordering violation at FX scale ---
+  const ccMix = currencyMixSuspect(gpA[0], opA[0], niA[0]);
+  const currencySuspect = ccMix.suspect;
+  if (currencySuspect) lamps.push('CURRENCY_SUSPECT');           // withheld + dropped from REL anchor DOWNSTREAM (court-score.js)
 
   // --- Axis B: GP/assets ---
   let gpa = null;
@@ -830,6 +885,7 @@ function buildConsdiscAxes(ticker, cohort) {
     gpa: round(gpa), growth: round(growthInput), assetGrowth: round(assetGrowth),
     eff: round(eff), shareCAGR: round(shareCAGR),
     dealMasked, staleGrowth, revArtifactMult,
+    ...(currencySuspect ? { currencySuspect: true, currencySuspectArm: ccMix.arm, currencySuspectRatio: round(ccMix.ratio) } : {}), // additive ONLY when fired -> clean records byte-identical (parity)
     nAnnualRev: revA.filter(v => v != null).length,
     sharesCoverage: sharesNN.length,
     lamps,
@@ -908,7 +964,13 @@ function buildMaterialsAxes(ticker, cohort) {
   const taA = bal.map(b => (b && b.totalAssets != null && isFinite(b.totalAssets)) ? b.totalAssets : null);
   // annualShares: RAW number array, Vintage-B only. <2 non-null -> Axis E DROP + ISSUANCE_NOT_READY.
   const sharesAll = Array.isArray(a.annualShares) ? a.annualShares.map(num) : [];
+  const niA = (a.annualNetIncome || []).map(num);
   const lamps = [];
+
+  // --- UNIVERSAL currency-mix guard (INFY-class): scored-year [0] same-block ordering violation at FX scale ---
+  const ccMix = currencyMixSuspect(gpA[0], opA[0], niA[0]);
+  const currencySuspect = ccMix.suspect;
+  if (currencySuspect) lamps.push('CURRENCY_SUSPECT');           // withheld + dropped from REL anchor DOWNSTREAM (court-score.js)
 
   // --- Axis B: GP/assets ---
   let gpa = null;
@@ -1016,6 +1078,7 @@ function buildMaterialsAxes(ticker, cohort) {
     gpa: round(gpa), marginStability: round(marginStability), growth: round(growthInput),
     assetGrowth: round(assetGrowth), netShareIssuance: round(netShareIssuance),
     dealMasked, spinoffRebase, staleGrowth, revArtifactMult,
+    ...(currencySuspect ? { currencySuspect: true, currencySuspectArm: ccMix.arm, currencySuspectRatio: round(ccMix.ratio) } : {}), // additive ONLY when fired -> clean records byte-identical (parity)
     revLatest: (revLatest == null ? null : round(revLatest)),
     nAnnualRev: revA.filter(v => v != null).length,
     nOpMargin: opMargins.length,
@@ -1085,7 +1148,13 @@ function buildEnergyAxes(ticker, cohort) {
   const bal = Array.isArray(a.annualBalance) ? a.annualBalance : [];
   const taA = bal.map(b => (b && b.totalAssets != null && isFinite(b.totalAssets)) ? b.totalAssets : null);
   const sharesAll = Array.isArray(a.annualShares) ? a.annualShares.map(num) : [];
+  const niA = (a.annualNetIncome || []).map(num);
   const lamps = [];
+
+  // --- UNIVERSAL currency-mix guard (INFY-class): scored-year [0] same-block ordering violation at FX scale ---
+  const ccMix = currencyMixSuspect(gpA[0], opA[0], niA[0]);
+  const currencySuspect = ccMix.suspect;
+  if (currencySuspect) lamps.push('CURRENCY_SUSPECT');           // withheld + dropped from REL anchor DOWNSTREAM (court-score.js)
 
   // --- Axis B: ROCE surrogate = opInc/totalAssets (the through-cycle capital-return pillar) ---
   let roce = null;
@@ -1155,6 +1224,7 @@ function buildEnergyAxes(ticker, cohort) {
     roce: round(roce), fcfMargin: round(fcfMargin), gpa: round(gpa),
     assetGrowth: round(assetGrowth), netShareIssuance: round(netShareIssuance),
     dealMasked, spinoffRebase, latestRevYoY: round(latestRevYoY),
+    ...(currencySuspect ? { currencySuspect: true, currencySuspectArm: ccMix.arm, currencySuspectRatio: round(ccMix.ratio) } : {}), // additive ONLY when fired -> clean records byte-identical (parity)
     revLatest: (revLatest == null ? null : round(revLatest)),
     nAnnualRev: revA.filter(v => v != null).length,
     sharesCoverage: sharesNN.length,
@@ -1227,7 +1297,13 @@ function buildPharmaAxes(ticker, cohort) {
   const fcfA = (a.annualFCF || []).map(num);
   const bal = Array.isArray(a.annualBalance) ? a.annualBalance : [];
   const taA = bal.map(b => (b && b.totalAssets != null && isFinite(b.totalAssets)) ? b.totalAssets : null);
+  const niA = (a.annualNetIncome || []).map(num);
   const lamps = [];
+
+  // --- UNIVERSAL currency-mix guard (INFY-class): scored-year [0] same-block ordering violation at FX scale ---
+  const ccMix = currencyMixSuspect(gpA[0], opA[0], niA[0]);
+  const currencySuspect = ccMix.suspect;
+  if (currencySuspect) lamps.push('CURRENCY_SUSPECT');           // withheld + dropped from REL anchor DOWNSTREAM (court-score.js)
 
   // --- Axis B: gross margin = annualGP[0]/annualRev[0] (null on a no-GP royalty name -> DROP+renorm) ---
   let gm = null;
@@ -1312,6 +1388,7 @@ function buildPharmaAxes(ticker, cohort) {
     growth: round(growthInput), gm: round(gm), eff: round(eff),
     fcfMargin: round(fcfM), opMargin: round(opM),
     dealMasked, spinoffRebase, staleGrowth, revArtifactMult,
+    ...(currencySuspect ? { currencySuspect: true, currencySuspectArm: ccMix.arm, currencySuspectRatio: round(ccMix.ratio) } : {}), // additive ONLY when fired -> clean records byte-identical (parity)
     revLatest: (revLatest == null ? null : round(revLatest)),
     nAnnualRev: revA.filter(v => v != null).length,
     lamps,
@@ -1385,7 +1462,13 @@ function buildItServicesAxes(ticker, cohort) {
   const bal = Array.isArray(a.annualBalance) ? a.annualBalance : [];
   const taA = bal.map(b => (b && b.totalAssets != null && isFinite(b.totalAssets)) ? b.totalAssets : null);
   const sharesAll = Array.isArray(a.annualShares) ? a.annualShares.map(num) : [];
+  const niA = (a.annualNetIncome || []).map(num);
   const lamps = [];
+
+  // --- UNIVERSAL currency-mix guard (INFY-class): scored-year [0] same-block ordering violation at FX scale ---
+  const ccMix = currencyMixSuspect(gpA[0], opA[0], niA[0]);
+  const currencySuspect = ccMix.suspect;
+  if (currencySuspect) lamps.push('CURRENCY_SUSPECT');           // withheld + dropped from REL anchor DOWNSTREAM (court-score.js)
 
   // --- Axis T1: GP/assets (Novy-Marx; the asset-light low-capital-compounding proxy, the lead axis) ---
   let gpa = null;
@@ -1490,6 +1573,7 @@ function buildItServicesAxes(ticker, cohort) {
     growth: round(growthInput), netShareIssuance: round(netShareIssuance),
     revPerEmployee: (revPerEmployee == null ? null : Math.round(revPerEmployee)),
     dealMasked, spinoffRebase, staleGrowth, revArtifactMult,
+    ...(currencySuspect ? { currencySuspect: true, currencySuspectArm: ccMix.arm, currencySuspectRatio: round(ccMix.ratio) } : {}), // additive ONLY when fired -> clean records byte-identical (parity)
     revLatest: (revLatest == null ? null : round(revLatest)),
     nAnnualRev: revA.filter(v => v != null).length,
     sharesCoverage: sharesNN.length,
@@ -1562,7 +1646,13 @@ function buildTechHwAxes(ticker, cohort) {
   const bal = Array.isArray(a.annualBalance) ? a.annualBalance : [];
   const taA = bal.map(b => (b && b.totalAssets != null && isFinite(b.totalAssets)) ? b.totalAssets : null);
   const sharesAll = Array.isArray(a.annualShares) ? a.annualShares.map(num) : [];
+  const niA = (a.annualNetIncome || []).map(num);
   const lamps = [];
+
+  // --- UNIVERSAL currency-mix guard (INFY-class): scored-year [0] same-block ordering violation at FX scale ---
+  const ccMix = currencyMixSuspect(gpA[0], opA[0], niA[0]);
+  const currencySuspect = ccMix.suspect;
+  if (currencySuspect) lamps.push('CURRENCY_SUSPECT');           // withheld + dropped from REL anchor DOWNSTREAM (court-score.js)
 
   // --- Axis H1: GP/assets (Novy-Marx; the franchise vs commodity-contract-mfg separator, the lead axis) ---
   let gpa = null;
@@ -1655,6 +1745,7 @@ function buildTechHwAxes(ticker, cohort) {
     gpa: round(gpa), fcfMargin: round(fcfMargin), opMargin: round(opMargin),
     growth: round(growthInput), netShareIssuance: round(netShareIssuance),
     dealMasked, spinoffRebase, staleGrowth, revArtifactMult,
+    ...(currencySuspect ? { currencySuspect: true, currencySuspectArm: ccMix.arm, currencySuspectRatio: round(ccMix.ratio) } : {}), // additive ONLY when fired -> clean records byte-identical (parity)
     revLatest: (revLatest == null ? null : round(revLatest)),
     nAnnualRev: revA.filter(v => v != null).length,
     anyPosRev, anyTotalAssets,
@@ -1710,6 +1801,11 @@ function buildBankAxes(ticker, cohort) {
   const { ni, ta, teq } = snBankAnnual(a);
   const lamps = [];
 
+  // --- UNIVERSAL currency-mix guard (INFY-class): scored-year [0] same-block ordering violation at FX scale ---
+  const ccMix = currencyMixSuspect(null, null, ni[0]);          // banks: no GP denominator -> suspect:false (parity-safe)
+  const currencySuspect = ccMix.suspect;
+  if (currencySuspect) lamps.push('CURRENCY_SUSPECT');           // withheld + dropped from REL anchor DOWNSTREAM (court-score.js)
+
   // --- Axis B1: through-cycle ROA = mean of available NI[i]/totalAssets[i] over i=0..3 (4y-avg damper) ---
   let roaThruCycle = null;
   const roas = [];
@@ -1760,6 +1856,7 @@ function buildBankAxes(ticker, cohort) {
     anyPositiveNI,
     totalAssetsLatest: (ta[0] == null ? null : round(ta[0])),
     equityCoverage: (capitalAdequacy != null),
+    ...(currencySuspect ? { currencySuspect: true, currencySuspectArm: ccMix.arm, currencySuspectRatio: round(ccMix.ratio) } : {}), // additive ONLY when fired -> clean records byte-identical (parity)
     lamps,
   };
 }
@@ -1837,6 +1934,11 @@ function buildReitAxes(ticker, cohort) {
   const tc = bal.map(b => (b && b.totalCash != null && isFinite(b.totalCash)) ? b.totalCash : null);         // RAW
   const lamps = [];
 
+  // --- UNIVERSAL currency-mix guard (INFY-class): scored-year [0] same-block ordering violation at FX scale ---
+  const ccMix = currencyMixSuspect(null, op[0], ni[0]);         // REITs: no GP denominator -> suspect:false (parity-safe)
+  const currencySuspect = ccMix.suspect;
+  if (currencySuspect) lamps.push('CURRENCY_SUSPECT');           // withheld + dropped from REL anchor DOWNSTREAM (court-score.js)
+
   // --- Axis R1: NOI-margin proxy = annualOpInc[0]/annualRev[0] ---
   let opMargin = null;
   if (op[0] != null && rev[0] != null && rev[0] > 0) opMargin = op[0] / rev[0];
@@ -1893,6 +1995,7 @@ function buildReitAxes(ticker, cohort) {
     revG3: round(revG3),
     ndGA: round(ndGA),
     positiveRevYears,
+    ...(currencySuspect ? { currencySuspect: true, currencySuspectArm: ccMix.arm, currencySuspectRatio: round(ccMix.ratio) } : {}), // additive ONLY when fired -> clean records byte-identical (parity)
     revLatest: (revLatest == null ? null : round(revLatest)),
     totalAssetsLatest: (ta[0] == null ? null : round(ta[0])),
     ffoCoverage: (ffoAssets != null),
@@ -1951,6 +2054,11 @@ function buildCapmktAxes(ticker, cohort) {
   const sh = (a.annualShares || []).map(cmUnwrap);              // raw-number array (~46% coverage)
   const lamps = [];
 
+  // --- UNIVERSAL currency-mix guard (INFY-class): scored-year [0] same-block ordering violation at FX scale ---
+  const ccMix = currencyMixSuspect(null, op[0], null);          // capmkt: no GP denominator -> suspect:false (parity-safe)
+  const currencySuspect = ccMix.suspect;
+  if (currencySuspect) lamps.push('CURRENCY_SUSPECT');           // withheld + dropped from REL anchor DOWNSTREAM (court-score.js)
+
   // --- Axis C1: operating-margin LEVEL = annualOpInc[0]/annualRev[0] ---
   let opMargin = null;
   if (op[0] != null && rev[0] != null && rev[0] > 0) opMargin = op[0] / rev[0];
@@ -2002,6 +2110,7 @@ function buildCapmktAxes(ticker, cohort) {
     fcfMargin: round(fcfMargin),
     netIssuance: round(netIssuance),
     positiveRevYears,
+    ...(currencySuspect ? { currencySuspect: true, currencySuspectArm: ccMix.arm, currencySuspectRatio: round(ccMix.ratio) } : {}), // additive ONLY when fired -> clean records byte-identical (parity)
     revLatest: (revLatest == null ? null : round(revLatest)),
     nAnnualOpM: opMs.length,
     lamps,

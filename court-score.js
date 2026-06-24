@@ -1580,6 +1580,26 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     }
   }
 
+  // ===========================================================================
+  // UNIVERSAL currency-mix guard (INFY-class) — GENERAL PRE-ANCHOR pass (protects ALL buckets).
+  // ===========================================================================
+  // A currency-corrupt record (a subset of annual fields in a foreign >>currency; detected UPSTREAM by
+  // court-screen.js currencyMixSuspect via a scored-year [0] same-block ordering violation at FX scale, e.g.
+  // INFY annualNetIncome/annualGP = 48× — physically impossible) has GARBAGE ratio axes (USD/INR margins ~0.2%).
+  // A corrupt score is worse than no score (the honest WITHHOLD): the member is (1) DROPPED from the per-cohort
+  // REL anchor pool here (so it cannot drag the cohort median/MAD — see the anchor `.filter(!_currencySuspect)`
+  // below) AND (2) score=null + CURRENCY_SUSPECT lamp + excluded[] (reason CURRENCY_SUSPECT) in the scoring loop.
+  // The flag rides on whichever per-bucket axis field is attached (it/thw/ind/stp/cd/mt/en/ph/bk/re/cm — banks/
+  // reits/capmkt have no GP denominator so currencyMixSuspect always returns false there → never fires →
+  // parity-safe). Reading from the SINGLE present field keeps this bucket-neutral with NO hardcoded ticker.
+  const CC_AXIS_FIELDS = ['it', 'thw', 'ind', 'stp', 'cd', 'mt', 'en', 'ph', 'bk', 're', 'cm'];
+  for (const m of members) {
+    for (const fld of CC_AXIS_FIELDS) {
+      const ax = m[fld];
+      if (ax && ax.currencySuspect === true) { m._currencySuspect = true; break; } // set ONLY when fired -> clean members never carry the field (parity)
+    }
+  }
+
   // Roh-Achswerte für Stats (cross-sectional Median/MAD): nutze winsorisierte Werte
   // For medtech growth: use _growthMedtech (Fix D organic + winsorize at 1.0) for Stats AND scoring (Fix D
   // ersetzt den separaten _growthMedtechAdj-Discount-Pfad; beide sind nun identisch = organic-winsorized).
@@ -1758,7 +1778,8 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
   const stats = {};
   for (const ax of F.axes) {
     if (ax.key === 'a2Forward') continue; // composite axis -> anchors computed separately (statsA2)
-    const vals = members.map(m => rawOfStats(m, ax.key)).filter(v => v != null && isFinite(v));
+    // currency-suspect members are DROPPED from the REL anchor pool (their ratio axes are corrupt-scale garbage)
+    const vals = members.filter(m => !m._currencySuspect).map(m => rawOfStats(m, ax.key)).filter(v => v != null && isFinite(v));
     stats[ax.key] = { median: median(vals), mad: mad(vals), n: vals.length };
   }
   // D&LST (Spec §1.2): REL cross-sektionale Stats PRO KOHORTE (dx z-scored gegen dx, tools gegen tools) —
@@ -1767,7 +1788,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
   const statsByCohort = {};
   if (F.cohortAware) {
     for (const coh of ['dx', 'tools']) {
-      const cohMembers = members.filter(m => m._cohort === coh);
+      const cohMembers = members.filter(m => m._cohort === coh && !m._currencySuspect);
       const s = {};
       for (const ax of F.axes) {
         if (ax.key === 'a2Forward') continue;
@@ -2481,8 +2502,22 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     }
     m.stage = stageOf(F, m.fcfMargin);
 
+    // UNIVERSAL currency-mix guard (INFY-class) — GENERAL score WITHHOLD (protects ALL buckets, overrides every
+    // bucket branch above). A currency-corrupt record (detected UPSTREAM, m._currencySuspect set in the pre-anchor
+    // pass) has GARBAGE ratio axes; a corrupt score is worse than no score → the honest WITHHOLD: score=null +
+    // CURRENCY_SUSPECT lamp + excluded[] (reason CURRENCY_SUSPECT, via the per-bucket R.excluded = score==null filter).
+    // The member was ALSO already dropped from the per-cohort REL anchor pool (the anchor `.filter(!_currencySuspect)`)
+    // so it cannot drag the cohort median/MAD. NO hardcoded ticker; bucket-neutral; the exclusionReason wins over any
+    // OUT_OF_SEGMENT shell/preexploration reason already set (currency-corruption is the more fundamental withhold).
+    if (m._currencySuspect) {
+      m.exclusionReason = 'CURRENCY_SUSPECT';
+      m.score = null;                                   // SI-4: lands in excluded[]
+      m.headlineShortlist = false;
+    }
+
     // Lampen
     const L = [];
+    if (m._currencySuspect) L.push('CURRENCY_SUSPECT');
     if (m.sbcPct != null && m.sbcPct > 0.50) L.push('IPO-SBC-distortion');
     else if (m.sbcPct != null && m.sbcPct > 0.15) L.push('SBC>15%');
     if (m.scaleRevM > MEGACAP_REVM) L.push('mega-cap');

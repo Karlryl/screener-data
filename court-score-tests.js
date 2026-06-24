@@ -2730,6 +2730,76 @@ test('it_services SI-4: Out-class / pre-revenue members carry score=null in excl
   for (const m of itR.excluded) assert(m.score == null, `${m.ticker} in excluded[] sollte score=null haben, hat ${m.score}`);
 });
 
+// =================== UNIVERSAL currency-mix guard (CURRENCY_SUSPECT, INFY-class snapshot corruption) ===========
+// A currency-corrupt record (a subset of annual fields in a foreign >>currency while the rest are reportingCurrency
+// → ratio axes whose num/den land in different currencies are garbage) is detected via a SCORED-YEAR [0] same-block
+// structural-ordering violation at FX scale (annualNetIncome[0]/annualGP[0] >= 10× OR annualOpInc[0]/annualGP[0] >=
+// 10× — both physically impossible UNLESS num/den differ in currency). The HONEST WITHHOLD: score=null + CURRENCY_
+// SUSPECT lamp + excluded[] (reason CURRENCY_SUSPECT) AND DROPPED from the per-cohort REL anchor (so it cannot drag
+// the cohort median). INFY (Infosys ADR: meta USD but annualRev/annualNetIncome in INR ~88.6×; NI/GP=48.4) is the
+// canonical case + the calibrated trigger. NO hardcoded ticker; economic/structural signal only.
+test('CURRENCY_SUSPECT (live): INFY withheld — score=null + CURRENCY_SUSPECT lamp + excluded[] reason CURRENCY_SUSPECT', () => {
+  const infy = IT_.find(m => m.ticker === 'INFY');
+  assert(infy != null, 'INFY sollte im it_services-Bucket sein (klassifiziert, marquee)');
+  assert(infy.score === null, `INFY score sollte WITHHELD (null) sein (currency-corrupt), ist ${infy.score}`);
+  assert(infy.exclusionReason === 'CURRENCY_SUSPECT', `INFY exclusionReason sollte CURRENCY_SUSPECT sein, ist ${infy.exclusionReason}`);
+  assert(Array.isArray(infy.lamps) && infy.lamps.includes('CURRENCY_SUSPECT'), `INFY sollte CURRENCY_SUSPECT-Lampe tragen, lamps=${JSON.stringify(infy.lamps)}`);
+  // upstream detector surfaced on the axis field (structural ratio NI/GP ~48× = FX 88.6 × real net/gross 0.55)
+  assert(infy.it && infy.it.currencySuspect === true, `INFY it.currencySuspect sollte true sein, ist ${infy.it && infy.it.currencySuspect}`);
+  assert(infy.it.currencySuspectArm === 'NI_GG_GP', `INFY arm sollte NI_GG_GP sein, ist ${infy.it.currencySuspectArm}`);
+  assert(infy.it.currencySuspectRatio != null && infy.it.currencySuspectRatio >= 10, `INFY ratio sollte >=10 sein (impossible), ist ${infy.it.currencySuspectRatio}`);
+  // lands in excluded[] with the reason
+  const inExcl = itR.excluded.find(m => m.ticker === 'INFY');
+  assert(inExcl != null && inExcl.exclusionReason === 'CURRENCY_SUSPECT', `INFY sollte in excluded[] mit reason CURRENCY_SUSPECT sein, ist ${inExcl && inExcl.exclusionReason}`);
+});
+
+test('CURRENCY_SUSPECT (live): INFY DROPPED from the it_services REL anchor (cohort median not dragged)', () => {
+  // The anchor n MUST exclude INFY: every per-axis anchor.n <= (classified - currency-suspect-count).
+  const ccCount = IT_.filter(m => m._currencySuspect === true).length;
+  assert(ccCount >= 1, `mindestens 1 currency-suspect (INFY) erwartet, ist ${ccCount}`);
+  // recompute the cohort fcfMargin/opMargin median over the FULL pool vs the no-suspect pool; the published anchor
+  // median MUST equal the no-suspect median (proving the suspect was dropped from the anchor, not just score-nulled).
+  const med = arr => { const s = arr.filter(v => v != null && isFinite(v)).sort((a, b) => a - b); if (!s.length) return null; const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+  const fcfNoSus = IT_.filter(m => m._currencySuspect !== true).map(m => (m.it || {}).fcfMargin);
+  const opNoSus = IT_.filter(m => m._currencySuspect !== true).map(m => (m.it || {}).opMargin);
+  const fcfWith = IT_.map(m => (m.it || {}).fcfMargin);
+  const opWith = IT_.map(m => (m.it || {}).opMargin);
+  assert(itR.anchors && itR.anchors.fcfMargin && itR.anchors.opMargin, 'it_services anchors fehlen');
+  assert(Math.abs(itR.anchors.fcfMargin.median - med(fcfNoSus)) < 1e-9,
+    `fcfMargin-Anker (${itR.anchors.fcfMargin.median}) sollte == no-suspect-Median (${med(fcfNoSus)}) sein — INFY NICHT im Anker-Pool`);
+  assert(Math.abs(itR.anchors.opMargin.median - med(opNoSus)) < 1e-9,
+    `opMargin-Anker (${itR.anchors.opMargin.median}) sollte == no-suspect-Median (${med(opNoSus)}) sein — INFY NICHT im Anker-Pool`);
+  // and the WITHHOLD must MATTER: the corrected median is strictly ABOVE the with-suspect median (INFY's ~0.2% margins
+  // dragged it down) — the de-contamination raises fcfMargin/opMargin back toward the true ~11-12%.
+  assert(med(fcfNoSus) > med(fcfWith), `fcfMargin-Median sollte OHNE INFY HÖHER sein (${med(fcfNoSus)} > ${med(fcfWith)})`);
+  assert(med(opNoSus) > med(opWith), `opMargin-Median sollte OHNE INFY HÖHER sein (${med(opNoSus)} > ${med(opWith)})`);
+  // SI-5 still balances with the currency withhold counted as excluded
+  assert(itR.classifiedCount === itR.scoredCount + itR.excludedCount, 'SI-5 nach CURRENCY_SUSPECT-Withhold verletzt');
+});
+
+test('CURRENCY_SUSPECT (live, no-false-positive control): NO other name in ANY bucket is currency-withheld', () => {
+  const firing = [];
+  for (const b of Object.keys(doc)) {
+    const v = doc[b]; if (!v || !Array.isArray(v.members)) continue;
+    for (const m of v.members) {
+      if (m.exclusionReason === 'CURRENCY_SUSPECT' || (Array.isArray(m.lamps) && m.lamps.includes('CURRENCY_SUSPECT'))) {
+        firing.push({ b, t: m.ticker, score: m.score });
+      }
+    }
+  }
+  // INFY is the ONLY calibrated trigger across the whole classified universe (gap [legit-max 3.0× .. INFY 48.4×]).
+  assert(firing.length === 1 && firing[0].t === 'INFY',
+    `CURRENCY_SUSPECT sollte NUR auf INFY feuern (kein Fehlalarm auf legit low-margin/distributor/lessor); firing=${JSON.stringify(firing)}`);
+  // a currency-suspect name is ALWAYS withheld (score=null) — never a misleading headline score.
+  for (const f of firing) assert(f.score == null, `${f.b}/${f.t} ist currency-suspect aber NICHT withheld (score=${f.score})`);
+  // positive-control: known legit low-margin / high-revenue names (commodity traders, distributors, brokers, lessors,
+  // royalty trusts) that are NEAR the structural ratios but legitimately so must NEVER be currency-withheld.
+  const fireSet = new Set(firing.map(f => f.t));
+  for (const legit of ['BAM', 'GOLD', 'AMR', 'SNEX', 'BG', 'ADM', 'RYN', 'GFL', 'XP', 'AER', 'NMR']) {
+    assert(!fireSet.has(legit), `${legit} ist ein legit low-margin/high-rev Name und darf NICHT currency-withheld werden (Fehlalarm)`);
+  }
+});
+
 test('it_services SI-3: normTableId + cohort + comparabilityNote (absKaliber cross-bucket, PEOPLE_LEVERAGE_BLIND disclosed)', () => {
   assert(itR.normTableId === 'it-services-norms-2026-06-23', `normTableId fehlt/falsch: ${itR.normTableId}`);
   assert(itR.cohort === 'it_services', `cohort falsch: ${itR.cohort}`);
