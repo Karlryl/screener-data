@@ -1191,7 +1191,7 @@ test('diagnostics_lst: efficiency = FCF primär, opMargin-Fallback bei >15pp-Dis
   }
 });
 
-test('diagnostics_lst: cohort-aware GM-NORM — dx gm-floor .50, tools gm-floor .30 (v1.1 Fix F) (normTableId pro Member)', () => {
+test('diagnostics_lst: cohort-aware GM-NORM — dx gm-floor .50, tools gm-floor .28 (v1.2 Fix 1) (normTableId pro Member)', () => {
   for (const m of DL) {
     assert(m.normTableId === 'dlst-norms-2026-06-20', `${m.ticker} normTableId falsch: ${m.normTableId}`);
   }
