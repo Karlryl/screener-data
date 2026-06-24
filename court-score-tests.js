@@ -3435,6 +3435,178 @@ test('capmkt_fee_core PARITÄT: KEIN capmkt-only Feld auf den anderen Buckets (L
   }
 });
 
+// ===========================================================================
+// tech_hardware_quality (CORE court bucket) — ONE durable hardware-FRANCHISE cohort. Council/court triage 2026-06-24
+// (the ONE remaining quality-compounder gap). 5 SCORED axes {gpa, fcfMargin, opMargin, growth, netIssuance} via the
+// REUSED engine absKaliberItServices (the tech_hardware axis set is byte-identical to it_services; only the cohort NORMS
+// differ — the 22 existing CORE/court buckets BYTE-UNTOUCHED, parity guard below + the tag28 fixture-hash gate). THE
+// THESIS: the bimodal HARDWARE peer group re-ranked by an absolute-anchor so margin-stable franchises (APH/KEYS/GRMN/
+// MSI/TDY/CGNX/AMAT/BMI/FTV) beat commodity contract-manufacturers (FLEX/JBL/BHE/SANM/PLXS) + loss-making cyclicals
+// (ASTS/ONDS/OUST) with NO contamination gate — the absolute-floor sinks the commodity/loss tail off-headline and the
+// SI-4 SHELL gate excludes the revenue-less shells.
+// ===========================================================================
+const thwR = doc.tech_hardware_quality;
+const THW_ = thwR ? thwR.members : [];
+
+test('tech_hardware_quality: bucket exists with members; label nennt v0 + hardware franchise quality', () => {
+  assert(thwR && Array.isArray(thwR.members) && THW_.length > 0, 'tech_hardware_quality bucket fehlt/leer');
+  assert(/Tech-Hardware-Quality v0/.test(thwR.label || ''), `label sollte v0 nennen: ${thwR.label}`);
+  assert(/franchise|hardware|margin/i.test(thwR.label || ''), 'label sollte franchise/hardware/margin nennen');
+});
+
+test('tech_hardware_quality MARQUEE: APH/KEYS/GRMN/MSI/TDY/CGNX/AMAT/BMI/FTV classify+present AND SCORED (never excluded) survive a sane rank (fail-loud)', () => {
+  const MARQUEE = ['APH', 'KEYS', 'GRMN', 'MSI', 'TDY', 'CGNX', 'AMAT', 'BMI', 'FTV'];
+  // COVERAGE = present in members[] (classified+reached the universe).
+  const present = new Set(THW_.map(m => m.ticker));
+  const missing = MARQUEE.filter(t => !present.has(t));
+  assert(missing.length === 0, `MARQUEE COVERAGE FAIL — nicht klassifiziert/präsent: ${missing.join(', ')}`);
+  // SCORED-MARQUEE (re-court tech_hardware headline-inversion fix 2026-06-23): EVERY marquee must be SCORED
+  // (score != null), i.e. NOT dropped to excluded[] / membershipClass=Out. This is the assert that should have caught
+  // the pro-cyclical membership-growth-gate defect: an IN-CLASS franchise must be SCORED on its honest absKaliber,
+  // NEVER exiled to the reject pile for a negative RECENT growth print. FTV (Fortive) is the witness — its Sept-2025
+  // Ralliant SPINOFF gave a -33% latest-year revenue print; under the OLD growth-gated membership it dropped to
+  // score=null/excluded[]. With growth removed from the membership/exclusion gate (mirrors materials/energy), FTV is
+  // SCORED on its absKaliber (~0.60) and lands on merit. score=null/excluded[] is reserved for OUT-OF-CLASS / shell.
+  const byT = {}; for (const m of THW_) byT[m.ticker] = m;
+  const excluded = MARQUEE.filter(t => byT[t] == null || byT[t].score == null);
+  assert(excluded.length === 0, `MARQUEE SCORED FAIL — diese Franchise-Marquees wurden zu score=null/excluded[] gedroppt `
+    + `(membership-Out/floor-excluded statt auf absKaliber gescored): `
+    + excluded.map(t => `${t}[${byT[t] ? (byT[t].exclusionReason || ('Out/' + byT[t].membershipClass)) : 'absent'}]`).join(', '));
+  // SANE-RANK: now that every marquee is scored, EACH must survive to a sane rank — no franchise exiled to the BOTTOM
+  // THIRD (the inversion mode). FTV is now ranked (no longer skipped), so this asserts FTV's rank too.
+  const ranked = THW_.filter(m => m.score != null).sort((a, b) => b.score - a.score);
+  const bottomThirdCut = Math.ceil(ranked.length * 2 / 3);
+  for (const t of MARQUEE) {
+    const idx = ranked.findIndex(m => m.ticker === t);
+    assert(idx >= 0, `${t} (Marquee) MUSS gescored + gerankt sein (score != null), ist aber nicht in der Rangliste`);
+    const rank = idx + 1;
+    assert(rank <= bottomThirdCut, `${t} rank ${rank}/${ranked.length} — Franchise ins unterste Drittel exiliert (absolute-anchor inverted)`);
+  }
+  const { assertTechHwMarquee } = require('./court-score.js');
+  assert(typeof assertTechHwMarquee === 'function', 'assertTechHwMarquee nicht exportiert');
+  assertTechHwMarquee(doc); // throws on collapse / foreign-control leak / dropped country-undef US / unscored marquee / sane-rank inversion
+});
+
+test('tech_hardware_quality SI-5: classifiedCount === scoredCount + excludedCount (fail-loud identity)', () => {
+  assert(thwR.classifiedCount != null && thwR.scoredCount != null && thwR.excludedCount != null, 'SI-5 counts fehlen');
+  assert(thwR.classifiedCount === thwR.scoredCount + thwR.excludedCount,
+    `SI-5 mismatch: classified ${thwR.classifiedCount} !== scored ${thwR.scoredCount} + excluded ${thwR.excludedCount}`);
+  // Live CLEAN de-ADRd + deduped count: 71 classified (raw 96 sector+industry; foreign primaries dropped, BELFA/BELFB
+  // economic-fp deduped, AMBA cross-cohort-collision dropped to fabless_semi).
+  assert(thwR.classifiedCount === 71, `classified sollte 71 sein (de-ADRd + deduped + AMBA->fabless), ist ${thwR.classifiedCount}`);
+});
+
+test('tech_hardware_quality ABSOLUTE-ANCHOR: commodity contract-mfg (FLEX/JBL/BHE/SANM/PLXS) score LOW + OFF headline', () => {
+  const byT = {}; for (const m of THW_) byT[m.ticker] = m;
+  // FLEX/SANM/PLXS stay in-cohort (country=US / undefined-US) but the absolute floor demotes them off the headline;
+  // JBL/BHE are membership-Out (even stronger). NONE may be on the headlineShortlist. CLS is foreign-dropped (not in cohort).
+  for (const t of ['FLEX', 'JBL', 'BHE', 'SANM', 'PLXS']) {
+    const m = byT[t];
+    if (!m) continue; // (CLS-style foreign drop — fine)
+    assert(m.headlineShortlist !== true, `${t} (commodity contract-mfg) darf NICHT auf der headlineShortlist sein`);
+    assert(m.absKaliber != null && m.absKaliber < 0.25, `${t} absKaliber ${m.absKaliber} sollte < .25 sein (commodity contract-mfg unter dem absoluten Floor)`);
+  }
+  // CLS (Celestica, Canada) must be foreign-dropped — never in the cohort.
+  assert(byT['CLS'] == null, 'CLS (Celestica Canada) sollte foreign-gedropped sein (nicht in der Kohorte)');
+});
+
+test('tech_hardware_quality FRANCHISE TOPS: a franchise (APH/KEYS/GRMN/MSI/TDY/CGNX/AMAT/BMI) tops; NO commodity/loss name in top-10', () => {
+  const ranked = THW_.filter(m => m.score != null).sort((a, b) => b.score - a.score);
+  const FRANCHISE = new Set(['APH', 'KEYS', 'GRMN', 'MSI', 'TDY', 'CGNX', 'AMAT', 'BMI', 'FTV', 'KLAC', 'LRCX', 'TER', 'UI', 'VICR', 'CSCO']);
+  assert(ranked.length > 0 && FRANCHISE.has(ranked[0].ticker), `#1 sollte eine Franchise sein, ist ${ranked[0] && ranked[0].ticker}`);
+  // NO commodity contract-mfg or deep-loss name in the top-10.
+  const TAIL = new Set(['FLEX', 'JBL', 'BHE', 'SANM', 'PLXS', 'TTMI', 'HPE', 'ASTS', 'ONDS', 'OUST', 'AAOI', 'VSAT', 'LITE']);
+  const top10 = ranked.slice(0, 10).map(m => m.ticker);
+  const leak = top10.filter(t => TAIL.has(t));
+  assert(leak.length === 0, `commodity/loss name(s) im Top-10: ${leak.join(', ')} (top10=${top10.join(',')})`);
+});
+
+test('tech_hardware_quality SI-4 SHELL: revenue-less / no-balance-sheet shell excluded (score=null, OUT_OF_SEGMENT:shell)', () => {
+  // every excluded name must be either membership-Out (score=null, no shell reason) OR shell-excluded; the shell-excluded
+  // ones carry OUT_OF_SEGMENT:shell. At minimum the shell exclusionReason path must be reachable + correctly labelled.
+  const shells = THW_.filter(m => m.exclusionReason === 'OUT_OF_SEGMENT:shell');
+  for (const m of shells) {
+    assert(m.score === null, `${m.ticker} shell sollte score=null haben, ist ${m.score}`);
+    assert(Array.isArray(m.lamps) && m.lamps.includes('OUT_OF_SEGMENT:shell'), `${m.ticker} shell sollte OUT_OF_SEGMENT:shell lamp tragen`);
+    assert(m.headlineShortlist === false, `${m.ticker} shell darf NICHT auf der headlineShortlist sein`);
+  }
+  // SI-5 consistency: excludedCount counts BOTH membership-Out and shell names.
+  assert(thwR.excludedCount === THW_.filter(m => m.score == null).length, 'excludedCount sollte alle score=null Namen zählen');
+});
+
+test('tech_hardware_quality COUNTRY NORMALIZE: country=undefined US names MSI/KEYS/TDY RETAINED+scored; GRMN allowlisted', () => {
+  for (const t of ['MSI', 'KEYS', 'TDY']) {
+    const m = THW_.find(x => x.ticker === t);
+    assert(m != null, `${t} (country=undefined US name) sollte in der Kohorte sein`);
+    assert(m.score != null && isFinite(m.score), `${t} sollte gescort sein (score!=null), hat ${m.score}`);
+  }
+  // GRMN (Garmin Ltd Switzerland) admitted via the US_PRIMARY_ALLOWLIST despite country=Switzerland.
+  const grmn = THW_.find(x => x.ticker === 'GRMN');
+  assert(grmn != null && grmn.score != null, 'GRMN (Garmin Ltd Switzerland NYSE-primary) sollte via US_PRIMARY_ALLOWLIST in der Kohorte+gescort sein');
+  const { TECHHW_UNDEF_US_CONTROL, TECHHW_US_PRIMARY_ALLOWLIST } = require('./court-score.js');
+  const scoredSet = new Set(THW_.filter(m => m.score != null).map(m => m.ticker));
+  const dropped = TECHHW_UNDEF_US_CONTROL.filter(t => !scoredSet.has(t));
+  assert(dropped.length === 0, `COUNTRY-UNDEF-US FAIL — wrongly dropped: ${dropped.join(', ')}`);
+  assert(TECHHW_US_PRIMARY_ALLOWLIST.includes('GRMN'), 'TECHHW_US_PRIMARY_ALLOWLIST sollte GRMN enthalten');
+});
+
+test('tech_hardware_quality NO FOREIGN LEAK: foreign primaries (ASML/CLS/ERIC/FN/CAMT/ITRN/GILT/DQ/ST/TEL/ICHR/NVMI) NOT in cohort', () => {
+  const { assertTechHwNoForeignLeak, TECHHW_FOREIGN_CONTROL } = require('./court-score.js');
+  const allTk = new Set(THW_.map(m => m.ticker));
+  const leaked = TECHHW_FOREIGN_CONTROL.filter(t => allTk.has(t));
+  assert(leaked.length === 0, `FOREIGN-CONTROL FAIL — foreign primary/ADR in der Kohorte: ${leaked.join(', ')}`);
+  assert(typeof assertTechHwNoForeignLeak === 'function', 'assertTechHwNoForeignLeak nicht exportiert');
+  let listing = new Map();
+  try {
+    const lp = (CAND_TEST.replace(/_court-candidates([^/\\]*)\.json$/, '_court-listing$1.json'));
+    const ld = JSON.parse(fs.readFileSync(lp, 'utf8'));
+    const obj = ld && ld.listings ? ld.listings : (ld || {});
+    for (const [t, rec] of Object.entries(obj)) listing.set(t, rec);
+  } catch {}
+  assertTechHwNoForeignLeak(doc, listing); // throws on a country-set leak (GRMN allowlist exempted)
+});
+
+test('tech_hardware_quality {value}-unwrap: the FLOW fields produce NUMERIC axes, not NaN', () => {
+  // the snapshot annual flow fields are {value}-wrapped; num() must unwrap them so the gpa/fcfMargin/opMargin axes are
+  // finite numbers (a marquee franchise like AMAT must have a finite gpa/opMargin, never NaN).
+  const amat = THW_.find(m => m.ticker === 'AMAT');
+  assert(amat != null, 'AMAT fehlt');
+  assert(amat.gpa != null && isFinite(amat.gpa), `AMAT gpa sollte numerisch sein, ist ${amat.gpa}`);
+  assert(amat.opMarginThw != null && isFinite(amat.opMarginThw), `AMAT opMargin sollte numerisch sein, ist ${amat.opMarginThw}`);
+  assert(amat.absKaliber != null && isFinite(amat.absKaliber) && amat.absKaliber > 0.5, `AMAT absKaliber sollte > .5 sein (Top-Franchise), ist ${amat.absKaliber}`);
+});
+
+test('tech_hardware_quality SI-3: normTableId + cohort + comparabilityNote (absKaliber cross-bucket, bimodality disclosed)', () => {
+  assert(thwR.normTableId === 'tech-hardware-norms-2026-06-24', `normTableId fehlt/falsch: ${thwR.normTableId}`);
+  assert(thwR.cohort === 'tech_hardware_quality', `cohort falsch: ${thwR.cohort}`);
+  assert(/gpa/i.test(thwR.comparabilityNote || '') && /CYCLE_WALL/i.test(thwR.comparabilityNote || ''),
+    'comparabilityNote sollte gpa + CYCLE_WALL nennen');
+  assert(/commodity|bimodal|franchise/i.test(thwR.comparabilityNote || ''), 'comparabilityNote sollte die bimodality/franchise-These disclosen');
+  assert(thwR.scoreScope === 'intra-bucket' && thwR.crossBucketComparableField === 'absKaliber', 'SI-3 scope/field fehlt');
+});
+
+test('tech_hardware_quality: always-on BLIND walls on every member (CYCLE_WALL/INVENTORY_BLIND/BACKLOG_FUTURE/BOOK_TO_BILL_BLIND)', () => {
+  for (const m of THW_) {
+    for (const wall of ['CYCLE_WALL', 'INVENTORY_BLIND', 'BACKLOG_FUTURE', 'BOOK_TO_BILL_BLIND']) {
+      assert(Array.isArray(m.lamps) && m.lamps.includes(wall), `${m.ticker} fehlt BLIND-wall ${wall}`);
+    }
+  }
+  assert(Array.isArray(thwR.walls) && thwR.walls.includes('BOOK_TO_BILL_BLIND'), 'thwR.walls fehlt BOOK_TO_BILL_BLIND');
+});
+
+test('tech_hardware_quality PARITÄT: KEIN techhw-only Feld auf den anderen Buckets (Leak-Guard)', () => {
+  // TRULY techhw-exclusive fields (thw/fcfMarginThw/opMarginThw/_thw*). The shared names (absUsedAxes/absDroppedAxes/
+  // cohort/absKaliber/gpa/growthInput/netShareIssuance) legitimately exist on other CORE members — guard only the techhw-suffixed ones.
+  for (const b of ['system_app_software', 'fabless_semi', 'medtech_devices', 'diagnostics_lst', 'industrials_heavy', 'industrials_light', 'staples_branded', 'staples_distribution', 'consdisc_store', 'consdisc_light', 'materials_pricingpower', 'materials_commodity', 'energy_upstream', 'energy_midstream', 'energy_services', 'pharma_branded', 'pharma_biopharma', 'pharma_specialty', 'it_services', 'financials_banks', 'equity_reits', 'capmkt_fee_core']) {
+    if (!doc[b]) continue;
+    for (const m of doc[b].members) {
+      for (const leak of ['thw', 'fcfMarginThw', 'opMarginThw', '_thwGpa', '_thwFcfMargin', '_thwOpMargin', '_thwGrowth', '_thwNetIssuance']) {
+        assert(!(leak in m), `${b}/${m.ticker} hat techhw-only Feld '${leak}' geleakt (Parität verletzt)`);
+      }
+    }
+  }
+});
+
 // Temp-Outputs aufräumen (Harness-Isolation: Produktions-Artefakte bleiben unberührt)
 try { fs.unlinkSync(CAND_TEST); } catch {}
 try { fs.unlinkSync(RESULTS); } catch {}

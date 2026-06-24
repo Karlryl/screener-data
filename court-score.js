@@ -570,6 +570,39 @@ const FORMULAS = {
     itservices: true, cohortKey: 'it_services',
     a2Note: 'it_services v0 (Spec formula-design-special_tracks-v0-2026-06-22.md PART B, Council->Court DESIGN-PASS v0; NORMS RECOMPUTED LIVE on the CLEAN de-contaminated vintage-tolerant US pool 2026-06-23 THEN frozen — the CORE gate). ONE de-contaminated people-leverage / low-capital-compounding cohort: Information Technology Services (the exact Yahoo industry string) ∧ Technology ∧ US (country-domicile guard + US_PRIMARY_ALLOWLIST {ACN,G,INFY,GLOB}) ∧ >=$1B ∧ NOT contamination-gated. Live: raw 38 US >=$1B; net 22 after the §B.1 contamination gate excludes the 8 economic-gate contaminants (CIFR/APLD/BBAI/KEEL/SHAZ/CHRN crypto-miners/AI-shells opMargin<0; CDW/INGM hardware distributors RPE>$700k) + the colo fallback (VNET) + the foreign primaries (GIB/GDS/MGRT). SCORE = LOW-CAPITAL-COMPOUNDING BUSINESS QUALITY. 5 SCORED axes via absKaliberItServices: GP/assets (Novy-Marx STRONG — THE asset-light low-capital-compounding proxy, the LEAD axis, w .34, norm .05/.45 = live p10 16.2% / p90 46.1%; floor .05 honors the goodwill-heavy roll-up CACI gpa 8.8% — floored honestly via the linear q, no special case), FCF-margin annualFCF/annualRev (cash conversion = the people-leverage payoff, Mohanram; w .24, .00/.18), operating margin annualOpInc/annualRev (pricing power vs wage inflation; w .18, .02/.18 — level NOT a hard gate, the India-offshore-vs-Western GM inversion means level mis-ranks), organic growth (deal-masked §B.5 + spin-off guarded UPSTREAM, 0.60*latest+0.40*min blend; w .14, .00/.15 — IT-services mid-single-digit through-cycle, capped BELOW the discipline pillar so a roll-up growth spike cannot top-score), net-share-issuance penalty (Pontiff-Woodgate STRONG, w .10, q(-NSI) {-.10/.03}, buyback=elite = the compounder signature; ~50% coverage — Vintage-A lacks annualShares → DROP+renorm+ISSUANCE_NOT_READY). CAPITAL-DISCIPLINE+PROFITABILITY PILLAR gpa+fcfMargin+netIssuance = .68 ≫ growth .14. COVERAGE-RENORM: any NOT_READY/null axis dropped, survivors renormalize to Σ=1.0 (no fake-neutral impute). score=100*(0.6*absKaliber+0.4*REL), β=0.6, REL per-cohort (n=22≫15). THE KEY DESIGN MOVE (§B.2): revenue-per-employee is NOT a scored axis (weight 0.00) — raw RPE is INVERTED on the live cohort (sorting RPE-descending puts the capital-intensive contaminants CIFR/INGM/CDW at the TOP and the genuine elite ACN/EPAM/GLOB/CTSH at the BOTTOM), so RPE is used ONLY as the classifier contamination gate (RPE>$700k) + an advisory RPE_ADVISORY flag. WALLS (always-on lamps): PEOPLE_LEVERAGE_BLIND (the FEASIBILITY DISCLOSURE — mirrors medtech MA_INTANGIBLE_BLIND: the 3 best direct people-leverage signals book-to-bill/utilization/attrition carry NO us-gaap tag and are ABSENT; headcount IS present locally but only ~55% coverage and raw RPE is INVERTED + therefore NOT scored — so NO axis directly measures people-leverage; the score leans on people-leverage-VIA-asset-efficiency gpa), BACKLOG_FUTURE/UTILIZATION_FUTURE/ATTRITION_FUTURE (0-weight future BONUS, verified absent), CYCLE_WALL (~4y history), INVENTORY_BLIND, PEOPLE_DATA_PARTIAL (headcount ~55% coverage). SI-4 out-of-class (non-IT-services tech industry / non-US per the country-domicile guard + FOREIGN hardening / <$1B / contamination-gated → never enter court-buckets; pre-revenue shell with <2 annual-rev OR revLatest<$1M → score=null + excluded[] OUT_OF_SEGMENT:preexploration, the materials lesson) → score=null + excluded[]; SI-5 classifiedCount===scoredCount+excludedCount fail-loud; marquee assert (ACN/CTSH/EPAM/CACI/INFY/G/EXLS/IBM/GLOB/CNXC/DXC/BR/FIS/JKHY/IT/INOD) fail-loud + GENERATIVE anti-leak + CONTAM/FOREIGN positive-control (CIFR/APLD/BBAI/KEEL/SHAZ/CHRN/CDW/INGM/VNET/GIB/GDS/MGRT must NOT classify). FEASIBILITY VERDICT: headcount IS present locally → the design itself (§B.2 RPE INVERTED) prescribes the low-capital-compounding axes as the scored signal with RPE as gate+flag only; the people-leverage omission is disclosed via the always-on PEOPLE_LEVERAGE_BLIND lamp. The ACN/G/GLOB US-primary foreign-domiciled marquees (Accenture plc Ireland / Genpact Ltd Bermuda / Globant S.A. Luxembourg, all NYSE-primary) + INFY (Infosys Ltd Vintage-A) are admitted via the name-verified US_PRIMARY_ALLOWLIST. Additive/parity-safe. Constants frozen §B.4.',
   },
+  // tech_hardware_quality (CORE court bucket) — ONE durable hardware-FRANCHISE quality cohort (the ONE remaining
+  // quality-compounder gap, council/court triage 2026-06-24; NORMS RECOMPUTED LIVE on the FINAL de-ADR'd + deduped +
+  // de-shelled US pool 2026-06-24, n=71 scored, THEN frozen — the CORE gate). 5 SCORED axes {gpa, fcfMargin, opMargin,
+  // growth, netIssuance} — the SAME axis set + the SAME engine as it_services → REUSES absKaliberItServices (the 22
+  // existing CORE/court buckets are BYTE-UNTOUCHED). Weights {gpa .34, fcfMargin .24, opMargin .18, growth .14,
+  // netIssuance .10}: the profitability+discipline pillar gpa+fcfMargin+netIssuance = .68 ≫ growth .14 (a durable
+  // franchise, not a cyclical growth chase). RAW inputs from m.thw.* (court-screen buildTechHwAxes; deal-mask + spin-off
+  // guard applied UPSTREAM). n=71 → full ABS+REL blend (β=0.6). tech_hardware_quality = NEW code keyed by the new cohort
+  // string; all existing buckets BYTE-IDENTICAL. NO contamination gate — the absolute floor sinks the commodity
+  // contract-mfg (FLEX/JBL/BHE/SANM/PLXS) off-headline and the SI-4 SHELL gate excludes the revenue-less shells.
+  tech_hardware_quality: {
+    label: 'Tech-Hardware-Quality v0 (durable hardware franchises: Semi Equipment & Materials / Electronic Components / Communication Equipment / Scientific & Technical Instruments; the bimodal HARDWARE peer group re-ranked by an absolute-anchor so margin-stable franchises beat commodity contract-mfg + loss-making cyclicals; GP/assets asset-efficiency, FCF cash-conversion, op-margin pricing-power, organic growth, net-issuance discipline; CYCLE_WALL/INVENTORY_BLIND/BACKLOG_FUTURE/BOOK_TO_BILL_BLIND)',
+    membership: { g: { c: 0.00, s: 0.06 }, gm: { c: 0.10, s: 0.10 }, scaleLog: { c: log10(1000), s: 0.6 } },
+    axes: [
+      { key: 'gpa',         name: 'GP/Assets',   k: 1.5, w: 0.34 },
+      { key: 'fcfMargin',   name: 'FCF-Margin',  k: 1.5, w: 0.24 },
+      { key: 'opMargin',    name: 'OpMargin',    k: 1.5, w: 0.18 },
+      { key: 'growth',      name: 'Growth',      k: 2.0, w: 0.14 },
+      { key: 'netIssuance', name: 'NetIssuance', k: 1.5, w: 0.10 },
+    ],
+    dilCap: 0, dilStart: 0.05, dilRange: 0.20, // net-issuance is a SCORED axis (H5); no separate SBC penalty.
+    stages: [
+      { name: 'S3-Cash-Compounder', test: f => f >= 0.20 },
+      { name: 'S2-FCF-positiv',     test: f => f >= 0.08 },
+      { name: 'S1-Approaching',     test: f => f >= -0.05 },
+      { name: 'S0-Low-Margin',      test: () => true },
+    ],
+    dominantBlock: ['gpa', 'fcfMargin'],
+    degraded: false,
+    normTableId: 'tech-hardware-norms-2026-06-24',
+    techhw: true, cohortKey: 'tech_hardware_quality',
+    a2Note: 'tech_hardware_quality v0 (council/court triage 2026-06-24 — the ONE genuine remaining quality-compounder gap; NORMS RECOMPUTED LIVE on the FINAL de-ADRd + deduped + de-shelled vintage-tolerant US pool 2026-06-24 THEN frozen — the CORE gate). ONE durable hardware-FRANCHISE cohort: meta.sector=="Technology" AND meta.industry in {Semiconductor Equipment & Materials, Electronic Components, Communication Equipment, Scientific & Technical Instruments} AND US (country-domicile guard + US_PRIMARY_ALLOWLIST {GRMN}) AND >=$1B (deduped). DELIBERATELY OUT: Computer Hardware / Consumer Electronics / Electronics & Computer Distribution / Solar (OEM-commodity / deep-loss / policy-cyclical; ANET is Computer-Hardware-classified and NOT forced in). Live: raw 96 sector+industry; net 72 classified after the de-ADR country guard removes the foreign primaries (ASML/CLS/ERIC/NOK/FN/CAMT/ITRN/GILT/DQ + ST/TEL/ICHR/NVMI plc/Ltd undefined-country) + the economic-fp dedupe drops BELFA/BELFB; 71 scored after the SI-4 SHELL gate. THE THESIS: the generic HARDWARE peer group is BIMODAL — durable margin-stable franchises (APH/KEYS/GRMN/MSI/TDY/CGNX/FTV/BMI/AMAT, gpa .24-.46, opMargin 16-41%) are lumped with commodity contract-manufacturers (FLEX/JBL/BHE/SANM/PLXS, opMargin 4-9%, gpa .12-.14) AND loss-making cyclicals/quantum (ASTS/ONDS/OUST/AAOI). The absolute-anchor on {gpa, fcfMargin, opMargin, growth, netIssuance} cleanly RE-RANKS franchises above the commodity/loss tail with NO per-name contamination gate — the commodity contract-mfg clip the gpa/fcfMargin/opMargin q-axes near 0 and sink BELOW the absolute floor -> off the headlineShortlist (verified live: FLEX rank 54/71 absK .18, BHE 55, JBL 61, SANM 63, PLXS 65, all .10-.18; the franchises rank top-17), exactly like materials/energy. SCORE = DURABLE FRANCHISE BUSINESS QUALITY (never bets on the semi/comms cycle). 5 SCORED axes via absKaliberItServices (REUSED — the tech_hardware axis set is byte-identical to it_services): GP/assets (Novy-Marx STRONG — THE franchise vs commodity-contract-mfg separator, the LEAD axis, w .34, norm .10/.40 = live p10 10.9% / p90 38.0%), FCF-margin annualFCF/annualRev (cash conversion = the franchise payoff, Mohanram; w .24, .00/.24 — loss tail floored honestly at 0), operating margin annualOpInc/annualRev (pricing power vs the cycle; w .18, .02/.25 — level NOT a hard gate), organic growth (deal-masked + spin-off guarded UPSTREAM, 0.60*latest+0.40*min blend; w .14, .00/.15 — hardware mid-cycle flat-to-low, capped BELOW the discipline pillar so a semi up-cycle spike cannot top-score a cyclical), net-share-issuance penalty (Pontiff-Woodgate STRONG, w .10, q(-NSI) {-.10/.03}, buyback=elite = the compounder signature; ~48% coverage — Vintage-A lacks annualShares -> DROP+renorm+ISSUANCE_NOT_READY). PROFITABILITY+DISCIPLINE PILLAR gpa+fcfMargin+netIssuance = .68 >> growth .14; the opMargin+fcfMargin margin pillar .42 is the bimodality separator. WEIGHT JUSTIFICATION: gpa LEADS because GP/assets most cleanly separates a margin-stable franchise from a capital-heavy contract-manufacturer turning a thin spread on a big asset base; the margin pillar is the bimodality cut; growth is SECONDARY (capped .14) so a semiconductor up-cycle revenue spike must NOT top-score a cyclical over a steady franchise. COVERAGE-RENORM: any NOT_READY/null axis dropped, survivors renormalize to Sum=1.0 (no fake-neutral impute). score=100*(0.6*absKaliber+0.4*REL), beta=0.6, REL per-cohort (n=71>>15). WALLS (always-on lamps): CYCLE_WALL, INVENTORY_BLIND, BACKLOG_FUTURE (0-weight future BONUS), BOOK_TO_BILL_BLIND. SI-4 SHELL gate (no positive revenue in ANY year OR no totalAssets in ANY year -> score=null + excluded[] OUT_OF_SEGMENT:shell, the materials/energy lesson); the absolute-floor demotes the commodity/loss tail off the headlineShortlist (NOT a score-kill). SI-5 classifiedCount===scoredCount+excludedCount fail-loud; marquee assert (APH/KEYS/GRMN/MSI/TDY/CGNX/AMAT/BMI/FTV must each classify+survive to a sane rank) fail-loud + GENERATIVE anti-leak + FOREIGN positive-control (ASML/CLS/ERIC/FN/CAMT/ITRN/GILT/DQ/ST/TEL/ICHR/NVMI must NOT classify) + country-undef-US retention (MSI/KEYS/TDY must classify). The GRMN (Garmin Ltd Switzerland NYSE-primary) marquee is admitted via the name-verified US_PRIMARY_ALLOWLIST; the anti-leak assert exempts it. Additive/parity-safe.',
+  },
   // financials_banks (CORE court bucket) — ONE deposit-funded US-bank cohort by THROUGH-CYCLE QUALITY. Court gauntlet
   // DESIGN (BUILD_WITH_CAVEATS / court REVISE, 2026-06-23; NORMS RECOMPUTED LIVE on the FINAL de-ADR'd + deduped US
   // pool 2026-06-23, n=128, THEN frozen — the CORE gate). 4 SCORED axes {roaThruCycle, capitalAdequacy,
@@ -740,6 +773,25 @@ const PH_MIN_REVENUE = 1e6; // $1M latest-annual-revenue floor for a pharma name
 // a latest revenue >= IT_MIN_REVENUE ($1M) — the gpa/fcfMargin/opMargin axes are undefined/explosive on near-zero
 // revenue. SI-4 score=null + excluded[] OUT_OF_SEGMENT:preexploration.
 const IT_MIN_REVENUE = 1e6; // $1M latest-annual-revenue floor for an it_services name to be SCORED (else preexploration)
+
+// tech_hardware_quality (CORE) SI-4 SHELL gate (the materials/energy pre-revenue lesson). The classifier admits the
+// WHOLE cohort (NO contamination gate — the absolute floor sinks the commodity/loss tail off-headline); this SI-4 gate
+// is the belt-and-suspenders economic SHELL exclusion. A tech_hardware name with NO positive revenue in ANY available
+// year OR no totalAssets in ANY available year (a true revenue-less / no-balance-sheet shell, e.g. a freshly-listed
+// quantum/space SPAC) CANNOT be scored: the gpa/fcfMargin/opMargin axes are undefined/explosive on it. SI-4 EXCLUDE ->
+// score=null + excluded[] OUT_OF_SEGMENT:shell, NEVER scored 0. The extractor (court-screen buildTechHwAxes) surfaces
+// anyPosRev + anyTotalAssets for this test. (A name with revenue + a balance sheet but a missing bal[0].totalAssets —
+// e.g. AMKR — is NOT a shell: its gpa axis just drops via coverage-renorm and it scores on the other 4 axes.)
+//
+// THE COMPOSITE absKaliber FLOOR for the headlineShortlist (the bimodality demotion mechanism — the thesis). The
+// per-axis SI-1 floors (gpa>=.10, fcfMargin>=0, opMargin>=.02) are individually too permissive: a commodity contract-
+// manufacturer clears each one (FLEX gpa .12 / fcfMargin .01-.03 / opMargin .04-.05) yet is NOT a franchise. The
+// COMPOSITE absKaliber cleanly separates the two modes — live there is a NATURAL GAP between the lowest genuine
+// franchise (FORM .31 / COHR .29) and the commodity/low-quality tail (TTMI .21 / HPE .19 / FLEX .18 / SANM .12 /
+// PLXS .11). THW_ABSK_FLOOR=.25 sits in that gap → a name with absKaliber < .25 is belowAbsoluteFloor (off the
+// headlineShortlist), demoting the commodity contract-mfg + the loss tail exactly as materials/energy demote their
+// commodity tail under the absolute anchor. NOT a score-kill (the name still gets a score/rank, just off the headline).
+const THW_ABSK_FLOOR = 0.25;
 
 // financials_banks (CORE) SHELL gate (the materials/energy pre-revenue lesson ADAPTED to the revenue-less bank schema):
 // banks have NO revenue line, so the SI-4 shell test keys on EARNINGS PRESENCE + a BALANCE SHEET, not a revenue floor.
@@ -1381,6 +1433,28 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.cohort = i.cohort || F.cohortKey;
     }
   }
+  // --- tech_hardware_quality (CORE) PRE-PASS: lift the 5 RAW axis inputs from m.thw onto the member ---
+  // All intermediates are TECHHW-LOCAL → all other buckets' member JSON byte-identical (parity). gpa/fcfMargin/opMargin/
+  // growth are NOT inverted (higher=better directly); netIssuance stores the NEGATED raw so the REL z (higher=better)
+  // agrees in sign with the ABS q-input. null raw → axis DROP (coverage-renorm in absKaliberItServices; REL sAxis returns
+  // 0=neutral for null). The SAME axis set as it_services (only the cohort NORMS differ). Mirrors the it_services pre-pass.
+  if (F.techhw) {
+    for (const m of members) {
+      const i = m.thw || {};
+      m._thwGpa = (i.gpa != null && isFinite(i.gpa)) ? i.gpa : null;
+      m._thwFcfMargin = (i.fcfMargin != null && isFinite(i.fcfMargin)) ? i.fcfMargin : null;
+      m._thwOpMargin = (i.opMargin != null && isFinite(i.opMargin)) ? i.opMargin : null;
+      m._thwGrowth = (i.growth != null && isFinite(i.growth)) ? i.growth : null; // deal-masked + spinoff-guarded UPSTREAM
+      m._thwNetIssuance = (i.netShareIssuance != null && isFinite(i.netShareIssuance)) ? -i.netShareIssuance : null; // q(-NSI) direction
+      // persisted audit fields (rounded)
+      m.gpa = m._thwGpa == null ? null : Math.round(m._thwGpa * 10000) / 10000;
+      m.fcfMarginThw = m._thwFcfMargin == null ? null : Math.round(m._thwFcfMargin * 10000) / 10000;
+      m.opMarginThw = m._thwOpMargin == null ? null : Math.round(m._thwOpMargin * 10000) / 10000;
+      m.growthInput = m._thwGrowth == null ? null : Math.round(m._thwGrowth * 10000) / 10000;
+      m.netShareIssuance = (i.netShareIssuance != null && isFinite(i.netShareIssuance)) ? Math.round(i.netShareIssuance * 10000) / 10000 : null;
+      m.cohort = i.cohort || F.cohortKey;
+    }
+  }
   // --- financials_banks (CORE) PRE-PASS: lift the 4 RAW axis inputs from m.bk onto the member ---
   // All intermediates are BANKS-LOCAL → all other buckets' member JSON byte-identical (parity). roaThruCycle/
   // capitalAdequacy/earningsDurability are NOT inverted (higher=better directly); assetGrowthDiscipline stores the
@@ -1528,6 +1602,19 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       default: return m[key];
     }
   };
+  // tech_hardware_quality (CORE): 5 axis-keys {gpa, fcfMargin, opMargin, growth, netIssuance}; gpa/fcfMargin/opMargin/
+  // growth NON-inverted, netIssuance inverted (stored negated in m._thwNetIssuance) → mirror itRaw on the m._thw* fields.
+  // The REL z/MAD reads the SAME signed values as the ABS q-input.
+  const thwRaw = (m, key) => {
+    switch (key) {
+      case 'gpa': return m._thwGpa;
+      case 'fcfMargin': return m._thwFcfMargin;
+      case 'opMargin': return m._thwOpMargin;
+      case 'growth': return m._thwGrowth;
+      case 'netIssuance': return m._thwNetIssuance;
+      default: return m[key];
+    }
+  };
   // financials_banks (CORE): 4 axis-keys {roaThruCycle, capitalAdequacy, assetGrowthDisc, earningsDurability};
   // roaThruCycle/capitalAdequacy/earningsDurability NON-inverted, assetGrowthDisc inverted (stored negated in
   // m._bkAssetGrowthDisc) → mirror enRaw/itRaw on the m._bk* fields. The REL z/MAD reads the SAME signed values as
@@ -1573,6 +1660,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (F.energy) return enRaw(m, key);
     if (F.pharma) return phRaw(m, key);
     if (F.itservices) return itRaw(m, key);
+    if (F.techhw) return thwRaw(m, key);
     if (F.banks) return bkRaw(m, key);
     if (F.reits) return reRaw(m, key);
     if (F.capmkt) return cmRaw(m, key);
@@ -1590,6 +1678,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (F.energy) return enRaw(m, key);
     if (F.pharma) return phRaw(m, key);
     if (F.itservices) return itRaw(m, key);
+    if (F.techhw) return thwRaw(m, key);
     if (F.banks) return bkRaw(m, key);
     if (F.reits) return reRaw(m, key);
     if (F.capmkt) return cmRaw(m, key);
@@ -1735,6 +1824,24 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       const mGpa = logistic(gpaGate, F.membership.gm.c, F.membership.gm.s);
       const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
       M = mg * mGpa * mSc;
+    } else if (F.techhw) {
+      // tech_hardware_quality membership: gpa(quality) × scale logistic. GROWTH IS NOT A MEMBERSHIP INPUT
+      // (QUALITY-ONLY — mirrors the materials/energy remediation: a hardware-franchise's recent revenue growth is
+      // a cyclical/deal-driven signal, never a durable-quality signal; gating membership/exclusion on growth is
+      // PRO-CYCLICAL and inverts the bucket's own quality-only absKaliber, dropping high-absKaliber franchises to
+      // score=null/excluded[] for a negative RECENT print). The gpa pillar is the franchise-quality gate (gm
+      // membership center is the gpa.floor .10). $1B+ marketCap is the classifier gate. opMargin/fcfMargin/
+      // netIssuance/growth are NOT membership inputs (scored axes only).
+      // audit/fix (re-court tech_hardware headline-inversion 2026-06-23): removed the growth factor (mg) from M —
+      // membership is now QUALITY-ONLY (gpa×scale), exactly as materials/energy were already remediated. A down-year
+      // cyclical franchise (ONTO/ACLS) or a SPINOFF franchise (FTV: Ralliant spinoff gave a -33% latest-year print)
+      // is now SCORED (growth axis q naturally contributes low → lower score), with score=null/excluded[] RESERVED
+      // for OUT-OF-CLASS / shell only. The absKaliber floor (THW_ABSK_FLOOR) then decides headline status on merit.
+      const gpaGate = m._thwGpa != null ? m._thwGpa : -1;              // null gpa → low
+      const scaleM = (m.marketCap != null && isFinite(m.marketCap)) ? m.marketCap / 1e6 : (m.scaleRevM || 1); // $1B+ marketCap
+      const mGpa = logistic(gpaGate, F.membership.gm.c, F.membership.gm.s);
+      const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
+      M = mGpa * mSc;
     } else if (F.banks) {
       // financials_banks membership: roaThruCycle(quality) × scale logistic. QUALITY-ONLY (mirrors materials/energy):
       // banks have NO revenue/gm line, so there is no growth or gm membership input — the through-cycle ROA pillar
@@ -2128,6 +2235,53 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
         m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
       }
       m.stage = stageOf(F, m._itFcfMargin);
+    } else if (F.techhw) {
+      // tech_hardware_quality (CORE): absKaliberItServices = 5-axis weighted-q {gpa, fcfMargin, opMargin, growth,
+      // netIssuance} with COVERAGE-RENORM reading the cohort NORMS (REUSED engine — the tech_hardware axis set is
+      // byte-identical to it_services, only the cohort NORMS differ). gpa/fcfMargin/opMargin/growth NON-inverted;
+      // netIssuance inverted (the engine re-negates the RAW netShareIssuance itself, so pass the RAW signed value).
+      // The renorm fires on ~48% of names lacking annualShares (ISSUANCE_NOT_READY) + any NOT_READY axis.
+      const cohortNorm = F.cohortKey; // 'tech_hardware_quality'
+      const thwRec = {
+        gpa: m._thwGpa, fcfMargin: m._thwFcfMargin, opMargin: m._thwOpMargin, growth: m._thwGrowth,
+        netShareIssuance: (m.thw && m.thw.netShareIssuance != null && isFinite(m.thw.netShareIssuance)) ? m.thw.netShareIssuance : null,
+      };
+      const ak = absKaliberItServices(thwRec, cohortNorm);
+      m.absKaliber = Math.round(ak.absK * 1000) / 1000;
+      m.absUsedAxes = ak.usedAxes;          // audit: which axes survived coverage-renorm
+      m.absDroppedAxes = ak.droppedAxes;    // audit: NOT_READY/ISSUANCE drops
+      const rawScore = Math.round(Math.max(0, blendScore(ak.absK, core, 0.6)) * 10) / 10; // pDil=0 (issuance is a SCORED axis)
+      // SI-1 shortlist-cut: gpa >= gpa.floor (the lead franchise-quality pillar) AND fcfMargin >= fcfMargin.floor AND
+      // opMargin >= opMargin.floor. THIS is the demotion mechanism for the commodity contract-mfg / loss tail (FLEX/JBL/
+      // BHE/SANM/PLXS clip below the floor → belowAbsoluteFloor, listed but off the headlineShortlist). A NOT_READY/
+      // missing axis fails the floor. NOT a score-kill (REL/score path runs independently — they still get a rank).
+      const norm = NORMS[cohortNorm];
+      const gateGpaOk = (m._thwGpa != null) && (m._thwGpa >= norm.gpa.floor);
+      const gateFcfOk = (m._thwFcfMargin != null) && (m._thwFcfMargin >= norm.fcfMargin.floor);
+      const gateOpOk = (m._thwOpMargin != null) && (m._thwOpMargin >= norm.opMargin.floor);
+      // COMPOSITE absKaliber floor — THE bimodality demotion mechanism (the thesis: the absolute-anchor sinks the
+      // commodity contract-mfg / loss tail off-headline). The per-axis floors alone are too permissive: a commodity
+      // contract-manufacturer (FLEX gpa .12/opMargin .05, SANM/PLXS similar) clears each individual floor but its
+      // COMPOSITE absKaliber (.11-.18) sits far below the genuine franchises (the lowest genuine franchise FORM/COHR
+      // .29-.31; then a CLIFF to TTMI .21 / HPE .19 / FLEX .18 / SANM .12 / PLXS .11). THW_ABSK_FLOOR=.25 sits in that
+      // natural gap → it demotes the entire commodity/low-quality tail (FLEX/SANM/PLXS/JBL/BHE/HPE/TTMI) off the
+      // headlineShortlist while keeping every genuine franchise. NOT a score-kill (the name still gets a score/rank).
+      const gateAbsKOk = (ak.absK != null && isFinite(ak.absK)) && (ak.absK >= THW_ABSK_FLOOR);
+      m.belowAbsoluteFloor = !(gateGpaOk && gateFcfOk && gateOpOk && gateAbsKOk);
+      // SI-4 SHELL hard-exclude (the materials/energy lesson — NO contamination gate in the classifier; this is the
+      // belt-and-suspenders economic shell gate). SCORED requires positive revenue in ANY year AND totalAssets in ANY
+      // year (surfaced as m.thw.anyPosRev / m.thw.anyTotalAssets) — a revenue-less / no-balance-sheet shell cannot be scored.
+      const thwRaw0 = m.thw || {};
+      const isShell = !(thwRaw0.anyPosRev === true && thwRaw0.anyTotalAssets === true);
+      if (isShell) {
+        m.exclusionReason = 'OUT_OF_SEGMENT:shell';
+        m.score = null;                                 // SI-4: lands in excluded[]
+        m.headlineShortlist = false;
+      } else {
+        m.score = m.membershipClass === 'Out' ? null : rawScore;
+        m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
+      }
+      m.stage = stageOf(F, m._thwFcfMargin);
     } else if (F.banks) {
       // financials_banks (CORE): absKaliberBanks = 4-axis weighted-q {roaThruCycle, capitalAdequacy,
       // assetGrowthDiscipline, earningsDurability} with COVERAGE-RENORM reading the cohort NORMS. roaThruCycle/
@@ -2509,6 +2663,27 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       L.push('INVENTORY_BLIND');      // no inventory line ⇒ channel/stockpile uncomputable
       L.push('BYPRODUCT_BLIND');      // by-product credits make C1 a price artifact
       L.push('BACKLOG_FUTURE');       // gases take-or-pay backlog absent from snapshots → 0-weight bonus
+      if (m.belowAbsoluteFloor) L.push('below-abs-floor');
+      if (m.membershipClass === 'Out') L.push('membership-Out(excluded-from-headline)');
+      if (Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.length) L.push(`coverage-renorm(dropped:${m.absDroppedAxes.join('+')})`);
+      m.cohort = F.cohortKey;
+      m.normTableId = getNormTableId(F.cohortKey);
+      m.scoreScope = 'intra-bucket';
+      m.crossBucketComparableField = 'absKaliber';
+    }
+    // tech_hardware_quality (CORE) lamps: advisory, never silent score-kills. Per-name upstream lamps (NOT_READY:gpa/
+    // fcfmargin/opmargin/growth, ISSUANCE_NOT_READY, SPINOFF_REBASE, DEAL_MASKED, STALE:growth, DILUTION_HIGH) + the
+    // always-on WALLS (CYCLE_WALL / INVENTORY_BLIND / BACKLOG_FUTURE / BOOK_TO_BILL_BLIND) are collected in court-screen
+    // (m.thw.lamps); the WALLS are re-asserted here so every member carries them even if the upstream record was thin.
+    if (F.techhw) {
+      const tl = (m.thw && Array.isArray(m.thw.lamps)) ? m.thw.lamps : [];
+      for (const lamp of tl) if (!L.includes(lamp)) L.push(lamp);
+      // SI-4 SHELL exclusion as an explicit lamp (the materials/energy lesson).
+      if (m.exclusionReason === 'OUT_OF_SEGMENT:shell' && !L.includes('OUT_OF_SEGMENT:shell')) L.push('OUT_OF_SEGMENT:shell');
+      // always-on WALLS — re-asserted (idempotent: court-screen already pushed them; dedup via includes).
+      for (const wall of ['CYCLE_WALL', 'INVENTORY_BLIND', 'BACKLOG_FUTURE', 'BOOK_TO_BILL_BLIND']) {
+        if (!L.includes(wall)) L.push(wall);
+      }
       if (m.belowAbsoluteFloor) L.push('below-abs-floor');
       if (m.membershipClass === 'Out') L.push('membership-Out(excluded-from-headline)');
       if (Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.length) L.push(`coverage-renorm(dropped:${m.absDroppedAxes.join('+')})`);
@@ -3018,6 +3193,36 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       withoutHeadcount: members.filter(m => m.revPerEmployee == null).length,
     };
   }
+  // tech_hardware_quality (CORE court bucket)-only Zusatzfelder (SI-3/4/5/6) — NUR auf dem tech_hardware_quality-Bucket
+  // gesetzt → alle anderen Buckets byte-identisch (Parität). Mirrors the it_services block; 5 axes {gpa, fcfMargin,
+  // opMargin, growth, netIssuance}.
+  if (F.techhw) {
+    // SI-5: classifiedCount === scoredCount + excludedCount (fail-loud). The classifier assigns ONLY tech_hardware_quality
+    // (non-hardware industry / non-US per the de-ADR country-domicile guard + FOREIGN_NAME + TECHHW_FOREIGN_DROP / <$1B /
+    // dual-class-dupe return null → never enter court-buckets), so every classified name reaches members[]. excludedCount
+    // = SI-4 SHELL names (no positive rev / no totalAssets in any year) that entered members but score=null.
+    R.classifiedCount = cls.filter(c => c.bucket === bucket).length;
+    R.excluded = members.filter(m => m.score == null);
+    R.excludedCount = R.excluded.length;
+    R.scoredCount = members.filter(m => m.score != null).length;
+    if (require.main === module && R.classifiedCount !== R.scoredCount + R.excludedCount) {
+      throw new Error(`SI-5 mismatch ${bucket}: classifiedCount ${R.classifiedCount} !== scoredCount ${R.scoredCount} + excludedCount ${R.excludedCount}`);
+    }
+    R.normTableId = getNormTableId(F.cohortKey);
+    R.cohort = F.cohortKey;
+    R.scoreScope = 'intra-bucket';
+    R.crossBucketComparableField = 'absKaliber';
+    const n = NORMS[F.cohortKey];
+    const fmt = x => (x == null ? '—' : x.toFixed(2).replace(/^0\./, '.').replace(/^-0\./, '-.'));
+    R.comparabilityNote = `tech_hardware_quality ${F.cohortKey} (durable hardware-FRANCHISE cohort: the bimodal HARDWARE peer group re-ranked by an absolute-anchor so margin-stable franchises beat commodity contract-mfg + loss-making cyclicals). absKaliber in [0,1] = cross-bucket-comparable absolute scale (5-axis weighted-q over the cohort NORMS '${getNormTableId(F.cohortKey)}' via the REUSED absKaliberItServices engine: gpa ${fmt(n.gpa.floor)}/${fmt(n.gpa.elite)} (GP/assets, THE franchise vs commodity-contract-mfg separator, the LEAD axis), fcfMargin ${fmt(n.fcfMargin.floor)}/${fmt(n.fcfMargin.elite)} (cash conversion), opMargin ${fmt(n.opMargin.floor)}/${fmt(n.opMargin.elite)} (pricing power vs the cycle), growth ${fmt(n.growth.floor)}/${fmt(n.growth.elite)} (organic, deal-masked UPSTREAM, SECONDARY), netIssuance ${fmt(n.netIssuance.floor)}/${fmt(n.netIssuance.elite)} (q(-NSI), buyback=elite); weights {gpa .34, fcfMargin .24, opMargin .18, growth .14, netIssuance .10}; profitability+discipline pillar gpa+fcfMargin+netIssuance=.68 ≫ growth .14, the opMargin+fcfMargin margin pillar .42 is the bimodality separator. NO contamination gate — the absolute floor sinks the commodity contract-mfg (FLEX/JBL/BHE/SANM/PLXS) below the floor → off the headlineShortlist. COVERAGE-RENORM drops any NOT_READY/null axis (incl. ISSUANCE_NOT_READY on the ~52% of names lacking annualShares, SPINOFF_REBASE) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6). WALLS always-on: CYCLE_WALL (~4y history, no through-cycle semi/comms normalization), INVENTORY_BLIND, BACKLOG_FUTURE, BOOK_TO_BILL_BLIND. The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison.`;
+    R.crossBucketComparableNote = 'Use members[].absKaliber (absolute [0,1] caliber) for cross-bucket comparison; members[].score (blended 0-100) is intra-bucket ONLY (mixes per-cohort REL, beta=0.6).';
+    R.walls = ['CYCLE_WALL', 'INVENTORY_BLIND', 'BACKLOG_FUTURE', 'BOOK_TO_BILL_BLIND'];
+    // Axis-H5 coverage disclosure: how many names took the ISSUANCE_NOT_READY drop+renorm path.
+    R.issuanceCoverage = {
+      scored: members.filter(m => m.netShareIssuance != null).length,
+      dropped: members.filter(m => m.netShareIssuance == null).length,
+    };
+  }
   // financials_banks (CORE court bucket)-only Zusatzfelder (SI-3/4/5/6) — NUR auf dem financials_banks-Bucket gesetzt
   // → alle anderen Buckets byte-identisch (Parität). Mirrors the it_services block; 4 axes {roaThruCycle,
   // capitalAdequacy, assetGrowthDiscipline, earningsDurability}.
@@ -3256,6 +3461,15 @@ function assertNoForeignLeak(resultsObj, listing) {
     // looser region==='US' test; note ACN/G/GLOB carry isUS===true via region==='US' so even C5 would not flag them,
     // but the exemption keeps the governance consistent with the other 6 CORE buckets and the allowlist explicit).
     if (bucket === 'it_services') continue;
+    // tech_hardware_quality (CORE) EXEMPTION: governed by the FROZEN spec classifier (scripts/classify-techhw.js
+    // country-domicile guard — STRICTER than court-screen's: country set != US -> exclude unconditionally; FOREIGN_NAME
+    // legal-form regex; the 5-letter pink-sheet ADR rule; and a name-verified US_PRIMARY_ALLOWLIST = {GRMN} for the
+    // verified US-PRIMARY / design-marquee foreign-domiciled flagship Garmin Ltd Switzerland NYSE-primary). It is
+    // governed instead by the marquee assert + the techhw-native generative country assert (assertTechHwNoForeignLeak)
+    // + the FOREIGN positive-control (assertTechHwMarquee) below — all reading the snapshot meta via the spec classifier,
+    // NOT the C5 court-listing.isUS flag (which uses court-screen's looser region==='US' test and would false-flag GRMN,
+    // which carries country=Switzerland but is a genuine US primary the design admits).
+    if (bucket === 'tech_hardware_quality') continue;
     for (const m of R.members) {
       const L = listing.get(m.ticker);
       if (!L) continue; // kein Snapshot-Meta → kann nichts behaupten (Vintage-A ohne Eintrag: tolerant)
@@ -3663,6 +3877,111 @@ function assertItServicesNoForeignLeak(resultsObj, listing) {
   }
 }
 
+// --- tech_hardware_quality (CORE court bucket) MARQUEE-COVERAGE + FOREIGN positive-control assert (fail-loud) ---
+// SI-5 identity alone does NOT catch a silent universe collapse (a dropped name is consistently absent from BOTH
+// classified and scored counts). The 9-name marquee must each be classified AND survive to a SANE rank (not exiled to
+// the bottom of the cohort) — else the run DIES LOUD (the regression guard against the country-vintage-collapse + the
+// de-ADR guard). "Sane rank" = the marquee franchises must rank in the TOP HALF of the scored cohort (they ARE the
+// franchises the absolute-anchor is designed to lift above the commodity/loss tail; if a franchise sinks below the
+// median the engine inverted). The foreign positive-control must NOT have reached the cohort.
+const TECHHW_MARQUEE = Object.freeze(['APH', 'KEYS', 'GRMN', 'MSI', 'TDY', 'CGNX', 'AMAT', 'BMI', 'FTV']);
+// FOREIGN positive-control: the foreign primaries the de-ADR country-domicile guard / FOREIGN_NAME regex must keep OUT
+// — the single largest classification risk in this bucket. A leak means the country guard broke. Spans country-SET
+// foreign (ASML/CLS/ERIC/FN/CAMT/ITRN/GILT/DQ) + undefined-country foreign-NAME (ST/TEL/ICHR/NVMI plc/Ltd).
+const TECHHW_FOREIGN_CONTROL = Object.freeze(['ASML', 'CLS', 'ERIC', 'FN', 'CAMT', 'ITRN', 'GILT', 'DQ', 'ST', 'TEL', 'ICHR', 'NVMI']);
+// country-undefined US names that MUST be RETAINED (the de-ADR retention guard). Catches a regression that re-keys the
+// classify-in on country!=US (which would wrongly drop these NYSE/Nasdaq USD names).
+const TECHHW_UNDEF_US_CONTROL = Object.freeze(['MSI', 'KEYS', 'TDY']);
+// The name-verified US-PRIMARY / design-marquee foreign-domiciled flagship the spec classifier DELIBERATELY admits
+// (GRMN Garmin Ltd Switzerland-NYSE-primary). Carries a foreign country but IS a genuine US primary → the generative
+// country anti-leak assert must EXEMPT it (mirrors classify-techhw's US_PRIMARY_ALLOWLIST).
+const TECHHW_US_PRIMARY_ALLOWLIST = Object.freeze(['GRMN']);
+function assertTechHwMarquee(resultsObj) {
+  const R = resultsObj.tech_hardware_quality;
+  if (!R) return; // tech_hardware_quality not in this run (e.g. isolated unit test) → tolerant no-op
+  const scored = new Set();
+  if (Array.isArray(R.members)) for (const m of R.members) scored.add(m.ticker);
+  const missing = TECHHW_MARQUEE.filter(t => !scored.has(t));
+  if (missing.length) {
+    throw new Error('MARQUEE COVERAGE FAIL (tech_hardware_quality) — universe collapsed, these bona-fide US '
+      + 'durable-hardware-franchise large-caps were not classified/scored: ' + missing.join(', '));
+  }
+  // SCORED-MARQUEE (re-court tech_hardware headline-inversion fix 2026-06-23): every marquee must be SCORED
+  // (score != null), i.e. NOT dropped into excluded[] / membershipClass=Out. THIS is the guard that should have
+  // caught the membership-growth-gate defect: the old SANE-RANK below filters m.score != null BEFORE ranking, so it
+  // was BLIND to a franchise that the pro-cyclical growth gate sank to score=null (it could not detect a marquee
+  // dropped into the reject pile — only one mis-RANKED among the scored). A high-absKaliber IN-CLASS franchise (e.g.
+  // FTV on its Ralliant-spinoff -33% print) must be SCORED on its honest absKaliber, never exiled to excluded[] for
+  // negative recent growth. score=null/excluded[] is reserved for OUT-OF-CLASS / shell only.
+  const byTickerThw = new Map();
+  if (Array.isArray(R.members)) for (const m of R.members) byTickerThw.set(m.ticker, m);
+  const unscored = TECHHW_MARQUEE.filter(t => { const m = byTickerThw.get(t); return !m || m.score == null; });
+  if (unscored.length) {
+    throw new Error('MARQUEE SCORED FAIL (tech_hardware_quality) — these franchise marquees were dropped to '
+      + 'score=null / excluded[] (membership-Out or floor-excluded), NOT scored on their absKaliber; the '
+      + 'membership/exclusion gate is pro-cyclical (dropping high-absKaliber franchises for negative recent growth): '
+      + unscored.map(t => { const m = byTickerThw.get(t); return `${t}[${m ? (m.exclusionReason || ('Out/' + m.membershipClass)) : 'absent'}]`; }).join(', '));
+  }
+  // SANE-RANK: the marquee franchises must survive to a SANE rank — NOT exiled to the BOTTOM THIRD of the scored cohort
+  // (the failure mode the guard protects against is an inverted engine that sinks a franchise to the tail with the
+  // commodity contract-mfg / loss names). A goodwill-heavy serial-acquirer franchise (e.g. TDY: gpa 0.17 from heavy
+  // acquisition goodwill but solid opMargin/fcfMargin → rank ~25/48 = mid-pack) legitimately sits mid-pack, so the cut
+  // is the bottom THIRD (not the top half) — strict enough to catch a true inversion, loose enough not to false-fire on
+  // a legitimately mid-pack roll-up. Ranked by the blended score (the headline ranking).
+  const ranked = Array.isArray(R.members)
+    ? R.members.filter(m => m.score != null).sort((a, b) => (b.score || 0) - (a.score || 0))
+    : [];
+  const nScored = ranked.length;
+  if (nScored > 0) {
+    const rankByTicker = new Map();
+    ranked.forEach((m, i) => rankByTicker.set(m.ticker, i + 1));
+    const bottomThirdCut = Math.ceil(nScored * 2 / 3); // a marquee ranked WORSE than this is in the bottom third → inverted
+    const sunk = TECHHW_MARQUEE.filter(t => rankByTicker.has(t) && rankByTicker.get(t) > bottomThirdCut);
+    if (sunk.length) {
+      throw new Error('MARQUEE SANE-RANK FAIL (tech_hardware_quality) — these franchise marquees sank into the cohort '
+        + `bottom third (rank > ${bottomThirdCut}/${nScored}); the absolute-anchor inverted: `
+        + sunk.map(t => `${t}#${rankByTicker.get(t)}`).join(', '));
+    }
+  }
+  // FOREIGN-CONTROL: the foreign primaries must NOT have reached the cohort.
+  const leakedControl = TECHHW_FOREIGN_CONTROL.filter(t => scored.has(t));
+  if (leakedControl.length) {
+    throw new Error('FOREIGN-CONTROL FAIL (tech_hardware_quality) — a foreign-primary name leaked into the cohort: '
+      + leakedControl.join(', '));
+  }
+  // country-undef US retention: MSI/KEYS/TDY must be present.
+  const droppedUndefUS = TECHHW_UNDEF_US_CONTROL.filter(t => !scored.has(t));
+  if (droppedUndefUS.length) {
+    throw new Error('COUNTRY-UNDEF-US FAIL (tech_hardware_quality) — undefined-country US name(s) wrongly dropped: '
+      + droppedUndefUS.join(', '));
+  }
+}
+// assertTechHwNoForeignLeak(results, listing): GENERATIVE property test reading the snapshot meta.country (via the
+// court-listing side-file) DIRECTLY — independent of the C5 isUS flag. Throws if ANY scored tech_hardware record
+// carries meta.country set AND != "United States" EXCEPT the name-verified US_PRIMARY_ALLOWLIST (GRMN — Garmin Ltd
+// Switzerland but a genuine US primary the spec admits by design). Tolerant: missing side-file → no-op.
+function assertTechHwNoForeignLeak(resultsObj, listing) {
+  if (!listing || listing.size === 0) return;
+  const allow = new Set(TECHHW_US_PRIMARY_ALLOWLIST);
+  const R = resultsObj.tech_hardware_quality;
+  if (!R || !Array.isArray(R.members)) return;
+  const leaks = [];
+  for (const m of R.members) {
+    if (allow.has(m.ticker)) continue; // verified US-primary inversion (GRMN) — admitted by design
+    const L = listing.get(m.ticker);
+    if (!L) continue; // no snapshot meta → can't assert (Vintage-A without entry: tolerant)
+    if (L.country != null && L.country !== 'United States') {
+      leaks.push(`${m.ticker}[${L.country}/${L.region}] in tech_hardware_quality`);
+    }
+  }
+  if (leaks.length) {
+    throw new Error('TECH_HARDWARE ANTI-LEAK ASSERT (GENERATIVE property test): foreign-country record(s) leaked into '
+      + 'the scored tech_hardware_quality cohort — meta.country set AND != "United States" (and not on the verified '
+      + 'US_PRIMARY_ALLOWLIST): ' + leaks.join(', ')
+      + '. The country-domicile guard (classify-techhw.js isUSListing) must exclude these — NOT suppress.');
+  }
+}
+
 // --- financials_banks (CORE court bucket) MARQUEE-COVERAGE + foreign-DENY anti-leak assert (court DESIGN, fail-loud) ---
 // The 7-name marquee must each be classified AND survive to a SANE rank (not exiled to the bottom). The court named
 // JPM/PNC/USB/MTB (the money-center / super-regional core, all country=undefined US banks) + EWBC/CFR/FITB.
@@ -3845,7 +4164,7 @@ function assertCapmktNoForeignLeak(resultsObj, listing) {
 // (computeDlstOrganicGrowth: Fix A FY-Alignment + Fix B dealYearExcluded-Ehrlichkeit, 2026-06-21)
 // + assertNoForeignLeak (gauntlet C5) + assertIndustrialsMarquee + assertStaplesMarquee +
 //   assertStaplesNoForeignLeak (Spec §6.2b) für direkten Property-Test.
-module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL, assertConsdiscMarquee, assertConsdiscNoForeignLeak, CONSDISC_MARQUEE, CONSDISC_EXCLUDE_CONTROL, assertMaterialsMarquee, assertMaterialsNoForeignLeak, MATERIALS_MARQUEE, MATERIALS_FOREIGN_CONTROL, MATERIALS_US_PRIMARY_ALLOWLIST, assertEnergyMarquee, assertEnergyNoForeignLeak, ENERGY_MARQUEE, ENERGY_FOREIGN_CONTROL, ENERGY_US_PRIMARY_ALLOWLIST, assertPharmaMarquee, assertPharmaNoForeignLeak, PHARMA_MARQUEE, PHARMA_FOREIGN_CONTROL, PHARMA_US_PRIMARY_ALLOWLIST, assertItServicesMarquee, assertItServicesNoForeignLeak, ITSERVICES_MARQUEE, ITSERVICES_CONTAM_CONTROL, ITSERVICES_US_PRIMARY_ALLOWLIST, assertBanksMarquee, assertBanksNoForeignLeak, BANKS_MARQUEE, BANKS_FOREIGN_CONTROL, BANK_FOREIGN_DENY, assertReitsMarquee, assertReitsNoMortgageLeak, REITS_MARQUEE, REITS_MORTGAGE_CONTROL, REIT_MORTGAGE_DENY, assertCapmktMarquee, assertCapmktNoForeignLeak, CAPMKT_MARQUEE, CAPMKT_FEEGATE_CONTROL, CAPMKT_UNDEF_US_CONTROL, CAPMKT_FEEGATE_DENY };
+module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL, assertConsdiscMarquee, assertConsdiscNoForeignLeak, CONSDISC_MARQUEE, CONSDISC_EXCLUDE_CONTROL, assertMaterialsMarquee, assertMaterialsNoForeignLeak, MATERIALS_MARQUEE, MATERIALS_FOREIGN_CONTROL, MATERIALS_US_PRIMARY_ALLOWLIST, assertEnergyMarquee, assertEnergyNoForeignLeak, ENERGY_MARQUEE, ENERGY_FOREIGN_CONTROL, ENERGY_US_PRIMARY_ALLOWLIST, assertPharmaMarquee, assertPharmaNoForeignLeak, PHARMA_MARQUEE, PHARMA_FOREIGN_CONTROL, PHARMA_US_PRIMARY_ALLOWLIST, assertItServicesMarquee, assertItServicesNoForeignLeak, ITSERVICES_MARQUEE, ITSERVICES_CONTAM_CONTROL, ITSERVICES_US_PRIMARY_ALLOWLIST, assertBanksMarquee, assertBanksNoForeignLeak, BANKS_MARQUEE, BANKS_FOREIGN_CONTROL, BANK_FOREIGN_DENY, assertReitsMarquee, assertReitsNoMortgageLeak, REITS_MARQUEE, REITS_MORTGAGE_CONTROL, REIT_MORTGAGE_DENY, assertCapmktMarquee, assertCapmktNoForeignLeak, CAPMKT_MARQUEE, CAPMKT_FEEGATE_CONTROL, CAPMKT_UNDEF_US_CONTROL, CAPMKT_FEEGATE_DENY, assertTechHwMarquee, assertTechHwNoForeignLeak, TECHHW_MARQUEE, TECHHW_FOREIGN_CONTROL, TECHHW_UNDEF_US_CONTROL, TECHHW_US_PRIMARY_ALLOWLIST };
 
 // --- require.main-Guard (Härtung 2): Write + Ausgabe NUR wenn direkt als Skript ausgeführt ---
 // `require('./court-score.js')` gibt nur den Export zurück und schreibt NICHT outputs/court-results.json.
@@ -3886,6 +4205,12 @@ if (require.main === module) {
   // ACN/G/GLOB/INFY US-primary allowlist exempted), else the it_services universe collapsed/leaked.
   assertItServicesMarquee(results);
   assertItServicesNoForeignLeak(results, listingByTicker);
+  // tech_hardware_quality (CORE court bucket) DESIGN: the 9-name marquee must each be classified+scored (survive to a
+  // sane TOP-HALF rank — they ARE the franchises the absolute-anchor lifts above the commodity/loss tail) + the foreign-
+  // primary FOREIGN_CONTROL must stay out + the country-undef US names MSI/KEYS/TDY must be retained + the GENERATIVE
+  // anti-leak property test must hold (with the GRMN US-primary allowlist exempted), else the universe collapsed/leaked.
+  assertTechHwMarquee(results);
+  assertTechHwNoForeignLeak(results, listingByTicker);
   // financials_banks (CORE court bucket) DESIGN: the 7-name marquee must each be classified+scored (survive to a sane
   // rank) + the foreign-megabank-ADR DENY positive-control must stay out + the foreign-DENY anti-leak property test
   // must hold (keyed on the foreign-DENY SIGNAL, NOT country!=US — country=undefined US banks JPM/PNC/USB/MTB are

@@ -230,6 +230,16 @@ const REITS_COHORTS = new Set(['equity_reits']);
 // de-ADR country guard already ran in the classifier; out-of-class names never reach here.
 const cmCohortByTicker = new Map(); // ticker -> 'capmkt_fee_core'
 const CAPMKT_COHORTS = new Set(['capmkt_fee_core']);
+// tech_hardware_quality CORE court bucket (council/court triage 2026-06-24 — the ONE remaining quality-compounder gap).
+// ADDITIV/parity-safe: exactly the court-buckets.json `tech_hardware_quality` tickers are admitted past the asset-light/
+// growth pre-filter (analog the other CORE buckets, Fix A SI-5: no silent drops). The 5 RAW axis inputs
+// {gpa, fcfMargin, opMargin, growth, netIssuance} — the SAME axis set as it_services — are extracted from
+// snapshots/<T>.json annual.* (flow fields are {value}-WRAPPED → num() dual-shape; annualBalance.*/annualShares are
+// raw numbers), attached as ONE techhw-only field `thw` -> all other candidate JSON byte-identical. The de-ADR country
+// guard + size + dedupe already ran in the classifier; NO contamination gate (the absolute floor in court-score.js
+// sinks the commodity contract-mfg / loss tail off-headline, and the SI-4 SHELL gate excludes the revenue-less shells).
+const thwCohortByTicker = new Map(); // ticker -> 'tech_hardware_quality'
+const TECHHW_COHORTS = new Set(['tech_hardware_quality']);
 try {
   const bd = JSON.parse(fs.readFileSync(BUCK, 'utf8'));
   const cls = Array.isArray(bd) ? bd : (bd.classifications || []);
@@ -245,6 +255,7 @@ try {
     if (c && BANKS_COHORTS.has(c.bucket) && c.t) bkCohortByTicker.set(c.t, c.bucket);
     if (c && REITS_COHORTS.has(c.bucket) && c.t) reCohortByTicker.set(c.t, c.bucket);
     if (c && CAPMKT_COHORTS.has(c.bucket) && c.t) cmCohortByTicker.set(c.t, c.bucket);
+    if (c && TECHHW_COHORTS.has(c.bucket) && c.t) thwCohortByTicker.set(c.t, c.bucket);
   }
 } catch {}
 
@@ -1423,6 +1434,166 @@ function buildItServicesAxes(ticker, cohort) {
 }
 
 // ===========================================================================
+// tech_hardware_quality (CORE) — 5-axis RAW extraction from snapshots (council/court triage 2026-06-24)
+// ===========================================================================
+// ADDITIV/parity-safe: only fires for tickers in thwCohortByTicker (court-buckets tech_hardware_quality). Reads
+// snapshots/<T>.json `annual.*` (NEWEST-FIRST) — the canonical pool the deterministic classifier + the frozen cohort
+// NORMS were calibrated on. Same dual-shape num() extractor as it_services (flow fields {value}-wrapped; annualBalance.*
+// raw numbers).
+//
+// 5 SCORED axes {gpa, fcfMargin, opMargin, growth, netIssuance} via the engine absKaliberItServices (REUSED — the
+// tech_hardware axis set is byte-identical to it_services; only the cohort NORMS differ). gpa/fcfMargin/opMargin/growth
+// NON-inverted (higher=better); netIssuance inverted q(-NSI). NO RPE / people-leverage logic (that is it_services-only;
+// hardware quality is carried directly by gpa asset-efficiency + the margin pillar). M&A: the franchises include serial
+// acquirers (FTV/AMAT roll-ups) — totalAssets-jump deal-mask on the GROWTH axis only (sign-aware, positive jumps only);
+// gpa/fcfMargin/opMargin/netIssuance are NEVER masked. Spin-off/divestiture re-baselining guard ports from it_services
+// (FTV spun off VNT). netIssuance ~48% coverage (Vintage-A lacks annualShares) → DROP+renorm+ISSUANCE_NOT_READY.
+//
+// Frozen constants (mirror it_services/industrials):
+const THW_DEAL_MASK = { assetJump: 0.25, revJump: 0.15 };      // serial-acquirer totalAssets-jump proxy; BOTH required; sign-aware (positive only)
+const THW_SPINOFF = { dropYoY: -0.25, baseFrac: 0.85 };        // spin-off/divestiture re-baselining guard
+const THW_GROWTH_BLEND = { wLatest: 0.60, wFloor: 0.40 };      // 0.60*latest clean YoY + 0.40*min(recent clean YoYs)
+
+// spin-off / divestiture re-baselining guard (EXACT JS, mirrors it_services/industrials/energy). Operates on annualRev
+// newest-first. Fires -> Axis growth routed to NOT_READY:growth UPSTREAM (a permanent-level-shift rebound off a
+// shrunken base is never scored as organic).
+function spinoffRebaselineGuardTechHw(revNewestFirst) {
+  const r = revNewestFirst.filter(v => v != null && isFinite(v) && v > 0);
+  if (r.length < 3) return false;
+  const chron = r.slice().reverse();                       // oldest -> newest
+  const yoy = [];
+  for (let i = 1; i < chron.length; i++) yoy.push((chron[i] - chron[i - 1]) / Math.abs(chron[i - 1]));
+  const hasBigDrop = yoy.some(y => y <= THW_SPINOFF.dropYoY);
+  const latestYoY = (r[0] - r[1]) / Math.abs(r[1]);
+  const latestPositive = latestYoY > 0;
+  const stillBelowBase = r[0] < THW_SPINOFF.baseFrac * Math.max(...r);
+  return hasBigDrop && latestPositive && stillBelowBase;
+}
+
+// snapshot annual cache for tech_hardware tickers only (avoid re-reading + keep the parity path untouched).
+const thwSnapAnnual = new Map(); // ticker -> snapshot.annual object
+if (thwCohortByTicker.size && fs.existsSync(SNAP_DIR)) {
+  for (const t of thwCohortByTicker.keys()) {
+    try {
+      const sn = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, t + '.json'), 'utf8'));
+      if (sn && sn.annual) thwSnapAnnual.set(t, sn.annual);
+    } catch {}
+  }
+}
+
+// buildTechHwAxes(ticker, cohort) -> the 5 RAW axis inputs + lamps/audit, or null if no snapshot.
+// gpa = annualGP[0]/totalAssets[0]; fcfMargin = annualFCF[0]/annualRev[0]; opMargin = annualOpInc[0]/annualRev[0];
+// growth = 0.60*latest_clean_YoY + 0.40*min(recent clean YoYs) with the deal-mask + spin-off guard applied UPSTREAM
+// (-> growth=null + NOT_READY:growth when fired); netShareIssuance = latest annualShares YoY (<2 non-null -> null +
+// ISSUANCE_NOT_READY for drop+renorm). SHELL facts (revLatest, nAnnualRev, totalAssets presence) surfaced for the
+// court-score.js SI-4 SHELL gate (no positive rev in any year OR no totalAssets in any year -> EXCLUDE). Always-on
+// disclosure walls (CYCLE_WALL / INVENTORY_BLIND / BACKLOG_FUTURE / BOOK_TO_BILL_BLIND).
+function buildTechHwAxes(ticker, cohort) {
+  const a = thwSnapAnnual.get(ticker);
+  if (!a) return null;
+  const revA = (a.annualRev || []).map(num);                  // NEWEST-FIRST, {value}-wrapped
+  const gpA = (a.annualGP || []).map(num);
+  const opA = (a.annualOpInc || []).map(num);
+  const fcfA = (a.annualFCF || []).map(num);
+  const bal = Array.isArray(a.annualBalance) ? a.annualBalance : [];
+  const taA = bal.map(b => (b && b.totalAssets != null && isFinite(b.totalAssets)) ? b.totalAssets : null);
+  const sharesAll = Array.isArray(a.annualShares) ? a.annualShares.map(num) : [];
+  const lamps = [];
+
+  // --- Axis H1: GP/assets (Novy-Marx; the franchise vs commodity-contract-mfg separator, the lead axis) ---
+  let gpa = null;
+  if (gpA[0] != null && taA[0] != null && taA[0] > 0) gpa = gpA[0] / taA[0];
+  else lamps.push('NOT_READY:gpa');
+
+  // --- Axis H2: FCF margin = annualFCF/annualRev (cash conversion = the franchise payoff) ---
+  let fcfMargin = null;
+  if (fcfA[0] != null && revA[0] != null && revA[0] > 0) fcfMargin = fcfA[0] / revA[0];
+  else lamps.push('NOT_READY:fcfmargin');
+
+  // --- Axis H3: operating margin = annualOpInc/annualRev (pricing power vs the semi/comms cycle) ---
+  let opMargin = null;
+  if (opA[0] != null && revA[0] != null && revA[0] > 0) opMargin = opA[0] / revA[0];
+  else lamps.push('NOT_READY:opmargin');
+
+  // --- Axis H5: net-share-issuance (latest YoY; <2 non-null -> DROP + ISSUANCE_NOT_READY renorm) ---
+  let netShareIssuance = null;
+  const sharesNN = sharesAll.filter(v => v != null && isFinite(v));
+  if (sharesNN.length >= 2) {
+    let s0 = null, s1 = null;
+    for (const v of sharesAll) { if (v != null && isFinite(v)) { if (s0 == null) s0 = v; else { s1 = v; break; } } }
+    if (s0 != null && s1 != null && s1 !== 0) netShareIssuance = (s0 - s1) / s1;
+    else { netShareIssuance = null; lamps.push('ISSUANCE_NOT_READY'); }
+  } else {
+    lamps.push('ISSUANCE_NOT_READY');                         // Vintage-A: no annualShares field (~52% of the pool)
+  }
+
+  // --- Axis H4: organic growth (deal-mask + spin-off guard UPSTREAM, min-floor blend) ---
+  let growthInput = null;
+  let dealMasked = false, spinoffRebase = false, staleGrowth = false;
+  if (spinoffRebaselineGuardTechHw(revA)) {
+    spinoffRebase = true;
+    lamps.push('SPINOFF_REBASE');
+    lamps.push('NOT_READY:growth');                          // route Axis H4 drop+renorm upstream
+  } else {
+    const cleanYoY = [];
+    for (let i = 0; i < revA.length - 1; i++) {
+      const rNew = revA[i], rOld = revA[i + 1];
+      if (rNew == null || rOld == null || rOld <= 0) continue;
+      const revG = rNew / rOld - 1;
+      const taNew = taA[i], taOld = taA[i + 1];
+      const assetG = (taNew != null && taOld != null && taOld > 0) ? (taNew - taOld) / taOld : null;
+      const masked = (assetG != null && assetG >= THW_DEAL_MASK.assetJump && revG >= THW_DEAL_MASK.revJump);
+      if (masked) { dealMasked = true; continue; }            // only POSITIVE jumps masked (sign-aware)
+      cleanYoY.push(revG);
+    }
+    if (cleanYoY.length === 0) {
+      lamps.push('NOT_READY:growth');                        // no clean YoY (fully deal-masked) -> DROP Axis H4 + renorm
+    } else {
+      if (dealMasked) {
+        const rNew0 = revA[0], rOld0 = revA[1];
+        const taNew0 = taA[0], taOld0 = taA[1];
+        if (rNew0 != null && rOld0 != null && rOld0 > 0 && taNew0 != null && taOld0 != null && taOld0 > 0) {
+          const revG0 = rNew0 / rOld0 - 1, assetG0 = (taNew0 - taOld0) / taOld0;
+          if (assetG0 >= THW_DEAL_MASK.assetJump && revG0 >= THW_DEAL_MASK.revJump) staleGrowth = true;
+        }
+      }
+      if (cleanYoY.length === 1) {
+        growthInput = cleanYoY[0];                           // only 1 clean YoY -> single YoY (ABS-honest)
+      } else {
+        growthInput = THW_GROWTH_BLEND.wLatest * cleanYoY[0] + THW_GROWTH_BLEND.wFloor * Math.min(...cleanYoY);
+      }
+      if (staleGrowth) lamps.push('STALE:growth');
+    }
+  }
+  if (dealMasked) lamps.push('DEAL_MASKED');
+
+  // --- always-on disclosure walls ---
+  lamps.push('CYCLE_WALL');             // ~4y history, no through-cycle (semi/comms) normalization
+  lamps.push('INVENTORY_BLIND');        // hardware inventory turns / obsolescence — no local axis
+  lamps.push('BACKLOG_FUTURE');         // book-to-bill / RPO — future BONUS, weight 0
+  lamps.push('BOOK_TO_BILL_BLIND');     // order book-to-bill (the semi/comms forward indicator) — absent
+
+  // advisory discipline lamp
+  if (netShareIssuance != null && (-netShareIssuance) <= -0.03) lamps.push('DILUTION_HIGH'); // issuance >= 3%
+
+  // SHELL facts for the court-score.js SI-4 gate (no positive rev in ANY year OR no totalAssets in ANY year -> EXCLUDE).
+  const revLatest = revA.find(v => v != null && isFinite(v));
+  const anyPosRev = revA.some(v => v != null && isFinite(v) && v > 0);
+  const anyTotalAssets = taA.some(v => v != null);
+  return {
+    cohort,
+    gpa: round(gpa), fcfMargin: round(fcfMargin), opMargin: round(opMargin),
+    growth: round(growthInput), netShareIssuance: round(netShareIssuance),
+    dealMasked, spinoffRebase, staleGrowth,
+    revLatest: (revLatest == null ? null : round(revLatest)),
+    nAnnualRev: revA.filter(v => v != null).length,
+    anyPosRev, anyTotalAssets,
+    sharesCoverage: sharesNN.length,
+    lamps,
+  };
+}
+
+// ===========================================================================
 // financials_banks (CORE) — 4-axis RAW extraction from snapshots (court DESIGN 2026-06-23)
 // ===========================================================================
 // ADDITIV/parity-safe: only fires for tickers in bkCohortByTicker (court-buckets financials_banks). Reads snapshots/
@@ -1867,7 +2038,11 @@ for (const file of files) {
   // with a thin CACHE row. Its 4 SCORED axes come from the SNAPSHOT (buildCapmktAxes) annual.* arrays, not the cache.
   // Bypasses the cache-based early gates. Non-capmkt path: BYTE-IDENTICAL.
   const cmCohortEarly = (cmCohortByTicker.get(ticker) && cmSnapAnnual.has(ticker)) ? cmCohortByTicker.get(ticker) : null;
-  const coreEarly = indCohortEarly || stpCohortEarly || cdCohortEarly || mtCohortEarly || enCohortEarly || phCohortEarly || itCohortEarly || bkCohortEarly || reCohortEarly || cmCohortEarly;
+  // tech_hardware_quality (CORE): same SI-5 rule — a court-buckets-classified hardware-franchise name MUST reach the
+  // universe even with a thin CACHE row. Its 5 SCORED axes come from the SNAPSHOT (buildTechHwAxes) annual.* arrays, not
+  // the cache. Bypasses the cache-based early gates. Non-techhw path: BYTE-IDENTICAL.
+  const thwCohortEarly = (thwCohortByTicker.get(ticker) && thwSnapAnnual.has(ticker)) ? thwCohortByTicker.get(ticker) : null;
+  const coreEarly = indCohortEarly || stpCohortEarly || cdCohortEarly || mtCohortEarly || enCohortEarly || phCohortEarly || itCohortEarly || bkCohortEarly || reCohortEarly || cmCohortEarly || thwCohortEarly;
   const p = j.payload || {};
   if (!j.payload && !coreEarly) continue;
   if (j._ftsPartial) stats.partial++;
@@ -2026,6 +2201,7 @@ for (const file of files) {
   const bkCohort = bkCohortByTicker.get(ticker) || null;
   const reCohort = reCohortByTicker.get(ticker) || null;
   const cmCohort = cmCohortByTicker.get(ticker) || null;
+  const thwCohort = thwCohortByTicker.get(ticker) || null;
   if (indCohort) {
     // industrials_compounder (CORE): admit EVERY court-buckets-classified industrials name into the universe
     // (cross-sectional cohort percentiles + SI-5 classifiedCount===scoredCount). NO asset-light/growth/gm
@@ -2094,6 +2270,14 @@ for (const file of files) {
     // SHELL gate live in court-score.js. 4 axes come from the snapshot annual.* arrays (buildCapmktAxes). Sole sanity:
     // a parseable snapshot annual block exists (else SI-5 classifiedCount===scoredCount+excludedCount mismatch silently).
     if (!cmSnapAnnual.has(ticker)) continue;
+  } else if (thwCohort) {
+    // tech_hardware_quality (CORE): identical admission policy — admit EVERY court-buckets-classified hardware-franchise
+    // name into the universe (cross-sectional cohort percentiles + SI-5). NO asset-light/growth/gm pre-filter — hardware
+    // is capital-intensive by nature (the asset-light/ppe gate would wrongly drop the franchises); the de-ADR + size +
+    // dedupe already ran in the classifier, and the SI-1 shortlist-cut + the absolute-floor demotion of the commodity/
+    // loss tail + the economic SHELL gate live in court-score.js. 5 axes come from the snapshot annual.* arrays
+    // (buildTechHwAxes). Sole sanity: a parseable snapshot annual block exists (else SI-5 mismatch silently).
+    if (!thwSnapAnnual.has(ticker)) continue;
   } else if (isMedtech || isDlst) {
     // Milde Daten-Sanity: growth/gm/rev müssen vorhanden + endlich sein (keine ökonomischen Floors).
     // Medtech UND D&LST sind kapitalintensiv/Large-Cap-haltig → asset-light/ppe-Gate + ökonomische Floors
@@ -2164,6 +2348,11 @@ for (const file of files) {
   // netIssuance DROP+renorm when annualShares absent; always-on AUM_FLOW/FEE_RATE/RECURRING_MIX/BDC_SPREAD BLIND
   // walls). Additiv → KEIN Feld auf Nicht-Capmkt-Records (Parität alle übrigen Buckets).
   const cmExtra = cmCohort ? { cm: buildCapmktAxes(ticker, cmCohort) } : {};
+  // tech_hardware_quality (CORE): the 5 RAW axis inputs {gpa, fcfMargin, opMargin, growth, netIssuance} from the
+  // snapshot annual.* arrays, attached as ONE techhw-only field `thw` (deal-mask + spin-off guard applied UPSTREAM;
+  // same axis set + engine as it_services, only the cohort NORMS differ; always-on CYCLE_WALL/INVENTORY_BLIND/
+  // BACKLOG_FUTURE/BOOK_TO_BILL_BLIND walls). Additiv → KEIN Feld auf Nicht-TechHW-Records (Parität alle übrigen Buckets).
+  const thwExtra = thwCohort ? { thw: buildTechHwAxes(ticker, thwCohort) } : {};
   candidates.push({
     ticker,
     growth: round(growth), growth_annual: round(gAnnual), growth_q: round(gQ), growthSource,
@@ -2189,6 +2378,7 @@ for (const file of files) {
     ...bkExtra,
     ...reExtra,
     ...cmExtra,
+    ...thwExtra,
   });
 }
 
