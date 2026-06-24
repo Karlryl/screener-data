@@ -29,6 +29,8 @@ const BUCKETS = {
     formula: 'equity_reits CORE — FFO/NOI quality; absKaliberReits 4 axes opMargin(NOI) .30 / ffoAssets((NI+Dep)/assets) .30 (DROP+renorm, top-tier no-Dep) / revG3 .25 / ndGA(net-debt/assets INVERTED LEVEL) .15; {value}-unwrap; FFO gains-on-sale guard; mortgage-REITs hard-separated; same-store-NOI/occupancy/NAV BLIND.' },
   capmkt_fee_core:  { keys: ['capmkt_fee_core'],  file: 'capmkt_fee_core-v1.0-2026-06-24.json',  etf: 'IAI',
     formula: 'capmkt_fee_core CORE — asset-light fee quality; absKaliberCapmkt 4 axes opMargin .30 / opMarginStability(1-CV) .30 / fcfMargin .25 / netIssuance .15; 4-arm economic fee-gate (fund-float / RIC / BDC-loan-book / crypto-miner) so genuine fee compounders lead.' },
+  tech_hardware_quality: { keys: ['tech_hardware_quality'], file: 'tech_hardware_quality-v1.0-2026-06-24.json', etf: 'SOXX',
+    formula: 'tech_hardware_quality CORE (universe-coverage completion, same 2026-06-24 batch) — picks-and-shovels/precision-instrument franchises (semi-equip/components/comm-equip/instruments); reuses absKaliberItServices 5-axis (gpa .34 lead / fcfMargin .24 / opMargin .18 / growth .14 / netIssuance .10); quality-only membership + composite THW_ABSK_FLOOR=0.25 demotes commodity contract-mfg off the headline.' },
 };
 
 const results = JSON.parse(fs.readFileSync(path.join(ROOT, 'outputs', 'court-results.json'), 'utf8'));
