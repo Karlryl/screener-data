@@ -18,7 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const ROOT = __dirname;
-const { absKaliber, absKaliberIndustrials, absKaliberStaples, absKaliberConsDisc, absKaliberMaterials, absKaliberEnergy, absKaliberPharma, absKaliberItServices, absKaliberBanks, absKaliberReits, absKaliberCapmkt, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
+const { absKaliber, absKaliberIndustrials, absKaliberStaples, absKaliberConsDisc, absKaliberMaterials, absKaliberEnergy, absKaliberPharma, absKaliberItServices, absKaliberBanks, absKaliberReits, absKaliberCapmkt, absKaliberMedFac, blendScore, gateOpen, normTableId: getNormTableId, NORMS } = require('./lib/absolute-anchor');
 // Medtech M&A snapshot (advisory lamps; object keyed by ticker)
 const maMedtechRaw = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'ma-rpo-snapshot-medtech.json'), 'utf8')); } catch { return {}; } })();
 // Remove _header key
@@ -710,6 +710,45 @@ const FORMULAS = {
     capmkt: true, cohortKey: 'capmkt_fee_core',
     a2Note: 'capmkt_fee_core v0 (court gauntlet DESIGN, BUILD_WITH_CAVEATS / court REVISE 2026-06-24 + RE-COURT 2026-06-24 DENIED-for-BDC-contamination -> 2 new fee-gate arms; NORMS RE-FROZEN LIVE on the FINAL de-ADRd + fee-gated + DE-BDCd + DE-MINED + deduped US pool 2026-06-24 THEN frozen — the CORE gate). ONE asset-light FEE-business cohort: Financial Services ∧ industry in {Asset Management, Capital Markets, Financial Data & Stock Exchanges, Insurance Brokers} ∧ US-listing (DE-ADRd country-domicile guard + FOREIGN_NAME + positive US-primary test) ∧ >=$1B, deduped, MINUS the economic fee-gate. Live: 84 classified; SCORE = THROUGH-CYCLE FEE-FRANCHISE QUALITY ONLY, never AUM direction / market levels. THE ECONOMIC FEE-GATE (court revision #1 + RE-COURT, applied at classification — classify-capmkt.js): a FOUR-arm ECONOMIC gate (NOT a name list) excludes 71 names — (1) FUND_FLOAT_PASSTHROUGH fcfMargin=annualFCF[0]/annualRev[0]>1.0 (a real fee business cannot FCF more than its revenue — KYN 8.80 / APO 1.62 / IBKR 2.56 / PDO 9.19; 16 names), (2) RIC_PASSTHROUGH niMargin=annualNetIncome[0]/annualRev[0]>=0.95 (a 40-Act closed-end fund drops ~all investment income to NI — NMZ/NUV/TY/ADX/GAB niMargin .97-1.00; live genuine-fee max niMargin is APO .76 so .95 has ZERO false positives; 39 names), (3) BDC_SPREAD_LOAN_BOOK (RE-COURT — the DENIAL cause: the original top-5 were 4 leveraged-spread-lender BDCs while CME/MSCI/ICE sat at ranks 6-14) revToAssets=annualRev[0]/annualBalance[0].totalAssets ∈[.05,.16] ∧ totalDebt===null ∧ totalLiabilities/totalEquity ∈[.7,2.0] (the regulated ~2:1 BDC asset-coverage signature; catches all 11 BDCs OBDC/GSBD/TSLX/MSDL/FSK/GBDC/OTF/ARCC/BXSL/CSWC/HTGC with ZERO genuine-fee false positives — the leverage CEILING 2.0 spares the alt-manager holdco Carlyle/CG at TL/TE 3.83; 11 names), (4) CRYPTO_MINER_NON_FEE (RE-COURT) opMargin<0 in EVERY available year ∧ mean NI margin AND mean FCF margin both <-.20 (5 commodity bitcoin-miners CLSK/HIVE/MARA/RIOT/WULF mislabeled into Capital Markets that polluted the REL anchors; opMargin strips volatile crypto mark-to-market; SPARES COIN +.13 FCF / HOOD positive recent opMargin / CG +.15 mean NI / BWIN near-break-even; 5 names). EXCLUDE-not-cap is the cleaner economic treatment (a fund/float vehicle, BDC loan-book, or commodity miner is a DIFFERENT ANIMAL, like a mortgage REIT vs equity REIT — score-capping would still pollute the cohort REL anchors). Verified: KYN/TIGR/APO/IBKR + 39 CEFs + 11 BDCs + 5 miners OUT; the genuine fee compounders CME/MSCI/ICE now LEAD the cohort. 4 SCORED axes via absKaliberCapmkt: opMargin = annualOpInc[0]/annualRev[0] (fee-franchise pricing power, w .30, norm -.01/.50 = clean-pool p10 -1.3% / p90 50.2%), opMarginStability = 1-CV(opMargin over available years) where CV=stdev/|mean|, clamp [0,1] (a through-cycle pricing-durability proxy, w .30, identity-clip norm 0/1; cov ~65/84), fcfMargin = annualFCF[0]/annualRev[0] (cash conversion, w .25, norm -.23/.52 = clean-pool p10 -22.7% / p90 51.9%), netIssuance = q(-((annualShares[0]-annualShares[1])/annualShares[1])) (Pontiff-Woodgate discipline, INVERTED, buyback=elite, w .15, norm -.08/.12; ~43% coverage → DROP+renorm + ISSUANCE_NOT_READY, NEVER imputed). COUNTRY NORMALIZE (court revision #2): snapshots carry country===undefined (NOT null) for the Vintage-A US names; the classify-in test treats undefined === US-primary (US exchange + USD + no foreign legal-form name), so MSCI/MCO/ICE/NDAQ/KKR are RETAINED; the anti-leak assert keys on the foreign-DENY SIGNAL, NOT country!=US. COVERAGE-RENORM: any NOT_READY/null axis dropped, survivors renormalize to Σ=1.0 (no fake-neutral impute) — the load-bearing netIssuance DROP path on ~57% of the pool. score=100*(0.6*absKaliber+0.4*REL), β=0.6, REL per-cohort (n=84≫15). WALLS (always-on lamps): AUM_FLOW_BLIND (AUM net flows / organic AUM growth — the fee-engine fuel — ABSENT), FEE_RATE_BLIND (fee rate / take-rate compression absent), RECURRING_MIX_BLIND (recurring vs transactional/performance-fee mix absent), BDC_SPREAD_BLIND (now largely MOOT — the 11 BDCs are hard-gated OUT by arm 3, not scored — kept always-on as a structural disclosure for any future borderline lender the economic gate misses). SI-4 out-of-class (non-fee industry / non-US per the de-ADRd guard / <$1B / fee-gated → never enter court-buckets; economic SHELL with <2 positive-revenue-years OR no revenue → score=null + excluded[] OUT_OF_SEGMENT:shell) → score=null + excluded[]; SI-5 classifiedCount===scoredCount+excludedCount fail-loud; marquee assert (SPGI/MCO/MSCI/ICE/NDAQ/CBOE/BLK/AJG/BRO classify AND survive to a sane rank) fail-loud + fee-gate/foreign anti-leak (a classified record in the fund-float/BDC/miner DENY set or a country-SET foreigner throws). Additive/parity-safe. Constants frozen 2026-06-24.',
   },
+  // medical_care_facilities (CORE court bucket) — ONE capital-intensive HEALTHCARE-FACILITIES operating-quality cohort
+  // (hospital / SNF / dialysis / rehab / hospice / surgery / home-health operators). Court gauntlet DESIGN (BUILD as a
+  // DISCLOSED partial-quality read — the banks precedent: real OPERATING quality is locally computable, but the core
+  // value driver (reimbursement-rate / payer mix / census-occupancy / regulatory) is BLIND and HONESTLY disclosed via
+  // always-on BLIND walls). NORMS COMPUTED LIVE on the FINAL de-ADR'd + deduped US pool 2026-06-24 (n=27) THEN frozen
+  // (the CORE gate). 4 SCORED axes {opMargin, roaThruCycle, fcfMargin, leverageDiscipline} via the NEW engine
+  // absKaliberMedFac (coverage-renorm; the 23 existing CORE/court buckets BYTE-UNTOUCHED). Weights {opMargin .30,
+  // roaThruCycle .30, fcfMargin .25, leverageDiscipline .15}: the operating-quality pillar opMargin+roaThruCycle = .60
+  // dominates; leverageDiscipline .15 the GENEROUS leverage tiebreaker. NO GROWTH AXIS — QUALITY-ONLY (the materials/
+  // tech_hardware lesson). RAW inputs from m.mf.* (court-screen buildMedFacAxes; {value}-unwrap; ndGA RAW → engine
+  // negates). medical_care_facilities = NEW code keyed by the new cohort string; all existing buckets BYTE-IDENTICAL.
+  medical_care_facilities: {
+    label: 'Medical-Care-Facilities v0 (capital-intensive healthcare facilities — hospital/SNF/dialysis/rehab/hospice/surgery/home-health operators; through-cycle OPERATING quality: operating-margin LEVEL, through-cycle ROA, FCF-margin, leverage discipline (net-debt/assets INVERTED); absolute-anchor; REIMBURSEMENT_RATE_BLIND/PAYER_MIX_BLIND/CENSUS_OCCUPANCY_BLIND/REGULATORY_BLIND)',
+    // REL cross-sectional z/MAD axes mirror the ABS axes (sign-aligned: leverageDiscipline reads the NEGATED net-debt/
+    // assets upstream so higher=better, same as the ABS inverted q-input). Weights mirror the absKaliberMedFac weights.
+    // membership = opMargin(quality) × scale (QUALITY-ONLY, mirrors banks/reits/capmkt): gm.c = opMargin.floor (-0.035,
+    // the quality center), gm.s = 0.20 (a floor-to-elite-spread scale); g is UNUSED (no growth/FCF membership gate — a
+    // low-growth quality operator is still high quality, and a serial acquirer's deal-masked growth must not gate); scaleLog
+    // center = log10($1B).
+    membership: { g: { c: 0.00, s: 0.06 }, gm: { c: -0.035, s: 0.20 }, scaleLog: { c: log10(1000), s: 0.6 } },
+    axes: [
+      { key: 'opMargin',          name: 'OpMargin-Level',  k: 1.5, w: 0.30 },
+      { key: 'roaThruCycle',      name: 'ROA-ThruCycle',   k: 1.5, w: 0.30 },
+      { key: 'fcfMargin',         name: 'FCF-Margin',      k: 1.5, w: 0.25 },
+      { key: 'leverageDisc',      name: 'LeverageDisc',    k: 1.5, w: 0.15 },
+    ],
+    dilCap: 0, dilStart: 0.05, dilRange: 0.20, // no separate share-issuance penalty axis for medfac (not a scored dimension here).
+    stages: [
+      { name: 'S3-Elite-OpMargin',  test: f => f >= 0.12 },
+      { name: 'S2-Strong-OpMargin', test: f => f >= 0.06 },
+      { name: 'S1-Adequate',        test: f => f >= -0.035 },
+      { name: 'S0-Sub-Floor',       test: () => true },
+    ],
+    dominantBlock: ['opMargin', 'roaThruCycle'],
+    degraded: false,
+    normTableId: 'medfac-norms-2026-06-24',
+    medfac: true, cohortKey: 'medical_care_facilities',
+    a2Note: 'medical_care_facilities v0 (court gauntlet DESIGN, BUILD as a DISCLOSED partial-quality read — the banks/equity_reits precedent; NORMS COMPUTED LIVE on the FINAL de-ADRd + deduped US pool 2026-06-24 THEN frozen — the CORE gate). ONE capital-intensive HEALTHCARE-FACILITIES operating-quality cohort: Healthcare ∧ industry=="Medical Care Facilities" ∧ US-listing (DE-ADRd country-domicile guard + FOREIGN_NAME + 5-letter-pink-sheet-ADR rule + positive US-primary test) ∧ >=$1B, deduped. Live: 27 classified (28 raw US >=$1B minus CON, a DATA-PLUMBING exclusion — "CON" is a Windows reserved device name so its snapshot is `_CON.json`, unreachable by the shared `snapshots/<ticker>.json` loader path; documented in classify-medfacilities.js MEDFAC_DEDUPE_DROP). SCOPE: this is the genuine capital-intensive facilities-operator industry ONLY — Healthcare Plans (managed-care 2-4% thin-margin regulated flow-through, the insurance-exclusion cousin) + Medical Distribution (~1% margin) are SEPARATE industries and never classify here. SCORE = THROUGH-CYCLE OPERATING QUALITY ONLY, never a reimbursement-cycle bet (the REIMBURSEMENT_RATE_BLIND wall). 4 SCORED axes via absKaliberMedFac: opMargin = annualOpInc[0]/annualRev[0] (operating efficiency / cost control, w .30, norm -.035/.158 = live p10 -3.5% / p90 15.8%), roaThruCycle = mean of available annualNetIncome[i]/annualBalance[i].totalAssets over i=0..3 (the 4y through-cycle capital-return co-pillar — the banks lead-axis pattern ADAPTED; damps a one-off impairment year, w .30, norm .00/.10 = floor lifted to break-even (no credit for a loss-making avg; the impaired AGL/PIII/AVAH SHOULD score the floor) / elite .10 ≈ HCA 10.2%), fcfMargin = annualFCF[0]/annualRev[0] (cash conversion = the operating-quality payoff, w .25, norm -.025/.119 = live p10 -2.5% / p90 11.9%), leverageDiscipline = q(-((totalDebt[0]-totalCash[0])/totalAssets[0])) (INVERTED + LEVEL-scored, w .15, norm -.674/-.30 = a name at ~30% net-debt/assets scores elite, ~67% floor; GENEROUS so only the OVER-levered BKD/SNDA lose points — LEVEL discipline, NOT the industrials asset-GROWTH penalty; ndGA null → DROP+renorm + NOT_READY:leverage, NEVER imputed). NO GROWTH AXIS — QUALITY-ONLY membership (the materials/tech_hardware lesson: do NOT exile a quality operator for a down year, and a serial acquirer ENSG/SEM has deal-masked unreadable organic growth that would inflate the score; roaThruCycle is the capital-return co-pillar so the deliberately-low-margin / high-ROIC SNF operators ENSG are NOT under-ranked by an opMargin-only read — ENSG lands ~#8 not bottom). COVERAGE-RENORM: any NOT_READY/null axis dropped, survivors renormalize to Σ=1.0 (no fake-neutral impute) — the leverageDiscipline DROP on the net-cash CHE + the roaThruCycle/fcf drops on the thin names. score=100*(0.6*absKaliber+0.4*REL), β=0.6, REL per-cohort (n=27≫15). WALLS (always-on lamps — the SINGLE MOST IMPORTANT facilities value-drivers carry NO local signal; the banks credit-quality-blind precedent): REIMBURSEMENT_RATE_BLIND (Medicare/Medicaid/commercial reimbursement-rate trajectory ABSENT — THE core driver; the score cannot see rate cuts/increases), PAYER_MIX_BLIND (payer mix Medicare vs Medicaid vs commercial vs self-pay absent), CENSUS_OCCUPANCY_BLIND (patient census / bed occupancy / admissions-volume trend absent), REGULATORY_BLIND (regulatory exposure — DOJ/CMS audits, site-of-care shifts, staffing mandates — absent). SI-4 out-of-class (non-facilities industry / non-US per the de-ADRd guard / <$1B → never enter court-buckets; economic SHELL with <3 positive-revenue-years OR no latest revenue → score=null + excluded[] OUT_OF_SEGMENT:shell, the materials/energy/reits lesson adapted to the facilities schema) → score=null + excluded[]; SI-5 classifiedCount===scoredCount+excludedCount fail-loud; marquee assert (HCA/THC/UHS/EHC/ENSG/DVA classify AND survive to a sane rank, with HCA/EHC quality operators leading, no loss-making name topping) fail-loud + foreign anti-leak (a classified record in the known foreign Fresenius/diagnostics ADR DENY set or a country-SET foreigner throws — NOT keyed on country!=US, which would wrongly throw on the legitimate country=undefined US operators THC/SGRY/MD/UHS/SEM). Additive/parity-safe. Constants frozen 2026-06-24.',
+  },
   diagnostics_lst: {
     label: 'Diagnostics-&-Life-Science-Tools v0 (cohort-aware dx|tools, absolute-anchor, deceleration-aware organic growth, FCF-efficiency, chronic-acquirer lamps)',
     membership: { g: { c: 0.10, s: 0.05 }, gm: { c: 0.40, s: 0.10 }, scaleLog: { c: log10(300), s: 0.5 } },
@@ -839,6 +878,58 @@ const CAPMKT_FEEGATE_DENY = new Set([
   'OBDC', 'GSBD', 'TSLX', 'MSDL', 'FSK', 'GBDC', 'OTF', 'ARCC', 'BXSL', 'CSWC', 'HTGC',   // RE-COURT arm 3: BDC_SPREAD_LOAN_BOOK
   'CLSK', 'HIVE', 'MARA', 'RIOT', 'WULF',                                                 // RE-COURT arm 4: CRYPTO_MINER_NON_FEE
 ]);
+
+// medical_care_facilities (CORE) economic SHELL gate (the materials/energy/reits pre-revenue lesson ADAPTED to the
+// facilities schema): a facilities operator with <3 positive-revenue-years OR no latest revenue is a pre-operating shell
+// that CANNOT be scored — the opMargin/fcfMargin axes are undefined/explosive on near-zero revenue, so coverage-renorm
+// would degenerate. SI-4 EXCLUDE → score=null + excluded[] OUT_OF_SEGMENT:shell, NEVER scored 0. The medfac-axis
+// extractor surfaces m.mf.positiveRevYears + m.mf.revLatest for exactly this gate.
+const MEDFAC_MIN_POSITIVE_REV_YEARS = 3; // >=3 positive-revenue-years required for a facilities operator to be SCORED (else shell)
+
+// medical_care_facilities (CORE) NON-FACILITY economic exclusion gate (RE-COURT 2026-06-24, the capmkt BDC_SPREAD_LOAN_BOOK
+// precedent ADAPTED to the facilities schema). THE DEFECT the re-court DENIED: CHE (Chemed) topped the cohort at score 93 /
+// absK .96 (vs HCA .82) — but Chemed is ~38% Roto-Rooter plumbing + asset-light home-hospice that owns NO facilities, the
+// OPPOSITE of this bucket's "capital-intensive medical care facilities" identity. It wins because the asset-light structure
+// MAXES axes calibrated for capital-intensive operators: roaThruCycle 17.2% (2.70x the cohort p90 of 6.38%, q=1.0), high
+// fcfMargin, AND the leverage axis is DROPPED (net-cash, no debt line → coverage-renorm onto the 3 quality axes). This is the
+// SAME failure mode capmkt_fee_core was RE-COURT-DENIED for (BDCs topping a fee bucket), fixed there with an ECONOMIC exclusion.
+//
+// THE ECONOMIC TELL (a CONJUNCTION, NO name list — the capmkt BDC precedent: signal-based, not ticker-gated): a non-facility
+// conglomerate combines (1) an ABNORMAL through-cycle capital return — roaThruCycle > 0.12 (CHE 17.2%; the next-highest is
+// HCA 10.2%, so the band [10.2%, 17.2%] is EMPTY — a clean 7-point gap; calibration anchor: cohort roaThruCycle p90 = 6.38%,
+// so 0.12 ≈ 1.9x p90 and CHE sits at 2.70x) — WITH (2) an ABNORMALLY LIGHT asset base — ppeToAssets < 0.40 (CHE 21.9%; EVERY
+// genuine operator with roaThruCycle even above 6% owns >=54.8% PPE: HCA 54.8%, EHC 60.9%, ENSG 69.5% — the band [22%, 55%]
+// among high-ROA names is EMPTY, a 33-point gap). NEITHER arm alone is sufficient: PPE<0.40 alone catches the genuine
+// asset-light service operators HCSG/ADUS/AMN/ASTH (modest ROA, legitimate home-health/staffing); roaThruCycle>0.12 alone is
+// fragile. The CONJUNCTION "elite capital return on a light asset base = not a facilities operator" isolates EXACTLY CHE and
+// nothing else across the live 27-name cohort, with ENSG safe on BOTH arms by a wide margin (roaTC 6.0% << 0.12; ppeTA 69.5%
+// >> 0.40 — ENSG is net-cash only because it LEASES its SNFs, a genuine operator, so net-cash is NOT the signal; PPE intensity
+// is). ppeToAssets PRESENT is REQUIRED — a thin record without a netPPE line (THC/UHS) can NEVER be gated (fail-safe = retain).
+// EXCLUDE-not-cap is the cleaner economic treatment (capmkt lesson): the member is (a) DROPPED from the per-cohort REL anchor
+// pool (so its anomalous ratios cannot drag the cohort median/MAD) AND (b) score=null + NON_FACILITY_CONGLOMERATE lamp +
+// excluded[] (reason NON_FACILITY_CONGLOMERATE). Verified: catches CHE, ZERO genuine-operator false positives, all 26 other
+// scored names (esp. ENSG) RETAINED; the new top is a genuine capital-intensive operator (HCA).
+const MEDFAC_NONFAC_ROA_HI = 0.12;   // roaThruCycle > this = an abnormal through-cycle capital return (CHE 17.2%; next is HCA 10.2%; cohort p90 6.38%)
+const MEDFAC_NONFAC_PPE_HI = 0.40;   // netPPE/totalAssets < this = an abnormally light asset base (CHE 21.9%; every genuine high-ROA operator >=54.8%)
+
+// medical_care_facilities (CORE) FOREIGN anti-leak positive-control: the known foreign facilities/diagnostics ADRs the
+// de-ADR guard must keep OUT (mirrors the classifier's MEDFAC_FOREIGN_CONTROL). The SI-5 block asserts NO classified
+// member is in this set — a leak means a de-ADR guard regressed. Fresenius Medical Care (FMS NYSE ADR of a German
+// primary; FMCQF/FME.DE pink/foreign-suffix), Fresenius SE (FRE.DE/FSNUF/FSNUY), Laboratorios (LWSCF), the .AX/.SZ
+// foreign-suffix names. country=undefined US operators (THC/SGRY/MD/UHS/SEM) are NOT here — admitted by the positive
+// US-primary test.
+const MEDFAC_FOREIGN_DENY = new Set(['FMS', 'FMCQF', 'FME.DE', 'FRE.DE', 'FSNUF', 'FSNUY', 'LWSCF', 'RHC.AX', '300015.SZ']);
+
+// medical_care_facilities (CORE) NON-FACILITY positive-control (RE-COURT). The known non-facility conglomerate the economic
+// gate (MEDFAC_NONFAC_ROA_HI × MEDFAC_NONFAC_PPE_HI conjunction) MUST keep OUT of the SCORED universe — a regression sentinel,
+// NOT the gating mechanism (the gate is purely the economic conjunction above; this set is asserted as a belt-and-suspenders
+// regression test, exactly like capmkt's CAPMKT_BDC_CONTROL). CHE = Chemed (~38% Roto-Rooter plumbing + asset-light home-hospice).
+const MEDFAC_NONFAC_DENY = new Set(['CHE']);
+// medical_care_facilities (CORE) NON-FACILITY SPARE positive-control: the genuine operators the gate MUST RETAIN (must NOT be
+// caught). ENSG (Ensign) is the load-bearing spare — net-cash because it LEASES its SNFs (a genuine high-PPE operator, ppeTA
+// 69.5%), so net-cash alone must never trip the gate. HCA/THC/UHS/EHC/DVA/ADUS round out the marquee + asset-light-but-genuine
+// service names. A miss here means the gate false-positived a genuine operator (the prompt's STOP condition).
+const MEDFAC_NONFAC_SPARE = Object.freeze(['ENSG', 'HCA', 'THC', 'UHS', 'EHC', 'DVA', 'ADUS']);
 
 // --- Skeptiker-Welle-2-Befunde, deterministisch eingebaut ---
 const KILL = new Set(['PS', 'RDVT', 'ADEA', 'OMDA', 'TEM', 'KMTS']); // verifiziert: Ticker-Mismatch / falscher Sektor / Daten-Fehler
@@ -1579,6 +1670,41 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       m.cohort = i.cohort || F.cohortKey;
     }
   }
+  // --- medical_care_facilities (CORE) PRE-PASS: lift the 4 RAW axis inputs from m.mf onto the member ---
+  // All intermediates are MEDFAC-LOCAL → all other buckets' member JSON byte-identical (parity). opMargin/roaThruCycle/
+  // fcfMargin are NOT inverted (higher=better directly); leverageDisc stores the NEGATED raw net-debt/assets so the REL
+  // z (higher=better) AGREES IN SIGN with the ABS inverted q-input (lower net-debt/assets = best). null raw → axis DROP
+  // (coverage-renorm in absKaliberMedFac; REL sAxis returns 0=neutral for null). The leverageDisc NULL case (net-cash
+  // names with no debt line, e.g. CHE) + roaThruCycle/fcf drops on the thin names are the DROP paths. Mirrors the reits/
+  // capmkt pre-pass. NO growth axis (quality-only).
+  if (F.medfac) {
+    for (const m of members) {
+      const i = m.mf || {};
+      m._mfOpMargin = (i.opMargin != null && isFinite(i.opMargin)) ? i.opMargin : null;
+      m._mfRoaThruCycle = (i.roaThruCycle != null && isFinite(i.roaThruCycle)) ? i.roaThruCycle : null;
+      m._mfFcfMargin = (i.fcfMargin != null && isFinite(i.fcfMargin)) ? i.fcfMargin : null;
+      m._mfLeverageDisc = (i.ndGA != null && isFinite(i.ndGA)) ? -i.ndGA : null;                     // q(-ndGA) direction (inverted leverage discipline)
+      // persisted audit fields (rounded)
+      m.opMarginMedFac = m._mfOpMargin == null ? null : Math.round(m._mfOpMargin * 10000) / 10000;
+      m.roaThruCycle = m._mfRoaThruCycle == null ? null : Math.round(m._mfRoaThruCycle * 10000) / 10000;
+      m.fcfMarginMedFac = m._mfFcfMargin == null ? null : Math.round(m._mfFcfMargin * 10000) / 10000;
+      m.netDebtToAssets = (i.ndGA != null && isFinite(i.ndGA)) ? Math.round(i.ndGA * 10000) / 10000 : null;
+      m.cohort = i.cohort || F.cohortKey;
+      // NON_FACILITY_CONGLOMERATE economic exclusion (RE-COURT, the capmkt BDC precedent): an abnormal through-cycle
+      // capital return (roaThruCycle > MEDFAC_NONFAC_ROA_HI) ON an abnormally light asset base (ppeToAssets present AND <
+      // MEDFAC_NONFAC_PPE_HI). The CONJUNCTION isolates CHE (elite ROA on a light book = not a capital-intensive facilities
+      // operator) and spares every genuine operator incl. the high-PPE net-cash leaser ENSG. ppeToAssets PRESENT is required
+      // → a thin record (THC/UHS, no netPPE line) can NEVER be gated (fail-safe = retain). Sets _nonFacility = the REL-drop +
+      // score-null flag (mirrors _currencySuspect): the anomalous ratios are dropped from the REL anchor pool below so they
+      // cannot drag the cohort median/MAD, and the scoring branch sets score=null + NON_FACILITY_CONGLOMERATE.
+      const _mfRoa = (i.roaThruCycle != null && isFinite(i.roaThruCycle)) ? i.roaThruCycle : null;
+      const _mfPpe = (i.ppeToAssets != null && isFinite(i.ppeToAssets)) ? i.ppeToAssets : null;
+      m.ppeToAssets = _mfPpe == null ? null : Math.round(_mfPpe * 10000) / 10000;   // persisted audit field
+      if (_mfRoa != null && _mfRoa > MEDFAC_NONFAC_ROA_HI && _mfPpe != null && _mfPpe < MEDFAC_NONFAC_PPE_HI) {
+        m._nonFacility = true;   // set ONLY when the economic conjunction fires → clean members never carry the field (parity)
+      }
+    }
+  }
 
   // ===========================================================================
   // UNIVERSAL currency-mix guard (INFY-class) — GENERAL PRE-ANCHOR pass (protects ALL buckets).
@@ -1592,7 +1718,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
   // The flag rides on whichever per-bucket axis field is attached (it/thw/ind/stp/cd/mt/en/ph/bk/re/cm — banks/
   // reits/capmkt have no GP denominator so currencyMixSuspect always returns false there → never fires →
   // parity-safe). Reading from the SINGLE present field keeps this bucket-neutral with NO hardcoded ticker.
-  const CC_AXIS_FIELDS = ['it', 'thw', 'ind', 'stp', 'cd', 'mt', 'en', 'ph', 'bk', 're', 'cm'];
+  const CC_AXIS_FIELDS = ['it', 'thw', 'ind', 'stp', 'cd', 'mt', 'en', 'ph', 'bk', 're', 'cm', 'mf'];
   for (const m of members) {
     for (const fld of CC_AXIS_FIELDS) {
       const ax = m[fld];
@@ -1731,6 +1857,18 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       default: return m[key];
     }
   };
+  // medical_care_facilities (CORE): 4 axis-keys {opMargin, roaThruCycle, fcfMargin, leverageDisc}; opMargin/roaThruCycle/
+  // fcfMargin NON-inverted, leverageDisc inverted (stored negated in m._mfLeverageDisc) → mirror reRaw/cmRaw on the
+  // m._mf* fields. The REL z/MAD reads the SAME signed values as the ABS q-input.
+  const mfRaw = (m, key) => {
+    switch (key) {
+      case 'opMargin': return m._mfOpMargin;
+      case 'roaThruCycle': return m._mfRoaThruCycle;
+      case 'fcfMargin': return m._mfFcfMargin;
+      case 'leverageDisc': return m._mfLeverageDisc;
+      default: return m[key];
+    }
+  };
   const rawOfStats = (m, key) => {
     if (F.industrials) return indRaw(m, key);
     if (F.staples) return stpRaw(m, key);
@@ -1743,6 +1881,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (F.banks) return bkRaw(m, key);
     if (F.reits) return reRaw(m, key);
     if (F.capmkt) return cmRaw(m, key);
+    if (F.medfac) return mfRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtech : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -1761,6 +1900,7 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
     if (F.banks) return bkRaw(m, key);
     if (F.reits) return reRaw(m, key);
     if (F.capmkt) return cmRaw(m, key);
+    if (F.medfac) return mfRaw(m, key);
     if (key === 'growth') return bucket === 'medtech_devices' ? m._growthMedtechAdj : (bucket === 'diagnostics_lst' ? m._growthDlst : m._growth);
     if (key === 'effDlst') return m._effDlst;
     if (key === 'capexNeg') return m._capexNeg;
@@ -1778,8 +1918,11 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
   const stats = {};
   for (const ax of F.axes) {
     if (ax.key === 'a2Forward') continue; // composite axis -> anchors computed separately (statsA2)
-    // currency-suspect members are DROPPED from the REL anchor pool (their ratio axes are corrupt-scale garbage)
-    const vals = members.filter(m => !m._currencySuspect).map(m => rawOfStats(m, ax.key)).filter(v => v != null && isFinite(v));
+    // currency-suspect members are DROPPED from the REL anchor pool (their ratio axes are corrupt-scale garbage); medfac
+    // NON_FACILITY conglomerates (_nonFacility, CHE-class) are DROPPED too (their elite-ROA-on-a-light-book ratios are
+    // off-cohort anomalies that would drag the cohort median/MAD — the capmkt RE-COURT lesson: a gated non-member must not
+    // pollute the REL anchors). _nonFacility is set ONLY on medfac members → parity-safe for every other bucket.
+    const vals = members.filter(m => !m._currencySuspect && !m._nonFacility).map(m => rawOfStats(m, ax.key)).filter(v => v != null && isFinite(v));
     stats[ax.key] = { median: median(vals), mad: mad(vals), n: vals.length };
   }
   // D&LST (Spec §1.2): REL cross-sektionale Stats PRO KOHORTE (dx z-scored gegen dx, tools gegen tools) —
@@ -1956,6 +2099,18 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       // (membership-Out only suppresses the headline rank, never absKaliber). A BDC with opMargin null but fcfMargin
       // present (OCSL) reads -1 here → membership-Out (off the headline shortlist) but still SCORED on its other axes.
       const opGate = m._cmOpMargin != null ? m._cmOpMargin : -1;        // null opMargin → low
+      const scaleM = (m.marketCap != null && isFinite(m.marketCap)) ? m.marketCap / 1e6 : (m.scaleRevM || 1); // $1B+ marketCap
+      const mOp = logistic(opGate, F.membership.gm.c, F.membership.gm.s);     // quality pillar (opMargin.floor center)
+      const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
+      M = mOp * mSc;
+    } else if (F.medfac) {
+      // medical_care_facilities membership: opMargin(quality) × scale logistic. QUALITY-ONLY (mirrors banks/reits/capmkt):
+      // facilities operators have NO growth membership gate — the operating-margin pillar stands in for the quality gate
+      // (gm membership center is the opMargin.floor, -.035), and a serial acquirer's deal-masked growth must NOT gate.
+      // roaThruCycle/fcfMargin are NOT membership inputs (a name can be null on either via coverage-renorm). $1B+ marketCap
+      // is the classifier gate. A shell (opMargin null) reads -1 → low membership, but the economic SHELL SI-4 gate is what
+      // actually excludes it (membership-Out only suppresses the headline rank, never absKaliber).
+      const opGate = m._mfOpMargin != null ? m._mfOpMargin : -1;        // null opMargin (shell) → low
       const scaleM = (m.marketCap != null && isFinite(m.marketCap)) ? m.marketCap / 1e6 : (m.scaleRevM || 1); // $1B+ marketCap
       const mOp = logistic(opGate, F.membership.gm.c, F.membership.gm.s);     // quality pillar (opMargin.floor center)
       const mSc = logistic(log10(Math.max(scaleM, 1)), F.membership.scaleLog.c, F.membership.scaleLog.s);
@@ -2492,6 +2647,62 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
         m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
       }
       m.stage = stageOf(F, m._cmOpMargin);
+    } else if (F.medfac) {
+      // medical_care_facilities (CORE): absKaliberMedFac = 4-axis weighted-q {opMargin, roaThruCycle, fcfMargin,
+      // leverageDiscipline} with COVERAGE-RENORM reading the cohort NORMS. opMargin/roaThruCycle/fcfMargin NON-inverted;
+      // leverageDiscipline inverted (the engine negates the RAW net-debt/assets itself, so pass the RAW signed ndGA,
+      // mirroring banks assetGrowthYoY / reits ndGA / capmkt netShareIssuance). The renorm fires on the net-cash names
+      // lacking a debt line (NOT_READY:leverage) + any NOT_READY:opmargin/fcfmargin / ROA_THRU_CYCLE_THIN axis. NO growth
+      // axis (quality-only — the materials/tech_hardware lesson).
+      const cohortNorm = F.cohortKey; // 'medical_care_facilities'
+      const mfRec = {
+        opMargin: m._mfOpMargin, roaThruCycle: m._mfRoaThruCycle, fcfMargin: m._mfFcfMargin,
+        ndGA: (m.mf && m.mf.ndGA != null && isFinite(m.mf.ndGA)) ? m.mf.ndGA : null,
+      };
+      const ak = absKaliberMedFac(mfRec, cohortNorm);
+      m.absKaliber = Math.round(ak.absK * 1000) / 1000;
+      m.absUsedAxes = ak.usedAxes;          // audit: which axes survived coverage-renorm (e.g. leverageDiscipline-dropped on net-cash CHE)
+      m.absDroppedAxes = ak.droppedAxes;    // audit: NOT_READY:leverage / ROA_THRU_CYCLE_THIN / NOT_READY drops
+      // n=27 ≫ minN 15 → full ABS+REL blend (β=0.6). THIN_REL guard kept for structural parity (if a future re-court
+      // narrows the cohort below 15 → ABS-only β=1.0); never fires at the live count (members.length=27).
+      const norm = NORMS[cohortNorm];
+      const mfThin = !!(norm.rel && norm.rel.minN != null && members.length < norm.rel.minN);
+      const beta = mfThin ? 1.0 : 0.6;
+      if (mfThin) m._thinRel = true;
+      const rawScore = Math.round(Math.max(0, blendScore(ak.absK, core, beta)) * 10) / 10; // pDil=0 (no separate net-issuance penalty axis)
+      // SI-1 shortlist-cut: opMargin >= opMargin.floor (the operating-margin quality pillar). A NOT_READY/missing opMargin
+      // fails the floor → belowAbsoluteFloor, listed but off the shortlist. NOT a score-kill (REL/score path runs
+      // independently). roaThruCycle/fcfMargin/leverageDiscipline are NOT hard headline gates (null on coverage-renorm names).
+      const gateOpOk = (m._mfOpMargin != null) && (m._mfOpMargin >= norm.opMargin.floor);
+      m.belowAbsoluteFloor = !gateOpOk;
+      // economic SHELL SI-4 hard-exclude (the materials/energy/reits lesson adapted to the facilities schema): a name with
+      // <3 positive-revenue-years OR no latest revenue is a shell that CANNOT be scored (axes undefined/explosive).
+      // score=null + excluded[] OUT_OF_SEGMENT:shell, NEVER scored 0. DETERMINISTIC, independent of membership.
+      const mf = m.mf || {};
+      const isShell = !(mf.positiveRevYears != null && mf.positiveRevYears >= MEDFAC_MIN_POSITIVE_REV_YEARS
+        && mf.revLatest != null && isFinite(mf.revLatest) && mf.revLatest > 0);
+      if (isShell) {
+        m.exclusionReason = 'OUT_OF_SEGMENT:shell';
+        m.score = null;                                 // SI-4: lands in excluded[]
+        m.headlineShortlist = false;
+      } else {
+        m.score = m.membershipClass === 'Out' ? null : rawScore;
+        m.headlineShortlist = (m.membershipClass !== 'Out') && !m.belowAbsoluteFloor;
+      }
+      // NON_FACILITY_CONGLOMERATE economic exclusion (RE-COURT, the capmkt BDC precedent) — OVERRIDES the score above. A name
+      // flagged _nonFacility in the pre-pass (abnormal roaThruCycle ON an abnormally light asset base — CHE-class: elite
+      // capital return on a book that owns no facilities = NOT a capital-intensive medical-care-facilities operator) is
+      // EXCLUDED not scored: a corrupt cohort-topping score is worse than no score. score=null + NON_FACILITY_CONGLOMERATE
+      // lamp + excluded[] (reason NON_FACILITY_CONGLOMERATE). The member was ALSO dropped from the per-cohort REL anchor pool
+      // above (the `.filter(!m._nonFacility)`) so it cannot drag the cohort median/MAD. Economic/signal-based, NO hardcoded
+      // ticker (MEDFAC_NONFAC_DENY is a regression sentinel only). Overrides the shell reason (non-facility identity is the
+      // more fundamental withhold), like the currency-suspect override below.
+      if (m._nonFacility) {
+        m.exclusionReason = 'NON_FACILITY_CONGLOMERATE';
+        m.score = null;                                 // SI-4: lands in excluded[]
+        m.headlineShortlist = false;
+      }
+      m.stage = stageOf(F, m._mfOpMargin);
     } else {
       // audit/fix (gauntlet E3): SI-4 für saas/fabless — Out-Class-Member bekommen score=null (kein
       // irreführender Headline-Rang), exakt wie medtech/dlst (m.score = membershipClass==='Out' ? null : rawScore).
@@ -2921,6 +3132,29 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       if (m.exclusionReason === 'OUT_OF_SEGMENT:shell' && !L.includes('OUT_OF_SEGMENT:shell')) L.push('OUT_OF_SEGMENT:shell');
       // always-on BLIND WALLS — re-asserted (idempotent: court-screen already pushed them; dedup).
       for (const wall of ['AUM_FLOW_BLIND', 'FEE_RATE_BLIND', 'RECURRING_MIX_BLIND', 'BDC_SPREAD_BLIND']) {
+        if (!L.includes(wall)) L.push(wall);
+      }
+      if (m.belowAbsoluteFloor) L.push('below-abs-floor');
+      if (m.membershipClass === 'Out') L.push('membership-Out(excluded-from-headline)');
+      if (Array.isArray(m.absDroppedAxes) && m.absDroppedAxes.length) L.push(`coverage-renorm(dropped:${m.absDroppedAxes.join('+')})`);
+      m.cohort = F.cohortKey;
+      m.normTableId = getNormTableId(F.cohortKey);
+      m.scoreScope = 'intra-bucket';
+      m.crossBucketComparableField = 'absKaliber';
+    }
+    // medical_care_facilities (CORE) lamps (court DESIGN): advisory, never silent score-kills. Per-name upstream lamps
+    // (NOT_READY:*, ROA_THRU_CYCLE_THIN, CURRENCY_SUSPECT) + the always-on BLIND walls are collected in court-screen
+    // (m.mf.lamps); the WALLS are re-asserted here so they are present even on a thin/dropped row.
+    if (F.medfac) {
+      const ml = (m.mf && Array.isArray(m.mf.lamps)) ? m.mf.lamps : [];
+      for (const lamp of ml) if (!L.includes(lamp)) L.push(lamp);
+      // economic SHELL SI-4 exclusion as an explicit lamp (the materials/energy/reits lesson adapted to the facilities schema).
+      if (m.exclusionReason === 'OUT_OF_SEGMENT:shell' && !L.includes('OUT_OF_SEGMENT:shell')) L.push('OUT_OF_SEGMENT:shell');
+      // NON_FACILITY_CONGLOMERATE economic exclusion as an explicit lamp (RE-COURT, the capmkt BDC precedent — elite ROA on
+      // an asset-light book that owns no facilities, CHE-class).
+      if (m._nonFacility && !L.includes('NON_FACILITY_CONGLOMERATE')) L.push('NON_FACILITY_CONGLOMERATE');
+      // always-on BLIND WALLS (the banks credit-quality-blind precedent) — re-asserted (idempotent: court-screen already pushed them; dedup).
+      for (const wall of ['REIMBURSEMENT_RATE_BLIND', 'PAYER_MIX_BLIND', 'CENSUS_OCCUPANCY_BLIND', 'REGULATORY_BLIND']) {
         if (!L.includes(wall)) L.push(wall);
       }
       if (m.belowAbsoluteFloor) L.push('below-abs-floor');
@@ -3440,6 +3674,62 @@ for (const [bucket, F] of Object.entries(FORMULAS)) {
       scored: members.filter(m => m.netShareIssuance != null).length,
       dropped: members.filter(m => m.netShareIssuance == null).length,   // ~54% (annualShares absent on Vintage-A)
     };
+  }
+  if (F.medfac) {
+    // SI-5: classifiedCount === scoredCount + excludedCount (fail-loud). The classifier assigns ONLY
+    // medical_care_facilities (non-facilities industry / non-US per the de-ADRd guard / <$1B return null → never enter
+    // court-buckets), so every classified name reaches members[]. excludedCount = SI-4 SHELL names (<3 positive-revenue-
+    // years / no revenue) + the NON_FACILITY_CONGLOMERATE economic exclusion (CHE-class) that entered members but score=null.
+    R.classifiedCount = cls.filter(c => c.bucket === bucket).length;
+    R.excluded = members.filter(m => m.score == null);
+    R.excludedCount = R.excluded.length;
+    R.scoredCount = members.filter(m => m.score != null).length;
+    if (require.main === module && R.classifiedCount !== R.scoredCount + R.excludedCount) {
+      throw new Error(`SI-5 mismatch ${bucket}: classifiedCount ${R.classifiedCount} !== scoredCount ${R.scoredCount} + excludedCount ${R.excludedCount}`);
+    }
+    // FOREIGN anti-leak assert: a classified member whose ticker is in the known foreign Fresenius/diagnostics ADR DENY
+    // set is a de-ADR-guard regression → fail-loud. (The country-SET foreign anti-leak is the generative
+    // assertMedFacNoForeignLeak below; here we assert on the foreign-ADR DENY SIGNAL.)
+    if (require.main === module) {
+      const leaked = members.filter(m => MEDFAC_FOREIGN_DENY.has(m.ticker));
+      if (leaked.length) {
+        throw new Error('MEDFAC FOREIGN ANTI-LEAK FAIL (de-ADRd guard) — foreign facilities/diagnostics ADR(s) reached medical_care_facilities: '
+          + leaked.map(m => m.ticker).join(', '));
+      }
+      // NON_FACILITY anti-stay assert (RE-COURT, belt-and-suspenders regression sentinel — the economic gate is the
+      // mechanism, this set is the watchdog, exactly like capmkt's CAPMKT_BDC_CONTROL): a name in MEDFAC_NONFAC_DENY that
+      // is SCORED (not excluded) means the economic gate regressed and the non-facility conglomerate is topping again.
+      const nonFacScored = members.filter(m => MEDFAC_NONFAC_DENY.has(m.ticker) && m.score != null);
+      if (nonFacScored.length) {
+        throw new Error('MEDFAC NON_FACILITY ANTI-STAY FAIL (RE-COURT economic gate regressed) — a non-facility conglomerate '
+          + 'is scored instead of excluded: ' + nonFacScored.map(m => m.ticker).join(', '));
+      }
+      // NON_FACILITY false-positive assert: a genuine operator in MEDFAC_NONFAC_SPARE (esp. ENSG) wrongly EXCLUDED with the
+      // NON_FACILITY reason means the gate over-fired (the prompt's STOP condition). Fail-loud.
+      const nonFacSpareGated = members.filter(m => MEDFAC_NONFAC_SPARE.includes(m.ticker) && m.exclusionReason === 'NON_FACILITY_CONGLOMERATE');
+      if (nonFacSpareGated.length) {
+        throw new Error('MEDFAC NON_FACILITY FALSE-POSITIVE FAIL — the economic gate wrongly excluded a genuine operator: '
+          + nonFacSpareGated.map(m => m.ticker).join(', '));
+      }
+    }
+    R.normTableId = getNormTableId(F.cohortKey);
+    R.cohort = F.cohortKey;
+    R.scoreScope = 'intra-bucket';
+    R.crossBucketComparableField = 'absKaliber';
+    const n = NORMS[F.cohortKey];
+    const fmt = x => (x == null ? '—' : x.toFixed(4).replace(/^0\./, '.').replace(/^-0\./, '-.'));
+    R.comparabilityNote = `medical_care_facilities ${F.cohortKey} (capital-intensive healthcare-facilities through-cycle OPERATING-quality cohort: hospital/SNF/dialysis/rehab/hospice/surgery/home-health operators). absKaliber in [0,1] = cross-bucket-comparable absolute scale (4-axis weighted-q over the cohort NORMS '${getNormTableId(F.cohortKey)}': opMargin ${fmt(n.opMargin.floor)}/${fmt(n.opMargin.elite)} (annualOpInc/annualRev level, operating efficiency/cost control), roaThruCycle ${fmt(n.roaThruCycle.floor)}/${fmt(n.roaThruCycle.elite)} (4y-avg annualNetIncome/totalAssets, the through-cycle capital-return co-pillar — the banks lead-axis pattern adapted; floor lifted to break-even so the impaired AGL/PIII/AVAH score the floor), fcfMargin ${fmt(n.fcfMargin.floor)}/${fmt(n.fcfMargin.elite)} (annualFCF/annualRev cash conversion), leverageDiscipline ${fmt(n.leverageDiscipline.floor)}/${fmt(n.leverageDiscipline.elite)} (q(-net-debt/assets) INVERTED + LEVEL-scored, GENEROUS so only the over-levered lose points; null on net-cash names → DROP+renorm, NEVER imputed); weights {opMargin .30, roaThruCycle .30, fcfMargin .25, leverageDiscipline .15}. NO GROWTH AXIS — QUALITY-ONLY (the materials/tech_hardware lesson: do not exile a quality operator for a down year; a serial acquirer ENSG/SEM has deal-masked unreadable organic growth that would inflate the score — roaThruCycle is the capital-return co-pillar so the low-margin/high-ROIC SNF operators are not under-ranked). SCOPE: this is the genuine capital-intensive facilities industry ONLY — Healthcare Plans (managed-care thin-margin flow-through) + Medical Distribution (~1% margin) are SEPARATE industries, never classified here. COVERAGE-RENORM drops any NOT_READY/null axis (the leverageDiscipline DROP on net-cash names) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6, n=27≫15). WALLS always-on (the banks credit-quality-blind precedent — the SINGLE MOST IMPORTANT facilities value-drivers carry NO local signal): REIMBURSEMENT_RATE_BLIND (Medicare/Medicaid/commercial reimbursement-rate trajectory ABSENT — THE core driver), PAYER_MIX_BLIND (payer mix absent), CENSUS_OCCUPANCY_BLIND (patient census/occupancy/admissions absent), REGULATORY_BLIND (DOJ/CMS audits / site-of-care shifts / staffing mandates absent). The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison.`;
+    R.crossBucketComparableNote = 'Use members[].absKaliber (absolute [0,1] caliber) for cross-bucket comparison; members[].score (blended 0-100) is intra-bucket ONLY (mixes per-cohort REL, beta=0.6).';
+    R.walls = ['REIMBURSEMENT_RATE_BLIND', 'PAYER_MIX_BLIND', 'CENSUS_OCCUPANCY_BLIND', 'REGULATORY_BLIND'];
+    // leverageDiscipline DROP+renorm coverage disclosure: how many names took the NOT_READY:leverage path (no debt line).
+    R.leverageCoverage = {
+      scored: members.filter(m => m.netDebtToAssets != null).length,
+      dropped: members.filter(m => m.netDebtToAssets == null).length,    // net-cash names with no debt line (e.g. ENSG, a genuine leaser)
+    };
+    // NON_FACILITY economic exclusion disclosure (RE-COURT): the names the gate removed (elite ROA on an asset-light book
+    // that owns no facilities — CHE-class) and their signature, surfaced for audit transparency.
+    R.nonFacilityExcluded = members.filter(m => m.exclusionReason === 'NON_FACILITY_CONGLOMERATE')
+      .map(m => ({ ticker: m.ticker, roaThruCycle: m.roaThruCycle, ppeToAssets: m.ppeToAssets }));
   }
   // audit/fix (gauntlet E3): saas/fabless SI-4/SI-5-Retrofit — spiegelt medtech/dlst exakt.
   // NUR auf den beiden Buckets gesetzt; medtech/dlst haben ihre eigenen Blöcke oben. Diese Felder
@@ -4258,11 +4548,93 @@ function assertCapmktNoForeignLeak(resultsObj, listing) {
   }
 }
 
+// --- medical_care_facilities (CORE court bucket) MARQUEE-COVERAGE + foreign anti-leak assert (court DESIGN, fail-loud) ---
+// The 6-name marquee must each be classified AND survive to a SANE rank (not exiled to the bottom). The named flagships
+// span hospital (HCA/THC/UHS), rehab (EHC), SNF (ENSG), dialysis (DVA) — the genuine operating-quality compounders.
+const MEDFAC_MARQUEE = Object.freeze(['HCA', 'THC', 'UHS', 'EHC', 'ENSG', 'DVA']);
+// foreign positive-control: the foreign facilities/diagnostics ADRs the de-ADR guard must keep OUT. Catches a regression
+// that drops a country guard (Fresenius FMS/FMCQF/FME.DE/FRE.DE/FSNUF/FSNUY, Laboratorios LWSCF, the .AX/.SZ names).
+const MEDFAC_FOREIGN_CONTROL = Object.freeze(['FMS', 'FMCQF', 'FME.DE', 'FRE.DE', 'FSNUF', 'FSNUY', 'LWSCF', 'RHC.AX', '300015.SZ']);
+function assertMedFacMarquee(resultsObj) {
+  const R = resultsObj.medical_care_facilities;
+  if (!R) return; // medical_care_facilities not in this run (e.g. isolated unit test) → tolerant no-op
+  // marquee must reach the SCORED universe (classified + survived to a sane rank, NOT shell/membership-excluded).
+  const scored = new Set();
+  if (Array.isArray(R.members)) for (const m of R.members) if (m.score != null) scored.add(m.ticker);
+  const missing = MEDFAC_MARQUEE.filter(t => !scored.has(t));
+  if (missing.length) {
+    throw new Error('MARQUEE COVERAGE FAIL (medical_care_facilities DESIGN) — facilities universe collapsed, these bona-fide '
+      + 'US healthcare-facilities operators were not classified/scored: ' + missing.join(', '));
+  }
+  // QUALITY-SANITY (the materials/tech_hardware lesson): a genuine quality operator (HCA/EHC) must out-rank the
+  // loss-making tail (PIII/SNDA/AGL). Assert HCA + EHC each score ABOVE the worst loss-maker present — catches a sign
+  // flip / norm regression that would let a loss name top the cohort.
+  const byTk = new Map();
+  if (Array.isArray(R.members)) for (const m of R.members) if (m.score != null) byTk.set(m.ticker, m.score);
+  const lossTail = ['PIII', 'SNDA', 'AGL'].filter(t => byTk.has(t));
+  if (lossTail.length && byTk.has('HCA') && byTk.has('EHC')) {
+    const worstLoss = Math.max(...lossTail.map(t => byTk.get(t)));
+    if (!(byTk.get('HCA') > worstLoss && byTk.get('EHC') > worstLoss)) {
+      throw new Error('QUALITY-SANITY FAIL (medical_care_facilities DESIGN) — a loss-making name out-ranks the HCA/EHC '
+        + 'quality operators (a sign-flip / norm regression): HCA ' + byTk.get('HCA') + ' / EHC ' + byTk.get('EHC')
+        + ' vs worst-loss ' + worstLoss + ' (' + lossTail.join('/') + ').');
+    }
+  }
+  // NON_FACILITY-SANITY (RE-COURT): the non-facility conglomerate (CHE-class) must NOT be in the SCORED universe and must
+  // NOT top the cohort — it is economically EXCLUDED. A scored CHE means the economic gate regressed. The genuine
+  // capital-intensive operator (HCA-type) must lead; assert the #1 scored name is a genuine operator, NOT a NONFAC name.
+  for (const t of MEDFAC_NONFAC_DENY) {
+    if (scored.has(t)) {
+      throw new Error('NON_FACILITY-SANITY FAIL (medical_care_facilities RE-COURT) — the non-facility conglomerate ' + t
+        + ' is SCORED (it must be economically excluded, NON_FACILITY_CONGLOMERATE). The economic gate regressed.');
+    }
+  }
+  const rankedScored = (Array.isArray(R.members) ? R.members : []).filter(m => m.score != null).sort((a, b) => b.score - a.score);
+  if (rankedScored.length && MEDFAC_NONFAC_DENY.has(rankedScored[0].ticker)) {
+    throw new Error('NON_FACILITY-SANITY FAIL (medical_care_facilities RE-COURT) — a non-facility conglomerate tops the '
+      + 'cohort: ' + rankedScored[0].ticker + ' (it must be economically excluded).');
+  }
+  // foreign positive-control: the foreign facilities/diagnostics ADRs must NOT have reached the cohort (classified OR scored).
+  const allTk = new Set();
+  if (Array.isArray(R.members)) for (const m of R.members) allTk.add(m.ticker);
+  const leakedControl = MEDFAC_FOREIGN_CONTROL.filter(t => allTk.has(t));
+  if (leakedControl.length) {
+    throw new Error('FOREIGN CONTROL FAIL (medical_care_facilities de-ADRd guard) — a foreign facilities/diagnostics ADR '
+      + 'leaked into the medical_care_facilities cohort: ' + leakedControl.join(', '));
+  }
+}
+// assertMedFacNoForeignLeak(results, listing): GENERATIVE property test. A scored record whose ticker is in the foreign
+// ADR DENY set, OR a record with a country SET to a non-US country, is a leak (the de-ADRd guard must exclude them).
+// country=undefined US operators (THC/SGRY/MD/UHS/SEM) are TOLERATED (admitted via the positive US-primary test — keyed
+// on the foreign-DENY SIGNAL, NOT country!=US).
+function assertMedFacNoForeignLeak(resultsObj, listing) {
+  const R = resultsObj.medical_care_facilities;
+  if (!R || !Array.isArray(R.members)) return;
+  const deny = new Set(MEDFAC_FOREIGN_DENY);
+  const leaks = [];
+  for (const m of R.members) {
+    if (deny.has(m.ticker)) { leaks.push(`${m.ticker}[foreign-ADR-DENY-set]`); continue; }   // the foreign-ADR DENY signal
+    if (!listing || listing.size === 0) continue;
+    const L = listing.get(m.ticker);
+    if (!L) continue; // no snapshot meta → can't assert (country=undefined US names: TOLERATED, never throws)
+    if (L.country != null && L.country !== 'United States') {
+      leaks.push(`${m.ticker}[${L.country}/${L.region}]`);   // a country-SET non-US foreigner (de-ADR guard regression)
+    }
+  }
+  if (leaks.length) {
+    throw new Error('MEDICAL_CARE_FACILITIES ANTI-LEAK ASSERT (de-ADRd guard, keyed on the foreign-ADR DENY SIGNAL + '
+      + 'country-SET, NOT country!=US): leaked record(s) in the medical_care_facilities cohort: ' + leaks.join(', ')
+      + '. The classifier (classify-medfacilities.js) must exclude foreign facilities/diagnostics ADRs + non-US-primary '
+      + 'names. NOTE: country=undefined US operators (THC/SGRY/MD/UHS/SEM) are TOLERATED by design — the positive '
+      + 'US-primary test.');
+  }
+}
+
 // --- Export: computeMedtechOrganicGrowth + computeDlstOrganicGrowth für Unit-Tests ---
 // (computeDlstOrganicGrowth: Fix A FY-Alignment + Fix B dealYearExcluded-Ehrlichkeit, 2026-06-21)
 // + assertNoForeignLeak (gauntlet C5) + assertIndustrialsMarquee + assertStaplesMarquee +
 //   assertStaplesNoForeignLeak (Spec §6.2b) für direkten Property-Test.
-module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL, assertConsdiscMarquee, assertConsdiscNoForeignLeak, CONSDISC_MARQUEE, CONSDISC_EXCLUDE_CONTROL, assertMaterialsMarquee, assertMaterialsNoForeignLeak, MATERIALS_MARQUEE, MATERIALS_FOREIGN_CONTROL, MATERIALS_US_PRIMARY_ALLOWLIST, assertEnergyMarquee, assertEnergyNoForeignLeak, ENERGY_MARQUEE, ENERGY_FOREIGN_CONTROL, ENERGY_US_PRIMARY_ALLOWLIST, assertPharmaMarquee, assertPharmaNoForeignLeak, PHARMA_MARQUEE, PHARMA_FOREIGN_CONTROL, PHARMA_US_PRIMARY_ALLOWLIST, assertItServicesMarquee, assertItServicesNoForeignLeak, ITSERVICES_MARQUEE, ITSERVICES_CONTAM_CONTROL, ITSERVICES_US_PRIMARY_ALLOWLIST, assertBanksMarquee, assertBanksNoForeignLeak, BANKS_MARQUEE, BANKS_FOREIGN_CONTROL, BANK_FOREIGN_DENY, assertReitsMarquee, assertReitsNoMortgageLeak, REITS_MARQUEE, REITS_MORTGAGE_CONTROL, REIT_MORTGAGE_DENY, assertCapmktMarquee, assertCapmktNoForeignLeak, CAPMKT_MARQUEE, CAPMKT_FEEGATE_CONTROL, CAPMKT_UNDEF_US_CONTROL, CAPMKT_FEEGATE_DENY, assertTechHwMarquee, assertTechHwNoForeignLeak, TECHHW_MARQUEE, TECHHW_FOREIGN_CONTROL, TECHHW_UNDEF_US_CONTROL, TECHHW_US_PRIMARY_ALLOWLIST };
+module.exports = { computeMedtechOrganicGrowth, computeDlstOrganicGrowth, assertNoForeignLeak, assertIndustrialsMarquee, INDUSTRIALS_MARQUEE, assertStaplesMarquee, assertStaplesNoForeignLeak, STAPLES_MARQUEE, STAPLES_FOREIGN_CONTROL, assertConsdiscMarquee, assertConsdiscNoForeignLeak, CONSDISC_MARQUEE, CONSDISC_EXCLUDE_CONTROL, assertMaterialsMarquee, assertMaterialsNoForeignLeak, MATERIALS_MARQUEE, MATERIALS_FOREIGN_CONTROL, MATERIALS_US_PRIMARY_ALLOWLIST, assertEnergyMarquee, assertEnergyNoForeignLeak, ENERGY_MARQUEE, ENERGY_FOREIGN_CONTROL, ENERGY_US_PRIMARY_ALLOWLIST, assertPharmaMarquee, assertPharmaNoForeignLeak, PHARMA_MARQUEE, PHARMA_FOREIGN_CONTROL, PHARMA_US_PRIMARY_ALLOWLIST, assertItServicesMarquee, assertItServicesNoForeignLeak, ITSERVICES_MARQUEE, ITSERVICES_CONTAM_CONTROL, ITSERVICES_US_PRIMARY_ALLOWLIST, assertBanksMarquee, assertBanksNoForeignLeak, BANKS_MARQUEE, BANKS_FOREIGN_CONTROL, BANK_FOREIGN_DENY, assertReitsMarquee, assertReitsNoMortgageLeak, REITS_MARQUEE, REITS_MORTGAGE_CONTROL, REIT_MORTGAGE_DENY, assertCapmktMarquee, assertCapmktNoForeignLeak, CAPMKT_MARQUEE, CAPMKT_FEEGATE_CONTROL, CAPMKT_UNDEF_US_CONTROL, CAPMKT_FEEGATE_DENY, assertMedFacMarquee, assertMedFacNoForeignLeak, MEDFAC_MARQUEE, MEDFAC_FOREIGN_CONTROL, MEDFAC_FOREIGN_DENY, assertTechHwMarquee, assertTechHwNoForeignLeak, TECHHW_MARQUEE, TECHHW_FOREIGN_CONTROL, TECHHW_UNDEF_US_CONTROL, TECHHW_US_PRIMARY_ALLOWLIST };
 
 // --- require.main-Guard (Härtung 2): Write + Ausgabe NUR wenn direkt als Skript ausgeführt ---
 // `require('./court-score.js')` gibt nur den Export zurück und schreibt NICHT outputs/court-results.json.
@@ -4327,6 +4699,12 @@ if (require.main === module) {
   // hold (fee-gate DENY signal + country-set; country=undefined US names tolerated), else the universe collapsed/leaked.
   assertCapmktMarquee(results);
   assertCapmktNoForeignLeak(results, listingByTicker);
+  // medical_care_facilities (CORE court bucket) DESIGN: the 6-name marquee (HCA/THC/UHS/EHC/ENSG/DVA) must each be
+  // classified + scored (survive to a sane rank) + the QUALITY-SANITY check (HCA/EHC out-rank the loss tail PIII/SNDA/
+  // AGL) + the foreign Fresenius/diagnostics ADR positive-control must stay out + the GENERATIVE anti-leak property test
+  // must hold (foreign-ADR DENY signal + country-set; country=undefined US operators tolerated), else collapsed/leaked.
+  assertMedFacMarquee(results);
+  assertMedFacNoForeignLeak(results, listingByTicker);
   fs.writeFileSync(OUT, JSON.stringify(results, null, 2));
 
   // --- Ausgabe ---

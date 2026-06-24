@@ -240,6 +240,15 @@ const CAPMKT_COHORTS = new Set(['capmkt_fee_core']);
 // sinks the commodity contract-mfg / loss tail off-headline, and the SI-4 SHELL gate excludes the revenue-less shells).
 const thwCohortByTicker = new Map(); // ticker -> 'tech_hardware_quality'
 const TECHHW_COHORTS = new Set(['tech_hardware_quality']);
+// medical_care_facilities CORE court bucket (court gauntlet DESIGN, BUILD as a DISCLOSED partial-quality read — the
+// banks precedent, 2026-06-24). ADDITIV/parity-safe: exactly the court-buckets.json `medical_care_facilities` tickers
+// are admitted past the asset-light/growth pre-filter (analog the other CORE buckets, Fix A SI-5: no silent drops). The
+// 4 RAW axis inputs {opMargin, roaThruCycle, fcfMargin, leverageDiscipline(ndGA)} are extracted from snapshots/<T>.json
+// annual.* — the FLOW fields (annualRev/OpInc/FCF/NetIncome) MAY be {value}-WRAPPED, annualBalance.{totalAssets,
+// totalDebt,totalCash} are RAW — attached as ONE medfac-only field `mf` -> all other candidate JSON byte-identical. The
+// de-ADR country guard + size + dedupe already ran in the classifier; out-of-class names never reach here.
+const mfCohortByTicker = new Map(); // ticker -> 'medical_care_facilities'
+const MEDFAC_COHORTS = new Set(['medical_care_facilities']);
 // saas/fabless (generic-path growth-scored buckets): the universal revenue-artifact guard runs on the LATEST
 // annual YoY (their growth axis = generic gAnnual). To let the guard drop+fall-back, persist the annual YoY
 // SERIES on saas/semi members ONLY (additive → no field on any other bucket; parity-safe).
@@ -262,6 +271,7 @@ try {
     if (c && REITS_COHORTS.has(c.bucket) && c.t) reCohortByTicker.set(c.t, c.bucket);
     if (c && CAPMKT_COHORTS.has(c.bucket) && c.t) cmCohortByTicker.set(c.t, c.bucket);
     if (c && TECHHW_COHORTS.has(c.bucket) && c.t) thwCohortByTicker.set(c.t, c.bucket);
+    if (c && MEDFAC_COHORTS.has(c.bucket) && c.t) mfCohortByTicker.set(c.t, c.bucket);
   }
 } catch {}
 
@@ -2117,6 +2127,129 @@ function buildCapmktAxes(ticker, cohort) {
   };
 }
 
+// ===========================================================================
+// medical_care_facilities (CORE) — 4-axis RAW extraction from snapshots (court DESIGN 2026-06-24)
+// ===========================================================================
+// ADDITIV/parity-safe: only fires for tickers in mfCohortByTicker (court-buckets medical_care_facilities). Reads
+// snapshots/<T>.json `annual.*` (NEWEST-FIRST) — the canonical pool the deterministic classifier + the frozen cohort
+// NORMS were calibrated on. The FLOW fields (annualRev/OpInc/FCF/NetIncome) MAY be {value}-WRAPPED; annualBalance.*
+// are RAW. Same dual-shape mfUnwrap() extractor used for all flow axes.
+//
+// 4 SCORED axes {opMargin, roaThruCycle, fcfMargin, leverageDiscipline} via the NEW engine absKaliberMedFac (coverage-
+// renorm). opMargin/roaThruCycle/fcfMargin NON-inverted (higher=better); ndGA passed RAW (the engine negates it for the
+// inverted, LEVEL-scored leverage-discipline axis q(-ndGA) — lower net-debt/assets is better). roaThruCycle = mean of
+// available annualNetIncome[i]/annualBalance[i].totalAssets over i=0..3 (a 4y through-cycle ROA; the banks lead-axis
+// pattern, ADAPTED) -> ROA_THRU_CYCLE_THIN + DROP+renorm when no NI/totalAssets pair. NO GROWTH AXIS (quality-only — the
+// materials/tech_hardware lesson; a serial acquirer's deal-masked growth would inflate the score). always-on BLIND walls:
+// the SINGLE MOST IMPORTANT facilities value-drivers (reimbursement-rate / payer-mix / census-occupancy / regulatory)
+// carry NO local signal — the banks credit-quality-blind precedent.
+
+// {value}-unwrap for the WRAPPED flow fields. Raw numbers pass through; {value} objects unwrap (mirrors reUnwrap/cmUnwrap).
+function mfUnwrap(x) {
+  if (x == null) return null;
+  if (typeof x === 'number') return isFinite(x) ? x : null;
+  if (typeof x === 'object' && x.value != null && isFinite(x.value)) return x.value;
+  return null;
+}
+
+// snapshot annual cache for medfac tickers only (avoid re-reading + keep the parity path untouched).
+const mfSnapAnnual = new Map(); // ticker -> snapshot.annual object
+if (mfCohortByTicker.size && fs.existsSync(SNAP_DIR)) {
+  for (const t of mfCohortByTicker.keys()) {
+    try {
+      const sn = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, t + '.json'), 'utf8'));
+      if (sn && sn.annual) mfSnapAnnual.set(t, sn.annual);
+    } catch {}
+  }
+}
+
+// buildMedFacAxes(ticker, cohort) -> the 4 RAW axis inputs + lamps/audit, or null if no snapshot.
+// opMargin = annualOpInc[0]/annualRev[0] (operating efficiency); roaThruCycle = mean(NI[i]/totalAssets[i], i=0..3)
+// (4y through-cycle capital return; null+ROA_THRU_CYCLE_THIN when no pair); fcfMargin = annualFCF[0]/annualRev[0];
+// ndGA = (totalDebt[0]-totalCash[0])/totalAssets[0] (RAW; engine negates -> inverted leverage discipline; null+
+// NOT_READY:leverage when no balance sheet). Shell facts (positive-revenue-year count + revLatest) surfaced for the
+// court-score.js SI-4 SHELL gate. ALL flow fields {value}-unwrapped.
+function buildMedFacAxes(ticker, cohort) {
+  const a = mfSnapAnnual.get(ticker);
+  if (!a) return null;
+  const rev = (a.annualRev || []).map(mfUnwrap);                 // NEWEST-FIRST, may be {value}-WRAPPED
+  const op = (a.annualOpInc || []).map(mfUnwrap);                // may be {value}-WRAPPED
+  const fcf = (a.annualFCF || []).map(mfUnwrap);                 // may be {value}-WRAPPED
+  const ni = (a.annualNetIncome || []).map(mfUnwrap);          // may be {value}-WRAPPED
+  const bal = Array.isArray(a.annualBalance) ? a.annualBalance : [];
+  const ta = bal.map(b => (b && b.totalAssets != null && isFinite(b.totalAssets)) ? b.totalAssets : null);   // RAW
+  const td = bal.map(b => (b && b.totalDebt != null && isFinite(b.totalDebt)) ? b.totalDebt : null);         // RAW
+  const tc = bal.map(b => (b && b.totalCash != null && isFinite(b.totalCash)) ? b.totalCash : null);         // RAW
+  const lamps = [];
+
+  // --- UNIVERSAL currency-mix guard (INFY-class): scored-year [0] same-block ordering violation at FX scale ---
+  const ccMix = currencyMixSuspect(null, op[0], ni[0]);         // medfac: no GP denominator -> suspect:false (parity-safe)
+  const currencySuspect = ccMix.suspect;
+  if (currencySuspect) lamps.push('CURRENCY_SUSPECT');           // withheld + dropped from REL anchor DOWNSTREAM (court-score.js)
+
+  // --- Axis M1: operating-margin LEVEL = annualOpInc[0]/annualRev[0] ---
+  let opMargin = null;
+  if (op[0] != null && rev[0] != null && rev[0] > 0) opMargin = op[0] / rev[0];
+  else lamps.push('NOT_READY:opmargin');
+
+  // --- Axis M2: through-cycle ROA = mean of available annualNetIncome[i]/annualBalance[i].totalAssets over i=0..3 ---
+  let roaThruCycle = null;
+  const roas = [];
+  for (let i = 0; i < 4; i++) {
+    if (ni[i] != null && ta[i] != null && ta[i] > 0) roas.push(ni[i] / ta[i]);
+  }
+  if (roas.length >= 1) roaThruCycle = roas.reduce((s, x) => s + x, 0) / roas.length;
+  else lamps.push('ROA_THRU_CYCLE_THIN');   // no NI/totalAssets pair -> DROP+renorm, NEVER imputed
+
+  // --- Axis M3: FCF margin = annualFCF[0]/annualRev[0] (cash conversion) ---
+  let fcfMargin = null;
+  if (fcf[0] != null && rev[0] != null && rev[0] > 0) fcfMargin = fcf[0] / rev[0];
+  else lamps.push('NOT_READY:fcfmargin');
+
+  // RAW net-PPE array for the NON_FACILITY asset-lightness signal (see Axis M4 block below). Mirrors the ta/td/tc RAW reads.
+  const ppe = bal.map(b => (b && b.netPPE != null && isFinite(b.netPPE)) ? b.netPPE : null);
+
+  // --- Axis M4: net-debt/assets = (totalDebt[0]-totalCash[0])/totalAssets[0] (RAW; engine negates -> discipline) ---
+  let ndGA = null;
+  if (ta[0] != null && ta[0] > 0 && td[0] != null && tc[0] != null) ndGA = (td[0] - tc[0]) / ta[0];
+  else lamps.push('NOT_READY:leverage');
+
+  // --- NON-FACILITY ASSET-LIGHTNESS signal (NOT a scored axis): netPPE/totalAssets[0] = how much of the asset base is
+  //     owned/financed property+plant+equipment. A genuine capital-intensive facilities operator owns/finances its
+  //     buildings+equipment (HCA 55%, EHC 61%, ENSG 69%, DVA 30%); an asset-LIGHT services/hospice/plumbing conglomerate
+  //     (CHE 22%) does not. Surfaced RAW for the court-score.js NON_FACILITY_CONGLOMERATE economic exclusion gate
+  //     (roaThruCycle-anomaly × asset-lightness conjunction). null when no balance sheet / no netPPE line (THC/UHS thin
+  //     records) — the gate requires the value PRESENT, so a thin record can NEVER be gated (fail-safe = retain). ---
+  const netPPE0 = ppe[0];
+  let ppeToAssets = null;
+  if (ta[0] != null && ta[0] > 0 && netPPE0 != null) ppeToAssets = netPPE0 / ta[0];
+
+  // --- always-on BLIND disclosure walls (the banks credit-quality-blind precedent) — the SINGLE MOST IMPORTANT
+  //     facilities value-drivers carry NO local signal ---
+  lamps.push('REIMBURSEMENT_RATE_BLIND');   // Medicare/Medicaid/commercial reimbursement-rate trajectory (THE core driver) ABSENT
+  lamps.push('PAYER_MIX_BLIND');            // payer mix (Medicare vs Medicaid vs commercial vs self-pay) ABSENT
+  lamps.push('CENSUS_OCCUPANCY_BLIND');     // patient census / bed occupancy / admissions-volume trend ABSENT
+  lamps.push('REGULATORY_BLIND');           // regulatory exposure (DOJ/CMS audits, site-of-care shifts, staffing mandates) ABSENT
+
+  // pre-revenue / shell facts for the court-score.js SI-4 SHELL gate: a name with <3 positive-revenue-years OR no
+  // latest revenue is a shell that CANNOT be scored (the opMargin/fcfMargin axes are undefined/explosive on near-zero rev).
+  const positiveRevYears = rev.filter(v => v != null && isFinite(v) && v > 0).length;
+  const revLatest = rev.find(v => v != null && isFinite(v));
+  return {
+    cohort,
+    opMargin: round(opMargin),
+    roaThruCycle: round(roaThruCycle),
+    fcfMargin: round(fcfMargin),
+    ndGA: round(ndGA),
+    ppeToAssets: round(ppeToAssets),   // NON_FACILITY asset-lightness signal (netPPE/totalAssets[0]); null when no balance/PPE line
+    positiveRevYears,
+    ...(currencySuspect ? { currencySuspect: true, currencySuspectArm: ccMix.arm, currencySuspectRatio: round(ccMix.ratio) } : {}), // additive ONLY when fired -> clean records byte-identical (parity)
+    revLatest: (revLatest == null ? null : round(revLatest)),
+    nRoa: roas.length,
+    lamps,
+  };
+}
+
 // --- robuste Feld-Helfer (Format ist gemischt: ftsAnnual.* = [{value}], Rest = [num]) ---
 function num(x) {
   if (x == null) return null;
@@ -2221,7 +2354,11 @@ for (const file of files) {
   // universe even with a thin CACHE row. Its 5 SCORED axes come from the SNAPSHOT (buildTechHwAxes) annual.* arrays, not
   // the cache. Bypasses the cache-based early gates. Non-techhw path: BYTE-IDENTICAL.
   const thwCohortEarly = (thwCohortByTicker.get(ticker) && thwSnapAnnual.has(ticker)) ? thwCohortByTicker.get(ticker) : null;
-  const coreEarly = indCohortEarly || stpCohortEarly || cdCohortEarly || mtCohortEarly || enCohortEarly || phCohortEarly || itCohortEarly || bkCohortEarly || reCohortEarly || cmCohortEarly || thwCohortEarly;
+  // medical_care_facilities (CORE): same SI-5 rule — a court-buckets-classified facilities-operator name MUST reach the
+  // universe even with a thin CACHE row. Its 4 SCORED axes come from the SNAPSHOT (buildMedFacAxes) annual.* arrays, not
+  // the cache. Bypasses the cache-based early gates. Non-medfac path: BYTE-IDENTICAL.
+  const mfCohortEarly = (mfCohortByTicker.get(ticker) && mfSnapAnnual.has(ticker)) ? mfCohortByTicker.get(ticker) : null;
+  const coreEarly = indCohortEarly || stpCohortEarly || cdCohortEarly || mtCohortEarly || enCohortEarly || phCohortEarly || itCohortEarly || bkCohortEarly || reCohortEarly || cmCohortEarly || thwCohortEarly || mfCohortEarly;
   const p = j.payload || {};
   if (!j.payload && !coreEarly) continue;
   if (j._ftsPartial) stats.partial++;
@@ -2381,6 +2518,7 @@ for (const file of files) {
   const reCohort = reCohortByTicker.get(ticker) || null;
   const cmCohort = cmCohortByTicker.get(ticker) || null;
   const thwCohort = thwCohortByTicker.get(ticker) || null;
+  const mfCohort = mfCohortByTicker.get(ticker) || null;
   if (indCohort) {
     // industrials_compounder (CORE): admit EVERY court-buckets-classified industrials name into the universe
     // (cross-sectional cohort percentiles + SI-5 classifiedCount===scoredCount). NO asset-light/growth/gm
@@ -2457,6 +2595,14 @@ for (const file of files) {
     // loss tail + the economic SHELL gate live in court-score.js. 5 axes come from the snapshot annual.* arrays
     // (buildTechHwAxes). Sole sanity: a parseable snapshot annual block exists (else SI-5 mismatch silently).
     if (!thwSnapAnnual.has(ticker)) continue;
+  } else if (mfCohort) {
+    // medical_care_facilities (CORE): identical admission policy — admit EVERY court-buckets-classified facilities-operator
+    // name into the universe (cross-sectional cohort percentiles + SI-5). NO asset-light/growth/gm pre-filter — hospital/
+    // SNF/dialysis operators are capital-intensive by nature (the asset-light/ppe gate would wrongly drop them); the
+    // de-ADR + size + dedupe already ran in the classifier, and the SI-1 shortlist-cut + economic SHELL gate live in
+    // court-score.js. 4 axes come from the snapshot annual.* arrays (buildMedFacAxes). Sole sanity: a parseable snapshot
+    // annual block exists (else SI-5 classifiedCount===scoredCount+excludedCount would mismatch silently).
+    if (!mfSnapAnnual.has(ticker)) continue;
   } else if (isMedtech || isDlst) {
     // Milde Daten-Sanity: growth/gm/rev müssen vorhanden + endlich sein (keine ökonomischen Floors).
     // Medtech UND D&LST sind kapitalintensiv/Large-Cap-haltig → asset-light/ppe-Gate + ökonomische Floors
@@ -2537,6 +2683,11 @@ for (const file of files) {
   // same axis set + engine as it_services, only the cohort NORMS differ; always-on CYCLE_WALL/INVENTORY_BLIND/
   // BACKLOG_FUTURE/BOOK_TO_BILL_BLIND walls). Additiv → KEIN Feld auf Nicht-TechHW-Records (Parität alle übrigen Buckets).
   const thwExtra = thwCohort ? { thw: buildTechHwAxes(ticker, thwCohort) } : {};
+  // medical_care_facilities (CORE): the 4 RAW axis inputs {opMargin, roaThruCycle, fcfMargin, ndGA} from the snapshot
+  // annual.* arrays, attached as ONE medfac-only field `mf` ({value}-unwrap; roaThruCycle = 4y-avg NI/totalAssets;
+  // ndGA RAW (engine negates -> inverted leverage discipline); NO growth axis (quality-only); always-on REIMBURSEMENT_
+  // RATE/PAYER_MIX/CENSUS_OCCUPANCY/REGULATORY BLIND walls). Additiv → KEIN Feld auf Nicht-MedFac-Records (Parität alle übrigen Buckets).
+  const mfExtra = mfCohort ? { mf: buildMedFacAxes(ticker, mfCohort) } : {};
   candidates.push({
     ticker,
     growth: round(growth), growth_annual: round(gAnnual), growth_q: round(gQ), growthSource,
@@ -2564,6 +2715,7 @@ for (const file of files) {
     ...reExtra,
     ...cmExtra,
     ...thwExtra,
+    ...mfExtra,
   });
 }
 

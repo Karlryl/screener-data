@@ -3568,6 +3568,181 @@ test('capmkt_fee_core PARITÄT: KEIN capmkt-only Feld auf den anderen Buckets (L
 });
 
 // ===========================================================================
+// medical_care_facilities (CORE court bucket) — ONE capital-intensive HEALTHCARE-FACILITIES operating-quality cohort.
+// Court gauntlet DESIGN (BUILD as a DISCLOSED partial-quality read — the banks/equity_reits precedent). 4 SCORED axes
+// {opMargin, roaThruCycle, fcfMargin, leverageDiscipline} via the NEW engine absKaliberMedFac. QUALITY-ONLY (NO growth
+// axis — the materials/tech_hardware lesson). always-on BLIND walls (the banks credit-quality-blind precedent): the
+// SINGLE MOST IMPORTANT facilities value-drivers (reimbursement-rate / payer-mix / census-occupancy / regulatory) carry
+// NO local signal and are HONESTLY disclosed, never faked.
+// ===========================================================================
+const mfR = doc.medical_care_facilities;
+const MF_ = mfR ? mfR.members : [];
+
+test('medical_care_facilities: bucket exists with members; label nennt v0 + facilities operating quality', () => {
+  assert(mfR && Array.isArray(mfR.members) && MF_.length > 0, 'medical_care_facilities bucket fehlt/leer');
+  assert(/v0/.test(mfR.label || '') && /facilities/i.test(mfR.label || ''), 'label sollte v0 + facilities nennen');
+});
+
+test('medical_care_facilities SI-5: classifiedCount === scoredCount + excludedCount (no silent drops)', () => {
+  assert(mfR.classifiedCount === mfR.scoredCount + mfR.excludedCount,
+    `SI-5 mismatch: classified ${mfR.classifiedCount} !== scored ${mfR.scoredCount} + excluded ${mfR.excludedCount}`);
+  assert(mfR.classifiedCount >= 20, `cohort sollte populous sein (>=20), ist ${mfR.classifiedCount}`);
+});
+
+test('medical_care_facilities MARQUEE: HCA/THC/UHS/EHC/ENSG/DVA each classified+scored (universe not collapsed)', () => {
+  const scored = new Set(MF_.filter(m => m.score != null).map(m => m.ticker));
+  for (const t of ['HCA', 'THC', 'UHS', 'EHC', 'ENSG', 'DVA']) {
+    assert(scored.has(t), `marquee ${t} fehlt im gescorten medical_care_facilities-Universum`);
+  }
+});
+
+test('medical_care_facilities QUALITY-SANITY: HCA/EHC out-rank the loss tail (PIII/SNDA/AGL) — no sign-flip', () => {
+  const byTk = new Map(MF_.filter(m => m.score != null).map(m => [m.ticker, m.score]));
+  const lossTail = ['PIII', 'SNDA', 'AGL'].filter(t => byTk.has(t));
+  assert(lossTail.length >= 1, 'mindestens ein Loss-Name sollte im Universum sein (Test-Voraussetzung)');
+  const worstLoss = Math.max(...lossTail.map(t => byTk.get(t)));
+  assert(byTk.get('HCA') > worstLoss && byTk.get('EHC') > worstLoss,
+    `HCA/EHC Qualitäts-Operatoren müssen ÜBER dem Loss-Tail (${lossTail.join('/')}) ranken — kein Vorzeichen-Flip`);
+  // top scorer must be a GENUINE CAPITAL-INTENSIVE FACILITIES OPERATOR (RE-COURT 2026-06-24): the asset-light non-facility
+  // conglomerate CHE (Chemed — ~38% Roto-Rooter plumbing + asset-light home-hospice, owns NO facilities) wrongly topped at
+  // score 93 by maxing axes calibrated for capital-intensive operators (roaThruCycle 2.70x cohort p90 on a light asset
+  // base, net-cash so the leverage axis dropped). It is now ECONOMICALLY EXCLUDED (NON_FACILITY_CONGLOMERATE). The #1 must
+  // be a genuine hospital/SNF/dialysis/rehab/surgery operator — NOT the conglomerate. CHE is explicitly NOT a legal top name.
+  const scoredSorted = MF_.filter(m => m.score != null).sort((a, b) => b.score - a.score);
+  const top = scoredSorted[0];
+  const GENUINE_OPERATORS = ['HCA', 'THC', 'EHC', 'UHS', 'ENSG', 'DVA', 'ADUS', 'MD', 'OPCH'];
+  assert(GENUINE_OPERATORS.includes(top.ticker), `Top-Name sollte ein genuiner kapital-intensiver Facilities-Operator sein, ist ${top.ticker}`);
+  assert(top.ticker !== 'CHE', 'CHE (non-facility conglomerate) darf NIE die Kohorte anführen — muss economically excluded sein');
+});
+
+test('medical_care_facilities: FOUR scored axes {opMargin, roaThruCycle, fcfMargin, leverageDiscipline}; weights Σ=1.0; pillar .60; NO growth axis', () => {
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  const w = NORMS.medical_care_facilities.weights;
+  const keys = Object.keys(w).sort().join(',');
+  assert(keys === 'fcfMargin,leverageDiscipline,opMargin,roaThruCycle', `4 Achsen erwartet, hat ${keys}`);
+  // QUALITY-ONLY (the materials/tech_hardware lesson): NO growth axis — a serial acquirer's deal-masked growth must not gate.
+  for (const forbidden of ['growth', 'revG3', 'gpa', 'gm', 'opMarginStability', 'netIssuance', 'ffoAssets', 'capitalAdequacy']) {
+    assert(!(forbidden in w), `${forbidden} darf KEINE gewichtete medfac-Achse sein (quality-only, no growth)`);
+  }
+  const sum = Object.values(w).reduce((s, v) => s + v, 0);
+  assert(Math.abs(sum - 1.0) < 1e-9, `weights sollten Σ=1.0 sein, sind ${sum}`);
+  assert(w.opMargin === 0.30 && w.roaThruCycle === 0.30 && w.fcfMargin === 0.25 && w.leverageDiscipline === 0.15,
+    'weights sollten {opMargin .30, roaThruCycle .30, fcfMargin .25, leverageDiscipline .15} sein');
+  assert((w.opMargin + w.roaThruCycle) === 0.60, 'opMargin+roaThruCycle sollten den .60 Operating-Quality-Pillar bilden');
+  assert(w.leverageDiscipline <= Math.min(w.opMargin, w.roaThruCycle, w.fcfMargin), 'leverageDiscipline sollte das kleinste Achsengewicht sein');
+});
+
+test('medical_care_facilities: NORMS frozen-id + anchors (opMargin -.035/.158, roaTC .00/.10, fcfMargin -.025/.119, lev -.674/-.30)', () => {
+  const { NORMS } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  const n = NORMS.medical_care_facilities;
+  assert(n.id === 'medfac-norms-2026-06-24', `norm id falsch: ${n.id}`);
+  assert(n.opMargin.floor === -0.035 && n.opMargin.elite === 0.158, `opMargin sollte -.035/.158 sein, ist ${n.opMargin.floor}/${n.opMargin.elite}`);
+  assert(n.roaThruCycle.floor === 0.00 && n.roaThruCycle.elite === 0.10, 'roaThruCycle sollte .00/.10 sein (floor break-even, no loss-credit)');
+  assert(n.fcfMargin.floor === -0.025 && n.fcfMargin.elite === 0.119, 'fcfMargin sollte -.025/.119 sein');
+  // leverageDiscipline is the INVERTED LEVEL axis: q(-ndGA), floor -.674 (over-levered), elite -.30 (well-capitalized).
+  assert(n.leverageDiscipline.floor === -0.674 && n.leverageDiscipline.elite === -0.30, 'leverageDiscipline sollte -.674/-.30 sein (INVERTED LEVEL)');
+  assert(n.leverageDiscipline.elite > n.leverageDiscipline.floor, 'leverageDiscipline floor<elite (monotone Skala)');
+  assert(n.rel && n.rel.minN === 15 && n.rel.beta === 0.6, 'medfac sollte full ABS+REL (beta .6, minN 15) sein');
+});
+
+test('medical_care_facilities-unit: absKaliberMedFac 4-axis coverage-renorm (leverage-drop renorm Σ=1.0; all-null → 0; inversion)', () => {
+  const { absKaliberMedFac } = require(path.join(ROOT, 'lib', 'absolute-anchor'));
+  // full 4 axes (elite operator): at/above the elite anchors (opMargin .158, roaTC .10, fcfMargin .119, lev: ndGA -.30 → q1).
+  const full = absKaliberMedFac({ opMargin: 0.158, roaThruCycle: 0.10, fcfMargin: 0.119, ndGA: -0.30 }, 'medical_care_facilities');
+  assert(full.usedAxes.length === 4 && full.droppedAxes.length === 0, `full sollte 4 Achsen nutzen, hat ${full.usedAxes.length}`);
+  assert(Math.abs(Object.values(full.renormWeights).reduce((s, v) => s + v, 0) - 1.0) < 1e-9, 'renormWeights Σ=1.0');
+  assert(full.absK > 0.95, `elite operator sollte absK~1.0 ergeben, hat ${full.absK}`);
+  // leverageDiscipline is INVERTED: LESS net-debt/assets (lower ndGA) must score HIGHER, all else equal.
+  const lowLev = absKaliberMedFac({ opMargin: 0.10, roaThruCycle: 0.06, fcfMargin: 0.08, ndGA: 0.30 }, 'medical_care_facilities');
+  const highLev = absKaliberMedFac({ opMargin: 0.10, roaThruCycle: 0.06, fcfMargin: 0.08, ndGA: 0.67 }, 'medical_care_facilities');
+  assert(lowLev.absK > highLev.absK, 'niedrigere net-debt/assets sollte HÖHER scoren als hohe — leverageDiscipline ist INVERTED');
+  // leverage-drop (net-cash CHE-like, ndGA null) → 3 axes renormalize to Σ=1.0 (NEVER imputed)
+  const dropLev = absKaliberMedFac({ opMargin: 0.135, roaThruCycle: 0.17, fcfMargin: 0.129, ndGA: null }, 'medical_care_facilities');
+  assert(dropLev.droppedAxes.includes('leverageDiscipline') && dropLev.usedAxes.length === 3, 'leverage-drop sollte 3 Achsen lassen');
+  assert(Math.abs(Object.values(dropLev.renormWeights).reduce((s, v) => s + v, 0) - 1.0) < 1e-9, 'renorm Σ=1.0 nach leverage-drop');
+  // all-null → 0 (pathological shell, no fake-neutral)
+  const allNull = absKaliberMedFac({ opMargin: null, roaThruCycle: null, fcfMargin: null, ndGA: null }, 'medical_care_facilities');
+  assert(allNull.absK === 0 && allNull.usedAxes.length === 0, 'all-null sollte absK=0 ergeben');
+});
+
+test('medical_care_facilities: always-on BLIND walls on every member (REIMBURSEMENT_RATE/PAYER_MIX/CENSUS_OCCUPANCY/REGULATORY)', () => {
+  for (const m of MF_) {
+    for (const wall of ['REIMBURSEMENT_RATE_BLIND', 'PAYER_MIX_BLIND', 'CENSUS_OCCUPANCY_BLIND', 'REGULATORY_BLIND']) {
+      assert(Array.isArray(m.lamps) && m.lamps.includes(wall), `${m.ticker} fehlt BLIND-wall ${wall}`);
+    }
+  }
+  assert(Array.isArray(mfR.walls) && mfR.walls.includes('REIMBURSEMENT_RATE_BLIND'), 'mfR.walls fehlt REIMBURSEMENT_RATE_BLIND');
+});
+
+test('medical_care_facilities SHELL SI-4: excluded[] all score=null with a valid exclusion reason (shell | NON_FACILITY | currency)', () => {
+  const VALID = new Set(['OUT_OF_SEGMENT:shell', 'NON_FACILITY_CONGLOMERATE', 'CURRENCY_SUSPECT']);
+  for (const m of (mfR.excluded || [])) {
+    assert(m.score == null, `excluded ${m.ticker} sollte score=null haben`);
+    assert(VALID.has(m.exclusionReason), `excluded ${m.ticker} reason sollte shell|NON_FACILITY|currency sein, ist ${m.exclusionReason}`);
+  }
+});
+
+test('medical_care_facilities NON_FACILITY gate (RE-COURT): CHE economically EXCLUDED (score=null, NON_FACILITY_CONGLOMERATE, lamp, dropped from REL)', () => {
+  // The economic exclusion gate (roaThruCycle > .12 ON ppeToAssets < .40 — elite capital return on an asset-light book that
+  // owns no facilities) must remove the non-facility conglomerate CHE. NO hardcoded ticker is the mechanism (it is the
+  // economic conjunction); CHE is the verified live target. Mirrors the capmkt BDC_SPREAD_LOAN_BOOK precedent.
+  const che = MF_.find(m => m.ticker === 'CHE');
+  assert(che != null, 'CHE sollte als klassifiziertes Member präsent sein (excluded, nicht silent gedroppt)');
+  assert(che.score == null, `CHE muss score=null sein (economically excluded), ist ${che.score}`);
+  assert(che.exclusionReason === 'NON_FACILITY_CONGLOMERATE', `CHE reason sollte NON_FACILITY_CONGLOMERATE sein, ist ${che.exclusionReason}`);
+  assert(Array.isArray(che.lamps) && che.lamps.includes('NON_FACILITY_CONGLOMERATE'), 'CHE sollte die NON_FACILITY_CONGLOMERATE-Lampe tragen');
+  // CHE must be in excluded[] and NOT in the scored ranking, NOT in the top-3
+  const scoredSorted = MF_.filter(m => m.score != null).sort((a, b) => b.score - a.score);
+  assert(!scoredSorted.some(m => m.ticker === 'CHE'), 'CHE darf NICHT im gescorten Universum sein');
+  assert(!scoredSorted.slice(0, 3).some(m => m.ticker === 'CHE'), 'CHE darf NICHT in den Top-3 sein');
+  assert((mfR.excluded || []).some(m => m.ticker === 'CHE'), 'CHE sollte in mfR.excluded[] gelistet sein');
+  // the economic signature is surfaced for audit (roaThruCycle anomaly + asset-lightness)
+  assert(che.roaThruCycle != null && che.roaThruCycle > 0.12, `CHE roaThruCycle sollte > .12 sein (Anomalie-Arm), ist ${che.roaThruCycle}`);
+  assert(che.ppeToAssets != null && che.ppeToAssets < 0.40, `CHE ppeToAssets sollte < .40 sein (asset-light-Arm), ist ${che.ppeToAssets}`);
+});
+
+test('medical_care_facilities NON_FACILITY gate: ZERO false positives — every GENUINE operator RETAINED (esp. ENSG net-cash leaser)', () => {
+  // The gate is a CONJUNCTION (anomalous ROA × asset-light) so it must NOT catch a genuine operator. ENSG is the
+  // load-bearing spare: net-cash because it LEASES its SNFs (a genuine high-PPE operator, ppeTA ~.69), so net-cash alone
+  // must never trip the gate. The full marquee + the asset-light-but-genuine service names must all stay scored.
+  const scored = new Set(MF_.filter(m => m.score != null).map(m => m.ticker));
+  for (const t of ['ENSG', 'HCA', 'THC', 'UHS', 'EHC', 'DVA', 'ADUS', 'MD', 'OPCH', 'HCSG']) {
+    const m = MF_.find(x => x.ticker === t);
+    if (!m) continue; // only assert on names present in this run
+    assert(m.exclusionReason !== 'NON_FACILITY_CONGLOMERATE', `genuiner Operator ${t} wurde FÄLSCHLICH als NON_FACILITY excluded (Gate over-fire)`);
+    assert(scored.has(t), `genuiner Operator ${t} sollte gescort bleiben`);
+  }
+  // exactly the conjunction-firing names are gated (live: only CHE)
+  const gated = MF_.filter(m => m.exclusionReason === 'NON_FACILITY_CONGLOMERATE').map(m => m.ticker);
+  assert(gated.length >= 1 && gated.includes('CHE'), `NON_FACILITY gate sollte CHE fangen, fing ${gated.join(',') || '(none)'}`);
+  assert(!gated.some(t => ['ENSG', 'HCA', 'THC', 'UHS', 'EHC', 'DVA'].includes(t)), `NON_FACILITY gate darf KEINEN marquee fangen, fing ${gated.join(',')}`);
+});
+
+test('medical_care_facilities SI-3: normTableId + cohort + comparabilityNote (absKaliber cross-bucket, BLIND walls + no-growth disclosed)', () => {
+  assert(mfR.normTableId === 'medfac-norms-2026-06-24', `normTableId fehlt/falsch: ${mfR.normTableId}`);
+  assert(mfR.cohort === 'medical_care_facilities', `cohort falsch: ${mfR.cohort}`);
+  assert(/opMargin/i.test(mfR.comparabilityNote || '') && /REIMBURSEMENT_RATE_BLIND/i.test(mfR.comparabilityNote || ''),
+    'comparabilityNote sollte opMargin + REIMBURSEMENT_RATE_BLIND nennen');
+  assert(/QUALITY-ONLY|NO GROWTH/i.test(mfR.comparabilityNote || ''), 'comparabilityNote sollte das quality-only / no-growth Design disclosen');
+  assert(mfR.scoreScope === 'intra-bucket' && mfR.crossBucketComparableField === 'absKaliber', 'SI-3 scope/field fehlt');
+});
+
+test('medical_care_facilities PARITÄT: KEIN medfac-only Feld auf den anderen Buckets (Leak-Guard)', () => {
+  // TRULY medfac-exclusive fields (mf/opMarginMedFac/roaThruCycle/fcfMarginMedFac/_mf*). The shared names
+  // (absUsedAxes/absDroppedAxes/cohort/absKaliber/netDebtToAssets) legitimately exist on other CORE members
+  // (netDebtToAssets is also a reits field) — guard only the medfac-suffixed/prefixed ones. NOTE: roaThruCycle is also a
+  // PERSISTED banks audit field name, so exclude financials_banks from the roaThruCycle guard.
+  for (const b of ['system_app_software', 'fabless_semi', 'medtech_devices', 'diagnostics_lst', 'industrials_heavy', 'industrials_light', 'staples_branded', 'staples_distribution', 'consdisc_store', 'consdisc_light', 'materials_pricingpower', 'materials_commodity', 'energy_upstream', 'energy_midstream', 'energy_services', 'pharma_branded', 'pharma_biopharma', 'pharma_specialty', 'it_services', 'financials_banks', 'equity_reits', 'capmkt_fee_core']) {
+    if (!doc[b]) continue;
+    for (const m of doc[b].members) {
+      for (const leak of ['mf', 'opMarginMedFac', 'fcfMarginMedFac', 'ppeToAssets', '_mfOpMargin', '_mfRoaThruCycle', '_mfFcfMargin', '_mfLeverageDisc', '_nonFacility']) {
+        assert(!(leak in m), `${b}/${m.ticker} hat medfac-only Feld '${leak}' geleakt (Parität verletzt)`);
+      }
+    }
+  }
+});
+
+// ===========================================================================
 // tech_hardware_quality (CORE court bucket) — ONE durable hardware-FRANCHISE cohort. Council/court triage 2026-06-24
 // (the ONE remaining quality-compounder gap). 5 SCORED axes {gpa, fcfMargin, opMargin, growth, netIssuance} via the
 // REUSED engine absKaliberItServices (the tech_hardware axis set is byte-identical to it_services; only the cohort NORMS
@@ -3729,7 +3904,7 @@ test('tech_hardware_quality: always-on BLIND walls on every member (CYCLE_WALL/I
 test('tech_hardware_quality PARITÄT: KEIN techhw-only Feld auf den anderen Buckets (Leak-Guard)', () => {
   // TRULY techhw-exclusive fields (thw/fcfMarginThw/opMarginThw/_thw*). The shared names (absUsedAxes/absDroppedAxes/
   // cohort/absKaliber/gpa/growthInput/netShareIssuance) legitimately exist on other CORE members — guard only the techhw-suffixed ones.
-  for (const b of ['system_app_software', 'fabless_semi', 'medtech_devices', 'diagnostics_lst', 'industrials_heavy', 'industrials_light', 'staples_branded', 'staples_distribution', 'consdisc_store', 'consdisc_light', 'materials_pricingpower', 'materials_commodity', 'energy_upstream', 'energy_midstream', 'energy_services', 'pharma_branded', 'pharma_biopharma', 'pharma_specialty', 'it_services', 'financials_banks', 'equity_reits', 'capmkt_fee_core']) {
+  for (const b of ['system_app_software', 'fabless_semi', 'medtech_devices', 'diagnostics_lst', 'industrials_heavy', 'industrials_light', 'staples_branded', 'staples_distribution', 'consdisc_store', 'consdisc_light', 'materials_pricingpower', 'materials_commodity', 'energy_upstream', 'energy_midstream', 'energy_services', 'pharma_branded', 'pharma_biopharma', 'pharma_specialty', 'it_services', 'financials_banks', 'equity_reits', 'capmkt_fee_core', 'medical_care_facilities']) {
     if (!doc[b]) continue;
     for (const m of doc[b].members) {
       for (const leak of ['thw', 'fcfMarginThw', 'opMarginThw', '_thwGpa', '_thwFcfMargin', '_thwOpMargin', '_thwGrowth', '_thwNetIssuance']) {
