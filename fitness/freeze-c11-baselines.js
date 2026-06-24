@@ -31,6 +31,8 @@ const BUCKETS = {
     formula: 'capmkt_fee_core CORE — asset-light fee quality; absKaliberCapmkt 4 axes opMargin .30 / opMarginStability(1-CV) .30 / fcfMargin .25 / netIssuance .15; 4-arm economic fee-gate (fund-float / RIC / BDC-loan-book / crypto-miner) so genuine fee compounders lead.' },
   tech_hardware_quality: { keys: ['tech_hardware_quality'], file: 'tech_hardware_quality-v1.0-2026-06-24.json', etf: 'SOXX',
     formula: 'tech_hardware_quality CORE (universe-coverage completion, same 2026-06-24 batch) — picks-and-shovels/precision-instrument franchises (semi-equip/components/comm-equip/instruments); reuses absKaliberItServices 5-axis (gpa .34 lead / fcfMargin .24 / opMargin .18 / growth .14 / netIssuance .10); quality-only membership + composite THW_ABSK_FLOOR=0.25 demotes commodity contract-mfg off the headline.' },
+  medical_care_facilities: { keys: ['medical_care_facilities'], file: 'medical_care_facilities-v1.0-2026-06-24.json', etf: 'IHF',
+    formula: 'medical_care_facilities CORE (disclosed partial read, banks precedent) — hospital/SNF/dialysis operators; absKaliberMedFac opMargin .30 / roaThruCycle .30 / fcfMargin .25 / leverageDiscipline .15; NO growth axis; NON_FACILITY_CONGLOMERATE gate (roaTC>.12 ∧ ppe/assets<.40) excludes CHE; reimbursement/payer/census/regulatory BLIND-walled.' },
 };
 
 const results = JSON.parse(fs.readFileSync(path.join(ROOT, 'outputs', 'court-results.json'), 'utf8'));

@@ -1,0 +1,362 @@
+{
+  "baselineId": "medical_care_facilities-v1.0-2026-06-24",
+  "bucket": "medical_care_facilities",
+  "frozenAt": "2026-06-24",
+  "formula": "medical_care_facilities CORE (disclosed partial read, banks precedent) — hospital/SNF/dialysis operators; absKaliberMedFac opMargin .30 / roaThruCycle .30 / fcfMargin .25 / leverageDiscipline .15; NO growth axis; NON_FACILITY_CONGLOMERATE gate (roaTC>.12 ∧ ppe/assets<.40) excludes CHE; reimbursement/payer/census/regulatory BLIND-walled.",
+  "source": "outputs/court-results.json :: medical_care_facilities",
+  "normTableId": "medfac-norms-2026-06-24",
+  "classifiedCount": 27,
+  "scoredCount": 25,
+  "excludedCount": 2,
+  "headlineShortlistSize": 22,
+  "scoreScope": "intra-bucket",
+  "crossBucketComparableField": "absKaliber",
+  "forwardFitness": {
+    "calendarGated": true,
+    "metric": [
+      "rank_ic_spearman",
+      "top_n_minus_universe_median_fwd_return"
+    ],
+    "horizonsDays": [
+      28,
+      84
+    ],
+    "windowEnds": {
+      "d28": "~2026-07-22",
+      "d84": "~2026-09-16"
+    },
+    "survivorshipKey": "evaluatedTickers",
+    "antiGaming": "gateOpen-Ranking am Ship-Tag (vor jeder weiteren Bucket-Änderung) eingefroren. Forward-Fenster = intrinsischer Holdout; Eval erst NACH Kalender-Gate. Erzeugende Agenten dürfen NIE auf dem Eval-Slice tunen.",
+    "honestLimitation": "N=22 — Rank-IC/Spread haben Richtungs-, nicht starke statistische Aussagekraft. Primärer Wert: Pre-Registration-Disziplin + Beitrag zur gepoolten Cross-Formel-Fitness."
+  },
+  "anchors": {
+    "opMargin": {
+      "median": 0.0598,
+      "mad": 0.0472,
+      "n": 25
+    },
+    "roaThruCycle": {
+      "median": 0.02935,
+      "mad": 0.0295,
+      "n": 26
+    },
+    "fcfMargin": {
+      "median": 0.0487,
+      "mad": 0.027000000000000003,
+      "n": 25
+    },
+    "leverageDisc": {
+      "median": -0.30400000000000005,
+      "mad": 0.21850000000000006,
+      "n": 24
+    }
+  },
+  "comparabilityNote": "medical_care_facilities medical_care_facilities (capital-intensive healthcare-facilities through-cycle OPERATING-quality cohort: hospital/SNF/dialysis/rehab/hospice/surgery/home-health operators). absKaliber in [0,1] = cross-bucket-comparable absolute scale (4-axis weighted-q over the cohort NORMS 'medfac-norms-2026-06-24': opMargin -.0350/.1580 (annualOpInc/annualRev level, operating efficiency/cost control), roaThruCycle .0000/.1000 (4y-avg annualNetIncome/totalAssets, the through-cycle capital-return co-pillar — the banks lead-axis pattern adapted; floor lifted to break-even so the impaired AGL/PIII/AVAH score the floor), fcfMargin -.0250/.1190 (annualFCF/annualRev cash conversion), leverageDiscipline -.6740/-.3000 (q(-net-debt/assets) INVERTED + LEVEL-scored, GENEROUS so only the over-levered lose points; null on net-cash names → DROP+renorm, NEVER imputed); weights {opMargin .30, roaThruCycle .30, fcfMargin .25, leverageDiscipline .15}. NO GROWTH AXIS — QUALITY-ONLY (the materials/tech_hardware lesson: do not exile a quality operator for a down year; a serial acquirer ENSG/SEM has deal-masked unreadable organic growth that would inflate the score — roaThruCycle is the capital-return co-pillar so the low-margin/high-ROIC SNF operators are not under-ranked). SCOPE: this is the genuine capital-intensive facilities industry ONLY — Healthcare Plans (managed-care thin-margin flow-through) + Medical Distribution (~1% margin) are SEPARATE industries, never classified here. COVERAGE-RENORM drops any NOT_READY/null axis (the leverageDiscipline DROP on net-cash names) and renormalizes survivors to Σ=1.0 — no fake-neutral impute. The REL/core component is cross-sectional z/MAD PER COHORT (this bucket only) and is NOT cross-bucket comparable. blendScore mixes both (beta=0.6, n=27≫15). WALLS always-on (the banks credit-quality-blind precedent — the SINGLE MOST IMPORTANT facilities value-drivers carry NO local signal): REIMBURSEMENT_RATE_BLIND (Medicare/Medicaid/commercial reimbursement-rate trajectory ABSENT — THE core driver), PAYER_MIX_BLIND (payer mix absent), CENSUS_OCCUPANCY_BLIND (patient census/occupancy/admissions absent), REGULATORY_BLIND (DOJ/CMS audits / site-of-care shifts / staffing mandates absent). The blended 0-100 'score' is INTRA-BUCKET ONLY; use absKaliber for cross-bucket comparison.",
+  "priceAnchorStatus": "CAPTURED — t0-Close je Ticker eingefroren. Forward-Return = close[t0+h]/close[t0]-1.",
+  "benchmarkAnchorNote": "Broad-market SPY/QQQ/IWM in prices/history.json; Sektor-ETF (IHF) i.d.R. NICHT im Screener-Universe-History → null bis ein künftiger Pull ihn aufnimmt (kein Holdout-Defekt).",
+  "ranking": [
+    {
+      "order": 1,
+      "ticker": "HCA",
+      "score": 81.8,
+      "membershipClass": "In",
+      "absKaliber": 0.82,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 2,
+      "ticker": "THC",
+      "score": 81.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.827,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 3,
+      "ticker": "EHC",
+      "score": 79.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.797,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 4,
+      "ticker": "ADUS",
+      "score": 72.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.698,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 5,
+      "ticker": "ENSG",
+      "score": 72,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.687,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 6,
+      "ticker": "UHS",
+      "score": 71.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.716,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 7,
+      "ticker": "DVA",
+      "score": 69.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.672,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 8,
+      "ticker": "MD",
+      "score": 67.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.664,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 9,
+      "ticker": "OPCH",
+      "score": 58.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.597,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 10,
+      "ticker": "HCSG",
+      "score": 54.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.519,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 11,
+      "ticker": "SGRY",
+      "score": 52.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.521,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 12,
+      "ticker": "PACS",
+      "score": 50,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.493,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 13,
+      "ticker": "ARDT",
+      "score": 49.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.49,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 14,
+      "ticker": "AMN",
+      "score": 48.8,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.485,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 15,
+      "ticker": "PNTG",
+      "score": 47.4,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.474,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 16,
+      "ticker": "SEM",
+      "score": 44.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.463,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 17,
+      "ticker": "ASTH",
+      "score": 44.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.461,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 18,
+      "ticker": "GRDN",
+      "score": 41.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.386,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 19,
+      "ticker": "LFST",
+      "score": 40.7,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.408,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 20,
+      "ticker": "AVAH",
+      "score": 37.1,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.364,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 21,
+      "ticker": "ACHC",
+      "score": 32.9,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.335,
+      "belowAbsoluteFloor": false
+    },
+    {
+      "order": 22,
+      "ticker": "BKD",
+      "score": 14.5,
+      "membershipClass": "Borderline",
+      "absKaliber": 0.149,
+      "belowAbsoluteFloor": false
+    }
+  ],
+  "evaluatedTickers": [
+    "HCA",
+    "THC",
+    "EHC",
+    "ADUS",
+    "ENSG",
+    "UHS",
+    "DVA",
+    "MD",
+    "OPCH",
+    "HCSG",
+    "SGRY",
+    "PACS",
+    "ARDT",
+    "AMN",
+    "PNTG",
+    "SEM",
+    "ASTH",
+    "GRDN",
+    "LFST",
+    "AVAH",
+    "ACHC",
+    "BKD"
+  ],
+  "priceAnchors": {
+    "HCA": {
+      "date": "2026-06-12",
+      "close": 387.17999267578125
+    },
+    "THC": {
+      "date": "2026-06-12",
+      "close": 174.66000366210938
+    },
+    "EHC": {
+      "date": "2026-06-12",
+      "close": 101.47000122070312
+    },
+    "ADUS": {
+      "date": "2026-06-12",
+      "close": 93.27999877929688
+    },
+    "ENSG": {
+      "date": "2026-06-12",
+      "close": 149.3699951171875
+    },
+    "UHS": {
+      "date": "2026-06-12",
+      "close": 146.4199981689453
+    },
+    "DVA": {
+      "date": "2026-06-15",
+      "close": 209.75
+    },
+    "MD": {
+      "date": "2026-06-15",
+      "close": 24.3700008392334
+    },
+    "OPCH": {
+      "date": "2026-06-12",
+      "close": 20.760000228881836
+    },
+    "HCSG": {
+      "date": "2026-06-12",
+      "close": 22.3799991607666
+    },
+    "SGRY": {
+      "date": "2026-06-15",
+      "close": 15.130000114440918
+    },
+    "PACS": {
+      "date": "2026-06-12",
+      "close": 36.279998779296875
+    },
+    "ARDT": {
+      "date": "2026-06-12",
+      "close": 9.350000381469727
+    },
+    "AMN": {
+      "date": "2026-06-12",
+      "close": 30.799999237060547
+    },
+    "PNTG": {
+      "date": "2026-06-15",
+      "close": 33.040000915527344
+    },
+    "SEM": {
+      "date": "2026-06-12",
+      "close": 16.65999984741211
+    },
+    "ASTH": {
+      "date": "2026-06-12",
+      "close": 38.619998931884766
+    },
+    "GRDN": {
+      "date": "2026-06-12",
+      "close": 43.09000015258789
+    },
+    "LFST": {
+      "date": "2026-06-15",
+      "close": 8.59000015258789
+    },
+    "AVAH": {
+      "date": "2026-06-15",
+      "close": 7.230000019073486
+    },
+    "ACHC": {
+      "date": "2026-06-12",
+      "close": 24.600000381469727
+    },
+    "BKD": {
+      "date": "2026-06-12",
+      "close": 13.430000305175781
+    },
+    "SPY": {
+      "date": "2026-06-12",
+      "close": 741.75
+    },
+    "QQQ": {
+      "date": "2026-06-15",
+      "close": 744
+    },
+    "IWM": {
+      "date": "2026-06-15",
+      "close": 294.6400146484375
+    },
+    "IHF": null
+  }
+}
