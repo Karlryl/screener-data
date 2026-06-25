@@ -109,4 +109,48 @@ function rankBy(results, formulaId, track) {
     .sort((a, b) => b.score - a.score);
 }
 
-module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue };
+const round1 = (x) => (Number.isFinite(x) ? Math.round(x * 10) / 10 : null);
+
+/**
+ * produceRankings(results, {topN}) -> dashboard-integrierbares JSON-Objekt:
+ *   { branches: { <id>: { profitable:[...], unprofitable:[...] } },
+ *     overview: [...cross-branch nach Score],
+ *     survival: [...pre-revenue-biotech mit Runway],
+ *     excluded: {<reason>: count} }
+ * Reine Funktion (kein I/O) — vom CLI run-screener.js sowie Tests genutzt.
+ */
+function produceRankings(results, opts = {}) {
+  const topN = opts.topN || 50;
+  const branches = {};
+  const overview = [];
+  const survival = [];
+  const excluded = {};
+  for (const e of (Array.isArray(results) ? results : [])) {
+    if (e.action === 'survival') {
+      survival.push({ ticker: e.ticker, runwayQuarters: e.overview ? e.overview.value : null, lamps: e.lamps });
+      continue;
+    }
+    if (e.action === 'exclude' || e.action === 'unrouted') {
+      const k = e.reason || e.action;
+      excluded[k] = (excluded[k] || 0) + 1;
+      continue;
+    }
+    if (e.action !== 'route' || e.score === null) continue;
+    const row = {
+      ticker: e.ticker, score: round1(e.score), track: e.track, lamps: e.lamps,
+      overview: e.overview ? { kind: e.overview.kind, value: round1(e.overview.value) } : null,
+    };
+    branches[e.formulaId] = branches[e.formulaId] || { profitable: [], unprofitable: [] };
+    (branches[e.formulaId][e.track] = branches[e.formulaId][e.track] || []).push(row);
+    overview.push({ ticker: e.ticker, formulaId: e.formulaId, track: e.track, score: round1(e.score),
+      overviewKind: e.overview ? e.overview.kind : null, overviewValue: e.overview ? round1(e.overview.value) : null,
+      lamps: e.lamps });
+  }
+  for (const b of Object.values(branches)) {
+    for (const t of Object.keys(b)) { b[t].sort((a, c) => c.score - a.score); b[t] = b[t].slice(0, topN); }
+  }
+  overview.sort((a, c) => c.score - a.score);
+  return { branches, overview: overview.slice(0, topN * 2), survival, excluded };
+}
+
+module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings };

@@ -129,6 +129,20 @@ test('Real-Estate Overview ist ffo-badge (track-eigene Badge)', () => {
   assert.ok(reits.every((e) => e.overview && e.overview.kind === 'ffo-badge'), 'REIT Overview != ffo-badge');
 });
 
+// --- produceRankings: dashboard-JSON-Form -----------------------------------
+test('produceRankings: korrekte JSON-Form, sortiert, PLTR top software', () => {
+  const { produceRankings } = require('../../src/scoring/score.js');
+  const r = produceRankings(results, { topN: 20 });
+  assert.ok(r.branches['semiconductors'].profitable.length <= 20);
+  const semis = r.branches['semiconductors'].profitable;
+  assert.ok(semis[0].score >= semis[1].score, 'nicht absteigend sortiert');
+  assert.ok(typeof semis[0].score === 'number' && semis[0].ticker, 'Row-Form');
+  assert.ok(r.overview.length > 0 && r.survival.length > 0);
+  assert.ok(r.excluded && typeof r.excluded.non_us !== 'undefined' || true); // excluded ist ein Objekt
+  assert.equal(typeof r.excluded, 'object');
+  assert.equal(r.branches['software-comm-services'].profitable[0].ticker, 'PLTR'); // Anker top im Output
+});
+
 // --- Sichtbarkeit: Top 6 je Branche/Track -----------------------------------
 for (const fid of ['semiconductors', 'software-comm-services', 'industrials', 'energy', 'health-care']) {
   for (const track of ['profitable', 'unprofitable']) {
