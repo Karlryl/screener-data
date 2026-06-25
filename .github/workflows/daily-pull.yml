@@ -74,18 +74,10 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
-      # Tag-23: Pre-Pull Engine-Tests. Bricht workflow ab BEVOR Yahoo-Pull
-      # läuft, falls Engine/Orchestrator/Filters durch einen Commit kaputt sind.
-      # Schützt gegen production-Schäden bei Engine-Bugs.
-      - name: Run Engine Tests (pre-pull guard)
-        run: node engine-cli-tests.js
-
-      # Tag-28: Methods-Plugin-Tests
-      - name: Run Method Tests
-        run: |
-          echo "--- tag21 ---" && node tag21-tests.js && echo "tag21 PASS" || { echo "tag21 FAIL"; exit 1; }
-          echo "--- tag22 ---" && node tag22-tests.js && echo "tag22 PASS" || { echo "tag22 FAIL"; exit 1; }
-          echo "--- tag28 ---" && node tag28-tests.js && echo "tag28 PASS" || { echo "tag28 FAIL"; exit 1; }
+      # Loop A (hypergrowth pivot): removed the pre-pull engine/method test gate
+      # (engine-cli-tests.js, tag21/22/28-tests.js). Those tested the deleted
+      # quality-compounder scoring layer. Loop B wires its own pre-pull gate
+      # (tests/scoring/*) once the new hypergrowth engine is in place.
 
       # Tag 132: Auto-Universe-Refresh — laeuft bei jedem Run (schedule + workflow_dispatch).
       # Tag 133: Merged mit SEC EDGAR, Finnhub, Wikipedia Indices.
