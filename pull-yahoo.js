@@ -95,6 +95,25 @@ const FUNDAMENTALS_MAX_AGE_MS = FUNDAMENTALS_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
 const FUNDAMENTALS_REFRESH_DAYS = parseInt(process.env.FUNDAMENTALS_REFRESH_DAYS || '30', 10);
 const FUNDAMENTALS_REFRESH_MS = FUNDAMENTALS_REFRESH_DAYS * 24 * 60 * 60 * 1000;
 
+// audit/fix F3-budget (2026-06-25): per-run cap on TIME-based fundamentals-stale
+// forced full pulls. The F3 fix forces a slow full pull whenever fundamentalsAsOf
+// (or fetchedAt) ages past FUNDAMENTALS_REFRESH_DAYS. Because the schema-stale wave
+// clustered a large cohort's seed timestamps, that cohort can re-expire together and
+// all take the slow full-pull path in ONE run — collapsing n_ok below the coverage
+// gate floor (max(2500, total*0.13), a hard CI fail). Since pullAll processes
+// oldest-staleness-first, we honor time-based forced fulls only while a per-run
+// counter is under budget; once exhausted, the remaining time-stale tickers fall
+// back to price-only and are caught next run (still oldest-first). Schema-stale and
+// currency-stale forced fulls are correctness-critical and rare — they are NEVER
+// budgeted. Generous default so normal runs are unaffected; only a mass re-expiry
+// stampede ever hits the cap.
+const FUNDAMENTALS_REFRESH_BUDGET = (() => {
+  const v = parseInt(process.env.FUNDAMENTALS_REFRESH_BUDGET || '', 10);
+  return (Number.isFinite(v) && v >= 0) ? v : 4000;
+})();
+let _fundamentalsRefreshUsed = 0;   // per-run counter, reset at the top of pullAll
+let _fundamentalsRefreshDeferred = 0; // tickers deferred to price-only this run (logged)
+
 // Market-cap floor (USD). Env-configurable so a wider universe sweep — e.g.
 // "screen every US company" — can lower it without a code edit, and so the
 // local fill-pull and the daily CI pull stay consistent (otherwise CI's $1B
@@ -309,8 +328,13 @@ function _convertSnapshotToUSD(snap) {
   // Tag 148: British pence (GBp/GBX) — Yahoo quotes some UK shares in pence, not pounds.
   // marketCap and financial values are already 100x too small relative to GBP.
   // Divide by 100 first to convert pence → pounds, then apply the GBP→USD rate.
-  // F-DQ-003: case-insensitive match including GBX variant
-  const isPence = /^GB[Xp]$/i.test(origCurrency) || origCurrency.toUpperCase() === 'GBPENCE';
+  // audit/fix GBP-pence (2026-06-25): case-SENSITIVE pence test. The previous
+  // /^GB[Xp]$/i used the /i flag, so the char class [Xp] also matched the uppercase
+  // 'P' in 'GBP' → GBP (pounds) was misclassified as pence → factor = GBP_rate/100
+  // → ALL GBP-reported financials (revenue/EBITDA/EV, every annual & timeseries
+  // series) came out 100× too small. Genuine pence currencies are 'GBp' (lowercase p)
+  // and 'GBX' (uppercase X); pounds is 'GBP'. Match ONLY genuine pence, exactly.
+  const isPence = origCurrency === 'GBp' || origCurrency === 'GBX' || origCurrency.toUpperCase() === 'GBPENCE';
   const fxKey = isPence ? 'GBP' : origCurrency.toUpperCase();
 
   const rate = FX_TO_USD[fxKey];
@@ -365,7 +389,11 @@ function _convertSnapshotToUSD(snap) {
   let tradingFactor = factor;  // default: equals financial factor (no special handling)
   let tradingOverride = false;
   if (tradingCcyRaw && tradingCcyRaw.toUpperCase() !== origCurrency.toUpperCase()) {
-    const tradingPence = /^GB[Xp]$/i.test(tradingCcyRaw) || tradingCcyRaw.toUpperCase() === 'GBPENCE';
+    // audit/fix GBP-pence (2026-06-25): case-SENSITIVE pence test (see ~line 313).
+    // /^GB[Xp]$/i matched the 'P' in 'GBP' under /i → GBP trading ccy was treated as
+    // pence → trading marketCap/price scaled by GBP_rate/100 (100× too small).
+    // Match ONLY genuine pence: 'GBp' (lowercase p) or 'GBX' (uppercase X).
+    const tradingPence = tradingCcyRaw === 'GBp' || tradingCcyRaw === 'GBX' || tradingCcyRaw.toUpperCase() === 'GBPENCE';
     const tradingKey = tradingPence ? 'GBP' : tradingCcyRaw.toUpperCase();
     const tradingRate = FX_TO_USD[tradingKey];
     if (tradingRate != null && Number.isFinite(tradingRate)) {
@@ -1370,6 +1398,10 @@ function sortByStaleness(stocks, outputDir) {
 
 async function pullAll(watchlist, outputDir, rateLimitMs) {
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+  // audit/fix F3-budget (2026-06-25): reset the per-run time-based fundamentals-stale
+  // counters so the budget is fresh each pullAll invocation.
+  _fundamentalsRefreshUsed = 0;
+  _fundamentalsRefreshDeferred = 0;
   const results = [];
   const failures = [];
   // Tag-80: Parallel pulls in batches of CONCURRENCY
@@ -1634,7 +1666,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     const tradingCcyRaw = (q.currency || (existing.price && existing.price.currency) || '').toString();
     let tradingFactor;
     if (tradingCcyRaw) {
-      const isPence = /^GB[Xp]$/i.test(tradingCcyRaw) || tradingCcyRaw.toUpperCase() === 'GBPENCE';
+      // audit/fix GBP-pence (2026-06-25): case-SENSITIVE pence test (see ~line 313).
+      // Same /^GB[Xp]$/i defect in the price-only fast path — under /i it misclassified
+      // 'GBP' (pounds) trading quotes as pence, scaling price/marketCap by GBP_rate/100.
+      // Match ONLY genuine pence: 'GBp' (lowercase p) or 'GBX' (uppercase X).
+      const isPence = tradingCcyRaw === 'GBp' || tradingCcyRaw === 'GBX' || tradingCcyRaw.toUpperCase() === 'GBPENCE';
       const tradingFxKey = isPence ? 'GBP' : tradingCcyRaw.toUpperCase();
       const tradingRate = FX_TO_USD[tradingFxKey];
       if (tradingRate != null && Number.isFinite(tradingRate)) {
@@ -1796,7 +1832,24 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
             return (Date.now() - t) > FUNDAMENTALS_REFRESH_MS;
           })()
         : false;
-      if (youngEnough && !staleSchema && !staleCurrency && !staleFundamentals) {
+      // audit/fix F3-budget (2026-06-25): apply the per-run budget to TIME-based
+      // forced fulls only. If this ticker is ALSO schema- or currency-stale, it takes
+      // the full pull for correctness regardless (free ride) and must not consume the
+      // time budget. Otherwise — when staleFundamentals is the SOLE reason — honor it
+      // only while under budget; once the budget is exhausted this run, defer the
+      // ticker to price-only (caught next run, oldest-first) so a clustered re-expiry
+      // wave can't starve the coverage gate. Counter incremented only on a forced
+      // time-based full that we actually honor.
+      let forceFundamentalsFull = staleFundamentals;
+      if (staleFundamentals && !staleSchema && !staleCurrency) {
+        if (_fundamentalsRefreshUsed < FUNDAMENTALS_REFRESH_BUDGET) {
+          _fundamentalsRefreshUsed++;
+        } else {
+          forceFundamentalsFull = false; // budget exhausted → fall back to price-only
+          _fundamentalsRefreshDeferred++;
+        }
+      }
+      if (youngEnough && !staleSchema && !staleCurrency && !forceFundamentalsFull) {
         try {
           const r = await _priceOnlyUpdate(stock, outputDir, _parsedSnapshot);
           results.push(r);
@@ -1810,7 +1863,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         _log('INFO', `  ${stock.ticker} [schema-stale]: forcing full pull to backfill Tag 211l fields`);
       } else if (staleCurrency) {
         _log('INFO', `  ${stock.ticker} [currency-stale]: forcing full pull to normalize pre-Tag-219c FX envelope`);
-      } else if (staleFundamentals) {
+      } else if (forceFundamentalsFull) {
         _log('INFO', `  ${stock.ticker} [fundamentals-stale]: forcing full pull (fundamentalsAsOf > ${FUNDAMENTALS_REFRESH_DAYS}d)`);
       }
 
@@ -2447,6 +2500,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
 
   await runWorkerPool(watchlist.stocks, processOne, CONCURRENCY, rateLimitMs, writeManifestIncremental);
   writeManifestIncremental(); // final incremental flush before full manifest
+
+  // audit/fix F3-budget (2026-06-25): report time-based fundamentals-refresh usage so a
+  // mass re-expiry stampede that hit the cap is visible. Deferred tickers fell back to
+  // price-only this run and will be picked up next run (oldest-first).
+  if (_fundamentalsRefreshDeferred > 0) {
+    _log('INFO', `Fundamentals-refresh budget: ${_fundamentalsRefreshUsed}/${FUNDAMENTALS_REFRESH_BUDGET} time-based full pulls used; ${_fundamentalsRefreshDeferred} ticker(s) deferred to price-only (caught next run, oldest-first) to protect the coverage gate.`);
+  } else {
+    _log('INFO', `Fundamentals-refresh budget: ${_fundamentalsRefreshUsed}/${FUNDAMENTALS_REFRESH_BUDGET} time-based full pulls used; none deferred.`);
+  }
 
   // F-DP-047 (Tag 192): same n_ok-vs-skipped-mcap fix as in the incremental
   // writeManifestIncremental() — final manifest must agree with the snapshot

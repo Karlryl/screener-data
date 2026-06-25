@@ -143,11 +143,30 @@ const _US_SOURCES = new Set(['sec-edgar', 'nasdaq-trader', 'nasdaq-api', 'auto-u
 // custom exchange-screener (EXCHANGE_CODES): NMS/NGM/NIM/NCM (NASDAQ tiers),
 // NYQ (NYSE), ASE (NYSE American), PCX (NYSE Arca). 'US' is the bare marker
 // sec-edgar emits. Anchored on word boundaries so 'LSE'/'OSL' never match 'US'.
-const _US_EXCHANGE_RE = /\b(NASDAQ|NYSE|NYSE ARCA|NYSE AMERICAN|AMEX|BATS|CBOE|NMS|NGM|NCM|NIM|NYQ|ASE|PCX|US)\b/i;
+// audit/fix (BUG MEDIUM): the bare case-insensitive `NASDAQ` alternation matched the
+// word "Nasdaq" inside the NON-US Nordic venue strings ("Nasdaq Helsinki/Stockholm/
+// Copenhagen", "NASDAQ OMX") - a latent false-positive. The literal "NASDAQ" IS
+// load-bearing for genuine US rows (discovery/nasdaq-all.js emits exchange:'NASDAQ';
+// discovery/nasdaq-api.js emits label 'NASDAQ'), so we keep it but add a negative
+// lookahead rejecting a following space + Nordic/OMX locale token. US 'NASDAQ' is
+// bare (no trailing locale) so the lookahead never fires on it.
+const _NORDIC_NASDAQ = 'OMX|Helsinki|Stockholm|Copenhagen|Reykjavik|Iceland|Riga|Tallinn|Vilnius|Baltic|Nordic';
+const _US_EXCHANGE_RE = new RegExp(
+  '\\b(NASDAQ(?! +(?:' + _NORDIC_NASDAQ + '))|NYSE|NYSE ARCA|NYSE AMERICAN|AMEX|BATS|CBOE|NMS|NGM|NCM|NIM|NYQ|ASE|PCX|US)\\b',
+  'i'
+);
+// audit/fix (BUG MEDIUM): Yahoo's q.fullExchangeName is spaceless camelCase
+// ("NasdaqGS/GM/CM", "NYSEArca", "NYSEAmerican") which the word-boundary RE above
+// can't match. These case-SENSITIVE alternations require the tier letter to follow
+// IMMEDIATELY (no space): so they flag "NasdaqGS" etc. but NOT the Nordic "Nasdaq
+// Helsinki" (space breaks `Nasdaq[A-Z]`). Kept outside /i so casing is enforced.
+const _US_EXCHANGE_CAMEL_RE = /Nasdaq[A-Z]|NYSE(?:Arca|American)/;
 function _looksUS(exchange, source) {
   const ex = String(exchange || '').trim();
   const src = String(source || '').trim().toLowerCase();
-  if (ex && _US_EXCHANGE_RE.test(ex)) return true;
+  // audit/fix (BUG MEDIUM): test both the word-boundary RE (codes + spaced venue
+  // names) AND the case-sensitive camelCase RE (Yahoo's NasdaqGS/NYSEArca forms).
+  if (ex && (_US_EXCHANGE_RE.test(ex) || _US_EXCHANGE_CAMEL_RE.test(ex))) return true;
   if (src && _US_SOURCES.has(src)) return true;
   return false;
 }
@@ -296,7 +315,11 @@ async function main() {
         if (!mcap || mcap < 1e9 || mcap > 500e9) continue;  // Tag 101: $1B+ Mid/Large-Cap universe
         // audit/fix: key the candidate map on the class-share-normalized symbol so a
         // US class-share dot collapses onto its dash twin; foreign keys unchanged.
-        const exForKey = q.fullExchangeName || q.exchange || '';
+        // audit/fix (BUG MEDIUM): prefer the exchange CODE (q.exchange = NMS/NYQ/ASE,
+        // which _US_EXCHANGE_RE matches) over the camelCase display name
+        // (q.fullExchangeName = "NasdaqGS"/"NYSEArca") so _looksUS=true fires at
+        // dedup time and the class-share collapse happens HERE, not only later.
+        const exForKey = q.exchange || q.fullExchangeName || '';
         const key = dedupKey(sym, exForKey, '');
         if (!allTickers.has(key) || (allTickers.get(key).marketCap || 0) < mcap) {
           allTickers.set(key, {
@@ -355,7 +378,11 @@ async function main() {
         // audit/fix: class-share-normalize the map key. `exch` is the Yahoo
         // exchange CODE (NMS/NYQ/ASE = US; LSE/FRA/etc = foreign), so US class
         // shares pulled here fold onto their dash twin; foreign codes pass through.
-        const exForKey = q.fullExchangeName || q.exchange || exch;
+        // audit/fix (BUG MEDIUM): prefer the CODE (q.exchange / exch, both match
+        // _US_EXCHANGE_RE for US venues) over the camelCase q.fullExchangeName
+        // ("NasdaqGS"/"NYSEArca") so _looksUS=true at dedup time; the camelCase RE
+        // now also covers fullExchangeName as a belt-and-braces fallback.
+        const exForKey = q.exchange || q.fullExchangeName || exch;
         const key = dedupKey(sym, exForKey, '');
         if (!allTickers.has(key) || (allTickers.get(key).marketCap || 0) < mcap) {
           allTickers.set(key, {
