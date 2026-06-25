@@ -331,6 +331,11 @@ async function main() {
   // Tag 165: OTC Markets OTCQX/OTCQB/Expert — ~3k–5k additional US OTC tickers (no auth required)
   // Tag 165: NASDAQ Screener API — NASDAQ/NYSE/AMEX with sector/mcap hints (no auth required)
   console.log('\nDiscovery: Additional Sources (Tag 133/135/165)...');
+  // audit/fix: name the sources in call-order so per-source observability below
+  // can attribute a non-empty/empty/failed result to the right discovery module.
+  const DISCOVERY_SOURCE_NAMES = [
+    'nasdaq-all', 'sec-tickers', 'finnhub', 'wikipedia-indices', 'otc-markets', 'nasdaq-api'
+  ];
   const discoverySources = await Promise.allSettled([
     fetchNasdaqAll(),
     fetchSecTickers(),
@@ -339,9 +344,37 @@ async function main() {
     fetchOTCMarkets(),
     fetchNasdaqApiList()
   ]);
-  for (const res of discoverySources) {
-    if (res.status === 'rejected') { console.error('  Discovery source error: ' + res.reason); continue; }
+  // audit/fix (BUG HIGH — silent total-discovery-outage): every source returns an
+  // empty Map() on total failure instead of rejecting, so Promise.allSettled sees
+  // them all 'fulfilled' and the rejected-branch is dead for the common-outage case.
+  // Track, per source, whether it contributed a NON-EMPTY map and how many raw
+  // candidate rows it yielded, so a degraded run can be detected after the merge.
+  const discoveryYield = {};   // sourceName -> raw candidate count (-1 = rejected/failed)
+  let nonEmptySources = 0;
+  let totalDiscoveryCandidates = 0;
+  for (let i = 0; i < discoverySources.length; i++) {
+    const res = discoverySources[i];
+    const srcName = DISCOVERY_SOURCE_NAMES[i] || ('source#' + i);
+    if (res.status === 'rejected') {
+      console.error('  Discovery source error [' + srcName + ']: ' + res.reason);
+      discoveryYield[srcName] = -1;
+      continue;
+    }
     const srcMap = res.value;
+    // audit/fix (SECONDARY MEDIUM): the merge loop trusted res.value to be an
+    // iterable of [sym,info] pairs. A source ever returning a non-Map (or a
+    // non-iterable) would throw mid-loop and — because the sources are merged
+    // sequentially — silently discard every LATER source's tickers too. Guard
+    // each result: log+skip a non-conforming source instead of aborting the merge.
+    if (!(srcMap instanceof Map)) {
+      console.error('  Discovery source [' + srcName + '] returned a non-Map (' +
+        (srcMap === null ? 'null' : typeof srcMap) + ') — skipping it');
+      discoveryYield[srcName] = -1;
+      continue;
+    }
+    discoveryYield[srcName] = srcMap.size;
+    totalDiscoveryCandidates += srcMap.size;
+    if (srcMap.size > 0) nonEmptySources++;
     for (const [sym, info] of srcMap) {
       if (!allTickers.has(sym)) {
         allTickers.set(sym, {
@@ -375,6 +408,46 @@ async function main() {
         }
       }
     }
+  }
+
+  // audit/fix (BUG HIGH — discovery-yield observability + fail-loud signal):
+  // surface per-source yield so a partial degradation is visible even when the run
+  // stays above the hard floor.
+  const yieldSummary = DISCOVERY_SOURCE_NAMES
+    .map(n => n + '=' + (discoveryYield[n] === -1 ? 'FAIL' : (discoveryYield[n] || 0)))
+    .join(' ');
+  console.log('  Discovery per-source yield: ' + yieldSummary +
+    '  (non-empty sources: ' + nonEmptySources + '/' + DISCOVERY_SOURCE_NAMES.length +
+    ', total raw candidates: ' + totalDiscoveryCandidates + ')');
+
+  // audit/fix (BUG HIGH — fail-loud on silent total-discovery-outage):
+  // because all six sources return an empty Map() rather than rejecting, a day when
+  // SEC(403)+NASDAQ-trader+OTC+Yahoo-screener all fail looks GREEN: the additive merge
+  // re-writes the existing ~15,734-row watchlist verbatim, the round-1 size-floor
+  // (stocks.length < 200) is a no-op, and CI "Watchlist Sanity" (>=200) + the
+  // continue-on-error refresh step never notice that ZERO new tickers entered.
+  // Thresholds (justified):
+  //   MIN_NONEMPTY_SOURCES = 2 — on a healthy day all six contribute; 6 of 6 are
+  //     written to swallow their own errors, so requiring >=2 non-empty catches the
+  //     systemic-outage case (shared rate-limit / network / CI-IP-block) while
+  //     tolerating 1-2 independent source flakes that the additive merge survives fine.
+  //   MIN_DISCOVERY_CANDIDATES = 1000 — a single healthy source (NASDAQ-Trader alone
+  //     is ~7k–8k US commons) clears this comfortably; the existing universe is
+  //     ~15,734, so 1000 raw candidates is a deliberately conservative floor that only
+  //     trips on a near-total discovery collapse, not on normal day-to-day variance.
+  // exit(1) is intentional even though the CI step is continue-on-error: it won't abort
+  // the daily pull, but it flips the step to FAILED and writes a ::error:: annotation —
+  // turning a silent green into a visible degraded-discovery signal in the run log.
+  const MIN_NONEMPTY_SOURCES = parseInt(process.env.MIN_DISCOVERY_SOURCES || '2', 10);
+  const MIN_DISCOVERY_CANDIDATES = parseInt(process.env.MIN_DISCOVERY_CANDIDATES || '1000', 10);
+  if (nonEmptySources < MIN_NONEMPTY_SOURCES || totalDiscoveryCandidates < MIN_DISCOVERY_CANDIDATES) {
+    console.error('::error::Degraded discovery — only ' + nonEmptySources + '/' +
+      DISCOVERY_SOURCE_NAMES.length + ' sources returned data (' + totalDiscoveryCandidates +
+      ' raw candidates; floors: >=' + MIN_NONEMPTY_SOURCES + ' sources, >=' +
+      MIN_DISCOVERY_CANDIDATES + ' candidates). Per-source: ' + yieldSummary +
+      '. The additive merge silently re-writes the existing universe unchanged — ' +
+      'no new tickers entered. Likely SEC/NASDAQ-trader/OTC/Yahoo-screener outage or CI-IP block.');
+    process.exit(1);
   }
 
   // Tag 147: Hard-cap universe by marketCap rank. Finnhub/SEC/NASDAQ/OTC add tickers

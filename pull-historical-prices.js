@@ -73,7 +73,13 @@ async function main() {
   for (const b of BENCHMARKS) {
     if (!wl.stocks.some(s => (s.ticker || '').toUpperCase() === b.ticker)) wl.stocks.unshift(b);
   }
-  const today = new Date().toISOString().slice(0, 10);
+  // audit/fix: honor the workflow's frozen RUN_DATE_UTC for the per-day snapshot
+  // filename + pulledOn provenance, instead of a self-computed wall-clock UTC date.
+  // The daily-pull workflow freezes RUN_DATE_UTC at job start so all date-stamped
+  // artifacts agree even across a UTC-midnight crossing; this mirrors what
+  // archive-old-snapshots.js already does. (History-array entry dates are NOT touched
+  // here — those correctly use the real exchange latestQuoteDate.)
+  const today = process.env.RUN_DATE_UTC || new Date().toISOString().slice(0, 10);
 
   // Load existing kumulative history wenn vorhanden.
   // F-SC-028 (Tag 180): a JSON.parse failure previously silently reset to {} and the

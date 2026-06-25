@@ -84,6 +84,17 @@ const yf = new YahooFinance({
 const FUNDAMENTALS_MAX_AGE_DAYS = parseInt(process.env.FUNDAMENTALS_MAX_AGE_DAYS || '7', 10);
 const FUNDAMENTALS_MAX_AGE_MS = FUNDAMENTALS_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
 
+// audit/fix F3 (2026-06-25): SEPARATE full-pull clock. The price-only fast path
+// resets meta.asOf on every daily run, and the price-only eligibility gate reads
+// that SAME meta.asOf (age < FUNDAMENTALS_MAX_AGE_MS) — so once a snapshot has the
+// current schema, asOf is bumped to "today" each day and the age never crosses 7d,
+// meaning a FULL pull (the only path that refreshes annual/metrics/FTS) NEVER runs
+// again → fundamentals freeze indefinitely while asOf shows "today". Fix: stamp
+// meta.fundamentalsAsOf ONLY on a successful full pull, NEVER touch it in
+// _priceOnlyUpdate, and force a full pull when it ages past FUNDAMENTALS_REFRESH_DAYS.
+const FUNDAMENTALS_REFRESH_DAYS = parseInt(process.env.FUNDAMENTALS_REFRESH_DAYS || '30', 10);
+const FUNDAMENTALS_REFRESH_MS = FUNDAMENTALS_REFRESH_DAYS * 24 * 60 * 60 * 1000;
+
 // Market-cap floor (USD). Env-configurable so a wider universe sweep — e.g.
 // "screen every US company" — can lower it without a code edit, and so the
 // local fill-pull and the daily CI pull stay consistent (otherwise CI's $1B
@@ -362,6 +373,22 @@ function _convertSnapshotToUSD(snap) {
       tradingOverride = true;
       snap.meta.tradingCurrencyOriginal = tradingCcyRaw;
       snap.meta.tradingFxRateApplied = tradingFactor;
+    } else {
+      // audit/fix F4 (2026-06-25): FAIL CLOSED. The trading currency differs from the
+      // reporting currency (ADR-class) but FX_TO_USD has no finite rate for it. The
+      // old code silently left tradingFactor = reporting `factor`, so marketCap (and
+      // analyst targets) got scaled by the WRONG rate and the snapshot was written
+      // with a mis-scaled mcap and NO flag — exactly the silent corruption the
+      // reporting-missing branch (~line 306) already guards against. Mirror that
+      // branch: flag fxConversionFailed (+ a directional tradingFxMissing marker) and
+      // return so the full-pull loop's fxConversionFailed skip (~line 2088) DROPS the
+      // ticker instead of persisting a silently mis-scaled marketCap.
+      snap.meta.tradingCurrencyOriginal = tradingCcyRaw;
+      snap.meta.tradingFxRateApplied = null;
+      snap.meta.tradingFxMissing = true;
+      snap.meta.fxConversionFailed = true;
+      snap.meta.fxConverted = false;
+      return snap;
     }
   }
 
@@ -1114,12 +1141,28 @@ function mapFTSToAnnual(annualRows, cashRows) {
     const oi = _ftsValue(r, 'operatingIncome', 'OperatingIncome', 'totalOperatingIncomeAsReported');
     const gp = _ftsValue(r, 'grossProfit', 'GrossProfit');
     const ni = _ftsValue(r, 'netIncome', 'NetIncome', 'netIncomeContinuousOperations');
-    // Skip completely empty rows (no rev AND no derivative fields) — those add no info.
-    if (rev == null && oi == null && gp == null && ni == null) continue;
+    // audit/fix F1 (2026-06-25): was `continue` on an all-empty income row. But
+    // annualRnD/SGA/Depreciation/Shares are built by _ftsExtractByYear over the
+    // SAME fts.annualFin rows WITHOUT any skip (null-preserving). So an interior
+    // income-empty-but-RnD-present year was dropped from annualRev/OpInc/GP/NI
+    // while kept in annualRnD/SGA/Shares → year-index drift between arrays read
+    // off identical rows. Push null placeholders for ALL four income arrays (the
+    // same no-skip convention as mapFTSToBalance/mapFTSToQuarterly/_ftsExtractByYear),
+    // then trim trailing all-null rows below. Consumers already null-check in place.
     annualRev.push(rev != null ? { value: rev } : null);
     annualOpInc.push(oi != null ? { value: oi } : null);
     annualGP.push(gp != null ? { value: gp } : null);
     annualNetIncome.push(ni != null ? { value: ni } : null);
+  }
+  // audit/fix F1 (2026-06-25): trim trailing all-null income rows (oldest) — no
+  // information to contribute; mirrors mapFTSToQuarterly's trailing-null trim so
+  // the arrays stay tight while interior nulls (which carry alignment) are kept.
+  while (annualRev.length > 0 &&
+         annualRev[annualRev.length - 1] == null &&
+         annualOpInc[annualOpInc.length - 1] == null &&
+         annualGP[annualGP.length - 1] == null &&
+         annualNetIncome[annualNetIncome.length - 1] == null) {
+    annualRev.pop(); annualOpInc.pop(); annualGP.pop(); annualNetIncome.pop();
   }
   // FCF + OCF aus cash-flow-Module.
   // F-DP-101 (audit 2026-06-11): the old `continue` on pure-empty rows COMPACTED
@@ -1723,7 +1766,37 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const staleCurrency = youngEnough
         ? _existingSnapshotMissingCurrencyNormalization(_parsedSnapshot)
         : false;
-      if (youngEnough && !staleSchema && !staleCurrency) {
+      // audit/fix F3 (2026-06-25): time-based fundamentals-refresh probe. Reads the
+      // SEPARATE full-pull clock (meta.fundamentalsAsOf, stamped only on full pulls)
+      // — NOT meta.asOf, which _priceOnlyUpdate resets daily. If fundamentals are
+      // older than FUNDAMENTALS_REFRESH_DAYS, force a full pull so annual/metrics/FTS
+      // actually refresh instead of freezing behind an ever-young asOf.
+      // Backward-compat: snapshots written before this fix carry no fundamentalsAsOf.
+      // Fall back to meta.fetchedAt — NOT meta.asOf. asOf is RESET to "today" by
+      // _priceOnlyUpdate on every daily refresh, so a pre-existing snapshot that is
+      // schema- and currency-current would price-only forever, keep asOf < 30d
+      // indefinitely, and NEVER force a full pull → fundamentalsAsOf is never seeded
+      // and fundamentals freeze permanently (the exact bug F3 targets, for the exact
+      // ~pre-existing population it targets). meta.fetchedAt, by contrast, is written
+      // ONLY by the full-pull mapper (mapYahooToCanonical, ~line 872) and is NEVER
+      // touched by _priceOnlyUpdate, so it is a faithful "last full pull" clock. As a
+      // pre-existing snapshot's fetchedAt naturally ages past FUNDAMENTALS_REFRESH_DAYS
+      // it forces one full pull, which seeds fundamentalsAsOf; thereafter the real
+      // fundamentalsAsOf clock governs. No day-1 stampede: fetchedAt values are spread
+      // across the universe's last-full-pull dates, so only the genuinely-overdue
+      // (>30d) fraction force-fulls on any given run — verified ~39% (1837/4681) on
+      // the live universe, not 100%. Missing/unparseable timestamp → not forced.
+      const staleFundamentals = (youngEnough && _parsedSnapshot && _parsedSnapshot.meta)
+        ? (() => {
+            const m = _parsedSnapshot.meta;
+            const anchor = m.fundamentalsAsOf || m.fetchedAt;
+            if (!anchor) return false;
+            const t = new Date(anchor).getTime();
+            if (!Number.isFinite(t)) return false;
+            return (Date.now() - t) > FUNDAMENTALS_REFRESH_MS;
+          })()
+        : false;
+      if (youngEnough && !staleSchema && !staleCurrency && !staleFundamentals) {
         try {
           const r = await _priceOnlyUpdate(stock, outputDir, _parsedSnapshot);
           results.push(r);
@@ -1737,6 +1810,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         _log('INFO', `  ${stock.ticker} [schema-stale]: forcing full pull to backfill Tag 211l fields`);
       } else if (staleCurrency) {
         _log('INFO', `  ${stock.ticker} [currency-stale]: forcing full pull to normalize pre-Tag-219c FX envelope`);
+      } else if (staleFundamentals) {
+        _log('INFO', `  ${stock.ticker} [fundamentals-stale]: forcing full pull (fundamentalsAsOf > ${FUNDAMENTALS_REFRESH_DAYS}d)`);
       }
 
       _log('INFO', `Pulling ${stock.ticker} (${stock.yahoo_symbol})…`);
@@ -1949,29 +2024,62 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const mergeQuarterTriplet = (qsTrip, ftsTrip) => (
         _nonNullCount(ftsTrip.revenueQ) > _nonNullCount(qsTrip.revenueQ) ? ftsTrip : qsTrip
       );
+      // audit/fix F2 (2026-06-25): the annual INCOME bundle (Rev/OpInc/GP/NI) must
+      // come from ONE source. Previously annualRev (mergePreferRicher), annualOpInc
+      // (its own non-null compare), annualGP (mergePreferRicher) and annualNetIncome
+      // (its own compare) each picked QS-vs-FTS INDEPENDENTLY by non-null count.
+      // EQUAL count does NOT imply equal year anchor: QS is ~4yr anchored at the
+      // latest FY (e.g. FY2025) while FTS is ~5yr anchored one year earlier (FY2024).
+      // So grossMargin[0]=annualGP[0]/annualRev[0] could divide a QS gross profit
+      // (FY2025) by an FTS revenue (FY2024) — different fiscal years. Mirror the
+      // mergeQuarterTriplet pattern: decide ONCE off the revenue array's non-null
+      // count (tiebreak on total bundle density so an equal-revenue tie still
+      // resolves deterministically toward the richer overall source), then move all
+      // four arrays from the SAME source together. Null placeholders within each
+      // array are preserved (no filtering) so positional year-alignment survives.
+      const _incomeBundleDensity = b =>
+        _nonNullCount(b.annualRev) + _nonNullCount(b.annualOpInc) +
+        _nonNullCount(b.annualGP) + _nonNullCount(b.annualNetIncome);
+      const mergeAnnualIncomeBundle = (qsB, ftsB) => {
+        const qsRev = _nonNullCount(qsB.annualRev);
+        const ftsRev = _nonNullCount(ftsB.annualRev);
+        if (ftsRev !== qsRev) return ftsRev > qsRev ? ftsB : qsB;
+        // revenue tie → fall back to total bundle density; FTS only wins on strictly
+        // richer (preserves the prior "QS keeps it on a tie" default).
+        return _incomeBundleDensity(ftsB) > _incomeBundleDensity(qsB) ? ftsB : qsB;
+      };
 
-      // Override leere annual-Arrays aus quoteSummary mit FTS-Daten wenn FTS welche hat
-      canonical.annual.annualRev = mergePreferRicher(canonical.annual.annualRev, ftsAnnual.annualRev, { mode: 'count' }); // audit F-A-2026-06-21: year-index drift (rev)
-      // Tag 203: FTS-OpInc override is now gated by non-null COUNT, not length.
-      // mapFTSToAnnual pushes null placeholders for OpInc-missing rows (bank/
-      // fintech) — without this guard a 4-null-entry FTS array would wipe out
-      // a 4-non-null derived OpInc series produced by the Financial-Services
-      // fallback in mapYahooToCanonical. Native FTS data (non-null entries)
-      // still wins as before. We also reset opIncSource accordingly.
-      const _qsOpIncNonNull = (canonical.annual.annualOpInc || []).filter(v => v != null && (typeof v !== 'object' || v.value != null)).length;
-      const _ftsOpIncNonNull = (ftsAnnual.annualOpInc || []).filter(v => v != null && (typeof v !== 'object' || v.value != null)).length;
-      if (_ftsOpIncNonNull > _qsOpIncNonNull) {
-        // Tag 206f (Bug-Hunt Agent D HIGH F2): do NOT .filter() out nulls.
-        // mapFTSToAnnual.js pushes null placeholders for OpInc-missing rows so that
-        // annualOpInc[i] stays aligned with annualRev[i] / annualNetIncome[i] by
-        // year (F-DP-030/031). Filtering nulls re-introduces positional drift:
-        // a bank with annualRev=[10,9,8,7] and annualOpInc=[3,null,2,null]
-        // becomes [3,2] after filter — now annualOpInc[1] (=2) wrongly maps
-        // to annualRev[1] (=9, last year) instead of annualRev[2] (=8, 2y ago).
-        // Downstream methods (_rawVals helper inside reinvestment-rate / margin-
-        // quality / etc.) already tolerate nulls in-place.
-        canonical.annual.annualOpInc = ftsAnnual.annualOpInc;
-        if (canonical.meta) canonical.meta.opIncSource = 'native';
+      // Override leere annual-Arrays aus quoteSummary mit FTS-Daten wenn FTS welche hat.
+      // audit/fix F2 (2026-06-25): single-source the whole income bundle.
+      {
+        const _qsIncome = {
+          annualRev: canonical.annual.annualRev,
+          annualOpInc: canonical.annual.annualOpInc,
+          annualGP: canonical.annual.annualGP,
+          annualNetIncome: canonical.annual.annualNetIncome,
+        };
+        const _ftsIncome = {
+          annualRev: ftsAnnual.annualRev,
+          annualOpInc: ftsAnnual.annualOpInc,
+          annualGP: ftsAnnual.annualGP,
+          annualNetIncome: ftsAnnual.annualNetIncome,
+        };
+        const _winner = mergeAnnualIncomeBundle(_qsIncome, _ftsIncome);
+        // Tag 206f: move siblings WITHOUT filtering nulls — null placeholders keep
+        // annualOpInc[i]/annualNetIncome[i] aligned with annualRev[i] by fiscal year
+        // (a bank's [3,null,2,null] OpInc must stay 4-long, not collapse to [3,2]).
+        canonical.annual.annualRev = _winner.annualRev;
+        canonical.annual.annualOpInc = _winner.annualOpInc;
+        canonical.annual.annualGP = _winner.annualGP;
+        canonical.annual.annualNetIncome = _winner.annualNetIncome;
+        // Tag 203: when the FTS bundle wins and actually carries OpInc, that OpInc is
+        // native Yahoo data — record provenance. If QS wins (or FTS OpInc is empty)
+        // leave opIncSource as mapYahooToCanonical set it; the post-merge sector-aware
+        // fallback below re-derives a margin-based OpInc when the winner left it empty.
+        if (_winner === _ftsIncome &&
+            (ftsAnnual.annualOpInc || []).some(v => v != null && (typeof v !== 'object' || v.value != null))) {
+          if (canonical.meta) canonical.meta.opIncSource = 'native';
+        }
       }
       // Tag-28: annualBalance aus FTS überschreiben wenn FTS mehr nicht-null Werte hat
       // F-DQ-011: extend usability check to include Tag 211l fields so FTS rows that
@@ -2022,15 +2130,32 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // RAW null placeholders instead (Bug #26 pattern): positional alignment stays,
       // but finite-counting (_arrLen) and v!=null checks now see the truth.
       canonical.timeseries.netIncomeQ = (ftsQuarterlyNI || []).map(v => v != null ? { value: v } : null);
-      // audit/fix: sparse FTS array clobbered denser quoteSummary (year-index drift) — use mergePreferRicher like annualRev
-      canonical.annual.annualGP = mergePreferRicher(canonical.annual.annualGP, ftsAnnual.annualGP, { mode: 'count' });
-      const _ftsNiNonNull = (ftsAnnual.annualNetIncome||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
-      const _qsNiNonNull = (canonical.annual.annualNetIncome||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
-      if (_ftsNiNonNull > _qsNiNonNull) canonical.annual.annualNetIncome = ftsAnnual.annualNetIncome;
-      // audit/fix: sparse FTS array clobbered denser quoteSummary (year-index drift) — use mergePreferRicher like annualRev
-      canonical.annual.annualFCF = mergePreferRicher(canonical.annual.annualFCF, ftsAnnual.annualFCF, { mode: 'count' });
-      // audit/fix: sparse FTS array clobbered denser quoteSummary (year-index drift) — use mergePreferRicher like annualRev
-      canonical.annual.annualOCF = mergePreferRicher(canonical.annual.annualOCF, ftsAnnual.annualOCF, { mode: 'count' });
+      // audit/fix F2 (2026-06-25): annualGP and annualNetIncome are now moved as part
+      // of the single-source income bundle above (alongside annualRev/annualOpInc) so
+      // grossMargin / net-margin can never pair a QS gross/net with an FTS revenue from
+      // a different fiscal year. (Previously these were two more independent per-array
+      // non-null-count merges here — removed.)
+      // audit/fix F2 (2026-06-25): bundle the FCF/OCF pair onto ONE source too. OCF and
+      // FCF come from the SAME cash-flow rows (FCF often = OCF + capex), and consumers
+      // like fcf-conversion zip annualFCF[i] against annualOCF[i] positionally — an
+      // independent per-array merge could pick FCF from FTS and OCF from QS with
+      // different year anchors. Decide once off OCF's non-null count (FCF density as
+      // tiebreak) and move both together; null placeholders preserved for alignment.
+      {
+        const _qsCash = { annualFCF: canonical.annual.annualFCF, annualOCF: canonical.annual.annualOCF };
+        const _ftsCash = { annualFCF: ftsAnnual.annualFCF, annualOCF: ftsAnnual.annualOCF };
+        const _qsOcf = _nonNullCount(_qsCash.annualOCF);
+        const _ftsOcf = _nonNullCount(_ftsCash.annualOCF);
+        let _cashWinner;
+        if (_ftsOcf !== _qsOcf) {
+          _cashWinner = _ftsOcf > _qsOcf ? _ftsCash : _qsCash;
+        } else {
+          // OCF tie → break on FCF density; FTS only wins on strictly richer.
+          _cashWinner = _nonNullCount(_ftsCash.annualFCF) > _nonNullCount(_qsCash.annualFCF) ? _ftsCash : _qsCash;
+        }
+        canonical.annual.annualFCF = _cashWinner.annualFCF;
+        canonical.annual.annualOCF = _cashWinner.annualOCF;
+      }
       const _ftsRevQNonNull = (ftsQuarterly.revenueQ||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
       const _qsRevQNonNull = (canonical.timeseries.revenueQ||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
       // F-010 (audit 2026-06-08): opIncQ/grossProfitQ must come from the SAME source
@@ -2184,6 +2309,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // here, but consistent format across all snapshot writes simplifies
       // downstream parsing assumptions and prevents the 267-MB methods-report
       // class of regressions (Tag 220b).
+      // audit/fix F3 (2026-06-25): stamp the SEPARATE full-pull clock here — this is
+      // the only point a full pull (fresh annual/metrics/FTS) actually lands on disk.
+      // _priceOnlyUpdate NEVER writes this field, so it records the true age of the
+      // fundamentals (not the daily-reset meta.asOf), and the eligibility gate uses it
+      // to force a full refresh every FUNDAMENTALS_REFRESH_DAYS.
+      canonical.meta = canonical.meta || {};
+      canonical.meta.fundamentalsAsOf = canonical.meta.asOf || new Date().toISOString();
       writeFileAtomic(outPath, JSON.stringify(canonical));
       const revStr = canonical.metrics.revenueTTM ? '$' + (canonical.metrics.revenueTTM.value / 1e9).toFixed(1) + 'B' : 'no-rev';
       const growthStr = canonical.metrics.revenueGrowthYoY ? canonical.metrics.revenueGrowthYoY.value.toFixed(1) + '%' : '-';

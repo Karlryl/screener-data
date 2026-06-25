@@ -47,7 +47,9 @@ jobs:
       # 01:00 UTC the next day would yield picks-history/2026-05-17.json
       # but methods-history/2026-05-18.json — silently breaking pick-diff's
       # findMethodFile lookup and method-effectiveness's vintage cache).
-      # Downstream snapshot-* scripts respect RUN_DATE_UTC over Date.now().
+      # Loop A removed the snapshot-* writers; RUN_DATE_UTC is now honored by
+      # archive-old-snapshots.js and pull-historical-prices.js. Kept frozen so any
+      # Loop-B snapshot writer can opt in and stay midnight-safe.
       - name: Freeze Run Date
         run: |
           RUN_DATE_UTC=$(date -u +%Y-%m-%d)
@@ -391,19 +393,24 @@ jobs:
           node scripts/check-pull-stats.js
         continue-on-error: true
 
-      # Tag 134 — Phase 5.1: archive methods-history / picks-history / prices snapshots
-      # older than 60 days into external-data/*.ndjson (git-ignored).
-      # Reduces committed repo bloat. Rebuildable from snapshots on the runner.
-      # Tag 153: methods-history is 14 MB/file.
-      # Tag 233a (audit F-BT-007 HIGH): raised methods-keep-days 7 → 90 to match
-      # method-effectiveness cache retention (CACHE_RETENTION_DAYS=90). The prior
-      # 7d window meant the cache was the SOLE record of vintages after 8 days;
-      # cache corruption silently lost months of effectiveness history. Repo-side
-      # cost: 14MB × 90d = 1.26 GB max, but vintages are archived to
-      # external-data/*.ndjson (git-ignored) and are not kept as committed files.
-      # picks-history is 65 KB/file but walk-forward-perf needs 84+ day vintages (keep 90d).
+      # Tag 134 — Phase 5.1: archive prices/ daily snapshots older than --keep-days
+      # into external-data/*.ndjson (git-ignored). Reduces committed repo bloat.
+      # Rebuildable from snapshots on the runner.
+      #
+      # Loop A removed the methods-history/ and picks-history/ WRITERS, so those
+      # dirs are frozen (no new files — the newest are the 2026-06-12 vintages).
+      # Previously this step passed --methods-keep-days 90 --picks-keep-days 90,
+      # which would archive each frozen file into git-ignored, runner-ephemeral
+      # NDJSON and then unlink + push the deletion of the committed original once
+      # it aged past 90 days (~2026-09-10) — silently losing OLD scoring vintages
+      # from main with no durable backup (only git history). Nothing regenerates
+      # them. Fix: stop archiving the frozen dirs by setting their keep-windows
+      # effectively-infinite (100000 days), leaving the committed files untouched.
+      # (Omitting the flags would fall back to --keep-days 14 and delete them even
+      # sooner.) The live prices/ archiving is preserved via --keep-days 14.
+      # A Loop-B writer can restore real keep-windows when it reintroduces them.
       - name: Archive Old Snapshots
-        run: node scripts/archive-old-snapshots.js --keep-days 14 --methods-keep-days 90 --picks-keep-days 90
+        run: node scripts/archive-old-snapshots.js --keep-days 14 --methods-keep-days 100000 --picks-keep-days 100000
         continue-on-error: true
 
       - name: Commit Snapshots
