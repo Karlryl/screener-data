@@ -406,7 +406,7 @@ jobs:
         run: node scripts/archive-old-snapshots.js --keep-days 14 --methods-keep-days 90 --picks-keep-days 90
         continue-on-error: true
 
-      - name: Commit Snapshots + Alert-State
+      - name: Commit Snapshots
         run: |
           git config user.name "yahoo-pull-bot"
           git config user.email "yahoo-pull-bot@users.noreply.github.com"
@@ -414,7 +414,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "chore: yahoo-pull + alert-state $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git commit -m "chore: yahoo-pull $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             # F-CI-001 v2 (Tag 179): the previous fallback `git rebase --abort; git reset
             # --hard origin/main` was CRITICAL data-loss — it discarded the just-made
             # commit, after which `git push` succeeded as a no-op and the workflow
@@ -490,19 +490,9 @@ jobs:
         if: success()
         run: |
           # Build a clean deploy directory
+          # Loop A: report generators removed; deploy index.html + outputs/ only until Loop B rebuilds the dashboard
           mkdir -p _site/outputs
           cp index.html _site/ 2>/dev/null || true
-          cp modes-report.html _site/ 2>/dev/null || true
-          cp diff-report.html _site/ 2>/dev/null || true
-          cp dashboard.html _site/ 2>/dev/null || true
-          cp screener.html _site/ 2>/dev/null || true
-          # Tag 246: ship the lazy-loaded heavy payload next to screener.html so
-          # the dashboard's modal fetch('screener-detail.json') resolves same-origin
-          # on gh-pages. Regenerated each run by generate-screener.js; gitignored on
-          # main (avoids ~44 MB/day history bloat) but MUST be deployed here or every
-          # detail modal 404s on the live site.
-          cp screener-detail.json _site/ 2>/dev/null || true
-          cp methods-report.html _site/ 2>/dev/null || true
           cp -r outputs/. _site/outputs/ 2>/dev/null || true
 
           # Push to gh-pages branch (orphan-safe force push)

@@ -16,7 +16,9 @@ const INDICES = [
   { name: 'DAX',     page: 'DAX',                         suffix: '.DE' },
 ];
 
-function get(url) {
+// audit/fix: relative-Location ERR_INVALID_URL + uncapped recursion + 307/308 silently wiped this discovery source (mirror nasdaq-api hardening)
+const MAX_REDIRECTS = 5;
+function get(url, redirectsLeft = MAX_REDIRECTS) {
   return new Promise((resolve, reject) => {
     const req = https.get(url, {
       headers: {
@@ -24,11 +26,21 @@ function get(url) {
         'Accept': 'application/json'
       }
     }, res => {
-      if (res.statusCode === 301 || res.statusCode === 302) {
+      if (res.statusCode === 301 || res.statusCode === 302 ||
+          res.statusCode === 307 || res.statusCode === 308) {
         res.resume(); // drain the body before following redirect
-        return get(res.headers.location).then(resolve).catch(reject);
+        const loc = res.headers.location;
+        if (!loc) return reject(new Error('HTTP ' + res.statusCode + ' without Location header'));
+        if (redirectsLeft <= 0) return reject(new Error('too many redirects'));
+        let nextUrl;
+        try { nextUrl = new URL(loc, url).toString(); }
+        catch (e) { return reject(new Error('invalid redirect Location: ' + loc)); }
+        return get(nextUrl, redirectsLeft - 1).then(resolve).catch(reject);
       }
-      if (res.statusCode !== 200) return reject(new Error('HTTP ' + res.statusCode));
+      if (res.statusCode !== 200) {
+        res.resume(); // drain non-200 body to avoid socket leak
+        return reject(new Error('HTTP ' + res.statusCode));
+      }
       const chunks = [];
       res.on('data', c => chunks.push(c));
       res.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));

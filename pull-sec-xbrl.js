@@ -52,7 +52,19 @@ const STALE_DAYS = 90;           // re-pull after 90 days (typical 10-Q cycle)
 function parseArgs(argv) {
   const args = { max: Infinity, concurrency: 1 };
   for (let i = 2; i < argv.length; i++) {
-    if (argv[i] === '--max' && argv[i+1]) args.max = parseInt(argv[++i], 10);
+    if (argv[i] === '--max' && argv[i+1]) {
+      // audit/fix: parseInt accepts NaN silently → entries.slice(0, NaN) = [] = silent zero-ticker run.
+      // Validate --max is a finite positive int; a passed-but-invalid value is a hard error, not a no-op.
+      const raw = argv[++i];
+      const n = Number(raw);
+      if (!Number.isInteger(n) || n <= 0) {
+        console.error(`::error::--max must be a positive integer (got "${raw}")`);
+        process.exit(1);
+      }
+      args.max = n;
+    }
+    // audit/fix: --concurrency is parsed but never used — the pull loop is serial (NO-OP flag,
+    // kept only for CLI back-compat). Do NOT read args.concurrency expecting parallelism.
     else if (argv[i] === '--concurrency' && argv[i+1]) args.concurrency = Math.max(1, parseInt(argv[++i], 10));
   }
   return args;
@@ -153,7 +165,10 @@ async function main() {
         manifest.entries[t.cik] = Object.assign({}, prior, { fetchedAt: new Date().toISOString() });
         skipped304++;
       } else if (res.notFound) {
-        manifest.entries[t.cik] = { ticker: t.ticker, fetchedAt: new Date().toISOString(), notFound: true };
+        // audit/fix: transient 404 must not 90-day-blackout a valid CIK (was fresh fetchedAt on notFound).
+        // Mirror the 13F/429 soft-retry pattern: do NOT stamp a fresh fetchedAt, so the stale-gate
+        // (~line 145, fetchedAt > staleCutoff) won't suppress the re-fetch — the next run retries soon.
+        manifest.entries[t.cik] = Object.assign({}, prior, { ticker: t.ticker, notFound: true, lastError: 'HTTP 404 (not found, will retry next run)' });
         notFound++;
       } else {
         writeFileAtomic(filePath, res.body);

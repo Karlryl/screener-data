@@ -418,8 +418,8 @@ function _convertSnapshotToUSD(snap) {
   const CCY_DENOMINATED_METRICS = [
     'revenueTTM',
     'fcfTTM',            // currently absent from metrics.* but reserved
-    'ebitda',            // currently absent — reserved for future EV-EBITDA refactor
-    'enterpriseValue',   // currently absent — reserved
+    'ebitda',            // POPULATED (Tag 219, financialData.ebitda) — reporting ccy, scaled by `factor` here. Correct: EBITDA is an income-statement quantity in the reporting currency.
+    'enterpriseValue',   // POPULATED (Tag 219, defaultKeyStatistics.enterpriseValue) — scaled by reporting `factor` here. F2 (audit 2026-06-25) flagged a SUSPECTED mis-scale for dual-non-USD ADRs (trading HKD / reporting CNY): EV is market-derived (mcap + net debt) and Yahoo MAY report it in the TRADING currency like marketCap (which uses scaleTrading/tradingFactor). NEEDS-LIVE-CONFIRMATION of Yahoo's source currency before moving to the trading-factor list — empirical EV/mcap ratios on existing snapshots are consistent with reporting-ccy scaling, so NOT changed.
     'bookValuePerShare', // currently absent — reserved
     'cashPerShare'       // currently absent — reserved
   ];
@@ -2022,12 +2022,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // RAW null placeholders instead (Bug #26 pattern): positional alignment stays,
       // but finite-counting (_arrLen) and v!=null checks now see the truth.
       canonical.timeseries.netIncomeQ = (ftsQuarterlyNI || []).map(v => v != null ? { value: v } : null);
-      if (ftsAnnual.annualGP.length > 0) canonical.annual.annualGP = ftsAnnual.annualGP;
+      // audit/fix: sparse FTS array clobbered denser quoteSummary (year-index drift) — use mergePreferRicher like annualRev
+      canonical.annual.annualGP = mergePreferRicher(canonical.annual.annualGP, ftsAnnual.annualGP, { mode: 'count' });
       const _ftsNiNonNull = (ftsAnnual.annualNetIncome||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
       const _qsNiNonNull = (canonical.annual.annualNetIncome||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
       if (_ftsNiNonNull > _qsNiNonNull) canonical.annual.annualNetIncome = ftsAnnual.annualNetIncome;
-      if (ftsAnnual.annualFCF.length > 0) canonical.annual.annualFCF = ftsAnnual.annualFCF;
-      if (ftsAnnual.annualOCF && ftsAnnual.annualOCF.length > 0) canonical.annual.annualOCF = ftsAnnual.annualOCF;
+      // audit/fix: sparse FTS array clobbered denser quoteSummary (year-index drift) — use mergePreferRicher like annualRev
+      canonical.annual.annualFCF = mergePreferRicher(canonical.annual.annualFCF, ftsAnnual.annualFCF, { mode: 'count' });
+      // audit/fix: sparse FTS array clobbered denser quoteSummary (year-index drift) — use mergePreferRicher like annualRev
+      canonical.annual.annualOCF = mergePreferRicher(canonical.annual.annualOCF, ftsAnnual.annualOCF, { mode: 'count' });
       const _ftsRevQNonNull = (ftsQuarterly.revenueQ||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
       const _qsRevQNonNull = (canonical.timeseries.revenueQ||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
       // F-010 (audit 2026-06-08): opIncQ/grossProfitQ must come from the SAME source

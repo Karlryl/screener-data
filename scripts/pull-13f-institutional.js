@@ -71,6 +71,12 @@ const USER_AGENT = 'Karl Viehrig screener-data karl_viehrig@web.de';
 // 125 ms ≈ 8 req/s (SEC limit: 10/s/IP).
 const RATE_DELAY_MS = 125;
 
+// audit/fix: 429 IP-block backoff. On HTTP 429 (rate-limited) or 503 SEC wants
+// the client to slow WAY down — a normal 125 ms cadence keeps tripping the
+// 10/s/IP limit and risks a ~10-min IP block. Wait 30 s and retry the
+// institution WITHOUT counting it as an abort-budget error.
+const RATE_LIMIT_BACKOFF_MS = 30000;
+
 // 13F-HR filings are quarterly (45-day deadline post-quarter-end). A 100-day
 // TTL means we refresh roughly once per quarter, which matches the data's
 // natural cadence.
@@ -182,8 +188,20 @@ function httpGet(url, _depth) {
         return httpGet(nextUrl, depth + 1).then(resolve).catch(reject);
       }
       if (res.statusCode === 404) return resolve({ notFound: true });
-      if (res.statusCode === 403) return reject(new Error('HTTP 403 (likely rate-limited or bad UA): ' + url));
-      if (res.statusCode !== 200) return reject(new Error('HTTP ' + res.statusCode + ' for ' + url));
+      // audit/fix: carry the status code on the error (429 IP-block / 403 silent exit-0).
+      // Previously every non-200/404 collapsed into a status-less Error, so the
+      // per-institution loop could not detect a 429 to back off (kept hammering
+      // SEC at normal cadence → ~10-min IP block) nor a systemic 403 outage.
+      if (res.statusCode === 403) {
+        const err = new Error('HTTP 403 (likely rate-limited or bad UA): ' + url);
+        err.statusCode = 403;
+        return reject(err);
+      }
+      if (res.statusCode !== 200) {
+        const err = new Error('HTTP ' + res.statusCode + ' for ' + url);
+        err.statusCode = res.statusCode;
+        return reject(err);
+      }
       const chunks = [];
       res.on('data', c => chunks.push(c));
       res.on('end', () => resolve({ body: Buffer.concat(chunks).toString('utf8') }));
@@ -846,6 +864,18 @@ async function main() {
             (r.amendmentOf ? ' AMEND(' + r.amendmentOf + ')' : '')));
       }
     } catch (e) {
+      // audit/fix: 429 IP-block backoff. On a rate-limit (429) or 503, back off
+      // 30 s and retry this institution WITHOUT incrementing the abort/error
+      // counter and WITHOUT stamping a fresh failedAt/nextRetryAt on the cache
+      // entry — the institution simply isn't processed this pass and is retried
+      // next run. Counting a 429 as an error would burn the abort budget (>25) on
+      // a transient throttle and normal cadence would hammer SEC into an IP block.
+      if (e && (e.statusCode === 429 || e.statusCode === 503)) {
+        console.warn('  [' + cik + '] rate-limited (HTTP ' + e.statusCode +
+          ') — backing off ' + (RATE_LIMIT_BACKOFF_MS / 1000) + 's');
+        await sleep(RATE_LIMIT_BACKOFF_MS);
+        continue;
+      }
       errors++;
       // Tag 211j errored-pull pattern: write failedAt (NOT fetchedAt) so
       // the freshness gate retries this institution on the next run.
@@ -900,6 +930,17 @@ async function main() {
   console.log('  uniqueCUSIPs=' + uniqueCusips + ' resolvedTickers=' + uniqueTickers);
   console.log('Cache: ' + args.out);
   console.log('By-ticker view: ' + BY_TICKER_PATH);
+
+  // audit/fix: 403 silent exit-0. If NOTHING succeeded but errors occurred
+  // (fetched === 0 && errors > 0) the run was a total failure — typically a
+  // systemic 403/UA/IP-block outage rather than scattered per-institution
+  // hiccups. Exit non-zero so CI surfaces it instead of a green run over an
+  // empty cache. (skippedFresh-only runs fetch 0 with 0 errors → stay exit 0.)
+  if (fetched === 0 && errors > 0) {
+    console.error('TOTAL FAILURE: 0 institutions fetched with ' + errors +
+      ' error(s) — likely a systemic SEC outage / 403 / IP block. Exiting 1.');
+    process.exit(1);
+  }
 }
 
 if (require.main === module) {

@@ -36,6 +36,8 @@ function parseArgs(argv) {
     // snapshot file is missing — even if added_at is recent/absent. Off by
     // default to prevent accidental mass-deletion (audit found 12 207 orphans).
     pruneOrphans: false,
+    // audit/fix: over-prune floor — a mis-pathed --snapshots could atomically wipe the watchlist
+    force: false,
     dryRun: false
   };
   for (let i = 2; i < argv.length; i++) {
@@ -46,6 +48,8 @@ function parseArgs(argv) {
     else if (argv[i] === '--prune-no-data-days' && argv[i+1]) args.pruneNoDataDays = parseInt(argv[++i], 10);
     // Tag 222b: hard-prune all orphans (tickers without a snapshot file).
     else if (argv[i] === '--prune-orphans') args.pruneOrphans = true;
+    // audit/fix: over-prune floor — a mis-pathed --snapshots could atomically wipe the watchlist
+    else if (argv[i] === '--force') args.force = true;
     else if (argv[i] === '--dry-run') args.dryRun = true;
   }
   return args;
@@ -219,6 +223,16 @@ function main() {
     wl.lastAutoPruneRemoved = pruned;
   } else {
     wl = kept; // legacy array shape — drop the prune-metadata fields (no place to put them)
+  }
+  // audit/fix: over-prune floor — a mis-pathed --snapshots could atomically wipe the watchlist
+  // A bad `--snapshots ./wrong` + `--prune-orphans` classifies every ticker as an orphan,
+  // leaving kept=[] and atomically (durably) wiping the watchlist. Refuse to write when the
+  // survivors fall below max(200, 50% of the prior count) unless --force is given.
+  const floor = Math.max(200, Math.floor(before * 0.5));
+  if (!args.force && kept.length < floor) {
+    console.error('::error::over-prune guard: would keep only ' + kept.length + ' of ' + before +
+      ' tickers (floor ' + floor + '). Refusing to write — check --snapshots path. Pass --force to override.');
+    process.exit(1);
   }
   // F-SM-021 (Tag 189): same atomic-write rationale as refresh-universe.js.
   writeFileAtomic(args.watchlist, JSON.stringify(wl, null, 2));

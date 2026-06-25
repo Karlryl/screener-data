@@ -113,7 +113,8 @@ async function main() {
         period1, period2, interval: '1d'
       });
       // Tag 148: use adjclose (dividend/split-adjusted) instead of raw close
-      const quotes = (result.quotes || []).filter(q => (q.adjclose ?? q.close) != null);
+      // audit/fix: reject NaN/Infinity closes (JSON.stringify rewrites them to null, poisoning history.json) — mirror backfill-prices.js isFinite filter
+      const quotes = (result.quotes || []).filter(q => { const v = q.adjclose ?? q.close; return v != null && isFinite(v); });
       if (!quotes.length) { failed++; return; }
       const latestQuote = quotes[quotes.length - 1];
       const latestClose = latestQuote.adjclose ?? latestQuote.close;
@@ -201,7 +202,8 @@ async function main() {
       const period1 = new Date(Date.now() - 400 * 86400 * 1000);
       const period2 = new Date();
       const benchResult = await yf.chart(sym, { period1, period2, interval: '1d' });
-      const benchQuotes = (benchResult.quotes || []).filter(q => (q.adjclose ?? q.close) != null);
+      // audit/fix: reject NaN/Infinity closes (JSON.stringify rewrites them to null, poisoning history.json) — mirror backfill-prices.js isFinite filter
+      const benchQuotes = (benchResult.quotes || []).filter(q => { const v = q.adjclose ?? q.close; return v != null && isFinite(v); });
       if (benchQuotes.length) {
         const latestBenchQuote = benchQuotes[benchQuotes.length - 1];
         const latestClose = latestBenchQuote.adjclose ?? latestBenchQuote.close;

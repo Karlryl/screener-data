@@ -6,7 +6,7 @@ name: Monthly SEC XBRL Pull
 on:
   schedule:
     # F-CI-003: moved from 04:00 to 08:00 UTC to avoid overlapping the daily pull
-    # (daily pull starts at 02:00 UTC with 180-min timeout — could still be running at 04:00).
+    # (daily pull starts at 02:17 UTC with 240-min timeout — could still be running at 04:00).
     - cron: '0 8 1 * *'  # 08:00 UTC on the 1st of each month
   workflow_dispatch:
     inputs:

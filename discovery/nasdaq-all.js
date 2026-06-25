@@ -41,7 +41,9 @@ function isJunkSecurity(symbol, name) {
   return false;
 }
 
-function get(url) {
+// audit/fix: relative-Location ERR_INVALID_URL + uncapped recursion + 307/308 silently wiped this discovery source (mirror nasdaq-api hardening)
+const MAX_REDIRECTS = 5;
+function get(url, redirectsLeft = MAX_REDIRECTS) {
   return new Promise((resolve, reject) => {
     https.get(url, {
       headers: {
@@ -49,11 +51,26 @@ function get(url) {
         'Accept': 'text/plain'
       }
     }, res => {
-      if (res.statusCode === 301 || res.statusCode === 302) {
+      if (res.statusCode === 301 || res.statusCode === 302 ||
+          res.statusCode === 307 || res.statusCode === 308) {
         res.resume(); // drain the body before following redirect
-        return get(res.headers.location).then(resolve).catch(reject);
+        const loc = res.headers.location;
+        if (!loc) {
+          return reject(new Error('HTTP ' + res.statusCode + ' with no Location header from ' + url));
+        }
+        if (redirectsLeft <= 0) {
+          return reject(new Error('too many redirects fetching ' + url));
+        }
+        let nextUrl;
+        try {
+          nextUrl = new URL(loc, url).toString();
+        } catch (e) {
+          return reject(new Error('invalid redirect Location "' + loc + '" from ' + url));
+        }
+        return get(nextUrl, redirectsLeft - 1).then(resolve).catch(reject);
       }
       if (res.statusCode !== 200) {
+        res.resume(); // drain non-200 body to avoid socket leak
         return reject(new Error('HTTP ' + res.statusCode + ' from ' + url));
       }
       const chunks = [];

@@ -221,4 +221,11 @@ function main() {
   });
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+// audit/fix: auto-run-on-require storm + un-testable (no require.main guard / no exports).
+// Bare top-level main() meant require('./enrich-q-revenue.js') immediately opened the multi-GB
+// companyfacts.zip, hit SEC, and rewrote fundamentals-cache. Guard it and export the units.
+if (require.main === module) {
+  main().catch(e => { console.error(e); process.exit(1); });
+}
+
+module.exports = { extractQuarterlyPoints, quarterlyYoY, isQuarterlyPoint, isAnnualPoint, main };
