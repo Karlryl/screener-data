@@ -3,7 +3,8 @@
  * Branchen-Formel: Software & Communication Services (SaaS, Internet, Plattformen).
  * Verdict JA. Anker PLTR. Split @ FCF (kapital-leichte, cash-generative Modelle;
  * Rule-of-X-kanonische Trennlinie). alpha hoch (hohe GM, FCF-Hebel). Dilution
- * staerker gewichtet (SBC ist in Software gross).
+ * track-spezifisch (Unprofit 1.3 > Profitable 0.8 — SBC-Verwaesserung trifft Burner
+ * haerter); kalibriert fuehrt revAcceleration, gpGrowth/capitalEfficiency als Quality.
  */
 module.exports = {
   id: 'software-comm-services',

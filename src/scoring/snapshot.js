@@ -121,18 +121,36 @@ function sign(x) {
   return Math.sign(x);
 }
 
-// Nur die present (nicht-null) Werte einer Serie.
+// Nur die present (finiten) Werte einer Serie. Number.isFinite faengt zusaetzlich
+// NaN/Infinity ab (Defense gegen abgeleitete Serien mit Ueberlauf/Misalignment).
 function presentValues(series) {
-  return Array.isArray(series) ? series.filter((v) => v !== null && v !== undefined) : [];
+  return Array.isArray(series) ? series.filter((v) => Number.isFinite(v)) : [];
 }
 
-// Erste zwei present Werte [neu, alt] (fuer YoY). null, wenn < 2 vorhanden.
+// Erste zwei present (finite) Werte [neu, alt] (fuer YoY). null, wenn < 2 vorhanden.
 function firstTwoPresent(series) {
   const out = [];
   for (const v of (Array.isArray(series) ? series : [])) {
-    if (v !== null && v !== undefined) { out.push(v); if (out.length === 2) break; }
+    if (Number.isFinite(v)) { out.push(v); if (out.length === 2) break; }
   }
   return out.length === 2 ? out : null;
+}
+
+// Element-weise num/den (newest-first); null wo ein Operand fehlt/kein Array ist,
+// den==0, ODER der Quotient nicht-finit ist (IEEE-Ueberlauf). Laengen-mismatch-
+// sicher (out-of-bounds -> undefined -> null). Geteilt von axes/lamps/overview.
+function ratioSeries(numS, denS) {
+  const a = Array.isArray(numS) ? numS : [];
+  const b = Array.isArray(denS) ? denS : [];
+  const n = Math.max(a.length, b.length);
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const x = a[i], y = b[i];
+    if (x === null || x === undefined || y === null || y === undefined || y === 0) { out.push(null); continue; }
+    const r = x / y;
+    out.push(Number.isFinite(r) ? r : null);
+  }
+  return out;
 }
 
 // Summe der ersten n present Werte (juengste zuerst); fewer wenn < n present.
@@ -150,5 +168,5 @@ function metricVal(snapshot, key) {
 
 module.exports = {
   norm, hasPresent, firstPresent, sumPresent, sign, FIELD_REGISTRY,
-  presentValues, firstTwoPresent, recentSumPresent, metricVal,
+  presentValues, firstTwoPresent, recentSumPresent, metricVal, ratioSeries,
 };

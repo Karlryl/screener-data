@@ -1,7 +1,10 @@
 'use strict';
 /**
- * Branchen-Formel: Energy. Verdict JA (Karl-Entscheid 2026-06-25: Clean-Energy-
- * Hypergrowth wie BE/PLUG/RUN/FCEL sind ausdruecklich erwuenscht). Split @ OpInc
+ * Branchen-Formel: Energy (GICS-Energy = Oil&Gas E&P/Midstream/Services, kalibriert
+ * fuehren RRC/EQT/AR). Verdict JA (Karl-Entscheid 2026-06-25). HINWEIS: die genannten
+ * Clean-Energy-Hypergrowth-Namen routen GICS-seitig groesstenteils NICHT hierher
+ * (BE/PLUG -> Industrials, FSLR/ENPH oft Technology) — Energy-Carve-out greift nur fuer
+ * GICS-Energy-Clean (z.B. Uranium/Biofuels). Split @ OpInc
  * (Projekt-Capex/Zins macht FCF zyklisch). Asset-Disziplin hoch gewichtet, um
  * capex-/preisgetriebenes Schein-Wachstum (commodity-Peak) von echtem
  * Compounding zu trennen. Beschleunigung fuehrt; Unprofit-Track fuer Clean-Burn.

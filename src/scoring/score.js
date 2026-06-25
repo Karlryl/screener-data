@@ -21,9 +21,15 @@ const axesFns = require('./axes.js');
 
 const tickerOf = (s) => (s && s.meta && s.meta.ticker) || (s && s.identifier && s.identifier.value) || '?';
 
-// Roh-Achsenwert (ruleOfX braucht alpha + track-abhaengiges includeFcf).
+// Roh-Achsenwert (ruleOfX braucht alpha + includeFcf am ECHTEN FCF-Vorzeichen).
 function rawAxisValue(s, key, formula, track) {
-  if (key === 'ruleOfX') return axesFns.ruleOfX(s, formula.alpha, track === 'profitable');
+  if (key === 'ruleOfX') {
+    // includeFcf am tatsaechlichen FCF-Vorzeichen koppeln, NICHT am erzwungenen
+    // 'profitable'-Label der none-Branchen (sonst FCF-Penalty fuer cash-negative
+    // Namen im einen Track -> Iron-Rule 2).
+    const includeFcf = fcfTrack(metricVal(s, 'fcfMarginTTM'), norm(s, 'annualFCF'), norm(s, 'annualOCF')) === 'profitable';
+    return axesFns.ruleOfX(s, formula.alpha, includeFcf);
+  }
   const fn = axesFns[key];
   return typeof fn === 'function' ? fn(s) : null;
 }
@@ -72,15 +78,25 @@ function scoreUniverse(snapshots, formulas) {
   for (const entries of Object.values(cohorts)) {
     const formula = entries[0].formula;
     const track = entries[0].track;
+    // none-Branchen mit subCohortByProfit (it-services/real-estate): die Niveau-ROIC-
+    // Achse capitalEfficiency nur gegen Firmen GLEICHEN Profit-Vorzeichens perzentil-
+    // ieren, damit Verlust-Wachser nicht vom Niveau-ROIC im SCORE demoviert werden
+    // (Iron-Rule 2). Split-Branchen (mit Ankern) trennen das ohnehin via Track.
+    const profitSign = formula.subCohortByProfit
+      ? entries.map((e) => signTrack(norm(e.snapshot, 'annualOpInc')))
+      : null;
     const rawByAxis = {};
     for (const ax of formula.axes) {
       rawByAxis[ax.key] = entries.map((e) => rawAxisValue(e.snapshot, ax.key, formula, track));
     }
     for (let i = 0; i < entries.length; i++) {
-      const axes = formula.axes.map((ax) => ({
-        value: q(rawByAxis[ax.key][i], rawByAxis[ax.key]), // Perzentil INNERHALB der Kohorte
-        weight: ax.w[track],
-      }));
+      const axes = formula.axes.map((ax) => {
+        let cohort = rawByAxis[ax.key];
+        if (profitSign && ax.key === 'capitalEfficiency') {
+          cohort = cohort.filter((_, j) => profitSign[j] === profitSign[i]);
+        }
+        return { value: q(rawByAxis[ax.key][i], cohort), weight: ax.w[track] };
+      });
       entries[i].score = weightedScore(axes);
     }
   }

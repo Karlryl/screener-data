@@ -9,6 +9,7 @@
 module.exports = {
   id: 'real-estate',
   splitMetric: 'none',
+  subCohortByProfit: true, // GAAP-Verlust=Abschreibungs-Artefakt; capEff darf REITs nicht demovieren (Iron-Rule 2)
   alpha: 1.8,
   axes: [
     { key: 'revGrowthLevel', w: { profitable: 1.3, unprofitable: 1.3 } },

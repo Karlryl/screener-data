@@ -21,7 +21,7 @@
  *  8 dilution              -(SBC/Rev) Niveau + Trend (niedriger/fallend = besser)
  */
 
-const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVal } = require('./snapshot.js');
+const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVal, ratioSeries } = require('./snapshot.js');
 const { fcfMarginValid } = require('./engine.js');
 
 // --- kleine Helfer auf normalisierten Serien (luecken-sicher) ---------------
@@ -35,19 +35,7 @@ function lastPresent(series) {
   return null;
 }
 
-// Element-weise num/den (newest-first), null wo ein Operand fehlt, kein Array, oder den==0.
-function ratioSeries(numS, denS) {
-  const a = Array.isArray(numS) ? numS : [];
-  const b = Array.isArray(denS) ? denS : [];
-  const n = Math.max(a.length, b.length);
-  const out = [];
-  for (let i = 0; i < n; i++) {
-    const x = a[i], y = b[i];
-    if (x === null || x === undefined || y === null || y === undefined || y === 0) out.push(null);
-    else out.push(x / y);
-  }
-  return out;
-}
+// ratioSeries kommt aus snapshot.js (geteilt, finite-/laengen-sicher).
 
 // --- 1. Umsatzwachstum (Niveau) ---------------------------------------------
 function revGrowthLevel(s) {
@@ -187,5 +175,5 @@ module.exports = {
   revGrowthLevel, revAcceleration, gpGrowth, ruleOfX,
   marginTrajectory, capitalEfficiency, revisionsMomentum, dilution,
   // Helfer fuer Tests/Formeln
-  _helpers: { lastPresent, ratioSeries },
+  _helpers: { lastPresent },
 };

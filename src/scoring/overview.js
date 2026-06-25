@@ -39,7 +39,12 @@ function grossProfitGrowthYoY(s) {
 function ffoProxyGrowthYoY(s) {
   const ni = norm(s, 'annualNetIncome');
   const dep = norm(s, 'annualDepreciation');
-  const ffo = ni.map((v, i) => (v !== null && dep[i] !== null) ? v + dep[i] : null);
+  const n = Math.min(ni.length, dep.length); // Laengen clampen (kein undefined-Zip)
+  const ffo = [];
+  for (let i = 0; i < n; i++) {
+    const a = ni[i], b = dep[i];
+    ffo.push((a !== null && b !== null && Number.isFinite(a + b)) ? a + b : null);
+  }
   const two = firstTwoPresent(ffo);
   if (!two || two[1] <= 0) return null; // negative Basis kippt sonst das Vorzeichen
   return two[0] / two[1] - 1;

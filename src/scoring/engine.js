@@ -78,7 +78,9 @@ function weightedScore(axes) {
  *   G0: TTM fehlt/nicht-finit            -> false (FCF-Term droppen).
  *   G1: weder FCF- noch OCF-Serie present -> false (HART droppen, nie sign(0)).
  *   G2: sign(TTM) == sign(juengstes present FCF-Jahr) (sonst Artefakt -> false).
- *   G3: sumPresent(FCF) >= 0  ODER  (OCF present UND sumPresent(OCF) >= 0).
+ *   G3: recentSumPresent(FCF,2) >= 0  ODER  recentSumPresent(OCF,2) >= 0
+ *       (juengstes 2-Jahres-Fenster, NICHT die Lebenszeit-Summe — sonst kappen
+ *        alte Burn-Jahre einen echten Turnaround wie BE).
  * true nur, wenn G0-G3 alle erfuellt.
  */
 function fcfMarginValid(fcfMarginTTM, normFCF, normOCF) {

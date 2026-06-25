@@ -24,8 +24,7 @@ function buildCalibMatrix(universe, formulas) {
     if (r.action !== 'route') continue;
     const formula = formulas[r.formulaId];
     if (!formula) continue;
-    let track = trackOf(s, formula);
-    if (track === 'unknown') track = 'profitable';
+    const track = trackOf(s, formula); // liefert nie 'unknown' (Fallback intern -> profitable)
     routed.push({ s, formulaId: r.formulaId, track, formula, ticker: (s.meta && s.meta.ticker) || '?', lamps: evaluateLamps(s).active });
   }
   const cohorts = {};

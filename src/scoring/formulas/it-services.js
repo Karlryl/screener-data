@@ -10,6 +10,7 @@
 module.exports = {
   id: 'it-services',
   splitMetric: 'none',
+  subCohortByProfit: true, // capEff-Niveau-ROIC darf Verlust-Wachser nicht demovieren (Iron-Rule 2)
   alpha: 2.0,
   axes: [
     { key: 'revGrowthLevel', w: { profitable: 2, unprofitable: 2 } },

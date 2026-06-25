@@ -9,7 +9,7 @@
  * true (an) / false (aus) / null (nicht bewertbar).
  */
 
-const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVal } = require('./snapshot.js');
+const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVal, ratioSeries } = require('./snapshot.js');
 
 // Schwellen (bewusst konservativ; Feinkalibrierung in der Formel-/Fixture-Phase)
 const TH = {
@@ -22,7 +22,7 @@ const TH = {
 };
 
 function meanPresent(series) {
-  const vals = (Array.isArray(series) ? series : []).filter((v) => v !== null && v !== undefined);
+  const vals = presentValues(series); // finite-only (faengt NaN/Infinity ab)
   return vals.length ? vals.reduce((p, c) => p + c, 0) / vals.length : null;
 }
 
@@ -58,19 +58,17 @@ function shortRunway(s) {
 function highDilution(s) {
   const sbc = norm(s, 'annualSBC');
   if (!hasPresent(sbc)) return null;
-  const rev0 = firstPresent(norm(s, 'annualRev'));
-  const sbc0 = firstPresent(sbc);
-  if (rev0 === null || rev0 <= 0 || sbc0 === null) return null;
-  return (sbc0 / rev0) > TH.HIGH_SBC_REV;
+  const r = ratioSeries(sbc, norm(s, 'annualRev')); // aligned SBC[i]/Rev[i], nicht unabh. firstPresent
+  const lvl = firstPresent(r);
+  if (lvl === null) return null;
+  return lvl > TH.HIGH_SBC_REV;
 }
 
 // 5. Peak-Marge (zyklische Warnung) ------------------------------------------
 function peakMargin(s) {
   const om = metricVal(s, 'operatingMargin');
-  // historischer Margen-Schnitt aus annualOpInc/annualRev
-  const opS = norm(s, 'annualOpInc');
-  const revS = norm(s, 'annualRev');
-  const margins = opS.map((v, i) => (v !== null && revS[i] !== null && revS[i] !== 0) ? v / revS[i] : null);
+  // historischer Margen-Schnitt aus annualOpInc/annualRev (aligned via ratioSeries)
+  const margins = ratioSeries(norm(s, 'annualOpInc'), norm(s, 'annualRev'));
   const cur = (om !== null) ? om / 100 : firstPresent(margins);
   const histRest = meanPresent(margins.slice(1)); // ohne juengstes
   if (cur === null || histRest === null || histRest <= 0) return null;
@@ -122,9 +120,7 @@ function fcfArtefact(s) {
 // werden Commodity-Peak-Price-Taker (Gold-Miner am Rekordpreis) markiert, ein
 // echter Margen-Expandierer (cur>hist aber steigend) NICHT.
 function cyclePeak(s) {
-  const opS = norm(s, 'annualOpInc');
-  const revS = norm(s, 'annualRev');
-  const margins = opS.map((v, i) => (v !== null && revS[i] !== null && revS[i] !== 0) ? v / revS[i] : null);
+  const margins = ratioSeries(norm(s, 'annualOpInc'), norm(s, 'annualRev')); // aligned
   const m = presentValues(margins);
   if (m.length < 3) return null;
   const histRest = meanPresent(m.slice(1));

@@ -6,7 +6,9 @@
  * Ein Profit-Split waere die falsche Achse (wuerde invertieren). Daher EIN Track,
  * Wachstum bewusst NIEDRIG gewichtet, Kapitaleffizienz/Zyklus-Qualitaet DOMINANT
  * (ROIC + Asset-Growth-Penalty trennt Compounder vom Peak-Price-Taker).
- * peakMargin/lowRoic-Lampen warnen zusaetzlich.
+ * peakMargin/lowRoic-Lampen warnen zusaetzlich. Kalibrierte Gewichte: capital-
+ * Efficiency ~28% UND revisionsMomentum ~23% sind die zwei groessten Achsen;
+ * Wachstum bewusst niedrig (Regel-5-Ausnahme, dossier-begruendet quality-dominant).
  */
 module.exports = {
   id: 'materials',

@@ -33,6 +33,14 @@ function run(topN) {
   const universe = loadUniverse();
   const results = scoreUniverse(universe, formulas);
   const ranked = produceRankings(results, { topN: topN || 100 });
+  // Echte Kohorten-Counts aus results (NICHT aus der gekappten topN-Anzeigeliste).
+  const counts = {};
+  for (const e of results) {
+    if (e.action === 'route' && e.score !== null) {
+      counts[e.formulaId] = counts[e.formulaId] || { profitable: 0, unprofitable: 0 };
+      counts[e.formulaId][e.track] = (counts[e.formulaId][e.track] || 0) + 1;
+    }
+  }
   fs.mkdirSync(OUT_DIR, { recursive: true });
   for (const [id, b] of Object.entries(ranked.branches)) {
     fs.writeFileSync(path.join(OUT_DIR, id + '.json'), JSON.stringify(b, null, 2));
@@ -42,8 +50,7 @@ function run(topN) {
   fs.writeFileSync(path.join(OUT_DIR, 'index.json'), JSON.stringify({
     generatedFromSnapshots: universe.length,
     branches: Object.keys(ranked.branches),
-    counts: Object.fromEntries(Object.entries(ranked.branches).map(([k, v]) =>
-      [k, { profitable: v.profitable.length, unprofitable: v.unprofitable.length }])),
+    counts,
     survivalCount: ranked.survival.length,
     excluded: ranked.excluded,
   }, null, 2));
