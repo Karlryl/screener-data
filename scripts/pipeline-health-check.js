@@ -16,23 +16,38 @@ const THRESHOLD = 0.05; // 5%
 // healthReport-write step → treat as 100% failure for that script. Without
 // this, a generate-modes-report.js that threw on line 1 left pipeline-health
 // empty and the check silently exited 0.
-const EXPECTED_SCRIPTS = [
-  { script: 'snapshot-picks',           file: 'snapshot-picks.json' },
-  { script: 'snapshot-methods-history', file: 'snapshot-methods-history.json' },
-  { script: 'generate-modes-report',    file: 'generate-modes-report.json' },
-  // Tag 203: score-history feeds the dashboard's ΔScore badges + sparkline.
-  // A silent crash would slowly degrade the modal (entries age out of the
-  // 30-day window) — make it loud.
-  { script: 'snapshot-score-history',   file: 'snapshot-score-history.json' }
-];
+//
+// audit/fix: EXPECTED_SCRIPTS aligned to data-only daily-pull (removed deleted scoring scripts that would synth 100% failure -> CI hard-fail)
+// The hypergrowth cleanup deleted EVERY script that emitted a pipeline-health/
+// report (snapshot-picks, snapshot-methods-history, generate-modes-report,
+// snapshot-score-history, snapshot-r40rx-history, ...). The surviving data-only
+// daily-pull steps (refresh-universe, prune-watchlist, refresh-fx,
+// pull-insider-form4-daily, pull-yahoo, pull-earnings-dates,
+// pull-historical-prices, macro-regime, check-pull-stats, archive-old-snapshots)
+// write NO pipeline-health/*.json — their health signal lives in
+// snapshots/_manifest.json, gated by the workflow's own Verify Pull Coverage /
+// Verify Snapshot Freshness steps. So the allowlist MUST be empty: any entry
+// here would synthesize a 100%-failure for a script that no longer emits a
+// report, hard-failing the pipeline on every run. The check still does its real
+// job below — it reads whatever pipeline-health/*.json reports are present and
+// breaches on a >5% failure_rate — it just no longer fabricates failures for
+// scripts that were deleted. Re-add an entry here only when a surviving script
+// is wired to write pipeline-health/<name>.json again.
+const EXPECTED_SCRIPTS = [];
 
 const ensureDir = !fs.existsSync(HEALTH_DIR);
 if (ensureDir) {
-  // F-CI-002: previously a missing directory exited 0. Now: dir absence
-  // means ALL expected scripts failed before writing — treat as catastrophic.
-  console.error('::error::pipeline-health/ directory is missing — every emitting script crashed before writing.');
-  console.error('Expected reports from: ' + EXPECTED_SCRIPTS.map(s => s.script).join(', '));
-  process.exit(1);
+  // audit/fix: with an empty EXPECTED_SCRIPTS (data-only pipeline emits no
+  // pipeline-health reports), an absent directory is no longer catastrophic —
+  // it just means zero reports to aggregate. Only hard-fail on a missing dir
+  // when scripts are actually expected to have written one.
+  if (EXPECTED_SCRIPTS.length > 0) {
+    console.error('::error::pipeline-health/ directory is missing — every emitting script crashed before writing.');
+    console.error('Expected reports from: ' + EXPECTED_SCRIPTS.map(s => s.script).join(', '));
+    process.exit(1);
+  }
+  console.log('pipeline-health/ directory absent and no scripts are expected to emit reports — nothing to check.');
+  process.exit(0);
 }
 
 const files = fs.readdirSync(HEALTH_DIR).filter(f => f.endsWith('.json'));

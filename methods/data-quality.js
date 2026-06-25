@@ -176,10 +176,24 @@ function gradeSnapshot(snapshot) {
   else if (nanRatio <= GRADE_THRESHOLDS.B) grade = 'B';
   else if (nanRatio <= GRADE_THRESHOLDS.C) grade = 'C';
   else grade = 'D';
+  // audit/fix: critical-field floor — empty/garbage snapshot must not grade above D (was pure nanRatio, no hard gate)
+  // marketCap and metrics.revenueTTM are the load-bearing identity/valuation fields;
+  // if either is absent/null/non-finite, the snapshot is unusable regardless of how
+  // many secondary fields happen to be present, so floor the grade to 'D' (→ REJECT
+  // via tierCapForGrade under DATAQUALITY_ENFORCE). When both are present, behaviour
+  // is UNCHANGED. NB: `price` is NOT floored — the full-pull mapYahooToCanonical never
+  // builds snapshot.price (it exists only on the price-only fast-path, see pull-yahoo.js
+  // ~line 343), so gating on it would force every full-pull snapshot to D.
+  let criticalMissing = false;
+  if (!_hasMetric(snapshot.marketCap) || !_hasMetric(snapshot.metrics && snapshot.metrics.revenueTTM)) {
+    criticalMissing = true;
+    grade = 'D';
+  }
   return {
     grade,
     nanRatio: Math.round(nanRatio * 1000) / 1000,
     missingFields: missing,
+    criticalMissing,
     computedAt: new Date().toISOString()
   };
 }

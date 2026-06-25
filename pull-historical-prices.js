@@ -10,11 +10,12 @@
  * per-day prices/<date>.json: the `close` field stores the ADJUSTED close
  * (split/dividend-adjusted, `adjclose ?? close`), standardized in Tag 148 and
  * consumed by walk-forward-perf.js (which reads `e.close` blindly). This is the
- * single source of truth — any OTHER writer of these files (e.g. pull-prices-bulk.js)
- * MUST write the same adjusted-close semantic, NOT the raw close, or the two pullers
- * will silently mix raw and adjusted prices into one series and corrupt returns.
- * (pull-prices-bulk.js is a separate file and is fixed there; this note documents the
- * contract this entrypoint owns and standardizes on.)
+ * single source of truth — any OTHER writer of these files (the manual
+ * scripts/backfill-prices.js) MUST write the same adjusted-close semantic, NOT
+ * the raw close, or the series would silently mix raw and adjusted prices and
+ * corrupt returns.
+ * audit/fix: pull-prices-bulk.js — a third, orphaned writer that stored RAW
+ * close — was retired in the hypergrowth cleanup, removing that mixed-basis hazard.
  *
  * Run: node pull-historical-prices.js [--watchlist watchlist.json] [--out prices/]
  */
@@ -249,6 +250,9 @@ async function main() {
   // The history file is read by scripts not humans; readability not needed.
   writeFileAtomic(histPath, JSON.stringify(history));
   _log('INFO', `Done: ${ok}/${wl.stocks.length} ok, ${failed} failed`);
+
+  // audit/fix: exit non-zero on total price-pull failure (was implicit exit 0, masking a dead Yahoo day) — mirrors backfill-prices.js
+  if (ok === 0 && wl.stocks.length > 0) process.exit(1);
 }
 
 main().catch(e => { _log('FATAL', e.stack || e.message); process.exit(1); });

@@ -24,7 +24,16 @@ const MAX_PAGES = 10;
 const PAGE_DELAY_MS = 500;
 
 // Symbols unlikely to have Yahoo Finance data — skip pure preferred/warrant/unit suffixes
-const JUNK_SUFFIX_RE = /[WRU]$|\.WS$|\.WT$|\.WI$|\.RT$|\.UN$|\.U$/i;
+// audit/fix: bare [WRU]$ dropped real tickers (NU/BKU/EW/ARW) — delimited-only, mirrors nasdaq-all.js
+const JUNK_SUFFIX_RE = /\.WS$|\.WT$|\.WI$|\.RT$|\.UN$|\.U$/i;
+// audit/fix: warrants/rights/units now caught via the company-name field (mirrors nasdaq-all.js)
+// audit/fix: dropped over-broad \bunits?\b name-term — it excluded real MLPs (BEP/BIP/CQP/UNIT...); delimited .U$/.UN$ symbol filter still catches true unit symbols
+const JUNK_NAME_RE = /\b(?:warrant|right)s?\b/i;
+function isJunkSecurity(symbol, name) {
+  if (JUNK_SUFFIX_RE.test(symbol)) return true;
+  if (name && JUNK_NAME_RE.test(name)) return true;
+  return false;
+}
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -158,9 +167,11 @@ async function fetchOTCMarkets() {
         // as sec-tickers.js / nasdaq-api.js — original regex rejected
         // BRK.B / BF.B / BRK-B despite the comment claiming to allow them.
         if (!/^[A-Z][A-Z0-9]{0,4}([.\-][A-Z])?$/.test(sym)) continue;
-        if (JUNK_SUFFIX_RE.test(sym)) continue;
 
         const name = (row.companyName || row.name || row.CompanyName || '').trim();
+        // audit/fix: bare [WRU]$ dropped real tickers (NU/BKU/EW/ARW) — delimited-only, mirrors nasdaq-all.js
+        if (isJunkSecurity(sym, name)) continue;
+
         const market = (row.marketTier || row.market || row.MarketTier || '').trim();
 
         if (!result.has(sym)) {

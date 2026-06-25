@@ -34,7 +34,16 @@ const REQUEST_LIMIT = 10000;
 const EXCHANGE_DELAY_MS = 800;
 
 // Symbols to skip — same junk-suffix filter as nasdaq-all.js
-const JUNK_SUFFIX_RE = /[WRU]$|\.WS$|\.WT$|\.WI$|\.RT$|\.UN$|\.U$/i;
+// audit/fix: bare [WRU]$ dropped real tickers (NU/BKU/EW/ARW) — delimited-only, mirrors nasdaq-all.js
+const JUNK_SUFFIX_RE = /\.WS$|\.WT$|\.WI$|\.RT$|\.UN$|\.U$/i;
+// audit/fix: warrants/rights/units now caught via the company-name field (mirrors nasdaq-all.js)
+// audit/fix: dropped over-broad \bunits?\b name-term — it excluded real MLPs (BEP/BIP/CQP/UNIT...); delimited .U$/.UN$ symbol filter still catches true unit symbols
+const JUNK_NAME_RE = /\b(?:warrant|right)s?\b/i;
+function isJunkSecurity(symbol, name) {
+  if (JUNK_SUFFIX_RE.test(symbol)) return true;
+  if (name && JUNK_NAME_RE.test(name)) return true;
+  return false;
+}
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -191,9 +200,11 @@ async function fetchNasdaqApiList() {
         // Tag 217g (audit F-217a-01 HIGH fix): same class-share regex bug
         // as sec-tickers.js — original regex rejected BRK.B / BF.B / BRK-B.
         if (!/^[A-Z][A-Z0-9]{0,4}([.\-][A-Z])?$/.test(rawSym)) continue;
-        if (JUNK_SUFFIX_RE.test(rawSym)) continue;
 
         const name     = (row.name || row.Name || row.companyName || '').trim();
+        // audit/fix: bare [WRU]$ dropped real tickers (NU/BKU/EW/ARW) — delimited-only, mirrors nasdaq-all.js
+        if (isJunkSecurity(rawSym, name)) continue;
+
         const sector   = (row.sector || row.Sector || '').trim();
         const mcapStr  = row.marketCap || row.MarketCap || '';
         const mcap     = parseMcap(mcapStr);

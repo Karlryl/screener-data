@@ -466,6 +466,12 @@ async function main() {
   wlRaw.stocks.sort((a, b) => (a.ticker || '').localeCompare(b.ticker || ''));
   wlRaw.lastUniverseRefresh = new Date().toISOString();
 
+  // audit/fix: internal watchlist size-floor (was CI-only, post-write) — refuse to overwrite with a degenerate universe
+  if (wlRaw.stocks.length < 200) {
+    console.error(`::error::watchlist size ${wlRaw.stocks.length} < 200 — refusing to overwrite with a degenerate universe`);
+    process.exit(1);
+  }
+
   // F-SM-021 / F-DP-046 (Tag 189): watchlist.json is pull-yahoo's entry point;
   // a truncated mid-write here aborts the entire daily pull on parse-error
   // and recovery needs a git revert.

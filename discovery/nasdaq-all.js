@@ -30,7 +30,8 @@ const JUNK_SUFFIX_RE = /\.WS$|\.WT$|\.WI$|\.RT$|\.UN$|\.U$/i;
 // audit F-A-2026-06-21: prevents NU/BKU/EW-class common stocks being filtered as warrants.
 // Centralized name-based filter for the warrant/right/unit security types that the lossy
 // suffix regex was meant to catch — keyed off the structured Security Name column instead.
-const JUNK_NAME_RE = /\b(?:warrant|right|unit)s?\b/i;
+// audit/fix: dropped over-broad \bunits?\b name-term — it excluded real MLPs (BEP/BIP/CQP/UNIT...); delimited .U$/.UN$ symbol filter still catches true unit symbols
+const JUNK_NAME_RE = /\b(?:warrant|right)s?\b/i;
 
 // audit F-A-2026-06-21: single shared filter so nasdaqlisted/otherlisted stay in sync and
 // neither path reintroduces the bare-letter-suffix bug.

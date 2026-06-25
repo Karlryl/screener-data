@@ -34,13 +34,8 @@ const { writeFileAtomic } = require('./lib/atomic-write.js');
 // breaking `git checkout` and `git pull` for any Windows developer. Prefix such
 // tickers with `_` so the filename is portable. The ticker inside the JSON is
 // unchanged — only the on-disk filename differs.
-const WINDOWS_RESERVED = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i;
-function safeSnapshotFilename(ticker) {
-  const sanitized = String(ticker).replace(/[^A-Z0-9.-]/gi, '_');
-  const stem = sanitized.split('.')[0];
-  if (WINDOWS_RESERVED.test(stem)) return '_' + sanitized + '.json';
-  return sanitized + '.json';
-}
+// audit/fix: inline safeSnapshotFilename diverged from lib (writer/reader mismatch on reserved/dotted stems) — use canonical lib/snapshot-fs.js
+const { safeSnapshotFilename } = require('./lib/snapshot-fs.js');
 
 let YahooFinance;
 try {
