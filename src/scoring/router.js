@@ -17,17 +17,8 @@
  * ist (ICE/CME/NDAQ: gm=100 ABER r~0.7 -> ECHTER GP, nicht degeneriert).
  */
 
-const { norm, hasPresent, firstPresent } = require('./snapshot.js');
+const { norm, hasPresent, firstPresent, presentValues, metricVal } = require('./snapshot.js');
 
-// present (nicht-null) Werte einer Serie.
-function present(series) {
-  return Array.isArray(series) ? series.filter((v) => v !== null && v !== undefined) : [];
-}
-
-const metricVal = (s, k) => {
-  const v = s && s.metrics && s.metrics[k] ? s.metrics[k].value : undefined;
-  return Number.isFinite(v) ? v : null;
-};
 const lc = (x) => (typeof x === 'string' ? x.toLowerCase() : '');
 
 // --- GP-Klassifikation (Master-Diskriminator) -------------------------------
@@ -56,7 +47,7 @@ function gpClass(s) {
 function isPreRevenue(s) {
   const rev = norm(s, 'annualRev');
   if (!hasPresent(rev)) return true;
-  return present(rev).every((v) => v === 0);
+  return presentValues(rev).every((v) => v === 0);
 }
 
 // --- Schritt 1: Struktur-Hard-Exclude ---------------------------------------
@@ -64,8 +55,10 @@ function structExcludeReason(s) {
   const ind = lc(s && s.meta ? s.meta.industry : '');
   const sec = lc(s && s.meta ? s.meta.sector : '');
   if (ind.includes('telecom')) return 'telecom';
-  if (ind.includes('bank')) return 'balance-sheet-bank';
-  if (ind.includes('insurance')) return 'insurer';
+  // Bilanz-Banken excludieren, aber NICHT Broker/Investment-Banking (Income-Statement-Financials, bleiben drin).
+  if (/\bbank/.test(ind) && !ind.includes('brokerage')) return 'balance-sheet-bank';
+  // Versicherer excludieren, aber NICHT Versicherungs-Makler (Broker = Income-Statement, bleiben drin).
+  if (ind.includes('insurance') && !ind.includes('broker')) return 'insurer';
   if (ind.includes('mortgage') && (ind.includes('reit') || sec.includes('real estate'))) return 'mortgage-reit';
   return null;
 }
@@ -78,7 +71,8 @@ function sectorRoute(s) {
   const sec = lc(s && s.meta ? s.meta.sector : '');
   // Industry-Overrides
   if (ind.includes('semiconductor')) return 'semiconductors';
-  if (ind.includes('information technology services') || ind.includes('it services')) return 'it-services';
+  // Wortgrenze: "\bit services" matcht "it services", NICHT "cred[it services]" (Substring-Kollision).
+  if (ind.includes('information technology services') || /\bit services\b/.test(ind)) return 'it-services';
   // Sektor-Fallback (Yahoo-Sektornamen)
   if (sec.includes('technology')) return 'software-comm-services';
   if (sec.includes('communication')) return 'software-comm-services';
@@ -108,7 +102,7 @@ function route(s) {
   if (se) return { action: 'exclude', reason: se };
   // Schritt 2 — VOR jeder grossMargin-Logik
   const gp = norm(s, 'annualGP');
-  if (hasPresent(gp) && present(gp).every((v) => v === 0)) {
+  if (hasPresent(gp) && presentValues(gp).every((v) => v === 0)) {
     return { action: 'exclude', reason: 'lender-gp0' };
   }
   // Schritt 3

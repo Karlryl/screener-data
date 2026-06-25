@@ -136,5 +136,19 @@ test('NaN-Freiheit: alle CRDO-Serien sind finite-oder-null', () => {
   }
 });
 
+// --- zentrale Helfer (dedupliziert aus axes/lamps/router/overview) ----------
+test('presentValues / firstTwoPresent / recentSumPresent / metricVal', () => {
+  const H = require('../../src/scoring/snapshot.js');
+  assert.deepEqual(H.presentValues([5, null, 6, undefined]), [5, 6]);
+  assert.deepEqual(H.firstTwoPresent([null, 9, 8, 7]), [9, 8]);
+  assert.equal(H.firstTwoPresent([5]), null);
+  assert.equal(H.recentSumPresent([10, 20, 30], 2), 30); // 2 juengste
+  assert.equal(H.recentSumPresent([null, null], 2), null);
+  assert.equal(H.recentSumPresent([], 2), null);
+  assert.equal(H.metricVal({ metrics: { x: { value: 4 } } }, 'x'), 4);
+  assert.equal(H.metricVal({ metrics: {} }, 'x'), null);
+  assert.equal(H.metricVal({}, 'x'), null);
+});
+
 console.log(`\nsnapshot.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

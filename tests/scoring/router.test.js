@@ -82,5 +82,28 @@ test('gpClass Tie-Break: kein GP -> grossMargin entscheidet', () => {
   assert.equal(gpClass({ metrics: {}, annual: {} }), 'none');
 });
 
+// --- Regression: Substring-Kollision "credit services".includes("it services") -
+test('Credit Services mit echtem GP -> financials (NICHT it-services)', () => {
+  const s = { meta: { sector: 'Financial Services', industry: 'Credit Services' },
+    annual: { annualRev: [{ value: 1000 }, { value: 800 }], annualGP: [{ value: 600 }, { value: 480 }] } };
+  const r = route(s);
+  assert.equal(r.formulaId, 'financials');
+  assert.equal(r.gpClass, 'real');
+});
+test('echte IT-Services -> it-services', () => {
+  const s = { meta: { sector: 'Technology', industry: 'Information Technology Services' }, annual: { annualRev: [{ value: 100 }] } };
+  assert.equal(route(s).formulaId, 'it-services');
+});
+
+// --- Regression: Broker/Brokerage NICHT als Bank/Versicherer excludiert -----
+test('Versicherungs-Makler & Investment-Brokerage bleiben drin (kein Fehl-Exclude)', () => {
+  const broker = { meta: { sector: 'Financial Services', industry: 'Insurance Brokers' },
+    annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
+  assert.equal(route(broker).action, 'route');
+  const ib = { meta: { sector: 'Financial Services', industry: 'Investment Banking & Brokerage' },
+    annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
+  assert.equal(route(ib).action, 'route');
+});
+
 console.log(`\nrouter.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

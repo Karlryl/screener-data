@@ -13,19 +13,8 @@
  * Begleitspalte: Rule-of-X (alpha=2.3) fuer den Wachstum-vs-Effizienz-Blick.
  */
 
-const { norm, firstPresent } = require('./snapshot.js');
+const { norm, firstPresent, firstTwoPresent, presentValues } = require('./snapshot.js');
 const { ruleOfX } = require('./axes.js');
-
-function firstTwoPresent(series) {
-  const out = [];
-  for (const v of (Array.isArray(series) ? series : [])) {
-    if (v !== null && v !== undefined) { out.push(v); if (out.length === 2) break; }
-  }
-  return out.length === 2 ? out : null;
-}
-function presentVals(series) {
-  return (Array.isArray(series) ? series : []).filter((v) => v !== null && v !== undefined);
-}
 
 // YoY-Wachstum einer {value}-Jahres-/Quartalsserie via norm()-Feldname.
 function yoyAnnual(s, field) {
@@ -37,7 +26,7 @@ function yoyAnnual(s, field) {
 // Bruttogewinn-Wachstum YoY: TTM-ueber-TTM wenn >=8 present Quartale, sonst
 // annualGP-YoY. (Aktuell 5 Quartale -> annual; zukunftssicher bei 8 Quartalen.)
 function grossProfitGrowthYoY(s) {
-  const present = presentVals(norm(s, 'grossProfitQ'));
+  const present = presentValues(norm(s, 'grossProfitQ'));
   if (present.length >= 8) {
     const ttmNew = present.slice(0, 4).reduce((p, c) => p + c, 0);
     const ttmOld = present.slice(4, 8).reduce((p, c) => p + c, 0);
@@ -52,7 +41,7 @@ function ffoProxyGrowthYoY(s) {
   const dep = norm(s, 'annualDepreciation');
   const ffo = ni.map((v, i) => (v !== null && dep[i] !== null) ? v + dep[i] : null);
   const two = firstTwoPresent(ffo);
-  if (!two || two[1] === 0) return null;
+  if (!two || two[1] <= 0) return null; // negative Basis kippt sonst das Vorzeichen
   return two[0] / two[1] - 1;
 }
 
@@ -61,7 +50,9 @@ function cashRunwayQuarters(s) {
   const cash = firstPresent(norm(s, 'annualBalance', 'totalCash'));
   const fcf = firstPresent(norm(s, 'annualFCF'));
   if (cash === null || fcf === null) return null;
-  if (fcf >= 0) return Infinity; // generiert Cash
+  // Cash-generierend = bester (=hoechster) Runway: endlicher Sentinel statt Infinity,
+  // damit q()/Perzentil und JSON (Infinity -> null) den Wert nicht verlieren.
+  if (fcf >= 0) return 9999;
   return cash / (Math.abs(fcf) / 4);
 }
 

@@ -21,7 +21,7 @@
  *  8 dilution              -(SBC/Rev) Niveau + Trend (niedriger/fallend = besser)
  */
 
-const { norm, hasPresent, firstPresent } = require('./snapshot.js');
+const { norm, hasPresent, firstPresent, firstTwoPresent, metricVal } = require('./snapshot.js');
 const { fcfMarginValid } = require('./engine.js');
 
 // --- kleine Helfer auf normalisierten Serien (luecken-sicher) ---------------
@@ -35,36 +35,23 @@ function lastPresent(series) {
   return null;
 }
 
-// Erste zwei present Werte [neu, alt] (fuer YoY). null, wenn < 2 vorhanden.
-function firstTwoPresent(series) {
-  if (!Array.isArray(series)) return null;
-  const vals = [];
-  for (const v of series) {
-    if (v !== null && v !== undefined) { vals.push(v); if (vals.length === 2) break; }
-  }
-  return vals.length === 2 ? vals : null;
-}
-
-// Element-weise num/den (newest-first), null wo ein Operand fehlt oder den==0.
+// Element-weise num/den (newest-first), null wo ein Operand fehlt, kein Array, oder den==0.
 function ratioSeries(numS, denS) {
-  const n = Math.max(numS.length, denS.length);
+  const a = Array.isArray(numS) ? numS : [];
+  const b = Array.isArray(denS) ? denS : [];
+  const n = Math.max(a.length, b.length);
   const out = [];
   for (let i = 0; i < n; i++) {
-    const a = numS[i], b = denS[i];
-    if (a === null || a === undefined || b === null || b === undefined || b === 0) out.push(null);
-    else out.push(a / b);
+    const x = a[i], y = b[i];
+    if (x === null || x === undefined || y === null || y === undefined || y === 0) out.push(null);
+    else out.push(x / y);
   }
   return out;
 }
 
-const metric = (s, k) => {
-  const v = s && s.metrics && s.metrics[k] ? s.metrics[k].value : undefined;
-  return Number.isFinite(v) ? v : null;
-};
-
 // --- 1. Umsatzwachstum (Niveau) ---------------------------------------------
 function revGrowthLevel(s) {
-  return metric(s, 'revenueGrowthYoY'); // % (negativ rankt natuerlich unten)
+  return metricVal(s,'revenueGrowthYoY'); // % (negativ rankt natuerlich unten)
 }
 
 // --- 2. Umsatz-Beschleunigung (2. Ableitung) --------------------------------
@@ -75,7 +62,7 @@ function revAcceleration(s) {
   if (rq.length < 3) return null; // mind. 2 QoQ-Raten
   const g = [];
   for (let i = 0; i < rq.length - 1; i++) {
-    if (rq[i + 1] > 0) g.push(rq[i] / rq[i + 1] - 1);
+    if (rq[i] > 0 && rq[i + 1] > 0) g.push(rq[i] / rq[i + 1] - 1); // beide Quartale positiv
   }
   if (g.length < 2) return null;
   return g[0] - g[g.length - 1];
@@ -99,11 +86,11 @@ function gpGrowth(s) {
 // validiert UND includeFcf (Profitable-Track). Unprofitable-Track: includeFcf
 // = false -> reiner alpha*revGrowth (kein BE-Penalty).
 function ruleOfX(s, alpha = 2.3, includeFcf = true) {
-  const rev = metric(s, 'revenueGrowthYoY');
+  const rev = metricVal(s,'revenueGrowthYoY');
   if (rev === null) return null;
   let x = alpha * rev;
   if (includeFcf) {
-    const ttm = metric(s, 'fcfMarginTTM');
+    const ttm = metricVal(s,'fcfMarginTTM');
     if (fcfMarginValid(ttm, norm(s, 'annualFCF'), norm(s, 'annualOCF'))) x += ttm;
   }
   return x;
@@ -125,10 +112,10 @@ function capitalEfficiency(s) {
   const opInc = norm(s, 'annualOpInc').filter((v) => v !== null);
   const assets = norm(s, 'annualBalance', 'totalAssets');
   const curLiab = norm(s, 'annualBalance', 'currentLiabilities');
-  const invested = ratioSeries(assets, assets).map((_, i) => {
-    const a = assets[i], c = curLiab[i];
-    if (a === null) return null;
-    return a - (c === null ? 0 : c);
+  const invested = assets.map((a, i) => {
+    if (a === null || a === undefined) return null;
+    const c = curLiab[i];
+    return a - (c === null || c === undefined ? 0 : c);
   }).filter((v) => v !== null && v > 0);
   if (opInc.length === 0 || invested.length === 0) return null;
   const mean = (arr) => arr.reduce((p, c) => p + c, 0) / arr.length;
@@ -184,5 +171,5 @@ module.exports = {
   revGrowthLevel, revAcceleration, gpGrowth, ruleOfX,
   marginTrajectory, capitalEfficiency, revisionsMomentum, dilution,
   // Helfer fuer Tests/Formeln
-  _helpers: { lastPresent, firstTwoPresent, ratioSeries },
+  _helpers: { lastPresent, ratioSeries },
 };

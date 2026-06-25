@@ -16,7 +16,7 @@
  *  - signTrack(): Track ueber das Vorzeichen einer OpInc-/NetIncome-Serie.
  */
 
-const { hasPresent, firstPresent, sumPresent, sign } = require('./snapshot.js');
+const { hasPresent, firstPresent, sumPresent, recentSumPresent, sign } = require('./snapshot.js');
 
 // --- q() / Perzentil ---------------------------------------------------------
 
@@ -61,11 +61,13 @@ function weightedScore(axes) {
     if (!a) continue;
     const v = a.value;
     if (v === null || v === undefined || !Number.isFinite(v)) continue;
-    if (!(a.weight > 0)) continue;
+    if (!(a.weight > 0) || !Number.isFinite(a.weight)) continue; // Infinity-Gewicht -> NaN-Schutz
     wsum += a.weight;
     vsum += a.weight * v;
   }
-  return wsum > 0 ? vsum / wsum : null;
+  if (wsum <= 0) return null;
+  const r = vsum / wsum;
+  return Number.isFinite(r) ? r : null;
 }
 
 // --- fcfSignGuard (G0-G3) + Track -------------------------------------------
@@ -86,8 +88,13 @@ function fcfMarginValid(fcfMarginTTM, normFCF, normOCF) {
   if (!hasPresent(normFCF) && !hasPresent(normOCF)) return false; // G1
   if (!hasPresent(normFCF)) return false; // G2 braucht juengstes present FCF-Jahr
   if (sign(fcfMarginTTM) !== sign(firstPresent(normFCF))) return false; // G2
-  const fcfRescue = sumPresent(normFCF) >= 0;
-  const ocfRescue = hasPresent(normOCF) && sumPresent(normOCF) >= 0; // leeres OCF rettet NICHT
+  // G3 (OCF-/FCF-Rescue): juengstes 2-Jahres-Fenster, NICHT die Lebenszeit-Summe
+  // — sonst kappen alte Burn-Jahre einen echten Turnaround (BE: sumFCF lifetime
+  // -674M, aber 2 juengste Jahre +90M). Bestaetigt durable cash-gen ohne Alt-Last-Strafe.
+  const rFcf = recentSumPresent(normFCF, 2);
+  const rOcf = recentSumPresent(normOCF, 2);
+  const fcfRescue = rFcf !== null && rFcf >= 0;
+  const ocfRescue = rOcf !== null && rOcf >= 0;
   if (!fcfRescue && !ocfRescue) return false; // G3
   return true;
 }

@@ -99,5 +99,12 @@ test('dilution: kein present annualSBC -> null (drop+renorm, KEIN Fake-50)', () 
   assert.equal(ax.dilution({ annual: { annualSBC: [null, null], annualRev: [{ value: 100 }] } }), null);
 });
 
+// --- Regression: revAcceleration ignoriert 0/negative Zwischenquartale ------
+test('revAcceleration: 0/negatives Quartal erzeugt keine Riesen-Rate', () => {
+  const s = { timeseries: { revenueQ: [{ value: 120 }, { value: 100 }, { value: 0 }, { value: 80 }, { value: 70 }] } };
+  const v = ax.revAcceleration(s);
+  assert.ok(Number.isFinite(v) && Math.abs(v) < 1); // nur positive Quartalspaare zaehlen
+});
+
 console.log(`\naxes.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

@@ -121,4 +121,34 @@ function sign(x) {
   return Math.sign(x);
 }
 
-module.exports = { norm, hasPresent, firstPresent, sumPresent, sign, FIELD_REGISTRY };
+// Nur die present (nicht-null) Werte einer Serie.
+function presentValues(series) {
+  return Array.isArray(series) ? series.filter((v) => v !== null && v !== undefined) : [];
+}
+
+// Erste zwei present Werte [neu, alt] (fuer YoY). null, wenn < 2 vorhanden.
+function firstTwoPresent(series) {
+  const out = [];
+  for (const v of (Array.isArray(series) ? series : [])) {
+    if (v !== null && v !== undefined) { out.push(v); if (out.length === 2) break; }
+  }
+  return out.length === 2 ? out : null;
+}
+
+// Summe der ersten n present Werte (juengste zuerst); fewer wenn < n present.
+// null, wenn kein present Wert existiert (vs. 0 = vorhanden aber netto null).
+function recentSumPresent(series, n) {
+  const vals = presentValues(series).slice(0, n);
+  return vals.length ? vals.reduce((p, c) => p + c, 0) : null;
+}
+
+// Null-sicherer metrics-Skalar-Zugriff: snapshot.metrics[key].value oder null.
+function metricVal(snapshot, key) {
+  const v = (snapshot && snapshot.metrics && snapshot.metrics[key]) ? snapshot.metrics[key].value : undefined;
+  return Number.isFinite(v) ? v : null;
+}
+
+module.exports = {
+  norm, hasPresent, firstPresent, sumPresent, sign, FIELD_REGISTRY,
+  presentValues, firstTwoPresent, recentSumPresent, metricVal,
+};

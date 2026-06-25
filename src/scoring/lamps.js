@@ -9,7 +9,7 @@
  * true (an) / false (aus) / null (nicht bewertbar).
  */
 
-const { norm, hasPresent, firstPresent } = require('./snapshot.js');
+const { norm, hasPresent, firstPresent, firstTwoPresent, metricVal } = require('./snapshot.js');
 
 // Schwellen (bewusst konservativ; Feinkalibrierung in der Formel-/Fixture-Phase)
 const TH = {
@@ -21,17 +21,6 @@ const TH = {
   HIGH_BETA: 2.5,          // Beta-Crash-Risiko
 };
 
-const metricVal = (s, k) => {
-  const v = s && s.metrics && s.metrics[k] ? s.metrics[k].value : undefined;
-  return Number.isFinite(v) ? v : null;
-};
-function firstTwoPresent(series) {
-  const out = [];
-  for (const v of (Array.isArray(series) ? series : [])) {
-    if (v !== null && v !== undefined) { out.push(v); if (out.length === 2) break; }
-  }
-  return out.length === 2 ? out : null;
-}
 function meanPresent(series) {
   const vals = (Array.isArray(series) ? series : []).filter((v) => v !== null && v !== undefined);
   return vals.length ? vals.reduce((p, c) => p + c, 0) / vals.length : null;

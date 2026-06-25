@@ -95,5 +95,19 @@ test('evaluateLamps: aktive Liste enthaelt true-Lampen, Score unberuehrt', () =>
   assert.equal(typeof r.flags, 'object');
 });
 
+// --- peakMargin isoliert (Testluecke aus Review geschlossen) ----------------
+test('peakMargin: aktuelle Marge >> historischer Schnitt -> true', () => {
+  const s = { metrics: { operatingMargin: { value: 40 } },
+    annual: { annualOpInc: [{ value: 40 }, { value: 10 }, { value: 12 }, { value: 8 }],
+      annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }, { value: 100 }] } };
+  assert.equal(L.peakMargin(s), true); // 0.40 > 1.3 * mean(0.10,0.12,0.08)
+});
+test('peakMargin: stabile Marge -> false', () => {
+  const s = { metrics: { operatingMargin: { value: 11 } },
+    annual: { annualOpInc: [{ value: 11 }, { value: 10 }, { value: 12 }, { value: 9 }],
+      annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }, { value: 100 }] } };
+  assert.equal(L.peakMargin(s), false);
+});
+
 console.log(`\nlamps.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

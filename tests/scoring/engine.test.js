@@ -106,5 +106,21 @@ test('signTrack: juengstes present Jahr entscheidet; leer -> unknown', () => {
   assert.equal(signTrack([]), 'unknown');
 });
 
+// --- Regression: BE-Turnaround (G3 2-Jahres-Fenster, nicht Lebenszeit-Summe) -
+test('BE: fcfMarginValid true + Track profitable (Court-Anker, Regression)', () => {
+  const b = snap('BE');
+  const ttm = b.metrics.fcfMarginTTM.value;
+  const fcf = norm(b, 'annualFCF'); const ocf = norm(b, 'annualOCF');
+  // Lebenszeit-Summe FCF/OCF ist negativ (Alt-Burn), 2 juengste Jahre aber positiv.
+  assert.equal(fcfMarginValid(ttm, fcf, ocf), true);
+  assert.equal(fcfTrack(ttm, fcf, ocf), 'profitable');
+});
+
+// --- Regression: Infinity-Gewicht darf keinen NaN-Score erzeugen ------------
+test('weightedScore: Infinity-Gewicht -> null/ignoriert (kein NaN-Leak)', () => {
+  assert.equal(weightedScore([{ value: 50, weight: Infinity }]), null);
+  assert.equal(weightedScore([{ value: 50, weight: Infinity }, { value: 80, weight: 1 }]), 80);
+});
+
 console.log(`\nengine.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

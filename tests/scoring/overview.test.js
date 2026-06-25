@@ -67,9 +67,9 @@ test('overviewMetric(biotech) -> runway-badge (Quartale)', () => {
   assert.ok(Math.abs(r.value - 8) < 1e-9); // 800 / (400/4=100) = 8 Quartale
 });
 
-// --- cashRunway: cash-generierend -> Infinity -------------------------------
-test('cashRunwayQuarters: positiver FCF -> Infinity', () => {
-  assert.equal(ov.cashRunwayQuarters({ annual: { annualBalance: [{ totalCash: 10 }], annualFCF: [{ value: 5 }] } }), Infinity);
+// --- cashRunway: cash-generierend -> endlicher Sentinel (nicht Infinity) ----
+test('cashRunwayQuarters: positiver FCF -> 9999 (JSON-/q()-sicher)', () => {
+  assert.equal(ov.cashRunwayQuarters({ annual: { annualBalance: [{ totalCash: 10 }], annualFCF: [{ value: 5 }] } }), 9999);
 });
 
 // --- BE companion (Rule-of-X) gross, da +130% Umsatz ------------------------
