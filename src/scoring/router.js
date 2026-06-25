@@ -21,6 +21,19 @@ const { norm, hasPresent, firstPresent, presentValues, metricVal } = require('./
 
 const lc = (x) => (typeof x === 'string' ? x.toLowerCase() : '');
 
+// US-Erkennung (Plan: US-Universe). meta.region ist das massgebliche Feld:
+// US-Firmen tragen 'US' ODER (inkonsistent) einen US-Boersennamen (SOFI/ICE/MU
+// region='NasdaqGS'/'NYSE'). Auslaendische ADRs tragen den LAENDERCODE (TSM
+// region='TW', KXIAY='JP') — obwohl ihre exchangeName US ist (NYSE/OTC). Daher
+// NUR region pruefen, NICHT exchangeName (sonst schluepfen ADRs durch).
+const US_SIGNAL = /nasdaq|nyse|amex|arca|bats|cboe|\botc\b|pink|\bnms\b|\bncm\b|\bngm\b|\bus\b|\busa\b|united states/i;
+function isUS(s) {
+  const m = (s && s.meta) || {};
+  if (m.region) return US_SIGNAL.test(m.region);
+  if (m.exchangeName) return US_SIGNAL.test(m.exchangeName); // nur Fallback wenn region fehlt
+  return true; // gar kein Signal -> konservativ behalten
+}
+
 // --- GP-Klassifikation (Master-Diskriminator) -------------------------------
 // 'real'       0 < r < 0.99  -> normale GP-Wachstums-Spalte
 // 'degenerate' r >= 0.99 (GP==Rev) -> Nicht-GP-Revenue-Badge
@@ -95,6 +108,9 @@ function sectorRoute(s) {
  *   {action:'route', formulaId[, gpClass]} Branchen-Formel
  */
 function route(s) {
+  // Universum-Filter: nur US (Plan: US-Universe inkl. Small-Caps). Auslaendisch
+  // gelistete Namen duerfen die US-Kohorten-Perzentile nicht verzerren.
+  if (!isUS(s)) return { action: 'exclude', reason: 'non-us' };
   // Schritt 0
   if (isPreRevenue(s)) return { action: 'survival', track: 'pre-revenue-biotech', reason: 'no-revenue' };
   // Schritt 1
@@ -112,4 +128,4 @@ function route(s) {
   return out;
 }
 
-module.exports = { route, gpClass, isPreRevenue, structExcludeReason, sectorRoute };
+module.exports = { route, gpClass, isPreRevenue, structExcludeReason, sectorRoute, isUS };

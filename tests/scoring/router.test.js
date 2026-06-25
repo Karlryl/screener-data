@@ -41,6 +41,30 @@ test('ICE/CME/NDAQ -> financials mit ECHTEM GP (r~0.7 trotz gm=100)', () => {
   }
 });
 
+// --- Universum-Filter: nur US -----------------------------------------------
+test('Nicht-US (region != US) -> exclude non-us', () => {
+  const s = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'KR' }, annual: { annualRev: [{ value: 100 }] } };
+  assert.equal(route(s).reason, 'non-us');
+});
+test('US-Aktie passiert den Filter', () => {
+  const s = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'US' }, annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
+  assert.equal(route(s).action, 'route');
+});
+
+test('Auslaendische ADRs (region=Laendercode, US-Boerse) -> exclude non-us', () => {
+  const tsm = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'TW', exchangeName: 'NYSE' },
+    annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
+  assert.equal(route(tsm).reason, 'non-us'); // ADR trotz US-Boerse raus
+  const adr = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'JP', exchangeName: 'OTC Markets OTCPK' },
+    annual: { annualRev: [{ value: 100 }] } };
+  assert.equal(route(adr).reason, 'non-us');
+});
+test('US-Name mit Boersennamen in region (SOFI/ICE-Muster) -> bleibt drin', () => {
+  const s = { meta: { sector: 'Financial Services', industry: 'Capital Markets', region: 'NasdaqGS' },
+    annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
+  assert.equal(route(s).action, 'route');
+});
+
 // --- Schritt 0: Pre-Revenue -------------------------------------------------
 test('kein/leerer Umsatz -> survival-track', () => {
   assert.equal(route({ meta: {}, annual: { annualRev: [] } }).action, 'survival');
