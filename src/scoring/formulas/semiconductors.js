@@ -13,14 +13,13 @@ module.exports = {
   splitMetric: 'OpInc',
   alpha: 3.0, // Rule-of-X: hohe Software-/Design-aehnliche Margen-Hebel
   axes: [
-    // key,                profitable, unprofitable
-    { key: 'revGrowthLevel',     w: { profitable: 1.5, unprofitable: 2.0 } },
-    { key: 'revAcceleration',    w: { profitable: 2.5, unprofitable: 3.0 } }, // hoechstes Hypergrowth-Signal
-    { key: 'gpGrowth',           w: { profitable: 1.5, unprofitable: 1.5 } },
-    { key: 'ruleOfX',            w: { profitable: 1.5, unprofitable: 1.0 } }, // FCF-Term nur im Profitable-Track
-    { key: 'marginTrajectory',   w: { profitable: 1.0, unprofitable: 1.0 } }, // Unprofit: Pfad-zur-Profitabilitaet
-    { key: 'capitalEfficiency',  w: { profitable: 1.0, unprofitable: 0.3 } },
-    { key: 'revisionsMomentum',  w: { profitable: 0.5, unprofitable: 0.5 } },
-    { key: 'dilution',           w: { profitable: 0.8, unprofitable: 0.5 } },
+    { key: 'revGrowthLevel', w: { profitable: 1.7, unprofitable: 2.3 } },
+    { key: 'revAcceleration', w: { profitable: 2.6, unprofitable: 2.5 } },
+    { key: 'gpGrowth', w: { profitable: 1.8, unprofitable: 2.1 } },
+    { key: 'ruleOfX', w: { profitable: 1.6, unprofitable: 1.7 } },
+    { key: 'marginTrajectory', w: { profitable: 0.3, unprofitable: 0.7 } },
+    { key: 'capitalEfficiency', w: { profitable: 0.8, unprofitable: 0.4 } },
+    { key: 'revisionsMomentum', w: { profitable: 0.5, unprofitable: 0.5 } },
+    { key: 'dilution', w: { profitable: 0.7, unprofitable: 0.5 } },
   ],
 };

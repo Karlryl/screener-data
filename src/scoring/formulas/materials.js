@@ -13,13 +13,13 @@ module.exports = {
   splitMetric: 'none',
   alpha: 1.5,
   axes: [
-    { key: 'revGrowthLevel',     w: { profitable: 0.8, unprofitable: 0.8 } }, // bewusst niedrig (Peak-Falle)
-    { key: 'revAcceleration',    w: { profitable: 1.2, unprofitable: 1.2 } },
-    { key: 'gpGrowth',           w: { profitable: 1.2, unprofitable: 1.2 } },
-    { key: 'ruleOfX',            w: { profitable: 0.8, unprofitable: 0.8 } },
-    { key: 'marginTrajectory',   w: { profitable: 1.5, unprofitable: 1.5 } },
-    { key: 'capitalEfficiency',  w: { profitable: 2.0, unprofitable: 2.0 } }, // dominant: Zyklus-Qualitaet
-    { key: 'revisionsMomentum',  w: { profitable: 0.5, unprofitable: 0.5 } },
-    { key: 'dilution',           w: { profitable: 0.5, unprofitable: 0.5 } },
+    { key: 'revGrowthLevel', w: { profitable: 0.5, unprofitable: 0.5 } },
+    { key: 'revAcceleration', w: { profitable: 1.9, unprofitable: 1.9 } },
+    { key: 'gpGrowth', w: { profitable: 0.8, unprofitable: 0.8 } },
+    { key: 'ruleOfX', w: { profitable: 0.6, unprofitable: 0.6 } },
+    { key: 'marginTrajectory', w: { profitable: 0.4, unprofitable: 0.4 } },
+    { key: 'capitalEfficiency', w: { profitable: 2.9, unprofitable: 2.9 } },
+    { key: 'revisionsMomentum', w: { profitable: 2.4, unprofitable: 2.4 } },
+    { key: 'dilution', w: { profitable: 0.8, unprofitable: 0.8 } },
   ],
 };
