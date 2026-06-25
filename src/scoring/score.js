@@ -88,13 +88,19 @@ function scoreUniverse(snapshots, formulas) {
   // 3. Overview-Metrik anhaengen + interne Felder entfernen
   for (const e of results) {
     if (e.action === 'route') {
-      e.overview = overviewMetric(e.snapshot, { gpClass: e.gpClass });
+      e.overview = overviewMetric(e.snapshot, { gpClass: e.gpClass, specialTrack: SPECIAL_OVERVIEW[e.formulaId] });
+    } else if (e.action === 'survival') {
+      // Pre-Revenue/Biotech: KEIN Growth-Score, nur Runway-Badge (Plan: nie growth-gescort)
+      e.overview = overviewMetric(e.snapshot, { specialTrack: 'biotech' });
     }
     delete e.snapshot;
     delete e.formula;
   }
   return results;
 }
+
+// Branchen, deren Overview-Spalte eine track-eigene Badge statt GP-Wachstum nutzt.
+const SPECIAL_OVERVIEW = { 'real-estate': 'reit' };
 
 // Bequemer Helfer: gerankte Liste je Branche+Track (Score absteigend).
 function rankBy(results, formulaId, track) {

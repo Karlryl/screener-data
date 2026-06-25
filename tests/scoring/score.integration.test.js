@@ -102,6 +102,33 @@ test('BE/Bloom Energy -> industrials, PROFITABLE-Track, oberes 20% (Karl-Anker)'
   assertAnchorTop('BE', 'industrials', 0.20);
 });
 
+// --- VIELLEICHT-Branchen produzieren Rankings -------------------------------
+test('VIELLEICHT-Branchen (utilities/staples/materials/real-estate/it-services) gerankt', () => {
+  for (const fid of ['utilities', 'consumer-staples', 'materials', 'real-estate', 'it-services']) {
+    const n = rankBy(results, fid).length;
+    console.log(`       ${fid}: ${n} gerankt`);
+    assert.ok(n > 0, fid + ' leer');
+  }
+});
+
+// --- Pre-Revenue-Biotech: Survival-Track, KEIN Growth-Score -----------------
+test('Pre-Revenue-Biotech -> survival-track, score=null, Runway-Badge', () => {
+  const surv = results.filter((e) => e.action === 'survival');
+  console.log(`       survival-Eintraege: ${surv.length}`);
+  assert.ok(surv.length > 0, 'keine survival-Eintraege im Universum');
+  for (const e of surv) {
+    assert.equal(e.score, null, e.ticker + ' darf keinen Growth-Score haben');
+    assert.ok(e.overview && e.overview.kind === 'runway-badge', e.ticker + ' Runway-Badge fehlt');
+  }
+});
+
+// --- Real-Estate: Overview = FFO-Badge (Nicht-GP) ---------------------------
+test('Real-Estate Overview ist ffo-badge (track-eigene Badge)', () => {
+  const reits = results.filter((e) => e.formulaId === 'real-estate' && e.action === 'route');
+  if (!reits.length) { console.log('       (keine REITs — uebersprungen)'); return; }
+  assert.ok(reits.every((e) => e.overview && e.overview.kind === 'ffo-badge'), 'REIT Overview != ffo-badge');
+});
+
 // --- Sichtbarkeit: Top 6 je Branche/Track -----------------------------------
 for (const fid of ['semiconductors', 'software-comm-services', 'industrials', 'energy', 'health-care']) {
   for (const track of ['profitable', 'unprofitable']) {
