@@ -120,6 +120,58 @@ const EXCHANGE_CODES = [
   'SAU',  // Saudi Arabia (Tadawul)
 ];
 
+// audit/fix (BUG HIGH — US class-share dot→dash for Yahoo): US class-share
+// tickers are stored in DOT form (BRK.B, BF.A, HEI.A) but Yahoo Finance's API
+// requires DASH form (BRK-B, BF-A, HEI-A). pull-yahoo passes yahoo_symbol
+// verbatim to yf.quote()/quoteSummary, so a dot-form yahoo_symbol is a permanent
+// silent 404. We must convert ONLY genuine US class shares — and must NOT touch
+// foreign exchange suffixes that share the same single-letter shape (RIO.L London,
+// 7203.T Tokyo, TKE.F Frankfurt, ABBN.SW Swiss, SHOP.TO Toronto, NESN.SW, ...).
+//
+// Determining US-ness (conservative — if uncertain, do NOT convert):
+//   - The US-only discovery sources are sec-tickers(sec-edgar), nasdaq-all
+//     (nasdaq-trader) and nasdaq-api(nasdaq-api). Rows from auto-universe-refresh
+//     that carry a US exchange string are US too.
+//   - A US exchange string is NASDAQ / NYSE / NYSE American / NYSE Arca / AMEX /
+//     BATS / CBOE / the bare 'US' marker sec-edgar emits, plus the Yahoo
+//     exchange codes for those venues (NMS/NGM/NCM/NIM/ASE/PCX).
+// On the merged candidate objects the relevant fields are `exchange` and `source`;
+// on EXISTING watchlist rows they are `exchange_hint` and `added_via`. _looksUS
+// accepts whichever pair the caller has.
+const _US_SOURCES = new Set(['sec-edgar', 'nasdaq-trader', 'nasdaq-api', 'auto-universe-refresh']);
+// Includes both human-readable venue names AND Yahoo exchange CODES used by the
+// custom exchange-screener (EXCHANGE_CODES): NMS/NGM/NIM/NCM (NASDAQ tiers),
+// NYQ (NYSE), ASE (NYSE American), PCX (NYSE Arca). 'US' is the bare marker
+// sec-edgar emits. Anchored on word boundaries so 'LSE'/'OSL' never match 'US'.
+const _US_EXCHANGE_RE = /\b(NASDAQ|NYSE|NYSE ARCA|NYSE AMERICAN|AMEX|BATS|CBOE|NMS|NGM|NCM|NIM|NYQ|ASE|PCX|US)\b/i;
+function _looksUS(exchange, source) {
+  const ex = String(exchange || '').trim();
+  const src = String(source || '').trim().toLowerCase();
+  if (ex && _US_EXCHANGE_RE.test(ex)) return true;
+  if (src && _US_SOURCES.has(src)) return true;
+  return false;
+}
+// audit/fix: class-share suffix is restricted to A/B/C — the real Yahoo class-share
+// letters present in the live universe (BRK-A, BRK-B, BF-A, CIG-C). It deliberately
+// EXCLUDES '.V': on NASDAQ-Trader '.V' is a when-issued / rights artifact (FDX.V,
+// MKC.V, NVRI.V, TYG.V — all have a plain base symbol FDX/MKC/NVRI/TYG already in
+// the universe), so converting .V→-V would fabricate a symbol Yahoo also 404s on.
+const _CLASS_SHARE_RE = /^[A-Z]{1,5}\.[ABC]$/;
+// audit/fix: convert a US class-share ticker from dot to dash for Yahoo. Returns
+// the ticker UNCHANGED unless it is US-listed AND matches the class-share shape.
+function toYahooClassShare(ticker, isUS) {
+  if (!ticker || typeof ticker !== 'string') return ticker;
+  if (!isUS) return ticker;                       // foreign or unknown → never touch
+  if (!_CLASS_SHARE_RE.test(ticker)) return ticker;
+  return ticker.replace('.', '-');
+}
+// audit/fix: the dedup KEY for a merged candidate. Collapses a US class-share dot
+// form onto its dash twin (BRK.B & BRK-B → BRK-B) so they never enter as two rows;
+// foreign keys pass through unchanged. exchange/source pin US-ness conservatively.
+function dedupKey(ticker, exchange, source) {
+  return toYahooClassShare(ticker, _looksUS(exchange, source));
+}
+
 async function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function fetchScreener(id, region) {
@@ -206,8 +258,15 @@ async function main() {
   // would throw TypeError on .toUpperCase() and abort the entire universe
   // refresh (one bad row -> frozen universe). Drop ticker-less rows from the
   // existing-set instead of crashing.
+  // audit/fix (BUG HIGH — dedup key must be class-share-normalized): key the
+  // existing-set on the dash-normalized form so an incoming dash candidate
+  // (BRK-B from sec-edgar) is recognized as already-present against a stored
+  // dot row (BRK.B) — and vice-versa — instead of entering as a second row.
+  // Only US class-share dots are folded; foreign keys pass through unchanged.
   const existing = new Set(
-    wlRaw.stocks.map(s => s.ticker).filter(Boolean).map(t => t.toUpperCase())
+    wlRaw.stocks
+      .filter(s => s && s.ticker)
+      .map(s => dedupKey(String(s.ticker).toUpperCase(), s.exchange_hint, s.added_via))
   );
   console.log('  current size: ' + existing.size);
 
@@ -235,9 +294,13 @@ async function main() {
         if (sym.length > 12) continue;        // longer than any real ticker — likely a name
         const mcap = q.marketCap;
         if (!mcap || mcap < 1e9 || mcap > 500e9) continue;  // Tag 101: $1B+ Mid/Large-Cap universe
-        if (!allTickers.has(sym) || (allTickers.get(sym).marketCap || 0) < mcap) {
-          allTickers.set(sym, {
-            ticker: sym,
+        // audit/fix: key the candidate map on the class-share-normalized symbol so a
+        // US class-share dot collapses onto its dash twin; foreign keys unchanged.
+        const exForKey = q.fullExchangeName || q.exchange || '';
+        const key = dedupKey(sym, exForKey, '');
+        if (!allTickers.has(key) || (allTickers.get(key).marketCap || 0) < mcap) {
+          allTickers.set(key, {
+            ticker: key,
             marketCap: mcap,
             name: q.longName || q.shortName || '',
             sector: q.sector || '',
@@ -289,9 +352,14 @@ async function main() {
         if (sym.length > 12) continue;
         const mcap = q.marketCap;
         if (!mcap || mcap < MIN_MCAP_CUSTOM || mcap > MAX_MCAP_CUSTOM) continue;
-        if (!allTickers.has(sym) || (allTickers.get(sym).marketCap || 0) < mcap) {
-          allTickers.set(sym, {
-            ticker: sym, marketCap: mcap,
+        // audit/fix: class-share-normalize the map key. `exch` is the Yahoo
+        // exchange CODE (NMS/NYQ/ASE = US; LSE/FRA/etc = foreign), so US class
+        // shares pulled here fold onto their dash twin; foreign codes pass through.
+        const exForKey = q.fullExchangeName || q.exchange || exch;
+        const key = dedupKey(sym, exForKey, '');
+        if (!allTickers.has(key) || (allTickers.get(key).marketCap || 0) < mcap) {
+          allTickers.set(key, {
+            ticker: key, marketCap: mcap,
             name: q.longName || q.shortName || '',
             sector: q.sector || '',
             exchange: q.fullExchangeName || q.exchange || exch
@@ -376,9 +444,14 @@ async function main() {
     totalDiscoveryCandidates += srcMap.size;
     if (srcMap.size > 0) nonEmptySources++;
     for (const [sym, info] of srcMap) {
-      if (!allTickers.has(sym)) {
-        allTickers.set(sym, {
-          ticker: sym,
+      // audit/fix: class-share-normalize the merge key so a discovery dash form
+      // (sec-edgar BRK-B) folds onto an already-seen dot form (and vice-versa),
+      // and so this source's US class shares collapse onto their dash twin.
+      // info.exchange/info.source pin US-ness; foreign keys pass through.
+      const key = dedupKey(sym, info.exchange, info.source);
+      if (!allTickers.has(key)) {
+        allTickers.set(key, {
+          ticker: key,
           // Tag 165: carry marketCap hint from NASDAQ API when available
           // audit F-A-2026-06-21: coerce non-finite/NaN/Infinity/<=0 marketCap
           // hints to null on ingest. A bad source value of Infinity would sort
@@ -395,7 +468,7 @@ async function main() {
         // F-DP-015: ticker already seen — concatenate source field so attribution is not lost.
         // F-217a-04: dedupe via Set so re-runs / multi-source overlaps don't accumulate
         // duplicate entries like "sec-edgar,sec-edgar,nasdaq-api".
-        const existing = allTickers.get(sym);
+        const existing = allTickers.get(key);
         const newSource = info.source || 'unknown';
         if (newSource) {
           const sources = new Set(
@@ -406,6 +479,17 @@ async function main() {
           sources.add(newSource);
           existing.source = Array.from(sources).join(',');
         }
+        // audit/fix (BUG 3 MEDIUM — first-source-wins lost sector/mcap): the
+        // first-seen source won the row and the else-branch only unioned `source`.
+        // So nasdaq-all (no sector, no mcap) beat nasdaq-api (has both) whenever it
+        // merged first, silently dropping usable metadata. Backfill ONLY fields that
+        // are still empty on the kept row — never overwrite a non-empty value.
+        if ((existing.marketCap == null) && Number.isFinite(info.marketCap) && info.marketCap > 0) {
+          existing.marketCap = info.marketCap;
+        }
+        if (!existing.sector && info.sector) existing.sector = info.sector;
+        if (!existing.name && info.name) existing.name = info.name;
+        if (!existing.exchange && info.exchange) existing.exchange = info.exchange;
       }
     }
   }
@@ -523,9 +607,15 @@ async function main() {
     // so a ticker-less row can never reach the null-unsafe sort below and
     // freeze the whole universe refresh.
     if (!info.ticker) continue;
+    // audit/fix (BUG HIGH — yahoo_symbol must be Yahoo's dash form): derive
+    // yahoo_symbol via toYahooClassShare so a US class share gets the DASH form
+    // Yahoo's API requires (BRK.B→BRK-B). info.ticker is already key-normalized to
+    // dash above, but we re-apply against this row's own exchange/source to be
+    // explicit and self-contained; foreign tickers pass through unchanged.
+    const isUS = _looksUS(info.exchange, info.source);
     wlRaw.stocks.push({
       ticker: info.ticker,
-      yahoo_symbol: info.ticker,
+      yahoo_symbol: toYahooClassShare(info.ticker, isUS),
       name: info.name || '',
       sector_hint: info.sector || '',
       exchange_hint: info.exchange || '',
@@ -533,6 +623,66 @@ async function main() {
       added_at: new Date().toISOString()
     });
   }
+  // audit/fix (BUG HIGH — repair EXISTING dead rows + collapse dot/dash twins):
+  // The live watchlist holds ~24 US class-share rows stored in DOT form (BRK.B,
+  // BF.A, HEI.A, …) whose yahoo_symbol is ALSO the dot form → pull-yahoo 404s them
+  // every day. Repair them in place, and where a dash twin already exists as a
+  // separate row, collapse the pair into one (keep the dash/Yahoo-valid ticker,
+  // backfill complementary metadata, drop the redundant dot row).
+  //
+  // SAFETY (no legitimate row may be dropped):
+  //   - A row is only ever REMOVED if it is a genuine US class-share DOT row
+  //     (_looksUS AND /^[A-Z]{1,5}\.[ABC]$/) whose dash twin is ALSO present.
+  //     Foreign rows (.L/.T/.SW/…), single-listing US dots without a twin, and
+  //     every dash row are untouched as rows.
+  //   - The dot→dash repair of yahoo_symbol on a twin-less US class share keeps
+  //     the row; only its yahoo_symbol changes (dot→dash) so it becomes pullable.
+  {
+    let repaired = 0, collapsed = 0;
+    const dashIndex = new Map();   // dash ticker -> row (built over current stocks)
+    for (const s of wlRaw.stocks) {
+      if (s && s.ticker) dashIndex.set(String(s.ticker).toUpperCase(), s);
+    }
+    const dropSet = new Set();     // rows (object identity) to remove after collapse
+    for (const s of wlRaw.stocks) {
+      if (!s || !s.ticker) continue;
+      const t = String(s.ticker).toUpperCase();
+      const isUS = _looksUS(s.exchange_hint, s.added_via);
+      const dash = toYahooClassShare(t, isUS);
+      if (dash === t) {
+        // not a US class-share dot (foreign / plain / dash already): still make
+        // sure yahoo_symbol is at least populated, but never alter the ticker.
+        if (!s.yahoo_symbol) s.yahoo_symbol = t;
+        continue;
+      }
+      // genuine US class-share dot row.
+      const twin = dashIndex.get(dash);
+      if (twin && twin !== s) {
+        // collapse: keep the dash twin, backfill any metadata it lacks from the
+        // dot row, then drop the dot row. Twin's ticker is already Yahoo-valid.
+        if (!twin.name && s.name) twin.name = s.name;
+        if (!twin.sector_hint && s.sector_hint) twin.sector_hint = s.sector_hint;
+        if (!twin.exchange_hint && s.exchange_hint) twin.exchange_hint = s.exchange_hint;
+        if (!twin.isin && s.isin) twin.isin = s.isin;
+        if (!twin.added_via && s.added_via) twin.added_via = s.added_via;
+        twin.yahoo_symbol = dash;   // ensure the survivor is pullable
+        dropSet.add(s);
+        collapsed++;
+      } else {
+        // no twin yet → repair this row in place so it becomes pullable, and
+        // promote the ticker itself to the Yahoo-valid dash form.
+        s.ticker = dash;
+        s.yahoo_symbol = dash;
+        dashIndex.set(dash, s);
+        repaired++;
+      }
+    }
+    if (dropSet.size > 0) {
+      wlRaw.stocks = wlRaw.stocks.filter(s => !dropSet.has(s));
+    }
+    console.log(`  Class-share repair: ${repaired} dot rows promoted to dash, ${collapsed} dot/dash twins collapsed.`);
+  }
+
   // audit F-A-2026-06-21: null-safe sort key — a single null/undefined ticker
   // (from a pre-existing bad watchlist row) would throw on .localeCompare and
   // abort the refresh after the merge work was already done.
@@ -557,5 +707,10 @@ async function main() {
     console.log(`  ${t.ticker.padEnd(8)} ${(t.sector || '').slice(0,20).padEnd(20)} $${(t.marketCap/1e9).toFixed(1)}B  ${(t.name || '').slice(0,40)}`);
   }
 }
+
+// audit/fix: export the class-share normalizer helpers so they can be unit-tested
+// in isolation against the live watchlist (the require() below executes only the
+// definitions, never main(), because main() is gated on require.main === module).
+module.exports = { toYahooClassShare, _looksUS, dedupKey };
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });

@@ -99,6 +99,11 @@ function cleanCell(cell) {
        .replace(/&nbsp;/gi, ' ');
   // An exchange prefix may survive as plain text, e.g. "NYSE: AAPL" or "NASDAQ: MSFT".
   s = s.replace(/^\s*(?:NYSE|NASDAQ|NYSEARCA|LSE|FWB|XETRA|ETR)\s*:\s*/i, '');
+  // audit/fix: strip trailing footnote markers like "[a]" / "[1]" that survive
+  // ref-stripping in plain-text headers ("Symbol[a]", "Ticker symbol[1]"). Without
+  // this, the cleaned header never equals a TICKER_HEADER_PATTERNS entry, no ticker
+  // column is found, and that whole index silently contributes ZERO tickers.
+  s = s.replace(/\[[^\]]*\]\s*$/, '');
   return s.trim();
 }
 
