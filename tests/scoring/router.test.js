@@ -64,6 +64,19 @@ test('US-Name mit Boersennamen in region (SOFI/ICE-Muster) -> bleibt drin', () =
     annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
   assert.equal(route(s).action, 'route');
 });
+test('Auslands-Listing mit region=US-Fehler, aber country/Boerse foreign -> exclude', () => {
+  const hk = { meta: { sector: 'Healthcare', industry: 'Biotechnology', region: 'US', country: 'China', exchangeName: 'HKSE', ticker: '6699.HK' },
+    annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
+  assert.equal(route(hk).reason, 'non-us'); // country schlaegt falsches region=US
+  const au = { meta: { sector: 'Healthcare', industry: 'Drug Manufacturers', region: 'US', country: 'Australia', exchangeName: 'OTC Markets OTCPK', ticker: 'MEOBF' },
+    annual: { annualRev: [{ value: 100 }] } };
+  assert.equal(route(au).reason, 'non-us');
+});
+test('US-Domizil (country United States) bleibt drin', () => {
+  const s = { meta: { sector: 'Healthcare', industry: 'Biotechnology', region: 'NasdaqGM', country: 'United States', ticker: 'SEPN' },
+    annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
+  assert.equal(route(s).action, 'route');
+});
 
 // --- Schritt 0: Pre-Revenue -------------------------------------------------
 test('kein/leerer Umsatz -> survival-track', () => {

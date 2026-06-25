@@ -11,7 +11,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { scoreUniverse, rankBy } = require('../../src/scoring/score.js');
-const semiconductors = require('../../src/scoring/formulas/semiconductors.js');
+const formulas = require('../../src/scoring/formulas/index.js');
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -30,7 +30,7 @@ for (const f of files) {
 }
 console.log(`  (Universum: ${universe.length} Snapshots geladen)`);
 
-const results = scoreUniverse(universe, { semiconductors });
+const results = scoreUniverse(universe, formulas);
 const byTicker = Object.fromEntries(results.map((r) => [r.ticker, r]));
 const rankIn = (cohort, ticker) => cohort.findIndex((e) => e.ticker === ticker);
 
@@ -81,13 +81,37 @@ test('Decliner NVTS/AEHR (falls vorhanden) in unterer Haelfte ihres Tracks', () 
   }
 });
 
-// --- Sichtbarkeit: Top 8 je Track -------------------------------------------
-for (const track of ['profitable', 'unprofitable']) {
-  const cohort = rankBy(results, 'semiconductors', track);
-  console.log(`\n  Top 8 semiconductors/${track} (von ${cohort.length}):`);
-  cohort.slice(0, 8).forEach((e, i) => {
-    console.log(`    ${String(i + 1).padStart(2)}. ${e.ticker.padEnd(6)} ${e.score.toFixed(1).padStart(6)}  lamps=[${e.lamps.join(',')}]`);
-  });
+// --- weitere Anker in anderen Branchen --------------------------------------
+function assertAnchorTop(ticker, formulaId, maxPct) {
+  const a = byTicker[ticker];
+  if (!a || a.action !== 'route' || a.score === null) { console.log(`       (${ticker} nicht scorebar — uebersprungen)`); return; }
+  assert.equal(a.formulaId, formulaId, `${ticker} formulaId=${a.formulaId}`);
+  const cohort = rankBy(results, formulaId, a.track);
+  const rank = rankIn(cohort, ticker);
+  console.log(`       ${ticker} Rang ${rank + 1}/${cohort.length} (${formulaId}/${a.track}), Score ${a.score.toFixed(1)}`);
+  assert.ok((rank / cohort.length) <= maxPct, `${ticker} Rang ${rank + 1}/${cohort.length} > ${maxPct * 100}%`);
+}
+test('PLTR -> software-comm-services, oberes 20% seines Tracks', () => {
+  assertAnchorTop('PLTR', 'software-comm-services', 0.20);
+});
+test('BE/Bloom Energy -> industrials, PROFITABLE-Track, oberes 20% (Karl-Anker)', () => {
+  const b = byTicker['BE'];
+  assert.ok(b && b.action === 'route', 'BE fehlt/ungeroutet');
+  assert.equal(b.formulaId, 'industrials');
+  assert.equal(b.track, 'profitable'); // Turnaround: juengstes annualOpInc +72.8M
+  assertAnchorTop('BE', 'industrials', 0.20);
+});
+
+// --- Sichtbarkeit: Top 6 je Branche/Track -----------------------------------
+for (const fid of ['semiconductors', 'software-comm-services', 'industrials', 'energy', 'health-care']) {
+  for (const track of ['profitable', 'unprofitable']) {
+    const cohort = rankBy(results, fid, track);
+    if (!cohort.length) continue;
+    console.log(`\n  Top 6 ${fid}/${track} (von ${cohort.length}):`);
+    cohort.slice(0, 6).forEach((e, i) => {
+      console.log(`    ${String(i + 1).padStart(2)}. ${e.ticker.padEnd(7)} ${e.score.toFixed(1).padStart(6)}  [${e.lamps.join(',')}]`);
+    });
+  }
 }
 
 console.log(`\nscore.integration.test.js: ${pass} ok, ${fail} fail`);

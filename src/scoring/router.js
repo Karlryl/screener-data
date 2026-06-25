@@ -21,16 +21,21 @@ const { norm, hasPresent, firstPresent, presentValues, metricVal } = require('./
 
 const lc = (x) => (typeof x === 'string' ? x.toLowerCase() : '');
 
-// US-Erkennung (Plan: US-Universe). meta.region ist das massgebliche Feld:
-// US-Firmen tragen 'US' ODER (inkonsistent) einen US-Boersennamen (SOFI/ICE/MU
-// region='NasdaqGS'/'NYSE'). Auslaendische ADRs tragen den LAENDERCODE (TSM
-// region='TW', KXIAY='JP') — obwohl ihre exchangeName US ist (NYSE/OTC). Daher
-// NUR region pruefen, NICHT exchangeName (sonst schluepfen ADRs durch).
+// US-Erkennung (Plan: US-Universe). meta.region ist in BEIDE Richtungen
+// unzuverlaessig: auslaendische ADRs tragen den Laendercode (TSM region='TW'),
+// auslaendisch GELISTETE Namen tragen teils faelschlich region='US' bei
+// exchangeName='HKSE'/country='China' (6699.HK). Daher mehrschichtig, country
+// zuerst (Domizil schlaegt Listing):
 const US_SIGNAL = /nasdaq|nyse|amex|arca|bats|cboe|\botc\b|pink|\bnms\b|\bncm\b|\bngm\b|\bus\b|\busa\b|united states/i;
+const FOREIGN_EX = /hkse|hong kong|tokyo|\bjpx\b|\bkrx\b|korea|taiwan|\btwse\b|\bsehk\b|shanghai|shenzhen|london|\blse\b|frankfurt|xetra|euronext|toronto|\btsx\b|\basx\b|\bsix\b|bolsa|borsa|stockholm|oslo|helsinki|copenhagen|johannesburg|\bjse\b|\bb3\b/i;
+const FOREIGN_SUFFIX = /\.(HK|KS|KQ|TW|TWO|SS|SZ|SR|T|L|TO|V|NE|F|DE|BE|VI|PA|AS|BR|LS|MC|MI|ST|HE|CO|OL|SW|AX|NZ|SI|JK|KL|BK|BO|NS|QA|TA|AT|WA|SA|SN|MX|JO)$/i;
 function isUS(s) {
   const m = (s && s.meta) || {};
+  if (m.country) return /united states|usa/i.test(m.country); // Domizil hat Vorrang
+  if (m.exchangeName && FOREIGN_EX.test(m.exchangeName)) return false; // klare Auslands-Boerse
+  if (m.ticker && FOREIGN_SUFFIX.test(m.ticker)) return false;        // Auslands-Listing-Suffix
   if (m.region) return US_SIGNAL.test(m.region);
-  if (m.exchangeName) return US_SIGNAL.test(m.exchangeName); // nur Fallback wenn region fehlt
+  if (m.exchangeName) return US_SIGNAL.test(m.exchangeName);
   return true; // gar kein Signal -> konservativ behalten
 }
 
