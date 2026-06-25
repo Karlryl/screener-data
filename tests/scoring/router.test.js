@@ -104,6 +104,12 @@ test('leeres/all-null annualGP -> KEIN Exclude (hasPresent-Schutz)', () => {
   assert.equal(route(s).action, 'route'); // greift NICHT faelschlich (Gate 2e-Analog)
 });
 
+// --- sektorlose/nicht-operative Entitaeten -> exclude no-sector -------------
+test('kein meta.sector (Bullion-Trust/Warrant/Fonds) -> exclude no-sector', () => {
+  const s = { meta: { region: 'US', ticker: 'PHYS' }, annual: { annualRev: [{ value: 50 }], annualGP: [{ value: 30 }] } };
+  assert.equal(route(s).reason, 'no-sector');
+});
+
 // --- gpClass Master-Diskriminator + Tie-Break -------------------------------
 test('gpClass: degenerierter GP (r>=0.99) -> degenerate', () => {
   const s = { annual: { annualGP: [{ value: 100 }], annualRev: [{ value: 100 }] } };

@@ -109,5 +109,20 @@ test('peakMargin: stabile Marge -> false', () => {
   assert.equal(L.peakMargin(s), false);
 });
 
+// --- cyclePeak: Zyklus-Peak (kippend) vs. struktureller Durchbruch (steigend) -
+test('cyclePeak: Marge weit ueber Schnitt UND kippend -> true', () => {
+  const s = { annual: { annualOpInc: [{ value: 35 }, { value: 40 }, { value: 12 }, { value: 10 }],
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }, { value: 100 }] } };
+  assert.equal(L.cyclePeak(s), true); // cur 0.35 > 1.3*mean(0.40,0.12,0.10), nicht steigend (0.35<0.40)
+});
+test('cyclePeak: Marge hoch ABER steigend (Durchbruch) -> false', () => {
+  const s = { annual: { annualOpInc: [{ value: 45 }, { value: 30 }, { value: 15 }, { value: 10 }],
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }, { value: 100 }] } };
+  assert.equal(L.cyclePeak(s), false); // cur 0.45 > hist, aber steigend (0.45>0.30) -> kein Peak
+});
+test('cyclePeak: < 3 Marge-Jahre -> null', () => {
+  assert.equal(L.cyclePeak({ annual: { annualOpInc: [{ value: 5 }, { value: 4 }], annualRev: [{ value: 100 }, { value: 100 }] } }), null);
+});
+
 console.log(`\nlamps.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

@@ -9,7 +9,7 @@
  * true (an) / false (aus) / null (nicht bewertbar).
  */
 
-const { norm, hasPresent, firstPresent, firstTwoPresent, metricVal } = require('./snapshot.js');
+const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVal } = require('./snapshot.js');
 
 // Schwellen (bewusst konservativ; Feinkalibrierung in der Formel-/Fixture-Phase)
 const TH = {
@@ -116,9 +116,26 @@ function fcfArtefact(s) {
   return f0 < 0; // TTM positiv, aber juengstes Jahr negativ = Artefakt
 }
 
+// 10. Zyklus-Peak (Court-Spec): schaerfere, Recovery-bewusste Peak-Warnung —
+// flaggt NUR, wenn die aktuelle OpMarge weit ueber dem Eigen-Schnitt liegt UND
+// nicht mehr steigt (echter Zyklus-Peak, kein struktureller Durchbruch). Damit
+// werden Commodity-Peak-Price-Taker (Gold-Miner am Rekordpreis) markiert, ein
+// echter Margen-Expandierer (cur>hist aber steigend) NICHT.
+function cyclePeak(s) {
+  const opS = norm(s, 'annualOpInc');
+  const revS = norm(s, 'annualRev');
+  const margins = opS.map((v, i) => (v !== null && revS[i] !== null && revS[i] !== 0) ? v / revS[i] : null);
+  const m = presentValues(margins);
+  if (m.length < 3) return null;
+  const histRest = meanPresent(m.slice(1));
+  if (histRest === null || histRest <= 0) return null;
+  const rising = m[0] > m[1];
+  return (m[0] > TH.PEAK_MARGIN_MULT * histRest) && !rising;
+}
+
 const LAMPS = {
   unprofit, burning, shortRunway, highDilution, peakMargin,
-  lowRoic, arDivergence, crashRisk, fcfArtefact,
+  lowRoic, arDivergence, crashRisk, fcfArtefact, cyclePeak,
 };
 
 /**

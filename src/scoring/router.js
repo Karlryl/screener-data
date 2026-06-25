@@ -128,6 +128,9 @@ function route(s) {
   }
   // Schritt 3
   const formulaId = sectorRoute(s);
+  // Sektorlose/nicht-operative Entitaeten (Bullion-Trusts, Warrants, Fonds, stale
+  // Ticker ohne meta.sector) sauber excludieren statt als 'unrouted' zu fuehren.
+  if (formulaId === 'unrouted') return { action: 'exclude', reason: 'no-sector' };
   const out = { action: 'route', formulaId };
   if (formulaId === 'financials') out.gpClass = gpClass(s);
   return out;

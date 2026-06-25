@@ -21,7 +21,7 @@
  *  8 dilution              -(SBC/Rev) Niveau + Trend (niedriger/fallend = besser)
  */
 
-const { norm, hasPresent, firstPresent, firstTwoPresent, metricVal } = require('./snapshot.js');
+const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVal } = require('./snapshot.js');
 const { fcfMarginValid } = require('./engine.js');
 
 // --- kleine Helfer auf normalisierten Serien (luecken-sicher) ---------------
@@ -130,7 +130,23 @@ function capitalEfficiency(s) {
     const revGrowth = rTwo[0] / rTwo[1] - 1;
     penalty = Math.max(0, assetGrowth - revGrowth);
   }
-  return roic - penalty;
+  // Zyklus-Peak-Discount (Court-Spec): roher 4J-ROIC belohnt am Commodity-Peak
+  // den Peak (Gold-Miner bei Rekordpreis). Liegt die juengste OpMarge weit ueber
+  // dem Eigen-Schnitt -> Discount holt den ROIC auf zyklus-bereinigtes Niveau
+  // zurueck. Trough-Recovery/stabil (cur <= histRest) -> Discount 1 (neutral);
+  // Software mit stabil hoher Marge unberuehrt. 1/(1+overshoot) bleibt in (0,1].
+  const margins = presentValues(ratioSeries(norm(s, 'annualOpInc'), norm(s, 'annualRev')));
+  let cycleDiscount = 1;
+  if (margins.length >= 3) {
+    const cur = margins[0];
+    const histRest = mean(margins.slice(1));
+    const rising = margins[0] > margins[1]; // steigende Marge = struktureller Durchbruch, KEIN Zyklus-Peak
+    if (histRest > 0 && cur > histRest && !rising) {
+      const overshoot = cur / histRest - 1;
+      cycleDiscount = 1 / (1 + Math.max(0, overshoot));
+    }
+  }
+  return roic * cycleDiscount - penalty;
 }
 
 // --- 7. Analysten-Revisions-Momentum ----------------------------------------

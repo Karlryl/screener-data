@@ -106,5 +106,25 @@ test('revAcceleration: 0/negatives Quartal erzeugt keine Riesen-Rate', () => {
   assert.ok(Number.isFinite(v) && Math.abs(v) < 1); // nur positive Quartalspaare zaehlen
 });
 
+// --- capitalEfficiency Zyklus-Peak-Discount (Court-Spec) --------------------
+test('capitalEfficiency: Peak-Marge wird diskontiert (< stabile Marge)', () => {
+  const flatBal = [{ totalAssets: 100, currentLiabilities: 0 }, { totalAssets: 100, currentLiabilities: 0 },
+    { totalAssets: 100, currentLiabilities: 0 }, { totalAssets: 100, currentLiabilities: 0 }];
+  const stable = { annual: { annualOpInc: [{ value: 20 }, { value: 20 }, { value: 20 }, { value: 20 }],
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }, { value: 100 }], annualBalance: flatBal } };
+  // gekippter Zyklus-Peak (cur 0.35 < Vorjahr 0.40 = nicht steigend) -> Discount greift.
+  const peak = { annual: { annualOpInc: [{ value: 35 }, { value: 40 }, { value: 12 }, { value: 10 }],
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }, { value: 100 }], annualBalance: flatBal } };
+  // Peak-ROIC ist roh aehnlich, aber der Discount holt ihn unter die stabile Marge.
+  assert.ok(ax.capitalEfficiency(peak) < ax.capitalEfficiency(stable),
+    `peak ${ax.capitalEfficiency(peak)} sollte < stable ${ax.capitalEfficiency(stable)}`);
+});
+test('capitalEfficiency: stabile Marge -> kein Discount (cur ~ hist)', () => {
+  const s = { annual: { annualOpInc: [{ value: 20 }, { value: 20 }, { value: 20 }],
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }],
+    annualBalance: [{ totalAssets: 100, currentLiabilities: 0 }, { totalAssets: 100, currentLiabilities: 0 }, { totalAssets: 100, currentLiabilities: 0 }] } };
+  assert.ok(Math.abs(ax.capitalEfficiency(s) - 0.2) < 1e-9); // roic 0.2, Discount 1
+});
+
 console.log(`\naxes.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);
