@@ -351,100 +351,6 @@ jobs:
             exit 1
           fi
 
-      - name: Detect Changes + Discord-Alert
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: node detect-changes.js --snapshots snapshots --state alert-state.json
-        continue-on-error: true
-
-      # Tag-49: Compute sector-medians-auto from current snapshots
-      - name: Compute Sector-Medians (auto)
-        run: node methods/sector-medians-compute.js ./snapshots
-        timeout-minutes: 10
-        continue-on-error: true
-
-      # Tag-28: Methods-Report (Werte-Matrix pro Stock × Methode)
-      # Tag 102b: Methods-Report deaktiviert — Modes-Report ist primärer Output
-      
-      # Tag 100: Modes-Report (3 Discovery-Modi: Hypergrowth/Quality/Turnaround)
-      # Tag 134: hard-fail. modes-report is the primary user-facing artifact;
-      # silently publishing yesterday's HTML masks real breakage.
-      # Tag 168: continue-on-error — per-stock failures are soft-fail; Pipeline Health Check
-      # below enforces the 5% threshold and hard-fails if breached.
-      - name: Generate Modes-Report
-        run: node generate-modes-report.js --snapshots snapshots --out modes-report.html
-        continue-on-error: true
-
-      # Tag 198: Bloomberg 6-tab Screener dashboard (HG/QC/SMALL/R40/PRE-BREAKOUT/WATCH).
-      # New artifact alongside dashboard.html / modes-report.html / methods-report.html.
-      # Tag 199: AUDIT_SCORE_MULTIPLIERS=1 enables q-spike-penalty + listing-age
-      # multiplier in score-aggregator. Scoped to this step only — other artifacts
-      # (snapshot-picks, modes-report) keep the un-multiplied scores so the
-      # fixture-hash test in tag28-tests.js (run without env) stays stable.
-      # continue-on-error: it's a secondary artifact; pipeline shouldn't hard-fail on it.
-      - name: Generate Screener Dashboard
-        env:
-          AUDIT_SCORE_MULTIPLIERS: '1'
-        run: node generate-screener.js --snapshots snapshots --out screener.html
-        continue-on-error: true
-
-      # Tag 203: Per-Ticker Score-History (sliding 30-entry window) — feeds the
-      # screener detail modal's ΔScore badges + sparkline (Section D). Must
-      # share AUDIT_SCORE_MULTIPLIERS with the dashboard step above so stored
-      # scores match what the dashboard renders (design §4: drift here produces
-      # a permanent fake "score uplift today" artifact). continue-on-error:
-      # secondary artifact; pipeline-health-check enforces the 5% threshold.
-      - name: Snapshot Score-History
-        env:
-          AUDIT_SCORE_MULTIPLIERS: '1'
-        run: node scripts/snapshot-score-history.js --snapshots snapshots --out score-history
-        continue-on-error: true
-
-      - name: Snapshot R40/RX History (quarterly)
-        env:
-          AUDIT_SCORE_MULTIPLIERS: '1'
-        run: node scripts/snapshot-r40rx-history.js --snapshots snapshots --out r40rx-history
-        continue-on-error: true
-
-      # Tag 102g: Walk-Forward Picks-History — friert Mode-Picks pro Run für späteren Performance-Vergleich.
-      # Tag 168: continue-on-error — per-stock failures are soft-fail; Pipeline Health Check
-      # below enforces the 5% threshold AND F-CI-002 missing-report=100%-fail rule, so a
-      # hard crash here is still caught downstream. (Tag 134's original hard-fail semantics
-      # are preserved indirectly — see audit F-218c-08.)
-      # Tag 219a (audit F-218c-04): INTENTIONALLY does NOT set AUDIT_SCORE_MULTIPLIERS.
-      # picks-history must record un-multiplied scores so the tag28-tests fixture hash
-      # stays stable across multiplier tuning (see Tag 199 / Tag 203 design notes). The
-      # screener.html / score-history steps above DO set the env var because their job
-      # is to surface the user-visible multiplied scores. Drift here would produce a
-      # permanent fake "score uplift today" artifact — do not add the env var.
-      - name: Snapshot Picks-History
-        run: node snapshot-picks.js --snapshots snapshots --out picks-history
-        continue-on-error: true
-
-      # Tag 133d: Picks-Regression Guard — Alarm wenn Pick-Count >35% von 4-Week-Median driftet.
-      # ALLOW_PICKS_DRIFT=1 für legitimate Universe-Expansion-Runs setzen.
-      - name: Picks-Regression Check
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          ALLOW_PICKS_DRIFT: ${{ vars.ALLOW_PICKS_DRIFT || '0' }}
-        run: |
-          # F-CI-007: consistent DISCORD_WEBHOOK existence check before invoking script
-          if [ -z "$DISCORD_WEBHOOK" ]; then echo "DISCORD_WEBHOOK not configured — Discord alerts disabled."; fi
-          node scripts/picks-regression-check.js
-        continue-on-error: true
-
-      # Tag-35: Methods-History-Snapshot (für Backtest später)
-      # Tag 168: continue-on-error — per-stock failures are soft-fail; Pipeline Health Check
-      # enforces the 5% threshold and the F-CI-002 missing-report rule. Tag 134's
-      # hard-fail semantics are preserved indirectly.
-      # Tag 219a (audit F-218c-04): INTENTIONALLY does NOT set AUDIT_SCORE_MULTIPLIERS.
-      # Same rationale as Snapshot Picks-History above — fixture-hash stability and
-      # un-multiplied scores are required for methods-history to be a meaningful
-      # backtest input.
-      - name: Snapshot Methods-History
-        run: node snapshot-methods-history.js --out methods-history
-        continue-on-error: true
-
       # Tag-63: Earnings-Calendar Pull
       # F-CI-005: Pipeline Health Check moved to AFTER commit so snapshots are always
       # committed even if health check fails (prevents vintage continuity gaps).
@@ -474,37 +380,6 @@ jobs:
         run: node scripts/macro-regime.js
         continue-on-error: true
 
-      # Tag 133e: Walk-Forward-Performance — picks-history × prices/history.json.
-      # Berechnet 1w/4w/12w α der Modi vs Universe-Median. Survivor-biased Caveat dokumentiert.
-      - name: Walk-Forward Performance
-        run: node scripts/walk-forward-perf.js
-        timeout-minutes: 15
-        continue-on-error: true
-
-      # Tag 133f: Method-Effectiveness Audit — welche Methoden korrelieren mit Forward-Return?
-      - name: Method-Effectiveness Audit
-        run: node scripts/method-effectiveness.js
-        timeout-minutes: 10
-        continue-on-error: true
-
-      # Tag 134 — Phase 3.6: Methodology Report combines walk-forward + method-effectiveness
-      # into a decision-ready summary. Read this in GitHub after the run completes.
-      - name: Methodology Report
-        run: node scripts/methodology-report.js
-        continue-on-error: true
-
-      # Tag 134 — Phase 4.2/4.4: pick-diff + Jaccard stability.
-      # Writes outputs/pick-diff.{json,html} answering "what's new, what's gone, why".
-      - name: Pick Diff + Jaccard
-        run: node scripts/pick-diff.js
-        continue-on-error: true
-
-      # Tag 134 — Phase 4.3: Elliott-Wave Export CSV per mode.
-      # Karl's downstream input — directly importable into Excel/Elliott tool.
-      - name: Elliott CSV Export
-        run: node scripts/elliott-export.js
-        continue-on-error: true
-
       # Tag 133g: Pull-Stats Monitoring — Discord-Alert wenn ein Pull-Output >25% vs 4-Week-Median shrinkt.
       - name: Pull-Stats Check
         env:
@@ -514,21 +389,6 @@ jobs:
           # F-CI-007: consistent DISCORD_WEBHOOK existence check before invoking script
           if [ -z "$DISCORD_WEBHOOK" ]; then echo "DISCORD_WEBHOOK not configured — Discord alerts disabled."; fi
           node scripts/check-pull-stats.js
-        continue-on-error: true
-
-      # Tag 133j: Method-Drift Time-Series — Sparkline-Daten für Dashboard.
-      - name: Compute Method-Drift
-        run: node scripts/compute-method-drift.js
-        continue-on-error: true
-
-      # Tag-50: Watchlist-Diff-Report (zeigt Änderungen vs vorigem Run)
-      - name: Generate Diff-Report
-        run: node generate-diff-report.js --out diff-report.html
-        continue-on-error: true
-
-      # Tag-77: Dashboard mit Discover-Button
-      - name: Generate Dashboard
-        run: node generate-dashboard.js dashboard.html
         continue-on-error: true
 
       # Tag 134 — Phase 5.1: archive methods-history / picks-history / prices snapshots
@@ -545,29 +405,6 @@ jobs:
       - name: Archive Old Snapshots
         run: node scripts/archive-old-snapshots.js --keep-days 14 --methods-keep-days 90 --picks-keep-days 90
         continue-on-error: true
-
-      # F-SM-003 / F-CI-008: Strip methodHistory from alert-state.json using a script
-      # instead of shell-interpolated inline node -e (avoids $size injection and non-atomic write).
-      # saveState() in detect-changes.js now always writes methodHistory to the committed sidecar
-      # (method-history-state.json) and never embeds it in alert-state.json. This step is a
-      # safety net that cleans up any leftover inline methodHistory from old runs.
-      #
-      # Tag 232a-2 (audit F-CI-001 HIGH): continue-on-error so a JSON.parse failure here
-      # never aborts the workflow before the "Commit Snapshots" step runs. Without this,
-      # one corrupt alert-state.json discards ~4h of fresh pulls AND becomes sticky (next
-      # day's run hits the same parse fail). The .corrupt.<ts>.json backup written below
-      # plus the failed-step Discord alert give the operator the visibility Karl wanted
-      # without sacrificing the day's snapshots.
-      # Tag 232c-10 (audit F-SM-004 HIGH): extracted from inline `node -e` to
-      # scripts/strip-method-history.js so the strip step can route the write
-      # through lib/atomic-write (POSIX parent-dir fsync + Windows EPERM retry
-      # + writeSync partial-write loop). Prior inline path used raw
-      # fs.writeFileSync + renameSync — a SIGKILL or power-loss between the
-      # writeSync and the renameSync could leave zero-byte alert-state.json
-      # committed to main, breaking the next run's detect-changes parser.
-      - name: Strip methodHistory from alert-state
-        continue-on-error: true
-        run: node scripts/strip-method-history.js
 
       - name: Commit Snapshots + Alert-State
         run: |
