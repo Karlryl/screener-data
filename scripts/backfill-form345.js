@@ -98,11 +98,17 @@ function downloadTo(url, destPath, _depth) {
       }
       if (res.statusCode === 404) { res.resume(); return resolve({ notFound: true }); }
       if (res.statusCode !== 200) { res.resume(); return reject(new Error('HTTP ' + res.statusCode + ' for ' + url)); }
-      const out = fs.createWriteStream(destPath);
+      // audit/fix: stream to a .part temp + rename on finish so a killed/aborted download
+      // can't leave a truncated file at destPath that a later run treats as a complete cache.
+      const tmpPath = destPath + '.part';
+      const out = fs.createWriteStream(tmpPath);
       res.pipe(out);
-      out.on('finish', () => out.close(() => resolve({ ok: true })));
-      out.on('error', reject);
-      res.on('error', reject);
+      out.on('finish', () => out.close(() => {
+        try { fs.renameSync(tmpPath, destPath); resolve({ ok: true }); }
+        catch (e) { try { fs.unlinkSync(tmpPath); } catch (_) {} reject(e); }
+      }));
+      out.on('error', (e) => { try { fs.unlinkSync(tmpPath); } catch (_) {} reject(e); });
+      res.on('error', (e) => { try { fs.unlinkSync(tmpPath); } catch (_) {} reject(e); });
     });
     req.on('error', reject);
     req.setTimeout(120000, () => { req.destroy(); reject(new Error('timeout: ' + url)); });

@@ -6,6 +6,10 @@
  */
 'use strict';
 const fs = require('fs');
+// audit/fix: route the persisted-state write through lib/atomic-write (was the only
+// production writer doing a plain non-atomic writeFileSync — a SIGTERM/crash mid-write
+// corrupted the committed earnings-calendar.json).
+const { writeFileAtomic } = require('./lib/atomic-write.js');
 let yf;
 try {
   const YF = require('yahoo-finance2').default;
@@ -62,8 +66,19 @@ async function main() {
     }
   }
 
-  fs.writeFileSync('./earnings-calendar.json', JSON.stringify(result, null, 2));
-  console.log(`✓ Saved earnings-calendar.json (${Object.keys(result).length} stocks with date)`);
+  // audit/fix: coverage floor — `result` is rebuilt from scratch each run, so a Yahoo
+  // outage day (nearly all quoteSummary calls fail) would otherwise atomically replace a
+  // good earnings-calendar.json with a near-empty one. Refuse to overwrite a populated
+  // calendar with a collapsed result; the existing file is preserved and the run fails loud.
+  const have = Object.keys(result).length;
+  let prev = 0;
+  try { prev = Object.keys(JSON.parse(fs.readFileSync('./earnings-calendar.json', 'utf8'))).length; } catch (_) {}
+  if (prev > 100 && have < prev * 0.5) {
+    console.error(`::error::earnings coverage collapsed (${have} dates vs prev ${prev}) — refusing to overwrite earnings-calendar.json`);
+    process.exit(1);
+  }
+  writeFileAtomic('./earnings-calendar.json', JSON.stringify(result, null, 2));
+  console.log(`✓ Saved earnings-calendar.json (${have} stocks with date)`);
 }
 // audit F-A-2026-06-21: guard against (1) silent failure — bare main() let a watchlist
 // parse error (or any rejection) die as an unhandled rejection that exits 0 on older Node,
