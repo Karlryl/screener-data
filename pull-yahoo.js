@@ -36,6 +36,7 @@ const { writeFileAtomic } = require('./lib/atomic-write.js');
 // unchanged — only the on-disk filename differs.
 // audit/fix: inline safeSnapshotFilename diverged from lib (writer/reader mismatch on reserved/dotted stems) — use canonical lib/snapshot-fs.js
 const { safeSnapshotFilename } = require('./lib/snapshot-fs.js');
+const { detectNewestQtrSuspect } = require('./lib/newest-qtr-guard.js');
 
 let YahooFinance;
 try {
@@ -2251,6 +2252,24 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           }
         }
       } catch (e) { /* defensive — never fail the pull on fallback errors */ }
+
+      // audit/fix (A2 council+court+anchor-fixture, 2026-06-26): newest-quarter source-corruption LAMP.
+      // Yahoo intermittently serves a corrupted newest quarter (confirmed 005930.KS: opIncQ[0]/revenueQ[0]
+      // ~42.8% vs ~10% trailing, co-corrupting financialData TTM -> a bogus revenueGrowthYoY ~69%). Detecting
+      // this internal physical inconsistency is a data-QUALITY concern (Loop A); values stay FAITHFUL and the
+      // disposition (down-weight/exclude) is delegated to Loop B per the §6 boundary + ledger §4 — the
+      // non-destructive _debtPartial / _quality.grade pattern (NOT value-nulling fcfMarginTTMSuppressed). The
+      // within-quarter trigger uses NO annual data (immune to the annual-scaling/TTM-fallback bugs) and was
+      // tuned on 2715 real snapshots: flags 005930.KS + SNDK with ZERO legitimate-cyclical leaks (MU/FRO/INSW/
+      // DHT/AG/NGD/NVDA all clean). Ratios are FX-invariant, so running pre-conversion is equivalent. Known-
+      // shape detector — limited recall by design (see lib/newest-qtr-guard.js + ledger §4).
+      try {
+        const _nqs = detectNewestQtrSuspect(canonical.timeseries);
+        if (_nqs.suspect && canonical.meta) {
+          canonical.meta._newestQtrSuspect = true;
+          canonical.meta._newestQtrSuspectReason = _nqs.reason;
+        }
+      } catch (e) { /* defensive — a lamp must never break the pull */ }
 
       // Tag 134: single-pass USD conversion across marketCap + revenueTTM + all annual/quarterly series.
       // Must run AFTER FTS overrides (FTS values are also in reporting currency) and BEFORE mcap filter
