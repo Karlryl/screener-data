@@ -33,7 +33,11 @@ catch (e) {
   console.error('✗ earnings-calendar.json unreadable: ' + e.message);
   process.exit(1);
 }
-const today = new Date(); today.setHours(0,0,0,0);
+// audit/fix: anchor `today` at UTC midnight to match info.date (a bare YYYY-MM-DD that
+// `new Date()` parses as UTC midnight). The previous local setHours(0,0,0,0) made `today`
+// a LOCAL-midnight instant — 1-2h off in Europe/Berlin — which shifted the upper window
+// edge by a day and could mis-round daysAway at the boundary when run locally.
+const today = new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00Z');
 const cutoff = new Date(today.getTime() + days * 86400 * 1000);
 
 const upcoming = [];

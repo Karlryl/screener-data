@@ -207,7 +207,14 @@ async function main() {
         continue;
       }
       errors++;
-      manifest.entries[t.cik] = Object.assign({}, prior, { fetchedAt: new Date().toISOString(), lastError: e.message });
+      // audit/fix: transient non-429 errors (5xx / ECONNRESET / ETIMEDOUT / EAI_AGAIN / TLS /
+      // timeout / too-many-redirects) must NOT stamp a fresh fetchedAt. Stamping it let the
+      // stale-gate (line 157: fetchedAt > staleCutoff) suppress the re-fetch for the full
+      // STALE_DAYS (~90d) window — a momentary network blip would serve stale audited
+      // fundamentals for an entire 10-Q cycle. Mirror the deliberately-fixed 429/404 branches:
+      // record only lastError and leave prior.fetchedAt intact, so a previously-stale CIK stays
+      // retry-eligible next run. (404 and 304 are handled above and never reach this catch.)
+      manifest.entries[t.cik] = Object.assign({}, prior, { lastError: e.message });
       if (errors > 50) {
         console.error('Too many errors (>50) — aborting to be polite to SEC.');
         break;

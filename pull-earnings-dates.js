@@ -70,10 +70,15 @@ async function main() {
   // outage day (nearly all quoteSummary calls fail) would otherwise atomically replace a
   // good earnings-calendar.json with a near-empty one. Refuse to overwrite a populated
   // calendar with a collapsed result; the existing file is preserved and the run fails loud.
+  // The floor is max(1, prev*0.5) WITHOUT a `prev > 100` precondition: the earlier
+  // `prev > 100` gate left two holes — (a) a small prior calendar (prev<=100) was unprotected,
+  // and (b) a fresh/missing/corrupt prior (prev=0) let a total-outage empty result through and
+  // exit 0. Now prev=0 blocks only a literally-empty result (have<1) so legitimate first runs
+  // still write, while any populated prior is protected against a >50% collapse.
   const have = Object.keys(result).length;
   let prev = 0;
   try { prev = Object.keys(JSON.parse(fs.readFileSync('./earnings-calendar.json', 'utf8'))).length; } catch (_) {}
-  if (prev > 100 && have < prev * 0.5) {
+  if (have < Math.max(1, prev * 0.5)) {
     console.error(`::error::earnings coverage collapsed (${have} dates vs prev ${prev}) — refusing to overwrite earnings-calendar.json`);
     process.exit(1);
   }
