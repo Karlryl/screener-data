@@ -403,17 +403,21 @@ function loadMacroRegimes() {
   return raw.regimes; // { "YYYY-MM-DD": { regime, price, sma200 } }
 }
 
+// audit/fix: schema-tolerant regime read. macro-regime.json's documented legacy schema is a bare
+// string ({date: "BULL"}); the current writer emits {date: {regime, price, sma200}}. Reading .regime
+// off a legacy string silently yields undefined for dates that DO exist. Unwrap either shape.
+function _regimeOf(v) { return (v && typeof v === 'object') ? v.regime : v; }
 // Tag 139 / F-BT-010: find closest regime entry for a given date.
 // Extended lookback to 30 days. Returns 'UNKNOWN' (not null) if no regime found.
 function getRegimeAt(regimes, isoDate) {
   if (!regimes) return null;
-  if (regimes[isoDate]) return regimes[isoDate].regime;
+  if (regimes[isoDate]) return _regimeOf(regimes[isoDate]);
   // Look back up to 30 days (was 7, F-BT-010)
   for (let i = 1; i <= 30; i++) {
     const d = new Date(isoDate + 'T00:00:00Z');
     d.setUTCDate(d.getUTCDate() - i);
     const key = d.toISOString().slice(0, 10);
-    if (regimes[key]) return regimes[key].regime;
+    if (regimes[key]) return _regimeOf(regimes[key]);
   }
   console.warn('[walk-forward-perf] WARNING: No macro regime found within 30 days of ' + isoDate + ' — returning UNKNOWN');
   return 'UNKNOWN';

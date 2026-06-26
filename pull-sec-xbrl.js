@@ -161,9 +161,18 @@ async function main() {
     const url = `https://data.sec.gov/api/xbrl/companyfacts/CIK${t.cik}.json`;
     try {
       const res = await get(url, prior && prior.lastModified);
-      if (res.notModified) {
+      if (res.notModified && fs.existsSync(filePath)) {
         manifest.entries[t.cik] = Object.assign({}, prior, { fetchedAt: new Date().toISOString() });
         skipped304++;
+      } else if (res.notModified) {
+        // audit/fix: 304 but the cache body is MISSING on disk (the normal case on a fresh CI runner —
+        // the cache dir is git-ignored, only _manifest.json is committed). Stamping a fresh fetchedAt
+        // here would mark the CIK "fresh" while its file never gets written -> permanently dark CIK.
+        // Drop lastModified (and do NOT refresh fetchedAt) so the next run sends an unconditional GET
+        // -> 200 + body. Mirrors the notFound branch below.
+        const cleaned = Object.assign({}, prior); delete cleaned.lastModified;
+        cleaned.lastError = '304 without cached body — will re-pull full next run';
+        manifest.entries[t.cik] = cleaned;
       } else if (res.notFound) {
         // audit/fix: transient 404 must not 90-day-blackout a valid CIK (was fresh fetchedAt on notFound).
         // Mirror the 13F/429 soft-retry pattern: do NOT stamp a fresh fetchedAt, so the stale-gate
