@@ -37,6 +37,7 @@ const { writeFileAtomic } = require('./lib/atomic-write.js');
 // audit/fix: inline safeSnapshotFilename diverged from lib (writer/reader mismatch on reserved/dotted stems) — use canonical lib/snapshot-fs.js
 const { safeSnapshotFilename } = require('./lib/snapshot-fs.js');
 const { detectNewestQtrSuspect } = require('./lib/newest-qtr-guard.js');
+const { detectAnnualCurrencyLeak } = require('./lib/annual-currency-guard.js');
 
 let YahooFinance;
 try {
@@ -2277,6 +2278,23 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // but annual.* was local — silently corrupting fcf-yield, ev/ebitda, ROIC and every other ratio.
       try { _convertSnapshotToUSD(canonical); }
       catch (e) { _log('WARN', `  FX conversion failed for ${stock.ticker}: ${e.message}`); }
+
+      // audit/fix (A2, 2026-06-26): annual-revenue currency-leak LAMP. Yahoo can serve a
+      // USD-reporter's annualRev in its TRADING ccy (e.g. NOK ~10x) via deprecated quoteSummary
+      // while FTS is USD; the density-based income-bundle merge can pick the leaked source and
+      // _convertSnapshotToUSD won't rescale it (fxRate=1, reporting ccy detected as USD). Runs
+      // AFTER conversion so reportingCurrencyOriginal/tradingCurrency are set; the leak survives
+      // conversion (fxRate=1) so the ratio is intact. Non-destructive (same pattern as the
+      // _newestQtrSuspect lamp): values stay FAITHFUL, Loop B disposes (ledger §4). Measured-clean
+      // trigger — fires on AKRBP.OL + GMAB.CO only across 4168 snapshots (lib/annual-currency-guard.js).
+      try {
+        const _acl = detectAnnualCurrencyLeak(canonical);
+        if (_acl.suspect && canonical.meta) {
+          canonical.meta._annualCurrencyLeakSuspect = true;
+          canonical.meta._annualCurrencyLeakReason = _acl.reason;
+        }
+      } catch (e) { /* defensive — a lamp must never break the pull */ }
+
       // F-DQ-002: skip tickers where FX conversion failed — mcap is in local currency and would
       // pass or fail the USD mcap filter incorrectly.
       // F-DQ-016: mirror the skipped-mcap pattern — delete stale snapshot so it doesn't
