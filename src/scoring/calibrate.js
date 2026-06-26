@@ -99,6 +99,7 @@ function diagnostics(cohort, weights, opts = {}) {
 function dumpMatrix() {
   const fs = require('fs');
   const path = require('path');
+  const { writeJsonAtomic } = require('../../lib/atomic-write.js'); // audit/fix (C2): atomar dumpen
   const { loadUniverse } = require('./run-screener.js');
   const formulas = require('./formulas/index.js');
   const universe = loadUniverse();
@@ -111,7 +112,8 @@ function dumpMatrix() {
     (byBranch[fid] = byBranch[fid] || {})[track] = cohort;
   }
   for (const [fid, tracks] of Object.entries(byBranch)) {
-    fs.writeFileSync(path.join(outDir, fid + '.json'), JSON.stringify(tracks));
+    // audit/fix (C2): atomar; indent 0 = kompakt, byte-identisch zum bisherigen JSON.stringify(tracks).
+    writeJsonAtomic(path.join(outDir, fid + '.json'), tracks, { indent: 0 });
   }
   return { universe: universe.length, branches: Object.keys(byBranch), dir: outDir };
 }
