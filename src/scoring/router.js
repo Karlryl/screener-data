@@ -3,14 +3,20 @@
  * Hypergrowth Engine — Schicht 1: Router (feste Pruefreihenfolge)
  * ==============================================================
  * Mappt jede Aktie deterministisch in genau EINE Branchen-Formel ODER excludet
- * sie. Liest ausschliesslich norm()-Serien + meta. Court-festgeschriebene
- * Reihenfolge (frueheste Wahr-Bedingung gewinnt):
+ * sie. Liest ausschliesslich norm()-Serien + meta. Feste Reihenfolge
+ * (frueheste Wahr-Bedingung gewinnt):
  *
- *   Schritt 0  Pre-Revenue-Guard  -> survival-track (NIE Growth-Score)
  *   Schritt 1  Struktur-Hard-Exclude (Telecom, Bilanz-Banken, Versicherer, mREIT)
- *   Schritt 2  annualGP=0-Hard-Exclude  (Lender/Credit-Services, z.B. SOFI)
- *              LAEUFT ZWINGEND VOR JEDER grossMargin-Logik.
- *   Schritt 3  Branchen-Routing + (fuer Financials) GP-Klassifikation
+ *   Schritt 2  annualGP=0-Hard-Exclude — NUR Lending-Industrien (Credit Services/
+ *              Mortgage/Consumer Finance/Savings/Thrift, z.B. SOFI). VOR grossMargin-Logik.
+ *   Schritt 3  Branchen-Routing; sektorlos (Fonds/ETF/Trust) -> no-sector-Exclude
+ *   Schritt 4  Pre-Revenue-Guard (nur sektor-routebare Namen) -> survival-track (NIE Growth-Score)
+ *
+ * audit/fix (R1/R2/R3, 2026-06-26): (a) Schritt 2 war sektor-unabhaengig und warf jeden GP=0-Namen
+ * raus (HUM/MKSI/WOLF/JLL + Broker MS/SCHW/RJF/NTRS) -> jetzt auf Lending-Industrien gegated.
+ * (b) Pre-Revenue lief frueher als Schritt 0 VOR no-sector, sodass sektorlose Fonds/ETFs (QQQ/MDY)
+ * faelschlich in den Survival-Track kamen -> jetzt NACH no-sector (echte Pre-Rev-Biotechs tragen
+ * immer sector=Healthcare). GP-Klassifikation (fuer Financials) wie gehabt.
  *
  * GP-Klassifikation nutzt den MASTER-DISKRIMINATOR r = firstPresent(normGP) /
  * firstPresent(normRev); grossMargin ist NUR Tie-Break, wenn r nicht berechenbar
@@ -29,6 +35,11 @@ const lc = (x) => (typeof x === 'string' ? x.toLowerCase() : '');
 const US_SIGNAL = /nasdaq|nyse|amex|arca|bats|cboe|\botc\b|pink|\bnms\b|\bncm\b|\bngm\b|\bus\b|\busa\b|united states/i;
 const FOREIGN_EX = /hkse|hong kong|tokyo|\bjpx\b|\bkrx\b|korea|taiwan|\btwse\b|\bsehk\b|shanghai|shenzhen|london|\blse\b|frankfurt|xetra|euronext|toronto|\btsx\b|\basx\b|\bsix\b|bolsa|borsa|stockholm|oslo|helsinki|copenhagen|johannesburg|\bjse\b|\bb3\b/i;
 const FOREIGN_SUFFIX = /\.(HK|KS|KQ|TW|TWO|SS|SZ|SR|T|L|TO|V|NE|F|DE|BE|VI|PA|AS|BR|LS|MC|MI|ST|HE|CO|OL|SW|AX|NZ|SI|JK|KL|BK|BO|NS|QA|TA|AT|WA|SA|SN|MX|JO)$/i;
+// audit/fix (R1/R2): GP=0-Exclude NUR fuer echte Lending-Geschaeftsmodelle (kein Gross-Profit-
+// Konzept), nicht universell — sonst fallen Nicht-Lender mit Yahoo-leerem GP (HUM/MKSI/WOLF/JLL)
+// und Broker/Asset-Manager (MS/SCHW/RJF/NTRS, die ins financials-Scoring gehoeren) faelschlich raus.
+// SOFI (industry "Credit Services") bleibt korrekt excludiert (Fixture-Constraint).
+const LENDING_INDUSTRY = /credit services|consumer finance|mortgage|savings|thrift|\blend/;
 function isUS(s) {
   const m = (s && s.meta) || {};
   if (m.country) return /united states|usa/i.test(m.country); // Domizil hat Vorrang
@@ -116,21 +127,23 @@ function route(s) {
   // Universum-Filter: nur US (Plan: US-Universe inkl. Small-Caps). Auslaendisch
   // gelistete Namen duerfen die US-Kohorten-Perzentile nicht verzerren.
   if (!isUS(s)) return { action: 'exclude', reason: 'non-us' };
-  // Schritt 0
-  if (isPreRevenue(s)) return { action: 'survival', track: 'pre-revenue-biotech', reason: 'no-revenue' };
-  // Schritt 1
+  // Schritt 1: Struktur-Hard-Exclude
   const se = structExcludeReason(s);
   if (se) return { action: 'exclude', reason: se };
-  // Schritt 2 — VOR jeder grossMargin-Logik
+  // Schritt 2: annualGP=0-Exclude — VOR jeder grossMargin-Logik, NUR Lending-Industrien
+  // (audit/fix R1/R2: nicht universell, sonst raus mit Nicht-Lendern/Brokern).
   const gp = norm(s, 'annualGP');
-  if (hasPresent(gp) && presentValues(gp).every((v) => v === 0)) {
+  if (hasPresent(gp) && presentValues(gp).every((v) => v === 0)
+      && LENDING_INDUSTRY.test(lc(s && s.meta ? s.meta.industry : ''))) {
     return { action: 'exclude', reason: 'lender-gp0' };
   }
-  // Schritt 3
+  // Schritt 3: Branchen-Routing. Sektorlose/nicht-operative Entitaeten (Bullion-Trusts,
+  // Warrants, Fonds/ETFs, stale Ticker ohne meta.sector) sauber excludieren.
   const formulaId = sectorRoute(s);
-  // Sektorlose/nicht-operative Entitaeten (Bullion-Trusts, Warrants, Fonds, stale
-  // Ticker ohne meta.sector) sauber excludieren statt als 'unrouted' zu fuehren.
   if (formulaId === 'unrouted') return { action: 'exclude', reason: 'no-sector' };
+  // Schritt 4: Pre-Revenue-Guard NACH no-sector (audit/fix R3: echte Pre-Rev-Biotechs tragen
+  // immer sector=Healthcare; sektorlos+umsatzlos = Fonds/ETF -> no-sector, nicht survival).
+  if (isPreRevenue(s)) return { action: 'survival', track: 'pre-revenue-biotech', reason: 'no-revenue' };
   const out = { action: 'route', formulaId };
   if (formulaId === 'financials') out.gpClass = gpClass(s);
   return out;

@@ -79,9 +79,14 @@ test('US-Domizil (country United States) bleibt drin', () => {
 });
 
 // --- Schritt 0: Pre-Revenue -------------------------------------------------
-test('kein/leerer Umsatz -> survival-track', () => {
-  assert.equal(route({ meta: {}, annual: { annualRev: [] } }).action, 'survival');
-  assert.equal(route({ meta: {}, annual: { annualRev: [{ value: 0 }, { value: 0 }] } }).track, 'pre-revenue-biotech');
+test('kein/leerer Umsatz (mit Sektor) -> survival-track', () => {
+  // audit/fix R3: Pre-Revenue laeuft jetzt NACH no-sector -> ein pre-revenue-Name braucht einen
+  // routebaren Sektor, um in survival zu landen (echte Pre-Rev-Biotechs tragen sector=Healthcare).
+  const bio = { meta: { sector: 'Healthcare', industry: 'Biotechnology' } };
+  assert.equal(route({ ...bio, annual: { annualRev: [] } }).action, 'survival');
+  assert.equal(route({ ...bio, annual: { annualRev: [{ value: 0 }, { value: 0 }] } }).track, 'pre-revenue-biotech');
+  // R3-Lock: sektorlos + umsatzlos (Fonds/ETF, z.B. QQQ/MDY) -> no-sector, NICHT survival.
+  assert.equal(route({ meta: {}, annual: { annualRev: [] } }).reason, 'no-sector');
 });
 
 // --- Schritt 1: Struktur-Hard-Exclude ---------------------------------------
