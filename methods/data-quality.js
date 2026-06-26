@@ -71,7 +71,12 @@ const CRITICAL_FIELDS = [
   { id: 'metrics.forwardPE',    weight: 0.5, check: s => _hasMetric(s.metrics && s.metrics.forwardPE) },
   // === Tag 220c additions ===
   { id: 'timeseries.netIncomeQ>=4', weight: 0.5, check: s => _arrLen(s.timeseries && s.timeseries.netIncomeQ) >= 4 },
-  { id: 'meta.earningsHistory', weight: 0.5, check: s => !!(s.meta && s.meta.earningsHistory) }
+  // audit/fix (A2 2026-06-26): earningsHistory is written to external.earningsHistory
+  // (pull-yahoo.js ~line 1053), NOT meta. The old `s.meta.earningsHistory` check was
+  // ALWAYS false, so every snapshot silently counted this 0.5-weight field as missing —
+  // inflating nanRatio by 0.5/TOTAL_WEIGHT universe-wide and nudging borderline snapshots
+  // one grade band worse. Read the correct path.
+  { id: 'external.earningsHistory', weight: 0.5, check: s => !!(s.external && s.external.earningsHistory) }
 ];
 
 const TOTAL_WEIGHT = CRITICAL_FIELDS.reduce((sum, f) => sum + f.weight, 0);

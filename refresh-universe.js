@@ -607,10 +607,12 @@ async function main() {
   }
   console.log(`\nNew tickers: ${newTickers.length} (already-in: ${allTickers.size - newTickers.length})`);
 
-  if (newTickers.length === 0) {
-    console.log('Nothing to add. Universe unchanged.');
-    return;
-  }
+  // audit/fix (A2 2026-06-26): do NOT early-return here on newTickers===0. The in-place
+  // class-share repair below (the dot->dash fix for the ~24 BRK.A/BF.A/HEI.A-style rows that
+  // pull-yahoo 404s daily) lives AFTER this point, so an early return on the common
+  // steady-state run (nothing new discovered) left those rows permanently un-pullable. We now
+  // flow through: the merge loop is a harmless no-op when newTickers is empty, the repair
+  // always runs, and the final write is gated on (newTickers OR a repair) just below it.
 
   // Tag 228c: source-attribution summary. F-DP-015 (Tag 169) added source-
   // preservation through the merge pipeline, but a future regression that
@@ -664,8 +666,8 @@ async function main() {
   //     every dash row are untouched as rows.
   //   - The dot→dash repair of yahoo_symbol on a twin-less US class share keeps
   //     the row; only its yahoo_symbol changes (dot→dash) so it becomes pullable.
+  let repaired = 0, collapsed = 0;
   {
-    let repaired = 0, collapsed = 0;
     const dashIndex = new Map();   // dash ticker -> row (built over current stocks)
     for (const s of wlRaw.stocks) {
       if (s && s.ticker) dashIndex.set(String(s.ticker).toUpperCase(), s);
@@ -708,6 +710,14 @@ async function main() {
       wlRaw.stocks = wlRaw.stocks.filter(s => !dropSet.has(s));
     }
     console.log(`  Class-share repair: ${repaired} dot rows promoted to dash, ${collapsed} dot/dash twins collapsed.`);
+  }
+
+  // audit/fix (A2 2026-06-26): gate the write on an actual change. With the early-return
+  // removed above, a run that discovered nothing new AND repaired nothing must still leave the
+  // universe untouched (no needless rewrite / timestamp churn).
+  if (newTickers.length === 0 && repaired === 0 && collapsed === 0) {
+    console.log('Nothing to add, nothing to repair. Universe unchanged.');
+    return;
   }
 
   // audit F-A-2026-06-21: null-safe sort key — a single null/undefined ticker
