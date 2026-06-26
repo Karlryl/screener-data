@@ -4,7 +4,14 @@
  * =====================================================================
  * Primaer: Bruttogewinn-Wachstum (YoY) — die fairste branchenuebergreifende
  * Growth-Zahl (Novy-Marx), respektiert Margen-Niveaus, bestraft Unprofitabilitaet
- * nicht (GP fast immer positiv), kein KGV. Wird universumsweit perzentil-normiert.
+ * nicht (GP fast immer positiv), kein KGV.
+ *
+ * audit/fix (O1, 2026-06-26): Dieser Wert wird als branchenuebergreifend VERGLEICHBARE
+ * Anzeige-Spalte je Name mitgefuehrt — er ist NICHT der Sortier-Schluessel der Overview-Liste.
+ * Die Cross-Branchen-Overview wird in score.js::produceRankings nach dem per-Kohorte
+ * gemischten SCORE gerankt (nicht nach einem universumsweiten GP-Perzentil): ein reines
+ * GP-Wachstum-Ranking wuerde Micro-Cap-Basis-Artefakte hochspuelen (GP von ~0 auf klein =
+ * +6000..+66000% bei UEC/JOBY/NUVB), die der Kohorten-Score korrekt unterdrueckt.
  *
  * Track-eigene Badges (klar als Nicht-GP markiert, nur intra-kohort verglichen):
  *   - degenerierte-GP-Financials (Master-r >= 0.99) -> Revenue-YoY-Badge

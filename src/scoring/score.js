@@ -155,18 +155,36 @@ function produceRankings(results, opts = {}) {
     const row = {
       ticker: e.ticker, score: round1(e.score), track: e.track, lamps: e.lamps,
       overview: e.overview ? { kind: e.overview.kind, value: round1(e.overview.value) } : null,
+      // audit/fix (D1/D2): rohen Score zum Sortieren behalten, NUR fuer die Anzeige runden.
+      // Sortiert man das gerundete Feld, entstehen kuenstliche round1-Ties, die JS-stable-sort
+      // per Input- = fs.readdirSync-Reihenfolge bricht -> nicht reproduzierbare topN-Membership (CI != lokal).
+      _raw: e.score,
     };
     branches[e.formulaId] = branches[e.formulaId] || { profitable: [], unprofitable: [] };
     (branches[e.formulaId][e.track] = branches[e.formulaId][e.track] || []).push(row);
     overview.push({ ticker: e.ticker, formulaId: e.formulaId, track: e.track, score: round1(e.score),
       overviewKind: e.overview ? e.overview.kind : null, overviewValue: e.overview ? round1(e.overview.value) : null,
-      lamps: e.lamps });
+      lamps: e.lamps, _raw: e.score });
   }
+  // audit/fix (D1/D2/D3): roher Score + deterministischer Ticker-Tie-Break VOR dem Slicen,
+  // damit exakte/round1-Ties nicht von der Dateisystem-Reihenfolge entschieden werden. _raw
+  // wird danach gestrippt -> Output-Shape unveraendert.
+  const byScore = (a, c) => (c._raw - a._raw) || a.ticker.localeCompare(c.ticker);
+  const stripRaw = ({ _raw, ...row }) => row;
   for (const b of Object.values(branches)) {
-    for (const t of Object.keys(b)) { b[t].sort((a, c) => c.score - a.score); b[t] = b[t].slice(0, topN); }
+    for (const t of Object.keys(b)) { b[t].sort(byScore); b[t] = b[t].slice(0, topN).map(stripRaw); }
   }
-  overview.sort((a, c) => c.score - a.score);
-  return { branches, overview: overview.slice(0, topN * 2), survival, excluded };
+  overview.sort(byScore);
+  // audit/fix (O8): Survival-Liste nach Runway absteigend (nulls ans Ende, Ticker-Tie-Break),
+  // sonst sind die laengsten-ueberlebenden Namen unsortiert vergraben.
+  survival.sort((a, c) => {
+    const av = a.runwayQuarters, cv = c.runwayQuarters;
+    if (av === null && cv === null) return a.ticker.localeCompare(c.ticker);
+    if (av === null) return 1;
+    if (cv === null) return -1;
+    return (cv - av) || a.ticker.localeCompare(c.ticker);
+  });
+  return { branches, overview: overview.slice(0, topN * 2).map(stripRaw), survival, excluded };
 }
 
 module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings };
