@@ -159,18 +159,26 @@ async function main() {
       // dropped those tickers (null forward returns). Mirror the SPY back-fill (lines
       // below): insert every fetched quote whose date isn't already present, then sort+trim.
       // One-time this fills history for the whole universe; steady-state it's a no-op append.
-      const knownDates = new Set(arr.map(e => e.date));
-      let changed = false;
+      // audit/fix (A2 council+court, 2026-06-26): FETCHED-WINS merge (was existing-wins).
+      // Yahoo's adjclose is BACK-adjusted: a forward split re-bases ALL prior dates, but
+      // existing-wins only wrote the new basis onto NEW dates, freezing a split-ratio
+      // discontinuity into the stored tail — a walk-forward window spanning the split then
+      // returned p1/p0-1 wrong by the split ratio (NVDA/AVGO 10:1 in 2024 -> phantom -90%).
+      // Overwrite each stored date's close with Yahoo's current authoritative value, mirroring
+      // the already-blessed sibling writer backfill-prices.js (~line 156, 'fetched overwrites').
+      // Self-correcting: we always re-derive from Yahoo, never from our own store, so a
+      // transient bad bar is replaced next run (not a frozen fixed point). c is already
+      // isFinite-filtered into `quotes` above; the guard below is defense-in-depth so no
+      // non-finite value can ever reach JSON.stringify (Tag 122/124 invariant).
+      const merged = new Map(arr.map(e => [e.date, e.close]));
       for (const q of quotes) {
         const d = (q.date instanceof Date ? q.date : new Date(q.date)).toISOString().slice(0, 10);
-        const c = q.adjclose ?? q.close; // store adjusted close (split/dividend-adjusted), same semantic as Tag 148
-        if (!knownDates.has(d)) {
-          arr.push({ date: d, close: c }); // 'close' key holds ADJUSTED close (Tag 148); kept for backward compat
-          knownDates.add(d);
-          changed = true;
-        }
+        const c = q.adjclose ?? q.close; // ADJUSTED close (split/dividend-adjusted), Tag 148
+        if (c != null && isFinite(c)) merged.set(d, c); // fetched overwrites stored -> re-base
       }
-      if (changed) arr.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+      arr.length = 0;
+      for (const [d, c] of merged) arr.push({ date: d, close: c }); // 'close' = ADJUSTED (Tag 148)
+      arr.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
       if (arr.length > 400) arr.splice(0, arr.length - 400);
       ok++;
     } catch (e) {
@@ -230,15 +238,18 @@ async function main() {
         // {Friday, Friday-price} (real) in history. The back-fill loop below
         // already inserts the real dated entry; the pre-push was redundant at
         // best and date-corrupting at worst.
-        const benchKnownDates = new Set(history[key].map(e => e.date));
-        // Back-fill all available dates from this pull (so walk-forward has enough history)
+        // audit/fix (A2 council+court, 2026-06-26): FETCHED-WINS (see processOne). Overwrite
+        // stored benchmark closes with Yahoo's current authoritative adjclose so a split
+        // re-bases the whole series — benchmarks (SPY/QQQ/IWM) split too, and a wrong-basis
+        // benchmark corrupts EVERY alpha computation in walk-forward.
+        const benchMerged = new Map(history[key].map(e => [e.date, e.close]));
         for (const q of benchQuotes) {
           const d = (q.date instanceof Date ? q.date : new Date(q.date)).toISOString().slice(0, 10);
-          if (!benchKnownDates.has(d)) {
-            history[key].push({ date: d, close: q.adjclose ?? q.close }); // 'close' key = ADJUSTED close (Tag 148)
-            benchKnownDates.add(d);
-          }
+          const c = q.adjclose ?? q.close;
+          if (c != null && isFinite(c)) benchMerged.set(d, c); // fetched overwrites stored
         }
+        history[key] = [];
+        for (const [d, c] of benchMerged) history[key].push({ date: d, close: c }); // ADJUSTED (Tag 148)
         history[key].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
         history[key] = history[key].slice(-400);
         ok++;
