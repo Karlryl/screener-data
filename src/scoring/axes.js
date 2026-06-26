@@ -97,17 +97,27 @@ function marginTrajectory(s) {
 // ROIC-Proxy (mean OpInc / mean Invested Capital) minus Asset-Growth-Penalty
 // (Asset-Wachstum > Umsatzwachstum = gekauftes Wachstum).
 function capitalEfficiency(s) {
-  const opInc = norm(s, 'annualOpInc').filter((v) => v !== null);
+  // audit/fix (E1/A1): ROIC mittelte den Zaehler (alle present OpInc-Jahre) und den Nenner
+  // (alle invested>0-Jahre) ueber VERSCHIEDENE Jahres-Sets -> bei Laengen-Mismatch (126 Namen)
+  // verfaelscht, teils Vorzeichen-Flip (SNDK 3 OpInc- vs 2 invested-Jahre: -0.036 statt +0.0027;
+  // BLSH analog). Jetzt pro Fiskaljahr zippen: nur Jahre, in denen OpInc present UND invested>0
+  // ist, gehen in BEIDE Mittel. (assets bleibt fuer die Asset-Growth-Penalty unten erhalten.)
+  const opIncS = norm(s, 'annualOpInc');
   const assets = norm(s, 'annualBalance', 'totalAssets');
   const curLiab = norm(s, 'annualBalance', 'currentLiabilities');
-  const invested = assets.map((a, i) => {
-    if (a === null || a === undefined) return null;
+  const opPaired = [], invPaired = [];
+  const nYears = Math.max(opIncS.length, assets.length);
+  for (let i = 0; i < nYears; i++) {
+    const o = opIncS[i], a = assets[i];
+    if (o === null || o === undefined || a === null || a === undefined) continue;
     const c = curLiab[i];
-    return a - (c === null || c === undefined ? 0 : c);
-  }).filter((v) => v !== null && v > 0);
-  if (opInc.length === 0 || invested.length === 0) return null;
+    const inv = a - (c === null || c === undefined ? 0 : c);
+    if (!(inv > 0)) continue;
+    opPaired.push(o); invPaired.push(inv);
+  }
+  if (opPaired.length === 0) return null;
   const mean = (arr) => arr.reduce((p, c) => p + c, 0) / arr.length;
-  const roic = mean(opInc) / mean(invested);
+  const roic = mean(opPaired) / mean(invPaired);
 
   // Asset-Growth-Penalty (nur wenn beide Wachstumsraten berechenbar)
   let penalty = 0;

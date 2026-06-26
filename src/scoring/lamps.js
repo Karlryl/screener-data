@@ -77,13 +77,24 @@ function peakMargin(s) {
 
 // 6. ROIC < WACC-Proxy -------------------------------------------------------
 function lowRoic(s) {
-  const op = meanPresent(norm(s, 'annualOpInc'));
+  // audit/fix (L2): wie capitalEfficiency (E1) — op (alle OpInc-Jahre) und inv (alle assets-Jahre)
+  // mittelten ueber verschiedene Jahres-Sets. Jetzt pro Jahr zippen (OpInc present UND assets present).
+  const opS = norm(s, 'annualOpInc');
   const assets = norm(s, 'annualBalance', 'totalAssets');
   const curLiab = norm(s, 'annualBalance', 'currentLiabilities');
-  const invested = assets.map((a, i) => (a !== null) ? a - (curLiab[i] === null ? 0 : curLiab[i]) : null);
-  const inv = meanPresent(invested);
-  if (op === null || inv === null || inv <= 0) return null;
-  return (op / inv) < TH.WACC_DEFAULT;
+  const opP = [], invP = [];
+  const nYears = Math.max(opS.length, assets.length);
+  for (let i = 0; i < nYears; i++) {
+    const o = opS[i], a = assets[i];
+    if (!Number.isFinite(o) || !Number.isFinite(a)) continue;
+    const c = curLiab[i];
+    opP.push(o); invP.push(a - (Number.isFinite(c) ? c : 0));
+  }
+  if (opP.length === 0) return null;
+  const mean = (arr) => arr.reduce((p, c) => p + c, 0) / arr.length;
+  const inv = mean(invP);
+  if (inv <= 0) return null;
+  return (mean(opP) / inv) < TH.WACC_DEFAULT;
 }
 
 // 7. AR-Divergenz (Forderungen wachsen schneller als Umsatz) -----------------
