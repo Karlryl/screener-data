@@ -192,6 +192,40 @@ jobs:
         timeout-minutes: 30
         continue-on-error: true
 
+      # Tag 220c (audit F-219c): Yahoo Schema-Drift Canary. Runs IMMEDIATELY
+      # before the Yahoo pull so a silent Yahoo field move (like the Tag 219c F1
+      # financialCurrency disappearance that mis-FX'd every ADR for weeks) is
+      # surfaced within 24h instead of corrupting data silently. The canary
+      # checks NVDA + TSM (TSM exercises the TWD!=USD financialCurrency divergence).
+      # MUST NOT block the pull: continue-on-error:true AND the step exits 0
+      # after alerting — drift fires a ::error:: annotation + a clearly-labeled
+      # Discord ping, but daily-pull (which has its own multi-anchor fallback)
+      # still runs. Canary exit-code contract: 1=drift, 2=Yahoo-unreachable
+      # (non-fatal, treated like 0), 0=clean.
+      - name: Schema-Drift Canary
+        continue-on-error: true
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          set +e
+          node tests/yahoo-schema-canary.js
+          canary_exit=$?
+          echo "Schema-Drift Canary exit code: $canary_exit"
+          if [ "$canary_exit" -eq 1 ]; then
+            echo "::error::SCHEMA-CANARY DRIFT — Yahoo field(s) moved; pull-yahoo extraction may be silently corrupting data"
+            if [ -z "$DISCORD_WEBHOOK" ]; then
+              echo "DISCORD_WEBHOOK not set, skipping Discord notification."
+            else
+              curl -H "Content-Type: application/json" -X POST \
+                -d "{\"content\": \"🚨 SCHEMA-CANARY DRIFT — Yahoo field(s) moved; pull-yahoo extraction may be silently corrupting data. Detected at $(date -u). See run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+                "$DISCORD_WEBHOOK"
+            fi
+          fi
+          # Never block the pull: the ::error:: annotation + Discord ping have
+          # already fired; exit 0 so the pull proceeds (continue-on-error also
+          # guards this, but exiting 0 keeps the step itself green).
+          exit 0
+
       - name: Run Yahoo Pull
         env:
           FUNDAMENTALS_MAX_AGE_DAYS: '7'
