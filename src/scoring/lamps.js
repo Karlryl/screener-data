@@ -66,10 +66,16 @@ function highDilution(s) {
 
 // 5. Peak-Marge (zyklische Warnung) ------------------------------------------
 function peakMargin(s) {
-  const om = metricVal(s, 'operatingMargin');
-  // historischer Margen-Schnitt aus annualOpInc/annualRev (aligned via ratioSeries)
+  // audit/fix (L1, Teil 1 — Basis-Mismatch): cur war die TTM-`operatingMargin`-Metrik, histRest aber
+  // das Mittel ANNUALer opInc/rev-Ratios -> zwei verschiedene Basen verglichen (Samsung TTM 42.8% vs
+  // annual 13.1% feuerte spurious; 806->631 Firings nach Fix). Jetzt cur = juengstes ANNUAL-Margin
+  // (gleiche Basis wie histRest). peakMargin = "Marge historisch hoch" (breit, Mean-Reversion-Watch);
+  // die schaerfere rolled-over-Variante ist cyclePeak (mit !rising-Guard).
+  // OFFEN (L1 Teil 2 -> Council/Court): ob peakMargin zusaetzlich einen !rising-Guard bekommt (dann
+  // feuert es nicht mehr auf Margen-Expander wie PLTR/MU, wird aber ~ cyclePeak -> ggf. mergen).
+  // Bewusst NICHT hier entschieden: Design-Frage + bewegt die MU/PLTR-Fixtures (Hash -> Court-Bless).
   const margins = ratioSeries(norm(s, 'annualOpInc'), norm(s, 'annualRev'));
-  const cur = (om !== null) ? om / 100 : firstPresent(margins);
+  const cur = firstPresent(margins);
   const histRest = meanPresent(margins.slice(1)); // ohne juengstes
   if (cur === null || histRest === null || histRest <= 0) return null;
   return cur > TH.PEAK_MARGIN_MULT * histRest;
