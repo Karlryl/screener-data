@@ -12,7 +12,8 @@
  * alpha. Gewichts-Kalibrierung ist instant; alpha-Aenderung braucht Rebuild.
  */
 const { route } = require('./router.js');
-const { q } = require('./engine.js');
+const { q, signTrack } = require('./engine.js');
+const { norm } = require('./snapshot.js');
 const { evaluateLamps } = require('./lamps.js');
 const { trackOf, rawAxisValue } = require('./score.js');
 
@@ -37,9 +38,22 @@ function buildCalibMatrix(universe, formulas) {
     const axisKeys = formula.axes.map((a) => a.key);
     const rawByAxis = {};
     for (const k of axisKeys) rawByAxis[k] = entries.map((e) => rawAxisValue(e.s, k, formula, track));
+    // audit/fix (C1): score.js perzentiliert capitalEfficiency bei subCohortByProfit-Branchen
+    // (real-estate/it-services) gegen die profit-Vorzeichen-Sub-Kohorte (Iron-Rule 2). Hier exakt
+    // spiegeln (score.js:85-98), sonst weicht die Kalibrier-Matrix von der Produktion ab -> Weights
+    // wuerden gegen ein Ranking getunt, das Produktion fuer diese 2 Branchen nie erzeugt (100% Mismatch).
+    const profitSign = formula.subCohortByProfit
+      ? entries.map((e) => signTrack(norm(e.s, 'annualOpInc')))
+      : null;
     const rows = entries.map((e, i) => {
       const pct = {};
-      for (const k of axisKeys) pct[k] = q(rawByAxis[k][i], rawByAxis[k]);
+      for (const k of axisKeys) {
+        let cohort = rawByAxis[k];
+        if (profitSign && k === 'capitalEfficiency') {
+          cohort = cohort.filter((_, j) => profitSign[j] === profitSign[i]);
+        }
+        pct[k] = q(rawByAxis[k][i], cohort);
+      }
       return { ticker: e.ticker, pct, lamps: e.lamps };
     });
     matrix[key] = { formulaId: entries[0].formulaId, track, axisKeys, defaultWeights: weightsObj(formula, track), alpha: formula.alpha, rows };
