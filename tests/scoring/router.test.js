@@ -70,10 +70,13 @@ test('US-Name mit Boersennamen in region (SOFI/ICE-Muster) -> bleibt drin', () =
     annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
   assert.equal(route(s).action, 'route');
 });
-test('Auslands-Listing mit region=US-Fehler, aber country/Boerse foreign -> exclude', () => {
+test('region=US-Fehler: foreign-LISTED (HKSE) oeffnet (A3-Stufe-2), OTC-Grey bleibt raus', () => {
+  // HKSE-gelistet trotz falschem region=US -> foreign-listed -> JETZT offen (Stufe-2).
   const hk = { meta: { sector: 'Healthcare', industry: 'Biotechnology', region: 'US', country: 'China', exchangeName: 'HKSE', ticker: '6699.HK' },
     annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
-  assert.equal(route(hk).reason, 'non-us'); // country schlaegt falsches region=US
+  assert.equal(route(hk).action, 'route');
+  assert.equal(route(hk).formulaId, 'health-care');
+  // OTC-Grey-Market (US-OTC, kein Auslands-Suffix) bleibt Duplikat-zurueckgestellt.
   const au = { meta: { sector: 'Healthcare', industry: 'Drug Manufacturers', region: 'US', country: 'Australia', exchangeName: 'OTC Markets OTCPK', ticker: 'MEOBF' },
     annual: { annualRev: [{ value: 100 }] } };
   assert.equal(route(au).reason, 'non-us');
@@ -102,13 +105,25 @@ test('Foreign-Domizil OTC-gelistet bleibt zurueckgestellt -> non-us (ASMLF-Grey-
     annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
   assert.equal(route(asmlf).reason, 'non-us');
 });
-test('Foreign-LISTED bleibt excludiert: LSE/USD-Falle CPG.L + Tokyo-Primaerlisting', () => {
+// A3-Stufe-2 (2026-06-27, Weltweit-Pivot): foreign-LISTED (echte Auslandsboerse per FOREIGN_EX
+// oder Auslands-Suffix) wird in den globalen Topf GEOEFFNET (Lampen-geschuetzt: A4-data-suspect-Gate
+// in score.js laeuft VOR dem Scoring). OTC-Grey-Market-Schattenduplikate (US-OTC, keine
+// Auslandsboerse/-Suffix) bleiben fuer den spaeteren Dedup-Zyklus zurueckgestellt.
+test('Foreign-LISTED wird GEOEFFNET (A3-Stufe-2): LSE CPG.L + Tokyo 6501.T', () => {
   const cpg = { meta: { sector: 'Consumer Defensive', industry: 'Restaurants', exchangeName: 'LSE', ticker: 'CPG.L' },
     annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
-  assert.equal(route(cpg).reason, 'non-us'); // LSE = foreign exchange, .L-Suffix -> kein US-Primaerlisting
+  assert.equal(route(cpg).action, 'route');      // LSE = Auslandsboerse -> jetzt offen
+  assert.equal(route(cpg).formulaId, 'consumer-staples');
   const tokyo = { meta: { sector: 'Technology', industry: 'Semiconductors', country: 'Japan', exchangeName: 'Tokyo', ticker: '6501.T' },
     annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
-  assert.equal(route(tokyo).reason, 'non-us');
+  assert.equal(route(tokyo).action, 'route');
+  assert.equal(route(tokyo).formulaId, 'semiconductors');
+});
+test('Suffix-only foreign-listed (kein exchangeName) -> route (A3-Stufe-2)', () => {
+  // .KS-Suffix allein (Korea) reicht als foreign-listed-Signal, auch ohne exchangeName.
+  const ks = { meta: { sector: 'Technology', industry: 'Semiconductors', ticker: '005930.KS' },
+    annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
+  assert.equal(route(ks).action, 'route');
 });
 
 // --- Schritt 0: Pre-Revenue -------------------------------------------------
@@ -127,6 +142,19 @@ test('Bilanz-Bank / Versicherer / mREIT -> exclude', () => {
   assert.equal(route({ meta: { sector: 'Financial Services', industry: 'Banks—Regional' }, annual: { annualRev: [{ value: 9 }] } }).reason, 'balance-sheet-bank');
   assert.equal(route({ meta: { sector: 'Financial Services', industry: 'Insurance—Life' }, annual: { annualRev: [{ value: 9 }] } }).reason, 'insurer');
   assert.equal(route({ meta: { sector: 'Real Estate', industry: 'REIT—Mortgage' }, annual: { annualRev: [{ value: 9 }] } }).reason, 'mortgage-reit');
+});
+
+// --- A3-Stufe-2: Non-Operating-Revenue-Exclude (Investment-Trusts/Closed-End-Funds) ---
+test('Negativer Jahresumsatz (Investment-Trust/CEF) -> exclude non-operating-rev', () => {
+  // SMT.L/ADX-Muster: "Umsatz" = Anlagegewinn/-verlust, kippt ins Negative -> kein operatives
+  // Umsatzgeschaeft, gehoert nicht in den Wachstums-Topf (sonst Mark-to-Market-Rank #1).
+  const trust = { meta: { sector: 'Financial Services', industry: 'Asset Management', region: 'US', ticker: 'XCEF' },
+    annual: { annualRev: [{ value: -2900 }, { value: 1500 }, { value: 800 }] } };
+  assert.equal(route(trust).reason, 'non-operating-rev');
+  // Positiv-Kontrolle: durchweg positiver Umsatz -> NICHT von dieser Regel gefangen.
+  const op = { meta: { sector: 'Technology', industry: 'Software', region: 'US', ticker: 'OPCO' },
+    annual: { annualRev: [{ value: 300 }, { value: 200 }], annualGP: [{ value: 180 }] } };
+  assert.equal(route(op).action, 'route');
 });
 
 // --- Schritt 2 laeuft VOR grossMargin (Reihenfolge-Beweis) ------------------

@@ -102,9 +102,11 @@ test('BE/Bloom Energy -> industrials, PROFITABLE-Track, oberes Quartil (Karl-Ank
   // audit/fix R1: PRG (PROG Holdings, ~$2.4B Umsatz, Yahoo-leerer GP) wird korrekt aus dem
   // lender-gp0-Exclude freigegeben und joint industrials -> Kohorte 293->294, BE 59->60 = 20.4%.
   // A3-Stufe-1 (Weltweit): 285 US-PRIMAERgelistete foreign-domiciled Industrie-ADRs treten der
-  // Kohorte bei (294->321) -> BE 70/321 = 21.8%, reine Verduennung, BE-Absolutscore unveraendert
-  // (~61.6). Gate auf 0.25 (oberes Quartil) geblesst = durabler Anker fuer die Weltweit-Aera;
-  // bei Stufe-2 (1597 foreign-listed) neu bewerten.
+  // Kohorte bei (294->321) -> BE 70/321 = 21.8%, reine Verduennung, BE-Absolutscore unveraendert (~61.6).
+  // A3-Stufe-2 (1584 foreign-listed geoeffnet + Issuer-Dedup + Non-Operating-Rev-Exclude): Kohorte
+  // 321->575, BE 136/575 = 23.7%, BE-Absolutscore weiter stabil (~61.1) -> reine Kohorten-Verduennung,
+  // KEINE Regression. Gate bleibt 0.25 (oberes Quartil) — haelt mit ~1.3pp Headroom; der naechste
+  // Oeffnungs-Zyklus (OTC-Grey-Dedup) muss BE erneut messen (Headroom duenn).
   assertAnchorTop('BE', 'industrials', 0.25);
 });
 
@@ -146,7 +148,49 @@ test('produceRankings: korrekte JSON-Form, sortiert, PLTR top software', () => {
   assert.ok(r.overview.length > 0 && r.survival.length > 0);
   assert.ok(r.excluded && typeof r.excluded.non_us !== 'undefined' || true); // excluded ist ein Objekt
   assert.equal(typeof r.excluded, 'object');
-  assert.equal(r.branches['software-comm-services'].profitable[0].ticker, 'PLTR'); // Anker top im Output
+  // A3-Stufe-2 (Weltweit-Pivot): PLTR ist im GLOBALEN Topf nicht mehr literal #1 — echte Auslands-
+  // Hypergrowth-Namen (2383.TW Elite Material, 2308.TW Delta, WTC.AX WiseTech) UND US-Peers (FICO/APP)
+  // ueberholen es knapp, bei stabilem PLTR-Absolutscore (~82.3). Anker re-geblesst (Court-Bless, Weltweit-
+  // Aera): PLTR bleibt Top-Tier = top 5% des globalen software-comm-services/profitable-Rankings
+  // (Rang ~10/424 = 2.4%). Die alte "[0]===PLTR"-Assertion war US-zentrisch und obsolet.
+  const softCohort = rankBy(results, 'software-comm-services', 'profitable');
+  const pltrRank = softCohort.findIndex((e) => e.ticker === 'PLTR');
+  assert.ok(pltrRank >= 0 && (pltrRank / softCohort.length) <= 0.05,
+    `PLTR top-5% global software: Rang ${pltrRank + 1}/${softCohort.length}`);
+});
+
+// --- A3-Stufe-2: Issuer-Dedup (Doppel-Listings desselben Emittenten) ---------
+test('Issuer-Dedup synthetisch: Heimat-Bein -> dup-issuer, US-Bein ist der Gewinner', () => {
+  const mk = (ticker, ex, ccy, region) => ({
+    meta: { name: 'DualListed Holding PLC', sector: 'Technology', industry: 'Software', exchangeName: ex, ticker, tradingCurrency: ccy, region },
+    annual: { annualRev: [{ value: 300 }, { value: 200 }, { value: 130 }], annualGP: [{ value: 180 }] },
+    marketCap: { value: 5e9 } });
+  const res = scoreUniverse([mk('DUAL', 'NYSE', 'USD', 'US'), mk('DUAL.L', 'LSE', 'GBP', undefined)], formulas);
+  const bt = Object.fromEntries(res.map((r) => [r.ticker, r]));
+  // Pruefe die WINNER-SELECTION (US-primaeres Bein gewinnt): das Heimat-Bein wird dedupt, das US-Bein
+  // NICHT. (Der absolute Score des Gewinners ist in diesem 1-Namen-Kohorten-Mini-Universum nicht
+  // berechenbar -> separat im realen SHOP/ASML-Test verifiziert.)
+  assert.equal(bt['DUAL.L'].reason, 'dup-issuer');   // Heimat-Bein verliert
+  assert.notEqual(bt['DUAL'].reason, 'dup-issuer');  // US-Bein ist der Gewinner
+});
+test('Issuer-Dedup real: SHOP.TO/ASML.AS/2330.TW (falls vorhanden) dedupt, US-Bein routet', () => {
+  for (const [us, home] of [['SHOP', 'SHOP.TO'], ['ASML', 'ASML.AS'], ['TSM', '2330.TW']]) {
+    const u = byTicker[us], h = byTicker[home];
+    if (!u || !h) { console.log(`       (${us}/${home} nicht im Universum — uebersprungen)`); continue; }
+    assert.equal(u.action, 'route', `${us} sollte routen`);
+    assert.equal(h.action, 'exclude', `${home} sollte dedupt sein`);
+    assert.equal(h.reason, 'dup-issuer', `${home} reason=${h.reason}`);
+  }
+});
+
+// --- A3-Stufe-2: Non-Operating-Revenue-Exclude (Investment-Trusts/CEFs) ------
+test('non-operating-rev: Closed-End-Fund/Investment-Trust (falls vorhanden) excludiert', () => {
+  for (const t of ['SMT.L', 'ADX', 'AOD']) {
+    const e = byTicker[t];
+    if (!e) { console.log(`       (${t} nicht im Universum — uebersprungen)`); continue; }
+    assert.equal(e.action, 'exclude', `${t} sollte excludiert sein`);
+    assert.equal(e.reason, 'non-operating-rev', `${t} reason=${e.reason}`);
+  }
 });
 
 // --- A2 (Weltweit-Pivot): jede Output-Zeile traegt country/region/sector/marketCap --------

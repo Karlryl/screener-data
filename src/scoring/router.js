@@ -52,6 +52,19 @@ function isUsPrimaryListing(m) {
   if (m.ticker && FOREIGN_SUFFIX.test(m.ticker)) return false;
   return true;
 }
+// A3-Stufe-2 (2026-06-27, Weltweit-Pivot): foreign-LISTED = an einer echten Auslandsboerse
+// (FOREIGN_EX) ODER mit Auslands-Suffix (FOREIGN_SUFFIX) gelistet. Diese ~1584 Namen werden in
+// den globalen Topf geoeffnet — der A4-data-suspect-Gate (score.js, VOR dem Scoring) schuetzt vor
+// erfundenen/geleakten Auslandsdaten, die 8 Achsen sind waehrungs-invariant (Ratios/Wachstum/Slope
+// im selben Snapshot, §7-De-Risking an Realdaten bestaetigt). BEWUSST NICHT geoeffnet: die US-OTC-
+// Grey-Market-Schattenduplikate (ASMLF=ASML: US-OTC, keine Auslandsboerse/-Suffix) — sie bleiben
+// fuer den spaeteren Dedup-Zyklus zurueckgestellt (sonst Doppel-Issuer im Topf/Tab).
+function isForeignListed(m) {
+  if (!m) return false;
+  if (m.exchangeName && FOREIGN_EX.test(m.exchangeName)) return true;
+  if (m.ticker && FOREIGN_SUFFIX.test(m.ticker)) return true;
+  return false;
+}
 function isUS(s) {
   const m = (s && s.meta) || {};
   // audit/feat (A3-Stufe-1): US-PRIMAERboersen-gelistete foreign-domiciled ADRs (USD/SEC-Filer)
@@ -140,12 +153,24 @@ function sectorRoute(s) {
  *   {action:'route', formulaId[, gpClass]} Branchen-Formel
  */
 function route(s) {
-  // Universum-Filter: nur US (Plan: US-Universe inkl. Small-Caps). Auslaendisch
-  // gelistete Namen duerfen die US-Kohorten-Perzentile nicht verzerren.
-  if (!isUS(s)) return { action: 'exclude', reason: 'non-us' };
+  // Universum-Filter (Weltweit-Pivot): US (isUS: US-Domizil + US-primaer-gelistete ADRs, A3-Stufe-1)
+  // ODER foreign-LISTED (echte Auslandsboerse, A3-Stufe-2 — globaler Topf). Nur die US-OTC-Grey-Market-
+  // Schattenduplikate (foreign-domiciled, aber keine Auslandsboerse/-Suffix) bleiben als Duplikate
+  // zurueckgestellt -> non-us. Die Achsen sind waehrungs-invariant, also verzerren die foreign-listed
+  // (auch nicht-USD-konvertierte) die Kohorten-Perzentile nicht (§7-De-Risking an Realdaten).
+  if (!isUS(s) && !isForeignListed((s && s.meta) || {})) return { action: 'exclude', reason: 'non-us' };
   // Schritt 1: Struktur-Hard-Exclude
   const se = structExcludeReason(s);
   if (se) return { action: 'exclude', reason: se };
+  // Schritt 1b: Non-operating-Revenue-Exclude (Weltweit-Pivot A3-Stufe-2). Negativer Jahresumsatz
+  // = kein operatives Umsatzgeschaeft: Investment-Trusts/Closed-End-Funds (z.B. SMT.L/Scottish
+  // Mortgage) fuehren Anlagegewinn/-verlust als "Umsatz", der ins Negative kippt -> sie gehoeren
+  // nicht in einen Umsatz-Wachstums-Topf (ranken sonst auf Mark-to-Market-Schwankung #1 financials).
+  // Erst durch das Oeffnen der foreign-listed Namen sichtbar geworden (Audit-Fund Stufe-2).
+  const revAnn = norm(s, 'annualRev');
+  if (hasPresent(revAnn) && presentValues(revAnn).some((v) => v < 0)) {
+    return { action: 'exclude', reason: 'non-operating-rev' };
+  }
   // Schritt 2: annualGP=0-Exclude — VOR jeder grossMargin-Logik, NUR Lending-Industrien
   // (audit/fix R1/R2: nicht universell, sonst raus mit Nicht-Lendern/Brokern).
   const gp = norm(s, 'annualGP');
@@ -165,4 +190,4 @@ function route(s) {
   return out;
 }
 
-module.exports = { route, gpClass, isPreRevenue, structExcludeReason, sectorRoute, isUS };
+module.exports = { route, gpClass, isPreRevenue, structExcludeReason, sectorRoute, isUS, isForeignListed };

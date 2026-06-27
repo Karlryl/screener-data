@@ -14,7 +14,7 @@
 
 const { norm, metricVal } = require('./snapshot.js');
 const { q, weightedScore, signTrack, fcfTrack } = require('./engine.js');
-const { route } = require('./router.js');
+const { route, isUS } = require('./router.js');
 const { evaluateLamps } = require('./lamps.js');
 const { overviewMetric } = require('./overview.js');
 const { normalizeCountry } = require('./country.js');
@@ -87,6 +87,40 @@ function scoreUniverse(snapshots, formulas) {
     });
   }
 
+  // 1b. Issuer-Dedup (Weltweit-Pivot A3-Stufe-2): derselbe Emittent kann mehrfach gelistet sein —
+  // US-ADR (Stufe-1, USD/SEC) + Heimatboerse (Stufe-2), z.B. ASML+ASML.AS, TSM+2330.TW, SHOP+SHOP.TO,
+  // BABA+9988.HK. Beide Beine wuerden dieselbe Firma DOPPELT in Topf/Kohorte/Sektor-Tab zeigen und
+  // die Perzentile verzerren. Pro Emittent (normalisierter meta.name) genau EIN Bein behalten:
+  // bevorzugt das US-primaere (USD/SEC-Qualitaet, isUS), sonst hoechste marketCap, dann Ticker-Tie-
+  // Break (deterministisch). Verlierer -> exclude 'dup-issuer'. Laeuft NACH dem A4-data-suspect-Gate,
+  // sodass ein bereits gegatetes Bein nicht "gewinnt"; greift nur auf Output-sichtbare route/survival.
+  const issuerKey = (s) => {
+    const n = s && s.meta && s.meta.name;
+    return (typeof n === 'string' && n.trim()) ? n.toLowerCase().replace(/\s+/g, ' ').trim() : null;
+  };
+  const mcapOf = (s) => (s && s.marketCap && Number.isFinite(s.marketCap.value)) ? s.marketCap.value : 0;
+  const issuerGroups = {};
+  for (const e of results) {
+    if (e.action !== 'route' && e.action !== 'survival') continue;
+    const k = issuerKey(e.snapshot);
+    if (k) (issuerGroups[k] ||= []).push(e);
+  }
+  for (const group of Object.values(issuerGroups)) {
+    if (group.length < 2) continue;
+    group.sort((a, b) => {
+      const ua = isUS(a.snapshot) ? 1 : 0, ub = isUS(b.snapshot) ? 1 : 0;
+      if (ua !== ub) return ub - ua;                       // US-primaeres Bein zuerst
+      const ma = mcapOf(a.snapshot), mb = mcapOf(b.snapshot);
+      if (ma !== mb) return mb - ma;                       // dann groesste marketCap
+      return a.ticker.localeCompare(b.ticker);             // dann stabiler Ticker-Tie-Break
+    });
+    for (let i = 1; i < group.length; i++) {
+      const e = group[i];
+      e.action = 'exclude'; e.formulaId = null; e.track = null; e.score = null; e.reason = 'dup-issuer';
+      delete e.formula; delete e.gpClass;
+    }
+  }
+
   // 2. Kohorten (formulaId|track) bilden, Roh-Achsen sammeln, q()-normieren, gewichten
   const cohorts = {};
   for (const e of results) {
@@ -116,6 +150,17 @@ function scoreUniverse(snapshots, formulas) {
         return { value: q(rawByAxis[ax.key][i], cohort), weight: ax.w[track] };
       });
       entries[i].score = weightedScore(axes);
+    }
+  }
+
+  // 2b. no-axes-Guard (Weltweit-Pivot A3-Stufe-2): ein routebarer Name, dessen Roh-Achsen alle null
+  // sind (extrem sparse/erratische Auslandsdaten -> weightedScore null), wird explizit als 'no-axes'
+  // excludiert statt als stummer score:null-route mitgeschleppt. q() filtert nulls aus der Kohorte,
+  // also verzerrt er die Perzentile der anderen nicht — der Guard macht den Zustand nur sichtbar.
+  for (const e of results) {
+    if (e.action === 'route' && e.score === null) {
+      e.action = 'exclude'; e.formulaId = null; e.track = null; e.reason = 'no-axes';
+      delete e.formula; delete e.gpClass;
     }
   }
 
