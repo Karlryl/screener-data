@@ -17,6 +17,7 @@ const { q, weightedScore, signTrack, fcfTrack } = require('./engine.js');
 const { route } = require('./router.js');
 const { evaluateLamps } = require('./lamps.js');
 const { overviewMetric } = require('./overview.js');
+const { normalizeCountry } = require('./country.js');
 const axesFns = require('./axes.js');
 
 const tickerOf = (s) => (s && s.meta && s.meta.ticker) || (s && s.identifier && s.identifier.value) || '?';
@@ -109,6 +110,17 @@ function scoreUniverse(snapshots, formulas) {
       // Pre-Revenue/Biotech: KEIN Growth-Score, nur Runway-Badge (Plan: nie growth-gescort)
       e.overview = overviewMetric(e.snapshot, { specialTrack: 'biotech' });
     }
+    // A2 (Weltweit-Pivot): Land/Region/Sektor/MarketCap aus meta anheften, SOLANGE der
+    // Snapshot noch existiert (wird gleich geloescht). produceRankings haengt sie an jede
+    // Output-Zeile -> Voraussetzung fuer Karls Laenderfilter + Sektor-Tabs + mcap-Spalte.
+    // Rein additiv: kein Routing/Track/Achsen/Score/Lampen-Einfluss -> fixture-safe.
+    const meta = e.snapshot && e.snapshot.meta;
+    const geo = normalizeCountry(meta);
+    e.country = geo.country;
+    e.region = geo.region;
+    e.sector = (meta && typeof meta.sector === 'string' && meta.sector) || null;
+    const mc = e.snapshot && e.snapshot.marketCap;
+    e.marketCap = (mc && Number.isFinite(mc.value)) ? mc.value : null;
     delete e.snapshot;
     delete e.formula;
   }
@@ -141,9 +153,12 @@ function produceRankings(results, opts = {}) {
   const overview = [];
   const survival = [];
   const excluded = {};
+  // A2: die in scoreUniverse angehefteten geo-Felder an jede Output-Zeile spreaden
+  // (?? null haelt die Form stabil, falls produceRankings mit handgebauten results laeuft).
+  const geo = (e) => ({ country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null });
   for (const e of (Array.isArray(results) ? results : [])) {
     if (e.action === 'survival') {
-      survival.push({ ticker: e.ticker, runwayQuarters: e.overview ? e.overview.value : null, lamps: e.lamps });
+      survival.push({ ticker: e.ticker, runwayQuarters: e.overview ? e.overview.value : null, lamps: e.lamps, ...geo(e) });
       continue;
     }
     if (e.action === 'exclude' || e.action === 'unrouted') {
@@ -155,6 +170,7 @@ function produceRankings(results, opts = {}) {
     const row = {
       ticker: e.ticker, score: round1(e.score), track: e.track, lamps: e.lamps,
       overview: e.overview ? { kind: e.overview.kind, value: round1(e.overview.value) } : null,
+      ...geo(e),
       // audit/fix (D1/D2): rohen Score zum Sortieren behalten, NUR fuer die Anzeige runden.
       // Sortiert man das gerundete Feld, entstehen kuenstliche round1-Ties, die JS-stable-sort
       // per Input- = fs.readdirSync-Reihenfolge bricht -> nicht reproduzierbare topN-Membership (CI != lokal).
@@ -164,7 +180,7 @@ function produceRankings(results, opts = {}) {
     (branches[e.formulaId][e.track] = branches[e.formulaId][e.track] || []).push(row);
     overview.push({ ticker: e.ticker, formulaId: e.formulaId, track: e.track, score: round1(e.score),
       overviewKind: e.overview ? e.overview.kind : null, overviewValue: e.overview ? round1(e.overview.value) : null,
-      lamps: e.lamps, _raw: e.score });
+      lamps: e.lamps, ...geo(e), _raw: e.score });
   }
   // audit/fix (D1/D2/D3): roher Score + deterministischer Ticker-Tie-Break VOR dem Slicen,
   // damit exakte/round1-Ties nicht von der Dateisystem-Reihenfolge entschieden werden. _raw

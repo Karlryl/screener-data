@@ -146,6 +146,25 @@ test('produceRankings: korrekte JSON-Form, sortiert, PLTR top software', () => {
   assert.equal(r.branches['software-comm-services'].profitable[0].ticker, 'PLTR'); // Anker top im Output
 });
 
+// --- A2 (Weltweit-Pivot): jede Output-Zeile traegt country/region/sector/marketCap --------
+// Voraussetzung fuer Karls Laenderfilter (filtert auf r.country) + Sektor-Tabs + mcap-Spalte.
+test('produceRankings-Zeilen tragen country/region/sector/marketCap (PLTR=US-Anker)', () => {
+  const { produceRankings } = require('../../src/scoring/score.js');
+  const r = produceRankings(results, { topN: 50 });
+  const pltr = r.branches['software-comm-services'].profitable.find((x) => x.ticker === 'PLTR');
+  assert.ok(pltr, 'PLTR fehlt im Output');
+  assert.equal(pltr.country, 'United States', 'PLTR country');
+  assert.equal(pltr.region, 'North America', 'PLTR region-Bucket');
+  assert.ok(typeof pltr.sector === 'string' && pltr.sector.length > 0, 'PLTR sector-Label');
+  assert.ok(Number.isFinite(pltr.marketCap) && pltr.marketCap > 0, 'PLTR marketCap');
+  // overview-Liste (globaler Topf) traegt dieselben Felder
+  const ov = r.overview.find((x) => x.ticker === 'PLTR');
+  assert.ok(ov && ov.country === 'United States' && Number.isFinite(ov.marketCap), 'overview-Zeile ohne geo');
+  // survival-Zeilen sind ebenfalls angereichert (Filter greift auch dort)
+  assert.ok(r.survival.length && ('country' in r.survival[0]) && ('marketCap' in r.survival[0]),
+    'survival-Zeile ohne geo-Felder');
+});
+
 // --- Sichtbarkeit: Top 6 je Branche/Track -----------------------------------
 for (const fid of ['semiconductors', 'software-comm-services', 'industrials', 'energy', 'health-care']) {
   for (const track of ['profitable', 'unprofitable']) {
