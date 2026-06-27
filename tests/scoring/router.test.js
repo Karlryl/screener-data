@@ -51,11 +51,17 @@ test('US-Aktie passiert den Filter', () => {
   assert.equal(route(s).action, 'route');
 });
 
-test('Auslaendische ADRs (region=Laendercode, US-Boerse) -> exclude non-us', () => {
-  const tsm = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'TW', exchangeName: 'NYSE' },
+// A3-Stufe-1 (2026-06-27, Weltweit-Pivot): US-PRIMAERboersen-gelistete foreign-domiciled ADRs
+// (USD/SEC-Filer) werden GEOEFFNET; OTC-Grey-Market bleibt bis A4 zurueckgestellt; foreign-LISTED
+// (foreign exchange) bleibt excludiert. (Ersetzt die alte US-only-ADR-Exclude-Policy bewusst.)
+test('US-primaer-gelisteter ADR (region=Laendercode TW, NYSE) -> JETZT route (A3-Stufe-1)', () => {
+  const tsm = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'TW', exchangeName: 'NYSE', ticker: 'TSM' },
     annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
-  assert.equal(route(tsm).reason, 'non-us'); // ADR trotz US-Boerse raus
-  const adr = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'JP', exchangeName: 'OTC Markets OTCPK' },
+  assert.equal(route(tsm).action, 'route');
+  assert.equal(route(tsm).formulaId, 'semiconductors');
+});
+test('OTC-Grey-Market-ADR bleibt zurueckgestellt -> exclude non-us (bis A4-Lampen/Dedup)', () => {
+  const adr = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'JP', exchangeName: 'OTC Markets OTCPK', ticker: 'XYZF' },
     annual: { annualRev: [{ value: 100 }] } };
   assert.equal(route(adr).reason, 'non-us');
 });
@@ -76,6 +82,33 @@ test('US-Domizil (country United States) bleibt drin', () => {
   const s = { meta: { sector: 'Healthcare', industry: 'Biotechnology', region: 'NasdaqGM', country: 'United States', ticker: 'SEPN' },
     annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
   assert.equal(route(s).action, 'route');
+});
+
+// --- A3-Stufe-1: US-gelistete foreign-domiciled ADRs oeffnen (USD/SEC) -------
+test('Foreign-Domizil (country=Ireland) US-primaer gelistet (NYSE) -> route (ACN/ETN-Muster)', () => {
+  const acn = { meta: { sector: 'Technology', industry: 'Information Technology Services', country: 'Ireland', exchangeName: 'NYSE', ticker: 'ACN' },
+    annual: { annualRev: [{ value: 100 }] } };
+  assert.equal(route(acn).action, 'route');
+  assert.equal(route(acn).formulaId, 'it-services');
+});
+test('China-ADR ohne country (region=CN, NYSE) -> route (BABA-Muster, USD/SEC-20F)', () => {
+  const baba = { meta: { sector: 'Consumer Cyclical', industry: 'Internet Retail', region: 'CN', exchangeName: 'NYSE', ticker: 'BABA' },
+    annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
+  assert.equal(route(baba).action, 'route');
+  assert.equal(route(baba).formulaId, 'consumer-discretionary');
+});
+test('Foreign-Domizil OTC-gelistet bleibt zurueckgestellt -> non-us (ASMLF-Grey-Duplikat)', () => {
+  const asmlf = { meta: { sector: 'Technology', industry: 'Semiconductor Equipment & Materials', country: 'Netherlands', exchangeName: 'OTC Markets OTCPK', ticker: 'ASMLF' },
+    annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
+  assert.equal(route(asmlf).reason, 'non-us');
+});
+test('Foreign-LISTED bleibt excludiert: LSE/USD-Falle CPG.L + Tokyo-Primaerlisting', () => {
+  const cpg = { meta: { sector: 'Consumer Defensive', industry: 'Restaurants', exchangeName: 'LSE', ticker: 'CPG.L' },
+    annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
+  assert.equal(route(cpg).reason, 'non-us'); // LSE = foreign exchange, .L-Suffix -> kein US-Primaerlisting
+  const tokyo = { meta: { sector: 'Technology', industry: 'Semiconductors', country: 'Japan', exchangeName: 'Tokyo', ticker: '6501.T' },
+    annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
+  assert.equal(route(tokyo).reason, 'non-us');
 });
 
 // --- Schritt 0: Pre-Revenue -------------------------------------------------

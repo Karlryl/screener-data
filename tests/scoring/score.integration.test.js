@@ -94,15 +94,18 @@ function assertAnchorTop(ticker, formulaId, maxPct) {
 test('PLTR -> software-comm-services, oberes 20% seines Tracks', () => {
   assertAnchorTop('PLTR', 'software-comm-services', 0.20);
 });
-test('BE/Bloom Energy -> industrials, PROFITABLE-Track, oberes 20% (Karl-Anker)', () => {
+test('BE/Bloom Energy -> industrials, PROFITABLE-Track, oberes Quartil (Karl-Anker)', () => {
   const b = byTicker['BE'];
   assert.ok(b && b.action === 'route', 'BE fehlt/ungeroutet');
   assert.equal(b.formulaId, 'industrials');
   assert.equal(b.track, 'profitable'); // Turnaround: juengstes annualOpInc +72.8M
   // audit/fix R1: PRG (PROG Holdings, ~$2.4B Umsatz, Yahoo-leerer GP) wird korrekt aus dem
   // lender-gp0-Exclude freigegeben und joint industrials -> Kohorte 293->294, BE 59->60 = 20.4%.
-  // Gate auf 0.21 relaxt; BE-Absolutscore unveraendert (~61.6), bleibt oberes ~20%.
-  assertAnchorTop('BE', 'industrials', 0.21);
+  // A3-Stufe-1 (Weltweit): 285 US-PRIMAERgelistete foreign-domiciled Industrie-ADRs treten der
+  // Kohorte bei (294->321) -> BE 70/321 = 21.8%, reine Verduennung, BE-Absolutscore unveraendert
+  // (~61.6). Gate auf 0.25 (oberes Quartil) geblesst = durabler Anker fuer die Weltweit-Aera;
+  // bei Stufe-2 (1597 foreign-listed) neu bewerten.
+  assertAnchorTop('BE', 'industrials', 0.25);
 });
 
 // --- VIELLEICHT-Branchen produzieren Rankings -------------------------------
