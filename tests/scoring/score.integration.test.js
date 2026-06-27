@@ -184,12 +184,22 @@ test('Issuer-Dedup real: SHOP.TO/ASML.AS/2330.TW (falls vorhanden) dedupt, US-Be
 });
 
 // --- A3-Stufe-2: Non-Operating-Revenue-Exclude (Investment-Trusts/CEFs) ------
-test('non-operating-rev: Closed-End-Fund/Investment-Trust (falls vorhanden) excludiert', () => {
-  for (const t of ['SMT.L', 'ADX', 'AOD']) {
+test('non-operating-rev: CEF/Trust + Investment-Holding/BDC (falls vorhanden) excludiert', () => {
+  // CEFs/Trusts (negativer Jahresumsatz) + NAV-Holdings (III.L/3i, INDU-A.ST/Industrivaerden:
+  // Asset-Mgmt mit GP=0/ni~rev bzw. negativem Quartalsumsatz). Alle gehoeren nicht in den Topf.
+  for (const t of ['SMT.L', 'ADX', 'AOD', 'III.L', 'INDU-A.ST']) {
     const e = byTicker[t];
     if (!e) { console.log(`       (${t} nicht im Universum — uebersprungen)`); continue; }
     assert.equal(e.action, 'exclude', `${t} sollte excludiert sein`);
     assert.equal(e.reason, 'non-operating-rev', `${t} reason=${e.reason}`);
+  }
+});
+test('echter Fee-Asset-Manager BLK/BX (falls vorhanden) bleibt in financials (kein Over-Exclude)', () => {
+  for (const t of ['BLK', 'BX', 'KKR']) {
+    const e = byTicker[t];
+    if (!e) { console.log(`       (${t} nicht im Universum — uebersprungen)`); continue; }
+    assert.equal(e.action, 'route', `${t} sollte routen`);
+    assert.equal(e.formulaId, 'financials', `${t} formulaId=${e.formulaId}`);
   }
 });
 

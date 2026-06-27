@@ -121,6 +121,37 @@ function structExcludeReason(s) {
   return null;
 }
 
+// --- Schritt 1b: Non-operating-Vehicle-Exclude -----------------------------
+// Investment-Trusts/Holdings/BDCs/Closed-End-Funds fuehren Anlagegewinn/-verlust als "Umsatz"
+// (keine operative Umsatzbasis) -> gehoeren nicht in einen Umsatz-WACHSTUMS-Topf (ranken sonst auf
+// Mark-to-Market-Schwankung #1 financials). Erst durch das Oeffnen der foreign-listed Namen voll
+// sichtbar (Audit-Fund A3-Stufe-2). Drei an Realdaten gegen ECHTE Fee-Asset-Manager (BLK/BX/KKR/
+// APO/BN/BAM/ARES/OWL — alle GP>0 ODER ni/rev<<1 ODER negQ=false) abgesicherte Signaturen:
+//   (a) negativer JAHRESumsatz -> Closed-End-Funds/Bullion-Trusts (SMT.L/ADX); universell sicher.
+//   (b) Asset-Management MIT negativem QUARTALSumsatz -> NAV-Holdings/BDCs (Industrivaerden/Investor
+//       AB/Kinnevik). NUR auf Asset-Management gescoped: ein einzelnes negatives Quartal ist bei
+//       OPERATIVEN Firmen (DD/TFX/BTE: Restatement/Glitch) legitim -> universell = 16 False-Positives.
+//   (c) Asset-Management OHNE Kostenstruktur: GP vorhanden-und-null UND |netIncome/revenue|>0.9 ->
+//       "Umsatz" IST der Anlagegewinn, kein Fee-Geschaeft (3i Group, dessen Quartal positiv bleibt).
+function isNonOperatingVehicle(s) {
+  // (a) negativer JAHRESumsatz -> Closed-End-Funds/Bullion-Trusts (SMT.L/ADX): "Umsatz" = Anlage-
+  //     gewinn/-verlust, kein operativer Umsatz. Universell sicher (1 harmloser Borderline: NBTX,
+  //     ein Biotech mit korruptem -8.4M-Glitch-Jahr -> ohnehin Datenmangel). Eine NI~rev-Verfeinerung
+  //     wurde VERWORFEN: sie gab 3 echte Muni-Bond-CEFs (BTT/NZF/PTA, NI/rev 1.8-3.5) faelschlich frei.
+  const revAnn = norm(s, 'annualRev');
+  if (hasPresent(revAnn) && presentValues(revAnn).some((v) => v < 0)) return true;        // (a)
+  const ind = lc(s && s.meta ? s.meta.industry : '');
+  if (!ind.includes('asset management')) return false;
+  const revQ = norm(s, 'revenueQ');
+  if (hasPresent(revQ) && presentValues(revQ).some((v) => v < 0)) return true;            // (b)
+  const gp = norm(s, 'annualGP');                                                          // (c)
+  if (hasPresent(gp) && presentValues(gp).every((v) => v === 0)) {
+    const r0 = firstPresent(revAnn), n0 = firstPresent(norm(s, 'annualNetIncome'));
+    if (r0 !== null && r0 > 0 && n0 !== null && Math.abs(n0 / r0) > 0.9) return true;
+  }
+  return false;
+}
+
 // --- Schritt 3: Branchen-Routing (provisorische GICS-Karte) -----------------
 // Industry-Overrides zuerst, dann Sektor-Fallback. Wird mit den Formel-Dateien
 // (jede exportiert ihr eigenes routingPredicate) verfeinert.
@@ -162,15 +193,8 @@ function route(s) {
   // Schritt 1: Struktur-Hard-Exclude
   const se = structExcludeReason(s);
   if (se) return { action: 'exclude', reason: se };
-  // Schritt 1b: Non-operating-Revenue-Exclude (Weltweit-Pivot A3-Stufe-2). Negativer Jahresumsatz
-  // = kein operatives Umsatzgeschaeft: Investment-Trusts/Closed-End-Funds (z.B. SMT.L/Scottish
-  // Mortgage) fuehren Anlagegewinn/-verlust als "Umsatz", der ins Negative kippt -> sie gehoeren
-  // nicht in einen Umsatz-Wachstums-Topf (ranken sonst auf Mark-to-Market-Schwankung #1 financials).
-  // Erst durch das Oeffnen der foreign-listed Namen sichtbar geworden (Audit-Fund Stufe-2).
-  const revAnn = norm(s, 'annualRev');
-  if (hasPresent(revAnn) && presentValues(revAnn).some((v) => v < 0)) {
-    return { action: 'exclude', reason: 'non-operating-rev' };
-  }
+  // Schritt 1b: Non-operating-Vehicle-Exclude (Weltweit-Pivot) — Investment-Trusts/Holdings/BDCs raus.
+  if (isNonOperatingVehicle(s)) return { action: 'exclude', reason: 'non-operating-rev' };
   // Schritt 2: annualGP=0-Exclude — VOR jeder grossMargin-Logik, NUR Lending-Industrien
   // (audit/fix R1/R2: nicht universell, sonst raus mit Nicht-Lendern/Brokern).
   const gp = norm(s, 'annualGP');

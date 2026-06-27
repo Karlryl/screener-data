@@ -156,6 +156,33 @@ test('Negativer Jahresumsatz (Investment-Trust/CEF) -> exclude non-operating-rev
     annual: { annualRev: [{ value: 300 }, { value: 200 }], annualGP: [{ value: 180 }] } };
   assert.equal(route(op).action, 'route');
 });
+test('Investment-Holding (Asset-Mgmt, GP=0, ni~rev) -> non-operating-rev (3i-Group-Muster)', () => {
+  const holding = { meta: { sector: 'Financial Services', industry: 'Asset Management', region: 'US', ticker: 'HOLD' },
+    annual: { annualRev: [{ value: 5211 }], annualGP: [{ value: 0 }], annualNetIncome: [{ value: 5045 }] } };
+  assert.equal(route(holding).reason, 'non-operating-rev'); // GP=0 & |ni/rev|=0.97 -> kein Fee-Geschaeft
+});
+test('Asset-Mgmt mit negativem Quartalsumsatz -> non-operating-rev (NAV-Holding/BDC)', () => {
+  const nav = { meta: { sector: 'Financial Services', industry: 'Asset Management', region: 'US', ticker: 'NAVH' },
+    annual: { annualRev: [{ value: 4566 }], annualGP: [{ value: 0 }] },
+    timeseries: { revenueQ: [{ value: 1846 }, { value: -3186 }, { value: 7793 }] } };
+  assert.equal(route(nav).reason, 'non-operating-rev'); // Industrivaerden/Investor-AB-Muster
+});
+test('echter Fee-Asset-Manager (GP>0) bleibt drin -> route financials (BLK-Muster)', () => {
+  const blk = { meta: { sector: 'Financial Services', industry: 'Asset Management', region: 'US', ticker: 'BLKX' },
+    annual: { annualRev: [{ value: 24216 }], annualGP: [{ value: 11310 }], annualNetIncome: [{ value: 5553 }] },
+    timeseries: { revenueQ: [{ value: 6698 }, { value: 7008 }] } };
+  const r = route(blk);
+  assert.equal(r.action, 'route');
+  assert.equal(r.formulaId, 'financials'); // GP>0 -> Fee-Geschaeft, kein NAV-Vehikel
+});
+test('operative Firma mit EINEM negativen Quartal bleibt drin (negQ NUR Asset-Mgmt-gescoped)', () => {
+  // DuPont/Teleflex-Muster: ein negatives Quartal (Restatement/Glitch) ist bei OPERATIVEN Firmen
+  // legitim -> universeller negQ-Exclude waere ein False-Positive (16 reale Namen). Daher gescoped.
+  const op = { meta: { sector: 'Basic Materials', industry: 'Specialty Chemicals', region: 'US', ticker: 'DDX' },
+    annual: { annualRev: [{ value: 12000 }], annualGP: [{ value: 4000 }] },
+    timeseries: { revenueQ: [{ value: 3000 }, { value: -100 }, { value: 3100 }] } };
+  assert.equal(route(op).action, 'route');
+});
 
 // --- Schritt 2 laeuft VOR grossMargin (Reihenfolge-Beweis) ------------------
 test('annualGP all-zero -> exclude, auch bei hohem grossMargin', () => {
