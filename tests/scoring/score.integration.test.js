@@ -168,6 +168,30 @@ test('produceRankings-Zeilen tragen country/region/sector/marketCap (PLTR=US-Ank
     'survival-Zeile ohne geo-Felder');
 });
 
+// --- A4: Daten-Qualitaets-Gate (data-suspect-Lampe / grade-D -> Ranking-Exclude) ----------
+test('A4-Gate: newestQtrSuspect-Name wird excludiert (data-suspect), clean-Twin routet', () => {
+  const V = (arr) => arr.map((v) => ({ value: v }));
+  const suspect = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'US', ticker: 'FAKEQ' },
+    annual: { annualRev: V([100]) },
+    timeseries: { revenueQ: V([100, 70, 70, 70, 70]), opIncQ: V([43, 7, 7, 7, 7]), grossProfitQ: V([62, 28, 28, 28, 28]) } };
+  const clean = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'US', ticker: 'FAKEC' },
+    annual: { annualRev: V([100]), annualGP: V([60]) },
+    timeseries: { revenueQ: V([100, 90, 80, 70, 60]), opIncQ: V([30, 25, 20, 15, 10]), grossProfitQ: V([40, 36, 32, 28, 24]) } };
+  const bt = Object.fromEntries(scoreUniverse([clean, suspect], formulas).map((r) => [r.ticker, r]));
+  assert.equal(bt['FAKEQ'].action, 'exclude');
+  assert.equal(bt['FAKEQ'].reason, 'data-suspect');
+  assert.equal(bt['FAKEC'].action, 'route'); // normale Daten -> unberuehrt
+});
+test('A4-Gate: _quality.grade=D excludiert auch ohne Lampe', () => {
+  const V = (arr) => arr.map((v) => ({ value: v }));
+  const d = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'US', ticker: 'FAKED' },
+    _quality: { grade: 'D' }, annual: { annualRev: V([100]), annualGP: V([60]) },
+    timeseries: { revenueQ: V([100, 90, 80, 70, 60]), opIncQ: V([30, 25, 20, 15, 10]), grossProfitQ: V([40, 36, 32, 28, 24]) } };
+  const res = scoreUniverse([d], formulas);
+  assert.equal(res[0].action, 'exclude');
+  assert.equal(res[0].reason, 'data-suspect');
+});
+
 // --- Sichtbarkeit: Top 6 je Branche/Track -----------------------------------
 for (const fid of ['semiconductors', 'software-comm-services', 'industrials', 'energy', 'health-care']) {
   for (const track of ['profitable', 'unprofitable']) {

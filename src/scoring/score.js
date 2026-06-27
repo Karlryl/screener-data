@@ -22,6 +22,17 @@ const axesFns = require('./axes.js');
 
 const tickerOf = (s) => (s && s.meta && s.meta.ticker) || (s && s.identifier && s.identifier.value) || '?';
 
+// A4 (Weltweit-Pivot): DISQUALIFIZIERENDE Daten-Qualitaets-Signale. Ein Name mit einer
+// data-suspect-Lampe (newestQtrSuspect/annualCurrencyLeak — erfundenes/geleaktes Quartal bzw.
+// annual-currency-Leak) ODER snapshot _quality.grade='D' wird aus dem Ranking EXCLUDIERT, sonst
+// koennte ein Auslandsname auf fabriziertem Wachstum #1 werden. Die uebrigen 10 Lampen sind reine
+// Timing-Warnungen und excludieren NICHT (BE/PLTR ranken trotz Lampe oben).
+const DATA_SUSPECT_LAMPS = ['newestQtrSuspect', 'annualCurrencyLeak'];
+function isDataSuspect(s, lampsActive) {
+  if (lampsActive.some((l) => DATA_SUSPECT_LAMPS.includes(l))) return true;
+  return !!(s && s._quality && s._quality.grade === 'D');
+}
+
 // Roh-Achsenwert (ruleOfX braucht alpha + includeFcf am ECHTEN FCF-Vorzeichen).
 function rawAxisValue(s, key, formula, track) {
   if (key === 'ruleOfX') {
@@ -54,7 +65,13 @@ function scoreUniverse(snapshots, formulas) {
   // 1. Routing + Track
   for (const s of (Array.isArray(snapshots) ? snapshots : [])) {
     const r = route(s);
-    const base = { ticker: tickerOf(s), snapshot: s, lamps: evaluateLamps(s).active };
+    const lampsActive = evaluateLamps(s).active;
+    const base = { ticker: tickerOf(s), snapshot: s, lamps: lampsActive };
+    // A4: Daten-Qualitaets-Gate VOR dem Scoring — data-suspect-Namen aus dem Ranking nehmen.
+    if ((r.action === 'route' || r.action === 'survival') && isDataSuspect(s, lampsActive)) {
+      results.push({ ...base, action: 'exclude', formulaId: null, track: null, score: null, reason: 'data-suspect' });
+      continue;
+    }
     if (r.action !== 'route') {
       results.push({ ...base, action: r.action, formulaId: null, track: null, score: null, reason: r.reason || r.track });
       continue;

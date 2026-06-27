@@ -26,6 +26,13 @@ function meanPresent(series) {
   return vals.length ? vals.reduce((p, c) => p + c, 0) / vals.length : null;
 }
 
+function _median(arr) {
+  const a = arr.filter(Number.isFinite).slice().sort((x, y) => x - y);
+  if (!a.length) return null;
+  const m = Math.floor(a.length / 2);
+  return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+}
+
 // 1. Unprofitabel (reine Warnung, KEINE Score-Strafe) ------------------------
 function unprofit(s) {
   const op = firstPresent(norm(s, 'annualOpInc'));
@@ -146,9 +153,71 @@ function cyclePeak(s) {
   return (m[0] > TH.PEAK_MARGIN_MULT * histRest) && !rising;
 }
 
+// --- 11+12: Daten-Qualitaets-Lampen (DISQUALIFIZIEREND) ----------------------
+// Anders als die Lampen 1-10 (reine Timing-Warnungen, kein Score/Ranking-Effekt)
+// excludiert der Orchestrator (score.js DATA_SUSPECT_LAMPS) einen Namen, der hier
+// feuert, aus dem Ranking: sein Score baut auf ERFUNDENEN/GELEAKTEN Daten und darf NICHT
+// #1 werden. Ports der battle-tested Loop-A-Detektoren (lib/newest-qtr-guard.js,
+// lib/annual-currency-guard.js) — hier aus den Snapshot-Serien NEU gerechnet, weil die
+// pre-A2-Snapshots die meta-Flags _newestQtrSuspect/_annualCurrencyLeakSuspect nicht tragen.
+
+// 11. newest-quarter source-corruption (4-Leg, precision-first). Yahoo serviert sporadisch ein
+// korruptes NEUESTES Quartal (Samsung 005930.KS opM 42.8% vs ~10% -> bogus revGrowthYoY). Vergleicht
+// NUR das neueste Quartal gegen die EIGENEN trailing-Quartale (annual-frei). leg4 trennt Samsungs
+// diskontinuierlichen Spike (q0/q1 ~2.0x) vom monotonen Aufschwung (MU ~1.5x).
+function newestQtrSuspect(s) {
+  const rev = norm(s, 'revenueQ'), oi = norm(s, 'opIncQ'), gp = norm(s, 'grossProfitQ');
+  if (rev.length < 5) return null;                       // neuestes + >=4 trailing
+  const r0 = rev[0], oi0 = oi[0], gp0 = gp[0], r1 = rev[1], oi1 = oi[1];
+  if (!(r0 > 0) || !Number.isFinite(oi0) || !Number.isFinite(gp0)) return null;
+  const q0opm = oi0 / r0, q0gm = gp0 / r0;
+  const trailOpm = [], trailRev = [];
+  for (let i = 1; i <= 4 && i < rev.length; i++) {
+    const ri = rev[i], oii = oi[i];
+    if (ri > 0) trailRev.push(ri);
+    if (ri > 0 && Number.isFinite(oii)) trailOpm.push(oii / ri);
+  }
+  if (trailOpm.length < 3 || trailRev.length < 3) return null;
+  const trailOpmMed = _median(trailOpm), trailRevMed = _median(trailRev);
+  if (trailOpmMed === null || trailRevMed === null || !(trailRevMed > 0)) return null;
+  const q1opm = (r1 > 0 && Number.isFinite(oi1)) ? oi1 / r1 : null;
+  const leg1 = (q0opm - trailOpmMed) > 0.20;             // opM-Diskontinuitaet
+  const leg2 = q0gm > 0.55;                              // physikalische GM-Schranke
+  const leg3 = r0 > 1.35 * trailRevMed;                  // Revenue-Sprung
+  const leg4 = q1opm !== null && q1opm > 0.02 && q0opm >= 1.9 * q1opm; // Spike, kein Ramp
+  return !!(leg1 && leg2 && leg3 && leg4);
+}
+
+// 12. annual-revenue currency-leak (3-Leg). USD-Reporter, dessen annualRev in der TRADING-ccy landet
+// (NOK ~10x: AKRBP.OL/GMAB.CO) -> annual-Metriken untrustworthy. Die Quartals-Seite muss GESUND sein
+// (isoliert das annual-Array als das geleakte, vs. ein separat kaputtes Quartals-TTM).
+function annualCurrencyLeak(s) {
+  const meta = s && s.meta;
+  if (!meta) return null;
+  const repOrig = meta.reportingCurrencyOriginal, trade = meta.tradingCurrency;
+  if (!repOrig || !trade) return null;                   // ccy-Felder fehlen -> nicht bewertbar
+  if (repOrig === trade) return false;                   // keine ccy-Divergenz -> kein Leak moeglich
+  const a0 = norm(s, 'annualRev')[0];                    // neuestes annual (positional)
+  if (!(a0 > 0)) return null;
+  const revQ = norm(s, 'revenueQ');
+  const q = [];
+  for (let i = 0; i < 4; i++) { if (Number.isFinite(revQ[i])) q.push(revQ[i]); }
+  if (q.length < 4) return null;                         // volles 4-Q-TTM noetig
+  const qTTM = q[0] + q[1] + q[2] + q[3];
+  if (!(qTTM > 0)) return null;
+  const ratio = a0 / qTTM;
+  if (!(ratio > 3)) return false;                        // annual nicht inflationiert -> kein Leak
+  const revTTM = metricVal(s, 'revenueTTM');
+  if (revTTM === null) return null;
+  const ttmRatio = revTTM / qTTM;
+  if (ttmRatio < 0.6 || ttmRatio > 1.6) return false;    // Quartals-TTM kaputt -> anderes Defekt
+  return true;
+}
+
 const LAMPS = {
   unprofit, burning, shortRunway, highDilution, peakMargin,
   lowRoic, arDivergence, crashRisk, fcfArtefact, cyclePeak,
+  newestQtrSuspect, annualCurrencyLeak,
 };
 
 /**

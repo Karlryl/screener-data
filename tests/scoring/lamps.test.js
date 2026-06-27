@@ -124,5 +124,48 @@ test('cyclePeak: < 3 Marge-Jahre -> null', () => {
   assert.equal(L.cyclePeak({ annual: { annualOpInc: [{ value: 5 }, { value: 4 }], annualRev: [{ value: 100 }, { value: 100 }] } }), null);
 });
 
+// --- A4: Daten-Qualitaets-Lampen (disqualifizierend, Port aus lib/) ----------
+const V = (arr) => arr.map((v) => ({ value: v })); // -> [{value:N}] (timeseries/annual-Shape)
+
+// newestQtrSuspect (4-Leg, precision-first): neuestes Quartal vs eigene trailing-Quartale.
+test('newestQtrSuspect: Samsung-Muster (opM-Spike 43% vs 10%) -> true', () => {
+  const s = { timeseries: { revenueQ: V([100, 70, 70, 70, 70]), opIncQ: V([43, 7, 7, 7, 7]), grossProfitQ: V([62, 28, 28, 28, 28]) } };
+  assert.equal(L.newestQtrSuspect(s), true);
+});
+test('newestQtrSuspect: monotoner Aufschwung (MU-Muster, kein Spike) -> false', () => {
+  const s = { timeseries: { revenueQ: V([100, 90, 80, 70, 60]), opIncQ: V([30, 25, 20, 15, 10]), grossProfitQ: V([40, 36, 32, 28, 24]) } };
+  assert.equal(L.newestQtrSuspect(s), false);
+});
+test('newestQtrSuspect: < 5 Quartale -> null (nicht bewertbar)', () => {
+  const s = { timeseries: { revenueQ: V([100, 70, 70]), opIncQ: V([43, 7, 7]), grossProfitQ: V([62, 28, 28]) } };
+  assert.equal(L.newestQtrSuspect(s), null);
+});
+
+// annualCurrencyLeak (3-Leg): USD-Reporter mit annualRev in Trading-ccy, Quartale gesund.
+test('annualCurrencyLeak: AKRBP-Muster (annual x10 vs Quartals-TTM, ccy-mismatch) -> true', () => {
+  const s = { meta: { reportingCurrencyOriginal: 'USD', tradingCurrency: 'NOK' },
+    annual: { annualRev: V([1000]) }, timeseries: { revenueQ: V([25, 25, 25, 25]) }, metrics: { revenueTTM: { value: 100 } } };
+  assert.equal(L.annualCurrencyLeak(s), true);
+});
+test('annualCurrencyLeak: gleiche Reporting-/Trading-ccy -> false (kein Leak moeglich)', () => {
+  const s = { meta: { reportingCurrencyOriginal: 'USD', tradingCurrency: 'USD' },
+    annual: { annualRev: V([1000]) }, timeseries: { revenueQ: V([25, 25, 25, 25]) }, metrics: { revenueTTM: { value: 100 } } };
+  assert.equal(L.annualCurrencyLeak(s), false);
+});
+test('annualCurrencyLeak: annual NICHT inflationiert (ratio ~1) -> false', () => {
+  const s = { meta: { reportingCurrencyOriginal: 'USD', tradingCurrency: 'NOK' },
+    annual: { annualRev: V([100]) }, timeseries: { revenueQ: V([25, 25, 25, 25]) }, metrics: { revenueTTM: { value: 100 } } };
+  assert.equal(L.annualCurrencyLeak(s), false);
+});
+test('annualCurrencyLeak: kaputtes Quartals-TTM (anderes Defekt, kein ccy-Leak) -> false', () => {
+  const s = { meta: { reportingCurrencyOriginal: 'USD', tradingCurrency: 'NOK' },
+    annual: { annualRev: V([1000]) }, timeseries: { revenueQ: V([25, 25, 25, 25]) }, metrics: { revenueTTM: { value: 1000 } } };
+  assert.equal(L.annualCurrencyLeak(s), false); // ttmRatio=10 ausserhalb [0.6,1.6]
+});
+test('annualCurrencyLeak: fehlende ccy-Felder (US-Name) -> null', () => {
+  const s = { meta: {}, annual: { annualRev: V([1000]) }, timeseries: { revenueQ: V([25, 25, 25, 25]) }, metrics: { revenueTTM: { value: 100 } } };
+  assert.equal(L.annualCurrencyLeak(s), null);
+});
+
 console.log(`\nlamps.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);
