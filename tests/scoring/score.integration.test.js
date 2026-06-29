@@ -187,6 +187,7 @@ test('Issuer-Dedup synthetisch: Heimat-Bein -> dup-issuer, US-Bein ist der Gewin
   const mk = (ticker, ex, ccy, region) => ({
     meta: { name: 'DualListed Holding PLC', sector: 'Technology', industry: 'Software', exchangeName: ex, ticker, tradingCurrency: ccy, region },
     annual: { annualRev: [{ value: 300 }, { value: 200 }, { value: 130 }], annualGP: [{ value: 180 }] },
+    metrics: { revenueTTM: { value: 300 } }, // F39 live re-grade: passt criticalMissing-Floor, sonst data-suspect vor Dedup
     marketCap: { value: 5e9 } });
   const res = scoreUniverse([mk('DUAL', 'NYSE', 'USD', 'US'), mk('DUAL.L', 'LSE', 'GBP', undefined)], formulas);
   const bt = Object.fromEntries(res.map((r) => [r.ticker, r]));
@@ -204,6 +205,7 @@ test('Issuer-Dedup FX-Haertung (F50): FX-suspektes dual-non-USD-Bein verliert de
     meta: { name: 'CMOC Group Ltd', sector: 'Basic Materials', industry: 'Other Industrial Metals & Mining',
       exchangeName: ex, ticker, tradingCurrency: tc, reportingCurrencyOriginal: rc, tradingFxRateApplied: fx },
     annual: { annualRev: [{ value: 300 }, { value: 200 }, { value: 130 }], annualGP: [{ value: 60 }] },
+    metrics: { revenueTTM: { value: 300 } }, // F39: passt criticalMissing-Floor, sonst data-suspect vor Dedup
     marketCap: { value: mcap } });
   const suspect = mk('3993.HK', 'HKSE', 'HKD', 'CNY', undefined, 54e9);     // FX-suspekt, GROESSERE mcap
   const consistent = mk('603993.SS', 'Shanghai', 'CNY', 'CNY', undefined, 46e9); // FX-konsistent, kleinere mcap
@@ -267,21 +269,25 @@ test('A4-Gate: newestQtrSuspect-Name wird excludiert (data-suspect), clean-Twin 
     annual: { annualRev: V([100]) },
     timeseries: { revenueQ: V([100, 70, 70, 70, 70]), opIncQ: V([43, 7, 7, 7, 7]), grossProfitQ: V([62, 28, 28, 28, 28]) } };
   const clean = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'US', ticker: 'FAKEC' },
-    annual: { annualRev: V([100]), annualGP: V([60]) },
+    annual: { annualRev: V([100]), annualGP: V([60]) }, marketCap: { value: 5e9 }, metrics: { revenueTTM: { value: 100 } },
     timeseries: { revenueQ: V([100, 90, 80, 70, 60]), opIncQ: V([30, 25, 20, 15, 10]), grossProfitQ: V([40, 36, 32, 28, 24]) } };
   const bt = Object.fromEntries(scoreUniverse([clean, suspect], formulas).map((r) => [r.ticker, r]));
   assert.equal(bt['FAKEQ'].action, 'exclude');
   assert.equal(bt['FAKEQ'].reason, 'data-suspect');
   assert.equal(bt['FAKEC'].action, 'route'); // normale Daten -> unberuehrt
 });
-test('A4-Gate: _quality.grade=D excludiert auch ohne Lampe', () => {
+test('A4-Gate (F39 live re-grade): fehlende marketCap/revenueTTM -> grade-D-Floor -> data-suspect, unabhaengig vom persistierten Grade', () => {
   const V = (arr) => arr.map((v) => ({ value: v }));
-  const d = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'US', ticker: 'FAKED' },
-    _quality: { grade: 'D' }, annual: { annualRev: V([100]), annualGP: V([60]) },
-    timeseries: { revenueQ: V([100, 90, 80, 70, 60]), opIncQ: V([30, 25, 20, 15, 10]), grossProfitQ: V([40, 36, 32, 28, 24]) } };
-  const res = scoreUniverse([d], formulas);
-  assert.equal(res[0].action, 'exclude');
-  assert.equal(res[0].reason, 'data-suspect');
+  const mk = (ticker, persisted) => ({ meta: { sector: 'Technology', industry: 'Semiconductors', region: 'US', ticker },
+    _quality: { grade: persisted }, annual: { annualRev: V([100]), annualGP: V([60]) }, // KEIN marketCap, KEIN revenueTTM
+    timeseries: { revenueQ: V([100, 90, 80, 70, 60]), opIncQ: V([30, 25, 20, 15, 10]), grossProfitQ: V([40, 36, 32, 28, 24]) } });
+  const d = scoreUniverse([mk('FAKED', 'D')], formulas)[0];     // persistierter D -> excludiert (wie bisher)
+  assert.equal(d.action, 'exclude'); assert.equal(d.reason, 'data-suspect');
+  // STALE A+ schuetzt NICHT mehr: der live re-grade floort wegen fehlender marketCap/revenueTTM auf D
+  // (genau der F39-Bug: vorher trug der persistierte A+ den toten D-Arm vorbei).
+  const a = scoreUniverse([mk('FAKEA', 'A+')], formulas)[0];
+  assert.equal(a.action, 'exclude', 'stale A+ darf nicht vor dem live-criticalMissing-Floor schuetzen');
+  assert.equal(a.reason, 'data-suspect');
 });
 
 // --- Sichtbarkeit: Top 6 je Branche/Track -----------------------------------

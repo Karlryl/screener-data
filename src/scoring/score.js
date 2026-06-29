@@ -19,6 +19,10 @@ const { evaluateLamps } = require('./lamps.js');
 const { overviewMetric } = require('./overview.js');
 const { normalizeCountry } = require('./country.js');
 const axesFns = require('./axes.js');
+// audit/fix (Court Fall 6, F39): Grader fuer die LIVE-Neuberechnung des Daten-Grades im
+// data-suspect-Gate. Der persistierte _quality.grade ist stale (alle aus der Zeit VOR dem
+// revenueTTM-criticalMissing-Floor) -> der grade-D-Arm war praktisch tot.
+const { gradeSnapshot } = require('../../methods/data-quality.js');
 
 const tickerOf = (s) => (s && s.meta && s.meta.ticker) || (s && s.identifier && s.identifier.value) || '?';
 
@@ -33,9 +37,21 @@ const cmpTicker = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
 // koennte ein Auslandsname auf fabriziertem Wachstum #1 werden. Die uebrigen 10 Lampen sind reine
 // Timing-Warnungen und excludieren NICHT (BE/PLTR ranken trotz Lampe oben).
 const DATA_SUSPECT_LAMPS = ['newestQtrSuspect', 'annualCurrencyLeak'];
-function isDataSuspect(s, lampsActive) {
+function isDataSuspect(s, lampsActive, action) {
+  // Fabrikations-Lampen (erfundenes Quartal / annual-currency-Leak) gelten fuer ALLE Tracks.
   if (lampsActive.some((l) => DATA_SUSPECT_LAMPS.includes(l))) return true;
-  return !!(s && s._quality && s._quality.grade === 'D');
+  // audit/fix (Court Fall 6, F39): Grade LIVE neu rechnen statt dem persistierten _quality.grade zu
+  // trauen (alle gespeicherten Grades stammen von VOR dem criticalMissing-Floor commit b04e24d3bf
+  // 2026-06-25 -> der D-Arm matchte 0 Snapshots). gradeSnapshot arbeitet deterministisch auf bereits
+  // vorhandenen Snapshot-Feldern (KEIN Re-Pull); criticalMissing floort grade='D' bei fehlender
+  // marketCap ODER metrics.revenueTTM.
+  // WICHTIG (Court-Intent: nur action=route gemessen): der grade-D-Floor gilt NUR fuer route. Der
+  // survival-Track ist DEFINITIONSGEMAESS pre-revenue (kein revenueTTM -> immer criticalMissing) —
+  // ihn dem Floor zu unterwerfen wuerde ~70 legitime Pre-Revenue-Biotechs aus dem survival-Runway-
+  // Board kicken (survival 77->7). Fabrikation faengt fuer survival weiter ueber die Lampen oben.
+  if (action !== 'route') return false;
+  if (!s || typeof s !== 'object') return false;
+  return gradeSnapshot(s).grade === 'D';
 }
 
 // Roh-Achsenwert (ruleOfX braucht alpha + includeFcf am ECHTEN FCF-Vorzeichen).
@@ -82,7 +98,7 @@ function scoreUniverse(snapshots, formulas) {
     const lampsActive = evaluateLamps(s).active;
     const base = { ticker: tickerOf(s), snapshot: s, lamps: lampsActive };
     // A4: Daten-Qualitaets-Gate VOR dem Scoring — data-suspect-Namen aus dem Ranking nehmen.
-    if ((r.action === 'route' || r.action === 'survival') && isDataSuspect(s, lampsActive)) {
+    if ((r.action === 'route' || r.action === 'survival') && isDataSuspect(s, lampsActive, r.action)) {
       results.push({ ...base, action: 'exclude', formulaId: null, track: null, score: null, reason: 'data-suspect' });
       continue;
     }
