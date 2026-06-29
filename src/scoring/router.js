@@ -50,6 +50,13 @@ const US_PRIMARY_EX = /nasdaq|nyse|amex|arca|bats|cboe/i;
 // und Broker/Asset-Manager (MS/SCHW/RJF/NTRS, die ins financials-Scoring gehoeren) faelschlich raus.
 // SOFI (industry "Credit Services") bleibt korrekt excludiert (Fixture-Constraint).
 const LENDING_INDUSTRY = /credit services|consumer finance|mortgage|savings|thrift|\blend/;
+// audit/fix (Court Phase A Runde 2, Fall 8/1b): Non-Operating-Vehikel mit KOMPLETT leerem
+// annualRev. Signaturen (a)-(c) verlangen alle PRESENT-Umsatzwerte; ein CEF/Shell/Asset-Manager
+// mit gaenzlich leerem annualRev faellt durch -> landet faelschlich auf dem survival-Runway-Board
+// (das per Court-Intent vom grade-D-Floor ausgenommen ist). ENG industrie-gescoped: NICHT jeder
+// leer-annualRev-Name (echte Pre-Rev-Biotechs UND Dev-Stage-Miner/Uran/Lithium haben auch leeren
+// annualRev und MUESSEN auf dem Board bleiben), nur die Finanz-Vehikel-Industrien.
+const NON_OPERATING_VEHICLE_INDUSTRY = /asset management|closed[- ]end fund|shell companies|\bbdc\b|term trust/;
 // A3-Stufe-1: US-Primaerlisting = US-Primaerboerse, KEINE Auslandsboerse, KEIN Auslands-Suffix.
 function isUsPrimaryListing(m) {
   const ex = m && m.exchangeName;
@@ -146,6 +153,10 @@ function isNonOperatingVehicle(s) {
   const revAnn = norm(s, 'annualRev');
   if (hasPresent(revAnn) && presentValues(revAnn).some((v) => v < 0)) return true;        // (a)
   const ind = lc(s && s.meta ? s.meta.industry : '');
+  // (d) KOMPLETT leerer annualRev + Finanz-Vehikel-Industrie -> CEF/Shell/Asset-Manager/BDC
+  //     (BMEZ/RVI/PIN.L = Asset Management, XXI = Shell Companies). Eng gescoped (s.o.): echte
+  //     Pre-Rev-Biotechs/Dev-Stage-Miner (leer-annualRev, aber NICHT diese Industrien) bleiben.
+  if (!hasPresent(revAnn) && NON_OPERATING_VEHICLE_INDUSTRY.test(ind)) return true;        // (d)
   if (!ind.includes('asset management')) return false;
   const revQ = norm(s, 'revenueQ');
   if (hasPresent(revQ) && presentValues(revQ).some((v) => v < 0)) return true;            // (b)
@@ -213,7 +224,10 @@ function route(s) {
   if (formulaId === 'unrouted') return { action: 'exclude', reason: 'no-sector' };
   // Schritt 4: Pre-Revenue-Guard NACH no-sector (audit/fix R3: echte Pre-Rev-Biotechs tragen
   // immer sector=Healthcare; sektorlos+umsatzlos = Fonds/ETF -> no-sector, nicht survival).
-  if (isPreRevenue(s)) return { action: 'survival', track: 'pre-revenue-biotech', reason: 'no-revenue' };
+  // audit/fix (Court Fall 1a): Track sektor-NEUTRAL benannt — der survival-Track ist by-design
+  // sektor-blind (nur ~46/77 sind wirklich Healthcare; Rest sind echte cross-sektor Dev-Stage:
+  // Uran/Lithium/Gold/Reactor OKLO/NXE/QS …). 'pre-revenue-biotech' war ein Mislabel.
+  if (isPreRevenue(s)) return { action: 'survival', track: 'pre-revenue', reason: 'no-revenue' };
   const out = { action: 'route', formulaId };
   if (formulaId === 'financials') out.gpClass = gpClass(s);
   return out;

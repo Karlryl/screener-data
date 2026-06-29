@@ -153,7 +153,7 @@ test('kein/leerer Umsatz (mit Sektor) -> survival-track', () => {
   // routebaren Sektor, um in survival zu landen (echte Pre-Rev-Biotechs tragen sector=Healthcare).
   const bio = { meta: { sector: 'Healthcare', industry: 'Biotechnology' } };
   assert.equal(route({ ...bio, annual: { annualRev: [] } }).action, 'survival');
-  assert.equal(route({ ...bio, annual: { annualRev: [{ value: 0 }, { value: 0 }] } }).track, 'pre-revenue-biotech');
+  assert.equal(route({ ...bio, annual: { annualRev: [{ value: 0 }, { value: 0 }] } }).track, 'pre-revenue');
   // R3-Lock: sektorlos + umsatzlos (Fonds/ETF, z.B. QQQ/MDY) -> no-sector, NICHT survival.
   assert.equal(route({ meta: {}, annual: { annualRev: [] } }).reason, 'no-sector');
 });
@@ -203,6 +203,29 @@ test('operative Firma mit EINEM negativen Quartal bleibt drin (negQ NUR Asset-Mg
     annual: { annualRev: [{ value: 12000 }], annualGP: [{ value: 4000 }] },
     timeseries: { revenueQ: [{ value: 3000 }, { value: -100 }, { value: 3100 }] } };
   assert.equal(route(op).action, 'route');
+});
+// --- Court Fall 8/1b: leer-annualRev Finanz-Vehikel (Branch d) ---------------
+test('leer-annualRev CEF/Shell/Asset-Mgmt -> exclude non-operating-rev (Branch d)', () => {
+  // BMEZ/RVI/PIN.L (Asset Management) + XXI (Shell Companies): komplett leerer annualRev faellt
+  // sonst durch alle (a)-(c)-Signaturen (die present-Werte verlangen) -> survival-Board.
+  const cef = { meta: { sector: 'Financial Services', industry: 'Asset Management', region: 'US', ticker: 'CEFX' },
+    annual: { annualRev: [] } };
+  assert.equal(route(cef).reason, 'non-operating-rev');
+  const shell = { meta: { sector: 'Financial Services', industry: 'Shell Companies', region: 'US', ticker: 'SHLX' },
+    annual: { annualRev: [{ value: null }] } };
+  assert.equal(route(shell).reason, 'non-operating-rev');
+});
+test('leer-annualRev ECHTES Pre-Rev-Biotech bleibt survival (Branch d eng gescoped)', () => {
+  // Kontrolle: ein leer-annualRev Healthcare/Biotech-Name darf NICHT vom Vehikel-Filter gefangen
+  // werden — er gehoert aufs Runway-Board (Court Fall 1: echte Pre-Revenue bleiben).
+  const bio = { meta: { sector: 'Healthcare', industry: 'Biotechnology', region: 'US', ticker: 'BIOX' },
+    annual: { annualRev: [] } };
+  assert.equal(route(bio).action, 'survival');
+  assert.equal(route(bio).track, 'pre-revenue');
+  // Dev-Stage-Miner/Uran (cross-sektor Pre-Revenue) bleiben ebenfalls survival, NICHT exclude.
+  const uran = { meta: { sector: 'Energy', industry: 'Uranium', region: 'US', ticker: 'URNX' },
+    annual: { annualRev: [] } };
+  assert.equal(route(uran).action, 'survival');
 });
 
 // --- Schritt 2 laeuft VOR grossMargin (Reihenfolge-Beweis) ------------------
