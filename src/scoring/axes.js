@@ -159,11 +159,22 @@ function capitalEfficiency(s) {
   let cycleDiscount = 1;
   if (margins.length >= 3) {
     const cur = margins[0];
+    const prev = margins[1];
     const histRest = mean(margins.slice(1));
-    const rising = margins[0] > margins[1]; // steigende Marge = struktureller Durchbruch, KEIN Zyklus-Peak
-    if (histRest > 0 && cur > histRest && !rising) {
+    if (histRest > 0 && cur > histRest) {
+      // audit/fix (Court Phase A Runde 2, Fall 4): das frühere binäre !rising-Gate
+      // (cur>prev) togglete den Discount hart (bis Faktor 2) an einer infinitesimalen
+      // Margen-Kante. Ersetzt durch eine SELBST-SKALIERENDE stetige Rampe OHNE neuen
+      // Parameter: blend = Anteil des Überschusses über histRest, der aus dem jüngsten
+      // Anstieg (cur-prev) stammt. Voll steigend (climb>=1) -> blend 1 -> Discount 1
+      // (struktureller Durchbruch). Flach/fallend (climb<=0) -> blend 0 -> voller
+      // rawDisc (Zyklus-Peak). Extremverhalten identisch zum alten Gate, nur die Kante
+      // wird weich. Rampenbreite skaliert mit dem Overshoot selbst -> keine Magic Number.
       const overshoot = cur / histRest - 1;
-      cycleDiscount = 1 / (1 + Math.max(0, overshoot));
+      const rawDisc = 1 / (1 + Math.max(0, overshoot));
+      const climb = (cur - histRest) > 0 ? (cur - prev) / (cur - histRest) : 0;
+      const blend = Math.max(0, Math.min(1, climb));
+      cycleDiscount = 1 - (1 - rawDisc) * (1 - blend);
     }
   }
   return roic * cycleDiscount - penalty;
