@@ -33,8 +33,13 @@ const lc = (x) => (typeof x === 'string' ? x.toLowerCase() : '');
 // exchangeName='HKSE'/country='China' (6699.HK). Daher mehrschichtig, country
 // zuerst (Domizil schlaegt Listing):
 const US_SIGNAL = /nasdaq|nyse|amex|arca|bats|cboe|\botc\b|pink|\bnms\b|\bncm\b|\bngm\b|\bus\b|\busa\b|united states/i;
-const FOREIGN_EX = /hkse|hong kong|tokyo|\bjpx\b|\bkrx\b|korea|taiwan|\btwse\b|\bsehk\b|shanghai|shenzhen|london|\blse\b|frankfurt|xetra|euronext|toronto|\btsx\b|\basx\b|\bsix\b|bolsa|borsa|stockholm|oslo|helsinki|copenhagen|johannesburg|\bjse\b|\bb3\b/i;
-const FOREIGN_SUFFIX = /\.(HK|KS|KQ|TW|TWO|SS|SZ|SR|T|L|TO|V|NE|F|DE|BE|VI|PA|AS|BR|LS|MC|MI|ST|HE|CO|OL|SW|AX|NZ|SI|JK|KL|BK|BO|NS|QA|TA|AT|WA|SA|SN|MX|JO)$/i;
+// audit/fix (Court Fall 8, F1): dublin/dubai/abu dhabi ergaenzt (Irland/VAE-Boersen). Konservativ
+// nur volle Wortmarken (kein \bise\b/\badx\b — die wuerden echte Ticker/CEFs treffen).
+const FOREIGN_EX = /hkse|hong kong|tokyo|\bjpx\b|\bkrx\b|korea|taiwan|\btwse\b|\bsehk\b|shanghai|shenzhen|london|\blse\b|frankfurt|xetra|euronext|toronto|\btsx\b|\basx\b|\bsix\b|bolsa|borsa|stockholm|oslo|helsinki|copenhagen|johannesburg|\bjse\b|\bb3\b|dublin|dubai|abu dhabi/i;
+// audit/fix (Court Fall 8, F1): IR (Euronext Dublin) + AE (Nasdaq Dubai/Abu Dhabi) ergaenzt —
+// vorher fielen echte foreign-listed Namen (BIRG.IR/PTSB.IR/EMAAR.AE) faelschlich auf exclude
+// non-us statt in den globalen Topf. Allgemeine Geo-Klassifikatoren, kein namens-spezifischer Carve-out.
+const FOREIGN_SUFFIX = /\.(HK|KS|KQ|TW|TWO|SS|SZ|SR|T|L|TO|V|NE|F|DE|BE|VI|PA|AS|BR|LS|MC|MI|ST|HE|CO|OL|SW|AX|NZ|SI|JK|KL|BK|BO|NS|QA|TA|AT|WA|SA|SN|MX|JO|IR|AE)$/i;
 // A3-Stufe-1 (2026-06-27, Weltweit-Pivot): US-PRIMAERboerse (NYSE/Nasdaq/Cboe/Amex/Arca), NICHT
 // OTC/Grey-Market. Oeffnet US-gelistete foreign-domiciled ADRs (USD-quotiert, SEC-Filer:
 // ACN/ETN/TSM/BABA/ASML) und haelt die ~316 OTC-Grey-Market-Schattenduplikate primaerer ADRs

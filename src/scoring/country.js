@@ -132,6 +132,7 @@ const SUFFIX_COUNTRY = {
   SI: 'Singapore', JK: 'Indonesia', KL: 'Malaysia', BK: 'Thailand', BO: 'India', NS: 'India',
   QA: 'Qatar', TA: 'Israel', AT: 'Greece', WA: 'Poland', SA: 'Brazil', SN: 'Chile', MX: 'Mexico',
   JO: 'South Africa', SR: 'Saudi Arabia',
+  IR: 'Ireland', AE: 'United Arab Emirates', // audit/fix (Court Fall 8, F1): spiegelt router.FOREIGN_SUFFIX
 };
 
 function fromTicker(ticker) {

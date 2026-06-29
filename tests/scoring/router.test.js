@@ -46,6 +46,27 @@ test('Nicht-US (region != US) -> exclude non-us', () => {
   const s = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'KR' }, annual: { annualRev: [{ value: 100 }] } };
   assert.equal(route(s).reason, 'non-us');
 });
+
+// --- audit/fix Court Fall 8 (F1): .IR (Euronext Dublin) + .AE (Dubai) oeffnen foreign-listed ---
+test('.IR/.AE foreign-listed: routebarer Name NICHT mehr exclude non-us (F1)', () => {
+  // EMAAR.AE-Muster: Real-Estate-Developer, .AE-Suffix -> isForeignListed oeffnet in den globalen Topf.
+  const ae = { meta: { sector: 'Real Estate', industry: 'Real Estate - Development', ticker: 'EMAAR.AE' },
+    annual: { annualRev: [{ value: 5000 }, { value: 4000 }], annualGP: [{ value: 3000 }, { value: 2400 }] } };
+  assert.equal(route(ae).action, 'route', 'EMAAR.AE-Muster sollte routen');
+  assert.equal(route(ae).formulaId, 'real-estate');
+  // .IR-Software ebenso routebar (statt non-us).
+  const ir = { meta: { sector: 'Technology', industry: 'Software - Application', ticker: 'FOO.IR' },
+    annual: { annualRev: [{ value: 300 }, { value: 200 }], annualGP: [{ value: 180 }, { value: 120 }] } };
+  assert.equal(route(ir).action, 'route', '.IR-Software mit GP sollte routen');
+  assert.notEqual(route(ir).reason, 'non-us');
+});
+test('.IR-Bank bleibt balance-sheet-bank (structExclude-Vorrang vor foreign-listed-Oeffnung)', () => {
+  // BIRG.IR/PTSB.IR-Muster: Bank-Industry -> structExclude greift VOR dem globalen Topf.
+  const bank = { meta: { sector: 'Financial Services', industry: 'Banks - Regional', ticker: 'BIRG.IR' },
+    annual: { annualRev: [{ value: 1000 }] } };
+  assert.equal(route(bank).action, 'exclude');
+  assert.equal(route(bank).reason, 'balance-sheet-bank');
+});
 test('US-Aktie passiert den Filter', () => {
   const s = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'US' }, annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
   assert.equal(route(s).action, 'route');
