@@ -140,6 +140,18 @@ test('newestQtrSuspect: < 5 Quartale -> null (nicht bewertbar)', () => {
   const s = { timeseries: { revenueQ: V([100, 70, 70]), opIncQ: V([43, 7, 7]), grossProfitQ: V([62, 28, 28]) } };
   assert.equal(L.newestQtrSuspect(s), null);
 });
+// Court Fall 2: 5. Leg (YoY-De-Fire). q0 sieht vs trailing anomal aus, gleicht aber dem
+// VORJAHRES-gleichen Quartal (Index 4) -> Saisonalitaet, kein korruptes Quartal -> de-fire.
+test('newestQtrSuspect: saisonaler Trog (VCEL-Muster, q0~q4 YoY) -> de-fired false', () => {
+  // leg1-leg4 wuerden alle feuern (q0opm 24% vs trailMed ~1.8%), aber q4opm=24% == q0opm -> saisonal.
+  const s = { timeseries: { revenueQ: V([100, 70, 70, 70, 100]), opIncQ: V([24, 1.5, 1, 1, 24]), grossProfitQ: V([62, 28, 28, 28, 62]) } };
+  assert.equal(L.newestQtrSuspect(s), false);
+});
+test('newestQtrSuspect: echte Diskontinuitaet (q0 != q4 YoY) feuert trotz aehnlicher leg1-4 -> true', () => {
+  // Gleiche leg1-4-Konstellation, aber q4opm=1.4% != q0opm 24% (|d|=0.226>0.20) -> NICHT saisonal -> feuert.
+  const s = { timeseries: { revenueQ: V([100, 70, 70, 70, 70]), opIncQ: V([24, 1.5, 1, 1, 1]), grossProfitQ: V([62, 28, 28, 28, 28]) } };
+  assert.equal(L.newestQtrSuspect(s), true);
+});
 
 // annualCurrencyLeak (3-Leg): USD-Reporter mit annualRev in Trading-ccy, Quartale gesund.
 test('annualCurrencyLeak: AKRBP-Muster (annual x10 vs Quartals-TTM, ccy-mismatch) -> true', () => {

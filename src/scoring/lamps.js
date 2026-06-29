@@ -187,7 +187,17 @@ function newestQtrSuspect(s) {
   const leg2 = q0gm > 0.55;                              // physikalische GM-Schranke
   const leg3 = r0 > 1.35 * trailRevMed;                  // Revenue-Sprung
   const leg4 = q1opm !== null && q1opm > 0.02 && q0opm >= 1.9 * q1opm; // Spike, kein Ramp
-  return !!(leg1 && leg2 && leg3 && leg4);
+  // audit/fix (Court Phase A Runde 2, Fall 2): 5. Leg, NUR ENTSCHAERFEND (de-fire, nie zusaetzlich
+  // excludierend). leg1-leg4 vergleichen q0 nur gegen die immediately-trailing 4 Quartale -> ein
+  // SAISONALER Trog/Spike (VCEL Q4: q0opm 24.1% vs trailMed 1.0%) sieht dort anomal aus, obwohl q0
+  // dem VORJAHRES-gleichen Quartal (Index 4) gleicht. Gleicht q0-OpMarge der year-ago-OpMarge
+  // (kleine YoY-Diskontinuitaet, TH 0.20 aus leg1 wiederverwendet) -> Saisonalitaet, kein korruptes
+  // Quartal -> de-fire. SNDK (70.0% vs -2.5% YoY, |d|=0.73) und Samsung (42.8% vs 8.4%, |d|=0.34)
+  // bleiben YoY-anomal -> feuern weiter (keine pauschale Exoneration).
+  const r4 = rev[4], oi4 = oi[4];
+  const q4opm = (r4 > 0 && Number.isFinite(oi4)) ? oi4 / r4 : null;
+  const legSeasonal = q4opm !== null && Math.abs(q0opm - q4opm) <= 0.20;
+  return !!(leg1 && leg2 && leg3 && leg4 && !legSeasonal);
 }
 
 // 12. annual-revenue currency-leak (3-Leg). USD-Reporter, dessen annualRev in der TRADING-ccy landet
