@@ -12,7 +12,7 @@
  *   { ticker, action, formulaId, track, score|null, lamps[], overview, reason? }
  */
 
-const { norm, metricVal } = require('./snapshot.js');
+const { norm, metricVal, firstPresent, presentValues } = require('./snapshot.js');
 const { q, weightedScore, coverageWeight, signTrack, fcfTrack } = require('./engine.js');
 const { route, isUS } = require('./router.js');
 const { evaluateLamps } = require('./lamps.js');
@@ -51,7 +51,28 @@ function isDataSuspect(s, lampsActive, action) {
   // Board kicken (survival 77->7). Fabrikation faengt fuer survival weiter ueber die Lampen oben.
   if (action !== 'route') return false;
   if (!s || typeof s !== 'object') return false;
-  return gradeSnapshot(s).grade === 'D';
+  const g = gradeSnapshot(s);
+  if (g.grade !== 'D') return false;
+  // audit/fix (Court R3 C3): den revenueTTM-Arm des criticalMissing-Floors vom data-suspect-Gate
+  // ENTKOPPELN. Der grade-D-Floor (criticalMissing = marketCap ODER metrics.revenueTTM fehlt) hat 22
+  // scorebare Real-Umsatz-Namen (VFS Rang #1, ERIC A+, +Biotechs) exkludiert, obwohl die Achsen
+  // annual.annualRev / metrics.revenueGrowthYoY lesen, NICHT revenueTTM. Hier (NUR route-Konsumtion,
+  // der persistierte DQ-Grade bleibt unveraendert):
+  if (!g.criticalMissing) return true;                                  // D wegen echter Sparsity (nanRatio) -> exclude
+  if (!(s.marketCap && Number.isFinite(s.marketCap.value))) return true; // marketCap fehlt -> harter Ausschluss (Identitaet/Bewertung)
+  // criticalMissing nur wegen fehlendem revenueTTM-Envelope: nur ausschliessen, wenn auch der
+  // AKTUELLE Umsatz fehlt (sonst echte Real-Umsatz-Namen, die nur das TTM-Envelope nicht tragen).
+  return !hasCurrentRevenue(s);
+}
+
+// audit/fix (Court R3 C3): "aktueller Umsatz present" anhand der Felder, die die Achsen TATSAECHLICH
+// lesen (annualRev / revenueQ) — neuester present annualRev > 0 ODER irgendein present revenueQ > 0.
+// Schliesst die echten Null-aktuell-Umsatz-Namen (DNLI/AMLX/PRAX/RVMD/SMMT/SRRK/SYRE) korrekt aus,
+// laesst aber VFS/ERIC/Biotechs-mit-Fruehumsatz durch.
+function hasCurrentRevenue(s) {
+  const a0 = firstPresent(norm(s, 'annualRev'));
+  if (a0 !== null && a0 > 0) return true;
+  return presentValues(norm(s, 'revenueQ')).some((v) => v > 0);
 }
 
 // Roh-Achsenwert (ruleOfX braucht alpha + includeFcf am ECHTEN FCF-Vorzeichen).

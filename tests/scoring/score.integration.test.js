@@ -293,6 +293,33 @@ test('A4-Gate (F39 live re-grade): fehlende marketCap/revenueTTM -> grade-D-Floo
   assert.equal(a.action, 'exclude', 'stale A+ darf nicht vor dem live-criticalMissing-Floor schuetzen');
   assert.equal(a.reason, 'data-suspect');
 });
+test('C3: revenueTTM-Arm entkoppelt — marketCap present + revTTM null + AKTUELLER Umsatz present -> route', () => {
+  const V = (arr) => arr.map((v) => ({ value: v }));
+  // marketCap present, KEIN metrics.revenueTTM -> criticalMissing=true (grade D), aber aktueller
+  // Umsatz present (annualRev[0]>0). Die Achsen lesen annualRev, NICHT revenueTTM -> darf NICHT
+  // mehr als data-suspect exkludiert werden (VFS/ERIC-Klasse).
+  const withRev = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'US', ticker: 'FAKER' },
+    marketCap: { value: 5e9 }, metrics: { revenueGrowthYoY: { value: 100 } },
+    annual: { annualRev: V([200, 100]), annualGP: V([120, 60]) },
+    timeseries: { revenueQ: V([200, 180, 160, 140, 120]), opIncQ: V([60, 50, 40, 30, 20]), grossProfitQ: V([100, 90, 80, 70, 60]) } };
+  const r = scoreUniverse([withRev], formulas)[0];
+  assert.equal(r.action, 'route', 'mcap present + revTTM null + aktueller Umsatz>0 -> route (C3)');
+});
+test('C3: marketCap present + revTTM null + KEIN aktueller Umsatz -> weiterhin data-suspect exclude', () => {
+  const V = (arr) => arr.map((v) => ({ value: v }));
+  // newester annualRev=0 (aelter 100 -> NICHT pre-revenue, routet) UND revenueQ alle 0 -> kein
+  // aktueller Umsatz -> bleibt korrekt data-suspect (DNLI/AMLX-Klasse, kein Gegenrichtungs-Score).
+  const noCurRev = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'US', ticker: 'FAKEZ' },
+    marketCap: { value: 5e9 }, annual: { annualRev: V([0, 100]), annualGP: V([0, 60]) },
+    timeseries: { revenueQ: V([0, 0, 0, 0, 0]), opIncQ: V([0, 0, 0, 0, 0]) } };
+  const z = scoreUniverse([noCurRev], formulas)[0];
+  assert.equal(z.action, 'exclude'); assert.equal(z.reason, 'data-suspect');
+  // marketCap FEHLT bleibt harter Ausschluss, auch mit aktuellem Umsatz:
+  const noMcap = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'US', ticker: 'FAKEM' },
+    annual: { annualRev: V([200, 100]) }, timeseries: { revenueQ: V([200, 180, 160, 140, 120]) } };
+  const m = scoreUniverse([noMcap], formulas)[0];
+  assert.equal(m.action, 'exclude'); assert.equal(m.reason, 'data-suspect');
+});
 
 // --- Sichtbarkeit: Top 6 je Branche/Track -----------------------------------
 for (const fid of ['semiconductors', 'software-comm-services', 'industrials', 'energy', 'health-care']) {
