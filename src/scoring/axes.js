@@ -133,7 +133,14 @@ function capitalEfficiency(s) {
     const o = opIncS[i], a = assets[i];
     if (o === null || o === undefined || a === null || a === undefined) continue;
     const c = curLiab[i];
-    const inv = a - (c === null || c === undefined ? 0 : c);
+    // audit/fix (Court Phase A Runde 2, Fall 3 / F14): currentLiabilities NICHT mehr zu 0
+    // koerzieren. Ein fehlendes curLiab machte invested = totalAssets -> die Achse rechnete
+    // still ROA statt ROIC (43.9% des Universums) -> ROA/ROIC-Misch-Bias in den Kohorten-
+    // Perzentilen. Jetzt jahres-genauer Drop: ein Jahr zaehlt nur mit PRESENT curLiab UND
+    // invested>0. Kein einziges valides Jahr -> opPaired leer -> Achse null -> renorm-on-drop
+    // (Kontrakt-konform, KEINE ROA-Maskerade, KEIN Fake-50).
+    if (c === null || c === undefined) continue;
+    const inv = a - c;
     if (!(inv > 0)) continue;
     opPaired.push(o); invPaired.push(inv);
   }

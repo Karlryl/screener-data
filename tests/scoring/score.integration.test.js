@@ -254,9 +254,13 @@ test('produceRankings-Zeilen tragen country/region/sector/marketCap (PLTR=US-Ank
   assert.equal(pltr.region, 'North America', 'PLTR region-Bucket');
   assert.ok(typeof pltr.sector === 'string' && pltr.sector.length > 0, 'PLTR sector-Label');
   assert.ok(Number.isFinite(pltr.marketCap) && pltr.marketCap > 0, 'PLTR marketCap');
-  // overview-Liste (globaler Topf) traegt dieselben Felder
-  const ov = r.overview.find((x) => x.ticker === 'PLTR');
-  assert.ok(ov && ov.country === 'United States' && Number.isFinite(ov.marketCap), 'overview-Zeile ohne geo');
+  // overview-Liste (globaler Topf) traegt dieselben geo-Felder. NICHT an PLTRs overview-Rang
+  // gepinnt: nach Court Fall 3 (capEff drop-on-absence) verschieben sich die cross-branch
+  // Perzentile, PLTR kann aus der topN-overview-Slice fallen (dichte Verteilung, ~56 Namen
+  // innerhalb +-2 Punkten). Die geo-Anreicherung ist universell -> PLTR falls vorhanden, sonst
+  // die Spitzenzeile; beide MUESSEN country+marketCap tragen.
+  const ov = r.overview.find((x) => x.ticker === 'PLTR') || r.overview[0];
+  assert.ok(ov && typeof ov.country === 'string' && ov.country.length > 0 && Number.isFinite(ov.marketCap), 'overview-Zeile ohne geo');
   // survival-Zeilen sind ebenfalls angereichert (Filter greift auch dort)
   assert.ok(r.survival.length && ('country' in r.survival[0]) && ('marketCap' in r.survival[0]),
     'survival-Zeile ohne geo-Felder');
