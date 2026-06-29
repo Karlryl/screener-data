@@ -178,5 +178,15 @@ test('dilution (F17/R2F1): echter Heavy-Diluter (newest SBC/Rev>1) behaelt die A
   assert.ok(d !== null && d < 0, `Heavy-Diluter muss Achse behalten + negative dilution haben, ist ${d}`);
 });
 
+test('marginTrajectory (F12, R2 mutation): revenueQ===0 wird verworfen (r>0-Guard, nicht r>=0)', () => {
+  const s = { timeseries: {
+    opIncQ:   [{ value: 30 }, { value: 25 }, { value: 20 }, { value: 5 }],
+    revenueQ: [{ value: 100 }, { value: 90 }, { value: 80 }, { value: 0 }] } };
+  // Aeltestes Quartal revenueQ=0 -> verwerfen (sonst Div/0). Mit r>0: 3 valide Q -> 0.30-0.25=0.05.
+  // Mit r>=0 (Mutation): 5/0=Infinity -> m nicht finit. Test faengt die Mutation.
+  const m = ax.marginTrajectory(s);
+  assert.ok(Number.isFinite(m) && m > 0, `revenueQ=0 muss verworfen werden, m=${m}`);
+});
+
 console.log(`\naxes.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);
