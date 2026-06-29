@@ -126,5 +126,41 @@ test('capitalEfficiency: stabile Marge -> kein Discount (cur ~ hist)', () => {
   assert.ok(Math.abs(ax.capitalEfficiency(s) - 0.2) < 1e-9); // roic 0.2, Discount 1
 });
 
+// --- audit/fix Court Fall 1: Achsen-Physik-Guards gegen pathologische Eingaben ---
+test('gpGrowth (F9): korruptes Alt-Jahr (GP>Rev, gm>1) wird verworfen, gmTraj dominiert nicht', () => {
+  const s = { annual: {
+    annualGP:  [{ value: 1.20 }, { value: 0.81 }, { value: 0.58 }, { value: 2.20 }],
+    annualRev: [{ value: 3.01 }, { value: 2.25 }, { value: 1.49 }, { value: 1.00 }] } };
+  // Ohne Guard: gmOld=2.20 -> gmTraj=-1.80 -> gpGrowth ~ -1.32 (korrupter Sturz, TAL-Muster).
+  // Mit Guard: Alt-Jahr (gm=2.2>1) verworfen -> gpGrowth ~ gpYoY+kleiner Tilt > 0.
+  const g = ax.gpGrowth(s);
+  assert.ok(g > 0.3, `gpGrowth sollte ~gpYoY positiv bleiben, nicht vom korrupten gmOld dominiert: ${g}`);
+});
+test('gpGrowth: beide gm-Endpunkte plausibel -> unveraendertes Verhalten (kein Regress)', () => {
+  const s = { annual: { annualGP: [{ value: 60 }, { value: 40 }], annualRev: [{ value: 100 }, { value: 100 }] } };
+  assert.ok(near(ax.gpGrowth(s), 0.7), 'gpGrowth=' + ax.gpGrowth(s)); // gpYoY 0.5 + gmTraj 0.2
+});
+test('marginTrajectory (F12): negativer Quartalsumsatz wird verworfen (keine Phantom-Marge/Flip)', () => {
+  const s = { timeseries: {
+    opIncQ:   [{ value: 30 }, { value: 25 }, { value: 20 }, { value: -5 }],
+    revenueQ: [{ value: 100 }, { value: 90 }, { value: 80 }, { value: -10 }] } };
+  // Ohne Guard: aeltestes Quartal -5/-10=+0.5 (Phantom) -> 0.30-0.5=-0.2 (falscher Flip).
+  // Mit Guard: nur 3 positive Quartale -> 0.30-0.25=+0.05 (korrekt, steigende Marge).
+  assert.ok(ax.marginTrajectory(s) > 0, `Trajektorie muss positiv sein, ist ${ax.marginTrajectory(s)}`);
+});
+test('marginTrajectory: alle Quartale positiv -> unveraendert (kein Regress)', () => {
+  const s = { timeseries: { opIncQ: [{ value: 30 }, { value: 10 }], revenueQ: [{ value: 100 }, { value: 100 }] } };
+  assert.ok(near(ax.marginTrajectory(s), 0.2), 'marginTraj=' + ax.marginTrajectory(s));
+});
+test('dilution (F17): near-zero Alt-Umsatz blaeht SBC/Rev nicht auf (Slope robust)', () => {
+  const s = { annual: {
+    annualSBC: [10, 9, 8, 0.01], // FIELD_REGISTRY annualSBC = ['annual','scalar'] -> reine Zahlen
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }, { value: 0.001 }] } };
+  // Ohne Guard: old=0.01/0.001=10 -> dilution ~ +9.8 ("beste Dilution", IBRX-Muster, falsch).
+  // Mit Guard: Alt-Jahr (ratio 10>1) verworfen -> dilution ~ -0.12 (echte Verwaesserung).
+  const d = ax.dilution(s);
+  assert.ok(d < 0 && d > -1, `dilution muss negativ + nicht aufgeblaeht sein, ist ${d}`);
+});
+
 console.log(`\naxes.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

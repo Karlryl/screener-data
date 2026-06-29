@@ -63,7 +63,13 @@ function gpGrowth(s) {
   if (!two || two[1] <= 0) return null;
   const gpYoY = two[0] / two[1] - 1;
   // GM-Trajektorie (Margenpunkt-Delta neu vs. alt), additiver Tilt
-  const gm = ratioSeries(norm(s, 'annualGP'), norm(s, 'annualRev'));
+  // audit/fix (Court Fall 1, F9): gm-Endpunkte gegen physikalisch unmoegliche Werte guarden.
+  // gm = GP/Rev muss in [0,1] liegen; gm>1 (GP>Rev) bzw. gm<0 sind korrupte Datenjahre, die den
+  // kleinen gpYoY-Tilt sonst DOMINIEREN statt zu tilten (TAL: gmOld=2.145 -> gmTraj=-1.746 ->
+  // gpGrowth-Perzentil 96.5->0.5). Implausible Jahre verwerfen (null); firstPresent/lastPresent
+  // ueberspringen sie. Ratio-Plausibilitaets-Guard, kein aufgezwungenes Niveau -> waehrungs-invariant.
+  const gm = ratioSeries(norm(s, 'annualGP'), norm(s, 'annualRev'))
+    .map((v) => (v !== null && v >= 0 && v <= 1) ? v : null);
   const gmNew = firstPresent(gm), gmOld = lastPresent(gm);
   const gmTraj = (gmNew !== null && gmOld !== null) ? (gmNew - gmOld) : 0;
   return gpYoY + gmTraj;
@@ -87,8 +93,20 @@ function ruleOfX(s, alpha = 2.3, includeFcf = true) {
 // --- 5. Marge-/Operating-Leverage-Trajektorie -------------------------------
 // Slope der Quartals-OpMargin (opIncQ/revenueQ), neu minus alt. >0 = Hebel greift.
 function marginTrajectory(s) {
-  const present = ratioSeries(norm(s, 'opIncQ'), norm(s, 'revenueQ'))
-    .filter((v) => v !== null && v !== undefined);
+  // audit/fix (Court Fall 1, F12): opIncQ/revenueQ NUR fuer Quartale mit revenueQ>0 bilden.
+  // ratioSeries droppt nur den===0, NICHT den<0 -> negativer Quartalsumsatz erzeugte eine
+  // Phantom-Marge mit verdrehtem Vorzeichen und kippte die Trajektorie (MRP -0.480->+0.300,
+  // NGL +0.209->-0.093). Schwester-Achsen (revAccel, gpGrowth, newest-qtr-guard) guarden den
+  // positiven Nenner bereits -> hier konsistent nachgezogen. Reihenfolge newest-first erhalten.
+  const oi = norm(s, 'opIncQ'), rev = norm(s, 'revenueQ');
+  const present = [];
+  const n = Math.max(oi.length, rev.length);
+  for (let i = 0; i < n; i++) {
+    const r = rev[i], o = oi[i];
+    if (!(r > 0)) continue;                                  // revenueQ<=0/null -> Phantom-Marge, verwerfen
+    if (o === null || o === undefined || !Number.isFinite(o)) continue;
+    present.push(o / r);
+  }
   if (present.length < 2) return null;
   return present[0] - present[present.length - 1]; // juengste minus aelteste Marge
 }
@@ -173,7 +191,13 @@ function revisionsMomentum(s) {
 function dilution(s) {
   const sbc = norm(s, 'annualSBC');
   if (!hasPresent(sbc)) return null; // CAT/CVX/XOM -> Achse droppt, KEIN Fake-50
-  const r = ratioSeries(sbc, norm(s, 'annualRev'));
+  // audit/fix (Court Fall 1, F17): SBC/Rev-Verhaeltnis gegen degenerierte near-zero-Nenner guarden.
+  // Ein altes Jahr mit winzigem Umsatz blaeht SBC/Rev auf (IBRX rev[oldest]=240k -> ratio 167) ->
+  // der Slope-Term -(level-old) wird riesig und macht Heavy-Dilution-Namen zu "bester Dilution"
+  // (IBRX Rang 1/2861 statt 2759, widerspricht der highDilution-Lampe). SBC/Rev>1 (SBC>Umsatz)
+  // bzw. <0 sind implausible Dilutions-Niveaus -> verwerfen (Ratio-Plausibilitaet, analog gm-Guard F9).
+  const r = ratioSeries(sbc, norm(s, 'annualRev'))
+    .map((v) => (v !== null && v >= 0 && v <= 1) ? v : null);
   const level = firstPresent(r);
   if (level === null) return null;
   const old = lastPresent(r);
