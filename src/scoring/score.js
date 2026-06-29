@@ -117,16 +117,20 @@ function trackOf(s, formula) {
     case 'FCF':
       t = fcfTrack(metricVal(s, 'fcfMarginTTM'), norm(s, 'annualFCF'), norm(s, 'annualOCF'));
       break;
-    case 'OpInc':
-      t = signTrack(norm(s, 'annualOpInc'));
+    case 'OpInc': {
+      const opInc = norm(s, 'annualOpInc');
+      t = signTrack(opInc);
       // audit/fix (Court Fall 3, F5+F27): leeres annualOpInc -> signTrack='unknown' -> NICHT
       // blind zum konservativen profitable-Default unten; erst auf das NetIncome-Vorzeichen
       // zurueckfallen (architektonisch analog zur fcfTrack OCF-Rescue, engine.js:113-114).
-      // WOLF: annualOpInc=[] aber annualNetIncome=[-1.6B,-864M,-330M,-201M] -> unprofitable
-      // (zuvor faelschlich profitable-Track + falsche Kohorte/Gewichte). Greift NUR im
-      // bisher blinden unknown-Fall -> kein Anker betroffen (keiner hat leeres annualOpInc).
-      if (t === 'unknown') t = signTrack(norm(s, 'annualNetIncome'));
+      // WOLF: annualOpInc=[] aber annualNetIncome=[-1.6B,-864M,-330M,-201M] -> unprofitable.
+      // audit/fix (Runde 4): die Rescue greift jetzt AUCH bei present-0 neuestem OpInc — ein
+      // Lead-0-Stub (601162.SS opInc=[0,-28M,-72M,-71M]) ist Platzhalter/break-even-Ambiguitaet,
+      // kein echtes profitable; signTrack(0)='profitable' umging die Rescue. NetIncome entscheidet.
+      // Stimmt NetIncome mit profitable ueberein (5 kosmetische Faelle), aendert sich nichts.
+      if (t === 'unknown' || firstPresent(opInc) === 0) t = signTrack(norm(s, 'annualNetIncome'));
       break;
+    }
     case 'NetIncome': t = signTrack(norm(s, 'annualNetIncome')); break;
     case 'none': default: t = 'profitable'; // Einzel-Formel-Branchen ohne Split
   }
@@ -261,6 +265,7 @@ function scoreUniverse(snapshots, formulas) {
       for (let i = 0; i < entries.length; i++) {
         const e = entries[i];
         if (!Number.isFinite(e.score) || !Number.isFinite(cohWcov[i])) continue;
+        if (cohWcov[i] === 1) continue; // 8/8-Achsen: Score EXAKT unveraendert (keine FP-Drift durch die Shrinkage-Arithmetik)
         e.score = cohMedian + cohWcov[i] * (e.score - cohMedian);
       }
     }

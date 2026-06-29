@@ -320,6 +320,20 @@ test('C3: marketCap present + revTTM null + KEIN aktueller Umsatz -> weiterhin d
   const m = scoreUniverse([noMcap], formulas)[0];
   assert.equal(m.action, 'exclude'); assert.equal(m.reason, 'data-suspect');
 });
+test('trackOf (R4): present-0 Lead-Stub OpInc faellt auf NetIncome zurueck (601162.SS-Muster)', () => {
+  const { trackOf } = require('../../src/scoring/score.js');
+  const V = (arr) => arr.map((v) => ({ value: v }));
+  const f = { splitMetric: 'OpInc' };
+  // Lead-0-Stub + Folge-Verluste, NetIncome negativ -> unprofitable (signTrack(0)='profitable' umging die Rescue).
+  const stub = { annual: { annualOpInc: V([0, -28, -72, -71]), annualNetIncome: V([-4, -3, -2, -1]) } };
+  assert.equal(trackOf(stub, f), 'unprofitable');
+  // Kontrolle: present-0 OpInc aber NetIncome positiv -> bleibt profitable (kosmetischer Fall, kein Flip).
+  const okp = { annual: { annualOpInc: V([0, 5, 5, 5]), annualNetIncome: V([10, 10, 10, 10]) } };
+  assert.equal(trackOf(okp, f), 'profitable');
+  // Kontrolle: echtes positives neuestes OpInc -> profitable (kein Regress, Rescue greift nicht).
+  const prof = { annual: { annualOpInc: V([50, 40, 30]), annualNetIncome: V([20, 15, 10]) } };
+  assert.equal(trackOf(prof, f), 'profitable');
+});
 
 // --- Sichtbarkeit: Top 6 je Branche/Track -----------------------------------
 for (const fid of ['semiconductors', 'software-comm-services', 'industrials', 'energy', 'health-care']) {
