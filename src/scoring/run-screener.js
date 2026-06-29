@@ -96,9 +96,13 @@ function loadUniverse() {
     }
   } catch (_) { /* manifest optional fuer die Diagnose */ }
   assertCoverageFloor(u.length, baseline);
-  // High-Water nach bestandenem Floor monoton fortschreiben (best effort, kein Abbruch bei I/O-Fehler).
+  // High-Water nach bestandenem Floor monoton fortschreiben. ATOMAR (tmp+rename) via writeJsonAtomic —
+  // audit/fix (Court R3 Runde-4-Regress): genau dieser State-File ist der Anker des Coverage-Floors;
+  // ein plain fs.writeFileSync hinterliesse bei Crash/CI-Timeout truncated JSON -> Read liefert baseline=
+  // null -> Floor fail-open + nextHighWater re-ankert auf den geschrumpften Wert -> High-Water-Lock weg
+  // (F-SM-015-baseline-wipe). Best effort, kein Abbruch bei I/O-Fehler.
   try {
-    fs.writeFileSync(LAST_GOOD_DISK, JSON.stringify({ value: nextHighWater(baseline, u.length), generatedAt: new Date().toISOString() }, null, 2));
+    writeJsonAtomic(LAST_GOOD_DISK, { value: nextHighWater(baseline, u.length), generatedAt: new Date().toISOString() });
   } catch (e) {
     console.warn('[run-screener] loadUniverse: _last_good_disk.json nicht schreibbar — Self-Baseline nicht fortgeschrieben:', e.message);
   }
