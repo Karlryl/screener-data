@@ -108,6 +108,14 @@ test('peakMargin: stabile Marge -> false', () => {
       annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }, { value: 100 }] } };
   assert.equal(L.peakMargin(s), false);
 });
+test('peakMargin: fuehrende null-Luecke wird kompaktiert (NEU/UVV under-fire-Bug behoben)', () => {
+  // margins=[null,0.258,0.220,0.173]: kompaktiert cur=0.258 vs histRest=mean(0.220,0.173)=0.1965
+  // -> 0.258 > 1.3*0.1965=0.255 -> feuert. Vorher mittelte das positionalem slice(1) cur in die
+  // eigene Baseline (histRest=mean(0.258,0.220,0.173)=0.217 -> 0.258 < 0.282 -> feuerte faelschlich nicht).
+  const s = { annual: { annualOpInc: [{ value: null }, { value: 25.8 }, { value: 22.0 }, { value: 17.3 }],
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }, { value: 100 }] } };
+  assert.equal(L.peakMargin(s), true);
+});
 
 // --- cyclePeak: Zyklus-Peak (kippend) vs. struktureller Durchbruch (steigend) -
 test('cyclePeak: Marge weit ueber Schnitt UND kippend -> true', () => {

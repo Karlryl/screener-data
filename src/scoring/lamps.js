@@ -83,9 +83,15 @@ function peakMargin(s) {
   // guarded, recovery-aware Peak existiert separat als cyclePeak (Lampe 10, mit !rising). Ein Guard
   // hier wuerde peakMargin zum Near-Duplicate von cyclePeak kollabieren (543/549 Firings weg) und die
   // MU-Anker-Fixture brechen. Beide Lampen sind reine Timing-Warnungen (nicht in DATA_SUSPECT_LAMPS).
-  const margins = ratioSeries(norm(s, 'annualOpInc'), norm(s, 'annualRev'));
-  const cur = firstPresent(margins);
-  const histRest = meanPresent(margins.slice(1)); // ohne juengstes
+  // audit/fix (Court R3 Hygiene): margins erst KOMPAKTIEREN (presentValues), dann cur=m[0] /
+  // histRest=mean(m.slice(1)) — wie cyclePeak/cycleDiscount. Vorher: cur=firstPresent (ueberspringt
+  // fuehrende null-Luecken) vs histRest=positionalem slice(1) -> bei margins[0]===null wurde cur in
+  // seine EIGENE Baseline gemittelt -> Lampe feuerte zu selten (8/46 Faelle, z.B. NEU/UVV). Reine
+  // Display-Lampe (nicht in DATA_SUSPECT_LAMPS) -> kein Score/Exclude-Effekt; KEIN !rising-Guard
+  // (Court F22: peakMargin bleibt die breite Mean-Reversion-Watch, NICHT cyclePeak-Duplikat).
+  const m = presentValues(ratioSeries(norm(s, 'annualOpInc'), norm(s, 'annualRev')));
+  const cur = m.length ? m[0] : null;
+  const histRest = meanPresent(m.slice(1)); // ohne juengstes (kompaktiert, kein Eigen-Overlap)
   if (cur === null || histRest === null || histRest <= 0) return null;
   return cur > TH.PEAK_MARGIN_MULT * histRest;
 }
