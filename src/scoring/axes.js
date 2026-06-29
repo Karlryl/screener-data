@@ -9,10 +9,14 @@
  *
  * q() (engine.js) macht das Ranking cohort-relativ — die Achsen muessen also
  * nicht saettigen/skalieren, nur ein konsistentes, monotones Signal liefern.
+ * Monotonie-Klausel (audit/fix Court Fall 2, F47): gilt fuer den ROHEN Achsenwert.
+ * capitalEfficiency traegt bewusst einen gegenlaeufigen Zyklus-Peak-Discount
+ * (cycleDiscount, Court-Spec, axes.test.js:peak<stable), der NICHT monoton im
+ * juengsten OpInc ist — das ist Absicht (Commodity-Peak-Taker-Penalty), kein Vertragsbruch.
  *
  * Die 8 Achsen (Plan v4):
  *  1 revGrowthLevel        Umsatzwachstum (Niveau, TTM YoY)
- *  2 revAcceleration       Umsatz-Beschleunigung (QoQ-Slope ueber 5 Quartale)
+ *  2 revAcceleration       Umsatz-Beschleunigung (QoQ-Endpunkt-Differenz: juengste minus aelteste QoQ-Rate; audit/fix F7a)
  *  3 gpGrowth              Bruttogewinn-Wachstum (YoY) + GM-Trajektorie
  *  4 ruleOfX               alpha*revGrowth + FCF-Marge (guarded; Unprofit: ohne FCF)
  *  5 marginTrajectory      Operating-Leverage (OpMargin-Slope ueber Quartale)

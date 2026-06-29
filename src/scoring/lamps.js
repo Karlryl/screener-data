@@ -78,9 +78,11 @@ function peakMargin(s) {
   // annual 13.1% feuerte spurious; 806->631 Firings nach Fix). Jetzt cur = juengstes ANNUAL-Margin
   // (gleiche Basis wie histRest). peakMargin = "Marge historisch hoch" (breit, Mean-Reversion-Watch);
   // die schaerfere rolled-over-Variante ist cyclePeak (mit !rising-Guard).
-  // OFFEN (L1 Teil 2 -> Council/Court): ob peakMargin zusaetzlich einen !rising-Guard bekommt (dann
-  // feuert es nicht mehr auf Margen-Expander wie PLTR/MU, wird aber ~ cyclePeak -> ggf. mergen).
-  // Bewusst NICHT hier entschieden: Design-Frage + bewegt die MU/PLTR-Fixtures (Hash -> Court-Bless).
+  // COURT-ENTSCHEID (2026-06-28, L1 Teil 2, F22): KEIN !rising-Guard fuer peakMargin. Die Lampe bleibt
+  // bewusst die BREITE Mean-Reversion-Watch und feuert per Design auf Margen-Expander (PLTR/MU). Der
+  // guarded, recovery-aware Peak existiert separat als cyclePeak (Lampe 10, mit !rising). Ein Guard
+  // hier wuerde peakMargin zum Near-Duplicate von cyclePeak kollabieren (543/549 Firings weg) und die
+  // MU-Anker-Fixture brechen. Beide Lampen sind reine Timing-Warnungen (nicht in DATA_SUSPECT_LAMPS).
   const margins = ratioSeries(norm(s, 'annualOpInc'), norm(s, 'annualRev'));
   const cur = firstPresent(margins);
   const histRest = meanPresent(margins.slice(1)); // ohne juengstes
