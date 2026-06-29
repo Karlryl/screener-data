@@ -66,12 +66,15 @@ function isDataSuspect(s, lampsActive, action) {
 }
 
 // audit/fix (Court R3 C3): "aktueller Umsatz present" anhand der Felder, die die Achsen TATSAECHLICH
-// lesen (annualRev / revenueQ) — neuester present annualRev > 0 ODER irgendein present revenueQ > 0.
-// Schliesst die echten Null-aktuell-Umsatz-Namen (DNLI/AMLX/PRAX/RVMD/SMMT/SRRK/SYRE) korrekt aus,
-// laesst aber VFS/ERIC/Biotechs-mit-Fruehumsatz durch.
+// lesen (annualRev / revenueQ). audit/fix (Court R5 B): STRIKT das neueste GJ (annualRev[0]) present-
+// und->0 — NICHT firstPresent (das ueberspringt eine fuehrende null-Luecke und akzeptierte einen STALEN
+// Altwert: RTEZ [null,5000,null,519443] -> der 2 GJ alte 5000 zaehlte faelschlich als 'aktuell').
+// ODER irgendein present revenueQ > 0. Schliesst echte Null-aktuell-Umsatz-Namen (DNLI/AMLX/…) korrekt
+// aus, laesst VFS/ERIC/Biotechs-mit-Fruehumsatz durch.
 function hasCurrentRevenue(s) {
-  const a0 = firstPresent(norm(s, 'annualRev'));
-  if (a0 !== null && a0 > 0) return true;
+  const ar = norm(s, 'annualRev');
+  const a0 = ar.length ? ar[0] : null;
+  if (a0 !== null && a0 !== undefined && a0 > 0) return true;
   return presentValues(norm(s, 'revenueQ')).some((v) => v > 0);
 }
 
@@ -93,11 +96,17 @@ function rawAxisValue(s, key, formula, track, winsorBounds) {
   return typeof fn === 'function' ? fn(s) : null;
 }
 
-// audit/fix (Court R3 C2): universe-weite Winsor-Schranken (data-learned, KEINE Magic Number
-// auf der Achse — nur die Tail-FRAKTION ist ein benannter Robustifizierungs-Parameter, wie
-// das gpGrowth-gm-Clip[0,1] eine physikalische Schranke ist). Symmetrisches Tail: jede
-// per-Quartal-Groesse wird auf [quantile(p), quantile(1-p)] der Universums-Verteilung geklemmt.
-const WINSOR_TAIL = 0.01; // p1/p99 — verifiziert: marginTraj-p99 ~6.8, revAccel-p99 ~1.4 (Court R3 C4-Scan)
+// audit/fix (Court R3 C2): universe-weite Winsor-Schranken (data-learned). Die Tail-FRAKTION
+// WINSOR_TAIL ist ein benannter Robustifizierungs-Parameter (keine Magic Number auf der Achse).
+// audit/fix (Court R5 A): die OBERE opMargin-Schranke ist NICHT data-learned, sondern die PHYSISCHE
+// Invariante opMargin = opIncQ/revenueQ <= 1 (opInc = Rev - COGS - opex, COGS+opex>=0) — exakt der
+// Praezedenzfall des Court-F9-geblessten gm=GP/Rev in [0,1]-Clips (axes.js). Der frueher symmetrische
+// p99 (~0.677) klemmte legitime 68-100%-Margen (Royalty/Boersen/Asset-Mgr) faelschlich auf 0
+// (linksschiefe Verteilung). Untere opMargin-Schranke bleibt data-learned p1 (kein physischer Verlust-
+// Floor; faengt JOBY=-9991-Stubs). qoq-Raten BLEIBEN symmetrisch (kein physischer Umsatz-Multiplikator-
+// Deckel; das +1503-Stub-Artefakt liegt korrekt auf der oberen p99-Tail).
+const WINSOR_TAIL = 0.01;
+const OPMARGIN_PHYS_MAX = 1.0; // opIncQ <= revenueQ -> opMargin <= 1 (physische Schranke, keine Magic Number)
 function quantile(samples, p) {
   const a = samples.filter(Number.isFinite).sort((x, y) => x - y);
   if (!a.length) return null;
@@ -226,7 +235,12 @@ function scoreUniverse(snapshots, formulas) {
     for (const v of axesFns.quarterOpMargins(e.snapshot)) opmSamples.push(v);
     for (const v of axesFns.quarterQoQRates(e.snapshot)) qoqSamples.push(v);
   }
-  const winsorBounds = { opMargin: winsorTailBounds(opmSamples), qoq: winsorTailBounds(qoqSamples) };
+  // Court R5 A: opMargin-Schranke = [data-learned p1, PHYSISCH 1.0]; qoq symmetrisch (data-learned p1/p99).
+  const opmTail = winsorTailBounds(opmSamples);
+  const winsorBounds = {
+    opMargin: opmTail ? [opmTail[0], OPMARGIN_PHYS_MAX] : null,
+    qoq: winsorTailBounds(qoqSamples),
+  };
   for (const entries of Object.values(cohorts)) {
     const formula = entries[0].formula;
     const track = entries[0].track;

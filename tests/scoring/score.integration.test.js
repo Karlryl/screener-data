@@ -334,6 +334,16 @@ test('trackOf (R4): present-0 Lead-Stub OpInc faellt auf NetIncome zurueck (6011
   const prof = { annual: { annualOpInc: V([50, 40, 30]), annualNetIncome: V([20, 15, 10]) } };
   assert.equal(trackOf(prof, f), 'profitable');
 });
+test('C3/R5: fuehrende null-Luecke im neuesten GJ -> KEIN aktueller Umsatz -> data-suspect (RTEZ-Muster)', () => {
+  const V = (arr) => arr.map((v) => ({ value: v }));
+  // annualRev[0]=null (neuestes GJ fehlt), aelterer 5000 ist STALE, revenueQ leer, mcap present,
+  // revenueTTM null. firstPresent haette den stalen 5000 als 'aktuell' akzeptiert -> jetzt strikt
+  // annualRev[0] -> kein aktueller Umsatz -> exclude.
+  const stale = { meta: { sector: 'Technology', industry: 'Semiconductors', region: 'US', ticker: 'FAKESTALE' },
+    marketCap: { value: 5e9 }, annual: { annualRev: V([null, 5000, null, 519443]) }, timeseries: { revenueQ: [] } };
+  const r = scoreUniverse([stale], formulas)[0];
+  assert.equal(r.action, 'exclude'); assert.equal(r.reason, 'data-suspect');
+});
 
 // --- Sichtbarkeit: Top 6 je Branche/Track -----------------------------------
 for (const fid of ['semiconductors', 'software-comm-services', 'industrials', 'energy', 'health-care']) {

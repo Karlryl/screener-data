@@ -93,6 +93,15 @@ test('Winsor-Clamp laesst plausible Werte unberuehrt (kein Regress)', () => {
   assert.ok(near(ax.marginTrajectory(CRDO, [-100, 100]), ax.marginTrajectory(CRDO)));
   assert.ok(near(ax.revAcceleration(CRDO, [-100, 100]), ax.revAcceleration(CRDO)));
 });
+test('C2/R5: physische Obergrenze 1.0 erhaelt legitime Hochmargen, klemmt nur >1-Stubs', () => {
+  // Hochmargen-Name (beide Quartals-OpMargen in [0,1]) -> marginTraj ERHALTEN, NICHT auf 0 genullt
+  // (genau der R5-Befund: symmetrisches p99~0.68 nullte FNV/VICI/APP faelschlich).
+  const hi = { timeseries: { opIncQ: [{ value: 78 }, { value: 72 }], revenueQ: [{ value: 100 }, { value: 100 }] } };
+  assert.ok(near(ax.marginTrajectory(hi, [-13, 1.0]), 0.78 - 0.72), 'Hochmarge erhalten (+0.06)');
+  // >1-OpMarge (opInc>rev, physisch unmoeglich = Stub/Artefakt): neueste 16.06 -> auf 1.0 geklemmt.
+  const stub = { timeseries: { opIncQ: [{ value: 1606 }, { value: 50 }], revenueQ: [{ value: 100 }, { value: 100 }] } };
+  assert.ok(near(ax.marginTrajectory(stub, [-13, 1.0]), 1.0 - 0.5), '>1-Stub auf 1.0 geklemmt');
+});
 
 // --- 6 capitalEfficiency ----------------------------------------------------
 test('capitalEfficiency(CRDO) ist finit', () => {
