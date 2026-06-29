@@ -46,16 +46,31 @@ function revGrowthLevel(s) {
   return metricVal(s,'revenueGrowthYoY'); // % (negativ rankt natuerlich unten)
 }
 
+// audit/fix (Court Phase A Runde 3, Fall C2): Winsor-Clamp gegen near-zero-Nenner-Artefakte.
+// Ein winziges Basis-Quartal (JOBY revenueQ[oldest]=15000) blaeht abgeleitete Quartals-Groessen
+// (QoQ-Rate, OpMarge) auf tausende auf -> Phantom-Extreme dominieren den Rang. Die Schranken
+// werden universe-weit gelernt (p1/p99 in score.js), KEIN aufgezwungenes Niveau; ohne bounds
+// (Standalone/Tests) unveraendert. Schwester-Achsen gpGrowth (gm-Clip[0,1]) / dilution (Endpunkt-
+// Clamp) sind analog gehaertet — diese zwei wurden uebersehen.
+const clampWinsor = (v, bounds) => (bounds ? Math.max(bounds[0], Math.min(bounds[1], v)) : v);
+
+// per-Quartal QoQ-Raten (newest-first), optional auf [lo,hi] winsorisiert.
+function quarterQoQRates(s, bounds) {
+  const rq = norm(s, 'revenueQ').filter((v) => v !== null && v !== undefined);
+  const g = [];
+  for (let i = 0; i < rq.length - 1; i++) {
+    if (rq[i] > 0 && rq[i + 1] > 0) g.push(clampWinsor(rq[i] / rq[i + 1] - 1, bounds)); // beide Quartale positiv
+  }
+  return g;
+}
+
 // --- 2. Umsatz-Beschleunigung (2. Ableitung) --------------------------------
 // QoQ-Wachstum ueber aufeinanderfolgende present Quartale (newest-first),
 // Beschleunigung = juengstes QoQ minus aeltestes QoQ. >0 = beschleunigt.
-function revAcceleration(s) {
+function revAcceleration(s, bounds) {
   const rq = norm(s, 'revenueQ').filter((v) => v !== null && v !== undefined);
   if (rq.length < 3) return null; // mind. 2 QoQ-Raten
-  const g = [];
-  for (let i = 0; i < rq.length - 1; i++) {
-    if (rq[i] > 0 && rq[i + 1] > 0) g.push(rq[i] / rq[i + 1] - 1); // beide Quartale positiv
-  }
+  const g = quarterQoQRates(s, bounds);
   if (g.length < 2) return null;
   return g[0] - g[g.length - 1];
 }
@@ -94,14 +109,11 @@ function ruleOfX(s, alpha = 2.3, includeFcf = true) {
   return x;
 }
 
-// --- 5. Marge-/Operating-Leverage-Trajektorie -------------------------------
-// Slope der Quartals-OpMargin (opIncQ/revenueQ), neu minus alt. >0 = Hebel greift.
-function marginTrajectory(s) {
-  // audit/fix (Court Fall 1, F12): opIncQ/revenueQ NUR fuer Quartale mit revenueQ>0 bilden.
-  // ratioSeries droppt nur den===0, NICHT den<0 -> negativer Quartalsumsatz erzeugte eine
-  // Phantom-Marge mit verdrehtem Vorzeichen und kippte die Trajektorie (MRP -0.480->+0.300,
-  // NGL +0.209->-0.093). Schwester-Achsen (revAccel, gpGrowth, newest-qtr-guard) guarden den
-  // positiven Nenner bereits -> hier konsistent nachgezogen. Reihenfolge newest-first erhalten.
+// per-Quartal OpMargin-Serie opIncQ/revenueQ (newest-first), optional auf [lo,hi] winsorisiert.
+// audit/fix (Court Fall 1, F12): NUR Quartale mit revenueQ>0 (negativer Umsatz -> Phantom-Marge,
+// Vorzeichen-Flip). audit/fix (Court R3 C2): jede Marge gegen die universe-weiten Tail-Schranken
+// winsorisieren (Stub-Quartal-Artefakt, JOBY 15000$-Quartal -> -9991-Marge).
+function quarterOpMargins(s, bounds) {
   const oi = norm(s, 'opIncQ'), rev = norm(s, 'revenueQ');
   const present = [];
   const n = Math.max(oi.length, rev.length);
@@ -109,8 +121,16 @@ function marginTrajectory(s) {
     const r = rev[i], o = oi[i];
     if (!(r > 0)) continue;                                  // revenueQ<=0/null -> Phantom-Marge, verwerfen
     if (o === null || o === undefined || !Number.isFinite(o)) continue;
-    present.push(o / r);
+    present.push(clampWinsor(o / r, bounds));
   }
+  return present;
+}
+
+// --- 5. Marge-/Operating-Leverage-Trajektorie -------------------------------
+// Slope der Quartals-OpMargin (opIncQ/revenueQ), neu minus alt. >0 = Hebel greift.
+// Reihenfolge newest-first erhalten; renorm-on-drop bei <2 present Quartalen.
+function marginTrajectory(s, bounds) {
+  const present = quarterOpMargins(s, bounds);
   if (present.length < 2) return null;
   return present[0] - present[present.length - 1]; // juengste minus aelteste Marge
 }
@@ -231,6 +251,8 @@ function dilution(s) {
 module.exports = {
   revGrowthLevel, revAcceleration, gpGrowth, ruleOfX,
   marginTrajectory, capitalEfficiency, revisionsMomentum, dilution,
+  // C2: per-Quartal-Rohwerte fuer die universe-weite Winsor-Schranken-Sammlung in score.js
+  quarterOpMargins, quarterQoQRates,
   // Helfer fuer Tests/Formeln
   _helpers: { lastPresent },
 };

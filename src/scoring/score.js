@@ -55,7 +55,10 @@ function isDataSuspect(s, lampsActive, action) {
 }
 
 // Roh-Achsenwert (ruleOfX braucht alpha + includeFcf am ECHTEN FCF-Vorzeichen).
-function rawAxisValue(s, key, formula, track) {
+// audit/fix (Court R3 C2): die zwei near-zero-Nenner-anfaelligen Quartals-Achsen
+// (marginTrajectory/revAcceleration) erhalten die universe-weit gelernten Winsor-
+// Schranken (winsorBounds), damit Stub-Quartale keine Phantom-Extreme pinnen.
+function rawAxisValue(s, key, formula, track, winsorBounds) {
   if (key === 'ruleOfX') {
     // includeFcf am tatsaechlichen FCF-Vorzeichen koppeln, NICHT am erzwungenen
     // 'profitable'-Label der none-Branchen (sonst FCF-Penalty fuer cash-negative
@@ -63,8 +66,27 @@ function rawAxisValue(s, key, formula, track) {
     const includeFcf = fcfTrack(metricVal(s, 'fcfMarginTTM'), norm(s, 'annualFCF'), norm(s, 'annualOCF')) === 'profitable';
     return axesFns.ruleOfX(s, formula.alpha, includeFcf);
   }
+  if (key === 'marginTrajectory') return axesFns.marginTrajectory(s, winsorBounds && winsorBounds.opMargin);
+  if (key === 'revAcceleration') return axesFns.revAcceleration(s, winsorBounds && winsorBounds.qoq);
   const fn = axesFns[key];
   return typeof fn === 'function' ? fn(s) : null;
+}
+
+// audit/fix (Court R3 C2): universe-weite Winsor-Schranken (data-learned, KEINE Magic Number
+// auf der Achse — nur die Tail-FRAKTION ist ein benannter Robustifizierungs-Parameter, wie
+// das gpGrowth-gm-Clip[0,1] eine physikalische Schranke ist). Symmetrisches Tail: jede
+// per-Quartal-Groesse wird auf [quantile(p), quantile(1-p)] der Universums-Verteilung geklemmt.
+const WINSOR_TAIL = 0.01; // p1/p99 — verifiziert: marginTraj-p99 ~6.8, revAccel-p99 ~1.4 (Court R3 C4-Scan)
+function quantile(samples, p) {
+  const a = samples.filter(Number.isFinite).sort((x, y) => x - y);
+  if (!a.length) return null;
+  const idx = (a.length - 1) * p;
+  const lo = Math.floor(idx), hi = Math.ceil(idx);
+  return lo === hi ? a[lo] : a[lo] + (a[hi] - a[lo]) * (idx - lo);
+}
+function winsorTailBounds(samples) {
+  const lo = quantile(samples, WINSOR_TAIL), hi = quantile(samples, 1 - WINSOR_TAIL);
+  return (lo === null || hi === null) ? null : [lo, hi];
 }
 
 // Track-Zuordnung gemaess splitMetric der Branchen-Formel.
@@ -170,6 +192,16 @@ function scoreUniverse(snapshots, formulas) {
     if (e.action !== 'route') continue;
     (cohorts[e.formulaId + '|' + e.track] ||= []).push(e);
   }
+  // audit/fix (Court R3 C2): universe-weite Winsor-Schranken VOR der Achsen-Berechnung lernen —
+  // alle per-Quartal-OpMargins / QoQ-Raten der gerouteten Namen sammeln, p1/p99 bilden. Die
+  // beiden near-zero-Nenner-anfaelligen Achsen klemmen damit Stub-Quartal-Phantome (data-learned).
+  const opmSamples = [], qoqSamples = [];
+  for (const e of results) {
+    if (e.action !== 'route') continue;
+    for (const v of axesFns.quarterOpMargins(e.snapshot)) opmSamples.push(v);
+    for (const v of axesFns.quarterQoQRates(e.snapshot)) qoqSamples.push(v);
+  }
+  const winsorBounds = { opMargin: winsorTailBounds(opmSamples), qoq: winsorTailBounds(qoqSamples) };
   for (const entries of Object.values(cohorts)) {
     const formula = entries[0].formula;
     const track = entries[0].track;
@@ -182,7 +214,7 @@ function scoreUniverse(snapshots, formulas) {
       : null;
     const rawByAxis = {};
     for (const ax of formula.axes) {
-      rawByAxis[ax.key] = entries.map((e) => rawAxisValue(e.snapshot, ax.key, formula, track));
+      rawByAxis[ax.key] = entries.map((e) => rawAxisValue(e.snapshot, ax.key, formula, track, winsorBounds));
     }
     for (let i = 0; i < entries.length; i++) {
       const axes = formula.axes.map((ax) => {

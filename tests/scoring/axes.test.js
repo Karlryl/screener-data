@@ -70,6 +70,30 @@ test('marginTrajectory: < 2 Quartale -> null', () => {
   assert.equal(ax.marginTrajectory({ timeseries: { opIncQ: [{ value: 5 }], revenueQ: [{ value: 50 }] } }), null);
 });
 
+// --- C2: Winsor-Clamp gegen Stub-Quartal-Phantome ---------------------------
+test('marginTrajectory: ohne bounds unveraendert (Rueckwaerts-Kompat)', () => {
+  // Stub-Quartal: oldest revenueQ=1, opIncQ=-5000 -> Phantom-Marge -5000.
+  const stub = { timeseries: { revenueQ: [{ value: 100 }, { value: 1 }], opIncQ: [{ value: 20 }, { value: -5000 }] } };
+  assert.ok(ax.marginTrajectory(stub) > 5000); // 0.2 - (-5000) ~ 5000 (das Artefakt)
+});
+test('marginTrajectory: mit bounds winsorisiert das Stub-Quartal weg', () => {
+  const stub = { timeseries: { revenueQ: [{ value: 100 }, { value: 1 }], opIncQ: [{ value: 20 }, { value: -5000 }] } };
+  const v = ax.marginTrajectory(stub, [-1, 1]); // oldest -5000 -> -1, newest 0.2 -> bleibt
+  assert.ok(near(v, 0.2 - (-1)), `erwartet ~1.2, war ${v}`);
+});
+test('revAcceleration: mit bounds winsorisiert die Stub-QoQ-Rate weg', () => {
+  // revenueQ=[100,50,1]: g=[100/50-1, 50/1-1]=[1,49]; ohne bounds revAccel=1-49=-48.
+  const stub = { timeseries: { revenueQ: [{ value: 100 }, { value: 50 }, { value: 1 }] } };
+  assert.ok(ax.revAcceleration(stub) < -40); // -48, das Artefakt
+  const v = ax.revAcceleration(stub, [-1, 2]); // 49 -> 2 geklemmt
+  assert.ok(near(v, 1 - 2), `erwartet ~-1, war ${v}`);
+});
+test('Winsor-Clamp laesst plausible Werte unberuehrt (kein Regress)', () => {
+  // CRDO ist ein realer gesunder Name; weite bounds duerfen nichts aendern.
+  assert.ok(near(ax.marginTrajectory(CRDO, [-100, 100]), ax.marginTrajectory(CRDO)));
+  assert.ok(near(ax.revAcceleration(CRDO, [-100, 100]), ax.revAcceleration(CRDO)));
+});
+
 // --- 6 capitalEfficiency ----------------------------------------------------
 test('capitalEfficiency(CRDO) ist finit', () => {
   const v = ax.capitalEfficiency(CRDO);
