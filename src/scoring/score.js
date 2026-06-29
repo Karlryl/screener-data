@@ -53,7 +53,16 @@ function trackOf(s, formula) {
     case 'FCF':
       t = fcfTrack(metricVal(s, 'fcfMarginTTM'), norm(s, 'annualFCF'), norm(s, 'annualOCF'));
       break;
-    case 'OpInc': t = signTrack(norm(s, 'annualOpInc')); break;
+    case 'OpInc':
+      t = signTrack(norm(s, 'annualOpInc'));
+      // audit/fix (Court Fall 3, F5+F27): leeres annualOpInc -> signTrack='unknown' -> NICHT
+      // blind zum konservativen profitable-Default unten; erst auf das NetIncome-Vorzeichen
+      // zurueckfallen (architektonisch analog zur fcfTrack OCF-Rescue, engine.js:113-114).
+      // WOLF: annualOpInc=[] aber annualNetIncome=[-1.6B,-864M,-330M,-201M] -> unprofitable
+      // (zuvor faelschlich profitable-Track + falsche Kohorte/Gewichte). Greift NUR im
+      // bisher blinden unknown-Fall -> kein Anker betroffen (keiner hat leeres annualOpInc).
+      if (t === 'unknown') t = signTrack(norm(s, 'annualNetIncome'));
+      break;
     case 'NetIncome': t = signTrack(norm(s, 'annualNetIncome')); break;
     case 'none': default: t = 'profitable'; // Einzel-Formel-Branchen ohne Split
   }

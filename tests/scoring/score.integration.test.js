@@ -110,6 +110,29 @@ test('BE/Bloom Energy -> industrials, PROFITABLE-Track, oberes Quartil (Karl-Ank
   assertAnchorTop('BE', 'industrials', 0.25);
 });
 
+// --- Track-Zuordnung: OpInc-Split mit leerem annualOpInc -> NetIncome-Rescue ---
+// (Court Fall 3, F5+F27): zuvor zwang der unknown->profitable-Default einen klar unprofitablen
+// Namen (WOLF) faelschlich in den profitable-Track + falsche Kohorte/Gewichte. Jetzt faellt der
+// OpInc-Split bei leerem annualOpInc erst auf das NetIncome-Vorzeichen zurueck, dann auf den Default.
+test('trackOf: OpInc-Split, leeres annualOpInc + neg. NetIncome -> unprofitable (F5/WOLF)', () => {
+  const { trackOf } = require('../../src/scoring/score.js');
+  const f = { splitMetric: 'OpInc' };
+  assert.equal(trackOf({ annual: { annualOpInc: [], annualNetIncome: [{ value: -1.6e9 }, { value: -864e6 }] } }, f),
+    'unprofitable', 'leeres OpInc + neg NetIncome muss unprofitable sein');
+  assert.equal(trackOf({ annual: { annualOpInc: [], annualNetIncome: [{ value: 5e8 }] } }, f),
+    'profitable', 'leeres OpInc + pos NetIncome -> profitable');
+  assert.equal(trackOf({ annual: { annualOpInc: [], annualNetIncome: [] } }, f),
+    'profitable', 'beide leer -> konservativer profitable-Default bleibt');
+  assert.equal(trackOf({ annual: { annualOpInc: [{ value: -50 }], annualNetIncome: [{ value: 999 }] } }, f),
+    'unprofitable', 'present OpInc hat Vorrang vor NetIncome (kein Regress)');
+});
+test('WOLF (falls vorhanden): semiconductors, UNPROFITABLE-Track (F5)', () => {
+  const w = byTicker['WOLF'];
+  if (!w || w.action !== 'route') { console.log('       (WOLF nicht scorebar — uebersprungen)'); return; }
+  assert.equal(w.formulaId, 'semiconductors', 'WOLF formulaId=' + w.formulaId);
+  assert.equal(w.track, 'unprofitable', 'WOLF muss unprofitable sein (annualOpInc leer, NetIncome negativ)');
+});
+
 // --- VIELLEICHT-Branchen produzieren Rankings -------------------------------
 test('VIELLEICHT-Branchen (utilities/staples/materials/real-estate/it-services) gerankt', () => {
   for (const fid of ['utilities', 'consumer-staples', 'materials', 'real-estate', 'it-services']) {
