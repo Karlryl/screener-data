@@ -214,6 +214,12 @@ test('leer-annualRev CEF/Shell/Asset-Mgmt -> exclude non-operating-rev (Branch d
   const shell = { meta: { sector: 'Financial Services', industry: 'Shell Companies', region: 'US', ticker: 'SHLX' },
     annual: { annualRev: [{ value: null }] } };
   assert.equal(route(shell).reason, 'non-operating-rev');
+  // Court R3 C5: PIN.L-Shape — present-ALL-ZERO annualRev [0,0,0,0] (hasPresent=true!) entging dem
+  // !hasPresent-only-Branch-(d) und leakte auf survival. Jetzt: present-all-zero zaehlt ebenso als
+  // non-operating (Pantheon International, Asset Management).
+  const pinl = { meta: { sector: 'Financial Services', industry: 'Asset Management', region: 'US', ticker: 'PINLX' },
+    annual: { annualRev: [{ value: 0 }, { value: 0 }, { value: 0 }, { value: 0 }] } };
+  assert.equal(route(pinl).reason, 'non-operating-rev');
 });
 test('leer-annualRev ECHTES Pre-Rev-Biotech bleibt survival (Branch d eng gescoped)', () => {
   // Kontrolle: ein leer-annualRev Healthcare/Biotech-Name darf NICHT vom Vehikel-Filter gefangen

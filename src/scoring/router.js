@@ -153,10 +153,14 @@ function isNonOperatingVehicle(s) {
   const revAnn = norm(s, 'annualRev');
   if (hasPresent(revAnn) && presentValues(revAnn).some((v) => v < 0)) return true;        // (a)
   const ind = lc(s && s.meta ? s.meta.industry : '');
-  // (d) KOMPLETT leerer annualRev + Finanz-Vehikel-Industrie -> CEF/Shell/Asset-Manager/BDC
-  //     (BMEZ/RVI/PIN.L = Asset Management, XXI = Shell Companies). Eng gescoped (s.o.): echte
-  //     Pre-Rev-Biotechs/Dev-Stage-Miner (leer-annualRev, aber NICHT diese Industrien) bleiben.
-  if (!hasPresent(revAnn) && NON_OPERATING_VEHICLE_INDUSTRY.test(ind)) return true;        // (d)
+  // (d) KEIN operativer Umsatz (leer ODER alle present-Werte ==0) + Finanz-Vehikel-Industrie ->
+  //     CEF/Shell/Asset-Manager/BDC (BMEZ/RVI = leer; PIN.L = present-Null [0,0,0,0]; XXI = Shell).
+  //     audit/fix (Court R3 C5): das present-all-zero-Bein NICHT inline ein zweites Mal hinkodieren,
+  //     sondern aus isPreRevenue single-sourcen — isPreRevenue(s) IST (!hasPresent || alle ==0).
+  //     PIN.L (hasPresent=true, alle 0) entging dem frueheren !hasPresent-only-Branch und leakte auf
+  //     survival. Eng gescoped (s.o.): echte Pre-Rev-Biotechs/Dev-Stage-Miner (andere Industrie) bleiben.
+  const noOperatingRev = isPreRevenue(s);
+  if (noOperatingRev && NON_OPERATING_VEHICLE_INDUSTRY.test(ind)) return true;             // (d)
   if (!ind.includes('asset management')) return false;
   const revQ = norm(s, 'revenueQ');
   if (hasPresent(revQ) && presentValues(revQ).some((v) => v < 0)) return true;            // (b)
@@ -169,8 +173,10 @@ function isNonOperatingVehicle(s) {
 }
 
 // --- Schritt 3: Branchen-Routing (provisorische GICS-Karte) -----------------
-// Industry-Overrides zuerst, dann Sektor-Fallback. Wird mit den Formel-Dateien
-// (jede exportiert ihr eigenes routingPredicate) verfeinert.
+// Industry-Overrides zuerst, dann Sektor-Fallback. Das Routing laeuft vollstaendig
+// ZENTRAL hier in sectorRoute(); die Formel-Dateien tragen nur Achsen+Gewichte
+// (id/splitMetric/alpha/axes), KEIN eigenes routingPredicate (audit/fix R3: alter
+// Kommentar behauptete das faelschlich — keine der 12 Formeln exportiert eines).
 function sectorRoute(s) {
   const ind = lc(s && s.meta ? s.meta.industry : '');
   const sec = lc(s && s.meta ? s.meta.sector : '');
