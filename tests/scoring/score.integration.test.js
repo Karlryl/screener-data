@@ -196,6 +196,21 @@ test('Issuer-Dedup synthetisch: Heimat-Bein -> dup-issuer, US-Bein ist der Gewin
   assert.equal(bt['DUAL.L'].reason, 'dup-issuer');   // Heimat-Bein verliert
   assert.notEqual(bt['DUAL'].reason, 'dup-issuer');  // US-Bein ist der Gewinner
 });
+test('Issuer-Dedup FX-Haertung (F50): FX-suspektes dual-non-USD-Bein verliert den Tie-Break', () => {
+  // CMOC-Muster: ein Bein mit tradingCurrency!=reportingCurrencyOriginal UND fehlendem
+  // tradingFxRateApplied (stale -> marketCap mit falschem FX-Faktor inflationiert) verliert den
+  // Dedup-Tie-Break TROTZ nominal groesserer marketCap gegen das FX-konsistente Heimat-Bein.
+  const mk = (ticker, ex, tc, rc, fx, mcap) => ({
+    meta: { name: 'CMOC Group Ltd', sector: 'Basic Materials', industry: 'Other Industrial Metals & Mining',
+      exchangeName: ex, ticker, tradingCurrency: tc, reportingCurrencyOriginal: rc, tradingFxRateApplied: fx },
+    annual: { annualRev: [{ value: 300 }, { value: 200 }, { value: 130 }], annualGP: [{ value: 60 }] },
+    marketCap: { value: mcap } });
+  const suspect = mk('3993.HK', 'HKSE', 'HKD', 'CNY', undefined, 54e9);     // FX-suspekt, GROESSERE mcap
+  const consistent = mk('603993.SS', 'Shanghai', 'CNY', 'CNY', undefined, 46e9); // FX-konsistent, kleinere mcap
+  const bt = Object.fromEntries(scoreUniverse([suspect, consistent], formulas).map((r) => [r.ticker, r]));
+  assert.equal(bt['3993.HK'].reason, 'dup-issuer', 'FX-suspektes Bein (3993.HK) muss den Dedup verlieren');
+  assert.notEqual(bt['603993.SS'].reason, 'dup-issuer', 'FX-konsistentes Bein (603993.SS) gewinnt den Dedup');
+});
 test('Issuer-Dedup real: SHOP.TO/ASML.AS/2330.TW (falls vorhanden) dedupt, US-Bein routet', () => {
   for (const [us, home] of [['SHOP', 'SHOP.TO'], ['ASML', 'ASML.AS'], ['TSM', '2330.TW']]) {
     const u = byTicker[us], h = byTicker[home];

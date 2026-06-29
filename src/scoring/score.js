@@ -113,6 +113,17 @@ function scoreUniverse(snapshots, formulas) {
     return (typeof n === 'string' && n.trim()) ? n.toLowerCase().replace(/\s+/g, ' ').trim() : null;
   };
   const mcapOf = (s) => (s && s.marketCap && Number.isFinite(s.marketCap.value)) ? s.marketCap.value : 0;
+  // audit/fix (Court Fall 10, F50): ein dual-non-USD-Bein, dessen marketCap mit dem REPORTING- statt
+  // dem TRADING-FX-Faktor skaliert wurde (stale Snapshot ohne tradingFxRateApplied), traegt eine
+  // untrustworthy marketCap -> im Dedup-Tie-Break deprioritisieren, damit nicht das FX-verzerrte Bein
+  // gewinnt (CMOC: 3993.HK HKD/CNY vs 603993.SS CNY/CNY). Konjunktion (ccy-Divergenz UND fehlender
+  // FX-Faktor), nicht reine Abwesenheit -> beruehrt kein FX-konsistentes/USD-primaeres Bein.
+  const fxSuspect = (s) => {
+    const m = s && s.meta;
+    if (!m) return false;
+    const tc = m.tradingCurrency, rc = m.reportingCurrencyOriginal;
+    return !!(tc && rc && String(tc).toUpperCase() !== String(rc).toUpperCase() && m.tradingFxRateApplied == null);
+  };
   const issuerGroups = {};
   for (const e of results) {
     if (e.action !== 'route' && e.action !== 'survival') continue;
@@ -124,6 +135,8 @@ function scoreUniverse(snapshots, formulas) {
     group.sort((a, b) => {
       const ua = isUS(a.snapshot) ? 1 : 0, ub = isUS(b.snapshot) ? 1 : 0;
       if (ua !== ub) return ub - ua;                       // US-primaeres Bein zuerst
+      const fa = fxSuspect(a.snapshot) ? 1 : 0, fb = fxSuspect(b.snapshot) ? 1 : 0;
+      if (fa !== fb) return fa - fb;                       // FX-suspekte marketCap deprioritisieren (vertrauenswuerdig zuerst)
       const ma = mcapOf(a.snapshot), mb = mcapOf(b.snapshot);
       if (ma !== mb) return mb - ma;                       // dann groesste marketCap
       return cmpTicker(a.ticker, b.ticker);                // dann stabiler Ticker-Tie-Break (deterministisch)
