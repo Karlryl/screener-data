@@ -70,6 +70,26 @@ function weightedScore(axes) {
   return Number.isFinite(r) ? r : null;
 }
 
+/**
+ * audit/fix (Court Phase A Runde 3, Fall C4): Achsen-Gewichts-Coverage eines Namens =
+ * Summe der Gewichte PRESENT-er Achsen / Summe ALLER Achsen-Gewichte. Das ist genau das
+ * Gewicht, das renorm-on-drop bei fehlenden Achsen still verwirft. Dient als data-gelernter
+ * Shrinkage-Faktor (score.js): wcov=1 (alle Achsen present) -> keine Schrumpfung; wcov<1
+ * (unvollstaendige Achsen) -> Score Richtung Kohorten-Median schrumpfen (effektives N / Inv. 4).
+ * GEWICHTS-basiert (nicht achsen-ZAHL-basiert), da Achsen ungleich gewichtet sind.
+ */
+function coverageWeight(axes) {
+  if (!Array.isArray(axes)) return null;
+  let presentW = 0, totalW = 0;
+  for (const a of axes) {
+    if (!a || !(a.weight > 0) || !Number.isFinite(a.weight)) continue;
+    totalW += a.weight;
+    const v = a.value;
+    if (v !== null && v !== undefined && Number.isFinite(v)) presentW += a.weight;
+  }
+  return totalW > 0 ? presentW / totalW : null;
+}
+
 // --- fcfSignGuard (G0-G3) + Track -------------------------------------------
 
 /**
@@ -125,6 +145,6 @@ function signTrack(normSeries) {
 }
 
 module.exports = {
-  percentileRank, q, weightedScore,
+  percentileRank, q, weightedScore, coverageWeight,
   fcfMarginValid, fcfTrack, signTrack,
 };

@@ -11,7 +11,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { norm } = require('../../src/scoring/snapshot.js');
 const {
-  percentileRank, q, weightedScore, fcfMarginValid, fcfTrack, signTrack,
+  percentileRank, q, weightedScore, coverageWeight, fcfMarginValid, fcfTrack, signTrack,
 } = require('../../src/scoring/engine.js');
 
 let pass = 0, fail = 0;
@@ -55,6 +55,21 @@ test('weightedScore: gedroppte Achse renormiert (KEIN Fake-50/0)', () => {
 test('weightedScore: alle Achsen weg -> null', () => {
   assert.equal(weightedScore([{ value: null, weight: 1 }, { value: NaN, weight: 2 }]), null);
   assert.equal(weightedScore([]), null);
+});
+// --- coverageWeight (C4 Shrinkage-Faktor) -----------------------------------
+test('coverageWeight: alle Achsen present -> 1 (keine Schrumpfung)', () => {
+  assert.equal(coverageWeight([{ value: 80, weight: 3 }, { value: 40, weight: 1 }]), 1);
+});
+test('coverageWeight: GEWICHTS-basiert, nicht achsen-zahl-basiert', () => {
+  // 1 von 2 Achsen present, aber die present-Achse traegt 3 von 4 Gewicht -> wcov=0.75 (nicht 0.5).
+  assert.equal(coverageWeight([{ value: 80, weight: 3 }, { value: null, weight: 1 }]), 0.75);
+  // umgekehrt: present-Achse traegt nur 1 von 4 -> wcov=0.25.
+  assert.equal(coverageWeight([{ value: 80, weight: 1 }, { value: null, weight: 3 }]), 0.25);
+});
+test('coverageWeight: alle Achsen weg/leer -> null', () => {
+  assert.equal(coverageWeight([{ value: null, weight: 1 }]), 0); // totalW>0 aber presentW=0 -> 0
+  assert.equal(coverageWeight([]), null); // totalW=0 -> null
+  assert.equal(coverageWeight([{ value: 50, weight: 0 }]), null); // weight<=0 zaehlt nicht
 });
 test('weightedScore: weight<=0 wird ignoriert', () => {
   assert.equal(weightedScore([{ value: 90, weight: 0 }, { value: 10, weight: 1 }]), 10);

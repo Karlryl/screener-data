@@ -13,7 +13,7 @@
  */
 
 const { norm, metricVal } = require('./snapshot.js');
-const { q, weightedScore, signTrack, fcfTrack } = require('./engine.js');
+const { q, weightedScore, coverageWeight, signTrack, fcfTrack } = require('./engine.js');
 const { route, isUS } = require('./router.js');
 const { evaluateLamps } = require('./lamps.js');
 const { overviewMetric } = require('./overview.js');
@@ -216,6 +216,7 @@ function scoreUniverse(snapshots, formulas) {
     for (const ax of formula.axes) {
       rawByAxis[ax.key] = entries.map((e) => rawAxisValue(e.snapshot, ax.key, formula, track, winsorBounds));
     }
+    const cohWcov = new Array(entries.length);
     for (let i = 0; i < entries.length; i++) {
       const axes = formula.axes.map((ax) => {
         let cohort = rawByAxis[ax.key];
@@ -224,7 +225,23 @@ function scoreUniverse(snapshots, formulas) {
         }
         return { value: q(rawByAxis[ax.key][i], cohort), weight: ax.w[track] };
       });
-      entries[i].score = weightedScore(axes);
+      entries[i].score = weightedScore(axes);   // Basis-Score (renorm-on-drop)
+      cohWcov[i] = coverageWeight(axes);         // Achsen-Gewichts-Coverage (C4-Shrinkage-Faktor)
+    }
+    // audit/fix (Court Phase A Runde 3, Fall C4): Coverage-Shrinkage. renorm-on-drop laesst Namen mit
+    // WENIGER present-Achsen eine strukturell HOEHERE Score-Varianz behalten (Mittel ueber k Achsen,
+    // Var ~1/k) -> sie ueberbevoelkern die Tails und verdraengen daten-vollstaendige Namen (alle 4
+    // Anker 8/8) aus der Spitze = Falsch-Entdeckung (Inv. 4 effektives N + 7 FDR). Jeden Basis-Score
+    // Richtung KOHORTEN-MEDIAN schrumpfen, Schrumpf-Faktor = wcov (= das fehlende Achsen-Gewicht,
+    // data-learned, KEINE freie Konstante). wcov=1 (8/8) -> Score byte-identisch. KEIN Fake-50:
+    // Ziel ist der gelernte Median, renorm-on-drop bleibt darunter erhalten.
+    const cohMedian = quantile(entries.map((e) => e.score).filter(Number.isFinite), 0.5);
+    if (cohMedian !== null) {
+      for (let i = 0; i < entries.length; i++) {
+        const e = entries[i];
+        if (!Number.isFinite(e.score) || !Number.isFinite(cohWcov[i])) continue;
+        e.score = cohMedian + cohWcov[i] * (e.score - cohMedian);
+      }
     }
   }
 
