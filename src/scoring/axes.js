@@ -195,17 +195,18 @@ function revisionsMomentum(s) {
 function dilution(s) {
   const sbc = norm(s, 'annualSBC');
   if (!hasPresent(sbc)) return null; // CAT/CVX/XOM -> Achse droppt, KEIN Fake-50
-  // audit/fix (Court Fall 1, F17): SBC/Rev-Verhaeltnis gegen degenerierte near-zero-Nenner guarden.
-  // Ein altes Jahr mit winzigem Umsatz blaeht SBC/Rev auf (IBRX rev[oldest]=240k -> ratio 167) ->
-  // der Slope-Term -(level-old) wird riesig und macht Heavy-Dilution-Namen zu "bester Dilution"
-  // (IBRX Rang 1/2861 statt 2759, widerspricht der highDilution-Lampe). SBC/Rev>1 (SBC>Umsatz)
-  // bzw. <0 sind implausible Dilutions-Niveaus -> verwerfen (Ratio-Plausibilitaet, analog gm-Guard F9).
-  const r = ratioSeries(sbc, norm(s, 'annualRev'))
-    .map((v) => (v !== null && v >= 0 && v <= 1) ? v : null);
-  const level = firstPresent(r);
-  if (level === null) return null;
-  const old = lastPresent(r);
-  const slope = (old !== null) ? (level - old) : 0; // steigend = schlechter
+  // audit/fix (Court Fall 1, F17 + Runde-2-Regress R2F1): SBC/Rev gegen degenerierte near-zero-Nenner
+  // guarden, OHNE die Achse fuer ECHTE Heavy-Diluter zu droppen. Das erste Nullen (v>1 -> null) liess
+  // bei realen Heavy-Dilutern (newest SBC/Rev>1) den LEVEL weg -> Achse droppt -> renorm-on-drop -> der
+  // Diluter entging der Strafe (Score inflationiert, R2F1 high). Jetzt: LEVEL clampen (nie droppen);
+  // SLOPE nur wenn das aelteste SBC/Rev plausibel ist (<=1) — ein near-zero-Nenner-Blowup (IBRX old=167)
+  // -> Slope=0 (nur Niveau zaehlt) statt das Ranking zu invertieren. Ratio-Plausibilitaet, kein Niveau.
+  const raw = ratioSeries(sbc, norm(s, 'annualRev'));
+  const levelRaw = firstPresent(raw);
+  if (levelRaw === null) return null;
+  const level = Math.min(1, Math.max(0, levelRaw));            // clampen, NIE droppen (Heavy-Diluter behaelt Strafe)
+  const oldRaw = lastPresent(raw);
+  const slope = (oldRaw !== null && oldRaw >= 0 && oldRaw <= 1) ? (level - oldRaw) : 0; // implausibles old -> Slope=0
   return -(level) - slope;
 }
 

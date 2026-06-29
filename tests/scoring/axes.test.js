@@ -162,5 +162,21 @@ test('dilution (F17): near-zero Alt-Umsatz blaeht SBC/Rev nicht auf (Slope robus
   assert.ok(d < 0 && d > -1, `dilution muss negativ + nicht aufgeblaeht sein, ist ${d}`);
 });
 
+test('gpGrowth (F9, R2F40): negatives gm-Jahr (GP<0) wird ebenso verworfen (v>=0-Guard hat Wirkung)', () => {
+  const s = { annual: {
+    annualGP:  [{ value: 60 }, { value: 40 }, { value: 30 }, { value: -50 }],
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }, { value: 100 }] } };
+  // gm = [0.6, 0.4, 0.3, -0.5]. Ohne v>=0-Guard: gmOld=-0.5 -> gmTraj=1.1 -> g~1.6 (aufgeblaeht).
+  // Mit Guard: -0.5 verworfen -> gmOld=0.3 -> gmTraj=0.3 -> g=0.8.
+  assert.ok(ax.gpGrowth(s) < 1.0, `gm<0-Jahr darf gpGrowth nicht aufblaehen: ${ax.gpGrowth(s)}`);
+});
+test('dilution (F17/R2F1): echter Heavy-Diluter (newest SBC/Rev>1) behaelt die Achse (kein Drop->renorm)', () => {
+  const s = { annual: { annualSBC: [150, 120, 90], annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }] } };
+  // newest SBC/Rev = 1.5 (>1) -> frueheres Nullen haette die Achse gedroppt (Diluter entging Strafe).
+  // Jetzt: level=clamp(1.5)=1 -> dilution != null und stark negativ (harte Verwaesserungs-Strafe).
+  const d = ax.dilution(s);
+  assert.ok(d !== null && d < 0, `Heavy-Diluter muss Achse behalten + negative dilution haben, ist ${d}`);
+});
+
 console.log(`\naxes.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);
