@@ -22,6 +22,11 @@ const axesFns = require('./axes.js');
 
 const tickerOf = (s) => (s && s.meta && s.meta.ticker) || (s && s.identifier && s.identifier.value) || '?';
 
+// audit/fix (Court Fall 7, F37): locale-/ICU-unabhaengiger Ticker-Tie-Break. localeCompare haengt
+// von der OS-Locale ab (CI-ubuntu != lokal-Windows/de-DE) -> untergraebt den dokumentierten
+// CI==lokal-Determinismus. Code-Unit-Vergleich (< / >) ist deterministisch und plattform-stabil.
+const cmpTicker = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
+
 // A4 (Weltweit-Pivot): DISQUALIFIZIERENDE Daten-Qualitaets-Signale. Ein Name mit einer
 // data-suspect-Lampe (newestQtrSuspect/annualCurrencyLeak — erfundenes/geleaktes Quartal bzw.
 // annual-currency-Leak) ODER snapshot _quality.grade='D' wird aus dem Ranking EXCLUDIERT, sonst
@@ -121,7 +126,7 @@ function scoreUniverse(snapshots, formulas) {
       if (ua !== ub) return ub - ua;                       // US-primaeres Bein zuerst
       const ma = mcapOf(a.snapshot), mb = mcapOf(b.snapshot);
       if (ma !== mb) return mb - ma;                       // dann groesste marketCap
-      return a.ticker.localeCompare(b.ticker);             // dann stabiler Ticker-Tie-Break
+      return cmpTicker(a.ticker, b.ticker);                // dann stabiler Ticker-Tie-Break (deterministisch)
     });
     for (let i = 1; i < group.length; i++) {
       const e = group[i];
@@ -256,7 +261,7 @@ function produceRankings(results, opts = {}) {
   // audit/fix (D1/D2/D3): roher Score + deterministischer Ticker-Tie-Break VOR dem Slicen,
   // damit exakte/round1-Ties nicht von der Dateisystem-Reihenfolge entschieden werden. _raw
   // wird danach gestrippt -> Output-Shape unveraendert.
-  const byScore = (a, c) => (c._raw - a._raw) || a.ticker.localeCompare(c.ticker);
+  const byScore = (a, c) => (c._raw - a._raw) || cmpTicker(a.ticker, c.ticker);
   const stripRaw = ({ _raw, ...row }) => row;
   for (const b of Object.values(branches)) {
     for (const t of Object.keys(b)) { b[t].sort(byScore); b[t] = b[t].slice(0, topN).map(stripRaw); }
@@ -266,10 +271,10 @@ function produceRankings(results, opts = {}) {
   // sonst sind die laengsten-ueberlebenden Namen unsortiert vergraben.
   survival.sort((a, c) => {
     const av = a.runwayQuarters, cv = c.runwayQuarters;
-    if (av === null && cv === null) return a.ticker.localeCompare(c.ticker);
+    if (av === null && cv === null) return cmpTicker(a.ticker, c.ticker);
     if (av === null) return 1;
     if (cv === null) return -1;
-    return (cv - av) || a.ticker.localeCompare(c.ticker);
+    return (cv - av) || cmpTicker(a.ticker, c.ticker);
   });
   return { branches, overview: overview.slice(0, topN * 2).map(stripRaw), survival, excluded };
 }

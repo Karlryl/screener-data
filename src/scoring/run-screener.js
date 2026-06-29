@@ -62,12 +62,16 @@ function run(topN) {
   }
   writeJsonAtomic(path.join(OUT_DIR, 'overview.json'), ranked.overview);
   writeJsonAtomic(path.join(OUT_DIR, 'survival.json'), ranked.survival);
+  // audit/fix (Court Fall 7, F6/F46): index.json byte-deterministisch machen. Die Key-Reihenfolge
+  // von branches/counts/excluded erbte von fs.readdirSync (OS-abhaengig -> CI-ubuntu != Windows).
+  // Werte unveraendert, nur Keys deterministisch sortieren (kein Score-/Membership-Effekt).
+  const sortKeys = (o) => Object.fromEntries(Object.keys(o).sort().map((k) => [k, o[k]]));
   writeJsonAtomic(path.join(OUT_DIR, 'index.json'), {
     generatedFromSnapshots: universe.length,
-    branches: Object.keys(ranked.branches),
-    counts,
+    branches: Object.keys(ranked.branches).sort(),
+    counts: sortKeys(counts),
     survivalCount: ranked.survival.length,
-    excluded: ranked.excluded,
+    excluded: sortKeys(ranked.excluded),
   });
   return { universe: universe.length, branches: Object.keys(ranked.branches).length, out: OUT_DIR };
 }
