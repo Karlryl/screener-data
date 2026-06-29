@@ -20,33 +20,45 @@ const ROOT = path.join(__dirname, '..', '..');
 const SNAP_DIR = path.join(ROOT, 'snapshots');
 const OUT_DIR = path.join(ROOT, 'outputs', 'hypergrowth');
 
-// audit/fix (Court Phase A Runde 2, Fall 7): manifest-relativer Coverage-Floor.
-// Weil das Scoring kohorten-relativ perzentil-normiert, verschiebt ein still
-// geschrumpftes Universum (defekte/nicht-parsbare Snapshots) lautlos ALLE
-// Perzentile. Schwelle = COVERAGE_FLOOR_RATIO * manifest.n_ok (letzter bekannter
-// Good-Pull), KEINE absolute Magic Number — sie skaliert mit dem Universum.
-// Praezedenzfall der Quote: das CI-Pull-Gate (.github/workflows/daily-pull.yml,
-// memory `ci_coverage_gate_calibration.md`) nutzt max(2500, total*0.13) auf der
-// PULL-Seite (locker, da Yahoo drosselt). Die SCORING-Seite ist strenger: hier
-// ist das Universum bereits ein Good-Pull, ein Sturz >5% ggue. n_ok ist anomal.
+// audit/fix (Court Phase A Runde 3, Fall C1): Coverage-Floor gegen eine SELF-BASELINE.
+// Weil das Scoring kohorten-relativ perzentil-normiert, verschiebt ein still geschrumpftes
+// Universum (defekte/nicht-parsbare Snapshots) lautlos ALLE Perzentile. Der R2-Fall-7-Floor
+// verglich on-disk (lokal akkumulierte Snapshot-Union) gegen manifest.n_ok (OK-Count des
+// LETZTEN Pulls) — zwei DESYNCHRONISIERTE Populationen (n_ok git-volatil 3978..11827 -> 20%
+// der juengsten Manifeste haetten einen GESUNDEN Lauf falsch abgebrochen). Jetzt: Schwelle
+// = COVERAGE_FLOOR_RATIO * Self-Baseline (= zuletzt erfolgreich geladener on-disk-Count,
+// High-Water in snapshots/_last_good_disk.json) — disk-jetzt vs disk-zuletzt-gesund, DIESELBE
+// lokal akkumulierende Population. KEINE absolute Magic Number, skaliert mit dem Universum.
+// manifest.n_ok ist nur noch console.warn-Diagnose. COVERAGE_FLOOR_RATIO=0.95 bleibt kalibriert.
 const COVERAGE_FLOOR_RATIO = 0.95;
+const LAST_GOOD_DISK = path.join(SNAP_DIR, '_last_good_disk.json'); // git-ignored (wie snapshots/)
 
 /**
- * Wirft (Fail-Loud), wenn die geladene Snapshot-Anzahl unter den manifest-
- * relativen Coverage-Floor faellt. Reine Funktion (testbar, kein I/O).
- * Ohne verwertbares manifest.n_ok (fehlt/0/NaN) ist der relative Floor nicht
- * berechenbar -> kein throw (anderes Fehlerbild, kein stilles Schrumpfen).
+ * Wirft (Fail-Loud), wenn die geladene Snapshot-Anzahl unter den Self-Baseline-relativen
+ * Coverage-Floor faellt. Reine Funktion (testbar, kein I/O). Ohne verwertbare Baseline
+ * (Erstlauf: fehlt/0/NaN) ist der relative Floor nicht berechenbar -> kein throw (fail-open).
  */
-function assertCoverageFloor(loadedCount, manifestNOk, floorRatio = COVERAGE_FLOOR_RATIO) {
-  if (!Number.isFinite(manifestNOk) || manifestNOk <= 0) return; // kein Baseline -> nicht erzwingbar
-  const floor = Math.ceil(floorRatio * manifestNOk);
+function assertCoverageFloor(loadedCount, baseline, floorRatio = COVERAGE_FLOOR_RATIO) {
+  if (!Number.isFinite(baseline) || baseline <= 0) return; // keine Baseline (Erstlauf) -> nicht erzwingbar
+  const floor = Math.ceil(floorRatio * baseline);
   if (loadedCount < floor) {
     throw new Error(
-      `[run-screener] loadUniverse: nur ${loadedCount} Snapshots geladen, unter Coverage-Floor ` +
-      `${floor} (= ${floorRatio} x manifest n_ok ${manifestNOk}). Universum geschrumpft — ` +
-      `Kohorten-Perzentile waeren unzuverlaessig. Lauf abgebrochen (defekte/fehlende Snapshots pruefen).`
+      `[run-screener] loadUniverse: nur ${loadedCount} Snapshots on-disk, unter Coverage-Floor ` +
+      `${floor} (= ${floorRatio} x Self-Baseline ${baseline}, zuletzt-gesunder on-disk-Count). Universum ` +
+      `geschrumpft — Kohorten-Perzentile waeren unzuverlaessig. Lauf abgebrochen (defekte/fehlende ` +
+      `Snapshots pruefen; bei legitimem Schrumpfen snapshots/_last_good_disk.json loeschen zum Reset).`
     );
   }
+}
+
+/**
+ * Self-Baseline (High-Water) wird MONOTON angehoben (nie gesenkt): ein gewachsenes Universum
+ * hebt die Baseline, ein kleiner Dip (>Floor) haelt sie -> echtes Schrumpfen ZWISCHEN Laeufen
+ * wirft weiterhin hart. Reine Funktion. Erstlauf/unbrauchbare Baseline -> der frische loaded-Wert.
+ */
+function nextHighWater(prevBaseline, loadedCount) {
+  const prev = Number.isFinite(prevBaseline) && prevBaseline > 0 ? prevBaseline : 0;
+  return Math.max(prev, loadedCount);
 }
 
 function loadUniverse() {
@@ -57,7 +69,7 @@ function loadUniverse() {
     // audit/fix (C3): NUR die Manifeste (_manifest.json/_manifest-full.json) explizit skippen,
     // NICHT pauschal jedes "_"-Praefix — safeSnapshotFilename praefixt Windows-Reserved-Ticker
     // (CON/PRN/AUX/NUL/COM1..LPT9 -> z.B. _CON.json), das sind ECHTE Snapshots mit meta.ticker.
-    if (f.startsWith('_manifest')) continue;
+    if (f.startsWith('_manifest') || f === '_last_good_disk.json') continue;
     let s;
     try {
       s = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, f), 'utf8'));
@@ -70,15 +82,26 @@ function loadUniverse() {
   if (parseFail > 0 || skippedNoMeta > 0) {
     console.warn(`[run-screener] loadUniverse: ${u.length} geladen, ${parseFail} parse-fail, ${skippedNoMeta} ohne meta.ticker uebersprungen`);
   }
-  // audit/fix (Court Fall 7): zusaetzlich zum console.warn ein HARTER Floor — ein
-  // Sub-Floor-Schrumpfen bricht den Lauf ab, statt verzerrte Perzentile zu liefern.
-  let manifestNOk = null;
+  // audit/fix (Court Fall C1): HARTER Floor gegen die Self-Baseline (zuletzt-gesunder on-disk-Count).
+  // I/O hier isoliert, die Floor-/High-Water-Logik bleibt rein (assertCoverageFloor/nextHighWater).
+  let baseline = null;
   try {
-    manifestNOk = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, '_manifest.json'), 'utf8')).n_ok;
-  } catch (_) {
-    console.warn('[run-screener] loadUniverse: _manifest.json nicht lesbar — Coverage-Floor nicht erzwingbar.');
+    baseline = JSON.parse(fs.readFileSync(LAST_GOOD_DISK, 'utf8')).value;
+  } catch (_) { /* Erstlauf / kein High-Water -> fail-open, gleich Startwert schreiben */ }
+  // manifest.n_ok nur noch als Diagnose (NICHT mehr als Floor-Referenz — andere Population).
+  try {
+    const nOk = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, '_manifest.json'), 'utf8')).n_ok;
+    if (Number.isFinite(nOk) && Math.abs(u.length - nOk) > 0.2 * nOk) {
+      console.warn(`[run-screener] loadUniverse: on-disk ${u.length} weicht >20% von manifest n_ok ${nOk} ab (verschiedene Populationen — nur Diagnose).`);
+    }
+  } catch (_) { /* manifest optional fuer die Diagnose */ }
+  assertCoverageFloor(u.length, baseline);
+  // High-Water nach bestandenem Floor monoton fortschreiben (best effort, kein Abbruch bei I/O-Fehler).
+  try {
+    fs.writeFileSync(LAST_GOOD_DISK, JSON.stringify({ value: nextHighWater(baseline, u.length), generatedAt: new Date().toISOString() }, null, 2));
+  } catch (e) {
+    console.warn('[run-screener] loadUniverse: _last_good_disk.json nicht schreibbar — Self-Baseline nicht fortgeschrieben:', e.message);
   }
-  assertCoverageFloor(u.length, manifestNOk);
   return u;
 }
 
@@ -121,4 +144,4 @@ if (require.main === module) {
   console.log(`Screener-Output: ${r.branches} Branchen, Universum ${r.universe} -> ${r.out}`);
 }
 
-module.exports = { loadUniverse, run, assertCoverageFloor, COVERAGE_FLOOR_RATIO };
+module.exports = { loadUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO };
