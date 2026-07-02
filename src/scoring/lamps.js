@@ -245,9 +245,24 @@ function annualCurrencyLeak(s) {
   return true;
 }
 
+// 13. Burn-Beschleunigung (Council/Court, Karl-Direktive): Firma verbrennt Cash UND vertieft den
+// operativen Verlust ggue. dem Vorjahres-GJ -> die Einheiten-Oekonomie VERSCHLECHTERT sich, trotz evtl.
+// starkem Rueckblick-Wachstum (IONQ: Umsatz +755%, aber FCF -57M->-300M). Vorzeichen-Gate + YoY-Schritt,
+// data-learned (keine Magic Number). Turnaround-zu-positiv (CRDO/ALAB/BE: neuestes FCF & OpInc >=0) faellt
+// STRUKTURELL aus dem Gate. REIN WARNEND (nicht in DATA_SUSPECT_LAMPS) — druckt den Score NICHT (der
+// Score-Abzug fuer Verschlechterer ist als naechste Iteration deferred, muss veto-sicher gebaut werden).
+function burnAccelerating(s) {
+  const fcf = presentValues(norm(s, 'annualFCF'));
+  const opi = presentValues(norm(s, 'annualOpInc'));
+  if (fcf.length < 2 || opi.length < 2) return null;
+  if (!(fcf[0] < 0) || !(opi[0] < 0)) return false;   // Gate: noch am Verbrennen UND operativ unprofitabel
+  return fcf[0] < fcf[1] && opi[0] < opi[1];           // beide tiefer als Vorjahr -> Burn/Verlust beschleunigt
+}
+
 const LAMPS = {
   unprofit, burning, shortRunway, highDilution, peakMargin,
   lowRoic, arDivergence, crashRisk, fcfArtefact, cyclePeak,
+  burnAccelerating,
   newestQtrSuspect, annualCurrencyLeak,
 };
 
