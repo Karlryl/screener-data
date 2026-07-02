@@ -115,11 +115,19 @@ function loadUniverse() {
 // DETERMINISTISCH: liest die COMMITTETE Datei (nicht den git-ignored companyfacts-Cache), kein Netzwerk -> CI==lokal.
 // Cache-tolerant: fehlende Datei/Ticker -> secAnnual weglassen -> cycleSeries faellt auf Yahoo-4J zurueck (byte-identisch).
 // Rein additiv (snapshot.secAnnual) — nur der Zyklus-Daempfer (score.js cycleSeries) liest es; 0 andere Achsen.
-const SECANNUAL_PATH = path.join(ROOT, 'external-data', 'sec-secannual.json');
+// Globale Gratis-Adapter: dieselbe tiefe {ticker:{annualOpInc,annualRev,...}}-Form fuer NICHT-US-Namen
+// (KR/OpenDART holt SK Hynix, die vom EDGAR-Chat offen gelassene non-US-Zyklus-Luecke; spaeter JP/TW).
+// Alle Dateien speisen DENSELBEN snapshot.secAnnual-Kanal -> derselbe Zyklus-Daempfer, kein zweiter
+// Mechanismus. Ticker-Raeume disjunkt (US vs 000660.KS) -> Object.assign kollidiert nie. Fehlende Datei
+// -> skip (byte-identisch). Alle offline via scripts/build-*annual.js erzeugt; hier KEIN Netz (CI==lokal).
+const SECANNUAL_FILES = ['sec-secannual.json', 'kr-secannual.json', 'jp-secannual.json', 'tw-secannual.json']
+  .map((f) => path.join(ROOT, 'external-data', f));
 function mergeSecIntoUniverse(u) {
-  let data;
-  try { data = JSON.parse(fs.readFileSync(SECANNUAL_PATH, 'utf8')); }
-  catch (_) { return u; } // keine committete Datei -> heutiges 4J-Verhalten
+  const data = {};
+  for (const p of SECANNUAL_FILES) {
+    try { Object.assign(data, JSON.parse(fs.readFileSync(p, 'utf8'))); } catch (_) { /* Datei fehlt -> skip */ }
+  }
+  if (!Object.keys(data).length) return u; // keine committete Datei -> heutiges 4J-Verhalten
   let merged = 0;
   for (const s of u) {
     const tk = s && s.meta && s.meta.ticker;
@@ -129,7 +137,7 @@ function mergeSecIntoUniverse(u) {
       annualNetIncome: d.annualNetIncome, annualFCF: d.annualFCF, annualOCF: d.annualOCF };
     merged++;
   }
-  if (merged > 0) console.log(`[run-screener] mergeSecIntoUniverse: tiefe SEC-Serie an ${merged} US-Namen angehaengt`);
+  if (merged > 0) console.log(`[run-screener] mergeSecIntoUniverse: tiefe annual-Serie an ${merged} Namen angehaengt (SEC+regional)`);
   return u;
 }
 
