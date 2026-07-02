@@ -150,6 +150,62 @@ function trackOf(s, formula) {
   return t === 'unknown' ? 'profitable' : t; // konservativer Fallback
 }
 
+// --- Filter-Schicht (Karl-Direktive 5): rein ADDITIVE, deskriptive Metadata je Output-Zeile ---
+// KEIN Score-/Routing-/Track-/Achsen-Einfluss (fixture-safe, Anker rang-invariant). Data-learned,
+// keine Magic Numbers: Phase nur ueber Gewinn-Vorzeichen, mcapBand/ipoRecency ueber quantile()-Quintile.
+
+// Gewinn-Serie fuer die Phase: annualOpInc primaer (operativer Kern), annualNetIncome NUR Rescue wenn
+// OpInc-Serie leer — analog zum trackOf-Muster. NBIS (OpInc[----], NI[+...] via Yandex-Einmaleffekt)
+// bleibt so korrekt 'unprofitable' (operativ), konsistent zum Track. presentValues haelt newest-first-Reihenfolge.
+function profitSeries(s) {
+  const op = presentValues(norm(s, 'annualOpInc'));
+  return op.length ? op : presentValues(norm(s, 'annualNetIncome'));
+}
+// Profitabilitaets-Phase: established (nie ein Verlustjahr im Fenster) / inflected (juengstes positiv,
+// aber ein Verlust davor = gerade gedreht = Karls CRDO/ALAB/BE/PLTR-Archetyp) / unprofitable (juengstes
+// negativ) / null (zu wenig Daten). Nur Vorzeichen, KEINE Jahreszahl/Schwelle.
+function phaseOf(s) {
+  const ser = profitSeries(s);
+  if (ser.length < 2) return null;
+  if (ser[0] < 0) return 'unprofitable';
+  return ser.every((v) => v >= 0) ? 'established' : 'inflected';
+}
+// Marktkap-Band ueber data-learned Quintil-Grenzen [p20,p40,p60,p80] (keine feste USD-Grenze).
+function mcapBandOf(mc, bounds) {
+  if (!Number.isFinite(mc) || !bounds) return null;
+  if (mc < bounds[0]) return 'micro';
+  if (mc < bounds[1]) return 'small';
+  if (mc < bounds[2]) return 'mid';
+  if (mc < bounds[3]) return 'large';
+  return 'mega';
+}
+// Boersen-IPO-Jahr: meta.ipoYear primaer, sonst Jahr aus meta.firstTradeDate. Deterministisch (fixe
+// Snapshot-Daten, KEIN Date.now() -> reproduzierbar/CI-stabil).
+function ipoYearOf(meta) {
+  if (meta && Number.isFinite(meta.ipoYear)) return meta.ipoYear;
+  const d = meta && meta.firstTradeDate;
+  if (typeof d === 'string' && d.length >= 4) {
+    const y = parseInt(d.slice(0, 4), 10);
+    if (Number.isFinite(y)) return y;
+  }
+  return null;
+}
+// IPO-Recency ueber data-learned Quintil-Grenzen der ipoYear-Verteilung (recent = neueste IPOs).
+function ipoRecencyOf(meta, bounds) {
+  const y = ipoYearOf(meta);
+  if (!Number.isFinite(y) || !bounds) return null;
+  if (y >= bounds[3]) return 'recent';
+  if (y >= bounds[2]) return 'growth';
+  if (y >= bounds[1]) return 'seasoned';
+  if (y >= bounds[0]) return 'mature';
+  return 'veteran';
+}
+// [p20,p40,p60,p80] via bestehendem quantile(); null bei degenerierter Stichprobe (dann Feld null).
+function quintileBounds(samples) {
+  const b = [0.2, 0.4, 0.6, 0.8].map((p) => quantile(samples, p));
+  return b.every((x) => x !== null) ? b : null;
+}
+
 function scoreUniverse(snapshots, formulas) {
   const results = [];
   // 1. Routing + Track
@@ -310,6 +366,20 @@ function scoreUniverse(snapshots, formulas) {
     }
   }
 
+  // Filter-Schicht (Karl-Direktive 5): data-learned Quintil-Baender fuer mcapBand + ipoRecency einmal
+  // universe-weit lernen (route+survival = alle output-sichtbaren Namen), via bestehendem quantile().
+  // Rein additive Metadata -> kein Score-Einfluss.
+  const mcapSamples = [], ipoSamples = [];
+  for (const e of results) {
+    if (e.action !== 'route' && e.action !== 'survival') continue;
+    const mc = e.snapshot && e.snapshot.marketCap;
+    if (mc && Number.isFinite(mc.value)) mcapSamples.push(mc.value);
+    const y = ipoYearOf(e.snapshot && e.snapshot.meta);
+    if (Number.isFinite(y)) ipoSamples.push(y);
+  }
+  const mcapBounds = quintileBounds(mcapSamples);
+  const ipoBounds = quintileBounds(ipoSamples);
+
   // 3. Overview-Metrik anhaengen + interne Felder entfernen
   for (const e of results) {
     if (e.action === 'route') {
@@ -329,6 +399,10 @@ function scoreUniverse(snapshots, formulas) {
     e.sector = (meta && typeof meta.sector === 'string' && meta.sector) || null;
     const mc = e.snapshot && e.snapshot.marketCap;
     e.marketCap = (mc && Number.isFinite(mc.value)) ? mc.value : null;
+    // Filter-Schicht (Karl-Direktive 5): 3 additive deskriptive Felder, SOLANGE der Snapshot lebt.
+    e.phase = phaseOf(e.snapshot);
+    e.mcapBand = mcapBandOf(e.marketCap, mcapBounds);
+    e.ipoRecency = ipoRecencyOf(meta, ipoBounds);
     delete e.snapshot;
     delete e.formula;
   }
@@ -363,7 +437,7 @@ function produceRankings(results, opts = {}) {
   const excluded = {};
   // A2: die in scoreUniverse angehefteten geo-Felder an jede Output-Zeile spreaden
   // (?? null haelt die Form stabil, falls produceRankings mit handgebauten results laeuft).
-  const geo = (e) => ({ country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null });
+  const geo = (e) => ({ country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, ipoRecency: e.ipoRecency ?? null });
   for (const e of (Array.isArray(results) ? results : [])) {
     if (e.action === 'survival') {
       survival.push({ ticker: e.ticker, runwayQuarters: e.overview ? e.overview.value : null, lamps: e.lamps, ...geo(e) });
@@ -411,4 +485,4 @@ function produceRankings(results, opts = {}) {
   return { branches, overview: overview.slice(0, topN * 2).map(stripRaw), survival, excluded };
 }
 
-module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings };
+module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings, phaseOf, mcapBandOf, ipoRecencyOf, ipoYearOf };
