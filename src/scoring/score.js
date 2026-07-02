@@ -127,6 +127,16 @@ const GROWTH_BOOST_K = 0.05;
 // Schwelle -> kein Bonus (alle Faktoren exakt 1.0). Konservativ: das reale 3000+-Namen-Universum liegt
 // weit darueber, der Guard greift nur in degenerierten/Test-Verteilungen.
 const GROWTH_MIN_DISTINCT = 10;
+// PHASE 3 (Zyklus-Daempfer, Council/Court-geplant 2026-07-02): Direktive-4-Root-Fix. Zyklische/reife Namen
+// (Memory-Semis: Micron, SK Hynix) ranken sonst ueber echtes Hypergrowth (ALAB). Ein data-learned
+// KONJUNKTIONS-Detektor (Gewinn-Oszillation UND Umsatz-Drawdown) daempft NUR sie, strukturell OHNE die
+// Anker zu treffen (NVDA hat 0 Vorzeichenflips -> osc=0 -> Faktor exakt 1.0; CRDO/ALAB/BE = 1 Flip = EINE
+// Inflection = free durch die -1). KD ist der EINE benannte Parameter (analog GROWTH_BOOST_K); NIE auf MUs
+// Ziel-Rang gefittet — kleinster Wert, der MU/SK-Hynix am vollen Lauf unter ALAB bringt. Die DD-Schwelle
+// ist data-learned (p75 der universums-weiten Drawdown-Verteilung), KEIN hartkodiertes Niveau (Inv. 3).
+const CYCLE_DAMPER_KD = 0.5;
+const CYCLE_DD_PCTL = 0.75;      // data-learned Drawdown-Schwelle = p75 (gemessen ~0.16: haelt SK-Hynix 0.266 drin, MRVL 0.07/ASM 0.01 draussen)
+const CYCLE_MIN_DISTINCT = 10;   // Degenerations-Guard analog GROWTH_MIN_DISTINCT (zu wenige distinkte DD -> Schwelle null -> alle Faktoren 1.0)
 function quantile(samples, p) {
   const a = samples.filter(Number.isFinite).sort((x, y) => x - y);
   if (!a.length) return null;
@@ -207,6 +217,47 @@ function growthBoostFactor(s, growthBounds, pctlFn) {
   if (g === null || pctlFn === null || pctlFn === undefined) return 1;
   return boostFromPctl(pctlFn(g));
 }
+
+// --- PHASE 3: Zyklus-Daempfer (data-learned Konjunktions-Detektor, kein axes.js/FIELD_REGISTRY-Touch) ---
+// Bein 1 (Oszillation): Vorzeichen-WECHSEL zwischen aufeinanderfolgenden NICHTNULL present OpInc-Jahren.
+// 0-Jahre (Break-even/Lead-0-Stub) uebersprungen -> kein Phantom-Flip.
+function signFlips(op) {
+  let f = 0, prev = null;
+  for (const v of op) {
+    if (v === 0) continue;
+    const g = v > 0 ? 1 : -1;
+    if (prev !== null && g !== prev) f++;
+    prev = g;
+  }
+  return f;
+}
+// oscExcess = max(0, signFlips - 1). Die -1 ist die STRUKTURELLE Inflection-Freistellung: flips<=1 (96.4% des
+// Universums = monoton ODER einmal gedreht = CRDO/ALAB/BE/PLTR-Archetyp) -> 0; flips>=2 (oszillierend) -> >=1.
+const oscExcess = (op) => Math.max(0, signFlips(op) - 1);
+
+// Bein 2 (Umsatz-Drawdown): max (peak-trough)/peak, chronologisch, NUR present-und-POSITIVE Umsatzjahre.
+// Das >0-Filter heilt Einzel-0/negativ-Jahr-Glitches (Fonds-/Yandex-Artefakt) -> kein Phantom-100%-Drop.
+function revMaxDrawdown(rev) {
+  const chron = presentValues(rev).slice().reverse().filter((v) => v > 0);
+  if (chron.length < 2) return 0;
+  let peak = -Infinity, dd = 0;
+  for (const v of chron) { if (v > peak) peak = v; if (peak > 0) dd = Math.max(dd, (peak - v) / peak); }
+  return dd;
+}
+// KONJUNKTION: feuert NUR wenn Oszillation UND echter Umsatzkollaps. >=3 present OpInc-Jahre (junge IPO nie
+// gedaempft). osc-Gate ZUERST (NBIS osc=0 kann nie ueber das DD-Bein feuern). Datenmuell-Guard: ein rev<=0-
+// Jahr (Fonds-/Buchungsartefakt) -> Signal 0 (konservativ). ddThreshold null (Degeneration) -> 0.
+function cycleSignal(s, ddThreshold) {
+  const op = presentValues(norm(s, 'annualOpInc'));
+  if (op.length < 3) return 0;
+  if (oscExcess(op) < 1) return 0;
+  const revS = presentValues(norm(s, 'annualRev'));
+  if (revS.some((v) => v <= 0)) return 0;                    // Datenmuell-Guard (negatives/0-Umsatzjahr)
+  if (ddThreshold === null || revMaxDrawdown(norm(s, 'annualRev')) < ddThreshold) return 0;
+  return oscExcess(op);                                      // self-scaling mit der Flip-Zahl
+}
+// Daempfer 1/(1+kd*signal) in (0,1]; signal=0 -> Faktor EXAKT 1.0 (byte-identisch).
+const cycleDamperFactor = (s, ddThreshold) => 1 / (1 + CYCLE_DAMPER_KD * cycleSignal(s, ddThreshold));
 
 // Track-Zuordnung gemaess splitMetric der Branchen-Formel.
 function trackOf(s, formula) {
@@ -374,7 +425,7 @@ function scoreUniverse(snapshots, formulas) {
   // audit/fix (Court R3 C2): universe-weite Winsor-Schranken VOR der Achsen-Berechnung lernen —
   // alle per-Quartal-OpMargins / QoQ-Raten der gerouteten Namen sammeln, p1/p99 bilden. Die
   // beiden near-zero-Nenner-anfaelligen Achsen klemmen damit Stub-Quartal-Phantome (data-learned).
-  const opmSamples = [], qoqSamples = [], growthSamples = [];
+  const opmSamples = [], qoqSamples = [], growthSamples = [], cycleDDSamples = [];
   for (const e of results) {
     if (e.action !== 'route') continue;
     for (const v of axesFns.quarterOpMargins(e.snapshot)) opmSamples.push(v);
@@ -384,6 +435,14 @@ function scoreUniverse(snapshots, formulas) {
     // nicht nennenswert -> action==='route' hier ist ausreichend (die Anwendungs-BASIS wird spaeter,
     // NACH dem no-axes-Guard, gesammelt, damit Perzentil-Basis == Anwendungs-Basis).
     for (const v of growthYoYComponents(e.snapshot)) growthSamples.push(v);
+    // PHASE 3: data-learned Zyklus-Drawdown-Schwellen-BASIS (Basis C, Court-gepinnt gegen die
+    // Mehrdeutigkeits-Falle): JEDER geroutete Name mit >=3 present OpInc-Jahren, revMaxDrawdown-Wert
+    // INKLUSIVE 0, OSC-UNGEGATET (die volle universums-weite Drawdown-Verteilung). Nur diese Basis
+    // ergibt p75~0.16, das SK-Hynix (dd=0.266) DRIN und MRVL (0.07)/ASM (0.01) DRAUSSEN haelt. Eine
+    // dd>0- oder osc-gegatete Basis schoebe p75 auf 0.29/0.47 -> SK-Hynix kippt raus -> DONE verfehlt.
+    if (presentValues(norm(e.snapshot, 'annualOpInc')).length >= 3) {
+      cycleDDSamples.push(revMaxDrawdown(norm(e.snapshot, 'annualRev')));
+    }
   }
   // Court R5 A: opMargin-Schranke = [data-learned p1, PHYSISCH 1.0]; qoq symmetrisch (data-learned p1/p99).
   const opmTail = winsorTailBounds(opmSamples);
@@ -391,6 +450,11 @@ function scoreUniverse(snapshots, formulas) {
     opMargin: opmTail ? [opmTail[0], OPMARGIN_CAP] : null,
     qoq: winsorTailBounds(qoqSamples),
   };
+  // PHASE 3: data-learned DD-Schwelle = p75 der universums-weiten Drawdown-Verteilung (Basis C oben).
+  // Degenerations-Guard analog GROWTH_MIN_DISTINCT: <CYCLE_MIN_DISTINCT distinkte DD-Werte -> null ->
+  // cycleSignal gatet alle Faktoren auf exakt 1.0 (byte-identisch, kein Phantom-Daempfer).
+  const cycleDDThreshold = (new Set(cycleDDSamples.filter(Number.isFinite)).size >= CYCLE_MIN_DISTINCT)
+    ? quantile(cycleDDSamples, CYCLE_DD_PCTL) : null;
   const growthBounds = winsorTailBounds(growthSamples); // null bei leerer Stichprobe -> robustG-null-Guard faengt
   for (const entries of Object.values(cohorts)) {
     const formula = entries[0].formula;
@@ -468,7 +532,10 @@ function scoreUniverse(snapshots, formulas) {
     if (e.action === 'route' && Number.isFinite(e.score)) {
       const g = robustGByEntry.get(e);
       const boost = (growthPctl === null || g === null || g === undefined) ? 1 : boostFromPctl(growthPctl(g));
-      e.score = e.score * burnPressFactor(e.snapshot) * boost;
+      // PHASE 3: Zyklus-Daempfer multiplikativ an derselben post-C4-Stelle (kommutativ). signal=0 (Anker,
+      // Nicht-Zykliker, Degeneration) -> Faktor exakt 1.0 -> byte-identisch. Nur MU/SK-Hynix-Typ (Oszillation
+      // UND Umsatzkollaps) wird gedrueckt.
+      e.score = e.score * burnPressFactor(e.snapshot) * boost * cycleDamperFactor(e.snapshot, cycleDDThreshold);
     }
   }
 
@@ -593,4 +660,6 @@ function produceRankings(results, opts = {}) {
 
 module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings, phaseOf, mcapBandOf, ipoRecencyOf, ipoYearOf,
   // AUFGABE 2 (Wachstums-Bonus): fuer TDD + gezielte Wiederverwendung
-  growthBoostFactor, growthYoYComponents, robustG, growthPctlFn, boostFromPctl, GROWTH_BOOST_K };
+  growthBoostFactor, growthYoYComponents, robustG, growthPctlFn, boostFromPctl, GROWTH_BOOST_K,
+  // PHASE 3 (Zyklus-Daempfer): fuer TDD + Mess-Skripte
+  signFlips, oscExcess, revMaxDrawdown, cycleSignal, cycleDamperFactor, CYCLE_DAMPER_KD, CYCLE_DD_PCTL };
