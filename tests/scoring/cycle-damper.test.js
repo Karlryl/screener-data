@@ -155,6 +155,17 @@ test('P4 KOHAERENZ (Verify-Fix): nur EIN tiefes SEC-Bein -> BEIDE Beine aus Yaho
   assert.equal(op.length, 4, 'rev-Bein nur 2 SEC < 4 Yahoo -> KEIN Misch -> op faellt AUCH auf Yahoo (4)');
   assert.equal(rev.length, 4);
 });
+test('P4 ZEITFENSTER-Alignment (Verify CEVA/COHU): null-Prefix in einem Feld -> Yahoo (disjunkte Fenster vermieden)', () => {
+  // annualRev-secAnnual mit fuehrendem null-Prefix (neueste Jahre fehlen, nur alte present) -> revS[0]===null
+  // -> useSec false -> BEIDE Beine Yahoo (statt op=neue-15J vs rev=alte-7J = Zeit-Misch).
+  const s = { annual: { annualOpInc: V([100, -20, 30, -5]), annualRev: V([1050, 1000, 980, 900]) },
+    secAnnual: { annualOpInc: V([100, -20, 30, -5, 40, -8, 50, -3, 60, -1, 70, 5, -9, 44, 22]),
+                 annualRev: V([null, null, null, null, null, null, null, null, 400, 300, 350, 320, 280, 260, 240]) } };
+  const { op, rev } = cycleSeriesPair(s);
+  assert.equal(op.length, 4, 'null-Prefix in rev -> beide Beine Yahoo (op AUCH 4, nicht 15)');
+  assert.equal(rev.length, 4);
+  assert.equal(cycleSignal(s, 0.16), cycleSignal({ annual: s.annual }, 0.16)); // == reines Yahoo-Verhalten
+});
 test('P4 FY-ROLL-STABILITAET (DONE-Kern): tiefe Serie haelt osc>=3 ueber Rolls; Yahoo-4J kippt auf 0', () => {
   // Yahoo-4J nach 1 Roll [+,+,+,-] -> osc 0 UND DD 0 (Fragilitaet, beide Beine)
   assert.equal(oscExcess([12000e6, 9809e6, 1305e6, -5405e6]), 0);

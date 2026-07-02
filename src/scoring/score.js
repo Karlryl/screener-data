@@ -264,7 +264,11 @@ function cycleSeriesPair(s) {
   const opS = normSec(s, 'annualOpInc'), revS = normSec(s, 'annualRev');
   const opSP = opS ? presentValues(opS) : null;
   const revSP = revS ? presentValues(revS) : null;
-  const useSec = opSP && revSP && opSP.length >= opY.length && revSP.length >= revY.length;
+  // ZEITFENSTER-Alignment (Verify CEVA/COHU): BEIDE Felder muessen am NEUESTEN Jahr (Index 0) present sein.
+  // Sonst kollabieren presentValues(op) und presentValues(rev) bei einem null-Prefix in NUR einem Feld auf
+  // DISJUNKTE Kalenderfenster (neue Oszillation vs alter Drawdown) = Zeit-Misch-Signal (Inv. 4/5). -> Yahoo-Fallback.
+  const useSec = opSP && revSP && opSP.length >= opY.length && revSP.length >= revY.length
+    && opS[0] !== null && revS[0] !== null;
   return useSec ? { op: opSP, rev: revSP } : { op: opY, rev: revY };
 }
 // KONJUNKTION: feuert NUR wenn Oszillation UND echter Umsatzkollaps. >=3 present OpInc-Jahre (junge IPO nie
