@@ -166,7 +166,18 @@ function capitalEfficiency(s) {
   }
   if (opPaired.length === 0) return null;
   const mean = (arr) => arr.reduce((p, c) => p + c, 0) / arr.length;
-  const roic = mean(opPaired) / mean(invPaired);
+  // audit/fix (Court Inflection, Karl-Direktive): die AELTESTE zusammenhaengende Vor-Profit-Verlust-
+  // Serie vor dem Mitteln abschneiden (opPaired ist newest-first; opPaired[end-1] = aeltestes Jahr).
+  // Eine gerade-profitable Firma (neuestes OpInc>0, aeltere <0) wurde durch mean(ALLE Jahre) — inkl.
+  // der Vor-Profit-Verluste — auf ROIC-Ebene bestraft (Inflection 29. vs reif 53. Perzentil; CRDO 11.,
+  // ALAB 18.). Der Trim misst die Rendite im PROFITABLEN Regime. Data-learned (nur das <=0-Vorzeichen-
+  // Guard-Muster wie signTrack/penalty, KEINE Magic Number). Reife all-positive Namen: nichts getrimmt
+  // -> byte-identisch. Verschlechterer (neuestes OpInc<0): das aelteste Jahr ist profitabel -> Loop
+  // trimmt NICHTS -> neutral (kein Rescue; marginTrajectory+cycleDiscount tragen das Verschlechterungs-
+  // Signal bereits, capEff-Neutralitaet vermeidet Doppel-Zaehlung).
+  let end = opPaired.length;
+  while (end > 1 && opPaired[end - 1] <= 0) end--;
+  const roic = mean(opPaired.slice(0, end)) / mean(invPaired.slice(0, end));
 
   // Asset-Growth-Penalty (nur wenn beide Wachstumsraten berechenbar)
   let penalty = 0;

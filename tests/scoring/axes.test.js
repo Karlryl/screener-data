@@ -158,6 +158,23 @@ test('capitalEfficiency: stabile Marge -> kein Discount (cur ~ hist)', () => {
     annualBalance: [{ totalAssets: 100, currentLiabilities: 0 }, { totalAssets: 100, currentLiabilities: 0 }, { totalAssets: 100, currentLiabilities: 0 }] } };
   assert.ok(Math.abs(ax.capitalEfficiency(s) - 0.2) < 1e-9); // roic 0.2, Discount 1
 });
+// --- capitalEfficiency Trailing-Loss-Trim (Court Inflection, Karl-Direktive) --
+test('capitalEfficiency: gerade-profitabel -> Vor-Profit-Verluste getrimmt (ROIC positiv statt negativ)', () => {
+  const bal = [{ totalAssets: 1000, currentLiabilities: 200 }, { totalAssets: 1000, currentLiabilities: 200 }, { totalAssets: 1000, currentLiabilities: 200 }];
+  // Inflection: neuestes OpInc +100, davor -50/-80. Ohne Trim waere ROIC = mean(100,-50,-80)/800 = -0.0125.
+  // Mit Trim (aelteste Verlust-Serie raus): ROIC = mean(100)/800 = +0.125 (misst das profitable Regime).
+  const infl = { annual: { annualOpInc: [{ value: 100 }, { value: -50 }, { value: -80 }],
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }], annualBalance: bal } };
+  assert.ok(Math.abs(ax.capitalEfficiency(infl) - 0.125) < 1e-9, 'Inflection-ROIC = 0.125 (getrimmt), war ' + ax.capitalEfficiency(infl));
+});
+test('capitalEfficiency: Verschlechterer (neuestes OpInc<0) wird NICHT gerescued (kein Trim)', () => {
+  const bal = [{ totalAssets: 1000, currentLiabilities: 200 }, { totalAssets: 1000, currentLiabilities: 200 }, { totalAssets: 1000, currentLiabilities: 200 }];
+  // neuestes -50, davor +90/+80: das AELTESTE Jahr ist profitabel -> Loop trimmt NICHTS -> ROIC =
+  // mean(-50,90,80)/800 = +0.05 (voller Schnitt inkl. neuestem Verlust, KEIN Rescue auf nur die +Jahre).
+  const det = { annual: { annualOpInc: [{ value: -50 }, { value: 90 }, { value: 80 }],
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }], annualBalance: bal } };
+  assert.ok(Math.abs(ax.capitalEfficiency(det) - 0.05) < 1e-9, 'Verschlechterer-ROIC = 0.05 (ungetrimmt), war ' + ax.capitalEfficiency(det));
+});
 
 // --- audit/fix Court Fall 1: Achsen-Physik-Guards gegen pathologische Eingaben ---
 test('gpGrowth (F9): korruptes Alt-Jahr (GP>Rev, gm>1) wird verworfen, gmTraj dominiert nicht', () => {
