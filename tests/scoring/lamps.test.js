@@ -160,6 +160,18 @@ test('newestQtrSuspect: echte Diskontinuitaet (q0 != q4 YoY) feuert trotz aehnli
   const s = { timeseries: { revenueQ: V([100, 70, 70, 70, 70]), opIncQ: V([24, 1.5, 1, 1, 1]), grossProfitQ: V([62, 28, 28, 28, 28]) } };
   assert.equal(L.newestQtrSuspect(s), true);
 });
+// Court Fall R6: 6. Leg legRamp. Eine echte monotone Frueh-Kommerzialisierungs-Rampe (LQDA-Muster,
+// alle 4 QoQ-Umsatz-Schritte > 1.35) triggert leg4 faelschlich, ist aber keine Fabrikation -> de-fire.
+test('newestQtrSuspect: durchgehende explosive Umsatz-Rampe (LQDA) -> de-fired false', () => {
+  // revQ-Schritte 1.6/1.67/3.0/4.0 (alle >1.35); leg1-4 wuerden feuern, legSeasonal de-firet nicht (q4opm=-6).
+  const s = { timeseries: { revenueQ: V([160, 100, 60, 20, 5]), opIncQ: V([80, 24, 2, -60, -30]), grossProfitQ: V([112, 40, 30, 10, 2]) } };
+  assert.equal(L.newestQtrSuspect(s), false);
+});
+test('newestQtrSuspect: EIN QoQ-Schritt < 1.35 (kein durchgehender Ramp) feuert weiter -> true', () => {
+  // revQ[0]/revQ[1]=160/130=1.23 < 1.35 -> legRamp=false -> Spike-Verdacht bleibt (Samsung/SNDK-Klasse).
+  const s = { timeseries: { revenueQ: V([160, 130, 60, 20, 5]), opIncQ: V([80, 24, 2, -60, -30]), grossProfitQ: V([112, 40, 30, 10, 2]) } };
+  assert.equal(L.newestQtrSuspect(s), true);
+});
 
 // annualCurrencyLeak (3-Leg): USD-Reporter mit annualRev in Trading-ccy, Quartale gesund.
 test('annualCurrencyLeak: AKRBP-Muster (annual x10 vs Quartals-TTM, ccy-mismatch) -> true', () => {

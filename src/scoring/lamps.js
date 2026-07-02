@@ -189,9 +189,10 @@ function newestQtrSuspect(s) {
   const trailOpmMed = _median(trailOpm), trailRevMed = _median(trailRev);
   if (trailOpmMed === null || trailRevMed === null || !(trailRevMed > 0)) return null;
   const q1opm = (r1 > 0 && Number.isFinite(oi1)) ? oi1 / r1 : null;
+  const REV_JUMP_MULT = 1.35;                            // Revenue-Sprung-Faktor, geteilt von leg3 + legRamp
   const leg1 = (q0opm - trailOpmMed) > 0.20;             // opM-Diskontinuitaet
   const leg2 = q0gm > 0.55;                              // physikalische GM-Schranke
-  const leg3 = r0 > 1.35 * trailRevMed;                  // Revenue-Sprung
+  const leg3 = r0 > REV_JUMP_MULT * trailRevMed;         // Revenue-Sprung
   const leg4 = q1opm !== null && q1opm > 0.02 && q0opm >= 1.9 * q1opm; // Spike, kein Ramp
   // audit/fix (Court Phase A Runde 2, Fall 2): 5. Leg, NUR ENTSCHAERFEND (de-fire, nie zusaetzlich
   // excludierend). leg1-leg4 vergleichen q0 nur gegen die immediately-trailing 4 Quartale -> ein
@@ -203,7 +204,19 @@ function newestQtrSuspect(s) {
   const r4 = rev[4], oi4 = oi[4];
   const q4opm = (r4 > 0 && Number.isFinite(oi4)) ? oi4 / r4 : null;
   const legSeasonal = q4opm !== null && Math.abs(q0opm - q4opm) <= 0.20;
-  return !!(leg1 && leg2 && leg3 && leg4 && !legSeasonal);
+  // audit/fix (Court Phase A Runde 6): 6. Leg legRamp, NUR ENTSCHAERFEND. Eine echte monotone Frueh-
+  // Kommerzialisierungs-Rampe (LQDA revQ 3M->133M in 5 Q) triggert leg4 faelschlich (q0opm>=1.9*q1opm),
+  // ist aber KEINE Yahoo-Fabrikation. legRamp de-firet, wenn ALLE 4 trailing QoQ-Umsatz-Schritte den
+  // Revenue-Sprung-Faktor uebersteigen (durchgehende explosive Rampe) — die bestehende REV_JUMP_MULT-
+  // Schwelle wiederverwendet (KEINE neue Konstante). Ein isolierter Einzel-Q-Margen-Spike (das
+  // Fabrikations-Muster: Samsung/SNDK/ONEX brechen bereits an QoQ-Schritt 2) kann diese mehr-quartalige
+  // Rampen-FORM strukturell nicht faken -> precision-safe. Jede Luecke/nichtpositiver Umsatz -> false.
+  let legRamp = true;
+  for (let i = 0; i < 4; i++) {
+    const a = rev[i], b = rev[i + 1];
+    if (!Number.isFinite(a) || !Number.isFinite(b) || !(b > 0) || !(a > REV_JUMP_MULT * b)) { legRamp = false; break; }
+  }
+  return !!(leg1 && leg2 && leg3 && leg4 && !legSeasonal && !legRamp);
 }
 
 // 12. annual-revenue currency-leak (3-Leg). USD-Reporter, dessen annualRev in der TRADING-ccy landet

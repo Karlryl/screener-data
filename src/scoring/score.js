@@ -98,15 +98,19 @@ function rawAxisValue(s, key, formula, track, winsorBounds) {
 
 // audit/fix (Court R3 C2): universe-weite Winsor-Schranken (data-learned). Die Tail-FRAKTION
 // WINSOR_TAIL ist ein benannter Robustifizierungs-Parameter (keine Magic Number auf der Achse).
-// audit/fix (Court R5 A): die OBERE opMargin-Schranke ist NICHT data-learned, sondern die PHYSISCHE
-// Invariante opMargin = opIncQ/revenueQ <= 1 (opInc = Rev - COGS - opex, COGS+opex>=0) — exakt der
-// Praezedenzfall des Court-F9-geblessten gm=GP/Rev in [0,1]-Clips (axes.js). Der frueher symmetrische
-// p99 (~0.677) klemmte legitime 68-100%-Margen (Royalty/Boersen/Asset-Mgr) faelschlich auf 0
-// (linksschiefe Verteilung). Untere opMargin-Schranke bleibt data-learned p1 (kein physischer Verlust-
-// Floor; faengt JOBY=-9991-Stubs). qoq-Raten BLEIBEN symmetrisch (kein physischer Umsatz-Multiplikator-
-// Deckel; das +1503-Stub-Artefakt liegt korrekt auf der oberen p99-Tail).
+// audit/fix (Court R5 A): die OBERE opMargin-Schranke ist NICHT data-learned p99, sondern ein
+// oekonomisch begruendeter Deckel 1.0. Der OPERATIVE Kern erfuellt opMargin = opIncQ/revenueQ <= 1
+// (opInc = Rev - COGS - opex, COGS+opex>=0). audit/fix (Court R6-Praezision): das ist KEIN striktes
+// physisches Gesetz auf REPORTED OpInc — bei REITs/Royalty fliessen Gains/Equity-Income in OpInc,
+// waehrend 'revenue' nur die Mietzeile ist (VICI 1.075/RPRX 1.003/TPZ.TO 1.153, ~12/14845 Samples
+// legit >1). 1.0 ist daher ein DATEN-PLAUSIBLER Robustifizierungs-Deckel: er faengt die >>1-Stub-
+// Artefakte (300251.SZ=16.06) und laesst die seltenen legit-1.0..1.3-REITs nur minimal geklemmt
+// (VICI marginTraj-Perzentil 99.68->97.77, Score unveraendert, kein Rang/Exclude-Flip) — deutlich
+// kleinere Verzerrung als der frueher symmetrische p99 (~0.677), der legitime 68-100%-Margen auf 0
+// nullte. Untere opMargin-Schranke bleibt data-learned p1 (faengt JOBY=-9991-Stubs). qoq-Raten
+// BLEIBEN symmetrisch (kein Umsatz-Multiplikator-Deckel; das +1503-Stub-Artefakt liegt korrekt auf p99).
 const WINSOR_TAIL = 0.01;
-const OPMARGIN_PHYS_MAX = 1.0; // opIncQ <= revenueQ -> opMargin <= 1 (physische Schranke, keine Magic Number)
+const OPMARGIN_CAP = 1.0; // oekonomisch-plausibler Deckel (opInc-Kern <= Umsatz), keine Magic Number, kein striktes physisches Gesetz
 function quantile(samples, p) {
   const a = samples.filter(Number.isFinite).sort((x, y) => x - y);
   if (!a.length) return null;
@@ -238,7 +242,7 @@ function scoreUniverse(snapshots, formulas) {
   // Court R5 A: opMargin-Schranke = [data-learned p1, PHYSISCH 1.0]; qoq symmetrisch (data-learned p1/p99).
   const opmTail = winsorTailBounds(opmSamples);
   const winsorBounds = {
-    opMargin: opmTail ? [opmTail[0], OPMARGIN_PHYS_MAX] : null,
+    opMargin: opmTail ? [opmTail[0], OPMARGIN_CAP] : null,
     qoq: winsorTailBounds(qoqSamples),
   };
   for (const entries of Object.values(cohorts)) {
