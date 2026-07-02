@@ -259,6 +259,22 @@ function burnAccelerating(s) {
   return fcf[0] < fcf[1] && opi[0] < opi[1];           // beide tiefer als Vorjahr -> Burn/Verlust beschleunigt
 }
 
+// Score-Press-Faktor fuer beschleunigte Cash-Verbrenner (Court, Karl-Direktive Teil 2): 1.0 wenn die
+// burnAccelerating-Lampe NICHT feuert (Nicht-Feuernde bleiben byte-identisch), sonst 1/(1+mag). mag =
+// FCF-Burn-VERTIEFUNG (dBurn = fcf[1]-fcf[0] > 0) skaliert an der EIGENEN Cash-Flow-Groesse der Firma
+// max(|rev[1]|,|fcf[0]|,|fcf[1]|). Das Gate garantiert fcf[0]<0 -> |fcf[0]|>0 -> Nenner strukturell NIE
+// near-zero (kein Stub-Denominator-Artefakt wie JOBY/FRVO). Self-bounded (wie cycleDiscount), keine Magic
+// Number, kein Deckel. Veto: CRDO/ALAB/BE feuern nicht (FCF & OpInc positiv) -> Faktor 1.0 -> Score identisch.
+function burnPressFactor(s) {
+  if (burnAccelerating(s) !== true) return 1;
+  const fcf = presentValues(norm(s, 'annualFCF'));
+  const rev = presentValues(norm(s, 'annualRev'));
+  const dBurn = Math.max(0, fcf[1] - fcf[0]);
+  const scale = Math.max(rev.length > 1 ? Math.abs(rev[1]) : 0, Math.abs(fcf[0]), Math.abs(fcf[1]));
+  const mag = scale > 0 ? dBurn / scale : 0;
+  return 1 / (1 + mag);
+}
+
 const LAMPS = {
   unprofit, burning, shortRunway, highDilution, peakMargin,
   lowRoic, arDivergence, crashRisk, fcfArtefact, cyclePeak,
@@ -281,4 +297,4 @@ function evaluateLamps(s) {
   return { flags, active };
 }
 
-module.exports = { evaluateLamps, LAMPS, TH, ...LAMPS };
+module.exports = { evaluateLamps, burnPressFactor, LAMPS, TH, ...LAMPS };

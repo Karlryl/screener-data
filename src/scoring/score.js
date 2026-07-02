@@ -15,7 +15,7 @@
 const { norm, metricVal, firstPresent, presentValues } = require('./snapshot.js');
 const { q, weightedScore, coverageWeight, signTrack, fcfTrack } = require('./engine.js');
 const { route, isUS } = require('./router.js');
-const { evaluateLamps } = require('./lamps.js');
+const { evaluateLamps, burnPressFactor } = require('./lamps.js');
 const { overviewMetric } = require('./overview.js');
 const { normalizeCountry } = require('./country.js');
 const axesFns = require('./axes.js');
@@ -297,6 +297,16 @@ function scoreUniverse(snapshots, formulas) {
     if (e.action === 'route' && e.score === null) {
       e.action = 'exclude'; e.formulaId = null; e.track = null; e.reason = 'no-axes';
       delete e.formula; delete e.gpClass;
+    }
+  }
+
+  // 2c. Burn-Press (Court, Karl-Direktive Teil 2): beschleunigte Cash-Verbrenner (burnAccelerating) NACH
+  // der C4-Shrinkage im Score druecken -> score' = score * burnPressFactor (=1/(1+mag), mag=FCF-Burn-
+  // Vertiefung/Cash-Flow-Skala). Fire-gated: Nicht-Feuernde Faktor 1.0 -> byte-identisch. Veto-sicher:
+  // CRDO/ALAB/BE feuern nicht (FCF & OpInc positiv) + 0 Feuer-Namen in ihren Kohorten -> Score+Rang invariant.
+  for (const e of results) {
+    if (e.action === 'route' && Number.isFinite(e.score)) {
+      e.score = e.score * burnPressFactor(e.snapshot);
     }
   }
 

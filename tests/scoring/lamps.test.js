@@ -198,6 +198,20 @@ test('annualCurrencyLeak: fehlende ccy-Felder (US-Name) -> null', () => {
   const s = { meta: {}, annual: { annualRev: V([1000]) }, timeseries: { revenueQ: V([25, 25, 25, 25]) }, metrics: { revenueTTM: { value: 100 } } };
   assert.equal(L.annualCurrencyLeak(s), null);
 });
+// burnAccelerating + burnPressFactor (Court, Karl-Direktive Teil 2) ----------
+test('burnAccelerating: Burn UND Verlust vertiefen sich -> true; Turnaround (FCF>=0) -> false', () => {
+  const burner = { annual: { annualFCF: V([-300, -100]), annualOpInc: V([-50, -20]) } };
+  assert.equal(L.burnAccelerating(burner), true);
+  const turn = { annual: { annualFCF: V([29, -46]), annualOpInc: V([38, -10]) } }; // CRDO-Muster (neuestes positiv)
+  assert.equal(L.burnAccelerating(turn), false);
+});
+test('burnPressFactor: Verbrenner -> Faktor <1 (Score gedrueckt), Nicht-Verbrenner -> exakt 1.0', () => {
+  const burner = { annual: { annualFCF: V([-300, -100]), annualOpInc: V([-50, -20]), annualRev: V([100, 80]) } };
+  const f = L.burnPressFactor(burner); // mag = dBurn 200 / scale max(80,300,100)=300 = 0.667 -> 1/1.667 = 0.6
+  assert.ok(Math.abs(f - 1 / (1 + 200 / 300)) < 1e-9, 'Verbrenner-Faktor ~0.6, war ' + f);
+  const turn = { annual: { annualFCF: V([29, -46]), annualOpInc: V([38, -10]), annualRev: V([100, 80]) } };
+  assert.equal(L.burnPressFactor(turn), 1); // feuert nicht -> byte-identisch
+});
 
 console.log(`\nlamps.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);
