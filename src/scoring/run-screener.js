@@ -106,6 +106,30 @@ function loadUniverse() {
   } catch (e) {
     console.warn('[run-screener] loadUniverse: _last_good_disk.json nicht schreibbar — Self-Baseline nicht fortgeschrieben:', e.message);
   }
+  mergeSecIntoUniverse(u); // PHASE 4: committete tiefe SEC-Serie an US-Namen anhaengen (deterministisch, kein Netzwerk)
+  return u;
+}
+
+// PHASE 4 (Refresh-Robustheit): haengt die COMMITTETE tiefe SEC-annual-Serie (external-data/sec-secannual.json,
+// per build-secannual offline erzeugt, FY-Versatz-robust via loose-sanity gefiltert) an die passenden Snapshots.
+// DETERMINISTISCH: liest die COMMITTETE Datei (nicht den git-ignored companyfacts-Cache), kein Netzwerk -> CI==lokal.
+// Cache-tolerant: fehlende Datei/Ticker -> secAnnual weglassen -> cycleSeries faellt auf Yahoo-4J zurueck (byte-identisch).
+// Rein additiv (snapshot.secAnnual) — nur der Zyklus-Daempfer (score.js cycleSeries) liest es; 0 andere Achsen.
+const SECANNUAL_PATH = path.join(ROOT, 'external-data', 'sec-secannual.json');
+function mergeSecIntoUniverse(u) {
+  let data;
+  try { data = JSON.parse(fs.readFileSync(SECANNUAL_PATH, 'utf8')); }
+  catch (_) { return u; } // keine committete Datei -> heutiges 4J-Verhalten
+  let merged = 0;
+  for (const s of u) {
+    const tk = s && s.meta && s.meta.ticker;
+    const d = tk && data[tk];
+    if (!d) continue;
+    s.secAnnual = { annualOpInc: d.annualOpInc, annualRev: d.annualRev,
+      annualNetIncome: d.annualNetIncome, annualFCF: d.annualFCF, annualOCF: d.annualOCF };
+    merged++;
+  }
+  if (merged > 0) console.log(`[run-screener] mergeSecIntoUniverse: tiefe SEC-Serie an ${merged} US-Namen angehaengt`);
   return u;
 }
 

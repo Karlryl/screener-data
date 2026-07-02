@@ -11,6 +11,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {
   signFlips, oscExcess, revMaxDrawdown, cycleSignal, cycleDamperFactor, CYCLE_DAMPER_KD,
+  normSec, cycleSeriesPair,
 } = require('../../src/scoring/score.js');
 const { norm, presentValues } = require('../../src/scoring/snapshot.js');
 
@@ -125,6 +126,54 @@ test('DRIFT-GUARD: 4J-Fenster-Roll (neues +FY) senkt MU signFlips 2->1 -> Daempf
   const muRolled = [12000e6, 9809e6, 1305e6, -5405e6];    // neues +Jahr rein, aeltestes + raus -> [+,+,+,-]
   assert.equal(signFlips(muRolled), 1);                   // -> oscExcess 0 -> Daempfer AUS (Refresh-Drift)
   assert.equal(oscExcess(muRolled), 0);
+});
+
+// ===== PHASE 4: Refresh-Robustheit via committete tiefe SEC-Serie (secAnnual) =====
+const MU_OP15 = [9770e6, 1304e6, -5745e6, 9702e6, 6283e6, 3003e6, 7376e6, 14994e6, 5868e6, 168e6, 2998e6, 3087e6, 236e6, -618e6, 755e6];
+const MU_REV15 = [37378e6, 25111e6, 15540e6, 30758e6, 27705e6, 21435e6, 23406e6, 30391e6, 20322e6, 12399e6, 16192e6, 16358e6, 9073e6, 8234e6, 8788e6];
+const deepSnap = (op4, rev4, opN, revN) => ({ annual: { annualOpInc: V(op4), annualRev: V(rev4) }, secAnnual: { annualOpInc: V(opN), annualRev: V(revN) } });
+
+test('P4 normSec: liefert PLAIN NUMBERS (nicht {value}-Objekte) -> keine stille 0-Falle', () => {
+  const s = deepSnap([9809e6, 1305e6, -5405e6, 9709e6], [37378e6, 25111e6, 15540e6, 30758e6], MU_OP15, MU_REV15);
+  const ns = normSec(s, 'annualRev');
+  assert.ok(ns.every((v) => v === null || typeof v === 'number'), 'normSec darf keine Objekte liefern');
+  assert.equal(ns.length, 15);
+  assert.ok(Math.abs(revMaxDrawdown(cycleSeriesPair(s).rev) - 0.4948) < 1e-3, 'DD auf tiefer Serie ~0.4948, NICHT 0');
+});
+test('P4 MU DEEP: cycleSeriesPair 15J -> oscExcess 3, cycleSignal 3, Faktor 0.400 (staerker als 4J)', () => {
+  const s = deepSnap([9809e6, 1305e6, -5405e6, 9709e6], [37378e6, 25111e6, 15540e6, 30758e6], MU_OP15, MU_REV15);
+  assert.equal(cycleSeriesPair(s).op.length, 15);
+  assert.equal(oscExcess(cycleSeriesPair(s).op), 3);
+  assert.equal(cycleSignal(s, 0.16), 3);
+  assert.ok(Math.abs(cycleDamperFactor(s, 0.16) - 1 / (1 + CYCLE_DAMPER_KD * 3)) < 1e-12); // 0.400
+});
+test('P4 KOHAERENZ (Verify-Fix): nur EIN tiefes SEC-Bein -> BEIDE Beine aus Yahoo (kein Misch-Signal)', () => {
+  // opInc tief (11J), rev nur Yahoo-4J -> useSec false -> beide Beine Yahoo (nicht op=SEC, rev=Yahoo)
+  const s = { annual: { annualOpInc: V([100, -20, 30, -5]), annualRev: V([1050, 1000, 980, 900]) },
+    secAnnual: { annualOpInc: V([100, -20, 30, -5, 40, -8, 50, -3, 60, -1, 70]), annualRev: V([1050, 1000]) } };
+  const { op, rev } = cycleSeriesPair(s);
+  assert.equal(op.length, 4, 'rev-Bein nur 2 SEC < 4 Yahoo -> KEIN Misch -> op faellt AUCH auf Yahoo (4)');
+  assert.equal(rev.length, 4);
+});
+test('P4 FY-ROLL-STABILITAET (DONE-Kern): tiefe Serie haelt osc>=3 ueber Rolls; Yahoo-4J kippt auf 0', () => {
+  // Yahoo-4J nach 1 Roll [+,+,+,-] -> osc 0 UND DD 0 (Fragilitaet, beide Beine)
+  assert.equal(oscExcess([12000e6, 9809e6, 1305e6, -5405e6]), 0);
+  assert.equal(revMaxDrawdown([45000e6, 37378e6, 25111e6, 15540e6]), 0); // monoton steigend chronologisch
+  // tiefe Serie mit prepended +Jahr -> Oszillation der Vergangenheit bleibt -> osc>=3
+  const rolled = [12000e6, ...MU_OP15];
+  assert.ok(oscExcess(rolled) >= 3, 'tiefe Historie haelt die Oszillation ueber den Roll');
+});
+test('P4 LAENGEN-GUARD (ALAB-Reverse): secAnnual kuerzer als Yahoo -> cycleSeriesPair waehlt Yahoo', () => {
+  // SEC nOp=2 < Yahoo nOp=4 -> das >=3-Jahres-Gate darf NICHT durch die kurze SEC-Serie reissen
+  const s = { annual: { annualOpInc: V([100, 90, -10, 80]), annualRev: V([1000, 900, 800, 700]) },
+    secAnnual: { annualOpInc: V([100, 90]), annualRev: V([1000, 900]) } };
+  assert.equal(cycleSeriesPair(s).op.length, 4, 'Yahoo (laenger) gewinnt');
+});
+test('P4 FALLBACK-IDENTITAET: kein secAnnual -> cycleSeriesPair==Yahoo -> cycleSignal byte-identisch', () => {
+  const yOnly = snap([9809e6, 1305e6, -5405e6, 9709e6], [37378e6, 25111e6, 15540e6, 30758e6]);
+  assert.equal(normSec(yOnly, 'annualOpInc'), null);
+  assert.equal(cycleSeriesPair(yOnly).op.length, 4);
+  assert.equal(oscExcess(cycleSeriesPair(yOnly).op), 1); // gleich wie HEAD (4J osc=1)
 });
 
 console.log(`\ncycle-damper.test.js: ${pass} ok, ${fail} fail`);

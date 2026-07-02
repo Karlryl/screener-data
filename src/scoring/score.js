@@ -244,16 +244,39 @@ function revMaxDrawdown(rev) {
   for (const v of chron) { if (v > peak) peak = v; if (peak > 0) dd = Math.max(dd, (peak - v) / peak); }
   return dd;
 }
+// PHASE 4 (Refresh-Robustheit): normSec liest die COMMITTETE tiefe SEC-Serie (snapshot.secAnnual, {value}[],
+// von run-screener.js mergeSecIntoUniverse aus external-data/sec-secannual.json angehaengt) als PLAIN-NUMBER-
+// Serie (norm-Format). null -> cycleSeries faellt auf norm() zurueck. Inline-toFinite (kein snapshot.js-Touch).
+function normSec(s, field) {
+  const raw = s && s.secAnnual && s.secAnnual[field];
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  return raw.map((e) => { const v = (e && typeof e === 'object') ? e.value : e; return Number.isFinite(v) ? v : null; });
+}
+// cycleSeriesPair: liefert BEIDE Daempfer-Beine (op, rev) aus EINER kohaerenten Quelle. secAnnual (tief) NUR
+// wenn BEIDE Felder present-tief >= Yahoo sind, sonst fuer BEIDE Yahoo-4J. KOHAERENZ-ZWANG: sonst koennten
+// Oszillations-Bein (Yahoo-4J) und Drawdown-Bein (SEC-11J) aus verschiedenen Zeittiefen stammen und ein
+// Zyklus-Signal aus zeitlich unverbundenen Fenstern erfinden (Verify-Befund CC). Laengen-Guard je Feld gegen
+// spaet-startende SEC-Filer. signFlips/revMaxDrawdown sind vorzeichen-/verhaeltnis-basiert -> robust gegen
+// SEC-vs-Yahoo FY-Versatz + Level-Restatement. Kein secAnnual -> Yahoo (byte-identisch zum 4J-Verhalten).
+function cycleSeriesPair(s) {
+  const opY = presentValues(norm(s, 'annualOpInc'));
+  const revY = presentValues(norm(s, 'annualRev'));
+  const opS = normSec(s, 'annualOpInc'), revS = normSec(s, 'annualRev');
+  const opSP = opS ? presentValues(opS) : null;
+  const revSP = revS ? presentValues(revS) : null;
+  const useSec = opSP && revSP && opSP.length >= opY.length && revSP.length >= revY.length;
+  return useSec ? { op: opSP, rev: revSP } : { op: opY, rev: revY };
+}
 // KONJUNKTION: feuert NUR wenn Oszillation UND echter Umsatzkollaps. >=3 present OpInc-Jahre (junge IPO nie
 // gedaempft). osc-Gate ZUERST (NBIS osc=0 kann nie ueber das DD-Bein feuern). Datenmuell-Guard: ein rev<=0-
-// Jahr (Fonds-/Buchungsartefakt) -> Signal 0 (konservativ). ddThreshold null (Degeneration) -> 0.
+// Jahr (Fonds-/Buchungsartefakt) -> Signal 0 (konservativ). ddThreshold null (Degeneration) -> 0. BEIDE Beine
+// aus DERSELBEN cycleSeriesPair-Quelle (sec-bevorzugt, tief) -> refresh-robust + kohaerent.
 function cycleSignal(s, ddThreshold) {
-  const op = presentValues(norm(s, 'annualOpInc'));
+  const { op, rev } = cycleSeriesPair(s);
   if (op.length < 3) return 0;
   if (oscExcess(op) < 1) return 0;
-  const revS = presentValues(norm(s, 'annualRev'));
-  if (revS.some((v) => v <= 0)) return 0;                    // Datenmuell-Guard (negatives/0-Umsatzjahr)
-  if (ddThreshold === null || revMaxDrawdown(norm(s, 'annualRev')) < ddThreshold) return 0;
+  if (rev.some((v) => v <= 0)) return 0;                     // Datenmuell-Guard (negatives/0-Umsatzjahr)
+  if (ddThreshold === null || revMaxDrawdown(rev) < ddThreshold) return 0;
   return oscExcess(op);                                      // self-scaling mit der Flip-Zahl
 }
 // Daempfer 1/(1+kd*signal) in (0,1]; signal=0 -> Faktor EXAKT 1.0 (byte-identisch).
@@ -440,9 +463,10 @@ function scoreUniverse(snapshots, formulas) {
     // INKLUSIVE 0, OSC-UNGEGATET (die volle universums-weite Drawdown-Verteilung). Nur diese Basis
     // ergibt p75~0.16, das SK-Hynix (dd=0.266) DRIN und MRVL (0.07)/ASM (0.01) DRAUSSEN haelt. Eine
     // dd>0- oder osc-gegatete Basis schoebe p75 auf 0.29/0.47 -> SK-Hynix kippt raus -> DONE verfehlt.
-    if (presentValues(norm(e.snapshot, 'annualOpInc')).length >= 3) {
-      cycleDDSamples.push(revMaxDrawdown(norm(e.snapshot, 'annualRev')));
-    }
+    // KOHAERENZ-ZWANG: dieselbe kohaerente sec-bevorzugte Quelle wie cycleSignal misst (sonst p75 auf flacher
+    // Yahoo-Verteilung gelernt, aber gegen tiefe DD angewandt = Phantom-Gate).
+    const cyc = cycleSeriesPair(e.snapshot);
+    if (cyc.op.length >= 3) cycleDDSamples.push(revMaxDrawdown(cyc.rev));
   }
   // Court R5 A: opMargin-Schranke = [data-learned p1, PHYSISCH 1.0]; qoq symmetrisch (data-learned p1/p99).
   const opmTail = winsorTailBounds(opmSamples);
@@ -662,4 +686,6 @@ module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings
   // AUFGABE 2 (Wachstums-Bonus): fuer TDD + gezielte Wiederverwendung
   growthBoostFactor, growthYoYComponents, robustG, growthPctlFn, boostFromPctl, GROWTH_BOOST_K,
   // PHASE 3 (Zyklus-Daempfer): fuer TDD + Mess-Skripte
-  signFlips, oscExcess, revMaxDrawdown, cycleSignal, cycleDamperFactor, CYCLE_DAMPER_KD, CYCLE_DD_PCTL };
+  signFlips, oscExcess, revMaxDrawdown, cycleSignal, cycleDamperFactor, CYCLE_DAMPER_KD, CYCLE_DD_PCTL,
+  // PHASE 4 (Refresh-Robustheit via committete SEC-Tiefe): fuer TDD
+  normSec, cycleSeriesPair };
