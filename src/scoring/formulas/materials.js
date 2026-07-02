@@ -21,7 +21,6 @@ module.exports = {
     { key: 'ruleOfX', w: { profitable: 0.6, unprofitable: 0.6 } },
     { key: 'marginTrajectory', w: { profitable: 0.4, unprofitable: 0.4 } },
     { key: 'capitalEfficiency', w: { profitable: 2.9, unprofitable: 2.9 } },
-    { key: 'revisionsMomentum', w: { profitable: 2.4, unprofitable: 2.4 } },
     { key: 'dilution', w: { profitable: 0.8, unprofitable: 0.8 } },
   ],
 };

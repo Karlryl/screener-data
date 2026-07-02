@@ -209,6 +209,10 @@ function capitalEfficiency(s) {
 
 // --- 7. Analysten-Revisions-Momentum ----------------------------------------
 // (up-down)/(up+down) gemittelt ueber 0y/+1y, 30/90-Tage-Fenster. null wenn leer.
+// HINWEIS (Karl-Direktive 2026-06-29): diese Achse ist BEWUSST aus ALLEN Formeln entfernt und in
+// KEINE Formel verdrahtet — der Screener bewertet auf harten Fundamentaldaten, NICHT auf Wall-Street-
+// Analysten-Sentiment (Karl macht seine eigene Bewertung; zudem nur 47% Datenabdeckung, oft stale).
+// Die Funktion bleibt als Rechner erhalten (reversibel), wird aber vom Scoring nicht mehr aufgerufen.
 function revisionsMomentum(s) {
   const er = s && s.external ? s.external.estimateRevisions : null;
   if (!er) return null;
