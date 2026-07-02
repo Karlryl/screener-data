@@ -12,7 +12,7 @@
  *   { ticker, action, formulaId, track, score|null, lamps[], overview, reason? }
  */
 
-const { norm, metricVal, firstPresent, presentValues } = require('./snapshot.js');
+const { norm, metricVal, firstPresent, presentValues, firstTwoPresent } = require('./snapshot.js');
 const { q, weightedScore, coverageWeight, signTrack, fcfTrack } = require('./engine.js');
 const { route, isUS } = require('./router.js');
 const { evaluateLamps, burnPressFactor } = require('./lamps.js');
@@ -111,6 +111,22 @@ function rawAxisValue(s, key, formula, track, winsorBounds) {
 // BLEIBEN symmetrisch (kein Umsatz-Multiplikator-Deckel; das +1503-Stub-Artefakt liegt korrekt auf p99).
 const WINSOR_TAIL = 0.01;
 const OPMARGIN_CAP = 1.0; // oekonomisch-plausibler Deckel (opInc-Kern <= Umsatz), keine Magic Number, kein striktes physisches Gesetz
+// AUFGABE 2 (Ranking-Wachstums-Bonus, Court-approbiert 2026-07-02): der EINE benannte Robustifizierungs-
+// Parameter fuer den AUFWAERTS-Wachstums-Bonus, in Reihe mit WINSOR_TAIL=0.01 / OPMARGIN_CAP=1.0. Der Bonus
+// ist multiplikativ: factor = 1 + k*max(0, 2*pctl-1), pctl in [0,1] -> Faktor in [1, 1+k], strukturell NIE
+// < 1 (kein Anker/0-Basis-Name faellt). ABOVE-MEDIAN (2*pctl-1): unter-Median-Wachser (inkl. Schrumpfer)
+// bekommen EXAKT 1.0 -> ein Schrumpfer ueberholt NIE einen 0-Basis-Namen allein durch den Bonus-Spread.
+// k=0.05 (max +5% am Perzentil-Deckel): Winsor ist data-learned (p1/p99), Median parameterfrei, Perzentil
+// self-scaling -> k ist der EINZIGE freie Scoring-Parameter, bewusst klein. Der EINE Stellhebel: hebt starke
+// Wachser (ALAB) sichtbar, ohne einen reifen Compounder ueber ALAB zu ziehen (Direktive 4). NIE auf einen
+// Ziel-Rang data-fitten (waere ein aufgezwungenes Niveau = Invariante-3-Verletzung).
+const GROWTH_BOOST_K = 0.05;
+// Degenerations-Guard (KEIN Scoring-Hebel, nur Ein/Aus): ein Perzentilrang ueber zu WENIGE distinkte
+// Wachstums-Werte ist Rauschen (Winsor-Deckel-Plateaus + Float-Jitter machen min!==max und wuerden sonst
+// einem Einzel-Name einen Phantom-Vollrang geben = Falsch-Entdeckung, Inv. 4/7). Unter dieser Distinct-
+// Schwelle -> kein Bonus (alle Faktoren exakt 1.0). Konservativ: das reale 3000+-Namen-Universum liegt
+// weit darueber, der Guard greift nur in degenerierten/Test-Verteilungen.
+const GROWTH_MIN_DISTINCT = 10;
 function quantile(samples, p) {
   const a = samples.filter(Number.isFinite).sort((x, y) => x - y);
   if (!a.length) return null;
@@ -121,6 +137,75 @@ function quantile(samples, p) {
 function winsorTailBounds(samples) {
   const lo = quantile(samples, WINSOR_TAIL), hi = quantile(samples, 1 - WINSOR_TAIL);
   return (lo === null || hi === null) ? null : [lo, hi];
+}
+
+// --- AUFGABE 2: Wachstums-Bonus (rein additiv-multiplikativer AUFWAERTS-Faktor) ---
+// Zwei TIEFEN-UNSENSITIVE YoY-Beine einer Aktie (EDGAR-A/B-invariant fuer den annual-Teil):
+//  - annual-lag1: firstTwoPresent(annualRev) -> ar[0]/ar[1]-1 (2 neueste present, luecken-sicher).
+//  - quartal-lag4 POSITIONAL: revenueQ[0]/revenueQ[4]-1 (Muster lamps.js). Verlangt 5 FINITE Fuehrungs-
+//    Quartale (rev[0..4]): eine interne null-Luecke wuerde Index 4 vom year-ago-Quartal wegschieben ->
+//    dann Bein droppen, annual-lag1 traegt. EHRLICHE GRENZE: revenueQ traegt nur {value}, KEIN Perioden-
+//    Enddatum -> eine KOMPLETT fehlende Quartals-Row (ohne null-Platzhalter) ist nicht detektierbar; die
+//    5-finite-Regel SETZT regelmaessige Provider-Kadenz VORAUS (Live-Scan aller Snapshots: 0 solche Luecken).
+//    Die robuste datums-basierte Ausrichtung wuerde snapshot.js/FIELD_REGISTRY beruehren (Brief verbietet es)
+//    -> dokumentiertes Rest-Risiko, kein aktiver Defekt. div0-Skip: Nenner STRIKT > 0 (0 UND negativ = Stub/Glitch).
+function growthYoYComponents(s) {
+  const comps = [];
+  const ar = firstTwoPresent(norm(s, 'annualRev'));
+  if (ar && ar[1] > 0) { const g = ar[0] / ar[1] - 1; if (Number.isFinite(g)) comps.push(g); }
+  const rq = norm(s, 'revenueQ');
+  if (rq.length >= 5 && rq.slice(0, 5).every(Number.isFinite) && rq[4] > 0) {
+    const g = rq[0] / rq[4] - 1; if (Number.isFinite(g)) comps.push(g);
+  }
+  return comps; // 0..2 Werte
+}
+
+// robustG einer Aktie = Median der COMPONENT-winsorisierten YoY-Komponenten. Der Component-Winsor VOR
+// dem Median IST der HBNB/NBIS-Fix (klemmt eine Mini-Basis-/korrupte Komponente auf die data-learned
+// Schranken p1/p99 BEVOR gemittelt wird). EHRLICH: bei <=2 Komponenten ist quantile(.,0.5) das
+// arithmetische Mittel — der Fix ist der Winsor, NICHT der "Median" (bei n=1 heilt der Median nichts).
+// growthBounds fehlt -> Winsor = identity (kein Crash). leer -> null.
+function robustG(s, growthBounds) {
+  const comps = growthYoYComponents(s);
+  if (!comps.length) return null;
+  const w = growthBounds
+    ? comps.map((v) => Math.max(growthBounds[0], Math.min(growthBounds[1], v))) // inline clampWinsor (axes.js:55 nicht exportiert)
+    : comps;
+  return quantile(w, 0.5);
+}
+
+// Perzentil -> AUFWAERTS-Faktor. ABOVE-MEDIAN: unter-Median (pctl<0.5) -> max(0,·)=0 -> Faktor EXAKT 1.0
+// (kein relativer Abwaerts-Effekt gegen 0-Basis-Namen); starke Wachser rampen linear auf 1+k. Faktor
+// strukturell in [1, 1+k], nie < 1. Der Math.min(1,·)-Deckel macht die [1,1+k]-Obergrenze UNABHAENGIG von
+// der Loop-Invariante "pctl in [0,1]" wahr — auch fuer einen exportierten Standalone-Aufruf mit einem
+// out-of-distribution-pctl>1 (byte-identisch im Prod-Pfad, wo pctl ohnehin <=1). NaN/kein-pctl -> literal 1.
+function boostFromPctl(pctl) {
+  if (!Number.isFinite(pctl)) return 1;
+  return 1 + GROWTH_BOOST_K * Math.max(0, Math.min(1, 2 * pctl - 1));
+}
+
+// Universums-globale, self-scaling Perzentil-Funktion ueber die robustG-Verteilung der gerouteten Namen.
+// NaN-sicher (filtert intern auf finite). Degenerations-Guard: <2 finite ODER <GROWTH_MIN_DISTINCT distinkt
+// ODER kompletter Tie (min===max) -> null -> alle Faktoren exakt 1.0 (byte-identisch). pctl = (Anzahl
+// strikt < g)/(n-1): strikt-< + /(n-1) gibt Winsor-Deckel-Ties den GEMEINSAMEN unteren Rang (Inv. 4/7).
+function growthPctlFn(gSorted) {
+  const finite = gSorted.filter(Number.isFinite).sort((a, b) => a - b);
+  const n = finite.length;
+  if (n < 2 || finite[0] === finite[n - 1]) return null;
+  if (new Set(finite).size < GROWTH_MIN_DISTINCT) return null;
+  return (g) => {
+    let lo = 0;
+    for (const x of finite) { if (x < g) lo++; else break; } // finite aufsteigend -> early-break korrekt
+    return lo / (n - 1);
+  };
+}
+
+// Standalone-Faktor (fuer TDD des leer/neutral-Pfads). Im scoreUniverse-Loop wird der Faktor inline aus
+// dem robustG-Cache gerechnet (kein zweites robustG); beide Wege sind byte-identisch.
+function growthBoostFactor(s, growthBounds, pctlFn) {
+  const g = robustG(s, growthBounds);
+  if (g === null || pctlFn === null || pctlFn === undefined) return 1;
+  return boostFromPctl(pctlFn(g));
 }
 
 // Track-Zuordnung gemaess splitMetric der Branchen-Formel.
@@ -289,11 +374,16 @@ function scoreUniverse(snapshots, formulas) {
   // audit/fix (Court R3 C2): universe-weite Winsor-Schranken VOR der Achsen-Berechnung lernen —
   // alle per-Quartal-OpMargins / QoQ-Raten der gerouteten Namen sammeln, p1/p99 bilden. Die
   // beiden near-zero-Nenner-anfaelligen Achsen klemmen damit Stub-Quartal-Phantome (data-learned).
-  const opmSamples = [], qoqSamples = [];
+  const opmSamples = [], qoqSamples = [], growthSamples = [];
   for (const e of results) {
     if (e.action !== 'route') continue;
     for (const v of axesFns.quarterOpMargins(e.snapshot)) opmSamples.push(v);
     for (const v of axesFns.quarterQoQRates(e.snapshot)) qoqSamples.push(v);
+    // AUFGABE 2: rohe YoY-Komponenten aller gerouteten Namen fuer die data-learned Wachstums-Winsor-
+    // Schranken (p1/p99, gemessen ~[-1.00, 5.18]). Der no-axes-Rest (Z. weiter unten) verzerrt p1/p99
+    // nicht nennenswert -> action==='route' hier ist ausreichend (die Anwendungs-BASIS wird spaeter,
+    // NACH dem no-axes-Guard, gesammelt, damit Perzentil-Basis == Anwendungs-Basis).
+    for (const v of growthYoYComponents(e.snapshot)) growthSamples.push(v);
   }
   // Court R5 A: opMargin-Schranke = [data-learned p1, PHYSISCH 1.0]; qoq symmetrisch (data-learned p1/p99).
   const opmTail = winsorTailBounds(opmSamples);
@@ -301,6 +391,7 @@ function scoreUniverse(snapshots, formulas) {
     opMargin: opmTail ? [opmTail[0], OPMARGIN_CAP] : null,
     qoq: winsorTailBounds(qoqSamples),
   };
+  const growthBounds = winsorTailBounds(growthSamples); // null bei leerer Stichprobe -> robustG-null-Guard faengt
   for (const entries of Object.values(cohorts)) {
     const formula = entries[0].formula;
     const track = entries[0].track;
@@ -356,13 +447,28 @@ function scoreUniverse(snapshots, formulas) {
     }
   }
 
-  // 2c. Burn-Press (Court, Karl-Direktive Teil 2): beschleunigte Cash-Verbrenner (burnAccelerating) NACH
-  // der C4-Shrinkage im Score druecken -> score' = score * burnPressFactor (=1/(1+mag), mag=FCF-Burn-
-  // Vertiefung/Cash-Flow-Skala). Fire-gated: Nicht-Feuernde Faktor 1.0 -> byte-identisch. Veto-sicher:
-  // CRDO/ALAB/BE feuern nicht (FCF & OpInc positiv) + 0 Feuer-Namen in ihren Kohorten -> Score+Rang invariant.
+  // 2b-2. AUFGABE 2: robustG je gerouteten, finite-score Namen EINMAL berechnen + cachen; sortierte
+  // Verteilung fuer den universums-globalen Perzentilrang. Guard action==='route' && finite(score) laeuft
+  // NACH dem no-axes-Guard -> excludierte Namen zaehlen NICHT in die Perzentil-Basis (Basis == Anwendung).
+  const robustGByEntry = new Map();
+  const gDist = [];
+  for (const e of results) {
+    if (e.action !== 'route' || !Number.isFinite(e.score)) continue;
+    const g = robustG(e.snapshot, growthBounds); // g kann null sein (keine YoY -> Faktor 1.0)
+    robustGByEntry.set(e, g);
+    if (Number.isFinite(g)) gDist.push(g);
+  }
+  const growthPctl = growthPctlFn(gDist); // null bei Degeneration -> alle Bonus-Faktoren exakt 1.0
+
+  // 2c. Burn-Press (Court, Karl-Direktive Teil 2) + AUFGABE-2-Wachstums-Bonus: beschleunigte Cash-Verbrenner
+  // (burnAccelerating) druecken (=1/(1+mag)), starke Wachser AUFWAERTS heben (1 + k*max(0,2*pctl-1)). Beide
+  // Faktoren multiplikativ auf denselben post-C4-Score (kommutativ). Fire-/leer-gated: kein Feuer + kein
+  // (ueber-Median-)Wachstum -> Faktor 1.0 -> byte-identisch. Bonus liest den robustG-Cache (kein zweites norm()).
   for (const e of results) {
     if (e.action === 'route' && Number.isFinite(e.score)) {
-      e.score = e.score * burnPressFactor(e.snapshot);
+      const g = robustGByEntry.get(e);
+      const boost = (growthPctl === null || g === null || g === undefined) ? 1 : boostFromPctl(growthPctl(g));
+      e.score = e.score * burnPressFactor(e.snapshot) * boost;
     }
   }
 
@@ -485,4 +591,6 @@ function produceRankings(results, opts = {}) {
   return { branches, overview: overview.slice(0, topN * 2).map(stripRaw), survival, excluded };
 }
 
-module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings, phaseOf, mcapBandOf, ipoRecencyOf, ipoYearOf };
+module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings, phaseOf, mcapBandOf, ipoRecencyOf, ipoYearOf,
+  // AUFGABE 2 (Wachstums-Bonus): fuer TDD + gezielte Wiederverwendung
+  growthBoostFactor, growthYoYComponents, robustG, growthPctlFn, boostFromPctl, GROWTH_BOOST_K };
