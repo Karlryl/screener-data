@@ -62,14 +62,26 @@ const { fetchOpenDartKr }       = require('./discovery/opendart-kr.js');
 const { fetchSseUniverse }      = require('./discovery/sse-cn.js');
 const { fetchSzseUniverse }     = require('./discovery/szse-cn.js');
 const { fetchHkexUniverse }     = require('./discovery/hkex-hk.js');
-// Map each foreign adapter's emitted source string onto the canonical FOREIGN_SOURCES
-// token the cap block reserves slots for. Without this, edinet-jp/finmind-tw/sse-cn/
-// szse-cn would NOT match FOREIGN_SOURCES ('edinet'/'finmind'/'sse'/'szse') and their
-// null-mcap rows would be dropped by the OTC mass — the exact bug the infra fix prevents.
+// EU + Rest-Welt (keyless, live-verified 2026-07-03): DE/Nordics/Oslo/India/UK/Canada/Australia.
+const { fetchXetraUniverse }    = require('./discovery/xetra.js');
+const { fetchNordicUniverse }   = require('./discovery/nordic.js');
+const { fetchOsloUniverse }     = require('./discovery/oslo.js');
+const { fetchNseIndia }         = require('./discovery/nse-in.js');
+const { fetchLseUniverse }      = require('./discovery/lse-uk.js');
+const { fetchTsxCanada }        = require('./discovery/tsx-ca.js');
+const { fetchAsxUniverse }      = require('./discovery/asx-au.js');
+// Marktkap-Vorpruefung (Karl-Sizing-Fix): filtert die Auslands-null-mcap-Zeilen VOR dem teuren Pull
+// billig auf >= $2B USD (Batch-Yahoo-quote). Nur die Ueberlebenden gehen in den Fundamental-Pull.
+const { prefilterByMcap }       = require('./discovery/mcap-prefilter.js');
+// Map each foreign adapter's emitted source string onto a canonical foreign token. Used by (a) the
+// mcap-prefilter to identify foreign null-mcap rows and (b) the cap block's FOREIGN_SOURCES fallback
+// for any row the prefilter could not price (network miss -> stays null-mcap -> slot-protected).
 const FOREIGN_SOURCE_CANON = {
   'edinet-jp': 'edinet', 'finmind-tw': 'finmind', 'opendart': 'opendart',
-  'sse-cn': 'sse', 'szse-cn': 'szse', 'hkex': 'hkex'
+  'sse-cn': 'sse', 'szse-cn': 'szse', 'hkex': 'hkex',
+  'xetra': 'xetra', 'nordic': 'nordic', 'oslo': 'oslo', 'nse-in': 'nse', 'lse': 'lse', 'tsx': 'tsx', 'asx': 'asx'
 };
+const FOREIGN_CANON_SET = new Set(Object.values(FOREIGN_SOURCE_CANON));
 
 function parseArgs(argv) {
   const args = { watchlist: './watchlist.json', out: null };
@@ -449,7 +461,8 @@ async function main() {
   // can attribute a non-empty/empty/failed result to the right discovery module.
   const DISCOVERY_SOURCE_NAMES = [
     'nasdaq-all', 'sec-tickers', 'finnhub', 'wikipedia-indices', 'otc-markets', 'nasdaq-api',
-    'edinet-jp', 'finmind-tw', 'opendart-kr', 'sse-cn', 'szse-cn', 'hkex-hk'
+    'edinet-jp', 'finmind-tw', 'opendart-kr', 'sse-cn', 'szse-cn', 'hkex-hk',
+    'xetra', 'nordic', 'oslo', 'nse-in', 'lse-uk', 'tsx-ca', 'asx-au'
   ];
   const discoverySources = await Promise.allSettled([
     fetchNasdaqAll(),
@@ -463,7 +476,14 @@ async function main() {
     fetchOpenDartKr(),
     fetchSseUniverse(),
     fetchSzseUniverse(),
-    fetchHkexUniverse()
+    fetchHkexUniverse(),
+    fetchXetraUniverse(),
+    fetchNordicUniverse(),
+    fetchOsloUniverse(),
+    fetchNseIndia(),
+    fetchLseUniverse(),
+    fetchTsxCanada(),
+    fetchAsxUniverse()
   ]);
   // audit/fix (BUG HIGH — silent total-discovery-outage): every source returns an
   // empty Map() on total failure instead of rejecting, so Promise.allSettled sees
@@ -604,14 +624,29 @@ async function main() {
   // per-run runtime tractable; the 20% null-mcap proportional split below
   // already prevents OOM by keeping low-confidence discoveries bounded.
   // Override via env MAX_UNIVERSE for tighter local-dev runs.
-  // Global-Universe-Ausbau (2026-07-03): die neuen Auslands-Vollregister (JP/KR/TW/CN/HK ~14k, spaeter
-  // EU/Rest) kommen mit marketCap:null. Bei 25000 haetten sie um die ~9k Null-mcap-Restslots konkurriert
-  // und ganze Maerkte (CN/HK) waeren per Reihenfolge gedroppt worden — ein junger auslaendischer CRDO/ALAB
-  // verschwunden. 40000 fasst die bestehenden ~15,7k (alle withMcap) + alle Asien-Register + Headroom, sodass
-  // der Cap fuer Asien gar nicht feuert; bei der vollen Global-Expansion (>40k) schuetzt die Foreign-First-
-  // Quote unten. Yahoo filtert danach ohnehin auf reale Marktkap; winzige Register-Namen fallen im naechsten
-  // Zyklus (mcap<1e9) raus -> das Universum trimmt sich selbst auf die $2B+-Ziele. Env-tunbar fuer CI-Pull-Last.
-  const MAX_UNIVERSE = parseInt(process.env.MAX_UNIVERSE || '40000', 10);
+  // Marktkap-Vorpruefung (Karl-Sizing-Fix 2026-07-03): die Auslands-Vollregister (~25k) kommen mit
+  // marketCap:null. Statt sie ALLE teuer zu pullen (10x Verschwendung, die meisten < $2B), hier VOR dem
+  // Pull billig auf >= $2B USD filtern (Batch-Yahoo-quote, ~200/Aufruf, Minuten). Ueberlebende bekommen
+  // ihre USD-mcap gesetzt (-> withMcap-Zweig unten, korrekt nach Groesse einsortiert); der Rest wird
+  // verworfen. Fail-safe: bei Ausfall bleibt eine Zeile null-mcap und faellt in die bestehende Slot-Logik
+  // zurueck (kein Regress). Ergebnis: Universum bleibt $2B+-schlank -> KEIN Pull-Sharding noetig.
+  try {
+    const foreignNull = [...allTickers.entries()].filter(([, v]) =>
+      v && !v.marketCap && v.source && String(v.source).split(',').some((s) => FOREIGN_CANON_SET.has(s.trim())));
+    if (foreignNull.length) {
+      const keptUsd = await prefilterByMcap(foreignNull.map(([k]) => k));
+      for (const [key, v] of foreignNull) {
+        const usd = keptUsd.get(key);
+        if (Number.isFinite(usd)) v.marketCap = usd;   // >= $2B: USD-mcap setzen -> withMcap-Zweig
+        else allTickers.delete(key);                    // < $2B oder keine Antwort: verwerfen
+      }
+    }
+  } catch (e) { console.warn('[refresh-universe] mcap-prefilter uebersprungen:', e.message); }
+
+  // MAX_UNIVERSE: mit der Vorpruefung bleibt das Universum $2B+-schlank (US ~15,7k + Ausland-$2B ~4k +
+  // Wachstum); 30000 gibt reichlich Headroom. Env-tunbar. Die Foreign-First-Slot-Quote unten schuetzt
+  // etwaige nicht-bepreiste Rest-Null-mcap-Auslandszeilen (Netzwerk-Miss der Vorpruefung).
+  const MAX_UNIVERSE = parseInt(process.env.MAX_UNIVERSE || '30000', 10);
   if (allTickers.size > MAX_UNIVERSE) {
     // F-DP-016: null-mcap tickers (often intentional small-cap additions) were previously
     // sorted to the bottom and silently dropped first. Fix: segregate null-mcap tickers and
