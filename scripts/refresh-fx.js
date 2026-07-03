@@ -40,6 +40,13 @@ const CURRENCIES = [
   'SAR',  // Saudi Riyal
   'QAR',  // Qatari Riyal
   'ILS',  // Israeli Shekel
+  // Bau-Plan 2026-07-03 (Karl "alles bauen"): Waehrungen fuer die neu gebauten Laender-Adapter
+  // (Neuseeland, Chile, Kolumbien, Argentinien). Ohne diese droppt mcap-prefilter die Namen fail-closed.
+  // Nur die Waehrungen SCOREBARER Maerkte — PEN/EGP/MAD/PKR etc. weggelassen (deren Maerkte sind Yahoo-Dead-Zones).
+  'NZD',  // Neuseeland-Dollar
+  'CLP',  // Chilenischer Peso
+  'COP',  // Kolumbianischer Peso
+  'ARS',  // Argentinischer Peso
 ];
 
 async function fetchFXRate(currency) {

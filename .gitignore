@@ -83,3 +83,8 @@ audit-report.json
 # to main, to avoid ~44 MB/day of git-history bloat. The dashboard fetches it
 # lazily on first modal open; main only carries the slim screener.html.
 screener-detail.json
+
+.gen-formulas.js
+.extract-calib.js
+.probe*.js
+.hg-synthesis*.json

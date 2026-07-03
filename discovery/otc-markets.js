@@ -24,11 +24,22 @@ const MAX_PAGES = 10;
 const PAGE_DELAY_MS = 500;
 
 // Symbols unlikely to have Yahoo Finance data — skip pure preferred/warrant/unit suffixes
-const JUNK_SUFFIX_RE = /[WRU]$|\.WS$|\.WT$|\.WI$|\.RT$|\.UN$|\.U$/i;
+// audit/fix: bare [WRU]$ dropped real tickers (NU/BKU/EW/ARW) — delimited-only, mirrors nasdaq-all.js
+const JUNK_SUFFIX_RE = /\.WS$|\.WT$|\.WI$|\.RT$|\.UN$|\.U$/i;
+// audit/fix: warrants/rights/units now caught via the company-name field (mirrors nasdaq-all.js)
+// audit/fix: dropped over-broad \bunits?\b name-term — it excluded real MLPs (BEP/BIP/CQP/UNIT...); delimited .U$/.UN$ symbol filter still catches true unit symbols
+const JUNK_NAME_RE = /\b(?:warrant|right)s?\b/i;
+function isJunkSecurity(symbol, name) {
+  if (JUNK_SUFFIX_RE.test(symbol)) return true;
+  if (name && JUNK_NAME_RE.test(name)) return true;
+  return false;
+}
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-function get(url) {
+// audit/fix: relative-Location ERR_INVALID_URL + uncapped recursion + 307/308 silently wiped this discovery source (mirror nasdaq-api hardening)
+const MAX_REDIRECTS = 5;
+function get(url, redirectsLeft = MAX_REDIRECTS) {
   return new Promise((resolve, reject) => {
     const req = https.get(url, {
       headers: {
@@ -37,11 +48,26 @@ function get(url) {
         'Accept-Language': 'en-US,en;q=0.9'
       }
     }, res => {
-      if (res.statusCode === 301 || res.statusCode === 302) {
+      if (res.statusCode === 301 || res.statusCode === 302 ||
+          res.statusCode === 307 || res.statusCode === 308) {
         res.resume(); // drain the body before following redirect
-        return get(res.headers.location).then(resolve).catch(reject);
+        const loc = res.headers.location;
+        if (!loc) {
+          return reject(new Error('HTTP ' + res.statusCode + ' with no Location header from ' + url));
+        }
+        if (redirectsLeft <= 0) {
+          return reject(new Error('too many redirects fetching ' + url));
+        }
+        let nextUrl;
+        try {
+          nextUrl = new URL(loc, url).toString();
+        } catch (e) {
+          return reject(new Error('invalid redirect Location "' + loc + '" from ' + url));
+        }
+        return get(nextUrl, redirectsLeft - 1).then(resolve).catch(reject);
       }
       if (res.statusCode !== 200) {
+        res.resume(); // drain non-200 body to avoid socket leak
         return reject(new Error('HTTP ' + res.statusCode + ' from ' + url));
       }
       const chunks = [];
@@ -125,6 +151,10 @@ async function fetchOTCMarkets() {
   console.log('  [OTC-Markets] Fetching OTCQX, OTCQB, Expert tiers (Tag 165)...');
 
   let totalRecords = null;
+  // audit F-A-2026-06-21: track per-page failures so a partial OTC pull is
+  // detectable by the aggregator (mirrors refresh-universe.js F-DP-037
+  // zero-quote alert) instead of being hidden behind a lone console.error.
+  let pageErrors = 0;
 
   for (let page = 1; page <= MAX_PAGES; page++) {
     try {
@@ -143,16 +173,22 @@ async function fetchOTCMarkets() {
       let added = 0;
       for (const row of rows) {
         // Field names vary: symbol / ticker / Symbol / tickerSymbol
-        const rawSym = row.symbol || row.ticker || row.Symbol || row.tickerSymbol || '';
+        // audit F-A-2026-06-21: prevents non-string symbol field crashing the
+        // page and truncating OTC pagination — a numeric symbol (e.g. an
+        // Expert-Market numeric placeholder) is truthy so `|| ''` won't fire,
+        // and (12345).trim is not a function. Coerce via String() defensively.
+        const rawSym = String(row.symbol ?? row.ticker ?? row.Symbol ?? row.tickerSymbol ?? '');
         const sym = rawSym.trim().toUpperCase();
         if (!sym) continue;
         // Tag 217g (audit F-217a-01 HIGH fix): same class-share regex bug
         // as sec-tickers.js / nasdaq-api.js — original regex rejected
         // BRK.B / BF.B / BRK-B despite the comment claiming to allow them.
         if (!/^[A-Z][A-Z0-9]{0,4}([.\-][A-Z])?$/.test(sym)) continue;
-        if (JUNK_SUFFIX_RE.test(sym)) continue;
 
         const name = (row.companyName || row.name || row.CompanyName || '').trim();
+        // audit/fix: bare [WRU]$ dropped real tickers (NU/BKU/EW/ARW) — delimited-only, mirrors nasdaq-all.js
+        if (isJunkSecurity(sym, name)) continue;
+
         const market = (row.marketTier || row.market || row.MarketTier || '').trim();
 
         if (!result.has(sym)) {
@@ -181,8 +217,15 @@ async function fetchOTCMarkets() {
       await sleep(PAGE_DELAY_MS);
     } catch (e) {
       console.error(`  [OTC-Markets] Page ${page} failed: ${e.message}`);
-      // Non-fatal: stop pagination for this batch but keep what we have
-      break;
+      // audit F-A-2026-06-21: prevents one bad page truncating the entire OTC
+      // tail. A single transient error (HTTP 5xx, JSON-parse) on an
+      // intermediate page used to `break` and silently drop all remaining
+      // pages (~3000 tickers). fetchOTCPage already retries timeouts; for any
+      // other error, skip just the bad page and continue to the next so the
+      // tail still gets fetched.
+      pageErrors++;
+      await sleep(PAGE_DELAY_MS);
+      continue;
     }
   }
 
@@ -193,6 +236,12 @@ async function fetchOTCMarkets() {
   if (totalRecords !== null && totalRecords > MAX_PAGES * PAGE_SIZE) {
     const missed = totalRecords - MAX_PAGES * PAGE_SIZE;
     console.warn(`  [OTC-Markets] HIT MAX_PAGES (${MAX_PAGES}) — ${missed} tickers truncated. Bump MAX_PAGES if OTC totalRecords keeps growing.`);
+  }
+  // audit F-A-2026-06-21: surface page failures so a partial OTC pull is
+  // visible to the aggregator/operator rather than silently returning a Map
+  // missing pages. Loud warning mirrors the zero-quote alert pattern.
+  if (pageErrors > 0) {
+    console.warn(`  [OTC-Markets] WARNING: ${pageErrors} page(s) failed and were skipped — OTC universe is PARTIAL (${result.size} tickers). Some symbols may be missing.`);
   }
   console.log(`  [OTC-Markets] Total OTC tickers: ${result.size}`);
   return result;

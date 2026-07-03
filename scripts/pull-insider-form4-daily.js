@@ -58,6 +58,10 @@ const FORM4_CACHE_PATH = path.join(EXTERNAL_DIR, 'sec-form4-cache.json');
 
 const USER_AGENT = 'Karl Viehrig screener-data karl_viehrig@web.de';
 const RATE_DELAY_MS = 125;          // ≤8 req/s, under SEC's 10/s/IP limit
+// audit/fix: 429 IP-block backoff. On HTTP 429/503 SEC wants the client to slow
+// WAY down; the normal 125 ms cadence keeps tripping the 10/s/IP limit and risks
+// a ~10-min IP block. Wait 30 s and retry WITHOUT counting it as an error.
+const RATE_LIMIT_BACKOFF_MS = 30000;
 const FORM4_LOOKBACK_DAYS = 180;    // drop txns older than this at merge time
 
 const DAILY_INDEX_URL = (y, q, ymd) =>
@@ -102,8 +106,20 @@ function httpGet(url, _depth) {
         return httpGet(nextUrl, depth + 1).then(resolve).catch(reject);
       }
       if (res.statusCode === 404) return resolve({ notFound: true });
-      if (res.statusCode === 403) return reject(new Error('HTTP 403 (rate-limited or bad UA): ' + url));
-      if (res.statusCode !== 200) return reject(new Error('HTTP ' + res.statusCode + ' for ' + url));
+      // audit/fix: carry the status code on the error (429 IP-block / 403 silent exit-0).
+      // Previously every non-200/404 collapsed into a status-less Error, so the
+      // per-item loop could not detect a 429 to back off (kept hammering SEC at
+      // normal cadence → ~10-min IP block) nor a systemic 403 outage.
+      if (res.statusCode === 403) {
+        const err = new Error('HTTP 403 (rate-limited or bad UA): ' + url);
+        err.statusCode = 403;
+        return reject(err);
+      }
+      if (res.statusCode !== 200) {
+        const err = new Error('HTTP ' + res.statusCode + ' for ' + url);
+        err.statusCode = res.statusCode;
+        return reject(err);
+      }
       const chunks = [];
       res.on('data', c => chunks.push(c));
       res.on('end', () => {
@@ -209,9 +225,14 @@ function buildMaps() {
 function parseDailyForm4Rows(text) {
   const rows = [];
   const lines = text.split(/\r?\n/);
-  const re = /^4\s+.+?\s+(\d+)\s+(\d{8})\s+(edgar\/data\/\d+\/([0-9-]+)\.txt)\s*$/;
+  // audit F-A-2026-06-21: prevents silent loss of Form 4/A amendments that the
+  // quarterly backfill keeps (daily-vs-history cache divergence). Accept the
+  // optional '/A' amendment suffix in both the fast-path prefilter and regex.
+  // audit F-A-2026-06-22: keep the '/A' amendment optional but NON-capturing — a
+  // capturing (\/A)? shifted m[1..4], making cik read the amendment group (NaN).
+  const re = /^4(?:\/A)?\s+.+?\s+(\d+)\s+(\d{8})\s+(edgar\/data\/\d+\/([0-9-]+)\.txt)\s*$/;
   for (const line of lines) {
-    if (line.charAt(0) !== '4') continue;       // FormType column starts with '4'
+    if (line.charAt(0) !== '4') continue;       // FormType column starts with '4' (covers '4' and '4/A')
     const m = re.exec(line);
     if (!m) continue;
     rows.push({
@@ -303,10 +324,27 @@ async function main() {
     let idxRes;
     try { idxRes = await httpGet(url); }
     catch (e) {
-      console.warn('[' + date + '] index fetch ERROR: ' + e.message + ' — skipping date');
-      grandErrors++;
-      await sleep(RATE_DELAY_MS);
-      continue;
+      // audit/fix: 429 IP-block backoff. On a rate-limit (429) or 503, back off
+      // 30 s and retry this date's index ONCE WITHOUT incrementing grandErrors —
+      // skipping the date and racing to the next one at normal cadence would keep
+      // hammering SEC into a ~10-min IP block.
+      if (e && (e.statusCode === 429 || e.statusCode === 503)) {
+        console.warn('[' + date + '] index rate-limited (HTTP ' + e.statusCode +
+          ') — backing off ' + (RATE_LIMIT_BACKOFF_MS / 1000) + 's and retrying');
+        await sleep(RATE_LIMIT_BACKOFF_MS);
+        try { idxRes = await httpGet(url); }
+        catch (e2) {
+          console.warn('[' + date + '] index fetch ERROR (post-backoff): ' + e2.message + ' — skipping date');
+          grandErrors++;
+          await sleep(RATE_DELAY_MS);
+          continue;
+        }
+      } else {
+        console.warn('[' + date + '] index fetch ERROR: ' + e.message + ' — skipping date');
+        grandErrors++;
+        await sleep(RATE_DELAY_MS);
+        continue;
+      }
     }
     await sleep(RATE_DELAY_MS);
     if (idxRes.notFound) {
@@ -335,10 +373,27 @@ async function main() {
       let docRes;
       try { docRes = await httpGet(docUrl); }
       catch (e) {
-        console.warn('  [' + ticker + '] fetch ERROR ' + hit.accession + ': ' + e.message);
-        grandErrors++;
-        await sleep(RATE_DELAY_MS);
-        continue;
+        // audit/fix: 429 IP-block backoff. On a rate-limit (429) or 503, back off
+        // 30 s and retry this hit WITHOUT incrementing grandErrors and WITHOUT
+        // consuming a fetch-budget slot — counting a transient throttle as an
+        // error and continuing at normal cadence risks a ~10-min SEC IP block.
+        if (e && (e.statusCode === 429 || e.statusCode === 503)) {
+          console.warn('  [' + ticker + '] rate-limited (HTTP ' + e.statusCode +
+            ') — backing off ' + (RATE_LIMIT_BACKOFF_MS / 1000) + 's and retrying');
+          await sleep(RATE_LIMIT_BACKOFF_MS);
+          try { docRes = await httpGet(docUrl); }
+          catch (e2) {
+            console.warn('  [' + ticker + '] fetch ERROR (post-backoff) ' + hit.accession + ': ' + e2.message);
+            grandErrors++;
+            await sleep(RATE_DELAY_MS);
+            continue;
+          }
+        } else {
+          console.warn('  [' + ticker + '] fetch ERROR ' + hit.accession + ': ' + e.message);
+          grandErrors++;
+          await sleep(RATE_DELAY_MS);
+          continue;
+        }
       }
       await sleep(RATE_DELAY_MS);
       fetchBudgetLeft--;
@@ -382,6 +437,17 @@ async function main() {
     ' fetched=' + grandFetched + ' txnsAdded=' + grandAdded +
     ' P-buys=' + grandPBuys + ' errors=' + grandErrors);
   console.log('Cache: ' + FORM4_CACHE_PATH + ' (' + cacheTickers + ' tickers)');
+
+  // audit/fix: 403 silent exit-0. If NOTHING was fetched but errors occurred
+  // (grandFetched === 0 && grandErrors > 0) the run was a total failure —
+  // typically a systemic 403/UA/IP-block outage rather than a quiet holiday with
+  // no filings. Exit non-zero so CI surfaces it instead of a green empty run.
+  // (A genuine no-filings day fetches 0 with 0 errors and correctly stays exit 0.)
+  if (grandFetched === 0 && grandErrors > 0) {
+    console.error('TOTAL FAILURE: 0 filings fetched with ' + grandErrors +
+      ' error(s) — likely a systemic SEC outage / 403 / IP block. Exiting 1.');
+    process.exit(1);
+  }
 }
 
 if (require.main === module) {

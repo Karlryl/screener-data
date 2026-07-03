@@ -82,6 +82,12 @@ const USER_AGENT = 'Karl Viehrig screener-data karl_viehrig@web.de';
 // documented 10/sec/IP limit. Same value used by pull-sec-xbrl.js.
 const RATE_DELAY_MS = 125;
 
+// audit/fix: 429 IP-block backoff. On HTTP 429 (rate-limited) or 503 SEC wants
+// the client to slow WAY down — a normal 125 ms cadence keeps tripping the
+// 10/s/IP limit and risks a ~10-min IP block. Wait 30 s and retry the ticker
+// WITHOUT counting it as an abort-budget error.
+const RATE_LIMIT_BACKOFF_MS = 30000;
+
 // Per-ticker cache freshness gate. Form 4s have a T+2 filing deadline so
 // 24 h is plenty fresh for trading-day purposes.
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -130,8 +136,20 @@ function httpGet(url, _depth) {
         return httpGet(nextUrl, depth + 1).then(resolve).catch(reject);
       }
       if (res.statusCode === 404) return resolve({ notFound: true });
-      if (res.statusCode === 403) return reject(new Error('HTTP 403 (likely rate-limited or bad UA): ' + url));
-      if (res.statusCode !== 200) return reject(new Error('HTTP ' + res.statusCode + ' for ' + url));
+      // audit/fix: carry the status code on the error (429 IP-block / 403 silent exit-0).
+      // Previously every non-200/404 collapsed into a status-less Error, so the
+      // per-item loop could not detect a 429 to back off (kept hammering SEC at
+      // normal cadence → ~10-min IP block) nor a systemic 403 outage.
+      if (res.statusCode === 403) {
+        const err = new Error('HTTP 403 (likely rate-limited or bad UA): ' + url);
+        err.statusCode = 403;
+        return reject(err);
+      }
+      if (res.statusCode !== 200) {
+        const err = new Error('HTTP ' + res.statusCode + ' for ' + url);
+        err.statusCode = res.statusCode;
+        return reject(err);
+      }
       const chunks = [];
       res.on('data', c => chunks.push(c));
       res.on('end', () => resolve({ body: Buffer.concat(chunks).toString('utf8') }));
@@ -228,9 +246,12 @@ function parseForm4Xml(xml) {
   const issuerBlock = _extractFirst(xml, 'issuer') || '';
   const issuerTradingSymbol =
     _innerValue(_extractFirst(issuerBlock, 'issuerTradingSymbol')) || null;
+  // audit/fix: scan ALL <footnotes> blocks, not just the first. _extractFirst
+  // returned only all[0], so a 10b5-1 plan mention in a LATER footnotes block
+  // was missed (false isTenB5One=false → mislabelled discretionary trade).
   const isTenB5One =
     /<aff10b5One>\s*(1|true)\b/i.test(xml) ||
-    /10b5-?\s?1/i.test(_extractFirst(xml, 'footnotes') || '');
+    /10b5-?\s?1/i.test(_extractAll(xml, 'footnotes').join(' '));
 
   // Reporting person — first <reportingOwner> block carries the name and
   // the relationship flags (officer / director / 10% owner).
@@ -459,6 +480,29 @@ async function main() {
     }
     try {
       const result = await pullTickerForm4(ticker, cikInfo);
+      if (result.error) {
+        // audit/fix: soft errors (submissions-404 / submissions-parse) returned
+        // WITHOUT throwing must NOT get a fresh fetchedAt — otherwise the 24h
+        // freshness gate (line ~454) skips this ticker for a full TTL window
+        // even though we got NO data. Mirror the thrown-error path below: stamp
+        // failedAt, preserve any prior successful pull's fetchedAt so the next
+        // run retries this ticker immediately. Like the thrown-error path, we
+        // also do NOT overwrite transactions: a transient 404/parse-error must
+        // not clobber a prior successful pull's cached insider transactions
+        // (red-team A1: asymmetric data-loss vs the catch path otherwise).
+        errors++;
+        byTicker[ticker] = Object.assign({}, prev || {}, {
+          ticker,
+          cik: cikInfo.cik,
+          name: cikInfo.name,
+          failedAt: new Date().toISOString(),
+          error: result.error
+          // intentionally NOT setting fetchedAt or transactions — preserve any
+          // prior successful pull's values (mirrors the thrown-error path).
+        });
+        console.warn('  [' + ticker + '] soft-error: ' + result.error);
+        continue;
+      }
       byTicker[ticker] = {
         ticker,
         cik: cikInfo.cik,
@@ -474,6 +518,18 @@ async function main() {
         (result.filingsScanned || 0) + ' txns=' + result.transactions.length +
         (result.error ? ' ERR=' + result.error : ''));
     } catch (e) {
+      // audit/fix: 429 IP-block backoff. On a rate-limit (429) or 503, back off
+      // 30 s and retry this ticker WITHOUT incrementing the abort/error counter
+      // and WITHOUT stamping a fresh failedAt/fetchedAt on the cache entry — the
+      // ticker simply isn't processed this pass and is retried next run. Counting
+      // a 429 as an error would burn the abort budget (>25) on a transient
+      // throttle and the normal cadence would keep hammering SEC into an IP block.
+      if (e && (e.statusCode === 429 || e.statusCode === 503)) {
+        console.warn('  [' + ticker + '] rate-limited (HTTP ' + e.statusCode +
+          ') — backing off ' + (RATE_LIMIT_BACKOFF_MS / 1000) + 's');
+        await sleep(RATE_LIMIT_BACKOFF_MS);
+        continue;
+      }
       errors++;
       // Tag 211j (audit MEDIUM): use failedAt (NOT fetchedAt) when the
       // pull errored — the freshness gate at line ~387 checks fetchedAt
@@ -512,6 +568,16 @@ async function main() {
   console.log('Done. fetched=' + fetched + ' skipped(fresh)=' + skippedFresh +
     ' errors=' + errors + ' totalTxns=' + totalTxns);
   console.log('Cache: ' + FORM4_CACHE_PATH);
+
+  // audit/fix: 403 silent exit-0. If NOTHING succeeded but errors occurred
+  // (fetched === 0 && errors > 0) the run was a total failure — typically a
+  // systemic 403/UA/IP-block outage rather than scattered per-ticker hiccups.
+  // Exit non-zero so CI surfaces it instead of a green run over an empty cache.
+  if (fetched === 0 && errors > 0) {
+    console.error('TOTAL FAILURE: 0 tickers fetched with ' + errors +
+      ' error(s) — likely a systemic SEC outage / 403 / IP block. Exiting 1.');
+    process.exit(1);
+  }
 }
 
 if (require.main === module) {

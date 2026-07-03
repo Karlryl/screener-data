@@ -52,7 +52,19 @@ const STALE_DAYS = 90;           // re-pull after 90 days (typical 10-Q cycle)
 function parseArgs(argv) {
   const args = { max: Infinity, concurrency: 1 };
   for (let i = 2; i < argv.length; i++) {
-    if (argv[i] === '--max' && argv[i+1]) args.max = parseInt(argv[++i], 10);
+    if (argv[i] === '--max' && argv[i+1]) {
+      // audit/fix: parseInt accepts NaN silently → entries.slice(0, NaN) = [] = silent zero-ticker run.
+      // Validate --max is a finite positive int; a passed-but-invalid value is a hard error, not a no-op.
+      const raw = argv[++i];
+      const n = Number(raw);
+      if (!Number.isInteger(n) || n <= 0) {
+        console.error(`::error::--max must be a positive integer (got "${raw}")`);
+        process.exit(1);
+      }
+      args.max = n;
+    }
+    // audit/fix: --concurrency is parsed but never used — the pull loop is serial (NO-OP flag,
+    // kept only for CLI back-compat). Do NOT read args.concurrency expecting parallelism.
     else if (argv[i] === '--concurrency' && argv[i+1]) args.concurrency = Math.max(1, parseInt(argv[++i], 10));
   }
   return args;
@@ -121,7 +133,21 @@ async function main() {
   })();
 
   let pulled = 0, skipped304 = 0, skippedFresh = 0, notFound = 0, errors = 0, rateLimited = 0;
-  const entries = Object.values(Object.fromEntries(tickers));
+  // audit F-A-2026-06-21: direct Map->array; the old Object.fromEntries(...)/
+  // Object.values round-trip silently collapsed duplicate keys and was a no-op
+  // rebuild of what [...values()] yields directly.
+  const entries = [...tickers.values()];
+  // audit F-A-2026-06-21: when --max truncates the run, prioritize the LEAST
+  // recently fetched CIKs (oldest fetchedAt first, never-fetched = oldest).
+  // The old `.slice(0, max)` took the head of insertion order, so partial runs
+  // re-pulled the same prefix forever and the tail of the list was never reached.
+  if (Number.isFinite(args.max) && args.max < entries.length) {
+    entries.sort((a, b) => {
+      const fa = (a.cik && manifest.entries[a.cik] && manifest.entries[a.cik].fetchedAt) || '';
+      const fb = (b.cik && manifest.entries[b.cik] && manifest.entries[b.cik].fetchedAt) || '';
+      return fa < fb ? -1 : fa > fb ? 1 : 0;
+    });
+  }
   const todo = entries.slice(0, args.max);
 
   for (const t of todo) {
@@ -135,11 +161,23 @@ async function main() {
     const url = `https://data.sec.gov/api/xbrl/companyfacts/CIK${t.cik}.json`;
     try {
       const res = await get(url, prior && prior.lastModified);
-      if (res.notModified) {
+      if (res.notModified && fs.existsSync(filePath)) {
         manifest.entries[t.cik] = Object.assign({}, prior, { fetchedAt: new Date().toISOString() });
         skipped304++;
+      } else if (res.notModified) {
+        // audit/fix: 304 but the cache body is MISSING on disk (the normal case on a fresh CI runner —
+        // the cache dir is git-ignored, only _manifest.json is committed). Stamping a fresh fetchedAt
+        // here would mark the CIK "fresh" while its file never gets written -> permanently dark CIK.
+        // Drop lastModified (and do NOT refresh fetchedAt) so the next run sends an unconditional GET
+        // -> 200 + body. Mirrors the notFound branch below.
+        const cleaned = Object.assign({}, prior); delete cleaned.lastModified;
+        cleaned.lastError = '304 without cached body — will re-pull full next run';
+        manifest.entries[t.cik] = cleaned;
       } else if (res.notFound) {
-        manifest.entries[t.cik] = { ticker: t.ticker, fetchedAt: new Date().toISOString(), notFound: true };
+        // audit/fix: transient 404 must not 90-day-blackout a valid CIK (was fresh fetchedAt on notFound).
+        // Mirror the 13F/429 soft-retry pattern: do NOT stamp a fresh fetchedAt, so the stale-gate
+        // (~line 145, fetchedAt > staleCutoff) won't suppress the re-fetch — the next run retries soon.
+        manifest.entries[t.cik] = Object.assign({}, prior, { ticker: t.ticker, notFound: true, lastError: 'HTTP 404 (not found, will retry next run)' });
         notFound++;
       } else {
         writeFileAtomic(filePath, res.body);
@@ -169,7 +207,14 @@ async function main() {
         continue;
       }
       errors++;
-      manifest.entries[t.cik] = Object.assign({}, prior, { fetchedAt: new Date().toISOString(), lastError: e.message });
+      // audit/fix: transient non-429 errors (5xx / ECONNRESET / ETIMEDOUT / EAI_AGAIN / TLS /
+      // timeout / too-many-redirects) must NOT stamp a fresh fetchedAt. Stamping it let the
+      // stale-gate (line 157: fetchedAt > staleCutoff) suppress the re-fetch for the full
+      // STALE_DAYS (~90d) window — a momentary network blip would serve stale audited
+      // fundamentals for an entire 10-Q cycle. Mirror the deliberately-fixed 429/404 branches:
+      // record only lastError and leave prior.fetchedAt intact, so a previously-stale CIK stays
+      // retry-eligible next run. (404 and 304 are handled above and never reach this catch.)
+      manifest.entries[t.cik] = Object.assign({}, prior, { lastError: e.message });
       if (errors > 50) {
         console.error('Too many errors (>50) — aborting to be polite to SEC.');
         break;

@@ -31,9 +31,27 @@ function main() {
   const outDir = './external-data';
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
   const outPath = path.join(outDir, 'aktienfinder.json');
+  // audit F-A-2026-06-21: prevent silent total history loss. Previously a
+  // JSON.parse failure was swallowed to `existing = {}`, so the merge below
+  // wrote ONLY the current CSV and the atomic write durably replaced the
+  // (still recoverable) corrupt file with a stripped-down version — destroying
+  // all accumulated aktienfinder scores. Now mirror pull-historical-prices.js
+  // (F-SC-028): back up the corrupt file, log loudly, and refuse to overwrite
+  // unless RESET_AKTIENFINDER=1 is explicitly set.
   let existing = {};
   if (fs.existsSync(outPath)) {
-    try { existing = JSON.parse(fs.readFileSync(outPath, 'utf8')); } catch (e) { console.warn('Failed to load aktienfinder.json:', e.message); }
+    try {
+      existing = JSON.parse(fs.readFileSync(outPath, 'utf8'));
+    } catch (e) {
+      const backup = outPath + '.corrupt.' + Date.now();
+      try { fs.copyFileSync(outPath, backup); } catch (_) {}
+      console.error('ERROR: aktienfinder.json is corrupt (' + e.message + '). Backup saved to ' + backup);
+      if (process.env.RESET_AKTIENFINDER !== '1') {
+        console.error('Refusing to overwrite — set RESET_AKTIENFINDER=1 to start fresh.');
+        process.exit(1);
+      }
+      console.warn('RESET_AKTIENFINDER=1 set — proceeding with empty base history.');
+    }
   }
   const merged = Object.assign(existing, data);
   writeFileAtomic(outPath, JSON.stringify(merged, null, 2));

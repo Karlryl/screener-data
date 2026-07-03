@@ -71,7 +71,12 @@ const CRITICAL_FIELDS = [
   { id: 'metrics.forwardPE',    weight: 0.5, check: s => _hasMetric(s.metrics && s.metrics.forwardPE) },
   // === Tag 220c additions ===
   { id: 'timeseries.netIncomeQ>=4', weight: 0.5, check: s => _arrLen(s.timeseries && s.timeseries.netIncomeQ) >= 4 },
-  { id: 'meta.earningsHistory', weight: 0.5, check: s => !!(s.meta && s.meta.earningsHistory) }
+  // audit/fix (A2 2026-06-26): earningsHistory is written to external.earningsHistory
+  // (pull-yahoo.js ~line 1053), NOT meta. The old `s.meta.earningsHistory` check was
+  // ALWAYS false, so every snapshot silently counted this 0.5-weight field as missing —
+  // inflating nanRatio by 0.5/TOTAL_WEIGHT universe-wide and nudging borderline snapshots
+  // one grade band worse. Read the correct path.
+  { id: 'external.earningsHistory', weight: 0.5, check: s => !!(s.external && s.external.earningsHistory) }
 ];
 
 const TOTAL_WEIGHT = CRITICAL_FIELDS.reduce((sum, f) => sum + f.weight, 0);
@@ -176,10 +181,24 @@ function gradeSnapshot(snapshot) {
   else if (nanRatio <= GRADE_THRESHOLDS.B) grade = 'B';
   else if (nanRatio <= GRADE_THRESHOLDS.C) grade = 'C';
   else grade = 'D';
+  // audit/fix: critical-field floor — empty/garbage snapshot must not grade above D (was pure nanRatio, no hard gate)
+  // marketCap and metrics.revenueTTM are the load-bearing identity/valuation fields;
+  // if either is absent/null/non-finite, the snapshot is unusable regardless of how
+  // many secondary fields happen to be present, so floor the grade to 'D' (→ REJECT
+  // via tierCapForGrade under DATAQUALITY_ENFORCE). When both are present, behaviour
+  // is UNCHANGED. NB: `price` is NOT floored — the full-pull mapYahooToCanonical never
+  // builds snapshot.price (it exists only on the price-only fast-path, see pull-yahoo.js
+  // ~line 343), so gating on it would force every full-pull snapshot to D.
+  let criticalMissing = false;
+  if (!_hasMetric(snapshot.marketCap) || !_hasMetric(snapshot.metrics && snapshot.metrics.revenueTTM)) {
+    criticalMissing = true;
+    grade = 'D';
+  }
   return {
     grade,
     nanRatio: Math.round(nanRatio * 1000) / 1000,
     missingFields: missing,
+    criticalMissing,
     computedAt: new Date().toISOString()
   };
 }
@@ -212,5 +231,9 @@ module.exports = {
   tierCapForGrade,
   CRITICAL_FIELDS,
   GRADE_THRESHOLDS,
-  TOTAL_WEIGHT
+  TOTAL_WEIGHT,
+  // F-DQ-004: export the canonical scalar-metric presence predicate so the
+  // data-quality report reuses the grader's finite-number test instead of its
+  // own divergent `.value != null` check. One definition of "present".
+  _hasMetric
 };

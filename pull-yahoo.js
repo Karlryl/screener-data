@@ -34,13 +34,10 @@ const { writeFileAtomic } = require('./lib/atomic-write.js');
 // breaking `git checkout` and `git pull` for any Windows developer. Prefix such
 // tickers with `_` so the filename is portable. The ticker inside the JSON is
 // unchanged — only the on-disk filename differs.
-const WINDOWS_RESERVED = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i;
-function safeSnapshotFilename(ticker) {
-  const sanitized = String(ticker).replace(/[^A-Z0-9.-]/gi, '_');
-  const stem = sanitized.split('.')[0];
-  if (WINDOWS_RESERVED.test(stem)) return '_' + sanitized + '.json';
-  return sanitized + '.json';
-}
+// audit/fix: inline safeSnapshotFilename diverged from lib (writer/reader mismatch on reserved/dotted stems) — use canonical lib/snapshot-fs.js
+const { safeSnapshotFilename } = require('./lib/snapshot-fs.js');
+const { detectNewestQtrSuspect } = require('./lib/newest-qtr-guard.js');
+const { detectAnnualCurrencyLeak } = require('./lib/annual-currency-guard.js');
 
 let YahooFinance;
 try {
@@ -88,6 +85,36 @@ const yf = new YahooFinance({
 // Composes with Tag 164 staleness-sort: oldest first → full pull, recent → price-only.
 const FUNDAMENTALS_MAX_AGE_DAYS = parseInt(process.env.FUNDAMENTALS_MAX_AGE_DAYS || '7', 10);
 const FUNDAMENTALS_MAX_AGE_MS = FUNDAMENTALS_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+
+// audit/fix F3 (2026-06-25): SEPARATE full-pull clock. The price-only fast path
+// resets meta.asOf on every daily run, and the price-only eligibility gate reads
+// that SAME meta.asOf (age < FUNDAMENTALS_MAX_AGE_MS) — so once a snapshot has the
+// current schema, asOf is bumped to "today" each day and the age never crosses 7d,
+// meaning a FULL pull (the only path that refreshes annual/metrics/FTS) NEVER runs
+// again → fundamentals freeze indefinitely while asOf shows "today". Fix: stamp
+// meta.fundamentalsAsOf ONLY on a successful full pull, NEVER touch it in
+// _priceOnlyUpdate, and force a full pull when it ages past FUNDAMENTALS_REFRESH_DAYS.
+const FUNDAMENTALS_REFRESH_DAYS = parseInt(process.env.FUNDAMENTALS_REFRESH_DAYS || '30', 10);
+const FUNDAMENTALS_REFRESH_MS = FUNDAMENTALS_REFRESH_DAYS * 24 * 60 * 60 * 1000;
+
+// audit/fix F3-budget (2026-06-25): per-run cap on TIME-based fundamentals-stale
+// forced full pulls. The F3 fix forces a slow full pull whenever fundamentalsAsOf
+// (or fetchedAt) ages past FUNDAMENTALS_REFRESH_DAYS. Because the schema-stale wave
+// clustered a large cohort's seed timestamps, that cohort can re-expire together and
+// all take the slow full-pull path in ONE run — collapsing n_ok below the coverage
+// gate floor (max(2500, total*0.13), a hard CI fail). Since pullAll processes
+// oldest-staleness-first, we honor time-based forced fulls only while a per-run
+// counter is under budget; once exhausted, the remaining time-stale tickers fall
+// back to price-only and are caught next run (still oldest-first). Schema-stale and
+// currency-stale forced fulls are correctness-critical and rare — they are NEVER
+// budgeted. Generous default so normal runs are unaffected; only a mass re-expiry
+// stampede ever hits the cap.
+const FUNDAMENTALS_REFRESH_BUDGET = (() => {
+  const v = parseInt(process.env.FUNDAMENTALS_REFRESH_BUDGET || '', 10);
+  return (Number.isFinite(v) && v >= 0) ? v : 4000;
+})();
+let _fundamentalsRefreshUsed = 0;   // per-run counter, reset at the top of pullAll
+let _fundamentalsRefreshDeferred = 0; // tickers deferred to price-only this run (logged)
 
 // Market-cap floor (USD). Env-configurable so a wider universe sweep — e.g.
 // "screen every US company" — can lower it without a code edit, and so the
@@ -168,7 +195,15 @@ for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded
       console.log('[FX] fx-rates.json is ' + ageDays.toFixed(1) + 'd old — using fallback');
       return;
     }
-    FX_TO_USD = Object.assign({}, FX_FALLBACK, raw.rates);
+    // F-DP-008: raw.rates may carry verbatim casing (e.g. "Eur", "gbp") while
+    // every lookup uppercases the currency (FX_TO_USD[ccy.toUpperCase()]). An
+    // Object.assign of raw.rates verbatim leaves lower/mixed-case keys that the
+    // uppercased reads never hit — the rate is silently ignored and the value
+    // falls through to FX_FALLBACK (or stale). Seed the table uppercased.
+    FX_TO_USD = Object.assign({}, FX_FALLBACK);
+    for (const [k, rate] of Object.entries(raw.rates)) {
+      FX_TO_USD[k.toUpperCase()] = rate;
+    }
     FX_SOURCE = 'fx-rates.json @ ' + (raw.fetchedAt || 'unknown');
     // F-DP-051 / F-DQ-008 (Tag 188): per-currency staleness gate.
     // refresh-fx now writes currencyMeta[c].lastSuccessAt per-currency, but the
@@ -227,13 +262,6 @@ for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded
     console.log('[FX] fx-rates.json load failed: ' + e.message + ' — using fallback');
   }
 })();
-function _convertToUSD(value, currency) {
-  if (value == null || !currency) return value;
-  const rate = FX_TO_USD[currency.toUpperCase()];
-  if (rate == null) return value;
-  return value * rate;
-}
-
 // Tag 134: stable region enum derived from currency + exchangeName.
 // Replaces the prior bug where meta.region held Yahoo's raw exchangeName
 // like "NasdaqGS" / "Frankfurt", which the engine then compared against
@@ -302,8 +330,13 @@ function _convertSnapshotToUSD(snap) {
   // Tag 148: British pence (GBp/GBX) — Yahoo quotes some UK shares in pence, not pounds.
   // marketCap and financial values are already 100x too small relative to GBP.
   // Divide by 100 first to convert pence → pounds, then apply the GBP→USD rate.
-  // F-DQ-003: case-insensitive match including GBX variant
-  const isPence = /^GB[Xp]$/i.test(origCurrency) || origCurrency.toUpperCase() === 'GBPENCE';
+  // audit/fix GBP-pence (2026-06-25): case-SENSITIVE pence test. The previous
+  // /^GB[Xp]$/i used the /i flag, so the char class [Xp] also matched the uppercase
+  // 'P' in 'GBP' → GBP (pounds) was misclassified as pence → factor = GBP_rate/100
+  // → ALL GBP-reported financials (revenue/EBITDA/EV, every annual & timeseries
+  // series) came out 100× too small. Genuine pence currencies are 'GBp' (lowercase p)
+  // and 'GBX' (uppercase X); pounds is 'GBP'. Match ONLY genuine pence, exactly.
+  const isPence = origCurrency === 'GBp' || origCurrency === 'GBX' || origCurrency.toUpperCase() === 'GBPENCE';
   const fxKey = isPence ? 'GBP' : origCurrency.toUpperCase();
 
   const rate = FX_TO_USD[fxKey];
@@ -344,11 +377,25 @@ function _convertSnapshotToUSD(snap) {
   // tradingCcy comes from snap.price.currency (Yahoo's quote response,
   // captured by the mapper). When it differs from origCurrency, the
   // ticker is an ADR-class and trading-fx-rate applies to mcap/price.
-  const tradingCcyRaw = (snap.price && snap.price.currency) ? String(snap.price.currency) : null;
+  // NEW-2/NEW-3 (2026-06-13 audit): snap.price is ONLY present on the
+  // price-only fast-path; the full-pull mapper never builds snap.price, so
+  // tradingCcyRaw was always null on full pulls and the ADR trading-factor
+  // override (and the F-DQ-001 analyst-target fix that depends on it) were
+  // dead — ADR marketCap/targets were silently scaled by the reporting-ccy
+  // factor (~32× off for TWD-reporting ADRs like TSM). Fall back to
+  // snap.meta.tradingCurrency (mapper line 814), which carries the trading
+  // quote currency on every full pull.
+  const tradingCcyRaw = (snap.price && snap.price.currency)
+    ? String(snap.price.currency)
+    : ((snap.meta && snap.meta.tradingCurrency) ? String(snap.meta.tradingCurrency) : null);
   let tradingFactor = factor;  // default: equals financial factor (no special handling)
   let tradingOverride = false;
   if (tradingCcyRaw && tradingCcyRaw.toUpperCase() !== origCurrency.toUpperCase()) {
-    const tradingPence = /^GB[Xp]$/i.test(tradingCcyRaw) || tradingCcyRaw.toUpperCase() === 'GBPENCE';
+    // audit/fix GBP-pence (2026-06-25): case-SENSITIVE pence test (see ~line 313).
+    // /^GB[Xp]$/i matched the 'P' in 'GBP' under /i → GBP trading ccy was treated as
+    // pence → trading marketCap/price scaled by GBP_rate/100 (100× too small).
+    // Match ONLY genuine pence: 'GBp' (lowercase p) or 'GBX' (uppercase X).
+    const tradingPence = tradingCcyRaw === 'GBp' || tradingCcyRaw === 'GBX' || tradingCcyRaw.toUpperCase() === 'GBPENCE';
     const tradingKey = tradingPence ? 'GBP' : tradingCcyRaw.toUpperCase();
     const tradingRate = FX_TO_USD[tradingKey];
     if (tradingRate != null && Number.isFinite(tradingRate)) {
@@ -356,6 +403,22 @@ function _convertSnapshotToUSD(snap) {
       tradingOverride = true;
       snap.meta.tradingCurrencyOriginal = tradingCcyRaw;
       snap.meta.tradingFxRateApplied = tradingFactor;
+    } else {
+      // audit/fix F4 (2026-06-25): FAIL CLOSED. The trading currency differs from the
+      // reporting currency (ADR-class) but FX_TO_USD has no finite rate for it. The
+      // old code silently left tradingFactor = reporting `factor`, so marketCap (and
+      // analyst targets) got scaled by the WRONG rate and the snapshot was written
+      // with a mis-scaled mcap and NO flag — exactly the silent corruption the
+      // reporting-missing branch (~line 306) already guards against. Mirror that
+      // branch: flag fxConversionFailed (+ a directional tradingFxMissing marker) and
+      // return so the full-pull loop's fxConversionFailed skip (~line 2088) DROPS the
+      // ticker instead of persisting a silently mis-scaled marketCap.
+      snap.meta.tradingCurrencyOriginal = tradingCcyRaw;
+      snap.meta.tradingFxRateApplied = null;
+      snap.meta.tradingFxMissing = true;
+      snap.meta.fxConversionFailed = true;
+      snap.meta.fxConverted = false;
+      return snap;
     }
   }
 
@@ -412,23 +475,34 @@ function _convertSnapshotToUSD(snap) {
   const CCY_DENOMINATED_METRICS = [
     'revenueTTM',
     'fcfTTM',            // currently absent from metrics.* but reserved
-    'ebitda',            // currently absent — reserved for future EV-EBITDA refactor
-    'enterpriseValue',   // currently absent — reserved
+    'ebitda',            // POPULATED (Tag 219, financialData.ebitda) — reporting ccy, scaled by `factor` here. Correct: EBITDA is an income-statement quantity in the reporting currency.
+    'enterpriseValue',   // POPULATED (Tag 219, defaultKeyStatistics.enterpriseValue) — scaled by reporting `factor` here. F2 (audit 2026-06-25) flagged a SUSPECTED mis-scale for dual-non-USD ADRs (trading HKD / reporting CNY): EV is market-derived (mcap + net debt) and Yahoo MAY report it in the TRADING currency like marketCap (which uses scaleTrading/tradingFactor). NEEDS-LIVE-CONFIRMATION of Yahoo's source currency before moving to the trading-factor list — empirical EV/mcap ratios on existing snapshots are consistent with reporting-ccy scaling, so NOT changed.
     'bookValuePerShare', // currently absent — reserved
-    'cashPerShare',      // currently absent — reserved
-    // F-DP-004 / F-DQ-009 (Tag 233d): analyst price targets are in the reporting
-    // currency (same as prices). Without FX conversion they are raw GBP/EUR/etc.
-    // while currentPrice is USD → analyst-upside ratio is wrong for non-USD tickers.
-    'targetMeanPrice',
-    'targetMedianPrice'
+    'cashPerShare'       // currently absent — reserved
   ];
   if (snap.metrics) {
     for (const k of CCY_DENOMINATED_METRICS) {
       if (snap.metrics[k]) snap.metrics[k] = scale(snap.metrics[k]);
     }
+    // F-DQ-001 (Tag 233d): analyst price targets are quoted in TRADING currency
+    // (same as `price`/`marketCap`), NOT the financial-reporting currency. Route
+    // them through scaleTrading() (tradingFactor), mirroring how marketCap is
+    // handled — scale()'s reporting `factor` mis-prices targets for ADR-class
+    // tickers where tradingFactor !== factor. (Non-ADR: tradingFactor === factor,
+    // so this is a no-op; the analyst-upside ratio vs currentPrice stays correct.)
+    const CCY_DENOMINATED_TRADING_METRICS = ['targetMeanPrice', 'targetMedianPrice'];
+    for (const k of CCY_DENOMINATED_TRADING_METRICS) {
+      if (snap.metrics[k]) snap.metrics[k] = scaleTrading(snap.metrics[k]);
+    }
   }
   if (snap.annual) {
     for (const key of Object.keys(snap.annual)) {
+      // NEW-4 (2026-06-13 audit): annualShares is a unit-less share COUNT, not a
+      // currency amount. FX-scaling it inflated absolute share counts by the FX
+      // factor for non-USD reporters (corrupting dcf-intrinsic-value's per-share
+      // math) and desynced it from the unscaled meta.sharesOutstanding. YoY-ratio
+      // consumers cancel the factor and are unaffected either way. Skip scaling.
+      if (key === 'annualShares') continue;
       if (Array.isArray(snap.annual[key])) snap.annual[key] = snap.annual[key].map(scale);
     }
   }
@@ -468,13 +542,22 @@ function _metric(value, source, confidence, asOf) {
   return { value, source, confidence, asOf };
 }
 
+// bug-fix (audit 2026-06-21): trim only TRAILING nulls, preserving interior null years so sibling
+// annual arrays stay positionally aligned (methods zip annualRev[i] with annualOpInc[i]/annualFCF[i]
+// /annualOCF[i] by index). The old .filter(Boolean) compacted nulls per-array, desyncing the index
+// across fields. Matches the FTS path (_ftsExtractByYear) and annualRnD, which already null-preserve.
+function _trimTrailingNull(mapped) {
+  let end = mapped.length;
+  while (end > 0 && mapped[end - 1] == null) end--;
+  return mapped.slice(0, end);
+}
+
 function _arr(history, key) {
   if (!Array.isArray(history)) return [];
-  return history.map(r => {
+  return _trimTrailingNull(history.map(r => {
     const v = _y(r, key);
-    if (v == null) return null;
-    return { value: v };
-  }).filter(Boolean);
+    return v == null ? null : { value: v };
+  }));
 }
 
 // ─── Tag 203: Fintech-aware OpInc fallback ────────────────────────
@@ -636,21 +719,21 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   // P0-Fix Tag 13: capex-fallback `|| 0` ist gefährlich.
   // NVDA hat real $35B Capex/Jahr — wegfallen lassen verfälscht FCF um Milliarden.
   // Wenn capex unknown, FCF=null statt overstated.
-  const annualFCF = (cfHist || []).map(r => {
+  const annualFCF = _trimTrailingNull((cfHist || []).map(r => {
     const op = _y(r, 'totalCashFromOperatingActivities');
     const capex = _y(r, 'capitalExpenditures');
-    if (op == null || capex == null) return null;
+    if (op == null || capex == null) return null;  // interior null preserved (positional alignment)
     return { value: op + capex };  // Yahoo capex ist negativ → echte Subtraktion
-  }).filter(Boolean);
+  }));
   // Bug #23: annualOCF never written to snapshot — premium-compounder-proof check #6
   // ((Capex+R&D)/OCF) was always computable:false. Extract OCF directly from cfHist.
-  const annualOCF = (cfHist || []).map(r => {
+  const annualOCF = _trimTrailingNull((cfHist || []).map(r => {
     const op = _y(r, 'totalCashFromOperatingActivities');
-    return op != null ? { value: op } : null;
-  }).filter(Boolean);
+    return op != null ? { value: op } : null;  // interior null preserved (positional alignment)
+  }));
   // P0-Fix Tag 13: 0+0 wenn beide undefined ist semantisch falsch — Engine sieht Debt=0 statt null.
   // Plus: Yahoo-Field-Name-Drift seit Nov 2024 — multi-fallback für cash.
-  const annualBalance = (bsHist || []).map(r => {
+  const annualBalance = _trimTrailingNull((bsHist || []).map(r => {
     const cash = _y(r, 'cash')
               ?? _y(r, 'cashAndCashEquivalents')
               ?? _y(r, 'cashAndShortTermInvestments');
@@ -662,12 +745,22 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     // when either component is missing would destroy leverage data for all of them.
     // The understatement risk is surfaced instead: _debtPartial is persisted and
     // net-debt-ebitda exposes it as debtPartialFlag in its components.
+    // audit F-A-2026-06-21: the _debtPartial flag's consumer-contract risk —
+    // it is a boolean that says NOTHING about which leg is missing, so every
+    // downstream method must individually opt in to size the understatement and
+    // most don't. Hardening (summing itself is out-of-scope / forbidden to change):
+    // also persist _debtPartialReason so consumers can tell a missing current-debt
+    // line (usually benign) from a missing long-term-debt line (materially
+    // understates leverage). Failure mode prevented: silent leverage
+    // understatement going unsized because the partial-debt signal carried no
+    // direction.
     const totalDebt = (std == null && ltd == null) ? null : (std || 0) + (ltd || 0);
     const _debtPartial = totalDebt != null && (std == null || ltd == null); // F-DQ-001
+    const _debtPartialReason = _debtPartial ? (std == null ? 'no-current-debt' : 'no-long-term-debt') : null; // audit F-A-2026-06-21
     const totalAssets = _y(r, 'totalAssets');
-    if (cash == null && totalDebt == null && totalAssets == null) return null;
-    return { totalCash: cash, totalDebt, totalAssets, ...(_debtPartial ? { _debtPartial: true } : {}) };
-  }).filter(Boolean);
+    if (cash == null && totalDebt == null && totalAssets == null) return null;  // interior null preserved
+    return { totalCash: cash, totalDebt, totalAssets, ...(_debtPartial ? { _debtPartial: true, _debtPartialReason } : {}) };
+  }));
 
   // Quartalsweise Timeseries (latest first → wir flippen NICHT, Engine erwartet latest=index 0)
   const revenueQ = _arr(isHistQ, 'totalRevenue');
@@ -1078,12 +1171,28 @@ function mapFTSToAnnual(annualRows, cashRows) {
     const oi = _ftsValue(r, 'operatingIncome', 'OperatingIncome', 'totalOperatingIncomeAsReported');
     const gp = _ftsValue(r, 'grossProfit', 'GrossProfit');
     const ni = _ftsValue(r, 'netIncome', 'NetIncome', 'netIncomeContinuousOperations');
-    // Skip completely empty rows (no rev AND no derivative fields) — those add no info.
-    if (rev == null && oi == null && gp == null && ni == null) continue;
+    // audit/fix F1 (2026-06-25): was `continue` on an all-empty income row. But
+    // annualRnD/SGA/Depreciation/Shares are built by _ftsExtractByYear over the
+    // SAME fts.annualFin rows WITHOUT any skip (null-preserving). So an interior
+    // income-empty-but-RnD-present year was dropped from annualRev/OpInc/GP/NI
+    // while kept in annualRnD/SGA/Shares → year-index drift between arrays read
+    // off identical rows. Push null placeholders for ALL four income arrays (the
+    // same no-skip convention as mapFTSToBalance/mapFTSToQuarterly/_ftsExtractByYear),
+    // then trim trailing all-null rows below. Consumers already null-check in place.
     annualRev.push(rev != null ? { value: rev } : null);
     annualOpInc.push(oi != null ? { value: oi } : null);
     annualGP.push(gp != null ? { value: gp } : null);
     annualNetIncome.push(ni != null ? { value: ni } : null);
+  }
+  // audit/fix F1 (2026-06-25): trim trailing all-null income rows (oldest) — no
+  // information to contribute; mirrors mapFTSToQuarterly's trailing-null trim so
+  // the arrays stay tight while interior nulls (which carry alignment) are kept.
+  while (annualRev.length > 0 &&
+         annualRev[annualRev.length - 1] == null &&
+         annualOpInc[annualOpInc.length - 1] == null &&
+         annualGP[annualGP.length - 1] == null &&
+         annualNetIncome[annualNetIncome.length - 1] == null) {
+    annualRev.pop(); annualOpInc.pop(); annualGP.pop(); annualNetIncome.pop();
   }
   // FCF + OCF aus cash-flow-Module.
   // F-DP-101 (audit 2026-06-11): the old `continue` on pure-empty rows COMPACTED
@@ -1142,8 +1251,12 @@ function mapFTSToBalance(bsRows) {
     const ltd = _ftsValue(r, 'longTermDebt');
     // F-NY-002: absence-as-zero kept deliberately — see the quoteSummary-mapper
     // twin site for the full rationale (12.4% of snapshots are _debtPartial).
+    // audit F-A-2026-06-21: mirror the twin site's _debtPartialReason so the
+    // partial-debt signal carries direction (which leg is missing) — same
+    // consumer-contract failure mode (unsized leverage understatement).
     const totalDebt = (std == null && ltd == null) ? null : (std || 0) + (ltd || 0);
     const _debtPartial = totalDebt != null && (std == null || ltd == null); // F-DQ-001
+    const _debtPartialReason = _debtPartial ? (std == null ? 'no-current-debt' : 'no-long-term-debt') : null; // audit F-A-2026-06-21
     const totalAssets = _ftsValue(r, 'totalAssets');
     // Tag 211l extensions (Beneish/Ohlson inputs). All nullable.
     const accountsReceivable = _ftsValue(r, 'accountsReceivable', 'receivables');
@@ -1168,7 +1281,7 @@ function mapFTSToBalance(bsRows) {
       currentLiabilities,
       totalLiabilities,
       totalEquity,
-      ...(_debtPartial ? { _debtPartial: true } : {})
+      ...(_debtPartial ? { _debtPartial: true, _debtPartialReason } : {}) // audit F-A-2026-06-21: persist which debt leg is absent
     });
   }
   // Trim trailing nulls — no information to contribute, keeps arrays tidy.
@@ -1213,16 +1326,12 @@ function mapFTSToQuarterly(quarterlyRows) {
 
 async function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// Tag 145: per-ticker timeout wrapper — prevents one hanging socket from
-// freezing the entire batch. Yahoo occasionally stalls indefinitely on rate-limit
-// or network issues; without this a single stuck ticker blocks all concurrent slots.
-function _withTimeout(promise, ms, label) {
-  let timer;
-  const timeout = new Promise((_, reject) => {
-    timer = setTimeout(() => reject(new Error(`ETIMEDOUT after ${ms}ms (${label})`)), ms);
-  });
-  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
-}
+// audit F-A-2026-06-21: _withTimeout removed — dead code fully superseded by
+// _withAbortTimeout (F-PY-102). The non-aborting Promise.race variant left
+// timed-out yahoo-finance2 calls occupying their queue slot as zombies; every
+// call site (quoteSummaryWithRetry, quote, FTS) already uses _withAbortTimeout.
+// Failure mode prevented: a stray future call site re-using the non-cancelling
+// wrapper and re-introducing the queue-zombie throughput collapse.
 
 // F-PY-102 (audit 2026-06-11): the plain Promise.race above stops WAITING for a
 // hung request but does NOT cancel it — yahoo-finance2 runs every fetch inside an
@@ -1291,6 +1400,10 @@ function sortByStaleness(stocks, outputDir) {
 
 async function pullAll(watchlist, outputDir, rateLimitMs) {
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+  // audit/fix F3-budget (2026-06-25): reset the per-run time-based fundamentals-stale
+  // counters so the budget is fresh each pullAll invocation.
+  _fundamentalsRefreshUsed = 0;
+  _fundamentalsRefreshDeferred = 0;
   const results = [];
   const failures = [];
   // Tag-80: Parallel pulls in batches of CONCURRENCY
@@ -1426,12 +1539,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // the existing `cached._cacheVersion !== FTS_CACHE_VERSION` branch (the
   // cache file's _cacheVersion is `undefined` for pre-Tag-211l caches, so
   // that branch already handles the FTS-cache side correctly).
-  function _existingSnapshotMissingTag211lFields(ticker) {
+  // audit F-A-2026-06-21: accepts an already-parsed snapshot object instead of
+  // re-reading+re-parsing the file. The schema-stale and currency-stale probes
+  // plus _priceOnlyUpdate previously each did a full readFileSync+JSON.parse —
+  // 3× parse per fast-path ticker on the ~80%-hit price-only path. Single parse
+  // is now shared across all three (see processOne). Failure mode prevented:
+  // wasteful triple-parse CPU/IO blowup on the hottest code path.
+  function _existingSnapshotMissingTag211lFields(s) {
     try {
-      const fp = path.join(outputDir, safeSnapshotFilename(ticker));
-      if (!fs.existsSync(fp)) return false;
-      const raw = fs.readFileSync(fp, 'utf8');
-      const s = JSON.parse(raw);
+      if (!s) return false;
       const A = s && s.annual;
       if (!A) return false;
       // If the snapshot has no annualRev at all, it's a price-only seed
@@ -1477,12 +1593,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // are NOT re-flagged here — they already carry the failure marker and
   // would just fail again. The full-pull path's existing fxConversionFailed
   // skip filters them out cleanly.
-  function _existingSnapshotMissingCurrencyNormalization(ticker) {
+  // audit F-A-2026-06-21: accepts an already-parsed snapshot object (see the
+  // schema probe twin above) — shares the single parse done in processOne
+  // instead of a second readFileSync+JSON.parse. Failure mode prevented:
+  // redundant parse on the fast-path ticker.
+  function _existingSnapshotMissingCurrencyNormalization(s) {
     try {
-      const fp = path.join(outputDir, safeSnapshotFilename(ticker));
-      if (!fs.existsSync(fp)) return false;
-      const raw = fs.readFileSync(fp, 'utf8');
-      const s = JSON.parse(raw);
+      if (!s) return false;
       const m = s && s.meta;
       if (!m) return false;
       // Price-only seeds (no annualRev) carry no FX-denominated series yet —
@@ -1507,10 +1624,18 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   }
 
   // Tag 166: lightweight price-only update — preserves fundamentals from previous snapshot
-  async function _priceOnlyUpdate(stock, outputDir) {
+  // audit F-A-2026-06-21: accepts an optional pre-parsed snapshot (preParsed) so
+  // the fast-path doesn't parse the file a THIRD time after the schema/currency
+  // probes already parsed it. Falls back to read+parse when called without one
+  // (preserves the original contract for any other caller). Failure mode
+  // prevented: triple JSON.parse per fast-path ticker.
+  async function _priceOnlyUpdate(stock, outputDir, preParsed) {
     const fp = path.join(outputDir, safeSnapshotFilename(stock.ticker));
-    if (!fs.existsSync(fp)) throw new Error('no existing snapshot to update');
-    const existing = JSON.parse(fs.readFileSync(fp, 'utf8'));
+    let existing = preParsed;
+    if (existing == null) {
+      if (!fs.existsSync(fp)) throw new Error('no existing snapshot to update');
+      existing = JSON.parse(fs.readFileSync(fp, 'utf8'));
+    }
     const q = await _withAbortTimeout((signal) => yf.quote(stock.yahoo_symbol, undefined, { fetchOptions: { signal } }), 8000, stock.ticker + '/quote-only'); // F-PY-102: abortable
     if (!q) throw new Error('quote returned null');
     // Update only fields that change daily
@@ -1543,7 +1668,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     const tradingCcyRaw = (q.currency || (existing.price && existing.price.currency) || '').toString();
     let tradingFactor;
     if (tradingCcyRaw) {
-      const isPence = /^GB[Xp]$/i.test(tradingCcyRaw) || tradingCcyRaw.toUpperCase() === 'GBPENCE';
+      // audit/fix GBP-pence (2026-06-25): case-SENSITIVE pence test (see ~line 313).
+      // Same /^GB[Xp]$/i defect in the price-only fast path — under /i it misclassified
+      // 'GBP' (pounds) trading quotes as pence, scaling price/marketCap by GBP_rate/100.
+      // Match ONLY genuine pence: 'GBp' (lowercase p) or 'GBX' (uppercase X).
+      const isPence = tradingCcyRaw === 'GBp' || tradingCcyRaw === 'GBX' || tradingCcyRaw.toUpperCase() === 'GBPENCE';
       const tradingFxKey = isPence ? 'GBP' : tradingCcyRaw.toUpperCase();
       const tradingRate = FX_TO_USD[tradingFxKey];
       if (tradingRate != null && Number.isFinite(tradingRate)) {
@@ -1559,12 +1688,36 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     }
     if (q.regularMarketPrice != null) {
       existing.price = existing.price || {};
-      existing.price.regularMarketPrice = q.regularMarketPrice * tradingFactor;
+      // audit F-A-2026-06-21: prevented failure mode — "price-field currency
+      // drifts between full-pull and price-only refreshes". The price-only path
+      // converts price to USD (`* tradingFactor`), while the full-pull mapper
+      // never builds snap.price and _convertSnapshotToUSD deliberately leaves any
+      // price in trading currency (see lines ~411-414). So consumers reading
+      // existing.price.regularMarketPrice could not tell whether the number was
+      // USD (after a price-only refresh) or trading-ccy/absent (after a full
+      // pull). We fix the invariant to "stored regularMarketPrice is USD" (the
+      // behavior price-only already had and downstream price-only consumers rely
+      // on) and record it explicitly in meta so consumers interpret the field
+      // from meta.priceCurrency instead of guessing — closing the drift.
+      const usdPrice = q.regularMarketPrice * tradingFactor;
+      if (!Number.isFinite(usdPrice)) {
+        // Never write a non-finite price; that would corrupt the invariant just
+        // asserted (USD numeric). Refuse the fast-path so a full pull recomputes.
+        throw new Error('price-only refused: non-finite USD price (raw=' + q.regularMarketPrice + ', tradingFactor=' + tradingFactor + ')');
+      }
+      existing.price.regularMarketPrice = usdPrice;
+      // audit F-A-2026-06-21: assert + record the price unit on write so the
+      // field is self-describing and the full-pull/price-only ambiguity is gone.
+      existing.price.currencyUnit = 'USD';
+      existing.meta = existing.meta || {};
+      existing.meta.priceCurrency = 'USD';
       // F-DP-040 (Tag 182): previously this overwrote existing.price.currency with
       // Yahoo's live value, flipping GBp ↔ GBP and breaking the invariant against
       // meta.reportingCurrencyOriginal. The snapshot's reporting currency is set
       // at full-pull time and must remain stable; only update if the existing
-      // field is missing.
+      // field is missing. NOTE: price.currency is the ORIGINAL trading-quote ccy
+      // (provenance of the raw quote); the stored regularMarketPrice number is in
+      // USD per meta.priceCurrency — these are intentionally distinct.
       if (existing.price.currency == null) existing.price.currency = q.currency;
     }
     if (q.marketCap != null) {
@@ -1632,16 +1785,75 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // working-capital-trend, and ohlson-o-score at <2% coverage indefinitely.
       const age = _getExistingSnapshotAge(stock.ticker);
       const youngEnough = age != null && age < FUNDAMENTALS_MAX_AGE_MS;
+      // audit F-A-2026-06-21: parse the young snapshot ONCE here and share the
+      // object across both staleness probes AND _priceOnlyUpdate. Previously
+      // each of the three did its own readFileSync+JSON.parse → 3× parse per
+      // fast-path ticker (the ~80%-hit path). Failure mode prevented: redundant
+      // triple parse of every young snapshot.
+      let _parsedSnapshot = null;
+      if (youngEnough) {
+        try {
+          const _fp = path.join(outputDir, safeSnapshotFilename(stock.ticker));
+          if (fs.existsSync(_fp)) _parsedSnapshot = JSON.parse(fs.readFileSync(_fp, 'utf8'));
+        } catch (_) { _parsedSnapshot = null; }
+      }
       const staleSchema = youngEnough
-        ? _existingSnapshotMissingTag211lFields(stock.ticker)
+        ? _existingSnapshotMissingTag211lFields(_parsedSnapshot)
         : false;
       // Tag 230a: separate sibling probe for mixed-currency envelopes.
       const staleCurrency = youngEnough
-        ? _existingSnapshotMissingCurrencyNormalization(stock.ticker)
+        ? _existingSnapshotMissingCurrencyNormalization(_parsedSnapshot)
         : false;
-      if (youngEnough && !staleSchema && !staleCurrency) {
+      // audit/fix F3 (2026-06-25): time-based fundamentals-refresh probe. Reads the
+      // SEPARATE full-pull clock (meta.fundamentalsAsOf, stamped only on full pulls)
+      // — NOT meta.asOf, which _priceOnlyUpdate resets daily. If fundamentals are
+      // older than FUNDAMENTALS_REFRESH_DAYS, force a full pull so annual/metrics/FTS
+      // actually refresh instead of freezing behind an ever-young asOf.
+      // Backward-compat: snapshots written before this fix carry no fundamentalsAsOf.
+      // Fall back to meta.fetchedAt — NOT meta.asOf. asOf is RESET to "today" by
+      // _priceOnlyUpdate on every daily refresh, so a pre-existing snapshot that is
+      // schema- and currency-current would price-only forever, keep asOf < 30d
+      // indefinitely, and NEVER force a full pull → fundamentalsAsOf is never seeded
+      // and fundamentals freeze permanently (the exact bug F3 targets, for the exact
+      // ~pre-existing population it targets). meta.fetchedAt, by contrast, is written
+      // ONLY by the full-pull mapper (mapYahooToCanonical, ~line 872) and is NEVER
+      // touched by _priceOnlyUpdate, so it is a faithful "last full pull" clock. As a
+      // pre-existing snapshot's fetchedAt naturally ages past FUNDAMENTALS_REFRESH_DAYS
+      // it forces one full pull, which seeds fundamentalsAsOf; thereafter the real
+      // fundamentalsAsOf clock governs. No day-1 stampede: fetchedAt values are spread
+      // across the universe's last-full-pull dates, so only the genuinely-overdue
+      // (>30d) fraction force-fulls on any given run — verified ~39% (1837/4681) on
+      // the live universe, not 100%. Missing/unparseable timestamp → not forced.
+      const staleFundamentals = (youngEnough && _parsedSnapshot && _parsedSnapshot.meta)
+        ? (() => {
+            const m = _parsedSnapshot.meta;
+            const anchor = m.fundamentalsAsOf || m.fetchedAt;
+            if (!anchor) return false;
+            const t = new Date(anchor).getTime();
+            if (!Number.isFinite(t)) return false;
+            return (Date.now() - t) > FUNDAMENTALS_REFRESH_MS;
+          })()
+        : false;
+      // audit/fix F3-budget (2026-06-25): apply the per-run budget to TIME-based
+      // forced fulls only. If this ticker is ALSO schema- or currency-stale, it takes
+      // the full pull for correctness regardless (free ride) and must not consume the
+      // time budget. Otherwise — when staleFundamentals is the SOLE reason — honor it
+      // only while under budget; once the budget is exhausted this run, defer the
+      // ticker to price-only (caught next run, oldest-first) so a clustered re-expiry
+      // wave can't starve the coverage gate. Counter incremented only on a forced
+      // time-based full that we actually honor.
+      let forceFundamentalsFull = staleFundamentals;
+      if (staleFundamentals && !staleSchema && !staleCurrency) {
+        if (_fundamentalsRefreshUsed < FUNDAMENTALS_REFRESH_BUDGET) {
+          _fundamentalsRefreshUsed++;
+        } else {
+          forceFundamentalsFull = false; // budget exhausted → fall back to price-only
+          _fundamentalsRefreshDeferred++;
+        }
+      }
+      if (youngEnough && !staleSchema && !staleCurrency && !forceFundamentalsFull) {
         try {
-          const r = await _priceOnlyUpdate(stock, outputDir);
+          const r = await _priceOnlyUpdate(stock, outputDir, _parsedSnapshot);
           results.push(r);
           _log('INFO', `  ✓ ${stock.ticker} [price-only]: mcap=${r.mcap}, price=${r.price}`);
           return;
@@ -1653,6 +1865,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         _log('INFO', `  ${stock.ticker} [schema-stale]: forcing full pull to backfill Tag 211l fields`);
       } else if (staleCurrency) {
         _log('INFO', `  ${stock.ticker} [currency-stale]: forcing full pull to normalize pre-Tag-219c FX envelope`);
+      } else if (forceFundamentalsFull) {
+        _log('INFO', `  ${stock.ticker} [fundamentals-stale]: forcing full pull (fundamentalsAsOf > ${FUNDAMENTALS_REFRESH_DAYS}d)`);
       }
 
       _log('INFO', `Pulling ${stock.ticker} (${stock.yahoo_symbol})…`);
@@ -1833,30 +2047,94 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         } catch (e) { _log('WARN', 'FTS cache write failed for ' + (stock && stock.ticker) + ': ' + e.message); }
         if (ftsPartial) canonical._ftsPartial = true;
       }
-      // Override leere annual-Arrays aus quoteSummary mit FTS-Daten wenn FTS welche hat
-      const _ftsRevNonNull = (ftsAnnual.annualRev||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
-      const _qsRevNonNull = (canonical.annual.annualRev||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
-      if (_ftsRevNonNull > _qsRevNonNull) canonical.annual.annualRev = ftsAnnual.annualRev;
-      // Tag 203: FTS-OpInc override is now gated by non-null COUNT, not length.
-      // mapFTSToAnnual pushes null placeholders for OpInc-missing rows (bank/
-      // fintech) — without this guard a 4-null-entry FTS array would wipe out
-      // a 4-non-null derived OpInc series produced by the Financial-Services
-      // fallback in mapYahooToCanonical. Native FTS data (non-null entries)
-      // still wins as before. We also reset opIncSource accordingly.
-      const _qsOpIncNonNull = (canonical.annual.annualOpInc || []).filter(v => v != null && (typeof v !== 'object' || v.value != null)).length;
-      const _ftsOpIncNonNull = (ftsAnnual.annualOpInc || []).filter(v => v != null && (typeof v !== 'object' || v.value != null)).length;
-      if (_ftsOpIncNonNull > _qsOpIncNonNull) {
-        // Tag 206f (Bug-Hunt Agent D HIGH F2): do NOT .filter() out nulls.
-        // mapFTSToAnnual.js pushes null placeholders for OpInc-missing rows so that
-        // annualOpInc[i] stays aligned with annualRev[i] / annualNetIncome[i] by
-        // year (F-DP-030/031). Filtering nulls re-introduces positional drift:
-        // a bank with annualRev=[10,9,8,7] and annualOpInc=[3,null,2,null]
-        // becomes [3,2] after filter — now annualOpInc[1] (=2) wrongly maps
-        // to annualRev[1] (=9, last year) instead of annualRev[2] (=8, 2y ago).
-        // Downstream methods (_rawVals helper inside reinvestment-rate / margin-
-        // quality / etc.) already tolerate nulls in-place.
-        canonical.annual.annualOpInc = ftsAnnual.annualOpInc;
-        if (canonical.meta) canonical.meta.opIncSource = 'native';
+      // audit F-A-2026-06-21: the FTS-vs-quoteSummary merge below was 7 copies of
+      // the same per-field "FTS wins iff it has more data" comparison, each with a
+      // slightly different filter predicate (count vs length) and override
+      // condition — the structural source of the year-index-drift bug class
+      // (annualGP even used a bare .length>0, NOT the non-null count its siblings
+      // use). Extracted into two helpers so every field uses identical semantics.
+      // Failure mode prevented: divergent per-field predicates silently letting a
+      // sparser FTS array overwrite a richer QS array (or vice-versa), drifting
+      // the year index between annualRev / annualOpInc / annualGP / annualNetIncome.
+      //
+      // _nonNullCount: counts entries that hold an actual value (handles both raw
+      // numbers and {value:n} wrappers, the two shapes these arrays carry).
+      const _nonNullCount = arr => (arr || []).filter(v => v != null && (v.value != null || typeof v === 'number')).length;
+      // mergePreferRicher: returns ftsArr iff it is strictly richer than qsArr.
+      //   mode:'count'  → compare non-null element counts (preserves null-placeholder
+      //                   year alignment; the correct default for value series).
+      //   mode:'length' → compare raw array lengths (legacy behaviour for series
+      //                   where mapFTSToAnnual emits no null placeholders).
+      const mergePreferRicher = (qsArr, ftsArr, opts) => {
+        const mode = (opts && opts.mode) || 'count';
+        if (mode === 'length') {
+          return (ftsArr || []).length > 0 ? ftsArr : qsArr;
+        }
+        return _nonNullCount(ftsArr) > _nonNullCount(qsArr) ? ftsArr : qsArr;
+      };
+      // mergeQuarterTriplet: moves revenueQ + opIncQ + grossProfitQ as ONE unit so
+      // the three quarter series always come from the SAME source (F-010). Picks
+      // the source whose revenueQ has more non-null quarters; siblings follow
+      // unconditionally (even if empty) to avoid stale cross-source leftovers.
+      const mergeQuarterTriplet = (qsTrip, ftsTrip) => (
+        _nonNullCount(ftsTrip.revenueQ) > _nonNullCount(qsTrip.revenueQ) ? ftsTrip : qsTrip
+      );
+      // audit/fix F2 (2026-06-25): the annual INCOME bundle (Rev/OpInc/GP/NI) must
+      // come from ONE source. Previously annualRev (mergePreferRicher), annualOpInc
+      // (its own non-null compare), annualGP (mergePreferRicher) and annualNetIncome
+      // (its own compare) each picked QS-vs-FTS INDEPENDENTLY by non-null count.
+      // EQUAL count does NOT imply equal year anchor: QS is ~4yr anchored at the
+      // latest FY (e.g. FY2025) while FTS is ~5yr anchored one year earlier (FY2024).
+      // So grossMargin[0]=annualGP[0]/annualRev[0] could divide a QS gross profit
+      // (FY2025) by an FTS revenue (FY2024) — different fiscal years. Mirror the
+      // mergeQuarterTriplet pattern: decide ONCE off the revenue array's non-null
+      // count (tiebreak on total bundle density so an equal-revenue tie still
+      // resolves deterministically toward the richer overall source), then move all
+      // four arrays from the SAME source together. Null placeholders within each
+      // array are preserved (no filtering) so positional year-alignment survives.
+      const _incomeBundleDensity = b =>
+        _nonNullCount(b.annualRev) + _nonNullCount(b.annualOpInc) +
+        _nonNullCount(b.annualGP) + _nonNullCount(b.annualNetIncome);
+      const mergeAnnualIncomeBundle = (qsB, ftsB) => {
+        const qsRev = _nonNullCount(qsB.annualRev);
+        const ftsRev = _nonNullCount(ftsB.annualRev);
+        if (ftsRev !== qsRev) return ftsRev > qsRev ? ftsB : qsB;
+        // revenue tie → fall back to total bundle density; FTS only wins on strictly
+        // richer (preserves the prior "QS keeps it on a tie" default).
+        return _incomeBundleDensity(ftsB) > _incomeBundleDensity(qsB) ? ftsB : qsB;
+      };
+
+      // Override leere annual-Arrays aus quoteSummary mit FTS-Daten wenn FTS welche hat.
+      // audit/fix F2 (2026-06-25): single-source the whole income bundle.
+      {
+        const _qsIncome = {
+          annualRev: canonical.annual.annualRev,
+          annualOpInc: canonical.annual.annualOpInc,
+          annualGP: canonical.annual.annualGP,
+          annualNetIncome: canonical.annual.annualNetIncome,
+        };
+        const _ftsIncome = {
+          annualRev: ftsAnnual.annualRev,
+          annualOpInc: ftsAnnual.annualOpInc,
+          annualGP: ftsAnnual.annualGP,
+          annualNetIncome: ftsAnnual.annualNetIncome,
+        };
+        const _winner = mergeAnnualIncomeBundle(_qsIncome, _ftsIncome);
+        // Tag 206f: move siblings WITHOUT filtering nulls — null placeholders keep
+        // annualOpInc[i]/annualNetIncome[i] aligned with annualRev[i] by fiscal year
+        // (a bank's [3,null,2,null] OpInc must stay 4-long, not collapse to [3,2]).
+        canonical.annual.annualRev = _winner.annualRev;
+        canonical.annual.annualOpInc = _winner.annualOpInc;
+        canonical.annual.annualGP = _winner.annualGP;
+        canonical.annual.annualNetIncome = _winner.annualNetIncome;
+        // Tag 203: when the FTS bundle wins and actually carries OpInc, that OpInc is
+        // native Yahoo data — record provenance. If QS wins (or FTS OpInc is empty)
+        // leave opIncSource as mapYahooToCanonical set it; the post-merge sector-aware
+        // fallback below re-derives a margin-based OpInc when the winner left it empty.
+        if (_winner === _ftsIncome &&
+            (ftsAnnual.annualOpInc || []).some(v => v != null && (typeof v !== 'object' || v.value != null))) {
+          if (canonical.meta) canonical.meta.opIncSource = 'native';
+        }
       }
       // Tag-28: annualBalance aus FTS überschreiben wenn FTS mehr nicht-null Werte hat
       // F-DQ-011: extend usability check to include Tag 211l fields so FTS rows that
@@ -1907,12 +2185,32 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // RAW null placeholders instead (Bug #26 pattern): positional alignment stays,
       // but finite-counting (_arrLen) and v!=null checks now see the truth.
       canonical.timeseries.netIncomeQ = (ftsQuarterlyNI || []).map(v => v != null ? { value: v } : null);
-      if (ftsAnnual.annualGP.length > 0) canonical.annual.annualGP = ftsAnnual.annualGP;
-      const _ftsNiNonNull = (ftsAnnual.annualNetIncome||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
-      const _qsNiNonNull = (canonical.annual.annualNetIncome||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
-      if (_ftsNiNonNull > _qsNiNonNull) canonical.annual.annualNetIncome = ftsAnnual.annualNetIncome;
-      if (ftsAnnual.annualFCF.length > 0) canonical.annual.annualFCF = ftsAnnual.annualFCF;
-      if (ftsAnnual.annualOCF && ftsAnnual.annualOCF.length > 0) canonical.annual.annualOCF = ftsAnnual.annualOCF;
+      // audit/fix F2 (2026-06-25): annualGP and annualNetIncome are now moved as part
+      // of the single-source income bundle above (alongside annualRev/annualOpInc) so
+      // grossMargin / net-margin can never pair a QS gross/net with an FTS revenue from
+      // a different fiscal year. (Previously these were two more independent per-array
+      // non-null-count merges here — removed.)
+      // audit/fix F2 (2026-06-25): bundle the FCF/OCF pair onto ONE source too. OCF and
+      // FCF come from the SAME cash-flow rows (FCF often = OCF + capex), and consumers
+      // like fcf-conversion zip annualFCF[i] against annualOCF[i] positionally — an
+      // independent per-array merge could pick FCF from FTS and OCF from QS with
+      // different year anchors. Decide once off OCF's non-null count (FCF density as
+      // tiebreak) and move both together; null placeholders preserved for alignment.
+      {
+        const _qsCash = { annualFCF: canonical.annual.annualFCF, annualOCF: canonical.annual.annualOCF };
+        const _ftsCash = { annualFCF: ftsAnnual.annualFCF, annualOCF: ftsAnnual.annualOCF };
+        const _qsOcf = _nonNullCount(_qsCash.annualOCF);
+        const _ftsOcf = _nonNullCount(_ftsCash.annualOCF);
+        let _cashWinner;
+        if (_ftsOcf !== _qsOcf) {
+          _cashWinner = _ftsOcf > _qsOcf ? _ftsCash : _qsCash;
+        } else {
+          // OCF tie → break on FCF density; FTS only wins on strictly richer.
+          _cashWinner = _nonNullCount(_ftsCash.annualFCF) > _nonNullCount(_qsCash.annualFCF) ? _ftsCash : _qsCash;
+        }
+        canonical.annual.annualFCF = _cashWinner.annualFCF;
+        canonical.annual.annualOCF = _cashWinner.annualOCF;
+      }
       const _ftsRevQNonNull = (ftsQuarterly.revenueQ||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
       const _qsRevQNonNull = (canonical.timeseries.revenueQ||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
       // F-010 (audit 2026-06-08): opIncQ/grossProfitQ must come from the SAME source
@@ -1956,12 +2254,47 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         }
       } catch (e) { /* defensive — never fail the pull on fallback errors */ }
 
+      // audit/fix (A2 council+court+anchor-fixture, 2026-06-26): newest-quarter source-corruption LAMP.
+      // Yahoo intermittently serves a corrupted newest quarter (confirmed 005930.KS: opIncQ[0]/revenueQ[0]
+      // ~42.8% vs ~10% trailing, co-corrupting financialData TTM -> a bogus revenueGrowthYoY ~69%). Detecting
+      // this internal physical inconsistency is a data-QUALITY concern (Loop A); values stay FAITHFUL and the
+      // disposition (down-weight/exclude) is delegated to Loop B per the §6 boundary + ledger §4 — the
+      // non-destructive _debtPartial / _quality.grade pattern (NOT value-nulling fcfMarginTTMSuppressed). The
+      // within-quarter trigger uses NO annual data (immune to the annual-scaling/TTM-fallback bugs) and was
+      // tuned on 2715 real snapshots: flags 005930.KS + SNDK with ZERO legitimate-cyclical leaks (MU/FRO/INSW/
+      // DHT/AG/NGD/NVDA all clean). Ratios are FX-invariant, so running pre-conversion is equivalent. Known-
+      // shape detector — limited recall by design (see lib/newest-qtr-guard.js + ledger §4).
+      try {
+        const _nqs = detectNewestQtrSuspect(canonical.timeseries);
+        if (_nqs.suspect && canonical.meta) {
+          canonical.meta._newestQtrSuspect = true;
+          canonical.meta._newestQtrSuspectReason = _nqs.reason;
+        }
+      } catch (e) { /* defensive — a lamp must never break the pull */ }
+
       // Tag 134: single-pass USD conversion across marketCap + revenueTTM + all annual/quarterly series.
       // Must run AFTER FTS overrides (FTS values are also in reporting currency) and BEFORE mcap filter
       // (which compares against $1B USD floor). Fixes the structural currency mismatch where mcap was USD
       // but annual.* was local — silently corrupting fcf-yield, ev/ebitda, ROIC and every other ratio.
       try { _convertSnapshotToUSD(canonical); }
       catch (e) { _log('WARN', `  FX conversion failed for ${stock.ticker}: ${e.message}`); }
+
+      // audit/fix (A2, 2026-06-26): annual-revenue currency-leak LAMP. Yahoo can serve a
+      // USD-reporter's annualRev in its TRADING ccy (e.g. NOK ~10x) via deprecated quoteSummary
+      // while FTS is USD; the density-based income-bundle merge can pick the leaked source and
+      // _convertSnapshotToUSD won't rescale it (fxRate=1, reporting ccy detected as USD). Runs
+      // AFTER conversion so reportingCurrencyOriginal/tradingCurrency are set; the leak survives
+      // conversion (fxRate=1) so the ratio is intact. Non-destructive (same pattern as the
+      // _newestQtrSuspect lamp): values stay FAITHFUL, Loop B disposes (ledger §4). Measured-clean
+      // trigger — fires on AKRBP.OL + GMAB.CO only across 4168 snapshots (lib/annual-currency-guard.js).
+      try {
+        const _acl = detectAnnualCurrencyLeak(canonical);
+        if (_acl.suspect && canonical.meta) {
+          canonical.meta._annualCurrencyLeakSuspect = true;
+          canonical.meta._annualCurrencyLeakReason = _acl.reason;
+        }
+      } catch (e) { /* defensive — a lamp must never break the pull */ }
+
       // F-DQ-002: skip tickers where FX conversion failed — mcap is in local currency and would
       // pass or fail the USD mcap filter incorrectly.
       // F-DQ-016: mirror the skipped-mcap pattern — delete stale snapshot so it doesn't
@@ -2031,6 +2364,22 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         };
       }
 
+      // audit F-A-2026-06-21: emit a snapshot-level count of how many annual-
+      // balance years carry an absence-as-zero (partial) totalDebt. The per-row
+      // _debtPartial flag alone forces every downstream method to opt in to
+      // notice the understatement; a meta-level tally lets score-aggregator
+      // tier-cap on the magnitude of the gap without re-walking the array.
+      // Failure mode prevented: leverage-based scores silently trusting
+      // understated totalDebt across multiple years with no aggregate signal.
+      try {
+        const _bal = (canonical.annual && canonical.annual.annualBalance) || [];
+        const _understatedYears = _bal.filter(b => b && b._debtPartial === true).length;
+        if (_understatedYears > 0) {
+          canonical.meta = canonical.meta || {};
+          canonical.meta._debtUnderstatedYears = _understatedYears;
+        }
+      } catch (_) { /* non-fatal: meta tally is advisory only */ }
+
       const filename = safeSnapshotFilename(stock.ticker);
       const outPath = path.join(outputDir, filename);
       // Tag 134: migrate from legacy un-sanitized name (one-time)
@@ -2050,6 +2399,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // here, but consistent format across all snapshot writes simplifies
       // downstream parsing assumptions and prevents the 267-MB methods-report
       // class of regressions (Tag 220b).
+      // audit/fix F3 (2026-06-25): stamp the SEPARATE full-pull clock here — this is
+      // the only point a full pull (fresh annual/metrics/FTS) actually lands on disk.
+      // _priceOnlyUpdate NEVER writes this field, so it records the true age of the
+      // fundamentals (not the daily-reset meta.asOf), and the eligibility gate uses it
+      // to force a full refresh every FUNDAMENTALS_REFRESH_DAYS.
+      canonical.meta = canonical.meta || {};
+      canonical.meta.fundamentalsAsOf = canonical.meta.asOf || new Date().toISOString();
       writeFileAtomic(outPath, JSON.stringify(canonical));
       const revStr = canonical.metrics.revenueTTM ? '$' + (canonical.metrics.revenueTTM.value / 1e9).toFixed(1) + 'B' : 'no-rev';
       const growthStr = canonical.metrics.revenueGrowthYoY ? canonical.metrics.revenueGrowthYoY.value.toFixed(1) + '%' : '-';
@@ -2081,20 +2437,22 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       else if (/timeout|ETIMEDOUT|ESOCKETTIMEDOUT/i.test(msg)) errClass = 'timeout';
       else if (/ENOTFOUND|ECONNREFUSED|ECONNRESET|EAI_AGAIN|network/i.test(msg)) errClass = 'network';
       else if (/parse|unexpected token|JSON/i.test(msg)) errClass = 'parse';
-      // Tag 215h: Yahoo schema-validation failures classified as not-found.
-      // Run #107 produced 637 such failures, ALL on international tickers
-      // (091990.KQ Korean, 2823.TW Taiwanese, 6502.T Japanese, 6837.HK HK,
-      // 600837.SS Chinese). Single-module probes return literal "Quote not
-      // found" / "No fundamentals data found"; the multi-module quoteSummary
-      // call gets a partially-populated response that fails the library's
-      // strict-shape validator. Empirically: these tickers do not exist in
-      // Yahoo's database for the requested region. Treat them like not-found
-      // so the snapshot gets marked delisted (instead of being retried daily
-      // and hitting the same wall). Risk acknowledged: if Yahoo ever
-      // introduces a real schema break we'd silently re-classify it as
-      // not-found — pull-stats-check should monitor the schema-vs-not-found
-      // ratio over time as a sentinel.
-      else if (/Failed Yahoo Schema validation|schema validation/i.test(msg)) errClass = 'not-found';
+      // audit F-A-2026-06-21: Yahoo schema-validation failures get their OWN
+      // 'schema-fail' class and are NO LONGER reclassified as not-found.
+      // Prevents valid international tickers with partial-but-valid payloads
+      // from being permanently marked delisted (survivorship attrition of
+      // non-US names). Tag 215h originally folded these into not-found so the
+      // snapshot got delisted — but the multi-module quoteSummary call only
+      // failing the library's strict-shape validator does NOT prove the symbol
+      // is gone; many of these are real, listed, internationally-domiciled
+      // companies whose payload is merely incomplete for one requested region.
+      // 'schema-fail' is still counted in `failures` (so pull-stats-check can
+      // monitor the schema-vs-not-found ratio as the sentinel Tag 215h intended)
+      // but does NOT enter the delisted branch below → the ticker is retried on
+      // the next run instead of being silently dropped from the universe.
+      // The delisted flag is reserved for the unambiguous not-found regex above
+      // (literal 404 / "no data found" / "invalid symbol").
+      else if (/Failed Yahoo Schema validation|schema validation/i.test(msg)) errClass = 'schema-fail';
 
       // Tag 148: mark snapshot as delisted when Yahoo definitively rejects the symbol
       // (not-found class only — transient errors like rate-limit/timeout/network must NOT set this flag).
@@ -2124,20 +2482,54 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // Tag 163: p-limit style worker pool — each worker independently loops through tickers.
   // A stalled ticker blocks only its own worker, not all CONCURRENCY workers.
   // Replaces batch Promise.all which gated all workers on the slowest ticker.
-  // With 20 workers and rateLimitMs=1500ms per worker, throughput is ~13 tickers/sec.
   // A rate-limited ticker (up to ~29s total: 12s + 5s + 12s timeouts/delays) blocks
-  // only its own slot; the other 19 workers keep pulling uninterrupted.
+  // only its own slot; the other workers keep pulling uninterrupted.
+  //
+  // audit F-A-2026-06-21: GLOBAL request-spacing gate (prevented failure mode:
+  // anti-429 throttle defeated by concurrency — effective request rate was
+  // concurrency × the intended rate). The old per-worker `_sleep(sleepMs)` after
+  // every ticker meant each of the CONCURRENCY workers independently spaced ITS
+  // OWN pulls by rateLimitMs, so aggregate issue rate was ~concurrency/rateLimitMs
+  // req/s (e.g. 20 / 1.5s ≈ 13 req/s) — the 1500ms "rate limit" was never a global
+  // request spacing and Yahoo saw bursts that tripped 429s. Fix: a single shared
+  // `nextSlotAt` timestamp that every worker advances atomically (Node is single-
+  // threaded; the read-modify-write below has no await between read and write, so
+  // no two workers can claim the same slot). Each worker reserves the next slot
+  // BEFORE issuing its request and sleeps until then, guaranteeing the MINIMUM
+  // spacing between consecutive Yahoo requests across ALL workers is exactly
+  // sleepMs, decoupled from concurrency. `concurrency` now governs only how many
+  // requests may be in flight at once; the gate governs the issue rate. The
+  // per-worker post-request sleep is removed to avoid double-counting.
   async function runWorkerPool(stocks, processOneFn, concurrency, sleepMs, writeManifestFn) {
     let idx = 0;
+    // Shared leaky-bucket gate: timestamp (ms) at which the next request may issue.
+    let nextSlotAt = 0;
+    // Reserve the next global issue slot atomically and wait for it. The
+    // read-of-nextSlotAt + write-back is synchronous (no await between), so
+    // concurrent workers serialize through it and each gets a distinct slot
+    // spaced sleepMs apart. Slots never bunch up in the future faster than
+    // wall-clock when the pipeline is request-bound, and the Math.max(now,…)
+    // keeps the gate from accumulating debt when a worker stalls on a slow pull.
+    async function acquireSlot() {
+      if (!(sleepMs > 0)) return; // throttle disabled → no spacing
+      const now = Date.now();
+      const slot = Math.max(now, nextSlotAt);
+      nextSlotAt = slot + sleepMs;
+      const waitMs = slot - now;
+      if (waitMs > 0) await _sleep(waitMs);
+    }
     async function worker() {
       while (true) {
         const myIdx = idx++;
         if (myIdx >= stocks.length) break;
         const stock = stocks[myIdx];
+        // audit F-A-2026-06-21: gate issue-rate globally BEFORE the request
+        // instead of sleeping per-worker AFTER it. This is what makes sleepMs a
+        // true global spacing rather than a per-worker one.
+        await acquireSlot();
         await processOneFn(stock).catch(e => _log('WARN', `Worker error ${stock.ticker}: ${e.message}`));
         // flush manifest every 100 tickers using the captured local index
         if (myIdx > 0 && myIdx % 100 === 0) writeManifestFn();
-        if (idx < stocks.length) await _sleep(sleepMs);
       }
     }
     await Promise.all(Array.from({ length: concurrency }, () => worker()));
@@ -2145,6 +2537,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
 
   await runWorkerPool(watchlist.stocks, processOne, CONCURRENCY, rateLimitMs, writeManifestIncremental);
   writeManifestIncremental(); // final incremental flush before full manifest
+
+  // audit/fix F3-budget (2026-06-25): report time-based fundamentals-refresh usage so a
+  // mass re-expiry stampede that hit the cap is visible. Deferred tickers fell back to
+  // price-only this run and will be picked up next run (oldest-first).
+  if (_fundamentalsRefreshDeferred > 0) {
+    _log('INFO', `Fundamentals-refresh budget: ${_fundamentalsRefreshUsed}/${FUNDAMENTALS_REFRESH_BUDGET} time-based full pulls used; ${_fundamentalsRefreshDeferred} ticker(s) deferred to price-only (caught next run, oldest-first) to protect the coverage gate.`);
+  } else {
+    _log('INFO', `Fundamentals-refresh budget: ${_fundamentalsRefreshUsed}/${FUNDAMENTALS_REFRESH_BUDGET} time-based full pulls used; none deferred.`);
+  }
 
   // F-DP-047 (Tag 192): same n_ok-vs-skipped-mcap fix as in the incremental
   // writeManifestIncremental() — final manifest must agree with the snapshot

@@ -155,8 +155,14 @@ async function main() {
 module.exports = { collectStats, detectStatsDrift, median };
 
 if (require.main === module) {
-  main().then(code => process.exit(code || 0)).catch(e => {
+  main().then(code => process.exit(code || 0)).catch(async e => {
     console.error('check-pull-stats failed: ' + e.message);
+    // audit F-A-2026-06-21: a top-level crash previously exited 0 with only a
+    // console line nobody reads, so a dead drift monitor reported green forever.
+    // Best-effort Discord ping makes the dead monitor visible; still exit 0 so
+    // the workflow never fails on a monitoring crash. Guard the post itself so a
+    // Discord failure can't escalate into a non-zero exit / unhandled rejection.
+    try { await postDiscord('check-pull-stats crashed: ' + e.message); } catch (_) { /* swallow */ }
     process.exit(0);
   });
 }

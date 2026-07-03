@@ -35,6 +35,21 @@ function parseArgs(argv) {
     else if (argv[i] === '--picks-keep-days' && argv[i+1]) args.picksKeepDays = parseInt(argv[++i], 10);
     else if (argv[i] === '--dry-run') args.dryRun = true;
   }
+  // audit/fix: validate keep-days args up front. A non-numeric flag value
+  // (e.g. `--keep-days foo`) → parseInt→NaN → later `new Date(...NaN...).toISOString()`
+  // throws, gets caught at the bottom, and process.exit(0) fires SAFE but GREEN
+  // under the workflow's continue-on-error — so a typo'd flag silently disables
+  // archiving forever with a passing check. Fail LOUD instead so the misconfig is visible.
+  for (const [name, val] of [
+    ['--keep-days', args.keepDays],
+    ['--methods-keep-days', args.methodsKeepDays],
+    ['--picks-keep-days', args.picksKeepDays],
+  ]) {
+    if (val !== null && !Number.isFinite(val)) {
+      console.error(`::error::archive-old-snapshots: invalid ${name} value (not a finite number) — aborting to avoid silently disabling archiving`);
+      process.exit(1);
+    }
+  }
   return args;
 }
 

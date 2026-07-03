@@ -1,0 +1,242 @@
+'use strict';
+/**
+ * Engine — Achsen-Test. Die 8 Achsen-Berechner gegen echte CRDO/NVTS-Snapshots
+ * + Drop-Verhalten (null -> renorm-on-drop) bei fehlenden Daten.
+ *
+ * Usage:  node tests/scoring/axes.test.js   (Exit 0 gruen / 1 Fehler)
+ */
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const ax = require('../../src/scoring/axes.js');
+
+let pass = 0, fail = 0;
+function test(name, fn) {
+  try { fn(); pass++; console.log('  ok   ' + name); }
+  catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
+}
+function snap(t) {
+  return JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'snapshots', t + '.json'), 'utf8'));
+}
+const CRDO = snap('CRDO');
+const NVTS = snap('NVTS');
+const near = (a, b, eps = 1e-6) => Math.abs(a - b) <= eps;
+
+// --- 1 revGrowthLevel -------------------------------------------------------
+test('revGrowthLevel(CRDO) == metrics.revenueGrowthYoY (201.5)', () => {
+  assert.ok(near(ax.revGrowthLevel(CRDO), CRDO.metrics.revenueGrowthYoY.value));
+  assert.ok(ax.revGrowthLevel(CRDO) > 100);
+});
+test('revGrowthLevel: fehlende metrics -> null', () => {
+  assert.equal(ax.revGrowthLevel({}), null);
+  assert.equal(ax.revGrowthLevel({ metrics: {} }), null);
+});
+
+// --- 2 revAcceleration ------------------------------------------------------
+test('revAcceleration(CRDO) > 0 (beschleunigt)', () => {
+  assert.ok(ax.revAcceleration(CRDO) > 0);
+});
+test('revAcceleration: < 3 Quartale -> null', () => {
+  assert.equal(ax.revAcceleration({ timeseries: { revenueQ: [{ value: 10 }, { value: 9 }] } }), null);
+});
+
+// --- 3 gpGrowth -------------------------------------------------------------
+test('gpGrowth(CRDO) > 1 (starkes GP-Wachstum)', () => {
+  assert.ok(ax.gpGrowth(CRDO) > 1);
+});
+test('gpGrowth: nur 1 GP-Jahr -> null', () => {
+  assert.equal(ax.gpGrowth({ annual: { annualGP: [{ value: 100 }], annualRev: [{ value: 200 }] } }), null);
+});
+
+// --- 4 ruleOfX --------------------------------------------------------------
+test('ruleOfX(CRDO): includeFcf addiert gueltige FCF-Marge', () => {
+  const withFcf = ax.ruleOfX(CRDO, 2.3, true);
+  const without = ax.ruleOfX(CRDO, 2.3, false);
+  assert.ok(withFcf > without); // CRDO FCF gilt als gueltig (G2+G3)
+  assert.ok(near(withFcf - without, CRDO.metrics.fcfMarginTTM.value, 1e-6));
+  assert.ok(near(without, 2.3 * CRDO.metrics.revenueGrowthYoY.value, 1e-6));
+});
+test('ruleOfX(NVTS) < 0 und FCF-Term gedroppt (Artefakt nicht addiert)', () => {
+  assert.ok(ax.ruleOfX(NVTS, 2.3, true) < 0); // negatives Umsatzwachstum
+  // NVTS +108% FCF-Artefakt ist ungueltig -> includeFcf aendert nichts
+  assert.ok(near(ax.ruleOfX(NVTS, 2.3, true), ax.ruleOfX(NVTS, 2.3, false), 1e-9));
+});
+
+// --- 5 marginTrajectory -----------------------------------------------------
+test('marginTrajectory(CRDO) > 0 (Operating-Leverage greift)', () => {
+  assert.ok(ax.marginTrajectory(CRDO) > 0);
+});
+test('marginTrajectory: < 2 Quartale -> null', () => {
+  assert.equal(ax.marginTrajectory({ timeseries: { opIncQ: [{ value: 5 }], revenueQ: [{ value: 50 }] } }), null);
+});
+
+// --- C2: Winsor-Clamp gegen Stub-Quartal-Phantome ---------------------------
+test('marginTrajectory: ohne bounds unveraendert (Rueckwaerts-Kompat)', () => {
+  // Stub-Quartal: oldest revenueQ=1, opIncQ=-5000 -> Phantom-Marge -5000.
+  const stub = { timeseries: { revenueQ: [{ value: 100 }, { value: 1 }], opIncQ: [{ value: 20 }, { value: -5000 }] } };
+  assert.ok(ax.marginTrajectory(stub) > 5000); // 0.2 - (-5000) ~ 5000 (das Artefakt)
+});
+test('marginTrajectory: mit bounds winsorisiert das Stub-Quartal weg', () => {
+  const stub = { timeseries: { revenueQ: [{ value: 100 }, { value: 1 }], opIncQ: [{ value: 20 }, { value: -5000 }] } };
+  const v = ax.marginTrajectory(stub, [-1, 1]); // oldest -5000 -> -1, newest 0.2 -> bleibt
+  assert.ok(near(v, 0.2 - (-1)), `erwartet ~1.2, war ${v}`);
+});
+test('revAcceleration: mit bounds winsorisiert die Stub-QoQ-Rate weg', () => {
+  // revenueQ=[100,50,1]: g=[100/50-1, 50/1-1]=[1,49]; ohne bounds revAccel=1-49=-48.
+  const stub = { timeseries: { revenueQ: [{ value: 100 }, { value: 50 }, { value: 1 }] } };
+  assert.ok(ax.revAcceleration(stub) < -40); // -48, das Artefakt
+  const v = ax.revAcceleration(stub, [-1, 2]); // 49 -> 2 geklemmt
+  assert.ok(near(v, 1 - 2), `erwartet ~-1, war ${v}`);
+});
+test('Winsor-Clamp laesst plausible Werte unberuehrt (kein Regress)', () => {
+  // CRDO ist ein realer gesunder Name; weite bounds duerfen nichts aendern.
+  assert.ok(near(ax.marginTrajectory(CRDO, [-100, 100]), ax.marginTrajectory(CRDO)));
+  assert.ok(near(ax.revAcceleration(CRDO, [-100, 100]), ax.revAcceleration(CRDO)));
+});
+test('C2/R5: physische Obergrenze 1.0 erhaelt legitime Hochmargen, klemmt nur >1-Stubs', () => {
+  // Hochmargen-Name (beide Quartals-OpMargen in [0,1]) -> marginTraj ERHALTEN, NICHT auf 0 genullt
+  // (genau der R5-Befund: symmetrisches p99~0.68 nullte FNV/VICI/APP faelschlich).
+  const hi = { timeseries: { opIncQ: [{ value: 78 }, { value: 72 }], revenueQ: [{ value: 100 }, { value: 100 }] } };
+  assert.ok(near(ax.marginTrajectory(hi, [-13, 1.0]), 0.78 - 0.72), 'Hochmarge erhalten (+0.06)');
+  // >1-OpMarge (opInc>rev, physisch unmoeglich = Stub/Artefakt): neueste 16.06 -> auf 1.0 geklemmt.
+  const stub = { timeseries: { opIncQ: [{ value: 1606 }, { value: 50 }], revenueQ: [{ value: 100 }, { value: 100 }] } };
+  assert.ok(near(ax.marginTrajectory(stub, [-13, 1.0]), 1.0 - 0.5), '>1-Stub auf 1.0 geklemmt');
+});
+
+// --- 6 capitalEfficiency ----------------------------------------------------
+test('capitalEfficiency(CRDO) ist finit', () => {
+  const v = ax.capitalEfficiency(CRDO);
+  assert.ok(v === null || Number.isFinite(v));
+  assert.ok(Number.isFinite(v));
+});
+test('capitalEfficiency: keine Bilanz -> null', () => {
+  assert.equal(ax.capitalEfficiency({ annual: { annualOpInc: [{ value: 10 }] } }), null);
+});
+
+// --- 7 revisionsMomentum ----------------------------------------------------
+test('revisionsMomentum(CRDO) finit (in [-1,1])', () => {
+  const v = ax.revisionsMomentum(CRDO);
+  assert.ok(Number.isFinite(v) && v >= -1 && v <= 1);
+});
+test('revisionsMomentum: keine Daten -> null', () => {
+  assert.equal(ax.revisionsMomentum({}), null);
+  assert.equal(ax.revisionsMomentum({ external: { estimateRevisions: { '0y': {} } } }), null);
+});
+
+// --- 8 dilution -------------------------------------------------------------
+test('dilution(CRDO) finit', () => {
+  assert.ok(Number.isFinite(ax.dilution(CRDO)));
+});
+test('dilution: kein present annualSBC -> null (drop+renorm, KEIN Fake-50)', () => {
+  assert.equal(ax.dilution({ annual: { annualSBC: [], annualRev: [{ value: 100 }] } }), null);
+  assert.equal(ax.dilution({ annual: { annualSBC: [null, null], annualRev: [{ value: 100 }] } }), null);
+});
+
+// --- Regression: revAcceleration ignoriert 0/negative Zwischenquartale ------
+test('revAcceleration: 0/negatives Quartal erzeugt keine Riesen-Rate', () => {
+  const s = { timeseries: { revenueQ: [{ value: 120 }, { value: 100 }, { value: 0 }, { value: 80 }, { value: 70 }] } };
+  const v = ax.revAcceleration(s);
+  assert.ok(Number.isFinite(v) && Math.abs(v) < 1); // nur positive Quartalspaare zaehlen
+});
+
+// --- capitalEfficiency Zyklus-Peak-Discount (Court-Spec) --------------------
+test('capitalEfficiency: Peak-Marge wird diskontiert (< stabile Marge)', () => {
+  const flatBal = [{ totalAssets: 100, currentLiabilities: 0 }, { totalAssets: 100, currentLiabilities: 0 },
+    { totalAssets: 100, currentLiabilities: 0 }, { totalAssets: 100, currentLiabilities: 0 }];
+  const stable = { annual: { annualOpInc: [{ value: 20 }, { value: 20 }, { value: 20 }, { value: 20 }],
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }, { value: 100 }], annualBalance: flatBal } };
+  // gekippter Zyklus-Peak (cur 0.35 < Vorjahr 0.40 = nicht steigend) -> Discount greift.
+  const peak = { annual: { annualOpInc: [{ value: 35 }, { value: 40 }, { value: 12 }, { value: 10 }],
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }, { value: 100 }], annualBalance: flatBal } };
+  // Peak-ROIC ist roh aehnlich, aber der Discount holt ihn unter die stabile Marge.
+  assert.ok(ax.capitalEfficiency(peak) < ax.capitalEfficiency(stable),
+    `peak ${ax.capitalEfficiency(peak)} sollte < stable ${ax.capitalEfficiency(stable)}`);
+});
+test('capitalEfficiency: stabile Marge -> kein Discount (cur ~ hist)', () => {
+  const s = { annual: { annualOpInc: [{ value: 20 }, { value: 20 }, { value: 20 }],
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }],
+    annualBalance: [{ totalAssets: 100, currentLiabilities: 0 }, { totalAssets: 100, currentLiabilities: 0 }, { totalAssets: 100, currentLiabilities: 0 }] } };
+  assert.ok(Math.abs(ax.capitalEfficiency(s) - 0.2) < 1e-9); // roic 0.2, Discount 1
+});
+// --- capitalEfficiency Trailing-Loss-Trim (Court Inflection, Karl-Direktive) --
+test('capitalEfficiency: gerade-profitabel -> Vor-Profit-Verluste getrimmt (ROIC positiv statt negativ)', () => {
+  const bal = [{ totalAssets: 1000, currentLiabilities: 200 }, { totalAssets: 1000, currentLiabilities: 200 }, { totalAssets: 1000, currentLiabilities: 200 }];
+  // Inflection: neuestes OpInc +100, davor -50/-80. Ohne Trim waere ROIC = mean(100,-50,-80)/800 = -0.0125.
+  // Mit Trim (aelteste Verlust-Serie raus): ROIC = mean(100)/800 = +0.125 (misst das profitable Regime).
+  const infl = { annual: { annualOpInc: [{ value: 100 }, { value: -50 }, { value: -80 }],
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }], annualBalance: bal } };
+  assert.ok(Math.abs(ax.capitalEfficiency(infl) - 0.125) < 1e-9, 'Inflection-ROIC = 0.125 (getrimmt), war ' + ax.capitalEfficiency(infl));
+});
+test('capitalEfficiency: Verschlechterer (neuestes OpInc<0) wird NICHT gerescued (kein Trim)', () => {
+  const bal = [{ totalAssets: 1000, currentLiabilities: 200 }, { totalAssets: 1000, currentLiabilities: 200 }, { totalAssets: 1000, currentLiabilities: 200 }];
+  // neuestes -50, davor +90/+80: das AELTESTE Jahr ist profitabel -> Loop trimmt NICHTS -> ROIC =
+  // mean(-50,90,80)/800 = +0.05 (voller Schnitt inkl. neuestem Verlust, KEIN Rescue auf nur die +Jahre).
+  const det = { annual: { annualOpInc: [{ value: -50 }, { value: 90 }, { value: 80 }],
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }], annualBalance: bal } };
+  assert.ok(Math.abs(ax.capitalEfficiency(det) - 0.05) < 1e-9, 'Verschlechterer-ROIC = 0.05 (ungetrimmt), war ' + ax.capitalEfficiency(det));
+});
+
+// --- audit/fix Court Fall 1: Achsen-Physik-Guards gegen pathologische Eingaben ---
+test('gpGrowth (F9): korruptes Alt-Jahr (GP>Rev, gm>1) wird verworfen, gmTraj dominiert nicht', () => {
+  const s = { annual: {
+    annualGP:  [{ value: 1.20 }, { value: 0.81 }, { value: 0.58 }, { value: 2.20 }],
+    annualRev: [{ value: 3.01 }, { value: 2.25 }, { value: 1.49 }, { value: 1.00 }] } };
+  // Ohne Guard: gmOld=2.20 -> gmTraj=-1.80 -> gpGrowth ~ -1.32 (korrupter Sturz, TAL-Muster).
+  // Mit Guard: Alt-Jahr (gm=2.2>1) verworfen -> gpGrowth ~ gpYoY+kleiner Tilt > 0.
+  const g = ax.gpGrowth(s);
+  assert.ok(g > 0.3, `gpGrowth sollte ~gpYoY positiv bleiben, nicht vom korrupten gmOld dominiert: ${g}`);
+});
+test('gpGrowth: beide gm-Endpunkte plausibel -> unveraendertes Verhalten (kein Regress)', () => {
+  const s = { annual: { annualGP: [{ value: 60 }, { value: 40 }], annualRev: [{ value: 100 }, { value: 100 }] } };
+  assert.ok(near(ax.gpGrowth(s), 0.7), 'gpGrowth=' + ax.gpGrowth(s)); // gpYoY 0.5 + gmTraj 0.2
+});
+test('marginTrajectory (F12): negativer Quartalsumsatz wird verworfen (keine Phantom-Marge/Flip)', () => {
+  const s = { timeseries: {
+    opIncQ:   [{ value: 30 }, { value: 25 }, { value: 20 }, { value: -5 }],
+    revenueQ: [{ value: 100 }, { value: 90 }, { value: 80 }, { value: -10 }] } };
+  // Ohne Guard: aeltestes Quartal -5/-10=+0.5 (Phantom) -> 0.30-0.5=-0.2 (falscher Flip).
+  // Mit Guard: nur 3 positive Quartale -> 0.30-0.25=+0.05 (korrekt, steigende Marge).
+  assert.ok(ax.marginTrajectory(s) > 0, `Trajektorie muss positiv sein, ist ${ax.marginTrajectory(s)}`);
+});
+test('marginTrajectory: alle Quartale positiv -> unveraendert (kein Regress)', () => {
+  const s = { timeseries: { opIncQ: [{ value: 30 }, { value: 10 }], revenueQ: [{ value: 100 }, { value: 100 }] } };
+  assert.ok(near(ax.marginTrajectory(s), 0.2), 'marginTraj=' + ax.marginTrajectory(s));
+});
+test('dilution (F17): near-zero Alt-Umsatz blaeht SBC/Rev nicht auf (Slope robust)', () => {
+  const s = { annual: {
+    annualSBC: [10, 9, 8, 0.01], // FIELD_REGISTRY annualSBC = ['annual','scalar'] -> reine Zahlen
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }, { value: 0.001 }] } };
+  // Ohne Guard: old=0.01/0.001=10 -> dilution ~ +9.8 ("beste Dilution", IBRX-Muster, falsch).
+  // Mit Guard: Alt-Jahr (ratio 10>1) verworfen -> dilution ~ -0.12 (echte Verwaesserung).
+  const d = ax.dilution(s);
+  assert.ok(d < 0 && d > -1, `dilution muss negativ + nicht aufgeblaeht sein, ist ${d}`);
+});
+
+test('gpGrowth (F9, R2F40): negatives gm-Jahr (GP<0) wird ebenso verworfen (v>=0-Guard hat Wirkung)', () => {
+  const s = { annual: {
+    annualGP:  [{ value: 60 }, { value: 40 }, { value: 30 }, { value: -50 }],
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }, { value: 100 }] } };
+  // gm = [0.6, 0.4, 0.3, -0.5]. Ohne v>=0-Guard: gmOld=-0.5 -> gmTraj=1.1 -> g~1.6 (aufgeblaeht).
+  // Mit Guard: -0.5 verworfen -> gmOld=0.3 -> gmTraj=0.3 -> g=0.8.
+  assert.ok(ax.gpGrowth(s) < 1.0, `gm<0-Jahr darf gpGrowth nicht aufblaehen: ${ax.gpGrowth(s)}`);
+});
+test('dilution (F17/R2F1): echter Heavy-Diluter (newest SBC/Rev>1) behaelt die Achse (kein Drop->renorm)', () => {
+  const s = { annual: { annualSBC: [150, 120, 90], annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }] } };
+  // newest SBC/Rev = 1.5 (>1) -> frueheres Nullen haette die Achse gedroppt (Diluter entging Strafe).
+  // Jetzt: level=clamp(1.5)=1 -> dilution != null und stark negativ (harte Verwaesserungs-Strafe).
+  const d = ax.dilution(s);
+  assert.ok(d !== null && d < 0, `Heavy-Diluter muss Achse behalten + negative dilution haben, ist ${d}`);
+});
+
+test('marginTrajectory (F12, R2 mutation): revenueQ===0 wird verworfen (r>0-Guard, nicht r>=0)', () => {
+  const s = { timeseries: {
+    opIncQ:   [{ value: 30 }, { value: 25 }, { value: 20 }, { value: 5 }],
+    revenueQ: [{ value: 100 }, { value: 90 }, { value: 80 }, { value: 0 }] } };
+  // Aeltestes Quartal revenueQ=0 -> verwerfen (sonst Div/0). Mit r>0: 3 valide Q -> 0.30-0.25=0.05.
+  // Mit r>=0 (Mutation): 5/0=Infinity -> m nicht finit. Test faengt die Mutation.
+  const m = ax.marginTrajectory(s);
+  assert.ok(Number.isFinite(m) && m > 0, `revenueQ=0 muss verworfen werden, m=${m}`);
+});
+
+console.log(`\naxes.test.js: ${pass} ok, ${fail} fail`);
+process.exit(fail ? 1 : 0);

@@ -2,7 +2,7 @@ name: Daily Yahoo Pull
 
 on:
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '17 2 * * 2-6'
   workflow_dispatch: {}
 
 permissions:
@@ -47,7 +47,9 @@ jobs:
       # 01:00 UTC the next day would yield picks-history/2026-05-17.json
       # but methods-history/2026-05-18.json — silently breaking pick-diff's
       # findMethodFile lookup and method-effectiveness's vintage cache).
-      # Downstream snapshot-* scripts respect RUN_DATE_UTC over Date.now().
+      # Loop A removed the snapshot-* writers; RUN_DATE_UTC is now honored by
+      # archive-old-snapshots.js and pull-historical-prices.js. Kept frozen so any
+      # Loop-B snapshot writer can opt in and stay midnight-safe.
       - name: Freeze Run Date
         run: |
           RUN_DATE_UTC=$(date -u +%Y-%m-%d)
@@ -74,18 +76,10 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
-      # Tag-23: Pre-Pull Engine-Tests. Bricht workflow ab BEVOR Yahoo-Pull
-      # läuft, falls Engine/Orchestrator/Filters durch einen Commit kaputt sind.
-      # Schützt gegen production-Schäden bei Engine-Bugs.
-      - name: Run Engine Tests (pre-pull guard)
-        run: node engine-cli-tests.js
-
-      # Tag-28: Methods-Plugin-Tests
-      - name: Run Method Tests
-        run: |
-          echo "--- tag21 ---" && node tag21-tests.js && echo "tag21 PASS" || { echo "tag21 FAIL"; exit 1; }
-          echo "--- tag22 ---" && node tag22-tests.js && echo "tag22 PASS" || { echo "tag22 FAIL"; exit 1; }
-          echo "--- tag28 ---" && node tag28-tests.js && echo "tag28 PASS" || { echo "tag28 FAIL"; exit 1; }
+      # Loop A (hypergrowth pivot): removed the pre-pull engine/method test gate
+      # (engine-cli-tests.js, tag21/22/28-tests.js). Those tested the deleted
+      # quality-compounder scoring layer. Loop B wires its own pre-pull gate
+      # (tests/scoring/*) once the new hypergrowth engine is in place.
 
       # Tag 132: Auto-Universe-Refresh — laeuft bei jedem Run (schedule + workflow_dispatch).
       # Tag 133: Merged mit SEC EDGAR, Finnhub, Wikipedia Indices.
@@ -198,6 +192,40 @@ jobs:
         timeout-minutes: 30
         continue-on-error: true
 
+      # Tag 220c (audit F-219c): Yahoo Schema-Drift Canary. Runs IMMEDIATELY
+      # before the Yahoo pull so a silent Yahoo field move (like the Tag 219c F1
+      # financialCurrency disappearance that mis-FX'd every ADR for weeks) is
+      # surfaced within 24h instead of corrupting data silently. The canary
+      # checks NVDA + TSM (TSM exercises the TWD!=USD financialCurrency divergence).
+      # MUST NOT block the pull: continue-on-error:true AND the step exits 0
+      # after alerting — drift fires a ::error:: annotation + a clearly-labeled
+      # Discord ping, but daily-pull (which has its own multi-anchor fallback)
+      # still runs. Canary exit-code contract: 1=drift, 2=Yahoo-unreachable
+      # (non-fatal, treated like 0), 0=clean.
+      - name: Schema-Drift Canary
+        continue-on-error: true
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          set +e
+          node tests/yahoo-schema-canary.js
+          canary_exit=$?
+          echo "Schema-Drift Canary exit code: $canary_exit"
+          if [ "$canary_exit" -eq 1 ]; then
+            echo "::error::SCHEMA-CANARY DRIFT — Yahoo field(s) moved; pull-yahoo extraction may be silently corrupting data"
+            if [ -z "$DISCORD_WEBHOOK" ]; then
+              echo "DISCORD_WEBHOOK not set, skipping Discord notification."
+            else
+              curl -H "Content-Type: application/json" -X POST \
+                -d "{\"content\": \"🚨 SCHEMA-CANARY DRIFT — Yahoo field(s) moved; pull-yahoo extraction may be silently corrupting data. Detected at $(date -u). See run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+                "$DISCORD_WEBHOOK"
+            fi
+          fi
+          # Never block the pull: the ::error:: annotation + Discord ping have
+          # already fired; exit 0 so the pull proceeds (continue-on-error also
+          # guards this, but exiting 0 keeps the step itself green).
+          exit 0
+
       - name: Run Yahoo Pull
         env:
           FUNDAMENTALS_MAX_AGE_DAYS: '7'
@@ -301,7 +329,7 @@ jobs:
           # incomplete updates degrade gracefully instead of polluting aggregates.
           partial=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.partial===true?'true':'false')}catch(e){console.log('false')}")
           if [ "$partial" = "true" ]; then
-            echo "::warning::Manifest reports partial=true — pull was killed mid-flight. Letting the coverage gate (n_ok ≥ max(2500, 18%)) decide."
+            echo "::warning::Manifest reports partial=true — pull was killed mid-flight. Letting the coverage gate (n_ok ≥ max(2500, 13%)) decide."
           fi
           ok=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.n_ok||0)}catch(e){console.log(0)}")
           total=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.n_total||0)}catch(e){console.log(0)}")
@@ -359,100 +387,6 @@ jobs:
             exit 1
           fi
 
-      - name: Detect Changes + Discord-Alert
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: node detect-changes.js --snapshots snapshots --state alert-state.json
-        continue-on-error: true
-
-      # Tag-49: Compute sector-medians-auto from current snapshots
-      - name: Compute Sector-Medians (auto)
-        run: node methods/sector-medians-compute.js ./snapshots
-        timeout-minutes: 10
-        continue-on-error: true
-
-      # Tag-28: Methods-Report (Werte-Matrix pro Stock × Methode)
-      # Tag 102b: Methods-Report deaktiviert — Modes-Report ist primärer Output
-      
-      # Tag 100: Modes-Report (3 Discovery-Modi: Hypergrowth/Quality/Turnaround)
-      # Tag 134: hard-fail. modes-report is the primary user-facing artifact;
-      # silently publishing yesterday's HTML masks real breakage.
-      # Tag 168: continue-on-error — per-stock failures are soft-fail; Pipeline Health Check
-      # below enforces the 5% threshold and hard-fails if breached.
-      - name: Generate Modes-Report
-        run: node generate-modes-report.js --snapshots snapshots --out modes-report.html
-        continue-on-error: true
-
-      # Tag 198: Bloomberg 6-tab Screener dashboard (HG/QC/SMALL/R40/PRE-BREAKOUT/WATCH).
-      # New artifact alongside dashboard.html / modes-report.html / methods-report.html.
-      # Tag 199: AUDIT_SCORE_MULTIPLIERS=1 enables q-spike-penalty + listing-age
-      # multiplier in score-aggregator. Scoped to this step only — other artifacts
-      # (snapshot-picks, modes-report) keep the un-multiplied scores so the
-      # fixture-hash test in tag28-tests.js (run without env) stays stable.
-      # continue-on-error: it's a secondary artifact; pipeline shouldn't hard-fail on it.
-      - name: Generate Screener Dashboard
-        env:
-          AUDIT_SCORE_MULTIPLIERS: '1'
-        run: node generate-screener.js --snapshots snapshots --out screener.html
-        continue-on-error: true
-
-      # Tag 203: Per-Ticker Score-History (sliding 30-entry window) — feeds the
-      # screener detail modal's ΔScore badges + sparkline (Section D). Must
-      # share AUDIT_SCORE_MULTIPLIERS with the dashboard step above so stored
-      # scores match what the dashboard renders (design §4: drift here produces
-      # a permanent fake "score uplift today" artifact). continue-on-error:
-      # secondary artifact; pipeline-health-check enforces the 5% threshold.
-      - name: Snapshot Score-History
-        env:
-          AUDIT_SCORE_MULTIPLIERS: '1'
-        run: node scripts/snapshot-score-history.js --snapshots snapshots --out score-history
-        continue-on-error: true
-
-      - name: Snapshot R40/RX History (quarterly)
-        env:
-          AUDIT_SCORE_MULTIPLIERS: '1'
-        run: node scripts/snapshot-r40rx-history.js --snapshots snapshots --out r40rx-history
-        continue-on-error: true
-
-      # Tag 102g: Walk-Forward Picks-History — friert Mode-Picks pro Run für späteren Performance-Vergleich.
-      # Tag 168: continue-on-error — per-stock failures are soft-fail; Pipeline Health Check
-      # below enforces the 5% threshold AND F-CI-002 missing-report=100%-fail rule, so a
-      # hard crash here is still caught downstream. (Tag 134's original hard-fail semantics
-      # are preserved indirectly — see audit F-218c-08.)
-      # Tag 219a (audit F-218c-04): INTENTIONALLY does NOT set AUDIT_SCORE_MULTIPLIERS.
-      # picks-history must record un-multiplied scores so the tag28-tests fixture hash
-      # stays stable across multiplier tuning (see Tag 199 / Tag 203 design notes). The
-      # screener.html / score-history steps above DO set the env var because their job
-      # is to surface the user-visible multiplied scores. Drift here would produce a
-      # permanent fake "score uplift today" artifact — do not add the env var.
-      - name: Snapshot Picks-History
-        run: node snapshot-picks.js --snapshots snapshots --out picks-history
-        continue-on-error: true
-
-      # Tag 133d: Picks-Regression Guard — Alarm wenn Pick-Count >35% von 4-Week-Median driftet.
-      # ALLOW_PICKS_DRIFT=1 für legitimate Universe-Expansion-Runs setzen.
-      - name: Picks-Regression Check
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          ALLOW_PICKS_DRIFT: ${{ vars.ALLOW_PICKS_DRIFT || '0' }}
-        run: |
-          # F-CI-007: consistent DISCORD_WEBHOOK existence check before invoking script
-          if [ -z "$DISCORD_WEBHOOK" ]; then echo "DISCORD_WEBHOOK not configured — Discord alerts disabled."; fi
-          node scripts/picks-regression-check.js
-        continue-on-error: true
-
-      # Tag-35: Methods-History-Snapshot (für Backtest später)
-      # Tag 168: continue-on-error — per-stock failures are soft-fail; Pipeline Health Check
-      # enforces the 5% threshold and the F-CI-002 missing-report rule. Tag 134's
-      # hard-fail semantics are preserved indirectly.
-      # Tag 219a (audit F-218c-04): INTENTIONALLY does NOT set AUDIT_SCORE_MULTIPLIERS.
-      # Same rationale as Snapshot Picks-History above — fixture-hash stability and
-      # un-multiplied scores are required for methods-history to be a meaningful
-      # backtest input.
-      - name: Snapshot Methods-History
-        run: node snapshot-methods-history.js --out methods-history
-        continue-on-error: true
-
       # Tag-63: Earnings-Calendar Pull
       # F-CI-005: Pipeline Health Check moved to AFTER commit so snapshots are always
       # committed even if health check fails (prevents vintage continuity gaps).
@@ -482,37 +416,6 @@ jobs:
         run: node scripts/macro-regime.js
         continue-on-error: true
 
-      # Tag 133e: Walk-Forward-Performance — picks-history × prices/history.json.
-      # Berechnet 1w/4w/12w α der Modi vs Universe-Median. Survivor-biased Caveat dokumentiert.
-      - name: Walk-Forward Performance
-        run: node scripts/walk-forward-perf.js
-        timeout-minutes: 15
-        continue-on-error: true
-
-      # Tag 133f: Method-Effectiveness Audit — welche Methoden korrelieren mit Forward-Return?
-      - name: Method-Effectiveness Audit
-        run: node scripts/method-effectiveness.js
-        timeout-minutes: 10
-        continue-on-error: true
-
-      # Tag 134 — Phase 3.6: Methodology Report combines walk-forward + method-effectiveness
-      # into a decision-ready summary. Read this in GitHub after the run completes.
-      - name: Methodology Report
-        run: node scripts/methodology-report.js
-        continue-on-error: true
-
-      # Tag 134 — Phase 4.2/4.4: pick-diff + Jaccard stability.
-      # Writes outputs/pick-diff.{json,html} answering "what's new, what's gone, why".
-      - name: Pick Diff + Jaccard
-        run: node scripts/pick-diff.js
-        continue-on-error: true
-
-      # Tag 134 — Phase 4.3: Elliott-Wave Export CSV per mode.
-      # Karl's downstream input — directly importable into Excel/Elliott tool.
-      - name: Elliott CSV Export
-        run: node scripts/elliott-export.js
-        continue-on-error: true
-
       # Tag 133g: Pull-Stats Monitoring — Discord-Alert wenn ein Pull-Output >25% vs 4-Week-Median shrinkt.
       - name: Pull-Stats Check
         env:
@@ -524,60 +427,27 @@ jobs:
           node scripts/check-pull-stats.js
         continue-on-error: true
 
-      # Tag 133j: Method-Drift Time-Series — Sparkline-Daten für Dashboard.
-      - name: Compute Method-Drift
-        run: node scripts/compute-method-drift.js
-        continue-on-error: true
-
-      # Tag-50: Watchlist-Diff-Report (zeigt Änderungen vs vorigem Run)
-      - name: Generate Diff-Report
-        run: node generate-diff-report.js --out diff-report.html
-        continue-on-error: true
-
-      # Tag-77: Dashboard mit Discover-Button
-      - name: Generate Dashboard
-        run: node generate-dashboard.js dashboard.html
-        continue-on-error: true
-
-      # Tag 134 — Phase 5.1: archive methods-history / picks-history / prices snapshots
-      # older than 60 days into external-data/*.ndjson (git-ignored).
-      # Reduces committed repo bloat. Rebuildable from snapshots on the runner.
-      # Tag 153: methods-history is 14 MB/file.
-      # Tag 233a (audit F-BT-007 HIGH): raised methods-keep-days 7 → 90 to match
-      # method-effectiveness cache retention (CACHE_RETENTION_DAYS=90). The prior
-      # 7d window meant the cache was the SOLE record of vintages after 8 days;
-      # cache corruption silently lost months of effectiveness history. Repo-side
-      # cost: 14MB × 90d = 1.26 GB max, but vintages are archived to
-      # external-data/*.ndjson (git-ignored) and are not kept as committed files.
-      # picks-history is 65 KB/file but walk-forward-perf needs 84+ day vintages (keep 90d).
-      - name: Archive Old Snapshots
-        run: node scripts/archive-old-snapshots.js --keep-days 14 --methods-keep-days 90 --picks-keep-days 90
-        continue-on-error: true
-
-      # F-SM-003 / F-CI-008: Strip methodHistory from alert-state.json using a script
-      # instead of shell-interpolated inline node -e (avoids $size injection and non-atomic write).
-      # saveState() in detect-changes.js now always writes methodHistory to the committed sidecar
-      # (method-history-state.json) and never embeds it in alert-state.json. This step is a
-      # safety net that cleans up any leftover inline methodHistory from old runs.
+      # Tag 134 — Phase 5.1: archive prices/ daily snapshots older than --keep-days
+      # into external-data/*.ndjson (git-ignored). Reduces committed repo bloat.
+      # Rebuildable from snapshots on the runner.
       #
-      # Tag 232a-2 (audit F-CI-001 HIGH): continue-on-error so a JSON.parse failure here
-      # never aborts the workflow before the "Commit Snapshots" step runs. Without this,
-      # one corrupt alert-state.json discards ~4h of fresh pulls AND becomes sticky (next
-      # day's run hits the same parse fail). The .corrupt.<ts>.json backup written below
-      # plus the failed-step Discord alert give the operator the visibility Karl wanted
-      # without sacrificing the day's snapshots.
-      # Tag 232c-10 (audit F-SM-004 HIGH): extracted from inline `node -e` to
-      # scripts/strip-method-history.js so the strip step can route the write
-      # through lib/atomic-write (POSIX parent-dir fsync + Windows EPERM retry
-      # + writeSync partial-write loop). Prior inline path used raw
-      # fs.writeFileSync + renameSync — a SIGKILL or power-loss between the
-      # writeSync and the renameSync could leave zero-byte alert-state.json
-      # committed to main, breaking the next run's detect-changes parser.
-      - name: Strip methodHistory from alert-state
+      # Loop A removed the methods-history/ and picks-history/ WRITERS, so those
+      # dirs are frozen (no new files — the newest are the 2026-06-12 vintages).
+      # Previously this step passed --methods-keep-days 90 --picks-keep-days 90,
+      # which would archive each frozen file into git-ignored, runner-ephemeral
+      # NDJSON and then unlink + push the deletion of the committed original once
+      # it aged past 90 days (~2026-09-10) — silently losing OLD scoring vintages
+      # from main with no durable backup (only git history). Nothing regenerates
+      # them. Fix: stop archiving the frozen dirs by setting their keep-windows
+      # effectively-infinite (100000 days), leaving the committed files untouched.
+      # (Omitting the flags would fall back to --keep-days 14 and delete them even
+      # sooner.) The live prices/ archiving is preserved via --keep-days 14.
+      # A Loop-B writer can restore real keep-windows when it reintroduces them.
+      - name: Archive Old Snapshots
+        run: node scripts/archive-old-snapshots.js --keep-days 14 --methods-keep-days 100000 --picks-keep-days 100000
         continue-on-error: true
-        run: node scripts/strip-method-history.js
 
-      - name: Commit Snapshots + Alert-State
+      - name: Commit Snapshots
         run: |
           git config user.name "yahoo-pull-bot"
           git config user.email "yahoo-pull-bot@users.noreply.github.com"
@@ -585,7 +455,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "chore: yahoo-pull + alert-state $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git commit -m "chore: yahoo-pull $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             # F-CI-001 v2 (Tag 179): the previous fallback `git rebase --abort; git reset
             # --hard origin/main` was CRITICAL data-loss — it discarded the just-made
             # commit, after which `git push` succeeded as a no-op and the workflow
@@ -661,19 +531,9 @@ jobs:
         if: success()
         run: |
           # Build a clean deploy directory
+          # Loop A: report generators removed; deploy index.html + outputs/ only until Loop B rebuilds the dashboard
           mkdir -p _site/outputs
           cp index.html _site/ 2>/dev/null || true
-          cp modes-report.html _site/ 2>/dev/null || true
-          cp diff-report.html _site/ 2>/dev/null || true
-          cp dashboard.html _site/ 2>/dev/null || true
-          cp screener.html _site/ 2>/dev/null || true
-          # Tag 246: ship the lazy-loaded heavy payload next to screener.html so
-          # the dashboard's modal fetch('screener-detail.json') resolves same-origin
-          # on gh-pages. Regenerated each run by generate-screener.js; gitignored on
-          # main (avoids ~44 MB/day history bloat) but MUST be deployed here or every
-          # detail modal 404s on the live site.
-          cp screener-detail.json _site/ 2>/dev/null || true
-          cp methods-report.html _site/ 2>/dev/null || true
           cp -r outputs/. _site/outputs/ 2>/dev/null || true
 
           # Push to gh-pages branch (orphan-safe force push)
