@@ -70,6 +70,10 @@ const { fetchNseIndia }         = require('./discovery/nse-in.js');
 const { fetchLseUniverse }      = require('./discovery/lse-uk.js');
 const { fetchTsxCanada }        = require('./discovery/tsx-ca.js');
 const { fetchAsxUniverse }      = require('./discovery/asx-au.js');
+// Bau-Plan 2026-07-03: parametrisierter TradingView-Scanner. EIN Adapter fixt JP-Register
+// (edinet-jp lieferte nur Filings) + SZSE (szse-cn egress-blockiert) UND deckt ~10 fehlende Maerkte
+// (Euronext/Schweiz/SE-Asien/Osteuropa/Brasilien/Mexiko). Fail-silent pro Land.
+const { discoverTvScanner, TV_FOREIGN_CANON } = require('./discovery/tv-scanner.js');
 // Marktkap-Vorpruefung (Karl-Sizing-Fix): filtert die Auslands-null-mcap-Zeilen VOR dem teuren Pull
 // billig auf >= $2B USD (Batch-Yahoo-quote). Nur die Ueberlebenden gehen in den Fundamental-Pull.
 const { prefilterByMcap }       = require('./discovery/mcap-prefilter.js');
@@ -79,7 +83,10 @@ const { prefilterByMcap }       = require('./discovery/mcap-prefilter.js');
 const FOREIGN_SOURCE_CANON = {
   'edinet-jp': 'edinet', 'finmind-tw': 'finmind', 'opendart': 'opendart',
   'sse-cn': 'sse', 'szse-cn': 'szse', 'hkex': 'hkex',
-  'xetra': 'xetra', 'nordic': 'nordic', 'oslo': 'oslo', 'nse-in': 'nse', 'lse': 'lse', 'tsx': 'tsx', 'asx': 'asx'
+  'xetra': 'xetra', 'nordic': 'nordic', 'oslo': 'oslo', 'nse-in': 'nse', 'lse': 'lse', 'tsx': 'tsx', 'asx': 'asx',
+  // Bau-Plan: per-Land TV-Scanner-Tokens (tv-japan->tvjp, tv-szse->tvsz, ...). Jedes landet ueber
+  // FOREIGN_CANON_SET automatisch im Foreign-Slot-Schutz (FIX-3) und wird von mcap-prefilter gepreist.
+  ...TV_FOREIGN_CANON
 };
 const FOREIGN_CANON_SET = new Set(Object.values(FOREIGN_SOURCE_CANON));
 
@@ -462,7 +469,8 @@ async function main() {
   const DISCOVERY_SOURCE_NAMES = [
     'nasdaq-all', 'sec-tickers', 'finnhub', 'wikipedia-indices', 'otc-markets', 'nasdaq-api',
     'edinet-jp', 'finmind-tw', 'opendart-kr', 'sse-cn', 'szse-cn', 'hkex-hk',
-    'xetra', 'nordic', 'oslo', 'nse-in', 'lse-uk', 'tsx-ca', 'asx-au'
+    'xetra', 'nordic', 'oslo', 'nse-in', 'lse-uk', 'tsx-ca', 'asx-au',
+    'tv-scanner'
   ];
   const discoverySources = await Promise.allSettled([
     fetchNasdaqAll(),
@@ -483,7 +491,8 @@ async function main() {
     fetchNseIndia(),
     fetchLseUniverse(),
     fetchTsxCanada(),
-    fetchAsxUniverse()
+    fetchAsxUniverse(),
+    discoverTvScanner()
   ]);
   // audit/fix (BUG HIGH — silent total-discovery-outage): every source returns an
   // empty Map() on total failure instead of rejecting, so Promise.allSettled sees
