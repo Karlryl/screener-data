@@ -51,6 +51,11 @@ async function prefilterByMcap(symbols, opts = {}) {
     catch (_) { errors++; continue; } // fail-silent: dieser Batch bleibt null-mcap
     for (const q of (Array.isArray(quotes) ? quotes : [quotes])) {
       if (!q || !q.symbol) continue;
+      // FIX-1 (Bau-Plan Welle 0): nur operative Aktien. yf.quote liefert quoteType gratis;
+      // ETF/CEF/MUTUALFUND/Bond mit echter marketCap >= $2B wuerden sonst als "Firma" durchrutschen
+      // und die CRDO/ALAB-Spitze mit $50B-Fonds verstopfen (Direktive-4-Bruch). Fail-open: fehlendes
+      // quoteType filtert nicht (kein Regress), gesetztes != EQUITY fliegt raus.
+      if (q.quoteType && q.quoteType !== 'EQUITY') continue;
       checked++;
       const usd = toUsd(q.marketCap, q.currency, rates);
       if (usd != null && usd >= minUsd) kept.set(q.symbol, usd);

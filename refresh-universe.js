@@ -665,7 +665,13 @@ async function main() {
     // rows come first (ties keep original discovery order — the sort is index-keyed),
     // and (2) reserve an exclusive foreign sub-quota that the OTC mass cannot consume.
     // The withMcap branch above is untouched — this only reorders/quotas the null bucket.
-    const FOREIGN_SOURCES = new Set(['edinet', 'finmind', 'opendart', 'sse', 'szse', 'hkex']);
+    // FIX-3 (Bau-Plan Welle 0): EINE Quelle der Wahrheit. Die alte 6-Token-Handliste war schon fuer
+    // xetra/nordic/oslo/nse/lse/tsx/asx veraltet -> die bereits gebauten EU/CA/AU/IN-Adapter waren im
+    // Cap-Block slot-UNGESCHUETZT (bei Yahoo-429 null-mcap wurden ihre Zeilen von der US-OTC-Masse
+    // verdraengt = stiller vorbestehender Verlust). FOREIGN_CANON_SET (Z.84) haelt alle 13 Tokens; jeder
+    // neue Adapter (inkl. tv-scanner per-Land-Token) ist automatisch geschuetzt, sobald sein Token in
+    // FOREIGN_SOURCE_CANON steht.
+    const FOREIGN_SOURCES = FOREIGN_CANON_SET;
     const isForeign = ([, v]) => {
       if (!v || !v.source) return false;
       return String(v.source).split(',').some(s => FOREIGN_SOURCES.has(s.trim()));
