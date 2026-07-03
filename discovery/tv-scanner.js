@@ -59,6 +59,19 @@ const MARKETS = {
   // Israel BEWUSST NICHT: TASE-market_cap_basic kommt in ILA(Agorot) mit unzuverlaessiger Skalierung (dual-listing-verzerrt);
   // die echten israelischen Tech-Namen (CYBR/MNDY/GLBE/NICE) notieren primaer US -> schon ueber US-Adapter gedeckt. Deferred (Dead-Zone-Report).
   'tv-rsa':       { endpoint: 'rsa',         suffix: '.JO', ccy: 'ZAR', canon: 'tvza', country: 'ZA' },
+  // Bau-Plan (Karl "alles bauen"): restliche Laender, Ertragscheck-verifiziert (scorebar >=$2B via Yahoo).
+  // Domizilfilter fuer CEDEAR/DR-schwere Maerkte (Chile/Kolumbien/Argentinien voller Auslands-Listings wie NVDA).
+  // 6 getestete Maerkte als Dead-Zones ENTFERNT (0 scorebar — Yahoo loest Suffix nicht auf): UAE/ADX (.AD, IHC/ADNOC
+  // nicht auf Yahoo), Peru (.LM), Aegypten (.CA), Marokko (.CS), Pakistan (.KA), Philippinen (.PS). Siehe Coverage-Report.
+  'tv-saudi':      { endpoint: 'ksa',        suffix: '.SR', ccy: 'SAR', canon: 'tvksa', country: 'SA' }, // TV /saudi=404, /ksa=OK; 60 scorebar
+  'tv-qatar':      { endpoint: 'qatar',      suffix: '.QA', ccy: 'QAR', canon: 'tvqa', country: 'QA' },  // 20
+  'tv-newzealand': { endpoint: 'newzealand', suffix: '.NZ', ccy: 'NZD', canon: 'tvnz', country: 'NZ' },  // 18
+  'tv-chile':      { endpoint: 'chile',      suffix: '.SN', ccy: 'CLP', canon: 'tvcl', country: 'CL', domicile: 'Chile' },      // 26
+  'tv-colombia':   { endpoint: 'colombia',   suffix: '.CL', ccy: 'COP', canon: 'tvco', country: 'CO', domicile: 'Colombia' },  // 12
+  'tv-argentina':  { endpoint: 'argentina',  suffix: '.BA', ccy: 'ARS', canon: 'tvar', country: 'AR', domicile: 'Argentina' }, // 9 (CEDEARs gefiltert)
+  'tv-romania':    { endpoint: 'romania',    suffix: '.RO', ccy: 'RON', canon: 'tvro', country: 'RO', domicile: 'Romania' },   // 8
+  'tv-hungary':    { endpoint: 'hungary',    suffix: '.BD', ccy: 'HUF', canon: 'tvhu', country: 'HU', domicile: 'Hungary' },   // 2
+  'tv-czech':      { endpoint: 'czech',      suffix: '.PR', ccy: 'CZK', canon: 'tvcz', country: 'CZ', domicile: 'Czech Republic' }, // 5
 };
 
 function loadRates() {
