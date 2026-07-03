@@ -32,8 +32,14 @@ jobs:
           echo -n "SGX     -> "; curl -s -o /dev/null -w "%{http_code}\n" --max-time 25 -H "User-Agent: Mozilla/5.0" "https://api.sgx.com/securities/v1.1?excludetypes=bonds&params=nc%2Cadjusted-vwap%2Cb%2Cbv%2Cp"
           echo -n "IDX     -> "; curl -s -o /dev/null -w "%{http_code}\n" --max-time 25 -H "User-Agent: Mozilla/5.0" "https://www.idx.co.id/primary/StockData/GetSecuritiesStock?start=0&length=10&code=&sector=&board=&language=en-us"
           echo -n "SSI-VN  -> "; curl -s -o /dev/null -w "%{http_code}\n" --max-time 25 -H "User-Agent: Mozilla/5.0" "https://iboard-query.ssi.com.vn/stock/exchange/hose"
+      - name: Checkout (fuer Adapter-Step)
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       - name: Adapter end-to-end (echter tv-scanner in CI)
         run: |
           set +e
           npm ci --no-audit --no-fund >/dev/null 2>&1 || npm install --no-audit --no-fund >/dev/null 2>&1
-          node -e "require('./discovery/tv-scanner.js').discoverTvScanner({markets:['tv-szse','tv-japan','tv-france']}).then(m=>console.log('ADAPTER tv-scanner (SZSE+JP+FR) ->', m.size, 'Kandidaten')).catch(e=>console.log('ADAPTER ERR', e.message))"
+          node -e "require('./discovery/tv-scanner.js').discoverTvScanner({markets:['tv-szse','tv-japan','tv-france']}).then(m=>{console.log('ADAPTER tv-scanner (SZSE+JP+FR) ->', m.size, 'Kandidaten'); process.exit(0);}).catch(e=>{console.log('ADAPTER ERR', e.message); process.exit(0);})"
