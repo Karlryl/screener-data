@@ -51,6 +51,25 @@ const { fetchNasdaqAll }        = require('./discovery/nasdaq-all.js');
 // Tag 165: OTC Markets (OTCQX/OTCQB/Expert) + NASDAQ Screener API — ~5k additional US tickers
 const { fetchOTCMarkets }       = require('./discovery/otc-markets.js');
 const { fetchNasdaqApiList }    = require('./discovery/nasdaq-api.js');
+// Foreign-exchange discovery (keyless, live-verified 2026-07-03): JP/TW/KR/CN/HK.
+// These arrive with marketCap:null; the null-mcap slot protection in the cap block
+// (FOREIGN_SOURCES) reserves slots for them so the US-OTC null-mcap mass can't starve
+// them. See FOREIGN_SOURCE_CANON below — the cap matches on canonical tokens
+// (edinet/finmind/opendart/sse/szse/hkex), so we normalize each row's source at merge.
+const { fetchEdinetJapan }      = require('./discovery/edinet-jp.js');
+const { fetchTaiwanUniverse }   = require('./discovery/finmind-tw.js');
+const { fetchOpenDartKr }       = require('./discovery/opendart-kr.js');
+const { fetchSseUniverse }      = require('./discovery/sse-cn.js');
+const { fetchSzseUniverse }     = require('./discovery/szse-cn.js');
+const { fetchHkexUniverse }     = require('./discovery/hkex-hk.js');
+// Map each foreign adapter's emitted source string onto the canonical FOREIGN_SOURCES
+// token the cap block reserves slots for. Without this, edinet-jp/finmind-tw/sse-cn/
+// szse-cn would NOT match FOREIGN_SOURCES ('edinet'/'finmind'/'sse'/'szse') and their
+// null-mcap rows would be dropped by the OTC mass — the exact bug the infra fix prevents.
+const FOREIGN_SOURCE_CANON = {
+  'edinet-jp': 'edinet', 'finmind-tw': 'finmind', 'opendart': 'opendart',
+  'sse-cn': 'sse', 'szse-cn': 'szse', 'hkex': 'hkex'
+};
 
 function parseArgs(argv) {
   const args = { watchlist: './watchlist.json', out: null };
@@ -429,7 +448,8 @@ async function main() {
   // audit/fix: name the sources in call-order so per-source observability below
   // can attribute a non-empty/empty/failed result to the right discovery module.
   const DISCOVERY_SOURCE_NAMES = [
-    'nasdaq-all', 'sec-tickers', 'finnhub', 'wikipedia-indices', 'otc-markets', 'nasdaq-api'
+    'nasdaq-all', 'sec-tickers', 'finnhub', 'wikipedia-indices', 'otc-markets', 'nasdaq-api',
+    'edinet-jp', 'finmind-tw', 'opendart-kr', 'sse-cn', 'szse-cn', 'hkex-hk'
   ];
   const discoverySources = await Promise.allSettled([
     fetchNasdaqAll(),
@@ -437,7 +457,13 @@ async function main() {
     fetchFinnhubUniverse(),
     fetchWikipediaIndices(),
     fetchOTCMarkets(),
-    fetchNasdaqApiList()
+    fetchNasdaqApiList(),
+    fetchEdinetJapan(),
+    fetchTaiwanUniverse(),
+    fetchOpenDartKr(),
+    fetchSseUniverse(),
+    fetchSzseUniverse(),
+    fetchHkexUniverse()
   ]);
   // audit/fix (BUG HIGH — silent total-discovery-outage): every source returns an
   // empty Map() on total failure instead of rejecting, so Promise.allSettled sees
@@ -471,6 +497,12 @@ async function main() {
     totalDiscoveryCandidates += srcMap.size;
     if (srcMap.size > 0) nonEmptySources++;
     for (const [sym, info] of srcMap) {
+      // Normalize the foreign adapter's source token (edinet-jp -> edinet, etc.) to
+      // the canonical form the cap block's FOREIGN_SOURCES set reserves null-mcap
+      // slots for. Non-foreign sources pass through unchanged. Mutating info.source
+      // here means BOTH the set-branch and the else-union-branch below carry the
+      // canonical token, so the row survives the slot-cap.
+      if (info && FOREIGN_SOURCE_CANON[info.source]) info.source = FOREIGN_SOURCE_CANON[info.source];
       // audit/fix: class-share-normalize the merge key so a discovery dash form
       // (sec-edgar BRK-B) folds onto an already-seen dot form (and vice-versa),
       // and so this source's US class shares collapse onto their dash twin.
@@ -572,7 +604,14 @@ async function main() {
   // per-run runtime tractable; the 20% null-mcap proportional split below
   // already prevents OOM by keeping low-confidence discoveries bounded.
   // Override via env MAX_UNIVERSE for tighter local-dev runs.
-  const MAX_UNIVERSE = parseInt(process.env.MAX_UNIVERSE || '25000', 10);
+  // Global-Universe-Ausbau (2026-07-03): die neuen Auslands-Vollregister (JP/KR/TW/CN/HK ~14k, spaeter
+  // EU/Rest) kommen mit marketCap:null. Bei 25000 haetten sie um die ~9k Null-mcap-Restslots konkurriert
+  // und ganze Maerkte (CN/HK) waeren per Reihenfolge gedroppt worden — ein junger auslaendischer CRDO/ALAB
+  // verschwunden. 40000 fasst die bestehenden ~15,7k (alle withMcap) + alle Asien-Register + Headroom, sodass
+  // der Cap fuer Asien gar nicht feuert; bei der vollen Global-Expansion (>40k) schuetzt die Foreign-First-
+  // Quote unten. Yahoo filtert danach ohnehin auf reale Marktkap; winzige Register-Namen fallen im naechsten
+  // Zyklus (mcap<1e9) raus -> das Universum trimmt sich selbst auf die $2B+-Ziele. Env-tunbar fuer CI-Pull-Last.
+  const MAX_UNIVERSE = parseInt(process.env.MAX_UNIVERSE || '40000', 10);
   if (allTickers.size > MAX_UNIVERSE) {
     // F-DP-016: null-mcap tickers (often intentional small-cap additions) were previously
     // sorted to the bottom and silently dropped first. Fix: segregate null-mcap tickers and
@@ -583,14 +622,43 @@ async function main() {
     // Sort known-mcap by descending mcap
     withMcap.sort((a, b) => b[1].marketCap - a[1].marketCap);
 
+    // Foreign-slot protection (Team-A infra): foreign-exchange discoveries
+    // (EDINET/FinMind/OpenDART/SSE/SZSE/HKEX) arrive with marketCap:null and land in
+    // the same null-mcap bucket as the huge US-OTC mass. In raw discovery order the
+    // OTC rows dominate, so a 20%-capped slice() would drop every foreign row before
+    // it ever reached the watchlist. Fix: (1) STABLE-sort withoutMcap so foreign-source
+    // rows come first (ties keep original discovery order — the sort is index-keyed),
+    // and (2) reserve an exclusive foreign sub-quota that the OTC mass cannot consume.
+    // The withMcap branch above is untouched — this only reorders/quotas the null bucket.
+    const FOREIGN_SOURCES = new Set(['edinet', 'finmind', 'opendart', 'sse', 'szse', 'hkex']);
+    const isForeign = ([, v]) => {
+      if (!v || !v.source) return false;
+      return String(v.source).split(',').some(s => FOREIGN_SOURCES.has(s.trim()));
+    };
+    const FOREIGN_SUBQUOTA = parseInt(process.env.FOREIGN_NULLMCAP_SLOTS || '2000', 10);
+    // Stable sort: decorate with original index, foreign-first, index tiebreak.
+    const decorated = withoutMcap.map((e, i) => ({ e, i, f: isForeign(e) ? 0 : 1 }));
+    decorated.sort((a, b) => (a.f - b.f) || (a.i - b.i));
+    for (let j = 0; j < decorated.length; j++) withoutMcap[j] = decorated[j].e;
+
     // Proportional share: null-mcap entries get at most 20% of MAX_UNIVERSE slots
     const maxNullMcap    = Math.round(MAX_UNIVERSE * 0.20);
     const maxWithMcap    = MAX_UNIVERSE - Math.min(withoutMcap.length, maxNullMcap);
     const keptWithMcap   = withMcap.slice(0, maxWithMcap);
-    const keptNullMcap   = withoutMcap.slice(0, MAX_UNIVERSE - keptWithMcap.length);
+    // Total null-mcap slots available after mcap rows are placed. Guarantee at least
+    // min(available, FOREIGN_SUBQUOTA, #foreign) go to foreign rows: because foreign rows
+    // now sort first, a plain slice() already realizes that guarantee — but the subquota
+    // is enforced explicitly so a future reorder can't silently starve foreign rows.
+    const nullSlots      = MAX_UNIVERSE - keptWithMcap.length;
+    const foreignCount   = decorated.reduce((n, d) => n + (d.f === 0 ? 1 : 0), 0);
+    const foreignReserve = Math.min(FOREIGN_SUBQUOTA, foreignCount, nullSlots);
+    const keptForeign    = withoutMcap.slice(0, foreignReserve);
+    const remainingSlots = nullSlots - keptForeign.length;
+    const keptOther      = withoutMcap.slice(foreignReserve, foreignReserve + remainingSlots);
+    const keptNullMcap   = [...keptForeign, ...keptOther];
 
     const capped = new Map([...keptWithMcap, ...keptNullMcap]);
-    console.log(`Universe-Cap: ${allTickers.size} -> ${capped.size} (top ${maxWithMcap} by mcap + ${keptNullMcap.length} null-mcap)`);
+    console.log(`Universe-Cap: ${allTickers.size} -> ${capped.size} (top ${maxWithMcap} by mcap + ${keptNullMcap.length} null-mcap, of which ${keptForeign.length} foreign-reserved)`);
     allTickers.clear();
     for (const [k, v] of capped) allTickers.set(k, v);
   }
