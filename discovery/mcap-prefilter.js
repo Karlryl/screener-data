@@ -26,10 +26,13 @@ function loadRates() {
 }
 // Marktkap (Handelswaehrung) -> USD. GBp/GBX (Pence) -> /100. Unbekannte Waehrung -> null (fail-closed,
 // wird nicht faelschlich aufgenommen; taucht bei naechster Runde ueber den normalen Pull wieder auf).
+// Subunit-Waehrungen (Pence/Cents/Agorot) -> Basiswaehrung, /100. ILA = israelische Agorot (Yahoo
+// liefert TASE-marketCap in Agorot, nicht Shekel) — sonst faellt jeder israelische Name fail-closed raus.
+const SUBUNIT = { GBp: 'GBP', GBX: 'GBP', ZAc: 'ZAR', ILA: 'ILS' };
 function toUsd(mcap, cur, rates) {
   if (!Number.isFinite(mcap) || mcap <= 0 || !cur) return null;
   let c = cur, m = mcap;
-  if (c === 'GBp' || c === 'GBX' || c === 'ZAc') { c = c === 'ZAc' ? 'ZAR' : 'GBP'; m = m / 100; }
+  if (SUBUNIT[c]) { c = SUBUNIT[c]; m = m / 100; }
   const r = rates[c];
   return Number.isFinite(r) ? m * r : null;
 }

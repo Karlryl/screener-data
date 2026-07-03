@@ -582,6 +582,22 @@ async function main() {
     }
   }
 
+  // FIX-2 (Bau-Plan): Cross-Listing/ADR-Dedup. Statisch verifizierte ADR<->Heimat-Paare
+  // (discovery/adr-dedup.json). Wenn BEIDE Zeilen im Universum sind (US-ADR + Heimat-Listing, das ein
+  // Auslands-Adapter sammelt), die ADR-Zeile fallen lassen (Heimat behalten) -> keine Firma doppelt.
+  // KONDITIONAL: nur droppen, wenn Heimat wirklich present ist (sonst Firma nicht verlieren; faengt auch
+  // Vorzugsaktien-Edge-Cases ab, wo die Heimat-PN-Zeile vom subtype-Filter gedroppt wurde). A/H und
+  // US-primaere Namen sind bewusst NICHT in der Liste. Daten, kein Merge-Umbau -> anker-sicher.
+  try {
+    const adrPairs = JSON.parse(fs.readFileSync(path.join(__dirname, 'discovery', 'adr-dedup.json'), 'utf8'));
+    let dropped = 0;
+    for (const [adr, home] of Object.entries(adrPairs)) {
+      if (adr.startsWith('_')) continue; // _comment ueberspringen
+      if (allTickers.has(adr) && allTickers.has(home)) { allTickers.delete(adr); dropped++; }
+    }
+    if (dropped) console.log('  ADR-Dedup: ' + dropped + ' US-ADR-Zeilen entfernt (Heimat-Listing present)');
+  } catch (e) { console.warn('  ADR-Dedup uebersprungen:', e.message); }
+
   // audit/fix (BUG HIGH — discovery-yield observability + fail-loud signal):
   // surface per-source yield so a partial degradation is visible even when the run
   // stays above the hard floor.
