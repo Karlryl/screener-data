@@ -1,0 +1,39 @@
+# CI-Dry-Run-Gate (Bau-Plan 2026-07-03, Guard-1/6): beantwortet die eine Frage, an der die
+# TradingView-Transport-Wette haengt — antworten scanner.tradingview.com + die Nicht-TV-JSON-
+# Endpoints aus GitHub-Actions-Datacenter-IPs (Cloudflare-403-Risiko), oder nur aus Residential-IP?
+# Read-only, keine Secrets, keine Dependency. Laeuft NUR auf Push dieses Feature-Branches + manuell.
+name: tv-reachability
+on:
+  push:
+    branches: [loop/hypergrowth-neu]
+    paths: ['.github/workflows/tv-reachability.yml']
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: TradingView scanner (Datacenter-IP-Reachability)
+        run: |
+          set +e
+          BODY='{"filter":[{"left":"market_cap_basic","operation":"egreater","right":2000000000}],"columns":["name","market_cap_basic","exchange"],"sort":{"sortBy":"market_cap_basic","sortOrder":"desc"},"range":[0,3]}'
+          echo "== TradingView =="
+          for c in germany japan china brazil france singapore poland mexico switzerland turkey; do
+            code=$(curl -s -o /tmp/r.json -w "%{http_code}" --max-time 25 -X POST "https://scanner.tradingview.com/$c/scan" \
+              -H "Content-Type: application/json" -H "User-Agent: Mozilla/5.0" --data "$BODY")
+            total=$(grep -o '"totalCount":[0-9]*' /tmp/r.json | head -1)
+            echo "TV $c -> HTTP $code  ${total:-no-totalCount}"
+          done
+      - name: Non-TV JSON endpoints (Guard-6)
+        run: |
+          set +e
+          echo "== Non-TV JSON =="
+          echo -n "SGX     -> "; curl -s -o /dev/null -w "%{http_code}\n" --max-time 25 -H "User-Agent: Mozilla/5.0" "https://api.sgx.com/securities/v1.1?excludetypes=bonds&params=nc%2Cadjusted-vwap%2Cb%2Cbv%2Cp"
+          echo -n "IDX     -> "; curl -s -o /dev/null -w "%{http_code}\n" --max-time 25 -H "User-Agent: Mozilla/5.0" "https://www.idx.co.id/primary/StockData/GetSecuritiesStock?start=0&length=10&code=&sector=&board=&language=en-us"
+          echo -n "SSI-VN  -> "; curl -s -o /dev/null -w "%{http_code}\n" --max-time 25 -H "User-Agent: Mozilla/5.0" "https://iboard-query.ssi.com.vn/stock/exchange/hose"
+      - name: Adapter end-to-end (echter tv-scanner in CI)
+        run: |
+          set +e
+          npm ci --no-audit --no-fund >/dev/null 2>&1 || npm install --no-audit --no-fund >/dev/null 2>&1
+          node -e "require('./discovery/tv-scanner.js').discoverTvScanner({markets:['tv-szse','tv-japan','tv-france']}).then(m=>console.log('ADAPTER tv-scanner (SZSE+JP+FR) ->', m.size, 'Kandidaten')).catch(e=>console.log('ADAPTER ERR', e.message))"
