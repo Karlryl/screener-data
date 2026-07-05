@@ -1,0 +1,51 @@
+feat(scoring): A3.1 A3-Stufe-2 — foreign-listed oeffnen (1584) + Issuer-Dedup + Non-Operating-Rev
+
+Weltweit-Pivot A3-Stufe-2: den globalen Topf um die ~1584 echt-auslands-GELISTETEN Namen
+(Tokyo/LSE/HKSE/KSE/Shenzhen/...) erweitern — Lampen-geschuetzt (A4-data-suspect-Gate). Zwei
+unabhaengige adversariale Audits gegen die 4681 echten Snapshots (kein Selbst-Verify): Audit 1
+fand einen Doppel-Issuer-Leak (BLOCKER), Audit 2 nach den Fixes = PASS, alle Zahlen exakt.
+
+KEIN frischer Pull noetig: A4 rechnet die Lampen aus den Snapshot-Serien NEU (0 Paritaet-Mismatch),
+also ist die alte "Pull, damit Lampen in den Snapshots sind"-Voraussetzung schon erfuellt. Ein
+Pull haette nur 15-Tage-Vintage-Skew zwischen Foreign (frisch) und US-Ankern (eingefroren) gebracht.
+
+OEFFNUNG (router.js): neue isForeignListed(m) = echte Auslandsboerse (FOREIGN_EX) ODER Auslands-
+Suffix (FOREIGN_SUFFIX). route() oeffnet jetzt isUS ODER isForeignListed; nur die US-OTC-Grey-Market-
+Schattenduplikate (ASMLF=ASML: US-OTC, keine Auslandsboerse) bleiben als 329 'non-us' fuer den
+Dedup-Zyklus zurueck. sectorRoute/structExclude UNVERAENDERT (generalisieren bereits, §7-De-Risking).
+
+ISSUER-DEDUP (score.js, Schritt 1b — Audit-1-Blocker-Fix): Stufe-1 oeffnete US-ADRs, Stufe-2 deren
+Heimat-Beine -> derselbe Emittent doppelt im Topf/Tab (SHOP+SHOP.TO, ASML+ASML.AS, TSM+2330.TW,
+BABA+9988.HK). Pro normalisiertem meta.name genau EIN Bein: US-primaer (USD/SEC) zuerst, sonst
+groesste marketCap, dann Ticker-Tie-Break. 186 Verlierer-Beine -> exclude 'dup-issuer'. Audit 2:
+0 Rest-Leak, 0 False-Merge (kein dup-Group ueber >1 Sektor), 0 Wrong-Winner.
+
+NON-OPERATING-REV (router.js, Schritt 1b): negativer Jahresumsatz = kein operatives Umsatzgeschaeft
+(Investment-Trusts/Closed-End-Funds wie SMT.L fuehren Anlagegewinn/-verlust als "Umsatz") -> exclude
+'non-operating-rev'. Raeumt 68 CEFs/Trusts raus (auch US-CEFs ADX/AIO/AOD/BST, die die Financials-
+Kohorte schon vor Stufe-2 verschmutzten). 1 harmloser Borderline (NBTX, Umsatzreihe ohnehin korrupt).
+
+NO-AXES-GUARD (score.js, Schritt 2b): routebarer Name mit komplett null Roh-Achsen (sparse Daten ->
+score null) wird explizit 'no-axes'-excludiert statt stumm mitgeschleppt (3 Namen: Kinnevik/Storebrand/
+Alpine Auto Brokers). q() filtert nulls, verzerrt also die Perzentile der anderen nicht.
+
+ANKER (Court-Bless, Weltweit-Aera, beide Audits exakt bestaetigt):
+- BE 136/575 = 23.7% industrials/profitable (Kohorte fast verdoppelt), Absolutscore stabil ~61.1
+  -> reine Verduennung, KEINE Regression. Gate bleibt 0.25 (~1.3pp Headroom; naechster Zyklus messen).
+- PLTR 10/424 = 2.4% software/profitable, Absolutscore stabil ~82.3. Im GLOBALEN Topf nicht mehr
+  literal #1 — echte Auslands-Hypergrowth (2383.TW Elite Material, 2308.TW Delta, WTC.AX WiseTech)
+  UND US-Peers FICO/APP ueberholen knapp (alle verifiziert real, sauberes USD-Wachstum, kein Artefakt).
+  Anker re-geblesst: PLTR top 5% global. Keine US-Suppression (US = 40-50% jeder Kohorten-Top-20).
+- CRDO 12.1% / ALAB 17.6% semis, NVTS/AEHR unten — alle halten.
+
+INTEGRITAET (Audit 2): 0 NaN/Infinity, 3380 routebar, 4681 Universum, Bucket-Summe exakt
+(1224 exclude/unrouted + 3380 route + 77 survival = 4681). FIELD_REGISTRY unveraendert, Fixtures gruen.
+
+Tests: router.test.js +Stufe-2-Open/Suffix/Neg-Rev, score.integration +Dedup(synth+real)/Neg-Rev,
+PLTR-Re-Bless, BE-Gate-Update. 168/168 gruen (10 Dateien).
+
+OFFEN (naechster Zyklus, Audit-2-Note): Investment-HOLDINGs mit positiv bleibendem NAV-"Umsatz"
+(III.L/3i Group #1, INDU-A.ST/Industrivaerden #2 financials) umgehen den Neg-Rev-Filter -> Non-
+Operating-Filter auf Asset-Management mit Umsatz~NetIncome & GP=0 bzw. negativem Quartalsumsatz haerten.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

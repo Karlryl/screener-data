@@ -1,0 +1,36 @@
+feat(scoring): A3.1 A3-Stufe-1 — US-gelistete foreign ADRs oeffnen (285, USD-Primaerlisting)
+
+Weltweit-Pivot, naechster Zyklus nach A1/A2 (6610d0adbe). Motor-Eingriff in den
+US-Universe-Filter, Council-designt (2 Foreground-Design-Agenten gegen Realdaten) +
+2 unabhaengige Adversarial-Verifier (PASS, kein Selbst-Verify).
+
+WAS: route() schloss bisher jedes Nicht-US-Domizil als 'non-us' aus. Neuer Early-Return in
+isUS (router.js): ein US-PRIMAERboersen-gelisteter Name (exchangeName matcht US_PRIMARY_EX =
+/nasdaq|nyse|amex|arca|bats|cboe/, KEINE FOREIGN_EX, KEIN FOREIGN_SUFFIX) wird VOR der
+Domizil-Regel zugelassen. Oeffnet exakt 285 US-gelistete foreign-domiciled ADRs (ACN/ETN/AER
+Ireland, TSM Taiwan, BABA China, ASML NL, AEM/AGI Canada, ABEV Brazil) — alle USD-quotiert /
+SEC-Filer -> near-zero Risiko (Plan §7).
+
+DESIGN-ENTSCHEID (Quality vor Headline-601): die ~316 OTC-Grey-Market-Schattenduplikate
+primaerer ADRs (ASMLF=ASML, SAPGF=SAP, HBCYF=HSBC) werden BEWUSST zurueckgestellt (Predikat
+verlangt Primaerboerse, NICHT OTC) — sie wuerden den globalen Topf mit Duplikat-Issuern +
+$700B-Grey-Lines verschmutzen; warten auf A4-Lampen/Dedup. Die ~1597 echt-foreign-listed
+(foreign exchange) bleiben bis A4 + frischem Pull excludiert.
+
+VERIFIKATION (gegen 4681 echte Snapshots, 2 unabhaengige Adversarial-Verifier):
+- non-us 2198 -> 1913 (-285 exakt); neue isUS = strikte Obermenge der alten (0 gedroppt).
+- 285 Admits: 100% tradingCurrency=USD, 0 OTC, 0 auf foreign exchange, 0 foreign suffix.
+- 0 NEUE Leaks: die einzigen foreign-ex/suffix unter Admitted sind BAM.TO/GFL.TO (country=US,
+  pre-existing vom alten country-first, NICHT von diesem Change).
+- OTC-Grey (318) + foreign-listed (CPG.L LSE/USD-Falle, .HK/.T/.KS) bleiben 'non-us'.
+- Anker: PLTR #1/310 software (haelt), CRDO 9.4% / ALAB 15.1% semis, NVTS/AEHR bottom-half;
+  alle 11 Fixture-Anker byte-identisch (anchors.fixture gruen; isUS bit-identisch fuer alle 11).
+- BE-Bless: industrials.profitable 294->321 -> BE 60/294 (20.4%) -> 70/321 (21.8%), reine
+  Verduennung (BE-Absolutscore 61.65->61.57; 10 hoeher-rankende echte ADRs ETN/ESLT/AER);
+  score.integration BE-Gate 0.21 -> 0.25 (oberes Quartil, durabel); bei Stufe-2 neu bewerten.
+- Output-Topf jetzt weltweit: 17-34 Laender statt 1 (US-gelistete ADRs korrekt geflaggt).
+
+KEIN Scoring-FORMEL-Change (nur Universe-Membership). Tests: router.test.js +5 (A3-Faelle,
+1 ADR-Test umgewidmet), score.integration BE-Gate. 153/153 gruen. FIELD_REGISTRY unveraendert.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

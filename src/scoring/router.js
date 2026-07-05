@@ -23,7 +23,7 @@
  * ist (ICE/CME/NDAQ: gm=100 ABER r~0.7 -> ECHTER GP, nicht degeneriert).
  */
 
-const { norm, hasPresent, firstPresent, presentValues, metricVal } = require('./snapshot.js');
+const { norm, hasPresent, firstPresent, presentValues, metricVal, ratioSeries } = require('./snapshot.js');
 
 const lc = (x) => (typeof x === 'string' ? x.toLowerCase() : '');
 
@@ -99,10 +99,12 @@ function gpClass(s) {
   const gp = norm(s, 'annualGP');
   const rev = norm(s, 'annualRev');
   if (hasPresent(gp)) {
-    const g0 = firstPresent(gp);
-    const r0 = firstPresent(rev);
-    if (r0 !== null && r0 > 0) {
-      const r = g0 / r0;
+    // Fix Bug 31: r = GP/Rev des JUENGSTEN GEMEINSAM present Jahres (aligned) statt zwei
+    // unabhaengiger firstPresent-Werte. Bei null-Luecke in nur einer Serie paarten die
+    // getrennten firstPresent verschiedene Fiskaljahre (annualGP=[null,500]/annualRev=[1000,505]
+    // -> 0.5 'real' statt aligned 500/505=0.99 'degenerate'). ratioSeries paart index-aligned.
+    const r = firstPresent(ratioSeries(gp, rev));
+    if (r !== null) {
       if (r >= 0.99) return 'degenerate';
       if (r > 0) return 'real';
     }
@@ -239,4 +241,4 @@ function route(s) {
   return out;
 }
 
-module.exports = { route, gpClass, isPreRevenue, structExcludeReason, sectorRoute, isUS, isForeignListed };
+module.exports = { route, gpClass, isPreRevenue, structExcludeReason, sectorRoute, isUS, isForeignListed, isUsPrimaryListing };

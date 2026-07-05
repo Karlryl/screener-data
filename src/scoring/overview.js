@@ -20,7 +20,7 @@
  * Begleitspalte: Rule-of-X (alpha=2.3) fuer den Wachstum-vs-Effizienz-Blick.
  */
 
-const { norm, firstPresent, firstTwoPresent, presentValues } = require('./snapshot.js');
+const { norm, firstPresent, firstTwoPresent } = require('./snapshot.js');
 const { ruleOfX } = require('./axes.js');
 
 // YoY-Wachstum einer {value}-Jahres-/Quartalsserie via norm()-Feldname.
@@ -33,10 +33,15 @@ function yoyAnnual(s, field) {
 // Bruttogewinn-Wachstum YoY: TTM-ueber-TTM wenn >=8 present Quartale, sonst
 // annualGP-YoY. (Aktuell 5 Quartale -> annual; zukunftssicher bei 8 Quartalen.)
 function grossProfitGrowthYoY(s) {
-  const present = presentValues(norm(s, 'grossProfitQ'));
-  if (present.length >= 8) {
-    const ttmNew = present.slice(0, 4).reduce((p, c) => p + c, 0);
-    const ttmOld = present.slice(4, 8).reduce((p, c) => p + c, 0);
+  // Fix Bug 24: TTM-Fenster POSITIONAL auf der ROH-Serie schneiden (Muster
+  // growthYoYComponents in score.js:162-171). presentValues() komprimiert
+  // null-Luecken -> slice(4,8) wuerde bei interner Luecke das Vorjahres-Fenster
+  // verschieben (kein Jahresvergleich mehr). Nur wenn die ersten 8 Quartale
+  // luecken-frei finit sind, ist die positionale TTM-ueber-TTM-Bildung ehrlich.
+  const raw = norm(s, 'grossProfitQ');
+  if (raw.length >= 8 && raw.slice(0, 8).every(Number.isFinite)) {
+    const ttmNew = raw.slice(0, 4).reduce((p, c) => p + c, 0);
+    const ttmOld = raw.slice(4, 8).reduce((p, c) => p + c, 0);
     if (ttmOld > 0) return ttmNew / ttmOld - 1;
   }
   return yoyAnnual(s, 'annualGP');

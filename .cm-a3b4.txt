@@ -1,0 +1,24 @@
+fix(scoring): A3 Z1 Batch4 — lender-gp0 auf Lender gescopt (R1/R2) + pre-rev/no-sector-Order (R3)
+
+audit/fix R1/R2: Step-2 lender-gp0 excludierte JEDEN GP-all-zero-Namen sektor-unabhaengig -> 20
+Nicht-Lender mit Yahoo-leerem GP (HUM/MKSI/WOLF/JLL/NWS/Biotechs) + Broker/Asset-Manager, die das
+Design BEHAELT (MS/SCHW/RJF/NTRS/STT), fielen faelschlich raus. Jetzt per LENDING_INDUSTRY-Regex
+gegated (credit services|consumer finance|mortgage|savings|thrift|lend). lender-gp0 47->10 (nur echte
+Lender inkl. SOFI). Freigegebene routen korrekt (HUM->health-care, WOLF->semiconductors, MKSI->
+software-comm-services, JLL->real-estate, Broker->financials, Biotechs->health-care). Strikte Teilmenge
+der alten Bedingung: gibt nur frei, excludiert nie neu.
+
+audit/fix R3: route() umsortiert — Pre-Revenue-Guard laeuft jetzt NACH dem no-sector-Exclude (war Step-0,
+vor allem). Sektorlose Fonds/ETFs (QQQ/MDY/REET/PALL + 25 weitere) landeten faelschlich im Survival-Track;
+jetzt -> no-sector. survival 90->61, no-sector 10->40. Alle 41 echten Healthcare-Pre-Revenue-Biotechs
+BLEIBEN survival; 0 struct-excluded/lender-Namen flippen.
+
+Tests: router.test.js Pre-Revenue-Fixture bekommt Healthcare-Sektor (matcht die neue Invariante "survival
+braucht routebaren Sektor") + no-sector-Regression-Lock. score.integration.test.js BE-Gate 0.20->0.21
+(PRG joint legitim industrials, Kohorte 293->294, BE 59->60=20.4%; BE-Absolutscore unveraendert 61.65).
+
+Independent adversarial verify (7/7 PASS): strict-subset bestaetigt, Regex kein Over/Under-Match ueber 145
+Industrien, 0 Survival-Flips, 41 Biotechs behalten, Anker intakt (CRDO 4/46, ALAB 7/46, PLTR #1, BE ~top-20%,
+NVTS/AEHR unten), 130 Tests gruen, 11 Fixtures route-identisch.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

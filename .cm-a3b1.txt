@@ -1,0 +1,19 @@
+fix(scoring): A3 Z1 Batch1 — deterministic topN + survival sort + overview doc
+
+audit/fix D1/D2/D3: produceRankings sortierte das round1-gerundete Score-Feld; JS-stable-sort
+brach die kuenstlichen Ties per fs.readdirSync-Reihenfolge -> nicht reproduzierbare topN-Membership
+(CI != lokal: DOW/RIO, AMTM/WAB, FSLY/VRSN, GFI/USLM). Jetzt roher Score + a.ticker.localeCompare-
+Tie-Break, _raw-Helfer vor Rueckgabe gestrippt (Output-Shape unveraendert). Per-Stock-Scores und
+Fixture-Hash unveraendert (nur Reihenfolge/Membership wird deterministisch).
+
+audit/fix O8: Survival-Liste war nie sortiert (beste Runways vergraben) -> nach runwayQuarters desc,
+nulls ans Ende, Ticker-Tie-Break.
+
+audit/fix O1: overview.js-Docstring behauptete faelschlich "universumsweit perzentil-normiert"; der
+Code rankt (korrekt) nach per-Kohorte-Score, da ein reines GP-Wachstum-Ranking Micro-Cap-Basis-
+Artefakte hochspuelt (UEC +66054%/JOBY/NUVB). Nur Doc korrigiert, keine Logik.
+
+Erster adversarialer Audit der Scoring-Schicht (A3 Zyklus 1, §2.2). Independent verify: reproduzierbar
+ueber 25 Shuffles, kein _raw-Leak, Scores/Shape unveraendert, 130 Tests gruen, Hash 6e529f271b35dd2b stabil.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

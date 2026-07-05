@@ -1,0 +1,28 @@
+feat(scoring): A3.1 PHASE A1/A2 — Land-Normalisierung + geo-Felder auf Output-Zeilen
+
+Weltweit-Pivot Phase A1/A2 (risikoarm, fixture-safe): Voraussetzung fuer Karls
+globalen Topf + Branchen-Tabs + Laenderfilter.
+
+A1 — neuer reiner Helfer src/scoring/country.js::normalizeCountry(meta) -> {country, region}.
+  Aufloesung Domizil-first (wie router.isUS): meta.country -> Auslands-Signal
+  (foreign Boerse / region-Code / Ticker-Suffix) -> US-Fallback -> null. Maps gegen die
+  realen distinct-Werte aus snapshots/ (4681) gebaut. Loest 4671/4681 (99.8%) sauber auf
+  (vorher trugen nur 61% meta.country). Ein Auslands-Signal schlaegt ein unzuverlaessiges
+  US-Signal (ADR-robust: BABA region=CN > NYSE-Listing -> China, TSM -> Taiwan).
+
+A2 — country/region/sector/marketCap an JEDE Output-Zeile (branches/overview/survival)
+  in produceRankings. geo wird in scoreUniverse Schritt 3 aus meta angeheftet, bevor der
+  Snapshot geloescht wird. Rein additiv -> 0 Einfluss auf Routing/Track/Score/Lampen.
+
+Verifikation (2 unabhaengige adversariale Agenten, kein Selbst-Verify):
+- Mapping-Korrektheit: 0 output-erreichende Mislabels (~120 Namen geprueft); die einzigen
+  Label-Quirks betreffen router-excludierte Namen ohne Output-Zeile.
+- Fixture-Safety: OLD- vs NEW-score.js ueber das volle 4681er-Universum -> nach geo-Strip
+  BYTE-IDENTISCH; marketCap == s.marketCap.value (USD), null statt Crash bei fehlend;
+  kein aktiver Hash-Gate auf produceRankings-Output.
+- BABA/TSM-Praezedenz-Fix chirurgisch (Real-Daten-Diff: exakt US -2, China +1, Taiwan +1).
+
+Tests: tests/scoring/country.test.js (17, neu) + 1 A2-Assertion in score.integration.
+Gesamt 148/148 gruen (Baseline 130 unberuehrt). FIELD_REGISTRY-Shapes unveraendert.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

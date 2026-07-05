@@ -1,0 +1,30 @@
+feat(scoring): A4 — Daten-Qualitaets-Lampen + grade-D-Gate (data-suspect raus aus Ranking)
+
+Weltweit-Pivot A4, Voraussetzung fuer A3-Stufe-2 (foreign-listed) + OTC-Grey-Oeffnung:
+verhindert, dass ein Auslandsname auf erfundenen/geleakten Daten #1 wird. Ports der
+battle-tested Loop-A-Detektoren (lib/), aus den Snapshot-Serien NEU gerechnet (pre-A2-
+Snapshots tragen die meta-Flags _newestQtrSuspect/_annualCurrencyLeakSuspect nicht).
+Unabhaengig adversarial verifiziert (PASS, kein Selbst-Verify).
+
+DETEKTOREN (src/scoring/lamps.js, additiv — Lampen 11+12):
+- newestQtrSuspect (4-Leg, precision-first, Port lib/newest-qtr-guard.js): Yahoo-korruptes
+  NEUESTES Quartal (Samsung opM 42.8% vs ~10%). leg1 q0opm-median(trail)>0.20; leg2 q0gm>0.55;
+  leg3 r0>1.35*median(trail rev); leg4 q1opm>0.02 & q0opm>=1.9*q1opm (Spike, kein Ramp).
+- annualCurrencyLeak (3-Leg, Port lib/annual-currency-guard.js): USD-Reporter mit annualRev in
+  Trading-ccy. repOrig!=trade & annualRev[0]/qTTM>3 & revenueTTM/qTTM in [0.6,1.6] (Quartale gesund).
+
+GATE (src/scoring/score.js, scoreUniverse Schritt 1, VOR dem Scoring): ein routebarer/survival-Name
+mit DATA_SUSPECT_LAMPS (newestQtrSuspect/annualCurrencyLeak) ODER _quality.grade='D' wird zu
+action:'exclude' reason:'data-suspect'. Die 10 normalen Lampen excludieren NICHT (BE/PLTR ranken mit Lampe).
+
+VERIFIKATION (unabhaengiger Adversarial-Verifier gegen 4681 echte Snapshots):
+- Detektor-PARITAET src vs lib = 0 Mismatches (beide) -> byte-treuer Port.
+- Gate excludiert exakt 4: SNDK/LQDA/VCEL (newest-qtr opM-Spikes vs Median) + ADSE (EUR-Reporter
+  annual-Leak x5.11) — je mit Belegzahlen genuin korrupt, 0 False-Positives. Die foreign Firer
+  (005930.KS/AKRBP.OL/GMAB.CO) sind ohnehin non-us-excludiert; das Gate greift bei A3-Stufe-2.
+- Kein Over-Gating: 1677 routebare Namen mit normalen Lampen routen weiter. 0 Anker feuern/excludiert.
+- PLTR #1 software, CRDO top-Dezil semis, BE oberes Quartil. Kein NaN. 163/163 gruen.
+
+Tests: lamps.test.js +8 (synthetisch, deterministisch), score.integration +2 (Gate). FIELD_REGISTRY unveraendert.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

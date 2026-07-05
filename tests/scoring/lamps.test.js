@@ -85,6 +85,19 @@ test('lowRoic: schwacher OpInc/Invested -> true', () => {
     annualBalance: [{ totalAssets: 1000, currentLiabilities: 0 }] } };
   assert.equal(L.lowRoic(s), true); // 1/1000 = 0.001 < 0.09
 });
+// Bug 30 (wie F14/axes.js): fehlende currentLiabilities darf NICHT zu 0 koerziert werden
+// (sonst invested=totalAssets -> Lampe misst ROA statt ROIC). Ohne curLiab-Jahr -> null.
+test('lowRoic: fehlende currentLiabilities -> null (keine ROA-Maskerade)', () => {
+  // alt: invested=1000, ROA=80/1000=0.08 < 0.09 -> spurious true. neu: curLiab absent -> null.
+  const s = { annual: { annualOpInc: [{ value: 80 }],
+    annualBalance: [{ totalAssets: 1000 }] } };
+  assert.equal(L.lowRoic(s), null);
+});
+test('lowRoic: curLiab present, ROIC unter Huerde -> true', () => {
+  const s = { annual: { annualOpInc: [{ value: 60 }],
+    annualBalance: [{ totalAssets: 1000, currentLiabilities: 200 }] } };
+  assert.equal(L.lowRoic(s), true); // 60/(1000-200)=0.075 < 0.09 -> true (curLiab korrekt abgezogen)
+});
 
 // --- evaluateLamps Aggregat -------------------------------------------------
 test('evaluateLamps: aktive Liste enthaelt true-Lampen, Score unberuehrt', () => {

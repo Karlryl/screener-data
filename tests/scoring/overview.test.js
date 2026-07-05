@@ -32,6 +32,22 @@ test('grossProfitGrowthYoY: nur 1 GP-Jahr -> null', () => {
   assert.equal(ov.grossProfitGrowthYoY({ annual: { annualGP: [{ value: 5 }] } }), null);
 });
 
+// --- grossProfitGrowthYoY: TTM-Pfad + Off-by-One-Guard (Bug 24) -------------
+// Sauberer 8-Quartals-Block (luecken-frei) -> echtes TTM-ueber-TTM.
+test('grossProfitGrowthYoY: 8 luecken-freie Q -> TTM/TTM (110*4 / 100*4 -1 = 0.1)', () => {
+  const s = { timeseries: { grossProfitQ: [110, 110, 110, 110, 100, 100, 100, 100].map((v) => ({ value: v })) } };
+  assert.ok(Math.abs(ov.grossProfitGrowthYoY(s) - 0.1) < 1e-9);
+});
+// Interne null-Luecke in den ersten 8 Q -> KEIN positionaler TTM (waere 0.075
+// auf der komprimierten Serie), sondern Fallback auf annualGP-YoY.
+test('grossProfitGrowthYoY: null-Luecke -> Fallback auf annualGP, nicht 0.075', () => {
+  const s = {
+    timeseries: { grossProfitQ: [110, 110, 110, null, 100, 100, 100, 100, 100].map((v) => ({ value: v })) },
+    annual: { annualGP: [{ value: 120 }, { value: 100 }] }, // YoY = 0.20, distinkt von 0.075
+  };
+  assert.ok(Math.abs(ov.grossProfitGrowthYoY(s) - 0.20) < 1e-9);
+});
+
 // --- overviewMetric: echter GP (Default) ------------------------------------
 test('overviewMetric(CRDO) -> kind gp, value = GP-Wachstum, companion finit', () => {
   const r = ov.overviewMetric(CRDO, { gpClass: 'real' });

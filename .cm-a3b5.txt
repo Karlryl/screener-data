@@ -1,0 +1,21 @@
+fix(scoring): A3 Z1 Batch5 — ROIC Jahres-Set-Alignment, capitalEfficiency + lowRoic (E1/A1/L2)
+
+audit/fix E1/A1: capitalEfficiency mittelte Zaehler (alle present OpInc-Jahre) und Nenner (alle
+invested>0-Jahre) ueber VERSCHIEDENE Jahres-Sets -> verfaelschter ROIC, teils VORZEICHEN-FLIP
+(SNDK -0.036->+0.0027, BLSH -0.089->+0.0104: ein veraltetes aeltestes Verlustjahr ohne passendes
+invested-Jahr zog den Zaehler negativ). Jetzt opInc[i] mit invested[i] pro Fiskaljahr zippen; nur
+Jahre mit beidem present (und invested>0) gehen in BEIDE Mittel. Asset-Growth-Penalty + cycleDiscount
+unveraendert.
+
+audit/fix L2: lamps.js lowRoic hatte den identischen Jahres-Set-Mismatch -> gleicher per-Jahr-Zip.
+
+Impact: exakt 126 Laengen-Mismatch-Namen aendern capitalEfficiency (Bijektion roic<->axis; andere 4555
+byte-identisch); 3 Vorzeichen-Flips korrigiert (SNDK/BLSH/RAJAF). lowRoic-Wert shiftet bei 101 Namen,
+Firing aber identisch (keiner ueberschreitet die 0.09-Huerde). Alle 11 Fixtures byte-identisch (kein
+Mismatch unter den Ankern) -> Fixture-Hash 6e529f271b35dd2b stabil, KEIN Re-Bless noetig.
+
+Independent adversarial verify (7/7 PASS): Vorzeichen-Flips behoben, Fixtures byte-identisch, nur die
+126 Mismatch-Namen aendern sich, 0 neue NaN/throws, Anker identisch old<->new (CRDO 4/46, ALAB 7/46,
+PLTR #1, BE #60, NVTS/AEHR unten), 130 Tests gruen.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

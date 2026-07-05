@@ -31,7 +31,9 @@ const JUNK_SUFFIX_RE = /\.WS$|\.WT$|\.WI$|\.RT$|\.UN$|\.U$/i;
 // Centralized name-based filter for the warrant/right/unit security types that the lossy
 // suffix regex was meant to catch — keyed off the structured Security Name column instead.
 // audit/fix: dropped over-broad \bunits?\b name-term — it excluded real MLPs (BEP/BIP/CQP/UNIT...); delimited .U$/.UN$ symbol filter still catches true unit symbols
-const JUNK_NAME_RE = /\b(?:warrant|right)s?\b/i;
+// Bug 28: header promised preferred/depositary filtering but the regex only caught warrants/rights.
+// ponytail: \bpreferred\b also catches REIT preferred-share issuers (e.g. "Preferred Apartment Communities") — acceptable, they are not common stock.
+const JUNK_NAME_RE = /\b(?:warrant|right)s?\b|\bpreferred\b|\bdepositary\s+shares?\b/i;
 
 // audit F-A-2026-06-21: single shared filter so nasdaqlisted/otherlisted stay in sync and
 // neither path reintroduces the bare-letter-suffix bug.

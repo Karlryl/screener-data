@@ -132,6 +132,16 @@ function overlapDivergence(yahooArr, secArr) {
  * Mutiert snapshot in place. Bei grober Overlap-Divergenz (>Toleranz) im replace-Modus
  * das betroffene Feld NICHT ersetzen (Konzept-Mismatch/Restatement) und flaggen.
  */
+// Felder, die im replace-Modus ersetzt UND auf Overlap-Divergenz geprueft werden.
+// Bug 15: Gate-Loop und Replace-Loop MUESSEN dieselbe Liste nutzen, sonst laufen
+// annualFCF/annualOCF ungeprueft durch.
+const ANNUAL_FIELDS = ['annualRev', 'annualOpInc', 'annualNetIncome', 'annualFCF', 'annualOCF'];
+
+// Feld hat mindestens eine finite Zelle? (Bug 14: Null-Serie soll echte Yahoo-Werte nicht ueberschreiben.)
+function hasFiniteCell(arr) {
+  return Array.isArray(arr) && arr.some((c) => Number.isFinite(c && c.value));
+}
+
 function mergeSecIntoSnapshot(snapshot, sec, opts = {}) {
   const mode = opts.mode || 'namespace';
   const tol = opts.overlapTolerance != null ? opts.overlapTolerance : 0.12;
@@ -139,15 +149,20 @@ function mergeSecIntoSnapshot(snapshot, sec, opts = {}) {
   snapshot.annual = snapshot.annual || {};
 
   const divergences = {};
-  for (const f of ['annualRev', 'annualOpInc', 'annualNetIncome']) {
+  const compared = {};
+  for (const f of ANNUAL_FIELDS) {
     const d = overlapDivergence(snapshot.annual[f], sec.annual[f]);
+    compared[f] = d.compared;
     if (d.compared > 0 && d.maxRel > tol) divergences[f] = Number(d.maxRel.toFixed(3));
   }
 
   if (mode === 'replace') {
-    const ANNUAL = ['annualRev', 'annualOpInc', 'annualNetIncome', 'annualFCF', 'annualOCF'];
-    for (const f of ANNUAL) {
+    for (const f of ANNUAL_FIELDS) {
       if (divergences[f]) continue;                          // grobe Divergenz -> Yahoo behalten + flaggen
+      if (!hasFiniteCell(sec.annual[f])) continue;           // Bug 14: reine Null-Serie darf echte Yahoo-Werte nicht ueberschreiben
+      // Bug 14: hat Yahoo echte Werte, war aber kein Overlap-Vergleich moeglich (disjunkte fy) -> konservativ Yahoo behalten.
+      // Fehlt Yahoo das Feld ganz, darf SEC weiterhin vertiefen (compared===0 ist dann kein Konflikt).
+      if (!compared[f] && hasFiniteCell(snapshot.annual[f])) continue;
       if (sec.annual[f] && sec.annual[f].length) snapshot.annual[f] = sec.annual[f];
     }
   } else {

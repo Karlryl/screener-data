@@ -76,7 +76,14 @@ const { fetchAsxUniverse }      = require('./discovery/asx-au.js');
 const { discoverTvScanner, TV_FOREIGN_CANON } = require('./discovery/tv-scanner.js');
 // Marktkap-Vorpruefung (Karl-Sizing-Fix): filtert die Auslands-null-mcap-Zeilen VOR dem teuren Pull
 // billig auf >= $2B USD (Batch-Yahoo-quote). Nur die Ueberlebenden gehen in den Fundamental-Pull.
-const { prefilterByMcap }       = require('./discovery/mcap-prefilter.js');
+const { prefilterByMcap, toUsd } = require('./discovery/mcap-prefilter.js');
+// Bug 4: Yahoo liefert q.marketCap in der LISTING-Waehrung. Das $1B/$500B-Gate ist in USD
+// definiert -> vor dem Vergleich mit toUsd() (fx-rates.json) konvertieren, sonst verschiebt
+// der FX-Faktor das Fenster (JP akzeptiert ~$6M-$3B, KR ~$0.65M-$327M).
+const _FX_RATES = (() => {
+  try { return (JSON.parse(fs.readFileSync(path.join(__dirname, 'fx-rates.json'), 'utf8')).rates) || { USD: 1 }; }
+  catch (_) { return { USD: 1 }; }
+})();
 // Map each foreign adapter's emitted source string onto a canonical foreign token. Used by (a) the
 // mcap-prefilter to identify foreign null-mcap rows and (b) the cap block's FOREIGN_SOURCES fallback
 // for any row the prefilter could not price (network miss -> stays null-mcap -> slot-protected).
@@ -349,7 +356,9 @@ async function main() {
         if (/[$]/.test(sym)) continue;        // preferred-stock variants
         if (/[/\\\s]/.test(sym)) continue;    // path-separators or whitespace = corrupt
         if (sym.length > 12) continue;        // longer than any real ticker — likely a name
-        const mcap = q.marketCap;
+        // Bug 4: q.marketCap ist in q.currency (Listing-Waehrung), das Gate in USD.
+        // Nach USD konvertieren, gegen $1B/$500B pruefen und den USD-Wert speichern.
+        const mcap = toUsd(q.marketCap, q.currency, _FX_RATES);
         if (!mcap || mcap < 1e9 || mcap > 500e9) continue;  // Tag 101: $1B+ Mid/Large-Cap universe
         // audit/fix: key the candidate map on the class-share-normalized symbol so a
         // US class-share dot collapses onto its dash twin; foreign keys unchanged.
@@ -394,6 +403,18 @@ async function main() {
     while (!pageEmpty) {
       const { quotes, error } = await fetchExchangePage(exch, MIN_MCAP_CUSTOM, MAX_MCAP_CUSTOM, offset);
       if (error) {
+        // Bug 3: yahoo-finance2 v3.14 akzeptiert im screener()-Schema nur 'scrIds'
+        // (additionalProperties verboten). Der {query,offset,sortField,sortType}-Call
+        // wirft deterministisch VOR jedem Netzwerk-Zugriff 'called with invalid options'
+        // -> alle 29 Boersen liefern still 0. Das ist ein permanenter Konfig-Fehler, kein
+        // transienter Ausfall: fail-loud (::error:: + exit 1) statt 29x still zu ueberspringen.
+        if (/invalid options|invalidoptions|additionalproperties|scrids/i.test(error)) {
+          console.error('::error::Custom-Exchange-Screener ist mit yahoo-finance2 (v3.14) inkompatibel — ' +
+            'screener() akzeptiert nur scrIds, der query-basierte Exchange-Call wirft "' + error + '". ' +
+            'Der gesamte Exchange-Kanal (' + EXCHANGE_CODES.length + ' Boersen) liefert 0. ' +
+            'Fix: query-Form auf einen v3.14-kompatiblen HTTP-Call umbauen oder Library-Version anpassen.');
+          process.exit(1);
+        }
         pageErrors++;
         console.warn('  [' + exch + ' offset=' + offset + '] FAIL: ' + error);
         // F-DP-037: don't pretend the page was empty — break to next exchange
@@ -411,7 +432,8 @@ async function main() {
         if (/[$]/.test(sym)) continue;
         if (/[/\\\s]/.test(sym)) continue;
         if (sym.length > 12) continue;
-        const mcap = q.marketCap;
+        // Bug 4: USD-konvertieren vor dem Gate (MIN/MAX_MCAP_CUSTOM sind USD-Schwellen).
+        const mcap = toUsd(q.marketCap, q.currency, _FX_RATES);
         if (!mcap || mcap < MIN_MCAP_CUSTOM || mcap > MAX_MCAP_CUSTOM) continue;
         // audit/fix: class-share-normalize the map key. `exch` is the Yahoo
         // exchange CODE (NMS/NYQ/ASE = US; LSE/FRA/etc = foreign), so US class
@@ -550,7 +572,12 @@ async function main() {
           sector: info.sector || '',
           exchange: info.exchange || '',
           // F-DP-015: preserve source attribution from discovery source
-          source: info.source || 'unknown'
+          source: info.source || 'unknown',
+          // Bug 5: den KOSDAQ/KOSPI-Suffix-Unsicherheits-Flag durch den Merge tragen (wurde
+          // bisher abgestreift). Der KR-Adapter emittiert Default .KS mit suffixUnsure:true;
+          // ohne Weiterreichung kann kein Downstream-Schritt den .KQ-Requote (siehe
+          // maybeRequoteKosdaq in mcap-prefilter.js) fuer diese Zeilen ausloesen.
+          suffixUnsure: info.suffixUnsure || false
         });
       } else {
         // F-DP-015: ticker already seen — concatenate source field so attribution is not lost.
@@ -659,11 +686,24 @@ async function main() {
     const foreignNull = [...allTickers.entries()].filter(([, v]) =>
       v && !v.marketCap && v.source && String(v.source).split(',').some((s) => FOREIGN_CANON_SET.has(s.trim())));
     if (foreignNull.length) {
-      const keptUsd = await prefilterByMcap(foreignNull.map(([k]) => k));
+      const { kept: keptUsd, answered, renamed } = await prefilterByMcap(foreignNull.map(([k]) => k));
       for (const [key, v] of foreignNull) {
-        const usd = keptUsd.get(key);
+        // Bug 5: hat der Prefilter dieses .KS-Symbol als KOSDAQ erkannt, ist die effektive
+        // Kennung (und der answered/kept-Schluessel) das .KQ-Symbol. Zeile in allTickers
+        // umschluesseln (falsches .KS-Listing raus, .KQ rein), bevor mcap gesetzt wird.
+        const eff = (renamed && renamed.get(key)) || key;
+        if (eff !== key) {
+          allTickers.delete(key);
+          v.ticker = eff;
+          allTickers.set(eff, v);
+        }
+        const usd = keptUsd.get(eff);
         if (Number.isFinite(usd)) v.marketCap = usd;   // >= $2B: USD-mcap setzen -> withMcap-Zweig
-        else allTickers.delete(key);                    // < $2B oder keine Antwort: verwerfen
+        // Bug 16: nur verwerfen, wenn Yahoo GEANTWORTET hat und < $2B ist. Ein 429/Netzfehler
+        // (Symbol nicht in 'answered') darf die Zeile NICHT loeschen -> null-mcap belassen, damit
+        // der Foreign-Slot-Schutz unten greift (kein stiller Verlust ganzer Batches).
+        else if (answered.has(eff)) allTickers.delete(eff); // beantwortet und < $2B: verwerfen
+        // sonst: unbeantwortet -> null-mcap belassen (Slot-Schutz)
       }
     }
   } catch (e) { console.warn('[refresh-universe] mcap-prefilter uebersprungen:', e.message); }
@@ -715,7 +755,11 @@ async function main() {
     // min(available, FOREIGN_SUBQUOTA, #foreign) go to foreign rows: because foreign rows
     // now sort first, a plain slice() already realizes that guarantee — but the subquota
     // is enforced explicitly so a future reorder can't silently starve foreign rows.
-    const nullSlots      = MAX_UNIVERSE - keptWithMcap.length;
+    // Bug 27: der 20%-Deckel (maxNullMcap) wurde bisher nur zur RESERVIERUNG bei maxWithMcap
+    // verrechnet, aber die Slot-VERGABE lief ungedeckelt ueber MAX_UNIVERSE - keptWithMcap.length.
+    // Bei wenig withMcap (< maxWithMcap) konnten so null-mcap-Zeilen weit ueber 20% belegen
+    // (Beispiel Befund: 67% statt 20%). Slots hart auf maxNullMcap deckeln.
+    const nullSlots      = Math.min(MAX_UNIVERSE - keptWithMcap.length, maxNullMcap);
     const foreignCount   = decorated.reduce((n, d) => n + (d.f === 0 ? 1 : 0), 0);
     const foreignReserve = Math.min(FOREIGN_SUBQUOTA, foreignCount, nullSlots);
     const keptForeign    = withoutMcap.slice(0, foreignReserve);
@@ -846,10 +890,51 @@ async function main() {
     console.log(`  Class-share repair: ${repaired} dot rows promoted to dash, ${collapsed} dot/dash twins collapsed.`);
   }
 
+  // Bug 17: ADR-Dedup als IN-PLACE-Repair auf wlRaw.stocks (analog Class-Share-Collapse oben).
+  // Die allTickers-Dedup (Z.591ff) wirkt nur auf die Kandidaten-Map dieses Runs; Bestands-ADRs
+  // (BABA, SONY, TM, SAP, ASML, ...) blieben additiv fuer immer doppelt neben ihrem neu entdeckten
+  // Heimat-Listing. Hier: ADR-Zeile aus der persistierten Watchlist droppen, wenn die Heimat-Zeile
+  // in (existing ∪ allTickers) present ist; komplementaere Metadaten auf die Heimat-Zeile backfillen.
+  let adrDropped = 0;
+  {
+    let adrPairs = {};
+    try { adrPairs = JSON.parse(fs.readFileSync(path.join(__dirname, 'discovery', 'adr-dedup.json'), 'utf8')); }
+    catch (e) { console.warn('  ADR-Watchlist-Repair uebersprungen:', e.message); adrPairs = {}; }
+    // Index der aktuellen wlRaw-Zeilen (nach Class-Share-Repair) nach Ticker.
+    const rowIndex = new Map();
+    for (const s of wlRaw.stocks) {
+      if (s && s.ticker) rowIndex.set(String(s.ticker).toUpperCase(), s);
+    }
+    const adrDropSet = new Set();
+    for (const [adr, home] of Object.entries(adrPairs)) {
+      if (adr.startsWith('_')) continue; // _comment ueberspringen
+      const adrKey = String(adr).toUpperCase();
+      const homeKey = String(home).toUpperCase();
+      const adrRow = rowIndex.get(adrKey);
+      if (!adrRow) continue; // ADR nicht in der Watchlist -> nichts zu tun
+      // Heimat present, wenn als Watchlist-Zeile ODER als frisch gemergter Kandidat vorhanden.
+      const homeRow = rowIndex.get(homeKey);
+      const homePresent = !!homeRow || allTickers.has(home) || existing.has(home);
+      if (!homePresent) continue; // Firma nicht verlieren
+      // Metadaten auf die Heimat-Watchlist-Zeile backfillen (falls sie eine Zeile ist).
+      if (homeRow && homeRow !== adrRow) {
+        if (!homeRow.name && adrRow.name) homeRow.name = adrRow.name;
+        if (!homeRow.sector_hint && adrRow.sector_hint) homeRow.sector_hint = adrRow.sector_hint;
+        if (!homeRow.isin && adrRow.isin) homeRow.isin = adrRow.isin;
+      }
+      adrDropSet.add(adrRow);
+      adrDropped++;
+    }
+    if (adrDropSet.size > 0) {
+      wlRaw.stocks = wlRaw.stocks.filter(s => !adrDropSet.has(s));
+    }
+    if (adrDropped) console.log('  ADR-Watchlist-Repair: ' + adrDropped + ' Bestands-ADR-Zeilen entfernt (Heimat-Listing present).');
+  }
+
   // audit/fix (A2 2026-06-26): gate the write on an actual change. With the early-return
   // removed above, a run that discovered nothing new AND repaired nothing must still leave the
   // universe untouched (no needless rewrite / timestamp churn).
-  if (newTickers.length === 0 && repaired === 0 && collapsed === 0) {
+  if (newTickers.length === 0 && repaired === 0 && collapsed === 0 && adrDropped === 0) {
     console.log('Nothing to add, nothing to repair. Universe unchanged.');
     return;
   }

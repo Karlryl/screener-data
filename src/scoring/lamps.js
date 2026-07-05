@@ -108,8 +108,13 @@ function lowRoic(s) {
   for (let i = 0; i < nYears; i++) {
     const o = opS[i], a = assets[i];
     if (!Number.isFinite(o) || !Number.isFinite(a)) continue;
+    // audit/fix (Bug 30, wie F14 in axes.js): curLiab NICHT zu 0 koerzieren — sonst invested=totalAssets
+    // und die Lampe misst still ROA statt ROIC. Jahr nur zaehlen wenn curLiab present UND invested>0.
     const c = curLiab[i];
-    opP.push(o); invP.push(a - (Number.isFinite(c) ? c : 0));
+    if (!Number.isFinite(c)) continue;
+    const inv = a - c;
+    if (!(inv > 0)) continue;
+    opP.push(o); invP.push(inv);
   }
   if (opP.length === 0) return null;
   const mean = (arr) => arr.reduce((p, c) => p + c, 0) / arr.length;

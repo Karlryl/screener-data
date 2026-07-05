@@ -15,7 +15,7 @@ const { route } = require('./router.js');
 const { q, signTrack } = require('./engine.js');
 const { norm } = require('./snapshot.js');
 const { evaluateLamps } = require('./lamps.js');
-const { trackOf, rawAxisValue } = require('./score.js');
+const { trackOf, rawAxisValue, learnWinsorBounds, isDataSuspect, issuerDedupComparator, issuerKey } = require('./score.js');
 
 // Baut pro (formulaId|track) die Perzentil-Matrix: rows[{ticker, pct:{axis:0-100}, lamps}].
 function buildCalibMatrix(universe, formulas) {
@@ -25,11 +25,34 @@ function buildCalibMatrix(universe, formulas) {
     if (r.action !== 'route') continue;
     const formula = formulas[r.formulaId];
     if (!formula) continue;
+    const lamps = evaluateLamps(s).active;
+    // audit/fix (Bug 9): dieselben zwei Gates wie score.js VOR der Kohortenbildung anwenden, sonst
+    // enthalten die Kohorten Namen, die die Produktion vor der Perzentilierung excludiert (A4 data-
+    // suspect, A3 Issuer-Dedup) -> Perzentil-Verschiebung + Geister-Zeilen. (1) data-suspect skip:
+    if (isDataSuspect(s, lamps, 'route')) continue;
     const track = trackOf(s, formula); // liefert nie 'unknown' (Fallback intern -> profitable)
-    routed.push({ s, formulaId: r.formulaId, track, formula, ticker: (s.meta && s.meta.ticker) || '?', lamps: evaluateLamps(s).active });
+    // snapshot:s -> issuerDedupComparator (erwartet e.snapshot/e.ticker) kann direkt sortieren.
+    routed.push({ s, snapshot: s, formulaId: r.formulaId, track, formula, ticker: (s.meta && s.meta.ticker) || '?', lamps });
   }
+  // audit/fix (Bug 9): (2) Issuer-Dedup mit identischem Sortierschluessel wie score.js — pro Emittent
+  // (normalisierter meta.name) nur das Gewinner-Bein behalten. Verlierer aus den Kohorten nehmen.
+  const issuerGroups = {};
+  for (const e of routed) { const k = issuerKey(e.s); if (k) (issuerGroups[k] = issuerGroups[k] || []).push(e); }
+  const dedupLosers = new Set();
+  for (const group of Object.values(issuerGroups)) {
+    if (group.length < 2) continue;
+    group.sort(issuerDedupComparator);
+    for (let i = 1; i < group.length; i++) dedupLosers.add(group[i]);
+  }
+  // audit/fix (Bug 0): universe-weite Winsor-Schranken EXAKT wie score.js lernen (gemeinsame Quelle)
+  // und als 5. Argument an rawAxisValue durchreichen — sonst laufen marginTrajectory/revAcceleration
+  // UNwinsorisiert (Stub-Quartal-Phantom-Extreme pinnen die Perzentil-Enden, Matrix != Produktion).
+  const winsorBounds = learnWinsorBounds(routed.map((e) => e.s));
   const cohorts = {};
-  for (const e of routed) (cohorts[e.formulaId + '|' + e.track] = cohorts[e.formulaId + '|' + e.track] || []).push(e);
+  for (const e of routed) {
+    if (dedupLosers.has(e)) continue;
+    (cohorts[e.formulaId + '|' + e.track] = cohorts[e.formulaId + '|' + e.track] || []).push(e);
+  }
 
   const matrix = {};
   for (const [key, entries] of Object.entries(cohorts)) {
@@ -37,7 +60,7 @@ function buildCalibMatrix(universe, formulas) {
     const track = entries[0].track;
     const axisKeys = formula.axes.map((a) => a.key);
     const rawByAxis = {};
-    for (const k of axisKeys) rawByAxis[k] = entries.map((e) => rawAxisValue(e.s, k, formula, track));
+    for (const k of axisKeys) rawByAxis[k] = entries.map((e) => rawAxisValue(e.s, k, formula, track, winsorBounds));
     // audit/fix (C1): score.js perzentiliert capitalEfficiency bei subCohortByProfit-Branchen
     // (real-estate/it-services) gegen die profit-Vorzeichen-Sub-Kohorte (Iron-Rule 2). Hier exakt
     // spiegeln (score.js:85-98), sonst weicht die Kalibrier-Matrix von der Produktion ab -> Weights

@@ -1,0 +1,17 @@
+fix(scoring): A3 Z1 Batch2 — atomic outputs (C2) + loadUniverse observability (C3)
+
+audit/fix C2: run-screener.js (4 Output-Writes) + calibrate.js dumpMatrix schreiben jetzt via
+lib/atomic-write writeJsonAtomic (tmp+rename+fsync) statt plain fs.writeFileSync — Crash/CI-Timeout
+mid-write hinterliess truncated JSON fuers Dashboard. Output byte-identisch (indent 2 Screener,
+indent 0 Calib). = das bekannte Loop-A->Loop-B-Item (§6).
+
+audit/fix C3: loadUniverse schluckte Parse-Fehler + no-meta-Snapshots lautlos (Universum schrumpft
+unbemerkt -> verzerrte Kohorten-Perzentile). Jetzt: zaehlt beide + warnt nur bei Anomalie>0. Skippt
+NUR _manifest-Praefix (NICHT pauschal "_"): fing+behob eine selbst-eingebaute Regression, bei der der
+breite "_"-Skip Windows-Reserved-Ticker-Snapshots gedroppt haette (safeSnapshotFilename: CON->_CON.json,
+§4-Lesregel-1). Universum korrekt 4681 inkl. CON.
+
+Independent adversarial verify: Outputs byte-identisch (27 Dateien), kein tmp-Litter, CON inkludiert,
+keine Spurious-Warnung, nulls erhalten, 0 non-finite, 130 Tests gruen, Hash 6e529f271b35dd2b.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

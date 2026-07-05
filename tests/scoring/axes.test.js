@@ -175,6 +175,21 @@ test('capitalEfficiency: Verschlechterer (neuestes OpInc<0) wird NICHT gerescued
     annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }], annualBalance: bal } };
   assert.ok(Math.abs(ax.capitalEfficiency(det) - 0.05) < 1e-9, 'Verschlechterer-ROIC = 0.05 (ungetrimmt), war ' + ax.capitalEfficiency(det));
 });
+// --- Bug 6: all-negative OpInc -> voller Mehrjahres-Schnitt (kein Kollaps aufs juengste Jahr) ---
+test('capitalEfficiency: all-negative Serie -> mean (kein Rescue aufs juengste Jahr)', () => {
+  const bal = [{ totalAssets: 1000, currentLiabilities: 200 }, { totalAssets: 1000, currentLiabilities: 200 }, { totalAssets: 1000, currentLiabilities: 200 }];
+  // Alle OpInc <=0: juengstes -5 -> kein Trim -> ROIC = mean(-5,-100,-200)/800 = -0.127.
+  // Vorher (Bug): Trim kollabierte auf opInc[0]/inv[0] = -5/800 = -0.00625 (Faktor ~20 Rescue).
+  const shrink = { annual: { annualOpInc: [{ value: -5 }, { value: -100 }, { value: -200 }],
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }], annualBalance: bal } };
+  assert.ok(Math.abs(ax.capitalEfficiency(shrink) - (-0.1270833333)) < 1e-9,
+    'Verlust-Verkleinerer-ROIC = -0.127 (voller Schnitt), war ' + ax.capitalEfficiency(shrink));
+  // Verlust-Vergroesserer (juengstes -200): vorher Trim-Doppel-Strafe -200/800=-0.25; jetzt mean = -0.127.
+  const grow = { annual: { annualOpInc: [{ value: -200 }, { value: -100 }, { value: -5 }],
+    annualRev: [{ value: 100 }, { value: 100 }, { value: 100 }], annualBalance: bal } };
+  assert.ok(Math.abs(ax.capitalEfficiency(grow) - (-0.1270833333)) < 1e-9,
+    'Verlust-Vergroesserer-ROIC = -0.127 (voller Schnitt, keine Doppel-Strafe), war ' + ax.capitalEfficiency(grow));
+});
 
 // --- audit/fix Court Fall 1: Achsen-Physik-Guards gegen pathologische Eingaben ---
 test('gpGrowth (F9): korruptes Alt-Jahr (GP>Rev, gm>1) wird verworfen, gmTraj dominiert nicht', () => {

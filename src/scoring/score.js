@@ -14,7 +14,7 @@
 
 const { norm, metricVal, firstPresent, presentValues, firstTwoPresent } = require('./snapshot.js');
 const { q, weightedScore, coverageWeight, signTrack, fcfTrack } = require('./engine.js');
-const { route, isUS } = require('./router.js');
+const { route, isUS, isUsPrimaryListing } = require('./router.js');
 const { evaluateLamps, burnPressFactor } = require('./lamps.js');
 const { overviewMetric } = require('./overview.js');
 const { normalizeCountry } = require('./country.js');
@@ -22,7 +22,7 @@ const axesFns = require('./axes.js');
 // audit/fix (Court Fall 6, F39): Grader fuer die LIVE-Neuberechnung des Daten-Grades im
 // data-suspect-Gate. Der persistierte _quality.grade ist stale (alle aus der Zeit VOR dem
 // revenueTTM-criticalMissing-Floor) -> der grade-D-Arm war praktisch tot.
-const { gradeSnapshot } = require('../../methods/data-quality.js');
+const { gradeSnapshot, GRADE_THRESHOLDS } = require('../../methods/data-quality.js');
 
 const tickerOf = (s) => (s && s.meta && s.meta.ticker) || (s && s.identifier && s.identifier.value) || '?';
 
@@ -30,6 +30,41 @@ const tickerOf = (s) => (s && s.meta && s.meta.ticker) || (s && s.identifier && 
 // von der OS-Locale ab (CI-ubuntu != lokal-Windows/de-DE) -> untergraebt den dokumentierten
 // CI==lokal-Determinismus. Code-Unit-Vergleich (< / >) ist deterministisch und plattform-stabil.
 const cmpTicker = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
+
+// --- Issuer-Dedup-Helfer (Modulebene, damit calibrate.js dieselben Gates spiegelt) ---
+// Normalisierter Emittenten-Schluessel (meta.name); null wenn kein Name.
+const issuerKey = (s) => {
+  const n = s && s.meta && s.meta.name;
+  return (typeof n === 'string' && n.trim()) ? n.toLowerCase().replace(/\s+/g, ' ').trim() : null;
+};
+const mcapOf = (s) => (s && s.marketCap && Number.isFinite(s.marketCap.value)) ? s.marketCap.value : 0;
+// audit/fix (Court Fall 10, F50): ein dual-non-USD-Bein, dessen marketCap mit dem REPORTING- statt
+// dem TRADING-FX-Faktor skaliert wurde (stale Snapshot ohne tradingFxRateApplied), traegt eine
+// untrustworthy marketCap -> im Dedup-Tie-Break deprioritisieren. Konjunktion (ccy-Divergenz UND
+// fehlender FX-Faktor), nicht reine Abwesenheit -> beruehrt kein FX-konsistentes/USD-primaeres Bein.
+const fxSuspect = (s) => {
+  const m = s && s.meta;
+  if (!m) return false;
+  const tc = m.tradingCurrency, rc = m.reportingCurrencyOriginal;
+  return !!(tc && rc && String(tc).toUpperCase() !== String(rc).toUpperCase() && m.tradingFxRateApplied == null);
+};
+// audit/fix (Bug 7): Dedup-Sortierschluessel. ERSTER Schluessel ist isUsPrimaryListing (LISTING-Check:
+// US-Primaerboerse, kein Auslands-Suffix), NICHT das domizil-basierte isUS. Ein Toronto-Bein mit
+// country='United States' bekam sonst denselben isUS=1-Rang wie das NYSE-Bein, und fxSuspect
+// deprioritisierte danach ausgerechnet das echte US-Primaerbein (GFL vs GFL.TO). Danach isUS
+// (Domizil), fxSuspect, marketCap, Ticker-Tie-Break. Erwartet: GFL schlaegt GFL.TO; BAM/CMOC unveraendert.
+function issuerDedupComparator(a, b) {
+  const pa = isUsPrimaryListing((a.snapshot && a.snapshot.meta) || {}) ? 1 : 0;
+  const pb = isUsPrimaryListing((b.snapshot && b.snapshot.meta) || {}) ? 1 : 0;
+  if (pa !== pb) return pb - pa;                        // US-PRIMAER-gelistetes Bein zuerst (Listing, nicht Domizil)
+  const ua = isUS(a.snapshot) ? 1 : 0, ub = isUS(b.snapshot) ? 1 : 0;
+  if (ua !== ub) return ub - ua;                        // dann US-Domizil
+  const fa = fxSuspect(a.snapshot) ? 1 : 0, fb = fxSuspect(b.snapshot) ? 1 : 0;
+  if (fa !== fb) return fa - fb;                        // FX-suspekte marketCap deprioritisieren (vertrauenswuerdig zuerst)
+  const ma = mcapOf(a.snapshot), mb = mcapOf(b.snapshot);
+  if (ma !== mb) return mb - ma;                        // dann groesste marketCap
+  return cmpTicker(a.ticker, b.ticker);                 // dann stabiler Ticker-Tie-Break (deterministisch)
+}
 
 // A4 (Weltweit-Pivot): DISQUALIFIZIERENDE Daten-Qualitaets-Signale. Ein Name mit einer
 // data-suspect-Lampe (newestQtrSuspect/annualCurrencyLeak — erfundenes/geleaktes Quartal bzw.
@@ -58,6 +93,11 @@ function isDataSuspect(s, lampsActive, action) {
   // scorebare Real-Umsatz-Namen (VFS Rang #1, ERIC A+, +Biotechs) exkludiert, obwohl die Achsen
   // annual.annualRev / metrics.revenueGrowthYoY lesen, NICHT revenueTTM. Hier (NUR route-Konsumtion,
   // der persistierte DQ-Grade bleibt unveraendert):
+  // audit/fix (Bug 22): Sparsity-D (nanRatio > C-Schwelle) IMMER excludieren — VOR dem criticalMissing-
+  // Entkopplungspfad. Koexistieren nanRatio>0.85 UND fehlendes revenueTTM, sprang der Code sonst in den
+  // Entkopplungs-Arm und liess bei vorhandener marketCap + positivem Umsatz den Daten-Muell-Namen durch.
+  // Court R3 C3 (revenueTTM-Envelope-Entkopplung) bleibt erhalten; nur der Sparsity-Arm wird vorgezogen.
+  if (g.nanRatio > GRADE_THRESHOLDS.C) return true;
   if (!g.criticalMissing) return true;                                  // D wegen echter Sparsity (nanRatio) -> exclude
   if (!(s.marketCap && Number.isFinite(s.marketCap.value))) return true; // marketCap fehlt -> harter Ausschluss (Identitaet/Bewertung)
   // criticalMissing nur wegen fehlendem revenueTTM-Envelope: nur ausschliessen, wenn auch der
@@ -147,6 +187,23 @@ function quantile(samples, p) {
 function winsorTailBounds(samples) {
   const lo = quantile(samples, WINSOR_TAIL), hi = quantile(samples, 1 - WINSOR_TAIL);
   return (lo === null || hi === null) ? null : [lo, hi];
+}
+
+// audit/fix (Bug 0): universe-weite Winsor-Schranken (opMargin/qoq) aus einer Snapshot-Liste
+// lernen — EINE gemeinsame Quelle fuer scoreUniverse UND buildCalibMatrix (calibrate.js), damit
+// die Kalibrier-Matrix die Produktions-Perzentile von marginTrajectory/revAcceleration exakt
+// spiegelt. Court R5 A: opMargin-Obergrenze = oekonomischer Deckel OPMARGIN_CAP, qoq symmetrisch.
+function learnWinsorBounds(snapshots) {
+  const opmSamples = [], qoqSamples = [];
+  for (const s of (Array.isArray(snapshots) ? snapshots : [])) {
+    for (const v of axesFns.quarterOpMargins(s)) opmSamples.push(v);
+    for (const v of axesFns.quarterQoQRates(s)) qoqSamples.push(v);
+  }
+  const opmTail = winsorTailBounds(opmSamples);
+  return {
+    opMargin: opmTail ? [opmTail[0], OPMARGIN_CAP] : null,
+    qoq: winsorTailBounds(qoqSamples),
+  };
 }
 
 // --- AUFGABE 2: Wachstums-Bonus (rein additiv-multiplikativer AUFWAERTS-Faktor) ---
@@ -403,22 +460,6 @@ function scoreUniverse(snapshots, formulas) {
   // bevorzugt das US-primaere (USD/SEC-Qualitaet, isUS), sonst hoechste marketCap, dann Ticker-Tie-
   // Break (deterministisch). Verlierer -> exclude 'dup-issuer'. Laeuft NACH dem A4-data-suspect-Gate,
   // sodass ein bereits gegatetes Bein nicht "gewinnt"; greift nur auf Output-sichtbare route/survival.
-  const issuerKey = (s) => {
-    const n = s && s.meta && s.meta.name;
-    return (typeof n === 'string' && n.trim()) ? n.toLowerCase().replace(/\s+/g, ' ').trim() : null;
-  };
-  const mcapOf = (s) => (s && s.marketCap && Number.isFinite(s.marketCap.value)) ? s.marketCap.value : 0;
-  // audit/fix (Court Fall 10, F50): ein dual-non-USD-Bein, dessen marketCap mit dem REPORTING- statt
-  // dem TRADING-FX-Faktor skaliert wurde (stale Snapshot ohne tradingFxRateApplied), traegt eine
-  // untrustworthy marketCap -> im Dedup-Tie-Break deprioritisieren, damit nicht das FX-verzerrte Bein
-  // gewinnt (CMOC: 3993.HK HKD/CNY vs 603993.SS CNY/CNY). Konjunktion (ccy-Divergenz UND fehlender
-  // FX-Faktor), nicht reine Abwesenheit -> beruehrt kein FX-konsistentes/USD-primaeres Bein.
-  const fxSuspect = (s) => {
-    const m = s && s.meta;
-    if (!m) return false;
-    const tc = m.tradingCurrency, rc = m.reportingCurrencyOriginal;
-    return !!(tc && rc && String(tc).toUpperCase() !== String(rc).toUpperCase() && m.tradingFxRateApplied == null);
-  };
   const issuerGroups = {};
   for (const e of results) {
     if (e.action !== 'route' && e.action !== 'survival') continue;
@@ -427,15 +468,7 @@ function scoreUniverse(snapshots, formulas) {
   }
   for (const group of Object.values(issuerGroups)) {
     if (group.length < 2) continue;
-    group.sort((a, b) => {
-      const ua = isUS(a.snapshot) ? 1 : 0, ub = isUS(b.snapshot) ? 1 : 0;
-      if (ua !== ub) return ub - ua;                       // US-primaeres Bein zuerst
-      const fa = fxSuspect(a.snapshot) ? 1 : 0, fb = fxSuspect(b.snapshot) ? 1 : 0;
-      if (fa !== fb) return fa - fb;                       // FX-suspekte marketCap deprioritisieren (vertrauenswuerdig zuerst)
-      const ma = mcapOf(a.snapshot), mb = mcapOf(b.snapshot);
-      if (ma !== mb) return mb - ma;                       // dann groesste marketCap
-      return cmpTicker(a.ticker, b.ticker);                // dann stabiler Ticker-Tie-Break (deterministisch)
-    });
+    group.sort(issuerDedupComparator);                     // audit/fix (Bug 7): US-Primaerlisting zuerst
     for (let i = 1; i < group.length; i++) {
       const e = group[i];
       e.action = 'exclude'; e.formulaId = null; e.track = null; e.score = null; e.reason = 'dup-issuer';
@@ -452,11 +485,9 @@ function scoreUniverse(snapshots, formulas) {
   // audit/fix (Court R3 C2): universe-weite Winsor-Schranken VOR der Achsen-Berechnung lernen —
   // alle per-Quartal-OpMargins / QoQ-Raten der gerouteten Namen sammeln, p1/p99 bilden. Die
   // beiden near-zero-Nenner-anfaelligen Achsen klemmen damit Stub-Quartal-Phantome (data-learned).
-  const opmSamples = [], qoqSamples = [], growthSamples = [], cycleDDSamples = [];
+  const growthSamples = [], cycleDDSamples = [];
   for (const e of results) {
     if (e.action !== 'route') continue;
-    for (const v of axesFns.quarterOpMargins(e.snapshot)) opmSamples.push(v);
-    for (const v of axesFns.quarterQoQRates(e.snapshot)) qoqSamples.push(v);
     // AUFGABE 2: rohe YoY-Komponenten aller gerouteten Namen fuer die data-learned Wachstums-Winsor-
     // Schranken (p1/p99, gemessen ~[-1.00, 5.18]). Der no-axes-Rest (Z. weiter unten) verzerrt p1/p99
     // nicht nennenswert -> action==='route' hier ist ausreichend (die Anwendungs-BASIS wird spaeter,
@@ -473,11 +504,8 @@ function scoreUniverse(snapshots, formulas) {
     if (cyc.op.length >= 3) cycleDDSamples.push(revMaxDrawdown(cyc.rev));
   }
   // Court R5 A: opMargin-Schranke = [data-learned p1, PHYSISCH 1.0]; qoq symmetrisch (data-learned p1/p99).
-  const opmTail = winsorTailBounds(opmSamples);
-  const winsorBounds = {
-    opMargin: opmTail ? [opmTail[0], OPMARGIN_CAP] : null,
-    qoq: winsorTailBounds(qoqSamples),
-  };
+  // audit/fix (Bug 0): via gemeinsamer learnWinsorBounds — dieselbe Quelle nutzt buildCalibMatrix.
+  const winsorBounds = learnWinsorBounds(results.filter((e) => e.action === 'route').map((e) => e.snapshot));
   // PHASE 3: data-learned DD-Schwelle = p75 der universums-weiten Drawdown-Verteilung (Basis C oben).
   // Degenerations-Guard analog GROWTH_MIN_DISTINCT: <CYCLE_MIN_DISTINCT distinkte DD-Werte -> null ->
   // cycleSignal gatet alle Faktoren auf exakt 1.0 (byte-identisch, kein Phantom-Daempfer).
@@ -621,6 +649,15 @@ function rankBy(results, formulaId, track) {
 }
 
 const round1 = (x) => (Number.isFinite(x) ? Math.round(x * 10) / 10 : null);
+// audit/fix (Bug 8): skalenbewusstes Runden der Overview-Wachstumsspalte. round1 (1 Nachkommastelle)
+// war fuer die 0-100-Score-Skala gebaut; auf DEZIMAL-Wachstumswerte (0.09 -> 0.1, 0.04 -> 0.0)
+// quantisiert es auf 10-Prozentpunkt-Stufen. gp/revenue-badge/ffo-badge sind Dezimal-YoY -> 3
+// Nachkommastellen; runway-badge ist eine Quartals-Zahl -> round1 bleibt.
+const round3 = (x) => (Number.isFinite(x) ? Math.round(x * 1000) / 1000 : null);
+const roundOverviewValue = (ov) => {
+  if (!ov) return null;
+  return ov.kind === 'runway-badge' ? round1(ov.value) : round3(ov.value);
+};
 
 /**
  * produceRankings(results, {topN}) -> dashboard-integrierbares JSON-Objekt:
@@ -652,7 +689,9 @@ function produceRankings(results, opts = {}) {
     if (e.action !== 'route' || e.score === null) continue;
     const row = {
       ticker: e.ticker, score: round1(e.score), track: e.track, lamps: e.lamps,
-      overview: e.overview ? { kind: e.overview.kind, value: round1(e.overview.value) } : null,
+      // audit/fix (Bug 8): skalenbewusst runden. audit/fix (Bug 23): companion (Rule-of-X) durchreichen
+      // (Prozent-Skala ~0-300 -> round1). Wird berechnet, ging aber bisher im Datenvertrag verloren.
+      overview: e.overview ? { kind: e.overview.kind, value: roundOverviewValue(e.overview), companion: round1(e.overview.companion) } : null,
       ...geo(e),
       // audit/fix (D1/D2): rohen Score zum Sortieren behalten, NUR fuer die Anzeige runden.
       // Sortiert man das gerundete Feld, entstehen kuenstliche round1-Ties, die JS-stable-sort
@@ -662,7 +701,9 @@ function produceRankings(results, opts = {}) {
     branches[e.formulaId] = branches[e.formulaId] || { profitable: [], unprofitable: [] };
     (branches[e.formulaId][e.track] = branches[e.formulaId][e.track] || []).push(row);
     overview.push({ ticker: e.ticker, formulaId: e.formulaId, track: e.track, score: round1(e.score),
-      overviewKind: e.overview ? e.overview.kind : null, overviewValue: e.overview ? round1(e.overview.value) : null,
+      // audit/fix (Bug 8): skalenbewusst; audit/fix (Bug 23): companion durchreichen.
+      overviewKind: e.overview ? e.overview.kind : null, overviewValue: roundOverviewValue(e.overview),
+      overviewCompanion: e.overview ? round1(e.overview.companion) : null,
       lamps: e.lamps, ...geo(e), _raw: e.score });
   }
   // audit/fix (D1/D2/D3): roher Score + deterministischer Ticker-Tie-Break VOR dem Slicen,
@@ -687,6 +728,8 @@ function produceRankings(results, opts = {}) {
 }
 
 module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings, phaseOf, mcapBandOf, ipoRecencyOf, ipoYearOf,
+  // audit/fix (Bug 0/9/7): fuer calibrate.js — Kohorten-Gates + Winsor-Schranken exakt spiegeln
+  learnWinsorBounds, isDataSuspect, issuerDedupComparator, issuerKey,
   // AUFGABE 2 (Wachstums-Bonus): fuer TDD + gezielte Wiederverwendung
   growthBoostFactor, growthYoYComponents, robustG, growthPctlFn, boostFromPctl, GROWTH_BOOST_K,
   // PHASE 3 (Zyklus-Daempfer): fuer TDD + Mess-Skripte

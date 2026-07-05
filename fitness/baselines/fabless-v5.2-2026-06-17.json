@@ -1,0 +1,220 @@
+{
+  "baselineId": "fabless-v5.2-2026-06-17",
+  "frozenAt": "2026-06-17",
+  "formula": "fabless_semi v5.2 — Growth(.35,k2.5) · GM(.25,k1.0) · Durability-v3(.25,k1.0: quarterly recency-weighted COUNT-below downside-drawdown, scale-norm) · Accel(.15,k2.0). KILL active (8 Member), durSource sec-quarterly. Commit 2fca2b2d2. Konstanten [TODO-CAL].",
+  "source": "outputs/court-results.json :: bucket fabless_semi",
+  "degraded": false,
+  "degradedNote": null,
+  "universeSize": 8,
+  "collapseSpearman": 0.79,
+  "rhoDomAxisDurability": 0.78,
+  "priceAnchorStatus": "CAPTURED — t0-Close je Ticker eingefroren (prices/history.json, neueste 2026-06-12/15). Forward-Return = close[t0+h]/close[t0]-1. 28d ~2026-07-14, 84d ~2026-09-08.",
+  "preRegistration": {
+    "metric": [
+      "rank_ic_spearman",
+      "top_n_minus_universe_median_fwd_return"
+    ],
+    "horizonsDays": [
+      28,
+      84
+    ],
+    "survivorshipKey": "evaluatedTickers",
+    "antiGaming": "Ranking am Ship-Tag (vor jeder weiteren Fabless-Änderung) eingefroren. Forward-Fenster = intrinsischer Holdout. Erzeugende Agenten dürfen NIE auf dem Eval-Slice tunen. Eine neue Fabless-Version gilt nur als „besser\", wenn sie diese Forward-Metrik STRIKT schlägt.",
+    "honestLimitation": "N=8 ist SEHR klein — Rank-IC/Kohorten-Spread haben nur RICHTUNGS-Aussagekraft, geringe statistische Power (SE(IC)≈0.35). Kein Einzel-Vintage-„besser\"-Claim. Primärer Wert: (1) Pre-Registration-Disziplin, (2) Beitrag zur GEPOOLTEN Cross-Formel-Fitness (Spec §6). SaaS-Baseline = analoge zweite Referenz."
+  },
+  "anchors": {
+    "growth": {
+      "median": 0.35745,
+      "mad": 0.12415,
+      "n": 8
+    },
+    "gm": {
+      "median": 0.6627000000000001,
+      "mad": 0.08250000000000002,
+      "n": 8
+    },
+    "durability": {
+      "median": 0.28125,
+      "mad": 0.27090000000000003,
+      "n": 8
+    },
+    "accel": {
+      "median": 0.05105,
+      "mad": 0.39525,
+      "n": 8
+    }
+  },
+  "anchorsDurabilityNote": "Durability-Anker (median/MAD) sind v3-spezifisch (median(gW)−downsideDrawdown über W=12 SEC-Quartals-YoY); bei Achsen-/Konstanten-Änderung neu einfrieren.",
+  "ranking": [
+    {
+      "rank": 1,
+      "ticker": "ALAB",
+      "score": 76.5,
+      "membershipClass": "In",
+      "durSource": "sec-quarterly",
+      "durWinN": 7,
+      "axisS": {
+        "Growth": 0.99,
+        "GM": 0.82,
+        "Durability": 0.92,
+        "Accel": -0.93
+      }
+    },
+    {
+      "rank": 2,
+      "ticker": "NVDA",
+      "score": 69.2,
+      "membershipClass": "In",
+      "durSource": "sec-quarterly",
+      "durWinN": 12,
+      "axisS": {
+        "Growth": 0.74,
+        "GM": 0.52,
+        "Durability": 0.33,
+        "Accel": -0.59
+      }
+    },
+    {
+      "rank": 3,
+      "ticker": "CRDO",
+      "score": 62.7,
+      "membershipClass": "In",
+      "durSource": "sec-quarterly",
+      "durWinN": 12,
+      "axisS": {
+        "Growth": 0.99,
+        "GM": -0.18,
+        "Durability": -0.33,
+        "Accel": 0.9
+      }
+    },
+    {
+      "rank": 4,
+      "ticker": "ARM",
+      "score": 55.2,
+      "membershipClass": "Borderline",
+      "durSource": "sec-quarterly",
+      "durWinN": 8,
+      "axisS": {
+        "Growth": -0.39,
+        "GM": 1,
+        "Durability": 0.54,
+        "Accel": -0.08
+      }
+    },
+    {
+      "rank": 5,
+      "ticker": "AVGO",
+      "score": 48.2,
+      "membershipClass": "Borderline",
+      "durSource": "sec-quarterly",
+      "durWinN": 12,
+      "axisS": {
+        "Growth": -0.36,
+        "GM": 0.18,
+        "Durability": 0.59,
+        "Accel": -0.31
+      }
+    },
+    {
+      "rank": 6,
+      "ticker": "AMD",
+      "score": 27.8,
+      "membershipClass": "Borderline",
+      "durSource": "sec-quarterly",
+      "durWinN": 12,
+      "axisS": {
+        "Growth": -0.05,
+        "GM": -0.97,
+        "Durability": -0.87,
+        "Accel": 0.19
+      }
+    },
+    {
+      "rank": 7,
+      "ticker": "MXL",
+      "score": 24.8,
+      "membershipClass": "Borderline",
+      "durSource": "sec-quarterly",
+      "durWinN": 12,
+      "axisS": {
+        "Growth": -0.19,
+        "GM": -0.82,
+        "Durability": -1,
+        "Accel": 0.73
+      }
+    },
+    {
+      "rank": 8,
+      "ticker": "AMBA",
+      "score": 22.2,
+      "membershipClass": "In",
+      "durSource": "sec-quarterly",
+      "durWinN": 12,
+      "axisS": {
+        "Growth": 0.05,
+        "GM": -0.7,
+        "Durability": -1,
+        "Accel": 0.08
+      }
+    }
+  ],
+  "evaluatedTickers": [
+    "ALAB",
+    "NVDA",
+    "CRDO",
+    "ARM",
+    "AVGO",
+    "AMD",
+    "MXL",
+    "AMBA"
+  ],
+  "priceAnchors": {
+    "ALAB": {
+      "date": "2026-06-12",
+      "close": 367.1499938964844
+    },
+    "NVDA": {
+      "date": "2026-06-12",
+      "close": 205.19000244140625
+    },
+    "CRDO": {
+      "date": "2026-06-15",
+      "close": 259.4100036621094
+    },
+    "ARM": {
+      "date": "2026-06-12",
+      "close": 380.80999755859375
+    },
+    "AVGO": {
+      "date": "2026-06-12",
+      "close": 382.07000732421875
+    },
+    "AMD": {
+      "date": "2026-06-12",
+      "close": 511.57000732421875
+    },
+    "MXL": {
+      "date": "2026-06-12",
+      "close": 84.45999908447266
+    },
+    "AMBA": {
+      "date": "2026-06-15",
+      "close": 70.13999938964844
+    },
+    "SPY": {
+      "date": "2026-06-12",
+      "close": 741.75
+    },
+    "QQQ": {
+      "date": "2026-06-15",
+      "close": 744
+    },
+    "IWM": {
+      "date": "2026-06-15",
+      "close": 294.6400146484375
+    },
+    "SOXX": null,
+    "SMH": null
+  }
+}

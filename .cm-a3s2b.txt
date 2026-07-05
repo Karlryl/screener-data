@@ -1,0 +1,35 @@
+fix(scoring): A3.1 Stufe-2-Nachzug — Non-Operating-Filter haerten (NAV-Holdings/BDCs raus)
+
+Audit-2-Note nach A3-Stufe-2 (ed70d5dba2): Investment-HOLDINGs, deren NAV-"Umsatz" positiv BLEIBT,
+umgingen den bisherigen Neg-Jahresumsatz-Filter und rankten #1/#2 financials — 3i Group (III.L, 93.6)
+und Industrivaerden (INDU-A.ST, 90.6) sind keine operativen Finanzfirmen, sondern Anlagevehikel.
+Unabhaengig adversarial verifiziert (3. Audit gegen 4681 Snapshots, kein Selbst-Verify): PASS.
+
+isNonOperatingVehicle(s) in router.js verallgemeinert den Filter auf drei an Realdaten gegen ECHTE
+Fee-Asset-Manager (BLK/BX/KKR/BN/APO/BAM/ARES/OWL) abgesicherte Signaturen:
+- (a) negativer JAHRESumsatz -> Closed-End-Funds/Bullion-Trusts (SMT.L/ADX). Universell. (Eine
+  NI~rev-Verfeinerung gegen den 1 harmlosen Borderline NBTX wurde per enumerierender Probe VERWORFEN:
+  sie gab 3 echte Muni-Bond-CEFs BTT/NZF/PTA faelschlich frei -> schlechter als der Status quo.)
+- (b) Asset-Management MIT negativem QUARTALSumsatz -> NAV-Holdings/BDCs (Industrivaerden/Investor AB/
+  Kinnevik). NUR auf Asset-Management gescoped: ein einzelnes negatives Quartal ist bei OPERATIVEN
+  Firmen (DuPont/Teleflex/Baytex: Restatement/Glitch) legitim -> universell waeren das 16 False-Positives.
+- (c) Asset-Management OHNE Kostenstruktur: GP vorhanden-und-null UND |netIncome/revenue|>0.9 ->
+  "Umsatz" IST der Anlagegewinn, kein Fee-Geschaeft (3i Group, dessen Quartal positiv bleibt).
+
+VERIFIKATION (3. unabh. Audit, alle exakt):
+- non-operating-rev 68 -> 88 (rule a 68 / b 19 / c 1). 3i Group + Industrivaerden + Investor AB +
+  Kinnevik (alle Varianten) + ~12 BDCs (FSK/GBDC/OBDC/PSEC/TSLX/OCSL...) raus.
+- ECHTE Fee-Asset-Manager bleiben in financials: BLK/BX/KKR/BN/APO/ARES/OWL route (BAM=dup-issuer,
+  separat). 0 Over-Exclude.
+- 16 operative negQ-Namen (DD/TFX/BTE/NGL/CMRE/TRS/VIR/MDU/HLIT/PRSU) routen weiter -> 0 False-Positives.
+- Anker unveraendert: PLTR 2.4%, BE 23.7%, CRDO 12.1% (financials-only-Aenderung).
+- NEUE financials/profitable-Spitze = echte operative Financials (000776.SZ/GF Securities, SEZL/Sezzle-
+  Fintech, Chinese Brokers, ORIX) statt NAV-Holding-Artefakt. 0 NaN, 4681 Universum konsistent.
+
+OFFEN (Audit-Note, niedrig): TRIN (BDC) rankt noch 7/14% financials (Quartalsumsatz bleibt positiv,
+ni/rev<0.9); NBTX bleibt excludiert (korruptes Glitch-Jahr -> ohnehin Datenmangel). Beide unkritisch.
+
+Tests: router.test.js +4 (Holding/negQ/Fee-Manager/operativ-negQ), score.integration +2 (III.L/INDU
+non-op-rev real, BLK/BX/KKR bleiben financials). 173/173 gruen. FIELD_REGISTRY unveraendert.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

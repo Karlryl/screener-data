@@ -1,0 +1,18 @@
+fix(scoring): A3 Z1 Batch6 — peakMargin TTM/Annual-Basis-Fix (L1 Teil 1)
+
+audit/fix L1 (Teil 1, Basis-Mismatch): peakMargin verglich cur = TTM-operatingMargin gegen histRest =
+Mittel ANNUALer opInc/rev-Ratios — zwei verschiedene Basen. Eine spiky/korrupte TTM (Samsung 42.8% vs
+annual 13.1%) feuerte spurious. Jetzt cur = juengstes ANNUAL-Margin (gleiche Basis wie histRest).
+Universumsweite Firings 806->631 (175 TTM-Spike-False-Positives entfernt). Nur Lampe (kein Score-Impact);
+alle 11 Fixtures unveraendert (MU/PLTR feuern unter alt UND neu) -> Fixture-Hash 6e529f271b35dd2b stabil.
+
+DEFERRED an Council/Court (L1 Teil 2, Design): ob peakMargin zusaetzlich einen !rising-Guard bekommt
+(dann feuert es nicht mehr auf Margen-EXPANDER wie PLTR/MU) — das macht es ~cyclePeak (Merge-Kandidat)
+UND bewegt die MU/PLTR-Fixtures (Hash -> Court-Bless). Nicht unilateral entschieden. peakMargin aktuell
+= "Marge historisch hoch" (breit, Mean-Reversion-Watch); cyclePeak = "rolled-over Peak" (scharf).
+
+Verifikation: Gates (130 Tests gruen, Hash stabil, Fixtures bewiesen unveraendert via per-Anker old-vs-new
+Recompute, 806->631 Firing-Delta). Hinweis: nur Gate-Level + Impact-Analyse (kein dedizierter unabhaengiger
+Agent wie Batches 1-5) — Display-only-Lampe, non-fixture-moving, trivialer Basis-Swap.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

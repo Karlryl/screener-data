@@ -1,0 +1,14 @@
+fix(scoring): A3 Z1 Batch3 — calibrate.js spiegelt score.js subCohortByProfit (C1)
+
+audit/fix C1: calibrate.js buildCalibMatrix perzentilierte JEDE Achse gegen die VOLLE Kohorte,
+aber score.js perzentiliert capitalEfficiency gegen die profit-Vorzeichen-SUB-Kohorte fuer die
+subCohortByProfit-Branchen (real-estate/it-services). Die Kalibrier-Matrix divergierte damit von
+der Produktion fuer diese 2 Branchen (159 Zeilen: real-estate 129 + it-services 30 = 100% Mismatch),
+d.h. via Harness getunte Weights optimierten ein Ranking, das Produktion nie erzeugt. Spiegelt jetzt
+score.js:85-98 exakt (profitSign + same-sign capEff-Sub-Kohorten-Filter).
+
+Independent adversarial verify: calibrate<->production-Paritaet jetzt 0 Mismatch ueber alle 2055
+gescorten Zeilen (die 159 eliminiert), andere 10 Branchen weiter bit-exakt, Sub-Kohorte live bewiesen
+(APLD capEff 8.3%->41.7% gg. Verlust-Peers), 130 Tests gruen, Fixture-Hash 6e529f271b35dd2b stabil.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
