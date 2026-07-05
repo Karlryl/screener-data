@@ -1,0 +1,71 @@
+name: Data Freshness Heartbeat
+
+# Masterplan Task 0.7 — Fail-loud-Alarm fuer "Daily-Pull rot ODER laeuft gar nicht".
+#
+# WARUM EIGENER WORKFLOW: Der "Notify on failure"-Step im Daily-Pull feuert nur, wenn
+# der Daily-Pull ueberhaupt LAEUFT und dann failt. Startet der Cron gar nicht (still
+# gestoppt, GitHub-Auto-Disable, Konfig-Fehler), meldet dort nichts. Dieser Heartbeat
+# laeuft in einem VOM Daily-Pull UNABHAENGIGEN Kanal und misst die Export-Frische direkt.
+#
+# ALARMKANAL: fail-loud (exit 1) -> GitHub mailt dem Repo-Owner nativ (KEIN Secret noetig,
+# funktioniert sofort). Discord zusaetzlich NUR wenn das Repo-Secret DISCORD_WEBHOOK gesetzt
+# ist — Stand 2026-07-05 ist es NICHT gesetzt, d.h. die bestehenden Discord-Steps im
+# Daily-Pull sind tote No-Ops; native Fail-Mail ist der aktuell einzige echte Kanal.
+#
+# RESTRISIKO (Masterplan 0.7, bewusst dokumentiert): GitHub deaktiviert GEPLANTE Workflows
+# nach 60 Tagen Repo-Inaktivitaet automatisch — dann waere auch dieser Heartbeat still tot.
+# Vollstaendige Abdeckung dieses Falls braucht einen EXTERNEN 0-EUR-Dead-Man-Switch
+# (z.B. healthchecks.io, einmaliger Karl-Signup) — als Follow-up empfohlen.
+#
+# SCHWELLE N: MAX_AGE_DAYS=2 (eine Nacht Puffer; nach 2 stillen/roten Naechten Alarm).
+
+on:
+  schedule:
+    - cron: '30 12 * * *'   # taeglich 12:30 UTC, ~6h nach dem Daily-Pull (~06:00 UTC)
+  workflow_dispatch:
+    inputs:
+      force_alarm:
+        description: 'Alarm erzwingen (Test der Meldekette, auch bei frischen Daten)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check export freshness
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          MAX_AGE_DAYS: '2'
+          FORCE: ${{ github.event.inputs.force_alarm }}
+        run: |
+          age_days=$(node -e "
+            const fs=require('fs');
+            try {
+              const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));
+              const t=Date.parse(m.pulled_at);
+              if(!Number.isFinite(t)){ console.log(9999); process.exit(0); }
+              console.log(Math.floor((Date.now()-t)/86400000));
+            } catch(e){ console.log(9999); }
+          ")
+          echo "Export-Alter (snapshots/_manifest.json .pulled_at): ${age_days} Tage (Schwelle: ${MAX_AGE_DAYS})"
+          if [ "$FORCE" = "true" ] || [ "$age_days" -gt "$MAX_AGE_DAYS" ]; then
+            msg="Screener-Daten VERALTET: Export ${age_days} Tage alt (Schwelle ${MAX_AGE_DAYS}d). URSACHE: Daily-Pull ist rot oder laeuft nicht. NAECHSTER SCHRITT: Actions pruefen -> ${{ github.server_url }}/${{ github.repository }}/actions/workflows/daily-pull.yml"
+            echo "::error::$msg"
+            if [ -n "$DISCORD_WEBHOOK" ]; then
+              curl -sf -H "Content-Type: application/json" -X POST \
+                -d "{\"content\": \"🚨 $msg\"}" "$DISCORD_WEBHOOK" \
+                && echo "Discord-Alarm gesendet." \
+                || echo "Discord-POST fehlgeschlagen (nicht blockierend)."
+            else
+              echo "DISCORD_WEBHOOK nicht gesetzt — Alarm laeuft ueber GitHubs native Fail-Mail an den Owner."
+            fi
+            exit 1
+          fi
+          echo "OK: Export frisch (<= ${MAX_AGE_DAYS} Tage)."
