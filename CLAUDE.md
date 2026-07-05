@@ -36,7 +36,7 @@ Der laufende Formel-Härtungs-Loop liest **ZUERST** das Ledger:
 
 ## Wissensbasis / Recherche (getrennt vom Code)
 Sektor-Dossiers (evidence-graded, englisch, zitiert) liegen im **Obsidian-Vault**
-`C:\Users\Karlr\OneDrive\Dokumente\GitHub\Jarvis\Knowledge\Trading\growth-screener\` — **NICHT** im screener-data-Repo. Hub: `growth-screener-knowledge-base`, verlinkt mit `elliott-wellen-referenz`.
+`C:\Users\Anwender\OneDrive\Dokumente\GitHub\Jarvis\Knowledge\Trading\growth-screener\` — **NICHT** im screener-data-Repo. Hub: `growth-screener-knowledge-base`, verlinkt mit `elliott-wellen-referenz`.
 
 ## Engineering-Regeln für Multi-Agent-Arbeit
 - **Nie shared Registry-Files parallel editieren:** `methods/index.js`, `methods/method-types.js`, `tag28-tests.js`, `methods/score-aggregator.js` → Write-Races. Stattdessen Coordinator-Pattern (ein Agent besitzt die Registry) **oder** in Wellen von 1–2 serialisieren. Kollisionsfrei parallel: neue `methods/<name>.js`, Per-Cycle-Audit-Reports.
