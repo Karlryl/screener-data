@@ -5,6 +5,15 @@
 ## Was das Projekt ist
 Growth-/Qualitäts-**Screener** für Aktien. Repo `Karlryl/screener-data` (Branch `main`, GitHub-Pages-Deploy via täglichem Cron 02:00 UTC). Verbindliche Engine-Leitplanken & Details: **`CONTEXT.md`** und `docs/` im Repo (Source of Truth für Engine-Regeln).
 
+## Masterplan (erster Lese-Stopp) & bindende Arbeitsregeln
+**Vor Arbeitsbeginn zuerst lesen:** der lebende Masterplan im Vault —
+`…\Jarvis\Knowledge\Trading\growth-screener\_MASTERPLAN-screener-findash.md`
+(Kopf-Block „Wo stehen wir gerade" + aktuelle Phase). Er ist Source of Truth für Reihenfolge, Status und Akzeptanz; hier **nicht** duplizieren.
+- **Update-Ritual (G2):** nach jedem erledigten Task im Masterplan Kästchen abhaken, WORKLOG-Zeile (Datum, Commit, 1 Satz), „Wo stehen wir"-Block aktualisieren.
+- **Commit-Konvention (H2):** `Tag <n>: <Betreff>` — `n` = höchste `Tag`-Nummer aus `git log --oneline` + 1, ein Tag pro logischem Chunk.
+- **Push & Melde-Pflicht (H3):** Push auf `main` erlaubt bei grünen Gates; **Force-Push / History-Rewrite / Löschen nie ohne Karl**. Was nicht gepusht werden konnte, am Session-Ende explizit an Karl melden.
+- **Schutzliste (nie löschen/überschreiben):** `picks-history/`, `methods-history/`, `earnings-calendar.json`, Branch `loop/formel-haertung`.
+
 ## Kern-Designprinzip: NUR Qualität, nie Bewertung
 Der Screener misst **bewusst ausschließlich fundamentale Qualität** — nie ob eine Aktie günstig/teuer ist. Bewertung sowie Entry/Exit-Timing macht Karl **extern über Elliott-Wellen-Analyse** (getrennter, menschlicher Schritt nach dem Screen).
 - Jedes preisnormierte Signal (Yield, P/E, PEG, EV/EBITDA, DCF/Margin-of-Safety, Target-Upside, Preis-Momentum) im 0–100-Score ist ein **Mandats-Verstoß** → raus aus `SCORE_WEIGHTS`.
@@ -12,10 +21,9 @@ Der Screener misst **bewusst ausschließlich fundamentale Qualität** — nie ob
 - **Fitness-Gate-Spannung:** Das Fitness-Maß (`fitness/measure.js`) optimiert Forward-Return-Rank-IC und belohnt damit strukturell Cheapness — es zieht genau die verbotenen Bewertungssignale zurück. Sinkt die Fitness nach dem Entfernen von Bewertung: **erwartet und korrekt, NICHT durch Wieder-Einbau „reparieren".**
 
 ## Pflicht-Test-Gates (bindend nach jeder Methoden-/Scoring-Änderung)
-```
-node tag28-tests.js                      # Fixture-Hash (Test-Oracle)
-node engine-cli-tests.js
-node tests/integration-anchor-test.js    # 10 Anchors müssen PASS bleiben
+Die alten Root-Gates (`tag28-tests.js`, `engine-cli-tests.js`, `tests/integration-anchor-test.js`) sind **entfernt** und durch die **`tests/scoring/*.test.js`-Suite** ersetzt (jede Datei ist ein Standalone-Runner: `node <datei>`, Exit 0/1). Nach jeder Scoring-/Methoden-Änderung die **komplette Suite** grün fahren — Anker u. a. `tests/scoring/anchors.fixture.test.js` (Fixture-Oracle), `score.integration.test.js`, `run-screener.test.js`.
+```powershell
+Get-ChildItem tests/scoring/*.test.js | ForEach-Object { node $_.FullName; if ($LASTEXITCODE) { "FAIL: $($_.Name)" } }
 ```
 Score-Methoden-Änderungen flippen den Fixture-Hash → das ist gewollt und der Nachweis. Quelle: `CONTEXT.md`. (node/gh sind auf PATH — siehe globale `~/.claude/CLAUDE.md`.)
 
