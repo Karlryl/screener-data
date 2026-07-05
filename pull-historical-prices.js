@@ -120,7 +120,9 @@ async function main() {
       });
       // Tag 148: use adjclose (dividend/split-adjusted) instead of raw close
       // audit/fix: reject NaN/Infinity closes (JSON.stringify rewrites them to null, poisoning history.json) — mirror backfill-prices.js isFinite filter
-      const quotes = (result.quotes || []).filter(q => { const v = q.adjclose ?? q.close; return v != null && isFinite(v); });
+      // Bug 11: also reject <=0 closes (Yahoo adjclose-0 glitch) so a 0-close never
+      // reaches history.json and gets booked as a -100% forward return downstream.
+      const quotes = (result.quotes || []).filter(q => { const v = q.adjclose ?? q.close; return v != null && isFinite(v) && v > 0; });
       if (!quotes.length) { failed++; return; }
       const latestQuote = quotes[quotes.length - 1];
       const latestClose = latestQuote.adjclose ?? latestQuote.close;
@@ -174,7 +176,7 @@ async function main() {
       for (const q of quotes) {
         const d = (q.date instanceof Date ? q.date : new Date(q.date)).toISOString().slice(0, 10);
         const c = q.adjclose ?? q.close; // ADJUSTED close (split/dividend-adjusted), Tag 148
-        if (c != null && isFinite(c)) merged.set(d, c); // fetched overwrites stored -> re-base
+        if (c != null && isFinite(c) && c > 0) merged.set(d, c); // Bug 11: reject <=0 too; fetched overwrites stored -> re-base
       }
       arr.length = 0;
       for (const [d, c] of merged) arr.push({ date: d, close: c }); // 'close' = ADJUSTED (Tag 148)
@@ -217,7 +219,8 @@ async function main() {
       const period2 = new Date();
       const benchResult = await yf.chart(sym, { period1, period2, interval: '1d' });
       // audit/fix: reject NaN/Infinity closes (JSON.stringify rewrites them to null, poisoning history.json) — mirror backfill-prices.js isFinite filter
-      const benchQuotes = (benchResult.quotes || []).filter(q => { const v = q.adjclose ?? q.close; return v != null && isFinite(v); });
+      // Bug 11: also reject <=0 closes (see processOne).
+      const benchQuotes = (benchResult.quotes || []).filter(q => { const v = q.adjclose ?? q.close; return v != null && isFinite(v) && v > 0; });
       if (benchQuotes.length) {
         const latestBenchQuote = benchQuotes[benchQuotes.length - 1];
         const latestClose = latestBenchQuote.adjclose ?? latestBenchQuote.close;
@@ -246,7 +249,7 @@ async function main() {
         for (const q of benchQuotes) {
           const d = (q.date instanceof Date ? q.date : new Date(q.date)).toISOString().slice(0, 10);
           const c = q.adjclose ?? q.close;
-          if (c != null && isFinite(c)) benchMerged.set(d, c); // fetched overwrites stored
+          if (c != null && isFinite(c) && c > 0) benchMerged.set(d, c); // Bug 11: reject <=0 too; fetched overwrites stored
         }
         history[key] = [];
         for (const [d, c] of benchMerged) history[key].push({ date: d, close: c }); // ADJUSTED (Tag 148)

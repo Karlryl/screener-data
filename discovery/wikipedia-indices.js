@@ -132,7 +132,10 @@ function extractTickersFromTable(tableText, suffix, out) {
         const t = line.trim();
         if (!t.startsWith('!')) continue;
         // Drop a leading scope=... attribute segment before the cell text.
-        for (let part of t.replace(/^!+/, '').split('!!')) {
+        // audit fix (Bug 20): MediaWiki allows '!!' AND '||' as header-cell
+        // separators; the FTSE-100 table uses '||'. Splitting only on '!!'
+        // leaves one giant cell, tickerColIdx stays -1, table is skipped.
+        for (let part of t.replace(/^!+/, '').split(/!!|\|\|/)) {
           const pipeIdx = part.indexOf('|');
           if (pipeIdx !== -1 && !/\[\[|\{\{/.test(part.slice(0, pipeIdx))) {
             part = part.slice(pipeIdx + 1);
@@ -166,8 +169,22 @@ function extractTickersFromTable(tableText, suffix, out) {
     if (cells.length <= tickerColIdx) continue;
     const sym = cleanCell(cells[tickerColIdx]).toUpperCase();
     if (!TICKER_RE.test(sym)) continue;
-    let final = sym;
-    if (suffix && !final.includes('.')) final = final + suffix;
+    // audit fix (Bug 29): normalize dotted class-share tickers per exchange
+    // BEFORE deciding the suffix. The old `!final.includes('.')` guard treated
+    // every dot as an existing suffix, so BRK.B/BF.B leaked through unconverted
+    // (invalid on Yahoo) and dotted FTSE names (BT.A) lost their .L.
+    let final;
+    if (suffix === '.L') {
+      // LSE rule (mirrors discovery/lse-uk.js): '.'→'-', strip trailing '-', add .L
+      final = sym.replace(/\./g, '-').replace(/-+$/, '') + '.L';
+    } else if (suffix === '') {
+      // US class shares: BRK.B → BRK-B
+      final = sym.replace(/\./g, '-');
+    } else {
+      // Other exchanges (.DE, ...): only append when no dot is present.
+      // ponytail: no dotted class-share convention known here — keep old guard.
+      final = sym.includes('.') ? sym : sym + suffix;
+    }
     out.add(final);
   }
   return tickerColIdx >= 0;
@@ -193,7 +210,10 @@ function extractTickersFromWikitext(wikitext, suffix) {
 }
 
 async function fetchIndexTickers(indexDef) {
-  const url = `https://en.wikipedia.org/w/api.php?action=parse&page=${indexDef.page}&prop=wikitext&formatversion=2&format=json`;
+  // audit fix (Bug 19): &redirects=1 so action=parse follows #REDIRECT stubs
+  // (e.g. 'FTSE_100' → 'FTSE 100 Index'); without it only the 28-char redirect
+  // stub returns and the index contributes ZERO tickers.
+  const url = `https://en.wikipedia.org/w/api.php?action=parse&page=${indexDef.page}&prop=wikitext&formatversion=2&format=json&redirects=1`;
   const body = await get(url);
   const parsed = JSON.parse(body);
   const wikitext = parsed && parsed.parse && parsed.parse.wikitext;
@@ -224,7 +244,8 @@ async function fetchWikipediaIndices() {
   return result;
 }
 
-module.exports = { fetchWikipediaIndices };
+// extractTickersFromWikitext exported for offline parser regression tests (Bug 20/29).
+module.exports = { fetchWikipediaIndices, extractTickersFromWikitext };
 
 if (require.main === module) {
   fetchWikipediaIndices().then(m => console.log('Total:', m.size)).catch(console.error);

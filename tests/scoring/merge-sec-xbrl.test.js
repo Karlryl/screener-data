@@ -108,5 +108,29 @@ test('merge replace: grobe Divergenz -> Feld NICHT ersetzt, geflaggt', () => {
   assert.equal(snap.annual.annualRev.length, 4, 'divergentes Feld bleibt bei Yahoo (nicht ersetzt)');
 });
 
+// --- Bug 14: reine SEC-Null-Serie (Konzept fehlt) darf echte Yahoo-Werte NICHT ueberschreiben ---
+test('merge replace [Bug14]: SEC-Null-Serie ueberschreibt echte Yahoo-Serie nicht', () => {
+  const snap = { annual: { annualOpInc: [{ value: 40 }, { value: 35 }] } };
+  const secNull = { annual: { annualOpInc: [{ value: null }, { value: null }], _fys: [2024, 2023] } };
+  mergeSecIntoSnapshot(snap, secNull, { mode: 'replace' });
+  assert.deepEqual(vals(snap.annual.annualOpInc), [40, 35], 'Yahoo [40,35] darf nicht [null,null] werden');
+});
+
+// --- Bug 15: annualOCF/annualFCF werden jetzt auf Divergenz geprueft (vorher toter Guard) ---
+test('merge replace [Bug15]: OCF 50 vs SEC 500 (10x) -> geflaggt, NICHT ersetzt', () => {
+  const snap = { annual: { annualOCF: [{ value: 50 }] } };
+  const secOcf = { annual: { annualOCF: [{ value: 500 }], _fys: [2024] } };
+  const rep = mergeSecIntoSnapshot(snap, secOcf, { mode: 'replace' });
+  assert.ok(rep.divergences.annualOCF > 0.12, 'annualOCF-Divergenz muss geflaggt sein');
+  assert.deepEqual(vals(snap.annual.annualOCF), [50], 'OCF 50 darf nicht durch 500 ersetzt werden');
+});
+
+// --- Bug 14: fehlt Yahoo das Feld ganz, darf SEC weiterhin vertiefen (compared===0 ist kein Konflikt) ---
+test('merge replace [Bug14]: Yahoo-freies Feld wird aus SEC vertieft', () => {
+  const snap = { annual: { annualRev: [{ value: 37378000000 }, { value: 25111000000 }, { value: 15540000000 }, { value: 30758000000 }] } };
+  mergeSecIntoSnapshot(snap, sec, { mode: 'replace' });
+  assert.equal(snap.annual.annualOCF.length, 15, 'annualOCF (bei Yahoo abwesend) wird auf SEC-Tiefe gesetzt');
+});
+
 console.log(`\nmerge-sec-xbrl.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

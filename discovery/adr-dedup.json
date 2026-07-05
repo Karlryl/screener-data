@@ -1,5 +1,5 @@
 {
-  "_comment": "Bau-Plan FIX-2: US-ADR (Key, FALLEN LASSEN) -> Heimat-Yahoo-Ticker (Value, BEHALTEN). Workflow-verifiziert (beide Seiten Yahoo-aufloesbar, gleiche Firma; adversarial confirm). Konditional angewandt in refresh-universe.js: ADR nur droppen, wenn Heimat wirklich im Universum ist. A/H-Shares und US-primaere Namen (Nubank/PDD/CHKP) bewusst NICHT enthalten.",
+  "_comment": "Bau-Plan FIX-2: US-ADR (Key, FALLEN LASSEN) -> Heimat-Yahoo-Ticker (Value, BEHALTEN). Workflow-verifiziert (beide Seiten Yahoo-aufloesbar, gleiche Firma; adversarial confirm). Konditional angewandt in refresh-universe.js: ADR nur droppen, wenn Heimat wirklich im Universum ist. A/H-Shares und US-primaere Namen (Nubank/PDD/CHKP) bewusst NICHT enthalten. REGEL: Der Heimat-Value MUSS ein Ticker sein, den der liefernde Adapter tatsaechlich emittieren kann. Fuer .SA ist die einzige Quelle tv-brazil, deren subtype-Filter (tv-scanner.js:128) 'preferred'-Ticker (PETR4/ITUB4) verwirft -> nur common-Ticker (PETR3.SA/ITUB3.SA) eintragen (Bug 18).",
   "BABA": "9988.HK",
   "JD": "9618.HK",
   "NIO": "9866.HK",
@@ -12,8 +12,8 @@
   "HDB": "HDFCBANK.NS",
   "IBN": "ICICIBANK.NS",
   "VALE": "VALE3.SA",
-  "ITUB": "ITUB4.SA",
-  "PBR": "PETR4.SA",
+  "ITUB": "ITUB3.SA",
+  "PBR": "PETR3.SA",
   "ABEV": "ABEV3.SA",
   "TEVA": "TEVA.TA",
   "NICE": "NICE.TA",

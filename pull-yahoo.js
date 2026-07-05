@@ -299,6 +299,73 @@ function normalizeRegion(currency, exchangeName) {
 // Closes the structural defect where marketCap was USD but annual/quarterly
 // series were left in reportingCurrency — silently corrupting every ratio
 // (fcf-yield, ev/ebitda, etc.) for non-USD stocks.
+// Bug 1 (audit 2026-07-03): trading-currency scaling for marketCap + analyst
+// targets, extracted so it runs in BOTH the USD-reporter and non-USD-reporter
+// branches of _convertSnapshotToUSD. Yahoo returns marketCap and
+// targetMean/MedianPrice in the TRADING currency (snap.price.currency /
+// snap.meta.tradingCurrency), which for a USD-REPORTING but foreign-LISTED
+// ticker (e.g. 1299.HK: financialCurrency='USD', price.currency='HKD') differs
+// from the reporting currency. Previously the USD branch early-returned before
+// this check, so those fields stayed in the trading currency while the snapshot
+// claimed 'USD, converted' → mcap ~7.8× overstated (HKD), every mcap ratio and
+// analyst upside corrupted, and a flip-flop vs the price-only fast path.
+//
+// financialFactor is the reporting→USD factor already applied to annual/metrics
+// (1.0 in the USD branch). Returns:
+//   { ok: true }               → marketCap/targets scaled in place (no-op when
+//                                trading ccy == reporting ccy, factor unchanged)
+//   { ok: false }              → fail-closed: trading ccy differs but FX_TO_USD
+//                                has no finite rate; caller must flag+return.
+function _applyTradingScale(snap, financialFactor) {
+  const origCurrency = snap.meta.reportingCurrency || 'USD';
+  const tradingCcyRaw = (snap.price && snap.price.currency)
+    ? String(snap.price.currency)
+    : ((snap.meta && snap.meta.tradingCurrency) ? String(snap.meta.tradingCurrency) : null);
+  let tradingFactor = financialFactor; // default: no divergence → identity vs financial factor
+  if (tradingCcyRaw && tradingCcyRaw.toUpperCase() !== origCurrency.toUpperCase()) {
+    // Match ONLY genuine pence: 'GBp' (lowercase p) or 'GBX' (uppercase X).
+    const tradingPence = tradingCcyRaw === 'GBp' || tradingCcyRaw === 'GBX' || tradingCcyRaw.toUpperCase() === 'GBPENCE';
+    const tradingKey = tradingPence ? 'GBP' : tradingCcyRaw.toUpperCase();
+    const tradingRate = FX_TO_USD[tradingKey];
+    if (tradingRate != null && Number.isFinite(tradingRate)) {
+      tradingFactor = tradingPence ? tradingRate / 100 : tradingRate;
+      snap.meta.tradingCurrencyOriginal = tradingCcyRaw;
+      snap.meta.tradingFxRateApplied = tradingFactor;
+    } else {
+      // FAIL CLOSED — trading ccy differs but no finite rate; do not persist a
+      // silently mis-scaled marketCap (mirrors the reporting-missing branch).
+      snap.meta.tradingCurrencyOriginal = tradingCcyRaw;
+      snap.meta.tradingFxRateApplied = null;
+      snap.meta.tradingFxMissing = true;
+      snap.meta.fxConversionFailed = true;
+      snap.meta.fxConverted = false;
+      return { ok: false };
+    }
+  }
+  const scaleTrading = (item) => {
+    if (item == null) return item;
+    if (typeof item === 'number') return Number.isFinite(item) ? item * tradingFactor : item;
+    if (typeof item !== 'object') return item;
+    if ('value' in item) {
+      const out = Object.assign({}, item);
+      if (typeof item.value === 'number' && Number.isFinite(item.value)) out.value = item.value * tradingFactor;
+      return out;
+    }
+    const out = {};
+    for (const [k, v] of Object.entries(item)) {
+      out[k] = (typeof v === 'number' && Number.isFinite(v)) ? v * tradingFactor : v;
+    }
+    return out;
+  };
+  if (snap.marketCap) snap.marketCap = scaleTrading(snap.marketCap);
+  if (snap.metrics) {
+    for (const k of ['targetMeanPrice', 'targetMedianPrice']) {
+      if (snap.metrics[k]) snap.metrics[k] = scaleTrading(snap.metrics[k]);
+    }
+  }
+  return { ok: true };
+}
+
 function _convertSnapshotToUSD(snap) {
   if (!snap || !snap.meta) return snap;
   // F-DP-008: idempotency guard — if already converted, return immediately to prevent double-scaling
@@ -321,6 +388,13 @@ function _convertSnapshotToUSD(snap) {
       snap.meta.fxConverted = false;
       return snap;
     }
+    // Bug 1 (audit 2026-07-03): even for a USD REPORTER, marketCap + analyst
+    // targets are in the TRADING currency, which for a foreign-LISTED USD
+    // reporter (1299.HK etc.) is NOT USD. Scale them here (financial factor = 1.0)
+    // before the early return, mirroring the non-USD branch. No-op when the
+    // ticker actually trades in USD (tradingFactor = 1.0). Fail-closed if the
+    // trading ccy differs but has no finite rate.
+    if (!_applyTradingScale(snap, 1.0).ok) return snap;
     snap.meta.reportingCurrencyOriginal = 'USD';
     snap.meta.fxRateApplied = 1.0;
     snap.meta.fxConverted = true;
@@ -1151,6 +1225,21 @@ function _ftsExtractByYear(rows, fieldNames) {
   return out;
 }
 
+// Bug 21 (audit 2026-07-03): re-align an FTS-anchored side-series to a QS-won
+// income bundle. The FTS side-series (annualSBC/Capex/RnD/SGA/Depreciation,
+// annualBalance) are latest-first and anchored on the FTS newest FY; when the
+// income bundle was won by QS whose newest FY is ONE fiscal year NEWER, index 0
+// of the FTS series belongs at index 1 relative to the income bundle. Insert a
+// single leading null so positional readers pair the same fiscal year.
+//   diverges=false → return the array unchanged (the common, aligned case).
+//   diverges=true  → prepend one null (renorm-on-shift; downstream null-checks).
+// Empty arrays are returned as-is (nothing to align, no phantom leading null).
+function _realignFtsAnchoredSeries(arr, diverges) {
+  if (!diverges) return arr;
+  if (!Array.isArray(arr) || arr.length === 0) return arr;
+  return [null, ...arr];
+}
+
 function mapFTSToAnnual(annualRows, cashRows) {
   // Rows kommen oldest first → wir wollen latest first.
   // F-DP-030/031 (Tag 180): previously this skipped rows where rev==null
@@ -1562,7 +1651,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const hasSGA = Array.isArray(A.annualSGA) && A.annualSGA.length > 0;
       const hasDepr = Array.isArray(A.annualDepreciation) && A.annualDepreciation.length > 0;
       const bal = A.annualBalance;
-      const hasCA = Array.isArray(bal) && bal[0] && Number.isFinite(bal[0].currentAssets);
+      // Bug 13 (audit 2026-07-03): key-PRESENCE, not finite-value. Banks/insurers
+      // (mapFTSToBalance writes currentAssets:null) and placeholder balance rows
+      // structurally never carry a finite currentAssets → hasCA stayed false after
+      // EVERY full pull → the schema-stale probe re-fired each run → permanent
+      // full-pull loop (budget drain, bypasses FUNDAMENTALS_REFRESH_BUDGET). Once a
+      // post-Tag-211l full pull has written the row, the currentAssets KEY exists
+      // (even if its value is null), which is the true "schema is current" signal.
+      const hasCA = Array.isArray(bal) && bal[0] && ('currentAssets' in bal[0]);
       // A snapshot is "stale-schema" if it lacks EITHER SGA/Depr OR the
       // extended balance fields. We use AND on the balance row + OR with
       // the income/cash items to avoid false-positives on companies that
@@ -1987,17 +2083,26 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         //   one retry on timeout/ECONNRESET before propagating.
         let fts;
         let ftsFetchFailed = false;
+        let ftsLastErr = null;
         for (let attempt = 0; attempt < 2; attempt++) {
           try {
             fts = await _withAbortTimeout((signal) => fetchFundamentalsTS(stock.yahoo_symbol, signal), 60000, stock.ticker + '/fts'); // F-PY-102: abortable
             break;
           } catch (e) {
-            if (attempt === 0 && (e.message.includes('timeout') || e.code === 'ECONNRESET')) continue;
+            ftsLastErr = e;
+            // Bug 12 (audit 2026-07-03): case-INSENSITIVE match — _withAbortTimeout
+            // throws 'ETIMEDOUT after 60000ms', which case-sensitive includes('timeout')
+            // never matched, so the single retry was dead code. Align with the
+            // F-DP-048 quoteSummaryWithRetry pattern.
+            if (attempt === 0 && (/timeout|timed out|ETIMEDOUT|ECONNRESET/i.test(String(e.message)) || e.code === 'ECONNRESET')) continue;
             ftsFetchFailed = true;
             break;
           }
         }
-        if (ftsFetchFailed || !fts) throw new Error('FTS fetch failed for ' + stock.ticker);
+        // Bug 12: append the original error message so the final throw carries a
+        // 'timeout'/'ECONNRESET' token → correct errClass ('timeout'/'network')
+        // instead of 'other' in the catch classifier.
+        if (ftsFetchFailed || !fts) throw new Error('FTS fetch failed for ' + stock.ticker + (ftsLastErr ? ': ' + ftsLastErr.message : ''));
         ftsAnnual = mapFTSToAnnual(fts.annualFin, fts.annualCash);
         ftsQuarterly = mapFTSToQuarterly(fts.quarterlyFin);
         ftsBalance = mapFTSToBalance(fts.annualBs);
@@ -2106,6 +2211,16 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
 
       // Override leere annual-Arrays aus quoteSummary mit FTS-Daten wenn FTS welche hat.
       // audit/fix F2 (2026-06-25): single-source the whole income bundle.
+      // Bug 21 (audit 2026-07-03): the FTS-anchored side-series (annualSBC/Capex/
+      // RnD/SGA/Depreciation) and annualBalance are ALWAYS set from FTS below,
+      // but the income bundle here can be won by QS. QS is ~4yr anchored at the
+      // latest FY while FTS is ~5yr anchored one year earlier (documented ~line
+      // 2086). When QS wins, positional readers (axes/overview/lamps zip index-
+      // for-index) then pair e.g. SBC(FTS-FY2024) with Rev(QS-FY2025) — a fiscal-
+      // year mismatch. We capture whether QS won + the anchor-divergence signal
+      // (FTS strictly longer than QS) so the side-series can be re-aligned/dropped.
+      let _incomeWinnerIsQS = false;
+      let _ftsAnchorDiverges = false;
       {
         const _qsIncome = {
           annualRev: canonical.annual.annualRev,
@@ -2120,6 +2235,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           annualNetIncome: ftsAnnual.annualNetIncome,
         };
         const _winner = mergeAnnualIncomeBundle(_qsIncome, _ftsIncome);
+        _incomeWinnerIsQS = (_winner === _qsIncome);
+        // Anchor-divergence signal: the FTS income series is strictly longer than
+        // the QS income series it lost to. Per the documented anchor convention
+        // (FTS ~5yr one FY earlier, QS ~4yr latest FY) this is the exact shape in
+        // which the FTS side-series' newest entry is one fiscal year OLDER than
+        // QS' newest — so index-0 of the FTS side-series does NOT line up with
+        // index-0 of the (QS-won) income bundle.
+        _ftsAnchorDiverges = _incomeWinnerIsQS &&
+          (_ftsIncome.annualRev || []).length > (_qsIncome.annualRev || []).length;
         // Tag 206f: move siblings WITHOUT filtering nulls — null placeholders keep
         // annualOpInc[i]/annualNetIncome[i] aligned with annualRev[i] by fiscal year
         // (a bank's [3,null,2,null] OpInc must stay 4-long, not collapse to [3,2]).
@@ -2135,6 +2259,20 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
             (ftsAnnual.annualOpInc || []).some(v => v != null && (typeof v !== 'object' || v.value != null))) {
           if (canonical.meta) canonical.meta.opIncSource = 'native';
         }
+      }
+      // Bug 21 (audit 2026-07-03): when QS won the income bundle with a newer FY
+      // anchor, shift every FTS-anchored series by one leading null so their
+      // index 0 no longer collides with the income bundle's newer index 0. Done
+      // ONCE here, before all the FTS→canonical assignments below consume them,
+      // so annualBalance + SBC/Capex/RnD/SGA/Depreciation are all aligned to the
+      // same fiscal-year axis as annualRev/OpInc/GP/NI. No-op when aligned.
+      if (_ftsAnchorDiverges) {
+        ftsBalance             = _realignFtsAnchoredSeries(ftsBalance, true);
+        ftsAnnualSBC           = _realignFtsAnchoredSeries(ftsAnnualSBC, true);
+        ftsAnnualCapex         = _realignFtsAnchoredSeries(ftsAnnualCapex, true);
+        ftsAnnualRnD           = _realignFtsAnchoredSeries(ftsAnnualRnD, true);
+        ftsAnnualSGA           = _realignFtsAnchoredSeries(ftsAnnualSGA, true);
+        ftsAnnualDepreciation  = _realignFtsAnchoredSeries(ftsAnnualDepreciation, true);
       }
       // Tag-28: annualBalance aus FTS überschreiben wenn FTS mehr nicht-null Werte hat
       // F-DQ-011: extend usability check to include Tag 211l fields so FTS rows that
@@ -2433,7 +2571,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         errClass = 'mapper-bug';
         console.error('MAPPER-BUG', e.stack);
       } else if (/429|too many request|rate.?limit/i.test(msg)) errClass = 'rate-limit';
-      else if (/404|not found|invalid (cookie|crumb|symbol)|no data found|no fundamentals data found/i.test(msg)) errClass = 'not-found';
+      // Bug 2 (audit 2026-07-03): 'Invalid Crumb'/'Invalid Cookie' are Yahoo
+      // session/auth failures from the crumb flow — NOT a statement about the
+      // symbol. They typically hit many tickers of a run at once when the crumb
+      // expires mid-run. Previously they matched the not-found regex below and
+      // set meta.delisted=true → prune-watchlist permanently removed live tickers.
+      // Classify as a transient 'auth' class (like rate-limit) that never enters
+      // the delisted branch, so the ticker is simply retried on the next run.
+      else if (/invalid (cookie|crumb)/i.test(msg)) errClass = 'auth';
+      else if (/404|not found|invalid symbol|no data found|no fundamentals data found/i.test(msg)) errClass = 'not-found';
       else if (/timeout|ETIMEDOUT|ESOCKETTIMEDOUT/i.test(msg)) errClass = 'timeout';
       else if (/ENOTFOUND|ECONNREFUSED|ECONNRESET|EAI_AGAIN|network/i.test(msg)) errClass = 'network';
       else if (/parse|unexpected token|JSON/i.test(msg)) errClass = 'parse';
@@ -2638,4 +2784,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename };
+module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries };

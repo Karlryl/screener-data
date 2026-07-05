@@ -38,7 +38,9 @@ const EXCHANGE_DELAY_MS = 800;
 const JUNK_SUFFIX_RE = /\.WS$|\.WT$|\.WI$|\.RT$|\.UN$|\.U$/i;
 // audit/fix: warrants/rights/units now caught via the company-name field (mirrors nasdaq-all.js)
 // audit/fix: dropped over-broad \bunits?\b name-term — it excluded real MLPs (BEP/BIP/CQP/UNIT...); delimited .U$/.UN$ symbol filter still catches true unit symbols
-const JUNK_NAME_RE = /\b(?:warrant|right)s?\b/i;
+// Bug 28: header promised preferred/depositary filtering but the regex only caught warrants/rights (mirrors nasdaq-all.js).
+// ponytail: \bpreferred\b also catches REIT preferred-share issuers (e.g. "Preferred Apartment Communities") — acceptable, they are not common stock.
+const JUNK_NAME_RE = /\b(?:warrant|right)s?\b|\bpreferred\b|\bdepositary\s+shares?\b/i;
 function isJunkSecurity(symbol, name) {
   if (JUNK_SUFFIX_RE.test(symbol)) return true;
   if (name && JUNK_NAME_RE.test(name)) return true;
