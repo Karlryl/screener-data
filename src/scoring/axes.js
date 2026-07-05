@@ -175,8 +175,15 @@ function capitalEfficiency(s) {
   // -> byte-identisch. Verschlechterer (neuestes OpInc<0): das aelteste Jahr ist profitabel -> Loop
   // trimmt NICHTS -> neutral (kein Rescue; marginTrajectory+cycleDiscount tragen das Verschlechterungs-
   // Signal bereits, capEff-Neutralitaet vermeidet Doppel-Zaehlung).
+  // audit/fix (Bug 6): Trim NUR wenn ein profitables Regime existiert (juengstes Jahr >0).
+  // Bei durchgehend negativer OpInc-Serie kollabierte der Trim sonst auf das juengste
+  // Verlustjahr (roic = opInc[0]/inv[0]) -> Verlust-Verkleinerer gerescued, -Vergroesserer
+  // doppelt bestraft. Kein profitables Regime -> voller Mehrjahres-Schnitt (dokumentierter
+  // Verschlechterer-Kontrakt: kein Rescue, keine Doppel-Strafe).
   let end = opPaired.length;
-  while (end > 1 && opPaired[end - 1] <= 0) end--;
+  if (opPaired[0] > 0) {
+    while (end > 1 && opPaired[end - 1] <= 0) end--;
+  }
   const roic = mean(opPaired.slice(0, end)) / mean(invPaired.slice(0, end));
 
   // Asset-Growth-Penalty (nur wenn beide Wachstumsraten berechenbar)
