@@ -123,12 +123,17 @@ jobs:
       # price-onlyt die Snapshots von N-1 (schnell) und pullt nur stale/neue voll ->
       # Coverage akkumuliert oldest-first bis voll. RESTORE hier (NACH dem Scoring-Gate,
       # damit das Gate deterministisch gegen leeres snapshots/ laeuft), VOR dem Pull.
-      # key ist pro Run eindeutig -> es wird immer ein neuer Cache gespeichert (Post-Step,
-      # auch bei Job-Failure); restore-keys holt den JUENGSTEN vorherigen Cache.
-      # Kaltstart: die ersten ~2 Laeufe bleiben rot (Cache fuellt sich trotzdem), ab
+      # key ist pro Run eindeutig; restore-keys holt den JUENGSTEN vorherigen Cache.
+      # WICHTIG (Tag 261): actions/cache@v4 speichert im Post-Step NUR bei Job-Erfolg — und
+      # dieser Job faellt beim Kaltstart am Coverage-Gate (1377 < Floor), also wurde der
+      # Snapshot-Cache NIE gespeichert (`gh cache list`: kein snapshots-* Eintrag) -> das
+      # Universum blieb ewig leer, price-only=0, permanente 1377-Decke (Bootstrapping-Deadlock).
+      # Fix: restore-only hier + separater save-Step mit `if: always()` NACH dem Pull, damit die
+      # gezogenen Snapshots auch bei Gate-Fail persistieren und ueber Laeufe akkumulieren.
+      # Kaltstart: die ersten ~2 Laeufe bleiben rot (Cache fuellt sich jetzt WIRKLICH), ab
       # ~Lauf 3 ueberschreitet die Coverage den Floor -> gruen und danach selbsttragend.
       - name: Restore snapshot cache (cross-run persistence for the pull-diet)
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: snapshots
           key: snapshots-${{ github.run_id }}
@@ -291,6 +296,19 @@ jobs:
         run: node --max-old-space-size=6144 pull-yahoo.js --watchlist watchlist.json --output snapshots --rate-limit 2000
         continue-on-error: true
         timeout-minutes: 165
+
+      # Tag 261: persist the freshly-pulled snapshots to the cross-run cache REGARDLESS of the
+      # later coverage-gate outcome (`if: always()`). The paired restore step above is now
+      # restore-only, so this is the ONLY save path. Per-run key -> always a new entry; the
+      # next run's restore-keys grabs it and price-onlys those tickers (cheap), warming the
+      # universe until coverage clears the floor. Without this the pull-diet can never start
+      # (Bootstrapping-Deadlock: gate blocks -> job fails -> @v4 post-save skipped -> empty).
+      - name: Save snapshot cache (always — persists even when the coverage gate blocks)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: snapshots
+          key: snapshots-${{ github.run_id }}
 
       # Tag 147: Quality-gate — fail hard only if coverage is too low to produce useful reports
       # Tag 161: relative threshold — max(1800, 40% of n_total)
