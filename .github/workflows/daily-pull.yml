@@ -309,7 +309,36 @@ jobs:
         # (match asOf OR fetchedAt) the gate can finally do its job.
         continue-on-error: false
 
-      - name: Verify Pull Coverage
+      # Frage 11 (two-stage coverage gate). Replaces the single-threshold gate.
+      # Signal path is red-X (::error::) + a machine-readable marker in the
+      # DEPLOYED export (outputs/coverage-status.json) — NO mail/Discord (Karl
+      # reads neither). The marker binds to findash-export v1 (task 1.1): the
+      # dashboard reads status/banner from it.
+      #
+      # IMPORTANT: outputs/ is .gitignored (repo convention: "committed via
+      # gh-pages only"). The marker is therefore DEPLOY-ONLY — the Deploy step
+      # copies the working-tree outputs/. into _site/outputs/, so the marker
+      # reaches gh-pages. It is NOT committed to main. The export contract
+      # (task 1.1) must read the marker from the gh-pages URL, not main.
+      #
+      # THREE outcomes, ONE marker file always written:
+      #   KATASTROPHAL -> exit 1, BLOCK deploy (Deploy step is `if: success()`).
+      #     schema-broken (manifest unreadable / n_ok==0) OR
+      #     n_ok < HARD_FLOOR = max(2500, 13% of n_total).  [UNCHANGED old gate]
+      #   DEGRADIERT   -> exit 0, DEPLOY partial WITH flag + ::error::/::warning::.
+      #     n_ok >= HARD_FLOOR but not a clean full pull: partial==true OR
+      #     n_ok < SOFT_TARGET = max(4600, 18% of n_total) OR failure-mass >35%.
+      #   OK           -> exit 0, deploy, banner hidden.
+      #
+      # A 12% timeout run is < HARD_FLOOR -> katastrophal -> blocks, as required
+      # (the floor is NOT lowered; it is the old max(2500,0.13*n_total) promoted).
+      - name: Verify Pull Coverage (two-stage)
+        run: node scripts/coverage-gate.js
+
+      # --- OLD single-threshold gate (retired by Frage 11) — kept disabled for
+      #     reference during the export-v1 rollout; delete once the marker is proven.
+      - name: Verify Pull Coverage (legacy, disabled)
+        if: ${{ false }}
         run: |
           # Tag 220c (audit F-219b-02 MEDIUM): manifest's `partial` flag reports
           # a mid-flight SIGKILL of Yahoo Pull. pull-yahoo writes partial:true on
