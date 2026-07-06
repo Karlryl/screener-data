@@ -746,6 +746,26 @@ jobs:
             exit 1
           fi
 
+      # Task 1.1: build the versioned findash-export/v1 contract from the engine output
+      # (latest-only, atomic via lib/atomic-write.js; never touches picks-history/ or
+      # earnings-calendar.json), then hard-validate it before the deploy below.
+      - name: Build findash-export v1
+        run: |
+          node scripts/write-findash-export.js
+          count=$(ls outputs/findash-export/v1/*.json 2>/dev/null | wc -l)
+          echo "findash-export wrote $count JSON files to outputs/findash-export/v1/"
+          if [ "$count" -lt 15 ]; then
+            echo "::error::findash-export produced $count files (expected 15) — writer failed."
+            exit 1
+          fi
+
+      # Task 1.1: contract gate — presence + type + enum of EVERY mandatory field across
+      # all 15 files. Non-empty violation list -> exit 1 -> blocks the if:success() deploy
+      # (red-X, Karl's only alarm channel). Verified: 20 tamper variants all blocked,
+      # clean export passes. Same fail-loud pattern as coverage-gate.js.
+      - name: Verify findash-export v1 schema (contract gate)
+        run: node scripts/write-findash-export.js --check
+
       # Publish outputs/hypergrowth/*.json to gh-pages, reusing the Deploy step's
       # x-access-token GITHUB_TOKEN force-push. Clone existing gh-pages first so
       # pull's index.html + other outputs survive; only refresh hypergrowth/.
@@ -758,6 +778,9 @@ jobs:
             || { mkdir -p _ghp; cd _ghp; git init -b gh-pages; cd ..; }
           mkdir -p _ghp/outputs/hypergrowth
           cp outputs/hypergrowth/*.json _ghp/outputs/hypergrowth/
+          # Task 1.1: publish the findash-export/v1 contract alongside the raw boards.
+          mkdir -p _ghp/outputs/findash-export/v1
+          cp -r outputs/findash-export/v1/. _ghp/outputs/findash-export/v1/
           cd _ghp
           git config user.name "yahoo-pull-bot"
           git config user.email "yahoo-pull-bot@users.noreply.github.com"
