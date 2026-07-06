@@ -88,3 +88,8 @@ screener-detail.json
 .extract-calib.js
 .probe*.js
 .hg-synthesis*.json
+
+# Session-runtime lock for the scheduled-tasks harness — machine/session-local state
+# (sessionId/pid/acquiredAt), never a work product. Was accidentally tracked and rewritten
+# by every session + the CI `git add -A`, causing perpetual churn on main. Untracked here.
+.claude/scheduled_tasks.lock
