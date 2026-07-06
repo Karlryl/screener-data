@@ -109,9 +109,20 @@ const FUNDAMENTALS_REFRESH_MS = FUNDAMENTALS_REFRESH_DAYS * 24 * 60 * 60 * 1000;
 // currency-stale forced fulls are correctness-critical and rare — they are NEVER
 // budgeted. Generous default so normal runs are unaffected; only a mass re-expiry
 // stampede ever hits the cap.
+// TASK 0.9 (Pull-Diät): budget cut 4000 → 1500. The full pulls are the run's
+// bottleneck (run today: only 1368/23692 finished before the 165-min timeout).
+// The budget caps ONLY sole-cause time-based fulls (schema/currency/earnings
+// fulls ride free). Lowering it does NOT starve anyone: the oldest-first
+// staleness rotation means the 1500 most-overdue tickers refresh each run and
+// the rest rotate in over the following days, and the two-stage coverage gate
+// now deploys degraded (price-only) results, so a smaller budget no longer
+// hard-blocks. Earnings-flagged tickers (new financials) bypass the budget
+// entirely via needsFullPull, so freshness where it matters is unaffected.
+// ponytail: 1500 sized to fit the 165-min step at the observed full-pull rate,
+// raise via env FUNDAMENTALS_REFRESH_BUDGET if the step grows or speeds up.
 const FUNDAMENTALS_REFRESH_BUDGET = (() => {
   const v = parseInt(process.env.FUNDAMENTALS_REFRESH_BUDGET || '', 10);
-  return (Number.isFinite(v) && v >= 0) ? v : 4000;
+  return (Number.isFinite(v) && v >= 0) ? v : 1500;
 })();
 let _fundamentalsRefreshUsed = 0;   // per-run counter, reset at the top of pullAll
 let _fundamentalsRefreshDeferred = 0; // tickers deferred to price-only this run (logged)
@@ -1459,9 +1470,13 @@ function _withAbortTimeout(makePromise, ms, label) {
 // Also accept BOTH meta.asOf and meta.fetchedAt — pre-Tag-215j snapshots
 // only had fetchedAt; post-Tag-215j have both. Without this dual-read,
 // old snapshots looked timestamp-0 and would be pulled first wastefully.
-function sortByStaleness(stocks, outputDir) {
+function sortByStaleness(stocks, outputDir, earningsCalendar, today) {
   const ageCache = new Map();
   const ageRegex = /"(?:asOf|fetchedAt)"\s*:\s*"([^"]+)"/;
+  // TASK 0.9 (Pull-Diät): prefer the SEPARATE full-pull clock for the earnings
+  // check so a daily-reset asOf doesn't hide a report as "already pulled".
+  const fundAsOfRegex = /"fundamentalsAsOf"\s*:\s*"([^"]+)"/;
+  const cal = earningsCalendar || {};
   for (const stock of stocks) {
     const ticker = stock.ticker;
     if (ageCache.has(ticker)) continue;
@@ -1473,11 +1488,19 @@ function sortByStaleness(stocks, outputDir) {
         const fd = fs.openSync(fp, 'r');
         fs.readSync(fd, buf, 0, 1024, 0);
         fs.closeSync(fd);
-        const m = buf.toString('utf8').match(ageRegex);
+        const hdr = buf.toString('utf8');
+        const m = hdr.match(ageRegex);
         if (m) {
           const t = new Date(m[1]).getTime();
           if (Number.isFinite(t)) age = t;
         }
+        // TASK 0.9 (Pull-Diät): if this ticker reported earnings since its last
+        // full pull, pull it FORWARD (age 0 = oldest) so the freshness promise
+        // holds even when the budget caps how far down the list we get. Reuses
+        // the same pure needsFullPull decision the processOne gate uses.
+        const fm = hdr.match(fundAsOfRegex);
+        const metaForCheck = { fundamentalsAsOf: (fm ? fm[1] : (m ? m[1] : undefined)) };
+        if (needsFullPull(metaForCheck, cal[ticker], today) === 'full') age = 0;
       }
     } catch {}
     ageCache.set(ticker, age);
@@ -1493,6 +1516,17 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // counters so the budget is fresh each pullAll invocation.
   _fundamentalsRefreshUsed = 0;
   _fundamentalsRefreshDeferred = 0;
+  // TASK 0.9 (Pull-Diät): load the earnings calendar ONCE, in scope for
+  // processOne and the staleness sort. Format { ticker: { date, pulledAt } }.
+  // READ ONLY — never written here. {} on any failure so a missing/corrupt
+  // file degrades to the pre-diet behaviour (no earnings-forced fulls).
+  let _earningsCalendar = {};
+  try {
+    _earningsCalendar = JSON.parse(fs.readFileSync(path.join(__dirname, 'earnings-calendar.json'), 'utf8')) || {};
+  } catch (e) {
+    _log('WARN', `earnings-calendar.json not loaded (${e.message}) — earnings-forced fulls disabled this run`);
+  }
+  const _today = new Date();
   const results = [];
   const failures = [];
   // Tag-80: Parallel pulls in batches of CONCURRENCY
@@ -1500,7 +1534,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   _log('INFO', `Parallel pulls: ${CONCURRENCY} concurrent. Total: ${watchlist.stocks.length} stocks.`);
   // Tag 164: sort by staleness — oldest snapshots pulled first so timeouts
   // always refresh the most-stale data. Guarantees full universe coverage over ~3 days.
-  watchlist.stocks = sortByStaleness(watchlist.stocks, outputDir);
+  watchlist.stocks = sortByStaleness(watchlist.stocks, outputDir, _earningsCalendar, _today);
   _log('INFO', `Sorted ${watchlist.stocks.length} stocks by staleness (oldest first)`);
   // Tag 154: exponential-backoff retry for rate-limit errors.
   // Yahoo 429s are transient — one retry after 10–30s usually succeeds.
@@ -1569,11 +1603,19 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const okResults = results.filter(r =>
         r && (r.status === 'ok' || r.status === 'price-only'));
       const skippedMcap = results.length - okResults.length;
+      // TASK 0.9 (Pull-Diät): split full vs price-only so the diet's effect is
+      // readable even on a TIMED-OUT run — the incremental manifest is flushed to
+      // disk every ~100 tickers, so these survive a mid-flight SIGKILL. n_full is
+      // the expensive full-pull count (the bottleneck the budget caps).
+      const nFull = okResults.filter(r => r.status === 'ok').length;
+      const nPriceOnly = okResults.length - nFull;
       const slim = {
         pulled_at: new Date().toISOString(),
         watchlist_version: watchlist._meta && watchlist._meta.version,
         n_total: watchlist.stocks.length,
         n_ok: okResults.length,
+        n_full: nFull,
+        n_priceonly: nPriceOnly,
         n_skipped_mcap: skippedMcap,
         n_failed: failures.length,
         partial: true
@@ -1938,8 +1980,20 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // ticker to price-only (caught next run, oldest-first) so a clustered re-expiry
       // wave can't starve the coverage gate. Counter incremented only on a forced
       // time-based full that we actually honor.
-      let forceFundamentalsFull = staleFundamentals;
-      if (staleFundamentals && !staleSchema && !staleCurrency) {
+      // TASK 0.9 (Pull-Diät): earnings free-ride. If this ticker reported earnings
+      // since its last full pull, new financials exist → force an UNBUDGETED full
+      // pull (same free-ride path as staleSchema/staleCurrency). Reporters stay
+      // fresh regardless of the time-based budget. needsFullPull is pure and never
+      // throws; snapshotMeta is the once-parsed snapshot's meta (carries the
+      // separate fundamentalsAsOf full-pull clock).
+      const staleEarnings = (youngEnough && _parsedSnapshot)
+        ? (needsFullPull(_parsedSnapshot.meta, _earningsCalendar[stock.ticker], _today) === 'full')
+        : false;
+      let forceFundamentalsFull = staleFundamentals || staleEarnings;
+      // Budget applies ONLY when time-staleness is the SOLE reason. If the ticker
+      // is also schema-, currency-, or earnings-stale it takes the full pull for
+      // correctness (free ride) and must not consume the time budget.
+      if (staleFundamentals && !staleSchema && !staleCurrency && !staleEarnings) {
         if (_fundamentalsRefreshUsed < FUNDAMENTALS_REFRESH_BUDGET) {
           _fundamentalsRefreshUsed++;
         } else {
@@ -1961,6 +2015,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         _log('INFO', `  ${stock.ticker} [schema-stale]: forcing full pull to backfill Tag 211l fields`);
       } else if (staleCurrency) {
         _log('INFO', `  ${stock.ticker} [currency-stale]: forcing full pull to normalize pre-Tag-219c FX envelope`);
+      } else if (staleEarnings) {
+        _log('INFO', `  ${stock.ticker} [earnings-stale]: forcing unbudgeted full pull (reported since last full pull)`);
       } else if (forceFundamentalsFull) {
         _log('INFO', `  ${stock.ticker} [fundamentals-stale]: forcing full pull (fundamentalsAsOf > ${FUNDAMENTALS_REFRESH_DAYS}d)`);
       }
@@ -2713,7 +2769,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // Full manifest (with per-ticker results/failures) goes to gitignored _manifest-full.json.
   // Saves ~1.4 MB per daily commit (95% of the committed file was diagnostics-only).
   // Tag 155: partial:false signals clean end-of-run write (incremental writes during loop set partial:true).
-  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_skipped_mcap: manifest.n_skipped_mcap, n_failed: manifest.n_failed, partial: false };
+  // TASK 0.9 (Pull-Diät): carry n_full/n_priceonly on the clean-run slim too, so
+  // the coverage step reads the same fields whether the run timed out (partial
+  // incremental manifest) or finished (this write).
+  const nFullFinal = okResultsFinal.filter(r => r.status === 'ok').length;
+  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, n_skipped_mcap: manifest.n_skipped_mcap, n_failed: manifest.n_failed, partial: false };
   // Tag 189: factored into writeFileAtomic helper.
   const slimPath = path.join(outputDir, '_manifest.json');
   writeFileAtomic(slimPath, JSON.stringify(slim));
