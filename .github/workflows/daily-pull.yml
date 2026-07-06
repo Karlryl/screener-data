@@ -111,6 +111,30 @@ jobs:
       - name: Coverage-Marker Contract Selftest
         run: node scripts/coverage-gate.js --selftest
 
+      # 0.9 STRUKTUR-FIX (Messung Run 28785631448: full=1371 price-only=0 -> 5.8%
+      # katastrophal): snapshots/ ist gitignored und wird pro Lauf NICHT persistiert
+      # -> jeder CI-Lauf startet mit LEEREM snapshots/ -> jeder Ticker ist ein Erst-/
+      # Voll-Pull (~7s), 0 price-only, nur ~1371 in 165min. Die Pull-Diaet (needsFullPull/
+      # Budget/earnings) kann strukturell nie greifen, weil sie PERSISTENTE Snapshots
+      # voraussetzt (Tag-164 "volle Coverage ueber ~3 Tage" gilt nur MIT Persistenz).
+      # FUNDAMENTALS_REFRESH_BUDGET ist in CI daher wirkungslos (kappt nur zeitbasierte
+      # Fulls auf vorhandenen jungen Snapshots).
+      # Fix: snapshots/ per actions/cache ueber Laeufe hinweg persistieren. Lauf N
+      # price-onlyt die Snapshots von N-1 (schnell) und pullt nur stale/neue voll ->
+      # Coverage akkumuliert oldest-first bis voll. RESTORE hier (NACH dem Scoring-Gate,
+      # damit das Gate deterministisch gegen leeres snapshots/ laeuft), VOR dem Pull.
+      # key ist pro Run eindeutig -> es wird immer ein neuer Cache gespeichert (Post-Step,
+      # auch bei Job-Failure); restore-keys holt den JUENGSTEN vorherigen Cache.
+      # Kaltstart: die ersten ~2 Laeufe bleiben rot (Cache fuellt sich trotzdem), ab
+      # ~Lauf 3 ueberschreitet die Coverage den Floor -> gruen und danach selbsttragend.
+      - name: Restore snapshot cache (cross-run persistence for the pull-diet)
+        uses: actions/cache@v4
+        with:
+          path: snapshots
+          key: snapshots-${{ github.run_id }}
+          restore-keys: |
+            snapshots-
+
       # Tag 132: Auto-Universe-Refresh — laeuft bei jedem Run (schedule + workflow_dispatch).
       # Tag 133: Merged mit SEC EDGAR, Finnhub, Wikipedia Indices.
       # Tag 165: OTC Markets (OTCQX/OTCQB/Expert) + NASDAQ Screener API added.
