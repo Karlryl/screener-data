@@ -2777,6 +2777,39 @@ async function main() {
   process.exit(failRatio > 0.75 ? 1 : 0);
 }
 
+// TASK 0.9 (Pull-Diät): pure decision fn — did this ticker report earnings since
+// its last full pull? If so it MUST take an UNBUDGETED full pull (new financials
+// exist), like staleSchema/staleCurrency — NOT via FUNDAMENTALS_REFRESH_BUDGET.
+// Contract: 'full' iff earningsEntry.date exists AND date <= today AND
+// date > meta.fundamentalsAsOf; else 'price-only'. Pure, no I/O, never throws.
+// All inputs are treated as untrusted (garbage in → 'price-only', not a throw).
+// ponytail: string-compares the two dates by parsing to epoch, not lexical —
+// fundamentalsAsOf is a full ISO timestamp, earnings date a YYYY-MM-DD day.
+function needsFullPull(snapshotMeta, earningsEntry, today) {
+  try {
+    const earnDate = earningsEntry && earningsEntry.date;
+    if (!earnDate) return 'price-only';
+    const earnT = new Date(earnDate).getTime();
+    if (!Number.isFinite(earnT)) return 'price-only';
+
+    const todayT = (today instanceof Date) ? today.getTime() : new Date(today).getTime();
+    if (!Number.isFinite(todayT)) return 'price-only';
+    // Not-yet-reported earnings (future date) carry no new financials → price-only.
+    if (earnT > todayT) return 'price-only';
+
+    // No last-full-pull clock → cannot prove the report is newer than our data.
+    // Be conservative: don't force an unbudgeted full on missing/garbage meta.
+    const asOf = snapshotMeta && snapshotMeta.fundamentalsAsOf;
+    if (!asOf) return 'price-only';
+    const asOfT = new Date(asOf).getTime();
+    if (!Number.isFinite(asOfT)) return 'price-only';
+
+    return (earnT > asOfT) ? 'full' : 'price-only';
+  } catch (_) {
+    return 'price-only';
+  }
+}
+
 if (require.main === module) {
   main().catch(e => {
     _log('FATAL', e.stack || e.message);
@@ -2784,4 +2817,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries };
+module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries, needsFullPull };
