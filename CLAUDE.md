@@ -9,7 +9,7 @@ Growth-/Qualitäts-**Screener** für Aktien. Repo `Karlryl/screener-data` (Branc
 **Vor Arbeitsbeginn zuerst lesen:** der lebende Masterplan im Vault —
 `…\Jarvis\Knowledge\Trading\growth-screener\_MASTERPLAN-screener-findash.md`
 (Kopf-Block „Wo stehen wir gerade" + aktuelle Phase). Er ist Source of Truth für Reihenfolge, Status und Akzeptanz; hier **nicht** duplizieren.
-- **Update-Ritual (G2):** nach jedem erledigten Task im Masterplan Kästchen abhaken, WORKLOG-Zeile (Datum, Commit, 1 Satz), „Wo stehen wir"-Block aktualisieren.
+- **Update-Ritual (G2):** nach jedem erledigten Task im Masterplan Kästchen abhaken, „Wo stehen wir"-Block aktualisieren, WORKLOG-Eintrag mit den **4 Pflichtteilen** (Was+Commit / Warum so entschieden / Fehler & Schwierigkeiten / Lektion). Verallgemeinerbare Lektionen zusätzlich als 1 Zeile ins **Lektionen-Register (Masterplan Abschnitt 6.0)** — das Register ist Pflicht-Lektüre vor Arbeitsbeginn.
 - **Commit-Konvention (H2):** `Tag <n>: <Betreff>` — `n` = höchste `Tag`-Nummer aus `git log --oneline` + 1, ein Tag pro logischem Chunk.
 - **Push & Melde-Pflicht (H3):** Push auf `main` erlaubt bei grünen Gates; **Force-Push / History-Rewrite / Löschen nie ohne Karl**. Was nicht gepusht werden konnte, am Session-Ende explizit an Karl melden.
 - **Schutzliste (nie löschen/überschreiben):** `picks-history/`, `methods-history/`, `earnings-calendar.json`, Branch `loop/formel-haertung`.
