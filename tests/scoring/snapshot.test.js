@@ -19,7 +19,7 @@ function test(name, fn) {
 }
 
 const CRDO = JSON.parse(
-  fs.readFileSync(path.join(__dirname, '..', '..', 'snapshots', 'CRDO.json'), 'utf8')
+  fs.readFileSync(path.join(__dirname, 'fixtures', 'CRDO.json'), 'utf8')
 );
 
 // --- (i) Objekt-Array [{value:N}] -> Zahlen-Serie, Reihenfolge erhalten -----
