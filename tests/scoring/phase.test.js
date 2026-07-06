@@ -82,6 +82,11 @@ test('Output-Zeilen tragen phase/mcapBand/ipoRecency; CRDO=inflected, route, Sco
   const files = fs.readdirSync(SNAP_DIR).filter((f) => f.endsWith('.json'));
   const universe = [];
   for (const f of files) { try { const s = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, f), 'utf8')); if (s && s.meta && s.meta.ticker) universe.push(s); } catch (_) { /* skip */ } }
+  // Task 0.9-Fix (CI pre-pull gate): dieser Integrations-Anker braucht das ECHTE Live-Universum
+  // (CRDO in der Semiconductor-Kohorte, non-leere survival-Liste). Vor dem Pull ist snapshots/ leer
+  // -> N/A (fehlende Daten, kein Engine-Regress), sauber ueberspringen; lokal mit Snapshots laeuft er
+  // voll. Die reinen phaseOf/mcapBand/ipoRecency-Klassifikatoren oben nutzen fixtures/ und laufen immer.
+  if (universe.length === 0) { console.log('       (kein Universum — pre-pull-Gate — uebersprungen)'); return; }
   const results = scoreUniverse(universe, formulas);
   const r = produceRankings(results, { topN: 50 });
   const crdo = r.branches['semiconductors'].profitable.find((x) => x.ticker === 'CRDO');
