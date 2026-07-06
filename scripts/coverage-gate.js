@@ -75,13 +75,14 @@ function finishGood(ok, total, source, m, reasons) {
   return { status, reasons, n_ok: ok, n_total: total, source };
 }
 
-function run() {
-  const m = readJSON(MANIFEST);
-  const res = classify(m, watchlistSize(), fileCount());
+// findash-export v1 contract (task 1.1 consumer): the dashboard binds `degraded`
+// (banner on/off) and `blocked`; `status`/`reasons` drive banner text. buildMarker is
+// PURE (no disk) so the selftest can assert the contract for every status class.
+// Carries the 0.9 pull-mix (n_full/n_priceonly — matching pull-yahoo's manifest keys)
+// through to the dashboard consumer.
+function buildMarker(res, m) {
   const coveragePct = res.n_total > 0 ? +(res.n_ok / res.n_total * 100).toFixed(1) : 0;
-  // findash-export v1 contract: `degraded` is the boolean the dashboard binds to;
-  // `status`/`reasons` drive banner text.
-  const marker = {
+  return {
     schema: 'coverage-status/v1',
     generated_at: new Date().toISOString(),
     run_id: process.env.GITHUB_RUN_ID || null,
@@ -90,17 +91,60 @@ function run() {
     blocked: res.status === 'katastrophal',
     n_ok: res.n_ok,
     n_total: res.n_total,
+    n_full: (m && Number.isFinite(m.n_full)) ? m.n_full : null,              // 0.9 instrumentation
+    n_priceonly: (m && Number.isFinite(m.n_priceonly)) ? m.n_priceonly : null,
     coverage_pct: coveragePct,
     source: res.source,
     reasons: res.reasons,
     manifest_partial: !!(m && m.partial === true)
   };
+}
+
+// Contract guard: coverage-status.json ist Karls EINZIGER sanktionierter Alarm-Kanal
+// (Dashboard-Degradiert-Banner; kein Mail/Discord). Ein stiller Schema-Bruch (fehlendes
+// degraded/blocked, falscher Typ, status<->degraded/blocked-Inkonsistenz) wuerde den Banner
+// lautlos abschalten -> Fail-silent statt Fail-loud. validateMarker liefert die Liste der
+// Vertragsverletzungen (leer = ok); im Selftest hart gepinnt.
+const VALID_STATUS = ['ok', 'degradiert', 'katastrophal'];
+function validateMarker(mk) {
+  if (!mk || typeof mk !== 'object') return ['marker not an object'];
+  const errs = [];
+  if (mk.schema !== 'coverage-status/v1') errs.push(`schema=${mk.schema}`);
+  if (!VALID_STATUS.includes(mk.status)) errs.push(`status=${mk.status}`);
+  if (typeof mk.degraded !== 'boolean') errs.push('degraded not boolean');
+  if (typeof mk.blocked !== 'boolean') errs.push('blocked not boolean');
+  if (mk.degraded !== (mk.status !== 'ok')) errs.push('degraded inconsistent with status');
+  if (mk.blocked !== (mk.status === 'katastrophal')) errs.push('blocked inconsistent with status');
+  for (const f of ['n_ok', 'n_total', 'coverage_pct']) {
+    if (!Number.isFinite(mk[f])) errs.push(`${f} not finite`);
+  }
+  if (!Array.isArray(mk.reasons)) errs.push('reasons not array');
+  // n_full/n_priceonly nullable (legacy manifests) but if present must be finite
+  for (const f of ['n_full', 'n_priceonly']) {
+    if (mk[f] !== null && !Number.isFinite(mk[f])) errs.push(`${f} present but not finite`);
+  }
+  return errs;
+}
+
+function run() {
+  const m = readJSON(MANIFEST);
+  const res = classify(m, watchlistSize(), fileCount());
+  const marker = buildMarker(res, m);
+  const coveragePct = marker.coverage_pct;
+  const bad = validateMarker(marker);
+  if (bad.length) console.error(`::warning::coverage-status marker contract violation: ${bad.join('; ')}`);
   try {
     fs.mkdirSync(path.dirname(MARKER), { recursive: true });
     fs.writeFileSync(MARKER, JSON.stringify(marker, null, 2));
   } catch (e) { console.error(`::warning::could not write ${MARKER}: ${e.message}`); }
 
-  const line = `Coverage: ${res.n_ok}/${res.n_total} (${coveragePct}%) status=${res.status} source=${res.source}`;
+  // TASK 0.9c: surface the full/price-only split so a Voll-Universum-Lauf reports the mix
+  // in the coverage-step log even on a partial (timeout) run — the number
+  // FUNDAMENTALS_REFRESH_BUDGET is tuned against.
+  const mix = (m && (Number.isFinite(m.n_full) || Number.isFinite(m.n_priceonly)))
+    ? ` full=${m.n_full == null ? '?' : m.n_full} price-only=${m.n_priceonly == null ? '?' : m.n_priceonly}`
+    : '';
+  const line = `Coverage: ${res.n_ok}/${res.n_total} (${coveragePct}%)${mix} status=${res.status} source=${res.source}`;
   if (res.status === 'katastrophal') {
     console.error(`::error::KATASTROPHAL — ${line}. ${res.reasons.join('; ')}. Blocking deploy.`);
     process.exit(1);
@@ -127,13 +171,32 @@ function selftest() {
   ];
   let pass = 0;
   for (const [m, want] of cases) {
-    const got = classify(m, N, 0).status;   // null case: 0 files -> file-count fallback also fails -> katastrophal
+    const res = classify(m, N, 0);          // null case: 0 files -> file-count fallback also fails -> katastrophal
+    const got = res.status;
     const ok = got === want;
     console.log(`${ok ? 'PASS' : 'FAIL'}  want=${want} got=${got}  ${JSON.stringify(m)}`);
     if (ok) pass++;
+    // Marker-Vertrag (coverage-status/v1) fuer JEDE Status-Klasse hart pinnen — schuetzt
+    // Karls einzigen Alarm-Kanal vor stillem Schema-Bruch.
+    const mk = buildMarker(res, m);
+    const errs = validateMarker(mk);
+    const okC = errs.length === 0
+      && mk.degraded === (want !== 'ok')
+      && mk.blocked === (want === 'katastrophal');
+    console.log(`${okC ? 'PASS' : 'FAIL'}  marker-contract status=${want} degraded=${mk.degraded} blocked=${mk.blocked}${errs.length ? ' ERRS=' + errs.join(',') : ''}`);
+    if (okC) pass++;
   }
-  console.log(`${pass}/${cases.length} passed`);
-  process.exit(pass === cases.length ? 0 : 1);
+  // Negativ-Kontrolle: validateMarker MUSS einen kaputten Marker fangen (sonst waere der
+  // Guard wertlos). cases[2] ist 'degradiert' -> degraded MUSS true sein; wir faelschen es auf
+  // false (Banner lautlos aus) und erwarten, dass der Guard das ablehnt.
+  const tampered = buildMarker(classify(cases[2][0], N, 0), cases[2][0]);
+  tampered.degraded = false;
+  const negOk = validateMarker(tampered).length > 0;
+  console.log(`${negOk ? 'PASS' : 'FAIL'}  marker-contract negative-control (tampered degraded flag is rejected)`);
+  const total = cases.length * 2 + 1;
+  if (negOk) pass++;
+  console.log(`${pass}/${total} passed`);
+  process.exit(pass === total ? 0 : 1);
 }
 
 if (process.argv.includes('--selftest')) selftest();

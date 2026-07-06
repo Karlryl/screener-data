@@ -103,6 +103,14 @@ jobs:
           fi
           echo "All scoring tests passed."
 
+      # Coverage-Marker-Vertrag (coverage-status/v1) pre-pull pinnen. Der Marker
+      # outputs/coverage-status.json ist Karls EINZIGER sanktionierter Alarm-Kanal
+      # (Dashboard-Degradiert-Banner; kein Mail/Discord) — ein stiller Schema-Bruch
+      # schaltet den Banner lautlos ab (Fail-silent). Der Selftest ist rein/synthetisch
+      # (kein Universum noetig) und laeuft in <1s.
+      - name: Coverage-Marker Contract Selftest
+        run: node scripts/coverage-gate.js --selftest
+
       # Tag 132: Auto-Universe-Refresh — laeuft bei jedem Run (schedule + workflow_dispatch).
       # Tag 133: Merged mit SEC EDGAR, Finnhub, Wikipedia Indices.
       # Tag 165: OTC Markets (OTCQX/OTCQB/Expert) + NASDAQ Screener API added.
