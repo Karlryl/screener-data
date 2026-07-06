@@ -100,7 +100,13 @@ function run() {
     fs.writeFileSync(MARKER, JSON.stringify(marker, null, 2));
   } catch (e) { console.error(`::warning::could not write ${MARKER}: ${e.message}`); }
 
-  const line = `Coverage: ${res.n_ok}/${res.n_total} (${coveragePct}%) status=${res.status} source=${res.source}`;
+  // TASK 0.9 (Pull-Diät): surface the full/price-only split so a Voll-Universum-Lauf
+  // reports the mix in the coverage-step log even on a partial (timeout) run — the number
+  // FUNDAMENTALS_REFRESH_BUDGET is tuned against.
+  const mix = (m && (Number.isFinite(m.n_full) || Number.isFinite(m.n_price_only)))
+    ? ` full=${m.n_full == null ? '?' : m.n_full} price-only=${m.n_price_only == null ? '?' : m.n_price_only}`
+    : '';
+  const line = `Coverage: ${res.n_ok}/${res.n_total} (${coveragePct}%)${mix} status=${res.status} source=${res.source}`;
   if (res.status === 'katastrophal') {
     console.error(`::error::KATASTROPHAL — ${line}. ${res.reasons.join('; ')}. Blocking deploy.`);
     process.exit(1);

@@ -40,6 +40,15 @@ jobs:
       # raised to 20. The Tag 163 retry budget (5s/12s) is too short for
       # CDN-edge 429s — Tag 215f also extends to 15s/45s (see pull-yahoo.js).
       PULL_CONCURRENCY: '8'
+      # TASK 0.9 (Pull-Diät): cap the SLOW time-based fundamentals-full path so the pull
+      # fits the 165-min Yahoo-Pull step. This is the correct lever (NOT lowering
+      # FUNDAMENTALS_REFRESH_DAYS, which would INCREASE fulls). Code default is 4000;
+      # 1500 is a conservative initial estimate. Safe: tickers over budget defer to
+      # PRICE-ONLY (still count toward n_ok → coverage gate unaffected) and are caught
+      # next run oldest-first; schema/currency/earnings fulls stay UNBUDGETED for
+      # correctness. Retune from the n_full/n_price_only the manifest+coverage log now
+      # report on a full-universe run.
+      FUNDAMENTALS_REFRESH_BUDGET: '1500'
     steps:
       # Tag 219 (audit F-219b-01 HIGH): freeze a shared run-date at job start
       # so all snapshot-* scripts agree on TODAY's date, even if the Yahoo
