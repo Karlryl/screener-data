@@ -33,6 +33,7 @@
 const fs = require('fs');
 const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
+const { boardStatus: boardStatusOf } = require('../src/scoring/board-status.js'); // 2.1: core|diagnostic per board
 
 const ROOT = path.join(__dirname, '..');
 const HG_DIR = path.join(ROOT, 'outputs', 'hypergrowth');
@@ -109,6 +110,7 @@ function buildBoard(id, coverage) {
     schema: SCHEMA,
     generated_at: new Date().toISOString(),
     branch: id,
+    boardStatus: boardStatusOf(id),                 // 'core' (Court-PASSED) | 'diagnostic' (unbewiesen, 2.1)
     coverage,                                       // {status,degraded,blocked,coverage_pct} | null
     profitable: (b.profitable || []).map(mapBoardRow),
     unprofitable: (b.unprofitable || []).map(mapBoardRow),
@@ -133,6 +135,7 @@ function buildIndex(coverage) {
     coverage,                                        // banner marker for the dashboard
     generatedFromSnapshots: idx.generatedFromSnapshots,
     branches: idx.branches,
+    boardStatus: Object.fromEntries(BRANCHES.map((id) => [id, boardStatusOf(id)])), // 2.1: core|diagnostic je Board
     counts: idx.counts,                              // true cohort counts, not topN
     survivalCount: idx.survivalCount,
     excluded: idx.excluded,
@@ -173,6 +176,7 @@ const VALID_MCAP = ['micro', 'small', 'mid', 'large', 'mega'];
 const VALID_IPO = ['recent', 'growth', 'seasoned', 'veteran', 'mature'];
 const VALID_OVKIND = ['gp', 'revenue-badge', 'ffo-badge', 'runway-badge'];
 const VALID_COVERAGE_STATUS = ['ok', 'degradiert', 'katastrophal'];
+const VALID_BOARDSTATUS = ['core', 'diagnostic'];
 
 // string|null field must be PRESENT (key exists) and either null or string.
 function checkStrOrNull(r, key, where, errs) {
@@ -270,6 +274,10 @@ function validateFile(mk, kind, errs) {
   if (kind === 'index') {
     if (!Number.isFinite(mk.generatedFromSnapshots)) errs.push('index: generatedFromSnapshots');
     if (!Array.isArray(mk.branches) || mk.branches.length !== BRANCHES.length) errs.push('index: branches');
+    if (!mk.boardStatus || typeof mk.boardStatus !== 'object') errs.push('index: boardStatus map missing');
+    else for (const [k, v] of Object.entries(mk.boardStatus)) {
+      if (!VALID_BOARDSTATUS.includes(v)) errs.push(`index: boardStatus.${k}=${JSON.stringify(v)}`);
+    }
     if (!mk.counts || typeof mk.counts !== 'object') errs.push('index: counts');
     if (!Number.isFinite(mk.survivalCount)) errs.push('index: survivalCount');
     if (!mk.excluded || typeof mk.excluded !== 'object') errs.push('index: excluded');
@@ -287,6 +295,7 @@ function validateFile(mk, kind, errs) {
   }
   // board file: branch (Pflicht, = filename) + profitable/unprofitable arrays of BoardRow.
   if (typeof mk.branch !== 'string' || mk.branch !== kind) errs.push(`${kind}: branch=${JSON.stringify(mk.branch)}`);
+  if (!VALID_BOARDSTATUS.includes(mk.boardStatus)) errs.push(`${kind}: boardStatus=${JSON.stringify(mk.boardStatus)}`);
   if (!Array.isArray(mk.profitable)) errs.push(`${kind}: profitable not array`);
   if (!Array.isArray(mk.unprofitable)) errs.push(`${kind}: unprofitable not array`);
   (mk.profitable || []).forEach((r, i) => validateBoardRow(r, `${kind}.profitable[${i}]`, errs));
@@ -368,13 +377,28 @@ function selftest() {
   trip(validateSurvivalRow, { ...s0, marketCap: 'GARBAGE' }, 'survival marketCap garbage');
   trip(validateSurvivalRow, { ...s0, phase: 'zombie' }, 'survival phase bad enum');
 
-  // hull-level: coverage key missing / bad status, branch mismatch.
-  let e = []; validateFile({ schema: SCHEMA, generated_at: 'x', branch: 'energy', profitable: [], unprofitable: [] }, 'energy', e);
+  // hull-level: coverage key missing / bad status, branch mismatch, boardStatus (2.1).
+  const mkHull = (over = {}) => ({ schema: SCHEMA, generated_at: 'x', boardStatus: 'core', coverage: null, branch: 'energy', profitable: [], unprofitable: [], ...over });
+  const mkIdx = (over = {}) => ({ schema: SCHEMA, generated_at: 'x', coverage: null, generatedFromSnapshots: 1, branches: BRANCHES, boardStatus: Object.fromEntries(BRANCHES.map(b => [b, 'core'])), counts: {}, survivalCount: 0, excluded: {}, ...over });
+  let e, m;
+  e = []; validateFile(mkHull(), 'energy', e); assert.strictEqual(e.length, 0, 'clean board hull must validate');
+  m = mkHull(); delete m.coverage; e = []; validateFile(m, 'energy', e);
   assert.ok(e.some(x => /coverage missing/.test(x)), 'coverage key missing must trip');
-  e = []; validateFile({ schema: SCHEMA, generated_at: 'x', coverage: null, branch: 'WRONG', profitable: [], unprofitable: [] }, 'energy', e);
+  e = []; validateFile(mkHull({ branch: 'WRONG' }), 'energy', e);
   assert.ok(e.some(x => /branch=/.test(x)), 'branch mismatch must trip');
-  e = []; validateFile({ schema: SCHEMA, generated_at: 'x', coverage: { status: 'bogus', degraded: true, blocked: false, coverage_pct: 20 }, branch: 'energy', profitable: [], unprofitable: [] }, 'energy', e);
+  e = []; validateFile(mkHull({ coverage: { status: 'bogus', degraded: true, blocked: false, coverage_pct: 20 } }), 'energy', e);
   assert.ok(e.some(x => /coverage\.status/.test(x)), 'bad coverage.status must trip');
+  // 2.1 boardStatus gate: missing / bad enum on a board file must trip.
+  m = mkHull(); delete m.boardStatus; e = []; validateFile(m, 'energy', e);
+  assert.ok(e.some(x => /boardStatus/.test(x)), 'board boardStatus missing must trip');
+  e = []; validateFile(mkHull({ boardStatus: 'bogus' }), 'energy', e);
+  assert.ok(e.some(x => /boardStatus=/.test(x)), 'board boardStatus bad enum must trip');
+  // index boardStatus map: clean passes, missing map / bad value trip.
+  e = []; validateFile(mkIdx(), 'index', e); assert.strictEqual(e.length, 0, 'clean index must validate');
+  e = []; validateFile(mkIdx({ boardStatus: { energy: 'bogus' } }), 'index', e);
+  assert.ok(e.some(x => /boardStatus\.energy/.test(x)), 'index boardStatus bad enum must trip');
+  m = mkIdx(); delete m.boardStatus; e = []; validateFile(m, 'index', e);
+  assert.ok(e.some(x => /boardStatus map missing/.test(x)), 'index boardStatus map missing must trip');
 
   console.log('selftest OK');
 }
