@@ -1480,10 +1480,20 @@ function sortByStaleness(stocks, outputDir, earningsCalendar, today) {
   for (const stock of stocks) {
     const ticker = stock.ticker;
     if (ageCache.has(ticker)) continue;
-    let age = 0;
+    // TASK 0.9 STRUKTUR-FIX (Tag 260): un-snapshotted tickers sort LAST (MAX age), not
+    // first. Mit der Cross-Run-Snapshot-Persistenz (Tag 259) zaehlt die Sortier-Reihenfolge
+    // endlich: die gecachten jungen Snapshots MUESSEN zuerst price-only'd werden (schnell,
+    // haelt sie frisch UND zaehlt sie in n_ok), BEVOR das 165-min-Budget in un-gecachte
+    // Ticker (langsame Voll-Pulls) fliesst. Vorher (age=0 fuer un-gecacht) flutete die
+    // Front mit langsamen Fulls und verhungerte die schnellen Price-onlys -> n_ok
+    // akkumulierte nie ueber ~1 Full-Batch -> der Tag-259-Cache blieb wirkungslos.
+    // has-snapshot -> age = Timestamp (oder 0 fuer earnings-forward/oldest); kein Snapshot
+    // -> MAX (Universum-Expansion nur mit Rest-Budget).
+    let age = Number.MAX_SAFE_INTEGER;
     try {
       const fp = path.join(outputDir, safeSnapshotFilename(ticker));
       if (fs.existsSync(fp)) {
+        age = 0; // hat einen Snapshot: default "aeltester" (refresh), bis ein echter Timestamp gelesen wird
         const buf = Buffer.alloc(1024);
         const fd = fs.openSync(fp, 'r');
         fs.readSync(fd, buf, 0, 1024, 0);
@@ -2877,4 +2887,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries, needsFullPull };
+module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries, needsFullPull, sortByStaleness };
