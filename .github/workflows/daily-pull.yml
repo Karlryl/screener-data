@@ -81,6 +81,28 @@ jobs:
       # quality-compounder scoring layer. Loop B wires its own pre-pull gate
       # (tests/scoring/*) once the new hypergrowth engine is in place.
 
+      # Task 0.3 (Loop B): PRE-pull scoring test-gate. Every tests/scoring/*.test.js
+      # is a self-running node script ending in process.exit(fail ? 1 : 0). The glob
+      # skips the fixtures/ subdir. A broken engine must block the run (::error:: +
+      # exit 1) BEFORE the expensive Yahoo pull. Signal path is GitHub red-X only.
+      - name: Scoring Test-Gate (pre-pull)
+        run: |
+          fail=0
+          for t in tests/scoring/*.test.js; do
+            echo "--- $t ---"
+            if node "$t"; then
+              echo "PASS $t"
+            else
+              echo "::error::Scoring test failed: $t — blocking run before Yahoo pull"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "::error::One or more tests/scoring/*.test.js failed — hypergrowth engine is broken, aborting run."
+            exit 1
+          fi
+          echo "All scoring tests passed."
+
       # Tag 132: Auto-Universe-Refresh — laeuft bei jedem Run (schedule + workflow_dispatch).
       # Tag 133: Merged mit SEC EDGAR, Finnhub, Wikipedia Indices.
       # Tag 165: OTC Markets (OTCQX/OTCQB/Expert) + NASDAQ Screener API added.
@@ -476,6 +498,24 @@ jobs:
         run: node scripts/archive-old-snapshots.js --keep-days 14 --methods-keep-days 100000 --picks-keep-days 100000
         continue-on-error: true
 
+      # Task 0.8 — three pure-node coverage canaries (no new deps). Each writes/
+      # refreshes a rolling data-health/ baseline BEFORE its ::error:: drift check,
+      # so an ongoing alarm still updates the window. continue-on-error: a watcher
+      # crash or false alarm must NOT block the data commit — the red-X on the step
+      # is the alert (Karl reads neither email nor Discord). Placed after Verify
+      # Pull Coverage, before Commit Snapshots, so the baseline writes land in this
+      # run's 'git add -A'.
+      - name: Watch Exchange Coverage
+        run: node scripts/watch-exchange-coverage.js
+        continue-on-error: true
+
+      - name: Watch Unrouted Quote Share
+        run: node scripts/watch-unrouted-quote.js
+        continue-on-error: true
+
+      - name: Watch FX Sanity
+        run: node scripts/watch-fx-sanity.js
+        continue-on-error: true
       - name: Commit Snapshots
         run: |
           git config user.name "yahoo-pull-bot"
@@ -533,6 +573,20 @@ jobs:
             echo "::error::Push failed after 3 attempts — local commit $COMMIT_SHA NOT on remote"
             exit 1
           fi
+
+      # Task 0.3 (Loop B): upload the final snapshots/ so the separate `scoring`
+      # job can score them on a fresh runner (snapshots are gitignored -> not on
+      # any branch it could checkout). Runs after Commit Snapshots so it captures
+      # the complete post-pull set. retention short — same-run handoff, not archive.
+      - name: Upload Snapshots Artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshots
+          path: |
+            snapshots/*.json
+          retention-days: 1
+          if-no-files-found: error
 
       # Tag 168: Pipeline Health Check — aggregates per-script failure rates and
       # alerts via Discord if any script exceeded the 5% threshold.
@@ -597,3 +651,77 @@ jobs:
           curl -H "Content-Type: application/json" -X POST \
             -d "{\"content\": \"⚠ Yahoo-Pull failed at $(date -u). See run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
             "$DISCORD_WEBHOOK"
+
+  # Task 0.3 (Loop B): separate scoring job. needs: pull so it runs only after a
+  # successful pull. Fresh runner: checks out the repo (for src/scoring/** +
+  # tracked external-data/*secannual.json), downloads the snapshots artifact into
+  # snapshots/, runs the engine, then publishes outputs/hypergrowth/*.json to
+  # gh-pages reusing the pull job's Deploy auth (x-access-token GITHUB_TOKEN
+  # force-push). outputs/ is gitignored -> gh-pages only.
+  # Timeout 15: run-screener is 0.56s over 4681 real snapshots (measured), pure
+  # in-memory ranking, no network; wall time is checkout+setup-node+npm ci+download.
+  scoring:
+    needs: pull
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Download Snapshots Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: snapshots
+          path: snapshots
+
+      - name: Run Hypergrowth Screener
+        run: |
+          node src/scoring/run-screener.js
+          # Karl reads only GitHub red-X — make a silent empty export a hard fail.
+          count=$(ls outputs/hypergrowth/*.json 2>/dev/null | wc -l)
+          echo "Scoring wrote $count JSON files to outputs/hypergrowth/"
+          if [ "$count" -lt 3 ]; then
+            echo "::error::Scoring produced $count outputs/hypergrowth/*.json (expected >=3) — engine failed or universe empty."
+            exit 1
+          fi
+
+      # Publish outputs/hypergrowth/*.json to gh-pages, reusing the Deploy step's
+      # x-access-token GITHUB_TOKEN force-push. Clone existing gh-pages first so
+      # pull's index.html + other outputs survive; only refresh hypergrowth/.
+      - name: Deploy Scoring Output to GitHub Pages
+        if: success()
+        run: |
+          rm -rf _ghp
+          git clone --depth 1 --branch gh-pages \
+            https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git _ghp \
+            || { mkdir -p _ghp; cd _ghp; git init -b gh-pages; cd ..; }
+          mkdir -p _ghp/outputs/hypergrowth
+          cp outputs/hypergrowth/*.json _ghp/outputs/hypergrowth/
+          cd _ghp
+          git config user.name "yahoo-pull-bot"
+          git config user.email "yahoo-pull-bot@users.noreply.github.com"
+          git remote get-url origin >/dev/null 2>&1 || git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git add -A
+          if git diff --staged --quiet; then echo "No scoring output changes to deploy."; exit 0; fi
+          git commit -m "deploy: hypergrowth scoring $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          for i in 1 2 3; do
+            if git push --force origin gh-pages; then
+              echo "✓ Scoring output deployed on attempt $i"
+              exit 0
+            fi
+            echo "gh-pages push attempt $i failed, retrying..."
+            sleep $((5 * i))
+          done
+          echo "::error::gh-pages scoring deploy failed after 3 attempts"
+          exit 1
