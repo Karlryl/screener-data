@@ -34,6 +34,7 @@ const fs = require('fs');
 const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { boardStatus: boardStatusOf } = require('../src/scoring/board-status.js'); // 2.1: core|diagnostic per board
+const { TIERS } = require('../src/scoring/profit-tier.js'); // 1.2: profitTier-Enum
 
 const ROOT = path.join(__dirname, '..');
 const HG_DIR = path.join(ROOT, 'outputs', 'hypergrowth');
@@ -47,7 +48,8 @@ const BRANCHES = [
   'semiconductors', 'software-comm-services', 'utilities',
 ];
 // The exact geo/classification fields the engine writes on every board+overview+survival row.
-const GEO_FIELDS = ['country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'ipoRecency'];
+// Task 1.2: profitTier (4-Stufen-Enum) + ipoYear (durchgereicht) sind seit 1.2 real (vorher RESERVIERT).
+const GEO_FIELDS = ['country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'ipoRecency', 'profitTier', 'ipoYear'];
 
 function readJSON(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
 function readJSONOrNull(p) { try { return readJSON(p); } catch (_) { return null; } }
@@ -177,6 +179,7 @@ const VALID_IPO = ['recent', 'growth', 'seasoned', 'veteran', 'mature'];
 const VALID_OVKIND = ['gp', 'revenue-badge', 'ffo-badge', 'runway-badge'];
 const VALID_COVERAGE_STATUS = ['ok', 'degradiert', 'katastrophal'];
 const VALID_BOARDSTATUS = ['core', 'diagnostic'];
+const VALID_PROFITTIER = TIERS; // 1.2: nicht/kurz-vor/seit-kurzem/langfristig-profitabel
 
 // string|null field must be PRESENT (key exists) and either null or string.
 function checkStrOrNull(r, key, where, errs) {
@@ -204,6 +207,8 @@ function validateGeo(r, where, errs) {
   checkEnumOrNull(r, 'phase', VALID_PHASE, where, errs);
   checkEnumOrNull(r, 'mcapBand', VALID_MCAP, where, errs);
   checkEnumOrNull(r, 'ipoRecency', VALID_IPO, where, errs);
+  checkEnumOrNull(r, 'profitTier', VALID_PROFITTIER, where, errs); // 1.2
+  checkNumOrNull(r, 'ipoYear', where, errs);                       // 1.2 (durchgereicht)
 }
 
 function validateBoardRow(r, where, errs) {
@@ -328,6 +333,7 @@ function selftest() {
     overview: { kind: 'gp', value: -0.055, companion: 89.1 },
     country: 'United States', region: 'North America', sector: 'Technology',
     marketCap: 5457368842240, phase: 'established', mcapBand: 'mega', ipoRecency: 'mature',
+    profitTier: 'langfristig-profitabel', ipoYear: 1999,
   };
   const cleanOv = {
     ticker: 'NVDA', formulaId: 'semiconductors', track: 'profitable', score: 94.9,
@@ -364,6 +370,9 @@ function selftest() {
   trip(validateBoardRow, { ...b0, overview: { kind: 'gp', value: NaN, companion: 1 } }, 'board overview.value NaN');
   trip(validateBoardRow, { ...b0, overview: { kind: 'gp', value: 1, companion: 'X' } }, 'board overview.companion garbage');
   trip(validateBoardRow, { ...b0, overview: { value: 1, companion: 1 } }, 'board overview.kind removed');
+  trip(validateBoardRow, { ...b0, profitTier: 'zombie-tier' }, 'board profitTier bad enum');     // 1.2
+  trip(validateBoardRow, { ...b0, ipoYear: 'GARBAGE' }, 'board ipoYear string');                 // 1.2
+  const bNoTier = { ...b0 }; delete bNoTier.profitTier; trip(validateBoardRow, bNoTier, 'board profitTier missing'); // 1.2
 
   const o0 = mapOverviewRow(cleanOv, 0);
   trip(validateOverviewRow, { ...o0, track: 'ghost' }, 'overview track bad enum');

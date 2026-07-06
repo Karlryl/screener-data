@@ -19,6 +19,7 @@ const { evaluateLamps, burnPressFactor } = require('./lamps.js');
 const { overviewMetric } = require('./overview.js');
 const { normalizeCountry } = require('./country.js');
 const axesFns = require('./axes.js');
+const { profitTierOf } = require('./profit-tier.js'); // Task 1.2: 4-Stufen-Profitabilitaets-Filter (deskriptiv)
 // audit/fix (Court Fall 6, F39): Grader fuer die LIVE-Neuberechnung des Daten-Grades im
 // data-suspect-Gate. Der persistierte _quality.grade ist stale (alle aus der Zeit VOR dem
 // revenueTTM-criticalMissing-Floor) -> der grade-D-Arm war praktisch tot.
@@ -632,6 +633,8 @@ function scoreUniverse(snapshots, formulas) {
     e.phase = phaseOf(e.snapshot);
     e.mcapBand = mcapBandOf(e.marketCap, mcapBounds);
     e.ipoRecency = ipoRecencyOf(meta, ipoBounds);
+    e.profitTier = profitTierOf(e.snapshot);  // Task 1.2: 4-Stufen (nicht/kurz-vor/seit-kurzem/langfristig)
+    e.ipoYear = ipoYearOf(meta);              // Task 1.2 Schritt 3: vorhandenes IPO-Jahr NUR durchreichen
     delete e.snapshot;
     delete e.formula;
   }
@@ -675,7 +678,7 @@ function produceRankings(results, opts = {}) {
   const excluded = {};
   // A2: die in scoreUniverse angehefteten geo-Felder an jede Output-Zeile spreaden
   // (?? null haelt die Form stabil, falls produceRankings mit handgebauten results laeuft).
-  const geo = (e) => ({ country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, ipoRecency: e.ipoRecency ?? null });
+  const geo = (e) => ({ country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, ipoRecency: e.ipoRecency ?? null, profitTier: e.profitTier ?? null, ipoYear: e.ipoYear ?? null });
   for (const e of (Array.isArray(results) ? results : [])) {
     if (e.action === 'survival') {
       survival.push({ ticker: e.ticker, runwayQuarters: e.overview ? e.overview.value : null, lamps: e.lamps, ...geo(e) });

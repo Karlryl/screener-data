@@ -1,7 +1,7 @@
 # findash-export v1 — Datenvertrag (Task 1.1)
 
 > **Schema-String:** `findash-export/v1` (Feld `schema` auf JEDER Datei).
-> **Status:** 1.1 umgesetzt. `profitTier`/`currency`/`ipoYear` sind RESERVIERT (1.2), NICHT emittiert.
+> **Status:** 1.1 umgesetzt; **1.2 ergaenzt `profitTier` + `ipoYear`** (real emittiert). Nur `currency` bleibt RESERVIERT.
 > **Quelle der Wahrheit:** Engine-Output `outputs/hypergrowth/*.json` (score.js / run-screener.js). Der Writer kopiert NUR echte Engine-Felder + ein abgeleitetes `rank`. Kein erfundenes Feld.
 > **Publiziert:** ausschliesslich nach gh-pages (`outputs/` ist gitignored). Der Dashboard-Consumer liest von der gh-pages-URL, nie von main.
 
@@ -88,7 +88,9 @@ Zusaetzlich zur Huelle (§2):
 | `marketCap` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | Roh, ungerundet (z.B. `5457368842240` oder `26183936833.024`). **Ohne Currency-Tag** (siehe RESERVIERT). |
 | `phase` | `"inflected"`\|`"established"`\|`"unprofitable"` \| null | Pflicht (nullable) | ja (Praesenz + Enum\|null) | Nur ueber Gewinn-Vorzeichen. **Real nullable** (3 Board-Rows null beobachtet). |
 | `mcapBand` | `"micro"`\|`"small"`\|`"mid"`\|`"large"`\|`"mega"` \| null | Pflicht (nullable) | ja (Praesenz + Enum\|null) | Data-learned Quintil. |
-| `ipoRecency` | `"recent"`\|`"growth"`\|`"seasoned"`\|`"veteran"`\|`"mature"` \| null | Pflicht (nullable) | ja (Praesenz + Enum\|null) | Data-learned Quintil (KEIN IPO-Datum — siehe RESERVIERT). **Real nullable** (8 Board-Rows null beobachtet). |
+| `ipoRecency` | `"recent"`\|`"growth"`\|`"seasoned"`\|`"veteran"`\|`"mature"` \| null | Pflicht (nullable) | ja (Praesenz + Enum\|null) | Data-learned Quintil. **Real nullable** (8 Board-Rows null beobachtet). |
+| `profitTier` | `"nicht-profitabel"`\|`"kurz-vor-profitabel"`\|`"seit-kurzem-profitabel"`\|`"langfristig-profitabel"` \| null | Pflicht (nullable) | ja (Praesenz + Enum\|null) | **Task 1.2** (Karl B3). 4 lueckenlos kachelnde Stufen aus dem Yahoo-JAHRES-Stream (≥4 Perioden fuer „langfristig") + Quartals-Trajektorie. Deskriptiv, KEIN Score-Einfluss. Quelle `src/scoring/profit-tier.js`. `null` = zu wenig Daten. |
+| `ipoYear` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | **Task 1.2** — Boersen-IPO-Jahr (`meta.ipoYear` bzw. Jahr aus `firstTradeDate`), nur durchgereicht (nicht neu berechnet). Ergaenzt das abgeleitete `ipoRecency`-Quintil um die Rohzahl. |
 
 ---
 
@@ -111,7 +113,7 @@ Huelle (§2) + `rows: Array<OverviewRow>`. Cross-Branch, score-desc, ~200 Zeilen
 | `overviewValue` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | KANN NEGATIV. |
 | `overviewCompanion` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | |
 | `lamps` | string[] | Pflicht | ja (Array) | Kann `[]`. |
-| `country/region/sector/marketCap/phase/mcapBand/ipoRecency` | wie BoardRow §3 | Pflicht (nullable) | ja (jedes einzeln, Praesenz + Typ/Enum\|null) | Volle geo-Felder. |
+| `country/region/sector/marketCap/phase/mcapBand/ipoRecency/profitTier/ipoYear` | wie BoardRow §3 | Pflicht (nullable) | ja (jedes einzeln, Praesenz + Typ/Enum\|null) | Volle geo-Felder (inkl. 1.2 `profitTier`+`ipoYear`). |
 
 ---
 
@@ -129,7 +131,7 @@ Huelle (§2) + `rows: Array<SurvivalRow>`, 73 Zeilen, **runway-desc nulls-last**
 | `ticker` | string (nichtleer) | Pflicht | ja | z.B. `"PAH3.DE"`. |
 | `runwayQuarters` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | Runway in Quartalen. **`9999` = Sentinel fuer quasi-unendlichen Runway** (pre-revenue mit Cash-Ueberdeckung). Sortierschluessel. **Real nullable** (3 von 73 Rows null). |
 | `lamps` | string[] | Pflicht | ja (Array) | z.B. `unprofit/lowRoic/burning/burnAccelerating/crashRisk/shortRunway`, kann `[]`. |
-| `country/region/sector/marketCap/phase/mcapBand/ipoRecency` | wie BoardRow §3 | Pflicht (nullable) | ja (jedes einzeln, Praesenz + Typ/Enum\|null) | Volle geo-Felder. Ein typ-falsches geo-Feld (z.B. `marketCap='GARBAGE'`, `phase='zombie'`) blockt jetzt den Deploy. |
+| `country/region/sector/marketCap/phase/mcapBand/ipoRecency/profitTier/ipoYear` | wie BoardRow §3 | Pflicht (nullable) | ja (jedes einzeln, Praesenz + Typ/Enum\|null) | Volle geo-Felder (inkl. 1.2 `profitTier`+`ipoYear`). Ein typ-falsches geo-Feld (z.B. `marketCap='GARBAGE'`, `phase='zombie'`) blockt jetzt den Deploy. |
 
 ---
 
@@ -156,9 +158,9 @@ Die 8 Achsen-Perzentile (`revGrowthLevel, revAcceleration, gpGrowth, ruleOfX, ma
 
 | Feld | Status 1.1 | Wann |
 | --- | --- | --- |
-| `profitTier` / `profitLevel` | EXISTIERT NICHT in der Engine (grep in `src/` = 0 Treffer). Nur binaer `track` + `phase`. Kein 3+-stufiges Tier. **Der `--check` verlangt es NICHT und toleriert seine Abwesenheit** (kein "unbekanntes Feld"-Reject). | 1.2 — dann als optionales Feld additiv (kein v2-Bump, weil Zusatz). |
+| `profitTier` | ✅ **UMGESETZT in 1.2** — reales 4-Stufen-Enum-Feld, siehe §3/§4/§5. (War in 1.1 reserviert.) | erledigt (Tag 264) |
 | `currency` | KEIN Feld. `marketCap` ist roh ohne Currency-Tag; der Snapshot fuehrt keine `price.currency`. Achsen sind waehrungs-invariant, aber `marketCap`-Vergleichbarkeit ueber Laender ist ungeloest. | 1.2 — MUSS geloest werden bevor Cross-Country-marketCap-Ranking im Dashboard erscheint. |
-| `ipoYear` / IPO-Datum | KEIN Datum. Nur das abgeleitete `ipoRecency`-Quintil. `ipoYearOf` existiert intern in score.js, wird aber NICHT in Rows geschrieben. | 1.2 — additiv. |
+| `ipoYear` | ✅ **UMGESETZT in 1.2** — Boersen-IPO-Jahr durchgereicht, reales `number\|null`-Feld, siehe §3. (War in 1.1 reserviert.) | erledigt (Tag 264) |
 | `axes` (pro Board-Row) | EXISTIERT NICHT in Boards. Nur im calib-Diagnostik-Kanal. | Optionaler Zusatz-Feed, nicht in BoardRow. |
 
 **Regel:** Ein reserviertes Feld wird erst emittiert, wenn die Engine es echt liefert. Bis dahin ist "abwesend" die vertragskonforme Aussage — der Consumer behandelt fehlend als "nicht verfuegbar". Ein additives OPTIONALES Feld (nur hinzufuegen, nie bestehendes brechen) ist KEIN v2-Bump. Der `--check` prueft nur die Pflicht-Felder; ein spaeter additiv hinzugefuegtes optionales Feld loest KEINEN Bruch aus.
