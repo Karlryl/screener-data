@@ -38,10 +38,12 @@ const cal = results.calibration;
 
 test('calibration: existiert mit schema + allen gelernten Schranken', () => {
   assert.ok(cal && typeof cal === 'object', 'results.calibration ist ein Objekt');
-  assert.equal(cal.schema, 'calibration/v1');
-  for (const k of ['winsorBounds', 'growthBounds', 'cycleDDThreshold', 'mcapBounds', 'ipoBounds', 'nRouted', 'nTotal']) {
+  assert.equal(cal.schema, 'calibration/v2'); // v2 (Slice 2): traegt zusaetzlich cohortBases + gDist
+  for (const k of ['winsorBounds', 'growthBounds', 'cycleDDThreshold', 'mcapBounds', 'ipoBounds', 'cohortBases', 'gDist', 'nRouted', 'nTotal']) {
     assert.ok(k in cal, `Feld '${k}' present`);
   }
+  assert.ok(cal.cohortBases && typeof cal.cohortBases === 'object' && Object.keys(cal.cohortBases).length > 0, 'cohortBases nicht leer');
+  assert.ok(Array.isArray(cal.gDist) && cal.gDist.length > 0, 'gDist nicht leer');
   assert.ok(Number.isInteger(cal.nRouted) && cal.nRouted > 0, 'nRouted > 0');
   assert.equal(cal.nTotal, universe.length, 'nTotal == Universumsgroesse');
 });

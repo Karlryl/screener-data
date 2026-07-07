@@ -10,7 +10,7 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { scoreUniverse, produceRankings } = require('./score.js');
+const { scoreUniverse, produceRankings, calibrationDrift } = require('./score.js');
 const formulas = require('./formulas/index.js');
 // audit/fix (C2): Outputs atomar schreiben (tmp+rename), wie das ganze Daten-Fundament —
 // plain fs.writeFileSync hinterlaesst bei Crash/CI-Timeout truncated JSON fuers Dashboard.
@@ -143,7 +143,21 @@ function mergeSecIntoUniverse(u) {
 
 function run(topN) {
   const universe = loadUniverse();
-  const results = scoreUniverse(universe, formulas);
+  // 2.9 Slice 2: optionaler Referenz-Modus — gegen ein EINGEFRORENES Lineal scoren (Universe-Ausbau
+  // verschiebt bestehende Scores dann NICHT mehr). SCORING_REF_CALIB=<pfad zu calibration.json>.
+  let refCalibration = null;
+  const refPath = process.env.SCORING_REF_CALIB;
+  if (refPath) {
+    try { refCalibration = JSON.parse(fs.readFileSync(refPath, 'utf8')); console.log(`[run-screener] Referenz-Lineal geladen (${refPath}, schema ${refCalibration.schema})`); }
+    catch (e) { console.warn(`[run-screener] SCORING_REF_CALIB nicht lesbar (${refPath}): ${e.message} -> live-lernend`); }
+  }
+  const results = scoreUniverse(universe, formulas, refCalibration ? { refCalibration } : {});
+  // Drift-Waechter: aktuelles Universum vs. eingefrorenes Lineal — fail-loud bei verschobener Basis (0.7-Kanal).
+  if (refCalibration) {
+    const drift = calibrationDrift(results.calibration, refCalibration);
+    if (!drift.ok) console.warn(`[run-screener] ⚠ KALIBRIER-DRIFT: maxKS ${drift.maxKs.toFixed(3)} > ${drift.ksThreshold} in ${drift.drifted.length} Achsen (Normierungsbasis verschoben).`);
+    else console.log(`[run-screener] Kalibrier-Drift ok (maxKS ${drift.maxKs.toFixed(3)} <= ${drift.ksThreshold}).`);
+  }
   const ranked = produceRankings(results, { topN: topN || 100 });
   // Echte Kohorten-Counts aus results (NICHT aus der gekappten topN-Anzeigeliste).
   const counts = {};

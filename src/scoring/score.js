@@ -427,7 +427,12 @@ function quintileBounds(samples) {
   return b.every((x) => x !== null) ? b : null;
 }
 
-function scoreUniverse(snapshots, formulas) {
+function scoreUniverse(snapshots, formulas, opts = {}) {
+  // 2.9 Slice 2: refCalibration = eingefrorenes "Lineal" (aus einem frueheren Lauf). Gesetzt ->
+  // NICHT neu lernen, sondern gegen die gefrorenen Schranken + Kohorten-/Boost-Verteilungen scoren
+  // (Universe-Ausbau verschiebt bestehende Scores dann NICHT mehr). Default (null) = live-lernend,
+  // byte-identisch zum bisherigen Verhalten.
+  const refCal = opts.refCalibration || null;
   const results = [];
   // 1. Routing + Track
   for (const s of (Array.isArray(snapshots) ? snapshots : [])) {
@@ -506,14 +511,19 @@ function scoreUniverse(snapshots, formulas) {
   }
   // Court R5 A: opMargin-Schranke = [data-learned p1, PHYSISCH 1.0]; qoq symmetrisch (data-learned p1/p99).
   // audit/fix (Bug 0): via gemeinsamer learnWinsorBounds — dieselbe Quelle nutzt buildCalibMatrix.
-  const winsorBounds = learnWinsorBounds(results.filter((e) => e.action === 'route').map((e) => e.snapshot));
+  // 2.9 Slice 2: im Referenz-Modus die gefrorenen Skalar-Schranken nutzen (nicht neu lernen).
+  const winsorBounds = refCal ? refCal.winsorBounds : learnWinsorBounds(results.filter((e) => e.action === 'route').map((e) => e.snapshot));
   // PHASE 3: data-learned DD-Schwelle = p75 der universums-weiten Drawdown-Verteilung (Basis C oben).
   // Degenerations-Guard analog GROWTH_MIN_DISTINCT: <CYCLE_MIN_DISTINCT distinkte DD-Werte -> null ->
   // cycleSignal gatet alle Faktoren auf exakt 1.0 (byte-identisch, kein Phantom-Daempfer).
-  const cycleDDThreshold = (new Set(cycleDDSamples.filter(Number.isFinite)).size >= CYCLE_MIN_DISTINCT)
-    ? quantile(cycleDDSamples, CYCLE_DD_PCTL) : null;
-  const growthBounds = winsorTailBounds(growthSamples); // null bei leerer Stichprobe -> robustG-null-Guard faengt
-  for (const entries of Object.values(cohorts)) {
+  const cycleDDThreshold = refCal ? refCal.cycleDDThreshold
+    : ((new Set(cycleDDSamples.filter(Number.isFinite)).size >= CYCLE_MIN_DISTINCT)
+      ? quantile(cycleDDSamples, CYCLE_DD_PCTL) : null);
+  const growthBounds = refCal ? refCal.growthBounds : winsorTailBounds(growthSamples); // null bei leerer Stichprobe -> robustG-null-Guard faengt
+  // 2.9 Slice 2: je Kohorte die live-berechneten Achsen-Rohwert-Verteilungen (+ profitSign fuer die
+  // subCohortByProfit-capitalEfficiency-Achse) cachen -> werden ins Kalibrier-Artefakt eingefroren.
+  const capturedCohortBases = {};
+  for (const [cohortKey, entries] of Object.entries(cohorts)) {
     const formula = entries[0].formula;
     const track = entries[0].track;
     // none-Branchen mit subCohortByProfit (it-services/real-estate): die Niveau-ROIC-
@@ -527,12 +537,20 @@ function scoreUniverse(snapshots, formulas) {
     for (const ax of formula.axes) {
       rawByAxis[ax.key] = entries.map((e) => rawAxisValue(e.snapshot, ax.key, formula, track, winsorBounds));
     }
+    // 2.9 Slice 2: Perzentil-Basis. refCal gesetzt + Kohorte im Lineal -> gegen die EINGEFRORENE
+    // Verteilung scoren (neue Namen mappen darauf, bestehende behalten ihren Rang exakt); sonst live.
+    // Fehlt eine Kohorte im Lineal (rein neue Kohorte) -> live-Fallback (beruehrt keine Referenz-Namen).
+    const refCoh = (refCal && refCal.cohortBases) ? refCal.cohortBases[cohortKey] : null;
+    capturedCohortBases[cohortKey] = { axes: { ...rawByAxis }, profitSign };
+    const baseSign = refCoh ? refCoh.profitSign : profitSign;
     const cohWcov = new Array(entries.length);
     for (let i = 0; i < entries.length; i++) {
       const axes = formula.axes.map((ax) => {
-        let cohort = rawByAxis[ax.key];
-        if (profitSign && ax.key === 'capitalEfficiency') {
-          cohort = cohort.filter((_, j) => profitSign[j] === profitSign[i]);
+        let cohort = (refCoh && refCoh.axes && refCoh.axes[ax.key]) ? refCoh.axes[ax.key] : rawByAxis[ax.key];
+        if (ax.key === 'capitalEfficiency' && profitSign) {
+          // gegen die gleich-vorzeichige Sub-Kohorte perzentilieren; im refCal die GEFRORENE Basis nach
+          // dem EIGENEN (snapshot-stabilen) Vorzeichen von Name i filtern -> A-Namen behalten ihren Rang.
+          cohort = cohort.filter((_, j) => baseSign[j] === profitSign[i]);
         }
         return { value: q(rawByAxis[ax.key][i], cohort), weight: ax.w[track] };
       });
@@ -550,7 +568,12 @@ function scoreUniverse(snapshots, formulas) {
     // Richtung KOHORTEN-MEDIAN schrumpfen, Schrumpf-Faktor = wcov (= das fehlende Achsen-Gewicht,
     // data-learned, KEINE freie Konstante). wcov=1 (8/8) -> Score byte-identisch. KEIN Fake-50:
     // Ziel ist der gelernte Median, renorm-on-drop bleibt darunter erhalten.
-    const cohMedian = quantile(entries.map((e) => e.score).filter(Number.isFinite), 0.5);
+    // 2.9 Slice 2: der C4-Shrinkage-Zielwert (Kohorten-Median) ist die letzte live-Kohorten-Abhaengigkeit
+    // im Score. refCal gesetzt -> den EINGEFRORENEN Median nutzen (sonst schoebe ein wachsendes Universum
+    // den Median und damit jeden geschrumpften A-Score = Drift). Median immer ins Artefakt cachen.
+    const cohMedian = (refCoh && 'median' in refCoh) ? refCoh.median
+      : quantile(entries.map((e) => e.score).filter(Number.isFinite), 0.5);
+    capturedCohortBases[cohortKey].median = cohMedian;
     if (cohMedian !== null) {
       for (let i = 0; i < entries.length; i++) {
         const e = entries[i];
@@ -583,7 +606,9 @@ function scoreUniverse(snapshots, formulas) {
     robustGByEntry.set(e, g);
     if (Number.isFinite(g)) gDist.push(g);
   }
-  const growthPctl = growthPctlFn(gDist); // null bei Degeneration -> alle Bonus-Faktoren exakt 1.0
+  // 2.9 Slice 2: der Wachstums-Bonus rangiert gegen die universums-globale robustG-Verteilung — auch
+  // die driftet mit dem Universum. refCal gesetzt -> gegen die EINGEFRORENE gDist rangieren.
+  const growthPctl = growthPctlFn(refCal ? refCal.gDist : gDist); // null bei Degeneration -> Bonus-Faktoren 1.0
 
   // 2c. Burn-Press (Court, Karl-Direktive Teil 2) + AUFGABE-2-Wachstums-Bonus: beschleunigte Cash-Verbrenner
   // (burnAccelerating) druecken (=1/(1+mag)), starke Wachser AUFWAERTS heben (1 + k*max(0,2*pctl-1)). Beide
@@ -611,8 +636,9 @@ function scoreUniverse(snapshots, formulas) {
     const y = ipoYearOf(e.snapshot && e.snapshot.meta);
     if (Number.isFinite(y)) ipoSamples.push(y);
   }
-  const mcapBounds = quintileBounds(mcapSamples);
-  const ipoBounds = quintileBounds(ipoSamples);
+  // 2.9 Slice 2: mcap/ipo-Quintile ebenfalls aus dem Lineal (Metadaten-Determinismus im Referenz-Modus).
+  const mcapBounds = refCal ? refCal.mcapBounds : quintileBounds(mcapSamples);
+  const ipoBounds = refCal ? refCal.ipoBounds : quintileBounds(ipoSamples);
 
   // 2.9 Slice 1: Kalibrier-Artefakt — die pro Lauf aus dem driftenden ~20%-Sample GELERNTEN
   // globalen "Lineale" (winsor/growth/cycleDD/mcap/ipo) als versionierbares Objekt ausweisen.
@@ -623,8 +649,14 @@ function scoreUniverse(snapshots, formulas) {
   // + .length unberuehrt). Die per-Kohorte-Perzentilbasen + Referenz-Scoring folgen in 2.9 Slice 2.
   Object.defineProperty(results, 'calibration', {
     value: {
-      schema: 'calibration/v1',
+      // v2 (2.9 Slice 2): traegt zusaetzlich die vollen Referenz-VERTEILUNGEN (cohortBases + gDist),
+      // damit ein spaeterer Lauf per {refCalibration} EXAKT gegen dieses Lineal scoren kann. v1 war
+      // scalar-only (nur diffbar). Volle Arrays statt Quantil-Grid = exakter Replay (Groesse ~1 MB,
+      // gitignored/2.3-kompaktiert; Quantil-Grid-Kompaktierung als spaetere Optimierung dokumentiert).
+      schema: 'calibration/v2',
       winsorBounds, growthBounds, cycleDDThreshold, mcapBounds, ipoBounds,
+      cohortBases: capturedCohortBases, // {cohortKey: {axes:{axisKey:[rohwerte]}, profitSign:[..]|null}}
+      gDist,                            // robustG-Verteilung fuer den universums-globalen Wachstums-Bonus
       nRouted: results.filter((e) => e.action === 'route').length,
       nTotal: Array.isArray(snapshots) ? snapshots.length : null,
     },
@@ -752,7 +784,37 @@ function produceRankings(results, opts = {}) {
   return { branches, overview: overview.slice(0, topN * 2).map(stripRaw), survival, excluded };
 }
 
-module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings, phaseOf, mcapBandOf, ipoRecencyOf, ipoYearOf,
+// 2.9 Slice 2: Drift-Waechter. KS-Distanz (max |CDF|-Differenz) je Kohorte/Achse zwischen dem
+// LIVE-Lineal und dem eingefrorenen Referenz-Lineal. Ueber Schwelle => die Normierungsbasis hat sich
+// verschoben (Universe-Ausbau/Daten-Drift) -> der Aufrufer meldet fail-loud (0.7) + flaggt das Vintage.
+// Reine Funktion. Default-Schwelle 0.15; cron-seitig aus den ersten Laeufen kalibrieren (Rezept 2.3-Wert-Gate).
+function ksDistance(a, b) {
+  const fa = (Array.isArray(a) ? a : []).filter(Number.isFinite).slice().sort((x, y) => x - y);
+  const fb = (Array.isArray(b) ? b : []).filter(Number.isFinite).slice().sort((x, y) => x - y);
+  if (!fa.length || !fb.length) return null;
+  const cdf = (arr, x) => { let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] <= x) lo = m + 1; else hi = m; } return lo / arr.length; };
+  let maxD = 0;
+  for (const x of [...new Set([...fa, ...fb])]) maxD = Math.max(maxD, Math.abs(cdf(fa, x) - cdf(fb, x)));
+  return maxD;
+}
+function calibrationDrift(liveCal, refCal, ksThreshold = 0.15) {
+  const drifted = [];
+  let maxKs = 0;
+  const lb = (liveCal && liveCal.cohortBases) || {}, rb = (refCal && refCal.cohortBases) || {};
+  for (const key of Object.keys(rb)) {
+    const la = lb[key] && lb[key].axes, ra = rb[key].axes;
+    if (!la || !ra) continue;
+    for (const ax of Object.keys(ra)) {
+      const ks = ksDistance(la[ax], ra[ax]);
+      if (ks === null) continue;
+      if (ks > maxKs) maxKs = ks;
+      if (ks > ksThreshold) drifted.push({ cohort: key, axis: ax, ks: Math.round(ks * 1000) / 1000 });
+    }
+  }
+  return { maxKs, ksThreshold, drifted, ok: maxKs <= ksThreshold };
+}
+
+module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings, phaseOf, mcapBandOf, ipoRecencyOf, ipoYearOf, calibrationDrift,
   // audit/fix (Bug 0/9/7): fuer calibrate.js — Kohorten-Gates + Winsor-Schranken exakt spiegeln
   learnWinsorBounds, isDataSuspect, issuerDedupComparator, issuerKey,
   // AUFGABE 2 (Wachstums-Bonus): fuer TDD + gezielte Wiederverwendung
