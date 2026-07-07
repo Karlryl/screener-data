@@ -15,7 +15,7 @@ const { route } = require('./router.js');
 const { q, signTrack } = require('./engine.js');
 const { norm } = require('./snapshot.js');
 const { evaluateLamps } = require('./lamps.js');
-const { trackOf, rawAxisValue, learnWinsorBounds, isDataSuspect, issuerDedupComparator, issuerKey } = require('./score.js');
+const { trackOf, rawAxisValue, learnWinsorBounds, isDataSuspect, issuerDedupComparator, issuerKey, scoreUniverse, rankBy } = require('./score.js');
 
 // Baut pro (formulaId|track) die Perzentil-Matrix: rows[{ticker, pct:{axis:0-100}, lamps}].
 function buildCalibMatrix(universe, formulas) {
@@ -110,6 +110,36 @@ function rankCohort(cohort, weights) {
     .sort((a, b) => b.score - a.score);
 }
 
+// --- 2.11 Stufe A Teil 1: Parität zur PRODUKTION -----------------------------
+// Court-Befund (Scoring-Court, Ankläger Architektur): scoreWithWeights/rankCohort sind ein COARSE-Vorfilter —
+// sie mitteln NUR die gewichteten Achsen-Perzentile und spiegeln NICHT die Produktions-Pipeline nach der
+// Perzentilierung: EB-Shrinkage (2.10, Richtung 50 per Kohorten-n), C4-Coverage-Shrinkage (Richtung Median)
+// und die 3 multiplikativen Post-Faktoren (burnPress/growthBoost/cycleDamper). Die Kalibrier-Matrix ist damit
+// schnell (jeder Gewichtsvektor = ein sofortiges gewichtetes Mittel), aber ihr Ranking ≠ Produktions-Ranking.
+// KONSEQUENZ (Anti-Fudge): Gewichte NIE allein am Coarse-Ranking festmachen. Die Simplex-Suche darf coarse
+// vor-filtern, aber der FINALE Kandidat MUSS durch die ECHTE Engine verifiziert werden — dafür diese zwei
+// Primitive. So bleibt die Suche schnell UND das Urteil produktionstreu (Rang-Identität per Konstruktion,
+// weil productionCohortRanking DIESELBE scoreUniverse-Engine ist, die run-screener nutzt).
+
+// Formel-Kopie mit ueberschriebenen Track-Gewichten (immutable; beruehrt die anderen Formeln/Tracks nicht).
+function withWeights(formulas, formulaId, track, weightObj) {
+  const f = formulas[formulaId];
+  if (!f) throw new Error(`withWeights: unbekannte formulaId ${formulaId}`);
+  const axes = f.axes.map((ax) => (weightObj[ax.key] === undefined
+    ? ax
+    : { ...ax, w: { ...ax.w, [track]: weightObj[ax.key] } }));
+  return { ...formulas, [formulaId]: { ...f, axes } };
+}
+
+// Exaktes PRODUKTIONS-Ranking einer Kohorte (formulaId|track) — läuft die volle scoreUniverse-Engine (inkl.
+// aller Shrinks + Post-Faktoren) und rankt via rankBy. weightObj optional: mit gesetzten Gewichten wird gegen
+// die überschriebene Formel gescort (der Verify-Schritt für einen Kalibrier-Kandidaten). Das IST das
+// run-screener-Ranking — daher Rang-identisch, kein separater Parität-Beweis nötig außer dem Test unten.
+function productionCohortRanking(universe, formulas, formulaId, track, weightObj) {
+  const f = weightObj ? withWeights(formulas, formulaId, track, weightObj) : formulas;
+  return rankBy(scoreUniverse(universe, f), formulaId, track).map((e) => ({ ticker: e.ticker, score: e.score }));
+}
+
 /**
  * Diagnose einer Gewichtung gegen Anker/Decliner/Peak-Falle.
  * anchorPos/declinerPos in [0,1] (0 = Spitze). peakTrap = Anteil Top-10 mit Peak-Lampe.
@@ -160,4 +190,6 @@ if (require.main === module) {
   console.log(`Calib-Matrix gedumpt: ${r.branches.length} Branchen (Universum ${r.universe}) -> ${r.dir}`);
 }
 
-module.exports = { buildCalibMatrix, weightsObj, scoreWithWeights, rankCohort, diagnostics, dumpMatrix };
+module.exports = { buildCalibMatrix, weightsObj, scoreWithWeights, rankCohort, diagnostics, dumpMatrix,
+  // 2.11 Stufe A Teil 1: Produktions-Parität (Coarse-Matrix vor-filtert, Engine verifiziert den Kandidaten)
+  withWeights, productionCohortRanking };
