@@ -226,5 +226,29 @@ test('burnPressFactor: Verbrenner -> Faktor <1 (Score gedrueckt), Nicht-Verbrenn
   assert.equal(L.burnPressFactor(turn), 1); // feuert nicht -> byte-identisch
 });
 
+// --- 14 inflationSuspect (2.13/#24, Disclosure-Lampe) -----------------------
+// Auflage A2: das reale Universum hat 0 Hoch-Inflations-Faelle -> synthetisch testen, sonst tot.
+test('inflationSuspect: Hoch-Inflations-Domizil (Turkey/Argentina) -> true', () => {
+  assert.equal(L.inflationSuspect({ meta: { country: 'Turkey' } }), true);
+  assert.equal(L.inflationSuspect({ meta: { country: 'Argentina' } }), true);
+});
+test('inflationSuspect: reportingCurrency-Fallback (ARS/TRY ohne country) -> true', () => {
+  assert.equal(L.inflationSuspect({ meta: { reportingCurrency: 'ARS' } }), true);
+  assert.equal(L.inflationSuspect({ meta: { reportingCurrency: 'TRY' } }), true);
+});
+test('inflationSuspect: bekanntes Normal-Land -> false; kein Herkunfts-Signal -> null', () => {
+  assert.equal(L.inflationSuspect({ meta: { country: 'United States', reportingCurrency: 'USD' } }), false);
+  assert.equal(L.inflationSuspect({ meta: { country: 'Germany' } }), false); // bekanntes Land, nicht Hoch-Inflation
+  // EUR/USD sind NICHT gemappt (spannen viele Laender) -> ohne country kein Herkunfts-Signal -> null (nicht bewertbar)
+  assert.equal(L.inflationSuspect({ meta: { reportingCurrency: 'EUR' } }), null);
+  assert.equal(L.inflationSuspect({ meta: {} }), null);
+  assert.equal(L.inflationSuspect({}), null);
+});
+test('inflationSuspect ist reine WARNUNG (US-Anker feuern nie, kein active-Eintrag)', () => {
+  const { evaluateLamps } = require('../../src/scoring/lamps.js');
+  assert.ok(!evaluateLamps({ meta: { country: 'United States' } }).active.includes('inflationSuspect'));
+  assert.ok(evaluateLamps({ meta: { country: 'Turkey' }, annual: {} }).active.includes('inflationSuspect'));
+});
+
 console.log(`\nlamps.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

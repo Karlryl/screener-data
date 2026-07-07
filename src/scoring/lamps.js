@@ -280,11 +280,39 @@ function burnPressFactor(s) {
   return 1 / (1 + mag);
 }
 
+// 14. Inflations-Verdacht (2.13 / #24): reine Disclosure-WARNUNG — nominales Umsatzwachstum in
+// Lokalwaehrung ist in Hoch-Inflations-Laendern inflations-verdaechtig (30% nominal bei 40%
+// Inflation = real negativ) und verzerrt die kohorten-relativen Wachstums-Perzentile. VERRECHNET
+// NICHTS: nicht in DATA_SUSPECT_LAMPS (score.js) -> kein Score-/Exclude-Effekt, nur Kennzeichnung
+// fuers Elliott-Wellen-Chart-Timing. Heute faktisch leer (0 Hoch-Inflations-Reportingwaehrungen im
+// Universum), praeventiv fuer den geplanten Universe-Ausbau (Vault _2.13-FAIRNESS-GUARDS-DESIGN).
+// Die Listen sind IWF-Referenzfakten (high-inflation-Gruppe, Stand 2026), KEIN Score-Niveau
+// (Invariante 3: binaer-deskriptiv wie country.js Land->Region, kein Perzentil-/Korrektur-Wert) —
+// jaehrlich von Karl reviewbar. Eine ECHTE nominal->real-Korrektur braeuchte eine CPI-Datenquelle
+// = eigener Task mit Karl-OK (nicht hier).
+const HIGH_INFLATION_ORIGINS = new Set([
+  'Turkey', 'Argentina', 'Egypt', 'Nigeria', 'Pakistan', 'Venezuela', 'Iran',
+  'Ghana', 'Ethiopia', 'Angola', 'Zimbabwe', 'Sudan', 'Lebanon',
+]);
+const REPORTING_CCY_ORIGIN = {
+  TRY: 'Turkey', ARS: 'Argentina', EGP: 'Egypt', NGN: 'Nigeria', PKR: 'Pakistan',
+  VES: 'Venezuela', VEF: 'Venezuela', IRR: 'Iran', GHS: 'Ghana', ETB: 'Ethiopia',
+  AOA: 'Angola', ZWL: 'Zimbabwe', SDG: 'Sudan', LBP: 'Lebanon',
+};
+function inflationSuspect(s) {
+  const m = s && s.meta;
+  if (!m) return null;
+  const origin = m.country || REPORTING_CCY_ORIGIN[m.reportingCurrency] || null;
+  if (!origin) return null;                    // kein Herkunfts-Signal -> nicht bewertbar
+  return HIGH_INFLATION_ORIGINS.has(origin);   // true = nominales Wachstum inflations-verdaechtig
+}
+
 const LAMPS = {
   unprofit, burning, shortRunway, highDilution, peakMargin,
   lowRoic, arDivergence, crashRisk, fcfArtefact, cyclePeak,
   burnAccelerating,
   newestQtrSuspect, annualCurrencyLeak,
+  inflationSuspect,
 };
 
 /**
