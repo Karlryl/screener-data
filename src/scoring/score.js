@@ -538,6 +538,10 @@ function scoreUniverse(snapshots, formulas) {
       });
       entries[i].score = weightedScore(axes);   // Basis-Score (renorm-on-drop)
       cohWcov[i] = coverageWeight(axes);         // Achsen-Gewichts-Coverage (C4-Shrinkage-Faktor)
+      // 2.13 #23: Coverage AUSWEISEN (nicht verrechnen) — present-Achsen/total + C4-Gewicht je Zeile
+      // an den Entry haengen (score-inert, reine Anzeige; round2 ist modul-scope, zur Aufrufzeit da).
+      entries[i].coverageAxes = axes.filter((a) => a.value !== null).length + '/' + axes.length;
+      entries[i].coverageWeight = round2(cohWcov[i]);
     }
     // audit/fix (Court Phase A Runde 3, Fall C4): Coverage-Shrinkage. renorm-on-drop laesst Namen mit
     // WENIGER present-Achsen eine strukturell HOEHERE Score-Varianz behalten (Mittel ueber k Achsen,
@@ -652,6 +656,7 @@ function rankBy(results, formulaId, track) {
 }
 
 const round1 = (x) => (Number.isFinite(x) ? Math.round(x * 10) / 10 : null);
+const round2 = (x) => (Number.isFinite(x) ? Math.round(x * 100) / 100 : null); // 2.13 #23: coverageWeight-Anzeige
 // audit/fix (Bug 8): skalenbewusstes Runden der Overview-Wachstumsspalte. round1 (1 Nachkommastelle)
 // war fuer die 0-100-Score-Skala gebaut; auf DEZIMAL-Wachstumswerte (0.09 -> 0.1, 0.04 -> 0.0)
 // quantisiert es auf 10-Prozentpunkt-Stufen. gp/revenue-badge/ffo-badge sind Dezimal-YoY -> 3
@@ -678,7 +683,7 @@ function produceRankings(results, opts = {}) {
   const excluded = {};
   // A2: die in scoreUniverse angehefteten geo-Felder an jede Output-Zeile spreaden
   // (?? null haelt die Form stabil, falls produceRankings mit handgebauten results laeuft).
-  const geo = (e) => ({ country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, ipoRecency: e.ipoRecency ?? null, profitTier: e.profitTier ?? null, ipoYear: e.ipoYear ?? null });
+  const geo = (e) => ({ country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, ipoRecency: e.ipoRecency ?? null, profitTier: e.profitTier ?? null, ipoYear: e.ipoYear ?? null, coverageAxes: e.coverageAxes ?? null, coverageWeight: e.coverageWeight ?? null });
   for (const e of (Array.isArray(results) ? results : [])) {
     if (e.action === 'survival') {
       survival.push({ ticker: e.ticker, runwayQuarters: e.overview ? e.overview.value : null, lamps: e.lamps, ...geo(e) });

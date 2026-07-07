@@ -49,7 +49,9 @@ const BRANCHES = [
 ];
 // The exact geo/classification fields the engine writes on every board+overview+survival row.
 // Task 1.2: profitTier (4-Stufen-Enum) + ipoYear (durchgereicht) sind seit 1.2 real (vorher RESERVIERT).
-const GEO_FIELDS = ['country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'ipoRecency', 'profitTier', 'ipoYear'];
+// Task 2.13 #23: coverageAxes ("n/m" present-Achsen) + coverageWeight (C4-Gewicht) — additiv OPTIONAL,
+// ausweisen statt verrechnen (score-inert); nicht in den Pflicht-Feld-Check (Auflage B1).
+const GEO_FIELDS = ['country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight'];
 
 function readJSON(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
 function readJSONOrNull(p) { try { return readJSON(p); } catch (_) { return null; } }

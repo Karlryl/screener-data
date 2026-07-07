@@ -1,7 +1,7 @@
 # findash-export v1 — Datenvertrag (Task 1.1)
 
 > **Schema-String:** `findash-export/v1` (Feld `schema` auf JEDER Datei).
-> **Status:** 1.1 umgesetzt; **1.2 ergaenzt `profitTier` + `ipoYear`** (real emittiert). Nur `currency` bleibt RESERVIERT.
+> **Status:** 1.1 umgesetzt; **1.2 ergaenzt `profitTier` + `ipoYear`** (real emittiert); **2.13 #23 ergaenzt `coverageAxes` + `coverageWeight`** (optional additiv, score-inert). Nur `currency` bleibt RESERVIERT.
 > **Quelle der Wahrheit:** Engine-Output `outputs/hypergrowth/*.json` (score.js / run-screener.js). Der Writer kopiert NUR echte Engine-Felder + ein abgeleitetes `rank`. Kein erfundenes Feld.
 > **Publiziert:** ausschliesslich nach gh-pages (`outputs/` ist gitignored). Der Dashboard-Consumer liest von der gh-pages-URL, nie von main.
 
@@ -91,6 +91,8 @@ Zusaetzlich zur Huelle (§2):
 | `ipoRecency` | `"recent"`\|`"growth"`\|`"seasoned"`\|`"veteran"`\|`"mature"` \| null | Pflicht (nullable) | ja (Praesenz + Enum\|null) | Data-learned Quintil. **Real nullable** (8 Board-Rows null beobachtet). |
 | `profitTier` | `"nicht-profitabel"`\|`"kurz-vor-profitabel"`\|`"seit-kurzem-profitabel"`\|`"langfristig-profitabel"` \| null | Pflicht (nullable) | ja (Praesenz + Enum\|null) | **Task 1.2** (Karl B3). 4 lueckenlos kachelnde Stufen aus dem Yahoo-JAHRES-Stream (≥4 Perioden fuer „langfristig") + Quartals-Trajektorie. Deskriptiv, KEIN Score-Einfluss. Quelle `src/scoring/profit-tier.js`. `null` = zu wenig Daten. |
 | `ipoYear` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | **Task 1.2** — Boersen-IPO-Jahr (`meta.ipoYear` bzw. Jahr aus `firstTradeDate`), nur durchgereicht (nicht neu berechnet). Ergaenzt das abgeleitete `ipoRecency`-Quintil um die Rohzahl. |
+| `coverageAxes` | string `"n/m"` \| null | **OPTIONAL (additiv)** | NEIN (nicht im `--check`, Auflage B1) | **Task 2.13 #23** — present-Leitachsen / Achsenzahl der Formel (z.B. `"5/7"`). „Ausweisen statt verrechnen": macht sichtbar, dass ein Name auf weniger Achsen gerankt wurde (UK/AU/JP duenner als US). **KEIN Score-Einfluss** (der Score ist per C4-Shrinkage schon fair). Quelle `src/scoring/score.js`. |
+| `coverageWeight` | number `[0,1]` \| null | **OPTIONAL (additiv)** | NEIN (nicht im `--check`) | **Task 2.13 #23** — C4-Achsen-Gewichts-Coverage (1.0 = alle Achsen present, data-learned Shrink-Faktor). `n/n` ⇔ `1.0`. Reine Anzeige-Rohzahl zu `coverageAxes`. |
 
 ---
 
@@ -171,7 +173,7 @@ Die 8 Achsen-Perzentile (`revGrowthLevel, revAcceleration, gpGrowth, ruleOfX, ma
 
 `schema` bleibt `findash-export/v1`, **solange NUR additiv geaendert wird**:
 
-- **ERLAUBT in v1 (kein Bump):** ein NEUES optionales Feld hinzufuegen (z.B. `profitTier`, `currency`, `ipoYear` sobald 1.2 liefert); einen neuen Enum-Wert ergaenzen, den der Consumer als "unbekannt" tolerieren kann. **Wird ein neuer Enum-Wert erlaubt, muss die entsprechende `VALID_*`-Liste im Writer erweitert werden**, sonst blockt der Check den legitimen neuen Wert faelschlich.
+- **ERLAUBT in v1 (kein Bump):** ein NEUES optionales Feld hinzufuegen (z.B. `profitTier`, `ipoYear` [1.2], `coverageAxes`/`coverageWeight` [2.13 #23], `currency` sobald verfuegbar); einen neuen Enum-Wert ergaenzen, den der Consumer als "unbekannt" tolerieren kann. **Wird ein neuer Enum-Wert erlaubt, muss die entsprechende `VALID_*`-Liste im Writer erweitert werden**, sonst blockt der Check den legitimen neuen Wert faelschlich.
 - **ERZWINGT v2-Bump (`schema: 'findash-export/v2'`):** ein Feld **umbenennen, entfernen, seinen Typ aendern** (z.B. `overview.value` von nullable-number auf number); die Verschachtelung aendern (overview.json flach → verschachtelt oder umgekehrt); die Semantik eines bestehenden Feldes aendern (z.B. `score` von round1 auf roh); den `runwayQuarters`-Sentinel `9999` neu belegen; einen Pflicht-Enum-Wert entfernen; ein bisher nullable-Pflichtfeld auf non-null verschaerfen.
 - Bei v2: neue Datei `outputs/findash-export/v2/`, der v1-Ordner bleibt eine Migrationsphase lang parallel bestehen, damit das Dashboard umstellen kann. `SCHEMA`, die `VALID_*`-Enum-Listen und `validateFile()`/`validate*Row()` im Writer werden auf v2 gepinnt, der Selftest auf v2-Cases.
 
