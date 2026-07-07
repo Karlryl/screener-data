@@ -20,7 +20,10 @@
  *
  * 'core' ist der Default fuer jede hier nicht genannte formulaId.
  */
-const DIAGNOSTIC = new Set(['consumer-staples', 'materials', 'real-estate', 'it-services']);
+// tech-hardware (P1-Carve-out 2.12a): gebaut, aber Court noch NICHT bestanden — der 7-Achsen-Satz
+// trennt Franchise nicht sauber von commodity-EMS (Margen-Niveau-Achse = Folge-Task 2.12b). Bis dahin
+// diagnostic (laeuft sichtbar als unbewiesen mit, zaehlt nicht als geprueft).
+const DIAGNOSTIC = new Set(['consumer-staples', 'materials', 'real-estate', 'it-services', 'tech-hardware']);
 
 function boardStatus(formulaId) {
   return DIAGNOSTIC.has(formulaId) ? 'diagnostic' : 'core';

@@ -281,6 +281,34 @@ test('echte IT-Services -> it-services', () => {
   assert.equal(route(s).formulaId, 'it-services');
 });
 
+// --- P1-Carve-out (2.12a): Technology-Hardware/EMS/Peripherie -> tech-hardware ---
+test('Hardware-Industrien (Technology) -> tech-hardware, NICHT software-comm-services', () => {
+  const mk = (industry, ticker) => ({ meta: { sector: 'Technology', industry, region: 'US', ticker },
+    annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } });
+  for (const ind of ['Computer Hardware', 'Electronic Components', 'Communication Equipment',
+    'Scientific & Technical Instruments', 'Consumer Electronics', 'Solar', 'Electronics & Computer Distribution']) {
+    assert.equal(route(mk(ind, 'HW')).formulaId, 'tech-hardware', ind + ' -> tech-hardware');
+  }
+  // Anker-Marquees (belegt in _P1-FORMEL-DESIGN): ANET (Computer Hardware), APH (Electronic Components).
+  assert.equal(route(mk('Computer Hardware', 'ANET')).formulaId, 'tech-hardware');
+  assert.equal(route(mk('Electronic Components', 'APH')).formulaId, 'tech-hardware');
+});
+test('Reihenfolge-Beweis: Semiconductor Equipment & Materials bleibt semiconductors (Schritt 1 VOR Carve-out)', () => {
+  const s = { meta: { sector: 'Technology', industry: 'Semiconductor Equipment & Materials', region: 'US' },
+    annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
+  assert.equal(route(s).formulaId, 'semiconductors'); // semiconductor-Substring faengt VOR tech-hardware
+});
+test('reine Software/Gaming bleibt software-comm-services (Carve-out greift nur bei echter Hardware)', () => {
+  const soft = { meta: { sector: 'Technology', industry: 'Software - Infrastructure', region: 'US' },
+    annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
+  assert.equal(route(soft).formulaId, 'software-comm-services');
+  // 'Electronic Gaming & Multimedia' enthaelt 'electronic', ist aber KEINE Hardware -> darf NICHT
+  // vom TECHHW_INDUSTRY-Regex gefangen werden (Phrasen-Match, kein 'electronic'-Substring).
+  const gaming = { meta: { sector: 'Technology', industry: 'Electronic Gaming & Multimedia', region: 'US' },
+    annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
+  assert.equal(route(gaming).formulaId, 'software-comm-services');
+});
+
 // --- Regression: Broker/Brokerage NICHT als Bank/Versicherer excludiert -----
 test('Versicherungs-Makler & Investment-Brokerage bleiben drin (kein Fehl-Exclude)', () => {
   const broker = { meta: { sector: 'Financial Services', industry: 'Insurance Brokers' },

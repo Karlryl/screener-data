@@ -8,7 +8,7 @@
  *   node scripts/write-findash-export.js --selftest  # runnable self-check (assert-based)
  *
  * READS  (read-only inputs, never a write target):
- *   outputs/hypergrowth/<branch>.json  (12 boards, {profitable[],unprofitable[]})
+ *   outputs/hypergrowth/<branch>.json  (13 boards, {profitable[],unprofitable[]})
  *   outputs/hypergrowth/overview.json  (flat cross-branch top-200)
  *   outputs/hypergrowth/survival.json  (flat pre-revenue, runway-desc)
  *   outputs/hypergrowth/index.json     (meta: counts/branches/excluded)
@@ -45,7 +45,7 @@ const SCHEMA = 'findash-export/v1';
 const BRANCHES = [
   'consumer-discretionary', 'consumer-staples', 'energy', 'financials',
   'health-care', 'industrials', 'it-services', 'materials', 'real-estate',
-  'semiconductors', 'software-comm-services', 'utilities',
+  'semiconductors', 'software-comm-services', 'tech-hardware', 'utilities',
 ];
 // The exact geo/classification fields the engine writes on every board+overview+survival row.
 // Task 1.2: profitTier (4-Stufen-Enum) + ipoYear (durchgereicht) sind seit 1.2 real (vorher RESERVIERT).

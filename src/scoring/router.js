@@ -57,6 +57,15 @@ const LENDING_INDUSTRY = /credit services|consumer finance|mortgage|savings|thri
 // leer-annualRev-Name (echte Pre-Rev-Biotechs UND Dev-Stage-Miner/Uran/Lithium haben auch leeren
 // annualRev und MUESSEN auf dem Board bleiben), nur die Finanz-Vehikel-Industrien.
 const NON_OPERATING_VEHICLE_INDUSTRY = /asset management|closed[- ]end fund|shell companies|\bbdc\b|term trust/;
+// P1-Carve-out (2.12a, Vault _P1-FORMEL-DESIGN-2026-07-07): Technology-Sektor-Hardware/EMS/
+// Peripherie/Solar/Distribution. Bewusst 7 Industrien — verschiebt exakt die 201 fehl-gerouteten
+// Namen aus software-comm-services (Diagnose _P1-ROUTER-DIAGNOSE: 201/539 = 37% Fehlrouting).
+// 'Semiconductor Equipment & Materials' NICHT hier: Schritt 1 (semiconductor-Substring) faengt es
+// zuvor ab -> waere toter Code. Nur volle Industrie-Phrasen (keine Kollision mit 'Electronic
+// Gaming & Multimedia' o.ae.). tech-hardware startet DIAGNOSTIC (board-status.js): der generische
+// 7-Achsen-Satz trennt Franchise (ANET/MSI/GRMN) noch nicht sauber von commodity-EMS — die
+// Margen-Niveau-Achse ist Folge-Task 2.12b; bis dahin ehrlich als unbewiesen geflaggt.
+const TECHHW_INDUSTRY = /electronic components|computer hardware|communication equipment|scientific & technical instruments|consumer electronics|\bsolar\b|electronics & computer distribution/;
 // A3-Stufe-1: US-Primaerlisting = US-Primaerboerse, KEINE Auslandsboerse, KEIN Auslands-Suffix.
 function isUsPrimaryListing(m) {
   const ex = m && m.exchangeName;
@@ -184,6 +193,10 @@ function sectorRoute(s) {
   const sec = lc(s && s.meta ? s.meta.sector : '');
   // Industry-Overrides
   if (ind.includes('semiconductor')) return 'semiconductors';
+  // P1-Carve-out (2.12a): Hardware/EMS/Peripherie aus dem Technology-Sektor-Fallback ziehen —
+  // sonst faellt jeder Nicht-Semi-Technology-Ticker unten in 'software-comm-services' und verzerrt
+  // dort die kohorten-relativen Perzentile. Reihenfolge: semiconductors -> tech-hardware -> it-services.
+  if (TECHHW_INDUSTRY.test(ind)) return 'tech-hardware';
   // Wortgrenze: "\bit services" matcht "it services", NICHT "cred[it services]" (Substring-Kollision).
   if (ind.includes('information technology services') || /\bit services\b/.test(ind)) return 'it-services';
   // Sektor-Fallback (Yahoo-Sektornamen)
