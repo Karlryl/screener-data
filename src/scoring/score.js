@@ -614,6 +614,23 @@ function scoreUniverse(snapshots, formulas) {
   const mcapBounds = quintileBounds(mcapSamples);
   const ipoBounds = quintileBounds(ipoSamples);
 
+  // 2.9 Slice 1: Kalibrier-Artefakt — die pro Lauf aus dem driftenden ~20%-Sample GELERNTEN
+  // globalen "Lineale" (winsor/growth/cycleDD/mcap/ipo) als versionierbares Objekt ausweisen.
+  // REINE EMISSION dessen, was oben ohnehin gelernt wurde -> KEIN Score-Einfluss (Score byte-
+  // identisch). Zeitstempel-FREI (run-screener stempelt beim Schreiben) fuer Replay-Determinismus.
+  // ponytail: als Property an das results-Array gehaengt statt {results,calibration} zurueckzugeben
+  // -> nicht-brechend fuer die vielen `const results = scoreUniverse(...)`-Aufrufer (Array-Iteration
+  // + .length unberuehrt). Die per-Kohorte-Perzentilbasen + Referenz-Scoring folgen in 2.9 Slice 2.
+  Object.defineProperty(results, 'calibration', {
+    value: {
+      schema: 'calibration/v1',
+      winsorBounds, growthBounds, cycleDDThreshold, mcapBounds, ipoBounds,
+      nRouted: results.filter((e) => e.action === 'route').length,
+      nTotal: Array.isArray(snapshots) ? snapshots.length : null,
+    },
+    enumerable: false, // unsichtbar fuer JSON.stringify(results)/Spread -> keine Alt-Konsument-Ueberraschung
+  });
+
   // 3. Overview-Metrik anhaengen + interne Felder entfernen
   for (const e of results) {
     if (e.action === 'route') {

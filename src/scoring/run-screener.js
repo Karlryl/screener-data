@@ -170,6 +170,15 @@ function run(topN) {
     survivalCount: ranked.survival.length,
     excluded: sortKeys(ranked.excluded),
   });
+  // 2.9 Slice 1: Kalibrier-Artefakt je Lauf ausschreiben — das versionierbare "Lineal" (gelernte
+  // winsor/growth/cycleDD/mcap/ipo-Schranken), macht die globale Normierungs-Drift zwischen Laeufen
+  // diffbar. generated_at NUR im Datei-Wrapper; die calibration selbst bleibt zeitstempel-frei
+  // (Replay-Determinismus). ponytail: nach outputs/calibration.json (latest) — die board-history-
+  // Vintage-Co-Location kommt mit 2.3; der Referenz-Scoring-Modus + Drift-Waechter folgen in Slice 2.
+  if (results.calibration) {
+    writeJsonAtomic(path.join(ROOT, 'outputs', 'calibration.json'),
+      { generated_at: new Date().toISOString(), ...results.calibration });
+  }
   return { universe: universe.length, branches: Object.keys(ranked.branches).length, out: OUT_DIR };
 }
 
