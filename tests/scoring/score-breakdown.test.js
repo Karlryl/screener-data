@@ -65,5 +65,30 @@ test('Rang-Identitaet: score == scoreShrunk * burn * growth * cycle (bis auf Run
   console.log(`       ${checked} Zeilen rang-identisch rekonstruiert`);
 });
 
+// (4) 2.7 axisBreakdown: je Zeile die Achsen-Beiträge; scoreBase == gewichtetes Mittel der present-Achsen.
+test('2.7: jede Zeile trägt axisBreakdown; scoreBase == gewichtetes Mittel der present-Achsen (renorm-on-drop)', () => {
+  let checked = 0;
+  for (const row of allRows) {
+    assert.ok(Array.isArray(row.axisBreakdown) && row.axisBreakdown.length > 0, `${row.ticker}: axisBreakdown fehlt/leer`);
+    for (const a of row.axisBreakdown) {
+      assert.ok(typeof a.key === 'string' && a.key, `${row.ticker}: axisBreakdown key fehlt`);
+      assert.ok(a.pct === null || Number.isFinite(a.pct), `${row.ticker}: pct weder finit noch null`);
+      assert.ok(Number.isFinite(a.weight), `${row.ticker}: weight nicht finit`);
+    }
+    if (row.scoreBase == null) continue;
+    let w = 0, v = 0;
+    for (const a of row.axisBreakdown) {
+      if (a.pct === null || !(a.weight > 0)) continue; // renorm-on-drop: gedroppte Achse fällt raus
+      w += a.weight; v += a.weight * a.pct;
+    }
+    if (w <= 0) continue;
+    const recon = v / w;
+    assert.ok(Math.abs(recon - row.scoreBase) <= 0.6, `${row.ticker}: axisBreakdown→scoreBase ${recon.toFixed(1)} != ${row.scoreBase}`);
+    checked++;
+  }
+  assert.ok(checked > 100, `nicht-triviale Prüfmenge (${checked})`);
+  console.log(`       ${checked} Zeilen: axisBreakdown rekonstruiert scoreBase (renorm-on-drop)`);
+});
+
 console.log(`\nscore-breakdown.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

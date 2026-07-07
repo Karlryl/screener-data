@@ -632,6 +632,9 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
       });
       // 2.10: Basis-Score -> EB-Shrinkage Richtung 50 mit EIGENER Kohorten-n (Konfidenz). Der Fallback aendert
       // nur die Perzentil-BASIS, NICHT die Konfidenz -> weiterhin per nCohort geschrumpft (kein Schwellensprung).
+      // 2.7 Score-Transparenz: je Achse Perzentil-Beitrag (0..100, null=gedroppt/renorm-on-drop) + Gewicht.
+      // Roh erfasst (Rundung im Export). scoreBase == gewichtetes Mittel der present-Achsen (renorm-on-drop).
+      entries[i]._axes = axes.map((a, j) => ({ key: formula.axes[j].key, pct: a.value, weight: a.weight }));
       const baseScore = weightedScore(axes);
       entries[i]._scoreBase = baseScore;         // 2.11 Stufe A: Basis-Score (vor EB-Shrinkage + C4 + Post-Faktoren)
       entries[i].score = shrinkToNeutral(baseScore, nCohort);
@@ -811,12 +814,17 @@ const roundOverviewValue = (ov) => {
 // explodiert bei scoreBase~0 (z.B. FRVO shrink~56) und ist rundungsfragil; die Zwischenzahl scoreShrunk ist die
 // ehrliche, robuste Form. burn/growth/cycle sind die 3 ECHTEN multiplikativen Post-Faktoren. null-sicher.
 function breakdown(e) {
+  // 2.7: Achsen-Beitrag je Zeile (Perzentil round1 + Gewicht); null-pct = Achse gedroppt (renorm-on-drop).
+  const axisBreakdown = Array.isArray(e._axes)
+    ? e._axes.map((a) => ({ key: a.key, pct: round1(a.pct), weight: a.weight }))
+    : null;
   const base = e._scoreBase, pre = e._scorePreFactor;
-  if (!Number.isFinite(base) || !Number.isFinite(pre)) return { scoreBase: null, scoreShrunk: null, factors: null };
+  if (!Number.isFinite(base) || !Number.isFinite(pre)) return { scoreBase: null, scoreShrunk: null, factors: null, axisBreakdown };
   return {
     scoreBase: round1(base),
     scoreShrunk: round1(pre),
     factors: { burn: round3(e._factorBurn), growth: round3(e._factorGrowth), cycle: round3(e._factorCycle) },
+    axisBreakdown,
   };
 }
 
