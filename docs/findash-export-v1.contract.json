@@ -1,0 +1,12 @@
+{
+  "_comment": "GETEILTES Schema-Fixture (Task 1.3). BYTE-IDENTISCH in findash/data-layer/ und screener-data/docs/. Pin der v1-Aussenschnittstelle: bumpt der CI-Writer (screener-data) auf v2, ohne diese Datei nachzuziehen, schlaegt der Consumer-Kontrakttest sichtbar an (rotes npm test). Voller Vertrag: screener-data/docs/findash-export-v1.md.",
+  "schema": "findash-export/v1",
+  "requiredHull": ["schema", "generated_at", "coverage"],
+  "requiredBoardRow": ["rank", "ticker", "score", "track", "lamps", "overview", "country", "region", "sector", "marketCap", "phase", "mcapBand", "ipoRecency", "profitTier", "ipoYear"],
+  "requiredOverviewRow": ["rank", "ticker", "formulaId", "track", "score", "overviewKind", "overviewValue", "overviewCompanion", "lamps", "country", "region", "sector", "marketCap", "phase", "mcapBand", "ipoRecency", "profitTier", "ipoYear"],
+  "requiredSurvivalRow": ["rank", "ticker", "runwayQuarters", "lamps", "country", "region", "sector", "marketCap", "phase", "mcapBand", "ipoRecency", "profitTier", "ipoYear"],
+  "requiredIndex": ["schema", "generated_at", "coverage", "boardStatus", "branches", "counts"],
+  "validProfitTiers": ["nicht-profitabel", "kurz-vor-profitabel", "seit-kurzem-profitabel", "langfristig-profitabel"],
+  "validBoardStatus": ["core", "diagnostic"],
+  "validTracks": ["profitable", "unprofitable"]
+}
