@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Engine — Achsen-Test. Die 8 Achsen-Berechner gegen echte CRDO/NVTS-Snapshots
+ * Engine — Achsen-Test. Die 9 Achsen-Berechner gegen echte CRDO/NVTS-Snapshots
  * + Drop-Verhalten (null -> renorm-on-drop) bei fehlenden Daten.
  *
  * Usage:  node tests/scoring/axes.test.js   (Exit 0 gruen / 1 Fehler)
@@ -251,6 +251,32 @@ test('marginTrajectory (F12, R2 mutation): revenueQ===0 wird verworfen (r>0-Guar
   // Mit r>=0 (Mutation): 5/0=Infinity -> m nicht finit. Test faengt die Mutation.
   const m = ax.marginTrajectory(s);
   assert.ok(Number.isFinite(m) && m > 0, `revenueQ=0 muss verworfen werden, m=${m}`);
+});
+
+// --- 9 marginLevel (2.12b, Franchise-vs-commodity-Diskriminator) -------------
+test('marginLevel(CRDO) ~0.65 (GM-Niveau aus annualGP/annualRev)', () => {
+  const v = ax.marginLevel(CRDO);
+  assert.ok(v !== null && v > 0.5 && v < 0.75, `CRDO GM-Level erwartet ~0.65, ist ${v}`);
+});
+test('marginLevel: kein present GP/Rev-Paar -> null (renorm-on-drop, kein Fake-50)', () => {
+  assert.equal(ax.marginLevel({}), null);
+  assert.equal(ax.marginLevel({ annual: { annualGP: [], annualRev: [] } }), null);
+});
+test('marginLevel [0,1]-Guard: implausibles GP>Rev-Jahr (gm>1) wird verworfen, faellt auf valides GJ', () => {
+  // juengstes GJ GP>Rev (gm=1.2, korrupt) -> verwerfen; naechstes valides GJ gm=0.30 zaehlt.
+  const s = { annual: { annualGP: [{ value: 120 }, { value: 30 }], annualRev: [{ value: 100 }, { value: 100 }] } };
+  const v = ax.marginLevel(s);
+  assert.ok(near(v, 0.30), `implausibles gm=1.2 muss uebersprungen werden, ist ${v}`);
+});
+
+// --- Inert-Invariante (2.12b): marginLevel NUR in tech-hardware verdrahtet ----
+test('marginLevel ist NUR in tech-hardware.js gelistet, in den anderen 11 Formeln NICHT (Inert-Waechter)', () => {
+  const formulas = require('../../src/scoring/formulas/index.js');
+  for (const [id, f] of Object.entries(formulas)) {
+    const hasML = (f.axes || []).some((a) => a.key === 'marginLevel');
+    if (id === 'tech-hardware') assert.ok(hasML, 'tech-hardware MUSS marginLevel listen');
+    else assert.ok(!hasML, `${id} darf marginLevel NICHT listen (sonst nicht mehr inert)`);
+  }
 });
 
 console.log(`\naxes.test.js: ${pass} ok, ${fail} fail`);

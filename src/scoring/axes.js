@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Hypergrowth Engine — die 8 Achsen-Berechner
+ * Hypergrowth Engine — die 9 Achsen-Berechner
  * ===========================================
  * Reine Funktionen ueber einen Snapshot. Lesen Serien AUSSCHLIESSLICH ueber
  * norm() (Schicht 0) und Skalare ueber snapshot.metrics. Jede Achse liefert
@@ -14,7 +14,7 @@
  * (cycleDiscount, Court-Spec, axes.test.js:peak<stable), der NICHT monoton im
  * juengsten OpInc ist — das ist Absicht (Commodity-Peak-Taker-Penalty), kein Vertragsbruch.
  *
- * Die 8 Achsen (Plan v4):
+ * Die 9 Achsen (Plan v4; #9 marginLevel = 2.12b, nur tech-hardware):
  *  1 revGrowthLevel        Umsatzwachstum (Niveau, TTM YoY)
  *  2 revAcceleration       Umsatz-Beschleunigung (QoQ-Endpunkt-Differenz: juengste minus aelteste QoQ-Rate; audit/fix F7a)
  *  3 gpGrowth              Bruttogewinn-Wachstum (YoY) + GM-Trajektorie
@@ -23,6 +23,7 @@
  *  6 capitalEfficiency     ROIC-Proxy minus Asset-Growth-Penalty
  *  7 revisionsMomentum     Analysten Up/Down-Saldo (0y/+1y, 30/90d)
  *  8 dilution              -(SBC/Rev) Niveau + Trend (niedriger/fallend = besser)
+ *  9 marginLevel           Bruttomarge-NIVEAU (Franchise-vs-commodity-Diskriminator, 2.12b)
  */
 
 const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVal, ratioSeries } = require('./snapshot.js');
@@ -270,9 +271,25 @@ function dilution(s) {
   return -(level) - slope;
 }
 
+// --- 9. Margen-NIVEAU (Bruttomarge, Franchise-vs-commodity-Diskriminator) ----
+// GM = firstPresent(annualGP)/firstPresent(annualRev), index-aligned via ratioSeries
+// (juengstes gemeinsam present GJ). Misst das NIVEAU (nicht die Trajektorie wie gpGrowth) —
+// das einzige Achsen-Signal, das commodity-EMS (GM 8-12%) strukturell unter Franchise
+// (GM 37-68%) zieht. Roh-Signal hoeher=besser; null-on-absence (renorm-on-drop, nie Fake-50).
+// Guard analog gpGrowth (F9): gm = GP/Rev muss in [0,1] liegen; gm>1 (GP>Rev) bzw. gm<0 sind
+// korrupte Datenjahre -> verwerfen, damit das juengste implausible Jahr das Niveau nicht auf
+// ein Phantom pinnt. Ratio-Natur => waehrungs-invariant. NUR in tech-hardware.js verdrahtet
+// (2.12b); fuer alle anderen Formeln inert (kein axes[]-Eintrag -> nie aufgerufen, wie
+// revisionsMomentum).
+function marginLevel(s) {
+  const gm = ratioSeries(norm(s, 'annualGP'), norm(s, 'annualRev'))
+    .map((v) => (v !== null && v >= 0 && v <= 1) ? v : null);
+  return firstPresent(gm); // ROH-GM-Niveau [0,1], hoeher=besser; null-on-absence
+}
+
 module.exports = {
   revGrowthLevel, revAcceleration, gpGrowth, ruleOfX,
-  marginTrajectory, capitalEfficiency, revisionsMomentum, dilution,
+  marginTrajectory, capitalEfficiency, revisionsMomentum, dilution, marginLevel,
   // C2: per-Quartal-Rohwerte fuer die universe-weite Winsor-Schranken-Sammlung in score.js
   quarterOpMargins, quarterQoQRates,
   // Helfer fuer Tests/Formeln
