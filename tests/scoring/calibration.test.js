@@ -38,7 +38,7 @@ const cal = results.calibration;
 
 test('calibration: existiert mit schema + allen gelernten Schranken', () => {
   assert.ok(cal && typeof cal === 'object', 'results.calibration ist ein Objekt');
-  assert.equal(cal.schema, 'calibration/v2'); // v2 (Slice 2): traegt zusaetzlich cohortBases + gDist
+  assert.equal(cal.schema, 'calibration/v3'); // v3 (2.10): cohortBases traegt zusaetzlich n (eingefrorene Kohorten-n fuer EB-Shrinkage)
   for (const k of ['winsorBounds', 'growthBounds', 'cycleDDThreshold', 'mcapBounds', 'ipoBounds', 'cohortBases', 'gDist', 'nRouted', 'nTotal']) {
     assert.ok(k in cal, `Feld '${k}' present`);
   }

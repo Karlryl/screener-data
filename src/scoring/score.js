@@ -178,6 +178,36 @@ const GROWTH_MIN_DISTINCT = 10;
 const CYCLE_DAMPER_KD = 0.5;
 const CYCLE_DD_PCTL = 0.75;      // data-learned Drawdown-Schwelle = p75 (gemessen ~0.16: haelt SK-Hynix 0.266 drin, MRVL 0.07/ASM 0.01 draussen)
 const CYCLE_MIN_DISTINCT = 10;   // Degenerations-Guard analog GROWTH_MIN_DISTINCT (zu wenige distinkte DD -> Schwelle null -> alle Faktoren 1.0)
+// 2.10 (Fable-Scoring-Court T1, n-bewusste Scores): Empirical-Bayes-Shrinkage der Kohorten-Perzentile
+// Richtung 50 (perzentil-neutrale Mitte). Mid-Rank-Perzentile haben eine n-abhaengige OBERGRENZE
+// (n-0.5)/n: ein n=3-"Sieger" kappt bei 83.3, ein n=575-Sieger erreicht 99.9 — roh in EIN Overview-Board
+// gemischt (Grundgesetz-3-Spannung) sind sie unvergleichbar. p' = 50 + (p-50)*n/(n+SHRINK_K) zieht kleine
+// Kohorten (wenig Aufloesung) Richtung Mitte, laesst grosse ~unberuehrt (n/(n+k)->1). REIN VARIANZ-
+// getrieben, KEIN aufgezwungenes Niveau (Invariante 3 gewahrt). SHRINK_K ist der EINE freie Parameter
+// (analog GROWTH_BOOST_K), Council/Court k=2-kalibriert (SE-matched: entfernt ~1 SE eines Top-Dezil-
+// Perzentils an der Governance-Grenze n=15, die der Fallback setzt; k~20 waere ~5 SE = Over-Shrink). Klein
+// genug, dass die Anker-Kohorten (semiconductors n=90 -> Faktor 0.978, industrials n=575 -> 0.997 bei k=2)
+// praktisch unberuehrt bleiben. 15 = Konvention (analog GROWTH/CYCLE_MIN_DISTINCT=10, eine Stufe strenger),
+// 2 = SE-matched; NICHT auf einen Ziel-Rang optimiert (Invariante 3).
+// EHRLICHKEIT (Court T2, Invariante 7 — NICHT ueberclaimen): Der Shrink ist eine UNIFORME affine
+// Transformation je Kohorte und erhaelt die VOR-Multiplikator-Ordnung. ABER die per-Name-Post-Faktoren
+// (burnPress/growthBoost/cycleDamper, unten ~Z.693) multiplizieren DANACH -> multiplier*shrink(score) ist
+// NICHT rang-aequivalent zu multiplier*score. Empirisch reordern beim Flip k 0->2 ~160 MID-BOARD-Positionen
+// (z.B. MU<->MPWR). Die 4 benannten Anker (CRDO/ALAB/PLTR/BE) behalten ihren within-Board-Rang bei k=2 EXAKT
+// (verifiziert: score.integration + anchors.rank gruen), weil sie an den Extremen liegen -> Direktive 4
+// (within-Board) unberuehrt. Kein Score-Fixture pinnt WERTE (Anker-Tests pinnen RAENGE) -> kein Score-Bless.
+const SHRINK_K = 2;
+// 2.10: Mindest-Kohorten-n. Darunter sind die EIGENEN Track-Perzentile Rauschen (n-Ceiling) -> die Achsen
+// gegen die ELTERN-Kohorte (Branche ueber BEIDE Tracks) perzentilieren = well-resolved Basis; die Zeile
+// wird via cohortFallback:true transparent geflaggt. Der Score bleibt ZUSAETZLICH per eigener n
+// geschrumpft (Konfidenz-Aussage), sodass am Schwellenwert kein Sprung entsteht (Monotonie). 15 = die im
+// Code bereits etablierte THIN-Linie (GROWTH/CYCLE_MIN_DISTINCT=10 sind Degenerations-Guards, hier strenger).
+const MIN_COHORT_N = 15;
+// EB-Shrinkage eines Scores Richtung 50 mit Kohorten-n. n<=0/nicht-finit -> unveraendert. Reine Funktion (TDD).
+function shrinkToNeutral(score, n) {
+  if (!Number.isFinite(score) || !Number.isFinite(n) || n <= 0) return score;
+  return 50 + (score - 50) * (n / (n + SHRINK_K));
+}
 function quantile(samples, p) {
   const a = samples.filter(Number.isFinite).sort((x, y) => x - y);
   if (!a.length) return null;
@@ -523,9 +553,14 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
   // 2.9 Slice 2: je Kohorte die live-berechneten Achsen-Rohwert-Verteilungen (+ profitSign fuer die
   // subCohortByProfit-capitalEfficiency-Achse) cachen -> werden ins Kalibrier-Artefakt eingefroren.
   const capturedCohortBases = {};
+  // 2.10: PASS 1 — Roh-Achsen + profitSign + n je Kohorte EINMAL sammeln. Der Mindest-n-Fallback (Pass 2)
+  // braucht die ELTERN-Kohorte (Branche ueber BEIDE Tracks), also ALLE Kohorten der Formel, nicht nur die
+  // eigene -> zwei Pässe. Rein strukturell: das Achsen-Lernen ist unveraendert.
+  const cohortRaw = {};
   for (const [cohortKey, entries] of Object.entries(cohorts)) {
     const formula = entries[0].formula;
     const track = entries[0].track;
+    const formulaId = entries[0].formulaId;
     // none-Branchen mit subCohortByProfit (it-services/real-estate): die Niveau-ROIC-
     // Achse capitalEfficiency nur gegen Firmen GLEICHEN Profit-Vorzeichens perzentil-
     // ieren, damit Verlust-Wachser nicht vom Niveau-ROIC im SCORE demoviert werden
@@ -537,29 +572,75 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
     for (const ax of formula.axes) {
       rawByAxis[ax.key] = entries.map((e) => rawAxisValue(e.snapshot, ax.key, formula, track, winsorBounds));
     }
-    // 2.9 Slice 2: Perzentil-Basis. refCal gesetzt + Kohorte im Lineal -> gegen die EINGEFRORENE
-    // Verteilung scoren (neue Namen mappen darauf, bestehende behalten ihren Rang exakt); sonst live.
-    // Fehlt eine Kohorte im Lineal (rein neue Kohorte) -> live-Fallback (beruehrt keine Referenz-Namen).
+    cohortRaw[cohortKey] = { formula, track, formulaId, entries, rawByAxis, profitSign };
+    // 2.10: n je Kohorte MITfrieren (ref-Modus liest die eingefrorene n fuer die Shrinkage -> ein
+    // wachsendes Universum verschiebt den Shrink-Faktor bestehender Namen NICHT = Grown-Universe-Invariante).
+    capturedCohortBases[cohortKey] = { axes: { ...rawByAxis }, profitSign, n: entries.length };
+  }
+  // 2.10: Eltern-Kohorten-Basis (Branche ueber beide Tracks) fuer eine Achse. refCal gesetzt -> AUSSCHLIESSLICH
+  // aus den EINGEFRORENEN Geschwister-Kohorten rekonstruieren (live-neue Geschwister ignorieren), sonst driften
+  // Fallback-Namen beim Universe-Ausbau (Grown-Universe-Invariante 2.9). profitSign-Parent parallel fuer die
+  // capitalEfficiency-Sub-Kohorte. Gibt {vals, signs} gleicher Laenge zurueck.
+  function parentBasis(formulaId, axisKey) {
+    const frozen = (refCal && refCal.cohortBases) || null;
+    const keys = frozen
+      ? Object.keys(frozen).filter((k) => k.startsWith(formulaId + '|'))
+      : Object.keys(cohortRaw).filter((k) => cohortRaw[k].formulaId === formulaId);
+    let vals = [], signs = [];
+    for (const key of keys) {
+      const arr = frozen ? (frozen[key].axes && frozen[key].axes[axisKey]) : cohortRaw[key].rawByAxis[axisKey];
+      const sg = frozen ? frozen[key].profitSign : cohortRaw[key].profitSign;
+      if (!Array.isArray(arr)) continue;
+      vals = vals.concat(arr);
+      signs = signs.concat((sg && sg.length === arr.length) ? sg : arr.map(() => null));
+    }
+    return { vals, signs };
+  }
+  // 2.10: PASS 2 — scoren. Basis-Wahl (eigene Kohorte vs. Eltern bei Mindest-n-Unterschreitung), q()-Normierung,
+  // EB-Shrinkage Richtung 50 per eigener n, dann C4-Coverage-Shrinkage (unveraendert).
+  for (const [cohortKey, cr] of Object.entries(cohortRaw)) {
+    const { formula, track, formulaId, entries, rawByAxis, profitSign } = cr;
+    // 2.9 Slice 2: refCal gesetzt + Kohorte im Lineal -> gegen die EINGEFRORENE Verteilung scoren (neue Namen
+    // mappen darauf, bestehende behalten ihren Rang exakt); sonst live. Rein neue Kohorte -> live-Fallback.
     const refCoh = (refCal && refCal.cohortBases) ? refCal.cohortBases[cohortKey] : null;
-    capturedCohortBases[cohortKey] = { axes: { ...rawByAxis }, profitSign };
+    // 2.10: n fuer Shrinkage + Fallback-Entscheid. Ref-Modus friert n (Grown-Universe); sonst live entries.length.
+    const nCohort = (refCoh && Number.isFinite(refCoh.n)) ? refCoh.n : entries.length;
+    const isFallback = nCohort < MIN_COHORT_N;          // duenne Kohorte -> Eltern-Basis (n-Ceiling weg)
     const baseSign = refCoh ? refCoh.profitSign : profitSign;
+    const parentCache = {};                             // Eltern-Basis je Achse nur bei Fallback + einmalig
     const cohWcov = new Array(entries.length);
     for (let i = 0; i < entries.length; i++) {
       const axes = formula.axes.map((ax) => {
-        let cohort = (refCoh && refCoh.axes && refCoh.axes[ax.key]) ? refCoh.axes[ax.key] : rawByAxis[ax.key];
+        let cohort, signBasis;
+        if (isFallback) {
+          const pb = parentCache[ax.key] || (parentCache[ax.key] = parentBasis(formulaId, ax.key));
+          cohort = pb.vals; signBasis = pb.signs;
+        } else {
+          cohort = (refCoh && refCoh.axes && refCoh.axes[ax.key]) ? refCoh.axes[ax.key] : rawByAxis[ax.key];
+          signBasis = baseSign;
+        }
         if (ax.key === 'capitalEfficiency' && profitSign) {
-          // gegen die gleich-vorzeichige Sub-Kohorte perzentilieren; im refCal die GEFRORENE Basis nach
+          // gegen die gleich-vorzeichige Sub-Kohorte perzentilieren; die (ggf. gefrorene/Eltern-)Basis nach
           // dem EIGENEN (snapshot-stabilen) Vorzeichen von Name i filtern -> A-Namen behalten ihren Rang.
-          cohort = cohort.filter((_, j) => baseSign[j] === profitSign[i]);
+          // 2.10-Court-Guard: dieser Fallback-Pfad ist NUR sicher, weil JEDE subCohortByProfit-Formel
+          // splitMetric:'none' ist (Einzel-Kohorte -> Eltern-Basis == eigene Kohorte, signBasis voll
+          // besetzt). Bekaeme je eine SPLIT-Branche subCohortByProfit UND fiele unter MIN_COHORT_N, mischte
+          // die Eltern-Basis beide Tracks mit ggf. null-signBasis -> diesen Pfad dann neu pruefen.
+          cohort = cohort.filter((_, j) => signBasis[j] === profitSign[i]);
         }
         return { value: q(rawByAxis[ax.key][i], cohort), weight: ax.w[track] };
       });
-      entries[i].score = weightedScore(axes);   // Basis-Score (renorm-on-drop)
+      // 2.10: Basis-Score -> EB-Shrinkage Richtung 50 mit EIGENER Kohorten-n (Konfidenz). Der Fallback aendert
+      // nur die Perzentil-BASIS, NICHT die Konfidenz -> weiterhin per nCohort geschrumpft (kein Schwellensprung).
+      entries[i].score = shrinkToNeutral(weightedScore(axes), nCohort);
       cohWcov[i] = coverageWeight(axes);         // Achsen-Gewichts-Coverage (C4-Shrinkage-Faktor)
       // 2.13 #23: Coverage AUSWEISEN (nicht verrechnen) — present-Achsen/total + C4-Gewicht je Zeile
       // an den Entry haengen (score-inert, reine Anzeige; round2 ist modul-scope, zur Aufrufzeit da).
       entries[i].coverageAxes = axes.filter((a) => a.value !== null).length + '/' + axes.length;
       entries[i].coverageWeight = round2(cohWcov[i]);
+      // 2.10: n je Zeile (Pflicht-Export, --check-Tamper->exit1) + Fallback-Flag (transparente Anzeige).
+      entries[i].cohortN = nCohort;
+      entries[i].cohortFallback = isFallback;
     }
     // audit/fix (Court Phase A Runde 3, Fall C4): Coverage-Shrinkage. renorm-on-drop laesst Namen mit
     // WENIGER present-Achsen eine strukturell HOEHERE Score-Varianz behalten (Mittel ueber k Achsen,
@@ -653,9 +734,9 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
       // damit ein spaeterer Lauf per {refCalibration} EXAKT gegen dieses Lineal scoren kann. v1 war
       // scalar-only (nur diffbar). Volle Arrays statt Quantil-Grid = exakter Replay (Groesse ~1 MB,
       // gitignored/2.3-kompaktiert; Quantil-Grid-Kompaktierung als spaetere Optimierung dokumentiert).
-      schema: 'calibration/v2',
+      schema: 'calibration/v3',        // v3 (2.10): cohortBases traegt zusaetzlich n (eingefrorene Kohorten-n fuer die EB-Shrinkage)
       winsorBounds, growthBounds, cycleDDThreshold, mcapBounds, ipoBounds,
-      cohortBases: capturedCohortBases, // {cohortKey: {axes:{axisKey:[rohwerte]}, profitSign:[..]|null}}
+      cohortBases: capturedCohortBases, // {cohortKey: {axes:{axisKey:[rohwerte]}, profitSign:[..]|null, n, median}}
       gDist,                            // robustG-Verteilung fuer den universums-globalen Wachstums-Bonus
       nRouted: results.filter((e) => e.action === 'route').length,
       nTotal: Array.isArray(snapshots) ? snapshots.length : null,
@@ -732,7 +813,7 @@ function produceRankings(results, opts = {}) {
   const excluded = {};
   // A2: die in scoreUniverse angehefteten geo-Felder an jede Output-Zeile spreaden
   // (?? null haelt die Form stabil, falls produceRankings mit handgebauten results laeuft).
-  const geo = (e) => ({ country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, ipoRecency: e.ipoRecency ?? null, profitTier: e.profitTier ?? null, ipoYear: e.ipoYear ?? null, coverageAxes: e.coverageAxes ?? null, coverageWeight: e.coverageWeight ?? null });
+  const geo = (e) => ({ country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, ipoRecency: e.ipoRecency ?? null, profitTier: e.profitTier ?? null, ipoYear: e.ipoYear ?? null, coverageAxes: e.coverageAxes ?? null, coverageWeight: e.coverageWeight ?? null, cohortN: e.cohortN ?? null, cohortFallback: e.cohortFallback ?? null });
   for (const e of (Array.isArray(results) ? results : [])) {
     if (e.action === 'survival') {
       survival.push({ ticker: e.ticker, runwayQuarters: e.overview ? e.overview.value : null, lamps: e.lamps, ...geo(e) });
@@ -822,4 +903,6 @@ module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings
   // PHASE 3 (Zyklus-Daempfer): fuer TDD + Mess-Skripte
   signFlips, oscExcess, revMaxDrawdown, cycleSignal, cycleDamperFactor, CYCLE_DAMPER_KD, CYCLE_DD_PCTL,
   // PHASE 4 (Refresh-Robustheit via committete SEC-Tiefe): fuer TDD
-  normSec, cycleSeriesPair };
+  normSec, cycleSeriesPair,
+  // 2.10 (n-bewusste Scores): fuer TDD der synthetischen Kohorten-Tests
+  shrinkToNeutral, SHRINK_K, MIN_COHORT_N };

@@ -51,7 +51,10 @@ const BRANCHES = [
 // Task 1.2: profitTier (4-Stufen-Enum) + ipoYear (durchgereicht) sind seit 1.2 real (vorher RESERVIERT).
 // Task 2.13 #23: coverageAxes ("n/m" present-Achsen) + coverageWeight (C4-Gewicht) — additiv OPTIONAL,
 // ausweisen statt verrechnen (score-inert); nicht in den Pflicht-Feld-Check (Auflage B1).
-const GEO_FIELDS = ['country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight'];
+// Task 2.10: cohortN (Kohortengroesse je Zeile) + cohortFallback (Eltern-Kohorten-Basis aktiv) — PFLICHT
+// (Tamper -> exit 1), anders als die optionalen coverage-Felder. Auf routed Board/Overview-Zeilen finite
+// Zahl bzw. boolean; auf pre-revenue survival-Zeilen null (nie gescort).
+const GEO_FIELDS = ['country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback'];
 
 function readJSON(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
 function readJSONOrNull(p) { try { return readJSON(p); } catch (_) { return null; } }
@@ -198,6 +201,19 @@ function checkEnumOrNull(r, key, allowed, where, errs) {
   if (!(key in r)) errs.push(`${where}: ${key} missing`);
   else if (r[key] !== null && !allowed.includes(r[key])) errs.push(`${where}: ${key}=${JSON.stringify(r[key])}`);
 }
+// boolean|null field must be PRESENT and either null or a boolean (2.10 cohortFallback on survival rows).
+function checkBoolOrNull(r, key, where, errs) {
+  if (!(key in r)) errs.push(`${where}: ${key} missing`);
+  else if (r[key] !== null && typeof r[key] !== 'boolean') errs.push(`${where}: ${key} not boolean|null`);
+}
+// Task 2.10: cohortN/cohortFallback on a SCORED row (board/overview) are Pflicht + NON-null: cohortN a
+// finite number, cohortFallback a boolean. Field removal or type corruption -> violation (exit 1).
+function checkCohortScored(r, where, errs) {
+  if (!('cohortN' in r)) errs.push(`${where}: cohortN missing`);
+  else if (!Number.isFinite(r.cohortN)) errs.push(`${where}: cohortN not finite`);
+  if (!('cohortFallback' in r)) errs.push(`${where}: cohortFallback missing`);
+  else if (typeof r.cohortFallback !== 'boolean') errs.push(`${where}: cohortFallback not boolean`);
+}
 
 // The 7 geo/classification fields carried by board + overview + survival rows.
 // All are "Pflicht (nullable)" per schema-doc 3/4/5.
@@ -233,6 +249,7 @@ function validateBoardRow(r, where, errs) {
     }
   }
   validateGeo(r, where, errs);
+  checkCohortScored(r, where, errs); // 2.10: cohortN finite + cohortFallback boolean (Pflicht)
 }
 
 function validateOverviewRow(r, where, errs) {
@@ -248,6 +265,7 @@ function validateOverviewRow(r, where, errs) {
   checkNumOrNull(r, 'overviewCompanion', where, errs);
   if (!Array.isArray(r.lamps)) errs.push(`${where}: lamps not array`);
   validateGeo(r, where, errs);
+  checkCohortScored(r, where, errs); // 2.10: cohortN finite + cohortFallback boolean (Pflicht)
 }
 
 function validateSurvivalRow(r, where, errs) {
@@ -258,6 +276,9 @@ function validateSurvivalRow(r, where, errs) {
   else if (r.runwayQuarters !== null && !Number.isFinite(r.runwayQuarters)) errs.push(`${where}: runwayQuarters not finite|null`);
   if (!Array.isArray(r.lamps)) errs.push(`${where}: lamps not array`);
   validateGeo(r, where, errs);
+  // 2.10: survival-Zeilen sind NIE gescort -> cohortN/cohortFallback nullable (present + null|Typ).
+  checkNumOrNull(r, 'cohortN', where, errs);
+  checkBoolOrNull(r, 'cohortFallback', where, errs);
 }
 
 // Hull-level coverage marker: Pflicht (value nullable). Key must be present; if
@@ -336,17 +357,20 @@ function selftest() {
     country: 'United States', region: 'North America', sector: 'Technology',
     marketCap: 5457368842240, phase: 'established', mcapBand: 'mega', ipoRecency: 'mature',
     profitTier: 'langfristig-profitabel', ipoYear: 1999,
+    cohortN: 90, cohortFallback: false, // 2.10
   };
   const cleanOv = {
     ticker: 'NVDA', formulaId: 'semiconductors', track: 'profitable', score: 94.9,
     overviewKind: 'gp', overviewValue: -1.17, overviewCompanion: 195.3, lamps: [],
     country: 'United States', region: 'North America', sector: 'Technology',
     marketCap: 33018304599.802, phase: 'inflected', mcapBand: 'large', ipoRecency: 'growth',
+    cohortN: 90, cohortFallback: false, // 2.10
   };
   const cleanSv = {
     ticker: 'PAH3.DE', runwayQuarters: 9999, lamps: ['burning'],
     country: 'Germany', region: 'Europe', sector: 'Consumer Cyclical',
     marketCap: null, phase: null, mcapBand: 'small', ipoRecency: null,
+    cohortN: null, cohortFallback: null, // 2.10: survival nie gescort -> nullable
   };
   const cleanErrs = (fn, mapped) => { const e = []; fn(mapped, 'r', e); return e; };
   assert.strictEqual(cleanErrs(validateBoardRow, mapBoardRow(cleanBoard, 0)).length, 0, 'clean board must validate');
@@ -375,6 +399,11 @@ function selftest() {
   trip(validateBoardRow, { ...b0, profitTier: 'zombie-tier' }, 'board profitTier bad enum');     // 1.2
   trip(validateBoardRow, { ...b0, ipoYear: 'GARBAGE' }, 'board ipoYear string');                 // 1.2
   const bNoTier = { ...b0 }; delete bNoTier.profitTier; trip(validateBoardRow, bNoTier, 'board profitTier missing'); // 1.2
+  // 2.10: cohortN/cohortFallback Pflicht auf gescorten Zeilen (Tamper -> exit 1).
+  trip(validateBoardRow, { ...b0, cohortN: 'GARBAGE' }, 'board cohortN string');
+  const bNoN = { ...b0 }; delete bNoN.cohortN; trip(validateBoardRow, bNoN, 'board cohortN missing');
+  trip(validateBoardRow, { ...b0, cohortFallback: 'yes' }, 'board cohortFallback non-boolean');
+  const bNoFb = { ...b0 }; delete bNoFb.cohortFallback; trip(validateBoardRow, bNoFb, 'board cohortFallback missing');
 
   const o0 = mapOverviewRow(cleanOv, 0);
   trip(validateOverviewRow, { ...o0, track: 'ghost' }, 'overview track bad enum');
@@ -382,6 +411,8 @@ function selftest() {
   trip(validateOverviewRow, { ...o0, overviewCompanion: 'GARBAGE' }, 'overview companion garbage');
   trip(validateOverviewRow, { ...o0, phase: 'zombie' }, 'overview phase bad enum');
   const oNoRank = { ...o0 }; delete oNoRank.rank; trip(validateOverviewRow, oNoRank, 'overview rank removed');
+  const oNoN = { ...o0 }; delete oNoN.cohortN; trip(validateOverviewRow, oNoN, 'overview cohortN missing'); // 2.10
+  trip(validateOverviewRow, { ...o0, cohortN: null }, 'overview cohortN null (scored row)');                 // 2.10
 
   const s0 = mapSurvivalRow(cleanSv, 0);
   const sNoRank = { ...s0 }; delete sNoRank.rank; trip(validateSurvivalRow, sNoRank, 'survival rank removed');
