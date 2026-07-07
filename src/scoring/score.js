@@ -632,7 +632,9 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
       });
       // 2.10: Basis-Score -> EB-Shrinkage Richtung 50 mit EIGENER Kohorten-n (Konfidenz). Der Fallback aendert
       // nur die Perzentil-BASIS, NICHT die Konfidenz -> weiterhin per nCohort geschrumpft (kein Schwellensprung).
-      entries[i].score = shrinkToNeutral(weightedScore(axes), nCohort);
+      const baseScore = weightedScore(axes);
+      entries[i]._scoreBase = baseScore;         // 2.11 Stufe A: Basis-Score (vor EB-Shrinkage + C4 + Post-Faktoren)
+      entries[i].score = shrinkToNeutral(baseScore, nCohort);
       cohWcov[i] = coverageWeight(axes);         // Achsen-Gewichts-Coverage (C4-Shrinkage-Faktor)
       // 2.13 #23: Coverage AUSWEISEN (nicht verrechnen) — present-Achsen/total + C4-Gewicht je Zeile
       // an den Entry haengen (score-inert, reine Anzeige; round2 ist modul-scope, zur Aufrufzeit da).
@@ -702,7 +704,13 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
       // PHASE 3: Zyklus-Daempfer multiplikativ an derselben post-C4-Stelle (kommutativ). signal=0 (Anker,
       // Nicht-Zykliker, Degeneration) -> Faktor exakt 1.0 -> byte-identisch. Nur MU/SK-Hynix-Typ (Oszillation
       // UND Umsatzkollaps) wird gedrueckt.
-      e.score = e.score * burnPressFactor(e.snapshot) * boost * cycleDamperFactor(e.snapshot, cycleDDThreshold);
+      // 2.11 Stufe A: Faktor-Breakdown roh erfassen (Rundung + shrink-Ratio erst im Export). _scorePreFactor =
+      // Score nach EB+C4, VOR den 3 multiplikativen Post-Faktoren -> final == _scorePreFactor*burn*growth*cycle.
+      const burn = burnPressFactor(e.snapshot);
+      const cyc = cycleDamperFactor(e.snapshot, cycleDDThreshold);
+      e._scorePreFactor = e.score;
+      e._factorBurn = burn; e._factorGrowth = boost; e._factorCycle = cyc;
+      e.score = e.score * burn * boost * cyc;
     }
   }
 
@@ -796,6 +804,21 @@ const roundOverviewValue = (ov) => {
   if (!ov) return null;
   return ov.kind === 'runway-badge' ? round1(ov.value) : round3(ov.value);
 };
+// 2.11 Stufe A: Score-Herkunft je Zeile (Transparenz — der Nordstern verlangt "nachvollziehbare Begruendung",
+// der Score war bisher Blackbox). Drei sichtbare Stufen statt kryptischer Ratios: scoreBase (roher Perzentil-
+// Score) -> scoreShrunk (nach EB-Shrinkage + C4-Coverage-Shrinkage) -> final == scoreShrunk*burn*growth*cycle.
+// Die beiden Shrinks sind AFFIN (Richtung 50 bzw. Median), NICHT multiplikativ — sie als Faktor-Ratio darzustellen
+// explodiert bei scoreBase~0 (z.B. FRVO shrink~56) und ist rundungsfragil; die Zwischenzahl scoreShrunk ist die
+// ehrliche, robuste Form. burn/growth/cycle sind die 3 ECHTEN multiplikativen Post-Faktoren. null-sicher.
+function breakdown(e) {
+  const base = e._scoreBase, pre = e._scorePreFactor;
+  if (!Number.isFinite(base) || !Number.isFinite(pre)) return { scoreBase: null, scoreShrunk: null, factors: null };
+  return {
+    scoreBase: round1(base),
+    scoreShrunk: round1(pre),
+    factors: { burn: round3(e._factorBurn), growth: round3(e._factorGrowth), cycle: round3(e._factorCycle) },
+  };
+}
 
 /**
  * produceRankings(results, {topN}) -> dashboard-integrierbares JSON-Objekt:
@@ -830,7 +853,7 @@ function produceRankings(results, opts = {}) {
       // audit/fix (Bug 8): skalenbewusst runden. audit/fix (Bug 23): companion (Rule-of-X) durchreichen
       // (Prozent-Skala ~0-300 -> round1). Wird berechnet, ging aber bisher im Datenvertrag verloren.
       overview: e.overview ? { kind: e.overview.kind, value: roundOverviewValue(e.overview), companion: round1(e.overview.companion) } : null,
-      ...geo(e),
+      ...geo(e), ...breakdown(e), // 2.11 Stufe A: scoreBase + factors{shrink,burn,growth,cycle}
       // audit/fix (D1/D2): rohen Score zum Sortieren behalten, NUR fuer die Anzeige runden.
       // Sortiert man das gerundete Feld, entstehen kuenstliche round1-Ties, die JS-stable-sort
       // per Input- = fs.readdirSync-Reihenfolge bricht -> nicht reproduzierbare topN-Membership (CI != lokal).
@@ -842,7 +865,7 @@ function produceRankings(results, opts = {}) {
       // audit/fix (Bug 8): skalenbewusst; audit/fix (Bug 23): companion durchreichen.
       overviewKind: e.overview ? e.overview.kind : null, overviewValue: roundOverviewValue(e.overview),
       overviewCompanion: e.overview ? round1(e.overview.companion) : null,
-      lamps: e.lamps, ...geo(e), _raw: e.score });
+      lamps: e.lamps, ...geo(e), ...breakdown(e), _raw: e.score }); // 2.11 Stufe A: scoreBase + factors
   }
   // audit/fix (D1/D2/D3): roher Score + deterministischer Ticker-Tie-Break VOR dem Slicen,
   // damit exakte/round1-Ties nicht von der Dateisystem-Reihenfolge entschieden werden. _raw

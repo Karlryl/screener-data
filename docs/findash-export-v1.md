@@ -1,7 +1,7 @@
 # findash-export v1 — Datenvertrag (Task 1.1)
 
 > **Schema-String:** `findash-export/v1` (Feld `schema` auf JEDER Datei).
-> **Status:** 1.1 umgesetzt; **1.2 ergaenzt `profitTier` + `ipoYear`** (real emittiert); **2.13 #23 ergaenzt `coverageAxes` + `coverageWeight`** (optional additiv, score-inert); **2.10 ergaenzt `cohortN` + `cohortFallback`** (Pflicht, `--check`-geprueft, Tamper→exit1). Nur `currency` bleibt RESERVIERT.
+> **Status:** 1.1 umgesetzt; **1.2 ergaenzt `profitTier` + `ipoYear`** (real emittiert); **2.13 #23 ergaenzt `coverageAxes` + `coverageWeight`** (optional additiv, score-inert); **2.10 ergaenzt `cohortN` + `cohortFallback`** (Pflicht, `--check`-geprueft, Tamper→exit1); **2.11 Stufe A ergaenzt `scoreBase` + `factors`** (optional additiv, Score-Herkunft). Nur `currency` bleibt RESERVIERT.
 > **Quelle der Wahrheit:** Engine-Output `outputs/hypergrowth/*.json` (score.js / run-screener.js). Der Writer kopiert NUR echte Engine-Felder + ein abgeleitetes `rank`. Kein erfundenes Feld.
 > **Publiziert:** ausschliesslich nach gh-pages (`outputs/` ist gitignored). Der Dashboard-Consumer liest von der gh-pages-URL, nie von main.
 
@@ -95,6 +95,9 @@ Zusaetzlich zur Huelle (§2):
 | `coverageWeight` | number `[0,1]` \| null | **OPTIONAL (additiv)** | NEIN (nicht im `--check`) | **Task 2.13 #23** — C4-Achsen-Gewichts-Coverage (1.0 = alle Achsen present, data-learned Shrink-Faktor). `n/n` ⇔ `1.0`. Reine Anzeige-Rohzahl zu `coverageAxes`. |
 | `cohortN` | number (finite) | **Pflicht** | ja (Praesenz + finite) | **Task 2.10** — Groesse der Kohorte (formulaId\|track), gegen die dieser Name perzentiliert wurde. Ehrliche n-Ausweisung fuer die Anzeige: „Score 87 (n=424)" vs. „Score 71 (n=3 ⚠)". Auf gescorten Board/Overview-Zeilen IMMER eine finite Zahl (auf `survival.json` null, da nie gescort). Quelle `src/scoring/score.js`. |
 | `cohortFallback` | boolean | **Pflicht** | ja (Praesenz + boolean) | **Task 2.10** — `true`, wenn die Kohorte < 15 Namen hatte und die Achsen gegen die ELTERN-Kohorte (Branche ueber beide Tracks) perzentiliert wurden (n-Ceiling-Reparatur, „unvergleichbare" Mini-Kohorten-Perzentile vermieden). Transparenz-Flag; `false` fuer ausreichend grosse Kohorten. |
+| `scoreBase` | number \| null | **OPTIONAL (additiv)** | NEIN (nicht im `--check`) | **Task 2.11 Stufe A** — der ROHE Perzentil-Score VOR EB-Shrinkage/C4/Post-Faktoren (Score-Herkunft; Nordstern „nachvollziehbare Begruendung"). Quelle `src/scoring/score.js`. |
+| `scoreShrunk` | number \| null | **OPTIONAL (additiv)** | NEIN (nicht im `--check`) | **Task 2.11 Stufe A** — Score NACH EB-Shrinkage + C4-Coverage-Shrinkage, VOR den Post-Faktoren. Die Shrinks sind affin (Richtung 50/Median), daher als Zwischenzahl statt Ratio ausgewiesen (robust bei scoreBase≈0). |
+| `factors` | `{burn,growth,cycle}` (je number\|null) \| null | **OPTIONAL (additiv)** | NEIN (nicht im `--check`) | **Task 2.11 Stufe A** — die 3 ECHTEN multiplikativen Post-Faktoren (burnPress/growthBoost/cycleDamper). **Rang-identisch rekonstruierbar:** `score ≈ scoreShrunk·burn·growth·cycle` (Test `score-breakdown.test.js`). |
 
 ---
 

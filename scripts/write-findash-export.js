@@ -54,7 +54,9 @@ const BRANCHES = [
 // Task 2.10: cohortN (Kohortengroesse je Zeile) + cohortFallback (Eltern-Kohorten-Basis aktiv) — PFLICHT
 // (Tamper -> exit 1), anders als die optionalen coverage-Felder. Auf routed Board/Overview-Zeilen finite
 // Zahl bzw. boolean; auf pre-revenue survival-Zeilen null (nie gescort).
-const GEO_FIELDS = ['country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback'];
+// Task 2.11 Stufe A: scoreBase + scoreShrunk (number|null) + factors ({burn,growth,cycle}|null) — additiv OPTIONAL
+// (Score-Transparenz, wie coverageAxes NICHT im --check, damit legitime Abwesenheit/alte Consumer nicht brechen).
+const GEO_FIELDS = ['country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback', 'scoreBase', 'scoreShrunk', 'factors'];
 
 function readJSON(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
 function readJSONOrNull(p) { try { return readJSON(p); } catch (_) { return null; } }
