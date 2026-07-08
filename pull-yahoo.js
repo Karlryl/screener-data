@@ -127,6 +127,32 @@ const FUNDAMENTALS_REFRESH_BUDGET = (() => {
 let _fundamentalsRefreshUsed = 0;   // per-run counter, reset at the top of pullAll
 let _fundamentalsRefreshDeferred = 0; // tickers deferred to price-only this run (logged)
 
+// TASK 0.11 (Stille-Fehler-Härtung): per-run silent-error counters. Every catch that
+// previously SWALLOWED a real error now bumps one of these, so its AUSFALL is countable
+// (surfaced in the manifest _silentErrors object + a pullAll summary log — H4/0.7 fail-loud).
+// Behaviour is UNCHANGED: a lamp/cache/parse fault still never crashes the pull; it just
+// stops being silent. All reset at the top of pullAll. See ledger §0.11.
+let _lampErrors = 0;            // lamp/advisory-tally detectors that threw (data stays faithful)
+let _needsFullPullThrew = 0;    // needsFullPull hit its (near-unreachable) catch on exotic input
+let _corruptYoungSnapshots = 0; // a young cached snapshot failed to JSON.parse (treated as no-cache)
+let _ftsCacheParseErrors = 0;   // an FTS cache file failed to JSON.parse (treated as cache-miss)
+
+// TASK 0.11: run a non-fatal "lamp"/advisory detector safely. On throw: count it
+// (run-level _lampErrors + per-snapshot meta._lampErrors, so the offending ticker is
+// self-describing), log a WARN, and CONTINUE — a lamp must never break the pull, but its
+// failure is now LOUD instead of silent. Values stay faithful; Loop-B disposition unchanged.
+function runLamp(name, meta, fn) {
+  try { fn(); }
+  catch (e) {
+    _lampErrors++;
+    if (meta && typeof meta === 'object') {
+      meta._lampErrors = (meta._lampErrors || 0) + 1;
+      (meta._lampErrorNames = meta._lampErrorNames || []).push(name);
+    }
+    _log('WARN', `lamp '${name}' threw (non-fatal, data faithful): ${e && e.message}`);
+  }
+}
+
 // Market-cap floor (USD). Env-configurable so a wider universe sweep — e.g.
 // "screen every US company" — can lower it without a code edit, and so the
 // local fill-pull and the daily CI pull stay consistent (otherwise CI's $1B
@@ -1526,6 +1552,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // counters so the budget is fresh each pullAll invocation.
   _fundamentalsRefreshUsed = 0;
   _fundamentalsRefreshDeferred = 0;
+  // TASK 0.11: reset the silent-error counters so each pullAll reports its own tally.
+  _lampErrors = 0;
+  _needsFullPullThrew = 0;
+  _corruptYoungSnapshots = 0;
+  _ftsCacheParseErrors = 0;
   // TASK 0.9 (Pull-Diät): load the earnings calendar ONCE, in scope for
   // processOne and the staleness sort. Format { ticker: { date, pulledAt } }.
   // READ ONLY — never written here. {} on any failure so a missing/corrupt
@@ -1628,6 +1659,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         n_priceonly: nPriceOnly,
         n_skipped_mcap: skippedMcap,
         n_failed: failures.length,
+        _silentErrors: { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors },
         partial: true
       };
       const mPath = path.join(outputDir, '_manifest.json');
@@ -1943,7 +1975,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         try {
           const _fp = path.join(outputDir, safeSnapshotFilename(stock.ticker));
           if (fs.existsSync(_fp)) _parsedSnapshot = JSON.parse(fs.readFileSync(_fp, 'utf8'));
-        } catch (_) { _parsedSnapshot = null; }
+        } catch (e) {
+          // TASK 0.11: a corrupt young snapshot was silently treated as no-cache. Keep that
+          // (the staleness probes then re-fetch, self-healing) but COUNT+log it so disk
+          // corruption becomes visible instead of silent.
+          _parsedSnapshot = null;
+          _corruptYoungSnapshots++;
+          _log('WARN', `young snapshot parse failed for ${stock.ticker} (→ no-cache, re-fetch): ${e && e.message}`);
+        }
       }
       const staleSchema = youngEnough
         ? _existingSnapshotMissingTag211lFields(_parsedSnapshot)
@@ -2084,7 +2123,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
             const ttl = cached._ftsPartial ? CACHE_PARTIAL_TTL_MS : CACHE_TTL_MS;
             if (age < ttl) useCache = true;
           }
-        } catch (e) {}
+        } catch (e) {
+          // TASK 0.11: a corrupt FTS cache file was silently treated as cache-miss. Keep
+          // that safe degradation (fresh fetch) but COUNT+log it so disk corruption becomes
+          // visible instead of silently costing a fresh fetch every run.
+          cached = null;
+          _ftsCacheParseErrors++;
+          _log('WARN', `FTS cache parse failed (${path.basename(cachePath)}) → fresh fetch: ${e && e.message}`);
+        }
       }
       // Tag 232c-3 (audit F-DP-001 CRITICAL) — refined Tag 232c-19:
       // The audit's "set useCache=false when staleSchema=true" is correct
@@ -2439,7 +2485,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // The fallback in mapYahooToCanonical already ran on quoteSummary fields,
       // but a partial FTS merge can leave annualOpInc shorter than annualRev;
       // this re-derivation guarantees a complete series when the metric exists.
-      try {
+      runLamp('opIncFinancialsFallback', canonical.meta, () => {
         const _postSector = canonical.meta && canonical.meta.sector;
         const _postRev = canonical.annual && canonical.annual.annualRev || [];
         const _postOpInc = canonical.annual && canonical.annual.annualOpInc || [];
@@ -2456,7 +2502,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
             canonical.meta.opIncSource = _retry.source;
           }
         }
-      } catch (e) { /* defensive — never fail the pull on fallback errors */ }
+      });
 
       // audit/fix (A2 council+court+anchor-fixture, 2026-06-26): newest-quarter source-corruption LAMP.
       // Yahoo intermittently serves a corrupted newest quarter (confirmed 005930.KS: opIncQ[0]/revenueQ[0]
@@ -2468,13 +2514,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // tuned on 2715 real snapshots: flags 005930.KS + SNDK with ZERO legitimate-cyclical leaks (MU/FRO/INSW/
       // DHT/AG/NGD/NVDA all clean). Ratios are FX-invariant, so running pre-conversion is equivalent. Known-
       // shape detector — limited recall by design (see lib/newest-qtr-guard.js + ledger §4).
-      try {
+      runLamp('newestQtrSuspect', canonical.meta, () => {
         const _nqs = detectNewestQtrSuspect(canonical.timeseries);
         if (_nqs.suspect && canonical.meta) {
           canonical.meta._newestQtrSuspect = true;
           canonical.meta._newestQtrSuspectReason = _nqs.reason;
         }
-      } catch (e) { /* defensive — a lamp must never break the pull */ }
+      });
 
       // Tag 134: single-pass USD conversion across marketCap + revenueTTM + all annual/quarterly series.
       // Must run AFTER FTS overrides (FTS values are also in reporting currency) and BEFORE mcap filter
@@ -2491,13 +2537,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // conversion (fxRate=1) so the ratio is intact. Non-destructive (same pattern as the
       // _newestQtrSuspect lamp): values stay FAITHFUL, Loop B disposes (ledger §4). Measured-clean
       // trigger — fires on AKRBP.OL + GMAB.CO only across 4168 snapshots (lib/annual-currency-guard.js).
-      try {
+      runLamp('annualCurrencyLeak', canonical.meta, () => {
         const _acl = detectAnnualCurrencyLeak(canonical);
         if (_acl.suspect && canonical.meta) {
           canonical.meta._annualCurrencyLeakSuspect = true;
           canonical.meta._annualCurrencyLeakReason = _acl.reason;
         }
-      } catch (e) { /* defensive — a lamp must never break the pull */ }
+      });
 
       // F-DQ-002: skip tickers where FX conversion failed — mcap is in local currency and would
       // pass or fail the USD mcap filter incorrectly.
@@ -2575,14 +2621,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // tier-cap on the magnitude of the gap without re-walking the array.
       // Failure mode prevented: leverage-based scores silently trusting
       // understated totalDebt across multiple years with no aggregate signal.
-      try {
+      runLamp('debtUnderstatedTally', canonical.meta, () => {
         const _bal = (canonical.annual && canonical.annual.annualBalance) || [];
         const _understatedYears = _bal.filter(b => b && b._debtPartial === true).length;
         if (_understatedYears > 0) {
           canonical.meta = canonical.meta || {};
           canonical.meta._debtUnderstatedYears = _understatedYears;
         }
-      } catch (_) { /* non-fatal: meta tally is advisory only */ }
+      });
 
       const filename = safeSnapshotFilename(stock.ticker);
       const outPath = path.join(outputDir, filename);
@@ -2765,6 +2811,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   const okResultsFinal = results.filter(r =>
     r && (r.status === 'ok' || r.status === 'price-only'));
   const skippedMcapFinal = results.length - okResultsFinal.length;
+  // TASK 0.11: surface the silent-error tally in the run log so it is visible even on a
+  // clean run (the manifest carries it too, but the log survives regardless of write path).
+  const _silentErrors = { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors };
+  _log('INFO', `Silent-error tally (0.11): lamp=${_lampErrors} needsFullPull=${_needsFullPullThrew} corruptYoung=${_corruptYoungSnapshots} ftsCacheParse=${_ftsCacheParseErrors}`);
   const manifest = {
     pulled_at: new Date().toISOString(),
     watchlist_version: watchlist._meta && watchlist._meta.version,
@@ -2772,6 +2822,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     n_ok: okResultsFinal.length,
     n_skipped_mcap: skippedMcapFinal,
     n_failed: failures.length,
+    _silentErrors,
     results,
     failures
   };
@@ -2783,7 +2834,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // the coverage step reads the same fields whether the run timed out (partial
   // incremental manifest) or finished (this write).
   const nFullFinal = okResultsFinal.filter(r => r.status === 'ok').length;
-  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, n_skipped_mcap: manifest.n_skipped_mcap, n_failed: manifest.n_failed, partial: false };
+  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, n_skipped_mcap: manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
   // Tag 189: factored into writeFileAtomic helper.
   const slimPath = path.join(outputDir, '_manifest.json');
   writeFileAtomic(slimPath, JSON.stringify(slim));
@@ -2880,7 +2931,10 @@ async function main() {
 // its last full pull? If so it MUST take an UNBUDGETED full pull (new financials
 // exist), like staleSchema/staleCurrency — NOT via FUNDAMENTALS_REFRESH_BUDGET.
 // Contract: 'full' iff earningsEntry.date exists AND date <= today AND
-// date > meta.fundamentalsAsOf; else 'price-only'. Pure, no I/O, never throws.
+// date > meta.fundamentalsAsOf; else 'price-only'. Never throws (returns 'price-only' on
+// any bad input); the catch is unreachable on valid input, so the fn is pure/deterministic
+// for all VALID inputs (what pull-diet.test.js exercises). TASK 0.11: the catch now
+// logs+counts instead of swallowing an exotic throw silently.
 // All inputs are treated as untrusted (garbage in → 'price-only', not a throw).
 // ponytail: string-compares the two dates by parsing to epoch, not lexical —
 // fundamentalsAsOf is a full ISO timestamp, earnings date a YYYY-MM-DD day.
@@ -2904,7 +2958,14 @@ function needsFullPull(snapshotMeta, earningsEntry, today) {
     if (!Number.isFinite(asOfT)) return 'price-only';
 
     return (earnT > asOfT) ? 'full' : 'price-only';
-  } catch (_) {
+  } catch (e) {
+    // TASK 0.11: near-unreachable — every untrusted path above returns a defined
+    // 'price-only' WITHOUT throwing. If an exotic input (e.g. a throwing valueOf) ever
+    // reaches here, make it LOUD (count + log) instead of swallowing it. Still returns
+    // 'price-only'; the rolling FUNDAMENTALS_REFRESH_DAYS sweep guarantees the ticker is
+    // never permanently frozen out of full pulls. See ledger §0.11.
+    _needsFullPullThrew++;
+    _log('WARN', `needsFullPull threw on exotic input (non-fatal → price-only): ${e && e.message}`);
     return 'price-only';
   }
 }
@@ -2918,4 +2979,8 @@ if (require.main === module) {
 
 module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries, needsFullPull, sortByStaleness,
   // 0.2/0.9 Sharding (Tag 279): fuer TDD
-  shardHash, shardStocks, parseArgs };
+  shardHash, shardStocks, parseArgs,
+  // TASK 0.11 (Stille-Fehler-Härtung): fuer TDD — runLamp + Zugriff auf die Zaehler.
+  runLamp,
+  _silentErrorCounts: () => ({ lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors }),
+  _resetSilentErrorCounts: () => { _lampErrors = 0; _needsFullPullThrew = 0; _corruptYoungSnapshots = 0; _ftsCacheParseErrors = 0; } };
