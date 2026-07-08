@@ -110,5 +110,24 @@ test('Drift: synthetisch verschobene Basis -> feuert (ok=false, drifted nicht le
   assert.ok(d.drifted.length > 0 && d.maxKs > 0.15, `drifted=${d.drifted.length} maxKs=${d.maxKs}`);
 });
 
+// (4) 2.11 Stufe B FAIL-LOUD (Verify-T2): ein pre-v4-Lineal (ohne gDistByCohort) darf NICHT still gegen die
+// Live-Wachstums-Verteilung scoren (das de-friere ~600 Board-Scores beim Universe-Ausbau) -> harter Abbruch.
+test('Fail-loud: refCalibration ohne gDistByCohort (pre-v4) -> scoreUniverse wirft', () => {
+  const preV4 = roundtrip(runA.calibration);
+  delete preV4.gDistByCohort; // simuliert ein altes Lineal von VOR 2.11 Stufe B
+  assert.throws(() => scoreUniverse(universe, formulas, { refCalibration: preV4 }), /gDistByCohort|v4/,
+    'ein pre-v4-Lineal muss hart abbrechen statt still gegen die Live-Verteilung zu scoren');
+});
+
+// (5) 2.11 Stufe B: Drift-Waechter faengt gDistByCohort-Drift (nicht nur cohortBases-Achsen).
+test('Drift: verschobene gDistByCohort -> feuert (Verify-T2-Haertung)', () => {
+  const shifted = roundtrip(calA);
+  const key = Object.keys(shifted.gDistByCohort)[0];
+  shifted.gDistByCohort[key] = shifted.gDistByCohort[key].map((v) => (Number.isFinite(v) ? v + 1e6 : v));
+  const d = calibrationDrift(shifted, calA);
+  assert.equal(d.ok, false, 'verschobene gDistByCohort muss den Waechter ausloesen');
+  assert.ok(d.drifted.some((x) => x.axis === 'gDist'), 'ein gDist-Drift-Eintrag muss auftauchen');
+});
+
 console.log(`calibration-ref.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

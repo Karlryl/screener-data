@@ -700,8 +700,16 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
   // refCal gesetzt + Kohorte gefroren -> gegen die EINGEFRORENE Kohorten-Verteilung rangieren (Grown-Universe-
   // Determinismus wie cohortBases); neue Kohorte im refCal-Modus -> live-Fallback (beruehrt keine A-Namen);
   // degenerierte/duenne Kohorte (growthPctlFn-Guard) -> null -> Bonus-Faktor 1.0 (konservativ, kein Phantom-Rang).
+  // 2.11 Stufe B FAIL-LOUD (Verify-T2): ein refCal OHNE gDistByCohort ist ein pre-v4-Lineal — der kohorten-
+  // relative Wachstums-Bonus kann darauf NICHT einfrieren. Der stille `|| {}`-Fallback wuerde jede Kohorte
+  // gegen die LIVE (universums-ausgebaute) Verteilung rangieren -> A-Namen driften beim Universe-Ausbau
+  // (~600/1708 Board-Scores de-frieren) = genau die Drift, die der Ref-Modus verhindern soll, STILL. Also
+  // hart abbrechen statt still falsch scoren: das Lineal muss mit v4-Code neu eingefroren werden.
+  if (refCal && !refCal.gDistByCohort) {
+    throw new Error('scoreUniverse: refCalibration ohne gDistByCohort (Schema < calibration/v4). Der kohorten-relative Wachstums-Bonus (2.11 Stufe B) braucht ein v4-Lineal — bitte neu einfrieren.');
+  }
   const growthPctlByCohort = {};
-  const frozenGD = refCal ? (refCal.gDistByCohort || {}) : null;
+  const frozenGD = refCal ? refCal.gDistByCohort : null;
   for (const key of new Set([...(frozenGD ? Object.keys(frozenGD) : []), ...Object.keys(gDistByCohort)])) {
     growthPctlByCohort[key] = growthPctlFn((frozenGD && frozenGD[key]) ? frozenGD[key] : gDistByCohort[key]);
   }
@@ -934,6 +942,15 @@ function calibrationDrift(liveCal, refCal, ksThreshold = 0.15) {
       if (ks > maxKs) maxKs = ks;
       if (ks > ksThreshold) drifted.push({ cohort: key, axis: ax, ks: Math.round(ks * 1000) / 1000 });
     }
+  }
+  // 2.11 Stufe B (Verify-T2): auch die per-Kohorte-Wachstums-Verteilung (gDistByCohort) auf Drift pruefen —
+  // sonst veraltet das kohorten-relative Boost-Lineal unbemerkt (der alte Waechter sah nur cohortBases-Achsen).
+  const lg = (liveCal && liveCal.gDistByCohort) || {}, rg = (refCal && refCal.gDistByCohort) || {};
+  for (const key of Object.keys(rg)) {
+    const ks = ksDistance(lg[key], rg[key]);
+    if (ks === null) continue;
+    if (ks > maxKs) maxKs = ks;
+    if (ks > ksThreshold) drifted.push({ cohort: key, axis: 'gDist', ks: Math.round(ks * 1000) / 1000 });
   }
   return { maxKs, ksThreshold, drifted, ok: maxKs <= ksThreshold };
 }
