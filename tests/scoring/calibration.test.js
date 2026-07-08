@@ -38,8 +38,8 @@ const cal = results.calibration;
 
 test('calibration: existiert mit schema + allen gelernten Schranken', () => {
   assert.ok(cal && typeof cal === 'object', 'results.calibration ist ein Objekt');
-  assert.equal(cal.schema, 'calibration/v3'); // v3 (2.10): cohortBases traegt zusaetzlich n (eingefrorene Kohorten-n fuer EB-Shrinkage)
-  for (const k of ['winsorBounds', 'growthBounds', 'cycleDDThreshold', 'mcapBounds', 'ipoBounds', 'cohortBases', 'gDist', 'nRouted', 'nTotal']) {
+  assert.equal(cal.schema, 'calibration/v4'); // v4 (2.11 Stufe B): gDistByCohort (kohorten-relativer Wachstums-Bonus)
+  for (const k of ['winsorBounds', 'growthBounds', 'cycleDDThreshold', 'mcapBounds', 'ipoBounds', 'cohortBases', 'gDist', 'gDistByCohort', 'nRouted', 'nTotal']) {
     assert.ok(k in cal, `Feld '${k}' present`);
   }
   assert.ok(cal.cohortBases && typeof cal.cohortBases === 'object' && Object.keys(cal.cohortBases).length > 0, 'cohortBases nicht leer');

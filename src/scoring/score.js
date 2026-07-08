@@ -685,16 +685,26 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
   // Verteilung fuer den universums-globalen Perzentilrang. Guard action==='route' && finite(score) laeuft
   // NACH dem no-axes-Guard -> excludierte Namen zaehlen NICHT in die Perzentil-Basis (Basis == Anwendung).
   const robustGByEntry = new Map();
-  const gDist = [];
+  const gDist = [];                 // universums-globale robustG-Verteilung (Diagnose + Rueckwaerts-Kompat im Artefakt)
+  const gDistByCohort = {};         // 2.11 Stufe B: robustG je formulaId|track (Kohorten-Doktrin)
   for (const e of results) {
     if (e.action !== 'route' || !Number.isFinite(e.score)) continue;
     const g = robustG(e.snapshot, growthBounds); // g kann null sein (keine YoY -> Faktor 1.0)
     robustGByEntry.set(e, g);
-    if (Number.isFinite(g)) gDist.push(g);
+    if (Number.isFinite(g)) { gDist.push(g); (gDistByCohort[e.formulaId + '|' + e.track] ||= []).push(g); }
   }
-  // 2.9 Slice 2: der Wachstums-Bonus rangiert gegen die universums-globale robustG-Verteilung — auch
-  // die driftet mit dem Universum. refCal gesetzt -> gegen die EINGEFRORENE gDist rangieren.
-  const growthPctl = growthPctlFn(refCal ? refCal.gDist : gDist); // null bei Degeneration -> Bonus-Faktoren 1.0
+  // 2.11 Stufe B (Court-approbiert 08.07., Karl-Go): der Wachstums-Bonus rangiert KOHORTEN-RELATIV (je
+  // formulaId|track) statt universums-global — der globale growthBoost brach sonst die Kohorten-Doktrin durch
+  // die Hintertuer (ein Software-Wachser gegen Energie/Versorger perzentiliert). Kohorten-Perzentilierung heilt
+  // das; empirisch byte-identische Anker-Board-Raenge (der Boost trug die Anker nie: er ist [1,1.05]-eng).
+  // refCal gesetzt + Kohorte gefroren -> gegen die EINGEFRORENE Kohorten-Verteilung rangieren (Grown-Universe-
+  // Determinismus wie cohortBases); neue Kohorte im refCal-Modus -> live-Fallback (beruehrt keine A-Namen);
+  // degenerierte/duenne Kohorte (growthPctlFn-Guard) -> null -> Bonus-Faktor 1.0 (konservativ, kein Phantom-Rang).
+  const growthPctlByCohort = {};
+  const frozenGD = refCal ? (refCal.gDistByCohort || {}) : null;
+  for (const key of new Set([...(frozenGD ? Object.keys(frozenGD) : []), ...Object.keys(gDistByCohort)])) {
+    growthPctlByCohort[key] = growthPctlFn((frozenGD && frozenGD[key]) ? frozenGD[key] : gDistByCohort[key]);
+  }
 
   // 2c. Burn-Press (Court, Karl-Direktive Teil 2) + AUFGABE-2-Wachstums-Bonus: beschleunigte Cash-Verbrenner
   // (burnAccelerating) druecken (=1/(1+mag)), starke Wachser AUFWAERTS heben (1 + k*max(0,2*pctl-1)). Beide
@@ -703,7 +713,8 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
   for (const e of results) {
     if (e.action === 'route' && Number.isFinite(e.score)) {
       const g = robustGByEntry.get(e);
-      const boost = (growthPctl === null || g === null || g === undefined) ? 1 : boostFromPctl(growthPctl(g));
+      const gp = growthPctlByCohort[e.formulaId + '|' + e.track]; // 2.11 Stufe B: Kohorten-Perzentilrang statt global
+      const boost = (!gp || g === null || g === undefined) ? 1 : boostFromPctl(gp(g));
       // PHASE 3: Zyklus-Daempfer multiplikativ an derselben post-C4-Stelle (kommutativ). signal=0 (Anker,
       // Nicht-Zykliker, Degeneration) -> Faktor exakt 1.0 -> byte-identisch. Nur MU/SK-Hynix-Typ (Oszillation
       // UND Umsatzkollaps) wird gedrueckt.
@@ -745,10 +756,11 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
       // damit ein spaeterer Lauf per {refCalibration} EXAKT gegen dieses Lineal scoren kann. v1 war
       // scalar-only (nur diffbar). Volle Arrays statt Quantil-Grid = exakter Replay (Groesse ~1 MB,
       // gitignored/2.3-kompaktiert; Quantil-Grid-Kompaktierung als spaetere Optimierung dokumentiert).
-      schema: 'calibration/v3',        // v3 (2.10): cohortBases traegt zusaetzlich n (eingefrorene Kohorten-n fuer die EB-Shrinkage)
+      schema: 'calibration/v4',        // v4 (2.11 Stufe B): gDistByCohort (kohorten-relativer Wachstums-Bonus)
       winsorBounds, growthBounds, cycleDDThreshold, mcapBounds, ipoBounds,
       cohortBases: capturedCohortBases, // {cohortKey: {axes:{axisKey:[rohwerte]}, profitSign:[..]|null, n, median}}
-      gDist,                            // robustG-Verteilung fuer den universums-globalen Wachstums-Bonus
+      gDist,                            // universums-globale robustG-Verteilung (Diagnose/Rueckwaerts-Kompat)
+      gDistByCohort,                    // 2.11 Stufe B: robustG je formulaId|track (der Wachstums-Bonus rangiert kohorten-relativ)
       nRouted: results.filter((e) => e.action === 'route').length,
       nTotal: Array.isArray(snapshots) ? snapshots.length : null,
     },
