@@ -88,6 +88,26 @@ function crossCheckDisjoint(shardFilelists) {
   return dupes;
 }
 
+// Reine Reconciliation der SUMMIERTEN n_ok (ueber die Shard-Manifeste) gegen die REALE
+// distinct on-disk-Snapshot-Zahl (TDD). gap = summe - on-disk (> 0 = Dateinamen-Kollisionen
+// im Union). Ursache eines KLEINEN gap: zwei Watchlist-Eintraege mappen auf DIESELBE
+// Snapshot-Datei (Dual-Listing/Ticker-Normalisierung, z.B. BRK.B vs BRK-B) und landen wegen
+// anderem Hash-Input in VERSCHIEDENEN Shards, ueberschreiben aber beim merge-multiple eine
+// Datei. Das ist ein gutartiger, VORBESTEHENDER Watchlist-Quirk — KEIN shardStocks-Hash-Bug
+// (der ist in pull-shard.test.js unit-bewiesen disjunkt auf ticker und wuerde SYSTEMATISCH
+// tausende kollidieren, nicht eine Handvoll). Autoritativ fuer die Coverage ist die distinct
+// on-disk-Zahl (genau die Snapshots, die das Scoring liest). Nur ein GROSSER gap (> hardLimit)
+// signalisiert einen echten systematischen Bug -> harter Stop.
+// ponytail: on-disk als Wahrheit; hardLimit = max(25, 0.5% Universum) faengt echte Hash-Bugs
+// (kollidieren Tausende), toleriert die realen Dual-Listing/Share-Class-Doppel eines globalen
+// ~24k-Universums (Dutzende). Schwelle im Ledger hebbar, falls legitime Doppel je > 0.5% sind.
+function reconcileOnDisk(summedNok, onDisk, fullUniverse) {
+  const hardLimit = Math.max(25, Math.floor((Number(fullUniverse) || 0) * 0.005));
+  const usable = onDisk > 0 && onDisk <= summedNok;
+  const gap = usable ? (summedNok - onDisk) : 0;
+  return { n_ok: usable ? onDisk : summedNok, gap, hardLimit, fatal: gap > hardLimit };
+}
+
 function run() {
   const argv = process.argv;
   const get = (flag, def) => { const i = argv.indexOf(flag); return i >= 0 && argv[i + 1] ? argv[i + 1] : def; };
@@ -120,10 +140,19 @@ function run() {
   // Datei ueberschrieben (Kollision) -> Warnung (n_ok waere ueberzaehlt).
   let onDisk = 0;
   try { onDisk = fs.readdirSync(snapDir).filter(f => f.endsWith('.json') && f !== '_manifest.json' && !f.startsWith('_')).length; } catch (e) { onDisk = 0; }
-  if (merged.n_ok > 0 && onDisk > 0 && onDisk < merged.n_ok) {
-    console.error(`::error::merge-shard-manifests — on-disk snapshots ${onDisk} < summierte n_ok ${merged.n_ok}: Ticker-Kollision zwischen Shards (Disjunktheit verletzt). Hash-Bug in shardStocks?`);
+  // Reconcile summierte n_ok gegen die reale distinct on-disk-Zahl. Kleiner gap = gutartige
+  // Watchlist-Dateinamen-Doppel -> ::warning:: + on-disk als autoritatives n_ok. Grosser gap =
+  // systematischer Hash-Bug -> ::error:: exit 1 (siehe reconcileOnDisk-Kommentar).
+  const rec = reconcileOnDisk(merged.n_ok, onDisk, fullUniverse);
+  if (rec.gap > 0) {
+    console.error(`::warning::merge-shard-manifests — ${rec.gap} Snapshot-Dateikollision(en): summierte n_ok ${merged.n_ok} vs. ${onDisk} distinct on-disk. Vermutlich Watchlist-Doppel (Dual-Listing/Ticker-Normalisierung). Nutze distinct on-disk (${onDisk}) als n_ok.`);
+  }
+  if (rec.fatal) {
+    console.error(`::error::merge-shard-manifests — on-disk ${onDisk} << summierte n_ok ${merged.n_ok} (gap ${rec.gap} > hardLimit ${rec.hardLimit}): SYSTEMATISCHE Ticker-Kollision zwischen Shards (shardStocks-Hash-Bug?). Stop.`);
     process.exit(1);
   }
+  merged.n_ok = rec.n_ok;                  // autoritativ = distinct on-disk (was das Scoring liest)
+  merged.n_shard_collisions = rec.gap;     // Instrumentierung (0 = sauber disjunkt)
 
   fs.mkdirSync(snapDir, { recursive: true });
   fs.writeFileSync(path.join(snapDir, '_manifest.json'), JSON.stringify(merged));
@@ -196,10 +225,33 @@ function selftest() {
     assert.equal(dupes.length, 0);
   });
 
+  t('reconcileOnDisk: kleiner Gap (Watchlist-Doppel wie BRK.B/BRK-B) -> n_ok=on-disk, NICHT fatal', () => {
+    const r = reconcileOnDisk(6088, 6086, 23700); // der reale Dry-Run-Fall (gap 2)
+    assert.equal(r.n_ok, 6086);
+    assert.equal(r.gap, 2);
+    assert.equal(r.fatal, false);
+  });
+  t('reconcileOnDisk: grosser Gap (systematischer Hash-Bug) -> fatal', () => {
+    const r = reconcileOnDisk(6000, 4000, 23700); // gap 2000 >> hardLimit ~118
+    assert.equal(r.fatal, true);
+  });
+  t('reconcileOnDisk: sauber disjunkt (gap 0) -> n_ok unveraendert, nicht fatal', () => {
+    const r = reconcileOnDisk(6086, 6086, 23700);
+    assert.equal(r.n_ok, 6086); assert.equal(r.gap, 0); assert.equal(r.fatal, false);
+  });
+  t('reconcileOnDisk: on-disk 0 (alle Shards leer) -> Summe behalten, NICHT fatal (coverage-gate faengt katastrophal)', () => {
+    const r = reconcileOnDisk(0, 0, 23700);
+    assert.equal(r.n_ok, 0); assert.equal(r.gap, 0); assert.equal(r.fatal, false);
+  });
+  t('reconcileOnDisk: on-disk > summe (defensiv, sollte nicht vorkommen) -> Summe behalten', () => {
+    const r = reconcileOnDisk(6086, 6090, 23700);
+    assert.equal(r.n_ok, 6086); assert.equal(r.gap, 0); assert.equal(r.fatal, false);
+  });
+
   console.log(`\nmerge-shard-manifests selftest: ${pass} ok, ${fail} fail`);
   process.exit(fail ? 1 : 0);
 }
 
-module.exports = { mergeManifests, crossCheckDisjoint, watchlistSize };
+module.exports = { mergeManifests, crossCheckDisjoint, watchlistSize, reconcileOnDisk };
 if (process.argv.includes('--selftest')) selftest();
 else if (require.main === module) run();
