@@ -28,6 +28,10 @@ on:
         description: 'Alarm erzwingen (Test der Meldekette, auch bei frischen Daten)'
         type: boolean
         default: false
+      backdate_days:
+        description: '0.10: Kadenz-Marker kuenstlich um N Tage altern (provoziert den Ausbleiben-Fall ohne 9-Tage-Warten)'
+        type: string
+        default: '0'
 
 permissions:
   contents: read
@@ -69,3 +73,35 @@ jobs:
             exit 1
           fi
           echo "OK: Export frisch (<= ${MAX_AGE_DAYS} Tage)."
+
+      # Masterplan Task 0.10 — Dead-Man fuer die Schutz-Kadenzen (weekly-guard / monthly-plan-check).
+      # Der Heartbeat ist der bewiesen-taeglich-lebende, unabhaengige Kanal; er liest die committeten
+      # Kadenz-Marker und wird rot, wenn ein Trigger ausbleibt (Cron still gestoppt / disabled / Marker-
+      # Push haengt). null = noch nie gefeuert (Bootstrap) -> nur ::warning::, nie rot. if: always(),
+      # damit dieser Check unabhaengig vom Freshness-Ergebnis IMMER meldet.
+      - name: Check cadence liveness (0.10 Dead-Man)
+        if: always()
+        env:
+          BACKDATE_DAYS: ${{ github.event.inputs.backdate_days }}
+        run: |
+          node -e "
+            const fs=require('fs');
+            const WEEKLY_MAX=9, MONTHLY_MAX=38;
+            const back=Number(process.env.BACKDATE_DAYS||'0')||0;
+            let m; try{ m=JSON.parse(fs.readFileSync('./state/cadence-heartbeat.json','utf8')); }
+            catch(e){ console.log('::warning::cadence-heartbeat.json fehlt/unparsbar ('+e.message+') — Bootstrap oder geloescht; nicht rot.'); process.exit(0); }
+            const overdue=[];
+            const chk=(field,label,max)=>{
+              const v=m[field];
+              if(v==null){ console.log('::warning::'+label+' noch nie gefeuert (null) — Bootstrap, nicht rot.'); return; }
+              const t=Date.parse(v);
+              if(!Number.isFinite(t)){ console.log('::warning::'+label+' Marker unparsbar ('+v+') — nicht rot.'); return; }
+              const age=(Date.now()-t)/86400000 + back;
+              console.log(label+': '+age.toFixed(1)+' Tage alt (Schwelle '+max+', backdate +'+back+')');
+              if(age>max) overdue.push(label+' '+age.toFixed(1)+'d > '+max+'d');
+            };
+            chk('last_weekly_run','Wochen-Kadenz',WEEKLY_MAX);
+            chk('last_monthly_run','Monats-Kadenz',MONTHLY_MAX);
+            if(overdue.length){ console.log('::error::KADENZ-AUSFALL — '+overdue.join('; ')+'. URSACHE: ein Schutz-Kadenz-Trigger (weekly-guard.yml/monthly-plan-check.yml) laeuft nicht mehr ODER sein Marker-Push haengt. NAECHSTER SCHRITT: Actions + letzte cadence-heartbeat-Commits pruefen.'); process.exit(1); }
+            console.log('OK: Schutz-Kadenzen frisch.');
+          "

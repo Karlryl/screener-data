@@ -1,0 +1,81 @@
+name: Weekly Guard
+
+# Masterplan Task 0.10 — WOECHENTLICHE Schutz-Kadenz (Pipeline-Status + Wert-Spot-Check).
+# Wird ROT (rotes X in Actions = sanktionierter Kanal, KEIN Mail/Discord), wenn:
+#   - Daten > 3 Tage alt, ODER
+#   - coverage-gate --selftest bricht / gh-pages coverage-status = katastrophal, ODER
+#   - der Wert-Spot-Check >=2 strukturelle Wert-Abweichungen findet (Waehrungs-invariant, nie auf
+#     Marktbewegung/Yahoo-Drossel — siehe scripts/value-spot-check.js).
+# Am Ende stempelt es state/cadence-heartbeat.json (last_weekly_run) + pusht = 0.10-Dead-Man-Marker,
+# den heartbeat.yml taeglich liest und bei Ueberfaelligkeit (>9d) rot macht.
+# force_alarm: erzwingt exit 1 zum Testen des roten X.
+
+on:
+  schedule:
+    - cron: '23 5 * * 1'   # Montag 05:23 UTC (kein daily-pull-Tag: Cron 2-6 = Di-Sa; krumme Minute)
+  workflow_dispatch:
+    inputs:
+      force_alarm:
+        description: 'Rotes X erzwingen (Test der Meldekette)'
+        type: boolean
+        default: false
+
+# Serialisiert den Marker-Push mit daily-pull/monthly-sec-xbrl (gleiche main-push-Gruppe).
+concurrency:
+  group: ${{ github.event_name == 'workflow_dispatch' && format('manual-{0}', github.run_id) || 'main-push' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  weekly-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci --no-audit --no-fund
+
+      - name: (a) Daten-Frische
+        run: |
+          age=$(node -e "try{const m=JSON.parse(require('fs').readFileSync('./snapshots/_manifest.json','utf8'));const t=Date.parse(m.pulled_at);console.log(Number.isFinite(t)?Math.floor((Date.now()-t)/86400000):9999);}catch(e){console.log(9999);}")
+          echo "Export-Alter: ${age} Tage (Schwelle 3)"
+          if [ "$age" -gt 3 ]; then echo "::error::Wochen-Guard: Daten ${age}d alt (>3). Daily-Pull rot/aus? Actions pruefen."; exit 1; fi
+          echo "OK: Daten frisch."
+
+      - name: (b) Coverage stabil
+        run: |
+          node scripts/coverage-gate.js --selftest || { echo "::error::coverage-gate --selftest gebrochen — Klassifikator-Regression."; exit 1; }
+          # curl-Exit neutralisieren (|| true): unter set -eo pipefail wuerde ein DNS-Fehler (exit 6) /
+          # Timeout (exit 28) sonst den ganzen Job rot reissen. So entscheidet NUR der geparste Body
+          # ueber rot/warning (Court-Auflage 3: transiente Nichterreichbarkeit -> ::warning::, nie rot).
+          st=$( (curl -s --max-time 20 "https://raw.githubusercontent.com/${{ github.repository }}/gh-pages/outputs/coverage-status.json" || true) | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).status||'unreachable');}catch(e){console.log('unreachable');}})")
+          echo "gh-pages coverage-status: ${st}"
+          if [ "$st" = "katastrophal" ]; then echo "::error::Coverage KATASTROPHAL (gh-pages) — Pipeline liefert keine belastbaren Daten."; exit 1; fi
+          if [ "$st" = "unreachable" ]; then echo "::warning::coverage-status.json (gh-pages) nicht lesbar — evtl. noch nicht deployt; nicht rot."; fi
+
+      - name: (c) Wert-Spot-Check
+        run: node scripts/value-spot-check.js --n 8
+
+      - name: force_alarm (Test der Meldekette)
+        if: ${{ github.event.inputs.force_alarm == 'true' }}
+        run: echo "::error::force_alarm — Wochen-Guard rotes X erzwungen (Meldekette-Test)."; exit 1
+
+      - name: Stamp cadence marker + push (Dead-Man)
+        if: ${{ always() && github.event.inputs.force_alarm != 'true' }}
+        run: |
+          node scripts/cadence-marker.js --field weekly
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add state/cadence-heartbeat.json
+          if git diff --cached --quiet; then echo "kein Marker-Delta"; exit 0; fi
+          git commit -m "chore: cadence heartbeat (weekly) [skip ci]"
+          for i in 1 2 3; do
+            if git pull --rebase --autostash origin main && git push origin HEAD:main; then echo "Marker gepusht (Versuch $i)"; exit 0; fi
+            echo "Push-Versuch $i fehlgeschlagen, retry..."; sleep 5
+          done
+          echo "::warning::Marker-Push haengt nach 3 Versuchen — state/cadence-heartbeat.json NICHT auf main aktualisiert. Bei Wiederholung koennte heartbeat faelschlich Kadenz-Tod melden; main-push-Konflikt pruefen."

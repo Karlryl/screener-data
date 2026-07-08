@@ -1,0 +1,69 @@
+name: Monthly Plan Check
+
+# Masterplan Task 0.10 — MONATLICHER "Stimmt der Plan noch?"-Check.
+# Prueft maschinell das Vendor-/Quellen-Register (Abschnitt 4): Endpoint-Reachability + Detektor-
+# Existenz + Universe-/Cache-Plausibilitaet (scripts/plan-check.js). Wird ROT (rotes X) NUR bei
+# struktureller Register-Luege (ein deklarierter Detektor wurde geloescht). Vendor-4xx/5xx/timeout
+# = nur Bericht (transient/key-gated). Erzeugt reports/plan-check-<YYYY-MM>.md (committet auf main →
+# der taegliche screener-briefing-Report referenziert neue Automatik-Reports = Karls Sicht-Kanal) mit
+# der Urteils-Checkliste (der nicht-automatisierbare "Ist-Zustand-Block noch aktuell?"-Teil).
+# Stempelt am Ende state/cadence-heartbeat.json (last_monthly_run) = 0.10-Dead-Man-Marker (heartbeat
+# liest ihn, >38d ueberfaellig -> rotes X).
+
+on:
+  schedule:
+    - cron: '41 6 3 * *'   # 3. des Monats 06:41 UTC (meidet den 1./monthly-sec-xbrl 08:00; krumme Minute)
+  workflow_dispatch:
+    inputs:
+      force_alarm:
+        description: 'Rotes X erzwingen (Test der Meldekette)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.event_name == 'workflow_dispatch' && format('manual-{0}', github.run_id) || 'main-push' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  monthly-plan-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Vendor-Register + Detektor-Check
+        id: plancheck
+        continue-on-error: true    # Report + Marker sollen auch bei rotem Befund geschrieben werden
+        run: node scripts/plan-check.js
+
+      - name: force_alarm (Test der Meldekette)
+        if: ${{ github.event.inputs.force_alarm == 'true' }}
+        run: echo "::error::force_alarm — Monats-Plan-Check rotes X erzwungen (Meldekette-Test)."; exit 1
+
+      - name: Commit Report + Marker + push (Dead-Man)
+        if: ${{ always() && github.event.inputs.force_alarm != 'true' }}
+        run: |
+          node scripts/cadence-marker.js --field monthly
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/ state/cadence-heartbeat.json
+          if git diff --cached --quiet; then echo "kein Delta"; else
+            git commit -m "chore: monthly plan-check report + cadence heartbeat [skip ci]"
+            for i in 1 2 3; do
+              if git pull --rebase --autostash origin main && git push origin HEAD:main; then echo "gepusht (Versuch $i)"; break; fi
+              echo "Push-Versuch $i fehlgeschlagen, retry..."; sleep 5
+              if [ "$i" = "3" ]; then echo "::warning::Report/Marker-Push haengt nach 3 Versuchen — main-push-Konflikt pruefen."; fi
+            done
+          fi
+
+      - name: Surface red X bei Register-Luege (fehlender Detektor)
+        if: ${{ steps.plancheck.outcome == 'failure' && github.event.inputs.force_alarm != 'true' }}
+        run: |
+          echo "::error::Monats-Plan-Check ROT — plan-check.js meldete struktureller Register-Drift (deklarierter Detektor fehlt). Siehe reports/plan-check-*.md."
+          exit 1
