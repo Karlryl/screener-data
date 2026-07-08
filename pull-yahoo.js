@@ -2793,14 +2793,35 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   return manifest;
 }
 
+// 0.2/0.9 Sharding (Tag 279): deterministischer djb2-Hash je Ticker -> STABILE Shard-Zuordnung. Ein Ticker
+// landet unabhaengig von Watchlist-Groesse/Reihenfolge immer im selben Shard -> sein Cache bleibt im selben
+// Shard konsistent (kein Cache-Miss beim Universe-Wachstum), und die N Shards partitionieren das Universum
+// vollstaendig + disjunkt + ~gleichverteilt. Reine Funktion (TDD).
+function shardHash(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = (((h << 5) + h) + s.charCodeAt(i)) >>> 0; // djb2, unsigned 32-bit
+  return h;
+}
+// Behaelt aus stocks nur die des Shards index/count (hash(ticker) % count === index). shard null -> alle.
+function shardStocks(stocks, shard) {
+  if (!shard) return stocks;
+  return stocks.filter((s) => shardHash(String((s && (s.ticker || s.isin)) || '')) % shard.count === shard.index);
+}
+
 function parseArgs(argv) {
-  const args = { watchlist: 'watchlist.json', output: './snapshots', rateLimit: 1500 };
+  const args = { watchlist: 'watchlist.json', output: './snapshots', rateLimit: 1500, shard: null };
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--watchlist' && argv[i+1]) args.watchlist = argv[++i];
     else if (argv[i] === '--output' && argv[i+1]) args.output = argv[++i];
     else if (argv[i] === '--rate-limit' && argv[i+1]) {
       const n = parseInt(argv[++i], 10);
       args.rateLimit = (Number.isFinite(n) && n > 0) ? n : 1500;  // P1-Fix Tag 13
+    }
+    // 0.2/0.9 Sharding: --shard i/N -> nur den i-ten von N Shards ziehen (0<=i<N). Ungueltig -> ignoriert (kein Shard).
+    else if (argv[i] === '--shard' && argv[i+1]) {
+      const [idx, cnt] = String(argv[++i]).split('/').map((x) => parseInt(x, 10));
+      if (Number.isInteger(idx) && Number.isInteger(cnt) && cnt > 0 && idx >= 0 && idx < cnt) args.shard = { index: idx, count: cnt };
+      else _log('WARN', `Ungueltiges --shard "${argv[i]}" (erwartet i/N, 0<=i<N) — ignoriert, ziehe volles Universum`);
     }
   }
   return args;
@@ -2823,6 +2844,14 @@ async function main() {
   if (!watchlist.stocks || !Array.isArray(watchlist.stocks)) {
     _log('ERROR', 'Watchlist must have .stocks array');
     process.exit(1);
+  }
+  // 0.2/0.9 Sharding: nur die Ticker DIESES Shards ziehen (parallele Matrix-Jobs decken je eine Scheibe ab;
+  // zusammen das volle Universum). n_total im Manifest ist dann die SHARD-Groesse — der Merge-/Coverage-Gate
+  // im Sammel-Job zaehlt das zusammengefuehrte Universum.
+  if (args.shard) {
+    const before = watchlist.stocks.length;
+    watchlist.stocks = shardStocks(watchlist.stocks, args.shard);
+    _log('INFO', `Shard ${args.shard.index}/${args.shard.count}: ${watchlist.stocks.length}/${before} Ticker in dieser Scheibe`);
   }
   const manifest = await pullAll(watchlist, args.output, args.rateLimit);
   // Tag 147: threshold is relative to "attempted" (excludes skipped-mcap which never
@@ -2887,4 +2916,6 @@ if (require.main === module) {
   });
 }
 
-module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries, needsFullPull, sortByStaleness };
+module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries, needsFullPull, sortByStaleness,
+  // 0.2/0.9 Sharding (Tag 279): fuer TDD
+  shardHash, shardStocks, parseArgs };
