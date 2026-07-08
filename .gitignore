@@ -56,6 +56,15 @@ snapshots/
 !snapshots/_manifest.json
 snapshots/_manifest-full.json
 
+# Tag 280 (0.2/0.9 Sharding): transient per-run merge-job scratch. The merge job
+# downloads every shard's manifest into shard-manifests/ (flat shard-<i>.json) to
+# recount ONE full-universe _manifest.json, and the pull runner stages its own
+# manifest into shard-manifest-out/. Both are runner-ephemeral — without these
+# ignores the merge job's `git add -A` would commit 17 shard-<i>.json to main and
+# churn them every run. Same rationale as snapshots/ / outputs/ / pipeline-health/.
+shard-manifests/
+shard-manifest-out/
+
 # Tag 168: pipeline-health/ is transient per-run state written by the 3 pipeline scripts.
 # Consumed by scripts/pipeline-health-check.js on the same runner, not needed in git history.
 pipeline-health/

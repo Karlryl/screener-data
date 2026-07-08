@@ -16,45 +16,57 @@ permissions:
 # free-plan can be evicted entirely). Scheduled cron runs still serialize on
 # 'main-push' so daily + monthly-sec-xbrl don't clobber each other; the
 # retry-with-rebase push loop handles the race the dispatch path can introduce.
+# Only the merge job pushes to main — the matrix shards never touch it.
 concurrency:
   group: ${{ github.event_name == 'workflow_dispatch' && format('manual-{0}', github.run_id) || 'main-push' }}
   cancel-in-progress: false
 
 jobs:
-  pull:
+  # ============================================================================
+  # PREP (once) — fixes the shared state ALL shards need, then fans out.
+  # ONE watchlist.json (all shards slice it internally via --shard), ONE fresh
+  # fx-rates.json (USD-mcap normalisation), ONE earnings-calendar.json (drives
+  # the needsFullPull diet), plus insider/canary. Emits the shard count + matrix
+  # list from a SINGLE source (fromJSON) so matrix and --shard/N can never drift
+  # (RED-TEAM-2 T1-b: a drifted count makes an out-of-range --shard fall back to
+  # a full-universe pull — silent, expensive, cache-poisoning). No Yahoo full pull
+  # here -> runs in ~5 min. Gates (watchlist sanity, fx freshness, scoring tests)
+  # block the fan-out before any runner-minutes are spent on the matrix.
+  # ============================================================================
+  prep:
     runs-on: ubuntu-latest
-    # Tag 219 (Run #108 timeout post-mortem): Tag 215f's PULL_CONCURRENCY 20→8
-    # made Yahoo Pull take ~163min (was ~75-90min at conc=20 but with 7,210
-    # rate-limit fails). That eats 163/180 of the job budget, leaving only
-    # 17min for the 17 downstream steps (Pull Historical Prices alone needs
-    # ~10-20min). Run #108 SIGKILL'd 1min into Pull Historical Prices —
-    # snapshots from Yahoo Pull were never committed. Raised to 240min so
-    # the downstream chain has ~75min of breathing room.
-    timeout-minutes: 240
-    env:
-      # Tag 215f: lowered from 20 → 8. Run #107 produced 7,210 rate-limit
-      # failures (82% of 8,769 total fails) because Yahoo's Cloudflare Edge
-      # could not sustain 20 concurrent requests. With 8-way concurrency the
-      # request rate stays well under Yahoo's throttle threshold. Empirical
-      # from Tag 147 era: 8 was the original hardcoded default before being
-      # raised to 20. The Tag 163 retry budget (5s/12s) is too short for
-      # CDN-edge 429s — Tag 215f also extends to 15s/45s (see pull-yahoo.js).
-      PULL_CONCURRENCY: '8'
+    timeout-minutes: 45
+    outputs:
+      run_date: ${{ steps.freeze.outputs.run_date }}
+      shard_count: ${{ steps.shards.outputs.count }}
+      shard_matrix: ${{ steps.shards.outputs.matrix }}
     steps:
-      # Tag 219 (audit F-219b-01 HIGH): freeze a shared run-date at job start
-      # so all snapshot-* scripts agree on TODAY's date, even if the Yahoo
-      # pull crosses UTC midnight (~3h pull starting 22:00 UTC, finishing
-      # 01:00 UTC the next day would yield picks-history/2026-05-17.json
-      # but methods-history/2026-05-18.json — silently breaking pick-diff's
-      # findMethodFile lookup and method-effectiveness's vintage cache).
-      # Loop A removed the snapshot-* writers; RUN_DATE_UTC is now honored by
-      # archive-old-snapshots.js and pull-historical-prices.js. Kept frozen so any
-      # Loop-B snapshot writer can opt in and stay midnight-safe.
+      # Tag 219 (audit F-219b-01 HIGH): freeze a shared run-date at job start so
+      # every downstream script (in prep, pull AND merge) agrees on TODAY's date
+      # even if the pull crosses UTC midnight. Passed to pull+merge as a job
+      # output (env-scoped RUN_DATE_UTC there), NOT via $GITHUB_ENV which is
+      # job-local. Honored by archive-old-snapshots.js and pull-historical-prices.js.
       - name: Freeze Run Date
+        id: freeze
         run: |
           RUN_DATE_UTC=$(date -u +%Y-%m-%d)
-          echo "RUN_DATE_UTC=$RUN_DATE_UTC" >> $GITHUB_ENV
+          echo "run_date=$RUN_DATE_UTC" >> "$GITHUB_OUTPUT"
           echo "Frozen run date: $RUN_DATE_UTC"
+
+      # 0.2/0.9 Sharding: N and the matrix list come from ONE place. N=17 ≈
+      # 23700/1384 (cold-start full coverage of the ~23.7k universe in ~1 run) and
+      # < 20 (GitHub free/public concurrent-job limit), leaving headroom for the
+      # prep job (ends before the matrix) and merge/scoring (run after). Bump N
+      # here ONLY — the matrix list is derived, so it cannot desync from the count.
+      - name: Compute shard fan-out (single source of truth for N)
+        id: shards
+        env:
+          SHARD_COUNT: '17'
+        run: |
+          echo "count=$SHARD_COUNT" >> "$GITHUB_OUTPUT"
+          matrix=$(node -e "console.log(JSON.stringify([...Array(+process.env.SHARD_COUNT).keys()]))")
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "Shard fan-out: N=$SHARD_COUNT matrix=$matrix"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -69,22 +81,16 @@ jobs:
           # F-CI-011: cache npm dependencies to save ~30-90s per run
           cache: 'npm'
 
-
       - name: Verify Node version
         run: node --version && npm --version
 
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
-      # Loop A (hypergrowth pivot): removed the pre-pull engine/method test gate
-      # (engine-cli-tests.js, tag21/22/28-tests.js). Those tested the deleted
-      # quality-compounder scoring layer. Loop B wires its own pre-pull gate
-      # (tests/scoring/*) once the new hypergrowth engine is in place.
-
       # Task 0.3 (Loop B): PRE-pull scoring test-gate. Every tests/scoring/*.test.js
       # is a self-running node script ending in process.exit(fail ? 1 : 0). The glob
       # skips the fixtures/ subdir. A broken engine must block the run (::error:: +
-      # exit 1) BEFORE the expensive Yahoo pull. Signal path is GitHub red-X only.
+      # exit 1) BEFORE the expensive fan-out. Signal path is GitHub red-X only.
       - name: Scoring Test-Gate (pre-pull)
         run: |
           fail=0
@@ -106,62 +112,21 @@ jobs:
       # Coverage-Marker-Vertrag (coverage-status/v1) pre-pull pinnen. Der Marker
       # outputs/coverage-status.json ist Karls EINZIGER sanktionierter Alarm-Kanal
       # (Dashboard-Degradiert-Banner; kein Mail/Discord) — ein stiller Schema-Bruch
-      # schaltet den Banner lautlos ab (Fail-silent). Der Selftest ist rein/synthetisch
-      # (kein Universum noetig) und laeuft in <1s.
+      # schaltet den Banner lautlos ab. Rein/synthetisch (<1s).
       - name: Coverage-Marker Contract Selftest
         run: node scripts/coverage-gate.js --selftest
 
-      # 0.9 STRUKTUR-FIX (Messung Run 28785631448: full=1371 price-only=0 -> 5.8%
-      # katastrophal): snapshots/ ist gitignored und wird pro Lauf NICHT persistiert
-      # -> jeder CI-Lauf startet mit LEEREM snapshots/ -> jeder Ticker ist ein Erst-/
-      # Voll-Pull (~7s), 0 price-only, nur ~1371 in 165min. Die Pull-Diaet (needsFullPull/
-      # Budget/earnings) kann strukturell nie greifen, weil sie PERSISTENTE Snapshots
-      # voraussetzt (Tag-164 "volle Coverage ueber ~3 Tage" gilt nur MIT Persistenz).
-      # FUNDAMENTALS_REFRESH_BUDGET ist in CI daher wirkungslos (kappt nur zeitbasierte
-      # Fulls auf vorhandenen jungen Snapshots).
-      # Fix: snapshots/ per actions/cache ueber Laeufe hinweg persistieren. Lauf N
-      # price-onlyt die Snapshots von N-1 (schnell) und pullt nur stale/neue voll ->
-      # Coverage akkumuliert oldest-first bis voll. RESTORE hier (NACH dem Scoring-Gate,
-      # damit das Gate deterministisch gegen leeres snapshots/ laeuft), VOR dem Pull.
-      # key ist pro Run eindeutig; restore-keys holt den JUENGSTEN vorherigen Cache.
-      # WICHTIG (Tag 261): actions/cache@v4 speichert im Post-Step NUR bei Job-Erfolg — und
-      # dieser Job faellt beim Kaltstart am Coverage-Gate (1377 < Floor), also wurde der
-      # Snapshot-Cache NIE gespeichert (`gh cache list`: kein snapshots-* Eintrag) -> das
-      # Universum blieb ewig leer, price-only=0, permanente 1377-Decke (Bootstrapping-Deadlock).
-      # Fix: restore-only hier + separater save-Step mit `if: always()` NACH dem Pull, damit die
-      # gezogenen Snapshots auch bei Gate-Fail persistieren und ueber Laeufe akkumulieren.
-      # Kaltstart: die ersten ~2 Laeufe bleiben rot (Cache fuellt sich jetzt WIRKLICH), ab
-      # ~Lauf 3 ueberschreitet die Coverage den Floor -> gruen und danach selbsttragend.
-      - name: Restore snapshot cache (cross-run persistence for the pull-diet)
-        uses: actions/cache/restore@v4
-        with:
-          path: snapshots
-          key: snapshots-${{ github.run_id }}
-          restore-keys: |
-            snapshots-
+      # NEU (Tag 280): Merge-Helfer-Selftest pre-pull. Der Umzaehler schreibt das
+      # Voll-Universum-Manifest, an dem Karls Coverage-Gate haengt — ein stiller
+      # Regress hier wuerde die ganze Sharding-Coverage-Messung blind machen.
+      # Rein/synthetisch (assert-basiert, kein Netz, <1s).
+      - name: Merge-Helper Selftest
+        run: node scripts/merge-shard-manifests.js --selftest
 
-      # Tag 132: Auto-Universe-Refresh — laeuft bei jedem Run (schedule + workflow_dispatch).
-      # Tag 133: Merged mit SEC EDGAR, Finnhub, Wikipedia Indices.
-      # Tag 165: OTC Markets (OTCQX/OTCQB/Expert) + NASDAQ Screener API added.
-      #          Target universe raised to 12,000+ tickers.
-      # Tag 227a (silent-cap audit): MAX_UNIVERSE raised 13000 -> 25000. The cap
-      # is applied to the *discovered* candidate set in refresh-universe.js (top
-      # N by mcap, plus a 20% null-mcap slice). With today's watchlist already
-      # at 15,734 — and the SEC/Finnhub/OTC sources contributing ~20-25k raw
-      # candidates per run — the 13k cap was silently dropping every newly-IPO'd
-      # ticker on the bottom rung (the existing 15.7k watchlist already exceeds
-      # the cap, so new tickers were competing for slots the cap had pre-filled).
-      # Precedent: memory `ci_coverage_gate_calibration.md` (audit Tag 215e
-      # `max(absolute, percent)` dual gate). 25k gives 2-3 years of universe-
-      # growth headroom; Node OOM is mitigated by the `--max-old-space-size=6144`
-      # on pull-yahoo.js and refresh-universe.js's own 20% null-mcap proportional
-      # split.
-      # FINNHUB_API_KEY: GitHub Secret (Settings → Secrets → Actions → FINNHUB_API_KEY)
-      # Tag 232c-18 (audit F-CI-004 MEDIUM): warn when the Finnhub secret is
-      # not set so the operator sees universe-refresh is running degraded
-      # (without Finnhub, only SEC/Wikipedia/OTC/NASDAQ sources contribute).
-      # Doesn't block the run — refresh-universe has its own fallbacks — just
-      # surfaces the silent degradation in the log.
+      # Tag 132/133/165/227a: Auto-Universe-Refresh -> DIE EINE watchlist.json, die
+      # alle Shards laden (jeder sliced sie intern via --shard). MUSS einmal laufen —
+      # 17x parallel waere ein Race auf dieselbe Datei. MAX_UNIVERSE 25000 (Tag 227a
+      # silent-cap audit). Finnhub-Secret-Warnung (Tag 232c-18) surfaced degraded coverage.
       - name: Refresh Universe
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
@@ -174,28 +139,21 @@ jobs:
           node refresh-universe.js --watchlist watchlist.json
         continue-on-error: true
 
-      # Tag 142: Prune delisted/stale tickers before Yahoo pull
+      # Tag 142: Prune delisted/stale tickers before the fan-out.
       - name: Prune Watchlist
         run: node scripts/prune-watchlist.js
         continue-on-error: true
 
-      # F-CI-003 (Tag 179): Refresh Universe / Prune Watchlist run with continue-on-error.
-      # Without a sanity check, a failure leaves a stale or degenerate watchlist that
-      # silently propagates to the rest of the pipeline. Hard-fail if size dropped
-      # below 200 (manual baseline floor) — that means refresh got nothing AND prune
-      # ate too much, or watchlist.json got corrupted.
+      # F-CI-003 (Tag 179/207a): hard-fail if the final watchlist drops below 200
+      # (refresh got nothing AND prune ate too much, or watchlist.json corrupted).
+      # Schema-aware (w.stocks | array | keys). This gate must trip BEFORE the
+      # matrix starts so 17 runners never fan out onto a broken universe.
       - name: Verify Watchlist Sanity
         run: |
           if [ ! -f watchlist.json ]; then
             echo "::error::watchlist.json is missing after refresh+prune"
             exit 1
           fi
-          # Tag 207a (CRITICAL CI FIX): the previous check used Object.keys(w).length
-          # when w is not an array. The watchlist schema was wrapped into
-          # { _meta, stocks: [...], lastUniverseRefresh, lastManualExpansion } — 4
-          # top-level keys — so the check counted 4 < 200 → exit 1 → all 5 most
-          # recent runs hard-failed despite 15,734 real stocks in w.stocks.
-          # Schema-aware: prefer w.stocks (current), array (legacy), Object.keys (very old).
           size=$(node -e "const w=JSON.parse(require('fs').readFileSync('watchlist.json','utf8'));let n;if(Array.isArray(w))n=w.length;else if(w&&Array.isArray(w.stocks))n=w.stocks.length;else n=Object.keys(w).length;console.log(n)")
           echo "watchlist size: $size"
           if [ "$size" -lt 200 ]; then
@@ -203,25 +161,18 @@ jobs:
             exit 1
           fi
 
-      # Tag 133b: FX-Rates refresh — frische Yahoo-Currency-Quotes statt hardcoded.
-      # Fix für stille mcap-Korruption bei non-USD-Tickern.
+      # Tag 133b: ONE fresh fx-rates.json -> handed to every shard as an artifact
+      # (each shard needs it for USD-mcap normalisation; don't pull it 17x against Yahoo).
       - name: Refresh FX-Rates
         run: node scripts/refresh-fx.js
         timeout-minutes: 5
         continue-on-error: true
 
-      # F-CI-004 (Tag 179): fx-rates.json staleness check. If refresh-fx silently failed
-      # repeatedly, hardcoded fallbacks become source of truth which silently drifts
-      # mcap normalization. Warn (not fail) if rates are older than 7 days; only fail
-      # if rates older than 30 days (effectively unusable for cross-currency picks).
+      # F-CI-004 (Tag 179/219a): fx-rates staleness. Warn >7d, hard-fail >30d.
+      # stat failure -> NOW (fail-open, not epoch/fail-closed).
       - name: Verify FX-Rates Freshness
         run: |
           if [ -f fx-rates.json ]; then
-            # Tag 219a (audit F-218c-06): on stat failure fall back to NOW (fail-open),
-            # not 0 (epoch start / fail-closed). The outer [ -f ] already confirmed the
-            # file exists; a stat failure here is almost certainly a transient permission
-            # / race issue, and reporting the file as 600,000 days old would trip the
-            # 30-day hard-fail downstream and kill the pipeline on a transient hiccup.
             now=$(date +%s)
             mtime=$(stat -c %Y fx-rates.json 2>/dev/null || echo "$now")
             age_days=$(( (now - mtime) / 86400 ))
@@ -237,13 +188,8 @@ jobs:
             echo "::warning::fx-rates.json missing — pull-yahoo will use hardcoded fallback rates"
           fi
 
-      # Workstream A1: SEC EDGAR Form-4 daily insider pull (index-driven).
-      # Reads SEC's daily form index, keeps Form-4 rows whose issuer CIK is on
-      # the watchlist, fetches each hit's submission .txt, parses out insider
-      # transactions, and merges P-buys/sales into external-data/sec-form4-cache.json.
-      # Runs BEFORE the Yahoo pull so the cache is committed in the same run.
-      # continue-on-error: SEC outages / rate-limits must not block the Yahoo
-      # pipeline; the cache is resumable and picks up missed dates next run.
+      # Workstream A1: SEC EDGAR Form-4 daily insider pull. Once, watchlist-CIK-filtered.
+      # continue-on-error: SEC outages must not block the pipeline; cache is resumable.
       - name: Pull Insider Form-4 (daily)
         env:
           DAYS: '5'
@@ -251,16 +197,23 @@ jobs:
         timeout-minutes: 30
         continue-on-error: true
 
-      # Tag 220c (audit F-219c): Yahoo Schema-Drift Canary. Runs IMMEDIATELY
-      # before the Yahoo pull so a silent Yahoo field move (like the Tag 219c F1
-      # financialCurrency disappearance that mis-FX'd every ADR for weeks) is
-      # surfaced within 24h instead of corrupting data silently. The canary
-      # checks NVDA + TSM (TSM exercises the TWD!=USD financialCurrency divergence).
-      # MUST NOT block the pull: continue-on-error:true AND the step exits 0
-      # after alerting — drift fires a ::error:: annotation + a clearly-labeled
-      # Discord ping, but daily-pull (which has its own multi-anchor fallback)
-      # still runs. Canary exit-code contract: 1=drift, 2=Yahoo-unreachable
-      # (non-fatal, treated like 0), 0=clean.
+      # Tag-63: Earnings-Calendar. VERSCHOBEN vor den Fan-out (war im Single-Job NACH
+      # dem Pull): earnings-calendar.json treibt die needsFullPull-Diaet -> JEDER Shard
+      # braucht es als Artefakt. pull-earnings-dates.js hat einen internen Collapse-Guard
+      # + atomic write (liest den committed Vorzustand aus dem prep-Checkout von main),
+      # aktualisiert die Schutzlisten-Datei also nur, loescht sie nie. Der merge-Job
+      # laedt sie als prep-Input zurueck und committet sie in main (einziger Commit-Pfad).
+      # Tag 232c-25: EARNINGS_CONCURRENCY 20->8 (gleiche Yahoo-Cloudflare-Drossel).
+      - name: Pull Earnings-Calendar
+        env:
+          EARNINGS_CONCURRENCY: '8'
+        run: node pull-earnings-dates.js
+        timeout-minutes: 20
+        continue-on-error: true
+
+      # Tag 220c: Yahoo Schema-Drift Canary (NVDA+TSM), once-only direkt vor dem Fan-out
+      # statt 17x denselben Alarm. Blockt NIE (continue-on-error + exit 0). Canary
+      # exit-code: 1=drift, 2=Yahoo-unreachable (non-fatal), 0=clean.
       - name: Schema-Drift Canary
         continue-on-error: true
         env:
@@ -280,72 +233,292 @@ jobs:
                 "$DISCORD_WEBHOOK"
             fi
           fi
-          # Never block the pull: the ::error:: annotation + Discord ping have
-          # already fired; exit 0 so the pull proceeds (continue-on-error also
-          # guards this, but exiting 0 keeps the step itself green).
           exit 0
 
-      - name: Run Yahoo Pull
+      # Der geteilte Zustand fuer alle Shards + den merge-Job: die EINE watchlist.json
+      # (Voll-Universum-Denominator), fx-rates.json, earnings-calendar.json, insider-cache.
+      # Shards laden AUSSCHLIESSLICH dieses Artefakt (nicht ihren eigenen Checkout-Stand),
+      # damit Refresh/Prune/FX/Earnings konsistent ueber alle 17 sind.
+      - name: Upload prep state (watchlist + fx + earnings + insider)
+        uses: actions/upload-artifact@v4
+        with:
+          name: prep-state
+          path: |
+            watchlist.json
+            fx-rates.json
+            earnings-calendar.json
+            external-data/sec-form4-cache.json
+          if-no-files-found: warn
+          retention-days: 1
+
+      - name: Notify on failure
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK" ]; then echo "DISCORD_WEBHOOK not set, skipping notification."; exit 0; fi
+          curl -H "Content-Type: application/json" -X POST \
+            -d "{\"content\": \"⚠ Yahoo-Pull PREP failed at $(date -u). See run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+            "$DISCORD_WEBHOOK"
+
+  # ============================================================================
+  # PULL (matrix, N shards in parallel) — the ONLY parallelised work.
+  # node pull-yahoo.js --shard i/N reads the full watchlist.json and slices it
+  # INTERNALLY (shardStocks: hash(ticker)%N===i) to the i-th disjoint slice.
+  # fail-fast:false — one slow/red shard must NOT kill the others. Each shard:
+  # own namespaced cache (cross-run warm-up without foreign tickers), own snapshot
+  # artifact, own manifest artifact (renamed shard-<i>.json for the flat merge).
+  # No once-only step lives here.
+  # ============================================================================
+  pull:
+    needs: prep
+    runs-on: ubuntu-latest
+    timeout-minutes: 200
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.prep.outputs.shard_matrix) }}
+    env:
+      # Tag 215f: PULL_CONCURRENCY 20->8 (Yahoo Cloudflare Edge rate-limited at 20).
+      PULL_CONCURRENCY: '8'
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
+      SHARD_COUNT: ${{ needs.prep.outputs.shard_count }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      # Prep-Zustand ueberschreibt den Checkout-Stand: dieselbe watchlist.json/fx/earnings
+      # fuer ALLE Shards -> identischer Split + korrekte mcap-Normierung + Diaet.
+      - name: Download prep state
+        uses: actions/download-artifact@v4
+        with:
+          name: prep-state
+          path: .
+
+      # Guard (RED-TEAM-0 T2-E / RED-TEAM-2 T1-b): assert this shard index is in
+      # range for N. parseArgs falls back to a FULL-universe pull on an invalid
+      # --shard (poisons this shard's cache with 23.7k foreign tickers, forever).
+      # The fromJSON matrix already keeps them in sync; this is defence-in-depth
+      # in case someone hand-edits the matrix. Hard-fail before the pull.
+      - name: Assert shard index in range
+        run: |
+          if [ "${{ matrix.shard }}" -ge "$SHARD_COUNT" ] || [ "${{ matrix.shard }}" -lt 0 ]; then
+            echo "::error::shard index ${{ matrix.shard }} out of range for N=$SHARD_COUNT — would trigger a full-universe pull. Aborting."
+            exit 1
+          fi
+          echo "shard ${{ matrix.shard }}/$SHARD_COUNT in range."
+
+      # Cross-run persistence PER SHARD. Tag 261: restore-only + separater save mit
+      # if:always() (sonst Bootstrapping-Deadlock: @v4-post-save nur bei Job-Erfolg).
+      # WICHTIG: key/restore-keys sind pro Shard namespaced. Der TRENNENDE Bindestrich
+      # nach dem Index ist load-bearing — `snapshots-shard-1-` ist KEIN Praefix von
+      # `snapshots-shard-10-` (naechstes Zeichen ist '0' != '-'), sonst restaurierte
+      # Shard 1 den Cache von Shard 10..16 (fremde, disjunkte Ticker -> alles Voll-Pull).
+      - name: Restore snapshot cache (shard ${{ matrix.shard }}, per-shard namespaced)
+        uses: actions/cache/restore@v4
+        with:
+          path: snapshots
+          key: snapshots-shard-${{ matrix.shard }}-${{ github.run_id }}
+          restore-keys: |
+            snapshots-shard-${{ matrix.shard }}-
+
+      # 0.2/0.9 Sharding: --shard i/N liest die VOLLE watchlist.json und sliced INTERN
+      # auf die i-te disjunkte Scheibe (~1394 Ticker). Das Shard-_manifest.json traegt
+      # n_total = SHARD-Groesse; der merge-Job zaehlt auf Voll-Universum um.
+      # FUNDAMENTALS_REFRESH_BUDGET (RED-TEAM-0 T1-A): der Default in pull-yahoo.js ist
+      # 1500 und cappt zeitbasierte Full-Pulls. Bei Kaltstart will jeder der ~1394-1470
+      # Ticker eines Shards voll gezogen werden — nah am 1500-Cap; waechst das Universum
+      # Richtung MAX_UNIVERSE 25000 (~1470/Shard), koennten ueberzaehlige als price-only
+      # ohne Vor-Snapshot als `failed` zurueckkommen (getarnte Fail-Mass). Auf 3000 heben
+      # (> groesste plausible Shard-Groesse) -> der Kaltstart endet am 165-min-Timeout,
+      # nie am Budget-Cap. Kostet nichts (reine Schutz-Obergrenze).
+      - name: Run Yahoo Pull (shard ${{ matrix.shard }}/${{ env.SHARD_COUNT }})
         env:
           FUNDAMENTALS_MAX_AGE_DAYS: '7'
-          # 2026-06: market-cap floor lowered $1B → $800M so the universe covers
-          # the broader US small/mid-cap set (per user "screen all US companies").
-          # Must match the local fill-pull floor, else this daily pull would
-          # re-purge $800M–$1B names on their next staleness refresh.
+          # 2026-06: market-cap floor $1B → $800M (broader US small/mid-cap set).
           MIN_MCAP_USD: '800000000'
-        run: node --max-old-space-size=6144 pull-yahoo.js --watchlist watchlist.json --output snapshots --rate-limit 2000
+          FUNDAMENTALS_REFRESH_BUDGET: '3000'
+        run: node --max-old-space-size=6144 pull-yahoo.js --shard ${{ matrix.shard }}/${{ env.SHARD_COUNT }} --watchlist watchlist.json --output snapshots --rate-limit 2000
         continue-on-error: true
         timeout-minutes: 165
 
-      # Tag 261: persist the freshly-pulled snapshots to the cross-run cache REGARDLESS of the
-      # later coverage-gate outcome (`if: always()`). The paired restore step above is now
-      # restore-only, so this is the ONLY save path. Per-run key -> always a new entry; the
-      # next run's restore-keys grabs it and price-onlys those tickers (cheap), warming the
-      # universe until coverage clears the floor. Without this the pull-diet can never start
-      # (Bootstrapping-Deadlock: gate blocks -> job fails -> @v4 post-save skipped -> empty).
-      - name: Save snapshot cache (always — persists even when the coverage gate blocks)
+      # Tag 261: Shard-Snapshots persistieren REGARDLESS des spaeteren Gate-Outcomes
+      # (if:always()). Per-run key -> neuer Eintrag; naechster Lauf holt ihn via
+      # restore-keys und price-onlyt diese ~1394 Ticker billig (Diaet greift).
+      - name: Save snapshot cache (shard ${{ matrix.shard }}, always — persists even on gate-fail)
         if: always()
         uses: actions/cache/save@v4
         with:
           path: snapshots
-          key: snapshots-${{ github.run_id }}
+          key: snapshots-shard-${{ matrix.shard }}-${{ github.run_id }}
 
-      # Tag 147: Quality-gate — fail hard only if coverage is too low to produce useful reports
-      # Tag 161: relative threshold — max(1800, 40% of n_total)
-      # Tag 162: file-count fallback — when Yahoo Pull times out the manifest is missing/zero
-      # (manifest deleted at pull start, only written at pull end). Fall back to counting
-      # actual .json snapshot files so partial-run progress is not thrown away.
-      # F-CI-002: check manifest freshness — stale committed manifest from a prior run
-      # would declare pass even when the current pull crashed early.
+      # F-CI-016 (Tag 192/218): per-Shard-Frische-Frühwarnung. <50% frisch (<36h asOf)
+      # -> dieser Shard war ein No-Op. continue-on-error:true — nur Log/rotes-Shard-X;
+      # das HARTE gemergte Freshness-Gate sitzt im merge-Job (sonst wuerde ein einzelner
+      # halb-staler Shard das ganze Universum blocken). Der Upload unten ist if:always(),
+      # also blockt ein rotes Shard-X den Upload nicht.
+      - name: Verify Snapshot Freshness (shard ${{ matrix.shard }})
+        continue-on-error: true
+        run: |
+          node -e "
+            const fs = require('fs');
+            const dir = './snapshots';
+            let files = [];
+            try { files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_')); } catch (e) {}
+            const now = Date.now();
+            const FRESH_MS = 36 * 3600 * 1000;
+            let fresh = 0, stale = 0, unparseable = 0;
+            for (const f of files) {
+              try {
+                const buf = fs.readFileSync(dir + '/' + f, 'utf8').slice(0, 800);
+                const m = buf.match(/\"(?:asOf|fetchedAt)\"\s*:\s*\"([^\"]+)\"/);
+                if (!m) { unparseable++; continue; }
+                const ts = new Date(m[1]).getTime();
+                if (now - ts < FRESH_MS) fresh++; else stale++;
+              } catch (e) { unparseable++; }
+            }
+            const pct = files.length > 0 ? (fresh / files.length * 100).toFixed(1) : '0';
+            console.log('shard ${{ matrix.shard }} freshness: ' + fresh + ' fresh / ' + stale + ' stale / ' + unparseable + ' unparseable of ' + files.length + ' (' + pct + '%)');
+          "
+
+      # Shard-Manifest eindeutig auf shard-<i>.json umbenennen — der merge-Umzaehler
+      # liest ein Verzeichnis FLACH (readdirSync .json). if:always() -> auch ein
+      # getimeouteter Shard liefert sein (partial) Manifest.
+      - name: Stage shard manifest for merge
+        if: always()
+        run: |
+          mkdir -p shard-manifest-out
+          if [ -f snapshots/_manifest.json ]; then
+            cp snapshots/_manifest.json shard-manifest-out/shard-${{ matrix.shard }}.json
+            echo "Staged shard-${{ matrix.shard }}.json"
+          else
+            echo "no manifest for shard ${{ matrix.shard }} (timeout before first flush) — merge counts it as a missing shard (partial=true)"
+          fi
+
+      # Shard-Snapshots hochladen — OHNE die Manifeste (Glob-Negation), sonst
+      # kollidieren 17 _manifest.json / _manifest-full.json beim merge-multiple-Download
+      # (RED-TEAM-2 T1-a). Die Ticker-Snapshots sind disjunkt -> keine echte Kollision.
+      - name: Upload shard snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshots-shard-${{ matrix.shard }}
+          path: |
+            snapshots/*.json
+            !snapshots/_manifest.json
+            !snapshots/_manifest-full.json
+          if-no-files-found: warn
+          retention-days: 1
+
+      # Shard-Manifest als eigenes Artefakt (getrennt von den Snapshots). Der merge-Job
+      # laedt alle via pattern + merge-multiple FLACH nach shard-manifests/.
+      - name: Upload shard manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shard-manifest-${{ matrix.shard }}
+          path: shard-manifest-out/
+          if-no-files-found: warn
+          retention-days: 1
+
+  # ============================================================================
+  # MERGE (once, after all shards) — collects every shard artifact, recounts ONE
+  # full-universe manifest, runs the coverage gate + the entire once-only
+  # downstream chain + the SINGLE commit-to-main + gh-pages deploy 1/2.
+  # if: always() && needs.prep.result == 'success' — runs even with 1-2 missing
+  # shard artifacts (coverage-gate catches partial coverage), but NOT if prep hard-
+  # failed (no universe = merge is meaningless, and prep-state would be missing).
+  # ============================================================================
+  merge:
+    needs: [prep, pull]
+    if: ${{ always() && needs.prep.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
+      SHARD_COUNT: ${{ needs.prep.outputs.shard_count }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # full history for the retry-rebase push to main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      # prep-state zurueckholen: die volle watchlist.json ist der Voll-Universum-
+      # Denominator fuer coverage-gate + Umzaehler; fx/earnings/insider fuer downstream
+      # + den Commit (earnings-calendar.json wird hier in main committet).
+      - name: Download prep state
+        uses: actions/download-artifact@v4
+        with:
+          name: prep-state
+          path: .
+
+      # Alle Shard-Snapshot-Segmente in EINEN snapshots/-Ordner mergen. Disjunkt
+      # (pull-shard.test.js beweist die Partition) -> keine Dateikollision; falls doch,
+      # faengt der merge-Helfer sie (on-disk < summierte n_ok -> exit 1).
+      - name: Download all shard snapshots
+        uses: actions/download-artifact@v4
+        with:
+          pattern: snapshots-shard-*
+          path: snapshots
+          merge-multiple: true
+
+      # Alle Shard-Manifeste FLACH nach shard-manifests/ (merge-multiple legt die
+      # shard-<i>.json flach ab — genau was der Umzaehler-readdirSync erwartet).
+      - name: Download all shard manifests
+        uses: actions/download-artifact@v4
+        with:
+          pattern: shard-manifest-*
+          path: shard-manifests
+          merge-multiple: true
+
+      # KERN: Shard-Manifeste -> EIN snapshots/_manifest.json mit n_total = VOLL-
+      # Universum (watchlist), n_ok/n_full/n_priceonly/n_skipped_mcap/n_failed = Summen,
+      # partial = OR ueber Shards ODER (present < expected). Disjunktheits-Check gegen
+      # die on-disk-Dateien. --expected-shards erzwingt partial=true bei fehlendem Shard.
+      - name: Merge shard manifests (recount n_total to full universe)
+        run: |
+          node scripts/merge-shard-manifests.js \
+            --shard-manifests shard-manifests \
+            --snapshots snapshots \
+            --watchlist watchlist.json \
+            --expected-shards "$SHARD_COUNT"
+
+      # F-CI-002: stale/leeres Manifest -> file-count-Fallback. Nach dem Umzaehler
+      # liegt hier immer ein frisches gemergtes Manifest; dieser Check ist der
+      # Vollstaendigkeits-Log fuer den Fallback-Pfad.
       - name: Check Manifest Freshness
         run: |
           if [ -f snapshots/_manifest.json ]; then
-            # Tag 219a (audit F-218c-06): on stat failure fall back to NOW (fail-open),
-            # not 0 (epoch start / fail-closed). The outer [ -f ] already confirmed the
-            # file exists; if `stat` itself errors transiently, the previous `|| echo 0`
-            # would silently `rm -f` a perfectly-fresh manifest and force the file-count
-            # fallback. Keeping the manifest is the safer default — a genuinely stale
-            # manifest gets caught on the next run.
-            now=$(date +%s)
-            manifest_mtime=$(stat -c %Y snapshots/_manifest.json 2>/dev/null || echo "$now")
-            four_hours_ago=$(date -d '4 hours ago' +%s 2>/dev/null || echo "$((now - 14400))")
-            if [ "$manifest_mtime" -lt "$four_hours_ago" ]; then
-              echo "WARNING: snapshots/_manifest.json is older than 4 hours (mtime=$manifest_mtime, threshold=$four_hours_ago). Manifest may be stale from a prior run — file-count fallback will be used."
-              rm -f snapshots/_manifest.json
-            else
-              echo "Manifest is fresh (mtime=$manifest_mtime)."
-            fi
+            echo "Merged manifest present (recounted to full universe)."
           else
-            echo "No manifest found — file-count fallback will be used."
+            echo "No merged manifest — coverage gate will use the file-count fallback."
           fi
 
-      # F-CI-016 (Tag 192): Snapshot-Freshness-Gate nach Pull, vor Downstream-Reports.
-      # Problem: prior-failed-pull snapshots haben asOf von gestern; downstream
-      # (snapshot-picks, detect-changes, walk-forward) verarbeitet sie als "heute"
-      # → vintage duplication + 0% forward-return. Hier zählen wir wieviele
-      # snapshots wirklich neuere asOf-Werte haben (< 36h alt). Wenn <50%
-      # frisch sind, abort — der Pull war effektiv ein No-Op.
-      - name: Verify Snapshot Freshness
+      # F-CI-016 (Tag 192/218): GEMERGTES Snapshot-Freshness-Gate ueber das VEREINTE
+      # Universum (nicht je Shard). 9 Shards je knapp ≥50% frisch waeren gemergt zur
+      # Haelfte stale -> genau der Fehlermodus, gegen den F-CI-016 gebaut ist. Hier hart
+      # (continue-on-error:false): <50% frisch -> Deploy blockt, keine stale Daten.
+      - name: Verify Snapshot Freshness (merged)
+        continue-on-error: false
         run: |
           node -e "
             const fs = require('fs');
@@ -356,11 +529,7 @@ jobs:
             let fresh = 0, stale = 0, unparseable = 0;
             for (const f of files) {
               try {
-                const buf = require('fs').readFileSync(dir + '/' + f, 'utf8').slice(0, 800);
-                // Tag 218: match BOTH asOf and fetchedAt. Pre-Tag-215j snapshots
-                // only had fetchedAt; matching only asOf counted them all as
-                // unparseable — Tag 215j fixed the pull side but old snapshots
-                // in the repo still need backwards-compat.
+                const buf = fs.readFileSync(dir + '/' + f, 'utf8').slice(0, 800);
                 const m = buf.match(/\"(?:asOf|fetchedAt)\"\s*:\s*\"([^\"]+)\"/);
                 if (!m) { unparseable++; continue; }
                 const ts = new Date(m[1]).getTime();
@@ -368,143 +537,21 @@ jobs:
               } catch (e) { unparseable++; }
             }
             const pct = files.length > 0 ? (fresh / files.length * 100).toFixed(1) : '0';
-            console.log('Snapshot freshness: ' + fresh + ' fresh / ' + stale + ' stale / ' + unparseable + ' unparseable of ' + files.length + ' (' + pct + '% fresh)');
+            console.log('Merged snapshot freshness: ' + fresh + ' fresh / ' + stale + ' stale / ' + unparseable + ' unparseable of ' + files.length + ' (' + pct + '% fresh)');
             if (files.length > 0 && fresh / files.length < 0.5) {
-              console.error('::error::F-CI-016 — fewer than 50% of snapshots are fresh (<36h asOf). Pull likely failed; refusing to publish stale data.');
+              console.error('::error::F-CI-016 — fewer than 50% of merged snapshots are fresh (<36h asOf). Pull likely failed; refusing to publish stale data.');
               process.exit(1);
             }
           "
-        # Tag 218 (audit F-218c-01 HIGH): flip from continue-on-error:true to
-        # fail-on-error. Tag 192's 'WARN initially; flip later' has been dormant
-        # for months — stale pulls flowed downstream into snapshot-picks,
-        # detect-changes, walk-forward. Now combined with Tag 218 regex fix
-        # (match asOf OR fetchedAt) the gate can finally do its job.
-        continue-on-error: false
 
-      # Frage 11 (two-stage coverage gate). Replaces the single-threshold gate.
-      # Signal path is red-X (::error::) + a machine-readable marker in the
-      # DEPLOYED export (outputs/coverage-status.json) — NO mail/Discord (Karl
-      # reads neither). The marker binds to findash-export v1 (task 1.1): the
-      # dashboard reads status/banner from it.
-      #
-      # IMPORTANT: outputs/ is .gitignored (repo convention: "committed via
-      # gh-pages only"). The marker is therefore DEPLOY-ONLY — the Deploy step
-      # copies the working-tree outputs/. into _site/outputs/, so the marker
-      # reaches gh-pages. It is NOT committed to main. The export contract
-      # (task 1.1) must read the marker from the gh-pages URL, not main.
-      #
-      # THREE outcomes, ONE marker file always written:
-      #   KATASTROPHAL -> exit 1, BLOCK deploy (Deploy step is `if: success()`).
-      #     schema-broken (manifest unreadable / n_ok==0) OR
-      #     n_ok < HARD_FLOOR = max(2500, 13% of n_total).  [UNCHANGED old gate]
-      #   DEGRADIERT   -> exit 0, DEPLOY partial WITH flag + ::error::/::warning::.
-      #     n_ok >= HARD_FLOOR but not a clean full pull: partial==true OR
-      #     n_ok < SOFT_TARGET = max(4600, 18% of n_total) OR failure-mass >35%.
-      #   OK           -> exit 0, deploy, banner hidden.
-      #
-      # A 12% timeout run is < HARD_FLOOR -> katastrophal -> blocks, as required
-      # (the floor is NOT lowered; it is the old max(2500,0.13*n_total) promoted).
+      # Frage 11 two-stage coverage gate — liest das umgezaehlte Manifest + volle
+      # watchlist. KATASTROPHAL -> exit1 blockt Deploy; DEGRADIERT/OK -> exit0.
+      # Signal: red-X + outputs/coverage-status.json (Karls einziger Alarm-Kanal).
       - name: Verify Pull Coverage (two-stage)
         run: node scripts/coverage-gate.js
 
-      # --- OLD single-threshold gate (retired by Frage 11) — kept disabled for
-      #     reference during the export-v1 rollout; delete once the marker is proven.
-      - name: Verify Pull Coverage (legacy, disabled)
-        if: ${{ false }}
-        run: |
-          # Tag 220c (audit F-219b-02 MEDIUM): manifest's `partial` flag reports
-          # a mid-flight SIGKILL of Yahoo Pull. pull-yahoo writes partial:true on
-          # every incremental flush (~100 tickers) and partial:false only on the
-          # clean final write.
-          #
-          # Tag 232c-2: 220c originally exit-1'd on partial=true regardless of
-          # n_ok. With MAX_UNIVERSE at 25k (Tag 227a-1) the 165-min Yahoo Pull
-          # budget can't reliably finish — partial=true became the norm, blocking
-          # the pipeline permanently. Run 26022734084 today: partial:true,
-          # n_ok=4613 > min_ok=3608 → would have passed the coverage gate, but
-          # 220c killed it first. Relaxed: emit ::warning on partial=true so the
-          # operator sees the signal in the run log, then let the n_ok threshold
-          # below be the actual gate. n_ok is accurate (counted on each
-          # successful pull) — just smaller than n_total when the run was killed.
-          # Downstream operates per-snapshot (each carries meta.asOf), so
-          # incomplete updates degrade gracefully instead of polluting aggregates.
-          partial=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.partial===true?'true':'false')}catch(e){console.log('false')}")
-          if [ "$partial" = "true" ]; then
-            echo "::warning::Manifest reports partial=true — pull was killed mid-flight. Letting the coverage gate (n_ok ≥ max(2500, 13%)) decide."
-          fi
-          ok=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.n_ok||0)}catch(e){console.log(0)}")
-          total=$(node -e "const fs=require('fs');try{const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));console.log(m.n_total||0)}catch(e){console.log(0)}")
-          source="manifest"
-          # F-CI-012: use watchlist length as the denominator in fallback (not file_count)
-          # to avoid 100% coverage when total=file_count and ok=file_count (1800/1800 = 100%)
-          # Tag 207b: schema-aware watchlist size (same fix pattern as Tag 207a).
-          # Watchlist is { _meta, stocks:[...], lastUniverseRefresh, ... } since wrap;
-          # counting Object.keys returned 4 instead of 15734 (only mattered in the
-          # fallback branch but still latent bug).
-          watchlist_total=$(node -e "const fs=require('fs');try{const w=JSON.parse(fs.readFileSync('./watchlist.json','utf8'));let n;if(Array.isArray(w))n=w.length;else if(w&&Array.isArray(w.stocks))n=w.stocks.length;else n=Object.keys(w).length;console.log(n)}catch(e){console.log(0)}")
-          if [ "$total" -eq 0 ] || [ "$ok" -eq 0 ]; then
-            file_count=$(node -e "const fs=require('fs');try{const files=fs.readdirSync('./snapshots').filter(f=>f.endsWith('.json')&&f!=='_manifest.json');console.log(files.length)}catch(e){console.log(0)}")
-            echo "Manifest reports $ok/$total — falling back to file count: $file_count .json files in ./snapshots/"
-            ok=$file_count
-            # F-CI-012: use watchlist total as denominator so 1800/13000 correctly fails the 40% gate
-            if [ "$watchlist_total" -gt 0 ]; then
-              total=$watchlist_total
-              source="file-count/watchlist-denom"
-            else
-              total=$file_count
-              source="file-count"
-            fi
-          fi
-          # Tag 207b: relaxed coverage gate after run #104 failed at this step with a
-          # 7-hour Yahoo Pull (compared to historical 75-165min). Yahoo's reliability
-          # fluctuates; the prior 40%/1800-floor was too strict — one bad-Yahoo day
-          # killed the entire pipeline. New: 25% relative / 1000 absolute floor.
-          # Still rejects "Yahoo totally broken" (~0 pulls) but tolerates 20-40%
-          # throttle days that historically passed.
-          #
-          # Tag 215e: universe grew from ~13k (Tag 207b era) to ~19k (Tag 215 era)
-          # because refresh-universe expanded discovery (Tag 165 NASDAQ Screener API
-          # + Tag 165 OTC Markets). Same percentage-of-universe gate is now
-          # effectively tighter — Run #105/#106/#107 all delivered 3500-3700
-          # snapshots which is healthy by absolute count but only 18-19% of the
-          # bigger universe. Calibrating to ABSOLUTE 2500 + RELATIVE 18% so a
-          # 3500-snapshot pull (the historical-normal absolute count) passes
-          # regardless of universe expansion. Yahoo-totally-broken (<1000 ok)
-          # still hard-fails.
-          #
-          # Tag 233: universe grew further from ~19k (Tag 215e era) to ~24k (Tag 232
-          # era, May 2026). At PULL_CONCURRENCY=8 and a 165-min budget, the pull
-          # completes ~3300 snapshots/run (sorted by staleness, so stale tickers rotate
-          # through across days). 3300/24000 = 13.8% — below the 18% gate that was
-          # calibrated when universe=19k. The absolute snapshot count is unchanged
-          # (3300-3500/run is healthy); the gate mis-fires because the denominator grew.
-          # Recalibrating to 13% so max(2500, 24000*0.13=3120) ≈ 3120 < 3300. This
-          # still hard-fails a "Yahoo totally broken" run (~0 snapshots) or a severe
-          # throttle day (<2500). Absolute floor stays at 2500.
-          min_ok=$(node -e "console.log(Math.max(2500,Math.floor(${total}*0.13)))")
-          echo "Snapshots ok: $ok / $total (threshold: $min_ok = max(2500, total*0.13), source: $source)"
-          if [ "$ok" -lt "$min_ok" ]; then
-            echo "::error::Pull coverage $ok/$total < threshold $min_ok (13% of universe, floor 2500, source: $source)"
-            exit 1
-          fi
-
-      # Tag-63: Earnings-Calendar Pull
-      # F-CI-005: Pipeline Health Check moved to AFTER commit so snapshots are always
-      # committed even if health check fails (prevents vintage continuity gaps).
-      # Tag 232c-25 (audit F-CI-008 LOW): EARNINGS_CONCURRENCY 20→8 + per-step
-      # timeout. The Tag 215f lesson (PULL_CONCURRENCY 20→8 because Yahoo
-      # Cloudflare Edge rate-limited at 20) applies here too — same upstream
-      # API. 20-way parallelism just trades wall-time savings for retry storms.
-      - name: Pull Earnings-Calendar
-        env:
-          EARNINGS_CONCURRENCY: '8'
-        run: node pull-earnings-dates.js
-        timeout-minutes: 20
-        continue-on-error: true
-
-      # Tag-39: Historical-Price-Pull (für Performance-Backtest)
-      # Tag 232c-25 (audit F-CI-008 LOW): PRICE_CONCURRENCY 20→8 + per-step
-      # timeout. Same Yahoo Cloudflare throttle as Yahoo Pull.
+      # Tag-39: Historical-Price-Pull ueber das zusammengefuehrte Universum. Einmalige
+      # Yahoo-Last (NICHT je Shard). Tag 232c-25: PRICE_CONCURRENCY 20->8.
       - name: Pull Historical Prices
         env:
           PRICE_CONCURRENCY: '8'
@@ -512,49 +559,31 @@ jobs:
         timeout-minutes: 25
         continue-on-error: true
 
-      # Tag 139: Macro-Regime-Tagging — SPY 200d-MA → BULL/BEAR/SIDEWAYS
+      # Tag 139: Macro-Regime-Tagging — SPY 200d-MA → BULL/BEAR/SIDEWAYS.
       - name: Compute Macro Regime
         run: node scripts/macro-regime.js
         continue-on-error: true
 
-      # Tag 133g: Pull-Stats Monitoring — Discord-Alert wenn ein Pull-Output >25% vs 4-Week-Median shrinkt.
+      # Tag 133g: Pull-Stats Monitoring — Discord-Alert wenn ein Pull-Output >25% vs
+      # 4-Week-Median shrinkt. Aggregiert ueber das gemergte Set.
       - name: Pull-Stats Check
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           ALLOW_PULL_DRIFT: ${{ vars.ALLOW_PULL_DRIFT || '0' }}
         run: |
-          # F-CI-007: consistent DISCORD_WEBHOOK existence check before invoking script
           if [ -z "$DISCORD_WEBHOOK" ]; then echo "DISCORD_WEBHOOK not configured — Discord alerts disabled."; fi
           node scripts/check-pull-stats.js
         continue-on-error: true
 
-      # Tag 134 — Phase 5.1: archive prices/ daily snapshots older than --keep-days
-      # into external-data/*.ndjson (git-ignored). Reduces committed repo bloat.
-      # Rebuildable from snapshots on the runner.
-      #
-      # Loop A removed the methods-history/ and picks-history/ WRITERS, so those
-      # dirs are frozen (no new files — the newest are the 2026-06-12 vintages).
-      # Previously this step passed --methods-keep-days 90 --picks-keep-days 90,
-      # which would archive each frozen file into git-ignored, runner-ephemeral
-      # NDJSON and then unlink + push the deletion of the committed original once
-      # it aged past 90 days (~2026-09-10) — silently losing OLD scoring vintages
-      # from main with no durable backup (only git history). Nothing regenerates
-      # them. Fix: stop archiving the frozen dirs by setting their keep-windows
-      # effectively-infinite (100000 days), leaving the committed files untouched.
-      # (Omitting the flags would fall back to --keep-days 14 and delete them even
-      # sooner.) The live prices/ archiving is preserved via --keep-days 14.
-      # A Loop-B writer can restore real keep-windows when it reintroduces them.
+      # Tag 134: prices/ 14d archivieren; frozen methods/picks-history unangetastet
+      # (100000d = effektiv unendlich -> SCHUTZLISTE wird nur aktualisiert, nie geloescht).
       - name: Archive Old Snapshots
         run: node scripts/archive-old-snapshots.js --keep-days 14 --methods-keep-days 100000 --picks-keep-days 100000
         continue-on-error: true
 
-      # Task 0.8 — three pure-node coverage canaries (no new deps). Each writes/
-      # refreshes a rolling data-health/ baseline BEFORE its ::error:: drift check,
-      # so an ongoing alarm still updates the window. continue-on-error: a watcher
-      # crash or false alarm must NOT block the data commit — the red-X on the step
-      # is the alert (Karl reads neither email nor Discord). Placed after Verify
-      # Pull Coverage, before Commit Snapshots, so the baseline writes land in this
-      # run's 'git add -A'.
+      # Task 0.8: drei pure-node Coverage-Canaries ueber das GEMERGTE Universum. Jeder
+      # schreibt seine data-health/-Baseline VOR dem ::error::-Drift-Check (landet im
+      # git add -A). continue-on-error: ein Watcher-Crash darf den Data-Commit nicht blocken.
       - name: Watch Exchange Coverage
         run: node scripts/watch-exchange-coverage.js
         continue-on-error: true
@@ -566,6 +595,12 @@ jobs:
       - name: Watch FX Sanity
         run: node scripts/watch-fx-sanity.js
         continue-on-error: true
+
+      # F-CI-001 v2 (Tag 179/232c-7): DER EINZIGE Commit-to-main, retry-rebase,
+      # tree-verified. Nur der merge-Job pusht auf main -> kein 17-Shard-Race.
+      # Schutzliste (picks-history/, methods-history/, earnings-calendar.json) wird
+      # nur aktualisiert, nie geloescht. git add -A committet auch die frisch von prep
+      # durchgereichte earnings-calendar.json + fx-rates.json + insider-cache.
       - name: Commit Snapshots
         run: |
           git config user.name "yahoo-pull-bot"
@@ -575,42 +610,24 @@ jobs:
             echo "No changes to commit."
           else
             git commit -m "chore: yahoo-pull $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            # F-CI-001 v2 (Tag 179): the previous fallback `git rebase --abort; git reset
-            # --hard origin/main` was CRITICAL data-loss — it discarded the just-made
-            # commit, after which `git push` succeeded as a no-op and the workflow
-            # reported green while a full day of snapshots vanished. New strategy:
-            # capture the just-made commit SHA, attempt rebase, and on rebase failure
-            # abort cleanly without resetting. If push still fails after 3 retries the
-            # workflow exits non-zero so the failure is visible (Discord alert via
-            # the notify step).
             COMMIT_SHA=$(git rev-parse HEAD)
             COMMIT_TREE=$(git rev-parse HEAD^{tree})
             echo "Local commit to publish: $COMMIT_SHA (tree $COMMIT_TREE)"
             for i in 1 2 3; do
               git fetch origin main
-              # Tag 232c-7 (audit F-CI-002 HIGH): dropped --strategy-option theirs.
-              # In rebase semantics, "theirs" = the upstream branch (origin/main),
-              # so on a content conflict the OUR change (the just-made commit's
-              # bytes) would be silently dropped. The post-rebase SHA-check only
-              # verifies the commit OBJECT survived; if the tree got rewritten,
-              # the commit looks present but its data is gone. Now: plain rebase,
-              # which exits non-zero on any conflict, triggering the abort + cherry-
-              # pick path below. ALSO: verify the tree hash matches what we just
-              # committed — catches "commit present, content silently mutated"
-              # scenarios that the prior SHA-only check missed.
+              # Tag 232c-7: plain rebase (no --strategy-option theirs, which would
+              # silently drop our bytes on conflict). Verify BOTH the commit object
+              # survived AND its tree hash is unchanged; else abort + cherry-pick.
               if ! git rebase --autostash origin/main; then
                 echo "::warning::Rebase failed on attempt $i — aborting cleanly (preserves local commit)"
                 git rebase --abort || true
-                # Verify our commit is still here AND its tree wasn't mutated.
                 NEW_TREE=$(git log -1 --format=%T "$COMMIT_SHA" 2>/dev/null || echo "MISSING")
-                # F-CI-002/F-CI-003: use merge-base --is-ancestor instead of O(history) rev-list | grep
                 if ! git merge-base --is-ancestor "$COMMIT_SHA" HEAD || [ "$NEW_TREE" != "$COMMIT_TREE" ]; then
                   echo "::warning::Local commit lost or mutated during rebase — restoring from $COMMIT_SHA (tree $COMMIT_TREE)"
                   git reset --hard origin/main
                   git cherry-pick "$COMMIT_SHA" || { echo "::error::cherry-pick failed"; exit 1; }
                 fi
               else
-                # F-CI-002: update SHA after successful rebase so subsequent iterations use the rewritten commit
                 COMMIT_SHA=$(git rev-parse HEAD)
               fi
               if git push; then
@@ -624,10 +641,8 @@ jobs:
             exit 1
           fi
 
-      # Task 0.3 (Loop B): upload the final snapshots/ so the separate `scoring`
-      # job can score them on a fresh runner (snapshots are gitignored -> not on
-      # any branch it could checkout). Runs after Commit Snapshots so it captures
-      # the complete post-pull set. retention short — same-run handoff, not archive.
+      # Task 0.3: upload the final merged snapshots/ so the scoring job scores them on
+      # a fresh runner. Runs after Commit so it captures the complete post-pull set.
       - name: Upload Snapshots Artifact
         if: success()
         uses: actions/upload-artifact@v4
@@ -638,13 +653,7 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-      # Tag 168: Pipeline Health Check — aggregates per-script failure rates and
-      # alerts via Discord if any script exceeded the 5% threshold.
-      # F-CI-005: placed AFTER commit so snapshots always land in git even if health
-      # check fails. Health check failure blocks deploy but not the data commit.
-      # F-CI-008: --strategy-option theirs was dropped in Tag 232c-7; concurrent
-      # pushes ARE possible via the manual dispatch escape hatch (workflow_dispatch
-      # gets its own concurrency group, so a manual run can race a scheduled cron run).
+      # Tag 168: Pipeline Health Check nach Commit (blockt Deploy, nicht den Data-Commit).
       - name: Pipeline Health Check
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
@@ -654,22 +663,15 @@ jobs:
           fi
           node scripts/pipeline-health-check.js
 
-      # Tag 146: Deploy HTML reports to GitHub Pages (gh-pages branch).
-      # Separates generated web artifacts from the data/code on main.
-      # Deploys: index.html, modes-report.html, diff-report.html, outputs/*.html|csv|md
-      # Enable in repo Settings → Pages → Source: Deploy from branch → gh-pages / root.
-      # Tag 153: only deploy when data commit succeeded — otherwise gh-pages would show
-      # picks from today's run that never landed in main (mismatched report vs data).
+      # Tag 146/153: gh-pages-Deploy 1 von 2 (index.html + outputs/, inkl. dem
+      # coverage-status.json-Marker). Nur bei erfolgreichem Data-Commit (if:success()).
+      # scoring-Deploy (2/2) laeuft danach (needs:merge) -> die zwei Force-Pushes racen NICHT.
       - name: Deploy to GitHub Pages
         if: success()
         run: |
-          # Build a clean deploy directory
-          # Loop A: report generators removed; deploy index.html + outputs/ only until Loop B rebuilds the dashboard
           mkdir -p _site/outputs
           cp index.html _site/ 2>/dev/null || true
           cp -r outputs/. _site/outputs/ 2>/dev/null || true
-
-          # Push to gh-pages branch (orphan-safe force push)
           cd _site
           git init -b gh-pages
           git config user.name "yahoo-pull-bot"
@@ -677,7 +679,6 @@ jobs:
           git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           git add -A
           git commit -m "deploy: screener reports $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          # F-CI-006: retry loop for transient push failures on gh-pages
           for i in 1 2 3; do
             if git push --force origin gh-pages; then
               echo "✓ GitHub Pages deployed on attempt $i"
@@ -694,24 +695,19 @@ jobs:
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
-          if [ -z "$DISCORD_WEBHOOK" ]; then
-            echo "DISCORD_WEBHOOK not set, skipping notification."
-            exit 0
-          fi
+          if [ -z "$DISCORD_WEBHOOK" ]; then echo "DISCORD_WEBHOOK not set, skipping notification."; exit 0; fi
           curl -H "Content-Type: application/json" -X POST \
-            -d "{\"content\": \"⚠ Yahoo-Pull failed at $(date -u). See run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+            -d "{\"content\": \"⚠ Yahoo-Pull MERGE failed at $(date -u). See run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
             "$DISCORD_WEBHOOK"
 
-  # Task 0.3 (Loop B): separate scoring job. needs: pull so it runs only after a
-  # successful pull. Fresh runner: checks out the repo (for src/scoring/** +
-  # tracked external-data/*secannual.json), downloads the snapshots artifact into
-  # snapshots/, runs the engine, then publishes outputs/hypergrowth/*.json to
-  # gh-pages reusing the pull job's Deploy auth (x-access-token GITHUB_TOKEN
-  # force-push). outputs/ is gitignored -> gh-pages only.
-  # Timeout 15: run-screener is 0.56s over 4681 real snapshots (measured), pure
-  # in-memory ranking, no network; wall time is checkout+setup-node+npm ci+download.
+  # ============================================================================
+  # SCORING (unchanged logic; needs: pull -> needs: merge, + snapshot source).
+  # needs:merge serialises the two gh-pages force-pushes (merge-Deploy first, then
+  # scoring) so they never race. Scores the merged snapshots artifact on a fresh
+  # runner and publishes hypergrowth + findash-export/v1 to gh-pages.
+  # ============================================================================
   scoring:
-    needs: pull
+    needs: merge
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -738,7 +734,6 @@ jobs:
       - name: Run Hypergrowth Screener
         run: |
           node src/scoring/run-screener.js
-          # Karl reads only GitHub red-X — make a silent empty export a hard fail.
           count=$(ls outputs/hypergrowth/*.json 2>/dev/null | wc -l)
           echo "Scoring wrote $count JSON files to outputs/hypergrowth/"
           if [ "$count" -lt 3 ]; then
@@ -746,9 +741,6 @@ jobs:
             exit 1
           fi
 
-      # Task 1.1: build the versioned findash-export/v1 contract from the engine output
-      # (latest-only, atomic via lib/atomic-write.js; never touches picks-history/ or
-      # earnings-calendar.json), then hard-validate it before the deploy below.
       - name: Build findash-export v1
         run: |
           node scripts/write-findash-export.js
@@ -759,16 +751,9 @@ jobs:
             exit 1
           fi
 
-      # Task 1.1: contract gate — presence + type + enum of EVERY mandatory field across
-      # all 15 files. Non-empty violation list -> exit 1 -> blocks the if:success() deploy
-      # (red-X, Karl's only alarm channel). Verified: 20 tamper variants all blocked,
-      # clean export passes. Same fail-loud pattern as coverage-gate.js.
       - name: Verify findash-export v1 schema (contract gate)
         run: node scripts/write-findash-export.js --check
 
-      # Publish outputs/hypergrowth/*.json to gh-pages, reusing the Deploy step's
-      # x-access-token GITHUB_TOKEN force-push. Clone existing gh-pages first so
-      # pull's index.html + other outputs survive; only refresh hypergrowth/.
       - name: Deploy Scoring Output to GitHub Pages
         if: success()
         run: |
@@ -778,7 +763,6 @@ jobs:
             || { mkdir -p _ghp; cd _ghp; git init -b gh-pages; cd ..; }
           mkdir -p _ghp/outputs/hypergrowth
           cp outputs/hypergrowth/*.json _ghp/outputs/hypergrowth/
-          # Task 1.1: publish the findash-export/v1 contract alongside the raw boards.
           mkdir -p _ghp/outputs/findash-export/v1
           cp -r outputs/findash-export/v1/. _ghp/outputs/findash-export/v1/
           cd _ghp
