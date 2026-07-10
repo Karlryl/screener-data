@@ -361,34 +361,16 @@ jobs:
           path: snapshots
           key: snapshots-shard-${{ matrix.shard }}-${{ github.run_id }}
 
-      # F-CI-016 (Tag 192/218): per-Shard-Frische-Frühwarnung. <50% frisch (<36h asOf)
-      # -> dieser Shard war ein No-Op. continue-on-error:true — nur Log/rotes-Shard-X;
-      # das HARTE gemergte Freshness-Gate sitzt im merge-Job (sonst wuerde ein einzelner
-      # halb-staler Shard das ganze Universum blocken). Der Upload unten ist if:always(),
-      # also blockt ein rotes Shard-X den Upload nicht.
+      # F-CI-016 (Tag 192/218, Tag 285): per-Shard-Frische-Frühwarnung. <50% frisch
+      # (<36h Pull-Uhr) -> dieser Shard war ein No-Op. continue-on-error:true — nur
+      # Log/rotes-Shard-X; das HARTE gemergte Freshness-Gate sitzt im merge-Job (sonst
+      # wuerde ein einzelner halb-staler Shard das ganze Universum blocken). Der Upload
+      # unten ist if:always(), also blockt ein rotes Shard-X den Upload nicht.
+      # Tag 285: Logik nach scripts/verify-freshness.js extrahiert (liest asOf =
+      # Pull-Uhr, nicht fetchedAt = Voll-Pull-Uhr — Pull-Diaet-Konflikt, falsch-rot 10.07.).
       - name: Verify Snapshot Freshness (shard ${{ matrix.shard }})
         continue-on-error: true
-        run: |
-          node -e "
-            const fs = require('fs');
-            const dir = './snapshots';
-            let files = [];
-            try { files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_')); } catch (e) {}
-            const now = Date.now();
-            const FRESH_MS = 36 * 3600 * 1000;
-            let fresh = 0, stale = 0, unparseable = 0;
-            for (const f of files) {
-              try {
-                const buf = fs.readFileSync(dir + '/' + f, 'utf8').slice(0, 800);
-                const m = buf.match(/\"(?:asOf|fetchedAt)\"\s*:\s*\"([^\"]+)\"/);
-                if (!m) { unparseable++; continue; }
-                const ts = new Date(m[1]).getTime();
-                if (now - ts < FRESH_MS) fresh++; else stale++;
-              } catch (e) { unparseable++; }
-            }
-            const pct = files.length > 0 ? (fresh / files.length * 100).toFixed(1) : '0';
-            console.log('shard ${{ matrix.shard }} freshness: ' + fresh + ' fresh / ' + stale + ' stale / ' + unparseable + ' unparseable of ' + files.length + ' (' + pct + '%)');
-          "
+        run: node scripts/verify-freshness.js ./snapshots "shard ${{ matrix.shard }}"
 
       # Shard-Manifest eindeutig auf shard-<i>.json umbenennen — der merge-Umzaehler
       # liest ein Verzeichnis FLACH (readdirSync .json). if:always() -> auch ein
@@ -513,36 +495,18 @@ jobs:
             echo "No merged manifest — coverage gate will use the file-count fallback."
           fi
 
-      # F-CI-016 (Tag 192/218): GEMERGTES Snapshot-Freshness-Gate ueber das VEREINTE
-      # Universum (nicht je Shard). 9 Shards je knapp ≥50% frisch waeren gemergt zur
-      # Haelfte stale -> genau der Fehlermodus, gegen den F-CI-016 gebaut ist. Hier hart
-      # (continue-on-error:false): <50% frisch -> Deploy blockt, keine stale Daten.
+      # F-CI-016 (Tag 192/218, Tag 285): GEMERGTES Snapshot-Freshness-Gate ueber das
+      # VEREINTE Universum (nicht je Shard). 9 Shards je knapp ≥50% frisch waeren gemergt
+      # zur Haelfte stale -> genau der Fehlermodus, gegen den F-CI-016 gebaut ist. Hier
+      # hart (continue-on-error:false): <50% frisch -> Deploy blockt, keine stale Daten.
+      # Tag 285: Logik nach scripts/verify-freshness.js extrahiert. Root-Cause-Fix
+      # falsch-rot 10.07.: der alte Inline-Regex las fetchedAt (Voll-Pull-Uhr, von der
+      # 0.9-Pull-Diaet absichtlich NICHT taeglich erneuert) statt asOf (Pull-Uhr, die
+      # _priceOnlyUpdate taeglich stempelt) — das Gate mass Fundamentals- statt
+      # Pull-Frische. Schutz bleibt: Pull versagt -> nichts gestempelt -> rot.
       - name: Verify Snapshot Freshness (merged)
         continue-on-error: false
-        run: |
-          node -e "
-            const fs = require('fs');
-            const dir = './snapshots';
-            const files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
-            const now = Date.now();
-            const FRESH_MS = 36 * 3600 * 1000;
-            let fresh = 0, stale = 0, unparseable = 0;
-            for (const f of files) {
-              try {
-                const buf = fs.readFileSync(dir + '/' + f, 'utf8').slice(0, 800);
-                const m = buf.match(/\"(?:asOf|fetchedAt)\"\s*:\s*\"([^\"]+)\"/);
-                if (!m) { unparseable++; continue; }
-                const ts = new Date(m[1]).getTime();
-                if (now - ts < FRESH_MS) fresh++; else stale++;
-              } catch (e) { unparseable++; }
-            }
-            const pct = files.length > 0 ? (fresh / files.length * 100).toFixed(1) : '0';
-            console.log('Merged snapshot freshness: ' + fresh + ' fresh / ' + stale + ' stale / ' + unparseable + ' unparseable of ' + files.length + ' (' + pct + '% fresh)');
-            if (files.length > 0 && fresh / files.length < 0.5) {
-              console.error('::error::F-CI-016 — fewer than 50% of merged snapshots are fresh (<36h asOf). Pull likely failed; refusing to publish stale data.');
-              process.exit(1);
-            }
-          "
+        run: node scripts/verify-freshness.js ./snapshots "Merged snapshot"
 
       # Frage 11 two-stage coverage gate — liest das umgezaehlte Manifest + volle
       # watchlist. KATASTROPHAL -> exit1 blockt Deploy; DEGRADIERT/OK -> exit0.
