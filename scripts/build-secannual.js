@@ -106,6 +106,12 @@ function looseSanity(yOpArr, sOpArr, yRevArr, sRevArr) {
     if (!looseSanity(snap.annual && snap.annual.annualOpInc, sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) { divergent++; continue; }
     out[tk] = { cik, annualOpInc: sec.annual.annualOpInc, annualRev: sec.annual.annualRev,
       annualNetIncome: sec.annual.annualNetIncome, annualFCF: sec.annual.annualFCF, annualOCF: sec.annual.annualOCF };
+    // Phase 4.1: tiefe Bilanz NUR wenn plausibel (newest Assets>0 UND newest CurrLiab>=0) — sonst laeuft
+    // ein isoliert-korruptes as-filed Assets/CurrLiab ungevalidiert in die roicStability-ROIC-Serie (Court-Auflage).
+    if (Number(newestPresent(sec.annual.annualAssets)) > 0 && Number(newestPresent(sec.annual.annualCurrentLiabilities)) >= 0) {
+      out[tk].annualAssets = sec.annual.annualAssets;
+      out[tk].annualCurrentLiabilities = sec.annual.annualCurrentLiabilities;
+    }
   }
   fs.writeFileSync(OUT, JSON.stringify(out));
   console.log(`secAnnual: ${Object.keys(out).length} Namen -> ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(0)}KB) | pulled=${pulled} cached=${cachedF} noCik=${noCik} 404=${no404} divergent=${divergent}`);

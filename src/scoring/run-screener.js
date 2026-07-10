@@ -119,7 +119,8 @@ function loadUniverse() {
 // per build-secannual offline erzeugt, FY-Versatz-robust via loose-sanity gefiltert) an die passenden Snapshots.
 // DETERMINISTISCH: liest die COMMITTETE Datei (nicht den git-ignored companyfacts-Cache), kein Netzwerk -> CI==lokal.
 // Cache-tolerant: fehlende Datei/Ticker -> secAnnual weglassen -> cycleSeries faellt auf Yahoo-4J zurueck (byte-identisch).
-// Rein additiv (snapshot.secAnnual) — nur der Zyklus-Daempfer (score.js cycleSeries) liest es; 0 andere Achsen.
+// Additiv (snapshot.secAnnual): der Zyklus-Daempfer (score.js cycleSeriesPair, OpInc/Rev) UND — seit Phase 4.1 —
+// roicStability (axes.js, OpInc/Assets/CurrLiab, Single-Source-Trio) lesen es. Beide fallen ohne secAnnual auf Yahoo zurueck.
 // Globale Gratis-Adapter: dieselbe tiefe {ticker:{annualOpInc,annualRev,...}}-Form fuer NICHT-US-Namen
 // (KR/OpenDART holt SK Hynix, die vom EDGAR-Chat offen gelassene non-US-Zyklus-Luecke; spaeter JP/TW).
 // Alle Dateien speisen DENSELBEN snapshot.secAnnual-Kanal -> derselbe Zyklus-Daempfer, kein zweiter
@@ -139,7 +140,9 @@ function mergeSecIntoUniverse(u) {
     const d = tk && data[tk];
     if (!d) continue;
     s.secAnnual = { annualOpInc: d.annualOpInc, annualRev: d.annualRev,
-      annualNetIncome: d.annualNetIncome, annualFCF: d.annualFCF, annualOCF: d.annualOCF };
+      annualNetIncome: d.annualNetIncome, annualFCF: d.annualFCF, annualOCF: d.annualOCF,
+      // Phase 4.1: tiefe Bilanz (fehlt in Alt-Store/regionalen Dateien -> undefined -> secSeries()==null -> Yahoo-Fallback)
+      annualAssets: d.annualAssets, annualCurrentLiabilities: d.annualCurrentLiabilities };
     merged++;
   }
   if (merged > 0) console.log(`[run-screener] mergeSecIntoUniverse: tiefe annual-Serie an ${merged} Namen angehaengt (SEC+regional)`);

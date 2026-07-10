@@ -298,10 +298,35 @@ function marginLevel(s) {
 // (renorm-on-drop, kein Fake-50). Misst Mehr-Zyklus-Konsistenz, nicht Niveau
 // (das traegt capitalEfficiency). null-on-absence wie marginLevel.
 const ROIC_STAB_MIN_YEARS = 6;
+// Inline-Leser der tiefen committeten SEC-Serie (snapshot.secAnnual, {value}[] von run-screener
+// mergeSecIntoUniverse angehaengt) als Plain-Number-Serie — 1:1 das normSec-Muster (score.js:338-342),
+// hier lokal, damit axes.js keine Zirkular-Dependency auf score.js aufbaut (axes.js kennt nur norm).
+function secSeries(s, field) {
+  const raw = s && s.secAnnual && s.secAnnual[field];
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  return raw.map((e) => { const v = (e && typeof e === 'object') ? e.value : e; return Number.isFinite(v) ? v : null; });
+}
+// Single-Source-Trio (Phase 4.1): OpInc + Assets + CurrLiab ENTWEDER alle aus der tiefen SEC-Serie
+// (secAnnual, ~10-15J) ODER alle aus Yahoo (annualBalance ~4J) — NIE feldweise gemischt, sonst entstuende
+// eine ROIC-Serie aus zeitlich unverbundenen Fenstern (Yahoo-OpInc-4J vs SEC-Bilanz-15J), genau was
+// cycleSeriesPair via useSec verbietet (score.js:358-359). secAnnual-Bilanz liegt in buildAnnual
+// index-aligned zu OpInc (dieselbe _fys-Achse) -> FY-kohaerent. useSec gdw alle drei tiefen Serien present,
+// Index0 non-null, und die tiefe OpInc mind. so tief wie Yahoo. Kein secAnnual -> Yahoo (byte-identisch).
+function roicStabilitySource(s) {
+  const opY = norm(s, 'annualOpInc');
+  const assetsY = norm(s, 'annualBalance', 'totalAssets');
+  const curLiabY = norm(s, 'annualBalance', 'currentLiabilities');
+  const opS = secSeries(s, 'annualOpInc');
+  const assetsS = secSeries(s, 'annualAssets');
+  const curLiabS = secSeries(s, 'annualCurrentLiabilities');
+  const useSec = opS && assetsS && curLiabS
+    && opS[0] !== null && assetsS[0] !== null && curLiabS[0] !== null
+    && opS.length >= opY.length;
+  return useSec ? { opInc: opS, assets: assetsS, curLiab: curLiabS }
+                : { opInc: opY, assets: assetsY, curLiab: curLiabY };
+}
 function roicStability(s) {
-  const opIncS = norm(s, 'annualOpInc');
-  const assets = norm(s, 'annualBalance', 'totalAssets');
-  const curLiab = norm(s, 'annualBalance', 'currentLiabilities');
+  const { opInc: opIncS, assets, curLiab } = roicStabilitySource(s);
   const roics = [];
   const nYears = Math.max(opIncS.length, assets.length);
   for (let i = 0; i < nYears; i++) {

@@ -63,9 +63,24 @@ test('annualFCF: OCF-Capex, newest 1.668B, null-Luecke statt 0 wo OCF fehlt', ()
   assert.equal(fcf[12], null);
 });
 
+// --- Bilanz (Phase 4.1): Assets/LiabilitiesCurrent, 15J, invested>0, FY-kohaerent zu OpInc ---
+test('annualAssets/annualCurrentLiabilities: 15J tief, invested=Assets-CurrLiab>0, gegen SEC-Filing verifiziert', () => {
+  const a = vals(sec.annual.annualAssets), c = vals(sec.annual.annualCurrentLiabilities);
+  assert.equal(a.length, 15); assert.equal(c.length, 15);
+  assert.equal(a[0], 82798000000);   // FY2025 Total Assets (Micron 10-K)
+  assert.equal(c[0], 11454000000);   // FY2025 Current Liabilities
+  assert.equal(a[2], 64254000000);   // FY2023
+  assert.equal(c[2], 4765000000);
+  // invested je Bilanzjahr > 0 (roicStability-Vorbedingung), FY-index-aligned zu annualOpInc
+  const oi = vals(sec.annual.annualOpInc);
+  let paired = 0;
+  for (let i = 0; i < 15; i++) { if (Number.isFinite(a[i]) && Number.isFinite(c[i]) && a[i] - c[i] > 0 && Number.isFinite(oi[i])) paired++; }
+  assert.equal(paired, 15, 'alle 15 FY sind gepaart (OpInc+invested>0) -> roicStability rechenbar (>=6)');
+});
+
 // --- Index-Alignment ueber die annual-Serien --------------------------------
 test('annual: alle emittierten Serien index-aligned auf 15 Jahre', () => {
-  for (const f of ['annualRev', 'annualOpInc', 'annualNetIncome', 'annualFCF', 'annualOCF', 'annualGP']) {
+  for (const f of ['annualRev', 'annualOpInc', 'annualNetIncome', 'annualFCF', 'annualOCF', 'annualGP', 'annualAssets', 'annualCurrentLiabilities']) {
     assert.equal(sec.annual[f].length, 15, f + ' laenge');
   }
 });

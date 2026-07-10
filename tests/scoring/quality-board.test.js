@@ -134,6 +134,26 @@ test('roicStability: stabilere Serie -> hoeherer (naeher 0) Wert als volatile', 
   assert.ok(near(ax.roicStability(stable), 0)); // konstante ROIC -> CoV 0 -> -0
 });
 
+// --- roicStability: tiefer SEC-Kanal (Phase 4.1) + Single-Source-Trio-Guard ---
+const secTrio = (op, as, cl) => ({ secAnnual: { annualOpInc: V(op), annualAssets: V(as), annualCurrentLiabilities: V(cl) } });
+test('roicStability(tiefe secAnnual-Bilanz 8J) === finit — der deep-Kanal schaltet die Achse frei', () => {
+  // Yahoo-Bilanz fehlt (kein annual) -> Yahoo-Pfad waere null; secAnnual 8J -> finit.
+  const s = secTrio([10, 11, 10, 9, 10, 11, 10, 9], Array(8).fill(100), Array(8).fill(0));
+  assert.ok(Number.isFinite(ax.roicStability(s)), 'tiefer Kanal muss finit liefern');
+});
+test('roicStability Single-Source-Guard: unvollstaendiges secAnnual-Trio -> Yahoo-Fallback (kein Feld-Mix)', () => {
+  // secAnnual hat OpInc+Assets aber KEIN annualCurrentLiabilities -> darf die 8J-Assets NICHT mit Yahoo-CurrLiab
+  // mischen; faellt KOMPLETT auf Yahoo zurueck (4J) -> null (byte-identisch zum Alt-Verhalten).
+  const s = { annual: { annualOpInc: V([10, 11, 10, 9]), annualBalance: bal(4, 100, 0) },
+    secAnnual: { annualOpInc: V([10, 11, 10, 9, 10, 11, 10, 9]), annualAssets: V(Array(8).fill(100)) } };
+  assert.equal(ax.roicStability(s), null, 'unvollstaendiges Trio -> Yahoo-Fallback -> 4J -> null');
+});
+test('roicStability: tiefes secAnnual (8J) schlaegt flache Yahoo-4J (null -> finit)', () => {
+  const s = { annual: { annualOpInc: V([10, 11, 10, 9]), annualBalance: bal(4, 100, 0) },
+    ...secTrio([10, 11, 10, 9, 10, 11, 10, 9], Array(8).fill(100), Array(8).fill(0)) };
+  assert.ok(Number.isFinite(ax.roicStability(s)), 'deep 8J ueberschreibt Yahoo-4J-null');
+});
+
 // --- QC-Formeln: Form-Invarianten (BAU-GATE 2 + 9) ---------------------------
 test('QC-Registry: 11 Boards (13 minus financials/real-estate), quality-Praefix', () => {
   const ids = Object.keys(qcFormulas);

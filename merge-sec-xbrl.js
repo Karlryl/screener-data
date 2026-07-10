@@ -39,6 +39,11 @@ const C_NETINC = 'NetIncomeLoss';
 const C_OCF = 'NetCashProvidedByUsedInOperatingActivities';
 const C_CAPEX = 'PaymentsToAcquirePropertyPlantAndEquipment'; // positiver Cash-Abfluss
 const C_GP = 'GrossProfit';
+// Bilanz (Phase 4.1): Assets/LiabilitiesCurrent -> invested = Assets - CurrLiab je FY (wie capitalEfficiency/
+// roicStability). Kanonische, ueber 10-15J stabile us-gaap-Tags (probe-verifiziert: MU 15J, MSFT/NVDA 16J
+// lueckenlos). Falls ein frueher Filer driftet: Prio-Union analog REV_CONCEPTS ergaenzen (add when).
+const C_ASSETS = 'Assets';
+const C_CURLIAB = 'LiabilitiesCurrent';
 
 function usdUnits(gaap, concept) {
   const node = gaap && gaap[concept];
@@ -76,10 +81,12 @@ function buildAnnual(gaap) {
   const ocf = annualConcept(gaap, C_OCF);
   const capex = annualConcept(gaap, C_CAPEX);
   const gp = annualConcept(gaap, C_GP);
+  const assets = annualConcept(gaap, C_ASSETS);
+  const curliab = annualConcept(gaap, C_CURLIAB);
 
   // gemeinsame fy-Achse = Union ueber die Serien; numerisch absteigend (newest-first).
   const fySet = new Set();
-  for (const m of [rev, opinc, ni, ocf, capex, gp]) for (const fy of m.keys()) fySet.add(fy);
+  for (const m of [rev, opinc, ni, ocf, capex, gp, assets, curliab]) for (const fy of m.keys()) fySet.add(fy);
   const fys = [...fySet].sort((a, b) => b - a);
 
   const cell = (m, fy) => (m.has(fy) ? { value: m.get(fy).val } : { value: null });
@@ -95,6 +102,10 @@ function buildAnnual(gaap) {
     annualOCF: fys.map((fy) => cell(ocf, fy)),
     annualFCF: fys.map((fy) => fcfCell(fy)),
     annualGP: fys.map((fy) => cell(gp, fy)),
+    // Bilanz (Phase 4.1): index-aligned auf dieselbe _fys-Achse -> Assets/CurrLiab/OpInc eines FY
+    // stammen aus DEMSELBEN 10-K (as-filed-per-year) -> invested = Assets - CurrLiab FY-kohaerent.
+    annualAssets: fys.map((fy) => cell(assets, fy)),
+    annualCurrentLiabilities: fys.map((fy) => cell(curliab, fy)),
   };
 }
 
