@@ -55,6 +55,19 @@ function parseArgs(argv) {
 
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+// A7-fix (2026-07-10): Comparator fuer die stale-first-Pull-Reihenfolge. Benchmarks
+// (added_via:'benchmark') immer zuerst (kritisch fuer alpha-vs-SPY), dann aeltester/
+// fehlender history-Verlauf zuerst — so schiebt jeder timeout-begrenzte Lauf die stale
+// Front vor, statt immer den Kopf neu zu pullen. Exportiert fuer den Unit-Test.
+function staleFirstComparator(history) {
+  const lastDateOf = (t) => { const a = history && history[t]; return (a && a.length) ? a[a.length - 1].date : ''; };
+  return (x, y) => {
+    const bx = x.added_via === 'benchmark' ? 0 : 1, by = y.added_via === 'benchmark' ? 0 : 1;
+    if (bx !== by) return bx - by;                                    // Benchmarks immer zuerst
+    return lastDateOf(x.ticker).localeCompare(lastDateOf(y.ticker));  // dann aeltester/fehlender Verlauf zuerst
+  };
+}
+
 async function main() {
   const args = parseArgs(process.argv);
   if (!fs.existsSync(args.out)) fs.mkdirSync(args.out, { recursive: true });
@@ -105,6 +118,20 @@ async function main() {
 
   const todaysSnapshot = {};
   let ok = 0, failed = 0;
+
+  // A7-fix (2026-07-10): oldest-history-first ordering + timeout-checkpoint.
+  // ROOT CAUSE (CI-verifiziert, run 28998189660): der Voll-Universum-Pull (~19k Ticker)
+  // ueberschreitet den 25-min Step-Timeout (braucht ~59 min) -> der Prozess wird MITTEN
+  // in der Batch-Schleife gekillt, BEVOR der einzige history.json-Schreibvorgang am
+  // Schleifen-ENDE (writeFileAtomic(histPath) unten) je laeuft -> history.json wird NIE
+  // geschrieben -> seit dem 16.06-Backfill eingefroren; continue-on-error maskierte es gruen.
+  // FIX (Muster wie Tag-280 Fundamentals-Sharding: oldest/uncached-first + save-always):
+  //  (a) stale Ticker zuerst pullen, damit jeder timeout-begrenzte Lauf die stale Front
+  //      vorschiebt (sonst restartet die Schleife immer bei Index 0 und refresht nur den Kopf);
+  //      Benchmarks (SPY/QQQ/IWM) bleiben ganz vorn (kritisch fuer alpha), dann aeltester Verlauf.
+  //  (b) periodischer Checkpoint-Write unten, damit ein Timeout-Kill den Fortschritt persistiert.
+  wl.stocks.sort(staleFirstComparator(history));
+  const CHECKPOINT_EVERY_BATCHES = parseInt(process.env.PRICE_CHECKPOINT_BATCHES || '100', 10);
 
   // Tag-84: parallel pulls
   const CONCURRENCY = parseInt(process.env.PRICE_CONCURRENCY || '10', 10);
@@ -192,6 +219,15 @@ async function main() {
   for (let batchStart = 0; batchStart < wl.stocks.length; batchStart += CONCURRENCY) {
     const batch = wl.stocks.slice(batchStart, batchStart + CONCURRENCY);
     await Promise.all(batch.map(s => processOne(s).catch(e => _log('WARN', `Batch ${s.ticker}: ${e.message}`))));
+    // A7-fix: Checkpoint history.json periodisch, damit ein 25-min-Timeout-Kill den bis
+    // hierher gepullten Fortschritt PERSISTIERT (der End-Write unten wird unter Timeout nie
+    // erreicht). Atomar (writeFileAtomic) -> ein Kill mitten im Write kann die gute Datei nie
+    // korrumpieren; Teil-Universum-history ist valides JSON und genau das gewuenschte Substrat.
+    const batchIdx = batchStart / CONCURRENCY;
+    if (batchIdx > 0 && batchIdx % CHECKPOINT_EVERY_BATCHES === 0) {
+      writeFileAtomic(histPath, JSON.stringify(history));
+      _log('INFO', `Checkpoint: history.json persistiert nach ${batchStart + CONCURRENCY} Tickern (${ok} ok)`);
+    }
     if (batchStart + CONCURRENCY < wl.stocks.length) {
       await sleep(args.rateLimit);
       if (batchStart % 100 === 0) _log('INFO', `Price pull progress: ${batchStart + CONCURRENCY}/${wl.stocks.length}`);
@@ -277,4 +313,9 @@ async function main() {
   if (ok === 0 && wl.stocks.length > 0) process.exit(1);
 }
 
-main().catch(e => { _log('FATAL', e.stack || e.message); process.exit(1); });
+module.exports = { staleFirstComparator };
+
+// A7-fix: nur als CLI ausfuehren; require (Unit-Test) darf main() NICHT starten.
+if (require.main === module) {
+  main().catch(e => { _log('FATAL', e.stack || e.message); process.exit(1); });
+}
