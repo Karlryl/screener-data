@@ -778,6 +778,23 @@ async function main() {
   // Tag 165: target raised to 12k+ with OTC + NASDAQ API sources
   console.log('Distinct candidates after all sources: ' + allTickers.size + ' (target: 12000+)');
 
+  // Task 0.12 (Fail-Ticker-Klassifizierung): belegt-tote Ticker sind in
+  // data-health/dead-tickers.json registriert (Klasse + Beleg-Verfahren im
+  // Registry-Header; Klassen-Report reports/fail-ticker-klassen-2026-07-10.md).
+  // Zwei Wirkungen: (a) tote Kandidaten werden nie (wieder) aufgenommen,
+  // (b) noch vorhandene tote Bestandszeilen werden unten in-place entfernt.
+  // Fail-open: fehlende/kaputte Registry = leere Registry (kein Austrag).
+  let deadRegistry = {};
+  try {
+    const reg = JSON.parse(fs.readFileSync(path.join(__dirname, 'data-health', 'dead-tickers.json'), 'utf8'));
+    if (reg && reg.tickers && typeof reg.tickers === 'object') deadRegistry = reg.tickers;
+  } catch (e) { console.warn('  dead-tickers-Registry nicht lesbar (' + e.message + ') — kein Austrag.'); }
+  let deadCandidatesBlocked = 0;
+  for (const sym of [...allTickers.keys()]) {
+    if (deadRegistry[String(sym).toUpperCase()]) { allTickers.delete(sym); deadCandidatesBlocked++; }
+  }
+  if (deadCandidatesBlocked) console.log('  Dead-Registry: ' + deadCandidatesBlocked + ' tote Kandidaten geblockt (0.12).');
+
   // 3. Identify new tickers
   const newTickers = [];
   for (const [sym, info] of allTickers) {
@@ -931,10 +948,21 @@ async function main() {
     if (adrDropped) console.log('  ADR-Watchlist-Repair: ' + adrDropped + ' Bestands-ADR-Zeilen entfernt (Heimat-Listing present).');
   }
 
+  // Task 0.12 (b): tote Bestandszeilen austragen (in-place-Repair, analog ADR-Dedup).
+  // Snapshots bleiben unangetastet — der 0.8-Boersen-Waechter zaehlt Snapshots,
+  // nicht Watchlist-Zeilen, und kippt dadurch nicht.
+  let deadDropped = 0;
+  if (Object.keys(deadRegistry).length > 0) {
+    const before012 = wlRaw.stocks.length;
+    wlRaw.stocks = wlRaw.stocks.filter(s => !(s && s.ticker && deadRegistry[String(s.ticker).toUpperCase()]));
+    deadDropped = before012 - wlRaw.stocks.length;
+    if (deadDropped) console.log('  Dead-Registry: ' + deadDropped + ' tote Bestandszeilen ausgetragen (0.12).');
+  }
+
   // audit/fix (A2 2026-06-26): gate the write on an actual change. With the early-return
   // removed above, a run that discovered nothing new AND repaired nothing must still leave the
   // universe untouched (no needless rewrite / timestamp churn).
-  if (newTickers.length === 0 && repaired === 0 && collapsed === 0 && adrDropped === 0) {
+  if (newTickers.length === 0 && repaired === 0 && collapsed === 0 && adrDropped === 0 && deadDropped === 0) {
     console.log('Nothing to add, nothing to repair. Universe unchanged.');
     return;
   }
