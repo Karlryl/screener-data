@@ -287,9 +287,42 @@ function marginLevel(s) {
   return firstPresent(gm); // ROH-GM-Niveau [0,1], hoeher=besser; null-on-absence
 }
 
+// --- roicStability (3.1 QC-Board, benannt-leer bis Phase 4.1) ----------------
+// NEGATIVER Variationskoeffizient (CoV = std/|mean|) der JAEHRLICHEN ROIC-Serie
+// (OpInc/invested je FY, invested = totalAssets - currentLiabilities wie in
+// capitalEfficiency). Hoeher (naeher 0) = stabiler = besser -> Vorzeichen negiert.
+// HART gegated: verlangt >= ROIC_STAB_MIN_YEARS gepaarte (OpInc present, invested>0)-
+// Jahre. ROIC_STAB_MIN_YEARS ist ein DATEN-VERFUEGBARKEITS-Gate (analog
+// profit-tier LONGTERM_MIN_YEARS=4), KEINE Score-Magic-Number: auf den heutigen
+// Yahoo-Daten (~4 GJ, oft fehlendes currentLiabilities) -> praktisch ueberall null
+// (renorm-on-drop, kein Fake-50). Misst Mehr-Zyklus-Konsistenz, nicht Niveau
+// (das traegt capitalEfficiency). null-on-absence wie marginLevel.
+const ROIC_STAB_MIN_YEARS = 6;
+function roicStability(s) {
+  const opIncS = norm(s, 'annualOpInc');
+  const assets = norm(s, 'annualBalance', 'totalAssets');
+  const curLiab = norm(s, 'annualBalance', 'currentLiabilities');
+  const roics = [];
+  const nYears = Math.max(opIncS.length, assets.length);
+  for (let i = 0; i < nYears; i++) {
+    const o = opIncS[i], a = assets[i], c = curLiab[i];
+    if (o === null || o === undefined || a === null || a === undefined) continue;
+    if (c === null || c === undefined) continue;      // jahres-genauer ROIC (kein ROA-Fallback)
+    const inv = a - c;
+    if (!(inv > 0)) continue;
+    roics.push(o / inv);
+  }
+  if (roics.length < ROIC_STAB_MIN_YEARS) return null; // hartes Daten-Gate -> heute ~ueberall null
+  const mean = roics.reduce((p, c) => p + c, 0) / roics.length;
+  if (!(Math.abs(mean) > 0)) return null;              // CoV undefiniert bei mean 0
+  const variance = roics.reduce((p, c) => p + (c - mean) * (c - mean), 0) / roics.length;
+  const cov = Math.sqrt(variance) / Math.abs(mean);
+  return -cov;                                         // hoeher (naeher 0) = stabiler = besser
+}
+
 module.exports = {
   revGrowthLevel, revAcceleration, gpGrowth, ruleOfX,
-  marginTrajectory, capitalEfficiency, revisionsMomentum, dilution, marginLevel,
+  marginTrajectory, capitalEfficiency, revisionsMomentum, dilution, marginLevel, roicStability,
   // C2: per-Quartal-Rohwerte fuer die universe-weite Winsor-Schranken-Sammlung in score.js
   quarterOpMargins, quarterQoQRates,
   // Helfer fuer Tests/Formeln

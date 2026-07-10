@@ -26,6 +26,9 @@
 const DIAGNOSTIC = new Set(['consumer-staples', 'materials', 'real-estate', 'it-services', 'tech-hardware']);
 
 function boardStatus(formulaId) {
+  // 3.1 QC-Board: jede quality-*-Formel ist per Konstruktion DIAGNOSTIC (Court-PASSED-AS-DIAGNOSTIC)
+  // -> kann NIE zu 'core' promoten, egal was DIAGNOSTIC listet.
+  if (typeof formulaId === 'string' && formulaId.startsWith('quality-')) return 'diagnostic';
   return DIAGNOSTIC.has(formulaId) ? 'diagnostic' : 'core';
 }
 

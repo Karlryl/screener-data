@@ -463,10 +463,18 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
   // (Universe-Ausbau verschiebt bestehende Scores dann NICHT mehr). Default (null) = live-lernend,
   // byte-identisch zum bisherigen Verhalten.
   const refCal = opts.refCalibration || null;
+  // 3.1 QC-Board (additive Seams, HG byte-identisch per Default):
+  //  (a) classify: erlaubt einem zweiten Pass eine EIGENE Membership-Funktion (qualityRoute) statt route().
+  //      HG uebergibt kein classify -> route -> byte-identisch.
+  //  (b) growthBoost:false -> der AUFWAERTS-Wachstums-Faktor wird auf 1 gepinnt (QCs Inversion nicht
+  //      hintenrum wieder einspeisen). HG setzt es nicht -> Boost weiter aktiv -> byte-identisch.
+  //      cycleDamper + burnPress bleiben UNBERUEHRT (weiter aktiv).
+  const classify = opts.classify || route;
+  const growthBoostOn = opts.growthBoost !== false;
   const results = [];
   // 1. Routing + Track
   for (const s of (Array.isArray(snapshots) ? snapshots : [])) {
-    const r = route(s);
+    const r = classify(s);
     const lampsActive = evaluateLamps(s).active;
     const base = { ticker: tickerOf(s), snapshot: s, lamps: lampsActive };
     // A4: Daten-Qualitaets-Gate VOR dem Scoring — data-suspect-Namen aus dem Ranking nehmen.
@@ -722,7 +730,9 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
     if (e.action === 'route' && Number.isFinite(e.score)) {
       const g = robustGByEntry.get(e);
       const gp = growthPctlByCohort[e.formulaId + '|' + e.track]; // 2.11 Stufe B: Kohorten-Perzentilrang statt global
-      const boost = (!gp || g === null || g === undefined) ? 1 : boostFromPctl(gp(g));
+      // 3.1 QC-Board: growthBoost:false pinnt den Faktor auf 1 (QCs Wachstums-Inversion nicht hintenrum
+      // wieder einspeisen). HG (growthBoost nicht gesetzt) -> growthBoostOn -> Faktor unveraendert.
+      const boost = (!growthBoostOn || !gp || g === null || g === undefined) ? 1 : boostFromPctl(gp(g));
       // PHASE 3: Zyklus-Daempfer multiplikativ an derselben post-C4-Stelle (kommutativ). signal=0 (Anker,
       // Nicht-Zykliker, Degeneration) -> Faktor exakt 1.0 -> byte-identisch. Nur MU/SK-Hynix-Typ (Oszillation
       // UND Umsatzkollaps) wird gedrueckt.

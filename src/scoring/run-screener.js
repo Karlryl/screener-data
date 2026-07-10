@@ -12,6 +12,10 @@ const fs = require('fs');
 const path = require('path');
 const { scoreUniverse, produceRankings, calibrationDrift } = require('./score.js');
 const formulas = require('./formulas/index.js');
+// 3.1 QC-Board (DIAGNOSTIC, additiv): eigener Membership-Router + eigene Formel-Registry + Board-Status.
+const { qualityRoute } = require('./quality-route.js');
+const qcFormulas = require('./formulas/quality/index.js');
+const { boardStatus } = require('./board-status.js');
 // audit/fix (C2): Outputs atomar schreiben (tmp+rename), wie das ganze Daten-Fundament —
 // plain fs.writeFileSync hinterlaesst bei Crash/CI-Timeout truncated JSON fuers Dashboard.
 const { writeJsonAtomic } = require('../../lib/atomic-write.js');
@@ -19,6 +23,7 @@ const { writeJsonAtomic } = require('../../lib/atomic-write.js');
 const ROOT = path.join(__dirname, '..', '..');
 const SNAP_DIR = path.join(ROOT, 'snapshots');
 const OUT_DIR = path.join(ROOT, 'outputs', 'hypergrowth');
+const QC_OUT_DIR = path.join(ROOT, 'outputs', 'quality'); // 3.1 QC-Board (DIAGNOSTIC), getrennter Ordner
 
 // audit/fix (Court Phase A Runde 3, Fall C1): Coverage-Floor gegen eine SELF-BASELINE.
 // Weil das Scoring kohorten-relativ perzentil-normiert, verschiebt ein still geschrumpftes
@@ -193,7 +198,53 @@ function run(topN) {
     writeJsonAtomic(path.join(ROOT, 'outputs', 'calibration.json'),
       { generated_at: new Date().toISOString(), ...results.calibration });
   }
+  // 3.1 QC-Board (DIAGNOSTIC, additiv): zweiter Scoring-Pass durch DIESELBE Engine, NACHDEM HG bereits
+  // auf Disk liegt. Fail-soft: ein QC-Fehler darf den frischen HG-Stand NICHT stalen (::error:: loggen,
+  // HG unberuehrt). KEIN HG-refCalibration (QC live-lernt sein eigenes Lineal).
+  try {
+    runQualityPass(universe, topN);
+  } catch (e) {
+    console.error(`::error:: [run-screener] QC-Pass fehlgeschlagen (HG unberuehrt): ${e && e.message}`);
+  }
   return { universe: universe.length, branches: Object.keys(ranked.branches).length, out: OUT_DIR };
+}
+
+// 3.1 QC-Board: eigener Scoring-Pass via classify-Seam (qualityRoute) + growthBoost:false. Schreibt
+// outputs/quality/{<boards>,overview,index,calibration}.json mit assertFinite-Write-Guard. calibration
+// NUR nach outputs/quality/calibration.json (NIE outputs/calibration.json — das ist das HG-Lineal).
+function runQualityPass(universe, topN) {
+  const qcResults = scoreUniverse(universe, qcFormulas, { classify: qualityRoute, growthBoost: false });
+  const qcRanked = produceRankings(qcResults, { topN: topN || 100 });
+  const counts = {};
+  for (const e of qcResults) {
+    if (e.action === 'route' && e.score !== null) {
+      counts[e.formulaId] = counts[e.formulaId] || { profitable: 0, unprofitable: 0 };
+      counts[e.formulaId][e.track] = (counts[e.formulaId][e.track] || 0) + 1;
+    }
+  }
+  const W = (p, v) => writeJsonAtomic(p, v, { assertFinite: true }); // fail-loud statt NaN->null
+  fs.mkdirSync(QC_OUT_DIR, { recursive: true });
+  for (const [id, b] of Object.entries(qcRanked.branches)) {
+    W(path.join(QC_OUT_DIR, id + '.json'), b);
+  }
+  W(path.join(QC_OUT_DIR, 'overview.json'), qcRanked.overview);
+  const sortKeys = (o) => Object.fromEntries(Object.keys(o).sort().map((k) => [k, o[k]]));
+  const boardIds = Object.keys(qcRanked.branches).sort();
+  const boardStatusMap = {};
+  for (const id of boardIds) boardStatusMap[id] = boardStatus(id); // alle 'diagnostic' (quality-Praefix)
+  W(path.join(QC_OUT_DIR, 'index.json'), {
+    schema: 'quality/diagnostic-v1',
+    generatedFromSnapshots: universe.length,
+    boards: boardIds,
+    boardStatus: boardStatusMap,
+    counts: sortKeys(counts),
+    excluded: sortKeys(qcRanked.excluded),
+  });
+  if (qcResults.calibration) {
+    W(path.join(QC_OUT_DIR, 'calibration.json'),
+      { generated_at: new Date().toISOString(), ...qcResults.calibration });
+  }
+  console.log(`[run-screener] QC-Board (DIAGNOSTIC): ${boardIds.length} Boards -> ${QC_OUT_DIR}`);
 }
 
 if (require.main === module) {
