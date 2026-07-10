@@ -27,6 +27,13 @@ const MARKER = './outputs/coverage-status.json';
 const HARD_ABS = 2500, HARD_PCT = 0.13;   // katastrophal floor = max(2500, 13%)
 const SOFT_ABS = 4600, SOFT_PCT = 0.18;   // full-pull target  = max(4600, 18%)
 const FAIL_MASS_MAX = 0.35;               // n_failed/(n_ok+n_failed) above this = degraded
+// Task 0.12: die 90%-Latte der 0.2-Akzeptanz, PRÄZISIERT auf den ehrlichen Nenner
+// (adressierbar = n_total − mcap-Skips; belegt-tote Ticker sind per
+// data-health/dead-tickers.json bereits aus der Watchlist ausgetragen).
+// Kein Relax (L6): alle bisherigen Schwellen (HARD/SOFT/FAIL_MASS) bleiben
+// unverändert aktiv — die ehrliche Latte kommt ADDITIV dazu und greift nur,
+// wenn das Manifest den Nenner trägt (n_addressable bzw. n_skipped_mcap).
+const HONEST_TARGET = 0.90;
 
 function readJSON(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return null; } }
 function watchlistSize() {
@@ -71,8 +78,21 @@ function finishGood(ok, total, source, m, reasons) {
   const denom = ok + nf;
   if (denom > 0 && nf / denom > FAIL_MASS_MAX)
     reasons.push(`failure-mass ${(nf / denom * 100).toFixed(0)}% > ${FAIL_MASS_MAX * 100}% (adapter/field mass-failure)`);
+  // Task 0.12: ehrliche Coverage gegen den adressierbaren Nenner. Fallback auf
+  // n_total − n_skipped_mcap für Manifeste, die n_addressable noch nicht tragen;
+  // Legacy-Manifeste ganz ohne mcap-Zählung => Latte nicht messbar => kein Reason.
+  let addressable = null;
+  if (m && Number.isFinite(m.n_addressable) && m.n_addressable > 0) addressable = m.n_addressable;
+  else if (m && Number.isFinite(m.n_skipped_mcap) && Number.isFinite(m.n_total) && m.n_total - m.n_skipped_mcap > 0)
+    addressable = m.n_total - m.n_skipped_mcap;
+  let honestPct = null;
+  if (addressable !== null) {
+    honestPct = +(ok / addressable * 100).toFixed(1);
+    if (ok / addressable < HONEST_TARGET)
+      reasons.push(`honest-coverage ${honestPct}% < ${HONEST_TARGET * 100}% of addressable ${addressable} (n_total − mcap-skips; Tote bereits ausgetragen, 0.12)`);
+  }
   const status = reasons.length ? 'degradiert' : 'ok';
-  return { status, reasons, n_ok: ok, n_total: total, source };
+  return { status, reasons, n_ok: ok, n_total: total, source, n_addressable: addressable, honest_coverage_pct: honestPct };
 }
 
 // findash-export v1 contract (task 1.1 consumer): the dashboard binds `degraded`
@@ -94,6 +114,9 @@ function buildMarker(res, m) {
     n_full: (m && Number.isFinite(m.n_full)) ? m.n_full : null,              // 0.9 instrumentation
     n_priceonly: (m && Number.isFinite(m.n_priceonly)) ? m.n_priceonly : null,
     coverage_pct: coveragePct,
+    // Task 0.12: ehrlicher Nenner + ehrliche Coverage (null bei Legacy-Manifest ohne mcap-Zählung)
+    n_addressable: Number.isFinite(res.n_addressable) ? res.n_addressable : null,
+    honest_coverage_pct: Number.isFinite(res.honest_coverage_pct) ? res.honest_coverage_pct : null,
     source: res.source,
     reasons: res.reasons,
     manifest_partial: !!(m && m.partial === true)
@@ -119,8 +142,8 @@ function validateMarker(mk) {
     if (!Number.isFinite(mk[f])) errs.push(`${f} not finite`);
   }
   if (!Array.isArray(mk.reasons)) errs.push('reasons not array');
-  // n_full/n_priceonly nullable (legacy manifests) but if present must be finite
-  for (const f of ['n_full', 'n_priceonly']) {
+  // n_full/n_priceonly/n_addressable/honest_coverage_pct nullable (legacy manifests) but if present must be finite
+  for (const f of ['n_full', 'n_priceonly', 'n_addressable', 'honest_coverage_pct']) {
     if (mk[f] !== null && !Number.isFinite(mk[f])) errs.push(`${f} present but not finite`);
   }
   return errs;
@@ -144,7 +167,11 @@ function run() {
   const mix = (m && (Number.isFinite(m.n_full) || Number.isFinite(m.n_priceonly)))
     ? ` full=${m.n_full == null ? '?' : m.n_full} price-only=${m.n_priceonly == null ? '?' : m.n_priceonly}`
     : '';
-  const line = `Coverage: ${res.n_ok}/${res.n_total} (${coveragePct}%)${mix} status=${res.status} source=${res.source}`;
+  // Task 0.12: ehrliche Coverage sichtbar machen (n_ok / adressierbar)
+  const honest = Number.isFinite(marker.honest_coverage_pct)
+    ? ` ehrlich=${marker.n_ok}/${marker.n_addressable} (${marker.honest_coverage_pct}%)`
+    : '';
+  const line = `Coverage: ${res.n_ok}/${res.n_total} (${coveragePct}%)${honest}${mix} status=${res.status} source=${res.source}`;
   if (res.status === 'katastrophal') {
     console.error(`::error::KATASTROPHAL — ${line}. ${res.reasons.join('; ')}. Blocking deploy.`);
     process.exit(1);
@@ -168,6 +195,10 @@ function selftest() {
     [{ n_ok: 4200, n_total: N, partial: false }, 'degradiert'],                    // above floor, below 18% soft
     [{ n_ok: 6500, n_total: N, partial: false, n_failed: 100 }, 'ok'],             // clean full healthy pull
     [{ n_ok: 6000, n_total: N, partial: false, n_failed: 5000 }, 'degradiert'],    // huge failure-mass
+    // Task 0.12: ehrliche 90%-Latte (nur bei Manifesten mit mcap-Zählung messbar)
+    [{ n_ok: 6088, n_total: 23689, partial: false, n_failed: 4209, n_skipped_mcap: 13392 }, 'degradiert'], // Ist-Zustand vor Austrag: ehrlich 59.1% < 90 (+ fail-mass)
+    [{ n_ok: 6100, n_total: 20066, partial: false, n_failed: 500, n_skipped_mcap: 13392, n_addressable: 6674 }, 'ok'], // nach Austrag: ehrlich 91.4% ≥ 90
+    [{ n_ok: 5500, n_total: 20066, partial: false, n_failed: 1100, n_skipped_mcap: 13392, n_addressable: 6674 }, 'degradiert'], // echter Pull-Einbruch bleibt rot: ehrlich 82.4% < 90
   ];
   let pass = 0;
   for (const [m, want] of cases) {

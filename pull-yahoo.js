@@ -2834,7 +2834,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // the coverage step reads the same fields whether the run timed out (partial
   // incremental manifest) or finished (this write).
   const nFullFinal = okResultsFinal.filter(r => r.status === 'ok').length;
-  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, n_skipped_mcap: manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
+  // Task 0.12: n_addressable = ehrlicher Coverage-Nenner (Universum minus mcap-Skips;
+  // belegt-tote Ticker sind bereits auf Watchlist-Ebene ausgetragen, siehe
+  // data-health/dead-tickers.json). coverage-gate misst die 90%-Latte hiergegen.
+  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, n_skipped_mcap: manifest.n_skipped_mcap, n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
   // Tag 189: factored into writeFileAtomic helper.
   const slimPath = path.join(outputDir, '_manifest.json');
   writeFileAtomic(slimPath, JSON.stringify(slim));

@@ -56,6 +56,9 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
     n_full: sum('n_full'),
     n_priceonly: sum('n_priceonly'),
     n_skipped_mcap: sum('n_skipped_mcap'),
+    // Task 0.12: ehrlicher Coverage-Nenner = Voll-Universum minus mcap-Skips
+    // (belegt-tote Ticker sind schon aus der Watchlist ausgetragen, dead-tickers.json).
+    n_addressable: fullUniverseSize - sum('n_skipped_mcap'),
     n_failed: sum('n_failed'),
     // partial=true wenn irgendein Shard mittendrin abbrach ODER ein Shard ganz fehlt.
     partial: anyShardPartial || missingShards > 0,
