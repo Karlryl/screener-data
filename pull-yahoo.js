@@ -187,6 +187,59 @@ const MODULES = [
   'earningsHistory'
 ];
 
+// ─── Task 0.13 (Tag 288): Schema-Salvage für falsch-negative Validator-Rejects ──
+// Befund 0.12/0.13: 1.126 LEBENDE Ticker (ADYEN.AS, 4188.T Mitsubishi Chemical,
+// 5101.T Yokohama Rubber, ALOT, …) scheiterten client-seitig am strikten
+// yahoo-finance2-Schema: Yahoo lässt in earningsHistory.history[i] die Keys
+// epsActual/epsEstimate/epsDifference/surprisePercent für Quartale ohne
+// Estimate/Actual GANZ WEG (typisch JP/EU-Titel), das Schema verlangt die Keys
+// aber als required (number|null — identisch bis v3.15.4, Library-Update fixt
+// nichts). Ein Loch im unkritischen Enrichment-Modul riss so den kompletten
+// 13-Module-Payload ab → Ticker zählte als schema-fail, obwohl Kurs, MCap und
+// Jahres-GuV vollständig da sind.
+//
+// Vorsicht F-A-2026-06-21 (audit-reports/2026-06-21-round1-raw-findings.json,
+// A-pull-yahoo-02-Verdict) bleibt gewahrt — validateResult wird NICHT (auch
+// nicht per Call) abgeschaltet: der Validator läuft unverändert und wirft
+// weiter; die {raw,fmt}→Number/Date-Koerzierung passiert in-place VOR dem
+// Throw (empirisch verifiziert 2026-07-10: e.result trägt plain numbers +
+// echte Date-Instanzen). Gerettet wird NUR, wenn alle drei Bedingungen halten:
+//   1. ALLE Validator-Fehler liegen in SALVAGEABLE_MODULES — Enrichment-Module,
+//      deren Konsumenten (_v/_y/_normTxTs) ohnehin defensiv unwrappen/nullen.
+//      Fehler in price/summaryDetail/financialData/Statements → weiter Reject.
+//   2. Ein whitelisted Modul mit einem ANDEREN Fehler als "Missing required
+//      properties" (z. B. Typ-Mismatch à la Issue #839) wird KOMPLETT aus dem
+//      Payload entfernt (fehlendes Modul = null bei allen Konsumenten). Es
+//      bleibt also nie schema-invalides Material im geretteten Payload —
+//      Löcher bleiben Löcher, Müll fliegt raus.
+//   3. Pflichtfeld-Check: price.regularMarketPrice finite > 0 UND
+//      price.currency non-empty string. Das lasttragende Paar (Kurs = Herz des
+//      Snapshots, currency treibt die gesamte FX-Skalierung). Eine leere Hülle
+//      / ein kaputter Payload bleibt ein Fail.
+const SALVAGEABLE_MODULES = new Set([
+  'earningsHistory', 'earningsTrend', 'insiderTransactions', 'majorHoldersBreakdown'
+]);
+function salvageValidationReject(e) {
+  if (!e || e.name !== 'FailedYahooValidationError') return null;
+  const res = e.result;
+  const errs = e.errors;
+  if (!res || typeof res !== 'object' || !Array.isArray(errs) || errs.length === 0) return null;
+  const seen = new Set();
+  const dropModules = new Set();
+  for (const err of errs) {
+    const mod = String((err && err.instancePath) || '').split('/')[1] || '';
+    if (!SALVAGEABLE_MODULES.has(mod)) return null; // Fehler außerhalb Enrichment → echter Fail
+    seen.add(mod);
+    if (!/^Missing required propert/.test(String((err && err.message) || ''))) dropModules.add(mod);
+  }
+  const p = res.price;
+  const px = p && p.regularMarketPrice;
+  if (!p || !Number.isFinite(px) || px <= 0) return null;
+  if (typeof p.currency !== 'string' || p.currency.length === 0) return null;
+  for (const m of dropModules) delete res[m];
+  return { result: res, salvagedModules: [...seen].sort() };
+}
+
 // ─── Logger ───────────────────────────────────────────────────────
 
 
@@ -1599,6 +1652,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           (signal) => yf.quoteSummary(symbol, { modules: MODULES }, { fetchOptions: { signal } }),
           12000, label);
       } catch (e) {
+        // Task 0.13 (Tag 288): falsch-negativer Validator-Reject (Fehler nur in
+        // Enrichment-Modulen, Pflichtfelder intakt) → Payload retten statt failen.
+        const salvaged = salvageValidationReject(e);
+        if (salvaged) {
+          _log('INFO', `  ${label} [schema-salvage]: Validator-Fehler nur in ${salvaged.salvagedModules.join('+')} — Payload gerettet`);
+          return salvaged.result;
+        }
         lastErr = e;
         const msg = String(e.message || '');
         const isRateLimit = /429|too many request|rate.?limit/i.test(msg);
@@ -2985,5 +3045,7 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   shardHash, shardStocks, parseArgs,
   // TASK 0.11 (Stille-Fehler-Härtung): fuer TDD — runLamp + Zugriff auf die Zaehler.
   runLamp,
+  // Task 0.13 (Tag 288): Schema-Salvage fuer TDD.
+  salvageValidationReject,
   _silentErrorCounts: () => ({ lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors }),
   _resetSilentErrorCounts: () => { _lampErrors = 0; _needsFullPullThrew = 0; _corruptYoungSnapshots = 0; _ftsCacheParseErrors = 0; } };
