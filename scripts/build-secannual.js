@@ -85,7 +85,12 @@ function looseSanity(yOpArr, sOpArr, yRevArr, sRevArr) {
   }
   console.log('US-routed>=3y:', routedUS.length, '| p75=' + p75.toFixed(4), '| Kandidaten:', cands.length);
   const tmap = await fetchSecTickers();
-  const out = {};
+  // Overwrite->Merge (Court-Vorbedingung der Expansion): bestehenden Store als Basis laden -> ein Teil-/Abbruch-Lauf
+  // oder ein geaendertes Kandidatenset LOESCHT keine schon abgedeckten Namen (Coverage akkumuliert non-ephemer).
+  // Namen-Granularitaet: jedes out[tk] stammt aus EINEM extractSecSeries-Call (ein _fys) -> feld-kohaerent, nie gesplittet.
+  let out = {};
+  try { out = JSON.parse(fs.readFileSync(OUT, 'utf8')); console.log('Merge-Basis:', Object.keys(out).length, 'bestehende Namen geladen'); } catch (_) { out = {}; }
+  const preCount = Object.keys(out).length;
   let pulled = 0, cachedF = 0, noCik = 0, no404 = 0, divergent = 0;
   const repoDir = path.join(ROOT, 'external-data', 'sec-xbrl');
   for (const tk of cands) {
@@ -104,7 +109,7 @@ function looseSanity(yOpArr, sOpArr, yRevArr, sRevArr) {
     let sec; try { sec = extractSecSeries(JSON.parse(body)); } catch (_) { continue; }
     const snap = uni.find(x => x.meta.ticker === tk);
     if (!looseSanity(snap.annual && snap.annual.annualOpInc, sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) { divergent++; continue; }
-    out[tk] = { cik, annualOpInc: sec.annual.annualOpInc, annualRev: sec.annual.annualRev,
+    out[tk] = { cik, nfy: sec.annual._fys[0], annualOpInc: sec.annual.annualOpInc, annualRev: sec.annual.annualRev,
       annualNetIncome: sec.annual.annualNetIncome, annualFCF: sec.annual.annualFCF, annualOCF: sec.annual.annualOCF };
     // Phase 4.1: tiefe Bilanz NUR wenn plausibel (newest Assets>0 UND newest CurrLiab>=0) — sonst laeuft
     // ein isoliert-korruptes as-filed Assets/CurrLiab ungevalidiert in die roicStability-ROIC-Serie (Court-Auflage).
@@ -114,5 +119,6 @@ function looseSanity(yOpArr, sOpArr, yRevArr, sRevArr) {
     }
   }
   fs.writeFileSync(OUT, JSON.stringify(out));
-  console.log(`secAnnual: ${Object.keys(out).length} Namen -> ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(0)}KB) | pulled=${pulled} cached=${cachedF} noCik=${noCik} 404=${no404} divergent=${divergent}`);
+  const postCount = Object.keys(out).length;
+  console.log(`secAnnual: ${postCount} Namen (${preCount}->${postCount}, +${postCount - preCount} akkumuliert) -> ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(0)}KB) | pulled=${pulled} cached=${cachedF} noCik=${noCik} 404=${no404} divergent=${divergent}`);
 })();
