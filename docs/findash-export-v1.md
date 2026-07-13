@@ -206,3 +206,42 @@ Faustregel: **Kann ein v1-Consumer die Datei ohne Code-Aenderung weiterlesen? �
 **Geschaetztes Jahres-Wachstum FALLS Teil b (board-history) aktiviert wird:** ~1,3 MB/Lauf × ~250 Handelstage = **~325 MB/Jahr** (unkomprimiert; gzip auf gh-pages drueckt real auf ~50–80 MB/Jahr).
 
 **Deckel: < 1 GB.** Board-History (Teil b) bekommt bei Aktivierung einen harten Retention-Deckel von **< 1 GB** — praktisch via rollierendem Fenster (aelteste datierte Ordner werden geloescht, sobald der Ordner-Gesamtstand 1 GB naehert, entsprechend ~3 Jahren unkomprimiert / deutlich mehr gzip). Der latest-only-Export (1.1) beruehrt diesen Deckel nie, weil er nicht akkumuliert. XBRL/prices-max (Teil c) haben eigene, groessere Budgets ausserhalb dieses Vertrags (an 2.2/4.1 gebunden).
+
+---
+
+## 10. `quality/` (QC-Board, DIAGNOSTIC) — additiver Feed (Task 3.2)
+
+Der **Quality-Compounder-Screener** (QC-Board, gebaut Tag 290) laeuft parallel zum Hypergrowth-Screener und wird **additiv** in denselben v1-Vertrag aufgenommen — als Unterordner `outputs/findash-export/v1/quality/`. Kein v2-Bump: bestehende HG-Dateien/-Felder werden **nicht** angefasst. Quelle: `outputs/quality/*` (erzeugt von `src/scoring/run-screener.js::runQualityPass`).
+
+### Dateien (unter `outputs/findash-export/v1/quality/`)
+
+| Datei | Inhalt | Herkunft |
+| --- | --- | --- |
+| `<id>.json` (dynamisch, aktuell 11) | Ein QC-Board je Branche: `{schema, generated_at, branch, boardStatus, coverage, profitable[], unprofitable[]}` | `outputs/quality/quality-<id>.json` (Prefix `quality-` fallengelassen; `branch` = Dateiname-Stamm, z.B. `semiconductors`) |
+| `overview.json` | Flaches Cross-Branch-QC-Top nach Score, `{…, rows: OverviewRow[]}` | `outputs/quality/overview.json` |
+| `index.json` | Meta/Zaehlung: `{schema, generated_at, coverage, generatedFromSnapshots, boards, boardStatus, counts, excluded}` | `outputs/quality/index.json` |
+
+**Board-Anzahl ist dynamisch** (aus den vorhandenen `quality-*.json` entdeckt, nicht hartkodiert) — heute 11 Boards (kein `survival`-Board; QC-Namen sind per Konstruktion profitabel, `unprofitable[]` meist `[]`). Der CI-Count-Check leitet die Soll-Zahl dynamisch ab (`#quality-*.json + overview + index`).
+
+### Zeilenform = HG-Board-/Overview-Zeilenform (voll wiederverwendet)
+
+QC-Board-Zeilen sind **byte-fuer-byte dieselbe `BoardRow`-Form wie §3** (verschachteltes `overview`, alle geo-Felder inkl. `profitTier`/`ipoYear`/`cohortN`/`cohortFallback`, optional `scoreBase`/`scoreShrunk`/`factors`/`axisBreakdown`). QC-`overview.json`-Zeilen sind die **flache `OverviewRow`-Form wie §4** (mit `formulaId`, hier `quality-`-praefigiert). Der Writer nutzt darum `mapBoardRow`/`mapOverviewRow` und die Validatoren `validateBoardRow`/`validateOverviewRow` **unveraendert** — kein Parallel-Validator. Die QC-`index.json` ist die HG-`index.json` **ohne** `branches`/`survivalCount` (QC hat kein Survival-Board und eine dynamische Board-Menge); dafuer gibt es einen kleinen dedizierten `validateQualityIndex`.
+
+### `boardStatus`-Semantik: QC ist bis auf Weiteres IMMER `diagnostic`
+
+Jedes QC-Board traegt `boardStatus: 'diagnostic'` — **per Konstruktion**, nicht per Hardcode: `src/scoring/board-status.js` gibt fuer jeden `quality-`-praefigierten Key `'diagnostic'` zurueck und kann ihn nie auf `'core'` promoten. Das Dashboard (1.3) MUSS QC-Boards sichtbar als **unbewiesen** kennzeichnen.
+
+- **`--check`-Verhalten:** `boardStatus` wird gegen das **bestehende Enum** `['core','diagnostic']` geprueft (dieselbe `VALID_BOARDSTATUS`-Liste wie HG). D.h. ein manipuliertes `'core'` auf einer QC-Datei ist enum-legal und trippt **nicht**; ein **fehlendes** oder **bogus** `boardStatus` (und ein bogus Wert in der QC-`index`-`boardStatus`-Map) trippt (exit 1). Der Build-Zeit-Invariante „QC == diagnostic" wird zusaetzlich im `--selftest` asserted.
+- **Core-Promotion** ist gated auf **ρ < 0,4 + rankIC** (QC-Rangkorrelation zum HG-Board niedrig genug, dass QC eigenstaendige Information traegt) — siehe **Masterplan 3.1**. Bis dieser Nachweis vorliegt, bleibt QC diagnostic.
+
+### Optional-when-absent (kein stiller Weglass, kein Crash)
+
+Fehlt `outputs/quality/` (alte lokale Laeufe ohne QC-Pass), schreibt der Writer **keine** `quality/`-Dateien und loggt eine **deutliche Warnung** (`::warning::`) — er crasht nicht und laesst nichts still weg. Der `--check` behandelt `quality/` als **optional-wenn-abwesend**: ohne `quality/index.json` auf Platte gibt es nichts zu pruefen (kein Bruch). **Sobald `quality/index.json` existiert**, sind alle darin gelisteten QC-Boards **plus** `overview.json` **Pflicht** und werden voll validiert (Zeilen wie `validateBoardRow`/`validateOverviewRow`, `boardStatus` gegen das Enum). Alle QC-Fehlermeldungen tragen ein `quality/`-Praefix, damit der Alarm-Kanal einen QC-Bruch nie mit einem HG-Bruch verwechselt.
+
+### Bewusste Disclosure: leere Dauerhaftigkeits-Achse
+
+Das QC-Achsenset enthaelt eine **Dauerhaftigkeits-/Stabilitaets-Achse `roicStability` mit Gewicht `w=0`** — sie ist derzeit **leer** (keine belastbare Zeitreihen-Basis fuer ROIC-Stabilitaet), traegt also **nicht** zum Score bei. Das ist eine **bewusste Offenlegung**, kein Bug: die Achse ist im Formel-Gerüst reserviert und wird erst gewichtet, wenn die Datenbasis steht. Sie erscheint (falls emittiert) in `axisBreakdown` mit `weight: 0` und ist score-inert.
+
+### Retention / Deploy
+
+`quality/` faellt unter dieselbe **Retention-Grundgesetz-7a**-Regel (§8): latest-only, atomar ueberschrieben, kein Anhaengen. Der Deploy-Step kopiert `outputs/findash-export/v1/.` rekursiv (`cp -r`) und nimmt den `quality/`-Unterordner damit automatisch mit — **keine** Aenderung am Deploy-Step noetig.

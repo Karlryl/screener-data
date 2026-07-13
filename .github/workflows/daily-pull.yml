@@ -714,6 +714,18 @@ jobs:
             echo "::error::findash-export produced $count files (expected 15) — writer failed."
             exit 1
           fi
+          # 3.2 QC-Board (quality/): expected = #QC boards + overview + index. Dynamic, no
+          # hardcode-drift — derive from the source quality-*.json count (0 = no QC pass this run).
+          qsrc=$(ls outputs/quality/quality-*.json 2>/dev/null | wc -l)
+          if [ "$qsrc" -gt 0 ]; then
+            qexp=$((qsrc + 2))
+            qgot=$(ls outputs/findash-export/v1/quality/*.json 2>/dev/null | wc -l)
+            echo "findash-export quality/ wrote $qgot files (expected $qexp)"
+            if [ "$qgot" -ne "$qexp" ]; then
+              echo "::error::findash-export quality/ produced $qgot files (expected $qexp) — QC export failed."
+              exit 1
+            fi
+          fi
 
       - name: Verify findash-export v1 schema (contract gate)
         run: node scripts/write-findash-export.js --check

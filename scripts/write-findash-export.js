@@ -20,6 +20,12 @@
  *   outputs/findash-export/v1/overview.json
  *   outputs/findash-export/v1/survival.json
  *   outputs/findash-export/v1/index.json
+ *   outputs/findash-export/v1/quality/<id>.json  (3.2: QC-Board, DIAGNOSTIC — additive subdir)
+ *   outputs/findash-export/v1/quality/overview.json
+ *   outputs/findash-export/v1/quality/index.json
+ * The quality/ subdir mirrors outputs/quality/ (produced by run-screener runQualityPass).
+ * Optional-when-absent: an old local run without outputs/quality/ writes NO quality files
+ * (loud warning, no crash); but once quality/index.json exists it is fully --check-validated.
  *
  * Contract: docs/findash-export-v1.md. Every file carries schema:'findash-export/v1'.
  * A v2 bump is the ONLY sanctioned way to rename/remove/retype a field.
@@ -38,8 +44,10 @@ const { TIERS } = require('../src/scoring/profit-tier.js'); // 1.2: profitTier-E
 
 const ROOT = path.join(__dirname, '..');
 const HG_DIR = path.join(ROOT, 'outputs', 'hypergrowth');
+const QUALITY_DIR = path.join(ROOT, 'outputs', 'quality'); // 3.2: QC-Board source (runQualityPass)
 const COVERAGE = path.join(ROOT, 'outputs', 'coverage-status.json');
 const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
+const QOUT_DIR = path.join(OUT_DIR, 'quality'); // 3.2: QC-Board export subdir
 
 const SCHEMA = 'findash-export/v1';
 const BRANCHES = [
@@ -151,6 +159,70 @@ function buildIndex(coverage) {
   };
 }
 
+// ---- QC-Board (quality/) — 3.2 ------------------------------------------
+// QC rows are the SAME shape as HG board/overview rows (verified against outputs/quality/*):
+// board files carry {profitable[],unprofitable[]} of BoardRow, overview.json is a flat
+// OverviewRow[] array, index.json is {schema,generatedFromSnapshots,boards,boardStatus,
+// counts,excluded}. So mapBoardRow/mapOverviewRow are reused verbatim; no new mapper.
+// Board files are named quality-<stem>.json; the export drops the prefix (quality/<stem>.json,
+// branch=<stem>). Board count is discovered, never hardcoded (11 today, may drift).
+function qualityBoardFiles() {
+  try { return fs.readdirSync(QUALITY_DIR).filter((f) => /^quality-.+\.json$/.test(f)).sort(); }
+  catch (_) { return []; }
+}
+function qualityStem(file) { return file.replace(/^quality-/, '').replace(/\.json$/, ''); }
+
+function buildQualityBoard(file, coverage) {
+  const stem = qualityStem(file);
+  const b = readJSON(path.join(QUALITY_DIR, file));
+  return {
+    schema: SCHEMA,
+    generated_at: new Date().toISOString(),
+    branch: stem,                                   // = filename stem (prefix dropped)
+    boardStatus: boardStatusOf('quality-' + stem),  // always 'diagnostic' by construction (board-status.js)
+    coverage,
+    profitable: (b.profitable || []).map(mapBoardRow),
+    unprofitable: (b.unprofitable || []).map(mapBoardRow),
+  };
+}
+
+function buildQualityOverview(coverage) {
+  const o = readJSON(path.join(QUALITY_DIR, 'overview.json'));
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: o.map(mapOverviewRow) };
+}
+
+function buildQualityIndex(coverage) {
+  const idx = readJSON(path.join(QUALITY_DIR, 'index.json'));
+  return {
+    schema: SCHEMA,                                  // pinned to the export contract, not quality/diagnostic-v1
+    generated_at: new Date().toISOString(),
+    coverage,
+    generatedFromSnapshots: idx.generatedFromSnapshots,
+    boards: idx.boards,                              // 'quality-'-prefixed ids, mirrored as-is
+    boardStatus: idx.boardStatus,                    // {[quality-id]: 'diagnostic'}
+    counts: idx.counts,
+    excluded: idx.excluded,
+  };
+}
+
+// Optional-when-absent: no outputs/quality/index.json (old local run) -> write NOTHING,
+// warn loud (never silent-drop). Keyed on the source index existing, symmetric with the
+// validation gate (once quality/index.json exists on disk, all QC files are Pflicht).
+function buildQuality(coverage) {
+  const idx = readJSONOrNull(path.join(QUALITY_DIR, 'index.json'));
+  if (!idx) {
+    console.warn('::warning::findash-export: outputs/quality/index.json absent — QC board (quality/) NOT exported (optional feed, older local run).');
+    return { boards: 0 };
+  }
+  const files = qualityBoardFiles();
+  fs.mkdirSync(QOUT_DIR, { recursive: true });
+  const opts = { assertFinite: true };
+  for (const f of files) writeJsonAtomic(path.join(QOUT_DIR, qualityStem(f) + '.json'), buildQualityBoard(f, coverage), opts);
+  writeJsonAtomic(path.join(QOUT_DIR, 'overview.json'), buildQualityOverview(coverage), opts);
+  writeJsonAtomic(path.join(QOUT_DIR, 'index.json'), buildQualityIndex(coverage), opts);
+  return { boards: files.length };
+}
+
 // coverage marker is a diagnostic passenger, not a hard input. Absent (fresh runner,
 // marker not yet written) -> export still builds; consumers read coverage:null as "unknown".
 function loadCoverage() {
@@ -169,7 +241,8 @@ function build() {
   writeJsonAtomic(path.join(OUT_DIR, 'overview.json'), buildOverview(coverage), opts);
   writeJsonAtomic(path.join(OUT_DIR, 'survival.json'), buildSurvival(coverage), opts);
   writeJsonAtomic(path.join(OUT_DIR, 'index.json'), buildIndex(coverage), opts);
-  return { out: OUT_DIR, branches: BRANCHES.length };
+  const q = buildQuality(coverage); // 3.2: QC-Board subdir (optional-when-absent)
+  return { out: OUT_DIR, branches: BRANCHES.length, qualityBoards: q.boards };
 }
 
 // ---- validate (schema-check gate) ---------------------------------------
@@ -345,7 +418,48 @@ function validateExport() {
     if (!mk) { errs.push(`${kind}: missing/unreadable`); continue; }
     validateFile(mk, kind, errs);
   }
-  return errs;
+  return errs.concat(validateQualityExport()); // 3.2: QC-Board (empty when quality/ absent)
+}
+
+// ---- QC-Board validation (3.2) ------------------------------------------
+// QC index is the HG index MINUS branches/survivalCount (QC has no survival board and a
+// dynamic board set). Small dedicated check; the board+overview ROWS reuse validateFile /
+// validateBoardRow / validateOverviewRow verbatim (no parallel row-validator).
+function validateQualityIndex(mk, errs) {
+  const kind = 'quality/index';
+  if (!mk || typeof mk !== 'object') { errs.push(`${kind}: not an object`); return; }
+  if (mk.schema !== SCHEMA) errs.push(`${kind}: schema=${JSON.stringify(mk.schema)}`);
+  if (typeof mk.generated_at !== 'string') errs.push(`${kind}: generated_at`);
+  validateCoverage(mk, kind, errs);
+  if (!Number.isFinite(mk.generatedFromSnapshots)) errs.push(`${kind}: generatedFromSnapshots`);
+  if (!Array.isArray(mk.boards) || !mk.boards.length) errs.push(`${kind}: boards`);
+  if (!mk.boardStatus || typeof mk.boardStatus !== 'object') errs.push(`${kind}: boardStatus map missing`);
+  else for (const [k, v] of Object.entries(mk.boardStatus)) {
+    if (!VALID_BOARDSTATUS.includes(v)) errs.push(`${kind}: boardStatus.${k}=${JSON.stringify(v)}`);
+  }
+  if (!mk.counts || typeof mk.counts !== 'object') errs.push(`${kind}: counts`);
+  if (!mk.excluded || typeof mk.excluded !== 'object') errs.push(`${kind}: excluded`);
+}
+
+// Optional-when-absent: no quality/index.json on disk -> nothing to validate ([]). Once it
+// exists, every board it lists + overview become Pflicht and are fully validated. All labels
+// carry a 'quality/' prefix so the alarm channel never confuses a QC breach with an HG one.
+function validateQualityExport() {
+  const raw = [];
+  const idx = readJSONOrNull(path.join(QOUT_DIR, 'index.json'));
+  if (!idx) return raw; // quality/ absent -> optional, no breach
+  validateQualityIndex(idx, raw);
+  const boards = Array.isArray(idx.boards) ? idx.boards : [];
+  for (const id of boards) {
+    const stem = String(id).replace(/^quality-/, '');
+    const mk = readJSONOrNull(path.join(QOUT_DIR, stem + '.json'));
+    if (!mk) { raw.push(`quality/${stem}: missing/unreadable`); continue; }
+    validateFile(mk, stem, raw); // reuses board-file check: branch===stem, boardStatus enum, every BoardRow
+  }
+  const ov = readJSONOrNull(path.join(QOUT_DIR, 'overview.json'));
+  if (!ov) raw.push('quality/overview: missing/unreadable');
+  else validateFile(ov, 'overview', raw); // reuses OverviewRow check
+  return raw.map((e) => (e.startsWith('quality/') ? e : 'quality/' + e));
 }
 
 // ---- runnable self-check: node scripts/write-findash-export.js --selftest ----
@@ -444,6 +558,29 @@ function selftest() {
   m = mkIdx(); delete m.boardStatus; e = []; validateFile(m, 'index', e);
   assert.ok(e.some(x => /boardStatus map missing/.test(x)), 'index boardStatus map missing must trip');
 
+  // ---- 3.2 QC-Board (quality/) ------------------------------------------------
+  // QC rows are the SAME shape as HG board/overview rows -> row validators reused; only the
+  // QC-specific invariants are asserted here.
+  assert.strictEqual(boardStatusOf('quality-semiconductors'), 'diagnostic', 'QC board must be diagnostic by construction');
+  assert.strictEqual(boardStatusOf('quality-anything'), 'diagnostic', 'every quality-* id is diagnostic');
+  // QC board hull: 'diagnostic' is the built value; 'core' is enum-legal so it does NOT trip (item 3).
+  const mkQHull = (over = {}) => ({ schema: SCHEMA, generated_at: 'x', boardStatus: 'diagnostic', coverage: null, branch: 'semiconductors', profitable: [mapBoardRow(cleanBoard, 0)], unprofitable: [], ...over });
+  e = []; validateFile(mkQHull(), 'semiconductors', e); assert.strictEqual(e.length, 0, 'clean QC board hull must validate');
+  e = []; validateFile(mkQHull({ boardStatus: 'core' }), 'semiconductors', e); assert.strictEqual(e.length, 0, "QC boardStatus 'core' is enum-legal, must NOT trip");
+  m = mkQHull(); delete m.boardStatus; e = []; validateFile(m, 'semiconductors', e);
+  assert.ok(e.some(x => /boardStatus/.test(x)), 'QC boardStatus missing must trip');
+  e = []; validateFile(mkQHull({ boardStatus: 'bogus' }), 'semiconductors', e);
+  assert.ok(e.some(x => /boardStatus=/.test(x)), 'QC boardStatus bogus must trip');
+  // cohortN tamper on a QC row trips (row validator reused).
+  trip(validateBoardRow, { ...b0, cohortN: 'GARBAGE' }, 'QC board cohortN string');
+  // QC index validator: clean passes; boardStatus bogus / map removed trip.
+  const mkQIdx = (over = {}) => ({ schema: SCHEMA, generated_at: 'x', coverage: null, generatedFromSnapshots: 1, boards: ['quality-semiconductors'], boardStatus: { 'quality-semiconductors': 'diagnostic' }, counts: {}, excluded: {}, ...over });
+  e = []; validateQualityIndex(mkQIdx(), e); assert.strictEqual(e.length, 0, 'clean QC index must validate');
+  e = []; validateQualityIndex(mkQIdx({ boardStatus: { 'quality-semiconductors': 'bogus' } }), e);
+  assert.ok(e.some(x => /boardStatus\.quality-semiconductors/.test(x)), 'QC index boardStatus bogus must trip');
+  m = mkQIdx(); delete m.boardStatus; e = []; validateQualityIndex(m, e);
+  assert.ok(e.some(x => /boardStatus map missing/.test(x)), 'QC index boardStatus map missing must trip');
+
   console.log('selftest OK');
 }
 
@@ -459,10 +596,11 @@ if (require.main === module) {
     process.exit(0);
   }
   const r = build();
-  console.log(`findash-export/v1 written: ${r.branches} boards + overview + survival + index -> ${r.out}`);
+  console.log(`findash-export/v1 written: ${r.branches} boards + overview + survival + index + ${r.qualityBoards} QC boards (quality/) -> ${r.out}`);
 }
 
 module.exports = {
   build, validateExport, validateFile, validateBoardRow, validateOverviewRow, validateSurvivalRow,
+  validateQualityExport, validateQualityIndex, buildQuality,
   mapBoardRow, mapOverviewRow, mapSurvivalRow, SCHEMA, BRANCHES,
 };
