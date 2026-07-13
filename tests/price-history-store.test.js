@@ -151,5 +151,23 @@ test('corrupt shard throws with shardPath set', () => {
   assert.equal(err.shardPath, store.shardPath(dir, badN), 'err.shardPath points at the bad shard');
 });
 
+test('A7-b: saveAll/saveDirty stamp _meta.json (freshness proof), loadMeta reads it', () => {
+  const dir = tmpDir();
+  const h = sampleHistory(50);
+  assert.equal(store.loadMeta(dir), null, 'no meta before first write');
+  store.saveAll(dir, h);
+  const m1 = store.loadMeta(dir);
+  assert.ok(m1 && m1.schema === 'price-history-store/1', 'meta stamped by saveAll');
+  assert.equal(m1.tickerCount, Object.keys(h).length, 'tickerCount matches');
+  assert.equal(m1.shardsWritten, store.SHARD_COUNT, 'saveAll writes all shards');
+  assert.ok(Number.isFinite(Date.parse(m1.updatedAt)), 'updatedAt parses');
+  const spin = Date.now() + 15; while (Date.now() < spin) { /* mtime/clock delta */ }
+  h['SPY'][0].close = 555;
+  store.saveDirty(dir, h, new Set(['SPY']));
+  const m2 = store.loadMeta(dir);
+  assert.equal(m2.shardsWritten, 1, 'saveDirty stamps with dirty-shard count');
+  assert.ok(Date.parse(m2.updatedAt) >= Date.parse(m1.updatedAt), 'stamp advances');
+});
+
 console.log('\nprice-history-store: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

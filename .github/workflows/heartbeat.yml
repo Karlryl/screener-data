@@ -74,6 +74,39 @@ jobs:
           fi
           echo "OK: Export frisch (<= ${MAX_AGE_DAYS} Tage)."
 
+      # Masterplan 2.3-Vorbedingung A7-b — Fail-loud-Gate fuers Preis-Substrat (prices/history/-Shards).
+      # A7-Fehlermodus: der Pull-Historical-Prices-Step meldet success (continue-on-error), aber der
+      # Store wird nie geschrieben (Timeout-Kill vor dem Write) — wochenlang unbemerkt. Seit Tag 294/295
+      # stempelt JEDER echte Store-Write prices/history/_meta.json; dieser Check alarmiert, wenn der
+      # Stempel veraltet ODER die SPY-Serie (Benchmark, wird bei jedem Lauf zuerst gepullt) nicht mehr
+      # fortschreitet. _meta fehlt = Bootstrap (erster Lauf nach Tag 295 noch nicht durch) -> nur Warnung.
+      # Floor-Semantik wie oben (Di-Sa-Kadenz: Montag = floor(2.4d)=2 -> gruen).
+      - name: Check price-substrate freshness (A7-b)
+        if: always()
+        env:
+          PRICE_META_MAX_AGE_DAYS: '2'
+          SPY_MAX_AGE_DAYS: '6'
+        run: |
+          node -e "
+            const store=require('./lib/price-history-store.js');
+            const META_MAX=Number(process.env.PRICE_META_MAX_AGE_DAYS), SPY_MAX=Number(process.env.SPY_MAX_AGE_DAYS);
+            const errs=[];
+            const m=store.loadMeta('prices');
+            if(!m){ console.log('::warning::prices/history/_meta.json fehlt — Bootstrap (erster gestempelter Pull nach Tag 295 steht aus); nicht rot.'); }
+            else {
+              const age=Math.floor((Date.now()-Date.parse(m.updatedAt))/86400000);
+              console.log('Preis-Store-Stempel: '+age+' Tage alt (Schwelle '+META_MAX+'), tickerCount='+m.tickerCount);
+              if(!Number.isFinite(age)||age>META_MAX) errs.push('Preis-Store-Stempel '+age+'d > '+META_MAX+'d — der Preis-Pull schreibt den Store nicht mehr (A7-Fehlermodus).');
+              const spy=(store.loadShard('prices', store.shardOf('SPY'))['SPY'])||[];
+              const last=spy.length?spy[spy.length-1].date:null;
+              const spyAge=last?Math.floor((Date.now()-Date.parse(last))/86400000):Infinity;
+              console.log('SPY letzte Bar: '+last+' ('+spyAge+' Tage alt, Schwelle '+SPY_MAX+')');
+              if(spyAge>SPY_MAX) errs.push('SPY-Serie steht auf '+last+' ('+spyAge+'d > '+SPY_MAX+'d) — Preis-Daten schreiten nicht fort.');
+            }
+            if(errs.length){ console.log('::error::PREIS-SUBSTRAT VERALTET — '+errs.join(' | ')+' NAECHSTER SCHRITT: daily-pull Step \"Pull Historical Prices\" pruefen.'); process.exit(1); }
+            console.log('OK: Preis-Substrat frisch (oder Bootstrap).');
+          "
+
       # Masterplan Task 0.10 — Dead-Man fuer die Schutz-Kadenzen (weekly-guard / monthly-plan-check).
       # Der Heartbeat ist der bewiesen-taeglich-lebende, unabhaengige Kanal; er liest die committeten
       # Kadenz-Marker und wird rot, wenn ein Trigger ausbleibt (Cron still gestoppt / disabled / Marker-
