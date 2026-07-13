@@ -672,6 +672,9 @@ function _convertSnapshotToUSD(snap) {
   }
   if (snap.timeseries) {
     for (const key of Object.keys(snap.timeseries)) {
+      // audit/fix A10: *Ends sind ISO-Datums-Strings (Perioden-Enden), keine
+      // Währungsbeträge — nicht durch scale() jagen (das würde sie zu NaN machen).
+      if (key.endsWith('Ends')) continue;
       if (Array.isArray(snap.timeseries[key])) snap.timeseries[key] = snap.timeseries[key].map(scale);
     }
   }
@@ -722,6 +725,34 @@ function _arr(history, key) {
     const v = _y(r, key);
     return v == null ? null : { value: v };
   }));
+}
+
+// audit/fix A10 (2.3-Vorbedingung, §4b Fundamental-Delivery-IC): das Perioden-Ende
+// eines Quartals als ISO-Tag "YYYY-MM-DD". Akzeptiert Date, {raw:epoch}, epoch-Zahl
+// (Sekunden ODER ms) und "YYYY-MM-DD…"-String. null wo unbekannt — nie fabrizieren.
+function _isoDay(v) {
+  if (v == null) return null;
+  if (typeof v === 'object' && !(v instanceof Date) && 'raw' in v) v = v.raw;
+  if (v instanceof Date) return Number.isFinite(v.getTime()) ? v.toISOString().slice(0, 10) : null;
+  if (typeof v === 'number' && Number.isFinite(v)) {
+    const ms = v < 1e12 ? v * 1000 : v;   // Yahoo-Epochs sind Sekunden, nicht ms
+    const d = new Date(ms);
+    return Number.isFinite(d.getTime()) ? d.toISOString().slice(0, 10) : null;
+  }
+  if (typeof v === 'string') {
+    const m = v.match(/^\d{4}-\d{2}-\d{2}/);
+    return m ? m[0] : null;
+  }
+  return null;
+}
+
+// audit/fix A10: Ends-Array index-aligned und LÄNGENGLEICH zu seiner value-Serie
+// halten. Fehlt es (z. B. FTS-Cache-Treffer VOR A10 hat keine Enden) → ehrliche
+// null-Serie gleicher Länge, kein Fabrizieren. Geschwister-Feld, ändert value-Shape nie.
+function _alignEnds(ends, values) {
+  const n = Array.isArray(values) ? values.length : 0;
+  if (Array.isArray(ends) && ends.length === n) return ends;
+  return new Array(n).fill(null);
 }
 
 // ─── Tag 203: Fintech-aware OpInc fallback ────────────────────────
@@ -930,6 +961,10 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   const revenueQ = _arr(isHistQ, 'totalRevenue');
   const opIncQ = _arr(isHistQ, 'operatingIncome');
   const grossProfitQ = _arr(isHistQ, 'grossProfit');
+  // audit/fix A10 (2.3-Vorbedingung, §4b Delivery-IC): Perioden-Ende je Quartal aus
+  // DERSELBEN isHistQ-Row (endDate), index-aligned & längengleich zu revenueQ (das
+  // _arr trailing-null-getrimmt hat → slice auf revenueQ.length hält den Index).
+  const revenueQEnds = isHistQ.slice(0, revenueQ.length).map(r => _isoDay(_y(r, 'endDate')));
 
   // FCF-Margin TTM
   // Tag 206b (Bug-Hunt Agent B HIGH-4): Yahoo's fcfMarginTTM is sometimes
@@ -1243,7 +1278,9 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       })()
     },
     timeseries: {
-      revenueQ, opIncQ, grossProfitQ
+      // audit/fix A10: revenueQEnds ist ein ADDITIVES Geschwister-Feld — value-Shapes
+      // (revenueQ=[{value:N}]) bleiben unangetastet; norm()/FIELD_REGISTRY lesen es nie.
+      revenueQ, opIncQ, grossProfitQ, revenueQEnds
     },
     annual: {
       annualRev, annualOpInc, annualNetIncome, annualGP, annualFCF, annualOCF, annualBalance,
@@ -1475,6 +1512,7 @@ function mapFTSToQuarterly(quarterlyRows) {
   const revenueQ = [];
   const opIncQ = [];
   const grossProfitQ = [];
+  const revenueQEnds = []; // audit/fix A10: Perioden-Enden, index-aligned zu revenueQ
   // F-002 (audit 2026-06-08): a null-revenue row must keep its placeholder in ALL
   // three series. Previously revenueQ was skipped (`continue`) while opIncQ/
   // grossProfitQ got a null pushed — every null-rev row shifted revenueQ left
@@ -1489,6 +1527,9 @@ function mapFTSToQuarterly(quarterlyRows) {
     opIncQ.push(oi != null ? { value: oi } : null);
     const gp = _ftsValue(r, 'grossProfit', 'GrossProfit');
     grossProfitQ.push(gp != null ? { value: gp } : null);
+    // audit/fix A10: Quartals-Ende aus DERSELBEN FTS-Row. FTS-Rows tragen das Datum
+    // als `date` (fallback asOfDate/endDate); fehlt es → null, nicht fabrizieren.
+    revenueQEnds.push(_isoDay(r ? (r.date ?? r.asOfDate ?? r.endDate ?? null) : null));
   }
   // Trim trailing all-null quarters (oldest) — no information to contribute;
   // mirrors mapFTSToBalance's trailing-null trim.
@@ -1496,9 +1537,9 @@ function mapFTSToQuarterly(quarterlyRows) {
          revenueQ[revenueQ.length - 1] == null &&
          opIncQ[opIncQ.length - 1] == null &&
          grossProfitQ[grossProfitQ.length - 1] == null) {
-    revenueQ.pop(); opIncQ.pop(); grossProfitQ.pop();
+    revenueQ.pop(); opIncQ.pop(); grossProfitQ.pop(); revenueQEnds.pop(); // A10: Ends in Lockstep
   }
-  return { revenueQ, opIncQ, grossProfitQ };
+  return { revenueQ, opIncQ, grossProfitQ, revenueQEnds };
 }
 
 // ─── Main Pull ─────────────────────────────────────────────────────
@@ -2535,6 +2576,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         canonical.timeseries.revenueQ = ftsQuarterly.revenueQ;
         canonical.timeseries.opIncQ = ftsQuarterly.opIncQ;
         canonical.timeseries.grossProfitQ = ftsQuarterly.grossProfitQ;
+        // audit/fix A10: Ends bewegen sich als EINE Einheit mit revenueQ. FTS-Cache-
+        // Einträge VOR A10 haben keine revenueQEnds → _alignEnds liefert ehrliche
+        // null-Serie in revenueQ-Länge (kein Fabrizieren, index/länge konsistent).
+        canonical.timeseries.revenueQEnds = _alignEnds(ftsQuarterly.revenueQEnds, ftsQuarterly.revenueQ);
       }
 
       // Tag 203: post-FTS sector-aware OpInc fallback. After both quoteSummary
@@ -3047,5 +3092,7 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   runLamp,
   // Task 0.13 (Tag 288): Schema-Salvage fuer TDD.
   salvageValidationReject,
+  // A10 (2.3-Vorbedingung, §4b Delivery-IC): Perioden-Ende-Substrat fuer TDD.
+  mapFTSToQuarterly, _isoDay, _alignEnds,
   _silentErrorCounts: () => ({ lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors }),
   _resetSilentErrorCounts: () => { _lampErrors = 0; _needsFullPullThrew = 0; _corruptYoungSnapshots = 0; _ftsCacheParseErrors = 0; } };
