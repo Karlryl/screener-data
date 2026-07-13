@@ -34,6 +34,9 @@ const { postDiscord } = require('../lib/discord.js');
 // Without it, a rollback to a bare-array watchlist would silently set
 // universeSize=null, disabling the drift detector forever.
 const { loadWatchlist } = require('../lib/watchlist-fs.js');
+// Tag 294: price history is sharded — count tickers across shards (Legacy-Fallback
+// inside loadAll covers the pre-migration window).
+const priceStore = require('../lib/price-history-store.js');
 
 const DRIFT_THRESHOLD = 0.25;
 const MIN_HISTORY_RUNS = 4;
@@ -69,9 +72,11 @@ function collectStats() {
   const earnings = loadJson(path.join(ROOT, 'earnings-calendar.json'));
   stats.earningsWithDate = earnings ? Object.keys(earnings).length : null;
 
-  // Historical prices
-  const priceHist = loadJson(path.join(ROOT, 'prices', 'history.json'));
-  stats.priceTickerCount = priceHist ? Object.keys(priceHist).length : null;
+  // Historical prices (Tag 294: sharded → count across shards; null on load error)
+  let priceTickerCount = null;
+  try { priceTickerCount = Object.keys(priceStore.loadAll(path.join(ROOT, 'prices'))).length; }
+  catch (_) { /* corrupt shard → leave null, drift monitor treats as unknown */ }
+  stats.priceTickerCount = priceTickerCount;
 
   // Universe
   // Tag 220c (audit F-219b-03): use shared schema-aware loader so all three

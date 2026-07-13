@@ -23,9 +23,13 @@ const path = require('path');
 // methodology-report and snapshot-picks's regression check; a truncated
 // half-written file would propagate stale alpha numbers downstream.
 const { writeFileAtomic } = require('../lib/atomic-write.js');
+// Tag 294: price history is sharded — loadAll merges all shards; the F-BT-001
+// freshness gate (maxPriceDate below) then runs over the merged store unchanged.
+const priceStore = require('../lib/price-history-store.js');
 
 const PICKS_DIR     = path.join(__dirname, '..', 'picks-history');
-const PRICES_PATH   = path.join(__dirname, '..', 'prices', 'history.json');
+const PRICES_DIR    = path.join(__dirname, '..', 'prices');
+const PRICES_PATH   = path.join(PRICES_DIR, 'history.json');
 const REGIME_PATH   = path.join(__dirname, '..', 'outputs', 'macro-regime.json');
 const OUT_DIR       = path.join(__dirname, '..', 'outputs');
 
@@ -589,8 +593,12 @@ function evaluateVintage(picksFile, priceIndex, regimes) {
 }
 
 function main() {
-  const history = loadJson(PRICES_PATH);
-  if (!history || typeof history !== 'object') {
+  // Tag 294: merge sharded price history (Legacy-Fallback inside loadAll). A
+  // corrupt shard throws → treat as no-data (same graceful skip as before).
+  let history;
+  try { history = priceStore.loadAll(PRICES_DIR); }
+  catch (e) { history = null; }
+  if (!history || typeof history !== 'object' || Object.keys(history).length === 0) {
     console.log('No prices/history.json — cannot compute walk-forward.');
     return;
   }

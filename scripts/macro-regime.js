@@ -24,8 +24,11 @@ const fs   = require('fs');
 const path = require('path');
 // Tag 218: atomic output writes (audit F-218b-03)
 const { writeFileAtomic } = require('../lib/atomic-write.js');
+// Tag 294: price history is sharded — load ONLY SPY's shard (no full-store load).
+const priceStore = require('../lib/price-history-store.js');
 
-const PRICES_PATH  = path.join(__dirname, '..', 'prices', 'history.json');
+const PRICES_DIR   = path.join(__dirname, '..', 'prices');
+const PRICES_PATH  = path.join(PRICES_DIR, 'history.json');
 const OUT_PATH     = path.join(__dirname, '..', 'outputs', 'macro-regime.json');
 const MA_PERIOD    = 200;
 const BULL_MARGIN  = 1.02;
@@ -85,16 +88,21 @@ function main() {
   // audit F-A-2026-06-21: unguarded JSON.parse of a missing/corrupt prices file
   // threw and failed the daily-pull job. Guard the read+parse and on failure emit
   // the same empty fallback the empty-series branch produces, then exit 0.
-  let history;
+  // Tag 294: load only the shard that holds this ticker (SPY by default) instead
+  // of the whole store. `--history` may be a shard dir or the legacy file path;
+  // derive the prices dir either way. Legacy-Fallback lives in loadShard/loadAll.
+  const pricesDir = args.history.endsWith('.json') ? path.dirname(args.history) : args.history;
+  let series;
   try {
-    history = JSON.parse(fs.readFileSync(args.history, 'utf8'));
+    series = priceStore.loadShard(pricesDir, priceStore.shardOf(args.ticker))[args.ticker];
+    // pre-migration window: no shards yet → loadShard returned {} → read legacy
+    if (series === undefined) series = priceStore.loadAll(pricesDir)[args.ticker];
   } catch (e) {
-    console.error('[macro-regime] cannot read/parse ' + args.history + ': ' + e.message + ' — writing empty fallback');
+    console.error('[macro-regime] cannot read/parse price history in ' + pricesDir + ': ' + e.message + ' — writing empty fallback');
     writeEmptyFallback(args);
     console.log('No price data for ' + args.ticker + ' — wrote empty fallback to ' + args.out);
     process.exit(0);
   }
-  const series = history[args.ticker];
 
   if (!Array.isArray(series) || series.length === 0) {
     writeEmptyFallback(args);

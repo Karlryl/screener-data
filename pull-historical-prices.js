@@ -29,6 +29,13 @@ const path = require('path');
 // (lines 60-75) refuses to run without RESET_HISTORY=1, which destroys
 // months of accumulated price history when triggered.
 const { writeFileAtomic } = require('./lib/atomic-write.js');
+// Tag 294 (P0 CI-Blocker fix): prices/history.json grew past GitHub's 100 MB
+// push limit (run 29141088525 → "File prices/history.json is 132.74 MB") → merge
+// push rejected → scoring skipped → boards froze. The history is now SHARDED into
+// prices/history/history-NN.json via lib/price-history-store.js (single owner of
+// the layout). We never write the old monolith again (Löschung braucht Karl-OK →
+// it stays frozen on disk as the legacy-fallback source until shards exist).
+const priceStore = require('./lib/price-history-store.js');
 let yf;
 try {
   const YF = require('yahoo-finance2').default;
@@ -99,22 +106,31 @@ async function main() {
   // run then overwrote the (possibly recoverable) corrupt file with one day of
   // prices — destroying months of accumulated history. Now: back up the corrupt
   // file, log loudly, and refuse to continue unless RESET_HISTORY=1 is explicit.
-  const histPath = path.join(args.out, 'history.json');
+  // Tag 294: load the merged history from shards (Legacy-Fallback: the very first
+  // run — no shards yet — reads the frozen monolith prices/history.json read-only;
+  // the migration/first pull then writes shards, and the monolith is ignored ever
+  // after). Corrupt-Backup-Logik je Shard: loadAll throws with err.shardPath set
+  // for the offending shard (or the legacy file), same fail-loud + RESET_HISTORY
+  // guard as before, now scoped to the one bad file instead of the whole store.
+  const histPath = path.join(args.out, 'history.json'); // legacy label (frozen)
   let history = {};
-  if (fs.existsSync(histPath)) {
-    try {
-      history = JSON.parse(fs.readFileSync(histPath, 'utf8'));
-    } catch (e) {
-      const backup = histPath + '.corrupt.' + Date.now();
-      try { fs.copyFileSync(histPath, backup); } catch (_) {}
-      _log('ERROR', 'history.json is corrupt (' + e.message + '). Backup saved to ' + backup);
-      if (process.env.RESET_HISTORY !== '1') {
-        _log('ERROR', 'Refusing to overwrite — set RESET_HISTORY=1 to start fresh.');
-        process.exit(1);
-      }
-      _log('WARN', 'RESET_HISTORY=1 set — proceeding with empty history.');
+  try {
+    history = priceStore.loadAll(args.out);
+  } catch (e) {
+    const bad = e.shardPath || histPath;
+    const backup = bad + '.corrupt.' + Date.now();
+    try { fs.copyFileSync(bad, backup); } catch (_) {}
+    _log('ERROR', 'price history load failed for ' + bad + ' (' + e.message + '). Backup saved to ' + backup);
+    if (process.env.RESET_HISTORY !== '1') {
+      _log('ERROR', 'Refusing to overwrite — set RESET_HISTORY=1 to start fresh.');
+      process.exit(1);
     }
+    _log('WARN', 'RESET_HISTORY=1 set — proceeding with empty history.');
+    history = {};
   }
+  // Tag 294: track which tickers changed this run so checkpoints only rewrite the
+  // shards that actually moved (saveDirty) — write-amplification stays low.
+  const dirty = new Set();
 
   const todaysSnapshot = {};
   let ok = 0, failed = 0;
@@ -209,6 +225,7 @@ async function main() {
       for (const [d, c] of merged) arr.push({ date: d, close: c }); // 'close' = ADJUSTED (Tag 148)
       arr.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
       if (arr.length > 400) arr.splice(0, arr.length - 400);
+      dirty.add(stock.ticker); // Tag 294: this ticker's shard needs rewriting
       ok++;
     } catch (e) {
       _log('WARN', `  ${stock.ticker} failed: ${e.message}`);
@@ -225,8 +242,13 @@ async function main() {
     // korrumpieren; Teil-Universum-history ist valides JSON und genau das gewuenschte Substrat.
     const batchIdx = batchStart / CONCURRENCY;
     if (batchIdx > 0 && batchIdx % CHECKPOINT_EVERY_BATCHES === 0) {
-      writeFileAtomic(histPath, JSON.stringify(history));
-      _log('INFO', `Checkpoint: history.json persistiert nach ${batchStart + CONCURRENCY} Tickern (${ok} ok)`);
+      // Tag 294: checkpoint writes only the shards touched since the last one
+      // (saveDirty), then clears `dirty` — a timeout-kill still persists progress
+      // (each touched shard was written whole at some checkpoint) without
+      // rewriting all 32 shards every 100 batches.
+      const wrote = priceStore.saveDirty(args.out, history, dirty);
+      dirty.clear();
+      _log('INFO', `Checkpoint: ${wrote.length} shards persistiert nach ${batchStart + CONCURRENCY} Tickern (${ok} ok)`);
     }
     if (batchStart + CONCURRENCY < wl.stocks.length) {
       await sleep(args.rateLimit);
@@ -291,6 +313,7 @@ async function main() {
         for (const [d, c] of benchMerged) history[key].push({ date: d, close: c }); // ADJUSTED (Tag 148)
         history[key].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
         history[key] = history[key].slice(-400);
+        dirty.add(key); // Tag 294: benchmark shard needs rewriting
         ok++;
         _log('INFO', `${key} dedicated pull: ${history[key].length} history entries`);
       } else {
@@ -302,11 +325,13 @@ async function main() {
   }
 
   writeFileAtomic(path.join(args.out, `${today}.json`), JSON.stringify(todaysSnapshot, null, 2));
-  // Tag 222 (audit F-222a-1 BLOCKING): drop the pretty-print indent. At 19k
-  // tickers × 400 days × ~40 bytes/entry = ~280MB single-string. V8 hard
-  // limit is 512MB per string → OOM. Compact JSON = ~80MB, well within limits.
-  // The history file is read by scripts not humans; readability not needed.
-  writeFileAtomic(histPath, JSON.stringify(history));
+  // Tag 294: final write = saveAll (all 32 shards). Guarantees completeness even
+  // for the migration/first run (every shard exists afterwards, so loadAll never
+  // falls back to legacy again) — replaces the single writeFileAtomic(histPath)
+  // that produced the >100 MB monolith. saveAll partitions in memory and writes
+  // each shard atomically + compact; per-shard JSON.stringify stays far under the
+  // V8 512 MB single-string limit that the old monolith flirted with.
+  priceStore.saveAll(args.out, history);
   _log('INFO', `Done: ${ok}/${wl.stocks.length} ok, ${failed} failed`);
 
   // audit/fix: exit non-zero on total price-pull failure (was implicit exit 0, masking a dead Yahoo day) — mirrors backfill-prices.js
