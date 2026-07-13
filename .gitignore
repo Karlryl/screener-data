@@ -102,3 +102,8 @@ screener-detail.json
 # (sessionId/pid/acquiredAt), never a work product. Was accidentally tracked and rewritten
 # by every session + the CI `git add -A`, causing perpetual churn on main. Untracked here.
 .claude/scheduled_tasks.lock
+
+# Masterplan 2.3 / 2.8-A12 — GG7(c)-Store: PIT-Voll-Snapshots vor der Kompaktierung.
+# Liegt außerhalb des CI-Checkouts (Betriebs-Sache, Muster analog prices-max/).
+# board-history/ selbst BLEIBT getrackt (GG7b, Messgrundlage) — nur das Archiv nicht.
+board-history-archive/

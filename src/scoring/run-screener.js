@@ -187,6 +187,11 @@ function run(topN) {
   for (const [id, b] of Object.entries(ranked.full)) {
     writeJsonAtomic(path.join(FULL_DIR, id + '.json'), b, { indent: 0 });
   }
+  // survival ist nie topN-gekappt (flache runway-desc-Liste) — trotzdem nach full/ spiegeln,
+  // damit der 2.3-Vintage-Writer (liest alles in full/) die volle 14er-Board-Familie (2.8 §3c)
+  // ohne Sonderpfad einfriert. Gleiche Form wie die Branch-Files: {profitable:[],unprofitable:[]}
+  // passt hier nicht — survival bleibt flach, der Writer behandelt Arrays wie Kohorten-Listen.
+  writeJsonAtomic(path.join(FULL_DIR, 'survival.json'), ranked.survival, { indent: 0 });
   writeJsonAtomic(path.join(OUT_DIR, 'overview.json'), ranked.overview);
   writeJsonAtomic(path.join(OUT_DIR, 'survival.json'), ranked.survival);
   // audit/fix (Court Fall 7, F6/F46): index.json byte-deterministisch machen. Die Key-Reihenfolge
