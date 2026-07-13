@@ -179,6 +179,14 @@ function run(topN) {
   for (const [id, b] of Object.entries(ranked.branches)) {
     writeJsonAtomic(path.join(OUT_DIR, id + '.json'), b); // indent 2 default -> byte-identisch
   }
+  // 2.3-A8: volle gescorte Kohorten als Vintage-Substrat nach full/ (2.8 §6). Kompakt (indent 0):
+  // maschinell gelesen (write-board-history), Voll-Kohorten sind ~5x groesser als die topN-Boards.
+  // QC-Pass bewusst ohne full/ — dessen Messreihe startet erst mit der eigenen Vintage-Entscheidung (3.2/2.3).
+  const FULL_DIR = path.join(OUT_DIR, 'full');
+  fs.mkdirSync(FULL_DIR, { recursive: true });
+  for (const [id, b] of Object.entries(ranked.full)) {
+    writeJsonAtomic(path.join(FULL_DIR, id + '.json'), b, { indent: 0 });
+  }
   writeJsonAtomic(path.join(OUT_DIR, 'overview.json'), ranked.overview);
   writeJsonAtomic(path.join(OUT_DIR, 'survival.json'), ranked.survival);
   // audit/fix (Court Fall 7, F6/F46): index.json byte-deterministisch machen. Die Key-Reihenfolge

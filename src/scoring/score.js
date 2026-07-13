@@ -910,8 +910,17 @@ function produceRankings(results, opts = {}) {
   // wird danach gestrippt -> Output-Shape unveraendert.
   const byScore = (a, c) => (c._raw - a._raw) || cmpTicker(a.ticker, c.ticker);
   const stripRaw = ({ _raw, ...row }) => row;
-  for (const b of Object.values(branches)) {
-    for (const t of Object.keys(b)) { b[t].sort(byScore); b[t] = b[t].slice(0, topN).map(stripRaw); }
+  // 2.3-A8: volle gescorte Kohorten VOR dem topN-Slice abgreifen (2.8 §6: board-history
+  // friert die VOLLE Kohorte ein, nicht Top-N — sonst ist rankIC range-restringiert
+  // Richtung 0 attenuiert). Rein additiv: Board-Listen bleiben byte-identisch topN-gekappt.
+  const full = {};
+  for (const [id, b] of Object.entries(branches)) {
+    full[id] = {};
+    for (const t of Object.keys(b)) {
+      b[t].sort(byScore);
+      full[id][t] = b[t].map(stripRaw);
+      b[t] = b[t].slice(0, topN).map(stripRaw);
+    }
   }
   overview.sort(byScore);
   // audit/fix (O8): Survival-Liste nach Runway absteigend (nulls ans Ende, Ticker-Tie-Break),
@@ -923,7 +932,7 @@ function produceRankings(results, opts = {}) {
     if (cv === null) return -1;
     return (cv - av) || cmpTicker(a.ticker, c.ticker);
   });
-  return { branches, overview: overview.slice(0, topN * 2).map(stripRaw), survival, excluded };
+  return { branches, overview: overview.slice(0, topN * 2).map(stripRaw), survival, excluded, full };
 }
 
 // 2.9 Slice 2: Drift-Waechter. KS-Distanz (max |CDF|-Differenz) je Kohorte/Achse zwischen dem

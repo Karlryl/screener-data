@@ -104,5 +104,26 @@ test('2.10: produceRankings-Board/Overview-Zeilen tragen cohortN + cohortFallbac
   assert.ok(r.overview.length > 0 && Number.isFinite(r.overview[0].cohortN), 'overview-Zeile ohne cohortN');
 });
 
+// --- 2.3-A8: Voll-Kohorten-Abgriff (Vintage-Substrat, 2.8 §6) ------------------
+test('A8: produceRankings.full traegt die VOLLE Kohorte; Board == full.slice(0,topN) byte-gleich', () => {
+  const r = produceRankings(results, { topN: 50 });
+  assert.ok(r.full && typeof r.full === 'object', 'full fehlt im Rueckgabewert');
+  let checkedBranches = 0, fullGreater = 0;
+  for (const [id, b] of Object.entries(r.branches)) {
+    for (const t of Object.keys(b)) {
+      const fullList = (r.full[id] || {})[t];
+      assert.ok(Array.isArray(fullList), `${id}.${t}: full-Liste fehlt`);
+      const cohort = rankBy(results, id, t);
+      assert.equal(fullList.length, cohort.length, `${id}.${t}: full=${fullList.length} != Kohorte=${cohort.length}`);
+      assert.equal(JSON.stringify(fullList.slice(0, 50)), JSON.stringify(b[t]),
+        `${id}.${t}: Board ist nicht das byte-gleiche topN-Praefix der full-Liste`);
+      if (fullList.length > b[t].length) fullGreater++;
+      checkedBranches++;
+    }
+  }
+  assert.ok(checkedBranches > 0, 'keine Branch geprueft');
+  assert.ok(fullGreater > 0, 'keine einzige Kohorte > topN — Test beisst nicht (Universum zu klein?)');
+});
+
 console.log(`\nanchors.rank.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);
