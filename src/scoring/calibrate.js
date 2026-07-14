@@ -15,7 +15,7 @@ const { route } = require('./router.js');
 const { q, signTrack } = require('./engine.js');
 const { norm } = require('./snapshot.js');
 const { evaluateLamps } = require('./lamps.js');
-const { trackOf, rawAxisValue, learnWinsorBounds, isDataSuspect, issuerDedupComparator, issuerKey, scoreUniverse, rankBy } = require('./score.js');
+const { trackOf, rawAxisValue, learnWinsorBounds, winsorTailBounds, growthYoYComponents, isDataSuspect, issuerDedupComparator, issuerKey, scoreUniverse, rankBy } = require('./score.js');
 
 // Baut pro (formulaId|track) die Perzentil-Matrix: rows[{ticker, pct:{axis:0-100}, lamps}].
 function buildCalibMatrix(universe, formulas) {
@@ -48,6 +48,12 @@ function buildCalibMatrix(universe, formulas) {
   // und als 5. Argument an rawAxisValue durchreichen — sonst laufen marginTrajectory/revAcceleration
   // UNwinsorisiert (Stub-Quartal-Phantom-Extreme pinnen die Perzentil-Enden, Matrix != Produktion).
   const winsorBounds = learnWinsorBounds(routed.map((e) => e.s));
+  // Datenrichtigkeits-Fix 14.07.2026: growthBounds EXAKT wie score.js lernen (gleiche Basis wie
+  // winsorBounds) und an rawAxisValue durchreichen — revGrowthLevel/ruleOfX rechnen jetzt
+  // reihen-basiert und klemmen Mini-Basis-Komponenten mit denselben data-learned Schranken.
+  const growthSamples = [];
+  for (const e of routed) for (const v of growthYoYComponents(e.s)) growthSamples.push(v);
+  const growthBounds = winsorTailBounds(growthSamples);
   const cohorts = {};
   for (const e of routed) {
     if (dedupLosers.has(e)) continue;
@@ -60,7 +66,7 @@ function buildCalibMatrix(universe, formulas) {
     const track = entries[0].track;
     const axisKeys = formula.axes.map((a) => a.key);
     const rawByAxis = {};
-    for (const k of axisKeys) rawByAxis[k] = entries.map((e) => rawAxisValue(e.s, k, formula, track, winsorBounds));
+    for (const k of axisKeys) rawByAxis[k] = entries.map((e) => rawAxisValue(e.s, k, formula, track, winsorBounds, growthBounds));
     // audit/fix (C1): score.js perzentiliert capitalEfficiency bei subCohortByProfit-Branchen
     // (real-estate/it-services) gegen die profit-Vorzeichen-Sub-Kohorte (Iron-Rule 2). Hier exakt
     // spiegeln (score.js:85-98), sonst weicht die Kalibrier-Matrix von der Produktion ab -> Weights

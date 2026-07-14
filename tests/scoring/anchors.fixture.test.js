@@ -57,7 +57,7 @@ test('BE/Bloom: industrials / profitable / Turnaround / Crash-Lampe, KEIN FCF-Ar
   const L = lampsOf(s);
   assert.ok(L.includes('crashRisk')); // Beta 3.7
   assert.ok(!L.includes('fcfArtefact')); // Turnaround, kein Artefakt
-  assert.ok(ax.revGrowthLevel(s) > 100);
+  assert.ok(ax.revGrowthLevel(s) > 100); // Quartals-YoY selbst gerechnet ~130 % (== gesundes Skalar)
 });
 
 // --- Negativ-Anker ----------------------------------------------------------

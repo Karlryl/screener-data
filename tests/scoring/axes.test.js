@@ -23,13 +23,30 @@ const NVTS = snap('NVTS');
 const near = (a, b, eps = 1e-6) => Math.abs(a - b) <= eps;
 
 // --- 1 revGrowthLevel -------------------------------------------------------
-test('revGrowthLevel(CRDO) == metrics.revenueGrowthYoY (201.5)', () => {
-  assert.ok(near(ax.revGrowthLevel(CRDO), CRDO.metrics.revenueGrowthYoY.value));
+// Datenrichtigkeits-Fix 14.07.2026: SELBST gerechnetes Quartals-YoY aus revenueQ
+// (identische Semantik wie Yahoos Skalar — gesunde Namen aendern sich nicht),
+// NICHT mehr das Provider-Skalar metrics.revenueGrowthYoY (belegte Glitches:
+// MRNA stale +260 %, GOLD +244 % vs real ~13 %). Fallback annual-lag1 nur ohne Quartale.
+test('revGrowthLevel(CRDO) == selbst gerechnetes Quartals-YoY (== gesundes Skalar 201.5)', () => {
+  const rq = CRDO.timeseries.revenueQ;
+  const expected = 100 * (rq[0].value / rq[4].value - 1);
+  assert.ok(near(ax.revGrowthLevel(CRDO), expected));
+  assert.ok(near(ax.revGrowthLevel(CRDO), CRDO.metrics.revenueGrowthYoY.value, 0.5)); // gesund: Quelle egal
   assert.ok(ax.revGrowthLevel(CRDO) > 100);
 });
-test('revGrowthLevel: fehlende metrics -> null', () => {
+test('revGrowthLevel: stale/defektes Skalar wird ignoriert, Reihe traegt', () => {
+  const s = { metrics: { revenueGrowthYoY: { value: 260 } }, // MRNA-Muster: Skalar behauptet +260%
+    timeseries: { revenueQ: [{ value: 80 }, { value: 90 }, { value: 95 }, { value: 100 }, { value: 100 }] } };
+  assert.ok(near(ax.revGrowthLevel(s), -20)); // Reihe sagt ehrlich -20%
+});
+test('revGrowthLevel: growthBounds klemmen Mini-Basis-Komponenten', () => {
+  const stub = { annual: { annualRev: [{ value: 300 }, { value: 1 }] } }; // +29900% Basis-Artefakt
+  assert.ok(ax.revGrowthLevel(stub) > 1000);                    // ungeklemmt: Phantom-Extrem
+  assert.ok(near(ax.revGrowthLevel(stub, [-0.7, 4.5]), 450));   // geklemmt auf p99-Schranke
+});
+test('revGrowthLevel: keine Reihen -> null (kein Skalar-Fallback)', () => {
   assert.equal(ax.revGrowthLevel({}), null);
-  assert.equal(ax.revGrowthLevel({ metrics: {} }), null);
+  assert.equal(ax.revGrowthLevel({ metrics: { revenueGrowthYoY: { value: 260 } } }), null);
 });
 
 // --- 2 revAcceleration ------------------------------------------------------
@@ -54,7 +71,8 @@ test('ruleOfX(CRDO): includeFcf addiert gueltige FCF-Marge', () => {
   const without = ax.ruleOfX(CRDO, 2.3, false);
   assert.ok(withFcf > without); // CRDO FCF gilt als gueltig (G2+G3)
   assert.ok(near(withFcf - without, CRDO.metrics.fcfMarginTTM.value, 1e-6));
-  assert.ok(near(without, 2.3 * CRDO.metrics.revenueGrowthYoY.value, 1e-6));
+  // Datenrichtigkeits-Fix 14.07.2026: rev-Bein = reihen-basiertes revGrowthLevel (EIN Wachstumsbegriff)
+  assert.ok(near(without, 2.3 * ax.revGrowthLevel(CRDO), 1e-6));
 });
 test('ruleOfX(NVTS) < 0 und FCF-Term gedroppt (Artefakt nicht addiert)', () => {
   assert.ok(ax.ruleOfX(NVTS, 2.3, true) < 0); // negatives Umsatzwachstum

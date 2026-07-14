@@ -43,8 +43,41 @@ function lastPresent(series) {
 // ratioSeries kommt aus snapshot.js (geteilt, finite-/laengen-sicher).
 
 // --- 1. Umsatzwachstum (Niveau) ---------------------------------------------
-function revGrowthLevel(s) {
-  return metricVal(s,'revenueGrowthYoY'); // % (negativ rankt natuerlich unten)
+// Datenrichtigkeits-Fix (14.07.2026, 2.14-v3-Court T1 + 2.6-Retrial): vorher las die
+// Achse metrics.revenueGrowthYoY — ein Yahoo-quoteSummary-SKALAR mit belegten Defekten
+// (MRNA +260 % bei real kollabierender Umsatzreihe [Stempel Mai], GOLD +244 % vs real
+// ~13 %, 20 Namen mit |YoY|>500 % im Level-Top-Dezil, 612 Divergenzen >=20pp gegen die
+// eigene annual-Reihe). Jetzt Single-Source aus den ROH-REIHEN (annualRev + revenueQ);
+// die Komponenten-Extraktion ist mit growthBoost/robustG geteilt (revYoYComponents),
+// die ACHSE selbst behaelt die Skalar-Semantik (Quartals-YoY, s. u.). growthBounds
+// (data-learned p1/p99, score.js) klemmt Mini-Basis-/Stub-Komponenten (JOBY-Muster),
+// KEIN aufgezwungenes Niveau.
+function revYoYComponents(s) {
+  const comps = [];
+  const ar = firstTwoPresent(norm(s, 'annualRev'));
+  if (ar && ar[1] > 0) { const g = ar[0] / ar[1] - 1; if (Number.isFinite(g)) comps.push(g); }
+  const rq = norm(s, 'revenueQ');
+  if (rq.length >= 5 && rq.slice(0, 5).every(Number.isFinite) && rq[4] > 0) {
+    const g = rq[0] / rq[4] - 1; if (Number.isFinite(g)) comps.push(g);
+  }
+  return comps; // 0..2 Werte (Bruchteile, nicht %)
+}
+// CHIRURGISCH, nicht semantisch: das Skalar WAR Yahoos Quartals-YoY (juengstes Quartal
+// vs Vorjahres-Quartal) — die Achse rechnet exakt DIESELBE Groesse selbst aus revenueQ
+// (CRDO: berechnet 201,5 % == Skalar; gesunde Namen aendern sich nicht). Nur wo die
+// Quartalsreihe fehlt, traegt annual-lag1 als dokumentierter Fallback. Ein Wechsel des
+// WACHSTUMSBEGRIFFS (z. B. robustG-Blend) waere eine Formel-Verbesserung und gehoert
+// vor den Court (2.14-v4), nicht in einen Datenrichtigkeits-Fix — Audit 14.07.: der
+// Blend reorderte median 9 Raenge ueber 3354 Namen ohne Anker-/Glitch-Nutzen.
+function revGrowthLevel(s, growthBounds) {
+  const comps = revYoYComponents(s); // [annual-lag1?, quartal-lag4?] (Bruchteile)
+  if (!comps.length) return null; // keine Reihe -> Achse droppt ehrlich (renorm-on-drop), KEIN Skalar-Fallback (der Skalar ist genau fuer reihen-lose Namen unpruefbar)
+  // Reihenfolge in revYoYComponents: annual zuerst, quartal zweit (wenn beide da).
+  const rq = norm(s, 'revenueQ');
+  const hasQuarter = rq.length >= 5 && rq.slice(0, 5).every(Number.isFinite) && rq[4] > 0;
+  let g = hasQuarter ? comps[comps.length - 1] : comps[0];
+  if (growthBounds) g = Math.max(growthBounds[0], Math.min(growthBounds[1], g));
+  return g * 100; // % wie zuvor (negativ rankt natuerlich unten)
 }
 
 // audit/fix (Court Phase A Runde 3, Fall C2): Winsor-Clamp gegen near-zero-Nenner-Artefakte.
@@ -99,8 +132,10 @@ function gpGrowth(s) {
 // alpha*revGrowth(%) + FCF-Marge(%) — FCF-Term nur wenn fcfSignGuard ihn
 // validiert UND includeFcf (Profitable-Track). Unprofitable-Track: includeFcf
 // = false -> reiner alpha*revGrowth (kein BE-Penalty).
-function ruleOfX(s, alpha = 2.3, includeFcf = true) {
-  const rev = metricVal(s,'revenueGrowthYoY');
+// Datenrichtigkeits-Fix 14.07.2026: rev aus der berechneten Reihe (revGrowthLevel),
+// nicht mehr aus dem defekten Provider-Skalar — beide Achsen teilen EINEN Wachstumsbegriff.
+function ruleOfX(s, alpha = 2.3, includeFcf = true, growthBounds) {
+  const rev = revGrowthLevel(s, growthBounds);
   if (rev === null) return null;
   let x = alpha * rev;
   if (includeFcf) {
@@ -346,7 +381,7 @@ function roicStability(s) {
 }
 
 module.exports = {
-  revGrowthLevel, revAcceleration, gpGrowth, ruleOfX,
+  revGrowthLevel, revAcceleration, gpGrowth, ruleOfX, revYoYComponents,
   marginTrajectory, capitalEfficiency, revisionsMomentum, dilution, marginLevel, roicStability,
   // C2: per-Quartal-Rohwerte fuer die universe-weite Winsor-Schranken-Sammlung in score.js
   quarterOpMargins, quarterQoQRates,

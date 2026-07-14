@@ -123,16 +123,19 @@ function hasCurrentRevenue(s) {
 // audit/fix (Court R3 C2): die zwei near-zero-Nenner-anfaelligen Quartals-Achsen
 // (marginTrajectory/revAcceleration) erhalten die universe-weit gelernten Winsor-
 // Schranken (winsorBounds), damit Stub-Quartale keine Phantom-Extreme pinnen.
-function rawAxisValue(s, key, formula, track, winsorBounds) {
+function rawAxisValue(s, key, formula, track, winsorBounds, growthBounds) {
   if (key === 'ruleOfX') {
     // includeFcf am tatsaechlichen FCF-Vorzeichen koppeln, NICHT am erzwungenen
     // 'profitable'-Label der none-Branchen (sonst FCF-Penalty fuer cash-negative
     // Namen im einen Track -> Iron-Rule 2).
     const includeFcf = fcfTrack(metricVal(s, 'fcfMarginTTM'), norm(s, 'annualFCF'), norm(s, 'annualOCF')) === 'profitable';
-    return axesFns.ruleOfX(s, formula.alpha, includeFcf);
+    return axesFns.ruleOfX(s, formula.alpha, includeFcf, growthBounds);
   }
   if (key === 'marginTrajectory') return axesFns.marginTrajectory(s, winsorBounds && winsorBounds.opMargin);
   if (key === 'revAcceleration') return axesFns.revAcceleration(s, winsorBounds && winsorBounds.qoq);
+  // Datenrichtigkeits-Fix 14.07.2026: die Level-Achse rechnet aus den Roh-Reihen und
+  // klemmt Mini-Basis-Komponenten mit den data-learned growthBounds (wie robustG).
+  if (key === 'revGrowthLevel') return axesFns.revGrowthLevel(s, growthBounds);
   const fn = axesFns[key];
   return typeof fn === 'function' ? fn(s) : null;
 }
@@ -247,15 +250,11 @@ function learnWinsorBounds(snapshots) {
 //    5-finite-Regel SETZT regelmaessige Provider-Kadenz VORAUS (Live-Scan aller Snapshots: 0 solche Luecken).
 //    Die robuste datums-basierte Ausrichtung wuerde snapshot.js/FIELD_REGISTRY beruehren (Brief verbietet es)
 //    -> dokumentiertes Rest-Risiko, kein aktiver Defekt. div0-Skip: Nenner STRIKT > 0 (0 UND negativ = Stub/Glitch).
+// Datenrichtigkeits-Fix 14.07.2026: Implementierung nach axes.js gewandert
+// (revYoYComponents) — die revGrowthLevel-Achse liest jetzt dieselben Komponenten
+// (Single-Source). Name + Export hier bleiben fuer growthBoost/TDD stabil.
 function growthYoYComponents(s) {
-  const comps = [];
-  const ar = firstTwoPresent(norm(s, 'annualRev'));
-  if (ar && ar[1] > 0) { const g = ar[0] / ar[1] - 1; if (Number.isFinite(g)) comps.push(g); }
-  const rq = norm(s, 'revenueQ');
-  if (rq.length >= 5 && rq.slice(0, 5).every(Number.isFinite) && rq[4] > 0) {
-    const g = rq[0] / rq[4] - 1; if (Number.isFinite(g)) comps.push(g);
-  }
-  return comps; // 0..2 Werte
+  return axesFns.revYoYComponents(s); // 0..2 Werte
 }
 
 // robustG einer Aktie = Median der COMPONENT-winsorisierten YoY-Komponenten. Der Component-Winsor VOR
@@ -578,7 +577,7 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
       : null;
     const rawByAxis = {};
     for (const ax of formula.axes) {
-      rawByAxis[ax.key] = entries.map((e) => rawAxisValue(e.snapshot, ax.key, formula, track, winsorBounds));
+      rawByAxis[ax.key] = entries.map((e) => rawAxisValue(e.snapshot, ax.key, formula, track, winsorBounds, growthBounds));
     }
     cohortRaw[cohortKey] = { formula, track, formulaId, entries, rawByAxis, profitSign };
     // 2.10: n je Kohorte MITfrieren (ref-Modus liest die eingefrorene n fuer die Shrinkage -> ein
@@ -976,7 +975,7 @@ function calibrationDrift(liveCal, refCal, ksThreshold = 0.15) {
 
 module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings, phaseOf, mcapBandOf, ipoRecencyOf, ipoYearOf, calibrationDrift,
   // audit/fix (Bug 0/9/7): fuer calibrate.js — Kohorten-Gates + Winsor-Schranken exakt spiegeln
-  learnWinsorBounds, isDataSuspect, issuerDedupComparator, issuerKey,
+  learnWinsorBounds, winsorTailBounds, isDataSuspect, issuerDedupComparator, issuerKey,
   // AUFGABE 2 (Wachstums-Bonus): fuer TDD + gezielte Wiederverwendung
   growthBoostFactor, growthYoYComponents, robustG, growthPctlFn, boostFromPctl, GROWTH_BOOST_K,
   // PHASE 3 (Zyklus-Daempfer): fuer TDD + Mess-Skripte

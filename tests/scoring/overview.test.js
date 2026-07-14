@@ -89,6 +89,8 @@ test('cashRunwayQuarters: positiver FCF -> 9999 (JSON-/q()-sicher)', () => {
 });
 
 // --- BE companion (Rule-of-X) gross, da +130% Umsatz ------------------------
+// (Datenrichtigkeits-Fix 14.07.2026: rev-Bein selbst gerechnet aus revenueQ —
+// gesunde Namen wie BE aendern sich nicht, Pin bleibt.)
 test('ruleOfXCompanion(BE) gross (>250, da +130% Umsatz)', () => {
   assert.ok(ov.ruleOfXCompanion(BE) > 250);
 });
