@@ -66,6 +66,21 @@ const BRANCHES = [
 // (Score-Transparenz, wie coverageAxes NICHT im --check, damit legitime Abwesenheit/alte Consumer nicht brechen).
 const GEO_FIELDS = ['country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback', 'scoreBase', 'scoreShrunk', 'factors', 'axisBreakdown'];
 
+// Task 2.2: ATH-Anzeige (Karl-A6-Lösung) — additiv OPTIONAL je Zeile: ath = {distancePct,
+// athDate, monthsAgo} | null. Quelle = external-data/ath-state.json (committeter Vertrag,
+// geseedet vom lokalen Max-Batch, täglich billig fortgeschrieben; Split-Wächter -> null).
+// Reine ANZEIGE, nie Score-Input (Grundgesetz 1). --check validiert die FORM wenn present
+// (nicht Pflicht — Abwesenheit ist legitim, Präzedenz coverageAxes/B1).
+const { displayFor } = require('./update-ath-state.js');
+let _athEntries = null;
+function athFor(ticker) {
+  if (_athEntries === null) {
+    const st = readJSONOrNull(path.join(__dirname, '..', 'external-data', 'ath-state.json'));
+    _athEntries = (st && st.entries) || {};
+  }
+  return displayFor(_athEntries[ticker]);
+}
+
 function readJSON(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
 function readJSONOrNull(p) { try { return readJSON(p); } catch (_) { return null; } }
 
@@ -88,6 +103,7 @@ function mapBoardRow(r, i) {
     },
   };
   for (const k of GEO_FIELDS) out[k] = r[k] === undefined ? null : r[k];
+  out.ath = athFor(r.ticker); // 2.2: ATH-Anzeige (null wenn nicht geseedet/Split-Wächter)
   return out;
 }
 
@@ -104,6 +120,7 @@ function mapOverviewRow(r, i) {
     lamps: r.lamps || [],
   };
   for (const k of GEO_FIELDS) out[k] = r[k] === undefined ? null : r[k];
+  out.ath = athFor(r.ticker); // 2.2
   return out;
 }
 
@@ -117,6 +134,7 @@ function mapSurvivalRow(r, i) {
     lamps: r.lamps || [],
   };
   for (const k of GEO_FIELDS) out[k] = r[k] === undefined ? null : r[k];
+  out.ath = athFor(r.ticker); // 2.2
   return out;
 }
 
@@ -302,6 +320,15 @@ function validateGeo(r, where, errs) {
   checkEnumOrNull(r, 'ipoRecency', VALID_IPO, where, errs);
   checkEnumOrNull(r, 'profitTier', VALID_PROFITTIER, where, errs); // 1.2
   checkNumOrNull(r, 'ipoYear', where, errs);                       // 1.2 (durchgereicht)
+  // 2.2: ath additiv OPTIONAL — Abwesenheit/null legitim; WENN present, muss die Form stimmen.
+  if ('ath' in r && r.ath !== null) {
+    if (typeof r.ath !== 'object') errs.push(`${where}: ath not object|null`);
+    else {
+      if (!Number.isFinite(r.ath.distancePct)) errs.push(`${where}: ath.distancePct not finite`);
+      if (typeof r.ath.athDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(r.ath.athDate)) errs.push(`${where}: ath.athDate`);
+      if (!Number.isFinite(r.ath.monthsAgo) || r.ath.monthsAgo < 0) errs.push(`${where}: ath.monthsAgo`);
+    }
+  }
 }
 
 function validateBoardRow(r, where, errs) {

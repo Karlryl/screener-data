@@ -560,6 +560,13 @@ jobs:
         run: node scripts/watch-fx-sanity.js
         continue-on-error: true
 
+      # 2.2: ATH-State billig fortschreiben (nur Ticker, die der lokale Max-Batch
+      # geseedet hat; Split-Wächter flaggt Re-Basierungen). Anzeige-Daten -> fail-soft.
+      # external-data/ath-state.json ist getrackt und faehrt im git add -A unten mit.
+      - name: Update ATH State (2.2)
+        run: node scripts/update-ath-state.js
+        continue-on-error: true
+
       # F-CI-001 v2 (Tag 179/232c-7): DER EINZIGE Commit-to-main, retry-rebase,
       # tree-verified. Nur der merge-Job pusht auf main -> kein 17-Shard-Race.
       # Schutzliste (picks-history/, methods-history/, earnings-calendar.json) wird
