@@ -121,6 +121,16 @@ test('China-ADR ohne country (region=CN, NYSE) -> route (BABA-Muster, USD/SEC-20
   assert.equal(route(baba).action, 'route');
   assert.equal(route(baba).formulaId, 'consumer-discretionary');
 });
+test('2.6-Carve-out: Education & Training Services -> consumer-discretionary (GICS), nicht staples', () => {
+  const tal = { meta: { sector: 'Consumer Defensive', industry: 'Education & Training Services', region: 'CN', exchangeName: 'NYSE', ticker: 'TAL' },
+    annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
+  assert.equal(route(tal).action, 'route');
+  assert.equal(route(tal).formulaId, 'consumer-discretionary');
+  // Kontrolle: normale Defensive-Namen bleiben staples
+  const ko = { meta: { sector: 'Consumer Defensive', industry: 'Beverages - Non-Alcoholic', exchangeName: 'NYSE', ticker: 'KO' },
+    annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };
+  assert.equal(route(ko).formulaId, 'consumer-staples');
+});
 test('Foreign-Domizil OTC-gelistet bleibt zurueckgestellt -> non-us (ASMLF-Grey-Duplikat)', () => {
   const asmlf = { meta: { sector: 'Technology', industry: 'Semiconductor Equipment & Materials', country: 'Netherlands', exchangeName: 'OTC Markets OTCPK', ticker: 'ASMLF' },
     annual: { annualRev: [{ value: 100 }], annualGP: [{ value: 60 }] } };

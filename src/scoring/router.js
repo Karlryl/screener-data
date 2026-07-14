@@ -66,6 +66,17 @@ const NON_OPERATING_VEHICLE_INDUSTRY = /asset management|closed[- ]end fund|shel
 // 7-Achsen-Satz trennt Franchise (ANET/MSI/GRMN) noch nicht sauber von commodity-EMS — die
 // Margen-Niveau-Achse ist Folge-Task 2.12b; bis dahin ehrlich als unbewiesen geflaggt.
 const TECHHW_INDUSTRY = /electronic components|computer hardware|communication equipment|scientific & technical instruments|consumer electronics|\bsolar\b|electronics & computer distribution/;
+// 2.6-Carve-out (Court-Retrial consumer-staples, 2026-07-14): Yahoo haengt
+// 'Education & Training Services' an Consumer DEFENSIVE — GICS ordnet Education
+// Services aber Consumer DISCRETIONARY zu (GICS 25302010, Sub-Industry 'Education
+// Services' unter 'Consumer Discretionary > Diversified Consumer Services').
+// Folge der Yahoo-Anomalie: 15 Education-Namen (TAL/EDU/LINC/LAUR/...) sassen in
+// der Staples-Kohorte und fuehrten das Board an (2.1-Court-DENIED-Beleg) — der
+// deklarierte dilution+capEff-Junk-Filter BELOHNTE TAL sogar (Post-Crackdown-
+// Buybacks = Dilution-Perzentil 100). Klassifikations-Korrektur statt Gewichts-
+// Kosmetik. Universum-Audit 14.07.: exakt EIN Yahoo-Label matcht, alle 16 Treffer
+// in consumer defensive — keine Substring-Kollision moeglich.
+const EDUCATION_INDUSTRY = /education & training services/;
 // A3-Stufe-1: US-Primaerlisting = US-Primaerboerse, KEINE Auslandsboerse, KEIN Auslands-Suffix.
 function isUsPrimaryListing(m) {
   const ex = m && m.exchangeName;
@@ -199,6 +210,8 @@ function sectorRoute(s) {
   if (TECHHW_INDUSTRY.test(ind)) return 'tech-hardware';
   // Wortgrenze: "\bit services" matcht "it services", NICHT "cred[it services]" (Substring-Kollision).
   if (ind.includes('information technology services') || /\bit services\b/.test(ind)) return 'it-services';
+  // 2.6-Carve-out: Education gehoert per GICS zu Consumer Discretionary (s. EDUCATION_INDUSTRY oben).
+  if (EDUCATION_INDUSTRY.test(ind)) return 'consumer-discretionary';
   // Sektor-Fallback (Yahoo-Sektornamen)
   if (sec.includes('technology')) return 'software-comm-services';
   if (sec.includes('communication')) return 'software-comm-services';
