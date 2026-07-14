@@ -758,3 +758,64 @@ jobs:
           done
           echo "::error::gh-pages scoring deploy failed after 3 attempts"
           exit 1
+
+      # ── 2.3 Vintage-Messreihe (scharf seit Tag 303; Writer Tag 298, 2.8-Spec) ──
+      # NACH dem gh-pages-Deploy: ein suspect-Vintage (exit 2) macht den Job am Ende
+      # fail-loud ROT (0.7-Kanal), darf aber weder Board-Deploy noch Vintage-Commit
+      # verhindern. ANGENOMMEN: scoring laeuft strikt NACH dem merge-Push (needs:)
+      # -> zweiter, serialisierter main-Pusher ohne Shard-Race; exakt dieselbe
+      # Haertung (retry-rebase, tree-verified) wie der merge-Commit (F-CI-001 v2).
+      # Falls falsch: zeigt sich als Push-Retry-Fail = roter Job, nie stiller Verlust.
+      # L17: gezieltes `git add board-history/` — NIE -A (_ghp/-Scratch liegt im Tree).
+      - name: Write board-history vintage (2.3)
+        id: vintage
+        run: |
+          set +e
+          node scripts/write-board-history.js
+          rc=$?
+          set -e
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          if [ "$rc" != "0" ] && [ "$rc" != "2" ]; then
+            echo "::error::write-board-history hard-failed rc=$rc (kein Vintage geschrieben)"
+            exit "$rc"
+          fi
+
+      - name: Commit board-history vintage to main
+        run: |
+          git config user.name "yahoo-pull-bot"
+          git config user.email "yahoo-pull-bot@users.noreply.github.com"
+          git add board-history/
+          if git diff --staged --quiet; then
+            echo "No vintage changes to commit."
+          else
+            git commit -m "chore: board-history vintage $(date -u +%F)"
+            COMMIT_SHA=$(git rev-parse HEAD)
+            COMMIT_TREE=$(git rev-parse HEAD^{tree})
+            ok=0
+            for i in 1 2 3; do
+              git fetch origin main
+              if ! git rebase --autostash origin/main; then
+                echo "::warning::vintage rebase failed on attempt $i — aborting cleanly"
+                git rebase --abort || true
+                NEW_TREE=$(git log -1 --format=%T "$COMMIT_SHA" 2>/dev/null || echo "MISSING")
+                if ! git merge-base --is-ancestor "$COMMIT_SHA" HEAD || [ "$NEW_TREE" != "$COMMIT_TREE" ]; then
+                  git reset --hard origin/main
+                  git cherry-pick "$COMMIT_SHA" || { echo "::error::vintage cherry-pick failed"; exit 1; }
+                fi
+              else
+                COMMIT_SHA=$(git rev-parse HEAD)
+              fi
+              if git push origin HEAD:main; then ok=1; break; fi
+              echo "vintage push attempt $i failed, retrying…"
+              sleep $((5 * i))
+            done
+            if [ "$ok" != "1" ]; then
+              echo "::error::board-history vintage push failed after 3 attempts"
+              exit 1
+            fi
+            echo "✓ board-history vintage committed to main"
+          fi
+          if [ "${{ steps.vintage.outputs.rc }}" = "2" ]; then
+            echo "::error::board-history vintage SUSPECT geflaggt (Wert-Gate) — Vintage IST committet, bitte pruefen"
+            exit 2
+          fi
