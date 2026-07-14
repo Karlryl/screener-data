@@ -10,10 +10,14 @@
  * GICS-korrekt -> consumer-discretionary) NICHT mehr in dieser Kohorte — der
  * fruehere Kommentar-Anspruch "dilution+capEff trennen Education-Junk heraus"
  * war vom 2.1-Court widerlegt (TAL profitierte: Buybacks = Dilution-P100).
- * dilution + capitalEfficiency bleiben als Diluter-/Qualitaets-Filter: ein
- * Wachser mit starker Verwaesserung (COCO dil-P8) rankt BEWUSST unter einem
- * soliden Compounder — Composite by Design, revGrowthLevel = hoechstes
- * Einzelgewicht, kein Alleinbestimmer.
+ * dilution + capitalEfficiency bleiben als Qualitaets-Filter; revGrowthLevel =
+ * hoechstes Einzelgewicht, kein Alleinbestimmer (Composite by Design). BEKANNTE
+ * LIMITATION (Retrial-Court 14.07., T1): dilution ist KOHORTEN-relativ — in
+ * diesem SBC-freien Inkumbenten-Feld landet ein absolut NIEDRIGES Wachstums-SBC
+ * (COCO 1,78 % SBC/Rev) auf P6 und wird wie ein Heavy-Diluter gedrueckt; das
+ * Perzentil ist ein Kohorten-Artefakt, KEIN Eigenschafts-Urteil. Board bleibt
+ * u. a. deshalb DIAGNOSTIC (Retrial: core-Promotion DENIED — Spitze mehrheitlich
+ * reife <13%-Compounder, Challenger-Bande duenn/M&A-getragen; Ledger §2.6).
  */
 module.exports = {
   id: 'consumer-staples',
