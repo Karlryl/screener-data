@@ -965,6 +965,9 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   // DERSELBEN isHistQ-Row (endDate), index-aligned & längengleich zu revenueQ (das
   // _arr trailing-null-getrimmt hat → slice auf revenueQ.length hält den Index).
   const revenueQEnds = isHistQ.slice(0, revenueQ.length).map(r => _isoDay(_y(r, 'endDate')));
+  // A10-Symmetrie: grossProfitQ trimmt via _arr unabhängig von revenueQ → eigenes slice
+  // auf grossProfitQ.length (beide newest-anchored an isHistQ[0], Index bleibt aligned).
+  const grossProfitQEnds = isHistQ.slice(0, grossProfitQ.length).map(r => _isoDay(_y(r, 'endDate')));
 
   // FCF-Margin TTM
   // Tag 206b (Bug-Hunt Agent B HIGH-4): Yahoo's fcfMarginTTM is sometimes
@@ -1280,7 +1283,7 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     timeseries: {
       // audit/fix A10: revenueQEnds ist ein ADDITIVES Geschwister-Feld — value-Shapes
       // (revenueQ=[{value:N}]) bleiben unangetastet; norm()/FIELD_REGISTRY lesen es nie.
-      revenueQ, opIncQ, grossProfitQ, revenueQEnds
+      revenueQ, opIncQ, grossProfitQ, revenueQEnds, grossProfitQEnds
     },
     annual: {
       annualRev, annualOpInc, annualNetIncome, annualGP, annualFCF, annualOCF, annualBalance,
@@ -1513,6 +1516,7 @@ function mapFTSToQuarterly(quarterlyRows) {
   const opIncQ = [];
   const grossProfitQ = [];
   const revenueQEnds = []; // audit/fix A10: Perioden-Enden, index-aligned zu revenueQ
+  const grossProfitQEnds = []; // A10-Symmetrie: dieselbe Row-Periode wie grossProfitQ
   // F-002 (audit 2026-06-08): a null-revenue row must keep its placeholder in ALL
   // three series. Previously revenueQ was skipped (`continue`) while opIncQ/
   // grossProfitQ got a null pushed — every null-rev row shifted revenueQ left
@@ -1529,7 +1533,9 @@ function mapFTSToQuarterly(quarterlyRows) {
     grossProfitQ.push(gp != null ? { value: gp } : null);
     // audit/fix A10: Quartals-Ende aus DERSELBEN FTS-Row. FTS-Rows tragen das Datum
     // als `date` (fallback asOfDate/endDate); fehlt es → null, nicht fabrizieren.
-    revenueQEnds.push(_isoDay(r ? (r.date ?? r.asOfDate ?? r.endDate ?? null) : null));
+    const _end = _isoDay(r ? (r.date ?? r.asOfDate ?? r.endDate ?? null) : null);
+    revenueQEnds.push(_end);
+    grossProfitQEnds.push(_end); // dieselbe FTS-Row → dieselbe Periode
   }
   // Trim trailing all-null quarters (oldest) — no information to contribute;
   // mirrors mapFTSToBalance's trailing-null trim.
@@ -1537,9 +1543,9 @@ function mapFTSToQuarterly(quarterlyRows) {
          revenueQ[revenueQ.length - 1] == null &&
          opIncQ[opIncQ.length - 1] == null &&
          grossProfitQ[grossProfitQ.length - 1] == null) {
-    revenueQ.pop(); opIncQ.pop(); grossProfitQ.pop(); revenueQEnds.pop(); // A10: Ends in Lockstep
+    revenueQ.pop(); opIncQ.pop(); grossProfitQ.pop(); revenueQEnds.pop(); grossProfitQEnds.pop(); // A10: Ends in Lockstep
   }
-  return { revenueQ, opIncQ, grossProfitQ, revenueQEnds };
+  return { revenueQ, opIncQ, grossProfitQ, revenueQEnds, grossProfitQEnds };
 }
 
 // ─── Main Pull ─────────────────────────────────────────────────────
@@ -2580,6 +2586,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // Einträge VOR A10 haben keine revenueQEnds → _alignEnds liefert ehrliche
         // null-Serie in revenueQ-Länge (kein Fabrizieren, index/länge konsistent).
         canonical.timeseries.revenueQEnds = _alignEnds(ftsQuarterly.revenueQEnds, ftsQuarterly.revenueQ);
+        canonical.timeseries.grossProfitQEnds = _alignEnds(ftsQuarterly.grossProfitQEnds, ftsQuarterly.grossProfitQ);
       }
 
       // Tag 203: post-FTS sector-aware OpInc fallback. After both quoteSummary

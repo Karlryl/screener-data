@@ -55,6 +55,9 @@ check('FTS: values und Enden gleiche Laenge + index-aligned (newest zuerst)', ()
   assert.strictEqual(t.revenueQEnds[0], '2026-01-31');
   assert.strictEqual(t.revenueQ[2].value, 100);
   assert.strictEqual(t.revenueQEnds[2], '2025-07-31');
+  // A10-Symmetrie: grossProfitQEnds existiert, laengengleich, gleiche Perioden wie die Row
+  assert.strictEqual(t.grossProfitQ.length, t.grossProfitQEnds.length, 'gp gleiche Laenge');
+  assert.deepStrictEqual(t.grossProfitQEnds, t.revenueQEnds, 'gp-Enden = rev-Enden (dieselbe Row)');
 });
 
 check('FTS: fehlendes Datum -> null-Ende, Index bleibt aligned', () => {
@@ -81,6 +84,9 @@ check('FTS: trailing-all-null-Trim haelt Enden in Lockstep', () => {
   assert.strictEqual(t.revenueQEnds.length, 2);
   assert.ok(!t.revenueQEnds.includes('2025-04-30'), 'trailing-Ende mitgetrimmt');
   assert.strictEqual(t.revenueQEnds[0], '2026-01-31');
+  // grossProfitQEnds trimmt im selben Lockstep
+  assert.strictEqual(t.grossProfitQEnds.length, 2, 'gp-Enden mitgetrimmt');
+  assert.ok(!t.grossProfitQEnds.includes('2025-04-30'));
 });
 
 // ── _alignEnds: Cache-Treffer VOR A10 (keine Enden) -> ehrliche null-Serie ──
