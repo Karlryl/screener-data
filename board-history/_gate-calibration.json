@@ -2,57 +2,79 @@
   "_doc": "Gate-Kalibrierung je Board: erste 3 messbare P99-Tagesdeltas → Schwelle P99×2 eingefroren.",
   "boards": {
     "consumer-discretionary": {
-      "dailyP99Samples": [],
+      "dailyP99Samples": [
+        1
+      ],
       "threshold": null,
       "frozen": false
     },
     "consumer-staples": {
-      "dailyP99Samples": [],
+      "dailyP99Samples": [
+        0
+      ],
       "threshold": null,
       "frozen": false
     },
     "energy": {
-      "dailyP99Samples": [],
+      "dailyP99Samples": [
+        0
+      ],
       "threshold": null,
       "frozen": false
     },
     "financials": {
-      "dailyP99Samples": [],
+      "dailyP99Samples": [
+        0
+      ],
       "threshold": null,
       "frozen": false
     },
     "health-care": {
-      "dailyP99Samples": [],
+      "dailyP99Samples": [
+        0.5
+      ],
       "threshold": null,
       "frozen": false
     },
     "industrials": {
-      "dailyP99Samples": [],
+      "dailyP99Samples": [
+        0.6000000000000014
+      ],
       "threshold": null,
       "frozen": false
     },
     "it-services": {
-      "dailyP99Samples": [],
+      "dailyP99Samples": [
+        0
+      ],
       "threshold": null,
       "frozen": false
     },
     "materials": {
-      "dailyP99Samples": [],
+      "dailyP99Samples": [
+        0.30000000000000426
+      ],
       "threshold": null,
       "frozen": false
     },
     "real-estate": {
-      "dailyP99Samples": [],
+      "dailyP99Samples": [
+        0.30000000000000426
+      ],
       "threshold": null,
       "frozen": false
     },
     "semiconductors": {
-      "dailyP99Samples": [],
+      "dailyP99Samples": [
+        2.6999999999999993
+      ],
       "threshold": null,
       "frozen": false
     },
     "software-comm-services": {
-      "dailyP99Samples": [],
+      "dailyP99Samples": [
+        0.29999999999999716
+      ],
       "threshold": null,
       "frozen": false
     },
@@ -62,12 +84,16 @@
       "frozen": false
     },
     "tech-hardware": {
-      "dailyP99Samples": [],
+      "dailyP99Samples": [
+        1.7000000000000028
+      ],
       "threshold": null,
       "frozen": false
     },
     "utilities": {
-      "dailyP99Samples": [],
+      "dailyP99Samples": [
+        0.6000000000000014
+      ],
       "threshold": null,
       "frozen": false
     }
