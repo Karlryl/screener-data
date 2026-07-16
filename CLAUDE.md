@@ -37,6 +37,12 @@ Einheit = eine Formel pro GICS-Sub-Industry. Jede Idee MUSS durch:
 
 Neue Methoden starten **DIAGNOSTIC** (fixture-hash-safe); Promotion zu CORE erst nach Walk-Forward-Beleg pro Sektor.
 
+**Vorgelagerter Forschungs-Prozess (6.1, seit 16.07.2026):** neue Board-/Achsen-KANDIDATEN entstehen im
+Ideen-Ledger `…\Jarvis\Knowledge\Trading\growth-screener\_IDEEN-LEDGER-2026-07-16.md`
+(Deep-Research mit verifizierten Quellen → Ledger-Eintrag → Council-Schärfung → Court; nur PASS wird
+Bau-Task im Masterplan, max. 1 Bau-Projekt gleichzeitig). Der Ledger PARKT nur — jede Promotion
+Richtung Scoring/Board läuft zusätzlich den vollen Gauntlet oben und ist Karl-Queue-pflichtig.
+
 ## Härtungs-Loop & Source of Truth
 Der laufende Formel-Härtungs-Loop liest **ZUERST** das Ledger:
 **`…\Jarvis\Knowledge\Trading\growth-screener\screener-formel-ledger.md`** (Fitness-Gate, eingefrorene Baseline, ✅/❌/⚠️-Befunde mit Verifizierbarkeits-Befehlen, P0/P1/P2-Backlog, WORKLOG). Mess-Artefakte in `screener-data\fitness\`.
