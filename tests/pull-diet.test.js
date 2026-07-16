@@ -47,8 +47,15 @@ check('today-as-string', needsFullPull(meta, { date: '2026-06-15' }, '2026-07-06
 // edge: earnings exactly on today => 'full' (reported today, after May asOf)
 check('earnings-equals-today', needsFullPull(meta, { date: '2026-07-06' }, today), 'full');
 
-// edge: earnings date equals asOf day-portion but asOf has time → not strictly newer
-check('earnings-equals-asOf-day', needsFullPull({ fundamentalsAsOf: '2026-06-15T00:00:00Z' }, { date: '2026-06-15' }, today), 'price-only');
+// edge: earnings date equals asOf day → 'full'. Die alte Erwartung ('price-only',
+// "not strictly newer") war ein gepinnter Bug: ein Pull am Earnings-Tag VOR der
+// Veröffentlichung löschte den Trigger für immer (Live-Beleg 16.07.: GS/FAST/ERIC,
+// date 07-14, asOf 07-14T02:39Z, nie wieder Voll-Pull).
+check('earnings-equals-asOf-day', needsFullPull({ fundamentalsAsOf: '2026-06-15T00:00:00Z' }, { date: '2026-06-15' }, today), 'full');
+check('earnings-equals-asOf-day-late-pull', needsFullPull({ fundamentalsAsOf: '2026-06-15T23:00:00Z' }, { date: '2026-06-15' }, today), 'full');
+
+// … aber KEIN Dauer-Re-Pull: liegt asOf NACH dem Ende des Earnings-Tages, reicht price-only.
+check('asOf-after-earnings-day', needsFullPull({ fundamentalsAsOf: '2026-06-16T05:00:00Z' }, { date: '2026-06-15' }, today), 'price-only');
 
 console.log(fail === 0 ? '\nPASS (all assertions ok)' : `\nFAIL (${fail} assertion(s) failed)`);
 process.exit(fail ? 1 : 0);

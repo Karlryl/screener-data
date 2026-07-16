@@ -3072,7 +3072,13 @@ function needsFullPull(snapshotMeta, earningsEntry, today) {
     const asOfT = new Date(asOf).getTime();
     if (!Number.isFinite(asOfT)) return 'price-only';
 
-    return (earnT > asOfT) ? 'full' : 'price-only';
+    // Earnings-Datum ist tags-genau (parst als UTC-Mitternacht). Ein Voll-Pull am
+    // Earnings-TAG VOR der Veröffentlichung (asOf 02:39Z, Release 08:00) darf den
+    // Trigger nicht dauerhaft löschen — Live-Beleg 16.07.: GS/FAST/ERIC (date 07-14,
+    // asOf 07-14T02:39Z) bekamen nie einen Earnings-Refresh. Deshalb zählt das ENDE
+    // des Earnings-Tages; kostet je Reporter höchstens einen redundanten Voll-Pull.
+    const earnEndT = earnT + 86400000;
+    return (earnEndT > asOfT) ? 'full' : 'price-only';
   } catch (e) {
     // TASK 0.11: near-unreachable — every untrusted path above returns a defined
     // 'price-only' WITHOUT throwing. If an exotic input (e.g. a throwing valueOf) ever
