@@ -350,12 +350,17 @@ async function fetchSecJsonStrict(url, userAgent, retrieval, requestKind) {
   const ctrl = new AbortController();
   const timeout = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
   let response;
+  let body;
   try {
     response = await fetch(url, {
       headers: { 'User-Agent': userAgent, 'Accept': 'application/json' },
       signal: ctrl.signal,
       redirect: 'manual'
     });
+    // Kreuz-Review Tag 318 [P2]: Body-Lesen bleibt unter demselben Timeout —
+    // ein haengender/abbrechender SEC-Body darf den seriellen Abruf nicht
+    // endlos blockieren und muss in der Fehlerzaehlung landen.
+    body = await response.text();
   } catch (error) {
     const type = error && error.name === 'AbortError' ? 'timeout' : 'network';
     countRetrievalError(retrieval, type);
@@ -364,7 +369,6 @@ async function fetchSecJsonStrict(url, userAgent, retrieval, requestKind) {
     clearTimeout(timeout);
   }
 
-  const body = await response.text();
   const htmlWafBody = /^\s*</.test(body) && /(?:request rate threshold|automated tool|access denied|request has been identified)/i.test(body);
   if (response.status === 403 || response.status === 429 || htmlWafBody) {
     const type = response.status === 429 ? 'http_429' : 'waf_block';
