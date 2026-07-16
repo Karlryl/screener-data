@@ -1,26 +1,48 @@
 #!/usr/bin/env node
 /**
- * Masterplan 5.1: reine Daten-Coverage-Probe fuer acht Hypergrowth-Achsen.
+ * Masterplan 5.1, Messlauf 2: Yahoo-Coverage fuer acht Hypergrowth-Achsen auf
+ * einer per R1-R6 gefilterten Small-Cap-Stichprobe. SEC/EDGAR bleibt in diesem
+ * Modus vollstaendig deaktiviert; der alte Messlauf-1-Code ist nur als nicht
+ * aufgerufener Legacy-Pfad erhalten.
  *
- * Quellen/Hosts:
- *   - SEC company_tickers.json als deterministische Ticker-Basis
- *   - Yahoo Fundamentals Time Series fuer Marktkapitalisierung und Rohreihen
- *   - SEC companyfacts fuer dieselben Rohreihen aus XBRL
- *
- * Der offizielle Report wird nur beim Voll-Lauf (--sample 100) geschrieben.
- * So ueberschreibt der geforderte Mini-Test (--sample 5) nicht den Vollbericht.
+ * Der offizielle Messlauf-2-Report wird nur bei --sample 100 geschrieben.
+ * Mini-Laeufe veraendern die offiziellen Reports nicht.
  */
 'use strict';
 
 const fs = require('fs');
 const path = require('path');
 
+// Derselbe Client wie in pull-yahoo.js. yahoo-finance2 fuehrt fuer
+// quoteSummary Cookie und Crumb; der Probe-Code baut keine zweite Auth-Logik.
+let YahooFinance;
+try {
+  YahooFinance = require('yahoo-finance2').default;
+} catch (error) {
+  throw new Error(`yahoo-finance2 nicht installiert: ${error.message}`);
+}
+const yf = new YahooFinance({
+  suppressNotices: ['yahooSurvey'],
+  queue: { concurrency: 1 },
+  validation: { logErrors: false, logOptionsErrors: false },
+  logger: {
+    info: () => {},
+    warn: (...args) => console.warn(...args),
+    error: (...args) => console.error(...args),
+    debug: () => {},
+    dir: () => {}
+  }
+});
+
 const ROOT = path.resolve(__dirname, '..');
 const PROBE_DATE = '2026-07-16';
 const REPORT_JSON = path.join(ROOT, 'reports', `smallcap-probe-${PROBE_DATE}.json`);
 const REPORT_MD = path.join(ROOT, 'reports', `smallcap-probe-${PROBE_DATE}.md`);
+const REPORT_M2_JSON = path.join(ROOT, 'reports', `smallcap-probe-messlauf2-${PROBE_DATE}.json`);
+const REPORT_M2_MD = path.join(ROOT, 'reports', `smallcap-probe-messlauf2-${PROBE_DATE}.md`);
 const OFFICIAL_SAMPLE = 100;
 const SEED = 'smallcap-probe-2026-07-16-v1';
+const M2_SEED = 'smallcap-probe-2026-07-16-messlauf2';
 const MIN_MCAP = 300_000_000;
 const MAX_MCAP = 800_000_000;
 const SEC_UA = 'screener-data coverage-probe (github.com/Karlryl/screener-data)';
@@ -31,6 +53,27 @@ const REQUEST_TIMEOUT_MS = 30_000;
 const MAX_RETRIES = 3;
 const PERIOD1 = Math.floor(Date.UTC(2010, 0, 1) / 1000);
 const PERIOD2 = Math.floor(Date.now() / 1000);
+
+// SEC ist in Messlauf 2 ausdruecklich gesperrt. Die Kandidatenbasis kommt daher
+// ausschliesslich aus Yahoo-Screener-Seiten und wird vor der Ziehung seed-gerankt.
+// Die Filter R1-R6 greifen erst im anschliessenden Reject-and-Redraw-Loop.
+const M2_SCREENER_PAGES = [
+  { id: 'aggressive_small_caps', starts: [0, 250] },
+  { id: 'small_cap_gainers', starts: [0] },
+  { id: 'most_shorted_stocks', starts: [0, 250] },
+  { id: 'undervalued_growth_stocks', starts: [0] }
+];
+const M2_QUOTE_MODULES = ['price', 'assetProfile', 'financialData', 'earningsTrend'];
+const M1_YAHOO_COVERAGE = {
+  revGrowthLevel: 80,
+  revAcceleration: 61,
+  gpGrowth: 56,
+  ruleOfX: 80,
+  marginTrajectory: 55,
+  capitalEfficiency: 74,
+  revisionsMomentum: 0,
+  dilution: 60
+};
 
 const YAHOO_TYPES = [
   'trailingMarketCap',
@@ -441,7 +484,8 @@ function unwrapYahooNumber(value) {
 }
 
 function extractRevisionRows(payload) {
-  const trend = payload && payload.quoteSummary && payload.quoteSummary.result && payload.quoteSummary.result[0] && payload.quoteSummary.result[0].earningsTrend;
+  const trend = payload && payload.earningsTrend ||
+    payload && payload.quoteSummary && payload.quoteSummary.result && payload.quoteSummary.result[0] && payload.quoteSummary.result[0].earningsTrend;
   const rows = [];
   for (const item of trend && trend.trend || []) {
     if (!['0y', '+1y'].includes(item.period)) continue;
@@ -763,7 +807,408 @@ function buildMarkdown(report) {
   return lines.join('\n');
 }
 
-async function main() {
+function yahooScreenerUrl(id, start) {
+  const qs = new URLSearchParams({
+    formatted: 'false',
+    lang: 'en-US',
+    region: 'US',
+    scrIds: id,
+    count: '250',
+    start: String(start)
+  });
+  return `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?${qs}`;
+}
+
+async function loadYahooCandidateBasisM2() {
+  const bySymbol = new Map();
+  const pages = [];
+  let rawQuotesN = 0;
+  let inBandRowsN = 0;
+
+  for (const source of M2_SCREENER_PAGES) {
+    for (const start of source.starts) {
+      const payload = await fetchJson(yahooScreenerUrl(source.id, start));
+      const financeError = payload && payload.finance && payload.finance.error;
+      if (financeError) throw new Error(`Yahoo-Screener ${source.id}/${start}: ${financeError.code || 'Fehler'} ${financeError.description || ''}`.trim());
+      const result = payload && payload.finance && payload.finance.result && payload.finance.result[0];
+      const quotes = result && Array.isArray(result.quotes) ? result.quotes : [];
+      const inBand = quotes.filter(row => {
+        const marketCap = unwrapYahooNumber(row && row.marketCap);
+        return finite(marketCap) && marketCap >= MIN_MCAP && marketCap <= MAX_MCAP;
+      });
+      rawQuotesN += quotes.length;
+      inBandRowsN += inBand.length;
+      pages.push({ id: source.id, start, returnedN: quotes.length, total: result && result.total || null, inBandN: inBand.length });
+
+      for (const row of inBand) {
+        const symbol = String(row && row.symbol || '').trim().toUpperCase();
+        if (!symbol) continue;
+        const existing = bySymbol.get(symbol);
+        const candidate = existing || {
+          ticker: symbol,
+          yahooSymbol: symbol,
+          marketCap: unwrapYahooNumber(row.marketCap),
+          longName: row.longName || null,
+          shortName: row.shortName || null,
+          quoteType: row.quoteType || null,
+          typeDisp: row.typeDisp || null,
+          sources: []
+        };
+        candidate.sources.push(`${source.id}@${start}`);
+        bySymbol.set(symbol, candidate);
+      }
+    }
+  }
+
+  const rows = [...bySymbol.values()].map(row => ({
+    ...row,
+    seedRank: fnv1a(`${M2_SEED}:${row.ticker}`)
+  }));
+  rows.sort((a, b) => a.seedRank - b.seedRank || a.ticker.localeCompare(b.ticker));
+  return { rows, pages, rawQuotesN, inBandRowsN };
+}
+
+function hardYahooStop(error) {
+  const message = errText(error);
+  return error && error.status === 429 || /(?:HTTP\s+429|too many requests|rate.?limit)/i.test(message) ||
+    /(?:Invalid Crumb|Invalid Cookie|HTTP\s+401|Unauthorized)/i.test(message);
+}
+
+async function fetchYahooSummaryM2(company) {
+  await reserveSlot('yahoo');
+  const ctrl = new AbortController();
+  const timeout = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const data = await yf.quoteSummary(
+      company.yahooSymbol,
+      { modules: M2_QUOTE_MODULES },
+      { fetchOptions: { signal: ctrl.signal } }
+    );
+    return { data, error: null, schemaSalvaged: false };
+  } catch (error) {
+    if (hardYahooStop(error)) throw new Error(`Yahoo-Auth/Rate-Limit bei ${company.ticker}: ${errText(error)}`);
+    // Dasselbe Salvage-Prinzip wie im produktiven Pull: ein vorhandener Payload
+    // bleibt messbar; fehlende Pflichtfelder fallen danach fail-closed durch R1/R3/R5.
+    if (error && error.result && typeof error.result === 'object') {
+      return { data: error.result, error: errText(error), schemaSalvaged: true };
+    }
+    return { data: null, error: errText(error), schemaSalvaged: false };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function rawFilterFieldsM2(company, summary) {
+  const price = summary && summary.price || {};
+  const profile = summary && summary.assetProfile || {};
+  const financial = summary && summary.financialData || {};
+  return {
+    quoteType: price.quoteType || company.quoteType || null,
+    typeDisp: price.typeDisp || company.typeDisp || null,
+    sector: profile.sector || null,
+    industry: profile.industry || null,
+    employees: unwrapYahooNumber(profile.fullTimeEmployees),
+    revenue: unwrapYahooNumber(financial.totalRevenue),
+    longName: price.longName || company.longName || null,
+    shortName: price.shortName || company.shortName || null
+  };
+}
+
+function filterOperatingCompanyM2(company, summaryResult) {
+  const raw = rawFilterFieldsM2(company, summaryResult.data);
+  const combinedName = [raw.longName, raw.shortName].filter(Boolean).join(' ');
+  const reject = (rule, reason) => ({ accepted: false, rule, reason, raw, combinedName, r6Boundary: null });
+
+  // R1 fail-closed: nur der explizite Yahoo-Wert EQUITY besteht.
+  if (raw.quoteType !== 'EQUITY') {
+    const suffix = summaryResult.error ? `; Yahoo-Abruf: ${summaryResult.error}` : '';
+    return reject('R1', `quoteType=${raw.quoteType || 'FEHLT'} (nur EQUITY bleibt)${suffix}`);
+  }
+
+  // R2 fail-open: nur ein positiver Suffix- oder Yahoo-Marker-Treffer greift.
+  const structureMatch = /(?:\.U|\.WS|-WT|-U)$/i.exec(company.ticker);
+  const marker = [raw.quoteType, raw.typeDisp].find(value => /^(?:WARRANT|UNIT)$/i.test(String(value || '').trim()));
+  if (structureMatch || marker) {
+    return reject('R2', structureMatch ? `Ticker-Suffix ${structureMatch[0]}` : `Yahoo-Marker ${marker}`);
+  }
+
+  // R3 fail-closed fuer beide benoetigten Strukturfelder.
+  if (!raw.sector || !raw.industry) {
+    return reject('R3', `Pflichtfeld fehlt: sector=${raw.sector || 'FEHLT'}, industry=${raw.industry || 'FEHLT'}`);
+  }
+  const blockedIndustry = raw.industry === 'Shell Companies' ||
+    raw.industry === 'Asset Management' ||
+    raw.industry.startsWith('Closed-End Fund') ||
+    raw.industry === 'Exchange Traded Fund';
+  if (raw.sector === 'Financial Services' && blockedIndustry) {
+    return reject('R3', `sector=Financial Services und industry=${raw.industry}`);
+  }
+
+  // R4 fail-open: Wortlaut und Regex entsprechen der bindenden Spezifikation.
+  const hardNameMatch = /\b(Acquisition Corp|Blank Check|SPAC)\b/i.exec(combinedName);
+  if (hardNameMatch) return reject('R4', `Namensmuster ${hardNameMatch[0]}`);
+
+  // R5 fail-closed: beide positiven Nachweise sind zwingend.
+  const r5Passed = finite(raw.employees) && raw.employees > 1 && finite(raw.revenue) && raw.revenue > 0;
+  if (!r5Passed) {
+    return reject('R5', `Struktur-Gate nicht bestanden: employees=${raw.employees == null ? 'FEHLT' : raw.employees}, revenue=${raw.revenue == null ? 'FEHLT' : raw.revenue}`);
+  }
+
+  // Wegen der Reihenfolge R1-R6 kann R6 nach bestandenem R5 nur einen
+  // Grenzfall protokollieren. Ein nicht klares R5 waere bereits unter R5 erfasst.
+  const softNameMatch = /\b(Trust|Fund|Royalty)\b/i.exec(combinedName);
+  const r6Boundary = softNameMatch ? {
+    ticker: company.ticker,
+    name: raw.longName || raw.shortName || company.ticker,
+    match: softNameMatch[0],
+    employees: raw.employees,
+    revenue: raw.revenue,
+    reason: 'R5 klar bestanden; nach R6 behalten'
+  } : null;
+  return { accepted: true, rule: null, reason: null, raw, combinedName, r6Boundary };
+}
+
+async function fetchYahooAxesM2(company, summary) {
+  let rows = {};
+  let fundamentalsError = null;
+  try {
+    rows = extractYahooRows(await fetchJson(yahooFtsUrl(company.yahooSymbol, YAHOO_TYPES)));
+  } catch (error) {
+    if (hardYahooStop(error)) throw new Error(`Yahoo-Rate-Limit bei FTS ${company.ticker}: ${errText(error)}`);
+    fundamentalsError = errText(error);
+  }
+  const revisions = extractRevisionRows(summary || {});
+  return { data: yahooDataFromRows(rows, revisions), fundamentalsError, revisionsN: revisions.length };
+}
+
+function yahooCoverageM2(companies) {
+  return AXES.map(axis => {
+    const n = companies.filter(company => company.axes.yahoo[axis.id]).length;
+    const previousN = M1_YAHOO_COVERAGE[axis.id];
+    const coveragePct = pct(n, companies.length);
+    const previousPct = pct(previousN, 100);
+    return {
+      id: axis.id,
+      label: axis.label,
+      n,
+      total: companies.length,
+      pct: coveragePct,
+      messlauf1N: previousN,
+      messlauf1Total: 100,
+      messlauf1Pct: previousPct,
+      deltaPercentagePoints: Number((coveragePct - previousPct).toFixed(1))
+    };
+  });
+}
+
+function m2FilterDefinitions() {
+  return [
+    { id: 'R1', definition: 'quoteType (hart): behalten nur wenn quoteType == "EQUITY"; ETF/MUTUALFUND/CLOSEDEND/INDEX/CURRENCY/CRYPTOCURRENCY/TRUST werden ausgeschlossen.', missing: 'fail-closed' },
+    { id: 'R2', definition: 'Ticker-Struktur (hart): Endung .U, .WS, -WT oder -U sowie positiver Warrant/Unit-Marker werden ausgeschlossen.', missing: 'fail-open' },
+    { id: 'R3', definition: 'Sektor/Industry (hart): Financial Services zusammen mit Shell Companies, Asset Management, Closed-End Fund* oder Exchange Traded Fund wird ausgeschlossen.', missing: 'fail-closed' },
+    { id: 'R4', definition: 'Name (hart): /\\b(Acquisition Corp|Blank Check|SPAC)\\b/i auf longName+shortName wird ausgeschlossen.', missing: 'fail-open' },
+    { id: 'R5', definition: 'Struktur-Gate: behalten nur wenn fullTimeEmployees > 1 UND totalRevenue (TTM) > 0.', missing: 'fail-closed' },
+    { id: 'R6', definition: 'Name (weich): /\\b(Trust|Fund|Royalty)\\b/i wird nur bei nicht klar bestandenem R5 ausgeschlossen; bei bestandenem R5 bleibt der Name und kommt ins Grenzfall-Log.', missing: 'fail-open' }
+  ];
+}
+
+function rawValueM2(value) {
+  if (value == null || value === '') return 'FEHLT';
+  return finite(value) ? String(value) : String(value);
+}
+
+function buildMarkdownM2(report) {
+  const n = report.sample.actual;
+  const balance = report.drawBalance;
+  const lines = [
+    `# Small-Cap-Coverage-Probe - Messlauf 2 (${report.probeDate})`,
+    '',
+    'Reine Messung mit Zahlen, Ausschlussgruenden und Rohfeldern. Der Bericht enthaelt keine Schlussfolgerung oder Empfehlung.',
+    '',
+    '## Stichproben-Definition',
+    '',
+    `- Finale Stichprobe: ${n} Operating Companies mit Yahoo-Market-Cap von USD ${(report.sample.marketCapMin / 1e6).toFixed(0)}-${(report.sample.marketCapMax / 1e6).toFixed(0)} Mio. (inklusive Grenzen).`,
+    `- Seed: \`${report.sample.seed}\`.`,
+    `- Kandidatenbasis: ${report.sample.candidateBasis}; ${report.sample.uniqueBandCandidates} eindeutige Ticker im Band.`,
+    '- Ziehung: Kandidaten werden nach Seed-Rang einzeln geprueft; beim ersten Treffer R1-R6 verworfen und sofort nachgezogen, bis das finale N erreicht ist.',
+    `- Yahoo-Drosselung: mindestens ${report.network.yahooDelayMs} ms zwischen ausgegebenen Requests; quoteSummary-Cookie/Crumb via yahoo-finance2 wie in pull-yahoo.js.`,
+    '- SEC/EDGAR: in Messlauf 2 nicht aufgerufen.',
+    '',
+    '| Yahoo-Screener | Start | Geliefert | Im MCap-Band |',
+    '|---|---:|---:|---:|'
+  ];
+  report.sample.screenerPages.forEach(page => lines.push(`| ${mdEscape(page.id)} | ${page.start} | ${page.returnedN} | ${page.inBandN} |`));
+
+  lines.push('', '## Filter-Definition R1-R6', '', '| Regel | Definition | Fehlende Felder |', '|---|---|---|');
+  report.filters.forEach(filter => lines.push(`| ${filter.id} | ${mdEscape(filter.definition)} | ${filter.missing} |`));
+  lines.push('', 'Erster Treffer entscheidet. Daher werden nicht klar bestandene Strukturfaelle bereits unter R5 gezaehlt; ein R6-Namensmatch nach bestandenem R5 wird behalten und unten protokolliert.', '');
+
+  lines.push('## Ziehungs-Bilanz', '', '| Kennzahl | Anzahl |', '|---|---:|',
+    `| Gezogen gesamt | ${balance.drawnTotal} |`,
+    `| Ausgeschlossen R1 | ${balance.excludedByRule.R1} |`,
+    `| Ausgeschlossen R2 | ${balance.excludedByRule.R2} |`,
+    `| Ausgeschlossen R3 | ${balance.excludedByRule.R3} |`,
+    `| Ausgeschlossen R4 | ${balance.excludedByRule.R4} |`,
+    `| Ausgeschlossen R5 | ${balance.excludedByRule.R5} |`,
+    `| Ausgeschlossen R6 | ${balance.excludedByRule.R6} |`,
+    `| Nachgezogen | ${balance.redrawn} |`,
+    `| Finale Stichprobe | ${balance.finalN} |`,
+    '');
+
+  lines.push('## Coverage je Yahoo-Achse', '',
+    'Nenner fuer Messlauf 2 ist ausschliesslich die gefilterte finale Stichprobe. Die Vergleichswerte sind Yahoo-Coverage (Yahoo-only plus beide) aus Messlauf 1.', '',
+    '| Achse | Messlauf 2 Yahoo | Messlauf 1 Yahoo | Delta |',
+    '|---|---:|---:|---:|');
+  report.coverageYahoo.forEach(row => lines.push(`| ${row.id} | ${row.pct.toFixed(1)} % (${row.n}/${row.total}) | ${row.messlauf1Pct.toFixed(1)} % (${row.messlauf1N}/${row.messlauf1Total}) | ${row.deltaPercentagePoints >= 0 ? '+' : ''}${row.deltaPercentagePoints.toFixed(1)} pp |`));
+
+  lines.push('', '## XBRL-Achsen', '', `**UNGEMESSEN.** ${report.xbrl.reason}`, '');
+
+  lines.push('## Ausschluss-Tabelle', '',
+    '| Ticker | Name | Regel-ID | Grund | quoteType | sector / industry | employees | revenue TTM |',
+    '|---|---|---|---|---|---|---:|---:|');
+  if (!report.exclusions.length) {
+    lines.push('| - | - | - | Keine Ausschluesse | - | - | - | - |');
+  } else {
+    report.exclusions.forEach(row => lines.push(`| ${mdEscape(row.ticker)} | ${mdEscape(row.name || '-')} | ${row.rule} | ${mdEscape(row.reason)} | ${mdEscape(rawValueM2(row.raw.quoteType))} | ${mdEscape(`${rawValueM2(row.raw.sector)} / ${rawValueM2(row.raw.industry)}`)} | ${mdEscape(rawValueM2(row.raw.employees))} | ${mdEscape(rawValueM2(row.raw.revenue))} |`));
+  }
+
+  lines.push('', '## Grenzfall-Log R6', '',
+    '| Ticker | Name | Namensmatch | employees | revenue TTM | Behandlung |',
+    '|---|---|---|---:|---:|---|');
+  if (!report.r6BoundaryLog.length) {
+    lines.push('| - | - | - | - | - | Kein R6-Namensmatch unter den behaltenen Firmen |');
+  } else {
+    report.r6BoundaryLog.forEach(row => lines.push(`| ${mdEscape(row.ticker)} | ${mdEscape(row.name)} | ${mdEscape(row.match)} | ${row.employees} | ${row.revenue} | ${mdEscape(row.reason)} |`));
+  }
+
+  const fundamentalsErrors = report.companies.filter(company => company.errors.yahooFundamentals).length;
+  const summarySchemaSalvages = report.companies.filter(company => company.errors.yahooSummarySchema).length;
+  lines.push('', '## Abrufstatus und finale Firmenliste', '',
+    `- Yahoo-Fundamentals-Time-Series-Abruffehler: ${fundamentalsErrors}/${n}.`,
+    `- quoteSummary-Schema-Salvage mit verwertbarem Payload: ${summarySchemaSalvages}/${n}.`,
+    `- earningsTrend-Achse ist numerisch gemessen; revisionsMomentum-Coverage: ${report.coverageYahoo.find(row => row.id === 'revisionsMomentum').pct.toFixed(1)} % (${report.coverageYahoo.find(row => row.id === 'revisionsMomentum').n}/${n}).`,
+    '',
+    '| Ticker | Name | MCap USD Mio. | employees | revenue TTM | earningsTrend-Zeilen | FTS-Fehler |',
+    '|---|---|---:|---:|---:|---:|---|');
+  report.companies.forEach(company => lines.push(`| ${company.ticker} | ${mdEscape(company.name)} | ${(company.marketCap / 1e6).toFixed(1)} | ${company.filterRaw.employees} | ${company.filterRaw.revenue} | ${company.revisionRows} | ${mdEscape(company.errors.yahooFundamentals || '-')} |`));
+  lines.push('');
+  return lines.join('\n');
+}
+
+async function mainMesslauf2() {
+  const args = parseArgs(process.argv);
+  console.log(`[probe-m2] sample=${args.sample}, seed=${M2_SEED}, SEC=disabled`);
+  const basis = await loadYahooCandidateBasisM2();
+  console.log(`[basis-m2] ${basis.rows.length} eindeutige Yahoo-Kandidaten im Band aus ${basis.rawQuotesN} Screener-Zeilen`);
+
+  const companies = [];
+  const exclusions = [];
+  const r6BoundaryLog = [];
+  const excludedByRule = Object.fromEntries(['R1', 'R2', 'R3', 'R4', 'R5', 'R6'].map(rule => [rule, 0]));
+  let drawnTotal = 0;
+
+  for (const candidate of basis.rows) {
+    if (companies.length >= args.sample) break;
+    drawnTotal++;
+    const summaryResult = await fetchYahooSummaryM2(candidate);
+    const filter = filterOperatingCompanyM2(candidate, summaryResult);
+    if (!filter.accepted) {
+      excludedByRule[filter.rule]++;
+      exclusions.push({
+        ticker: candidate.ticker,
+        name: filter.raw.longName || filter.raw.shortName || candidate.ticker,
+        marketCap: candidate.marketCap,
+        rule: filter.rule,
+        reason: filter.reason,
+        raw: filter.raw
+      });
+    } else {
+      if (filter.r6Boundary) r6BoundaryLog.push(filter.r6Boundary);
+      const yahoo = await fetchYahooAxesM2(candidate, summaryResult.data);
+      companies.push({
+        ticker: candidate.ticker,
+        name: filter.raw.longName || filter.raw.shortName || candidate.ticker,
+        marketCap: candidate.marketCap,
+        sources: candidate.sources,
+        filterRaw: filter.raw,
+        fields: { yahoo: fieldSummary(yahoo.data) },
+        axes: { yahoo: axisSummary(yahoo.data) },
+        revisionRows: yahoo.revisionsN,
+        errors: {
+          yahooSummarySchema: summaryResult.schemaSalvaged ? summaryResult.error : null,
+          yahooFundamentals: yahoo.fundamentalsError
+        }
+      });
+    }
+    if (drawnTotal % 10 === 0 || companies.length === args.sample) {
+      console.log(`[draw] gezogen=${drawnTotal} final=${companies.length}/${args.sample} ausgeschlossen=${exclusions.length}`);
+    }
+  }
+
+  if (companies.length < args.sample) {
+    throw new Error(`Kandidatenbasis erschoepft: nur ${companies.length}/${args.sample} Operating Companies nach ${drawnTotal} Ziehungen; Ausschluesse=${exclusions.length}`);
+  }
+
+  const coverageYahoo = yahooCoverageM2(companies);
+  const drawBalance = {
+    drawnTotal,
+    excludedByRule,
+    redrawn: drawnTotal - companies.length,
+    finalN: companies.length
+  };
+  const report = {
+    schemaVersion: 2,
+    measurementRun: 2,
+    probeDate: PROBE_DATE,
+    generatedAt: new Date().toISOString(),
+    measurementOnly: true,
+    sample: {
+      requested: args.sample,
+      actual: companies.length,
+      seed: M2_SEED,
+      marketCapMin: MIN_MCAP,
+      marketCapMax: MAX_MCAP,
+      candidateBasis: 'Yahoo predefined screener pages, dedupliziert und per FNV-1a-Seed gerankt',
+      rawScreenerRows: basis.rawQuotesN,
+      inBandScreenerRows: basis.inBandRowsN,
+      uniqueBandCandidates: basis.rows.length,
+      screenerPages: basis.pages,
+      drawMethod: 'Reject-and-Redraw: je Kandidat R1 bis R6 in Reihenfolge; erster Treffer verwirft; Ziehung laeuft bis N stabil ist.'
+    },
+    network: {
+      allowedHosts: ['query*.finance.yahoo.com'],
+      yahooDelayMs: YAHOO_DELAY_MS,
+      quoteSummaryAuth: 'yahoo-finance2 Cookie/Crumb-Flow wie pull-yahoo.js',
+      secRequests: 0
+    },
+    filters: m2FilterDefinitions(),
+    drawBalance,
+    coverageYahoo,
+    xbrl: {
+      status: 'UNGEMESSEN',
+      reason: 'SEC_CONTACT fehlt; gemaess Messlauf-2-Vorgabe wurden keine SEC/EDGAR-Requests und keine lokalen SEC/XBRL-Fallbacks verwendet.'
+    },
+    exclusions,
+    r6BoundaryLog,
+    companies
+  };
+
+  if (args.sample === OFFICIAL_SAMPLE) {
+    fs.writeFileSync(REPORT_M2_JSON, JSON.stringify(report, null, 2) + '\n');
+    fs.writeFileSync(REPORT_M2_MD, buildMarkdownM2(report) + '\n');
+  }
+  coverageYahoo.forEach(row => console.log(`[coverage] ${row.id}: ${row.n}/${row.total} (${row.pct.toFixed(1)}%)`));
+  console.log(`[balance] drawn=${drawBalance.drawnTotal} R1=${excludedByRule.R1} R2=${excludedByRule.R2} R3=${excludedByRule.R3} R4=${excludedByRule.R4} R5=${excludedByRule.R5} R6=${excludedByRule.R6} redrawn=${drawBalance.redrawn} final=${drawBalance.finalN}`);
+  if (args.sample === OFFICIAL_SAMPLE) {
+    console.log(`[report] ${path.relative(ROOT, REPORT_M2_JSON)}`);
+    console.log(`[report] ${path.relative(ROOT, REPORT_M2_MD)}`);
+  } else {
+    console.log(`[report] Mini-Lauf: offizielle N=${OFFICIAL_SAMPLE}-Messlauf-2-Reports unveraendert`);
+  }
+  console.log(`[done] ${companies.length}/${args.sample} gefilterte Operating Companies gemessen; SEC-Requests=0`);
+}
+
+async function mainMesslauf1() {
   const args = parseArgs(process.argv);
   console.log(`[probe] sample=${args.sample}, seed=${SEED}`);
   const tickerBasis = await loadTickerBasis();
@@ -863,7 +1308,7 @@ async function main() {
   console.log(`[done] ${companies.length}/${args.sample} Firmen gemessen`);
 }
 
-main().catch(error => {
+mainMesslauf2().catch(error => {
   console.error(`[fatal] ${error.stack || error.message || error}`);
   process.exitCode = 1;
 });
