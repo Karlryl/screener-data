@@ -1008,7 +1008,8 @@ function m2FilterDefinitions() {
     { id: 'R3', definition: 'Sektor/Industry (hart): Financial Services zusammen mit Shell Companies, Asset Management, Closed-End Fund* oder Exchange Traded Fund wird ausgeschlossen.', missing: 'fail-closed' },
     { id: 'R4', definition: 'Name (hart): /\\b(Acquisition Corp|Blank Check|SPAC)\\b/i auf longName+shortName wird ausgeschlossen.', missing: 'fail-open' },
     { id: 'R5', definition: 'Struktur-Gate: behalten nur wenn fullTimeEmployees > 1 UND totalRevenue (TTM) > 0.', missing: 'fail-closed' },
-    { id: 'R6', definition: 'Name (weich): /\\b(Trust|Fund|Royalty)\\b/i wird nur bei nicht klar bestandenem R5 ausgeschlossen; bei bestandenem R5 bleibt der Name und kommt ins Grenzfall-Log.', missing: 'fail-open' }
+    { id: 'R6', definition: 'Name (weich): /\\b(Trust|Fund|Royalty)\\b/i wird nur bei nicht klar bestandenem R5 ausgeschlossen; bei bestandenem R5 bleibt der Name und kommt ins Grenzfall-Log.', missing: 'fail-open' },
+    { id: 'DUP', definition: 'Emittenten-Dedupe (Mess-Hygiene, kein Council-Filter; Kreuz-Review Tag 315 P2): normalisierter Firmenname darf nur einmal in die Stichprobe — Share-Klassen desselben Emittenten werden nachgezogen statt doppelt gezaehlt.', missing: 'fail-open' }
   ];
 }
 
@@ -1051,6 +1052,7 @@ function buildMarkdownM2(report) {
     `| Ausgeschlossen R4 | ${balance.excludedByRule.R4} |`,
     `| Ausgeschlossen R5 | ${balance.excludedByRule.R5} |`,
     `| Ausgeschlossen R6 | ${balance.excludedByRule.R6} |`,
+    `| Ausgeschlossen DUP (Emittenten-Dublette) | ${balance.excludedByRule.DUP} |`,
     `| Nachgezogen | ${balance.redrawn} |`,
     `| Finale Stichprobe | ${balance.finalN} |`,
     '');
@@ -1104,8 +1106,12 @@ async function mainMesslauf2() {
   const companies = [];
   const exclusions = [];
   const r6BoundaryLog = [];
-  const excludedByRule = Object.fromEntries(['R1', 'R2', 'R3', 'R4', 'R5', 'R6'].map(rule => [rule, 0]));
+  const excludedByRule = Object.fromEntries(['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'DUP'].map(rule => [rule, 0]));
   let drawnTotal = 0;
+  // Kreuz-Review Tag 315 [P2]: Nenner muss firmen-, nicht tickerbasiert sein —
+  // Share-Klassen desselben Emittenten (z. B. KELYA/KELYB) duerfen nur einmal zaehlen.
+  const issuerKeys = new Set();
+  const issuerKeyOf = raw => String(raw.longName || raw.shortName || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
   for (const candidate of basis.rows) {
     if (companies.length >= args.sample) break;
@@ -1122,7 +1128,18 @@ async function mainMesslauf2() {
         reason: filter.reason,
         raw: filter.raw
       });
+    } else if (issuerKeys.has(issuerKeyOf(filter.raw) || candidate.ticker.toLowerCase())) {
+      excludedByRule.DUP++;
+      exclusions.push({
+        ticker: candidate.ticker,
+        name: filter.raw.longName || filter.raw.shortName || candidate.ticker,
+        marketCap: candidate.marketCap,
+        rule: 'DUP',
+        reason: 'Emittenten-Dublette: derselbe Firmenname ist bereits in der Stichprobe (Share-Klasse)',
+        raw: filter.raw
+      });
     } else {
+      issuerKeys.add(issuerKeyOf(filter.raw) || candidate.ticker.toLowerCase());
       if (filter.r6Boundary) r6BoundaryLog.push(filter.r6Boundary);
       const yahoo = await fetchYahooAxesM2(candidate, summaryResult.data);
       companies.push({

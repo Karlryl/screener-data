@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "measurementRun": 2,
   "probeDate": "2026-07-16",
-  "generatedAt": "2026-07-16T20:08:47.393Z",
+  "generatedAt": "2026-07-16T20:53:04.987Z",
   "measurementOnly": true,
   "sample": {
     "requested": 100,
@@ -11,51 +11,51 @@
     "marketCapMin": 300000000,
     "marketCapMax": 800000000,
     "candidateBasis": "Yahoo predefined screener pages, dedupliziert und per FNV-1a-Seed gerankt",
-    "rawScreenerRows": 1260,
-    "inBandScreenerRows": 274,
-    "uniqueBandCandidates": 218,
+    "rawScreenerRows": 1263,
+    "inBandScreenerRows": 278,
+    "uniqueBandCandidates": 222,
     "screenerPages": [
       {
         "id": "aggressive_small_caps",
         "start": 0,
         "returnedN": 250,
-        "total": 488,
+        "total": 484,
         "inBandN": 75
       },
       {
         "id": "aggressive_small_caps",
         "start": 250,
-        "returnedN": 238,
-        "total": 488,
-        "inBandN": 54
+        "returnedN": 234,
+        "total": 484,
+        "inBandN": 51
       },
       {
         "id": "small_cap_gainers",
         "start": 0,
-        "returnedN": 64,
-        "total": 64,
-        "inBandN": 19
+        "returnedN": 74,
+        "total": 74,
+        "inBandN": 26
       },
       {
         "id": "most_shorted_stocks",
         "start": 0,
         "returnedN": 250,
-        "total": 4053,
-        "inBandN": 54
+        "total": 4049,
+        "inBandN": 55
       },
       {
         "id": "most_shorted_stocks",
         "start": 250,
         "returnedN": 250,
-        "total": 4053,
+        "total": 4049,
         "inBandN": 36
       },
       {
         "id": "undervalued_growth_stocks",
         "start": 0,
-        "returnedN": 208,
-        "total": 208,
-        "inBandN": 36
+        "returnedN": 205,
+        "total": 205,
+        "inBandN": 35
       }
     ],
     "drawMethod": "Reject-and-Redraw: je Kandidat R1 bis R6 in Reihenfolge; erster Treffer verwirft; Ziehung laeuft bis N stabil ist."
@@ -98,19 +98,25 @@
       "id": "R6",
       "definition": "Name (weich): /\\b(Trust|Fund|Royalty)\\b/i wird nur bei nicht klar bestandenem R5 ausgeschlossen; bei bestandenem R5 bleibt der Name und kommt ins Grenzfall-Log.",
       "missing": "fail-open"
+    },
+    {
+      "id": "DUP",
+      "definition": "Emittenten-Dedupe (Mess-Hygiene, kein Council-Filter; Kreuz-Review Tag 315 P2): normalisierter Firmenname darf nur einmal in die Stichprobe — Share-Klassen desselben Emittenten werden nachgezogen statt doppelt gezaehlt.",
+      "missing": "fail-open"
     }
   ],
   "drawBalance": {
-    "drawnTotal": 132,
+    "drawnTotal": 130,
     "excludedByRule": {
       "R1": 0,
       "R2": 0,
-      "R3": 19,
+      "R3": 18,
       "R4": 0,
-      "R5": 13,
-      "R6": 0
+      "R5": 12,
+      "R6": 0,
+      "DUP": 0
     },
-    "redrawn": 32,
+    "redrawn": 30,
     "finalN": 100
   },
   "coverageYahoo": [
@@ -128,24 +134,24 @@
     {
       "id": "revAcceleration",
       "label": "Umsatz-Beschleunigung",
-      "n": 97,
+      "n": 98,
       "total": 100,
-      "pct": 97,
+      "pct": 98,
       "messlauf1N": 61,
       "messlauf1Total": 100,
       "messlauf1Pct": 61,
-      "deltaPercentagePoints": 36
+      "deltaPercentagePoints": 37
     },
     {
       "id": "gpGrowth",
       "label": "Bruttogewinn-Wachstum + GM-Trajektorie",
-      "n": 73,
+      "n": 74,
       "total": 100,
-      "pct": 73,
+      "pct": 74,
       "messlauf1N": 56,
       "messlauf1Total": 100,
       "messlauf1Pct": 56,
-      "deltaPercentagePoints": 17
+      "deltaPercentagePoints": 18
     },
     {
       "id": "ruleOfX",
@@ -183,13 +189,13 @@
     {
       "id": "revisionsMomentum",
       "label": "Analysten-Revisions-Momentum",
-      "n": 83,
+      "n": 85,
       "total": 100,
-      "pct": 83,
+      "pct": 85,
       "messlauf1N": 0,
       "messlauf1Total": 100,
       "messlauf1Pct": 0,
-      "deltaPercentagePoints": 83
+      "deltaPercentagePoints": 85
     },
     {
       "id": "dilution",
@@ -211,7 +217,7 @@
     {
       "ticker": "NMG",
       "name": "Nouveau Monde Graphite Inc.",
-      "marketCap": 465696768,
+      "marketCap": 467342336,
       "rule": "R5",
       "reason": "Struktur-Gate nicht bestanden: employees=144, revenue=FEHLT",
       "raw": {
@@ -228,7 +234,7 @@
     {
       "ticker": "EMF",
       "name": "Templeton Emerging Markets Fund",
-      "marketCap": 322665312,
+      "marketCap": 322426144,
       "rule": "R3",
       "reason": "sector=Financial Services und industry=Asset Management",
       "raw": {
@@ -296,7 +302,7 @@
     {
       "ticker": "ETO",
       "name": "Eaton Vance Tax-Advantaged Global Dividend Opportunities Fund",
-      "marketCap": 503771360,
+      "marketCap": 502951968,
       "rule": "R3",
       "reason": "sector=Financial Services und industry=Asset Management",
       "raw": {
@@ -330,7 +336,7 @@
     {
       "ticker": "RMT",
       "name": "Royce Micro-Cap Trust, Inc.",
-      "marketCap": 744955776,
+      "marketCap": 746025344,
       "rule": "R3",
       "reason": "sector=Financial Services und industry=Asset Management",
       "raw": {
@@ -364,7 +370,7 @@
     {
       "ticker": "AFB",
       "name": "AllianceBernstein National Municipal Income Fund, Inc.",
-      "marketCap": 322087008,
+      "marketCap": 322230720,
       "rule": "R3",
       "reason": "sector=Financial Services und industry=Asset Management",
       "raw": {
@@ -432,7 +438,7 @@
     {
       "ticker": "TEI",
       "name": "Templeton Emerging Markets Income Fund",
-      "marketCap": 321389376,
+      "marketCap": 322097792,
       "rule": "R3",
       "reason": "sector=Financial Services und industry=Asset Management",
       "raw": {
@@ -449,7 +455,7 @@
     {
       "ticker": "AVK",
       "name": "Advent Convertible and Income Fund",
-      "marketCap": 560909760,
+      "marketCap": 561572032,
       "rule": "R3",
       "reason": "sector=Financial Services und industry=Asset Management",
       "raw": {
@@ -466,7 +472,7 @@
     {
       "ticker": "ACP",
       "name": "Abrdn Income Credit Strategies Fund",
-      "marketCap": 653702272,
+      "marketCap": 652447488,
       "rule": "R3",
       "reason": "sector=Financial Services und industry=Asset Management",
       "raw": {
@@ -551,7 +557,7 @@
     {
       "ticker": "BGY",
       "name": "BlackRock Enhanced International Dividend Trust",
-      "marketCap": 519673920,
+      "marketCap": 518314656,
       "rule": "R3",
       "reason": "sector=Financial Services und industry=Asset Management",
       "raw": {
@@ -568,7 +574,7 @@
     {
       "ticker": "PEO",
       "name": "Adams Natural Resources Fund, Inc.",
-      "marketCap": 717494400,
+      "marketCap": 717631936,
       "rule": "R3",
       "reason": "sector=Financial Services und industry=Asset Management",
       "raw": {
@@ -585,7 +591,7 @@
     {
       "ticker": "BKT",
       "name": "BlackRock Income Trust, Inc.",
-      "marketCap": 339436192,
+      "marketCap": 338788448,
       "rule": "R3",
       "reason": "sector=Financial Services und industry=Asset Management",
       "raw": {
@@ -619,7 +625,7 @@
     {
       "ticker": "BOE",
       "name": "BlackRock Enhanced Global Dividend Trust",
-      "marketCap": 673873472,
+      "marketCap": 676097472,
       "rule": "R3",
       "reason": "sector=Financial Services und industry=Asset Management",
       "raw": {
@@ -636,7 +642,7 @@
     {
       "ticker": "DIN",
       "name": "Dine Brands Global, Inc.",
-      "marketCap": 461994048,
+      "marketCap": 461232960,
       "rule": "R5",
       "reason": "Struktur-Gate nicht bestanden: employees=FEHLT, revenue=889699968",
       "raw": {
@@ -687,7 +693,7 @@
     {
       "ticker": "EVEX",
       "name": "Eve Holding, Inc.",
-      "marketCap": 778460672,
+      "marketCap": 776719232,
       "rule": "R5",
       "reason": "Struktur-Gate nicht bestanden: employees=198, revenue=FEHLT",
       "raw": {
@@ -717,40 +723,6 @@
         "longName": "AgomAb Therapeutics NV",
         "shortName": "AgomAb Therapeutics NV"
       }
-    },
-    {
-      "ticker": "CMTG",
-      "name": "Claros Mortgage Trust, Inc.",
-      "marketCap": 324606464,
-      "rule": "R5",
-      "reason": "Struktur-Gate nicht bestanden: employees=FEHLT, revenue=-318585984",
-      "raw": {
-        "quoteType": "EQUITY",
-        "typeDisp": "Equity",
-        "sector": "Real Estate",
-        "industry": "REIT - Mortgage",
-        "employees": null,
-        "revenue": -318585984,
-        "longName": "Claros Mortgage Trust, Inc.",
-        "shortName": "Claros Mortgage Trust, Inc."
-      }
-    },
-    {
-      "ticker": "MHD",
-      "name": "BlackRock MuniHoldings Fund, Inc.",
-      "marketCap": 616835328,
-      "rule": "R3",
-      "reason": "sector=Financial Services und industry=Asset Management",
-      "raw": {
-        "quoteType": "EQUITY",
-        "typeDisp": "Equity",
-        "sector": "Financial Services",
-        "industry": "Asset Management",
-        "employees": null,
-        "revenue": 52300008,
-        "longName": "BlackRock MuniHoldings Fund, Inc.",
-        "shortName": "Blackrock MuniHoldings Fund, In"
-      }
     }
   ],
   "r6BoundaryLog": [],
@@ -758,7 +730,7 @@
     {
       "ticker": "RYAM",
       "name": "Rayonier Advanced Materials Inc.",
-      "marketCap": 548612608,
+      "marketCap": 549624192,
       "sources": [
         "aggressive_small_caps@0",
         "small_cap_gainers@0"
@@ -1021,7 +993,7 @@
     {
       "ticker": "SGU",
       "name": "Star Group, L.P.",
-      "marketCap": 433572064,
+      "marketCap": 431437888,
       "sources": [
         "aggressive_small_caps@250",
         "undervalued_growth_stocks@0"
@@ -1109,7 +1081,7 @@
     {
       "ticker": "HZO",
       "name": "MarineMax, Inc.",
-      "marketCap": 776602624,
+      "marketCap": 776932992,
       "sources": [
         "most_shorted_stocks@250"
       ],
@@ -1457,7 +1429,7 @@
     {
       "ticker": "SMWB",
       "name": "Similarweb Ltd.",
-      "marketCap": 615393856,
+      "marketCap": 617583872,
       "sources": [
         "aggressive_small_caps@0"
       ],
@@ -1980,7 +1952,7 @@
     {
       "ticker": "UMAC",
       "name": "Unusual Machines, Inc.",
-      "marketCap": 795768832,
+      "marketCap": 795290880,
       "sources": [
         "most_shorted_stocks@250"
       ],
@@ -2067,7 +2039,7 @@
     {
       "ticker": "CWH",
       "name": "Camping World Holdings, Inc.",
-      "marketCap": 415101792,
+      "marketCap": 415419392,
       "sources": [
         "aggressive_small_caps@0",
         "most_shorted_stocks@0"
@@ -2168,6 +2140,93 @@
         "revenue": 1001942016,
         "longName": "Cross Country Healthcare, Inc.",
         "shortName": "Cross Country Healthcare, Inc."
+      },
+      "fields": {
+        "yahoo": {
+          "annualRevenue": {
+            "present": true,
+            "observations": 4
+          },
+          "quarterlyRevenue": {
+            "present": true,
+            "observations": 5
+          },
+          "annualGrossProfit": {
+            "present": true,
+            "observations": 4
+          },
+          "annualOperatingIncome": {
+            "present": true,
+            "observations": 4
+          },
+          "quarterlyOperatingIncome": {
+            "present": true,
+            "observations": 5
+          },
+          "annualAssets": {
+            "present": true,
+            "observations": 4
+          },
+          "annualCurrentLiabilities": {
+            "present": true,
+            "observations": 4
+          },
+          "annualSBC": {
+            "present": true,
+            "observations": 4
+          },
+          "annualFCF": {
+            "present": true,
+            "observations": 4
+          },
+          "annualOCF": {
+            "present": true,
+            "observations": 4
+          },
+          "fcfMarginTTM": {
+            "present": true,
+            "observations": 1
+          },
+          "estimateRevisions": {
+            "present": true,
+            "observations": 2
+          }
+        }
+      },
+      "axes": {
+        "yahoo": {
+          "revGrowthLevel": true,
+          "revAcceleration": true,
+          "gpGrowth": true,
+          "ruleOfX": true,
+          "marginTrajectory": true,
+          "capitalEfficiency": true,
+          "revisionsMomentum": true,
+          "dilution": true
+        }
+      },
+      "revisionRows": 2,
+      "errors": {
+        "yahooSummarySchema": null,
+        "yahooFundamentals": null
+      }
+    },
+    {
+      "ticker": "OFIX",
+      "name": "Orthofix Medical Inc.",
+      "marketCap": 480613472,
+      "sources": [
+        "small_cap_gainers@0"
+      ],
+      "filterRaw": {
+        "quoteType": "EQUITY",
+        "typeDisp": "Equity",
+        "sector": "Healthcare",
+        "industry": "Medical Devices",
+        "employees": 1605,
+        "revenue": 825374016,
+        "longName": "Orthofix Medical Inc.",
+        "shortName": "Orthofix Medical Inc."
       },
       "fields": {
         "yahoo": {
@@ -2505,7 +2564,7 @@
     {
       "ticker": "VTS",
       "name": "Vitesse Energy, Inc.",
-      "marketCap": 653633664,
+      "marketCap": 653216576,
       "sources": [
         "most_shorted_stocks@250"
       ],
@@ -2764,9 +2823,96 @@
       }
     },
     {
+      "ticker": "MLAB",
+      "name": "Mesa Laboratories, Inc.",
+      "marketCap": 549399168,
+      "sources": [
+        "small_cap_gainers@0"
+      ],
+      "filterRaw": {
+        "quoteType": "EQUITY",
+        "typeDisp": "Equity",
+        "sector": "Technology",
+        "industry": "Scientific & Technical Instruments",
+        "employees": 717,
+        "revenue": 249130000,
+        "longName": "Mesa Laboratories, Inc.",
+        "shortName": "Mesa Laboratories, Inc."
+      },
+      "fields": {
+        "yahoo": {
+          "annualRevenue": {
+            "present": true,
+            "observations": 4
+          },
+          "quarterlyRevenue": {
+            "present": true,
+            "observations": 5
+          },
+          "annualGrossProfit": {
+            "present": true,
+            "observations": 4
+          },
+          "annualOperatingIncome": {
+            "present": true,
+            "observations": 4
+          },
+          "quarterlyOperatingIncome": {
+            "present": true,
+            "observations": 5
+          },
+          "annualAssets": {
+            "present": true,
+            "observations": 4
+          },
+          "annualCurrentLiabilities": {
+            "present": true,
+            "observations": 4
+          },
+          "annualSBC": {
+            "present": true,
+            "observations": 4
+          },
+          "annualFCF": {
+            "present": true,
+            "observations": 4
+          },
+          "annualOCF": {
+            "present": true,
+            "observations": 4
+          },
+          "fcfMarginTTM": {
+            "present": true,
+            "observations": 1
+          },
+          "estimateRevisions": {
+            "present": true,
+            "observations": 2
+          }
+        }
+      },
+      "axes": {
+        "yahoo": {
+          "revGrowthLevel": true,
+          "revAcceleration": true,
+          "gpGrowth": true,
+          "ruleOfX": true,
+          "marginTrajectory": true,
+          "capitalEfficiency": true,
+          "revisionsMomentum": true,
+          "dilution": true
+        }
+      },
+      "revisionRows": 2,
+      "errors": {
+        "yahooSummarySchema": null,
+        "yahooFundamentals": null
+      }
+    },
+    {
       "ticker": "ORN",
       "name": "Orion Group Holdings, Inc.",
-      "marketCap": 533314528,
+      "marketCap": 533516928,
       "sources": [
         "aggressive_small_caps@0"
       ],
@@ -2940,7 +3086,7 @@
     {
       "ticker": "VEL",
       "name": "Velocity Financial, Inc.",
-      "marketCap": 696781248,
+      "marketCap": 695603520,
       "sources": [
         "aggressive_small_caps@250",
         "undervalued_growth_stocks@0"
@@ -3028,7 +3174,7 @@
     {
       "ticker": "PACK",
       "name": "Ranpak Holdings Corp.",
-      "marketCap": 591115072,
+      "marketCap": 590259648,
       "sources": [
         "aggressive_small_caps@0"
       ],
@@ -3376,7 +3522,7 @@
     {
       "ticker": "ONT",
       "name": "Onterris, Inc.",
-      "marketCap": 789280768,
+      "marketCap": 788196544,
       "sources": [
         "small_cap_gainers@0"
       ],
@@ -3463,7 +3609,7 @@
     {
       "ticker": "BKSY",
       "name": "BlackSky Technology Inc.",
-      "marketCap": 795246400,
+      "marketCap": 796359616,
       "sources": [
         "most_shorted_stocks@0"
       ],
@@ -3716,93 +3862,6 @@
         }
       },
       "revisionRows": 2,
-      "errors": {
-        "yahooSummarySchema": null,
-        "yahooFundamentals": null
-      }
-    },
-    {
-      "ticker": "KELYB",
-      "name": "Kelly Services, Inc.",
-      "marketCap": 793577792,
-      "sources": [
-        "aggressive_small_caps@250"
-      ],
-      "filterRaw": {
-        "quoteType": "EQUITY",
-        "typeDisp": "Equity",
-        "sector": "Industrials",
-        "industry": "Staffing & Employment Services",
-        "employees": 4900,
-        "revenue": 4126700032,
-        "longName": "Kelly Services, Inc.",
-        "shortName": "Kelly Services, Inc."
-      },
-      "fields": {
-        "yahoo": {
-          "annualRevenue": {
-            "present": true,
-            "observations": 4
-          },
-          "quarterlyRevenue": {
-            "present": true,
-            "observations": 5
-          },
-          "annualGrossProfit": {
-            "present": true,
-            "observations": 4
-          },
-          "annualOperatingIncome": {
-            "present": true,
-            "observations": 4
-          },
-          "quarterlyOperatingIncome": {
-            "present": true,
-            "observations": 5
-          },
-          "annualAssets": {
-            "present": true,
-            "observations": 4
-          },
-          "annualCurrentLiabilities": {
-            "present": true,
-            "observations": 4
-          },
-          "annualSBC": {
-            "present": true,
-            "observations": 4
-          },
-          "annualFCF": {
-            "present": true,
-            "observations": 4
-          },
-          "annualOCF": {
-            "present": true,
-            "observations": 4
-          },
-          "fcfMarginTTM": {
-            "present": true,
-            "observations": 1
-          },
-          "estimateRevisions": {
-            "present": false,
-            "observations": 0
-          }
-        }
-      },
-      "axes": {
-        "yahoo": {
-          "revGrowthLevel": true,
-          "revAcceleration": true,
-          "gpGrowth": true,
-          "ruleOfX": true,
-          "marginTrajectory": true,
-          "capitalEfficiency": true,
-          "revisionsMomentum": false,
-          "dilution": true
-        }
-      },
-      "revisionRows": 0,
       "errors": {
         "yahooSummarySchema": null,
         "yahooFundamentals": null
@@ -4074,7 +4133,7 @@
     {
       "ticker": "HBB",
       "name": "Hamilton Beach Brands Holding Company",
-      "marketCap": 325910272,
+      "marketCap": 326452096,
       "sources": [
         "small_cap_gainers@0"
       ],
@@ -4248,7 +4307,7 @@
     {
       "ticker": "EVMN",
       "name": "Evommune, Inc.",
-      "marketCap": 421414944,
+      "marketCap": 421775136,
       "sources": [
         "most_shorted_stocks@250"
       ],
@@ -4335,7 +4394,7 @@
     {
       "ticker": "FVR",
       "name": "FrontView REIT, Inc.",
-      "marketCap": 637347776,
+      "marketCap": 635745984,
       "sources": [
         "aggressive_small_caps@250"
       ],
@@ -4770,7 +4829,7 @@
     {
       "ticker": "TWI",
       "name": "Titan International, Inc.",
-      "marketCap": 504354304,
+      "marketCap": 504676192,
       "sources": [
         "aggressive_small_caps@0"
       ],
@@ -4855,9 +4914,96 @@
       }
     },
     {
+      "ticker": "BXC",
+      "name": "BlueLinx Holdings Inc.",
+      "marketCap": 482586304,
+      "sources": [
+        "small_cap_gainers@0"
+      ],
+      "filterRaw": {
+        "quoteType": "EQUITY",
+        "typeDisp": "Equity",
+        "sector": "Industrials",
+        "industry": "Industrial Distribution",
+        "employees": 2138,
+        "revenue": 2975930112,
+        "longName": "BlueLinx Holdings Inc.",
+        "shortName": "Bluelinx Holdings Inc."
+      },
+      "fields": {
+        "yahoo": {
+          "annualRevenue": {
+            "present": true,
+            "observations": 4
+          },
+          "quarterlyRevenue": {
+            "present": true,
+            "observations": 5
+          },
+          "annualGrossProfit": {
+            "present": true,
+            "observations": 4
+          },
+          "annualOperatingIncome": {
+            "present": true,
+            "observations": 4
+          },
+          "quarterlyOperatingIncome": {
+            "present": true,
+            "observations": 5
+          },
+          "annualAssets": {
+            "present": true,
+            "observations": 4
+          },
+          "annualCurrentLiabilities": {
+            "present": true,
+            "observations": 4
+          },
+          "annualSBC": {
+            "present": true,
+            "observations": 4
+          },
+          "annualFCF": {
+            "present": true,
+            "observations": 4
+          },
+          "annualOCF": {
+            "present": true,
+            "observations": 4
+          },
+          "fcfMarginTTM": {
+            "present": true,
+            "observations": 1
+          },
+          "estimateRevisions": {
+            "present": true,
+            "observations": 2
+          }
+        }
+      },
+      "axes": {
+        "yahoo": {
+          "revGrowthLevel": true,
+          "revAcceleration": true,
+          "gpGrowth": true,
+          "ruleOfX": true,
+          "marginTrajectory": true,
+          "capitalEfficiency": true,
+          "revisionsMomentum": true,
+          "dilution": true
+        }
+      },
+      "revisionRows": 2,
+      "errors": {
+        "yahooSummarySchema": null,
+        "yahooFundamentals": null
+      }
+    },
+    {
       "ticker": "BGS",
       "name": "B&G Foods, Inc.",
-      "marketCap": 309246272,
+      "marketCap": 310057920,
       "sources": [
         "most_shorted_stocks@250"
       ],
@@ -4944,7 +5090,7 @@
     {
       "ticker": "HTT",
       "name": "High Templar Tech Limited",
-      "marketCap": 409948480,
+      "marketCap": 408395648,
       "sources": [
         "aggressive_small_caps@250"
       ],
@@ -5293,7 +5439,7 @@
     {
       "ticker": "PKE",
       "name": "Park Aerospace Corp.",
-      "marketCap": 673937280,
+      "marketCap": 675190016,
       "sources": [
         "aggressive_small_caps@0"
       ],
@@ -5992,7 +6138,7 @@
     {
       "ticker": "DDL",
       "name": "Dingdong (Cayman) Limited",
-      "marketCap": 508377824,
+      "marketCap": 507284512,
       "sources": [
         "aggressive_small_caps@0"
       ],
@@ -6079,7 +6225,7 @@
     {
       "ticker": "BBW",
       "name": "Build-A-Bear Workshop, Inc.",
-      "marketCap": 438810496,
+      "marketCap": 438434400,
       "sources": [
         "most_shorted_stocks@0"
       ],
@@ -6342,7 +6488,7 @@
     {
       "ticker": "MAX",
       "name": "MediaAlpha, Inc.",
-      "marketCap": 759573312,
+      "marketCap": 761195136,
       "sources": [
         "aggressive_small_caps@0"
       ],
@@ -6429,7 +6575,7 @@
     {
       "ticker": "BWMX",
       "name": "Betterware de México, S.A.P.I. de C.V.",
-      "marketCap": 688640064,
+      "marketCap": 689012544,
       "sources": [
         "aggressive_small_caps@250",
         "undervalued_growth_stocks@0"
@@ -6517,7 +6663,7 @@
     {
       "ticker": "OPTU",
       "name": "Optimum Communications, Inc.",
-      "marketCap": 350099872,
+      "marketCap": 347750720,
       "sources": [
         "aggressive_small_caps@0"
       ],
@@ -6604,7 +6750,7 @@
     {
       "ticker": "DDD",
       "name": "3D Systems Corporation",
-      "marketCap": 459803520,
+      "marketCap": 458986784,
       "sources": [
         "most_shorted_stocks@0"
       ],
@@ -6954,7 +7100,7 @@
     {
       "ticker": "UAMY",
       "name": "United States Antimony Corporation",
-      "marketCap": 789088384,
+      "marketCap": 789829312,
       "sources": [
         "aggressive_small_caps@0",
         "most_shorted_stocks@0"
@@ -7303,7 +7449,7 @@
     {
       "ticker": "SG",
       "name": "Sweetgreen, Inc.",
-      "marketCap": 740890432,
+      "marketCap": 739107968,
       "sources": [
         "most_shorted_stocks@0"
       ],
@@ -7390,7 +7536,7 @@
     {
       "ticker": "ONIT",
       "name": "Onity Group Inc.",
-      "marketCap": 351409312,
+      "marketCap": 349933696,
       "sources": [
         "aggressive_small_caps@250",
         "small_cap_gainers@0",
@@ -7566,7 +7712,7 @@
     {
       "ticker": "CNNE",
       "name": "Cannae Holdings, Inc.",
-      "marketCap": 670532096,
+      "marketCap": 670971520,
       "sources": [
         "aggressive_small_caps@0"
       ],
@@ -8261,9 +8407,96 @@
       }
     },
     {
+      "ticker": "OEC",
+      "name": "Orion S.A.",
+      "marketCap": 376112288,
+      "sources": [
+        "small_cap_gainers@0"
+      ],
+      "filterRaw": {
+        "quoteType": "EQUITY",
+        "typeDisp": "Equity",
+        "sector": "Basic Materials",
+        "industry": "Specialty Chemicals",
+        "employees": 1639,
+        "revenue": 1788499968,
+        "longName": "Orion S.A.",
+        "shortName": "Orion S.A."
+      },
+      "fields": {
+        "yahoo": {
+          "annualRevenue": {
+            "present": true,
+            "observations": 4
+          },
+          "quarterlyRevenue": {
+            "present": true,
+            "observations": 5
+          },
+          "annualGrossProfit": {
+            "present": true,
+            "observations": 4
+          },
+          "annualOperatingIncome": {
+            "present": true,
+            "observations": 4
+          },
+          "quarterlyOperatingIncome": {
+            "present": true,
+            "observations": 5
+          },
+          "annualAssets": {
+            "present": true,
+            "observations": 4
+          },
+          "annualCurrentLiabilities": {
+            "present": true,
+            "observations": 4
+          },
+          "annualSBC": {
+            "present": true,
+            "observations": 4
+          },
+          "annualFCF": {
+            "present": true,
+            "observations": 4
+          },
+          "annualOCF": {
+            "present": true,
+            "observations": 4
+          },
+          "fcfMarginTTM": {
+            "present": true,
+            "observations": 1
+          },
+          "estimateRevisions": {
+            "present": true,
+            "observations": 2
+          }
+        }
+      },
+      "axes": {
+        "yahoo": {
+          "revGrowthLevel": true,
+          "revAcceleration": true,
+          "gpGrowth": true,
+          "ruleOfX": true,
+          "marginTrajectory": true,
+          "capitalEfficiency": true,
+          "revisionsMomentum": true,
+          "dilution": true
+        }
+      },
+      "revisionRows": 2,
+      "errors": {
+        "yahooSummarySchema": null,
+        "yahooFundamentals": null
+      }
+    },
+    {
       "ticker": "HSHP",
       "name": "Himalaya Shipping Ltd.",
-      "marketCap": 722732864,
+      "marketCap": 724618624,
       "sources": [
         "aggressive_small_caps@0"
       ],
@@ -8437,7 +8670,7 @@
     {
       "ticker": "XPOF",
       "name": "Xponential Fitness, Inc.",
-      "marketCap": 334898304,
+      "marketCap": 334407264,
       "sources": [
         "most_shorted_stocks@0"
       ],
@@ -8611,7 +8844,7 @@
     {
       "ticker": "FUBO",
       "name": "FuboTV Inc.",
-      "marketCap": 301798528,
+      "marketCap": 302092960,
       "sources": [
         "most_shorted_stocks@0"
       ],
@@ -8698,7 +8931,7 @@
     {
       "ticker": "OXM",
       "name": "Oxford Industries, Inc.",
-      "marketCap": 612616128,
+      "marketCap": 613959936,
       "sources": [
         "small_cap_gainers@0",
         "most_shorted_stocks@0"
@@ -9045,6 +9278,93 @@
       }
     },
     {
+      "ticker": "GCO",
+      "name": "Genesco Inc.",
+      "marketCap": 414512224,
+      "sources": [
+        "small_cap_gainers@0"
+      ],
+      "filterRaw": {
+        "quoteType": "EQUITY",
+        "typeDisp": "Equity",
+        "sector": "Consumer Cyclical",
+        "industry": "Apparel Retail",
+        "employees": 4800,
+        "revenue": 2449147904,
+        "longName": "Genesco Inc.",
+        "shortName": "Genesco Inc."
+      },
+      "fields": {
+        "yahoo": {
+          "annualRevenue": {
+            "present": true,
+            "observations": 4
+          },
+          "quarterlyRevenue": {
+            "present": true,
+            "observations": 5
+          },
+          "annualGrossProfit": {
+            "present": true,
+            "observations": 4
+          },
+          "annualOperatingIncome": {
+            "present": true,
+            "observations": 4
+          },
+          "quarterlyOperatingIncome": {
+            "present": true,
+            "observations": 5
+          },
+          "annualAssets": {
+            "present": true,
+            "observations": 4
+          },
+          "annualCurrentLiabilities": {
+            "present": true,
+            "observations": 4
+          },
+          "annualSBC": {
+            "present": true,
+            "observations": 4
+          },
+          "annualFCF": {
+            "present": true,
+            "observations": 4
+          },
+          "annualOCF": {
+            "present": true,
+            "observations": 4
+          },
+          "fcfMarginTTM": {
+            "present": true,
+            "observations": 1
+          },
+          "estimateRevisions": {
+            "present": true,
+            "observations": 2
+          }
+        }
+      },
+      "axes": {
+        "yahoo": {
+          "revGrowthLevel": true,
+          "revAcceleration": true,
+          "gpGrowth": true,
+          "ruleOfX": true,
+          "marginTrajectory": true,
+          "capitalEfficiency": true,
+          "revisionsMomentum": true,
+          "dilution": true
+        }
+      },
+      "revisionRows": 2,
+      "errors": {
+        "yahooSummarySchema": null,
+        "yahooFundamentals": null
+      }
+    },
+    {
       "ticker": "SPRY",
       "name": "ARS Pharmaceuticals, Inc.",
       "marketCap": 740802368,
@@ -9122,356 +9442,6 @@
           "marginTrajectory": true,
           "capitalEfficiency": true,
           "revisionsMomentum": true,
-          "dilution": true
-        }
-      },
-      "revisionRows": 2,
-      "errors": {
-        "yahooSummarySchema": null,
-        "yahooFundamentals": null
-      }
-    },
-    {
-      "ticker": "PERI",
-      "name": "Perion Network Ltd.",
-      "marketCap": 398985888,
-      "sources": [
-        "aggressive_small_caps@0"
-      ],
-      "filterRaw": {
-        "quoteType": "EQUITY",
-        "typeDisp": "Equity",
-        "sector": "Communication Services",
-        "industry": "Internet Content & Information",
-        "employees": 511,
-        "revenue": 440959008,
-        "longName": "Perion Network Ltd.",
-        "shortName": "Perion Network Ltd"
-      },
-      "fields": {
-        "yahoo": {
-          "annualRevenue": {
-            "present": true,
-            "observations": 4
-          },
-          "quarterlyRevenue": {
-            "present": true,
-            "observations": 5
-          },
-          "annualGrossProfit": {
-            "present": true,
-            "observations": 4
-          },
-          "annualOperatingIncome": {
-            "present": true,
-            "observations": 4
-          },
-          "quarterlyOperatingIncome": {
-            "present": true,
-            "observations": 5
-          },
-          "annualAssets": {
-            "present": true,
-            "observations": 4
-          },
-          "annualCurrentLiabilities": {
-            "present": true,
-            "observations": 4
-          },
-          "annualSBC": {
-            "present": true,
-            "observations": 4
-          },
-          "annualFCF": {
-            "present": true,
-            "observations": 4
-          },
-          "annualOCF": {
-            "present": true,
-            "observations": 4
-          },
-          "fcfMarginTTM": {
-            "present": true,
-            "observations": 1
-          },
-          "estimateRevisions": {
-            "present": true,
-            "observations": 2
-          }
-        }
-      },
-      "axes": {
-        "yahoo": {
-          "revGrowthLevel": true,
-          "revAcceleration": true,
-          "gpGrowth": true,
-          "ruleOfX": true,
-          "marginTrajectory": true,
-          "capitalEfficiency": true,
-          "revisionsMomentum": true,
-          "dilution": true
-        }
-      },
-      "revisionRows": 2,
-      "errors": {
-        "yahooSummarySchema": null,
-        "yahooFundamentals": null
-      }
-    },
-    {
-      "ticker": "PRTA",
-      "name": "Prothena Corporation plc",
-      "marketCap": 443431936,
-      "sources": [
-        "aggressive_small_caps@0",
-        "most_shorted_stocks@250"
-      ],
-      "filterRaw": {
-        "quoteType": "EQUITY",
-        "typeDisp": "Equity",
-        "sector": "Healthcare",
-        "industry": "Biotechnology",
-        "employees": 67,
-        "revenue": 57940000,
-        "longName": "Prothena Corporation plc",
-        "shortName": "Prothena Corporation plc"
-      },
-      "fields": {
-        "yahoo": {
-          "annualRevenue": {
-            "present": true,
-            "observations": 4
-          },
-          "quarterlyRevenue": {
-            "present": true,
-            "observations": 5
-          },
-          "annualGrossProfit": {
-            "present": false,
-            "observations": 0
-          },
-          "annualOperatingIncome": {
-            "present": true,
-            "observations": 4
-          },
-          "quarterlyOperatingIncome": {
-            "present": true,
-            "observations": 5
-          },
-          "annualAssets": {
-            "present": true,
-            "observations": 4
-          },
-          "annualCurrentLiabilities": {
-            "present": true,
-            "observations": 4
-          },
-          "annualSBC": {
-            "present": true,
-            "observations": 4
-          },
-          "annualFCF": {
-            "present": true,
-            "observations": 4
-          },
-          "annualOCF": {
-            "present": true,
-            "observations": 4
-          },
-          "fcfMarginTTM": {
-            "present": true,
-            "observations": 1
-          },
-          "estimateRevisions": {
-            "present": true,
-            "observations": 2
-          }
-        }
-      },
-      "axes": {
-        "yahoo": {
-          "revGrowthLevel": true,
-          "revAcceleration": true,
-          "gpGrowth": false,
-          "ruleOfX": true,
-          "marginTrajectory": true,
-          "capitalEfficiency": true,
-          "revisionsMomentum": true,
-          "dilution": true
-        }
-      },
-      "revisionRows": 2,
-      "errors": {
-        "yahooSummarySchema": null,
-        "yahooFundamentals": null
-      }
-    },
-    {
-      "ticker": "CINT",
-      "name": "CI&T Inc.",
-      "marketCap": 429298560,
-      "sources": [
-        "aggressive_small_caps@0",
-        "undervalued_growth_stocks@0"
-      ],
-      "filterRaw": {
-        "quoteType": "EQUITY",
-        "typeDisp": "Equity",
-        "sector": "Technology",
-        "industry": "Software - Infrastructure",
-        "employees": 8015,
-        "revenue": 515382016,
-        "longName": "CI&T Inc.",
-        "shortName": "CI&T Inc"
-      },
-      "fields": {
-        "yahoo": {
-          "annualRevenue": {
-            "present": true,
-            "observations": 4
-          },
-          "quarterlyRevenue": {
-            "present": true,
-            "observations": 5
-          },
-          "annualGrossProfit": {
-            "present": true,
-            "observations": 4
-          },
-          "annualOperatingIncome": {
-            "present": true,
-            "observations": 4
-          },
-          "quarterlyOperatingIncome": {
-            "present": true,
-            "observations": 5
-          },
-          "annualAssets": {
-            "present": true,
-            "observations": 4
-          },
-          "annualCurrentLiabilities": {
-            "present": true,
-            "observations": 4
-          },
-          "annualSBC": {
-            "present": true,
-            "observations": 4
-          },
-          "annualFCF": {
-            "present": true,
-            "observations": 4
-          },
-          "annualOCF": {
-            "present": true,
-            "observations": 4
-          },
-          "fcfMarginTTM": {
-            "present": true,
-            "observations": 1
-          },
-          "estimateRevisions": {
-            "present": true,
-            "observations": 2
-          }
-        }
-      },
-      "axes": {
-        "yahoo": {
-          "revGrowthLevel": true,
-          "revAcceleration": true,
-          "gpGrowth": true,
-          "ruleOfX": true,
-          "marginTrajectory": true,
-          "capitalEfficiency": true,
-          "revisionsMomentum": true,
-          "dilution": true
-        }
-      },
-      "revisionRows": 2,
-      "errors": {
-        "yahooSummarySchema": null,
-        "yahooFundamentals": null
-      }
-    },
-    {
-      "ticker": "NVRI",
-      "name": "Enviri Corporation",
-      "marketCap": 640437184,
-      "sources": [
-        "aggressive_small_caps@0"
-      ],
-      "filterRaw": {
-        "quoteType": "EQUITY",
-        "typeDisp": "Equity",
-        "sector": "Industrials",
-        "industry": "Waste Management",
-        "employees": 12000,
-        "revenue": 2242254080,
-        "longName": "Enviri Corporation",
-        "shortName": "Enviri Corporation"
-      },
-      "fields": {
-        "yahoo": {
-          "annualRevenue": {
-            "present": true,
-            "observations": 3
-          },
-          "quarterlyRevenue": {
-            "present": true,
-            "observations": 2
-          },
-          "annualGrossProfit": {
-            "present": true,
-            "observations": 3
-          },
-          "annualOperatingIncome": {
-            "present": true,
-            "observations": 3
-          },
-          "quarterlyOperatingIncome": {
-            "present": true,
-            "observations": 2
-          },
-          "annualAssets": {
-            "present": true,
-            "observations": 2
-          },
-          "annualCurrentLiabilities": {
-            "present": true,
-            "observations": 2
-          },
-          "annualSBC": {
-            "present": true,
-            "observations": 3
-          },
-          "annualFCF": {
-            "present": true,
-            "observations": 3
-          },
-          "annualOCF": {
-            "present": true,
-            "observations": 3
-          },
-          "fcfMarginTTM": {
-            "present": true,
-            "observations": 1
-          },
-          "estimateRevisions": {
-            "present": true,
-            "observations": 2
-          }
-        }
-      },
-      "axes": {
-        "yahoo": {
-          "revGrowthLevel": true,
-          "revAcceleration": false,
-          "gpGrowth": true,
-          "ruleOfX": true,
-          "marginTrajectory": true,
-          "capitalEfficiency": true,
-          "revisionsMomentum": false,
           "dilution": true
         }
       },
