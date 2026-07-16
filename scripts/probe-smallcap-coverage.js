@@ -40,6 +40,9 @@ const REPORT_JSON = path.join(ROOT, 'reports', `smallcap-probe-${PROBE_DATE}.jso
 const REPORT_MD = path.join(ROOT, 'reports', `smallcap-probe-${PROBE_DATE}.md`);
 const REPORT_M2_JSON = path.join(ROOT, 'reports', `smallcap-probe-messlauf2-${PROBE_DATE}.json`);
 const REPORT_M2_MD = path.join(ROOT, 'reports', `smallcap-probe-messlauf2-${PROBE_DATE}.md`);
+const XBRL_RUN_DATE = new Date().toISOString().slice(0, 10);
+const REPORT_M2_XBRL_JSON = path.join(ROOT, 'reports', `smallcap-probe-messlauf2-xbrl-${XBRL_RUN_DATE}.json`);
+const REPORT_M2_XBRL_MD = path.join(ROOT, 'reports', `smallcap-probe-messlauf2-xbrl-${XBRL_RUN_DATE}.md`);
 const OFFICIAL_SAMPLE = 100;
 const SEED = 'smallcap-probe-2026-07-16-v1';
 const M2_SEED = 'smallcap-probe-2026-07-16-messlauf2';
@@ -262,14 +265,16 @@ function errText(error) { return String(error && error.message ? error.message :
 
 function parseArgs(argv) {
   let sample = OFFICIAL_SAMPLE;
+  let xbrl = false;
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--sample' && argv[i + 1]) sample = Number(argv[++i]);
+    else if (argv[i] === '--xbrl') xbrl = true;
     else throw new Error(`Unbekanntes Argument: ${argv[i]}`);
   }
   if (!Number.isInteger(sample) || sample < 1 || sample > 200) {
     throw new Error('--sample muss eine ganze Zahl zwischen 1 und 200 sein');
   }
-  return { sample };
+  return { sample, xbrl };
 }
 
 function assertAllowedHost(url) {
@@ -318,6 +323,65 @@ async function fetchJson(url) {
     }
   }
   throw lastError;
+}
+
+class SecAccessBlockedError extends Error {}
+
+function assertSecOnlyHost(url) {
+  const host = new URL(url).hostname.toLowerCase();
+  if (host !== 'sec.gov' && !host.endsWith('.sec.gov')) {
+    throw new Error(`Im --xbrl-Modus ist nur *.sec.gov erlaubt: ${host}`);
+  }
+}
+
+function countRetrievalError(retrieval, type) {
+  retrieval.errorsByType[type] = (retrieval.errorsByType[type] || 0) + 1;
+}
+
+function secErrorResult(type, message, status = null) {
+  return { ok: false, error: { type, status, message: String(message).replace(/\s+/g, ' ').slice(0, 240) } };
+}
+
+async function fetchSecJsonStrict(url, userAgent, retrieval, requestKind) {
+  assertSecOnlyHost(url);
+  await reserveSlot('sec');
+  retrieval.requestsTotal++;
+  retrieval.requestsByKind[requestKind] = (retrieval.requestsByKind[requestKind] || 0) + 1;
+  const ctrl = new AbortController();
+  const timeout = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
+  let response;
+  try {
+    response = await fetch(url, {
+      headers: { 'User-Agent': userAgent, 'Accept': 'application/json' },
+      signal: ctrl.signal,
+      redirect: 'manual'
+    });
+  } catch (error) {
+    const type = error && error.name === 'AbortError' ? 'timeout' : 'network';
+    countRetrievalError(retrieval, type);
+    return secErrorResult(type, errText(error));
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  const body = await response.text();
+  const htmlWafBody = /^\s*</.test(body) && /(?:request rate threshold|automated tool|access denied|request has been identified)/i.test(body);
+  if (response.status === 403 || response.status === 429 || htmlWafBody) {
+    const type = response.status === 429 ? 'http_429' : 'waf_block';
+    countRetrievalError(retrieval, type);
+    throw new SecAccessBlockedError(`SEC-Zugriff blockiert (${response.status === 429 ? 'HTTP 429' : `HTTP ${response.status} / WAF`}); Lauf abgebrochen`);
+  }
+  if (!response.ok) {
+    const type = `http_${response.status}`;
+    countRetrievalError(retrieval, type);
+    return secErrorResult(type, `HTTP ${response.status}`, response.status);
+  }
+  try {
+    return { ok: true, data: JSON.parse(body) };
+  } catch (error) {
+    countRetrievalError(retrieval, 'invalid_json');
+    return secErrorResult('invalid_json', errText(error));
+  }
 }
 
 function fnv1a(text) {
@@ -1225,6 +1289,295 @@ async function mainMesslauf2() {
   console.log(`[done] ${companies.length}/${args.sample} gefilterte Operating Companies gemessen; SEC-Requests=0`);
 }
 
+function buildTickerCikMap(payload) {
+  const byTicker = new Map();
+  for (const entry of Object.values(payload || {})) {
+    const ticker = String(entry && entry.ticker || '').trim().toUpperCase();
+    const cikRaw = entry && entry.cik_str;
+    if (!ticker || cikRaw == null || !/^\d+$/.test(String(cikRaw))) continue;
+    if (!byTicker.has(ticker)) {
+      byTicker.set(ticker, {
+        cik: String(cikRaw).padStart(10, '0'),
+        secName: String(entry.title || '') || null
+      });
+    }
+  }
+  return byTicker;
+}
+
+function xbrlAxisMissingReason(data, axisId) {
+  if (axisId === 'revGrowthLevel' || axisId === 'ruleOfX') {
+    return `Quartalsumsatz=${values(data.quarterlyRevenue).length} Beobachtungen; Jahresumsatz=${values(data.annualRevenue).length} Beobachtungen`;
+  }
+  if (axisId === 'revAcceleration') {
+    return `positive Quartalsumsaetze=${positiveValues(data.quarterlyRevenue).length}; benoetigt>=3`;
+  }
+  if (axisId === 'gpGrowth') {
+    return `Jahres-Bruttogewinn=${values(data.annualGrossProfit).length} Beobachtungen; benoetigt>=2 und aelterer Wert>0`;
+  }
+  if (axisId === 'marginTrajectory') {
+    const n = alignedPairs(data.quarterlyRevenue, data.quarterlyOperatingIncome, (r, o) => r > 0 && finite(o)).length;
+    return `gepaarte Umsatz/Operating-Income-Quartale=${n}; benoetigt>=2`;
+  }
+  if (axisId === 'capitalEfficiency') {
+    return `verwertbare Operating-Income/Assets/Current-Liabilities-Jahre=${capitalPairs(data).length}; benoetigt>=1`;
+  }
+  if (axisId === 'revisionsMomentum') {
+    return 'kein SEC-XBRL-Konzept fuer Analystenrevisionen';
+  }
+  if (axisId === 'dilution') {
+    const n = alignedPairs(data.annualSBC, data.annualRevenue, (sbc, rev) => finite(sbc) && finite(rev) && rev !== 0).length;
+    return `gepaarte SBC/Umsatz-Jahre=${n}; benoetigt>=1`;
+  }
+  return 'Coverage-Praedikat nicht erfuellt';
+}
+
+function xbrlCoverage(companies, cikN) {
+  return AXES.map(axis => {
+    const tickers = companies.filter(company => company.axes.xbrl[axis.id]).map(company => company.ticker);
+    return {
+      id: axis.id,
+      label: axis.label,
+      n: tickers.length,
+      total: OFFICIAL_SAMPLE,
+      pct: pct(tickers.length, OFFICIAL_SAMPLE),
+      cikN: tickers.length,
+      cikTotal: cikN,
+      cikPct: pct(tickers.length, cikN),
+      tickers
+    };
+  });
+}
+
+function xbrlComparison(companies) {
+  return AXES.map(axis => {
+    const yahooTickers = companies.filter(company => company.axes.yahoo[axis.id]).map(company => company.ticker);
+    const xbrlTickers = companies.filter(company => company.axes.xbrl[axis.id]).map(company => company.ticker);
+    const bothTickers = companies.filter(company => company.axes.yahoo[axis.id] && company.axes.xbrl[axis.id]).map(company => company.ticker);
+    const neitherTickers = companies.filter(company => !company.axes.yahoo[axis.id] && !company.axes.xbrl[axis.id]).map(company => company.ticker);
+    return {
+      id: axis.id,
+      label: axis.label,
+      yahoo: { n: yahooTickers.length, total: OFFICIAL_SAMPLE, pct: pct(yahooTickers.length, OFFICIAL_SAMPLE), tickers: yahooTickers },
+      xbrl: { n: xbrlTickers.length, total: OFFICIAL_SAMPLE, pct: pct(xbrlTickers.length, OFFICIAL_SAMPLE), tickers: xbrlTickers },
+      both: { n: bothTickers.length, total: OFFICIAL_SAMPLE, pct: pct(bothTickers.length, OFFICIAL_SAMPLE), tickers: bothTickers },
+      neither: { n: neitherTickers.length, total: OFFICIAL_SAMPLE, pct: pct(neitherTickers.length, OFFICIAL_SAMPLE), tickers: neitherTickers }
+    };
+  });
+}
+
+function coverageCell(row, nKey = 'n', totalKey = 'total', pctKey = 'pct') {
+  return `${row[pctKey].toFixed(1)} % (${row[nKey]}/${row[totalKey]})`;
+}
+
+function buildMarkdownM2Xbrl(report) {
+  const lines = [
+    `# Small-Cap-Coverage-Probe - Messlauf 2b XBRL (${report.runDate})`,
+    '',
+    'Reine SEC/XBRL-Messung mit Zahlen, Tabellen und Fehlgruenden.',
+    '',
+    '## Stichprobe und Messdefinition',
+    '',
+    `- Bindende Stichprobe: ${report.sample.actual} Operating Companies aus \`${report.sample.source}\`; keine neue Ziehung.`,
+    '- Yahoo-Coverage und Yahoo-Firmenwerte wurden ausschliesslich aus dieser JSON-Datei gelesen; im XBRL-Modus gab es keine Yahoo-Requests.',
+    '- Die acht Achsen, us-gaap-Konzepte und Coverage-Praedikate stammen unveraendert aus dem bestehenden XBRL-Codepfad dieses Skripts.',
+    '',
+    '## CIK-Mapping-Bilanz',
+    '',
+    '| Kennzahl | Anzahl |',
+    '|---|---:|',
+    `| Ticker gesamt | ${report.cikMapping.total} |`,
+    `| Mit CIK | ${report.cikMapping.withCik} |`,
+    `| Ohne CIK | ${report.cikMapping.withoutCik} |`,
+    '',
+    '### Ticker ohne CIK',
+    '',
+    '| Ticker | Name |',
+    '|---|---|'
+  ];
+  if (!report.cikMapping.missing.length) lines.push('| - | Keine |');
+  else report.cikMapping.missing.forEach(row => lines.push(`| ${mdEscape(row.ticker)} | ${mdEscape(row.name)} |`));
+
+  lines.push('', '## XBRL-Coverage je Achse', '',
+    'Der erste Nenner ist immer 100; ein fehlender CIK oder fehlgeschlagener companyfacts-Abruf zaehlt als nicht abgedeckt. Der zweite Nenner umfasst nur Firmen mit CIK.', '',
+    '| Achse | XBRL / 100 | XBRL / nur CIK vorhanden |',
+    '|---|---:|---:|');
+  report.coverageXbrl.forEach(row => lines.push(`| ${row.id} | ${coverageCell(row)} | ${coverageCell(row, 'cikN', 'cikTotal', 'cikPct')} |`));
+
+  lines.push('', '## Vergleich Yahoo und XBRL', '',
+    'Alle vier Spalten verwenden den Nenner 100. Yahoo und XBRL sind jeweilige Quellen-Coverage; beide und keine sind deren Schnittmenge beziehungsweise gemeinsame Abwesenheit.', '',
+    '| Achse | Yahoo | XBRL | beide | keine |',
+    '|---|---:|---:|---:|---:|');
+  report.comparison.forEach(row => lines.push(`| ${row.id} | ${coverageCell(row.yahoo)} | ${coverageCell(row.xbrl)} | ${coverageCell(row.both)} | ${coverageCell(row.neither)} |`));
+
+  lines.push('', '## Achse-Konzept-Zuordnung', '',
+    '| Achse | Mindestfelder fuer Coverage | XBRL-Konzepte |',
+    '|---|---|---|');
+  report.axisDefinitions.forEach(axis => {
+    const mappings = axis.fields.map(field => `${field.key}: ${field.xbrl.join(', ')}`).join('; ');
+    lines.push(`| ${axis.id} | ${mdEscape(axis.requiredForCoverage)} | ${mdEscape(mappings)} |`);
+  });
+
+  lines.push('', '## Abrufstatistik', '',
+    `- Requests gesamt: ${report.retrieval.requestsTotal} (company_tickers: ${report.retrieval.requestsByKind.companyTickers || 0}; companyfacts: ${report.retrieval.requestsByKind.companyFacts || 0}).`,
+    `- companyfacts erfolgreich: ${report.retrieval.companyFactsSuccess}; fehlgeschlagen: ${report.retrieval.companyFactsFailed}; wegen fehlendem CIK nicht angefragt: ${report.retrieval.companyFactsSkippedNoCik}.`,
+    `- Laufzeit: ${(report.retrieval.durationMs / 1000).toFixed(1)} Sekunden.`,
+    `- SEC-Drosselung: mindestens ${report.network.secDelayMs} ms zwischen Requests.`,
+    '- Der SEC-User-Agent kam zur Laufzeit aus `process.env.SEC_CONTACT`; sein Wert wurde nicht protokolliert.',
+    '',
+    '| Fehler-Typ | Anzahl |',
+    '|---|---:|');
+  const errors = Object.entries(report.retrieval.errorsByType).sort((a, b) => a[0].localeCompare(b[0]));
+  if (!errors.length) lines.push('| keine | 0 |');
+  else errors.forEach(([type, n]) => lines.push(`| ${mdEscape(type)} | ${n} |`));
+
+  lines.push('', '## Firmen-Rohbilanz', '',
+    '| Ticker | Name | CIK | Abruf | Abgedeckte XBRL-Achsen | Nicht abgedeckte XBRL-Achsen |',
+    '|---|---|---|---|---|---|');
+  report.companies.forEach(company => {
+    const covered = AXES.filter(axis => company.axes.xbrl[axis.id]).map(axis => axis.id);
+    const missing = AXES.filter(axis => !company.axes.xbrl[axis.id]).map(axis => axis.id);
+    lines.push(`| ${mdEscape(company.ticker)} | ${mdEscape(company.name)} | ${company.cik || '-'} | ${mdEscape(company.fetch.status)} | ${mdEscape(covered.join(', ') || '-')} | ${mdEscape(missing.join(', ') || '-')} |`);
+  });
+  lines.push('');
+  return lines.join('\n');
+}
+
+async function mainXbrl() {
+  const args = parseArgs(process.argv);
+  const secContact = String(process.env.SEC_CONTACT || '').trim();
+  if (!secContact) {
+    throw new Error('SEC_CONTACT fehlt: --xbrl wurde ohne den erforderlichen SEC-User-Agent abgebrochen; es wurde kein SEC-Request gesendet.');
+  }
+  if (/\r|\n/.test(secContact)) throw new Error('SEC_CONTACT enthaelt einen unzulaessigen Zeilenumbruch.');
+  if (args.sample !== OFFICIAL_SAMPLE) throw new Error(`--xbrl verwendet exakt die bindende ${OFFICIAL_SAMPLE}er-Stichprobe; --sample ist hier nicht zulaessig.`);
+
+  const source = readJson(REPORT_M2_JSON);
+  const sourceCompanies = source && source.companies;
+  if (!source || source.sample && source.sample.actual !== OFFICIAL_SAMPLE || !Array.isArray(sourceCompanies) || sourceCompanies.length !== OFFICIAL_SAMPLE) {
+    throw new Error(`Bindende Messlauf-2-Stichprobe fehlt oder enthaelt nicht exakt ${OFFICIAL_SAMPLE} Firmen: ${path.relative(ROOT, REPORT_M2_JSON)}`);
+  }
+  const sourceTickers = sourceCompanies.map(company => String(company.ticker || '').trim().toUpperCase());
+  if (sourceTickers.some(ticker => !ticker) || new Set(sourceTickers).size !== OFFICIAL_SAMPLE) {
+    throw new Error('Bindende Messlauf-2-Stichprobe enthaelt leere oder doppelte Ticker.');
+  }
+
+  const startedAt = Date.now();
+  const retrieval = {
+    requestsTotal: 0,
+    requestsByKind: { companyTickers: 0, companyFacts: 0 },
+    companyFactsSuccess: 0,
+    companyFactsFailed: 0,
+    companyFactsSkippedNoCik: 0,
+    errorsByType: {}
+  };
+  console.log(`[xbrl] bindende Stichprobe=${sourceCompanies.length}; SEC-Drossel=${SEC_DELAY_MS}ms; Yahoo-Requests=0`);
+  const tickerResult = await fetchSecJsonStrict(SEC_TICKERS_URL, secContact, retrieval, 'companyTickers');
+  if (!tickerResult.ok) {
+    throw new Error(`SEC company_tickers.json nicht abrufbar (${tickerResult.error.type}): ${tickerResult.error.message}`);
+  }
+  const tickerMap = buildTickerCikMap(tickerResult.data);
+  const companies = [];
+
+  for (let i = 0; i < sourceCompanies.length; i++) {
+    const sourceCompany = sourceCompanies[i];
+    const ticker = sourceTickers[i];
+    const mapping = tickerMap.get(ticker) || null;
+    let data = emptyData();
+    let fetchStatus = 'not-requested-no-cik';
+    let fetchError = null;
+    let entityName = null;
+    if (!mapping) {
+      retrieval.companyFactsSkippedNoCik++;
+    } else {
+      const url = `https://data.sec.gov/api/xbrl/companyfacts/CIK${mapping.cik}.json`;
+      const factsResult = await fetchSecJsonStrict(url, secContact, retrieval, 'companyFacts');
+      if (factsResult.ok) {
+        data = secDataFromCompanyFacts(factsResult.data);
+        entityName = factsResult.data && factsResult.data.entityName || null;
+        fetchStatus = 'ok';
+        retrieval.companyFactsSuccess++;
+      } else {
+        fetchStatus = 'error';
+        fetchError = factsResult.error;
+        retrieval.companyFactsFailed++;
+      }
+    }
+    const axesXbrl = axisSummary(data);
+    const axisMissingReasons = {};
+    for (const axis of AXES) {
+      if (axesXbrl[axis.id]) continue;
+      axisMissingReasons[axis.id] = !mapping
+        ? 'CIK fehlt'
+        : fetchError
+          ? `companyfacts-Abruf fehlgeschlagen: ${fetchError.type}`
+          : xbrlAxisMissingReason(data, axis.id);
+    }
+    companies.push({
+      ticker,
+      name: sourceCompany.name,
+      cik: mapping && mapping.cik,
+      secTickerName: mapping && mapping.secName,
+      companyFactsEntityName: entityName,
+      axes: {
+        yahoo: Object.fromEntries(AXES.map(axis => [axis.id, Boolean(sourceCompany.axes && sourceCompany.axes.yahoo && sourceCompany.axes.yahoo[axis.id])])),
+        xbrl: axesXbrl
+      },
+      fields: { xbrl: fieldSummary(data) },
+      axisMissingReasons,
+      fetch: { status: fetchStatus, error: fetchError }
+    });
+    if ((i + 1) % 10 === 0 || i + 1 === sourceCompanies.length) {
+      console.log(`[xbrl-progress] ${i + 1}/${sourceCompanies.length}; mit-CIK=${companies.filter(company => company.cik).length}; companyfacts-ok=${retrieval.companyFactsSuccess}; fehler=${retrieval.companyFactsFailed}`);
+    }
+  }
+
+  retrieval.durationMs = Date.now() - startedAt;
+  const missingCik = companies.filter(company => !company.cik).map(company => ({ ticker: company.ticker, name: company.name }));
+  const cikN = companies.length - missingCik.length;
+  const report = {
+    schemaVersion: 1,
+    measurementRun: '2b-xbrl',
+    probeDate: PROBE_DATE,
+    runDate: XBRL_RUN_DATE,
+    generatedAt: new Date().toISOString(),
+    measurementOnly: true,
+    sample: {
+      source: path.relative(ROOT, REPORT_M2_JSON).replace(/\\/g, '/'),
+      expected: OFFICIAL_SAMPLE,
+      actual: companies.length,
+      newDraw: false
+    },
+    network: {
+      allowedHosts: ['*.sec.gov'],
+      yahooRequests: 0,
+      secDelayMs: SEC_DELAY_MS,
+      secUserAgentSource: 'process.env.SEC_CONTACT',
+      secUserAgentValueRecorded: false
+    },
+    cikMapping: {
+      total: companies.length,
+      withCik: cikN,
+      withoutCik: missingCik.length,
+      missing: missingCik
+    },
+    axisDefinitions: reportAxisDefinitions(),
+    coverageXbrl: xbrlCoverage(companies, cikN),
+    comparison: xbrlComparison(companies),
+    retrieval,
+    companies
+  };
+
+  fs.writeFileSync(REPORT_M2_XBRL_JSON, JSON.stringify(report, null, 2) + '\n');
+  fs.writeFileSync(REPORT_M2_XBRL_MD, buildMarkdownM2Xbrl(report) + '\n');
+  report.coverageXbrl.forEach(row => console.log(`[xbrl-coverage] ${row.id}: ${row.n}/${row.total} (${row.pct.toFixed(1)}%); mit-CIK ${row.cikN}/${row.cikTotal} (${row.cikPct.toFixed(1)}%)`));
+  console.log(`[cik-bilanz] gesamt=${companies.length} mit-CIK=${cikN} ohne-CIK=${missingCik.length}`);
+  console.log(`[abruf] requests=${retrieval.requestsTotal} companyfacts-ok=${retrieval.companyFactsSuccess} fehler=${retrieval.companyFactsFailed} laufzeit=${(retrieval.durationMs / 1000).toFixed(1)}s`);
+  console.log(`[report] ${path.relative(ROOT, REPORT_M2_XBRL_JSON)}`);
+  console.log(`[report] ${path.relative(ROOT, REPORT_M2_XBRL_MD)}`);
+  console.log(`[done] ${companies.length}/${OFFICIAL_SAMPLE} Firmen aus der bindenden Stichprobe XBRL-seitig gemessen; Yahoo-Requests=0`);
+}
+
 async function mainMesslauf1() {
   const args = parseArgs(process.argv);
   console.log(`[probe] sample=${args.sample}, seed=${SEED}`);
@@ -1325,7 +1678,8 @@ async function mainMesslauf1() {
   console.log(`[done] ${companies.length}/${args.sample} Firmen gemessen`);
 }
 
-mainMesslauf2().catch(error => {
+const selectedMain = process.argv.includes('--xbrl') ? mainXbrl : mainMesslauf2;
+selectedMain().catch(error => {
   console.error(`[fatal] ${error.stack || error.message || error}`);
   process.exitCode = 1;
 });
