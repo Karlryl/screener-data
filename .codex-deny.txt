@@ -1,0 +1,14 @@
+# Maschinenlesbare Schutzliste fuer codex-delegieren — das Gate liest die HEAD-Version.
+# Treffer (Substring-Match auf geaenderte/neue/geloeschte Pfade) = automatisches Rot.
+# Aenderungen an dieser Datei nur durch Claude nach Karls Regeln. Fuer den
+# Masterplan-Codex ist diese Datei TABU (AGENTS.md).
+.codex-deny.txt
+picks-history/
+methods-history/
+board-history/
+score-history/
+r40rx-history/
+methods/
+tests/scoring/
+.github/
+earnings-calendar.json

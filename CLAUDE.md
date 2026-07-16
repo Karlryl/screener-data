@@ -54,3 +54,9 @@ Sektor-Dossiers (evidence-graded, englisch, zitiert) liegen im **Obsidian-Vault*
 ## Fallen
 - **`GitHub\screener-data-fix`** = eingefrorene Kopie/Ex-Worktree (18.05.2026) — **nicht anfassen**.
 - **`GitHub\docGPT`** = totes Fremd-Repo (zum Löschen markiert) — nie als Workspace nutzen.
+
+
+## Zwei-Motoren-Betrieb (Codex) — Anker (2026-07-16)
+
+- **Delegations-Default:** Fix-Loops mit vielen Iterationen, Chart-/Render-Iterationen und Bulk-Mechanik gehen an Codex (Skill `codex-delegieren`) — Selbermachen ist dort die begründungspflichtige Ausnahme (1 Log-Zeile). NIE delegieren: Scoring/Gauntlet/Methodik/Architektur — das schlägt auch einen „codex:"-Zwang von Karl (in 1 Zeile erklären, selbst machen).
+- **Vor jeder Schreibarbeit:** Delegations-Lock prüfen (`%USERPROFILE%\.codex\delegation-locks\<repo>.lock.json`). Aktiv/pending → nicht ins Repo schreiben; Krisenpfad steht im Skill. Commits `WIP (Codex, ungereviewt)` zuerst reviewen (`git reset --soft HEAD~1`, dann richtig committen).

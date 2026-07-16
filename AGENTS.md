@@ -28,6 +28,10 @@ außerhalb des Auftrags anfassen.
 
 Du hast keinen Zugriff auf Claudes Skills/Memory — dieser Abschnitt ersetzt sie.
 
+**0. Vorbedingung:** `git status` muss sauber sein — wenn nicht: anhalten und
+melden, nie über fremde Änderungen hinweg arbeiten oder committen.
+Die Datei `.codex-deny.txt` ist **TABU** (nie ändern).
+
 **1. Lesen (Pflicht, in dieser Reihenfolge):**
 - `..\Jarvis\Knowledge\Trading\growth-screener\_MASTERPLAN-screener-findash.md`
   (relativ zu diesem Repo: `..\..\GitHub\Jarvis\...` — absoluter Pfad:
@@ -61,3 +65,14 @@ Du hast keinen Zugriff auf Claudes Skills/Memory — dieser Abschnitt ersetzt si
 
 **Nie:** Force-Push, Löschen, Schutzlisten-Dateien anfassen, kostenpflichtige
 API-Calls, neue Dependencies ohne Karls OK.
+
+## Delegationsmodus (Auftrag kommt von Claude via `codex exec`)
+
+Erkennbar am Brief (ZIEL / ZIEL-DATEIEN / VERBOTEN / FERTIG-WENN / MELDEFORMAT):
+1. Der Brief ist bindend — **nichts** außerhalb der ZIEL-DATEIEN anfassen
+   (jede fremde Datei im Diff schlägt im Gate automatisch Rot).
+2. **NIE committen oder pushen** — Review und Commit macht Claude.
+3. Tests nie abschwächen (kein skip/only/todo, keine gelockerten Assertions,
+   keine gelöschten Testfälle) — rote Tests werden im Code gefixt.
+4. Schlussnachricht exakt im MELDEFORMAT des Briefs.
+Bei Widerspruch gilt: Brief > diese Datei > Bequemlichkeit.
