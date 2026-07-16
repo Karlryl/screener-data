@@ -3,6 +3,7 @@
   "boards": {
     "consumer-discretionary": {
       "dailyP99Samples": [
+        1,
         1
       ],
       "threshold": null,
@@ -10,13 +11,15 @@
     },
     "consumer-staples": {
       "dailyP99Samples": [
-        0
+        0,
+        0.5
       ],
       "threshold": null,
       "frozen": false
     },
     "energy": {
       "dailyP99Samples": [
+        0,
         0
       ],
       "threshold": null,
@@ -24,27 +27,31 @@
     },
     "financials": {
       "dailyP99Samples": [
-        0
+        0,
+        1.5
       ],
       "threshold": null,
       "frozen": false
     },
     "health-care": {
       "dailyP99Samples": [
-        0.5
+        0.5,
+        0.30000000000000426
       ],
       "threshold": null,
       "frozen": false
     },
     "industrials": {
       "dailyP99Samples": [
-        0.6000000000000014
+        0.6000000000000014,
+        0.10000000000000853
       ],
       "threshold": null,
       "frozen": false
     },
     "it-services": {
       "dailyP99Samples": [
+        0,
         0
       ],
       "threshold": null,
@@ -52,28 +59,32 @@
     },
     "materials": {
       "dailyP99Samples": [
-        0.30000000000000426
+        0.30000000000000426,
+        0.20000000000000284
       ],
       "threshold": null,
       "frozen": false
     },
     "real-estate": {
       "dailyP99Samples": [
-        0.30000000000000426
+        0.30000000000000426,
+        2.9000000000000057
       ],
       "threshold": null,
       "frozen": false
     },
     "semiconductors": {
       "dailyP99Samples": [
-        2.6999999999999993
+        2.6999999999999993,
+        0
       ],
       "threshold": null,
       "frozen": false
     },
     "software-comm-services": {
       "dailyP99Samples": [
-        0.29999999999999716
+        0.29999999999999716,
+        0.5
       ],
       "threshold": null,
       "frozen": false
@@ -85,13 +96,15 @@
     },
     "tech-hardware": {
       "dailyP99Samples": [
-        1.7000000000000028
+        1.7000000000000028,
+        0
       ],
       "threshold": null,
       "frozen": false
     },
     "utilities": {
       "dailyP99Samples": [
+        0.6000000000000014,
         0.6000000000000014
       ],
       "threshold": null,
