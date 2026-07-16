@@ -120,6 +120,13 @@ test('evaluate: bekanntes Signal wird wiedergefunden, Exclude greift, Null-Board
       }));
     }
   }
+  // Sidecars wie im echten Vintage-Ordner (write-board-history legt calibration.json
+  // + regime.json neben die Boards) — der Auswerter darf daran nie crashen und sie
+  // nie als Pseudo-Boards zählen (Live-Crash 16.07., rank-ic.js:300).
+  const d0 = addDays(t0, 0);
+  fs.writeFileSync(path.join(hist, d0, 'calibration.json'), JSON.stringify({ generated_at: d0, schema: 'v4', winsorBounds: {} }));
+  fs.writeFileSync(path.join(hist, d0, 'regime.json'), JSON.stringify({ date: d0, label: 'neutral', source: 'test' }));
+
   // Exclude: ein zusätzliches, absichtlich kaputtes Vintage wird exkludiert.
   const badDate = addDays(t0, V * SPACING);
   fs.mkdirSync(path.join(hist, badDate), { recursive: true });
@@ -128,6 +135,8 @@ test('evaluate: bekanntes Signal wird wiedergefunden, Exclude greift, Null-Board
 
   const rep = ric.evaluate(hist, priceIndex, { B: 300 });
   assert.deepEqual(rep.vintagesExcluded, [badDate], 'Exclude ausgewiesen');
+  assert.deepEqual(Object.keys(rep.boards).sort(), ['null-board', 'sig-board'],
+    'Sidecars (calibration/regime) sind keine Boards');
   const sig84 = rep.boards['sig-board'].horizons[84];
   const nul84 = rep.boards['null-board'].horizons[84];
   // 10 Vintages à 28d -> disjunkte 84d-Punkte = ceil(10/3) = 4 -> N_eff<8 -> KEIN Urteil (§3d) …

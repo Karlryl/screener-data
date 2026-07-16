@@ -180,10 +180,14 @@ function loadVintage(historyDir, date, board) {
   })();
 }
 function boardsOf(historyDir, date) {
+  // Board = Datei mit cohort-Objekt. Der Vintage-Ordner trägt auch Sidecars
+  // (calibration.json, regime.json — write-board-history legt sie daneben);
+  // namensbasiertes Filtern bricht beim nächsten Sidecar wieder, also inhaltsbasiert.
   try {
     return fs.readdirSync(path.join(historyDir, date))
       .filter((f) => f.endsWith('.json') && !f.startsWith('_'))
-      .map((f) => f.replace(/\.json$/, ''));
+      .map((f) => f.replace(/\.json$/, ''))
+      .filter((b) => { const v = loadVintage(historyDir, date, b); return !!(v && v.cohort); });
   } catch (_) { return []; }
 }
 // §1: disjunkte Entscheidungspunkte — erstes Vintage, dann jeweils das erste
@@ -296,7 +300,7 @@ function evaluate(historyDir, priceIndex, opts = {}) {
       const points = [], pointsResid = [], detail = [];
       for (const d of decisions) {
         const v = loadVintage(historyDir, d, board);
-        if (!v) continue;
+        if (!v || !v.cohort) continue; // Sidecar/korrupte Datei zählt nie als Board-Vintage
         const rows = (v.cohort.profitable || []).concat(v.cohort.unprofitable || []);
         const w = windowReturns(priceIndex, rows, d, horizon);
         const ic = windowIC(w.used);
