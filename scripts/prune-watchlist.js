@@ -74,11 +74,19 @@ function isInvalidSymbol(ticker) {
   return null;
 }
 
+// audit T2 (silent data loss): a snapshot file that EXISTS but fails to parse
+// (e.g. OneDrive post-write corruption) must never be treated the same as
+// "no snapshot ever pulled" — the caller in main() prunes the latter after
+// pruneNoDataDays. Return a distinguishable sentinel + warn, so a corrupt
+// (but present) snapshot can never cause a silent eviction.
 function loadSnapshot(snapshotsDir, ticker) {
   const fp = path.join(snapshotsDir, safeSnapshotFilename(ticker));
   if (!fs.existsSync(fp)) return null;
   try { return JSON.parse(fs.readFileSync(fp, 'utf8')); }
-  catch (e) { return null; }
+  catch (e) {
+    console.warn('[prune-watchlist] snapshot for ' + ticker + ' exists but failed to parse: ' + e.message + ' — NOT treating as no-data');
+    return { __corrupt: true };
+  }
 }
 
 // F-DP-023: Returns a specific reason string rather than a boolean, so callers can use
@@ -167,6 +175,13 @@ function main() {
     }
 
     const snap = loadSnapshot(args.snapshots, entry.ticker);
+
+    // audit T2: snapshot exists on disk but failed to parse — never evict. A
+    // corrupt file is not the same signal as "never pulled"; keep and move on.
+    if (snap && snap.__corrupt) {
+      kept.push(entry);
+      continue;
+    }
 
     // F-DP-022: prune tickers with no snapshot that have been in the watchlist too long
     if (!snap) {
