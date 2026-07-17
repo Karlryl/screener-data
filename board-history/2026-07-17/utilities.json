@@ -3,7 +3,7 @@
   "board": "utilities",
   "boardStatus": "core",
   "formulaVersion": "calibration/v4",
-  "calibrationGeneratedAt": "2026-07-17T06:54:05.042Z",
+  "calibrationGeneratedAt": "2026-07-17T22:03:27.862Z",
   "cohortCount": {
     "profitable": 118,
     "unprofitable": 2
@@ -20,9 +20,9 @@
     "revenueQEnds-missing"
   ],
   "gate": {
-    "calibrating": true,
+    "calibrating": false,
     "p99Delta": 0,
-    "threshold": null,
+    "threshold": 1.2000000000000028,
     "suspect": false,
     "reasons": [],
     "priorDate": "2026-07-16",
@@ -101,7 +101,9 @@
             1352000000,
             859000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.8660705,
+          "priceSalesAsOf": "2026-07-08T06:24:00.381Z"
         }
       },
       {
@@ -175,7 +177,9 @@
             94000000,
             191000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 5.4154873,
+          "priceSalesAsOf": "2026-07-08T06:57:24.380Z"
         }
       },
       {
@@ -252,7 +256,9 @@
             34939483.92,
             24663165.12
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.129328,
+          "priceSalesAsOf": "2026-07-08T06:33:08.041Z"
         }
       },
       {
@@ -327,7 +333,9 @@
             86271000,
             83120000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 21.467667,
+          "priceSalesAsOf": "2026-07-08T06:15:27.793Z"
         }
       },
       {
@@ -385,12 +393,14 @@
         "pit": {
           "beta": 0.561,
           "evSales": 5.325,
-          "priceGrossProfit": 1.8388219546336886,
-          "fetchedAt": "2026-07-17T05:56:54.166Z",
+          "priceGrossProfit": 1.8629475302526612,
+          "fetchedAt": "2026-07-17T21:20:42.061Z",
           "revenueQ": [],
           "revenueQEnds": [],
           "grossProfitQ": [],
-          "grossProfitQEnds": []
+          "grossProfitQEnds": [],
+          "priceSales": 1.8066492,
+          "priceSalesAsOf": "2026-07-17T21:20:42.061Z"
         }
       },
       {
@@ -462,7 +472,9 @@
             1125000000,
             1117000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.185689,
+          "priceSalesAsOf": "2026-07-08T05:58:29.283Z"
         }
       },
       {
@@ -519,12 +531,14 @@
         "pit": {
           "beta": 0.579,
           "evSales": 7.542,
-          "priceGrossProfit": 3.8926641906153594,
-          "fetchedAt": "2026-07-17T05:55:55.998Z",
+          "priceGrossProfit": 3.961815737132652,
+          "fetchedAt": "2026-07-17T21:20:35.539Z",
           "revenueQ": [],
           "revenueQEnds": [],
           "grossProfitQ": [],
-          "grossProfitQEnds": []
+          "grossProfitQEnds": [],
+          "priceSales": 3.9041317,
+          "priceSalesAsOf": "2026-07-17T21:20:35.539Z"
         }
       },
       {
@@ -596,7 +610,9 @@
             40141281.55125384,
             61649550.38097305
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.0017847897,
+          "priceSalesAsOf": "2026-07-10T13:36:02.101Z"
         }
       },
       {
@@ -668,7 +684,9 @@
             1543000000,
             793000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.7004075,
+          "priceSalesAsOf": "2026-07-08T06:12:06.281Z"
         }
       },
       {
@@ -742,7 +760,9 @@
             56895000,
             72927000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 5.8127003,
+          "priceSalesAsOf": "2026-07-08T06:31:14.043Z"
         }
       },
       {
@@ -817,7 +837,9 @@
             41700000,
             75800000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.6331121,
+          "priceSalesAsOf": "2026-07-08T06:57:12.176Z"
         }
       },
       {
@@ -873,13 +895,13 @@
           "beta": 0.234,
           "evSales": 1.998,
           "priceGrossProfit": 1.1800519480519482,
-          "fetchedAt": "2026-07-17T05:55:31.995Z",
+          "fetchedAt": "2026-07-17T21:19:34.022Z",
           "revenueQ": [
-            2491539498.5643997,
-            2090585168.1678,
-            1960544601.5162,
-            1999050058.3516,
-            2041235320.5665998
+            2486276647.72868,
+            2086169248.65066,
+            1956403365.2241402,
+            1994827487.41652,
+            2036923642.17702
           ],
           "revenueQEnds": [
             "2026-03-31",
@@ -889,11 +911,11 @@
             "2025-03-31"
           ],
           "grossProfitQ": [
-            1485399287.1385999,
-            4405037707.9402,
-            800120895.5397999,
-            957176690.4679999,
-            945988702.236
+            1482261694.94542,
+            4395732996.37694,
+            798430809.17906,
+            955154856.9196,
+            943990500.9492
           ],
           "grossProfitQEnds": [
             "2026-03-31",
@@ -901,7 +923,9 @@
             "2025-09-30",
             "2025-06-30",
             "2025-03-31"
-          ]
+          ],
+          "priceSales": 0.5542704,
+          "priceSalesAsOf": "2026-07-17T21:19:34.022Z"
         }
       },
       {
@@ -971,7 +995,9 @@
             59099000,
             81500000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.1633008,
+          "priceSalesAsOf": "2026-07-10T13:47:57.200Z"
         }
       },
       {
@@ -1045,7 +1071,9 @@
             1920000000,
             2060000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.5197637,
+          "priceSalesAsOf": "2026-07-08T06:13:09.790Z"
         }
       },
       {
@@ -1118,7 +1146,9 @@
             67801000,
             20328000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.84979117,
+          "priceSalesAsOf": "2026-07-08T05:39:10.023Z"
         }
       },
       {
@@ -1192,7 +1222,9 @@
             81900000,
             119000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.031808,
+          "priceSalesAsOf": "2026-07-08T06:10:30.044Z"
         }
       },
       {
@@ -1265,7 +1297,9 @@
             404717815.44748,
             445584515.39692
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.3152647,
+          "priceSalesAsOf": "2026-07-08T06:13:16.044Z"
         }
       },
       {
@@ -1322,15 +1356,15 @@
         "pit": {
           "beta": 0.614,
           "evSales": 7.901,
-          "priceGrossProfit": 6.088824401636002,
-          "fetchedAt": "2026-07-17T05:55:23.024Z",
+          "priceGrossProfit": 6.264347143792707,
+          "fetchedAt": "2026-07-17T21:20:12.237Z",
           "revenueQ": [
-            1131106218.0600002,
+            1131365158.59,
             null,
-            1130419797.7800002,
-            1101475742.64,
-            1031689680.84,
-            1143461783.1000001
+            1130678581.17,
+            1101727899.96,
+            1031925862.26,
+            1143723552.15
           ],
           "revenueQEnds": [
             "2026-03-31",
@@ -1341,11 +1375,11 @@
             "2024-12-31"
           ],
           "grossProfitQ": [
-            1017503661.7200001,
-            1226404233.6000001,
-            997940683.7400001,
-            1027227949.0200001,
-            940166976.84,
+            1017736595.58,
+            1226684990.4,
+            998169139.11,
+            1027463109.03,
+            940382206.26,
             null
           ],
           "grossProfitQEnds": [
@@ -1355,7 +1389,9 @@
             "2025-06-30",
             "2025-03-31",
             "2024-12-31"
-          ]
+          ],
+          "priceSales": 5.0696735,
+          "priceSalesAsOf": "2026-07-17T21:20:12.237Z"
         }
       },
       {
@@ -1429,7 +1465,9 @@
             29000000,
             27000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.4820497,
+          "priceSalesAsOf": "2026-07-10T13:45:51.949Z"
         }
       },
       {
@@ -1492,7 +1530,9 @@
           "revenueQ": [],
           "revenueQEnds": null,
           "grossProfitQ": [],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.3809378,
+          "priceSalesAsOf": "2026-07-08T06:13:14.056Z"
         }
       },
       {
@@ -1568,7 +1608,9 @@
             249074273.944,
             167231225.784
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.016557444,
+          "priceSalesAsOf": "2026-07-08T06:01:11.922Z"
         }
       },
       {
@@ -1642,7 +1684,9 @@
             1004000000,
             1213000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.9378186,
+          "priceSalesAsOf": "2026-07-08T05:40:18.278Z"
         }
       },
       {
@@ -1714,7 +1758,9 @@
             261000000,
             176000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 5.3968096,
+          "priceSalesAsOf": "2026-07-10T13:38:31.223Z"
         }
       },
       {
@@ -1786,7 +1832,9 @@
             0,
             0
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 6.5830336,
+          "priceSalesAsOf": "2026-07-10T13:40:13.961Z"
         }
       },
       {
@@ -1859,7 +1907,9 @@
             425000000,
             457000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.3461211,
+          "priceSalesAsOf": "2026-07-08T06:26:54.313Z"
         }
       },
       {
@@ -1932,7 +1982,9 @@
             1434000000,
             1428000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.210935,
+          "priceSalesAsOf": "2026-07-08T05:33:11.611Z"
         }
       },
       {
@@ -2006,7 +2058,9 @@
             714000000,
             1044000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.6970062,
+          "priceSalesAsOf": "2026-07-08T05:36:37.622Z"
         }
       },
       {
@@ -2080,7 +2134,9 @@
             2259000000,
             2528000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.8248979,
+          "priceSalesAsOf": "2026-07-08T06:16:25.789Z"
         }
       },
       {
@@ -2154,7 +2210,9 @@
             2370543000,
             3630949000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.0176182,
+          "priceSalesAsOf": "2026-07-08T06:28:05.421Z"
         }
       },
       {
@@ -2227,7 +2285,9 @@
             120017000,
             114378000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 4.79947,
+          "priceSalesAsOf": "2026-07-08T06:18:38.165Z"
         }
       },
       {
@@ -2302,7 +2362,9 @@
             2328000000,
             2442000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.4645693,
+          "priceSalesAsOf": "2026-07-08T06:45:17.511Z"
         }
       },
       {
@@ -2376,7 +2438,9 @@
             68508000,
             86500000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 4.1786485,
+          "priceSalesAsOf": "2026-07-08T06:25:32.051Z"
         }
       },
       {
@@ -2449,7 +2513,9 @@
             726605483.06844,
             682305122.92568
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.50614464,
+          "priceSalesAsOf": "2026-07-08T06:52:05.424Z"
         }
       },
       {
@@ -2521,7 +2587,9 @@
             0,
             0
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.496189,
+          "priceSalesAsOf": "2026-07-08T06:01:02.043Z"
         }
       },
       {
@@ -2595,7 +2663,9 @@
             403200000,
             479700000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.7042248,
+          "priceSalesAsOf": "2026-07-08T06:03:52.047Z"
         }
       },
       {
@@ -2669,7 +2739,9 @@
             842800000,
             1375800000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.8009076,
+          "priceSalesAsOf": "2026-07-08T06:45:57.788Z"
         }
       },
       {
@@ -2743,7 +2815,9 @@
             309662000,
             461161000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 4.3421354,
+          "priceSalesAsOf": "2026-07-08T06:57:18.286Z"
         }
       },
       {
@@ -2817,7 +2891,9 @@
             831000000,
             1113000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.9400804,
+          "priceSalesAsOf": "2026-07-08T06:00:35.958Z"
         }
       },
       {
@@ -2891,7 +2967,9 @@
             3154800000,
             3291000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.335745,
+          "priceSalesAsOf": "2026-07-08T05:29:17.960Z"
         }
       },
       {
@@ -2965,7 +3043,9 @@
             3817000000,
             4277000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.0551004,
+          "priceSalesAsOf": "2026-07-08T06:26:45.587Z"
         }
       },
       {
@@ -3039,7 +3119,9 @@
             625000000,
             1107900000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.3374724,
+          "priceSalesAsOf": "2026-07-08T05:57:42.468Z"
         }
       },
       {
@@ -3113,7 +3195,9 @@
             1562394000,
             1450898000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 4.044955,
+          "priceSalesAsOf": "2026-07-08T06:27:33.515Z"
         }
       },
       {
@@ -3183,7 +3267,9 @@
             0,
             0
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.69869334,
+          "priceSalesAsOf": "2026-07-10T13:31:41.147Z"
         }
       },
       {
@@ -3257,7 +3343,9 @@
             595138000,
             352100000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.4118602,
+          "priceSalesAsOf": "2026-07-08T06:46:20.642Z"
         }
       },
       {
@@ -3331,7 +3419,9 @@
             26257000,
             23192000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 5.221363,
+          "priceSalesAsOf": "2026-07-08T05:55:03.954Z"
         }
       },
       {
@@ -3405,7 +3495,9 @@
             3490000000,
             3741000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.6346354,
+          "priceSalesAsOf": "2026-07-08T06:05:11.288Z"
         }
       },
       {
@@ -3480,7 +3572,9 @@
             1806000000,
             1781000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.4862713,
+          "priceSalesAsOf": "2026-07-08T06:26:37.515Z"
         }
       },
       {
@@ -3555,7 +3649,9 @@
             568626241.8,
             960393516.1999999
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.8255155,
+          "priceSalesAsOf": "2026-07-08T05:40:49.926Z"
         }
       },
       {
@@ -3629,7 +3725,9 @@
             453000000,
             441000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.83497757,
+          "priceSalesAsOf": "2026-07-08T06:01:42.052Z"
         }
       },
       {
@@ -3704,7 +3802,9 @@
             2210000000,
             2845000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.9637703,
+          "priceSalesAsOf": "2026-07-08T05:41:55.290Z"
         }
       },
       {
@@ -3778,7 +3878,9 @@
             56372000,
             375729000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.6614137,
+          "priceSalesAsOf": "2026-07-08T06:44:30.375Z"
         }
       },
       {
@@ -3850,7 +3952,9 @@
             1825000000,
             2636000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.4188306,
+          "priceSalesAsOf": "2026-07-08T06:14:49.793Z"
         }
       },
       {
@@ -3922,7 +4026,9 @@
             1879485624709.2,
             -259999998.02608
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.19779588,
+          "priceSalesAsOf": "2026-07-08T06:22:20.641Z"
         }
       },
       {
@@ -3997,7 +4103,9 @@
             869813715.8,
             null
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 5.300333,
+          "priceSalesAsOf": "2026-07-10T13:56:21.043Z"
         }
       },
       {
@@ -4071,7 +4179,9 @@
             928000000,
             941000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.7061074,
+          "priceSalesAsOf": "2026-07-08T05:29:25.292Z"
         }
       },
       {
@@ -4136,7 +4246,9 @@
           "revenueQ": [],
           "revenueQEnds": null,
           "grossProfitQ": [],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.0798534,
+          "priceSalesAsOf": "2026-07-08T06:44:21.548Z"
         }
       },
       {
@@ -4210,7 +4322,9 @@
             8017812290.400001,
             13567413800.7012
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.17638,
+          "priceSalesAsOf": "2026-07-08T06:34:24.165Z"
         }
       },
       {
@@ -4286,7 +4400,9 @@
             1281888870.6,
             1106266735.6
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.4547734,
+          "priceSalesAsOf": "2026-07-08T05:57:33.922Z"
         }
       },
       {
@@ -4360,7 +4476,9 @@
             562834000,
             937973000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 6.072559,
+          "priceSalesAsOf": "2026-07-08T06:18:06.164Z"
         }
       },
       {
@@ -4434,7 +4552,9 @@
             205106000,
             271724000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.6510477,
+          "priceSalesAsOf": "2026-07-08T06:44:34.179Z"
         }
       },
       {
@@ -4506,7 +4626,9 @@
             4296000000,
             3909000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 6.6214566,
+          "priceSalesAsOf": "2026-07-08T05:55:55.159Z"
         }
       },
       {
@@ -4580,7 +4702,9 @@
             796000000,
             674000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 5.05816,
+          "priceSalesAsOf": "2026-07-08T05:32:56.275Z"
         }
       },
       {
@@ -4654,7 +4778,9 @@
             188100000,
             426200000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.8421291,
+          "priceSalesAsOf": "2026-07-08T06:40:05.783Z"
         }
       },
       {
@@ -4726,7 +4852,9 @@
             462000000,
             498000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 4.5394325,
+          "priceSalesAsOf": "2026-07-08T05:51:09.282Z"
         }
       },
       {
@@ -4798,7 +4926,9 @@
             1944810499.02456,
             2964429860.5344
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.00016443105,
+          "priceSalesAsOf": "2026-07-08T06:37:46.373Z"
         }
       },
       {
@@ -4873,7 +5003,9 @@
             736600000,
             690800000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.3299553,
+          "priceSalesAsOf": "2026-07-08T05:41:41.925Z"
         }
       },
       {
@@ -4931,7 +5063,9 @@
           "revenueQ": [],
           "revenueQEnds": null,
           "grossProfitQ": [],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.41412005,
+          "priceSalesAsOf": "2026-07-08T06:14:07.424Z"
         }
       },
       {
@@ -5005,7 +5139,9 @@
             308717000,
             289064000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.8625655,
+          "priceSalesAsOf": "2026-07-08T06:54:48.294Z"
         }
       },
       {
@@ -5079,7 +5215,9 @@
             1559000000,
             1685000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.4063735,
+          "priceSalesAsOf": "2026-07-08T06:12:01.166Z"
         }
       },
       {
@@ -5136,12 +5274,14 @@
         "pit": {
           "beta": 0.548,
           "evSales": 6.768,
-          "priceGrossProfit": 9.807698126022661,
-          "fetchedAt": "2026-07-17T05:55:15.059Z",
+          "priceGrossProfit": 10.090738168009633,
+          "fetchedAt": "2026-07-17T21:20:08.236Z",
           "revenueQ": [],
           "revenueQEnds": [],
           "grossProfitQ": [],
-          "grossProfitQEnds": []
+          "grossProfitQEnds": [],
+          "priceSales": 3.268491,
+          "priceSalesAsOf": "2026-07-17T21:20:08.236Z"
         }
       },
       {
@@ -5196,12 +5336,14 @@
         "pit": {
           "beta": 0.343,
           "evSales": 0.346,
-          "priceGrossProfit": 1.028120952601394,
-          "fetchedAt": "2026-07-17T05:56:58.867Z",
+          "priceGrossProfit": 1.0355905665715093,
+          "fetchedAt": "2026-07-17T21:21:03.257Z",
           "revenueQ": [],
           "revenueQEnds": [],
           "grossProfitQ": [],
-          "grossProfitQEnds": []
+          "grossProfitQEnds": [],
+          "priceSales": 0.40266868,
+          "priceSalesAsOf": "2026-07-17T21:21:03.257Z"
         }
       },
       {
@@ -5269,7 +5411,9 @@
             0,
             0
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.3607439,
+          "priceSalesAsOf": "2026-07-10T13:49:22.055Z"
         }
       },
       {
@@ -5343,7 +5487,9 @@
             927000000,
             1166000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.0915277,
+          "priceSalesAsOf": "2026-07-08T06:25:08.383Z"
         }
       },
       {
@@ -5413,7 +5559,9 @@
             1854304636.8000002,
             2233386619.2000003
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.9115399,
+          "priceSalesAsOf": "2026-07-08T05:40:43.919Z"
         }
       },
       {
@@ -5489,7 +5637,9 @@
             81234331.026,
             116819984.442
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.00039050504,
+          "priceSalesAsOf": "2026-07-08T06:13:00.076Z"
         }
       },
       {
@@ -5561,7 +5711,9 @@
             6856588266.000001,
             9893811378
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.2907834,
+          "priceSalesAsOf": "2026-07-08T06:28:09.586Z"
         }
       },
       {
@@ -5635,7 +5787,9 @@
             1480964519.54,
             1619826970.92
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.393154,
+          "priceSalesAsOf": "2026-07-08T06:31:20.381Z"
         }
       },
       {
@@ -5710,7 +5864,9 @@
             84343000,
             218205000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.6305343,
+          "priceSalesAsOf": "2026-07-08T06:45:38.374Z"
         }
       },
       {
@@ -5770,7 +5926,9 @@
           "revenueQ": [],
           "revenueQEnds": null,
           "grossProfitQ": [],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 161.56044,
+          "priceSalesAsOf": "2026-07-10T13:31:13.848Z"
         }
       },
       {
@@ -5842,7 +6000,9 @@
             194029458.8892,
             186485499.07680002
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.3647544,
+          "priceSalesAsOf": "2026-07-08T06:50:32.374Z"
         }
       },
       {
@@ -5916,7 +6076,9 @@
             170408000,
             136581000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.9425063,
+          "priceSalesAsOf": "2026-07-08T05:39:34.468Z"
         }
       },
       {
@@ -5986,7 +6148,9 @@
             160591000,
             345301000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.8510051,
+          "priceSalesAsOf": "2026-07-08T06:53:33.584Z"
         }
       },
       {
@@ -6058,7 +6222,9 @@
             563000000,
             574000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.3358253,
+          "priceSalesAsOf": "2026-07-10T13:34:37.175Z"
         }
       },
       {
@@ -6131,7 +6297,9 @@
             353400000,
             301900000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.0997233,
+          "priceSalesAsOf": "2026-07-08T06:45:12.166Z"
         }
       },
       {
@@ -6191,7 +6359,9 @@
           "revenueQ": [],
           "revenueQEnds": null,
           "grossProfitQ": [],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.277257,
+          "priceSalesAsOf": "2026-07-10T13:30:57.057Z"
         }
       },
       {
@@ -6263,7 +6433,9 @@
             0,
             0
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.9511197,
+          "priceSalesAsOf": "2026-07-10T13:41:13.864Z"
         }
       },
       {
@@ -6337,7 +6509,9 @@
             1566804065.7324002,
             2009910939.696
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.2064539,
+          "priceSalesAsOf": "2026-07-08T06:26:22.631Z"
         }
       },
       {
@@ -6411,7 +6585,9 @@
             167400000,
             291800000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.4398973,
+          "priceSalesAsOf": "2026-07-08T06:07:29.657Z"
         }
       },
       {
@@ -6470,12 +6646,14 @@
         "pit": {
           "beta": 0.59,
           "evSales": 3.797,
-          "priceGrossProfit": 7.763465642679853,
-          "fetchedAt": "2026-07-17T05:56:00.244Z",
+          "priceGrossProfit": 7.952038970718143,
+          "fetchedAt": "2026-07-17T21:20:49.270Z",
           "revenueQ": [],
           "revenueQEnds": [],
           "grossProfitQ": [],
-          "grossProfitQEnds": []
+          "grossProfitQEnds": [],
+          "priceSales": 2.9463098,
+          "priceSalesAsOf": "2026-07-17T21:20:49.270Z"
         }
       },
       {
@@ -6546,7 +6724,9 @@
             0,
             0
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.0363188,
+          "priceSalesAsOf": "2026-07-08T05:28:21.281Z"
         }
       },
       {
@@ -6606,7 +6786,9 @@
           "revenueQ": [],
           "revenueQEnds": null,
           "grossProfitQ": [],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.1987107,
+          "priceSalesAsOf": "2026-07-10T13:32:11.844Z"
         }
       },
       {
@@ -6668,7 +6850,9 @@
           "revenueQ": [],
           "revenueQEnds": null,
           "grossProfitQ": [],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 4.6762624,
+          "priceSalesAsOf": "2026-07-08T05:56:09.160Z"
         }
       },
       {
@@ -6741,7 +6925,9 @@
             557000000,
             1365000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.02754,
+          "priceSalesAsOf": "2026-07-08T06:10:38.270Z"
         }
       },
       {
@@ -6813,7 +6999,9 @@
             6047042707.200001,
             6240009138
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.6463414,
+          "priceSalesAsOf": "2026-07-08T05:40:47.609Z"
         }
       },
       {
@@ -6874,7 +7062,9 @@
           "revenueQ": [],
           "revenueQEnds": null,
           "grossProfitQ": [],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.8861046,
+          "priceSalesAsOf": "2026-07-10T13:31:13.459Z"
         }
       },
       {
@@ -6948,7 +7138,9 @@
             1402000000,
             1795000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 4.5617247,
+          "priceSalesAsOf": "2026-07-08T06:06:42.273Z"
         }
       },
       {
@@ -7022,7 +7214,9 @@
             174812000,
             287433000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.1022127,
+          "priceSalesAsOf": "2026-07-08T05:57:03.920Z"
         }
       },
       {
@@ -7096,7 +7290,9 @@
             107351000,
             202881000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.3999338,
+          "priceSalesAsOf": "2026-07-08T06:39:54.170Z"
         }
       },
       {
@@ -7170,7 +7366,9 @@
             281000000,
             361000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.7777826,
+          "priceSalesAsOf": "2026-07-08T05:32:05.162Z"
         }
       },
       {
@@ -7242,7 +7440,9 @@
             1409225851.44,
             1860470428.0800002
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.4634805,
+          "priceSalesAsOf": "2026-07-08T05:45:21.922Z"
         }
       },
       {
@@ -7316,7 +7516,9 @@
             1111000000,
             2024000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.89915514,
+          "priceSalesAsOf": "2026-07-08T06:42:39.506Z"
         }
       },
       {
@@ -7378,7 +7580,9 @@
           "revenueQ": [],
           "revenueQEnds": null,
           "grossProfitQ": [],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.66345817,
+          "priceSalesAsOf": "2026-07-08T06:13:42.170Z"
         }
       },
       {
@@ -7431,12 +7635,14 @@
         "pit": {
           "beta": 0.625,
           "evSales": 0.624,
-          "priceGrossProfit": 1.880550230016121,
-          "fetchedAt": "2026-07-17T05:56:28.168Z",
+          "priceGrossProfit": 1.8952804230723863,
+          "fetchedAt": "2026-07-17T21:21:02.441Z",
           "revenueQ": [],
           "revenueQEnds": [],
           "grossProfitQ": [],
-          "grossProfitQEnds": []
+          "grossProfitQEnds": [],
+          "priceSales": 0.48202667,
+          "priceSalesAsOf": "2026-07-17T21:21:02.441Z"
         }
       },
       {
@@ -7508,7 +7714,9 @@
             53747000,
             62420000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.7460284,
+          "priceSalesAsOf": "2026-07-08T06:32:59.443Z"
         }
       },
       {
@@ -7578,7 +7786,9 @@
             0,
             0
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.68721694,
+          "priceSalesAsOf": "2026-07-08T06:01:01.816Z"
         }
       },
       {
@@ -7652,7 +7862,9 @@
             101209000,
             55556000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 4.709827,
+          "priceSalesAsOf": "2026-07-08T05:48:20.277Z"
         }
       },
       {
@@ -7727,7 +7939,9 @@
             240000000,
             172000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.988228,
+          "priceSalesAsOf": "2026-07-10T13:58:41.851Z"
         }
       },
       {
@@ -7798,7 +8012,9 @@
             0,
             0
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.12079955,
+          "priceSalesAsOf": "2026-07-08T06:13:39.549Z"
         }
       },
       {
@@ -7872,7 +8088,9 @@
             399000000,
             450000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.7252861,
+          "priceSalesAsOf": "2026-07-08T06:47:29.424Z"
         }
       },
       {
@@ -7944,7 +8162,9 @@
             834665449.2,
             701073304.8000001
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.3166351,
+          "priceSalesAsOf": "2026-07-08T05:43:17.155Z"
         }
       },
       {
@@ -8014,7 +8234,9 @@
             0,
             0
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 0.6228509,
+          "priceSalesAsOf": "2026-07-10T13:32:29.885Z"
         }
       },
       {
@@ -8090,7 +8312,9 @@
             599000000,
             539000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.7435561,
+          "priceSalesAsOf": "2026-07-08T06:20:01.583Z"
         }
       },
       {
@@ -8164,7 +8388,9 @@
             993000000,
             905000000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.541656,
+          "priceSalesAsOf": "2026-07-08T06:19:36.172Z"
         }
       },
       {
@@ -8238,7 +8464,9 @@
             221869000,
             331170000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.705632,
+          "priceSalesAsOf": "2026-07-08T06:53:35.505Z"
         }
       },
       {
@@ -8299,7 +8527,9 @@
           "revenueQ": [],
           "revenueQEnds": null,
           "grossProfitQ": [],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 31.33031,
+          "priceSalesAsOf": "2026-07-08T06:14:03.427Z"
         }
       },
       {
@@ -8373,7 +8603,9 @@
             101133000,
             115547000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 3.1661432,
+          "priceSalesAsOf": "2026-07-08T06:33:17.506Z"
         }
       },
       {
@@ -8445,7 +8677,9 @@
             235431770.36,
             304510553.28000003
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.0086663,
+          "priceSalesAsOf": "2026-07-08T06:56:16.417Z"
         }
       },
       {
@@ -8519,7 +8753,9 @@
             883125831.4999999,
             1762824266.4999998
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 2.5050445,
+          "priceSalesAsOf": "2026-07-08T08:18:47.039Z"
         }
       }
     ],
@@ -8597,7 +8833,9 @@
             89099000,
             42582000
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 1.1552627,
+          "priceSalesAsOf": "2026-07-08T06:16:13.639Z"
         }
       },
       {
@@ -8667,7 +8905,9 @@
           "grossProfitQ": [
             0
           ],
-          "grossProfitQEnds": null
+          "grossProfitQEnds": null,
+          "priceSales": 40132.42,
+          "priceSalesAsOf": "2026-07-10T13:41:08.397Z"
         }
       }
     ]
