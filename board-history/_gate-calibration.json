@@ -4,90 +4,101 @@
     "consumer-discretionary": {
       "dailyP99Samples": [
         1,
-        1
+        1,
+        2
       ],
-      "threshold": null,
-      "frozen": false
+      "threshold": 4,
+      "frozen": true
     },
     "consumer-staples": {
       "dailyP99Samples": [
         0,
-        0.5
+        0.5,
+        9
       ],
-      "threshold": null,
-      "frozen": false
+      "threshold": 18,
+      "frozen": true
     },
     "energy": {
       "dailyP99Samples": [
         0,
+        0,
         0
       ],
-      "threshold": null,
-      "frozen": false
+      "threshold": 0,
+      "frozen": true
     },
     "financials": {
       "dailyP99Samples": [
         0,
-        1.5
+        1.5,
+        1.6000000000000014
       ],
-      "threshold": null,
-      "frozen": false
+      "threshold": 3.200000000000003,
+      "frozen": true
     },
     "health-care": {
       "dailyP99Samples": [
         0.5,
+        0.30000000000000426,
         0.30000000000000426
       ],
-      "threshold": null,
-      "frozen": false
+      "threshold": 1,
+      "frozen": true
     },
     "industrials": {
       "dailyP99Samples": [
         0.6000000000000014,
-        0.10000000000000853
+        0.10000000000000853,
+        8.799999999999997
       ],
-      "threshold": null,
-      "frozen": false
+      "threshold": 17.599999999999994,
+      "frozen": true
     },
     "it-services": {
       "dailyP99Samples": [
         0,
+        0,
         0
       ],
-      "threshold": null,
-      "frozen": false
+      "threshold": 0,
+      "frozen": true
     },
     "materials": {
       "dailyP99Samples": [
         0.30000000000000426,
-        0.20000000000000284
+        0.20000000000000284,
+        0.7000000000000028
       ],
-      "threshold": null,
-      "frozen": false
+      "threshold": 1.4000000000000057,
+      "frozen": true
     },
     "real-estate": {
       "dailyP99Samples": [
         0.30000000000000426,
-        2.9000000000000057
+        2.9000000000000057,
+        0.30000000000000426
       ],
-      "threshold": null,
-      "frozen": false
+      "threshold": 5.800000000000011,
+      "frozen": true
     },
     "semiconductors": {
       "dailyP99Samples": [
         2.6999999999999993,
-        0
+        0,
+        19.10000000000001
       ],
-      "threshold": null,
-      "frozen": false
+      "threshold": 38.20000000000002,
+      "frozen": true
     },
     "software-comm-services": {
       "dailyP99Samples": [
         0.29999999999999716,
-        0.5
+        0.5,
+        0
       ],
-      "threshold": null,
-      "frozen": false
+      "threshold": 1,
+      "frozen": true
     },
     "survival": {
       "dailyP99Samples": [],
@@ -97,18 +108,20 @@
     "tech-hardware": {
       "dailyP99Samples": [
         1.7000000000000028,
-        0
+        0,
+        0.7999999999999972
       ],
-      "threshold": null,
-      "frozen": false
+      "threshold": 3.4000000000000057,
+      "frozen": true
     },
     "utilities": {
       "dailyP99Samples": [
         0.6000000000000014,
-        0.6000000000000014
+        0.6000000000000014,
+        0
       ],
-      "threshold": null,
-      "frozen": false
+      "threshold": 1.2000000000000028,
+      "frozen": true
     }
   }
 }
