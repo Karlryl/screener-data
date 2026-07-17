@@ -88,6 +88,13 @@ const COVERAGE_COLLAPSE_DROP = 0.25;
 // A12: Kompaktierung frühestens nach t0+2Q ≈ 180 Kalendertage (NICHT 84 — §4b/§7-Kopplung).
 const RETENTION_DAYS = 180;
 const MS_PER_DAY = 86400000;
+// F7: Der Regime-Fallback (jüngster Key <= Datum) darf nicht unbegrenzt zurückgreifen —
+// ein Wochen-altes Regime als „heute" auszugeben wäre eine stille Lüge. SPY handelt
+// ~5 Tage/Woche; die größte normale Lücke (Fr→Mo, plus Feiertag, oder ein Lauf vor
+// US-Handelsschluss über ein langes Wochenende) ist ~3–4 Kalendertage. 7 deckt Wochenende
+// + Feiertagscluster ab und schlägt erst an, wenn der Macro-Feed wirklich steht — dann ist
+// 'unknown' die ehrliche Antwort, kein geerbtes Alt-Label. Kalendertage (kein Ledger-Wert).
+const REGIME_MAX_STALE_DAYS = 7;
 
 // ── kleine Helfer ────────────────────────────────────────────────────────────
 function isoDay(d) { return new Date(d).toISOString().slice(0, 10); }
@@ -290,10 +297,24 @@ function evaluateGate(vintage, priorVintage, gateState) {
 // Die zweite Bedingung ist der Kern: aus 3× Delta 0 lässt sich keine Schwelle ableiten —
 // „das Board hat sich nie bewegt" heißt „noch nicht gemessen", nicht „Schwelle 0".
 // Ein solches Fenster sammelt weiter (Gate bleibt im Log-Modus), bis echte Bewegung da war.
-function updateGateCalibration(gateCalib, board, p99Delta) {
-  const b = gateCalib.boards[board] || (gateCalib.boards[board] = { dailyP99Samples: [], threshold: null, frozen: false });
+function updateGateCalibration(gateCalib, board, p99Delta, date) {
+  const b = gateCalib.boards[board] || (gateCalib.boards[board] = { dailyP99Samples: [], sampleDates: [], threshold: null, frozen: false });
   if (frozenThresholdOf(b) != null) return b;   // echt eingefroren → Messreihe ist abgeschlossen
-  if (p99Delta != null) b.dailyP99Samples.push(p99Delta);
+  if (p99Delta != null) {
+    // F8: je Vintage-Datum genau EIN Sample. dailyP99Samples[i] gehört zu sampleDates[i]
+    // (Map Datum→Sample als zwei index-gleiche Arrays — hält dailyP99Samples ein reines
+    // number[], sodass Schwellen-Mathematik, .length und alle Leser unverändert bleiben).
+    if (!Array.isArray(b.sampleDates)) b.sampleDates = [];
+    // Migration bestehender Roh-Arrays (Live-Stand: energy/it-services tragen [0,0,0] OHNE
+    // sampleDates): die N Alt-Samples stammen aus N distinkten VERGANGENEN Tagen, deren
+    // Datum die Datei nie festhielt. Distinkte Platzhalter-Keys bewahren die Zählung, ohne
+    // einen Kalendertag zu erfinden (kollidieren nie mit einem echten ISO-Datum). Roh-Werte
+    // bleiben unangetastet — nichts wird umgeschrieben, nur die fehlenden Datums-Marker ergänzt.
+    while (b.sampleDates.length < b.dailyP99Samples.length) b.sampleDates.push('legacy#' + b.sampleDates.length);
+    const idx = date != null ? b.sampleDates.indexOf(date) : -1;
+    if (idx >= 0) b.dailyP99Samples[idx] = p99Delta;   // Rerun DESSELBEN Vintage-Tags → ersetzen, nicht anhängen
+    else { b.dailyP99Samples.push(p99Delta); b.sampleDates.push(date != null ? date : ('nodate#' + b.sampleDates.length)); }
+  }
   // Repräsentatives P99-Tagesdelta = das größte der Kalibrier-Samples (konservativ), × 2.
   const peak = Math.max(0, ...b.dailyP99Samples);
   const ready = b.dailyP99Samples.length >= CALIBRATION_SAMPLES && peak > 0;
@@ -341,7 +362,11 @@ function compact(date, dryRun) {
       if (!f.endsWith('.json') || f.startsWith('_')) continue;
       const fp = path.join(dir, f);
       const v = readJsonOrNull(fp);
-      if (!v || v.compacted) continue;
+      // F9: nur echte Board-Vintages kompaktieren. Sidecars (calibration.json/regime.json —
+      // ohne '_'-Präfix und ohne cohort) bekämen sonst vom Lean-Write ein leeres cohort
+      // injiziert; rank-ic.js:boardsOf erkennt Boards genau über !!(v && v.cohort) und
+      // zählte sie danach als Phantom-Boards. Gleiche inhaltsbasierte Prüfung wie dort.
+      if (!v || v.compacted || !v.cohort) continue;
       const archivePath = assertNoPicksHistory(path.join(P.ARCHIVE_DIR, d, f));
       if (!dryRun) {
         fs.mkdirSync(path.dirname(archivePath), { recursive: true });
@@ -364,12 +389,31 @@ function compact(date, dryRun) {
 }
 
 // ── Regime-Ausweis (nur Ausweis, §5) ─────────────────────────────────────────
+// macro.regimes ist nach SPY-Handelsdatum gekeyt (macro-regime.js). Ein exakter
+// Key-Lookup verfehlt jeden Lauf, dessen Vintage-Datum (heute UTC) noch keinen
+// SPY-Schluss trägt — Wochenenden, Feiertage, Läufe vor US-Handelsschluss (F7):
+// er lieferte dann fälschlich 'unknown' statt des letzten gültigen Regimes. Fix:
+// den jüngsten Key <= Ziel-Datum erben. Der Staleness-Wächter (REGIME_MAX_STALE_DAYS)
+// verhindert, dass ein Wochen-altes Regime still als „heute" durchgeht; asOf weist
+// immer aus, WELCHER Handelstag tatsächlich gilt.
 function regimeForDate(date) {
   const macro = readJsonOrNull(P.MACRO_REGIME_FILE);
-  const entry = macro && macro.regimes && macro.regimes[date];
-  if (entry) return { date, label: entry.regime, price: entry.price, sma200: entry.sma200, source: 'macro-regime.json' };
-  // §5: fehlendes Regime-Label ist KEIN Datenfehler → 'unknown', nicht suspect.
-  return { date, label: 'unknown', source: macro ? 'macro-regime.json(date-missing)' : 'macro-regime.json(absent)' };
+  const regimes = macro && macro.regimes;
+  if (!regimes) return { date, label: 'unknown', source: 'macro-regime.json(absent)' };
+  let keyDate = regimes[date] ? date : null;
+  if (!keyDate) {
+    const priorKeys = Object.keys(regimes).filter((k) => k < date).sort();
+    keyDate = priorKeys.length ? priorKeys[priorKeys.length - 1] : null;
+  }
+  // §5: kein Key <= Datum (Macro beginnt erst später) → 'unknown', kein Datenfehler.
+  if (!keyDate) return { date, label: 'unknown', source: 'macro-regime.json(date-missing)' };
+  const ageDays = Math.round((Date.parse(date + 'T00:00:00Z') - Date.parse(keyDate + 'T00:00:00Z')) / MS_PER_DAY);
+  if (ageDays > REGIME_MAX_STALE_DAYS) {
+    // Zu alt → ehrlich 'unknown' MIT Grund + Alter; kein geerbtes Alt-Label (keine stille Lüge).
+    return { date, label: 'unknown', source: 'macro-regime.json(stale>' + REGIME_MAX_STALE_DAYS + 'd)', asOf: keyDate, staleDays: ageDays };
+  }
+  const entry = regimes[keyDate];
+  return { date, label: entry.regime, price: entry.price, sma200: entry.sma200, source: 'macro-regime.json', asOf: keyDate };
 }
 
 // ── Hauptlauf ────────────────────────────────────────────────────────────────
@@ -408,7 +452,7 @@ function run(opts) {
     const gate = evaluateGate(vintage, priorVintage, gateCalib.boards[board]);
     // Kalibrier-Sample nachziehen (frozen erst NACH Auswertung, damit die aktuelle
     // Auswertung noch in der Kalibrierphase mit calibrating:true läuft).
-    const gs = updateGateCalibration(gateCalib, board, gate.p99Delta);
+    const gs = updateGateCalibration(gateCalib, board, gate.p99Delta, date);
     vintage.gate = {
       calibrating: gate.calibrating,
       p99Delta: gate.p99Delta,
