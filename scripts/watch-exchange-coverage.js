@@ -107,7 +107,7 @@ function main() {
   console.log('Exchange coverage today: ' + JSON.stringify(today));
 
   const alerts = checkDrift(today, baseline);
-  const dateStr = new Date().toISOString().slice(0, 10);
+  const dateStr = process.env.RUN_DATE_UTC || new Date().toISOString().slice(0, 10); // frozen run-date (prep) mit Wall-Clock-Fallback — Codex-Gegenreview Tag 353
   const updated = updateBaseline(baseline, today, dateStr);
 
   fs.mkdirSync(path.dirname(BASELINE_PATH), { recursive: true });

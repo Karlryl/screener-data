@@ -77,7 +77,13 @@ function checkJump(today, baseline) {
 // rerun -> first post-fix run advances the pointer exactly like before).
 function updateBaseline(baseline, today, dateStr) {
   if (baseline && baseline.date === dateStr) {
-    return { ...baseline, updatedAt: new Date().toISOString() }; // same day: pin prev/last
+    // same-day rerun (Codex-Gegenreview Tag 353): .prev bleibt am WAHREN Vortag verankert,
+    // aber .last nimmt den HEUTIGEN latest-Stand — ein Rerun korrigiert normalerweise den
+    // ersten Lauf. Konsistent mit watch-exchange-coverage.js (replace-not-append = take latest).
+    // Tradeoff: ein rein spurioser (nicht-korrigierender) Rerun kann einen fail-loud-Alarm am
+    // Folgetag ausloesen (sicher); das Pinnen des ersten Werts wuerde stattdessen eine echte
+    // Korrektur still verwerfen.
+    return { prev: (baseline.prev != null ? baseline.prev : null), last: today, date: dateStr, updatedAt: new Date().toISOString() };
   }
   return {
     prev: baseline && baseline.last ? baseline.last : null,
@@ -94,7 +100,7 @@ function main() {
   const baseline = loadJson(BASELINE_PATH, null);
   const problems = checkJump(today, baseline);
 
-  const dateStr = new Date().toISOString().slice(0, 10);
+  const dateStr = process.env.RUN_DATE_UTC || new Date().toISOString().slice(0, 10); // frozen run-date (prep) mit Wall-Clock-Fallback — Codex-Gegenreview Tag 353
   const nextBaseline = updateBaseline(baseline, today, dateStr);
   fs.mkdirSync(path.dirname(BASELINE_PATH), { recursive: true });
   writeJsonAtomic(BASELINE_PATH, nextBaseline);

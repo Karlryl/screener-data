@@ -34,28 +34,28 @@ check('a NEW calendar day advances the pointer normally (control, no regression)
   assert.equal(day2.date, '2026-07-19');
 });
 
-check('SAME-DAY rerun must NOT advance .last (THE BUG)', () => {
+check('SAME-DAY rerun takes the latest reading into .last but does NOT shift .prev', () => {
   const day1 = updateBaseline(null, { usOver: 100, foreignOver: 50 }, '2026-07-18');
-  // Rerun later the SAME day (e.g. a retriggered daily-pull job) sees a spurious,
-  // higher intraday count — not a real day-over-day move.
-  const rerun = updateBaseline(day1, { usOver: 145, foreignOver: 50 }, '2026-07-18');
-  assert.deepEqual(rerun.last, { usOver: 100, foreignOver: 50 },
-    '.last was overwritten by a same-day rerun instead of staying pinned to the last ' +
-    'distinct calendar day: ' + JSON.stringify(rerun.last));
+  // A same-day rerun is normally a CORRECTION of the first run — its value becomes the
+  // reference, while .prev stays anchored to the true prior day (here: none yet).
+  const rerun = updateBaseline(day1, { usOver: 102, foreignOver: 51 }, '2026-07-18');
+  assert.deepEqual(rerun.last, { usOver: 102, foreignOver: 51 },
+    '.last must reflect the latest same-day (corrected) reading: ' + JSON.stringify(rerun.last));
+  assert.equal(rerun.prev, null,
+    '.prev must NOT be shifted by a same-day rerun (stays the true prior day)');
   assert.equal(rerun.date, '2026-07-18');
 });
 
-check('end-to-end: a same-day rerun must not produce a false alarm the following day', () => {
-  const day1 = updateBaseline(null, { usOver: 100, foreignOver: 50 }, '2026-07-18');
-  // Intraday retry with a transient spike that self-corrects — should not poison
-  // tomorrow's day-over-day baseline.
-  const rerun = updateBaseline(day1, { usOver: 145, foreignOver: 50 }, '2026-07-18');
-  // Day 2: back to a normal, ~2% move off the TRUE prior day (100) — must be quiet.
-  const day2Today = { usOver: 102, foreignOver: 50 };
-  const problems = checkJump(day2Today, rerun);
+check('end-to-end: a CORRECTED same-day rerun becomes the reference (no false alarm next day)', () => {
+  // Day 1 first run glitched high (145); a same-day rerun corrects it to 100.
+  const day1 = updateBaseline(null, { usOver: 145, foreignOver: 50 }, '2026-07-18');
+  const rerun = updateBaseline(day1, { usOver: 100, foreignOver: 50 }, '2026-07-18');
+  // Day 2: normal ~2% move off the CORRECTED prior day (100) — must be quiet, because the
+  // corrected rerun value (not the glitched first reading) is now the reference.
+  const problems = checkJump({ usOver: 102, foreignOver: 50 }, rerun);
   assert.deepEqual(problems, [],
-    'false alarm: comparison used the stale intraday rerun value instead of the true ' +
-    'prior day. problems=' + JSON.stringify(problems));
+    'the corrected rerun value must be the reference, not the glitched first reading. ' +
+    'problems=' + JSON.stringify(problems));
 });
 
 console.log(fail ? `\nwatch-fx-sanity-samedayrerun: ${fail} FAILED` : '\nwatch-fx-sanity-samedayrerun: all passed');
