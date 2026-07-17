@@ -251,5 +251,69 @@ check('updateGateCalibration friert Schwelle nach 3 Samples = max×2 ein', () =>
   assert.strictEqual(gc.boards.b.threshold, 1.2, 'Schwelle bleibt eingefroren');
 });
 
+// ── R2.13: Boden unter der Gate-Schwelle (degenerierte Kalibrierung) ─────────
+// VORHER ROT: updateGateCalibration bildete threshold = max(samples)*2 ohne Boden.
+// Ein bewegungsloses Kalibrierfenster (3× 0) ergab threshold 0 — statt >= MIN_GATE_THRESHOLD.
+check('(f1) bewegungsloses Kalibrierfenster → Schwelle >= Boden, nicht 0', () => {
+  const gc = { boards: {} };
+  W.updateGateCalibration(gc, 'energy', 0);
+  W.updateGateCalibration(gc, 'energy', 0);
+  W.updateGateCalibration(gc, 'energy', 0);
+  assert.strictEqual(gc.boards.energy.frozen, true, 'nach 3 Samples frozen');
+  assert.ok(gc.boards.energy.threshold >= W._const.MIN_GATE_THRESHOLD,
+    'Schwelle auf Boden angehoben statt 0 (war vorher 0)');
+  assert.notStrictEqual(gc.boards.energy.threshold, 0, 'nie 0');
+  // Messwerte bleiben roh — der Boden fälscht keine Samples.
+  assert.deepStrictEqual(gc.boards.energy.dailyP99Samples, [0, 0, 0], 'Messreihe unverändert');
+});
+
+// VORHER ROT (grün-aber-falsch): mit eingefrorener 0-Schwelle löste evaluateGate wegen
+// `p99Delta > 0` bei einer Mini-Bewegung von 0.3 suspect + exit 2 aus (Alarmkanal-Dauerfeuer).
+// Der Boden greift jetzt auch beim AUSWERTEN, ohne die gemessenen Samples anzufassen.
+check('(f2) eingefrorene 0-Schwelle: Mini-Bewegung unter dem Boden → KEIN suspect', () => {
+  const base = mkBase();
+  writeJson(path.join(base, 'snapshots', 'ABC.json'), snapFull('ABC', { withEnds: true }));
+  writeJson(path.join(base, 'outputs', 'calibration.json'), { schema: 'calibration/v4', generated_at: 'x' });
+  writeBoard(base, 'energy', [row('ABC', 90)]);
+  assert.strictEqual(W.run({ baseDir: base, date: '2026-07-13' }).exitCode, 0);
+
+  // Live-Zustand nachstellen: energy hat threshold 0 eingefroren (echte Messwerte, nicht gefälscht).
+  writeJson(path.join(base, 'board-history', '_gate-calibration.json'),
+    { _doc: 'test', boards: { energy: { dailyP99Samples: [0, 0, 0], threshold: 0, frozen: true } } });
+
+  // Tag 2: Score bewegt sich um 0.3 — Rauschen, weit unter dem Boden.
+  writeBoard(base, 'energy', [row('ABC', 90.3)]);
+  const r2 = W.run({ baseDir: base, date: '2026-07-14' });
+  assert.strictEqual(r2.exitCode, 0, 'exit 0: Rausch-Bewegung ist kein Wertfehler');
+  const v2 = readVintage(base, '2026-07-14', 'energy');
+  assert.strictEqual(v2.gate.suspect, false, 'kein suspect bei Bewegung unter dem Boden');
+  assert.strictEqual(v2.gate.calibrating, false, 'Schwelle ist eingefroren → keine Kalibrierphase');
+  assert.ok(v2.gate.threshold >= W._const.MIN_GATE_THRESHOLD, 'ausgewiesene Schwelle ist die geheilte');
+
+  // Messdaten-Ehrlichkeit: die 0-Samples der Datendatei wurden nicht umgeschrieben.
+  const gc = JSON.parse(fs.readFileSync(path.join(base, 'board-history', '_gate-calibration.json'), 'utf8'));
+  assert.deepStrictEqual(gc.boards.energy.dailyP99Samples, [0, 0, 0], 'gemessene Samples unangetastet');
+});
+
+// VORHER ROT gäbe es nicht — dieser Test sichert, dass der Boden die Bissigkeit NICHT frisst:
+// ein echter Wertfehler auf demselben 0-Schwellen-Board muss weiterhin suspect + exit 2 liefern.
+check('(f3) eingefrorene 0-Schwelle: echter Wertfehler → weiterhin suspect + exit 2', () => {
+  const base = mkBase();
+  writeJson(path.join(base, 'snapshots', 'ABC.json'), snapFull('ABC', { withEnds: true }));
+  writeJson(path.join(base, 'outputs', 'calibration.json'), { schema: 'calibration/v4', generated_at: 'x' });
+  writeBoard(base, 'energy', [row('ABC', 90)]);
+  W.run({ baseDir: base, date: '2026-07-13' });
+  writeJson(path.join(base, 'board-history', '_gate-calibration.json'),
+    { _doc: 'test', boards: { energy: { dailyP99Samples: [0, 0, 0], threshold: 0, frozen: true } } });
+
+  // Tag 2: Score springt um +40 — echter Wertbruch, weit über dem Boden.
+  writeBoard(base, 'energy', [row('ABC', 130)]);
+  const r2 = W.run({ baseDir: base, date: '2026-07-14' });
+  assert.strictEqual(r2.exitCode, 2, 'exit 2: Boden nimmt dem Gate nicht die Zähne');
+  const v2 = readVintage(base, '2026-07-14', 'energy');
+  assert.strictEqual(v2.gate.suspect, true, 'suspect-Flag gesetzt');
+  assert.ok(v2.gate.reasons.includes('p99-delta-exceeds-threshold'), 'Grund: Schwellen-Bruch');
+});
+
 console.log(fail ? ('\nFAIL: ' + fail + ' Test(s)') : '\nAlle board-history-Tests grün');
 process.exit(fail ? 1 : 0);
