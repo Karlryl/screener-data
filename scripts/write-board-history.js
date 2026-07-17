@@ -18,11 +18,12 @@
  *       board-history-archive/ (GG7c, außerhalb CI-Checkout). NICHTS wird ohne Archiv-Kopie entfernt.
  *
  * Wert-Plausibilitäts-Gate VOR dem Schreiben (Ledger 2.3 „Wert-Plausibilitäts-Gate"):
- *   Vergleich gegen Vortags-Vintage; P99-Tages-Delta der Scores. Erste 3 messbare Vintages =
- *   Kalibrierphase (calibrating:true, Gate loggt nur). Danach Schwelle = P99-Tagesdelta × 2,
- *   mindestens MIN_GATE_THRESHOLD (Boden gegen bewegungslose Kalibrierfenster → sonst Schwelle 0
- *   = Dauer-Alarm; greift auch beim Auswerten, heilt vor-Fix eingefrorene 0-Schwellen)
- *   (im _gate-calibration.json eingefroren + im Vintage-Meta persistiert). Bruch / NaN-Einbruch /
+ *   Vergleich gegen Vortags-Vintage; P99-Tages-Delta der Scores. Kalibrierphase (calibrating:true,
+ *   Gate loggt nur) läuft, bis MINDESTENS CALIBRATION_SAMPLES messbare Deltas vorliegen UND
+ *   davon eines > 0 war (ein bewegungsloses Fenster kalibriert nichts → weiter sammeln).
+ *   Danach Schwelle = größtes Kalibrier-Delta × 2, mindestens MIN_GATE_THRESHOLD (Boden nur
+ *   gegen absurd kleine, aber echte Schwellen) (im _gate-calibration.json eingefroren + im
+ *   Vintage-Meta persistiert). Bruch / NaN-Einbruch /
  *   Coverage-Absturz → Vintage MIT suspect:true geschrieben (nie still) + exit 2 (0.7-Kanal).
  *   KEINE Löschung je.
  *
@@ -63,21 +64,20 @@ function _setPaths(base) { P = resolvePaths(base || REPO_ROOT); return P; }
 // 2.3-Gate-Kalibrierung: erste 3 messbare Tages-Deltas = Kalibrierphase (Ledger:
 // „erste 3 Live-Vintages"). Ein Vintage ist erst messbar, wenn es einen Vorgänger
 // hat (Vintage #1 hat keinen) → die 3 Samples stammen aus den Vintages #2/#3/#4.
+// MINDEST-Anzahl, kein Ausreichen-Kriterium: siehe updateGateCalibration (Bewegung nötig).
 const CALIBRATION_SAMPLES = 3;
 // Schwelle = P99-Tagesdelta × 2 (Ledger-Anhalt „P99-Tagesdelta × 2").
 const THRESHOLD_MULTIPLIER = 2;
-// Boden unter der eingefrorenen Wert-Gate-Schwelle. Bewegte sich ein Board während des
-// Kalibrierfensters nicht (3× p99Delta = 0 — live passiert bei den Boards energy und
-// it-services), ergäbe max(samples)×2 die Schwelle 0. Weil evaluateGate auf
-// `p99Delta > threshold` prüft, würde ab dann JEDE noch so kleine Score-Bewegung
-// suspect:true + exit 2 auslösen → Dauerfeuer im 0.7-Alarmkanal, Gate wertlos.
-// Zahl begründet: Scores laufen auf einer 0–100-Skala. 1.0 = 1 % der Skala und zugleich
-// die kleinste Schwelle, die real bewegte Boards ohnehin schon eingefroren haben
-// (health-care, software-comm-services: je 1.0) — der Boden hebt also kein einziges
-// bestehendes Board an. Nach oben abgesichert: das größte je gemessene Rausch-Delta der
-// ruhigen Boards liegt bei 0.3, echte Wertfehler liegen in der Größenordnung +40
-// (Regressionsfall (b)). Der Boden liegt sauber dazwischen: blind für Rauschen, bissig
-// bei echten Brüchen.
+// Boden unter einer eingefrorenen Wert-Gate-Schwelle. Er ist NICHT die Antwort auf
+// bewegungslose Kalibrierfenster (die frieren gar nicht erst ein, s. updateGateCalibration),
+// sondern nur der Schutz gegen eine echte, aber absurd kleine Schwelle: Scores laufen auf
+// einer 0–100-Skala, 1.0 = 1 % der Skala.
+// An den echten Messwerten aus board-history/_gate-calibration.json (Stand 2026-07-17) geprüft:
+// die kleinste je aus Bewegung eingefrorene Schwelle ist 1.0 (health-care, software-comm-services),
+// die nächstkleineren sind 1.2 (utilities) und 1.4 (materials) → der Boden hebt kein einziges
+// bestehendes Board an, er ist reine Untergrenze für künftige Fenster mit Mini-Bewegung.
+// Keine Aussage über „Rausch-Höhe": die gemessenen Tages-Deltas streuen real von 0.1 bis 19.1
+// (semiconductors) — Schwellen deutlich über dem Boden sind der Normalfall, nicht die Ausnahme.
 const MIN_GATE_THRESHOLD = 1.0;
 const P99 = 0.99;
 // Coverage-Absturz: fällt der present-Anteil eines Kontroll-Felds gegenüber dem
@@ -105,13 +105,27 @@ function readJsonOrNull(file) {
   catch (_) { return null; }
 }
 
-// Boden auf eine Gate-Schwelle anwenden. EINE Stelle für beide Wege (Einfrieren in
-// updateGateCalibration UND Auswerten in evaluateGate), damit auch bereits mit 0
-// eingefrorene Boards geheilt werden: board-history/_gate-calibration.json ist eine
-// Datendatei mit echten Messwerten — die dailyP99Samples werden NICHT angefasst, der
-// Boden greift erst bei der Auswertung. So bleibt die Messreihe roh und ehrlich.
+// Boden auf eine Gate-Schwelle anwenden (nur echte, aus Bewegung abgeleitete Schwellen
+// erreichen diese Funktion — s. updateGateCalibration).
 function flooredThreshold(t) {
   return Number.isFinite(t) ? Math.max(t, MIN_GATE_THRESHOLD) : null;
+}
+
+// Die EINE Wahrheit darüber, ob ein Board eine gültige, eingefrorene Gate-Schwelle hat.
+// Beide Wege gehen hier durch (Auswerten in evaluateGate, Weiter-Sammeln in
+// updateGateCalibration), damit „eingefroren" nie zwei Bedeutungen bekommt.
+//
+// DEGENERIERT = frozen:true mit threshold <= 0 (live: energy und it-services, je 3× Delta 0).
+// Eine 0-Schwelle stammt aus keinem einzigen echten Messwert — das Board hat sich im ganzen
+// Kalibrierfenster nicht bewegt. Solche Boards gelten hier als NICHT eingefroren und sammeln
+// weiter, bis echte Bewegung da war. Bewusst als Laufzeit-Heilung statt Datei-Migration:
+// board-history/_gate-calibration.json ist eine Datendatei mit echten Messwerten, die
+// dailyP99Samples bleiben unangetastet roh; threshold/frozen sind daraus ABGELEITETE Felder
+// und werden beim nächsten Schreiben ohnehin neu berechnet (dann auch in der Datei geheilt).
+function frozenThresholdOf(gateState) {
+  if (!gateState || !gateState.frozen) return null;
+  const t = gateState.threshold;
+  return Number.isFinite(t) && t > 0 ? flooredThreshold(t) : null;
 }
 
 // P-Quantil einer Zahlenliste (nearest-rank, konservativ aufgerundet).
@@ -258,11 +272,10 @@ function evaluateGate(vintage, priorVintage, gateState) {
   }
   const p99Delta = deltas.length ? quantile(deltas, P99) : null;
 
-  const frozenThreshold = gateState && Number.isFinite(gateState.threshold) ? gateState.threshold : null;
-  const calibrating = frozenThreshold == null;  // solange keine eingefrorene Schwelle → Kalibrierphase
-  // Boden auch beim Auswerten anwenden: heilt Boards, die vor diesem Fix mit Schwelle 0
-  // eingefroren wurden (energy, it-services), ohne deren Messwerte zu verändern.
-  const threshold = flooredThreshold(frozenThreshold);
+  // Keine gültige eingefrorene Schwelle (nie kalibriert ODER degeneriert) → Kalibrierphase:
+  // das Gate LOGGT (p99Delta steht im Vintage-Meta), straft aber nicht.
+  const threshold = frozenThresholdOf(gateState);
+  const calibrating = threshold == null;
   // Threshold-Bruch nur NACH der Kalibrierphase (Ledger: „Gate loggt nur" solange calibrating).
   if (!calibrating && p99Delta != null && p99Delta > threshold) {
     reasons.push('p99-delta-exceeds-threshold');
@@ -271,19 +284,21 @@ function evaluateGate(vintage, priorVintage, gateState) {
   return { calibrating, p99Delta, threshold, suspect: reasons.length > 0, reasons };
 }
 
-// Aktualisiert den Gate-Kalibrierungs-Zustand je Board (sammelt die ersten
-// CALIBRATION_SAMPLES messbaren P99-Tagesdeltas, friert dann die Schwelle ein).
+// Aktualisiert den Gate-Kalibrierungs-Zustand je Board: sammelt messbare P99-Tagesdeltas
+// und friert die Schwelle ein, sobald das Fenster AUSSAGEKRÄFTIG ist.
+// Aussagekräftig = genug Samples DA (>= CALIBRATION_SAMPLES) UND mindestens eines > 0.
+// Die zweite Bedingung ist der Kern: aus 3× Delta 0 lässt sich keine Schwelle ableiten —
+// „das Board hat sich nie bewegt" heißt „noch nicht gemessen", nicht „Schwelle 0".
+// Ein solches Fenster sammelt weiter (Gate bleibt im Log-Modus), bis echte Bewegung da war.
 function updateGateCalibration(gateCalib, board, p99Delta) {
   const b = gateCalib.boards[board] || (gateCalib.boards[board] = { dailyP99Samples: [], threshold: null, frozen: false });
-  if (b.frozen) return b;
+  if (frozenThresholdOf(b) != null) return b;   // echt eingefroren → Messreihe ist abgeschlossen
   if (p99Delta != null) b.dailyP99Samples.push(p99Delta);
-  if (b.dailyP99Samples.length >= CALIBRATION_SAMPLES) {
-    // Repräsentatives P99-Tagesdelta = das größte der Kalibrier-Samples (konservativ), × 2,
-    // mindestens aber MIN_GATE_THRESHOLD — ein bewegungsloses Kalibrierfenster darf nie
-    // eine 0-Schwelle erzeugen (die machte das Gate zum Dauer-Alarm).
-    b.threshold = flooredThreshold(Math.max(...b.dailyP99Samples) * THRESHOLD_MULTIPLIER);
-    b.frozen = true;
-  }
+  // Repräsentatives P99-Tagesdelta = das größte der Kalibrier-Samples (konservativ), × 2.
+  const peak = Math.max(0, ...b.dailyP99Samples);
+  const ready = b.dailyP99Samples.length >= CALIBRATION_SAMPLES && peak > 0;
+  b.threshold = ready ? flooredThreshold(peak * THRESHOLD_MULTIPLIER) : null;
+  b.frozen = ready;
   return b;
 }
 
@@ -466,6 +481,6 @@ module.exports = {
   compact, readOrScaffoldExcluded, regimeForDate, priceGrossProfit, pitCoverageBlock,
   quantile, assertNoPicksHistory, buildPit,
   _setPaths, resolvePaths,
-  flooredThreshold,
+  flooredThreshold, frozenThresholdOf,
   _const: { CALIBRATION_SAMPLES, THRESHOLD_MULTIPLIER, MIN_GATE_THRESHOLD, COVERAGE_COLLAPSE_DROP, RETENTION_DAYS },
 };
