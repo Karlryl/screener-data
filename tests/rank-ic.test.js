@@ -92,6 +92,27 @@ test('windowReturns §8: ok / delisted=-100% / M&A-shortened / no-entry-Ausschlu
   assert.ok(w.exitRate > 0);
 });
 
+// Fund R2.12: Kohorte, in der KEINE Zeile einen Einstiegskurs hat.
+// VOR dem Fix war dieser Zustand unsichtbar: excluded_no_entry zählte nur im Nenner
+// von exitRate, nie im Zähler -> exitRate 0.000 ("sauber"), obwohl 100 % der
+// Stichprobe verloren waren. unusableRate existierte nicht (undefined) -> der Test
+// wäre an `unusableRate === 1` rot gewesen.
+test('windowReturns §8: Kohorte ohne jeden Einstiegskurs -> unusableRate=1, exitRate bleibt 0', () => {
+  const t0 = '2026-01-05';
+  // Jede Serie startet erst NACH t0 -> kein Entry-Kurs, kein Punkt landet in `used`.
+  const priceIndex = {
+    SPY: mkSeries(t0, 120, 500, 0.0002),
+    A: (() => { const m = new Map(); m.set(addDays(t0, 60), 5); return m; })(),
+    B: (() => { const m = new Map(); m.set(addDays(t0, 70), 8); return m; })(),
+  };
+  const rows = ['A', 'B'].map((t, i) => ({ ticker: t, score: 90 - i, pit: null }));
+  const w = ric.windowReturns(priceIndex, rows, t0, 84);
+  assert.equal(w.used.length, 0);
+  assert.equal(w.quota.excluded_no_entry, 2);
+  assert.equal(w.exitRate, 0);        // echte Austritte: keine — korrekt, aber allein irreführend
+  assert.equal(w.unusableRate, 1);    // der blinde Fleck: 100 % der Stichprobe unbrauchbar
+});
+
 // ── End-to-End: synthetische Vintage-Reihe mit bekanntem Signal ─────────────
 test('evaluate: bekanntes Signal wird wiedergefunden, Exclude greift, Null-Board bleibt ohne Urteil', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'rankic-'));
@@ -233,6 +254,107 @@ test('newestPriceDate: Maximum ueber den gesamten Index, unabhaengig von der Tic
   };
   assert.equal(ric.newestPriceDate(idx), '2026-05-09');
   assert.equal(ric.newestPriceDate({}), null);
+});
+
+// ── Ausschluss-Vertrag Writer -> rank-ic (R-Gate 2.R, Fund R2.5) ─────────────
+// write-board-history.js (readOrScaffoldExcluded) legt {_doc, excluded:[{date,board,reason}]}
+// an und dokumentiert im _doc selbst, dass rank-ic diese Liste konsumiert. loadExcluded()
+// las aber nur die Altformate und filterte Objekt-Keys per Datums-Regex — '_doc'/'excluded'
+// fielen durch, die Map blieb LEER. Ein per Audit eingetragener Ausschluss war damit ein
+// stiller No-Op: das als korrupt erkannte Vintage blieb in JEDER Auswertung drin.
+// Beide Tests unten waeren vor dem Fix rot gewesen (badDate haette weiter mitgerechnet).
+// Die Datei wird bewusst vom ECHTEN Writer erzeugt — damit pinnt der Test den Vertrag
+// an beiden Enden statt eine Wunschform des Readers.
+const wbh = require('../scripts/write-board-history.js');
+
+function mkExcludeFixture(tag) {
+  // Vintage-Reihe im Layout des Writers (base/board-history/<date>/<board>.json).
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), tag));
+  const hist = path.join(tmp, 'board-history');
+  const t0 = '2026-01-02', SPACING = 28, V = 6;
+  const dates = Array.from({ length: V }, (_, i) => addDays(t0, i * SPACING));
+  const rows = Array.from({ length: 12 }, (_, i) => ({ ticker: 'T' + i, score: i, pit: {} }));
+  for (const d of dates) {
+    fs.mkdirSync(path.join(hist, d), { recursive: true });
+    for (const board of ['b1', 'b2']) {
+      fs.writeFileSync(path.join(hist, d, board + '.json'), JSON.stringify({
+        date: d, board, cohort: { profitable: rows, unprofitable: [] },
+      }));
+    }
+  }
+  // Kurse weit ueber das letzte 84d-Fenster hinaus -> Fenster laufen wirklich ab (§1).
+  const priceIndex = {};
+  for (const r of rows) priceIndex[r.ticker] = mkSeries(t0, V * SPACING + 200, 100, 0.0005 * r.score);
+  // Ausschlussliste vom echten Writer anlegen lassen (Gerüst + _doc), dann Eintrag setzen.
+  wbh._setPaths(tmp);
+  const excl = wbh.readOrScaffoldExcluded(false);
+  assert.ok(Array.isArray(excl.excluded), 'Writer-Vertrag: Feld "excluded" ist ein Array');
+  assert.ok(fs.existsSync(path.join(hist, '_excluded.json')), 'Writer legt _excluded.json an');
+  const writeExcl = (entries) => {
+    excl.excluded = entries;
+    fs.writeFileSync(path.join(hist, '_excluded.json'), JSON.stringify(excl, null, 2));
+  };
+  return { tmp, hist, dates, priceIndex, writeExcl };
+}
+const decisionDates = (rep, board, horizon) => rep.boards[board].horizons[horizon].decisions.map((x) => x.date);
+
+test('loadExcluded R2.5: Writer-Vertrag {excluded:[{date,board,reason}]} greift — Eintrag OHNE board schliesst das Datum global aus', () => {
+  const { tmp, hist, dates, priceIndex, writeExcl } = mkExcludeFixture('rank-ic-excl-global-');
+  const badDate = dates[2];
+  writeExcl([{ date: badDate, reason: 'synthetisch korrupt (Test)' }]);
+
+  // Reader-Ebene: der Writer-Block wird ueberhaupt gelesen (war vorher eine leere Map).
+  const ex = ric.loadExcluded(hist);
+  assert.equal(ex.size, 1, 'Writer-Vertrag gelesen (vor dem Fix: 0 Eintraege = stiller No-Op)');
+  assert.equal(ric.isDateExcluded(ex, badDate), true, 'Eintrag ohne board = Datum global aus');
+
+  // Auswertungs-Ebene: das Vintage faellt aus JEDER Rechnung, auf JEDEM Board.
+  const rep = ric.evaluate(hist, priceIndex, { B: 50 });
+  assert.deepEqual(rep.vintagesExcluded, [badDate], 'Ausschluss im Report ausgewiesen');
+  for (const board of ['b1', 'b2']) {
+    for (const horizon of [28, 84]) {
+      assert.ok(!decisionDates(rep, board, horizon).includes(badDate),
+        board + '/' + horizon + 'd: exkludiertes Vintage darf in keiner Entscheidungsliste stehen');
+    }
+  }
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test('loadExcluded R2.5: Eintrag MIT board schliesst NUR dieses Board an diesem Datum aus (Board-Ebene geehrt)', () => {
+  const { tmp, hist, dates, priceIndex, writeExcl } = mkExcludeFixture('rank-ic-excl-board-');
+  const badDate = dates[2];
+  writeExcl([{ date: badDate, board: 'b1', reason: 'b1-Kohorte an diesem Tag korrupt (Test)' }]);
+
+  const ex = ric.loadExcluded(hist);
+  assert.equal(ric.isDateExcluded(ex, badDate), false, 'board-enger Eintrag ist KEIN globaler Ausschluss');
+  assert.equal(ric.isBoardExcluded(ex, badDate, 'b1'), true);
+  assert.equal(ric.isBoardExcluded(ex, badDate, 'b2'), false);
+
+  const rep = ric.evaluate(hist, priceIndex, { B: 50 });
+  assert.deepEqual(rep.vintagesExcluded, [], 'board-enger Ausschluss leert das Datum nicht global');
+  assert.deepEqual(rep.boardVintagesExcluded, [{ date: badDate, board: 'b1', reason: 'b1-Kohorte an diesem Tag korrupt (Test)' }]);
+  // 28d-Horizont bei 28d-Spacing: jedes Vintage ist ein Entscheidungspunkt -> scharfer Kontrast.
+  assert.ok(!decisionDates(rep, 'b1', 28).includes(badDate), 'b1: ausgeschlossenes Vintage ist raus');
+  assert.ok(decisionDates(rep, 'b2', 28).includes(badDate), 'b2: dasselbe Datum bleibt drin (nur b1 war exkludiert)');
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test('loadExcluded R2.5: Altformate bleiben lesbar (Rueckwaertskompatibilitaet)', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'rank-ic-excl-legacy-'));
+  const write = (obj) => { fs.writeFileSync(path.join(tmp, '_excluded.json'), JSON.stringify(obj)); return ric.loadExcluded(tmp); };
+  // (a) Altformat {"YYYY-MM-DD":"grund"}
+  let ex = write({ '2026-01-02': 'grund', 'nicht-ein-datum': 'x' });
+  assert.equal(ex.size, 1);
+  assert.equal(ric.isDateExcluded(ex, '2026-01-02'), true);
+  // (b) Altformat: blanke Liste von Datums-Strings
+  ex = write(['2026-01-02', '2026-02-01']);
+  assert.equal(ex.size, 2);
+  assert.equal(ric.isBoardExcluded(ex, '2026-02-01', 'irgendein-board'), true, 'Liste = globaler Ausschluss');
+  // (c) fehlende/kaputte Datei -> leere Map, kein Crash
+  fs.writeFileSync(path.join(tmp, '_excluded.json'), '{kaputt');
+  assert.equal(ric.loadExcluded(tmp).size, 0);
+  assert.equal(ric.loadExcluded(path.join(tmp, 'gibt-es-nicht')).size, 0);
+  fs.rmSync(tmp, { recursive: true, force: true });
 });
 
 console.log(`\nrank-ic.test.js: ${pass} ok, ${fail} fail`);

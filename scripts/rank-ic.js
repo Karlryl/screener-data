@@ -28,8 +28,11 @@
  *                         letzter gehandelter Kurs ≈ Angebotspreis, nie gedroppt);
  *                         kein Kurs am Fensterstart -> Ausschluss mit Quote.
  *      Austrittsquote je Board×Vintage wird protokolliert (hohe Quote = Warnung).
- *  Exclude: board-history/_excluded.json ({"YYYY-MM-DD": "grund"} ODER Liste) —
- *      exkludierte Vintages fallen nachweislich aus JEDER Rechnung (Ausweis im Report).
+ *  Exclude: board-history/_excluded.json — der vom Writer (write-board-history.js)
+ *      angelegte Vertrag {_doc, excluded:[{date,board,reason}]} sowie die Altformate
+ *      ({"YYYY-MM-DD":"grund"} ODER Liste von Datums-Strings). Eintrag OHNE board =
+ *      Datum global aus; MIT board = nur dieses Board an diesem Datum. Exkludiertes
+ *      fällt nachweislich aus JEDER Rechnung (Ausweis im Report).
  *
  * Usage: node scripts/rank-ic.js [--history-dir board-history] [--out outputs/rank-ic-report.json]
  * Exit 0 = Report geschrieben (auch „keine auswertbaren Fenster" ist ein gültiger Report).
@@ -160,13 +163,53 @@ function benjaminiYekutieli(pvals, q) {
 }
 
 // ── Vintage-Laden + §1-Fenster ───────────────────────────────────────────────
+// R-Gate 2.R Fund R2.5: der Writer (write-board-history.js readOrScaffoldExcluded)
+// legt {_doc, excluded:[{date,board,reason}]} an und dokumentiert im _doc, dass rank-ic
+// diese Liste konsumiert. Gelesen wurden aber nur die Altformate — die Schlüssel des
+// Writer-Blocks ('_doc','excluded') fielen durch den Datums-Regex und die Map blieb LEER:
+// ein per Audit eingetragener Ausschluss war ein stiller No-Op, das als korrupt erkannte
+// Vintage blieb in JEDER Rechnung. Alle drei Formate werden jetzt gelesen.
+//
+// Rückgabe: Map<date, {reason, boards}> — boards === null heisst „Datum global aus",
+// sonst Map<board,reason> = nur diese Boards an diesem Datum aus (global schlägt board-eng).
 function loadExcluded(historyDir) {
   const f = path.join(historyDir, '_excluded.json');
-  try {
-    const raw = JSON.parse(fs.readFileSync(f, 'utf8'));
-    if (Array.isArray(raw)) return new Map(raw.map((d) => [d, 'excluded']));
-    return new Map(Object.entries(raw).filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k)));
-  } catch (_) { return new Map(); }
+  let raw;
+  try { raw = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (_) { return new Map(); }
+  const out = new Map();
+  const add = (date, board, reason) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date == null ? '' : date))) return;
+    let e = out.get(date);
+    if (!e) { e = { reason, boards: new Map() }; out.set(date, e); }
+    if (e.boards === null) return;                                  // schon global aus
+    if (!board) { e.boards = null; e.reason = reason; return; }     // ohne board = global
+    e.boards.set(String(board), reason);
+  };
+  // (1) Writer-Vertrag {excluded:[…]} und (2) blanke Liste — Einträge dürfen
+  //     Datums-String ODER {date,board,reason} sein.
+  const entries = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.excluded) ? raw.excluded : null);
+  if (entries) {
+    for (const e of entries) {
+      if (typeof e === 'string') add(e, null, 'excluded');
+      else if (e && typeof e === 'object') add(e.date, e.board || null, e.reason || 'excluded');
+    }
+    return out;
+  }
+  // (3) Altformat {"YYYY-MM-DD": "grund"}
+  if (raw && typeof raw === 'object') {
+    for (const [k, v] of Object.entries(raw)) add(k, null, typeof v === 'string' ? v : 'excluded');
+  }
+  return out;
+}
+// Datum global aus (fällt aus der Vintage-Reihe aller Boards).
+function isDateExcluded(excluded, date) {
+  const e = excluded.get(date);
+  return !!e && e.boards === null;
+}
+// Datum für DIESES Board aus (global oder board-eng).
+function isBoardExcluded(excluded, date, board) {
+  const e = excluded.get(date);
+  return !!e && (e.boards === null || e.boards.has(board));
 }
 function listVintageDates(historyDir) {
   let entries = [];
@@ -241,7 +284,16 @@ function windowReturns(priceIndex, rows, t0, horizonDays) {
     quota.excluded_no_entry++; // no_series / no_entry_price
   }
   const denom = used.length + quota.excluded_no_series + quota.excluded_no_entry;
-  return { used, quota, exitRate: denom ? (quota.delisted + quota.shortened + quota.excluded_no_series) / denom : 0 };
+  // R-Gate 2.R Fund R2.12: exitRate zählt excluded_no_entry im NENNER, nie im Zähler —
+  // eine Kohorte ohne einen einzigen Einstiegskurs meldet damit exitRate 0.000 ("sauber"),
+  // während 100 % der Stichprobe weg sind. exitRate bleibt wie gemeint (echte Austritte);
+  // daneben tritt unusableRate als eigene Kennzahl für den blinden Fleck.
+  return {
+    used,
+    quota,
+    exitRate: denom ? (quota.delisted + quota.shortened + quota.excluded_no_series) / denom : 0,
+    unusableRate: denom ? (quota.excluded_no_series + quota.excluded_no_entry) / denom : 0,
+  };
 }
 
 // Ein Fenster auswerten: roher + residualisierter rankIC (§4a).
@@ -297,12 +349,17 @@ function deliveryIC(vintage0, vintageLater) {
 function evaluate(historyDir, priceIndex, opts = {}) {
   const excluded = loadExcluded(historyDir);
   const allDates = listVintageDates(historyDir);
-  const dates = allDates.filter((d) => !excluded.has(d));
+  const dates = allDates.filter((d) => !isDateExcluded(excluded, d));
   const report = {
     generatedAt: new Date().toISOString(),
     spec: 'Ledger 2.8 §1–§4/§8 + pre-registrierte Schwelle 2026-07-14 (84d>0,05 ∧ CI90-lo>0; BY-q=' + BY_Q + '; N_eff>=' + MIN_NEFF + ')',
     vintagesTotal: allDates.length,
-    vintagesExcluded: Array.from(excluded.keys()).filter((d) => allDates.includes(d)),
+    vintagesExcluded: allDates.filter((d) => isDateExcluded(excluded, d)),
+    // board-enge Ausschlüsse getrennt ausweisen (das Datum bleibt für die anderen Boards drin).
+    boardVintagesExcluded: allDates.flatMap((d) => {
+      const e = excluded.get(d);
+      return e && e.boards ? Array.from(e.boards, ([board, reason]) => ({ date: d, board, reason })) : [];
+    }),
     boards: {},
     family: null,
   };
@@ -315,9 +372,14 @@ function evaluate(historyDir, priceIndex, opts = {}) {
   const boards = boardsOf(historyDir, dates[0]);
   const familyTests = []; // {board,horizon,p} für BY über die abschließende Familie
   for (const board of boards) {
-    const b = { horizons: {}, delivery: null, exitRates: {} };
+    const b = { horizons: {}, delivery: null, exitRates: {}, unusableRates: {} };
+    // Board-enge Ausschlüsse VOR dem §1-Fensterplan herausnehmen — genau wie beim globalen
+    // Ausschluss, damit ein als korrupt erkanntes Vintage den Entscheidungspunkt nicht
+    // belegt, sondern das nächste saubere Vintage nachrückt.
+    const boardDates = dates.filter((d) => !isBoardExcluded(excluded, d, board));
+    b.datesExcluded = dates.filter((d) => isBoardExcluded(excluded, d, board));
     for (const horizon of HORIZONS) {
-      const decisions = disjointDecisionDates(dates, horizon);
+      const decisions = disjointDecisionDates(boardDates, horizon);
       const points = [], pointsResid = [], detail = [];
       let pendingWindows = 0; // Fenster noch nicht abgelaufen — nie stillschweigend verschweigen
       for (const d of decisions) {
@@ -328,6 +390,7 @@ function evaluate(historyDir, priceIndex, opts = {}) {
         const w = windowReturns(priceIndex, rows, d, horizon);
         const ic = windowIC(w.used);
         b.exitRates[d + '/' + horizon] = +w.exitRate.toFixed(3);
+        b.unusableRates[d + '/' + horizon] = +w.unusableRate.toFixed(3);
         detail.push({ date: d, n: ic.n, icRaw: ic.icRaw, icResid: ic.icResid, nResid: ic.nResid, quota: w.quota });
         if (Number.isFinite(ic.icRaw)) points.push(ic.icRaw);
         if (Number.isFinite(ic.icResid)) pointsResid.push(ic.icResid);
@@ -356,9 +419,10 @@ function evaluate(historyDir, priceIndex, opts = {}) {
       };
       if (ci && ne >= MIN_NEFF) familyTests.push({ board, horizon, p: ci.p });
     }
-    // §4b: jüngstes Paar (erstes Vintage, erstes Vintage >= +180d)
-    const d0 = dates[0];
-    const dLater = dates.find((d) => (new Date(d) - new Date(d0)) / 86400000 >= DELIVERY_MIN_GAP_DAYS);
+    // §4b: jüngstes Paar (erstes Vintage, erstes Vintage >= +180d) — auf den für dieses
+    // Board zulässigen Vintages (ein exkludiertes Vintage darf auch den Delivery-IC nicht tragen).
+    const d0 = boardDates[0];
+    const dLater = d0 && boardDates.find((d) => (new Date(d) - new Date(d0)) / 86400000 >= DELIVERY_MIN_GAP_DAYS);
     if (dLater) {
       const v0 = loadVintage(historyDir, d0, board), v1 = loadVintage(historyDir, dLater, board);
       if (v0 && v1) b.delivery = Object.assign({ t0: d0, t1: dLater }, deliveryIC(v0, v1));
@@ -415,5 +479,5 @@ function main() {
   console.log('[rank-ic] Report -> ' + outFile);
 }
 
-module.exports = { spearman, ranks, residualize, bootstrapCI, nEff, benjaminiYekutieli, disjointDecisionDates, windowReturns, windowIC, deliveryIC, evaluate, loadExcluded, loadPriceIndexOrThrow, newestPriceDate };
+module.exports = { spearman, ranks, residualize, bootstrapCI, nEff, benjaminiYekutieli, disjointDecisionDates, windowReturns, windowIC, deliveryIC, evaluate, loadExcluded, isDateExcluded, isBoardExcluded, loadPriceIndexOrThrow, newestPriceDate };
 if (require.main === module) main();
