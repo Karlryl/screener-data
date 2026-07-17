@@ -15,7 +15,7 @@ const { route } = require('./router.js');
 const { q, signTrack } = require('./engine.js');
 const { norm } = require('./snapshot.js');
 const { evaluateLamps } = require('./lamps.js');
-const { trackOf, rawAxisValue, learnWinsorBounds, winsorTailBounds, growthYoYComponents, isDataSuspect, issuerDedupComparator, issuerKey, scoreUniverse, rankBy } = require('./score.js');
+const { trackOf, rawAxisValue, learnWinsorBounds, winsorTailBounds, growthYoYComponents, isDataSuspect, issuerDedupComparator, issuerKey, scoreUniverse, rankBy, MIN_COHORT_N } = require('./score.js');
 
 // Baut pro (formulaId|track) die Perzentil-Matrix: rows[{ticker, pct:{axis:0-100}, lamps}].
 function buildCalibMatrix(universe, formulas) {
@@ -62,32 +62,82 @@ function buildCalibMatrix(universe, formulas) {
     (cohorts[e.formulaId + '|' + e.track] = cohorts[e.formulaId + '|' + e.track] || []).push(e);
   }
 
-  const matrix = {};
-  for (const [key, entries] of Object.entries(cohorts)) {
+  // audit/fix (R2.2): PASS 1 — Roh-Achsen + profitSign je Kohorte EINMAL sammeln. Der Mindest-n-Fallback
+  // (PASS 2) braucht die ELTERN-Kohorte (Branche ueber BEIDE Tracks), also ALLE Kohorten der Formel, nicht
+  // nur die eigene -> zwei Paesse (spiegelt score.js:566-586). Rein strukturell: das Achsen-Lernen ist
+  // unveraendert (rawByAxis pro Kohorte unter deren eigenem track wie zuvor).
+  const cohortRaw = {};
+  for (const [cohortKey, entries] of Object.entries(cohorts)) {
     const formula = entries[0].formula;
     const track = entries[0].track;
-    const axisKeys = formula.axes.map((a) => a.key);
-    const rawByAxis = {};
-    for (const k of axisKeys) rawByAxis[k] = entries.map((e) => rawAxisValue(e.s, k, formula, track, winsorBounds, growthBounds));
+    const formulaId = entries[0].formulaId;
     // audit/fix (C1): score.js perzentiliert capitalEfficiency bei subCohortByProfit-Branchen
     // (real-estate/it-services) gegen die profit-Vorzeichen-Sub-Kohorte (Iron-Rule 2). Hier exakt
-    // spiegeln (score.js:85-98), sonst weicht die Kalibrier-Matrix von der Produktion ab -> Weights
+    // spiegeln (score.js:575-577), sonst weicht die Kalibrier-Matrix von der Produktion ab -> Weights
     // wuerden gegen ein Ranking getunt, das Produktion fuer diese 2 Branchen nie erzeugt (100% Mismatch).
     const profitSign = formula.subCohortByProfit
       ? entries.map((e) => signTrack(norm(e.s, 'annualOpInc')))
       : null;
+    const rawByAxis = {};
+    for (const ax of formula.axes) {
+      rawByAxis[ax.key] = entries.map((e) => rawAxisValue(e.s, ax.key, formula, track, winsorBounds, growthBounds));
+    }
+    cohortRaw[cohortKey] = { formula, track, formulaId, entries, rawByAxis, profitSign };
+  }
+  // audit/fix (R2.2): Eltern-Kohorten-Basis (Branche ueber beide Tracks) fuer eine Achse — KONKATENATION
+  // der bereits pro-Kohorte-unter-eigenem-track berechneten rawByAxis-Arrays aller Geschwister-Kohorten
+  // derselben formulaId (spiegelt score.js parentBasis 591-604; der refCal-Zweig entfaellt, calibrate kennt
+  // keinen Ref-Modus). NICHT unter einem Einheits-track neu rechnen -> keine subtile Track-Divergenz.
+  // profitSign-Parent parallel fuer die capitalEfficiency-Sub-Kohorte. Gibt {vals, signs} gleicher Laenge.
+  function parentBasis(formulaId, axisKey) {
+    const keys = Object.keys(cohortRaw).filter((k) => cohortRaw[k].formulaId === formulaId);
+    let vals = [], signs = [];
+    for (const key of keys) {
+      const arr = cohortRaw[key].rawByAxis[axisKey];
+      const sg = cohortRaw[key].profitSign;
+      if (!Array.isArray(arr)) continue;
+      vals = vals.concat(arr);
+      signs = signs.concat((sg && sg.length === arr.length) ? sg : arr.map(() => null));
+    }
+    return { vals, signs };
+  }
+
+  const matrix = {};
+  for (const [key, cr] of Object.entries(cohortRaw)) {
+    const { formula, track, formulaId, entries, rawByAxis, profitSign } = cr;
+    const axisKeys = formula.axes.map((a) => a.key);
+    // audit/fix (R2.2): PASS 2 — Basis-Wahl je Kohorte. duenne Kohorte (n < MIN_COHORT_N) perzentiliert gegen
+    // die ELTERN-Basis (beide Tracks), NICHT gegen die eigene duenne Stichprobe — spiegelt score.js:606-638
+    // (isFallback 615). Der zu perzentilierende Wert bleibt rawByAxis[k][i] der EIGENEN Kohorte; nur die
+    // q()-Basis wechselt. fette Kohorte: unveraendert eigene Kohorte (byte-identisch zum bisherigen Verhalten).
+    const nCohort = entries.length;
+    const isFallback = nCohort < MIN_COHORT_N;
+    const parentCache = {};                             // Eltern-Basis je Achse nur bei Fallback + einmalig
     const rows = entries.map((e, i) => {
       const pct = {};
       for (const k of axisKeys) {
-        let cohort = rawByAxis[k];
-        if (profitSign && k === 'capitalEfficiency') {
-          cohort = cohort.filter((_, j) => profitSign[j] === profitSign[i]);
+        let cohort, signBasis;
+        if (isFallback) {
+          const pb = parentCache[k] || (parentCache[k] = parentBasis(formulaId, k));
+          cohort = pb.vals; signBasis = pb.signs;
+        } else {
+          cohort = rawByAxis[k];
+          signBasis = profitSign;
+        }
+        if (k === 'capitalEfficiency' && profitSign) {
+          // gegen die gleich-vorzeichige Sub-Kohorte perzentilieren; die (ggf. Eltern-)Basis nach dem
+          // EIGENEN (snapshot-stabilen) Vorzeichen von Name i filtern -> A-Namen behalten ihren Rang.
+          // 2.10-Court-Guard: dieser Fallback-Pfad ist NUR sicher, weil JEDE subCohortByProfit-Formel
+          // splitMetric:'none' ist (Einzel-Kohorte -> Eltern-Basis == eigene Kohorte, signBasis voll
+          // besetzt). Bekaeme je eine SPLIT-Branche subCohortByProfit UND fiele unter MIN_COHORT_N, mischte
+          // die Eltern-Basis beide Tracks mit ggf. null-signBasis -> diesen Pfad dann neu pruefen.
+          cohort = cohort.filter((_, j) => signBasis[j] === profitSign[i]);
         }
         pct[k] = q(rawByAxis[k][i], cohort);
       }
       return { ticker: e.ticker, pct, lamps: e.lamps };
     });
-    matrix[key] = { formulaId: entries[0].formulaId, track, axisKeys, defaultWeights: weightsObj(formula, track), alpha: formula.alpha, rows };
+    matrix[key] = { formulaId, track, axisKeys, defaultWeights: weightsObj(formula, track), alpha: formula.alpha, rows };
   }
   // R-Gate R2.1+R2.8: die intern gelernten universe-weiten Schranken NICHT-ENUMERIERBAR ausweisen
   // (score.js:770-785-Muster), damit der Paritaets-Test sie lesen kann OHNE dass dumpMatrix() sie als
