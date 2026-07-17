@@ -684,6 +684,25 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
+      # F4/F6 (Artefakt-Handoff merge→scoring): der scoring-Job checkt github.sha
+      # (Trigger-Commit) aus und laedt NUR das snapshots-Artefakt — er sieht daher
+      # WEDER die in diesem Lauf frisch fortgeschriebene external-data/ath-state.json
+      # (vom merge-Commit oben, F4) NOCH outputs/macro-regime.json (gitignored, nur
+      # hier erzeugt, F6). Beide als EIN Artefakt durchreichen; scoring laedt es vor
+      # write-findash-export/write-board-history. Artefakt statt git-fetch = race-frei
+      # gegen parallele main-Pushes. if-no-files-found: warn haelt die fail-soft-Semantik
+      # der continue-on-error-Quellschritte (Compute Macro Regime, Update ATH State).
+      - name: Upload merge→scoring handoff (ath-state + macro-regime)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: merge-handoff
+          path: |
+            external-data/ath-state.json
+            outputs/macro-regime.json
+          if-no-files-found: warn
+          retention-days: 1
+
       # Tag 168: Pipeline Health Check nach Commit (blockt Deploy, nicht den Data-Commit).
       - name: Pipeline Health Check
         env:
@@ -761,6 +780,21 @@ jobs:
         with:
           name: snapshots
           path: snapshots
+
+      # F4/F6: die im merge-Job frisch erzeugten Handoff-Dateien holen, BEVOR die
+      # Reader laufen — external-data/ath-state.json (write-findash-export.js:78, F4)
+      # und outputs/macro-regime.json (write-board-history.js:368, F6). Landet dank
+      # der beibehaltenen Artefakt-Pfade exakt am Lese-Ort (path: .). run-screener.js
+      # schreibt macro-regime.json nicht, ueberschreibt es also nicht. continue-on-error:
+      # fehlt das Artefakt ausnahmsweise, fallen beide Reader auf ihr bisheriges
+      # Verhalten zurueck (ath: alter committeter Stand; regime: 'unknown') — kein
+      # NEUER Hart-Abbruch im scoring-Job, die fail-soft-Semantik bleibt unveraendert.
+      - name: Download merge→scoring handoff (ath-state + macro-regime)
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: merge-handoff
+          path: .
 
       - name: Run Hypergrowth Screener
         run: |
