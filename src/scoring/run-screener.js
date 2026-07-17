@@ -235,7 +235,13 @@ function run(topN) {
 // 3.1 QC-Board: eigener Scoring-Pass via classify-Seam (qualityRoute) + growthBoost:false. Schreibt
 // outputs/quality/{<boards>,overview,index,calibration}.json mit assertFinite-Write-Guard. calibration
 // NUR nach outputs/quality/calibration.json (NIE outputs/calibration.json — das ist das HG-Lineal).
-function runQualityPass(universe, topN) {
+function runQualityPass(universe, topN, qcOutDir = QC_OUT_DIR) {
+  // H-B (T3, nur lokale Laeufe): index.json wird ZULETZT geschrieben. Wirft der Pass davor,
+  // bliebe lokal ein index.json des LETZTEN Erfolgs liegen — qualityExportMode prueft index
+  // ZUERST und wuerde 'export' ueber den FRISCHEREN _failed-Marker gewinnen lassen: alte Boards
+  // mit neuem generated_at re-exportiert, der Ausfall lokal maskiert. Darum den stalen Index
+  // ganz am Anfang raeumen (Variante A). Begruendung/Restfall siehe clearStaleQualityIndex.
+  clearStaleQualityIndex(qcOutDir);
   const qcResults = scoreUniverse(universe, qcFormulas, { classify: qualityRoute, growthBoost: false });
   const qcRanked = produceRankings(qcResults, { topN: topN || 100 });
   const counts = {};
@@ -246,16 +252,16 @@ function runQualityPass(universe, topN) {
     }
   }
   const W = (p, v) => writeJsonAtomic(p, v, { assertFinite: true }); // fail-loud statt NaN->null
-  fs.mkdirSync(QC_OUT_DIR, { recursive: true });
+  fs.mkdirSync(qcOutDir, { recursive: true });
   for (const [id, b] of Object.entries(qcRanked.branches)) {
-    W(path.join(QC_OUT_DIR, id + '.json'), b);
+    W(path.join(qcOutDir, id + '.json'), b);
   }
-  W(path.join(QC_OUT_DIR, 'overview.json'), qcRanked.overview);
+  W(path.join(qcOutDir, 'overview.json'), qcRanked.overview);
   const sortKeys = (o) => Object.fromEntries(Object.keys(o).sort().map((k) => [k, o[k]]));
   const boardIds = Object.keys(qcRanked.branches).sort();
   const boardStatusMap = {};
   for (const id of boardIds) boardStatusMap[id] = boardStatus(id); // alle 'diagnostic' (quality-Praefix)
-  W(path.join(QC_OUT_DIR, 'index.json'), {
+  W(path.join(qcOutDir, 'index.json'), {
     schema: 'quality/diagnostic-v1',
     generatedFromSnapshots: universe.length,
     boards: boardIds,
@@ -264,10 +270,30 @@ function runQualityPass(universe, topN) {
     excluded: sortKeys(qcRanked.excluded),
   });
   if (qcResults.calibration) {
-    W(path.join(QC_OUT_DIR, 'calibration.json'),
+    W(path.join(qcOutDir, 'calibration.json'),
       { generated_at: new Date().toISOString(), ...qcResults.calibration });
   }
-  console.log(`[run-screener] QC-Board (DIAGNOSTIC): ${boardIds.length} Boards -> ${QC_OUT_DIR}`);
+  console.log(`[run-screener] QC-Board (DIAGNOSTIC): ${boardIds.length} Boards -> ${qcOutDir}`);
+}
+
+// H-B-Guard: entfernt AUSSCHLIESSLICH ein evtl. stales outputs/quality/index.json, bevor der
+// QC-Pass neu schreibt. Betriebsdaten-Semantik (outputs/ ist git-ignorte, lauf-regenerierte
+// Zwischenausgabe), kein Karl-Loesch-Stop. Best-effort/idempotent (force schluckt ENOENT, der
+// try/catch jeden Windows-Handle-Fall) — der Guard darf selbst NIE werfen.
+//
+// Variante A (Anfang statt catch) gewaehlt, weil sie den Ausfall AM EHRLICHSTEN ausweist:
+//   - Normalfall QC-Exception (haeufig): Index vorab weg -> run()-catch schreibt _failed ->
+//     qualityExportMode = 'failed' (Ausfall sichtbar; kein stales Board).
+//   - Erfolgslauf: Index vorab weg, danach frisch geschrieben -> 'export' (byte-identisch zu vorher;
+//     ein stehen gebliebener _failed eines Vorlaufs verliert weiterhin gegen den frischen index -> Tag-343-Semantik haelt).
+// RESTFALL: stirbt der Prozess MITTEN im Pass HART (SIGKILL/OOM, KEIN catch), ist lokal weder Index
+// noch Marker da -> qualityExportMode = 'absent' (still, aber KEIN stales Board als frisch getarnt).
+// Das ist ehrlicher als die catch-Variante, die bei Hard-Kill den Erfolgs-Index haelt und alte
+// Boards mit neuem generated_at re-exportieren wuerde (genau der maskierte Ausfall, den H-B behebt).
+function clearStaleQualityIndex(qcOutDir = QC_OUT_DIR) {
+  try {
+    fs.rmSync(path.join(qcOutDir, 'index.json'), { force: true });
+  } catch (_) { /* best-effort: bleibt der stale Index liegen, ist der Ausgangszustand nicht schlechter als heute */ }
 }
 
 // F11: expliziter QC-Fehl-Marker (outputs/quality/_failed). Wird im catch des QC-Passes
@@ -293,4 +319,4 @@ if (require.main === module) {
   console.log(`Screener-Output: ${r.branches} Branchen, Universum ${r.universe} -> ${r.out}`);
 }
 
-module.exports = { loadUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO, writeQualityFailedMarker };
+module.exports = { loadUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex };
