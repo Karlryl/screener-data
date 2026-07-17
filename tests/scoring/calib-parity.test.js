@@ -14,8 +14,10 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { scoreUniverse, rankBy } = require('../../src/scoring/score.js');
+const { scoreUniverse, rankBy, isDataSuspect, issuerKey, issuerDedupComparator, learnWinsorBounds, winsorTailBounds, growthYoYComponents } = require('../../src/scoring/score.js');
 const { buildCalibMatrix, rankCohort, weightsObj, withWeights, productionCohortRanking } = require('../../src/scoring/calibrate.js');
+const { route } = require('../../src/scoring/router.js');
+const { evaluateLamps } = require('../../src/scoring/lamps.js');
 const formulas = require('../../src/scoring/formulas/index.js');
 
 let pass = 0, fail = 0;
@@ -83,6 +85,42 @@ test('withWeights überschreibt Gewichte immutabel und verändert das Produktion
   for (let i = 0; i < Math.min(base.length, perturbedRank.length); i++) if (base[i] !== perturbedRank[i]) diffs++;
   console.log(`       withWeights-Perturbation: ${diffs} Rangänderungen`);
   assert.ok(diffs > 0, 'Gewichts-Override muss das Produktions-Ranking verändern (Verify-Primitiv funktioniert)');
+});
+
+// (4) R2.1+R2.8: buildCalibMatrix lernt die universe-weiten Winsor-/Growth-Schranken auf der
+// POST-Dedup kept-Population (wie score.js), NICHT auf pre-dedup routed. Referenz UNABHAENGIG auf
+// der route-only kept-Population gerechnet (calibrate-Semantik) — NICHT gegen scoreUniverse().calibration
+// (route-vs-survival-Asymmetrie, R2.1-Auflage 5). BEIDE Schranken deepEqual ohne Toleranz (R2.8-Auflage 1).
+test('Kalibrier-Bounds werden auf der post-Dedup kept-Population gelernt (R2.1+R2.8, winsor UND growth)', () => {
+  const matrix = buildCalibMatrix(universe, formulas);
+  // route-only Population exakt wie buildCalibMatrix: route -> Formel vorhanden -> nicht data-suspect.
+  const routedEntries = [];
+  for (const s of universe) {
+    const r = route(s);
+    if (r.action !== 'route') continue;
+    if (!formulas[r.formulaId]) continue;
+    const lamps = evaluateLamps(s).active;
+    if (isDataSuspect(s, lamps, 'route')) continue;
+    routedEntries.push({ snapshot: s, ticker: (s.meta && s.meta.ticker) || '?' });
+  }
+  // Issuer-Dedup mit demselben Sortierschluessel; Verlierer entfernen -> kept (post-Dedup).
+  const groups = {};
+  for (const e of routedEntries) { const k = issuerKey(e.snapshot); if (k) (groups[k] ||= []).push(e); }
+  const losers = new Set();
+  for (const g of Object.values(groups)) {
+    if (g.length < 2) continue;
+    g.sort(issuerDedupComparator);
+    for (let i = 1; i < g.length; i++) losers.add(g[i]);
+  }
+  const kept = routedEntries.filter((e) => !losers.has(e));
+  // Diskriminanz-Schutz: nur wenn der Dedup wirklich Verlierer entfernt, unterscheiden sich pre-/post-Bounds.
+  assert.ok(routedEntries.length - kept.length > 0, `Dedup muss Verlierer entfernen (routed=${routedEntries.length}, kept=${kept.length})`);
+  const refWinsor = learnWinsorBounds(kept.map((e) => e.snapshot));
+  const growthSamples = [];
+  for (const e of kept) for (const v of growthYoYComponents(e.snapshot)) growthSamples.push(v);
+  const refGrowth = winsorTailBounds(growthSamples);
+  assert.deepEqual(matrix.calibration.winsorBounds, refWinsor, 'winsorBounds muss post-Dedup (kept) gelernt sein');
+  assert.deepEqual(matrix.calibration.growthBounds, refGrowth, 'growthBounds muss post-Dedup (kept) gelernt sein');
 });
 
 console.log(`\ncalib-parity.test.js: ${pass} ok, ${fail} fail`);

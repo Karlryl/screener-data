@@ -44,19 +44,21 @@ function buildCalibMatrix(universe, formulas) {
     group.sort(issuerDedupComparator);
     for (let i = 1; i < group.length; i++) dedupLosers.add(group[i]);
   }
-  // audit/fix (Bug 0): universe-weite Winsor-Schranken EXAKT wie score.js lernen (gemeinsame Quelle)
-  // und als 5. Argument an rawAxisValue durchreichen — sonst laufen marginTrajectory/revAcceleration
-  // UNwinsorisiert (Stub-Quartal-Phantom-Extreme pinnen die Perzentil-Enden, Matrix != Produktion).
-  const winsorBounds = learnWinsorBounds(routed.map((e) => e.s));
-  // Datenrichtigkeits-Fix 14.07.2026: growthBounds EXAKT wie score.js lernen (gleiche Basis wie
-  // winsorBounds) und an rawAxisValue durchreichen — revGrowthLevel/ruleOfX rechnen jetzt
-  // reihen-basiert und klemmen Mini-Basis-Komponenten mit denselben data-learned Schranken.
+  // audit/fix (R2.1+R2.8): die Dedup-Verlierer VOR dem Bounds-Lernen entfernen — die universe-weiten
+  // Winsor-/Growth-Schranken auf der POST-Dedup-Population `kept` lernen, exakt wie score.js (dort setzt
+  // der Dedup Z.512-520 die Verlierer auf exclude, DANN lernt Z.552/559 auf action==='route'). Vorher
+  // lernten sie auf pre-dedup `routed` (die Doppel-Notierungs-Verlierer verschoben p1/p99) -> Matrix != Produktion.
+  const kept = routed.filter((e) => !dedupLosers.has(e));
+  // Winsor-Schranken (marginTrajectory/revAcceleration) als 5. Argument an rawAxisValue durchgereicht —
+  // sonst UNwinsorisiert (Stub-Quartal-Phantom-Extreme pinnen die Perzentil-Enden).
+  const winsorBounds = learnWinsorBounds(kept.map((e) => e.s));
+  // growthBounds gleiche Basis wie winsorBounds, an rawAxisValue durchgereicht — revGrowthLevel/ruleOfX
+  // rechnen reihen-basiert und klemmen Mini-Basis-Komponenten mit denselben data-learned Schranken.
   const growthSamples = [];
-  for (const e of routed) for (const v of growthYoYComponents(e.s)) growthSamples.push(v);
+  for (const e of kept) for (const v of growthYoYComponents(e.s)) growthSamples.push(v);
   const growthBounds = winsorTailBounds(growthSamples);
   const cohorts = {};
-  for (const e of routed) {
-    if (dedupLosers.has(e)) continue;
+  for (const e of kept) {
     (cohorts[e.formulaId + '|' + e.track] = cohorts[e.formulaId + '|' + e.track] || []).push(e);
   }
 
@@ -87,6 +89,10 @@ function buildCalibMatrix(universe, formulas) {
     });
     matrix[key] = { formulaId: entries[0].formulaId, track, axisKeys, defaultWeights: weightsObj(formula, track), alpha: formula.alpha, rows };
   }
+  // R-Gate R2.1+R2.8: die intern gelernten universe-weiten Schranken NICHT-ENUMERIERBAR ausweisen
+  // (score.js:770-785-Muster), damit der Paritaets-Test sie lesen kann OHNE dass dumpMatrix() sie als
+  // Pseudo-Kohorte iteriert (Object.entries -> key.split('|') -> Junk-Datei calibration.json).
+  Object.defineProperty(matrix, 'calibration', { value: { winsorBounds, growthBounds }, enumerable: false });
   return matrix;
 }
 
