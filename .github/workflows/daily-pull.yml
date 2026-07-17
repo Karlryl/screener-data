@@ -87,27 +87,36 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
-      # Task 0.3 (Loop B): PRE-pull scoring test-gate. Every tests/scoring/*.test.js
-      # is a self-running node script ending in process.exit(fail ? 1 : 0). The glob
-      # skips the fixtures/ subdir. A broken engine must block the run (::error:: +
-      # exit 1) BEFORE the expensive fan-out. Signal path is GitHub red-X only.
-      - name: Scoring Test-Gate (pre-pull)
+      # Task 0.3 (Loop B): PRE-pull test-gate. Jede Testdatei ist ein selbstlaufendes
+      # node-Skript, das mit process.exit(fail ? 1 : 0) endet. Der Glob laesst
+      # fixtures/-Unterordner aus. Eine kaputte Engine muss den Lauf VOR dem teuren
+      # Fan-out blocken (::error:: + exit 1). Signalweg ist ausschliesslich das rote X.
+      #
+      # R-Gate 2.R (17.07.): Das Gate globbte NUR tests/scoring/*.test.js — die 13
+      # Dateien unter tests/ liefen im CI NIE. Darunter rank-ic.test.js und
+      # board-history.test.js, also ausgerechnet die Regressionstests der drei
+      # T1-Funde vom 17.07. (Preis-Store-Pfad, unfertige Fenster, Ausschluss-Vertrag):
+      # Sie haetten eine Wiederholung nicht verhindert, weil sie niemand gefahren haette.
+      # Beide Baeume laufen jetzt im selben Gate; tests/ ist hermetisch (Temp-Fixtures)
+      # und braucht kein Universum, ist also pre-pull voll aussagekraeftig.
+      - name: Test-Gate (pre-pull, tests/ + tests/scoring/)
         run: |
           fail=0
-          for t in tests/scoring/*.test.js; do
+          for t in tests/*.test.js tests/scoring/*.test.js; do
+            [ -e "$t" ] || continue
             echo "--- $t ---"
             if node "$t"; then
               echo "PASS $t"
             else
-              echo "::error::Scoring test failed: $t — blocking run before Yahoo pull"
+              echo "::error::Test failed: $t — blocking run before Yahoo pull"
               fail=1
             fi
           done
           if [ "$fail" -ne 0 ]; then
-            echo "::error::One or more tests/scoring/*.test.js failed — hypergrowth engine is broken, aborting run."
+            echo "::error::One or more tests failed — engine/measurement is broken, aborting run."
             exit 1
           fi
-          echo "All scoring tests passed."
+          echo "All tests passed."
 
       # Coverage-Marker-Vertrag (coverage-status/v1) pre-pull pinnen. Der Marker
       # outputs/coverage-status.json ist Karls EINZIGER sanktionierter Alarm-Kanal
