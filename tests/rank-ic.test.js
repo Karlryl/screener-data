@@ -357,5 +357,40 @@ test('loadExcluded R2.5: Altformate bleiben lesbar (Rueckwaertskompatibilitaet)'
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
+// ── Union statt Fruehausstieg (R-Gate 2.R Runde 3, Funde #4+#6) ──────────────
+// Der Tag-324-Fix stieg beim ersten gefundenen Format sofort aus (return im
+// entries-Zweig). Auf der ECHTEN board-history/_excluded.json ist 'excluded' aber
+// IMMER vorhanden (readOrScaffoldExcluded legt {_doc, excluded: []} an) -> der im
+// Kopf-Kommentar versprochene Altformat-Pfad war TOT. Wer einen Ausschluss im
+// Altformat in die existierende Datei eintrug, wurde still geschluckt: exakt der
+// No-Op, den Tag 324 beheben sollte. Beide Tests waeren vor dem Fix rot gewesen.
+test('loadExcluded R3/#4: excluded-Array UND Top-Level-Datum in DERSELBEN Datei wirken beide (Union statt Fruehausstieg)', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'rank-ic-excl-union-'));
+  // Datei exakt in der Form, die der Writer anlegt — plus ein Altformat-Eintrag daneben.
+  fs.writeFileSync(path.join(tmp, '_excluded.json'), JSON.stringify({
+    _doc: 'vom Writer angelegtes Geruest',
+    excluded: [{ date: '2026-01-02', reason: 'via Writer-Vertrag' }],
+    '2026-02-01': 'via Altformat (wurde vor dem Fix still geschluckt)',
+  }));
+  const ex = ric.loadExcluded(tmp);
+  assert.equal(ex.size, 2, 'beide Quellen gelesen (vor dem Fix: 1 — der Altformat-Zweig war unerreichbar)');
+  assert.equal(ric.isDateExcluded(ex, '2026-01-02'), true, 'Writer-Vertrag wirkt');
+  assert.equal(ric.isDateExcluded(ex, '2026-02-01'), true, 'Top-Level-Datum wirkt (war vorher ein stiller No-Op)');
+});
+
+test('loadExcluded R3/#6: "excluded" vorhanden aber KEIN Array -> lauter Fehler statt stillem No-Op', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'rank-ic-excl-typo-'));
+  const write = (excl) => fs.writeFileSync(path.join(tmp, '_excluded.json'), JSON.stringify({ _doc: 'x', excluded: excl }));
+  // Tippfehler-Fall: Objekt statt Liste. Vor dem Fix: entries=null -> Altformat-Zweig ->
+  // Datums-Regex verwirft '_doc'/'excluded' -> leere Map, kein Ausschluss, kein Wort.
+  write({ '2026-01-02': 'grund' });
+  assert.throws(() => ric.loadExcluded(tmp), /excluded.*erwartet wird eine LISTE/s, 'Objekt statt Liste -> fail-loud');
+  write('2026-01-02');
+  assert.throws(() => ric.loadExcluded(tmp), /erwartet wird eine LISTE/, 'String statt Liste -> fail-loud');
+  write(null);
+  assert.throws(() => ric.loadExcluded(tmp), /erwartet wird eine LISTE/, 'null statt Liste -> fail-loud');
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
 console.log(`\nrank-ic.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

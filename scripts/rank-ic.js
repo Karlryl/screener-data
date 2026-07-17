@@ -29,13 +29,19 @@
  *                         kein Kurs am Fensterstart -> Ausschluss mit Quote.
  *      Austrittsquote je Board×Vintage wird protokolliert (hohe Quote = Warnung).
  *  Exclude: board-history/_excluded.json — der vom Writer (write-board-history.js)
- *      angelegte Vertrag {_doc, excluded:[{date,board,reason}]} sowie die Altformate
- *      ({"YYYY-MM-DD":"grund"} ODER Liste von Datums-Strings). Eintrag OHNE board =
+ *      angelegte Vertrag {_doc, excluded:[{date,board,reason}]} UND (als Union, nicht
+ *      als Alternative — 'excluded' existiert auf der echten Datei immer) die Altformate:
+ *      Top-Level-Datumsschlüssel {"YYYY-MM-DD":"grund"} in derselben Datei sowie eine
+ *      blanke Liste von Datums-Strings als ganzer Dateiinhalt. Eintrag OHNE board =
  *      Datum global aus; MIT board = nur dieses Board an diesem Datum. Exkludiertes
- *      fällt nachweislich aus JEDER Rechnung (Ausweis im Report).
+ *      fällt nachweislich aus JEDER Rechnung (Ausweis im Report). Ein vorhandenes
+ *      'excluded', das KEIN Array ist, ist ein harter Fehler (kein stiller No-Op).
  *
  * Usage: node scripts/rank-ic.js [--history-dir board-history] [--out outputs/rank-ic-report.json]
  * Exit 0 = Report geschrieben (auch „keine auswertbaren Fenster" ist ein gültiger Report).
+ * Exit 1 = KEIN Report: leerer/fehlender Preis-Index (loadPriceIndexOrThrow, Tag 321) —
+ *          bewusst fail-loud. Ein IC ohne Preise waere kein Negativergebnis, sondern
+ *          ein stiller Messausfall, der wie „kein Signal" aussieht.
  */
 const fs = require('fs');
 const path = require('path');
@@ -168,7 +174,17 @@ function benjaminiYekutieli(pvals, q) {
 // diese Liste konsumiert. Gelesen wurden aber nur die Altformate — die Schlüssel des
 // Writer-Blocks ('_doc','excluded') fielen durch den Datums-Regex und die Map blieb LEER:
 // ein per Audit eingetragener Ausschluss war ein stiller No-Op, das als korrupt erkannte
-// Vintage blieb in JEDER Rechnung. Alle drei Formate werden jetzt gelesen.
+// Vintage blieb in JEDER Rechnung.
+//
+// R-Gate 2.R Runde 3 (Funde #4+#6): der Tag-324-Fix stieg beim ersten gefundenen Format
+// SOFORT aus. Auf der ECHTEN Datei ist 'excluded' aber IMMER vorhanden (das Writer-Gerüst
+// legt {_doc, excluded: []} an) — der Altformat-Zweig war damit tot, und ein daneben
+// eingetragener Top-Level-Datumsschlüssel wurde erneut still geschluckt: derselbe Fehler,
+// nur eine Ebene tiefer. Jetzt UNION statt Frühausstieg: beide Quellen werden gelesen
+// (der Datums-Regex ignoriert '_doc'/'excluded' ohnehin). Und ein 'excluded', das existiert
+// aber KEIN Array ist (Tippfehler, Objekt statt Liste), ist ab jetzt ein harter Fehler —
+// analog loadPriceIndexOrThrow: die Messreihe darf nie wieder still nichts ausschliessen,
+// wo ein Audit einen Ausschluss eingetragen hat.
 //
 // Rückgabe: Map<date, {reason, boards}> — boards === null heisst „Datum global aus",
 // sonst Map<board,reason> = nur diese Boards an diesem Datum aus (global schlägt board-eng).
@@ -185,18 +201,27 @@ function loadExcluded(historyDir) {
     if (!board) { e.boards = null; e.reason = reason; return; }     // ohne board = global
     e.boards.set(String(board), reason);
   };
+  const isObj = raw && typeof raw === 'object' && !Array.isArray(raw);
+  // fail-loud: 'excluded' da, aber keine Liste -> die Einträge wären unlesbar und
+  // der Ausschluss ein stiller No-Op. Lieber lauter Abbruch als falsche Messreihe.
+  if (isObj && 'excluded' in raw && !Array.isArray(raw.excluded)) {
+    throw new Error(
+      '[rank-ic] ' + f + ': Feld "excluded" ist ' + (raw.excluded === null ? 'null' : typeof raw.excluded)
+      + ', erwartet wird eine LISTE (Writer-Vertrag {_doc, excluded:[{date,board,reason}]}). '
+      + 'Ein nicht lesbares Ausschluss-Feld würde still nichts ausschliessen — als korrupt '
+      + 'erkannte Vintages blieben in jeder Rechnung.',
+    );
+  }
   // (1) Writer-Vertrag {excluded:[…]} und (2) blanke Liste — Einträge dürfen
   //     Datums-String ODER {date,board,reason} sein.
-  const entries = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.excluded) ? raw.excluded : null);
-  if (entries) {
-    for (const e of entries) {
-      if (typeof e === 'string') add(e, null, 'excluded');
-      else if (e && typeof e === 'object') add(e.date, e.board || null, e.reason || 'excluded');
-    }
-    return out;
+  const entries = Array.isArray(raw) ? raw : (isObj && Array.isArray(raw.excluded) ? raw.excluded : []);
+  for (const e of entries) {
+    if (typeof e === 'string') add(e, null, 'excluded');
+    else if (e && typeof e === 'object') add(e.date, e.board || null, e.reason || 'excluded');
   }
-  // (3) Altformat {"YYYY-MM-DD": "grund"}
-  if (raw && typeof raw === 'object') {
+  // (3) Altformat {"YYYY-MM-DD": "grund"} — als UNION, nicht als Alternative: auf der
+  //     echten Datei existiert 'excluded' immer, ein Alternativ-Zweig wäre tot.
+  if (isObj) {
     for (const [k, v] of Object.entries(raw)) add(k, null, typeof v === 'string' ? v : 'excluded');
   }
   return out;
