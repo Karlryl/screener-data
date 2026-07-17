@@ -14,9 +14,19 @@ const { scoreUniverse, rankBy } = require('../../src/scoring/score.js');
 const formulas = require('../../src/scoring/formulas/index.js');
 
 let pass = 0, fail = 0, skip = 0;
+// R2.R (Rumpf-Skip-Ehrlichkeit): ein Test, der ERST IM RUMPF merkt, dass seine Voraussetzung fehlt
+// (kein Universum, Anker-Ticker nicht im Universum), darf NICHT als pass gezaehlt werden — er hat
+// nichts geprueft. Frueher stieg so ein Rumpf per `return`/`continue` aus und test() zaehlte pass++
+// -> "18 ok" mit 8 hohlen Tests. skipBody() wirft ein Sentinel, das test() als skip verbucht:
+// EINE Stelle statt acht stiller Aussteiger, Ausgabe im selben Format wie testU.
+const SKIP = Symbol('skip-body');
+function skipBody(grund) { const e = new Error(grund); e[SKIP] = true; throw e; }
 function test(name, fn) {
   try { fn(); pass++; console.log('  ok   ' + name); }
-  catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
+  catch (e) {
+    if (e && e[SKIP]) { skip++; console.log('  skip ' + name + ' (' + e.message + ')'); return; }
+    fail++; console.error('FAIL   ' + name + '\n       ' + e.message);
+  }
 }
 
 // SCREENER_SNAPSHOTS_DIR: nur Test-Seam (Skip-Ehrlichkeits-Regression zeigt damit ein leeres
@@ -45,8 +55,7 @@ const rankIn = (cohort, ticker) => cohort.findIndex((e) => e.ticker === ticker);
 // Lokal (mit echten Snapshots) laufen alle Anker voll durch -> kein Aufweichen des Gates.
 const HAS_UNIVERSE = universe.length > 0;
 function testU(name, fn) {
-  if (!HAS_UNIVERSE) { skip++; console.log('  skip ' + name + ' (kein Universum — pre-pull-Gate)'); return; }
-  test(name, fn);
+  test(name, () => { if (!HAS_UNIVERSE) skipBody('kein Universum — pre-pull-Gate'); fn(); });
 }
 
 // --- keine NaN/Infinity-Scores ueber das ganze Universum --------------------
@@ -77,7 +86,7 @@ testU('CRDO im oberen 20% seines Track-Kohorten-Rankings', () => {
 // --- ALAB (falls vorhanden) ebenfalls oben ----------------------------------
 test('ALAB (falls vorhanden) im oberen 25% seines Tracks', () => {
   const a = byTicker['ALAB'];
-  if (!a || a.action !== 'route') { console.log('       (ALAB nicht im Universum — uebersprungen)'); return; }
+  if (!a || a.action !== 'route') skipBody('ALAB nicht im Universum/nicht geroutet');
   const cohort = rankBy(results, 'semiconductors', a.track);
   const rank = rankIn(cohort, 'ALAB');
   console.log(`       ALAB Rang ${rank + 1}/${cohort.length} (${a.track}), Score ${a.score.toFixed(1)}`);
@@ -86,9 +95,14 @@ test('ALAB (falls vorhanden) im oberen 25% seines Tracks', () => {
 
 // --- Decliner (NVTS/AEHR falls vorhanden) im unteren Bereich ----------------
 test('Decliner NVTS/AEHR (falls vorhanden) in unterer Haelfte ihres Tracks', () => {
-  for (const t of ['NVTS', 'AEHR']) {
+  // erst filtern, dann pruefen: ist KEINER scorebar, hat der Test nichts geprueft -> skip statt pass.
+  const have = ['NVTS', 'AEHR'].filter((t) => {
     const d = byTicker[t];
-    if (!d || d.action !== 'route' || d.score === null) { console.log(`       (${t} nicht scorebar — uebersprungen)`); continue; }
+    return d && d.action === 'route' && d.score !== null;
+  });
+  if (!have.length) skipBody('weder NVTS noch AEHR scorebar');
+  for (const t of have) {
+    const d = byTicker[t];
     const cohort = rankBy(results, 'semiconductors', d.track);
     const rank = rankIn(cohort, t);
     console.log(`       ${t} Rang ${rank + 1}/${cohort.length} (${d.track}), Score ${d.score.toFixed(1)}`);
@@ -99,7 +113,7 @@ test('Decliner NVTS/AEHR (falls vorhanden) in unterer Haelfte ihres Tracks', () 
 // --- weitere Anker in anderen Branchen --------------------------------------
 function assertAnchorTop(ticker, formulaId, maxPct) {
   const a = byTicker[ticker];
-  if (!a || a.action !== 'route' || a.score === null) { console.log(`       (${ticker} nicht scorebar — uebersprungen)`); return; }
+  if (!a || a.action !== 'route' || a.score === null) skipBody(`${ticker} nicht scorebar`);
   assert.equal(a.formulaId, formulaId, `${ticker} formulaId=${a.formulaId}`);
   const cohort = rankBy(results, formulaId, a.track);
   const rank = rankIn(cohort, ticker);
@@ -143,7 +157,7 @@ test('trackOf: OpInc-Split, leeres annualOpInc + neg. NetIncome -> unprofitable 
 });
 test('WOLF (falls vorhanden): semiconductors, UNPROFITABLE-Track (F5)', () => {
   const w = byTicker['WOLF'];
-  if (!w || w.action !== 'route') { console.log('       (WOLF nicht scorebar — uebersprungen)'); return; }
+  if (!w || w.action !== 'route') skipBody('WOLF nicht scorebar');
   assert.equal(w.formulaId, 'semiconductors', 'WOLF formulaId=' + w.formulaId);
   assert.equal(w.track, 'unprofitable', 'WOLF muss unprofitable sein (annualOpInc leer, NetIncome negativ)');
 });
@@ -171,7 +185,7 @@ testU('Pre-Revenue-Biotech -> survival-track, score=null, Runway-Badge', () => {
 // --- Real-Estate: Overview = FFO-Badge (Nicht-GP) ---------------------------
 test('Real-Estate Overview ist ffo-badge (track-eigene Badge)', () => {
   const reits = results.filter((e) => e.formulaId === 'real-estate' && e.action === 'route');
-  if (!reits.length) { console.log('       (keine REITs — uebersprungen)'); return; }
+  if (!reits.length) skipBody('keine REITs im Universum');
   assert.ok(reits.every((e) => e.overview && e.overview.kind === 'ffo-badge'), 'REIT Overview != ffo-badge');
 });
 
@@ -229,9 +243,11 @@ test('Issuer-Dedup FX-Haertung (F50): FX-suspektes dual-non-USD-Bein verliert de
   assert.notEqual(bt['603993.SS'].reason, 'dup-issuer', 'FX-konsistentes Bein (603993.SS) gewinnt den Dedup');
 });
 test('Issuer-Dedup real: SHOP.TO/ASML.AS/2330.TW (falls vorhanden) dedupt, US-Bein routet', () => {
-  for (const [us, home] of [['SHOP', 'SHOP.TO'], ['ASML', 'ASML.AS'], ['TSM', '2330.TW']]) {
+  const pairs = [['SHOP', 'SHOP.TO'], ['ASML', 'ASML.AS'], ['TSM', '2330.TW']]
+    .filter(([us, home]) => byTicker[us] && byTicker[home]);
+  if (!pairs.length) skipBody('kein SHOP/ASML/TSM-Doppellisting im Universum');
+  for (const [us, home] of pairs) {
     const u = byTicker[us], h = byTicker[home];
-    if (!u || !h) { console.log(`       (${us}/${home} nicht im Universum — uebersprungen)`); continue; }
     assert.equal(u.action, 'route', `${us} sollte routen`);
     assert.equal(h.action, 'exclude', `${home} sollte dedupt sein`);
     assert.equal(h.reason, 'dup-issuer', `${home} reason=${h.reason}`);
@@ -242,17 +258,19 @@ test('Issuer-Dedup real: SHOP.TO/ASML.AS/2330.TW (falls vorhanden) dedupt, US-Be
 test('non-operating-rev: CEF/Trust + Investment-Holding/BDC (falls vorhanden) excludiert', () => {
   // CEFs/Trusts (negativer Jahresumsatz) + NAV-Holdings (III.L/3i, INDU-A.ST/Industrivaerden:
   // Asset-Mgmt mit GP=0/ni~rev bzw. negativem Quartalsumsatz). Alle gehoeren nicht in den Topf.
-  for (const t of ['SMT.L', 'ADX', 'AOD', 'III.L', 'INDU-A.ST']) {
+  const have = ['SMT.L', 'ADX', 'AOD', 'III.L', 'INDU-A.ST'].filter((t) => byTicker[t]);
+  if (!have.length) skipBody('kein CEF/Trust/NAV-Holding-Anker im Universum');
+  for (const t of have) {
     const e = byTicker[t];
-    if (!e) { console.log(`       (${t} nicht im Universum — uebersprungen)`); continue; }
     assert.equal(e.action, 'exclude', `${t} sollte excludiert sein`);
     assert.equal(e.reason, 'non-operating-rev', `${t} reason=${e.reason}`);
   }
 });
 test('echter Fee-Asset-Manager BLK/BX (falls vorhanden) bleibt in financials (kein Over-Exclude)', () => {
-  for (const t of ['BLK', 'BX', 'KKR']) {
+  const have = ['BLK', 'BX', 'KKR'].filter((t) => byTicker[t]);
+  if (!have.length) skipBody('kein BLK/BX/KKR im Universum');
+  for (const t of have) {
     const e = byTicker[t];
-    if (!e) { console.log(`       (${t} nicht im Universum — uebersprungen)`); continue; }
     assert.equal(e.action, 'route', `${t} sollte routen`);
     assert.equal(e.formulaId, 'financials', `${t} formulaId=${e.formulaId}`);
   }

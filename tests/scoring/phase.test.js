@@ -13,8 +13,20 @@ const path = require('node:path');
 const { phaseOf, mcapBandOf, ipoRecencyOf, ipoYearOf, scoreUniverse, produceRankings } = require('../../src/scoring/score.js');
 const formulas = require('../../src/scoring/formulas/index.js');
 
-let pass = 0, fail = 0;
-function test(name, fn) { try { fn(); pass++; console.log('  ok   ' + name); } catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); } }
+let pass = 0, fail = 0, skip = 0;
+// R2.R (Rumpf-Skip-Ehrlichkeit): wie in score.integration.test.js — ein Rumpf, der seine
+// Voraussetzung erst drinnen vermisst, meldet das per skipBody() und wird als skip verbucht,
+// NICHT als pass. Vorher stieg der Integrations-Anker unten per `return` aus und die Summenzeile
+// meldete "12 ok, 0 fail" ohne jedes "skipped" — im CI ununterscheidbar von einem Voll-Pass.
+const SKIP = Symbol('skip-body');
+function skipBody(grund) { const e = new Error(grund); e[SKIP] = true; throw e; }
+function test(name, fn) {
+  try { fn(); pass++; console.log('  ok   ' + name); }
+  catch (e) {
+    if (e && e[SKIP]) { skip++; console.log('  skip ' + name + ' (' + e.message + ')'); return; }
+    fail++; console.error('FAIL   ' + name + '\n       ' + e.message);
+  }
+}
 function fix(t) { return JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', t + '.json'), 'utf8')); }
 const V = (arr) => arr.map((v) => ({ value: v }));
 
@@ -78,15 +90,17 @@ test('ipoRecencyOf: Quintil-Baender (recent=neueste IPOs)', () => {
 
 // --- Integration: Felder additiv im Output, Anker unveraendert ---
 test('Output-Zeilen tragen phase/mcapBand/ipoRecency; CRDO=inflected, route, Score finit', () => {
-  const SNAP_DIR = path.join(__dirname, '..', '..', 'snapshots');
+  // SCREENER_SNAPSHOTS_DIR: nur Test-Seam (die Skip-Ehrlichkeits-Regression zeigt damit ein leeres
+  // Universum); ohne die Variable unveraendert das echte snapshots/.
+  const SNAP_DIR = process.env.SCREENER_SNAPSHOTS_DIR || path.join(__dirname, '..', '..', 'snapshots');
   const files = fs.readdirSync(SNAP_DIR).filter((f) => f.endsWith('.json'));
   const universe = [];
-  for (const f of files) { try { const s = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, f), 'utf8')); if (s && s.meta && s.meta.ticker) universe.push(s); } catch (_) { /* skip */ } }
+  for (const f of files) { try { const s = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, f), 'utf8')); if (s && s.meta && s.meta.ticker) universe.push(s); } catch (_) { /* defekt */ } }
   // Task 0.9-Fix (CI pre-pull gate): dieser Integrations-Anker braucht das ECHTE Live-Universum
   // (CRDO in der Semiconductor-Kohorte, non-leere survival-Liste). Vor dem Pull ist snapshots/ leer
   // -> N/A (fehlende Daten, kein Engine-Regress), sauber ueberspringen; lokal mit Snapshots laeuft er
   // voll. Die reinen phaseOf/mcapBand/ipoRecency-Klassifikatoren oben nutzen fixtures/ und laufen immer.
-  if (universe.length === 0) { console.log('       (kein Universum — pre-pull-Gate — uebersprungen)'); return; }
+  if (universe.length === 0) skipBody('kein Universum — pre-pull-Gate');
   const results = scoreUniverse(universe, formulas);
   const r = produceRankings(results, { topN: 50 });
   const crdo = r.branches['semiconductors'].profitable.find((x) => x.ticker === 'CRDO');
@@ -97,5 +111,7 @@ test('Output-Zeilen tragen phase/mcapBand/ipoRecency; CRDO=inflected, route, Sco
   assert.ok(r.survival.length && 'phase' in r.survival[0], 'survival-Zeile ohne Filter-Felder');
 });
 
-console.log(`\nphase.test.js: ${pass} ok, ${fail} fail`);
+// Skip-Zahl gehoert in die Summenzeile: sonst liest "12 ok, 0 fail" wie ein voller Pass, obwohl im
+// pre-pull-CI der Live-Universums-Anker gar nicht gelaufen ist.
+console.log(`\nphase.test.js: ${pass} ok, ${fail} fail` + (skip ? `, ${skip} skipped (kein Universum)` : ''));
 process.exit(fail ? 1 : 0);
