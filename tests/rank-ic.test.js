@@ -191,5 +191,49 @@ test('loadPriceIndexOrThrow: liest den Store aus dem prices-Verzeichnis (Vertrag
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
+// ── §1-Haltedauer: unfertige Fenster (R-Gate 2.R, Fund F5-2) ─────────────────
+// Live-Fall vom 17.07.: alle Vintages waren 0-3 Tage alt, ein 84d-Fenster KANN
+// nicht abgelaufen sein. Trotzdem lieferte jedes Board nPoints=1 — der
+// §8-Verkuerzungspfad (fuer echte M&A-Austritte gedacht) sah "series_ended" fuer
+// die ganze Kohorte (niemand hat Kurse aus der Zukunft) und buchte die
+// 3-Tage-Rendite als vollwertigen 84d-Punkt. Dieser Test waere vorher rot gewesen.
+test('evaluate §1: Fenster, das noch nicht abgelaufen ist, wird NICHT als voller Horizont gebucht (pendingWindows)', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'rank-ic-pending-'));
+  const t0 = '2026-07-14';
+  const newest = '2026-07-17'; // letzter Kurstag: 3 Tage nach dem Vintage
+  // Vintage mit 12 Zeilen (ueber windowIC-Mindestgroesse 10)
+  const rows = Array.from({ length: 12 }, (_, i) => ({ ticker: 'T' + i, score: i, pit: {} }));
+  const dir = path.join(tmp, t0);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'b1.json'), JSON.stringify({ date: t0, board: 'b1', cohort: { profitable: rows, unprofitable: [] } }));
+  // Preis-Index endet am 17.07. — genau wie die echte Welt am Tag des Laufs.
+  const priceIndex = {};
+  for (const r of rows) {
+    const m = new Map();
+    m.set(t0, 100);
+    m.set(newest, 100 + r.score); // Score-korrelierte Kurzfrist-Rendite: waere ein verlockender Fake-IC
+    priceIndex[r.ticker] = m;
+  }
+  const rep = ric.evaluate(tmp, priceIndex, { B: 50 });
+  assert.equal(rep.newestPriceDate, newest, 'globaler letzter Kurstag wird ausgewiesen');
+  for (const horizon of [28, 84]) {
+    const h = rep.boards.b1.horizons[horizon];
+    assert.equal(h.nPoints, 0, horizon + 'd: kein Punkt aus unfertigem Fenster (war: ' + h.nPoints + ')');
+    assert.ok(h.pendingWindows >= 1, horizon + 'd: unfertiges Fenster wird transparent als pending ausgewiesen');
+    assert.equal(h.meanICRaw, null, horizon + 'd: kein IC aus einer 3-Tage-Rendite');
+  }
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test('newestPriceDate: Maximum ueber den gesamten Index, unabhaengig von der Ticker-Reihenfolge', () => {
+  const idx = {
+    A: new Map([['2026-01-02', 1], ['2026-03-05', 2]]),
+    B: new Map([['2026-05-09', 3]]), // spaeter, aber nicht zuerst einsortiert
+    C: new Map([['2026-02-01', 4]]),
+  };
+  assert.equal(ric.newestPriceDate(idx), '2026-05-09');
+  assert.equal(ric.newestPriceDate({}), null);
+});
+
 console.log(`\nrank-ic.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

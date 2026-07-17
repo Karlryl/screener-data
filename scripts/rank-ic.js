@@ -206,9 +206,25 @@ function disjointDecisionDates(dates, horizonDays) {
   return out;
 }
 
+const addDaysIso = (iso, n) => { const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+
+// newestPriceDate — letzter Kurstag über den GESAMTEN Index.
+// R-Gate 2.R Fund F5-2: Liegt das Fensterende hinter diesem Tag, ist das Fenster
+// schlicht NICHT ABGELAUFEN. Ohne diesen Anker greift der §8-M&A-Verkürzungspfad
+// (gedacht für echte Austritte) für die ganze Kohorte und bucht eine 3-Tage-Rendite
+// als vollwertigen 84d-Punkt — die pre-registrierte Haltedauer wäre gebrochen.
+function newestPriceDate(priceIndex) {
+  let newest = null;
+  for (const map of Object.values(priceIndex)) {
+    if (!map || typeof map.keys !== 'function') continue;
+    for (const d of map.keys()) if (!newest || d > newest) newest = d;
+  }
+  return newest;
+}
+
 // ── Forward-Returns je Vintage-Kohorte (§8) ──────────────────────────────────
 function windowReturns(priceIndex, rows, t0, horizonDays) {
-  const t1 = (() => { const d = new Date(t0 + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + horizonDays); return d.toISOString().slice(0, 10); })();
+  const t1 = addDaysIso(t0, horizonDays);
   const used = []; const quota = { ok: 0, delisted: 0, shortened: 0, excluded_no_series: 0, excluded_no_entry: 0 };
   for (const r of rows) {
     if (!Number.isFinite(r.score)) continue; // survival-Zeilen ohne Score bleiben draußen
@@ -291,6 +307,11 @@ function evaluate(historyDir, priceIndex, opts = {}) {
     family: null,
   };
   if (!dates.length) { report.note = 'keine (nicht-exkludierten) Vintages — Reihe sammelt noch'; return report; }
+  // §1-Haltedauer-Anker (Fund F5-2): ein Entscheidungspunkt zählt erst, wenn sein
+  // Fenster real abgelaufen ist. Sonst würde der §8-Verkürzungspfad eine wenige Tage
+  // alte Rendite als vollen 28d-/84d-Punkt buchen.
+  const newestGlobal = opts.newestGlobal || newestPriceDate(priceIndex);
+  report.newestPriceDate = newestGlobal;
   const boards = boardsOf(historyDir, dates[0]);
   const familyTests = []; // {board,horizon,p} für BY über die abschließende Familie
   for (const board of boards) {
@@ -298,7 +319,9 @@ function evaluate(historyDir, priceIndex, opts = {}) {
     for (const horizon of HORIZONS) {
       const decisions = disjointDecisionDates(dates, horizon);
       const points = [], pointsResid = [], detail = [];
+      let pendingWindows = 0; // Fenster noch nicht abgelaufen — nie stillschweigend verschweigen
       for (const d of decisions) {
+        if (newestGlobal && addDaysIso(d, horizon) > newestGlobal) { pendingWindows++; continue; }
         const v = loadVintage(historyDir, d, board);
         if (!v || !v.cohort) continue; // Sidecar/korrupte Datei zählt nie als Board-Vintage
         const rows = (v.cohort.profitable || []).concat(v.cohort.unprofitable || []);
@@ -324,7 +347,7 @@ function evaluate(historyDir, priceIndex, opts = {}) {
         verdict = pass ? 'LIVE-Kriterium erfüllt (vorbehaltlich BY-FDR)' : 'DIAGNOSTIC-Kandidat (Prüf-Flag, kein Sofort-Cut)';
       }
       b.horizons[horizon] = {
-        decisions: detail, nPoints: points.length, nEff: +(+ne).toFixed(2),
+        decisions: detail, nPoints: points.length, pendingWindows, nEff: +(+ne).toFixed(2),
         meanICRaw: mean === null ? null : +mean.toFixed(4),
         meanICResid: meanResid === null ? null : +meanResid.toFixed(4),
         ci90: ci ? { lo: +ci.lo.toFixed(4), hi: +ci.hi.toFixed(4) } : null,
@@ -387,10 +410,10 @@ function main() {
   console.log('[rank-ic] Vintages: ' + report.vintagesTotal + ' (exkludiert: ' + (report.vintagesExcluded || []).join(',') + ')');
   for (const [board, b] of Object.entries(report.boards || {})) {
     const h = b.horizons && b.horizons[DECISION_HORIZON];
-    if (h) console.log(`  ${board}: 84d nPoints=${h.nPoints} N_eff=${h.nEff} meanIC=${h.meanICRaw} CI90=[${h.ci90 ? h.ci90.lo + ',' + h.ci90.hi : '—'}] -> ${h.verdict}`);
+    if (h) console.log(`  ${board}: 84d nPoints=${h.nPoints} (pending=${h.pendingWindows}) N_eff=${h.nEff} meanIC=${h.meanICRaw} CI90=[${h.ci90 ? h.ci90.lo + ',' + h.ci90.hi : '—'}] -> ${h.verdict}`);
   }
   console.log('[rank-ic] Report -> ' + outFile);
 }
 
-module.exports = { spearman, ranks, residualize, bootstrapCI, nEff, benjaminiYekutieli, disjointDecisionDates, windowReturns, windowIC, deliveryIC, evaluate, loadExcluded, loadPriceIndexOrThrow };
+module.exports = { spearman, ranks, residualize, bootstrapCI, nEff, benjaminiYekutieli, disjointDecisionDates, windowReturns, windowIC, deliveryIC, evaluate, loadExcluded, loadPriceIndexOrThrow, newestPriceDate };
 if (require.main === module) main();
