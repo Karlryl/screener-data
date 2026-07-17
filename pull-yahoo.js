@@ -1646,6 +1646,16 @@ function sortByStaleness(stocks, outputDir, earningsCalendar, today) {
   );
 }
 
+// F1 (Codex-Fund, T2): n_skipped_mcap MUSS ausschliesslich echte mcap-Skips zaehlen —
+// exakt wie das Fail-Ratio-Gate bei ~Z.3026. Frueher gebildet als
+// results.length - (ok+price-only), was fx-unknown MITzaehlte und sie so aus dem
+// adressierbaren Coverage-Nenner (n_addressable = n_total - n_skipped_mcap) warf ->
+// coverage-gate honestPct blieb bei Teil-FX-Ausfall faelschlich ~100%. Eine geteilte
+// reine Funktion, damit beide Schreibpfade (inkrementell + final) nicht wieder driften.
+function countSkippedMcap(results) {
+  return results.filter(r => r && r.status === 'skipped-mcap').length;
+}
+
 async function pullAll(watchlist, outputDir, rateLimitMs) {
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
   // audit/fix F3-budget (2026-06-25): reset the per-run time-based fundamentals-stale
@@ -1750,7 +1760,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // only entries whose status reflects a real snapshot write.
       const okResults = results.filter(r =>
         r && (r.status === 'ok' || r.status === 'price-only'));
-      const skippedMcap = results.length - okResults.length;
+      const skippedMcap = countSkippedMcap(results);
       // TASK 0.9 (Pull-Diät): split full vs price-only so the diet's effect is
       // readable even on a TIMED-OUT run — the incremental manifest is flushed to
       // disk every ~100 tickers, so these survive a mid-flight SIGKILL. n_full is
@@ -2922,7 +2932,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // count actually on disk.
   const okResultsFinal = results.filter(r =>
     r && (r.status === 'ok' || r.status === 'price-only'));
-  const skippedMcapFinal = results.length - okResultsFinal.length;
+  const skippedMcapFinal = countSkippedMcap(results);
   // TASK 0.11: surface the silent-error tally in the run log so it is visible even on a
   // clean run (the manifest carries it too, but the log survives regardless of write path).
   const _silentErrors = { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors };
@@ -3101,6 +3111,8 @@ if (require.main === module) {
 module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries, needsFullPull, sortByStaleness,
   // 0.2/0.9 Sharding (Tag 279): fuer TDD
   shardHash, shardStocks, parseArgs,
+  // F1 (Codex-Fund): ehrlicher mcap-Skip-Zaehler (schliesst fx-unknown aus) — fuer TDD
+  countSkippedMcap,
   // TASK 0.11 (Stille-Fehler-Härtung): fuer TDD — runLamp + Zugriff auf die Zaehler.
   runLamp,
   // Task 0.13 (Tag 288): Schema-Salvage fuer TDD.
