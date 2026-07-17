@@ -46,13 +46,22 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function readJsonOrNull(f) { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (_) { return null; } }
 
 // Union der Top-50 je Board (profitable+unprofitable je 50; overview/survival zählen als Board).
-function boardUniverse() {
+// Liest die Top-Level-*.json unter v1/ UND den Unterordner v1/quality/ (QC-Boards, F12) —
+// sonst blieben QC-Top-50-Namen ohne HG-Platzierung dauerhaft ath:null.
+function boardUniverse(v1Dir = V1_DIR) {
   const tickers = new Set();
-  let files = [];
-  try { files = fs.readdirSync(V1_DIR).filter((f) => f.endsWith('.json') && f !== 'index.json'); }
-  catch (_) { return []; }
+  const files = [];
+  const collect = (dir) => {
+    try {
+      for (const f of fs.readdirSync(dir)) {
+        if (f.endsWith('.json') && f !== 'index.json') files.push(path.join(dir, f));
+      }
+    } catch (_) { /* Verzeichnis fehlt (z. B. keine QC-Boards) -> überspringen */ }
+  };
+  collect(v1Dir);
+  collect(path.join(v1Dir, 'quality')); // QC-Boards liegen im Unterordner (write-findash-export QOUT_DIR)
   for (const f of files) {
-    const j = readJsonOrNull(path.join(V1_DIR, f));
+    const j = readJsonOrNull(f);
     if (!j) continue;
     const lists = [];
     if (Array.isArray(j.profitable)) lists.push(j.profitable);

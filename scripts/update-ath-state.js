@@ -29,7 +29,12 @@ const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_STATE = path.join(REPO_ROOT, 'external-data', 'ath-state.json');
-const DEFAULT_PRICES = path.join(REPO_ROOT, 'prices', 'history');
+// Vertrag: store.loadAll(dir) hängt 'history' SELBST an (price-history-store.js
+// HISTORY_DIRNAME) — deshalb der ELTERN-Ordner prices/, identisch zu allen anderen
+// loadAll-Aufrufern (pull-historical-prices.js './prices', rank-ic loadPriceIndexOrThrow
+// prices/, Tag-321-Fix R2.3). Zeigte er auf prices/history, suchte der Store unter
+// prices/history/history/ -> leer -> ATH-State bekam nie Schlusskurse/Split-Erkennung.
+const DEFAULT_PRICES = path.join(REPO_ROOT, 'prices');
 // Split-Wächter-Toleranz: adjclose driftet durch Dividenden-Re-Adjustierung leicht;
 // echte Splits springen um Faktoren (2x/4x/10x). 5 % trennt beides sauber.
 const REF_DRIFT_TOLERANCE = 0.05;
@@ -76,6 +81,22 @@ function displayFor(entry) {
   };
 }
 
+// Store->History laden, fail-loud statt still leer (Muster rank-ic loadPriceIndexOrThrow,
+// Tag 321). Ein leerer Index ODER ein fehlender Frische-Stempel (_meta.json) bedeutet,
+// dass dieser Lauf NICHTS fortschreibt — nach dem F3-Miss (falscher pricesDir -> {}) darf
+// ein toter ATH-Lauf nie wieder still grün durchlaufen. Wirft -> Node beendet mit Exit != 0.
+function loadHistoryOrDie(pricesDir) {
+  const history = store.loadAll(pricesDir);
+  if (Object.keys(history).length === 0 || store.loadMeta(pricesDir) == null) {
+    throw new Error(
+      '[ath] Preis-Store LEER/ungestempelt aus ' + pricesDir + ' — der ATH-Fortschrieb würde '
+      + 'nichts tun (kein Schlusskurs-Nachzug, kein Split-Wächter). Erwartet wird das '
+      + 'prices-Verzeichnis (der Store hängt "history" selbst an), nicht prices/history.',
+    );
+  }
+  return history;
+}
+
 function main() {
   const args = process.argv.slice(2);
   const getArg = (k, dflt) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : dflt; };
@@ -87,7 +108,7 @@ function main() {
   const entries = state.entries || {};
   const tickers = Object.keys(entries);
   if (!tickers.length) { console.log('[ath] ath-state leer — No-op'); return; }
-  const history = store.loadAll(pricesDir);
+  const history = loadHistoryOrDie(pricesDir);
   let bumped = 0, reseed = 0, touched = 0;
   for (const t of tickers) {
     const before = entries[t];
@@ -102,5 +123,5 @@ function main() {
   console.log(`[ath] ${tickers.length} Ticker · ${touched} aktualisiert · ${bumped} neue ATHs · ${reseed} needsReseed (Split-Wächter)`);
 }
 
-module.exports = { advanceEntry, displayFor, monthsBetween, REF_DRIFT_TOLERANCE };
+module.exports = { advanceEntry, displayFor, monthsBetween, loadHistoryOrDie, REF_DRIFT_TOLERANCE };
 if (require.main === module) main();
