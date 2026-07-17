@@ -413,7 +413,9 @@ function regimeForDate(date) {
     return { date, label: 'unknown', source: 'macro-regime.json(stale>' + REGIME_MAX_STALE_DAYS + 'd)', asOf: keyDate, staleDays: ageDays };
   }
   const entry = regimes[keyDate];
-  return { date, label: entry.regime, price: entry.price, sma200: entry.sma200, source: 'macro-regime.json', asOf: keyDate };
+  // Schema-Toleranz wie walk-forward-perf._regimeOf (G-B, Alt-Format-Robustheit).
+  const isObj = entry && typeof entry === 'object';
+  return { date, label: isObj ? entry.regime : entry, price: isObj ? entry.price : undefined, sma200: isObj ? entry.sma200 : undefined, source: 'macro-regime.json', asOf: keyDate };
 }
 
 // ── Hauptlauf ────────────────────────────────────────────────────────────────

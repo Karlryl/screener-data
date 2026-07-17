@@ -12,7 +12,8 @@
  *   otherwise                 → SIDEWAYS
  *
  * Output format:
- *   { asOf, ticker, regimes: { "YYYY-MM-DD": "BULL"|"BEAR"|"SIDEWAYS" } }
+ *   { asOf, ticker, regimes: { "YYYY-MM-DD": { regime: "BULL"|"BEAR"|"SIDEWAYS", price, sma200, _convention } } }
+ *   (historisch: bare-string-Werte "BULL"; Leser bleiben tolerant, siehe walk-forward-perf._regimeOf)
  *
  * Run:
  *   node scripts/macro-regime.js [--history prices/history.json]
