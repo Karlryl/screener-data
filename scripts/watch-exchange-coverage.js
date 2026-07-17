@@ -53,7 +53,9 @@ function countByExchange(snapDir) {
 
 function checkDrift(today, baseline) {
   const alerts = [];
-  const exchanges = new Set([...Object.keys(today), ...Object.keys(baseline)]);
+  // '_'-prefixed keys (e.g. _lastUpdated) are metadata, not exchanges — same
+  // leading-underscore convention as _manifest.json / _excluded.json elsewhere.
+  const exchanges = new Set([...Object.keys(today), ...Object.keys(baseline)].filter((k) => !k.startsWith('_')));
   for (const ex of exchanges) {
     const todayCount = today[ex] || 0;
     const history = (baseline[ex] || []).filter(Number.isFinite);
@@ -74,14 +76,27 @@ function checkDrift(today, baseline) {
   return alerts;
 }
 
-function updateBaseline(baseline, today) {
+// T2: a same-day rerun (retry, manual re-run) must not push a second entry for
+// today into the rolling window — that double-counts today's count AND evicts
+// one real prior day via slice(-WINDOW). `_lastUpdated` is a reserved top-level
+// marker (ISO date of the last write) added to the baseline; old baseline files
+// without it (current on-disk format: plain {"Shenzhen":[68,68,...], ...}) are
+// backward-compatible — their first post-fix run has no marker to match, so it
+// appends exactly like before and simply starts carrying the marker from then on.
+function updateBaseline(baseline, today, dateStr) {
+  const sameDayRerun = baseline._lastUpdated != null && baseline._lastUpdated === dateStr;
   const next = { ...baseline };
-  const exchanges = new Set([...Object.keys(baseline), ...Object.keys(today)]);
+  const exchanges = new Set([...Object.keys(baseline), ...Object.keys(today)].filter((k) => !k.startsWith('_')));
   for (const ex of exchanges) {
     const history = Array.isArray(baseline[ex]) ? baseline[ex].slice() : [];
-    history.push(today[ex] || 0);
+    if (sameDayRerun && history.length > 0) {
+      history[history.length - 1] = today[ex] || 0; // replace today's already-recorded entry, not append
+    } else {
+      history.push(today[ex] || 0);
+    }
     next[ex] = history.slice(-WINDOW);
   }
+  next._lastUpdated = dateStr;
   return next;
 }
 
@@ -92,7 +107,8 @@ function main() {
   console.log('Exchange coverage today: ' + JSON.stringify(today));
 
   const alerts = checkDrift(today, baseline);
-  const updated = updateBaseline(baseline, today);
+  const dateStr = new Date().toISOString().slice(0, 10);
+  const updated = updateBaseline(baseline, today, dateStr);
 
   fs.mkdirSync(path.dirname(BASELINE_PATH), { recursive: true });
   writeJsonAtomic(BASELINE_PATH, updated);

@@ -43,7 +43,19 @@ function getJSON(u) {
     r.setTimeout(20000, () => { r.destroy(); rej(new Error('timeout')); });
   });
 }
-const numOf = (x) => (x ? Number(String(x.thstrm_amount || '').replace(/,/g, '')) : null);
+// T2: absent/blank thstrm_amount must stay null, not become a real $0. '' || ''
+// coerced straight into Number() gave 0 (Number('')===0, isFinite(0)===true) for
+// BOTH a genuinely missing field and a genuinely empty string — indistinguishable
+// from an actual reported zero. Check blank/absent BEFORE the Number() coercion.
+const numOf = (x) => {
+  if (!x) return null;
+  const raw = x.thstrm_amount;
+  if (raw == null) return null;
+  const cleaned = String(raw).replace(/,/g, '').trim(); // strip thousands-seps first, so ',' / ', ,' also count as blank
+  if (cleaned === '') return null;
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : null;
+};
 // Konto-Pick: primaer stabile IFRS/DART-account_id, sonst koreanischer Name (Fallback).
 const pick = (list, id, re) => list.find((x) => x.account_id === id) || list.find((x) => re.test(x.account_nm || ''));
 
@@ -77,4 +89,6 @@ async function main() {
   fs.writeFileSync(OUT, JSON.stringify(out, null, 1));
   console.log(`geschrieben: ${OUT} (${Object.keys(out).length} Namen)`);
 }
-main();
+if (require.main === module) main();
+
+module.exports = { numOf };

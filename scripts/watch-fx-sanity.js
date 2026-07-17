@@ -66,6 +66,27 @@ function checkJump(today, baseline) {
   return problems;
 }
 
+// T2 sibling: checkJump always compares today against baseline.last, treating it
+// as "yesterday's" counts. A same-day rerun (retry, manual re-run) previously
+// shifted TODAY's own earlier-today counts into .last — so the next run's
+// day-over-day comparison silently became intraday-vs-intraday, which can mask
+// a real cross-day jump behind an already-corrupted intraday value (the .prev
+// field this evicted into is never read by checkJump — a dead end, not a save).
+// `date` (ISO day) tracks which calendar day .last currently holds; backward-
+// compatible with existing baseline files lacking it (no match -> not a same-day
+// rerun -> first post-fix run advances the pointer exactly like before).
+function updateBaseline(baseline, today, dateStr) {
+  if (baseline && baseline.date === dateStr) {
+    return { ...baseline, updatedAt: new Date().toISOString() }; // same day: pin prev/last
+  }
+  return {
+    prev: baseline && baseline.last ? baseline.last : null,
+    last: today,
+    date: dateStr,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 function main() {
   const today = countOverCap(SNAP_DIR);
   console.log(`Over-cap counts — US-primary (>=${CAP_US / 1e6}M): ${today.usOver}, foreign (>=${CAP_FOREIGN / 1e9}B): ${today.foreignOver}`);
@@ -73,11 +94,8 @@ function main() {
   const baseline = loadJson(BASELINE_PATH, null);
   const problems = checkJump(today, baseline);
 
-  const nextBaseline = {
-    prev: baseline && baseline.last ? baseline.last : null,
-    last: today,
-    updatedAt: new Date().toISOString(),
-  };
+  const dateStr = new Date().toISOString().slice(0, 10);
+  const nextBaseline = updateBaseline(baseline, today, dateStr);
   fs.mkdirSync(path.dirname(BASELINE_PATH), { recursive: true });
   writeJsonAtomic(BASELINE_PATH, nextBaseline);
   console.log('Baseline updated: ' + BASELINE_PATH);
@@ -92,4 +110,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { countOverCap, checkJump };
+module.exports = { countOverCap, checkJump, updateBaseline };
