@@ -462,6 +462,27 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
   // (Universe-Ausbau verschiebt bestehende Scores dann NICHT mehr). Default (null) = live-lernend,
   // byte-identisch zum bisherigen Verhalten.
   const refCal = opts.refCalibration || null;
+  // R2.7 FAIL-LOUD (Court E-20260717-5): ein refCal, dessen cohortBases eine Achse der AKTUELLEN
+  // formulas-Version NICHT kennt (Lineal aelter als der Code), wuerde sonst STILL gegen die Live-
+  // Verteilung scoren: der nicht-Fallback-Zweig (Pass 2) faellt bei fehlendem refCoh.axes[ax.key] auf
+  // rawByAxis (live) zurueck, und parentBasis() droppt die fehlende Achse per `if(!Array.isArray) continue`
+  // fuer duenne (n<MIN_COHORT_N) Kohorten ebenso still. RULER-ZENTRISCH (ueber refCal.cohortBases statt
+  // Live-Kohorten iterieren): faengt BEIDE stillen Pfade — auch fuer eine live-neue duenne Kohorte, die aus
+  // einer live-leeren Geschwister-Kohorte im Lineal liest. Genuinely-NEUE Live-Kohorten haben KEINEN Eintrag
+  // im Lineal -> ungeprueft -> gewollter Live-Fallback + Grown-Universe-Invariante bleiben unberuehrt. Frueh
+  // (vor Pass 1) = ehrliche Root-Cause-Stelle: kein Board wird geschrieben, bevor das veraltete Lineal knallt.
+  if (refCal && refCal.cohortBases) {
+    for (const cohortKey of Object.keys(refCal.cohortBases)) {
+      const formula = formulas[cohortKey.split('|')[0]];
+      if (!formula) continue; // Formel seit dem Freeze entfernt -> nicht vergleichbar, ueberspringen
+      const refAxes = refCal.cohortBases[cohortKey].axes;
+      for (const ax of formula.axes) {
+        if (!(refAxes && Array.isArray(refAxes[ax.key]))) {
+          throw new Error(`scoreUniverse: refCalibration-Lineal kennt Achse '${ax.key}' in Kohorte '${cohortKey}' nicht (Lineal aelter als die aktuelle formulas-Version). Mit aktuellem Code neu einfrieren.`);
+        }
+      }
+    }
+  }
   // 3.1 QC-Board (additive Seams, HG byte-identisch per Default):
   //  (a) classify: erlaubt einem zweiten Pass eine EIGENE Membership-Funktion (qualityRoute) statt route().
   //      HG uebergibt kein classify -> route -> byte-identisch.

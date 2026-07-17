@@ -119,6 +119,49 @@ test('Fail-loud: refCalibration ohne gDistByCohort (pre-v4) -> scoreUniverse wir
     'ein pre-v4-Lineal muss hart abbrechen statt still gegen die Live-Verteilung zu scoren');
 });
 
+// (4b) R2.7 (Court E-20260717-5): FAIL-LOUD fuer ein UNVOLLSTAENDIGES (achsen-luecken-haftes) Lineal.
+// Ein Lineal, dem eine Achse der aktuellen formulas-Version fehlt (Code neuer als das Lineal), darf NICHT
+// still gegen die Live-Verteilung scoren (score.js:626 faellt auf rawByAxis, parentBasis droppt die Achse
+// per `if(!Array.isArray) continue`) -> harter Abbruch VOR jeder Emission. RULER-ZENTRISCH geprueft: der
+// Guard iteriert refCal.cohortBases direkt, faengt also auch eine NUR im Lineal vorhandene Kohorte (Test B),
+// waehrend eine im Lineal KOMPLETT fehlende (=live-neue) Kohorte den gewollten Live-Fallback behaelt (Test C).
+// Ticker -> cohortKey (formulaId|track) aus einem Live-Vollauf — fuer Test B (eine Kohorte live entfernen).
+const keyByTicker = new Map();
+for (const e of scoreUniverse(universe, formulas)) {
+  if (e.action === 'route' && e.formulaId && e.track) keyByTicker.set(e.ticker, e.formulaId + '|' + e.track);
+}
+
+test('R2.7 Test A — Achsen-Key aus einer Lineal-Kohorte geloescht -> scoreUniverse wirft', () => {
+  const shifted = roundtrip(calA);
+  const key = Object.keys(shifted.cohortBases)[0];
+  const ax = Object.keys(shifted.cohortBases[key].axes)[0];
+  delete shifted.cohortBases[key].axes[ax];
+  assert.throws(() => scoreUniverse(universe, formulas, { refCalibration: shifted }), /Achse|axes/,
+    'ein Lineal ohne vollstaendige Achsen-Liste muss hart abbrechen statt still gegen die Live-Verteilung zu scoren');
+});
+
+test('R2.7 Test B — NUR-im-Lineal-Kohorte (live entfernt) mit Achsen-Luecke -> wirft (parentBasis-Haertung)', () => {
+  const shifted = roundtrip(calA);
+  const keys = Object.keys(shifted.cohortBases);
+  // bevorzugt eine live-vorhandene Kohorte (dann koennen wir ihre Live-Namen entfernen); sonst die erste.
+  const liveKeys = new Set(keyByTicker.values());
+  const key = keys.find((k) => liveKeys.has(k)) || keys[0];
+  const drop = new Set([...keyByTicker.entries()].filter(([, k]) => k === key).map(([t]) => t));
+  const uni = universe.filter((s) => !drop.has(s.meta.ticker)); // Kohorte live entfernen -> nur noch im Lineal
+  const ax = Object.keys(shifted.cohortBases[key].axes)[0];
+  delete shifted.cohortBases[key].axes[ax];
+  assert.throws(() => scoreUniverse(uni, formulas, { refCalibration: shifted }), /Achse|axes/,
+    'der Guard prueft auch eine NUR im Lineal vorhandene (live entfernte) Kohorte — der live-zentrische Brief-Guard haette sie verpasst');
+});
+
+test('R2.7 Test C — komplett fehlende (=live-neue) Kohorte im Lineal wirft NICHT (Grown-Universe-Schutz)', () => {
+  const shifted = roundtrip(calA);
+  const key = Object.keys(shifted.cohortBases)[0];
+  delete shifted.cohortBases[key]; // Kohorte GANZ aus dem Lineal -> im vollen Universum "neu" -> gewollter Live-Fallback
+  assert.doesNotThrow(() => scoreUniverse(universe, formulas, { refCalibration: shifted }),
+    'eine im Lineal komplett fehlende (=neue) Kohorte darf NICHT werfen — gewollter Live-Fallback');
+});
+
 // (5) 2.11 Stufe B: Drift-Waechter faengt gDistByCohort-Drift (nicht nur cohortBases-Achsen).
 test('Drift: verschobene gDistByCohort -> feuert (Verify-T2-Haertung)', () => {
   const shifted = roundtrip(calA);
