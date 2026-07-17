@@ -20,7 +20,7 @@ const qcFormulas = require('../../src/scoring/formulas/quality/index.js');
 const { boardStatus } = require('../../src/scoring/board-status.js');
 const ax = require('../../src/scoring/axes.js');
 
-let pass = 0, fail = 0;
+let pass = 0, fail = 0, skip = 0;
 function test(name, fn) {
   try { fn(); pass++; console.log('  ok   ' + name); }
   catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
@@ -29,7 +29,9 @@ const V = (arr) => arr.map((v) => ({ value: v }));
 const near = (a, b, eps = 1e-9) => Math.abs(a - b) <= eps;
 
 // Reales Universum laden (fuer die byte-identisch-Seam-Pruefung); pre-pull leer -> skippen.
-const SNAP_DIR = path.join(__dirname, '..', '..', 'snapshots');
+// SCREENER_SNAPSHOTS_DIR: nur Test-Seam (Skip-Ehrlichkeits-Regression zeigt damit ein leeres
+// Universum); ohne die Variable unveraendert das echte snapshots/.
+const SNAP_DIR = process.env.SCREENER_SNAPSHOTS_DIR || path.join(__dirname, '..', '..', 'snapshots');
 const universe = [];
 try {
   for (const f of fs.readdirSync(SNAP_DIR)) {
@@ -40,7 +42,7 @@ try {
 } catch (_) { /* kein snapshots-Dir */ }
 const HAS_UNIVERSE = universe.length > 0;
 function testU(name, fn) {
-  if (!HAS_UNIVERSE) { console.log('  skip ' + name + ' (kein Universum — pre-pull-Gate)'); return; }
+  if (!HAS_UNIVERSE) { skip++; console.log('  skip ' + name + ' (kein Universum — pre-pull-Gate)'); return; }
   test(name, fn);
 }
 
@@ -202,5 +204,7 @@ testU('QC-Pass laeuft ueber das reale Universum, Kohorten disjunkt (nur quality-
   console.log(`       QC gescort: ${routed.length} Compounder ueber ${new Set(routed.map((e) => e.formulaId)).size} Boards`);
 });
 
-console.log(`\nquality-board.test.js: ${pass} ok, ${fail} fail`);
+// Skip-Zahl gehoert in die Summenzeile: sonst liest "18 ok, 0 fail" wie ein voller Pass,
+// obwohl im pre-pull-CI die Universums-Beweise gar nicht gelaufen sind.
+console.log(`\nquality-board.test.js: ${pass} ok, ${fail} fail` + (skip ? `, ${skip} skipped (kein Universum)` : ''));
 process.exit(fail ? 1 : 0);

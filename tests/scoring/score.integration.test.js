@@ -13,13 +13,15 @@ const path = require('node:path');
 const { scoreUniverse, rankBy } = require('../../src/scoring/score.js');
 const formulas = require('../../src/scoring/formulas/index.js');
 
-let pass = 0, fail = 0;
+let pass = 0, fail = 0, skip = 0;
 function test(name, fn) {
   try { fn(); pass++; console.log('  ok   ' + name); }
   catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
 }
 
-const SNAP_DIR = path.join(__dirname, '..', '..', 'snapshots');
+// SCREENER_SNAPSHOTS_DIR: nur Test-Seam (Skip-Ehrlichkeits-Regression zeigt damit ein leeres
+// Universum); ohne die Variable unveraendert das echte snapshots/.
+const SNAP_DIR = process.env.SCREENER_SNAPSHOTS_DIR || path.join(__dirname, '..', '..', 'snapshots');
 const files = fs.readdirSync(SNAP_DIR).filter((f) => f.endsWith('.json'));
 const universe = [];
 for (const f of files) {
@@ -43,7 +45,7 @@ const rankIn = (cohort, ticker) => cohort.findIndex((e) => e.ticker === ticker);
 // Lokal (mit echten Snapshots) laufen alle Anker voll durch -> kein Aufweichen des Gates.
 const HAS_UNIVERSE = universe.length > 0;
 function testU(name, fn) {
-  if (!HAS_UNIVERSE) { console.log('  skip ' + name + ' (kein Universum — pre-pull-Gate)'); return; }
+  if (!HAS_UNIVERSE) { skip++; console.log('  skip ' + name + ' (kein Universum — pre-pull-Gate)'); return; }
   test(name, fn);
 }
 
@@ -370,5 +372,7 @@ for (const fid of ['semiconductors', 'software-comm-services', 'industrials', 'e
   }
 }
 
-console.log(`\nscore.integration.test.js: ${pass} ok, ${fail} fail`);
+// Skip-Zahl gehoert in die Summenzeile: sonst liest "N ok, 0 fail" wie ein voller Pass,
+// obwohl im pre-pull-CI die Live-Universums-Anker gar nicht gelaufen sind.
+console.log(`\nscore.integration.test.js: ${pass} ok, ${fail} fail` + (skip ? `, ${skip} skipped (kein Universum)` : ''));
 process.exit(fail ? 1 : 0);
