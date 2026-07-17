@@ -236,11 +236,15 @@ function run(topN) {
 // outputs/quality/{<boards>,overview,index,calibration}.json mit assertFinite-Write-Guard. calibration
 // NUR nach outputs/quality/calibration.json (NIE outputs/calibration.json — das ist das HG-Lineal).
 function runQualityPass(universe, topN, qcOutDir = QC_OUT_DIR) {
-  // H-B (T3, nur lokale Laeufe): index.json wird ZULETZT geschrieben. Wirft der Pass davor,
-  // bliebe lokal ein index.json des LETZTEN Erfolgs liegen — qualityExportMode prueft index
-  // ZUERST und wuerde 'export' ueber den FRISCHEREN _failed-Marker gewinnen lassen: alte Boards
-  // mit neuem generated_at re-exportiert, der Ausfall lokal maskiert. Darum den stalen Index
-  // ganz am Anfang raeumen (Variante A). Begruendung/Restfall siehe clearStaleQualityIndex.
+  // X3-Fix (T3, Opus-Fund, korrigiert den falschen H-B-Kommentar von Tag 345): index.json
+  // wird jetzt WIRKLICH ZULETZT geschrieben — hinter branches/overview/calibration und jeden
+  // anderen fehlbaren Write. Vorher stand index.json VOR calibration.json (W() mit
+  // assertFinite:true, kann werfen): wirft calibration (NaN/Inf oder I/O-Fehler), lag bereits
+  // ein gueltiger index.json auf Disk, obwohl der Pass danach scheiterte — qualityExportMode
+  // prueft index ZUERST und liesse 'export' ueber den frischeren _failed-Marker gewinnen (genau
+  // das Loch, das H-B/F11 schliessen sollten). Jetzt haelt KEIN Mid-Pass-Fehler mehr einen
+  // gueltigen Index zurueck; der stale-Index-Guard am Anfang (clearStaleQualityIndex) bleibt
+  // fuer den echten Restfall (Hard-Kill zwischen den Writes) unveraendert noetig.
   clearStaleQualityIndex(qcOutDir);
   const qcResults = scoreUniverse(universe, qcFormulas, { classify: qualityRoute, growthBoost: false });
   const qcRanked = produceRankings(qcResults, { topN: topN || 100 });
@@ -257,6 +261,10 @@ function runQualityPass(universe, topN, qcOutDir = QC_OUT_DIR) {
     W(path.join(qcOutDir, id + '.json'), b);
   }
   W(path.join(qcOutDir, 'overview.json'), qcRanked.overview);
+  if (qcResults.calibration) {
+    W(path.join(qcOutDir, 'calibration.json'),
+      { generated_at: new Date().toISOString(), ...qcResults.calibration });
+  }
   const sortKeys = (o) => Object.fromEntries(Object.keys(o).sort().map((k) => [k, o[k]]));
   const boardIds = Object.keys(qcRanked.branches).sort();
   const boardStatusMap = {};
@@ -269,10 +277,6 @@ function runQualityPass(universe, topN, qcOutDir = QC_OUT_DIR) {
     counts: sortKeys(counts),
     excluded: sortKeys(qcRanked.excluded),
   });
-  if (qcResults.calibration) {
-    W(path.join(qcOutDir, 'calibration.json'),
-      { generated_at: new Date().toISOString(), ...qcResults.calibration });
-  }
   console.log(`[run-screener] QC-Board (DIAGNOSTIC): ${boardIds.length} Boards -> ${qcOutDir}`);
 }
 

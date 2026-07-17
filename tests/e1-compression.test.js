@@ -226,5 +226,58 @@ check('(9) Meldesatz nennt EV/Sales + Reifegrad-Label + Tag n, NIE "P/S"', () =>
   assert.ok(/revGrowthLevel/.test(line) && /revAcceleration/.test(line), 'Wachstums-Perzentile ausgewiesen');
 });
 
+// ── X5 (T2, Opus-Fund): Reset nur bei ECHTEM Bewertungs-Austritt, nicht bei blosser
+// Abwesenheit aus candSet (= cheap UND growthIntact). Vorher resettete JEDE Abwesenheit
+// (auch cheap-aber-Wachstum-verfehlt) sofort den Cooldown -> Premature-Refire vor Ablauf
+// der 30-Tage-Sperre (Bruch Auflage 5). ──────────────────────────────────────────────────
+check('X5: cheap bleibt, Wachstum verfehlt transient -> KEIN Reset, Cooldown haelt (kein Premature-Refire)', () => {
+  const base = mkBase();
+  const cfg = { minCohortN: 4, minDwellDays: 0, cooldownDays: 30 };
+  // Tag 1: CHEAP_HI billig + Wachstum intakt -> feuert, setzt lastAlertDate=Tag1.
+  writeVintage(base, '2026-07-14', 'semiconductors', mkVintage('semiconductors', '2026-07-14', cohortEight(true)));
+  const r1 = E.runE1({ baseDir: base, date: '2026-07-14', cfg });
+  assert.ok(r1.alerts.some((a) => a.ticker === 'CHEAP_HI'), 'Tag 1 feuert');
+
+  // Tag 2: CHEAP_HI bleibt UNVERAENDERT billig (evSales=5, weiterhin unterstes Quartil),
+  // verfehlt aber TRANSIENT das Wachstumsgate (glvl/accel unter dem Mindest-Perzentil) ->
+  // faellt aus candSet (nicht getriggert), ist aber KEIN Bewertungs-Austritt.
+  const missRows = cohortEight(true).map((row) => {
+    if (row.ticker === 'CHEAP_HI') { row.axisBreakdown[0].pct = 10; row.axisBreakdown[1].pct = 10; }
+    return row;
+  });
+  writeVintage(base, '2026-07-15', 'semiconductors', mkVintage('semiconductors', '2026-07-15', missRows));
+  const r2 = E.runE1({ baseDir: base, date: '2026-07-15', cfg });
+  assert.ok(!r2.alerts.some((a) => a.ticker === 'CHEAP_HI'), 'Tag 2: Wachstums-Miss verhindert das Feuern (erwartet)');
+
+  // Tag 3: Wachstum erholt sich, CHEAP_HI weiterhin unveraendert billig -> waere ohne den
+  // X5-Fix ein frischer Eintritt (State auf Tag 2 faelschlich resettet) und wuerde SOFORT
+  // erneut feuern, nur 2 Tage nach dem Original-Alarm (Tag 1), weit vor den 30 Cooldown-Tagen.
+  writeVintage(base, '2026-07-16', 'semiconductors', mkVintage('semiconductors', '2026-07-16', cohortEight(true)));
+  const r3 = E.runE1({ baseDir: base, date: '2026-07-16', cfg });
+  assert.ok(!r3.alerts.some((a) => a.ticker === 'CHEAP_HI'),
+    'Tag 3: Cooldown seit Tag 1 (2 Tage < 30) haelt weiterhin -> KEIN Premature-Refire (X5-Fix)');
+});
+
+// Gegen-Test: ein ECHTER Bewertungs-Austritt (evSales steigt ueber die Schwelle) muss den
+// Zustand weiterhin zuruecksetzen, damit ein Wiedereintritt frisch feuern darf.
+check('X5 Gegen-Test: echter evSales-Austritt resettet weiterhin -> Wiedereintritt feuert wieder', () => {
+  const base = mkBase();
+  const cfg = { minCohortN: 4, minDwellDays: 0, cooldownDays: 30 };
+  writeVintage(base, '2026-07-14', 'semiconductors', mkVintage('semiconductors', '2026-07-14', cohortEight(true)));
+  const r1 = E.runE1({ baseDir: base, date: '2026-07-14', cfg });
+  assert.ok(r1.alerts.some((a) => a.ticker === 'CHEAP_HI'), 'Tag 1 feuert');
+
+  // Tag 2: CHEAP_HI verlaesst das unterste Quartil ECHT (evSales weit ueber der Schwelle).
+  const exitRows = cohortEight(true).map((row) => { if (row.ticker === 'CHEAP_HI') row.pit.evSales = 999; return row; });
+  writeVintage(base, '2026-07-15', 'semiconductors', mkVintage('semiconductors', '2026-07-15', exitRows));
+  E.runE1({ baseDir: base, date: '2026-07-15', cfg });
+
+  // Tag 3: Wiedereintritt (wieder billig + Wachstum intakt) -> muss trotz 30-Tage-Cooldown
+  // seit Tag 1 SOFORT feuern duerfen, weil der echte Austritt den Zustand resettet hat.
+  writeVintage(base, '2026-07-16', 'semiconductors', mkVintage('semiconductors', '2026-07-16', cohortEight(true)));
+  const r3 = E.runE1({ baseDir: base, date: '2026-07-16', cfg });
+  assert.ok(r3.alerts.some((a) => a.ticker === 'CHEAP_HI'), 'Tag 3: echter Austritt resettet -> Wiedereintritt feuert erneut');
+});
+
 console.log(fail ? ('\nFAIL: ' + fail + ' Test(s)') : '\nAlle E1-Kompressions-Tests gruen');
 process.exit(fail ? 1 : 0);

@@ -140,6 +140,27 @@ test('Gegen-Test: Erfolgslauf nach Fehl-Lauf -> export (frischer index schlaegt 
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
+// --- X3 (T3, Opus-Fund): index.json wurde VOR calibration.json geschrieben; der H-B-Kommentar
+// behauptete faelschlich "index.json wird ZULETZT geschrieben". Scheitert der calibration-Write
+// (assertFinite wirft bei NaN/Inf, oder ein I/O-Fehler) NACH einem bereits erfolgreich
+// geschriebenen index.json, ueberlebt der gueltige Index den Fehlstart -> qualityExportMode
+// prueft index ZUERST -> 'export' gewinnt ueber den frischen _failed-Marker (genau das Loch,
+// das H-B/F11 schliessen sollten). Fix: index.json steht jetzt WIRKLICH zuletzt (hinter
+// calibration). Hermetisch: calibration.json als Verzeichnis blockieren -> der calibration-Write
+// (W() mit assertFinite:true) wirft deterministisch EISDIR/EPERM.
+test('X3: calibration-Write scheitert -> index.json darf NICHT auf Disk ueberleben (mode=failed)', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'qc-x3-'));
+  fs.mkdirSync(path.join(tmp, 'calibration.json')); // Throw-Hebel: calibration-Write wirft (Ziel ist ein Verzeichnis)
+  let threw = false;
+  try { runQualityPass([], 100, tmp); }
+  catch (e) { threw = true; writeQualityFailedMarker(e && e.message, tmp); }
+  assert.equal(threw, true, 'QC-Pass muss werfen (calibration-Write blockiert)');
+  assert.equal(fs.existsSync(path.join(tmp, 'index.json')), false,
+    'index.json darf bei gescheitertem calibration-Write NICHT auf Disk liegen (sonst stale export)');
+  assert.equal(wfe.qualityExportMode(tmp), 'failed', 'Fehl-Marker muss gewinnen, kein maskierter Ausfall');
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
 // --- Guard-Robustheit: nie werfen, nur index.json betroffen ----------------------------------
 test('clearStaleQualityIndex: idempotent, wirft nie, entfernt AUSSCHLIESSLICH index.json', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'qc-guard-'));
