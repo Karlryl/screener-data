@@ -190,6 +190,49 @@ test('deliveryIC: Score korreliert mit realisiertem Umsatz-Delta (Perioden-Ende-
   assert.ok(r.ic > 0.9, 'Delivery-IC: ' + r.ic); // Umsatz-Delta steigt monoton im Score
 });
 
+// F10: das Later-Quartal MUSS an ~2Q nach end0 (Band [end0+150d, end0+210d]) gebunden sein,
+// NICHT einfach das neueste Perioden-Ende > end0. Ein voll gemeldeter Later-Snapshot enthält
+// oft +3Q; der alte Code nahm index 0 (= +3Q) und mischte damit heterogene Horizonte in einen IC.
+test('deliveryIC F10: bindet an das ~2Q-Zielband, nicht ans neueste Later-Quartal', () => {
+  const N = 12; const rnd = lcg(11);
+  // Later-Vintage (newest-first): +3Q(2026-12-31, KONSTANT 100), +2Q(2026-09-30, monoton im Score), +1Q(2026-06-30).
+  // Altes Verhalten: index 0 = +3Q-Konstante -> ys konstant -> IC null. Fix: +2Q-Signal -> IC ~1.
+  const mk = (later) => ({
+    cohort: {
+      profitable: Array.from({ length: N }, (_, i) => ({
+        ticker: 'T' + i, score: i,
+        pit: later
+          ? { revenueQ: [100, 100 + i * 5 + rnd(), 90], revenueQEnds: ['2026-12-31', '2026-09-30', '2026-06-30'] }
+          : { revenueQ: [100], revenueQEnds: ['2026-03-31'] },
+      })), unprofitable: [],
+    },
+  });
+  const r = ric.deliveryIC(mk(false), mk(true));
+  assert.equal(r.n, N, 'alle Ticker haben ein Quartal im Band');
+  assert.equal(r.skippedNoBand, 0, 'kein Ticker übersprungen');
+  assert.ok(r.ic > 0.9, 'IC trägt das +2Q-Signal (nicht die +3Q-Konstante): ' + r.ic);
+});
+
+// F10: fehlt das +2Q-Quartal (lückenhafter Later-Snapshot, nur +1Q gemeldet), darf der IC
+// NICHT still auf einen +1Q-Horizont fallen -> Ticker überspringen UND zählen (fail-loud).
+test('deliveryIC F10: +1Q-Lücke (kein Quartal im Band) -> Ticker übersprungen und gezählt', () => {
+  const N = 11; const rnd = lcg(13);
+  const mk = (later) => ({
+    cohort: {
+      profitable: Array.from({ length: N }, (_, i) => ({
+        ticker: 'T' + i, score: i,
+        pit: later
+          ? { revenueQ: [110 + i + rnd()], revenueQEnds: ['2026-06-30'] } // nur +1Q (~91d) -> ausserhalb [150,210]
+          : { revenueQ: [100], revenueQEnds: ['2026-03-31'] },
+      })), unprofitable: [],
+    },
+  });
+  const r = ric.deliveryIC(mk(false), mk(true));
+  assert.equal(r.skippedNoBand, N, 'jeder +1Q-only-Ticker wird übersprungen (Band-Untergrenze greift)');
+  assert.equal(r.n, 0, 'kein Ticker mit gültigem ~2Q-Horizont -> leere Stichprobe');
+  assert.equal(r.ic, null, 'n<10 -> kein IC');
+});
+
 // ── Verdrahtung Store->Preis-Index (R-Gate 2.R, Fund F5-1) ───────────────────
 // Die Einzelfunktionen waren immer grün — kaputt war NUR die Verdrahtung in main():
 // loadAll bekam prices/history statt prices, der Store hängt 'history' selbst an,

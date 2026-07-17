@@ -221,6 +221,13 @@ function run(topN) {
     runQualityPass(universe, topN);
   } catch (e) {
     console.error(`::error:: [run-screener] QC-Pass fehlgeschlagen (HG unberuehrt): ${e && e.message}`);
+    // F11: EXPLIZITES Fehlsignal statt stiller Abwesenheit. Ohne Marker sieht ein QC-Throw
+    // fuer write-findash-export/Deploy aus wie "QC-Ordner fehlt" (alter Lokallauf) — der
+    // Deploy kopiert dann den frischen HG-Stand ueber den bestehenden gh-pages-Checkout und
+    // laesst das ALTE QC-Board unmarkiert live (stiller Stale-Feed). Der Marker macht den
+    // Ausfall sichtbar: write-findash-export reicht ihn in den Export durch, der Deploy leert
+    // das Ziel-Unterverzeichnis -> kein stales QC-Board. HG bleibt unberuehrt (fail-soft).
+    writeQualityFailedMarker(e && e.message);
   }
   return { universe: universe.length, branches: Object.keys(ranked.branches).length, out: OUT_DIR };
 }
@@ -263,6 +270,22 @@ function runQualityPass(universe, topN) {
   console.log(`[run-screener] QC-Board (DIAGNOSTIC): ${boardIds.length} Boards -> ${QC_OUT_DIR}`);
 }
 
+// F11: expliziter QC-Fehl-Marker (outputs/quality/_failed). Wird im catch des QC-Passes
+// geschrieben, damit die Abwesenheit eines frischen QC-Boards NICHT still als "optional
+// absent" durchgeht. write-findash-export liest ihn (wenn KEIN gueltiger quality/index.json
+// vorliegt) und reicht das "QC failed" in den Export durch; der Deploy leert das Ziel-Subdir.
+// Best-effort und rein diagnostisch: schlaegt der Marker-Write fehl, bleibt der HG-Stand so
+// oder so unberuehrt (fail-soft) — nur die Sichtbarkeit des QC-Ausfalls ginge verloren.
+function writeQualityFailedMarker(reason, qcOutDir = QC_OUT_DIR) {
+  try {
+    fs.mkdirSync(qcOutDir, { recursive: true });
+    writeJsonAtomic(path.join(qcOutDir, '_failed'), { reason: String(reason || 'unknown'), at: new Date().toISOString() });
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 if (require.main === module) {
   const argIdx = process.argv.indexOf('--topN');
   const topN = argIdx >= 0 ? parseInt(process.argv[argIdx + 1], 10) : 100;
@@ -270,4 +293,4 @@ if (require.main === module) {
   console.log(`Screener-Output: ${r.branches} Branchen, Universum ${r.universe} -> ${r.out}`);
 }
 
-module.exports = { loadUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO };
+module.exports = { loadUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO, writeQualityFailedMarker };

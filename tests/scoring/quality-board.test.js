@@ -19,6 +19,7 @@ const { qualityRoute, COMPOUNDER_TIERS, QC_UNSUPPORTED_SECTORS } = require('../.
 const qcFormulas = require('../../src/scoring/formulas/quality/index.js');
 const { boardStatus } = require('../../src/scoring/board-status.js');
 const ax = require('../../src/scoring/axes.js');
+const wfe = require('../../scripts/write-findash-export.js'); // 3.2/F11: QC-Feed-Export
 
 let pass = 0, fail = 0, skip = 0;
 function test(name, fn) {
@@ -202,6 +203,40 @@ testU('QC-Pass laeuft ueber das reale Universum, Kohorten disjunkt (nur quality-
   assert.ok(routed.every((e) => boardStatus(e.formulaId) === 'diagnostic'), 'ein QC-Board ist nicht diagnostic');
   assert.ok(routed.every((e) => e.track === 'profitable'), 'splitMetric none -> track muss profitable sein');
   console.log(`       QC gescort: ${routed.length} Compounder ueber ${new Set(routed.map((e) => e.formulaId)).size} Boards`);
+});
+
+// --- F11: QC-Feed-Auslieferung (stiller Stale-Feed unmoeglich machen) ---------
+// write-findash-export unterscheidet drei Quell-Zustaende statt nur "Datei da/nicht da":
+// gueltiger index -> export; _failed-Marker (QC-Pass scheiterte) -> als _failed durchreichen
+// (KEIN stales Board); weder/noch -> alter Lokallauf (absent). index gewinnt ueber Marker.
+test('qualityExportMode F11: index -> export, _failed-Marker -> failed, sonst absent', () => {
+  const tmp = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'qmode-'));
+  assert.equal(wfe.qualityExportMode(tmp), 'absent', 'leeres Dir = alter Lokallauf');
+  fs.writeFileSync(path.join(tmp, '_failed'), JSON.stringify({ reason: 'boom', at: 'x' }));
+  assert.equal(wfe.qualityExportMode(tmp), 'failed', 'nur _failed -> QC-Fehl-Lauf');
+  fs.writeFileSync(path.join(tmp, 'index.json'), JSON.stringify({ boards: [] }));
+  assert.equal(wfe.qualityExportMode(tmp), 'export', 'index gewinnt (QC hat geliefert)');
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+test('buildQuality F11: _failed-Marker -> exportiert v1/quality/_failed, KEINE (stale) Boards', () => {
+  const os = require('node:os');
+  const src = fs.mkdtempSync(path.join(os.tmpdir(), 'qsrc-'));
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'qout-'));
+  fs.writeFileSync(path.join(src, '_failed'), JSON.stringify({ reason: 'scoreUniverse boom', at: '2026-07-17T00:00:00Z' }));
+  // buildQuality warnt per console.warn (::warning::) — hier kapseln, damit die Zeile nicht in
+  // den Testausgabestrom leckt (skip-honesty.test.js parst stdout+stderr und liest die letzte
+  // Zeile als Summenzeile; eine Warnung dahinter wuerde die Zahlen-Kongruenzpruefung stoeren).
+  const origWarn = console.warn; console.warn = () => {};
+  let r;
+  try { r = wfe.buildQuality(null, { qualityDir: src, qoutDir: out }); } finally { console.warn = origWarn; }
+  assert.equal(r.boards, 0, 'kein Board exportiert');
+  assert.equal(r.failed, true, 'als Fehl-Lauf ausgewiesen');
+  const marker = JSON.parse(fs.readFileSync(path.join(out, '_failed'), 'utf8'));
+  assert.equal(marker.reason, 'scoreUniverse boom', 'Grund durchgereicht');
+  assert.equal(marker.schema, wfe.SCHEMA, 'Export-Schema gesetzt');
+  const jsonFiles = fs.readdirSync(out).filter((f) => f.endsWith('.json'));
+  assert.equal(jsonFiles.length, 0, 'KEINE QC-Board-JSONs (kein stales Board mitgeliefert)');
+  fs.rmSync(src, { recursive: true, force: true }); fs.rmSync(out, { recursive: true, force: true });
 });
 
 // Skip-Zahl gehoert in die Summenzeile: sonst liest "18 ok, 0 fail" wie ein voller Pass,

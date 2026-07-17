@@ -817,8 +817,13 @@ jobs:
           fi
           # 3.2 QC-Board (quality/): expected = #QC boards + overview + index. Dynamic, no
           # hardcode-drift — derive from the source quality-*.json count (0 = no QC pass this run).
+          # F11: ein QC-Fehl-Lauf schreibt outputs/quality/_failed (run-screener catch) und
+          # exportiert quality/ NUR als _failed-Marker (write-findash-export) — dann gibt es
+          # KEINEN Board-Count-Vertrag zu pruefen (QC ist als gescheitert ausgewiesen, HG liefert
+          # weiter). Nur OHNE _failed-Marker UND mit QC-Quellboards ist der vollstaendige
+          # quality/-Export Pflicht.
           qsrc=$(ls outputs/quality/quality-*.json 2>/dev/null | wc -l)
-          if [ "$qsrc" -gt 0 ]; then
+          if [ ! -f outputs/quality/_failed ] && [ "$qsrc" -gt 0 ]; then
             qexp=$((qsrc + 2))
             qgot=$(ls outputs/findash-export/v1/quality/*.json 2>/dev/null | wc -l)
             echo "findash-export quality/ wrote $qgot files (expected $qexp)"
@@ -840,6 +845,12 @@ jobs:
             || { mkdir -p _ghp; cd _ghp; git init -b gh-pages; cd ..; }
           mkdir -p _ghp/outputs/hypergrowth
           cp outputs/hypergrowth/*.json _ghp/outputs/hypergrowth/
+          # F11: Ziel-v1 VOR dem Kopieren leeren — sonst ueberleben aus dem frischen Export
+          # verschwundene Dateien (v.a. das optionale quality/-Board bei einem QC-Fehl-Lauf)
+          # aus dem alten gh-pages-Checkout und werden als frisch weiter-serviert (stiller
+          # Stale-Feed). Nach dem rm ist der deployte v1-Stand exakt der DIESES Laufs; HG bleibt
+          # unberuehrt (BRANCHES+overview+survival+index werden jeden Lauf voll neu geschrieben).
+          rm -rf _ghp/outputs/findash-export/v1
           mkdir -p _ghp/outputs/findash-export/v1
           cp -r outputs/findash-export/v1/. _ghp/outputs/findash-export/v1/
           cd _ghp

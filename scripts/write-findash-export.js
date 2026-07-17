@@ -223,21 +223,48 @@ function buildQualityIndex(coverage) {
   };
 }
 
-// Optional-when-absent: no outputs/quality/index.json (old local run) -> write NOTHING,
-// warn loud (never silent-drop). Keyed on the source index existing, symmetric with the
-// validation gate (once quality/index.json exists on disk, all QC files are Pflicht).
-function buildQuality(coverage) {
-  const idx = readJSONOrNull(path.join(QUALITY_DIR, 'index.json'));
-  if (!idx) {
+// F11: QC-Export-Entscheidung aus dem Quell-Zustand (rein, testbar). 'export' = gueltiges
+// Board-Set (quality/index.json da, QC-Pass lief durch); 'failed' = QC-Fehl-Marker (_failed,
+// von run-screener im catch) OHNE index -> QC-Pass scheiterte; 'absent' = weder noch (alter
+// Lokallauf ohne QC). index gewinnt ueber den Marker: ein spaeterer Erfolgslauf schreibt einen
+// frischen index, ein stale _failed eines Vorlaufs darf ihn nicht ueberstimmen.
+function qualityExportMode(qualityDir) {
+  if (fs.existsSync(path.join(qualityDir, 'index.json'))) return 'export';
+  if (fs.existsSync(path.join(qualityDir, '_failed'))) return 'failed';
+  return 'absent';
+}
+
+// Optional-when-absent -> explizites Fehlsignal (F11). Drei Zustaende statt "Datei da/nicht da":
+//   export  -> QC-Boards spiegeln (wie bisher);
+//   failed  -> NUR den _failed-Marker in den Export durchreichen (KEIN evtl. stales Board),
+//              damit der Deploy den QC-Ausfall sichtbar macht statt still das Alt-Board weiter
+//              zu servieren. HG liefert unveraendert weiter (fail-soft);
+//   absent  -> nichts schreiben, laut warnen (alter Lokallauf ohne QC-Ordner).
+// Einmal geschrieben, ist jede quality/index.json voll --check-validiert (validateQualityExport).
+function buildQuality(coverage, opts = {}) {
+  const qualityDir = opts.qualityDir || QUALITY_DIR;
+  const qoutDir = opts.qoutDir || QOUT_DIR;
+  const mode = qualityExportMode(qualityDir);
+  if (mode === 'failed') {
+    const failed = readJSONOrNull(path.join(qualityDir, '_failed')) || {};
+    fs.mkdirSync(qoutDir, { recursive: true });
+    writeJsonAtomic(path.join(qoutDir, '_failed'), { schema: SCHEMA, generated_at: new Date().toISOString(), ...failed });
+    console.warn('::warning::findash-export: QC-Pass FAILED (quality/_failed) — quality/ nur als _failed-Marker exportiert, KEINE (evtl. stale) QC-Boards.');
+    return { boards: 0, failed: true };
+  }
+  if (mode === 'absent') {
     console.warn('::warning::findash-export: outputs/quality/index.json absent — QC board (quality/) NOT exported (optional feed, older local run).');
     return { boards: 0 };
   }
+  // mode === 'export': gueltiges QC-Board-Set spiegeln.
+  // ponytail: die Board-Helfer (qualityBoardFiles/buildQualityBoard/…) lesen die Modul-Dirs
+  // (QUALITY_DIR/QOUT_DIR); der hermetische F11-Test treibt nur failed/absent (kein index).
   const files = qualityBoardFiles();
-  fs.mkdirSync(QOUT_DIR, { recursive: true });
-  const opts = { assertFinite: true };
-  for (const f of files) writeJsonAtomic(path.join(QOUT_DIR, qualityStem(f) + '.json'), buildQualityBoard(f, coverage), opts);
-  writeJsonAtomic(path.join(QOUT_DIR, 'overview.json'), buildQualityOverview(coverage), opts);
-  writeJsonAtomic(path.join(QOUT_DIR, 'index.json'), buildQualityIndex(coverage), opts);
+  fs.mkdirSync(qoutDir, { recursive: true });
+  const wo = { assertFinite: true };
+  for (const f of files) writeJsonAtomic(path.join(qoutDir, qualityStem(f) + '.json'), buildQualityBoard(f, coverage), wo);
+  writeJsonAtomic(path.join(qoutDir, 'overview.json'), buildQualityOverview(coverage), wo);
+  writeJsonAtomic(path.join(qoutDir, 'index.json'), buildQualityIndex(coverage), wo);
   return { boards: files.length };
 }
 
@@ -628,6 +655,6 @@ if (require.main === module) {
 
 module.exports = {
   build, validateExport, validateFile, validateBoardRow, validateOverviewRow, validateSurvivalRow,
-  validateQualityExport, validateQualityIndex, buildQuality,
+  validateQualityExport, validateQualityIndex, buildQuality, qualityExportMode,
   mapBoardRow, mapOverviewRow, mapSurvivalRow, SCHEMA, BRANCHES,
 };

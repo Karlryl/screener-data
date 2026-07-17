@@ -60,7 +60,8 @@ const CI_LEVEL = 0.90;                // Ledger: Block-Bootstrap-90 %-CI
 const BOOTSTRAP_B = 2000;             // §2
 const MIN_NEFF = 8;                   // §3d Mindest-Power
 const BY_Q = 0.10;                    // §3b Benjamini-Yekutieli-FDR-Niveau
-const DELIVERY_MIN_GAP_DAYS = 180;    // §4b: t0+2Q (A12-Kopplung)
+const DELIVERY_MIN_GAP_DAYS = 180;    // §4b: t0+2Q (A12-Kopplung), zugleich Zielband-Zentrum des Delivery-Quartals
+const DELIVERY_BAND_TOL_DAYS = 30;    // §4b: akzeptiertes Fenster ±30d um +2Q -> [end0+150d, end0+210d]
 
 // ── kleine Statistik-Helfer (pur, testbar) ───────────────────────────────────
 function ranks(values) {
@@ -347,6 +348,7 @@ function deliveryIC(vintage0, vintageLater) {
     for (const r of (vintageLater.cohort && vintageLater.cohort[t]) || []) later.set(r.ticker, r);
   }
   const xs = [], ys = [];
+  let skippedNoBand = 0; // F10: Ticker ohne Later-Quartal im ~2Q-Band (fail-loud statt Horizont-Drift)
   for (const t of ['profitable', 'unprofitable']) {
     for (const r of (vintage0.cohort && vintage0.cohort[t]) || []) {
       if (!Number.isFinite(r.score)) continue;
@@ -356,18 +358,29 @@ function deliveryIC(vintage0, vintageLater) {
       if (!Array.isArray(p0.revenueQEnds) || !Array.isArray(p1.revenueQEnds)) continue; // A10-Substrat nötig
       const end0 = p0.revenueQEnds[0], rev0 = p0.revenueQ[0];
       if (!end0 || !Number.isFinite(rev0) || rev0 <= 0) continue;
-      // jüngstes Later-Quartal, dessen Perioden-Ende NACH end0 liegt und >= ~2 Quartale weiter
-      let rev1 = null;
+      const end0ms = Date.parse(end0);
+      if (!Number.isFinite(end0ms)) continue;
+      // F10/§4b/A12: das Later-Quartal an ~2Q nach end0 binden (Ziel end0+180d, akzeptiert im
+      // Band [end0+150d, end0+210d]) und das dem Ziel NÄCHSTE nehmen — NICHT einfach das
+      // neueste Perioden-Ende > end0. Ein voll gemeldeter Later-Snapshot enthält oft +3Q; ein
+      // lückenhafter nur +1Q. Beides ausserhalb des Bandes -> Ticker überspringen, sonst mischt
+      // der IC heterogene 1-3Q-Deltas. Kein Quartal im Band -> zählen (Ausweis in b.delivery).
+      let rev1 = null, bestDev = Infinity;
       for (let i = 0; i < p1.revenueQ.length; i++) {
         const e1 = p1.revenueQEnds[i];
-        if (e1 && e1 > end0 && Number.isFinite(p1.revenueQ[i])) { rev1 = p1.revenueQ[i]; break; }
+        if (!e1 || !Number.isFinite(p1.revenueQ[i])) continue;
+        const gapDays = (Date.parse(e1) - end0ms) / 86400000;
+        if (gapDays < DELIVERY_MIN_GAP_DAYS - DELIVERY_BAND_TOL_DAYS) continue;
+        if (gapDays > DELIVERY_MIN_GAP_DAYS + DELIVERY_BAND_TOL_DAYS) continue;
+        const dev = Math.abs(gapDays - DELIVERY_MIN_GAP_DAYS);
+        if (dev < bestDev) { bestDev = dev; rev1 = p1.revenueQ[i]; }
       }
-      if (rev1 === null) continue;
+      if (rev1 === null) { skippedNoBand++; continue; }
       xs.push(r.score); ys.push(rev1 / rev0 - 1);
     }
   }
-  if (xs.length < 10) return { n: xs.length, ic: null };
-  return { n: xs.length, ic: spearman(xs, ys) };
+  if (xs.length < 10) return { n: xs.length, ic: null, skippedNoBand };
+  return { n: xs.length, ic: spearman(xs, ys), skippedNoBand };
 }
 
 // ── Hauptauswertung ──────────────────────────────────────────────────────────

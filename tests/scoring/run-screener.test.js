@@ -11,7 +11,10 @@
  * Usage:  node tests/scoring/run-screener.test.js   (Exit 0/1)
  */
 const assert = require('node:assert/strict');
-const { assertCoverageFloor, COVERAGE_FLOOR_RATIO, nextHighWater } = require('../../src/scoring/run-screener.js');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { assertCoverageFloor, COVERAGE_FLOOR_RATIO, nextHighWater, writeQualityFailedMarker } = require('../../src/scoring/run-screener.js');
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -74,6 +77,27 @@ test('nextHighWater: bei Wachstum anheben, bei Dip halten, Erstlauf = loaded', (
   assert.equal(nextHighWater(null, 4681), 4681, 'Erstlauf (keine Baseline) -> Startwert');
   assert.equal(nextHighWater(0, 4681), 4681, 'leere/0-Baseline -> Startwert');
   assert.equal(nextHighWater(NaN, 4681), 4681, 'unbrauchbare Baseline -> Startwert');
+});
+
+// --- F11: QC-Fehl-Marker (explizites Fehlsignal statt stiller Abwesenheit) ----
+// Der catch-Zweig von run() schreibt outputs/quality/_failed, wenn der QC-Pass wirft.
+// So behandeln write-findash-export + Deploy den QC-Ausfall als Ausfall und reichen
+// KEIN stales QC-Board weiter; der frische HG-Stand bleibt unberührt (fail-soft).
+test('writeQualityFailedMarker: schreibt _failed mit reason+timestamp ins QC-Out-Dir (hermetisch)', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'qc-failed-'));
+  const ok = writeQualityFailedMarker('scoreUniverse boom', tmp);
+  assert.equal(ok, true, 'Marker best-effort geschrieben');
+  const marker = JSON.parse(fs.readFileSync(path.join(tmp, '_failed'), 'utf8'));
+  assert.equal(marker.reason, 'scoreUniverse boom', 'Grund festgehalten');
+  assert.ok(typeof marker.at === 'string' && marker.at.length > 0, 'Zeitstempel gesetzt');
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+test('writeQualityFailedMarker: leerer Grund -> "unknown", kein Crash', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'qc-failed2-'));
+  writeQualityFailedMarker(undefined, tmp);
+  const marker = JSON.parse(fs.readFileSync(path.join(tmp, '_failed'), 'utf8'));
+  assert.equal(marker.reason, 'unknown');
+  fs.rmSync(tmp, { recursive: true, force: true });
 });
 
 console.log(`run-screener.test.js: ${pass} ok, ${fail} fail`);
