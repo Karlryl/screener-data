@@ -247,6 +247,10 @@ function buildQuality(coverage, opts = {}) {
   const mode = qualityExportMode(qualityDir);
   if (mode === 'failed') {
     const failed = readJSONOrNull(path.join(qualityDir, '_failed')) || {};
+    // T2: symmetrisch zum export-Zweig (X4/Tag 349) — qoutDir ERST leeren, DANN neu schreiben.
+    // Sonst blieben Board-Dateien + index.json eines FRUEHEREN erfolgreichen Laufs liegen,
+    // validateQualityExport/Deploy haetten sie stillschweigend als gueltig weiterserviert.
+    fs.rmSync(qoutDir, { recursive: true, force: true });
     fs.mkdirSync(qoutDir, { recursive: true });
     writeJsonAtomic(path.join(qoutDir, '_failed'), { schema: SCHEMA, generated_at: new Date().toISOString(), ...failed });
     console.warn('::warning::findash-export: QC-Pass FAILED (quality/_failed) — quality/ nur als _failed-Marker exportiert, KEINE (evtl. stale) QC-Boards.');
@@ -426,6 +430,29 @@ function validateCoverage(mk, kind, errs) {
   if (!Number.isFinite(c.coverage_pct)) errs.push(`${kind}: coverage.coverage_pct not finite`);
 }
 
+// R2.18: rank is Number.isInteger(>=1)-checked above but that alone is tautological — rank
+// is derived as i+1 from array position (mapBoardRow/mapOverviewRow/mapSurvivalRow), so a
+// type check can never contradict a broken sort. Two INDEPENDENT value checks close that gap:
+//   checkRankSequence  — rank must equal 1-based index within ITS list (pins the derivation
+//                         promise; catches rank getting decoupled from array position).
+//   checkScoreDescending — score must be non-increasing (score.js produceRankings' byScore
+//                         sort). Independent of rank: a broken upstream sort leaves rank=i+1
+//                         internally consistent but scores out of order, so this is the check
+//                         that actually catches a broken sort. Only wired where score.js
+//                         GUARANTEES score-desc order (board tracks + overview.json) — survival
+//                         is runway-desc and its rows carry no .score field at all.
+function checkRankSequence(rows, where, errs) {
+  (rows || []).forEach((r, i) => { if (r && r.rank !== i + 1) errs.push(`${where}[${i}]: rank!=index+1 (rank=${JSON.stringify(r.rank)})`); });
+}
+function checkScoreDescending(rows, where, errs) {
+  for (let i = 1; i < (rows || []).length; i++) {
+    const prev = rows[i - 1], cur = rows[i];
+    if (prev && cur && Number.isFinite(cur.score) && Number.isFinite(prev.score) && cur.score > prev.score + 1e-9) {
+      errs.push(`${where}[${i}]: score-Ordnung gebrochen (${cur.score} > ${prev.score})`);
+    }
+  }
+}
+
 function validateFile(mk, kind, errs) {
   if (!mk || typeof mk !== 'object') { errs.push(`${kind}: not an object`); return; }
   if (mk.schema !== SCHEMA) errs.push(`${kind}: schema=${JSON.stringify(mk.schema)}`);
@@ -446,11 +473,14 @@ function validateFile(mk, kind, errs) {
   if (kind === 'survival') {
     if (!Array.isArray(mk.rows)) { errs.push('survival: rows not array'); return; }
     mk.rows.forEach((r, i) => validateSurvivalRow(r, `survival[${i}]`, errs));
+    checkRankSequence(mk.rows, 'survival.rows', errs); // R2.18 (a) — runway-desc, no .score -> no (b) here
     return;
   }
   if (kind === 'overview') {
     if (!Array.isArray(mk.rows)) { errs.push('overview: rows not array'); return; }
     mk.rows.forEach((r, i) => validateOverviewRow(r, `overview[${i}]`, errs));
+    checkRankSequence(mk.rows, 'overview.rows', errs);     // R2.18 (a)
+    checkScoreDescending(mk.rows, 'overview.rows', errs);  // R2.18 (b) — overview.json is globally score-desc
     return;
   }
   // board file: branch (Pflicht, = filename) + profitable/unprofitable arrays of BoardRow.
@@ -460,6 +490,12 @@ function validateFile(mk, kind, errs) {
   if (!Array.isArray(mk.unprofitable)) errs.push(`${kind}: unprofitable not array`);
   (mk.profitable || []).forEach((r, i) => validateBoardRow(r, `${kind}.profitable[${i}]`, errs));
   (mk.unprofitable || []).forEach((r, i) => validateBoardRow(r, `${kind}.unprofitable[${i}]`, errs));
+  // R2.18: each track is its OWN score-desc list (score.js rankBy/byScore sorts profitable and
+  // unprofitable separately), so rank(a)+score(b) are checked per track, not across both.
+  checkRankSequence(mk.profitable, `${kind}.profitable`, errs);
+  checkScoreDescending(mk.profitable, `${kind}.profitable`, errs);
+  checkRankSequence(mk.unprofitable, `${kind}.unprofitable`, errs);
+  checkScoreDescending(mk.unprofitable, `${kind}.unprofitable`, errs);
 }
 
 // Validate the ON-DISK export (what CI just wrote). Missing/unreadable file = breach.

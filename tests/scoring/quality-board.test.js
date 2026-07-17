@@ -268,6 +268,38 @@ test('buildQuality X4: entferntes/umbenanntes QC-Board wird aus qoutDir geraeumt
   fs.rmSync(src, { recursive: true, force: true }); fs.rmSync(out, { recursive: true, force: true });
 });
 
+// --- T2: failed-Zweig raeumt stale QC-Boards nicht (Geschwisterpfad zu X4/Tag348) -----------
+// Der export-Zweig (X4 oben) leert qoutDir VOR dem Neuschreiben. Der failed-Zweig tat das
+// bisher NICHT: er schrieb nur mkdirSync + den _failed-Marker, liess Board-Dateien + index.json
+// eines FRUEHEREN erfolgreichen Laufs unangetastet liegen. validateQualityExport() UND der
+// Deploy lesen dann das stale index.json + die Karteileichen-Boards als gueltig -> derselbe
+// Stale-QC-Feed-Klasse wie H-B/Tag345 und X3/Tag348, nur ueber den 'failed'-statt-'export'-Pfad
+// wieder offen. Fix: dieselbe rmSync-Raeumung wie im export-Zweig VOR dem mkdirSync.
+test('buildQuality T2: failed-Zweig raeumt ein stales export-qoutDir (Boards + index.json weg, nur _failed bleibt)', () => {
+  const os = require('node:os');
+  const src = fs.mkdtempSync(path.join(os.tmpdir(), 'qsrc-t2-'));
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'qout-t2-'));
+  // Aktuelle Quelle: QC-Pass ist DIESMAL gescheitert (nur _failed-Marker, kein index.json).
+  fs.writeFileSync(path.join(src, '_failed'), JSON.stringify({ reason: 'scoreUniverse boom', at: '2026-07-17T00:00:00Z' }));
+  // qoutDir traegt noch den VOLLEN Board-Satz eines FRUEHEREN erfolgreichen Laufs.
+  fs.writeFileSync(path.join(out, 'index.json'), JSON.stringify({ schema: wfe.SCHEMA, boards: ['quality-alpha'] }));
+  fs.writeFileSync(path.join(out, 'alpha.json'), JSON.stringify({ schema: wfe.SCHEMA, branch: 'alpha' }));
+  fs.writeFileSync(path.join(out, 'overview.json'), JSON.stringify({ schema: wfe.SCHEMA, rows: [] }));
+
+  const origWarn = console.warn; console.warn = () => {}; // ::warning:: nicht in stdout leaken (s.o.)
+  let r;
+  try { r = wfe.buildQuality(null, { qualityDir: src, qoutDir: out }); } finally { console.warn = origWarn; }
+  assert.equal(r.failed, true, 'als Fehl-Lauf ausgewiesen');
+  assert.ok(!fs.existsSync(path.join(out, 'index.json')), 'stales index.json muss weg sein — sonst liest validateQualityExport/Deploy es als gueltig');
+  assert.ok(!fs.existsSync(path.join(out, 'alpha.json')), 'stale Board-Datei muss weg sein');
+  assert.ok(!fs.existsSync(path.join(out, 'overview.json')), 'stale overview.json muss weg sein');
+  assert.ok(fs.existsSync(path.join(out, '_failed')), '_failed-Marker muss geschrieben sein');
+  const remaining = fs.readdirSync(out);
+  assert.deepEqual(remaining, ['_failed'], 'qoutDir darf NUR noch den _failed-Marker enthalten, keine (stale) QC-Boards');
+
+  fs.rmSync(src, { recursive: true, force: true }); fs.rmSync(out, { recursive: true, force: true });
+});
+
 // Skip-Zahl gehoert in die Summenzeile: sonst liest "18 ok, 0 fail" wie ein voller Pass,
 // obwohl im pre-pull-CI die Universums-Beweise gar nicht gelaufen sind.
 console.log(`\nquality-board.test.js: ${pass} ok, ${fail} fail` + (skip ? `, ${skip} skipped (kein Universum)` : ''));
