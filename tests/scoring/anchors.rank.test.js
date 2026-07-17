@@ -23,7 +23,10 @@ const formulas = require('../../src/scoring/formulas/index.js');
 let pass = 0, fail = 0;
 function test(name, fn) { try { fn(); pass++; console.log('  ok   ' + name); } catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); } }
 
-const SNAP_DIR = path.join(__dirname, '..', '..', 'snapshots');
+// SCREENER_SNAPSHOTS_DIR: nur Test-Seam (spiegelt score.integration.test.js Z.34, bereits geblesst) —
+// laesst den hermetischen Rumpf-Skip-Regressionstest (anchors.rank.rumpf-skip.test.js) ein synthetisches
+// Fixture-Universum injizieren; ohne die Variable unveraendert das echte snapshots/.
+const SNAP_DIR = process.env.SCREENER_SNAPSHOTS_DIR || path.join(__dirname, '..', '..', 'snapshots');
 const universe = [];
 try {
   for (const f of fs.readdirSync(SNAP_DIR).filter((x) => x.endsWith('.json') && !x.startsWith('_'))) {
@@ -58,7 +61,11 @@ const ANCHORS = [
 for (const a of ANCHORS) {
   test(`Direktive 4: ${a.t} oben in ${a.fid}|${a.track} (<= ${a.max * 100}%)`, () => {
     const e = byTicker[a.t];
-    if (!e || e.action !== 'route') { console.log(`       (${a.t} nicht im Universum — uebersprungen)`); return; }
+    // C2 (kein stiller Rumpf-Skip): fehlender/nicht-gerouteter Anker faerbt HART rot statt vakuos "ok".
+    // Meldung nennt Ticker + Grund (fehlend vs. action!='route'), damit ein Fail sofort als harmlose
+    // Anker-Verschiebung ODER echte Regression lesbar ist.
+    assert.ok(e, `${a.t} fehlt komplett im Universum — Direktive 4 nicht pruefbar (Anker verschwunden? Karl-Entscheid noetig)`);
+    assert.equal(e.action, 'route', `${a.t} nicht geroutet (action=${e.action}) — Direktive 4 nicht pruefbar`);
     assert.equal(e.formulaId, a.fid, `${a.t} formulaId=${e.formulaId}`);
     const r = boardPct(a.t, a.fid, a.track);
     console.log(`       ${a.t} Rang ${r.rank}/${r.n} = ${(r.pct * 100).toFixed(1)}% (Score ${e.score.toFixed(1)})`);
@@ -69,7 +76,11 @@ for (const a of ANCHORS) {
 // --- Direktive 4: CRDO steht ueber ALAB im semiconductors-Board (Hypergrowth-Ordnung) ----
 test('Direktive 4: CRDO rankt >= ALAB im semiconductors|profitable-Board', () => {
   const crdo = byTicker['CRDO'], alab = byTicker['ALAB'];
-  if (!crdo || !alab || crdo.action !== 'route' || alab.action !== 'route') { console.log('       (CRDO/ALAB nicht beide da — uebersprungen)'); return; }
+  // C2: statt stillem return benennt der Fail, WELCHER der beiden fehlt bzw. nicht geroutet ist.
+  assert.ok(crdo, 'CRDO fehlt im Universum — CRDO>=ALAB-Ordnung nicht pruefbar');
+  assert.ok(alab, 'ALAB fehlt im Universum — CRDO>=ALAB-Ordnung nicht pruefbar');
+  assert.equal(crdo.action, 'route', `CRDO nicht geroutet (action=${crdo.action}) — CRDO>=ALAB-Ordnung nicht pruefbar`);
+  assert.equal(alab.action, 'route', `ALAB nicht geroutet (action=${alab.action}) — CRDO>=ALAB-Ordnung nicht pruefbar`);
   assert.ok(crdo.score >= alab.score, `CRDO ${crdo.score.toFixed(1)} sollte >= ALAB ${alab.score.toFixed(1)}`);
 });
 
@@ -85,7 +96,9 @@ test('2.10: kein cohortFallback-Name (n < MIN_COHORT_N) in den Overview-Top-25',
 test('2.10: Anker-Zeilen tragen finite cohortN == Kohortengroesse, cohortFallback=false (fette Kohorten)', () => {
   for (const a of ANCHORS) {
     const e = byTicker[a.t];
-    if (!e || e.action !== 'route') continue;
+    // C2: kein stilles continue — ein fehlender Anker faerbt die 2.10-Feld-Integritaet laut rot.
+    assert.ok(e, `${a.t} fehlt im Universum — 2.10-Feld-Integritaet nicht pruefbar`);
+    assert.equal(e.action, 'route', `${a.t} nicht geroutet (action=${e.action}) — 2.10-Feld-Integritaet nicht pruefbar`);
     const cohort = rankBy(results, a.fid, a.track);
     assert.ok(Number.isFinite(e.cohortN) && e.cohortN === cohort.length, `${a.t} cohortN=${e.cohortN} != ${cohort.length}`);
     assert.equal(e.cohortFallback, false, `${a.t} sollte in fetter Kohorte (fb=false) sein`);
