@@ -162,7 +162,7 @@ function run(topN) {
   const results = scoreUniverse(universe, formulas, refCalibration ? { refCalibration } : {});
   // Drift-Waechter: aktuelles Universum vs. eingefrorenes Lineal — fail-loud bei verschobener Basis (0.7-Kanal).
   if (refCalibration) {
-    const drift = calibrationDrift(results.calibration, refCalibration);
+    const drift = calibrationDrift(results.calibrationLive, refCalibration);
     if (!drift.ok) console.warn(`[run-screener] ⚠ KALIBRIER-DRIFT: maxKS ${drift.maxKs.toFixed(3)} > ${drift.ksThreshold} in ${drift.drifted.length} Achsen (Normierungsbasis verschoben).`);
     else console.log(`[run-screener] Kalibrier-Drift ok (maxKS ${drift.maxKs.toFixed(3)} <= ${drift.ksThreshold}).`);
   }

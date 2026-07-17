@@ -240,5 +240,81 @@ test('R2.9 Test B — neue Kohorte behaelt LIVE-Basis im Artefakt (Ganzobjekt-Te
   assert.ok(Array.isArray(gd) && gd.length > 0, `chimeraEdge.gDistByCohort[${edgeKey}] existiert (live)`);
 });
 
+// ============================================================================
+// COURT-NACHTRAG zu Tag 336 (E-20260717-5): zwei am Substrat belegte Funde am
+// mergeFrozenByKey-Emissionsblock. Beide pinnen das ECHTE run-screener-Wiring,
+// nicht nur die Funktion.
+//   F-A [T1-Regression] — der Drift-Waechter (run-screener.js:165) fuetterte das
+//        frozen-gemergte Emit (results.calibration) statt der roh-live erfassten
+//        Vor-Merge-Verteilungen. Jede geteilte Kohorte wird so VERBATIM gegen sich
+//        selbst verglichen -> ksDistance(ref,ref)=0 -> maxKs strukturell 0 -> der
+//        einzige Alarm gegen ein veraltetes Lineal ist tot. Fix: results.calibrationLive
+//        (non-enumerable) mit { cohortBases: capturedCohortBases, gDistByCohort } roh-live.
+//   F-B [T3] — mergeFrozenByKey iterierte nur Object.keys(live); eine im Lineal
+//        praesente, im (transient) Live-Universum leere Kohorte fiel still aus dem
+//        Artefakt = De-Freeze am naechsten Kettenglied. Fix: UNION(frozen,live),
+//        Frozen gewinnt. Spiegelbild zu R2.9 Test B.
+// ============================================================================
+
+// F-A — pinnt die ARGUMENT-QUELLE des Drift-Waechters, nicht nur calibrationDrift.
+// verschoben-aber-vollstaendiges Lineal: calA klonen, EINE Achse EINER auch live
+// besetzten Kohorte um +1e6 auf ALLEN Werten verschieben; alle Achsen-Keys UND
+// gDistByCohort intakt lassen (sonst wirft der R2.7- bzw. R2.11-Guard vor der Emission).
+test('F-A — Drift-Waechter liest roh-live (calibrationLive), nicht das frozen-gemergte Emit', () => {
+  const shiftedRuler = roundtrip(calA);
+  const liveKeys = new Set(keyByTicker.values());
+  const rulerKeys = Object.keys(shiftedRuler.cohortBases);
+  const key = rulerKeys.find((k) => liveKeys.has(k)) || rulerKeys[0]; // Kohorte, die auch live besetzt ist
+  const ax = Object.keys(shiftedRuler.cohortBases[key].axes)[0];
+  shiftedRuler.cohortBases[key].axes[ax] = shiftedRuler.cohortBases[key].axes[ax].map((v) => (Number.isFinite(v) ? v + 1e6 : v));
+  const r = scoreUniverse(universe, formulas, { refCalibration: shiftedRuler });
+  // (a) der HEUTE verdrahtete Pfad ist per Konstruktion blind: das frozen-gemergte Emit traegt die
+  //     Kohorte VERBATIM aus dem Lineal -> Vergleich gegen sich selbst -> KS 0 -> ok=true. Dokumentiert
+  //     den Regressions-Pfad (gilt vor UND nach dem Fix -> keine Rot-Quelle, nur Beleg).
+  const blind = calibrationDrift(r.calibration, shiftedRuler);
+  assert.equal(blind.ok, true, 'frozen-gemergtes Emit ist gegen sein eigenes Lineal driftfrei — der blinde Pfad');
+  // (b) der KORREKTE Pfad: roh-live gegen das verschobene Lineal MUSS feuern.
+  //     ROT-VORHER (Tag 337): r.calibrationLive existiert nicht -> calibrationDrift(undefined,..) liefert
+  //     maxKs 0/ok=true -> diese Assertion faellt. GRUEN-NACHHER: KS ~1 auf der verschobenen Achse.
+  const live = calibrationDrift(r.calibrationLive, shiftedRuler);
+  assert.equal(live.ok, false, 'roh-live (calibrationLive) gegen das +1e6-verschobene Lineal muss den Waechter ausloesen');
+  assert.ok(live.drifted.some((x) => x.cohort === key && x.axis === ax),
+    `ein Drift-Eintrag auf genau der verschobenen Kohorte/Achse (${key}/${ax})`);
+});
+
+// F-B — Frozen-only-Kohorte ueberlebt das Artefakt (Union). Spiegelbild zu R2.9 Test B:
+// dort ist die Kohorte live-NEU (nur live) -> live gewinnt; hier ist sie frozen-ONLY
+// (nur im Lineal, live leer) -> Frozen wird weitergetragen statt still gedroppt.
+const calAcb = calA.cohortBases || {}, calAgd = calA.gDistByCohort || {};
+const liveKeyTix = new Map(); // cohortKey -> Set(ticker), aus dem Voll-Live-Lauf (keyByTicker Z.129-132)
+for (const [t, k] of keyByTicker) { if (!liveKeyTix.has(k)) liveKeyTix.set(k, new Set()); liveKeyTix.get(k).add(t); }
+let Kkey = null, Ktix = null; // kleinste Kohorte, die im Lineal VOLL (cohortBases+gDistByCohort) UND live praesent ist
+for (const [k, tix] of [...liveKeyTix.entries()].sort((a, b) => a[1].size - b[1].size)) {
+  if (calAcb[k] && calAgd[k]) { Kkey = k; Ktix = tix; break; }
+}
+const universeOhneK = Ktix ? universe.filter((s) => !Ktix.has(s.meta.ticker)) : universe; // K live LEER
+const rFB = Kkey ? scoreUniverse(universeOhneK, formulas, { refCalibration: calA }) : null;
+test('F-B — Frozen-only-Kohorte (live leer) ueberlebt das Emissions-Artefakt (Union, kein stilles De-Freeze)', () => {
+  assert.ok(Kkey, 'eine im Lineal + live praesente Kohorte K gefunden');
+  assert.ok(calAcb[Kkey] && calAgd[Kkey], `Vorbedingung: K=${Kkey} im Lineal calA praesent (cohortBases+gDistByCohort)`);
+  // Kern: ROT-VORHER iteriert mergeFrozenByKey nur Object.keys(live) -> K faellt raus -> undefined.
+  //       GRUEN-NACHHER traegt die Union die frozene Basis weiter.
+  const cb = rFB.calibration.cohortBases && rFB.calibration.cohortBases[Kkey];
+  assert.ok(cb, `rFB.calibration.cohortBases[${Kkey}] existiert (Frozen-only-Kohorte ueberlebt)`);
+  assert.ok(cb.axes && Object.keys(cb.axes).length > 0 && Number.isFinite(cb.n), `${Kkey}: frozene axes/n intakt`);
+  assert.ok(rFB.calibration.gDistByCohort && rFB.calibration.gDistByCohort[Kkey], `rFB.calibration.gDistByCohort[${Kkey}] existiert`);
+  // De-Freeze-Nachweis: rFB.calibration als Lineal ueber das VOLLE Universum -> K's Namen halten den
+  // gegen calA gefrorenen Score EXAKT (grown = Full∪calA). Ohne die Union waere K hier live-neu -> live
+  // gelernt -> Drift. Frozen K == calA K (verbatim) -> dieselbe Basis -> identische Scores.
+  const third = scoreUniverse(universe, formulas, { refCalibration: roundtrip(rFB.calibration) });
+  const sThird = routedScores(third);
+  let compared = 0, mism = 0;
+  for (const t of Ktix) {
+    if (scoreGrown.has(t) && sThird.has(t)) { compared++; if (sThird.get(t) !== scoreGrown.get(t)) mism++; }
+  }
+  assert.ok(compared > 0, `nicht-triviale K-Namen-Schnittmenge (${compared})`);
+  assert.equal(mism, 0, `${mism}/${compared} K-Namen driften am naechsten Kettenglied (muss 0 sein — Frozen-Basis getreu weitergetragen)`);
+});
+
 console.log(`calibration-ref.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

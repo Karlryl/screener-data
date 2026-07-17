@@ -797,7 +797,13 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
   const mergeFrozenByKey = (live, frozen) => {
     if (!frozen) return live;
     const out = {};
-    for (const key of Object.keys(live)) out[key] = (key in frozen) ? frozen[key] : live[key];
+    // Court-Nachtrag F-B (T3): ueber die UNION(frozen, live) iterieren statt nur Object.keys(live) —
+    // sonst faellt eine im Lineal PRAESENTE, im (transient) Live-Universum LEERE Kohorte still aus dem
+    // Emissions-Artefakt = De-Freeze am naechsten Ref-Kettenglied. Frozen gewinnt bei geteilten Keys
+    // (R2.9-Kern unveraendert). KEIN TTL/Praesenz-Zaehler (YAGNI): der Kohorten-Keyspace ist geschlossen
+    // (~22 formulaId|track) und waechst NUR durch ein bewusstes Code-Ereignis (neue Formel/Track), nie
+    // durch Universe-Wachstum/Daten — eine dauerhaft tote Kohorte wird beim bewussten Re-Freeze geraeumt.
+    for (const key of new Set([...Object.keys(frozen), ...Object.keys(live)])) out[key] = (key in frozen) ? frozen[key] : live[key];
     return out;
   };
   const emitCohortBases = mergeFrozenByKey(capturedCohortBases, refCal && refCal.cohortBases);
@@ -820,6 +826,17 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
       nTotal: Array.isArray(snapshots) ? snapshots.length : null,
     },
     enumerable: false, // unsichtbar fuer JSON.stringify(results)/Spread -> keine Alt-Konsument-Ueberraschung
+  });
+  // Court-Nachtrag F-A (T1): der Drift-Waechter (run-screener.js) braucht die ROH-LIVE erfassten Vor-Merge-
+  // Verteilungen — NICHT das oben frozen-gemergte `calibration`. Sonst vergleicht er jede GETEILTE Kohorte
+  // VERBATIM gegen sich selbst (ksDistance(ref,ref)=0, strukturell blind gegen ein veraltetes Lineal).
+  // capturedCohortBases (axes/profitSign/n/median, roh-live) + gDistByCohort (rohe Live-Verteilung, Z.722),
+  // beide VOR dem mergeFrozenByKey. Zweite non-enumerable Property -> landet NIE in calibration.json
+  // (run-screener spreadet nur ...results.calibration; Schema v4 + Byte-Identitaet unberuehrt).
+  // calibrationDrift liest genau liveCal.cohortBases + liveCal.gDistByCohort — Interna unveraendert.
+  Object.defineProperty(results, 'calibrationLive', {
+    value: { cohortBases: capturedCohortBases, gDistByCohort },
+    enumerable: false,
   });
 
   // 3. Overview-Metrik anhaengen + interne Felder entfernen
