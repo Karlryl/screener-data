@@ -169,5 +169,27 @@ test('deliveryIC: Score korreliert mit realisiertem Umsatz-Delta (Perioden-Ende-
   assert.ok(r.ic > 0.9, 'Delivery-IC: ' + r.ic); // Umsatz-Delta steigt monoton im Score
 });
 
+// ── Verdrahtung Store->Preis-Index (R-Gate 2.R, Fund F5-1) ───────────────────
+// Die Einzelfunktionen waren immer grün — kaputt war NUR die Verdrahtung in main():
+// loadAll bekam prices/history statt prices, der Store hängt 'history' selbst an,
+// der Index blieb leer und JEDES Board meldete "unterpowert" auf n=0. Dieser Test
+// pinnt den Store-Vertrag gegen ein Temp-Repo und wäre vor dem Fix rot gewesen.
+test('loadPriceIndexOrThrow: liest den Store aus dem prices-Verzeichnis (Vertrag: Store hängt "history" selbst an)', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'rank-ic-wiring-'));
+  const shardDir = path.join(tmp, 'prices', 'history');
+  fs.mkdirSync(shardDir, { recursive: true });
+  // Layout exakt wie price-history-store.loadAll es erwartet: <pricesDir>/history/history-NN.json
+  fs.writeFileSync(path.join(shardDir, 'history-00.json'), JSON.stringify({
+    AAA: [{ date: '2026-01-02', close: 10 }, { date: '2026-01-03', close: 11 }],
+    BBB: [{ date: '2026-01-02', close: 20 }],
+  }));
+  const idx = ric.loadPriceIndexOrThrow(path.join(tmp, 'prices'));
+  assert.ok(Object.keys(idx).length >= 2, 'Index findet die Ticker aus dem Store: ' + Object.keys(idx).length);
+  // Der alte (kaputte) Pfad muss jetzt LAUT scheitern statt still 0 Ticker zu liefern.
+  assert.throws(() => ric.loadPriceIndexOrThrow(path.join(tmp, 'prices', 'history')),
+    /Preis-Index LEER/, 'falscher Pfad -> fail-loud statt stiller Leer-Index');
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
 console.log(`\nrank-ic.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

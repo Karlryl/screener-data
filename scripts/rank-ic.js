@@ -354,14 +354,33 @@ function evaluate(historyDir, priceIndex, opts = {}) {
   return report;
 }
 
+// loadPriceIndexOrThrow — Verdrahtung Store->Index, fail-loud statt still leer.
+// R-Gate 2.R Fund F5-1: der Aufruf stand auf prices/history, während der Store
+// selbst 'history' anhängt (Vertrag: loadAll(pricesDir), siehe price-history-store.js
+// Kopf + alle anderen Aufrufer) -> Index leer -> JEDER Board-Punkt n=0 und die
+// gesamte Messreihe meldete "unterpowert", obwohl sie schlicht nichts gemessen hat.
+// Ein leerer Index ist ab jetzt ein harter Fehler: die Messreihe darf nie wieder
+// aus einem Pfad-Artefakt ein methodisches Urteil ableiten.
+function loadPriceIndexOrThrow(pricesDir) {
+  const history = store.loadAll(pricesDir);
+  const tickers = Object.keys(history).length;
+  if (tickers === 0) {
+    throw new Error(
+      '[rank-ic] Preis-Index LEER aus ' + pricesDir + ' — ohne Kurse ist jeder IC-Punkt n=0 '
+      + 'und jedes "unterpowert"-Urteil ein Artefakt. Erwartet wird das prices-Verzeichnis '
+      + '(der Store hängt "history" selbst an).',
+    );
+  }
+  return buildPriceIndex(history);
+}
+
 // ── CLI ──────────────────────────────────────────────────────────────────────
 function main() {
   const args = process.argv.slice(2);
   const getArg = (k, dflt) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : dflt; };
   const historyDir = path.resolve(REPO_ROOT, getArg('--history-dir', 'board-history'));
   const outFile = path.resolve(REPO_ROOT, getArg('--out', path.join('outputs', 'rank-ic-report.json')));
-  const history = store.loadAll(path.join(REPO_ROOT, 'prices', 'history'));
-  const priceIndex = buildPriceIndex(history);
+  const priceIndex = loadPriceIndexOrThrow(path.join(REPO_ROOT, 'prices'));
   const report = evaluate(historyDir, priceIndex);
   fs.mkdirSync(path.dirname(outFile), { recursive: true });
   fs.writeFileSync(outFile, JSON.stringify(report, null, 2));
@@ -373,5 +392,5 @@ function main() {
   console.log('[rank-ic] Report -> ' + outFile);
 }
 
-module.exports = { spearman, ranks, residualize, bootstrapCI, nEff, benjaminiYekutieli, disjointDecisionDates, windowReturns, windowIC, deliveryIC, evaluate, loadExcluded };
+module.exports = { spearman, ranks, residualize, bootstrapCI, nEff, benjaminiYekutieli, disjointDecisionDates, windowReturns, windowIC, deliveryIC, evaluate, loadExcluded, loadPriceIndexOrThrow };
 if (require.main === module) main();
