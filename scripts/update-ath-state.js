@@ -52,12 +52,22 @@ function advanceEntry(entry, series) {
   const byDate = series.filter((b) => b && b.date && Number.isFinite(b.close) && b.close > 0)
     .slice().sort((a, b) => (a.date < b.date ? -1 : 1));
   if (!byDate.length) return out;
-  // Split-Wächter: Referenzpunkt im Store nachschlagen (exakter Tag; fehlt er, kein Urteil).
+  // Split-Wächter: Referenzpunkt im Store nachschlagen (exakter Tag).
   if (out.refDate && Number.isFinite(out.refClose)) {
     const ref = byDate.find((b) => b.date === out.refDate);
-    if (ref && Math.abs(ref.close / out.refClose - 1) > REF_DRIFT_TOLERANCE) {
-      out.needsReseed = true; // Re-Basierung erkannt (Split/Adjustierung) — Anzeige aus
+    if (ref) {
+      if (Math.abs(ref.close / out.refClose - 1) > REF_DRIFT_TOLERANCE) {
+        out.needsReseed = true; // Re-Basierung erkannt (Split/Adjustierung) — Anzeige aus
+      }
+    } else if (byDate[0].date > out.refDate) {
+      // refDate aus dem rollenden ~400-Tage-Fenster HERAUSGEALTERT (ältester Bar jünger als
+      // refDate): byDate.find bliebe für immer undefined -> der Split-Wächter wäre dauerhaft
+      // lautlos aus (echter Split nie erkannt, ath friert auf Vor-Split-Skala). Reseed
+      // erzwingen -> backfill-prices-max verankert refDate/refClose neu, Anzeige aus bis dahin.
+      // (Der Übergang wird in der [ath]-Summenzeile mitgezählt — kein neuer stiller Zustand.)
+      out.needsReseed = true;
     }
+    // sonst: refDate fehlt als Loch MITTEN im Fenster (Feiertag/Datenloch) -> kein Urteil.
   }
   const newest = byDate[byDate.length - 1];
   out.lastClose = newest.close;

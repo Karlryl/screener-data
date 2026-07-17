@@ -43,6 +43,26 @@ test('advanceEntry SPLIT-WÄCHTER: re-basierter Referenzkurs -> needsReseed, ATH
   assert.equal(out.ath, 950); // NICHT gegen falsche Skala fortgeschrieben
   assert.equal(upd.displayFor(out), null); // Anzeige ehrlich aus
 });
+test('advanceEntry AGED-OUT (J-A): refDate aelter als aeltester Store-Bar -> needsReseed, Waechter nie lautlos aus', () => {
+  // Rollendes ~400-Tage-Fenster: refDate 2025-01-02 ist aus dem Store herausgealtert
+  // (aeltester Bar 2026-06-01 > refDate). byDate.find liefert undefined -> der Split-
+  // Waechter waere fuer den Ticker DAUERHAFT lautlos aus (echter Split nie erkannt).
+  const entry = { ath: 950, athDate: '2024-06-18', refDate: '2025-01-02', refClose: 800, lastClose: 800, lastDate: '2025-01-02', needsReseed: false };
+  const series = [{ date: '2026-06-01', close: 1000 }, { date: '2026-07-10', close: 1200 }];
+  const out = upd.advanceEntry(entry, series);
+  assert.equal(out.needsReseed, true); // herausgealtert -> Reseed erzwingen (re-verankert refDate)
+  assert.equal(out.ath, 950); // eingefroren: nicht gegen ungepruefte Skala fortgeschrieben
+  assert.equal(upd.displayFor(out), null); // Anzeige ehrlich aus bis Reseed
+});
+test('advanceEntry GEGEN-TEST: refDate-Loch MITTEN im Fenster (Feiertag/Datenloch) -> KEIN Reseed', () => {
+  // Fenster (2026-06-01 .. 2026-07-10) UMSCHLIESST refDate 2026-06-15, aber der 06-15-Bar
+  // fehlt (Lücke, kein Split). "Kein Urteil" bleibt korrekt: NICHT reseeden, ATH laeuft normal.
+  const entry = { ath: 100, athDate: '2025-01-02', refDate: '2026-06-15', refClose: 110, lastClose: 110, lastDate: '2026-06-14', needsReseed: false };
+  const series = [{ date: '2026-06-01', close: 105 }, { date: '2026-07-10', close: 130 }];
+  const out = upd.advanceEntry(entry, series);
+  assert.equal(out.needsReseed, false); // Lücke != Split -> kein Reseed
+  assert.equal(out.ath, 130); // ATH laeuft normal weiter
+});
 test('displayFor: Abstand/Monate korrekt; unter ATH negativ', () => {
   const d = upd.displayFor({ ath: 200, athDate: '2025-07-14', lastClose: 150, lastDate: '2026-07-14', needsReseed: false });
   assert.equal(d.distancePct, -25);
