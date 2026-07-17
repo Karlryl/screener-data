@@ -2,11 +2,19 @@
 /**
  * scripts/backfill-prices.js
  *
- * Gap-free backfill for prices/history.json.
- * Fetches ~400 days of daily closes from yahoo-finance2 for a given set of
- * tickers, merges them into the existing history (fetched value wins on
- * collision), deduplicates by date, sorts ascending, caps at 400 entries.
- * Writes via lib/atomic-write.js — one load, mutate in memory, one write.
+ * Gap-free backfill for the sharded price store (prices/history/, 32 shards —
+ * lib/price-history-store.js). Fetches ~400 days of daily closes from
+ * yahoo-finance2 for a given set of tickers, merges them into the existing
+ * history (fetched value wins on collision), deduplicates by date, sorts
+ * ascending, caps at 400 entries.
+ *
+ * X1 (Tag 348): reads via store.loadAll(), writes via store.saveDirty() —
+ * ONLY the shards touched by the requested tickers. Before this fix the
+ * script read/wrote the legacy prices/history.json monolith directly; since
+ * the shard migration (Tag 294) store.loadAll() ignores that file once any
+ * shard exists (price-history-store.js:122-124), so a manual backfill wrote
+ * a file nobody reads anymore — every migrated consumer (pull-historical-
+ * prices.js, update-ath-state.js, rank-ic.js, …) reads the shards.
  *
  * CLI:
  *   node scripts/backfill-prices.js --tickers AAA,BBB,CCC
@@ -20,7 +28,7 @@
 const fs   = require('fs');
 const path = require('path');
 
-const { writeFileAtomic } = require('../lib/atomic-write.js');
+const store = require('../lib/price-history-store.js');
 
 // ── yahoo-finance2 — exact same import style as pull-historical-prices.js ──
 let yf;
@@ -67,6 +75,27 @@ function quoteDate(q) {
   return (q.date instanceof Date ? q.date : new Date(q.date)).toISOString().slice(0, 10);
 }
 
+// ── store I/O (X1) — mirrors update-ath-state.js / pull-historical-prices.js:
+// read/write the shard store, never the legacy monolith directly. ──────────
+function loadHistory(pricesDir) {
+  try {
+    return store.loadAll(pricesDir);
+  } catch (e) {
+    _log('ERROR', `price store read error: ${e.message} — aborting to protect data.`);
+    process.exit(1);
+  }
+}
+
+function saveHistory(pricesDir, history, dirty) {
+  if (dirty.size === 0) {
+    _log('INFO', 'no ticker updated — no shard written.');
+    return [];
+  }
+  const written = store.saveDirty(pricesDir, history, dirty);
+  _log('INFO', `price store shards written: ${written.map(store.shardFilename).join(', ')}`);
+  return written;
+}
+
 // ── main ───────────────────────────────────────────────────────────────────
 async function main() {
   const args = parseArgs(process.argv);
@@ -98,19 +127,11 @@ async function main() {
     }
   } catch (_) { /* watchlist unavailable — proceed without it */ }
 
-  // ── load existing history once ─────────────────────────────────────────────
-  const histPath = path.resolve(__dirname, '../prices/history.json');
-  let history = {};
-  if (fs.existsSync(histPath)) {
-    try {
-      history = JSON.parse(fs.readFileSync(histPath, 'utf8'));
-    } catch (e) {
-      _log('ERROR', `history.json parse error: ${e.message} — aborting to protect data.`);
-      process.exit(1);
-    }
-  } else {
-    _log('WARN', 'prices/history.json not found — will create it.');
-    fs.mkdirSync(path.dirname(histPath), { recursive: true });
+  // ── load existing history once (shard-aware store, X1) ─────────────────────
+  const pricesDir = path.resolve(__dirname, '../prices');
+  const history = loadHistory(pricesDir);
+  if (Object.keys(history).length === 0) {
+    _log('WARN', 'price store empty (no shards, no legacy history.json) — starting fresh.');
   }
 
   // ── process tickers in batches of 10 ──────────────────────────────────────
@@ -119,6 +140,7 @@ async function main() {
 
   let succeeded = 0;
   const failed  = [];
+  const dirty   = new Set(); // X1: tickers actually written this run → saveDirty shard set
   let globalMaxDate = '';
 
   for (let batchStart = 0; batchStart < tickers.length; batchStart += BATCH) {
@@ -162,6 +184,7 @@ async function main() {
         if (arr.length > 400) arr = arr.slice(arr.length - 400);
 
         history[ticker] = arr;
+        dirty.add(ticker);
 
         const firstDate = arr[0].date;
         const lastDate  = arr[arr.length - 1].date;
@@ -181,9 +204,8 @@ async function main() {
     }
   }
 
-  // ── atomic write — once, after all tickers processed ──────────────────────
-  writeFileAtomic(histPath, JSON.stringify(history));
-  _log('INFO', 'prices/history.json written atomically.');
+  // ── shard write — once, after all tickers processed; dirty shards only (X1) ─
+  saveHistory(pricesDir, history, dirty);
 
   // ── summary ────────────────────────────────────────────────────────────────
   console.log('\n=== BACKFILL SUMMARY ===');
@@ -196,4 +218,11 @@ async function main() {
   if (succeeded === 0 && tickers.length > 0) process.exit(1);
 }
 
-main().catch(e => { _log('FATAL', e.stack || e.message); process.exit(1); });
+// X1: guard like every other migrated caller (pull-historical-prices.js,
+// update-ath-state.js) so the module can be require()'d for tests without
+// immediately running main() against process.argv.
+if (require.main === module) {
+  main().catch(e => { _log('FATAL', e.stack || e.message); process.exit(1); });
+}
+
+module.exports = { parseArgs, loadTickerFile, quoteDate, loadHistory, saveHistory };

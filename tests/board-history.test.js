@@ -378,5 +378,20 @@ check('(f4) degeneriertes Board: NaN-Einbruch schlägt trotz Kalibrier-Modus an'
   assert.ok(readVintage(base, '2026-07-14', 'energy').gate.reasons.includes('nan-break'));
 });
 
+// X2 (Tag 348): eine unlesbare/korrupte Board-Datei in FULL_DIR darf den Lauf NIE mit
+// exit 0 durchwinken. Vorher: results.push({board,error:'unreadable'}) + continue liess
+// anySuspect unberührt -> exit 0 trotz fehlendem Board im Vintage — Widerspruch zum
+// Kopf-Vertrag ("1 = harter Fehler (Inputs fehlen)") und den FULL_DIR-Guards, die für
+// genau diese Fehlerklasse bereits werfen.
+check('(g) unlesbare Board-Datei in FULL_DIR wirft (kein stiller exit 0)', () => {
+  const base = mkBase();
+  writeJson(path.join(base, 'outputs', 'calibration.json'), { schema: 'calibration/v4', generated_at: 'x' });
+  writeBoard(base, 'energy', [row('ABC', 90)]);
+  // korrupte Datei statt validem JSON — simuliert einen kaputten Board-Schreiber.
+  fs.writeFileSync(path.join(base, 'outputs', 'hypergrowth', 'full', 'semiconductors.json'), '{not valid json');
+  assert.throws(() => W.run({ baseDir: base, date: '2026-07-13' }), /unreadable full-cohort board file/,
+    'muss werfen statt still zu überspringen');
+});
+
 console.log(fail ? ('\nFAIL: ' + fail + ' Test(s)') : '\nAlle board-history-Tests grün');
 process.exit(fail ? 1 : 0);

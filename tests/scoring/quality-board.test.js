@@ -239,6 +239,35 @@ test('buildQuality F11: _failed-Marker -> exportiert v1/quality/_failed, KEINE (
   fs.rmSync(src, { recursive: true, force: true }); fs.rmSync(out, { recursive: true, force: true });
 });
 
+// --- X4 (Tag 348): stale QC-Board-Datei im qoutDir wird beim naechsten Export-Lauf geraeumt ---
+// Vorher schrieb buildQuality im export-Modus NUR die aktuellen Board-Dateien, leerte qoutDir
+// aber nie -> ein entferntes/umbenanntes QC-Board aus einem frueheren lokalen Lauf blieb liegen.
+// validateQualityExport iteriert nur idx.boards (das frische index.json) und sieht die
+// Karteileiche nie -> ein Deploy haette sie stillschweigend mitpubliziert.
+test('buildQuality X4: entferntes/umbenanntes QC-Board wird aus qoutDir geraeumt, nicht re-publiziert', () => {
+  const os = require('node:os');
+  const src = fs.mkdtempSync(path.join(os.tmpdir(), 'qsrc-x4-'));
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'qout-x4-'));
+  // Aktuelle Quelle: NUR noch 'alpha' (Board 'zombie' wurde entfernt/umbenannt).
+  fs.writeFileSync(path.join(src, 'index.json'), JSON.stringify({
+    generatedFromSnapshots: 1, boards: ['quality-alpha'],
+    boardStatus: { 'quality-alpha': 'diagnostic' }, counts: {}, excluded: {},
+  }));
+  fs.writeFileSync(path.join(src, 'quality-alpha.json'), JSON.stringify({ profitable: [], unprofitable: [] }));
+  fs.writeFileSync(path.join(src, 'overview.json'), JSON.stringify([]));
+  // qoutDir traegt noch die Karteileiche eines FRUEHEREN Laufs (Board 'zombie').
+  fs.writeFileSync(path.join(out, 'zombie.json'), JSON.stringify({ schema: wfe.SCHEMA, branch: 'zombie' }));
+
+  const r = wfe.buildQuality(null, { qualityDir: src, qoutDir: out });
+  assert.equal(r.boards, 1, 'genau 1 aktuelles Board exportiert');
+  assert.ok(!fs.existsSync(path.join(out, 'zombie.json')), 'Karteileiche muss weg sein — sonst stiller Re-Publish eines entfernten Boards');
+  assert.ok(fs.existsSync(path.join(out, 'alpha.json')), 'aktuelles Board muss geschrieben sein');
+  const idx = JSON.parse(fs.readFileSync(path.join(out, 'index.json'), 'utf8'));
+  assert.deepEqual(idx.boards, ['quality-alpha']);
+
+  fs.rmSync(src, { recursive: true, force: true }); fs.rmSync(out, { recursive: true, force: true });
+});
+
 // Skip-Zahl gehoert in die Summenzeile: sonst liest "18 ok, 0 fail" wie ein voller Pass,
 // obwohl im pre-pull-CI die Universums-Beweise gar nicht gelaufen sind.
 console.log(`\nquality-board.test.js: ${pass} ok, ${fail} fail` + (skip ? `, ${skip} skipped (kein Universum)` : ''));

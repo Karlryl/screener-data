@@ -184,15 +184,15 @@ function buildIndex(coverage) {
 // counts,excluded}. So mapBoardRow/mapOverviewRow are reused verbatim; no new mapper.
 // Board files are named quality-<stem>.json; the export drops the prefix (quality/<stem>.json,
 // branch=<stem>). Board count is discovered, never hardcoded (11 today, may drift).
-function qualityBoardFiles() {
-  try { return fs.readdirSync(QUALITY_DIR).filter((f) => /^quality-.+\.json$/.test(f)).sort(); }
+function qualityBoardFiles(qualityDir) {
+  try { return fs.readdirSync(qualityDir || QUALITY_DIR).filter((f) => /^quality-.+\.json$/.test(f)).sort(); }
   catch (_) { return []; }
 }
 function qualityStem(file) { return file.replace(/^quality-/, '').replace(/\.json$/, ''); }
 
-function buildQualityBoard(file, coverage) {
+function buildQualityBoard(file, coverage, qualityDir) {
   const stem = qualityStem(file);
-  const b = readJSON(path.join(QUALITY_DIR, file));
+  const b = readJSON(path.join(qualityDir || QUALITY_DIR, file));
   return {
     schema: SCHEMA,
     generated_at: new Date().toISOString(),
@@ -204,13 +204,13 @@ function buildQualityBoard(file, coverage) {
   };
 }
 
-function buildQualityOverview(coverage) {
-  const o = readJSON(path.join(QUALITY_DIR, 'overview.json'));
+function buildQualityOverview(coverage, qualityDir) {
+  const o = readJSON(path.join(qualityDir || QUALITY_DIR, 'overview.json'));
   return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: o.map(mapOverviewRow) };
 }
 
-function buildQualityIndex(coverage) {
-  const idx = readJSON(path.join(QUALITY_DIR, 'index.json'));
+function buildQualityIndex(coverage, qualityDir) {
+  const idx = readJSON(path.join(qualityDir || QUALITY_DIR, 'index.json'));
   return {
     schema: SCHEMA,                                  // pinned to the export contract, not quality/diagnostic-v1
     generated_at: new Date().toISOString(),
@@ -257,14 +257,17 @@ function buildQuality(coverage, opts = {}) {
     return { boards: 0 };
   }
   // mode === 'export': gueltiges QC-Board-Set spiegeln.
-  // ponytail: die Board-Helfer (qualityBoardFiles/buildQualityBoard/…) lesen die Modul-Dirs
-  // (QUALITY_DIR/QOUT_DIR); der hermetische F11-Test treibt nur failed/absent (kein index).
-  const files = qualityBoardFiles();
+  // X4 (Tag 348): qoutDir ERST leeren, DANN neu schreiben. Vorher blieb eine Board-Datei
+  // eines seither entfernten/umbenannten QC-Boards aus einem frueheren Lauf liegen —
+  // validateQualityExport iteriert nur idx.boards (das FRISCHE index.json), sieht die
+  // Karteileiche also nie und der Deploy haette sie stillschweigend mitpubliziert.
+  const files = qualityBoardFiles(qualityDir);
+  fs.rmSync(qoutDir, { recursive: true, force: true });
   fs.mkdirSync(qoutDir, { recursive: true });
   const wo = { assertFinite: true };
-  for (const f of files) writeJsonAtomic(path.join(qoutDir, qualityStem(f) + '.json'), buildQualityBoard(f, coverage), wo);
-  writeJsonAtomic(path.join(qoutDir, 'overview.json'), buildQualityOverview(coverage), wo);
-  writeJsonAtomic(path.join(qoutDir, 'index.json'), buildQualityIndex(coverage), wo);
+  for (const f of files) writeJsonAtomic(path.join(qoutDir, qualityStem(f) + '.json'), buildQualityBoard(f, coverage, qualityDir), wo);
+  writeJsonAtomic(path.join(qoutDir, 'overview.json'), buildQualityOverview(coverage, qualityDir), wo);
+  writeJsonAtomic(path.join(qoutDir, 'index.json'), buildQualityIndex(coverage, qualityDir), wo);
   return { boards: files.length };
 }
 

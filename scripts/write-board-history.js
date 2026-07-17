@@ -456,8 +456,15 @@ function run(opts) {
   const results = [];
   let anySuspect = false;
   for (const board of boards) {
-    const boardData = readJsonOrNull(path.join(P.FULL_DIR, board + '.json'));
-    if (!boardData) { results.push({ board, error: 'unreadable' }); continue; }
+    const boardPath = path.join(P.FULL_DIR, board + '.json');
+    const boardData = readJsonOrNull(boardPath);
+    // X2: an unreadable/corrupt board file is a missing INPUT — the same class as the
+    // FULL_DIR-guards above (missing dir / no board files), which already throw -> exit 1.
+    // It is NOT a value-plausibility question (exit 2 "suspect"), which presumes a parsed
+    // vintage exists to judge. A silent `continue` here left anySuspect untouched -> exit 0
+    // with a board missing from the vintage, contradicting the header's own exit contract
+    // ("1 = harter Fehler (Inputs fehlen)") and the fail-loud line the FULL_DIR-guards set.
+    if (!boardData) throw new Error('unreadable full-cohort board file: ' + boardPath);
     const vintage = buildBoardVintage(board, boardData, date, calibMeta);
     const priorVintage = priorDate ? readJsonOrNull(path.join(P.HISTORY_DIR, priorDate, board + '.json')) : null;
     const gate = evaluateGate(vintage, priorVintage, gateCalib.boards[board]);

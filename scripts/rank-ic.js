@@ -7,7 +7,10 @@
  *
  *  §1  Entscheidungs-IC NUR auf disjunkten 84-KALENDERTAGE-Quartalsfenstern
  *      (erstes Vintage = t0; nächster Entscheidungspunkt = erstes Vintage >= t0+84d …).
- *      Die tägliche (überlappende) Reihe läuft als DIAGNOSE mit Newey-West-SE.
+ *      Die tägliche (überlappende) Reihe als Newey-West-Diagnose ist NOCH NICHT
+ *      implementiert — offener Diagnose-Pfad (§2b). Der Code hat bisher nur den
+ *      disjunkten Pfad (§1/§2 unten); M5-Fund 2026-07-17: Kopf behauptete faelschlich
+ *      im Praesens, die taegliche Reihe liefe bereits.
  *  §2  Block-Bootstrap-CI (B=2000, Resampling der disjunkten Punkte) für den
  *      mittleren IC; N_eff aus der Lag-1-Autokorrelation der Punkt-Reihe (§3a).
  *  §3  Entscheidung: CI-Untergrenze(90 %) > 0 UND mittlerer 84d-IC > 0,05
