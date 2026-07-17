@@ -185,6 +185,15 @@ function buildPit(snap, pitGaps) {
     revenueQEnds: revEnds,
     grossProfitQ: seriesValues(ts.grossProfitQ),
     grossProfitQEnds: gpEnds,
+    // 6.2-E1 Option B (Court 2026-07-17, PASS_MIT_AUFLAGEN, Auflage 4): echtes Price/Sales
+    // MIT eigener Bewertungs-asOf ab heute additiv in die committete Historie schreiben —
+    // startet die 12-Monats-Eigenhistorie-Uhr. Rein additiv (kein neuer Fetch: metrics.priceSales
+    // wird bereits Z. priceGrossProfit() gelesen); ans Ende gehängt, damit alle Bestandsfelder
+    // (evSales …) byte-identisch bleiben. priceSalesAsOf ist der WAHRE Bewertungs-Zeitstempel
+    // (kann Wochen VOR meta.fetchedAt liegen — genau der KILL-4-Widerspruch); E1s Freshness-Gate
+    // keyed hierauf, NIE auf fetchedAt.
+    priceSales: val(m.priceSales),
+    priceSalesAsOf: (m.priceSales && m.priceSales.asOf) || null,
   };
 }
 

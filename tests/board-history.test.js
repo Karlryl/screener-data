@@ -37,7 +37,7 @@ function snapFull(ticker, opts) {
     metrics: {
       beta: opts.noBeta ? null : { value: 1.5 },
       enterpriseToRevenue: { value: 8.2 },
-      priceSales: { value: 10.0 },
+      priceSales: { value: 10.0, asOf: '2026-07-09T00:00:00.000Z' },  // asOf = echter Bewertungs-Zeitstempel (E1 Option B)
       grossMargin: { value: 50.0 },   // → priceGrossProfit = 10/0.5 = 20
     },
     timeseries: {
@@ -111,6 +111,38 @@ check('(a) schreibt Vintage mit §7-PIT-Feldern + pitCoverage + boardStatus', ()
   // Seiten-Artefakte:
   assert.ok(fs.existsSync(path.join(base, 'board-history', '2026-07-13', 'calibration.json')), 'calibration-Kopie');
   assert.ok(fs.existsSync(path.join(base, 'board-history', '2026-07-13', 'regime.json')), 'regime.json');
+});
+
+// ── (a2) E1 Option B: pit trägt priceSales + priceSalesAsOf ADDITIV ───────────
+// Court 2026-07-17 (PASS_MIT_AUFLAGEN, Auflage 4): buildPit schreibt echtes P/S MIT
+// asOf mit — rein additiv, evSales (und alle Bestandsfelder) bleiben byte-identisch.
+check('(a2) E1 Option B: buildPit trägt priceSales/priceSalesAsOf additiv, evSales byte-identisch', () => {
+  const base = mkBase();
+  writeJson(path.join(base, 'snapshots', 'ABC.json'), snapFull('ABC', { withEnds: true }));
+  writeJson(path.join(base, 'outputs', 'calibration.json'), { schema: 'calibration/v4', generated_at: 'x' });
+  writeBoard(base, 'semiconductors', [row('ABC', 90)]);
+  W.run({ baseDir: base, date: '2026-07-13' });
+  const abc = readVintage(base, '2026-07-13', 'semiconductors').cohort.profitable[0];
+
+  // Neue Felder present:
+  assert.strictEqual(abc.pit.priceSales, 10.0, 'priceSales aus metrics.priceSales.value');
+  assert.strictEqual(abc.pit.priceSalesAsOf, '2026-07-09T00:00:00.000Z', 'priceSalesAsOf = echte Bewertungs-asOf');
+  // Bestandsfeld unverändert (byte-identisch für Bestandsleser):
+  assert.strictEqual(abc.pit.evSales, 8.2, 'evSales unverändert');
+  // Additiv = neue Keys am ENDE (Bestands-Serialisierung bleibt bit-stabil bis grossProfitQEnds):
+  const keys = Object.keys(abc.pit);
+  assert.strictEqual(keys[keys.length - 2], 'priceSales', 'priceSales angehängt');
+  assert.strictEqual(keys[keys.length - 1], 'priceSalesAsOf', 'priceSalesAsOf zuletzt');
+  assert.strictEqual(keys.indexOf('evSales'), 1, 'evSales behält seine Position (byte-additiv)');
+
+  // Fehlendes priceSales → beide Felder null (kein Crash, LOSS-/GM0-robust):
+  writeJson(path.join(base, 'snapshots', 'NOPS.json'),
+    { meta: { fetchedAt: 't' }, metrics: { enterpriseToRevenue: { value: 3 } }, timeseries: {} });
+  writeBoard(base, 'semiconductors', [row('NOPS', 70)]);
+  W.run({ baseDir: base, date: '2026-07-14' });
+  const nops = readVintage(base, '2026-07-14', 'semiconductors').cohort.profitable[0];
+  assert.strictEqual(nops.pit.priceSales, null, 'kein priceSales → null');
+  assert.strictEqual(nops.pit.priceSalesAsOf, null, 'kein asOf → null');
 });
 
 // ── (b) Wert-Gate: wertfalsches Folge-Vintage → suspect + exit 2 ──────────────
