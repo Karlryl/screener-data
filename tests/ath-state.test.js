@@ -71,10 +71,19 @@ test('displayFor: Abstand/Monate korrekt; unter ATH negativ', () => {
 test('pendingTickers (Kill+Resume): done übersprungen, stale + neue gezogen, --force alles', () => {
   const universe = ['A', 'B', 'C', 'D'];
   const manifest = { done: { A: { at: 'x' }, B: { at: 'x' } } };
-  const state = { entries: { B: { needsReseed: true } } };
+  // A braucht einen VORHANDENEN, nicht-stale Entry, sonst waere sie selbst ein Fall des
+  // FIX-2-Bugs (done-ohne-Entry) statt des hier gemeinten "sauber done -> skip".
+  const state = { entries: { A: { needsReseed: false }, B: { needsReseed: true } } };
   assert.deepEqual(bf.pendingTickers(universe, manifest, state, {}), ['B', 'C', 'D']); // B stale, C/D neu
   assert.deepEqual(bf.pendingTickers(universe, manifest, state, { onlyStale: true }), ['B']);
   assert.deepEqual(bf.pendingTickers(universe, manifest, state, { force: true }), universe);
+});
+// FIX 2 (Karl-Audit ath-resume, 2026-07-18): wird der Batch zwischen MANIFEST-Write (Z.149)
+// und STATE_FILE-Write (Z.151) abgebrochen, ist der Ticker in manifest.done, aber sein
+// ath-state-Entry fehlt auf Platte. Ohne den Guard ueberspringt pendingTickers ihn dauerhaft
+// (!done[t] ist false) -> ATH bleibt fuer immer null trotz vorhandener Max-Historie.
+test('pendingTickers SELF-HEAL: done-aber-ohne-State-Entry wird erneut gezogen (Abbruch zwischen MANIFEST- und STATE-Write)', () => {
+  assert.deepEqual(bf.pendingTickers(['C'], { done: { C: { at: 'x' } } }, { entries: {} }, {}), ['C']);
 });
 
 // ── F3 Wiring: Store-Vertrag + Fail-loud (Muster rank-ic loadPriceIndexOrThrow, Tag 321) ──

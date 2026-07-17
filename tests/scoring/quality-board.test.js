@@ -300,6 +300,39 @@ test('buildQuality T2: failed-Zweig raeumt ein stales export-qoutDir (Boards + i
   fs.rmSync(src, { recursive: true, force: true }); fs.rmSync(out, { recursive: true, force: true });
 });
 
+// --- FIX 3 (Karl-Audit wfe-orphan-source, 2026-07-18): export-Zweig muss die Board-Liste aus
+// dem QUELL-INDEX ableiten, nicht aus einem Verzeichnis-Listing (qualityBoardFiles/readdirSync).
+// Sonst: ein Folgepass mit WENIGER Boards laesst eine alte quality-*.json im Quellordner liegen
+// (clearStaleQualityIndex entfernt nur index.json, s. run-screener.js), das Listing nimmt sie
+// wieder auf und kopiert sie in den Export — obwohl validateQualityExport NUR idx.boards
+// iteriert und diese Karteileiche nie sieht (stiller Re-Publish eines Boards, das laut Index
+// gar nicht existiert). Geschwisterfall zu X4 (dort: STALE Datei im qoutDir/ZIEL; hier: STALE
+// Datei im qualityDir/QUELLE, die das Listing faelschlich wieder aufnimmt).
+test('buildQuality FIX 3: export-Zweig liest die Board-Liste aus index.json, nicht aus dem Verzeichnis-Listing (Karteileiche im QUELLORDNER wird NICHT mitkopiert)', () => {
+  const os = require('node:os');
+  const src = fs.mkdtempSync(path.join(os.tmpdir(), 'qsrc-orphan-'));
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), 'qout-orphan-'));
+  // Aktueller Index kennt NUR 'quality-alpha'.
+  fs.writeFileSync(path.join(src, 'index.json'), JSON.stringify({
+    generatedFromSnapshots: 1, boards: ['quality-alpha'],
+    boardStatus: { 'quality-alpha': 'diagnostic' }, counts: {}, excluded: {},
+  }));
+  fs.writeFileSync(path.join(src, 'quality-alpha.json'), JSON.stringify({ profitable: [], unprofitable: [] }));
+  fs.writeFileSync(path.join(src, 'overview.json'), JSON.stringify([]));
+  // Karteileiche: eine quality-*.json OHNE Index-Eintrag, liegengeblieben von einem frueheren
+  // Lauf mit mehr Boards (clearStaleQualityIndex loescht nur index.json, keine Board-Dateien).
+  fs.writeFileSync(path.join(src, 'quality-beta.json'), JSON.stringify({ profitable: [], unprofitable: [] }));
+
+  const r = wfe.buildQuality(null, { qualityDir: src, qoutDir: out });
+  assert.equal(r.boards, 1, 'nur das indexierte Board zaehlt, die Karteileiche nicht');
+  assert.ok(fs.existsSync(path.join(out, 'alpha.json')), 'indexiertes Board muss exportiert sein');
+  assert.ok(!fs.existsSync(path.join(out, 'beta.json')), 'Karteileiche (nicht im Index) darf NICHT exportiert werden');
+  const idx = JSON.parse(fs.readFileSync(path.join(out, 'index.json'), 'utf8'));
+  assert.deepEqual(idx.boards, ['quality-alpha'], 'exportierter Index bleibt deckungsgleich mit der Quelle');
+
+  fs.rmSync(src, { recursive: true, force: true }); fs.rmSync(out, { recursive: true, force: true });
+});
+
 // Skip-Zahl gehoert in die Summenzeile: sonst liest "18 ok, 0 fail" wie ein voller Pass,
 // obwohl im pre-pull-CI die Universums-Beweise gar nicht gelaufen sind.
 console.log(`\nquality-board.test.js: ${pass} ok, ${fail} fail` + (skip ? `, ${skip} skipped (kein Universum)` : ''));

@@ -81,7 +81,10 @@ function pendingTickers(universe, manifest, state, opts = {}) {
     if (opts.force) return true;
     if (opts.onlyStale) return entries[t] && entries[t].needsReseed;
     if (entries[t] && entries[t].needsReseed) return true; // stale immer mitziehen
-    return !done[t];
+    // FIX 2 (Karl-Audit ath-resume): done-ohne-Entry (Abbruch zwischen MANIFEST- und
+    // STATE-Write, Z.149/151) sonst dauerhaft uebersprungen -> ATH bleibt null. Selbstheilend:
+    // fetchMax/seedEntry sind idempotent, ein Re-Pull kostet nur einen weiteren Batch-Slot.
+    return !done[t] || !entries[t];
   });
 }
 

@@ -184,10 +184,9 @@ function buildIndex(coverage) {
 // counts,excluded}. So mapBoardRow/mapOverviewRow are reused verbatim; no new mapper.
 // Board files are named quality-<stem>.json; the export drops the prefix (quality/<stem>.json,
 // branch=<stem>). Board count is discovered, never hardcoded (11 today, may drift).
-function qualityBoardFiles(qualityDir) {
-  try { return fs.readdirSync(qualityDir || QUALITY_DIR).filter((f) => /^quality-.+\.json$/.test(f)).sort(); }
-  catch (_) { return []; }
-}
+// FIX 3 (Karl-Audit wfe-orphan-source): the board LIST is index-authoritative (buildQuality
+// export branch below reads qualityDir/index.json), not directory-listing-authoritative —
+// a stray quality-*.json in qualityDir that isn't in index.boards must never surface.
 function qualityStem(file) { return file.replace(/^quality-/, '').replace(/\.json$/, ''); }
 
 function buildQualityBoard(file, coverage, qualityDir) {
@@ -265,7 +264,16 @@ function buildQuality(coverage, opts = {}) {
   // eines seither entfernten/umbenannten QC-Boards aus einem frueheren Lauf liegen —
   // validateQualityExport iteriert nur idx.boards (das FRISCHE index.json), sieht die
   // Karteileiche also nie und der Deploy haette sie stillschweigend mitpubliziert.
-  const files = qualityBoardFiles(qualityDir);
+  // FIX 3 (Karl-Audit wfe-orphan-source, 2026-07-18): die Board-Liste kam bisher aus einem
+  // Verzeichnis-Listing (qualityBoardFiles/readdirSync) statt aus dem Quell-Index. Ein
+  // Folgepass mit WENIGER Boards laesst eine alte quality-*.json im Quellordner liegen
+  // (clearStaleQualityIndex, run-screener.js, entfernt nur index.json) — das Listing nahm sie
+  // wieder auf und kopierte sie in den Export, obwohl validateQualityExport nur idx.boards
+  // sieht (stiller Re-Publish einer Board-Leiche). Index-autoritativ statt Verzeichnis-autoritativ:
+  // idx.boards traegt bereits die 'quality-'-praefixten IDs ohne .json (verifiziert gegen
+  // buildQualityIndex + eine echte outputs/quality/index.json).
+  const idx = readJSONOrNull(path.join(qualityDir, 'index.json'));
+  const files = (idx && Array.isArray(idx.boards) ? idx.boards : []).map((id) => id + '.json');
   fs.rmSync(qoutDir, { recursive: true, force: true });
   fs.mkdirSync(qoutDir, { recursive: true });
   const wo = { assertFinite: true };

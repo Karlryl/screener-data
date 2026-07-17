@@ -312,6 +312,84 @@ async function fetchWithMcap(symbol) {
   } catch (e) { return null; }
 }
 
+// FIX 1 (Karl-Audit univ-cap, 2026-07-18): dead-registry eviction MUST run before the
+// MAX_UNIVERSE cap slices allTickers down. Previously the cap ran first, so a dead ticker
+// could occupy a cap slot and only got deleted afterwards — the universe then ended up
+// UNDER the cap even though live candidates were available. Extracted to a pure function
+// (mutates the passed-in allTickers Map) so the order-sensitive logic is unit-testable
+// without the full network/file main() flow. Cap math itself is UNCHANGED (F-DP-016 /
+// Bug 27 foreign-slot logic) — only the ordering relative to dead-eviction moved.
+function applyDeadRegistryAndCap(allTickers, deadRegistry, MAX_UNIVERSE) {
+  // 0.12: dead-ticker eviction FIRST — before any cap slot accounting.
+  let deadCandidatesBlocked = 0;
+  for (const sym of [...allTickers.keys()]) {
+    if (deadRegistry[String(sym).toUpperCase()]) { allTickers.delete(sym); deadCandidatesBlocked++; }
+  }
+  if (deadCandidatesBlocked) console.log('  Dead-Registry: ' + deadCandidatesBlocked + ' tote Kandidaten geblockt (0.12).');
+
+  if (allTickers.size > MAX_UNIVERSE) {
+    // F-DP-016: null-mcap tickers (often intentional small-cap additions) were previously
+    // sorted to the bottom and silently dropped first. Fix: segregate null-mcap tickers and
+    // keep a proportional share of them alongside known-mcap tickers.
+    const withMcap    = [...allTickers.entries()].filter(([, v]) => v.marketCap != null && v.marketCap > 0);
+    const withoutMcap = [...allTickers.entries()].filter(([, v]) => !v.marketCap);
+
+    // Sort known-mcap by descending mcap
+    withMcap.sort((a, b) => b[1].marketCap - a[1].marketCap);
+
+    // Foreign-slot protection (Team-A infra): foreign-exchange discoveries
+    // (EDINET/FinMind/OpenDART/SSE/SZSE/HKEX) arrive with marketCap:null and land in
+    // the same null-mcap bucket as the huge US-OTC mass. In raw discovery order the
+    // OTC rows dominate, so a 20%-capped slice() would drop every foreign row before
+    // it ever reached the watchlist. Fix: (1) STABLE-sort withoutMcap so foreign-source
+    // rows come first (ties keep original discovery order — the sort is index-keyed),
+    // and (2) reserve an exclusive foreign sub-quota that the OTC mass cannot consume.
+    // The withMcap branch above is untouched — this only reorders/quotas the null bucket.
+    // FIX-3 (Bau-Plan Welle 0): EINE Quelle der Wahrheit. Die alte 6-Token-Handliste war schon fuer
+    // xetra/nordic/oslo/nse/lse/tsx/asx veraltet -> die bereits gebauten EU/CA/AU/IN-Adapter waren im
+    // Cap-Block slot-UNGESCHUETZT (bei Yahoo-429 null-mcap wurden ihre Zeilen von der US-OTC-Masse
+    // verdraengt = stiller vorbestehender Verlust). FOREIGN_CANON_SET (Z.84) haelt alle 13 Tokens; jeder
+    // neue Adapter (inkl. tv-scanner per-Land-Token) ist automatisch geschuetzt, sobald sein Token in
+    // FOREIGN_SOURCE_CANON steht.
+    const FOREIGN_SOURCES = FOREIGN_CANON_SET;
+    const isForeign = ([, v]) => {
+      if (!v || !v.source) return false;
+      return String(v.source).split(',').some(s => FOREIGN_SOURCES.has(s.trim()));
+    };
+    const FOREIGN_SUBQUOTA = parseInt(process.env.FOREIGN_NULLMCAP_SLOTS || '2000', 10);
+    // Stable sort: decorate with original index, foreign-first, index tiebreak.
+    const decorated = withoutMcap.map((e, i) => ({ e, i, f: isForeign(e) ? 0 : 1 }));
+    decorated.sort((a, b) => (a.f - b.f) || (a.i - b.i));
+    for (let j = 0; j < decorated.length; j++) withoutMcap[j] = decorated[j].e;
+
+    // Proportional share: null-mcap entries get at most 20% of MAX_UNIVERSE slots
+    const maxNullMcap    = Math.round(MAX_UNIVERSE * 0.20);
+    const maxWithMcap    = MAX_UNIVERSE - Math.min(withoutMcap.length, maxNullMcap);
+    const keptWithMcap   = withMcap.slice(0, maxWithMcap);
+    // Total null-mcap slots available after mcap rows are placed. Guarantee at least
+    // min(available, FOREIGN_SUBQUOTA, #foreign) go to foreign rows: because foreign rows
+    // now sort first, a plain slice() already realizes that guarantee — but the subquota
+    // is enforced explicitly so a future reorder can't silently starve foreign rows.
+    // Bug 27: der 20%-Deckel (maxNullMcap) wurde bisher nur zur RESERVIERUNG bei maxWithMcap
+    // verrechnet, aber die Slot-VERGABE lief ungedeckelt ueber MAX_UNIVERSE - keptWithMcap.length.
+    // Bei wenig withMcap (< maxWithMcap) konnten so null-mcap-Zeilen weit ueber 20% belegen
+    // (Beispiel Befund: 67% statt 20%). Slots hart auf maxNullMcap deckeln.
+    const nullSlots      = Math.min(MAX_UNIVERSE - keptWithMcap.length, maxNullMcap);
+    const foreignCount   = decorated.reduce((n, d) => n + (d.f === 0 ? 1 : 0), 0);
+    const foreignReserve = Math.min(FOREIGN_SUBQUOTA, foreignCount, nullSlots);
+    const keptForeign    = withoutMcap.slice(0, foreignReserve);
+    const remainingSlots = nullSlots - keptForeign.length;
+    const keptOther      = withoutMcap.slice(foreignReserve, foreignReserve + remainingSlots);
+    const keptNullMcap   = [...keptForeign, ...keptOther];
+
+    const capped = new Map([...keptWithMcap, ...keptNullMcap]);
+    console.log(`Universe-Cap: ${allTickers.size} -> ${capped.size} (top ${maxWithMcap} by mcap + ${keptNullMcap.length} null-mcap, of which ${keptForeign.length} foreign-reserved)`);
+    allTickers.clear();
+    for (const [k, v] of capped) allTickers.set(k, v);
+  }
+  return deadCandidatesBlocked;
+}
+
 async function main() {
   const args = parseArgs(process.argv);
   console.log('Auto-Universe-Refresh');
@@ -712,71 +790,6 @@ async function main() {
   // Wachstum); 30000 gibt reichlich Headroom. Env-tunbar. Die Foreign-First-Slot-Quote unten schuetzt
   // etwaige nicht-bepreiste Rest-Null-mcap-Auslandszeilen (Netzwerk-Miss der Vorpruefung).
   const MAX_UNIVERSE = parseInt(process.env.MAX_UNIVERSE || '30000', 10);
-  if (allTickers.size > MAX_UNIVERSE) {
-    // F-DP-016: null-mcap tickers (often intentional small-cap additions) were previously
-    // sorted to the bottom and silently dropped first. Fix: segregate null-mcap tickers and
-    // keep a proportional share of them alongside known-mcap tickers.
-    const withMcap    = [...allTickers.entries()].filter(([, v]) => v.marketCap != null && v.marketCap > 0);
-    const withoutMcap = [...allTickers.entries()].filter(([, v]) => !v.marketCap);
-
-    // Sort known-mcap by descending mcap
-    withMcap.sort((a, b) => b[1].marketCap - a[1].marketCap);
-
-    // Foreign-slot protection (Team-A infra): foreign-exchange discoveries
-    // (EDINET/FinMind/OpenDART/SSE/SZSE/HKEX) arrive with marketCap:null and land in
-    // the same null-mcap bucket as the huge US-OTC mass. In raw discovery order the
-    // OTC rows dominate, so a 20%-capped slice() would drop every foreign row before
-    // it ever reached the watchlist. Fix: (1) STABLE-sort withoutMcap so foreign-source
-    // rows come first (ties keep original discovery order — the sort is index-keyed),
-    // and (2) reserve an exclusive foreign sub-quota that the OTC mass cannot consume.
-    // The withMcap branch above is untouched — this only reorders/quotas the null bucket.
-    // FIX-3 (Bau-Plan Welle 0): EINE Quelle der Wahrheit. Die alte 6-Token-Handliste war schon fuer
-    // xetra/nordic/oslo/nse/lse/tsx/asx veraltet -> die bereits gebauten EU/CA/AU/IN-Adapter waren im
-    // Cap-Block slot-UNGESCHUETZT (bei Yahoo-429 null-mcap wurden ihre Zeilen von der US-OTC-Masse
-    // verdraengt = stiller vorbestehender Verlust). FOREIGN_CANON_SET (Z.84) haelt alle 13 Tokens; jeder
-    // neue Adapter (inkl. tv-scanner per-Land-Token) ist automatisch geschuetzt, sobald sein Token in
-    // FOREIGN_SOURCE_CANON steht.
-    const FOREIGN_SOURCES = FOREIGN_CANON_SET;
-    const isForeign = ([, v]) => {
-      if (!v || !v.source) return false;
-      return String(v.source).split(',').some(s => FOREIGN_SOURCES.has(s.trim()));
-    };
-    const FOREIGN_SUBQUOTA = parseInt(process.env.FOREIGN_NULLMCAP_SLOTS || '2000', 10);
-    // Stable sort: decorate with original index, foreign-first, index tiebreak.
-    const decorated = withoutMcap.map((e, i) => ({ e, i, f: isForeign(e) ? 0 : 1 }));
-    decorated.sort((a, b) => (a.f - b.f) || (a.i - b.i));
-    for (let j = 0; j < decorated.length; j++) withoutMcap[j] = decorated[j].e;
-
-    // Proportional share: null-mcap entries get at most 20% of MAX_UNIVERSE slots
-    const maxNullMcap    = Math.round(MAX_UNIVERSE * 0.20);
-    const maxWithMcap    = MAX_UNIVERSE - Math.min(withoutMcap.length, maxNullMcap);
-    const keptWithMcap   = withMcap.slice(0, maxWithMcap);
-    // Total null-mcap slots available after mcap rows are placed. Guarantee at least
-    // min(available, FOREIGN_SUBQUOTA, #foreign) go to foreign rows: because foreign rows
-    // now sort first, a plain slice() already realizes that guarantee — but the subquota
-    // is enforced explicitly so a future reorder can't silently starve foreign rows.
-    // Bug 27: der 20%-Deckel (maxNullMcap) wurde bisher nur zur RESERVIERUNG bei maxWithMcap
-    // verrechnet, aber die Slot-VERGABE lief ungedeckelt ueber MAX_UNIVERSE - keptWithMcap.length.
-    // Bei wenig withMcap (< maxWithMcap) konnten so null-mcap-Zeilen weit ueber 20% belegen
-    // (Beispiel Befund: 67% statt 20%). Slots hart auf maxNullMcap deckeln.
-    const nullSlots      = Math.min(MAX_UNIVERSE - keptWithMcap.length, maxNullMcap);
-    const foreignCount   = decorated.reduce((n, d) => n + (d.f === 0 ? 1 : 0), 0);
-    const foreignReserve = Math.min(FOREIGN_SUBQUOTA, foreignCount, nullSlots);
-    const keptForeign    = withoutMcap.slice(0, foreignReserve);
-    const remainingSlots = nullSlots - keptForeign.length;
-    const keptOther      = withoutMcap.slice(foreignReserve, foreignReserve + remainingSlots);
-    const keptNullMcap   = [...keptForeign, ...keptOther];
-
-    const capped = new Map([...keptWithMcap, ...keptNullMcap]);
-    console.log(`Universe-Cap: ${allTickers.size} -> ${capped.size} (top ${maxWithMcap} by mcap + ${keptNullMcap.length} null-mcap, of which ${keptForeign.length} foreign-reserved)`);
-    allTickers.clear();
-    for (const [k, v] of capped) allTickers.set(k, v);
-  }
-
-  // 2. No sector-exclude at universe level (Tag 132: modes filter sectors, not discovery)
-  // Banks/REITs/Insurance are allowed for Quality-Compounder mode.
-  // Tag 165: target raised to 12k+ with OTC + NASDAQ API sources
-  console.log('Distinct candidates after all sources: ' + allTickers.size + ' (target: 12000+)');
 
   // Task 0.12 (Fail-Ticker-Klassifizierung): belegt-tote Ticker sind in
   // data-health/dead-tickers.json registriert (Klasse + Beleg-Verfahren im
@@ -789,11 +802,15 @@ async function main() {
     const reg = JSON.parse(fs.readFileSync(path.join(__dirname, 'data-health', 'dead-tickers.json'), 'utf8'));
     if (reg && reg.tickers && typeof reg.tickers === 'object') deadRegistry = reg.tickers;
   } catch (e) { console.warn('  dead-tickers-Registry nicht lesbar (' + e.message + ') — kein Austrag.'); }
-  let deadCandidatesBlocked = 0;
-  for (const sym of [...allTickers.keys()]) {
-    if (deadRegistry[String(sym).toUpperCase()]) { allTickers.delete(sym); deadCandidatesBlocked++; }
-  }
-  if (deadCandidatesBlocked) console.log('  Dead-Registry: ' + deadCandidatesBlocked + ' tote Kandidaten geblockt (0.12).');
+
+  // FIX 1 (Karl-Audit univ-cap): Austrag + Cap sind order-sensitive (s. Kommentar an der
+  // Funktionsdefinition oben) — deshalb EIN Aufruf statt zwei separater Bloecke.
+  applyDeadRegistryAndCap(allTickers, deadRegistry, MAX_UNIVERSE);
+
+  // 2. No sector-exclude at universe level (Tag 132: modes filter sectors, not discovery)
+  // Banks/REITs/Insurance are allowed for Quality-Compounder mode.
+  // Tag 165: target raised to 12k+ with OTC + NASDAQ API sources
+  console.log('Distinct candidates after all sources: ' + allTickers.size + ' (target: 12000+)');
 
   // 3. Identify new tickers
   const newTickers = [];
@@ -995,6 +1012,6 @@ async function main() {
 // audit/fix: export the class-share normalizer helpers so they can be unit-tested
 // in isolation against the live watchlist (the require() below executes only the
 // definitions, never main(), because main() is gated on require.main === module).
-module.exports = { toYahooClassShare, _looksUS, dedupKey };
+module.exports = { toYahooClassShare, _looksUS, dedupKey, applyDeadRegistryAndCap };
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
