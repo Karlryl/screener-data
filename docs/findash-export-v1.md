@@ -33,7 +33,7 @@ Bricht das Schema still (fehlendes Feld, falscher Typ, kaputter Enum), zeigt das
 
 Die 12 Branchen (formulaId): `consumer-discretionary, consumer-staples, energy, financials, health-care, industrials, it-services, materials, real-estate, semiconductors, software-comm-services, utilities`.
 
-**NICHT im Export:** `outputs/hypergrowth/calib/<branche>.json` (Achsen-Perzentile) bleibt getrennter Diagnostik-Kanal — siehe §6.
+**NICHT im Export:** `outputs/hypergrowth/calib/<branche>.json` (Roh-Perzentil-Matrix ueber die GANZE Kohorte) bleibt getrennter Diagnostik-Kanal — siehe §6. Die Achsen-Perzentile der **exportierten** Zeilen stehen dagegen sehr wohl im Vertrag, per `axisBreakdown` (§3).
 
 ---
 
@@ -157,9 +157,22 @@ Huelle (§2) +:
 | `survivalCount` | number (finite) | Pflicht | ja | z.B. `73`. |
 | `excluded` | `{[grund]: count}` | Pflicht | ja (Objekt-Praesenz) | Ausschluss-Gruende, z.B. `{"non-us":326,"balance-sheet-bank":305,...}`. Gruende: `balance-sheet-bank, data-suspect, dup-issuer, insurer, lender-gp0, mortgage-reit, no-axes, no-sector, non-operating-rev, non-us, telecom`. |
 
-### Achsen-Coverage — bewusst NICHT im Board-Vertrag
+### Achsen-Perzentile — seit 2.7/2.13 IM Board-Vertrag; calib ist nur noch die Roh-Matrix
 
-Die 8 Achsen-Perzentile (`revGrowthLevel, revAcceleration, gpGrowth, ruleOfX, marginTrajectory, capitalEfficiency, revisionsMomentum, dilution`) stehen NUR in `outputs/hypergrowth/calib/<branche>.json` unter `rows[].pct` — getrennter Diagnostik-Kanal, **nicht Teil des v1-Board-Vertrags**. `coverageWeight` (scoring-internes Shrinkage) wird gar nicht emittiert. Falls das Dashboard Achsen-Coverage braucht, ist das ein **eigener v1.1-Zusatz-Feed** (`axes.json`), kein stiller Einbau in BoardRow — sonst v2-Bruch.
+> **Korrigiert (R-Gate 2.R, Fund R2.10).** Dieser Abschnitt behauptete frueher, die Achsen-Perzentile stuenden NUR im calib-Kanal und `coverageWeight` werde „gar nicht emittiert". Beides ist seit Task 2.7 (Tag 276) bzw. 2.13 #23 falsch und widersprach der Feldtabelle in §3 **derselben Datei**. Der Abschnitt beschrieb einen toten Zustand.
+
+**Ist-Zustand (je Board-/Overview-Zeile, alles OPTIONAL/additiv und score-inert — kein `--check`-Pflichtfeld, kein v2-Bump):**
+
+- **`axisBreakdown`** liefert je Achse den Perzentil-Beitrag `pct` (0–100 round1, `null` = gedroppt/renorm-on-drop) **plus** `weight`. Quelle: `src/scoring/score.js:849-851` (`breakdown()`), gespeist aus `score.js:644` (`entries[i]._axes`). Real belegt: `NVDA` traegt `[{key:'revGrowthLevel',pct:88.3,weight:1.7}, …]` ueber 7 Achsen.
+- **`coverageAxes`** + **`coverageWeight`** werden ebenfalls je Zeile emittiert: berechnet in `score.js:651-652`, in die Export-Zeile durchgereicht von `geo()` in `score.js:878`. Real belegt: `NVDA` → `coverageAxes: "7/7"`, `coverageWeight: 1`.
+
+**Die LIVE-Achsen sind 7, nicht 8** — in allen 13 HG-Formeln (`src/scoring/formulas/*.js`):
+`revGrowthLevel, revAcceleration, gpGrowth, ruleOfX, marginTrajectory, capitalEfficiency, dilution`.
+`marginLevel` kommt zusaetzlich in **genau einer** Formel vor (`tech-hardware`).
+
+**`revisionsMomentum` ist KEINE Live-Achse mehr** — per Karl-Direktive entfernt, in **0 von 13** Formeln. Die Funktion existiert noch (`src/scoring/axes.js:270`, exportiert `:385`), wird aber von keiner Formel referenziert; die einzigen Nennungen sind Kommentare in `src/scoring/formulas/materials.js:10-12`. Der Achsen-Satz wird in `src/scoring/calibrate.js:67` **live** aus `formula.axes` abgeleitet — auf Platte liegende calib-Dateien mit `revisionsMomentum` sind **veraltete Artefakte** eines Laufs von vor der Entfernung (`outputs/` ist gitignored).
+
+**Der calib-Kanal bleibt getrennt und NICHT im Vertrag:** `outputs/hypergrowth/calib/<branche>.json` haelt die Roh-Perzentil-Matrix ueber die **ganze Kohorte** (nicht nur topN), Form `{<track>: {formulaId, track, axisKeys, defaultWeights, alpha, rows:[{ticker, pct, lamps}]}}` — also `<track>.rows[].pct`, **nicht** `rows[].pct` auf oberster Ebene. Dump: `src/scoring/calibrate.js:172-192` (`dumpMatrix()`), Zweck: Sub-Agenten laden billig, statt das Universum neu zu parsen. Was das **Dashboard** an Achsen-Coverage braucht, steht per `axisBreakdown`/`coverageAxes`/`coverageWeight` schon in der Zeile — ein separater `axes.json`-Feed ist damit gegenstandslos.
 
 ---
 
@@ -170,7 +183,7 @@ Die 8 Achsen-Perzentile (`revGrowthLevel, revAcceleration, gpGrowth, ruleOfX, ma
 | `profitTier` | ✅ **UMGESETZT in 1.2** — reales 4-Stufen-Enum-Feld, siehe §3/§4/§5. (War in 1.1 reserviert.) | erledigt (Tag 264) |
 | `currency` | KEIN Feld. `marketCap` ist roh ohne Currency-Tag; der Snapshot fuehrt keine `price.currency`. Achsen sind waehrungs-invariant, aber `marketCap`-Vergleichbarkeit ueber Laender ist ungeloest. | 1.2 — MUSS geloest werden bevor Cross-Country-marketCap-Ranking im Dashboard erscheint. |
 | `ipoYear` | ✅ **UMGESETZT in 1.2** — Boersen-IPO-Jahr durchgereicht, reales `number\|null`-Feld, siehe §3. (War in 1.1 reserviert.) | erledigt (Tag 264) |
-| `axes` (pro Board-Row) | EXISTIERT NICHT in Boards. Nur im calib-Diagnostik-Kanal. | Optionaler Zusatz-Feed, nicht in BoardRow. |
+| `axes` (pro Board-Row) | ✅ **GELIEFERT — als `axisBreakdown`** (Task 2.7, Tag 276). Jede Board-/Overview-Zeile traegt `[{key,pct,weight}]`, siehe §3/§6; Quelle `src/scoring/score.js:849-851`. (Die alte Aussage „EXISTIERT NICHT in Boards. Nur im calib-Diagnostik-Kanal." war tot und widersprach §3.) Ein Feld mit dem Namen `axes` gibt es nicht und ist nicht geplant — der erwogene `axes.json`-Zusatz-Feed ist gegenstandslos. | erledigt (Tag 276) |
 
 **Regel:** Ein reserviertes Feld wird erst emittiert, wenn die Engine es echt liefert. Bis dahin ist "abwesend" die vertragskonforme Aussage — der Consumer behandelt fehlend als "nicht verfuegbar". Ein additives OPTIONALES Feld (nur hinzufuegen, nie bestehendes brechen) ist KEIN v2-Bump. Der `--check` prueft nur die Pflicht-Felder; ein spaeter additiv hinzugefuegtes optionales Feld loest KEINEN Bruch aus.
 
@@ -239,9 +252,17 @@ Jedes QC-Board traegt `boardStatus: 'diagnostic'` — **per Konstruktion**, nich
 
 Fehlt `outputs/quality/` (alte lokale Laeufe ohne QC-Pass), schreibt der Writer **keine** `quality/`-Dateien und loggt eine **deutliche Warnung** (`::warning::`) — er crasht nicht und laesst nichts still weg. Der `--check` behandelt `quality/` als **optional-wenn-abwesend**: ohne `quality/index.json` auf Platte gibt es nichts zu pruefen (kein Bruch). **Sobald `quality/index.json` existiert**, sind alle darin gelisteten QC-Boards **plus** `overview.json` **Pflicht** und werden voll validiert (Zeilen wie `validateBoardRow`/`validateOverviewRow`, `boardStatus` gegen das Enum). Alle QC-Fehlermeldungen tragen ein `quality/`-Praefix, damit der Alarm-Kanal einen QC-Bruch nie mit einem HG-Bruch verwechselt.
 
-### Bewusste Disclosure: leere Dauerhaftigkeits-Achse
+### Bewusste Disclosure: praktisch leere Dauerhaftigkeits-Achse `roicStability`
 
-Das QC-Achsenset enthaelt eine **Dauerhaftigkeits-/Stabilitaets-Achse `roicStability` mit Gewicht `w=0`** — sie ist derzeit **leer** (keine belastbare Zeitreihen-Basis fuer ROIC-Stabilitaet), traegt also **nicht** zum Score bei. Das ist eine **bewusste Offenlegung**, kein Bug: die Achse ist im Formel-Gerüst reserviert und wird erst gewichtet, wenn die Datenbasis steht. Sie erscheint (falls emittiert) in `axisBreakdown` mit `weight: 0` und ist score-inert.
+Das QC-Achsenset enthaelt eine **Dauerhaftigkeits-/Stabilitaets-Achse `roicStability` mit Gewicht `w=0`** (`src/scoring/formulas/quality/index.js:33,44`) — sie traegt **nicht** zum Score bei, ist score-inert und erscheint in `axisBreakdown` mit `weight: 0`. Das ist eine **bewusste Offenlegung**, kein Bug.
+
+> **Praezisiert (R-Gate 2.R, Fund R2.10).** Die frueher hier genannte Begruendung — „sie ist derzeit leer (keine belastbare Zeitreihen-Basis fuer ROIC-Stabilitaet)" — war schon **beim Schreiben ueberholt**: der SEC-XBRL-Tiefkanal landete mit **Tag 291 (2026-07-10)**, dieser Absatz wurde mit **Tag 293 (2026-07-13)** geschrieben. Die Basis EXISTIERT.
+
+**Was wirklich stimmt:** `roicStability` liest OpInc/Assets/CurrLiab als **Single-Source-Trio** aus `snapshot.secAnnual` (`src/scoring/axes.js:350-381`; angehaengt in `src/scoring/run-screener.js:142-145`, Tiefe ~10–15 GJ) und rechnet damit **echte** Werte — 61 der 124 Namen im committeten `external-data/sec-secannual.json` ergeben einen finiten CoV.
+
+**Der Grund fuer `w=0` ist also nicht „keine Basis", sondern DUENNE ABDECKUNG:** der Tiefkanal umfasst heute **124 von 6406** Universe-Namen (**1,9 %**). Auf den realen QC-Boards ist `roicStability.pct` folglich in nur **7 von 1033** Zeilen non-null (**0,7 %**, Lauf 2026-07-14) — sonst greift das harte Daten-Gate `ROIC_STAB_MIN_YEARS = 6` (`axes.js:335`) und liefert `null` (renorm-on-drop, kein Fake-50). Eine so null-schwere Achse wuerde bei `w>0` ueber die C4-Coverage-Shrinkage das Board Richtung Median stauchen; mit `w=0` ueberspringen die engine-Guards sie (nicht in `totalW`) — **die Praxis-Aussage „leer" bleibt damit korrekt, nur ihre Begruendung war falsch.**
+
+**Aufleuchten** (Gewicht `0` → ~`1.5`, eine Zeile) haengt damit an der **Verbreiterung des SEC-Stores**, nicht mehr am Bauen des Tiefkanals — der steht seit Tag 291.
 
 ### Retention / Deploy
 
