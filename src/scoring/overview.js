@@ -74,17 +74,23 @@ function cashRunwayQuarters(s) {
 }
 
 // Rule-of-X-Begleitspalte (growth-dominant, aus 2 freien Feldern).
-function ruleOfXCompanion(s) {
-  return ruleOfX(s, 2.3, true);
+// growthBounds MUSS durchgereicht werden: Tag 302 hat ruleOfX um die data-learned
+// Klemmung erweitert und score.js:132 reicht sie an die ACHSE durch — die Anzeige
+// hier tat es nicht und zeigte dadurch dieselbe Kennzahl ungeklemmt (R-Gate 2.R,
+// Fund F6-1: 131 Namen wichen ab, JOBY 90121 statt 1048, 25 davon in Top-100-Boards).
+// Ohne Bounds (Aufruf aus Tests/Tools) bleibt das Verhalten wie zuvor: ungeklemmt.
+function ruleOfXCompanion(s, growthBounds) {
+  return ruleOfX(s, 2.3, true, growthBounds);
 }
 
 /**
  * overviewMetric(s, opts) -> { kind, value, companion }
- * opts: { gpClass:'real'|'degenerate'|'none', specialTrack:'reit'|'biotech'|null }
+ * opts: { gpClass:'real'|'degenerate'|'none', specialTrack:'reit'|'biotech'|null,
+ *         growthBounds:[lo,hi]|null }
  * kind: 'gp' | 'revenue-badge' | 'ffo-badge' | 'runway-badge'
  */
 function overviewMetric(s, opts = {}) {
-  const companion = ruleOfXCompanion(s);
+  const companion = ruleOfXCompanion(s, opts.growthBounds);
   if (opts.specialTrack === 'reit') {
     return { kind: 'ffo-badge', value: ffoProxyGrowthYoY(s), companion };
   }

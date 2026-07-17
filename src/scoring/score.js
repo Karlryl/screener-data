@@ -787,10 +787,12 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
   // 3. Overview-Metrik anhaengen + interne Felder entfernen
   for (const e of results) {
     if (e.action === 'route') {
-      e.overview = overviewMetric(e.snapshot, { gpClass: e.gpClass, specialTrack: SPECIAL_OVERVIEW[e.formulaId] });
+      // growthBounds mitgeben: die Begleitspalte ist dieselbe Kennzahl wie die Achse
+      // und muss identisch geklemmt sein (R-Gate 2.R, Fund F6-1).
+      e.overview = overviewMetric(e.snapshot, { gpClass: e.gpClass, specialTrack: SPECIAL_OVERVIEW[e.formulaId], growthBounds });
     } else if (e.action === 'survival') {
       // Pre-Revenue/Biotech: KEIN Growth-Score, nur Runway-Badge (Plan: nie growth-gescort)
-      e.overview = overviewMetric(e.snapshot, { specialTrack: 'biotech' });
+      e.overview = overviewMetric(e.snapshot, { specialTrack: 'biotech', growthBounds });
     }
     // A2 (Weltweit-Pivot): Land/Region/Sektor/MarketCap aus meta anheften, SOLANGE der
     // Snapshot noch existiert (wird gleich geloescht). produceRankings haengt sie an jede
