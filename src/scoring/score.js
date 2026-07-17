@@ -767,6 +767,23 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
   // ponytail: als Property an das results-Array gehaengt statt {results,calibration} zurueckzugeben
   // -> nicht-brechend fuer die vielen `const results = scoreUniverse(...)`-Aufrufer (Array-Iteration
   // + .length unberuehrt). Die per-Kohorte-Perzentilbasen + Referenz-Scoring folgen in 2.9 Slice 2.
+  // 2.9 R2.9 (Court E-20260717-5): Die Referenz-Verteilungen im Artefakt PER-KOHORTE-KEY gegen das
+  // Lineal mergen statt live durchreichen — sonst de-friert das Lineal am naechsten Kettenglied
+  // (A-Namen driften bis ~13.7 Punkte, 1711/1711). Frozen-bevorzugt-per-Key wie parentBasis (Z.591-605):
+  // gefrorener Key -> refCal-Eintrag VERBATIM (axes/profitSign/n/median bzw. Verteilung konsistent aus
+  // dem Lineal); echt neuer Key (oder kein refCal) -> live. KEIN Ganzobjekt-Ternary: der verloere im
+  // gewachsenen Universum brandneue Kohorten aus dem Artefakt -> sie frieren nie ein = R2.9 im Kleinen.
+  const mergeFrozenByKey = (live, frozen) => {
+    if (!frozen) return live;
+    const out = {};
+    for (const key of Object.keys(live)) out[key] = (key in frozen) ? frozen[key] : live[key];
+    return out;
+  };
+  const emitCohortBases = mergeFrozenByKey(capturedCohortBases, refCal && refCal.cohortBases);
+  const emitGDistByCohort = mergeFrozenByKey(gDistByCohort, refCal && refCal.gDistByCohort);
+  // gDist: rein diagnostisch (einziger Leser calibration.test.js:46), keine Scoring-/Drift-Logik ->
+  // bei gesetztem refCal wholesale aus dem Lineal, sonst live.
+  const emitGDist = (refCal && refCal.gDist) ? refCal.gDist : gDist;
   Object.defineProperty(results, 'calibration', {
     value: {
       // v2 (2.9 Slice 2): traegt zusaetzlich die vollen Referenz-VERTEILUNGEN (cohortBases + gDist),
@@ -775,9 +792,9 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
       // gitignored/2.3-kompaktiert; Quantil-Grid-Kompaktierung als spaetere Optimierung dokumentiert).
       schema: 'calibration/v4',        // v4 (2.11 Stufe B): gDistByCohort (kohorten-relativer Wachstums-Bonus)
       winsorBounds, growthBounds, cycleDDThreshold, mcapBounds, ipoBounds,
-      cohortBases: capturedCohortBases, // {cohortKey: {axes:{axisKey:[rohwerte]}, profitSign:[..]|null, n, median}}
-      gDist,                            // universums-globale robustG-Verteilung (Diagnose/Rueckwaerts-Kompat)
-      gDistByCohort,                    // 2.11 Stufe B: robustG je formulaId|track (der Wachstums-Bonus rangiert kohorten-relativ)
+      cohortBases: emitCohortBases,     // {cohortKey: {axes:{axisKey:[rohwerte]}, profitSign:[..]|null, n, median}} — per-Key gg. Lineal gemergt
+      gDist: emitGDist,                 // universums-globale robustG-Verteilung (Diagnose/Rueckwaerts-Kompat); im Ref-Modus aus dem Lineal
+      gDistByCohort: emitGDistByCohort, // 2.11 Stufe B: robustG je formulaId|track — per-Key gg. Lineal gemergt (Wachstums-Bonus rangiert kohorten-relativ)
       nRouted: results.filter((e) => e.action === 'route').length,
       nTotal: Array.isArray(snapshots) ? snapshots.length : null,
     },

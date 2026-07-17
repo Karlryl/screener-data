@@ -129,5 +129,73 @@ test('Drift: verschobene gDistByCohort -> feuert (Verify-T2-Haertung)', () => {
   assert.ok(d.drifted.some((x) => x.axis === 'gDist'), 'ein gDist-Drift-Eintrag muss auftauchen');
 });
 
+// ============================================================================
+// R2.9 (Court E-20260717-5): VERKETTUNGS-DRIFT. Der Emissionsblock in score.js
+// (~Z.778-780) reichte cohortBases/gDist/gDistByCohort im Ref-Modus LIVE durch
+// statt sie per-Kohorte-Key gegen das Lineal zu mergen -> das gefrorene Lineal
+// de-friert am ZWEITEN Kettenglied. Zwei Beweise, die zusammen NUR der korrekte
+// Per-Key-Merge gruen faerbt:
+//   Test A — 2-Hop-Kette: A-Namen halten ueber zwei Ref-Laeufe EXAKT ihren Score.
+//            (rot auf dem Ist-Stand: Live-Emission driftet; das eigentliche R2.9)
+//   Test B — neue Kohorte: ein im Lineal fehlender, im gewachsenen Universum
+//            praesenter Kohorten-Key MUSS mit LIVE-Basis im Artefakt bleiben.
+//            (rot gegen einen falsch gebauten Ganzobjekt-Ternary, der ihn verliert)
+// ============================================================================
+
+// Test A — 2-Hop-Kette. chimera1 = das calibration.json, das run-screener.js:214 nach
+// dem ERSTEN Ref-Lauf (grown, oben) schreiben wuerde; grown2 = der zweite Ref-Lauf dagegen.
+const chimera1 = roundtrip(grown.calibration);
+const grown2 = scoreUniverse(universe, formulas, { refCalibration: chimera1 });
+const scoreGrown2 = routedScores(grown2);
+test('R2.9 Test A — 2-Hop-Kette: A-Namen halten ueber zwei Ref-Kettenglieder EXAKT ihren Score', () => {
+  let compared = 0, mism = 0, maxAbs = 0;
+  for (const [t, s] of scoreA) {
+    if (!scoreGrown2.has(t)) continue; // nur Schnittmenge (Routing kann sich durch B verschieben)
+    compared++;
+    const g2 = scoreGrown2.get(t);
+    if (g2 !== s) { mism++; const d = Math.abs(g2 - s); if (d > maxAbs) maxAbs = d; }
+  }
+  console.log(`       [R2.9-A] compared=${compared} drift=${mism} maxAbs=${maxAbs.toFixed(2)}`);
+  assert.ok(compared > 0, `nicht-triviale Schnittmenge (${compared})`);
+  assert.equal(mism, 0, `${mism}/${compared} A-Namen driften am 2. Kettenglied (maxAbs ${maxAbs.toFixed(2)}) — muss 0 sein`);
+});
+
+// Test B — neue Kohorte darf NICHT aus dem Artefakt fallen. Ziel-Kohorte K aus dem
+// vollen Universum (via `grown`) waehlen und aus A entfernen -> K fehlt im Lineal
+// calA_edge, taucht im gewachsenen (vollen) Universum wieder auf.
+const keyOf = (e) => e.formulaId + '|' + e.track;
+const fullKeyTickers = new Map(); // K -> Set(ticker), aus dem vollen Ref-Lauf `grown`
+for (const e of grown) {
+  if (e.action === 'route' && Number.isFinite(e.score) && e.formulaId && e.track) {
+    const k = keyOf(e);
+    if (!fullKeyTickers.has(k)) fullKeyTickers.set(k, new Set());
+    fullKeyTickers.get(k).add(e.ticker);
+  }
+}
+// kleinste normale Kohorte (in beiden Artefakt-Maps von chimera1) waehlen -> minimale Entfernung.
+const cb1 = chimera1.cohortBases || {}, gd1 = chimera1.gDistByCohort || {};
+let edgeKey = null, edgeTix = null;
+for (const [k, tix] of [...fullKeyTickers.entries()].sort((a, b) => a[1].size - b[1].size)) {
+  if (cb1[k] && gd1[k]) { edgeKey = k; edgeTix = tix; break; }
+}
+const Aedge = edgeTix ? universe.filter((s) => !edgeTix.has(s.meta.ticker)) : universe;
+const calAedge = roundtrip(scoreUniverse(Aedge, formulas).calibration);
+const chimeraEdge = roundtrip(scoreUniverse(universe, formulas, { refCalibration: calAedge }).calibration);
+test('R2.9 Test B — neue Kohorte behaelt LIVE-Basis im Artefakt (Ganzobjekt-Ternary-Falle)', () => {
+  assert.ok(edgeKey, 'eine Ziel-Kohorte K gefunden');
+  // Vorbedingung: K fehlt im Lineal (kein stiller Skip — der Fail nennt die Ursache).
+  assert.ok(!(calAedge.cohortBases && calAedge.cohortBases[edgeKey]),
+    `Vorbedingung: Kohorte ${edgeKey} fehlt in calA_edge.cohortBases`);
+  assert.ok(!(calAedge.gDistByCohort && calAedge.gDistByCohort[edgeKey]),
+    `Vorbedingung: Kohorte ${edgeKey} fehlt in calA_edge.gDistByCohort`);
+  // Kern: die im Lineal fehlende, im vollen Universum praesente Kohorte MUSS live im Artefakt stehen.
+  const cb = chimeraEdge.cohortBases && chimeraEdge.cohortBases[edgeKey];
+  assert.ok(cb, `chimeraEdge.cohortBases[${edgeKey}] existiert (nicht aus dem Artefakt verloren)`);
+  assert.ok(cb.axes && Object.keys(cb.axes).length > 0, `${edgeKey}: axes nicht-leer (live-Basis)`);
+  assert.ok(Number.isFinite(cb.n), `${edgeKey}: n finite`);
+  const gd = chimeraEdge.gDistByCohort && chimeraEdge.gDistByCohort[edgeKey];
+  assert.ok(Array.isArray(gd) && gd.length > 0, `chimeraEdge.gDistByCohort[${edgeKey}] existiert (live)`);
+});
+
 console.log(`calibration-ref.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);
