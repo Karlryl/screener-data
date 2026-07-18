@@ -1,0 +1,21 @@
+{
+  "schema": "coverage-status/v1",
+  "generated_at": "2026-07-18T05:43:20.245Z",
+  "run_id": "29631632950",
+  "status": "degradiert",
+  "degraded": true,
+  "blocked": false,
+  "n_ok": 4252,
+  "n_total": 11106,
+  "n_full": 224,
+  "n_priceonly": 4028,
+  "coverage_pct": 38.3,
+  "n_addressable": 5163,
+  "honest_coverage_pct": 82.4,
+  "source": "manifest",
+  "reasons": [
+    "n_ok 4252 < SOFT_TARGET 4600 (18% of 11106) — short of a full pull",
+    "honest-coverage 82.4% < 90% of addressable 5163 (n_total − mcap-skips; Tote bereits ausgetragen, 0.12)"
+  ],
+  "manifest_partial": false
+}
