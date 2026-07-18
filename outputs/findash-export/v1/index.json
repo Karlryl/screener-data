@@ -1,0 +1,104 @@
+{
+  "schema": "findash-export/v1",
+  "generated_at": "2026-07-18T06:11:02.074Z",
+  "coverage": null,
+  "generatedFromSnapshots": 6399,
+  "branches": [
+    "consumer-discretionary",
+    "consumer-staples",
+    "energy",
+    "financials",
+    "health-care",
+    "industrials",
+    "it-services",
+    "materials",
+    "real-estate",
+    "semiconductors",
+    "software-comm-services",
+    "tech-hardware",
+    "utilities"
+  ],
+  "boardStatus": {
+    "consumer-discretionary": "core",
+    "consumer-staples": "diagnostic",
+    "energy": "core",
+    "financials": "core",
+    "health-care": "core",
+    "industrials": "core",
+    "it-services": "diagnostic",
+    "materials": "diagnostic",
+    "real-estate": "diagnostic",
+    "semiconductors": "core",
+    "software-comm-services": "core",
+    "tech-hardware": "diagnostic",
+    "utilities": "core"
+  },
+  "counts": {
+    "consumer-discretionary": {
+      "profitable": 378,
+      "unprofitable": 31
+    },
+    "consumer-staples": {
+      "profitable": 149,
+      "unprofitable": 0
+    },
+    "energy": {
+      "profitable": 166,
+      "unprofitable": 13
+    },
+    "financials": {
+      "profitable": 139,
+      "unprofitable": 19
+    },
+    "health-care": {
+      "profitable": 267,
+      "unprofitable": 131
+    },
+    "industrials": {
+      "profitable": 492,
+      "unprofitable": 48
+    },
+    "it-services": {
+      "profitable": 48,
+      "unprofitable": 0
+    },
+    "materials": {
+      "profitable": 219,
+      "unprofitable": 0
+    },
+    "real-estate": {
+      "profitable": 184,
+      "unprofitable": 0
+    },
+    "semiconductors": {
+      "profitable": 60,
+      "unprofitable": 26
+    },
+    "software-comm-services": {
+      "profitable": 273,
+      "unprofitable": 37
+    },
+    "tech-hardware": {
+      "profitable": 103,
+      "unprofitable": 20
+    },
+    "utilities": {
+      "profitable": 118,
+      "unprofitable": 2
+    }
+  },
+  "survivalCount": 92,
+  "excluded": {
+    "balance-sheet-bank": 268,
+    "data-suspect": 15,
+    "dup-issuer": 103,
+    "insurer": 116,
+    "lender-gp0": 39,
+    "mortgage-reit": 18,
+    "no-axes": 2,
+    "no-sector": 16,
+    "non-operating-rev": 107,
+    "non-us": 2635,
+    "telecom": 65
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "schema": "findash-export/v1",
+  "generated_at": "2026-07-18T06:11:02.115Z",
+  "coverage": null,
+  "generatedFromSnapshots": 6399,
+  "boards": [
+    "quality-consumer-discretionary",
+    "quality-consumer-staples",
+    "quality-energy",
+    "quality-health-care",
+    "quality-industrials",
+    "quality-it-services",
+    "quality-materials",
+    "quality-semiconductors",
+    "quality-software-comm-services",
+    "quality-tech-hardware",
+    "quality-utilities"
+  ],
+  "boardStatus": {
+    "quality-consumer-discretionary": "diagnostic",
+    "quality-consumer-staples": "diagnostic",
+    "quality-energy": "diagnostic",
+    "quality-health-care": "diagnostic",
+    "quality-industrials": "diagnostic",
+    "quality-it-services": "diagnostic",
+    "quality-materials": "diagnostic",
+    "quality-semiconductors": "diagnostic",
+    "quality-software-comm-services": "diagnostic",
+    "quality-tech-hardware": "diagnostic",
+    "quality-utilities": "diagnostic"
+  },
+  "counts": {
+    "quality-consumer-discretionary": {
+      "profitable": 378,
+      "unprofitable": 0
+    },
+    "quality-consumer-staples": {
+      "profitable": 145,
+      "unprofitable": 0
+    },
+    "quality-energy": {
+      "profitable": 166,
+      "unprofitable": 0
+    },
+    "quality-health-care": {
+      "profitable": 256,
+      "unprofitable": 0
+    },
+    "quality-industrials": {
+      "profitable": 492,
+      "unprofitable": 0
+    },
+    "quality-it-services": {
+      "profitable": 40,
+      "unprofitable": 0
+    },
+    "quality-materials": {
+      "profitable": 192,
+      "unprofitable": 0
+    },
+    "quality-semiconductors": {
+      "profitable": 60,
+      "unprofitable": 0
+    },
+    "quality-software-comm-services": {
+      "profitable": 231,
+      "unprofitable": 0
+    },
+    "quality-tech-hardware": {
+      "profitable": 103,
+      "unprofitable": 0
+    },
+    "quality-utilities": {
+      "profitable": 118,
+      "unprofitable": 0
+    }
+  },
+  "excluded": {
+    "balance-sheet-bank": 268,
+    "data-suspect": 4,
+    "dup-issuer": 92,
+    "insurer": 116,
+    "lender-gp0": 39,
+    "mortgage-reit": 18,
+    "no-revenue": 93,
+    "no-sector": 16,
+    "non-operating-rev": 107,
+    "non-us": 2635,
+    "qc-not-compounder": 418,
+    "qc-sector-unsupported": 347,
+    "telecom": 65
+  }
+}
