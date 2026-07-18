@@ -172,8 +172,15 @@ function buildPit(snap, pitGaps) {
   const ts = snap.timeseries || {};
   const meta = snap.meta || {};
   const val = (o) => (o && Number.isFinite(o.value) ? o.value : null);
-  const revEnds = ts.revenueQEnds != null ? ts.revenueQEnds : null;
-  const gpEnds = ts.grossProfitQEnds != null ? ts.grossProfitQEnds : null;
+  // bh-null-ends (T2, Karl-Semantik freigegeben): present = das Array traegt MINDESTENS
+  // EIN gueltiges (nicht-null) Perioden-Ende. Ein FTS-Cache-Treffer vor A10 liefert []
+  // (leer) oder [null,null,null] (Serie ohne echtes Datum) — beides ist truthy != null
+  // und wurde vorher faelschlich als "vorhanden" gezaehlt (weder pitGaps-Vermerk noch
+  // Coverage-Verlust). Normalisierung an EINER Stelle heilt pitGaps UND pitCoverageBlock
+  // gleichzeitig, da beide von revEnds/gpEnds lesen.
+  const validEnds = (a) => (Array.isArray(a) && a.some((x) => x != null)) ? a : null;
+  const revEnds = validEnds(ts.revenueQEnds);
+  const gpEnds = validEnds(ts.grossProfitQEnds);
   if (revEnds == null) pitGaps.add('revenueQEnds-missing');   // A10: parallel in pull-yahoo
   if (gpEnds == null) pitGaps.add('grossProfitQEnds-missing');
   return {

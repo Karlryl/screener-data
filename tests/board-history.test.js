@@ -145,6 +145,36 @@ check('(a2) E1 Option B: buildPit trägt priceSales/priceSalesAsOf additiv, evSa
   assert.strictEqual(nops.pit.priceSalesAsOf, null, 'kein asOf → null');
 });
 
+// ── (a3) bh-null-ends (T2): leere/all-null Perioden-Enden gelten als ABSENT ──
+// Vorher: ts.revenueQEnds/grossProfitQEnds wurde nur gegen != null geprüft. Ein
+// FTS-Cache-Treffer vor A10 liefert [] (leer) oder [null,null,null] (Serie ohne
+// echtes Datum) — beides ist truthy != null und wurde fälschlich als "vorhanden"
+// durchgewunken: kein pitGaps-Vermerk, pitCoverageBlock zählte es present.
+// Karl-Semantik (freigegeben): present = mindestens EIN gültiges (nicht-null) Ende.
+check('(a3) bh-null-ends: leeres/all-null revenueQEnds/grossProfitQEnds zaehlt als absent', () => {
+  const base = mkBase();
+  const snap = snapFull('XYZ', { withEnds: true });
+  snap.timeseries.revenueQEnds = [];                 // leer (FTS-Cache-Treffer vor A10)
+  snap.timeseries.grossProfitQEnds = [null, null, null]; // all-null (Serie ohne Datum)
+  writeJson(path.join(base, 'snapshots', 'XYZ.json'), snap);
+  writeJson(path.join(base, 'outputs', 'calibration.json'), { schema: 'calibration/v4', generated_at: 'x' });
+  writeBoard(base, 'semiconductors', [row('XYZ', 90)]);
+  W.run({ baseDir: base, date: '2026-07-13' });
+  const v = readVintage(base, '2026-07-13', 'semiconductors');
+  const xyz = v.cohort.profitable[0];
+
+  assert.strictEqual(xyz.pit.revenueQEnds, null, '[] zaehlt als absent, nicht als vorhandene leere Serie');
+  assert.strictEqual(xyz.pit.grossProfitQEnds, null, '[null,null,null] zaehlt als absent');
+  assert.ok(v.pitGaps.includes('revenueQEnds-missing'), 'pitGaps notiert das leere revenueQEnds');
+  assert.ok(v.pitGaps.includes('grossProfitQEnds-missing'), 'pitGaps notiert das all-null grossProfitQEnds');
+  assert.strictEqual(v.pitCoverage.revenueQEnds, 0, 'Coverage zaehlt die leere Serie als absent (0/1)');
+  assert.strictEqual(v.pitCoverage.grossProfitQEnds, 0, 'Coverage zaehlt die all-null Serie als absent (0/1)');
+  // andere Achsen bleiben unberuehrt (kein Nebeneffekt der Normalisierung):
+  assert.strictEqual(xyz.pit.beta, 1.5, 'beta unberuehrt');
+  assert.strictEqual(xyz.pit.evSales, 8.2, 'evSales unberuehrt');
+  assert.deepStrictEqual(xyz.pit.revenueQ, [120, 110, 100], 'revenueQ-Werte unberuehrt');
+});
+
 // ── (b) Wert-Gate: wertfalsches Folge-Vintage → suspect + exit 2 ──────────────
 check('(b) wertfalsches Folge-Vintage → suspect:true + exit 2', () => {
   const base = mkBase();
