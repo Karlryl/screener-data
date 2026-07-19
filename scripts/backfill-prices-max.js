@@ -18,7 +18,8 @@
  * zusätzlich alle needsReseed-Ticker (nach Splits) neu.
  *
  * CLI: node scripts/backfill-prices-max.js [--tickers A,B] [--limit N] [--force] [--only-stale] [--dry-run]
- * Exit 0 = ok (Teil-Fehler im Summary) · 1 = fatale I/O-/Input-Fehler.
+ * Exit 0 = ok (Teil-Fehler im Summary) · 1 = fatale I/O-/Input-Fehler ODER
+ * (BH-145) alle Ticker fehlgeschlagen (0 ok bei >0 versuchten).
  */
 const fs = require('fs');
 const path = require('path');
@@ -44,6 +45,20 @@ try {
 const log = (m) => console.log(`[${new Date().toISOString()}] ${m}`);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function readJsonOrNull(f) { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (_) { return null; } }
+
+// BH-144: STATE_FILE is committed and covers the WHOLE history (all boards ever
+// seeded), not just today's board universe. readJsonOrNull() would turn an
+// existing-but-unparsable STATE_FILE into {entries:{}}, and the batch loop below
+// then overwrites STATE_FILE after every batch with only today's (much smaller)
+// board universe — permanently dropping every ATH entry outside it. ENOENT (no
+// file yet) is a legit empty seed; any OTHER read/parse failure must stop hard.
+function readStateFileOrThrow(f) {
+  let raw;
+  try { raw = fs.readFileSync(f, 'utf8'); }
+  catch (e) { if (e.code === 'ENOENT') return { asOf: null, entries: {} }; throw e; }
+  try { return JSON.parse(raw); }
+  catch (e) { throw new Error(`Corrupt STATE_FILE ${f}: ${e.message} — refusing to reset to {} (would drop existing ATH entries)`); }
+}
 
 // Union der Top-50 je Board (profitable+unprofitable je 50; overview/survival zählen als Board).
 // Liest die Top-Level-*.json unter v1/ UND den Unterordner v1/quality/ (QC-Boards, F12) —
@@ -88,6 +103,12 @@ function pendingTickers(universe, manifest, state, opts = {}) {
   });
 }
 
+// BH-145: pure predicate (testbar ohne Netz) — 0 Erfolge bei >=1 versuchtem Ticker
+// ist kein Teil-Fehler mehr, sondern ein Totalausfall.
+function allFailed(todoLen, ok, failedLen) {
+  return todoLen > 0 && ok === 0 && failedLen > 0;
+}
+
 // Aus einer Max-Serie den ATH-State-Eintrag bauen (pur, testbar).
 function seedEntry(bars, seededAt) {
   const clean = bars.filter((b) => b && b.date && Number.isFinite(b.close) && b.close > 0)
@@ -127,7 +148,7 @@ async function main() {
   if (!universe.length) { console.error('Kein Board-Universum (outputs/findash-export/v1/ fehlt?) und keine --tickers.'); process.exit(1); }
   fs.mkdirSync(MAX_DIR, { recursive: true });
   const manifest = readJsonOrNull(MANIFEST) || { done: {} };
-  const state = readJsonOrNull(STATE_FILE) || { asOf: null, entries: {} };
+  const state = readStateFileOrThrow(STATE_FILE);
   let todo = pendingTickers(universe, manifest, state, { force: has('--force'), onlyStale: has('--only-stale') });
   const limit = parseInt(getArg('--limit', '0'), 10);
   if (limit > 0) todo = todo.slice(0, limit);
@@ -155,7 +176,15 @@ async function main() {
     if (i + BATCH < todo.length) await sleep(SLEEP_MS);
   }
   log(`FERTIG: ${ok} ok, ${failed.length} failed${failed.length ? ' (' + failed.slice(0, 10).join(',') + (failed.length > 10 ? '…' : '') + ')' : ''}`);
+  // BH-145: a total fetch failure (e.g. Yahoo down, network gone) previously still
+  // exited 0 — a partial-failure batch is legitimately fine (exit 0, see header),
+  // but zero successes out of an attempted batch is not "partial", it's a run
+  // that did nothing and must not look like a seed success.
+  if (allFailed(todo.length, ok, failed.length)) {
+    log('ALLE Ticker fehlgeschlagen — kein einziger Erfolg. Exit 1.');
+    process.exitCode = 1;
+  }
 }
 
-module.exports = { pendingTickers, seedEntry, boardUniverse, TOP_N, REF_LOOKBACK_BARS };
+module.exports = { pendingTickers, seedEntry, boardUniverse, readStateFileOrThrow, allFailed, TOP_N, REF_LOOKBACK_BARS };
 if (require.main === module) main();

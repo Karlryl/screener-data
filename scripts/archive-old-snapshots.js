@@ -101,12 +101,27 @@ function archiveDirByDate(srcDir, archiveDir, keepDays, dryRun) {
     const merged = new Map();
     let toWrite = entries;
     if (fs.existsSync(ndjsonPath)) {
-      try {
-        const existingLines = fs.readFileSync(ndjsonPath, 'utf8').split('\n').filter(Boolean);
-        for (const ln of existingLines) {
-          try { const obj = JSON.parse(ln); if (obj && obj.date) merged.set(obj.date, ln); } catch (_) {}
+      // BH-142: no silent catch here — a corrupt existing line used to be dropped
+      // from `merged` and then permanently lost when the atomic rewrite below
+      // persisted the map without it. Let it throw (top-level catch → exit 1).
+      const existingLines = fs.readFileSync(ndjsonPath, 'utf8').split('\n').filter(Boolean);
+      for (const ln of existingLines) {
+        const obj = JSON.parse(ln);
+        if (obj && obj.date) merged.set(obj.date, ln);
+      }
+      // BH-190: a same-date collision is only truly "already archived" if the
+      // content matches too. Without this, a corrected live snapshot (same date,
+      // different content) would be filtered out of toWrite below and then, in
+      // the toWrite.length===0 branch, its live original still gets unlinked —
+      // silently keeping the stale v1 forever and losing the correction.
+      for (const e of entries) {
+        if (!merged.has(e.date)) continue;
+        const newLine = JSON.stringify({ date: e.date, ...e.content });
+        if (merged.get(e.date) !== newLine) {
+          throw new Error('archive collision: ' + ndjsonPath + ' already has a DIFFERENT entry for ' +
+            e.date + ' — refusing to silently keep the old version and delete the corrected live file');
         }
-      } catch (_) {}
+      }
       toWrite = entries.filter(e => !merged.has(e.date));
       if (toWrite.length === 0) {
         console.log('  all ' + entries.length + ' entries already archived in ' + ndjsonPath + ' — skipping append');
@@ -198,7 +213,10 @@ function main() {
 }
 
 if (require.main === module) {
-  try { main(); } catch (e) { console.error('archive failed: ' + e.message); process.exit(0); }
+  // BH-142: was exit(0) — a genuine runtime failure (e.g. the corrupt-line /
+  // collision throws above) rendered green under the workflow's continue-on-error
+  // instead of surfacing. Fail loud with exit 1.
+  try { main(); } catch (e) { console.error('archive failed: ' + e.message); process.exit(1); }
 }
 
 module.exports = { archiveDirByDate };
