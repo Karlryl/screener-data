@@ -2,12 +2,13 @@
 /**
  * Live test for discovery/tsx-ca.js
  * Hits the real TMX listed-companies XLSX register. Asserts rowCount>0, correct
- * .TO/.V yahooTicker forms, contract shape, that both venues are represented,
- * and that dual-class dot->hyphen rewriting produced at least one hyphen ticker.
+ * .TO/.V yahooTicker forms, contract shape, and that both venues are represented.
+ * The dot->hyphen rewrite is asserted hermetically via toYahooTicker (the live
+ * register carries no dot-class rows anymore, verified 2026-07-19).
  */
 'use strict';
 const assert = require('assert');
-const { fetchTsxCanada } = require('../../discovery/tsx-ca');
+const { fetchTsxCanada, toYahooTicker } = require('../../discovery/tsx-ca');
 
 (async () => {
   const map = await fetchTsxCanada();
@@ -35,8 +36,10 @@ const { fetchTsxCanada } = require('../../discovery/tsx-ca');
   // Both venues must be present (this is the union register, not one exchange).
   assert(tsx > 500, 'expected many TSX (.TO) tickers, got ' + tsx);
   assert(tsxv > 300, 'expected many TSXV (.V) tickers, got ' + tsxv);
-  // Dual-class/preferred rewriting (BBD.B -> BBD-B.TO) must have fired at least once.
-  assert(hyphen > 0, 'expected at least one dot->hyphen class ticker');
+  // Dual-class rewriting (BBD.B -> BBD-B.TO) hermetically: the register itself
+  // carries no dot-class rows anymore, so assert the function contract directly.
+  assert.strictEqual(toYahooTicker('BBD.B', 'TSX'), 'BBD-B.TO', 'dot->hyphen rewrite broken');
+  assert.strictEqual(toYahooTicker('ABC', 'TSXV'), 'ABC.V', 'plain TSXV mapping broken');
 
   console.log('PASS tsx-ca:', map.size, 'issuers (', tsx, 'TSX /', tsxv, 'TSXV )');
 })().catch(e => { console.error('FAIL', e && e.message); process.exit(1); });

@@ -172,6 +172,15 @@ function toIpoDate(raw) {
   return s.slice(0, 4) + '-' + s.slice(4, 6) + '-' + s.slice(6, 8);
 }
 
+// audit/fix BH-063: TMX writes the SAME dot-suffix convention for dual-class
+// COMMON shares (BBD.B) and for non-common instruments — preferred (.PR,
+// .PR.A/.PR.B series), CPC shells (.P) and warrants/rights (.WT/.RT). Only
+// the dual-class-common form belongs in an equity universe; Yahoo tags many
+// preferreds as EQUITY too, so downstream mcap-prefilter's quoteType filter
+// doesn't reliably catch them. Drop the non-common suffixes at the source,
+// analogous to the subtype:'common' filter in tv-scanner.js.
+const NON_COMMON_SUFFIX_RE = /\.(?:PR(?:\.[A-Z]+)?|PF|P|WT|RT)$/i;
+
 // TMX root ticker -> Yahoo symbol. TMX uses '.' for class/preferred/CPC suffixes
 // (BBD.B); Yahoo rewrites that as '-' and appends the venue suffix.
 // Verified live: BBD.B -> BBD-B.TO.
@@ -226,6 +235,8 @@ function parseSheet(sheetXml, strings, result) {
     }
     if (exch !== 'TSX' && exch !== 'TSXV') continue; // banner/blank/summary rows
     const root = cells[cols.cTicker];
+    // audit/fix BH-063: preferred/CPC/warrant/right suffix -> not common equity, drop.
+    if (NON_COMMON_SUFFIX_RE.test(String(root || '').trim())) continue;
     const yahoo = toYahooTicker(root, exch);
     if (!yahoo) continue;
     if (result.has(yahoo)) continue;
@@ -265,6 +276,15 @@ async function fetchTsxCanada() {
       tsxvCount = parseSheet(entries['xl/worksheets/sheet2.xml'].toString('utf8'), strings, result);
     }
     console.log(`  [TSX-CA] TSX ${tsxCount} + TSXV ${tsxvCount} = ${result.size} issuers`);
+    // audit/fix BH-061: a missing sheet entry or an unlocatable header row
+    // (locateColumns returns null) silently yields 0 for that venue while the
+    // OTHER sheet still keeps the whole Map nonempty/green — no contract check
+    // caught a workbook reshuffle. Both venues are always present in a healthy
+    // pull, so 0 on either one is a loud signal, not a normal outcome.
+    if (tsxCount === 0 || tsxvCount === 0) {
+      console.warn(`  [TSX-CA] WARNING: TSX=${tsxCount} TSXV=${tsxvCount} — one venue yielded zero issuers (header not found / sheet reshuffled?). Register is PARTIAL.`);
+      result.partial = true;
+    }
   } catch (e) {
     console.error('  [TSX-CA] failed: ' + e.message);
     return new Map(); // fail-silent per contract
@@ -272,7 +292,7 @@ async function fetchTsxCanada() {
   return result;
 }
 
-module.exports = { fetchTsxCanada };
+module.exports = { fetchTsxCanada, NON_COMMON_SUFFIX_RE, toYahooTicker };
 
 if (require.main === module) {
   fetchTsxCanada().then(m => {

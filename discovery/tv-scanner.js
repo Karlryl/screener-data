@@ -109,17 +109,35 @@ function postScan(endpoint, right) {
   });
 }
 
+// Server-Filterschwelle in LISTING-Waehrung = permissiver USD-Precut / FX-Rate. Bewusst PERMISSIV
+// (MIN_USD_PRECUT statt 2e9), damit FX-Schlupf keinen echten $2B-Namen am Rand wegschneidet — der
+// exakte $2B-USD-Gate + quoteType passiert danach in mcap-prefilter (live Yahoo). Unbekannte ccy -> 2e9 lokal.
+// audit/fix BH-065: this used to hardcode the literal 1.5e9 instead of reading
+// MIN_USD_PRECUT, so TV_PRECUT_USD could raise the client-side cut (still
+// applied in scanMarket below) but never LOWER the server-side one below
+// 1.5e9 — the two knobs disagreed. Deriving `right` from MIN_USD_PRECUT makes
+// both follow the same env value. Factored out (rather than inlined) so the
+// formula is directly unit-testable without a network call.
+function serverFloor(ccy, rate) {
+  return (ccy && Number.isFinite(rate) && rate > 0) ? Math.round(MIN_USD_PRECUT / rate) : 2000000000;
+}
+
 // EIN Markt -> Map<yahooTicker,{ticker,name,exchange,source,country}>. Fail-silent (leere Map).
 async function scanMarket(key, cfg, rates) {
   const out = new Map();
-  // Server-Filterschwelle in LISTING-Waehrung = permissiver USD-Precut / FX-Rate. Bewusst PERMISSIV
-  // (1.5e9 statt 2e9), damit FX-Schlupf keinen echten $2B-Namen am Rand wegschneidet — der exakte
-  // $2B-USD-Gate + quoteType passiert danach in mcap-prefilter (live Yahoo). Unbekannte ccy -> 2e9 lokal.
   const rate = rates[cfg.ccy];
-  const right = (cfg.ccy && Number.isFinite(rate) && rate > 0) ? Math.round(1.5e9 / rate) : 2000000000;
+  const right = serverFloor(cfg.ccy, rate);
   let j;
   try { j = await postScan(cfg.endpoint, right); } catch (_) { return out; }
   if (!j || !Array.isArray(j.data)) return out;
+  // audit/fix BH-060: range:[0,RANGE] was never checked against the endpoint's
+  // own j.totalCount, so a market with more matches than RANGE truncated
+  // silently (the mcap-desc sort means the truncated tail is the SMALLER —
+  // but still potentially >=$2B — names). Stamp partial on the returned Map.
+  if (Number.isFinite(j.totalCount) && j.totalCount > j.data.length) {
+    out.partial = true;
+    out.totalCount = j.totalCount;
+  }
   const seen = new Set();
   for (const row of j.data) {
     const d = row && row.d;
@@ -139,6 +157,29 @@ async function scanMarket(key, cfg, rates) {
   return out;
 }
 
+// audit/fix BH-060: all ~34 markets used to fire via a single Promise.all — a
+// burst against scanner.tradingview.com with no pool. Small worker pool bounds
+// in-flight requests instead; per-market fail-silent behaviour is unchanged.
+const TV_SCAN_CONCURRENCY = parseInt(process.env.TV_SCAN_CONCURRENCY || '6', 10);
+
+// Work-stealing pool: runs fn(items[i]) for every index, at most `concurrency`
+// in flight, results[i] lines up with items[i] regardless of completion order.
+// Factored out (not inlined in discoverTvScanner) so it's unit-testable without
+// a network call — see tests/scoring/bh-b14-discovery.test.js.
+async function runPooled(items, concurrency, fn) {
+  const results = new Array(items.length);
+  let next = 0;
+  async function worker() {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await fn(items[i], i);
+    }
+  }
+  const poolSize = Math.min(Math.max(concurrency, 1), items.length) || 1;
+  await Promise.all(Array.from({ length: poolSize }, worker));
+  return results;
+}
+
 /**
  * discoverTvScanner({markets?}) -> Map<yahooTicker, meta> ueber alle (oder Teilmenge) TV-Maerkte.
  * markets: optionale Liste von MARKETS-Keys (Default: alle). Fail-silent pro Markt.
@@ -146,19 +187,27 @@ async function scanMarket(key, cfg, rates) {
 async function discoverTvScanner(opts = {}) {
   const rates = loadRates();
   const keys = Object.keys(MARKETS).filter((k) => !opts.markets || opts.markets.includes(k));
-  const results = await Promise.all(keys.map((k) => scanMarket(k, MARKETS[k], rates).catch(() => new Map())));
+  const results = await runPooled(keys, TV_SCAN_CONCURRENCY,
+    (k) => scanMarket(k, MARKETS[k], rates).catch(() => new Map()));
   const merged = new Map();
   const summary = [];
+  const partialMarkets = [];
   for (let i = 0; i < keys.length; i++) {
     const m = results[i];
     for (const [k, v] of m) if (!merged.has(k)) merged.set(k, v);
-    summary.push(`${keys[i].replace('tv-', '')}:${m.size}`);
+    const label = keys[i].replace('tv-', '');
+    summary.push(`${label}:${m.size}${m.partial ? '!' : ''}`);
+    if (m.partial) partialMarkets.push(label);
   }
   console.log(`[tv-scanner] ${merged.size} Kandidaten aus ${keys.length} Maerkten (${summary.join(' ')})`);
+  if (partialMarkets.length > 0) {
+    console.warn(`[tv-scanner] WARNING: truncated (rows < totalCount) in ${partialMarkets.length} market(s): ${partialMarkets.join(', ')} — some >=2B names may be missing.`);
+    merged.partial = true;
+  }
   return merged;
 }
 
 // Foreign-Canon-Beitrag: {source-string: canon-token} fuer FOREIGN_SOURCE_CANON in refresh-universe.js.
 const TV_FOREIGN_CANON = Object.fromEntries(Object.entries(MARKETS).map(([k, c]) => [k, c.canon]));
 
-module.exports = { discoverTvScanner, scanMarket, MARKETS, TV_FOREIGN_CANON };
+module.exports = { discoverTvScanner, scanMarket, serverFloor, runPooled, MARKETS, TV_FOREIGN_CANON };

@@ -240,8 +240,18 @@ async function fetchOTCMarkets() {
   // audit F-A-2026-06-21: surface page failures so a partial OTC pull is
   // visible to the aggregator/operator rather than silently returning a Map
   // missing pages. Loud warning mirrors the zero-quote alert pattern.
+  // audit/fix BH-058: the warnings above only ever reached the console — the
+  // returned Map itself carried no signal, so a caller checking only .size saw
+  // a plain "success". Stamp a partial flag + coverage denominator ON the Map
+  // (Map is an object, extra props don't break size/iteration) so a future
+  // consumer can distinguish a truncated/degraded pull from a complete one.
+  const truncated = totalRecords !== null && totalRecords > MAX_PAGES * PAGE_SIZE;
   if (pageErrors > 0) {
     console.warn(`  [OTC-Markets] WARNING: ${pageErrors} page(s) failed and were skipped — OTC universe is PARTIAL (${result.size} tickers). Some symbols may be missing.`);
+  }
+  if (pageErrors > 0 || truncated) {
+    result.partial = true;
+    if (totalRecords !== null) result.totalRecords = totalRecords;
   }
   console.log(`  [OTC-Markets] Total OTC tickers: ${result.size}`);
   return result;

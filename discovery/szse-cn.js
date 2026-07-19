@@ -91,6 +91,12 @@ async function fetchSzseUniverse() {
   const result = new Map();
   console.log('  [SZSE] Fetching Shenzhen A-share list...');
   let expectedPages = null;
+  // audit/fix BH-059: a later page dying after retries used to just log+skip —
+  // the accumulated Map still came back nonempty/green with no signal that a
+  // page (and its ~20 tickers) was dropped from the register. Count skips and
+  // stamp the return value so a genuine partial pull isn't mistaken for a
+  // complete one (mirrors the otc-markets.js pageErrors pattern).
+  let skippedPages = 0;
   try {
     for (let page = 1; page <= MAX_PAGES; page++) {
       let json;
@@ -103,6 +109,7 @@ async function fetchSzseUniverse() {
         if (page === 1) return new Map();
         // A later page died even after retries: skip it and keep going so a
         // single transient reset can't drop the entire tail (incl. ChiNext).
+        skippedPages++;
         if (expectedPages && page >= expectedPages) break;
         await sleep(200);
         continue;
@@ -136,6 +143,10 @@ async function fetchSzseUniverse() {
     return new Map();
   }
 
+  if (skippedPages > 0) {
+    console.warn(`  [SZSE] WARNING: ${skippedPages} page(s) failed after retries and were skipped — universe is PARTIAL (${result.size} tickers).`);
+    result.partial = true;
+  }
   console.log(`  [SZSE] Total: ${result.size} A-share tickers`);
   return result;
 }

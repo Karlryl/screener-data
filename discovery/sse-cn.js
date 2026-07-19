@@ -11,10 +11,13 @@
  * we read `result`. Each row carries A_STOCK_CODE, FULL_NAME_IN_ENGLISH,
  * LIST_DATE (YYYYMMDD), LIST_BOARD and DELIST_DATE.
  *
- * pageSize=2000 returns the full register (~2508 rows) in a single response —
- * the endpoint ignores paging once pageSize exceeds the total, so no loop is
- * needed. Delisted rows (DELIST_DATE != '-') are dropped, leaving ~2300 live
- * A-shares incl. the STAR Market (688xxx).
+ * pageSize=5000 returns the full register (~2508 rows, headroom for growth)
+ * in a single response — the endpoint ignores paging once pageSize exceeds
+ * the total, so no loop is needed. Delisted rows (DELIST_DATE != '-') are
+ * dropped, leaving ~2300 live A-shares incl. the STAR Market (688xxx).
+ * audit/fix BH-062: pageSize was hardcoded at 2000 against a comment that
+ * (falsely) claimed it exceeds the ~2508-row total — raised to 5000 and the
+ * reported pageHelp.total is now checked against the rows actually returned.
  *
  * yahooTicker = A_STOCK_CODE + '.SS'  (e.g. 600000.SS, 688797.SS)
  * exchange = 'SSE', country = 'China'.
@@ -30,7 +33,7 @@ const https = require('https');
 const SSE_URL =
   'https://query.sse.com.cn/sseQuery/commonQuery.do' +
   '?sqlId=COMMON_SSE_CP_GPJCTPZ_GPLB_GP_L' +
-  '&isPagination=true&pageHelp.pageSize=2000' +
+  '&isPagination=true&pageHelp.pageSize=5000' +
   '&pageHelp.pageNo=1&pageHelp.beginPage=1&pageHelp.endPage=1';
 
 const REFERER = 'https://www.sse.com.cn/';
@@ -92,8 +95,9 @@ async function fetchSseUniverse() {
   }
 
   let data;
+  let j;
   try {
-    const j = JSON.parse(body);
+    j = JSON.parse(body);
     // Rows live under result[] (mirror of pageHelp.data[]).
     data = Array.isArray(j.result) ? j.result
       : (j.pageHelp && Array.isArray(j.pageHelp.data) ? j.pageHelp.data : null);
@@ -104,6 +108,14 @@ async function fetchSseUniverse() {
   if (!Array.isArray(data)) {
     console.error('  [SSE-CN] unexpected response shape (no result[] / pageHelp.data[])');
     return result;
+  }
+  // audit/fix BH-062: pageSize alone is not a completeness guarantee if the
+  // register ever outgrows it again — check the endpoint's own reported total
+  // (pageHelp.total) against the rows we actually got back.
+  const reportedTotal = j.pageHelp && Number.isFinite(j.pageHelp.total) ? j.pageHelp.total : null;
+  const truncated = reportedTotal !== null && data.length < reportedTotal;
+  if (truncated) {
+    console.warn(`  [SSE-CN] WARNING: got ${data.length} rows but endpoint reports total=${reportedTotal} — register is PARTIAL, raise pageHelp.pageSize.`);
   }
 
   let delisted = 0;
@@ -128,6 +140,7 @@ async function fetchSseUniverse() {
     result.set(yahooTicker, info);
   }
 
+  if (truncated) result.partial = true;
   console.log(`  [SSE-CN] ${data.length} rows, ${delisted} delisted dropped, ${result.size} live A-shares`);
   return result;
 }
