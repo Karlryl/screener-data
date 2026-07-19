@@ -1402,5 +1402,22 @@ module.exports = {
   yahooCoverageM2,
   xbrlCoverage,
   xbrlComparison,
-  buildRunHash
+  buildRunHash,
+  // Messlauf 3 (Karl-Entscheid E-20260719-4, echte Zufallsstichprobe): der
+  // schlanke Runner scripts/probe-smallcap-messlauf3.js braucht dieselbe
+  // Fetch-/Pacing-/Filter-/XBRL-Mechanik und dupliziert sie nicht.
+  AXES,
+  fnv1a,
+  unwrapYahooNumber,
+  fetchSecJsonStrict,
+  buildTickerCikMap,
+  fetchYahooSummaryM2,
+  fetchYahooAxesM2,
+  errText,
+  m2FilterDefinitions,
+  mdEscape,
+  MIN_MCAP,
+  MAX_MCAP,
+  SEC_DELAY_MS,
+  YAHOO_DELAY_MS
 };
