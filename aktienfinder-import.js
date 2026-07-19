@@ -11,6 +11,14 @@ const fs = require('fs');
 const path = require('path');
 const { writeFileAtomic } = require('./lib/atomic-write.js');
 
+// audit BH-070: isNaN() only rejects genuinely non-numeric strings — parseFloat('-1')
+// and parseFloat('99') both return finite numbers, so out-of-range scores silently
+// passed through even though the header documents a 0-10 scale. Guard the documented
+// range explicitly. Exported so it stays testable without shelling out to main().
+function isValidScore(v) {
+  return Number.isFinite(v) && v >= 0 && v <= 10;
+}
+
 function main() {
   const csvPath = process.argv[2];
   if (!csvPath || !fs.existsSync(csvPath)) {
@@ -25,7 +33,7 @@ function main() {
     const [ticker, scoreStr] = line.split(',').map(s => s.trim());
     if (!ticker) continue;
     const score = parseFloat(scoreStr);
-    if (isNaN(score)) continue;
+    if (!isValidScore(score)) continue;
     data[ticker.toUpperCase()] = { score, importedAt: new Date().toISOString().slice(0, 10) };
   }
   const outDir = './external-data';
@@ -58,4 +66,5 @@ function main() {
   console.log(`✓ Imported ${Object.keys(data).length} aktienfinder scores → ${outPath}`);
   console.log(`  Total stocks tracked: ${Object.keys(merged).length}`);
 }
-main();
+module.exports = { isValidScore };
+if (require.main === module) main();

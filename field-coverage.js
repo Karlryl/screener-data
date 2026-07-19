@@ -160,6 +160,30 @@ function detectDrift(currentCoverage, baseline) {
   const drifts = [];
   const seenFields = new Set();
 
+  // audit BH-066: zero-disappearance contract, checked BEFORE the floor gate below.
+  // The floor-check only escalates when a field's OWN baseline was >= ABSOLUTE_FLOOR
+  // (structurally-sparse fields are exempted to avoid alert fatigue). The standard
+  // baseline-drop check below requires drop >= DROP_THRESHOLD (0.20). A field that
+  // sat at e.g. 10% baseline and drops to exactly 0% has drop=0.10 — under BOTH
+  // gates, so it vanished silently. Any base>0 -> cur===0 transition is always a
+  // genuine "field removed" event regardless of how sparse it normally was.
+  for (const field of TRACKED_FIELDS) {
+    const cur = currentCoverage[field];
+    const base = baseline[field];
+    if (typeof cur !== 'number' || typeof base !== 'number') continue;
+    if (base > 0 && cur === 0) {
+      drifts.push({
+        field,
+        current:  0,
+        baseline: Math.round(base * 100) / 100,
+        drop:     Math.round(base * 100) / 100,
+        severity: 'HIGH',
+        reason:   'field-vanished'
+      });
+      seenFields.add(field);
+    }
+  }
+
   // audit F-A-2026-06-22: prevents alert fatigue from structurally-sparse fields.
   // The old absolute floor fired a HIGH 'below-50pct-floor' alert for ANY tracked
   // field below 50% coverage "independent of baseline ... even on cold start".
@@ -172,6 +196,7 @@ function detectDrift(currentCoverage, baseline) {
   // On cold start (no numeric baseline) the floor is suppressed entirely — a field
   // that is merely structurally sparse is never escalated.
   for (const field of TRACKED_FIELDS) {
+    if (seenFields.has(field)) continue; // already reported via zero-disappearance check
     const cur = currentCoverage[field];
     if (typeof cur !== 'number') continue;
     const base = baseline[field];

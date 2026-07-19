@@ -5,9 +5,8 @@
  *
  * Usage:
  *   node watchlist-cli.js list
- *   node watchlist-cli.js add TICKER --name "Stock Name" [--position interested|watching|owned] [--track A|B] [--isin ISIN]
+ *   node watchlist-cli.js add TICKER --name "Stock Name" [--track A|B] [--isin ISIN]
  *   node watchlist-cli.js remove TICKER
- *   node watchlist-cli.js position TICKER owned|watching|interested
  *   node watchlist-cli.js info TICKER
  */
 'use strict';
@@ -15,6 +14,44 @@ const fs = require('fs');
 const { writeFileAtomic } = require('./lib/atomic-write.js');
 
 const PATH = './watchlist.json';
+
+// audit BH-196: lib/snapshot-fs.js derives a per-ticker snapshot filename by mapping
+// every character outside [A-Z0-9.-] to '_' with no collision check — two distinct
+// exotic tickers (e.g. 'ABC/A' and 'ABC:A') can sanitize to the same filename and
+// silently overwrite each other's snapshot. Reject such tickers at this trust
+// boundary (manual add/import) instead of teaching the sanitizer a registry.
+const TICKER_RE = /^[A-Z0-9.-]+$/;
+
+// audit BH-067: cmdImport/cmdExport used to split(',')/join(',') with no quoting —
+// a name containing a comma (510 of 11106 watchlist names do) shifted every
+// following CSV field. Minimal RFC-4180-style quoting: wrap a field in "..." and
+// double internal quotes when it contains a comma/quote/newline.
+function csvField(v) {
+  const s = String(v == null ? '' : v);
+  if (/[",\r\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+function parseCsvLine(line) {
+  const out = [];
+  let cur = '', inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (line[i + 1] === '"') { cur += '"'; i++; }
+        else inQuotes = false;
+      } else cur += c;
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ',') {
+      out.push(cur); cur = '';
+    } else {
+      cur += c;
+    }
+  }
+  out.push(cur);
+  return out.map(s => s.trim());
+}
 
 // F-GC-007 / F-GC-009 (Tag 184): load needs try/catch — JSON.parse of a
 // corrupted watchlist would crash with a cryptic SyntaxError. Save uses
@@ -42,6 +79,11 @@ function cmdList() {
 }
 
 function cmdAdd(ticker, opts) {
+  // BH-196: reject at the trust boundary — see TICKER_RE comment above.
+  if (!TICKER_RE.test(ticker)) {
+    console.error(`✗ ${ticker} contains characters outside [A-Z0-9.-] — rejected (snapshot filename collision risk)`);
+    process.exit(1);
+  }
   const wl = load();
   if (wl.stocks.find(s => s.ticker === ticker)) {
     console.error(`✗ ${ticker} already exists`);
@@ -86,25 +128,31 @@ function cmdImport(csvPath) {
   const lines = fs.readFileSync(csvPath, 'utf8').split(/\r?\n/).filter(Boolean);
   const wl = load();
   const existing = new Set(wl.stocks.map(s => s.ticker));
-  let added = 0, skipped = 0;
+  let added = 0, skipped = 0, rejected = 0;
   for (const line of lines) {
     if (line.toLowerCase().startsWith('ticker')) continue;
-    const parts = line.split(',').map(s => s.trim());
+    const parts = parseCsvLine(line); // BH-067: quote-aware (was naive split(','))
     if (!parts[0]) continue;
     const ticker = parts[0].toUpperCase();
+    if (!TICKER_RE.test(ticker)) { rejected++; continue; } // BH-196
     if (existing.has(ticker)) { skipped++; continue; }
     wl.stocks.push({
       isin: parts[3] || null,
       ticker,
       yahoo_symbol: parts[2] || ticker,
       name: parts[1] || ticker,
-      track_hint: parts[4] || 'A'
+      track_hint: parts[4] || 'A',
+      // BH-068: cmdAdd stamps added_at (F-A-2026-06-21) but cmdImport didn't —
+      // prune-watchlist's no-snapshot grace period only fires when added_at is
+      // set, so 3341/11106 imported rows could never age out.
+      added_at: new Date().toISOString(),
     });
     existing.add(ticker);
     added++;
   }
   save(wl);
-  console.log('✓ ' + added + ' added, ' + skipped + ' skipped (duplicates)');
+  console.log('✓ ' + added + ' added, ' + skipped + ' skipped (duplicates)' +
+    (rejected ? ', ' + rejected + ' rejected (invalid ticker chars)' : ''));
 }
 
 function cmdExport(csvPath) {
@@ -112,7 +160,7 @@ function cmdExport(csvPath) {
   const target = csvPath || './watchlist-export.csv';
   const lines = ['ticker,name,yahoo_symbol,isin,track_hint'];
   for (const s of wl.stocks) {
-    lines.push([s.ticker, s.name, s.yahoo_symbol, s.isin || '', s.track_hint || 'A'].join(','));
+    lines.push([s.ticker, s.name, s.yahoo_symbol, s.isin || '', s.track_hint || 'A'].map(csvField).join(','));
   }
   fs.writeFileSync(target, lines.join('\n'));
   console.log('✓ Exported ' + wl.stocks.length + ' stocks → ' + target);
@@ -165,4 +213,5 @@ function main() {
       console.log('  export [path/to/file.csv]                          — Watchlist als CSV speichern');
   }
 }
-main();
+module.exports = { TICKER_RE, csvField, parseCsvLine, cmdAdd, cmdImport, cmdExport };
+if (require.main === module) main();
