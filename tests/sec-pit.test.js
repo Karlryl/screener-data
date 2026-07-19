@@ -118,4 +118,32 @@ const REVS = ['Revenues', 'RevenueFromContractWithCustomerExcludingAssessedTax',
   assert.strictEqual(s.length, 0);
 }
 
-console.log('sec-pit.test.js: alle 6 Blöcke grün');
+// (7) Q4-Ableitung + YoY-Partner (B1-Protokoll §1): FY 400 − (100+130+95) = 75 als
+//     derived-Q4 mit filed = max(Bestandteile); yoyPartner findet ~365d-Rückpartner.
+{
+  const { pitQuarterlyWithDerivedQ4, yoyPartner } = require('../lib/sec-pit.js');
+  const c2 = fixtureCompany();
+  c2.facts['us-gaap'].Revenues.units.USD.push(
+    { start: '2025-07-01', end: '2025-09-30', val: 95, filed: '2025-11-01', form: '10-Q', fy: 2025, fp: 'Q3' },
+    { start: '2025-01-01', end: '2025-12-31', val: 400, filed: '2026-02-20', form: '10-K', fy: 2025, fp: 'FY' },
+    { start: '2024-01-01', end: '2024-03-31', val: 80, filed: '2024-05-01', form: '10-Q', fy: 2024, fp: 'Q1' },
+  );
+  const full = pitQuarterlyWithDerivedQ4(c2, ['Revenues'], {});
+  const d = full.series.find((p) => p.derived);
+  assert.ok(d, 'derived Q4 existiert');
+  assert.strictEqual(d.end, '2025-12-31');
+  assert.strictEqual(d.val, 400 - (110 + 130 + 95), 'FY minus 3 diskrete (Q1 korrigiert=110)');
+  assert.strictEqual(d.filed, '2026-02-20', 'bekannt erst mit dem letzten Bestandteil');
+  // Vor dem 10-K (asOf 2026-01-01) darf das derived-Q4 NICHT existieren:
+  const early = pitQuarterlyWithDerivedQ4(c2, ['Revenues'], { asOf: '2026-01-01' });
+  assert.ok(!early.series.some((p) => p.derived), 'kein derived Q4 vor FY-Filing');
+  // yoyPartner: Q1-2025 (end 2025-03-31) -> Q1-2024 (end 2024-03-31), exakt 365d.
+  const q1 = full.series.find((p) => p.end === '2025-03-31');
+  const partner = yoyPartner(full.series, q1);
+  assert.ok(partner && partner.end === '2024-03-31', 'YoY-Partner ~365d zurück');
+  // kein Partner ausserhalb ±35d: Q3-2025 hat keinen 2024-Q3-Punkt -> null
+  const q3 = full.series.find((p) => p.end === '2025-09-30');
+  assert.strictEqual(yoyPartner(full.series, q3), null);
+}
+
+console.log('sec-pit.test.js: alle 7 Blöcke grün');
