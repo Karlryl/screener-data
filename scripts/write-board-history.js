@@ -46,13 +46,26 @@ const REPO_ROOT = path.resolve(__dirname, '..');
 // Pfade werden aus einem Base gebildet, damit Tests hermetisch gegen ein Temp-Verzeichnis
 // laufen können (L4 — keine Abhängigkeit von echten snapshots/outputs). Default = REPO_ROOT.
 function resolvePaths(base) {
+  // BH-154: ARCHIVE_DIR lag vorher IMMER unter base — für den Produktionspfad
+  // (base===REPO_ROOT) hieß das INNERHALB des Checkouts, entgegen dem eigenen
+  // Kommentar "außerhalb CI-Checkout": ein frischer actions/checkout löscht den
+  // kompletten Baum, eine dort abgelegte Archiv-Kopie wäre flüchtig (BH-103
+  // verschärft das zur Messblockade). Fix nur für den Default-Pfad: Env-Override,
+  // sonst os.tmpdir()-Unterordner — Muster wie SEC_XBRL_CACHE_DIR in
+  // scripts/build-secannual.js, der einzige im Repo bereits etablierte
+  // "außerhalb des Checkouts"-Pfad. Test-Hermetik (_setPaths(base)) bleibt
+  // unverändert base-relativ, weil board-history.test.js Check (c) das Archiv
+  // gezielt unter dem Test-Sandkasten erwartet.
+  const isDefaultBase = base === REPO_ROOT;
   return {
     FULL_DIR: path.join(base, 'outputs', 'hypergrowth', 'full'),
     CALIBRATION_FILE: path.join(base, 'outputs', 'calibration.json'),
     MACRO_REGIME_FILE: path.join(base, 'outputs', 'macro-regime.json'),
     SNAP_DIR: path.join(base, 'snapshots'),
     HISTORY_DIR: path.join(base, 'board-history'),          // GG7b: committet, Messgrundlage
-    ARCHIVE_DIR: path.join(base, 'board-history-archive'),  // GG7c: gitignored, außerhalb CI-Checkout
+    ARCHIVE_DIR: isDefaultBase                               // GG7c: gitignored, außerhalb CI-Checkout
+      ? (process.env.BOARD_HISTORY_ARCHIVE_DIR || path.join(require('os').tmpdir(), 'board-history-archive'))
+      : path.join(base, 'board-history-archive'),
     get EXCLUDED_FILE() { return path.join(this.HISTORY_DIR, '_excluded.json'); },
     get GATE_CALIB_FILE() { return path.join(this.HISTORY_DIR, '_gate-calibration.json'); },
     base,
@@ -85,6 +98,12 @@ const P99 = 0.99;
 // Viertel der Kohorte verliert ein Kontroll-Feld über Nacht = unplausibel.
 // ponytail: fixe Decke; datengetrieben nachziehen, falls Coverage real ruckelt.
 const COVERAGE_COLLAPSE_DROP = 0.25;
+// BH-111: Überlappungs-Boden gegen den Vortag. NaN/Coverage/P99-Delta wurden vorher
+// NUR auf der Schnittmenge nowMap∩priorMap gebildet — verschwinden 50–90 % der
+// Boardzeilen (Audit-Beleg), sieht die verbleibende Schnittmenge trotzdem "sauber"
+// aus. Der Boden liegt an der unteren Kante des beobachteten Bruchbereichs (schon
+// 50 % Verlust ist Bruch, nicht erst 90 %).
+const MIN_COHORT_OVERLAP = 0.5;
 // A12: Kompaktierung frühestens nach t0+2Q ≈ 180 Kalendertage (NICHT 84 — §4b/§7-Kopplung).
 const RETENTION_DAYS = 180;
 const MS_PER_DAY = 86400000;
@@ -98,6 +117,25 @@ const REGIME_MAX_STALE_DAYS = 7;
 
 // ── kleine Helfer ────────────────────────────────────────────────────────────
 function isoDay(d) { return new Date(d).toISOString().slice(0, 10); }
+
+// BH-147: --date wurde bisher jeder String verbatim übernommen und direkt in
+// path.join(HISTORY_DIR, date) verwendet — weder Format- noch Zukunfts- noch
+// Pfadprüfung. Das Format-Regex schließt einen Pfad-Escape ('../foo') strukturell
+// aus (kann nie auf YYYY-MM-DD passen); der resolved-path-Guard in run() ist
+// zusätzliche Absicherung an der Schreib-Grenze.
+function isValidDateStr(d) { return typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d); }
+
+// BH-147: reine Entscheidungsfunktion (hermetisch testbar ohne CLI-Subprozess).
+// Ein --date, das vom heutigen Tag abweicht, ist im Live-Betrieb (daily-pull.yml
+// läuft OHNE --date) immer manueller Operator-Eingriff — Audit-Risiko "manueller
+// Operator-Fehlgebrauch der committeten PIT-Messreihe". --allow-backfill ist der
+// explizite Vertrag dafür; --dry-run schreibt nichts und braucht keinen Vertrag.
+// Gilt NUR an der CLI-Grenze (require.main===module) — run()/Tests rufen die
+// interne API direkt und bewusst mit beliebigem --date auf (Backfill-Fixtures,
+// L4-Hermetik), das ist kein Operator-Fehlgebrauch.
+function requiresBackfillContract(date, allowBackfill, dryRun) {
+  return !!date && date !== isoDay(Date.now()) && !allowBackfill && !dryRun;
+}
 
 function assertNoPicksHistory(p) {
   // audit/fix: GG-Schutzliste — kein Ausgabepfad darf je picks-history berühren.
@@ -192,6 +230,16 @@ function buildPit(snap, pitGaps) {
     revenueQEnds: revEnds,
     grossProfitQ: seriesValues(ts.grossProfitQ),
     grossProfitQEnds: gpEnds,
+    // BH-108: revenueQ/grossProfitQ werden bei JEDEM pull-yahoo-Abruf mit dem dann
+    // aktuellen FX-Faktor neu in USD umgerechnet (live belegt: identische Periode
+    // driftet über Vintages ohne neue Unternehmensperiode). Ohne Provenienz kann
+    // niemand nachträglich zwischen echtem Umsatzdelta und Abruf-FX-Bewegung
+    // unterscheiden. pull-yahoo.js schreibt reportingCurrencyOriginal/fxRateApplied
+    // bereits (Tag 134/148ff) — hier nur additiv PIT-gefroren, kein neuer Fetch.
+    // Konsum (Delivery-IC auf konsistenter FX-Basis) ist Sache von rank-ic.js, nicht
+    // dieses Writers.
+    reportingCurrencyOriginal: (typeof meta.reportingCurrencyOriginal === 'string' && meta.reportingCurrencyOriginal) || null,
+    fxRateApplied: Number.isFinite(meta.fxRateApplied) ? meta.fxRateApplied : null,
     // 6.2-E1 Option B (Court 2026-07-17, PASS_MIT_AUFLAGEN, Auflage 4): echtes Price/Sales
     // MIT eigener Bewertungs-asOf ab heute additiv in die committete Historie schreiben —
     // startet die 12-Monats-Eigenhistorie-Uhr. Rein additiv (kein neuer Fetch: metrics.priceSales
@@ -204,8 +252,21 @@ function buildPit(snap, pitGaps) {
   };
 }
 
+// BH-109: juengstes Ende einer Enden-Serie als ms-Timestamp (oder null). Serien
+// sind [ISO-Datum|null, ...] — Reihenfolge nicht vorausgesetzt, es zaehlt das Max.
+function latestEndMs(ends) {
+  if (!Array.isArray(ends)) return null;
+  let latest = null;
+  for (const e of ends) {
+    if (typeof e !== 'string') continue;
+    const t = Date.parse(e + 'T00:00:00Z');
+    if (Number.isFinite(t) && (latest == null || t > latest)) latest = t;
+  }
+  return latest;
+}
+
 // pitCoverage: Anteil present je Kontroll-Feld über die Kohorte (A9-Attenuations-Ausweis).
-function pitCoverageBlock(rows) {
+function pitCoverageBlock(rows, date) {
   const fields = ['beta', 'evSales', 'priceGrossProfit', 'revenueQEnds', 'grossProfitQEnds'];
   const cov = {};
   const n = rows.length || 1;
@@ -213,6 +274,26 @@ function pitCoverageBlock(rows) {
     let present = 0;
     for (const r of rows) if (r.pit && r.pit[f] != null) present++;
     cov[f] = present / n;
+  }
+  // BH-109: "present" oben zaehlt jedes Enden-Array mit MINDESTENS einem gueltigen
+  // Datum, auch wenn das juengste Ende Jahre alt ist (Audit-Beleg 18.07.2026: 26/205
+  // present-Zeilen mit juengstem Ende >1 Jahr alt — u. a. MKS.L 2023-03-31, SBRY.L
+  // 2011-06-30). Additive Fresh-Metrik: nur Zeilen, deren juengstes Ende innerhalb
+  // RETENTION_DAYS (~2Q, dieselbe A12-Konstante) vor dem Vintage-Datum liegt, gelten
+  // als fuer den +2Q-Delivery-Vergleich tatsaechlich nutzbar. Bestehende *Ends-Felder
+  // bleiben unveraendert (Bestandsleser/Tests).
+  if (date) {
+    const vintageMs = Date.parse(date + 'T00:00:00Z');
+    if (Number.isFinite(vintageMs)) {
+      for (const f of ['revenueQEnds', 'grossProfitQEnds']) {
+        let fresh = 0;
+        for (const r of rows) {
+          const latest = latestEndMs(r.pit && r.pit[f]);
+          if (latest != null && (vintageMs - latest) <= RETENTION_DAYS * MS_PER_DAY) fresh++;
+        }
+        cov[f + 'Fresh'] = fresh / n;
+      }
+    }
   }
   return cov;
 }
@@ -244,9 +325,19 @@ function buildBoardVintage(board, boardData, date, calibMeta) {
     board,
     boardStatus: boardStatus(board),           // core|diagnostic (src/scoring/board-status.js)
     formulaVersion: calibMeta.formulaVersion,  // Proxy: calibration.schema (siehe Kopf-Doku)
+    // BH-105: formulaVersion haengt an calibration.schema und blieb ueber mehrfache
+    // Scoring-Aenderungen (Tags 323, 334-340) konstant "calibration/v4" — kein
+    // unveraenderlicher Formel-Marker. GITHUB_SHA ist der commit, der die Vintage-
+    // Zeile TATSAECHLICH erzeugt hat; in der CI (daily-pull.yml, der einzige Ort,
+    // der committete Messreihen erzeugt) automatisch gesetzt. Additiv, formulaVersion
+    // bleibt fuer Bestandsleser unveraendert.
+    // ponytail: kein git-rev-parse-Fallback fuer lokale Ad-hoc-Laeufe — die reale
+    // Messreihe entsteht ausschliesslich in CI. Fallback nachziehen, falls lokale
+    // Vintages je in rank-ic einfliessen sollen.
+    formulaCommit: process.env.GITHUB_SHA || null,
     calibrationGeneratedAt: calibMeta.generatedAt,
     cohortCount: { profitable: profitable.length, unprofitable: unprofitable.length },
-    pitCoverage: pitCoverageBlock(allRows),
+    pitCoverage: pitCoverageBlock(allRows, date),
     pitGaps: Array.from(pitGaps).sort(),
     // gate wird nach der Gate-Auswertung befüllt (calibrating/threshold/suspect/...)
     gate: null,
@@ -268,10 +359,22 @@ function evaluateGate(vintage, priorVintage, gateState) {
     return m;
   };
   const nowMap = rowsByTicker(vintage);
+  const priorMap = rowsByTicker(priorVintage);
+
+  // BH-111: absolute Mindestgröße + Überlappungs-Boden GEGEN DIE VOLLEN Ticker-Sets
+  // (vor jeder Schnittmengen-Bildung) — NaN/Coverage/P99-Delta unten werden NUR auf
+  // nowMap∩priorMap gebildet, sodass ein fast leerer Volloutput trotzdem "sauber"
+  // aussehen kann (Audit-Beleg: 50–90 % Boardzeilen-Verlust blieb unauffällig). Ein
+  // leeres Board (0 Zeilen) ist unabhängig von jeder Schnittmenge ein Datenbruch.
+  if (nowMap.size === 0) reasons.push('cohort-empty');
+  if (priorVintage && priorMap.size > 0) {
+    let matched = 0;
+    for (const tk of nowMap.keys()) if (priorMap.has(tk)) matched++;
+    if (matched / priorMap.size < MIN_COHORT_OVERLAP) reasons.push('cohort-overlap-collapse');
+  }
 
   // Harter Integritäts-Check: NaN/null-Score wo vorher ein Wert stand (immer suspect,
   // auch in der Kalibrierphase — kein Threshold-Thema, sondern Datenbruch).
-  const priorMap = rowsByTicker(priorVintage);
   let nanBreak = false;
   for (const [tk, r] of nowMap) {
     const p = priorMap.get(tk);
@@ -434,12 +537,34 @@ function regimeForDate(date) {
   return { date, label: isObj ? entry.regime : entry, price: isObj ? entry.price : undefined, sma200: isObj ? entry.sma200 : undefined, source: 'macro-regime.json', asOf: keyDate };
 }
 
+// BH-155: folgt sameAs-Verweisen rückwärts bis zur echten Vollkopie der
+// Kalibrierung (Dedup-Kette). Deckel = RETENTION_DAYS (wiederverwendete Konstante,
+// kein neuer Magic-Wert) als reine Bremse gegen korrupte/zyklische Verweise.
+function resolveFullCalibration(date) {
+  let d = date;
+  for (let hops = 0; hops < RETENTION_DAYS; hops++) {
+    const v = readJsonOrNull(path.join(P.HISTORY_DIR, d, 'calibration.json'));
+    if (!v) return null;
+    if (v.sameAs) { d = v.sameAs; continue; }
+    return { date: d, json: JSON.stringify(v) };
+  }
+  return null;
+}
+
 // ── Hauptlauf ────────────────────────────────────────────────────────────────
 function run(opts) {
   opts = opts || {};
   if (opts.baseDir) _setPaths(opts.baseDir);   // Test-Hermetik (L4); Default bleibt REPO_ROOT
   const date = opts.date || isoDay(Date.now());
   const dryRun = !!opts.dryRun;
+
+  // BH-147: Format- + Zukunfts-Guard gilt für JEDEN Aufrufer (auch --compact nutzt
+  // date als Cutoff-Referenz). Das Format-Regex schließt einen Pfad-Escape strukturell
+  // aus; die "Backfill-Vertrag"-Regel (--allow-backfill) ist eine CLI-Grenze und lebt
+  // bewusst NICHT hier — run() ist die interne API, die Tests/andere Skripte mit
+  // beliebigem historischem --date aufrufen dürfen.
+  if (!isValidDateStr(date)) throw new Error('write-board-history: invalid --date (expected YYYY-MM-DD): ' + date);
+  if (date > isoDay(Date.now())) throw new Error('write-board-history: --date is in the future: ' + date);
 
   if (opts.compact) {
     const res = compact(date, dryRun);
@@ -459,6 +584,14 @@ function run(opts) {
   const gateCalib = readJsonOrNull(P.GATE_CALIB_FILE) || { _doc: 'Gate-Kalibrierung je Board: erste 3 messbare P99-Tagesdeltas → Schwelle P99×2 eingefroren.', boards: {} };
   const priorDate = priorVintageDate(date);
   const dateDir = path.join(P.HISTORY_DIR, date);
+  // BH-147: Defense-in-depth — der resolved Pfad muss unter HISTORY_DIR bleiben.
+  // Das Format-Regex oben schließt einen Escape bereits strukturell aus; dieser
+  // Guard fängt jede künftige Aufweichung der Regex an der Schreib-Grenze selbst ab.
+  const resolvedDateDir = path.resolve(dateDir);
+  const resolvedHistoryDir = path.resolve(P.HISTORY_DIR);
+  if (resolvedDateDir !== resolvedHistoryDir && !resolvedDateDir.startsWith(resolvedHistoryDir + path.sep)) {
+    throw new Error('write-board-history: resolved date dir escapes HISTORY_DIR: ' + resolvedDateDir);
+  }
 
   const results = [];
   let anySuspect = false;
@@ -477,7 +610,11 @@ function run(opts) {
     const gate = evaluateGate(vintage, priorVintage, gateCalib.boards[board]);
     // Kalibrier-Sample nachziehen (frozen erst NACH Auswertung, damit die aktuelle
     // Auswertung noch in der Kalibrierphase mit calibrating:true läuft).
-    const gs = updateGateCalibration(gateCalib, board, gate.p99Delta, date);
+    // BH-111: ein bereits als suspect erkannter Tag darf die eingefrorene Schwelle
+    // NICHT mitziehen — sonst kalibriert genau der Datenbruch, den das Gate fangen
+    // soll, das Gate selbst hoch. suspect-Tage liefern daher kein Sample (null statt
+    // p99Delta); die Kalibrierung sammelt einfach weiter, bis ein sauberer Tag kommt.
+    const gs = updateGateCalibration(gateCalib, board, gate.suspect ? null : gate.p99Delta, date);
     vintage.gate = {
       calibrating: gate.calibrating,
       p99Delta: gate.p99Delta,
@@ -498,7 +635,22 @@ function run(opts) {
   // Seiten-Artefakte je Datum: calibration.json-Kopie + regime.json.
   if (!dryRun) {
     fs.mkdirSync(dateDir, { recursive: true });
-    if (calib) writeJsonAtomic(assertNoPicksHistory(path.join(dateDir, 'calibration.json')), calib);
+    if (calib) {
+      // BH-155: calibration.json wurde bisher JEDEN Tag voll kopiert (~0,8 MB, Stand
+      // 18.07.2026), obwohl sich die Kalibrierung oft tagelang nicht ändert; compact()
+      // überspringt Sidecars ausdrücklich (F9) UND läuft in Produktion nie (BH-153) —
+      // Kompaktierung allein löst das Wachstum also nicht, der Fix muss am
+      // Schreib-Zeitpunkt selbst ansetzen. Dedup gegen die letzte VOLLE Kopie (Kette
+      // folgt sameAs-Verweise zurück); bei Byte-Gleichheit nur ein kleiner Verweis.
+      const prevFull = priorDate ? resolveFullCalibration(priorDate) : null;
+      const calibJson = JSON.stringify(calib);
+      if (prevFull && prevFull.json === calibJson) {
+        writeJsonAtomic(assertNoPicksHistory(path.join(dateDir, 'calibration.json')),
+          { sameAs: prevFull.date, _doc: 'BH-155-Dedup: unveraendert seit sameAs; volle Kopie dort.' });
+      } else {
+        writeJsonAtomic(assertNoPicksHistory(path.join(dateDir, 'calibration.json')), calib);
+      }
+    }
     writeJsonAtomic(assertNoPicksHistory(path.join(dateDir, 'regime.json')), regimeForDate(date));
     writeJsonAtomic(assertNoPicksHistory(P.GATE_CALIB_FILE), gateCalib);
   }
@@ -508,11 +660,12 @@ function run(opts) {
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
 function parseArgs(argv) {
-  const o = { dryRun: false, compact: false, date: null };
+  const o = { dryRun: false, compact: false, date: null, allowBackfill: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--dry-run') o.dryRun = true;
     else if (a === '--compact') o.compact = true;
+    else if (a === '--allow-backfill') o.allowBackfill = true;   // BH-147: expliziter Operator-Vertrag
     else if (a === '--date') o.date = argv[++i];
     else if (a.startsWith('--date=')) o.date = a.slice(7);
   }
@@ -522,6 +675,14 @@ function parseArgs(argv) {
 if (require.main === module) {
   try {
     const opts = parseArgs(process.argv.slice(2));
+    // BH-147: manuelles --date-Backfill ist Operator-Risiko (Audit: "manueller
+    // Operator-Fehlgebrauch der committeten PIT-Messreihe"). CI läuft ohne --date
+    // (daily-pull.yml). Ein von heute abweichendes Datum verlangt daher explizit
+    // --allow-backfill; ohne den Vertrag bricht die CLI VOR jedem Schreibzugriff.
+    if (requiresBackfillContract(opts.date, opts.allowBackfill, opts.dryRun)) {
+      console.error('write-board-history: --date ' + opts.date + ' weicht vom heutigen Tag ab — erfordert --allow-backfill (Operator-Vertrag, BH-147).');
+      process.exit(1);
+    }
     const res = run(opts);
     const tag = res.dryRun ? '[dry-run] ' : '';
     if (res.mode === 'compact') {
@@ -551,5 +712,6 @@ module.exports = {
   quantile, assertNoPicksHistory, buildPit,
   _setPaths, resolvePaths,
   flooredThreshold, frozenThresholdOf,
-  _const: { CALIBRATION_SAMPLES, THRESHOLD_MULTIPLIER, MIN_GATE_THRESHOLD, COVERAGE_COLLAPSE_DROP, RETENTION_DAYS },
+  isValidDateStr, requiresBackfillContract, resolveFullCalibration,   // BH-147/BH-155
+  _const: { CALIBRATION_SAMPLES, THRESHOLD_MULTIPLIER, MIN_GATE_THRESHOLD, COVERAGE_COLLAPSE_DROP, RETENTION_DAYS, MIN_COHORT_OVERLAP },
 };
