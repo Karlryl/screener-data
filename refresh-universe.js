@@ -80,9 +80,15 @@ const { prefilterByMcap, toUsd } = require('./discovery/mcap-prefilter.js');
 // Bug 4: Yahoo liefert q.marketCap in der LISTING-Waehrung. Das $1B/$500B-Gate ist in USD
 // definiert -> vor dem Vergleich mit toUsd() (fx-rates.json) konvertieren, sonst verschiebt
 // der FX-Faktor das Fenster (JP akzeptiert ~$6M-$3B, KR ~$0.65M-$327M).
+// BH-041: a missing/corrupt fx-rates.json used to fall back to {USD:1} — every non-USD
+// marketCap then converts to null (toUsd), and downstream code conflated "unpriceable"
+// with "priced and below threshold", deleting rows that were never actually evaluated.
+// Track the load failure here; main() aborts on it before any data work instead of
+// silently mispricing (or mass-deleting) every non-USD row.
+let _fxRatesLoadFailed = false;
 const _FX_RATES = (() => {
   try { return (JSON.parse(fs.readFileSync(path.join(__dirname, 'fx-rates.json'), 'utf8')).rates) || { USD: 1 }; }
-  catch (_) { return { USD: 1 }; }
+  catch (_) { _fxRatesLoadFailed = true; return { USD: 1 }; }
 })();
 // Map each foreign adapter's emitted source string onto a canonical foreign token. Used by (a) the
 // mcap-prefilter to identify foreign null-mcap rows and (b) the cap block's FOREIGN_SOURCES fallback
@@ -105,6 +111,27 @@ function parseArgs(argv) {
   }
   if (!args.out) args.out = args.watchlist;
   return args;
+}
+
+// BH-193: numeric env-var parser with fail-closed validation. Plain parseInt/parseFloat
+// silently produces NaN (typo, e.g. MAX_UNIVERSE=foo) or a truncated number (silent
+// truncation, e.g. '25o00' -> 25) on an operator mistake; every downstream numeric
+// comparison against NaN evaluates false, so the floor/cap/gate it was meant to enforce
+// just switches itself off instead of erroring. Number() (not parseInt) rejects the
+// truncation case too. Aborts loud (::error:: + process.exit) instead of running with an
+// unvalidated threshold.
+function numEnv(name, defaultVal, opts) {
+  opts = opts || {};
+  const raw = process.env[name];
+  if (raw == null || raw === '') return defaultVal;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || (opts.min != null && n < opts.min) || (opts.max != null && n > opts.max)) {
+    console.error('::error::Ungueltiger Wert fuer ' + name + '="' + raw + '" (erwartet endliche Zahl' +
+      (opts.min != null ? ' >= ' + opts.min : '') + (opts.max != null ? ' <= ' + opts.max : '') +
+      '). Abbruch vor jeder Datenarbeit statt stillem NaN-Deaktivieren des Gates.');
+    process.exit(1);
+  }
+  return n;
 }
 
 // Yahoo-vordefinierte Screener (geographisch/thematisch breit)
@@ -215,6 +242,21 @@ function _looksUS(exchange, source) {
   if (src && _US_SOURCES.has(src)) return true;
   return false;
 }
+// BH-039: SCREENER_IDS deliberately includes fund/bond buckets (solid_large_growth_funds,
+// solid_midcap_growth_funds, conservative_foreign_funds, high_yield_bond) whose results are
+// ETF/MUTUALFUND/BOND rows, not equities — this is an equity universe. The exchange-code
+// screener has no security-type constraint of its own either. Fail-open on a missing field
+// (bulk screener responses aren't guaranteed to carry it) but reject an explicit non-EQUITY
+// type, mirroring the R1 rule in scripts/probe-smallcap-coverage.js. Shared by both intake
+// loops so the policy lives in one place.
+function _isNonEquityQuote(q) {
+  return !!(q && q.quoteType && q.quoteType !== 'EQUITY');
+}
+// BH-038: yahoo-finance2 v3.14's screener() schema accepts only {scrIds}; the query-based
+// exchange-screener call throws this message deterministically, before any network I/O, on
+// every single exchange — a permanent config incompatibility, not a transient per-exchange
+// outage. Named/exported so the classification itself is unit-testable.
+const EXCHANGE_SCREENER_SCHEMA_ERROR_RE = /invalid options|invalidoptions|additionalproperties|scrids/i;
 // audit/fix: class-share suffix is restricted to A/B/C — the real Yahoo class-share
 // letters present in the live universe (BRK-A, BRK-B, BF-A, CIG-C). It deliberately
 // EXCLUDES '.V': on NASDAQ-Trader '.V' is a when-issued / rights artifact (FDX.V,
@@ -356,7 +398,7 @@ function applyDeadRegistryAndCap(allTickers, deadRegistry, MAX_UNIVERSE) {
       if (!v || !v.source) return false;
       return String(v.source).split(',').some(s => FOREIGN_SOURCES.has(s.trim()));
     };
-    const FOREIGN_SUBQUOTA = parseInt(process.env.FOREIGN_NULLMCAP_SLOTS || '2000', 10);
+    const FOREIGN_SUBQUOTA = numEnv('FOREIGN_NULLMCAP_SLOTS', 2000, { min: 0 }); // BH-193
     // Stable sort: decorate with original index, foreign-first, index tiebreak.
     const decorated = withoutMcap.map((e, i) => ({ e, i, f: isForeign(e) ? 0 : 1 }));
     decorated.sort((a, b) => (a.f - b.f) || (a.i - b.i));
@@ -390,10 +432,38 @@ function applyDeadRegistryAndCap(allTickers, deadRegistry, MAX_UNIVERSE) {
   return deadCandidatesBlocked;
 }
 
+// BH-040: applyDeadRegistryAndCap() only caps the raw discovery candidate map; existing
+// watchlist rows never go through any cap at all, so the persisted union(existing,
+// newTickers) could grow past MAX_UNIVERSE over time (only prune-watchlist ever shrinks
+// it). Existing rows carry no marketCap (pull-yahoo.js fetches that separately and never
+// writes it back into watchlist.json), so they can't be mcap-ranked for eviction without
+// inventing a policy for data we don't have — instead cap ADMISSION of new tickers to the
+// remaining MAX_UNIVERSE budget, reusing the exact same mcap/foreign-slot priority the
+// candidate cap already applies. Pure function (list in, list out) — unit-testable
+// without main()'s network/file flow.
+function capNewTickerAdmission(newTickers, existingSize, maxUniverse) {
+  const remainingBudget = maxUniverse - existingSize;
+  if (newTickers.length <= remainingBudget) return newTickers;
+  const budgetMap = new Map(newTickers.map(info => [info.ticker, info]));
+  applyDeadRegistryAndCap(budgetMap, {}, Math.max(remainingBudget, 0));
+  return newTickers.filter(info => budgetMap.has(info.ticker));
+}
+
 async function main() {
   const args = parseArgs(process.argv);
   console.log('Auto-Universe-Refresh');
   console.log('  watchlist: ' + args.watchlist);
+
+  // BH-041: fail-closed on a missing/corrupt fx-rates.json instead of silently running
+  // with the {USD:1} fallback (mis-converts every non-USD row and, downstream, gets
+  // misread as "priced and below $2B" — deleting Auslandszeilen that were never actually
+  // evaluated). Abort before any screener pull / file write.
+  if (_fxRatesLoadFailed) {
+    console.error('::error::fx-rates.json fehlt oder ist nicht lesbar/parsebar — Nicht-USD-Marktkapitalisierungen ' +
+      'wuerden faelschlich als USD (Faktor 1.0) behandelt und Auslandszeilen faelschlich als "< $2B" verworfen. ' +
+      'Abbruch vor jeder Datenarbeit statt stillem {USD:1}-Fallback.');
+    process.exit(1);
+  }
 
   const wlRaw = JSON.parse(fs.readFileSync(args.watchlist, 'utf8'));
   // audit F-A-2026-06-21: a single watchlist row with a null/undefined ticker
@@ -416,11 +486,20 @@ async function main() {
   // Tag 116: Mcap-Range gesenkt auf $1B (mehr Mid-Cap-Coverage), max bleibt $500B
   console.log('\nPulling Yahoo Screener-Buckets (Multi-Region)...');
   const allTickers = new Map(); // ticker -> {marketCap, name, sector, exchange}
+  // BH-100: this predefined-bucket channel (13 SCREENER_IDS x 25 REGIONS) had no
+  // success/failure aggregate at all — fetchScreener() already logs individual
+  // failures, but a channel-wide collapse (every bucket empty) produced no signal
+  // distinguishable from a normal day where these buckets mostly overlap with other
+  // sources. Track it the same way exchangeStats/discoveryYield already do below.
+  let predefinedAttempted = 0, predefinedNonEmpty = 0, predefinedTotalQuotes = 0;
   for (const region of REGIONS) {
     console.log('  --- Region: ' + region + ' ---');
     for (const id of SCREENER_IDS) {
       const quotes = await fetchScreener(id, region);
+      predefinedAttempted++;
       if (quotes.length === 0) continue;
+      predefinedNonEmpty++;
+      predefinedTotalQuotes += quotes.length;
       let kept = 0;
       for (const q of quotes) {
         if (!q || !q.symbol) continue;
@@ -434,6 +513,9 @@ async function main() {
         if (/[$]/.test(sym)) continue;        // preferred-stock variants
         if (/[/\\\s]/.test(sym)) continue;    // path-separators or whitespace = corrupt
         if (sym.length > 12) continue;        // longer than any real ticker — likely a name
+        // BH-039: reject explicit non-equity rows (fund/bond screener buckets). See
+        // _isNonEquityQuote() above for the rationale.
+        if (_isNonEquityQuote(q)) continue;
         // Bug 4: q.marketCap ist in q.currency (Listing-Waehrung), das Gate in USD.
         // Nach USD konvertieren, gegen $1B/$500B pruefen und den USD-Wert speichern.
         const mcap = toUsd(q.marketCap, q.currency, _FX_RATES);
@@ -461,6 +543,18 @@ async function main() {
       await _sleep(300);
     }
   }
+  console.log('  Predefined-Buckets: ' + predefinedNonEmpty + '/' + predefinedAttempted +
+    ' nicht-leer, ' + predefinedTotalQuotes + ' Quotes gesamt.');
+  if (predefinedNonEmpty === 0) {
+    // BH-100: total collapse of this channel — surface it, but don't abort. It's
+    // redundant coverage (EXCHANGE_CODES + the discovery adapters cover the same ground),
+    // so a collapse here alone isn't result-corrupting; MIN_DISCOVERY_CANDIDATES below
+    // still gates a genuine systemic outage.
+    console.error('::error::Predefined-Screener-Kanal (SCREENER_IDS x REGIONS) liefert 0 nicht-leere ' +
+      'Buckets ueber ' + predefinedAttempted + ' Aufrufe — moeglicher Yahoo-Schema-Bruch/Totalausfall ' +
+      'dieses Kanals. Kein Prozess-Abbruch (redundant zu Custom-Exchange-Screener und Discovery-Adaptern), ' +
+      'aber sichtbar gemacht statt still.');
+  }
 
   // Tag 131: Custom Exchange-Screener (paginiert) — zusätzlich zu predefined Screener-Buckets.
   // Ziel: 10k+ Stocks statt ~3500.
@@ -472,7 +566,16 @@ async function main() {
   // breakage. Without this, a 429 or schema break on one exchange just made
   // the exchange disappear with zero diagnostic.
   const exchangeStats = {};
+  // BH-038: this is a permanent yahoo-finance2 v3.14 schema incompatibility, not a
+  // transient per-exchange failure — every exchange will throw the identical error (see
+  // Bug-3 comment below). The channel used to process.exit(1) HERE, before the country
+  // adapters and the watchlist write (further down in main()) ever ran, freezing the
+  // ENTIRE universe refresh on one broken (and redundant — see BH-100 above) channel.
+  // Fail loud but let the rest of main() run: mark the channel fatal, stop retrying it,
+  // and flip the eventual process exit code without aborting execution.
+  let exchangeScreenerFatal = false;
   for (const exch of EXCHANGE_CODES) {
+    if (exchangeScreenerFatal) break;
     let offset = 0;
     let pageEmpty = false;
     let pageErrors = 0;
@@ -485,13 +588,17 @@ async function main() {
         // (additionalProperties verboten). Der {query,offset,sortField,sortType}-Call
         // wirft deterministisch VOR jedem Netzwerk-Zugriff 'called with invalid options'
         // -> alle 29 Boersen liefern still 0. Das ist ein permanenter Konfig-Fehler, kein
-        // transienter Ausfall: fail-loud (::error:: + exit 1) statt 29x still zu ueberspringen.
-        if (/invalid options|invalidoptions|additionalproperties|scrids/i.test(error)) {
+        // transienter Ausfall: fail-loud (::error:: + non-zero exit code), aber ohne den
+        // Rest von main() (Laenderadapter, Watchlist-Write) zu blockieren (BH-038).
+        if (EXCHANGE_SCREENER_SCHEMA_ERROR_RE.test(error)) {
           console.error('::error::Custom-Exchange-Screener ist mit yahoo-finance2 (v3.14) inkompatibel — ' +
             'screener() akzeptiert nur scrIds, der query-basierte Exchange-Call wirft "' + error + '". ' +
             'Der gesamte Exchange-Kanal (' + EXCHANGE_CODES.length + ' Boersen) liefert 0. ' +
             'Fix: query-Form auf einen v3.14-kompatiblen HTTP-Call umbauen oder Library-Version anpassen.');
-          process.exit(1);
+          exchangeScreenerFatal = true;
+          process.exitCode = 1;
+          pageEmpty = true;
+          break;
         }
         pageErrors++;
         console.warn('  [' + exch + ' offset=' + offset + '] FAIL: ' + error);
@@ -510,6 +617,8 @@ async function main() {
         if (/[$]/.test(sym)) continue;
         if (/[/\\\s]/.test(sym)) continue;
         if (sym.length > 12) continue;
+        // BH-039: reject explicit non-equity rows. See _isNonEquityQuote() above.
+        if (_isNonEquityQuote(q)) continue;
         // Bug 4: USD-konvertieren vor dem Gate (MIN/MAX_MCAP_CUSTOM sind USD-Schwellen).
         const mcap = toUsd(q.marketCap, q.currency, _FX_RATES);
         if (!mcap || mcap < MIN_MCAP_CUSTOM || mcap > MAX_MCAP_CUSTOM) continue;
@@ -731,8 +840,8 @@ async function main() {
   // exit(1) is intentional even though the CI step is continue-on-error: it won't abort
   // the daily pull, but it flips the step to FAILED and writes a ::error:: annotation —
   // turning a silent green into a visible degraded-discovery signal in the run log.
-  const MIN_NONEMPTY_SOURCES = parseInt(process.env.MIN_DISCOVERY_SOURCES || '2', 10);
-  const MIN_DISCOVERY_CANDIDATES = parseInt(process.env.MIN_DISCOVERY_CANDIDATES || '1000', 10);
+  const MIN_NONEMPTY_SOURCES = numEnv('MIN_DISCOVERY_SOURCES', 2, { min: 0 }); // BH-193
+  const MIN_DISCOVERY_CANDIDATES = numEnv('MIN_DISCOVERY_CANDIDATES', 1000, { min: 0 }); // BH-193
   if (nonEmptySources < MIN_NONEMPTY_SOURCES || totalDiscoveryCandidates < MIN_DISCOVERY_CANDIDATES) {
     console.error('::error::Degraded discovery — only ' + nonEmptySources + '/' +
       DISCOVERY_SOURCE_NAMES.length + ' sources returned data (' + totalDiscoveryCandidates +
@@ -780,6 +889,15 @@ async function main() {
         // Bug 16: nur verwerfen, wenn Yahoo GEANTWORTET hat und < $2B ist. Ein 429/Netzfehler
         // (Symbol nicht in 'answered') darf die Zeile NICHT loeschen -> null-mcap belassen, damit
         // der Foreign-Slot-Schutz unten greift (kein stiller Verlust ganzer Batches).
+        // BH-041 (OFFEN, nicht durch den fail-closed-Guard oben abgedeckt): 'answered' heisst
+        // nur "Yahoo hat eine Quote geliefert", NICHT "die Zeile war bepreisbar". Fehlt in einer
+        // sonst validen fx-rates.json nur EINE Waehrung (partielle Degradation statt Totalausfall),
+        // liefert toUsd() innerhalb prefilterByMcap() fuer genau diese Zeilen still null -> sie
+        // landen in 'answered' aber nie in 'kept' und werden hier faelschlich wie "geprueft und
+        // < $2B" geloescht. Echter Fix braucht eine dritte Rueckgabe aus discovery/mcap-prefilter.js
+        // (z.B. 'priced': Set der Symbole mit finitem toUsd()-Ergebnis), um "beantwortet & unbepreisbar"
+        // von "beantwortet & unter Schwelle" zu trennen — mcap-prefilter.js ist nicht Teil dieses
+        // Batches (b05-universe fasst nur refresh-universe.js), daher hier nur dokumentiert statt gefixt.
         else if (answered.has(eff)) allTickers.delete(eff); // beantwortet und < $2B: verwerfen
         // sonst: unbeantwortet -> null-mcap belassen (Slot-Schutz)
       }
@@ -789,7 +907,7 @@ async function main() {
   // MAX_UNIVERSE: mit der Vorpruefung bleibt das Universum $2B+-schlank (US ~15,7k + Ausland-$2B ~4k +
   // Wachstum); 30000 gibt reichlich Headroom. Env-tunbar. Die Foreign-First-Slot-Quote unten schuetzt
   // etwaige nicht-bepreiste Rest-Null-mcap-Auslandszeilen (Netzwerk-Miss der Vorpruefung).
-  const MAX_UNIVERSE = parseInt(process.env.MAX_UNIVERSE || '30000', 10);
+  const MAX_UNIVERSE = numEnv('MAX_UNIVERSE', 30000, { min: 1 }); // BH-193
 
   // Task 0.12 (Fail-Ticker-Klassifizierung): belegt-tote Ticker sind in
   // data-health/dead-tickers.json registriert (Klasse + Beleg-Verfahren im
@@ -813,11 +931,21 @@ async function main() {
   console.log('Distinct candidates after all sources: ' + allTickers.size + ' (target: 12000+)');
 
   // 3. Identify new tickers
-  const newTickers = [];
+  let newTickers = [];
   for (const [sym, info] of allTickers) {
     if (!existing.has(sym)) newTickers.push(info);
   }
   console.log(`\nNew tickers: ${newTickers.length} (already-in: ${allTickers.size - newTickers.length})`);
+
+  // BH-040: final persistence cap — see capNewTickerAdmission() above for the rationale.
+  {
+    const beforeBudgetCap = newTickers.length;
+    newTickers = capNewTickerAdmission(newTickers, existing.size, MAX_UNIVERSE);
+    if (newTickers.length !== beforeBudgetCap) {
+      console.log(`  Persistence-Cap: ${beforeBudgetCap} -> ${newTickers.length} neue Ticker admittiert ` +
+        `(MAX_UNIVERSE=${MAX_UNIVERSE}, bestehend=${existing.size}).`);
+    }
+  }
 
   // audit/fix (A2 2026-06-26): do NOT early-return here on newTickers===0. The in-place
   // class-share repair below (the dot->dash fix for the ~24 BRK.A/BF.A/HEI.A-style rows that
@@ -1012,6 +1140,11 @@ async function main() {
 // audit/fix: export the class-share normalizer helpers so they can be unit-tested
 // in isolation against the live watchlist (the require() below executes only the
 // definitions, never main(), because main() is gated on require.main === module).
-module.exports = { toYahooClassShare, _looksUS, dedupKey, applyDeadRegistryAndCap };
+// numEnv/capNewTickerAdmission/_isNonEquityQuote/EXCHANGE_SCREENER_SCHEMA_ERROR_RE added
+// for BH-193/BH-040/BH-039/BH-038 test coverage.
+module.exports = {
+  toYahooClassShare, _looksUS, dedupKey, applyDeadRegistryAndCap,
+  numEnv, capNewTickerAdmission, _isNonEquityQuote, EXCHANGE_SCREENER_SCHEMA_ERROR_RE
+};
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
