@@ -33,10 +33,15 @@ const tickerOf = (s) => (s && s.meta && s.meta.ticker) || (s && s.identifier && 
 const cmpTicker = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
 
 // --- Issuer-Dedup-Helfer (Modulebene, damit calibrate.js dieselben Gates spiegelt) ---
-// Normalisierter Emittenten-Schluessel (meta.name); null wenn kein Name.
-const issuerKey = (s) => {
+// Anzeigename behält die Schreibweise, normalisiert aber Rand-/Mehrfach-Whitespace.
+const issuerName = (s) => {
   const n = s && s.meta && s.meta.name;
-  return (typeof n === 'string' && n.trim()) ? n.toLowerCase().replace(/\s+/g, ' ').trim() : null;
+  return (typeof n === 'string' && n.trim()) ? n.replace(/\s+/g, ' ').trim() : null;
+};
+// Dedup bleibt case-insensitive; dieselbe Normalisierung speist nun auch das Exportfeld.
+const issuerKey = (s) => {
+  const n = issuerName(s);
+  return n ? n.toLowerCase() : null;
 };
 const mcapOf = (s) => (s && s.marketCap && Number.isFinite(s.marketCap.value)) ? s.marketCap.value : 0;
 // audit/fix (Court Fall 10, F50): ein dual-non-USD-Bein, dessen marketCap mit dem REPORTING- statt
@@ -886,6 +891,7 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
     // Output-Zeile -> Voraussetzung fuer Karls Laenderfilter + Sektor-Tabs + mcap-Spalte.
     // Rein additiv: kein Routing/Track/Achsen/Score/Lampen-Einfluss -> fixture-safe.
     const meta = e.snapshot && e.snapshot.meta;
+    e.name = issuerName(e.snapshot);
     const geo = normalizeCountry(meta);
     e.country = geo.country;
     e.region = geo.region;
@@ -960,12 +966,12 @@ function produceRankings(results, opts = {}) {
   const overview = [];
   const survival = [];
   const excluded = {};
-  // A2: die in scoreUniverse angehefteten geo-Felder an jede Output-Zeile spreaden
+  // A2: die in scoreUniverse angehefteten Anzeige-/geo-Felder an jede Output-Zeile spreaden
   // (?? null haelt die Form stabil, falls produceRankings mit handgebauten results laeuft).
-  const geo = (e) => ({ country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, ipoRecency: e.ipoRecency ?? null, profitTier: e.profitTier ?? null, ipoYear: e.ipoYear ?? null, coverageAxes: e.coverageAxes ?? null, coverageWeight: e.coverageWeight ?? null, cohortN: e.cohortN ?? null, cohortFallback: e.cohortFallback ?? null });
+  const rowMeta = (e) => ({ name: e.name ?? null, country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, ipoRecency: e.ipoRecency ?? null, profitTier: e.profitTier ?? null, ipoYear: e.ipoYear ?? null, coverageAxes: e.coverageAxes ?? null, coverageWeight: e.coverageWeight ?? null, cohortN: e.cohortN ?? null, cohortFallback: e.cohortFallback ?? null });
   for (const e of (Array.isArray(results) ? results : [])) {
     if (e.action === 'survival') {
-      survival.push({ ticker: e.ticker, runwayQuarters: e.overview ? e.overview.value : null, lamps: e.lamps, ...geo(e) });
+      survival.push({ ticker: e.ticker, runwayQuarters: e.overview ? e.overview.value : null, lamps: e.lamps, ...rowMeta(e) });
       continue;
     }
     if (e.action === 'exclude' || e.action === 'unrouted') {
@@ -979,7 +985,7 @@ function produceRankings(results, opts = {}) {
       // audit/fix (Bug 8): skalenbewusst runden. audit/fix (Bug 23): companion (Rule-of-X) durchreichen
       // (Prozent-Skala ~0-300 -> round1). Wird berechnet, ging aber bisher im Datenvertrag verloren.
       overview: e.overview ? { kind: e.overview.kind, value: roundOverviewValue(e.overview), companion: round1(e.overview.companion) } : null,
-      ...geo(e), ...breakdown(e), // 2.11 Stufe A: scoreBase + factors{shrink,burn,growth,cycle}
+      ...rowMeta(e), ...breakdown(e), // 2.11 Stufe A: scoreBase + factors{shrink,burn,growth,cycle}
       // audit/fix (D1/D2): rohen Score zum Sortieren behalten, NUR fuer die Anzeige runden.
       // Sortiert man das gerundete Feld, entstehen kuenstliche round1-Ties, die JS-stable-sort
       // per Input- = fs.readdirSync-Reihenfolge bricht -> nicht reproduzierbare topN-Membership (CI != lokal).
@@ -991,7 +997,7 @@ function produceRankings(results, opts = {}) {
       // audit/fix (Bug 8): skalenbewusst; audit/fix (Bug 23): companion durchreichen.
       overviewKind: e.overview ? e.overview.kind : null, overviewValue: roundOverviewValue(e.overview),
       overviewCompanion: e.overview ? round1(e.overview.companion) : null,
-      lamps: e.lamps, ...geo(e), ...breakdown(e), _raw: e.score }); // 2.11 Stufe A: scoreBase + factors
+      lamps: e.lamps, ...rowMeta(e), ...breakdown(e), _raw: e.score }); // 2.11 Stufe A: scoreBase + factors
   }
   // audit/fix (D1/D2/D3): roher Score + deterministischer Ticker-Tie-Break VOR dem Slicen,
   // damit exakte/round1-Ties nicht von der Dateisystem-Reihenfolge entschieden werden. _raw

@@ -55,7 +55,7 @@ const BRANCHES = [
   'health-care', 'industrials', 'it-services', 'materials', 'real-estate',
   'semiconductors', 'software-comm-services', 'tech-hardware', 'utilities',
 ];
-// The exact geo/classification fields the engine writes on every board+overview+survival row.
+// The exact descriptive fields the engine writes on every board+overview+survival row.
 // Task 1.2: profitTier (4-Stufen-Enum) + ipoYear (durchgereicht) sind seit 1.2 real (vorher RESERVIERT).
 // Task 2.13 #23: coverageAxes ("n/m" present-Achsen) + coverageWeight (C4-Gewicht) — additiv OPTIONAL,
 // ausweisen statt verrechnen (score-inert); nicht in den Pflicht-Feld-Check (Auflage B1).
@@ -64,7 +64,7 @@ const BRANCHES = [
 // Zahl bzw. boolean; auf pre-revenue survival-Zeilen null (nie gescort).
 // Task 2.11 Stufe A: scoreBase + scoreShrunk (number|null) + factors ({burn,growth,cycle}|null) — additiv OPTIONAL
 // (Score-Transparenz, wie coverageAxes NICHT im --check, damit legitime Abwesenheit/alte Consumer nicht brechen).
-const GEO_FIELDS = ['country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback', 'scoreBase', 'scoreShrunk', 'factors', 'axisBreakdown'];
+const ROW_FIELDS = ['name', 'country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback', 'scoreBase', 'scoreShrunk', 'factors', 'axisBreakdown'];
 
 // Task 2.2: ATH-Anzeige (Karl-A6-Lösung) — additiv OPTIONAL je Zeile: ath = {distancePct,
 // athDate, monthsAgo} | null. Quelle = external-data/ath-state.json (committeter Vertrag,
@@ -84,6 +84,12 @@ function athFor(ticker) {
 function readJSON(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
 function readJSONOrNull(p) { try { return readJSON(p); } catch (_) { return null; } }
 
+function normalizeName(value) {
+  if (typeof value !== 'string') return null;
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  return normalized || null;
+}
+
 // ---- row mappers ---------------------------------------------------------
 // Copy ONLY real engine fields. `rank` is derived = 1-based array index (score-desc;
 // survival runway-desc). currency/profitTier/ipoYear are RESERVED (1.2) — NOT
@@ -102,7 +108,7 @@ function mapBoardRow(r, i) {
       companion: r.overview.companion, // number|null (Rule-of-X companion)
     },
   };
-  for (const k of GEO_FIELDS) out[k] = r[k] === undefined ? null : r[k];
+  for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2: ATH-Anzeige (null wenn nicht geseedet/Split-Wächter)
   return out;
 }
@@ -119,7 +125,7 @@ function mapOverviewRow(r, i) {
     overviewCompanion: r.overviewCompanion, // number|null
     lamps: r.lamps || [],
   };
-  for (const k of GEO_FIELDS) out[k] = r[k] === undefined ? null : r[k];
+  for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
   return out;
 }
@@ -133,7 +139,7 @@ function mapSurvivalRow(r, i) {
     runwayQuarters: r.runwayQuarters,  // number|null, 9999 = inf-runway sentinel
     lamps: r.lamps || [],
   };
-  for (const k of GEO_FIELDS) out[k] = r[k] === undefined ? null : r[k];
+  for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
   return out;
 }
@@ -332,6 +338,13 @@ function checkStrOrNull(r, key, where, errs) {
   if (!(key in r)) errs.push(`${where}: ${key} missing`);
   else if (r[key] !== null && typeof r[key] !== 'string') errs.push(`${where}: ${key} not string|null`);
 }
+// Der neue Producer emittiert name immer. Der geteilte v1-Consumer-Vertrag bleibt
+// dagegen additiv/optional, damit bereits gespeicherte v1-Dateien ohne name lesbar bleiben.
+function checkProducerName(r, where, errs) {
+  if (!('name' in r)) errs.push(`${where}: name missing`);
+  else if (r.name !== null && typeof r.name !== 'string') errs.push(`${where}: name not string|null`);
+  else if (r.name !== null && normalizeName(r.name) !== r.name) errs.push(`${where}: name not normalized`);
+}
 // number|null field must be PRESENT and either null or finite number.
 function checkNumOrNull(r, key, where, errs) {
   if (!(key in r)) errs.push(`${where}: ${key} missing`);
@@ -356,9 +369,10 @@ function checkCohortScored(r, where, errs) {
   else if (typeof r.cohortFallback !== 'boolean') errs.push(`${where}: cohortFallback not boolean`);
 }
 
-// The 7 geo/classification fields carried by board + overview + survival rows.
+// Pflicht-Metadaten carried by board + overview + survival rows.
 // All are "Pflicht (nullable)" per schema-doc 3/4/5.
 function validateGeo(r, where, errs) {
+  checkProducerName(r, where, errs);
   checkStrOrNull(r, 'country', where, errs);
   checkStrOrNull(r, 'region', where, errs);
   checkStrOrNull(r, 'sector', where, errs);
@@ -605,7 +619,7 @@ function validateQualityExport() {
 function selftest() {
   const assert = require('assert');
   const cleanBoard = {
-    ticker: 'NVDA', score: 88.2, track: 'profitable', lamps: ['peakMargin'],
+    ticker: 'NVDA', name: 'NVIDIA Corporation', score: 88.2, track: 'profitable', lamps: ['peakMargin'],
     overview: { kind: 'gp', value: -0.055, companion: 89.1 },
     country: 'United States', region: 'North America', sector: 'Technology',
     marketCap: 5457368842240, phase: 'established', mcapBand: 'mega', ipoRecency: 'mature',
@@ -613,14 +627,14 @@ function selftest() {
     cohortN: 90, cohortFallback: false, // 2.10
   };
   const cleanOv = {
-    ticker: 'NVDA', formulaId: 'semiconductors', track: 'profitable', score: 94.9,
+    ticker: 'NVDA', name: 'NVIDIA Corporation', formulaId: 'semiconductors', track: 'profitable', score: 94.9,
     overviewKind: 'gp', overviewValue: -1.17, overviewCompanion: 195.3, lamps: [],
     country: 'United States', region: 'North America', sector: 'Technology',
     marketCap: 33018304599.802, phase: 'inflected', mcapBand: 'large', ipoRecency: 'growth',
     cohortN: 90, cohortFallback: false, // 2.10
   };
   const cleanSv = {
-    ticker: 'PAH3.DE', runwayQuarters: 9999, lamps: ['burning'],
+    ticker: 'PAH3.DE', name: 'Porsche Automobil Holding SE', runwayQuarters: 9999, lamps: ['burning'],
     country: 'Germany', region: 'Europe', sector: 'Consumer Cyclical',
     marketCap: null, phase: null, mcapBand: 'small', ipoRecency: null,
     cohortN: null, cohortFallback: null, // 2.10: survival nie gescort -> nullable
@@ -639,6 +653,8 @@ function selftest() {
   trip(validateBoardRow, { ...b0, track: 'ghost' }, 'board track bad enum');
   trip(validateBoardRow, { ...b0, rank: undefined }, 'board rank removed');
   const bNoCountry = { ...b0 }; delete bNoCountry.country; trip(validateBoardRow, bNoCountry, 'board country missing');
+  const bNoName = { ...b0 }; delete bNoName.name; trip(validateBoardRow, bNoName, 'board name missing');
+  trip(validateBoardRow, { ...b0, name: 12345 }, 'board name number');
   trip(validateBoardRow, { ...b0, sector: 12345 }, 'board sector number');
   const bNoRegion = { ...b0 }; delete bNoRegion.region; trip(validateBoardRow, bNoRegion, 'board region missing');
   trip(validateBoardRow, { ...b0, marketCap: 'GARBAGE' }, 'board marketCap string');
