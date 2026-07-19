@@ -57,7 +57,9 @@ function annualConcept(gaap, concept) {
   for (const x of usdUnits(gaap, concept)) {
     if (x.form === '10-K' && x.fp === 'FY' && x.fy != null && Number.isFinite(x.val)) {
       const prev = out.get(x.fy);
-      if (!prev || x.end > prev.end) out.set(x.fy, { val: x.val, end: x.end });
+      // BH-007: keep accn (filing identity) alongside the value so callers can
+      // verify two concepts for the same fy actually came from the same 10-K.
+      if (!prev || x.end > prev.end) out.set(x.fy, { val: x.val, end: x.end, accn: x.accn });
     }
   }
   return out;
@@ -93,6 +95,18 @@ function buildAnnual(gaap) {
   const fcfCell = (fy) => (ocf.has(fy) && capex.has(fy))
     ? { value: ocf.get(fy).val - capex.get(fy).val }  // FCF = OCF - Capex(positiv)
     : { value: null };
+  // BH-007 fix: same fy alone doesn't prove same 10-K -- a fy-union axis can pair
+  // an Assets/CurrLiab value that was later amended against an OpInc value that
+  // wasn't (or vice versa). axes.js roicStabilitySource relies on this trio being
+  // filing-coherent (comment there: "NIE feldweise gemischt"), so gate the balance-
+  // sheet cell on matching accn (filing identity) with OpInc for that fy; on
+  // mismatch null it out (fail closed) instead of silently pairing two vintages.
+  const balCell = (m, fy) => {
+    if (!m.has(fy)) return { value: null };
+    const opRow = opinc.get(fy);
+    if (opRow && m.get(fy).accn !== opRow.accn) return { value: null };
+    return { value: m.get(fy).val };
+  };
 
   return {
     _fys: fys,
@@ -103,9 +117,9 @@ function buildAnnual(gaap) {
     annualFCF: fys.map((fy) => fcfCell(fy)),
     annualGP: fys.map((fy) => cell(gp, fy)),
     // Bilanz (Phase 4.1): index-aligned auf dieselbe _fys-Achse -> Assets/CurrLiab/OpInc eines FY
-    // stammen aus DEMSELBEN 10-K (as-filed-per-year) -> invested = Assets - CurrLiab FY-kohaerent.
-    annualAssets: fys.map((fy) => cell(assets, fy)),
-    annualCurrentLiabilities: fys.map((fy) => cell(curliab, fy)),
+    // stammen aus DEMSELBEN 10-K (accn-geprueft via balCell) -> invested = Assets - CurrLiab FY-kohaerent.
+    annualAssets: fys.map((fy) => balCell(assets, fy)),
+    annualCurrentLiabilities: fys.map((fy) => balCell(curliab, fy)),
   };
 }
 

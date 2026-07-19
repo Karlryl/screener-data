@@ -18,7 +18,7 @@
  * Rate-Limit: SEC erlaubt 10 req/sec. Wir nutzen 8 req/sec (125ms zwischen Calls)
  *             plus If-Modified-Since-Headers wo möglich.
  *
- * Run: node pull-sec-xbrl.js [--max N] [--concurrency K]
+ * Run: node pull-sec-xbrl.js [--max N] [--concurrency K (reserved, no-op — pull loop is serial)]
  */
 'use strict';
 const fs = require('fs');
@@ -133,6 +133,11 @@ async function main() {
   })();
 
   let pulled = 0, skipped304 = 0, skippedFresh = 0, notFound = 0, errors = 0, rateLimited = 0;
+  // BH-005 fix: a break below (429/error abort) used to fall through to a
+  // silent exit 0 — manifest.summary carried no trace of the early stop, so
+  // e.g. 100 ok + 51 err (33.8%) passed the <50% error-rate gate green.
+  // Track the abort explicitly and fail the process on it.
+  let aborted = false;
   // audit F-A-2026-06-21: direct Map->array; the old Object.fromEntries(...)/
   // Object.values round-trip silently collapsed duplicate keys and was a no-op
   // rebuild of what [...values()] yields directly.
@@ -202,6 +207,7 @@ async function main() {
         await sleep(RATE_LIMIT_BACKOFF_MS);
         if (rateLimited > 200) {
           console.error('Persistent 429s (>200) — aborting run, SEC is throttling us.');
+          aborted = true;
           break;
         }
         continue;
@@ -217,6 +223,7 @@ async function main() {
       manifest.entries[t.cik] = Object.assign({}, prior, { lastError: e.message });
       if (errors > 50) {
         console.error('Too many errors (>50) — aborting to be polite to SEC.');
+        aborted = true;
         break;
       }
     }
@@ -229,9 +236,13 @@ async function main() {
   }
 
   manifest.lastRun = today;
-  manifest.summary = { pulled, skipped304, skippedFresh, notFound, errors, rateLimited, totalKnown: tickers.size };
+  manifest.summary = { pulled, skipped304, skippedFresh, notFound, errors, rateLimited, totalKnown: tickers.size, aborted };
   writeFileAtomic(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
-  console.log('Done. pulled=' + pulled + ' 304=' + skipped304 + ' fresh=' + skippedFresh + ' 404=' + notFound + ' err=' + errors + ' 429=' + rateLimited);
+  console.log('Done. pulled=' + pulled + ' 304=' + skipped304 + ' fresh=' + skippedFresh + ' 404=' + notFound + ' err=' + errors + ' 429=' + rateLimited + (aborted ? ' ABORTED' : ''));
+  // BH-005 fix: an aborted run must fail the CI step, not exit 0 — the
+  // Verify-SEC-Coverage gate only looks at the error *rate*, which an early
+  // abort can keep under the 50% threshold (e.g. 100 ok + 51 err = 33.8%).
+  if (aborted) process.exit(1);
 }
 
 if (require.main === module) {

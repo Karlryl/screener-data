@@ -19,7 +19,10 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const ROOT = path.join(__dirname, '..');
-const SNAP = path.join(ROOT, 'snapshots');
+// BH-004 test hook: overridable like CACHE below, so the hermetic empty-universe
+// regression test can point at a real-but-empty temp dir instead of the repo's
+// (locally populated, git-ignored) snapshots/ folder.
+const SNAP = process.env.SEC_SNAPSHOTS_DIR || path.join(ROOT, 'snapshots');
 const CACHE = process.env.SEC_XBRL_CACHE_DIR || path.join(require('os').tmpdir(), 'sec-xbrl-cache');
 const OUT = path.join(ROOT, 'external-data', 'sec-secannual.json');
 const UA = 'Karl Viehrig screener-data karl_viehrig@web.de';
@@ -28,6 +31,9 @@ const { norm, presentValues } = require(path.join(ROOT, 'src/scoring/snapshot.js
 const { signFlips, oscExcess, revMaxDrawdown } = require(path.join(ROOT, 'src/scoring/score.js'));
 const { extractSecSeries } = require(path.join(ROOT, 'merge-sec-xbrl.js'));
 const { fetchSecTickers } = require(path.join(ROOT, 'discovery/sec-tickers.js'));
+// BH-010 fix: atomic tmp+rename writes (was plain fs.writeFileSync — a crash
+// mid-write left a truncated companyfacts cache file or a truncated OUT).
+const { writeFileAtomic } = require(path.join(ROOT, 'lib/atomic-write.js'));
 
 function loadUniverse() {
   const u = [];
@@ -67,9 +73,40 @@ function looseSanity(yOpArr, sOpArr, yRevArr, sRevArr) {
   return true;
 }
 
-(async () => {
+// BH-009 fix: fail closed on a fully-missing series. newestPresent() returns
+// null when the array is empty/all-null; Number(null)>=0 is TRUE, so the old
+// inline guard (`Number(newestPresent(...))>=0`) let a completely absent
+// CurrLiab through into the committed Bilanz-Serie. Exported for the hermetic
+// regression check (tests/scoring/bh-b12-sec.test.js).
+function bilanzGuardOk(newAssets, newCurLiab) {
+  return newAssets !== null && newAssets > 0 && newCurLiab !== null && newCurLiab >= 0;
+}
+
+// BH-010 fix: which companyfacts cache to read for a CIK. repoCache used to win
+// unconditionally, so a stale, git-ignored leftover from an old local run
+// silently shadowed a fresher explicitly-passed SEC_XBRL_CACHE_DIR pull.
+// Pick whichever file is newer when both exist. Exported for the hermetic
+// regression check.
+function chooseCacheSource(repoExists, tmpExists, repoMtimeMs, tmpMtimeMs) {
+  if (repoExists && tmpExists) return tmpMtimeMs > repoMtimeMs ? 'tmp' : 'repo';
+  if (tmpExists) return 'tmp';
+  if (repoExists) return 'repo';
+  return null;
+}
+
+async function run() {
   if (!fs.existsSync(CACHE)) fs.mkdirSync(CACHE, { recursive: true });
   const uni = loadUniverse();
+  // BH-004 fix: loadUniverse() returns [] when snapshots/*.json isn't present (e.g. the CI
+  // checkout only ships snapshots/_manifest.json). Without this guard dds stays [] -> p75
+  // is undefined -> p75.toFixed() below throws, crashing the run instead of leaving
+  // sec-secannual.json untouched. The real fix is the caller supplying a real universe
+  // (see monthly-sec-xbrl.yml's "Restore Snapshots" step) — this is the safety net for
+  // when that's unavailable, so the script degrades to a loud no-op, never a crash.
+  if (uni.length === 0) {
+    console.log('::warning::secAnnual: leeres Universum (keine snapshots/*.json gefunden) - Build uebersprungen, sec-secannual.json unveraendert');
+    return;
+  }
   const dds = [], routedUS = [];
   for (const s of uni) {
     if (route(s).action !== 'route') continue;
@@ -98,13 +135,17 @@ function looseSanity(yOpArr, sOpArr, yRevArr, sRevArr) {
     if (!cik) { noCik++; continue; }
     const repoCache = path.join(repoDir, cik + '.json'), tmpFile = path.join(CACHE, cik + '.json');
     let body = null;
-    if (fs.existsSync(repoCache)) body = fs.readFileSync(repoCache, 'utf8');
-    else if (fs.existsSync(tmpFile)) { body = fs.readFileSync(tmpFile, 'utf8'); cachedF++; }
+    const repoExists = fs.existsSync(repoCache), tmpExists = fs.existsSync(tmpFile);
+    const cacheSrc = chooseCacheSource(repoExists, tmpExists,
+      repoExists ? fs.statSync(repoCache).mtimeMs : -Infinity,
+      tmpExists ? fs.statSync(tmpFile).mtimeMs : -Infinity);
+    if (cacheSrc === 'tmp') { body = fs.readFileSync(tmpFile, 'utf8'); cachedF++; }
+    else if (cacheSrc === 'repo') { body = fs.readFileSync(repoCache, 'utf8'); }
     else {
       try { body = await get(`https://data.sec.gov/api/xbrl/companyfacts/CIK${cik}.json`); }
       catch (e) { console.log('  pull-fail', tk, cik, e.message); await sleep(125); continue; }
       if (!body) { no404++; await sleep(125); continue; }
-      fs.writeFileSync(tmpFile, body); pulled++; await sleep(130);
+      writeFileAtomic(tmpFile, body); pulled++; await sleep(130);
     }
     let sec; try { sec = extractSecSeries(JSON.parse(body)); } catch (_) { continue; }
     const snap = uni.find(x => x.meta.ticker === tk);
@@ -113,12 +154,21 @@ function looseSanity(yOpArr, sOpArr, yRevArr, sRevArr) {
       annualNetIncome: sec.annual.annualNetIncome, annualFCF: sec.annual.annualFCF, annualOCF: sec.annual.annualOCF };
     // Phase 4.1: tiefe Bilanz NUR wenn plausibel (newest Assets>0 UND newest CurrLiab>=0) — sonst laeuft
     // ein isoliert-korruptes as-filed Assets/CurrLiab ungevalidiert in die roicStability-ROIC-Serie (Court-Auflage).
-    if (Number(newestPresent(sec.annual.annualAssets)) > 0 && Number(newestPresent(sec.annual.annualCurrentLiabilities)) >= 0) {
+    if (bilanzGuardOk(newestPresent(sec.annual.annualAssets), newestPresent(sec.annual.annualCurrentLiabilities))) {
       out[tk].annualAssets = sec.annual.annualAssets;
       out[tk].annualCurrentLiabilities = sec.annual.annualCurrentLiabilities;
     }
   }
-  fs.writeFileSync(OUT, JSON.stringify(out));
+  writeFileAtomic(OUT, JSON.stringify(out));
   const postCount = Object.keys(out).length;
   console.log(`secAnnual: ${postCount} Namen (${preCount}->${postCount}, +${postCount - preCount} akkumuliert) -> ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(0)}KB) | pulled=${pulled} cached=${cachedF} noCik=${noCik} 404=${no404} divergent=${divergent}`);
-})();
+}
+
+// BH-036-adjacent hardening (in-scope, minimal): guard direct execution so
+// `require()`-ing this module (e.g. from a hermetic test) no longer fires off
+// a live SEC/network run — previously an unconditional top-level IIFE.
+if (require.main === module) {
+  run().catch((e) => { console.error(e); process.exit(1); });
+}
+
+module.exports = { newestPresent, bilanzGuardOk, chooseCacheSource, run };
