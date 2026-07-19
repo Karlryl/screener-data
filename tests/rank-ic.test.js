@@ -71,12 +71,15 @@ function mkSeries(t0, days, start, drift) {
   for (let i = 0; i <= days; i++) m.set(addDays(t0, i), start * (1 + drift * i));
   return m;
 }
-test('windowReturns §8: ok / delisted=-100% / M&A-shortened / no-entry-Ausschluss', () => {
+test('windowReturns §8: ok / Datenluecke ohne Delisting-Beleg wird ausgeschlossen (BH-101) / M&A-shortened / no-entry-Ausschluss', () => {
   const t0 = '2026-01-05';
   const priceIndex = {
     SPY: mkSeries(t0, 120, 500, 0.0002),
     OK1: mkSeries(t0, 120, 100, 0.001),
-    DEAD: (() => { const m = mkSeries(t0, 20, 50, 0); m.set(addDays(t0, 89), 0); return m; })(), // Loch im Exit-Fenster, aber Coverage danach -> delisted
+    // BH-101: 0-Close bei t0+89 ist invalide und faellt weg -> Serie endet t0+20.
+    // Blosses Serienende ohne Delisting-Beleg darf KEINE -100% mehr buchen,
+    // sondern wird konservativ ausgeschlossen (frueher: delisted, ret=-1.0).
+    DEAD: (() => { const m = mkSeries(t0, 20, 50, 0); m.set(addDays(t0, 89), 0); return m; })(),
     MNA: mkSeries(t0, 30, 10, 0.01),   // Serie endet 30d nach t0 (Übernahme) -> verkürzt, Gewinn gebucht
     NOENT: (() => { const m = new Map(); m.set(addDays(t0, 60), 5); return m; })(), // kein Entry-Kurs
   };
@@ -84,7 +87,9 @@ test('windowReturns §8: ok / delisted=-100% / M&A-shortened / no-entry-Ausschlu
   const w = ric.windowReturns(priceIndex, rows, t0, 84);
   const byT = new Map(w.used.map((u) => [u.row.ticker, u]));
   assert.ok(byT.has('OK1') && Math.abs(byT.get('OK1').ret - 0.084) < 0.02);
-  assert.equal(byT.get('DEAD').ret, -1.0);                       // §8: Totalverlust, nicht gedroppt
+  assert.ok(!byT.has('DEAD'), 'BH-101: Datenluecke ohne Delisting-Beleg darf nicht als -100% in used landen');
+  assert.equal(w.quota.delisted, 0);
+  assert.equal(w.quota.excluded_no_series, 1);
   assert.ok(byT.has('MNA') && byT.get('MNA').shortened === true);
   assert.ok(byT.get('MNA').ret > 0.25, 'M&A-Gewinn gebucht: ' + byT.get('MNA').ret);
   assert.ok(!byT.has('NOENT'));
@@ -393,9 +398,9 @@ test('loadExcluded R2.5: Altformate bleiben lesbar (Rueckwaertskompatibilitaet)'
   ex = write(['2026-01-02', '2026-02-01']);
   assert.equal(ex.size, 2);
   assert.equal(ric.isBoardExcluded(ex, '2026-02-01', 'irgendein-board'), true, 'Liste = globaler Ausschluss');
-  // (c) fehlende/kaputte Datei -> leere Map, kein Crash
+  // (c) fehlende Datei -> leere Map, kein Crash. Kaputte VORHANDENE Datei -> fail-loud (BH-104).
   fs.writeFileSync(path.join(tmp, '_excluded.json'), '{kaputt');
-  assert.equal(ric.loadExcluded(tmp).size, 0);
+  assert.throws(() => ric.loadExcluded(tmp), /JSON kaputt/);
   assert.equal(ric.loadExcluded(path.join(tmp, 'gibt-es-nicht')).size, 0);
   fs.rmSync(tmp, { recursive: true, force: true });
 });
