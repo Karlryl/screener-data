@@ -3,7 +3,11 @@
 // konfirmatorischen Lauf (Protokoll Tag 389 §4/§5/§8): First-Passage-Semantik,
 // Matching-Caliper, Cluster-Bootstrap, Event-Flagging inkl. NoMargin-View.
 const assert = require('assert');
-const { firstPassage, buildPairs, clusterBootstrap } = require('../scripts/b1-validate.js');
+const {
+  firstPassage, buildPairs, clusterBootstrap, evaluatePairOutcomes,
+  assessBalance, buildEventDatedCandidatePools, selectViewRecords,
+  matchDistance, bcaInterval, _const,
+} = require('../scripts/b1-validate.js');
 const detect = require('../lib/b1-detect.js');
 
 // Bars-Fabrik: startDatum + tägliche Multiplikatoren (Handelstage, ISO fortlaufend).
@@ -120,4 +124,163 @@ function withHistory(path_) {
   assert.ok(small.every((r) => !r.isEvent), 'Mindest-Kohorten-N-Gate');
 }
 
-console.log('b1-validate.test.js: alle 8 Blöcke grün');
+function qFact(start, end, val, filed, fp) {
+  return { start, end, val, filed, form: '10-Q', fp };
+}
+function companyFacts(revenues, operatingIncome, shares) {
+  return {
+    facts: {
+      'us-gaap': {
+        Revenues: { units: { USD: revenues || [] } },
+        OperatingIncomeLoss: { units: { USD: operatingIncome || [] } },
+      },
+      dei: {
+        EntityCommonStockSharesOutstanding: { units: { shares: shares || [] } },
+      },
+    },
+  };
+}
+
+// (9 / F1) Eine spaetere Korrektur darf weder das Eventdatum verschieben noch am
+//     fruehen Erkennungsstichtag den Originalwert im PIT-Snapshot ersetzen.
+{
+  const rev = [
+    qFact('2020-01-01', '2020-03-31', 100, '2020-05-01', 'Q1'),
+    qFact('2020-04-01', '2020-06-30', 100, '2020-08-01', 'Q2'),
+    qFact('2020-07-01', '2020-09-30', 100, '2020-11-01', 'Q3'),
+    qFact('2021-01-01', '2021-03-31', 110, '2021-05-01', 'Q1'),
+    qFact('2021-04-01', '2021-06-30', 120, '2021-08-01', 'Q2'),
+    qFact('2021-07-01', '2021-09-30', 130, '2021-11-01', 'Q3'),
+    qFact('2021-07-01', '2021-09-30', 260, '2022-02-01', 'Q3'),
+  ];
+  const op = [
+    qFact('2020-07-01', '2020-09-30', 10, '2020-11-01', 'Q3'),
+    qFact('2021-07-01', '2021-09-30', 20, '2021-11-01', 'Q3'),
+  ];
+  const store = { factsForCik: () => companyFacts(rev, op) };
+  const got = detect.collectRecords(store, { eraStart: '2021-09-30', eraEnd: '2021-09-30', ciks: [1] });
+  assert.strictEqual(got.records.length, 1);
+  assert.strictEqual(got.records[0].filed, '2021-11-01', 'F1: erstes Filing ist Erkennungsstichtag');
+  assert.ok(Math.abs(got.records[0].dYoY - 0.1) < 1e-12, 'F1: Originalwert 130 statt Korrektur 260');
+}
+
+// (10 / F2) Outcome-Asymmetrie ist Teil des Balance-Gates, auch wenn die
+//      vorgelagerte Preis-Fehlquote perfekt ausgeglichen war.
+{
+  const path = []; for (let i = 1; i <= 300; i++) path.push(100 * Math.pow(1.02, i));
+  const bars = mkBars('2020-01-01', withHistory(path));
+  const filed = bars[100].date;
+  const outcome = evaluatePairOutcomes([
+    { ev: { ticker: 'EV', filed, sic2: '73', calQ: '2020Q1' }, ctl: { ticker: 'CTL', filed: '2030-01-01' } },
+  ], {}, (ticker) => ticker === 'EV' ? bars : null);
+  const gate = assessBalance(0, outcome.outcomeBalanceDelta);
+  assert.strictEqual(outcome.evOutcomeMissing, 0);
+  assert.strictEqual(outcome.ctlOutcomeMissing, 1);
+  assert.strictEqual(gate.passed, false, 'F2: 100-pp Outcome-Delta reisst das 5-pp-Gate');
+}
+
+// (11 / F3) Kontrollvariablen und Kontroll-Outcome sind am Eventdatum verankert;
+//      das eigene spaetere Filing der Kontrolle darf keine Daten freischalten.
+{
+  const closes = []; for (let i = 0; i < 500; i++) closes.push(100 * Math.pow(1.005, i));
+  const bars = mkBars('2020-01-01', closes);
+  const eventDate = bars[200].date, controlOwnDate = bars[490].date;
+  const rev = [
+    qFact('2019-01-01', '2019-03-31', 20, '2019-05-01', 'Q1'),
+    qFact('2019-04-01', '2019-06-30', 20, '2019-08-01', 'Q2'),
+    qFact('2019-07-01', '2019-09-30', 20, '2019-11-01', 'Q3'),
+    qFact('2019-10-01', '2019-12-31', 20, '2020-02-01', 'Q4'),
+  ];
+  const shares = [
+    { end: '2020-06-30', val: 100, filed: '2020-07-01', form: '10-Q' },
+    { end: '2020-09-30', val: 1000, filed: '2020-10-01', form: '10-Q' },
+  ];
+  const facts = companyFacts(rev, [], shares);
+  const ev = { cik: 1, ticker: 'EV', sic2: '73', calQ: '2020Q2', filed: eventDate };
+  const ctl = { cik: 2, ticker: 'CTL', sic2: '73', calQ: '2020Q2', filed: controlOwnDate };
+  const pools = buildEventDatedCandidatePools([ev], [ctl], {
+    factsOf: () => facts,
+    barsOf: () => bars,
+  });
+  const datedCtl = pools.get(ev)[0];
+  assert.ok(Math.abs(datedCtl.vars.logMcap - Math.log(bars[200].close * 100)) < 1e-12,
+    'F3: Shares und Preis stammen vom Eventdatum');
+  assert.notStrictEqual(firstPassage(bars, controlOwnDate, {}).status, 'ok', 'Kontroll-eigenes Filing ist zu spaet');
+  const outcome = evaluatePairOutcomes([{ ev, ctl: datedCtl }], {}, () => bars);
+  assert.strictEqual(outcome.ctlOutcomeMissing, 0, 'F3: Kontroll-Outcome nutzt Eventdatum');
+}
+
+// (12 / F5) Eine Sechs-Monats-Luecke ist kein konsekutives Quartal und wird
+//      explizit gezaehlt, statt als t-1 in die Beschleunigung einzugehen.
+{
+  const rev = [
+    qFact('2020-10-01', '2020-12-31', 100, '2021-02-01', 'Q4'),
+    qFact('2021-01-01', '2021-03-31', 110, '2021-05-01', 'Q1'),
+    qFact('2021-07-01', '2021-09-30', 140, '2021-11-01', 'Q3'),
+  ];
+  const store = { factsForCik: () => companyFacts(rev) };
+  const got = detect.collectRecords(store, { eraStart: '2021-09-30', eraEnd: '2021-09-30', ciks: [1] });
+  assert.strictEqual(got.records.length, 0, 'F5: Lueckenquartal ist nicht auswertbar');
+  assert.strictEqual(got.counters.nonConsecutive, 1, 'F5: eigener Counter zaehlt die Luecke');
+}
+
+// (13 / F6) Ein Record, der in der P75-View Event ist, darf dort nicht zugleich
+//      im neu gebauten Kontroll-Kandidaten-Pool stehen.
+{
+  const recs = [];
+  for (let i = 0; i < 250; i++) recs.push({
+    cik: i, end: '2020-03-31', calQ: '2020Q1', filed: '2020-05-01',
+    dYoY: i / 250, dYoYprev: 0.01, dOpMargin: 0.01,
+  });
+  detect.flagEvents(recs);
+  const target = recs[200];
+  assert.strictEqual(target.isEvent, false, 'Fixture liegt unter P90');
+  recs.push({ ...target, end: '2020-04-01', dYoY: 0 });
+  const view = selectViewRecords(recs, { pctl: 0.75 }, new Set());
+  assert.ok(view.events.some((r) => r.cik === target.cik), 'Fixture wird bei P75 zum Event');
+  assert.ok(!view.controls.some((r) => r.cik === target.cik), 'F6: P75-Event ist keine P75-Kontrolle');
+}
+
+// (14 / F7a) Drei vollstaendige standardisierte Abstaende von je 0,8 ergeben
+//      sqrt(3*0,8^2)=1,386 und liegen damit ausserhalb des Calipers.
+{
+  const stats = {
+    logMcap: { m: 0, sd: 1 }, mom: { m: 0, sd: 1 }, evsPctl: { m: 0, sd: 1 },
+  };
+  const dist = matchDistance(
+    { logMcap: 0, mom: 0, evsPctl: 0 },
+    { logMcap: 0.8, mom: 0.8, evsPctl: 0.8 },
+    stats,
+  );
+  assert.ok(Math.abs(dist - Math.sqrt(3 * 0.8 ** 2)) < 1e-12);
+  assert.ok(dist > _const.CALIPER, 'F7a: kein Match jenseits Caliper 1,0');
+  const incomplete = {
+    cik: 2, sic2: '73', calQ: '2020Q1', vars: { logMcap: 0, mom: 0 },
+  };
+  const event = {
+    cik: 1, sic2: '73', calQ: '2020Q1', vars: { logMcap: 0, mom: 0, evsPctl: 0 },
+  };
+  assert.strictEqual(buildPairs([event], new Map([['2020Q1', [incomplete]]])).pairs.length, 0,
+    'F7a: alle drei Variablen sind Pflicht');
+}
+
+// (15 / F7b) BCa existiert als eigener Intervallschritt und liegt bei
+//      symmetrischem Bootstrap/Jackknife nahe am einfachen Perzentilintervall.
+{
+  const means = []; for (let i = -50; i <= 50; i++) means.push(i / 50);
+  const jack = [-0.2, -0.1, 0, 0.1, 0.2];
+  const ci = bcaInterval(means, 0, jack, 0.05, 0.95);
+  const pct = { lo: means[Math.round(0.05 * (means.length - 1))], hi: means[Math.round(0.95 * (means.length - 1))] };
+  assert.ok(Number.isFinite(ci.lo) && Number.isFinite(ci.hi), 'F7b: BCa-Intervall existiert');
+  assert.ok(Math.abs(ci.lo - pct.lo) < 0.05 && Math.abs(ci.hi - pct.hi) < 0.05,
+    'F7b: symmetrisches BCa liegt nahe Perzentil-CI');
+  const boot = clusterBootstrap([
+    { cluster: 'A|2020Q1', calQ: '2020Q1', diff: -1 },
+    { cluster: 'B|2020Q2', calQ: '2020Q2', diff: -0.5 },
+    { cluster: 'C|2020Q3', calQ: '2020Q3', diff: 0.5 },
+    { cluster: 'D|2020Q4', calQ: '2020Q4', diff: 1 },
+  ], 500, 7);
+  assert.strictEqual(boot.ci90.method, 'BCa', 'clusterBootstrap weist BCa aus');
+}
+
+console.log('b1-validate.test.js: alle 15 Blöcke grün');

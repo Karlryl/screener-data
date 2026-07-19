@@ -187,19 +187,97 @@ function evSales(facts, mcap, asOf) {
   return (mcap + Math.max(0, debt - cash)) / ltm;
 }
 
+function recordVarsAt(record, asOf, { factsOf, barsOf }) {
+  const bars = record.ticker ? barsOf(record.ticker) : null;
+  if (!bars) return { hasBars: false, vars: null };
+  const facts = factsOf(record.cik);
+  const shares = facts ? secPit.sharesHistory(facts, { asOf }) : [];
+  const mv = matchVarsAt(bars, asOf, shares);
+  if (!mv) return { hasBars: true, vars: null };
+  const evs = facts ? evSales(facts, mv.mcap, asOf) : null;
+  return {
+    hasBars: true,
+    vars: { logMcap: mv.mcap ? Math.log(mv.mcap) : NaN, mom: mv.mom, evsRaw: evs },
+  };
+}
+
+// Kandidaten werden pro Eventdatum neu geschnitten und bewertet. Der Cache-Key
+// stellt sicher, dass dieselbe Firmen-Periode je Datum nur einmal Facts/Bars nutzt.
+function buildEventDatedCandidatePools(events, candidates, deps, cache) {
+  const datedCache = cache || new Map();
+  const candidatesByQ = new Map();
+  for (const c of candidates) {
+    let arr = candidatesByQ.get(c.calQ);
+    if (!arr) candidatesByQ.set(c.calQ, arr = []);
+    arr.push(c);
+  }
+  const groups = new Map();
+  for (const ev of events) {
+    const key = ev.calQ + '|' + ev.filed;
+    let arr = groups.get(key);
+    if (!arr) groups.set(key, arr = []);
+    arr.push(ev);
+  }
+  const getAt = (r, asOf) => {
+    const key = r.cik + '|' + r.end + '|' + asOf;
+    if (!datedCache.has(key)) datedCache.set(key, recordVarsAt(r, asOf, deps));
+    return datedCache.get(key);
+  };
+  const pools = new Map();
+  for (const groupedEvents of groups.values()) {
+    const asOf = groupedEvents[0].filed, calQ = groupedEvents[0].calQ;
+    for (const ev of groupedEvents) {
+      const at = getAt(ev, asOf);
+      ev.hasBars = at.hasBars;
+      ev.vars = at.vars ? { ...at.vars } : null;
+    }
+    const datedCandidates = (candidatesByQ.get(calQ) || []).map((c) => {
+      const at = getAt(c, asOf);
+      return { ...c, hasBars: at.hasBars, vars: at.vars ? { ...at.vars } : null };
+    });
+    const universe = [...groupedEvents, ...datedCandidates]
+      .filter((r) => r.vars && Number.isFinite(r.vars.evsRaw));
+    const sorted = universe.map((r) => r.vars.evsRaw).sort((a, b) => a - b);
+    for (const r of universe) r.vars.evsPctl = sorted.findIndex((v) => v >= r.vars.evsRaw) / sorted.length;
+    for (const ev of groupedEvents) pools.set(ev, datedCandidates);
+  }
+  return pools;
+}
+
+function selectViewRecords(records, view, excludedEventCiks) {
+  const cloned = records.map((r) => ({ ...r }));
+  detect.flagEvents(cloned, view.pctl ? { pctl: view.pctl } : {});
+  const isEvent = (r) => view.noOpMargin ? r.isEventNoMargin : r.isEvent;
+  const eventFirmQuarters = new Set(cloned.filter(isEvent).map((r) => r.cik + '|' + r.calQ));
+  return {
+    events: cloned.filter((r) => isEvent(r) && !excludedEventCiks.has(r.cik)),
+    controls: cloned.filter((r) => !eventFirmQuarters.has(r.cik + '|' + r.calQ)),
+  };
+}
+
 // ── Matching (§5): kontemporär, SIC2 exakt, Mahalanobis (diag) ≤ CALIPER ─────
+const MATCH_DIMS = ['logMcap', 'mom', 'evsPctl'];
+function matchDistance(evVars, ctlVars, stats) {
+  let d2 = 0;
+  for (const d of MATCH_DIMS) {
+    if (!Number.isFinite(evVars[d]) || !Number.isFinite(ctlVars[d])) return null;
+    const z = (ctlVars[d] - stats[d].m) / stats[d].sd - (evVars[d] - stats[d].m) / stats[d].sd;
+    d2 += z * z;
+  }
+  return Math.sqrt(d2);
+}
 function buildPairs(events, candidatesByQ) {
   const usedControlPerQ = new Map(); // calQ -> Set(cik)
   const pairs = []; let noMatch = 0;
   for (const ev of events) {
-    const pool = (candidatesByQ.get(ev.calQ) || []).filter((c) => c.cik !== ev.cik && c.sic2 === ev.sic2
-      && c.vars && ev.vars && Number.isFinite(c.vars.logMcap) && Number.isFinite(ev.vars.logMcap));
+    const eventPool = candidatesByQ.get(ev) || candidatesByQ.get(ev.calQ) || [];
+    const pool = eventPool.filter((c) => c.cik !== ev.cik && c.sic2 === ev.sic2
+      && c.vars && ev.vars && MATCH_DIMS.every((d) => Number.isFinite(c.vars[d]) && Number.isFinite(ev.vars[d])));
     if (!pool.length) { noMatch++; continue; }
     // Standardisierung über den Pool + Event (je Quartal, je Event-Sektor)
-    const dims = ['logMcap', 'mom', 'evsPctl'];
     const stats = {};
-    for (const d of dims) {
-      const vals = pool.map((c) => c.vars[d]).concat([ev.vars[d]]).filter(Number.isFinite);
+    for (const d of MATCH_DIMS) {
+      const vals = pool.map((c) => c.vars[d]).concat([ev.vars[d]]);
       const m = vals.reduce((s, v) => s + v, 0) / vals.length;
       const sd = Math.sqrt(vals.reduce((s, v) => s + (v - m) ** 2, 0) / Math.max(1, vals.length - 1)) || 1;
       stats[d] = { m, sd };
@@ -208,14 +286,8 @@ function buildPairs(events, candidatesByQ) {
     let best = null, bestD = Infinity;
     for (const c of pool) {
       if (used.has(c.cik)) continue;
-      let d2 = 0, okDims = 0;
-      for (const d of dims) {
-        if (!Number.isFinite(c.vars[d]) || !Number.isFinite(ev.vars[d])) continue;
-        const z = (c.vars[d] - stats[d].m) / stats[d].sd - (ev.vars[d] - stats[d].m) / stats[d].sd;
-        d2 += z * z; okDims++;
-      }
-      if (okDims < 2) continue;
-      const dist = Math.sqrt(d2 / okDims);
+      const dist = matchDistance(ev.vars, c.vars, stats);
+      if (dist == null) continue;
       if (dist < bestD) { bestD = dist; best = c; }
     }
     if (!best || bestD > CALIPER) { noMatch++; continue; }
@@ -227,6 +299,27 @@ function buildPairs(events, candidatesByQ) {
 
 // ── Cluster-Bootstrap (§8) über SIC2×CalQ ────────────────────────────────────
 function lcg(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+function normalCdf(z) { return 0.5 * (1 + erf2(z / Math.SQRT2)); }
+function bcaInterval(bootstrapMeans, original, jackknife, alphaLo, alphaHi) {
+  const sorted = bootstrapMeans.slice().sort((a, b) => a - b);
+  const B = sorted.length;
+  const tail = Math.min(1 - 1 / (2 * B), Math.max(1 / (2 * B), sorted.filter((m) => m < original).length / B));
+  const z0 = rankIc.invNormalCdf(tail);
+  const jackMean = jackknife.reduce((s, v) => s + v, 0) / jackknife.length;
+  let num = 0, denBase = 0;
+  for (const v of jackknife) {
+    const d = jackMean - v;
+    num += d ** 3;
+    denBase += d ** 2;
+  }
+  const acceleration = denBase > 0 ? num / (6 * denBase ** 1.5) : 0;
+  const adjusted = (alpha) => {
+    const za = rankIc.invNormalCdf(alpha);
+    return normalCdf(z0 + (z0 + za) / (1 - acceleration * (z0 + za)));
+  };
+  const quantile = (p) => sorted[Math.min(B - 1, Math.max(0, Math.round(p * (B - 1))))];
+  return { lo: quantile(adjusted(alphaLo)), hi: quantile(adjusted(alphaHi)) };
+}
 function clusterBootstrap(pairDiffs /* [{cluster, calQ, diff}] */, B, seed) {
   const byCluster = new Map();
   for (const p of pairDiffs) { let a = byCluster.get(p.cluster); if (!a) byCluster.set(p.cluster, a = []); a.push(p.diff); }
@@ -254,10 +347,12 @@ function clusterBootstrap(pairDiffs /* [{cluster, calQ, diff}] */, B, seed) {
     const z = rankIc.invNormalCdf(1 - p);
     p = Math.min(0.5, Math.max(pRaw, 1 - (0.5 * (1 + erf2((z / f) / Math.SQRT2)))));
   }
-  const sorted = means.slice().sort((a, b) => a - b);
-  const q = (pr) => sorted[Math.min(B - 1, Math.max(0, Math.round(pr * (B - 1))))];
-  const lo = mean0 - (mean0 - q(0.05)) * f, hi = mean0 + (q(0.95) - mean0) * f;
-  return { mean: mean0, nClusters: nC, nEff: +(+nEff).toFixed(2), p: +p.toFixed(5), ci90: { lo: +lo.toFixed(4), hi: +hi.toFixed(4) } };
+  const jackknife = nC > 1
+    ? clusters.map((_, omitted) => meanOf(clusters.filter((__, i) => i !== omitted)))
+    : [mean0];
+  const bca = bcaInterval(means, mean0, jackknife, 0.05, 0.95);
+  const lo = mean0 - (mean0 - bca.lo) * f, hi = mean0 + (bca.hi - mean0) * f;
+  return { mean: mean0, nClusters: nC, nEff: +(+nEff).toFixed(2), p: +p.toFixed(5), ci90: { lo: +lo.toFixed(4), hi: +hi.toFixed(4), method: 'BCa' } };
 }
 function erf2(x) {
   const sign = x < 0 ? -1 : 1; const ax = Math.abs(x);
@@ -266,8 +361,38 @@ function erf2(x) {
   return sign * (1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-ax * ax));
 }
 
+function evaluatePairOutcomes(pairs, view, barsOf) {
+  const diffs = [];
+  let evOutcomeMissing = 0, ctlOutcomeMissing = 0;
+  for (const p of pairs) {
+    const opts = { kSigma: view.kSigma, entryLag: view.entryLag, imputeMissing: view.impute };
+    const eo = firstPassage(barsOf(p.ev.ticker), p.ev.filed, opts);
+    const co = firstPassage(barsOf(p.ctl.ticker), p.ev.filed, opts);
+    if (eo.status !== 'ok') evOutcomeMissing++;
+    if (co.status !== 'ok') ctlOutcomeMissing++;
+    if (eo.status === 'ok' && co.status === 'ok') {
+      diffs.push({ cluster: p.ev.sic2 + '|' + p.ev.calQ, calQ: p.ev.calQ, diff: (eo.upperFirst ? 1 : 0) - (co.upperFirst ? 1 : 0) });
+    }
+  }
+  const pairsAttempted = pairs.length;
+  const eventOutcomeMissRate = pairsAttempted ? evOutcomeMissing / pairsAttempted : 0;
+  const controlOutcomeMissRate = pairsAttempted ? ctlOutcomeMissing / pairsAttempted : 0;
+  return {
+    diffs, pairsAttempted, pairsComplete: diffs.length, evOutcomeMissing, ctlOutcomeMissing,
+    eventOutcomeMissRate, controlOutcomeMissRate,
+    outcomeBalanceDelta: Math.abs(eventOutcomeMissRate - controlOutcomeMissRate),
+  };
+}
+
+function assessBalance(beforeDelta, outcomeDelta, threshold = BALANCE_GATE_PP) {
+  const maxDelta = Math.max(beforeDelta || 0, outcomeDelta || 0);
+  return { passed: maxDelta <= threshold, maxDelta };
+}
+
 module.exports = {
   firstPassage, matchVarsAt, buildPairs, clusterBootstrap, evSales, idxOnOrAfter,
+  buildEventDatedCandidatePools, selectViewRecords, matchDistance, bcaInterval,
+  evaluatePairOutcomes, assessBalance,
   ensureSubmissions, sic2Of, loadPriceSeries,
   _const: { VAL_START, VAL_END, DISC_END, K_SIGMA, TIMEOUT_TD, CALIPER, BALANCE_GATE_PP, MIN_NEFF_CLUSTERS, BY_Q },
 };
@@ -288,7 +413,8 @@ async function main() {
   detect.flagEvents(disc.records);
   const discEventCiks = new Set(disc.records.filter((r) => r.isEvent).map((r) => r.cik));
   const events = val.records.filter((r) => r.isEvent && !discEventCiks.has(r.cik));
-  const nonEvents = val.records.filter((r) => !r.isEvent);
+  const eventFirmQuarters = new Set(val.records.filter((r) => r.isEvent).map((r) => r.cik + '|' + r.calQ));
+  const nonEvents = val.records.filter((r) => !eventFirmQuarters.has(r.cik + '|' + r.calQ));
   console.log('[b1-validate] Events=' + val.records.filter((r) => r.isEvent).length
     + ' davon nach Discovery-Ausschluss=' + events.length + ' · Nicht-Event-Records=' + nonEvents.length);
 
@@ -335,13 +461,8 @@ async function main() {
   };
   console.log('[b1-validate] Anreicherung (Ticker/SIC/Preise/Variablen) …');
   events.forEach(enrich); nonEvents.forEach(enrich);
-  // EV/Sales je CalQ in Perzentile drehen
-  const allByQ = new Map();
-  for (const r of [...events, ...nonEvents]) { if (r.vars && Number.isFinite(r.vars.evsRaw)) { let a = allByQ.get(r.calQ); if (!a) allByQ.set(r.calQ, a = []); a.push(r); } }
-  for (const arr of allByQ.values()) {
-    const sorted = arr.map((r) => r.vars.evsRaw).sort((a, b) => a - b);
-    for (const r of arr) r.vars.evsPctl = sorted.findIndex((v) => v >= r.vars.evsRaw) / sorted.length;
-  }
+  const datedDeps = { factsOf, barsOf }, datedVarsCache = new Map();
+  const mainCandidatePools = buildEventDatedCandidatePools(events, nonEvents, datedDeps, datedVarsCache);
 
   // Balance-Gate-Zählung: Preis-/Substrat-Verfügbarkeit je Gruppe
   const usable = (r) => !!(r.ticker && r.sic2 && r.hasBars && r.vars);
@@ -353,9 +474,7 @@ async function main() {
     + ' % · Δ=' + (100 * balanceDelta).toFixed(1) + ' pp (Gate ' + (100 * BALANCE_GATE_PP) + ' pp)');
 
   // 3) Matching
-  const candByQ = new Map();
-  for (const c of ctlCandidates) { let a = candByQ.get(c.calQ); if (!a) candByQ.set(c.calQ, a = []); a.push(c); }
-  const { pairs, noMatch } = buildPairs(evUsable, candByQ);
+  const { pairs, noMatch } = buildPairs(evUsable, mainCandidatePools);
   console.log('[b1-validate] Paare=' + pairs.length + ' · ohne Caliper-Match=' + noMatch);
 
   const report = {
@@ -382,30 +501,29 @@ async function main() {
     { key: 'shumway', kSigma: K_SIGMA, entryLag: 1, impute: true },
   ];
   const famResults = {};
+  const enrichedByKey = new Map([...events, ...nonEvents].map((r) => [r.cik + '|' + r.end, r]));
   for (const v of views) {
     // Event-Menge je View (P75/ohneOpMargin verändern die Auswahl; Paare neu bilden)
     let evSet = evUsable, prs = pairs;
     if (v.pctl || v.noOpMargin) {
-      const rec2 = val.records.map((r) => ({ ...r }));
-      detect.flagEvents(rec2, v.pctl ? { pctl: v.pctl } : {});
-      const evs2 = rec2.filter((r) => !discEventCiks.has(r.cik)
-        && (v.noOpMargin ? r.isEventNoMargin : r.isEvent));
-      // Anreicherung wiederverwenden (Records sind Kopien): Map via cik+end.
-      const emap = new Map([...events, ...nonEvents].map((r) => [r.cik + '|' + r.end, r]));
-      evSet = evs2.map((r) => emap.get(r.cik + '|' + r.end)).filter((r) => r && usable(r));
-      prs = buildPairs(evSet, candByQ).pairs;
+      const selected = selectViewRecords(val.records, v, discEventCiks);
+      evSet = selected.events.map((r) => enrichedByKey.get(r.cik + '|' + r.end)).filter(Boolean);
+      const viewControls = selected.controls.map((r) => enrichedByKey.get(r.cik + '|' + r.end)).filter(Boolean);
+      const viewPools = buildEventDatedCandidatePools(evSet, viewControls, datedDeps, datedVarsCache);
+      evSet = evSet.filter(usable);
+      prs = buildPairs(evSet, viewPools).pairs;
     }
-    const diffs = [];
-    let evMissing = 0, ctlMissing = 0;
-    for (const p of prs) {
-      const eo = firstPassage(barsOf(p.ev.ticker), p.ev.filed, { kSigma: v.kSigma, entryLag: v.entryLag, imputeMissing: v.impute });
-      const co = firstPassage(barsOf(p.ctl.ticker), p.ctl.filed, { kSigma: v.kSigma, entryLag: v.entryLag, imputeMissing: v.impute });
-      if (eo.status !== 'ok') { evMissing++; continue; }
-      if (co.status !== 'ok') { ctlMissing++; continue; }
-      diffs.push({ cluster: p.ev.sic2 + '|' + p.ev.calQ, calQ: p.ev.calQ, diff: (eo.upperFirst ? 1 : 0) - (co.upperFirst ? 1 : 0) });
-    }
-    const boot = diffs.length ? clusterBootstrap(diffs, B_BOOT, BOOT_SEED) : null;
-    famResults[v.key] = { pairsAttempted: prs.length, pairsComplete: diffs.length, evOutcomeMissing: evMissing, ctlOutcomeMissing: ctlMissing, ...boot };
+    const outcome = evaluatePairOutcomes(prs, v, barsOf);
+    const boot = outcome.diffs.length ? clusterBootstrap(outcome.diffs, B_BOOT, BOOT_SEED) : null;
+    famResults[v.key] = {
+      pairsAttempted: outcome.pairsAttempted, pairsComplete: outcome.pairsComplete,
+      evOutcomeMissing: outcome.evOutcomeMissing, ctlOutcomeMissing: outcome.ctlOutcomeMissing,
+      eventOutcomeMissRate: +outcome.eventOutcomeMissRate.toFixed(3),
+      controlOutcomeMissRate: +outcome.controlOutcomeMissRate.toFixed(3),
+      outcomeBalanceDelta: outcome.outcomeBalanceDelta,
+      outcomeBalanceDeltaPp: +(100 * outcome.outcomeBalanceDelta).toFixed(1),
+      ...boot,
+    };
   }
   // BY über m=6 (unmessbare p=1)
   const keys = views.map((v) => v.key);
@@ -416,7 +534,9 @@ async function main() {
   // 5) Verdikt (§8)
   const H = famResults.haupttest || {};
   const powerOk = H.nEff != null && H.nEff >= MIN_NEFF_CLUSTERS;
-  const balanceOk = balanceDelta <= BALANCE_GATE_PP;
+  const outcomeDelta = H.outcomeBalanceDelta || 0;
+  const balance = assessBalance(balanceDelta, outcomeDelta);
+  const balanceOk = balance.passed;
   const shumwayVeto = famResults.shumway && Number.isFinite(famResults.shumway.mean) && famResults.shumway.mean < 0 && H.mean > 0;
   let verdict;
   if (!powerOk) verdict = 'unterpowert — kein Urteil (N_eff<' + MIN_NEFF_CLUSTERS + ' Cluster)';
@@ -425,7 +545,22 @@ async function main() {
   else if (H.bySignificant && H.mean > 0) verdict = 'POSITIV: Haupttest überlebt BY + Gates';
   else verdict = 'NEGATIV/NULL: kein BY-signifikanter Effekt (gültiges Ergebnis)';
   report.family = famResults;
-  report.gates = { powerOk, nEffClusters: H.nEff || null, balanceOk, shumwayVeto: !!shumwayVeto };
+  report.missingness.outcome = Object.fromEntries(keys.map((k) => [k, {
+    pairsAttempted: famResults[k].pairsAttempted,
+    evOutcomeMissing: famResults[k].evOutcomeMissing,
+    ctlOutcomeMissing: famResults[k].ctlOutcomeMissing,
+    eventMissRate: famResults[k].eventOutcomeMissRate,
+    controlMissRate: famResults[k].controlOutcomeMissRate,
+    balanceDeltaPp: famResults[k].outcomeBalanceDeltaPp,
+  }]));
+  report.missingness.balanceGatePassed = balanceOk;
+  report.gates = {
+    powerOk, nEffClusters: H.nEff || null, balanceOk,
+    balanceDeltaBeforePp: +(100 * balanceDelta).toFixed(1),
+    balanceDeltaOutcomePp: H.outcomeBalanceDeltaPp || 0,
+    balanceDeltaMaxPp: +(100 * balance.maxDelta).toFixed(1),
+    shumwayVeto: !!shumwayVeto,
+  };
   report.verdict = verdict;
 
   fs.writeFileSync(OUT_BASE + '.json', JSON.stringify(report, null, 2));

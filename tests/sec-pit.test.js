@@ -5,7 +5,7 @@
 // (3) YTD-Fakten (BH-017-Falle) fallen aus der Quartals-Serie; (4) Shares-
 // Historie (instant) mit denselben Regeln; (5) freshness-first Konzeptwahl.
 const assert = require('assert');
-const { pitSeries, pitSeriesFromFacts, sharesHistory } = require('../lib/sec-pit.js');
+const { pitSeries, pitSeriesFromFacts, sharesHistory, pitQuarterlyWithDerivedQ4 } = require('../lib/sec-pit.js');
 
 function fixtureCompany() {
   return {
@@ -146,4 +146,25 @@ const REVS = ['Revenues', 'RevenueFromContractWithCustomerExcludingAssessedTax',
   assert.strictEqual(yoyPartner(full.series, q3), null);
 }
 
-console.log('sec-pit.test.js: alle 7 Blöcke grün');
+// (8 / F4) FY und diskrete Quartale aus verschiedenen Konzepten duerfen nie zu
+//     einem synthetischen Q4 vermischt werden.
+{
+  const mixed = {
+    facts: {
+      'us-gaap': {
+        Revenues: { units: { USD: [
+          { start: '2025-01-01', end: '2025-12-31', val: 400, filed: '2026-02-20', form: '10-K', fy: 2025, fp: 'FY' },
+        ] } },
+        SalesRevenueNet: { units: { USD: [
+          { start: '2025-01-01', end: '2025-03-31', val: 100, filed: '2025-05-01', form: '10-Q', fy: 2025, fp: 'Q1' },
+          { start: '2025-04-01', end: '2025-06-30', val: 110, filed: '2025-08-01', form: '10-Q', fy: 2025, fp: 'Q2' },
+          { start: '2025-07-01', end: '2025-09-30', val: 120, filed: '2025-11-01', form: '10-Q', fy: 2025, fp: 'Q3' },
+        ] } },
+      },
+    },
+  };
+  const got = pitQuarterlyWithDerivedQ4(mixed, ['Revenues', 'SalesRevenueNet'], {});
+  assert.ok(!got.series.some((p) => p.derived), 'F4: kein derived Q4 ueber Konzeptgrenzen');
+}
+
+console.log('sec-pit.test.js: alle 8 Blöcke grün');
