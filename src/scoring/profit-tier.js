@@ -45,8 +45,15 @@ const BREAKEVEN_MAX_QUARTERS = 4;  // 'kurz vor': Breakeven bei aktueller Rate b
 // Annual-Operating-Ergebnis-Stream (Fallback NetIncome), newest-first, nur present values.
 // Spiegelt profitSeries() aus score.js — hier standalone gehalten (kein score.js-Import ->
 // kein Zyklus, eigenstaendig testbar).
+// audit/fix (BH-081): presentValues() ueberspringt eine FUEHRENDE Luecke (raw[0]===null) — annual[0]
+// waere dann ein AELTERES Jahr, das profitTierOf() als "juengstes Jahr" liest (Store-Beleg CI:
+// annualOpInc=[null,8.44B,-88.6B,7.3B,15.57B] -> stale 8.44B macht CI faelschlich "seit-kurzem-
+// profitabel"). Fehlt das juengste OpInc-Jahr, ist die OpInc-Serie fuer DAS aktuelle Jahr nicht
+// aussagekraeftig -> komplett auf NetIncome zurueckfallen (dessen eigene Index0-Position gilt dann),
+// analog zum bestehenden Fallback bei komplett leerem OpInc.
 function annualProfitSeries(s) {
-  const op = presentValues(norm(s, 'annualOpInc'));
+  const raw = norm(s, 'annualOpInc');
+  const op = (raw.length && raw[0] !== null && raw[0] !== undefined) ? presentValues(raw) : [];
   return op.length ? op : presentValues(norm(s, 'annualNetIncome'));
 }
 

@@ -346,8 +346,9 @@ function normSec(s, field) {
 // spaet-startende SEC-Filer. signFlips/revMaxDrawdown sind vorzeichen-/verhaeltnis-basiert -> robust gegen
 // SEC-vs-Yahoo FY-Versatz + Level-Restatement. Kein secAnnual -> Yahoo (byte-identisch zum 4J-Verhalten).
 function cycleSeriesPair(s) {
-  const opY = presentValues(norm(s, 'annualOpInc'));
-  const revY = presentValues(norm(s, 'annualRev'));
+  const opRaw = norm(s, 'annualOpInc'), revRaw = norm(s, 'annualRev');
+  const opY = presentValues(opRaw);
+  const revY = presentValues(revRaw);
   const opS = normSec(s, 'annualOpInc'), revS = normSec(s, 'annualRev');
   const opSP = opS ? presentValues(opS) : null;
   const revSP = revS ? presentValues(revS) : null;
@@ -356,7 +357,17 @@ function cycleSeriesPair(s) {
   // DISJUNKTE Kalenderfenster (neue Oszillation vs alter Drawdown) = Zeit-Misch-Signal (Inv. 4/5). -> Yahoo-Fallback.
   const useSec = opSP && revSP && opSP.length >= opY.length && revSP.length >= revY.length
     && opS[0] !== null && revS[0] !== null;
-  return useSec ? { op: opSP, rev: revSP } : { op: opY, rev: revY };
+  if (useSec) return { op: opSP, rev: revSP };
+  // audit/fix (BH-082): derselbe Index0-Alignment-Guard galt bisher NUR fuer den SEC-Zweig — der
+  // Yahoo-Fallback baute op/rev aus GETRENNT kompaktierten presentValues()-Serien OHNE Pruefung, ob
+  // beide am juengsten Jahr present sind. Eine fuehrende Luecke in NUR einem der beiden Felder liess
+  // op/rev aus disjunkten GJ-Fenstern zusammen, exakt das Zeit-Misch-Signal, das der Kommentar oben fuer
+  // den SEC-Zweig verbietet. Ohne Index0 auf BEIDEN Seiten ist das Paar nicht zeitlich verbunden -> leer
+  // liefern, cycleSignal gatet dann ueber op.length<3 auf 0 (kein Phantom-Zyklus-Signal).
+  if (opRaw[0] === null || opRaw[0] === undefined || revRaw[0] === null || revRaw[0] === undefined) {
+    return { op: [], rev: [] };
+  }
+  return { op: opY, rev: revY };
 }
 // KONJUNKTION: feuert NUR wenn Oszillation UND echter Umsatzkollaps. >=3 present OpInc-Jahre (junge IPO nie
 // gedaempft). osc-Gate ZUERST (NBIS osc=0 kann nie ueber das DD-Bein feuern). Datenmuell-Guard: ein rev<=0-
@@ -480,6 +491,22 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
         if (!(refAxes && Array.isArray(refAxes[ax.key]))) {
           throw new Error(`scoreUniverse: refCalibration-Lineal kennt Achse '${ax.key}' in Kohorte '${cohortKey}' nicht (Lineal aelter als die aktuelle formulas-Version). Mit aktuellem Code neu einfrieren.`);
         }
+      }
+    }
+  }
+  // audit/fix (BH-075): der Guard oben validiert NUR die cohortBases-Achsen-Arrays. Die weiter unten roh aus
+  // refCal konsumierten SKALARE (winsorBounds/growthBounds/cycleDDThreshold/mcapBounds/ipoBounds, Z.~575-786)
+  // blieben ungeprueft — fehlt eines in einem Teil-Artefakt, wird es `undefined` statt `null`. Das ist
+  // gefaehrlich, weil Vergleiche gegen `undefined` anders als gegen `null` gaten (z.B. ddThreshold===null
+  // faengt den Degenerations-Fall ab, ddThreshold===undefined NICHT -> revMaxDrawdown(rev)<undefined ist
+  // IMMER false -> der Zyklus-Daempfer wuerde ungegatet fuer jedes oszillierende Signal feuern). `null` ist
+  // ein legitimer gefrorener Degenerations-Zustand (downstream ueberall per ===null gegatet) — nur das
+  // FEHLEN des Schluessels selbst (Teil-Artefakt/aeltere Schema-Version) ist der Fehler -> `in`-Check, nicht
+  // Truthy-Check. Frueh (vor dem ersten Score) = ehrliche Root-Cause-Stelle, analog zum gDistByCohort-Guard unten.
+  if (refCal) {
+    for (const scalarKey of ['winsorBounds', 'growthBounds', 'cycleDDThreshold', 'mcapBounds', 'ipoBounds']) {
+      if (!(scalarKey in refCal)) {
+        throw new Error(`scoreUniverse: refCalibration-Lineal fehlt Feld '${scalarKey}' (Teil-Artefakt/aeltere Schema-Version) — mit aktuellem Code neu einfrieren.`);
       }
     }
   }
@@ -669,7 +696,12 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
       cohWcov[i] = coverageWeight(axes);         // Achsen-Gewichts-Coverage (C4-Shrinkage-Faktor)
       // 2.13 #23: Coverage AUSWEISEN (nicht verrechnen) — present-Achsen/total + C4-Gewicht je Zeile
       // an den Entry haengen (score-inert, reine Anzeige; round2 ist modul-scope, zur Aufrufzeit da).
-      entries[i].coverageAxes = axes.filter((a) => a.value !== null).length + '/' + axes.length;
+      // audit/fix (BH-083): axes.length zaehlte auch w=0-Achsen (QCs roicStability) mit, waehrend
+      // coverageWeight() (engine.js) diese korrekt aus totalW ausschliesst -> QC-Zeilen zeigten '5/6' bei
+      // coverageWeight 1.0, Vertragsbruch zu docs/findash-export-v1.md ('n/n <=> 1.0'). Nur gewichtete
+      // Achsen zaehlen, konsistent zu coverageWeight.
+      const weightedAxes = axes.filter((a) => a.weight > 0);
+      entries[i].coverageAxes = weightedAxes.filter((a) => a.value !== null).length + '/' + weightedAxes.length;
       entries[i].coverageWeight = round2(cohWcov[i]);
       // 2.10: n je Zeile (Pflicht-Export, --check-Tamper->exit1) + Fallback-Flag (transparente Anzeige).
       entries[i].cohortN = nCohort;
@@ -1010,10 +1042,14 @@ function calibrationDrift(liveCal, refCal, ksThreshold = 0.15) {
   const lb = (liveCal && liveCal.cohortBases) || {}, rb = (refCal && refCal.cohortBases) || {};
   for (const key of Object.keys(rb)) {
     const la = lb[key] && lb[key].axes, ra = rb[key].axes;
-    if (!la || !ra) continue;
+    if (!ra) continue; // Referenz-Kohorte ohne axes-Schema -> strukturell nicht vergleichbar (sollte nie vorkommen)
     for (const ax of Object.keys(ra)) {
-      const ks = ksDistance(la[ax], ra[ax]);
-      if (ks === null) continue;
+      const ks = ksDistance(la && la[ax], ra[ax]);
+      // audit/fix (BH-074): eine fehlende Live-Kohorte/-Achse (la undefined) oder eine leere Verteilung
+      // (ksDistance->null bei leerem Array) wurde bisher per `if(!la||!ra) continue`/`if(ks===null) continue`
+      // STILL uebersprungen -> ein voller Kohortenkollaps hielt maxKs bei 0 und meldete ok:true (false-green
+      // "Drift ok"). Nicht-vergleichbar ist selbst der maximale Drift-Fall (1.0), nicht "kein Drift" -> fail-loud.
+      if (ks === null) { maxKs = 1; drifted.push({ cohort: key, axis: ax, ks: 1, reason: 'uncomparable' }); continue; }
       if (ks > maxKs) maxKs = ks;
       if (ks > ksThreshold) drifted.push({ cohort: key, axis: ax, ks: Math.round(ks * 1000) / 1000 });
     }
@@ -1023,7 +1059,9 @@ function calibrationDrift(liveCal, refCal, ksThreshold = 0.15) {
   const lg = (liveCal && liveCal.gDistByCohort) || {}, rg = (refCal && refCal.gDistByCohort) || {};
   for (const key of Object.keys(rg)) {
     const ks = ksDistance(lg[key], rg[key]);
-    if (ks === null) continue;
+    // audit/fix (BH-074): dieselbe Uncomparable=Drift-Regel wie oben (sonst gleiche false-green-Luecke
+    // fuer das Wachstums-Lineal).
+    if (ks === null) { maxKs = 1; drifted.push({ cohort: key, axis: 'gDist', ks: 1, reason: 'uncomparable' }); continue; }
     if (ks > maxKs) maxKs = ks;
     if (ks > ksThreshold) drifted.push({ cohort: key, axis: 'gDist', ks: Math.round(ks * 1000) / 1000 });
   }

@@ -26,7 +26,7 @@
  *  9 marginLevel           Bruttomarge-NIVEAU (Franchise-vs-commodity-Diskriminator, 2.12b)
  */
 
-const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVal, ratioSeries } = require('./snapshot.js');
+const { norm, hasPresent, firstPresent, presentValues, metricVal, ratioSeries } = require('./snapshot.js');
 const { fcfMarginValid } = require('./engine.js');
 
 // --- kleine Helfer auf normalisierten Serien (luecken-sicher) ---------------
@@ -38,6 +38,20 @@ function lastPresent(series) {
     if (series[i] !== null && series[i] !== undefined) return series[i];
   }
   return null;
+}
+
+// audit/fix (BH-079): Ersatz fuer snapshot.js firstTwoPresent() innerhalb dieser Achsen — firstTwoPresent
+// ueberspringt NULL-Luecken OHNE Adjazenz-Pruefung und gibt die ersten zwei present Werte als [neu,alt]
+// zurueck, egal wie weit sie im Array auseinanderliegen. Ein YoY-Delta ist aber nur eine ECHTE
+// Ein-Jahres-Differenz, wenn Index 0 (juengstes GJ) UND Index 1 (Vorjahr) BEIDE present sind — sonst wird
+// entweder ein Mehrjahres-Sprung als 1-Jahres-YoY ausgegeben (Luecke ZWISCHEN den Werten) oder eine
+// fuehrende Luecke macht einen Altwert zum vermeintlich "aktuellen" (Store-Belege: AUR 4-Jahres-Sprung,
+// HYMC fuehrende Luecke). Nur Index0+Index1 beide present -> [neu,alt]; sonst null (ehrlich droppen,
+// renorm-on-drop) statt den Mehrjahres-/Stale-Wert durchzureichen.
+function adjacentTwoPresent(series) {
+  if (!Array.isArray(series)) return null;
+  const a = series[0], b = series[1];
+  return (Number.isFinite(a) && Number.isFinite(b)) ? [a, b] : null;
 }
 
 // ratioSeries kommt aus snapshot.js (geteilt, finite-/laengen-sicher).
@@ -54,7 +68,7 @@ function lastPresent(series) {
 // KEIN aufgezwungenes Niveau.
 function revYoYComponents(s) {
   const comps = [];
-  const ar = firstTwoPresent(norm(s, 'annualRev'));
+  const ar = adjacentTwoPresent(norm(s, 'annualRev'));
   if (ar && ar[1] > 0) { const g = ar[0] / ar[1] - 1; if (Number.isFinite(g)) comps.push(g); }
   const rq = norm(s, 'revenueQ');
   if (rq.length >= 5 && rq.slice(0, 5).every(Number.isFinite) && rq[4] > 0) {
@@ -89,11 +103,20 @@ function revGrowthLevel(s, growthBounds) {
 const clampWinsor = (v, bounds) => (bounds ? Math.max(bounds[0], Math.min(bounds[1], v)) : v);
 
 // per-Quartal QoQ-Raten (newest-first), optional auf [lo,hi] winsorisiert.
+// audit/fix (BH-080): vorher filterte .filter(v=>v!==null) die NULL-Luecken VOR der Index-Paarung weg
+// (Kompaktierung) -> nicht-benachbarte Quartale rutschten im gefilterten Array zusammen und wurden als
+// Nachbarn geratet (eine QoQ-Rate ueber eine echte Luecke hinweg). Jetzt auf der ROHEN (luecken-erhaltenden)
+// Serie iterieren: ein QoQ-Schritt nur zwischen WIRKLICH aufeinanderfolgenden Quartals-Indizes — eine
+// Luecke an i ODER i+1 bricht die Kette (kein Schritt fuer dieses Paar), statt sie zu ueberbruecken.
+// Aktuell inert (revenueQ hat 0 Luecken im Store), haertet aber gegen kuenftige Luecken (dieselbe
+// Kompaktierungs-Klasse wie BH-079).
 function quarterQoQRates(s, bounds) {
-  const rq = norm(s, 'revenueQ').filter((v) => v !== null && v !== undefined);
+  const rq = norm(s, 'revenueQ');
   const g = [];
   for (let i = 0; i < rq.length - 1; i++) {
-    if (rq[i] > 0 && rq[i + 1] > 0) g.push(clampWinsor(rq[i] / rq[i + 1] - 1, bounds)); // beide Quartale positiv
+    const a = rq[i], b = rq[i + 1];
+    if (a === null || a === undefined || b === null || b === undefined) continue; // Luecke bricht die Kette
+    if (a > 0 && b > 0) g.push(clampWinsor(a / b - 1, bounds)); // beide Quartale positiv
   }
   return g;
 }
@@ -112,7 +135,7 @@ function revAcceleration(s, bounds) {
 // --- 3. Bruttogewinn-Wachstum + GM-Trajektorie ------------------------------
 function gpGrowth(s) {
   const gp = norm(s, 'annualGP');
-  const two = firstTwoPresent(gp);
+  const two = adjacentTwoPresent(gp);
   if (!two || two[1] <= 0) return null;
   const gpYoY = two[0] / two[1] - 1;
   // GM-Trajektorie (Margenpunkt-Delta neu vs. alt), additiver Tilt
@@ -166,6 +189,14 @@ function quarterOpMargins(s, bounds) {
 // Slope der Quartals-OpMargin (opIncQ/revenueQ), neu minus alt. >0 = Hebel greift.
 // Reihenfolge newest-first erhalten; renorm-on-drop bei <2 present Quartalen.
 function marginTrajectory(s, bounds) {
+  // audit/fix (BH-080): quarterOpMargins() kompaktiert fehlende Quartale weg (present ist eine reine
+  // Werteliste, keine Index-Positionen) — bei einer FUEHRENDEN opIncQ-Luecke (juengstes Quartal fehlt)
+  // ist present[0] in Wahrheit eine 1-Quartal-alte Marge, wuerde hier aber als "juengste" behandelt
+  // (Store-Beleg: 45 Namen mit fuehrender opIncQ-Luecke). Vor der Kompaktierung pruefen, ob Index0
+  // (echtes juengstes Quartal) selbst eine valide Marge hat; sonst ist "juengste Marge" unbekannt ->
+  // ehrlich droppen (renorm-on-drop) statt eine stale Periode als aktuell auszugeben.
+  const rq0 = norm(s, 'revenueQ')[0], oi0 = norm(s, 'opIncQ')[0];
+  if (!(rq0 > 0) || oi0 === null || oi0 === undefined || !Number.isFinite(oi0)) return null;
   const present = quarterOpMargins(s, bounds);
   if (present.length < 2) return null;
   return present[0] - present[present.length - 1]; // juengste minus aelteste Marge
@@ -224,8 +255,8 @@ function capitalEfficiency(s) {
 
   // Asset-Growth-Penalty (nur wenn beide Wachstumsraten berechenbar)
   let penalty = 0;
-  const aTwo = firstTwoPresent(assets);
-  const rTwo = firstTwoPresent(norm(s, 'annualRev'));
+  const aTwo = adjacentTwoPresent(assets);
+  const rTwo = adjacentTwoPresent(norm(s, 'annualRev'));
   if (aTwo && aTwo[1] > 0 && rTwo && rTwo[1] > 0) {
     const assetGrowth = aTwo[0] / aTwo[1] - 1;
     const revGrowth = rTwo[0] / rTwo[1] - 1;

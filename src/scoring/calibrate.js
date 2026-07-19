@@ -18,10 +18,14 @@ const { evaluateLamps } = require('./lamps.js');
 const { trackOf, rawAxisValue, learnWinsorBounds, winsorTailBounds, growthYoYComponents, isDataSuspect, issuerDedupComparator, issuerKey, scoreUniverse, rankBy, MIN_COHORT_N } = require('./score.js');
 
 // Baut pro (formulaId|track) die Perzentil-Matrix: rows[{ticker, pct:{axis:0-100}, lamps}].
-function buildCalibMatrix(universe, formulas) {
+// audit/fix (BH-076): opts.classify erlaubt einen QC-Lauf (classify:qualityRoute) gegen dieselbe Matrix-
+// Logik zu pinnen wie run-screener (opts-Seam spiegelt scoreUniverse, score.js:492). Ohne classify -> route()
+// (byte-identisch zum bisherigen Verhalten). Default-Param statt Pflicht-Arg -> bestehende Aufrufer unveraendert.
+function buildCalibMatrix(universe, formulas, opts = {}) {
+  const classify = opts.classify || route;
   const routed = [];
   for (const s of (Array.isArray(universe) ? universe : [])) {
-    const r = route(s);
+    const r = classify(s);
     if (r.action !== 'route') continue;
     const formula = formulas[r.formulaId];
     if (!formula) continue;
@@ -197,9 +201,13 @@ function withWeights(formulas, formulaId, track, weightObj) {
 // aller Shrinks + Post-Faktoren) und rankt via rankBy. weightObj optional: mit gesetzten Gewichten wird gegen
 // die überschriebene Formel gescort (der Verify-Schritt für einen Kalibrier-Kandidaten). Das IST das
 // run-screener-Ranking — daher Rang-identisch, kein separater Parität-Beweis nötig außer dem Test unten.
-function productionCohortRanking(universe, formulas, formulaId, track, weightObj) {
+// audit/fix (BH-076): opts (classify, growthBoost, refCalibration, ...) an scoreUniverse durchreichen —
+// vorher lief hier IMMER die HG-Default-Konfiguration (route()+growthBoost:true), ein QC-Kandidat
+// (classify:qualityRoute, growthBoost:false) konnte nie produktionsgetreu verifiziert werden. Default {} ->
+// byte-identisch zum bisherigen Verhalten.
+function productionCohortRanking(universe, formulas, formulaId, track, weightObj, opts = {}) {
   const f = weightObj ? withWeights(formulas, formulaId, track, weightObj) : formulas;
-  return rankBy(scoreUniverse(universe, f), formulaId, track).map((e) => ({ ticker: e.ticker, score: e.score }));
+  return rankBy(scoreUniverse(universe, f, opts), formulaId, track).map((e) => ({ ticker: e.ticker, score: e.score }));
 }
 
 /**
