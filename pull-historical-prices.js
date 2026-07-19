@@ -62,6 +62,113 @@ function parseArgs(argv) {
 
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+// BH-002 fix (audit): every date derivation in this file used a naive
+// toISOString().slice(0,10) UTC slice on Yahoo's quote timestamp. For an
+// exchange materially ahead of UTC (e.g. .AX at UTC+10/11) the bar's
+// local-midnight instant falls on the PREVIOUS UTC calendar day, so the naive
+// slice silently rolled the whole trading day back by one — Store-Beleg:
+// JBH.AX stored Sunday-Thursday weeks instead of Monday-Friday. Shift the
+// instant by the exchange's own meta.gmtoffset (seconds, Yahoo-supplied)
+// before slicing so the stored date matches the exchange's own calendar day.
+function exchangeLocalDate(d, gmtoffsetSeconds) {
+  const dt = d instanceof Date ? d : new Date(d);
+  const offsetMs = (typeof gmtoffsetSeconds === 'number' && isFinite(gmtoffsetSeconds)) ? gmtoffsetSeconds * 1000 : 0;
+  return new Date(dt.getTime() + offsetMs).toISOString().slice(0, 10);
+}
+
+// BH-050 fix: reject non-session bars before they ever reach the merge (Yahoo
+// occasionally returns a Sat/Sun row — holiday-adjacent glitch or the pre-fix
+// weekend phantom-date, Tag 231a-3). Day-of-week convention (0=Sun,6=Sat)
+// mirrors scripts/walk-forward-perf.js.
+// ponytail: blanket Sat/Sun reject, not a full exchange trading calendar —
+// safe today because no Sun-Thu market (e.g. .TA) is in the watchlist
+// (verified against watchlist.json suffixes); add a real calendar if one ever is.
+function isWeekendDate(dateStr) {
+  const dow = new Date(dateStr + 'T00:00:00Z').getUTCDay();
+  return dow === 0 || dow === 6;
+}
+
+// BH-052 fix: yf.chart() had no timeout — a hung request could stall a batch
+// until the CI step's own ~25-min timeout. AbortSignal.timeout is native
+// (Node >=17.3; package.json engines requires >=22) — no new dependency.
+const FETCH_TIMEOUT_MS = 30000;
+
+// BH-054 fix: PRICE_CONCURRENCY='0' is truthy as a string, so the old
+// `parseInt(env || '10')` never fell back to the default — CONCURRENCY became
+// 0 and the batch loop (`batchStart += CONCURRENCY`) never advanced, spinning
+// on empty batches until the step timeout. Guard for a positive integer.
+function parseConcurrency(envVal) {
+  const n = parseInt(envVal, 10);
+  return (Number.isFinite(n) && n > 0) ? n : 10;
+}
+
+// Shared fetch+merge core for both processOne() (per-ticker) and the dedicated
+// benchmark back-fill below, and reused by scripts/backfill-prices.js — all
+// three need the identical basis/session/positivity/window-merge contract, so
+// one implementation means a fix here can't silently diverge between call
+// sites (BH-001/002/049/050/051 all reproduced through this exact path, for
+// tickers, benchmarks, and manual backfills alike).
+// `chartFn` is injectable for hermetic tests (default: the real yf.chart call).
+async function fetchAndMergeSeries(symbol, existingArr, chartFn) {
+  const fetchChart = chartFn || ((...a) => yf.chart(...a));
+  const period1 = new Date(Date.now() - 400 * 86400 * 1000);
+  const period2 = new Date();
+  const result = await fetchChart(symbol, { period1, period2, interval: '1d' },
+    { fetchOptions: { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) } }); // BH-052
+  const gmtoffset = result.meta && result.meta.gmtoffset;
+  const rawQuotes = result.quotes || [];
+
+  // BH-049 fix: enforce ONE price basis per series instead of the old per-bar
+  // `adjclose ?? close` fallback (Tag 148 introduced adjusted-close as the
+  // canonical basis; this closes the gap it left open). Store-Beleg: KLAC had
+  // an event-day bar with NO adjclose sitting mid-series at ~10x its
+  // split-adjusted neighbours — the per-bar fallback silently mixed a raw
+  // close into an otherwise adjusted series. If adjclose exists anywhere in
+  // the series, a bar missing it is REJECTED (not downgraded to raw close);
+  // only a series with NO adjclose at all uses raw close throughout.
+  const seriesHasAdjclose = rawQuotes.some(q => q.adjclose != null);
+  const quotes = [];
+  for (const q of rawQuotes) {
+    if (seriesHasAdjclose && q.adjclose == null) continue; // mixed-basis bar — reject, don't fall back
+    const v = seriesHasAdjclose ? q.adjclose : q.close;
+    // Bug 11 (pre-existing): reject non-finite/<=0 closes (Yahoo adjclose-0
+    // glitch; JSON.stringify would otherwise null a NaN and poison the store).
+    if (v == null || !isFinite(v) || v <= 0) continue;
+    const d = exchangeLocalDate(q.date, gmtoffset); // BH-002
+    if (isWeekendDate(d)) continue; // BH-050
+    quotes.push({ date: d, close: v });
+  }
+  if (!quotes.length) return null;
+
+  // BH-001 fix: rebuild the fetch-covered window authoritatively from THIS
+  // fetch. Previously the merge seeded the map with ALL stored dates
+  // unconditionally (audit/fix A2 council+court 2026-06-26: "fetched-wins")
+  // and only overwrote dates Yahoo re-sent — a bad row already in the store
+  // (e.g. a pre-fix weekend phantom) survived forever because it was never
+  // re-delivered. Now: a stored date inside the window this fetch covers
+  // (>= the earliest date Yahoo just returned) is dropped unless Yahoo
+  // re-confirms it; only the tail strictly BEFORE that window — outside this
+  // fetch's coverage — is carried over (still re-validated, see BH-051 below).
+  // quotes is date-ascending (Yahoo's own order, Tag 223c-documented
+  // invariant), so quotes[0] is the earliest fetched date.
+  const minFetched = quotes[0].date;
+  const merged = new Map();
+  for (const e of (existingArr || [])) {
+    // BH-051 fix: validate the carried-over tail exactly like fresh bars — a
+    // stored negative/zero close (Yahoo adjclose-0 glitch pre-dating the
+    // Bug-11 guard) no longer survives just because it's outside this fetch's window.
+    if (e.date < minFetched && isFinite(e.close) && e.close > 0) merged.set(e.date, e.close);
+  }
+  for (const q of quotes) merged.set(q.date, q.close); // fetched authoritatively rebuilds the covered window
+
+  const arr = Array.from(merged, ([date, close]) => ({ date, close }));
+  arr.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  if (arr.length > 400) arr.splice(0, arr.length - 400); // Tag 223c: in-place trim
+
+  const latest = quotes[quotes.length - 1];
+  return { arr, latestClose: latest.close, latestDate: latest.date, currency: result.meta && result.meta.currency };
+}
+
 // A7-fix (2026-07-10): Comparator fuer die stale-first-Pull-Reihenfolge. Benchmarks
 // (added_via:'benchmark') immer zuerst (kritisch fuer alpha-vs-SPY), dann aeltester/
 // fehlender history-Verlauf zuerst — so schiebt jeder timeout-begrenzte Lauf die stale
@@ -150,92 +257,36 @@ async function main() {
   const CHECKPOINT_EVERY_BATCHES = parseInt(process.env.PRICE_CHECKPOINT_BATCHES || '100', 10);
 
   // Tag-84: parallel pulls
-  const CONCURRENCY = parseInt(process.env.PRICE_CONCURRENCY || '10', 10);
+  const CONCURRENCY = parseConcurrency(process.env.PRICE_CONCURRENCY); // BH-054
   _log('INFO', `Parallel price pulls: ${CONCURRENCY} concurrent`);
   async function processOne(stock) {
-
     try {
       _log('INFO', `Pulling ${stock.ticker}...`);
-      const period1 = new Date(Date.now() - 400 * 86400 * 1000);
-      const period2 = new Date();
-      const result = await yf.chart(stock.yahoo_symbol, {
-        period1, period2, interval: '1d'
-      });
-      // Tag 148: use adjclose (dividend/split-adjusted) instead of raw close
-      // audit/fix: reject NaN/Infinity closes (JSON.stringify rewrites them to null, poisoning history.json) — mirror backfill-prices.js isFinite filter
-      // Bug 11: also reject <=0 closes (Yahoo adjclose-0 glitch) so a 0-close never
-      // reaches history.json and gets booked as a -100% forward return downstream.
-      const quotes = (result.quotes || []).filter(q => { const v = q.adjclose ?? q.close; return v != null && isFinite(v) && v > 0; });
-      if (!quotes.length) { failed++; return; }
-      const latestQuote = quotes[quotes.length - 1];
-      const latestClose = latestQuote.adjclose ?? latestQuote.close;
-      // Tag 231a-3 (audit HIGH fix): derive the actual trading date from the
-      // latest quote rather than using UTC `today`. Previously: on a weekend
-      // (today=Sat) the workflow would push {date:'Sat', close: Friday-price}
-      // into history — a phantom row mapping Saturday to Friday's close. When
-      // walk-forward looked up SPY at Saturday it got a real number that
-      // wasn't actually an end-of-day quote for Saturday, breaking the
-      // benchmark-canonical date pair (Tag 231a-2) for any vintage falling
-      // on a weekend/holiday. Fix: store the date the exchange actually
-      // reported, never a calendar date the market wasn't open on.
-      const latestQuoteDate = latestQuote.date
-        ? (latestQuote.date instanceof Date ? latestQuote.date : new Date(latestQuote.date)).toISOString().slice(0, 10)
-        : today;
-      // audit F-A-2026-06-21: weekend phantom-date — per-day snapshot now stamps the
-      // real exchange trading date (latestQuoteDate, Tag 231a-3) instead of the calendar
-      // run date `today`. On a Saturday/holiday run the prices/<date>.json file previously
-      // labeled Friday's adjclose as asOf=Saturday, re-introducing the exact Sat→Fri
-      // phantom-date mapping the history array was fixed to avoid. We keep the run date
-      // explicitly as `pulledOn` for provenance.
-      todaysSnapshot[stock.ticker] = { close: latestClose, asOf: latestQuoteDate, pulledOn: today, currency: result.meta && result.meta.currency };
-
-      // Extend history: back-fill the full fetched series, not just the latest day.
       if (!history[stock.ticker]) history[stock.ticker] = [];
-      // Tag 223c (audit F-222a-6 HIGH fix): replace O(N) .find() with O(1)
-      // last-element check (array is sorted ascending by date in the steady
-      // state — only today's entry can be appended). Also replace .slice(-400)
-      // (which allocates a fresh array each call) with in-place .splice when
-      // the array exceeds 400 entries. At 19k × 400 = 7.6M comparisons -> ~7.6k.
-      const arr = history[stock.ticker];
-      // audit F-A-2026-06-21: under-length series → null forward-return → survivorship-like
-      // exclusion. Previously processOne fetched 400 days but appended ONLY the single
-      // latest quote, so any freshly-discovered ticker had a 1-point history and grew by
-      // 1/day — walk-forward had near-zero history for most of the universe and silently
-      // dropped those tickers (null forward returns). Mirror the SPY back-fill (lines
-      // below): insert every fetched quote whose date isn't already present, then sort+trim.
-      // One-time this fills history for the whole universe; steady-state it's a no-op append.
-      // audit/fix (A2 council+court, 2026-06-26): FETCHED-WINS merge (was existing-wins).
-      // Yahoo's adjclose is BACK-adjusted: a forward split re-bases ALL prior dates, but
-      // existing-wins only wrote the new basis onto NEW dates, freezing a split-ratio
-      // discontinuity into the stored tail — a walk-forward window spanning the split then
-      // returned p1/p0-1 wrong by the split ratio (NVDA/AVGO 10:1 in 2024 -> phantom -90%).
-      // Overwrite each stored date's close with Yahoo's current authoritative value, mirroring
-      // the already-blessed sibling writer backfill-prices.js (~line 156, 'fetched overwrites').
-      // Self-correcting: we always re-derive from Yahoo, never from our own store, so a
-      // transient bad bar is replaced next run (not a frozen fixed point). c is already
-      // isFinite-filtered into `quotes` above; the guard below is defense-in-depth so no
-      // non-finite value can ever reach JSON.stringify (Tag 122/124 invariant).
-      const merged = new Map(arr.map(e => [e.date, e.close]));
-      for (const q of quotes) {
-        const d = (q.date instanceof Date ? q.date : new Date(q.date)).toISOString().slice(0, 10);
-        const c = q.adjclose ?? q.close; // ADJUSTED close (split/dividend-adjusted), Tag 148
-        if (c != null && isFinite(c) && c > 0) merged.set(d, c); // Bug 11: reject <=0 too; fetched overwrites stored -> re-base
-      }
-      arr.length = 0;
-      for (const [d, c] of merged) arr.push({ date: d, close: c }); // 'close' = ADJUSTED (Tag 148)
-      arr.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
-      if (arr.length > 400) arr.splice(0, arr.length - 400);
+      // fetchAndMergeSeries (see above) owns the fetch/basis/session/positivity/
+      // window-merge contract — BH-001/002/049/050/051/052 all live there now.
+      const merged = await fetchAndMergeSeries(stock.yahoo_symbol, history[stock.ticker]);
+      if (!merged) { failed++; return; }
+      // audit F-A-2026-06-21: per-day snapshot stamps the real exchange trading
+      // date (merged.latestDate), never the calendar run date `today` — avoids
+      // the Sat→Fri phantom-date mapping (Tag 231a-3). `pulledOn` keeps `today`
+      // explicitly for provenance.
+      todaysSnapshot[stock.ticker] = { close: merged.latestClose, asOf: merged.latestDate, pulledOn: today, currency: merged.currency };
+      history[stock.ticker] = merged.arr;
       dirty.add(stock.ticker); // Tag 294: this ticker's shard needs rewriting
       ok++;
     } catch (e) {
       _log('WARN', `  ${stock.ticker} failed: ${e.message}`);
       failed++;
     }
-
-    }
+  }
   for (let batchStart = 0; batchStart < wl.stocks.length; batchStart += CONCURRENCY) {
     const batch = wl.stocks.slice(batchStart, batchStart + CONCURRENCY);
-    await Promise.all(batch.map(s => processOne(s).catch(e => _log('WARN', `Batch ${s.ticker}: ${e.message}`))));
+    // BH-052: allSettled — processOne already catches internally and never
+    // rejects, but Promise.all would still return early on an unexpected throw,
+    // leaving that batch's other in-flight requests unawaited (silent concurrency
+    // creep into the next batch). allSettled always waits for the whole batch.
+    await Promise.allSettled(batch.map(s => processOne(s)));
     // A7-fix: Checkpoint history.json periodisch, damit ein 25-min-Timeout-Kill den bis
     // hierher gepullten Fortschritt PERSISTIERT (der End-Write unten wird unter Timeout nie
     // erreicht). Atomar (writeFileAtomic) -> ein Kill mitten im Write kann die gute Datei nie
@@ -273,46 +324,13 @@ async function main() {
     if (history[key] && todaysSnapshot[key]) continue;
     try {
       _log('INFO', `${key} not in history — pulling dedicated ${key} benchmark...`);
-      const period1 = new Date(Date.now() - 400 * 86400 * 1000);
-      const period2 = new Date();
-      const benchResult = await yf.chart(sym, { period1, period2, interval: '1d' });
-      // audit/fix: reject NaN/Infinity closes (JSON.stringify rewrites them to null, poisoning history.json) — mirror backfill-prices.js isFinite filter
-      // Bug 11: also reject <=0 closes (see processOne).
-      const benchQuotes = (benchResult.quotes || []).filter(q => { const v = q.adjclose ?? q.close; return v != null && isFinite(v) && v > 0; });
-      if (benchQuotes.length) {
-        const latestBenchQuote = benchQuotes[benchQuotes.length - 1];
-        const latestClose = latestBenchQuote.adjclose ?? latestBenchQuote.close;
-        // audit F-A-2026-06-21: weekend phantom-date (see processOne) — stamp the real
-        // exchange trading date, not the calendar run date, in the per-day snapshot.
-        const latestBenchDate = latestBenchQuote.date
-          ? (latestBenchQuote.date instanceof Date ? latestBenchQuote.date : new Date(latestBenchQuote.date)).toISOString().slice(0, 10)
-          : today;
-        todaysSnapshot[key] = { close: latestClose, asOf: latestBenchDate, pulledOn: today, currency: benchResult.meta && benchResult.meta.currency };
-        if (!history[key]) history[key] = [];
-        // Tag 223c (audit F-222a-9 MEDIUM fix): replace O(N²) .find() in
-        // back-fill loop (~400 quotes × 400 history entries = ~160k compares)
-        // with a single Set of known dates (O(N) total).
-        // Tag 231a-3 (audit HIGH fix): rely entirely on the back-fill loop to
-        // populate dates. Previously we pre-pushed {date: today, close: latestClose}
-        // before the back-fill — if today was Saturday and latestQuote.date was
-        // Friday, we'd then have BOTH {Saturday, Friday-price} (phantom) AND
-        // {Friday, Friday-price} (real) in history. The back-fill loop below
-        // already inserts the real dated entry; the pre-push was redundant at
-        // best and date-corrupting at worst.
-        // audit/fix (A2 council+court, 2026-06-26): FETCHED-WINS (see processOne). Overwrite
-        // stored benchmark closes with Yahoo's current authoritative adjclose so a split
-        // re-bases the whole series — benchmarks (SPY/QQQ/IWM) split too, and a wrong-basis
-        // benchmark corrupts EVERY alpha computation in walk-forward.
-        const benchMerged = new Map(history[key].map(e => [e.date, e.close]));
-        for (const q of benchQuotes) {
-          const d = (q.date instanceof Date ? q.date : new Date(q.date)).toISOString().slice(0, 10);
-          const c = q.adjclose ?? q.close;
-          if (c != null && isFinite(c) && c > 0) benchMerged.set(d, c); // Bug 11: reject <=0 too; fetched overwrites stored
-        }
-        history[key] = [];
-        for (const [d, c] of benchMerged) history[key].push({ date: d, close: c }); // ADJUSTED (Tag 148)
-        history[key].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
-        history[key] = history[key].slice(-400);
+      // Same fetchAndMergeSeries core as processOne (BH-001/002/049/050/051/052) —
+      // a wrong-basis or phantom-date benchmark bar corrupts EVERY alpha
+      // computation in walk-forward, so this path must never diverge from it.
+      const merged = await fetchAndMergeSeries(sym, history[key]);
+      if (merged) {
+        todaysSnapshot[key] = { close: merged.latestClose, asOf: merged.latestDate, pulledOn: today, currency: merged.currency };
+        history[key] = merged.arr;
         dirty.add(key); // Tag 294: benchmark shard needs rewriting
         ok++;
         _log('INFO', `${key} dedicated pull: ${history[key].length} history entries`);
@@ -334,11 +352,22 @@ async function main() {
   priceStore.saveAll(args.out, history);
   _log('INFO', `Done: ${ok}/${wl.stocks.length} ok, ${failed} failed`);
 
-  // audit/fix: exit non-zero on total price-pull failure (was implicit exit 0, masking a dead Yahoo day) — mirrors backfill-prices.js
-  if (ok === 0 && wl.stocks.length > 0) process.exit(1);
+  // BH-053 fix: previously only ok===0 failed the run — 1 success among
+  // thousands of failures still exited 0, and saveAll's freshly-stamped
+  // _meta.updatedAt (lib/price-history-store.js) then made a coverage
+  // collapse look like a healthy, just-updated store to any consumer that
+  // only checks store age. Gate on a fail-ratio instead of a bare zero-check,
+  // mirroring pull-yahoo.js's already-blessed 75%-failure threshold (Tag 147)
+  // rather than inventing a new one.
+  const attempted = Math.max(1, wl.stocks.length);
+  const failRatio = failed / attempted;
+  if (failRatio > 0.75) {
+    _log('ERROR', `Coverage collapse: ${(failRatio * 100).toFixed(1)}% failed (${failed}/${attempted}) — exceeds 75% threshold.`);
+    process.exit(1);
+  }
 }
 
-module.exports = { staleFirstComparator };
+module.exports = { staleFirstComparator, exchangeLocalDate, isWeekendDate, fetchAndMergeSeries, parseConcurrency };
 
 // A7-fix: nur als CLI ausfuehren; require (Unit-Test) darf main() NICHT starten.
 if (require.main === module) {

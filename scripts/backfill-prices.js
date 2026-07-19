@@ -4,9 +4,11 @@
  *
  * Gap-free backfill for the sharded price store (prices/history/, 32 shards —
  * lib/price-history-store.js). Fetches ~400 days of daily closes from
- * yahoo-finance2 for a given set of tickers, merges them into the existing
- * history (fetched value wins on collision), deduplicates by date, sorts
- * ascending, caps at 400 entries.
+ * yahoo-finance2 for a given set of tickers via the same fetchAndMergeSeries()
+ * core as pull-historical-prices.js's daily writer (adjusted-close basis
+ * enforced per-series, non-session bars rejected, the fetch-covered window
+ * rebuilt authoritatively — audit BH-001/002/049/050/051/052), deduplicates
+ * by date, sorts ascending, caps at 400 entries.
  *
  * X1 (Tag 348): reads via store.loadAll(), writes via store.saveDirty() —
  * ONLY the shards touched by the requested tickers. Before this fix the
@@ -29,18 +31,14 @@ const fs   = require('fs');
 const path = require('path');
 
 const store = require('../lib/price-history-store.js');
-
-// ── yahoo-finance2 — exact same import style as pull-historical-prices.js ──
-let yf;
-try {
-  const YF = require('yahoo-finance2').default;
-  yf = (typeof YF === 'function')
-    ? new YF({ validation: { logErrors: false, logOptionsErrors: false } })
-    : YF;
-} catch (e) {
-  console.error('yahoo-finance2 not installed');
-  process.exit(1);
-}
+// BH-001/002/049/050/051/052 (audit): fetch/basis/session/positivity/window-merge
+// is now a single implementation shared with pull-historical-prices.js's
+// processOne() and dedicated benchmark pull, so this manual backfill can never
+// silently diverge from the daily writer's contract again (that divergence —
+// this file's own per-bar `adjclose ?? close` and unchecked existing-wins merge
+// — was itself part of the finding). require() is safe: pull-historical-prices.js
+// guards main() behind require.main === module.
+const { fetchAndMergeSeries } = require('../pull-historical-prices.js');
 
 // ── helpers ────────────────────────────────────────────────────────────────
 function _ts()           { return new Date().toISOString(); }
@@ -68,11 +66,6 @@ function loadTickerFile(filePath) {
     return arr.map(t => (typeof t === 'string' ? t : (t && t.ticker) || '').trim()).filter(Boolean);
   }
   return raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-}
-
-// ── date extraction — same pattern as pull-historical-prices.js ────────────
-function quoteDate(q) {
-  return (q.date instanceof Date ? q.date : new Date(q.date)).toISOString().slice(0, 10);
 }
 
 // ── store I/O (X1) — mirrors update-ath-state.js / pull-historical-prices.js:
@@ -146,51 +139,29 @@ async function main() {
   for (let batchStart = 0; batchStart < tickers.length; batchStart += BATCH) {
     const batch = tickers.slice(batchStart, batchStart + BATCH);
 
-    await Promise.all(batch.map(async (ticker) => {
+    // BH-052: allSettled — see pull-historical-prices.js for why (a throw inside
+    // one ticker's promise must not leave siblings unawaited going into the next batch).
+    await Promise.allSettled(batch.map(async (ticker) => {
       try {
         const yahooSymbol = wlSymbolMap[ticker] || ticker;
 
-        const period1 = new Date(Date.now() - 400 * 86400 * 1000);
-        const period2 = new Date();
-
-        const result = await yf.chart(yahooSymbol, { period1, period2, interval: '1d' });
-
-        // Extract {date, close} — match pull-historical-prices.js:
-        // prefer adjclose, fall back to close; skip null/NaN/non-finite closes.
-        const quotes = (result.quotes || []);
-        const fetched = [];
-        for (const q of quotes) {
-          const closeVal = q.adjclose ?? q.close;
-          if (closeVal == null || !isFinite(closeVal)) continue;
-          fetched.push({ date: quoteDate(q), close: closeVal });
-        }
-
-        if (fetched.length === 0) {
+        // BH-001/002/049/050/051/052: fetch/basis/session/positivity/window-merge
+        // — same contract as the daily writer, see pull-historical-prices.js.
+        const merged = await fetchAndMergeSeries(yahooSymbol, history[ticker]);
+        if (!merged) {
           _log('WARN', `${ticker}: no usable bars returned`);
           failed.push(ticker);
           return;
         }
 
-        // ── MERGE: existing entries are the base; fetched wins on collision ──
-        const existing = history[ticker] || [];
-        const merged   = new Map();
-        for (const e of existing) merged.set(e.date, e.close);
-        for (const e of fetched)  merged.set(e.date, e.close); // fetched overwrites
-
-        // Sort ascending, dedup by date (Map already deduped), cap at 400
-        let arr = Array.from(merged.entries())
-          .map(([date, close]) => ({ date, close }))
-          .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-        if (arr.length > 400) arr = arr.slice(arr.length - 400);
-
-        history[ticker] = arr;
+        history[ticker] = merged.arr;
         dirty.add(ticker);
 
-        const firstDate = arr[0].date;
-        const lastDate  = arr[arr.length - 1].date;
+        const firstDate = merged.arr[0].date;
+        const lastDate  = merged.arr[merged.arr.length - 1].date;
         if (lastDate > globalMaxDate) globalMaxDate = lastDate;
 
-        _log('INFO', `${ticker}: fetched ${fetched.length} bars, series now ${firstDate}..${lastDate}, ${arr.length} entries`);
+        _log('INFO', `${ticker}: series now ${firstDate}..${lastDate}, ${merged.arr.length} entries`);
         succeeded++;
       } catch (e) {
         _log('WARN', `${ticker}: FAILED — ${e.message}`);
@@ -215,7 +186,14 @@ async function main() {
   console.log(`Global max date among processed tickers: ${globalMaxDate || '(none)'}`);
   console.log('========================\n');
 
-  if (succeeded === 0 && tickers.length > 0) process.exit(1);
+  // BH-053 fix: mirror pull-historical-prices.js's fail-ratio gate (same 75%
+  // threshold as pull-yahoo.js, Tag 147) instead of only checking succeeded===0.
+  const attempted = Math.max(1, tickers.length);
+  const failRatio = failed.length / attempted;
+  if (failRatio > 0.75) {
+    _log('ERROR', `Coverage collapse: ${(failRatio * 100).toFixed(1)}% failed (${failed.length}/${attempted}) — exceeds 75% threshold.`);
+    process.exit(1);
+  }
 }
 
 // X1: guard like every other migrated caller (pull-historical-prices.js,
@@ -225,4 +203,4 @@ if (require.main === module) {
   main().catch(e => { _log('FATAL', e.stack || e.message); process.exit(1); });
 }
 
-module.exports = { parseArgs, loadTickerFile, quoteDate, loadHistory, saveHistory };
+module.exports = { parseArgs, loadTickerFile, loadHistory, saveHistory };
