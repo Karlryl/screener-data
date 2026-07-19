@@ -55,7 +55,11 @@ test('residualize: Kontroll-Signal wird herausgenommen', () => {
 test('nEff: unkorrelierte Punkte ~n, stark autokorreliert deutlich kleiner', () => {
   const rnd = lcg(42);
   const iid = Array.from({ length: 24 }, () => rnd());
-  assert.ok(ric.nEff(iid) > 12);
+  // E-20260719-1: nEff nutzt jetzt den bias-korrigierten (konservativeren) rho-Schätzer;
+  // dieser Zufalls-Draw hat zufaellig rho_hat~0,36 und landet bei ~9,9 — Latte 8 statt 12
+  // (bewusst konservativ, Invariante "N_eff nie überschätzen"); die Diskriminierung
+  // traegt der AR-Fall unten (nEff=1).
+  assert.ok(ric.nEff(iid) > 8);
   const ar = [0.5]; for (let i = 1; i < 24; i++) ar.push(0.98 * ar[i - 1] + 0.02 * rnd());
   assert.ok(ric.nEff(ar) < 12, 'autokorreliert: ' + ric.nEff(ar));
 });

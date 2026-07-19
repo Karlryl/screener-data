@@ -15,7 +15,11 @@
  *      zirkuläres Resampling zusammenhängender Blöcke statt IID-Punkte, da benachbarte
  *      Fenster über Preishistorie/Regime autokorreliert sind — BH-148) für den mittleren
  *      IC; N_eff aus der Lag-1-Autokorrelation der Punkt-Reihe (§3a).
- *  §3  Entscheidung: CI-Untergrenze(90 %) > 0 UND mittlerer 84d-IC > 0,05
+ *      Karl-Entscheid E-20260719-1: CI und p werden zusätzlich um sqrt(n/N_eff)
+ *      verbreitert/entkräftet — der Anker-Beweis (Überdeckung >=85 % bei rho=0,6)
+ *      zeigte, dass Blocklänge 2 allein bei n~20 unterdeckt (62 % gemessen).
+ *  §3  Entscheidung: CI-Untergrenze(90 %) > Wirkungsschwelle (Karl-Entscheid
+ *      E-20260719-5, strenge Lesart von Ledger 2.3) UND mittlerer 84d-IC > 0,05
  *      (UND-Regel roh+residualisiert, §4a, JEWEILS mit eigener Power/N_eff); Benjamini-
  *      YEKUTIELI-FDR über die VOLLE Familie Boards × {28d, 84d} (nicht nur die gerade
  *      messbaren/gepowerten Punkte — sonst schrumpft m und die Schwelle wird liberaler,
@@ -246,15 +250,34 @@ function bootstrapCI(points, level, B, seed, blockLen) {
   // p-Wert (einseitig, H0: mean<=0): Anteil Bootstrap-Mittel <= 0, min 1/B (nie exakt 0).
   const pLeq0 = Math.max(1 / B, means.filter((m) => m <= 0).length / B);
   const { lo, hi } = bcaInterval(points, means, mean0, level);
-  return { lo, hi, p: pLeq0 };
+  // E-20260719-1 (BH-148-Anker): Blocklänge 2 allein unterdeckt bei n~20 und rho>0
+  // (gemessen 62 % statt >=85 % bei rho=0,6). CI symmetrisch um mean0 um f=sqrt(n/nEff)
+  // verbreitern und kleine p entsprechend entkräften (z -> z/f); bei rho<=0 ist f=1
+  // und nichts ändert sich. Nur p<0,5 wird angepasst — Verbreiterung darf Evidenz
+  // nie ERZEUGEN, nur abschwächen.
+  const f = Math.sqrt(n / nEff(points));
+  const loW = mean0 - (mean0 - lo) * f;
+  const hiW = mean0 + (hi - mean0) * f;
+  let p = pLeq0;
+  if (f > 1 && p < 0.5) {
+    const z = invNormalCdf(1 - p);
+    p = Math.min(0.5, Math.max(pLeq0, 1 - normalCdf(z / f)));
+  }
+  return { lo: loW, hi: hiW, p };
 }
 // §3a: N_eff aus Lag-1-Autokorrelation der Punkt-Reihe (konservativ geklemmt).
+// E-20260719-1: Der rohe Lag-1-Schätzer ist bei kleinem n systematisch zu niedrig
+// (Kendall-Bias ~ -(1+3*rho)/n) — ohne Korrektur unterdeckt das verbreiterte CI
+// weiterhin (81 % statt >=85 % im Anker-Test). Bias-korrigiert und bei 0,95 gekappt;
+// macht auch das §3d-Power-Gate konservativer (Invariante: N_eff nie überschätzen).
 function nEff(points) {
   const n = points.length;
   if (n < 3) return n;
   const rho = pearson(points.slice(0, -1), points.slice(1));
-  if (rho === null || rho <= 0) return n;
-  return Math.max(1, n * (1 - rho) / (1 + rho));
+  if (rho === null) return n;
+  const rhoC = Math.min(0.95, rho + (1 + 3 * rho) / n);
+  if (rhoC <= 0) return n;
+  return Math.max(1, n * (1 - rhoC) / (1 + rhoC));
 }
 // §3b Benjamini-Yekutieli: adjustierte Signifikanz über m Tests.
 function benjaminiYekutieli(pvals, q) {
@@ -570,7 +593,7 @@ function evaluate(historyDir, priceIndex, opts = {}) {
   const dates = allDates.filter((d) => !isDateExcluded(excluded, d));
   const report = {
     generatedAt: new Date().toISOString(),
-    spec: 'Ledger 2.8 §1–§4/§8 + pre-registrierte Schwelle 2026-07-14 (84d>0,05 ∧ CI90-lo>0; BY-q=' + BY_Q + '; N_eff>=' + MIN_NEFF + ')',
+    spec: 'Ledger 2.8 §1–§4/§8 + pre-registrierte Schwelle 2026-07-14, streng per E-20260719-5 (84d>0,05 ∧ CI90-lo>Schwelle; nEff-verbreitertes Block-CI per E-20260719-1; BY-q=' + BY_Q + '; N_eff>=' + MIN_NEFF + ')',
     vintagesTotal: allDates.length,
     vintagesExcluded: allDates.filter((d) => isDateExcluded(excluded, d)),
     // board-enge Ausschlüsse getrennt ausweisen (das Datum bleibt für die anderen Boards drin).
@@ -627,11 +650,13 @@ function evaluate(historyDir, priceIndex, opts = {}) {
       let passRaw = false, residPowered = false, passResid = false;
       if (powered) {
         const thr = horizon === DECISION_HORIZON ? IC_THRESHOLD_84 : IC_GUIDE_28;
-        passRaw = mean > thr && ci.lo > 0;
+        // E-20260719-5 (BH-157, strenge Lesart von Ledger 2.3/Sec3a): die CI-UNTERGRENZE
+        // muss über der Wirkungsschwelle liegen, nicht nur über 0.
+        passRaw = mean > thr && ci.lo > thr;
         // BH-107: Residualseite braucht ihre EIGENE Power (neResid), nicht die der Raw-Seite —
         // vorher konnte ein unterpowertes Residual-CI trotzdem in die Konjunktion einfließen.
         residPowered = meanResid !== null && ciResid && neResid >= MIN_NEFF;
-        passResid = residPowered ? (meanResid > thr && ciResid.lo > 0) : false;
+        passResid = residPowered ? (meanResid > thr && ciResid.lo > thr) : false;
         // §4a UND-Regel nur am Entscheidungs-Horizont; 28d bleibt Richtwert.
         const pass = horizon === DECISION_HORIZON ? (passRaw && passResid) : passRaw;
         verdict = pass ? 'LIVE-Kriterium erfüllt (vorbehaltlich BY-FDR)' : 'DIAGNOSTIC-Kandidat (Prüf-Flag, kein Sofort-Cut)';
