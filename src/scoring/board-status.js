@@ -18,18 +18,29 @@
  *               materials, real-estate, it-services (EXCLUDE — kein Hypergrowth-Terrain)
  *   core:       die 7 JA-Sektoren + utilities (2.1 KEEP — Merchant/Nuklear-IPP-Schnitt)
  *
- * 'core' ist der Default fuer jede hier nicht genannte formulaId.
+ * BH-077/BH-159-Fix: CORE ist eine explizite Allowlist. Jede hier NICHT gelistete
+ * formulaId (Tippfehler, neue Formel ohne Registry-Eintrag, Nicht-Formel-IDs wie
+ * 'survival') faellt fail-closed auf 'diagnostic' — nie mehr stumm 'core'. Neue
+ * Formeln starten laut Governance ohnehin DIAGNOSTIC (CLAUDE.md); Aufnahme in CORE
+ * ist ein bewusster Schritt hier in dieser Datei, kein Default.
  */
-// tech-hardware (P1-Carve-out 2.12a): gebaut, aber Court noch NICHT bestanden — der 7-Achsen-Satz
-// trennt Franchise nicht sauber von commodity-EMS (Margen-Niveau-Achse = Folge-Task 2.12b). Bis dahin
-// diagnostic (laeuft sichtbar als unbewiesen mit, zaehlt nicht als geprueft).
+// tech-hardware (P1-Carve-out 2.12a): 8-Achsen-Satz (marginLevel/2.12b ist gebaut, s.
+// formulas/tech-hardware.js), bleibt aber diagnostic bis zum Walk-forward-/Court-Nachweis
+// (BH-085: der urspruengliche "fehlende Margen-Achse"-Grund ist ueberholt).
 const DIAGNOSTIC = new Set(['consumer-staples', 'materials', 'real-estate', 'it-services', 'tech-hardware']);
+
+// Die 8 Court-PASSED HG-Sektoren (2.1 KEEP + JA-Sektoren). Einzige Quelle fuer 'core'.
+const CORE = new Set([
+  'consumer-discretionary', 'energy', 'financials', 'health-care',
+  'industrials', 'semiconductors', 'software-comm-services', 'utilities',
+]);
 
 function boardStatus(formulaId) {
   // 3.1 QC-Board: jede quality-*-Formel ist per Konstruktion DIAGNOSTIC (Court-PASSED-AS-DIAGNOSTIC)
-  // -> kann NIE zu 'core' promoten, egal was DIAGNOSTIC listet.
+  // -> aktuell IMMER diagnostic; eine Core-Promotion erfordert einen kuenftigen Code-Change,
+  // gated auf rho<0,4 + rankIC (Masterplan 3.1, docs/findash-export-v1.md).
   if (typeof formulaId === 'string' && formulaId.startsWith('quality-')) return 'diagnostic';
-  return DIAGNOSTIC.has(formulaId) ? 'diagnostic' : 'core';
+  return CORE.has(formulaId) ? 'core' : 'diagnostic';
 }
 
-module.exports = { boardStatus, DIAGNOSTIC };
+module.exports = { boardStatus, CORE, DIAGNOSTIC };
