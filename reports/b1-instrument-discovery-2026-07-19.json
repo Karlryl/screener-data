@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2026-07-19T13:35:30.546Z",
+  "generatedAt": "2026-07-19T13:45:11.086Z",
   "protocol": "protocol/b1-registered-20260719.md",
   "protocolSha256": "7b20e750261ca5a6ede207064275d3934f11408565865477baced74ee0cf0f79",
   "scope": "Discovery <= 2018-12-31 (Protokoll §6 — nur Instrumentierung)",
+  "detectionImpl": "lib/b1-detect.js (geteilt mit b1-validate.js, Tag 391)",
   "limit": null,
-  "runtimeSec": 65,
+  "runtimeSec": 80,
   "counters": {
+    "ciksTooShort": null,
     "ciksTotal": 20072,
     "ciksParsed": 20072,
     "ciksNoRevenue": 8745,
-    "ciksTooShort": 4829,
-    "firmQuartersEvaluated": 103815,
-    "yoyUndefined": 42311,
-    "dyoyUndefined": 8252,
-    "opMarginUndefined": 12953,
-    "transitionDropped": 0,
-    "derivedQ4Used": 10900,
-    "evaluable": 53183
+    "firmQuartersEvaluated": 111467,
+    "yoyUndefined": 49302,
+    "dyoyUndefined": 8670,
+    "opMarginUndefined": 12981,
+    "derivedQ4Used": 10943,
+    "evaluable": 53415
   },
   "cohorts": {
     "2009Q3": {
@@ -80,19 +80,19 @@
       "events": 12
     },
     "2012Q1": {
-      "n": 897,
+      "n": 898,
       "p90": 0.1913,
       "belowMinN": false,
       "events": 13
     },
     "2012Q2": {
-      "n": 985,
-      "p90": 0.231,
+      "n": 986,
+      "p90": 0.2348,
       "belowMinN": false,
-      "events": 15
+      "events": 14
     },
     "2012Q3": {
-      "n": 2263,
+      "n": 2265,
       "p90": 0.2769,
       "belowMinN": false,
       "events": 50
@@ -104,8 +104,8 @@
       "events": 46
     },
     "2013Q1": {
-      "n": 2117,
-      "p90": 0.3066,
+      "n": 2119,
+      "p90": 0.3137,
       "belowMinN": false,
       "events": 56
     },
@@ -134,8 +134,8 @@
       "events": 43
     },
     "2014Q2": {
-      "n": 1995,
-      "p90": 0.3329,
+      "n": 1996,
+      "p90": 0.3341,
       "belowMinN": false,
       "events": 53
     },
@@ -152,14 +152,14 @@
       "events": 45
     },
     "2015Q1": {
-      "n": 1924,
+      "n": 1925,
       "p90": 0.3618,
       "belowMinN": false,
       "events": 51
     },
     "2015Q2": {
-      "n": 1863,
-      "p90": 0.2365,
+      "n": 1865,
+      "p90": 0.2395,
       "belowMinN": false,
       "events": 46
     },
@@ -176,14 +176,14 @@
       "events": 28
     },
     "2016Q1": {
-      "n": 1709,
-      "p90": 0.3285,
+      "n": 1710,
+      "p90": 0.3251,
       "belowMinN": false,
       "events": 34
     },
     "2016Q2": {
-      "n": 1657,
-      "p90": 0.2951,
+      "n": 1659,
+      "p90": 0.2995,
       "belowMinN": false,
       "events": 41
     },
@@ -200,93 +200,93 @@
       "events": 42
     },
     "2017Q1": {
-      "n": 1520,
+      "n": 1526,
       "p90": 0.5112,
       "belowMinN": false,
       "events": 59
     },
     "2017Q2": {
-      "n": 1481,
-      "p90": 0.3581,
+      "n": 1487,
+      "p90": 0.3591,
       "belowMinN": false,
-      "events": 45
+      "events": 46
     },
     "2017Q3": {
-      "n": 1529,
-      "p90": 0.3562,
+      "n": 1543,
+      "p90": 0.3609,
       "belowMinN": false,
-      "events": 37
+      "events": 39
     },
     "2017Q4": {
-      "n": 1347,
-      "p90": 0.3327,
+      "n": 1355,
+      "p90": 0.3321,
       "belowMinN": false,
       "events": 30
     },
     "2018Q1": {
-      "n": 1343,
+      "n": 1387,
       "p90": 0.4506,
       "belowMinN": false,
-      "events": 25
+      "events": 26
     },
     "2018Q2": {
-      "n": 1356,
+      "n": 1395,
       "p90": 0.3306,
       "belowMinN": false,
-      "events": 40
+      "events": 41
     },
     "2018Q3": {
-      "n": 2577,
-      "p90": 0.2356,
+      "n": 2625,
+      "p90": 0.235,
       "belowMinN": false,
       "events": 72
     },
     "2018Q4": {
-      "n": 2587,
-      "p90": 0.2368,
+      "n": 2641,
+      "p90": 0.2342,
       "belowMinN": false,
-      "events": 74
+      "events": 75
     }
   },
   "events": {
-    "total": 1310,
-    "withTodayTicker": 373,
+    "total": 1315,
+    "withTodayTicker": 375,
     "tickerMappableRate": 0.285,
     "byCalQuarter": {
+      "2018Q4": 75,
+      "2017Q1": 59,
+      "2016Q4": 42,
+      "2016Q3": 42,
+      "2017Q3": 39,
+      "2015Q3": 49,
+      "2015Q2": 46,
+      "2018Q3": 72,
+      "2016Q2": 41,
+      "2016Q1": 34,
+      "2018Q2": 41,
       "2010Q3": 3,
-      "2010Q4": 6,
-      "2011Q1": 4,
-      "2011Q2": 8,
-      "2011Q3": 14,
-      "2011Q4": 12,
-      "2012Q1": 13,
-      "2012Q2": 15,
-      "2012Q3": 50,
-      "2012Q4": 46,
-      "2013Q1": 56,
-      "2013Q2": 41,
       "2013Q3": 63,
       "2013Q4": 59,
-      "2014Q1": 43,
-      "2014Q2": 53,
-      "2014Q3": 64,
-      "2014Q4": 45,
-      "2015Q1": 51,
-      "2015Q2": 46,
-      "2015Q3": 49,
       "2015Q4": 28,
-      "2016Q1": 34,
-      "2016Q2": 41,
-      "2016Q3": 42,
-      "2016Q4": 42,
-      "2017Q1": 59,
-      "2017Q2": 45,
-      "2017Q3": 37,
+      "2012Q3": 50,
+      "2014Q4": 45,
+      "2011Q4": 12,
+      "2013Q2": 41,
+      "2017Q2": 46,
+      "2014Q3": 64,
+      "2014Q2": 53,
+      "2011Q3": 14,
+      "2012Q4": 46,
+      "2018Q1": 26,
+      "2015Q1": 51,
+      "2013Q1": 56,
+      "2014Q1": 43,
+      "2012Q2": 14,
+      "2012Q1": 13,
       "2017Q4": 30,
-      "2018Q1": 25,
-      "2018Q2": 40,
-      "2018Q3": 72,
-      "2018Q4": 74
+      "2010Q4": 6,
+      "2011Q1": 4,
+      "2011Q2": 8
     }
   }
 }
