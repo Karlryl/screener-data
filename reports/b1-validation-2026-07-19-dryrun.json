@@ -1,0 +1,40 @@
+{
+  "generatedAt": "2026-07-19T14:53:45.811Z",
+  "protocol": "protocol/b1-registered-20260719.md",
+  "protocolSha256": "7b20e750261ca5a6ede207064275d3934f11408565865477baced74ee0cf0f79",
+  "era": {
+    "validation": [
+      "2019-01-01",
+      "2024-12-31"
+    ],
+    "lockboxUntouched": true
+  },
+  "dryRun": true,
+  "detection": {
+    "counters": {
+      "ciksTotal": 20072,
+      "ciksParsed": 20072,
+      "ciksNoRevenue": 8745,
+      "firmQuartersEvaluated": 110412,
+      "yoyUndefined": 20432,
+      "dyoyUndefined": 4372,
+      "opMarginUndefined": 14591,
+      "derivedQ4Used": 31277,
+      "evaluable": 85533
+    },
+    "eventsRaw": 2401,
+    "discoveryExcluded": 829,
+    "events": 2023,
+    "nonEventRecords": 83132
+  },
+  "missingness": {
+    "eventMissRate": 0.3,
+    "controlMissRate": 0.276,
+    "balanceDeltaPp": 2.4,
+    "balanceGatePassed": true
+  },
+  "matching": {
+    "pairs": 1225,
+    "noCaliperMatch": 192
+  }
+}

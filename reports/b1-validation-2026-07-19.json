@@ -1,0 +1,139 @@
+{
+  "generatedAt": "2026-07-19T14:57:55.317Z",
+  "protocol": "protocol/b1-registered-20260719.md",
+  "protocolSha256": "7b20e750261ca5a6ede207064275d3934f11408565865477baced74ee0cf0f79",
+  "era": {
+    "validation": [
+      "2019-01-01",
+      "2024-12-31"
+    ],
+    "lockboxUntouched": true
+  },
+  "dryRun": false,
+  "detection": {
+    "counters": {
+      "ciksTotal": 20072,
+      "ciksParsed": 20072,
+      "ciksNoRevenue": 8745,
+      "firmQuartersEvaluated": 110412,
+      "yoyUndefined": 20432,
+      "dyoyUndefined": 4372,
+      "opMarginUndefined": 14591,
+      "derivedQ4Used": 31277,
+      "evaluable": 85533
+    },
+    "eventsRaw": 2401,
+    "discoveryExcluded": 829,
+    "events": 2023,
+    "nonEventRecords": 83132
+  },
+  "missingness": {
+    "eventMissRate": 0.3,
+    "controlMissRate": 0.276,
+    "balanceDeltaPp": 2.4,
+    "balanceGatePassed": true
+  },
+  "matching": {
+    "pairs": 1225,
+    "noCaliperMatch": 192
+  },
+  "family": {
+    "haupttest": {
+      "pairsAttempted": 1225,
+      "pairsComplete": 979,
+      "evOutcomeMissing": 200,
+      "ctlOutcomeMissing": 46,
+      "mean": -0.0030643513789581204,
+      "nClusters": 339,
+      "nEff": 313.73,
+      "p": 0.6597,
+      "ci90": {
+        "lo": -0.0183,
+        "hi": 0.012
+      },
+      "bySignificant": false
+    },
+    "p75": {
+      "pairsAttempted": 2996,
+      "pairsComplete": 2389,
+      "evOutcomeMissing": 489,
+      "ctlOutcomeMissing": 118,
+      "mean": -0.002092925910422771,
+      "nClusters": 608,
+      "nEff": 528.04,
+      "p": 0.6593,
+      "ci90": {
+        "lo": -0.013,
+        "hi": 0.0082
+      },
+      "bySignificant": false
+    },
+    "sigma15": {
+      "pairsAttempted": 1225,
+      "pairsComplete": 994,
+      "evOutcomeMissing": 177,
+      "ctlOutcomeMissing": 54,
+      "mean": 0.002012072434607646,
+      "nClusters": 345,
+      "nEff": 345,
+      "p": 0.4459,
+      "ci90": {
+        "lo": -0.0199,
+        "hi": 0.0238
+      },
+      "bySignificant": false
+    },
+    "ohneOpMargin": {
+      "pairsAttempted": 1828,
+      "pairsComplete": 1443,
+      "evOutcomeMissing": 323,
+      "ctlOutcomeMissing": 62,
+      "mean": -0.002079002079002079,
+      "nClusters": 470,
+      "nEff": 470,
+      "p": 0.623,
+      "ci90": {
+        "lo": -0.0138,
+        "hi": 0.0096
+      },
+      "bySignificant": false
+    },
+    "tplus5": {
+      "pairsAttempted": 1225,
+      "pairsComplete": 975,
+      "evOutcomeMissing": 206,
+      "ctlOutcomeMissing": 44,
+      "mean": -0.0010256410256410256,
+      "nClusters": 338,
+      "nEff": 297.92,
+      "p": 0.5736,
+      "ci90": {
+        "lo": -0.0167,
+        "hi": 0.0143
+      },
+      "bySignificant": false
+    },
+    "shumway": {
+      "pairsAttempted": 1225,
+      "pairsComplete": 1218,
+      "evOutcomeMissing": 1,
+      "ctlOutcomeMissing": 6,
+      "mean": 0.003284072249589491,
+      "nClusters": 392,
+      "nEff": 382.12,
+      "p": 0.36032,
+      "ci90": {
+        "lo": -0.01,
+        "hi": 0.0167
+      },
+      "bySignificant": false
+    }
+  },
+  "gates": {
+    "powerOk": true,
+    "nEffClusters": 313.73,
+    "balanceOk": true,
+    "shumwayVeto": false
+  },
+  "verdict": "NEGATIV/NULL: kein BY-signifikanter Effekt (gültiges Ergebnis)"
+}
