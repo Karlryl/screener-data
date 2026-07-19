@@ -35,6 +35,20 @@ const OUT_DIR       = path.join(__dirname, '..', 'outputs');
 
 const HORIZONS_DAYS = [7, 28, 84]; // 1w / 4w / 12w
 const MIN_SAMPLES   = 10;          // F-BT-006: minimum picks for meaningful alpha
+// F-BT-008: a vintage is excluded from the pooled summary when its actual
+// measured window deviates from the nominal horizon by more than this many
+// days (backward-snap to a pre-holiday close can shorten e.g. 84d to 79-82d).
+// BH-141: hoisted from the per-mode/per-horizon loop to module scope so
+// computeHorizonSummary() below can be a pure, independently testable function.
+const HORIZON_TOLERANCE_DAYS = 3;
+// F-BT-112 / F-BT-004: minimum number of contributing vintages before a
+// pooled median alpha is published (else it's a false-confidence 1-2-vintage
+// number). BH-141: hoisted alongside HORIZON_TOLERANCE_DAYS for the same reason.
+const MIN_VINTAGES_UNIVERSE = 4;
+// F-BT-012: warn when more than this fraction of expected business-day
+// picks-history vintages are missing from the corpus (failed crons, partial
+// backfills). BH-141: hoisted so computeCoverageDiagnostic() below is pure.
+const COVERAGE_MISSING_THRESHOLD = 0.20; // 20%
 
 // F-BT-001 (fail-loud freshness): if the most recent price in prices/history.json
 // is older than this many US business days, the price pull is stale and every
@@ -162,8 +176,13 @@ function priceAtLegacy(history, ticker, targetDate) {
   return chosen.close;
 }
 
+// BH-188: guard p1<=0 too (mirror lib/forward-returns.js's classify(), the
+// sanctioned live path). Previously only p0<=0 was rejected, so a nonpositive
+// EXIT close (bad-tick 0/negative rows exist in the store — see BH-051) fell
+// through to (p1-p0)/p0*100 and produced a fantasy return like -150% instead
+// of being treated as unusable data.
 function returnPct(p0, p1) {
-  if (!Number.isFinite(p0) || !Number.isFinite(p1) || p0 <= 0) return null;
+  if (!Number.isFinite(p0) || !Number.isFinite(p1) || p0 <= 0 || p1 <= 0) return null;
   return (p1 - p0) / p0 * 100;
 }
 
@@ -214,16 +233,24 @@ function getEntryDate(asOf) {
 // Backward-first is conservative: entry uses a known prior close, exit uses
 // the latest available close at or before the horizon — both observable at
 // the time the trade would have been placed/closed.
+// BH-146: exhaust ALL backward offsets before trying ANY forward offset.
+// The previous per-offset interleaving (backward-1, forward-1, backward-2,
+// forward-2, ...) let a NEARER forward (look-ahead) date win over a FARTHER
+// backward date whenever backward missed at an early offset — e.g. a 1-day
+// gap on the backward side let a forward match at the same offset return
+// before backward-2..5 were ever checked. That contradicts the documented
+// "backward-first (no look-ahead)" guarantee. Forward is now a last-resort
+// fallback used only when no backward match exists within the whole window.
 function nearestTradingDay(targetDate, priceMap) {
   if (!priceMap) return null;
   if (priceMap.has(targetDate)) return targetDate;
   for (let offset = 1; offset <= 5; offset++) {
-    // Backward first (no look-ahead bias)
     const dBwd = new Date(targetDate + 'T00:00:00Z');
     dBwd.setUTCDate(dBwd.getUTCDate() - offset);
     const keyBwd = dBwd.toISOString().slice(0, 10);
     if (priceMap.has(keyBwd)) return keyBwd;
-    // Forward only if no backward match within this offset
+  }
+  for (let offset = 1; offset <= 5; offset++) {
     const dFwd = new Date(targetDate + 'T00:00:00Z');
     dFwd.setUTCDate(dFwd.getUTCDate() + offset);
     const keyFwd = dFwd.toISOString().slice(0, 10);
@@ -258,6 +285,51 @@ function businessDaysBetween(startIso, endIso) {
   return count;
 }
 
+// F-BT-012: picks-history coverage diagnostic. Compare the number of business
+// days spanned by the corpus against the number of vintages actually present,
+// and warn when more than COVERAGE_MISSING_THRESHOLD of expected vintages are
+// missing — a silent gap (failed crons, partial backfills) otherwise just
+// shrinks the backtest corpus without any signal.
+// `vintageFilenames` are the raw picks-history filenames (YYYY-MM-DD.json),
+// sorted ascending, as returned by listVintages().
+// BH-141: extracted from main() (a) so the counter-consistency fix below is
+// directly testable and (b) to fix the mixed denominator/numerator bug:
+// `presentVintages` previously counted every file found (vintages.length),
+// including any that happen to land on a Sat/Sun, against a Mon-Fri-only
+// `expectedBusinessDays` — a weekend-inclusive numerator over a weekday-only
+// denominator understated (or Math.max-clamped away) the true coverage gap.
+// Both sides now count weekday vintages only.
+function computeCoverageDiagnostic(vintageFilenames) {
+  if (!vintageFilenames || vintageFilenames.length === 0) return null;
+  const firstDate = vintageFilenames[0].slice(0, 10);
+  const lastDate = vintageFilenames[vintageFilenames.length - 1].slice(0, 10);
+  const expectedBusinessDays = businessDaysBetween(firstDate, lastDate);
+  const isWeekday = v => {
+    const dow = new Date(v.slice(0, 10) + 'T00:00:00Z').getUTCDay();
+    return dow !== 0 && dow !== 6;
+  };
+  const presentVintages = vintageFilenames.filter(isWeekday).length;
+  const missingVintages = Math.max(0, expectedBusinessDays - presentVintages);
+  const missingPct = expectedBusinessDays > 0
+    ? Math.round((missingVintages / expectedBusinessDays) * 1000) / 1000
+    : 0;
+  const belowThreshold = missingPct > COVERAGE_MISSING_THRESHOLD;
+  return {
+    firstVintage: firstDate,
+    lastVintage: lastDate,
+    expectedBusinessDays,
+    presentVintages,
+    missingVintages,
+    missingPct,
+    missingThreshold: COVERAGE_MISSING_THRESHOLD,
+    coverageWarning: belowThreshold
+      ? ('picks-history coverage gap: ' + missingVintages + ' of ' + expectedBusinessDays
+         + ' expected business-day vintages missing (' + Math.round(missingPct * 100)
+         + '% > ' + Math.round(COVERAGE_MISSING_THRESHOLD * 100) + '% threshold)')
+      : undefined
+  };
+}
+
 // Tag 138: survivor-bias fix. When the picks file has evaluatedTickers[], use that
 // list (stocks that were actually in the universe at vintage time) instead of all
 // tickers in prices/history.json (which includes stocks added later → upward bias).
@@ -269,15 +341,30 @@ function businessDaysBetween(startIso, endIso) {
 // look-ahead). Returns null if no usable price exists — caller drops the
 // ticker from the cohort.
 // F-BT-115: removed dead `fallbackTargetDate` parameter — no callsite ever passed it.
-function _priceAtCanonical(map, canonicalDate) {
+// BH-186: optional `originalTargetDate` — the ticker's OWN pre-benchmark-snap
+// target (asOfDate/futureDate), not the benchmark-anchored `canonicalDate`.
+// computeBenchmarkReturn's nearestTradingDay() can already have shifted
+// canonicalDate up to 5 days from the original target; this function then
+// additionally walked up to PRICE_MAX_STALE_DAYS (7) further back from THAT
+// shifted date — up to 12 days of total staleness against the real target,
+// silently exceeding the intended PRICE_MAX_STALE_DAYS bound. When the caller
+// supplies originalTargetDate, the resolved price date is checked against it
+// (not just against canonicalDate) and nulled out if the combined drift is
+// too large. Optional + defaults to off so lib/forward-returns.js's classify()
+// (which does its own staleness accounting) keeps its exact prior behavior.
+function _priceAtCanonical(map, canonicalDate, originalTargetDate) {
   if (!map || !canonicalDate) return null;
-  if (map.has(canonicalDate)) return map.get(canonicalDate);
+  const tooStale = (resolvedDate) => originalTargetDate
+    && _daysBetween(resolvedDate, originalTargetDate) > PRICE_MAX_STALE_DAYS;
+  if (map.has(canonicalDate)) {
+    return tooStale(canonicalDate) ? null : map.get(canonicalDate);
+  }
   // Walk backward from canonicalDate to find a usable close within stale window
   for (let i = 1; i <= PRICE_MAX_STALE_DAYS; i++) {
     const d = new Date(canonicalDate + 'T00:00:00Z');
     d.setUTCDate(d.getUTCDate() - i);
     const key = d.toISOString().slice(0, 10);
-    if (map.has(key)) return map.get(key);
+    if (map.has(key)) return tooStale(key) ? null : map.get(key);
   }
   return null;
 }
@@ -297,8 +384,10 @@ function computeUniverseMedianReturn(priceIndex, asOfDate, horizonDays, evaluate
     // Tag 231a-2 (audit HIGH fix): when canonical dates are provided (benchmark-anchored),
     // use them so every ticker is measured over the same calendar window.
     if (canonicalDates && canonicalDates.entryDate && canonicalDates.exitDate) {
-      p0 = _priceAtCanonical(map, canonicalDates.entryDate);
-      p1 = _priceAtCanonical(map, canonicalDates.exitDate);
+      // BH-186: bound total staleness against the ticker's OWN target dates,
+      // not just the (already up-to-5-days-shifted) canonical dates.
+      p0 = _priceAtCanonical(map, canonicalDates.entryDate, asOfDate);
+      p1 = _priceAtCanonical(map, canonicalDates.exitDate, futureDate);
     } else {
       const entryDate = nearestTradingDay(asOfDate, map) || asOfDate;
       const exitDate  = nearestTradingDay(futureDate, map) || futureDate;
@@ -330,8 +419,9 @@ function computeFrozenVintageMedianReturn(priceIndex, vintagePicks, asOfDate, ho
     let p0, p1;
     // Tag 231a-2 (audit HIGH fix): canonical-date anchoring when provided.
     if (canonicalDates && canonicalDates.entryDate && canonicalDates.exitDate) {
-      p0 = _priceAtCanonical(map, canonicalDates.entryDate);
-      p1 = _priceAtCanonical(map, canonicalDates.exitDate);
+      // BH-186: bound total staleness against the original per-ticker target.
+      p0 = _priceAtCanonical(map, canonicalDates.entryDate, asOfDate);
+      p1 = _priceAtCanonical(map, canonicalDates.exitDate, futureDate);
     } else {
       // F-BT-005: snap to nearest trading day
       const entryDate = nearestTradingDay(asOfDate, map) || asOfDate;
@@ -412,18 +502,21 @@ function loadMacroRegimes() {
 // off a legacy string silently yields undefined for dates that DO exist. Unwrap either shape.
 function _regimeOf(v) { return (v && typeof v === 'object') ? v.regime : v; }
 // Tag 139 / F-BT-010: find closest regime entry for a given date.
-// Extended lookback to 30 days. Returns 'UNKNOWN' (not null) if no regime found.
+// Returns 'UNKNOWN' (not null) if no regime found.
+// BH-187: lookback capped at PRICE_MAX_STALE_DAYS (7), reusing the same
+// staleness contract already applied to price lookups in this file, instead
+// of the previous 30-day window — a regime label 30 days stale at a genuine
+// regime change (BULL->BEAR) mislabels every vintage in between.
 function getRegimeAt(regimes, isoDate) {
   if (!regimes) return null;
   if (regimes[isoDate]) return _regimeOf(regimes[isoDate]);
-  // Look back up to 30 days (was 7, F-BT-010)
-  for (let i = 1; i <= 30; i++) {
+  for (let i = 1; i <= PRICE_MAX_STALE_DAYS; i++) {
     const d = new Date(isoDate + 'T00:00:00Z');
     d.setUTCDate(d.getUTCDate() - i);
     const key = d.toISOString().slice(0, 10);
     if (regimes[key]) return _regimeOf(regimes[key]);
   }
-  console.warn('[walk-forward-perf] WARNING: No macro regime found within 30 days of ' + isoDate + ' — returning UNKNOWN');
+  console.warn('[walk-forward-perf] WARNING: No macro regime found within ' + PRICE_MAX_STALE_DAYS + ' days of ' + isoDate + ' — returning UNKNOWN');
   return 'UNKNOWN';
 }
 
@@ -440,7 +533,10 @@ function evaluateVintage(picksFile, priceIndex, regimes) {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const macroRegime = getRegimeAt(regimes, asOf);  // Tag 139
+  // BH-187: resolve regime at the actual entry date (post pre-market shift),
+  // not the raw snapshot date — asOf and entryDate differ by ~1 day only when
+  // getEntryDate() pushed a pre-close snapshot to the next day.
+  const macroRegime = getRegimeAt(regimes, entryDate);  // Tag 139
   const out = { asOf, macroRegime, modes: {} };
 
   // F-BT-003: warn when evaluatedTickers is absent (no survivor-bias correction possible)
@@ -504,8 +600,10 @@ function evaluateVintage(picksFile, priceIndex, regimes) {
         if (!map) continue;
         let p0, p1;
         if (canonical) {
-          p0 = _priceAtCanonical(map, canonical.entryDate);
-          p1 = _priceAtCanonical(map, canonical.exitDate);
+          // BH-186: bound total staleness against the ticker's own
+          // (pre-benchmark-snap) target dates, not just the canonical ones.
+          p0 = _priceAtCanonical(map, canonical.entryDate, entryDate);
+          p1 = _priceAtCanonical(map, canonical.exitDate, futureDate);
         } else {
           // Legacy path: no benchmark available
           const tEntry = nearestTradingDay(entryDate, map) || entryDate;
@@ -586,10 +684,91 @@ function evaluateVintage(picksFile, priceIndex, regimes) {
         backtest_runner_version: 'stored_pass'
       };
     }
-    // F-BT-012: report n_total/n_evaluated/truncated at mode level too
-    out.modes[mode] = { n_total: allPicks.length, n_evaluated: picks.length, truncated, horizons: horizonResults };
+    // F-BT-012: report n_total/n_considered/truncated at mode level too.
+    // BH-141: was named `n_evaluated` here but held picks.length (post-truncation
+    // candidate count, BEFORE per-horizon price-availability filtering) — a
+    // different quantity than the correctly-named `horizons[days+'d'].n_evaluated`
+    // (the actual two-price-resolved count). Renamed to avoid the same key
+    // meaning two different things at two nesting levels.
+    out.modes[mode] = { n_total: allPicks.length, n_considered: picks.length, truncated, horizons: horizonResults };
   }
   return out;
+}
+
+// Tag 134/139 — summary: median alpha per horizon × benchmark, pooled across
+// vintages, plus per-regime (BULL/BEAR/SIDEWAYS) breakdown.
+// BH-141: extracted from main()'s per-mode/per-horizon aggregation loop (a)
+// so it's directly testable and (b) to fix vintageCount not applying the same
+// `onWindow` (F-BT-008) filter that every other counter here (totalPicks,
+// medianAlpha*) already applies — a vintage whose actual measured window
+// deviated from the nominal horizon by more than HORIZON_TOLERANCE_DAYS was
+// silently excluded from every median/totalPicks figure but still counted
+// toward the headline "N vintages" numbers, overstating sample size.
+function computeHorizonSummary(vintages, days) {
+  const key = days + 'd';
+  const onWindow = v => {
+    const h = v.horizons[key];
+    if (!h) return false;
+    const ad = h.horizonActualDays;
+    if (ad == null) return true;
+    return Math.abs(ad - days) <= HORIZON_TOLERANCE_DAYS;
+  };
+  const collect = (field, filterFn) => vintages
+    .filter(onWindow)
+    .filter(v => !filterFn || filterFn(v))
+    .map(v => v.horizons[key] && v.horizons[key][field])
+    .filter(a => a != null && Number.isFinite(a));
+  const ns = vintages.filter(onWindow).map(v => v.horizons[key] && v.horizons[key].n_evaluated).filter(n => n != null);
+
+  const regimeAlpha = {};
+  for (const regime of ['BULL', 'BEAR', 'SIDEWAYS']) {
+    const vals = collect('alphaVsSpy', v => v.macroRegime === regime);
+    if (vals.length > 0) regimeAlpha[regime] = { medianAlphaVsBenchmark: median(vals), vintages: vals.length };
+  }
+
+  const universeAlphaVals = collect('alphaVsUniverse');
+  const universeAlphaVintageCount = universeAlphaVals.length;
+  const rawMedianAlphaVsUniverse = median(universeAlphaVals);
+  const medianAlphaVsUniverseGated = universeAlphaVintageCount < MIN_VINTAGES_UNIVERSE
+    ? null : rawMedianAlphaVsUniverse;
+  const medianAlphaVsUniverseNote = universeAlphaVintageCount < MIN_VINTAGES_UNIVERSE
+    ? ('insufficient vintages (n=' + universeAlphaVintageCount + ')')
+    : undefined;
+
+  const frozenAlphaVals = collect('alphaVsFrozenVintage');
+  const frozenAlphaVintageCount = frozenAlphaVals.length;
+  const medianAlphaVsFrozenVintageGated = frozenAlphaVintageCount < MIN_VINTAGES_UNIVERSE
+    ? null : median(frozenAlphaVals);
+  const medianAlphaVsFrozenVintageNote = frozenAlphaVintageCount < MIN_VINTAGES_UNIVERSE
+    ? ('insufficient vintages (n=' + frozenAlphaVintageCount + ')')
+    : undefined;
+
+  const benchmarkAlphaVals = collect('alphaVsSpy');
+  const benchmarkAlphaVintageCount = benchmarkAlphaVals.length;
+  const medianAlphaVsBenchmarkGated = benchmarkAlphaVintageCount < MIN_VINTAGES_UNIVERSE
+    ? null : median(benchmarkAlphaVals);
+  const medianAlphaVsBenchmarkNote = benchmarkAlphaVintageCount < MIN_VINTAGES_UNIVERSE
+    ? ('insufficient vintages (n=' + benchmarkAlphaVintageCount + ')')
+    : undefined;
+
+  return {
+    // BH-141: gated on the SAME onWindow filter as totalPicks/medianAlpha*
+    // below (was previously ungated — see extraction note above).
+    vintageCount: vintages.filter(onWindow).filter(v => v.horizons[key] && v.horizons[key].status === 'ok').length,
+    universeAlphaVintageCount,
+    medianAlphaVsUniverse: medianAlphaVsUniverseGated,
+    medianAlphaVsUniverseNote,
+    frozenVintageAlphaVintageCount: frozenAlphaVintageCount,
+    medianAlphaVsFrozenVintage: medianAlphaVsFrozenVintageGated,
+    medianAlphaVsFrozenVintageNote,
+    benchmarkAlphaVintageCount,
+    medianAlphaVsBenchmark: medianAlphaVsBenchmarkGated,
+    medianAlphaVsBenchmarkNote,
+    medianAlphaVsSpy: medianAlphaVsBenchmarkGated, // backwards-compat
+    totalPicks: ns.reduce((s, n) => s + n, 0),
+    regimeAlpha: Object.keys(regimeAlpha).length > 0 ? regimeAlpha : undefined,
+    medianAlpha: medianAlphaVsUniverseGated
+  };
 }
 
 function main() {
@@ -652,40 +831,10 @@ function main() {
     if (ev) evaluations.push(ev);
   }
 
-  // F-BT-012: picks-history coverage diagnostic. Compare the number of business
-  // days spanned by the corpus against the number of vintages actually present,
-  // and warn when more than COVERAGE_MISSING_THRESHOLD of expected vintages are
-  // missing — a silent gap (failed crons, partial backfills) otherwise just
-  // shrinks the backtest corpus without any signal.
-  const COVERAGE_MISSING_THRESHOLD = 0.20; // 20%
-  let coverageDiagnostic = null;
-  if (vintages.length > 0) {
-    const firstDate = vintages[0].slice(0, 10);
-    const lastDate = vintages[vintages.length - 1].slice(0, 10);
-    const expectedBusinessDays = businessDaysBetween(firstDate, lastDate);
-    const presentVintages = vintages.length;
-    const missingVintages = Math.max(0, expectedBusinessDays - presentVintages);
-    const missingPct = expectedBusinessDays > 0
-      ? Math.round((missingVintages / expectedBusinessDays) * 1000) / 1000
-      : 0;
-    const belowThreshold = missingPct > COVERAGE_MISSING_THRESHOLD;
-    coverageDiagnostic = {
-      firstVintage: firstDate,
-      lastVintage: lastDate,
-      expectedBusinessDays,
-      presentVintages,
-      missingVintages,
-      missingPct,
-      missingThreshold: COVERAGE_MISSING_THRESHOLD,
-      coverageWarning: belowThreshold
-        ? ('picks-history coverage gap: ' + missingVintages + ' of ' + expectedBusinessDays
-           + ' expected business-day vintages missing (' + Math.round(missingPct * 100)
-           + '% > ' + Math.round(COVERAGE_MISSING_THRESHOLD * 100) + '% threshold)')
-        : undefined
-    };
-    if (belowThreshold) {
-      console.warn('::warning::[walk-forward-perf] ' + coverageDiagnostic.coverageWarning);
-    }
+  // F-BT-012 / BH-141: picks-history coverage diagnostic (see computeCoverageDiagnostic).
+  const coverageDiagnostic = computeCoverageDiagnostic(vintages);
+  if (coverageDiagnostic && coverageDiagnostic.coverageWarning) {
+    console.warn('::warning::[walk-forward-perf] ' + coverageDiagnostic.coverageWarning);
   }
 
   // Aggregate per-mode across vintages
@@ -696,113 +845,43 @@ function main() {
       modes[mode].vintages.push({
         asOf: ev.asOf,
         macroRegime: ev.macroRegime || null,  // Tag 139
-        // F-BT-012: expose n_total/n_evaluated/truncated
-        n: modeData.n_evaluated,
+        // F-BT-012 / BH-141: expose n_total/n_considered/truncated. The real
+        // per-horizon evaluated counts live in horizons[days+'d'].n_evaluated;
+        // no separate top-level n/n_evaluated duplicate (see rename above).
         n_total: modeData.n_total,
-        n_evaluated: modeData.n_evaluated,
+        n_considered: modeData.n_considered,
         truncated: modeData.truncated,
         horizons: modeData.horizons
       });
     }
   }
-  // Summary: median alpha per horizon × benchmark across vintages
-  // Tag 134 — Phase 3.2/3.3: now reports alpha vs three benchmarks (universe / frozen-vintage / SPY/bench).
+  // Summary: median alpha per horizon × benchmark across vintages (see
+  // computeHorizonSummary — BH-141 extraction).
+  // Tag 134 — Phase 3.2/3.3: reports alpha vs three benchmarks (universe / frozen-vintage / SPY/bench).
   // Tag 139: also computes per-regime (BULL/BEAR/SIDEWAYS) alpha breakdown.
   for (const [mode, data] of Object.entries(modes)) {
     for (const days of HORIZONS_DAYS) {
-      const key = days + 'd';
-      // F-BT-008: exclude vintages whose actual measured window deviates from the
-      // nominal horizon by more than HORIZON_TOLERANCE_DAYS from the POOLED summary.
-      // The backward-snap to the nearest pre-holiday close can silently shorten an
-      // 84d horizon to 79-82d; pooling 79d returns with 84d returns biases the
-      // aggregate alpha. We drop off-window vintages from the summary only — they
-      // remain in the per-vintage output (data.vintages) untouched. We do NOT
-      // rescale returns (riskier). A null horizonActualDays (older output, or no
-      // benchmark) is treated as on-window so we don't silently drop everything.
-      const HORIZON_TOLERANCE_DAYS = 3;
-      const onWindow = v => {
-        const h = v.horizons[key];
-        if (!h) return false;
-        const ad = h.horizonActualDays;
-        if (ad == null) return true;
-        return Math.abs(ad - days) <= HORIZON_TOLERANCE_DAYS;
-      };
-      const collect = (field, filterFn) => data.vintages
-        .filter(onWindow)
-        .filter(v => !filterFn || filterFn(v))
-        .map(v => v.horizons[key] && v.horizons[key][field])
-        .filter(a => a != null && Number.isFinite(a));
-      const ns = data.vintages.filter(onWindow).map(v => v.horizons[key] && v.horizons[key].n_evaluated).filter(n => n != null);
-
-      // Tag 139: per-regime alpha (BULL/BEAR/SIDEWAYS)
-      const regimeAlpha = {};
-      for (const regime of ['BULL', 'BEAR', 'SIDEWAYS']) {
-        const vals = collect('alphaVsSpy', v => v.macroRegime === regime);
-        if (vals.length > 0) regimeAlpha[regime] = { medianAlphaVsBenchmark: median(vals), vintages: vals.length };
-      }
-
-      // F-BT-112: count vintages that contributed a non-null alphaVsUniverse
-      const universeAlphaVals = collect('alphaVsUniverse');
-      const universeAlphaVintageCount = universeAlphaVals.length;
-      const MIN_VINTAGES_UNIVERSE = 4;
-      const rawMedianAlphaVsUniverse = median(universeAlphaVals);
-      const medianAlphaVsUniverseGated = universeAlphaVintageCount < MIN_VINTAGES_UNIVERSE
-        ? null : rawMedianAlphaVsUniverse;
-      const medianAlphaVsUniverseNote = universeAlphaVintageCount < MIN_VINTAGES_UNIVERSE
-        ? ('insufficient vintages (n=' + universeAlphaVintageCount + ')')
-        : undefined;
-
-      // F-BT-004: apply the SAME MIN_VINTAGES gate (counting non-null contributing
-      // vintages) to medianAlphaVsBenchmark and medianAlphaVsFrozenVintage. Pre-fix
-      // these two were ungated, so a single surviving vintage could publish a
-      // headline alpha number with the same false confidence the universe gate was
-      // added to prevent.
-      const frozenAlphaVals = collect('alphaVsFrozenVintage');
-      const frozenAlphaVintageCount = frozenAlphaVals.length;
-      const medianAlphaVsFrozenVintageGated = frozenAlphaVintageCount < MIN_VINTAGES_UNIVERSE
-        ? null : median(frozenAlphaVals);
-      const medianAlphaVsFrozenVintageNote = frozenAlphaVintageCount < MIN_VINTAGES_UNIVERSE
-        ? ('insufficient vintages (n=' + frozenAlphaVintageCount + ')')
-        : undefined;
-
-      const benchmarkAlphaVals = collect('alphaVsSpy');
-      const benchmarkAlphaVintageCount = benchmarkAlphaVals.length;
-      const medianAlphaVsBenchmarkGated = benchmarkAlphaVintageCount < MIN_VINTAGES_UNIVERSE
-        ? null : median(benchmarkAlphaVals);
-      const medianAlphaVsBenchmarkNote = benchmarkAlphaVintageCount < MIN_VINTAGES_UNIVERSE
-        ? ('insufficient vintages (n=' + benchmarkAlphaVintageCount + ')')
-        : undefined;
-
-      data.summary[key] = {
-        // Bug #32 fix: collect() filters nulls, so vintageCount was only counting vintages
-        // with non-null alphaVsUniverse (n >= MIN_SAMPLES). Count all status='ok' vintages.
-        vintageCount: data.vintages.filter(v => v.horizons[key] && v.horizons[key].status === 'ok').length,
-        // F-BT-112: gated when fewer than MIN_VINTAGES_UNIVERSE vintages contributed
-        universeAlphaVintageCount,
-        medianAlphaVsUniverse: medianAlphaVsUniverseGated,
-        medianAlphaVsUniverseNote,
-        // F-BT-004: gated like medianAlphaVsUniverse
-        frozenVintageAlphaVintageCount: frozenAlphaVintageCount,
-        medianAlphaVsFrozenVintage: medianAlphaVsFrozenVintageGated,
-        medianAlphaVsFrozenVintageNote,
-        benchmarkAlphaVintageCount,
-        medianAlphaVsBenchmark: medianAlphaVsBenchmarkGated,
-        medianAlphaVsBenchmarkNote,
-        medianAlphaVsSpy: medianAlphaVsBenchmarkGated, // backwards-compat
-        totalPicks: ns.reduce((s, n) => s + n, 0),
-        // Tag 139: alpha by macro regime (only if regime data available)
-        regimeAlpha: Object.keys(regimeAlpha).length > 0 ? regimeAlpha : undefined,
-        // Backwards-compat (deprecated, prefer medianAlphaVsUniverse):
-        // F-BT-112: also apply the vintage gate here for consistency
-        medianAlpha: medianAlphaVsUniverseGated
-      };
+      data.summary[days + 'd'] = computeHorizonSummary(data.vintages, days);
     }
   }
 
   if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
   const today = new Date().toISOString().slice(0, 10);
+  // BH-140: this script is not invoked by any GitHub Actions workflow (grep
+  // .github/workflows/*.yml for walk-forward-perf.js is empty) — it is a
+  // retired/orphaned legacy backtest, superseded by the live scoring path
+  // (rank-ic.js / lib/forward-returns.js). `asOf` previously held today's RUN
+  // date, which silently overstated freshness on every ad-hoc manual
+  // invocation (a report run today against months-old picks-history still
+  // said "asOf: today"). Report the actual data end date — the newest
+  // evaluated picks-history vintage — as `asOf`, and keep the run date
+  // separately as `generatedAt`.
+  const dataAsOf = evaluations.length > 0 ? evaluations[evaluations.length - 1].asOf : null;
   const outJson = {
-    asOf: today,
+    legacy: true,
+    legacyNote: 'Retired/orphaned: not wired into any CI workflow. Manual ad-hoc backtest only — do not treat this report as live pipeline scoring.',
+    asOf: dataAsOf || today,
+    generatedAt: today,
     vintageCount: evaluations.length,
     // F-BT-012: picks-history coverage diagnostic (new field, existing fields untouched)
     coverageDiagnostic,
@@ -816,7 +895,8 @@ function main() {
   writeFileAtomic(path.join(OUT_DIR, 'walk-forward.json'), JSON.stringify(outJson, null, 2));
 
   // Markdown report
-  let md = '# Walk-Forward Performance — ' + today + '\n\n';
+  let md = '# Walk-Forward Performance — LEGACY/RETIRED (not wired into CI)\n\n';
+  md += '**Data as of:** ' + (dataAsOf || today) + ' · **Generated:** ' + today + '\n\n';
   md += '**Benchmarks:** Universe-Median · Frozen-Vintage-Median · SPY/QQQ/IWM. **Vintages:** ' + evaluations.length + '.\n\n';
   md += '_Universe-median uses evaluatedTickers from each vintage (survivor-bias corrected). If evaluatedTickers absent, alphaVsUniverse=null. Frozen-vintage uses only the tickers in that vintage\'s picks. SPY (or QQQ/IWM fallback) is the external US-equity reference._\n\n';
   md += '**F-BT-011 note:** Historical alpha uses stored `pass` flags from snapshot date. Live comparison uses today\'s Runner. Version drift is not tracked — do not compare absolute alpha values across Runner-version boundaries.\n\n';
@@ -830,7 +910,7 @@ function main() {
       md += `| ${days}d | ${s.vintageCount} | ${fmt(s.medianAlphaVsUniverse)} | ${fmt(s.medianAlphaVsFrozenVintage)} | ${fmt(s.medianAlphaVsBenchmark)} | ${s.totalPicks} |\n`;
     }
     md += '\n### Per-Vintage (α vs Benchmark shown — most honest)\n\n';
-    md += '| asOf | entry | n_evaluated | n_total | truncated | 1w | 4w | 12w |\n|---|---|---|---|---|---|---|---|\n';
+    md += '| asOf | entry | n_considered | n_total | truncated | 1w | 4w | 12w |\n|---|---|---|---|---|---|---|---|\n';
     for (const v of data.vintages) {
       const cells = HORIZONS_DAYS.map(d => {
         const h = v.horizons[d + 'd'];
@@ -840,7 +920,8 @@ function main() {
       // Determine entry date from first horizon (all horizons use same entry date)
       const firstH = v.horizons[HORIZONS_DAYS[0] + 'd'];
       const entryNote = firstH && firstH.backtest_runner_version === 'stored_pass' ? '' : '';
-      md += `| ${v.asOf} | ${entryNote}next-day | ${v.n_evaluated} | ${v.n_total} | ${v.truncated ? 'yes' : 'no'} | ${cells[0]} | ${cells[1]} | ${cells[2]} |\n`;
+      // BH-141: n_considered (renamed from n_evaluated — see mode-level rename above)
+      md += `| ${v.asOf} | ${entryNote}next-day | ${v.n_considered} | ${v.n_total} | ${v.truncated ? 'yes' : 'no'} | ${cells[0]} | ${cells[1]} | ${cells[2]} |\n`;
     }
     md += '\n';
   }
@@ -879,7 +960,14 @@ module.exports = {
   // applies the identical staleness guard without duplicating logic.
   maxPriceDate,
   businessDaysSince,
-  MAX_PRICE_STALENESS_BUSINESS_DAYS
+  MAX_PRICE_STALENESS_BUSINESS_DAYS,
+  // BH-141/BH-187: exported for direct hermetic testing (bh-w2-wfp.test.js)
+  // of the aggregation/regime logic without needing full main() file I/O.
+  businessDaysBetween,
+  computeCoverageDiagnostic,
+  computeHorizonSummary,
+  computeFrozenVintageMedianReturn,
+  getRegimeAt
 };
 
 if (require.main === module) {
