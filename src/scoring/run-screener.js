@@ -19,9 +19,13 @@ const { boardStatus } = require('./board-status.js');
 // audit/fix (C2): Outputs atomar schreiben (tmp+rename), wie das ganze Daten-Fundament —
 // plain fs.writeFileSync hinterlaesst bei Crash/CI-Timeout truncated JSON fuers Dashboard.
 const { writeJsonAtomic } = require('../../lib/atomic-write.js');
+// BH-116: Scoring-Korpus auf die autorisierte Watchlist-Menge schneiden (shape-toleranter Loader,
+// bereits von prune-watchlist/check-pull-stats genutzt -> ein Parser fuer alle drei watchlist.json-Formen).
+const { loadWatchlist } = require('../../lib/watchlist-fs.js');
 
 const ROOT = path.join(__dirname, '..', '..');
 const SNAP_DIR = path.join(ROOT, 'snapshots');
+const WATCHLIST_PATH = path.join(ROOT, 'watchlist.json');
 const OUT_DIR = path.join(ROOT, 'outputs', 'hypergrowth');
 const QC_OUT_DIR = path.join(ROOT, 'outputs', 'quality'); // 3.1 QC-Board (DIAGNOSTIC), getrennter Ordner
 
@@ -66,8 +70,23 @@ function nextHighWater(prevBaseline, loadedCount) {
   return Math.max(prev, loadedCount);
 }
 
+/**
+ * BH-116: Scoring-Korpus auf die autorisierte Watchlist-Menge schneiden. Snapshot-Dateien fuer
+ * delistete/geprunte Ticker ueberleben auf Disk (pull-yahoo.js loescht nur beim mcap-Skip eines
+ * noch-verarbeiteten Tickers, nie bei Watchlist-Austritt) und wuerden sonst unbemerkt als
+ * Altbestand mitgescort -> verzerrte Kohorten-Perzentile. Reine Funktion (testbar, kein I/O);
+ * I/O (Watchlist laden) bleibt in loadUniverse. Leere/kaputte Watchlist -> fail-open (kein Schnitt),
+ * wie jeder andere optionale Cache in dieser Pipeline.
+ */
+function filterToAuthorizedUniverse(u, watchlistStocks) {
+  if (!Array.isArray(watchlistStocks) || watchlistStocks.length === 0) return { filtered: u, dropped: 0 };
+  const authorized = new Set(watchlistStocks.map((s) => s && s.ticker).filter(Boolean));
+  const filtered = u.filter((s) => authorized.has(s.meta.ticker));
+  return { filtered, dropped: u.length - filtered.length };
+}
+
 function loadUniverse() {
-  const u = [];
+  let u = [];
   let parseFail = 0, skippedNoMeta = 0;
   for (const f of fs.readdirSync(SNAP_DIR)) {
     if (!f.endsWith('.json')) continue;
@@ -82,34 +101,58 @@ function loadUniverse() {
     if (s && s.meta && s.meta.ticker) u.push(s);
     else skippedNoMeta++;
   }
-  // audit/fix (C3): still geschluckte Parse-Fehler / Schema-Drift verzerren lautlos die
-  // Kohorten-Perzentile (Universum schrumpft unbemerkt) -> sichtbar machen statt verschweigen.
-  if (parseFail > 0 || skippedNoMeta > 0) {
-    console.warn(`[run-screener] loadUniverse: ${u.length} geladen, ${parseFail} parse-fail, ${skippedNoMeta} ohne meta.ticker uebersprungen`);
-  }
+  // audit/fix (Opus-Review b07, BH-116-Regression): der Coverage-Floor braucht die ROHE on-disk-
+  // Parse-Erfolgs-Menge (die Korruptions-Population, die C1 faengt), NICHT den watchlist-gefilterten
+  // Count. Vorher lief der BH-116-Schnitt VOR dem Floor -> ganze Boersen ohne Watchlist-Eintraege
+  // (.SZ/.SS/.TW/.TO) rissen den gefilterten Count unter den Floor und loesten einen dauerhaften
+  // Abbruch aus, obwohl kein einziger Snapshot korrupt war (legitimes Pruning != Korruptions-Schwund).
+  // rawCount VOR dem BH-116-Filter fixiert; Floor/High-Water unten rechnen dagegen, der Watchlist-
+  // Schnitt (BH-116) folgt ERST NACH dem Floor-Check auf das zurueckgegebene Universum.
+  const rawCount = u.length;
   // audit/fix (Court Fall C1): HARTER Floor gegen die Self-Baseline (zuletzt-gesunder on-disk-Count).
   // I/O hier isoliert, die Floor-/High-Water-Logik bleibt rein (assertCoverageFloor/nextHighWater).
   let baseline = null;
   try {
     baseline = JSON.parse(fs.readFileSync(LAST_GOOD_DISK, 'utf8')).value;
   } catch (_) { /* Erstlauf / kein High-Water -> fail-open, gleich Startwert schreiben */ }
+  // BH-117: baseline ist in JEDEM CI-Lauf null (_last_good_disk.json liegt gitignored in snapshots/
+  // und wird von keinem Artefakt/Cache-Schritt in daily-pull.yml ueber Laeufe hinweg persistiert,
+  // der scoring-Job startet also stets ohne Self-Baseline). assertCoverageFloor ist dafuer bewusst
+  // fail-open (Erstlauf-Vertrag) -> der Floor greift in CI dadurch NIE, still. Persistenz ueber
+  // Job-Grenzen ist Workflow-Zustaendigkeit (.github/workflows/daily-pull.yml, ausserhalb dieser
+  // Datei) — hier nur die Sichtbarkeit herstellen, damit der Blindspot nicht mehr lautlos ist.
+  if (!Number.isFinite(baseline) || baseline <= 0) {
+    console.warn('[run-screener] loadUniverse: keine Self-Baseline (_last_good_disk.json fehlt/unbrauchbar) — Coverage-Floor NICHT erzwungen diesen Lauf.');
+  }
   // manifest.n_ok nur noch als Diagnose (NICHT mehr als Floor-Referenz — andere Population).
   try {
     const nOk = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, '_manifest.json'), 'utf8')).n_ok;
-    if (Number.isFinite(nOk) && Math.abs(u.length - nOk) > 0.2 * nOk) {
-      console.warn(`[run-screener] loadUniverse: on-disk ${u.length} weicht >20% von manifest n_ok ${nOk} ab (verschiedene Populationen — nur Diagnose).`);
+    if (Number.isFinite(nOk) && Math.abs(rawCount - nOk) > 0.2 * nOk) {
+      console.warn(`[run-screener] loadUniverse: on-disk ${rawCount} weicht >20% von manifest n_ok ${nOk} ab (verschiedene Populationen — nur Diagnose).`);
     }
   } catch (_) { /* manifest optional fuer die Diagnose */ }
-  assertCoverageFloor(u.length, baseline);
-  // High-Water nach bestandenem Floor monoton fortschreiben. ATOMAR (tmp+rename) via writeJsonAtomic —
+  assertCoverageFloor(rawCount, baseline);
+  // High-Water nach bestandenem Floor monoton fortschreiben, gegen den ROHEN Count (rawCount, siehe
+  // oben) — nicht gegen den watchlist-gefilterten. ATOMAR (tmp+rename) via writeJsonAtomic —
   // audit/fix (Court R3 Runde-4-Regress): genau dieser State-File ist der Anker des Coverage-Floors;
   // ein plain fs.writeFileSync hinterliesse bei Crash/CI-Timeout truncated JSON -> Read liefert baseline=
   // null -> Floor fail-open + nextHighWater re-ankert auf den geschrumpften Wert -> High-Water-Lock weg
   // (F-SM-015-baseline-wipe). Best effort, kein Abbruch bei I/O-Fehler.
   try {
-    writeJsonAtomic(LAST_GOOD_DISK, { value: nextHighWater(baseline, u.length), generatedAt: new Date().toISOString() });
+    writeJsonAtomic(LAST_GOOD_DISK, { value: nextHighWater(baseline, rawCount), generatedAt: new Date().toISOString() });
   } catch (e) {
     console.warn('[run-screener] loadUniverse: _last_good_disk.json nicht schreibbar — Self-Baseline nicht fortgeschrieben:', e.message);
+  }
+  // BH-116: Altbestand ausserhalb der aktuellen Watchlist raus — ERST NACH dem Korruptions-Floor
+  // (siehe rawCount oben), damit legitimes Watchlist-Prunen (ganze Boersen ohne Watchlist-Eintraege)
+  // den Floor nicht mehr faelschlich ausloest. Wirkt nur auf das zurueckgegebene Scoring-Universum.
+  const wl = loadWatchlist(WATCHLIST_PATH);
+  const { filtered, dropped } = filterToAuthorizedUniverse(u, wl.stocks);
+  u = filtered;
+  // audit/fix (C3): still geschluckte Parse-Fehler / Schema-Drift verzerren lautlos die
+  // Kohorten-Perzentile (Universum schrumpft unbemerkt) -> sichtbar machen statt verschweigen.
+  if (parseFail > 0 || skippedNoMeta > 0 || dropped > 0) {
+    console.warn(`[run-screener] loadUniverse: ${u.length} geladen, ${parseFail} parse-fail, ${skippedNoMeta} ohne meta.ticker, ${dropped} nicht (mehr) in watchlist.json uebersprungen`);
   }
   mergeSecIntoUniverse(u); // PHASE 4: committete tiefe SEC-Serie an US-Namen anhaengen (deterministisch, kein Netzwerk)
   return u;
@@ -128,24 +171,39 @@ function loadUniverse() {
 // -> skip (byte-identisch). Alle offline via scripts/build-*annual.js erzeugt; hier KEIN Netz (CI==lokal).
 const SECANNUAL_FILES = ['sec-secannual.json', 'kr-secannual.json', 'jp-secannual.json', 'tw-secannual.json']
   .map((f) => path.join(ROOT, 'external-data', f));
+// BH-011: Coverage anhand finiter Serien ausweisen statt blosser Key-Praesenz. Reine Funktion.
+function hasFiniteSeries(arr) {
+  return Array.isArray(arr) && arr.some((v) => Number.isFinite(v));
+}
+
 function mergeSecIntoUniverse(u) {
   const data = {};
   for (const p of SECANNUAL_FILES) {
     try { Object.assign(data, JSON.parse(fs.readFileSync(p, 'utf8'))); } catch (_) { /* Datei fehlt -> skip */ }
   }
   if (!Object.keys(data).length) return u; // keine committete Datei -> heutiges 4J-Verhalten
-  let merged = 0;
+  // BH-011: "merged" zaehlte bisher jede blosse Key-Praesenz (d truthy) mit, auch wenn die
+  // angehaengten Serien komplett leer/undefined sind -> Logs/Doku ueberzeichneten die tatsaechliche
+  // Tiefe. Das Scoring selbst faellt bei toten Keys ohnehin korrekt auf Yahoo zurueck (secSeries()==
+  // null -> Fallback); hier geht es NUR um Messehrlichkeit im Diagnose-Log.
+  let keys = 0, rev = 0, oi = 0, both = 0, roicTrio = 0;
   for (const s of u) {
     const tk = s && s.meta && s.meta.ticker;
     const d = tk && data[tk];
     if (!d) continue;
+    keys++;
     s.secAnnual = { annualOpInc: d.annualOpInc, annualRev: d.annualRev,
       annualNetIncome: d.annualNetIncome, annualFCF: d.annualFCF, annualOCF: d.annualOCF,
       // Phase 4.1: tiefe Bilanz (fehlt in Alt-Store/regionalen Dateien -> undefined -> secSeries()==null -> Yahoo-Fallback)
       annualAssets: d.annualAssets, annualCurrentLiabilities: d.annualCurrentLiabilities };
-    merged++;
+    const hasRev = hasFiniteSeries(d.annualRev);
+    const hasOi = hasFiniteSeries(d.annualOpInc);
+    if (hasRev) rev++;
+    if (hasOi) oi++;
+    if (hasRev && hasOi) both++;
+    if (hasOi && hasFiniteSeries(d.annualAssets) && hasFiniteSeries(d.annualCurrentLiabilities)) roicTrio++;
   }
-  if (merged > 0) console.log(`[run-screener] mergeSecIntoUniverse: tiefe annual-Serie an ${merged} Namen angehaengt (SEC+regional)`);
+  if (keys > 0) console.log(`[run-screener] mergeSecIntoUniverse: ${keys} Namen mit SEC-Key angehaengt (finite Serien: rev=${rev}, oi=${oi}, both=${both}, roicTrio=${roicTrio})`);
   return u;
 }
 
@@ -316,11 +374,32 @@ function writeQualityFailedMarker(reason, qcOutDir = QC_OUT_DIR) {
   }
 }
 
+/**
+ * BH-198: --topN darf nur eine positive Ganzzahl sein. Reine Funktion (testbar, kein I/O).
+ * Zuvor lief ein negativer finiter Wert (z.B. "--topN -1") unvalidiert bis in slice(0,topN) durch —
+ * slice(0,-1) heisst "alle ausser dem letzten", kein Fehler, nur ein falsches Ergebnis. 0/NaN/
+ * Infinity waren bereits sicher (topN||100-Fallback in run()); hier trotzdem auf "nur positive
+ * Ganzzahl" praezisiert, damit ein Tippfehler laut stoppt statt still auf 100 zu fallen.
+ */
+function parseTopNArg(argv) {
+  const argIdx = argv.indexOf('--topN');
+  if (argIdx < 0) return { ok: true, value: 100 };
+  const raw = argv[argIdx + 1];
+  const topN = parseInt(raw, 10);
+  if (!Number.isInteger(topN) || topN <= 0) {
+    return { ok: false, message: `--topN muss eine positive Ganzzahl sein, erhalten: ${raw}` };
+  }
+  return { ok: true, value: topN };
+}
+
 if (require.main === module) {
-  const argIdx = process.argv.indexOf('--topN');
-  const topN = argIdx >= 0 ? parseInt(process.argv[argIdx + 1], 10) : 100;
-  const r = run(topN);
+  const parsed = parseTopNArg(process.argv);
+  if (!parsed.ok) {
+    console.error(`[run-screener] ${parsed.message}`);
+    process.exit(1);
+  }
+  const r = run(parsed.value);
   console.log(`Screener-Output: ${r.branches} Branchen, Universum ${r.universe} -> ${r.out}`);
 }
 
-module.exports = { loadUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex };
+module.exports = { loadUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex, filterToAuthorizedUniverse, hasFiniteSeries, parseTopNArg };

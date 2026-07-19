@@ -1,0 +1,124 @@
+'use strict';
+/**
+ * b07-runscreener — Test-Gate fuer BH-011/BH-116/BH-117/BH-198 (src/scoring/run-screener.js).
+ * ==============================================================================
+ * BH-011: mergeSecIntoUniverse zaehlte Coverage bisher an blosser Key-Praesenz (d truthy),
+ *   nicht an finiten Serien -> Logs/Doku ueberzeichneten die tatsaechliche Tiefe. Pinnt
+ *   hasFiniteSeries() als die neue, korrekte Klassifikation (leer/undefined/NaN-only -> false).
+ * BH-116: loadUniverse lud JEDE *.json in snapshots/ ohne Watchlist-Filter -> Snapshot-
+ *   Altbestand fuer delistete/geprunte Ticker wuerde mitgescort. Pinnt filterToAuthorizedUniverse()
+ *   als reine, testbare Schnitt-Logik (fail-open bei leerer/kaputter Watchlist).
+ * BH-116-Regression (Opus-Review): der Watchlist-Schnitt lief in loadUniverse VOR dem
+ *   Coverage-Floor -> legitimes Pruning (ganze Boersen ohne Watchlist-Eintrag) loeste denselben
+ *   Floor aus, der Snapshot-Korruption faengt (dauerhafter Fehl-Abbruch). Fix: loadUniverse rechnet
+ *   Floor/High-Water gegen die ROHE on-disk-Menge (rawCount, vor dem Filter), der Watchlist-Schnitt
+ *   folgt danach. Pinnt das Zahlenbeispiel aus dem Fund (4681 -> 3077).
+ * BH-117: baseline (_last_good_disk.json) ist in jedem CI-Lauf null (Workflow persistiert die
+ *   Datei nicht ueber Job-Grenzen — ausserhalb dieser Datei/dieses Batches). Der Floor bleibt
+ *   dadurch bewusst fail-open (Erstlauf-Vertrag, unveraendert); kein eigenstaendig testbarer
+ *   Verhaltensfix in dieser Datei, siehe Notiz im Rueckgabe-JSON. Kein Test hier noetig.
+ * BH-198: --topN akzeptierte bisher jeden finiten Wert inkl. negativer Ganzzahlen unvalidiert
+ *   (slice(0,-1) statt Fehler). Pinnt parseTopNArg() als die neue Validierung.
+ *
+ * Usage:  node tests/scoring/bh-b07-runscreener.test.js   (Exit 0/1)
+ */
+const assert = require('node:assert/strict');
+const {
+  filterToAuthorizedUniverse,
+  hasFiniteSeries,
+  parseTopNArg,
+  assertCoverageFloor,
+} = require('../../src/scoring/run-screener.js');
+
+let pass = 0, fail = 0;
+function test(name, fn) {
+  try { fn(); pass++; console.log('  ok   ' + name); }
+  catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
+}
+
+// --- BH-011: hasFiniteSeries -------------------------------------------------
+test('hasFiniteSeries: finite Zahl irgendwo im Array -> true', () => {
+  assert.equal(hasFiniteSeries([null, undefined, 42, NaN]), true);
+});
+test('hasFiniteSeries: nur null/undefined/NaN/Infinity -> false (der eigentliche BH-011-Bug)', () => {
+  assert.equal(hasFiniteSeries([null, null]), false);
+  assert.equal(hasFiniteSeries([undefined]), false);
+  assert.equal(hasFiniteSeries([NaN, Infinity, -Infinity]), false);
+});
+test('hasFiniteSeries: leeres Array / kein Array / undefined -> false', () => {
+  assert.equal(hasFiniteSeries([]), false);
+  assert.equal(hasFiniteSeries(undefined), false);
+  assert.equal(hasFiniteSeries(null), false);
+  assert.equal(hasFiniteSeries('not-an-array'), false);
+});
+
+// --- BH-116: filterToAuthorizedUniverse -------------------------------------
+test('filterToAuthorizedUniverse: schneidet Snapshots raus, die nicht in der Watchlist stehen', () => {
+  const u = [
+    { meta: { ticker: 'AAPL' } },
+    { meta: { ticker: 'DELISTED.OLD' } }, // geprunter Ticker, Snapshot-Datei ueberlebt auf Disk
+    { meta: { ticker: 'MSFT' } },
+  ];
+  const wl = [{ ticker: 'AAPL' }, { ticker: 'MSFT' }];
+  const { filtered, dropped } = filterToAuthorizedUniverse(u, wl);
+  assert.deepEqual(filtered.map((s) => s.meta.ticker), ['AAPL', 'MSFT']);
+  assert.equal(dropped, 1);
+});
+test('filterToAuthorizedUniverse: leere/kaputte Watchlist -> fail-open (kein Schnitt)', () => {
+  const u = [{ meta: { ticker: 'AAPL' } }, { meta: { ticker: 'MSFT' } }];
+  assert.deepEqual(filterToAuthorizedUniverse(u, []).filtered, u);
+  assert.deepEqual(filterToAuthorizedUniverse(u, null).filtered, u);
+  assert.deepEqual(filterToAuthorizedUniverse(u, undefined).filtered, u);
+  assert.equal(filterToAuthorizedUniverse(u, []).dropped, 0);
+});
+test('filterToAuthorizedUniverse: alles autorisiert -> nichts gedroppt', () => {
+  const u = [{ meta: { ticker: 'AAPL' } }, { meta: { ticker: 'MSFT' } }];
+  const wl = [{ ticker: 'AAPL' }, { ticker: 'MSFT' }, { ticker: 'GOOG' }];
+  const { filtered, dropped } = filterToAuthorizedUniverse(u, wl);
+  assert.equal(filtered.length, 2);
+  assert.equal(dropped, 0);
+});
+
+// --- BH-116-Regression (Opus-Review b07): Coverage-Floor muss gegen die ROHE on-disk-Menge
+// rechnen (rawCount, VOR dem Watchlist-Schnitt in loadUniverse), nicht gegen den gefilterten Count —
+// sonst loest legitimes Watchlist-Prunen (ganze Boersen ohne Watchlist-Eintrag) denselben
+// Korruptions-Floor aus, der eigentlich Parse-Fails/Snapshot-Schwund faengt. Reproduziert das
+// gemeldete Zahlenbeispiel 4681 -> 3077 (34% weg, floor=ceil(0.95*4681)=4447).
+test('BH-116-Regression: Floor gegen rawCount uebersteht legitimes Watchlist-Pruning', () => {
+  const rawCount = 4681;
+  const baseline = 4681;
+  const u = Array.from({ length: rawCount }, (_, i) => ({ meta: { ticker: `T${i}` } }));
+  const wl = u.slice(0, 3077).map((s) => ({ ticker: s.meta.ticker })); // nur 3077 autorisiert
+  const { filtered, dropped } = filterToAuthorizedUniverse(u, wl);
+  assert.equal(filtered.length, 3077);
+  assert.equal(dropped, 1604);
+  // Der Fix: loadUniverse prueft assertCoverageFloor(rawCount, baseline) VOR dem Filter -> kein throw.
+  assert.doesNotThrow(() => assertCoverageFloor(rawCount, baseline),
+    'Floor gegen die rohe on-disk-Menge darf legitimes Pruning nicht bestrafen');
+  // Gegenprobe/Regressions-Wächter: der GEFILTERTE Count waere faelschlich unter den Floor gefallen —
+  // genau das war der BH-116-Bug (Filter lief vor dem Floor). Bleibt dieser throw irgendwann aus,
+  // ist die alte, falsche Verdrahtung zurueckgekehrt.
+  assert.throws(() => assertCoverageFloor(filtered.length, baseline), /Coverage-Floor|geschrumpft/i,
+    'gegenprobe: der gefilterte Count waere faelschlich unter den Floor gefallen (das war der Bug)');
+});
+
+// --- BH-198: parseTopNArg ----------------------------------------------------
+test('parseTopNArg: kein --topN -> Default 100', () => {
+  assert.deepEqual(parseTopNArg(['node', 'run-screener.js']), { ok: true, value: 100 });
+});
+test('parseTopNArg: positive Ganzzahl -> ok', () => {
+  assert.deepEqual(parseTopNArg(['node', 'run-screener.js', '--topN', '50']), { ok: true, value: 50 });
+});
+test('parseTopNArg: negative Ganzzahl -> REJECTED (der eigentliche BH-198-Bug: slice(0,-1) statt Fehler)', () => {
+  const r = parseTopNArg(['node', 'run-screener.js', '--topN', '-1']);
+  assert.equal(r.ok, false);
+  assert.match(r.message, /positive Ganzzahl/);
+});
+test('parseTopNArg: 0/NaN/nicht-numerisch -> REJECTED', () => {
+  assert.equal(parseTopNArg(['node', 'run-screener.js', '--topN', '0']).ok, false);
+  assert.equal(parseTopNArg(['node', 'run-screener.js', '--topN', 'foo']).ok, false);
+  assert.equal(parseTopNArg(['node', 'run-screener.js', '--topN', 'Infinity']).ok, false);
+});
+
+console.log(`bh-b07-runscreener.test.js: ${pass} ok, ${fail} fail`);
+process.exit(fail ? 1 : 0);
