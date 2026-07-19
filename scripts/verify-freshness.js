@@ -24,6 +24,10 @@
 //   bleibt via continue-on-error:true eine Warnung; das merged Gate ist hart.
 const fs = require('fs');
 const path = require('path');
+// BH-132: skip only real metadata files (writer/reader share this predicate),
+// not every "_"-prefixed name — safeSnapshotFilename prefixes Windows-reserved
+// tickers (CON -> _CON.json) and those are real snapshots, not metadata.
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 
 const FRESH_MS = 36 * 3600 * 1000;
 // quote-anchored: matcht "asOf", NICHT "fundamentalsAsOf"
@@ -33,8 +37,8 @@ const FETCHED_RE = /"fetchedAt"\s*:\s*"([^"]+)"/;
 function checkFreshness(dir, now = Date.now()) {
   let files = [];
   try {
-    files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_'));
-  } catch (_) { /* fehlendes Verzeichnis = 0 Dateien, ok bleibt true */ }
+    files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !isMetadataSnapshot(f));
+  } catch (_) { /* Verzeichnis existiert nicht: 0 Dateien, faellt unten in den total===0-Fall */ }
   let fresh = 0, stale = 0, unparseable = 0;
   for (const f of files) {
     try {
@@ -45,11 +49,20 @@ function checkFreshness(dir, now = Date.now()) {
       const m = buf.match(ASOF_RE) || buf.match(FETCHED_RE);
       if (!m) { unparseable++; continue; }
       const ts = new Date(m[1]).getTime();
-      if (Number.isFinite(ts) && now - ts < FRESH_MS) fresh++; else stale++;
+      // BH-133: ein Zukunftsstempel (Clock-Skew/korrupt) ergibt ein negatives
+      // Alter, das die reine "< FRESH_MS"-Pruefung als frisch durchwinkt. Nur
+      // ein Alter in [0, FRESH_MS) zaehlt als frisch.
+      const age = now - ts;
+      if (Number.isFinite(ts) && age >= 0 && age < FRESH_MS) fresh++; else stale++;
     } catch (_) { unparseable++; }
   }
   const total = files.length;
-  return { total, fresh, stale, unparseable, ok: total === 0 || fresh / total >= 0.5 };
+  // BH-127: total===0 frueher pauschal "ok" (auch fuer einen leergefegten
+  // Snapshot-Ordner unter einem stale Manifest) — genau der Totalausfall, den
+  // dieses Gate faengen soll. snapshots/ existiert im Checkout immer
+  // (_manifest.json ist getrackt), "0 Dateien" heisst hier also praktisch nie
+  // "Verzeichnis fehlt", sondern "Pull hat nichts geschrieben".
+  return { total, fresh, stale, unparseable, ok: total > 0 && fresh / total >= 0.5 };
 }
 
 module.exports = { checkFreshness, FRESH_MS };

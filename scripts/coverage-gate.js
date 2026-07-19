@@ -149,6 +149,14 @@ function validateMarker(mk) {
   return errs;
 }
 
+// BH-126: fuer 'degradiert' entscheidet dies, ob trotz eines kaputten/nicht
+// geschriebenen Markers noch deployt werden darf. 'katastrophal' blockt ueber
+// den regulaeren exit-1-Pfad ohnehin immer, unabhaengig vom Marker. Reine
+// Funktion (kein Disk-Zugriff) — selftest pinnt beide Zweige.
+function degradedMarkerBroken(status, markerErrors, markerWriteFailed) {
+  return status === 'degradiert' && (markerErrors.length > 0 || markerWriteFailed);
+}
+
 function run() {
   const m = readJSON(MANIFEST);
   const res = classify(m, watchlistSize(), fileCount());
@@ -156,10 +164,14 @@ function run() {
   const coveragePct = marker.coverage_pct;
   const bad = validateMarker(marker);
   if (bad.length) console.error(`::warning::coverage-status marker contract violation: ${bad.join('; ')}`);
+  let markerWriteFailed = false;
   try {
     fs.mkdirSync(path.dirname(MARKER), { recursive: true });
     fs.writeFileSync(MARKER, JSON.stringify(marker, null, 2));
-  } catch (e) { console.error(`::warning::could not write ${MARKER}: ${e.message}`); }
+  } catch (e) {
+    markerWriteFailed = true;
+    console.error(`::warning::could not write ${MARKER}: ${e.message}`);
+  }
 
   // TASK 0.9c: surface the full/price-only split so a Voll-Universum-Lauf reports the mix
   // in the coverage-step log even on a partial (timeout) run — the number
@@ -178,6 +190,14 @@ function run() {
   }
   if (res.status === 'degradiert') {
     console.error(`::error::DEGRADIERT — ${line}. ${res.reasons.join('; ')}. Deploying WITH degradation flag.`);
+    // BH-126: coverage-status.json ist Karls EINZIGER Alarmkanal fuer diesen
+    // Zustand. Ein kaputter Vertrag oder ein fehlgeschlagener Write duerfen
+    // vorher nur ::warning:: gewesen sein und trotzdem ohne funktionierenden
+    // Banner deployen. Fail loud statt blind zu deployen.
+    if (degradedMarkerBroken(res.status, bad, markerWriteFailed)) {
+      console.error(`::error::degradiert, aber Marker-Vertrag kaputt/nicht geschrieben (${bad.join('; ') || 'write failed'}) — Deploy blockiert, kein funktionierender Banner.`);
+      process.exit(1);
+    }
     console.log(`::warning::Coverage degraded — dashboard banner will show. See outputs/coverage-status.json.`);
     process.exit(0);
   }
@@ -230,5 +250,13 @@ function selftest() {
   process.exit(pass === total ? 0 : 1);
 }
 
-if (process.argv.includes('--selftest')) selftest();
-else run();
+module.exports = { classify, buildMarker, validateMarker, degradedMarkerBroken };
+
+// require.main-Guard: ohne ihn wuerde ein `require('./coverage-gate.js')' aus
+// einem Test heraus sofort run()/selftest() gegen echte ./snapshots,
+// ./watchlist.json feuern und process.exit() aufrufen. Verhalten beim
+// direkten `node scripts/coverage-gate.js [--selftest]`-Aufruf unveraendert.
+if (require.main === module) {
+  if (process.argv.includes('--selftest')) selftest();
+  else run();
+}

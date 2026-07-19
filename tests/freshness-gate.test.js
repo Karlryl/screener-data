@@ -78,11 +78,32 @@ check('50%-Schwelle', () => {
   assert.strictEqual(checkFreshness(dir, NOW).ok, false);
 });
 
-// Fall 6: leeres/fehlendes Verzeichnis -> ok (kein Div-durch-0, kein Crash).
-check('leeres Verzeichnis ist ok', () => {
+// Fall 6 (BH-127): leeres/fehlendes Verzeichnis -> NICHT ok. Ein total===0
+// (leergefegter Snapshot-Ordner unter einem stale Manifest, oder ein Pull,
+// der komplett nichts geschrieben hat) ist der Totalausfall, den dieses Gate
+// faengen soll — kein Div-durch-0/Crash, aber auch kein stiller Pass mehr.
+check('leeres Verzeichnis ist NICHT ok (Totalausfall)', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fresh-'));
-  assert.strictEqual(checkFreshness(dir, NOW).ok, true);
-  assert.strictEqual(checkFreshness(path.join(dir, 'gibtsnicht'), NOW).ok, true);
+  assert.strictEqual(checkFreshness(dir, NOW).ok, false);
+  assert.strictEqual(checkFreshness(path.join(dir, 'gibtsnicht'), NOW).ok, false);
+});
+
+// Fall 7 (BH-133): Zukunftsstempel (Clock-Skew/korrupt) darf nicht als frisch zaehlen.
+check('Zukunftsstempel zaehlt als stale, nicht frisch', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fresh-'));
+  writeSnap(dir, 'FUTURE.json', { fetchedAt: iso(240 * H), asOf: iso(-365 * 24 * H) });
+  const r = checkFreshness(dir, NOW);
+  assert.deepStrictEqual({ fresh: r.fresh, stale: r.stale, ok: r.ok }, { fresh: 0, stale: 1, ok: false });
+});
+
+// Fall 8 (BH-132): ein Windows-reserved-Ticker-Snapshot (_CON.json) ist ein
+// ECHTER Snapshot, kein Metadaten-File — darf nicht pauschal per "_"-Praefix
+// aus der Frische-Zaehlung fallen.
+check('_CON.json (Windows-reserved Ticker) zaehlt mit, nicht als Metadatei geskippt', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fresh-'));
+  writeSnap(dir, '_CON.json', { fetchedAt: iso(240 * H), asOf: iso(1 * H) });
+  const r = checkFreshness(dir, NOW);
+  assert.deepStrictEqual({ total: r.total, fresh: r.fresh, ok: r.ok }, { total: 1, fresh: 1, ok: true });
 });
 
 console.log(fail ? `${fail} FAILED` : 'all ok');

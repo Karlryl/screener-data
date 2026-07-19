@@ -15,9 +15,19 @@
  *   - watchlist.json (universe size)
  *
  * Output:
- *   outputs/pull-stats/YYYY-MM-DD.json  — heutiger Snapshot
- *   outputs/pull-stats/history.json     — kumulativ
+ *   outputs/pull-stats/YYYY-MM-DD.json  — heutiger Snapshot (gh-pages-only, wie outputs/)
+ *   pull-stats/history.json             — kumulativ, GETRACKT (Tag 356 / BH-120)
  *   Discord-Alert bei Drift (außer ALLOW_PULL_DRIFT=1)
+ *
+ * BH-120: history.json lag vorher unter outputs/, das per Repo-Konvention
+ * .gitignored ist ("committed via gh-pages only") und dessen gh-pages-Deploy
+ * bei jedem Lauf per `git init -b gh-pages` + force-push NEU aufgebaut wird
+ * (kein Restore vom Vorlauf). history.json startete daher jeden Lauf leer,
+ * MIN_HISTORY_RUNS=4 wurde nie erreicht, der Drift-Waechter konnte nie feuern.
+ * Fix: history.json liegt jetzt unter dem GETRACKTEN Top-Level-Verzeichnis
+ * pull-stats/ (analog score-history/, external-data/ath-state.json) — der
+ * ohnehin vorhandene "Commit Snapshots"-Schritt (git add -A) in
+ * daily-pull.yml committet sie automatisch, keine Workflow-Aenderung noetig.
  */
 'use strict';
 const fs = require('fs');
@@ -42,6 +52,10 @@ const DRIFT_THRESHOLD = 0.25;
 const MIN_HISTORY_RUNS = 4;
 const ROOT = path.join(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'outputs', 'pull-stats');
+// BH-120: history.json getrennt vom gh-pages-only outputs/ — dieses Verzeichnis
+// ist NICHT gitignored (siehe .gitignore-Kommentar Tag 203 zum Schwester-Pattern
+// score-history/), damit die Historie ueber CI-Laeufe hinweg akkumuliert.
+const HIST_DIR = path.join(ROOT, 'pull-stats');
 
 function loadJson(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return null; } }
 function median(values) {
@@ -119,9 +133,10 @@ function detectStatsDrift(today, history, threshold) {
 
 async function main() {
   if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
+  if (!fs.existsSync(HIST_DIR)) fs.mkdirSync(HIST_DIR, { recursive: true });
   const today = collectStats();
 
-  const histPath = path.join(OUT_DIR, 'history.json');
+  const histPath = path.join(HIST_DIR, 'history.json');
   let history = loadJson(histPath) || [];
   if (!Array.isArray(history)) history = [];
   // Avoid duplicate entries for same date
@@ -157,7 +172,7 @@ async function main() {
   return 0; // never fail workflow; alert is enough
 }
 
-module.exports = { collectStats, detectStatsDrift, median };
+module.exports = { collectStats, detectStatsDrift, median, HIST_DIR, OUT_DIR };
 
 if (require.main === module) {
   main().then(code => process.exit(code || 0)).catch(async e => {
