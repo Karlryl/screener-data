@@ -293,10 +293,11 @@ jobs:
         continue-on-error: true
 
       # Tag 220c: Yahoo Schema-Drift Canary (NVDA+TSM), once-only direkt vor dem Fan-out
-      # statt 17x denselben Alarm. Blockt NIE (continue-on-error + exit 0). Canary
-      # exit-code: 1=drift, 2=Yahoo-unreachable (non-fatal), 0=clean.
+      # statt 17x denselben Alarm. audit/fix BH-071: Drift (exit 1) blockt jetzt HART
+      # (rotes X = Karls Alarm-Kanal) statt doppelt maskiert (continue-on-error + exit 0)
+      # zu verpuffen — ein Schema-Drift heisst, die Extraktion korrumpiert still Daten.
+      # Nur 2=Yahoo-unreachable bleibt non-fatal (transient, kein Extraktionsfehler).
       - name: Schema-Drift Canary
-        continue-on-error: true
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
@@ -313,6 +314,10 @@ jobs:
                 -d "{\"content\": \"🚨 SCHEMA-CANARY DRIFT — Yahoo field(s) moved; pull-yahoo extraction may be silently corrupting data. Detected at $(date -u). See run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
                 "$DISCORD_WEBHOOK"
             fi
+            exit 1
+          fi
+          if [ "$canary_exit" -eq 2 ]; then
+            echo "::warning::Schema-Canary: Yahoo unreachable (transient) — kein Drift-Beleg, Lauf geht weiter"
           fi
           exit 0
 
@@ -844,6 +849,25 @@ jobs:
           name: snapshots
           path: snapshots
 
+      # audit BH-117: assertCoverageFloor() (src/scoring/run-screener.js) braucht eine
+      # ueber Job-Grenzen persistente Self-Baseline (snapshots/_last_good_disk.json,
+      # git-ignored) — der scoring-Job lief bislang auf einem FRISCHEN Runner OHNE
+      # diese Datei (nur das snapshots-Artefakt + merge-handoff werden geladen), also
+      # baseline=null in JEDEM Lauf und der Floor fail-open (Kommentar dort, Zeile
+      # 118-123: "Persistenz ueber Job-Grenzen ist Workflow-Zustaendigkeit"). Selber
+      # Cross-Run-Cache-Mechanismus wie die per-Shard-Snapshot-Persistenz (Tag 261):
+      # restore-only hier, separater Save NACH dem Scoring mit if:always() (sonst
+      # Bootstrapping-Deadlock — ohne vorherigen erfolgreichen Save gibt es nie einen
+      # Cache-Hit). Eigener Key-Namespace (last-good-disk-scoring-), keine
+      # Ueberschneidung mit den Shard-Caches.
+      - name: Restore Coverage-Floor Baseline (_last_good_disk.json)
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: snapshots/_last_good_disk.json
+          key: last-good-disk-scoring-${{ github.run_id }}
+          restore-keys: |
+            last-good-disk-scoring-
+
       # audit BH-003: die vier Live-Universum-Anker-Suiten (score.integration/
       # quality-board/phase/score-breakdown) liefen nach dem synthetischen Pre-Pull-
       # Gate (leeres snapshots/ -> die Suiten skippen dort sauber) in KEINEM weiteren
@@ -906,6 +930,18 @@ jobs:
             echo "::error::Scoring produced $count outputs/hypergrowth/*.json (expected >=3) — engine failed or universe empty."
             exit 1
           fi
+
+      # audit BH-117: Baseline REGARDLESS des Scoring-Ausgangs sichern (if:always(),
+      # gleiches Muster wie der Shard-Snapshot-Save/Tag 261). Wirft assertCoverageFloor
+      # (Floor unterschritten), hat run-screener.js writeJsonAtomic gar nicht erst
+      # erreicht (der Write sitzt HINTER dem Floor-Check) — der Save persistiert dann
+      # einfach die unveraenderte alte Baseline weiter, kein Datenverlust.
+      - name: Save Coverage-Floor Baseline (_last_good_disk.json)
+        if: always()
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: snapshots/_last_good_disk.json
+          key: last-good-disk-scoring-${{ github.run_id }}
 
       - name: Build findash-export v1
         run: |
