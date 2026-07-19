@@ -1,3 +1,10 @@
+# audit BH-136: actions/* hier auf volle Commit-SHAs gepinnt (statt des beweglichen
+# @v4-Major-Tags), Version im Kommentar. Schreibberechtigter Cron-Workflow
+# (permissions: contents: write) — ein kompromittierter/verschobener Tag liefe sonst
+# automatisch mit Schreibrechten mit. Scope dieses Fixes: NUR diese Datei (Batch-
+# Grenze); monthly-plan-check.yml/weekly-guard.yml/heartbeat.yml/monthly-sec-xbrl.yml/
+# tv-reachability.yml pinnen noch auf @v4 und ein Dependabot-Update-Pfad
+# (.github/dependabot.yml) fehlt — beides ausserhalb dieses Batches.
 name: Daily Yahoo Pull
 
 on:
@@ -69,13 +76,13 @@ jobs:
           echo "Shard fan-out: N=$SHARD_COUNT matrix=$matrix"
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           # F-CI-004: full history required for git-log operations and reliable rebase
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           # F-CI-011: cache npm dependencies to save ~30-90s per run
@@ -110,7 +117,13 @@ jobs:
       - name: Test-Gate (pre-pull, Waechter + tests/ + tests/scoring/ + lib/)
         env:
           # EINE Quelle fuer Waechter UND Gate — sie koennen nicht auseinanderdriften.
-          GATE_GLOB: 'tests/*.test.js tests/scoring/*.test.js lib/*.test.js'
+          # audit BH-035: '*.test.js' -> '*test.js' erweitert — faengt auch die
+          # '-test.js'-Schreibweise (tests/13f-test.js, sec-form4-test.js,
+          # sec-user-agent-test.js liefen sonst in KEINEM CI-Gate; weder Waechter noch
+          # Gate sahen sie ueberhaupt, weil `git ls-files '*.test.js'` sie nicht listet).
+          # Alle drei sind offline/hermetisch (kein Netz) -> gehoeren ins Gate, nicht in
+          # GATE_EXEMPT.
+          GATE_GLOB: 'tests/*test.js tests/scoring/*test.js lib/*test.js'
           # Begruendete Ausnahmen (Praefix-Match). Jede Zeile hier braucht einen Grund:
           # tests/discovery/ (13 Dateien) = Live-Netz-Tests gegen echte Boersen-/Regulator-
           # Endpunkte (LSE, Xetra, EDINET, FinMind, …). Im pre-pull-Gate wuerde jeder
@@ -127,7 +140,7 @@ jobs:
           # Schleifendurchlauf 1 zurueckgibt, wuerde den Schritt WORTLOS abbrechen —
           # ein falsch-rotes Gate, das Karls Tagslauf blockt, ohne zu sagen warum.
           gated=$(for t in $GATE_GLOB; do if [ -e "$t" ]; then printf '%s ' "$t"; fi; done)
-          all=$(git ls-files '*.test.js' | grep -v '/fixtures/' || true)
+          all=$(git ls-files '*test.js' | grep -v '/fixtures/' || true)
           if [ -z "$all" ]; then
             echo "::error::Waechter fand KEINE Testdatei im Repo — git ls-files kaputt oder Checkout unvollstaendig."
             exit 1
@@ -199,25 +212,28 @@ jobs:
           node refresh-universe.js --watchlist watchlist.json
         continue-on-error: true
 
-      # Tag 142: Prune delisted/stale tickers before the fan-out.
-      - name: Prune Watchlist
-        run: node scripts/prune-watchlist.js
-        continue-on-error: true
+      # audit BH-143: Prune lief frueher HIER (vor dem Fan-out) gegen ein snapshots/,
+      # das in diesem Job nur die vorherige _manifest.json enthaelt — jedes echte
+      # loadSnapshot(ticker) lieferte also null, wodurch die delisted-/no-active-quote-/
+      # no-financial-data-Zweige NIE griffen (nur isInvalidSymbol + added_at liefen).
+      # Verschoben in den merge-Job, NACH dem Download der echten gemergten Snapshots
+      # (siehe dort) — dieselbe fixSketch-Empfehlung wie im Audit.
 
-      # F-CI-003 (Tag 179/207a): hard-fail if the final watchlist drops below 200
-      # (refresh got nothing AND prune ate too much, or watchlist.json corrupted).
-      # Schema-aware (w.stocks | array | keys). This gate must trip BEFORE the
-      # matrix starts so 17 runners never fan out onto a broken universe.
+      # F-CI-003 (Tag 179/207a): hard-fail if the refreshed watchlist drops below 200
+      # (refresh got nothing or watchlist.json corrupted). Schema-aware (w.stocks |
+      # array | keys). This gate must trip BEFORE the matrix starts so 17 runners
+      # never fan out onto a broken universe. Prune (now post-snapshot, in the merge
+      # job) can only shrink further — it never repairs a refresh that got nothing.
       - name: Verify Watchlist Sanity
         run: |
           if [ ! -f watchlist.json ]; then
-            echo "::error::watchlist.json is missing after refresh+prune"
+            echo "::error::watchlist.json is missing after refresh"
             exit 1
           fi
           size=$(node -e "const w=JSON.parse(require('fs').readFileSync('watchlist.json','utf8'));let n;if(Array.isArray(w))n=w.length;else if(w&&Array.isArray(w.stocks))n=w.stocks.length;else n=Object.keys(w).length;console.log(n)")
           echo "watchlist size: $size"
           if [ "$size" -lt 200 ]; then
-            echo "::error::watchlist size $size < 200 — refresh/prune likely corrupted the universe"
+            echo "::error::watchlist size $size < 200 — refresh likely corrupted the universe"
             exit 1
           fi
 
@@ -229,20 +245,25 @@ jobs:
         continue-on-error: true
 
       # F-CI-004 (Tag 179/219a): fx-rates staleness. Warn >7d, hard-fail >30d.
-      # stat failure -> NOW (fail-open, not epoch/fail-closed).
+      # Missing/unparsable fetchedAt -> NOW (fail-open, not epoch/fail-closed).
+      # audit BH-121: fruehere Version mass `stat -c %Y` (Datei-Mtime) statt des
+      # `fetchedAt`-Felds. Die Mtime ist in JEDEM CI-Job frisch (Checkout UND weil
+      # refresh-fx.js die Datei bei JEDEM Lauf neu schreibt, auch bei Totalausfall),
+      # waehrend `fetchedAt` bei einem Fehl-Lauf eingefroren bleibt (refresh-fx.js
+      # anySuccess-Gate) — der 7-/30-Tage-Check war damit strukturell unerreichbar.
       - name: Verify FX-Rates Freshness
         run: |
           if [ -f fx-rates.json ]; then
             now=$(date +%s)
-            mtime=$(stat -c %Y fx-rates.json 2>/dev/null || echo "$now")
-            age_days=$(( (now - mtime) / 86400 ))
-            echo "fx-rates.json age: ${age_days} days"
+            fetched=$(node -e "try{const d=require('./fx-rates.json');const t=d.fetchedAt?Date.parse(d.fetchedAt):NaN;console.log(Number.isFinite(t)?Math.floor(t/1000):$now);}catch(e){console.log($now);}")
+            age_days=$(( (now - fetched) / 86400 ))
+            echo "fx-rates.json fetchedAt age: ${age_days} days"
             if [ "$age_days" -gt 30 ]; then
-              echo "::error::fx-rates.json is ${age_days} days old — refresh-fx has been failing silently"
+              echo "::error::fx-rates.json fetchedAt is ${age_days} days old — refresh-fx has been failing silently"
               exit 1
             fi
             if [ "$age_days" -gt 7 ]; then
-              echo "::warning::fx-rates.json is ${age_days} days old — refresh-fx may be intermittently failing"
+              echo "::warning::fx-rates.json fetchedAt is ${age_days} days old — refresh-fx may be intermittently failing"
             fi
           else
             echo "::warning::fx-rates.json missing — pull-yahoo will use hardcoded fallback rates"
@@ -300,7 +321,7 @@ jobs:
       # Shards laden AUSSCHLIESSLICH dieses Artefakt (nicht ihren eigenen Checkout-Stand),
       # damit Refresh/Prune/FX/Earnings konsistent ueber alle 17 sind.
       - name: Upload prep state (watchlist + fx + earnings + insider)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: prep-state
           path: |
@@ -345,10 +366,10 @@ jobs:
       SHARD_COUNT: ${{ needs.prep.outputs.shard_count }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           cache: 'npm'
@@ -359,7 +380,7 @@ jobs:
       # Prep-Zustand ueberschreibt den Checkout-Stand: dieselbe watchlist.json/fx/earnings
       # fuer ALLE Shards -> identischer Split + korrekte mcap-Normierung + Diaet.
       - name: Download prep state
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: prep-state
           path: .
@@ -384,7 +405,7 @@ jobs:
       # `snapshots-shard-10-` (naechstes Zeichen ist '0' != '-'), sonst restaurierte
       # Shard 1 den Cache von Shard 10..16 (fremde, disjunkte Ticker -> alles Voll-Pull).
       - name: Restore snapshot cache (shard ${{ matrix.shard }}, per-shard namespaced)
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: snapshots
           key: snapshots-shard-${{ matrix.shard }}-${{ github.run_id }}
@@ -416,7 +437,7 @@ jobs:
       # restore-keys und price-onlyt diese ~1394 Ticker billig (Diaet greift).
       - name: Save snapshot cache (shard ${{ matrix.shard }}, always — persists even on gate-fail)
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: snapshots
           key: snapshots-shard-${{ matrix.shard }}-${{ github.run_id }}
@@ -451,7 +472,7 @@ jobs:
       # (RED-TEAM-2 T1-a). Die Ticker-Snapshots sind disjunkt -> keine echte Kollision.
       - name: Upload shard snapshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: snapshots-shard-${{ matrix.shard }}
           path: |
@@ -465,7 +486,7 @@ jobs:
       # laedt alle via pattern + merge-multiple FLACH nach shard-manifests/.
       - name: Upload shard manifest
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: shard-manifest-${{ matrix.shard }}
           path: shard-manifest-out/
@@ -490,13 +511,13 @@ jobs:
       SHARD_COUNT: ${{ needs.prep.outputs.shard_count }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           # full history for the retry-rebase push to main
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           cache: 'npm'
@@ -508,7 +529,7 @@ jobs:
       # Denominator fuer coverage-gate + Umzaehler; fx/earnings/insider fuer downstream
       # + den Commit (earnings-calendar.json wird hier in main committet).
       - name: Download prep state
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: prep-state
           path: .
@@ -517,16 +538,28 @@ jobs:
       # (pull-shard.test.js beweist die Partition) -> keine Dateikollision; falls doch,
       # faengt der merge-Helfer sie (on-disk < summierte n_ok -> exit 1).
       - name: Download all shard snapshots
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: snapshots-shard-*
           path: snapshots
           merge-multiple: true
 
+      # audit BH-143 (verschoben von Tag 142/prep — siehe Kommentar dort): Prune lief
+      # frueher im prep-Job VOR dem Fan-out, wo snapshots/ nur die alte _manifest.json
+      # enthaelt -> loadSnapshot() lieferte fuer jeden echten Ticker null, delisted-/
+      # no-active-quote-/no-financial-data-Erkennung griff nie. Hier, NACH dem Download
+      # der echten gemergten Shard-Snapshots, laufen die Standardpfade von
+      # prune-watchlist.js (./watchlist.json, ./snapshots) — beide liegen an dieser
+      # Stelle im merge-Job bereits vor. VOR "Merge shard manifests" platziert, damit
+      # dessen n_total-Umzaehlung den bereits bereinigten Voll-Universum-Nenner liest.
+      - name: Prune Watchlist (post-snapshot)
+        run: node scripts/prune-watchlist.js
+        continue-on-error: true
+
       # Alle Shard-Manifeste FLACH nach shard-manifests/ (merge-multiple legt die
       # shard-<i>.json flach ab — genau was der Umzaehler-readdirSync erwartet).
       - name: Download all shard manifests
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: shard-manifest-*
           path: shard-manifests
@@ -676,7 +709,7 @@ jobs:
       # a fresh runner. Runs after Commit so it captures the complete post-pull set.
       - name: Upload Snapshots Artifact
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: snapshots
           path: |
@@ -692,14 +725,19 @@ jobs:
       # write-findash-export/write-board-history. Artefakt statt git-fetch = race-frei
       # gegen parallele main-Pushes. if-no-files-found: warn haelt die fail-soft-Semantik
       # der continue-on-error-Quellschritte (Compute Macro Regime, Update ATH State).
-      - name: Upload merge→scoring handoff (ath-state + macro-regime)
+      # audit BH-118: outputs/coverage-status.json (hier von "Verify Pull Coverage"
+      # geschrieben, ebenfalls gitignored) fehlte in diesem Handoff -> write-findash-
+      # export.js sah im scoring-Job IMMER coverage:null, unabhaengig vom echten
+      # Coverage-Stand. Aus derselben Quelle wie ath-state/macro-regime mitgeben.
+      - name: Upload merge→scoring handoff (ath-state + macro-regime + coverage-status)
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: merge-handoff
           path: |
             external-data/ath-state.json
             outputs/macro-regime.json
+            outputs/coverage-status.json
           if-no-files-found: warn
           retention-days: 1
 
@@ -716,18 +754,43 @@ jobs:
       # Tag 146/153: gh-pages-Deploy 1 von 2 (index.html + outputs/, inkl. dem
       # coverage-status.json-Marker). Nur bei erfolgreichem Data-Commit (if:success()).
       # scoring-Deploy (2/2) laeuft danach (needs:merge) -> die zwei Force-Pushes racen NICHT.
+      # audit BH-113: frueher `git init -b gh-pages` + Force-Push — das ersetzte den
+      # KOMPLETTEN Branch. Dieser Job faehrt den Scorer NICHT, sein outputs/ enthaelt
+      # also nur ~6 Dateien (coverage-status/macro-regime/pull-stats) und KEIN
+      # hypergrowth/findash-export — ein voller Re-Init loeschte damit die Scoring-Feeds
+      # des Vorlaufs bis Deploy 2 (~2min spaeter) sie wiederherstellte; scheiterte
+      # Scoring/Deploy-2 dazwischen, blieben sie 404. Jetzt: bestehenden gh-pages-Branch
+      # klonen und NUR index.html + outputs/ ueberschreiben — hypergrowth/findash-export
+      # aus einem vorherigen scoring-Deploy bleiben im Baum erhalten.
       - name: Deploy to GitHub Pages
         if: success()
         run: |
+          rm -rf _site
+          # audit BH-114 (gleiche Haertung wie im scoring-Deploy unten): Branch-Existenz
+          # separat pruefen. Existiert er und der Clone scheitert trotzdem (transientes
+          # Netz/Auth), hart abbrechen statt einen frischen (leeren) Branch zu
+          # initialisieren und einen gestrippten Tree force-zu-pushen.
+          if git ls-remote --exit-code https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages >/dev/null 2>&1; then
+            if ! git clone --depth 1 --branch gh-pages \
+              https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git _site; then
+              echo "::error::gh-pages branch exists but clone failed (transient?) — aborting instead of force-pushing a stripped tree."
+              exit 1
+            fi
+          else
+            mkdir -p _site
+            cd _site
+            git init -b gh-pages
+            cd ..
+          fi
           mkdir -p _site/outputs
           cp index.html _site/ 2>/dev/null || true
           cp -r outputs/. _site/outputs/ 2>/dev/null || true
           cd _site
-          git init -b gh-pages
           git config user.name "yahoo-pull-bot"
           git config user.email "yahoo-pull-bot@users.noreply.github.com"
-          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git remote get-url origin >/dev/null 2>&1 || git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           git add -A
+          if git diff --staged --quiet; then echo "No merge-deploy changes."; exit 0; fi
           git commit -m "deploy: screener reports $(date -u +%Y-%m-%dT%H:%M:%SZ)"
           for i in 1 2 3; do
             if git push --force origin gh-pages; then
@@ -762,12 +825,12 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           cache: 'npm'
@@ -776,10 +839,45 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: Download Snapshots Artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: snapshots
           path: snapshots
+
+      # audit BH-003: die vier Live-Universum-Anker-Suiten (score.integration/
+      # quality-board/phase/score-breakdown) liefen nach dem synthetischen Pre-Pull-
+      # Gate (leeres snapshots/ -> die Suiten skippen dort sauber) in KEINEM weiteren
+      # Job — ein realdatenabhaengiger Ranking-/Routing-/Dedup-/Board-Regress konnte
+      # so mit vollstaendig gruenem CI deployen. Hier, direkt nach dem Download der
+      # gemergten Snapshots, erneut ausfuehren: in DIESEM Job ist das Universum real
+      # (Coverage-Gate im merge-Job hat es bereits als hinreichend bestaetigt), ein
+      # "kein Universum"-Skip ist hier also kein legitimer Pre-Pull-Zustand mehr,
+      # sondern selbst ein Befund und wird als Fehler behandelt. Das synthetische
+      # Pre-Pull-Gate bleibt unveraendert bestehen.
+      - name: Live-Universum-Gate (score.integration/quality-board/phase/score-breakdown)
+        run: |
+          fail=0
+          for t in tests/scoring/score.integration.test.js tests/scoring/quality-board.test.js tests/scoring/phase.test.js tests/scoring/score-breakdown.test.js; do
+            echo "--- $t ---"
+            set +e
+            out=$(node "$t" 2>&1)
+            rc=$?
+            set -e
+            echo "$out"
+            if [ "$rc" -ne 0 ]; then
+              echo "::error::Live-Universum-Test failed: $t (exit $rc)"
+              fail=1
+            fi
+            if echo "$out" | grep -q 'pre-pull-Gate'; then
+              echo "::error::$t skipped its live-universe anchor(s) in the scoring job — real snapshots were expected here. Treating as failure."
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "::error::Live-Universum-Gate failed — a ranking/routing/dedup/board regression may be present. See above."
+            exit 1
+          fi
+          echo "Live-Universum-Gate OK (real snapshots, no skip)."
 
       # F4/F6: die im merge-Job frisch erzeugten Handoff-Dateien holen, BEVOR die
       # Reader laufen — external-data/ath-state.json (write-findash-export.js:78, F4)
@@ -789,9 +887,12 @@ jobs:
       # fehlt das Artefakt ausnahmsweise, fallen beide Reader auf ihr bisheriges
       # Verhalten zurueck (ath: alter committeter Stand; regime: 'unknown') — kein
       # NEUER Hart-Abbruch im scoring-Job, die fail-soft-Semantik bleibt unveraendert.
-      - name: Download merge→scoring handoff (ath-state + macro-regime)
+      # audit BH-118: outputs/coverage-status.json faehrt jetzt im selben Artefakt mit
+      # (write-findash-export.js loadCoverage()) — fehlt es, bleibt coverage:null wie
+      # bisher (fail-soft, kein neuer Hart-Abbruch).
+      - name: Download merge→scoring handoff (ath-state + macro-regime + coverage-status)
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: merge-handoff
           path: .
@@ -836,13 +937,29 @@ jobs:
       - name: Verify findash-export v1 schema (contract gate)
         run: node scripts/write-findash-export.js --check
 
+      # audit BH-114: frueher fing `|| { git init -b gh-pages }` JEDEN Clone-Fehler ab
+      # — auch transiente DNS/Auth/Netz-Aussetzer, nicht nur einen tatsaechlich
+      # fehlenden Branch. Ein transienter Fehler fuehrte dann zum Force-Push eines
+      # gestrippten Trees (nur hypergrowth+findash-export), der index.html/
+      # coverage-status.json/macro-regime/pull-stats geloescht haette. Jetzt: Branch-
+      # Existenz separat pruefen; existiert er und der Clone scheitert trotzdem, hart
+      # abbrechen statt destruktiv zu re-initialisieren.
       - name: Deploy Scoring Output to GitHub Pages
         if: success()
         run: |
           rm -rf _ghp
-          git clone --depth 1 --branch gh-pages \
-            https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git _ghp \
-            || { mkdir -p _ghp; cd _ghp; git init -b gh-pages; cd ..; }
+          if git ls-remote --exit-code https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages >/dev/null 2>&1; then
+            if ! git clone --depth 1 --branch gh-pages \
+              https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git _ghp; then
+              echo "::error::gh-pages branch exists but clone failed (transient?) — aborting instead of force-pushing a stripped tree."
+              exit 1
+            fi
+          else
+            mkdir -p _ghp
+            cd _ghp
+            git init -b gh-pages
+            cd ..
+          fi
           mkdir -p _ghp/outputs/hypergrowth
           cp outputs/hypergrowth/*.json _ghp/outputs/hypergrowth/
           # F11: Ziel-v1 VOR dem Kopieren leeren — sonst ueberleben aus dem frischen Export
@@ -882,6 +999,12 @@ jobs:
       - name: Write board-history vintage (2.3)
         id: vintage
         run: |
+          # audit BH-156: `date -u +%F` unmittelbar vor dem Aufruf gestempelt — deckt
+          # sich mit write-board-history.js' eigenem isoDay(Date.now()) (kein --date
+          # uebergeben, das Skript nutzt also dieselbe Wanduhr). Als Output verfuegbar
+          # fuer den Commit-Step unten (praeziser als das Stunden-alte RUN_DATE_UTC,
+          # das dieser Job gar nicht sieht).
+          echo "date=$(date -u +%F)" >> "$GITHUB_OUTPUT"
           set +e
           node scripts/write-board-history.js
           rc=$?
@@ -896,7 +1019,20 @@ jobs:
         run: |
           git config user.name "yahoo-pull-bot"
           git config user.email "yahoo-pull-bot@users.noreply.github.com"
-          git add board-history/
+          # audit BH-156: SUSPECT (rc=2) darf laut Masterplan-Akzeptanz "geflaggt/nicht
+          # committet" bleiben. Frueher committete+pushte dieser Step BEDINGUNGSLOS und
+          # wurde erst DANACH rot (exit 2) — der suspect Tages-Delta war also schon in
+          # main und floss (rank-ic.js schliesst suspect nicht automatisch aus, nur ueber
+          # eine manuelle _excluded.json-Eintragung) in die Gate-Kalibrierung ein. Bei
+          # rc=2 wird das Tagesverzeichnis jetzt vom Commit ausgenommen (Dateien bleiben
+          # lokal auf dem Runner, verschwinden mit dessen Teardown).
+          VINTAGE_DATE="${{ steps.vintage.outputs.date }}"
+          if [ "${{ steps.vintage.outputs.rc }}" = "2" ]; then
+            echo "::warning::board-history vintage SUSPECT geflaggt (Wert-Gate) fuer $VINTAGE_DATE — wird NICHT committet."
+            git add board-history/ ":(exclude)board-history/$VINTAGE_DATE"
+          else
+            git add board-history/
+          fi
           if git diff --staged --quiet; then
             echo "No vintage changes to commit."
           else
@@ -928,6 +1064,6 @@ jobs:
             echo "✓ board-history vintage committed to main"
           fi
           if [ "${{ steps.vintage.outputs.rc }}" = "2" ]; then
-            echo "::error::board-history vintage SUSPECT geflaggt (Wert-Gate) — Vintage IST committet, bitte pruefen"
+            echo "::error::board-history vintage SUSPECT geflaggt (Wert-Gate) fuer $VINTAGE_DATE — NICHT committet, bitte pruefen."
             exit 2
           fi
