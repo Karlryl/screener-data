@@ -873,7 +873,7 @@ async function main() {
     const foreignNull = [...allTickers.entries()].filter(([, v]) =>
       v && !v.marketCap && v.source && String(v.source).split(',').some((s) => FOREIGN_CANON_SET.has(s.trim())));
     if (foreignNull.length) {
-      const { kept: keptUsd, answered, renamed } = await prefilterByMcap(foreignNull.map(([k]) => k));
+      const { kept: keptUsd, answered, renamed, unpriceable } = await prefilterByMcap(foreignNull.map(([k]) => k));
       for (const [key, v] of foreignNull) {
         // Bug 5: hat der Prefilter dieses .KS-Symbol als KOSDAQ erkannt, ist die effektive
         // Kennung (und der answered/kept-Schluessel) das .KQ-Symbol. Zeile in allTickers
@@ -889,17 +889,14 @@ async function main() {
         // Bug 16: nur verwerfen, wenn Yahoo GEANTWORTET hat und < $2B ist. Ein 429/Netzfehler
         // (Symbol nicht in 'answered') darf die Zeile NICHT loeschen -> null-mcap belassen, damit
         // der Foreign-Slot-Schutz unten greift (kein stiller Verlust ganzer Batches).
-        // BH-041 (OFFEN, nicht durch den fail-closed-Guard oben abgedeckt): 'answered' heisst
-        // nur "Yahoo hat eine Quote geliefert", NICHT "die Zeile war bepreisbar". Fehlt in einer
-        // sonst validen fx-rates.json nur EINE Waehrung (partielle Degradation statt Totalausfall),
-        // liefert toUsd() innerhalb prefilterByMcap() fuer genau diese Zeilen still null -> sie
-        // landen in 'answered' aber nie in 'kept' und werden hier faelschlich wie "geprueft und
-        // < $2B" geloescht. Echter Fix braucht eine dritte Rueckgabe aus discovery/mcap-prefilter.js
-        // (z.B. 'priced': Set der Symbole mit finitem toUsd()-Ergebnis), um "beantwortet & unbepreisbar"
-        // von "beantwortet & unter Schwelle" zu trennen — mcap-prefilter.js ist nicht Teil dieses
-        // Batches (b05-universe fasst nur refresh-universe.js), daher hier nur dokumentiert statt gefixt.
-        else if (answered.has(eff)) allTickers.delete(eff); // beantwortet und < $2B: verwerfen
-        // sonst: unbeantwortet -> null-mcap belassen (Slot-Schutz)
+        // BH-041 (gefixt): 'answered' heisst nur "Yahoo hat eine Quote geliefert", NICHT "die
+        // Zeile war bepreisbar". Fehlt in einer sonst validen fx-rates.json nur EINE Waehrung
+        // (partielle Degradation statt Totalausfall), liefert toUsd() innerhalb prefilterByMcap()
+        // fuer genau diese Zeilen still null. prefilterByMcap markiert diesen Fall jetzt separat
+        // in 'unpriceable' (echtes, positives marketCap + unbekannte Waehrung) -> hier NICHT wie
+        // "geprueft und < $2B" loeschen, sondern wie unbeantwortet behandeln (null-mcap, Slot-Schutz).
+        else if (answered.has(eff) && !(unpriceable && unpriceable.has(eff))) allTickers.delete(eff); // beantwortet, bepreisbar und < $2B: verwerfen
+        // sonst: unbeantwortet ODER unbewertbar (FX-Luecke) -> null-mcap belassen (Slot-Schutz)
       }
     }
   } catch (e) { console.warn('[refresh-universe] mcap-prefilter uebersprungen:', e.message); }

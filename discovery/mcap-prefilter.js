@@ -37,6 +37,17 @@ function toUsd(mcap, cur, rates) {
   return Number.isFinite(r) ? m * r : null;
 }
 
+// BH-041: reine Funktion (offline testbar) — unterscheidet, WARUM toUsd() null geliefert hat.
+// true nur, wenn ein echtes, positives marketCap + eine bekannte Waehrung vorlagen, aber genau
+// diese Waehrung in rates fehlt (FX-Artefakt-Luecke, z.B. eine einzelne fehlende Zeile in einer
+// sonst validen fx-rates.json). false bei echtem "kein/kein positives marketCap" (dann ist die
+// Zeile schlicht nicht bewertbar, unabhaengig von FX — kein 'unpriceable' im BH-041-Sinn).
+function isUnpriceable(mcap, cur, rates) {
+  if (!Number.isFinite(mcap) || mcap <= 0 || !cur) return false;
+  const c = SUBUNIT[cur] || cur;
+  return !Number.isFinite(rates[c]);
+}
+
 // Bug 5 (KOSDAQ-Suffix): Der KR-Adapter (opendart-kr.js) emittiert alle KR-Titel als
 // <code>.KS (KOSPI-Default, suffixUnsure:true), weil corpCode.xml kein Marktsegment traegt.
 // KOSDAQ-Titel (~1600) haben aber .KQ. Yahoo antwortet unter .KS zwar (mit ABWEICHENDER
@@ -54,7 +65,10 @@ function kosdaqTarget(symbol, quote) {
 
 /**
  * prefilterByMcap(symbols) -> { kept: Map<yahooSymbol, marketCapUsd> nur fuer >= MIN_USD,
- *                               answered: Set<yahooSymbol> die Yahoo ueberhaupt beantwortet hat }.
+ *                               answered: Set<yahooSymbol> die Yahoo ueberhaupt beantwortet hat,
+ *                               unpriceable: Set<yahooSymbol> beantwortet MIT positivem marketCap,
+ *                                 aber fx-rates.json kennt die Handelswaehrung nicht (Artefakt-
+ *                                 Luecke, nicht "unter Schwelle") }.
  * symbols: Array yahoo-suffigierter Ticker (die null-mcap-Auslandszeilen).
  */
 async function prefilterByMcap(symbols, opts = {}) {
@@ -67,6 +81,12 @@ async function prefilterByMcap(symbols, opts = {}) {
   // Auslands-Kandidaten pro Batch, statt sie null-mcap in den Slot-Schutz fallen zu lassen.
   // -> answered = Menge der Symbole, fuer die Yahoo ueberhaupt eine Quote geliefert hat.
   const answered = new Set();
+  // BH-041: answered heisst nur "Yahoo hat geantwortet", nicht "toUsd() konnte umrechnen".
+  // Fehlt in einer sonst validen fx-rates.json nur EINE Waehrung, liefert toUsd() fuer genau
+  // diese Zeilen still null, obwohl ein echtes, positives marketCap vorlag — das ist "nicht
+  // bewertbar", nicht "geprueft und < Schwelle". unpriceable markiert genau diesen Fall, damit
+  // der Caller ihn NICHT wie einen Unter-Cap-Befund loescht.
+  const unpriceable = new Set();
   // Bug 5: .KS-Symbole, fuer die Yahoo KOSDAQ meldet -> auf .KQ requoten. renamed traegt die
   // Zuordnung .KS -> .KQ zum Caller (er ersetzt die Watchlist-Zeile), requoteTargets sammelt
   // die neu zu quotenden .KQ-Symbole.
@@ -78,7 +98,11 @@ async function prefilterByMcap(symbols, opts = {}) {
     if (q.quoteType && q.quoteType !== 'EQUITY') return; // fail-open bei fehlendem quoteType
     checked++;
     const usd = toUsd(q.marketCap, q.currency, rates);
-    if (usd != null && usd >= minUsd) kept.set(q.symbol, usd);
+    if (usd != null) {
+      if (usd >= minUsd) kept.set(q.symbol, usd);
+      return;
+    }
+    if (isUnpriceable(q.marketCap, q.currency, rates)) unpriceable.add(q.symbol);
   };
   for (let i = 0; i < symbols.length; i += BATCH) {
     const batch = symbols.slice(i, i + BATCH);
@@ -111,8 +135,8 @@ async function prefilterByMcap(symbols, opts = {}) {
       gradeQuote(q);
     }
   }
-  console.log(`[mcap-prefilter] ${symbols.length} geprueft (${checked} beantwortet, ${errors} Batch-Fehler, ${renamed.size} KOSDAQ .KS->.KQ) -> ${kept.size} >= $${(minUsd / 1e9).toFixed(1)}B`);
-  return { kept, answered, renamed };
+  console.log(`[mcap-prefilter] ${symbols.length} geprueft (${checked} beantwortet, ${errors} Batch-Fehler, ${renamed.size} KOSDAQ .KS->.KQ, ${unpriceable.size} unbewertbar/FX-Luecke) -> ${kept.size} >= $${(minUsd / 1e9).toFixed(1)}B`);
+  return { kept, answered, renamed, unpriceable };
 }
 
-module.exports = { prefilterByMcap, toUsd, kosdaqTarget };
+module.exports = { prefilterByMcap, toUsd, kosdaqTarget, isUnpriceable };
