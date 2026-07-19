@@ -21,15 +21,57 @@ try {
 
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+// audit fix BH-057: quoteSummary has no per-call timeout (undici's ~300s default
+// header/body timeout is the only ceiling), so one non-responding call can occupy its
+// Promise.all batch far longer than the batch pacing intends. Race it against a short
+// local timeout so a hung call fails fast and frees its batch slot. Pure/generic —
+// exported for TDD.
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`quoteSummary timeout after ${ms}ms`)), ms)),
+  ]);
+}
+
+// audit fix BH-055/BH-056: pure decision — what earnings-calendar.json entry (if any) to
+// write for a ticker this run, given its previous entry, this run's parsed date (or null
+// on a failed/timed-out call), today, and the rollover-grace window. Extracted for TDD
+// (repo pattern, see pull-yahoo.js needsFullPull/shouldRetryKosdaq).
+//   BH-056: newDate === null (the call failed) => carry the previous entry forward
+//     instead of losing a known date to a merely transient error.
+//   BH-055: Yahoo can roll calendarEvents to the next quarter the same day it reports.
+//     If that just happened — old date in the past, new date in the future — keep
+//     serving the old (just-passed) date for `graceDays` so the report stays visible to
+//     needsFullPull() (pull-yahoo.js:3176) instead of vanishing behind the future
+//     rollover before a full pull ever fires. Bounded by the 30-day
+//     FUNDAMENTALS_REFRESH_DAYS sweep either way, so a short window is enough.
+function resolveEntry(prevEntry, newDate, today, graceDays) {
+  if (!newDate) return prevEntry || null;
+  const prevDate = prevEntry && prevEntry.date;
+  let date = newDate;
+  if (prevDate && prevDate < today && newDate > today) {
+    const daysSincePrev = (new Date(today).getTime() - new Date(prevDate).getTime()) / 86400000;
+    if (daysSincePrev <= graceDays) date = prevDate;
+  }
+  return { date, pulledAt: today };
+}
+
 async function main() {
   const wl = JSON.parse(fs.readFileSync('./watchlist.json', 'utf8'));
+  // audit fix BH-055/BH-056: load the previous calendar once, up front — fed into
+  // resolveEntry() above, and reused below for the collapse-guard count instead of a
+  // second read.
+  let prevCalendar = {};
+  try { prevCalendar = JSON.parse(fs.readFileSync('./earnings-calendar.json', 'utf8')); } catch (_) {}
   const result = {};
   // Tag-86: parallel earnings pulls
   const CONCURRENCY = parseInt(process.env.EARNINGS_CONCURRENCY || '15', 10);
+  const ROLLOVER_GRACE_DAYS = parseInt(process.env.EARNINGS_ROLLOVER_GRACE_DAYS || '3', 10);
+  const QUOTE_TIMEOUT_MS = parseInt(process.env.EARNINGS_QUOTE_TIMEOUT_MS || '20000', 10);
   async function processOne(stock) {
-
+    const today = new Date().toISOString().slice(0, 10);
     try {
-      const r = await yf.quoteSummary(stock.yahoo_symbol, { modules: ['calendarEvents'] });
+      const r = await withTimeout(yf.quoteSummary(stock.yahoo_symbol, { modules: ['calendarEvents'] }), QUOTE_TIMEOUT_MS);
       const d = r.calendarEvents && r.calendarEvents.earnings && r.calendarEvents.earnings.earningsDate;
       if (d) {
         const arr = Array.isArray(d) ? d : [d];
@@ -44,11 +86,18 @@ async function main() {
         // two sides internally consistent; switching to a local-zone slice here would
         // silently desync the pull from the UTC-based comparison downstream.
         const iso = (first instanceof Date) ? first.toISOString() : (first && first.raw ? new Date(first.raw * 1000).toISOString() : null);
-        if (iso) result[stock.ticker] = { date: iso.slice(0, 10), pulledAt: new Date().toISOString().slice(0, 10) };
+        if (iso) {
+          result[stock.ticker] = resolveEntry(prevCalendar[stock.ticker], iso.slice(0, 10), today, ROLLOVER_GRACE_DAYS);
+        }
       }
-    } catch (e) { /* skip */ }
-
+    } catch (e) {
+      // audit fix BH-056: a failed/timed-out call previously vanished the ticker from the
+      // rebuilt-from-scratch `result`, silently dropping a known earnings date (and its
+      // full-pull trigger) on a merely transient error.
+      const entry = resolveEntry(prevCalendar[stock.ticker], null, today, ROLLOVER_GRACE_DAYS);
+      if (entry) result[stock.ticker] = entry;
     }
+  }
   // audit F-A-2026-06-21: rate-limit burst on fast batches — a fixed post-batch sleep
   // paces by the GAP, not the cadence. When a batch returns fast (cache hits / quick
   // network) CONCURRENCY quoteSummary calls fire, then only 300ms passes before the next
@@ -76,8 +125,7 @@ async function main() {
   // exit 0. Now prev=0 blocks only a literally-empty result (have<1) so legitimate first runs
   // still write, while any populated prior is protected against a >50% collapse.
   const have = Object.keys(result).length;
-  let prev = 0;
-  try { prev = Object.keys(JSON.parse(fs.readFileSync('./earnings-calendar.json', 'utf8'))).length; } catch (_) {}
+  const prev = Object.keys(prevCalendar).length;
   if (have < Math.max(1, prev * 0.5)) {
     console.error(`::error::earnings coverage collapsed (${have} dates vs prev ${prev}) — refusing to overwrite earnings-calendar.json`);
     process.exit(1);
@@ -94,4 +142,4 @@ if (require.main === module) {
   main().catch(e => { console.error('pull-earnings-dates failed:', e.stack || e.message); process.exit(1); });
 }
 
-module.exports = { main };
+module.exports = { main, resolveEntry, withTimeout };
