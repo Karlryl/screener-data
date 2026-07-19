@@ -2,6 +2,14 @@
 
 _Last updated: 2026-05-18, post Tag 231 wave-11._
 
+> **SUPERSEDED — frozen historical snapshot, Tag 231 (2026-05-18).** Ticker
+> count, snapshot count, method registry (`methods/index.js`), and root test
+> suites (`tag28-tests.js`, `engine-cli-tests.js`) below describe a since-removed
+> engine generation. Current engine: `src/scoring/` (see `CLAUDE.md`, `README.md`,
+> and the live Masterplan for the actual state). This file is not updated
+> anymore and must not be treated as binding engine truth — kept for
+> historical session-resume context only.
+
 ---
 
 ## Standing /goal (Karl's directive — persistent across sessions)

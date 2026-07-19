@@ -1,6 +1,6 @@
 # ADR-001 — Retire Track-A / Track-B Scoring in engine-v7.3.js
 
-**Status:** Accepted (2026-05-13)
+**Status:** Superseded/Implemented (2026-05-13; see Status Update below — Phases 3+5 are done, the legacy stack no longer exists)
 **Phase:** Tag 134 Phase 2 — Methodology Hygiene
 **Author:** Karl + Claude
 
@@ -84,4 +84,12 @@ Per the Tag 222c documentation-accuracy audit (`audit-reports/2026-05-17-tag222c
 ### Decision
 
 Status remains **Accepted**. Phases 3 + 5 are explicitly **deferred**, not abandoned — they will be picked up either when a real bug forces touching the legacy stack again or when a dedicated cleanup wave is scheduled. This status update closes the documentation drift surfaced by Tag 222c finding A1 / A2 / A3.
+
+---
+
+## Status Update 2026-07-19 (BH-171 doc-audit pass)
+
+Verified against HEAD: `engine-v7.3.js`, `score-orchestrator.js`, `engine-cli-tests.js`, and `diagnose-spec.js` no longer exist in the active tree at all — they are not merely deprecated, they are physically gone. `methods/index.js`, `methods/score-aggregator.js`, and `methods/strategy-modes.js` are gone too; the production scorer is now `src/scoring/` (`run-screener.js`, `score.js`, `formulas/index.js`, `formulas/quality/index.js`). The "Phases still pending" table above (Phase 3: migrate `engine-cli-tests.js`; Phase 5: delete `score-orchestrator.js`/`diagnose-spec.js`) is **moot** — the migration target files it names no longer exist to migrate or delete.
+
+**Status set to Superseded/Implemented.** No successor ADR exists yet for the `src/scoring/` rebuild; if one is written it should supersede this ADR explicitly and this line should link to it.
 

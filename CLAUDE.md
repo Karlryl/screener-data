@@ -3,7 +3,7 @@
 > **Stabile** Projekt-Wahrheit & Prozesse. Dynamische, sich mit dem Code ändernde Fakten leben im Memory (`~/.claude/projects/…-screener-data/memory/`), **nicht** hier. Globale Person/Umgebung: `~/.claude/CLAUDE.md`. Keine Info zwischen den Ebenen duplizieren.
 
 ## Was das Projekt ist
-Growth-/Qualitäts-**Screener** für Aktien. Repo `Karlryl/screener-data` (Branch `main`, GitHub-Pages-Deploy via täglichem Cron 02:00 UTC). Verbindliche Engine-Leitplanken & Details: **`CONTEXT.md`** und `docs/` im Repo (Source of Truth für Engine-Regeln).
+Growth-/Qualitäts-**Screener** für Aktien. Repo `Karlryl/screener-data` (Branch `main`, GitHub-Pages-Deploy via Cron `17 2 * * 2-6`, Di–Sa 02:17 UTC). Verbindliche Engine-Leitplanken & Details: `README.md` und `docs/` im Repo (Source of Truth für Engine-Regeln). `CONTEXT.md` ist ein SUPERSEDED-markiertes historisches Resume-Briefing — keine Engine-Wahrheit mehr.
 
 ## Masterplan (erster Lese-Stopp) & bindende Arbeitsregeln
 **Vor Arbeitsbeginn zuerst lesen:** der lebende Masterplan im Vault —
@@ -18,14 +18,14 @@ Growth-/Qualitäts-**Screener** für Aktien. Repo `Karlryl/screener-data` (Branc
 Der Screener misst **bewusst ausschließlich fundamentale Qualität** — nie ob eine Aktie günstig/teuer ist. Bewertung sowie Entry/Exit-Timing macht Karl **extern über Elliott-Wellen-Analyse** (getrennter, menschlicher Schritt nach dem Screen).
 - Jedes preisnormierte Signal (Yield, P/E, PEG, EV/EBITDA, DCF/Margin-of-Safety, Target-Upside, Preis-Momentum) im 0–100-Score ist ein **Mandats-Verstoß** → raus aus `SCORE_WEIGHTS`.
 - **BUFFETT-Mode** (value+quality, DCF/MoS) wird entfernt (Karl-Entscheidung 2026-06-20).
-- **Fitness-Gate-Spannung:** Das Fitness-Maß (`fitness/measure.js`) optimiert Forward-Return-Rank-IC und belohnt damit strukturell Cheapness — es zieht genau die verbotenen Bewertungssignale zurück. Sinkt die Fitness nach dem Entfernen von Bewertung: **erwartet und korrekt, NICHT durch Wieder-Einbau „reparieren".**
+- **Fitness-Gate-Spannung:** Das Fitness-Maß (`scripts/rank-ic.js`, Mess-Artefakte in `fitness/`) optimiert Forward-Return-Rank-IC und belohnt damit strukturell Cheapness — es zieht genau die verbotenen Bewertungssignale zurück. Sinkt die Fitness nach dem Entfernen von Bewertung: **erwartet und korrekt, NICHT durch Wieder-Einbau „reparieren".**
 
 ## Pflicht-Test-Gates (bindend nach jeder Methoden-/Scoring-Änderung)
-Die alten Root-Gates (`tag28-tests.js`, `engine-cli-tests.js`, `tests/integration-anchor-test.js`) sind **entfernt** und durch die **`tests/scoring/*.test.js`-Suite** ersetzt (jede Datei ist ein Standalone-Runner: `node <datei>`, Exit 0/1). Nach jeder Scoring-/Methoden-Änderung die **komplette Suite** grün fahren — Anker u. a. `tests/scoring/anchors.fixture.test.js` (Fixture-Oracle), `score.integration.test.js`, `run-screener.test.js`.
+Die alten Root-Gates (`tag28-tests.js`, `engine-cli-tests.js`, `tests/integration-anchor-test.js`) sind **entfernt**. Bindend ist der volle CI-Gate-Glob aus `.github/workflows/daily-pull.yml` (`GATE_GLOB`) — **`tests/*test.js`, `tests/scoring/*test.js`, `lib/*test.js`** (jede Datei ist ein Standalone-Runner: `node <datei>`, Exit 0/1). Nach jeder Scoring-/Methoden-Änderung die **komplette Suite** grün fahren — Anker u. a. `tests/scoring/anchors.fixture.test.js` (Fixture-Oracle), `score.integration.test.js`, `run-screener.test.js`.
 ```powershell
-Get-ChildItem tests/scoring/*.test.js | ForEach-Object { node $_.FullName; if ($LASTEXITCODE) { "FAIL: $($_.Name)" } }
+Get-ChildItem tests/*test.js,tests/scoring/*test.js,lib/*test.js | ForEach-Object { node $_.FullName; if ($LASTEXITCODE) { "FAIL: $($_.Name)" } }
 ```
-Score-Methoden-Änderungen flippen den Fixture-Hash → das ist gewollt und der Nachweis. Quelle: `CONTEXT.md`. (node/gh sind auf PATH — siehe globale `~/.claude/CLAUDE.md`.)
+Score-Methoden-Änderungen flippen den Fixture-Hash → das ist gewollt und der Nachweis. Quelle der Wahrheit: `GATE_GLOB` in `.github/workflows/daily-pull.yml`. (node/gh sind auf PATH — siehe globale `~/.claude/CLAUDE.md`.)
 
 ## Formel-Entwicklungs-Prozess (Gauntlet — Pflicht vor Promotion zu CORE)
 Einheit = eine Formel pro GICS-Sub-Industry. Jede Idee MUSS durch:
@@ -53,9 +53,9 @@ Sektor-Dossiers (evidence-graded, englisch, zitiert) liegen im **Obsidian-Vault*
 `C:\Users\Anwender\OneDrive\Dokumente\GitHub\Jarvis\Knowledge\Trading\growth-screener\` — **NICHT** im screener-data-Repo. Hub: `growth-screener-knowledge-base`, verlinkt mit `elliott-wellen-referenz`.
 
 ## Engineering-Regeln für Multi-Agent-Arbeit
-- **Nie shared Registry-Files parallel editieren:** `methods/index.js`, `methods/method-types.js`, `tag28-tests.js`, `methods/score-aggregator.js` → Write-Races. Stattdessen Coordinator-Pattern (ein Agent besitzt die Registry) **oder** in Wellen von 1–2 serialisieren. Kollisionsfrei parallel: neue `methods/<name>.js`, Per-Cycle-Audit-Reports.
+- **Nie shared Registry-Files parallel editieren:** `src/scoring/formulas/index.js`, `src/scoring/formulas/quality/index.js`, `src/scoring/score.js` → Write-Races. Stattdessen Coordinator-Pattern (ein Agent besitzt die Registry) **oder** in Wellen von 1–2 serialisieren. Kollisionsfrei parallel: neue `src/scoring/formulas/<sector>.js`, Per-Cycle-Audit-Reports.
 - **`git commit` ohne Pathspec staged ALLES** (auch Dateien laufender Agenten) → vor Commit `git status --short`, dann gezielt `git commit -- <pfade>`.
-- **`/audit`-Zyklen:** 5 general-purpose-Agenten parallel in **einer** Nachricht, dann je Output als `Tag NNNa-e` committen; Zyklus endet mit `audit-reports/YYYY-MM-DD-tagNNN-cycle.md` (+ Next-Cycle-Prioritäten → Loop bleibt selbst-tragend).
+- **`/audit`-Zyklen:** 5 general-purpose-Agenten parallel in **einer** Nachricht, dann je Output als `Tag NNNa-e` committen; Zyklus endet mit `audit-reports/YYYY-MM-DD-tagNNN-cycle.md` (+ Next-Cycle-Prioritäten → Loop bleibt selbst-tragend). `.claude/commands/audit.md` ist ein SUPERSEDED-markiertes altes Verfahren gegen entfernte Architektur — nicht wörtlich ausführen.
 
 ## Fallen
 - **`GitHub\screener-data-fix`** = eingefrorene Kopie/Ex-Worktree (18.05.2026) — **nicht anfassen**.

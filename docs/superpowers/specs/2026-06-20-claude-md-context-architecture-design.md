@@ -1,7 +1,12 @@
 # Design: Persistenter Kontext — Drei-Ebenen-Architektur (CLAUDE.md + Memory)
 
 **Datum:** 2026-06-20
-**Status:** Entwurf, vom User abgenommen (Abschnitte 1–3)
+**Status:** SUPERSEDED/erledigt (Stand 2026-07-19) — `screener-data/CLAUDE.md` und
+`screener-data/AGENTS.md` existieren inzwischen im Repo-Root, ebenso
+`~/.claude/CLAUDE.md` global. Abschnitt 1 Punkt 1/3 („Es existiert gar keine
+CLAUDE.md" / „hat weder CLAUDE.md noch AGENTS.md") beschreibt den historischen
+Ausgangszustand vor dieser Migration, nicht den Ist-Zustand. Ursprünglich:
+Entwurf, vom User abgenommen (Abschnitte 1–3).
 **Auslöser:** Frage des Users, wie man „die CLAUDE.md am besten updatet" — bzw. ob das der falsche Ansatz ist.
 
 ---

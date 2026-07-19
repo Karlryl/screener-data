@@ -1,5 +1,17 @@
 # /audit — Precision Stock Quality Audit & Continuous Improvement
 
+> **SUPERSEDED — frozen historical command, Tag 199 era.** Every target path
+> below (`generate-screener.js`, `methods/*.js`, `score-aggregator.js`,
+> `tag28-tests.js`, `audit-classifications.js`) has been removed from the
+> active tree; literal execution fails immediately. **Do not run this command.**
+> It is kept only as a historical record. If a future audit revives it: the
+> "pick a value in the middle" instruction (OPERATING RULES item 6, below) is
+> label leakage / outcome tuning on named tickers and is disallowed by the
+> project's Methodik-Invarianten — any threshold must be set from out-of-sample
+> evidence (walk-forward / Gauntlet), never by fitting to which named anchor or
+> quarantine tickers end up in which tab. The anchor/quarantine ticker lists
+> below are illustrative examples from that era, not a live calibration target.
+
 You are auditing the screener's classifications stock-by-stock with surgical precision.
 Your job: ensure only LEGITIMATE companies appear in each tab — without losing the
 true high-performers. This is a precision task. False negatives are as bad as false positives.
@@ -305,8 +317,11 @@ After all changes, regenerate and verify:
 3. **Every method change must include a comment explaining the failure mode it prevents.**
 4. **Run the audit script after every method change** — verify no anchor regressed.
 5. **Commit frequently** — every fixed bug = one commit. Easier to bisect later.
-6. **When in doubt about a threshold:** look at what value WOULD include the anchor stocks
-   and exclude the quarantine stocks. That's your range. Pick a value in the middle.
+6. **When in doubt about a threshold:** DO NOT fit it to which named tickers end up
+   in which tab (that is label leakage / outcome tuning, forbidden by this project's
+   Methodik-Invarianten). Derive the threshold from the metric's own distribution
+   (e.g. a percentile or robust-statistic cutoff) and confirm it out-of-sample
+   (walk-forward) before adopting it.
 
 ---
 

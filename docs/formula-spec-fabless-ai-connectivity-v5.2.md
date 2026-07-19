@@ -1,5 +1,14 @@
 # Formula Spec — Fabless AI/Connectivity Semis · v5.2 (Durability-Achse v3)
 
+> **SUPERSEDED / ORPHANED (Stand 2026-07-19):** `court-screen.js`, `court-score.js`,
+> `court-score-tests.js` und `scripts/_proto-durability-v3.js` existieren nur noch
+> in `outputs/_backup-pre-dlst/`, nicht im aktiven Baum. Die aktive Engine
+> `src/scoring/` (inkl. `formulas/`) hat **keine** Durability-Achse dieses Namens
+> — die hier beschriebene Formel ist nicht implementiert/verifizierbar. Der
+> Verifikationsbefehl unten (`node court-screen.js; ...; 17/17`) läuft nicht mehr.
+> Diese Spec bleibt als Herleitungs-Dokument stehen; vor einer Reaktivierung
+> erst gegen den aktuellen `src/scoring/`-Stand neu verdrahten und neu testen.
+
 > **CO-LOCATED beside the code** (Court-Auflage Iteration 10: die Spec lag bisher nur im Jarvis-Vault).
 > v5.2 ändert AUSSCHLIESSLICH die **Durability-Achse** (court-screen.js). Alle übrigen Achsen, Membership,
 > Stage-Bucketing, Penalties, Realness-Harness etc. **unverändert per v5.1**

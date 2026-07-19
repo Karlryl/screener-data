@@ -1,7 +1,9 @@
 # AGENTS.md — Anweisungen für Codex (und alle Nicht-Claude-Agenten)
 
-**Lies zuerst `CLAUDE.md` und `CONTEXT.md` in diesem Verzeichnis und halte dich exakt daran.**
+**Lies zuerst `CLAUDE.md` in diesem Verzeichnis und halte dich exakt daran.**
 Vor Arbeitsbeginn außerdem den Masterplan lesen (Pfad steht in CLAUDE.md).
+`CONTEXT.md` ist ein eingefrorenes Resume-Briefing (Stand Tag 231, SUPERSEDED-Banner
+oben in der Datei) — keine bindende Engine-Wahrheit, nicht mehr referenzieren.
 
 ## Harte Regeln (Kurzfassung — Details in CLAUDE.md)
 

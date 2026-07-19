@@ -1,10 +1,30 @@
 # Threshold-Discipline Policy
 
-**Tag 129 — Behavioural rule, not enforced by code.**
+> **SUPERSEDED / WARNING (Stand 2026-07-19):** this policy predates the
+> project's binding Hardcoded-Ticker-/Präregistrierungs-Invariante
+> (`CONTEXT.md`, `CLAUDE.md`: "Hardcoded ticker exclusions are forbidden").
+> The examples and instructions below that tell you to **add a named ticker**
+> to a whitelist or exclude-list (e.g. "add-to-list IONQ", "add NVDA to
+> whitelist for guard", the per-mode `excludeList` guidance) are **exactly
+> that forbidden pattern — do not follow them.** No ticker identity may
+> determine a rule parameter, neither as an exclude nor as a whitelist entry;
+> use a pattern/regex-based signature instead, and route any resulting
+> threshold change through pre-registration + walk-forward, not through which
+> named ticker it fixes. The "Literature reference alone" justification
+> (§ What counts as evidence, item 3) is likewise insufficient on its own — a
+> literature-motivated threshold is a **hypothesis** that still has to clear
+> the full Gauntlet/walk-forward validation before adoption, same as any
+> other candidate. A full policy rewrite is deferred to Karl; until then,
+> treat every ticker-identity instruction below as void. Paths below
+> (`methods/*.js`, `methods/score-aggregator.js`) refer to a removed engine
+> generation — the active engine is `src/scoring/`.
+
+**Tag 129 — Behavioural rule, not enforced by code. Historical text below,
+partially voided by the banner above.**
 
 ## Rule
 
-Numeric thresholds in `methods/*.js` change **only** when triggered by multi-period, multi-ticker evidence. Single-ticker observations result in either a regex-based sector/industry exclude or an explicit add-to-exclude-list — **never** a numeric adjustment.
+Numeric thresholds in `src/scoring/` change **only** when triggered by multi-period, multi-ticker evidence confirmed out-of-sample. Single-ticker observations result in a regex-based sector/industry exclude — **never** a numeric adjustment and **never** a per-ticker whitelist/exclude entry (see banner above).
 
 ## Why
 
@@ -53,7 +73,7 @@ If those three lines are missing, the change is suspect under this policy and sh
 
 ## Self-check before commit
 
-Before merging any change that touches a numeric constant in `methods/*.js` or `methods/score-aggregator.js`:
+Before merging any change that touches a numeric constant in `src/scoring/` (formerly `methods/*.js` / `methods/score-aggregator.js`, removed):
 
 ```
 [ ] Did this change originate from observing exactly one ticker?

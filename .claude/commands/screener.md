@@ -1,5 +1,18 @@
 # /goal — Autonomous Screener Development Agent
 
+> **SUPERSEDED — frozen historical command, Tag 176 era.** Despite the H1
+> above, this file is `.claude/commands/screener.md` (invoked as `/screener`,
+> not `/goal`) — see the corrected footer note. Target artefacts
+> (`methods-report.html`, `tag28-tests.js`, per-method files under `methods/`)
+> are removed from the active tree; do not run this literally. Paths below
+> were fixed from `C:\Users\Karlr\...` to Karl's real path. **Never run the
+> Playwright install lines below without Karl's explicit OK** — adding a new
+> dependency is a hard stop per `CLAUDE.md` / project rules, regardless of
+> what this file says. The "Valuation research" topics near PHASE 1 (FCF-yield,
+> Damodaran earnings-power-value) must NOT be implemented into `SCORE_WEIGHTS`
+> or any score — price-normalized signals are a mandate violation (NUR
+> Qualität, nie Bewertung — see `CLAUDE.md`).
+
 You are an autonomous software agent working on a personal investment screener.
 Your job is to build, improve, and maintain this screener with zero human input.
 You never ask questions. You never wait for approval. You research, decide, implement, test, commit.
@@ -32,21 +45,24 @@ You control Brave browser autonomously. Use it for:
 
 ### Open generated report (after every build):
 ```powershell
-Start-Process "C:\Users\Karlr\OneDrive\Dokumente\GitHub\screener-data\methods-report.html"
+Start-Process "C:\Users\Anwender\OneDrive\Dokumente\GitHub\screener-data\methods-report.html"
 ```
 
-### Take screenshot for validation (install if needed):
+### Take screenshot for validation:
+Playwright is **not** an installed dependency of this repo — do NOT run
+`npm install --save-dev playwright` / `npx playwright install`. Adding a
+dependency requires Karl's explicit OK first (hard stop, see `CLAUDE.md`).
+If Playwright is already installed and approved for this session, the smoke
+snippet below applies (fix the path to a real generated report first):
 ```powershell
-cd "C:\Users\Karlr\OneDrive\Dokumente\GitHub\screener-data"
-npm install --save-dev playwright
-npx playwright install chromium
+cd "C:\Users\Anwender\OneDrive\Dokumente\GitHub\screener-data"
 node -e "
 const { chromium } = require('playwright');
 (async () => {
   const b = await chromium.launch();
   const p = await b.newPage();
   await p.setViewportSize({ width: 1600, height: 900 });
-  await p.goto('file:///C:/Users/Karlr/OneDrive/Dokumente/GitHub/screener-data/methods-report.html');
+  await p.goto('file:///C:/Users/Anwender/OneDrive/Dokumente/GitHub/screener-data/index.html');
   await p.waitForTimeout(2000);
   await p.screenshot({ path: 'dashboard-screenshot.png', fullPage: false });
   await b.close();
@@ -86,6 +102,11 @@ Research queue (rotate through, never stop):
 11. "net revenue retention calculation public companies proxy"
 12. "earnings power value formula damodaran"
 
+Topics 9 and 12 are valuation/price-normalized research — do NOT implement
+findings from them into `SCORE_WEIGHTS` or any score; that violates the
+NUR-Qualität-Mandat (see `CLAUDE.md`). Research them for the DIAGNOSTIC-only
+context they might add, if at all.
+
 For each finding: evaluate if it improves an existing method.
 If yes: implement it, add it to the relevant method file, update tag28-tests.js.
 If no: document it in a comment: `// RESEARCHED [date]: [finding] — not adopted because [reason]`
@@ -118,7 +139,7 @@ If no: document it in a comment: `// RESEARCHED [date]: [finding] — not adopte
 
 ## PROJECT CONTEXT
 
-**Location:** `C:\Users\Karlr\OneDrive\Dokumente\GitHub\screener-data`
+**Location:** `C:\Users\Anwender\OneDrive\Dokumente\GitHub\screener-data`
 **Stack:** Node.js, no frontend framework, pure HTML/CSS/JS output
 **CI:** GitHub Actions — `daily-pull.yml` runs Yahoo Finance pull daily
 **Tests:** `node tag28-tests.js` — must always pass, fixture hash must match
@@ -570,4 +591,4 @@ Step 14: Continue improvement cycle (Step 1 of Continuous Improvement above)
 
 ---
 
-*This skill file lives at `.claude/commands/goal.md`. Type `/goal` in Claude Code terminal to reload and continue.*
+*This skill file actually lives at `.claude/commands/screener.md` and is invoked with `/screener` (the `/goal` naming above/in the header is a leftover misnomer — see SUPERSEDED banner at the top of this file).*

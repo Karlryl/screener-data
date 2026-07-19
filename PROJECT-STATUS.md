@@ -1,5 +1,13 @@
 # Project Status — screener-data
 
+> **SUPERSEDED — frozen snapshot, Tag 239 era (2026-06-10).** Every artefact
+> named below (`methods/index.js`, `methods/score-aggregator.js`,
+> `engine-v7.3.js`, `score-orchestrator.js`, `tag28-tests.js`,
+> `engine-cli-tests.js`, `snapshot-picks.js`, …) has since been removed from
+> the active tree. Current engine: `src/scoring/`. Current universe/cron/test
+> gate: see `README.md` and `CLAUDE.md`. This snapshot was never regenerated
+> after the Tag ~350+ rebuild — treat everything below as historical only.
+
 **Last Update:** 2026-06-10 — **Tag 239 era.** Daily-cron discovery pipeline over ~15 700 tickers.
 Alle 19 deferred Audit-Findings vom 2026-06-08 aufgelöst (Tag 237–239, siehe
 `audit-reports/2026-06-10.md`); screener.html UI-Redesign (CSS-Token-Layer);

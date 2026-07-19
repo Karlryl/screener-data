@@ -19,41 +19,42 @@ git log --oneline -15
 ```
 
 ```!
-ls -1 *.js scripts/*.js methods/*.js 2>/dev/null | head -60
+ls -1 *.js scripts/*.js src/scoring/*.js src/scoring/formulas/*.js 2>/dev/null | head -60
 ```
 
 ## Step 2 — Read critical files
 
+> **Note:** `methods/`, `generate-modes-report.js` and the root `tag*-tests.js`
+> files no longer exist (removed engine generation) — replaced below by their
+> `src/scoring/` equivalents.
+
 Read ALL of the following:
 - `package.json` (dependencies, node version requirement)
 - `watchlist.json` (first 30 lines — universe size)
-- `methods/index.js` (full — method registry)
-- `methods/runner.js` (full — how methods are evaluated)
-- `methods/score-aggregator.js` (full)
-- `methods/strategy-modes.js` (full)
-- `generate-modes-report.js` (full)
+- `src/scoring/formulas/index.js` (full — sector-formula registry)
+- `src/scoring/formulas/quality/index.js` (full)
+- `src/scoring/score.js` (full — how formulas are evaluated)
+- `src/scoring/run-screener.js` (full)
 - `pull-yahoo.js` (first 120 lines — entry point + concurrency)
 - `.github/workflows/daily-pull.yml` (full)
 - `.gitignore` (full)
 
 ## Step 3 — Targeted checks
 
-### A. Method registry vs filesystem consistency
+### A. Formula registry vs filesystem consistency
 
-Count files in `methods/` that export a method (`module.exports.*id`), compare against entries in `methods/index.js`. Any mismatch causes tag28-tests.js to fail and aborts the entire run.
+Compare sector-formula files under `src/scoring/formulas/` against the
+entries registered in `src/scoring/formulas/index.js` (and
+`src/scoring/formulas/quality/index.js`). An unregistered formula file is
+silently never scored; a registry entry pointing at a missing file breaks
+`node src/scoring/run-screener.js`.
 
 ```!
-grep -l "module.exports" methods/*.js | wc -l
+ls -1 src/scoring/formulas/*.js src/scoring/formulas/quality/*.js 2>/dev/null
 ```
 
 ```!
-grep -c "file:" methods/index.js
-```
-
-List any `.js` files in `methods/` that are NOT referenced in `methods/index.js`:
-
-```!
-for f in methods/*.js; do base=$(basename $f); if ! grep -q "$base" methods/index.js; then echo "UNREGISTERED: $f"; fi; done
+for f in src/scoring/formulas/*.js; do base=$(basename "$f"); if ! grep -q "$base" src/scoring/formulas/index.js 2>/dev/null; then echo "CHECK-UNREGISTERED: $f"; fi; done
 ```
 
 ### B. Hard-fail steps without continue-on-error
@@ -73,7 +74,7 @@ grep -rn "require('yahoo-finance2')" *.js scripts/*.js discovery/*.js 2>/dev/nul
 Any `filter(Boolean)` that may pass non-object values (strings, numbers) to method code accessing `.annual` or `.meta` is a crash risk.
 
 ```!
-grep -n "filter(Boolean)" *.js scripts/*.js methods/*.js 2>/dev/null
+grep -n "filter(Boolean)" *.js scripts/*.js src/scoring/*.js src/scoring/formulas/*.js 2>/dev/null
 ```
 
 ### E. outputs/ directory guard

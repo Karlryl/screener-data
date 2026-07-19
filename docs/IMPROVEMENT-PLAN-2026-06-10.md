@@ -1,5 +1,12 @@
 # Screener-Verbesserungsplan 2026-06-10
 
+> **SUPERSEDED — historischer Plan, Tag 239 era.** Referenzierte Artefakte
+> (`SCORE_WEIGHTS`, `engine-cli-tests.js`, `engine-v7.3.js`,
+> `score-orchestrator.js`, `methods-history/`-Groessenangaben) beziehen sich
+> auf eine seither entfernte Engine-Generation. Aktueller Stand: `README.md`,
+> `CLAUDE.md`, Engine `src/scoring/`. Nicht mehr als aktive Prioritaetenliste
+> lesen.
+
 > Synthese aus: ROADMAP-detailliert-2026-06-05, CONTEXT.md-Punchlist, Audit-Reports
 > (insb. 2026-06-08 Notes + 2026-06-10 Resolution), Tag-208-Research (academic /
 > competitive / data-sources / UI) und frischen Messungen aus dieser Session.
