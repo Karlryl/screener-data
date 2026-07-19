@@ -461,7 +461,12 @@ function checkScoreDescending(rows, where, errs) {
   }
 }
 
-function validateFile(mk, kind, errs) {
+// opts.forceDiagnostic (BH-160): true when the caller KNOWS mk is a QC board (quality/*, only
+// reachable via validateQualityExport, which reads the file list off the QC index). QC boards
+// are 'diagnostic' by construction (board-status.js) and can never legitimately be 'core' — a
+// plain enum check lets a tampered 'core' slip through silently. validateFile stays reusable
+// for HG boards (where 'core' is legitimate) by defaulting the flag off.
+function validateFile(mk, kind, errs, opts = {}) {
   if (!mk || typeof mk !== 'object') { errs.push(`${kind}: not an object`); return; }
   if (mk.schema !== SCHEMA) errs.push(`${kind}: schema=${JSON.stringify(mk.schema)}`);
   if (typeof mk.generated_at !== 'string') errs.push(`${kind}: generated_at`);
@@ -470,8 +475,16 @@ function validateFile(mk, kind, errs) {
     if (!Number.isFinite(mk.generatedFromSnapshots)) errs.push('index: generatedFromSnapshots');
     if (!Array.isArray(mk.branches) || mk.branches.length !== BRANCHES.length) errs.push('index: branches');
     if (!mk.boardStatus || typeof mk.boardStatus !== 'object') errs.push('index: boardStatus map missing');
-    else for (const [k, v] of Object.entries(mk.boardStatus)) {
-      if (!VALID_BOARDSTATUS.includes(v)) errs.push(`index: boardStatus.${k}=${JSON.stringify(v)}`);
+    else {
+      for (const [k, v] of Object.entries(mk.boardStatus)) {
+        if (!VALID_BOARDSTATUS.includes(v)) errs.push(`index: boardStatus.${k}=${JSON.stringify(v)}`);
+      }
+      // BH-078: the loop above only checks PRESENT entries' enum value, never completeness —
+      // a boardStatus map missing a branch (or carrying a stray extra key) slipped through with
+      // zero violations. Pin exact key-set equality against BRANCHES.
+      const bsKeys = new Set(Object.keys(mk.boardStatus));
+      for (const b of BRANCHES) if (!bsKeys.has(b)) errs.push(`index: boardStatus missing key ${b}`);
+      for (const k of bsKeys) if (!BRANCHES.includes(k)) errs.push(`index: boardStatus unexpected key ${k}`);
     }
     if (!mk.counts || typeof mk.counts !== 'object') errs.push('index: counts');
     if (!Number.isFinite(mk.survivalCount)) errs.push('index: survivalCount');
@@ -493,7 +506,10 @@ function validateFile(mk, kind, errs) {
   }
   // board file: branch (Pflicht, = filename) + profitable/unprofitable arrays of BoardRow.
   if (typeof mk.branch !== 'string' || mk.branch !== kind) errs.push(`${kind}: branch=${JSON.stringify(mk.branch)}`);
-  if (!VALID_BOARDSTATUS.includes(mk.boardStatus)) errs.push(`${kind}: boardStatus=${JSON.stringify(mk.boardStatus)}`);
+  // BH-160: QC boards (opts.forceDiagnostic) are pinned to 'diagnostic' only — 'core' is
+  // enum-legal for HG but a QC board can never be core (board-status.js:42).
+  const allowedBoardStatus = opts.forceDiagnostic ? ['diagnostic'] : VALID_BOARDSTATUS;
+  if (!allowedBoardStatus.includes(mk.boardStatus)) errs.push(`${kind}: boardStatus=${JSON.stringify(mk.boardStatus)}`);
   if (!Array.isArray(mk.profitable)) errs.push(`${kind}: profitable not array`);
   if (!Array.isArray(mk.unprofitable)) errs.push(`${kind}: unprofitable not array`);
   (mk.profitable || []).forEach((r, i) => validateBoardRow(r, `${kind}.profitable[${i}]`, errs));
@@ -535,8 +551,20 @@ function validateQualityIndex(mk, errs) {
   if (!Number.isFinite(mk.generatedFromSnapshots)) errs.push(`${kind}: generatedFromSnapshots`);
   if (!Array.isArray(mk.boards) || !mk.boards.length) errs.push(`${kind}: boards`);
   if (!mk.boardStatus || typeof mk.boardStatus !== 'object') errs.push(`${kind}: boardStatus map missing`);
-  else for (const [k, v] of Object.entries(mk.boardStatus)) {
-    if (!VALID_BOARDSTATUS.includes(v)) errs.push(`${kind}: boardStatus.${k}=${JSON.stringify(v)}`);
+  else {
+    // BH-078: QC boardStatus values are restricted to 'diagnostic' only (not the shared
+    // VALID_BOARDSTATUS enum) — a manipulated 'core' in the QC index is a real breach, unlike
+    // on an HG index where 'core' is legitimate.
+    for (const [k, v] of Object.entries(mk.boardStatus)) {
+      if (v !== 'diagnostic') errs.push(`${kind}: boardStatus.${k}=${JSON.stringify(v)}`);
+    }
+    // BH-078: exact key-set match against mk.boards — completeness, not just per-entry enum
+    // (a missing or stray extra key previously produced zero violations).
+    if (Array.isArray(mk.boards)) {
+      const bsKeys = new Set(Object.keys(mk.boardStatus));
+      for (const b of mk.boards) if (!bsKeys.has(b)) errs.push(`${kind}: boardStatus missing key ${b}`);
+      for (const k of bsKeys) if (!mk.boards.includes(k)) errs.push(`${kind}: boardStatus unexpected key ${k}`);
+    }
   }
   if (!mk.counts || typeof mk.counts !== 'object') errs.push(`${kind}: counts`);
   if (!mk.excluded || typeof mk.excluded !== 'object') errs.push(`${kind}: excluded`);
@@ -555,7 +583,9 @@ function validateQualityExport() {
     const stem = String(id).replace(/^quality-/, '');
     const mk = readJSONOrNull(path.join(QOUT_DIR, stem + '.json'));
     if (!mk) { raw.push(`quality/${stem}: missing/unreadable`); continue; }
-    validateFile(mk, stem, raw); // reuses board-file check: branch===stem, boardStatus enum, every BoardRow
+    // BH-160: forceDiagnostic — this file is KNOWN to be a QC board (came off idx.boards), so
+    // boardStatus is pinned to 'diagnostic' here, unlike the HG board-file call below.
+    validateFile(mk, stem, raw, { forceDiagnostic: true }); // reuses board-file check: branch===stem, boardStatus enum, every BoardRow
   }
   const ov = readJSONOrNull(path.join(QOUT_DIR, 'overview.json'));
   if (!ov) raw.push('quality/overview: missing/unreadable');
@@ -658,19 +688,30 @@ function selftest() {
   assert.ok(e.some(x => /boardStatus\.energy/.test(x)), 'index boardStatus bad enum must trip');
   m = mkIdx(); delete m.boardStatus; e = []; validateFile(m, 'index', e);
   assert.ok(e.some(x => /boardStatus map missing/.test(x)), 'index boardStatus map missing must trip');
+  // BH-078: boardStatus map completeness — a missing key (branch dropped from the map, values
+  // otherwise all valid) or an unexpected extra key must trip, not just a bad per-entry enum.
+  e = []; validateFile(mkIdx({ boardStatus: Object.fromEntries(BRANCHES.slice(1).map(b => [b, 'core'])) }), 'index', e);
+  assert.ok(e.some(x => /boardStatus missing key/.test(x)), 'index boardStatus missing key must trip');
+  e = []; validateFile(mkIdx({ boardStatus: { ...Object.fromEntries(BRANCHES.map(b => [b, 'core'])), ghost: 'core' } }), 'index', e);
+  assert.ok(e.some(x => /boardStatus unexpected key/.test(x)), 'index boardStatus extra key must trip');
 
   // ---- 3.2 QC-Board (quality/) ------------------------------------------------
   // QC rows are the SAME shape as HG board/overview rows -> row validators reused; only the
   // QC-specific invariants are asserted here.
   assert.strictEqual(boardStatusOf('quality-semiconductors'), 'diagnostic', 'QC board must be diagnostic by construction');
   assert.strictEqual(boardStatusOf('quality-anything'), 'diagnostic', 'every quality-* id is diagnostic');
-  // QC board hull: 'diagnostic' is the built value; 'core' is enum-legal so it does NOT trip (item 3).
+  // QC board hull: validateQualityExport calls validateFile with forceDiagnostic:true (BH-160)
+  // — simulate that here. Plain validateFile (no opts) stays enum-permissive since it is reused
+  // for HG boards too, where 'core' is legitimate (see mkHull tests above).
   const mkQHull = (over = {}) => ({ schema: SCHEMA, generated_at: 'x', boardStatus: 'diagnostic', coverage: null, branch: 'semiconductors', profitable: [mapBoardRow(cleanBoard, 0)], unprofitable: [], ...over });
-  e = []; validateFile(mkQHull(), 'semiconductors', e); assert.strictEqual(e.length, 0, 'clean QC board hull must validate');
-  e = []; validateFile(mkQHull({ boardStatus: 'core' }), 'semiconductors', e); assert.strictEqual(e.length, 0, "QC boardStatus 'core' is enum-legal, must NOT trip");
-  m = mkQHull(); delete m.boardStatus; e = []; validateFile(m, 'semiconductors', e);
+  e = []; validateFile(mkQHull(), 'semiconductors', e, { forceDiagnostic: true }); assert.strictEqual(e.length, 0, 'clean QC board hull must validate');
+  // BH-160: 'core' is enum-legal HG-wide but QC boards are always diagnostic (board-status.js:42)
+  // — under forceDiagnostic it now MUST trip (previously slipped through silently).
+  e = []; validateFile(mkQHull({ boardStatus: 'core' }), 'semiconductors', e, { forceDiagnostic: true });
+  assert.ok(e.some(x => /boardStatus=/.test(x)), "BH-160: QC boardStatus 'core' must trip under forceDiagnostic");
+  m = mkQHull(); delete m.boardStatus; e = []; validateFile(m, 'semiconductors', e, { forceDiagnostic: true });
   assert.ok(e.some(x => /boardStatus/.test(x)), 'QC boardStatus missing must trip');
-  e = []; validateFile(mkQHull({ boardStatus: 'bogus' }), 'semiconductors', e);
+  e = []; validateFile(mkQHull({ boardStatus: 'bogus' }), 'semiconductors', e, { forceDiagnostic: true });
   assert.ok(e.some(x => /boardStatus=/.test(x)), 'QC boardStatus bogus must trip');
   // cohortN tamper on a QC row trips (row validator reused).
   trip(validateBoardRow, { ...b0, cohortN: 'GARBAGE' }, 'QC board cohortN string');
@@ -681,6 +722,16 @@ function selftest() {
   assert.ok(e.some(x => /boardStatus\.quality-semiconductors/.test(x)), 'QC index boardStatus bogus must trip');
   m = mkQIdx(); delete m.boardStatus; e = []; validateQualityIndex(m, e);
   assert.ok(e.some(x => /boardStatus map missing/.test(x)), 'QC index boardStatus map missing must trip');
+  // BH-078: QC boardStatus map values are restricted to 'diagnostic' only — 'core' is enum-legal
+  // on the shared VALID_BOARDSTATUS list but must trip here (QC can never be core).
+  e = []; validateQualityIndex(mkQIdx({ boardStatus: { 'quality-semiconductors': 'core' } }), e);
+  assert.ok(e.some(x => /boardStatus\.quality-semiconductors/.test(x)), 'QC index boardStatus core must trip (QC-only-diagnostic)');
+  // BH-078: key-set completeness against mk.boards — a board present in `boards` but missing
+  // from the boardStatus map (or a stray extra key) must trip.
+  e = []; validateQualityIndex(mkQIdx({ boards: ['quality-semiconductors', 'quality-energy'] }), e);
+  assert.ok(e.some(x => /boardStatus missing key quality-energy/.test(x)), 'QC index boardStatus missing key must trip');
+  e = []; validateQualityIndex(mkQIdx({ boardStatus: { 'quality-semiconductors': 'diagnostic', 'quality-ghost': 'diagnostic' } }), e);
+  assert.ok(e.some(x => /boardStatus unexpected key/.test(x)), 'QC index boardStatus extra key must trip');
 
   console.log('selftest OK');
 }

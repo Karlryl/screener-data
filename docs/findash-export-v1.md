@@ -13,7 +13,7 @@ Das Dashboard (findash-Cockpit) bindet an eine **stabile, versionierte** Form. D
 
 Bricht das Schema still (fehlendes Feld, falscher Typ, kaputter Enum), zeigt das Dashboard falsche Daten ohne Warnung. **Dagegen steht der Schema-Check-Step (rotes X, Karls einziger Alarm-Kanal).** Damit dieses Versprechen echt ist, muss der Check JEDES Pflicht-Feld auf **Praesenz UND Typ/Enum** pruefen — sonst ist der Alarm-Kanal eine Attrappe.
 
-**Vertrags-Garantie (verifiziert gegen echte `outputs/hypergrowth/*` via materialisiertem Writer):** Der `--check`-Step blockt den Deploy (exit 1) bei jedem der folgenden Brueche auf einer beliebigen der 15 Dateien: fehlendes Pflicht-Feld, falsch getyptes Feld (Zahl statt String, String statt Zahl, NaN/Infinity), kaputter Enum-Wert (`track`, `phase`, `mcapBand`, `ipoRecency`, `overview.kind`/`overviewKind`, `coverage.status`), fehlendes/falsch getyptes Huellen-Feld (`schema`, `generated_at`, `branch`, `coverage`), verletzte Meta-Struktur (`index`). Empirisch: 22 Bruch-Varianten getestet, davon der 4-fach-gleichzeitige Bruch auf `energy.json` (branch entfernt + country entfernt + sector=42 numerisch + overview.companion='X') => **exit 1, Deploy geblockt** (frueher: exit 0).
+**Vertrags-Garantie (verifiziert gegen echte `outputs/hypergrowth/*` via materialisiertem Writer):** Der `--check`-Step blockt den Deploy (exit 1) bei jedem der folgenden Brueche auf einer beliebigen der 16 Dateien: fehlendes Pflicht-Feld, falsch getyptes Feld (Zahl statt String, String statt Zahl, NaN/Infinity), kaputter Enum-Wert (`track`, `phase`, `mcapBand`, `ipoRecency`, `overview.kind`/`overviewKind`, `coverage.status`), fehlendes/falsch getyptes Huellen-Feld (`schema`, `generated_at`, `branch`, `coverage`), verletzte Meta-Struktur (`index`). Empirisch: 22 Bruch-Varianten getestet, davon der 4-fach-gleichzeitige Bruch auf `energy.json` (branch entfernt + country entfernt + sector=42 numerisch + overview.companion='X') => **exit 1, Deploy geblockt** (frueher: exit 0).
 
 **Konvention der Pflicht-Semantik:**
 - **Pflicht** = Schluessel muss existieren UND den geforderten Typ/Enum haben (nicht null, ausser explizit "nullable").
@@ -26,18 +26,18 @@ Bricht das Schema still (fehlendes Feld, falscher Typ, kaputter Enum), zeigt das
 
 | Datei | Inhalt | Laenge |
 | --- | --- | --- |
-| `<branche>.json` (12) | Ein Board je Branche: `{branch, profitable[], unprofitable[]}` | topN=100 je Track (score-desc) |
+| `<branche>.json` (13) | Ein Board je Branche: `{branch, profitable[], unprofitable[]}` | topN=100 je Track (score-desc) |
 | `overview.json` | Flaches Cross-Branch-Top nach Score | ~200 (topN*2) |
 | `survival.json` | Flaches Pre-Revenue-Board nach Runway | 73 (ungekappt) |
 | `index.json` | Meta/Zaehlung + Coverage-Banner-Marker | 1 Objekt |
 
-Die 12 Branchen (formulaId): `consumer-discretionary, consumer-staples, energy, financials, health-care, industrials, it-services, materials, real-estate, semiconductors, software-comm-services, utilities`.
+Die 13 Branchen (formulaId): `consumer-discretionary, consumer-staples, energy, financials, health-care, industrials, it-services, materials, real-estate, semiconductors, software-comm-services, tech-hardware, utilities`.
 
 **NICHT im Export:** `outputs/hypergrowth/calib/<branche>.json` (Roh-Perzentil-Matrix ueber die GANZE Kohorte) bleibt getrennter Diagnostik-Kanal — siehe §6. Die Achsen-Perzentile der **exportierten** Zeilen stehen dagegen sehr wohl im Vertrag, per `axisBreakdown` (§3).
 
 ---
 
-## 2. Gemeinsame Datei-Huelle (jede der 15 Dateien)
+## 2. Gemeinsame Datei-Huelle (jede der 16 Dateien)
 
 | Feld | Typ | Pflicht | Geprueft vom `--check` | Bedeutung |
 | --- | --- | --- | --- | --- |
@@ -151,8 +151,8 @@ Huelle (§2) +:
 | Feld | Typ | Pflicht | Geprueft | Bedeutung |
 | --- | --- | --- | --- | --- |
 | `generatedFromSnapshots` | number (finite) | Pflicht | ja | z.B. `4681`. Wie viele Snapshots in den Lauf gingen. |
-| `branches` | string[] (Laenge 12) | Pflicht | ja (Array + Laenge===12) | Sortiert. **Haerte-Hinweis:** die Laenge-12-Pruefung ist an die Nebenannahme gekoppelt, dass alle 12 Branchen geroutete Zeilen haben (run-screener.js baut `branches` aus `Object.keys(ranked.branches)`). Real 12/12; faellt eine Branche komplett aus, schlaegt der Gate mit `index: branches` fehl — bewusste konservative Haerte, hier als Invariante dokumentiert. |
-| `boardStatus` | `{[branche]: 'core'\|'diagnostic'}` | Pflicht | ja (Map-Praesenz + jeder Wert Enum) | Zentrale Court-Standing-Map aller 12 Boards (= das Board-Datei-Feld `boardStatus`, hier gebuendelt). Das Dashboard joint Overview-Zeilen per `formulaId` gegen diese Map, um `diagnostic`-Namen zu badgen. Quelle `src/scoring/board-status.js`, Ledger §2.1. |
+| `branches` | string[] (Laenge 13) | Pflicht | ja (Array + Laenge===13) | Sortiert. **Haerte-Hinweis:** die Laenge-13-Pruefung ist an die Nebenannahme gekoppelt, dass alle 13 Branchen geroutete Zeilen haben (run-screener.js baut `branches` aus `Object.keys(ranked.branches)`). Real 13/13; faellt eine Branche komplett aus, schlaegt der Gate mit `index: branches` fehl — bewusste konservative Haerte, hier als Invariante dokumentiert. |
+| `boardStatus` | `{[branche]: 'core'\|'diagnostic'}` | Pflicht | ja (Map-Praesenz, Vollstaendigkeit gegen alle 13 Branchen UND jeder Wert Enum — BH-078) | Zentrale Court-Standing-Map aller 13 Boards (= das Board-Datei-Feld `boardStatus`, hier gebuendelt). Das Dashboard joint Overview-Zeilen per `formulaId` gegen diese Map, um `diagnostic`-Namen zu badgen. Quelle `src/scoring/board-status.js`, Ledger §2.1. |
 | `counts` | `{[branche]: {profitable:int, unprofitable:int}}` | Pflicht | ja (Objekt-Praesenz) | **ECHTE Kohorten-Counts** (ganze Population), NICHT die topN-Anzeigeliste. |
 | `survivalCount` | number (finite) | Pflicht | ja | z.B. `73`. |
 | `excluded` | `{[grund]: count}` | Pflicht | ja (Objekt-Praesenz) | Ausschluss-Gruende, z.B. `{"non-us":326,"balance-sheet-bank":305,...}`. Gruende: `balance-sheet-bank, data-suspect, dup-issuer, insurer, lender-gp0, mortgage-reit, no-axes, no-sector, non-operating-rev, non-us, telecom`. |
@@ -205,9 +205,9 @@ Faustregel: **Kann ein v1-Consumer die Datei ohne Code-Aenderung weiterlesen? �
 
 **Teil a — "nur latest" (UMGESETZT in 1.1):** Der Writer schreibt ausschliesslich `outputs/findash-export/v1/` und ueberschreibt es atomar bei jedem Lauf. **Keine** datierte Historie, **kein** Anhaengen. Der Deploy-Step force-pusht denselben Pfad auf gh-pages — der Vorlauf wird ersetzt, nicht akkumuliert. Das haelt gh-pages und den Runner-Footprint konstant.
 
-**Teil b — board-history (DOKUMENTIERT, ausserhalb CI, gebunden an Task 2.3):** Eine datierte Board-Historie (`findash-export/history/YYYY-MM-DD/`) fuer Zeitreihen-Analyse im Dashboard ist bewusst NICHT im CI-Writer. Grund: sie waechst monoton und wuerde gh-pages aufblaehen; sie gehoert in denselben Pfad-getrennten Mechanismus wie `picks-history/` (vom pull-Job/snapshot-picks bewirtschaftet, in main committet, nicht ueber den scoring-Loop). **Bindung:** wird mit Task 2.3 aktiviert, dann als separater Retention-Pfad mit eigenem Deckel (siehe §9), nie ueber diesen 1.1-Writer.
+**Teil b — board-history (UMGESETZT, scharf seit Tag 303, Task 2.3):** Eine datierte Board-Vintage-Historie liegt unter `board-history/` (**nicht** `findash-export/history/YYYY-MM-DD/` — frueherer Platzhalter-Pfad dieser Doku, nie real gebaut). Geschrieben von `scripts/write-board-history.js` als **eigener Schritt** in `daily-pull.yml` (NACH dem gh-pages-Deploy), getrennt vom 1.1-Export-Writer (`write-findash-export.js`) und separat nach main committet — derselbe Pfad-getrennte Mechanismus wie `picks-history/` (eigener Job, eigener Commit, nicht ueber den scoring-Loop). Retention siehe §9: der Writer selbst loescht nie.
 
-**Teil c — XBRL/prices-max (DOKUMENTIERT, ausserhalb CI, gebunden an 2.2/4.1):** Die tiefe Roh-Historie (SEC-XBRL-Serien, `prices/`-Vollhistorie) ist die Basis fuer spaetere Deep-Work-Achsen, gehoert aber NICHT in den findash-export. Sie wird von `pull-sec-xbrl.js` / `pull-historical-prices.js` in eigene, gitignored bzw. tracked-external Pfade geschrieben. **Bindung:** XBRL-Tiefe an Task 2.2 (EDGAR-Merge), prices-max an Task 4.1 (Preis-Historie). Der 1.1-Writer liest diese Quellen NICHT und darf sie nie als Zielpfad bekommen.
+**Teil c — XBRL/prices-max (DOKUMENTIERT, ausserhalb CI, gebunden an 4.1/2.2):** Die tiefe Roh-Historie (SEC-XBRL-Serien, `prices/`-Vollhistorie) ist die Basis fuer spaetere Deep-Work-Achsen, gehoert aber NICHT in den findash-export. Sie wird von `pull-sec-xbrl.js` / `pull-historical-prices.js` in eigene, gitignored bzw. tracked-external Pfade geschrieben. **Bindung:** XBRL-Tiefe an Task 4.1 (Buffett-Board Quant-Teil, Masterplan Phase 4), prices-max an Task 2.2 (ATH-Abstand-Spalte, `prices-max/`-Max-Batch, Masterplan Phase 2). Der 1.1-Writer liest diese Quellen NICHT und darf sie nie als Zielpfad bekommen.
 
 **Schutzliste (read-only fuer den 1.1-Writer, NIE Zielpfad):** `picks-history/`, `earnings-calendar.json`. Beide werden vom pull-Job bewirtschaftet; der scoring-Job laeuft auf frischem Runner und schreibt ausschliesslich unter `outputs/` — damit sind sie faktisch geschuetzt, aber der Writer dokumentiert sie explizit als read-only, um die Trennung zu zementieren.
 
@@ -215,11 +215,11 @@ Faustregel: **Kann ein v1-Consumer die Datei ohne Code-Aenderung weiterlesen? �
 
 ## 9. Groessen-Budget (Jahres-Wachstum + Deckel)
 
-**Pro Lauf (latest-only, Teil a):** ~1,3 MB (12 Boards + overview + survival + index; calib NICHT im Export). Da nur `latest` geschrieben und force-gepusht wird, ist der **stationaere gh-pages-Footprint konstant ~1,3 MB** — kein Jahres-Wachstum. Das ist der Sinn von Grundgesetz 7a.
+**Pro Lauf (latest-only, Teil a):** ~1,3 MB (13 Boards + overview + survival + index; calib NICHT im Export). Da nur `latest` geschrieben und force-gepusht wird, ist der **stationaere gh-pages-Footprint konstant ~1,3 MB** — kein Jahres-Wachstum. Das ist der Sinn von Grundgesetz 7a.
 
-**Geschaetztes Jahres-Wachstum FALLS Teil b (board-history) aktiviert wird:** ~1,3 MB/Lauf × ~250 Handelstage = **~325 MB/Jahr** (unkomprimiert; gzip auf gh-pages drueckt real auf ~50–80 MB/Jahr).
+**Jahres-Wachstum seit Teil b (board-history) live ist:** ~1,3 MB/Vintage × ~250 Handelstage = **~325 MB/Jahr** (unkomprimiert; gzip drueckt real auf ~50–80 MB/Jahr). `board-history/` wird nach **main** committet, nicht nach gh-pages gepusht — das Wachstum betrifft den Repo-Baum, nicht den gh-pages-Footprint aus Teil a.
 
-**Deckel: < 1 GB.** Board-History (Teil b) bekommt bei Aktivierung einen harten Retention-Deckel von **< 1 GB** — praktisch via rollierendem Fenster (aelteste datierte Ordner werden geloescht, sobald der Ordner-Gesamtstand 1 GB naehert, entsprechend ~3 Jahren unkomprimiert / deutlich mehr gzip). Der latest-only-Export (1.1) beruehrt diesen Deckel nie, weil er nicht akkumuliert. XBRL/prices-max (Teil c) haben eigene, groessere Budgets ausserhalb dieses Vertrags (an 2.2/4.1 gebunden).
+**Retention: kein automatisches Loeschen.** `write-board-history.js` kennt eine Kompaktierung (`--compact`, `RETENTION_DAYS = 180`): Vintages **aelter als 180 Tage** werden als Voll-Snapshot nach `board-history-archive/` (ausserhalb des CI-Checkouts, GG7c) kopiert und danach im committeten `board-history/`-Eintrag gestrippt (`compacted:true`) — **geloescht wird dabei nichts**. Der taegliche CI-Lauf (`daily-pull.yml`, Schritt „Write board-history vintage") ruft den Writer OHNE `--compact` auf; die Kompaktierung ist bis auf Weiteres ein manueller Schritt, kein automatischer harter 1-GB-Deckel. Der latest-only-Export (1.1) beruehrt das nie, weil er nicht akkumuliert. XBRL/prices-max (Teil c) haben eigene, groessere Budgets ausserhalb dieses Vertrags (an 4.1/2.2 gebunden).
 
 ---
 
@@ -245,7 +245,7 @@ QC-Board-Zeilen sind **byte-fuer-byte dieselbe `BoardRow`-Form wie §3** (versch
 
 Jedes QC-Board traegt `boardStatus: 'diagnostic'` — **per Konstruktion**, nicht per Hardcode: `src/scoring/board-status.js` gibt fuer jeden `quality-`-praefigierten Key `'diagnostic'` zurueck und kann ihn nie auf `'core'` promoten. Das Dashboard (1.3) MUSS QC-Boards sichtbar als **unbewiesen** kennzeichnen.
 
-- **`--check`-Verhalten:** `boardStatus` wird gegen das **bestehende Enum** `['core','diagnostic']` geprueft (dieselbe `VALID_BOARDSTATUS`-Liste wie HG). D.h. ein manipuliertes `'core'` auf einer QC-Datei ist enum-legal und trippt **nicht**; ein **fehlendes** oder **bogus** `boardStatus` (und ein bogus Wert in der QC-`index`-`boardStatus`-Map) trippt (exit 1). Der Build-Zeit-Invariante „QC == diagnostic" wird zusaetzlich im `--selftest` asserted.
+- **`--check`-Verhalten (BH-160/BH-078 gefixt):** `boardStatus` ist auf QC-Dateien (Board-Datei UND die QC-`index`-`boardStatus`-Map) auf den **einzigen legitimen Wert `'diagnostic'`** gepinnt — NICHT das breitere `['core','diagnostic']`-Enum, das fuer HG gilt. Ein manipuliertes `'core'` auf einer QC-Datei oder in der QC-Index-Map **trippt jetzt** (exit 1), ebenso ein **fehlendes** oder **bogus** `boardStatus`. Die QC-`index`-`boardStatus`-Map wird zusaetzlich auf Key-Vollstaendigkeit gegen `boards` geprueft (fehlender oder ueberzaehliger Eintrag trippt). Der Build-Zeit-Invariante „QC == diagnostic" wird zusaetzlich im `--selftest` asserted.
 - **Core-Promotion** ist gated auf **ρ < 0,4 + rankIC** (QC-Rangkorrelation zum HG-Board niedrig genug, dass QC eigenstaendige Information traegt) — siehe **Masterplan 3.1**. Bis dieser Nachweis vorliegt, bleibt QC diagnostic.
 
 ### Optional-when-absent (kein stiller Weglass, kein Crash)
