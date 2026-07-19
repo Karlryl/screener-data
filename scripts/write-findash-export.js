@@ -256,6 +256,12 @@ function buildQuality(coverage, opts = {}) {
     return { boards: 0, failed: true };
   }
   if (mode === 'absent') {
+    // Karl-Entscheid: absent raeumt wie failed (T2/Tag 349-Muster) — sonst blieb ein
+    // QC-Board-Stand eines FRUEHEREN erfolgreichen Laufs im qoutDir liegen, obwohl
+    // dieser Lauf gar kein quality/ hat. validateQualityExport haette das stale
+    // index.json weiter als gueltig gelesen (derselbe Stale-QC-Feed-Klasse wie X4/T2).
+    fs.rmSync(qoutDir, { recursive: true, force: true });
+    fs.mkdirSync(qoutDir, { recursive: true });
     console.warn('::warning::findash-export: outputs/quality/index.json absent — QC board (quality/) NOT exported (optional feed, older local run).');
     return { boards: 0 };
   }

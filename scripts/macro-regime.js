@@ -115,11 +115,21 @@ function main() {
   // of the whole store. `--history` may be a shard dir or the legacy file path;
   // derive the prices dir either way. Legacy-Fallback lives in loadShard/loadAll.
   const pricesDir = args.history.endsWith('.json') ? path.dirname(args.history) : args.history;
+  // BH: --history <datei.json> naming a file OTHER than the default legacy filename
+  // (e.g. a test fixture) was silently ignored — only its parent dir fed the
+  // shard/legacy loader below, which always looks for the hardcoded 'history.json'
+  // inside that dir. An explicitly named file must be read verbatim. Default path
+  // (basename === legacy filename) keeps using the shard-aware loader unchanged.
+  const isCustomHistoryFile = args.history.endsWith('.json') && path.basename(args.history) !== path.basename(PRICES_PATH);
   let series;
   try {
-    series = priceStore.loadShard(pricesDir, priceStore.shardOf(args.ticker))[args.ticker];
-    // pre-migration window: no shards yet → loadShard returned {} → read legacy
-    if (series === undefined) series = priceStore.loadAll(pricesDir)[args.ticker];
+    if (isCustomHistoryFile) {
+      series = JSON.parse(fs.readFileSync(args.history, 'utf8'))[args.ticker];
+    } else {
+      series = priceStore.loadShard(pricesDir, priceStore.shardOf(args.ticker))[args.ticker];
+      // pre-migration window: no shards yet → loadShard returned {} → read legacy
+      if (series === undefined) series = priceStore.loadAll(pricesDir)[args.ticker];
+    }
   } catch (e) {
     console.error('[macro-regime] cannot read/parse price history in ' + pricesDir + ': ' + e.message + ' — writing empty fallback');
     writeEmptyFallback(args);
