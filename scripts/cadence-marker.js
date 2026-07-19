@@ -10,6 +10,7 @@
 //        node scripts/cadence-marker.js --selftest
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const FIELD_MAP = { weekly: 'last_weekly_run', monthly: 'last_monthly_run' };
 
@@ -21,6 +22,31 @@ function stampMarker(existing, field, nowIso) {
   return Object.assign({}, base, { schema: base.schema || 'cadence-heartbeat/v1', [key]: nowIso });
 }
 
+// BH-128: reine, testbare Datei-I/O ohne process.exit (run() ist nur noch der
+// duenne CLI-Wrapper drumherum). Zwei Fixes gegenueber vorher:
+//   1. atomarer Schreib (writeFileAtomic statt writeFileSync) — ein abgebrochener
+//      Schreibvorgang (CI-Timeout/SIGKILL) truncierte vorher die Datei; genau so
+//      ein Truncat war der wahrscheinlichste Ausloeser des Parse-Fehlers unten.
+//   2. existiert die Datei, ist aber nicht parsebar, wird sie NICHT still als
+//      "existing=null" behandelt (das liess stampMarker ein Teilobjekt schreiben,
+//      das das jeweils andere Feld — z.B. last_monthly_run — verlor) — stattdessen
+//      wird die korrupte Datei gesichert und laut gewarnt.
+function writeMarker(file, field, nowIso) {
+  let existing = null;
+  if (fs.existsSync(file)) {
+    try { existing = JSON.parse(fs.readFileSync(file, 'utf8')); }
+    catch (e) {
+      const backup = file + '.corrupt-' + Date.now() + '.json';
+      try { fs.copyFileSync(file, backup); } catch (_) { /* best effort */ }
+      console.warn(`cadence-marker — ${file} nicht lesbar/parsebar (${e.message}); korrupte Datei gesichert nach ${backup}, lege neu an (Sibling-Feld ggf. verloren)`);
+    }
+  }
+  const updated = stampMarker(existing, field, nowIso);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  writeFileAtomic(file, JSON.stringify(updated, null, 2) + '\n');
+  return updated;
+}
+
 function run() {
   const argv = process.argv;
   const get = (flag, def) => { const i = argv.indexOf(flag); return i >= 0 && argv[i + 1] ? argv[i + 1] : def; };
@@ -30,12 +56,7 @@ function run() {
     console.error(`::error::cadence-marker — --field muss weekly oder monthly sein (war: "${field}")`);
     process.exit(1);
   }
-  let existing = null;
-  try { existing = JSON.parse(fs.readFileSync(file, 'utf8')); }
-  catch (e) { console.warn(`cadence-marker — ${file} nicht lesbar (${e.message}), lege neu an`); }
-  const updated = stampMarker(existing, field, new Date().toISOString());
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, JSON.stringify(updated, null, 2) + '\n');
+  const updated = writeMarker(file, field, new Date().toISOString());
   console.log(`cadence-marker: ${FIELD_MAP[field]}=${updated[FIELD_MAP[field]]} -> ${file}`);
   process.exit(0);
 }
@@ -70,6 +91,6 @@ function selftest() {
   process.exit(fail ? 1 : 0);
 }
 
-module.exports = { stampMarker, FIELD_MAP };
+module.exports = { stampMarker, FIELD_MAP, writeMarker };
 if (process.argv.includes('--selftest')) selftest();
 else if (require.main === module) run();

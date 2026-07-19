@@ -52,6 +52,19 @@ function scanSnapshots(snapDir) {
   return { routable, noSector, labels };
 }
 
+// Grow-only union so a single day's missing label (e.g. a sector absent from
+// today's partial pull) never gets treated as "new" tomorrow.
+// BH-125: a genuinely NEW (not-yet-baselined) label must NOT enter the union in
+// the SAME run that flags it — merging it immediately clears the alarm (next
+// run's baselineSet already contains it -> newLabels=[] -> a real Yahoo taxonomy
+// rename goes silent after one warning). Only merge labels already known, or
+// everything on a true first-ever run (baseline null — nothing to alarm on yet).
+function mergeLabels(baselineLabels, todayLabels, baselineExists) {
+  const baselineSet = new Set(baselineLabels);
+  const labelsToMerge = baselineExists ? todayLabels.filter((l) => baselineSet.has(l)) : todayLabels;
+  return Array.from(new Set([...baselineLabels, ...labelsToMerge])).sort();
+}
+
 function main() {
   const { routable, noSector, labels } = scanSnapshots(SNAP_DIR);
   const share = routable > 0 ? noSector / routable : 0;
@@ -63,9 +76,7 @@ function main() {
   const todayLabels = Array.from(labels).sort();
   const newLabels = todayLabels.filter((l) => !baselineSet.has(l));
 
-  // Grow-only union so a single day's missing label (e.g. a sector absent from
-  // today's partial pull) never gets treated as "new" tomorrow.
-  const mergedLabels = Array.from(new Set([...baselineLabels, ...todayLabels])).sort();
+  const mergedLabels = mergeLabels(baselineLabels, todayLabels, !!baseline);
   fs.mkdirSync(path.dirname(BASELINE_PATH), { recursive: true });
   writeJsonAtomic(BASELINE_PATH, { labels: mergedLabels, updatedAt: new Date().toISOString() });
   console.log('Baseline updated: ' + BASELINE_PATH + ' (' + mergedLabels.length + ' known labels)');
@@ -89,4 +100,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { scanSnapshots };
+module.exports = { scanSnapshots, mergeLabels };

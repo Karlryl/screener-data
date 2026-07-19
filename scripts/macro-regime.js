@@ -71,17 +71,39 @@ function computeRegimes(series, maPeriod) {
 // audit F-A-2026-06-21: write the present-but-empty regime output and exit 0,
 // so a missing/corrupt prices file degrades gracefully instead of throwing and
 // failing the daily-pull workflow step.
+//
+// BH-138: this used to CLOBBER args.out unconditionally — the producer recomputes
+// the whole file every run, so ONE bad day overwrote a last-known-good `regimes`
+// map with an empty one. Any board-history vintage written that day (write-board-
+// history.js regimeForDate) permanently froze 'unknown' for that date, even though
+// a perfectly good regime existed seconds earlier. Fix: leave an EXISTING args.out
+// untouched (readers keep serving the last good regimes) and record the failure in
+// a sibling *-error.json sidecar instead. Only a true first-ever run (no prior
+// args.out) gets the empty placeholder — there is no "last good" to preserve.
+function errorSidecarPath(outPath) {
+  const dir = path.dirname(outPath);
+  const base = path.basename(outPath, path.extname(outPath));
+  return path.join(dir, base + '-error.json');
+}
+
 function writeEmptyFallback(args) {
   const outDir = path.dirname(args.out);
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-  writeFileAtomic(args.out, JSON.stringify({
+  writeFileAtomic(errorSidecarPath(args.out), JSON.stringify({
     asOf: new Date().toISOString(),
     ticker: args.ticker,
     error: 'no_price_data',
-    regimes: {},
-    summary: { total: 0, BULL: 0, BEAR: 0, SIDEWAYS: 0 },
-    current: null
-  }));
+  }, null, 2));
+  if (!fs.existsSync(args.out)) {
+    writeFileAtomic(args.out, JSON.stringify({
+      asOf: new Date().toISOString(),
+      ticker: args.ticker,
+      error: 'no_price_data',
+      regimes: {},
+      summary: { total: 0, BULL: 0, BEAR: 0, SIDEWAYS: 0 },
+      current: null
+    }));
+  }
 }
 
 function main() {
@@ -138,4 +160,9 @@ function main() {
   console.log('Written: ' + args.out);
 }
 
-main();
+// BH-138 testability: expose the pure/IO pieces and guard main() behind
+// require.main so a test can `require()` this module (e.g. to hermetically
+// exercise writeEmptyFallback) without triggering a real CLI run — same
+// pattern already used by every sibling watcher/state script in this dir.
+module.exports = { computeRegimes, writeEmptyFallback, errorSidecarPath };
+if (require.main === module) main();

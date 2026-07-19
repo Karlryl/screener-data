@@ -53,15 +53,21 @@ function countOverCap(snapDir) {
   return { usOver, foreignOver };
 }
 
+// BH-124: shared jump predicate — same condition checkJump alerts on, reused
+// by updateBaseline() so an alarming bucket can be kept OUT of tomorrow's
+// reference (see there).
+function isBucketJump(todayVal, prevVal) {
+  if (prevVal === null || prevVal === 0) return false; // no history yet, or nothing to jump from
+  return Math.abs((todayVal - prevVal) / prevVal) > JUMP_THRESHOLD;
+}
+
 function checkJump(today, baseline) {
   const problems = [];
   for (const bucket of ['usOver', 'foreignOver']) {
     const prevVal = baseline && Number.isFinite(baseline.last && baseline.last[bucket]) ? baseline.last[bucket] : null;
-    if (prevVal === null || prevVal === 0) continue; // no history yet, or nothing to jump from
+    if (!isBucketJump(today[bucket], prevVal)) continue;
     const jump = (today[bucket] - prevVal) / prevVal;
-    if (Math.abs(jump) > JUMP_THRESHOLD) {
-      problems.push(`${bucket}: ${today[bucket]} vs yesterday ${prevVal} (${(jump * 100).toFixed(0)}%)`);
-    }
+    problems.push(`${bucket}: ${today[bucket]} vs yesterday ${prevVal} (${(jump * 100).toFixed(0)}%)`);
   }
   return problems;
 }
@@ -82,12 +88,24 @@ function updateBaseline(baseline, today, dateStr) {
     // ersten Lauf. Konsistent mit watch-exchange-coverage.js (replace-not-append = take latest).
     // Tradeoff: ein rein spurioser (nicht-korrigierender) Rerun kann einen fail-loud-Alarm am
     // Folgetag ausloesen (sicher); das Pinnen des ersten Werts wuerde stattdessen eine echte
-    // Korrektur still verwerfen.
+    // Korrektur still verwerfen. BH-124's Freeze greift hier bewusst NICHT — ein Rerun IST
+    // die Korrektur, kein zweiter unabhaengiger Tageswert.
     return { prev: (baseline.prev != null ? baseline.prev : null), last: today, date: dateStr, updatedAt: new Date().toISOString() };
+  }
+  // BH-124: a NEW calendar day's bucket that jumped >25% vs the reference must NOT
+  // become tomorrow's reference — otherwise persistent corruption (100->50->50->...)
+  // reads as a healthy 0% day-over-day move from the second alarm onward. Freeze
+  // that bucket at its last known-good value; only a bucket that did NOT jump
+  // advances normally.
+  const prevLast = baseline && baseline.last ? baseline.last : {};
+  const nextLast = {};
+  for (const bucket of ['usOver', 'foreignOver']) {
+    const prevVal = Number.isFinite(prevLast[bucket]) ? prevLast[bucket] : null;
+    nextLast[bucket] = isBucketJump(today[bucket], prevVal) ? prevVal : today[bucket];
   }
   return {
     prev: baseline && baseline.last ? baseline.last : null,
-    last: today,
+    last: nextLast,
     date: dateStr,
     updatedAt: new Date().toISOString(),
   };
@@ -116,4 +134,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { countOverCap, checkJump, updateBaseline };
+module.exports = { countOverCap, checkJump, updateBaseline, isBucketJump };

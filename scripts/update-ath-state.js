@@ -72,6 +72,14 @@ function advanceEntry(entry, series) {
   const newest = byDate[byDate.length - 1];
   out.lastClose = newest.close;
   out.lastDate = newest.date;
+  // BH-184: a corrupt/missing out.ath (e.g. null) must not silently become the
+  // 400-day window's high via JS coercion (`b.close > null` -> `b.close > 0`,
+  // true for every close since byDate is already filtered to close > 0) — that
+  // would plant a fake, too-low ATH instead of the honest "no display until
+  // reseed". Schema-guard before the bump loop: non-finite/<=0 ath -> reseed.
+  if (!out.needsReseed && !(Number.isFinite(out.ath) && out.ath > 0)) {
+    out.needsReseed = true;
+  }
   if (!out.needsReseed) {
     for (const b of byDate) {
       if (b.close > out.ath) { out.ath = b.close; out.athDate = b.date; }
@@ -88,6 +96,15 @@ function displayFor(entry) {
     distancePct: +((entry.lastClose / entry.ath - 1) * 100).toFixed(1), // <=0 unter ATH
     athDate: entry.athDate,
     monthsAgo: monthsBetween(entry.athDate, entry.lastDate),
+    // BH-129: lastDate roh durchreichen — der Export hatte bislang KEINERLEI
+    // Zeilen-Datum im ath-Payload, nur den globalen state.asOf-Gesamtstempel.
+    // Bei einem lueckenhaften Preis-Store (Ticker seit Wochen ohne neuen Bar)
+    // sah eine 32-Tage-alte distancePct unter frischem asOf wie eine heutige
+    // Zahl aus. displayFor kennt state.asOf selbst nicht (wird ihm nicht
+    // durchgereicht) — lastDate roh exportieren laesst jeden Konsumenten (z.B.
+    // Findash) selbst entscheiden, ab wann "zu alt" ist, statt hier eine
+    // Schwelle zu erfinden.
+    lastDate: entry.lastDate,
   };
 }
 
@@ -113,8 +130,19 @@ function main() {
   const stateFile = path.resolve(getArg('--state', DEFAULT_STATE));
   const pricesDir = path.resolve(getArg('--prices-dir', DEFAULT_PRICES));
   let state;
+  if (!fs.existsSync(stateFile)) {
+    console.log('[ath] kein ath-state.json — No-op (Seeding via backfill-prices-max.js)');
+    return;
+  }
+  // BH-137: ENOENT (Bootstrap, legitimes No-op) und ein EXISTIERENDER, aber
+  // kaputter/truncierter committeter State duerfen nicht denselben stillen
+  // No-op-Pfad nehmen — sonst friert ein korrupter Vertrag lautlos ein statt
+  // aufzufallen. existsSync trennt beide Faelle; ein Parse-Fehler auf einer
+  // vorhandenen Datei ist jetzt fail-loud (wie loadHistoryOrDie unten).
   try { state = JSON.parse(fs.readFileSync(stateFile, 'utf8')); }
-  catch (_) { console.log('[ath] kein ath-state.json — No-op (Seeding via backfill-prices-max.js)'); return; }
+  catch (e) {
+    throw new Error('[ath] ' + stateFile + ' existiert, ist aber nicht lesbar/parsebar (' + e.message + ') — fail-loud statt stillem No-op auf einem korrupten committeten Vertrag.');
+  }
   const entries = state.entries || {};
   const tickers = Object.keys(entries);
   if (!tickers.length) { console.log('[ath] ath-state leer — No-op'); return; }

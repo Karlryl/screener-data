@@ -51,6 +51,17 @@ function countByExchange(snapDir) {
   return counts;
 }
 
+// BH-123: shared alarm predicate — same condition checkDrift alerts on, reused
+// by updateBaseline() so an alarming count can be kept OUT of the rolling
+// window (see there).
+function isExchangeAlarming(todayCount, history) {
+  if (history.length < WINDOW) return false; // still seeding — not enough history to judge
+  const med = median(history);
+  if (med === null || med <= 0) return false;
+  if (todayCount === 0) return true;
+  return (med - todayCount) / med > DROP_THRESHOLD;
+}
+
 function checkDrift(today, baseline) {
   const alerts = [];
   // '_'-prefixed keys (e.g. _lastUpdated) are metadata, not exchanges — same
@@ -59,18 +70,13 @@ function checkDrift(today, baseline) {
   for (const ex of exchanges) {
     const todayCount = today[ex] || 0;
     const history = (baseline[ex] || []).filter(Number.isFinite);
-    if (history.length < WINDOW) continue; // still seeding — not enough history to judge
+    if (!isExchangeAlarming(todayCount, history)) continue;
     const med = median(history);
-    if (med === null) continue;
-    if (med > 0 && todayCount === 0) {
+    if (todayCount === 0) {
       alerts.push(`${ex}: dropped to 0 (median ${med})`);
-      continue;
-    }
-    if (med > 0) {
+    } else {
       const drop = (med - todayCount) / med;
-      if (drop > DROP_THRESHOLD) {
-        alerts.push(`${ex}: ${todayCount} vs median ${med} (-${(drop * 100).toFixed(0)}%)`);
-      }
+      alerts.push(`${ex}: ${todayCount} vs median ${med} (-${(drop * 100).toFixed(0)}%)`);
     }
   }
   return alerts;
@@ -83,16 +89,32 @@ function checkDrift(today, baseline) {
 // without it (current on-disk format: plain {"Shenzhen":[68,68,...], ...}) are
 // backward-compatible — their first post-fix run has no marker to match, so it
 // appends exactly like before and simply starts carrying the marker from then on.
+// BH-123: an alarming count (median drop / drop-to-zero, same threshold as
+// checkDrift) must NOT enter the rolling window — pushing it lets the median
+// self-heal toward the corruption within ~WINDOW/2 runs (production: Shenzhen/
+// Shanghai/Taiwan/... went silent after ~7 daily zeros). Freeze that exchange's
+// history on alarm days so the healthy reference stays anchored until a human
+// fixes the root cause and the count recovers.
+// ponytail: freezing skips the same-day-rerun "replace last slot" logic for an
+// exchange that alarmed on run 1 and recovers on a same-day rerun — the rerun
+// then appends instead of replacing (one extra window slot for that day).
+// Narrow edge case (alarm+recovery inside one run); the WINDOW slice still
+// self-corrects within 14 days, not worth a per-exchange date ledger.
 function updateBaseline(baseline, today, dateStr) {
   const sameDayRerun = baseline._lastUpdated != null && baseline._lastUpdated === dateStr;
   const next = { ...baseline };
   const exchanges = new Set([...Object.keys(baseline), ...Object.keys(today)].filter((k) => !k.startsWith('_')));
   for (const ex of exchanges) {
     const history = Array.isArray(baseline[ex]) ? baseline[ex].slice() : [];
+    const todayCount = today[ex] || 0;
+    if (isExchangeAlarming(todayCount, history.filter(Number.isFinite))) {
+      next[ex] = history.slice(-WINDOW); // frozen — today's alarming count is not pushed
+      continue;
+    }
     if (sameDayRerun && history.length > 0) {
-      history[history.length - 1] = today[ex] || 0; // replace today's already-recorded entry, not append
+      history[history.length - 1] = todayCount; // replace today's already-recorded entry, not append
     } else {
-      history.push(today[ex] || 0);
+      history.push(todayCount);
     }
     next[ex] = history.slice(-WINDOW);
   }
@@ -124,4 +146,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { countByExchange, checkDrift, updateBaseline, median };
+module.exports = { countByExchange, checkDrift, updateBaseline, median, isExchangeAlarming };
