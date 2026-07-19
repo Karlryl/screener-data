@@ -171,8 +171,15 @@ function findTsv(dir, base) {
 }
 
 // ─── Merge / dedupe (history cache) ─────────────────────────────────────
+// audit/fix BH-025: accession+date+code+shares alone collides two REAL
+// distinct lots of the same accession/date/code/share-count but different
+// price or owner (e.g. gestueckelte Fills). Widen the identity key with
+// price, acquired/disposed and the reporting owner so legitimate multi-lot
+// rows stop colliding.
 function txnKey(t) {
-  return [t.accessionNumber, t.transactionDate, t.transactionCode, t.transactionShares].join('|');
+  return [t.accessionNumber, t.transactionDate, t.transactionCode, t.transactionShares,
+    t.transactionPricePerShare, t.acquiredDisposed, t.rptOwnerCik || t.reportingPersonName || ''
+  ].join('|');
 }
 function normDate(s) {
   // SEC data-set dates are `DD-MON-YYYY` (e.g. 08-MAY-2026) — normalise to
@@ -252,15 +259,20 @@ async function processQuarter(y, q, watchlistSymbols, byTicker) {
   console.log('[' + tag + '] submissions=' + sub.rows.length +
     ' watchlist-issuer filings=' + accToSub.size);
 
-  // 2. REPORTINGOWNER → first owner per accession (the filer of record).
+  // 2. REPORTINGOWNER → ALL owners per accession (joint/group filings list
+  //    several reporting persons under one accession).
+  // audit/fix BH-022: "first owner wins" silently dropped every co-filer but
+  // the first. The dataset still ties a transaction to the ACCESSION, not to
+  // one owner, so we still can't attribute a row to ONE specific owner — we
+  // keep the first owner as the legacy single-owner fields (back-compat) and
+  // additionally attach the full owners[] list (filing-wide, txn-agnostic).
   const own = parseTsv(ownPath, ['ACCESSION_NUMBER', 'RPTOWNERCIK', 'RPTOWNERNAME',
     'RPTOWNER_RELATIONSHIP', 'RPTOWNER_TITLE']);
-  const accToOwner = new Map();
+  const accToOwners = new Map();
   for (const r of own.rows) {
     if (!accToSub.has(r.ACCESSION_NUMBER)) continue;       // only watchlist filings
-    if (accToOwner.has(r.ACCESSION_NUMBER)) continue;      // first owner wins
     const relRaw = (r.RPTOWNER_RELATIONSHIP || '').toLowerCase();
-    accToOwner.set(r.ACCESSION_NUMBER, {
+    const ownerRec = {
       rptOwnerCik: r.RPTOWNERCIK || null,
       reportingPersonName: r.RPTOWNERNAME || null,
       reportingPersonRelationship: {
@@ -269,7 +281,9 @@ async function processQuarter(y, q, watchlistSymbols, byTicker) {
         isTenPercentOwner: /10|ten\s*percent/.test(relRaw),
         officerTitle: r.RPTOWNER_TITLE || null
       }
-    });
+    };
+    if (!accToOwners.has(r.ACCESSION_NUMBER)) accToOwners.set(r.ACCESSION_NUMBER, []);
+    accToOwners.get(r.ACCESSION_NUMBER).push(ownerRec);
   }
 
   // 3. NONDERIV_TRANS → join, filter to watchlist filings, merge.
@@ -281,7 +295,8 @@ async function processQuarter(y, q, watchlistSymbols, byTicker) {
     const subInfo = accToSub.get(r.ACCESSION_NUMBER);
     if (!subInfo) continue;
     considered++;
-    const owner = accToOwner.get(r.ACCESSION_NUMBER) || {};
+    const owners = accToOwners.get(r.ACCESSION_NUMBER) || [];
+    const owner = owners[0] || {};
     const code = (r.TRANS_CODE || '').trim();
     const txn = {
       transactionDate: normDate(r.TRANS_DATE),
@@ -293,9 +308,16 @@ async function processQuarter(y, q, watchlistSymbols, byTicker) {
       reportingPersonName: owner.reportingPersonName || null,
       reportingPersonRelationship: owner.reportingPersonRelationship || null,
       rptOwnerCik: owner.rptOwnerCik || null,
+      owners: owners,
       accessionNumber: r.ACCESSION_NUMBER,
       filingDate: subInfo.filingDate,
       issuerTradingSymbol: subInfo.ticker,
+      // audit/fix BH-023 (note, no code change): AFF10B5ONE is a SUBMISSION-
+      // level column in this quarterly TSV dataset — there is no per-
+      // transaction footnote/id column here (unlike the live XML path in
+      // pull-insider-form4.js), so a per-txn split isn't derivable from this
+      // data source. Stays filing-wide; that's the source's own granularity,
+      // not an implementation gap.
       isTenB5One: subInfo.isTenB5One
     };
     if (code === 'P') pBuys++;

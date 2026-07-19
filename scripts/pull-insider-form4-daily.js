@@ -19,9 +19,13 @@
  *   parseForm4Xml works on it directly.
  *
  * Merges into external-data/sec-form4-cache.json (shape shared with
- * pull-insider-form4.js: { updatedAt, userAgent, lookbackDays, byTicker }).
- * Transactions deduped by accession+date+code+shares; anything older than
- * 180 days is dropped at merge time to keep the cache bounded.
+ * pull-insider-form4.js: { updatedAt, userAgent, lookbackDays,
+ * lastIndexedDate, byTicker }). Transactions deduped by accession+date+
+ * code+shares+price+acquiredDisposed+owner; anything older than 180 days is
+ * dropped at merge time to keep the cache bounded. lastIndexedDate is the
+ * resumability cursor (BH-020): targetDates() fills the gap from there to
+ * yesterday instead of a fixed DAYS window, so a missed run doesn't
+ * permanently drop filings.
  *
  * SEC rules respected: contact User-Agent, gzip Accept-Encoding (the index
  * is large), ≥125ms throttle (≤8 req/s), atomic writes (lib/atomic-write),
@@ -63,6 +67,11 @@ const RATE_DELAY_MS = 125;          // ≤8 req/s, under SEC's 10/s/IP limit
 // a ~10-min IP block. Wait 30 s and retry WITHOUT counting it as an error.
 const RATE_LIMIT_BACKOFF_MS = 30000;
 const FORM4_LOOKBACK_DAYS = 180;    // drop txns older than this at merge time
+// audit/fix BH-020: hard cap on how many trading days a single run will
+// catch up when resuming after a gap (CI outage, missed runs). Bounds the
+// number of daily-index fetches in one run; days beyond the cap stay
+// unindexed and are logged loudly instead of silently, forever, dropped.
+const MAX_CATCHUP_DAYS = 60;
 
 const DAILY_INDEX_URL = (y, q, ymd) =>
   `https://www.sec.gov/Archives/edgar/daily-index/${y}/QTR${q}/form.${ymd}.idx`;
@@ -153,23 +162,61 @@ function parseYmd(s) {
   return new Date(Date.UTC(y, m - 1, d));
 }
 function isWeekend(d) { const wd = d.getUTCDay(); return wd === 0 || wd === 6; }
+// audit/fix BH-020: string-compare is safe for zero-padded YYYYMMDD.
+function maxYmd(a, b) {
+  if (!a) return b || null;
+  if (!b) return a;
+  return a > b ? a : b;
+}
 
 // Build the list of target YYYYMMDD strings. The index is posted ~22:00 ET,
 // so "today" is usually not yet available — start from yesterday and walk
-// back DAYS *trading* days (skipping weekends; SEC posts no index then).
-function targetDates() {
+// back N *trading* days (skipping weekends; SEC posts no index then).
+//
+// audit/fix BH-020: N used to be the fixed DAYS env knob (default 5) with no
+// memory of what was actually indexed last run — a CI/SEC outage lasting
+// longer than DAYS trading days let filings fall permanently out of the
+// cache, unnoticed. If `lastIndexedDate` (persisted in the cache by main())
+// is given, target from the day AFTER it through yesterday instead, capped
+// at MAX_CATCHUP_DAYS with a loud warning for anything beyond the cap. With
+// no cursor (first run / fresh cache) we fall back to the old fixed-DAYS
+// behaviour.
+function targetDates(lastIndexedDate) {
   if (SINGLE_DATE) {
     if (!/^\d{8}$/.test(SINGLE_DATE)) {
       throw new Error('DATE must be YYYYMMDD, got: ' + SINGLE_DATE);
     }
     return [SINGLE_DATE];
   }
+  const yesterday = new Date();
+  yesterday.setUTCHours(0, 0, 0, 0);
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+
+  let wanted = DAYS;
+  if (lastIndexedDate && /^\d{8}$/.test(lastIndexedDate)) {
+    const since = parseYmd(lastIndexedDate);
+    let gapDays = 0;
+    const probe = new Date(yesterday);
+    let guard2 = 0;
+    while (probe.getTime() > since.getTime() && guard2 < (MAX_CATCHUP_DAYS + 30) * 3) {
+      guard2++;
+      if (!isWeekend(probe)) gapDays++;
+      probe.setUTCDate(probe.getUTCDate() - 1);
+    }
+    if (gapDays > MAX_CATCHUP_DAYS) {
+      console.warn('[coverage-gap] last indexed date ' + lastIndexedDate + ' is ' +
+        gapDays + ' trading day(s) behind — capping catch-up to ' + MAX_CATCHUP_DAYS +
+        ' day(s); ' + (gapDays - MAX_CATCHUP_DAYS) + ' older day(s) will remain unindexed.');
+      wanted = MAX_CATCHUP_DAYS;
+    } else {
+      wanted = gapDays; // may be 0 (already caught up, e.g. re-run same day)
+    }
+  }
+
   const out = [];
-  const cursor = new Date();
-  cursor.setUTCHours(0, 0, 0, 0);
-  cursor.setUTCDate(cursor.getUTCDate() - 1); // start at yesterday
+  const cursor = new Date(yesterday);
   let guard = 0;
-  while (out.length < DAYS && guard < DAYS * 3 + 14) {
+  while (out.length < wanted && guard < wanted * 3 + 14) {
     guard++;
     if (!isWeekend(cursor)) out.push(ymd(cursor));
     cursor.setUTCDate(cursor.getUTCDate() - 1);
@@ -230,30 +277,63 @@ function parseDailyForm4Rows(text) {
   // optional '/A' amendment suffix in both the fast-path prefilter and regex.
   // audit F-A-2026-06-22: keep the '/A' amendment optional but NON-capturing — a
   // capturing (\/A)? shifted m[1..4], making cik read the amendment group (NaN).
-  const re = /^4(?:\/A)?\s+.+?\s+(\d+)\s+(\d{8})\s+(edgar\/data\/\d+\/([0-9-]+)\.txt)\s*$/;
+  // audit/fix BH-024 (2026-07-19): now capturing '/A' AGAIN, deliberately —
+  // callers need to tell an amendment apart from an original to purge-and-
+  // replace instead of additively merging (see isAmendment below) — every
+  // following group index is bumped by one (m[2]=cik, m[3]=date, m[4]=
+  // fileName, m[5]=accession).
+  const re = /^(4(?:\/A)?)\s+.+?\s+(\d+)\s+(\d{8})\s+(edgar\/data\/\d+\/([0-9-]+)\.txt)\s*$/;
   for (const line of lines) {
     if (line.charAt(0) !== '4') continue;       // FormType column starts with '4' (covers '4' and '4/A')
     const m = re.exec(line);
     if (!m) continue;
     rows.push({
-      cik: parseInt(m[1], 10),
-      dateFiled: m[2],
-      fileName: m[3],
-      accession: m[4]                            // dotted, e.g. 0001105965-26-000001
+      cik: parseInt(m[2], 10),
+      dateFiled: m[3],
+      fileName: m[4],
+      accession: m[5],                          // dotted, e.g. 0001105965-26-000001
+      // audit/fix BH-024: needed to treat a 4/A as a correction (replace) of
+      // the original filing's txns rather than an additive new filing — the
+      // amendment carries its OWN accession, so accession-keyed dedup alone
+      // never recognises it as the same underlying report.
+      isAmendment: m[1] === '4/A'
     });
   }
   return rows;
 }
 
 // ─── Merge / dedupe ─────────────────────────────────────────────────────
+// audit/fix BH-025: accession+date+code+shares alone collides two REAL
+// distinct lots of the same accession/date/code/share-count but different
+// price or owner (e.g. a stock split into 100@$10 + 100@$12 same day) — the
+// second is silently dropped as a "duplicate". Widen the identity key with
+// price, acquired/disposed and the reporting person so legitimate multi-lot
+// rows stop colliding.
 function txnKey(t) {
-  return [t.accessionNumber, t.transactionDate, t.transactionCode, t.transactionShares].join('|');
+  return [t.accessionNumber, t.transactionDate, t.transactionCode, t.transactionShares,
+    t.transactionPricePerShare, t.acquiredDisposed, t.reportingPersonName || ''].join('|');
 }
 function withinLookback(dateStr, lookbackDays) {
   if (!dateStr) return false;
   const t = Date.parse(dateStr);
   if (!Number.isFinite(t)) return false;
   return (Date.now() - t) <= lookbackDays * 86400000;
+}
+
+// audit/fix BH-024: a 4/A carries its own accession number, so plain
+// accession-keyed dedup (txnKey) never recognises it as a correction of the
+// original filing — original and amendment txns would just coexist. Drop
+// the prior cached txns for the SAME reporting period before the amendment's
+// fresh txns are merged in below.
+// ponytail: scoped by ticker+periodOfReport, not per-owner — good enough for
+// the overwhelming single-owner-per-filing case; a joint-filing amendment
+// could in theory also purge an untouched co-filer's txns for that period.
+// Upgrade to period+owner if that surfaces in practice.
+function purgeAmendedPeriod(entry, periodOfReport) {
+  if (!entry || !Array.isArray(entry.transactions) || !periodOfReport) return 0;
+  const before = entry.transactions.length;
+  entry.transactions = entry.transactions.filter(t => t.periodOfReport !== periodOfReport);
+  return before - entry.transactions.length;
 }
 
 // Merge a batch of new txns into byTicker[ticker], dedupe by txnKey, and
@@ -285,11 +365,31 @@ function mergeTransactions(byTicker, ticker, cikPadded, name, newTxns) {
   return added;
 }
 
-function writeCache(byTicker) {
+// audit/fix BH-026: pure predicate for the bottom-of-main total-failure gate
+// — unit-testable without mocking the SEC network calls.
+function _isTotalFailure(fetched, errors, parseErrors) {
+  return fetched === 0 && (errors > 0 || parseErrors > 0);
+}
+
+// audit/fix BH-021: pick the cache merge key from the FILING's own
+// issuerTradingSymbol (all txns in one filing share it — issuer-level
+// field), falling back to the watchlist ticker only when the filing omits
+// it. Pulled out as a pure function so the "first-wins CIK collision"
+// regression is unit-testable.
+function resolveMergeTicker(parsedTxns, fallbackTicker) {
+  const filedSymbol = (parsedTxns[0] && parsedTxns[0].issuerTradingSymbol)
+    ? String(parsedTxns[0].issuerTradingSymbol).toUpperCase().trim() : '';
+  return filedSymbol || fallbackTicker;
+}
+
+function writeCache(byTicker, lastIndexedDate) {
   writeFileAtomic(FORM4_CACHE_PATH, JSON.stringify({
     updatedAt: new Date().toISOString(),
     userAgent: USER_AGENT,
     lookbackDays: FORM4_LOOKBACK_DAYS,
+    // audit/fix BH-020: persisted so the NEXT run's targetDates() knows where
+    // it left off instead of always looking back a fixed DAYS window.
+    lastIndexedDate: lastIndexedDate || null,
     byTicker
   }, null, 2));
 }
@@ -302,17 +402,28 @@ async function main() {
   console.log('[maps] watchlist US tickers (CIK known): ' + watchlistTickers.size +
     ' → ' + watchlistCiks.size + ' distinct issuer CIKs');
 
-  const dates = targetDates();
-  console.log('[dates] targeting ' + dates.length + ' date(s): ' + dates.join(', '));
-
+  // audit/fix BH-020: load the cache BEFORE computing target dates so the
+  // last-successfully-indexed cursor (if any) can drive the date range.
   const existing = readJsonSafe(FORM4_CACHE_PATH) || {};
   const byTicker = (existing.byTicker && typeof existing.byTicker === 'object')
     ? existing.byTicker : {};
 
+  const dates = targetDates(existing.lastIndexedDate || null);
+  console.log('[dates] targeting ' + dates.length + ' date(s): ' + dates.join(', '));
+
   let grandFetched = 0, grandHits = 0, grandAdded = 0, grandPBuys = 0, grandErrors = 0;
+  let grandParseErrors = 0;
   let fetchBudgetLeft = SAMPLE_LIMIT == null ? Infinity : SAMPLE_LIMIT;
 
-  for (const date of dates) {
+  // audit/fix BH-020: process oldest → newest so the "last indexed date"
+  // cursor only ever advances contiguously — if an older date's index fetch
+  // fails, the cursor stops there instead of jumping ahead to a later date
+  // that happened to succeed, which would silently paper over the gap.
+  let lastIndexedDate = existing.lastIndexedDate || null;
+  let cursorContiguous = true;
+  const processDates = dates.slice().reverse();
+
+  for (const date of processDates) {
     if (fetchBudgetLeft <= 0) {
       console.log('[sample] SAMPLE_LIMIT reached — stopping before date ' + date);
       break;
@@ -336,17 +447,23 @@ async function main() {
         catch (e2) {
           console.warn('[' + date + '] index fetch ERROR (post-backoff): ' + e2.message + ' — skipping date');
           grandErrors++;
+          cursorContiguous = false; // audit/fix BH-020: stop advancing lastIndexedDate past a gap
           await sleep(RATE_DELAY_MS);
           continue;
         }
       } else {
         console.warn('[' + date + '] index fetch ERROR: ' + e.message + ' — skipping date');
         grandErrors++;
+        cursorContiguous = false; // audit/fix BH-020: stop advancing lastIndexedDate past a gap
         await sleep(RATE_DELAY_MS);
         continue;
       }
     }
     await sleep(RATE_DELAY_MS);
+    // audit/fix BH-020: this date's index was successfully retrieved
+    // (whether it has rows or is a legitimate holiday/weekend 404) — advance
+    // the cursor as long as no earlier date in this run left a gap.
+    if (cursorContiguous) lastIndexedDate = date;
     if (idxRes.notFound) {
       console.log('[' + date + '] no daily index (holiday/weekend/not-yet-posted) — skipping');
       continue;
@@ -358,7 +475,7 @@ async function main() {
     console.log('[' + date + '] form-4 rows=' + allRows.length +
       ' watchlist hits=' + hits.length);
 
-    let dayFetched = 0, dayAdded = 0, dayPBuys = 0;
+    let dayFetched = 0, dayAdded = 0, dayPBuys = 0, dayParseErrors = 0;
     for (const hit of hits) {
       if (fetchBudgetLeft <= 0) {
         console.log('  [sample] SAMPLE_LIMIT reached mid-date — stopping');
@@ -397,12 +514,30 @@ async function main() {
       }
       await sleep(RATE_DELAY_MS);
       fetchBudgetLeft--;
-      dayFetched++; grandFetched++;
       if (docRes.notFound || !docRes.body) continue;
 
       let parsed;
       try { parsed = parseForm4Xml(docRes.body); }
-      catch (e) { continue; } // tolerate per-filing parse errors
+      catch (e) {
+        // audit/fix BH-026: count parse failures SEPARATELY from successful
+        // fetches — previously dayFetched/grandFetched were incremented
+        // before the parse attempt, so a run of all-200-but-unparsable
+        // filings looked identical to a healthy 0-hits day in the
+        // total-failure gate at the bottom of main().
+        dayParseErrors++; grandParseErrors++;
+        continue;
+      }
+      // Counted only once actually parsed — see BH-026 note above.
+      dayFetched++; grandFetched++;
+
+      // audit/fix BH-021: key the cache entry by the symbol the FILING
+      // itself reports (issuer-level <issuerTradingSymbol>), not by the
+      // first-wins watchlist ticker the CIK happened to resolve to — two
+      // watchlist tickers can share one CIK (share classes / dual listings)
+      // and first-wins silently folds the loser's filings under the
+      // winner's symbol. Fall back to the watchlist ticker only when the
+      // filing itself omits the symbol.
+      const mergeTicker = resolveMergeTicker(parsed, ticker);
 
       const filingDate = hit.dateFiled.slice(0, 4) + '-' +
         hit.dateFiled.slice(4, 6) + '-' + hit.dateFiled.slice(6, 8);
@@ -412,30 +547,41 @@ async function main() {
         t.filingDate = filingDate;
         // Prefer the symbol parsed from the filing; fall back to the
         // watchlist ticker the CIK resolved to.
-        if (!t.issuerTradingSymbol) t.issuerTradingSymbol = ticker;
+        if (!t.issuerTradingSymbol) t.issuerTradingSymbol = mergeTicker;
         newTxns.push(t);
         if (t.transactionCode === 'P') { dayPBuys++; grandPBuys++; }
       }
-      const added = mergeTransactions(byTicker, ticker, cikPadded, name, newTxns);
+      // audit/fix BH-024: a 4/A replaces (not adds to) the original filing's
+      // txns for the same reporting period — purge before merging.
+      if (hit.isAmendment) {
+        const period = parsed[0] && parsed[0].periodOfReport;
+        purgeAmendedPeriod(byTicker[mergeTicker], period);
+      }
+      const added = mergeTransactions(byTicker, mergeTicker, cikPadded, name, newTxns);
       dayAdded += added; grandAdded += added;
     }
 
     grandHits += hits.length;
     console.log('[' + date + '] done: fetched=' + dayFetched + ' txnsAdded=' +
-      dayAdded + ' P-buys=' + dayPBuys);
+      dayAdded + ' P-buys=' + dayPBuys + ' parseErrors=' + dayParseErrors);
 
+    // audit/fix BH-020: never move the persisted cursor BACKWARD — guards
+    // the SINGLE_DATE ad-hoc-backfill knob (an arbitrary, possibly older,
+    // single date) from regressing a cursor that's already further ahead.
+    const persistedCursor = maxYmd(existing.lastIndexedDate, lastIndexedDate);
     // Resumable: atomically re-write the full cache after every date.
-    writeCache(byTicker);
+    writeCache(byTicker, persistedCursor);
   }
 
   // Final write (covers the SINGLE_DATE / early-break paths).
-  writeCache(byTicker);
+  writeCache(byTicker, maxYmd(existing.lastIndexedDate, lastIndexedDate));
 
   const cacheTickers = Object.keys(byTicker).length;
   console.log('');
   console.log('Done. dates=' + dates.length + ' hits=' + grandHits +
     ' fetched=' + grandFetched + ' txnsAdded=' + grandAdded +
-    ' P-buys=' + grandPBuys + ' errors=' + grandErrors);
+    ' P-buys=' + grandPBuys + ' errors=' + grandErrors +
+    ' parseErrors=' + grandParseErrors);
   console.log('Cache: ' + FORM4_CACHE_PATH + ' (' + cacheTickers + ' tickers)');
 
   // audit/fix: 403 silent exit-0. If NOTHING was fetched but errors occurred
@@ -443,9 +589,12 @@ async function main() {
   // typically a systemic 403/UA/IP-block outage rather than a quiet holiday with
   // no filings. Exit non-zero so CI surfaces it instead of a green empty run.
   // (A genuine no-filings day fetches 0 with 0 errors and correctly stays exit 0.)
-  if (grandFetched === 0 && grandErrors > 0) {
+  // audit/fix BH-026: also trip on grandParseErrors — an all-200-but-
+  // unparsable run must not look like a healthy empty day either.
+  if (_isTotalFailure(grandFetched, grandErrors, grandParseErrors)) {
     console.error('TOTAL FAILURE: 0 filings fetched with ' + grandErrors +
-      ' error(s) — likely a systemic SEC outage / 403 / IP block. Exiting 1.');
+      ' error(s) / ' + grandParseErrors +
+      ' parse-error(s) — likely a systemic SEC outage / 403 / IP block. Exiting 1.');
     process.exit(1);
   }
 }
@@ -456,5 +605,8 @@ if (require.main === module) {
 
 module.exports = {
   parseDailyForm4Rows, targetDates, buildMaps, mergeTransactions,
-  _internals: { httpGet, quarterOf, ymd, parseYmd, withinLookback, txnKey }
+  _internals: {
+    httpGet, quarterOf, ymd, parseYmd, withinLookback, txnKey,
+    purgeAmendedPeriod, maxYmd, resolveMergeTicker, _isTotalFailure
+  }
 };

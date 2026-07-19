@@ -232,38 +232,79 @@ function _innerValue(xml) {
   return (v != null ? v : xml).trim();
 }
 
+// audit/fix BH-023: id -> footnote-text map, scanning every <footnotes>
+// block (there's normally one, but we stay defensive per the earlier
+// all-footnotes-blocks fix below). Real Form 4 XML wraps each footnote as
+// <footnote id="F1">text</footnote>; ids are referenced per-transaction via
+// <footnoteId id="F1"/> nested inside that transaction's own sub-elements
+// (verified against a live SEC filing, 2025-12, HIMS CIK 1773751).
+function _footnoteMap(xml) {
+  const map = {};
+  for (const fnBlock of _extractAll(xml, 'footnotes')) {
+    const re = /<footnote\b[^>]*\bid="([^"]+)"[^>]*>([\s\S]*?)<\/footnote>/g;
+    let m;
+    while ((m = re.exec(fnBlock)) !== null) map[m[1]] = m[2];
+  }
+  return map;
+}
+
+// audit/fix BH-023: every footnoteId referenced ANYWHERE inside one
+// transaction block (transactionCoding, transactionAmounts/…PricePerShare,
+// etc. can each carry their own <footnoteId id="X"/>).
+function _txnFootnoteIds(block) {
+  const ids = [];
+  const re = /<footnoteId\b[^>]*\bid="([^"]+)"/g;
+  let m;
+  while ((m = re.exec(block)) !== null) ids.push(m[1]);
+  return ids;
+}
+
 function parseForm4Xml(xml) {
   const txns = [];
 
   // Tag A1: issuer-level fields parsed once and attached to every txn for
   // downstream convenience.
   //   issuerTradingSymbol — <issuer><issuerTradingSymbol>SYM</issuerTradingSymbol>
-  //   isTenB5One — 10b5-1 trading-plan indicator. True if the submission
-  //     carries the structured <aff10b5One>1</aff10b5One> (or `true`) flag,
-  //     OR if any footnote text mentions a "10b5-1" / "10b5 1" plan (some
-  //     filers note the plan in free-text footnotes rather than the
-  //     structured element). Default false.
   const issuerBlock = _extractFirst(xml, 'issuer') || '';
   const issuerTradingSymbol =
     _innerValue(_extractFirst(issuerBlock, 'issuerTradingSymbol')) || null;
+  // audit/fix BH-024: <periodOfReport> is filing-wide (not wrapped in
+  // <value>), needed to correlate a 4/A amendment back to the original
+  // filing it corrects (same ticker + same reporting period).
+  const periodOfReport = _innerValue(_extractFirst(xml, 'periodOfReport')) || null;
+
   // audit/fix: scan ALL <footnotes> blocks, not just the first. _extractFirst
   // returned only all[0], so a 10b5-1 plan mention in a LATER footnotes block
   // was missed (false isTenB5One=false → mislabelled discretionary trade).
-  const isTenB5One =
-    /<aff10b5One>\s*(1|true)\b/i.test(xml) ||
-    /10b5-?\s?1/i.test(_extractAll(xml, 'footnotes').join(' '));
+  const structuredAff10b5One = /<aff10b5One>\s*(1|true)\b/i.test(xml);
+  const footnoteMap = _footnoteMap(xml);
+  const anyFootnoteMentions10b51 =
+    Object.values(footnoteMap).some(t => /10b5-?\s?1/i.test(t));
 
-  // Reporting person — first <reportingOwner> block carries the name and
-  // the relationship flags (officer / director / 10% owner).
-  const ownerBlock = _extractFirst(xml, 'reportingOwner') || '';
-  const personName = _innerValue(_extractFirst(ownerBlock, 'rptOwnerName')) || null;
-  const rel = _extractFirst(ownerBlock, 'reportingOwnerRelationship') || '';
-  const relationship = {
-    isDirector: /<isDirector>\s*(true|1)\s*<\/isDirector>/i.test(rel),
-    isOfficer: /<isOfficer>\s*(true|1)\s*<\/isOfficer>/i.test(rel),
-    isTenPercentOwner: /<isTenPercentOwner>\s*(true|1)\s*<\/isTenPercentOwner>/i.test(rel),
-    isOther: /<isOther>\s*(true|1)\s*<\/isOther>/i.test(rel),
-    officerTitle: _innerValue(_extractFirst(rel, 'officerTitle')) || null
+  // audit/fix BH-022: collect ALL <reportingOwner> blocks, not just the
+  // first — joint/group filings (spouse, trust, co-officers) lose every
+  // owner but the first otherwise. The source ties a transaction to the
+  // ACCESSION, not to a specific owner, so we still can't attribute a row
+  // to ONE owner; we attach the full owners[] list filing-wide (txn-agnostic)
+  // alongside the legacy single-owner fields (= first owner, kept for
+  // backward compatibility with existing consumers/fixtures).
+  const owners = _extractAll(xml, 'reportingOwner').map(ownerBlock => {
+    const rel = _extractFirst(ownerBlock, 'reportingOwnerRelationship') || '';
+    return {
+      name: _innerValue(_extractFirst(ownerBlock, 'rptOwnerName')) || null,
+      relationship: {
+        isDirector: /<isDirector>\s*(true|1)\s*<\/isDirector>/i.test(rel),
+        isOfficer: /<isOfficer>\s*(true|1)\s*<\/isOfficer>/i.test(rel),
+        isTenPercentOwner: /<isTenPercentOwner>\s*(true|1)\s*<\/isTenPercentOwner>/i.test(rel),
+        isOther: /<isOther>\s*(true|1)\s*<\/isOther>/i.test(rel),
+        officerTitle: _innerValue(_extractFirst(rel, 'officerTitle')) || null
+      }
+    };
+  });
+  const personName = owners.length ? owners[0].name : null;
+  const relationship = owners.length ? owners[0].relationship : {
+    isDirector: false, isOfficer: false, isTenPercentOwner: false,
+    isOther: false, officerTitle: null
   };
 
   // All non-derivative transactions (= the ones the methods care about;
@@ -284,6 +325,18 @@ function parseForm4Xml(xml) {
     const ownedRaw = _innerValue(_extractFirst(postBlock, 'sharesOwnedFollowingTransaction'));
     const owned = ownedRaw != null ? parseFloat(ownedRaw) : null;
     if (!dateRaw || !codeRaw) continue;
+
+    // audit/fix BH-023: prefer THIS transaction's own footnote reference(s)
+    // over the filing-wide blob match — a mixed filing (some rows plan-based,
+    // some discretionary) must not tag every row as 10b5-1 just because SOME
+    // footnote somewhere in the filing mentions it. Only fall back to the
+    // filing-wide signal (structured checkbox or any footnote) when this
+    // transaction carries no footnote reference of its own to disambiguate.
+    const txnFootnoteIds = _txnFootnoteIds(block);
+    const isTenB5One = txnFootnoteIds.length > 0
+      ? txnFootnoteIds.some(id => /10b5-?\s?1/i.test(footnoteMap[id] || ''))
+      : (structuredAff10b5One || anyFootnoteMentions10b51);
+
     txns.push({
       transactionDate: dateRaw,
       transactionCode: codeRaw,       // P=purchase, S=sale, A=award, M=exercise, etc.
@@ -293,7 +346,9 @@ function parseForm4Xml(xml) {
       sharesOwnedFollowingTransaction: Number.isFinite(owned) ? owned : null,
       reportingPersonName: personName,
       reportingPersonRelationship: relationship,
+      owners: owners,
       issuerTradingSymbol: issuerTradingSymbol,
+      periodOfReport: periodOfReport,
       isTenB5One: isTenB5One
     });
   }
@@ -385,6 +440,7 @@ async function pullTickerForm4(ticker, cikInfo) {
     .filter(f => f.form === '4' && _withinLookback(f.filingDate, FORM4_LOOKBACK_DAYS));
 
   const transactions = [];
+  let parseErrors = 0;
   for (const f of filings) {
     const accNoDash = (f.accessionNumber || '').replace(/-/g, '');
     if (!accNoDash || !f.primaryDocument) continue;
@@ -416,12 +472,15 @@ async function pullTickerForm4(ticker, cikInfo) {
         transactions.push(t);
       }
     } catch (e) {
-      // Tolerate per-filing parse errors; the rest of the ticker's
-      // filings are still useful.
+      // audit/fix BH-026: count swallowed per-filing parse errors so main()
+      // can tell "this ticker legitimately has zero Form 4 activity" apart
+      // from "every filing we fetched failed to parse" and avoid clobbering
+      // a prior good cache entry with an empty one in the latter case.
+      parseErrors++;
       continue;
     }
   }
-  return { transactions, filingsScanned: filings.length };
+  return { transactions, filingsScanned: filings.length, parseErrors };
 }
 
 // ─── Watchlist filter ───────────────────────────────────────────────────
@@ -441,6 +500,12 @@ function selectUsTickers(watchlist, tickerCikMap) {
     if (tickerCikMap[t]) matched.push({ ticker: t, cikInfo: tickerCikMap[t] });
   }
   return matched;
+}
+
+// audit/fix BH-026: pulled out as a pure predicate so the "preserve prior
+// cache entry" decision is unit-testable without mocking the SEC network calls.
+function _isAllParseFailure(result) {
+  return result.transactions.length === 0 && (result.parseErrors || 0) > 0;
 }
 
 // ─── Main ───────────────────────────────────────────────────────────────
@@ -501,6 +566,25 @@ async function main() {
           // prior successful pull's values (mirrors the thrown-error path).
         });
         console.warn('  [' + ticker + '] soft-error: ' + result.error);
+        continue;
+      }
+      // audit/fix BH-026: if EVERY filing we fetched for this ticker failed
+      // to parse (0 transactions but parseErrors>0), don't overwrite the
+      // cache with a fresh-but-empty entry — that would silently erase any
+      // previously-cached good transactions under a shiny new fetchedAt.
+      // Preserve the prior entry (same pattern as the soft-error branch
+      // above) and retry next run.
+      if (_isAllParseFailure(result)) {
+        errors++;
+        byTicker[ticker] = Object.assign({}, prev || {}, {
+          ticker,
+          cik: cikInfo.cik,
+          name: cikInfo.name,
+          failedAt: new Date().toISOString(),
+          error: 'all-filings-unparsable(' + result.parseErrors + ')'
+        });
+        console.warn('  [' + ticker + '] soft-error: all ' + result.parseErrors +
+          ' filing(s) failed to parse');
         continue;
       }
       byTicker[ticker] = {
@@ -584,4 +668,7 @@ if (require.main === module) {
   main().catch(e => { console.error(e); process.exit(1); });
 }
 
-module.exports = { parseForm4Xml, selectUsTickers, loadTickerCikMap, _internals: { httpGet, _normalizeSubmissions, _withinLookback } };
+module.exports = {
+  parseForm4Xml, selectUsTickers, loadTickerCikMap,
+  _internals: { httpGet, _normalizeSubmissions, _withinLookback, _isAllParseFailure }
+};

@@ -14,6 +14,12 @@
  *
  * Offline — pure static source inspection, no network.
  *
+ * audit/fix BH-037: this list MISSED the two other SEC pullers added since —
+ * pull-insider-form4-daily.js runs DAILY in CI (daily-pull.yml), so a UA
+ * regression there would 403-storm silently (the step is continue-on-error,
+ * i.e. fail-soft) and this guard would stay green throughout. Adding it and
+ * its sibling backfill-form345.js closes that blind spot.
+ *
  * Run:
  *   node tests/sec-user-agent-test.js
  *
@@ -30,6 +36,8 @@ const ROOT = path.join(__dirname, '..');
 const SEC_SCRIPTS = [
   'pull-sec-xbrl.js',
   path.join('scripts', 'pull-insider-form4.js'),
+  path.join('scripts', 'pull-insider-form4-daily.js'),
+  path.join('scripts', 'backfill-form345.js'),
   path.join('scripts', 'pull-13f-institutional.js'),
 ];
 
