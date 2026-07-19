@@ -14,7 +14,7 @@
  * Freshness-first concept selection (avoids the MXL SalesRevenueNet-stale-2018 trap).
  *
  * Usage: node scripts/enrich-q-revenue.js [TICKER ...]   (default: 8 fabless_semi members)
- * Source: C:/Users/Karlr/AppData/Local/sec-xbrl-cache/companyfacts.zip
+ * Source: SEC_COMPANYFACTS_ZIP env var, default C:/Users/Karlr/AppData/Local/sec-xbrl-cache/companyfacts.zip
  */
 'use strict';
 const fs = require('fs');
@@ -24,7 +24,11 @@ const zlib = require('zlib');
 // SIGKILL/CI-timeout mid-write can't truncate a court-screen input file (Pattern D).
 const { writeFileAtomic } = require('../lib/atomic-write.js');
 
-const ZIP_PATH = 'C:/Users/Karlr/AppData/Local/sec-xbrl-cache/companyfacts.zip';
+// audit fix BH-018: the bulk companyfacts.zip path was hardcoded to a dead
+// Windows user path (C:/Users/Karlr/...), unreachable on this machine or any
+// CI runner. Configurable via env so a real local mirror can be pointed at;
+// default kept as-is (still documents the original, now-orphaned, source).
+const ZIP_PATH = process.env.SEC_COMPANYFACTS_ZIP || 'C:/Users/Karlr/AppData/Local/sec-xbrl-cache/companyfacts.zip';
 const CACHE = path.join(__dirname, '..', 'fundamentals-cache');
 const STORE_CAP = 20; // store up to 20 newest YoY points (court-screen windows to 12)
 const DEFAULT_TICKERS = ['CRDO', 'ALAB', 'NVDA', 'ARM', 'AMBA', 'AVGO', 'AMD', 'MXL'];
@@ -105,10 +109,11 @@ function readEntry(fd, entry) {
 }
 
 // ── Quarterly revenue extraction (verbatim from _probe-q-revenue.js) ──
+// audit fix BH-017: the fp==Q1/Q2/Q3 shortcut used to return true before the
+// period duration was checked, so a 6M/9M YTD fact (also tagged fp=Q2/Q3 by
+// some filers) was wrongly admitted as a discrete quarter. Duration (80-110d)
+// is now required in every branch — fp is no longer authoritative on its own.
 function isQuarterlyPoint(u) {
-  const fp = (u.fp || '').toUpperCase(), form = (u.form || '').toUpperCase();
-  if (fp === 'Q1' || fp === 'Q2' || fp === 'Q3') return true;
-  if (fp === 'Q4' && (form === '10-Q' || form === '10-Q/A')) return true;
   if (!u.start || !u.end) return false;
   const days = (new Date(u.end) - new Date(u.start)) / 86400000;
   return days >= 80 && days <= 110;
