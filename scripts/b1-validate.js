@@ -298,23 +298,32 @@ async function main() {
   const needCiks = Array.from(new Set([...events, ...nonEvents].filter((r) => tickerByCik.has(r.cik)).map((r) => r.cik)));
   await ensureSubmissions(needCiks, process.env.SEC_CONTACT);
 
-  // Caches: factsForCik parst ~100-500 KB JSON — NIE pro Record, nur pro CIK;
-  // Preis-Serien analog pro Ticker (eine Firma hat viele Validation-Quartale).
-  const factsCache = new Map(), barsCache = new Map();
-  const factsOf = (cik) => {
-    if (!factsCache.has(cik)) { try { factsCache.set(cik, store.factsForCik(cik)); } catch (_) { factsCache.set(cik, null); } }
-    return factsCache.get(cik);
+  // Caches: factsForCik parst ~100 KB–5 MB JSON — NIE pro Record, nur pro CIK.
+  // WICHTIG (OOM-Lektion, Exit 134): unbegrenzt gecacht sprengen ~2.400 geparste
+  // Dateien den V8-Heap. Die Records sind CIK-sequentiell (collectRecords baut
+  // sie pro CIK am Stück) — ein kleiner LRU (16) deckt das Zugriffs-Muster
+  // vollständig und hält den Heap flach. Preis-Serien analog pro Ticker.
+  const mkLru = (max) => {
+    const m = new Map();
+    return { get(k, mk) {
+      if (m.has(k)) { const v = m.get(k); m.delete(k); m.set(k, v); return v; }
+      const v = mk();
+      m.set(k, v);
+      if (m.size > max) m.delete(m.keys().next().value);
+      return v;
+    } };
   };
-  const barsOf = (tk) => {
-    if (!barsCache.has(tk)) barsCache.set(tk, loadPriceSeries(tk));
-    return barsCache.get(tk);
-  };
+  const factsLru = mkLru(16), barsLru = mkLru(16);
+  const factsOf = (cik) => factsLru.get(cik, () => { try { return store.factsForCik(cik); } catch (_) { return null; } });
+  const barsOf = (tk) => barsLru.get(tk, () => loadPriceSeries(tk));
   const enrich = (r) => {
     const ticker = tickerByCik.get(r.cik) || null;
     r.ticker = ticker; r.sic2 = sic2Of(r.cik);
     if (!ticker || !r.sic2) return r;
+    // OOM-Lektion: bars NIE an Records hängen (2,4k Ticker × ~10k Bar-Objekte
+    // wären GBs) — transient über den LRU beziehen, Outcome-Phase lädt erneut.
     const bars = barsOf(ticker);
-    r.bars = bars;
+    r.hasBars = !!bars;
     if (!bars) return r;
     const facts = factsOf(r.cik);
     const shares = facts ? secPit.sharesHistory(facts, { asOf: r.filed }) : [];
@@ -335,7 +344,7 @@ async function main() {
   }
 
   // Balance-Gate-Zählung: Preis-/Substrat-Verfügbarkeit je Gruppe
-  const usable = (r) => !!(r.ticker && r.sic2 && r.bars && r.vars);
+  const usable = (r) => !!(r.ticker && r.sic2 && r.hasBars && r.vars);
   const evUsable = events.filter(usable), evMissRate = events.length ? 1 - evUsable.length / events.length : 0;
   const ctlCandidates = nonEvents.filter(usable);
   const ctlMissRate = nonEvents.length ? 1 - ctlCandidates.length / nonEvents.length : 0;
@@ -389,8 +398,8 @@ async function main() {
     const diffs = [];
     let evMissing = 0, ctlMissing = 0;
     for (const p of prs) {
-      const eo = firstPassage(p.ev.bars, p.ev.filed, { kSigma: v.kSigma, entryLag: v.entryLag, imputeMissing: v.impute });
-      const co = firstPassage(p.ctl.bars, p.ctl.filed, { kSigma: v.kSigma, entryLag: v.entryLag, imputeMissing: v.impute });
+      const eo = firstPassage(barsOf(p.ev.ticker), p.ev.filed, { kSigma: v.kSigma, entryLag: v.entryLag, imputeMissing: v.impute });
+      const co = firstPassage(barsOf(p.ctl.ticker), p.ctl.filed, { kSigma: v.kSigma, entryLag: v.entryLag, imputeMissing: v.impute });
       if (eo.status !== 'ok') { evMissing++; continue; }
       if (co.status !== 'ok') { ctlMissing++; continue; }
       diffs.push({ cluster: p.ev.sic2 + '|' + p.ev.calQ, calQ: p.ev.calQ, diff: (eo.upperFirst ? 1 : 0) - (co.upperFirst ? 1 : 0) });
