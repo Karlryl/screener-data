@@ -43,22 +43,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # BH-119 fix: snapshots/_manifest.json .pulled_at is stamped at the merge-commit (daily-
+      # pull.yml), which runs BEFORE scoring/export/gh-pages-deploy. A failure downstream of the
+      # merge commit (scoring crash, export contract violation, deploy push failure) left this
+      # stamp fresh while the actually PUBLISHED product (gh-pages) was stale or missing — the
+      # "independent" watchdog measured the pull, not the product. Measure the deployed
+      # findash-export/v1/index.json .generated_at instead (same gh-pages-fetch pattern already
+      # used by weekly-guard.yml for coverage-status.json). Unreachable/unparsable counts as
+      # 9999 (max-stale), same fail-loud convention as the previous local-read-failure branch.
       - name: Check export freshness
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           MAX_AGE_DAYS: '2'
           FORCE: ${{ github.event.inputs.force_alarm }}
         run: |
-          age_days=$(node -e "
-            const fs=require('fs');
-            try {
-              const m=JSON.parse(fs.readFileSync('./snapshots/_manifest.json','utf8'));
-              const t=Date.parse(m.pulled_at);
-              if(!Number.isFinite(t)){ console.log(9999); process.exit(0); }
-              console.log(Math.floor((Date.now()-t)/86400000));
-            } catch(e){ console.log(9999); }
+          age_days=$( (curl -s --max-time 20 "https://raw.githubusercontent.com/${{ github.repository }}/gh-pages/outputs/findash-export/v1/index.json" || true) | node -e "
+            let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{
+              try {
+                const idx=JSON.parse(s);
+                const t=Date.parse(idx.generated_at);
+                if(!Number.isFinite(t)){ console.log(9999); return; }
+                console.log(Math.floor((Date.now()-t)/86400000));
+              } catch(e){ console.log(9999); }
+            });
           ")
-          echo "Export-Alter (snapshots/_manifest.json .pulled_at): ${age_days} Tage (Schwelle: ${MAX_AGE_DAYS})"
+          echo "Export-Alter (gh-pages findash-export/v1/index.json .generated_at): ${age_days} Tage (Schwelle: ${MAX_AGE_DAYS})"
           if [ "$FORCE" = "true" ] || [ "$age_days" -gt "$MAX_AGE_DAYS" ]; then
             msg="Screener-Daten VERALTET: Export ${age_days} Tage alt (Schwelle ${MAX_AGE_DAYS}d). URSACHE: Daily-Pull ist rot oder laeuft nicht. NAECHSTER SCHRITT: Actions pruefen -> ${{ github.server_url }}/${{ github.repository }}/actions/workflows/daily-pull.yml"
             echo "::error::$msg"

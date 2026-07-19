@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'  # BH-134: package.json engines requires >=22
 
       - name: Vendor-Register + Detektor-Check
         id: plancheck
@@ -55,11 +55,21 @@ jobs:
           git add reports/ state/cadence-heartbeat.json
           if git diff --cached --quiet; then echo "kein Delta"; else
             git commit -m "chore: monthly plan-check report + cadence heartbeat [skip ci]"
+            pushed=0
             for i in 1 2 3; do
-              if git pull --rebase --autostash origin main && git push origin HEAD:main; then echo "gepusht (Versuch $i)"; break; fi
+              # BH-131: abort any rebase left hanging by a prior failed attempt, else every
+              # subsequent retry fails immediately with "rebase in progress".
+              git rebase --abort >/dev/null 2>&1 || true
+              if git pull --rebase --autostash origin main && git push origin HEAD:main; then echo "gepusht (Versuch $i)"; pushed=1; break; fi
               echo "Push-Versuch $i fehlgeschlagen, retry..."; sleep 5
-              if [ "$i" = "3" ]; then echo "::warning::Report/Marker-Push haengt nach 3 Versuchen — main-push-Konflikt pruefen."; fi
             done
+            # BH-131: the old code always ended with `echo`/loop-end (exit 0) here, so the step
+            # (and workflow) went green even after 3 failed pushes. exit 1 so a hanging push
+            # surfaces as a red X instead of only relying on the delayed heartbeat dead-man.
+            if [ "$pushed" != "1" ]; then
+              echo "::error::Report/Marker-Push haengt nach 3 Versuchen — main-push-Konflikt pruefen."
+              exit 1
+            fi
           fi
 
       - name: Surface red X bei Register-Luege (fehlender Detektor)

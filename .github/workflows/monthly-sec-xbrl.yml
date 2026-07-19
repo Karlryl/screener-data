@@ -1,7 +1,8 @@
 name: Monthly SEC XBRL Pull
 
 # Tag 133k: SEC company-facts pull. Runs monthly because 10-Q/K filings are quarterly.
-# Cache is git-ignored (lives on runner); only _manifest.json is committed.
+# Cache is git-ignored (lives on runner); _manifest.json AND the derived external-data/
+# sec-secannual.json (scored deep-XBRL layer, build-secannual.js) are committed.
 
 on:
   schedule:
@@ -17,6 +18,7 @@ on:
 
 permissions:
   contents: write
+  actions: read  # BH-004 fix: needed to list/download the daily-pull "snapshots" artifact below
 
 concurrency:
   group: ${{ github.event_name == 'workflow_dispatch' && format('manual-{0}', github.run_id) || 'main-push' }}
@@ -25,7 +27,7 @@ concurrency:
 jobs:
   pull:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 150  # BH-004: +60min headroom for the added "Build sec-secannual" step
     steps:
       # Tag 232c-24 (audit F-CI-006 MEDIUM): drift correction from daily-pull.
       # monthly-sec-xbrl was missing three hardenings present in daily-pull:
@@ -113,11 +115,58 @@ jobs:
             }
           "
 
+      # BH-004 fix (round 2): build-secannual.js's loadUniverse() reads snapshots/*.json to
+      # pick candidates and score the p75 drawdown threshold — but snapshots/ is git-ignored
+      # (only _manifest.json is committed) and this job never runs pull-yahoo itself (a full
+      # pull is ~90min sharded 17-way in daily-pull, far past this job's budget). Without a
+      # real universe the build crashed (empty dds[] -> p75 undefined -> .toFixed() throws),
+      # so the round-1 fix never actually refreshed anything. Restore the most recent
+      # daily-pull's merged "snapshots" artifact instead — same data the live scorer runs on,
+      # at most ~1 day old, which is fine for a monthly refresh cadence.
+      - name: Find latest daily-pull run
+        id: find_run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_ID=$(gh run list --repo "${{ github.repository }}" --workflow daily-pull.yml \
+            --status success --limit 1 --json databaseId --jq '.[0].databaseId' || true)
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+          if [ -z "$RUN_ID" ]; then
+            echo "::warning::No successful daily-pull run found — sec-secannual build will be skipped this month"
+          else
+            echo "Restoring snapshots from daily-pull run $RUN_ID"
+          fi
+
+      - name: Restore Snapshots (from daily-pull artifact)
+        if: steps.find_run.outputs.run_id != ''
+        continue-on-error: true  # network flake here must not block the raw-XBRL manifest commit below
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: snapshots
+          path: snapshots
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.find_run.outputs.run_id }}
+
+      # run-screener.js (mergeSecIntoUniverse) reads EXCLUSIVELY external-data/sec-secannual.json,
+      # so without this step the "monthly maintenance" was green while the scored SEC series
+      # silently never refreshed. build-secannual.js reads the just-pulled per-CIK companyfacts
+      # straight from the runner-local cache (same dir the pull step above just populated),
+      # scores candidates against the restored snapshots/ universe, and merges the result into
+      # the committed, small output file. Guarded here (real universe unavailable this run) AND
+      # inside build-secannual.js itself (empty-universe guard, so a bare `node
+      # scripts/build-secannual.js` stays crash-safe outside CI too).
+      - name: Build sec-secannual (scored deep-XBRL layer)
+        if: steps.find_run.outputs.run_id != ''
+        timeout-minutes: 60
+        env:
+          SEC_XBRL_CACHE_DIR: external-data/sec-xbrl
+        run: node scripts/build-secannual.js
+
       - name: Commit manifest
         run: |
           git config user.name "sec-xbrl-bot"
           git config user.email "sec-xbrl-bot@users.noreply.github.com"
-          git add external-data/sec-xbrl/_manifest.json
+          git add external-data/sec-xbrl/_manifest.json external-data/sec-secannual.json
           if git diff --staged --quiet; then
             echo "No manifest changes to commit."
           else
