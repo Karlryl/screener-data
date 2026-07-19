@@ -30,6 +30,32 @@ function writeBoard(hist, date, board, rows) {
   fs.mkdirSync(path.join(hist, date), { recursive: true });
   fs.writeFileSync(path.join(hist, date, board + '.json'), JSON.stringify({ date, board, cohort: { profitable: rows, unprofitable: [] } }));
 }
+// Tag 396 (FDR-Familien-Freeze): evaluate() bekommt die konfirmatorische Familie seit dem
+// Manifest-Freeze INJIZIERT (opts.families) und laedt protocol/ nie selbst — sonst haenge
+// die Familiengroesse m wieder am gefundenen Board-Roster (Invariante 7). Diese hermetische
+// Fixture haelt die Tests hier von der Produktionsfamilie fern (kein Test darf sie laden).
+function fixtureFamily(boards) {
+  return {
+    schemaVersion: 1,
+    familyId: 'bh-b02-test-g1',
+    generation: 1,
+    hypothesisId: 'bh-b02-test-hypothesis-g1',
+    artifactCreatedAt: '2026-01-01',
+    provenance: {
+      registration: { specifiedAt: '2025-12-01', confirmedAt: '2025-12-02', source: 'test fixture' },
+      thresholdFreeze: { frozenAt: '2025-12-03', source: 'test fixture' },
+    },
+    firstEligibleVintage: '2026-01-01',
+    methodContract: {
+      protocolVersion: 'rank-ic-confirmatory-v1', horizonsDays: [28, 84], decisionHorizonDays: 84,
+      testDefinition: '28d=max(raw,residual)-IUT; 84d=max(raw,residual)-IUT; underpowered=1',
+      correction: { method: 'benjamini-yekutieli', q: 0.10 }, minimumNeff: 8, ciLevel: 0.90,
+      bootstrapIterations: 10000, bootstrapBlockLength: 2, threshold28: 0.03, threshold84: 0.05,
+    },
+    boards: boards.slice().sort(),
+    payloadHash: 'sha256:bh-b02-test-fixture-g1',
+  };
+}
 
 // ── BH-148: Block-Bootstrap + BCa ────────────────────────────────────────────
 test('invNormalCdf (BH-148): bekannte Standardnormal-Quantile', () => {
@@ -132,7 +158,7 @@ test('evaluate (BH-110): Board-Liste ist die Union ueber ALLE Vintages, nicht nu
   writeBoard(hist, d0, 'old-board', [{ ticker: 'T0', score: 1, pit: {} }]);
   writeBoard(hist, d1, 'old-board', [{ ticker: 'T0', score: 1, pit: {} }]);
   writeBoard(hist, d1, 'new-board', [{ ticker: 'T0', score: 1, pit: {} }]); // fehlt im ERSTEN Vintage
-  const rep = ric.evaluate(hist, {}, { B: 20 });
+  const rep = ric.evaluate(hist, {}, { B: 20, families: [fixtureFamily(['old-board', 'new-board'])] });
   assert.deepEqual(Object.keys(rep.boards).sort(), ['new-board', 'old-board'],
     'new-board (erst ab d1) darf nicht unsichtbar bleiben, nur weil dates[0]=d0 es noch nicht hatte');
   fs.rmSync(tmp, { recursive: true, force: true });
@@ -155,7 +181,7 @@ test('evaluate (BH-107): Familie voll (jeder Horizont vertreten) und 84d-Konjunk
     }));
     writeBoard(hist, d, 'sig-board', rows);
   }
-  const rep = ric.evaluate(hist, priceIndex, { B: 300 });
+  const rep = ric.evaluate(hist, priceIndex, { B: 300, families: [fixtureFamily(['sig-board'])] });
   assert.equal(rep.family.length, 2, 'Familie deckt beide Horizonte des einen Boards ab, auch ohne Residual-Power');
   const fam84 = rep.family.find((f) => f.horizon === 84);
   assert.equal(fam84.p, 1, 'Konjunktions-p bleibt 1 (unbewiesen), solange die Residualseite unterpowert ist: ' + fam84.p);
@@ -189,7 +215,7 @@ test('evaluate (BH-151/BH-158): jedes Horizont-Objekt traegt icResidLabel (semi-
   const t0 = '2026-07-14';
   const rows = Array.from({ length: 12 }, (_, i) => ({ ticker: 'T' + i, score: i, pit: {} }));
   writeBoard(tmp, t0, 'b1', rows);
-  const rep = ric.evaluate(tmp, {}, { B: 20 });
+  const rep = ric.evaluate(tmp, {}, { B: 20, families: [fixtureFamily(['b1'])] });
   for (const horizon of [28, 84]) {
     const h = rep.boards.b1.horizons[horizon];
     assert.equal(h.icResidLabel, 'semi-partial (nur Return residualisiert)', horizon + 'd');

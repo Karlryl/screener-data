@@ -61,6 +61,7 @@ const path = require('path');
 const store = require('../lib/price-history-store.js');
 const { classify } = require('../lib/forward-returns.js');
 const { buildPriceIndex } = require('./walk-forward-perf.js');
+const { loadFamiliesOrThrow } = require('./rank-ic-families.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 
@@ -290,6 +291,13 @@ function benjaminiYekutieli(pvals, q) {
   const sig = new Array(m).fill(false);
   for (let k = 0; k <= maxK; k++) sig[order[k][1]] = true;
   return sig;
+}
+
+// Reine Familien-Stufe: immer auf dem vollstaendigen, bereits mit p=1
+// vorinitialisierten Slotvektor arbeiten. Der Eingabevektor bleibt unveraendert.
+function applyFamilyBY(slots, q) {
+  const significant = benjaminiYekutieli(slots.map((slot) => slot.p), q);
+  return slots.map((slot, index) => Object.assign({}, slot, { bySignificant: significant[index] }));
 }
 
 // ── Vintage-Laden + §1-Fenster ───────────────────────────────────────────────
@@ -587,9 +595,10 @@ function deliveryIC(vintage0, vintageLater) {
 }
 
 // ── Hauptauswertung ──────────────────────────────────────────────────────────
-function evaluate(historyDir, priceIndex, opts = {}) {
+function evaluateObserved(historyDir, priceIndex, opts = {}) {
   const excluded = loadExcluded(historyDir);
-  const allDates = listVintageDates(historyDir);
+  const allDates = listVintageDates(historyDir)
+    .filter((date) => !opts.firstEligibleVintage || date >= opts.firstEligibleVintage);
   const dates = allDates.filter((d) => !isDateExcluded(excluded, d));
   const report = {
     generatedAt: new Date().toISOString(),
@@ -602,7 +611,6 @@ function evaluate(historyDir, priceIndex, opts = {}) {
       return e && e.boards ? Array.from(e.boards, ([board, reason]) => ({ date: d, board, reason })) : [];
     }),
     boards: {},
-    family: null,
   };
   if (!dates.length) { report.note = 'keine (nicht-exkludierten) Vintages — Reihe sammelt noch'; return report; }
   // §1-Haltedauer-Anker (Fund F5-2): ein Entscheidungspunkt zählt erst, wenn sein
@@ -614,7 +622,6 @@ function evaluate(historyDir, priceIndex, opts = {}) {
   // ältesten Vintage noch fehlt (später hinzugekommen), für die GESAMTE Historie unsichtbar.
   // Union über ALLE (nicht-exkludierten) Vintages.
   const boards = Array.from(new Set(dates.flatMap((d) => boardsOf(historyDir, d)))).sort();
-  const familyTests = []; // {board,horizon,p} für BY über die abschließende Familie
   for (const board of boards) {
     const b = { horizons: {}, delivery: null, exitRates: {}, unusableRates: {} };
     // Board-enge Ausschlüsse VOR dem §1-Fensterplan herausnehmen — genau wie beim globalen
@@ -646,25 +653,35 @@ function evaluate(historyDir, priceIndex, opts = {}) {
       const ne = nEff(points);
       const neResid = nEff(pointsResid); // BH-107: eigene Power der Residual-Seite
       const powered = ne >= MIN_NEFF && mean !== null && ci;
-      let verdict = 'unterpowert — kein Urteil (N_eff<' + MIN_NEFF + ')';
-      let passRaw = false, residPowered = false, passResid = false;
-      if (powered) {
+      const residPowered = meanResid !== null && ciResid && neResid >= MIN_NEFF;
+      // §3d: KEIN Urteil, solange EINE der beiden §4a-Seiten unterpowert ist. Welche Seite
+      // fehlt, wird benannt: ein pauschales "N_eff<8" wäre nachweislich falsch, wenn die
+      // Rohseite gepowert ist (N_eff>=8) und nur die Residualseite die Power verfehlt.
+      let verdict = powered
+        ? 'unterpowert — kein Urteil (residualisierte Seite: N_eff<' + MIN_NEFF + ')'
+        : 'unterpowert — kein Urteil (N_eff<' + MIN_NEFF + ')';
+      let passRaw = false, passResid = false;
+      if (powered && residPowered) {
         const thr = horizon === DECISION_HORIZON ? IC_THRESHOLD_84 : IC_GUIDE_28;
         // E-20260719-5 (BH-157, strenge Lesart von Ledger 2.3/Sec3a): die CI-UNTERGRENZE
         // muss über der Wirkungsschwelle liegen, nicht nur über 0.
         passRaw = mean > thr && ci.lo > thr;
         // BH-107: Residualseite braucht ihre EIGENE Power (neResid), nicht die der Raw-Seite —
         // vorher konnte ein unterpowertes Residual-CI trotzdem in die Konjunktion einfließen.
-        residPowered = meanResid !== null && ciResid && neResid >= MIN_NEFF;
         passResid = residPowered ? (meanResid > thr && ciResid.lo > thr) : false;
-        // §4a UND-Regel nur am Entscheidungs-Horizont; 28d bleibt Richtwert.
-        const pass = horizon === DECISION_HORIZON ? (passRaw && passResid) : passRaw;
+        // §4a UND-Regel fuer jeden Board×Horizont-Slot; die Schwellen bleiben getrennt.
+        const pass = passRaw && passResid;
         verdict = pass ? 'LIVE-Kriterium erfüllt (vorbehaltlich BY-FDR)' : 'DIAGNOSTIC-Kandidat (Prüf-Flag, kein Sofort-Cut)';
       }
       // BH-158: MDE (Minimum Detectable Effect) je Board/Horizont als Pflicht-Ausweis, aus der
       // N_eff-adjustierten Streuung der Fenster-IC-Punkte (reiner Ausweis, kein Verdict-Kriterium).
       const sd = stddev(points);
       const mde = (sd !== null && ne > 0) ? +(MDE_Z * sd / Math.sqrt(ne)).toFixed(4) : null;
+      const measured = Boolean(powered && residPowered);
+      const familyP = measured ? Math.max(ci.p, ciResid.p) : 1;
+      const familyStatus = measured
+        ? 'MEASURED'
+        : (detail.length === 0 && pendingWindows > 0 ? 'WINDOW_PENDING' : 'UNDERPOWERED');
       b.horizons[horizon] = {
         decisions: detail, nPoints: points.length, pendingWindows, nEff: +(+ne).toFixed(2), mde,
         meanICRaw: mean === null ? null : +mean.toFixed(4),
@@ -675,6 +692,8 @@ function evaluate(historyDir, priceIndex, opts = {}) {
         ci90: ci ? { lo: +ci.lo.toFixed(4), hi: +ci.hi.toFixed(4) } : null,
         ci90Resid: ciResid ? { lo: +ciResid.lo.toFixed(4), hi: +ciResid.hi.toFixed(4) } : null,
         verdict,
+        _familyP: familyP,
+        _familyStatus: familyStatus,
       };
       // BH-107: BY-FDR muss über die VOLLE Familie (jedes Board × Horizont) laufen, nicht nur
       // über die gerade messbaren/gepowerten Punkte — sonst schrumpft m und die BY-Schwelle wird
@@ -683,13 +702,6 @@ function evaluate(historyDir, priceIndex, opts = {}) {
       // der Familientest die Raw∧Residual-Konjunktion (Intersection-Union-Test: p_conj =
       // max(p_raw,p_resid), Berger 1982) — beide Seiten brauchen eigene Power, sonst bleibt die
       // Konjunktion unbewiesen (p=1).
-      let famP = 1;
-      if (horizon === DECISION_HORIZON) {
-        if (powered && ci && residPowered) famP = Math.max(ci.p, ciResid.p);
-      } else if (powered && ci) {
-        famP = ci.p;
-      }
-      familyTests.push({ board, horizon, p: famP });
     }
     // §4b: jüngstes Paar (erstes Vintage, erstes Vintage >= +180d) — auf den für dieses
     // Board zulässigen Vintages (ein exkludiertes Vintage darf auch den Delivery-IC nicht tragen).
@@ -703,24 +715,141 @@ function evaluate(historyDir, priceIndex, opts = {}) {
     }
     report.boards[board] = b;
   }
-  // §3b/§3c: BY-FDR über die abschließende Familie — JEDES Board×Horizont (BH-107; p=1
-  // für nicht (aus)messbare/unterpowerte Paare, siehe Kommentar oben in der Schleife).
-  if (familyTests.length) {
-    const sig = benjaminiYekutieli(familyTests.map((t) => t.p), BY_Q);
-    report.family = familyTests.map((t, i) => ({ board: t.board, horizon: t.horizon, p: +t.p.toFixed(4), bySignificant: sig[i] }));
-  } else {
-    report.family = 'keine Tests mit N_eff>=' + MIN_NEFF + ' — Familie leer (erwartete Wartezeit, §3d/§7)';
+  return report;
+}
+
+// Manifestbasierte, generationsgetrennte Familienausgabe (Reportvertrag v2).
+function initialFamilyReport(family) {
+  const slots = [];
+  for (const board of family.boards) {
+    for (const horizon of family.methodContract.horizonsDays) {
+      slots.push({ board, horizon, p: 1, bySignificant: false, status: 'NO_ELIGIBLE_VINTAGE' });
+    }
+  }
+  return {
+    familyId: family.familyId,
+    generation: family.generation,
+    hypothesisId: family.hypothesisId,
+    artifactCreatedAt: family.artifactCreatedAt,
+    firstEligibleVintage: family.firstEligibleVintage,
+    provenance: family.provenance,
+    methodContract: family.methodContract,
+    payloadHash: family.payloadHash,
+    m: slots.length,
+    slots,
+  };
+}
+
+function stripInternalFamilyFields(boards) {
+  for (const board of Object.values(boards || {})) {
+    for (const horizon of Object.values(board.horizons || {})) {
+      delete horizon._familyP;
+      delete horizon._familyStatus;
+    }
+  }
+}
+
+function evaluate(historyDir, priceIndex, opts = {}) {
+  const families = opts.families;
+  if (!Array.isArray(families) || families.length === 0) {
+    throw new Error('[rank-ic] evaluate() verlangt eine nichtleere, validierte opts.families-Liste');
+  }
+
+  // Invariante 7: der vollstaendige, eingefrorene Slotvektor steht mit p=1,
+  // bevor irgendein Vintage, Ausschluss oder Preis gelesen wird.
+  const familyReports = families.map(initialFamilyReport);
+
+  const excluded = loadExcluded(historyDir);
+  const allDates = listVintageDates(historyDir);
+  const boardsByDate = new Map(allDates.map((date) => [date, new Set(boardsOf(historyDir, date))]));
+  const observed = evaluateObserved(historyDir, priceIndex, opts);
+  stripInternalFamilyFields(observed.boards);
+
+  const familyHealth = { missingBoards: [], exclusions: [], renameWarnings: [], warnings: [] };
+  for (let familyIndex = 0; familyIndex < families.length; familyIndex++) {
+    const family = families[familyIndex];
+    const output = familyReports[familyIndex];
+    const eligibleAllDates = allDates.filter((date) => date >= family.firstEligibleVintage);
+    const familyObserved = eligibleAllDates.length
+      ? evaluateObserved(historyDir, priceIndex, Object.assign({}, opts, { firstEligibleVintage: family.firstEligibleVintage }))
+      : null;
+
+    if (eligibleAllDates.length === 0) {
+      familyHealth.warnings.push({
+        code: 'NO_ELIGIBLE_VINTAGE', familyId: family.familyId,
+        message: 'Kein Vintage ab firstEligibleVintage ' + family.firstEligibleVintage + ' vorhanden.',
+      });
+    }
+
+    for (const board of family.boards) {
+      const presentDates = eligibleAllDates.filter((date) => boardsByDate.get(date).has(board));
+      const excludedDates = presentDates.filter((date) => isBoardExcluded(excluded, date, board));
+      if (excludedDates.length > 0) {
+        familyHealth.exclusions.push({ familyId: family.familyId, board, dates: excludedDates });
+      }
+
+      let forcedStatus = null;
+      if (eligibleAllDates.length === 0) forcedStatus = 'NO_ELIGIBLE_VINTAGE';
+      else if (presentDates.length === 0) {
+        forcedStatus = 'MISSING_ON_DISK';
+        familyHealth.missingBoards.push({ familyId: family.familyId, board });
+      } else if (presentDates.every((date) => isBoardExcluded(excluded, date, board))) {
+        forcedStatus = 'EXCLUDED_ALL';
+      }
+
+      for (const horizon of family.methodContract.horizonsDays) {
+        const slotIndex = output.slots.findIndex((slot) => slot.board === board && slot.horizon === horizon);
+        const existing = output.slots[slotIndex];
+        let status = forcedStatus;
+        let p = 1;
+        if (!status) {
+          const horizonReport = familyObserved && familyObserved.boards[board]
+            && familyObserved.boards[board].horizons[horizon];
+          status = horizonReport ? horizonReport._familyStatus : 'UNDERPOWERED';
+          if (status === 'MEASURED') p = horizonReport._familyP;
+        }
+        output.slots[slotIndex] = Object.assign({}, existing, { p, status });
+      }
+    }
+    output.slots = applyFamilyBY(output.slots, family.methodContract.correction.q)
+      .map((slot) => Object.assign({}, slot, { p: +slot.p.toFixed(4) }));
+  }
+
+  const registeredBoards = new Set(families.flatMap((family) => family.boards));
+  const unregisteredBoards = Object.keys(observed.boards || {})
+    .filter((board) => !registeredBoards.has(board)).sort()
+    .map((board) => ({ board, status: 'UNREGISTERED_OBSERVATIONAL' }));
+  if (familyHealth.missingBoards.length > 0 && unregisteredBoards.length > 0) {
+    familyHealth.renameWarnings.push({
+      code: 'POSSIBLE_BOARD_RENAME',
+      message: 'Mindestens ein registriertes Board fehlt und mindestens ein unregistriertes Board ist vorhanden.',
+    });
+  }
+
+  const g1 = familyReports.find((family) => family.generation === 1);
+  const report = Object.assign({}, observed, {
+    schemaVersion: 2,
+    spec: 'Ledger 2.8 §1–§4/§8; raw∧residual je Board×Horizont; Schwellen 28d>0,03 und 84d>0,05; BY je eingefrorener Manifestgeneration',
+    families: familyReports,
+    family: g1 ? g1.slots.map((slot) => ({
+      board: slot.board, horizon: slot.horizon, p: slot.p, bySignificant: slot.bySignificant,
+    })) : [],
+    familyNote: null,
+    unregisteredBoards,
+    familyHealth,
+  });
+  delete report.note;
+
+  const nonExcludedDates = allDates.filter((date) => !isDateExcluded(excluded, date));
+  if (allDates.length === 0) report.familyNote = 'keine Vintages — Reihe sammelt noch';
+  else if (nonExcludedDates.length === 0) report.familyNote = 'alle Vintages global ausgeschlossen — keine regulaere Familienmessung';
+  else if (familyReports.every((family) => family.slots.every((slot) => slot.status !== 'MEASURED'))) {
+    report.familyNote = 'Familienmessung wartet: kein Slot ist bereits vollstaendig gemessen und gepowert';
   }
   return report;
 }
 
-// loadPriceIndexOrThrow — Verdrahtung Store->Index, fail-loud statt still leer.
-// R-Gate 2.R Fund F5-1: der Aufruf stand auf prices/history, während der Store
-// selbst 'history' anhängt (Vertrag: loadAll(pricesDir), siehe price-history-store.js
-// Kopf + alle anderen Aufrufer) -> Index leer -> JEDER Board-Punkt n=0 und die
-// gesamte Messreihe meldete "unterpowert", obwohl sie schlicht nichts gemessen hat.
-// Ein leerer Index ist ab jetzt ein harter Fehler: die Messreihe darf nie wieder
-// aus einem Pfad-Artefakt ein methodisches Urteil ableiten.
+// Store->Index-Verdrahtung: leerer Preisindex ist ein harter Messausfall (F5-1).
 function loadPriceIndexOrThrow(pricesDir) {
   const history = store.loadAll(pricesDir);
   const tickers = Object.keys(history).length;
@@ -735,13 +864,14 @@ function loadPriceIndexOrThrow(pricesDir) {
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
-function main() {
-  const args = process.argv.slice(2);
+function main(options = {}) {
+  const args = options.args || process.argv.slice(2);
   const getArg = (k, dflt) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : dflt; };
-  const historyDir = path.resolve(REPO_ROOT, getArg('--history-dir', 'board-history'));
-  const outFile = path.resolve(REPO_ROOT, getArg('--out', path.join('outputs', 'rank-ic-report.json')));
-  const priceIndex = loadPriceIndexOrThrow(path.join(REPO_ROOT, 'prices'));
-  const report = evaluate(historyDir, priceIndex);
+  const historyDir = options.historyDir || path.resolve(REPO_ROOT, getArg('--history-dir', 'board-history'));
+  const outFile = options.outFile || path.resolve(REPO_ROOT, getArg('--out', path.join('outputs', 'rank-ic-report.json')));
+  const families = loadFamiliesOrThrow(path.join(REPO_ROOT, 'protocol', 'rank-ic-families'));
+  const priceIndex = options.priceIndex || loadPriceIndexOrThrow(path.join(REPO_ROOT, 'prices'));
+  const report = evaluate(historyDir, priceIndex, { families });
   fs.mkdirSync(path.dirname(outFile), { recursive: true });
   fs.writeFileSync(outFile, JSON.stringify(report, null, 2));
   console.log('[rank-ic] Vintages: ' + report.vintagesTotal + ' (exkludiert: ' + (report.vintagesExcluded || []).join(',') + ')');
@@ -750,7 +880,8 @@ function main() {
     if (h) console.log(`  ${board}: 84d nPoints=${h.nPoints} (pending=${h.pendingWindows}) N_eff=${h.nEff} meanIC=${h.meanICRaw} CI90=[${h.ci90 ? h.ci90.lo + ',' + h.ci90.hi : '—'}] -> ${h.verdict}`);
   }
   console.log('[rank-ic] Report -> ' + outFile);
+  return report;
 }
 
-module.exports = { spearman, ranks, residualize, bootstrapCI, nEff, benjaminiYekutieli, disjointDecisionDates, windowReturns, windowIC, deliveryIC, evaluate, loadExcluded, isDateExcluded, isBoardExcluded, loadPriceIndexOrThrow, newestPriceDate, invNormalCdf, stddev, loadVintage };
+module.exports = { spearman, ranks, residualize, bootstrapCI, nEff, benjaminiYekutieli, applyFamilyBY, disjointDecisionDates, windowReturns, windowIC, deliveryIC, evaluate, loadExcluded, isDateExcluded, isBoardExcluded, loadPriceIndexOrThrow, newestPriceDate, invNormalCdf, stddev, loadVintage, main };
 if (require.main === module) main();

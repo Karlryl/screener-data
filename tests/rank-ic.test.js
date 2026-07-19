@@ -20,6 +20,29 @@ const addDays = (iso, n) => { const d = new Date(iso + 'T00:00:00Z'); d.setUTCDa
 // deterministischer LCG (kein Math.random — Reproduzierbarkeit)
 function lcg(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 
+function fixtureFamily(boards) {
+  return {
+    schemaVersion: 1,
+    familyId: 'rank-ic-test-g1',
+    generation: 1,
+    hypothesisId: 'rank-ic-test-hypothesis-g1',
+    artifactCreatedAt: '2026-01-01',
+    provenance: {
+      registration: { specifiedAt: '2025-12-01', confirmedAt: '2025-12-02', source: 'test fixture' },
+      thresholdFreeze: { frozenAt: '2025-12-03', source: 'test fixture' },
+    },
+    firstEligibleVintage: '2026-01-01',
+    methodContract: {
+      protocolVersion: 'rank-ic-confirmatory-v1', horizonsDays: [28, 84], decisionHorizonDays: 84,
+      testDefinition: '28d=max(raw,residual)-IUT; 84d=max(raw,residual)-IUT; underpowered=1',
+      correction: { method: 'benjamini-yekutieli', q: 0.10 }, minimumNeff: 8, ciLevel: 0.90,
+      bootstrapIterations: 10000, bootstrapBlockLength: 2, threshold28: 0.03, threshold84: 0.05,
+    },
+    boards: boards.slice().sort(),
+    payloadHash: 'sha256:test-fixture-g1',
+  };
+}
+
 // ── Statistik-Primitives ─────────────────────────────────────────────────────
 test('spearman: perfekte Monotonie = 1, Antitonie = -1, Ties korrekt', () => {
   assert.equal(ric.spearman([1, 2, 3, 4], [10, 20, 30, 40]), 1);
@@ -163,7 +186,7 @@ test('evaluate: bekanntes Signal wird wiedergefunden, Exclude greift, Null-Board
   fs.writeFileSync(path.join(hist, badDate, 'sig-board.json'), JSON.stringify({ date: badDate, board: 'sig-board', cohort: { profitable: [], unprofitable: [] } }));
   fs.writeFileSync(path.join(hist, '_excluded.json'), JSON.stringify({ [badDate]: 'synthetisch korrupt (Test)' }));
 
-  const rep = ric.evaluate(hist, priceIndex, { B: 300 });
+  const rep = ric.evaluate(hist, priceIndex, { B: 300, families: [fixtureFamily(['sig-board', 'null-board'])] });
   assert.deepEqual(rep.vintagesExcluded, [badDate], 'Exclude ausgewiesen');
   assert.deepEqual(Object.keys(rep.boards).sort(), ['null-board', 'sig-board'],
     'Sidecars (calibration/regime) sind keine Boards');
@@ -287,7 +310,7 @@ test('evaluate §1: Fenster, das noch nicht abgelaufen ist, wird NICHT als volle
     m.set(newest, 100 + r.score); // Score-korrelierte Kurzfrist-Rendite: waere ein verlockender Fake-IC
     priceIndex[r.ticker] = m;
   }
-  const rep = ric.evaluate(tmp, priceIndex, { B: 50 });
+  const rep = ric.evaluate(tmp, priceIndex, { B: 50, families: [fixtureFamily(['b1'])] });
   assert.equal(rep.newestPriceDate, newest, 'globaler letzter Kurstag wird ausgewiesen');
   for (const horizon of [28, 84]) {
     const h = rep.boards.b1.horizons[horizon];
@@ -361,7 +384,7 @@ test('loadExcluded R2.5: Writer-Vertrag {excluded:[{date,board,reason}]} greift 
   assert.equal(ric.isDateExcluded(ex, badDate), true, 'Eintrag ohne board = Datum global aus');
 
   // Auswertungs-Ebene: das Vintage faellt aus JEDER Rechnung, auf JEDEM Board.
-  const rep = ric.evaluate(hist, priceIndex, { B: 50 });
+  const rep = ric.evaluate(hist, priceIndex, { B: 50, families: [fixtureFamily(['b1', 'b2'])] });
   assert.deepEqual(rep.vintagesExcluded, [badDate], 'Ausschluss im Report ausgewiesen');
   for (const board of ['b1', 'b2']) {
     for (const horizon of [28, 84]) {
@@ -382,7 +405,7 @@ test('loadExcluded R2.5: Eintrag MIT board schliesst NUR dieses Board an diesem 
   assert.equal(ric.isBoardExcluded(ex, badDate, 'b1'), true);
   assert.equal(ric.isBoardExcluded(ex, badDate, 'b2'), false);
 
-  const rep = ric.evaluate(hist, priceIndex, { B: 50 });
+  const rep = ric.evaluate(hist, priceIndex, { B: 50, families: [fixtureFamily(['b1', 'b2'])] });
   assert.deepEqual(rep.vintagesExcluded, [], 'board-enger Ausschluss leert das Datum nicht global');
   assert.deepEqual(rep.boardVintagesExcluded, [{ date: badDate, board: 'b1', reason: 'b1-Kohorte an diesem Tag korrupt (Test)' }]);
   // 28d-Horizont bei 28d-Spacing: jedes Vintage ist ein Entscheidungspunkt -> scharfer Kontrast.
