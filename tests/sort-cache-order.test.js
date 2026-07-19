@@ -17,8 +17,13 @@ function check(name, got, want) {
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sort-cache-'));
 const now = Date.now();
 const iso = (msAgo) => new Date(now - msAgo).toISOString();
-function writeSnap(ticker, asOfMsAgo, fundAsOf) {
-  const meta = { asOf: iso(asOfMsAgo) };
+// BH-044: real snapshots write fetchedAt BEFORE asOf (mapYahooToCanonical meta object
+// literal order) — fetchedAtMsAgo mirrors that real byte layout instead of an
+// asOf-only fixture that never exercised the field-order bug.
+function writeSnap(ticker, asOfMsAgo, fundAsOf, fetchedAtMsAgo) {
+  const meta = {};
+  if (fetchedAtMsAgo != null) meta.fetchedAt = iso(fetchedAtMsAgo);
+  meta.asOf = iso(asOfMsAgo);
   if (fundAsOf) meta.fundamentalsAsOf = fundAsOf;
   fs.writeFileSync(path.join(dir, safeSnapshotFilename(ticker)), JSON.stringify({ meta }));
 }
@@ -51,6 +56,19 @@ const order2 = sortByStaleness(stocks, dir, cal, today).map(s => s.ticker);
 console.log('       order2 (earnings-forward):', order2.join(', '));
 check('earnings-forward CACHEDNEW jumps ahead of CACHEDOLD', order2.indexOf('CACHEDNEW') < order2.indexOf('CACHEDOLD'), true);
 check('earnings-forward still before un-snapshotted', order2.indexOf('CACHEDNEW') < order2.indexOf('NEW1'), true);
+
+// BH-044: a price-only'd ticker has a FRESH asOf (~1h ago) but a STALE fetchedAt
+// (~30d ago, last full pull). Oldest-first means the genuinely 10d-stale CACHEDOLD
+// must be refreshed BEFORE this ticker. A "first field match wins" regex reads the
+// stale fetchedAt (written first in real snapshots) and would wrongly treat this
+// just-refreshed ticker as staler than CACHEDOLD, sorting it FIRST — burning refresh
+// budget on a ticker that doesn't need it while a genuinely stale one waits.
+writeSnap('PRICEONLY', 3600e3, null, 30 * 864e5); // fetchedAt 30d ago, asOf 1h ago
+const stocksPO = stocks.concat([{ ticker: 'PRICEONLY' }]);
+const orderPO = sortByStaleness(stocksPO, dir, {}, today).map(s => s.ticker);
+console.log('       orderPO (asOf-vs-fetchedAt priority):', orderPO.join(', '));
+check('PRICEONLY (fresh asOf, stale fetchedAt) sorts by asOf — AFTER the genuinely 10d-stale CACHEDOLD',
+  orderPO.indexOf('PRICEONLY') > orderPO.indexOf('CACHEDOLD'), true);
 
 try { fs.rmSync(dir, { recursive: true, force: true }); } catch (_) {}
 console.log(fail === 0 ? '\nPASS (all assertions ok)' : `\nFAIL (${fail} assertion(s) failed)`);

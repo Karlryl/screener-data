@@ -164,6 +164,24 @@ const MIN_MCAP_USD = (() => {
   return (Number.isFinite(v) && v >= 0) ? v : 1e9;
 })();
 
+// audit fix BH-047: a single not-found response (transient 404 / momentarily-empty
+// fundamentals) must not permanently delist a ticker — the very next daily
+// prune-watchlist run removes anything flagged meta.delisted, irreversibly. Require
+// NOT_FOUND_DELIST_STREAK consecutive not-found runs before flagging.
+const NOT_FOUND_DELIST_STREAK = parseInt(process.env.NOT_FOUND_DELIST_STREAK || '2', 10);
+
+// audit fix BH-047: pure decision extracted so it's unit-testable without touching disk.
+function nextNotFoundState(existingMeta) {
+  const streak = ((existingMeta && existingMeta.notFoundStreak) || 0) + 1;
+  return { streak, delisted: streak >= NOT_FOUND_DELIST_STREAK };
+}
+
+// audit fix BH-042: pure decision extracted so it's unit-testable without a yf mock.
+function shouldRetryKosdaq(stock, errClass) {
+  return errClass === 'not-found' && !!(stock && stock.suffixUnsure) && !stock._kqRetried
+    && /\.KS$/i.test((stock && stock.yahoo_symbol) || '');
+}
+
 // Modules die wir brauchen für canonicalInput-Mapping
 const MODULES = [
   'summaryDetail',                      // marketCap, priceToSalesTrailing12Months, forwardPE, trailingPE
@@ -1160,7 +1178,11 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     },
     // Tag 134: marketCap stored in reportingCurrency at mapper level;
     // _convertSnapshotToUSD applies FX conversion uniformly across all currency-denominated fields.
-    marketCap: _metric(_y(sd, 'marketCap'), SRC, CONF, asOf),
+    // audit fix BH-046: fall back to price.marketCap when summaryDetail.marketCap is
+    // absent (Live-Yahoo-Schema-Drift) — previously a null here unlinked an otherwise
+    // valid snapshot (skipped-mcap) even though the price module (already loaded, see
+    // MODULES) carried the value.
+    marketCap: _metric(_y(sd, 'marketCap') ?? _y(pr, 'marketCap'), SRC, CONF, asOf),
     metrics: {
       revenueTTM:       _metric(revTTM, SRC, CONF, asOf),
       revenueGrowthYoY: _metric(revGrowthYoY, SRC, CONF, asOf),
@@ -1309,17 +1331,23 @@ async function fetchFundamentalsTS(symbol, signal) {
   // cancels the in-flight request and frees the yahoo-finance2 queue slot.
   const mo = signal ? { fetchOptions: { signal } } : undefined;
   // Defensive: jeder Aufruf eigener try/catch, Teilausfall darf nicht alles töten.
+  // audit fix BH-043: acquireYfSlot() before EACH of these 4 sequential HTTP calls —
+  // previously only the ticker's first request (quoteSummary) was gated.
   try {
+    await acquireYfSlot();
     out.annualFin = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'annual', module: 'financials' }, mo);
   } catch (e) { _log('WARN', `  fundamentalsTimeSeries annual financials failed for ${symbol}: ${e.message}`); }
   try {
+    await acquireYfSlot();
     out.quarterlyFin = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'quarterly', module: 'financials' }, mo);
   } catch (e) { _log('WARN', `  fundamentalsTimeSeries quarterly financials failed for ${symbol}: ${e.message}`); }
   try {
+    await acquireYfSlot();
     out.annualCash = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'annual', module: 'cash-flow' }, mo);
   } catch (e) { _log('WARN', `  fundamentalsTimeSeries annual cash-flow failed for ${symbol}: ${e.message}`); }
   // Tag-28: Balance-Sheet via fundamentalsTimeSeries (für ROIC/Sloan/Net-Debt-EBITDA).
   try {
+    await acquireYfSlot();
     out.annualBs = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'annual', module: 'balance-sheet' }, mo);
   } catch (e) { _log('WARN', `  fundamentalsTimeSeries annual balance-sheet failed for ${symbol}: ${e.message}`); }
   return out;
@@ -1552,6 +1580,28 @@ function mapFTSToQuarterly(quarterlyRows) {
 
 async function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+// audit fix BH-043: MODULE-scope request-spacing gate shared by every yf.* call site
+// (quoteSummary, quote, fundamentalsTimeSeries) — not just once per ticker. The old
+// runWorkerPool gate reserved ONE slot per ticker before processOneFn started, but a
+// single ticker fires ~6 sequential yf requests (quoteSummary + quote + 4x
+// fundamentalsTimeSeries) with NO spacing between them — the "minimum spacing between
+// consecutive Yahoo requests" the Tag-163 comment promised was never enforced per-request.
+// pullAll() arms _yfGateSleepMs from its rateLimitMs param at the start of each run;
+// acquireYfSlot() is a no-op (sleepMs<=0) outside a pullAll() run.
+// ponytail: module-level mutable gate instead of threading a gate object through the
+// 3 nested + 1 top-level fetch helpers — only one pullAll() runs per process. Revisit
+// if concurrent pullAll() calls in one process ever become a real need.
+let _yfGateSleepMs = 0;
+let _yfGateNextSlotAt = 0;
+async function acquireYfSlot() {
+  if (!(_yfGateSleepMs > 0)) return;
+  const now = Date.now();
+  const slot = Math.max(now, _yfGateNextSlotAt);
+  _yfGateNextSlotAt = slot + _yfGateSleepMs;
+  const waitMs = slot - now;
+  if (waitMs > 0) await _sleep(waitMs);
+}
+
 // audit F-A-2026-06-21: _withTimeout removed — dead code fully superseded by
 // _withAbortTimeout (F-PY-102). The non-aborting Promise.race variant left
 // timed-out yahoo-finance2 calls occupying their queue slot as zombies; every
@@ -1596,9 +1646,17 @@ function _withAbortTimeout(makePromise, ms, label) {
 // Also accept BOTH meta.asOf and meta.fetchedAt — pre-Tag-215j snapshots
 // only had fetchedAt; post-Tag-215j have both. Without this dual-read,
 // old snapshots looked timestamp-0 and would be pulled first wastefully.
+// audit fix BH-044: asOf is preferred, fetchedAt is only the fallback. Both fields
+// are present post-Tag-215j, but fetchedAt is written BEFORE asOf in the mapper
+// (see mapYahooToCanonical meta) and price-only refreshes update ONLY asOf — a
+// single "first match of either" regex always found fetchedAt first (earlier byte
+// offset) regardless of which is actually fresher, understating a price-only'd
+// ticker's true freshness. A two-stage match makes the priority explicit instead
+// of an accident of field order.
 function sortByStaleness(stocks, outputDir, earningsCalendar, today) {
   const ageCache = new Map();
-  const ageRegex = /"(?:asOf|fetchedAt)"\s*:\s*"([^"]+)"/;
+  const asOfRegex = /"asOf"\s*:\s*"([^"]+)"/;
+  const fetchedAtRegex = /"fetchedAt"\s*:\s*"([^"]+)"/;
   // TASK 0.9 (Pull-Diät): prefer the SEPARATE full-pull clock for the earnings
   // check so a daily-reset asOf doesn't hide a report as "already pulled".
   const fundAsOfRegex = /"fundamentalsAsOf"\s*:\s*"([^"]+)"/;
@@ -1625,7 +1683,7 @@ function sortByStaleness(stocks, outputDir, earningsCalendar, today) {
         fs.readSync(fd, buf, 0, 1024, 0);
         fs.closeSync(fd);
         const hdr = buf.toString('utf8');
-        const m = hdr.match(ageRegex);
+        const m = hdr.match(asOfRegex) || hdr.match(fetchedAtRegex);
         if (m) {
           const t = new Date(m[1]).getTime();
           if (Number.isFinite(t)) age = t;
@@ -1680,8 +1738,19 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   const _today = new Date();
   const results = [];
   const failures = [];
+  // audit fix BH-043: (re)arm the shared per-request spacing gate for this run.
+  _yfGateSleepMs = rateLimitMs;
+  _yfGateNextSlotAt = 0;
   // Tag-80: Parallel pulls in batches of CONCURRENCY
+  // audit fix BH-048: validate like args.rateLimit (parseArgs) — but fail-FAST rather
+  // than silently falling back to a default. An invalid value here (0/negative/NaN)
+  // made runWorkerPool spawn zero workers → empty results → n_ok=0, n_failed=0 →
+  // failRatio=0 → exit 0, i.e. a no-op run that reports success while touching nothing.
   const CONCURRENCY = parseInt(process.env.PULL_CONCURRENCY || '10', 10);
+  if (!(Number.isFinite(CONCURRENCY) && CONCURRENCY > 0)) {
+    _log('ERROR', `Invalid PULL_CONCURRENCY="${process.env.PULL_CONCURRENCY}" (must be a positive integer) — aborting instead of a silent no-op run`);
+    process.exit(1);
+  }
   _log('INFO', `Parallel pulls: ${CONCURRENCY} concurrent. Total: ${watchlist.stocks.length} stocks.`);
   // Tag 164: sort by staleness — oldest snapshots pulled first so timeouts
   // always refresh the most-stale data. Guarantees full universe coverage over ~3 days.
@@ -1703,6 +1772,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     let lastErr;
     for (let attempt = 0; attempt <= DELAYS.length; attempt++) {
       try {
+        // audit fix BH-043: acquire the shared spacing slot before EACH attempt
+        // (including retries) — this is the request the gate is meant to space.
+        await acquireYfSlot();
         // F-PY-102: pass the abort signal through moduleOptions.fetchOptions so a
         // timeout cancels the fetch and frees the yahoo-finance2 queue slot.
         return await _withAbortTimeout(
@@ -1933,11 +2005,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       if (!fs.existsSync(fp)) throw new Error('no existing snapshot to update');
       existing = JSON.parse(fs.readFileSync(fp, 'utf8'));
     }
+    await acquireYfSlot(); // audit fix BH-043
     const q = await _withAbortTimeout((signal) => yf.quote(stock.yahoo_symbol, undefined, { fetchOptions: { signal } }), 8000, stock.ticker + '/quote-only'); // F-PY-102: abortable
     if (!q) throw new Error('quote returned null');
+    // audit fix BH-047: a successful quote (this call didn't throw not-found) breaks
+    // any prior not-found streak — the ticker is confirmed alive.
+    if (existing.meta && existing.meta.notFoundStreak) delete existing.meta.notFoundStreak;
     // Update only fields that change daily
     const newAsOf = new Date().toISOString();
-    if (existing.meta) existing.meta.asOf = newAsOf;
     // Tag 232a-4 (audit F-DP-002 CRITICAL): yf.quote() returns regularMarketPrice
     // and marketCap in TRADING currency, NOT financial-reporting currency. The
     // pre-Tag-232a-4 path multiplied by meta.fxRateApplied (the financial→USD
@@ -1984,6 +2059,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       tradingFactor = (fxApplied !== 1 && origCcy !== 'USD') ? fxApplied : 1;
     }
     if (q.regularMarketPrice != null) {
+      // audit fix BH-045: stamp asOf only when a price was actually written. The
+      // unconditional stamp (moved) previously marked the F-CI-016 freshness gate's
+      // asOf fresh even for a sparse quote ({currency:'USD'} etc.) that updated
+      // nothing — a no-op refresh looked like a successful one.
+      if (existing.meta) existing.meta.asOf = newAsOf;
       existing.price = existing.price || {};
       // audit F-A-2026-06-21: prevented failure mode — "price-field currency
       // drifts between full-pull and price-only refreshes". The price-only path
@@ -2194,6 +2274,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
 
       // Tag 106: IPO-Datum via separates yf.quote() — quoteSummary.price hat das Feld nicht.
       try {
+        await acquireYfSlot(); // audit fix BH-043
         const q = await _withAbortTimeout((signal) => yf.quote(stock.yahoo_symbol, undefined, { fetchOptions: { signal } }), 8000, stock.ticker + '/quote'); // Tag 163: 15s→8s; F-PY-102: abortable
         if (q && q.firstTradeDateMilliseconds) {
           const ftd = new Date(q.firstTradeDateMilliseconds);
@@ -2834,6 +2915,24 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // (literal 404 / "no data found" / "invalid symbol").
       else if (/Failed Yahoo Schema validation|schema validation/i.test(msg)) errClass = 'schema-fail';
 
+      // audit fix BH-042: opendart-kr.js (KR universe adapter) flags KOSPI/KOSDAQ-
+      // ambiguous tickers with suffixUnsure:true + a default ".KS" guess (corpCode.xml
+      // carries no market-segment field) and documents this exact retry as the
+      // promised downstream correction ("the downstream Yahoo pull can drop the clean
+      // 404 and retry .KQ") — it never existed anywhere in this file. A clean not-found
+      // on an unsure .KS symbol very likely means the ticker is actually KOSDAQ (.KQ);
+      // retry once with the corrected suffix before falling into the not-found/delisted
+      // handling below. _kqRetried guards against re-recursing if .KQ ALSO 404s.
+      // ponytail: the corrected suffix is not persisted back to watchlist.json
+      // (pull-yahoo.js never writes it) — costs one extra request per affected ticker
+      // per run, acceptable given the KR adapter is currently dormant (OPENDART_KEY
+      // unset in CI).
+      if (shouldRetryKosdaq(stock, errClass)) {
+        const kqSymbol = stock.yahoo_symbol.replace(/\.KS$/i, '.KQ');
+        _log('INFO', `  ${stock.ticker}: suffixUnsure .KS not-found — retrying as ${kqSymbol}`);
+        return processOne(Object.assign({}, stock, { yahoo_symbol: kqSymbol, _kqRetried: true }));
+      }
+
       // Tag 148: mark snapshot as delisted when Yahoo definitively rejects the symbol
       // (not-found class only — transient errors like rate-limit/timeout/network must NOT set this flag).
       if (errClass === 'not-found') {
@@ -2842,12 +2941,22 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         try {
           let existing = fs.existsSync(outPath) ? JSON.parse(fs.readFileSync(outPath, 'utf8')) : null;
           if (existing && existing.meta) {
-            existing.meta.delisted = true;
-            existing.meta.delistedAt = new Date().toISOString();
+            // audit fix BH-047: require NOT_FOUND_DELIST_STREAK consecutive not-found
+            // runs before setting the delisted flag — the next prune-watchlist run
+            // removes anything flagged delisted, irreversibly, so a single transient
+            // 404/missing-fundamentals response must not trigger it.
+            const { streak, delisted } = nextNotFoundState(existing.meta);
+            existing.meta.notFoundStreak = streak;
+            if (delisted) {
+              existing.meta.delisted = true;
+              existing.meta.delistedAt = new Date().toISOString();
+            }
             // F-DP-028 → factored into writeFileAtomic (Tag 189).
             // Tag 232c-6: compact stringify; see fast-path note above.
             writeFileAtomic(outPath, JSON.stringify(existing));
-            _log('INFO', `  Marked ${stock.ticker} as delisted in snapshot`);
+            _log('INFO', delisted
+              ? `  Marked ${stock.ticker} as delisted in snapshot (not-found streak ${streak})`
+              : `  ${stock.ticker} not-found (streak ${streak}/${NOT_FOUND_DELIST_STREAK}) — not yet delisted`);
           }
         } catch (writeErr) {
           _log('WARN', `  Could not update delisted flag for ${stock.ticker}: ${writeErr.message}`);
@@ -2871,42 +2980,23 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // every ticker meant each of the CONCURRENCY workers independently spaced ITS
   // OWN pulls by rateLimitMs, so aggregate issue rate was ~concurrency/rateLimitMs
   // req/s (e.g. 20 / 1.5s ≈ 13 req/s) — the 1500ms "rate limit" was never a global
-  // request spacing and Yahoo saw bursts that tripped 429s. Fix: a single shared
-  // `nextSlotAt` timestamp that every worker advances atomically (Node is single-
-  // threaded; the read-modify-write below has no await between read and write, so
-  // no two workers can claim the same slot). Each worker reserves the next slot
-  // BEFORE issuing its request and sleeps until then, guaranteeing the MINIMUM
-  // spacing between consecutive Yahoo requests across ALL workers is exactly
-  // sleepMs, decoupled from concurrency. `concurrency` now governs only how many
-  // requests may be in flight at once; the gate governs the issue rate. The
-  // per-worker post-request sleep is removed to avoid double-counting.
+  // request spacing and Yahoo saw bursts that tripped 429s.
+  //
+  // audit fix BH-043: the gate ITSELF (formerly a local `acquireSlot()` reserving
+  // one slot per ticker, right here, before processOneFn) moved to the MODULE-scope
+  // acquireYfSlot() and is now called before EACH individual yf.* request (quote,
+  // quoteSummary, the 4 fundamentalsTimeSeries calls) — a ticker fires ~6 sequential
+  // requests, and gating only the ticker START never actually spaced them. Sub-slot
+  // reservation logic unchanged (Math.max(now, nextSlotAt) + no-await-between-read-
+  // and-write == atomic under Node's single thread); it just now lives where every
+  // real request routes through it, instead of once per ticker here.
   async function runWorkerPool(stocks, processOneFn, concurrency, sleepMs, writeManifestFn) {
     let idx = 0;
-    // Shared leaky-bucket gate: timestamp (ms) at which the next request may issue.
-    let nextSlotAt = 0;
-    // Reserve the next global issue slot atomically and wait for it. The
-    // read-of-nextSlotAt + write-back is synchronous (no await between), so
-    // concurrent workers serialize through it and each gets a distinct slot
-    // spaced sleepMs apart. Slots never bunch up in the future faster than
-    // wall-clock when the pipeline is request-bound, and the Math.max(now,…)
-    // keeps the gate from accumulating debt when a worker stalls on a slow pull.
-    async function acquireSlot() {
-      if (!(sleepMs > 0)) return; // throttle disabled → no spacing
-      const now = Date.now();
-      const slot = Math.max(now, nextSlotAt);
-      nextSlotAt = slot + sleepMs;
-      const waitMs = slot - now;
-      if (waitMs > 0) await _sleep(waitMs);
-    }
     async function worker() {
       while (true) {
         const myIdx = idx++;
         if (myIdx >= stocks.length) break;
         const stock = stocks[myIdx];
-        // audit F-A-2026-06-21: gate issue-rate globally BEFORE the request
-        // instead of sleeping per-worker AFTER it. This is what makes sleepMs a
-        // true global spacing rather than a per-worker one.
-        await acquireSlot();
         await processOneFn(stock).catch(e => _log('WARN', `Worker error ${stock.ticker}: ${e.message}`));
         // flush manifest every 100 tickers using the captured local index
         if (myIdx > 0 && myIdx % 100 === 0) writeManifestFn();
@@ -2985,26 +3075,46 @@ function shardStocks(stocks, shard) {
 }
 
 function parseArgs(argv) {
-  const args = { watchlist: 'watchlist.json', output: './snapshots', rateLimit: 1500, shard: null };
+  // audit fix BH-182/BH-194: `help` and `argError` added. parseArgs previously ignored
+  // BOTH unknown flags (so "--help" silently fell through to a full watchlist pull that
+  // starts by deleting the committed prod manifest — a real documented incident) AND a
+  // malformed-but-present --shard value (WARN + null shard → silent full-universe pull
+  // instead of the intended shard slice). main() must check args.help/args.argError
+  // BEFORE any file mutation.
+  const args = { watchlist: 'watchlist.json', output: './snapshots', rateLimit: 1500, shard: null, help: false, argError: null };
   for (let i = 2; i < argv.length; i++) {
-    if (argv[i] === '--watchlist' && argv[i+1]) args.watchlist = argv[++i];
+    if (argv[i] === '--help' || argv[i] === '-h') args.help = true;
+    else if (argv[i] === '--watchlist' && argv[i+1]) args.watchlist = argv[++i];
     else if (argv[i] === '--output' && argv[i+1]) args.output = argv[++i];
     else if (argv[i] === '--rate-limit' && argv[i+1]) {
       const n = parseInt(argv[++i], 10);
       args.rateLimit = (Number.isFinite(n) && n > 0) ? n : 1500;  // P1-Fix Tag 13
     }
-    // 0.2/0.9 Sharding: --shard i/N -> nur den i-ten von N Shards ziehen (0<=i<N). Ungueltig -> ignoriert (kein Shard).
+    // 0.2/0.9 Sharding: --shard i/N -> nur den i-ten von N Shards ziehen (0<=i<N).
+    // BH-194: malformed (flag present, value invalid) is now a hard argError — distinct
+    // from "no --shard flag at all" (args.shard stays null, full universe, as designed).
     else if (argv[i] === '--shard' && argv[i+1]) {
-      const [idx, cnt] = String(argv[++i]).split('/').map((x) => parseInt(x, 10));
+      const raw = argv[++i];
+      const [idx, cnt] = String(raw).split('/').map((x) => parseInt(x, 10));
       if (Number.isInteger(idx) && Number.isInteger(cnt) && cnt > 0 && idx >= 0 && idx < cnt) args.shard = { index: idx, count: cnt };
-      else _log('WARN', `Ungueltiges --shard "${argv[i]}" (erwartet i/N, 0<=i<N) — ignoriert, ziehe volles Universum`);
+      else if (!args.argError) args.argError = `Ungueltiges --shard "${raw}" (erwartet i/N, 0<=i<N)`;
     }
+    else if (!args.argError) args.argError = `Unbekanntes Argument "${argv[i]}"`;
   }
   return args;
 }
 
 async function main() {
   const args = parseArgs(process.argv);
+  // BH-182: bail BEFORE the manifest-delete/watchlist-load/full-pull below.
+  if (args.help) {
+    console.log('Usage: node pull-yahoo.js [--watchlist FILE] [--output DIR] [--rate-limit MS] [--shard i/N]');
+    process.exit(0);
+  }
+  if (args.argError) {
+    _log('ERROR', args.argError);
+    process.exit(1);
+  }
   if (!fs.existsSync(args.watchlist)) {
     _log('ERROR', `Watchlist not found: ${args.watchlist}`);
     process.exit(1);
@@ -3120,4 +3230,8 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // A10 (2.3-Vorbedingung, §4b Delivery-IC): Perioden-Ende-Substrat fuer TDD.
   mapFTSToQuarterly, _isoDay, _alignEnds,
   _silentErrorCounts: () => ({ lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors }),
-  _resetSilentErrorCounts: () => { _lampErrors = 0; _needsFullPullThrew = 0; _corruptYoungSnapshots = 0; _ftsCacheParseErrors = 0; } };
+  _resetSilentErrorCounts: () => { _lampErrors = 0; _needsFullPullThrew = 0; _corruptYoungSnapshots = 0; _ftsCacheParseErrors = 0; },
+  // audit fix BH-042/BH-047: pure decisions fuer TDD.
+  shouldRetryKosdaq, nextNotFoundState,
+  // audit fix BH-043: shared request-spacing gate fuer TDD (timing test, no network).
+  acquireYfSlot, _setYfGateSleepMs: (ms) => { _yfGateSleepMs = ms; _yfGateNextSlotAt = 0; } };
