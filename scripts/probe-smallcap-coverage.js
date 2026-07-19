@@ -2,16 +2,22 @@
 /**
  * Masterplan 5.1, Messlauf 2: Yahoo-Coverage fuer acht Hypergrowth-Achsen auf
  * einer per R1-R6 gefilterten Small-Cap-Stichprobe. SEC/EDGAR bleibt in diesem
- * Modus vollstaendig deaktiviert; der alte Messlauf-1-Code ist nur als nicht
- * aufgerufener Legacy-Pfad erhalten.
+ * Modus vollstaendig deaktiviert.
  *
  * Der offizielle Messlauf-2-Report wird nur bei --sample 100 geschrieben.
  * Mini-Laeufe veraendern die offiziellen Reports nicht.
+ *
+ * BH-014-Limitation: die Kandidatenbasis kommt aus vier thematischen Yahoo-
+ * Screener-Seiten, nicht aus einer vollstaendigen Small-Cap-Listing-Basis.
+ * Das ist kein Wahrscheinlichkeits-Sample der Grundgesamtheit; siehe die
+ * Limitation-Zeile im Report-Header (buildMarkdownM2).
  */
 'use strict';
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 // Derselbe Client wie in pull-yahoo.js. yahoo-finance2 fuehrt fuer
 // quoteSummary Cookie und Crumb; der Probe-Code baut keine zweite Auth-Logik.
@@ -36,15 +42,12 @@ const yf = new YahooFinance({
 
 const ROOT = path.resolve(__dirname, '..');
 const PROBE_DATE = '2026-07-16';
-const REPORT_JSON = path.join(ROOT, 'reports', `smallcap-probe-${PROBE_DATE}.json`);
-const REPORT_MD = path.join(ROOT, 'reports', `smallcap-probe-${PROBE_DATE}.md`);
 const REPORT_M2_JSON = path.join(ROOT, 'reports', `smallcap-probe-messlauf2-${PROBE_DATE}.json`);
 const REPORT_M2_MD = path.join(ROOT, 'reports', `smallcap-probe-messlauf2-${PROBE_DATE}.md`);
 const XBRL_RUN_DATE = new Date().toISOString().slice(0, 10);
 const REPORT_M2_XBRL_JSON = path.join(ROOT, 'reports', `smallcap-probe-messlauf2-xbrl-${XBRL_RUN_DATE}.json`);
 const REPORT_M2_XBRL_MD = path.join(ROOT, 'reports', `smallcap-probe-messlauf2-xbrl-${XBRL_RUN_DATE}.md`);
 const OFFICIAL_SAMPLE = 100;
-const SEED = 'smallcap-probe-2026-07-16-v1';
 const M2_SEED = 'smallcap-probe-2026-07-16-messlauf2';
 const MIN_MCAP = 300_000_000;
 const MAX_MCAP = 800_000_000;
@@ -260,6 +263,14 @@ let nextYahooAt = 0;
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 function finite(v) { return Number.isFinite(v); }
 function pct(n, total) { return total ? Number((100 * n / total).toFixed(1)) : 0; }
+
+// BH-019: kurzer Fingerabdruck ueber Auswahl+Filter+Quelle eines Messlaufs,
+// identisch in JSON und MD eingebettet. Ein Crash zwischen den beiden
+// fs-Writes hinterlaesst dann ein erkennbar inkonsistentes Paar (Hash im
+// alten MD != Hash im neuen JSON) statt einer stillen Generationen-Mischung.
+function buildRunHash(payload) {
+  return crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex').slice(0, 16);
+}
 function readJson(file) { try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch (_) { return null; } }
 function errText(error) { return String(error && error.message ? error.message : error).replace(/\s+/g, ' ').slice(0, 240); }
 
@@ -397,65 +408,10 @@ function fnv1a(text) {
   return hash >>> 0;
 }
 
-function normalizeTickerEntry(entry) {
-  const ticker = String(entry && entry.ticker || '').trim().toUpperCase();
-  const cikRaw = entry && (entry.cik_str != null ? entry.cik_str : entry.cik);
-  const cik = cikRaw != null && cikRaw !== '' ? String(cikRaw).padStart(10, '0') : null;
-  if (!ticker || !cik || !/^[A-Z][A-Z0-9]{0,5}([.\-][A-Z])?$/.test(ticker)) return null;
-  return { ticker, yahooSymbol: ticker.replace('.', '-'), cik, name: String(entry.title || entry.name || ticker) };
-}
-
-function fallbackTickerBasis() {
-  // Nur Read-only-Fallback fuer SEC-WAF-Ausfaelle. Beide Dateien wurden durch
-  // die bestehende SEC-Pipeline aus company_tickers/companyfacts erzeugt.
-  const byTicker = new Map();
-  const tickerMap = readJson(path.join(ROOT, 'external-data', 'sec-ticker-cik-map.json'));
-  for (const [ticker, entry] of Object.entries(tickerMap && tickerMap.byTicker || {})) {
-    const row = normalizeTickerEntry({ ticker, cik: entry.cik, name: entry.name || ticker });
-    if (row) byTicker.set(row.ticker, row);
-  }
-  const manifest = readJson(path.join(ROOT, 'external-data', 'sec-xbrl', '_manifest.json'));
-  for (const [cik, entry] of Object.entries(manifest && manifest.entries || {})) {
-    const row = normalizeTickerEntry({ ticker: entry.ticker, cik, name: entry.ticker });
-    if (row) byTicker.set(row.ticker, row);
-  }
-  const secAnnual = readJson(path.join(ROOT, 'external-data', 'sec-secannual.json')) || {};
-  for (const [ticker, entry] of Object.entries(secAnnual)) {
-    const row = normalizeTickerEntry({ ticker, cik: entry.cik, name: ticker });
-    if (row) byTicker.set(row.ticker, row);
-  }
-  return [...byTicker.values()];
-}
-
-async function loadTickerBasis() {
-  let rows;
-  let source = 'SEC company_tickers.json (live)';
-  let fetchError = null;
-  try {
-    const json = await fetchJson(SEC_TICKERS_URL);
-    rows = Object.values(json).map(normalizeTickerEntry).filter(Boolean);
-  } catch (error) {
-    fetchError = errText(error);
-    rows = fallbackTickerBasis();
-    source = 'lokaler Read-only-SEC-Pipeline-Fallback nach Fehler bei company_tickers.json';
-  }
-  if (!rows.length) throw new Error(`Keine SEC-Tickerbasis verfuegbar${fetchError ? `: ${fetchError}` : ''}`);
-
-  // Vorgabe: erst kanonisch sortierte Basis, dann feste Seed-Rangfolge.
-  rows.sort((a, b) => a.ticker.localeCompare(b.ticker) || a.cik.localeCompare(b.cik));
-  rows = rows.map((row, sortedIndex) => ({ ...row, sortedIndex, seedRank: fnv1a(`${SEED}:${row.ticker}:${row.cik}`) }));
-  rows.sort((a, b) => a.seedRank - b.seedRank || a.sortedIndex - b.sortedIndex);
-  return { rows, source, fetchError };
-}
-
 function yahooFtsUrl(symbol, types) {
   const sym = encodeURIComponent(symbol);
   const qs = new URLSearchParams({ symbol, type: types.join(','), period1: String(PERIOD1), period2: String(PERIOD2) });
   return `https://query1.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/${sym}?${qs}`;
-}
-
-function yahooChartUrl(symbol) {
-  return `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`;
 }
 
 function extractYahooRows(payload) {
@@ -469,51 +425,6 @@ function extractYahooRows(payload) {
     })).filter(item => item.date && finite(item.value)).sort((a, b) => b.date.localeCompare(a.date));
   }
   return out;
-}
-
-async function yahooMarketCap(company) {
-  const payload = await fetchJson(yahooFtsUrl(company.yahooSymbol, ['trailingMarketCap']));
-  const rows = extractYahooRows(payload).trailingMarketCap || [];
-  return rows.length ? rows[0].value : null;
-}
-
-async function yahooUsEquityMeta(company) {
-  const payload = await fetchJson(yahooChartUrl(company.yahooSymbol));
-  const meta = payload && payload.chart && payload.chart.result && payload.chart.result[0] && payload.chart.result[0].meta;
-  if (!meta) return { accepted: false, reason: 'chart.meta fehlt' };
-  const accepted = meta.instrumentType === 'EQUITY' && meta.currency === 'USD' && meta.exchangeTimezoneName === 'America/New_York';
-  return {
-    accepted,
-    reason: accepted ? null : `instrumentType=${meta.instrumentType || 'null'}, currency=${meta.currency || 'null'}, timezone=${meta.exchangeTimezoneName || 'null'}`,
-    exchange: meta.exchangeName || meta.fullExchangeName || null,
-    currency: meta.currency || null,
-    instrumentType: meta.instrumentType || null
-  };
-}
-
-async function selectSample(basis, requested) {
-  const selected = [];
-  const scanErrors = [];
-  let scanned = 0;
-  for (const company of basis) {
-    scanned++;
-    try {
-      const marketCap = await yahooMarketCap(company);
-      if (!(finite(marketCap) && marketCap >= MIN_MCAP && marketCap <= MAX_MCAP)) continue;
-      const meta = await yahooUsEquityMeta(company);
-      if (!meta.accepted) continue;
-      selected.push({ ...company, marketCap, yahooMeta: meta });
-      console.log(`[select] ${selected.length}/${requested} ${company.ticker} mcap=${Math.round(marketCap / 1e6)}M`);
-      if (selected.length >= requested) break;
-    } catch (error) {
-      scanErrors.push({ ticker: company.ticker, error: errText(error) });
-    }
-    if (scanned % 100 === 0) console.log(`[scan] ${scanned} geprueft, ${selected.length}/${requested} im Band`);
-  }
-  if (selected.length < requested) {
-    throw new Error(`Nur ${selected.length}/${requested} passende Firmen nach ${scanned} SEC-Tickern gefunden`);
-  }
-  return { selected, scanned, scanErrors };
 }
 
 function emptyData() {
@@ -567,48 +478,17 @@ function extractRevisionRows(payload) {
   return rows;
 }
 
-async function probeYahooRevisionCapability(company) {
-  const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(company.yahooSymbol)}?modules=earningsTrend`;
-  try {
-    const payload = await fetchJson(url);
-    return { supported: true, firstTicker: company.ticker, firstRows: extractRevisionRows(payload), error: null };
-  } catch (error) {
-    return { supported: false, firstTicker: company.ticker, firstRows: [], error: errText(error) };
-  }
-}
-
-async function fetchYahooCompany(company, revisionCapability) {
-  try {
-    const payload = await fetchJson(yahooFtsUrl(company.yahooSymbol, YAHOO_TYPES));
-    const rows = extractYahooRows(payload);
-    let revisions = [];
-    let revisionError = revisionCapability.error;
-    if (revisionCapability.supported) {
-      if (company.ticker === revisionCapability.firstTicker) revisions = revisionCapability.firstRows;
-      else {
-        try {
-          const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(company.yahooSymbol)}?modules=earningsTrend`;
-          revisions = extractRevisionRows(await fetchJson(url));
-          revisionError = null;
-        } catch (error) { revisionError = errText(error); }
-      }
-    }
-    return { data: yahooDataFromRows(rows, revisions), error: null, revisionError };
-  } catch (error) {
-    return { data: emptyData(), error: errText(error), revisionError: revisionCapability.error };
-  }
-}
-
 function conceptFacts(companyfacts, concepts) {
   const usGaap = companyfacts && companyfacts.facts && companyfacts.facts['us-gaap'] || {};
   const rows = [];
   concepts.forEach((concept, priority) => {
     const fact = usGaap[concept];
     if (!fact || !fact.units) return;
-    const units = fact.units.USD || Object.values(fact.units)[0] || [];
+    const unitKey = fact.units.USD ? 'USD' : Object.keys(fact.units)[0];
+    const units = (unitKey && fact.units[unitKey]) || [];
     for (const item of units) {
       if (!finite(item.val) || !item.end) continue;
-      rows.push({ ...item, concept, priority });
+      rows.push({ ...item, concept, priority, unit: unitKey });
     }
   });
   return rows;
@@ -669,7 +549,17 @@ function quarterlyFlow(companyfacts, concepts) {
   });
   const byDate = new Map(direct.map(row => [row.date, row]));
   for (const fy of annual) {
-    const prior = ytd9m.find(row => row.start === fy.start && Date.parse(fy.end) - Date.parse(row.end) >= 45 * 86_400_000 && Date.parse(fy.end) - Date.parse(row.end) <= 150 * 86_400_000);
+    // BH-015: Q4 = FY minus 9M nur bei identischer Fakt-Identitaet (Concept +
+    // Unit) zulassen, sonst kann z.B. Revenues(FY) minus SalesRevenueNet(9M)
+    // ein erfundenes Q4 erzeugen. Accession bewusst NICHT verlangt: der FY-
+    // Wert stammt strukturell aus dem 10-K, der 9M-Wert aus dem vorherigen
+    // 10-Q — unterschiedliche Accessions sind bei diesem Fallback-Pfad der
+    // Normalfall (kein diskretes Q4 wurde je getaggt), nicht der Fehler;
+    // dieselbe Accession zu verlangen wuerde die Ableitung komplett stillegen
+    // statt den belegten Cross-Concept-Fehler zu beheben.
+    const prior = ytd9m.find(row => row.start === fy.start
+      && row.concept === fy.concept && row.unit === fy.unit
+      && Date.parse(fy.end) - Date.parse(row.end) >= 45 * 86_400_000 && Date.parse(fy.end) - Date.parse(row.end) <= 150 * 86_400_000);
     if (prior && !byDate.has(fy.end)) byDate.set(fy.end, { date: fy.end, value: fy.val - prior.val });
   }
   return [...byDate.values()].sort((a, b) => b.date.localeCompare(a.date));
@@ -692,41 +582,6 @@ function secDataFromCompanyFacts(companyfacts) {
   d.fcfMarginTTM = [];
   d.estimateRevisions = []; // Analystenschaetzungen sind kein XBRL-Konzept.
   return d;
-}
-
-function indexedSeries(raw) {
-  return (Array.isArray(raw) ? raw : []).map((item, i) => {
-    const value = finite(item) ? item : item && item.value;
-    return finite(value) ? { date: `index-${String(i).padStart(3, '0')}`, value } : null;
-  }).filter(Boolean);
-}
-
-function secDataFromAnnualCache(entry) {
-  const d = emptyData();
-  d.annualRevenue = indexedSeries(entry.annualRev);
-  d.annualOperatingIncome = indexedSeries(entry.annualOpInc);
-  d.annualAssets = indexedSeries(entry.annualAssets);
-  d.annualCurrentLiabilities = indexedSeries(entry.annualCurrentLiabilities);
-  d.annualFCF = indexedSeries(entry.annualFCF);
-  d.annualOCF = indexedSeries(entry.annualOCF);
-  return d;
-}
-
-async function fetchSecCompany(company, secAnnualCache) {
-  const url = `https://data.sec.gov/api/xbrl/companyfacts/CIK${company.cik}.json`;
-  try {
-    const payload = await fetchJson(url);
-    return { data: secDataFromCompanyFacts(payload), mode: 'live-companyfacts', error: null };
-  } catch (error) {
-    const networkError = errText(error);
-    const localFile = path.join(ROOT, 'external-data', 'sec-xbrl', `${company.cik}.json`);
-    const local = readJson(localFile);
-    if (local) return { data: secDataFromCompanyFacts(local), mode: 'local-companyfacts-cache', error: networkError };
-    if (secAnnualCache[company.ticker]) {
-      return { data: secDataFromAnnualCache(secAnnualCache[company.ticker]), mode: 'local-secannual-derived-cache', error: networkError };
-    }
-    return { data: emptyData(), mode: 'unavailable', error: networkError };
-  }
 }
 
 function values(rows) { return (Array.isArray(rows) ? rows : []).map(row => row && row.value).filter(finite); }
@@ -776,41 +631,6 @@ function axisSummary(data) {
   return Object.fromEntries(AXES.map(axis => [axis.id, Boolean(axis.available(data))]));
 }
 
-function buildCoverage(companies) {
-  const coverage = {};
-  for (const axis of AXES) {
-    const counts = { yahooOnly: 0, xbrlOnly: 0, both: 0, neither: 0 };
-    const tickers = { yahooOnly: [], xbrlOnly: [], both: [], neither: [] };
-    for (const company of companies) {
-      const y = company.axes.yahoo[axis.id];
-      const x = company.axes.xbrl[axis.id];
-      const bucket = y && x ? 'both' : y ? 'yahooOnly' : x ? 'xbrlOnly' : 'neither';
-      counts[bucket]++;
-      tickers[bucket].push(company.ticker);
-    }
-    coverage[axis.id] = {
-      label: axis.label,
-      yahooOnly: { n: counts.yahooOnly, pct: pct(counts.yahooOnly, companies.length), tickers: tickers.yahooOnly },
-      xbrlOnly: { n: counts.xbrlOnly, pct: pct(counts.xbrlOnly, companies.length), tickers: tickers.xbrlOnly },
-      both: { n: counts.both, pct: pct(counts.both, companies.length), tickers: tickers.both },
-      neither: { n: counts.neither, pct: pct(counts.neither, companies.length), tickers: tickers.neither }
-    };
-  }
-  return coverage;
-}
-
-function buildMissingFields(companies) {
-  const rows = [];
-  for (const provider of ['yahoo', 'xbrl']) {
-    for (const [field, def] of Object.entries(FIELD_DEFS)) {
-      const tickers = companies.filter(company => !company.fields[provider][field].present).map(company => company.ticker);
-      rows.push({ provider, field, label: def.label, missingN: tickers.length, missingPct: pct(tickers.length, companies.length), tickers });
-    }
-  }
-  rows.sort((a, b) => b.missingN - a.missingN || a.provider.localeCompare(b.provider) || a.field.localeCompare(b.field));
-  return rows;
-}
-
 function reportAxisDefinitions() {
   return AXES.map(axis => ({
     id: axis.id,
@@ -821,59 +641,7 @@ function reportAxisDefinitions() {
   }));
 }
 
-function cell(bucket, total) { return `${bucket.pct.toFixed(1)} % (${bucket.n}/${total})`; }
 function mdEscape(text) { return String(text == null ? '' : text).replace(/\|/g, '\\|').replace(/\r?\n/g, ' '); }
-function tickerPreview(tickers) { return tickers.length ? tickers.slice(0, 20).join(', ') + (tickers.length > 20 ? `, ... (+${tickers.length - 20})` : '') : '-'; }
-
-function buildMarkdown(report) {
-  const n = report.sample.actual;
-  const lines = [
-    '# Small-Cap-Daten-Coverage-Probe (2026-07-16)',
-    '',
-    'Reine Messung: Zahlen, Felddefinitionen und Fehllisten. Der Bericht enthaelt keine GO/NO-GO-Empfehlung und keine Schwellen-Interpretation.',
-    '',
-    '## Stichproben-Definition',
-    '',
-    `- Datum: ${report.probeDate}`,
-    `- Seed: \`${report.sample.seed}\``,
-    `- Ticker-Basis: ${mdEscape(report.sample.basisSource)} (${report.sample.basisN} Eintraege)`,
-    `- Auswahlregel: ${mdEscape(report.sample.selectionRule)}`,
-    `- Marktkapitalisierungsband: USD ${(report.sample.marketCapMin / 1e6).toFixed(0)}-${(report.sample.marketCapMax / 1e6).toFixed(0)} Mio. (Yahoo trailingMarketCap, inklusive Grenzen)`,
-    `- Stichprobe: ${n} Firmen; ${report.sample.scannedN} Kandidaten der Seed-Reihenfolge bis zum Erreichen von N geprueft`,
-    `- US-Abgrenzung: ${mdEscape(report.sample.usDefinition)}`,
-    `- Drosselung: SEC ${report.network.secDelayMs} ms Mindestabstand; Yahoo ${report.network.yahooDelayMs} ms Mindestabstand`,
-    ''
-  ];
-  if (report.sample.basisFetchError) lines.push(`- Fehler beim Live-Abruf der SEC-Basis: ${mdEscape(report.sample.basisFetchError)}`, '');
-
-  lines.push('## Coverage je Achse', '', '| Achse | Yahoo-only | XBRL-only | beide | keins |', '|---|---:|---:|---:|---:|');
-  for (const axis of report.axisDefinitions) {
-    const c = report.coverage[axis.id];
-    lines.push(`| ${axis.id} | ${cell(c.yahooOnly, n)} | ${cell(c.xbrlOnly, n)} | ${cell(c.both, n)} | ${cell(c.neither, n)} |`);
-  }
-
-  lines.push('', '## Felder je Achse', '', '| Achse | Mindestfelder fuer die Coverage-Zaehlung | Zusaetzliche/bedingte Rohfelder | Quellen-Mapping |', '|---|---|---|---|');
-  for (const axis of report.axisDefinitions) {
-    const mappings = axis.fields.map(field => `${field.key}: Yahoo [${field.yahoo.join(', ')}]; XBRL [${field.xbrl.join(', ')}]`).join('; ');
-    lines.push(`| ${axis.id} | ${mdEscape(axis.requiredForCoverage)} | ${mdEscape(axis.optionalOrConditional)} | ${mdEscape(mappings)} |`);
-  }
-
-  lines.push('', '## 10 haeufigste fehlende Felder', '', 'Gezählt wird Feldabwesenheit (keine gelieferte Beobachtung) je Quelle und Firma; Abruffehler bleiben zusaetzlich in der Fehlerliste sichtbar.', '', '| Rang | Quelle | Rohfeld | Fehlend | Ticker (max. 20) |', '|---:|---|---|---:|---|');
-  report.missingFieldsTop10.forEach((row, index) => {
-    lines.push(`| ${index + 1} | ${row.provider} | ${mdEscape(row.label)} (\`${row.field}\`) | ${row.missingPct.toFixed(1)} % (${row.missingN}/${n}) | ${mdEscape(tickerPreview(row.tickers))} |`);
-  });
-
-  lines.push('', '## Quellenabrufe und Firmenliste', '', `- Yahoo-Fundamentals-Abruffehler: ${report.errors.yahooFundamentals.length}/${n}`, `- Yahoo-earningsTrend-Zugriff: ${mdEscape(report.network.yahooRevisionCapability.supported ? 'verfuegbar' : `nicht verfuegbar (${report.network.yahooRevisionCapability.error})`)}`, `- SEC-companyfacts live: ${report.secModes['live-companyfacts'] || 0}/${n}`, `- SEC lokaler companyfacts-Cache nach Live-Fehler: ${report.secModes['local-companyfacts-cache'] || 0}/${n}`, `- SEC lokaler secannual-Extrakt nach Live-Fehler: ${report.secModes['local-secannual-derived-cache'] || 0}/${n}`, `- SEC ohne Rohdaten nach Live-Fehler: ${report.secModes.unavailable || 0}/${n}`, '');
-  lines.push('| Ticker | MCap USD Mio. | Boerse | Yahoo-Fehler | SEC-Modus | SEC-Live-Fehler |', '|---|---:|---|---|---|---|');
-  for (const company of report.companies) {
-    lines.push(`| ${company.ticker} | ${(company.marketCap / 1e6).toFixed(1)} | ${mdEscape(company.exchange || '-')} | ${mdEscape(company.errors.yahoo || '-')} | ${company.secMode} | ${mdEscape(company.errors.sec || '-')} |`);
-  }
-
-  lines.push('', '## Messannahmen', '');
-  report.assumptions.forEach(item => lines.push(`- ${item}`));
-  lines.push('');
-  return lines.join('\n');
-}
 
 function yahooScreenerUrl(id, start) {
   const qs = new URLSearchParams({
@@ -1092,6 +860,10 @@ function buildMarkdownM2(report) {
   const lines = [
     `# Small-Cap-Coverage-Probe - Messlauf 2 (${report.probeDate})`,
     '',
+    `Run-Hash: \`${report.runHash}\` (Fingerabdruck ueber Seed, Filter und gezogene Ticker; identisch in JSON und MD — weicht er ab, stammen JSON und MD aus verschiedenen Laeufen).`,
+    '',
+    `> **Limitation (BH-014):** ${report.sample.candidateBasisLimitation}`,
+    '',
     'Reine Messung mit Zahlen, Ausschlussgruenden und Rohfeldern. Der Bericht enthaelt keine Schlussfolgerung oder Empfehlung.',
     '',
     '## Stichproben-Definition',
@@ -1241,9 +1013,17 @@ async function mainMesslauf2() {
     redrawn: drawnTotal - companies.length,
     finalN: companies.length
   };
+  const runHash = buildRunHash({
+    seed: M2_SEED,
+    marketCapMin: MIN_MCAP,
+    marketCapMax: MAX_MCAP,
+    filters: m2FilterDefinitions(),
+    tickers: companies.map(c => c.ticker)
+  });
   const report = {
     schemaVersion: 2,
     measurementRun: 2,
+    runHash,
     probeDate: PROBE_DATE,
     generatedAt: new Date().toISOString(),
     measurementOnly: true,
@@ -1254,6 +1034,10 @@ async function mainMesslauf2() {
       marketCapMin: MIN_MCAP,
       marketCapMax: MAX_MCAP,
       candidateBasis: 'Yahoo predefined screener pages, dedupliziert und per FNV-1a-Seed gerankt',
+      // BH-014: keine vollstaendige Small-Cap-Listing-/SEC-Basis, sondern nur
+      // vier thematische Yahoo-Screener-Seiten -> kein Wahrscheinlichkeits-
+      // Sample der Grundgesamtheit; siehe candidateBasisLimitation.
+      candidateBasisLimitation: 'BH-014 (ungeloest): Kandidatenbasis stammt aus 4 thematischen Yahoo-Screener-Seiten (Aggressive Small Caps, Gainers, Most Shorted, Undervalued Growth), NICHT aus einer vollstaendigen Small-Cap-Listing-/SEC-Basis. Das ist kein Wahrscheinlichkeits-Sample der $300-800M-Operating-Company-Population; gemessene Coverage-Raten sind selektionsverzerrt und tragen ohne echtes Probability-Sample keine Universe-Expansions-Entscheidung.',
       rawScreenerRows: basis.rawQuotesN,
       inBandScreenerRows: basis.inBandRowsN,
       uniqueBandCandidates: basis.rows.length,
@@ -1279,8 +1063,8 @@ async function mainMesslauf2() {
   };
 
   if (args.sample === OFFICIAL_SAMPLE) {
-    fs.writeFileSync(REPORT_M2_JSON, JSON.stringify(report, null, 2) + '\n');
-    fs.writeFileSync(REPORT_M2_MD, buildMarkdownM2(report) + '\n');
+    writeFileAtomic(REPORT_M2_JSON, JSON.stringify(report, null, 2) + '\n');
+    writeFileAtomic(REPORT_M2_MD, buildMarkdownM2(report) + '\n');
   }
   coverageYahoo.forEach(row => console.log(`[coverage] ${row.id}: ${row.n}/${row.total} (${row.pct.toFixed(1)}%)`));
   console.log(`[balance] drawn=${drawBalance.drawnTotal} R1=${excludedByRule.R1} R2=${excludedByRule.R2} R3=${excludedByRule.R3} R4=${excludedByRule.R4} R5=${excludedByRule.R5} R6=${excludedByRule.R6} redrawn=${drawBalance.redrawn} final=${drawBalance.finalN}`);
@@ -1377,6 +1161,8 @@ function coverageCell(row, nKey = 'n', totalKey = 'total', pctKey = 'pct') {
 function buildMarkdownM2Xbrl(report) {
   const lines = [
     `# Small-Cap-Coverage-Probe - Messlauf 2b XBRL (${report.runDate})`,
+    '',
+    `Run-Hash: \`${report.runHash}\` (Fingerabdruck ueber Quell-Run-Hash und Ticker; identisch in JSON und MD). Quell-Run-Hash Messlauf 2: \`${report.sample.sourceRunHash || 'unbekannt'}\`.`,
     '',
     'Reine SEC/XBRL-Messung mit Zahlen, Tabellen und Fehlgruenden.',
     '',
@@ -1539,15 +1325,22 @@ async function mainXbrl() {
   retrieval.durationMs = Date.now() - startedAt;
   const missingCik = companies.filter(company => !company.cik).map(company => ({ ticker: company.ticker, name: company.name }));
   const cikN = companies.length - missingCik.length;
+  const runHash = buildRunHash({
+    sourceRunHash: source.runHash || null,
+    tickers: sourceTickers,
+    secTickersUrl: SEC_TICKERS_URL
+  });
   const report = {
     schemaVersion: 1,
     measurementRun: '2b-xbrl',
+    runHash,
     probeDate: PROBE_DATE,
     runDate: XBRL_RUN_DATE,
     generatedAt: new Date().toISOString(),
     measurementOnly: true,
     sample: {
       source: path.relative(ROOT, REPORT_M2_JSON).replace(/\\/g, '/'),
+      sourceRunHash: source.runHash || null,
       expected: OFFICIAL_SAMPLE,
       actual: companies.length,
       newDraw: false
@@ -1572,8 +1365,8 @@ async function mainXbrl() {
     companies
   };
 
-  fs.writeFileSync(REPORT_M2_XBRL_JSON, JSON.stringify(report, null, 2) + '\n');
-  fs.writeFileSync(REPORT_M2_XBRL_MD, buildMarkdownM2Xbrl(report) + '\n');
+  writeFileAtomic(REPORT_M2_XBRL_JSON, JSON.stringify(report, null, 2) + '\n');
+  writeFileAtomic(REPORT_M2_XBRL_MD, buildMarkdownM2Xbrl(report) + '\n');
   report.coverageXbrl.forEach(row => console.log(`[xbrl-coverage] ${row.id}: ${row.n}/${row.total} (${row.pct.toFixed(1)}%); mit-CIK ${row.cikN}/${row.cikTotal} (${row.cikPct.toFixed(1)}%)`));
   console.log(`[cik-bilanz] gesamt=${companies.length} mit-CIK=${cikN} ohne-CIK=${missingCik.length}`);
   console.log(`[abruf] requests=${retrieval.requestsTotal} companyfacts-ok=${retrieval.companyFactsSuccess} fehler=${retrieval.companyFactsFailed} laufzeit=${(retrieval.durationMs / 1000).toFixed(1)}s`);
@@ -1582,108 +1375,32 @@ async function mainXbrl() {
   console.log(`[done] ${companies.length}/${OFFICIAL_SAMPLE} Firmen aus der bindenden Stichprobe XBRL-seitig gemessen; Yahoo-Requests=0`);
 }
 
-async function mainMesslauf1() {
-  const args = parseArgs(process.argv);
-  console.log(`[probe] sample=${args.sample}, seed=${SEED}`);
-  const tickerBasis = await loadTickerBasis();
-  console.log(`[basis] ${tickerBasis.rows.length} Ticker; ${tickerBasis.source}`);
-  const selection = await selectSample(tickerBasis.rows, args.sample);
-  const revisionCapability = await probeYahooRevisionCapability(selection.selected[0]);
-  const secAnnualCache = readJson(path.join(ROOT, 'external-data', 'sec-secannual.json')) || {};
-  const companies = [];
+// BH-016: Der alte Messlauf-1-Pfad (SEC-Basis-Scan + Yahoo/XBRL-Feldvergleich)
+// wurde nie vom CLI-Dispatcher aufgerufen (siehe selectedMain unten) und ist
+// entfernt statt repariert (Court-Sketch: toten Code entfernen, nicht die
+// Index-Jahres-Paarung im Legacy-Fallback flicken).
 
-  for (let i = 0; i < selection.selected.length; i++) {
-    const selected = selection.selected[i];
-    console.log(`[fields] ${i + 1}/${selection.selected.length} ${selected.ticker}`);
-    const yahoo = await fetchYahooCompany(selected, revisionCapability);
-    const sec = await fetchSecCompany(selected, secAnnualCache);
-    companies.push({
-      ticker: selected.ticker,
-      cik: selected.cik,
-      name: selected.name,
-      marketCap: selected.marketCap,
-      exchange: selected.yahooMeta.exchange,
-      secMode: sec.mode,
-      fields: { yahoo: fieldSummary(yahoo.data), xbrl: fieldSummary(sec.data) },
-      axes: { yahoo: axisSummary(yahoo.data), xbrl: axisSummary(sec.data) },
-      errors: { yahoo: yahoo.error, yahooRevisions: yahoo.revisionError, sec: sec.error }
-    });
-  }
-
-  const coverage = buildCoverage(companies);
-  const missingFields = buildMissingFields(companies);
-  const secModes = companies.reduce((acc, company) => { acc[company.secMode] = (acc[company.secMode] || 0) + 1; return acc; }, {});
-  const report = {
-    schemaVersion: 1,
-    probeDate: PROBE_DATE,
-    generatedAt: new Date().toISOString(),
-    measurementOnly: true,
-    sample: {
-      requested: args.sample,
-      actual: companies.length,
-      seed: SEED,
-      basisUrl: SEC_TICKERS_URL,
-      basisSource: tickerBasis.source,
-      basisFetchError: tickerBasis.fetchError,
-      basisN: tickerBasis.rows.length,
-      scannedN: selection.scanned,
-      marketCapMin: MIN_MCAP,
-      marketCapMax: MAX_MCAP,
-      selectionRule: 'SEC-Basis ticker/CIK aufsteigend sortieren; FNV-1a-Rang ueber Seed+Ticker+CIK; nach Rang aufsteigend scannen; Yahoo trailingMarketCap im Band; dann Yahoo chart.meta = USD-EQUITY in America/New_York; erste N Treffer.',
-      usDefinition: 'SEC-registrierter Ticker plus bei Yahoo als USD-EQUITY mit Exchange-Zeitzone America/New_York gefuehrt; Sitzland/Domizil wird mangels Feld in company_tickers.json nicht behauptet.'
-    },
-    network: {
-      allowedHosts: ['query*.finance.yahoo.com', '*.sec.gov'],
-      secUserAgent: SEC_UA,
-      secDelayMs: SEC_DELAY_MS,
-      yahooDelayMs: YAHOO_DELAY_MS,
-      yahooRevisionCapability: revisionCapability
-    },
-    axisDefinitions: reportAxisDefinitions(),
-    coverage,
-    missingFields,
-    missingFieldsTop10: missingFields.slice(0, 10),
-    secModes,
-    errors: {
-      selectionYahoo: selection.scanErrors,
-      yahooFundamentals: companies.filter(c => c.errors.yahoo).map(c => ({ ticker: c.ticker, error: c.errors.yahoo })),
-      secCompanyFacts: companies.filter(c => c.errors.sec).map(c => ({ ticker: c.ticker, mode: c.secMode, error: c.errors.sec }))
-    },
-    assumptions: [
-      'Achsenliste ist exakt die acht in src/scoring/axes.js benannten Funktionen: revGrowthLevel, revAcceleration, gpGrowth, ruleOfX, marginTrajectory, capitalEfficiency, revisionsMomentum, dilution.',
-      'Achsen-Coverage folgt der minimalen Nicht-null-Semantik der Funktion in axes.js. Optionale Tilts/Guards werden als Felder ausgewiesen, bestimmen aber nicht die Kern-Coverage.',
-      'revGrowthLevel und ruleOfX gelten als lieferbar bei >=5 Quartalsumsaetzen (Lag 4) oder >=2 Jahresumsaetzen mit positivem aelterem Wert.',
-      'revAcceleration gilt als lieferbar bei mindestens drei positiven Quartalsumsaetzen; das bildet mindestens zwei positive QoQ-Paare wie quarterQoQRates.',
-      'gpGrowth verlangt fuer den Rueckgabewert zwei Jahres-Bruttogewinne und einen positiven aelteren Wert; Jahresumsatz fuer die GM-Trajektorie ist optional und separat gemessen.',
-      'ruleOfX verlangt fuer den Rueckgabewert nur den Umsatz-Wachstumspfad. FCF-Marge und annualFCF/annualOCF sind bedingt (Profitable-Track/Sign-Guard) und separat gemessen.',
-      'marginTrajectory verlangt zwei nach Periodenende gepaarte Quartale mit Umsatz >0 und operativem Ergebnis.',
-      'capitalEfficiency verlangt mindestens ein nach Periodenende gepaartes Jahr aus Operating Income, Assets und Current Liabilities mit positivem investiertem Kapital; Asset-Growth-Penalty und Zyklus-Discount sind optionale Komponenten.',
-      'revisionsMomentum nutzt Yahoo earningsTrend.epsRevisions. SEC-XBRL enthaelt keine Analystenrevisionen; XBRL-Coverage dieser Achse ist daher per Quellenvertrag null.',
-      'dilution verlangt mindestens ein nach Periodenende gepaartes Jahr aus ShareBasedCompensation und Umsatz ungleich null; ein zweites Jahr fuegt nur den Trend hinzu.',
-      'SEC-Umsatz akzeptiert vier uebliche us-gaap-Tags in dokumentierter Prioritaet; gleiche Perioden werden nicht addiert. Q4-Flows werden nur als FY minus passendem 9M-YTD-Fakt abgeleitet.',
-      'Yahoo-Fundamentals werden aus dem keylosen Fundamentals-Time-Series-Endpunkt gelesen. Der separate quoteSummary-earningsTrend-Endpunkt wird einmal auf Zugriff faehigkeit geprueft und bei globalem Auth-Fehler fuer den Lauf als nicht verfuegbar markiert.',
-      'Wenn der vorgeschriebene kontaktfreie SEC-User-Agent vom SEC-WAF abgewiesen wird, werden vorhandene, von der Repo-SEC-Pipeline erzeugte Rohcaches nur lesend verwendet; Modus und Live-Fehler stehen je Firma im Report. Nicht gecachte Firmen bleiben XBRL-seitig leer.'
-    ],
-    companies
-  };
-
-  if (args.sample === OFFICIAL_SAMPLE) {
-    fs.writeFileSync(REPORT_JSON, JSON.stringify(report, null, 2) + '\n');
-    fs.writeFileSync(REPORT_MD, buildMarkdown(report));
-    console.log(`[report] ${path.relative(ROOT, REPORT_JSON)}`);
-    console.log(`[report] ${path.relative(ROOT, REPORT_MD)}`);
-  } else {
-    console.log(`[report] Mini-Lauf: offizielle N=${OFFICIAL_SAMPLE}-Reports unveraendert`);
-  }
-  for (const axis of AXES) {
-    const c = coverage[axis.id];
-    console.log(`[coverage] ${axis.id}: Y=${c.yahooOnly.n} X=${c.xbrlOnly.n} both=${c.both.n} neither=${c.neither.n}`);
-  }
-  console.log(`[done] ${companies.length}/${args.sample} Firmen gemessen`);
+if (require.main === module) {
+  const selectedMain = process.argv.includes('--xbrl') ? mainXbrl : mainMesslauf2;
+  selectedMain().catch(error => {
+    console.error(`[fatal] ${error.stack || error.message || error}`);
+    process.exitCode = 1;
+  });
 }
 
-const selectedMain = process.argv.includes('--xbrl') ? mainXbrl : mainMesslauf2;
-selectedMain().catch(error => {
-  console.error(`[fatal] ${error.stack || error.message || error}`);
-  process.exitCode = 1;
-});
+module.exports = {
+  conceptFacts,
+  groupFacts,
+  quarterlyFlow,
+  annualFlow,
+  annualInstant,
+  secDataFromCompanyFacts,
+  alignedPairs,
+  fieldSummary,
+  axisSummary,
+  filterOperatingCompanyM2,
+  yahooCoverageM2,
+  xbrlCoverage,
+  xbrlComparison,
+  buildRunHash
+};
