@@ -16,6 +16,20 @@
  * gives a high-quality fundamental signal (big-money in = bullish, out =
  * bearish) that complements Tag 210e's Form 4 insider feed.
  *
+ * BH-028 fix: `byInstitution[cik].quarters[reportPeriod]` holds one entry
+ * PER quarter (SEC `reportDate`/periodOfReport), so a successful refresh no
+ * longer discards the prior quarter's book — the flat top-level fields
+ * (`positions`, `filingDate`, ...) still mirror the latest quarter only, for
+ * back-compat with readers written before this fix. Cross-quarter
+ * accumulation reads `quarters`, not the flat fields.
+ * BH-029/BH-030 fix: amendment (13F-HR/A) handling is scoped to filings that
+ * share the SAME SEC reportDate as the base filing, and full-book-vs-partial
+ * is decided from the cover page's <amendmentType> (RESTATEMENT/NEW
+ * HOLDINGS) when available — the position-count ratio is a fallback only.
+ * BH-033 fix: both output files carry a `status` field ('active' vs
+ * 'research-inactive') so a sparse/stale store doesn't silently look like
+ * real institutional coverage.
+ *
  * Mirrors the Tag 210e pattern (pull-insider-form4.js):
  *   - SEC EDGAR submissions JSON → latest filing per institution
  *   - regex-based XML parsing (no extra deps)
@@ -96,6 +110,21 @@ const PERMANENT_ERROR_RETRY_DAYS = 30;
 // filings can list 5,000+ positions; we cap parsing at 20,000 to keep cache
 // size bounded and reject obviously-corrupt filings without OOM risk.
 const MAX_POSITIONS_PER_FILING = 20000;
+
+// BH-030 fix: FALLBACK ONLY. The primary amendment-type decision now reads
+// the SEC cover page's <amendmentType> (RESTATEMENT vs NEW HOLDINGS) — see
+// _fetchAmendmentType(). This ratio is used only when the cover page can't
+// be fetched/parsed (network hiccup, unexpected schema). Named + hoisted to
+// config (previously a function-local magic number) per audit finding.
+const AMENDMENT_MIN_RATIO_FALLBACK = 0.5;
+
+// BH-033 fix: below this many institutions with a live (non-errored,
+// non-empty) positions array, the store is too sparse to represent as
+// trustworthy "institutional coverage" — output is stamped research-inactive
+// instead of silently looking like a real cross-section. 10 is a low bar on
+// purpose: the curated bootstrap list has 40 institutions, so single-digit
+// live coverage is already a clear red flag on its own.
+const RESEARCH_ACTIVE_MIN_INSTITUTIONS = 10;
 
 // ─── Bootstrap institution list ─────────────────────────────────────────
 // Hardcoded list of well-known institutional managers. CIKs are SEC-padded
@@ -317,6 +346,14 @@ function _normalizeSubmissions(subJson) {
     rows.push({
       form: recent.form[i],
       filingDate: recent.filingDate[i],
+      // BH-029 fix: reportDate is SEC's periodOfReport (the quarter the
+      // filing COVERS, e.g. "2026-06-30"), distinct from filingDate (when it
+      // was FILED, e.g. "2026-12-01" for a late amendment). Selecting by
+      // filingDate alone can pick a late amendment for an OLD quarter as
+      // "newest" and pair it against a DIFFERENT quarter's base book.
+      // Optional-chained defensively: absent on older cached submissions
+      // fixtures / if SEC ever omits it, callers fall back to filingDate.
+      reportDate: recent.reportDate ? recent.reportDate[i] : undefined,
       accessionNumber: recent.accessionNumber[i],
       primaryDocument: recent.primaryDocument[i]
     });
@@ -368,6 +405,63 @@ async function findInfoTableUrl(cik, accNoDash) {
   return best ? SEC_ARCHIVE_FILE_URL(cik, accNoDash, best) : null;
 }
 
+// BH-030 fix: read the SEC cover page's actual amendment semantics instead of
+// guessing from a position-count ratio. Form 13F-HR/A cover pages
+// (primary_doc.xml) carry <amendmentInfo><amendmentType> = "RESTATEMENT"
+// (full book replacement) or "NEW HOLDINGS" (additive — only changed/added
+// rows). filing.primaryDocument already names this file (from the
+// submissions index), so no extra index.json round-trip is needed.
+// Returns 'RESTATEMENT' | 'NEW HOLDINGS' | null (unavailable/unparseable —
+// caller falls back to AMENDMENT_MIN_RATIO_FALLBACK).
+async function _fetchAmendmentType(cik, filing) {
+  if (!filing || !filing.primaryDocument || !filing.accessionNumber) return null;
+  const acc = filing.accessionNumber.replace(/-/g, '');
+  const url = SEC_ARCHIVE_FILE_URL(cik, acc, filing.primaryDocument);
+  let res;
+  try { res = await httpGet(url); }
+  catch (e) { await sleep(RATE_DELAY_MS); return null; }
+  await sleep(RATE_DELAY_MS);
+  if (res.notFound || !res.body) return null;
+  const type = _text(_extractFirst(res.body, 'amendmentType'));
+  return type ? type.toUpperCase().trim() : null;
+}
+
+// BH-029 fix: pick the target REPORT PERIOD (SEC's reportDate /
+// periodOfReport — the quarter a filing COVERS) rather than the most recent
+// filingDate. A 13F-HR/A for an OLDER quarter can be filed after a NEWER
+// quarter's original (e.g. Q2 original 08-14, Q3 original 11-14, Q2/A filed
+// 12-01) — sorting by filingDate alone would treat that late Q2 amendment as
+// "newest" and risk pairing it against the Q3 base book. Pure/exported so
+// this selection is directly test-covered (tests/scoring/bh-w2-13f.test.js)
+// instead of only reachable through a live network pull.
+function _selectPeriodFilings(f13s) {
+  const withPeriod = f13s.filter(f => f.reportDate);
+  const periodSortKey = f => f.reportDate || f.filingDate || '';
+  const targetPeriod = withPeriod.length
+    ? withPeriod.slice().sort((a, b) => periodSortKey(b).localeCompare(periodSortKey(a)))[0].reportDate
+    : null;
+  // Filings for the target period only — an amendment may ONLY be merged
+  // against a base filing covering the SAME period. If reportDate is
+  // unavailable anywhere (older cached submissions shape), degrade to the
+  // pre-fix filingDate-only pool rather than crash.
+  const periodFilings = (targetPeriod ? f13s.filter(f => f.reportDate === targetPeriod) : f13s.slice())
+    .sort((a, b) => (b.filingDate || '').localeCompare(a.filingDate || ''));
+  const newest = periodFilings[0] || null;
+  const baseFiling = periodFilings.find(f => f.form === '13F-HR') || null;
+  const reportPeriod = targetPeriod || (newest && newest.reportDate) || null;
+  return { reportPeriod, periodFilings, newest, baseFiling };
+}
+
+// BH-030 fix: is a 13F-HR/A a full-book restatement (use it directly) or a
+// partial amendment (merge onto the base book)? The SEC cover page's
+// <amendmentType> is authoritative when readable; AMENDMENT_MIN_RATIO_FALLBACK
+// is a last resort. Pure/exported for direct test coverage.
+function _isFullBookAmendment(amendmentType, baseCount, amendCount) {
+  if (amendmentType === 'RESTATEMENT') return true;
+  if (amendmentType === 'NEW HOLDINGS') return false;
+  return baseCount === 0 ? true : (amendCount / baseCount) >= AMENDMENT_MIN_RATIO_FALLBACK;
+}
+
 // ─── Per-institution pull ───────────────────────────────────────────────
 async function pullInstitution13f(cik, displayName) {
   const paddedCik = padCik(cik);
@@ -386,26 +480,25 @@ async function pullInstitution13f(cik, displayName) {
   if (f13s.length === 0) {
     return { positions: [], name, error: 'no-13f-hr-filings' };
   }
-  // Pick the latest by filingDate (lexicographic on ISO YYYY-MM-DD is fine).
-  f13s.sort((a, b) => (b.filingDate || '').localeCompare(a.filingDate || ''));
 
-  // audit F-A-2026-06-22: prevents a partial 13F-HR/A restatement from
-  // replacing the full holdings book. An amendment (13F-HR/A) is frequently
-  // filed AFTER the original 13F-HR to correct or add a SINGLE position; its
-  // information_table can legitimately contain only the changed rows. Picking
-  // it purely by latest filingDate would silently drop most of the book.
+  const { reportPeriod, newest, baseFiling } = _selectPeriodFilings(f13s);
+
+  // audit F-A-2026-06-22 (scope narrowed to one report period by BH-029):
+  // prevents a partial 13F-HR/A restatement from replacing the full holdings
+  // book. An amendment (13F-HR/A) is frequently filed AFTER the original
+  // 13F-HR to correct or add a SINGLE position; its information_table can
+  // legitimately contain only the changed rows. Picking it purely by latest
+  // filingDate would silently drop most of the book.
   //
   // Strategy:
-  //   - identify the newest ORIGINAL 13F-HR as the base (full book).
-  //   - if the newest filing overall is a /A, fetch BOTH the /A and the base.
-  //     Use the /A's book only when it is within a sane ratio of the base
-  //     (>= AMENDMENT_MIN_RATIO of the base position count). Otherwise treat
-  //     the /A as a partial restatement and MERGE its rows onto the base book
-  //     (amendment rows win on CUSIP+class+putCall identity).
+  //   - identify the newest ORIGINAL 13F-HR *for the target period* as the
+  //     base (full book).
+  //   - if the newest filing in the period is a /A, fetch BOTH the /A and
+  //     the base. BH-030: ask the SEC cover page (primary_doc.xml) what kind
+  //     of amendment this is — RESTATEMENT (full book) vs NEW HOLDINGS
+  //     (additive/partial) — and fall back to the position-count ratio
+  //     heuristic only when the cover page is unavailable/unparseable.
   //   - record amendmentOf + a low-position-count flag so downstream can audit.
-  const AMENDMENT_MIN_RATIO = 0.5;
-  const newest = f13s[0];
-  const baseFiling = f13s.find(f => f.form === '13F-HR') || null;
 
   // Fetch helper: resolve + download + parse one filing's info table.
   async function _fetchPositions(filing) {
@@ -424,18 +517,20 @@ async function pullInstitution13f(cik, displayName) {
              infoTableUrl: url };
   }
 
-  // Common case: newest filing is an original 13F-HR (or there is no /A at
-  // all) — behave exactly as before, no extra fetch.
+  // Common case: newest filing (for the target period) is an original
+  // 13F-HR (or there is no /A at all) — behave exactly as before, no extra
+  // fetch.
   if (newest.form === '13F-HR') {
     const r = await _fetchPositions(newest);
     if (r.error) {
-      return { positions: [], name, filingDate: newest.filingDate,
+      return { positions: [], name, filingDate: newest.filingDate, reportPeriod,
                accessionNumber: newest.accessionNumber, error: r.error };
     }
     return {
       positions: r.positions,
       name,
       filingDate: newest.filingDate,
+      reportPeriod,
       accessionNumber: newest.accessionNumber,
       infoTableUrl: r.infoTableUrl,
       form: newest.form,
@@ -445,18 +540,20 @@ async function pullInstitution13f(cik, displayName) {
     };
   }
 
-  // Newest filing is a 13F-HR/A amendment.
+  // Newest filing (for the target period) is a 13F-HR/A amendment.
   const amend = await _fetchPositions(newest);
   if (amend.error) {
-    return { positions: [], name, filingDate: newest.filingDate,
+    return { positions: [], name, filingDate: newest.filingDate, reportPeriod,
              accessionNumber: newest.accessionNumber, form: newest.form, error: amend.error };
   }
-  // No prior original 13F-HR to compare against — accept the /A as-is but flag it.
+  // No prior original 13F-HR for this SAME period to compare against —
+  // accept the /A as-is but flag it.
   if (!baseFiling || baseFiling.accessionNumber === newest.accessionNumber) {
     return {
       positions: amend.positions,
       name,
       filingDate: newest.filingDate,
+      reportPeriod,
       accessionNumber: newest.accessionNumber,
       infoTableUrl: amend.infoTableUrl,
       form: newest.form,
@@ -475,6 +572,7 @@ async function pullInstitution13f(cik, displayName) {
       positions: amend.positions,
       name,
       filingDate: newest.filingDate,
+      reportPeriod,
       accessionNumber: newest.accessionNumber,
       infoTableUrl: amend.infoTableUrl,
       form: newest.form,
@@ -489,7 +587,10 @@ async function pullInstitution13f(cik, displayName) {
 
   const baseCount = base.positions.length;
   const amendCount = amend.positions.length;
-  const ratioOk = baseCount === 0 ? true : (amendCount / baseCount) >= AMENDMENT_MIN_RATIO;
+  // BH-030 fix: SEC cover-page amendment type decides first; the position-
+  // count ratio is used only when the cover page can't be read.
+  const amendmentType = await _fetchAmendmentType(paddedCik, newest);
+  const ratioOk = _isFullBookAmendment(amendmentType, baseCount, amendCount);
 
   if (ratioOk) {
     // The /A is a full-book restatement — use it directly.
@@ -497,10 +598,12 @@ async function pullInstitution13f(cik, displayName) {
       positions: amend.positions,
       name,
       filingDate: newest.filingDate,
+      reportPeriod,
       accessionNumber: newest.accessionNumber,
       infoTableUrl: amend.infoTableUrl,
       form: newest.form,
       amendmentOf: baseFiling.accessionNumber,
+      amendmentType: amendmentType || null,
       lowPositionAmendment: false,
       truncated: amend.truncated || false,
       blocksSeen: amend.blocksSeen,
@@ -518,10 +621,12 @@ async function pullInstitution13f(cik, displayName) {
     positions: Array.from(merged.values()),
     name,
     filingDate: newest.filingDate,
+    reportPeriod,
     accessionNumber: newest.accessionNumber,
     infoTableUrl: amend.infoTableUrl,
     form: newest.form,
     amendmentOf: baseFiling.accessionNumber,
+    amendmentType: amendmentType || null,
     amendmentMerged: true,
     lowPositionAmendment: true,
     amendmentPositionCount: amendCount,
@@ -559,6 +664,19 @@ function parseArgs(argv) {
     }
   }
   return out;
+}
+
+// BH-032 fix: the derived by-ticker view previously ALWAYS wrote to the
+// hardcoded production path (BY_TICKER_PATH) regardless of --out, so an
+// isolated smoke run (e.g. `--out=temp.json --cik-list=...` for a single
+// institution) silently clobbered the real by-ticker file with just that
+// smoke institution's data. Only the default cache path derives the default
+// by-ticker path; any custom --out derives its own sibling file instead.
+function deriveByTickerPath(outPath) {
+  if (outPath === DEFAULT_CACHE_PATH) return BY_TICKER_PATH;
+  const dir = path.dirname(outPath);
+  const base = path.basename(outPath, path.extname(outPath));
+  return path.join(dir, base + '.by-ticker.json');
 }
 
 // ─── Derived: ticker-by-CUSIP best-effort index ─────────────────────────
@@ -664,27 +782,34 @@ function buildByTickerView(cache) {
   // against the SEC ticker→CIK map's `name` field. Loaded if available;
   // missing map → byTicker stays empty (still publish byCusip / byIssuer).
   const map = readJsonSafe(TICKER_CIK_MAP_PATH);
-  // Tag 226a-1: build canonicalized name→ticker map. When two SEC entries
-  // collide on the same canonical form (e.g. share-class duplicates GOOG /
-  // GOOGL both canonicalize to "ALPHABET"), prefer the SHORTEST ticker —
-  // typically the primary listing/most-liquid class. Berkshire's 13F lists
-  // ALPHABET once without share-class so we want to attribute that holding
-  // to a single ticker rather than randomly pick one.
-  // Also keep a legacy exact-uppercase map as a fallback — defense in depth
-  // for any oddball name the normalizer might overstrip.
+  // Tag 226a-1 / BH-031 fix: build canonicalized name→ticker map. When two
+  // SEC entries collide on the same canonical form (e.g. share-class
+  // duplicates GOOG / GOOGL — this repo's ticker-CIK map carries an
+  // IDENTICAL name "Alphabet Inc." for both, so there is no CUSIP/share-class
+  // security master here to pick the right one), a shortest-ticker-wins
+  // guess would silently misattribute one class's holdings to the other.
+  // Instead: mark the name a collision (nameToTicker[norm] = null) and DON'T
+  // resolve it to any ticker — report it via `collisions` so it's auditable
+  // instead of silently guessed.
   const nameToTicker = {};
   const exactToTicker = {};
+  const collisions = {}; // normName -> [ticker, ticker, ...]
   if (map && map.byTicker) {
     for (const [ticker, info] of Object.entries(map.byTicker)) {
-      if (info && info.name) {
-        const exact = info.name.toUpperCase().trim();
-        exactToTicker[exact] = ticker;
-        const norm = _normName(info.name);
-        if (!norm) continue;
-        const prev = nameToTicker[norm];
-        if (!prev || ticker.length < prev.length) {
-          nameToTicker[norm] = ticker;
-        }
+      if (!info || !info.name) continue;
+      const exact = info.name.toUpperCase().trim();
+      if (!(exact in exactToTicker)) exactToTicker[exact] = ticker;
+      else if (exactToTicker[exact] !== ticker) exactToTicker[exact] = null; // collision, same treatment
+
+      const norm = _normName(info.name);
+      if (!norm) continue;
+      if (!(norm in nameToTicker)) {
+        nameToTicker[norm] = ticker;
+      } else if (nameToTicker[norm] === null) {
+        if (collisions[norm].indexOf(ticker) === -1) collisions[norm].push(ticker);
+      } else if (nameToTicker[norm] !== ticker) {
+        collisions[norm] = [nameToTicker[norm], ticker];
+        nameToTicker[norm] = null;
       }
     }
   }
@@ -707,6 +832,15 @@ function buildByTickerView(cache) {
         institutionCik: instCik,
         institutionName: entry.name || null,
         filingDate: entry.filingDate || null,
+        // BH-034 fix: provenance. A soft-errored institution's LAST
+        // successful positions are deliberately carried over in the cache
+        // (see main()'s error branch) so the by-ticker view doesn't go dark
+        // on a transient failure — but that means these holdings can be
+        // stale. Carry the error/timestamps through so a consumer can tell
+        // fresh holdings from a stale error-preserved book.
+        fetchedAt: entry.fetchedAt || null,
+        error: entry.error || null,
+        failedAt: entry.failedAt || null,
         value: p.value,              // DEPRECATED alias of valueThousandsUSD (thousands USD)
         valueThousandsUSD,           // explicit unit: thousands of USD (raw SEC schema)
         valueUSD,                    // derived whole-dollar value (valueThousandsUSD * 1000)
@@ -723,11 +857,13 @@ function buildByTickerView(cache) {
         (byIssuerName[issuer] = byIssuerName[issuer] || {
           nameOfIssuer: p.nameOfIssuer, holders: []
         }).holders.push(holding);
-        // Tag 226a-1: canonicalized join, with legacy exact-uppercase
-        // match as a defense-in-depth fallback for any oddball name the
-        // normalizer might overstrip.
+        // Tag 226a-1 / BH-031 fix: canonicalized join, with legacy
+        // exact-uppercase match as a defense-in-depth fallback for any
+        // oddball name the normalizer might overstrip. A `null` map value
+        // means a known collision (>1 distinct ticker) — skip publishing
+        // rather than guess.
         let ticker = nameToTicker[_normName(issuer)];
-        if (!ticker) ticker = exactToTicker[issuer];
+        if (ticker === undefined) ticker = exactToTicker[issuer];
         if (ticker) {
           (byTicker[ticker] = byTicker[ticker] || {
             ticker, nameOfIssuer: p.nameOfIssuer, holders: []
@@ -736,7 +872,22 @@ function buildByTickerView(cache) {
       }
     }
   }
-  return { byCusip, byIssuerName, byTicker };
+  return { byCusip, byIssuerName, byTicker, collisions };
+}
+
+// BH-033 fix: is the store currently believable "institutional coverage" or
+// too sparse/stale to trust? Pure function (no I/O) so it's hermetically
+// testable. Below RESEARCH_ACTIVE_MIN_INSTITUTIONS live institutions, the
+// output is stamped 'research-inactive' rather than silently looking like a
+// real cross-section — the puller is manual-only (see file header), so a
+// long-stale, single-digit-coverage store won't self-heal without a run.
+function computeResearchStatus(byInstitution) {
+  const entries = Object.values(byInstitution || {});
+  const activeInstitutionCount = entries.filter(e =>
+    e && !e.error && Array.isArray(e.positions) && e.positions.length > 0
+  ).length;
+  const status = activeInstitutionCount >= RESEARCH_ACTIVE_MIN_INSTITUTIONS ? 'active' : 'research-inactive';
+  return { status, activeInstitutionCount };
 }
 
 // ─── Main ───────────────────────────────────────────────────────────────
@@ -834,11 +985,36 @@ async function main() {
           (permanent ? ', permanent' : '') + '; prior positions preserved=' +
           (byInstitution[cik].positions || []).length + ')');
       } else {
+        const reportPeriod = r.reportPeriod || r.filingDate || null;
+        // BH-028 fix: keep a per-reportPeriod history alongside the flat
+        // top-level fields (which still mirror the LATEST period only, for
+        // backward compat with any reader written before this fix — e.g.
+        // tests/13f-test.js's synthetic fixtures). Previously
+        // byInstitution[cik] was replaced wholesale on every successful
+        // refresh, so the prior quarter's book was gone the moment a new one
+        // was fetched — impossible to reconcile with the header's own claim
+        // of "accumulation across quarters".
+        const prevQuarters = (prev && prev.quarters && typeof prev.quarters === 'object') ? prev.quarters : {};
+        const quarters = Object.assign({}, prevQuarters);
+        if (reportPeriod) {
+          quarters[reportPeriod] = {
+            filingDate: r.filingDate || null,
+            accessionNumber: r.accessionNumber || null,
+            form: r.form || null,
+            positions: r.positions || [],
+            truncated: r.truncated || false,
+            amendmentOf: r.amendmentOf || null,
+            amendmentType: r.amendmentType || null,
+            amendmentMerged: r.amendmentMerged || false,
+            lowPositionAmendment: r.lowPositionAmendment || false
+          };
+        }
         byInstitution[cik] = {
           cik,
           name: r.name || t.name || null,
           fetchedAt: new Date().toISOString(),
           filingDate: r.filingDate || null,
+          reportPeriod,
           accessionNumber: r.accessionNumber || null,
           form: r.form || null,
           infoTableUrl: r.infoTableUrl || null,
@@ -851,8 +1027,10 @@ async function main() {
           blocksSeen: (r.blocksSeen != null) ? r.blocksSeen : null,
           positionsParsed: (r.positionsParsed != null) ? r.positionsParsed : null,
           amendmentOf: r.amendmentOf || null,
+          amendmentType: r.amendmentType || null,
           amendmentMerged: r.amendmentMerged || false,
-          lowPositionAmendment: r.lowPositionAmendment || false
+          lowPositionAmendment: r.lowPositionAmendment || false,
+          quarters // BH-028: reportPeriod-keyed history
         };
         fetched++;
         totalPositions += (r.positions || []).length;
@@ -899,27 +1077,47 @@ async function main() {
         break;
       }
     }
+    // BH-033: recompute coverage status each write — cheap (~40 entries) and
+    // keeps the on-disk status honest even if a run is Ctrl-C'd mid-loop.
+    const runStatus = computeResearchStatus(byInstitution);
     // Re-write after every institution so a Ctrl-C leaves a valid cache.
     writeFileAtomic(args.out, JSON.stringify({
       updatedAt: new Date().toISOString(),
       userAgent: USER_AGENT,
       maxAgeDays: args.maxAgeDays,
+      // BH-033: sichtbare Abdeckungs-Kennzeichnung statt stillschweigend
+      // suggerierter institutioneller Vollabdeckung.
+      status: runStatus.status,
+      activeInstitutionCount: runStatus.activeInstitutionCount,
+      bootstrapInstitutionCount: BOOTSTRAP_INSTITUTIONS.length,
       byInstitution
     }, null, 2));
   }
 
   // Final derived by-ticker view.
+  // BH-032 fix: derive from --out instead of the hardcoded production path.
+  const byTickerPath = deriveByTickerPath(args.out);
+  const finalStatus = computeResearchStatus(byInstitution);
   const cache = { byInstitution };
   const derived = buildByTickerView(cache);
-  writeFileAtomic(BY_TICKER_PATH, JSON.stringify({
+  writeFileAtomic(byTickerPath, JSON.stringify({
     updatedAt: new Date().toISOString(),
-    source: 'derived from sec-13f-cache.json',
+    source: 'derived from ' + args.out,
+    // BH-033: same coverage-honesty stamp as the main cache.
+    status: finalStatus.status,
+    activeInstitutionCount: finalStatus.activeInstitutionCount,
+    bootstrapInstitutionCount: BOOTSTRAP_INSTITUTIONS.length,
     cusipCount: Object.keys(derived.byCusip).length,
     issuerNameCount: Object.keys(derived.byIssuerName).length,
     tickerCount: Object.keys(derived.byTicker).length,
+    // BH-031: issuer names that canonicalize to >1 distinct ticker (no
+    // CUSIP-level security master exists here to pick the right share
+    // class) — reported instead of silently guessed.
+    collisionCount: Object.keys(derived.collisions).length,
     byCusip: derived.byCusip,
     byIssuerName: derived.byIssuerName,
-    byTicker: derived.byTicker
+    byTicker: derived.byTicker,
+    collisions: derived.collisions
   }, null, 2));
 
   const uniqueTickers = Object.keys(derived.byTicker).length;
@@ -927,9 +1125,12 @@ async function main() {
   console.log('');
   console.log('Done. fetched=' + fetched + ' skipped(fresh)=' + skippedFresh +
     ' errors=' + errors + ' totalPositions=' + totalPositions);
-  console.log('  uniqueCUSIPs=' + uniqueCusips + ' resolvedTickers=' + uniqueTickers);
+  console.log('  uniqueCUSIPs=' + uniqueCusips + ' resolvedTickers=' + uniqueTickers +
+    ' collisions=' + Object.keys(derived.collisions).length);
+  console.log('  coverage status=' + finalStatus.status +
+    ' (active=' + finalStatus.activeInstitutionCount + '/' + BOOTSTRAP_INSTITUTIONS.length + ')');
   console.log('Cache: ' + args.out);
-  console.log('By-ticker view: ' + BY_TICKER_PATH);
+  console.log('By-ticker view: ' + byTickerPath);
 
   // audit/fix: 403 silent exit-0. If NOTHING succeeded but errors occurred
   // (fetched === 0 && errors > 0) the run was a total failure — typically a
@@ -952,11 +1153,16 @@ module.exports = {
   padCik,
   buildByTickerView,
   parseArgs,
+  computeResearchStatus,  // BH-033: exposed for test coverage
+  deriveByTickerPath,     // BH-032: exposed for test coverage
   _internals: {
     httpGet,
     _normalizeSubmissions,
     findInfoTableUrl,
     pullInstitution13f,
+    _selectPeriodFilings,   // BH-029: exposed for test coverage
+    _isFullBookAmendment,   // BH-030: exposed for test coverage
+    _fetchAmendmentType,    // BH-030: exposed for test coverage (network; not called in hermetic tests)
     BOOTSTRAP_INSTITUTIONS,
     _normName,  // Tag 226a-1: exposed for test coverage
     // audit F-A-2026-06-22: exposed so truncation telemetry is testable.
