@@ -356,15 +356,23 @@ function _priceAtCanonical(map, canonicalDate, originalTargetDate) {
   if (!map || !canonicalDate) return null;
   const tooStale = (resolvedDate) => originalTargetDate
     && _daysBetween(resolvedDate, originalTargetDate) > PRICE_MAX_STALE_DAYS;
-  if (map.has(canonicalDate)) {
+  // audit/fix (R-Gate Dry Round 2026-07-20, Fund 2): ein 0/negativer Bar ist KEIN
+  // brauchbarer Kurs. Vorher gab map.has(key) ihn ungeprüft zurück -> ein 0-Glitch
+  // GENAU am Zieltag maskierte einen gültigen Kurs an t-1 im 7-Tage-Lookback: p1=0
+  // -> p1<=0-Pfad in forward-returns.classify -> bei newest===exitDate ein falsches
+  // -100%-Delisting (bzw. no_entry_price am Einstieg). Jetzt: nicht-positive Bars wie
+  // fehlende behandeln und weitersuchen. Bleibt der Lookback leer -> null (korrekt
+  // delisted/series_ended). Geteiltes Primitiv (auch computeUniverseMedianReturn).
+  const usable = (v) => typeof v === 'number' && Number.isFinite(v) && v > 0;
+  if (map.has(canonicalDate) && usable(map.get(canonicalDate))) {
     return tooStale(canonicalDate) ? null : map.get(canonicalDate);
   }
-  // Walk backward from canonicalDate to find a usable close within stale window
+  // Walk backward from canonicalDate to find a usable (positive) close within stale window
   for (let i = 1; i <= PRICE_MAX_STALE_DAYS; i++) {
     const d = new Date(canonicalDate + 'T00:00:00Z');
     d.setUTCDate(d.getUTCDate() - i);
     const key = d.toISOString().slice(0, 10);
-    if (map.has(key)) return tooStale(key) ? null : map.get(key);
+    if (map.has(key) && usable(map.get(key))) return tooStale(key) ? null : map.get(key);
   }
   return null;
 }
