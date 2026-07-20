@@ -488,8 +488,15 @@ function windowReturns(priceIndex, rows, t0, horizonDays) {
     const c = classify(priceIndex, r.ticker, t0, t1);
     if (c.status === 'ok') { used.push({ row: r, ret: c.ret, shortened: false }); quota.ok++; continue; }
     if (c.status === 'delisted') { used.push({ row: r, ret: -1.0, shortened: false }); quota.delisted++; continue; } // §8: Totalverlust, NIE droppen
-    if (c.status === 'series_ended' && c.newestDate && c.newestDate > t0) {
-      // §8-M&A-Pfad: Fenster auf letzten verfügbaren Tag verkürzen (Angebotspreis-Nähe).
+    if (c.status === 'series_ended' && c.newestDate && c.newestDate > t0 && c.newestDate < t1) {
+      // §8-M&A-Pfad: Fenster auf letzten verfügbaren Tag VERKÜRZEN (Angebotspreis-Nähe).
+      // audit/fix (R-Gate Dry Round 2026-07-20): Obergrenze `< t1` ergänzt. Seit BH-101
+      // liefert classify() 'series_ended' AUCH bei newestDate > exitDate (Datenloch am
+      // Fensterende, Serie handelt danach weiter). Ohne die Obergrenze VERLÄNGERTE dieser
+      // Pfad das Fenster über den prä-registrierten Horizont hinaus (z.B. 208d als 84d-Punkt)
+      // und poolte die Langfrist-Rendite ungefiltert in den validierungsentscheidenden rankIC
+      // — Verletzung Invariante 5 (feste Haltedauer). newestDate > t1 kann den Horizont NICHT
+      // messen (kein Kurs am/vor t1) und fällt jetzt korrekt in excluded_no_series (Z.497).
       const c2 = classify(priceIndex, r.ticker, t0, c.newestDate);
       if (c2.status === 'ok') { used.push({ row: r, ret: c2.ret, shortened: true, heldUntil: c.newestDate }); quota.shortened++; continue; }
       quota.excluded_no_series++; continue;
