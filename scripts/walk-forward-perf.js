@@ -72,7 +72,11 @@ function maxPriceDate(history) {
   for (const entries of Object.values(history || {})) {
     if (!Array.isArray(entries)) continue;
     for (const e of entries) {
-      if (e && typeof e.date === 'string' && (max === null || e.date > max)) max = e.date;
+      // Bless-Gate-P2 (2. Runde, 20.07., Court E-20260720-5): ein Bar ohne
+      // usable Close ist kein Frische-Beleg — sonst meldet derselbe Store vor
+      // dem Putz "frisch" und danach "stale" (Preprocessing-Invarianz).
+      if (!e || typeof e.date !== 'string' || !_usableClose(e.close)) continue;
+      if (max === null || e.date > max) max = e.date;
     }
   }
   return max;
@@ -411,10 +415,12 @@ function computeUniverseMedianReturn(priceIndex, asOfDate, horizonDays, evaluate
       p0 = _priceAtCanonical(map, canonicalDates.entryDate, asOfDate);
       p1 = _priceAtCanonical(map, canonicalDates.exitDate, futureDate);
     } else {
-      const entryDate = nearestTradingDay(asOfDate, map) || asOfDate;
-      const exitDate  = nearestTradingDay(futureDate, map) || futureDate;
-      p0 = map.get(entryDate) || null;
-      p1 = map.get(exitDate)  || null;
+      // Bless-Gate-P2 (2. Runde, 20.07.): derselbe Resolver wie der kanonische
+      // Pfad — vorher suchte nearestTradingDay nur 5 Tage zurueck (+5 vorwaerts,
+      // Look-ahead!) vs. 7 Tage backward-only in _priceAtCanonical; ein usable
+      // Close an t-6/t-7 machte Median/Kohorte damit weiter benchmark-abhaengig.
+      p0 = _priceAtCanonical(map, asOfDate, asOfDate);
+      p1 = _priceAtCanonical(map, futureDate, futureDate);
     }
     const r = returnPct(p0, p1);
     if (r != null) returns.push(r);
@@ -445,11 +451,9 @@ function computeFrozenVintageMedianReturn(priceIndex, vintagePicks, asOfDate, ho
       p0 = _priceAtCanonical(map, canonicalDates.entryDate, asOfDate);
       p1 = _priceAtCanonical(map, canonicalDates.exitDate, futureDate);
     } else {
-      // F-BT-005: snap to nearest trading day
-      const entryDate = nearestTradingDay(asOfDate, map) || asOfDate;
-      const exitDate  = nearestTradingDay(futureDate, map) || futureDate;
-      p0 = map.get(entryDate) || null;
-      p1 = map.get(exitDate)  || null;
+      // Bless-Gate-P2 (2. Runde, 20.07.): einheitlicher Resolver, s. o.
+      p0 = _priceAtCanonical(map, asOfDate, asOfDate);
+      p1 = _priceAtCanonical(map, futureDate, futureDate);
     }
     const r = returnPct(p0, p1);
     if (r != null) returns.push(r);
@@ -627,14 +631,12 @@ function evaluateVintage(picksFile, priceIndex, regimes) {
           p0 = _priceAtCanonical(map, canonical.entryDate, entryDate);
           p1 = _priceAtCanonical(map, canonical.exitDate, futureDate);
         } else {
-          // Legacy path: no benchmark available
-          const tEntry = nearestTradingDay(entryDate, map) || entryDate;
-          const tExit  = nearestTradingDay(futureDate, map) || futureDate;
-          // Tag 216b: enforce staleness gate symmetrically on entry and exit.
-          if (_daysBetween(tEntry, entryDate)  > PRICE_MAX_STALE_DAYS) continue;
-          if (_daysBetween(tExit,  futureDate) > PRICE_MAX_STALE_DAYS) continue;
-          p0 = map.get(tEntry) || null;
-          p1 = map.get(tExit)  || null;
+          // Legacy path: no benchmark available.
+          // Bless-Gate-P2 (2. Runde, 20.07.): einheitlicher Resolver — die
+          // Tag-216b-Staleness-Symmetrie steckt jetzt im tooStale-Bound von
+          // _priceAtCanonical (originalTargetDate = Zieltag selbst).
+          p0 = _priceAtCanonical(map, entryDate, entryDate);
+          p1 = _priceAtCanonical(map, futureDate, futureDate);
         }
         const r = returnPct(p0, p1);
         if (r != null) pickReturns.push(r);
@@ -975,6 +977,9 @@ module.exports = {
   nearestTradingDay,
   // Tag 231a-2: exported for canonical-date callers (method-effectiveness.js)
   _priceAtCanonical,
+  // Court E-20260720-5 / Bless-Gate-P2: das eine usable-Praedikat fuer alle
+  // Preis-/Datums-Anker (rank-ic.js newestPriceDate nutzt es mit).
+  _usableClose,
   // Tag 232c-20: export computeBenchmarkReturn so method-effectiveness can
   // share walk-forward's canonical-date anchoring (audit F-BT-002 HIGH).
   computeBenchmarkReturn,

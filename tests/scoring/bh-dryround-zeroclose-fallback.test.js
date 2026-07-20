@@ -44,5 +44,34 @@ assert.equal(nearestTradingDay(t1, mkIdx(0).T), '2026-03-29', '0-Bar zaehlt nich
 assert.equal(nearestTradingDay(t1, new Map([[t1, 0]])), null, 'nur unusable Bars im Fenster -> null (kein Erfinden)');
 assert.equal(nearestTradingDay(t1, mkIdx(7).T), t1, 'usable Close am Zieltag gewinnt unveraendert');
 
-console.log('PASS bh-dryround-zeroclose-fallback: kanonisch==Fallback (0/negativ uebersprungen, kleiner Positivkurs gebucht)');
+// ── Bless-Gate-P2 Runde 2: Fenster-Vereinheitlichung — usable Close liegt 6
+// Kalendertage vor dem 0-Ziel-Bar. Kanonisch (7-Tage-Fenster) bucht ihn; der
+// alte 5-Tage-Fallback droppte -> jetzt identisch (gleicher Resolver).
+const idx6d = { T: new Map([[asOf, 100], ['2026-03-24', 110], [t1, 0]]) };
+const farCanon = computeUniverseMedianReturn(idx6d, asOf, horizon, ['T'], canonical);
+const farFb = computeUniverseMedianReturn(idx6d, asOf, horizon, ['T'], null);
+assert.equal(farCanon.n, farFb.n, 'gleiches Lookback-Fenster in beiden Pfaden');
+assert.equal(farFb.n, 1, 'usable Close an t-6 wird auch im Fallback gebucht');
+
+// ── kein Look-ahead mehr im Fallback: einziger Exit-Kurs liegt NACH t1 ->
+// beide Pfade droppen (vorher snappte der Fallback bis 5 Tage nach vorn).
+const idxFwd = { T: new Map([[asOf, 100], ['2026-04-02', 120]]) };
+const fwdFb = computeUniverseMedianReturn(idxFwd, asOf, horizon, ['T'], null);
+assert.equal(fwdFb.n, 0, 'Fallback nutzt keinen Zukunftskurs (kein Look-ahead, kanonische Parität)');
+
+// ── Anker-Konsistenz (Bless-Gate-P2 Runde 2): terminale Glitch-Bars sind kein
+// Reife-/Frische-Beleg.
+const ric = require('../../scripts/rank-ic.js');
+const wf = require('../../scripts/walk-forward-perf.js');
+assert.equal(
+  ric.newestPriceDate({ SPY: new Map([['2026-03-29', 100], ['2026-03-30', 0]]) }),
+  '2026-03-29', 'newestPriceDate: terminaler 0-Bar reift kein Fenster');
+assert.equal(
+  wf.maxPriceDate({ SPY: [{ date: '2026-03-29', close: 100 }, { date: '2026-03-30', close: 0 }] }),
+  '2026-03-29', 'maxPriceDate: terminaler 0-Bar ist kein Frische-Beleg');
+assert.equal(
+  wf.maxPriceDate({ SPY: [{ date: '2026-03-30', close: 0 }] }),
+  null, 'maxPriceDate: Store ohne usable Close -> null (fail-loud statt frisch)');
+
+console.log('PASS bh-dryround-zeroclose-fallback: kanonisch==Fallback (0/negativ uebersprungen, 7-Tage-Fenster vereinheitlicht, kein Look-ahead, Anker usable-basiert)');
 process.exit(0);
