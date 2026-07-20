@@ -492,11 +492,24 @@ function newestPriceDate(priceIndex) {
 // ── Forward-Returns je Vintage-Kohorte (§8) ──────────────────────────────────
 function windowReturns(priceIndex, rows, t0, horizonDays) {
   const t1 = addDaysIso(t0, horizonDays);
-  const used = []; const quota = { ok: 0, delisted: 0, shortened: 0, excluded_no_series: 0, excluded_no_entry: 0 };
+  const used = []; const quota = { ok: 0, delisted: 0, shortened: 0, excluded_no_series: 0, excluded_no_entry: 0, excluded_stale_window: 0 };
+  // Dry Round #3 Fund T2 (20.07.): classify() liefert entryStale/exitStale
+  // (BH-112, Schwelle EXIT_STALE_FLAG_BUSINESS_DAYS=2 Geschaeftstage, im lib-
+  // Vertrag genau dafuer exportiert: "drop/normalize instead of pooling
+  // heterogeneous windows") — windowReturns hat sie nie konsumiert. Folge:
+  // Entry loeste bis 7 Kalendertage VOR t0 auf (nicht handelbarer Vor-Pause-
+  // Kurs inkl. Wiedereroeffnungsbewegung), Exit bis 7 Tage vor t1 — nominale
+  // 84d-Punkte massen real 77-91d (Invariante 5, dieselbe Klasse wie der
+  // Tag-399-Cap). Jetzt: Fenster mit stalem Entry ODER Exit fliegen als
+  // excluded_stale_window raus (Ausweis in unusableRate), analog dem
+  // HORIZON_TOLERANCE-Filter in walk-forward-perf.js.
   for (const r of rows) {
     if (!Number.isFinite(r.score)) continue; // survival-Zeilen ohne Score bleiben draußen
     const c = classify(priceIndex, r.ticker, t0, t1);
-    if (c.status === 'ok') { used.push({ row: r, ret: c.ret, shortened: false }); quota.ok++; continue; }
+    if (c.status === 'ok') {
+      if (c.entryStale || c.exitStale) { quota.excluded_stale_window++; continue; }
+      used.push({ row: r, ret: c.ret, shortened: false }); quota.ok++; continue;
+    }
     if (c.status === 'delisted') { used.push({ row: r, ret: -1.0, shortened: false }); quota.delisted++; continue; } // §8: Totalverlust, NIE droppen
     if (c.status === 'series_ended' && c.newestDate && c.newestDate > t0 && c.newestDate < t1) {
       // §8-M&A-Pfad: Fenster auf letzten verfügbaren Tag VERKÜRZEN (Angebotspreis-Nähe).
@@ -508,13 +521,17 @@ function windowReturns(priceIndex, rows, t0, horizonDays) {
       // — Verletzung Invariante 5 (feste Haltedauer). newestDate > t1 kann den Horizont NICHT
       // messen (kein Kurs am/vor t1) und fällt jetzt korrekt in excluded_no_series (Z.497).
       const c2 = classify(priceIndex, r.ticker, t0, c.newestDate);
-      if (c2.status === 'ok') { used.push({ row: r, ret: c2.ret, shortened: true, heldUntil: c.newestDate }); quota.shortened++; continue; }
+      if (c2.status === 'ok') {
+        // Dry Round #3: derselbe Stale-Guard auch im §8-Verkuerzungspfad.
+        if (c2.entryStale || c2.exitStale) { quota.excluded_stale_window++; continue; }
+        used.push({ row: r, ret: c2.ret, shortened: true, heldUntil: c.newestDate }); quota.shortened++; continue;
+      }
       quota.excluded_no_series++; continue;
     }
     if (c.status === 'series_ended') { quota.excluded_no_series++; continue; }
     quota.excluded_no_entry++; // no_series / no_entry_price
   }
-  const denom = used.length + quota.excluded_no_series + quota.excluded_no_entry;
+  const denom = used.length + quota.excluded_no_series + quota.excluded_no_entry + quota.excluded_stale_window;
   // R-Gate 2.R Fund R2.12: exitRate zählt excluded_no_entry im NENNER, nie im Zähler —
   // eine Kohorte ohne einen einzigen Einstiegskurs meldet damit exitRate 0.000 ("sauber"),
   // während 100 % der Stichprobe weg sind. exitRate bleibt wie gemeint (echte Austritte);
@@ -523,7 +540,7 @@ function windowReturns(priceIndex, rows, t0, horizonDays) {
     used,
     quota,
     exitRate: denom ? (quota.delisted + quota.shortened + quota.excluded_no_series) / denom : 0,
-    unusableRate: denom ? (quota.excluded_no_series + quota.excluded_no_entry) / denom : 0,
+    unusableRate: denom ? (quota.excluded_no_series + quota.excluded_no_entry + quota.excluded_stale_window) / denom : 0,
   };
 }
 
