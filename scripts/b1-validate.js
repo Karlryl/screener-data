@@ -512,7 +512,12 @@ async function main() {
     return r;
   };
   console.log('[b1-validate] Anreicherung (Ticker/SIC/Preise/Variablen) …');
-  events.forEach(enrich); nonEvents.forEach(enrich); eventFirmOthers.forEach(enrich);
+  events.forEach(enrich); nonEvents.forEach(enrich);
+  // Bless-Gate-P2 zu Tag 409: Restquartale nur LEICHT anreichern (Ticker/SIC,
+  // kein bars/facts-Load) — hasBars/vars der tatsaechlich ausgewaehlten
+  // Alternativ-View-Events setzt buildEventDatedCandidatePools ohnehin frisch
+  // zum jeweiligen Eventdatum; der usable-Filter der Views laeuft DANACH.
+  eventFirmOthers.forEach((r) => { r.ticker = tickerByCik.get(r.cik) || null; r.sic2 = sic2Of(r.cik); });
   const datedDeps = { factsOf, barsOf }, datedVarsCache = new Map();
   const mainCandidatePools = buildEventDatedCandidatePools(events, nonEvents, datedDeps, datedVarsCache);
 
