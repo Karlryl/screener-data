@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-19T14:57:55.317Z",
+  "generatedAt": "2026-07-20T17:42:45.753Z",
   "protocol": "protocol/b1-registered-20260719.md",
   "protocolSha256": "7b20e750261ca5a6ede207064275d3934f11408565865477baced74ee0cf0f79",
   "era": {
@@ -15,125 +15,206 @@
       "ciksTotal": 20072,
       "ciksParsed": 20072,
       "ciksNoRevenue": 8745,
-      "firmQuartersEvaluated": 110412,
-      "yoyUndefined": 20432,
-      "dyoyUndefined": 4372,
-      "opMarginUndefined": 14591,
-      "derivedQ4Used": 31277,
-      "evaluable": 85533
+      "firmQuartersEvaluated": 110352,
+      "yoyUndefined": 9586,
+      "dyoyUndefined": 2377,
+      "opMarginUndefined": 14306,
+      "derivedQ4Used": 31250,
+      "nonConsecutive": 14146,
+      "evaluable": 84225
     },
-    "eventsRaw": 2401,
-    "discoveryExcluded": 829,
-    "events": 2023,
-    "nonEventRecords": 83132
+    "eventsRaw": 2378,
+    "discoveryExcluded": 799,
+    "events": 2024,
+    "nonEventRecords": 59159
   },
   "missingness": {
     "eventMissRate": 0.3,
-    "controlMissRate": 0.276,
-    "balanceDeltaPp": 2.4,
-    "balanceGatePassed": true
+    "controlMissRate": 0.283,
+    "balanceDeltaPp": 1.7,
+    "balanceGatePassed": true,
+    "outcome": {
+      "haupttest": {
+        "pairsAttempted": 899,
+        "evOutcomeMissing": 7,
+        "ctlOutcomeMissing": 9,
+        "eventMissRate": 0.008,
+        "controlMissRate": 0.01,
+        "balanceDeltaPp": 0.2
+      },
+      "p75": {
+        "pairsAttempted": 1811,
+        "evOutcomeMissing": 7,
+        "ctlOutcomeMissing": 10,
+        "eventMissRate": 0.004,
+        "controlMissRate": 0.006,
+        "balanceDeltaPp": 0.2
+      },
+      "sigma15": {
+        "pairsAttempted": 899,
+        "evOutcomeMissing": 7,
+        "ctlOutcomeMissing": 9,
+        "eventMissRate": 0.008,
+        "controlMissRate": 0.01,
+        "balanceDeltaPp": 0.2
+      },
+      "ohneOpMargin": {
+        "pairsAttempted": 1240,
+        "evOutcomeMissing": 12,
+        "ctlOutcomeMissing": 16,
+        "eventMissRate": 0.01,
+        "controlMissRate": 0.013,
+        "balanceDeltaPp": 0.3
+      },
+      "tplus5": {
+        "pairsAttempted": 899,
+        "evOutcomeMissing": 7,
+        "ctlOutcomeMissing": 9,
+        "eventMissRate": 0.008,
+        "controlMissRate": 0.01,
+        "balanceDeltaPp": 0.2
+      },
+      "shumway": {
+        "pairsAttempted": 0,
+        "evOutcomeMissing": 0,
+        "ctlOutcomeMissing": 0,
+        "eventMissRate": 0,
+        "controlMissRate": 0,
+        "balanceDeltaPp": 0
+      }
+    }
   },
   "matching": {
-    "pairs": 1225,
-    "noCaliperMatch": 192
+    "pairs": 899,
+    "noCaliperMatch": 518
   },
   "family": {
     "haupttest": {
-      "pairsAttempted": 1225,
-      "pairsComplete": 979,
-      "evOutcomeMissing": 200,
-      "ctlOutcomeMissing": 46,
-      "mean": -0.0030643513789581204,
-      "nClusters": 339,
-      "nEff": 313.73,
-      "p": 0.6597,
+      "pairsAttempted": 899,
+      "pairsComplete": 887,
+      "evOutcomeMissing": 7,
+      "ctlOutcomeMissing": 9,
+      "eventOutcomeMissRate": 0.008,
+      "controlOutcomeMissRate": 0.01,
+      "outcomeBalanceDelta": 0.0022246941045606233,
+      "outcomeBalanceDeltaPp": 0.2,
+      "mean": 0.010146561443066516,
+      "nClusters": 275,
+      "nEff": 275,
+      "p": 0.1605,
       "ci90": {
-        "lo": -0.0183,
-        "hi": 0.012
+        "lo": -0.0053,
+        "hi": 0.0267,
+        "method": "BCa"
       },
       "bySignificant": false
     },
     "p75": {
-      "pairsAttempted": 2996,
-      "pairsComplete": 2389,
-      "evOutcomeMissing": 489,
-      "ctlOutcomeMissing": 118,
-      "mean": -0.002092925910422771,
-      "nClusters": 608,
-      "nEff": 528.04,
-      "p": 0.6593,
+      "pairsAttempted": 1811,
+      "pairsComplete": 1798,
+      "evOutcomeMissing": 7,
+      "ctlOutcomeMissing": 10,
+      "eventOutcomeMissRate": 0.004,
+      "controlOutcomeMissRate": 0.006,
+      "outcomeBalanceDelta": 0.0016565433462175593,
+      "outcomeBalanceDeltaPp": 0.2,
+      "mean": 0.010011123470522803,
+      "nClusters": 418,
+      "nEff": 418,
+      "p": 0.1193,
       "ci90": {
-        "lo": -0.013,
-        "hi": 0.0082
+        "lo": -0.0037,
+        "hi": 0.024,
+        "method": "BCa"
       },
       "bySignificant": false
     },
     "sigma15": {
-      "pairsAttempted": 1225,
-      "pairsComplete": 994,
-      "evOutcomeMissing": 177,
-      "ctlOutcomeMissing": 54,
-      "mean": 0.002012072434607646,
-      "nClusters": 345,
-      "nEff": 345,
-      "p": 0.4459,
+      "pairsAttempted": 899,
+      "pairsComplete": 887,
+      "evOutcomeMissing": 7,
+      "ctlOutcomeMissing": 9,
+      "eventOutcomeMissRate": 0.008,
+      "controlOutcomeMissRate": 0.01,
+      "outcomeBalanceDelta": 0.0022246941045606233,
+      "outcomeBalanceDeltaPp": 0.2,
+      "mean": 0.014656144306651634,
+      "nClusters": 275,
+      "nEff": 275,
+      "p": 0.1446,
       "ci90": {
-        "lo": -0.0199,
-        "hi": 0.0238
+        "lo": -0.0071,
+        "hi": 0.0367,
+        "method": "BCa"
       },
       "bySignificant": false
     },
     "ohneOpMargin": {
-      "pairsAttempted": 1828,
-      "pairsComplete": 1443,
-      "evOutcomeMissing": 323,
-      "ctlOutcomeMissing": 62,
-      "mean": -0.002079002079002079,
-      "nClusters": 470,
-      "nEff": 470,
-      "p": 0.623,
+      "pairsAttempted": 1240,
+      "pairsComplete": 1220,
+      "evOutcomeMissing": 12,
+      "ctlOutcomeMissing": 16,
+      "eventOutcomeMissRate": 0.01,
+      "controlOutcomeMissRate": 0.013,
+      "outcomeBalanceDelta": 0.003225806451612903,
+      "outcomeBalanceDeltaPp": 0.3,
+      "mean": -0.001639344262295082,
+      "nClusters": 371,
+      "nEff": 342.95,
+      "p": 0.6052,
       "ci90": {
-        "lo": -0.0138,
-        "hi": 0.0096
+        "lo": -0.0147,
+        "hi": 0.0123,
+        "method": "BCa"
       },
       "bySignificant": false
     },
     "tplus5": {
-      "pairsAttempted": 1225,
-      "pairsComplete": 975,
-      "evOutcomeMissing": 206,
-      "ctlOutcomeMissing": 44,
-      "mean": -0.0010256410256410256,
-      "nClusters": 338,
-      "nEff": 297.92,
-      "p": 0.5736,
+      "pairsAttempted": 899,
+      "pairsComplete": 887,
+      "evOutcomeMissing": 7,
+      "ctlOutcomeMissing": 9,
+      "eventOutcomeMissRate": 0.008,
+      "controlOutcomeMissRate": 0.01,
+      "outcomeBalanceDelta": 0.0022246941045606233,
+      "outcomeBalanceDeltaPp": 0.2,
+      "mean": 0.009019165727170236,
+      "nClusters": 275,
+      "nEff": 275,
+      "p": 0.2094,
       "ci90": {
-        "lo": -0.0167,
-        "hi": 0.0143
+        "lo": -0.0084,
+        "hi": 0.0263,
+        "method": "BCa"
       },
       "bySignificant": false
     },
     "shumway": {
-      "pairsAttempted": 1225,
-      "pairsComplete": 1218,
-      "evOutcomeMissing": 1,
-      "ctlOutcomeMissing": 6,
-      "mean": 0.003284072249589491,
-      "nClusters": 392,
-      "nEff": 382.12,
-      "p": 0.36032,
-      "ci90": {
-        "lo": -0.01,
-        "hi": 0.0167
-      },
+      "estimable": false,
+      "reason": "NOT_ESTIMABLE_NO_DELISTING_LABELS",
+      "p": 1,
+      "mean": null,
+      "n": 0,
+      "pairsAttempted": 0,
+      "pairsComplete": 0,
+      "evOutcomeMissing": 0,
+      "ctlOutcomeMissing": 0,
+      "eventOutcomeMissRate": 0,
+      "controlOutcomeMissRate": 0,
+      "outcomeBalanceDelta": 0,
+      "outcomeBalanceDeltaPp": 0,
       "bySignificant": false
     }
   },
   "gates": {
     "powerOk": true,
-    "nEffClusters": 313.73,
+    "nEffClusters": 275,
     "balanceOk": true,
-    "shumwayVeto": false
+    "balanceDeltaBeforePp": 1.7,
+    "balanceDeltaOutcomePp": 0.2,
+    "balanceDeltaMaxPp": 1.7,
+    "shumwayVeto": false,
+    "shumwayEstimable": false
   },
   "verdict": "NEGATIV/NULL: kein BY-signifikanter Effekt (gültiges Ergebnis)"
 }
