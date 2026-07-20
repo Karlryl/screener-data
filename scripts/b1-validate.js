@@ -285,10 +285,12 @@ function selectViewRecords(records, view, excludedEventCiks) {
   const cloned = records.map((r) => ({ ...r }));
   detect.flagEvents(cloned, view.pctl ? { pctl: view.pctl } : {});
   const isEvent = (r) => view.noOpMargin ? r.isEventNoMargin : r.isEvent;
-  const eventFirmQuarters = new Set(cloned.filter(isEvent).map((r) => r.cik + '|' + r.calQ));
+  // Dry Round #4 Fund T2 (20.07.): Firmen-Ebene wie im Hauptpfad — Protokoll
+  // par.5 "Kontrolle = Nicht-Event-Firma", nie nur das Event-Quartal.
+  const eventFirmCiks = new Set(cloned.filter(isEvent).map((r) => r.cik));
   return {
     events: cloned.filter((r) => isEvent(r) && !excludedEventCiks.has(r.cik)),
-    controls: cloned.filter((r) => !eventFirmQuarters.has(r.cik + '|' + r.calQ)),
+    controls: cloned.filter((r) => !eventFirmCiks.has(r.cik)),
   };
 }
 
@@ -450,8 +452,14 @@ async function main() {
   detect.flagEvents(disc.records);
   const discEventCiks = new Set(disc.records.filter((r) => r.isEvent).map((r) => r.cik));
   const events = val.records.filter((r) => r.isEvent && !discEventCiks.has(r.cik));
-  const eventFirmQuarters = new Set(val.records.filter((r) => r.isEvent).map((r) => r.cik + '|' + r.calQ));
-  const nonEvents = val.records.filter((r) => !eventFirmQuarters.has(r.cik + '|' + r.calQ));
+  // Dry Round #4 Fund T2 (20.07.): Protokoll par.5 verlangt "Kontrolle =
+  // Nicht-Event-FIRMA" (Firmen-Ebene; par.6 formuliert "Zeit- UND Firmen-
+  // Trennung" explizit). Der fruehere cik|calQ-Ausschluss liess Nicht-Event-
+  // QUARTALE von Event-Firmen als Kontrollen zu - deren Post-Event-Drift
+  // (PEAD, par.9) hob die Kontroll-Oben-zuerst-Rate und attenuierte die
+  // Primaerdifferenz Richtung 0 (konservative Verzerrung, entwertet ein NULL).
+  const eventFirmCiks = new Set(val.records.filter((r) => r.isEvent).map((r) => r.cik));
+  const nonEvents = val.records.filter((r) => !eventFirmCiks.has(r.cik));
   console.log('[b1-validate] Events=' + val.records.filter((r) => r.isEvent).length
     + ' davon nach Discovery-Ausschluss=' + events.length + ' · Nicht-Event-Records=' + nonEvents.length);
 

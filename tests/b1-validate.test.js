@@ -291,4 +291,18 @@ function companyFacts(revenues, operatingIncome, shares) {
   assert.strictEqual(boot.ci90.method, 'BCa', 'clusterBootstrap weist BCa aus');
 }
 
-console.log('b1-validate.test.js: alle 15 Blöcke grün');
+// (16) Dry Round #4 T2 (20.07.): Kontrolle = Nicht-Event-FIRMA (Protokoll par.5,
+// Firmen-Ebene) — Post-Event-Quartale von Event-Firmen sind KEINE Kontrollen
+// mehr (deren PEAD-Drift attenuierte die Primaerdifferenz Richtung 0).
+{
+  const recs = [];
+  for (let i = 0; i < 200; i++) recs.push({ cik: 'C' + i, calQ: '2020Q1', dYoY: 0.01 + (i % 10) * 0.001, dYoYprev: 0.01, dOpMargin: 0.01 });
+  recs.push({ cik: 'EVT', calQ: '2020Q1', dYoY: 5, dYoYprev: 0.5, dOpMargin: 0.1 });   // klares Event
+  recs.push({ cik: 'EVT', calQ: '2020Q3', dYoY: 0.01, dYoYprev: 0.01, dOpMargin: 0.01 }); // Post-Event-Quartal derselben Firma
+  const sel = selectViewRecords(recs, {}, new Set());
+  assert.ok(sel.events.some((r) => r.cik === 'EVT' && r.calQ === '2020Q1'), 'Event erkannt');
+  assert.ok(!sel.controls.some((r) => r.cik === 'EVT'), 'KEIN Quartal der Event-Firma dient als Kontrolle (par.5 Firmen-Ebene)');
+  assert.ok(sel.controls.some((r) => r.cik === 'C0'), 'Nicht-Event-Firmen bleiben Kontrollen');
+}
+
+console.log('b1-validate.test.js: alle 16 Blöcke grün');
