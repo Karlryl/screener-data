@@ -60,7 +60,7 @@ const fs = require('fs');
 const path = require('path');
 const store = require('../lib/price-history-store.js');
 const { classify } = require('../lib/forward-returns.js');
-const { buildPriceIndex } = require('./walk-forward-perf.js');
+const { buildPriceIndex, _usableClose } = require('./walk-forward-perf.js');
 const { loadFamiliesOrThrow } = require('./rank-ic-families.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -463,18 +463,28 @@ const addDaysIso = (iso, n) => { const d = new Date(iso + 'T00:00:00Z'); d.setUT
 // Test-Fixture ohne Benchmark), fällt der Anker auf den alten globalen Max zurück
 // (Rückwärtskompatibilität dort, wo kein Benchmark verfügbar ist).
 const BENCHMARK_CANDIDATES = ['SPY', 'QQQ', 'IWM']; // Reihenfolge wie walk-forward-perf.js
+// Bless-Gate-P2 (2. Runde, 20.07., Court E-20260720-5): nur Bars mit usable
+// Close (>0, finit) zaehlen als Reife-Anker — ein terminaler 0-Glitch-Bar
+// (z. B. SPY {t-1: 100, t: 0}) darf ein Fenster nicht reifen lassen, sonst
+// entscheidet der Preprocessing-Stand ueber die Reife (Invarianz-Bruch).
 function newestPriceDate(priceIndex) {
-  for (const t of BENCHMARK_CANDIDATES) {
-    const map = priceIndex[t];
-    if (!map || typeof map.keys !== 'function') continue;
+  const newestUsable = (map) => {
     let newest = null;
-    for (const d of map.keys()) if (!newest || d > newest) newest = d;
+    if (!map || typeof map.entries !== 'function') return null;
+    for (const [d, v] of map.entries()) {
+      if (!_usableClose(v)) continue;
+      if (!newest || d > newest) newest = d;
+    }
+    return newest;
+  };
+  for (const t of BENCHMARK_CANDIDATES) {
+    const newest = newestUsable(priceIndex[t]);
     if (newest) return newest;
   }
   let newest = null;
   for (const map of Object.values(priceIndex)) {
-    if (!map || typeof map.keys !== 'function') continue;
-    for (const d of map.keys()) if (!newest || d > newest) newest = d;
+    const n = newestUsable(map);
+    if (n && (!newest || n > newest)) newest = n;
   }
   return newest;
 }

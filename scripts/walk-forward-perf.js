@@ -72,7 +72,11 @@ function maxPriceDate(history) {
   for (const entries of Object.values(history || {})) {
     if (!Array.isArray(entries)) continue;
     for (const e of entries) {
-      if (e && typeof e.date === 'string' && (max === null || e.date > max)) max = e.date;
+      // Bless-Gate-P2 (2. Runde, 20.07., Court E-20260720-5): ein Bar ohne
+      // usable Close ist kein Frische-Beleg — sonst meldet derselbe Store vor
+      // dem Putz "frisch" und danach "stale" (Preprocessing-Invarianz).
+      if (!e || typeof e.date !== 'string' || !_usableClose(e.close)) continue;
+      if (max === null || e.date > max) max = e.date;
     }
   }
   return max;
@@ -186,6 +190,16 @@ function returnPct(p0, p1) {
   return (p1 - p0) / p0 * 100;
 }
 
+// Court E-20260720-5 (A-konsistent) + Bless-Gate-P2 20.07.: ein 0/negativer Bar
+// ist KEIN Preis — dasselbe usable-Praedikat gilt fuer ALLE Aufloesungspfade
+// (_priceAtCanonical UND nearestTradingDay-Fallback). Vorher divergierten die
+// Pfade: kanonisch wurde der 0-Bar uebersprungen (Nachbar gebucht), im Fallback
+// droppte `map.get(...) || null` denselben Ticker aus der Kohorte — Median/
+// Alpha hingen damit an Benchmark-Verfuegbarkeit und Preprocessing-Stand.
+function _usableClose(v) {
+  return typeof v === 'number' && Number.isFinite(v) && v > 0;
+}
+
 function addDaysIso(isoDate, days) {
   const d = new Date(isoDate + 'T00:00:00Z');
   d.setUTCDate(d.getUTCDate() + days);
@@ -241,20 +255,24 @@ function getEntryDate(asOf) {
 // before backward-2..5 were ever checked. That contradicts the documented
 // "backward-first (no look-ahead)" guarantee. Forward is now a last-resort
 // fallback used only when no backward match exists within the whole window.
+// Court E-20260720-5 + Bless-Gate-P2: Tage mit unusable Close (0/negativ)
+// zaehlen nicht als Trading Day — weitersuchen statt zurueckgeben, damit der
+// Fallback-Pfad denselben Nachbarkurs findet wie _priceAtCanonical (BH-146-
+// Reihenfolge backward-first bleibt unveraendert).
 function nearestTradingDay(targetDate, priceMap) {
   if (!priceMap) return null;
-  if (priceMap.has(targetDate)) return targetDate;
+  if (priceMap.has(targetDate) && _usableClose(priceMap.get(targetDate))) return targetDate;
   for (let offset = 1; offset <= 5; offset++) {
     const dBwd = new Date(targetDate + 'T00:00:00Z');
     dBwd.setUTCDate(dBwd.getUTCDate() - offset);
     const keyBwd = dBwd.toISOString().slice(0, 10);
-    if (priceMap.has(keyBwd)) return keyBwd;
+    if (priceMap.has(keyBwd) && _usableClose(priceMap.get(keyBwd))) return keyBwd;
   }
   for (let offset = 1; offset <= 5; offset++) {
     const dFwd = new Date(targetDate + 'T00:00:00Z');
     dFwd.setUTCDate(dFwd.getUTCDate() + offset);
     const keyFwd = dFwd.toISOString().slice(0, 10);
-    if (priceMap.has(keyFwd)) return keyFwd;
+    if (priceMap.has(keyFwd) && _usableClose(priceMap.get(keyFwd))) return keyFwd;
   }
   return null;
 }
@@ -356,15 +374,23 @@ function _priceAtCanonical(map, canonicalDate, originalTargetDate) {
   if (!map || !canonicalDate) return null;
   const tooStale = (resolvedDate) => originalTargetDate
     && _daysBetween(resolvedDate, originalTargetDate) > PRICE_MAX_STALE_DAYS;
-  if (map.has(canonicalDate)) {
+  // audit/fix (R-Gate Dry Round 2026-07-20, Fund 2): ein 0/negativer Bar ist KEIN
+  // brauchbarer Kurs. Vorher gab map.has(key) ihn ungeprüft zurück -> ein 0-Glitch
+  // GENAU am Zieltag maskierte einen gültigen Kurs an t-1 im 7-Tage-Lookback: p1=0
+  // -> p1<=0-Pfad in forward-returns.classify -> bei newest===exitDate ein falsches
+  // -100%-Delisting (bzw. no_entry_price am Einstieg). Jetzt: nicht-positive Bars wie
+  // fehlende behandeln und weitersuchen. Bleibt der Lookback leer -> null (korrekt
+  // delisted/series_ended). Geteiltes Primitiv (auch computeUniverseMedianReturn).
+  const usable = _usableClose; // Court E-20260720-5: ein Praedikat fuer ALLE Pfade
+  if (map.has(canonicalDate) && usable(map.get(canonicalDate))) {
     return tooStale(canonicalDate) ? null : map.get(canonicalDate);
   }
-  // Walk backward from canonicalDate to find a usable close within stale window
+  // Walk backward from canonicalDate to find a usable (positive) close within stale window
   for (let i = 1; i <= PRICE_MAX_STALE_DAYS; i++) {
     const d = new Date(canonicalDate + 'T00:00:00Z');
     d.setUTCDate(d.getUTCDate() - i);
     const key = d.toISOString().slice(0, 10);
-    if (map.has(key)) return tooStale(key) ? null : map.get(key);
+    if (map.has(key) && usable(map.get(key))) return tooStale(key) ? null : map.get(key);
   }
   return null;
 }
@@ -389,10 +415,12 @@ function computeUniverseMedianReturn(priceIndex, asOfDate, horizonDays, evaluate
       p0 = _priceAtCanonical(map, canonicalDates.entryDate, asOfDate);
       p1 = _priceAtCanonical(map, canonicalDates.exitDate, futureDate);
     } else {
-      const entryDate = nearestTradingDay(asOfDate, map) || asOfDate;
-      const exitDate  = nearestTradingDay(futureDate, map) || futureDate;
-      p0 = map.get(entryDate) || null;
-      p1 = map.get(exitDate)  || null;
+      // Bless-Gate-P2 (2. Runde, 20.07.): derselbe Resolver wie der kanonische
+      // Pfad — vorher suchte nearestTradingDay nur 5 Tage zurueck (+5 vorwaerts,
+      // Look-ahead!) vs. 7 Tage backward-only in _priceAtCanonical; ein usable
+      // Close an t-6/t-7 machte Median/Kohorte damit weiter benchmark-abhaengig.
+      p0 = _priceAtCanonical(map, asOfDate, asOfDate);
+      p1 = _priceAtCanonical(map, futureDate, futureDate);
     }
     const r = returnPct(p0, p1);
     if (r != null) returns.push(r);
@@ -423,11 +451,9 @@ function computeFrozenVintageMedianReturn(priceIndex, vintagePicks, asOfDate, ho
       p0 = _priceAtCanonical(map, canonicalDates.entryDate, asOfDate);
       p1 = _priceAtCanonical(map, canonicalDates.exitDate, futureDate);
     } else {
-      // F-BT-005: snap to nearest trading day
-      const entryDate = nearestTradingDay(asOfDate, map) || asOfDate;
-      const exitDate  = nearestTradingDay(futureDate, map) || futureDate;
-      p0 = map.get(entryDate) || null;
-      p1 = map.get(exitDate)  || null;
+      // Bless-Gate-P2 (2. Runde, 20.07.): einheitlicher Resolver, s. o.
+      p0 = _priceAtCanonical(map, asOfDate, asOfDate);
+      p1 = _priceAtCanonical(map, futureDate, futureDate);
     }
     const r = returnPct(p0, p1);
     if (r != null) returns.push(r);
@@ -605,14 +631,12 @@ function evaluateVintage(picksFile, priceIndex, regimes) {
           p0 = _priceAtCanonical(map, canonical.entryDate, entryDate);
           p1 = _priceAtCanonical(map, canonical.exitDate, futureDate);
         } else {
-          // Legacy path: no benchmark available
-          const tEntry = nearestTradingDay(entryDate, map) || entryDate;
-          const tExit  = nearestTradingDay(futureDate, map) || futureDate;
-          // Tag 216b: enforce staleness gate symmetrically on entry and exit.
-          if (_daysBetween(tEntry, entryDate)  > PRICE_MAX_STALE_DAYS) continue;
-          if (_daysBetween(tExit,  futureDate) > PRICE_MAX_STALE_DAYS) continue;
-          p0 = map.get(tEntry) || null;
-          p1 = map.get(tExit)  || null;
+          // Legacy path: no benchmark available.
+          // Bless-Gate-P2 (2. Runde, 20.07.): einheitlicher Resolver — die
+          // Tag-216b-Staleness-Symmetrie steckt jetzt im tooStale-Bound von
+          // _priceAtCanonical (originalTargetDate = Zieltag selbst).
+          p0 = _priceAtCanonical(map, entryDate, entryDate);
+          p1 = _priceAtCanonical(map, futureDate, futureDate);
         }
         const r = returnPct(p0, p1);
         if (r != null) pickReturns.push(r);
@@ -953,6 +977,9 @@ module.exports = {
   nearestTradingDay,
   // Tag 231a-2: exported for canonical-date callers (method-effectiveness.js)
   _priceAtCanonical,
+  // Court E-20260720-5 / Bless-Gate-P2: das eine usable-Praedikat fuer alle
+  // Preis-/Datums-Anker (rank-ic.js newestPriceDate nutzt es mit).
+  _usableClose,
   // Tag 232c-20: export computeBenchmarkReturn so method-effectiveness can
   // share walk-forward's canonical-date anchoring (audit F-BT-002 HIGH).
   computeBenchmarkReturn,
