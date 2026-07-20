@@ -613,10 +613,12 @@ function deliveryIC(vintage0, vintageLater) {
       let rev1 = null, bestDev = Infinity;
       for (let i = 0; i < p1.revenueQ.length; i++) {
         const e1 = p1.revenueQEnds[i];
-        // Dry Round #5 Fund #4 (Codex-verifiziert, 20.07.): rev1 muss wie beide
-        // Basiswerte >0 sein — 86 echte Negativ-Umsaetze in den Vintages haetten
-        // sonst Muell-Deltas (ret < -1) in den Delivery-IC gemischt.
-        if (!e1 || !Number.isFinite(p1.revenueQ[i]) || p1.revenueQ[i] <= 0) continue;
+        // Dry Round #5 Fund #4 + Bless-Korrektur (Codex, 20.07.): NEGATIVE
+        // rev1 sind Muell (ret < -1, 86 echte Faelle in den Vintages) und
+        // fliegen raus; rev1 === 0 bei positiver Basis ist dagegen ein ECHTES
+        // -100%-Delivery (Umsatz kann legitim 0 sein — anders als Preise) und
+        // bleibt drin, sonst verzerrt der IC zugunsten der Ueberlebenden.
+        if (!e1 || !Number.isFinite(p1.revenueQ[i]) || p1.revenueQ[i] < 0) continue;
         const gapDays = (Date.parse(e1) - end0ms) / 86400000;
         if (gapDays < DELIVERY_MIN_GAP_DAYS - DELIVERY_BAND_TOL_DAYS) continue;
         if (gapDays > DELIVERY_MIN_GAP_DAYS + DELIVERY_BAND_TOL_DAYS) continue;
