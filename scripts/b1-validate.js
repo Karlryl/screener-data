@@ -187,10 +187,8 @@ function evSales(facts, mcap, asOf) {
   return (mcap + Math.max(0, debt - cash)) / ltm;
 }
 
-function recordVarsAt(record, asOf, { factsOf, barsOf }) {
-  const bars = record.ticker ? barsOf(record.ticker) : null;
+function recordVarsAt(asOf, facts, bars) {
   if (!bars) return { hasBars: false, vars: null };
-  const facts = factsOf(record.cik);
   const shares = facts ? secPit.sharesHistory(facts, { asOf }) : [];
   const mv = matchVarsAt(bars, asOf, shares);
   if (!mv) return { hasBars: true, vars: null };
@@ -201,8 +199,8 @@ function recordVarsAt(record, asOf, { factsOf, barsOf }) {
   };
 }
 
-// Kandidaten werden pro Eventdatum neu geschnitten und bewertet. Der Cache-Key
-// stellt sicher, dass dieselbe Firmen-Periode je Datum nur einmal Facts/Bars nutzt.
+// Kandidaten werden pro Eventdatum neu geschnitten und bewertet. Facts/Bars
+// werden je Firmen-Periode einmal geladen und fuer alle benoetigten Daten genutzt.
 function buildEventDatedCandidatePools(events, candidates, deps, cache) {
   const datedCache = cache || new Map();
   const candidatesByQ = new Map();
@@ -218,11 +216,39 @@ function buildEventDatedCandidatePools(events, candidates, deps, cache) {
     if (!arr) groups.set(key, arr = []);
     arr.push(ev);
   }
-  const getAt = (r, asOf) => {
+  // Anforderungen in der bisherigen Gruppen-Reihenfolge sammeln, die teuren
+  // Loads danach aber Record-aussen/Termine-innen ausfuehren.
+  const requiredByRecord = new Map(), missingKeys = [], requested = new Set();
+  const requireAt = (r, asOf) => {
     const key = r.cik + '|' + r.end + '|' + asOf;
-    if (!datedCache.has(key)) datedCache.set(key, recordVarsAt(r, asOf, deps));
-    return datedCache.get(key);
+    if (datedCache.has(key) || requested.has(key)) return;
+    requested.add(key); missingKeys.push(key);
+    const recordKey = r.cik + '|' + r.end;
+    let job = requiredByRecord.get(recordKey);
+    if (!job) requiredByRecord.set(recordKey, job = { record: r, dates: [] });
+    job.dates.push(asOf);
   };
+  for (const groupedEvents of groups.values()) {
+    const asOf = groupedEvents[0].filed, calQ = groupedEvents[0].calQ;
+    for (const ev of groupedEvents) requireAt(ev, asOf);
+    for (const c of candidatesByQ.get(calQ) || []) requireAt(c, asOf);
+  }
+  const computed = new Map();
+  let nextMissing = 0;
+  for (const { record, dates } of requiredByRecord.values()) {
+    const bars = record.ticker ? deps.barsOf(record.ticker) : null;
+    const facts = bars ? deps.factsOf(record.cik) : null;
+    for (const asOf of dates) {
+      const key = record.cik + '|' + record.end + '|' + asOf;
+      computed.set(key, recordVarsAt(asOf, facts, bars));
+    }
+    while (nextMissing < missingKeys.length && computed.has(missingKeys[nextMissing])) {
+      const key = missingKeys[nextMissing++];
+      datedCache.set(key, computed.get(key));
+      computed.delete(key);
+    }
+  }
+  const getAt = (r, asOf) => datedCache.get(r.cik + '|' + r.end + '|' + asOf);
   const pools = new Map();
   for (const groupedEvents of groups.values()) {
     const asOf = groupedEvents[0].filed, calQ = groupedEvents[0].calQ;
