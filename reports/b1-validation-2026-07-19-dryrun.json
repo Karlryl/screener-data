@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-19T14:53:45.811Z",
+  "generatedAt": "2026-07-20T05:31:17.231Z",
   "protocol": "protocol/b1-registered-20260719.md",
   "protocolSha256": "7b20e750261ca5a6ede207064275d3934f11408565865477baced74ee0cf0f79",
   "era": {
@@ -15,26 +15,27 @@
       "ciksTotal": 20072,
       "ciksParsed": 20072,
       "ciksNoRevenue": 8745,
-      "firmQuartersEvaluated": 110412,
-      "yoyUndefined": 20432,
-      "dyoyUndefined": 4372,
-      "opMarginUndefined": 14591,
-      "derivedQ4Used": 31277,
-      "evaluable": 85533
+      "firmQuartersEvaluated": 110352,
+      "yoyUndefined": 9586,
+      "dyoyUndefined": 2377,
+      "opMarginUndefined": 14306,
+      "derivedQ4Used": 31250,
+      "nonConsecutive": 14146,
+      "evaluable": 84225
     },
-    "eventsRaw": 2401,
-    "discoveryExcluded": 829,
-    "events": 2023,
-    "nonEventRecords": 83132
+    "eventsRaw": 2378,
+    "discoveryExcluded": 799,
+    "events": 2024,
+    "nonEventRecords": 81837
   },
   "missingness": {
     "eventMissRate": 0.3,
-    "controlMissRate": 0.276,
-    "balanceDeltaPp": 2.4,
+    "controlMissRate": 0.279,
+    "balanceDeltaPp": 2.1,
     "balanceGatePassed": true
   },
   "matching": {
-    "pairs": 1225,
-    "noCaliperMatch": 192
+    "pairs": 1050,
+    "noCaliperMatch": 367
   }
 }
