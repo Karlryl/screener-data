@@ -9,6 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const {
   mapFTSToQuarterly, _isoDay, _alignEnds, _convertSnapshotToUSD,
+  _applyCurrencyConsistencyGuard,
 } = require('../pull-yahoo.js');
 
 let fail = 0;
@@ -122,6 +123,35 @@ check('FX: _convertSnapshotToUSD scaled values, aber NICHT die Enden', () => {
     // Loop lief -> values skaliert (Beweis, dass der Ends-Skip wirklich greift).
     assert.notStrictEqual(out.timeseries.revenueQ[0].value, 100);
   }
+});
+
+// ── T027: USD-deklarierte ADR-Finanzwerte duerfen nicht still in Heimatwaehrung bleiben ──
+function usdCurrencyFixture(annualRevenue) {
+  return {
+    meta: { reportingCurrency: 'USD', tradingCurrency: 'USD' },
+    marketCap: { value: 48_766_443_520 },
+    metrics: { revenueTTM: { value: 20_157_999_104 } },
+    timeseries: {
+      revenueQ: [5_040_000_000, 5_099_000_000, 5_076_000_000, 4_941_000_000]
+        .map(value => ({ value })),
+    },
+    annual: { annualRev: [{ value: annualRevenue }] },
+  };
+}
+
+check('currency guard: INFY-artige INR-Groessenordnung bei USD wird geflaggt', () => {
+  const snap = usdCurrencyFixture(1_786_500_000_000);
+  _convertSnapshotToUSD(snap);
+  _applyCurrencyConsistencyGuard(snap);
+  assert.strictEqual(snap.meta._currencyInconsistencySuspect, true);
+  assert.ok(/USD|currency/i.test(snap.meta._currencyInconsistencyReason || ''));
+});
+
+check('currency guard: konsistenter USD-Fall traegt kein Suspect-Flag', () => {
+  const snap = usdCurrencyFixture(20_200_000_000);
+  _convertSnapshotToUSD(snap);
+  _applyCurrencyConsistencyGuard(snap);
+  assert.ok(!Object.prototype.hasOwnProperty.call(snap.meta, '_currencyInconsistencySuspect'));
 });
 
 // ── price-only-Update erhaelt die Enden: _priceOnlyUpdate schreibt timeseries nie ──

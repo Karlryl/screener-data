@@ -153,6 +153,17 @@ function runLamp(name, meta, fn) {
   }
 }
 
+function _applyCurrencyConsistencyGuard(canonical) {
+  const result = detectAnnualCurrencyLeak(canonical);
+  if (result.suspect && canonical && canonical.meta) {
+    canonical.meta._annualCurrencyLeakSuspect = true;
+    canonical.meta._annualCurrencyLeakReason = result.reason;
+    canonical.meta._currencyInconsistencySuspect = true;
+    canonical.meta._currencyInconsistencyReason = result.reason;
+  }
+  return result;
+}
+
 // Market-cap floor (USD). Env-configurable so a wider universe sweep — e.g.
 // "screen every US company" — can lower it without a code edit, and so the
 // local fill-pull and the daily CI pull stay consistent (otherwise CI's $1B
@@ -2732,20 +2743,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       try { _convertSnapshotToUSD(canonical); }
       catch (e) { _log('WARN', `  FX conversion failed for ${stock.ticker}: ${e.message}`); }
 
-      // audit/fix (A2, 2026-06-26): annual-revenue currency-leak LAMP. Yahoo can serve a
-      // USD-reporter's annualRev in its TRADING ccy (e.g. NOK ~10x) via deprecated quoteSummary
-      // while FTS is USD; the density-based income-bundle merge can pick the leaked source and
-      // _convertSnapshotToUSD won't rescale it (fxRate=1, reporting ccy detected as USD). Runs
-      // AFTER conversion so reportingCurrencyOriginal/tradingCurrency are set; the leak survives
-      // conversion (fxRate=1) so the ratio is intact. Non-destructive (same pattern as the
-      // _newestQtrSuspect lamp): values stay FAITHFUL, Loop B disposes (ledger §4). Measured-clean
-      // trigger — fires on AKRBP.OL + GMAB.CO only across 4168 snapshots (lib/annual-currency-guard.js).
+      // Annual-revenue currency-leak LAMP. Besides cross-currency leaks, T027 covers the
+      // INFY class where reporting + trading both claim USD but annualRev remains INR-sized.
+      // Runs after conversion so the envelope metadata is final. Non-destructive: values
+      // stay FAITHFUL; only suspect flags are persisted and Loop B owns disposition.
       runLamp('annualCurrencyLeak', canonical.meta, () => {
-        const _acl = detectAnnualCurrencyLeak(canonical);
-        if (_acl.suspect && canonical.meta) {
-          canonical.meta._annualCurrencyLeakSuspect = true;
-          canonical.meta._annualCurrencyLeakReason = _acl.reason;
-        }
+        _applyCurrencyConsistencyGuard(canonical);
       });
 
       // F-DQ-002: skip tickers where FX conversion failed — mcap is in local currency and would
@@ -3228,7 +3231,7 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // Task 0.13 (Tag 288): Schema-Salvage fuer TDD.
   salvageValidationReject,
   // A10 (2.3-Vorbedingung, §4b Delivery-IC): Perioden-Ende-Substrat fuer TDD.
-  mapFTSToQuarterly, _isoDay, _alignEnds,
+  mapFTSToQuarterly, _isoDay, _alignEnds, _applyCurrencyConsistencyGuard,
   _silentErrorCounts: () => ({ lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors }),
   _resetSilentErrorCounts: () => { _lampErrors = 0; _needsFullPullThrew = 0; _corruptYoungSnapshots = 0; _ftsCacheParseErrors = 0; },
   // audit fix BH-042/BH-047: pure decisions fuer TDD.
