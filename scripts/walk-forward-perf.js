@@ -186,6 +186,16 @@ function returnPct(p0, p1) {
   return (p1 - p0) / p0 * 100;
 }
 
+// Court E-20260720-5 (A-konsistent) + Bless-Gate-P2 20.07.: ein 0/negativer Bar
+// ist KEIN Preis — dasselbe usable-Praedikat gilt fuer ALLE Aufloesungspfade
+// (_priceAtCanonical UND nearestTradingDay-Fallback). Vorher divergierten die
+// Pfade: kanonisch wurde der 0-Bar uebersprungen (Nachbar gebucht), im Fallback
+// droppte `map.get(...) || null` denselben Ticker aus der Kohorte — Median/
+// Alpha hingen damit an Benchmark-Verfuegbarkeit und Preprocessing-Stand.
+function _usableClose(v) {
+  return typeof v === 'number' && Number.isFinite(v) && v > 0;
+}
+
 function addDaysIso(isoDate, days) {
   const d = new Date(isoDate + 'T00:00:00Z');
   d.setUTCDate(d.getUTCDate() + days);
@@ -241,20 +251,24 @@ function getEntryDate(asOf) {
 // before backward-2..5 were ever checked. That contradicts the documented
 // "backward-first (no look-ahead)" guarantee. Forward is now a last-resort
 // fallback used only when no backward match exists within the whole window.
+// Court E-20260720-5 + Bless-Gate-P2: Tage mit unusable Close (0/negativ)
+// zaehlen nicht als Trading Day — weitersuchen statt zurueckgeben, damit der
+// Fallback-Pfad denselben Nachbarkurs findet wie _priceAtCanonical (BH-146-
+// Reihenfolge backward-first bleibt unveraendert).
 function nearestTradingDay(targetDate, priceMap) {
   if (!priceMap) return null;
-  if (priceMap.has(targetDate)) return targetDate;
+  if (priceMap.has(targetDate) && _usableClose(priceMap.get(targetDate))) return targetDate;
   for (let offset = 1; offset <= 5; offset++) {
     const dBwd = new Date(targetDate + 'T00:00:00Z');
     dBwd.setUTCDate(dBwd.getUTCDate() - offset);
     const keyBwd = dBwd.toISOString().slice(0, 10);
-    if (priceMap.has(keyBwd)) return keyBwd;
+    if (priceMap.has(keyBwd) && _usableClose(priceMap.get(keyBwd))) return keyBwd;
   }
   for (let offset = 1; offset <= 5; offset++) {
     const dFwd = new Date(targetDate + 'T00:00:00Z');
     dFwd.setUTCDate(dFwd.getUTCDate() + offset);
     const keyFwd = dFwd.toISOString().slice(0, 10);
-    if (priceMap.has(keyFwd)) return keyFwd;
+    if (priceMap.has(keyFwd) && _usableClose(priceMap.get(keyFwd))) return keyFwd;
   }
   return null;
 }
@@ -363,7 +377,7 @@ function _priceAtCanonical(map, canonicalDate, originalTargetDate) {
   // -100%-Delisting (bzw. no_entry_price am Einstieg). Jetzt: nicht-positive Bars wie
   // fehlende behandeln und weitersuchen. Bleibt der Lookback leer -> null (korrekt
   // delisted/series_ended). Geteiltes Primitiv (auch computeUniverseMedianReturn).
-  const usable = (v) => typeof v === 'number' && Number.isFinite(v) && v > 0;
+  const usable = _usableClose; // Court E-20260720-5: ein Praedikat fuer ALLE Pfade
   if (map.has(canonicalDate) && usable(map.get(canonicalDate))) {
     return tooStale(canonicalDate) ? null : map.get(canonicalDate);
   }
