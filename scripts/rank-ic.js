@@ -566,6 +566,7 @@ function deliveryIC(vintage0, vintageLater) {
   }
   const xs = [], ys = [];
   let skippedNoBand = 0; // F10: Ticker ohne Later-Quartal im ~2Q-Band (fail-loud statt Horizont-Drift)
+  let skippedNoBase = 0; // Dry Round #2 T2-1: end0-Quartal fehlt im Later-Vintage (keine FX-konsistente Basis)
   // BH-150: `later` wird AUSSCHLIESSLICH aus vintageLater.cohort gebaut — ein t0-Ticker, der im
   // späteren Board-Vintage fehlt (delistet/eingebrochen/vom Board gefallen), hat dort keine
   // Zeile und wurde bisher lautlos verworfen (kein Attritions-Ausweis, Survivorship-Bias). Volle
@@ -603,12 +604,26 @@ function deliveryIC(vintage0, vintageLater) {
         if (dev < bestDev) { bestDev = dev; rev1 = p1.revenueQ[i]; }
       }
       if (rev1 === null) { skippedNoBand++; continue; }
-      xs.push(r.score); ys.push(rev1 / rev0 - 1);
+      // Dry Round #2 Fund T2-1 (BH-108-Konsum, 20.07.): BEIDE Umsatzwerte aus
+      // DEMSELBEN Later-Vintage (ein Pull-FX). rev0 aus vintage0 traegt den
+      // t0-Pull-FX, rev1 den t1-Pull-FX — fuer Nicht-USD-Reporter rankte der
+      // Delivery-IC sonst ~6 Monate FX-Drift statt Delivery (write-board-
+      // history.js BH-108 dokumentiert die Drift und weist den Konsum auf
+      // konsistenter FX-Basis rank-ic.js zu). Der Perioden-Anker end0 bleibt
+      // PIT aus dem t0-Vintage; nur die WERTE kommen aus p1. Fehlt das
+      // end0-Quartal im Later-Vintage: fail-loud ueberspringen (Ausweis),
+      // nie auf die FX-gemischte Basis zurueckfallen.
+      let rev0Same = null;
+      for (let i = 0; i < p1.revenueQ.length; i++) {
+        if (p1.revenueQEnds[i] === end0 && Number.isFinite(p1.revenueQ[i]) && p1.revenueQ[i] > 0) { rev0Same = p1.revenueQ[i]; break; }
+      }
+      if (rev0Same === null) { skippedNoBase++; continue; }
+      xs.push(r.score); ys.push(rev1 / rev0Same - 1);
     }
   }
   const attritionRate = evaluable ? +(attrition / evaluable).toFixed(3) : 0;
-  if (xs.length < 10) return { n: xs.length, ic: null, skippedNoBand, attrition, attritionRate };
-  return { n: xs.length, ic: spearman(xs, ys), skippedNoBand, attrition, attritionRate };
+  if (xs.length < 10) return { n: xs.length, ic: null, skippedNoBand, skippedNoBase, attrition, attritionRate };
+  return { n: xs.length, ic: spearman(xs, ys), skippedNoBand, skippedNoBase, attrition, attritionRate };
 }
 
 // ── Hauptauswertung ──────────────────────────────────────────────────────────

@@ -53,15 +53,23 @@ function withHistory(path_) {
   assert.strictEqual(r.upperFirst, false);
   assert.ok(r.timeout, 'Timeout zählt als Miss, wird nie gedroppt');
 }
-// (4) Serie endet im Fenster: primär unbrauchbar (Ausweis), Shumway-View = Miss.
+// (4) Serie endet im Fenster: unbrauchbar (Ausweis) — in ALLEN Views.
+// Geaendert per Dry Round #2 T2-Fund + Duell-Ruling 20.07. (Option E,
+// protocol/b1-addendum-20260720-shumway.md): die fruehere imputeMissing-
+// Abkuerzung (jedes Serienende = Miss) verletzte das eingefrorene Protokoll
+// par.7 Nr. 6; firstPassage imputiert jetzt NIE, die Shumway-View laeuft
+// fail-closed als NOT_ESTIMABLE (p=1) in der m=6-Familie.
 {
   const short = []; for (let i = 0; i < 30; i++) short.push(100);
   const bars = mkBars('2020-01-01', withHistory(short));
   const prim = firstPassage(bars, bars[100].date, {});
   assert.strictEqual(prim.status, 'series_ended_in_window');
   const shum = firstPassage(bars, bars[100].date, { imputeMissing: true });
-  assert.strictEqual(shum.status, 'ok');
-  assert.strictEqual(shum.upperFirst, false, 'Imputation = nie oben zuerst');
+  assert.strictEqual(shum.status, 'series_ended_in_window', 'keine Imputation mehr - ehrlicher Status in allen Views');
+  // Serienende VOR dem Einstieg: nie imputierbar (kein Entry-Kurs existiert).
+  const tiny = bars.slice(0, 102); // d0=100, entryIdx=101 -> letzter Bar
+  const pre = firstPassage(tiny.slice(0, 101), tiny[100].date, {});
+  assert.strictEqual(pre.status, 'series_ended_pre_entry');
 }
 // (5) Zu wenig Vor-Historie -> insufficient_history (Balance-Gate-Zählung).
 {

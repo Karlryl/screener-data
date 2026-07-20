@@ -196,9 +196,14 @@ test('evaluate (BH-107): Familie voll (jeder Horizont vertreten) und 84d-Konjunk
 // ── BH-150: Delivery-IC-Attrition ausgewiesen statt still gedroppt ───────────
 test('deliveryIC (BH-150): t0-Ticker ohne jede Zeile im spaeteren Vintage zaehlt als Attrition, nicht als stiller Drop', () => {
   const N = 12;
+  // Dry Round #2 T2-1 (20.07.): Later-Vintage traegt zusaetzlich das
+  // end0-Quartal als FX-konsistente Basis (rev0Same aus p1) — reale
+  // PIT-Bloecke enthalten die Historie.
   const mkRow = (i, later) => ({
     ticker: 'T' + i, score: i,
-    pit: later ? { revenueQ: [100 + i * 3], revenueQEnds: ['2026-09-30'] } : { revenueQ: [100], revenueQEnds: ['2026-03-31'] },
+    pit: later
+      ? { revenueQ: [100 + i * 3, 100], revenueQEnds: ['2026-09-30', '2026-03-31'] }
+      : { revenueQ: [100], revenueQEnds: ['2026-03-31'] },
   });
   const v0 = { cohort: { profitable: Array.from({ length: N }, (_, i) => mkRow(i, false)), unprofitable: [] } };
   // T10/T11 fehlen im spaeteren Vintage komplett (vom Board gefallen/delistet) -> Attrition.

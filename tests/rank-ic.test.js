@@ -235,12 +235,15 @@ test('deliveryIC F10: bindet an das ~2Q-Zielband, nicht ans neueste Later-Quarta
   const N = 12; const rnd = lcg(11);
   // Later-Vintage (newest-first): +3Q(2026-12-31, KONSTANT 100), +2Q(2026-09-30, monoton im Score), +1Q(2026-06-30).
   // Altes Verhalten: index 0 = +3Q-Konstante -> ys konstant -> IC null. Fix: +2Q-Signal -> IC ~1.
+  // Dry Round #2 T2-1 (20.07.): das Later-Vintage traegt zusaetzlich das
+  // end0-Quartal (2026-03-31) — reale PIT-Bloecke enthalten die Historie, und
+  // deliveryIC braucht es jetzt als FX-konsistente Basis (rev0Same aus p1).
   const mk = (later) => ({
     cohort: {
       profitable: Array.from({ length: N }, (_, i) => ({
         ticker: 'T' + i, score: i,
         pit: later
-          ? { revenueQ: [100, 100 + i * 5 + rnd(), 90], revenueQEnds: ['2026-12-31', '2026-09-30', '2026-06-30'] }
+          ? { revenueQ: [100, 100 + i * 5 + rnd(), 90, 100], revenueQEnds: ['2026-12-31', '2026-09-30', '2026-06-30', '2026-03-31'] }
           : { revenueQ: [100], revenueQEnds: ['2026-03-31'] },
       })), unprofitable: [],
     },
@@ -248,6 +251,7 @@ test('deliveryIC F10: bindet an das ~2Q-Zielband, nicht ans neueste Later-Quarta
   const r = ric.deliveryIC(mk(false), mk(true));
   assert.equal(r.n, N, 'alle Ticker haben ein Quartal im Band');
   assert.equal(r.skippedNoBand, 0, 'kein Ticker übersprungen');
+  assert.equal(r.skippedNoBase, 0, 'end0-Basis im Later-Vintage vorhanden');
   assert.ok(r.ic > 0.9, 'IC trägt das +2Q-Signal (nicht die +3Q-Konstante): ' + r.ic);
 });
 

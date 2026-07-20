@@ -69,7 +69,17 @@ function idxOnOrAfter(bars, d) {
 // §3/§4: Tag 0 = erster Handelstag >= filed; Einstieg = Close von Tag 0 + entryLag.
 // σ_daily aus VOL_LOOKBACK Log-Returns VOR Tag 0. Rückgabe null + Grund, wenn
 // Substrat fehlt (Balance-Gate-Zählung beim Aufrufer).
-function firstPassage(bars, filedDate, { kSigma = K_SIGMA, entryLag = 1, imputeMissing = false } = {}) {
+// Dry Round #2 Fund T2-2 + Duell-Ruling 20.07. (Option E, fail closed): die
+// fruehere imputeMissing-Abkuerzung (JEDES Serienende = Miss) verletzte das
+// eingefrorene Protokoll par.7 Nr. 6 (nur PERFORMANCE-bedingte Serienenden,
+// Klassifikation via forward-returns.classify). Eine protokolltreue
+// Klassifikation existiert unter Court E-20260720-5 nicht mehr (close<=0 ist
+// nie Delisting-Beleg; 'delisted' fuer wohlgeformte Adapter unerreichbar,
+// Codex-Duell Einwand 3-5) -> die Shumway-View ist OHNE unabhaengige
+// Delisting-Labels NICHT SCHAETZBAR und wird fail-closed gefuehrt
+// (protocol/b1-addendum-20260720-shumway.md). firstPassage liefert deshalb
+// immer die ehrlichen Serienende-Status, imputiert nie.
+function firstPassage(bars, filedDate, { kSigma = K_SIGMA, entryLag = 1 } = {}) {
   if (!bars) return { status: 'no_series' };
   const d0 = idxOnOrAfter(bars, filedDate);
   if (d0 < 0) return { status: 'no_day0' };
@@ -83,7 +93,7 @@ function firstPassage(bars, filedDate, { kSigma = K_SIGMA, entryLag = 1, imputeM
   const sigmaDaily = Math.sqrt(sum2 / n);
   if (!(sigmaDaily > 0)) return { status: 'zero_vol' };
   const entryIdx = d0 + entryLag;
-  if (entryIdx >= bars.length) return imputeMissing ? { status: 'ok', upperFirst: false, imputed: true } : { status: 'series_ended_pre_entry' };
+  if (entryIdx >= bars.length) return { status: 'series_ended_pre_entry' };
   const entry = bars[entryIdx].close;
   const up = entry * Math.exp(kSigma * sigmaDaily * Math.sqrt(TIMEOUT_TD));
   const dn = entry * Math.exp(-kSigma * sigmaDaily * Math.sqrt(TIMEOUT_TD));
@@ -93,9 +103,10 @@ function firstPassage(bars, filedDate, { kSigma = K_SIGMA, entryLag = 1, imputeM
     if (bars[i].close <= dn) return { status: 'ok', upperFirst: false, days: i - entryIdx, lower: true };
   }
   if (entryIdx + TIMEOUT_TD > bars.length - 1) {
-    // Serie endet vor Timeout ohne Barriere: primär = unbrauchbar (Ausweis);
-    // Shumway-View (§7 Nr. 6): −30 %-Imputation → nie „oben zuerst" = Miss.
-    return imputeMissing ? { status: 'ok', upperFirst: false, imputed: true } : { status: 'series_ended_in_window' };
+    // Serie endet vor Timeout ohne Barriere: unbrauchbar (Ausweis) — in ALLEN
+    // Views; die fruehere Shumway-Imputation an dieser Stelle war der
+    // Dry-Round-#2-T2-Fund (Protokoll-Bruch, s. Funktionskommentar).
+    return { status: 'series_ended_in_window' };
   }
   return { status: 'ok', upperFirst: false, timeout: true };
 }
@@ -391,7 +402,7 @@ function evaluatePairOutcomes(pairs, view, barsOf) {
   const diffs = [];
   let evOutcomeMissing = 0, ctlOutcomeMissing = 0;
   for (const p of pairs) {
-    const opts = { kSigma: view.kSigma, entryLag: view.entryLag, imputeMissing: view.impute };
+    const opts = { kSigma: view.kSigma, entryLag: view.entryLag };
     const eo = firstPassage(barsOf(p.ev.ticker), p.ev.filed, opts);
     const co = firstPassage(barsOf(p.ctl.ticker), p.ev.filed, opts);
     if (eo.status !== 'ok') evOutcomeMissing++;
@@ -519,16 +530,31 @@ async function main() {
 
   // 4) Outcomes + Familie m=6 (§7)
   const views = [
-    { key: 'haupttest', kSigma: K_SIGMA, entryLag: 1, impute: false, evFilter: (r) => r.isEvent },
-    { key: 'p75', kSigma: K_SIGMA, entryLag: 1, impute: false, pctl: 0.75 },
-    { key: 'sigma15', kSigma: K_SIGMA_ROBUST, entryLag: 1, impute: false },
-    { key: 'ohneOpMargin', kSigma: K_SIGMA, entryLag: 1, impute: false, noOpMargin: true },
-    { key: 'tplus5', kSigma: K_SIGMA, entryLag: 5, impute: false },
-    { key: 'shumway', kSigma: K_SIGMA, entryLag: 1, impute: true },
+    { key: 'haupttest', kSigma: K_SIGMA, entryLag: 1, evFilter: (r) => r.isEvent },
+    { key: 'p75', kSigma: K_SIGMA, entryLag: 1, pctl: 0.75 },
+    { key: 'sigma15', kSigma: K_SIGMA_ROBUST, entryLag: 1 },
+    { key: 'ohneOpMargin', kSigma: K_SIGMA, entryLag: 1, noOpMargin: true },
+    { key: 'tplus5', kSigma: K_SIGMA, entryLag: 5 },
+    // Dry Round #2 T2-2 / Option E (fail closed): die praeregistrierte
+    // Shumway-View ist ohne unabhaengige Delisting-Labels NICHT SCHAETZBAR
+    // (Details protocol/b1-addendum-20260720-shumway.md). Sie bleibt in der
+    // m=6-Familie mit der bestehenden "unmessbar = p=1"-Konvention und kann
+    // nie BY-signifikant werden; ein POSITIV-Verdikt ist ohne auswertbare
+    // Shumway-View strukturell nicht erreichbar (par.8, fail closed).
+    { key: 'shumway', kSigma: K_SIGMA, entryLag: 1, notEstimable: 'NOT_ESTIMABLE_NO_DELISTING_LABELS' },
   ];
   const famResults = {};
   const enrichedByKey = new Map([...events, ...nonEvents].map((r) => [r.cik + '|' + r.end, r]));
   for (const v of views) {
+    if (v.notEstimable) {
+      famResults[v.key] = {
+        estimable: false, reason: v.notEstimable, p: 1, mean: null, n: 0,
+        pairsAttempted: 0, pairsComplete: 0, evOutcomeMissing: 0, ctlOutcomeMissing: 0,
+        eventOutcomeMissRate: 0, controlOutcomeMissRate: 0,
+        outcomeBalanceDelta: 0, outcomeBalanceDeltaPp: 0,
+      };
+      continue;
+    }
     // Event-Menge je View (P75/ohneOpMargin verändern die Auswahl; Paare neu bilden)
     let evSet = evUsable, prs = pairs;
     if (v.pctl || v.noOpMargin) {
@@ -563,11 +589,18 @@ async function main() {
   const outcomeDelta = H.outcomeBalanceDelta || 0;
   const balance = assessBalance(balanceDelta, outcomeDelta);
   const balanceOk = balance.passed;
-  const shumwayVeto = famResults.shumway && Number.isFinite(famResults.shumway.mean) && famResults.shumway.mean < 0 && H.mean > 0;
+  // Option E (fail closed, Duell-Ruling 20.07.): eine nicht schaetzbare
+  // Shumway-View darf ein POSITIV nicht durchwinken (das waere ein still
+  // uebersprungenes Pflicht-Gate) — sie kappt es auf 'nicht belastbar'.
+  // Ein NULL bleibt ein gueltiges Ergebnis (par.8: NULL braucht das Veto nicht).
+  const S = famResults.shumway || {};
+  const shumwayNotEstimable = S.estimable === false;
+  const shumwayVeto = !shumwayNotEstimable && Number.isFinite(S.mean) && S.mean < 0 && H.mean > 0;
   let verdict;
   if (!powerOk) verdict = 'unterpowert — kein Urteil (N_eff<' + MIN_NEFF_CLUSTERS + ' Cluster)';
   else if (!balanceOk) verdict = 'nicht belastbar unter Attrition (Balance-Gate)';
   else if (shumwayVeto) verdict = 'nicht belastbar unter Attrition (Shumway-Veto: Vorzeichen kippt)';
+  else if (H.bySignificant && H.mean > 0 && shumwayNotEstimable) verdict = 'nicht belastbar unter Attrition (Shumway-View nicht auswertbar — keine unabhaengigen Delisting-Labels, Addendum 20260720)';
   else if (H.bySignificant && H.mean > 0) verdict = 'POSITIV: Haupttest überlebt BY + Gates';
   else verdict = 'NEGATIV/NULL: kein BY-signifikanter Effekt (gültiges Ergebnis)';
   report.family = famResults;
@@ -586,6 +619,7 @@ async function main() {
     balanceDeltaOutcomePp: H.outcomeBalanceDeltaPp || 0,
     balanceDeltaMaxPp: +(100 * balance.maxDelta).toFixed(1),
     shumwayVeto: !!shumwayVeto,
+    shumwayEstimable: !shumwayNotEstimable,
   };
   report.verdict = verdict;
 
