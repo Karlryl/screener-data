@@ -460,13 +460,20 @@ async function main() {
   // Primaerdifferenz Richtung 0 (konservative Verzerrung, entwertet ein NULL).
   const eventFirmCiks = new Set(val.records.filter((r) => r.isEvent).map((r) => r.cik));
   const nonEvents = val.records.filter((r) => !eventFirmCiks.has(r.cik));
+  // Bless-Gate-P1 zu Tag 408: der Firmen-Ausschluss gilt NUR fuer den
+  // Kontroll-Pool. Die Nicht-Event-Quartale der Event-Firmen bleiben in der
+  // ANREICHERUNGS-Basis verfuegbar — die P75-/ohneOpMargin-Views koennen dort
+  // legitime Alternativ-Events flaggen; ohne diese Basis verwarf enrichedByKey
+  // sie still (.filter(Boolean)) und View-p/BY haetten sich verschoben.
+  const eventFirmOthers = val.records.filter((r) => eventFirmCiks.has(r.cik) && !r.isEvent);
   console.log('[b1-validate] Events=' + val.records.filter((r) => r.isEvent).length
-    + ' davon nach Discovery-Ausschluss=' + events.length + ' · Nicht-Event-Records=' + nonEvents.length);
+    + ' davon nach Discovery-Ausschluss=' + events.length + ' · Nicht-Event-Records=' + nonEvents.length
+    + ' · Event-Firmen-Restquartale (nur Anreicherung/Views)=' + eventFirmOthers.length);
 
   // 2) Ticker/SIC/Preise/Match-Variablen
   const tickerByCik = new Map();
   for (const [tk, cik] of secPit.loadTickerMap().entries()) if (!tickerByCik.has(cik)) tickerByCik.set(cik, tk);
-  const needCiks = Array.from(new Set([...events, ...nonEvents].filter((r) => tickerByCik.has(r.cik)).map((r) => r.cik)));
+  const needCiks = Array.from(new Set([...events, ...nonEvents, ...eventFirmOthers].filter((r) => tickerByCik.has(r.cik)).map((r) => r.cik)));
   await ensureSubmissions(needCiks, process.env.SEC_CONTACT);
 
   // Caches: factsForCik parst ~100 KB–5 MB JSON — NIE pro Record, nur pro CIK.
@@ -505,7 +512,7 @@ async function main() {
     return r;
   };
   console.log('[b1-validate] Anreicherung (Ticker/SIC/Preise/Variablen) …');
-  events.forEach(enrich); nonEvents.forEach(enrich);
+  events.forEach(enrich); nonEvents.forEach(enrich); eventFirmOthers.forEach(enrich);
   const datedDeps = { factsOf, barsOf }, datedVarsCache = new Map();
   const mainCandidatePools = buildEventDatedCandidatePools(events, nonEvents, datedDeps, datedVarsCache);
 
@@ -552,7 +559,9 @@ async function main() {
     { key: 'shumway', kSigma: K_SIGMA, entryLag: 1, notEstimable: 'NOT_ESTIMABLE_NO_DELISTING_LABELS' },
   ];
   const famResults = {};
-  const enrichedByKey = new Map([...events, ...nonEvents].map((r) => [r.cik + '|' + r.end, r]));
+  // Bless-Gate-P1 zu Tag 408: inkl. eventFirmOthers — Alternativ-View-Events
+  // von Event-Firmen duerfen nicht still am Lookup scheitern.
+  const enrichedByKey = new Map([...events, ...nonEvents, ...eventFirmOthers].map((r) => [r.cik + '|' + r.end, r]));
   for (const v of views) {
     if (v.notEstimable) {
       famResults[v.key] = {
