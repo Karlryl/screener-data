@@ -19,6 +19,8 @@ const TH = {
   PEAK_MARGIN_MULT: 1.30,  // aktuelle Marge > 1.3x historischer Schnitt = Peak
   SHORT_RUNWAY_Q: 8,       // < 8 Quartale Cash-Runway = kurz
   HIGH_BETA: 2.5,          // Beta-Crash-Risiko
+  SHARES_ORGANIC_CAP: 2,   // s. shareYoYLegs()
+  SHARE_DILUTION_PCTL: 0.75, // s. shareCountDilution() — reuse der etablierten p75-Konvention (wie CYCLE_DD_PCTL, score.js)
 };
 
 function meanPresent(series) {
@@ -307,27 +309,98 @@ function inflationSuspect(s) {
   return HIGH_INFLATION_ORIGINS.has(origin);   // true = nominales Wachstum inflations-verdaechtig
 }
 
+// 15. Aktienzahl-Verwaesserung (5.2 Small-Cap-Board, Karl E-20260721-4 A1): Kohorten-relative
+// Warnung, KEIN Score-Effekt (wie alle Timing-Lampen 1-10). Liest annualShares direkt aus der SEC-
+// Tiefenserie (secAnnual, Tag 421/422) — Yahoo hat keine Aktienzahl-Historie, dieselbe Grenze wie
+// normSec()/cycleSeriesPair in score.js; hier lokal statt importiert (reine Anzeige-Lampe, kein
+// Cross-Modul-Kopplungsrisiko).
+function annualSharesSeries(s) {
+  const raw = s && s.secAnnual && s.secAnnual.annualShares;
+  if (!Array.isArray(raw) || raw.length === 0) return null;
+  return raw.map((e) => { const v = (e && typeof e === 'object') ? e.value : e; return Number.isFinite(v) ? v : null; });
+}
+
+// Split/Reverse-Split-Guard: eine ECHTE organische Jahres-Verwaesserung (SBC/Secondary) verdoppelt
+// oder halbiert die Aktienzahl nicht binnen EINES Jahres — ein Sprung ausserhalb [1/2, 2] ist die
+// Split-Signatur (Roh-Aktienzahl-Sprung, keine Verwaesserung), oekonomisch begruendeter Deckel wie
+// OPMARGIN_CAP (score.js), keine data-gefittete Magic Number. Live-verifiziert an GME: die Serie
+// zeigt den echten 4-fuer-1-Split (Juli 2022) als Ratio~3.989 zwischen zwei GJ — dieses Bein faellt
+// sauber raus, die uebrigen organischen Beine (0..10%, ein Ausreisser 46%) bleiben.
+function shareYoYLegs(series) {
+  const legs = [];
+  for (let i = 0; i + 1 < series.length; i++) {
+    const cur = series[i], prev = series[i + 1];
+    if (!Number.isFinite(cur) || !Number.isFinite(prev) || prev <= 0) continue;
+    const ratio = cur / prev;
+    if (ratio > TH.SHARES_ORGANIC_CAP || ratio < 1 / TH.SHARES_ORGANIC_CAP) continue; // Split-Signatur
+    legs.push(ratio - 1);
+  }
+  return legs;
+}
+
+// Aktienzahl-Wachstumsrate einer Firma = Median der organischen (split-bereinigten) YoY-Beine (wie
+// robustG: Median statt Einzeljahr, damit ein Ausreisser-Jahr die Aussage nicht kippt). Kein
+// organisches Bein -> null (nicht bewertbar, z.B. reiner Split-Serie ohne Zwischenjahre).
+function shareGrowthRate(s) {
+  const series = annualSharesSeries(s);
+  if (!series) return null;
+  const legs = shareYoYLegs(series);
+  return legs.length ? _median(legs) : null;
+}
+
+// Kohorten-Perzentil-Funktion ueber die shareGrowthRate-Verteilung EINER Kohorte (vom Board-Bau
+// uebergeben, s. run-screener.js/5.2-Board — dieselbe Rang-Methode wie growthPctlFn in score.js:
+// pctl = Anteil strikt kleinerer Werte). Degenerations-Guard analog (n<2 oder komplett gleich -> null).
+function buildShareGrowthPctlFn(cohortSnapshots) {
+  const finite = (cohortSnapshots || []).map(shareGrowthRate).filter(Number.isFinite).sort((a, b) => a - b);
+  const n = finite.length;
+  if (n < 2 || finite[0] === finite[n - 1]) return null;
+  return (g) => {
+    let lo = 0;
+    for (const x of finite) { if (x < g) lo++; else break; }
+    return lo / (n - 1);
+  };
+}
+
+// shareCountDilution(s, ctx): ctx.shareGrowthPctlFn ist die Kohorten-Perzentil-Funktion (vom Aufrufer
+// gebaut, s.o.) — OHNE ctx (z.B. HG/QC-Board, die Lampe B nicht verdrahten) liefert die Lampe null
+// (nicht bewertbar), byte-identisch zum bisherigen Verhalten dort. Feuert bei Kohorten-p75+ (TH.SHARE_DILUTION_PCTL).
+function shareCountDilution(s, ctx) {
+  const g = shareGrowthRate(s);
+  if (g === null) return null;
+  const pctlFn = ctx && ctx.shareGrowthPctlFn;
+  if (typeof pctlFn !== 'function') return null;
+  const p = pctlFn(g);
+  if (!Number.isFinite(p)) return null;
+  return p >= TH.SHARE_DILUTION_PCTL;
+}
+
 const LAMPS = {
   unprofit, burning, shortRunway, highDilution, peakMargin,
   lowRoic, arDivergence, crashRisk, fcfArtefact, cyclePeak,
   burnAccelerating,
   newestQtrSuspect, annualCurrencyLeak,
   inflationSuspect,
+  shareCountDilution,
 };
 
 /**
- * evaluateLamps(s) -> { flags: {name:bool|null}, active: [names mit true] }
- * Reine Anzeige — fliesst NIE in den Score ein.
+ * evaluateLamps(s, ctx) -> { flags: {name:bool|null}, active: [names mit true] }
+ * Reine Anzeige — fliesst NIE in den Score ein. ctx ist optional (Kohorten-Kontext fuer Lampen wie
+ * shareCountDilution) — die Lampen 1-14 haben Stellenzahl 1 und ignorieren ctx (byte-identisch).
  */
-function evaluateLamps(s) {
+function evaluateLamps(s, ctx) {
   const flags = {};
   const active = [];
   for (const [name, fn] of Object.entries(LAMPS)) {
-    const v = fn(s);
+    const v = fn(s, ctx);
     flags[name] = v;
     if (v === true) active.push(name);
   }
   return { flags, active };
 }
 
-module.exports = { evaluateLamps, burnPressFactor, LAMPS, TH, ...LAMPS };
+module.exports = {
+  evaluateLamps, burnPressFactor, LAMPS, TH, ...LAMPS,
+  shareGrowthRate, buildShareGrowthPctlFn,
+};
