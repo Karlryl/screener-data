@@ -537,8 +537,24 @@ async function main() {
   const report = {
     generatedAt: new Date().toISOString(), protocol: 'protocol/b1-registered-20260719.md', protocolSha256: '7b20e750261ca5a6ede207064275d3934f11408565865477baced74ee0cf0f79',
     era: { validation: [VAL_START, VAL_END], lockboxUntouched: true }, dryRun,
-    detection: { counters: val.counters, eventsRaw: val.records.filter((r) => r.isEvent).length, discoveryExcluded: discEventCiks.size, events: events.length, nonEventRecords: nonEvents.length },
+    detection: {
+      counters: val.counters,
+      eventsRaw: val.records.filter((r) => r.isEvent).length,
+      // Kreuz-Review-Claim-5-Fix (21.07.): getrennt ausweisen — discEventCiks.size ist die
+      // CIK-Anzahl mit Discovery-Event (Firmen-Ausschluss §6), NICHT die Zahl entfernter Events.
+      discoveryExcludedCiks: discEventCiks.size,
+      discoveryExcludedEvents: val.records.filter((r) => r.isEvent).length - events.length,
+      events: events.length,
+      nonEventRecords: nonEvents.length,
+    },
     missingness: { eventMissRate: +evMissRate.toFixed(3), controlMissRate: +ctlMissRate.toFixed(3), balanceDeltaPp: +(100 * balanceDelta).toFixed(1), balanceGatePassed: balanceDelta <= BALANCE_GATE_PP },
+    // §8 Z.101 deskriptive Survivorship-Bilanz auf der VOLLEN companyfacts-CIK-Population
+    // (inkl. tote CIKs) — „null Entscheidungsgewalt" (§7 Z.84-85); nur Ausweis. Kreuz-Review-P2.
+    survivorship: {
+      ciksTotal: val.counters.ciksTotal, ciksParsed: val.counters.ciksParsed,
+      ciksNoRevenue: val.counters.ciksNoRevenue,
+      firmQuartersEvaluated: val.counters.firmQuartersEvaluated, evaluable: val.counters.evaluable,
+    },
     matching: { pairs: pairs.length, noCaliperMatch: noMatch },
   };
 
