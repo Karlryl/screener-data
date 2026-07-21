@@ -60,7 +60,7 @@ const EXTERNAL_DIR = path.join(ROOT, 'external-data');
 const TICKER_CIK_MAP_PATH = path.join(EXTERNAL_DIR, 'sec-ticker-cik-map.json');
 const FORM4_CACHE_PATH = path.join(EXTERNAL_DIR, 'sec-form4-cache.json');
 
-const USER_AGENT = 'Karl Viehrig screener-data karl_viehrig@web.de';
+const USER_AGENT = require('../lib/sec-user-agent').secUserAgent();
 const RATE_DELAY_MS = 125;          // ≤8 req/s, under SEC's 10/s/IP limit
 // audit/fix: 429 IP-block backoff. On HTTP 429/503 SEC wants the client to slow
 // WAY down; the normal 125 ms cadence keeps tripping the 10/s/IP limit and risks
@@ -385,7 +385,7 @@ function resolveMergeTicker(parsedTxns, fallbackTicker) {
 function writeCache(byTicker, lastIndexedDate) {
   writeFileAtomic(FORM4_CACHE_PATH, JSON.stringify({
     updatedAt: new Date().toISOString(),
-    userAgent: USER_AGENT,
+    userAgentSource: 'process.env.SEC_CONTACT',
     lookbackDays: FORM4_LOOKBACK_DAYS,
     // audit/fix BH-020: persisted so the NEXT run's targetDates() knows where
     // it left off instead of always looking back a fixed DAYS window.

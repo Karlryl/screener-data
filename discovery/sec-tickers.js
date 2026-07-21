@@ -14,7 +14,7 @@ const SEC_URL = 'https://www.sec.gov/files/company_tickers.json';
 // Run #107 log shows '[SEC] Failed: HTTP 403'. SEC policy requires the UA
 // header to include a real contact so they can reach the requester. Same
 // pattern as Tag 211j fix for scripts/pull-insider-form4.js.
-const USER_AGENT = 'Karl Viehrig screener-data karl_viehrig@web.de';
+const USER_AGENT = require('../lib/sec-user-agent').secUserAgent();
 // Tag 229c-2: redirect handler hardened.
 // Prior implementation had two latent failure modes that would silently
 // degrade the entire US universe (≈10k tickers vanish):

@@ -58,7 +58,7 @@ const TICKER_CIK_MAP_PATH = path.join(EXTERNAL_DIR, 'sec-ticker-cik-map.json');
 const TMP_DIR = path.join(EXTERNAL_DIR, 'tmp');
 const HISTORY_CACHE_PATH = path.join(EXTERNAL_DIR, 'sec-form4-history.json');
 
-const USER_AGENT = 'Karl Viehrig screener-data karl_viehrig@web.de';
+const USER_AGENT = require('../lib/sec-user-agent').secUserAgent();
 const RATE_DELAY_MS = 125;
 const ZIP_URL = (y, q) =>
   `https://www.sec.gov/files/structureddata/data/insider-transactions-data-sets/${y}q${q}_form345.zip`;
@@ -204,7 +204,7 @@ function num(s) {
 function writeHistory(byTicker) {
   writeFileAtomic(HISTORY_CACHE_PATH, JSON.stringify({
     updatedAt: new Date().toISOString(),
-    userAgent: USER_AGENT,
+    userAgentSource: 'process.env.SEC_CONTACT',
     source: 'sec-quarterly-form345-datasets',
     byTicker
   }, null, 2));

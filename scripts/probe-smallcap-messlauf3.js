@@ -23,7 +23,7 @@
  * Netzwerk: SEC (company_tickers.json + companyfacts, striktes WAF/429-
  * Handling ueber fetchSecJsonStrict) und Yahoo (quoteSummary + fundamentals-
  * timeseries). SEC_CONTACT muss gesetzt sein -- Beispielwert wie
- * discovery/sec-tickers.js: "Karl Viehrig screener-data karl_viehrig@web.de".
+ * discovery/sec-tickers.js: "Name screener-data mail@example.com".
  * Bei Drosselung: reaktiver Backoff (siehe withBackoff), kein harter Abbruch
  * bei der ersten 429. Teilfortschritt wird nach jedem gezogenen Kandidaten
  * in state/smallcap-messlauf3-checkpoint.json geschrieben; ein Neustart mit
@@ -382,7 +382,7 @@ async function main() {
   const args = parseArgs(process.argv);
   const secContact = String(process.env.SEC_CONTACT || '').trim();
   if (!secContact) {
-    throw new Error('SEC_CONTACT fehlt (z.B. "Karl Viehrig screener-data karl_viehrig@web.de", siehe discovery/sec-tickers.js) -- Messlauf 3 braucht SEC fuer Kandidatenbasis + XBRL.');
+    throw new Error('SEC_CONTACT fehlt (z.B. "Name screener-data mail@example.com", siehe discovery/sec-tickers.js) -- Messlauf 3 braucht SEC fuer Kandidatenbasis + XBRL.');
   }
   if (/\r|\n/.test(secContact)) throw new Error('SEC_CONTACT enthaelt einen unzulaessigen Zeilenumbruch.');
 

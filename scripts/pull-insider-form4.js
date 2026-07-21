@@ -76,7 +76,7 @@ const SEC_ARCHIVE_URL = (cik, accNoDash, doc) =>
 // spec; if SEC ever complains they'll email this address before blocking.
 // Tag 211j: real contact per SEC EDGAR Terms of Use — fake addresses can
 // be silently rate-limited or rejected. Karl's screener-data, public repo.
-const USER_AGENT = 'Karl Viehrig screener-data karl_viehrig@web.de';
+const USER_AGENT = require('../lib/sec-user-agent').secUserAgent();
 
 // Throttle: 8 req/sec = 125 ms inter-call delay, comfortably under SEC's
 // documented 10/sec/IP limit. Same value used by pull-sec-xbrl.js.
@@ -642,7 +642,7 @@ async function main() {
     // the script resumable — Ctrl-C at any point leaves a valid cache.
     writeFileAtomic(FORM4_CACHE_PATH, JSON.stringify({
       updatedAt: new Date().toISOString(),
-      userAgent: USER_AGENT,
+      userAgentSource: 'process.env.SEC_CONTACT',
       lookbackDays: FORM4_LOOKBACK_DAYS,
       byTicker
     }, null, 2));

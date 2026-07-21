@@ -1,29 +1,27 @@
 #!/usr/bin/env node
 /**
- * Regression guard: every SEC-EDGAR-pulling script MUST send a User-Agent that
- * carries a real contact (an email address), per SEC's EDGAR Terms of Use.
+ * Regression guard: every SEC-EDGAR-pulling script MUST derive its User-Agent
+ * from process.env.SEC_CONTACT at runtime — and carry NO hardcoded contact.
  *
- * Why this exists: SEC silently serves HTTP 403 to contactless User-Agents.
- * Tag 211j fixed this in pull-insider-form4.js and pull-13f-institutional.js
- * but MISSED pull-sec-xbrl.js — which kept the contactless
- * 'screener-data/1.0 (github.com/...)' UA and so returned err=51/pulled=0 on
- * every monthly run (the 51-error abort gate tripping on 51 consecutive 403s)
- * until the 2026-06 fix. This test makes that whole class of regression loud
- * and fast: a contactless UA fails here in milliseconds instead of after a
- * 403 storm in CI.
+ * Two guarantees at once:
+ *  1) PII (E-20260721-3): SEC's Terms require a contact email in the UA. That
+ *     contact used to be hardcoded as a string literal in 11 tracked files of
+ *     this PUBLIC repo (a real name + address). It now comes from
+ *     process.env.SEC_CONTACT via lib/sec-user-agent.js. This guard fails loud
+ *     if any SEC puller reintroduces a hardcoded real contact (example.* is a
+ *     permitted placeholder, e.g. in comments).
+ *  2) 403 protection: SEC silently serves HTTP 403 to contactless User-Agents.
+ *     The UA must be derived from SEC_CONTACT (the helper, or process.env
+ *     directly), never a contactless literal. Set SEC_CONTACT as an env var /
+ *     GitHub-Actions secret at runtime.
+ *
+ * History: Tag 211j fixed contactless UAs in pull-insider-form4 + pull-13f but
+ * missed pull-sec-xbrl → 403-storm until the 2026-06 fix; BH-037 added the daily
+ * puller + backfill-form345. This test previously required a UA *literal*; since
+ * E-20260721-3 it guards the env-var contract instead.
  *
  * Offline — pure static source inspection, no network.
- *
- * audit/fix BH-037: this list MISSED the two other SEC pullers added since —
- * pull-insider-form4-daily.js runs DAILY in CI (daily-pull.yml), so a UA
- * regression there would 403-storm silently (the step is continue-on-error,
- * i.e. fail-soft) and this guard would stay green throughout. Adding it and
- * its sibling backfill-form345.js closes that blind spot.
- *
- * Run:
- *   node tests/sec-user-agent-test.js
- *
- * Exits non-zero on any violation (CI-friendly).
+ * Run: node tests/sec-user-agent-test.js   (exits non-zero on any violation)
  */
 'use strict';
 
@@ -41,10 +39,9 @@ const SEC_SCRIPTS = [
   path.join('scripts', 'pull-13f-institutional.js'),
 ];
 
-// A compliant UA must contain an email-like contact. SEC's guidance is
-// "Sample Company Name AdminContact@sample.com"; the operative signal is a
-// reachable address, which in practice means an '@' inside the UA string.
-const EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
+// Any email-like string literal in the source. example.* is a permitted
+// placeholder; anything else is treated as a hardcoded real contact.
+const EMAIL_LITERAL_RE = /(['"`])[^'"`\s]*@[A-Z0-9.-]+\.[A-Z]{2,}[^'"`]*\1/ig;
 
 let failed = 0;
 function check(name, cond, detail) {
@@ -65,18 +62,21 @@ for (const rel of SEC_SCRIPTS) {
     check(rel + ' readable', false, e.message);
     continue;
   }
-  // Pull the USER_AGENT string literal. Tolerates single or double quotes and
-  // a preceding `const USER_AGENT =`.
-  const m = src.match(/USER_AGENT\s*=\s*(['"])([^'"]+)\1/);
-  check(rel + ' declares a USER_AGENT', !!m, 'no `const USER_AGENT = "..."` found');
-  if (!m) continue;
-  const ua = m[2];
-  check(rel + ' UA carries a contact email', EMAIL_RE.test(ua),
-    'contactless UA "' + ua + '" → SEC will 403 it');
+
+  // 1) No hardcoded real contact anywhere in the source (PII guard).
+  const literals = src.match(EMAIL_LITERAL_RE) || [];
+  const realContacts = literals.filter((l) => !/@example\.(com|org|net)/i.test(l));
+  check(rel + ' carries no hardcoded contact email', realContacts.length === 0,
+    realContacts.length ? 'found ' + realContacts[0] + ' — the contact must come from process.env.SEC_CONTACT' : '');
+
+  // 2) The UA is derived from SEC_CONTACT (helper or process.env directly).
+  const usesEnv = /secUserAgent\s*\(/.test(src) || /process\.env\.SEC_CONTACT/.test(src);
+  check(rel + ' derives its User-Agent from SEC_CONTACT', usesEnv,
+    'no secUserAgent()/process.env.SEC_CONTACT — set the contact via env, not code');
 }
 
 if (failed > 0) {
   console.log('\nFAILED: ' + failed + ' SEC User-Agent assertion(s)');
   process.exit(1);
 }
-console.log('\nPASSED: all SEC scripts send a contact-bearing User-Agent');
+console.log('\nPASSED: all SEC scripts derive their User-Agent from SEC_CONTACT (no hardcoded contact)');

@@ -80,7 +80,7 @@ const SEC_ARCHIVE_INDEX_JSON = (cik, accNoDash) =>
   `https://www.sec.gov/Archives/edgar/data/${parseInt(cik, 10)}/${accNoDash}/index.json`;
 
 // Tag 211j: real contact — SEC silently rate-limits fake addresses.
-const USER_AGENT = 'Karl Viehrig screener-data karl_viehrig@web.de';
+const USER_AGENT = require('../lib/sec-user-agent').secUserAgent();
 
 // 125 ms ≈ 8 req/s (SEC limit: 10/s/IP).
 const RATE_DELAY_MS = 125;
@@ -1083,7 +1083,7 @@ async function main() {
     // Re-write after every institution so a Ctrl-C leaves a valid cache.
     writeFileAtomic(args.out, JSON.stringify({
       updatedAt: new Date().toISOString(),
-      userAgent: USER_AGENT,
+      userAgentSource: 'process.env.SEC_CONTACT',
       maxAgeDays: args.maxAgeDays,
       // BH-033: sichtbare Abdeckungs-Kennzeichnung statt stillschweigend
       // suggerierter institutioneller Vollabdeckung.

@@ -30,7 +30,7 @@ Ziel: Eigener Tab `INSIDER_BUYING` (gespiegelt nach KI_INFRA-Muster), der Aktien
 - **`scripts/backfill-form345.js`**: lädt die Quartals-Datasets
   `https://www.sec.gov/files/structureddata/data/insider-transactions-data-sets/{YYYY}q{N}_form345.zip`
   für die letzten ~8 Quartale. TSV-Schema: `SUBMISSION.tsv` (PK ACCESSION_NUMBER; Felder FILING_DATE, PERIOD_OF_REPORT, ISSUERCIK, **ISSUERTRADINGSYMBOL** = Ticker direkt, AFF10B5ONE); `NONDERIV_TRANS.tsv` (TRANS_DATE, TRANS_CODE, TRANS_SHARES, TRANS_PRICEPERSHARE, TRANS_ACQUIRED_DISP_CD, SHRS_OWND_FOLWNG_TRANS); `REPORTINGOWNER.tsv` (RPTOWNERCIK, RPTOWNERNAME, RPTOWNER_RELATIONSHIP, RPTOWNER_TITLE). Join auf ISSUERTRADINGSYMBOL — kein CIK-Map nötig.
-- **SEC-Regeln**: User-Agent `Karl Viehrig screener-data karl_viehrig@web.de`, ≤10 req/s (125ms throttle), `Accept-Encoding: gzip, deflate`, atomic writes via `lib/atomic-write.js`, resumable. `data.sec.gov` und `www.sec.gov` sind getrennte Hosts (Rate pro Host).
+- **SEC-Regeln**: User-Agent `Name screener-data mail@example.com`, ≤10 req/s (125ms throttle), `Accept-Encoding: gzip, deflate`, atomic writes via `lib/atomic-write.js`, resumable. `data.sec.gov` und `www.sec.gov` sind getrennte Hosts (Rate pro Host).
 - **Verdrahten**: `pull-insider-form4-daily.js` in `daily-pull.yml` VOR "Run Yahoo Pull", `timeout-minutes: 30`, `continue-on-error: true`.
 
 ### A2. SIGNAL-METHODE — `methods/insider-conviction-score.js` (in `methods/index.js` registrieren)

@@ -44,7 +44,7 @@ const MANIFEST_PATH = path.join(CACHE_DIR, '_manifest.json');
 // missed and so the monthly XBRL pull returned err=51/pulled=0 on every run
 // (the 51-error abort gate at the pull loop tripped on 51 consecutive 403s).
 // Keep this string identical to the other two SEC scripts.
-const USER_AGENT = 'Karl Viehrig screener-data karl_viehrig@web.de';
+const USER_AGENT = require('./lib/sec-user-agent').secUserAgent();
 const RATE_DELAY_MS = 125;       // 8 req/sec (under SEC 10/sec limit)
 const RATE_LIMIT_BACKOFF_MS = 30000; // F-006: pause after an HTTP 429 before continuing
 const STALE_DAYS = 90;           // re-pull after 90 days (typical 10-Q cycle)
