@@ -44,6 +44,11 @@ const C_GP = 'GrossProfit';
 // lueckenlos). Falls ein frueher Filer driftet: Prio-Union analog REV_CONCEPTS ergaenzen (add when).
 const C_ASSETS = 'Assets';
 const C_CURLIAB = 'LiabilitiesCurrent';
+const SHARE_CONCEPTS = [
+  ['dei', 'EntityCommonStockSharesOutstanding', false],
+  ['us-gaap', 'CommonStockSharesOutstanding', false],
+  ['us-gaap', 'WeightedAverageNumberOfSharesOutstandingBasic', true],
+];
 
 function usdUnits(gaap, concept) {
   const node = gaap && gaap[concept];
@@ -75,8 +80,32 @@ function annualRevUnion(gaap) {
   return out;
 }
 
+function shareFacts(taxonomy, concept) {
+  const node = taxonomy && taxonomy[concept];
+  const units = node && node.units;
+  if (!units) return [];
+  if (Array.isArray(units.shares)) return units.shares;
+  const first = units[Object.keys(units)[0]];
+  return Array.isArray(first) ? first : [];
+}
+
+function sharesAtFyEnd(gaap, dei, fyEnd) {
+  if (!fyEnd) return null;
+  for (const [taxonomy, concept, annualOnly] of SHARE_CONCEPTS) {
+    const tax = taxonomy === 'dei' ? dei : gaap;
+    let best = null;
+    for (const x of shareFacts(tax, concept)) {
+      if (!x || !Number.isFinite(x.val) || !x.end || x.end > fyEnd) continue;
+      if (annualOnly && (x.form !== '10-K' || x.fp !== 'FY')) continue;
+      if (!best || x.end >= best.end) best = x;
+    }
+    if (best) return best.val;
+  }
+  return null;
+}
+
 // Tiefe annual-Serien, alle auf EINER fy-Achse (Union der fy) index-aligned, newest-first.
-function buildAnnual(gaap) {
+function buildAnnual(gaap, dei = {}) {
   const rev = annualRevUnion(gaap);
   const opinc = annualConcept(gaap, C_OPINC);
   const ni = annualConcept(gaap, C_NETINC);
@@ -90,6 +119,10 @@ function buildAnnual(gaap) {
   const fySet = new Set();
   for (const m of [rev, opinc, ni, ocf, capex, gp, assets, curliab]) for (const fy of m.keys()) fySet.add(fy);
   const fys = [...fySet].sort((a, b) => b - a);
+  const fyEnds = new Map();
+  for (const m of [rev, opinc, ni, ocf, capex, gp, assets, curliab]) {
+    for (const [fy, row] of m) if (!fyEnds.has(fy)) fyEnds.set(fy, row.end);
+  }
 
   const cell = (m, fy) => (m.has(fy) ? { value: m.get(fy).val } : { value: null });
   const fcfCell = (fy) => (ocf.has(fy) && capex.has(fy))
@@ -120,6 +153,7 @@ function buildAnnual(gaap) {
     // stammen aus DEMSELBEN 10-K (accn-geprueft via balCell) -> invested = Assets - CurrLiab FY-kohaerent.
     annualAssets: fys.map((fy) => balCell(assets, fy)),
     annualCurrentLiabilities: fys.map((fy) => balCell(curliab, fy)),
+    annualShares: fys.map((fy) => ({ value: sharesAtFyEnd(gaap, dei, fyEnds.get(fy)) })),
   };
 }
 
@@ -129,7 +163,8 @@ function buildAnnual(gaap) {
  */
 function extractSecSeries(companyfacts) {
   const gaap = (companyfacts && companyfacts.facts && companyfacts.facts['us-gaap']) || {};
-  return { annual: buildAnnual(gaap) };
+  const dei = (companyfacts && companyfacts.facts && companyfacts.facts.dei) || {};
+  return { annual: buildAnnual(gaap, dei) };
 }
 
 // --- Overlap-Validierung (SEC vs Yahoo fuer die gemeinsamen Fuehrungsjahre) ---

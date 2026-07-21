@@ -194,6 +194,7 @@ function mergeSecIntoUniverse(u) {
     keys++;
     s.secAnnual = { annualOpInc: d.annualOpInc, annualRev: d.annualRev,
       annualNetIncome: d.annualNetIncome, annualFCF: d.annualFCF, annualOCF: d.annualOCF,
+      annualShares: d.annualShares,
       // Phase 4.1: tiefe Bilanz (fehlt in Alt-Store/regionalen Dateien -> undefined -> secSeries()==null -> Yahoo-Fallback)
       annualAssets: d.annualAssets, annualCurrentLiabilities: d.annualCurrentLiabilities };
     const hasRev = hasFiniteSeries(d.annualRev);

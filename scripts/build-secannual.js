@@ -151,7 +151,8 @@ async function run() {
     const snap = uni.find(x => x.meta.ticker === tk);
     if (!looseSanity(snap.annual && snap.annual.annualOpInc, sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) { divergent++; continue; }
     out[tk] = { cik, nfy: sec.annual._fys[0], annualOpInc: sec.annual.annualOpInc, annualRev: sec.annual.annualRev,
-      annualNetIncome: sec.annual.annualNetIncome, annualFCF: sec.annual.annualFCF, annualOCF: sec.annual.annualOCF };
+      annualNetIncome: sec.annual.annualNetIncome, annualFCF: sec.annual.annualFCF, annualOCF: sec.annual.annualOCF,
+      annualShares: sec.annual.annualShares };
     // Phase 4.1: tiefe Bilanz NUR wenn plausibel (newest Assets>0 UND newest CurrLiab>=0) — sonst laeuft
     // ein isoliert-korruptes as-filed Assets/CurrLiab ungevalidiert in die roicStability-ROIC-Serie (Court-Auflage).
     if (bilanzGuardOk(newestPresent(sec.annual.annualAssets), newestPresent(sec.annual.annualCurrentLiabilities))) {
