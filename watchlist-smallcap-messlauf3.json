@@ -1,0 +1,908 @@
+{
+  "_meta": {
+    "owner": "Karl",
+    "notes": "5.2 Small-Cap-Board Bootstrap: Karls messlauf3-Zufallsstichprobe (E-20260719-4), scoped pull fuer echte Fundamentaldaten."
+  },
+  "stocks": [
+    {
+      "ticker": "MCFT",
+      "yahoo_symbol": "MCFT",
+      "name": "MasterCraft Boat Holdings, Inc.",
+      "sector_hint": "Consumer Cyclical",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "IDPUF",
+      "yahoo_symbol": "IDPUF",
+      "name": "IDP Education Limited",
+      "sector_hint": "Consumer Defensive",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "CLDT",
+      "yahoo_symbol": "CLDT",
+      "name": "Chatham Lodging Trust",
+      "sector_hint": "Real Estate",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "IBCP",
+      "yahoo_symbol": "IBCP",
+      "name": "Independent Bank Corporation",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "CBAN",
+      "yahoo_symbol": "CBAN",
+      "name": "Colony Bankcorp, Inc.",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "SBC",
+      "yahoo_symbol": "SBC",
+      "name": "SBC Medical Group Holdings Incorporated",
+      "sector_hint": "Industrials",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "PFIS",
+      "yahoo_symbol": "PFIS",
+      "name": "Peoples Financial Services Corp.",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "ALT",
+      "yahoo_symbol": "ALT",
+      "name": "Altimmune, Inc.",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "CLB",
+      "yahoo_symbol": "CLB",
+      "name": "Core Laboratories Inc.",
+      "sector_hint": "Energy",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "VTEX",
+      "yahoo_symbol": "VTEX",
+      "name": "VTEX",
+      "sector_hint": "Technology",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "EGY",
+      "yahoo_symbol": "EGY",
+      "name": "VAALCO Energy, Inc.",
+      "sector_hint": "Energy",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "CTKB",
+      "yahoo_symbol": "CTKB",
+      "name": "Cytek Biosciences, Inc.",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "BWAY",
+      "yahoo_symbol": "BWAY",
+      "name": "BrainsWay Ltd.",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "PROK",
+      "yahoo_symbol": "PROK",
+      "name": "ProKidney Corp.",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "OABI",
+      "yahoo_symbol": "OABI",
+      "name": "OmniAb, Inc.",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "SERV",
+      "yahoo_symbol": "SERV",
+      "name": "Serve Robotics Inc.",
+      "sector_hint": "Industrials",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "RYAM",
+      "yahoo_symbol": "RYAM",
+      "name": "Rayonier Advanced Materials Inc.",
+      "sector_hint": "Basic Materials",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "HNRG",
+      "yahoo_symbol": "HNRG",
+      "name": "Hallador Energy Company",
+      "sector_hint": "Utilities",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "KIDS",
+      "yahoo_symbol": "KIDS",
+      "name": "OrthoPediatrics Corp.",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "ELMD",
+      "yahoo_symbol": "ELMD",
+      "name": "Electromed, Inc.",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "CWH",
+      "yahoo_symbol": "CWH",
+      "name": "Camping World Holdings, Inc.",
+      "sector_hint": "Consumer Cyclical",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "NVEC",
+      "yahoo_symbol": "NVEC",
+      "name": "NVE Corporation",
+      "sector_hint": "Technology",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "LYEL",
+      "yahoo_symbol": "LYEL",
+      "name": "Lyell Immunopharma, Inc.",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "CBK",
+      "yahoo_symbol": "CBK",
+      "name": "Commercial Bancgroup, Inc.",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "GMRS",
+      "yahoo_symbol": "GMRS",
+      "name": "GMR Solutions Inc.",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "URG",
+      "yahoo_symbol": "URG",
+      "name": "Ur-Energy Inc.",
+      "sector_hint": "Energy",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "COFS",
+      "yahoo_symbol": "COFS",
+      "name": "ChoiceOne Financial Services, Inc.",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "MVBF",
+      "yahoo_symbol": "MVBF",
+      "name": "MVB Financial Corp.",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "ATNI",
+      "yahoo_symbol": "ATNI",
+      "name": "ATN International, Inc.",
+      "sector_hint": "Communication Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "ECX",
+      "yahoo_symbol": "ECX",
+      "name": "ECARX Holdings Inc.",
+      "sector_hint": "Consumer Cyclical",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "OMER",
+      "yahoo_symbol": "OMER",
+      "name": "Omeros Corporation",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "BWMX",
+      "yahoo_symbol": "BWMX",
+      "name": "Betterware de México, S.A.P.I. de C.V.",
+      "sector_hint": "Consumer Cyclical",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "ETD",
+      "yahoo_symbol": "ETD",
+      "name": "Ethan Allen Interiors Inc.",
+      "sector_hint": "Consumer Cyclical",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "CTO",
+      "yahoo_symbol": "CTO",
+      "name": "CTO Realty Growth, Inc.",
+      "sector_hint": "Real Estate",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "LDI",
+      "yahoo_symbol": "LDI",
+      "name": "loanDepot, Inc.",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "AXG",
+      "yahoo_symbol": "AXG",
+      "name": "Solowin Holdings",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "PDLB",
+      "yahoo_symbol": "PDLB",
+      "name": "Ponce Financial Group, Inc.",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "EBS",
+      "yahoo_symbol": "EBS",
+      "name": "Emergent BioSolutions Inc.",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "USCB",
+      "yahoo_symbol": "USCB",
+      "name": "USCB Financial Holdings, Inc.",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "TATT",
+      "yahoo_symbol": "TATT",
+      "name": "TAT Technologies Ltd.",
+      "sector_hint": "Industrials",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "OFIX",
+      "yahoo_symbol": "OFIX",
+      "name": "Orthofix Medical Inc.",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "BTBT",
+      "yahoo_symbol": "BTBT",
+      "name": "Bit Digital, Inc.",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "PTLO",
+      "yahoo_symbol": "PTLO",
+      "name": "Portillo's Inc.",
+      "sector_hint": "Consumer Cyclical",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "BMBL",
+      "yahoo_symbol": "BMBL",
+      "name": "Bumble Inc.",
+      "sector_hint": "Communication Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "OSPN",
+      "yahoo_symbol": "OSPN",
+      "name": "OneSpan Inc.",
+      "sector_hint": "Technology",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "NRC",
+      "yahoo_symbol": "NRC",
+      "name": "NRC Health",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "RMR",
+      "yahoo_symbol": "RMR",
+      "name": "The RMR Group Inc.",
+      "sector_hint": "Real Estate",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "EFTY",
+      "yahoo_symbol": "EFTY",
+      "name": "Etoiles Capital Group Co., Ltd",
+      "sector_hint": "Industrials",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "CINT",
+      "yahoo_symbol": "CINT",
+      "name": "CI&T Inc.",
+      "sector_hint": "Technology",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "NATR",
+      "yahoo_symbol": "NATR",
+      "name": "Nature's Sunshine Products, Inc.",
+      "sector_hint": "Consumer Defensive",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "OFLX",
+      "yahoo_symbol": "OFLX",
+      "name": "Omega Flex, Inc.",
+      "sector_hint": "Industrials",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "FSBW",
+      "yahoo_symbol": "FSBW",
+      "name": "FS Bancorp, Inc.",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "IPI",
+      "yahoo_symbol": "IPI",
+      "name": "Intrepid Potash, Inc.",
+      "sector_hint": "Basic Materials",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "GYRE",
+      "yahoo_symbol": "GYRE",
+      "name": "Gyre Therapeutics, Inc.",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "CYH",
+      "yahoo_symbol": "CYH",
+      "name": "Community Health Systems, Inc.",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "PCB",
+      "yahoo_symbol": "PCB",
+      "name": "PCB Bancorp",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "WOOF",
+      "yahoo_symbol": "WOOF",
+      "name": "Petco Health and Wellness Company, Inc.",
+      "sector_hint": "Consumer Cyclical",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "AGNT",
+      "yahoo_symbol": "AGNT",
+      "name": "AGNT, Inc",
+      "sector_hint": "Real Estate",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "BKKT",
+      "yahoo_symbol": "BKKT",
+      "name": "Bakkt, Inc.",
+      "sector_hint": "Technology",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "GSM",
+      "yahoo_symbol": "GSM",
+      "name": "Ferroglobe PLC",
+      "sector_hint": "Basic Materials",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "ELMT",
+      "yahoo_symbol": "ELMT",
+      "name": "The Elmet Group Co.",
+      "sector_hint": "Industrials",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "SBOEF",
+      "yahoo_symbol": "SBOEF",
+      "name": "SBO AG",
+      "sector_hint": "Energy",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "AUTL",
+      "yahoo_symbol": "AUTL",
+      "name": "Autolus Therapeutics plc",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "CPS",
+      "yahoo_symbol": "CPS",
+      "name": "Cooper-Standard Holdings Inc.",
+      "sector_hint": "Consumer Cyclical",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "MGPI",
+      "yahoo_symbol": "MGPI",
+      "name": "MGP Ingredients, Inc.",
+      "sector_hint": "Consumer Defensive",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "CRD-A",
+      "yahoo_symbol": "CRD-A",
+      "name": "Crawford & Company",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "EACO",
+      "yahoo_symbol": "EACO",
+      "name": "EACO Corporation",
+      "sector_hint": "Technology",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "KRNGY",
+      "yahoo_symbol": "KRNGY",
+      "name": "Karoon Energy Ltd",
+      "sector_hint": "Energy",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "FCCO",
+      "yahoo_symbol": "FCCO",
+      "name": "First Community Corporation",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "GFR",
+      "yahoo_symbol": "GFR",
+      "name": "Greenfire Resources Ltd.",
+      "sector_hint": "Energy",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "FCCN",
+      "yahoo_symbol": "FCCN",
+      "name": "Spectral Capital Corporation",
+      "sector_hint": "Technology",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "LEGH",
+      "yahoo_symbol": "LEGH",
+      "name": "Legacy Housing Corporation",
+      "sector_hint": "Consumer Cyclical",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "UNTY",
+      "yahoo_symbol": "UNTY",
+      "name": "Unity Bancorp, Inc.",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "NATH",
+      "yahoo_symbol": "NATH",
+      "name": "Nathan's Famous, Inc.",
+      "sector_hint": "Consumer Cyclical",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "SWRD",
+      "yahoo_symbol": "SWRD",
+      "name": "Stewards Inc.",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "OVID",
+      "yahoo_symbol": "OVID",
+      "name": "Ovid Therapeutics Inc.",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "JMSB",
+      "yahoo_symbol": "JMSB",
+      "name": "John Marshall Bancorp, Inc.",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "ELTP",
+      "yahoo_symbol": "ELTP",
+      "name": "Elite Pharmaceuticals, Inc.",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "KODK",
+      "yahoo_symbol": "KODK",
+      "name": "Eastman Kodak Company",
+      "sector_hint": "Industrials",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "ALTO",
+      "yahoo_symbol": "ALTO",
+      "name": "Alto Ingredients, Inc.",
+      "sector_hint": "Basic Materials",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "CZFS",
+      "yahoo_symbol": "CZFS",
+      "name": "Citizens Financial Services, Inc.",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "CGC",
+      "yahoo_symbol": "CGC",
+      "name": "Canopy Growth Corporation",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "TRC",
+      "yahoo_symbol": "TRC",
+      "name": "Tejon Ranch Co.",
+      "sector_hint": "Industrials",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "ARQQ",
+      "yahoo_symbol": "ARQQ",
+      "name": "Arqit Quantum Inc.",
+      "sector_hint": "Technology",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "SFST",
+      "yahoo_symbol": "SFST",
+      "name": "Southern First Bancshares, Inc.",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "PTCHF",
+      "yahoo_symbol": "PTCHF",
+      "name": "PureTech Health plc",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "VALU",
+      "yahoo_symbol": "VALU",
+      "name": "Value Line, Inc.",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "NCMI",
+      "yahoo_symbol": "NCMI",
+      "name": "National CineMedia, Inc.",
+      "sector_hint": "Communication Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "CIX",
+      "yahoo_symbol": "CIX",
+      "name": "CompX International Inc.",
+      "sector_hint": "Industrials",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "RBB",
+      "yahoo_symbol": "RBB",
+      "name": "RBB Bancorp",
+      "sector_hint": "Financial Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "YSG",
+      "yahoo_symbol": "YSG",
+      "name": "Yatsen Holding Limited",
+      "sector_hint": "Consumer Defensive",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "CWCO",
+      "yahoo_symbol": "CWCO",
+      "name": "Consolidated Water Co. Ltd.",
+      "sector_hint": "Utilities",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "FSTR",
+      "yahoo_symbol": "FSTR",
+      "name": "L.B. Foster Company",
+      "sector_hint": "Industrials",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "DGMDF",
+      "yahoo_symbol": "DGMDF",
+      "name": "Digital Domain Holdings Limited",
+      "sector_hint": "Communication Services",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "CSV",
+      "yahoo_symbol": "CSV",
+      "name": "Carriage Services, Inc.",
+      "sector_hint": "Consumer Cyclical",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "OTLY",
+      "yahoo_symbol": "OTLY",
+      "name": "Oatly Group AB",
+      "sector_hint": "Consumer Defensive",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "TWIN",
+      "yahoo_symbol": "TWIN",
+      "name": "Twin Disc, Incorporated",
+      "sector_hint": "Industrials",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "AUNA",
+      "yahoo_symbol": "AUNA",
+      "name": "Auna SA",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "VALN",
+      "yahoo_symbol": "VALN",
+      "name": "Valneva SE",
+      "sector_hint": "Healthcare",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    },
+    {
+      "ticker": "XNET",
+      "yahoo_symbol": "XNET",
+      "name": "Xunlei Limited",
+      "sector_hint": "Technology",
+      "exchange_hint": "US",
+      "added_via": "smallcap-messlauf3",
+      "added_at": "2026-07-21T17:45:49.832Z"
+    }
+  ]
+}

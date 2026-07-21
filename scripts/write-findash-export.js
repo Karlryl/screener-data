@@ -45,9 +45,11 @@ const { TIERS } = require('../src/scoring/profit-tier.js'); // 1.2: profitTier-E
 const ROOT = path.join(__dirname, '..');
 const HG_DIR = path.join(ROOT, 'outputs', 'hypergrowth');
 const QUALITY_DIR = path.join(ROOT, 'outputs', 'quality'); // 3.2: QC-Board source (runQualityPass)
+const SMALLCAP_DIR = path.join(ROOT, 'outputs', 'smallcap'); // 5.2: Small-Cap-Board source (runSmallcapPass)
 const COVERAGE = path.join(ROOT, 'outputs', 'coverage-status.json');
 const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
 const QOUT_DIR = path.join(OUT_DIR, 'quality'); // 3.2: QC-Board export subdir
+const SCOUT_DIR = path.join(OUT_DIR, 'smallcap'); // 5.2: Small-Cap-Board export subdir
 
 const SCHEMA = 'findash-export/v1';
 const BRANCHES = [
@@ -295,6 +297,85 @@ function buildQuality(coverage, opts = {}) {
   return { boards: files.length };
 }
 
+// ---- 5.2 Small-Cap-Board (smallcap/) -------------------------------------
+// Byte-fuer-Byte dasselbe Muster wie QC (quality/) oben — bewusst dupliziert statt
+// parametrisiert (buildQualityBoard haengt intern boardStatusOf('quality-'+stem) fest an
+// das QC-Praefix; ein gemeinsamer Helper braeuchte den Praefix als weiteren Parameter durch
+// alle vier Funktionen, fuer zwei Nutzer kein Gewinn). runSmallcapPass schreibt
+// outputs/smallcap/{smallcap-<sektor>,overview,index}.json; boardStatus ist IMMER
+// 'diagnostic' (board-status.js: 'smallcap-'-Praefix), Praereg-DIAGNOSTIC-Start.
+function smallcapStem(file) { return file.replace(/^smallcap-/, '').replace(/\.json$/, ''); }
+
+function buildSmallcapBoard(file, coverage, smallcapDir) {
+  const stem = smallcapStem(file);
+  const b = readJSON(path.join(smallcapDir || SMALLCAP_DIR, file));
+  return {
+    schema: SCHEMA,
+    generated_at: new Date().toISOString(),
+    branch: stem,
+    boardStatus: boardStatusOf('smallcap-' + stem), // always 'diagnostic' by construction (board-status.js)
+    coverage,
+    profitable: (b.profitable || []).map(mapBoardRow),
+    unprofitable: (b.unprofitable || []).map(mapBoardRow),
+  };
+}
+
+function buildSmallcapOverview(coverage, smallcapDir) {
+  const o = readJSON(path.join(smallcapDir || SMALLCAP_DIR, 'overview.json'));
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: o.map(mapOverviewRow) };
+}
+
+function buildSmallcapIndex(coverage, smallcapDir) {
+  const idx = readJSON(path.join(smallcapDir || SMALLCAP_DIR, 'index.json'));
+  return {
+    schema: SCHEMA,
+    generated_at: new Date().toISOString(),
+    coverage,
+    generatedFromSnapshots: idx.generatedFromSnapshots,
+    boards: idx.boards,
+    boardStatus: idx.boardStatus,
+    counts: idx.counts,
+    excluded: idx.excluded,
+    coverageFloor: idx.coverageFloor ?? null, // 5.2 Auflage 3: Coverage-Gate-Beleg durchreichen
+  };
+}
+
+function smallcapExportMode(smallcapDir) {
+  if (fs.existsSync(path.join(smallcapDir, 'index.json'))) return 'export';
+  if (fs.existsSync(path.join(smallcapDir, '_failed'))) return 'failed';
+  return 'absent';
+}
+
+// Optional-when-absent, identisches 3-Zustands-Muster wie buildQuality (F11).
+function buildSmallcap(coverage, opts = {}) {
+  const smallcapDir = opts.smallcapDir || SMALLCAP_DIR;
+  const scoutDir = opts.scoutDir || SCOUT_DIR;
+  const mode = smallcapExportMode(smallcapDir);
+  if (mode === 'failed') {
+    const failed = readJSONOrNull(path.join(smallcapDir, '_failed')) || {};
+    fs.rmSync(scoutDir, { recursive: true, force: true });
+    fs.mkdirSync(scoutDir, { recursive: true });
+    writeJsonAtomic(path.join(scoutDir, '_failed'), { schema: SCHEMA, generated_at: new Date().toISOString(), ...failed });
+    console.warn('::warning::findash-export: Small-Cap-Pass FAILED (smallcap/_failed) — smallcap/ nur als _failed-Marker exportiert, KEINE (evtl. stale) Boards.');
+    return { boards: 0, failed: true };
+  }
+  if (mode === 'absent') {
+    fs.rmSync(scoutDir, { recursive: true, force: true });
+    fs.mkdirSync(scoutDir, { recursive: true });
+    console.warn('::warning::findash-export: outputs/smallcap/index.json absent — Small-Cap-Board (smallcap/) NOT exported (optional feed, older local run).');
+    return { boards: 0 };
+  }
+  const idx = readJSONOrNull(path.join(smallcapDir, 'index.json'));
+  const files = (idx && Array.isArray(idx.boards) ? idx.boards : []).map((id) => id + '.json');
+  fs.rmSync(scoutDir, { recursive: true, force: true });
+  fs.mkdirSync(scoutDir, { recursive: true });
+  const wo = { assertFinite: true };
+  for (const f of files) writeJsonAtomic(path.join(scoutDir, smallcapStem(f) + '.json'), buildSmallcapBoard(f, coverage, smallcapDir), wo);
+  writeJsonAtomic(path.join(scoutDir, 'overview.json'), buildSmallcapOverview(coverage, smallcapDir), wo);
+  writeJsonAtomic(path.join(scoutDir, 'index.json'), buildSmallcapIndex(coverage, smallcapDir), wo);
+  return { boards: files.length };
+}
+
 // coverage marker is a diagnostic passenger, not a hard input. Absent (fresh runner,
 // marker not yet written) -> export still builds; consumers read coverage:null as "unknown".
 function loadCoverage() {
@@ -314,7 +395,8 @@ function build() {
   writeJsonAtomic(path.join(OUT_DIR, 'survival.json'), buildSurvival(coverage), opts);
   writeJsonAtomic(path.join(OUT_DIR, 'index.json'), buildIndex(coverage), opts);
   const q = buildQuality(coverage); // 3.2: QC-Board subdir (optional-when-absent)
-  return { out: OUT_DIR, branches: BRANCHES.length, qualityBoards: q.boards };
+  const sc = buildSmallcap(coverage); // 5.2: Small-Cap-Board subdir (optional-when-absent)
+  return { out: OUT_DIR, branches: BRANCHES.length, qualityBoards: q.boards, smallcapBoards: sc.boards };
 }
 
 // ---- validate (schema-check gate) ---------------------------------------
@@ -555,7 +637,8 @@ function validateExport() {
     if (!mk) { errs.push(`${kind}: missing/unreadable`); continue; }
     validateFile(mk, kind, errs);
   }
-  return errs.concat(validateQualityExport()); // 3.2: QC-Board (empty when quality/ absent)
+  return errs.concat(validateQualityExport())  // 3.2: QC-Board (empty when quality/ absent)
+             .concat(validateSmallcapExport()); // 5.2: Small-Cap-Board (empty when smallcap/ absent)
 }
 
 // ---- QC-Board validation (3.2) ------------------------------------------
@@ -611,6 +694,54 @@ function validateQualityExport() {
   if (!ov) raw.push('quality/overview: missing/unreadable');
   else validateFile(ov, 'overview', raw); // reuses OverviewRow check
   return raw.map((e) => (e.startsWith('quality/') ? e : 'quality/' + e));
+}
+
+// ---- Small-Cap-Board validation (5.2) -----------------------------------
+// Identisches Muster wie validateQualityIndex/validateQualityExport (dupliziert statt
+// parametrisiert, s. Kommentar bei buildSmallcap). 'smallcap-'-Praefix statt 'quality-'.
+function validateSmallcapIndex(mk, errs) {
+  const kind = 'smallcap/index';
+  if (!mk || typeof mk !== 'object') { errs.push(`${kind}: not an object`); return; }
+  if (mk.schema !== SCHEMA) errs.push(`${kind}: schema=${JSON.stringify(mk.schema)}`);
+  if (typeof mk.generated_at !== 'string') errs.push(`${kind}: generated_at`);
+  validateCoverage(mk, kind, errs);
+  if (!Number.isFinite(mk.generatedFromSnapshots)) errs.push(`${kind}: generatedFromSnapshots`);
+  if (!Array.isArray(mk.boards) || !mk.boards.length) errs.push(`${kind}: boards`);
+  if (!mk.boardStatus || typeof mk.boardStatus !== 'object') errs.push(`${kind}: boardStatus map missing`);
+  else {
+    for (const [k, v] of Object.entries(mk.boardStatus)) {
+      if (v !== 'diagnostic') errs.push(`${kind}: boardStatus.${k}=${JSON.stringify(v)}`);
+    }
+    if (Array.isArray(mk.boards)) {
+      const bsKeys = new Set(Object.keys(mk.boardStatus));
+      for (const b of mk.boards) if (!bsKeys.has(b)) errs.push(`${kind}: boardStatus missing key ${b}`);
+      for (const k of bsKeys) if (!mk.boards.includes(k)) errs.push(`${kind}: boardStatus unexpected key ${k}`);
+    }
+  }
+  if (!mk.counts || typeof mk.counts !== 'object') errs.push(`${kind}: counts`);
+  if (!mk.excluded || typeof mk.excluded !== 'object') errs.push(`${kind}: excluded`);
+  // 5.2 Auflage 3: coverageFloor ist Pflicht (nullable) — der Beleg-Wert des data-abgeleiteten
+  // Coverage-Gates dieses Laufs muss im Export ankommen, sonst ist Auflage 3 nicht nachpruefbar.
+  if (!('coverageFloor' in mk)) errs.push(`${kind}: coverageFloor missing`);
+  else if (mk.coverageFloor !== null && !Number.isFinite(mk.coverageFloor)) errs.push(`${kind}: coverageFloor not finite|null`);
+}
+
+function validateSmallcapExport() {
+  const raw = [];
+  const idx = readJSONOrNull(path.join(SCOUT_DIR, 'index.json'));
+  if (!idx) return raw; // smallcap/ absent -> optional, no breach
+  validateSmallcapIndex(idx, raw);
+  const boards = Array.isArray(idx.boards) ? idx.boards : [];
+  for (const id of boards) {
+    const stem = String(id).replace(/^smallcap-/, '');
+    const mk = readJSONOrNull(path.join(SCOUT_DIR, stem + '.json'));
+    if (!mk) { raw.push(`smallcap/${stem}: missing/unreadable`); continue; }
+    validateFile(mk, stem, raw, { forceDiagnostic: true });
+  }
+  const ov = readJSONOrNull(path.join(SCOUT_DIR, 'overview.json'));
+  if (!ov) raw.push('smallcap/overview: missing/unreadable');
+  else validateFile(ov, 'overview', raw);
+  return raw.map((e) => (e.startsWith('smallcap/') ? e : 'smallcap/' + e));
 }
 
 // ---- runnable self-check: node scripts/write-findash-export.js --selftest ----
@@ -755,6 +886,21 @@ function selftest() {
   e = []; validateQualityIndex(mkQIdx({ boardStatus: { 'quality-semiconductors': 'diagnostic', 'quality-ghost': 'diagnostic' } }), e);
   assert.ok(e.some(x => /boardStatus unexpected key/.test(x)), 'QC index boardStatus extra key must trip');
 
+  // ---- 5.2 Small-Cap-Board (smallcap/) — identisches Muster wie QC, lean (Row-Validatoren
+  // sind bereits gegen jeden Tamper bewiesen; hier nur die smallcap-spezifischen Invarianten:
+  // boardStatus-Praefix, coverageFloor-Pflichtfeld).
+  assert.strictEqual(boardStatusOf('smallcap-semiconductors'), 'diagnostic', 'Small-Cap-Board muss diagnostic sein');
+  const mkScIdx = (over = {}) => ({ schema: SCHEMA, generated_at: 'x', coverage: null, generatedFromSnapshots: 1, boards: ['smallcap-semiconductors'], boardStatus: { 'smallcap-semiconductors': 'diagnostic' }, counts: {}, excluded: {}, coverageFloor: 0.42, ...over });
+  e = []; validateSmallcapIndex(mkScIdx(), e); assert.strictEqual(e.length, 0, 'clean Small-Cap-index must validate');
+  m = mkScIdx(); delete m.coverageFloor; e = []; validateSmallcapIndex(m, e);
+  assert.ok(e.some(x => /coverageFloor missing/.test(x)), 'Small-Cap coverageFloor missing must trip (Auflage 3 Beleg-Pflicht)');
+  e = []; validateSmallcapIndex(mkScIdx({ coverageFloor: 'GARBAGE' }), e);
+  assert.ok(e.some(x => /coverageFloor not finite/.test(x)), 'Small-Cap coverageFloor garbage must trip');
+  e = []; validateSmallcapIndex(mkScIdx({ coverageFloor: null }), e);
+  assert.strictEqual(e.length, 0, 'Small-Cap coverageFloor null is legit (Degenerations-Guard, quantile() liefert null)');
+  e = []; validateSmallcapIndex(mkScIdx({ boardStatus: { 'smallcap-semiconductors': 'core' } }), e);
+  assert.ok(e.some(x => /boardStatus\.smallcap-semiconductors/.test(x)), 'Small-Cap boardStatus core must trip (nur-diagnostic)');
+
   console.log('selftest OK');
 }
 
@@ -770,11 +916,12 @@ if (require.main === module) {
     process.exit(0);
   }
   const r = build();
-  console.log(`findash-export/v1 written: ${r.branches} boards + overview + survival + index + ${r.qualityBoards} QC boards (quality/) -> ${r.out}`);
+  console.log(`findash-export/v1 written: ${r.branches} boards + overview + survival + index + ${r.qualityBoards} QC boards (quality/) + ${r.smallcapBoards} Small-Cap boards (smallcap/) -> ${r.out}`);
 }
 
 module.exports = {
   build, validateExport, validateFile, validateBoardRow, validateOverviewRow, validateSurvivalRow,
   validateQualityExport, validateQualityIndex, buildQuality, qualityExportMode,
+  validateSmallcapExport, validateSmallcapIndex, buildSmallcap, smallcapExportMode,
   mapBoardRow, mapOverviewRow, mapSurvivalRow, SCHEMA, BRANCHES,
 };

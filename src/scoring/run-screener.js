@@ -10,12 +10,16 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { scoreUniverse, produceRankings, calibrationDrift } = require('./score.js');
+const { scoreUniverse, produceRankings, calibrationDrift, quantile } = require('./score.js');
 const formulas = require('./formulas/index.js');
 // 3.1 QC-Board (DIAGNOSTIC, additiv): eigener Membership-Router + eigene Formel-Registry + Board-Status.
 const { qualityRoute } = require('./quality-route.js');
 const qcFormulas = require('./formulas/quality/index.js');
 const { boardStatus } = require('./board-status.js');
+// 5.2 Small-Cap-Board (DIAGNOSTIC, additiv): eigener Membership-Router + eigene Formel-Registry.
+const { smallcapRoute } = require('./smallcap-route.js');
+const smallcapFormulas = require('./formulas/smallcap/index.js');
+const { buildShareGrowthPctlFn, shareCountDilution } = require('./lamps.js');
 // audit/fix (C2): Outputs atomar schreiben (tmp+rename), wie das ganze Daten-Fundament —
 // plain fs.writeFileSync hinterlaesst bei Crash/CI-Timeout truncated JSON fuers Dashboard.
 const { writeJsonAtomic } = require('../../lib/atomic-write.js');
@@ -28,6 +32,13 @@ const SNAP_DIR = path.join(ROOT, 'snapshots');
 const WATCHLIST_PATH = path.join(ROOT, 'watchlist.json');
 const OUT_DIR = path.join(ROOT, 'outputs', 'hypergrowth');
 const QC_OUT_DIR = path.join(ROOT, 'outputs', 'quality'); // 3.1 QC-Board (DIAGNOSTIC), getrennter Ordner
+const SMALLCAP_OUT_DIR = path.join(ROOT, 'outputs', 'smallcap'); // 5.2 Small-Cap-Board (DIAGNOSTIC), getrennter Ordner
+// 5.2 Auflage 3: Coverage-Gate-Perzentil. Data-abgeleitet aus der eigenen coverageWeight-Verteilung
+// DIESES Laufs (kein fester "muss X/7 Achsen haben"-Wert) — p10 reuse-t die etablierte Tail-Konvention
+// (analog WINSOR_TAIL=0.01, nur als unterer Ausschluss-Rand statt Winsor-Clip). Namen in den duennst-
+// abgedeckten 10% ihres eigenen Small-Cap-Laufs fliegen raus (exclude 'smallcap-thin-coverage'), statt
+// auf einer 2-von-7-Achsen-Ruine zu ranken.
+const SMALLCAP_COVERAGE_FLOOR_PCTL = 0.10;
 
 // audit/fix (Court Phase A Runde 3, Fall C1): Coverage-Floor gegen eine SELF-BASELINE.
 // Weil das Scoring kohorten-relativ perzentil-normiert, verschiebt ein still geschrumpftes
@@ -288,6 +299,14 @@ function run(topN) {
     // das Ziel-Unterverzeichnis -> kein stales QC-Board. HG bleibt unberuehrt (fail-soft).
     writeQualityFailedMarker(e && e.message);
   }
+  // 5.2 Small-Cap-Board (DIAGNOSTIC, additiv): dritter Scoring-Pass, gleiches Fail-soft-Muster wie QC
+  // (ein Fehler hier darf HG/QC NICHT stalen).
+  try {
+    runSmallcapPass(universe, topN);
+  } catch (e) {
+    console.error(`::error:: [run-screener] Small-Cap-Pass fehlgeschlagen (HG/QC unberuehrt): ${e && e.message}`);
+    writeQualityFailedMarker(e && e.message, SMALLCAP_OUT_DIR);
+  }
   return { universe: universe.length, branches: Object.keys(ranked.branches).length, out: OUT_DIR };
 }
 
@@ -337,6 +356,88 @@ function runQualityPass(universe, topN, qcOutDir = QC_OUT_DIR) {
     excluded: sortKeys(qcRanked.excluded),
   });
   console.log(`[run-screener] QC-Board (DIAGNOSTIC): ${boardIds.length} Boards -> ${qcOutDir}`);
+}
+
+// 5.2 Small-Cap-Board: eigener Scoring-Pass via classify-Seam (smallcapRoute) + growthBoost:false
+// (wie QC — der HG-Wachstumsbonus greift kohorten-relativ; ohne eigenes Karl-Signal fuer 5.2 bleibt
+// er aus, wie beim QC-Board). Zwei zusaetzliche Nachbearbeitungsschritte GEGENUEBER dem QC-Pass,
+// beide NACH scoreUniverse (die geteilte Engine bleibt unberuehrt, rein additiv in DIESEM Pass):
+//   (a) Lampe B (shareCountDilution) kohorten-scoped nachruesten — evaluateLamps() in score.js
+//       laeuft VOR der Kohortenbildung und kennt daher keinen ctx; hier, NACH dem Scoren, wird pro
+//       Kohorte (formulaId|track) eine Perzentil-Funktion aus den bereits gemergten secAnnual-Serien
+//       gebaut und die Lampe je Name nachgetragen (rein additiv zur bestehenden lamps[]-Liste).
+//   (b) Coverage-Gate (Karls Auflage 3): Namen deren coverageWeight unter dem data-abgeleiteten
+//       Kohorten-Floor (p10, SMALLCAP_COVERAGE_FLOOR_PCTL) liegt werden NACHTRAEGLICH excludiert
+//       (reason 'smallcap-thin-coverage') -- VOR produceRankings, damit sie nicht in Boards/Overview
+//       auftauchen, aber weiterhin im Run-Log als Zaehl-Beleg sichtbar sind (index.json.excluded).
+function runSmallcapPass(universe, topN, scOutDir = SMALLCAP_OUT_DIR) {
+  clearStaleQualityIndex(scOutDir);
+  const scResults = scoreUniverse(universe, smallcapFormulas, { classify: smallcapRoute, growthBoost: false });
+
+  // (a) Lampe B kohorten-scoped nachruesten.
+  const byCohort = {};
+  for (const e of scResults) {
+    if (e.action === 'route' && e.score !== null) (byCohort[e.formulaId + '|' + e.track] ||= []).push(e);
+  }
+  for (const entries of Object.values(byCohort)) {
+    const pctlFn = buildShareGrowthPctlFn(entries.map((e) => e.snapshot));
+    if (!pctlFn) continue; // Degenerations-Guard (n<2 oder konstant) -> keine Kohorte, keine Lampe
+    const ctx = { shareGrowthPctlFn: pctlFn };
+    for (const e of entries) {
+      if (shareCountDilution(e.snapshot, ctx) === true && !e.lamps.includes('shareCountDilution')) {
+        e.lamps.push('shareCountDilution');
+      }
+    }
+  }
+
+  // (b) Coverage-Gate: Floor aus der coverageWeight-Verteilung DIESES Laufs (data-abgeleitet, kein
+  // fester Achsen-Count). Ungescorte/nicht-routete Zeilen bleiben unberuehrt (Filter oben: route+score).
+  const routedScored = scResults.filter((e) => e.action === 'route' && e.score !== null);
+  const covSamples = routedScored.map((e) => e.coverageWeight).filter(Number.isFinite);
+  const covFloor = quantile(covSamples, SMALLCAP_COVERAGE_FLOOR_PCTL);
+  let thinCoverageExcluded = 0;
+  if (covFloor !== null) {
+    for (const e of routedScored) {
+      if (Number.isFinite(e.coverageWeight) && e.coverageWeight < covFloor) {
+        e.action = 'exclude'; e.formulaId = null; e.track = null; e.score = null; e.reason = 'smallcap-thin-coverage';
+        thinCoverageExcluded++;
+      }
+    }
+  }
+
+  const scRanked = produceRankings(scResults, { topN: topN || 100 });
+  const counts = {};
+  for (const e of scResults) {
+    if (e.action === 'route' && e.score !== null) {
+      counts[e.formulaId] = counts[e.formulaId] || { profitable: 0, unprofitable: 0 };
+      counts[e.formulaId][e.track] = (counts[e.formulaId][e.track] || 0) + 1;
+    }
+  }
+  const W = (p, v) => writeJsonAtomic(p, v, { assertFinite: true });
+  fs.mkdirSync(scOutDir, { recursive: true });
+  for (const [id, b] of Object.entries(scRanked.branches)) {
+    W(path.join(scOutDir, id + '.json'), b);
+  }
+  W(path.join(scOutDir, 'overview.json'), scRanked.overview);
+  if (scResults.calibration) {
+    W(path.join(scOutDir, 'calibration.json'),
+      { generated_at: new Date().toISOString(), ...scResults.calibration });
+  }
+  const sortKeys = (o) => Object.fromEntries(Object.keys(o).sort().map((k) => [k, o[k]]));
+  const boardIds = Object.keys(scRanked.branches).sort();
+  const boardStatusMap = {};
+  for (const id of boardIds) boardStatusMap[id] = boardStatus(id); // alle 'diagnostic' (smallcap-Praefix)
+  W(path.join(scOutDir, 'index.json'), {
+    schema: 'smallcap/diagnostic-v1',
+    generatedFromSnapshots: universe.length,
+    boards: boardIds,
+    boardStatus: boardStatusMap,
+    counts: sortKeys(counts),
+    excluded: sortKeys(scRanked.excluded),
+    coverageFloor: covFloor, // 5.2 Auflage 3: Beleg-Wert des data-abgeleiteten Coverage-Floors dieses Laufs
+  });
+  // Auflage 3 Zaehl-Beleg: explizit ins Run-Log (nicht nur implizit in excluded.'smallcap-thin-coverage').
+  console.log(`[run-screener] Small-Cap-Board (DIAGNOSTIC): ${boardIds.length} Boards, Coverage-Floor p${SMALLCAP_COVERAGE_FLOOR_PCTL * 100}=${covFloor === null ? 'n/a' : covFloor.toFixed(3)}, thin-coverage-excludiert=${thinCoverageExcluded} -> ${scOutDir}`);
 }
 
 // H-B-Guard: entfernt AUSSCHLIESSLICH ein evtl. stales outputs/quality/index.json, bevor der
@@ -403,4 +504,4 @@ if (require.main === module) {
   console.log(`Screener-Output: ${r.branches} Branchen, Universum ${r.universe} -> ${r.out}`);
 }
 
-module.exports = { loadUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex, filterToAuthorizedUniverse, hasFiniteSeries, parseTopNArg };
+module.exports = { loadUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex, filterToAuthorizedUniverse, hasFiniteSeries, parseTopNArg, runSmallcapPass, SMALLCAP_OUT_DIR, SMALLCAP_COVERAGE_FLOOR_PCTL };

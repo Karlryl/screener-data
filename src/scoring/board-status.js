@@ -40,6 +40,8 @@ function boardStatus(formulaId) {
   // -> aktuell IMMER diagnostic; eine Core-Promotion erfordert einen kuenftigen Code-Change,
   // gated auf rho<0,4 + rankIC (Masterplan 3.1, docs/findash-export-v1.md).
   if (typeof formulaId === 'string' && formulaId.startsWith('quality-')) return 'diagnostic';
+  // 5.2 Small-Cap-Board: per Praereg DIAGNOSTIC-Start, kein Court-Nachweis vor Karls 5 Auflagen.
+  if (typeof formulaId === 'string' && formulaId.startsWith('smallcap-')) return 'diagnostic';
   return CORE.has(formulaId) ? 'core' : 'diagnostic';
 }
 

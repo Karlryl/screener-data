@@ -1084,4 +1084,6 @@ module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings
   // PHASE 4 (Refresh-Robustheit via committete SEC-Tiefe): fuer TDD
   normSec, cycleSeriesPair,
   // 2.10 (n-bewusste Scores): fuer TDD der synthetischen Kohorten-Tests
-  shrinkToNeutral, SHRINK_K, MIN_COHORT_N };
+  shrinkToNeutral, SHRINK_K, MIN_COHORT_N,
+  // 5.2 Small-Cap-Board: reine Funktion, additiv exportiert fuer den Coverage-Floor (run-screener.js)
+  quantile };
