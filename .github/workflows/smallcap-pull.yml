@@ -1,0 +1,178 @@
+# 5.2 WEG 1b — isolierter Small-Cap-CI-Pull (Council-Entscheid Tag 432, s. protocol/
+# 5.2-weg1b-universe-registered-20260722.md Chunk 4 / Einwand 3+8). Getrennter Workflow
+# statt Erweiterung von daily-pull.yml: 3 von 4 Ratsstimmen (Mechaniker, Risiko-Ingenieur,
+# Wartbarkeits-Praktiker) sahen Option B (Zusatz-Shards in daily-pull.yml) als Gefahr fuer
+# Karls einzigen Alarm-Kanal (coverage-gate.js liest EIN n_total/Manifest — eine zweite,
+# andere Watchlist in derselben Matrix wuerde diesen Nenner verfaelschen). Dieser Workflow
+# ruehrt daily-pull.yml NICHT an: eigene Matrix (N=4, ~194 Ticker/Shard — weit unter dem in
+# daily-pull.yml bewiesenen ~1394/Shard-Limit gegen Yahoo-Cloudflare-Drosselung), eigener
+# Cron-Slot (versetzt zum Hauptlauf 02:17 UTC, NICHT parallel — sonst verdoppelt sich exakt
+# die Yahoo-Last, die Tag 430 zum 87%-Fehlschlag fuehrte), eigenes Coverage-Verstaendnis
+# (DIAGNOSTIC, kein hartes Gate).
+#
+# HANDOFF (Advocatus-Diaboli-Einwand aus dem Council, Tag 432): der urspruengliche Plan
+# ("Artefakt an den scoring-Job in daily-pull.yml reichen") waere gescheitert — GitHub-
+# Actions-Artefakte sind pro Workflow-RUN gescopt, ein fremder Workflow kann sie nicht
+# lesen. snapshots-smallcap/ wird auch NICHT committet (gleicher Grund wie snapshots/ in
+# .gitignore: taeglicher Commit von hunderten Snapshot-JSONs waere Repo-Bloat). Stattdessen:
+# GH-Actions-CACHE unter einem stabilen Key (repo-weit sichtbar, nicht run-gescopt) —
+# dieser Workflow schreibt (job "merge"), der scoring-Job in daily-pull.yml restored ihn
+# (ein einzelner zusaetzlicher, fail-soft Cache-Restore-Schritt dort, gleiche Technik wie
+# der dort bereits bestehende "Restore Coverage-Floor Baseline"-Schritt). Kein `needs:`
+# zwischen den Dateien moeglich (GHA kennt das datei-uebergreifend nicht) -> fail-soft ist
+# strukturell garantiert: fehlt der Cache, faellt loadSmallcapUniverse() (run-screener.js)
+# auf sein bestehendes Fail-soft-Verhalten zurueck (Hauptkorpus-Fallback), nichts blockt.
+#
+# Kein Commit-Schritt in diesem Workflow -> `permissions: contents: read` genuegt.
+name: Small-Cap Pull (5.2, isoliert)
+
+on:
+  schedule:
+    # Versetzt zu daily-pull.yml (02:17 UTC) — dessen Pull+Merge laeuft typischerweise
+    # binnen 2-3h durch; 06:00 UTC laesst reichlich Abstand, damit beide Workflows nie
+    # gleichzeitig Yahoo belasten (Advocatus-Diaboli-Einwand).
+    - cron: '0 6 * * 2-6'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smallcap-pull
+  cancel-in-progress: false
+
+env:
+  SHARD_COUNT: '4'
+
+jobs:
+  # ============================================================================
+  # PULL (4-Shard-Matrix). Jeder Shard restored den zuletzt gemergten Small-Cap-Store
+  # aus dem Cache (Diaet-Grundlage fuer FUNDAMENTALS_MAX_AGE_DAYS in pull-yahoo.js —
+  # ohne Vorzustand waere jeder Lauf ein teurer Voll-Pull), zieht seine Ticker-Scheibe
+  # (--shard i/N slice intern per hash(ticker)%N, wie im Hauptlauf) und laedt seine
+  # neu/aktualisierten Snapshots als Artefakt hoch (gueltig, weil "merge" derselbe
+  # Workflow-RUN ist — anders als der Handoff an daily-pull.yml).
+  # ============================================================================
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Verify watchlist-smallcap.json sanity
+        run: |
+          if [ ! -f watchlist-smallcap.json ]; then
+            echo "::error::watchlist-smallcap.json missing"
+            exit 1
+          fi
+          size=$(node -e "console.log((JSON.parse(require('fs').readFileSync('watchlist-smallcap.json','utf8')).stocks||[]).length)")
+          echo "watchlist-smallcap size: $size"
+          if [ "$size" -lt 500 ]; then
+            echo "::error::watchlist-smallcap.json has only $size entries (expected ~775) — refusing to pull against a possibly corrupted list"
+            exit 1
+          fi
+
+      - name: Assert shard index in range
+        run: |
+          if [ "${{ matrix.shard }}" -ge "$SHARD_COUNT" ] || [ "${{ matrix.shard }}" -lt 0 ]; then
+            echo "::error::shard index ${{ matrix.shard }} out of range for N=$SHARD_COUNT"
+            exit 1
+          fi
+
+      # Restore-only: der zuletzt gemergte Store (job "merge" unten schreibt ihn), damit
+      # die Freshness-Diaet in pull-yahoo.js greift. Fehlt er (allererster Lauf) -> leerer
+      # Ordner -> pull-yahoo.js macht fuer diesen Shard einen Voll-Pull (erwartet, einmalig).
+      - name: Restore merged small-cap store (diet baseline)
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: snapshots-smallcap
+          key: snapshots-smallcap-store-nonexistent
+          restore-keys: |
+            snapshots-smallcap-store-
+
+      - name: Run Yahoo Pull (small-cap shard ${{ matrix.shard }}/${{ env.SHARD_COUNT }})
+        env:
+          PULL_CONCURRENCY: '8'
+          MIN_MCAP_USD: '300000000'
+          FUNDAMENTALS_MAX_AGE_DAYS: '7'
+        run: node pull-yahoo.js --shard ${{ matrix.shard }}/${{ env.SHARD_COUNT }} --watchlist watchlist-smallcap.json --output snapshots-smallcap --rate-limit 2000
+        continue-on-error: true
+        timeout-minutes: 45
+
+      - name: Upload shard snapshots
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: snapshots-smallcap-shard-${{ matrix.shard }}
+          path: |
+            snapshots-smallcap/*.json
+            !snapshots-smallcap/_manifest.json
+          if-no-files-found: warn
+          retention-days: 1
+
+  # ============================================================================
+  # MERGE (once). Setzt auf dem zuletzt gemergten Store auf (Cache-Restore), ueberlagert
+  # mit den frisch hochgeladenen Shard-Snapshots (merge-multiple, disjunkte Ticker-
+  # Scheiben -> keine echte Kollision) und speichert das Ergebnis unter einem NEUEN,
+  # run-eindeutigen Key zurueck (restore-keys-Praefix im naechsten Lauf/im scoring-Job
+  # von daily-pull.yml findet dann automatisch diesen neuesten Stand — selbes Muster
+  # wie die per-Shard-Caches in daily-pull.yml).
+  # ============================================================================
+  merge:
+    needs: pull
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Restore merged small-cap store (baseline for tickers no shard touched this run)
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: snapshots-smallcap
+          key: snapshots-smallcap-store-nonexistent
+          restore-keys: |
+            snapshots-smallcap-store-
+
+      - name: Download all shard snapshots (overlays fresh pulls onto the restored baseline)
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: snapshots-smallcap-shard-*
+          path: snapshots-smallcap
+          merge-multiple: true
+
+      # DIAGNOSTIC, non-blocking: reines Log, kein zweiter Alarm-Kanal neben Karls einzigem
+      # sanktionierten (coverage-status.json/Dashboard-Banner fuer den Hauptkorpus).
+      - name: Small-Cap Freshness (informational only)
+        continue-on-error: true
+        run: node scripts/verify-freshness.js ./snapshots-smallcap "Small-Cap"
+
+      - name: Save merged small-cap store
+        if: always()
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: snapshots-smallcap
+          key: snapshots-smallcap-store-${{ github.run_id }}

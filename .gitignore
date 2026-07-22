@@ -56,10 +56,16 @@ snapshots/
 !snapshots/_manifest.json
 snapshots/_manifest-full.json
 
-# 5.2 WEG 1b (Codex-Duell-Einwand 7, 22.07.): der getrennte Small-Cap-Snapshot-Store.
-# Wie snapshots/ regeneriert (gescopter $300M-Pull) — NICHT committen, sonst zieht ein
-# lokaler Bootstrap-Pull ODER der Haupt-merge-Job (git add -A) hunderte Snapshots nach main.
-# Der spaetere dedizierte Small-Cap-CI-Job reicht sie als Artefakt weiter, nicht via Commit.
+# 5.2 WEG 1b: der getrennte Small-Cap-Snapshot-Store, genau wie snapshots/ oben NICHT
+# committet (gleicher Grund: taeglicher Git-Commit von hunderten Snapshot-JSONs waere
+# Repo-Bloat, exakt was Tag 151 fuer snapshots/ vermeiden wollte). KORRIGIERT (Tag 432,
+# Council-Verdikt Auflage 4/CI-Job): der urspruengliche Plan "Artefakt-Handoff an den
+# Scoring-Job" waere gescheitert — GitHub-Actions-Artefakte sind pro Workflow-RUN
+# gescopt, ein separater Workflow (smallcap-pull.yml) kann sie dem scoring-Job in
+# daily-pull.yml nicht zustellen. Stattdessen: GH-Actions-CACHE (repo-weit, nicht
+# run-gescopt) unter einem stabilen Key — smallcap-pull.yml schreibt, der scoring-Job
+# in daily-pull.yml restored (ein einzelner zusaetzlicher Cache-Restore-Schritt, gleiche
+# Technik wie der bestehende "Restore Coverage-Floor Baseline"-Schritt dort).
 snapshots-smallcap/
 
 # Tag 280 (0.2/0.9 Sharding): transient per-run merge-job scratch. The merge job

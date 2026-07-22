@@ -921,6 +921,23 @@ jobs:
           name: merge-handoff
           path: .
 
+      # 5.2 WEG 1b (Tag 432): einziger Anknuepfungspunkt des isolierten Small-Cap-CI-Jobs
+      # (.github/workflows/smallcap-pull.yml, Council-Entscheid) an diese Datei — bewusst
+      # NUR ein Cache-Restore, keine Matrix-/Merge-/Coverage-Gate-Aenderung. restore-only +
+      # fehlender Key -> Fallback auf den Praefix, den smallcap-pull.yml zuletzt gespeichert
+      # hat (repo-weiter Cache-Scope, kein Workflow-Artefakt-Problem). Fehlt der Cache ganz
+      # (smallcap-pull.yml lief noch nie) -> leerer/fehlender snapshots-smallcap/-Ordner ->
+      # loadSmallcapUniverse() (run-screener.js) faellt wie bisher fail-soft auf den
+      # Hauptkorpus zurueck. Kein Hart-Abbruch moeglich, kein neuer Blast-Radius fuer HG/QC.
+      - name: Restore Small-Cap Store (5.2 WEG 1b, isoliert von smallcap-pull.yml)
+        continue-on-error: true
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: snapshots-smallcap
+          key: snapshots-smallcap-store-nonexistent
+          restore-keys: |
+            snapshots-smallcap-store-
+
       - name: Run Hypergrowth Screener
         run: |
           node src/scoring/run-screener.js
