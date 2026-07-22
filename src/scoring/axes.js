@@ -211,9 +211,16 @@ function capitalEfficiency(s) {
   // verfaelscht, teils Vorzeichen-Flip (SNDK 3 OpInc- vs 2 invested-Jahre: -0.036 statt +0.0027;
   // BLSH analog). Jetzt pro Fiskaljahr zippen: nur Jahre, in denen OpInc present UND invested>0
   // ist, gehen in BEIDE Mittel. (assets bleibt fuer die Asset-Growth-Penalty unten erhalten.)
-  const opIncS = norm(s, 'annualOpInc');
-  const assets = norm(s, 'annualBalance', 'totalAssets');
-  const curLiab = norm(s, 'annualBalance', 'currentLiabilities');
+  // Auflage 1 / 5.2-Datenfehler-Fix (Tag 434): Yahoo-annualOpInc weicht bei einzelnen
+  // Namen material von der SEC-Bilanz ab (MGPI Vorzeichen-Flip, KODK-Betrag) — nur DIESE
+  // Achse ist betroffen (Kreuz-Review-verifiziert, ruleOfX/marginTrajectory nicht). Fix:
+  // dieselbe Single-Source-Trio-Praeferenz wie roicStability (SEC wo verfuegbar, sonst
+  // Yahoo, NIE feldweise gemischt — roicStabilitySource() ist die EINE Quelle dieser
+  // Entscheidung, hier wiederverwendet statt eine zweite, potenziell abweichende Kopie
+  // zu pflegen). Der Zyklus-Peak-Discount unten (margins/cycleDiscount) bleibt bewusst
+  // Yahoo-OpInc+Yahoo-Rev (beide gleiche Quelle, kein Misch-Risiko, nicht Teil des
+  // gefundenen Fehlers) — unveraendert.
+  const { opInc: opIncS, assets, curLiab } = roicStabilitySource(s);
   const opPaired = [], invPaired = [];
   const nYears = Math.max(opIncS.length, assets.length);
   for (let i = 0; i < nYears; i++) {

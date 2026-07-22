@@ -130,6 +130,24 @@ test('capitalEfficiency(CRDO) ist finit', () => {
 test('capitalEfficiency: keine Bilanz -> null', () => {
   assert.equal(ax.capitalEfficiency({ annual: { annualOpInc: [{ value: 10 }] } }), null);
 });
+// Auflage 1 / 5.2-Datenfehler-Fix (Tag 434): MGPI-Vorzeichen-Flip-Regression. Yahoo und SEC
+// muessen fuer capitalEfficiency zu MATERIELL verschiedenen ROIC-Werten fuehren, wenn secAnnual
+// eine abweichende OpInc-Serie mitbringt (Single-Source-Trio, wie roicStability) — sonst waere
+// der SEC-Praeferenz-Fix stillschweigend tot code.
+test('capitalEfficiency: SEC-Praeferenz aktiv (secAnnual-OpInc-Divergenz veraendert ROIC)', () => {
+  const withoutSec = ax.capitalEfficiency(CRDO);
+  const withDivergentSec = JSON.parse(JSON.stringify(CRDO));
+  const bal = withDivergentSec.annual.annualBalance; // Array-von-Jahresobjekten, nicht {totalAssets:[...]}
+  const n = bal.length;
+  withDivergentSec.secAnnual = {
+    annualOpInc: Array.from({ length: n }, (_, i) => ({ value: -Math.abs(1000 + i) })),
+    annualAssets: bal.map((y) => ({ value: y.totalAssets })),
+    annualCurrentLiabilities: bal.map((y) => ({ value: y.currentLiabilities })),
+  };
+  const withSec = ax.capitalEfficiency(withDivergentSec);
+  assert.ok(Number.isFinite(withSec), 'SEC-Pfad sollte finiten ROIC liefern, war ' + withSec);
+  assert.notEqual(withSec, withoutSec, 'SEC-abweichende OpInc-Serie muss den ROIC gegenueber dem Yahoo-Pfad veraendern');
+});
 
 // --- 7 revisionsMomentum ----------------------------------------------------
 test('revisionsMomentum(CRDO) finit (in [-1,1])', () => {
