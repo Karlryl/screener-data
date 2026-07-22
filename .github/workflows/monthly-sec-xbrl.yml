@@ -27,7 +27,7 @@ concurrency:
 jobs:
   pull:
     runs-on: ubuntu-latest
-    timeout-minutes: 150  # BH-004: +60min headroom for the added "Build sec-secannual" step
+    timeout-minutes: 210  # BH-004: +60min for "Build sec-secannual"; Tag 432: +60min for the small-cap variant
     steps:
       # Tag 232c-24 (audit F-CI-006 MEDIUM): drift correction from daily-pull.
       # monthly-sec-xbrl was missing three hardenings present in daily-pull:
@@ -162,11 +162,32 @@ jobs:
           SEC_XBRL_CACHE_DIR: external-data/sec-xbrl
         run: node scripts/build-secannual.js
 
+      # 5.2 WEG 1b (Tag 432, Chunk 2): getrennter Small-Cap-Datenpfad — restored aus dem
+      # Cache, den .github/workflows/smallcap-pull.yml schreibt (gleiche Technik wie der
+      # Restore-Schritt im scoring-Job von daily-pull.yml). continue-on-error: fehlt der
+      # Cache (smallcap-pull.yml lief noch nie / evicted), bleibt snapshots-smallcap/ leer
+      # -> build-secannual-smallcap.js's eigener Empty-Universe-Guard greift (No-Op, kein
+      # Absturz), exakt wie beim Hauptkorpus-Pendant oben.
+      - name: Restore Small-Cap Store (5.2 WEG 1b)
+        continue-on-error: true
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: snapshots-smallcap
+          key: snapshots-smallcap-store-nonexistent
+          restore-keys: |
+            snapshots-smallcap-store-
+
+      - name: Build sec-secannual-smallcap (5.2 WEG 1b, isoliert)
+        timeout-minutes: 60
+        env:
+          SEC_XBRL_CACHE_DIR: external-data/sec-xbrl
+        run: node scripts/build-secannual-smallcap.js
+
       - name: Commit manifest
         run: |
           git config user.name "sec-xbrl-bot"
           git config user.email "sec-xbrl-bot@users.noreply.github.com"
-          git add external-data/sec-xbrl/_manifest.json external-data/sec-secannual.json
+          git add external-data/sec-xbrl/_manifest.json external-data/sec-secannual.json external-data/sec-secannual-smallcap.json
           if git diff --staged --quiet; then
             echo "No manifest changes to commit."
           else

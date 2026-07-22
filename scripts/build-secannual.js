@@ -172,4 +172,4 @@ if (require.main === module) {
   run().catch((e) => { console.error(e); process.exit(1); });
 }
 
-module.exports = { newestPresent, bilanzGuardOk, chooseCacheSource, run };
+module.exports = { newestPresent, bilanzGuardOk, chooseCacheSource, run, get, sleep, looseSanity, plain };
