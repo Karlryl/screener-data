@@ -12,8 +12,12 @@
  * Echte SEC/Yahoo-Bilanzdaten aus snapshots/{IPI,MCFT}.json (5.2-Bootstrap-Pull 2026-07-21):
  *   Positiv: Intrepid Potash (IPI) - AR +50.3% (22.465M->33.776M) vs Umsatz +17.1%
  *     (254.694M->298.328M) im selben Jahr -> 33.2 Prozentpunkte Divergenz.
- *   Negativ: MasterCraft Boat Holdings (MCFT) - AR FAELLT -64.3% (11.455M->4.086M)
- *     waehrend der Umsatz +13.4% waechst (genau das GEGENTEIL des Manipulations-Musters).
+ *   Negativ: Carriage Services (CSV) FY2018 - Umsatz WAECHST +3.8% (258.139M->267.992M)
+ *     waehrend AR FAELLT -3.9% (19.655M->18.897M) -> genau das GEGENTEIL des Manipulations-
+ *     Musters (echte SEC-10-K-Werte, CIK 0001016281).
+ *   Kreuz-Review-Korrektur (Codex 2026-07-22): die urspruengliche MCFT-Fixture war
+ *     newest-first FALSCH etikettiert — dort FIEL der Umsatz (322.351M->284.203M), der Test
+ *     pruefte also NICHT den benannten "Umsatz waechst"-Fall. CSV FY2018 zeigt ihn real.
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -27,10 +31,12 @@ test('arDivergence: Positiv-Fixture Intrepid Potash (IPI) - AR waechst 33pp schn
   assert.equal(arDivergence(s), true);
 });
 
-test('arDivergence: Negativ-Fixture MasterCraft (MCFT) - AR faellt, Umsatz waechst -> false', () => {
+test('arDivergence: Negativ-Fixture Carriage Services (CSV) FY2018 - Umsatz waechst +3.8%, AR faellt -3.9% -> false', () => {
+  // newest-first: [FY2018, FY2017]. Umsatz 267.992M > 258.139M (waechst), AR 18.897M < 19.655M (faellt).
+  // arG(-3.9%) - revG(+3.8%) = -7.7% << AR_DIVERGENCE(0.15) -> false (kein Channel-Stuffing).
   const s = { annual: {
-    annualRev: [{ value: 284203000 }, { value: 322351000 }, { value: 609903000 }],
-    annualBalance: [{ accountsReceivable: 4086000 }, { accountsReceivable: 11455000 }, { accountsReceivable: 15741000 }],
+    annualRev: [{ value: 267992000 }, { value: 258139000 }],
+    annualBalance: [{ accountsReceivable: 18897000 }, { accountsReceivable: 19655000 }],
   } };
   assert.equal(arDivergence(s), false);
 });
