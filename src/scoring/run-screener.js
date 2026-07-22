@@ -30,6 +30,13 @@ const { loadWatchlist } = require('../../lib/watchlist-fs.js');
 const ROOT = path.join(__dirname, '..', '..');
 const SNAP_DIR = path.join(ROOT, 'snapshots');
 const WATCHLIST_PATH = path.join(ROOT, 'watchlist.json');
+// 5.2 WEG 1b (Council+Codex-Duell 22.07.): getrennter Small-Cap-Datenpfad. Eigenes
+// snapshots-Verzeichnis + eigene Watchlist, damit der gescopte $300M-Pull HG/QC NICHT
+// beruehrt (Blast-Radius-Isolation, Codex-Einwand 2). Fehlen beide (noch kein getrennter
+// Pull gelaufen) -> loadSmallcapUniverse() gibt null -> runSmallcapPass faellt auf den
+// Hauptkorpus zurueck (heutiges Verhalten, die im $800M-Universum verbliebenen Small-Caps).
+const SMALLCAP_SNAP_DIR = path.join(ROOT, 'snapshots-smallcap');
+const SMALLCAP_WATCHLIST_PATH = path.join(ROOT, 'watchlist-smallcap.json');
 const OUT_DIR = path.join(ROOT, 'outputs', 'hypergrowth');
 const QC_OUT_DIR = path.join(ROOT, 'outputs', 'quality'); // 3.1 QC-Board (DIAGNOSTIC), getrennter Ordner
 const SMALLCAP_OUT_DIR = path.join(ROOT, 'outputs', 'smallcap'); // 5.2 Small-Cap-Board (DIAGNOSTIC), getrennter Ordner
@@ -169,6 +176,40 @@ function loadUniverse() {
   return u;
 }
 
+/**
+ * 5.2 WEG 1b: isolierter Loader fuer den getrennten Small-Cap-Datenpfad.
+ * Laedt AUSSCHLIESSLICH aus SMALLCAP_SNAP_DIR (nicht dem Hauptkorpus), filtert auf die
+ * SMALLCAP_WATCHLIST_PATH-autorisierte Menge und haengt dieselbe committete SEC-Tiefenserie
+ * an (mergeSecIntoUniverse — Voraussetzung fuer den spaeteren capitalEfficiency-SEC-Praeferenz-
+ * Fix). BEWUSST OHNE den Hauptuniversum-Coverage-Floor (_last_good_disk-Self-Baseline gehoert
+ * dem $800M-Korpus); der Small-Cap-Pass hat sein EIGENES data-abgeleitetes p10-Coverage-Gate
+ * (runSmallcapPass). Fehlt das Verzeichnis oder ist es leer (noch kein getrennter Pull) ->
+ * null -> der Aufrufer faellt fail-soft auf den Hauptkorpus zurueck (heutiges Verhalten).
+ */
+function loadSmallcapUniverse(snapDir = SMALLCAP_SNAP_DIR, watchlistPath = SMALLCAP_WATCHLIST_PATH) {
+  let files;
+  try { files = fs.readdirSync(snapDir); }
+  catch (_) { return null; } // Verzeichnis fehlt -> Fallback-Signal
+  const u = [];
+  let parseFail = 0;
+  for (const f of files) {
+    if (!f.endsWith('.json')) continue;
+    if (f.startsWith('_manifest') || f === '_last_good_disk.json') continue;
+    let s;
+    try { s = JSON.parse(fs.readFileSync(path.join(snapDir, f), 'utf8')); }
+    catch (_) { parseFail++; continue; }
+    if (s && s.meta && s.meta.ticker) u.push(s);
+  }
+  if (u.length === 0) return null; // leeres Verzeichnis -> Fallback-Signal
+  // Autorisierungs-Schnitt auf die Small-Cap-Watchlist (fehlt sie -> fail-open, kein Schnitt).
+  let stocks = [];
+  try { stocks = (JSON.parse(fs.readFileSync(watchlistPath, 'utf8')).stocks) || []; } catch (_) {}
+  const { filtered, dropped } = filterToAuthorizedUniverse(u, stocks);
+  mergeSecIntoUniverse(filtered);
+  console.log(`[run-screener] loadSmallcapUniverse: ${filtered.length} Small-Cap-Snapshots aus ${snapDir} (${parseFail} parse-fail, ${dropped} nicht in watchlist-smallcap.json)`);
+  return filtered;
+}
+
 // PHASE 4 (Refresh-Robustheit): haengt die COMMITTETE tiefe SEC-annual-Serie (external-data/sec-secannual.json,
 // per build-secannual offline erzeugt, FY-Versatz-robust via loose-sanity gefiltert) an die passenden Snapshots.
 // DETERMINISTISCH: liest die COMMITTETE Datei (nicht den git-ignored companyfacts-Cache), kein Netzwerk -> CI==lokal.
@@ -302,7 +343,9 @@ function run(topN) {
   // 5.2 Small-Cap-Board (DIAGNOSTIC, additiv): dritter Scoring-Pass, gleiches Fail-soft-Muster wie QC
   // (ein Fehler hier darf HG/QC NICHT stalen).
   try {
-    runSmallcapPass(universe, topN);
+    // WEG 1b: getrennter Small-Cap-Korpus wenn vorhanden, sonst fail-soft Hauptkorpus-Fallback.
+    const scUniverse = loadSmallcapUniverse() || universe;
+    runSmallcapPass(scUniverse, topN);
   } catch (e) {
     console.error(`::error:: [run-screener] Small-Cap-Pass fehlgeschlagen (HG/QC unberuehrt): ${e && e.message}`);
     writeQualityFailedMarker(e && e.message, SMALLCAP_OUT_DIR);
@@ -504,4 +547,4 @@ if (require.main === module) {
   console.log(`Screener-Output: ${r.branches} Branchen, Universum ${r.universe} -> ${r.out}`);
 }
 
-module.exports = { loadUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex, filterToAuthorizedUniverse, hasFiniteSeries, parseTopNArg, runSmallcapPass, SMALLCAP_OUT_DIR, SMALLCAP_COVERAGE_FLOOR_PCTL };
+module.exports = { loadUniverse, loadSmallcapUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex, filterToAuthorizedUniverse, hasFiniteSeries, parseTopNArg, runSmallcapPass, SMALLCAP_OUT_DIR, SMALLCAP_SNAP_DIR, SMALLCAP_WATCHLIST_PATH, SMALLCAP_COVERAGE_FLOOR_PCTL };

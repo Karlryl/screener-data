@@ -56,6 +56,12 @@ snapshots/
 !snapshots/_manifest.json
 snapshots/_manifest-full.json
 
+# 5.2 WEG 1b (Codex-Duell-Einwand 7, 22.07.): der getrennte Small-Cap-Snapshot-Store.
+# Wie snapshots/ regeneriert (gescopter $300M-Pull) — NICHT committen, sonst zieht ein
+# lokaler Bootstrap-Pull ODER der Haupt-merge-Job (git add -A) hunderte Snapshots nach main.
+# Der spaetere dedizierte Small-Cap-CI-Job reicht sie als Artefakt weiter, nicht via Commit.
+snapshots-smallcap/
+
 # Tag 280 (0.2/0.9 Sharding): transient per-run merge-job scratch. The merge job
 # downloads every shard's manifest into shard-manifests/ (flat shard-<i>.json) to
 # recount ONE full-universe _manifest.json, and the pull runner stages its own
