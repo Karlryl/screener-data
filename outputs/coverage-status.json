@@ -1,23 +1,23 @@
 {
   "schema": "coverage-status/v1",
-  "generated_at": "2026-07-23T08:53:09.504Z",
-  "run_id": "29982476691",
+  "generated_at": "2026-07-24T08:49:53.465Z",
+  "run_id": "30069557825",
   "status": "degradiert",
   "degraded": true,
   "blocked": false,
-  "n_ok": 4090,
-  "n_total": 15073,
-  "n_full": 0,
-  "n_priceonly": 4090,
-  "coverage_pct": 27.1,
-  "n_addressable": 15073,
-  "honest_coverage_pct": 27.1,
+  "n_ok": 4049,
+  "n_total": 15082,
+  "n_full": 6,
+  "n_priceonly": 4043,
+  "coverage_pct": 26.8,
+  "n_addressable": 15081,
+  "honest_coverage_pct": 26.8,
   "source": "manifest",
   "reasons": [
     "manifest partial=true (pull killed mid-flight)",
-    "n_ok 4090 < SOFT_TARGET 4600 (18% of 15073) — short of a full pull",
-    "failure-mass 66% > 35% (adapter/field mass-failure)",
-    "honest-coverage 27.1% < 90% of addressable 15073 (n_total − mcap-skips; Tote bereits ausgetragen, 0.12)"
+    "n_ok 4049 < SOFT_TARGET 4600 (18% of 15082) — short of a full pull",
+    "failure-mass 67% > 35% (adapter/field mass-failure)",
+    "honest-coverage 26.8% < 90% of addressable 15081 (n_total − mcap-skips; Tote bereits ausgetragen, 0.12)"
   ],
   "manifest_partial": true
 }
