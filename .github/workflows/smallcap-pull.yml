@@ -34,8 +34,11 @@ on:
     - cron: '0 6 * * 2-6'
   workflow_dispatch: {}
 
+# Karl-Entscheid 27.07.2026 (Frage 1 = A): der Reconcile darf die Small-Cap-Liste
+# woechentlich selbst aufraeumen. Dafuer braucht dieser Workflow Schreibrechte — er
+# committet AUSSCHLIESSLICH watchlist-smallcap.json, nichts sonst.
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: smallcap-pull
@@ -176,9 +179,46 @@ jobs:
       # Der Schritt MISST und berichtet also nur — inkl. der Auflage-6-Ueberschneidung
       # mit dem Hauptuniversum. Ob der Reconcile automatisch schreiben darf, haengt an
       # der Eigentumsgrenze (Auflage 6) und ist ein offener Karl-Entscheid.
-      - name: Small-Cap Reconciliation (Auflagen 4+5, nur Bericht)
+      # Karl-Entscheid 27.07. (Frage 1 = A): woechentlich automatisch aufraeumen.
+      # NUR SAMSTAGS scharf — der Reconcile entfernt Mitgliedschaften; das soll einmal die
+      # Woche passieren und nicht taeglich, damit ein einzelner schlechter Datentag nicht
+      # durchschlaegt. An den anderen Tagen laeuft er als reiner Bericht mit.
+      #
+      # --max-remove-pct 40 statt der Standard-25: gemessen am echten Datenstand wuerden beim
+      # ERSTEN scharfen Lauf 184 von 775 Namen (23,7 %) entfernt — fast alles Fonds-Huellen,
+      # die seit dem Aufbau der Liste drinstehen. Das liegt so knapp unter 25 %, dass die
+      # Sperre grundlos ausloesen wuerde. Danach fallen die Zahlen auf einzelne Namen/Woche.
+      - name: Small-Cap Reconciliation (Auflagen 4+5)
         continue-on-error: true
-        run: node scripts/reconcile-smallcap.js --dry-run --report smallcap-reconcile.json
+        run: |
+          if [ "$(date -u +%u)" = "6" ]; then
+            echo "Samstag — Reconcile schreibt."
+            node scripts/reconcile-smallcap.js --max-remove-pct 40 --report smallcap-reconcile.json
+          else
+            echo "Kein Samstag — Reconcile laeuft als reiner Bericht."
+            node scripts/reconcile-smallcap.js --dry-run --report smallcap-reconcile.json
+          fi
+
+      # Committet AUSSCHLIESSLICH die Mitgliedschaftsliste. Keine Vintages, keine Snapshots,
+      # keine Ausgaben — die bleiben wie bisher aus diesem Workflow heraus.
+      - name: Commit aufgeraeumte Small-Cap-Liste
+        if: always()
+        continue-on-error: true
+        run: |
+          git config user.name "yahoo-pull-bot"
+          git config user.email "yahoo-pull-bot@users.noreply.github.com"
+          git add watchlist-smallcap.json
+          if git diff --staged --quiet; then
+            echo "Keine Aenderung an der Small-Cap-Liste."
+          else
+            git commit -m "chore: small-cap reconcile $(date -u +%F)"
+            for i in 1 2 3; do
+              git fetch origin main
+              if ! git rebase --autostash origin/main; then git rebase --abort || true; break; fi
+              if git push origin HEAD:main; then echo "Small-Cap-Liste committet"; break; fi
+              sleep $((5 * i))
+            done
+          fi
 
       - name: Upload reconciliation report
         if: always()

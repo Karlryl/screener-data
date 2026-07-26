@@ -3182,6 +3182,41 @@ async function main() {
     _log('ERROR', 'Watchlist must have .stocks array');
     process.exit(1);
   }
+  // 5.2 Auflage 6 / Karl-Entscheid 27.07.2026 ("A — die Small-Cap-Liste besitzt das Band"):
+  // 583 der 775 Small-Cap-Ticker standen AUCH in der Hauptliste. Beide Laeufe holten sie
+  // taeglich getrennt bei Yahoo ab — der Hauptlauf verwarf sie danach unterhalb seiner
+  // 800-Mio.-Grenze. Das ist die Doppellast, die der Council bei Einwand 8 verhindern wollte.
+  //
+  // Bewusst als FILTER beim Abruf, NICHT als Loeschung aus watchlist.json: die Mitgliedschaft
+  // bleibt unveraendert erhalten, der Hauptlauf ueberspringt diese Ticker nur. Damit ist der
+  // Schritt jederzeit rueckgaengig (Datei weg = alter Zustand) und es geht keine Historie
+  // verloren. Greift NUR, wenn der Hauptlauf mit der Hauptliste laeuft — der Small-Cap-Lauf
+  // uebergibt seine eigene Liste per --watchlist und darf sich nicht selbst leerfiltern.
+  const SMALLCAP_LISTE = 'watchlist-smallcap.json';
+  if (path.resolve(args.watchlist) !== path.resolve(SMALLCAP_LISTE) && fs.existsSync(SMALLCAP_LISTE)) {
+    try {
+      const sc = JSON.parse(fs.readFileSync(SMALLCAP_LISTE, 'utf8'));
+      const scTicker = new Set(
+        (Array.isArray(sc) ? sc : (sc.stocks || []))
+          .map((e) => (typeof e === 'string' ? e : e && e.ticker))
+          .filter(Boolean),
+      );
+      if (scTicker.size) {
+        const vorher = watchlist.stocks.length;
+        watchlist.stocks = watchlist.stocks.filter((e) => {
+          const t = typeof e === 'string' ? e : (e && e.ticker);
+          return !(t && scTicker.has(t));
+        });
+        const weg = vorher - watchlist.stocks.length;
+        if (weg > 0) _log('INFO', `Small-Cap-Eigentumsgrenze: ${weg} Ticker uebersprungen (gehoeren ${SMALLCAP_LISTE}); ${watchlist.stocks.length}/${vorher} bleiben`);
+      }
+    } catch (e) {
+      // Fail-soft: eine unlesbare Small-Cap-Liste darf den Hauptlauf nicht stoppen —
+      // dann wird eben wie bisher alles geholt (Doppellast, aber keine Datenluecke).
+      _log('WARN', `Small-Cap-Liste nicht lesbar (${e.message}) — Hauptlauf holt unveraendert alles`);
+    }
+  }
+
   // 0.2/0.9 Sharding: nur die Ticker DIESES Shards ziehen (parallele Matrix-Jobs decken je eine Scheibe ab;
   // zusammen das volle Universum). n_total im Manifest ist dann die SHARD-Groesse — der Merge-/Coverage-Gate
   // im Sammel-Job zaehlt das zusammengefuehrte Universum.
