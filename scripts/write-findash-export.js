@@ -437,6 +437,13 @@ function checkNumOrNull(r, key, where, errs) {
   if (!(key in r)) errs.push(`${where}: ${key} missing`);
   else if (r[key] !== null && !Number.isFinite(r[key])) errs.push(`${where}: ${key} not finite|null`);
 }
+// ADDITIV OPTIONAL: Abwesenheit ist legitim (alter Export, Altbestands-Consumer) und darf
+// den --check NICHT rot faerben — Karls einziger Alarmkanal haengt daran. Ist das Feld da,
+// wird es voll geprueft (null oder endliche Zahl). Praezedenz: coverageAxes/scoreBase.
+function checkOptionalNumOrNull(r, key, where, errs) {
+  if (!(key in r)) return;
+  if (r[key] !== null && !Number.isFinite(r[key])) errs.push(where + ": " + key + " not finite|null");
+}
 // enum|null field must be PRESENT and either null or one of the allowed values.
 function checkEnumOrNull(r, key, allowed, where, errs) {
   if (!(key in r)) errs.push(`${where}: ${key} missing`);
@@ -464,7 +471,7 @@ function validateGeo(r, where, errs) {
   checkStrOrNull(r, 'region', where, errs);
   checkStrOrNull(r, 'sector', where, errs);
   checkNumOrNull(r, 'marketCap', where, errs);
-  checkNumOrNull(r, 'revGrowthYoYPct', where, errs);
+  checkOptionalNumOrNull(r, 'revGrowthYoYPct', where, errs);
   checkEnumOrNull(r, 'phase', VALID_PHASE, where, errs);
   checkEnumOrNull(r, 'mcapBand', VALID_MCAP, where, errs);
   checkEnumOrNull(r, 'ipoRecency', VALID_IPO, where, errs);
