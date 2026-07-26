@@ -1,4 +1,47 @@
 {
   "_doc": "Vintage-Ausschlussliste. Von Hand/Audit gepflegt (Datum + Grund). scripts/rank-ic.js KONSUMIERT diese Liste und schließt gelistete Vintages aus der Auswertung aus. write-board-history.js schreibt hier NIE Einträge (legt nur dieses Gerüst an). Keine Löschung, nur ein Flag.",
-  "excluded": []
+  "excluded": [
+    {
+      "date": "2026-07-14",
+      "board": null,
+      "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
+    },
+    {
+      "date": "2026-07-15",
+      "board": null,
+      "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
+    },
+    {
+      "date": "2026-07-16",
+      "board": null,
+      "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
+    },
+    {
+      "date": "2026-07-17",
+      "board": null,
+      "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
+    },
+    {
+      "date": "2026-07-18",
+      "board": null,
+      "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
+    }
+  ],
+  "_massstab_brueche": [
+    {
+      "ab_commit": "ece786900b",
+      "tag": "Tag 437",
+      "datum": "2026-07-26",
+      "was": "revAcceleration saison-bereinigt (Umsatz-Beschleunigung)",
+      "wirkung": "Score-Niveau und Rangfolge aendern sich; Vintages davor sind mit spaeteren nicht vergleichbar.",
+      "betroffene_vintages": [
+        "2026-07-14",
+        "2026-07-15",
+        "2026-07-16",
+        "2026-07-17",
+        "2026-07-18"
+      ],
+      "entscheid": "Karl-Entscheid 10 (26.07.2026): Bruch markieren, Altes stehen lassen, NICHT neu rechnen."
+    }
+  ]
 }
