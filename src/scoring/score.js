@@ -101,12 +101,25 @@ const fxSuspect = (s) => {
   return !!(tc && rc && String(tc).toUpperCase() !== String(rc).toUpperCase() && m.tradingFxRateApplied == null);
 };
 // Schutz gegen Fehlverschmelzung durch issuerKeyLoose: eine Gruppe mit MEHR ALS EINEM
-// US-Primaerlisting kann keine Zweitnotierungs-Familie sein (ein Emittent hat genau ein
-// US-Primaerlisting). Solche Gruppen werden auf den strengen, zeichensetzungs-genauen
-// issuerKey zurueckgesetzt — also exakt auf das Verhalten vor diesem Fix. Damit kann der
-// Fix nie eine echte Firma verschlucken; er kann im schlimmsten Fall eine Doppelung
-// stehen lassen, die vorher auch stand. Belegt an FBNC/FBP (beide US-primaer -> bleiben
-// getrennt) gegen ASML/ASML.SW, AXON/1AXON.MI, ADSK/AUD.DE (je hoechstens eins -> merged).
+// US-Primaerlisting wird auf den strengen, zeichensetzungs-genauen issuerKey zurueckgesetzt —
+// also exakt auf das Verhalten vor diesem Fix. Damit kann der Fix nie eine echte Firma
+// verschlucken; er kann im schlimmsten Fall eine Doppelung stehen lassen, die vorher auch
+// stand. Belegt an FBNC/FBP (beide US-primaer -> bleiben getrennt) gegen ASML/ASML.SW,
+// AXON/1AXON.MI, ADSK/AUD.DE (je hoechstens eins -> merged).
+//
+// ⚠ KORREKTUR der urspruenglichen Begruendung (Court-Auflage 27.07.2026): hier stand
+// "ein Emittent hat genau EIN US-Primaerlisting". Das ist FALSCH. Mehrklassen-Aktien
+// haben zwei: Alphabet (GOOG/GOOGL), Fox (FOX/FOXA), HEICO (HEI/HEI-A), Berkshire
+// (BRK-A/BRK-B) — je ein Primaerlisting JE ANTEILSKLASSE, unter identischem Firmennamen.
+// Richtig ist: ein Emittent hat genau ein US-Primaerlisting JE ANTEILSKLASSE.
+//
+// Warum der Schutz trotzdem haelt: Mehrklassen-Paare tragen DENSELBEN meta.name, ihr
+// strenger Schluessel ist also identisch — der Rueckfall wirft sie in dieselbe Untergruppe
+// und sie werden weiterhin dedupt. Am CI-Universum nachgemessen (Lauf 30213797442):
+// GOOG/GOOGL, FOX/FOXA und HEI/HEI-A werden je zu genau EINEM Bein zusammengefasst;
+// BRK-A/BRK-B faellt schon vorher als 'insurer' aus dem Ranking. Der Test
+// "Mehrklassen-Aktien werden NICHT auseinandergerissen" nagelt das fest — denn genau hier
+// waere der Schaden unsichtbar: eine Firma stuende doppelt im Board, statt zu fehlen.
 function splitFalseIssuerMerges(groups) {
   const out = [];
   for (const group of groups) {

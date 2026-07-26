@@ -261,6 +261,23 @@ test('Issuer-Dedup Zeichensetzung: "Holding N.V." und "Holding NV" sind derselbe
   assert.equal(bt['PUNKT.SW'].reason, 'dup-issuer', 'Zweitnotierung muss trotz abweichender Zeichensetzung dedupt werden');
   assert.notEqual(bt['PUNKT'].reason, 'dup-issuer', 'US-Primaerbein bleibt der Gewinner');
 });
+test('Issuer-Dedup: Mehrklassen-Aktien werden NICHT auseinandergerissen (Court-Auflage 27.07.)', () => {
+  // Der Fehlverschmelzungs-Schutz stand urspruenglich auf der Universalie "ein Emittent hat
+  // genau EIN US-Primaerlisting". Die ist FALSCH: Alphabet (GOOG/GOOGL), Fox (FOX/FOXA),
+  // HEICO (HEI/HEI-A) haben je ein Primaerlisting PRO ANTEILSKLASSE — zwei US-primaere Beine
+  // unter identischem Firmennamen. Der Schutz haelt trotzdem, weil identische Namen denselben
+  // strengen Schluessel ergeben; genau das wird hier festgenagelt. Faellt es, steht eine Firma
+  // DOPPELT im Board — der unsichtbarere und damit teurere Fehler.
+  const mk = (ticker, ex) => ({
+    meta: { name: 'Mehrklassen Beispiel Inc.', sector: 'Technology', industry: 'Software', exchangeName: ex, ticker, tradingCurrency: 'USD', region: 'US' },
+    annual: { annualRev: [{ value: 300 }, { value: 200 }, { value: 130 }], annualGP: [{ value: 180 }] },
+    metrics: { revenueTTM: { value: 300 } },
+    marketCap: { value: 5e9 } });
+  const res = scoreUniverse([mk('MKLA', 'NasdaqGS'), mk('MKLB', 'NasdaqGS')], formulas);
+  const bt = Object.fromEntries(res.map((r) => [r.ticker, r]));
+  const dedupt = ['MKLA', 'MKLB'].filter((t) => bt[t].reason === 'dup-issuer').length;
+  assert.equal(dedupt, 1, 'genau EINE Anteilsklasse darf uebrig bleiben, nicht beide');
+});
 test('Issuer-Dedup Gleichsetzungs-Liste: Namen mit Artikel/Rechtsform-Unterschied werden dedupt', () => {
   // Die drei Faelle, die die Zeichensetzungs-Regel NICHT loest, weil sich die Namen um
   // mehr unterscheiden: "The Carlyle Group Inc." gegen "Carlyle Group Inc" (Artikel),
