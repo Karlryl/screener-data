@@ -1602,6 +1602,14 @@ async function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 // ponytail: module-level mutable gate instead of threading a gate object through the
 // 3 nested + 1 top-level fetch helpers — only one pullAll() runs per process. Revisit
 // if concurrent pullAll() calls in one process ever become a real need.
+// Tag 436: Wie viele yf.*-Requests ein Ticker im Vollzug abfeuert — quoteSummary + quote
+// + 4x fundamentalsTimeSeries (die 7 acquireYfSlot()-Stellen decken 6 Requests je Ticker
+// ab; die 7. ist der Retry-Pfad derselben quoteSummary). Der --rate-limit-Wert ist das
+// Budget PRO TICKER und wird hierdurch geteilt, damit die mittlere Anfragerate die des
+// grün laufenden Vorzustands bleibt. Aendert sich die Zahl der Requests je Ticker, MUSS
+// dieser Wert mitgezogen werden — sonst driftet die Anfragerate still.
+const YF_REQUESTS_PER_TICKER = 6;
+
 let _yfGateSleepMs = 0;
 let _yfGateNextSlotAt = 0;
 async function acquireYfSlot() {
@@ -1750,7 +1758,24 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   const results = [];
   const failures = [];
   // audit fix BH-043: (re)arm the shared per-request spacing gate for this run.
-  _yfGateSleepMs = rateLimitMs;
+  //
+  // Tag 436 (Dosis-Korrektur zu BH-043): BH-043 hat die GLIEDERUNG richtig gestellt
+  // (jeder yf.*-Request wird einzeln getaktet statt nur der erste je Ticker), dabei
+  // aber die BEDEUTUNG von --rate-limit still verschoben: der Wert war historisch das
+  // Budget PRO TICKER, wurde danach aber als Budget PRO REQUEST verarbeitet — ohne dass
+  // ein Aufrufer seinen Wert anpasste. Da der Gate global serialisiert, sank der
+  // effektive Durchsatz um den Faktor YF_REQUESTS_PER_TICKER: bei --rate-limit 2000
+  // von ~3 Req/s auf 0,5 Req/s. Folge (gemessen): ~1,93 s -> ~18,2 s je Ticker, alle 17
+  // Shards liefen ab dem 21.07. in ihren 165-Minuten-Timeout und meldeten wegen
+  // continue-on-error trotzdem "success"; frische Fundamentaldaten fielen von 224 (18.07.)
+  // auf 0, und der veroeffentlichte Board stand ab da auf dem Stand vom 18.07. fest.
+  //
+  // KEIN Revert von BH-043: das Glaetten der Bursts ist richtig und schuetzt gegen genau
+  // die Cloudflare-Drosselung, die Tag 430 zum 87-%-Fehlschlag fuehrte. Stattdessen wird
+  // das Ticker-Budget auf die Requests eines Tickers verteilt. Ergebnis: dieselbe mittlere
+  // Anfragerate wie vor BH-043 (die monatelang gruen lief), aber gleichmaessig verteilt
+  // statt in Buendeln — strikt besser als beide Vorzustaende.
+  _yfGateSleepMs = rateLimitMs / YF_REQUESTS_PER_TICKER;
   _yfGateNextSlotAt = 0;
   // Tag-80: Parallel pulls in batches of CONCURRENCY
   // audit fix BH-048: validate like args.rateLimit (parseArgs) — but fail-FAST rather
@@ -3237,4 +3262,5 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // audit fix BH-042/BH-047: pure decisions fuer TDD.
   shouldRetryKosdaq, nextNotFoundState,
   // audit fix BH-043: shared request-spacing gate fuer TDD (timing test, no network).
-  acquireYfSlot, _setYfGateSleepMs: (ms) => { _yfGateSleepMs = ms; _yfGateNextSlotAt = 0; } };
+  acquireYfSlot, _setYfGateSleepMs: (ms) => { _yfGateSleepMs = ms; _yfGateNextSlotAt = 0; },
+  YF_REQUESTS_PER_TICKER, _getYfGateSleepMs: () => _yfGateSleepMs };

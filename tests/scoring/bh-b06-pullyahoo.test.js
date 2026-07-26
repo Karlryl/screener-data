@@ -30,7 +30,7 @@
 const assert = require('node:assert/strict');
 const {
   parseArgs, mapYahooToCanonical, shouldRetryKosdaq, nextNotFoundState,
-  acquireYfSlot, _setYfGateSleepMs,
+  acquireYfSlot, _setYfGateSleepMs, YF_REQUESTS_PER_TICKER,
 } = require('../../pull-yahoo.js');
 
 let pass = 0, fail = 0;
@@ -149,7 +149,25 @@ async function run() {
     _setYfGateSleepMs(0); // disarm — no-op outside a pullAll() run
   });
 
-  console.log(`\nbh-b06-pullyahoo.test.js: ${pass} ok, ${fail} fail`);
+  
+// -- Tag 436: Dosis-Korrektur zu BH-043 -- --rate-limit ist das Budget PRO TICKER ----
+// Regression, die den stillen Durchsatz-Einbruch vom 19.07. gefangen haette: BH-043
+// verarbeitete den Wert als Budget pro REQUEST und machte den Pull dadurch ~6x langsamer,
+// bis alle Shards in ihren Timeout liefen (n_full 224 -> 0) -- ohne dass CI rot wurde.
+test('Tag 436: --rate-limit wird als Ticker-Budget auf die Requests verteilt', () => {
+  assert.equal(YF_REQUESTS_PER_TICKER, 6);
+  const src = require('node:fs').readFileSync(
+    require('node:path').join(__dirname, '..', '..', 'pull-yahoo.js'), 'utf8');
+  assert.ok(!/_yfGateSleepMs = rateLimitMs;/.test(src),
+    'Gate wird wieder mit dem rohen rateLimitMs armiert - das ist der BH-043-Durchsatzfehler');
+  assert.ok(/_yfGateSleepMs = rateLimitMs \/ YF_REQUESTS_PER_TICKER;/.test(src),
+    'Gate muss das Ticker-Budget auf die Requests je Ticker verteilen');
+  const gates = (src.match(/await acquireYfSlot\(\)/g) || []).length;
+  assert.equal(gates, YF_REQUESTS_PER_TICKER + 1,
+    gates + " acquireYfSlot()-Stellen, erwartet " + (YF_REQUESTS_PER_TICKER + 1)
+    + " (6 Requests + 1 Retry-Pfad) - Konstante mitziehen!");
+});
+console.log(`\nbh-b06-pullyahoo.test.js: ${pass} ok, ${fail} fail`);
   process.exit(fail ? 1 : 0);
 }
 
