@@ -34788,6 +34788,15 @@
       "track_hint": "A"
     },
     {
+      "ticker": "7317.T",
+      "yahoo_symbol": "7317.T",
+      "name": "Matsuya R&D Co.,Ltd",
+      "sector_hint": "",
+      "exchange_hint": "TSE",
+      "added_via": "edinet",
+      "added_at": "2026-07-26T18:26:25.439Z"
+    },
+    {
       "ticker": "7327.T",
       "yahoo_symbol": "7327.T",
       "name": "Daishi Hokuetsu Financial Group,Inc.",
@@ -41371,6 +41380,15 @@
       "exchange_hint": "US",
       "added_via": "sec-edgar",
       "added_at": "2026-06-19T07:12:38.563Z"
+    },
+    {
+      "ticker": "AKRA.JK",
+      "yahoo_symbol": "AKRA.JK",
+      "name": "PT AKR Corporindo Tbk",
+      "sector_hint": "",
+      "exchange_hint": "IDX",
+      "added_via": "tvid",
+      "added_at": "2026-07-26T18:26:25.439Z"
     },
     {
       "ticker": "AKRBP.OL",
@@ -50338,15 +50356,6 @@
       "added_at": "2026-07-21T03:15:23.316Z"
     },
     {
-      "ticker": "BMRMF",
-      "yahoo_symbol": "BMRMF",
-      "name": "SOCIETE DES BAINS DE MER",
-      "sector_hint": "",
-      "exchange_hint": "US",
-      "added_via": "finnhub",
-      "added_at": "2026-06-21T06:58:52.855Z"
-    },
-    {
       "isin": null,
       "ticker": "BMRN",
       "yahoo_symbol": "BMRN",
@@ -58111,6 +58120,15 @@
       "exchange_hint": "BCS",
       "added_via": "tvcl",
       "added_at": "2026-07-21T03:15:23.308Z"
+    },
+    {
+      "ticker": "COPEC0.SN",
+      "yahoo_symbol": "COPEC0.SN",
+      "name": "Empresas Copec S.A.",
+      "sector_hint": "",
+      "exchange_hint": "BCS",
+      "added_via": "tvcl",
+      "added_at": "2026-07-26T18:26:25.439Z"
     },
     {
       "ticker": "COPH.VI",
@@ -110935,15 +110953,6 @@
       "added_at": "2026-07-21T03:15:23.306Z"
     },
     {
-      "ticker": "RYSKF",
-      "yahoo_symbol": "RYSKF",
-      "name": "REYSAS TICARET AS",
-      "sector_hint": "",
-      "exchange_hint": "US",
-      "added_via": "finnhub",
-      "added_at": "2026-06-21T06:58:52.854Z"
-    },
-    {
       "isin": null,
       "ticker": "RYTM",
       "yahoo_symbol": "RYTM",
@@ -127983,15 +127992,6 @@
       "track_hint": "A"
     },
     {
-      "ticker": "WIPKF",
-      "yahoo_symbol": "WIPKF",
-      "name": "Winpak Ltd./ADR",
-      "sector_hint": "",
-      "exchange_hint": "US",
-      "added_via": "sec-edgar,finnhub",
-      "added_at": "2026-06-19T07:12:38.565Z"
-    },
-    {
       "ticker": "WIPRO.NS",
       "yahoo_symbol": "WIPRO.NS",
       "name": "Wipro Limited",
@@ -128580,13 +128580,6 @@
       "exchange_hint": "TSX",
       "added_via": "tsx",
       "added_at": "2026-07-21T03:15:23.307Z"
-    },
-    {
-      "isin": null,
-      "ticker": "WSR",
-      "yahoo_symbol": "WSR",
-      "name": "WSR",
-      "track_hint": "A"
     },
     {
       "isin": null,
@@ -130135,20 +130128,28 @@
       "track_hint": "A"
     }
   ],
-  "lastUniverseRefresh": "2026-07-25T05:51:24.626Z",
+  "lastUniverseRefresh": "2026-07-26T18:26:25.465Z",
   "lastManualExpansion": {
     "tag": 115,
     "at": "2026-05-09T21:57:56.511Z",
     "added": 66
   },
-  "lastAutoPrune": "2026-07-25T08:47:30.112Z",
+  "lastAutoPrune": "2026-07-26T18:56:57.943Z",
   "lastAutoPruneRemoved": [
     {
-      "ticker": "BK",
-      "reason": "delisted"
+      "ticker": "BMRMF",
+      "reason": "no-snapshot-after-30d"
     },
     {
-      "ticker": "KW",
+      "ticker": "RYSKF",
+      "reason": "no-snapshot-after-30d"
+    },
+    {
+      "ticker": "WIPKF",
+      "reason": "no-snapshot-after-30d"
+    },
+    {
+      "ticker": "WSR",
       "reason": "delisted"
     }
   ]
