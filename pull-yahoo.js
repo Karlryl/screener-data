@@ -669,7 +669,30 @@ function _convertSnapshotToUSD(snap) {
     'revenueTTM',
     'fcfTTM',            // currently absent from metrics.* but reserved
     'ebitda',            // POPULATED (Tag 219, financialData.ebitda) — reporting ccy, scaled by `factor` here. Correct: EBITDA is an income-statement quantity in the reporting currency.
-    'enterpriseValue',   // POPULATED (Tag 219, defaultKeyStatistics.enterpriseValue) — scaled by reporting `factor` here. F2 (audit 2026-06-25) flagged a SUSPECTED mis-scale for dual-non-USD ADRs (trading HKD / reporting CNY): EV is market-derived (mcap + net debt) and Yahoo MAY report it in the TRADING currency like marketCap (which uses scaleTrading/tradingFactor). NEEDS-LIVE-CONFIRMATION of Yahoo's source currency before moving to the trading-factor list — empirical EV/mcap ratios on existing snapshots are consistent with reporting-ccy scaling, so NOT changed.
+    // POPULATED (Tag 219, defaultKeyStatistics.enterpriseValue) — scaled by reporting `factor` here.
+    // F2 (audit 2026-06-25) flagged a SUSPECTED mis-scale for dual-non-USD ADRs (trading HKD /
+    // reporting CNY): EV is market-derived (mcap + net debt) and Yahoo MAY report it in the TRADING
+    // currency like marketCap (which uses scaleTrading/tradingFactor). The comment asked for
+    // NEEDS-LIVE-CONFIRMATION before moving EV to the trading-factor list.
+    //
+    // >>> LIVE-CONFIRMATION LIEGT VOR (2026-07-27, gemessen am snapshots-Artefakt des CI-Laufs
+    // 30213797442, 12 321 Snapshots). F2 ist BESTAETIGT, aber nur fuer eine klar umrissene
+    // Teilmenge: Namen mit reportingCurrency === 'USD' UND tradingCurrency !== 'USD'. Dort ist der
+    // reporting `factor` = 1, EV wird also unveraendert durchgereicht — Yahoo liefert es aber in der
+    // TRADING-Waehrung. Das Verhaeltnis EV/marketCap ist dann exakt der Wechselkurs:
+    //   .JK (IDR): 26 Namen, Faktor 17 968-17 970  (IDR/USD)
+    //   .SN (CLP): 12 Namen, Faktor  949-  954     (CLP/USD)
+    //   .NS (INR),  .IS (TRY),  .T (JPY): einzelne Namen mit dem jeweiligen Kurs
+    // Beispiel MEDC.JK: tc=IDR, rc=USD, mcap 1,82 Mrd, EV 32 705 Mrd.
+    //
+    // NICHT geaendert, bewusst: der Umbau auf den trading-Faktor betraefe JEDEN nicht-USD-Namen,
+    // und fuer die Gegenrichtung (reporting non-USD, trading non-USD) fehlt der Beleg weiterhin —
+    // eine pauschale Umstellung koennte dort korrekte Werte kaputt machen. WIRKUNG heute begrenzt:
+    // enterpriseValue fliesst in KEINE Score-Achse (src/scoring/axes.js kennt das Feld nicht);
+    // Konsument ist lib/e1-compression.js (EV/Sales), das noch nicht scharf verdrahtet ist.
+    // Naechster Schritt waere ein gezielter Fix genau fuer die Teilmenge oben plus ein Test, der
+    // das Verhaeltnis EV/marketCap gegen fx-rates.json prueft. Karl-Frage dazu im Nachtlauf-Protokoll.
+    'enterpriseValue',
     'bookValuePerShare', // currently absent — reserved
     'cashPerShare'       // currently absent — reserved
   ];
