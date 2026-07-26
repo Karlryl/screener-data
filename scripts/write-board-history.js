@@ -457,12 +457,43 @@ function readOrScaffoldExcluded(dryRun) {
 }
 
 // ── Vorheriges Vintage-Datum finden (jüngstes Datum < target) ────────────────
+// Ausgeschlossene Vintages kommen NICHT als Vergleichsbasis in Frage. Das ist keine
+// Kosmetik, sondern verhindert einen Dauerzustand: nach dem Maßstab-Bruch von Tag 437/438
+// stehen die Vintages bis 2026-07-18 in board-history/_excluded.json. Das Wert-Gate verglich
+// das erste neue Vintage gegen den 18.07., meldete erwartungsgemäß ein zu großes Tagesdelta
+// (die Beschleunigungs-Achse misst seither etwas anderes) → suspect → rc=2 → der Commit-Schritt
+// nimmt genau dieses Vintage vom Commit aus und der Lauf wird rot. Weil das suspect-Vintage
+// dadurch NIE in main landet, bleibt der 18.07. auch morgen der jüngste Vorgänger — der Lauf
+// wäre ab jetzt JEDEN TAG rot, ohne dass sich etwas ändern kann. Live eingetreten im Lauf
+// 30217057400 (26.07.2026).
+//
+// Karl-Entscheid 10 sagt genau das aus, was hier zu tun ist: über den Bruch hinweg wird nicht
+// verglichen. Ein ausgeschlossener Vorgänger zählt deshalb als „kein vergleichbarer Vorgänger"
+// — dasselbe, was beim allerersten Vintage gilt. Das Gate straft dann nicht, es sammelt.
 function priorVintageDate(date) {
   if (!fs.existsSync(P.HISTORY_DIR)) return null;
+  const ausgeschlossen = excludedDates();
   const dates = fs.readdirSync(P.HISTORY_DIR)
-    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && d < date)
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && d < date && !ausgeschlossen.has(d))
     .sort();
   return dates.length ? dates[dates.length - 1] : null;
+}
+
+// Global ausgeschlossene Vintage-Daten aus board-history/_excluded.json. Bewusst nur die
+// GLOBALEN Einträge (ohne board-Feld): ein board-enger Ausschluss betrifft die Messreihe
+// dieses einen Boards, nicht die Vergleichbarkeit des Tages insgesamt. Defensiv: eine
+// fehlende oder unlesbare Datei ergibt eine leere Menge — das Gate verhält sich dann wie
+// bisher, statt hier hart abzubrechen.
+function excludedDates() {
+  const raw = readJsonOrNull(P.EXCLUDED_FILE);
+  const out = new Set();
+  if (!raw) return out;
+  const eintraege = Array.isArray(raw) ? raw : (Array.isArray(raw.excluded) ? raw.excluded : []);
+  for (const e of eintraege) {
+    if (typeof e === 'string') out.add(e);
+    else if (e && typeof e === 'object' && !e.board && typeof e.date === 'string') out.add(e.date);
+  }
+  return out;
 }
 
 // ── Retention/Kompaktierung (A12) ────────────────────────────────────────────
@@ -710,6 +741,7 @@ module.exports = {
   run, parseArgs, buildBoardVintage, evaluateGate, updateGateCalibration,
   compact, readOrScaffoldExcluded, regimeForDate, priceGrossProfit, pitCoverageBlock,
   quantile, assertNoPicksHistory, buildPit,
+  priorVintageDate, excludedDates,
   _setPaths, resolvePaths,
   flooredThreshold, frozenThresholdOf,
   isValidDateStr, requiresBackfillContract, resolveFullCalibration,   // BH-147/BH-155

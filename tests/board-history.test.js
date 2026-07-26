@@ -261,6 +261,50 @@ check('(c2) frische Vintages (jünger als t0+2Q) bleiben von --compact unberühr
 });
 
 // ── (d) _excluded-Gerüst ─────────────────────────────────────────────────────
+// ── (d0) Ausgeschlossene Vintages sind KEINE Vergleichsbasis ─────────────────
+// Realfall aus Lauf 30217057400 (26.07.2026): nach dem Massstab-Bruch (Tag 437/438) stehen
+// die Vintages bis 18.07. in _excluded.json. Das Wert-Gate verglich das erste neue Vintage
+// trotzdem gegen den 18.07., meldete das erwartete grosse Tagesdelta -> suspect -> rc=2 ->
+// der Commit-Schritt nimmt genau dieses Vintage vom Commit aus. Damit landet es NIE in main,
+// der 18.07. bleibt auch morgen der juengste Vorgaenger, und der Lauf waere ab dann JEDEN TAG
+// rot, ohne dass sich etwas aendern koennte. Dieser Test haelt den Ausweg fest.
+check('(d0) priorVintageDate ueberspringt global ausgeschlossene Vintages', () => {
+  const base = mkBase();
+  W._setPaths(base);
+  try {
+    const hist = path.join(base, 'board-history');
+    for (const d of ['2026-07-17', '2026-07-18', '2026-07-20']) {
+      fs.mkdirSync(path.join(hist, d), { recursive: true });
+      writeJson(path.join(hist, d, 'semiconductors.json'), { date: d, board: 'semiconductors' });
+    }
+    // Ohne Ausschluesse: juengster Vorgaenger von 2026-07-21 ist der 20.07.
+    writeJson(path.join(hist, '_excluded.json'), { _doc: 'test', excluded: [] });
+    assert.strictEqual(W.priorVintageDate('2026-07-21'), '2026-07-20');
+
+    // 20.07. global ausgeschlossen -> der 18.07. rueckt nach.
+    writeJson(path.join(hist, '_excluded.json'), { _doc: 'test', excluded: [{ date: '2026-07-20', board: null, reason: 'Massstab' }] });
+    assert.strictEqual(W.priorVintageDate('2026-07-21'), '2026-07-18');
+
+    // ALLE ausgeschlossen -> kein vergleichbarer Vorgaenger. Genau das beendet das Dauer-Rot:
+    // das Gate straft dann nicht, sondern sammelt (wie beim allerersten Vintage).
+    writeJson(path.join(hist, '_excluded.json'), {
+      _doc: 'test',
+      excluded: ['2026-07-17', '2026-07-18', '2026-07-20'].map((date) => ({ date, board: null, reason: 'Massstab' })),
+    });
+    assert.strictEqual(W.priorVintageDate('2026-07-21'), null);
+
+    // Ein BOARD-ENGER Ausschluss darf den Tag NICHT als Ganzes entwerten.
+    writeJson(path.join(hist, '_excluded.json'), { _doc: 'test', excluded: [{ date: '2026-07-20', board: 'semiconductors', reason: 'nur dieses Board' }] });
+    assert.strictEqual(W.priorVintageDate('2026-07-21'), '2026-07-20');
+
+    // Fehlende Ausschlussdatei -> Verhalten wie bisher, kein Absturz.
+    fs.rmSync(path.join(hist, '_excluded.json'));
+    assert.strictEqual(W.priorVintageDate('2026-07-21'), '2026-07-20');
+  } finally {
+    W._setPaths(null);
+  }
+});
+
 check('(d) legt _excluded.json-Gerüst an (leer), Writer schreibt nie Einträge', () => {
   const base = mkBase();
   writeJson(path.join(base, 'snapshots', 'ABC.json'), snapFull('ABC', { withEnds: true }));
