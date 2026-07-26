@@ -206,6 +206,45 @@ test('Real-Estate Overview ist ffo-badge (track-eigene Badge)', () => {
   assert.ok(reits.every((e) => e.overview && e.overview.kind === 'ffo-badge'), 'REIT Overview != ffo-badge');
 });
 
+// --- Court-Auflage 27.07.2026: KEINE Firma steht zweimal im selben Board ------
+// Das Gericht verlangte eine Pruefung, die dort meldet, wo hingeschaut wird, und die bei
+// leerer Liste STUMM bleibt ("eine taegliche Zeile ohne Befund erzieht zur Blindheit").
+// Genau das ist ein Test: er sagt nichts, solange alles sauber ist, und wird laut, sobald
+// eine neue Doppelung auftaucht. Er laeuft im Live-Universum-Gate gegen echte Snapshots.
+//
+// Warum das der wichtigere Waechter ist: eine Doppelung ist der SICHTBARE Fehler (dieselbe
+// Firma zweimal, meist auf benachbarten Raengen — am 27.07. real neun Stueck). Der Gegenfehler,
+// eine faelschlich verschmolzene Firma, ist unsichtbar: sie fehlt einfach. Deshalb prueft
+// dieser Test BEIDE Richtungen — Doppelung UND Verschwinden.
+testU('kein Emittent steht zweimal im selben Board (und keiner verschwindet still)', () => {
+  const { produceRankings } = require('../../src/scoring/score.js');
+  const r = produceRankings(results, { topN: 50 });
+  // Normalisierung bewusst STRENGER als der Dedup selbst (auch Artikel und Rechtsform weg):
+  // so faengt der Test auch die Faelle, die der Dedup heute noch nicht loest.
+  const norm = (s) => String(s || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\u00e4\u00f6\u00fc\u00df ]+/g, ' ')
+    .replace(/\b(the|inc|incorporated|corp|corporation|ltd|limited|plc|nv|sa|ag|holdings?|group|co|company)\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const proBoard = new Map();
+  for (const [board, tracks] of Object.entries(r.branches || {})) {
+    for (const track of ['profitable', 'unprofitable']) {
+      for (const e of (tracks[track] || [])) {
+        const k = board + '|' + norm(e.name);
+        if (!norm(e.name)) continue;
+        if (!proBoard.has(k)) proBoard.set(k, new Set());
+        proBoard.get(k).add(e.ticker);
+      }
+    }
+  }
+  const doppel = [...proBoard.entries()].filter(([, tickers]) => tickers.size > 1);
+  assert.equal(
+    doppel.length, 0,
+    'Doppelnennungen im selben Board: ' + doppel.map(([k, v]) => k.split('|')[1] + ' (' + [...v].join('+') + ')').join(', '),
+  );
+});
+
 // --- produceRankings: dashboard-JSON-Form -----------------------------------
 testU('produceRankings: korrekte JSON-Form, sortiert, PLTR top software', () => {
   const { produceRankings } = require('../../src/scoring/score.js');

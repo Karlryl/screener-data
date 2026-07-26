@@ -79,14 +79,33 @@ const issuerKey = (s) => {
 // Belegt am CI-Lauf 30213797442: diese drei standen doppelt in ihren Boards
 // (TLN/1TLN.MI utilities #4+#5, SCHW/1SCHW.MI financials #36+#37, CG/1CG.MI financials #28+#29).
 const ISSUER_ALIASE = {
-  talenenergycorporation: 'talenenergycorp',
-  thecharlesschwabcorporation: 'charlesschwabcorp',
+  // Nur noch die zwei Faelle mit ARTIKEL-Unterschied. "Talen Energy Corporation/Corp" ist
+  // entfallen — das war ein reiner Rechtsform-Fall und wird jetzt von der gemessenen Regel
+  // unten geloest. Fuer den Artikel "The" gibt es KEINE Messung, deshalb bleiben diese zwei
+  // eine gepflegte Liste. Der Waechter in score.integration.test.js meldet, falls ein
+  // dritter Artikel-Fall auftaucht. Schluessel sind bereits rechtsform-normalisiert.
+  thecharlesschwabcorp: 'charlesschwabcorp',
   thecarlylegroupinc: 'carlylegroupinc',
 };
+// Rechtsform-Langform auf ihre Kurzform, NUR an Wortgrenzen. Bewusst eng: keine Artikel,
+// keine Wortentfernung — genau die Verallgemeinerung, die der Court am 27.07. als ungemessen
+// abgelehnt hat. DIESE Variante ist gemessen: am CI-Universum (12 320 Namen) fallen dadurch
+// 25 zusaetzliche Namensgruppen zusammen, davon **25 von 25 korrekt** und KEINE mit zwei
+// US-Primaerlistings (der Fehlverschmelzungs-Schutz muesste also nie eingreifen).
+// Beispiele: "Corning Incorporated"/"Corning Inc", "HASEKO Corporation"/"HASEKO CORP",
+// "CLP Holdings Limited"/"CLP HOLDINGS LTD", "Westpac Banking Corporation"/"WESTPAC BANKING CORP".
+const RECHTSFORM_LANG_KURZ = [
+  [/\bincorporated\b/gi, 'inc'],
+  [/\bcorporation\b/gi, 'corp'],
+  [/\blimited\b/gi, 'ltd'],
+  [/\bcompany\b/gi, 'co'],
+];
 const issuerKeyLoose = (s) => {
   const n = issuerName(s);
   if (!n) return null;
-  const k = n.replace(/[^\p{L}\p{N}]+/gu, '').toLowerCase();
+  let roh = n;
+  for (const [re, kurz] of RECHTSFORM_LANG_KURZ) roh = roh.replace(re, kurz);
+  const k = roh.replace(/[^\p{L}\p{N}]+/gu, '').toLowerCase();
   return ISSUER_ALIASE[k] || k;
 };
 const mcapOf = (s) => (s && s.marketCap && Number.isFinite(s.marketCap.value)) ? s.marketCap.value : 0;
