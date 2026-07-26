@@ -973,6 +973,23 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
     e.ipoRecency = ipoRecencyOf(meta, ipoBounds);
     e.profitTier = profitTierOf(e.snapshot);  // Task 1.2: 4-Stufen (nicht/kurz-vor/seit-kurzem/langfristig)
     e.ipoYear = ipoYearOf(meta);              // Task 1.2 Schritt 3: vorhandenes IPO-Jahr NUR durchreichen
+    // findash-Anzeigespalte "Umsatzwachstum" (Karl-Wunsch F-5, 26.07.). REINE ANZEIGE,
+    // kein Score-Einfluss — die Achse revGrowthLevel bleibt unveraendert die gescorte Groesse.
+    // Bewusst NICHT metrics.revenueGrowthYoY: dieser Yahoo-Skalar hat belegte Defekte
+    // (MRNA +260 % bei kollabierender Umsatzreihe, GOLD +244 % statt ~13 %, 612 Divergenzen
+    // >= 20 Prozentpunkte gegen die eigene Reihe) und wurde am 14.07. genau deshalb aus der
+    // Achse entfernt. Angezeigt wird derselbe selbst gerechnete Wert, den auch die Achse
+    // sieht — sonst stuenden zwei verschiedene Wachstumszahlen fuer dieselbe Firma
+    // nebeneinander. UNGEKLEMMT (ohne growthBounds): die Winsorisierung dient dem Ranking,
+    // in der Anzeige waere sie eine stille Verfaelschung des berichteten Werts.
+    e.revGrowthYoYPct = (() => {
+      const comps = growthYoYComponents(e.snapshot);   // Single-Source: axesFns.revYoYComponents
+      if (!comps.length) return null;
+      const rq = norm(e.snapshot, 'revenueQ');
+      const hatQuartal = rq.length >= 5 && rq.slice(0, 5).every(Number.isFinite) && rq[4] > 0;
+      const g = hatQuartal ? comps[comps.length - 1] : comps[0];
+      return Number.isFinite(g) ? g * 100 : null;
+    })();
     delete e.snapshot;
     delete e.formula;
   }
@@ -1037,7 +1054,7 @@ function produceRankings(results, opts = {}) {
   const excluded = {};
   // A2: die in scoreUniverse angehefteten Anzeige-/geo-Felder an jede Output-Zeile spreaden
   // (?? null haelt die Form stabil, falls produceRankings mit handgebauten results laeuft).
-  const rowMeta = (e) => ({ name: e.name ?? null, country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, ipoRecency: e.ipoRecency ?? null, profitTier: e.profitTier ?? null, ipoYear: e.ipoYear ?? null, coverageAxes: e.coverageAxes ?? null, coverageWeight: e.coverageWeight ?? null, cohortN: e.cohortN ?? null, cohortFallback: e.cohortFallback ?? null });
+  const rowMeta = (e) => ({ name: e.name ?? null, country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, ipoRecency: e.ipoRecency ?? null, profitTier: e.profitTier ?? null, ipoYear: e.ipoYear ?? null, coverageAxes: e.coverageAxes ?? null, coverageWeight: e.coverageWeight ?? null, cohortN: e.cohortN ?? null, cohortFallback: e.cohortFallback ?? null, revGrowthYoYPct: e.revGrowthYoYPct ?? null });
   for (const e of (Array.isArray(results) ? results : [])) {
     if (e.action === 'survival') {
       survival.push({ ticker: e.ticker, runwayQuarters: e.overview ? e.overview.value : null, lamps: e.lamps, ...rowMeta(e) });

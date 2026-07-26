@@ -66,7 +66,12 @@ const BRANCHES = [
 // Zahl bzw. boolean; auf pre-revenue survival-Zeilen null (nie gescort).
 // Task 2.11 Stufe A: scoreBase + scoreShrunk (number|null) + factors ({burn,growth,cycle}|null) — additiv OPTIONAL
 // (Score-Transparenz, wie coverageAxes NICHT im --check, damit legitime Abwesenheit/alte Consumer nicht brechen).
-const ROW_FIELDS = ['name', 'country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback', 'scoreBase', 'scoreShrunk', 'factors', 'axisBreakdown'];
+// F-5 (Karl 26.07.): revGrowthYoYPct = Umsatzwachstum als ANZEIGE-Spalte in findash.
+// Reine Anzeige, kein Score-Input. Quelle ist derselbe selbst gerechnete Wert, den auch die
+// Achse revGrowthLevel sieht (score.js) — NICHT Yahoos metrics.revenueGrowthYoY, das wegen
+// belegter Defekte am 14.07. aus der Achse entfernt wurde. Additiv OPTIONAL wie die
+// coverage-Felder: alte Consumer und legitime Abwesenheit brechen nicht.
+const ROW_FIELDS = ['name', 'country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback', 'scoreBase', 'scoreShrunk', 'factors', 'axisBreakdown', 'revGrowthYoYPct'];
 
 // Task 2.2: ATH-Anzeige (Karl-A6-Lösung) — additiv OPTIONAL je Zeile: ath = {distancePct,
 // athDate, monthsAgo} | null. Quelle = external-data/ath-state.json (committeter Vertrag,
@@ -459,6 +464,7 @@ function validateGeo(r, where, errs) {
   checkStrOrNull(r, 'region', where, errs);
   checkStrOrNull(r, 'sector', where, errs);
   checkNumOrNull(r, 'marketCap', where, errs);
+  checkNumOrNull(r, 'revGrowthYoYPct', where, errs);
   checkEnumOrNull(r, 'phase', VALID_PHASE, where, errs);
   checkEnumOrNull(r, 'mcapBand', VALID_MCAP, where, errs);
   checkEnumOrNull(r, 'ipoRecency', VALID_IPO, where, errs);
