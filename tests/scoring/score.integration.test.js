@@ -243,6 +243,43 @@ test('Issuer-Dedup synthetisch: Heimat-Bein -> dup-issuer, US-Bein ist der Gewin
   assert.equal(bt['DUAL.L'].reason, 'dup-issuer');   // Heimat-Bein verliert
   assert.notEqual(bt['DUAL'].reason, 'dup-issuer');  // US-Bein ist der Gewinner
 });
+test('Issuer-Dedup Zeichensetzung: "Holding N.V." und "Holding NV" sind derselbe Emittent', () => {
+  // Belegt am CI-Lauf 30213797442: Zweitnotierungen schreiben ihren Namen anders
+  // ("ASML Holding N.V." vs "ASML Holding NV", "Autodesk, Inc." vs "AUTODESK INC.").
+  // Der Dedup verglich nur klein geschrieben und lief daran vorbei -> dieselbe Firma
+  // stand zweimal im selben Board, meist auf benachbarten Raengen.
+  const mk = (ticker, name, ex, ccy, region) => ({
+    meta: { name, sector: 'Technology', industry: 'Software', exchangeName: ex, ticker, tradingCurrency: ccy, region },
+    annual: { annualRev: [{ value: 300 }, { value: 200 }, { value: 130 }], annualGP: [{ value: 180 }] },
+    metrics: { revenueTTM: { value: 300 } },
+    marketCap: { value: 5e9 } });
+  const res = scoreUniverse([
+    mk('PUNKT', 'Punktuation Holding N.V.', 'NasdaqGS', 'USD', 'US'),
+    mk('PUNKT.SW', 'Punktuation Holding NV', 'Swiss', 'CHF', undefined),
+  ], formulas);
+  const bt = Object.fromEntries(res.map((r) => [r.ticker, r]));
+  assert.equal(bt['PUNKT.SW'].reason, 'dup-issuer', 'Zweitnotierung muss trotz abweichender Zeichensetzung dedupt werden');
+  assert.notEqual(bt['PUNKT'].reason, 'dup-issuer', 'US-Primaerbein bleibt der Gewinner');
+});
+test('Issuer-Dedup Fehlverschmelzungs-Schutz: zwei US-Primaerlistings sind NIE derselbe Emittent', () => {
+  // Realfall aus dem CI-Universum: "First Bancorp" (FBNC, NasdaqGS, North Carolina) und
+  // "First BanCorp." (FBP, NYSE, Puerto Rico) sind zwei verschiedene Banken, die sich nach
+  // dem Wegwerfen der Zeichensetzung nicht mehr unterscheiden. Ein Emittent hat aber genau
+  // EIN US-Primaerlisting -> zwei davon in einer Gruppe heisst: zwei Firmen, nicht dedupen.
+  // Ohne diesen Schutz wuerde eine echte Firma still aus den Boards verschwinden.
+  const mk = (ticker, name, ex) => ({
+    meta: { name, sector: 'Technology', industry: 'Software', exchangeName: ex, ticker, tradingCurrency: 'USD', region: 'US' },
+    annual: { annualRev: [{ value: 300 }, { value: 200 }, { value: 130 }], annualGP: [{ value: 180 }] },
+    metrics: { revenueTTM: { value: 300 } },
+    marketCap: { value: 5e9 } });
+  const res = scoreUniverse([
+    mk('ERSTA', 'Erste Beispiel Bancorp', 'NasdaqGS'),
+    mk('ERSTB', 'Erste Beispiel BanCorp.', 'NYSE'),
+  ], formulas);
+  const bt = Object.fromEntries(res.map((r) => [r.ticker, r]));
+  assert.notEqual(bt['ERSTA'].reason, 'dup-issuer', 'ERSTA darf nicht als Doppelung verschwinden');
+  assert.notEqual(bt['ERSTB'].reason, 'dup-issuer', 'ERSTB darf nicht als Doppelung verschwinden');
+});
 test('Issuer-Dedup FX-Haertung (F50): FX-suspektes dual-non-USD-Bein verliert den Tie-Break', () => {
   // CMOC-Muster: ein Bein mit tradingCurrency!=reportingCurrencyOriginal UND fehlendem
   // tradingFxRateApplied (stale -> marketCap mit falschem FX-Faktor inflationiert) verliert den

@@ -43,6 +43,36 @@ const issuerKey = (s) => {
   const n = issuerName(s);
   return n ? n.toLowerCase() : null;
 };
+// audit/fix (26.07.2026, Datenrichtigkeit): issuerKey vergleicht nur klein geschrieben,
+// NICHT zeichensetzungs-tolerant. Zweitnotierungen desselben Emittenten schreiben ihren
+// Namen aber unterschiedlich — "ASML Holding N.V." vs "ASML Holding NV", "Autodesk, Inc."
+// vs "AUTODESK INC.", "KKR & Co Inc" vs "KKR & Co. Inc.". Der Dedup lief daran vorbei und
+// liess dieselbe Firma ZWEIMAL im selben Board stehen, meist auf benachbarten Raengen
+// (gemessen am CI-Lauf 30213797442: 9 Doppelungen in 1001 Board-Zeilen, u. a.
+// AXON/1AXON.MI industrials #27+#28, ALNY/1ALNY.MI health-care #2+#3).
+//
+// issuerKeyLoose entfernt jedes Nicht-Buchstaben/Ziffern-Zeichen ERSATZLOS — bewusst ohne
+// Leerzeichen an seiner Stelle, sonst wuerde "N.V." zu "n v" und traefe "NV" nicht (der
+// erste Anlauf dieses Fixes scheiterte genau daran und wurde vom Test darunter gefangen).
+// Gemessen am CI-Universum von Lauf 30213797442 (12 320 Namen): 65 Namensgruppen fallen
+// dadurch zusammen, die vorher getrennt waren. 64 davon sind echte Zweitnotierungen
+// (ASML/ASML.AS/ASML.SW, Adyen N.V./Adyen NV, Autodesk, Inc./AUTODESK INC., KKR & Co Inc/
+// KKR & Co. Inc., Kuehne & Nagel/Kuehne + Nagel, dazu viele S.A./SA- und S.p.A./SPA-Paare).
+//
+// GENAU EINER ist ein Fehltreffer: "First Bancorp" (FBNC, NasdaqGS, North Carolina) und
+// "First BanCorp." (FBP, NYSE, Puerto Rico) sind zwei verschiedene Banken, die sich nur im
+// Schlusspunkt unterscheiden. Ein Marktkapitalisierungs-Filter trennt sie NICHT sauber ab:
+// gemessen liegen zwei ECHTE Paare mit stalem OTC-Kurs (Daido Steel 1,60 / INFRONEER 1,55)
+// naeher am FBNC/FBP-Verhaeltnis von 1,70, als eine Schwelle vertragen wuerde.
+//
+// Der tragfaehige Unterscheider ist das LISTING: ein Emittent hat genau EIN
+// US-Primaerlisting. Zwei US-primaere Beine sind deshalb nie zwei Notierungen derselben
+// Firma, sondern zwei Firmen. Genau das prueft splitFalseIssuerMerges unten; im gemessenen
+// Universum greift der Schutz bei exakt einer Gruppe — FBNC/FBP.
+const issuerKeyLoose = (s) => {
+  const n = issuerName(s);
+  return n ? n.replace(/[^\p{L}\p{N}]+/gu, '').toLowerCase() : null;
+};
 const mcapOf = (s) => (s && s.marketCap && Number.isFinite(s.marketCap.value)) ? s.marketCap.value : 0;
 // audit/fix (Court Fall 10, F50): ein dual-non-USD-Bein, dessen marketCap mit dem REPORTING- statt
 // dem TRADING-FX-Faktor skaliert wurde (stale Snapshot ohne tradingFxRateApplied), traegt eine
@@ -54,6 +84,28 @@ const fxSuspect = (s) => {
   const tc = m.tradingCurrency, rc = m.reportingCurrencyOriginal;
   return !!(tc && rc && String(tc).toUpperCase() !== String(rc).toUpperCase() && m.tradingFxRateApplied == null);
 };
+// Schutz gegen Fehlverschmelzung durch issuerKeyLoose: eine Gruppe mit MEHR ALS EINEM
+// US-Primaerlisting kann keine Zweitnotierungs-Familie sein (ein Emittent hat genau ein
+// US-Primaerlisting). Solche Gruppen werden auf den strengen, zeichensetzungs-genauen
+// issuerKey zurueckgesetzt — also exakt auf das Verhalten vor diesem Fix. Damit kann der
+// Fix nie eine echte Firma verschlucken; er kann im schlimmsten Fall eine Doppelung
+// stehen lassen, die vorher auch stand. Belegt an FBNC/FBP (beide US-primaer -> bleiben
+// getrennt) gegen ASML/ASML.SW, AXON/1AXON.MI, ADSK/AUD.DE (je hoechstens eins -> merged).
+function splitFalseIssuerMerges(groups) {
+  const out = [];
+  for (const group of groups) {
+    const usPrimaer = group.filter((e) => isUsPrimaryListing((e.snapshot && e.snapshot.meta) || {})).length;
+    if (usPrimaer < 2) { out.push(group); continue; }
+    const streng = {};
+    for (const e of group) {
+      const k = issuerKey(e.snapshot);
+      if (k) (streng[k] ||= []).push(e);
+    }
+    out.push(...Object.values(streng));
+  }
+  return out;
+}
+
 // audit/fix (Bug 7): Dedup-Sortierschluessel. ERSTER Schluessel ist isUsPrimaryListing (LISTING-Check:
 // US-Primaerboerse, kein Auslands-Suffix), NICHT das domizil-basierte isUS. Ein Toronto-Bein mit
 // country='United States' bekam sonst denselben isUS=1-Rang wie das NYSE-Bein, und fxSuspect
@@ -559,10 +611,11 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
   const issuerGroups = {};
   for (const e of results) {
     if (e.action !== 'route' && e.action !== 'survival') continue;
-    const k = issuerKey(e.snapshot);
+    // Zeichensetzungs-tolerant gruppieren (s. Kommentar an issuerKeyLoose).
+    const k = issuerKeyLoose(e.snapshot);
     if (k) (issuerGroups[k] ||= []).push(e);
   }
-  for (const group of Object.values(issuerGroups)) {
+  for (const group of splitFalseIssuerMerges(Object.values(issuerGroups))) {
     if (group.length < 2) continue;
     group.sort(issuerDedupComparator);                     // audit/fix (Bug 7): US-Primaerlisting zuerst
     for (let i = 1; i < group.length; i++) {
