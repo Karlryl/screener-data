@@ -1,0 +1,302 @@
+{
+  "schema": "findash-export/v1",
+  "generated_at": "2026-07-26T20:46:45.095Z",
+  "branch": "it-services",
+  "boardStatus": "diagnostic",
+  "coverage": {
+    "status": "degradiert",
+    "degraded": true,
+    "blocked": false,
+    "coverage_pct": 69.7
+  },
+  "profitable": [
+    {
+      "rank": 1,
+      "ticker": "IBEX",
+      "score": 72.1,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.135,
+        "companion": 43.7
+      },
+      "name": "IBEX Limited",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 447999808,
+      "phase": "established",
+      "mcapBand": "mid",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2020,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 4,
+      "cohortFallback": true,
+      "scoreBase": 83.2,
+      "scoreShrunk": 72.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 87.5,
+          "weight": 2.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 87.5,
+          "weight": 2.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 87.5,
+          "weight": 1.3
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 87.5,
+          "weight": 1
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 87.5,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 83.3,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 37.5,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 2,
+      "ticker": "TASK",
+      "score": 52.9,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.141,
+        "companion": 30.3
+      },
+      "name": "TaskUs, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 505511712,
+      "phase": "established",
+      "mcapBand": "mid",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2021,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 4,
+      "cohortFallback": true,
+      "scoreBase": 54.4,
+      "scoreShrunk": 52.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 62.5,
+          "weight": 2.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 62.5,
+          "weight": 2.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 62.5,
+          "weight": 1.3
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 62.5,
+          "weight": 1
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 62.5,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 16.7,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 62.5,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 3,
+      "ticker": "GDYN",
+      "score": 45.5,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.121,
+        "companion": 14.9
+      },
+      "name": "Grid Dynamics Holdings, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 475832256,
+      "phase": "unprofitable",
+      "mcapBand": "mid",
+      "ipoRecency": "seasoned",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2018,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 4,
+      "cohortFallback": true,
+      "scoreBase": 43.3,
+      "scoreShrunk": 45.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 37.5,
+          "weight": 2.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 37.5,
+          "weight": 2.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 37.5,
+          "weight": 1.3
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 37.5,
+          "weight": 1
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 37.5,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 50,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 87.5,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 4,
+      "ticker": "VRRM",
+      "score": 29.4,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.084,
+        "companion": 5.8
+      },
+      "name": "Verra Mobility Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 615222016,
+      "phase": "established",
+      "mcapBand": "large",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2017,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 4,
+      "cohortFallback": true,
+      "scoreBase": 19.1,
+      "scoreShrunk": 29.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 12.5,
+          "weight": 2.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 12.5,
+          "weight": 2.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 12.5,
+          "weight": 1.3
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 12.5,
+          "weight": 1
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 12.5,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 50,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 12.5,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    }
+  ],
+  "unprofitable": []
+}

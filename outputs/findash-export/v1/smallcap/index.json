@@ -1,0 +1,105 @@
+{
+  "schema": "findash-export/v1",
+  "generated_at": "2026-07-26T20:46:45.110Z",
+  "coverage": {
+    "status": "degradiert",
+    "degraded": true,
+    "blocked": false,
+    "coverage_pct": 69.7
+  },
+  "generatedFromSnapshots": 722,
+  "boards": [
+    "smallcap-consumer-discretionary",
+    "smallcap-consumer-staples",
+    "smallcap-energy",
+    "smallcap-financials",
+    "smallcap-health-care",
+    "smallcap-industrials",
+    "smallcap-it-services",
+    "smallcap-materials",
+    "smallcap-real-estate",
+    "smallcap-semiconductors",
+    "smallcap-software-comm-services",
+    "smallcap-utilities"
+  ],
+  "boardStatus": {
+    "smallcap-consumer-discretionary": "diagnostic",
+    "smallcap-consumer-staples": "diagnostic",
+    "smallcap-energy": "diagnostic",
+    "smallcap-financials": "diagnostic",
+    "smallcap-health-care": "diagnostic",
+    "smallcap-industrials": "diagnostic",
+    "smallcap-it-services": "diagnostic",
+    "smallcap-materials": "diagnostic",
+    "smallcap-real-estate": "diagnostic",
+    "smallcap-semiconductors": "diagnostic",
+    "smallcap-software-comm-services": "diagnostic",
+    "smallcap-utilities": "diagnostic"
+  },
+  "counts": {
+    "smallcap-consumer-discretionary": {
+      "profitable": 29,
+      "unprofitable": 17
+    },
+    "smallcap-consumer-staples": {
+      "profitable": 20,
+      "unprofitable": 0
+    },
+    "smallcap-energy": {
+      "profitable": 15,
+      "unprofitable": 3
+    },
+    "smallcap-financials": {
+      "profitable": 8,
+      "unprofitable": 8
+    },
+    "smallcap-health-care": {
+      "profitable": 23,
+      "unprofitable": 54
+    },
+    "smallcap-industrials": {
+      "profitable": 35,
+      "unprofitable": 22
+    },
+    "smallcap-it-services": {
+      "profitable": 4,
+      "unprofitable": 0
+    },
+    "smallcap-materials": {
+      "profitable": 15,
+      "unprofitable": 0
+    },
+    "smallcap-real-estate": {
+      "profitable": 18,
+      "unprofitable": 0
+    },
+    "smallcap-semiconductors": {
+      "profitable": 1,
+      "unprofitable": 2
+    },
+    "smallcap-software-comm-services": {
+      "profitable": 41,
+      "unprofitable": 19
+    },
+    "smallcap-utilities": {
+      "profitable": 5,
+      "unprofitable": 2
+    }
+  },
+  "excluded": {
+    "balance-sheet-bank": 64,
+    "data-suspect": 12,
+    "dup-issuer": 1,
+    "insurer": 9,
+    "lender-gp0": 7,
+    "mortgage-reit": 5,
+    "no-revenue": 43,
+    "no-sector": 2,
+    "non-operating-rev": 179,
+    "smallcap-mcap-out-of-band": 5,
+    "smallcap-thin-coverage": 37,
+    "telecom": 5,
+    "unrouted": 12
+  },
+  "coverageFloor": 0.68
+}

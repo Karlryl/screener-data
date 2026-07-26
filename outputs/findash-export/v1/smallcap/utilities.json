@@ -1,0 +1,548 @@
+{
+  "schema": "findash-export/v1",
+  "generated_at": "2026-07-26T20:46:45.101Z",
+  "branch": "utilities",
+  "boardStatus": "diagnostic",
+  "coverage": {
+    "status": "degradiert",
+    "degraded": true,
+    "blocked": false,
+    "coverage_pct": 69.7
+  },
+  "profitable": [
+    {
+      "rank": 1,
+      "ticker": "YORW",
+      "score": 62.8,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.025,
+        "companion": -16.4
+      },
+      "name": "The York Water Company",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Utilities",
+      "marketCap": 504596704,
+      "phase": "established",
+      "mcapBand": "mid",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1999,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 5,
+      "cohortFallback": true,
+      "scoreBase": 67.9,
+      "scoreShrunk": 62.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 78.6,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 35.7,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 8.3,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 78.6,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 50,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 50,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": 92.9,
+          "weight": 0.5
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 2,
+      "ticker": "ARTNA",
+      "score": 58.7,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.045,
+        "companion": -9.2
+      },
+      "name": "Artesian Resources Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Utilities",
+      "marketCap": 355676896,
+      "phase": "established",
+      "mcapBand": "micro",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1994,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 5,
+      "cohortFallback": true,
+      "scoreBase": 62.2,
+      "scoreShrunk": 58.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 64.3,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 21.4,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 25,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 64.3,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 78.6,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 78.6,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": 78.6,
+          "weight": 0.5
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 3,
+      "ticker": "CWCO",
+      "score": 54.9,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.06,
+        "companion": -8.2
+      },
+      "name": "Consolidated Water Co. Ltd.",
+      "country": "Cayman Islands",
+      "region": "North America",
+      "sector": "Utilities",
+      "marketCap": 469125568,
+      "phase": "established",
+      "mcapBand": "mid",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1995,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 5,
+      "cohortFallback": true,
+      "scoreBase": 56.9,
+      "scoreShrunk": 54.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 50,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 64.3,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 58.3,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 50,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 64.3,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 92.9,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": 64.3,
+          "weight": 0.5
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 4,
+      "ticker": "OPAL",
+      "score": 35.8,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.061,
+        "companion": -57.7
+      },
+      "name": "OPAL Fuels Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Utilities",
+      "marketCap": 386212032,
+      "phase": "established",
+      "mcapBand": "small",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2021,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 5,
+      "cohortFallback": true,
+      "scoreBase": 30.1,
+      "scoreShrunk": 35.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 21.4,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 50,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 41.7,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 21.4,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 35.7,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 64.3,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": 35.7,
+          "weight": 0.5
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 5,
+      "ticker": "HNRG",
+      "score": 17.4,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.133,
+        "companion": -28.9
+      },
+      "name": "Hallador Energy Company",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Utilities",
+      "marketCap": 718267136,
+      "phase": "inflected",
+      "mcapBand": "mega",
+      "ipoRecency": "veteran",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 1994,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 5,
+      "cohortFallback": true,
+      "scoreBase": 40.9,
+      "scoreShrunk": 43.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 0.4
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 35.7,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 78.6,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 75,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 35.7,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 21.4,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 35.7,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": 50,
+          "weight": 0.5
+        }
+      ],
+      "ath": null
+    }
+  ],
+  "unprofitable": [
+    {
+      "rank": 1,
+      "ticker": "NRGV",
+      "score": 67.3,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "highDilution",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 6.757,
+        "companion": 359.7
+      },
+      "name": "Energy Vault Holdings, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Utilities",
+      "marketCap": 521969088,
+      "phase": "unprofitable",
+      "mcapBand": "large",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2021,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 2,
+      "cohortFallback": true,
+      "scoreBase": 84.6,
+      "scoreShrunk": 67.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 92.9,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 92.9,
+          "weight": 1
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 91.7,
+          "weight": 1.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 92.9,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 92.9,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 21.4,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": 21.4,
+          "weight": 0.4
+        }
+      ],
+      "ath": {
+        "distancePct": -84.5,
+        "athDate": "2022-04-05",
+        "monthsAgo": 51,
+        "lastDate": "2026-07-14"
+      }
+    },
+    {
+      "rank": 2,
+      "ticker": "DGXX",
+      "score": 21.3,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "highDilution",
+        "lowRoic",
+        "arDivergence",
+        "crashRisk",
+        "burnAccelerating"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": -61.6
+      },
+      "name": "Digi Power X Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Utilities",
+      "marketCap": 359888160,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "ipoRecency": "recent",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2021,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.83,
+      "cohortN": 2,
+      "cohortFallback": true,
+      "scoreBase": 7.1,
+      "scoreShrunk": 32,
+      "factors": {
+        "burn": 0.666,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 7.1,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 7.1,
+          "weight": 1
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 7.1,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 7.1,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 7.1,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": 7.1,
+          "weight": 0.4
+        }
+      ],
+      "ath": null
+    }
+  ]
+}

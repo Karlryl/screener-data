@@ -1,20 +1,26 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-07-18T06:11:02.071Z",
-  "coverage": null,
+  "generated_at": "2026-07-26T20:46:45.036Z",
+  "coverage": {
+    "status": "degradiert",
+    "degraded": true,
+    "blocked": false,
+    "coverage_pct": 69.7
+  },
   "rows": [
     {
       "rank": 1,
       "ticker": "PAH3.DE",
       "runwayQuarters": 9999,
       "lamps": [],
+      "name": "Porsche Automobil Holding SE",
       "country": "Germany",
       "region": "Europe",
       "sector": "Consumer Cyclical",
-      "marketCap": 9555195513.668812,
+      "marketCap": 9440762681.513983,
       "phase": "inflected",
       "mcapBand": "large",
-      "ipoRecency": "growth",
+      "ipoRecency": "seasoned",
       "profitTier": "seit-kurzem-profitabel",
       "ipoYear": 2009,
       "coverageAxes": null,
@@ -28,23 +34,25 @@
       "ath": {
         "distancePct": -64.9,
         "athDate": "2021-06-07",
-        "monthsAgo": 61
+        "monthsAgo": 62,
+        "lastDate": "2026-07-24"
       }
     },
     {
       "rank": 2,
-      "ticker": "SLSR",
+      "ticker": "VAPORES.SN",
       "runwayQuarters": 9999,
       "lamps": [],
-      "country": "Switzerland",
-      "region": "Europe",
-      "sector": "Basic Materials",
-      "marketCap": 1207665408,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2020,
+      "name": "Compañía Sud Americana de Vapores S.A.",
+      "country": "Chile",
+      "region": "South America",
+      "sector": "Industrials",
+      "marketCap": 2644858048.717888,
+      "phase": "established",
+      "mcapBand": "small",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2000,
       "coverageAxes": null,
       "coverageWeight": null,
       "cohortN": null,
@@ -53,11 +61,7 @@
       "scoreShrunk": null,
       "factors": null,
       "axisBreakdown": null,
-      "ath": {
-        "distancePct": -41.5,
-        "athDate": "2021-12-31",
-        "monthsAgo": 54
-      }
+      "ath": null
     },
     {
       "rank": 3,
@@ -66,13 +70,14 @@
       "lamps": [
         "burning"
       ],
+      "name": "Damora Therapeutics, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 1861368448,
+      "marketCap": 1773963008,
       "phase": "unprofitable",
       "mcapBand": "micro",
-      "ipoRecency": "recent",
+      "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2020,
       "coverageAxes": null,
@@ -87,46 +92,16 @@
     },
     {
       "rank": 4,
-      "ticker": "HSLV",
-      "runwayQuarters": 38.11141177023041,
-      "lamps": [
-        "unprofit",
-        "burning"
-      ],
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Basic Materials",
-      "marketCap": 834036032,
-      "phase": "inflected",
-      "mcapBand": "micro",
-      "ipoRecency": "recent",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2026,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": {
-        "distancePct": -32.8,
-        "athDate": "2026-03-11",
-        "monthsAgo": 4
-      }
-    },
-    {
-      "rank": 5,
       "ticker": "BLTE",
       "runwayQuarters": 37.98439433891191,
       "lamps": [
         "burning"
       ],
+      "name": "Belite Bio, Inc",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 6039620608,
+      "marketCap": 6147449856,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "ipoRecency": "recent",
@@ -141,10 +116,40 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -20.8,
+        "distancePct": -19.4,
         "athDate": "2026-02-27",
-        "monthsAgo": 5
+        "monthsAgo": 5,
+        "lastDate": "2026-07-24"
       }
+    },
+    {
+      "rank": 5,
+      "ticker": "688759.SS",
+      "runwayQuarters": 35.74677964588346,
+      "lamps": [
+        "unprofit",
+        "burning",
+        "lowRoic"
+      ],
+      "name": "BEBETTER MED INC.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Healthcare",
+      "marketCap": 2051944102.0510206,
+      "phase": null,
+      "mcapBand": "micro",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2025,
+      "coverageAxes": null,
+      "coverageWeight": null,
+      "cohortN": null,
+      "cohortFallback": null,
+      "scoreBase": null,
+      "scoreShrunk": null,
+      "factors": null,
+      "axisBreakdown": null,
+      "ath": null
     },
     {
       "rank": 6,
@@ -153,10 +158,11 @@
       "lamps": [
         "burning"
       ],
+      "name": "NovaGold Resources Inc.",
       "country": "Canada",
       "region": "North America",
       "sector": "Basic Materials",
-      "marketCap": 2272883456,
+      "marketCap": 2601968896,
       "phase": "unprofitable",
       "mcapBand": "small",
       "ipoRecency": "seasoned",
@@ -171,9 +177,10 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -72.6,
+        "distancePct": -68.7,
         "athDate": "2007-11-09",
-        "monthsAgo": 224
+        "monthsAgo": 224,
+        "lastDate": "2026-07-24"
       }
     },
     {
@@ -183,10 +190,11 @@
       "lamps": [
         "burning"
       ],
+      "name": "LB Pharmaceuticals Inc",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 877218816,
+      "marketCap": 1003969536,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -209,10 +217,11 @@
       "lamps": [
         "burning"
       ],
+      "name": "Oklo Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 7152769536,
+      "marketCap": 7003137536,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "ipoRecency": "recent",
@@ -227,9 +236,10 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -76.4,
+        "distancePct": -76.9,
         "athDate": "2025-10-14",
-        "monthsAgo": 9
+        "monthsAgo": 9,
+        "lastDate": "2026-07-24"
       }
     },
     {
@@ -239,12 +249,13 @@
       "lamps": [
         "burning"
       ],
+      "name": "GH Research PLC",
       "country": "Ireland",
       "region": "Europe",
       "sector": "Healthcare",
-      "marketCap": 1998577792,
+      "marketCap": 1871651328,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2021,
@@ -257,9 +268,10 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -11,
-        "athDate": "2026-06-29",
-        "monthsAgo": 0
+        "distancePct": -6.4,
+        "athDate": "2026-07-16",
+        "monthsAgo": 0,
+        "lastDate": "2026-07-24"
       }
     },
     {
@@ -270,10 +282,11 @@
         "burning",
         "crashRisk"
       ],
+      "name": "NANO Nuclear Energy Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
-      "marketCap": 844374400,
+      "marketCap": 812580032,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -288,48 +301,24 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -68.2,
+        "distancePct": -72.5,
         "athDate": "2025-10-07",
-        "monthsAgo": 9
+        "monthsAgo": 10,
+        "lastDate": "2026-07-24"
       }
     },
     {
       "rank": 11,
-      "ticker": "VZLA",
-      "runwayQuarters": 15.01922864084197,
-      "lamps": [
-        "burning"
-      ],
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Basic Materials",
-      "marketCap": 1072961472,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2022,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": null
-    },
-    {
-      "rank": 12,
       "ticker": "GPCR",
       "runwayQuarters": 14.164339519868209,
       "lamps": [
         "burning"
       ],
+      "name": "Structure Therapeutics Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 3445692416,
+      "marketCap": 3491180032,
       "phase": "unprofitable",
       "mcapBand": "small",
       "ipoRecency": "recent",
@@ -344,22 +333,24 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -48.3,
+        "distancePct": -47.6,
         "athDate": "2026-01-21",
-        "monthsAgo": 6
+        "monthsAgo": 6,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 13,
+      "rank": 12,
       "ticker": "NXE",
       "runwayQuarters": 13.771602369686546,
       "lamps": [
         "burning"
       ],
+      "name": "NexGen Energy Ltd.",
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 5824803328,
+      "marketCap": 6049852416,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "ipoRecency": "growth",
@@ -374,27 +365,61 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -36.8,
+        "distancePct": -34.3,
         "athDate": "2026-01-28",
-        "monthsAgo": 6
+        "monthsAgo": 6,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 14,
-      "ticker": "ANRO",
-      "runwayQuarters": 13.629949993242331,
+      "rank": 13,
+      "ticker": "PPTA",
+      "runwayQuarters": 12.110835245237835,
       "lamps": [
         "burning"
       ],
+      "name": "Perpetua Resources Corp.",
       "country": "United States",
       "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": 1062327360,
+      "sector": "Basic Materials",
+      "marketCap": 2231685888,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
-      "ipoYear": 2024,
+      "ipoYear": 2021,
+      "coverageAxes": null,
+      "coverageWeight": null,
+      "cohortN": null,
+      "cohortFallback": null,
+      "scoreBase": null,
+      "scoreShrunk": null,
+      "factors": null,
+      "axisBreakdown": null,
+      "ath": {
+        "distancePct": -52.1,
+        "athDate": "2026-03-02",
+        "monthsAgo": 5,
+        "lastDate": "2026-07-24"
+      }
+    },
+    {
+      "rank": 14,
+      "ticker": "VOR",
+      "runwayQuarters": 11.040026730895068,
+      "lamps": [
+        "burning"
+      ],
+      "name": "Vor Biopharma Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Healthcare",
+      "marketCap": 1043619968,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2021,
       "coverageAxes": null,
       "coverageWeight": null,
       "cohortN": null,
@@ -407,103 +432,18 @@
     },
     {
       "rank": 15,
-      "ticker": "CNL",
-      "runwayQuarters": 12.39901710610652,
-      "lamps": [
-        "burning"
-      ],
-      "country": "United States",
-      "region": "North America",
-      "sector": "Basic Materials",
-      "marketCap": 1088761728,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": {
-        "distancePct": -43.5,
-        "athDate": "2026-04-20",
-        "monthsAgo": 3
-      }
-    },
-    {
-      "rank": 16,
-      "ticker": "PPTA",
-      "runwayQuarters": 12.110835245237835,
-      "lamps": [
-        "burning"
-      ],
-      "country": "United States",
-      "region": "North America",
-      "sector": "Basic Materials",
-      "marketCap": 2147872768,
-      "phase": "unprofitable",
-      "mcapBand": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": {
-        "distancePct": -49,
-        "athDate": "2026-03-02",
-        "monthsAgo": 4
-      }
-    },
-    {
-      "rank": 17,
-      "ticker": "VOR",
-      "runwayQuarters": 11.040026730895068,
-      "lamps": [
-        "burning"
-      ],
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": 980222528,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": null
-    },
-    {
-      "rank": 18,
       "ticker": "TMC",
       "runwayQuarters": 10.918229069983292,
       "lamps": [
         "burning"
       ],
+      "name": "TMC the metals company Inc.",
       "country": "Canada",
       "region": "North America",
       "sector": "Basic Materials",
-      "marketCap": 2097788800,
+      "marketCap": 2047575808,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2021,
@@ -516,54 +456,26 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -66.4,
+        "distancePct": -70.5,
         "athDate": "2021-09-13",
-        "monthsAgo": 58
+        "monthsAgo": 58,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 19,
-      "ticker": "NAK",
-      "runwayQuarters": 9.43445660605016,
-      "lamps": [
-        "burning"
-      ],
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Basic Materials",
-      "marketCap": 896497856,
-      "phase": "established",
-      "mcapBand": "micro",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2001,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": {
-        "distancePct": -92.2,
-        "athDate": "2011-02-07",
-        "monthsAgo": 185
-      }
-    },
-    {
-      "rank": 20,
+      "rank": 16,
       "ticker": "PVLA",
       "runwayQuarters": 9.274894025433897,
       "lamps": [
         "burning"
       ],
+      "name": "Palvella Therapeutics, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 2119442176,
+      "marketCap": 1979455872,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2015,
@@ -576,25 +488,27 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -80.2,
+        "distancePct": -81.7,
         "athDate": "2018-02-13",
-        "monthsAgo": 101
+        "monthsAgo": 101,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 21,
+      "rank": 17,
       "ticker": "IMVT",
       "runwayQuarters": 8.859024153118693,
       "lamps": [
         "burning"
       ],
+      "name": "Immunovant, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 7998835200,
+      "marketCap": 8091224064,
       "phase": "unprofitable",
-      "mcapBand": "mid",
-      "ipoRecency": "recent",
+      "mcapBand": "large",
+      "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2019,
       "coverageAxes": null,
@@ -606,24 +520,26 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -26.6,
+        "distancePct": -25.2,
         "athDate": "2020-11-17",
-        "monthsAgo": 68
+        "monthsAgo": 68,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 22,
+      "rank": 18,
       "ticker": "PHVS",
       "runwayQuarters": 8.501387379217075,
       "lamps": [
         "burning"
       ],
+      "name": "Pharvaris N.V.",
       "country": "Switzerland",
       "region": "Europe",
       "sector": "Healthcare",
-      "marketCap": 2352151552,
+      "marketCap": 2387790080,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2021,
@@ -638,19 +554,20 @@
       "ath": null
     },
     {
-      "rank": 23,
+      "rank": 19,
       "ticker": "DYN",
       "runwayQuarters": 8.429659579587513,
       "lamps": [
         "burning"
       ],
+      "name": "Dyne Therapeutics, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 3924549376,
+      "marketCap": 4040269056,
       "phase": "unprofitable",
-      "mcapBand": "small",
-      "ipoRecency": "recent",
+      "mcapBand": "mid",
+      "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2020,
       "coverageAxes": null,
@@ -662,27 +579,29 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -49.5,
+        "distancePct": -48,
         "athDate": "2024-08-21",
-        "monthsAgo": 23
+        "monthsAgo": 23,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 24,
-      "ticker": "LAR",
-      "runwayQuarters": 8.101242338910055,
+      "rank": 20,
+      "ticker": "NGEX.TO",
+      "runwayQuarters": 8.23770087026883,
       "lamps": [
         "burning"
       ],
-      "country": "Switzerland",
-      "region": "Europe",
+      "name": "NGEx Minerals Ltd.",
+      "country": "Canada",
+      "region": "North America",
       "sector": "Basic Materials",
-      "marketCap": 1058367616,
+      "marketCap": 4078805185.7769217,
       "phase": "unprofitable",
-      "mcapBand": "micro",
-      "ipoRecency": "seasoned",
+      "mcapBand": "mid",
+      "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
-      "ipoYear": 2008,
+      "ipoYear": 2019,
       "coverageAxes": null,
       "coverageWeight": null,
       "cohortN": null,
@@ -694,17 +613,18 @@
       "ath": null
     },
     {
-      "rank": 25,
+      "rank": 21,
       "ticker": "DFTX",
       "runwayQuarters": 7.839373669808452,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Definium Therapeutics, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 5853977600,
+      "marketCap": 5730526208,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "ipoRecency": "growth",
@@ -719,26 +639,28 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -37.3,
+        "distancePct": -38.6,
         "athDate": "2021-04-26",
-        "monthsAgo": 63
+        "monthsAgo": 63,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 26,
+      "rank": 22,
       "ticker": "MLTX",
       "runwayQuarters": 6.825414962099958,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "MoonLake Immunotherapeutics",
       "country": "Switzerland",
       "region": "Europe",
       "sector": "Healthcare",
-      "marketCap": 1588507648,
+      "marketCap": 1589343360,
       "phase": "unprofitable",
       "mcapBand": "micro",
-      "ipoRecency": "recent",
+      "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2020,
       "coverageAxes": null,
@@ -750,13 +672,14 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -69.4,
+        "distancePct": -70.2,
         "athDate": "2024-02-12",
-        "monthsAgo": 29
+        "monthsAgo": 29,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 27,
+      "rank": 23,
       "ticker": "OICT",
       "runwayQuarters": 6.672097949302856,
       "lamps": [
@@ -764,13 +687,14 @@
         "burning",
         "shortRunway"
       ],
+      "name": "Oicintra, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Basic Materials",
       "marketCap": 5052734976,
       "phase": null,
       "mcapBand": "mid",
-      "ipoRecency": "mature",
+      "ipoRecency": "veteran",
       "profitTier": "nicht-profitabel",
       "ipoYear": 1996,
       "coverageAxes": null,
@@ -784,17 +708,18 @@
       "ath": null
     },
     {
-      "rank": 28,
+      "rank": 24,
       "ticker": "KOD",
       "runwayQuarters": 6.149171513544398,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Kodiak Sciences Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 2668344576,
+      "marketCap": 2591373312,
       "phase": "unprofitable",
       "mcapBand": "small",
       "ipoRecency": "growth",
@@ -809,13 +734,14 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -74.1,
+        "distancePct": -74.8,
         "athDate": "2021-01-19",
-        "monthsAgo": 66
+        "monthsAgo": 66,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 29,
+      "rank": 25,
       "ticker": "FBRX",
       "runwayQuarters": 6.036079846268481,
       "lamps": [
@@ -823,10 +749,11 @@
         "shortRunway",
         "crashRisk"
       ],
+      "name": "Forte Biosciences, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 921341952,
+      "marketCap": 1121829504,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "ipoRecency": "growth",
@@ -843,50 +770,20 @@
       "ath": null
     },
     {
-      "rank": 30,
-      "ticker": "VERA",
-      "runwayQuarters": 5.869674931949994,
-      "lamps": [
-        "burning",
-        "shortRunway"
-      ],
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": 2808147200,
-      "phase": "unprofitable",
-      "mcapBand": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": {
-        "distancePct": -25.5,
-        "athDate": "2025-12-24",
-        "monthsAgo": 7
-      }
-    },
-    {
-      "rank": 31,
+      "rank": 26,
       "ticker": "COAG",
       "runwayQuarters": 5.722723650615538,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Hemab Therapeutics Holdings, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 2079791744,
+      "marketCap": 2209633024,
       "phase": null,
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2026,
@@ -899,26 +796,28 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": 0,
-        "athDate": "2026-07-16",
-        "monthsAgo": 0
+        "distancePct": -4.2,
+        "athDate": "2026-07-20",
+        "monthsAgo": 0,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 32,
+      "rank": 27,
       "ticker": "ELVN",
       "runwayQuarters": 5.614385671099504,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Enliven Therapeutics, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 3633350912,
+      "marketCap": 3782657024,
       "phase": "unprofitable",
       "mcapBand": "small",
-      "ipoRecency": "recent",
+      "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2020,
       "coverageAxes": null,
@@ -930,25 +829,27 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -76.8,
+        "distancePct": -75.9,
         "athDate": "2020-06-11",
-        "monthsAgo": 73
+        "monthsAgo": 73,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 33,
+      "rank": 28,
       "ticker": "KLRA",
       "runwayQuarters": 5.241851870022404,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Kailera Therapeutics, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 2373641984,
+      "marketCap": 2292015616,
       "phase": null,
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2026,
@@ -961,52 +862,27 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -23.2,
+        "distancePct": -32,
         "athDate": "2026-04-17",
-        "monthsAgo": 3
+        "monthsAgo": 3,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 34,
-      "ticker": "IPX",
-      "runwayQuarters": 4.971729989993146,
-      "lamps": [
-        "burning",
-        "shortRunway"
-      ],
-      "country": "United States",
-      "region": "North America",
-      "sector": "Basic Materials",
-      "marketCap": 842323904,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2022,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": null
-    },
-    {
-      "rank": 35,
+      "rank": 29,
       "ticker": "MLYS",
       "runwayQuarters": 4.856274266135883,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Mineralys Therapeutics, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 2387331584,
+      "marketCap": 2354712832,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2023,
@@ -1019,23 +895,25 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -42.4,
+        "distancePct": -43.6,
         "athDate": "2025-11-12",
-        "monthsAgo": 8
+        "monthsAgo": 8,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 36,
+      "rank": 30,
       "ticker": "COGT",
       "runwayQuarters": 4.691945052218438,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Cogent Biosciences, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 6482731520,
+      "marketCap": 6793711616,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "ipoRecency": "growth",
@@ -1050,23 +928,25 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -43.4,
+        "distancePct": -40.7,
         "athDate": "2018-07-31",
-        "monthsAgo": 95
+        "monthsAgo": 96,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 37,
+      "rank": 31,
       "ticker": "CELC",
       "runwayQuarters": 4.317177862162849,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Celcuity Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 4305575424,
+      "marketCap": 4029070848,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "ipoRecency": "growth",
@@ -1081,51 +961,25 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -39.1,
+        "distancePct": -43,
         "athDate": "2026-05-04",
-        "monthsAgo": 2
+        "monthsAgo": 3,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 38,
-      "ticker": "GRTX",
-      "runwayQuarters": 4.215572821954042,
-      "lamps": [
-        "burning",
-        "shortRunway",
-        "crashRisk"
-      ],
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": 3469570816,
-      "phase": "unprofitable",
-      "mcapBand": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2019,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": null
-    },
-    {
-      "rank": 39,
+      "rank": 32,
       "ticker": "TRAX",
       "runwayQuarters": 3.9022225040423577,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "First Tracks Biotherapeutics, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 1263453056,
+      "marketCap": 1239377408,
       "phase": null,
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -1142,20 +996,21 @@
       "ath": null
     },
     {
-      "rank": 40,
+      "rank": 33,
       "ticker": "CMPS",
       "runwayQuarters": 3.8058509285169166,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "COMPASS Pathways plc",
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Healthcare",
-      "marketCap": 1666624000,
+      "marketCap": 1519529344,
       "phase": "unprofitable",
       "mcapBand": "micro",
-      "ipoRecency": "recent",
+      "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2020,
       "coverageAxes": null,
@@ -1167,23 +1022,25 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -79.1,
+        "distancePct": -81,
         "athDate": "2020-12-23",
-        "monthsAgo": 67
+        "monthsAgo": 67,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 41,
+      "rank": 34,
       "ticker": "NUVL",
       "runwayQuarters": 3.8043087253687196,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Nuvalent, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 9792580608,
+      "marketCap": 9808736256,
       "phase": "unprofitable",
       "mcapBand": "large",
       "ipoRecency": "recent",
@@ -1200,26 +1057,255 @@
       "ath": {
         "distancePct": 0,
         "athDate": "2026-07-14",
-        "monthsAgo": 0
+        "monthsAgo": 0,
+        "lastDate": "2026-07-21"
       }
     },
     {
-      "rank": 42,
+      "rank": 35,
       "ticker": "JBIO",
       "runwayQuarters": 3.7282183696053117,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Jade Biosciences, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 1246410240,
+      "marketCap": 1222066304,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2021,
+      "coverageAxes": null,
+      "coverageWeight": null,
+      "cohortN": null,
+      "cohortFallback": null,
+      "scoreBase": null,
+      "scoreShrunk": null,
+      "factors": null,
+      "axisBreakdown": null,
+      "ath": null
+    },
+    {
+      "rank": 36,
+      "ticker": "MBX",
+      "runwayQuarters": 3.678106451061335,
+      "lamps": [
+        "burning",
+        "shortRunway"
+      ],
+      "name": "MBX Biosciences, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Healthcare",
+      "marketCap": 2951047168,
+      "phase": "unprofitable",
+      "mcapBand": "small",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2024,
+      "coverageAxes": null,
+      "coverageWeight": null,
+      "cohortN": null,
+      "cohortFallback": null,
+      "scoreBase": null,
+      "scoreShrunk": null,
+      "factors": null,
+      "axisBreakdown": null,
+      "ath": {
+        "distancePct": -5.6,
+        "athDate": "2026-07-09",
+        "monthsAgo": 0,
+        "lastDate": "2026-07-24"
+      }
+    },
+    {
+      "rank": 37,
+      "ticker": "BCAX",
+      "runwayQuarters": 3.6105457736617064,
+      "lamps": [
+        "burning",
+        "shortRunway"
+      ],
+      "name": "Bicara Therapeutics Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Healthcare",
+      "marketCap": 1775318400,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2024,
+      "coverageAxes": null,
+      "coverageWeight": null,
+      "cohortN": null,
+      "cohortFallback": null,
+      "scoreBase": null,
+      "scoreShrunk": null,
+      "factors": null,
+      "axisBreakdown": null,
+      "ath": {
+        "distancePct": -11.1,
+        "athDate": "2026-07-07",
+        "monthsAgo": 1,
+        "lastDate": "2026-07-24"
+      }
+    },
+    {
+      "rank": 38,
+      "ticker": "SION",
+      "runwayQuarters": 3.5066742658307586,
+      "lamps": [
+        "burning",
+        "shortRunway"
+      ],
+      "name": "Sionna Therapeutics, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Healthcare",
+      "marketCap": 2063369984,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2025,
+      "coverageAxes": null,
+      "coverageWeight": null,
+      "cohortN": null,
+      "cohortFallback": null,
+      "scoreBase": null,
+      "scoreShrunk": null,
+      "factors": null,
+      "axisBreakdown": null,
+      "ath": {
+        "distancePct": -7.5,
+        "athDate": "2026-07-17",
+        "monthsAgo": 0,
+        "lastDate": "2026-07-24"
+      }
+    },
+    {
+      "rank": 39,
+      "ticker": "ANNX",
+      "runwayQuarters": 3.4757551221761673,
+      "lamps": [
+        "burning",
+        "shortRunway"
+      ],
+      "name": "Annexon, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Healthcare",
+      "marketCap": 855258048,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "ipoRecency": "growth",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2020,
+      "coverageAxes": null,
+      "coverageWeight": null,
+      "cohortN": null,
+      "cohortFallback": null,
+      "scoreBase": null,
+      "scoreShrunk": null,
+      "factors": null,
+      "axisBreakdown": null,
+      "ath": {
+        "distancePct": -85.1,
+        "athDate": "2021-03-16",
+        "monthsAgo": 64,
+        "lastDate": "2026-07-24"
+      }
+    },
+    {
+      "rank": 40,
+      "ticker": "QS",
+      "runwayQuarters": 3.3079677130044844,
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "crashRisk"
+      ],
+      "name": "QuantumScape Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 3004983808,
+      "phase": "unprofitable",
+      "mcapBand": "small",
+      "ipoRecency": "growth",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2020,
+      "coverageAxes": null,
+      "coverageWeight": null,
+      "cohortN": null,
+      "cohortFallback": null,
+      "scoreBase": null,
+      "scoreShrunk": null,
+      "factors": null,
+      "axisBreakdown": null,
+      "ath": {
+        "distancePct": -96.1,
+        "athDate": "2020-12-22",
+        "monthsAgo": 67,
+        "lastDate": "2026-07-23"
+      }
+    },
+    {
+      "rank": 41,
+      "ticker": "TYRA",
+      "runwayQuarters": 3.248722227469748,
+      "lamps": [
+        "burning",
+        "shortRunway"
+      ],
+      "name": "Tyra Biosciences, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Healthcare",
+      "marketCap": 1821577728,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2021,
+      "coverageAxes": null,
+      "coverageWeight": null,
+      "cohortN": null,
+      "cohortFallback": null,
+      "scoreBase": null,
+      "scoreShrunk": null,
+      "factors": null,
+      "axisBreakdown": null,
+      "ath": {
+        "distancePct": -22.2,
+        "athDate": "2026-04-02",
+        "monthsAgo": 4,
+        "lastDate": "2026-07-23"
+      }
+    },
+    {
+      "rank": 42,
+      "ticker": "SEA.TO",
+      "runwayQuarters": 3.0840970668696004,
+      "lamps": [
+        "burning",
+        "shortRunway"
+      ],
+      "name": "Seabridge Gold Inc.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 2802139167.3546753,
+      "phase": "unprofitable",
+      "mcapBand": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 1996,
       "coverageAxes": null,
       "coverageWeight": null,
       "cohortN": null,
@@ -1232,281 +1318,6 @@
     },
     {
       "rank": 43,
-      "ticker": "FAC",
-      "runwayQuarters": 3.697338111082672,
-      "lamps": [
-        "burning",
-        "shortRunway"
-      ],
-      "country": "United States",
-      "region": "North America",
-      "sector": "Industrials",
-      "marketCap": 1044546944,
-      "phase": null,
-      "mcapBand": "micro",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2025,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": null
-    },
-    {
-      "rank": 44,
-      "ticker": "MBX",
-      "runwayQuarters": 3.678106451061335,
-      "lamps": [
-        "burning",
-        "shortRunway"
-      ],
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": 2775888384,
-      "phase": "unprofitable",
-      "mcapBand": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2024,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": {
-        "distancePct": -8.6,
-        "athDate": "2026-07-09",
-        "monthsAgo": 0
-      }
-    },
-    {
-      "rank": 45,
-      "ticker": "BCAX",
-      "runwayQuarters": 3.6105457736617064,
-      "lamps": [
-        "burning",
-        "shortRunway"
-      ],
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": 1813426688,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2024,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": {
-        "distancePct": -9.2,
-        "athDate": "2026-07-07",
-        "monthsAgo": 0
-      }
-    },
-    {
-      "rank": 46,
-      "ticker": "SION",
-      "runwayQuarters": 3.5066742658307586,
-      "lamps": [
-        "burning",
-        "shortRunway"
-      ],
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": 2044858368,
-      "phase": "unprofitable",
-      "mcapBand": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2025,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": {
-        "distancePct": -4.4,
-        "athDate": "2026-05-11",
-        "monthsAgo": 2
-      }
-    },
-    {
-      "rank": 47,
-      "ticker": "ANNX",
-      "runwayQuarters": 3.4757551221761673,
-      "lamps": [
-        "burning",
-        "shortRunway"
-      ],
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": 965032576,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2020,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": {
-        "distancePct": -81.4,
-        "athDate": "2021-03-16",
-        "monthsAgo": 64
-      }
-    },
-    {
-      "rank": 48,
-      "ticker": "QS",
-      "runwayQuarters": 3.3079677130044844,
-      "lamps": [
-        "burning",
-        "shortRunway",
-        "crashRisk"
-      ],
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Cyclical",
-      "marketCap": 3604750336,
-      "phase": "unprofitable",
-      "mcapBand": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2020,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": {
-        "distancePct": -95.5,
-        "athDate": "2020-12-22",
-        "monthsAgo": 67
-      }
-    },
-    {
-      "rank": 49,
-      "ticker": "TYRA",
-      "runwayQuarters": 3.248722227469748,
-      "lamps": [
-        "burning",
-        "shortRunway"
-      ],
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": 1910783360,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": {
-        "distancePct": -18.9,
-        "athDate": "2026-04-02",
-        "monthsAgo": 3
-      }
-    },
-    {
-      "rank": 50,
-      "ticker": "SIND",
-      "runwayQuarters": 3.213876596030737,
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "lowRoic",
-        "burnAccelerating"
-      ],
-      "country": "Mexico",
-      "region": "North America",
-      "sector": "Basic Materials",
-      "marketCap": 1817019392,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2026,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": null
-    },
-    {
-      "rank": 51,
-      "ticker": "SA",
-      "runwayQuarters": 3.0840970668696,
-      "lamps": [
-        "burning",
-        "shortRunway"
-      ],
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Basic Materials",
-      "marketCap": 2630304512,
-      "phase": "unprofitable",
-      "mcapBand": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2004,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": {
-        "distancePct": -36.6,
-        "athDate": "2026-02-27",
-        "monthsAgo": 4
-      }
-    },
-    {
-      "rank": 52,
       "ticker": "RGC",
       "runwayQuarters": 2.956015415779587,
       "lamps": [
@@ -1515,10 +1326,11 @@
         "shortRunway",
         "lowRoic"
       ],
+      "name": "Regencell Bioscience Holdings Limited",
       "country": "Hong Kong",
       "region": "Asia",
       "sector": "Healthcare",
-      "marketCap": 2363656960,
+      "marketCap": 2828476416,
       "phase": "unprofitable",
       "mcapBand": "small",
       "ipoRecency": "recent",
@@ -1533,23 +1345,25 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -92.8,
+        "distancePct": -92.7,
         "athDate": "2025-06-17",
-        "monthsAgo": 13
+        "monthsAgo": 13,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 53,
+      "rank": 44,
       "ticker": "REPL",
       "runwayQuarters": 2.9381340773877507,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Replimune Group, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 858758976,
+      "marketCap": 814268032,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "ipoRecency": "growth",
@@ -1566,17 +1380,18 @@
       "ath": null
     },
     {
-      "rank": 54,
+      "rank": 45,
       "ticker": "ERAS",
       "runwayQuarters": 2.80939828516506,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Erasca, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 6602363392,
+      "marketCap": 6633604608,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "ipoRecency": "recent",
@@ -1591,29 +1406,30 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -21.9,
+        "distancePct": -21.5,
         "athDate": "2021-09-02",
-        "monthsAgo": 58
+        "monthsAgo": 59,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 55,
-      "ticker": "LAC",
-      "runwayQuarters": 2.750813902544701,
+      "rank": 46,
+      "ticker": "KARD",
+      "runwayQuarters": 2.764534293831169,
       "lamps": [
         "burning",
-        "shortRunway",
-        "crashRisk"
+        "shortRunway"
       ],
-      "country": "Canada",
+      "name": "Kardigan, Inc.",
+      "country": "United States",
       "region": "North America",
-      "sector": "Basic Materials",
-      "marketCap": 1032123648,
-      "phase": "unprofitable",
+      "sector": "Healthcare",
+      "marketCap": 1852893312,
+      "phase": null,
       "mcapBand": "micro",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
-      "ipoYear": 2023,
+      "ipoYear": 2026,
       "coverageAxes": null,
       "coverageWeight": null,
       "cohortN": null,
@@ -1622,26 +1438,23 @@
       "scoreShrunk": null,
       "factors": null,
       "axisBreakdown": null,
-      "ath": {
-        "distancePct": -73.2,
-        "athDate": "2023-10-04",
-        "monthsAgo": 33
-      }
+      "ath": null
     },
     {
-      "rank": 56,
+      "rank": 47,
       "ticker": "FRMI",
       "runwayQuarters": 2.7079334830269035,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Fermi Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 3783834112,
+      "marketCap": 4721816576,
       "phase": null,
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2025,
@@ -1654,23 +1467,25 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -81.8,
+        "distancePct": -77.3,
         "athDate": "2025-10-01",
-        "monthsAgo": 9
+        "monthsAgo": 10,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 57,
+      "rank": 48,
       "ticker": "AVLN",
       "runwayQuarters": 2.5573153443808967,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Avalyn Pharma Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 1138473856,
+      "marketCap": 1239110016,
       "phase": null,
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -1685,13 +1500,14 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -22.1,
+        "distancePct": -15.2,
         "athDate": "2026-06-22",
-        "monthsAgo": 1
+        "monthsAgo": 1,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 58,
+      "rank": 49,
       "ticker": "RAPP",
       "runwayQuarters": 2.3905368434197234,
       "lamps": [
@@ -1699,10 +1515,11 @@
         "burning",
         "shortRunway"
       ],
+      "name": "Rapport Therapeutics, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 1919294720,
+      "marketCap": 1945599488,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -1717,28 +1534,30 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -3.5,
-        "athDate": "2026-07-09",
-        "monthsAgo": 0
+        "distancePct": -4.6,
+        "athDate": "2026-07-17",
+        "monthsAgo": 0,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 59,
-      "ticker": "VKTX",
+      "rank": 50,
+      "ticker": "1VKTX.MI",
       "runwayQuarters": 2.379891275095538,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Viking Therapeutics, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 4222761984,
+      "marketCap": 4298985719.4368,
       "phase": "unprofitable",
       "mcapBand": "mid",
-      "ipoRecency": "growth",
+      "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
-      "ipoYear": 2015,
+      "ipoYear": 2025,
       "coverageAxes": null,
       "coverageWeight": null,
       "cohortN": null,
@@ -1747,24 +1566,21 @@
       "scoreShrunk": null,
       "factors": null,
       "axisBreakdown": null,
-      "ath": {
-        "distancePct": -59.8,
-        "athDate": "2024-02-28",
-        "monthsAgo": 28
-      }
+      "ath": null
     },
     {
-      "rank": 60,
+      "rank": 51,
       "ticker": "SPTX",
       "runwayQuarters": 2.3521418171600805,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Seaport Therapeutics, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 1044916416,
+      "marketCap": 1129494656,
       "phase": null,
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -1779,23 +1595,25 @@
       "factors": null,
       "axisBreakdown": null,
       "ath": {
-        "distancePct": -10.7,
+        "distancePct": -6.3,
         "athDate": "2026-06-29",
-        "monthsAgo": 0
+        "monthsAgo": 1,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 61,
+      "rank": 52,
       "ticker": "APGE",
       "runwayQuarters": 2.262264775556005,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Apogee Therapeutics, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 10140044288,
+      "marketCap": 10155169792,
       "phase": "unprofitable",
       "mcapBand": "large",
       "ipoRecency": "recent",
@@ -1812,24 +1630,26 @@
       "ath": {
         "distancePct": 0,
         "athDate": "2026-07-15",
-        "monthsAgo": 0
+        "monthsAgo": 0,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 62,
+      "rank": 53,
       "ticker": "ORKA",
       "runwayQuarters": 2.1232992908763952,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Oruka Therapeutics, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 5008316928,
+      "marketCap": 5558363136,
       "phase": "unprofitable",
       "mcapBand": "mid",
-      "ipoRecency": "mature",
+      "ipoRecency": "veteran",
       "profitTier": "nicht-profitabel",
       "ipoYear": 1997,
       "coverageAxes": null,
@@ -1843,24 +1663,26 @@
       "ath": {
         "distancePct": -100,
         "athDate": "2000-02-18",
-        "monthsAgo": 317
+        "monthsAgo": 317,
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 63,
+      "rank": 54,
       "ticker": "IRON",
       "runwayQuarters": 2.010632782943428,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Disc Medicine, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 2806487040,
+      "marketCap": 2831316480,
       "phase": "unprofitable",
       "mcapBand": "small",
-      "ipoRecency": "recent",
+      "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2020,
       "coverageAxes": null,
@@ -1874,17 +1696,18 @@
       "ath": null
     },
     {
-      "rank": 64,
+      "rank": 55,
       "ticker": "CGEM",
       "runwayQuarters": 2.00984078407727,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Cullinan Therapeutics, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 1087192960,
+      "marketCap": 1050932672,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -1901,17 +1724,18 @@
       "ath": null
     },
     {
-      "rank": 65,
+      "rank": 56,
       "ticker": "SANA",
       "runwayQuarters": 1.9858254009919456,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Sana Biotechnology, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 882184320,
+      "marketCap": 884967232,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -1928,20 +1752,49 @@
       "ath": null
     },
     {
-      "rank": 66,
+      "rank": 57,
+      "ticker": "MAU.TO",
+      "runwayQuarters": 1.956358962326706,
+      "lamps": [
+        "burning",
+        "shortRunway"
+      ],
+      "name": "Montage Gold Corp.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 4695636122.044108,
+      "phase": "unprofitable",
+      "mcapBand": "mid",
+      "ipoRecency": "growth",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2020,
+      "coverageAxes": null,
+      "coverageWeight": null,
+      "cohortN": null,
+      "cohortFallback": null,
+      "scoreBase": null,
+      "scoreShrunk": null,
+      "factors": null,
+      "axisBreakdown": null,
+      "ath": null
+    },
+    {
+      "rank": 58,
       "ticker": "TRVI",
       "runwayQuarters": 1.7970119474596804,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Trevi Therapeutics, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 2464768000,
+      "marketCap": 2489614336,
       "phase": "unprofitable",
       "mcapBand": "small",
-      "ipoRecency": "recent",
+      "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2019,
       "coverageAxes": null,
@@ -1955,19 +1808,20 @@
       "ath": null
     },
     {
-      "rank": 67,
+      "rank": 59,
       "ticker": "EWTX",
       "runwayQuarters": 1.6977067022044534,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Edgewise Therapeutics, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 4108976896,
+      "marketCap": 4394098688,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2021,
@@ -1982,20 +1836,21 @@
       "ath": null
     },
     {
-      "rank": 68,
+      "rank": 60,
       "ticker": "ORIC",
       "runwayQuarters": 1.6356798767930374,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "ORIC Pharmaceuticals, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 1110743424,
+      "marketCap": 1252562560,
       "phase": "unprofitable",
       "mcapBand": "micro",
-      "ipoRecency": "recent",
+      "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2020,
       "coverageAxes": null,
@@ -2009,45 +1864,18 @@
       "ath": null
     },
     {
-      "rank": 69,
-      "ticker": "BHVN",
-      "runwayQuarters": 1.5075366342540313,
-      "lamps": [
-        "burning",
-        "shortRunway",
-        "crashRisk"
-      ],
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": 2133449216,
-      "phase": "unprofitable",
-      "mcapBand": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2022,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": null
-    },
-    {
-      "rank": 70,
+      "rank": 61,
       "ticker": "DRTS",
       "runwayQuarters": 1.4900476248626207,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Alpha Tau Medical Ltd.",
       "country": "Israel",
       "region": "Middle East",
       "sector": "Healthcare",
-      "marketCap": 1073071360,
+      "marketCap": 1129073408,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -2064,20 +1892,21 @@
       "ath": null
     },
     {
-      "rank": 71,
+      "rank": 62,
       "ticker": "SKE",
       "runwayQuarters": 1.38529904816025,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Skeena Resources Limited",
       "country": "Canada",
       "region": "North America",
       "sector": "Basic Materials",
-      "marketCap": 3124444928,
+      "marketCap": 3363927808,
       "phase": "unprofitable",
       "mcapBand": "small",
-      "ipoRecency": "seasoned",
+      "ipoRecency": "mature",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2002,
       "coverageAxes": null,
@@ -2091,17 +1920,18 @@
       "ath": null
     },
     {
-      "rank": 72,
+      "rank": 63,
       "ticker": "MPLT",
       "runwayQuarters": 1.3485029940119762,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "MapLight Therapeutics, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 1687766144,
+      "marketCap": 1657837952,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -2118,20 +1948,21 @@
       "ath": null
     },
     {
-      "rank": 73,
+      "rank": 64,
       "ticker": "OLMA",
       "runwayQuarters": 1.3168570571716787,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Olema Pharmaceuticals, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 966936512,
+      "marketCap": 1021965376,
       "phase": "unprofitable",
       "mcapBand": "micro",
-      "ipoRecency": "recent",
+      "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2020,
       "coverageAxes": null,
@@ -2145,17 +1976,18 @@
       "ath": null
     },
     {
-      "rank": 74,
+      "rank": 65,
       "ticker": "SVRA",
       "runwayQuarters": 1.3132922352289256,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Savara Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 1131198208,
+      "marketCap": 1129149056,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "ipoRecency": "growth",
@@ -2172,19 +2004,49 @@
       "ath": null
     },
     {
-      "rank": 75,
-      "ticker": "MANE",
-      "runwayQuarters": 1.2155362577834865,
+      "rank": 66,
+      "ticker": "AVBP",
+      "runwayQuarters": 1.1343313323536006,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "ArriVent BioPharma, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 4421438464,
+      "marketCap": 1477822464,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "micro",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2024,
+      "coverageAxes": null,
+      "coverageWeight": null,
+      "cohortN": null,
+      "cohortFallback": null,
+      "scoreBase": null,
+      "scoreShrunk": null,
+      "factors": null,
+      "axisBreakdown": null,
+      "ath": null
+    },
+    {
+      "rank": 67,
+      "ticker": "VAML.NS",
+      "runwayQuarters": 1.1074380165289257,
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway"
+      ],
+      "name": "Vedanta Aluminium Metal Limited",
+      "country": "India",
+      "region": "Asia",
+      "sector": "Basic Materials",
+      "marketCap": 17698741900.61784,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2026,
@@ -2199,74 +2061,21 @@
       "ath": null
     },
     {
-      "rank": 76,
-      "ticker": "AVBP",
-      "runwayQuarters": 1.1343313323536006,
-      "lamps": [
-        "burning",
-        "shortRunway"
-      ],
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": 1525794560,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2024,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": null
-    },
-    {
-      "rank": 77,
-      "ticker": "TBN",
-      "runwayQuarters": 1.128720837687003,
-      "lamps": [
-        "burning",
-        "shortRunway"
-      ],
-      "country": "Australia",
-      "region": "Oceania",
-      "sector": "Energy",
-      "marketCap": 1088914304,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2024,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": null
-    },
-    {
-      "rank": 78,
+      "rank": 68,
       "ticker": "PCVX",
       "runwayQuarters": 0.9765434004631254,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Vaxcyte, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 8115149824,
+      "marketCap": 7892776960,
       "phase": "unprofitable",
-      "mcapBand": "mid",
-      "ipoRecency": "recent",
+      "mcapBand": "large",
+      "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2020,
       "coverageAxes": null,
@@ -2280,17 +2089,18 @@
       "ath": null
     },
     {
-      "rank": 79,
+      "rank": 69,
       "ticker": "PBLS",
       "runwayQuarters": 0.8937662777477644,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Parabilis Medicines, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 3614332672,
+      "marketCap": 3825933568,
       "phase": null,
       "mcapBand": "small",
       "ipoRecency": "recent",
@@ -2307,17 +2117,18 @@
       "ath": null
     },
     {
-      "rank": 80,
+      "rank": 70,
       "ticker": "CRVS",
       "runwayQuarters": 0.5551545297382549,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "Corvus Pharmaceuticals, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
-      "marketCap": 1199970432,
+      "marketCap": 1099061760,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "ipoRecency": "growth",
@@ -2334,7 +2145,7 @@
       "ath": null
     },
     {
-      "rank": 81,
+      "rank": 71,
       "ticker": "CRML",
       "runwayQuarters": 0.3110982040187201,
       "lamps": [
@@ -2342,10 +2153,11 @@
         "burning",
         "shortRunway"
       ],
+      "name": "Critical Metals Corp.",
       "country": "United States",
       "region": "North America",
       "sector": "Basic Materials",
-      "marketCap": 985623552,
+      "marketCap": 853423616,
       "phase": null,
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -2362,19 +2174,20 @@
       "ath": null
     },
     {
-      "rank": 82,
+      "rank": 72,
       "ticker": "NEXT",
       "runwayQuarters": 0.11465402922209703,
       "lamps": [
         "burning",
         "shortRunway"
       ],
+      "name": "NextDecade Corporation",
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 2035146112,
+      "marketCap": 1856275968,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2015,
@@ -2389,7 +2202,7 @@
       "ath": null
     },
     {
-      "rank": 83,
+      "rank": 73,
       "ticker": "NIKA",
       "runwayQuarters": 0.09486027067065056,
       "lamps": [
@@ -2397,6 +2210,7 @@
         "burning",
         "shortRunway"
       ],
+      "name": "NIKA PHARMACEUTICALS, INC",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
@@ -2417,7 +2231,7 @@
       "ath": null
     },
     {
-      "rank": 84,
+      "rank": 74,
       "ticker": "EMAT",
       "runwayQuarters": 0.012111840287528222,
       "lamps": [
@@ -2425,10 +2239,11 @@
         "burning",
         "shortRunway"
       ],
+      "name": "Evolution Metals & Technologies Corp.",
       "country": "United States",
       "region": "North America",
       "sector": "Basic Materials",
-      "marketCap": 3177350400,
+      "marketCap": 3152478720,
       "phase": null,
       "mcapBand": "small",
       "ipoRecency": "recent",
@@ -2445,16 +2260,17 @@
       "ath": null
     },
     {
-      "rank": 85,
+      "rank": 75,
       "ticker": "BSP",
       "runwayQuarters": null,
       "lamps": [],
+      "name": "Bending Spoons S.p.A.",
       "country": "Italy",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 20187271168,
+      "marketCap": 21635571712,
       "phase": null,
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "ipoRecency": "recent",
       "profitTier": null,
       "ipoYear": 2026,
@@ -2469,40 +2285,17 @@
       "ath": null
     },
     {
-      "rank": 86,
-      "ticker": "BXDC",
-      "runwayQuarters": null,
-      "lamps": [],
-      "country": "United States",
-      "region": "North America",
-      "sector": "Real Estate",
-      "marketCap": 1988862080,
-      "phase": null,
-      "mcapBand": "small",
-      "ipoRecency": "recent",
-      "profitTier": null,
-      "ipoYear": 2026,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": null
-    },
-    {
-      "rank": 87,
+      "rank": 76,
       "ticker": "CMRF",
       "runwayQuarters": null,
       "lamps": [
         "crashRisk"
       ],
+      "name": "CIM Group, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 1136933248,
+      "marketCap": 979291136,
       "phase": null,
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -2519,43 +2312,18 @@
       "ath": null
     },
     {
-      "rank": 88,
-      "ticker": "CSBI",
-      "runwayQuarters": null,
-      "lamps": [
-        "unprofit"
-      ],
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Cyclical",
-      "marketCap": 860482752,
-      "phase": null,
-      "mcapBand": "micro",
-      "ipoRecency": "seasoned",
-      "profitTier": null,
-      "ipoYear": 2003,
-      "coverageAxes": null,
-      "coverageWeight": null,
-      "cohortN": null,
-      "cohortFallback": null,
-      "scoreBase": null,
-      "scoreShrunk": null,
-      "factors": null,
-      "axisBreakdown": null,
-      "ath": null
-    },
-    {
-      "rank": 89,
+      "rank": 77,
       "ticker": "IPEU",
       "runwayQuarters": null,
       "lamps": [],
+      "name": "IPE Universal Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
       "marketCap": 3121329408,
       "phase": null,
       "mcapBand": "small",
-      "ipoRecency": "growth",
+      "ipoRecency": "seasoned",
       "profitTier": null,
       "ipoYear": 2010,
       "coverageAxes": null,
@@ -2569,14 +2337,15 @@
       "ath": null
     },
     {
-      "rank": 90,
+      "rank": 78,
       "ticker": "PURR",
       "runwayQuarters": null,
       "lamps": [],
+      "name": "Hyperliquid Strategies Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 1332629760,
+      "marketCap": 1216663424,
       "phase": null,
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -2593,17 +2362,18 @@
       "ath": null
     },
     {
-      "rank": 91,
+      "rank": 79,
       "ticker": "RCIT",
       "runwayQuarters": null,
       "lamps": [],
+      "name": "Reelcause, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
       "marketCap": 295782711296,
       "phase": null,
       "mcapBand": "mega",
-      "ipoRecency": "seasoned",
+      "ipoRecency": "mature",
       "profitTier": null,
       "ipoYear": 2001,
       "coverageAxes": null,
@@ -2617,19 +2387,72 @@
       "ath": null
     },
     {
-      "rank": 92,
+      "rank": 80,
       "ticker": "SECZ",
       "runwayQuarters": null,
       "lamps": [],
+      "name": "Securitize Corp.",
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 1063090560,
+      "marketCap": 1106028672,
       "phase": null,
       "mcapBand": "micro",
       "ipoRecency": "recent",
       "profitTier": null,
       "ipoYear": 2026,
+      "coverageAxes": null,
+      "coverageWeight": null,
+      "cohortN": null,
+      "cohortFallback": null,
+      "scoreBase": null,
+      "scoreShrunk": null,
+      "factors": null,
+      "axisBreakdown": null,
+      "ath": null
+    },
+    {
+      "rank": 81,
+      "ticker": "SWICH.AS",
+      "runwayQuarters": null,
+      "lamps": [],
+      "name": "SWI Capital Holding Ltd.",
+      "country": "Singapore",
+      "region": "Asia",
+      "sector": "Technology",
+      "marketCap": 3477402202.5766397,
+      "phase": null,
+      "mcapBand": "small",
+      "ipoRecency": "recent",
+      "profitTier": null,
+      "ipoYear": 2026,
+      "coverageAxes": null,
+      "coverageWeight": null,
+      "cohortN": null,
+      "cohortFallback": null,
+      "scoreBase": null,
+      "scoreShrunk": null,
+      "factors": null,
+      "axisBreakdown": null,
+      "ath": null
+    },
+    {
+      "rank": 82,
+      "ticker": "SWRD",
+      "runwayQuarters": null,
+      "lamps": [
+        "unprofit"
+      ],
+      "name": "Stewards Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Financial Services",
+      "marketCap": 883351936,
+      "phase": null,
+      "mcapBand": "micro",
+      "ipoRecency": "seasoned",
+      "profitTier": null,
+      "ipoYear": 2005,
       "coverageAxes": null,
       "coverageWeight": null,
       "cohortN": null,

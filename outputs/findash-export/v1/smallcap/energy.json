@@ -1,0 +1,1340 @@
+{
+  "schema": "findash-export/v1",
+  "generated_at": "2026-07-26T20:46:45.089Z",
+  "branch": "energy",
+  "boardStatus": "diagnostic",
+  "coverage": {
+    "status": "degradiert",
+    "degraded": true,
+    "blocked": false,
+    "coverage_pct": 69.7
+  },
+  "profitable": [
+    {
+      "rank": 1,
+      "ticker": "SD",
+      "score": 76.9,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.466,
+        "companion": 38.7
+      },
+      "name": "SandRidge Energy, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 510210336,
+      "phase": "established",
+      "mcapBand": "mid",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2016,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 17,
+      "cohortFallback": false,
+      "scoreBase": 80.1,
+      "scoreShrunk": 76.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 79.4,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 90,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 65.6,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 67.6,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 91.2,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 96.9,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 26.9,
+          "weight": 0.55
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 2,
+      "ticker": "SGU",
+      "score": 66.8,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.122,
+        "companion": 7.3
+      },
+      "name": "Star Group, L.P.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 428482816,
+      "phase": "established",
+      "mcapBand": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1995,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.95,
+      "cohortN": 17,
+      "cohortFallback": false,
+      "scoreBase": 69.7,
+      "scoreShrunk": 66.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 50,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 76.7,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 59.4,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 44.1,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 73.5,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 90.6,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.55
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 3,
+      "ticker": "SMC",
+      "score": 64.3,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.324,
+        "companion": 11.2
+      },
+      "name": "Summit Midstream Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 421335712,
+      "phase": "established",
+      "mcapBand": "small",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2012,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 17,
+      "cohortFallback": false,
+      "scoreBase": 65.9,
+      "scoreShrunk": 64.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 55.9,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 83.3,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 78.1,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 50,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 38.2,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 53.1,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 65.4,
+          "weight": 0.55
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 4,
+      "ticker": "KNOP",
+      "score": 62.5,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.172,
+        "companion": 66.2
+      },
+      "name": "KNOT Offshore Partners LP",
+      "country": "United Kingdom",
+      "region": "Europe",
+      "sector": "Energy",
+      "marketCap": 355205088,
+      "phase": "established",
+      "mcapBand": "micro",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2013,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.95,
+      "cohortN": 17,
+      "cohortFallback": false,
+      "scoreBase": 64.6,
+      "scoreShrunk": 62.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 67.6,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 50,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 71.9,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 85.3,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 14.7,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 71.9,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.55
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 5,
+      "ticker": "VTS",
+      "score": 53.8,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.288,
+        "companion": 12.2
+      },
+      "name": "Vitesse Energy, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 659056320,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2023,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 17,
+      "cohortFallback": false,
+      "scoreBase": 54.2,
+      "scoreShrunk": 53.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 44.1,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 70,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 9.4,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 55.9,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 67.6,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 78.1,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 11.5,
+          "weight": 0.55
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 6,
+      "ticker": "FET",
+      "score": 52.8,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.141,
+        "companion": 27.7
+      },
+      "name": "Forum Energy Technologies, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 654065984,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2012,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 17,
+      "cohortFallback": false,
+      "scoreBase": 53.1,
+      "scoreShrunk": 52.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 61.8,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 36.7,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 53.1,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 61.8,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 61.8,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 59.4,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 73.1,
+          "weight": 0.55
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 7,
+      "ticker": "NOA",
+      "score": 51.1,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "fcfArtefact"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.227,
+        "companion": -14.6
+      },
+      "name": "North American Construction Group Ltd.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 377267808,
+      "phase": "established",
+      "mcapBand": "small",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2006,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 17,
+      "cohortFallback": false,
+      "scoreBase": 51.2,
+      "scoreShrunk": 51.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 38.2,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 43.3,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 34.4,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 32.4,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 32.4,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 84.4,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 88.5,
+          "weight": 0.55
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 8,
+      "ticker": "OIS",
+      "score": 50.8,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.156,
+        "companion": -7.5
+      },
+      "name": "Oil States International, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 521876928,
+      "phase": "established",
+      "mcapBand": "mid",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2001,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 17,
+      "cohortFallback": false,
+      "scoreBase": 50.9,
+      "scoreShrunk": 50.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 26.5,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 63.3,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 46.9,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 38.2,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 55.9,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 46.9,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 80.8,
+          "weight": 0.55
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 9,
+      "ticker": "RNGR",
+      "score": 50,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.188,
+        "companion": 40.7
+      },
+      "name": "Ranger Energy Services, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 373295104,
+      "phase": "established",
+      "mcapBand": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2017,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 17,
+      "cohortFallback": false,
+      "scoreBase": 50,
+      "scoreShrunk": 50,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 85.3,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 56.7,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 40.6,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 73.5,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 79.4,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 15.6,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 57.7,
+          "weight": 0.55
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 10,
+      "ticker": "REPX",
+      "score": 42.5,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": -0.221,
+        "companion": 64.7
+      },
+      "name": "Riley Exploration Permian, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 769772224,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1998,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 17,
+      "cohortFallback": false,
+      "scoreBase": 41.6,
+      "scoreShrunk": 42.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 73.5,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 30,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 28.1,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 79.4,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 20.6,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 40.6,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 19.2,
+          "weight": 0.55
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 11,
+      "ticker": "TXO",
+      "score": 28.7,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.476,
+        "companion": -187
+      },
+      "name": "TXO Partners, L.P.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 725886592,
+      "phase": "inflected",
+      "mcapBand": "mega",
+      "ipoRecency": "recent",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2023,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 17,
+      "cohortFallback": false,
+      "scoreBase": 58.3,
+      "scoreShrunk": 57.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 0.5
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 2.9,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 96.7,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 84.4,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 2.9,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 2.9,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 65.6,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 3.8,
+          "weight": 0.55
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 12,
+      "ticker": "REI",
+      "score": 28.6,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "fcfArtefact"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.342,
+        "companion": -15.8
+      },
+      "name": "Ring Energy, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 322394112,
+      "phase": "established",
+      "mcapBand": "micro",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2007,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 17,
+      "cohortFallback": false,
+      "scoreBase": 26.1,
+      "scoreShrunk": 28.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 32.4,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 23.3,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 21.9,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 26.5,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 44.1,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 21.9,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 50,
+          "weight": 0.55
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 13,
+      "ticker": "PNRG",
+      "score": 21.8,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": -0.446,
+        "companion": -20.5
+      },
+      "name": "PrimeEnergy Resources Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 302889600,
+      "phase": "established",
+      "mcapBand": "micro",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1980,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.95,
+      "cohortN": 17,
+      "cohortFallback": false,
+      "scoreBase": 16.5,
+      "scoreShrunk": 21.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 20.6,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 3.3,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 15.6,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 20.6,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 26.5,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 28.1,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.55
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 14,
+      "ticker": "EGY",
+      "score": 20.8,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.472,
+        "companion": -124.1
+      },
+      "name": "VAALCO Energy, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 593917440,
+      "phase": "established",
+      "mcapBand": "large",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1993,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 17,
+      "cohortFallback": false,
+      "scoreBase": 17.3,
+      "scoreShrunk": 20.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 8.8,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 16.7,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 3.1,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 8.8,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 8.8,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 34.4,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 34.6,
+          "weight": 0.55
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 15,
+      "ticker": "OBE",
+      "score": 20.2,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "fcfArtefact"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 4.364,
+        "companion": -68.6
+      },
+      "name": "Obsidian Energy Ltd.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 707165952,
+      "phase": "inflected",
+      "mcapBand": "mega",
+      "ipoRecency": "mature",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2005,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 17,
+      "cohortFallback": false,
+      "scoreBase": 28,
+      "scoreShrunk": 30.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 0.667
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 14.7,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 10,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 90.6,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 14.7,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 50,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 9.4,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 42.3,
+          "weight": 0.55
+        }
+      ],
+      "ath": null
+    }
+  ],
+  "unprofitable": [
+    {
+      "rank": 1,
+      "ticker": "WTI",
+      "score": 56,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.015,
+        "companion": 59.3
+      },
+      "name": "W&T Offshore, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 544526400,
+      "phase": "unprofitable",
+      "mcapBand": "large",
+      "ipoRecency": "mature",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2005,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 3,
+      "cohortFallback": true,
+      "scoreBase": 60.1,
+      "scoreShrunk": 56,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 72.5,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 41.7,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 55.3,
+          "weight": 1.3
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 72.5,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 87.5,
+          "weight": 1.2
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 92.1,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": 15.6,
+          "weight": 0.5
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 2,
+      "ticker": "CLNE",
+      "score": 48.9,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "highDilution",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.805,
+        "companion": 30.6
+      },
+      "name": "Clean Energy Fuels Corp.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 447056000,
+      "phase": "unprofitable",
+      "mcapBand": "mid",
+      "ipoRecency": "mature",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2007,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 3,
+      "cohortFallback": true,
+      "scoreBase": 48.2,
+      "scoreShrunk": 48.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 67.5,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 47.2,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 2.6,
+          "weight": 1.3
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 57.5,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 92.5,
+          "weight": 1.2
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 18.4,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": 3.1,
+          "weight": 0.5
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 3,
+      "ticker": "WHK",
+      "score": 37.4,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "burnAccelerating"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 11.079,
+        "companion": 983.7
+      },
+      "name": "WhiteHawk Minerals Corp.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 598371008,
+      "phase": "unprofitable",
+      "mcapBand": "large",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2026,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 3,
+      "cohortFallback": true,
+      "scoreBase": 78.6,
+      "scoreShrunk": 67.1,
+      "factors": {
+        "burn": 0.557,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 87.5,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 97.2,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 92.1,
+          "weight": 1.3
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 87.5,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 12.5,
+          "weight": 1.2
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 34.2,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": 84.4,
+          "weight": 0.5
+        }
+      ],
+      "ath": null
+    }
+  ]
+}

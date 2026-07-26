@@ -1,0 +1,1135 @@
+{
+  "schema": "findash-export/v1",
+  "generated_at": "2026-07-26T20:46:45.096Z",
+  "branch": "materials",
+  "boardStatus": "diagnostic",
+  "coverage": {
+    "status": "degradiert",
+    "degraded": true,
+    "blocked": false,
+    "coverage_pct": 69.7
+  },
+  "profitable": [
+    {
+      "rank": 1,
+      "ticker": "WLKP",
+      "score": 70.8,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": -0.17,
+        "companion": 84.1
+      },
+      "name": "Westlake Chemical Partners LP",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 777171648,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2014,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.89,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 75.8,
+      "scoreShrunk": 70.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 63.9,
+          "weight": 0.5
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 67.6,
+          "weight": 1.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 60.7,
+          "weight": 0.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 63.9,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 73.5,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 96.7,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 2,
+      "ticker": "SCZM",
+      "score": 65.7,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "crashRisk"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.912,
+        "companion": 192.5
+      },
+      "name": "Santacruz Silver Mining Ltd.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 583338944,
+      "phase": "inflected",
+      "mcapBand": "large",
+      "ipoRecency": "mature",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2012,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 67.4,
+      "scoreShrunk": 65.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 75,
+          "weight": 0.5
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 61.8,
+          "weight": 1.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 82.1,
+          "weight": 0.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 75,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 32.4,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 76.7,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 50,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 3,
+      "ticker": "GEVO",
+      "score": 58.4,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 14.335,
+        "companion": 109.3
+      },
+      "name": "Gevo, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 395543424,
+      "phase": "unprofitable",
+      "mcapBand": "small",
+      "ipoRecency": "mature",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2011,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 59.3,
+      "scoreShrunk": 58.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 69.4,
+          "weight": 0.5
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 91.2,
+          "weight": 1.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 96.4,
+          "weight": 0.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 69.4,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 91.2,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 16.7,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 23.3,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 4,
+      "ticker": "OGG",
+      "score": 57.6,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "lowRoic",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 1559.5
+      },
+      "name": "Osisko Gold Group Inc.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 688670336,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
+      "ipoRecency": "mature",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2008,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.83,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 59.7,
+      "scoreShrunk": 57.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 97.2,
+          "weight": 0.5
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 97.1,
+          "weight": 1.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 0.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 97.2,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 23.3,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 10,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 5,
+      "ticker": "ALTO",
+      "score": 57.2,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 2.591,
+        "companion": -1.1
+      },
+      "name": "Alto Ingredients, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 359535264,
+      "phase": "inflected",
+      "mcapBand": "micro",
+      "ipoRecency": "mature",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2005,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 58,
+      "scoreShrunk": 57.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 25,
+          "weight": 0.5
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 73.5,
+          "weight": 1.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 89.3,
+          "weight": 0.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 25,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 55.9,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 50,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 56.7,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 6,
+      "ticker": "MAKO",
+      "score": 53.5,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "cyclePeak"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.617,
+        "companion": 292.6
+      },
+      "name": "Mako Mining Corp.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 619957696,
+      "phase": "inflected",
+      "mcapBand": "large",
+      "ipoRecency": "mature",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2012,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 53.8,
+      "scoreShrunk": 53.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 80.6,
+          "weight": 0.5
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 79.4,
+          "weight": 1.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 75,
+          "weight": 0.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 86.1,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 61.8,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 10,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 36.7,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 7,
+      "ticker": "ASIX",
+      "score": 50.7,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.078,
+        "companion": 16.1
+      },
+      "name": "AdvanSix Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 567487680,
+      "phase": "established",
+      "mcapBand": "large",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2016,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 50.8,
+      "scoreShrunk": 50.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 47.2,
+          "weight": 0.5
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 55.9,
+          "weight": 1.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 67.9,
+          "weight": 0.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 47.2,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 14.7,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 43.3,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 63.3,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 8,
+      "ticker": "SXC",
+      "score": 47,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.144,
+        "companion": 12.6
+      },
+      "name": "SunCoke Energy, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 756890560,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2011,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 46.6,
+      "scoreShrunk": 47,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 41.7,
+          "weight": 0.5
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 50,
+          "weight": 1.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 53.6,
+          "weight": 0.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 41.7,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 26.5,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 30,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 90,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 9,
+      "ticker": "OEC",
+      "score": 46.6,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": -0.161,
+        "companion": -5.6
+      },
+      "name": "Orion S.A.",
+      "country": "Luxembourg",
+      "region": "Europe",
+      "sector": "Basic Materials",
+      "marketCap": 394156640,
+      "phase": "established",
+      "mcapBand": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2014,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 46.2,
+      "scoreShrunk": 46.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 19.4,
+          "weight": 0.5
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 38.2,
+          "weight": 1.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 46.4,
+          "weight": 0.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 19.4,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 44.1,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 70,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 43.3,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 10,
+      "ticker": "GSM",
+      "score": 40.4,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "arDivergence",
+        "burnAccelerating"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.415,
+        "companion": 29.8
+      },
+      "name": "Ferroglobe PLC",
+      "country": "United Kingdom",
+      "region": "Europe",
+      "sector": "Basic Materials",
+      "marketCap": 627851328,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
+      "ipoRecency": "mature",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2009,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 44.2,
+      "scoreShrunk": 44.8,
+      "factors": {
+        "burn": 0.903,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 58.3,
+          "weight": 0.5
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 8.8,
+          "weight": 1.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 10.7,
+          "weight": 0.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 58.3,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 79.4,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 63.3,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 76.7,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 11,
+      "ticker": "VHI",
+      "score": 39.8,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "lowRoic",
+        "fcfArtefact",
+        "burnAccelerating"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.304,
+        "companion": 9.2
+      },
+      "name": "Valhi, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 385477216,
+      "phase": "unprofitable",
+      "mcapBand": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 1980,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.89,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 39.2,
+      "scoreShrunk": 41.6,
+      "factors": {
+        "burn": 0.957,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 30.6,
+          "weight": 0.5
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 26.5,
+          "weight": 1.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 32.1,
+          "weight": 0.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 30.6,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 50,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 56.7,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 12,
+      "ticker": "RYAM",
+      "score": 36,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.283,
+        "companion": -24.8
+      },
+      "name": "Rayonier Advanced Materials Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 565135104,
+      "phase": "established",
+      "mcapBand": "large",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2014,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 34.4,
+      "scoreShrunk": 36,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 13.9,
+          "weight": 0.5
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 32.4,
+          "weight": 1.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 39.3,
+          "weight": 0.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 13.9,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 8.8,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 36.7,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 70,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 13,
+      "ticker": "ASTL",
+      "score": 34.2,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "burnAccelerating"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -3.355,
+        "companion": -112.4
+      },
+      "name": "Algoma Steel Group Inc.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 455278848,
+      "phase": "unprofitable",
+      "mcapBand": "mid",
+      "ipoRecency": "recent",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2021,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 35.1,
+      "scoreShrunk": 36.6,
+      "factors": {
+        "burn": 0.933,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 2.8,
+          "weight": 0.5
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 2.9,
+          "weight": 1.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 3.6,
+          "weight": 0.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 2.8,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 2.9,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 83.3,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 83.3,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 14,
+      "ticker": "METC",
+      "score": 14,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "lowRoic",
+        "burnAccelerating"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.374,
+        "companion": -41
+      },
+      "name": "Ramaco Resources, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 675969280,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
+      "ipoRecency": "seasoned",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2017,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 12.9,
+      "scoreShrunk": 16.6,
+      "factors": {
+        "burn": 0.841,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 8.3,
+          "weight": 0.5
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 14.7,
+          "weight": 1.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 17.9,
+          "weight": 0.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 8.3,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 20.6,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 3.3,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 30,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    },
+    {
+      "rank": 15,
+      "ticker": "KRO",
+      "score": 11.5,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "fcfArtefact",
+        "burnAccelerating"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.407,
+        "companion": 9.4
+      },
+      "name": "Kronos Worldwide, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 760501120,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
+      "ipoRecency": "veteran",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2003,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.89,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 47.4,
+      "scoreShrunk": 48.2,
+      "factors": {
+        "burn": 0.958,
+        "growth": 1,
+        "cycle": 0.25
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 36.1,
+          "weight": 0.5
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 20.6,
+          "weight": 1.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 25,
+          "weight": 0.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 36.1,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 38.2,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 90,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.8
+        }
+      ],
+      "ath": null
+    }
+  ],
+  "unprofitable": []
+}
