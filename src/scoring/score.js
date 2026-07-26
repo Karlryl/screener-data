@@ -69,9 +69,25 @@ const issuerKey = (s) => {
 // US-Primaerlisting. Zwei US-primaere Beine sind deshalb nie zwei Notierungen derselben
 // Firma, sondern zwei Firmen. Genau das prueft splitFalseIssuerMerges unten; im gemessenen
 // Universum greift der Schutz bei exakt einer Gruppe — FBNC/FBP.
+// Gepflegte Gleichsetzungs-Liste fuer Zweitnotierungen, deren Namen sich um MEHR als
+// Zeichensetzung unterscheiden. Bewusst eine Liste statt einer weiteren Regel: die
+// naheliegende Verallgemeinerung (Artikel "The" und Rechtsform-Varianten wie
+// Corporation/Corp wegnormalisieren) haette ein Fehlverschmelzungs-Risiko, das hier nicht
+// gemessen ist — und eine Regel, deren Fehlerfaelle man nicht kennt, ist an einer
+// Identitaets-Entscheidung das falsche Werkzeug. Drei Faelle rechtfertigen keine Regel.
+// Schluessel und Wert sind bereits normalisiert (klein, ohne Trennzeichen).
+// Belegt am CI-Lauf 30213797442: diese drei standen doppelt in ihren Boards
+// (TLN/1TLN.MI utilities #4+#5, SCHW/1SCHW.MI financials #36+#37, CG/1CG.MI financials #28+#29).
+const ISSUER_ALIASE = {
+  talenenergycorporation: 'talenenergycorp',
+  thecharlesschwabcorporation: 'charlesschwabcorp',
+  thecarlylegroupinc: 'carlylegroupinc',
+};
 const issuerKeyLoose = (s) => {
   const n = issuerName(s);
-  return n ? n.replace(/[^\p{L}\p{N}]+/gu, '').toLowerCase() : null;
+  if (!n) return null;
+  const k = n.replace(/[^\p{L}\p{N}]+/gu, '').toLowerCase();
+  return ISSUER_ALIASE[k] || k;
 };
 const mcapOf = (s) => (s && s.marketCap && Number.isFinite(s.marketCap.value)) ? s.marketCap.value : 0;
 // audit/fix (Court Fall 10, F50): ein dual-non-USD-Bein, dessen marketCap mit dem REPORTING- statt

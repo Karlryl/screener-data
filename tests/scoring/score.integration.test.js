@@ -261,6 +261,24 @@ test('Issuer-Dedup Zeichensetzung: "Holding N.V." und "Holding NV" sind derselbe
   assert.equal(bt['PUNKT.SW'].reason, 'dup-issuer', 'Zweitnotierung muss trotz abweichender Zeichensetzung dedupt werden');
   assert.notEqual(bt['PUNKT'].reason, 'dup-issuer', 'US-Primaerbein bleibt der Gewinner');
 });
+test('Issuer-Dedup Gleichsetzungs-Liste: Namen mit Artikel/Rechtsform-Unterschied werden dedupt', () => {
+  // Die drei Faelle, die die Zeichensetzungs-Regel NICHT loest, weil sich die Namen um
+  // mehr unterscheiden: "The Carlyle Group Inc." gegen "Carlyle Group Inc" (Artikel),
+  // "Talen Energy Corporation" gegen "Talen Energy Corp" (Rechtsform-Kurzform).
+  // Bewusst eine gepflegte Liste statt einer weiteren Regel.
+  const mk = (ticker, name, ex, ccy, region) => ({
+    meta: { name, sector: 'Technology', industry: 'Software', exchangeName: ex, ticker, tradingCurrency: ccy, region },
+    annual: { annualRev: [{ value: 300 }, { value: 200 }, { value: 130 }], annualGP: [{ value: 180 }] },
+    metrics: { revenueTTM: { value: 300 } },
+    marketCap: { value: 5e9 } });
+  const res = scoreUniverse([
+    mk('CG', 'The Carlyle Group Inc.', 'NasdaqGS', 'USD', 'US'),
+    mk('1CG.MI', 'Carlyle Group Inc', 'Milan', 'EUR', undefined),
+  ], formulas);
+  const bt = Object.fromEntries(res.map((r) => [r.ticker, r]));
+  assert.equal(bt['1CG.MI'].reason, 'dup-issuer', 'Mailaender Zweitnotierung muss dedupt werden');
+  assert.notEqual(bt['CG'].reason, 'dup-issuer', 'US-Primaerbein bleibt der Gewinner');
+});
 test('Issuer-Dedup Fehlverschmelzungs-Schutz: zwei US-Primaerlistings sind NIE derselbe Emittent', () => {
   // Realfall aus dem CI-Universum: "First Bancorp" (FBNC, NasdaqGS, North Carolina) und
   // "First BanCorp." (FBP, NYSE, Puerto Rico) sind zwei verschiedene Banken, die sich nach
