@@ -47,6 +47,26 @@ const HG_DIR = path.join(ROOT, 'outputs', 'hypergrowth');
 const QUALITY_DIR = path.join(ROOT, 'outputs', 'quality'); // 3.2: QC-Board source (runQualityPass)
 const SMALLCAP_DIR = path.join(ROOT, 'outputs', 'smallcap'); // 5.2: Small-Cap-Board source (runSmallcapPass)
 const COVERAGE = path.join(ROOT, 'outputs', 'coverage-status.json');
+// Court-Auflage 27.07.2026 (Antrag 1 DENIED, rettende Auflage): Die Groessenklasse allein
+// ('mega') ist eine Aussage ueber die LISTE, nicht ueber die Firma — sie sagt nur 'oberstes
+// Fuenftel dieses Universums'. Das Gericht hat den Umbau der Klassifikation und den
+// Board-Umzug abgelehnt, aber genau EINE Massnahme freigegeben: die absoluten Grenzen
+// mitliefern, damit die Klasse lesbar wird ('Mega (ab 27,8 Mrd.)'). Voller Informationswert,
+// kein neuer Zustand, kein neuer Widerspruch. Quelle sind die data-learned Quintil-Grenzen
+// aus outputs/calibration.json (score.js mcapBounds) — es wird NICHTS neu gerechnet.
+const CALIBRATION_FILE = path.join(ROOT, 'outputs', 'calibration.json');
+// [p20, p40, p60, p80] in USD | null, wenn die Datei fehlt oder das Feld unbrauchbar ist.
+// Fehlt sie, entfaellt die Spanne in der Anzeige — kein Abbruch, keine geratenen Grenzen.
+function readMcapBounds() {
+  try {
+    const c = JSON.parse(fs.readFileSync(CALIBRATION_FILE, 'utf8'));
+    const b = c && c.mcapBounds;
+    if (!Array.isArray(b) || b.length !== 4 || !b.every((x) => Number.isFinite(x) && x > 0)) return null;
+    // Monoton steigend — sonst waere die Zuordnung Klasse->Spanne sinnlos.
+    for (let i = 1; i < b.length; i++) if (!(b[i] > b[i - 1])) return null;
+    return b;
+  } catch (_) { return null; }
+}
 const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
 const QOUT_DIR = path.join(OUT_DIR, 'quality'); // 3.2: QC-Board export subdir
 const SCOUT_DIR = path.join(OUT_DIR, 'smallcap'); // 5.2: Small-Cap-Board export subdir
@@ -160,6 +180,7 @@ function buildBoard(id, coverage) {
     branch: id,
     boardStatus: boardStatusOf(id),                 // 'core' (Court-PASSED) | 'diagnostic' (unbewiesen, 2.1)
     coverage,                                       // {status,degraded,blocked,coverage_pct} | null
+    mcapBounds: readMcapBounds(),                   // [p20,p40,p60,p80] USD | null — macht mcapBand lesbar
     profitable: (b.profitable || []).map(mapBoardRow),
     unprofitable: (b.unprofitable || []).map(mapBoardRow),
   };
@@ -167,7 +188,7 @@ function buildBoard(id, coverage) {
 
 function buildOverview(coverage) {
   const o = readJSON(path.join(HG_DIR, 'overview.json'));
-  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: o.map(mapOverviewRow) };
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, mcapBounds: readMcapBounds(), rows: o.map(mapOverviewRow) };
 }
 
 function buildSurvival(coverage) {
