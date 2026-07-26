@@ -279,8 +279,29 @@ test('non-operating-rev: CEF/Trust + Investment-Holding/BDC (falls vorhanden) ex
   if (!have.length) skipBody('kein CEF/Trust/NAV-Holding-Anker im Universum');
   for (const t of have) {
     const e = byTicker[t];
+    // Die tragende Eigenschaft: ein NAV-Vehikel routet NIE in ein Board. Sie gilt
+    // immer und wird immer geprueft.
     assert.equal(e.action, 'exclude', `${t} sollte excludiert sein`);
-    assert.equal(e.reason, 'non-operating-rev', `${t} reason=${e.reason}`);
+    // Die BEGRUENDUNG haengt an Fremddaten: isNonOperatingVehicle erkennt NAV-Holdings
+    // ueber meta.industry ('asset management'). Faellt Yahoos assetProfile fuer einen
+    // Titel weg, ist nicht nur die Industrie leer, sondern auch der Sektor — dann
+    // greift route() eine Stufe spaeter mit 'no-sector'. Belegt am CI-Lauf 30213797442
+    // (26.07.2026): III.L und SMT.L kamen frisch mit sector=null/industry=null und
+    // _quality.grade='D' zurueck, waehrend die am 08.07. gecachten Anker ADX/AOD/
+    // INDU-A.ST ihre Metadaten behielten. Kein Regress: ueber das ganze Artefakt
+    // gemessen fehlte der Sektor bei 0,3 % der frisch geholten Snapshots gegen 0,6 %
+    // der aelteren.
+    //
+    // Deshalb wird die Begruendung DATENABHAENGIG erwartet statt hartkodiert — aber
+    // weiterhin geprueft: ein stiller Wechsel auf einen anderen Ausschlussgrund
+    // (z. B. 'non-us') faellt weiter auf.
+    const hatIndustrie = !!(e.snapshot && e.snapshot.meta && e.snapshot.meta.industry);
+    const erwartet = hatIndustrie ? ['non-operating-rev'] : ['non-operating-rev', 'no-sector'];
+    assert.ok(
+      erwartet.includes(e.reason),
+      `${t} reason=${e.reason}, erwartet ${erwartet.join(' oder ')} `
+      + `(meta.industry=${JSON.stringify(e.snapshot && e.snapshot.meta && e.snapshot.meta.industry)})`,
+    );
   }
 });
 test('echter Fee-Asset-Manager BLK/BX (falls vorhanden) bleibt in financials (kein Over-Exclude)', () => {
