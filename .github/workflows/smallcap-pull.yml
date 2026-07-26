@@ -170,6 +170,26 @@ jobs:
         continue-on-error: true
         run: node scripts/verify-freshness.js ./snapshots-smallcap "Small-Cap"
 
+      # 5.2-Auflagen 4+5 (protocol/5.2-weg1b-universe-registered-20260722.md):
+      # Band-/Operating-Reconcile. BEWUSST --dry-run: dieser Workflow hat
+      # `permissions: contents: read` und committet nichts (Council-Entscheid Tag 432).
+      # Der Schritt MISST und berichtet also nur — inkl. der Auflage-6-Ueberschneidung
+      # mit dem Hauptuniversum. Ob der Reconcile automatisch schreiben darf, haengt an
+      # der Eigentumsgrenze (Auflage 6) und ist ein offener Karl-Entscheid.
+      - name: Small-Cap Reconciliation (Auflagen 4+5, nur Bericht)
+        continue-on-error: true
+        run: node scripts/reconcile-smallcap.js --dry-run --report smallcap-reconcile.json
+
+      - name: Upload reconciliation report
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: smallcap-reconcile
+          path: smallcap-reconcile.json
+          if-no-files-found: warn
+          retention-days: 30
+
       - name: Save merged small-cap store
         if: always()
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
