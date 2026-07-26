@@ -122,14 +122,60 @@ function quarterQoQRates(s, bounds) {
 }
 
 // --- 2. Umsatz-Beschleunigung (2. Ableitung) --------------------------------
-// QoQ-Wachstum ueber aufeinanderfolgende present Quartale (newest-first),
-// Beschleunigung = juengstes QoQ minus aeltestes QoQ. >0 = beschleunigt.
+// Beschleunigung = juengste YoY-Wachstumsrate minus aelteste. >0 = beschleunigt.
+//
+// SAISON-FIX (Tag 437, 26.07.2026 — Court-Urteil + Karl-Entscheid). Vorher bildete die
+// Achse QoQ-Raten (Quartal gegen VORQUARTAL) und subtrahierte die aelteste von der
+// juengsten. Das vergleicht zwei VERSCHIEDENE Saison-Uebergaenge miteinander, und welche
+// das sind, haengt allein davon ab, wie viele Quartale gespeichert sind. Gemessen an einer
+// synthetischen Reihe mit exakt konstantem Jahreswachstum (Beschleunigung also beweisbar
+// null): -1,6 / -36,2 / +1,6 / +36,2 Prozentpunkte je nach Fiskal-Versatz — 72 Punkte
+// Spannweite aus reiner Saison. Schlimmer noch: eine ECHT beschleunigende Reihe
+// (20->40->60 % YoY) kam mit negativem Vorzeichen heraus. Die Achse mass keine
+// Beschleunigung, sondern die Saisonform. In 8 von 13 Branchenformeln ist sie die
+// zweitschwerste Achse.
+//
+// Jetzt YoY-basiert: rq[i] gegen rq[i+4] ist per Konstruktion DASSELBE Fiskalquartal ein
+// Jahr frueher — die Saison kuerzt sich heraus, unabhaengig von Versatz und Reihenlaenge.
+// Es ist derselbe Wachstumsbegriff, den revGrowthLevel/revYoYComponents bereits benutzen;
+// die Achse erbt ihn damit statt einen zweiten zu fuehren.
+//
+// KEIN Ticker im Spiel: der Defekt und der Nachweis der Reparatur laufen ueber synthetische
+// Reihen (tests/scoring/acceleration-invariance.test.js). Dass sich Raenge echter Firmen
+// dadurch verschieben, ist Folge, nicht Ziel.
+//
+// DATENBEDARF — und die unbequeme Messung dazu (26.07.2026, ueber 4768 lokale Snapshots):
+// Quartalsweise braucht die Achse >=2 YoY-Paare, also >=6 present Quartale. Yahoo liefert
+// aber HOECHSTENS 5 (Verteilung ueber 1500 Snapshots: 964x fuenf, 372x vier, nichts
+// darueber) — mit 5 Quartalen gibt es genau EIN YoY-Paar und damit keine Aenderungsrate.
+// Folge, ehrlich benannt: der Quartals-Zweig greift heute bei 1 von 4768 Namen, 4472
+// laufen ueber den JAHRES-Fallback (93,8 % Abdeckung), 295 droppen auf null
+// (renorm-on-drop). Die Achse misst damit faktisch JAHRES-Beschleunigung.
+//
+// Das ist keine Schwaeche der Rechnung, sondern die Grenze der Datenquelle: eine
+// saisonsaubere QUARTALS-Beschleunigung ist aus 5 Quartalen nicht konstruierbar. Wer sie
+// zurueckwill, braucht tiefere Quartalshistorie (>=8 Quartale) — Kandidat ist die bereits
+// vorhandene SEC-XBRL-Schicht, nicht ein Rueckbau auf die kaputte QoQ-Konstruktion.
+// Jahresdaten sind saisonfrei, die Groesse ist dieselbe, nur eine Ebene grober und
+// traeger (reagiert ein Jahr spaeter).
 function revAcceleration(s, bounds) {
-  const rq = norm(s, 'revenueQ').filter((v) => v !== null && v !== undefined);
-  if (rq.length < 3) return null; // mind. 2 QoQ-Raten
-  const g = quarterQoQRates(s, bounds);
-  if (g.length < 2) return null;
-  return g[0] - g[g.length - 1];
+  const rq = norm(s, 'revenueQ');
+  const yoy = [];
+  for (let i = 0; i + 4 < rq.length; i++) {
+    const a = rq[i], b = rq[i + 4];
+    if (a === null || a === undefined || b === null || b === undefined) continue; // Luecke ueberspringen
+    if (a > 0 && b > 0) yoy.push(clampWinsor(a / b - 1, bounds));
+  }
+  if (yoy.length >= 2) return yoy[0] - yoy[yoy.length - 1];
+
+  // Fallback Jahresreihe: drei present Jahre -> zwei Jahres-Wachstumsraten.
+  const ar = norm(s, 'annualRev').filter((v) => v !== null && v !== undefined && v > 0);
+  if (ar.length >= 3) {
+    const neu = clampWinsor(ar[0] / ar[1] - 1, bounds);
+    const alt = clampWinsor(ar[1] / ar[2] - 1, bounds);
+    if (Number.isFinite(neu) && Number.isFinite(alt)) return neu - alt;
+  }
+  return null;
 }
 
 // --- 3. Bruttogewinn-Wachstum + GM-Trajektorie ------------------------------

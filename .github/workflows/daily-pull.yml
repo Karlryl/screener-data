@@ -881,7 +881,7 @@ jobs:
       - name: Live-Universum-Gate (score.integration/quality-board/phase/score-breakdown)
         run: |
           fail=0
-          for t in tests/scoring/score.integration.test.js tests/scoring/quality-board.test.js tests/scoring/phase.test.js tests/scoring/score-breakdown.test.js; do
+          for t in tests/scoring/score.integration.test.js tests/scoring/quality-board.test.js tests/scoring/phase.test.js tests/scoring/score-breakdown.test.js tests/scoring/acceleration-invariance.test.js; do
             echo "--- $t ---"
             set +e
             out=$(node "$t" 2>&1)

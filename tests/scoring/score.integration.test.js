@@ -74,13 +74,30 @@ testU('CRDO -> semiconductors, profitabler Track, Score finit', () => {
   assert.equal(c.track, 'profitable'); // annualOpInc juengstes Jahr +37.997M
   assert.ok(Number.isFinite(c.score));
 });
-testU('CRDO im oberen 20% seines Track-Kohorten-Rankings', () => {
+// Tag 437 (Karl-Entscheid 26.07., Court-Urteil): Der frueher hier blockierende Anker
+// "CRDO im oberen 20 % seines Track-Kohorten-Rankings" ist ABGESCHAFFT. Gruende:
+//   (1) Er prueft einen NAMEN, nicht eine Eigenschaft — und ist damit durch Kalibrieren
+//       auf genau diesen Namen erfuellbar (Zirkelschluss).
+//   (2) Er war seit seiner Scharfschaltung am 19.07. nie gruen und hat 5 Tageslaeufe
+//       blockiert; seine Baseline war beim Einbau bereits verletzt (21,7 % ab 14.07.).
+//   (3) Karl selbst (26.07.): "Wenn der Screener viele Firmen findet, die einfach besser
+//       sind als CRDO und Astera Labs, dann nehme ich das einfach so hin." Die Platzierung
+//       ist nicht das Ziel — die Frage ist, ob ARTGLEICHE Firmen verglichen werden.
+// Ersetzt durch tests/scoring/acceleration-invariance.test.js, der eine EIGENSCHAFT des
+// Messgeraets prueft (konstantes Wachstum muss null Beschleunigung ergeben) und ohne
+// einen einzigen Ticker auskommt. Der laeuft ebenfalls im Live-Universum-Gate.
+// CRDOs Rang wird weiter GEMESSEN und protokolliert — nur nicht mehr erzwungen; ein
+// Abrutschen meldet das taegliche Briefing.
+testU('CRDO: Rang im Track-Kohorten-Ranking wird protokolliert (kein Gate)', () => {
   const c = byTicker['CRDO'];
   const cohort = rankBy(results, 'semiconductors', c.track);
   assert.ok(cohort.length >= 5, 'Kohorte zu klein: ' + cohort.length);
   const rank = rankIn(cohort, 'CRDO');
-  console.log(`       CRDO Rang ${rank + 1}/${cohort.length} (profitable), Score ${c.score.toFixed(1)}`);
-  assert.ok(rank >= 0 && (rank / cohort.length) <= 0.20, `CRDO Rang ${rank + 1}/${cohort.length}`);
+  const pct = (rank / cohort.length) * 100;
+  console.log(`       CRDO Rang ${rank + 1}/${cohort.length} (profitable), Score ${c.score.toFixed(1)}, Perzentil ${pct.toFixed(1)} %`);
+  // Nur noch eine STRUKTUR-Aussage: CRDO ist ueberhaupt in seiner Kohorte auffindbar.
+  // Kein Perzentil-Ziel — das waere wieder der Ticker-Anker.
+  assert.ok(rank >= 0, 'CRDO nicht in der eigenen Kohorte auffindbar');
 });
 
 // --- ALAB (falls vorhanden) ebenfalls oben ----------------------------------

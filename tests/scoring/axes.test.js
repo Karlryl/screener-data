@@ -99,12 +99,19 @@ test('marginTrajectory: mit bounds winsorisiert das Stub-Quartal weg', () => {
   const v = ax.marginTrajectory(stub, [-1, 1]); // oldest -5000 -> -1, newest 0.2 -> bleibt
   assert.ok(near(v, 0.2 - (-1)), `erwartet ~1.2, war ${v}`);
 });
-test('revAcceleration: mit bounds winsorisiert die Stub-QoQ-Rate weg', () => {
-  // revenueQ=[100,50,1]: g=[100/50-1, 50/1-1]=[1,49]; ohne bounds revAccel=1-49=-48.
-  const stub = { timeseries: { revenueQ: [{ value: 100 }, { value: 50 }, { value: 1 }] } };
-  assert.ok(ax.revAcceleration(stub) < -40); // -48, das Artefakt
-  const v = ax.revAcceleration(stub, [-1, 2]); // 49 -> 2 geklemmt
-  assert.ok(near(v, 1 - 2), `erwartet ~-1, war ${v}`);
+// Tag 437: auf YoY-Paare umgeschrieben (die Achse rechnet seit dem Saison-Fix rq[i] gegen
+// rq[i+4] statt Quartal-gegen-Vorquartal). Die GESCHUETZTE EIGENSCHAFT ist unveraendert:
+// ein winziges Basis-Quartal darf die Achse nicht dominieren.
+test('revAcceleration: mit bounds winsorisiert die Mini-Basis-Rate weg', () => {
+  // revenueQ (newest-first) = [100,90,80,70,1,60]
+  //   YoY[0] = 100/1 - 1 = 99   <- Mini-Basis-Artefakt
+  //   YoY[1] = 90/60 - 1 = 0.5
+  // ohne bounds: 99 - 0.5 = 98.5
+  const stub = { timeseries: { revenueQ: [{ value: 100 }, { value: 90 }, { value: 80 },
+    { value: 70 }, { value: 1 }, { value: 60 }] } };
+  assert.ok(ax.revAcceleration(stub) > 40, 'ungeklemmt muss das Artefakt sichtbar sein');
+  const v = ax.revAcceleration(stub, [-1, 2]); // 99 -> 2 geklemmt
+  assert.ok(near(v, 2 - 0.5), `erwartet ~1.5, war ${v}`);
 });
 test('Winsor-Clamp laesst plausible Werte unberuehrt (kein Regress)', () => {
   // CRDO ist ein realer gesunder Name; weite bounds duerfen nichts aendern.
@@ -169,10 +176,14 @@ test('dilution: kein present annualSBC -> null (drop+renorm, KEIN Fake-50)', () 
 });
 
 // --- Regression: revAcceleration ignoriert 0/negative Zwischenquartale ------
+// Tag 437: auf YoY-Paare umgeschrieben, geschuetzte Eigenschaft unveraendert — ein Null-
+// oder Negativ-Quartal darf keine Riesen-Rate erzeugen, sondern muss sein Paar ueberspringen.
 test('revAcceleration: 0/negatives Quartal erzeugt keine Riesen-Rate', () => {
-  const s = { timeseries: { revenueQ: [{ value: 120 }, { value: 100 }, { value: 0 }, { value: 80 }, { value: 70 }] } };
+  // Das YoY-Paar (120 / 0) wird verworfen; es bleiben 100/70 und 90/60.
+  const s = { timeseries: { revenueQ: [{ value: 120 }, { value: 100 }, { value: 90 },
+    { value: 80 }, { value: 0 }, { value: 70 }, { value: 60 }] } };
   const v = ax.revAcceleration(s);
-  assert.ok(Number.isFinite(v) && Math.abs(v) < 1); // nur positive Quartalspaare zaehlen
+  assert.ok(Number.isFinite(v) && Math.abs(v) < 1, `erwartet endlich und |v|<1, war ${v}`);
 });
 
 // --- capitalEfficiency Zyklus-Peak-Discount (Court-Spec) --------------------
