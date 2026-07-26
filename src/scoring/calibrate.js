@@ -15,7 +15,7 @@ const { route } = require('./router.js');
 const { q, signTrack } = require('./engine.js');
 const { norm } = require('./snapshot.js');
 const { evaluateLamps } = require('./lamps.js');
-const { trackOf, rawAxisValue, learnWinsorBounds, winsorTailBounds, growthYoYComponents, isDataSuspect, issuerDedupComparator, issuerKey, scoreUniverse, rankBy, MIN_COHORT_N } = require('./score.js');
+const { trackOf, rawAxisValue, learnWinsorBounds, winsorTailBounds, growthYoYComponents, isDataSuspect, issuerDedupComparator, issuerDedupGroups, scoreUniverse, rankBy, MIN_COHORT_N } = require('./score.js');
 
 // Baut pro (formulaId|track) die Perzentil-Matrix: rows[{ticker, pct:{axis:0-100}, lamps}].
 // audit/fix (BH-076): opts.classify erlaubt einen QC-Lauf (classify:qualityRoute) gegen dieselbe Matrix-
@@ -40,10 +40,12 @@ function buildCalibMatrix(universe, formulas, opts = {}) {
   }
   // audit/fix (Bug 9): (2) Issuer-Dedup mit identischem Sortierschluessel wie score.js — pro Emittent
   // (normalisierter meta.name) nur das Gewinner-Bein behalten. Verlierer aus den Kohorten nehmen.
-  const issuerGroups = {};
-  for (const e of routed) { const k = issuerKey(e.s); if (k) (issuerGroups[k] = issuerGroups[k] || []).push(e); }
+  // audit/fix (Kreuz-Review 27.07., Befund P1): frueher stand hier eine EIGENE Gruppierung mit
+  // dem strengen issuerKey. Als die Produktion auf issuerKeyLoose + Fehlverschmelzungs-Schutz
+  // umgestellt wurde, blieb diese Kopie stehen — die Matrix lernte damit auf Zeilen, die die
+  // Produktion entfernt. Jetzt dieselbe Funktion wie score.js, damit das nicht wieder driften kann.
   const dedupLosers = new Set();
-  for (const group of Object.values(issuerGroups)) {
+  for (const group of issuerDedupGroups(routed)) {
     if (group.length < 2) continue;
     group.sort(issuerDedupComparator);
     for (let i = 1; i < group.length; i++) dedupLosers.add(group[i]);

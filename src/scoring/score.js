@@ -154,6 +154,26 @@ function splitFalseIssuerMerges(groups) {
   return out;
 }
 
+// Gemeinsame Emittenten-Gruppierung fuer BEIDE Pfade — Produktion (scoreUniverse) und
+// Kalibrierung (buildCalibMatrix). Die beiden muessen dieselbe Population sehen; calibrate.js
+// traegt dafuer seit Bug 9 den Kommentar "identischer Sortierschluessel wie score.js".
+//
+// Warum als Funktion und nicht zweimal derselbe Code (Kreuz-Review 27.07., Befund P1): genau
+// diese Spiegelung war einseitig gebrochen, nachdem die Produktion auf issuerKeyLoose +
+// splitFalseIssuerMerges umgestellt wurde und die Kalibrierung auf dem strengen issuerKey
+// stehen blieb. Folge waren Geister-Zeilen in der Matrix — die Winsor-Schranken und Perzentile
+// wurden auf einer Population gelernt, die es in der Produktion nicht gibt. Ein zweiter
+// Aufrufer, der es "auch so macht", faellt beim naechsten Umbau wieder auseinander.
+// Erwartet Eintraege mit .snapshot (score.js: results, calibrate.js: routed mit snapshot: s).
+function issuerDedupGroups(entries) {
+  const groups = {};
+  for (const e of entries) {
+    const k = issuerKeyLoose(e.snapshot);
+    if (k) (groups[k] ||= []).push(e);
+  }
+  return splitFalseIssuerMerges(Object.values(groups));
+}
+
 // audit/fix (Bug 7): Dedup-Sortierschluessel. ERSTER Schluessel ist isUsPrimaryListing (LISTING-Check:
 // US-Primaerboerse, kein Auslands-Suffix), NICHT das domizil-basierte isUS. Ein Toronto-Bein mit
 // country='United States' bekam sonst denselben isUS=1-Rang wie das NYSE-Bein, und fxSuspect
@@ -656,14 +676,9 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
   // bevorzugt das US-primaere (USD/SEC-Qualitaet, isUS), sonst hoechste marketCap, dann Ticker-Tie-
   // Break (deterministisch). Verlierer -> exclude 'dup-issuer'. Laeuft NACH dem A4-data-suspect-Gate,
   // sodass ein bereits gegatetes Bein nicht "gewinnt"; greift nur auf Output-sichtbare route/survival.
-  const issuerGroups = {};
-  for (const e of results) {
-    if (e.action !== 'route' && e.action !== 'survival') continue;
-    // Zeichensetzungs-tolerant gruppieren (s. Kommentar an issuerKeyLoose).
-    const k = issuerKeyLoose(e.snapshot);
-    if (k) (issuerGroups[k] ||= []).push(e);
-  }
-  for (const group of splitFalseIssuerMerges(Object.values(issuerGroups))) {
+  // Zeichensetzungs-tolerant gruppieren (s. Kommentar an issuerKeyLoose) — ueber die
+  // gemeinsame Funktion, damit die Kalibrierung garantiert dieselbe Population sieht.
+  for (const group of issuerDedupGroups(results.filter((e) => e.action === 'route' || e.action === 'survival'))) {
     if (group.length < 2) continue;
     group.sort(issuerDedupComparator);                     // audit/fix (Bug 7): US-Primaerlisting zuerst
     for (let i = 1; i < group.length; i++) {
@@ -1194,7 +1209,7 @@ function calibrationDrift(liveCal, refCal, ksThreshold = 0.15) {
 
 module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings, phaseOf, mcapBandOf, ipoRecencyOf, ipoYearOf, calibrationDrift,
   // audit/fix (Bug 0/9/7): fuer calibrate.js — Kohorten-Gates + Winsor-Schranken exakt spiegeln
-  learnWinsorBounds, winsorTailBounds, isDataSuspect, issuerDedupComparator, issuerKey,
+  learnWinsorBounds, winsorTailBounds, isDataSuspect, issuerDedupComparator, issuerKey, issuerDedupGroups,
   // AUFGABE 2 (Wachstums-Bonus): fuer TDD + gezielte Wiederverwendung
   growthBoostFactor, growthYoYComponents, robustG, growthPctlFn, boostFromPctl, GROWTH_BOOST_K,
   // PHASE 3 (Zyklus-Daempfer): fuer TDD + Mess-Skripte

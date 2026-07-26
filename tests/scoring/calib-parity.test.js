@@ -14,7 +14,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { scoreUniverse, rankBy, isDataSuspect, issuerKey, issuerDedupComparator, learnWinsorBounds, winsorTailBounds, growthYoYComponents } = require('../../src/scoring/score.js');
+const { scoreUniverse, rankBy, isDataSuspect, issuerDedupGroups, issuerDedupComparator, learnWinsorBounds, winsorTailBounds, growthYoYComponents } = require('../../src/scoring/score.js');
 const { buildCalibMatrix, rankCohort, weightsObj, withWeights, productionCohortRanking } = require('../../src/scoring/calibrate.js');
 const { route } = require('../../src/scoring/router.js');
 const { evaluateLamps } = require('../../src/scoring/lamps.js');
@@ -103,11 +103,13 @@ test('Kalibrier-Bounds werden auf der post-Dedup kept-Population gelernt (R2.1+R
     if (isDataSuspect(s, lamps, 'route')) continue;
     routedEntries.push({ snapshot: s, ticker: (s.meta && s.meta.ticker) || '?' });
   }
-  // Issuer-Dedup mit demselben Sortierschluessel; Verlierer entfernen -> kept (post-Dedup).
-  const groups = {};
-  for (const e of routedEntries) { const k = issuerKey(e.snapshot); if (k) (groups[k] ||= []).push(e); }
+  // Issuer-Dedup mit derselben Gruppierung wie Produktion und Kalibrierung; Verlierer entfernen.
+  // ⚠ Kreuz-Review 27.07., Befund P1: hier stand eine DRITTE Kopie der Gruppierung (strenger
+  // issuerKey). Sie hat mitgeholfen, den Bruch zu verdecken — die Referenz rechnete falsch
+  // dasselbe wie der falsche Produktionspfad. Jetzt dieselbe Funktion; damit gibt es genau eine
+  // Stelle, an der sich die Dedup-Population aendern kann.
   const losers = new Set();
-  for (const g of Object.values(groups)) {
+  for (const g of issuerDedupGroups(routedEntries)) {
     if (g.length < 2) continue;
     g.sort(issuerDedupComparator);
     for (let i = 1; i < g.length; i++) losers.add(g[i]);

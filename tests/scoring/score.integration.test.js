@@ -214,9 +214,20 @@ test('Real-Estate Overview ist ffo-badge (track-eigene Badge)', () => {
 //
 // Warum das der wichtigere Waechter ist: eine Doppelung ist der SICHTBARE Fehler (dieselbe
 // Firma zweimal, meist auf benachbarten Raengen — am 27.07. real neun Stueck). Der Gegenfehler,
-// eine faelschlich verschmolzene Firma, ist unsichtbar: sie fehlt einfach. Deshalb prueft
-// dieser Test BEIDE Richtungen — Doppelung UND Verschwinden.
-testU('kein Emittent steht zweimal im selben Board (und keiner verschwindet still)', () => {
+// eine faelschlich verschmolzene Firma, ist unsichtbar: sie fehlt einfach.
+//
+// ⚠ KORREKTUR (Kreuz-Review 27.07., Befund P2): hier stand "Deshalb prueft dieser Test BEIDE
+// Richtungen — Doppelung UND Verschwinden". Das war FALSCH, und es ist die gefaehrlichere
+// Sorte Fehler: eine Zusicherung behauptet, die der Code nicht einloest. Wenn die
+// Normalisierung zwei VERSCHIEDENE Firmen zusammenwirft, ist der Verlierer bereits als
+// 'dup-issuer' entfernt, bevor diese Zaehlung beginnt — die Gruppe hat dann genau einen
+// Ticker und faellt nicht auf. Dieser Test prueft AUSSCHLIESSLICH die Doppelungs-Richtung;
+// die Gegenrichtung deckt der eigene Test darunter ab.
+//
+// Zweite Korrektur derselben Meldung: geprueft wird jetzt die VOLLE ueberlebende Population
+// (full + survival) statt der auf topN gekappten Branch-Listen. Eine Doppelung unterhalb von
+// Rang 50 verfaelscht Kohorten, Perzentile und Board-Historie genauso — sie war nur unsichtbar.
+testU('kein Emittent steht zweimal im selben Board', () => {
   const { produceRankings } = require('../../src/scoring/score.js');
   const r = produceRankings(results, { topN: 50 });
   // Normalisierung bewusst STRENGER als der Dedup selbst (auch Artikel und Rechtsform weg):
@@ -228,20 +239,59 @@ testU('kein Emittent steht zweimal im selben Board (und keiner verschwindet stil
     .replace(/\s+/g, ' ')
     .trim();
   const proBoard = new Map();
-  for (const [board, tracks] of Object.entries(r.branches || {})) {
-    for (const track of ['profitable', 'unprofitable']) {
-      for (const e of (tracks[track] || [])) {
-        const k = board + '|' + norm(e.name);
-        if (!norm(e.name)) continue;
-        if (!proBoard.has(k)) proBoard.set(k, new Set());
-        proBoard.get(k).add(e.ticker);
-      }
-    }
+  const zaehle = (board, e) => {
+    const n = norm(e.name);
+    if (!n) return;
+    const k = board + '|' + n;
+    if (!proBoard.has(k)) proBoard.set(k, new Set());
+    proBoard.get(k).add(e.ticker);
+  };
+  // r.full ist ZWEISTUFIG: { board: { track: [...] } } — nicht flach. Nachgelesen, nicht geraten.
+  for (const [board, tracks] of Object.entries(r.full || {})) {
+    for (const liste of Object.values(tracks || {})) for (const e of (liste || [])) zaehle(board, e);
   }
+  for (const e of (r.survival || [])) zaehle('SURVIVAL', e);
+  assert.ok(proBoard.size > 0, 'Kein Board-Eintrag geprueft — der Waechter darf nicht ins Leere laufen');
   const doppel = [...proBoard.entries()].filter(([, tickers]) => tickers.size > 1);
   assert.equal(
     doppel.length, 0,
     'Doppelnennungen im selben Board: ' + doppel.map(([k, v]) => k.split('|')[1] + ' (' + [...v].join('+') + ')').join(', '),
+  );
+});
+
+// Gegenrichtung, mit einem UNABHAENGIGEN Orakel. Eine faelschlich verschmolzene Firma ist
+// unsichtbar — sie fehlt einfach. Ueber Namensmerkmale laesst sich das grundsaetzlich nicht
+// pruefen: jede namensbasierte Gegenprobe benutzt dieselbe Regel wie der Fix und meldet
+// deshalb garantiert Erfolg (genau dieser Zirkelschluss ist am 27.07. schon einmal passiert
+// und hat ein falsches "0 Doppelungen" produziert, waehrend drei offen waren). Die BRANCHE
+// ist dagegen namensunabhaengig: zwei Beine desselben Emittenten tragen sie identisch.
+//
+// Am echten Bestand gemessen (27.07.): 339 Dedup-Gruppen, davon 0 mit abweichender Branche —
+// die Bedingung haelt also auf allen heutigen echten Verschmelzungen.
+// EHRLICHE GRENZE: notwendige, keine hinreichende Bedingung. Zwei verschiedene Firmen
+// DERSELBEN Branche, faelschlich verschmolzen, faengt auch dieser Test nicht. Er faengt die
+// Fehlerklasse, die eine zu grosszuegige Namens-Normalisierung typischerweise erzeugt.
+testU('Dedup verschmilzt keine Firmen aus verschiedenen Branchen (unabhaengiges Orakel)', () => {
+  const { issuerDedupGroups } = require('../../src/scoring/score.js');
+  // Gruppiert wird direkt ueber `universe`, NICHT ueber `results`. Zwei Gruende, beide beim
+  // Bauen gemessen statt angenommen: (a) die Eintraege aus scoreUniverse tragen keine
+  // .snapshot-Referenz mehr, die Gruppierung liefe dort ins Leere; (b) `results` ist bereits
+  // dedupliziert — die interessante Population ist die VOR dem Dedup. Ueber das rohe Universum
+  // ist die Pruefung sogar strenger: sie erfasst auch Beine, die schon vorher ausgeroutet
+  // wurden, und meldet eine gefaehrliche Namensregel damit frueher.
+  const kandidaten = universe.map((s) => ({ snapshot: s, ticker: (s.meta && s.meta.ticker) || '?' }));
+  const gruppen = issuerDedupGroups(kandidaten).filter((g) => g.length > 1);
+  assert.ok(gruppen.length > 0, 'Keine Dedup-Gruppe gefunden — der Waechter darf nicht ins Leere laufen');
+  const verdaechtig = gruppen
+    .map((g) => ({
+      tickers: g.map((e) => e.ticker).join('+'),
+      branchen: [...new Set(g.map((e) => ((e.snapshot && e.snapshot.meta) || {}).industry).filter(Boolean))],
+    }))
+    .filter((x) => x.branchen.length > 1);
+  assert.equal(
+    verdaechtig.length, 0,
+    'Moegliche Fehlverschmelzung (verschiedene Branchen in einer Dedup-Gruppe): '
+      + verdaechtig.map((x) => x.tickers + ' [' + x.branchen.join(' | ') + ']').join(', '),
   );
 });
 
