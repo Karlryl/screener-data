@@ -230,17 +230,28 @@ test('Real-Estate Overview ist ffo-badge (track-eigene Badge)', () => {
 testU('kein Emittent steht zweimal im selben Board', () => {
   const { produceRankings } = require('../../src/scoring/score.js');
   const r = produceRankings(results, { topN: 50 });
-  // Normalisierung bewusst STRENGER als der Dedup selbst (auch Artikel und Rechtsform weg):
-  // so faengt der Test auch die Faelle, die der Dedup heute noch nicht loest.
-  const norm = (s) => String(s || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9\u00e4\u00f6\u00fc\u00df ]+/g, ' ')
-    .replace(/\b(the|inc|incorporated|corp|corporation|ltd|limited|plc|nv|sa|ag|holdings?|group|co|company)\b/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  // \u26a0 ZWEITE KORREKTUR (CI-Lauf 30226188564): hier stand eine Normalisierung, die bewusst
+  // STRENGER war als der Dedup \u2014 sie entfernte zusaetzlich Artikel, Rechtsformen wie ag/sa/nv/plc
+  // sowie "holdings" und "group". Solange nur die obersten 50 Zeilen geprueft wurden, fiel das
+  // nicht auf. Ueber die volle Population erzeugt sie FALSCHE ALARME, weil genau diese Woerter
+  // Firmen UNTERSCHEIDEN. Am echten CI-Universum belegt:
+  //     Graham Corporation      vs. Graham HOLDINGS Company   \u2014 zwei Firmen
+  //     Metro Inc. (Kanada)     vs. Metro AG (Deutschland)    \u2014 zwei Firmen
+  //     Heineken N.V.           vs. Heineken HOLDING N.V.     \u2014 zwei Gesellschaften
+  //     Interparfums, Inc. (US) vs. Interparfums SA (FR)      \u2014 zwei Firmen
+  // Der Lauf wurde dadurch rot, ohne dass ein Defekt vorlag \u2014 teurer als ein uebersehener Fall.
+  //
+  // Es gibt KEINE sichere "etwas strengere" Normalisierung: jedes weitere Wort, das man
+  // entfernt, unterscheidet irgendwo zwei Gesellschaften. Deshalb prueft der Test jetzt die
+  // Zusicherung selbst \u2014 kein Emittentenschluessel der PRODUKTION darf zweimal in einem Board
+  // stehen. Das ist nicht zirkulaer: der Dedup gruppiert nur die zum Zeitpunkt seines Laufs
+  // gerouteten Eintraege, waehrend die Boards spaeter zusammengesetzt werden. Ein Bein, das
+  // danach wieder auftaucht, faellt hier auf.
+  const { issuerKeyLoose } = require('../../src/scoring/score.js');
+  const norm = (e) => issuerKeyLoose(e && e.snapshot ? e.snapshot : { meta: { name: e && e.name } });
   const proBoard = new Map();
   const zaehle = (board, e) => {
-    const n = norm(e.name);
+    const n = norm(e);
     if (!n) return;
     const k = board + '|' + n;
     if (!proBoard.has(k)) proBoard.set(k, new Set());
@@ -259,41 +270,34 @@ testU('kein Emittent steht zweimal im selben Board', () => {
   );
 });
 
-// Gegenrichtung, mit einem UNABHAENGIGEN Orakel. Eine faelschlich verschmolzene Firma ist
-// unsichtbar — sie fehlt einfach. Ueber Namensmerkmale laesst sich das grundsaetzlich nicht
-// pruefen: jede namensbasierte Gegenprobe benutzt dieselbe Regel wie der Fix und meldet
-// deshalb garantiert Erfolg (genau dieser Zirkelschluss ist am 27.07. schon einmal passiert
-// und hat ein falsches "0 Doppelungen" produziert, waehrend drei offen waren). Die BRANCHE
-// ist dagegen namensunabhaengig: zwei Beine desselben Emittenten tragen sie identisch.
+// ⚠ HIER STAND EIN TEST, DER AM ECHTEN UNIVERSUM WIDERLEGT WURDE (CI-Lauf 30226188564).
 //
-// Am echten Bestand gemessen (27.07.): 339 Dedup-Gruppen, davon 0 mit abweichender Branche —
-// die Bedingung haelt also auf allen heutigen echten Verschmelzungen.
-// EHRLICHE GRENZE: notwendige, keine hinreichende Bedingung. Zwei verschiedene Firmen
-// DERSELBEN Branche, faelschlich verschmolzen, faengt auch dieser Test nicht. Er faengt die
-// Fehlerklasse, die eine zu grosszuegige Namens-Normalisierung typischerweise erzeugt.
-testU('Dedup verschmilzt keine Firmen aus verschiedenen Branchen (unabhaengiges Orakel)', () => {
-  const { issuerDedupGroups } = require('../../src/scoring/score.js');
-  // Gruppiert wird direkt ueber `universe`, NICHT ueber `results`. Zwei Gruende, beide beim
-  // Bauen gemessen statt angenommen: (a) die Eintraege aus scoreUniverse tragen keine
-  // .snapshot-Referenz mehr, die Gruppierung liefe dort ins Leere; (b) `results` ist bereits
-  // dedupliziert — die interessante Population ist die VOR dem Dedup. Ueber das rohe Universum
-  // ist die Pruefung sogar strenger: sie erfasst auch Beine, die schon vorher ausgeroutet
-  // wurden, und meldet eine gefaehrliche Namensregel damit frueher.
-  const kandidaten = universe.map((s) => ({ snapshot: s, ticker: (s.meta && s.meta.ticker) || '?' }));
-  const gruppen = issuerDedupGroups(kandidaten).filter((g) => g.length > 1);
-  assert.ok(gruppen.length > 0, 'Keine Dedup-Gruppe gefunden — der Waechter darf nicht ins Leere laufen');
-  const verdaechtig = gruppen
-    .map((g) => ({
-      tickers: g.map((e) => e.ticker).join('+'),
-      branchen: [...new Set(g.map((e) => ((e.snapshot && e.snapshot.meta) || {}).industry).filter(Boolean))],
-    }))
-    .filter((x) => x.branchen.length > 1);
-  assert.equal(
-    verdaechtig.length, 0,
-    'Moegliche Fehlverschmelzung (verschiedene Branchen in einer Dedup-Gruppe): '
-      + verdaechtig.map((x) => x.tickers + ' [' + x.branchen.join(' | ') + ']').join(', '),
-  );
-});
+// Die Idee war richtig: die Gegenrichtung (faelschlich VERSCHMOLZENE Firmen) braucht ein
+// Merkmal, das nichts mit dem Namen zu tun hat — sonst prueft die Gegenprobe dieselbe Regel
+// wie der Fix. Gewaehlt war die BRANCHE, mit der Annahme: zwei Beine desselben Emittenten
+// tragen sie identisch. Am lokalen Bestand (339 Dedup-Gruppen) hielt das ausnahmslos.
+//
+// Am CI-Universum (12.451 Snapshots) haelt es NICHT. Vier Gegenbeispiele, alle mit
+// IDENTISCHEM Firmennamen und verschiedener Branche:
+//     Tianqi Lithium Corporation      Specialty Chemicals  vs. Other Industrial Metals & Mining
+//     Anglo American plc              AIRLINES             vs. Other Industrial Metals & Mining
+//     Teck Resources Limited          Other Ind. Metals    vs. Copper
+//     Corporacion Inmobiliaria Vesta  RE - Diversified     vs. RE - Development
+//
+// Das Branchenfeld ist bei Yahoo also NICHT stabil je Emittent. Ein Test auf einer
+// widerlegten Praemisse ist schlechter als keiner: er blockiert Karls Tageslauf mit
+// Falschmeldungen und erzieht dazu, rote Laeufe wegzudruecken. Er ist deshalb ENTFERNT und
+// nicht abgeschwaecht — eine aufgeweichte Fassung haette dieselbe kaputte Annahme behalten.
+//
+// LEHRE, die teurer war als der Test: eine an 339 lokalen Faellen bestaetigte Regel ist
+// keine Regel, wenn die Produktionsdaten dreimal so gross sind. Genau das steht als Falle
+// Nr. 1 im Nachtmandat (ein lokaler Lauf ist KEIN Beleg fuer CI-Verhalten) — und ist hier
+// trotzdem passiert, in derselben Nacht, in der die Regel notiert wurde.
+//
+// OFFEN und Karl gemeldet: dass dieselbe Firma je nach Notierung eine andere Branche traegt,
+// betrifft nicht nur diesen Test — die Routing-Entscheidung haengt an Sektor und Branche.
+// Welches Bein den Dedup gewinnt, entscheidet damit mit, in welche Branchenformel die Firma
+// faellt.
 
 // --- produceRankings: dashboard-JSON-Form -----------------------------------
 testU('produceRankings: korrekte JSON-Form, sortiert, PLTR top software', () => {

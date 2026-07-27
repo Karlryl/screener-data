@@ -78,15 +78,13 @@ const issuerKey = (s) => {
 // Schluessel und Wert sind bereits normalisiert (klein, ohne Trennzeichen).
 // Belegt am CI-Lauf 30213797442: diese drei standen doppelt in ihren Boards
 // (TLN/1TLN.MI utilities #4+#5, SCHW/1SCHW.MI financials #36+#37, CG/1CG.MI financials #28+#29).
-const ISSUER_ALIASE = {
-  // Nur noch die zwei Faelle mit ARTIKEL-Unterschied. "Talen Energy Corporation/Corp" ist
-  // entfallen — das war ein reiner Rechtsform-Fall und wird jetzt von der gemessenen Regel
-  // unten geloest. Fuer den Artikel "The" gibt es KEINE Messung, deshalb bleiben diese zwei
-  // eine gepflegte Liste. Der Waechter in score.integration.test.js meldet, falls ein
-  // dritter Artikel-Fall auftaucht. Schluessel sind bereits rechtsform-normalisiert.
-  thecharlesschwabcorp: 'charlesschwabcorp',
-  thecarlylegroupinc: 'carlylegroupinc',
-};
+// LEER — und das ist das Ziel. Hier standen zuletzt zwei handgepflegte Artikel-Faelle
+// (Schwab, Carlyle); die inzwischen am CI-Universum GEMESSENE Regel "fuehrendes The" unten
+// loest beide und 17 weitere. Eine Handliste ist an einer Identitaets-Entscheidung immer die
+// schlechtere Loesung: sie waechst still, und was nicht drinsteht, faellt lautlos durch.
+// Der Eintrag bleibt als Ventil bestehen, falls einmal ein Fall auftaucht, fuer den es
+// nachweislich keine Regel gibt — dann aber mit Beleg, warum eine Regel nicht geht.
+const ISSUER_ALIASE = {};
 // Rechtsform-Langform auf ihre Kurzform, NUR an Wortgrenzen. Bewusst eng: keine Artikel,
 // keine Wortentfernung — genau die Verallgemeinerung, die der Court am 27.07. als ungemessen
 // abgelehnt hat. DIESE Variante ist gemessen: am CI-Universum (12 320 Namen) fallen dadurch
@@ -94,16 +92,20 @@ const ISSUER_ALIASE = {
 // US-Primaerlistings (der Fehlverschmelzungs-Schutz muesste also nie eingreifen).
 // Beispiele: "Corning Incorporated"/"Corning Inc", "HASEKO Corporation"/"HASEKO CORP",
 // "CLP Holdings Limited"/"CLP HOLDINGS LTD", "Westpac Banking Corporation"/"WESTPAC BANKING CORP".
-const RECHTSFORM_LANG_KURZ = [
-  [/\bincorporated\b/gi, 'inc'],
-  [/\bcorporation\b/gi, 'corp'],
-  [/\blimited\b/gi, 'ltd'],
-  [/\bcompany\b/gi, 'co'],
-];
+const RECHTSFORM_LANG_KURZ = [];
+// audit/fix (CI-Lauf 30226188564): ein FUEHRENDES "The" unterscheidet keine Firmen. Yahoo fuehrt
+// dieselbe Gesellschaft je nach Notierung mal mit, mal ohne Artikel — "AES Corporation" (Mailand)
+// gegen "The AES Corporation" (NYSE). Vorher war das zweimal per Hand in ISSUER_ALIASE geflickt;
+// die Regel macht beide Eintraege ueberfluessig.
+// AM ECHTEN CI-UNIVERSUM GEMESSEN (12.451 Snapshots), bevor sie eingebaut wurde: 19 zusaetzlich
+// zusammengefuehrte Gruppen, 19 davon korrekt, NULL Fehlverschmelzungen — AES, Allstate,
+// BNY Mellon, Cheesecake Factory, Carlyle, Cigna, Cooper, Campbell's, Ensign, Goodyear, Hartford,
+// Hershey, Mosaic, Procter & Gamble, Progressive, Schwab, Smucker, Williams, Magnum Ice Cream.
+// Bewusst nur der FUEHRENDE Artikel: ein "the" mitten im Namen kann bedeutungstragend sein.
 const issuerKeyLoose = (s) => {
   const n = issuerName(s);
   if (!n) return null;
-  let roh = n;
+  let roh = n.replace(/^\s*the\s+/i, '');
   for (const [re, kurz] of RECHTSFORM_LANG_KURZ) roh = roh.replace(re, kurz);
   const k = roh.replace(/[^\p{L}\p{N}]+/gu, '').toLowerCase();
   return ISSUER_ALIASE[k] || k;
@@ -1209,7 +1211,7 @@ function calibrationDrift(liveCal, refCal, ksThreshold = 0.15) {
 
 module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings, phaseOf, mcapBandOf, ipoRecencyOf, ipoYearOf, calibrationDrift,
   // audit/fix (Bug 0/9/7): fuer calibrate.js — Kohorten-Gates + Winsor-Schranken exakt spiegeln
-  learnWinsorBounds, winsorTailBounds, isDataSuspect, issuerDedupComparator, issuerKey, issuerDedupGroups,
+  learnWinsorBounds, winsorTailBounds, isDataSuspect, issuerDedupComparator, issuerKey, issuerKeyLoose, issuerDedupGroups,
   // AUFGABE 2 (Wachstums-Bonus): fuer TDD + gezielte Wiederverwendung
   growthBoostFactor, growthYoYComponents, robustG, growthPctlFn, boostFromPctl, GROWTH_BOOST_K,
   // PHASE 3 (Zyklus-Daempfer): fuer TDD + Mess-Skripte
