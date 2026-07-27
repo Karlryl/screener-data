@@ -23,7 +23,9 @@
 # strukturell garantiert: fehlt der Cache, faellt loadSmallcapUniverse() (run-screener.js)
 # auf sein bestehendes Fail-soft-Verhalten zurueck (Hauptkorpus-Fallback), nichts blockt.
 #
-# Kein Commit-Schritt in diesem Workflow -> `permissions: contents: read` genuegt.
+# Seit Tag 439 gibt es EINEN Commit-Schritt (der woechentliche Reconcile schreibt
+# watchlist-smallcap.json). Die Schreibrechte haengen deshalb NICHT mehr workflow-weit,
+# sondern nur am merge-Job — die vier Abruf-Shards laufen weiter mit Lese-Token.
 name: Small-Cap Pull (5.2, isoliert)
 
 on:
@@ -35,10 +37,15 @@ on:
   workflow_dispatch: {}
 
 # Karl-Entscheid 27.07.2026 (Frage 1 = A): der Reconcile darf die Small-Cap-Liste
-# woechentlich selbst aufraeumen. Dafuer braucht dieser Workflow Schreibrechte — er
-# committet AUSSCHLIESSLICH watchlist-smallcap.json, nichts sonst.
+# woechentlich selbst aufraeumen. Er committet AUSSCHLIESSLICH watchlist-smallcap.json.
+#
+# ⚠ KORREKTUR (unabhaengige Pruefung 27.07.): hier stand contents: write auf WORKFLOW-Ebene.
+# Das gibt auch den vier Abruf-Shards einen Schreib-Token, den sie nie brauchen — die ziehen
+# nur Kursdaten. Ein Token ist genau so gefaehrlich wie die Summe der Stellen, an denen er
+# herumliegt. Standard bleibt Lesen; Schreiben haengt jetzt am merge-Job, der als Einziger
+# committet.
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: smallcap-pull
@@ -139,6 +146,9 @@ jobs:
     needs: pull
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Nur DIESER Job committet (die aufgeraeumte Small-Cap-Liste) — nur er braucht Schreibrecht.
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -206,9 +216,15 @@ jobs:
 
       # Committet AUSSCHLIESSLICH die Mitgliedschaftsliste. Keine Vintages, keine Snapshots,
       # keine Ausgaben — die bleiben wie bisher aus diesem Workflow heraus.
+      # ⚠ continue-on-error BEWUSST ENTFERNT (unabhaengige Pruefung 27.07., Schwere hoch).
+      # Vorher konnte dieser Schritt NIE rot werden: die Retry-Schleife brach bei jedem
+      # Misserfolg still ab, und continue-on-error verschluckte auch einen echten Fehler.
+      # Folge waere gewesen: der Aufraeumer entfernt Namen, der Push scheitert, der Lauf bleibt
+      # gruen — und Karl haelt die Liste fuer aufgeraeumt, obwohl nichts angekommen ist. Ein
+      # stiller Verlust in einer Mitgliedschaftsliste ist genau die Sorte Fehler, die dieses
+      # Repo nirgends haben darf. Jetzt: drei Versuche, danach rotes X.
       - name: Commit aufgeraeumte Small-Cap-Liste
         if: always()
-        continue-on-error: true
         run: |
           git config user.name "yahoo-pull-bot"
           git config user.email "yahoo-pull-bot@users.noreply.github.com"
@@ -238,12 +254,24 @@ jobs:
               } catch (e) { console.log('Bericht nicht lesbar'); }
             ")
             git commit -m "chore: small-cap reconcile $(date -u +%F) — $zeile"
+            # erfolg bleibt 0, bis ein Push wirklich durch ist. Jeder Ausstieg ohne erfolg=1
+            # endet unten in einem roten X — kein stiller Abbruch mehr.
+            erfolg=0
             for i in 1 2 3; do
-              git fetch origin main
-              if ! git rebase --autostash origin/main; then git rebase --abort || true; break; fi
-              if git push origin HEAD:main; then echo "Small-Cap-Liste committet"; break; fi
+              git fetch origin main || { echo "fetch fehlgeschlagen (Versuch $i)"; sleep $((5 * i)); continue; }
+              if ! git rebase --autostash origin/main; then
+                git rebase --abort || true
+                echo "rebase fehlgeschlagen (Versuch $i) — vermutlich Konflikt an watchlist-smallcap.json"
+                sleep $((5 * i)); continue
+              fi
+              if git push origin HEAD:main; then erfolg=1; echo "Small-Cap-Liste committet"; break; fi
+              echo "push fehlgeschlagen (Versuch $i)"
               sleep $((5 * i))
             done
+            if [ "$erfolg" != "1" ]; then
+              echo "::error::Small-Cap-Reconcile: die aufgeraeumte Liste konnte nach 3 Versuchen NICHT gepusht werden. Die Entfernungen sind NICHT wirksam — der naechste Lauf wiederholt sie. Bitte nachsehen, warum der Push scheitert."
+              exit 1
+            fi
           fi
 
       - name: Upload reconciliation report
