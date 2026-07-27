@@ -375,6 +375,65 @@ function shareCountDilution(s, ctx) {
   return p >= TH.SHARE_DILUTION_PCTL;
 }
 
+// 16. Einmalertrag (Karl-Sichtabnahme 27.07.2026): ein einzelnes Quartal traegt den ganzen
+// Jahresumsatz — typisch fuer Lizenz-, Meilenstein- oder Verkaufserloese, die als Umsatz
+// gebucht werden. Fuer einen Wachstums-Screener sehen solche Firmen wie Spitzenwerte aus,
+// obwohl nichts davon wiederkehrt.
+//
+// DER ANLASS: Zealand Pharma stand am 27.07. auf Rang 1 der Uebersicht, Score 100,1, mit
+// sechs Achsen ueber dem 99. Perzentil. Grundlage waren die Quartalsumsaetze 5 / 10 / 8 /
+// 1.382 Mio. — ein einziger Buchungsvorgang (Lizenzertrag). Karl fiel es beim Draufschauen
+// auf, dem Screener nicht.
+//
+// WARUM UEBER QUARTALE UND NICHT UEBER DIE JAHRESREIHE: ein echter Hypergrowth kann auch das
+// Fuenffache wachsen — die Jahresreihe allein kann beides nicht trennen. Der Unterschied ist
+// die WIEDERHOLBARKEIT, und die steht in den Quartalen: ein Einmalertrag ist EIN Ausreisser,
+// echtes Wachstum ist getragen.
+//
+// DIE SCHWELLE ist strukturell, kein Marktniveau (Invariante 3, wie bei inflationSuspect):
+// 0,50 heisst "ein Quartal traegt so viel wie die anderen drei zusammen". Bei vier gleich
+// grossen Quartalen liegt der Wert bei 0,25 — das ist die natuerliche Referenz, nicht eine
+// gelernte. Am ausgelieferten Bestand des 27.07. gemessen (151 Zeilen mit vier verwertbaren
+// Quartalen): Median 0,301, p90 0,374, und nur FUENF Zeilen ueber 0,50 (ZEAL.VI 0,983,
+// ABUS 0,936, 688336.SS 0,742, BEAM 0,696, 2451.TW 0,511).
+//
+// GEGENPROBE an genau den Firmen, die Karl sehen WILL: CRDO 0,327 · ALAB 0,308 · BE 0,318 ·
+// NVDA 0,322 · PLTR 0,313 · CELH 0,264 · DAVE 0,271 — alle weit im Normalbereich, kein
+// Fehlalarm.
+//
+// SAISON-SCHUTZ: ein Weihnachtsgeschaeft kann ein Quartal legitim dominieren. Liegen acht
+// Quartale vor und ist DASSELBE Quartal auch im Vorjahr das groesste, ist es Saison und die
+// Lampe schweigt. Nur bei einem Ausreisser OHNE Vorjahres-Entsprechung feuert sie.
+//
+// VERRECHNET NICHTS: nicht in DATA_SUSPECT_LAMPS (score.js) -> kein Score-, kein
+// Exclude-Effekt. Ob ein Einmalertrag den Score druecken soll, ist eine eigene Frage mit
+// Gauntlet-Pflicht — diese Lampe macht ihn zuerst SICHTBAR.
+const EINMALERTRAG_ANTEIL = 0.50;
+function einmalertrag(s) {
+  // ⚠ Bewusst die ROHE Reihe (mit Luecken), NICHT presentValues: der Saison-Vergleich unten
+  // stellt Quartal gegen Quartal, und presentValues wuerfe Luecken heraus und damit die
+  // Positionen durcheinander — Q4 laege dann gegen Q3 des Vorjahres.
+  const roh = norm(s, 'revenueQ');
+  const letzte4 = roh.slice(0, 4);
+  const brauchbar = (v) => Number.isFinite(v) && v > 0;
+  if (letzte4.length < 4 || !letzte4.every(brauchbar)) return null;   // nicht bewertbar, nicht "sauber"
+  const summe = letzte4.reduce((a, b) => a + b, 0);
+  if (!(summe > 0)) return null;
+  const groesster = Math.max(...letzte4);
+  if (groesster / summe < EINMALERTRAG_ANTEIL) return false;
+
+  // Saison-Schutz: dominiert im Vorjahr DASSELBE Quartal ebenso stark, ist es Saison und
+  // kein Einmaleffekt. Fehlt das Vorjahr, wird nicht geraten — dann bleibt es beim Verdacht.
+  const vorjahr = roh.slice(4, 8);
+  if (vorjahr.length === 4 && vorjahr.every(brauchbar)) {
+    const groessterVorjahr = Math.max(...vorjahr);
+    const anteilVorjahr = groessterVorjahr / vorjahr.reduce((a, b) => a + b, 0);
+    if (letzte4.indexOf(groesster) === vorjahr.indexOf(groessterVorjahr)
+        && anteilVorjahr >= EINMALERTRAG_ANTEIL) return false;
+  }
+  return true;
+}
+
 const LAMPS = {
   unprofit, burning, shortRunway, highDilution, peakMargin,
   lowRoic, arDivergence, crashRisk, fcfArtefact, cyclePeak,
@@ -382,6 +441,7 @@ const LAMPS = {
   newestQtrSuspect, annualCurrencyLeak,
   inflationSuspect,
   shareCountDilution,
+  einmalertrag,
 };
 
 /**
