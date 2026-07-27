@@ -267,4 +267,4 @@ function route(s) {
   return out;
 }
 
-module.exports = { route, gpClass, isPreRevenue, structExcludeReason, sectorRoute, isUS, isForeignListed, isUsPrimaryListing };
+module.exports = { route, gpClass, isPreRevenue, structExcludeReason, sectorRoute, isUS, isForeignListed, isUsPrimaryListing, NON_OPERATING_VEHICLE_INDUSTRY };

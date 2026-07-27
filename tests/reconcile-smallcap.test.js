@@ -3,7 +3,8 @@
 // protocol/5.2-weg1b-universe-registered-20260722.md):
 //   (a) delisted -> entfernen (Auflage 4)
 //   (b) marketCap ueber der Bandobergrenze -> entfernen (Auflage 5, Band-Austritt)
-//   (c) Nicht-Operating-Vehikel -> entfernen (Auflage 5)
+//   (c1) Nicht-Operating-Vehikel (negativer Umsatz UND Vehikel-Industrie) -> entfernen
+//   (c2) negativer Umsatz bei operativer Branche -> BEHALTEN (Korrektur 27.07.)
 //   (d) veralteter Snapshot entfernt NICHT (Schutz gegen transiente Fehlurteile)
 //   (e) unter der Bandgrenze / kein Snapshot / sonstige route()-Ausschluesse -> BEHALTEN
 //   (f) relative Ueberprune-Sperre statt absoluter 200er-Grenze (Auflage 4)
@@ -79,12 +80,32 @@ check('(b2) genau AUF der Obergrenze bleibt drin (Grenze ist inklusiv wie in sma
 });
 
 // ── (c) Auflage 5: Nicht-Operating ───────────────────────────────────────────
-check('(c) Nicht-Operating-Vehikel (negativer Jahresumsatz) -> entfernen', () => {
+// ⚠ DIESER FALL WURDE AM 27.07. KORRIGIERT. Vorher stand hier nur die erste Haelfte, und
+// zwar OHNE Vehikel-Industrie — der Test hat damit eine Fehlklassifikation als Sollverhalten
+// festgeschrieben: ein einzelnes negatives Umsatzjahr genuegte, um einen Namen dauerhaft aus
+// dem Universum zu entfernen. Am echten Bestand traf das ALT (Altimmune, Inc., Biotechnology,
+// 545 Mio. USD, frischer Snapshot). Ein Test, der einen Fehler zementiert, ist schlimmer als
+// kein Test: er laesst die spaetere Korrektur wie einen Regress aussehen.
+check('(c1) negativer Jahresumsatz UND Vehikel-Industrie -> entfernen', () => {
   const s = snap({});
+  s.meta.industry = 'Closed-End Fund - Debt';
   s.annual = { annualRev: [{ value: -8e6 }, { value: 12e6 }], annualOpInc: [{ value: -1e6 }], annualNetIncome: [{ value: -1e6 }] };
   const u = R.classify(s, OPTS);
   assert.strictEqual(u.entscheidung, 'entfernen');
   assert.strictEqual(u.grund, 'nicht-operativ');
+});
+
+check('(c2) negativer Jahresumsatz bei OPERATIVER Branche -> behalten (der Altimmune-Fall)', () => {
+  // Die Gegenrichtung, und der eigentliche Zweck der Korrektur: eine echte Firma mit einem
+  // kaputten Umsatzjahr darf nicht aus dem Universum fallen. Im Scoring wird sie fuer EINEN
+  // Tag ausgeschlossen und ist morgen wieder da — hier waere die Entfernung dauerhaft.
+  const s = snap({});
+  s.meta.industry = 'Biotechnology';
+  s.meta.sector = 'Healthcare';
+  s.annual = { annualRev: [{ value: -68e3 }, { value: 426e3 }], annualOpInc: [{ value: -1e6 }], annualNetIncome: [{ value: -1e6 }] };
+  const u = R.classify(s, OPTS);
+  assert.strictEqual(u.entscheidung, 'behalten');
+  assert.strictEqual(u.grund, 'auffaellige-umsatzreihe-aber-operative-branche');
 });
 
 // ── (d) Frische-Sperre ───────────────────────────────────────────────────────

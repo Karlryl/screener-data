@@ -43,7 +43,7 @@ const fs = require('fs');
 const path = require('path');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
-const { route } = require('../src/scoring/router.js');
+const { route, NON_OPERATING_VEHICLE_INDUSTRY } = require('../src/scoring/router.js');
 const { MAX_MCAP, MIN_MCAP } = require('../src/scoring/smallcap-route.js');
 
 const REPO = path.join(__dirname, '..');
@@ -130,9 +130,30 @@ function classify(snapshot, opts) {
   //     eine route()-Grund entfernt; alle uebrigen Ausschluesse (no-sector,
   //     Datenmangel, pre-revenue, non-us) sind transient oder Definitionsfragen
   //     und werden nur berichtet.
+  // ⚠ KORREKTUR (unabhaengige Pruefung 27.07., bestaetigt an echten Daten): route() allein
+  // reicht hier NICHT. Der Grund 'non-operating-rev' entsteht in router.js auch ueber Zweig (a)
+  // — EIN einziges negatives Jahresumsatz-Jahr genuegt. Das Regelwerk dort gesteht den
+  // Fehltreffer selbst ein ("1 harmloser Borderline: NBTX, ein Biotech mit korruptem
+  // -8.4M-Glitch-Jahr"). Im Scoring ist das harmlos: der Name faellt fuer EINEN Tag aus dem
+  // Board und ist morgen wieder da. Hier ist dieselbe Heuristik eine MITGLIEDSCHAFTS-
+  // Entscheidung — der Name faellt dauerhaft aus dem Universum und kommt nur ueber einen
+  // teuren Builder-Lauf zurueck. Dieselbe Regel, voellig andere Folgen.
+  //
+  // Am echten Bestand belegt: ALT = Altimmune, Inc., Branche Biotechnology, 545,5 Mio. USD,
+  // Snapshot frisch — waere am ersten scharfen Samstag entfernt worden. Genau das, was der
+  // Kopf dieser Datei ausschliesst ("ein Prune darauf wuerde das registrierte Universum still
+  // erodieren").
+  //
+  // Entfernt wird deshalb nur, wenn die INDUSTRIE das Vehikel ausweist (Fonds, Shell,
+  // Asset-Manager, BDC) — eine Eigenschaft der Gesellschaft, keine Eigenschaft einer
+  // Umsatzreihe. Alles andere wird BERICHTET.
   const r = route(snapshot);
   if (r.action === 'exclude' && r.reason === 'non-operating-rev') {
-    return { entscheidung: 'entfernen', grund: 'nicht-operativ', mcap };
+    const industrie = String((meta && meta.industry) || '').toLowerCase();
+    if (NON_OPERATING_VEHICLE_INDUSTRY.test(industrie)) {
+      return { entscheidung: 'entfernen', grund: 'nicht-operativ', mcap };
+    }
+    return { entscheidung: 'behalten', grund: 'auffaellige-umsatzreihe-aber-operative-branche', mcap };
   }
   if (r.action !== 'route') return { entscheidung: 'behalten', grund: 'route-' + (r.reason || r.action), mcap };
 
