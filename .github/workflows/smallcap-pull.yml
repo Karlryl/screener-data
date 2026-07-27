@@ -185,6 +185,11 @@ jobs:
       # durchschlaegt. An den anderen Tagen laeuft er als reiner Bericht mit.
       #
       # --max-remove-pct 40 statt der Standard-25: gemessen am echten Datenstand wuerden beim
+      # ⚠ Herkunft dieser Zahl, damit sie niemand falsch nachprueft: sie stammt aus dem
+      # SNAPSHOT-BESTAND EINES CI-LAUFS (12.321 Dateien), nicht vom Entwicklungsrechner. Lokal
+      # liegen nur rund 100 der 775 Small-Cap-Snapshots vor, dort meldet derselbe Befehl
+      # entsprechend nur 9 Entfernungen — kein Widerspruch, sondern eine andere Datenbasis.
+      # Fuer die Sperre ist beides unkritisch: bei 9 wie bei 184 loest sie nicht aus.
       # ERSTEN scharfen Lauf 184 von 775 Namen (23,7 %) entfernt — fast alles Fonds-Huellen,
       # die seit dem Aufbau der Liste drinstehen. Das liegt so knapp unter 25 %, dass die
       # Sperre grundlos ausloesen wuerde. Danach fallen die Zahlen auf einzelne Namen/Woche.
@@ -211,7 +216,28 @@ jobs:
           if git diff --staged --quiet; then
             echo "Keine Aenderung an der Small-Cap-Liste."
           else
-            git commit -m "chore: small-cap reconcile $(date -u +%F)"
+            # Die Zahlen gehoeren IN die Commit-Zeile, nicht nur in ein Artefakt: Karl liest
+            # git log, keine Artefakt-Anhaenge. Ein Lauf, der wortlos ein Viertel der Liste
+            # entfernt, ist keine gute Nachricht, auch wenn er richtig liegt.
+            #
+            # ZWEI FALLEN, beide am echten Bericht gemessen (27.07.), nicht angenommen:
+            #   (a) `entfernt` ist ein ARRAY von {ticker,grund,mcap}, kein Zaehler — direkt
+            #       eingesetzt haette dort "[object Object],[object Object],…" gestanden.
+            #   (b) `gruende` zaehlt ALLE Entscheidungen, auch die Behalte-Gruende. Der
+            #       groesste Posten ist "kein-snapshot" (lokal 674) — der haette in der
+            #       Commit-Zeile wie 674 Loeschungen ausgesehen. Gezaehlt wird deshalb ueber
+            #       das `entfernt`-Array, nicht ueber `gruende`.
+            zeile=$(node -e "
+              try {
+                const r = require('./smallcap-reconcile.json');
+                const weg = Array.isArray(r.entfernt) ? r.entfernt : [];
+                const z = {};
+                for (const e of weg) z[e.grund] = (z[e.grund] || 0) + 1;
+                const g = Object.entries(z).sort((a,b) => b[1]-a[1]).map(([k,v]) => k + '=' + v).join(', ');
+                console.log(r.vorher + ' -> ' + r.nachher + ', ' + weg.length + ' entfernt' + (g ? ' (' + g + ')' : ''));
+              } catch (e) { console.log('Bericht nicht lesbar'); }
+            ")
+            git commit -m "chore: small-cap reconcile $(date -u +%F) — $zeile"
             for i in 1 2 3; do
               git fetch origin main
               if ! git rebase --autostash origin/main; then git rebase --abort || true; break; fi
