@@ -460,12 +460,22 @@ test('non-operating-rev: CEF/Trust + Investment-Holding/BDC (falls vorhanden) ex
     // Deshalb wird die Begruendung DATENABHAENGIG erwartet statt hartkodiert — aber
     // weiterhin geprueft: ein stiller Wechsel auf einen anderen Ausschlussgrund
     // (z. B. 'non-us') faellt weiter auf.
-    const hatIndustrie = !!(e.snapshot && e.snapshot.meta && e.snapshot.meta.industry);
+    // ⚠ KORREKTUR (unabhaengige Pruefung 27.07.): hier stand `e.snapshot.meta.industry`.
+    // scoreUniverse loescht die Snapshot-Referenz aber auf JEDEM Ergebnis-Eintrag
+    // (`delete e.snapshot`) — auch bei action='exclude'. `hatIndustrie` war damit IMMER
+    // false, der strenge Zweig unerreichbar, und der Test hat faktisch nur den lockeren
+    // geprueft. Der Kommentar darueber versprach ausdruecklich das Gegenteil. Genau die
+    // Sorte Zusicherung, die eine Pruefung vortaeuscht, die es nicht gibt.
+    // Die Industrie kommt jetzt aus dem UNIVERSUM (dort liegen die Snapshots unveraendert),
+    // damit der datenabhaengige Zweig wirklich greift.
+    const snapVonTicker = universe.find((s) => s && s.meta && s.meta.ticker === t);
+    const industrie = snapVonTicker && snapVonTicker.meta ? snapVonTicker.meta.industry : undefined;
+    const hatIndustrie = !!industrie;
     const erwartet = hatIndustrie ? ['non-operating-rev'] : ['non-operating-rev', 'no-sector'];
     assert.ok(
       erwartet.includes(e.reason),
       `${t} reason=${e.reason}, erwartet ${erwartet.join(' oder ')} `
-      + `(meta.industry=${JSON.stringify(e.snapshot && e.snapshot.meta && e.snapshot.meta.industry)})`,
+      + `(meta.industry=${JSON.stringify(industrie)})`,
     );
   }
 });
