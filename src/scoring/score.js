@@ -186,6 +186,29 @@ function issuerDedupGroups(entries) {
 // country='United States' bekam sonst denselben isUS=1-Rang wie das NYSE-Bein, und fxSuspect
 // deprioritisierte danach ausgerechnet das echte US-Primaerbein (GFL vs GFL.TO). Danach isUS
 // (Domizil), fxSuspect, marketCap, Ticker-Tie-Break. Erwartet: GFL schlaegt GFL.TO; BAM/CMOC unveraendert.
+// MESSUNG 27.07. (Tag 465) — „waehlt der Sieger die falsche Branchenformel?"
+// Anlass: derselbe Emittent traegt bei Yahoo je nach Boersenplatz eine andere Branche. Weil
+// hier genau EIN Bein ueberlebt, entscheidet dieser Vergleich mit darueber, gegen welche
+// Kohorte die Firma gemessen wird. Am CI-Bestand des Laufs 30230485209 durchgerechnet
+// (12.453 Snapshots, NICHT lokal — der lokale Ordner ist seit dem 17.05. eingefroren):
+//
+//   8.101 Emittenten-Gruppen, davon 2.646 mehrbeinig
+//   ->     4 Gruppen mit UNTERSCHIEDLICHER Branche ueber ihre Beine
+//   ->    21 mit unterschiedlicher FORMEL, aber 20 davon nur, weil ein metadatenloses
+//          OTC-Schattenbein 'unrouted' liefert — das ist ohnehin ausgeschlossen (non-us)
+//   ->     1 echter Fall: Anglo American plc. AAL.SW steht bei Yahoo als „Airlines",
+//          AAM.SW und NGL0.DE als „Other Industrial Metals & Mining". AAL.SW gewinnt
+//          (US-Primaer/Domizil gleich, groesste marketCap) -> die Firma faellt in
+//          'industrials' statt 'materials'.
+//
+// BEWUSST NICHT GEFIXT. Ein Mehrheitsentscheid ueber die Branchen einer Gruppe waere
+// technisch klein, aber er griffe in die Routing-Reihenfolge des Scorings ein — fuer
+// derzeit EINE Firma, die als reifer 30-Mrd.-Bergbaukonzern in einem Hypergrowth-Board
+// ohnehin nie oben steht. Der Eintrag steht hier, damit der naechste Leser die Messung
+// findet statt sie zu wiederholen. Nachmessen jederzeit mit
+// `node scripts/probe-issuer-branchenkonflikt.js <CI-Snapshot-Ordner>`. Steigt die Zahl der
+// echten Faelle, ist der Mehrheitsentscheid der naechste Schritt — mit der Auflage, dass
+// Beine OHNE Branche nicht mitstimmen duerfen (sonst gewinnt „keine Branche" per Anzahl).
 function issuerDedupComparator(a, b) {
   const pa = isUsPrimaryListing((a.snapshot && a.snapshot.meta) || {}) ? 1 : 0;
   const pb = isUsPrimaryListing((b.snapshot && b.snapshot.meta) || {}) ? 1 : 0;
