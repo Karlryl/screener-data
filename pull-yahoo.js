@@ -181,6 +181,26 @@ const MIN_MCAP_USD = (() => {
 // NOT_FOUND_DELIST_STREAK consecutive not-found runs before flagging.
 const NOT_FOUND_DELIST_STREAK = parseInt(process.env.NOT_FOUND_DELIST_STREAK || '2', 10);
 
+/**
+ * Tag 466 — die Ueberspring-Entscheidung der Small-Cap-Eigentumsgrenze, als reine Funktion
+ * herausgezogen (gleiches Muster wie nextNotFoundState darunter: pruefbar ohne Platte).
+ *
+ * WARUM DAS EINEN EIGENEN WAECHTER BRAUCHT: an genau dieser Bedingung haengt, ob eine Firma,
+ * die ueber die Bandgrenze waechst, im Hauptboard sichtbar ist. Die aeltere Fassung lautete
+ * "steht auf der Small-Cap-Liste -> ueberspringen" und machte Aufsteiger bis zu eine Woche
+ * unsichtbar. Tag 456 hat das auf "steht drauf UND hat KEINE eigene Kursdatei" verschaerft.
+ *
+ * Der Unterschied ist von aussen unsichtbar: beide Fassungen laufen gruen, beide melden
+ * plausible Zahlen. Erst am 27.07. wurde am CI-Bestand nachgemessen, dass mit der neuen
+ * Bedingung NULL von fuenf Aufsteigern uebersprungen werden — vorher waeren es fuenf gewesen.
+ * Ohne Waechter faellt ein Rueckbau also niemandem auf, und die Luecke kaeme lautlos zurueck.
+ * Festgenagelt in tests/smallcap-eigentumsgrenze.test.js.
+ */
+function ueberspringtSmallcapTicker({ aufSmallcapListe, hatSnapshot }) {
+  if (!aufSmallcapListe) return false;   // gehoert dem Hauptlauf — immer ziehen
+  return !hatSnapshot;                   // ohne eigene Kursdatei holt sie der Small-Cap-Lauf
+}
+
 // audit fix BH-047: pure decision extracted so it's unit-testable without touching disk.
 function nextNotFoundState(existingMeta) {
   const streak = ((existingMeta && existingMeta.notFoundStreak) || 0) + 1;
@@ -3262,9 +3282,12 @@ async function main() {
         let behaltenMitStand = 0;
         watchlist.stocks = watchlist.stocks.filter((e) => {
           const t = typeof e === 'string' ? e : (e && e.ticker);
-          if (!(t && scTicker.has(t))) return true;
-          if (!ohneStand(t)) { behaltenMitStand++; return true; }
-          return false;
+          const aufSmallcapListe = Boolean(t && scTicker.has(t));
+          const hatSnapshot = aufSmallcapListe ? !ohneStand(t) : false;
+          // Tag 466: Entscheidung ueber die reine Funktion, damit sie einen Waechter hat.
+          if (ueberspringtSmallcapTicker({ aufSmallcapListe, hatSnapshot })) return false;
+          if (aufSmallcapListe && hatSnapshot) behaltenMitStand++;
+          return true;
         });
         if (behaltenMitStand > 0) {
           _log('INFO', `Small-Cap-Eigentumsgrenze: ${behaltenMitStand} Ticker BLEIBEN im Hauptlauf, weil sie noch eine Snapshot-Datei haben (sonst friere sie ein; der normale mcap-Skip raeumt sie ab)`);
@@ -3370,6 +3393,9 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   shardHash, shardStocks, parseArgs,
   // F1 (Codex-Fund): ehrlicher mcap-Skip-Zaehler (schliesst fx-unknown aus) — fuer TDD
   countSkippedMcap,
+  // Tag 466: Ueberspring-Entscheidung der Small-Cap-Eigentumsgrenze — an ihr haengt, ob
+  // Aufsteiger im Hauptboard sichtbar sind. Waechter: tests/smallcap-eigentumsgrenze.test.js
+  ueberspringtSmallcapTicker,
   // TASK 0.11 (Stille-Fehler-Härtung): fuer TDD — runLamp + Zugriff auf die Zaehler.
   runLamp,
   // Task 0.13 (Tag 288): Schema-Salvage fuer TDD.
