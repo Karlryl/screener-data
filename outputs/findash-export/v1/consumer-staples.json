@@ -1,25 +1,25 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-07-26T23:39:34.427Z",
+  "generated_at": "2026-07-27T02:56:39.507Z",
   "branch": "consumer-staples",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 70.1
+    "coverage_pct": 70.2
   },
   "mcapBounds": [
-    2458633547.037696,
-    3903860736,
-    7141396357.493391,
-    17268888608.931942
+    2477568421.318441,
+    3916471040,
+    7155583548.664054,
+    17298650767.03273
   ],
   "profitable": [
     {
       "rank": 1,
       "ticker": "CUPID.NS",
-      "score": 100.1,
+      "score": 100.2,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -39,7 +39,7 @@
       "ipoYear": 2016,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 95.7,
       "scoreShrunk": 95.4,
@@ -71,17 +71,17 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 90.1,
+          "pct": 89.9,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 86,
+          "pct": 86.4,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 94.6,
+          "pct": 94.4,
           "weight": 2.4
         }
       ],
@@ -103,7 +103,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 57226262143.5904,
+      "marketCap": 57769799103.2832,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "recent",
@@ -111,7 +111,7 @@
       "ipoYear": 2020,
       "coverageAxes": "6/7",
       "coverageWeight": 0.97,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 91.3,
       "scoreShrunk": 90,
@@ -123,12 +123,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 88.4,
+          "pct": 88.2,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 94,
+          "pct": 93.9,
           "weight": 0.5
         },
         {
@@ -138,7 +138,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 92.2,
+          "pct": 92.1,
           "weight": 0.6
         },
         {
@@ -153,22 +153,22 @@
         },
         {
           "key": "dilution",
-          "pct": 87.8,
+          "pct": 88,
           "weight": 2.4
         }
       ],
       "revGrowthYoYPct": 22.512401624841782,
       "ath": {
-        "distancePct": -33.6,
+        "distancePct": -33,
         "athDate": "2021-01-08",
-        "monthsAgo": 66,
-        "lastDate": "2026-07-24"
+        "monthsAgo": 67,
+        "lastDate": "2026-07-27"
       }
     },
     {
       "rank": 3,
       "ticker": "1318.HK",
-      "score": 92.9,
+      "score": 92.8,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -180,7 +180,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 3525715097.366528,
+      "marketCap": 3553755212.544,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "recent",
@@ -188,10 +188,10 @@
       "ipoYear": 2024,
       "coverageAxes": "6/7",
       "coverageWeight": 0.97,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 90.2,
-      "scoreShrunk": 88.9,
+      "scoreBase": 90.1,
+      "scoreShrunk": 88.8,
       "factors": {
         "burn": 1,
         "growth": 1.045,
@@ -200,12 +200,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 91.9,
+          "pct": 91.8,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 25,
+          "pct": 25.4,
           "weight": 0.5
         },
         {
@@ -215,7 +215,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 93.7,
+          "pct": 93.6,
           "weight": 0.6
         },
         {
@@ -230,7 +230,7 @@
         },
         {
           "key": "dilution",
-          "pct": 92.3,
+          "pct": 92.1,
           "weight": 2.4
         }
       ],
@@ -240,7 +240,7 @@
     {
       "rank": 4,
       "ticker": "300972.SZ",
-      "score": 91.4,
+      "score": 91.3,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -254,7 +254,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 5463248068.852941,
+      "marketCap": 5633561404.072673,
       "phase": "inflected",
       "mcapBand": "mid",
       "ipoRecency": "recent",
@@ -262,7 +262,7 @@
       "ipoYear": 2021,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 96.8,
       "scoreShrunk": 87.2,
@@ -279,7 +279,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 95.5,
+          "pct": 95.4,
           "weight": 0.5
         },
         {
@@ -294,7 +294,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 79.5,
+          "pct": 79.6,
           "weight": 0.3
         },
         {
@@ -326,7 +326,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 10147181769.015297,
+      "marketCap": 10321201669.7344,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "recent",
@@ -334,7 +334,7 @@
       "ipoYear": 2025,
       "coverageAxes": "6/7",
       "coverageWeight": 0.97,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 87.7,
       "scoreShrunk": 86.5,
@@ -346,12 +346,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 94.3,
+          "pct": 94.2,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 89.6,
+          "pct": 89.5,
           "weight": 0.5
         },
         {
@@ -361,7 +361,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 94,
+          "pct": 93.9,
           "weight": 0.6
         },
         {
@@ -371,12 +371,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 61.3,
+          "pct": 61.9,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 90.6,
+          "pct": 90.4,
           "weight": 2.4
         }
       ],
@@ -386,7 +386,7 @@
     {
       "rank": 6,
       "ticker": "VBL.NS",
-      "score": 87.9,
+      "score": 87.8,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -408,7 +408,7 @@
       "ipoYear": 2016,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 84.1,
       "scoreShrunk": 83.9,
@@ -425,12 +425,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 5.7,
+          "pct": 5.8,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 63.8,
+          "pct": 63.3,
           "weight": 1.8
         },
         {
@@ -440,17 +440,17 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 90.6,
+          "pct": 90.4,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 88.7,
+          "pct": 88.8,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 83.2,
+          "pct": 83.3,
           "weight": 2.4
         }
       ],
@@ -472,7 +472,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 13661794438.60439,
+      "marketCap": 13848353999.34124,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "recent",
@@ -480,9 +480,9 @@
       "ipoYear": 2021,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 91.4,
+      "scoreBase": 91.3,
       "scoreShrunk": 82.8,
       "factors": {
         "burn": 1,
@@ -492,12 +492,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 92.8,
+          "pct": 92.7,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 44.6,
+          "pct": 45,
           "weight": 0.5
         },
         {
@@ -507,12 +507,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 93.4,
+          "pct": 93.3,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 83.6,
+          "pct": 83.8,
           "weight": 0.3
         },
         {
@@ -532,7 +532,7 @@
     {
       "rank": 8,
       "ticker": "CMRY.JK",
-      "score": 86.6,
+      "score": 86.5,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -546,7 +546,7 @@
       "country": "Indonesia",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 2022531878.2626693,
+      "marketCap": 2088771912.5188608,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -554,39 +554,39 @@
       "ipoYear": 2021,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 91.5,
-      "scoreShrunk": 83,
+      "scoreShrunk": 82.9,
       "factors": {
         "burn": 1,
-        "growth": 1.044,
+        "growth": 1.043,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 92.5,
+          "pct": 92.4,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 68,
+          "pct": 68.4,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 91,
+          "pct": 90.9,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 91.3,
+          "pct": 91.2,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 89.2,
+          "pct": 89,
           "weight": 0.3
         },
         {
@@ -606,7 +606,7 @@
     {
       "rank": 9,
       "ticker": "RADICO.NS",
-      "score": 86.5,
+      "score": 86.4,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -628,10 +628,10 @@
       "ipoYear": 2003,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 83.4,
-      "scoreShrunk": 83.2,
+      "scoreBase": 83.3,
+      "scoreShrunk": 83.1,
       "factors": {
         "burn": 1,
         "growth": 1.04,
@@ -640,12 +640,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 82.6,
+          "pct": 82.3,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 84.4,
+          "pct": 84.1,
           "weight": 0.5
         },
         {
@@ -655,17 +655,17 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 78.2,
+          "pct": 78.1,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 81.3,
+          "pct": 81.5,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 79.6,
+          "pct": 79.9,
           "weight": 2
         },
         {
@@ -703,10 +703,10 @@
       "ipoYear": 2007,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 81.5,
-      "scoreShrunk": 81.4,
+      "scoreShrunk": 81.3,
       "factors": {
         "burn": 1,
         "growth": 1.05,
@@ -760,7 +760,7 @@
     {
       "rank": 11,
       "ticker": "600186.SS",
-      "score": 83.9,
+      "score": 84,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -774,7 +774,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 2248346381.186662,
+      "marketCap": 2294238659.123128,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "mature",
@@ -782,10 +782,10 @@
       "ipoYear": 1998,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 88,
-      "scoreShrunk": 80.2,
+      "scoreBase": 88.1,
+      "scoreShrunk": 80.3,
       "factors": {
         "burn": 1,
         "growth": 1.046,
@@ -794,7 +794,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 95.5,
+          "pct": 95.4,
           "weight": 4.2
         },
         {
@@ -809,17 +809,17 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 94.6,
+          "pct": 94.5,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 87.3,
+          "pct": 87.6,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 64.3,
+          "pct": 64.9,
           "weight": 2
         },
         {
@@ -834,7 +834,7 @@
     {
       "rank": 12,
       "ticker": "OV8.SI",
-      "score": 83.8,
+      "score": 83.7,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -846,7 +846,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 3801138959.5242496,
+      "marketCap": 3768467846.176358,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "seasoned",
@@ -854,7 +854,7 @@
       "ipoYear": 2011,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 88.5,
       "scoreShrunk": 80.6,
@@ -866,7 +866,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 91.6,
+          "pct": 91.5,
           "weight": 4.2
         },
         {
@@ -876,12 +876,12 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 83.3,
+          "pct": 83.1,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 91.9,
+          "pct": 91.8,
           "weight": 0.6
         },
         {
@@ -891,7 +891,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 89.9,
+          "pct": 90,
           "weight": 2
         },
         {
@@ -926,7 +926,7 @@
       "ipoYear": 2014,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 87.7,
       "scoreShrunk": 79.9,
@@ -938,7 +938,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 94.6,
+          "pct": 94.5,
           "weight": 4.2
         },
         {
@@ -948,22 +948,22 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 83.6,
+          "pct": 83.4,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 93.1,
+          "pct": 93,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 68.9,
+          "pct": 68.8,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 80.1,
+          "pct": 80.4,
           "weight": 2
         },
         {
@@ -978,7 +978,7 @@
     {
       "rank": 14,
       "ticker": "600809.SS",
-      "score": 82.8,
+      "score": 82.7,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -992,7 +992,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 21751759282.955875,
+      "marketCap": 22051693459.129467,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "veteran",
@@ -1000,9 +1000,9 @@
       "ipoYear": 1994,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 86.3,
+      "scoreBase": 86.2,
       "scoreShrunk": 78.8,
       "factors": {
         "burn": 1,
@@ -1017,12 +1017,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 22.7,
+          "pct": 23,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 53.7,
+          "pct": 53.1,
           "weight": 1.8
         },
         {
@@ -1064,7 +1064,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 3950118418.1272573,
+      "marketCap": 4069651939.6227074,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "seasoned",
@@ -1072,7 +1072,7 @@
       "ipoYear": 2005,
       "coverageAxes": "6/7",
       "coverageWeight": 0.97,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 79.5,
       "scoreShrunk": 78.6,
@@ -1084,7 +1084,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 91.3,
+          "pct": 91.2,
           "weight": 4.2
         },
         {
@@ -1094,12 +1094,12 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 60.8,
+          "pct": 60.3,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 89.3,
+          "pct": 89.1,
           "weight": 0.6
         },
         {
@@ -1109,12 +1109,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 56,
+          "pct": 56.6,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 86.1,
+          "pct": 86.3,
           "weight": 2.4
         }
       ],
@@ -1123,80 +1123,8 @@
     },
     {
       "rank": 16,
-      "ticker": "P8Z.SI",
-      "score": 82.1,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.28,
-        "companion": 44.3
-      },
-      "name": "Bumitama Agri Ltd.",
-      "country": "Indonesia",
-      "region": "Asia",
-      "sector": "Consumer Defensive",
-      "marketCap": 2487934326.46656,
-      "phase": "established",
-      "mcapBand": "small",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2012,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.77,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 87.7,
-      "scoreShrunk": 79,
-      "factors": {
-        "burn": 1,
-        "growth": 1.039,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 86.4,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 88.5,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 88.6,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 82.8,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 91,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 19.240954434782264,
-      "ath": null
-    },
-    {
-      "rank": 17,
       "ticker": "DMART.NS",
-      "score": 82.1,
+      "score": 82,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1219,7 +1147,7 @@
       "ipoYear": 2017,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 79,
       "scoreShrunk": 78.8,
@@ -1231,37 +1159,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 89.9,
+          "pct": 89.7,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 48.7,
+          "pct": 49.1,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 87.4,
+          "pct": 87.3,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 88.4,
+          "pct": 88.2,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 65.7,
+          "pct": 66,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 62.5,
+          "pct": 63.1,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 73,
+          "pct": 72.8,
           "weight": 2.4
         }
       ],
@@ -1269,79 +1197,79 @@
       "ath": null
     },
     {
-      "rank": 18,
-      "ticker": "MARICO.NS",
-      "score": 80.6,
+      "rank": 17,
+      "ticker": "P8Z.SI",
+      "score": 82,
       "track": "profitable",
       "lamps": [],
       "overview": {
         "kind": "gp",
-        "value": 0.111,
-        "companion": 68.3
+        "value": 0.28,
+        "companion": 44.3
       },
-      "name": "Marico Limited",
-      "country": "India",
+      "name": "Bumitama Agri Ltd.",
+      "country": "Indonesia",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 11513072750.974598,
+      "marketCap": 2408720262.110208,
       "phase": "established",
-      "mcapBand": "large",
-      "ipoRecency": "veteran",
+      "mcapBand": "micro",
+      "ipoRecency": "growth",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 1996,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 343,
+      "ipoYear": 2012,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.77,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 77.4,
-      "scoreShrunk": 77.3,
+      "scoreBase": 87.6,
+      "scoreShrunk": 78.9,
       "factors": {
         "burn": 1,
-        "growth": 1.043,
+        "growth": 1.039,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 87.8,
+          "pct": 86.2,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 91.1,
+          "pct": 88.3,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 72.9,
+          "pct": 88.5,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 90.5,
+          "pct": 82.6,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 28.3,
+          "pct": null,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 95.7,
+          "pct": 91.2,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 47.4,
+          "pct": null,
           "weight": 2.4
         }
       ],
-      "revGrowthYoYPct": 22.087912087912077,
+      "revGrowthYoYPct": 19.240954434782264,
       "ath": null
     },
     {
-      "rank": 19,
+      "rank": 18,
       "ticker": "1768.HK",
       "score": 80.3,
       "track": "profitable",
@@ -1357,7 +1285,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 9617599788.09549,
+      "marketCap": 9534016002.6624,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "recent",
@@ -1365,7 +1293,7 @@
       "ipoYear": 2026,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 76.7,
       "scoreShrunk": 76.6,
@@ -1397,21 +1325,93 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 66.6,
+          "pct": 66.9,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 91.3,
+          "pct": 91.5,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 23.6,
+          "pct": 23.7,
           "weight": 2.4
         }
       ],
       "revGrowthYoYPct": 68.1861489179245,
+      "ath": null
+    },
+    {
+      "rank": 19,
+      "ticker": "MARICO.NS",
+      "score": 80.3,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.111,
+        "companion": 68.3
+      },
+      "name": "Marico Limited",
+      "country": "India",
+      "region": "Asia",
+      "sector": "Consumer Defensive",
+      "marketCap": 11513072750.974598,
+      "phase": "established",
+      "mcapBand": "large",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1996,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 77.1,
+      "scoreShrunk": 76.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1.043,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 87.6,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 90.9,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 72.6,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 90.3,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 27.9,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 95.7,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 46.5,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 22.087912087912077,
       "ath": null
     },
     {
@@ -1432,7 +1432,7 @@
       "country": "Switzerland",
       "region": "Europe",
       "sector": "Consumer Defensive",
-      "marketCap": 7871699062.189671,
+      "marketCap": 7886077105.110221,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "recent",
@@ -1440,7 +1440,7 @@
       "ipoYear": 2025,
       "coverageAxes": "6/7",
       "coverageWeight": 0.97,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 76.7,
       "scoreShrunk": 75.9,
@@ -1452,22 +1452,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 95.2,
+          "pct": 95.1,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 93.1,
+          "pct": 93,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 20,
+          "pct": 19.6,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 94.3,
+          "pct": 94.2,
           "weight": 0.6
         },
         {
@@ -1477,12 +1477,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 63.7,
+          "pct": 64.3,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 90.1,
+          "pct": 89.8,
           "weight": 2.4
         }
       ],
@@ -1492,7 +1492,7 @@
     {
       "rank": 21,
       "ticker": "GNC.AX",
-      "score": 78.7,
+      "score": 78.8,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -1504,7 +1504,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Consumer Defensive",
-      "marketCap": 847554516.4740608,
+      "marketCap": 848141524.426752,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "mature",
@@ -1512,10 +1512,10 @@
       "ipoYear": 1998,
       "coverageAxes": "5/7",
       "coverageWeight": 0.77,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 84.3,
-      "scoreShrunk": 76.4,
+      "scoreBase": 84.4,
+      "scoreShrunk": 76.5,
       "factors": {
         "burn": 1,
         "growth": 1.031,
@@ -1524,7 +1524,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 77,
+          "pct": 76.9,
           "weight": 4.2
         },
         {
@@ -1539,7 +1539,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 71.1,
+          "pct": 71.6,
           "weight": 0.6
         },
         {
@@ -1549,7 +1549,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 91.9,
+          "pct": 92.1,
           "weight": 2
         },
         {
@@ -1576,7 +1576,7 @@
       "country": "Finland",
       "region": "Europe",
       "sector": "Consumer Defensive",
-      "marketCap": 9486501343.699354,
+      "marketCap": 9503828901.880627,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "mature",
@@ -1584,7 +1584,7 @@
       "ipoYear": 2000,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 76.1,
       "scoreShrunk": 76,
@@ -1596,37 +1596,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 87,
+          "pct": 86.8,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 72.4,
+          "pct": 72.6,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 54,
+          "pct": 53.4,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 84.9,
+          "pct": 84.7,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 71.2,
+          "pct": 71.1,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 61.9,
+          "pct": 62.5,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 84.9,
+          "pct": 85.1,
           "weight": 2.4
         }
       ],
@@ -1648,7 +1648,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 25295081210.00018,
+      "marketCap": 24760800039.83966,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "veteran",
@@ -1656,7 +1656,7 @@
       "ipoYear": 1996,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 81.9,
       "scoreShrunk": 75.3,
@@ -1668,12 +1668,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 92.2,
+          "pct": 92.1,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 85.8,
+          "pct": 85.6,
           "weight": 0.5
         },
         {
@@ -1683,17 +1683,17 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 89.9,
+          "pct": 89.7,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 91,
+          "pct": 90.8,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 85.1,
+          "pct": 85.5,
           "weight": 2
         },
         {
@@ -1704,10 +1704,10 @@
       ],
       "revGrowthYoYPct": 30.23464880451716,
       "ath": {
-        "distancePct": -35,
+        "distancePct": -36.3,
         "athDate": "2021-01-07",
-        "monthsAgo": 66,
-        "lastDate": "2026-07-24"
+        "monthsAgo": 67,
+        "lastDate": "2026-07-27"
       }
     },
     {
@@ -1728,7 +1728,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 5177138684.35456,
+      "marketCap": 5152182282.349608,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "veteran",
@@ -1736,7 +1736,7 @@
       "ipoYear": 1997,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 80.3,
       "scoreShrunk": 74.1,
@@ -1753,12 +1753,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 61.5,
+          "pct": 61.9,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 87.7,
+          "pct": 87.6,
           "weight": 1.8
         },
         {
@@ -1768,12 +1768,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 95.2,
+          "pct": 95.1,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 30.4,
+          "pct": 30.6,
           "weight": 2
         },
         {
@@ -1784,16 +1784,16 @@
       ],
       "revGrowthYoYPct": 125.00732475840861,
       "ath": {
-        "distancePct": -12.9,
+        "distancePct": -13.3,
         "athDate": "2026-04-10",
-        "monthsAgo": 3,
-        "lastDate": "2026-07-24"
+        "monthsAgo": 4,
+        "lastDate": "2026-07-27"
       }
     },
     {
       "rank": 25,
       "ticker": "DNP.WA",
-      "score": 77.2,
+      "score": 77,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -1805,7 +1805,7 @@
       "country": "Poland",
       "region": "Europe",
       "sector": "Consumer Defensive",
-      "marketCap": 7452578663.970407,
+      "marketCap": 7466858172.942091,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "growth",
@@ -1813,10 +1813,10 @@
       "ipoYear": 2017,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 81.1,
-      "scoreShrunk": 74.7,
+      "scoreBase": 80.9,
+      "scoreShrunk": 74.6,
       "factors": {
         "burn": 1,
         "growth": 1.033,
@@ -1825,32 +1825,32 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 80.8,
+          "pct": 80.5,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 57.5,
+          "pct": 57.7,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 84.5,
+          "pct": 84.3,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 75.8,
+          "pct": 76,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 34.3,
+          "pct": 34,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 93.1,
+          "pct": 93,
           "weight": 2
         },
         {
@@ -1864,8 +1864,80 @@
     },
     {
       "rank": 26,
-      "ticker": "AWL.NS",
+      "ticker": "LOUP.PA",
       "score": 77,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.169,
+        "companion": 37.5
+      },
+      "name": "L.D.C. S.A.",
+      "country": "France",
+      "region": "Europe",
+      "sector": "Consumer Defensive",
+      "marketCap": 4618095700.829952,
+      "phase": "established",
+      "mcapBand": "mid",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1995,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.77,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 81.7,
+      "scoreShrunk": 74.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1.034,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 81.1,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 89.8,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 89.4,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 79,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 74.8,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 15.177012324585682,
+      "ath": null
+    },
+    {
+      "rank": 27,
+      "ticker": "AWL.NS",
+      "score": 76.9,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -1885,10 +1957,10 @@
       "ipoYear": 2022,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 74.1,
-      "scoreShrunk": 74,
+      "scoreBase": 74,
+      "scoreShrunk": 73.9,
       "factors": {
         "burn": 1,
         "growth": 1.041,
@@ -1897,113 +1969,41 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 90.8,
+          "pct": 90.6,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 15.9,
+          "pct": 16.2,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 55.8,
+          "pct": 55.2,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 89.6,
+          "pct": 89.4,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 17.7,
+          "pct": 18.1,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 72.5,
+          "pct": 73,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 75.3,
+          "pct": 75.1,
           "weight": 2.4
         }
       ],
       "revGrowthYoYPct": 27.471693451932012,
-      "ath": null
-    },
-    {
-      "rank": 27,
-      "ticker": "LOUP.PA",
-      "score": 77,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.169,
-        "companion": 37.5
-      },
-      "name": "L.D.C. S.A.",
-      "country": "France",
-      "region": "Europe",
-      "sector": "Consumer Defensive",
-      "marketCap": 4609675902.581376,
-      "phase": "established",
-      "mcapBand": "mid",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1995,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.77,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 81.7,
-      "scoreShrunk": 74.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1.035,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 81.4,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 89.9,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 89.5,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 79,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 74.3,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 15.177012324585682,
       "ath": null
     },
     {
@@ -2032,7 +2032,7 @@
       "ipoYear": 1980,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 74.2,
       "scoreShrunk": 74.1,
@@ -2044,12 +2044,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 79.9,
+          "pct": 79.6,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 32.6,
+          "pct": 33.4,
           "weight": 0.5
         },
         {
@@ -2064,17 +2064,17 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 84.6,
+          "pct": 84.7,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 39.3,
+          "pct": 39.6,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 81.5,
+          "pct": 81.6,
           "weight": 2.4
         }
       ],
@@ -2084,7 +2084,7 @@
     {
       "rank": 29,
       "ticker": "FCG.NZ",
-      "score": 75.5,
+      "score": 75.4,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -2096,7 +2096,7 @@
       "country": "New Zealand",
       "region": "Oceania",
       "sector": "Consumer Defensive",
-      "marketCap": 5929905250.467431,
+      "marketCap": 5933690157.549772,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "growth",
@@ -2104,9 +2104,9 @@
       "ipoYear": 2012,
       "coverageAxes": "5/7",
       "coverageWeight": 0.77,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 79.7,
+      "scoreBase": 79.6,
       "scoreShrunk": 72.8,
       "factors": {
         "burn": 1,
@@ -2116,7 +2116,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 84.9,
+          "pct": 84.7,
           "weight": 4.2
         },
         {
@@ -2126,12 +2126,12 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 72,
+          "pct": 71.7,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 81.7,
+          "pct": 81.4,
           "weight": 0.6
         },
         {
@@ -2141,7 +2141,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 70.4,
+          "pct": 70.9,
           "weight": 2
         },
         {
@@ -2156,7 +2156,7 @@
     {
       "rank": 30,
       "ticker": "COKE",
-      "score": 75.5,
+      "score": 75.4,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -2176,10 +2176,10 @@
       "ipoYear": 1973,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 79.4,
-      "scoreShrunk": 73.4,
+      "scoreBase": 79.3,
+      "scoreShrunk": 73.3,
       "factors": {
         "burn": 1,
         "growth": 1.029,
@@ -2188,32 +2188,32 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 84,
+          "pct": 83.8,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 58.3,
+          "pct": 58.6,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 63.2,
+          "pct": 62.7,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 84,
+          "pct": 83.8,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 57.4,
+          "pct": 57.5,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 91.6,
+          "pct": 91.8,
           "weight": 2
         },
         {
@@ -2232,7 +2232,7 @@
     },
     {
       "rank": 31,
-      "ticker": "ATM.NZ",
+      "ticker": "A2M.AX",
       "score": 74.7,
       "track": "profitable",
       "lamps": [],
@@ -2245,17 +2245,17 @@
       "country": "New Zealand",
       "region": "Oceania",
       "sector": "Consumer Defensive",
-      "marketCap": 3554360931.5732484,
+      "marketCap": 3588249977.7275906,
       "phase": "established",
       "mcapBand": "small",
-      "ipoRecency": "seasoned",
+      "ipoRecency": "growth",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 2004,
+      "ipoYear": 2015,
       "coverageAxes": "5/7",
       "coverageWeight": 0.77,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 79,
+      "scoreBase": 79.1,
       "scoreShrunk": 72.4,
       "factors": {
         "burn": 1,
@@ -2270,17 +2270,17 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 85.5,
+          "pct": 85.3,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 82.1,
+          "pct": 81.9,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 81.4,
+          "pct": 81.1,
           "weight": 0.6
         },
         {
@@ -2290,7 +2290,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 73.4,
+          "pct": 73.9,
           "weight": 2
         },
         {
@@ -2319,7 +2319,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Consumer Defensive",
-      "marketCap": 2070164749.4178817,
+      "marketCap": 2065322083.671081,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -2327,10 +2327,10 @@
       "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 72.2,
-      "scoreShrunk": 72.1,
+      "scoreBase": 72.3,
+      "scoreShrunk": 72.2,
       "factors": {
         "burn": 1,
         "growth": 1.029,
@@ -2344,27 +2344,27 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 9.8,
+          "pct": 9.9,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 78,
+          "pct": 77.7,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 65.2,
+          "pct": 65.9,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 62.4,
+          "pct": 62.7,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 70.7,
+          "pct": 71.2,
           "weight": 2
         },
         {
@@ -2379,7 +2379,7 @@
     {
       "rank": 33,
       "ticker": "TATACONSUM.NS",
-      "score": 74.1,
+      "score": 73.9,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -2402,49 +2402,49 @@
       "ipoYear": 1996,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 71.6,
-      "scoreShrunk": 71.4,
+      "scoreBase": 71.3,
+      "scoreShrunk": 71.2,
       "factors": {
         "burn": 1,
-        "growth": 1.038,
+        "growth": 1.037,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 88.1,
+          "pct": 87.9,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 49.3,
+          "pct": 49.7,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 76.5,
+          "pct": 76.2,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 86.1,
+          "pct": 85.9,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 70.3,
+          "pct": 70.2,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 41.6,
+          "pct": 41.9,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 65.1,
+          "pct": 64,
           "weight": 2.4
         }
       ],
@@ -2453,6 +2453,83 @@
     },
     {
       "rank": 34,
+      "ticker": "PM",
+      "score": 73.8,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.111,
+        "companion": 23.9
+      },
+      "name": "Philip Morris International Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Defensive",
+      "marketCap": 300801851392,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2008,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.8,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 77.8,
+      "scoreShrunk": 72.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1.024,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 73.7,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 51.8,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 81,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 62.9,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 77.2,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 94.5,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 10.374753451676533,
+      "ath": {
+        "distancePct": -0.7,
+        "athDate": "2026-07-22",
+        "monthsAgo": 0,
+        "lastDate": "2026-07-24"
+      }
+    },
+    {
+      "rank": 35,
       "ticker": "FRPT",
       "score": 73.8,
       "track": "profitable",
@@ -2476,7 +2553,7 @@
       "ipoYear": 2014,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 71.6,
       "scoreShrunk": 71.5,
@@ -2493,22 +2570,22 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 6.9,
+          "pct": 7,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 91.6,
+          "pct": 91.5,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 74,
+          "pct": 74.3,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 85.5,
+          "pct": 85.7,
           "weight": 0.3
         },
         {
@@ -2518,7 +2595,7 @@
         },
         {
           "key": "dilution",
-          "pct": 98.6,
+          "pct": 98.5,
           "weight": 2.4
         }
       ],
@@ -2531,163 +2608,9 @@
       }
     },
     {
-      "rank": 35,
-      "ticker": "PM",
-      "score": 73.7,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.111,
-        "companion": 23.9
-      },
-      "name": "Philip Morris International Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Defensive",
-      "marketCap": 300801851392,
-      "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2008,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.8,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 77.7,
-      "scoreShrunk": 72,
-      "factors": {
-        "burn": 1,
-        "growth": 1.024,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 73.5,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 51.3,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 81.2,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 62.3,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 77.2,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 94.6,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 10.374753451676533,
-      "ath": {
-        "distancePct": -0.7,
-        "athDate": "2026-07-22",
-        "monthsAgo": 0,
-        "lastDate": "2026-07-24"
-      }
-    },
-    {
       "rank": 36,
-      "ticker": "000833.SZ",
-      "score": 73.7,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "shortRunway",
-        "peakMargin",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.404,
-        "companion": 36.2
-      },
-      "name": "Guangxi Yuegui Guangye Holdings Co., Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Consumer Defensive",
-      "marketCap": 2346331111.2751102,
-      "phase": "established",
-      "mcapBand": "micro",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1998,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.8,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 76.6,
-      "scoreShrunk": 71.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1.036,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 89.6,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 95.2,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 97.2,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 88.1,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 92.4,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 20.1,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 25.995792206581392,
-      "ath": null
-    },
-    {
-      "rank": 37,
       "ticker": "DLTR",
-      "score": 73.5,
+      "score": 73.7,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -2707,10 +2630,10 @@
       "ipoYear": 1995,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 71.9,
-      "scoreShrunk": 71.8,
+      "scoreBase": 72.1,
+      "scoreShrunk": 72,
       "factors": {
         "burn": 1,
         "growth": 1.024,
@@ -2719,37 +2642,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 65.2,
+          "pct": 65.6,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 80.8,
+          "pct": 80.6,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 75.9,
+          "pct": 75.6,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 66.4,
+          "pct": 67.1,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 62.9,
+          "pct": 63.1,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 68.1,
+          "pct": 68.5,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 84.4,
+          "pct": 84.5,
           "weight": 2.4
         }
       ],
@@ -2760,6 +2683,83 @@
         "monthsAgo": 51,
         "lastDate": "2026-07-24"
       }
+    },
+    {
+      "rank": 37,
+      "ticker": "000833.SZ",
+      "score": 73.6,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "peakMargin",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.404,
+        "companion": 36.2
+      },
+      "name": "Guangxi Yuegui Guangye Holdings Co., Ltd.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Consumer Defensive",
+      "marketCap": 2308900694.177986,
+      "phase": "established",
+      "mcapBand": "micro",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1998,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.8,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 76.5,
+      "scoreShrunk": 71.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1.036,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 89.4,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 95.1,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 97.2,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 87.9,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 92.3,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 20.1,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 25.995792206581392,
+      "ath": null
     },
     {
       "rank": 38,
@@ -2776,7 +2776,7 @@
       "country": "Indonesia",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 3144550045.4020057,
+      "marketCap": 3075941611.1699066,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "seasoned",
@@ -2784,7 +2784,7 @@
       "ipoYear": 2009,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 76.7,
       "scoreShrunk": 71.2,
@@ -2796,32 +2796,32 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 84.3,
+          "pct": 84.1,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 32.3,
+          "pct": 33.1,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 74.4,
+          "pct": 74.1,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 82.6,
+          "pct": 82.3,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 57.8,
+          "pct": 58,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 74.9,
+          "pct": 75.4,
           "weight": 2
         },
         {
@@ -2853,14 +2853,14 @@
       "marketCap": 28899151629.361347,
       "phase": "established",
       "mcapBand": "mega",
-      "ipoRecency": "mature",
+      "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2002,
       "coverageAxes": "4/7",
       "coverageWeight": 0.47,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 91.7,
+      "scoreBase": 91.6,
       "scoreShrunk": 69.9,
       "factors": {
         "burn": 1,
@@ -2870,12 +2870,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 93.4,
+          "pct": 93.3,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 96.1,
+          "pct": 96,
           "weight": 0.5
         },
         {
@@ -2885,12 +2885,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 91.1,
+          "pct": 90.9,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 62,
+          "pct": 62.2,
           "weight": 0.3
         },
         {
@@ -2925,7 +2925,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 2743051484.737536,
+      "marketCap": 2760486803.992719,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "seasoned",
@@ -2933,7 +2933,7 @@
       "ipoYear": 2010,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 74.6,
       "scoreShrunk": 69.5,
@@ -2950,12 +2950,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 27.6,
+          "pct": 28.3,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 79.4,
+          "pct": 79.2,
           "weight": 1.8
         },
         {
@@ -2965,12 +2965,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 95.6,
+          "pct": 95.5,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 26.6,
+          "pct": 26.7,
           "weight": 2
         },
         {
@@ -2985,7 +2985,7 @@
     {
       "rank": 41,
       "ticker": "9985.HK",
-      "score": 72.1,
+      "score": 71.9,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -3000,7 +3000,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 2386512920.3778563,
+      "marketCap": 2442239575.3472,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -3008,10 +3008,10 @@
       "ipoYear": 2022,
       "coverageAxes": "6/7",
       "coverageWeight": 0.97,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 70.2,
-      "scoreShrunk": 69.6,
+      "scoreBase": 70.1,
+      "scoreShrunk": 69.5,
       "factors": {
         "burn": 1,
         "growth": 1.035,
@@ -3020,22 +3020,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 81.7,
+          "pct": 81.4,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 8,
+          "pct": 8.2,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 90.1,
+          "pct": 90,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 86.4,
+          "pct": 86.2,
           "weight": 0.6
         },
         {
@@ -3059,83 +3059,6 @@
     },
     {
       "rank": 42,
-      "ticker": "COST",
-      "score": 72,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.101,
-        "companion": 29
-      },
-      "name": "Costco Wholesale Corporation",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Defensive",
-      "marketCap": 414665998336,
-      "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1986,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 70.2,
-      "scoreShrunk": 70.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1.027,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 75.8,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 70.9,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 75,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 72.9,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 42.2,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 90.7,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 42.3,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 11.584526540621788,
-      "ath": {
-        "distancePct": -14.6,
-        "athDate": "2026-05-19",
-        "monthsAgo": 2,
-        "lastDate": "2026-07-24"
-      }
-    },
-    {
-      "rank": 43,
       "ticker": "002507.SZ",
       "score": 71.8,
       "track": "profitable",
@@ -3151,7 +3074,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 1938642457.2297215,
+      "marketCap": 1945621515.3308465,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "seasoned",
@@ -3159,9 +3082,9 @@
       "ipoYear": 2010,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 73.3,
+      "scoreBase": 73.4,
       "scoreShrunk": 68.6,
       "factors": {
         "burn": 1,
@@ -3181,7 +3104,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 35.9,
+          "pct": 35.8,
           "weight": 1.8
         },
         {
@@ -3191,12 +3114,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 94.2,
+          "pct": 94.1,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 44.3,
+          "pct": 44.6,
           "weight": 2
         },
         {
@@ -3209,9 +3132,86 @@
       "ath": null
     },
     {
+      "rank": 43,
+      "ticker": "COST",
+      "score": 71.7,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.101,
+        "companion": 29
+      },
+      "name": "Costco Wholesale Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Defensive",
+      "marketCap": 414665998336,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1986,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 70,
+      "scoreShrunk": 69.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1.027,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 75.7,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 71.4,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 74.7,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 73.4,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 42,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 90.9,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 41.2,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 11.584526540621788,
+      "ath": {
+        "distancePct": -14.6,
+        "athDate": "2026-05-19",
+        "monthsAgo": 2,
+        "lastDate": "2026-07-24"
+      }
+    },
+    {
       "rank": 44,
       "ticker": "2914.T",
-      "score": 71.3,
+      "score": 71.4,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -3223,7 +3223,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 70086184955.58235,
+      "marketCap": 71077279896.6538,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "mature",
@@ -3231,10 +3231,10 @@
       "ipoYear": 2000,
       "coverageAxes": "5/7",
       "coverageWeight": 0.77,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 74.8,
-      "scoreShrunk": 69.1,
+      "scoreShrunk": 69.2,
       "factors": {
         "burn": 1,
         "growth": 1.032,
@@ -3248,17 +3248,17 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 81.4,
+          "pct": 81.2,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 80,
+          "pct": 79.8,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 76.1,
+          "pct": 76.3,
           "weight": 0.6
         },
         {
@@ -3268,7 +3268,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 59,
+          "pct": 59.6,
           "weight": 2
         },
         {
@@ -3280,91 +3280,15 @@
       "revGrowthYoYPct": 13.444721103644476,
       "ath": {
         "distancePct": 0,
-        "athDate": "2026-07-24",
+        "athDate": "2026-07-27",
         "monthsAgo": 0,
-        "lastDate": "2026-07-24"
+        "lastDate": "2026-07-27"
       }
     },
     {
       "rank": 45,
-      "ticker": "PATANJALI.NS",
-      "score": 71.3,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "shortRunway",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.065,
-        "companion": 55.2
-      },
-      "name": "Patanjali Foods Limited",
-      "country": "India",
-      "region": "Asia",
-      "sector": "Consumer Defensive",
-      "marketCap": 3838203383.6284966,
-      "phase": "established",
-      "mcapBand": "small",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2002,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 68.6,
-      "scoreShrunk": 68.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1.041,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 88.7,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 89,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 77.1,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 87,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 20,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 54.9,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 35.5,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 23.99424871183553,
-      "ath": null
-    },
-    {
-      "rank": 46,
       "ticker": "141A.T",
-      "score": 71.2,
+      "score": 71.3,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -3380,7 +3304,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 2239822791.2994323,
+      "marketCap": 2257752807.549239,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -3388,10 +3312,10 @@
       "ipoYear": 2024,
       "coverageAxes": "5/7",
       "coverageWeight": 0.77,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 74.9,
-      "scoreShrunk": 69.2,
+      "scoreBase": 75,
+      "scoreShrunk": 69.3,
       "factors": {
         "burn": 1,
         "growth": 1.03,
@@ -3400,22 +3324,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 76.1,
+          "pct": 76,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 64.8,
+          "pct": 65.1,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 87.1,
+          "pct": 87,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 67.9,
+          "pct": 68.6,
           "weight": 0.6
         },
         {
@@ -3425,7 +3349,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 66,
+          "pct": 66.4,
           "weight": 2
         },
         {
@@ -3435,6 +3359,78 @@
         }
       ],
       "revGrowthYoYPct": 11.962008390579836,
+      "ath": null
+    },
+    {
+      "rank": 46,
+      "ticker": "HINDUNILVR.NS",
+      "score": 71.3,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.045,
+        "companion": 22.9
+      },
+      "name": "Hindustan Unilever Limited",
+      "country": "India",
+      "region": "Asia",
+      "sector": "Consumer Defensive",
+      "marketCap": 52235041469.384094,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1996,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 70.6,
+      "scoreShrunk": 70.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1.011,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 60.9,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 81.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 65.1,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 65.6,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 36.9,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 90.3,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 78.7,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 5.562430795284312,
       "ath": null
     },
     {
@@ -3455,7 +3451,7 @@
       "country": "Indonesia",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 2947770695.383253,
+      "marketCap": 2911265682.3897295,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "seasoned",
@@ -3463,10 +3459,10 @@
       "ipoYear": 2005,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 74.7,
-      "scoreShrunk": 69.6,
+      "scoreShrunk": 69.7,
       "factors": {
         "burn": 1,
         "growth": 1.022,
@@ -3475,32 +3471,32 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 77.6,
+          "pct": 77.5,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 24.1,
+          "pct": 24.5,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 91.3,
+          "pct": 91.2,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 74.9,
+          "pct": 75.1,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 71.7,
+          "pct": 71.6,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 66.6,
+          "pct": 67,
           "weight": 2
         },
         {
@@ -3514,80 +3510,84 @@
     },
     {
       "rank": 48,
-      "ticker": "HINDUNILVR.NS",
-      "score": 71.1,
+      "ticker": "PATANJALI.NS",
+      "score": 70.9,
       "track": "profitable",
-      "lamps": [],
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "arDivergence"
+      ],
       "overview": {
         "kind": "gp",
-        "value": 0.045,
-        "companion": 22.9
+        "value": 0.065,
+        "companion": 55.2
       },
-      "name": "Hindustan Unilever Limited",
+      "name": "Patanjali Foods Limited",
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 52235041469.384094,
+      "marketCap": 3838203383.6284966,
       "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "veteran",
+      "mcapBand": "small",
+      "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 1996,
+      "ipoYear": 2002,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 70.4,
-      "scoreShrunk": 70.3,
+      "scoreBase": 68.3,
+      "scoreShrunk": 68.1,
       "factors": {
         "burn": 1,
-        "growth": 1.011,
+        "growth": 1.041,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 60.3,
+          "pct": 88.5,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 81.7,
+          "pct": 88.9,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 65.5,
+          "pct": 76.8,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 65,
+          "pct": 86.8,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 37.1,
+          "pct": 20,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 90.1,
+          "pct": 55.4,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 78.7,
+          "pct": 34.2,
           "weight": 2.4
         }
       ],
-      "revGrowthYoYPct": 5.562430795284312,
+      "revGrowthYoYPct": 23.99424871183553,
       "ath": null
     },
     {
       "rank": 49,
       "ticker": "3038.T",
-      "score": 71,
+      "score": 70.9,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -3599,7 +3599,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 3603699051.136942,
+      "marketCap": 3624839277.3762417,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "seasoned",
@@ -3607,10 +3607,10 @@
       "ipoYear": 2006,
       "coverageAxes": "6/7",
       "coverageWeight": 0.97,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 70.1,
-      "scoreShrunk": 69.4,
+      "scoreBase": 69.9,
+      "scoreShrunk": 69.3,
       "factors": {
         "burn": 1,
         "growth": 1.023,
@@ -3619,22 +3619,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 69.4,
+          "pct": 69.5,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 44.9,
+          "pct": 45.3,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 82.7,
+          "pct": 82.5,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 62.9,
+          "pct": 63.5,
           "weight": 0.6
         },
         {
@@ -3644,27 +3644,27 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 82.8,
+          "pct": 83.1,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 58.2,
+          "pct": 57,
           "weight": 2.4
         }
       ],
       "revGrowthYoYPct": 8.627577611379,
       "ath": {
-        "distancePct": -43.5,
+        "distancePct": -43.3,
         "athDate": "2025-05-26",
         "monthsAgo": 14,
-        "lastDate": "2026-07-24"
+        "lastDate": "2026-07-27"
       }
     },
     {
       "rank": 50,
       "ticker": "PBH.TO",
-      "score": 70.9,
+      "score": 70.8,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -3680,7 +3680,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 3276887174.086656,
+      "marketCap": 3280845443.1334395,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "seasoned",
@@ -3688,10 +3688,10 @@
       "ipoYear": 2008,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 72.9,
-      "scoreShrunk": 68.2,
+      "scoreBase": 72.8,
+      "scoreShrunk": 68.1,
       "factors": {
         "burn": 1,
         "growth": 1.04,
@@ -3700,32 +3700,32 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 89.3,
+          "pct": 89.1,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 88.7,
+          "pct": 88.6,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 64.6,
+          "pct": 64.2,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 87.5,
+          "pct": 87.4,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 43.5,
+          "pct": 43.4,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 41.9,
+          "pct": 42.2,
           "weight": 2
         },
         {
@@ -3745,7 +3745,7 @@
     {
       "rank": 51,
       "ticker": "UNVR.JK",
-      "score": 70.7,
+      "score": 70.8,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -3757,7 +3757,7 @@
       "country": "Indonesia",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 3561797647.2683153,
+      "marketCap": 3572366743.0409503,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "seasoned",
@@ -3765,9 +3765,9 @@
       "ipoYear": 2003,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 74.7,
+      "scoreBase": 74.8,
       "scoreShrunk": 69.7,
       "factors": {
         "burn": 1,
@@ -3777,12 +3777,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 71.4,
+          "pct": 71.6,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 94.9,
+          "pct": 94.8,
           "weight": 0.5
         },
         {
@@ -3792,12 +3792,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 77.3,
+          "pct": 77.2,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 92.9,
+          "pct": 92.7,
           "weight": 0.3
         },
         {
@@ -3834,7 +3834,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 2700014923.6121597,
+      "marketCap": 2691440533.849559,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "recent",
@@ -3842,7 +3842,7 @@
       "ipoYear": 2020,
       "coverageAxes": "5/7",
       "coverageWeight": 0.77,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 73.6,
       "scoreShrunk": 68.2,
@@ -3854,7 +3854,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 85.2,
+          "pct": 85,
           "weight": 4.2
         },
         {
@@ -3864,12 +3864,12 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 89.2,
+          "pct": 89.1,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 87.8,
+          "pct": 87.6,
           "weight": 0.6
         },
         {
@@ -3879,7 +3879,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 49,
+          "pct": 49.4,
           "weight": 2
         },
         {
@@ -3894,7 +3894,7 @@
     {
       "rank": 53,
       "ticker": "2222.T",
-      "score": 70.5,
+      "score": 70.3,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -3906,7 +3906,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 2296717707.148886,
+      "marketCap": 2367900826.246054,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "seasoned",
@@ -3914,10 +3914,10 @@
       "ipoYear": 2010,
       "coverageAxes": "6/7",
       "coverageWeight": 0.97,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 69.4,
-      "scoreShrunk": 68.8,
+      "scoreBase": 69.2,
+      "scoreShrunk": 68.6,
       "factors": {
         "burn": 1,
         "growth": 1.024,
@@ -3926,17 +3926,17 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 70.5,
+          "pct": 70.7,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 27.3,
+          "pct": 28,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 71.4,
+          "pct": 71.1,
           "weight": 1.8
         },
         {
@@ -3956,7 +3956,7 @@
         },
         {
           "key": "dilution",
-          "pct": 50.9,
+          "pct": 50,
           "weight": 2.4
         }
       ],
@@ -3965,8 +3965,82 @@
     },
     {
       "rank": 54,
+      "ticker": "AXFO.ST",
+      "score": 70,
+      "track": "profitable",
+      "lamps": [
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.074,
+        "companion": 27.3
+      },
+      "name": "Axfood AB (publ)",
+      "country": "Sweden",
+      "region": "Europe",
+      "sector": "Consumer Defensive",
+      "marketCap": 5233747605.192704,
+      "phase": "established",
+      "mcapBand": "mid",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2000,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.8,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 73.3,
+      "scoreShrunk": 68.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1.021,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 73.2,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 67.4,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 66.8,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 70.4,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 55.4,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 84.5,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 10.251901140684417,
+      "ath": null
+    },
+    {
+      "rank": 55,
       "ticker": "OLLI",
-      "score": 70.2,
+      "score": 70,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -3988,29 +4062,29 @@
       "ipoYear": 2015,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 67.9,
-      "scoreShrunk": 67.8,
+      "scoreBase": 67.7,
+      "scoreShrunk": 67.6,
       "factors": {
         "burn": 1,
-        "growth": 1.036,
+        "growth": 1.035,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 80.5,
+          "pct": 80.2,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 86.1,
+          "pct": 85.9,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 90.7,
+          "pct": 90.6,
           "weight": 1.8
         },
         {
@@ -4020,17 +4094,17 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 54.1,
+          "pct": 54.2,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 55.7,
+          "pct": 56.3,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 33.8,
+          "pct": 33,
           "weight": 2.4
         }
       ],
@@ -4043,231 +4117,9 @@
       }
     },
     {
-      "rank": 55,
-      "ticker": "AXFO.ST",
-      "score": 69.9,
-      "track": "profitable",
-      "lamps": [
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.074,
-        "companion": 27.3
-      },
-      "name": "Axfood AB (publ)",
-      "country": "Sweden",
-      "region": "Europe",
-      "sector": "Consumer Defensive",
-      "marketCap": 5223370788.639744,
-      "phase": "established",
-      "mcapBand": "mid",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2000,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.8,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 73.2,
-      "scoreShrunk": 68.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1.021,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 73,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 67,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 67.2,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 69.9,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 55.3,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 84.1,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 10.251901140684417,
-      "ath": null
-    },
-    {
       "rank": 56,
-      "ticker": "CARL-A.CO",
-      "score": 69.9,
-      "track": "profitable",
-      "lamps": [
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.17,
-        "companion": 49.5
-      },
-      "name": "Carlsberg A/S",
-      "country": "Denmark",
-      "region": "Europe",
-      "sector": "Consumer Defensive",
-      "marketCap": 23067733775.23646,
-      "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2000,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.97,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 67.9,
-      "scoreShrunk": 67.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1.038,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 85.9,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 91.8,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 86.1,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 85.6,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 7.9,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 63.1,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 18.775912866112954,
-      "ath": null
-    },
-    {
-      "rank": 57,
-      "ticker": "CARL.WA",
-      "score": 69.9,
-      "track": "profitable",
-      "lamps": [
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.17,
-        "companion": 49.5
-      },
-      "name": "Carlsberg AS Class B",
-      "country": "Denmark",
-      "region": "Europe",
-      "sector": "Consumer Defensive",
-      "marketCap": 18844517217.006386,
-      "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2025,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.97,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 67.9,
-      "scoreShrunk": 67.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1.038,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 85.9,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 91.8,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 86.1,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 85.6,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 7.9,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 63.1,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 18.775912866112954,
-      "ath": null
-    },
-    {
-      "rank": 58,
       "ticker": "EMMN.SW",
-      "score": 69.7,
+      "score": 69.9,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -4279,7 +4131,7 @@
       "country": "Switzerland",
       "region": "Europe",
       "sector": "Consumer Defensive",
-      "marketCap": 5633861071.343257,
+      "marketCap": 5650814694.160077,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "seasoned",
@@ -4287,10 +4139,10 @@
       "ipoYear": 2004,
       "coverageAxes": "5/7",
       "coverageWeight": 0.77,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 73.4,
-      "scoreShrunk": 68,
+      "scoreBase": 73.6,
+      "scoreShrunk": 68.2,
       "factors": {
         "burn": 1,
         "growth": 1.025,
@@ -4299,22 +4151,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 71.1,
+          "pct": 71.3,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 83.2,
+          "pct": 82.9,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 86.8,
+          "pct": 86.7,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 67.3,
+          "pct": 68,
           "weight": 0.6
         },
         {
@@ -4324,7 +4176,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 65.4,
+          "pct": 65.8,
           "weight": 2
         },
         {
@@ -4337,9 +4189,9 @@
       "ath": null
     },
     {
-      "rank": 59,
+      "rank": 57,
       "ticker": "1AXFO.MI",
-      "score": 69.4,
+      "score": 69.5,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -4353,7 +4205,7 @@
       "country": "Sweden",
       "region": "Europe",
       "sector": "Consumer Defensive",
-      "marketCap": 5928444342.538855,
+      "marketCap": 5939272935.773389,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "recent",
@@ -4361,10 +4213,10 @@
       "ipoYear": 2026,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 72.6,
-      "scoreShrunk": 68,
+      "scoreBase": 72.7,
+      "scoreShrunk": 68.1,
       "factors": {
         "burn": 1,
         "growth": 1.021,
@@ -4373,32 +4225,32 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 73,
+          "pct": 73.2,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 67,
+          "pct": 67.4,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 67.2,
+          "pct": 66.8,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 60.9,
+          "pct": 61.5,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 55.3,
+          "pct": 55.4,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 84.1,
+          "pct": 84.5,
           "weight": 2
         },
         {
@@ -4408,6 +4260,154 @@
         }
       ],
       "revGrowthYoYPct": 10.251901140684417,
+      "ath": null
+    },
+    {
+      "rank": 58,
+      "ticker": "CARL-A.CO",
+      "score": 69.5,
+      "track": "profitable",
+      "lamps": [
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.17,
+        "companion": 49.5
+      },
+      "name": "Carlsberg A/S",
+      "country": "Denmark",
+      "region": "Europe",
+      "sector": "Consumer Defensive",
+      "marketCap": 23104607041.508312,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2000,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.97,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 67.5,
+      "scoreShrunk": 67,
+      "factors": {
+        "burn": 1,
+        "growth": 1.038,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 85.7,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 91.7,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 85.9,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 85.4,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 7.8,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 62,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 18.775912866112954,
+      "ath": null
+    },
+    {
+      "rank": 59,
+      "ticker": "CARL.WA",
+      "score": 69.5,
+      "track": "profitable",
+      "lamps": [
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.17,
+        "companion": 49.5
+      },
+      "name": "Carlsberg AS Class B",
+      "country": "Denmark",
+      "region": "Europe",
+      "sector": "Consumer Defensive",
+      "marketCap": 18880624243.15134,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2025,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.97,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 67.5,
+      "scoreShrunk": 67,
+      "factors": {
+        "burn": 1,
+        "growth": 1.038,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 85.7,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 91.7,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 85.9,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 85.4,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 7.8,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 62,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 18.775912866112954,
       "ath": null
     },
     {
@@ -4427,7 +4427,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Consumer Defensive",
-      "marketCap": 6329921468.972237,
+      "marketCap": 6342049911.28486,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "recent",
@@ -4435,10 +4435,10 @@
       "ipoYear": 2021,
       "coverageAxes": "6/7",
       "coverageWeight": 0.97,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 67.9,
-      "scoreShrunk": 67.4,
+      "scoreBase": 67.8,
+      "scoreShrunk": 67.3,
       "factors": {
         "burn": 1,
         "growth": 1.023,
@@ -4447,7 +4447,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 70.2,
+          "pct": 70.4,
           "weight": 4.2
         },
         {
@@ -4457,7 +4457,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 88,
+          "pct": 87.9,
           "weight": 1.8
         },
         {
@@ -4472,12 +4472,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 60.7,
+          "pct": 61.3,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 45.7,
+          "pct": 44.7,
           "weight": 2.4
         }
       ],
@@ -4487,7 +4487,7 @@
     {
       "rank": 61,
       "ticker": "INDF.JK",
-      "score": 68.8,
+      "score": 68.7,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -4499,7 +4499,7 @@
       "country": "Indonesia",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 3347391154.7913833,
+      "marketCap": 3384041362.421711,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "mature",
@@ -4507,7 +4507,7 @@
       "ipoYear": 2000,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 71,
       "scoreShrunk": 66.7,
@@ -4519,32 +4519,32 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 84.6,
+          "pct": 84.4,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 69.4,
+          "pct": 69.9,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 54.6,
+          "pct": 54,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 84.6,
+          "pct": 84.4,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 9.9,
+          "pct": 10.1,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 62.8,
+          "pct": 63.4,
           "weight": 2
         },
         {
@@ -4571,7 +4571,7 @@
       "country": "Belgium",
       "region": "Europe",
       "sector": "Consumer Defensive",
-      "marketCap": 9928923956.508059,
+      "marketCap": 9947059621.206835,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "mature",
@@ -4579,10 +4579,10 @@
       "ipoYear": 2000,
       "coverageAxes": "6/7",
       "coverageWeight": 0.97,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 67.4,
-      "scoreShrunk": 66.9,
+      "scoreShrunk": 66.8,
       "factors": {
         "burn": 1,
         "growth": 1.027,
@@ -4591,22 +4591,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 72.3,
+          "pct": 72.5,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 19.4,
+          "pct": 19.7,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 77.4,
+          "pct": 77.1,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 65.5,
+          "pct": 66.2,
           "weight": 0.6
         },
         {
@@ -4616,12 +4616,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 85.4,
+          "pct": 85.8,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 46.9,
+          "pct": 45.9,
           "weight": 2.4
         }
       ],
@@ -4631,7 +4631,7 @@
     {
       "rank": 63,
       "ticker": "EEE.AT",
-      "score": 68.7,
+      "score": 68.6,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -4643,7 +4643,7 @@
       "country": "Switzerland",
       "region": "Europe",
       "sector": "Consumer Defensive",
-      "marketCap": 23796511810.601166,
+      "marketCap": 23839977302.036892,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "growth",
@@ -4651,10 +4651,10 @@
       "ipoYear": 2013,
       "coverageAxes": "6/7",
       "coverageWeight": 0.97,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 67.9,
-      "scoreShrunk": 67.4,
+      "scoreBase": 67.8,
+      "scoreShrunk": 67.3,
       "factors": {
         "burn": 1,
         "growth": 1.02,
@@ -4663,22 +4663,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 67.3,
+          "pct": 67.4,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 65.9,
+          "pct": 66.3,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 78.6,
+          "pct": 78.3,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 64.1,
+          "pct": 64.7,
           "weight": 0.6
         },
         {
@@ -4688,12 +4688,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 73.7,
+          "pct": 74.2,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 57.7,
+          "pct": 56.4,
           "weight": 2.4
         }
       ],
@@ -4703,7 +4703,7 @@
     {
       "rank": 64,
       "ticker": "BJ",
-      "score": 68.2,
+      "score": 68.1,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -4715,7 +4715,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 11867735040,
+      "marketCap": 11867879424,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "growth",
@@ -4723,10 +4723,10 @@
       "ipoYear": 2018,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 67.1,
-      "scoreShrunk": 67,
+      "scoreBase": 67,
+      "scoreShrunk": 66.9,
       "factors": {
         "burn": 1,
         "growth": 1.018,
@@ -4735,46 +4735,46 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 72,
+          "pct": 72.2,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 64.2,
+          "pct": 64.5,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 62.9,
+          "pct": 62.4,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 60.6,
+          "pct": 61.2,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 39.9,
+          "pct": 39.7,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 83.1,
+          "pct": 83.4,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 54.3,
+          "pct": 52.9,
           "weight": 2.4
         }
       ],
       "revGrowthYoYPct": 9.857740871562015,
       "ath": {
-        "distancePct": -22.5,
+        "distancePct": -23.9,
         "athDate": "2025-04-14",
         "monthsAgo": 15,
-        "lastDate": "2026-07-24"
+        "lastDate": "2026-07-23"
       }
     },
     {
@@ -4792,7 +4792,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 3244550257.7270784,
+      "marketCap": 3273272431.701459,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "mature",
@@ -4800,10 +4800,10 @@
       "ipoYear": 2001,
       "coverageAxes": "5/7",
       "coverageWeight": 0.77,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 70.7,
-      "scoreShrunk": 65.9,
+      "scoreShrunk": 66,
       "factors": {
         "burn": 1,
         "growth": 1.029,
@@ -4817,17 +4817,17 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 37,
+          "pct": 37.5,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 70.6,
+          "pct": 70.2,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 72,
+          "pct": 72.5,
           "weight": 0.6
         },
         {
@@ -4837,7 +4837,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 69.9,
+          "pct": 70.3,
           "weight": 2
         },
         {
@@ -4852,7 +4852,7 @@
     {
       "rank": 66,
       "ticker": "TATE.L",
-      "score": 67.5,
+      "score": 67.4,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -4866,7 +4866,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Consumer Defensive",
-      "marketCap": 3286634055.2774143,
+      "marketCap": 3290805914.266624,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "veteran",
@@ -4874,10 +4874,10 @@
       "ipoYear": 1988,
       "coverageAxes": "6/7",
       "coverageWeight": 0.97,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 65.7,
-      "scoreShrunk": 65.2,
+      "scoreBase": 65.5,
+      "scoreShrunk": 65,
       "factors": {
         "burn": 1,
         "growth": 1.036,
@@ -4886,22 +4886,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 82,
+          "pct": 81.7,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 87.9,
+          "pct": 87.7,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 3.4,
+          "pct": 3.1,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 83.4,
+          "pct": 83.2,
           "weight": 0.6
         },
         {
@@ -4911,12 +4911,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 42.5,
+          "pct": 42.8,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 94,
+          "pct": 93.9,
           "weight": 2.4
         }
       ],
@@ -4925,80 +4925,8 @@
     },
     {
       "rank": 67,
-      "ticker": "COLPAL.NS",
-      "score": 67,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": -0.012,
-        "companion": 46
-      },
-      "name": "Colgate-Palmolive (India) Limited",
-      "country": "India",
-      "region": "Asia",
-      "sector": "Consumer Defensive",
-      "marketCap": 5887500448.6912565,
-      "phase": "established",
-      "mcapBand": "mid",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2002,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 66.8,
-      "scoreShrunk": 66.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1.004,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 70.8,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 16.8,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 38.3,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 86.7,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 65.2,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 99,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 59.9,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 8.990435267626594,
-      "ath": null
-    },
-    {
-      "rank": 68,
       "ticker": "2607.T",
-      "score": 67,
+      "score": 66.9,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -5015,7 +4943,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 2014754825.9381084,
+      "marketCap": 2052999149.523665,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "mature",
@@ -5023,10 +4951,10 @@
       "ipoYear": 2001,
       "coverageAxes": "5/7",
       "coverageWeight": 0.77,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 69.1,
-      "scoreShrunk": 64.8,
+      "scoreShrunk": 64.7,
       "factors": {
         "burn": 1,
         "growth": 1.034,
@@ -5035,12 +4963,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 81.1,
+          "pct": 80.8,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 28.8,
+          "pct": 29.5,
           "weight": 0.5
         },
         {
@@ -5050,7 +4978,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 75.2,
+          "pct": 75.4,
           "weight": 0.6
         },
         {
@@ -5060,7 +4988,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 27.8,
+          "pct": 27.9,
           "weight": 2
         },
         {
@@ -5073,81 +5001,81 @@
       "ath": null
     },
     {
-      "rank": 69,
-      "ticker": "ZAB.WA",
-      "score": 66.9,
+      "rank": 68,
+      "ticker": "COLPAL.NS",
+      "score": 66.8,
       "track": "profitable",
       "lamps": [],
       "overview": {
         "kind": "gp",
-        "value": 0.161,
-        "companion": 42
+        "value": -0.012,
+        "companion": 46
       },
-      "name": "Zabka Group S.A.",
-      "country": "Luxembourg",
-      "region": "Europe",
+      "name": "Colgate-Palmolive (India) Limited",
+      "country": "India",
+      "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 8220923440.64983,
+      "marketCap": 5887500448.6912565,
       "phase": "established",
-      "mcapBand": "large",
-      "ipoRecency": "recent",
+      "mcapBand": "mid",
+      "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 2024,
+      "ipoYear": 2002,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 64.8,
-      "scoreShrunk": 64.7,
+      "scoreBase": 66.6,
+      "scoreShrunk": 66.5,
       "factors": {
         "burn": 1,
-        "growth": 1.034,
+        "growth": 1.004,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 82.3,
+          "pct": 71,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 18,
+          "pct": 17.1,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 85.7,
+          "pct": 38.5,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 82.3,
+          "pct": 86.5,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 48.6,
+          "pct": 65.5,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 80.7,
+          "pct": 99,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 12.8,
+          "pct": 58.8,
           "weight": 2.4
         }
       ],
-      "revGrowthYoYPct": 15.866572537945656,
+      "revGrowthYoYPct": 8.990435267626594,
       "ath": null
     },
     {
-      "rank": 70,
+      "rank": 69,
       "ticker": "BRITANNIA.NS",
-      "score": 66.6,
+      "score": 66.8,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -5167,10 +5095,10 @@
       "ipoYear": 1996,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 69.7,
-      "scoreShrunk": 65.7,
+      "scoreBase": 69.9,
+      "scoreShrunk": 65.9,
       "factors": {
         "burn": 1,
         "growth": 1.014,
@@ -5179,27 +5107,27 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 56.7,
+          "pct": 57.3,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 61.8,
+          "pct": 62.2,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 78.3,
+          "pct": 78,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 63.2,
+          "pct": 63.8,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 33.9,
+          "pct": 33.6,
           "weight": 0.3
         },
         {
@@ -5217,9 +5145,153 @@
       "ath": null
     },
     {
+      "rank": 70,
+      "ticker": "ZAB.WA",
+      "score": 66.8,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.161,
+        "companion": 42
+      },
+      "name": "Zabka Group S.A.",
+      "country": "Luxembourg",
+      "region": "Europe",
+      "sector": "Consumer Defensive",
+      "marketCap": 8236675136.179569,
+      "phase": "established",
+      "mcapBand": "large",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2024,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 64.7,
+      "scoreShrunk": 64.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1.033,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 82,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 18.2,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 85.5,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 82,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 48.6,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 81,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 12.6,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 15.866572537945656,
+      "ath": null
+    },
+    {
       "rank": 71,
+      "ticker": "301498.SZ",
+      "score": 66.4,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.297,
+        "companion": 10.2
+      },
+      "name": "Gambol Pet Group Co., Ltd.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Consumer Defensive",
+      "marketCap": 2344095540.331868,
+      "phase": "established",
+      "mcapBand": "micro",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2023,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.8,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 67.6,
+      "scoreShrunk": 64.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1.036,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 54,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 84.7,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 96.6,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 35.6,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 33.1,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 80.7,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 4.450570872296433,
+      "ath": null
+    },
+    {
+      "rank": 72,
       "ticker": "BG",
-      "score": 66.3,
+      "score": 66.1,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -5243,10 +5315,10 @@
       "ipoYear": 2001,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 63.4,
-      "scoreShrunk": 63.3,
+      "scoreBase": 63.1,
+      "scoreShrunk": 63,
       "factors": {
         "burn": 1,
         "growth": 1.048,
@@ -5265,7 +5337,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 29.4,
+          "pct": 29.2,
           "weight": 1.8
         },
         {
@@ -5275,7 +5347,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 32.5,
+          "pct": 32.2,
           "weight": 0.3
         },
         {
@@ -5285,94 +5357,22 @@
         },
         {
           "key": "dilution",
-          "pct": 67.3,
+          "pct": 66.4,
           "weight": 2.4
         }
       ],
       "revGrowthYoYPct": 87.7608863694924,
       "ath": {
-        "distancePct": -7.5,
+        "distancePct": -6.9,
         "athDate": "2026-06-03",
         "monthsAgo": 2,
-        "lastDate": "2026-07-24"
+        "lastDate": "2026-07-23"
       }
-    },
-    {
-      "rank": 72,
-      "ticker": "301498.SZ",
-      "score": 66.1,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.297,
-        "companion": 10.2
-      },
-      "name": "Gambol Pet Group Co., Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Consumer Defensive",
-      "marketCap": 2229290988.911616,
-      "phase": "established",
-      "mcapBand": "micro",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2023,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.8,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 67.4,
-      "scoreShrunk": 63.8,
-      "factors": {
-        "burn": 1,
-        "growth": 1.036,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 53.5,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 84.9,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 96.6,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 35.3,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 33.4,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 80.4,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 4.450570872296433,
-      "ath": null
     },
     {
       "rank": 73,
       "ticker": "COCO",
-      "score": 66,
+      "score": 65.9,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -5395,10 +5395,10 @@
       "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 63.4,
-      "scoreShrunk": 63.3,
+      "scoreBase": 63.2,
+      "scoreShrunk": 63.2,
       "factors": {
         "burn": 1,
         "growth": 1.043,
@@ -5407,37 +5407,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 91.1,
+          "pct": 90.9,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 90.8,
+          "pct": 90.7,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 92.5,
+          "pct": 92.4,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 92.5,
+          "pct": 92.4,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 93.8,
+          "pct": 93.7,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 29.3,
+          "pct": 29.4,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 4.8,
+          "pct": 4.4,
           "weight": 2.4
         }
       ],
@@ -5451,85 +5451,8 @@
     },
     {
       "rank": 74,
-      "ticker": "KO",
-      "score": 65.6,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.028,
-        "companion": 34.1
-      },
-      "name": "The Coca-Cola Company",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Defensive",
-      "marketCap": 353879195648,
-      "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1962,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 64.6,
-      "scoreShrunk": 64.5,
-      "factors": {
-        "burn": 1,
-        "growth": 1.016,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 76.7,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 47.5,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 58.7,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 77,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 66.1,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 76.9,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 37.8,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 12.067571210351336,
-      "ath": {
-        "distancePct": -3.1,
-        "athDate": "2026-07-16",
-        "monthsAgo": 0,
-        "lastDate": "2026-07-24"
-      }
-    },
-    {
-      "rank": 75,
       "ticker": "300146.SZ",
-      "score": 65.5,
+      "score": 65.4,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -5543,18 +5466,18 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 2426796062.88896,
+      "marketCap": 2487355973.5856943,
       "phase": "established",
-      "mcapBand": "micro",
+      "mcapBand": "small",
       "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2010,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 65.9,
-      "scoreShrunk": 62.7,
+      "scoreBase": 65.8,
+      "scoreShrunk": 62.6,
       "factors": {
         "burn": 1,
         "growth": 1.045,
@@ -5568,12 +5491,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 92.8,
+          "pct": 92.7,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 14.1,
+          "pct": 13.6,
           "weight": 1.8
         },
         {
@@ -5588,7 +5511,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 25.1,
+          "pct": 25.2,
           "weight": 2
         },
         {
@@ -5601,9 +5524,9 @@
       "ath": null
     },
     {
-      "rank": 76,
+      "rank": 75,
       "ticker": "WALMEX.MX",
-      "score": 65.3,
+      "score": 65.4,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -5615,7 +5538,7 @@
       "country": "Mexico",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 47573600586.12384,
+      "marketCap": 47631478309.84114,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "seasoned",
@@ -5623,10 +5546,10 @@
       "ipoYear": 2003,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 64.9,
-      "scoreShrunk": 64.9,
+      "scoreBase": 65.1,
+      "scoreShrunk": 65,
       "factors": {
         "burn": 1,
         "growth": 1.007,
@@ -5635,37 +5558,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 51.5,
+          "pct": 51.9,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 37.9,
+          "pct": 38.4,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 62.3,
+          "pct": 61.8,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 40,
+          "pct": 40.3,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 27.9,
+          "pct": 27.5,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 92.8,
+          "pct": 92.7,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 83.8,
+          "pct": 83.9,
           "weight": 2.4
         }
       ],
@@ -5673,9 +5596,9 @@
       "ath": null
     },
     {
-      "rank": 77,
+      "rank": 76,
       "ticker": "GODFRYPHLP.NS",
-      "score": 65.2,
+      "score": 65.3,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -5697,10 +5620,10 @@
       "ipoYear": 1999,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 63.3,
-      "scoreShrunk": 63.2,
+      "scoreBase": 63.4,
+      "scoreShrunk": 63.3,
       "factors": {
         "burn": 1,
         "growth": 1.032,
@@ -5719,27 +5642,27 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 85.1,
+          "pct": 84.9,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 72.6,
+          "pct": 73.1,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 89.6,
+          "pct": 89.4,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 74,
+          "pct": 74.5,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 18.5,
+          "pct": 18.4,
           "weight": 2.4
         }
       ],
@@ -5747,9 +5670,86 @@
       "ath": null
     },
     {
+      "rank": 77,
+      "ticker": "KO",
+      "score": 65.3,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.028,
+        "companion": 34.1
+      },
+      "name": "The Coca-Cola Company",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Defensive",
+      "marketCap": 353879195648,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1962,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 64.3,
+      "scoreShrunk": 64.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1.017,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 76.6,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 47.9,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 58.2,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 76.9,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 66.4,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 77.2,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 36.5,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 12.067571210351336,
+      "ath": {
+        "distancePct": -3.1,
+        "athDate": "2026-07-16",
+        "monthsAgo": 0,
+        "lastDate": "2026-07-24"
+      }
+    },
+    {
       "rank": 78,
       "ticker": "DAR",
-      "score": 64.5,
+      "score": 64.3,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -5771,10 +5771,10 @@
       "ipoYear": 1994,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 63,
-      "scoreShrunk": 62.9,
+      "scoreBase": 62.7,
+      "scoreShrunk": 62.6,
       "factors": {
         "burn": 1,
         "growth": 1.026,
@@ -5783,37 +5783,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 77.3,
+          "pct": 77.2,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 94.6,
+          "pct": 94.5,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 84.8,
+          "pct": 84.6,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 74.6,
+          "pct": 74.9,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 76.7,
+          "pct": 76.8,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 28.7,
+          "pct": 28.8,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 38.9,
+          "pct": 37.7,
           "weight": 2.4
         }
       ],
@@ -5828,7 +5828,7 @@
     {
       "rank": 79,
       "ticker": "MNST",
-      "score": 64.4,
+      "score": 64.2,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -5850,34 +5850,34 @@
       "ipoYear": 1985,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 62.1,
-      "scoreShrunk": 62,
+      "scoreBase": 61.9,
+      "scoreShrunk": 61.8,
       "factors": {
         "burn": 1,
-        "growth": 1.039,
+        "growth": 1.038,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 90.2,
+          "pct": 90,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 81.1,
+          "pct": 80.9,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 88.9,
+          "pct": 88.8,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 92.8,
+          "pct": 92.7,
           "weight": 0.6
         },
         {
@@ -5887,12 +5887,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 36.3,
+          "pct": 36.6,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 4.3,
+          "pct": 3.8,
           "weight": 2.4
         }
       ],
@@ -5907,7 +5907,7 @@
     {
       "rank": 80,
       "ticker": "GODREJCP.NS",
-      "score": 64,
+      "score": 64.2,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -5922,15 +5922,15 @@
       "marketCap": 11266189403.253178,
       "phase": "established",
       "mcapBand": "large",
-      "ipoRecency": "mature",
+      "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2002,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 63.3,
-      "scoreShrunk": 63.2,
+      "scoreBase": 63.4,
+      "scoreShrunk": 63.4,
       "factors": {
         "burn": 1,
         "growth": 1.013,
@@ -5939,12 +5939,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 48.2,
+          "pct": 48.7,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 86.7,
+          "pct": 86.5,
           "weight": 0.5
         },
         {
@@ -5954,22 +5954,22 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 58.2,
+          "pct": 58.8,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 61.1,
+          "pct": 61.3,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 89.3,
+          "pct": 89.4,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 76.4,
+          "pct": 76.3,
           "weight": 2.4
         }
       ],
@@ -5978,8 +5978,80 @@
     },
     {
       "rank": 81,
-      "ticker": "PSMT",
+      "ticker": "TCO0.DE",
       "score": 63.8,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.096,
+        "companion": 15.5
+      },
+      "name": "Tesco PLC",
+      "country": "United Kingdom",
+      "region": "Europe",
+      "sector": "Consumer Defensive",
+      "marketCap": 39484442442.98793,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2012,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.97,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 63.5,
+      "scoreShrunk": 63.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1.011,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 60,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 69.6,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 77.4,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 51.9,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 45.8,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 75.7,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 5.429372389724807,
+      "ath": null
+    },
+    {
+      "rank": 82,
+      "ticker": "PSMT",
+      "score": 63.7,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -5999,10 +6071,10 @@
       "ipoYear": 1997,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 62.2,
-      "scoreShrunk": 62.2,
+      "scoreBase": 62.1,
+      "scoreShrunk": 62,
       "factors": {
         "burn": 1,
         "growth": 1.026,
@@ -6011,37 +6083,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 77.9,
+          "pct": 77.8,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 26.8,
+          "pct": 27.4,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 68.2,
+          "pct": 67.8,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 73.2,
+          "pct": 73.7,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 45.4,
+          "pct": 45.3,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 55.4,
+          "pct": 56,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 42.9,
+          "pct": 41.8,
           "weight": 2.4
         }
       ],
@@ -6054,153 +6126,9 @@
       }
     },
     {
-      "rank": 82,
-      "ticker": "TCO0.DE",
-      "score": 63.6,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.096,
-        "companion": 15.5
-      },
-      "name": "Tesco PLC",
-      "country": "United Kingdom",
-      "region": "Europe",
-      "sector": "Consumer Defensive",
-      "marketCap": 39412453670.80469,
-      "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2012,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.97,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 63.3,
-      "scoreShrunk": 62.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1.011,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 59.4,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 69.2,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 77.7,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 51.5,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 45.4,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 75.9,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 5.429372389724807,
-      "ath": null
-    },
-    {
       "rank": 83,
-      "ticker": "000596.SZ",
-      "score": 63.5,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": -0.208,
-        "companion": 149.8
-      },
-      "name": "Anhui Gujing Distillery Co., Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Consumer Defensive",
-      "marketCap": 6841928802.308096,
-      "phase": "established",
-      "mcapBand": "mid",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1996,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.8,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 63.7,
-      "scoreShrunk": 61,
-      "factors": {
-        "burn": 1,
-        "growth": 1.042,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 96.9,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 2.5,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 4.6,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 96.9,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 80,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 50.1,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 65.1197150334306,
-      "ath": null
-    },
-    {
-      "rank": 84,
       "ticker": "MO",
-      "score": 63.5,
+      "score": 63.6,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -6222,10 +6150,10 @@
       "ipoYear": 1962,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 66.9,
-      "scoreShrunk": 63.5,
+      "scoreBase": 67.1,
+      "scoreShrunk": 63.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6234,22 +6162,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 58.2,
+          "pct": 58.8,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 45.8,
+          "pct": 46.1,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 50.4,
+          "pct": 50.1,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 89,
+          "pct": 88.8,
           "weight": 0.6
         },
         {
@@ -6272,9 +6200,81 @@
       "ath": null
     },
     {
+      "rank": 84,
+      "ticker": "000596.SZ",
+      "score": 63.6,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": -0.208,
+        "companion": 149.8
+      },
+      "name": "Anhui Gujing Distillery Co., Ltd.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Consumer Defensive",
+      "marketCap": 6849749172.210278,
+      "phase": "established",
+      "mcapBand": "mid",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1996,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.8,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 63.8,
+      "scoreShrunk": 61,
+      "factors": {
+        "burn": 1,
+        "growth": 1.042,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 96.9,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 2.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 4.3,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 96.9,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 80,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 50.9,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 65.1197150334306,
+      "ath": null
+    },
+    {
       "rank": 85,
       "ticker": "E5H.SI",
-      "score": 63.3,
+      "score": 63.2,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -6286,7 +6286,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 2802872955.214643,
+      "marketCap": 2804591182.3140864,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "seasoned",
@@ -6294,7 +6294,7 @@
       "ipoYear": 2007,
       "coverageAxes": "5/7",
       "coverageWeight": 0.77,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 64.2,
       "scoreShrunk": 61,
@@ -6306,22 +6306,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 85.5,
+          "pct": 85.3,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 84.1,
+          "pct": 83.8,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 4.3,
+          "pct": 4,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 82,
+          "pct": 81.7,
           "weight": 0.6
         },
         {
@@ -6331,7 +6331,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 63.1,
+          "pct": 63.7,
           "weight": 2
         },
         {
@@ -6358,7 +6358,7 @@
       "country": "Indonesia",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 4527037586.828427,
+      "marketCap": 4510811736.017732,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "mature",
@@ -6366,7 +6366,7 @@
       "ipoYear": 2000,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 63.9,
       "scoreShrunk": 61.1,
@@ -6378,32 +6378,32 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 90.5,
+          "pct": 90.3,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 29.7,
+          "pct": 30.4,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 28.6,
+          "pct": 28.3,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 90.2,
+          "pct": 90,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 21,
+          "pct": 20.9,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 46.9,
+          "pct": 47.3,
           "weight": 2
         },
         {
@@ -6418,7 +6418,7 @@
     {
       "rank": 87,
       "ticker": "MAMA",
-      "score": 63,
+      "score": 62.8,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -6440,10 +6440,10 @@
       "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 60.2,
-      "scoreShrunk": 60.1,
+      "scoreBase": 60.1,
+      "scoreShrunk": 60,
       "factors": {
         "burn": 1,
         "growth": 1.047,
@@ -6457,7 +6457,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 93.4,
+          "pct": 93.3,
           "weight": 0.5
         },
         {
@@ -6467,7 +6467,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 95.5,
+          "pct": 95.4,
           "weight": 0.6
         },
         {
@@ -6482,7 +6482,7 @@
         },
         {
           "key": "dilution",
-          "pct": 3.7,
+          "pct": 3.2,
           "weight": 2.4
         }
       ],
@@ -6504,7 +6504,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 6849637765.315788,
+      "marketCap": 6913079769.679257,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "growth",
@@ -6512,7 +6512,7 @@
       "ipoYear": 2018,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 63.1,
       "scoreShrunk": 60.5,
@@ -6524,32 +6524,32 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 94.9,
+          "pct": 94.8,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 11,
+          "pct": 11.1,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 3.7,
+          "pct": 3.4,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 95.2,
+          "pct": 95.1,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 43.1,
+          "pct": 43,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 56.3,
+          "pct": 56.9,
           "weight": 2
         },
         {
@@ -6564,7 +6564,7 @@
     {
       "rank": 89,
       "ticker": "000568.SZ",
-      "score": 62.4,
+      "score": 62.3,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -6576,7 +6576,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 18069795963.20604,
+      "marketCap": 18227209340.03466,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "veteran",
@@ -6584,10 +6584,10 @@
       "ipoYear": 1994,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
       "scoreBase": 65.5,
-      "scoreShrunk": 62.4,
+      "scoreShrunk": 62.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6596,32 +6596,32 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 83.1,
+          "pct": 82.9,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 3.9,
+          "pct": 4,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 4.9,
+          "pct": 4.6,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 88.7,
+          "pct": 88.5,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 97,
+          "pct": 96.9,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 86.9,
+          "pct": 87.3,
           "weight": 2
         },
         {
@@ -6632,16 +6632,88 @@
       ],
       "revGrowthYoYPct": 16.43016872686387,
       "ath": {
-        "distancePct": -69.3,
+        "distancePct": -69.1,
         "athDate": "2021-02-10",
         "monthsAgo": 65,
-        "lastDate": "2026-07-24"
+        "lastDate": "2026-07-27"
       }
     },
     {
       "rank": 90,
+      "ticker": "417A.T",
+      "score": 61.8,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.105,
+        "companion": 25.5
+      },
+      "name": "BLUE ZONES HOLDINGS CO.,LTD.",
+      "country": "Japan",
+      "region": "Asia",
+      "sector": "Consumer Defensive",
+      "marketCap": 2195784501.492253,
+      "phase": "established",
+      "mcapBand": "micro",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2001,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.77,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 63.1,
+      "scoreShrunk": 60.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1.028,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 74,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 13.8,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 71.4,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 66.8,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 44,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 10.422868006518172,
+      "ath": null
+    },
+    {
+      "rank": 91,
       "ticker": "MKC-V",
-      "score": 62,
+      "score": 61.7,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -6661,10 +6733,10 @@
       "ipoYear": 2003,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 60.5,
-      "scoreShrunk": 60.4,
+      "scoreBase": 60.2,
+      "scoreShrunk": 60.2,
       "factors": {
         "burn": 1,
         "growth": 1.026,
@@ -6673,37 +6745,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 83.4,
+          "pct": 83.2,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 57.2,
+          "pct": 57.4,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 37.7,
+          "pct": 37.9,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 85.2,
+          "pct": 85,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 68.4,
+          "pct": 68.3,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 54.3,
+          "pct": 54.8,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 36.1,
+          "pct": 34.8,
           "weight": 2.4
         }
       ],
@@ -6716,66 +6788,68 @@
       }
     },
     {
-      "rank": 91,
-      "ticker": "417A.T",
-      "score": 61.7,
+      "rank": 92,
+      "ticker": "002946.SZ",
+      "score": 61.5,
       "track": "profitable",
-      "lamps": [],
+      "lamps": [
+        "peakMargin"
+      ],
       "overview": {
         "kind": "gp",
-        "value": 0.105,
-        "companion": 25.5
+        "value": 0.084,
+        "companion": 17.2
       },
-      "name": "BLUE ZONES HOLDINGS CO.,LTD.",
-      "country": "Japan",
+      "name": "New Hope Dairy Co., Ltd.",
+      "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 2171260542.5381866,
+      "marketCap": 1979020340.120494,
       "phase": "established",
       "mcapBand": "micro",
-      "ipoRecency": "mature",
+      "ipoRecency": "growth",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 2001,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.77,
-      "cohortN": 343,
+      "ipoYear": 2019,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.8,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 62.9,
-      "scoreShrunk": 60,
+      "scoreBase": 63.6,
+      "scoreShrunk": 60.9,
       "factors": {
         "burn": 1,
-        "growth": 1.028,
+        "growth": 1.01,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 73.8,
+          "pct": 59.4,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 13.6,
+          "pct": 33.7,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 71.7,
+          "pct": 80.1,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 66.1,
+          "pct": 56.7,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": null,
+          "pct": 28.4,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 43.7,
+          "pct": 72.7,
           "weight": 2
         },
         {
@@ -6784,13 +6858,92 @@
           "weight": 2.4
         }
       ],
-      "revGrowthYoYPct": 10.422868006518172,
+      "revGrowthYoYPct": 5.325941883553753,
       "ath": null
     },
     {
-      "rank": 92,
-      "ticker": "300765.SZ",
+      "rank": 93,
+      "ticker": "600600.SS",
       "score": 61.4,
+      "track": "profitable",
+      "lamps": [
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.051,
+        "companion": 7.6
+      },
+      "name": "Tsingtao Brewery Company Limited",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Consumer Defensive",
+      "marketCap": 10760996149.309439,
+      "phase": "established",
+      "mcapBand": "large",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1993,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 61.5,
+      "scoreShrunk": 61.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 34.1,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 56.8,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 72,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 33.8,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 98.8,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 72.4,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 95.6,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 1.0444499576998778,
+      "ath": {
+        "distancePct": -53.6,
+        "athDate": "2023-04-10",
+        "monthsAgo": 40,
+        "lastDate": "2026-07-27"
+      }
+    },
+    {
+      "rank": 94,
+      "ticker": "300765.SZ",
+      "score": 61.2,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -6809,7 +6962,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Consumer Defensive",
-      "marketCap": 7665155307.960729,
+      "marketCap": 7659038910.852219,
       "phase": "unprofitable",
       "mcapBand": "large",
       "ipoRecency": "growth",
@@ -6817,10 +6970,10 @@
       "ipoYear": 2019,
       "coverageAxes": "6/7",
       "coverageWeight": 0.8,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 61.2,
-      "scoreShrunk": 59,
+      "scoreBase": 61.1,
+      "scoreShrunk": 58.9,
       "factors": {
         "burn": 1,
         "growth": 1.04,
@@ -6829,22 +6982,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 93.1,
+          "pct": 93,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 95.8,
+          "pct": 95.7,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 16.7,
+          "pct": 16.3,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 90.8,
+          "pct": 90.6,
           "weight": 0.6
         },
         {
@@ -6854,7 +7007,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 11.3,
+          "pct": 11.2,
           "weight": 2
         },
         {
@@ -6867,9 +7020,158 @@
       "ath": null
     },
     {
-      "rank": 93,
+      "rank": 95,
+      "ticker": "7532.T",
+      "score": 61.2,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.081,
+        "companion": 19.9
+      },
+      "name": "Pan Pacific International Holdings Corporation",
+      "country": "Japan",
+      "region": "Asia",
+      "sector": "Consumer Defensive",
+      "marketCap": 16164629277.037298,
+      "phase": "established",
+      "mcapBand": "large",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2001,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.77,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 63,
+      "scoreShrunk": 60.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1.017,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 65.3,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 48.2,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 72.9,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 59.4,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 54.2,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 7.239877102369019,
+      "ath": {
+        "distancePct": -19.8,
+        "athDate": "2025-09-08",
+        "monthsAgo": 11,
+        "lastDate": "2026-07-27"
+      }
+    },
+    {
+      "rank": 96,
+      "ticker": "JMT.WA",
+      "score": 61.2,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.085,
+        "companion": 16.9
+      },
+      "name": "Jerónimo Martins, SGPS, S.A.",
+      "country": "Portugal",
+      "region": "Europe",
+      "sector": "Consumer Defensive",
+      "marketCap": 12240001374.669374,
+      "phase": "established",
+      "mcapBand": "large",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2023,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.8,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 62.7,
+      "scoreShrunk": 60.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1.016,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 62.9,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 43.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 65.7,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 54,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 42.5,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 70,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 6.2910349767219875,
+      "ath": null
+    },
+    {
+      "rank": 97,
       "ticker": "DOLE",
-      "score": 61.3,
+      "score": 61.1,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -6891,10 +7193,10 @@
       "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 59.7,
-      "scoreShrunk": 59.7,
+      "scoreBase": 59.6,
+      "scoreShrunk": 59.5,
       "factors": {
         "burn": 1,
         "growth": 1.027,
@@ -6903,7 +7205,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 75.5,
+          "pct": 75.4,
           "weight": 4.2
         },
         {
@@ -6913,27 +7215,27 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 29.1,
+          "pct": 28.9,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 71.4,
+          "pct": 71.9,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 36.2,
+          "pct": 35.9,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 38.7,
+          "pct": 39,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 68.5,
+          "pct": 67.5,
           "weight": 2.4
         }
       ],
@@ -6946,234 +7248,81 @@
       }
     },
     {
-      "rank": 94,
-      "ticker": "600600.SS",
-      "score": 61.3,
-      "track": "profitable",
-      "lamps": [
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.051,
-        "companion": 7.6
-      },
-      "name": "Tsingtao Brewery Company Limited",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Consumer Defensive",
-      "marketCap": 10656607317.599846,
-      "phase": "established",
-      "mcapBand": "large",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1993,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 61.4,
-      "scoreShrunk": 61.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 33.9,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 56.3,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 72.3,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 33.6,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 98.8,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 71.9,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 95.7,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 1.0444499576998778,
-      "ath": {
-        "distancePct": -54.1,
-        "athDate": "2023-04-10",
-        "monthsAgo": 39,
-        "lastDate": "2026-07-24"
-      }
-    },
-    {
-      "rank": 95,
-      "ticker": "002946.SZ",
-      "score": 61.2,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.084,
-        "companion": 17.2
-      },
-      "name": "New Hope Dairy Co., Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Consumer Defensive",
-      "marketCap": 1964053231.038259,
-      "phase": "established",
-      "mcapBand": "micro",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2019,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.8,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 63.3,
-      "scoreShrunk": 60.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1.01,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 58.8,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 32.9,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 80.3,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 56.2,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 28.8,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 72.2,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 5.325941883553753,
-      "ath": null
-    },
-    {
-      "rank": 96,
-      "ticker": "JMT.WA",
-      "score": 61,
+      "rank": 98,
+      "ticker": "SYY",
+      "score": 60.9,
       "track": "profitable",
       "lamps": [],
       "overview": {
         "kind": "gp",
-        "value": 0.085,
-        "companion": 16.9
+        "value": 0.025,
+        "companion": 13
       },
-      "name": "Jerónimo Martins, SGPS, S.A.",
-      "country": "Portugal",
-      "region": "Europe",
+      "name": "Sysco Corporation",
+      "country": "United States",
+      "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 12216593777.337957,
+      "marketCap": 39741755392,
       "phase": "established",
-      "mcapBand": "large",
-      "ipoRecency": "recent",
+      "mcapBand": "mega",
+      "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 2023,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.8,
-      "cohortN": 343,
+      "ipoYear": 1973,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 62.5,
-      "scoreShrunk": 60,
+      "scoreBase": 60.9,
+      "scoreShrunk": 60.8,
       "factors": {
         "burn": 1,
-        "growth": 1.016,
+        "growth": 1.002,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 62.6,
+          "pct": 56.4,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 43.1,
+          "pct": 54.2,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 66.1,
+          "pct": 40.6,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 53.5,
+          "pct": 43.9,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 42.6,
+          "pct": 35.4,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 69.6,
+          "pct": 78.4,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": null,
+          "pct": 78.1,
           "weight": 2.4
         }
       ],
-      "revGrowthYoYPct": 6.2910349767219875,
+      "revGrowthYoYPct": 4.699459128482508,
       "ath": null
     },
     {
-      "rank": 97,
+      "rank": 99,
       "ticker": "UBL.NS",
-      "score": 60.9,
+      "score": 60.8,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -7196,49 +7345,49 @@
       "ipoYear": 2008,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 59.7,
-      "scoreShrunk": 59.7,
+      "scoreBase": 59.6,
+      "scoreShrunk": 59.6,
       "factors": {
         "burn": 1,
-        "growth": 1.021,
+        "growth": 1.02,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 78.2,
+          "pct": 78.1,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 11.8,
+          "pct": 12,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 72.6,
+          "pct": 72.3,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 70.8,
+          "pct": 71.3,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 26,
+          "pct": 25.6,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 6.6,
+          "pct": 6.4,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 73.6,
+          "pct": 73.4,
           "weight": 2.4
         }
       ],
@@ -7246,158 +7395,9 @@
       "ath": null
     },
     {
-      "rank": 98,
-      "ticker": "7532.T",
-      "score": 60.9,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.081,
-        "companion": 19.9
-      },
-      "name": "Pan Pacific International Holdings Corporation",
-      "country": "Japan",
-      "region": "Asia",
-      "sector": "Consumer Defensive",
-      "marketCap": 15758034295.106567,
-      "phase": "established",
-      "mcapBand": "large",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2001,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.77,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 62.8,
-      "scoreShrunk": 59.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1.017,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 65,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 47.8,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 73.2,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 58.8,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 53.7,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 7.239877102369019,
-      "ath": {
-        "distancePct": -21.1,
-        "athDate": "2025-09-08",
-        "monthsAgo": 10,
-        "lastDate": "2026-07-24"
-      }
-    },
-    {
-      "rank": 99,
-      "ticker": "SYY",
-      "score": 60.6,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.025,
-        "companion": 13
-      },
-      "name": "Sysco Corporation",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Defensive",
-      "marketCap": 39741755392,
-      "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1973,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 343,
-      "cohortFallback": false,
-      "scoreBase": 60.6,
-      "scoreShrunk": 60.5,
-      "factors": {
-        "burn": 1,
-        "growth": 1.002,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 55.9,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 53.7,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 40.4,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 43.5,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 35.7,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 78.1,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 78.1,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 4.699459128482508,
-      "ath": null
-    },
-    {
       "rank": 100,
       "ticker": "2280.SR",
-      "score": 60.4,
+      "score": 60,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -7417,10 +7417,10 @@
       "ipoYear": 2010,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 343,
+      "cohortN": 338,
       "cohortFallback": false,
-      "scoreBase": 58.7,
-      "scoreShrunk": 58.6,
+      "scoreBase": 58.3,
+      "scoreShrunk": 58.2,
       "factors": {
         "burn": 1,
         "growth": 1.031,
@@ -7429,37 +7429,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 86.7,
+          "pct": 86.5,
           "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 40.2,
+          "pct": 40.5,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 57,
+          "pct": 56.4,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 83.1,
+          "pct": 82.9,
           "weight": 0.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 74,
+          "pct": 73.9,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 14.6,
+          "pct": 14.5,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 43.5,
+          "pct": 42.4,
           "weight": 2.4
         }
       ],
