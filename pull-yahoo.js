@@ -3201,12 +3201,41 @@ async function main() {
           .map((e) => (typeof e === 'string' ? e : e && e.ticker))
           .filter(Boolean),
       );
+      // ⚠ KORREKTUR (unabhaengige Pruefung 27.07., am Bestand reproduziert): NICHT jeden Namen
+      // der Small-Cap-Liste ueberspringen. Karls Entscheid 2 gibt der Small-Cap-Liste das BAND
+      // 300–800 Mio. — nicht die Namen, die inzwischen darueber liegen. Wer die pauschal
+      // ueberspringt, schaltet fuer sie auch den mcap-Skip-Pfad ab, der ihre Snapshot-Datei
+      // sonst pflegt: sie wird weder aktualisiert noch entfernt. Ergebnis waere ein
+      // EINGEFRORENER Snapshot, der im Hauptboard weiter mitgescort wird — sichtbar falsch ist
+      // schlimmer als unsichtbar. Kein Gate faengt das: die Frische-Pruefung arbeitet auf der
+      // Aggregatquote, und ein paar hundert von 12.300 reissen sie nicht.
+      // Lokal gemessen: 26 Namen stehen in beiden Listen UND liegen bei >= 800 Mio.
+      //
+      // Uebersprungen wird deshalb nur, wer nach dem EIGENEN letzten Stand des Hauptlaufs
+      // wirklich im Band liegt. Ohne Snapshot wird uebersprungen (der Small-Cap-Lauf holt ihn),
+      // mit Snapshot ueber der Grenze wird weiter gezogen.
+      const imBand = (t) => {
+        try {
+          const p = path.join(args.output, safeSnapshotFilename(t));
+          if (!fs.existsSync(p)) return true;                 // noch kein Hauptlauf-Stand
+          const s = JSON.parse(fs.readFileSync(p, 'utf8'));
+          const v = s && s.marketCap && s.marketCap.value;
+          if (!Number.isFinite(v)) return true;               // kein verwertbarer Wert
+          return v < MIN_MCAP_USD;
+        } catch (_) { return true; }                          // im Zweifel ueberspringen wie bisher
+      };
       if (scTicker.size) {
         const vorher = watchlist.stocks.length;
+        let behaltenWeilGross = 0;
         watchlist.stocks = watchlist.stocks.filter((e) => {
           const t = typeof e === 'string' ? e : (e && e.ticker);
-          return !(t && scTicker.has(t));
+          if (!(t && scTicker.has(t))) return true;
+          if (!imBand(t)) { behaltenWeilGross++; return true; }
+          return false;
         });
+        if (behaltenWeilGross > 0) {
+          _log('INFO', `Small-Cap-Eigentumsgrenze: ${behaltenWeilGross} Ticker BLEIBEN im Hauptlauf (ueber ${MIN_MCAP_USD} — sonst wuerde ihr Snapshot einfrieren)`);
+        }
         const weg = vorher - watchlist.stocks.length;
         if (weg > 0) _log('INFO', `Small-Cap-Eigentumsgrenze: ${weg} Ticker uebersprungen (gehoeren ${SMALLCAP_LISTE}); ${watchlist.stocks.length}/${vorher} bleiben`);
       }
