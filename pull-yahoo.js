@@ -3214,27 +3214,35 @@ async function main() {
       // Uebersprungen wird deshalb nur, wer nach dem EIGENEN letzten Stand des Hauptlaufs
       // wirklich im Band liegt. Ohne Snapshot wird uebersprungen (der Small-Cap-Lauf holt ihn),
       // mit Snapshot ueber der Grenze wird weiter gezogen.
-      const imBand = (t) => {
+      // ⚠ ZWEITE KORREKTUR derselben Stelle (unabhaengige Pruefung 27.07., Fund zur
+      // Survivor-Bias-Bereinigung): uebersprungen wird nur, wer in snapshots/ GAR KEINE Datei
+      // (mehr) hat. Grund: der Hauptlauf loescht die Datei selbst, sobald ein Ticker unter die
+      // 800-Mio.-Schwelle faellt — ein Pfad, der ausdruecklich gegen Survivor-Bias gebaut wurde.
+      // Wer pauschal uebersprungen wird, erreicht diesen Pfad nie: seine Datei wird weder
+      // aktualisiert noch entfernt und bleibt als eingefrorener Stand im Board stehen.
+      // Am Bestand gemessen: 98 Ticker stehen in beiden Listen UND haben eine Datei — 26 davon
+      // ueber der Schwelle (die bleiben ohnehin, s. o.), 72 darunter, also 72 potenzielle
+      // Karteileichen mit eingefrorenen Kursen.
+      //
+      // Diese Fassung braucht KEINEN neuen Loeschcode: die Namen laufen einmal durch den
+      // normalen Weg, der bestehende mcap-Skip raeumt ihre Datei ab, und ab dem naechsten Lauf
+      // greift das Ueberspringen von selbst. Einmalig ~98 Abrufe mehr, danach null.
+      const ohneStand = (t) => {
         try {
-          const p = path.join(args.output, safeSnapshotFilename(t));
-          if (!fs.existsSync(p)) return true;                 // noch kein Hauptlauf-Stand
-          const s = JSON.parse(fs.readFileSync(p, 'utf8'));
-          const v = s && s.marketCap && s.marketCap.value;
-          if (!Number.isFinite(v)) return true;               // kein verwertbarer Wert
-          return v < MIN_MCAP_USD;
+          return !fs.existsSync(path.join(args.output, safeSnapshotFilename(t)));
         } catch (_) { return true; }                          // im Zweifel ueberspringen wie bisher
       };
       if (scTicker.size) {
         const vorher = watchlist.stocks.length;
-        let behaltenWeilGross = 0;
+        let behaltenMitStand = 0;
         watchlist.stocks = watchlist.stocks.filter((e) => {
           const t = typeof e === 'string' ? e : (e && e.ticker);
           if (!(t && scTicker.has(t))) return true;
-          if (!imBand(t)) { behaltenWeilGross++; return true; }
+          if (!ohneStand(t)) { behaltenMitStand++; return true; }
           return false;
         });
-        if (behaltenWeilGross > 0) {
-          _log('INFO', `Small-Cap-Eigentumsgrenze: ${behaltenWeilGross} Ticker BLEIBEN im Hauptlauf (ueber ${MIN_MCAP_USD} — sonst wuerde ihr Snapshot einfrieren)`);
+        if (behaltenMitStand > 0) {
+          _log('INFO', `Small-Cap-Eigentumsgrenze: ${behaltenMitStand} Ticker BLEIBEN im Hauptlauf, weil sie noch eine Snapshot-Datei haben (sonst friere sie ein; der normale mcap-Skip raeumt sie ab)`);
         }
         const weg = vorher - watchlist.stocks.length;
         if (weg > 0) _log('INFO', `Small-Cap-Eigentumsgrenze: ${weg} Ticker uebersprungen (gehoeren ${SMALLCAP_LISTE}); ${watchlist.stocks.length}/${vorher} bleiben`);
