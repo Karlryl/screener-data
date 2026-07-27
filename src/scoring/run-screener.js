@@ -10,7 +10,7 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { scoreUniverse, produceRankings, calibrationDrift, quantile, LARGE_CAP_USD } = require('./score.js');
+const { scoreUniverse, produceRankings, calibrationDrift, quantile, LARGE_CAP_USD, MIN_COHORT_N } = require('./score.js');
 const formulas = require('./formulas/index.js');
 // 3.1 QC-Board (DIAGNOSTIC, additiv): eigener Membership-Router + eigene Formel-Registry + Board-Status.
 const { qualityRoute } = require('./quality-route.js');
@@ -292,6 +292,22 @@ function run(topN) {
       counts[e.formulaId][e.track] = (counts[e.formulaId][e.track] || 0) + 1;
     }
   }
+  // Unabhaengige Pruefung 27.07., Befund (f): MIN_COHORT_N ist ein HARTER Umschaltpunkt —
+  // faellt eine Kohorte darunter, wechseln ALLE ihre Mitglieder von der eigenen auf die
+  // Eltern-Perzentilbasis. Jede Aenderung am Dedup verschiebt Kohortengroessen um einzelne
+  // Namen, und dieser Umschlag passiert bisher lautlos. Am Board vom 27.07. gemessen: fuenf
+  // Kohorten liegen im Bereich 15..20, alle im (diagnostischen) Small-Cap-Teil.
+  // Nur ein LOG, kein Gate: eine Schwelle waere geraten, die Sichtbarkeit ist belegt noetig.
+  const knapp = Object.entries(counts)
+    .flatMap(([id, b]) => Object.entries(b).map(([track, n]) => ({ id, track, n })))
+    .filter((k) => k.n >= MIN_COHORT_N && k.n <= MIN_COHORT_N + 5)
+    .sort((a, b) => a.n - b.n);
+  if (knapp.length) {
+    console.log(`[run-screener] ${knapp.length} Kohorte(n) dicht am Umschaltpunkt n=${MIN_COHORT_N} `
+      + `(darunter wechselt die Perzentilbasis fuer ALLE Mitglieder): `
+      + knapp.map((k) => `${k.id}|${k.track}=${k.n}`).join(', '));
+  }
+
   fs.mkdirSync(OUT_DIR, { recursive: true });
   for (const [id, b] of Object.entries(ranked.branches)) {
     writeJsonAtomic(path.join(OUT_DIR, id + '.json'), b); // indent 2 default -> byte-identisch

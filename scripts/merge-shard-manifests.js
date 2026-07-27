@@ -51,7 +51,15 @@ function honestDenominator(fullUniverseSize, skippedMcap, skippedOwned, nOk) {
   const basis = fullUniverseSize - (Number.isFinite(skippedMcap) ? skippedMcap : 0);
   const owned = Number.isFinite(skippedOwned) ? skippedOwned : 0;
   const kandidat = basis - owned;
-  if (owned < 0 || !(kandidat > 0) || (Number.isFinite(nOk) && kandidat < nOk)) {
+  // Unabhaengige Pruefung 27.07., Befund 1: die Bedingung `Number.isFinite(nOk) && kandidat < nOk`
+  // ueberspringt per Kurzschluss die EINZIGE Absicherung gegen einen zu kleinen Nenner, sobald
+  // nOk nicht endlich ist. Heute unerreichbar (mergeManifests uebergibt immer sum('n_ok')), aber
+  // die Funktion ist exportiert — ein kuenftiger Aufrufer mit undefined haette den Schutz still
+  // ausgeschaltet. Ein fehlendes nOk ist kein Grund zu vertrauen, sondern einer zu misstrauen.
+  if (!Number.isFinite(nOk)) {
+    return { n_addressable: basis, verworfen: owned, grund: `n_ok=${nOk} ist keine Zahl — ohne Gegenprobe wird der Abzug nicht angewandt, Nenner bleibt ${basis}` };
+  }
+  if (owned < 0 || !(kandidat > 0) || kandidat < nOk) {
     return { n_addressable: basis, verworfen: owned, grund: `n_skipped_owned=${skippedOwned} ergibt Nenner ${kandidat} (n_ok=${nOk}) — unplausibel, nutze ${basis}` };
   }
   return { n_addressable: kandidat, verworfen: 0, grund: null };
@@ -328,6 +336,17 @@ function selftest() {
     const r = honestDenominator(15212, 2256, undefined, 10672);
     assert.equal(r.n_addressable, 12956);
     assert.equal(r.grund, null);
+  });
+  t('Befund 1: fehlendes n_ok schaltet den Schutz NICHT ab', () => {
+    // Ohne Gegenprobe darf der Abzug nicht angewandt werden — sonst koennte ein zu grosses
+    // n_skipped_owned unbemerkt durchgehen und den Nenner zu klein machen.
+    for (const kaputt of [undefined, NaN, null, 'viele']) {
+      const r = honestDenominator(15212, 2256, 9000, kaputt);
+      assert.equal(r.n_addressable, 12956, `n_ok=${String(kaputt)} haette den Abzug durchgelassen`);
+      assert.ok(r.grund, 'der uebersprungene Schutz muss gemeldet werden');
+    }
+    // Gegenkontrolle: mit gueltigem n_ok und plausiblem owned wird sehr wohl abgezogen.
+    assert.equal(honestDenominator(15212, 2256, 583, 10672).n_addressable, 12373);
   });
   t('Tag 464: der Warnpfad landet auch im gemergten Manifest', () => {
     const kaputt = { n_ok: 10672, n_skipped_mcap: 2256, n_skipped_owned: 9000, n_failed: 0, partial: false };

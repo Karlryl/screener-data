@@ -231,6 +231,18 @@ function selftest() {
     [{ n_ok: 10672, n_total: 15212, partial: false, n_failed: 1678, n_skipped_mcap: 2256, n_skipped_owned: 583, n_addressable: 12373 }, 'degradiert'],
     // Und die Gegenrichtung: waeren die 1678 Fehlschlaege behoben, geht der Banner aus.
     [{ n_ok: 12000, n_total: 15212, partial: false, n_failed: 350, n_skipped_mcap: 2256, n_skipped_owned: 583, n_addressable: 12373 }, 'ok'],
+    // ⚠ DER GEFAEHRLICHSTE PFAD, von der unabhaengigen Pruefung am 27.07. als Testluecke
+    // gemeldet: genau DIESE Manifest-Form schreibt pull-yahoo.js beim inkrementellen (partial)
+    // und beim Einzellauf — n_skipped_mcap UND n_skipped_owned gesetzt, n_addressable FEHLT.
+    // Dort ist n_total bereits um die uebersprungenen Namen reduziert, der Fallback darf sie
+    // also NICHT nochmal abziehen. Wer aus Ehrlichkeits-Impuls "- n_skipped_owned" ergaenzt,
+    // erzeugt genau den Doppelabzug, gegen den der ganze Umbau gebaut ist — Nenner zu klein,
+    // Abdeckung zu hoch, Karls einziger Alarm dauerhaft gruen.
+    // Der Fall unten ist so gewaehlt, dass der Doppelabzug das Urteil KIPPEN wuerde:
+    //   richtig:  9000/10000 = 90,0 %  -> genau auf der Latte -> ok
+    //   falsch:   9000/(10000-583) = 95,6 % -> ebenfalls ok, aber die Zahl waere gelogen;
+    //   deshalb pinnt der Selftest zusaetzlich den ausgewiesenen Prozentwert im Marker.
+    [{ n_ok: 9000, n_total: 12256, partial: false, n_failed: 200, n_skipped_mcap: 2256, n_skipped_owned: 583 }, 'ok'],
   ];
   let pass = 0;
   for (const [m, want] of cases) {
@@ -249,6 +261,16 @@ function selftest() {
     console.log(`${okC ? 'PASS' : 'FAIL'}  marker-contract status=${want} degraded=${mk.degraded} blocked=${mk.blocked}${errs.length ? ' ERRS=' + errs.join(',') : ''}`);
     if (okC) pass++;
   }
+  // ⚠ Der Doppelabzug-Test zum Fall oben: der Fallback-Nenner MUSS n_total - n_skipped_mcap
+  // sein, NICHT zusaetzlich minus n_skipped_owned. Der Statuswert allein wuerde beide Varianten
+  // durchlassen — deshalb wird hier die ZAHL festgenagelt.
+  const inkrementell = { n_ok: 9000, n_total: 12256, partial: false, n_failed: 200, n_skipped_mcap: 2256, n_skipped_owned: 583 };
+  const mkInk = buildMarker(classify(inkrementell, N, 0), inkrementell);
+  const nennerOk = mkInk.n_addressable === 10000;
+  const pctOk = mkInk.honest_coverage_pct === 90;
+  console.log(`${nennerOk && pctOk ? 'PASS' : 'FAIL'}  kein Doppelabzug im Fallback-Nenner (erwartet 9000/10000 = 90 %, bekommen ${mkInk.n_ok}/${mkInk.n_addressable} = ${mkInk.honest_coverage_pct} %)`);
+  if (nennerOk && pctOk) pass++;
+
   // Negativ-Kontrolle: validateMarker MUSS einen kaputten Marker fangen (sonst waere der
   // Guard wertlos). cases[2] ist 'degradiert' -> degraded MUSS true sein; wir faelschen es auf
   // false (Banner lautlos aus) und erwarten, dass der Guard das ablehnt.
@@ -256,7 +278,7 @@ function selftest() {
   tampered.degraded = false;
   const negOk = validateMarker(tampered).length > 0;
   console.log(`${negOk ? 'PASS' : 'FAIL'}  marker-contract negative-control (tampered degraded flag is rejected)`);
-  const total = cases.length * 2 + 1;
+  const total = cases.length * 2 + 2;   // +1 Doppelabzug-Test, +1 Negativ-Kontrolle
   if (negOk) pass++;
   console.log(`${pass}/${total} passed`);
   process.exit(pass === total ? 0 : 1);
