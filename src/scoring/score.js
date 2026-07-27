@@ -107,10 +107,33 @@ const RECHTSFORM_LANG_KURZ = [
 // BNY Mellon, Cheesecake Factory, Carlyle, Cigna, Cooper, Campbell's, Ensign, Goodyear, Hartford,
 // Hershey, Mosaic, Procter & Gamble, Progressive, Schwab, Smucker, Williams, Magnum Ice Cream.
 // Bewusst nur der FUEHRENDE Artikel: ein "the" mitten im Namen kann bedeutungstragend sein.
+// Tag 467: eine Anteilsklassen-Bezeichnung am ENDE des Namens unterscheidet ebenfalls keine
+// Firmen. Yahoo haengt sie je nach Boersenplatz an oder laesst sie weg — typisch traegt die
+// Mailaender Notierung "… Class A", die US-Notierung nicht.
+//
+// WARUM DAS AUFFIEL: im ausgelieferten Board standen Palantir auf Rang 19 UND 20, AppLovin auf
+// 13 UND 14, Carvana auf 175 UND 176. Vier Plaetze in Karls 200er-Listen, doppelt belegt.
+// Die naechtliche Pruefung hatte "0 Doppelnennungen" gemeldet — sie gruppierte mit GENAU
+// DIESEM Schluessel und konnte den Fehler daher nicht sehen. Ein Waechter, der dieselbe Regel
+// benutzt wie der Code, prueft nur sich selbst.
+//
+// AM ECHTEN CI-UNIVERSUM GEMESSEN (12.453 Snapshots aus Lauf 30230485209), bevor die Regel
+// eingebaut wurde: 86 zusaetzlich zusammengefuehrte Gruppen, 86 davon korrekt, NULL
+// Fehlverschmelzungen. Jede einzelne wurde angesehen; das Muster ist durchgehend dieselbe
+// Firma unter zwei Schreibweisen (Accenture, Affirm, Alphabet, AppLovin, Atlas Copco, BNP
+// Paribas, Carvana, CME, CrowdStrike, Datadog, Fox, KONE, Meta, News Corp, Nike, Novo Nordisk,
+// Palantir, Prosus, Stora Enso, UPS, Visa …).
+//
+// Bewusst nur am ENDE und nur vor EINEM Zeichen: "World Class Extractions Inc." und
+// "First Class Holding AG" bleiben unberuehrt (gegengeprobt). Mehrklassen-Paare mit zwei
+// US-Primaerlistings (Alphabet, Fox, News Corp, Lennar, Molson Coors, Brown-Forman) laufen
+// ohnehin durch splitFalseIssuerMerges auf den strengen Schluessel zurueck — ihr Verhalten
+// aendert sich nicht.
+const GATTUNG_AM_ENDE = /\s+(class|klasse|cl|series|ser)\.?\s+[a-z0-9]\.?$/i;
 const issuerKeyLoose = (s) => {
   const n = issuerName(s);
   if (!n) return null;
-  let roh = n.replace(/^\s*the\s+/i, '');
+  let roh = n.replace(/^\s*the\s+/i, '').replace(GATTUNG_AM_ENDE, '');
   for (const [re, kurz] of RECHTSFORM_LANG_KURZ) roh = roh.replace(re, kurz);
   const k = roh.replace(/[^\p{L}\p{N}]+/gu, '').toLowerCase();
   return ISSUER_ALIASE[k] || k;
