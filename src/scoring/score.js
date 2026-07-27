@@ -184,6 +184,22 @@ const fxSuspect = (s) => {
 // BRK-A/BRK-B faellt schon vorher als 'insurer' aus dem Ranking. Der Test
 // "Mehrklassen-Aktien werden NICHT auseinandergerissen" nagelt das fest — denn genau hier
 // waere der Schaden unsichtbar: eine Firma stuende doppelt im Board, statt zu fehlen.
+//
+// ⚠ ZWEITE KORREKTUR (Tag 469, vom Live-Universum-Gate gefangen): die obige Begruendung
+// stimmt NUR, solange beide Beine denselben Namen tragen. Sobald eine Notierung die
+// Anteilsklasse IM NAMEN fuehrt ("Fox Corporation" gegen "Fox Corporation Class B"), sind die
+// strengen Schluessel verschieden — der Rueckfall trennt sie wieder, und BEIDE landen im
+// Board. Sichtbar wurde das erst durch die Gattungs-Regel aus Tag 467: vorher gruppierte der
+// lockere Schluessel diese Paare gar nicht, also sah es auch der Doppelungs-Waechter nicht.
+// Am CI-Bestand reproduziert, 7 Faelle: Lennar, Brown-Forman, Molson Coors, Alphabet, Fox,
+// Zillow, News Corp. Der Rueckfall benutzt deshalb denselben strengen Schluessel WIE BISHER,
+// nur zusaetzlich ohne die Anteilsklasse — die Schutzwirkung gegen echte Fehlverschmelzungen
+// (FBNC/FBP, Graham Corp gegen Graham Holdings) bleibt unveraendert, weil dort keine
+// Gattungs-Bezeichnung im Spiel ist.
+const issuerKeyStrengOhneGattung = (s) => {
+  const n = issuerName(s);
+  return n ? n.replace(GATTUNG_AM_ENDE, '').toLowerCase() : null;
+};
 function splitFalseIssuerMerges(groups) {
   const out = [];
   for (const group of groups) {
@@ -191,7 +207,7 @@ function splitFalseIssuerMerges(groups) {
     if (usPrimaer < 2) { out.push(group); continue; }
     const streng = {};
     for (const e of group) {
-      const k = issuerKey(e.snapshot);
+      const k = issuerKeyStrengOhneGattung(e.snapshot);
       if (k) (streng[k] ||= []).push(e);
     }
     out.push(...Object.values(streng));

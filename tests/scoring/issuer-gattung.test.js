@@ -66,6 +66,34 @@ test('verschiedene Firmen bleiben verschieden', () => {
   assert.notEqual(key('Interparfums Inc.'), key('Interparfums SA'));
 });
 
+test('Mehrklassen-Firmen mit ZWEI US-Notierungen bleiben trotzdem EIN Emittent', () => {
+  // Tag 469, vom Live-Universum-Gate gefangen: bei zwei US-Primaerlistings faellt der Dedup
+  // auf den strengen Schluessel zurueck (Schutz gegen Fehlverschmelzung). Fuehrt eine der
+  // beiden Notierungen die Anteilsklasse IM NAMEN, trennte der Rueckfall sie wieder — und
+  // BEIDE standen im Board. Am CI-Bestand waren es sieben Faelle.
+  const { issuerDedupGroups } = require('../../src/scoring/score.js');
+  const { isUsPrimaryListing } = require('../../src/scoring/router.js');
+  // ⚠ Das Feld heisst exchangeName, NICHT exchange — die erste Fassung dieses Tests setzte das
+  // falsche Feld, isUsPrimaryListing lieferte fuer alle Beine false, der Rueckfallpfad wurde nie
+  // betreten und der Test war gruen, ohne irgendetwas zu pruefen. Gefunden hat das nur die
+  // Gegenprobe. Deshalb steht die Vorbedingung jetzt als eigene Zusicherung darunter.
+  const bein = (ticker, name, exchangeName) => ({
+    ticker,
+    snapshot: { meta: { name, exchangeName, ticker, country: 'United States', currency: 'USD' } },
+  });
+  const beine = [
+    bein('FOX', 'Fox Corporation', 'NasdaqGS'),
+    bein('FOXA', 'Fox Corporation', 'NasdaqGS'),
+    bein('1FOXA.MI', 'Fox Corporation Class A', 'Milan'),
+  ];
+  const usPrimaer = beine.filter((b) => isUsPrimaryListing(b.snapshot.meta)).length;
+  assert.equal(usPrimaer, 2, 'Vorbedingung: genau zwei US-Primaerlistings — sonst wird der Rueckfallpfad gar nicht betreten und der Test prueft nichts');
+
+  const gruppen = issuerDedupGroups(beine);
+  assert.equal(gruppen.length, 1, `Fox darf nicht aufgeteilt werden, wurde aber zu ${gruppen.length} Gruppen`);
+  assert.equal(gruppen[0].length, 3);
+});
+
 test('die Regel greift WIRKLICH — sonst waeren die Tests oben wertlos', () => {
   // Ohne Zusatz muss der Schluessel unveraendert bleiben, MIT Zusatz muss er sich aendern.
   const ohne = key('Palantir Technologies Inc.');
