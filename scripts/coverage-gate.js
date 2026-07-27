@@ -117,6 +117,11 @@ function buildMarker(res, m) {
     // Task 0.12: ehrlicher Nenner + ehrliche Coverage (null bei Legacy-Manifest ohne mcap-Zählung)
     n_addressable: Number.isFinite(res.n_addressable) ? res.n_addressable : null,
     honest_coverage_pct: Number.isFinite(res.honest_coverage_pct) ? res.honest_coverage_pct : null,
+    // Tag 464: sichtbar machen, WARUM der Nenner kleiner ist als das Universum. Ohne diese
+    // Zahl sieht man im Marker nur ein geschrumpftes n_addressable und kann nicht pruefen,
+    // ob der Abzug stimmt. Nur Anzeige — die Klassifizierung liest sie nicht.
+    n_skipped_mcap: (m && Number.isFinite(m.n_skipped_mcap)) ? m.n_skipped_mcap : null,
+    n_skipped_owned: (m && Number.isFinite(m.n_skipped_owned)) ? m.n_skipped_owned : null,
     source: res.source,
     reasons: res.reasons,
     manifest_partial: !!(m && m.partial === true)
@@ -143,7 +148,7 @@ function validateMarker(mk) {
   }
   if (!Array.isArray(mk.reasons)) errs.push('reasons not array');
   // n_full/n_priceonly/n_addressable/honest_coverage_pct nullable (legacy manifests) but if present must be finite
-  for (const f of ['n_full', 'n_priceonly', 'n_addressable', 'honest_coverage_pct']) {
+  for (const f of ['n_full', 'n_priceonly', 'n_addressable', 'honest_coverage_pct', 'n_skipped_mcap', 'n_skipped_owned']) {
     if (mk[f] !== null && !Number.isFinite(mk[f])) errs.push(`${f} present but not finite`);
   }
   return errs;
@@ -219,6 +224,13 @@ function selftest() {
     [{ n_ok: 6088, n_total: 23689, partial: false, n_failed: 4209, n_skipped_mcap: 13392 }, 'degradiert'], // Ist-Zustand vor Austrag: ehrlich 59.1% < 90 (+ fail-mass)
     [{ n_ok: 6100, n_total: 20066, partial: false, n_failed: 500, n_skipped_mcap: 13392, n_addressable: 6674 }, 'ok'], // nach Austrag: ehrlich 91.4% ≥ 90
     [{ n_ok: 5500, n_total: 20066, partial: false, n_failed: 1100, n_skipped_mcap: 13392, n_addressable: 6674 }, 'degradiert'], // echter Pull-Einbruch bleibt rot: ehrlich 82.4% < 90
+    // Tag 464: der reale Lauf 30230485209 MIT ehrlichem Nenner (Small-Cap-eigene Namen abgezogen).
+    // 10672/12373 = 86.3% — ehrlicher als die alten 82.4%, aber weiter UNTER der 90er-Latte.
+    // Der Banner bleibt also an, und das ist richtig: die Luecke sind 1678 echte Fehlschlaege.
+    // Diese Zeile haelt fest, dass der Fix den Alarm NICHT stillstellt.
+    [{ n_ok: 10672, n_total: 15212, partial: false, n_failed: 1678, n_skipped_mcap: 2256, n_skipped_owned: 583, n_addressable: 12373 }, 'degradiert'],
+    // Und die Gegenrichtung: waeren die 1678 Fehlschlaege behoben, geht der Banner aus.
+    [{ n_ok: 12000, n_total: 15212, partial: false, n_failed: 350, n_skipped_mcap: 2256, n_skipped_owned: 583, n_addressable: 12373 }, 'ok'],
   ];
   let pass = 0;
   for (const [m, want] of cases) {

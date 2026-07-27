@@ -40,6 +40,23 @@ function watchlistSize(wl) {
   return Object.keys(wl).length;
 }
 
+// Tag 464 — der ehrliche Coverage-Nenner, als eigene reine Funktion, weil hier die
+// GEFAEHRLICHE Fehlerrichtung liegt: ein zu KLEINER Nenner macht die Coverage zu gross und
+// schaltet Karls einzigen Alarm dauerhaft auf gruen. Ein zu grosser Nenner meldet nur zu
+// pessimistisch — laestig, aber laut. Deshalb faellt jede unstimmige Rechnung auf den alten,
+// pessimistischeren Nenner (nur mcap abgezogen) zurueck und meldet das.
+// Unstimmig heisst: nicht endlich, negativ, oder kleiner als die Zahl der tatsaechlich
+// geholten Snapshots (n_ok kann nie groesser als der adressierbare Bestand sein).
+function honestDenominator(fullUniverseSize, skippedMcap, skippedOwned, nOk) {
+  const basis = fullUniverseSize - (Number.isFinite(skippedMcap) ? skippedMcap : 0);
+  const owned = Number.isFinite(skippedOwned) ? skippedOwned : 0;
+  const kandidat = basis - owned;
+  if (owned < 0 || !(kandidat > 0) || (Number.isFinite(nOk) && kandidat < nOk)) {
+    return { n_addressable: basis, verworfen: owned, grund: `n_skipped_owned=${skippedOwned} ergibt Nenner ${kandidat} (n_ok=${nOk}) — unplausibel, nutze ${basis}` };
+  }
+  return { n_addressable: kandidat, verworfen: 0, grund: null };
+}
+
 // Reine Merge-Funktion (TDD): summiert die Shard-Manifeste, setzt n_total = Voll-Universum,
 // partial = OR(alle Shards) OR (weniger Shards vorhanden als erwartet).
 // shardManifests: Array der geparsten Shard-Manifest-Objekte (null-Eintraege = fehlender Shard).
@@ -48,6 +65,7 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
   const sum = (f) => present.reduce((a, m) => a + (Number.isFinite(m[f]) ? m[f] : 0), 0);
   const anyShardPartial = present.some(m => m.partial === true);
   const missingShards = Number.isFinite(expectedShards) ? expectedShards - present.length : 0;
+  const hd = honestDenominator(fullUniverseSize, sum('n_skipped_mcap'), sum('n_skipped_owned'), sum('n_ok'));
   const merged = {
     pulled_at: new Date().toISOString(),
     watchlist_version: (present.find(m => m.watchlist_version != null) || {}).watchlist_version,
@@ -56,9 +74,19 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
     n_full: sum('n_full'),
     n_priceonly: sum('n_priceonly'),
     n_skipped_mcap: sum('n_skipped_mcap'),
+    // Tag 464: Ticker, die der Hauptlauf vor dem Abruf uebersprungen hat, weil die
+    // Small-Cap-Liste sie besitzt (Eigentumsgrenze, Karl-Entscheid A). Sie stehen weiter in
+    // watchlist.json — also im Voll-Universum unten — wurden aber nie versucht und koennen
+    // n_ok nie erreichen. Ohne diesen Abzug meldet der Alarm dauerhaft zu wenig Abdeckung.
+    // Die Summe ist exakt, weil pull-yahoo.js seit Tag 464 ERST shardet und DANN filtert:
+    // jeder Shard zaehlt nur die uebersprungenen Namen seiner eigenen Scheibe.
+    n_skipped_owned: sum('n_skipped_owned'),
     // Task 0.12: ehrlicher Coverage-Nenner = Voll-Universum minus mcap-Skips
     // (belegt-tote Ticker sind schon aus der Watchlist ausgetragen, dead-tickers.json).
-    n_addressable: fullUniverseSize - sum('n_skipped_mcap'),
+    // Tag 464: minus der von der Small-Cap-Liste besessenen Namen (s. o.).
+    n_addressable: hd.n_addressable,
+    // nur gesetzt, wenn der Abzug verworfen wurde — run() macht daraus ein ::warning::
+    _addressable_warnung: hd.grund || undefined,
     n_failed: sum('n_failed'),
     // partial=true wenn irgendein Shard mittendrin abbrach ODER ein Shard ganz fehlt.
     partial: anyShardPartial || missingShards > 0,
@@ -137,6 +165,12 @@ function run() {
   }
 
   const merged = mergeManifests(shardManifests, fullUniverse, expectedShards);
+  // Tag 464: der Nenner-Abzug wurde verworfen (unplausible Zahl) -> laut melden. Still auf den
+  // pessimistischen Nenner zurueckzufallen waere ok fuer den Alarm, aber unsichtbar fuer die
+  // Ursachensuche: genau die Sorte Fehler, die monatelang niemand findet.
+  if (merged._addressable_warnung) {
+    console.error(`::warning::merge-shard-manifests — ${merged._addressable_warnung}`);
+  }
 
   // On-disk-Konsistenz + grobe Disjunktheits-Sicht: die gemergte Snapshot-Dateimenge ist
   // bereits die Union. Wenn sie KLEINER als n_ok ist, hat ein Ticker in zwei Shards dieselbe
@@ -159,7 +193,11 @@ function run() {
 
   fs.mkdirSync(snapDir, { recursive: true });
   fs.writeFileSync(path.join(snapDir, '_manifest.json'), JSON.stringify(merged));
-  console.log(`Merged manifest: n_ok=${merged.n_ok}/${merged.n_total} full=${merged.n_full} price-only=${merged.n_priceonly} failed=${merged.n_failed} partial=${merged.partial} shards=${merged.n_shards_present}/${merged.n_shards_expected} (on-disk snapshots=${onDisk})`);
+  console.log(`Merged manifest: n_ok=${merged.n_ok}/${merged.n_total} full=${merged.n_full} price-only=${merged.n_priceonly} failed=${merged.n_failed} partial=${merged.partial} shards=${merged.n_shards_present}/${merged.n_shards_expected} (on-disk snapshots=${onDisk}) adressierbar=${merged.n_addressable} (mcap-Skips ${merged.n_skipped_mcap}, Small-Cap-eigene ${merged.n_skipped_owned}) unerklaert=${merged.n_addressable - merged.n_ok - merged.n_failed}`);
+  // Tag 464, Plausibilitaets-Anker fuer den Nenner: adressierbar - n_ok sollte ungefaehr
+  // n_failed sein. Am Lauf 30230485209 nachgerechnet: 12373-10672 = 1701 gegen 1678
+  // Fehlschlaege -> 23 unerklaert. Vor dem Fix waren es 2284 gegen 1678, also 606 unerklaert.
+  // Waechst diese Zahl, faellt irgendwo etwas still aus dem Zaehler — dann hier nachsehen.
   process.exit(0);
 }
 
@@ -251,10 +289,57 @@ function selftest() {
     assert.equal(r.n_ok, 6086); assert.equal(r.gap, 0); assert.equal(r.fatal, false);
   });
 
+  // ── Tag 464: ehrlicher Nenner zieht auch die Small-Cap-eigenen Namen ab ──────────────
+  // Zahlen aus dem realen Lauf 30230485209 (outputs/coverage-status.json auf gh-pages):
+  // Universum 15212, mcap-Skips 2256, n_ok 10672 -> vor dem Fix 10672/12956 = 82.4 %.
+  t('Tag 464: n_skipped_owned wird summiert und vom Nenner abgezogen (realer Lauf)', () => {
+    const U2 = 15212;
+    const s = (ok, mcap, owned) => ({ n_ok: ok, n_full: 0, n_priceonly: ok, n_skipped_mcap: mcap, n_skipped_owned: owned, n_failed: 0, partial: false });
+    // 2 Scheiben, die zusammen den echten Lauf ergeben
+    const m = mergeManifests([s(5336, 1128, 291), s(5336, 1128, 292)], U2, 2);
+    assert.equal(m.n_skipped_owned, 583);
+    assert.equal(m.n_addressable, 15212 - 2256 - 583);      // 12373
+    assert.equal(m.n_addressable, 12373);
+    const ehrlich = +(m.n_ok / m.n_addressable * 100).toFixed(1);
+    assert.equal(ehrlich, 86.3);                             // vorher 82.4 -> 3.9 Punkte zu pessimistisch
+    assert.equal(m._addressable_warnung, undefined);
+  });
+
+  t('Tag 464: Alt-Manifest ohne n_skipped_owned verhaelt sich exakt wie vorher', () => {
+    const m = mergeManifests([shard(1400, 1400, 0, false), shard(1400, 1400, 0, false)], U, 2);
+    assert.equal(m.n_skipped_owned, 0);
+    assert.equal(m.n_addressable, U);                        // shard() hat n_skipped_mcap 0
+    assert.equal(m._addressable_warnung, undefined);
+  });
+
+  // GEGENPROBE zur gefaehrlichen Richtung: ein zu kleiner Nenner macht die Coverage zu gross
+  // und schaltet Karls einzigen Alarm still. honestDenominator MUSS solche Zahlen verwerfen.
+  t('Tag 464: unplausibel grosses n_skipped_owned faellt auf den pessimistischen Nenner zurueck', () => {
+    const r = honestDenominator(15212, 2256, 9000, 10672);   // Nenner waere 3956 < n_ok 10672
+    assert.equal(r.n_addressable, 12956);                    // = alter Wert, nur mcap abgezogen
+    assert.ok(r.grund && r.grund.includes('unplausibel'), 'Grund muss gemeldet werden');
+  });
+  t('Tag 464: negatives n_skipped_owned wird verworfen', () => {
+    const r = honestDenominator(15212, 2256, -5, 10672);
+    assert.equal(r.n_addressable, 12956);
+    assert.ok(r.grund);
+  });
+  t('Tag 464: fehlendes n_skipped_owned ist kein Fehler (Nenner = alter Wert)', () => {
+    const r = honestDenominator(15212, 2256, undefined, 10672);
+    assert.equal(r.n_addressable, 12956);
+    assert.equal(r.grund, null);
+  });
+  t('Tag 464: der Warnpfad landet auch im gemergten Manifest', () => {
+    const kaputt = { n_ok: 10672, n_skipped_mcap: 2256, n_skipped_owned: 9000, n_failed: 0, partial: false };
+    const m = mergeManifests([kaputt], 15212, 1);
+    assert.equal(m.n_addressable, 12956);
+    assert.ok(m._addressable_warnung, 'run() braucht die Warnung fuer das ::warning::');
+  });
+
   console.log(`\nmerge-shard-manifests selftest: ${pass} ok, ${fail} fail`);
   process.exit(fail ? 1 : 0);
 }
 
-module.exports = { mergeManifests, crossCheckDisjoint, watchlistSize, reconcileOnDisk };
+module.exports = { mergeManifests, crossCheckDisjoint, watchlistSize, reconcileOnDisk, honestDenominator };
 if (process.argv.includes('--selftest')) selftest();
 else if (require.main === module) run();

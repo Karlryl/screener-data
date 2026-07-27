@@ -1906,6 +1906,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         n_full: nFull,
         n_priceonly: nPriceOnly,
         n_skipped_mcap: skippedMcap,
+        // Tag 464: vor dem Abruf aus DIESER Scheibe entfernt (Small-Cap-Eigentumsgrenze).
+        // n_total oben ist bereits ohne sie; der Merge braucht die Zahl, weil er n_total
+        // durch das volle Universum ersetzt.
+        n_skipped_owned: (watchlist._skippedOwned || 0),
         n_failed: failures.length,
         _silentErrors: { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors },
         partial: true
@@ -3100,7 +3104,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // Task 0.12: n_addressable = ehrlicher Coverage-Nenner (Universum minus mcap-Skips;
   // belegt-tote Ticker sind bereits auf Watchlist-Ebene ausgetragen, siehe
   // data-health/dead-tickers.json). coverage-gate misst die 90%-Latte hiergegen.
-  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, n_skipped_mcap: manifest.n_skipped_mcap, n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
+  // Tag 464: n_skipped_owned wird hier NICHT von n_addressable abgezogen — n_total ist in
+  // diesem Manifest bereits die gefilterte Liste. Nur der Merge, der n_total durch das volle
+  // Universum ersetzt, muss die Zahl abziehen. Doppelt abziehen hiesse: Nenner zu klein,
+  // Coverage zu optimistisch — und genau das schaltete Karls einzigen Alarm still.
+  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, n_skipped_mcap: manifest.n_skipped_mcap, n_skipped_owned: (watchlist._skippedOwned || 0), n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
   // Tag 189: factored into writeFileAtomic helper.
   const slimPath = path.join(outputDir, '_manifest.json');
   writeFileAtomic(slimPath, JSON.stringify(slim));
@@ -3182,6 +3190,23 @@ async function main() {
     _log('ERROR', 'Watchlist must have .stocks array');
     process.exit(1);
   }
+  // 0.2/0.9 Sharding: nur die Ticker DIESES Shards ziehen (parallele Matrix-Jobs decken je eine Scheibe ab;
+  // zusammen das volle Universum). n_total im Manifest ist dann die SHARD-Groesse — der Merge-/Coverage-Gate
+  // im Sammel-Job zaehlt das zusammengefuehrte Universum.
+  // REIHENFOLGE (Tag 464): das Sharding steht bewusst VOR der Eigentumsgrenze. shardStocks teilt
+  // per Ticker-Hash auf (shardHash(ticker) % count), ist also unabhaengig von Reihenfolge und
+  // Laenge der Liste (festgenagelt in tests/pull-shard.test.js: "Universe-Wachstum verschiebt
+  // bestehende Ticker NICHT in andere Shards") — die Scheiben sind exakt dieselben wie vorher.
+  // Gewonnen ist, dass jeder
+  // Shard nur die uebersprungenen Namen SEINER Scheibe zaehlt und die Summe ueber alle Shards
+  // genau die globale Zahl ergibt. Filtert man zuerst, meldet jeder der 17 Shards dieselbe
+  // globale Zahl und der Merge wuerde sie 17-fach vom Nenner abziehen.
+  if (args.shard) {
+    const before = watchlist.stocks.length;
+    watchlist.stocks = shardStocks(watchlist.stocks, args.shard);
+    _log('INFO', `Shard ${args.shard.index}/${args.shard.count}: ${watchlist.stocks.length}/${before} Ticker in dieser Scheibe`);
+  }
+
   // 5.2 Auflage 6 / Karl-Entscheid 27.07.2026 ("A — die Small-Cap-Liste besitzt das Band"):
   // 583 der 775 Small-Cap-Ticker standen AUCH in der Hauptliste. Beide Laeufe holten sie
   // taeglich getrennt bei Yahoo ab — der Hauptlauf verwarf sie danach unterhalb seiner
@@ -3245,6 +3270,13 @@ async function main() {
           _log('INFO', `Small-Cap-Eigentumsgrenze: ${behaltenMitStand} Ticker BLEIBEN im Hauptlauf, weil sie noch eine Snapshot-Datei haben (sonst friere sie ein; der normale mcap-Skip raeumt sie ab)`);
         }
         const weg = vorher - watchlist.stocks.length;
+        // Tag 464: die Zahl MUSS ins Manifest. Diese Ticker werden nie versucht, verschwinden im
+        // Merge-Schritt aber NICHT aus dem Nenner — der ersetzt n_total durch das volle Universum
+        // aus watchlist.json (siehe merge-shard-manifests.js), waehrend n_ok sie nicht enthaelt.
+        // Gemessen am Lauf 30230485209: 10.672/12.956 = 82,4 % statt ehrlich 10.672/12.373 = 86,3 %.
+        // Wichtig: n_total DIESES Manifests ist bereits um `weg` reduziert (es wird in pullAll aus
+        // der gefilterten Liste genommen) — nur der Merge, der n_total ersetzt, zieht sie ab.
+        watchlist._skippedOwned = (watchlist._skippedOwned || 0) + weg;
         if (weg > 0) _log('INFO', `Small-Cap-Eigentumsgrenze: ${weg} Ticker uebersprungen (gehoeren ${SMALLCAP_LISTE}); ${watchlist.stocks.length}/${vorher} bleiben`);
       }
     } catch (e) {
@@ -3254,14 +3286,6 @@ async function main() {
     }
   }
 
-  // 0.2/0.9 Sharding: nur die Ticker DIESES Shards ziehen (parallele Matrix-Jobs decken je eine Scheibe ab;
-  // zusammen das volle Universum). n_total im Manifest ist dann die SHARD-Groesse — der Merge-/Coverage-Gate
-  // im Sammel-Job zaehlt das zusammengefuehrte Universum.
-  if (args.shard) {
-    const before = watchlist.stocks.length;
-    watchlist.stocks = shardStocks(watchlist.stocks, args.shard);
-    _log('INFO', `Shard ${args.shard.index}/${args.shard.count}: ${watchlist.stocks.length}/${before} Ticker in dieser Scheibe`);
-  }
   const manifest = await pullAll(watchlist, args.output, args.rateLimit);
   // Tag 147: threshold is relative to "attempted" (excludes skipped-mcap which never
   // hit the network). Counting skipped-mcap in n_total inflated the denominator and
