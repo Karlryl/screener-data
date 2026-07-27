@@ -1,6 +1,6 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-07-27T02:56:39.735Z",
+  "generated_at": "2026-07-27T10:20:11.884Z",
   "branch": "software-comm-services",
   "boardStatus": "diagnostic",
   "coverage": {
@@ -13,7 +13,7 @@
     {
       "rank": 1,
       "ticker": "DAVE",
-      "score": 93.3,
+      "score": 93.1,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -36,10 +36,10 @@
       "ipoYear": 2021,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 93.6,
-      "scoreShrunk": 93.3,
+      "scoreBase": 93.4,
+      "scoreShrunk": 93.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -48,27 +48,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 95,
+          "pct": 94.7,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 88,
+          "pct": 87.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 96.4,
+          "pct": 96.6,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 97.7,
+          "pct": 97.6,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 92.7,
+          "pct": 92.9,
           "weight": 0.8
         },
         {
@@ -87,77 +87,8 @@
     },
     {
       "rank": 2,
-      "ticker": "1APP.MI",
-      "score": 90.2,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.781,
-        "companion": 187.2
-      },
-      "name": "AppLovin Corp. Class A",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Communication Services",
-      "marketCap": 130809342461.30647,
-      "phase": "inflected",
-      "mcapBand": "mega",
-      "ipoRecency": "recent",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2025,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 90.5,
-      "scoreShrunk": 90.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 94.2,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 90.2,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 98.8,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 69.8,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 94.7,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 58.97241870827128,
-      "ath": null
-    },
-    {
-      "rank": 3,
       "ticker": "APP",
-      "score": 90.2,
+      "score": 90.1,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -179,10 +110,10 @@
       "ipoYear": 2021,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 90.5,
-      "scoreShrunk": 90.2,
+      "scoreBase": 90.4,
+      "scoreShrunk": 90.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -191,27 +122,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 94.2,
+          "pct": 94.1,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 90.2,
+          "pct": 89.8,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 98.8,
+          "pct": 98.9,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 69.8,
+          "pct": 69.7,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 94.7,
+          "pct": 94.8,
           "weight": 0.8
         },
         {
@@ -222,16 +153,16 @@
       ],
       "revGrowthYoYPct": 58.97241870827128,
       "ath": {
-        "distancePct": -45.6,
+        "distancePct": -46.6,
         "athDate": "2025-12-22",
         "monthsAgo": 7,
-        "lastDate": "2026-07-23"
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 4,
+      "rank": 3,
       "ticker": "603444.SS",
-      "score": 89.1,
+      "score": 89,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -245,7 +176,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Communication Services",
-      "marketCap": 3729219175.2895484,
+      "marketCap": 3755508825.451049,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "growth",
@@ -253,10 +184,10 @@
       "ipoYear": 2017,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 96,
-      "scoreShrunk": 89.1,
+      "scoreBase": 95.9,
+      "scoreShrunk": 89,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -265,17 +196,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 95.6,
+          "pct": 95.4,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 95.4,
+          "pct": 95.1,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 97.3,
+          "pct": 97.5,
           "weight": 1.5
         },
         {
@@ -285,7 +216,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 96.6,
+          "pct": 96.7,
           "weight": 0.8
         },
         {
@@ -298,7 +229,7 @@
       "ath": null
     },
     {
-      "rank": 5,
+      "rank": 4,
       "ticker": "HACK.ST",
       "score": 88.5,
       "track": "profitable",
@@ -312,7 +243,7 @@
       "country": "Sweden",
       "region": "Europe",
       "sector": "Communication Services",
-      "marketCap": 2102126083.4327757,
+      "marketCap": 2133358987.2474275,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -320,7 +251,7 @@
       "ipoYear": 2025,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
       "scoreBase": 95.3,
       "scoreShrunk": 88.5,
@@ -337,12 +268,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 96.9,
+          "pct": 96.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 90.2,
+          "pct": 90.7,
           "weight": 1.5
         },
         {
@@ -352,7 +283,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 86.5,
+          "pct": 86.7,
           "weight": 0.8
         },
         {
@@ -365,9 +296,9 @@
       "ath": null
     },
     {
-      "rank": 6,
+      "rank": 5,
       "ticker": "3293.TWO",
-      "score": 84.4,
+      "score": 84.5,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -379,7 +310,7 @@
       "country": "Taiwan",
       "region": "Asia",
       "sector": "Communication Services",
-      "marketCap": 6312759305.997681,
+      "marketCap": 6274862878.977557,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "seasoned",
@@ -387,10 +318,10 @@
       "ipoYear": 2007,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 90.4,
-      "scoreShrunk": 84.4,
+      "scoreBase": 90.6,
+      "scoreShrunk": 84.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -404,12 +335,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 98.1,
+          "pct": 98,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 73.6,
+          "pct": 74.3,
           "weight": 1.5
         },
         {
@@ -419,7 +350,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 72.3,
+          "pct": 72.6,
           "weight": 0.8
         },
         {
@@ -432,9 +363,9 @@
       "ath": null
     },
     {
-      "rank": 7,
+      "rank": 6,
       "ticker": "EVER",
-      "score": 82.1,
+      "score": 82.3,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -456,10 +387,10 @@
       "ipoYear": 2018,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 82.3,
-      "scoreShrunk": 82.1,
+      "scoreBase": 82.5,
+      "scoreShrunk": 82.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -468,27 +399,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 65.9,
+          "pct": 66.3,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 97.8,
+          "pct": 97.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 92.3,
+          "pct": 92.6,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 88.6,
+          "pct": 88.7,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 64.8,
+          "pct": 65,
           "weight": 0.8
         },
         {
@@ -501,9 +432,9 @@
       "ath": null
     },
     {
-      "rank": 8,
+      "rank": 7,
       "ticker": "688615.SS",
-      "score": 81.7,
+      "score": 81.8,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -515,7 +446,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 2662919369.575096,
+      "marketCap": 2695326209.56373,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "recent",
@@ -523,10 +454,10 @@
       "ipoYear": 2024,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 87.3,
-      "scoreShrunk": 81.7,
+      "scoreBase": 87.4,
+      "scoreShrunk": 81.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -535,17 +466,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 87,
+          "pct": 87.4,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 88.3,
+          "pct": 87.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 87,
+          "pct": 87.4,
           "weight": 1.5
         },
         {
@@ -555,7 +486,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 86.2,
+          "pct": 86.4,
           "weight": 0.8
         },
         {
@@ -568,9 +499,9 @@
       "ath": null
     },
     {
-      "rank": 9,
-      "ticker": "ADYEN.SW",
-      "score": 81.2,
+      "rank": 8,
+      "ticker": "ADYE.VI",
+      "score": 81.3,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -581,22 +512,22 @@
         "value": 0.183,
         "companion": 66
       },
-      "name": "Adyen NV",
+      "name": "Adyen N.V.",
       "country": "Netherlands",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 29337000777.485928,
+      "marketCap": 29828800176.58184,
       "phase": "established",
       "mcapBand": "mega",
-      "ipoRecency": "growth",
+      "ipoRecency": "recent",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 2018,
+      "ipoYear": 2019,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 81.4,
-      "scoreShrunk": 81.2,
+      "scoreBase": 81.5,
+      "scoreShrunk": 81.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -605,27 +536,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 84.3,
+          "pct": 84.5,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 91.2,
+          "pct": 90.8,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 98,
+          "pct": 98.2,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 42.8,
+          "pct": 43.6,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 71.7,
+          "pct": 71.9,
           "weight": 0.8
         },
         {
@@ -638,9 +569,9 @@
       "ath": null
     },
     {
-      "rank": 10,
+      "rank": 9,
       "ticker": "4194.T",
-      "score": 80.3,
+      "score": 80.1,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -654,7 +585,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Communication Services",
-      "marketCap": 2181129937.432445,
+      "marketCap": 2228032264.2615237,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -662,10 +593,10 @@
       "ipoYear": 2021,
       "coverageAxes": "3/5",
       "coverageWeight": 0.72,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 92.2,
-      "scoreShrunk": 80.3,
+      "scoreBase": 92,
+      "scoreShrunk": 80.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -674,12 +605,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 94.6,
+          "pct": 94.4,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 94.5,
+          "pct": 94.2,
           "weight": 2.2
         },
         {
@@ -689,7 +620,7 @@
         },
         {
           "key": "dilution",
-          "pct": 82.4,
+          "pct": 82.5,
           "weight": 1.2
         },
         {
@@ -707,9 +638,9 @@
       "ath": null
     },
     {
-      "rank": 11,
+      "rank": 10,
       "ticker": "1G24.MI",
-      "score": 79,
+      "score": 79.2,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -721,7 +652,7 @@
       "country": "Germany",
       "region": "Europe",
       "sector": "Communication Services",
-      "marketCap": 5828376415.752295,
+      "marketCap": 5821066646.13289,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "recent",
@@ -729,10 +660,10 @@
       "ipoYear": 2025,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 79.2,
-      "scoreShrunk": 79,
+      "scoreBase": 79.4,
+      "scoreShrunk": 79.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -741,27 +672,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 80.6,
+          "pct": 80.7,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 98.4,
+          "pct": 98.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 51.7,
+          "pct": 52.8,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 84.9,
+          "pct": 84.7,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 65.1,
+          "pct": 65.4,
           "weight": 0.8
         },
         {
@@ -774,9 +705,9 @@
       "ath": null
     },
     {
-      "rank": 12,
+      "rank": 11,
       "ticker": "002558.SZ",
-      "score": 78.5,
+      "score": 78.7,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -785,13 +716,13 @@
       "overview": {
         "kind": "gp",
         "value": 0.8,
-        "companion": 374.3
+        "companion": 375.8
       },
       "name": "Giant Network Group Co., Ltd.",
       "country": "China",
       "region": "Asia",
       "sector": "Communication Services",
-      "marketCap": 6869670195.08994,
+      "marketCap": 6944847482.871643,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "growth",
@@ -799,10 +730,10 @@
       "ipoYear": 2011,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 83.5,
-      "scoreShrunk": 78.5,
+      "scoreBase": 83.8,
+      "scoreShrunk": 78.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -811,17 +742,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 61.6,
+          "pct": 62.5,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 93.9,
+          "pct": 93.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 97.7,
+          "pct": 97.9,
           "weight": 1.5
         },
         {
@@ -844,7 +775,7 @@
       "ath": null
     },
     {
-      "rank": 13,
+      "rank": 12,
       "ticker": "RDDT",
       "score": 77.9,
       "track": "profitable",
@@ -869,9 +800,9 @@
       "ipoYear": 2024,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 78,
+      "scoreBase": 78.1,
       "scoreShrunk": 77.9,
       "factors": {
         "burn": 1,
@@ -881,27 +812,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 83.3,
+          "pct": 83.5,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 94.2,
+          "pct": 93.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 97,
+          "pct": 97.2,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 0.6,
+          "pct": 0.7,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 96.9,
+          "pct": 97,
           "weight": 0.8
         },
         {
@@ -914,81 +845,9 @@
       "ath": null
     },
     {
-      "rank": 14,
-      "ticker": "FICO",
-      "score": 77.7,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.196,
-        "companion": 121.4
-      },
-      "name": "Fair Isaac Corporation",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Technology",
-      "marketCap": 28695732224,
-      "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1987,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 77.8,
-      "scoreShrunk": 77.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 98.9,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 80.3,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 77.7,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 18.8,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 91.2,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 38.686276278985844,
-      "ath": {
-        "distancePct": -48.1,
-        "athDate": "2024-11-26",
-        "monthsAgo": 20,
-        "lastDate": "2026-07-24"
-      }
-    },
-    {
-      "rank": 15,
+      "rank": 13,
       "ticker": "PLTR",
-      "score": 77.5,
+      "score": 77.9,
       "track": "profitable",
       "lamps": [
         "highDilution",
@@ -1013,10 +872,10 @@
       "ipoYear": 2020,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 77.7,
-      "scoreShrunk": 77.5,
+      "scoreBase": 78,
+      "scoreShrunk": 77.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1025,27 +884,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 63,
+          "pct": 63.7,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 80.7,
+          "pct": 80.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 95.6,
+          "pct": 95.9,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 67.8,
+          "pct": 68.8,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 98.2,
+          "pct": 98.3,
           "weight": 0.8
         },
         {
@@ -1063,37 +922,32 @@
       }
     },
     {
-      "rank": 16,
-      "ticker": "PLTR.SW",
-      "score": 77.5,
+      "rank": 14,
+      "ticker": "FICO",
+      "score": 77.7,
       "track": "profitable",
-      "lamps": [
-        "highDilution",
-        "peakMargin",
-        "lowRoic",
-        "arDivergence"
-      ],
+      "lamps": [],
       "overview": {
         "kind": "gp",
-        "value": 0.603,
-        "companion": 228.4
+        "value": 0.196,
+        "companion": 121.4
       },
-      "name": "Palantir Technologies Inc. Class A",
+      "name": "Fair Isaac Corporation",
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 311872278360.9848,
-      "phase": "inflected",
+      "marketCap": 28695732224,
+      "phase": "established",
       "mcapBand": "mega",
-      "ipoRecency": "recent",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2026,
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1987,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 77.7,
-      "scoreShrunk": 77.5,
+      "scoreBase": 77.9,
+      "scoreShrunk": 77.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1102,27 +956,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 63,
+          "pct": 98.9,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 80.7,
+          "pct": 80.1,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 95.6,
+          "pct": 77.9,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 67.8,
+          "pct": 19.2,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 98.2,
+          "pct": 91.4,
           "weight": 0.8
         },
         {
@@ -1131,11 +985,16 @@
           "weight": 0
         }
       ],
-      "revGrowthYoYPct": 84.71163256416494,
-      "ath": null
+      "revGrowthYoYPct": 38.686276278985844,
+      "ath": {
+        "distancePct": -48.1,
+        "athDate": "2024-11-26",
+        "monthsAgo": 20,
+        "lastDate": "2026-07-24"
+      }
     },
     {
-      "rank": 17,
+      "rank": 15,
       "ticker": "TNE.AX",
       "score": 77.3,
       "track": "profitable",
@@ -1149,7 +1008,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Technology",
-      "marketCap": 6424433499.209318,
+      "marketCap": 6576722980.981863,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "mature",
@@ -1157,9 +1016,9 @@
       "ipoYear": 1999,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 82,
+      "scoreBase": 82.1,
       "scoreShrunk": 77.3,
       "factors": {
         "burn": 1,
@@ -1169,17 +1028,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 97.1,
+          "pct": 97,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 86.8,
+          "pct": 86.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 55.5,
+          "pct": 56.4,
           "weight": 1.5
         },
         {
@@ -1189,7 +1048,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 69.9,
+          "pct": 70.1,
           "weight": 0.8
         },
         {
@@ -1202,9 +1061,9 @@
       "ath": null
     },
     {
-      "rank": 18,
+      "rank": 16,
       "ticker": "688692.SS",
-      "score": 76.8,
+      "score": 76.9,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -1216,7 +1075,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 3486843602.9662,
+      "marketCap": 3486921705.460244,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "recent",
@@ -1224,10 +1083,10 @@
       "ipoYear": 2024,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 81.5,
-      "scoreShrunk": 76.8,
+      "scoreBase": 81.7,
+      "scoreShrunk": 76.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1236,17 +1095,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 85.2,
+          "pct": 85.5,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 96.6,
+          "pct": 96.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 88.6,
+          "pct": 89.1,
           "weight": 1.5
         },
         {
@@ -1256,7 +1115,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 15,
+          "pct": 15.2,
           "weight": 0.8
         },
         {
@@ -1269,9 +1128,9 @@
       "ath": null
     },
     {
-      "rank": 19,
+      "rank": 17,
       "ticker": "YOU",
-      "score": 75.1,
+      "score": 75.5,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -1293,10 +1152,10 @@
       "ipoYear": 2021,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 75.2,
-      "scoreShrunk": 75.1,
+      "scoreBase": 75.7,
+      "scoreShrunk": 75.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1305,27 +1164,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 88.5,
+          "pct": 89,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 51.2,
+          "pct": 51.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 68,
+          "pct": 69.1,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 99.4,
+          "pct": 99.3,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 75.2,
+          "pct": 75.4,
           "weight": 0.8
         },
         {
@@ -1343,79 +1202,9 @@
       }
     },
     {
-      "rank": 20,
-      "ticker": "LFTO",
-      "score": 74.7,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.35,
-        "companion": 101.6
-      },
-      "name": "Liftoff Mobile, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Communication Services",
-      "marketCap": 3748977664,
-      "phase": "established",
-      "mcapBand": "small",
-      "ipoRecency": "recent",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2026,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 74.8,
-      "scoreShrunk": 74.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 45.7,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 85.6,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 88.9,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 90.3,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 90.4,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 37.12300542112037,
-      "ath": null
-    },
-    {
-      "rank": 21,
+      "rank": 18,
       "ticker": "FTNT",
-      "score": 74.5,
+      "score": 74.9,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -1435,10 +1224,10 @@
       "ipoYear": 2009,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 74.7,
-      "scoreShrunk": 74.5,
+      "scoreBase": 75.1,
+      "scoreShrunk": 74.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1447,27 +1236,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 93.7,
+          "pct": 93.8,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 76.4,
+          "pct": 76.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 65.8,
+          "pct": 67.2,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 40.3,
+          "pct": 40.9,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 76.1,
+          "pct": 76.3,
           "weight": 0.8
         },
         {
@@ -1480,9 +1269,79 @@
       "ath": null
     },
     {
-      "rank": 22,
+      "rank": 19,
+      "ticker": "LFTO",
+      "score": 74.8,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.35,
+        "companion": 101.6
+      },
+      "name": "Liftoff Mobile, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Communication Services",
+      "marketCap": 3685878784,
+      "phase": "established",
+      "mcapBand": "small",
+      "ipoRecency": "recent",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2026,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 75,
+      "scoreShrunk": 74.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 46.2,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 85.1,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 89.4,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 90.5,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 90.4,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 37.12300542112037,
+      "ath": null
+    },
+    {
+      "rank": 20,
       "ticker": "OFSS.NS",
-      "score": 74,
+      "score": 74.2,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -1494,7 +1353,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 9568637898.818518,
+      "marketCap": 10063996982.76188,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "seasoned",
@@ -1502,10 +1361,10 @@
       "ipoYear": 2002,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 74.2,
-      "scoreShrunk": 74,
+      "scoreBase": 74.4,
+      "scoreShrunk": 74.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1514,27 +1373,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 96.2,
+          "pct": 96,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 46.7,
+          "pct": 47.5,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 81.1,
+          "pct": 81.2,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 52.3,
+          "pct": 52.4,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 97.8,
+          "pct": 98,
           "weight": 0.8
         },
         {
@@ -1547,145 +1406,9 @@
       "ath": null
     },
     {
-      "rank": 23,
-      "ticker": "002602.SZ",
-      "score": 73.3,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.781,
-        "companion": 165.1
-      },
-      "name": "Zhejiang Century Huatong Group Co.,Ltd",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Communication Services",
-      "marketCap": 13636705236.873707,
-      "phase": "established",
-      "mcapBand": "large",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2011,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 73.4,
-      "scoreShrunk": 73.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 66.2,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 57.7,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 98.3,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 71.7,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 96.3,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 67.5456612092195,
-      "ath": null
-    },
-    {
-      "rank": 24,
-      "ticker": "REA.AX",
-      "score": 73.3,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.095,
-        "companion": 55.5
-      },
-      "name": "REA Group Limited",
-      "country": "Australia",
-      "region": "Oceania",
-      "sector": "Communication Services",
-      "marketCap": 14238443625.259008,
-      "phase": "established",
-      "mcapBand": "large",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1999,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 77.4,
-      "scoreShrunk": 73.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 93.1,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 97.2,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 29.5,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 61.3,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 13.454524061654304,
-      "ath": null
-    },
-    {
-      "rank": 25,
+      "rank": 21,
       "ticker": "ADSK",
-      "score": 73.2,
+      "score": 73.5,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -1707,10 +1430,10 @@
       "ipoYear": 1985,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 73.3,
-      "scoreShrunk": 73.2,
+      "scoreBase": 73.6,
+      "scoreShrunk": 73.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1719,27 +1442,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 88.8,
+          "pct": 89.3,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 93.3,
+          "pct": 92.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 65.2,
+          "pct": 66.5,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 15.1,
+          "pct": 15.3,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 70.5,
+          "pct": 70.7,
           "weight": 0.8
         },
         {
@@ -1752,7 +1475,143 @@
       "ath": null
     },
     {
-      "rank": 26,
+      "rank": 22,
+      "ticker": "002602.SZ",
+      "score": 73.5,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.781,
+        "companion": 165.1
+      },
+      "name": "Zhejiang Century Huatong Group Co.,Ltd",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Communication Services",
+      "marketCap": 13760786904.411749,
+      "phase": "established",
+      "mcapBand": "large",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2011,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 73.6,
+      "scoreShrunk": 73.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 66.6,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 58.2,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 98.5,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 71,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 96.4,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 67.5456612092195,
+      "ath": null
+    },
+    {
+      "rank": 23,
+      "ticker": "REA.AX",
+      "score": 73.4,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.095,
+        "companion": 55.5
+      },
+      "name": "REA Group Limited",
+      "country": "Australia",
+      "region": "Oceania",
+      "sector": "Communication Services",
+      "marketCap": 14317030119.516365,
+      "phase": "established",
+      "mcapBand": "large",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1999,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 77.5,
+      "scoreShrunk": 73.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 93.1,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 97,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 30.2,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 61.9,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 13.454524061654304,
+      "ath": null
+    },
+    {
+      "rank": 24,
       "ticker": "PTC",
       "score": 72.3,
       "track": "profitable",
@@ -1776,9 +1635,9 @@
       "ipoYear": 1989,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 72.4,
+      "scoreBase": 72.5,
       "scoreShrunk": 72.3,
       "factors": {
         "burn": 1,
@@ -1793,22 +1652,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 83.2,
+          "pct": 82.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 81.4,
+          "pct": 81.5,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 22.5,
+          "pct": 23.2,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 77.9,
+          "pct": 78.2,
           "weight": 0.8
         },
         {
@@ -1821,7 +1680,7 @@
       "ath": null
     },
     {
-      "rank": 27,
+      "rank": 25,
       "ticker": "ADBE",
       "score": 71.2,
       "track": "profitable",
@@ -1843,9 +1702,9 @@
       "ipoYear": 1986,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 71.3,
+      "scoreBase": 71.4,
       "scoreShrunk": 71.2,
       "factors": {
         "burn": 1,
@@ -1855,27 +1714,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 96.8,
+          "pct": 96.6,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 91.8,
+          "pct": 91.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 47,
+          "pct": 47.9,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 16.7,
+          "pct": 17,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 59.2,
+          "pct": 59.7,
           "weight": 0.8
         },
         {
@@ -1888,9 +1747,9 @@
       "ath": null
     },
     {
-      "rank": 28,
+      "rank": 26,
       "ticker": "KARO",
-      "score": 70.9,
+      "score": 71.2,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -1910,10 +1769,10 @@
       "ipoYear": 2021,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 74.6,
-      "scoreShrunk": 70.9,
+      "scoreBase": 74.9,
+      "scoreShrunk": 71.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1922,17 +1781,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 95.9,
+          "pct": 95.7,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 55.9,
+          "pct": 56.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 66.7,
+          "pct": 68.1,
           "weight": 1.5
         },
         {
@@ -1942,7 +1801,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 71.4,
+          "pct": 71.6,
           "weight": 0.8
         },
         {
@@ -1955,9 +1814,9 @@
       "ath": null
     },
     {
-      "rank": 29,
+      "rank": 27,
       "ticker": "NFLX",
-      "score": 70.6,
+      "score": 70.9,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -1980,10 +1839,10 @@
       "ipoYear": 2002,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 70.7,
-      "scoreShrunk": 70.6,
+      "scoreBase": 71,
+      "scoreShrunk": 70.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1992,27 +1851,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 86.1,
+          "pct": 86.4,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 34,
+          "pct": 34.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 85.2,
+          "pct": 85.5,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 89,
+          "pct": 89.2,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 67.2,
+          "pct": 67.6,
           "weight": 0.8
         },
         {
@@ -2030,9 +1889,9 @@
       }
     },
     {
-      "rank": 30,
+      "rank": 28,
       "ticker": "688111.SS",
-      "score": 70.4,
+      "score": 70.6,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -2044,7 +1903,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 15944355268.268358,
+      "marketCap": 16516548038.97434,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "recent",
@@ -2052,10 +1911,10 @@
       "ipoYear": 2019,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 74,
-      "scoreShrunk": 70.4,
+      "scoreBase": 74.2,
+      "scoreShrunk": 70.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2069,12 +1928,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 86.2,
+          "pct": 85.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 63.6,
+          "pct": 64.9,
           "weight": 1.5
         },
         {
@@ -2084,7 +1943,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 66.6,
+          "pct": 66.9,
           "weight": 0.8
         },
         {
@@ -2097,78 +1956,9 @@
       "ath": null
     },
     {
-      "rank": 31,
-      "ticker": "VRSN",
-      "score": 70.1,
-      "track": "profitable",
-      "lamps": [
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.069,
-        "companion": 62.6
-      },
-      "name": "VeriSign, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Technology",
-      "marketCap": 25312000000,
-      "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1998,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 70.2,
-      "scoreShrunk": 70.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 99.8,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 90.7,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 36.4,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 34.9,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 34,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 6.025859965845326,
-      "ath": null
-    },
-    {
-      "rank": 32,
+      "rank": 29,
       "ticker": "PAYX",
-      "score": 69.9,
+      "score": 70.2,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -2190,10 +1980,10 @@
       "ipoYear": 1983,
       "coverageAxes": "3/5",
       "coverageWeight": 0.72,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 77.7,
-      "scoreShrunk": 69.9,
+      "scoreBase": 78.1,
+      "scoreShrunk": 70.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2202,12 +1992,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 97.4,
+          "pct": 97.3,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 61.6,
+          "pct": 62.2,
           "weight": 2.2
         },
         {
@@ -2217,7 +2007,7 @@
         },
         {
           "key": "dilution",
-          "pct": 64.7,
+          "pct": 65.7,
           "weight": 1.2
         },
         {
@@ -2235,9 +2025,78 @@
       "ath": null
     },
     {
-      "rank": 33,
+      "rank": 30,
+      "ticker": "VRSN",
+      "score": 70.2,
+      "track": "profitable",
+      "lamps": [
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.069,
+        "companion": 62.6
+      },
+      "name": "VeriSign, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 25312000000,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1998,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 70.3,
+      "scoreShrunk": 70.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 99.8,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 90.1,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 37.1,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 35.2,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 35,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 6.025859965845326,
+      "ath": null
+    },
+    {
+      "rank": 31,
       "ticker": "CDR.WA",
-      "score": 69.8,
+      "score": 70.1,
       "track": "profitable",
       "lamps": [
         "burning"
@@ -2251,7 +2110,7 @@
       "country": "Poland",
       "region": "Europe",
       "sector": "Communication Services",
-      "marketCap": 5980639000.267653,
+      "marketCap": 6132621585.844347,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "mature",
@@ -2259,10 +2118,10 @@
       "ipoYear": 2000,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 73.3,
-      "scoreShrunk": 69.8,
+      "scoreBase": 73.6,
+      "scoreShrunk": 70.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2271,17 +2130,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 60.4,
+          "pct": 61.2,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 93,
+          "pct": 92.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 86.7,
+          "pct": 87.1,
           "weight": 1.5
         },
         {
@@ -2291,7 +2150,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 35.5,
+          "pct": 36.2,
           "weight": 0.8
         },
         {
@@ -2304,9 +2163,9 @@
       "ath": null
     },
     {
-      "rank": 34,
+      "rank": 32,
       "ticker": "STNE",
-      "score": 69.3,
+      "score": 69.8,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -2330,10 +2189,10 @@
       "ipoYear": 2018,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 69.4,
-      "scoreShrunk": 69.3,
+      "scoreBase": 69.9,
+      "scoreShrunk": 69.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2347,22 +2206,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 66,
+          "pct": 66.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 67.2,
+          "pct": 68.5,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 51.4,
+          "pct": 51.5,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 36.6,
+          "pct": 37.5,
           "weight": 0.8
         },
         {
@@ -2380,80 +2239,9 @@
       }
     },
     {
-      "rank": 35,
-      "ticker": "1STNE.MI",
-      "score": 69.2,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "arDivergence",
-        "fcfArtefact"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.151,
-        "companion": 14.9
-      },
-      "name": "StoneCo Ltd. Class A",
-      "country": "Cayman Islands",
-      "region": "North America",
-      "sector": "Technology",
-      "marketCap": 2701055040.6520834,
-      "phase": "established",
-      "mcapBand": "small",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2025,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 69.4,
-      "scoreShrunk": 69.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 91.6,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 66.3,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 67.2,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 51,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 36.9,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 6.463397724709763,
-      "ath": null
-    },
-    {
-      "rank": 36,
+      "rank": 33,
       "ticker": "300251.SZ",
-      "score": 69.1,
+      "score": 69.4,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -2461,13 +2249,13 @@
       "overview": {
         "kind": "gp",
         "value": 3.468,
-        "companion": 319.3
+        "companion": 320.7
       },
       "name": "Beijing Enlight Media Co., Ltd",
       "country": "China",
       "region": "Asia",
       "sector": "Communication Services",
-      "marketCap": 4894299399.43508,
+      "marketCap": 4921837789.971968,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "growth",
@@ -2475,10 +2263,10 @@
       "ipoYear": 2011,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 72.4,
-      "scoreShrunk": 69.1,
+      "scoreBase": 72.8,
+      "scoreShrunk": 69.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2487,12 +2275,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 64.4,
+          "pct": 65,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 53.3,
+          "pct": 53.8,
           "weight": 2.2
         },
         {
@@ -2520,9 +2308,76 @@
       "ath": null
     },
     {
-      "rank": 37,
-      "ticker": "HAV2.VI",
-      "score": 68.5,
+      "rank": 34,
+      "ticker": "AUTO.L",
+      "score": 68.7,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.216,
+        "companion": 47.9
+      },
+      "name": "Autotrader Group plc",
+      "country": "United Kingdom",
+      "region": "Europe",
+      "sector": "Communication Services",
+      "marketCap": 5224565857.57678,
+      "phase": "established",
+      "mcapBand": "mid",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2015,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.82,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 72.9,
+      "scoreShrunk": 68.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 98.2,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 69.4,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 56,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 25.5,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 3.859590750291142,
+      "ath": null
+    },
+    {
+      "rank": 35,
+      "ticker": "HAVAS.AS",
+      "score": 68.6,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -2534,18 +2389,18 @@
       "country": "France",
       "region": "Europe",
       "sector": "Communication Services",
-      "marketCap": 2075401220.4118528,
+      "marketCap": 2028222179.49024,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "recent",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 2025,
+      "ipoYear": 2024,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 68.6,
-      "scoreShrunk": 68.5,
+      "scoreBase": 68.8,
+      "scoreShrunk": 68.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2554,27 +2409,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 77.8,
+          "pct": 78.1,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 96.3,
+          "pct": 96.1,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 23.6,
+          "pct": 24.3,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 85.7,
+          "pct": 85.6,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 20.9,
+          "pct": 21.2,
           "weight": 0.8
         },
         {
@@ -2587,76 +2442,9 @@
       "ath": null
     },
     {
-      "rank": 38,
-      "ticker": "AUTO.L",
-      "score": 68.4,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.216,
-        "companion": 47.9
-      },
-      "name": "Autotrader Group plc",
-      "country": "United Kingdom",
-      "region": "Europe",
-      "sector": "Communication Services",
-      "marketCap": 5117297033.591808,
-      "phase": "established",
-      "mcapBand": "mid",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2015,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.82,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 72.6,
-      "scoreShrunk": 68.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 98.3,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 68.7,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 55.6,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 25.1,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 3.8595907502911198,
-      "ath": null
-    },
-    {
-      "rank": 39,
+      "rank": 36,
       "ticker": "CDNS",
-      "score": 67.9,
+      "score": 68.2,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -2676,10 +2464,10 @@
       "ipoYear": 1987,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 68,
-      "scoreShrunk": 67.9,
+      "scoreBase": 68.3,
+      "scoreShrunk": 68.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2688,27 +2476,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 89.9,
+          "pct": 90.4,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 87.2,
+          "pct": 86.8,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 43.8,
+          "pct": 44.8,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 13.6,
+          "pct": 13.7,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 70.9,
+          "pct": 71.2,
           "weight": 0.8
         },
         {
@@ -2721,9 +2509,9 @@
       "ath": null
     },
     {
-      "rank": 40,
+      "rank": 37,
       "ticker": "CDS.DE",
-      "score": 67.9,
+      "score": 68.2,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -2735,7 +2523,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 92017385916.8043,
+      "marketCap": 93207003287.77728,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "seasoned",
@@ -2743,10 +2531,10 @@
       "ipoYear": 2007,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 68,
-      "scoreShrunk": 67.9,
+      "scoreBase": 68.3,
+      "scoreShrunk": 68.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2755,27 +2543,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 89.9,
+          "pct": 90.4,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 87.2,
+          "pct": 86.8,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 43.8,
+          "pct": 44.8,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 13.6,
+          "pct": 13.7,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 70.9,
+          "pct": 71.2,
           "weight": 0.8
         },
         {
@@ -2788,9 +2576,9 @@
       "ath": null
     },
     {
-      "rank": 41,
+      "rank": 38,
       "ticker": "SGE.L",
-      "score": 67.8,
+      "score": 68.1,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -2802,7 +2590,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 10292003796.918272,
+      "marketCap": 10519382037.030912,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "veteran",
@@ -2810,10 +2598,10 @@
       "ipoYear": 1989,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 67.9,
-      "scoreShrunk": 67.8,
+      "scoreBase": 68.2,
+      "scoreShrunk": 68.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2822,27 +2610,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 82.1,
+          "pct": 82.3,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 94.8,
+          "pct": 94.5,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 31.7,
+          "pct": 32.5,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 50.2,
+          "pct": 50.7,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 42.3,
+          "pct": 43.1,
           "weight": 0.8
         },
         {
@@ -2855,9 +2643,9 @@
       "ath": null
     },
     {
-      "rank": 42,
+      "rank": 39,
       "ticker": "META",
-      "score": 67.6,
+      "score": 67.8,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -2877,10 +2665,10 @@
       "ipoYear": 2012,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 67.7,
-      "scoreShrunk": 67.6,
+      "scoreBase": 67.9,
+      "scoreShrunk": 67.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2889,7 +2677,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 70.3,
+          "pct": 70.4,
           "weight": 2.6
         },
         {
@@ -2899,17 +2687,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 80.3,
+          "pct": 80.6,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 10.7,
+          "pct": 11.3,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 88.7,
+          "pct": 88.9,
           "weight": 0.8
         },
         {
@@ -2922,143 +2710,9 @@
       "ath": null
     },
     {
-      "rank": 43,
-      "ticker": "META.WA",
-      "score": 67.6,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.227,
-        "companion": 88
-      },
-      "name": "Meta Platforms Inc Class A",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Communication Services",
-      "marketCap": 1545025633629.9336,
-      "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2024,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 67.7,
-      "scoreShrunk": 67.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 70.3,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 79.5,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 80.3,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 10.7,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 88.7,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 33.07888642057002,
-      "ath": null
-    },
-    {
-      "rank": 44,
-      "ticker": "QLYS",
-      "score": 67.4,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.117,
-        "companion": 57.3
-      },
-      "name": "Qualys, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Technology",
-      "marketCap": 4841634304,
-      "phase": "established",
-      "mcapBand": "mid",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2012,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 67.5,
-      "scoreShrunk": 67.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 95.3,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 81.5,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 57,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 6.8,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 50,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 9.843088449583792,
-      "ath": null
-    },
-    {
-      "rank": 45,
+      "rank": 40,
       "ticker": "GEN",
-      "score": 67.4,
+      "score": 67.7,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -3078,10 +2732,10 @@
       "ipoYear": 1989,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 67.5,
-      "scoreShrunk": 67.4,
+      "scoreBase": 67.8,
+      "scoreShrunk": 67.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3090,17 +2744,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 73.2,
+          "pct": 73.3,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 72.6,
+          "pct": 73.2,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 70.2,
+          "pct": 71.1,
           "weight": 1.5
         },
         {
@@ -3110,7 +2764,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 84.7,
+          "pct": 84.8,
           "weight": 0.8
         },
         {
@@ -3123,9 +2777,76 @@
       "ath": null
     },
     {
-      "rank": 46,
+      "rank": 41,
+      "ticker": "QLYS",
+      "score": 67.6,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.117,
+        "companion": 57.3
+      },
+      "name": "Qualys, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 4841634304,
+      "phase": "established",
+      "mcapBand": "mid",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2012,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 67.7,
+      "scoreShrunk": 67.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 95,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 81,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 58,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 7.3,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 50.6,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 9.843088449583792,
+      "ath": null
+    },
+    {
+      "rank": 42,
       "ticker": "CAR.AX",
-      "score": 66.7,
+      "score": 67,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -3137,7 +2858,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Communication Services",
-      "marketCap": 6486085147.535769,
+      "marketCap": 6634664766.620468,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "seasoned",
@@ -3145,10 +2866,10 @@
       "ipoYear": 2009,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 69.6,
-      "scoreShrunk": 66.7,
+      "scoreBase": 70,
+      "scoreShrunk": 67,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3157,17 +2878,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 65.6,
+          "pct": 66,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 96,
+          "pct": 95.8,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 52.7,
+          "pct": 53.8,
           "weight": 1.5
         },
         {
@@ -3177,7 +2898,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 42,
+          "pct": 42.8,
           "weight": 0.8
         },
         {
@@ -3190,9 +2911,9 @@
       "ath": null
     },
     {
-      "rank": 47,
+      "rank": 43,
       "ticker": "GRND",
-      "score": 66.5,
+      "score": 67,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -3214,10 +2935,10 @@
       "ipoYear": 2021,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 66.6,
-      "scoreShrunk": 66.5,
+      "scoreBase": 67.1,
+      "scoreShrunk": 67,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3226,27 +2947,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 76.9,
+          "pct": 77.2,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 65.7,
+          "pct": 66.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 83,
+          "pct": 83.2,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 9.3,
+          "pct": 10,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 90.9,
+          "pct": 91.1,
           "weight": 0.8
         },
         {
@@ -3264,9 +2985,76 @@
       }
     },
     {
-      "rank": 48,
+      "rank": 44,
+      "ticker": "TOTS3.SA",
+      "score": 66.7,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.173,
+        "companion": 58.3
+      },
+      "name": "TOTVS S.A.",
+      "country": "Brazil",
+      "region": "South America",
+      "sector": "Technology",
+      "marketCap": 3102533123.6476417,
+      "phase": "established",
+      "mcapBand": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2006,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 66.8,
+      "scoreShrunk": 66.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 74.6,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 58.5,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 64.5,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 59.1,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 80.1,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 22.6320444671829,
+      "ath": null
+    },
+    {
+      "rank": 45,
       "ticker": "9766.T",
-      "score": 66.4,
+      "score": 66.6,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -3280,7 +3068,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Communication Services",
-      "marketCap": 15980252282.999538,
+      "marketCap": 16146063342.520998,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "mature",
@@ -3288,10 +3076,10 @@
       "ipoYear": 2000,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 69.3,
-      "scoreShrunk": 66.4,
+      "scoreBase": 69.6,
+      "scoreShrunk": 66.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3300,17 +3088,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 83,
+          "pct": 83.2,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 35.2,
+          "pct": 35.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 87.3,
+          "pct": 87.7,
           "weight": 1.5
         },
         {
@@ -3320,7 +3108,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 84.4,
+          "pct": 84.5,
           "weight": 0.8
         },
         {
@@ -3333,9 +3121,9 @@
       "ath": null
     },
     {
-      "rank": 49,
+      "rank": 46,
       "ticker": "PAYP",
-      "score": 66.4,
+      "score": 66.5,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -3358,10 +3146,10 @@
       "ipoYear": 2026,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 69.2,
-      "scoreShrunk": 66.4,
+      "scoreBase": 69.4,
+      "scoreShrunk": 66.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3370,17 +3158,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 38.4,
+          "pct": 38.8,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 89.5,
+          "pct": 89.2,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 84.2,
+          "pct": 84.5,
           "weight": 1.5
         },
         {
@@ -3390,7 +3178,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 85.6,
+          "pct": 85.7,
           "weight": 0.8
         },
         {
@@ -3403,29 +3191,100 @@
       "ath": null
     },
     {
-      "rank": 50,
-      "ticker": "TOTS3.SA",
-      "score": 66.2,
+      "rank": 47,
+      "ticker": "002027.SZ",
+      "score": 66.3,
       "track": "profitable",
-      "lamps": [],
+      "lamps": [
+        "arDivergence"
+      ],
       "overview": {
         "kind": "gp",
-        "value": 0.173,
-        "companion": 58.3
+        "value": 0.107,
+        "companion": 32.7
       },
-      "name": "TOTVS S.A.",
-      "country": "Brazil",
-      "region": "South America",
-      "sector": "Technology",
-      "marketCap": 3095275473.796137,
+      "name": "Focus Media Information Technology Co., Ltd.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Communication Services",
+      "marketCap": 10994432477.781033,
       "phase": "established",
-      "mcapBand": "small",
+      "mcapBand": "large",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2004,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 69.2,
+      "scoreShrunk": 66.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 92.8,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 58.8,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 73.7,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 12.7,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": -2.8496165379993443,
+      "ath": null
+    },
+    {
+      "rank": 48,
+      "ticker": "NAUKRI.NS",
+      "score": 66.2,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.152,
+        "companion": 66.3
+      },
+      "name": "Info Edge (India) Limited",
+      "country": "India",
+      "region": "Asia",
+      "sector": "Communication Services",
+      "marketCap": 8092199333.935448,
+      "phase": "established",
+      "mcapBand": "large",
       "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2006,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
       "scoreBase": 66.3,
       "scoreShrunk": 66.2,
@@ -3437,27 +3296,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 74.5,
+          "pct": 34,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 58,
+          "pct": 97.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 63.3,
+          "pct": 56,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 58.5,
+          "pct": 91.4,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 80,
+          "pct": 67.2,
           "weight": 0.8
         },
         {
@@ -3466,13 +3325,80 @@
           "weight": 0
         }
       ],
-      "revGrowthYoYPct": 22.6320444671829,
+      "revGrowthYoYPct": 15.925295981323973,
       "ath": null
     },
     {
-      "rank": 51,
-      "ticker": "1860.HK",
+      "rank": 49,
+      "ticker": "NEM.VI",
       "score": 66.1,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.23,
+        "companion": 44
+      },
+      "name": "Nemetschek SE",
+      "country": "Germany",
+      "region": "Europe",
+      "sector": "Technology",
+      "marketCap": 7894798657.628775,
+      "phase": "established",
+      "mcapBand": "large",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2017,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 69,
+      "scoreShrunk": 66.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 88,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 48.1,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 80.9,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 42.2,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 7.630270820298812,
+      "ath": null
+    },
+    {
+      "rank": 50,
+      "ticker": "1860.HK",
+      "score": 66,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -3484,7 +3410,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Communication Services",
-      "marketCap": 2199519859.456,
+      "marketCap": 2214098490.0975003,
       "phase": "inflected",
       "mcapBand": "micro",
       "ipoRecency": "growth",
@@ -3492,10 +3418,10 @@
       "ipoYear": 2018,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 66.2,
-      "scoreShrunk": 66.1,
+      "scoreBase": 66.1,
+      "scoreShrunk": 66,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3504,22 +3430,22 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 86.4,
+          "pct": 86.7,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 6.7,
+          "pct": 5.8,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 89.8,
+          "pct": 90.4,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 86.2,
+          "pct": 86.1,
           "weight": 1.2
         },
         {
@@ -3537,78 +3463,9 @@
       "ath": null
     },
     {
-      "rank": 52,
-      "ticker": "002027.SZ",
-      "score": 66,
-      "track": "profitable",
-      "lamps": [
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.107,
-        "companion": 32.7
-      },
-      "name": "Focus Media Information Technology Co., Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Communication Services",
-      "marketCap": 10884311348.42585,
-      "phase": "established",
-      "mcapBand": "large",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2004,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 68.8,
-      "scoreShrunk": 66,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 92.8,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 58.3,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 72.7,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 12.6,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": -2.8496165379993443,
-      "ath": null
-    },
-    {
-      "rank": 53,
+      "rank": 51,
       "ticker": "DLO",
-      "score": 65.8,
+      "score": 65.9,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -3628,10 +3485,10 @@
       "ipoYear": 2021,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 65.9,
-      "scoreShrunk": 65.8,
+      "scoreBase": 66,
+      "scoreShrunk": 65.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3640,27 +3497,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 96.5,
+          "pct": 96.3,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 19.7,
+          "pct": 19.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 79.5,
+          "pct": 79.9,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 48.6,
+          "pct": 49.3,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 94.2,
+          "pct": 94.5,
           "weight": 0.8
         },
         {
@@ -3678,100 +3535,33 @@
       }
     },
     {
-      "rank": 54,
-      "ticker": "NAUKRI.NS",
-      "score": 65.8,
+      "rank": 52,
+      "ticker": "035420.KS",
+      "score": 65.7,
       "track": "profitable",
       "lamps": [
         "lowRoic"
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.152,
-        "companion": 66.3
+        "value": 0.121,
+        "companion": 49.2
       },
-      "name": "Info Edge (India) Limited",
-      "country": "India",
+      "name": "NAVER Corporation",
+      "country": "South Korea",
       "region": "Asia",
       "sector": "Communication Services",
-      "marketCap": 7795497226.049814,
+      "marketCap": 22917311638.814903,
       "phase": "established",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 2006,
+      "ipoYear": 2002,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 65.9,
-      "scoreShrunk": 65.8,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 33.5,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 97.5,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 55.2,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 91.1,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 66.9,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 15.925295981323973,
-      "ath": null
-    },
-    {
-      "rank": 55,
-      "ticker": "NEM.DE",
-      "score": 65.7,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.23,
-        "companion": 44
-      },
-      "name": "Nemetschek SE",
-      "country": "Germany",
-      "region": "Europe",
-      "sector": "Technology",
-      "marketCap": 7529238794.314548,
-      "phase": "established",
-      "mcapBand": "mid",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1999,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 68.5,
+      "scoreBase": 65.8,
       "scoreShrunk": 65.7,
       "factors": {
         "burn": 1,
@@ -3781,27 +3571,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 87.6,
+          "pct": 50.3,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 47.3,
+          "pct": 99.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 80.8,
+          "pct": 47.5,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": null,
+          "pct": 59.5,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 41.4,
+          "pct": 67.9,
           "weight": 0.8
         },
         {
@@ -3810,13 +3600,13 @@
           "weight": 0
         }
       ],
-      "revGrowthYoYPct": 7.630270820298812,
+      "revGrowthYoYPct": 16.301150596390947,
       "ath": null
     },
     {
-      "rank": 56,
+      "rank": 53,
       "ticker": "9697.T",
-      "score": 65.4,
+      "score": 65.7,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -3828,7 +3618,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Communication Services",
-      "marketCap": 9072035111.37036,
+      "marketCap": 9000646555.835617,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "seasoned",
@@ -3836,10 +3626,10 @@
       "ipoYear": 2001,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 65.4,
-      "scoreShrunk": 65.4,
+      "scoreBase": 65.8,
+      "scoreShrunk": 65.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3853,22 +3643,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 40.8,
+          "pct": 41.5,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 38.3,
+          "pct": 39.1,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 85.3,
+          "pct": 85.2,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 66.3,
+          "pct": 66.6,
           "weight": 0.8
         },
         {
@@ -3886,145 +3676,9 @@
       }
     },
     {
-      "rank": 57,
-      "ticker": "035420.KS",
-      "score": 65.3,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.121,
-        "companion": 49.2
-      },
-      "name": "NAVER Corporation",
-      "country": "South Korea",
-      "region": "Asia",
-      "sector": "Communication Services",
-      "marketCap": 23023491281.857555,
-      "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2002,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 65.4,
-      "scoreShrunk": 65.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 49.7,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 99.4,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 46.7,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 58.9,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 67.5,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 16.301150596390947,
-      "ath": null
-    },
-    {
-      "rank": 58,
-      "ticker": "1BSY.MI",
-      "score": 65.2,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.118,
-        "companion": 59.8
-      },
-      "name": "Bentley Systems, Incorporated Class B",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Technology",
-      "marketCap": 9342789108.562023,
-      "phase": "established",
-      "mcapBand": "large",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2025,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 65.3,
-      "scoreShrunk": 65.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 69.7,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 78.6,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 54.7,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 45,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 64.1,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 14.475821904129615,
-      "ath": null
-    },
-    {
-      "rank": 59,
+      "rank": 54,
       "ticker": "BSY",
-      "score": 65.2,
+      "score": 65.7,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -4044,10 +3698,10 @@
       "ipoYear": 2020,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 65.3,
-      "scoreShrunk": 65.2,
+      "scoreBase": 65.8,
+      "scoreShrunk": 65.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4056,27 +3710,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 69.7,
+          "pct": 70.1,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 78.6,
+          "pct": 78.8,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 54.7,
+          "pct": 55.7,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 45,
+          "pct": 45.8,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 64.1,
+          "pct": 64.4,
           "weight": 0.8
         },
         {
@@ -4087,16 +3741,16 @@
       ],
       "revGrowthYoYPct": 14.475821904129615,
       "ath": {
-        "distancePct": -56.7,
+        "distancePct": -54.9,
         "athDate": "2021-09-15",
         "monthsAgo": 58,
-        "lastDate": "2026-07-23"
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 60,
+      "rank": 55,
       "ticker": "4716.T",
-      "score": 65.2,
+      "score": 65.1,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -4108,7 +3762,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 6757901021.50303,
+      "marketCap": 6800830952.367824,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "seasoned",
@@ -4116,10 +3770,10 @@
       "ipoYear": 2001,
       "coverageAxes": "3/5",
       "coverageWeight": 0.72,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 71,
-      "scoreShrunk": 65.2,
+      "scoreBase": 71.1,
+      "scoreShrunk": 65.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4128,12 +3782,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 98,
+          "pct": 97.9,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 30.7,
+          "pct": 30.9,
           "weight": 2.2
         },
         {
@@ -4143,7 +3797,7 @@
         },
         {
           "key": "dilution",
-          "pct": 86.6,
+          "pct": 86.5,
           "weight": 1.2
         },
         {
@@ -4161,79 +3815,9 @@
       "ath": null
     },
     {
-      "rank": 61,
-      "ticker": "1FRSH.MI",
-      "score": 64.8,
-      "track": "profitable",
-      "lamps": [
-        "highDilution",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.174,
-        "companion": 68.2
-      },
-      "name": "Freshworks, Inc. Class A",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Technology",
-      "marketCap": 3020579887.365018,
-      "phase": "inflected",
-      "mcapBand": "small",
-      "ipoRecency": "recent",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2025,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 64.9,
-      "scoreShrunk": 64.8,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 27.5,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 84.9,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 73.1,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 97.1,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 68,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 16.48723971203374,
-      "ath": null
-    },
-    {
-      "rank": 62,
+      "rank": 56,
       "ticker": "FRSH",
-      "score": 64.8,
+      "score": 65,
       "track": "profitable",
       "lamps": [
         "highDilution",
@@ -4256,10 +3840,10 @@
       "ipoYear": 2021,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 64.9,
-      "scoreShrunk": 64.8,
+      "scoreBase": 65.1,
+      "scoreShrunk": 65,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4268,17 +3852,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 27.5,
+          "pct": 28,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 84.9,
+          "pct": 84.5,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 73.1,
+          "pct": 74,
           "weight": 1.5
         },
         {
@@ -4288,7 +3872,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 68,
+          "pct": 68.2,
           "weight": 0.8
         },
         {
@@ -4301,9 +3885,9 @@
       "ath": null
     },
     {
-      "rank": 63,
+      "rank": 57,
       "ticker": "PAGS",
-      "score": 63.9,
+      "score": 64.3,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -4323,10 +3907,10 @@
       "ipoYear": 2018,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 64,
-      "scoreShrunk": 63.9,
+      "scoreBase": 64.4,
+      "scoreShrunk": 64.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4340,12 +3924,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 37.5,
+          "pct": 38.1,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 61.4,
+          "pct": 62.6,
           "weight": 1.5
         },
         {
@@ -4355,7 +3939,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 24.2,
+          "pct": 24.6,
           "weight": 0.8
         },
         {
@@ -4368,9 +3952,9 @@
       "ath": null
     },
     {
-      "rank": 64,
+      "rank": 58,
       "ticker": "MSFT",
-      "score": 63.6,
+      "score": 64.1,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -4390,10 +3974,10 @@
       "ipoYear": 1986,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 63.7,
-      "scoreShrunk": 63.6,
+      "scoreBase": 64.1,
+      "scoreShrunk": 64.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4402,27 +3986,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 89.1,
+          "pct": 89.6,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 56.8,
+          "pct": 57.2,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 51.4,
+          "pct": 52.5,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 32,
+          "pct": 32.1,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 70.2,
+          "pct": 70.4,
           "weight": 0.8
         },
         {
@@ -4435,9 +4019,9 @@
       "ath": null
     },
     {
-      "rank": 65,
+      "rank": 59,
       "ticker": "0700.HK",
-      "score": 62.8,
+      "score": 63.3,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -4449,7 +4033,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Communication Services",
-      "marketCap": 504172038481.5104,
+      "marketCap": 508508214121.0706,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "seasoned",
@@ -4457,10 +4041,10 @@
       "ipoYear": 2004,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 62.9,
-      "scoreShrunk": 62.8,
+      "scoreBase": 63.4,
+      "scoreShrunk": 63.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4469,27 +4053,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 74.2,
+          "pct": 74.3,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 40.2,
+          "pct": 40.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 88,
+          "pct": 88.4,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 49,
+          "pct": 49.8,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 62.5,
+          "pct": 63.2,
           "weight": 0.8
         },
         {
@@ -4502,9 +4086,9 @@
       "ath": null
     },
     {
-      "rank": 66,
+      "rank": 60,
       "ticker": "PEGA",
-      "score": 62.8,
+      "score": 63.2,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -4526,10 +4110,10 @@
       "ipoYear": 1996,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 62.9,
-      "scoreShrunk": 62.8,
+      "scoreBase": 63.3,
+      "scoreShrunk": 63.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4538,27 +4122,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 77.2,
+          "pct": 77.5,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 67.5,
+          "pct": 68.2,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 76.7,
+          "pct": 77,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 15.5,
+          "pct": 15.7,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 48.5,
+          "pct": 49.1,
           "weight": 0.8
         },
         {
@@ -4571,9 +4155,76 @@
       "ath": null
     },
     {
-      "rank": 67,
+      "rank": 61,
+      "ticker": "PRGS",
+      "score": 63,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.269,
+        "companion": 46.3
+      },
+      "name": "Progress Software Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 1552339840,
+      "phase": "established",
+      "mcapBand": "micro",
+      "ipoRecency": null,
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": null,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 63.1,
+      "scoreShrunk": 63,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 69.8,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 77.3,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 76.6,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 21.5,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 39.3,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 6.787301721050754,
+      "ath": null
+    },
+    {
+      "rank": 62,
       "ticker": "RDVT",
-      "score": 62.7,
+      "score": 62.8,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -4596,10 +4247,10 @@
       "ipoYear": 2018,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 62.7,
-      "scoreShrunk": 62.7,
+      "scoreBase": 62.9,
+      "scoreShrunk": 62.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4608,27 +4259,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 43.9,
+          "pct": 44.2,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 82.9,
+          "pct": 82.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 83.9,
+          "pct": 84.2,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 35.7,
+          "pct": 36.1,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 69.3,
+          "pct": 69.4,
           "weight": 0.8
         },
         {
@@ -4646,212 +4297,9 @@
       }
     },
     {
-      "rank": 68,
-      "ticker": "PRGS",
-      "score": 62.6,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.269,
-        "companion": 46.3
-      },
-      "name": "Progress Software Corporation",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Technology",
-      "marketCap": 1552339840,
-      "phase": "established",
-      "mcapBand": "micro",
-      "ipoRecency": null,
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": null,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 62.7,
-      "scoreShrunk": 62.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 69.3,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 77,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 76.4,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 20.9,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 38.7,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 6.787301721050754,
-      "ath": null
-    },
-    {
-      "rank": 69,
-      "ticker": "ADEA",
-      "score": 61.9,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 82.1
-      },
-      "name": "Adeia Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Technology",
-      "marketCap": 2862123008,
-      "phase": "established",
-      "mcapBand": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2003,
-      "coverageAxes": "3/5",
-      "coverageWeight": 0.55,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 71.5,
-      "scoreShrunk": 61.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 85.8,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": null,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 38.6,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 74.3,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 19.507243070605675,
-      "ath": null
-    },
-    {
-      "rank": 70,
-      "ticker": "LMN.V",
-      "score": 61.9,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.239,
-        "companion": 49.1
-      },
-      "name": "Lumine Group Inc.",
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Technology",
-      "marketCap": 3818397385.7415676,
-      "phase": "established",
-      "mcapBand": "small",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2023,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 63.9,
-      "scoreShrunk": 61.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 77.5,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 37.2,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 84.5,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 54.5,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 11.348817820342894,
-      "ath": null
-    },
-    {
-      "rank": 71,
+      "rank": 63,
       "ticker": "DSGX",
-      "score": 61.8,
+      "score": 62.5,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -4871,10 +4319,10 @@
       "ipoYear": 1999,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 61.9,
-      "scoreShrunk": 61.8,
+      "scoreBase": 62.6,
+      "scoreShrunk": 62.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4883,27 +4331,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 67.7,
+          "pct": 68.2,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 69.6,
+          "pct": 70.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 53.6,
+          "pct": 54.7,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 43.2,
+          "pct": 44,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 65.4,
+          "pct": 65.7,
           "weight": 0.8
         },
         {
@@ -4921,9 +4369,214 @@
       }
     },
     {
-      "rank": 72,
+      "rank": 64,
+      "ticker": "LMN.V",
+      "score": 62.2,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.239,
+        "companion": 49.1
+      },
+      "name": "Lumine Group Inc.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 3810059122.556109,
+      "phase": "established",
+      "mcapBand": "small",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2023,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 64.3,
+      "scoreShrunk": 62.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 77.8,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 37.8,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 84.8,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 55,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 11.348817820342894,
+      "ath": null
+    },
+    {
+      "rank": 65,
+      "ticker": "ADEA",
+      "score": 62,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 82.1
+      },
+      "name": "Adeia Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 2862123008,
+      "phase": "established",
+      "mcapBand": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2003,
+      "coverageAxes": "3/5",
+      "coverageWeight": 0.55,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 71.8,
+      "scoreShrunk": 62,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 86.1,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": null,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 39.2,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 74.5,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 19.507243070605675,
+      "ath": null
+    },
+    {
+      "rank": 66,
+      "ticker": "4704.T",
+      "score": 61.9,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.022,
+        "companion": 2.8
+      },
+      "name": "Trend Micro Incorporated",
+      "country": "Japan",
+      "region": "Asia",
+      "sector": "Technology",
+      "marketCap": 5149529074.253169,
+      "phase": "established",
+      "mcapBand": "mid",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2000,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 62,
+      "scoreShrunk": 61.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 85.8,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 69.1,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 23.7,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 73.7,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 19.3,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 1.2272683925204753,
+      "ath": null
+    },
+    {
+      "rank": 67,
       "ticker": "PGY",
-      "score": 61.8,
+      "score": 61.9,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -4946,10 +4599,10 @@
       "ipoYear": 2021,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 61.8,
-      "scoreShrunk": 61.8,
+      "scoreBase": 61.9,
+      "scoreShrunk": 61.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4963,12 +4616,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 23.3,
+          "pct": 23,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 86.4,
+          "pct": 86.8,
           "weight": 1.5
         },
         {
@@ -4978,7 +4631,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 32.8,
+          "pct": 33.7,
           "weight": 0.8
         },
         {
@@ -4991,217 +4644,9 @@
       "ath": null
     },
     {
-      "rank": 73,
-      "ticker": "4704.T",
-      "score": 61.6,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.022,
-        "companion": 2.8
-      },
-      "name": "Trend Micro Incorporated",
-      "country": "Japan",
-      "region": "Asia",
-      "sector": "Technology",
-      "marketCap": 5128629263.695676,
-      "phase": "established",
-      "mcapBand": "mid",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2000,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 61.6,
-      "scoreShrunk": 61.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 85.5,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 68.4,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 23,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 74.2,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 19.1,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 1.2272683925204753,
-      "ath": null
-    },
-    {
-      "rank": 74,
-      "ticker": "SUNTV.NS",
-      "score": 61.4,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "shortRunway"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.05,
-        "companion": -27.8
-      },
-      "name": "Sun TV Network Limited",
-      "country": "India",
-      "region": "Asia",
-      "sector": "Communication Services",
-      "marketCap": 1987728949.9778578,
-      "phase": "established",
-      "mcapBand": "micro",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2006,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 63.4,
-      "scoreShrunk": 61.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 82.4,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 84.4,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 29.2,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 7.6,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": -6.2963867446725,
-      "ath": null
-    },
-    {
-      "rank": 75,
-      "ticker": "VU.PA",
-      "score": 61.3,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.673,
-        "companion": 124.6
-      },
-      "name": "Vusion S.A.",
-      "country": "France",
-      "region": "Europe",
-      "sector": "Technology",
-      "marketCap": 2475773561.9830275,
-      "phase": "established",
-      "mcapBand": "micro",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2006,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 63.2,
-      "scoreShrunk": 61.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 76.6,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 13.5,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 96.7,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 93.6,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 54.17813614215028,
-      "ath": null
-    },
-    {
-      "rank": 76,
+      "rank": 68,
       "ticker": "INTU",
-      "score": 61.1,
+      "score": 61.6,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -5221,10 +4666,10 @@
       "ipoYear": 1993,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 61.2,
-      "scoreShrunk": 61.1,
+      "scoreBase": 61.6,
+      "scoreShrunk": 61.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5238,22 +4683,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 75.2,
+          "pct": 75.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 56.1,
+          "pct": 57,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 8.1,
+          "pct": 8.6,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 50.6,
+          "pct": 51.3,
           "weight": 0.8
         },
         {
@@ -5266,35 +4711,35 @@
       "ath": null
     },
     {
-      "rank": 77,
-      "ticker": "1TTD.MI",
-      "score": 60.6,
+      "rank": 69,
+      "ticker": "SUNTV.NS",
+      "score": 61.5,
       "track": "profitable",
       "lamps": [
-        "highDilution",
-        "peakMargin"
+        "burning",
+        "shortRunway"
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.154,
-        "companion": 46.4
+        "value": 0.05,
+        "companion": -27.8
       },
-      "name": "Trade Desk, Inc. Class A",
-      "country": "United States",
-      "region": "North America",
+      "name": "Sun TV Network Limited",
+      "country": "India",
+      "region": "Asia",
       "sector": "Communication Services",
-      "marketCap": 7974669477.281793,
+      "marketCap": 2013435904.0414188,
       "phase": "established",
-      "mcapBand": "large",
-      "ipoRecency": "recent",
+      "mcapBand": "micro",
+      "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 2025,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
+      "ipoYear": 2006,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 60.7,
-      "scoreShrunk": 60.6,
+      "scoreBase": 63.5,
+      "scoreShrunk": 61.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5303,27 +4748,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 65.1,
+          "pct": 82.6,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 73.3,
+          "pct": 84.2,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 45.9,
+          "pct": 29.9,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 49.6,
+          "pct": null,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 55.8,
+          "pct": 7.4,
           "weight": 0.8
         },
         {
@@ -5332,13 +4777,13 @@
           "weight": 0
         }
       ],
-      "revGrowthYoYPct": 11.823622895972697,
+      "revGrowthYoYPct": -6.2963867446725,
       "ath": null
     },
     {
-      "rank": 78,
+      "rank": 70,
       "ticker": "TTD",
-      "score": 60.6,
+      "score": 61.2,
       "track": "profitable",
       "lamps": [
         "highDilution",
@@ -5361,10 +4806,10 @@
       "ipoYear": 2016,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 60.7,
-      "scoreShrunk": 60.6,
+      "scoreBase": 61.3,
+      "scoreShrunk": 61.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5373,27 +4818,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 65.1,
+          "pct": 65.7,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 73.3,
+          "pct": 73.8,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 45.9,
+          "pct": 46.9,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 49.6,
+          "pct": 50.2,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 55.8,
+          "pct": 56.3,
           "weight": 0.8
         },
         {
@@ -5411,9 +4856,78 @@
       }
     },
     {
-      "rank": 79,
+      "rank": 71,
+      "ticker": "VU.PA",
+      "score": 61.2,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.673,
+        "companion": 124.6
+      },
+      "name": "Vusion S.A.",
+      "country": "France",
+      "region": "Europe",
+      "sector": "Technology",
+      "marketCap": 2562134266.347725,
+      "phase": "established",
+      "mcapBand": "micro",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2006,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 63.1,
+      "scoreShrunk": 61.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 76.8,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 12.7,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 96.9,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 93.9,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 54.17813614215028,
+      "ath": null
+    },
+    {
+      "rank": 72,
       "ticker": "YMM",
-      "score": 60.5,
+      "score": 61,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -5437,10 +4951,10 @@
       "ipoYear": 2021,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 60.6,
-      "scoreShrunk": 60.5,
+      "scoreBase": 61.1,
+      "scoreShrunk": 61,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5449,27 +4963,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 44.2,
+          "pct": 44.6,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 48.8,
+          "pct": 49.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 92,
+          "pct": 92.3,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 98.1,
+          "pct": 98,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 31,
+          "pct": 31.8,
           "weight": 0.8
         },
         {
@@ -5482,143 +4996,9 @@
       "ath": null
     },
     {
-      "rank": 80,
-      "ticker": "SPG.DE",
-      "score": 60.5,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.044,
-        "companion": 25.2
-      },
-      "name": "Springer Nature AG & Co. KGaA",
-      "country": "Germany",
-      "region": "Europe",
-      "sector": "Communication Services",
-      "marketCap": 4045892697.522893,
-      "phase": "established",
-      "mcapBand": "small",
-      "ipoRecency": "recent",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2024,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 62.3,
-      "scoreShrunk": 60.5,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 69,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 89.8,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 28.6,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 28.3,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 4.29321639326512,
-      "ath": null
-    },
-    {
-      "rank": 81,
-      "ticker": "3769.T",
-      "score": 60.3,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.154,
-        "companion": 83
-      },
-      "name": "GMO Payment Gateway, Inc.",
-      "country": "Japan",
-      "region": "Asia",
-      "sector": "Technology",
-      "marketCap": 4482594321.662739,
-      "phase": "established",
-      "mcapBand": "mid",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2005,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 62.1,
-      "scoreShrunk": 60.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 72.3,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 55.3,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 58,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 55.3,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 11.810426921820415,
-      "ath": null
-    },
-    {
-      "rank": 82,
-      "ticker": "1TEMN.MI",
-      "score": 60.2,
+      "rank": 73,
+      "ticker": "TEMN.VI",
+      "score": 60.8,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -5630,7 +5010,7 @@
       "country": "Switzerland",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 5162868711.140864,
+      "marketCap": 5311520092.150272,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "recent",
@@ -5638,10 +5018,10 @@
       "ipoYear": 2025,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 60.3,
-      "scoreShrunk": 60.2,
+      "scoreBase": 60.9,
+      "scoreShrunk": 60.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5650,27 +5030,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 81.8,
+          "pct": 81.9,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 64.5,
+          "pct": 65.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 52.3,
+          "pct": 53.4,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 36.6,
+          "pct": 36.9,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 29.2,
+          "pct": 29.9,
           "weight": 0.8
         },
         {
@@ -5683,34 +5063,32 @@
       "ath": null
     },
     {
-      "rank": 83,
-      "ticker": "1357.HK",
-      "score": 60.2,
+      "rank": 74,
+      "ticker": "SPG.DE",
+      "score": 60.7,
       "track": "profitable",
-      "lamps": [
-        "peakMargin"
-      ],
+      "lamps": [],
       "overview": {
         "kind": "gp",
-        "value": 0.246,
-        "companion": 97.7
+        "value": 0.044,
+        "companion": 25.2
       },
-      "name": "Meitu, Inc.",
-      "country": "China",
-      "region": "Asia",
+      "name": "Springer Nature AG & Co. KGaA",
+      "country": "Germany",
+      "region": "Europe",
       "sector": "Communication Services",
-      "marketCap": 2284199919.9744,
+      "marketCap": 4058959119.0891266,
       "phase": "established",
-      "mcapBand": "micro",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2016,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
+      "mcapBand": "small",
+      "ipoRecency": "recent",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2024,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 60.2,
-      "scoreShrunk": 60.2,
+      "scoreBase": 62.6,
+      "scoreShrunk": 60.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5719,27 +5097,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 41.4,
+          "pct": 69.5,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 64.2,
+          "pct": 89.5,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 91.1,
+          "pct": 29.2,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 37.8,
+          "pct": null,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 85.9,
+          "pct": 29,
           "weight": 0.8
         },
         {
@@ -5748,13 +5126,80 @@
           "weight": 0
         }
       ],
-      "revGrowthYoYPct": 28.78850483715607,
+      "revGrowthYoYPct": 4.29321639326512,
       "ath": null
     },
     {
-      "rank": 84,
+      "rank": 75,
+      "ticker": "3769.T",
+      "score": 60.6,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.154,
+        "companion": 83
+      },
+      "name": "GMO Payment Gateway, Inc.",
+      "country": "Japan",
+      "region": "Asia",
+      "sector": "Technology",
+      "marketCap": 4568276801.465902,
+      "phase": "established",
+      "mcapBand": "mid",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2005,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 62.5,
+      "scoreShrunk": 60.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 72.4,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 55.6,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 59,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 56,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 11.810426921820415,
+      "ath": null
+    },
+    {
+      "rank": 76,
       "ticker": "PCTY",
-      "score": 60.1,
+      "score": 60.6,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -5777,10 +5222,10 @@
       "ipoYear": 2014,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 60.2,
-      "scoreShrunk": 60.1,
+      "scoreBase": 60.7,
+      "scoreShrunk": 60.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5789,27 +5234,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 82.7,
+          "pct": 82.9,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 56.5,
+          "pct": 56.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 60.8,
+          "pct": 61.9,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 23.3,
+          "pct": 24.1,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 50.9,
+          "pct": 51.6,
           "weight": 0.8
         },
         {
@@ -5822,9 +5267,9 @@
       "ath": null
     },
     {
-      "rank": 85,
+      "rank": 77,
       "ticker": "NTAP",
-      "score": 60.1,
+      "score": 60.6,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -5844,10 +5289,10 @@
       "ipoYear": 1995,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 60.1,
-      "scoreShrunk": 60.1,
+      "scoreBase": 60.7,
+      "scoreShrunk": 60.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5856,27 +5301,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 88.2,
+          "pct": 88.7,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 58.9,
+          "pct": 59.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 41.1,
+          "pct": 42,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 26.2,
+          "pct": 26.8,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 58.6,
+          "pct": 59.1,
           "weight": 0.8
         },
         {
@@ -5889,9 +5334,78 @@
       "ath": null
     },
     {
-      "rank": 86,
+      "rank": 78,
+      "ticker": "1357.HK",
+      "score": 60.6,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.246,
+        "companion": 97.7
+      },
+      "name": "Meitu, Inc.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Communication Services",
+      "marketCap": 2278315381.615596,
+      "phase": "established",
+      "mcapBand": "micro",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2016,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 60.6,
+      "scoreShrunk": 60.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 41.7,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 65,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 91.3,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 38.3,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 86.1,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 28.78850483715607,
+      "ath": null
+    },
+    {
+      "rank": 79,
       "ticker": "PLTK",
-      "score": 59.7,
+      "score": 60.2,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -5911,10 +5425,10 @@
       "ipoYear": 2021,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 59.8,
-      "scoreShrunk": 59.7,
+      "scoreBase": 60.3,
+      "scoreShrunk": 60.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5923,27 +5437,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 80.3,
+          "pct": 80.4,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 61.9,
+          "pct": 62.5,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 34.5,
+          "pct": 35.1,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 62.6,
+          "pct": 63.5,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 30.7,
+          "pct": 31.5,
           "weight": 0.8
         },
         {
@@ -5956,9 +5470,9 @@
       "ath": null
     },
     {
-      "rank": 87,
+      "rank": 80,
       "ticker": "FFIV",
-      "score": 59.6,
+      "score": 60.2,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -5980,10 +5494,10 @@
       "ipoYear": 1999,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 59.7,
-      "scoreShrunk": 59.6,
+      "scoreBase": 60.3,
+      "scoreShrunk": 60.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5992,27 +5506,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 67.1,
+          "pct": 67.6,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 78.2,
+          "pct": 78.5,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 48.6,
+          "pct": 49.5,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 28.3,
+          "pct": 29,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 52.7,
+          "pct": 53.4,
           "weight": 0.8
         },
         {
@@ -6025,9 +5539,9 @@
       "ath": null
     },
     {
-      "rank": 88,
+      "rank": 81,
       "ticker": "ADP",
-      "score": 59.3,
+      "score": 59.7,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -6047,10 +5561,10 @@
       "ipoYear": 1980,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 59.3,
-      "scoreShrunk": 59.3,
+      "scoreBase": 59.7,
+      "scoreShrunk": 59.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6059,27 +5573,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 97.7,
+          "pct": 97.6,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 30.1,
+          "pct": 30.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 45.5,
+          "pct": 46.6,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 60.5,
+          "pct": 61.3,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 39.3,
+          "pct": 40,
           "weight": 0.8
         },
         {
@@ -6090,16 +5604,150 @@
       ],
       "revGrowthYoYPct": 6.954799207635509,
       "ath": {
-        "distancePct": -23.2,
+        "distancePct": -21,
         "athDate": "2025-06-06",
         "monthsAgo": 14,
-        "lastDate": "2026-07-23"
+        "lastDate": "2026-07-24"
       }
     },
     {
-      "rank": 89,
+      "rank": 82,
+      "ticker": "SPSC",
+      "score": 59.5,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.217,
+        "companion": 33.3
+      },
+      "name": "SPS Commerce, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 2245348864,
+      "phase": "established",
+      "mcapBand": "micro",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2010,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 59.6,
+      "scoreShrunk": 59.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 75.2,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 57.5,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 78.6,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 22.3,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 34.3,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 5.8232212791037075,
+      "ath": null
+    },
+    {
+      "rank": 83,
+      "ticker": "NTES",
+      "score": 59.4,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.1,
+        "companion": 43.9
+      },
+      "name": "NetEase, Inc.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Communication Services",
+      "marketCap": 76541911040,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2000,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 59.5,
+      "scoreShrunk": 59.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 76.5,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 51.3,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 68.8,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 41.8,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 35.9,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 6.114550699662424,
+      "ath": null
+    },
+    {
+      "rank": 84,
       "ticker": "300803.SZ",
-      "score": 59.2,
+      "score": 59.3,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -6113,7 +5761,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 6839445466.19179,
+      "marketCap": 6808216659.747184,
       "phase": "inflected",
       "mcapBand": "mid",
       "ipoRecency": "recent",
@@ -6121,10 +5769,10 @@
       "ipoYear": 2019,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 60.8,
-      "scoreShrunk": 59.2,
+      "scoreBase": 60.9,
+      "scoreShrunk": 59.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6133,17 +5781,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 30.1,
+          "pct": 30.5,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 93.6,
+          "pct": 93.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 93.3,
+          "pct": 93.6,
           "weight": 1.5
         },
         {
@@ -6166,143 +5814,9 @@
       "ath": null
     },
     {
-      "rank": 90,
-      "ticker": "SPSC",
-      "score": 59.1,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.217,
-        "companion": 33.3
-      },
-      "name": "SPS Commerce, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Technology",
-      "marketCap": 2245348864,
-      "phase": "established",
-      "mcapBand": "micro",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2010,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 59.2,
-      "scoreShrunk": 59.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 75.1,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 57.1,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 78.3,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 21.7,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 33.4,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 5.8232212791037075,
-      "ath": null
-    },
-    {
-      "rank": 91,
-      "ticker": "NTES",
-      "score": 58.9,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.1,
-        "companion": 43.9
-      },
-      "name": "NetEase, Inc.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Communication Services",
-      "marketCap": 76541911040,
-      "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2000,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 59,
-      "scoreShrunk": 58.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 76.3,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 50.9,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 67.7,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 41.1,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 35.2,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 6.114550699662424,
-      "ath": null
-    },
-    {
-      "rank": 92,
+      "rank": 85,
       "ticker": "SEK.AX",
-      "score": 58.6,
+      "score": 59,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -6316,7 +5830,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Communication Services",
-      "marketCap": 3299304823.5835395,
+      "marketCap": 3299864992.4800515,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "seasoned",
@@ -6324,10 +5838,10 @@
       "ipoYear": 2005,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 60.1,
-      "scoreShrunk": 58.6,
+      "scoreBase": 60.6,
+      "scoreShrunk": 59,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6336,7 +5850,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 62.5,
+          "pct": 63.4,
           "weight": 2.6
         },
         {
@@ -6346,7 +5860,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 20.5,
+          "pct": 21.1,
           "weight": 1.5
         },
         {
@@ -6356,7 +5870,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 18.5,
+          "pct": 18.7,
           "weight": 0.8
         },
         {
@@ -6369,76 +5883,9 @@
       "ath": null
     },
     {
-      "rank": 93,
-      "ticker": "GCT",
-      "score": 58.4,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.054,
-        "companion": 80.1
-      },
-      "name": "GigaCloud Technology Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Technology",
-      "marketCap": 1345762560,
-      "phase": "established",
-      "mcapBand": "micro",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2022,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 58.4,
-      "scoreShrunk": 58.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 83.9,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 7.9,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 45.2,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 92.8,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 88,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 32.21039623987703,
-      "ath": null
-    },
-    {
-      "rank": 94,
+      "rank": 86,
       "ticker": "PATH",
-      "score": 58.3,
+      "score": 58.6,
       "track": "profitable",
       "lamps": [
         "highDilution",
@@ -6461,10 +5908,10 @@
       "ipoYear": 2021,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 58.3,
-      "scoreShrunk": 58.3,
+      "scoreBase": 58.7,
+      "scoreShrunk": 58.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6473,27 +5920,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 37.2,
+          "pct": 37.5,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 82,
+          "pct": 81.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 50.2,
+          "pct": 51.1,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 63.8,
+          "pct": 64.8,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 69,
+          "pct": 69.1,
           "weight": 0.8
         },
         {
@@ -6511,9 +5958,9 @@
       }
     },
     {
-      "rank": 95,
+      "rank": 87,
       "ticker": "AIY.SI",
-      "score": 58.1,
+      "score": 58.5,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -6528,7 +5975,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Technology",
-      "marketCap": 2187556680.333005,
+      "marketCap": 2133541738.8424191,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "growth",
@@ -6536,10 +5983,10 @@
       "ipoYear": 2014,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 58.2,
-      "scoreShrunk": 58.1,
+      "scoreBase": 58.5,
+      "scoreShrunk": 58.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6548,27 +5995,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 15.4,
+          "pct": 16.1,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 60.1,
+          "pct": 60.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 94.2,
+          "pct": 94.6,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 75.8,
+          "pct": 75.4,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 97.5,
+          "pct": 97.6,
           "weight": 0.8
         },
         {
@@ -6581,35 +6028,32 @@
       "ath": null
     },
     {
-      "rank": 96,
-      "ticker": "IRE.AX",
-      "score": 58,
+      "rank": 88,
+      "ticker": "GCT",
+      "score": 58.5,
       "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "arDivergence"
-      ],
+      "lamps": [],
       "overview": {
         "kind": "gp",
-        "value": -0.074,
-        "companion": -7.4
+        "value": 0.054,
+        "companion": 80.1
       },
-      "name": "Iress Limited",
-      "country": "Australia",
-      "region": "Oceania",
+      "name": "GigaCloud Technology Inc.",
+      "country": "United States",
+      "region": "North America",
       "sector": "Technology",
-      "marketCap": 859155730.9779456,
+      "marketCap": 1345762560,
       "phase": "established",
       "mcapBand": "micro",
-      "ipoRecency": "mature",
+      "ipoRecency": "recent",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 2000,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 341,
+      "ipoYear": 2022,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 59.4,
-      "scoreShrunk": 58,
+      "scoreBase": 58.5,
+      "scoreShrunk": 58.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6618,27 +6062,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 71.1,
+          "pct": 84.2,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 99.4,
+          "pct": 7.1,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 8.6,
+          "pct": 46.2,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": null,
+          "pct": 92.7,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 6.7,
+          "pct": 88.2,
           "weight": 0.8
         },
         {
@@ -6647,13 +6091,13 @@
           "weight": 0
         }
       ],
-      "revGrowthYoYPct": -7.407789596672587,
+      "revGrowthYoYPct": 32.21039623987703,
       "ath": null
     },
     {
-      "rank": 97,
+      "rank": 89,
       "ticker": "DT",
-      "score": 58,
+      "score": 58.4,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -6676,10 +6120,10 @@
       "ipoYear": 2019,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 58,
-      "scoreShrunk": 58,
+      "scoreBase": 58.5,
+      "scoreShrunk": 58.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6688,27 +6132,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 54,
+          "pct": 54.8,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 79.1,
+          "pct": 79.2,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 69.5,
+          "pct": 70.4,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 3.1,
+          "pct": 3.3,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 74,
+          "pct": 74.1,
           "weight": 0.8
         },
         {
@@ -6721,76 +6165,9 @@
       "ath": null
     },
     {
-      "rank": 98,
-      "ticker": "DSY2.VI",
-      "score": 57.9,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.005,
-        "companion": 25.4
-      },
-      "name": "Dassault Systèmes SE",
-      "country": "France",
-      "region": "Europe",
-      "sector": "Technology",
-      "marketCap": 29834953036.653362,
-      "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2020,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "scoreBase": 57.9,
-      "scoreShrunk": 57.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 76,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 82.6,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 17.7,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 47.3,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 22.4,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 2.1469371676186677,
-      "ath": null
-    },
-    {
-      "rank": 99,
+      "rank": 90,
       "ticker": "WLY",
-      "score": 57.8,
+      "score": 58.3,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -6812,10 +6189,10 @@
       "ipoYear": 1972,
       "coverageAxes": "5/5",
       "coverageWeight": 1,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
-      "scoreBase": 57.8,
-      "scoreShrunk": 57.8,
+      "scoreBase": 58.4,
+      "scoreShrunk": 58.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6824,27 +6201,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 73.5,
+          "pct": 73.6,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 65.4,
+          "pct": 66.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 35.2,
+          "pct": 35.8,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 64.3,
+          "pct": 65.3,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 18.8,
+          "pct": 19,
           "weight": 0.8
         },
         {
@@ -6857,9 +6234,146 @@
       "ath": null
     },
     {
-      "rank": 100,
+      "rank": 91,
+      "ticker": "DSY2.VI",
+      "score": 58,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.005,
+        "companion": 25.4
+      },
+      "name": "Dassault Systèmes SE",
+      "country": "France",
+      "region": "Europe",
+      "sector": "Technology",
+      "marketCap": 30501651446.022762,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2020,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 58.1,
+      "scoreShrunk": 58,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 76.2,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 82.3,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 18.1,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 48,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 22.7,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 2.1469371676186677,
+      "ath": null
+    },
+    {
+      "rank": 92,
+      "ticker": "IRE.AX",
+      "score": 58,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.074,
+        "companion": -7.4
+      },
+      "name": "Iress Limited",
+      "country": "Australia",
+      "region": "Oceania",
+      "sector": "Technology",
+      "marketCap": 862246112.3565696,
+      "phase": "established",
+      "mcapBand": "micro",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2000,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 59.4,
+      "scoreShrunk": 58,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 71.1,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 99.4,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 9,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 6.4,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": -7.407789596672587,
+      "ath": null
+    },
+    {
+      "rank": 93,
       "ticker": "EVD.VI",
-      "score": 57.8,
+      "score": 57.7,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -6871,7 +6385,7 @@
       "country": "Germany",
       "region": "Europe",
       "sector": "Communication Services",
-      "marketCap": 6174783017.97591,
+      "marketCap": 6369506171.740109,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "growth",
@@ -6879,10 +6393,10 @@
       "ipoYear": 2017,
       "coverageAxes": "4/5",
       "coverageWeight": 0.86,
-      "cohortN": 341,
+      "cohortN": 323,
       "cohortFallback": false,
       "scoreBase": 59.1,
-      "scoreShrunk": 57.8,
+      "scoreShrunk": 57.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6891,17 +6405,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 93.4,
+          "pct": 93.5,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 11.4,
+          "pct": 10.5,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 58.3,
+          "pct": 59.3,
           "weight": 1.5
         },
         {
@@ -6911,7 +6425,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 80.3,
+          "pct": 80.4,
           "weight": 0.8
         },
         {
@@ -6922,6 +6436,490 @@
       ],
       "revGrowthYoYPct": 23.04602023727147,
       "ath": null
+    },
+    {
+      "rank": 94,
+      "ticker": "OKTA",
+      "score": 57.6,
+      "track": "profitable",
+      "lamps": [
+        "highDilution",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.134,
+        "companion": 58.4
+      },
+      "name": "Okta, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 24285483008,
+      "phase": "inflected",
+      "mcapBand": "mega",
+      "ipoRecency": "growth",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2017,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 57.6,
+      "scoreShrunk": 57.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 34.7,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 70.7,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 70.1,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 70.1,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 54.4,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 11.191860465116289,
+      "ath": null
+    },
+    {
+      "rank": 95,
+      "ticker": "7974.T",
+      "score": 57.6,
+      "track": "profitable",
+      "lamps": [
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.28,
+        "companion": 238.7
+      },
+      "name": "Nintendo Co., Ltd.",
+      "country": "Japan",
+      "region": "Asia",
+      "sector": "Communication Services",
+      "marketCap": 52380476950.49211,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2001,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 58.9,
+      "scoreShrunk": 57.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 84.8,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 21.8,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 47.2,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 98.6,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 98.55844425635362,
+      "ath": null
+    },
+    {
+      "rank": 96,
+      "ticker": "251270.KS",
+      "score": 57.5,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.064,
+        "companion": 27.5
+      },
+      "name": "Netmarble Corporation",
+      "country": "South Korea",
+      "region": "Asia",
+      "sector": "Communication Services",
+      "marketCap": 2083848110.0496175,
+      "phase": "inflected",
+      "mcapBand": "micro",
+      "ipoRecency": "growth",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2017,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 57.5,
+      "scoreShrunk": 57.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 30.8,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 99.4,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 31.2,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 90,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 29.6,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 4.463986867304626,
+      "ath": null
+    },
+    {
+      "rank": 97,
+      "ticker": "PLUS",
+      "score": 57.5,
+      "track": "profitable",
+      "lamps": [
+        "burning"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.203,
+        "companion": 34.5
+      },
+      "name": "ePlus inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 2349465600,
+      "phase": "established",
+      "mcapBand": "micro",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1996,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 57.5,
+      "scoreShrunk": 57.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 81.3,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 7.7,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 71.4,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 72.3,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 68.8,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 16.767246052108554,
+      "ath": null
+    },
+    {
+      "rank": 98,
+      "ticker": "SAP.VI",
+      "score": 57.1,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.075,
+        "companion": 45.5
+      },
+      "name": "SAP SE",
+      "country": "Germany",
+      "region": "Europe",
+      "sector": "Technology",
+      "marketCap": 196053014357.93573,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2017,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 57.1,
+      "scoreShrunk": 57.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 78.4,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 63.8,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 32.8,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 34.3,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 49.4,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 9.427273734352504,
+      "ath": null
+    },
+    {
+      "rank": 99,
+      "ticker": "NYT",
+      "score": 57.1,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.124,
+        "companion": 41.2
+      },
+      "name": "The New York Times Company",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Communication Services",
+      "marketCap": 11597462528,
+      "phase": "established",
+      "mcapBand": "large",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1973,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 57.1,
+      "scoreShrunk": 57.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 81.6,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 37.1,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 58.3,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 38.7,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 57.5,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 12.00264188328537,
+      "ath": null
+    },
+    {
+      "rank": 100,
+      "ticker": "CSU.TO",
+      "score": 57,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.208,
+        "companion": 68.4
+      },
+      "name": "Constellation Software Inc.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 40076360669.626366,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2007,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 323,
+      "cohortFallback": false,
+      "scoreBase": 58.2,
+      "scoreShrunk": 57,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 74.9,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 19.9,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 76,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 75.7,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 19.90199773840935,
+      "ath": {
+        "distancePct": -48.4,
+        "athDate": "2025-05-08",
+        "monthsAgo": 15,
+        "lastDate": "2026-07-24"
+      }
     }
   ],
   "unprofitable": []

@@ -1,13 +1,13 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-07-27T02:56:39.700Z",
+  "generated_at": "2026-07-27T10:20:11.854Z",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
     "coverage_pct": 70.2
   },
-  "generatedFromSnapshots": 10670,
+  "generatedFromSnapshots": 10709,
   "branches": [
     "consumer-discretionary",
     "consumer-staples",
@@ -40,8 +40,8 @@
   },
   "counts": {
     "consumer-discretionary": {
-      "profitable": 639,
-      "unprofitable": 52
+      "profitable": 629,
+      "unprofitable": 50
     },
     "consumer-staples": {
       "profitable": 338,
@@ -52,23 +52,23 @@
       "unprofitable": 14
     },
     "financials": {
-      "profitable": 247,
-      "unprofitable": 28
+      "profitable": 243,
+      "unprofitable": 27
     },
     "health-care": {
-      "profitable": 448,
-      "unprofitable": 184
+      "profitable": 444,
+      "unprofitable": 185
     },
     "industrials": {
-      "profitable": 1147,
-      "unprofitable": 55
+      "profitable": 1145,
+      "unprofitable": 54
     },
     "it-services": {
       "profitable": 84,
       "unprofitable": 0
     },
     "materials": {
-      "profitable": 604,
+      "profitable": 610,
       "unprofitable": 0
     },
     "real-estate": {
@@ -80,23 +80,23 @@
       "unprofitable": 51
     },
     "software-comm-services": {
-      "profitable": 385,
-      "unprofitable": 71
+      "profitable": 359,
+      "unprofitable": 67
     },
     "tech-hardware": {
-      "profitable": 362,
-      "unprofitable": 48
+      "profitable": 361,
+      "unprofitable": 47
     },
     "utilities": {
       "profitable": 267,
-      "unprofitable": 4
+      "unprofitable": 3
     }
   },
   "survivalCount": 82,
   "excluded": {
-    "balance-sheet-bank": 564,
+    "balance-sheet-bank": 565,
     "data-suspect": 30,
-    "dup-issuer": 2101,
+    "dup-issuer": 2188,
     "insurer": 237,
     "lender-gp0": 95,
     "mortgage-reit": 13,
@@ -104,6 +104,6 @@
     "no-sector": 21,
     "non-operating-rev": 46,
     "non-us": 1523,
-    "telecom": 159
+    "telecom": 160
   }
 }
