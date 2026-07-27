@@ -695,15 +695,37 @@ function ipoYearOf(meta) {
   }
   return null;
 }
+/**
+ * Boersendebuet der FIRMA statt des einzelnen Papiers.
+ *
+ * Bei Doppelnotierungen traegt jedes Bein sein eigenes Erstnotiz-Datum — die Wiener
+ * Zweitnotiz von Zealand Pharma etwa den 31.03.2026, obwohl die Firma seit 2010 in
+ * Kopenhagen notiert. Welches Bein den Dedup gewinnt, entscheidet sich an ganz anderen
+ * Kriterien (Liquiditaet, Datenqualitaet) und darf das Alter der Firma nicht bestimmen.
+ * `gruppeErstnotiz` traegt deshalb das frueheste Datum der gesamten Emittenten-Gruppe
+ * herein; gesetzt wird es beim Dedup (dort steht auch die Messung).
+ *
+ * Konservativ per Minimum: liegt aus irgendeinem Grund ein noch frueheres eigenes Datum
+ * vor, bleibt es gueltig. Ohne Gruppe (Einzelnotierung) aendert sich nichts.
+ */
+function ipoYearEffektiv(meta, gruppeErstnotiz) {
+  const eigen = ipoYearOf(meta);
+  if (typeof gruppeErstnotiz !== 'string' || gruppeErstnotiz.length < 4) return eigen;
+  const g = parseInt(gruppeErstnotiz.slice(0, 4), 10);
+  if (!Number.isFinite(g)) return eigen;
+  return Number.isFinite(eigen) ? Math.min(eigen, g) : g;
+}
 // IPO-Recency ueber data-learned Quintil-Grenzen der ipoYear-Verteilung (recent = neueste IPOs).
-function ipoRecencyOf(meta, bounds) {
-  const y = ipoYearOf(meta);
+function ipoRecencyVonJahr(y, bounds) {
   if (!Number.isFinite(y) || !bounds) return null;
   if (y >= bounds[3]) return 'recent';
   if (y >= bounds[2]) return 'growth';
   if (y >= bounds[1]) return 'seasoned';
   if (y >= bounds[0]) return 'mature';
   return 'veteran';
+}
+function ipoRecencyOf(meta, bounds) {
+  return ipoRecencyVonJahr(ipoYearOf(meta), bounds);
 }
 // [p20,p40,p60,p80] via bestehendem quantile(); null bei degenerierter Stichprobe (dann Feld null).
 function quintileBounds(samples) {
@@ -800,6 +822,30 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
   for (const group of issuerDedupGroups(results.filter((e) => e.action === 'route' || e.action === 'survival'))) {
     if (group.length < 2) continue;
     group.sort(issuerDedupComparator);                     // audit/fix (Bug 7): US-Primaerlisting zuerst
+    // KARL-BEFUND 27.07.2026: Zealand Pharma stand auf Rang 1 als Neuemission von 2026 — es
+    // gewann die WIENER Zweitnotiz (erster Handelstag 31.03.2026) gegen die Heimatboerse
+    // Kopenhagen (23.11.2010). Die Firma ist 16 Jahre alt.
+    //
+    // Warum der Vergleich oben das nicht faengt: bei zwei Notierungen DERSELBEN Firma sind
+    // die ersten drei Schluessel (US-Primaerlisting, Domizil, FX-Verdacht) meist gleich, und
+    // dann entscheidet die marketCap — die sich zwischen zwei Beinen nur um Rundung und
+    // Abrufzeitpunkt unterscheidet. Bei Zealand waren es 3.072,0 gegen 3.083,2 Mio. USD,
+    // also 0,36 %. Ein Muenzwurf entschied ueber 16 Jahre Firmenhistorie.
+    //
+    // Am CI-Bestand des Laufs vom 27.07. gemessen: 12.490 Snapshots, 475 Emittenten-Gruppen
+    // mit mindestens zwei Jahren Abstand im ersten Handelstag, davon SECHS in der Uebersicht —
+    // und alle sechs mit der juengeren Notierung (ZEAL.VI, UMI.VI, SBMO.VI, LUG.ST, CEPU, SVM).
+    //
+    // GEHEILT WIRD HIER NUR DAS DATUM, nicht die Auswahl des Siegers. Der Comparator bleibt
+    // unangetastet: seine Reihenfolge hat belegte Gruende (Bug 7, GFL vs GFL.TO), und ein
+    // Eingriff traefe alle 2.646 mehrbeinigen Gruppen statt der gemessenen sechs. Das
+    // Boersendebuet der FIRMA ist dagegen das frueheste ihrer Notierungen — unabhaengig
+    // davon, welches Bein die besseren Kursdaten liefert.
+    const erstnotizen = group
+      .map((g) => g.snapshot && g.snapshot.meta && g.snapshot.meta.firstTradeDate)
+      .filter((d) => typeof d === 'string' && d.length >= 4)
+      .sort();
+    if (erstnotizen.length) group[0]._gruppeErstnotiz = erstnotizen[0];
     for (let i = 1; i < group.length; i++) {
       const e = group[i];
       e.action = 'exclude'; e.formulaId = null; e.track = null; e.score = null; e.reason = 'dup-issuer';
@@ -1139,9 +1185,12 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
     // Absolute Groessenklasse NEBEN der gelernten: mcapBand wandert mit dem Universum,
     // mcapKlasse nicht. Karl filtert nach dieser (Begruendung an MCAP_KLASSEN_USD).
     e.mcapKlasse = mcapKlasseOf(e.marketCap);
-    e.ipoRecency = ipoRecencyOf(meta, ipoBounds);
     e.profitTier = profitTierOf(e.snapshot);  // Task 1.2: 4-Stufen (nicht/kurz-vor/seit-kurzem/langfristig)
-    e.ipoYear = ipoYearOf(meta);              // Task 1.2 Schritt 3: vorhandenes IPO-Jahr NUR durchreichen
+    // Beide aus DEMSELBEN Jahr — sonst koennten Jahr und Einstufung auseinanderlaufen.
+    // _gruppeErstnotiz setzt der Dedup bei Doppelnotierungen (Begruendung dort).
+    e.ipoYear = ipoYearEffektiv(meta, e._gruppeErstnotiz);
+    e.ipoRecency = ipoRecencyVonJahr(e.ipoYear, ipoBounds);
+    delete e._gruppeErstnotiz;
     // findash-Anzeigespalte "Umsatzwachstum" (Karl-Wunsch F-5, 26.07.). REINE ANZEIGE,
     // kein Score-Einfluss — die Achse revGrowthLevel bleibt unveraendert die gescorte Groesse.
     // Bewusst NICHT metrics.revenueGrowthYoY: dieser Yahoo-Skalar hat belegte Defekte
@@ -1356,7 +1405,7 @@ function calibrationDrift(liveCal, refCal, ksThreshold = 0.15) {
   return { maxKs, ksThreshold, drifted, ok: maxKs <= ksThreshold };
 }
 
-module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings, phaseOf, mcapBandOf, mcapKlasseOf, MCAP_KLASSEN_USD, ipoRecencyOf, ipoYearOf, calibrationDrift,
+module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings, phaseOf, mcapBandOf, mcapKlasseOf, MCAP_KLASSEN_USD, ipoRecencyOf, ipoRecencyVonJahr, ipoYearOf, ipoYearEffektiv, calibrationDrift,
   // audit/fix (Bug 0/9/7): fuer calibrate.js — Kohorten-Gates + Winsor-Schranken exakt spiegeln
   learnWinsorBounds, winsorTailBounds, isDataSuspect, issuerDedupComparator, issuerKey, issuerKeyLoose, issuerDedupGroups,
   // AUFGABE 2 (Wachstums-Bonus): fuer TDD + gezielte Wiederverwendung
