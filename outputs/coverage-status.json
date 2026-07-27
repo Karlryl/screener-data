@@ -1,20 +1,22 @@
 {
   "schema": "coverage-status/v1",
-  "generated_at": "2026-07-27T02:27:38.917Z",
-  "run_id": "30230485209",
+  "generated_at": "2026-07-27T08:26:44.428Z",
+  "run_id": "30247107785",
   "status": "degradiert",
   "degraded": true,
   "blocked": false,
-  "n_ok": 10672,
-  "n_total": 15212,
-  "n_full": 289,
-  "n_priceonly": 10383,
+  "n_ok": 10693,
+  "n_total": 15233,
+  "n_full": 302,
+  "n_priceonly": 10391,
   "coverage_pct": 70.2,
-  "n_addressable": 12956,
-  "honest_coverage_pct": 82.4,
+  "n_addressable": 12403,
+  "honest_coverage_pct": 86.2,
+  "n_skipped_mcap": 2251,
+  "n_skipped_owned": 579,
   "source": "manifest",
   "reasons": [
-    "honest-coverage 82.4% < 90% of addressable 12956 (n_total − mcap-skips; Tote bereits ausgetragen, 0.12)"
+    "honest-coverage 86.2% < 90% of addressable 12403 (n_total − mcap-skips; Tote bereits ausgetragen, 0.12)"
   ],
   "manifest_partial": false
 }
