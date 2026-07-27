@@ -79,6 +79,31 @@ check('(b2) genau AUF der Obergrenze bleibt drin (Grenze ist inklusiv wie in sma
   assert.strictEqual(u.entscheidung, 'behalten');
 });
 
+// ── (b3) Band-Austritt braucht einen FRISCHEN Stand ─────────────────────────
+// Der Marktwert schwankt taeglich; die Entfernung ist einseitig und dauerhaft. Ein Name, der
+// vor Wochen einmal ueber die Grenze sprang und laengst wieder darunter liegt, darf nicht
+// deswegen aus dem Universum fallen. Fuer 'delisted' gilt das NICHT (Fall a2) — ein
+// delisteter Name bekommt naturgemaess keinen frischen Snapshot mehr.
+check('(b3) Band-Austritt mit 30 Tage altem Stand -> behalten, nur berichten', () => {
+  const s = snap({});
+  const alt30 = new Date(NOW - 30 * 86400000).toISOString();
+  s.meta.asOf = alt30; s.meta.fetchedAt = alt30;
+  s.marketCap = { value: 900e6, source: 'test', confidence: 0.9, asOf: alt30 };
+  const u = R.classify(s, OPTS);
+  assert.strictEqual(u.entscheidung, 'behalten');
+  assert.strictEqual(u.grund, 'band-austritt-aber-stand-zu-alt');
+});
+
+check('(b4) Band-Austritt mit frischem Stand -> weiterhin entfernen (die Regel bleibt scharf)', () => {
+  // Gegenprobe zu (b3): ohne sie waere nicht belegt, dass die neue Frische-Sperre nicht
+  // einfach den ganzen Band-Austritt abgeschaltet hat.
+  const s = snap({});
+  s.marketCap = { value: 900e6, source: 'test', confidence: 0.9, asOf: s.meta.asOf };
+  const u = R.classify(s, OPTS);
+  assert.strictEqual(u.entscheidung, 'entfernen');
+  assert.strictEqual(u.grund, 'band-austritt-oben');
+});
+
 // ── (c) Auflage 5: Nicht-Operating ───────────────────────────────────────────
 // ⚠ DIESER FALL WURDE AM 27.07. KORRIGIERT. Vorher stand hier nur die erste Haelfte, und
 // zwar OHNE Vehikel-Industrie — der Test hat damit eine Fehlklassifikation als Sollverhalten

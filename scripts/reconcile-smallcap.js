@@ -122,7 +122,24 @@ function classify(snapshot, opts) {
   //     ">$800M"; ein Unterschreiten der Untergrenze wird nur berichtet, weil
   //     ein zeitweise abgerutschter Name sonst dauerhaft verloren ginge und nur
   //     ueber einen teuren Builder-Lauf zurueckkaeme.
-  if (mcap != null && mcap > MAX_MCAP) return { entscheidung: 'entfernen', grund: 'band-austritt-oben', mcap };
+  //
+  // ⚠ EIGENE, STRENGERE FRISCHE fuer den Band-Austritt (unabhaengige Pruefung 27.07.):
+  // die allgemeine Sperre oben laesst bis zu --max-age-days (Standard 60) alte Staende zu.
+  // Fuer 'delisted' ist das richtig — ein delisteter Name bekommt naturgemaess keinen frischen
+  // Snapshot mehr. Fuer einen MARKTWERT ist es falsch: der schwankt taeglich, und ein Name, der
+  // vor sieben Wochen einmal auf 810 Mio. sprang und heute bei 500 Mio. steht, waere dauerhaft
+  // aus der Liste geflogen. Die Entfernung ist einseitig — es gibt keinen Weg zurueck ausser
+  // einem teuren Builder-Lauf.
+  //
+  // 14 Tage sind grosszuegig: der Small-Cap-Lauf laeuft fuenfmal die Woche, ein Name mit einem
+  // aelteren Stand hat also ein anderes Problem und soll dann eben nur berichtet werden.
+  const BAND_MAX_AGE_DAYS = 14;
+  const bandFrisch = ageDays(meta.asOf || meta.fetchedAt, now) <= BAND_MAX_AGE_DAYS;
+  if (mcap != null && mcap > MAX_MCAP) {
+    return bandFrisch
+      ? { entscheidung: 'entfernen', grund: 'band-austritt-oben', mcap }
+      : { entscheidung: 'behalten', grund: 'band-austritt-aber-stand-zu-alt', mcap };
+  }
   if (mcap != null && mcap < MIN_MCAP) return { entscheidung: 'behalten', grund: 'unter-bandgrenze', mcap };
 
   // (3) Auflage 5 — Nicht-Operating. Single-Source ueber route(): dieselbe
