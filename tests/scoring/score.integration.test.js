@@ -371,6 +371,61 @@ test('Issuer-Dedup: Mehrklassen-Aktien werden NICHT auseinandergerissen (Court-A
   const dedupt = ['MKLA', 'MKLB'].filter((t) => bt[t].reason === 'dup-issuer').length;
   assert.equal(dedupt, 1, 'genau EINE Anteilsklasse darf uebrig bleiben, nicht beide');
 });
+// ⚠ DIESER TEST FEHLTE, UND SEIN FEHLEN HAT IN DERSELBEN NACHT ZUGESCHLAGEN.
+//
+// Die vier Rechtsform-Regeln (incorporated->inc, corporation->corp, limited->ltd,
+// company->co) waren am CI-Universum gemessen (25 von 25 korrekt) und trotzdem KOMPLETT
+// ungetestet: der Test darunter heisst zwar 'Artikel/Rechtsform', baut im Rumpf aber nur
+// ein Artikel-Paar. In Tag 453 ging die Regelliste versehentlich als LEERES Array raus —
+// kein einziger Test wurde rot, aufgefallen ist es nur beim Lesen von git status.
+// Ein Wert, der gemessen wurde, aber nicht festgenagelt ist, verschwindet irgendwann.
+//
+// Geprueft wird jede der vier Regeln EINZELN, damit man am roten Test sofort sieht, welche
+// fehlt — eine Sammelpruefung haette nur 'irgendwas kaputt' gemeldet.
+test('Issuer-Dedup Rechtsform-Regel: jede der vier Langform/Kurzform-Paarungen greift', () => {
+  const mk = (ticker, name, ex, ccy, region) => ({
+    meta: { name, sector: 'Technology', industry: 'Software', exchangeName: ex, ticker, tradingCurrency: ccy, region },
+    annual: { annualRev: [{ value: 300 }, { value: 200 }, { value: 130 }], annualGP: [{ value: 180 }] },
+    metrics: { revenueTTM: { value: 300 } },
+    marketCap: { value: 5e9 } });
+  const paare = [
+    ['incorporated/inc', 'Beispiel Incorporated', 'Beispiel Inc'],
+    ['corporation/corp', 'Beispiel Corporation', 'Beispiel Corp'],
+    ['limited/ltd',      'Beispiel Limited',      'Beispiel Ltd'],
+    ['company/co',       'Beispiel Company',      'Beispiel Co'],
+  ];
+  for (const [regel, lang, kurz] of paare) {
+    const res = scoreUniverse([
+      mk('AAA', lang, 'NasdaqGS', 'USD', 'US'),
+      mk('1AAA.MI', kurz, 'Milan', 'EUR', undefined),
+    ], formulas);
+    const bt = Object.fromEntries(res.map((r) => [r.ticker, r]));
+    assert.equal(bt['1AAA.MI'].reason, 'dup-issuer', `Regel ${regel}: die Zweitnotierung muss dedupt werden ("${lang}" vs "${kurz}")`);
+    assert.notEqual(bt['AAA'].reason, 'dup-issuer', `Regel ${regel}: das US-Primaerbein bleibt der Gewinner`);
+  }
+});
+
+// Gegenstueck: die Regel darf NICHT so weit gehen, dass sie verschiedene Firmen verschmilzt.
+// Am CI-Universum belegte Faelle (27.07.): 'Graham Corporation' vs 'Graham Holdings Company'
+// und 'Heineken N.V.' vs 'Heineken Holding N.V.' sind je ZWEI Gesellschaften. Ohne diesen
+// Test waere eine spaetere Erweiterung um 'holdings' oder 'group' unbemerkt durchgegangen.
+test('Issuer-Dedup Rechtsform-Regel verschmilzt NICHT ueber Holding-Grenzen hinweg', () => {
+  const mk = (ticker, name, ex, ccy, region) => ({
+    meta: { name, sector: 'Technology', industry: 'Software', exchangeName: ex, ticker, tradingCurrency: ccy, region },
+    annual: { annualRev: [{ value: 300 }, { value: 200 }, { value: 130 }], annualGP: [{ value: 180 }] },
+    metrics: { revenueTTM: { value: 300 } },
+    marketCap: { value: 5e9 } });
+  for (const [a, b] of [['Graham Corporation', 'Graham Holdings Company'], ['Heineken N.V.', 'Heineken Holding N.V.']]) {
+    const res = scoreUniverse([
+      mk('XA', a, 'NasdaqGS', 'USD', 'US'),
+      mk('XB.AS', b, 'Amsterdam', 'EUR', undefined),
+    ], formulas);
+    const bt = Object.fromEntries(res.map((r) => [r.ticker, r]));
+    const weg = ['XA', 'XB.AS'].filter((x) => bt[x].reason === 'dup-issuer');
+    assert.equal(weg.length, 0, `"${a}" und "${b}" sind ZWEI Firmen und duerfen nicht verschmolzen werden (entfernt: ${weg.join(',')})`);
+  }
+});
+
 test('Issuer-Dedup Gleichsetzungs-Liste: Namen mit Artikel/Rechtsform-Unterschied werden dedupt', () => {
   // Die drei Faelle, die die Zeichensetzungs-Regel NICHT loest, weil sich die Namen um
   // mehr unterscheiden: "The Carlyle Group Inc." gegen "Carlyle Group Inc" (Artikel),
