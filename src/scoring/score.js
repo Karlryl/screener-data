@@ -138,6 +138,21 @@ const issuerKeyLoose = (s) => {
   const k = roh.replace(/[^\p{L}\p{N}]+/gu, '').toLowerCase();
   return ISSUER_ALIASE[k] || k;
 };
+/**
+ * Large-Cap-Untergrenze fuer die Hypergrowth-Uebersicht (Tag 468).
+ *
+ * HERKUNFT — die Zahl ist nicht geraten: 22,7 Mrd. USD ist die Large-Cap-Untergrenze der
+ * S&P-Definition (Stand der Recherche zu Karls Frage F-N03). Bewusst diese und nicht die
+ * hauseigene "mega"-Klasse: die beginnt bei 17,3 Mrd. und ist per Konstruktion nur das
+ * oberste Fuenftel DIESER Liste — genau die Aussage, die Karl kritisiert hat ("sagt nichts
+ * ueber die Firma, nur ueber die Liste"). Eine externe Definition sagt etwas ueber die Firma.
+ *
+ * Sie ist ABSOLUT und altert deshalb mit den Kursen. Das ist bewusst in Kauf genommen: die
+ * Alternative (Anteil am Gesamtmarkt) haengt am Marktregime und an Wechselkursen und wuerde
+ * Firmen aus dem Board werfen, die sich selbst gar nicht bewegt haben. Nachziehen, wenn die
+ * Zahl der betroffenen Zeilen deutlich von den heute gemessenen 34 von 200 abweicht.
+ */
+const LARGE_CAP_USD = 22.7e9;
 const mcapOf = (s) => (s && s.marketCap && Number.isFinite(s.marketCap.value)) ? s.marketCap.value : 0;
 // audit/fix (Court Fall 10, F50): ein dual-non-USD-Bein, dessen marketCap mit dem REPORTING- statt
 // dem TRADING-FX-Faktor skaliert wurde (stale Snapshot ohne tradingFxRateApplied), traegt eine
@@ -1148,6 +1163,21 @@ function breakdown(e) {
  */
 function produceRankings(results, opts = {}) {
   const topN = opts.topN || 50;
+  // Tag 468 — Karls stehende Anweisung: "alles ueber der Large-Cap-Grenze geht in den anderen
+  // Screener." Umgesetzt als reiner ANZEIGE-Filter auf der Uebersicht, mit drei Auflagen aus
+  // Rat und Gericht:
+  //   1. NACH dem Scoren, nicht davor. Das Scoring ist kohorten-relativ (q() ist ein
+  //      Rang-Perzentil ueber die Kohorte, Winsor-Schranken werden universumsweit gelernt).
+  //      Wer die Grossen VOR der Kohortenbildung entfernt, verschiebt still die Scores ALLER
+  //      anderen — ein Seiteneffekt, den niemand sieht. Hier aendert sich kein einziger Score.
+  //   2. NUR die Uebersicht, nicht die Branchen-Boards. Am ausgelieferten Board nachgemessen:
+  //      von 34 betroffenen Zeilen faengt das Quality-Board 27 auf, und ALLE SIEBEN uebrigen
+  //      (Constellation Energy, Eternal, Formula One, Liberty Media, Nintendo, Carvana zweimal)
+  //      stehen in ihrem Branchen-Board. Es verschwindet also niemand — die Uebersicht wird
+  //      sauber, die Detailtiefe bleibt vollstaendig.
+  //   3. Nur fuer den Hypergrowth-Durchlauf. Der Quality-Compounder-Durchlauf ruft
+  //      produceRankings OHNE diese Option auf — dort gehoeren grosse reife Firmen hin.
+  const overviewMaxMcap = Number.isFinite(opts.overviewMaxMcap) ? opts.overviewMaxMcap : null;
   const branches = {};
   const overview = [];
   const survival = [];
@@ -1212,7 +1242,19 @@ function produceRankings(results, opts = {}) {
     if (cv === null) return -1;
     return (cv - av) || cmpTicker(a.ticker, c.ticker);
   });
-  return { branches, overview: overview.slice(0, topN * 2).map(stripRaw), survival, excluded, full };
+  // Tag 468: der Groessen-Filter greift NACH dem Sortieren und VOR dem Kappen — so ruecken
+  // genau so viele Namen nach, wie herausfallen, und die Liste bleibt gleich lang.
+  // Zeilen ohne brauchbaren Marktwert bleiben drin. Zwei Faelle, und nur der zweite ist heikel:
+  // FEHLT der Wert, macht rowMeta() daraus null, und Number(null) ist 0 — harmlos klein.
+  // Ist er KAPUTT (z. B. ein Text), ergibt Number() NaN. Deshalb `!(x >= grenze)` und nicht
+  // `x < grenze`: das erste behaelt NaN, das zweite wirft es hinaus. Eine unlesbare Zahl darf
+  // keine Firma aus dem Board werfen — der haeufigste Weg, wie ein Filter still zu viel
+  // entfernt. Beide Faelle sind im Waechter festgenagelt; die Gegenprobe hat gezeigt, dass
+  // ein Test mit `null` allein den Unterschied gar nicht sieht.
+  const uebersicht = overviewMaxMcap === null
+    ? overview
+    : overview.filter((r) => !(Number(r.marketCap) >= overviewMaxMcap));
+  return { branches, overview: uebersicht.slice(0, topN * 2).map(stripRaw), survival, excluded, full };
 }
 
 // 2.9 Slice 2: Drift-Waechter. KS-Distanz (max |CDF|-Differenz) je Kohorte/Achse zwischen dem
@@ -1272,4 +1314,6 @@ module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings
   // 2.10 (n-bewusste Scores): fuer TDD der synthetischen Kohorten-Tests
   shrinkToNeutral, SHRINK_K, MIN_COHORT_N,
   // 5.2 Small-Cap-Board: reine Funktion, additiv exportiert fuer den Coverage-Floor (run-screener.js)
-  quantile };
+  quantile,
+  // Tag 468: Large-Cap-Grenze der Hypergrowth-Uebersicht — fuer run-screener.js und den Waechter
+  LARGE_CAP_USD };

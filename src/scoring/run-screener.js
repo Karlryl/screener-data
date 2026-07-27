@@ -10,7 +10,7 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { scoreUniverse, produceRankings, calibrationDrift, quantile } = require('./score.js');
+const { scoreUniverse, produceRankings, calibrationDrift, quantile, LARGE_CAP_USD } = require('./score.js');
 const formulas = require('./formulas/index.js');
 // 3.1 QC-Board (DIAGNOSTIC, additiv): eigener Membership-Router + eigene Formel-Registry + Board-Status.
 const { qualityRoute } = require('./quality-route.js');
@@ -277,7 +277,13 @@ function run(topN) {
     if (!drift.ok) console.warn(`[run-screener] ⚠ KALIBRIER-DRIFT: maxKS ${drift.maxKs.toFixed(3)} > ${drift.ksThreshold} in ${drift.drifted.length} Achsen (Normierungsbasis verschoben).`);
     else console.log(`[run-screener] Kalibrier-Drift ok (maxKS ${drift.maxKs.toFixed(3)} <= ${drift.ksThreshold}).`);
   }
-  const ranked = produceRankings(results, { topN: topN || 100 });
+  // Tag 468 — Karls stehende Anweisung ("alles ueber der Large-Cap-Grenze geht in den anderen
+  // Screener"), ausgefuehrt als reiner Anzeige-Filter auf DIESER Uebersicht. Der
+  // Quality-Compounder-Durchlauf weiter unten ruft produceRankings bewusst OHNE die Option auf:
+  // dort gehoeren grosse reife Firmen hin. Begruendung und Messung stehen an LARGE_CAP_USD.
+  const ranked = produceRankings(results, { topN: topN || 100, overviewMaxMcap: LARGE_CAP_USD });
+  const grosseRaus = (results || []).filter((e) => e.action === 'route' && Number(e.marketCap) >= LARGE_CAP_USD).length;
+  console.log(`[run-screener] Uebersicht: ${grosseRaus} Firmen ab ${(LARGE_CAP_USD / 1e9).toFixed(1)} Mrd. USD nicht angezeigt (stehen weiter in Branchen- und Quality-Boards).`);
   // Echte Kohorten-Counts aus results (NICHT aus der gekappten topN-Anzeigeliste).
   const counts = {};
   for (const e of results) {
