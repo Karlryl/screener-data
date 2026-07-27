@@ -205,31 +205,68 @@ function main() {
     }
   }
 
+
+  // Auflage 4 — RELATIVE Ueberprune-Sperre (keine absolute Untergrenze, die bei
+  // kleinen Listen entweder wirkungslos oder blockierend waere).
+  const entferntPct = vorher ? (entfernt.length / vorher) * 100 : 0;
+  let gesperrt = null;
+  if (!args.force && entferntPct > args.maxRemovePct) {
+    gesperrt = 'ueberprune-' + entferntPct.toFixed(1) + '-pct';
+  }
+  // ⚠ ZWEITE SPERRE (unabhaengige Pruefung 27.07.): die relative Sperre allein kann die Liste
+  // unter die Startschwelle des Workflows druecken. .github/workflows/smallcap-pull.yml
+  // verweigert den Abruf bei weniger als MIN_LISTE Eintraegen ("possibly corrupted list") —
+  // ein Reconcile, der 40 % von 775 entfernt, laesst 465 uebrig und legt damit den NAECHSTEN
+  // Lauf still. Eine Aufraeumung, die den Betrieb blockiert, ist keine Aufraeumung.
+  // Die Zahl ist bewusst hier UND dort hartkodiert und gegenseitig kommentiert: ein Skript
+  // kann die YAML-Datei nicht lesen, und eine dritte Konfigurationsdatei waere mehr Risiko
+  // als Nutzen. Wer eine der beiden aendert, aendert die andere mit.
+  //
+  // ⚠ Die Grenze greift NUR, wenn die Liste vorher darueber lag. Sonst waere sie genau die
+  // absolute Untergrenze, die Auflage 4 ausdruecklich verbietet ("keine absolute Untergrenze,
+  // die bei kleinen Listen entweder wirkungslos oder blockierend waere") — eine bewusst kleine
+  // oder eine Test-Liste duerfte dann gar nicht mehr aufgeraeumt werden. Verhindert wird nur
+  // das EINE: dass ein gesunder Bestand unter die Betriebsschwelle geprunt wird.
+  // Der Testfall (f3) haelt genau diese Unterscheidung fest.
+  const MIN_LISTE = 500;
+  if (!gesperrt && !args.force && vorher >= MIN_LISTE && behalten.length < MIN_LISTE) {
+    gesperrt = 'unter-startschwelle-' + behalten.length;
+  }
+
+
+  // ⚠ Der Bericht wird JETZT geschrieben, nicht mehr vor der Sperre (unabhaengige Pruefung
+  // 27.07.): vorher behauptete das Artefakt eine Liste entfernter Namen auch dann, wenn die
+  // Sperre gegriffen und NICHTS geschrieben hatte. Ein Bericht, der etwas anderes sagt als
+  // die Wirklichkeit, ist schlimmer als keiner. Jetzt steht der tatsaechliche Ausgang drin.
+  const geschrieben = !gesperrt && !args.dryRun && entfernt.length > 0;
   if (args.report) {
     const rep = {
       erzeugt: new Date(now).toISOString(),
       watchlist: path.relative(REPO, args.watchlist).replace(/\\/g, '/'),
-      vorher, nachher: behalten.length,
-      entfernt,
+      vorher, nachher: geschrieben ? behalten.length : vorher,
+      geschrieben,
+      gesperrt,
+      dryRun: !!args.dryRun,
+      entfernt: geschrieben ? entfernt : [],
+      wuerde_entfernen: geschrieben ? [] : entfernt,
       gruende,
       auflage6_ueberschneidung: { anzahl: ueberschneidung.length, tickers: ueberschneidung.slice(0, 2000) },
-      hinweis: 'Entfernt wird nur aus den drei Auflagen-Gruenden. Alles andere ist Bericht, kein Prune.',
+      hinweis: 'entfernt = tatsaechlich geschrieben. wuerde_entfernen = nur vorgeschlagen (dry-run oder Sperre).',
     };
     writeFileAtomic(args.report, JSON.stringify(rep, null, 2));
     console.log('  Bericht: ' + args.report);
   }
 
-  // Auflage 4 — RELATIVE Ueberprune-Sperre (keine absolute Untergrenze, die bei
-  // kleinen Listen entweder wirkungslos oder blockierend waere).
-  const entferntPct = vorher ? (entfernt.length / vorher) * 100 : 0;
-  if (!args.force && entferntPct > args.maxRemovePct) {
-    console.error('::error::Ueberprune-Sperre: ' + entfernt.length + ' von ' + vorher + ' Namen ('
-      + entferntPct.toFixed(1) + ' %) wuerden entfernt, erlaubt sind ' + args.maxRemovePct
-      + ' %. Kein Schreibvorgang. Ursache pruefen (falscher --snapshots-Pfad? kaputter Pull?), '
-      + 'dann --force setzen, wenn es wirklich stimmt.');
+  if (gesperrt) {
+    // Der Name der Sperre gehoert in die Meldung — wer sie liest, muss ohne Code-Blick wissen,
+    // WELCHE der beiden gegriffen hat. Der Test (f1) nagelt das fest.
+    const sperrName = gesperrt.startsWith('ueberprune') ? 'Ueberprune-Sperre' : 'Startschwellen-Sperre';
+    console.error('::error::' + sperrName + ' (' + gesperrt + '): ' + entfernt.length
+      + ' von ' + vorher + ' Namen (' + entferntPct.toFixed(1) + ' %) waeren entfernt worden, '
+      + 'uebrig blieben ' + behalten.length + '. Kein Schreibvorgang. Ursache pruefen '
+      + '(falscher --snapshots-Pfad? kaputter Pull?), dann --force setzen, wenn es wirklich stimmt.');
     process.exit(1);
   }
-
   if (args.dryRun) { console.log('  (dry-run — nichts geschrieben)'); return; }
   if (!entfernt.length) { console.log('  Nichts zu tun.'); return; }
 

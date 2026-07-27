@@ -203,8 +203,13 @@ jobs:
       # ERSTEN scharfen Lauf 184 von 775 Namen (23,7 %) entfernt — fast alles Fonds-Huellen,
       # die seit dem Aufbau der Liste drinstehen. Das liegt so knapp unter 25 %, dass die
       # Sperre grundlos ausloesen wuerde. Danach fallen die Zahlen auf einzelne Namen/Woche.
+      # ⚠ continue-on-error ENTFERNT (unabhaengige Pruefung 27.07.): die Ueberprune- und die
+      # Startschwellen-Sperre im Skript beenden mit Exit 1 und einer ::error::-Zeile — und
+      # genau das wurde hier verschluckt. Eine Sperre, die niemand sieht, ist keine Sperre,
+      # sondern eine Beruhigung. Sie feuert nur, wenn wirklich etwas nicht stimmt (ein Viertel
+      # der Liste auf einmal, oder ein Prune unter die Betriebsschwelle) — dann gehoert der
+      # Lauf rot, auch an einem Tag, an dem nur der Bericht laeuft.
       - name: Small-Cap Reconciliation (Auflagen 4+5)
-        continue-on-error: true
         run: |
           if [ "$(date -u +%u)" = "6" ]; then
             echo "Samstag — Reconcile schreibt."
