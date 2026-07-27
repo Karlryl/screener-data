@@ -104,6 +104,12 @@ const COVERAGE_COLLAPSE_DROP = 0.25;
 // aus. Der Boden liegt an der unteren Kante des beobachteten Bruchbereichs (schon
 // 50 % Verlust ist Bruch, nicht erst 90 %).
 const MIN_COHORT_OVERLAP = 0.5;
+// Maßstab-Bruch: Skala, auf der die Scores laufen (dieselbe 0–100-Skala, auf die sich
+// schon MIN_GATE_THRESHOLD beruft, s. o.). Sie übersetzt einen KOHORTEN-Anteil in
+// Score-Punkte: fällt der Anteil x der Kohorte weg, kann sich ein kohorten-relatives
+// Rang-Perzentil um bis zu x der Skala verschieben. Obere Heuristik, kein Beweis — und
+// sie wirkt nur nach UNTEN begrenzend (min gegen den Deckel), nie aufweitend.
+const SCORE_SKALA = 100;
 // A12: Kompaktierung frühestens nach t0+2Q ≈ 180 Kalendertage (NICHT 84 — §4b/§7-Kopplung).
 const RETENTION_DAYS = 180;
 const MS_PER_DAY = 86400000;
@@ -348,7 +354,7 @@ function buildBoardVintage(board, boardData, date, calibMeta) {
 // ── Wert-Plausibilitäts-Gate ─────────────────────────────────────────────────
 // Vergleicht das neue Board-Vintage gegen das Vortags-Vintage. Liefert
 // { calibrating, p99Delta, threshold, suspect, reasons }.
-function evaluateGate(vintage, priorVintage, gateState) {
+function evaluateGate(vintage, priorVintage, gateState, bruch, board) {
   const reasons = [];
   const rowsByTicker = (v) => {
     const m = new Map();
@@ -402,12 +408,52 @@ function evaluateGate(vintage, priorVintage, gateState) {
   // das Gate LOGGT (p99Delta steht im Vintage-Meta), straft aber nicht.
   const threshold = frozenThresholdOf(gateState);
   const calibrating = threshold == null;
+
+  // ── Maßstab-Bruch: erhöhte Tagesgrenze für den EINEN Neu-gegen-Alt-Vergleich ──
+  // Ändert sich die Score-DEFINITION (z. B. die Kohorte wird entdoppelt), misst der
+  // Vergleich Neu-gegen-Alt zwei verschiedene Maßstäbe. Die eingefrorene Schwelle kann
+  // das nicht beurteilen — sie ist auf dem alten Maßstab kalibriert. Ohne Ausnahme
+  // bliebe das Folge-Vintage dauerhaft suspect (es landet nie, der Vergleich zeigt
+  // morgen wieder auf denselben alten Stand) und die Messreihe stünde still.
+  //
+  // VIER Bedingungen MÜSSEN zusammenkommen, sonst gilt unverändert die normale Schwelle:
+  //   1. der gefundene Vorgänger ist im Register EXAKT als letztes_altes_vintage eines
+  //      Bruchs benannt (prüft der Aufrufer über massstabBruchFuer — Begründung dort),
+  //   2. dieses Board steht dort NAMENTLICH (Court-Auflage: keine rein dynamische
+  //      Auswahl — sonst hebt ein beliebiger unabhängiger Datenfehler, der die Kohorte
+  //      schrumpfen lässt, seine eigene Grenze an),
+  //   3. die Kohorte ist gegenüber dem Vergleichsstand MESSBAR geschrumpft,
+  //   4. es gibt überhaupt eine eingefrorene Schwelle (in der Kalibrierphase wäre jeder
+  //      Deckel erfunden — es gibt nichts, worauf er sich beziehen könnte).
+  // Die HÖHE kommt bewusst NICHT aus dem Register (eine von Hand eingetragene Messzahl
+  // wäre eine ungeprüfte Selbstauskunft), sondern aus den beiden verglichenen Vintages.
+  let bruchGrenze = null;
+  if (bruch && !calibrating && board && bruch.boards.has(board) && priorMap.size > 0 && nowMap.size < priorMap.size) {
+    const schrumpfung = (priorMap.size - nowMap.size) / priorMap.size;
+    const strukturgrenze = SCORE_SKALA * schrumpfung;
+    const deckel = THRESHOLD_MULTIPLIER * threshold;
+    bruchGrenze = {
+      tag: bruch.tag,
+      zeilenVorher: priorMap.size,
+      zeilenNachher: nowMap.size,
+      strukturgrenze,
+      deckel,
+      normaleSchwelle: threshold,
+      // max(): die Grenze wird nie STRENGER als die kalibrierte Schwelle (sonst
+      // erzeugte eine Mini-Schrumpfung Fehlalarme). min(): sie wird nie weiter als das
+      // Doppelte — derselbe Multiplikator, mit dem das System aus einer gemessenen
+      // Spitze ohnehin eine Schwelle macht.
+      tagesschwelle: Math.max(threshold, Math.min(strukturgrenze, deckel)),
+    };
+  }
+  const wirksameSchwelle = bruchGrenze ? bruchGrenze.tagesschwelle : threshold;
+
   // Threshold-Bruch nur NACH der Kalibrierphase (Ledger: „Gate loggt nur" solange calibrating).
-  if (!calibrating && p99Delta != null && p99Delta > threshold) {
+  if (!calibrating && p99Delta != null && p99Delta > wirksameSchwelle) {
     reasons.push('p99-delta-exceeds-threshold');
   }
 
-  return { calibrating, p99Delta, threshold, suspect: reasons.length > 0, reasons };
+  return { calibrating, p99Delta, threshold, bruchGrenze, suspect: reasons.length > 0, reasons };
 }
 
 // Aktualisiert den Gate-Kalibrierungs-Zustand je Board: sammelt messbare P99-Tagesdeltas
@@ -494,6 +540,46 @@ function excludedDates() {
     else if (e && typeof e === 'object' && !e.board && typeof e.date === 'string') out.add(e.date);
   }
   return out;
+}
+
+// Maßstab-Bruch-Eintrag aus board-history/_excluded.json (_massstab_brueche), gesucht
+// über den ERWARTETEN VORGÄNGER — nicht über das Datum des neuen Vintages.
+//
+// Warum der Vorgänger und nicht der Bruch-Tag: beides wurde durchgespielt, beides bricht.
+//   • „gilt am Tag X" (festes Kalenderdatum): landet das Vintage von X aus einem FREMDEN
+//     Grund nicht (ein anderes Board wird suspect — der Commit-Schritt nimmt das ganze
+//     Tagesverzeichnis raus), ist die Ausnahme verbraucht, ohne je gewirkt zu haben. Am
+//     Folgetag zeigt der Vergleich wieder auf denselben alten Stand → dieselbe Dauersperre.
+//   • „gilt, solange der Vorgänger älter als X ist": dann aktiviert auch eine DATENLÜCKE
+//     die erhöhte Grenze — fehlt der 27.07. und liegt nur der 26.07. vor, ginge eine über
+//     mehrere Tage kumulierte Bewegung unbeanstandet durch.
+// Der exakte Vorgänger löst beides: er greift genau dann, wenn wirklich Neu-gegen-Alt
+// verglichen wird, überlebt einen ausgefallenen Lauf, endet von selbst, sobald ein Vintage
+// im neuen Maßstab gelandet ist (dann ist der Vorgänger ein anderer), und eine unerwartete
+// Vergleichsbasis fällt auf die strengere normale Schwelle zurück.
+//
+// Ein Eintrag trägt NUR Daten und eine Board-NAMENSLISTE — bewusst keine Größenangabe:
+// die Höhe der Tagesgrenze rechnet evaluateGate selbst aus den verglichenen Vintages,
+// damit es nichts gibt, dessen Vertippen die Grenze aufblähen könnte.
+// Fail-closed in jeder Richtung: fehlende/unlesbare Datei, kein Eintrag, anderer
+// Vorgänger, kein Vorgänger oder eine leere Board-Liste ergeben null.
+// Zwei Einträge mit demselben letztes_altes_vintage sind mehrdeutig (welche Board-Liste
+// gilt?) und brechen HART ab, statt still zu mergen — der Fall entsteht real beim
+// Nachtragen eines späteren Bruchs ohne Blick auf den vorherigen.
+function massstabBruchFuer(priorDate) {
+  if (!priorDate) return null;
+  const raw = readJsonOrNull(P.EXCLUDED_FILE);
+  if (!raw || !Array.isArray(raw._massstab_brueche)) return null;
+  const treffer = raw._massstab_brueche.filter((b) => b && b.letztes_altes_vintage === priorDate);
+  if (treffer.length > 1) {
+    throw new Error('write-board-history: ' + treffer.length + ' Massstab-Brueche nennen dasselbe '
+      + 'letztes_altes_vintage ' + priorDate + ' — mehrdeutig. Register bereinigen (kein stiller Merge).');
+  }
+  if (treffer.length === 0) return null;
+  const b = treffer[0];
+  const boards = Array.isArray(b.boards) ? b.boards.filter((s) => typeof s === 'string' && s) : [];
+  if (boards.length === 0) return null;
+  return { tag: b.tag || null, letztesAltesVintage: priorDate, boards: new Set(boards) };
 }
 
 // ── Retention/Kompaktierung (A12) ────────────────────────────────────────────
@@ -614,6 +700,10 @@ function run(opts) {
   readOrScaffoldExcluded(dryRun);
   const gateCalib = readJsonOrNull(P.GATE_CALIB_FILE) || { _doc: 'Gate-Kalibrierung je Board: erste 3 messbare P99-Tagesdeltas → Schwelle P99×2 eingefroren.', boards: {} };
   const priorDate = priorVintageDate(date);
+  // Der Bruch hängt am EXAKTEN Vorgänger (Begründung an der Funktion): er greift genau
+  // dann, wenn tatsächlich gegen den letzten Stand des alten Maßstabs verglichen wird,
+  // und endet von selbst, sobald ein Vintage im neuen Maßstab gelandet ist.
+  const bruch = massstabBruchFuer(priorDate);
   const dateDir = path.join(P.HISTORY_DIR, date);
   // BH-147: Defense-in-depth — der resolved Pfad muss unter HISTORY_DIR bleiben.
   // Das Format-Regex oben schließt einen Escape bereits strukturell aus; dieser
@@ -638,18 +728,22 @@ function run(opts) {
     if (!boardData) throw new Error('unreadable full-cohort board file: ' + boardPath);
     const vintage = buildBoardVintage(board, boardData, date, calibMeta);
     const priorVintage = priorDate ? readJsonOrNull(path.join(P.HISTORY_DIR, priorDate, board + '.json')) : null;
-    const gate = evaluateGate(vintage, priorVintage, gateCalib.boards[board]);
+    const gate = evaluateGate(vintage, priorVintage, gateCalib.boards[board], bruch, board);
     // Kalibrier-Sample nachziehen (frozen erst NACH Auswertung, damit die aktuelle
     // Auswertung noch in der Kalibrierphase mit calibrating:true läuft).
     // BH-111: ein bereits als suspect erkannter Tag darf die eingefrorene Schwelle
     // NICHT mitziehen — sonst kalibriert genau der Datenbruch, den das Gate fangen
     // soll, das Gate selbst hoch. suspect-Tage liefern daher kein Sample (null statt
     // p99Delta); die Kalibrierung sammelt einfach weiter, bis ein sauberer Tag kommt.
-    const gs = updateGateCalibration(gateCalib, board, gate.suspect ? null : gate.p99Delta, date);
+    // Ein Bruch-Tag liefert AUCH kein Sample: sein Delta enthält den Maßstab-Wechsel,
+    // nicht nur Tagesbewegung — es würde die eingefrorene Schwelle dauerhaft hochziehen
+    // (dieselbe Falle wie beim suspect-Tag, nur mit umgekehrtem Vorzeichen im Urteil).
+    const gs = updateGateCalibration(gateCalib, board, (gate.suspect || gate.bruchGrenze) ? null : gate.p99Delta, date);
     vintage.gate = {
       calibrating: gate.calibrating,
       p99Delta: gate.p99Delta,
-      threshold: gate.threshold,
+      threshold: gate.threshold,          // unverändert die KALIBRIERTE Schwelle (Historie bleibt ehrlich)
+      bruchGrenze: gate.bruchGrenze || null,   // an einem Bruch-Tag: die tatsächlich angelegte Grenze + ihre Herleitung
       suspect: gate.suspect,
       reasons: gate.reasons,
       priorDate: priorDate,
@@ -660,7 +754,7 @@ function run(opts) {
       fs.mkdirSync(dateDir, { recursive: true });
       writeJsonAtomic(assertNoPicksHistory(path.join(dateDir, board + '.json')), vintage);
     }
-    results.push({ board, suspect: gate.suspect, calibrating: gate.calibrating, p99Delta: gate.p99Delta, threshold: gate.threshold, rows: vintage.cohort.profitable.length + vintage.cohort.unprofitable.length, pitCoverage: vintage.pitCoverage });
+    results.push({ board, suspect: gate.suspect, calibrating: gate.calibrating, p99Delta: gate.p99Delta, threshold: gate.threshold, bruchGrenze: gate.bruchGrenze || null, rows: vintage.cohort.profitable.length + vintage.cohort.unprofitable.length, pitCoverage: vintage.pitCoverage });
   }
 
   // Seiten-Artefakte je Datum: calibration.json-Kopie + regime.json.
@@ -686,7 +780,7 @@ function run(opts) {
     writeJsonAtomic(assertNoPicksHistory(P.GATE_CALIB_FILE), gateCalib);
   }
 
-  return { mode: 'write', date, dryRun, priorDate, boards: results, regime: regimeForDate(date), exitCode: anySuspect ? 2 : 0 };
+  return { mode: 'write', date, dryRun, priorDate, bruch: bruch ? { tag: bruch.tag, boards: Array.from(bruch.boards) } : null, boards: results, regime: regimeForDate(date), exitCode: anySuspect ? 2 : 0 };
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
@@ -721,12 +815,33 @@ if (require.main === module) {
       res.compacted.forEach((f) => console.log('  archiviert+gestrippt: ' + f));
     } else {
       console.log(tag + 'board-history ' + res.date + ' (prior=' + res.priorDate + ', regime=' + res.regime.label + ')');
+      // Karls einziger Alarmkanal ist das Lauf-Protokoll: eine ausgesetzte oder erhöhte
+      // Grenze MUSS im Klartext dort stehen, sonst ist "gruen" nicht von "Gate uebergangen"
+      // zu unterscheiden. Kopfzeile vor der Board-Liste, damit sie ohne Scrollen sichtbar ist.
+      if (res.bruch) {
+        const erhoeht = res.boards.filter((b) => b.bruchGrenze).length;
+        console.log('GATE: Massstab-Bruch aktiv fuer ' + res.date
+          + (res.bruch.tag ? ' (' + res.bruch.tag + ')' : '')
+          + ' — ' + erhoeht + ' Board(s) mit erhoehter Tagesschwelle, '
+          + (res.boards.length - erhoeht) + ' unveraendert; uebrige Integritaetspruefungen AKTIV');
+      }
       for (const b of res.boards) {
         if (b.error) { console.log('  ' + b.board + ': ' + b.error); continue; }
         const flag = b.suspect ? ' SUSPECT[' + '⚠' + ']' : (b.calibrating ? ' (calibrating)' : '');
+        const g = b.bruchGrenze;
+        // Alle Bestandteile getrennt: gemessene Schrumpfung → Strukturgrenze → Deckel →
+        // angelegte Grenze. Wer die Zeile liest, kann die Rechnung nachvollziehen.
+        const bruchText = g
+          ? ' [Bruch: Kohorte ' + g.zeilenNachher + ' von ' + g.zeilenVorher
+            + ' = -' + (100 * (g.zeilenVorher - g.zeilenNachher) / g.zeilenVorher).toFixed(1) + '%'
+            + ' -> Strukturgrenze ' + g.strukturgrenze.toFixed(2)
+            + ', Deckel ' + g.deckel.toFixed(2)
+            + ' -> Tagesschwelle ' + g.tagesschwelle.toFixed(2)
+            + ' statt ' + g.normaleSchwelle.toFixed(2) + ']'
+          : '';
         console.log('  ' + b.board + ': ' + b.rows + ' Zeilen, p99Δ=' + (b.p99Delta == null ? '—' : b.p99Delta.toFixed(2)) +
           ', thr=' + (b.threshold == null ? '—' : b.threshold.toFixed(2)) +
-          ', beta-cov=' + (b.pitCoverage.beta * 100).toFixed(0) + '%' + flag);
+          ', beta-cov=' + (b.pitCoverage.beta * 100).toFixed(0) + '%' + flag + bruchText);
       }
       if (res.exitCode === 2) console.log('EXIT 2: mindestens ein suspect-Vintage geschrieben (0.7-Kanal).');
     }
@@ -741,7 +856,7 @@ module.exports = {
   run, parseArgs, buildBoardVintage, evaluateGate, updateGateCalibration,
   compact, readOrScaffoldExcluded, regimeForDate, priceGrossProfit, pitCoverageBlock,
   quantile, assertNoPicksHistory, buildPit,
-  priorVintageDate, excludedDates,
+  priorVintageDate, excludedDates, massstabBruchFuer,
   _setPaths, resolvePaths,
   flooredThreshold, frozenThresholdOf,
   isValidDateStr, requiresBackfillContract, resolveFullCalibration,   // BH-147/BH-155
