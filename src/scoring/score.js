@@ -92,7 +92,12 @@ const ISSUER_ALIASE = {};
 // US-Primaerlistings (der Fehlverschmelzungs-Schutz muesste also nie eingreifen).
 // Beispiele: "Corning Incorporated"/"Corning Inc", "HASEKO Corporation"/"HASEKO CORP",
 // "CLP Holdings Limited"/"CLP HOLDINGS LTD", "Westpac Banking Corporation"/"WESTPAC BANKING CORP".
-const RECHTSFORM_LANG_KURZ = [];
+const RECHTSFORM_LANG_KURZ = [
+  [/\bincorporated\b/gi, 'inc'],
+  [/\bcorporation\b/gi, 'corp'],
+  [/\blimited\b/gi, 'ltd'],
+  [/\bcompany\b/gi, 'co'],
+];
 // audit/fix (CI-Lauf 30226188564): ein FUEHRENDES "The" unterscheidet keine Firmen. Yahoo fuehrt
 // dieselbe Gesellschaft je nach Notierung mal mit, mal ohne Artikel — "AES Corporation" (Mailand)
 // gegen "The AES Corporation" (NYSE). Vorher war das zweimal per Hand in ISSUER_ALIASE geflickt;
