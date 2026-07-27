@@ -91,7 +91,12 @@ const BRANCHES = [
 // Achse revGrowthLevel sieht (score.js) — NICHT Yahoos metrics.revenueGrowthYoY, das wegen
 // belegter Defekte am 14.07. aus der Achse entfernt wurde. Additiv OPTIONAL wie die
 // coverage-Felder: alte Consumer und legitime Abwesenheit brechen nicht.
-const ROW_FIELDS = ['name', 'country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback', 'scoreBase', 'scoreShrunk', 'factors', 'axisBreakdown', 'revGrowthYoYPct'];
+// K-3 (Karl 27.07., Sichtabnahme): mcapKlasse = ABSOLUTE Groessenklasse (micro/small/mid/
+// large/mega) nach Marktstandard. Neben dem bestehenden mcapBand, das aus dem Universum
+// GELERNT wird und deshalb mit ihm wandert — am 27.07. fielen CRDO (39,8 Mrd.) und NVIDIA
+// (5.010 Mrd.) in dieselbe gelernte Klasse. findash filtert nach mcapKlasse, die Kohorten
+// und das Scoring nutzen weiter mcapBand. Additiv OPTIONAL wie die coverage-Felder.
+const ROW_FIELDS = ['name', 'country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'mcapKlasse', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback', 'scoreBase', 'scoreShrunk', 'factors', 'axisBreakdown', 'revGrowthYoYPct'];
 
 // Task 2.2: ATH-Anzeige (Karl-A6-Lösung) — additiv OPTIONAL je Zeile: ath = {distancePct,
 // athDate, monthsAgo} | null. Quelle = external-data/ath-state.json (committeter Vertrag,

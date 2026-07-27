@@ -139,20 +139,55 @@ const issuerKeyLoose = (s) => {
   return ISSUER_ALIASE[k] || k;
 };
 /**
- * Large-Cap-Untergrenze fuer die Hypergrowth-Uebersicht (Tag 468).
+ * Absolute Groessenklassen in USD, nach dem gebraeuchlichen Marktstandard.
  *
- * HERKUNFT — die Zahl ist nicht geraten: 22,7 Mrd. USD ist die Large-Cap-Untergrenze der
- * S&P-Definition (Stand der Recherche zu Karls Frage F-N03). Bewusst diese und nicht die
- * hauseigene "mega"-Klasse: die beginnt bei 17,3 Mrd. und ist per Konstruktion nur das
- * oberste Fuenftel DIESER Liste — genau die Aussage, die Karl kritisiert hat ("sagt nichts
- * ueber die Firma, nur ueber die Liste"). Eine externe Definition sagt etwas ueber die Firma.
+ * WARUM ES DIESE NEBEN mcapBand GIBT: mcapBand wird aus dem Universum GELERNT (Quintile,
+ * s. mcapBandOf). Das ist fuer Kohorten und Scoring richtig, taugt aber nicht als Aussage
+ * ueber eine Firma — Karl hat genau das kritisiert: "sagt nichts ueber die Firma, nur ueber
+ * die Liste". Am 27.07.2026 gemessen lagen die gelernten Grenzen bei 2,47 / 3,89 / 7,02 /
+ * 17,02 Mrd. — CRDO (39,8 Mrd.) und NVIDIA (5.010 Mrd.) fielen BEIDE in dieselbe oberste
+ * Klasse, obwohl zwischen ihnen der Faktor 126 liegt. Eine absolute Klasse trennt sie.
  *
- * Sie ist ABSOLUT und altert deshalb mit den Kursen. Das ist bewusst in Kauf genommen: die
- * Alternative (Anteil am Gesamtmarkt) haengt am Marktregime und an Wechselkursen und wuerde
- * Firmen aus dem Board werfen, die sich selbst gar nicht bewegt haben. Nachziehen, wenn die
- * Zahl der betroffenen Zeilen deutlich von den heute gemessenen 34 von 200 abweicht.
+ * Die Werte sind Marktkonvention, nicht selbst gesetzt: Micro bis 300 Mio., Small bis
+ * 2 Mrd., Mid bis 10 Mrd., Large bis 200 Mrd., darueber Mega.
  */
-const LARGE_CAP_USD = 22.7e9;
+const MCAP_KLASSEN_USD = Object.freeze({ micro: 300e6, small: 2e9, mid: 10e9, large: 200e9 });
+
+/**
+ * Obergrenze fuer die Hypergrowth-Uebersicht: die Mega-Cap-Schwelle (200 Mrd. USD).
+ *
+ * KARL-KORREKTUR 27.07.2026 (Sichtabnahme). Vorher standen hier 22,7 Mrd. — das ist die
+ * Aufnahmeschwelle fuer den S&P 500, nicht die Large-Cap-Grenze, und sie war damit viel zu
+ * scharf. Gemessen am ausgelieferten Stand: die Uebersicht enthielt nur noch Firmen bis
+ * 22,24 Mrd. (Median 4,37 Mrd.), waehrend CRDO (39,8), ALAB (50,0) und BE (52,6) —
+ * die Kernnamen, um die es Karl geht — herausfielen. Sein Urteil: "Ich glaube, ich habe
+ * gerade einen Small-Cap-Screener."
+ *
+ * Die neue Grenze trennt dort, wo die Luecke wirklich ist: zwischen BE (52,6 Mrd.) und
+ * AVGO (1.817 Mrd.) liegt der Faktor 35. Sie haelt weiterhin fern, was Karl fernhalten
+ * wollte (NVIDIA 5.010 Mrd., TSM 2.066, AVGO 1.817 — alle Mega Cap), und laesst herein,
+ * was er sehen will. Der urspruengliche Zweck von Tag 468 bleibt damit erfuellt: ein Board
+ * namens Hypergrowth enthaelt keine Billionen-Konzerne.
+ *
+ * Sie ist ABSOLUT und altert mit den Kursen — bewusst, aus demselben Grund wie zuvor: die
+ * Alternative (Anteil am Gesamtmarkt) haengt am Marktregime und wuerde Firmen aus dem Board
+ * werfen, die sich selbst gar nicht bewegt haben.
+ */
+const MEGA_CAP_USD = MCAP_KLASSEN_USD.large;
+
+/**
+ * Absolute Groessenklasse einer Firma. Unabhaengig vom Universum und damit ueber Laeufe
+ * hinweg vergleichbar — anders als mcapBand, das mit dem Universum wandert.
+ */
+function mcapKlasseOf(mc) {
+  const v = Number(mc);
+  if (!Number.isFinite(v) || v <= 0) return null;
+  if (v < MCAP_KLASSEN_USD.micro) return 'micro';
+  if (v < MCAP_KLASSEN_USD.small) return 'small';
+  if (v < MCAP_KLASSEN_USD.mid) return 'mid';
+  if (v < MCAP_KLASSEN_USD.large) return 'large';
+  return 'mega';
+}
 const mcapOf = (s) => (s && s.marketCap && Number.isFinite(s.marketCap.value)) ? s.marketCap.value : 0;
 // audit/fix (Court Fall 10, F50): ein dual-non-USD-Bein, dessen marketCap mit dem REPORTING- statt
 // dem TRADING-FX-Faktor skaliert wurde (stale Snapshot ohne tradingFxRateApplied), traegt eine
@@ -1101,6 +1136,9 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
     // Filter-Schicht (Karl-Direktive 5): 3 additive deskriptive Felder, SOLANGE der Snapshot lebt.
     e.phase = phaseOf(e.snapshot);
     e.mcapBand = mcapBandOf(e.marketCap, mcapBounds);
+    // Absolute Groessenklasse NEBEN der gelernten: mcapBand wandert mit dem Universum,
+    // mcapKlasse nicht. Karl filtert nach dieser (Begruendung an MCAP_KLASSEN_USD).
+    e.mcapKlasse = mcapKlasseOf(e.marketCap);
     e.ipoRecency = ipoRecencyOf(meta, ipoBounds);
     e.profitTier = profitTierOf(e.snapshot);  // Task 1.2: 4-Stufen (nicht/kurz-vor/seit-kurzem/langfristig)
     e.ipoYear = ipoYearOf(meta);              // Task 1.2 Schritt 3: vorhandenes IPO-Jahr NUR durchreichen
@@ -1318,7 +1356,7 @@ function calibrationDrift(liveCal, refCal, ksThreshold = 0.15) {
   return { maxKs, ksThreshold, drifted, ok: maxKs <= ksThreshold };
 }
 
-module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings, phaseOf, mcapBandOf, ipoRecencyOf, ipoYearOf, calibrationDrift,
+module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings, phaseOf, mcapBandOf, mcapKlasseOf, MCAP_KLASSEN_USD, ipoRecencyOf, ipoYearOf, calibrationDrift,
   // audit/fix (Bug 0/9/7): fuer calibrate.js — Kohorten-Gates + Winsor-Schranken exakt spiegeln
   learnWinsorBounds, winsorTailBounds, isDataSuspect, issuerDedupComparator, issuerKey, issuerKeyLoose, issuerDedupGroups,
   // AUFGABE 2 (Wachstums-Bonus): fuer TDD + gezielte Wiederverwendung
@@ -1332,4 +1370,4 @@ module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings
   // 5.2 Small-Cap-Board: reine Funktion, additiv exportiert fuer den Coverage-Floor (run-screener.js)
   quantile,
   // Tag 468: Large-Cap-Grenze der Hypergrowth-Uebersicht — fuer run-screener.js und den Waechter
-  LARGE_CAP_USD };
+  MEGA_CAP_USD };
