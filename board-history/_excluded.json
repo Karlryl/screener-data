@@ -42,6 +42,17 @@
         "2026-07-18"
       ],
       "entscheid": "Karl-Entscheid 10 (26.07.2026): Bruch markieren, Altes stehen lassen, NICHT neu rechnen."
+    },
+    {
+      "ab_commit": "e15b83a778",
+      "tag": "Tag 467-469",
+      "datum": "2026-07-27",
+      "was": "Issuer-Dedup erkennt Anteilsklassen im Firmennamen (\"... Class A\") als denselben Emittenten; zusaetzlich erscheinen Firmen ab 22,7 Mrd. nicht mehr in der Hypergrowth-Uebersicht.",
+      "wirkung": "Der Groessen-Filter beruehrt die Messreihe NICHT — board-history friert die volle Kohorte ein, nicht die Uebersicht. Der Dedup verschiebt die Kohorten-Zusammensetzung leicht.",
+      "ab_wann_wirksam": "Die Vintages 2026-07-26 und 2026-07-27 stammen aus Laeufen VOR der Aenderung (der 27.07. aus Commit 042bd7f3f3, 01:43 UTC). Wirksam ist die Aenderung erstmals im Vintage 2026-07-28.",
+      "wert_gate": "Ein Nachlauf am 27.07. abends (Lauf 30252496643) wollte den Messpunkt desselben Tages mit den neuen Werten ueberschreiben. Das Wert-Gate hat das als SUSPECT abgelehnt (software-comm-services p99-Delta 1,10 gegen Schwelle 1,00, ein Board von 14). Richtig so: zwei Maßstaebe unter demselben Datum waeren der schlimmste Fall. Der urspruengliche Messpunkt blieb unveraendert stehen.",
+      "entscheid": "KEIN Vintage ausgeschlossen. Der Bruch ist um Groessenordnungen kleiner als Tag 437 (dort wurde eine ganze Achse neu berechnet), und ein Ausschluss wuerde die einzigen verwertbaren Messpunkte vernichten. Die Zahl steht hier, damit eine spaetere Auswertung selbst entscheiden kann.",
+      "nachpruefen": "Meldet das Wert-Gate auch fuer das Vintage 2026-07-28 SUSPECT, ist die Ursache NICHT die einmalige Umstellung — dann hier nachtragen und ernsthaft pruefen."
     }
   ]
 }
