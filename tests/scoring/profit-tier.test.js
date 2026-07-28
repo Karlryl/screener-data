@@ -87,5 +87,27 @@ test('Kachelung: Klassifikator liefert nur TIERS oder null', () => {
   }
 });
 
+// --- Kopplung ans Quality-Board: die Beschreibung darf nicht wieder veralten ---
+test('die Stufe ist eine Aufnahmeregel, und der Kopf sagt das auch', () => {
+  // Bis 28.07. stand im Kopf von profit-tier.js "Reine DESKRIPTIVE Filter-Dimension —
+  // KEIN Score-Einfluss". Das galt bei der Entstehung (Task 1.2), war aber seit Task 3.1
+  // falsch: quality-route.js entscheidet damit ueber die MITGLIEDSCHAFT im Quality-Board.
+  // Wer die Stufen-Logik anfasst, muss das wissen. Dieser Waechter faellt in beide
+  // Richtungen: verschwindet die Kopplung, ist die Warnung im Kopf zu entfernen;
+  // bleibt sie und die Warnung verschwindet, wird der Test rot.
+  const fs = require('fs'), path = require('path');
+  const dir = path.join(__dirname, '..', '..', 'src', 'scoring');
+  const route = fs.readFileSync(path.join(dir, 'quality-route.js'), 'utf8');
+  const tier = fs.readFileSync(path.join(dir, 'profit-tier.js'), 'utf8');
+  const koppelt = /profitTierOf\s*\(/.test(route);
+  const warnt = /NICHT MEHR REIN DESKRIPTIV|Aufnahmeregel/i.test(tier);
+  assert.equal(koppelt, warnt,
+    koppelt
+      ? 'quality-route.js koppelt an profitTierOf, aber der Kopf von profit-tier.js warnt nicht davor'
+      : 'die Kopplung ist weg — die Warnung im Kopf von profit-tier.js gehoert entfernt');
+  assert.ok(!/Reine DESKRIPTIVE Filter-Dimension — KEIN Score-Einfluss/.test(tier),
+    'die alte, falsche Selbstbeschreibung ist zurueck');
+});
+
 console.log(`\nprofit-tier.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

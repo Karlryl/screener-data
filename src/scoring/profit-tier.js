@@ -2,10 +2,16 @@
 /**
  * Profitabilitaets-Stufen-Klassifikator (Task 1.2, Karl-Direktive B3).
  *
- * Reine DESKRIPTIVE Filter-Dimension — KEIN Score-Einfluss. Wird (wie phase/mcapBand/
- * ipoRecency) NACH dem Scoring additiv an die Output-Zeile gehaengt, damit Karl im
- * Findash-Tab nach Turnaround-Reife filtern kann. Fixture-safe (kein Routing/Track/
- * Achsen/Score-Einfluss).
+ * Wird (wie phase/mcapBand/ipoRecency) NACH dem Scoring additiv an die Output-Zeile
+ * gehaengt, damit Karl im Findash-Tab nach Turnaround-Reife filtern kann. Auf das
+ * HG-Scoring wirkt die Stufe nicht (kein Routing/Track/Achsen/Score-Einfluss, fixture-safe).
+ *
+ * ⚠ ABER NICHT MEHR REIN DESKRIPTIV (korrigiert 28.07.). Hier stand bis heute "KEIN
+ * Score-Einfluss". Das galt bei der Entstehung (Task 1.2, 06.07.), ist aber seit Task 3.1
+ * (10.07.) falsch: `quality-route.js` benutzt profitTierOf() als AUFNAHMEREGEL fuers
+ * Quality-Board — wer hier die Stufe aendert, aendert dort die Mitgliederliste.
+ * Der Waechter in tests/profit-tier.test.js haelt diese Kopplung fest, damit die
+ * Beschreibung nicht ein zweites Mal veraltet, ohne dass es jemand merkt.
  *
  * Vier LUECKENLOS kachelnde Stufen auf dem Yahoo-JAHRES-Stream (annual OpInc, Fallback
  * NetIncome; ~4 Jahre) + der Quartals-Trajektorie (opIncQ; ~5 Quartale):

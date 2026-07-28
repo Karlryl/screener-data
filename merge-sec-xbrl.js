@@ -179,6 +179,21 @@ function extractSecSeries(companyfacts) {
 // --- Overlap-Validierung (SEC vs Yahoo fuer die gemeinsamen Fuehrungsjahre) ---
 const cleanVals = (arr) => (Array.isArray(arr) ? arr.map((x) => (x && typeof x === 'object' ? x.value : x)) : []);
 
+/**
+ * ⚠ ANNAHME, die hier drinsteckt und bis 28.07. nirgends stand: Position i der Yahoo-Reihe
+ * und Position i der SEC-Reihe meinen DASSELBE Geschaeftsjahr. Der Yahoo-Jahresblock
+ * traegt keine Jahres-Labels — die Annahme ist also nicht aus den Daten selbst pruefbar.
+ *
+ * Am 28.07. erstmals gegengeprueft, indem je Firma der beste Versatz am UMSATZ bestimmt
+ * wurde (bei beiden Quellen eindeutig, keine Definitionsfrage), ueber 1.827 Firmen:
+ *     Versatz 0 bestaetigt (<2 % Abweichung) : 1.472  (80,6 %)
+ *     Versatz +-1 oder +-2                   :    55  ( 2,9 %)
+ *     kein Treffer bei keinem Versatz        :   300  (16,4 %)
+ * Die Annahme traegt also ueberwiegend, aber nicht immer. Wer diese Funktion fuer eine
+ * ERNSTE Aussage benutzt (nicht nur die grobe loose-sanity-Pruefung, fuer die sie gebaut
+ * wurde), muss vorher die Zuordnung je Firma belegen — sonst misst er bei jeder fuenften
+ * Firma zwei verschiedene Jahre gegeneinander.
+ */
 function overlapDivergence(yahooArr, secArr) {
   const y = cleanVals(yahooArr), s = cleanVals(secArr);
   const n = Math.min(y.length, s.length);
