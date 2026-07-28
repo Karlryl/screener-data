@@ -20,6 +20,7 @@ const { overviewMetric } = require('./overview.js');
 const { normalizeCountry } = require('./country.js');
 const axesFns = require('./axes.js');
 const { profitTierOf } = require('./profit-tier.js'); // Task 1.2: 4-Stufen-Profitabilitaets-Filter (deskriptiv)
+const { profitStreakOf } = require('./profit-streak.js'); // Task 4.5: belegte Gewinn-Serienlaenge (additiv)
 // audit/fix (Court Fall 6, F39): Grader fuer die LIVE-Neuberechnung des Daten-Grades im
 // data-suspect-Gate. Der persistierte _quality.grade ist stale (alle aus der Zeit VOR dem
 // revenueTTM-criticalMissing-Floor) -> der grade-D-Arm war praktisch tot.
@@ -1186,6 +1187,12 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
     // mcapKlasse nicht. Karl filtert nach dieser (Begruendung an MCAP_KLASSEN_USD).
     e.mcapKlasse = mcapKlasseOf(e.marketCap);
     e.profitTier = profitTierOf(e.snapshot);  // Task 1.2: 4-Stufen (nicht/kurz-vor/seit-kurzem/langfristig)
+    // Task 4.5: die Stufe oben sieht nur Yahoos ~4 Jahre — in vier sauberen Jahren ist jede
+    // Firma "langfristig profitabel". Gemessen 28.07.: 380 von 1.353 tragen das Etikett,
+    // obwohl die Serie binnen acht Jahren abreisst (American Airlines, Autodesk).
+    // Rein ADDITIV daneben, ohne die Stufe anzufassen: die belegte Serienlaenge. Fehlt die
+    // Langhistorie (Fixtures, Nicht-US) -> null, keine Verhaltensaenderung.
+    e.profitStreak = profitStreakOf(meta && meta.ticker);
     // Beide aus DEMSELBEN Jahr — sonst koennten Jahr und Einstufung auseinanderlaufen.
     // _gruppeErstnotiz setzt der Dedup bei Doppelnotierungen (Begruendung dort).
     e.ipoYear = ipoYearEffektiv(meta, e._gruppeErstnotiz);
@@ -1287,7 +1294,7 @@ function produceRankings(results, opts = {}) {
   const excluded = {};
   // A2: die in scoreUniverse angehefteten Anzeige-/geo-Felder an jede Output-Zeile spreaden
   // (?? null haelt die Form stabil, falls produceRankings mit handgebauten results laeuft).
-  const rowMeta = (e) => ({ name: e.name ?? null, country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, ipoRecency: e.ipoRecency ?? null, profitTier: e.profitTier ?? null, ipoYear: e.ipoYear ?? null, coverageAxes: e.coverageAxes ?? null, coverageWeight: e.coverageWeight ?? null, cohortN: e.cohortN ?? null, cohortFallback: e.cohortFallback ?? null, revGrowthYoYPct: e.revGrowthYoYPct ?? null });
+  const rowMeta = (e) => ({ name: e.name ?? null, country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, ipoRecency: e.ipoRecency ?? null, profitTier: e.profitTier ?? null, ipoYear: e.ipoYear ?? null, coverageAxes: e.coverageAxes ?? null, coverageWeight: e.coverageWeight ?? null, cohortN: e.cohortN ?? null, cohortFallback: e.cohortFallback ?? null, revGrowthYoYPct: e.revGrowthYoYPct ?? null, profitStreak: e.profitStreak ?? null });
   for (const e of (Array.isArray(results) ? results : [])) {
     if (e.action === 'survival') {
       survival.push({ ticker: e.ticker, runwayQuarters: e.overview ? e.overview.value : null, lamps: e.lamps, ...rowMeta(e) });

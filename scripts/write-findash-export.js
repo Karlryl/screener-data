@@ -96,7 +96,13 @@ const BRANCHES = [
 // GELERNT wird und deshalb mit ihm wandert — am 27.07. fielen CRDO (39,8 Mrd.) und NVIDIA
 // (5.010 Mrd.) in dieselbe gelernte Klasse. findash filtert nach mcapKlasse, die Kohorten
 // und das Scoring nutzen weiter mcapBand. Additiv OPTIONAL wie die coverage-Felder.
-const ROW_FIELDS = ['name', 'country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'mcapKlasse', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback', 'scoreBase', 'scoreShrunk', 'factors', 'axisBreakdown', 'revGrowthYoYPct'];
+const ROW_FIELDS = ['name', 'country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'mcapKlasse', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback', 'scoreBase', 'scoreShrunk', 'factors', 'axisBreakdown', 'revGrowthYoYPct', 'profitStreak'];
+// Task 4.5: profitStreak = {jahre, basis, tiefe, mindestens, letzterVerlust} | null.
+// Additiv OPTIONAL wie revGrowthYoYPct. Belegte Laenge der ununterbrochenen Gewinnserie
+// aus der SEC-Langhistorie — NEBEN profitTier, nicht statt dessen. Grund: profitTier sieht
+// nur Yahoos ~4 Jahre, und in vier sauberen Jahren ist jede Firma 'langfristig profitabel'
+// (gemessen 28.07.: 380 von 1.353 tragen das Etikett trotz Serienabriss binnen 8 Jahren,
+// darunter American Airlines und Autodesk). REINE ANZEIGE, kein Score-Input.
 
 // Task 2.2: ATH-Anzeige (Karl-A6-Lösung) — additiv OPTIONAL je Zeile: ath = {distancePct,
 // athDate, monthsAgo} | null. Quelle = external-data/ath-state.json (committeter Vertrag,
@@ -470,6 +476,25 @@ function checkOptionalNumOrNull(r, key, where, errs) {
   if (!(key in r)) return;
   if (r[key] !== null && !Number.isFinite(r[key])) errs.push(where + ": " + key + " not finite|null");
 }
+// 4.5: profitStreak additiv OPTIONAL — Abwesenheit/null legitim; WENN present, muss die
+// Form stimmen. Wie bei revGrowthYoYPct bewusst nicht Pflicht: Karls einziger Alarmkanal
+// (das rote X) darf nicht an einem additiven Anzeigefeld haengen.
+function checkOptionalProfitStreak(r, where, errs) {
+  if (!('profitStreak' in r) || r.profitStreak === null) return;
+  const p = r.profitStreak;
+  if (typeof p !== 'object') { errs.push(where + ': profitStreak not object|null'); return; }
+  if (!Number.isInteger(p.jahre) || p.jahre < 0) errs.push(where + ': profitStreak.jahre not a non-negative integer');
+  if (!Number.isInteger(p.tiefe) || p.tiefe < 1) errs.push(where + ': profitStreak.tiefe not a positive integer');
+  if (Number.isInteger(p.jahre) && Number.isInteger(p.tiefe) && p.jahre > p.tiefe) {
+    errs.push(where + ': profitStreak.jahre > tiefe (Serie laenger als die Reihe)');
+  }
+  if (p.basis !== 'opInc' && p.basis !== 'netIncome') errs.push(where + ': profitStreak.basis bad enum');
+  if (typeof p.mindestens !== 'boolean') errs.push(where + ': profitStreak.mindestens not boolean');
+  if (p.letzterVerlust !== null && !Number.isInteger(p.letzterVerlust)) errs.push(where + ': profitStreak.letzterVerlust not int|null');
+  // Innere Widerspruchsfreiheit: laeuft die Serie bis zum Reihenanfang, KANN es kein
+  // sichtbares Verlustjahr geben — und umgekehrt.
+  if (p.mindestens === true && p.letzterVerlust !== null) errs.push(where + ': profitStreak mindestens=true, aber letzterVerlust gesetzt');
+}
 // enum|null field must be PRESENT and either null or one of the allowed values.
 function checkEnumOrNull(r, key, allowed, where, errs) {
   if (!(key in r)) errs.push(`${where}: ${key} missing`);
@@ -498,6 +523,7 @@ function validateGeo(r, where, errs) {
   checkStrOrNull(r, 'sector', where, errs);
   checkNumOrNull(r, 'marketCap', where, errs);
   checkOptionalNumOrNull(r, 'revGrowthYoYPct', where, errs);
+  checkOptionalProfitStreak(r, where, errs);                       // 4.5 additiv OPTIONAL
   checkEnumOrNull(r, 'phase', VALID_PHASE, where, errs);
   checkEnumOrNull(r, 'mcapBand', VALID_MCAP, where, errs);
   checkEnumOrNull(r, 'ipoRecency', VALID_IPO, where, errs);
@@ -818,6 +844,10 @@ function selftest() {
 
   // tamper matrix — each MUST produce >=1 violation. If any slips through with 0, the gate is blind.
   const trip = (fn, row, label) => { const e = []; fn(row, 't', e); assert.ok(e.length > 0, `TAMPER SLIPPED: ${label}`); };
+  // Gegenstueck zu trip(): ein additiv-OPTIONALES Feld muss in seiner gueltigen Form
+  // DURCHGEHEN. Ohne diese Richtung wuerde ein zu strenger Waechter unbemerkt Karls
+  // einzigen Alarmkanal rot faerben, sobald das Feld einmal wirklich gefuellt ist.
+  const pass_ = (fn, row, label) => { const e = []; fn(row, 't', e); assert.equal(e.length, 0, `FALSCH-ROT: ${label} -> ${e.join('; ')}`); };
   const b0 = mapBoardRow(cleanBoard, 0);
   trip(validateBoardRow, { ...b0, score: NaN }, 'board score NaN');
   trip(validateBoardRow, { ...b0, track: 'ghost' }, 'board track bad enum');
@@ -843,6 +873,20 @@ function selftest() {
   const bNoN = { ...b0 }; delete bNoN.cohortN; trip(validateBoardRow, bNoN, 'board cohortN missing');
   trip(validateBoardRow, { ...b0, cohortFallback: 'yes' }, 'board cohortFallback non-boolean');
   const bNoFb = { ...b0 }; delete bNoFb.cohortFallback; trip(validateBoardRow, bNoFb, 'board cohortFallback missing');
+
+  // 4.5 profitStreak — additiv OPTIONAL: Abwesenheit und null muessen DURCHGEHEN,
+  // eine kaputte Form nicht. Beide Richtungen, sonst prueft der Waechter nur die haelfte.
+  const bStreakOk = { ...b0, profitStreak: { jahre: 9, basis: 'opInc', tiefe: 16, mindestens: false, letzterVerlust: 2016 } };
+  pass_(validateBoardRow, bStreakOk, 'board profitStreak valide Form geht durch');
+  pass_(validateBoardRow, { ...b0, profitStreak: null }, 'board profitStreak null geht durch');
+  pass_(validateBoardRow, b0, 'board ohne profitStreak geht durch');
+  trip(validateBoardRow, { ...bStreakOk, profitStreak: { ...bStreakOk.profitStreak, jahre: -1 } }, 'board profitStreak jahre negativ');
+  trip(validateBoardRow, { ...bStreakOk, profitStreak: { ...bStreakOk.profitStreak, basis: 'ebitda' } }, 'board profitStreak basis bad enum');
+  trip(validateBoardRow, { ...bStreakOk, profitStreak: { ...bStreakOk.profitStreak, mindestens: 'ja' } }, 'board profitStreak mindestens non-boolean');
+  // Die beiden inneren Widersprueche: eine Serie kann nicht laenger sein als die Reihe,
+  // und wer bis zum Reihenanfang durchlaeuft, kann kein Verlustjahr in Sicht haben.
+  trip(validateBoardRow, { ...bStreakOk, profitStreak: { ...bStreakOk.profitStreak, jahre: 20 } }, 'board profitStreak jahre > tiefe');
+  trip(validateBoardRow, { ...bStreakOk, profitStreak: { ...bStreakOk.profitStreak, mindestens: true } }, 'board profitStreak mindestens+letzterVerlust');
 
   const o0 = mapOverviewRow(cleanOv, 0);
   trip(validateOverviewRow, { ...o0, track: 'ghost' }, 'overview track bad enum');
