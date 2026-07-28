@@ -47,7 +47,21 @@ const { fetchSecTickers } = require(path.join(ROOT, 'discovery/sec-tickers.js'))
 const PAUSE_MS = 150;
 // Zwei Eintraege werden zu EINEM Abruf zusammengefasst, wenn die Luecke dazwischen kleiner
 // ist als das hier. Groesser = weniger Anfragen, aber mehr weggeworfene Bytes.
-const LUECKE_MAX = 2 * 1024 * 1024;
+//
+// NICHT geschaetzt, sondern am echten Verzeichnis gemessen (28.07., 2.234 von 20.102
+// Eintraegen gesucht, Archiv 1.391 MB):
+//     Luecke      Bloecke   Transfer   Ersparnis
+//        0 KB       1.891     390 MB       72 %
+//      256 KB       1.091     482 MB       65 %   <== gewaehlt
+//      512 KB         639     656 MB       53 %
+//        2 MB          73   1.212 MB       13 %
+// Der erste Ansatz (2 MB) sparte praktisch nichts: bei 11 % Trefferdichte liegt der
+// mittlere Abstand zweier gesuchter Eintraege unter der Toleranz, also verschmolz alles
+// zu 73 Riesenbloecken und der gezielte Abruf war wieder ein Volldownload.
+// 256 KB ist der Knick: ab hier kostet jede weitere Halbierung mehr Anfragen als sie
+// Bytes spart. Etwas langsamer als 2 MB (mehr Pausen), aber ein Drittel des Datenvolumens —
+// bei einem Monatslauf ist die Uhr egal und die Last bei der SEC nicht.
+const LUECKE_MAX = 256 * 1024;
 const BLOCK_MAX = 48 * 1024 * 1024;   // Obergrenze je Abruf, damit ein Fehlschlag billig bleibt
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
