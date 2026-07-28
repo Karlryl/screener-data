@@ -19,7 +19,11 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const WF = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'daily-pull.yml'), 'utf8');
+// Zeilenenden vereinheitlichen: git materialisiert die Datei unter Windows mit CRLF.
+// Ohne das suchen die Proben unten nach einem Zeilenumbruch und finden nichts — ein
+// Falschalarm, den es nur auf Karls Rechner gibt, waehrend die CI (Linux) gruen bleibt.
+const WF = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'daily-pull.yml'), 'utf8')
+  .split('\r\n').join('\n');
 
 let pass = 0, fail = 0;
 function check(name, fn) {

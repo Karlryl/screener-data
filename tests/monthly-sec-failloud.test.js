@@ -25,8 +25,12 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const WF = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'monthly-sec-xbrl.yml'), 'utf8');
-const DAILY = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'daily-pull.yml'), 'utf8');
+// Zeilenenden vereinheitlichen: git materialisiert die Dateien unter Windows mit CRLF —
+// ohne das finden die Block-Suchen unten nichts (Falschalarm nur lokal, CI bleibt gruen).
+const WF = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'monthly-sec-xbrl.yml'), 'utf8')
+  .split('\r\n').join('\n');
+const DAILY = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'daily-pull.yml'), 'utf8')
+  .split('\r\n').join('\n');
 
 let pass = 0, fail = 0;
 function check(name, fn) {
