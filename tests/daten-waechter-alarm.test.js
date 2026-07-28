@@ -95,14 +95,21 @@ check('der Schrumpf-Waechter meldet Drift jetzt als Fehler, nicht als Notiz', ()
   // entfernt und das VERHALTEN geprueft.
   const roh = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'check-pull-stats.js'), 'utf8');
   const code = roh.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
-  // Der Drift-Zweig steht zwischen dem Discord-Versand und dem Ende von main().
-  const i = code.indexOf('postDiscord(msg)');
-  assert.ok(i > 0, 'der Drift-Zweig wurde umgebaut — Probe anpassen');
+  // 29.07.: Der Anker war `postDiscord(msg)` — also ausgerechnet die Zeile, die mit dem
+  // Discord-Ausbau verschwunden ist. Der Anker ist jetzt die ::error::-Zeile SELBST:
+  // sie ist der Alarm, um den es geht, und sie kann nicht wegfallen, ohne dass die
+  // gepruefte Eigenschaft mit ihr wegfaellt.
+  const i = code.indexOf('::error::Pull-Stats-Drift');
+  assert.ok(i > 0, 'der Drift-Zweig schreibt kein ::error:: mehr — Alarm weg');
   const rest = code.slice(i, i + 400);
   assert.ok(/return\s+1\s*;/.test(rest),
-    'der Drift-Zweig gibt nicht 1 zurueck — der Lauf bliebe gruen, und Discord ist nicht konfiguriert');
-  assert.ok(/::error::Pull-Stats-Drift/.test(roh), 'der Drift-Fall muss ::error:: schreiben');
+    'der Drift-Zweig gibt nicht 1 zurueck — der Lauf bliebe gruen');
   assert.ok(/ALLOW_PULL_DRIFT/.test(code), 'das Ventil fuer bekannte, gewollte Einbrueche muss bleiben');
+  // Und der Absturzpfad darf ebenfalls nicht still gruen sein (29.07.).
+  const j = code.indexOf('require.main === module');
+  assert.ok(j > 0, 'kein Einstiegspunkt gefunden');
+  assert.ok(!/process\.exit\(\s*0\s*\)/.test(code.slice(code.indexOf('.catch(', j))),
+    'der Absturzpfad meldet Erfolg — ein toter Waechter waere fuer immer gruen');
 });
 
 console.log('\ndaten-waechter-alarm: ' + pass + ' ok, ' + fail + ' fail');

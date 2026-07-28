@@ -298,12 +298,7 @@ jobs:
             exit 1
           fi
 
-      - name: Notify on failure
-        if: failure()
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: |
-          if [ -z "$DISCORD_WEBHOOK" ]; then exit 0; fi
-          curl -H "Content-Type: application/json" -X POST \
-            -d "{\"content\": \"⚠ SEC-XBRL pull failed at $(date -u). See: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
-            "$DISCORD_WEBHOOK"
+      # 29.07.: Discord-Benachrichtigung entfernt (Karl-Freigabe). DISCORD_WEBHOOK war nie
+      # gesetzt, der Schritt also immer ein No-Op — er sah aus wie ein zweiter Alarmkanal
+      # und war keiner. Ein fehlgeschlagener Lauf ist das rote X in Actions; das ist
+      # Karls einziger Kanal und er reicht.

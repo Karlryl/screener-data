@@ -7,10 +7,10 @@ name: Data Freshness Heartbeat
 # gestoppt, GitHub-Auto-Disable, Konfig-Fehler), meldet dort nichts. Dieser Heartbeat
 # laeuft in einem VOM Daily-Pull UNABHAENGIGEN Kanal und misst die Export-Frische direkt.
 #
-# ALARMKANAL: fail-loud (exit 1) -> GitHub mailt dem Repo-Owner nativ (KEIN Secret noetig,
-# funktioniert sofort). Discord zusaetzlich NUR wenn das Repo-Secret DISCORD_WEBHOOK gesetzt
-# ist — Stand 2026-07-05 ist es NICHT gesetzt, d.h. die bestehenden Discord-Steps im
-# Daily-Pull sind tote No-Ops; native Fail-Mail ist der aktuell einzige echte Kanal.
+# ALARMKANAL: fail-loud (exit 1) -> rotes X in Actions, dazu GitHubs native Fail-Mail an
+# den Repo-Owner (KEIN Secret noetig). Das ist seit dem 29.07. der EINZIGE Kanal — der
+# Discord-Zweig ist raus (Karl-Freigabe). Er war nie mehr als ein No-Op: DISCORD_WEBHOOK
+# war nie gesetzt, und Karl liest ohnehin kein Discord, sondern das rote X.
 #
 # RESTRISIKO (Masterplan 0.7, bewusst dokumentiert): GitHub deaktiviert GEPLANTE Workflows
 # nach 60 Tagen Repo-Inaktivitaet automatisch — dann waere auch dieser Heartbeat still tot.
@@ -53,7 +53,6 @@ jobs:
       # 9999 (max-stale), same fail-loud convention as the previous local-read-failure branch.
       - name: Check export freshness
         env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           MAX_AGE_DAYS: '2'
           FORCE: ${{ github.event.inputs.force_alarm }}
         run: |
@@ -70,15 +69,11 @@ jobs:
           echo "Export-Alter (gh-pages findash-export/v1/index.json .generated_at): ${age_days} Tage (Schwelle: ${MAX_AGE_DAYS})"
           if [ "$FORCE" = "true" ] || [ "$age_days" -gt "$MAX_AGE_DAYS" ]; then
             msg="Screener-Daten VERALTET: Export ${age_days} Tage alt (Schwelle ${MAX_AGE_DAYS}d). URSACHE: Daily-Pull ist rot oder laeuft nicht. NAECHSTER SCHRITT: Actions pruefen -> ${{ github.server_url }}/${{ github.repository }}/actions/workflows/daily-pull.yml"
+            # 29.07.: Discord-Zweig entfernt (Karl-Freigabe). Der Webhook war nie gesetzt,
+            # es lief also immer der else-Zweig — zwei Kanaele auf dem Papier, einer in
+            # Wirklichkeit. Der wirksame Alarm ist die Zeile darueber (::error:: + exit 1
+            # = rotes X in Actions) und GitHubs native Fail-Mail an den Besitzer.
             echo "::error::$msg"
-            if [ -n "$DISCORD_WEBHOOK" ]; then
-              curl -sf -H "Content-Type: application/json" -X POST \
-                -d "{\"content\": \"🚨 $msg\"}" "$DISCORD_WEBHOOK" \
-                && echo "Discord-Alarm gesendet." \
-                || echo "Discord-POST fehlgeschlagen (nicht blockierend)."
-            else
-              echo "DISCORD_WEBHOOK nicht gesetzt — Alarm laeuft ueber GitHubs native Fail-Mail an den Owner."
-            fi
             exit 1
           fi
           echo "OK: Export frisch (<= ${MAX_AGE_DAYS} Tage)."

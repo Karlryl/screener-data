@@ -298,22 +298,15 @@ jobs:
       # zu verpuffen — ein Schema-Drift heisst, die Extraktion korrumpiert still Daten.
       # Nur 2=Yahoo-unreachable bleibt non-fatal (transient, kein Extraktionsfehler).
       - name: Schema-Drift Canary
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
           set +e
           node tests/yahoo-schema-canary.js
           canary_exit=$?
           echo "Schema-Drift Canary exit code: $canary_exit"
           if [ "$canary_exit" -eq 1 ]; then
+            # 29.07.: Discord-Zweig entfernt (Karl-Freigabe). Der wirksame Alarm ist die
+            # Zeile hier plus exit 1 — rotes X in Actions. Der Webhook war nie gesetzt.
             echo "::error::SCHEMA-CANARY DRIFT — Yahoo field(s) moved; pull-yahoo extraction may be silently corrupting data"
-            if [ -z "$DISCORD_WEBHOOK" ]; then
-              echo "DISCORD_WEBHOOK not set, skipping Discord notification."
-            else
-              curl -H "Content-Type: application/json" -X POST \
-                -d "{\"content\": \"🚨 SCHEMA-CANARY DRIFT — Yahoo field(s) moved; pull-yahoo extraction may be silently corrupting data. Detected at $(date -u). See run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
-                "$DISCORD_WEBHOOK"
-            fi
             exit 1
           fi
           if [ "$canary_exit" -eq 2 ]; then
@@ -337,15 +330,9 @@ jobs:
           if-no-files-found: warn
           retention-days: 1
 
-      - name: Notify on failure
-        if: failure()
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: |
-          if [ -z "$DISCORD_WEBHOOK" ]; then echo "DISCORD_WEBHOOK not set, skipping notification."; exit 0; fi
-          curl -H "Content-Type: application/json" -X POST \
-            -d "{\"content\": \"⚠ Yahoo-Pull PREP failed at $(date -u). See run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
-            "$DISCORD_WEBHOOK"
+      # 29.07.: Discord-Benachrichtigung bei Fehlschlag entfernt (Karl-Freigabe) —
+      # DISCORD_WEBHOOK war nie gesetzt, der Schritt also immer ein No-Op. Ein
+      # fehlgeschlagener prep-Job ist ohnehin ein rotes X in Actions.
 
   # ============================================================================
   # PULL (matrix, N shards in parallel) — the ONLY parallelised work.
@@ -626,15 +613,15 @@ jobs:
         run: node scripts/macro-regime.js
         continue-on-error: true
 
-      # Tag 133g: Pull-Stats Monitoring — Discord-Alert wenn ein Pull-Output >25% vs
-      # 4-Week-Median shrinkt. Aggregiert ueber das gemergte Set.
+      # Tag 133g / 29.07.: Pull-Stats Monitoring — meldet, wenn ein Pull-Output >25 % unter
+      # den 4-Wochen-Median faellt. Der Alarm lief frueher nach Discord und damit ins Leere;
+      # seit dem 28.07. faerbt die Drift den Lauf rot (exit 1, am Job-Ende eingesammelt),
+      # seit dem 29.07. ist der Discord-Rest raus. Ventil bleibt ALLOW_PULL_DRIFT=1.
       - name: Pull-Stats Check
         id: w_pullstats
         env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           ALLOW_PULL_DRIFT: ${{ vars.ALLOW_PULL_DRIFT || '0' }}
         run: |
-          if [ -z "$DISCORD_WEBHOOK" ]; then echo "DISCORD_WEBHOOK not configured — Discord alerts disabled."; fi
           node scripts/check-pull-stats.js
         continue-on-error: true
 
@@ -790,12 +777,7 @@ jobs:
           echo "alle vier Daten-Waechter still."
 
       - name: Pipeline Health Check
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
-          if [ -z "$DISCORD_WEBHOOK" ]; then
-            echo "DISCORD_WEBHOOK not configured — health check will run without Discord alerts."
-          fi
           node scripts/pipeline-health-check.js
 
       # Tag 146/153: gh-pages-Deploy 1 von 2 (index.html + outputs/, inkl. dem
@@ -850,15 +832,9 @@ jobs:
           echo "gh-pages push failed after 3 attempts"
           exit 1
 
-      - name: Notify on failure
-        if: failure()
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: |
-          if [ -z "$DISCORD_WEBHOOK" ]; then echo "DISCORD_WEBHOOK not set, skipping notification."; exit 0; fi
-          curl -H "Content-Type: application/json" -X POST \
-            -d "{\"content\": \"⚠ Yahoo-Pull MERGE failed at $(date -u). See run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
-            "$DISCORD_WEBHOOK"
+      # 29.07.: Discord-Benachrichtigung bei Fehlschlag entfernt (Karl-Freigabe) —
+      # DISCORD_WEBHOOK war nie gesetzt, der Schritt also immer ein No-Op. Ein
+      # fehlgeschlagener merge-Job ist ohnehin ein rotes X in Actions.
 
   # ============================================================================
   # SCORING (unchanged logic; needs: pull -> needs: merge, + snapshot source).

@@ -88,29 +88,17 @@ for (const r of reports) {
   console.log(`  [${marker}] ${r.script}: ${r.n_ok}/${r.n_total} (${(r.failure_rate*100).toFixed(2)}% failed)`);
 }
 
-async function _notifyAndExit() {
+// 29.07.: Der Discord-Versand ist raus (Karl-Freigabe). Er war nie mehr als ein
+// No-Op — DISCORD_WEBHOOK war nicht gesetzt —, sah aber wie ein zweiter Alarmkanal aus.
+// Der wirksame Alarm ist die ::error::-Zeile plus Exit 1: rotes X in Actions, und das
+// ist der einzige Kanal, den Karl liest. Die Funktion braucht dadurch kein await mehr,
+// aber der Name bleibt: sie meldet und beendet.
+function _notifyAndExit() {
   if (breached.length === 0) { process.exit(0); }
-  console.error('::error::' + breached.length + ' script(s) exceeded ' + (THRESHOLD*100) + '% failure threshold');
-  const webhook = process.env.DISCORD_WEBHOOK;
-  if (webhook) {
-    const msg = '⚠ Pipeline health breach:\n' + breached.map(r => `  • ${r.script}: ${(r.failure_rate*100).toFixed(2)}% failed (${r.n_failed}/${r.n_total})`).join('\n');
-    // F-SC-007 (Tag 181): previously the webhook was fire-and-forget — `process.exit`
-    // ran before the fetch promise resolved, so the very alert this step exists to
-    // surface was silently dropped. Await the fetch with a hard timeout so a hung
-    // Discord doesn't block CI indefinitely.
-    try {
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 5000);
-      await fetch(webhook, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ content: msg }),
-        signal: ctrl.signal
-      });
-      clearTimeout(timer);
-    } catch (e) {
-      console.log('Discord post failed: ' + e.message);
-    }
+  console.error('::error::' + breached.length + ' script(s) exceeded ' + (THRESHOLD * 100) + '% failure threshold');
+  for (const r of breached) {
+    // Die Einzelheiten gehoeren ins Protokoll, nicht in eine Nachricht, die niemand liest.
+    console.error(`::error::  ${r.script}: ${(r.failure_rate * 100).toFixed(2)}% fehlgeschlagen (${r.n_failed}/${r.n_total})`);
   }
   process.exit(1);
 }

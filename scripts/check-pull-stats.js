@@ -34,12 +34,6 @@ const fs = require('fs');
 const path = require('path');
 // Tag 218: atomic output writes (audit F-218b-03)
 const { writeFileAtomic } = require('../lib/atomic-write.js');
-// Tag 219a (audit F-218b systemic): shared Discord helper. Previously this
-// file carried a private fire-and-forget `https.request(...)` postDiscord
-// that exhibited the same defect Tag 181 / F-SC-007 closed in
-// pipeline-health-check.js — the process exited before the request resolved
-// and the drift alert was silently dropped.
-const { postDiscord } = require('../lib/discord.js');
 // Tag 220c (audit F-219b-03 LOW): shared schema-aware watchlist loader.
 // Without it, a rollback to a bare-array watchlist would silently set
 // universeSize=null, disabling the drift detector forever.
@@ -168,7 +162,8 @@ async function main() {
   }
   const msg = '⚠ Pull-Stats Drift (' + today.asOf + '): ' +
     alerts.map(a => `${a.metric} ${(a.drift*100).toFixed(0)}% (today=${a.today}, median=${a.median})`).join(', ');
-  await postDiscord(msg);
+  // 29.07.: Der Discord-Versand ist raus (Karl-Freigabe) — der Webhook existierte nie,
+  // und Karl liest ohnehin nur das rote X.
   // 28.07.: frueher stand hier `return 0; // never fail workflow; alert is enough`.
   // Der Alarm war aber KEINER: DISCORD_WEBHOOK ist nicht gesetzt (der Workflow sagt es
   // selbst — "Discord alerts disabled"), und Karl liest ohnehin kein Discord, sondern
@@ -183,14 +178,16 @@ async function main() {
 module.exports = { collectStats, detectStatsDrift, median, HIST_DIR, OUT_DIR };
 
 if (require.main === module) {
-  main().then(code => process.exit(code || 0)).catch(async e => {
-    console.error('check-pull-stats failed: ' + e.message);
-    // audit F-A-2026-06-21: a top-level crash previously exited 0 with only a
-    // console line nobody reads, so a dead drift monitor reported green forever.
-    // Best-effort Discord ping makes the dead monitor visible; still exit 0 so
-    // the workflow never fails on a monitoring crash. Guard the post itself so a
-    // Discord failure can't escalate into a non-zero exit / unhandled rejection.
-    try { await postDiscord('check-pull-stats crashed: ' + e.message); } catch (_) { /* swallow */ }
-    process.exit(0);
+  main().then(code => process.exit(code || 0)).catch(e => {
+    // 29.07.: Hier stand `process.exit(0)` mit einem Discord-Ping als Sichtbarmachung.
+    // Der Ping geht ins Leere (DISCORD_WEBHOOK ist nicht gesetzt), und damit war ein
+    // ABGESTUERZTER Waechter fuer immer gruen — genau die Klasse Fehler, gegen die er
+    // gebaut wurde, nur eine Ebene hoeher. Ein Waechter, der beim eigenen Absturz
+    // Erfolg meldet, ist keiner.
+    // Jetzt derselbe Weg wie beim erkannten Drift zwei Zeilen weiter oben: ::error::
+    // plus Exit 1. Der Schritt traegt continue-on-error, sein Ergebnis wird am Ende
+    // des Jobs eingesammelt und faerbt den Lauf rot — Karls einziger Alarmkanal.
+    console.error('::error::check-pull-stats abgestuerzt (Waechter hat NICHT geprueft): ' + e.message);
+    process.exit(1);
   });
 }

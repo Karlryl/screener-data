@@ -128,7 +128,11 @@ test('BH-143: Reihenfolge Download-Snapshots -> Prune (post-snapshot) -> Merge-M
 // ── BH-113 / BH-114: beide gh-pages-Deploys pruefen Branch-Existenz vor jedem
 //    destruktiven git-init-Fallback (statt jeden Clone-Fehler pauschal so zu lesen)
 test('BH-113: Deploy 1 (merge-Job) klont bestehenden gh-pages statt git init -b (voller Re-Init)', () => {
-  const s = section('name: Deploy to GitHub Pages', 'name: Notify on failure');
+  // 29.07.: Endmarke war `name: Notify on failure` — der Discord-Schritt, der mit dem
+  // Discord-Ausbau verschwunden ist. Der Deploy ist jetzt der LETZTE Schritt des
+  // merge-Jobs; die Endmarke ist deshalb der naechste Job. Der haelt laenger als ein
+  // beliebiger Nachbarschritt.
+  const s = section('name: Deploy to GitHub Pages', '\n  scoring:');
   assert.match(s, /git ls-remote --exit-code/);
   assert.match(s, /git clone --depth 1 --branch gh-pages/);
 });

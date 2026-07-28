@@ -162,7 +162,7 @@ Run with `AUDIT_SCORE_MULTIPLIERS=1` to enable q-spike-penalty + listing-age mul
 ├── pull-historical-prices.js              # daily OHLCV
 ├── pull-earnings-dates.js                 # Yahoo earnings calendar
 ├── refresh-universe.js                    # ticker universe assembly
-├── detect-changes.js                      # state-diff + Discord alerts
+├── detect-changes.js                      # state-diff (Alarm = rotes X in Actions)
 ├── snapshot-picks.js                      # freeze daily picks for walk-forward
 ├── snapshot-methods-history.js            # freeze per-method pass-rates
 ├── generate-screener.js                   # Bloomberg-style 6-tab dashboard
@@ -195,8 +195,8 @@ Run with `AUDIT_SCORE_MULTIPLIERS=1` to enable q-spike-penalty + listing-age mul
 │   ├── pick-diff.js                       # what's new, what's gone, why
 │   ├── elliott-export.js                  # CSV export for downstream Elliott-Wave tool
 │   ├── archive-old-snapshots.js           # NDJSON compaction (keep-days policy)
-│   ├── picks-regression-check.js          # pick-count drift Discord alert
-│   ├── check-pull-stats.js                # pull-output shrink Discord alert
+│   ├── picks-regression-check.js          # pick-count drift (Alarm = rotes X)
+│   ├── check-pull-stats.js                # pull-output shrink (Alarm = rotes X)
 │   ├── pipeline-health-check.js           # per-script failure-rate aggregator
 │   ├── compute-method-drift.js            # sparkline data
 │   └── macro-regime.js                    # SPY 200d-MA → BULL/BEAR/SIDEWAYS
@@ -267,9 +267,8 @@ drift.
 | Secret               | Required | Purpose                                                         |
 |----------------------|----------|-----------------------------------------------------------------|
 | `FINNHUB_API_KEY`    | Optional | Augments universe discovery via Finnhub `/stock/symbol`         |
-| `DISCORD_WEBHOOK`    | Optional | Pick-regression, pull-stats, pipeline-health, failure notifications |
 
-If `DISCORD_WEBHOOK` is unset the workflow logs `"… not configured — alerts disabled"` and continues. `FINNHUB_API_KEY` absence narrows the discovered universe but does not fail the run.
+Der einzige Alarmkanal ist das **rote X in GitHub Actions** (plus GitHubs native Fail-Mail an den Besitzer). Der frühere Discord-Weg ist am 29.07.2026 entfernt worden — der Webhook war nie gesetzt, der Kanal also immer ein No-Op, der wie ein zweiter Kanal aussah. `FINNHUB_API_KEY` absence narrows the discovered universe but does not fail the run.
 
 **Repo permissions:** Settings → Actions → General → Workflow permissions → "Read and write permissions". Required for the bot commit + `gh-pages` deploy.
 
