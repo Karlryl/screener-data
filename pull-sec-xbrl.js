@@ -48,6 +48,29 @@ const USER_AGENT = require('./lib/sec-user-agent').secUserAgent();
 const RATE_DELAY_MS = 125;       // 8 req/sec (under SEC 10/sec limit)
 const RATE_LIMIT_BACKOFF_MS = 30000; // F-006: pause after an HTTP 429 before continuing
 const STALE_DAYS = 90;           // re-pull after 90 days (typical 10-Q cycle)
+// Negativ-Cache (29.07.): Ein CIK, der KEINE companyfacts hat, antwortet jeden Monat
+// wieder mit 404 — bei rund 1.000 solchen CIKs sind das >1.000 vergebliche Anfragen je
+// Monatslauf. Nach NOTFOUND_STREAK aufeinanderfolgenden 404 wird der CIK fuer
+// NOTFOUND_PAUSE_DAYS uebersprungen. Bewusst mit Ablauf und nicht fuer immer: eine Firma
+// kann anfangen zu berichten (Boersengang, Wechsel von 20-F auf 10-K). Ein einzelner
+// 404 aendert weiterhin nichts — der kann eine Stoerung sein.
+const NOTFOUND_STREAK = 3;
+const NOTFOUND_PAUSE_DAYS = 180;
+
+/**
+ * Ist dieser CIK gerade negativ gesperrt? Rein und ohne Nebenwirkung, damit die Regel
+ * ohne Netz pruefbar ist. `jetzt` wird hereingereicht statt gelesen — ein Test, der auf
+ * die Systemuhr angewiesen ist, prueft die Uhr mit.
+ */
+function istNegativGesperrt(eintrag, jetzt) {
+  if (!eintrag) return false;
+  const straehne = eintrag.notFoundStreak || 0;
+  if (straehne < NOTFOUND_STREAK) return false;
+  const zuletzt = Date.parse(eintrag.lastNotFoundAt || '');
+  if (!Number.isFinite(zuletzt)) return false;   // ohne Datum keine Sperre
+  const tage = (jetzt.getTime() - zuletzt) / 86400000;
+  return tage < NOTFOUND_PAUSE_DAYS;
+}
 
 function parseArgs(argv) {
   const args = { max: Infinity, concurrency: 1 };
@@ -132,7 +155,7 @@ async function main() {
     return d.toISOString();
   })();
 
-  let pulled = 0, skipped304 = 0, skippedFresh = 0, notFound = 0, errors = 0, rateLimited = 0;
+  let pulled = 0, skipped304 = 0, skippedFresh = 0, notFound = 0, errors = 0, rateLimited = 0, skippedNotFound = 0;
   // BH-005 fix: a break below (429/error abort) used to fall through to a
   // silent exit 0 — manifest.summary carried no trace of the early stop, so
   // e.g. 100 ok + 51 err (33.8%) passed the <50% error-rate gate green.
@@ -163,6 +186,13 @@ async function main() {
       skippedFresh++;
       continue;
     }
+    // Negativ-Cache: mehrfach hintereinander 404 und die Pause laeuft noch -> gar nicht
+    // erst fragen. Die Pause ist absichtlich endlich; nach ihrem Ablauf wird erneut
+    // versucht, damit ein Neu-Berichter nicht dauerhaft dunkel bleibt.
+    if (istNegativGesperrt(prior, new Date())) {
+      skippedNotFound++;
+      continue;
+    }
     const url = `https://data.sec.gov/api/xbrl/companyfacts/CIK${t.cik}.json`;
     try {
       const res = await get(url, prior && prior.lastModified);
@@ -182,7 +212,14 @@ async function main() {
         // audit/fix: transient 404 must not 90-day-blackout a valid CIK (was fresh fetchedAt on notFound).
         // Mirror the 13F/429 soft-retry pattern: do NOT stamp a fresh fetchedAt, so the stale-gate
         // (~line 145, fetchedAt > staleCutoff) won't suppress the re-fetch — the next run retries soon.
-        manifest.entries[t.cik] = Object.assign({}, prior, { ticker: t.ticker, notFound: true, lastError: 'HTTP 404 (not found, will retry next run)' });
+        const straehne = ((prior && prior.notFoundStreak) || 0) + 1;
+        manifest.entries[t.cik] = Object.assign({}, prior, {
+          ticker: t.ticker, notFound: true, notFoundStreak: straehne,
+          lastNotFoundAt: new Date().toISOString(),
+          lastError: straehne >= NOTFOUND_STREAK
+            ? `HTTP 404 zum ${straehne}. Mal in Folge — pausiert ${NOTFOUND_PAUSE_DAYS} Tage`
+            : 'HTTP 404 (not found, will retry next run)',
+        });
         notFound++;
       } else {
         writeFileAtomic(filePath, res.body);
@@ -228,7 +265,7 @@ async function main() {
       }
     }
     if ((pulled + skipped304) % 100 === 0 && (pulled + skipped304) > 0) {
-      console.log(`  progress: pulled=${pulled} 304=${skipped304} fresh=${skippedFresh} 404=${notFound} err=${errors}`);
+      console.log(`  progress: pulled=${pulled} 304=${skipped304} fresh=${skippedFresh} 404=${notFound} 404-pausiert=${skippedNotFound} err=${errors}`);
       // F-SM-023 (Tag 189): atomic — every 100-success flush, and final.
       writeFileAtomic(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
     }
@@ -236,9 +273,9 @@ async function main() {
   }
 
   manifest.lastRun = today;
-  manifest.summary = { pulled, skipped304, skippedFresh, notFound, errors, rateLimited, totalKnown: tickers.size, aborted };
+  manifest.summary = { pulled, skipped304, skippedFresh, notFound, skippedNotFound, errors, rateLimited, totalKnown: tickers.size, aborted };
   writeFileAtomic(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
-  console.log('Done. pulled=' + pulled + ' 304=' + skipped304 + ' fresh=' + skippedFresh + ' 404=' + notFound + ' err=' + errors + ' 429=' + rateLimited + (aborted ? ' ABORTED' : ''));
+  console.log('Done. pulled=' + pulled + ' 304=' + skipped304 + ' fresh=' + skippedFresh + ' 404=' + notFound + ' 404-pausiert=' + skippedNotFound + ' err=' + errors + ' 429=' + rateLimited + (aborted ? ' ABORTED' : ''));
   // BH-005 fix: an aborted run must fail the CI step, not exit 0 — the
   // Verify-SEC-Coverage gate only looks at the error *rate*, which an early
   // abort can keep under the 50% threshold (e.g. 100 ok + 51 err = 33.8%).
@@ -249,4 +286,4 @@ if (require.main === module) {
   main().catch(e => { console.error(e); process.exit(1); });
 }
 
-module.exports = { main };
+module.exports = { main, istNegativGesperrt, NOTFOUND_STREAK, NOTFOUND_PAUSE_DAYS };

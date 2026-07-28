@@ -73,7 +73,11 @@ function annualConcept(gaap, concept) {
       const prev = out.get(x.fy);
       // BH-007: keep accn (filing identity) alongside the value so callers can
       // verify two concepts for the same fy actually came from the same 10-K.
-      if (!prev || x.end > prev.end) out.set(x.fy, { val: x.val, end: x.end, accn: x.accn });
+      // 4.1 Auflage 5 (29.07.): `filed` = das EINREICHUNGSDATUM der Fassung, aus der der
+      // Wert stammt. Ohne es ist jede Rueckrechnung vergiftet — ein Wert fuer 2016 in der
+      // Fassung von 2019 war 2016 noch nicht bekannt. Was jetzt nicht mitgeschrieben wird,
+      // fehlt spaeter unwiederbringlich (dieselbe Lektion wie beim Ticker-Mitschnitt).
+      if (!prev || x.end > prev.end) out.set(x.fy, { val: x.val, end: x.end, accn: x.accn, filed: x.filed || null });
     }
   }
   return out;
@@ -163,6 +167,19 @@ function buildAnnual(gaap, dei = {}) {
     annualAssets: fys.map((fy) => balCell(assets, fy)),
     annualCurrentLiabilities: fys.map((fy) => balCell(curliab, fy)),
     annualShares: fys.map((fy) => ({ value: sharesAtFyEnd(gaap, dei, fyEnds.get(fy)) })),
+    // Je Geschaeftsjahr das SPAETESTE Einreichungsdatum unter den Konzepten, die diese
+    // Zeile gefuellt haben — bewusst das spaeteste: erst ab diesem Tag war die ganze
+    // Zeile oeffentlich. Ein frueheres Datum wuerde eine Rueckrechnung Wissen unterstellen,
+    // das damals noch nicht da war. Null, wenn die SEC kein filed mitliefert.
+    annualFiled: fys.map((fy) => {
+      let spaetestes = null;
+      for (const m of [rev, opinc, ni, ocf, capex, gp, assets, curliab]) {
+        const row = m.get(fy);
+        const f = row && row.filed;
+        if (f && (spaetestes == null || f > spaetestes)) spaetestes = f;
+      }
+      return { value: spaetestes };
+    }),
   };
 }
 

@@ -13,6 +13,7 @@ const assert = require('node:assert/strict');
 const zlib = require('zlib');
 const zip = require('../lib/zip-stream.js');
 const { baueBloecke, cikKarte } = require('../scripts/fetch-secbulk.js');
+const { extractSecSeries } = require('../merge-sec-xbrl.js');
 
 let pass = 0, fail = 0;
 function check(name, fn) {
@@ -197,6 +198,46 @@ check('das Datentor des Berichts stimmt mit dem der Achse ueberein', () => {
   assert.ok(m, 'ROIC_STAB_MIN_YEARS in axes.js nicht gefunden');
   assert.equal(Number(m[1]), R.ROIC_STAB_MIN_YEARS,
     'Bericht und Achse haben verschiedene Datentore — der Bericht misst dann etwas anderes als das System rechnet');
+});
+
+
+// ── 4.1 Auflage 5 (29.07.): das Einreichungsdatum wird mitgeschrieben ────────────
+// Der Waechter nagelt die SACHE fest: kommt je Geschaeftsjahr das Datum heraus, ab dem
+// die ZEILE oeffentlich war? Das ist das SPAETESTE filed unter den beteiligten Konzepten —
+// ein frueheres wuerde einer Rueckrechnung Wissen unterstellen, das es damals nicht gab.
+check('extractSecSeries schreibt je Jahr das spaeteste Einreichungsdatum mit', () => {
+  const cf = {
+    entityName: 'Testfirma AG',
+    facts: {
+      'us-gaap': {
+        Revenues: { units: { USD: [
+          { form: '10-K', fp: 'FY', fy: 2024, val: 1000, end: '2024-12-31', accn: 'a-1', filed: '2025-02-10' },
+          { form: '10-K', fp: 'FY', fy: 2023, val: 900, end: '2023-12-31', accn: 'a-0', filed: '2024-02-12' },
+        ] } },
+        OperatingIncomeLoss: { units: { USD: [
+          // NACHTRAEGLICH eingereicht: dieselbe Zeile war erst ab diesem Tag vollstaendig.
+          { form: '10-K', fp: 'FY', fy: 2024, val: 200, end: '2024-12-31', accn: 'a-1', filed: '2025-08-01' },
+        ] } },
+      },
+      dei: {},
+    },
+  };
+  const s = extractSecSeries(cf);
+  const fys = s.annual._fys;
+  const i2024 = fys.indexOf(2024);
+  const i2023 = fys.indexOf(2023);
+  assert.ok(i2024 >= 0 && i2023 >= 0, 'beide Jahre muessen auf der Achse liegen');
+  assert.equal(s.annual.annualFiled.length, fys.length, 'gleich lang wie jede andere Reihe');
+  assert.equal(s.annual.annualFiled[i2024].value, '2025-08-01', 'spaetestes, nicht fruehestes');
+  assert.equal(s.annual.annualFiled[i2023].value, '2024-02-12');
+});
+
+check('fehlt das Einreichungsdatum, wird KEINES erfunden', () => {
+  const cf = { facts: { 'us-gaap': { Revenues: { units: { USD: [
+    { form: '10-K', fp: 'FY', fy: 2024, val: 1000, end: '2024-12-31', accn: 'a-1' },
+  ] } } }, dei: {} } };
+  const s = extractSecSeries(cf);
+  assert.equal(s.annual.annualFiled[0].value, null);
 });
 
 console.log('\nsecbulk: ' + pass + ' ok, ' + fail + ' fail');
