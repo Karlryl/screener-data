@@ -216,11 +216,37 @@ jobs:
           SEC_XBRL_CACHE_DIR: external-data/sec-xbrl
         run: node scripts/build-secannual-smallcap.js
 
+      # PHASE 4.1 (Tags 480-482): die Langhistorie fuer ALLE US-Namen, aus dem Bulk-Archiv.
+      # Bewusst NEBEN build-secannual.js statt darin: sec-secannual.json fuettert das Scoring,
+      # sec-annual-bulk.jsonl NICHT — es ist die Basis des Verlaesslichkeits-Berichts, solange
+      # W_ROIC_STABILITY bei 0 steht (Urteils-Revision 28.07.). Ein Test haelt die Trennung fest.
+      # Kein continue-on-error: schlaegt der Abruf fehl, soll der Lauf rot werden statt still
+      # mit der Datei vom Vormonat weiterzulaufen — genau der Fehler, den Tag 479 geheilt hat.
+      - name: Fetch SEC bulk long history (4.1)
+        if: steps.find_run.outputs.run_id != ''
+        timeout-minutes: 60
+        run: node scripts/fetch-secbulk.js
+
+      # Der Bericht laeuft bei JEDEM Datenlauf mit, damit die Frage "darf die Achse scharf?"
+      # beim naechsten Mal nicht wieder bei null beginnt. Er entscheidet nichts, er misst nur;
+      # das Gate (>=80 % Board-Abdeckung UND board-eigenes rho >=0,35) steht in seiner Ausgabe.
+      - name: ROIC reliability report (4.1)
+        if: steps.find_run.outputs.run_id != ''
+        run: |
+          mkdir -p reports
+          # ohne pipefail wuerde der Exit-Code von tee gewinnen und ein Absturz des Berichts
+          # als gruen durchgehen
+          set -o pipefail
+          node scripts/roic-reliability.js | tee "reports/roic-reliability-$(date -u +%Y-%m).txt"
+
       - name: Commit manifest
         run: |
           git config user.name "sec-xbrl-bot"
           git config user.email "sec-xbrl-bot@users.noreply.github.com"
+          mkdir -p reports
           git add external-data/sec-xbrl/_manifest.json external-data/sec-secannual.json external-data/sec-secannual-smallcap.json
+          if [ -f external-data/sec-annual-bulk.jsonl ]; then git add external-data/sec-annual-bulk.jsonl; fi
+          if ls reports/roic-reliability-*.txt >/dev/null 2>&1; then git add reports/roic-reliability-*.txt; fi
           if git diff --staged --quiet; then
             echo "No manifest changes to commit."
           else
