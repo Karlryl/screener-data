@@ -147,6 +147,39 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ steps.find_run.outputs.run_id }}
 
+      # ── FAIL-LOUD statt Warnung (28.07.) ────────────────────────────────────────
+      # BEFUND: sec-secannual.json wurde seit Bestehen dieses Workflows NIE von einem
+      # Bot-Lauf geaendert — alle drei Aenderungen (03.07./10.07./21.07.) stammen von Hand.
+      # Die Laeufe meldeten trotzdem gruen. Die Kette dahinter, Glied fuer Glied belegt:
+      #   daily-pull laeuft Di-Sa, sein snapshots-Artefakt lebt EINEN Tag
+      #   (retention-days: 1). Dieser Workflow startet am 1. jedes Monats, egal welcher
+      #   Wochentag. Faellt der Erste auf Sonntag oder Montag, ist das Artefakt des letzten
+      #   Laufs (Samstag) bereits geloescht. `find_run` findet die run_id trotzdem — sie
+      #   prueft nur, ob ein LAUF existierte, nicht ob sein Artefakt noch da ist. Der
+      #   Download scheitert unter continue-on-error, snapshots/ bleibt leer, der
+      #   Empty-Universe-Guard in build-secannual.js macht einen "lauten No-Op" als
+      #   ::warning:: — und der Job endet mit 0.
+      # Betroffen sind rund 2 von 7 Monaten dauerhaft (01.11.2026, 01.02.2027, 01.03.2027).
+      # Ein ::warning:: ist KEIN rotes X und damit ausserhalb des einzigen Alarmkanals,
+      # den Karl liest.
+      #
+      # Dieser Schritt laeuft BEWUSST OHNE `if:` — auch ein leeres run_id (gar kein Lauf
+      # gefunden) muss rot werden, nicht still uebersprungen.
+      # Die STRUKTURELLE Loesung (Abkopplung vom daily-pull-Artefakt) haengt an der
+      # 4.1-Architekturentscheidung; bis dahin macht dieser Schritt den Ausfall wenigstens
+      # sichtbar, statt ihn zu verstecken.
+      - name: Verify snapshots restored (fail-loud)
+        run: |
+          N=$(ls snapshots/*.json 2>/dev/null | wc -l)
+          echo "snapshots/: $N Dateien"
+          # Untergrenze bewusst grosszuegig: das Universum hat rund 12.500 Snapshots.
+          # Unter 1.000 ist der Restore kaputt, nicht bloss duenn — ein Teil-Pull faengt
+          # der Coverage-Gate an anderer Stelle ab.
+          if [ "$N" -lt 1000 ]; then
+            echo "::error::snapshots-Restore fehlgeschlagen ($N Dateien, erwartet >1000). Ohne Universum baut sec-secannual.json NICHTS und der Lauf waere frueher still gruen gewesen. Wahrscheinlichste Ursache: das daily-pull-Artefakt ist abgelaufen (retention-days: 1) — pruefen, ob der Monatserste auf einen Sonntag oder Montag fiel."
+            exit 1
+          fi
+
       # run-screener.js (mergeSecIntoUniverse) reads EXCLUSIVELY external-data/sec-secannual.json,
       # so without this step the "monthly maintenance" was green while the scored SEC series
       # silently never refreshed. build-secannual.js reads the just-pulled per-CIK companyfacts
