@@ -31,9 +31,18 @@
 // Umsatz wechselt das Konzept ueber die Jahre -> Prioritaets-Union (aktuelles zuerst).
 const REV_CONCEPTS = [
   'RevenueFromContractWithCustomerExcludingAssessedTax', // ~2019+
+  'RevenueFromContractWithCustomerIncludingAssessedTax', // ~2019+, Filer die Verkaufssteuern
+  //   im Umsatz ausweisen (Einzelhandel, Vertriebe). GLEICHE Groesse, andere Steuer-Behandlung
+  //   -> als Gesamtumsatz brauchbar. Live-Beleg 28.07.: AAR Corp fuehrt AUSSCHLIESSLICH dieses
+  //   Tag fuer 8 Jahre, hatte damit 8/16 statt 16/16 Umsatzjahren.
   'Revenues',                                            // Fallback-Uebergangsjahre
   'SalesRevenueNet',                                     // ~2017-
 ];
+// BEWUSST NICHT in der Liste: SalesRevenueGoodsNet / SalesRevenueServicesNet. Das sind
+// BESTANDTEILE des Umsatzes, keine Gesamtgroesse — bei AAR stehen beide (je 8 Jahre) NEBEN
+// SalesRevenueNet. Als Fallback wuerde ein Filer, der Waren und Dienste getrennt ausweist,
+// stillschweigend nur seinen Warenanteil melden. Eine fehlende Jahreszahl ist ehrlich,
+// ein Bestandteil in der Rolle der Gesamtgroesse ist falsch.
 const C_OPINC = 'OperatingIncomeLoss';
 const C_NETINC = 'NetIncomeLoss';
 const C_OCF = 'NetCashProvidedByUsedInOperatingActivities';
