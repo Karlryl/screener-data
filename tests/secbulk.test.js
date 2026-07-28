@@ -159,5 +159,45 @@ check('der Bulk-Abruf fasst die LIVE-Scoringdatei nicht an', () => {
   assert.ok(!/sec-secannual\.json/.test(src), 'fetch-secbulk.js darf sec-secannual.json nicht schreiben');
 });
 
+// --- Verlaesslichkeits-Bericht -------------------------------------------
+const R = require('../scripts/roic-reliability.js');
+
+check('Spearman liefert bei perfekter und bei umgekehrter Ordnung +-1', () => {
+  assert.equal(R.spearman([1, 2, 3, 4], [10, 20, 30, 40]).toFixed(3), '1.000');
+  assert.equal(R.spearman([1, 2, 3, 4], [40, 30, 20, 10]).toFixed(3), '-1.000');
+  // rangbasiert: eine monotone, nichtlineare Verzerrung darf nichts aendern
+  assert.equal(R.spearman([1, 2, 3, 4], [1, 4, 9, 16]).toFixed(3), '1.000');
+});
+
+check('die Paarungsregel ist die der Achse — jedes Jahr braucht alle drei Felder', () => {
+  // Genau axes.js roicStability: OpInc, Assets UND CurrLiab present, invested > 0.
+  // Waere hier eine Regel gelockert, meldete der Bericht eine Tiefe, die das Scoring
+  // nie sieht — und das Urteil ueber das Scharfschalten stuende auf falschen Zahlen.
+  const j = R.roicJahre({
+    _fys: [2024, 2023, 2022, 2021, 2020],
+    annualOpInc: [{ value: 100 }, { value: 90 }, { value: null }, { value: 70 }, { value: 60 }],
+    annualAssets: [{ value: 1000 }, { value: 900 }, { value: 800 }, { value: 700 }, { value: 600 }],
+    //                                              ^kein OpInc      ^CurrLiab fehlt   ^invested<=0
+    annualCurrentLiabilities: [{ value: 400 }, { value: 300 }, { value: 200 }, { value: null }, { value: 600 }],
+  });
+  assert.deepEqual(j.map((x) => x.fy), [2024, 2023], 'nur die vollstaendigen Jahre zaehlen');
+  assert.equal(j[0].roic.toFixed(4), (100 / 600).toFixed(4));
+});
+
+check('der Vertrauensbereich ist reproduzierbar', () => {
+  // Ein Bericht, der bei jedem Lauf andere Grenzen nennt, taugt nicht als Grundlage fuer
+  // ein Ja/Nein zum Scharfschalten.
+  const paare = Array.from({ length: 60 }, (_, i) => [i, i + (i % 5)]);
+  assert.deepEqual(R.bootstrapKI(paare, 200), R.bootstrapKI(paare, 200));
+});
+
+check('das Datentor des Berichts stimmt mit dem der Achse ueberein', () => {
+  const achse = require('fs').readFileSync(require('path').join(__dirname, '..', 'src', 'scoring', 'axes.js'), 'utf8');
+  const m = achse.match(/const ROIC_STAB_MIN_YEARS = (\d+)/);
+  assert.ok(m, 'ROIC_STAB_MIN_YEARS in axes.js nicht gefunden');
+  assert.equal(Number(m[1]), R.ROIC_STAB_MIN_YEARS,
+    'Bericht und Achse haben verschiedene Datentore — der Bericht misst dann etwas anderes als das System rechnet');
+});
+
 console.log('\nsecbulk: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);

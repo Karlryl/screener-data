@@ -33,6 +33,7 @@ const fs = require('fs');
 const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const IN_DEFAULT = path.join(ROOT, 'external-data', 'sec-annual-bulk.jsonl');
+const { route } = require(path.join(ROOT, 'src/scoring/router.js'));
 
 // Das Produktions-Gate der Achse. NICHT hier neu erfunden, sondern aus der Achse gelesen —
 // weicht es ab, misst der Bericht etwas anderes als das System rechnet.
@@ -203,7 +204,12 @@ function run() {
       if (!f.endsWith('.json') || f.startsWith('_')) continue;
       let s; try { s = JSON.parse(fs.readFileSync(path.join(SNAP, f), 'utf8')); } catch (_) { continue; }
       const p = (s && (s.profile || s.meta)) || {};
-      if (s && s.meta && s.meta.ticker && p.sector) branche.set(s.meta.ticker, p.sector);
+      if (!(s && s.meta && s.meta.ticker && p.sector)) continue;
+      // NUR geroutete Namen. Die Boards werden aus ihnen gebaut; wer das Gesamtuniversum
+      // als Nenner nimmt, misst eine Abdeckung, die es in keinem Board gibt (Financial
+      // Services: 4 % ueber alles gegen 13 % ueber die Board-Mitglieder).
+      if (route(s).action !== 'route') continue;
+      branche.set(s.meta.ticker, p.sector);
     }
   } catch (_) { /* ohne Snapshots faellt nur dieser Abschnitt aus */ }
 
@@ -236,12 +242,45 @@ function run() {
       console.log('  ' + 'INNERHALB der Branchen'.padEnd(24) + 'rho ' + f2(innen) + '  n=' + gewN + ' (nach Groesse gewichtet)');
       console.log('  Bricht dieser Wert gegenueber dem Gesamtuniversum ein, misst die Achse Branche, nicht Firma.');
     }
+
+    // --- 4. Ist ein Board homogen genug, dass die Achse fuer ALLE gilt? ---
+    // Solange die Achse nichts misst, ist die Coverage-Schrumpfung rangneutral (Null-Test:
+    // 0,068 Punkte, null Verdraengungen). Sobald sie etwas misst, wird aus dem neutralen
+    // Platzhalter eine Bevorzugung: die abgedeckte Haelfte spreizt sich, die andere klebt am
+    // Median. Ein Board, in dem nur die Haelfte die Achse hat, bewertet nach zwei Massstaeben.
+    const mitAchse = new Set(firmen.filter((f) => f.jahre.length >= ROIC_STAB_MIN_YEARS).map((f) => f.ticker));
+    const proBoard = new Map();
+    for (const [tk, b] of branche) {
+      if (!proBoard.has(b)) proBoard.set(b, { n: 0, achse: 0 });
+      const e = proBoard.get(b);
+      e.n += 1;
+      if (mitAchse.has(tk)) e.achse += 1;
+    }
+    const rhoJeBranche = new Map(zeilen2.map(([b, paare]) => [b, spearman(paare.map((p) => p[0]), paare.map((p) => p[1]))]));
+    console.log('\n=== 4 · IST EIN BOARD HOMOGEN GENUG? ===');
+    console.log('Board                     Namen   hat Achse   rho     scharfschalten?');
+    const MIN_ABDECKUNG = 0.80, MIN_RHO = 0.35;
+    let reif = 0;
+    for (const [b, e] of [...proBoard.entries()].filter(([, x]) => x.n >= 40).sort((a, b2) => b2[1].n - a[1].n)) {
+      const abd = e.achse / e.n;
+      const rho = rhoJeBranche.has(b) ? rhoJeBranche.get(b) : null;
+      const ok = abd >= MIN_ABDECKUNG && rho !== null && rho >= MIN_RHO;
+      if (ok) reif += 1;
+      const grund = ok ? 'JA' : (abd < MIN_ABDECKUNG ? 'nein — Abdeckung' : 'nein — rho');
+      console.log('  ' + b.padEnd(24) + String(e.n).padStart(5) + (100 * abd).toFixed(0).padStart(10) + ' %'
+        + (rho === null ? '     —' : f2(rho).padStart(7)) + '   ' + grund);
+    }
+    console.log('  ' + '-'.repeat(64));
+    console.log('  reif zum Scharfschalten: ' + reif + ' Boards'
+      + (reif === 0 ? '  -> W_ROIC_STABILITY bleibt 0' : '  -> Board-weise Aktivierung moeglich'));
   }
 
-  console.log('\n=== 4 · MASSSTAB ===');
-  console.log('Scharfschalten von W_ROIC_STABILITY verlangt laut Urteil vom 28.07.:');
-  console.log('  die UNTERE Grenze des Vertrauensbereichs klar ueber 0,35 — bei BEIDEN Messungen.');
-  console.log('  Die Abdeckungsquote ist ausdruecklich KEIN Kriterium.');
+  console.log('\n=== 5 · MASSSTAB (Urteils-Revision vom 28.07.) ===');
+  console.log('Scharfschalten von W_ROIC_STABILITY verlangt JE BOARD BEIDES:');
+  console.log('  (a) >= 80 % der Board-Mitglieder tragen die Achse  (Homogenitaet)');
+  console.log('  (b) das Board-eigene rho >= 0,35                   (Verlaesslichkeit)');
+  console.log('Die Verlaesslichkeit ist global belegt (rho 0,47 [0,42; 0,52]) — sie ist nicht');
+  console.log('mehr der Blocker. Der Blocker ist (a): kein Board kommt heute ueber ~52 %.');
 }
 
 module.exports = { roicJahre, kennzahl, spearman, bootstrapKI, ROIC_STAB_MIN_YEARS };
