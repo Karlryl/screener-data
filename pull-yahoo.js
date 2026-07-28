@@ -1469,7 +1469,23 @@ function mapFTSToAnnual(annualRows, cashRows) {
   const annualNetIncome = [];
   for (const r of sorted) {
     const rev = _ftsValue(r, 'totalRevenue', 'TotalRevenue');
-    const oi = _ftsValue(r, 'operatingIncome', 'OperatingIncome', 'totalOperatingIncomeAsReported');
+    // 28.07.: REIHENFOLGE GEDREHT. Yahoo liefert in DERSELBEN Antwort zwei verschiedene
+    // Betriebsergebnisse, und hier stand jahrelang das falsche zuerst:
+    //   operatingIncome                 = NORMALISIERT (ohne Wertminderungen,
+    //                                     Restrukturierung, M&A — Yahoos totalUnusualItems)
+    //   totalOperatingIncomeAsReported  = die BERICHTETE Zahl aus dem Abschluss
+    // Weil operatingIncome fast immer belegt ist, wurde der As-Reported-Zweig praktisch
+    // nie erreicht. Gemessen an 143 Konfliktfirmen (516 vergleichbare Jahre, live gegen
+    // fundamentalsTimeSeries, Jahres-Zuordnung per Umsatz gesichert):
+    //     totalOperatingIncomeAsReported == SEC-Abschluss : 483 von 516 (93,6 %)
+    //     operatingIncome                == SEC-Abschluss : 121 von 516 (23,4 %)
+    // Der Unterschied IST der Einmalaufwand: AGCO FY2024 operatingIncome 927 Mio,
+    // berichtet -122 Mio, totalUnusualItems -1.050 Mio (Wertminderung 370, Restrukturierung
+    // 173) -> 927-1050 = -123. Gleiches Muster bei ALB, AMN, AAP.
+    // Folge des alten Zustands: eine Firma mit berichtetem Betriebsverlust galt dem
+    // Screener als profitabel. Das ist kein Methodik-Streit, sondern ein falsches Feld.
+    // operatingIncome bleibt als Rueckfall — AsReported fehlt in rund 3 % der Jahre.
+    const oi = _ftsValue(r, 'totalOperatingIncomeAsReported', 'TotalOperatingIncomeAsReported', 'operatingIncome', 'OperatingIncome');
     const gp = _ftsValue(r, 'grossProfit', 'GrossProfit');
     const ni = _ftsValue(r, 'netIncome', 'NetIncome', 'netIncomeContinuousOperations');
     // audit/fix F1 (2026-06-25): was `continue` on an all-empty income row. But
@@ -1609,7 +1625,10 @@ function mapFTSToQuarterly(quarterlyRows) {
   for (const r of sorted) {
     const rev = _ftsValue(r, 'totalRevenue', 'TotalRevenue');
     revenueQ.push(rev != null ? { value: rev } : null);
-    const oi = _ftsValue(r, 'operatingIncome', 'OperatingIncome');
+    // Gleiche Reihenfolge wie im Jahres-Pfad oben. Hier fehlte der As-Reported-Zweig
+    // bisher KOMPLETT — die Quartalsreihe war also noch systematischer normalisiert als
+    // die Jahresreihe. Sie speist u.a. die Breakeven-Trajektorie in profit-tier.js.
+    const oi = _ftsValue(r, 'totalOperatingIncomeAsReported', 'TotalOperatingIncomeAsReported', 'operatingIncome', 'OperatingIncome');
     opIncQ.push(oi != null ? { value: oi } : null);
     const gp = _ftsValue(r, 'grossProfit', 'GrossProfit');
     grossProfitQ.push(gp != null ? { value: gp } : null);

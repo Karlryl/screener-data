@@ -1,65 +1,77 @@
 {
-  "_doc": "Vintage-Ausschlussliste. Von Hand/Audit gepflegt (Datum + Grund). scripts/rank-ic.js KONSUMIERT diese Liste und schließt gelistete Vintages aus der Auswertung aus. write-board-history.js schreibt hier NIE Einträge (legt nur dieses Gerüst an). Keine Löschung, nur ein Flag.",
-  "excluded": [
-    {
-      "date": "2026-07-14",
-      "board": null,
-      "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
-    },
-    {
-      "date": "2026-07-15",
-      "board": null,
-      "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
-    },
-    {
-      "date": "2026-07-16",
-      "board": null,
-      "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
-    },
-    {
-      "date": "2026-07-17",
-      "board": null,
-      "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
-    },
-    {
-      "date": "2026-07-18",
-      "board": null,
-      "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
-    }
-  ],
-  "_massstab_brueche": [
-    {
-      "ab_commit": "ece786900b",
-      "tag": "Tag 437",
-      "datum": "2026-07-26",
-      "was": "revAcceleration saison-bereinigt (Umsatz-Beschleunigung)",
-      "wirkung": "Score-Niveau und Rangfolge aendern sich; Vintages davor sind mit spaeteren nicht vergleichbar.",
-      "betroffene_vintages": [
-        "2026-07-14",
-        "2026-07-15",
-        "2026-07-16",
-        "2026-07-17",
-        "2026-07-18"
-      ],
-      "entscheid": "Karl-Entscheid 10 (26.07.2026): Bruch markieren, Altes stehen lassen, NICHT neu rechnen."
-    },
-    {
-      "ab_commit": "e15b83a778",
-      "tag": "Tag 467-469",
-      "datum": "2026-07-27",
-      "was": "Issuer-Dedup erkennt Anteilsklassen im Firmennamen (\"... Class A\") als denselben Emittenten; zusaetzlich erscheinen Firmen ab 22,7 Mrd. nicht mehr in der Hypergrowth-Uebersicht.",
-      "wirkung": "Der Groessen-Filter beruehrt die Messreihe NICHT — board-history friert die volle Kohorte ein, nicht die Uebersicht. Der Dedup verschiebt die Kohorten-Zusammensetzung leicht.",
-      "letztes_altes_vintage": "2026-07-27",
-      "boards": [
-        "software-comm-services"
-      ],
-      "_bindung_doc": "Die Ausnahme haengt am EXAKTEN Vorgaenger (letztes_altes_vintage), nicht am Datum des neuen Vintages. Grund: (a) waere sie an einen Kalendertag gebunden und das Vintage dieses Tages landete aus einem FREMDEN Grund nicht (ein anderes Board wird suspect -> der Commit-Schritt nimmt das ganze Tagesverzeichnis raus), waere sie verbraucht ohne je gewirkt zu haben, und die Dauersperre kaeme zurueck; (b) waere sie an 'Vorgaenger aelter als X' gebunden, aktivierte auch eine Datenluecke die erhoehte Grenze. Der exakte Vorgaenger greift nur beim echten Neu-gegen-Alt-Vergleich, ueberlebt einen ausgefallenen Lauf und endet von selbst, sobald ein Vintage im neuen Massstab gelandet ist (dann ist der Vorgaenger ein anderer). 2026-07-27 ist der letzte committete Stand im alten Massstab (Lauf 01:43 UTC, Commit 96071fa048).",
-      "_boards_doc": "NUR Namen, bewusst KEINE Groessenangabe: die Hoehe der Tagesgrenze rechnet write-board-history.js selbst aus den beiden verglichenen Vintages (gemessene Kohorten-Schrumpfung, gedeckelt auf THRESHOLD_MULTIPLIER x kalibrierte Schwelle). Es gibt hier also nichts, dessen Vertippen die Grenze aufblaehen koennte. Aufgenommen ist genau das Board, dessen kalibrierte Schwelle den gemessenen Bruch NICHT abdeckt: software-comm-services (Bruch-Delta 1,10 gegen Schwelle 1,00). Die anderen 12 Boards wurden nachgerechnet - bei ihnen deckt die normale Schwelle den Bruch bereits ab (groesster Fall financials: Strukturgrenze 1,82 gegen Schwelle 3,20), sie stehen deshalb NICHT hier und behalten ihre unveraenderte Schwelle.",
-      "ab_wann_wirksam": "Die Vintages 2026-07-26 und 2026-07-27 stammen aus Laeufen VOR der Aenderung (der 27.07. aus Commit 042bd7f3f3, 01:43 UTC). Wirksam ist die Aenderung erstmals im Vintage 2026-07-28.",
-      "wert_gate": "Ein Nachlauf am 27.07. abends (Lauf 30252496643) wollte den Messpunkt desselben Tages mit den neuen Werten ueberschreiben. Das Wert-Gate hat das als SUSPECT abgelehnt (software-comm-services p99-Delta 1,10 gegen Schwelle 1,00, ein Board von 14). Richtig so: zwei Maßstaebe unter demselben Datum waeren der schlimmste Fall. Der urspruengliche Messpunkt blieb unveraendert stehen.",
-      "entscheid": "KEIN Vintage ausgeschlossen. Der Bruch ist um Groessenordnungen kleiner als Tag 437 (dort wurde eine ganze Achse neu berechnet), und ein Ausschluss wuerde die einzigen verwertbaren Messpunkte vernichten. Die Zahl steht hier, damit eine spaetere Auswertung selbst entscheiden kann.",
-      "korrektur_27_07_abends": "Der urspruengliche nachpruefen-Satz war FALSCH und ist ersetzt. Er lautete: 'Meldet das Wert-Gate auch fuer das Vintage 2026-07-28 SUSPECT, ist die Ursache NICHT die einmalige Umstellung.' Genau das Gegenteil stimmt: weil der committete 27.07. aus dem Lauf VOR der Aenderung stammt, zeigt sich die Umstellung ERSTMALS im Vergleich 28.07. gegen 27.07. Ein SUSPECT am 28.07. waere also die Vorhersage der Umstellung gewesen, nicht ihr Gegenbeweis. Schlimmer: das 28.07.-Vintage waere nicht committet worden, der 29.07. haette wieder gegen den 27.07. verglichen und dasselbe Urteil gefaellt — die Messreihe waere dauerhaft blockiert und das CI dauerhaft rot geblieben.",
-      "nachpruefen": "Meldet das Wert-Gate fuer das Vintage 2026-07-29 (also NACH dem Bruch-Tag, wenn wieder Neu gegen Neu verglichen wird) erneut SUSPECT auf software-comm-services, ist die Ursache NICHT die einmalige Umstellung — dann hier nachtragen und ernsthaft pruefen."
-    }
-  ]
+ "_doc": "Vintage-Ausschlussliste. Von Hand/Audit gepflegt (Datum + Grund). scripts/rank-ic.js KONSUMIERT diese Liste und schließt gelistete Vintages aus der Auswertung aus. write-board-history.js schreibt hier NIE Einträge (legt nur dieses Gerüst an). Keine Löschung, nur ein Flag.",
+ "excluded": [
+  {
+   "date": "2026-07-14",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
+  },
+  {
+   "date": "2026-07-15",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
+  },
+  {
+   "date": "2026-07-16",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
+  },
+  {
+   "date": "2026-07-17",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
+  },
+  {
+   "date": "2026-07-18",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
+  }
+ ],
+ "_massstab_brueche": [
+  {
+   "ab_commit": "ece786900b",
+   "tag": "Tag 437",
+   "datum": "2026-07-26",
+   "was": "revAcceleration saison-bereinigt (Umsatz-Beschleunigung)",
+   "wirkung": "Score-Niveau und Rangfolge aendern sich; Vintages davor sind mit spaeteren nicht vergleichbar.",
+   "betroffene_vintages": [
+    "2026-07-14",
+    "2026-07-15",
+    "2026-07-16",
+    "2026-07-17",
+    "2026-07-18"
+   ],
+   "entscheid": "Karl-Entscheid 10 (26.07.2026): Bruch markieren, Altes stehen lassen, NICHT neu rechnen."
+  },
+  {
+   "ab_commit": "e15b83a778",
+   "tag": "Tag 467-469",
+   "datum": "2026-07-27",
+   "was": "Issuer-Dedup erkennt Anteilsklassen im Firmennamen (\"... Class A\") als denselben Emittenten; zusaetzlich erscheinen Firmen ab 22,7 Mrd. nicht mehr in der Hypergrowth-Uebersicht.",
+   "wirkung": "Der Groessen-Filter beruehrt die Messreihe NICHT — board-history friert die volle Kohorte ein, nicht die Uebersicht. Der Dedup verschiebt die Kohorten-Zusammensetzung leicht.",
+   "letztes_altes_vintage": "2026-07-27",
+   "boards": [
+    "software-comm-services"
+   ],
+   "_bindung_doc": "Die Ausnahme haengt am EXAKTEN Vorgaenger (letztes_altes_vintage), nicht am Datum des neuen Vintages. Grund: (a) waere sie an einen Kalendertag gebunden und das Vintage dieses Tages landete aus einem FREMDEN Grund nicht (ein anderes Board wird suspect -> der Commit-Schritt nimmt das ganze Tagesverzeichnis raus), waere sie verbraucht ohne je gewirkt zu haben, und die Dauersperre kaeme zurueck; (b) waere sie an 'Vorgaenger aelter als X' gebunden, aktivierte auch eine Datenluecke die erhoehte Grenze. Der exakte Vorgaenger greift nur beim echten Neu-gegen-Alt-Vergleich, ueberlebt einen ausgefallenen Lauf und endet von selbst, sobald ein Vintage im neuen Massstab gelandet ist (dann ist der Vorgaenger ein anderer). 2026-07-27 ist der letzte committete Stand im alten Massstab (Lauf 01:43 UTC, Commit 96071fa048).",
+   "_boards_doc": "NUR Namen, bewusst KEINE Groessenangabe: die Hoehe der Tagesgrenze rechnet write-board-history.js selbst aus den beiden verglichenen Vintages (gemessene Kohorten-Schrumpfung, gedeckelt auf THRESHOLD_MULTIPLIER x kalibrierte Schwelle). Es gibt hier also nichts, dessen Vertippen die Grenze aufblaehen koennte. Aufgenommen ist genau das Board, dessen kalibrierte Schwelle den gemessenen Bruch NICHT abdeckt: software-comm-services (Bruch-Delta 1,10 gegen Schwelle 1,00). Die anderen 12 Boards wurden nachgerechnet - bei ihnen deckt die normale Schwelle den Bruch bereits ab (groesster Fall financials: Strukturgrenze 1,82 gegen Schwelle 3,20), sie stehen deshalb NICHT hier und behalten ihre unveraenderte Schwelle.",
+   "ab_wann_wirksam": "Die Vintages 2026-07-26 und 2026-07-27 stammen aus Laeufen VOR der Aenderung (der 27.07. aus Commit 042bd7f3f3, 01:43 UTC). Wirksam ist die Aenderung erstmals im Vintage 2026-07-28.",
+   "wert_gate": "Ein Nachlauf am 27.07. abends (Lauf 30252496643) wollte den Messpunkt desselben Tages mit den neuen Werten ueberschreiben. Das Wert-Gate hat das als SUSPECT abgelehnt (software-comm-services p99-Delta 1,10 gegen Schwelle 1,00, ein Board von 14). Richtig so: zwei Maßstaebe unter demselben Datum waeren der schlimmste Fall. Der urspruengliche Messpunkt blieb unveraendert stehen.",
+   "entscheid": "KEIN Vintage ausgeschlossen. Der Bruch ist um Groessenordnungen kleiner als Tag 437 (dort wurde eine ganze Achse neu berechnet), und ein Ausschluss wuerde die einzigen verwertbaren Messpunkte vernichten. Die Zahl steht hier, damit eine spaetere Auswertung selbst entscheiden kann.",
+   "korrektur_27_07_abends": "Der urspruengliche nachpruefen-Satz war FALSCH und ist ersetzt. Er lautete: 'Meldet das Wert-Gate auch fuer das Vintage 2026-07-28 SUSPECT, ist die Ursache NICHT die einmalige Umstellung.' Genau das Gegenteil stimmt: weil der committete 27.07. aus dem Lauf VOR der Aenderung stammt, zeigt sich die Umstellung ERSTMALS im Vergleich 28.07. gegen 27.07. Ein SUSPECT am 28.07. waere also die Vorhersage der Umstellung gewesen, nicht ihr Gegenbeweis. Schlimmer: das 28.07.-Vintage waere nicht committet worden, der 29.07. haette wieder gegen den 27.07. verglichen und dasselbe Urteil gefaellt — die Messreihe waere dauerhaft blockiert und das CI dauerhaft rot geblieben.",
+   "nachpruefen": "Meldet das Wert-Gate fuer das Vintage 2026-07-29 (also NACH dem Bruch-Tag, wenn wieder Neu gegen Neu verglichen wird) erneut SUSPECT auf software-comm-services, ist die Ursache NICHT die einmalige Umstellung — dann hier nachtragen und ernsthaft pruefen."
+  },
+  {
+   "ab_commit": "ef430194be",
+   "tag": "Tag 489",
+   "datum": "2026-07-28",
+   "was": "Yahoo-Feldreihenfolge fuer das Betriebsergebnis gedreht: totalOperatingIncomeAsReported (die BERICHTETE Zahl) statt operatingIncome (Yahoos NORMALISIERTE Zahl ohne Wertminderungen, Restrukturierung, M&A).",
+   "wirkung": "Score-Niveau und Rangfolge aendern sich universumsweit. Zwei volle Vergleichslaeufe ueber 4.037 Snapshots ergaben 170 Wechsel der Profitabilitaets-Stufe, 20 Track-Flips und 54 Abgaenge aus dem Quality-Board. Der Wert-Gate wird am ersten Lauf danach mit hoher Wahrscheinlichkeit SUSPECT melden — das ist die ERWARTETE Folge der Umstellung, KEIN Defekt.",
+   "letztes_altes_vintage": "2026-07-28",
+   "boards": null,
+   "belege": "An 143 Konfliktfirmen live gemessen (516 vergleichbare Jahre): die berichtete Zahl deckt sich zu 93,6 % mit dem SEC-Abschluss, die normalisierte nur zu 23,4 %. End-to-end verifiziert: AGCO [699,927,1716,1308] -> [596,-122,1700,1265] = exakt die eingereichten Werte; ALB ebenso.",
+   "nachpruefen": "Meldet der Wert-Gate am Lauf NACH dem naechsten erneut SUSPECT, ist die Umstellung NICHT mehr die Ursache — dann echter Defekt, eigener Befund.",
+   "entscheid": "Rat (4 Stimmen, alle vier laufen auf dieselbe Zeile zu) + 9 adversarische Gegenproben, 8 halten. Der Gegenvorschlag SEC-Quelle ist tot: der Bulk-Extrakt hat 0 von 1.589 Nicht-US-Tickern, ein Wechsel liesse ein Drittel des Universums unversorgt."
+  }
+ ]
 }
