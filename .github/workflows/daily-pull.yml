@@ -719,7 +719,15 @@ jobs:
           name: snapshots
           path: |
             snapshots/*.json
-          retention-days: 1
+          # 7 statt 1 (28.07.): der Monatslauf monthly-sec-xbrl.yml startet am ERSTEN jedes
+          # Monats, egal welcher Wochentag. Dieser Lauf hier laeuft Di-Sa. Faellt der Erste
+          # auf Sonntag oder Montag, war das Paket mit einem Tag Haltbarkeit schon geloescht
+          # — der Monatslauf fand nichts und aktualisierte die SEC-Tiefendaten NICHT. Das
+          # traf planmaessig 2 bis 3 Monate im Jahr (naechste Faelle 01.11.2026, 01.02.2027,
+          # 01.03.2027). Seit Tag 479 wird der Monatslauf in dem Fall ROT — ein Alarm, den
+          # Karl gar nicht reparieren koennte. 7 Tage ueberbruecken jedes Wochenende.
+          # Kosten: das Paket ist ~30 MB, sieben Generationen statt einer.
+          retention-days: 7
           if-no-files-found: error
 
       # F4/F6 (Artefakt-Handoff merge→scoring): der scoring-Job checkt github.sha

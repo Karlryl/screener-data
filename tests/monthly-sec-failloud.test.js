@@ -60,14 +60,43 @@ check('die Untergrenze ist gesetzt und nicht bei null', () => {
 
 check('die Ursache steht im Workflow, nicht nur im Commit', () => {
   // Wer den Schritt in zwei Jahren sieht, muss ohne git-Archaeologie verstehen, warum.
-  assert.ok(/retention-days: 1/.test(WF), 'die Artefakt-Lebensdauer muss benannt sein');
+  assert.ok(/Artefakt-Lebensdauer|retention-days/.test(WF), 'die Artefakt-Lebensdauer muss benannt sein');
   assert.ok(/Sonntag oder Montag/.test(WF), 'der konkrete Ausfall-Fall muss benannt sein');
 });
 
-check('die Praemisse stimmt noch: Artefakt lebt einen Tag, daily-pull laeuft Di-Sa', () => {
+/**
+ * Liest retention-days GENAU des benannten Artefakts, nicht irgendeines in der Datei.
+ *
+ * ⚠ Das ist die Heilung eines Fehlers in diesem Test selbst (28.07.): die alte Fassung
+ * pruefte `/retention-days: 1/` gegen die GANZE Datei. daily-pull.yml laedt aber ZWEI
+ * Artefakte hoch — das Shard-Paket (Lebensdauer 1 Tag, wird im selben Lauf verbraucht)
+ * und das snapshots-Paket (das der Monatslauf holt). Als die Lebensdauer des zweiten auf
+ * 7 gesetzt wurde, blieb der Test GRUEN, weil das erste weiter "1" trug. Ein Waechter,
+ * der ein Schreibmuster irgendwo in einer Datei sucht statt die Sache am richtigen Ort,
+ * ist kein Waechter.
+ */
+function retentionVon(yaml, artefaktName) {
+  const i = yaml.indexOf('name: ' + artefaktName + '\n');
+  assert.ok(i > 0, 'Artefakt "' + artefaktName + '" nicht gefunden');
+  const bis = yaml.indexOf('- name:', i);
+  const block = yaml.slice(i, bis > 0 ? bis : i + 2000);
+  const m = block.match(/retention-days:\s*(\d+)/);
+  assert.ok(m, 'retention-days fehlt beim Artefakt "' + artefaktName + '"');
+  return Number(m[1]);
+}
+
+check('das snapshots-Paket ueberlebt das Wochenende', () => {
+  // Der Monatslauf startet am 1., egal welcher Wochentag; daily-pull laeuft Di-Sa.
+  // Faellt der Erste auf Sonntag oder Montag, braucht das Paket mindestens 3 Tage
+  // Haltbarkeit — sonst ist es weg und der Monatslauf wird durch den fail-loud-Schritt
+  // ROT, mit einem Alarm, den Karl nicht reparieren kann.
+  const tage = retentionVon(DAILY, 'snapshots');
+  assert.ok(tage >= 3, 'snapshots lebt nur ' + tage + ' Tag(e) — ein Erster am Sonntag/Montag findet nichts');
+});
+
+check('die Praemisse stimmt noch: daily-pull laeuft Di-Sa, der Monatslauf am Ersten', () => {
   // Faellt eine der beiden, ist die Begruendung oben veraltet — dann soll dieser Test
   // rot werden und zum Nachlesen zwingen, statt eine falsche Erklaerung zu konservieren.
-  assert.ok(/retention-days: 1/.test(DAILY), 'daily-pull haelt das Artefakt nicht mehr 1 Tag');
   assert.ok(/cron: '17 2 \* \* 2-6'/.test(DAILY), 'der daily-pull-Zeitplan hat sich geaendert');
   assert.ok(/cron: '0 8 1 \* \*'/.test(WF), 'der Monats-Zeitplan hat sich geaendert');
 });

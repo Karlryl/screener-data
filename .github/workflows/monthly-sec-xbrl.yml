@@ -151,17 +151,24 @@ jobs:
       # BEFUND: sec-secannual.json wurde seit Bestehen dieses Workflows NIE von einem
       # Bot-Lauf geaendert — alle drei Aenderungen (03.07./10.07./21.07.) stammen von Hand.
       # Die Laeufe meldeten trotzdem gruen. Die Kette dahinter, Glied fuer Glied belegt:
-      #   daily-pull laeuft Di-Sa, sein snapshots-Artefakt lebt EINEN Tag
-      #   (retention-days: 1). Dieser Workflow startet am 1. jedes Monats, egal welcher
-      #   Wochentag. Faellt der Erste auf Sonntag oder Montag, ist das Artefakt des letzten
-      #   Laufs (Samstag) bereits geloescht. `find_run` findet die run_id trotzdem — sie
-      #   prueft nur, ob ein LAUF existierte, nicht ob sein Artefakt noch da ist. Der
-      #   Download scheitert unter continue-on-error, snapshots/ bleibt leer, der
-      #   Empty-Universe-Guard in build-secannual.js macht einen "lauten No-Op" als
-      #   ::warning:: — und der Job endet mit 0.
-      # Betroffen sind rund 2 von 7 Monaten dauerhaft (01.11.2026, 01.02.2027, 01.03.2027).
+      #   daily-pull laeuft Di-Sa, sein snapshots-Artefakt lebte EINEN Tag. Dieser
+      #   Workflow startet am 1. jedes Monats, egal welcher Wochentag. Faellt der Erste
+      #   auf Sonntag oder Montag, war das Artefakt des letzten Laufs (Samstag) bereits
+      #   geloescht. `find_run` findet die run_id trotzdem — sie prueft nur, ob ein LAUF
+      #   existierte, nicht ob sein Artefakt noch da ist. Der Download scheiterte unter
+      #   continue-on-error, snapshots/ blieb leer, der Empty-Universe-Guard in
+      #   build-secannual.js machte einen "lauten No-Op" als ::warning:: — und der Job
+      #   endete mit 0. Betroffen waren rund 2 von 7 Monaten dauerhaft.
       # Ein ::warning:: ist KEIN rotes X und damit ausserhalb des einzigen Alarmkanals,
       # den Karl liest.
+      #
+      # ✅ DIE URSACHE IST SEIT DEM 28.07. AN DER WURZEL BEHOBEN: die Lebensdauer des
+      # snapshots-Artefakts steht in daily-pull.yml jetzt auf 7 Tagen und ueberbrueckt
+      # damit jedes Wochenende. Dieser Schritt bleibt trotzdem — als NETZ, nicht als
+      # Erklaerung des Ist-Zustands. Denn er faengt mehr als den einen Fall: einen
+      # abgebrochenen daily-pull, ein geleertes Artefakt, einen Runner ohne Platz. Ohne
+      # ihn waere jeder dieser Faelle wieder ein stiller Gruen-Lauf.
+      # Der Waechter tests/monthly-sec-failloud.test.js prueft die 7 Tage mit.
       #
       # Dieser Schritt laeuft BEWUSST OHNE `if:` — auch ein leeres run_id (gar kein Lauf
       # gefunden) muss rot werden, nicht still uebersprungen.
