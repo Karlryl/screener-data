@@ -629,6 +629,7 @@ jobs:
       # Tag 133g: Pull-Stats Monitoring — Discord-Alert wenn ein Pull-Output >25% vs
       # 4-Week-Median shrinkt. Aggregiert ueber das gemergte Set.
       - name: Pull-Stats Check
+        id: w_pullstats
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           ALLOW_PULL_DRIFT: ${{ vars.ALLOW_PULL_DRIFT || '0' }}
@@ -647,14 +648,17 @@ jobs:
       # schreibt seine data-health/-Baseline VOR dem ::error::-Drift-Check (landet im
       # git add -A). continue-on-error: ein Watcher-Crash darf den Data-Commit nicht blocken.
       - name: Watch Exchange Coverage
+        id: w_exchange
         run: node scripts/watch-exchange-coverage.js
         continue-on-error: true
 
       - name: Watch Unrouted Quote Share
+        id: w_unrouted
         run: node scripts/watch-unrouted-quote.js
         continue-on-error: true
 
       - name: Watch FX Sanity
+        id: w_fx
         run: node scripts/watch-fx-sanity.js
         continue-on-error: true
 
@@ -755,6 +759,36 @@ jobs:
           retention-days: 1
 
       # Tag 168: Pipeline Health Check nach Commit (blockt Deploy, nicht den Data-Commit).
+      # ── SAMMEL-ALARM: die vier Daten-Waechter ins rote X (28.07.) ────────────────
+      # BEFUND: Boersen-Abdeckung, nicht geroutete Namen, FX-Plausibilitaet und der
+      # Schrumpf-Waechter melden ihre Funde per ::error:: und Exit 1 — aber jeder Schritt
+      # traegt continue-on-error, und der Rest des Jobs laeuft weiter. Der Lauf endete
+      # gruen. Der gedachte zweite Kanal (Discord) existiert nicht: DISCORD_WEBHOOK ist
+      # nicht gesetzt, der Workflow sagt es an zwei Stellen selbst — und Karl liest ohnehin
+      # kein Discord, sondern ausschliesslich das rote X auf GitHub.
+      # Ergebnis: ein stiller Einbruch der Boersen-Abdeckung, ein FX-Sprung oder ein
+      # halbierter Pull kam bei niemandem an.
+      #
+      # WARUM continue-on-error BLEIBT: die Waechter schreiben ihre data-health-Baseline
+      # VOR dem Drift-Check, und der Commit-Schritt weiter oben nimmt sie mit. Wuerde ein
+      # Waechter den Job sofort abbrechen, ginge die Baseline verloren und der naechste
+      # Lauf haette keinen Vergleichsstand — der Alarm wuerde sich selbst blind machen.
+      # Deshalb: erst alles schreiben und committen, DANN einsammeln und rot faerben.
+      # Gleiches Muster wie in monthly-plan-check.yml.
+      - name: Daten-Waechter einsammeln (rotes X)
+        if: always()
+        run: |
+          FEHLER=""
+          [ "${{ steps.w_exchange.outcome }}"  = "failure" ] && FEHLER="$FEHLER Boersen-Abdeckung"
+          [ "${{ steps.w_unrouted.outcome }}"  = "failure" ] && FEHLER="$FEHLER nicht-geroutete-Namen"
+          [ "${{ steps.w_fx.outcome }}"        = "failure" ] && FEHLER="$FEHLER FX-Plausibilitaet"
+          [ "${{ steps.w_pullstats.outcome }}" = "failure" ] && FEHLER="$FEHLER Pull-Schrumpfung"
+          if [ -n "$FEHLER" ]; then
+            echo "::error::Daten-Waechter haben angeschlagen:$FEHLER — Details im jeweiligen Schritt oben. Die Daten sind trotzdem committet (Baseline-Erhalt), aber der Stand ist verdaechtig."
+            exit 1
+          fi
+          echo "alle vier Daten-Waechter still."
+
       - name: Pipeline Health Check
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}

@@ -169,7 +169,15 @@ async function main() {
   const msg = '⚠ Pull-Stats Drift (' + today.asOf + '): ' +
     alerts.map(a => `${a.metric} ${(a.drift*100).toFixed(0)}% (today=${a.today}, median=${a.median})`).join(', ');
   await postDiscord(msg);
-  return 0; // never fail workflow; alert is enough
+  // 28.07.: frueher stand hier `return 0; // never fail workflow; alert is enough`.
+  // Der Alarm war aber KEINER: DISCORD_WEBHOOK ist nicht gesetzt (der Workflow sagt es
+  // selbst — "Discord alerts disabled"), und Karl liest ohnehin kein Discord, sondern
+  // ausschliesslich das rote X auf GitHub. Ein halbierter Pull lief damit still durch.
+  // Jetzt Exit 1; der Schritt traegt weiterhin continue-on-error, sein Ergebnis wird
+  // aber am Ende des Jobs eingesammelt und faerbt den Lauf rot. Ventil bleibt:
+  // ALLOW_PULL_DRIFT=1 (oben) fuer bekannte, gewollte Einbrueche.
+  console.error('::error::Pull-Stats-Drift — ' + msg);
+  return 1;
 }
 
 module.exports = { collectStats, detectStatsDrift, median, HIST_DIR, OUT_DIR };
