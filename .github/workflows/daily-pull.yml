@@ -644,6 +644,14 @@ jobs:
         run: node scripts/watch-unrouted-quote.js
         continue-on-error: true
 
+      # 29.07. (Anlass Cigna): einzelne Jahre, die von BEIDEN Nachbarn um
+      # Groessenordnungen abweichen. Meldet nur NEUE Faelle gegen den mitgefuehrten
+      # Bestand — bekannte schweigen, sonst waere der Waechter ab Tag eins rot.
+      - name: Watch Annual Spikes
+        id: w_spikes
+        run: node scripts/watch-annual-spikes.js
+        continue-on-error: true
+
       - name: Watch FX Sanity
         id: w_fx
         run: node scripts/watch-fx-sanity.js
@@ -769,6 +777,7 @@ jobs:
           [ "${{ steps.w_exchange.outcome }}"  = "failure" ] && FEHLER="$FEHLER Boersen-Abdeckung"
           [ "${{ steps.w_unrouted.outcome }}"  = "failure" ] && FEHLER="$FEHLER nicht-geroutete-Namen"
           [ "${{ steps.w_fx.outcome }}"        = "failure" ] && FEHLER="$FEHLER FX-Plausibilitaet"
+          [ "${{ steps.w_spikes.outcome }}"    = "failure" ] && FEHLER="$FEHLER Jahres-Ausreisser"
           [ "${{ steps.w_pullstats.outcome }}" = "failure" ] && FEHLER="$FEHLER Pull-Schrumpfung"
           if [ -n "$FEHLER" ]; then
             echo "::error::Daten-Waechter haben angeschlagen:$FEHLER — Details im jeweiligen Schritt oben. Die Daten sind trotzdem committet (Baseline-Erhalt), aber der Stand ist verdaechtig."
