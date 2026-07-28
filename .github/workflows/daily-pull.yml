@@ -1068,6 +1068,16 @@ jobs:
             exit "$rc"
           fi
 
+      # S0.2 (Masterplan 6.2): Mitschrift, wer NEU in der Uebersicht steht. Die
+      # Coverage-Studie S0.1 konnte fuer keinen Namen belegen, ob Karl ihn uebersah —
+      # weil niemand aufschrieb, wann er zum ersten Mal auftauchte. Rein beobachtend:
+      # kein Score, keine Achse, kein Alarm. Faellt es aus, fehlt eine Zeile.
+      # BEWUSST OHNE set -e-Ausnahme: das Skript endet bei fehlender/leerer Uebersicht
+      # selbst mit 0 (das ist kein Fehler, sondern ein Lauf ohne Ergebnis weiter vorn).
+      # Nur eine UNLESBARE Uebersicht gibt 1 — und das ist dann auch ein echter Defekt.
+      - name: Write newcomer log (S0.2)
+        run: node scripts/write-newcomer-log.js
+
       - name: Commit board-history vintage to main
         run: |
           git config user.name "yahoo-pull-bot"
@@ -1086,6 +1096,16 @@ jobs:
           else
             git add board-history/
           fi
+          # S0.2: das Newcomer-Log faehrt bewusst im SELBEN Commit mit — es nutzt damit
+          # dieselbe gehaertete Push-Mechanik (Retry, Rebase, Tree-Verifikation) statt
+          # einer zweiten, ungetesteten. Und es faellt NICHT unter die SUSPECT-Ausnahme
+          # oben: die betrifft die Messreihe, deren Werte dann strittig sind. Wer WANN in
+          # der Uebersicht stand, ist davon unberuehrt — diese Beobachtung bleibt richtig,
+          # auch wenn das Wert-Gate am selben Tag anschlaegt.
+          # Explizite Existenzpruefung statt `|| true`: ein unterdruecktes git-add
+          # verschluckt auch echte Fehler. Fehlt das Verzeichnis, hat das Skript bewusst
+          # nichts geschrieben (keine Uebersicht) — dann gibt es auch nichts anzumelden.
+          if [ -d newcomer-log ]; then git add newcomer-log/; fi
           if git diff --staged --quiet; then
             echo "No vintage changes to commit."
           else
