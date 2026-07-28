@@ -422,6 +422,18 @@ function einmalertrag(s) {
   const groesster = Math.max(...letzte4);
   if (groesster / summe < EINMALERTRAG_ANTEIL) return false;
 
+  // Anlauf-Schutz (Rat + Gericht 28.07., Urteil _URTEIL-EINMALERTRAG-2026-07-28.md):
+  // Steigt die Reihe vom aeltesten zum neuesten Quartal monoton, ist der Sprung das Ende
+  // eines Anstiegs und kein Einmalertrag. Ein Anlauf mit rund +84 % je Quartal reisst die
+  // 50-%-Marke rein arithmetisch (r^3 >= 1+r+r^2), ohne dass etwas Einmaliges passiert
+  // waere — und der Saison-Schutz unten greift dort NICHT, weil im Vorjahr noch kaum
+  // Umsatz stand. Genau diese Form haben die Firmen, die Karl finden will.
+  // An der CI-Kohorte gemessen: 12 der 65 geflaggten Zeilen sind solche Anlaeufe, u. a.
+  // 2451.TW (92 -> 100 -> 211 -> 422, stand auf Uebersichts-Rang 28) und ONDS (6 -> 10 -> 30 -> 50).
+  // GEGENPROBE (durchgefuehrt): Regel deaktiviert -> zwei Waechter-Tests rot.
+  const altZuNeu = [...letzte4].reverse();
+  if (altZuNeu.every((v, i) => i === 0 || v >= altZuNeu[i - 1])) return false;
+
   // Saison-Schutz: dominiert im Vorjahr DASSELBE Quartal ebenso stark, ist es Saison und
   // kein Einmaleffekt. Fehlt das Vorjahr, wird nicht geraten — dann bleibt es beim Verdacht.
   const vorjahr = roh.slice(4, 8);

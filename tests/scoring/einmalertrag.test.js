@@ -39,7 +39,38 @@ const snap = (quartale) => ({ timeseries: { revenueQ: quartale.map((v) => (v ===
 
 test('der echte Zealand-Fall feuert', () => {
   // Die Zahlen aus dem ausgelieferten Stand vom 27.07., in Mio. USD.
-  assert.equal(einmalertrag(snap([1382, 8, 10, 5])), true);
+  //
+  // ⚠ KORRIGIERT 28.07.: hier stand [1382, 8, 10, 5], also 1382 als NEUESTES Quartal.
+  // Das ist verdreht. Der Snapshot fuehrt revenueQEnds ["2026-03-31","2025-12-31",
+  // "2025-09-30","2025-06-30"] — das 1382er-Quartal endete am 30.06.2025 und ist das
+  // AELTESTE der vier; das neueste liegt bei 5 Mio. Der Lizenzertrag rollt also im
+  // naechsten Quartal aus dem Fenster. Fuer die Konzentration (groesstes/Summe) war die
+  // Reihenfolge egal, weshalb der Fehler nie aufflog — fuer den Anlauf-Schutz unten
+  // waere er entscheidend geworden.
+  assert.equal(einmalertrag(snap([5, 10, 8, 1382])), true);
+});
+
+test('ein Anlauf feuert NICHT — auch wenn er die 50-%-Marke reisst', () => {
+  // Echte Reihen aus der CI-Kohorte vom 27.07. (newest-first, Mio.). Beide liegen ueber
+  // der Konzentrations-Schwelle und sind trotzdem kein Einmalertrag, sondern ein
+  // Anstieg ueber vier Quartale. Vor dieser Regel trug 2451.TW die Lampe auf Rang 28
+  // der Uebersicht.
+  const anlaeufe = {
+    '2451.TW': [422, 211, 100, 92],
+    ONDS: [50, 30, 10, 6],
+    BMNR: [47, 11, 2, 1],
+  };
+  for (const [name, q] of Object.entries(anlaeufe)) {
+    assert.equal(einmalertrag(snap(q)), false, `${name} ist ein Anlauf und darf nicht feuern`);
+  }
+});
+
+test('ein Anlauf MIT Delle bleibt ein Einmalertrag', () => {
+  // Gegenprobe zum Anlauf-Schutz: ein einziges faellendes Quartal genuegt, damit die
+  // Reihe nicht mehr monoton ist. Sonst wuerde die Regel zu viel verschlucken.
+  // BEAM real: 8 -> 10 -> 114 -> 32 (aelteste zuerst) — steigt, faellt, feuert.
+  assert.equal(einmalertrag(snap([32, 114, 10, 8])), true, 'BEAM muss weiter feuern');
+  assert.equal(einmalertrag(snap([300, 10, 20, 5])), true, 'Delle in der Mitte -> feuert');
 });
 
 test('der echte ABUS-Fall feuert', () => {
@@ -69,8 +100,15 @@ test('vier gleich grosse Quartale feuern nie', () => {
 
 test('genau an der Schwelle feuert es, knapp darunter nicht', () => {
   // 50 % heisst: ein Quartal traegt so viel wie die anderen drei zusammen.
-  assert.equal(einmalertrag(snap([100, 40, 30, 30])), true, 'genau 0,50 muss feuern');
-  assert.equal(einmalertrag(snap([99, 40, 31, 30])), false, 'knapp darunter darf nicht feuern');
+  //
+  // ⚠ Reihen entdrallt 28.07. (waren [100, 40, 30, 30] und [99, 40, 31, 30]): beide liefen
+  // aeltestes -> neuestes monoton durch und haetten am Anlauf-Schutz gehangen statt an der
+  // Schwelle. Beim zweiten Fall waere der Test dadurch aus dem FALSCHEN Grund gruen
+  // geblieben - er haette nicht mehr die Schwelle geprueft. Nur die mittleren Quartale
+  // sind getauscht; Summe (200) und groesstes Quartal bleiben gleich, die gemessene
+  // Konzentration also auch.
+  assert.equal(einmalertrag(snap([100, 30, 40, 30])), true, 'genau 0,50 muss feuern');
+  assert.equal(einmalertrag(snap([99, 31, 40, 30])), false, 'knapp darunter darf nicht feuern');
 });
 
 test('Saison feuert NICHT - dasselbe Quartal dominiert auch im Vorjahr', () => {
@@ -81,11 +119,28 @@ test('Saison feuert NICHT - dasselbe Quartal dominiert auch im Vorjahr', () => {
 
 test('ein Ausreisser OHNE Vorjahres-Entsprechung feuert trotz acht Quartalen', () => {
   // Dieselbe Laenge, aber im Vorjahr war die Verteilung normal -> echter Einmaleffekt.
-  assert.equal(einmalertrag(snap([600, 200, 100, 100, 110, 105, 100, 95])), true);
+  //
+  // ⚠ Reihe angepasst 28.07. (war [600, 200, 100, 100, …]): die alte lief aeltestes ->
+  // neuestes glatt 100 -> 100 -> 200 -> 600 durch und ist damit selbst ein ANLAUF, den
+  // der neue Schutz abschaltet. Diese drei Tests pruefen den SAISON-Schutz, nicht den
+  // Anlauf-Schutz — die mittleren zwei Quartale sind deshalb getauscht, damit die Reihe
+  // eine Delle hat. Konzentration (600/1000) und Vorjahr bleiben unveraendert.
+  assert.equal(einmalertrag(snap([600, 100, 200, 100, 110, 105, 100, 95])), true);
+});
+
+test('ein glatter Anlauf feuert auch mit Vorjahr nicht — bewusste Verhaltensaenderung', () => {
+  // Haelt die Entscheidung vom 28.07. fest, damit sie nicht in einem Fixture versteckt
+  // liegt: 100 -> 100 -> 200 -> 600 (aeltestes zuerst) reisst die 50-%-Marke, ist aber
+  // ein Anstieg ueber vier Quartale. Bis Tag 476 feuerte die Lampe hier. Sie tut es
+  // jetzt nicht mehr, und das ist gewollt: genau diese Form haben die Firmen, die Karl
+  // finden will.
+  assert.equal(einmalertrag(snap([600, 200, 100, 100])), false);
+  assert.equal(einmalertrag(snap([600, 200, 100, 100, 110, 105, 100, 95])), false,
+    'auch mit vollstaendigem Vorjahr bleibt der Anlauf ein Anlauf');
 });
 
 test('dominiert im Vorjahr ein ANDERES Quartal, ist es kein Saisonmuster', () => {
-  assert.equal(einmalertrag(snap([600, 200, 100, 100, 95, 580, 190, 95])), true);
+  assert.equal(einmalertrag(snap([600, 100, 200, 100, 95, 580, 190, 95])), true);
 });
 
 test('unvollstaendige oder unbrauchbare Reihen ergeben null, nicht false', () => {
@@ -102,11 +157,11 @@ test('unvollstaendige oder unbrauchbare Reihen ergeben null, nicht false', () =>
 test('eine Luecke im VORJAHR laesst den Verdacht stehen, statt ihn wegzuraten', () => {
   // Ohne vollstaendiges Vorjahr kann Saison nicht ausgeschlossen werden - dann bleibt es
   // beim Verdacht. Der umgekehrte Weg (Entwarnung bei fehlenden Daten) waere gefaehrlich.
-  assert.equal(einmalertrag(snap([600, 200, 100, 100, 580, null, 95, 95])), true);
+  assert.equal(einmalertrag(snap([600, 100, 200, 100, 580, null, 95, 95])), true);
 });
 
 test('die Lampe ist registriert und laeuft im normalen Durchlauf mit', () => {
-  const r = evaluateLamps(snap([1382, 8, 10, 5]));
+  const r = evaluateLamps(snap([5, 10, 8, 1382]));
   assert.ok('einmalertrag' in r.flags, 'Lampe fehlt in der Auswertung');
   assert.ok(r.active.includes('einmalertrag'), 'Lampe steht nicht in der aktiven Liste');
 });
