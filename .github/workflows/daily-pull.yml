@@ -1078,6 +1078,22 @@ jobs:
       - name: Write newcomer log (S0.2)
         run: node scripts/write-newcomer-log.js
 
+      # TAEGLICHER MITSCHNITT DER TICKER-LANDKARTE — zeitkritisch und nicht nachholbar.
+      # NASDAQ und die SEC ueberschreiben ihre Symbolverzeichnisse taeglich, es gibt kein
+      # Archiv. Ohne diesen Schritt bleibt "welche Ticker gab es am 01.08.2025?" fuer immer
+      # unbeantwortbar, und jede Rueckrechnung sieht nur die Ueberlebenden — sie haelt sie
+      # dann fuer das ganze Feld (Ueberlebenden-Verzerrung in Reinform).
+      #
+      # Kein continue-on-error: ein verpasster Tag ist unwiederbringlich, das gehoert in
+      # Karls Alarmkanal. Das Skript beendet sich bei einer kaputten Quelle SELBST mit 1
+      # (Untergrenze 5.000 Symbole), statt einen leeren Tag zu schreiben, der spaeter wie
+      # ein Massen-Delisting aussaehe.
+      #
+      # Der Lauf Di-Sa deckt alle fuenf Handelstage ab: der Dienstagslauf haelt Montag
+      # fest, der Samstagslauf Freitag.
+      - name: Snapshot ticker map
+        run: node scripts/snapshot-ticker-map.js
+
       - name: Commit board-history vintage to main
         run: |
           git config user.name "yahoo-pull-bot"
@@ -1106,6 +1122,9 @@ jobs:
           # verschluckt auch echte Fehler. Fehlt das Verzeichnis, hat das Skript bewusst
           # nichts geschrieben (keine Uebersicht) — dann gibt es auch nichts anzumelden.
           if [ -d newcomer-log ]; then git add newcomer-log/; fi
+          # Die Ticker-Landkarte kommt aus demselben Lauf und geht in denselben Commit.
+          # Gleiche Existenzpruefung statt `|| true`, gleicher Grund.
+          if [ -d external-data/ticker-map ]; then git add external-data/ticker-map/; fi
           if git diff --staged --quiet; then
             echo "No vintage changes to commit."
           else
