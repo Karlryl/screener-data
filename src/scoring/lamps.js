@@ -434,8 +434,27 @@ function einmalertrag(s) {
   const altZuNeu = [...letzte4].reverse();
   if (altZuNeu.every((v, i) => i === 0 || v >= altZuNeu[i - 1])) return false;
 
-  // Saison-Schutz: dominiert im Vorjahr DASSELBE Quartal ebenso stark, ist es Saison und
-  // kein Einmaleffekt. Fehlt das Vorjahr, wird nicht geraten — dann bleibt es beim Verdacht.
+  // Saison-Schutz Teil 1 (29.07.): der EINZELNE Vorjahres-Wert desselben Quartals.
+  // Der Block-Test unten verlangt VIER verwertbare Vorjahresquartale. Der Bestand traegt
+  // aber meist nur fuenf Quartale insgesamt — dann ist roh.slice(4,8) nie vollstaendig und
+  // der Saison-Schutz lief praktisch nie. Belegt an H&R Block (HRB): Quartale
+  // 2.398 / 199 / 204 / 1.111 / 2.277 Mio, Anteil 0,60 -> Lampe an, obwohl das
+  // Vorjahresquartal 95 % der Spitze erreicht. Ein Steuersaison-Geschaeft als
+  // "Einmalertrag" zu fuehren ist genau der Fehlalarm, den die Lampe vermeiden soll.
+  //
+  // Der direkte Test braucht nur EINEN Wert statt vier: war dasselbe Quartal im Vorjahr
+  // schon mindestens halb so gross wie die jetzige Spitze, ist das Saison. Dieselbe
+  // Konstante wie oben, KEIN neuer Schwellwert — 0,50 heisst hier "das Vorjahresquartal
+  // erreicht mindestens die Haelfte der Spitze".
+  //
+  // Der Anlassfall bleibt betroffen: Zealands Spitze liegt an Position 3, das
+  // Vorjahresquartal waere Position 7 und fehlt -> keine Entlastung, die Lampe brennt.
+  const spitzeIdx = letzte4.indexOf(groesster);
+  const vorjahresQuartal = roh[spitzeIdx + 4];
+  if (brauchbar(vorjahresQuartal) && vorjahresQuartal >= EINMALERTRAG_ANTEIL * groesster) return false;
+
+  // Saison-Schutz Teil 2: dominiert im Vorjahr DASSELBE Quartal ebenso stark, ist es Saison
+  // und kein Einmaleffekt. Fehlt das Vorjahr, wird nicht geraten — dann bleibt es beim Verdacht.
   const vorjahr = roh.slice(4, 8);
   if (vorjahr.length === 4 && vorjahr.every(brauchbar)) {
     const groessterVorjahr = Math.max(...vorjahr);

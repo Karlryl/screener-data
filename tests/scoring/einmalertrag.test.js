@@ -154,10 +154,33 @@ test('unvollstaendige oder unbrauchbare Reihen ergeben null, nicht false', () =>
   assert.equal(einmalertrag({}), null, 'kein timeseries-Container');
 });
 
-test('eine Luecke im VORJAHR laesst den Verdacht stehen, statt ihn wegzuraten', () => {
-  // Ohne vollstaendiges Vorjahr kann Saison nicht ausgeschlossen werden - dann bleibt es
-  // beim Verdacht. Der umgekehrte Weg (Entwarnung bei fehlenden Daten) waere gefaehrlich.
-  assert.equal(einmalertrag(snap([600, 100, 200, 100, 580, null, 95, 95])), true);
+test('fehlt das RELEVANTE Vorjahresquartal, bleibt der Verdacht stehen', () => {
+  // Ohne den Vorjahres-Wert DERSELBEN Periode kann Saison nicht ausgeschlossen werden -
+  // dann bleibt es beim Verdacht. Der umgekehrte Weg (Entwarnung bei fehlenden Daten)
+  // waere gefaehrlich.
+  //
+  // GEAENDERT 29.07.: der Fall trug vorher [600,100,200,100,580,null,95,95] und erwartete
+  // true. Dort steht an Position 4 - dem Vorjahresquartal der Spitze - eine 580 gegen eine
+  // Spitze von 600. Das IST Saison, positiv belegt und nicht nur "nicht ausschliessbar";
+  // die Luecke stand an Position 5 und war fuer die Frage irrelevant. Der Fall nagelte
+  // damit den BLOCK-Test fest (vier vollstaendige Vorjahresquartale) statt der Sache
+  // (ist dieses Quartal jedes Jahr gross?). Jetzt fehlt die Position, auf die es ankommt.
+  assert.equal(einmalertrag(snap([600, 100, 200, 100, null, 580, 95, 95])), true);
+});
+
+test('das Vorjahresquartal der Spitze entlastet auch OHNE volles Vorjahr', () => {
+  // Der Grund fuer den Teil-1-Schutz: der Block-Test verlangt vier verwertbare
+  // Vorjahresquartale, der Bestand traegt aber meist nur fuenf Quartale insgesamt -
+  // gemessen an 3.491 auswertbaren Fenstern greift der Block-Test in NULL Faellen.
+  // Belegt an H&R Block: 2.398 / 199 / 204 / 1.111 / 2.277 Mio, Anteil 0,60 -> Lampe an,
+  // obwohl das Vorjahresquartal 95 % der Spitze erreicht. Steuersaison, kein Einmalertrag.
+  assert.equal(einmalertrag(snap([2398, 199, 204, 1111, 2277])), false, 'HRB-Form: Saison');
+  // Die Gegenrichtung, damit der Schutz nicht zum Freibrief wird: liegt das
+  // Vorjahresquartal deutlich unter der Haelfte, bleibt die Lampe an.
+  assert.equal(einmalertrag(snap([2398, 199, 204, 1111, 300])), true, 'Vorjahr nur 13 % der Spitze');
+  // Und der Anlassfall bleibt betroffen: Zealands Spitze liegt an Position 3, das
+  // Vorjahresquartal waere Position 7 und fehlt -> keine Entlastung.
+  assert.equal(einmalertrag(snap([5, 10, 8, 1382, 1])), true, 'Zealand-Form bleibt geflaggt');
 });
 
 test('die Lampe ist registriert und laeuft im normalen Durchlauf mit', () => {

@@ -19,6 +19,20 @@
 // echter Blindtest: sagt der Erkenner "der Ausreisser in diesem Fenster ist
 // nicht wiederholbar", muss Q0 auf das Niveau der übrigen Quartale zurückfallen.
 //
+// ⛔ WIDERLEGT AM 29.07. ABENDS, WENIGE STUNDEN NACH DEM SCHREIBEN. Die unten
+// gerechnete "Trefferquote 78,6 % gegen Basisrate 44,9 %" ist ZIRKULÄR und darf
+// NICHT mehr zitiert werden. Der Grund steht in Abschnitt [3b] der Ausgabe und
+// wird bei jedem Lauf mitgerechnet — das Skript widerlegt sich selbst, statt die
+// Zahl still stehen zu lassen. Gefunden hat es eine unabhängige Gegenrechnung,
+// nicht ich.
+//
+// KURZ: das Erfolgskriterium hängt vom Flag-Kriterium ab. Geflaggt heisst
+// "Spitze A ist riesig gegen Basis B"; die Trennlinie liegt bei B + 0,5·(A−B)
+// und wandert damit MIT A nach oben. Eine geflaggte Zeile muss also viel weniger
+// weit fallen, um als "zurückgefallen" zu zählen: Latte im Median 3,74·B gegen
+// 1,05·B bei den sauberen. Legt man beiden Gruppen DIESELBE Latte an, dreht sich
+// das Vorzeichen um.
+//
 // DAS URTEIL, vorab festgelegt (keine nachträgliche Schwellensuche):
 //   Ausreisser A = groesstes Quartal im Fenster
 //   Basis B      = Median der drei uebrigen Fensterquartale
@@ -139,7 +153,45 @@ function main() {
         : 'der Erkenner trennt nachweisbar SCHLECHTER — er waere schaedlich.')}`);
   }
 
-  console.log('\n[4] EMPFINDLICHKEIT der Trennlinie (Ergebnis darf nicht daran haengen)');
+  // ── [3b] DIE WIDERLEGUNG — laeuft bei jedem Aufruf mit ─────────────────────
+  // Ohne diesen Abschnitt bliebe oben eine Zahl stehen, die wie ein Beleg aussieht.
+  console.log('\n[3b] ⛔ GEGENRECHNUNG: die Zahlen oben sind ZIRKULAER');
+  {
+    const dateien = fs.readdirSync(SNAP_DIR).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
+    const G = [], S = [];
+    for (const f of dateien) {
+      let s; try { s = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, f), 'utf8')); } catch (_) { continue; }
+      let reihe; try { reihe = norm(s, 'revenueQ'); } catch (_) { continue; }
+      if (!Array.isArray(reihe) || reihe.length < 5) continue;
+      const r = auswerten(reihe, MITTE);
+      if (!r) continue;
+      (r.geflaggt ? G : S).push({ k: (r.B + MITTE * (r.A - r.B)) / r.B, verhaeltnis: r.zukunft / r.B, spreizung: r.A / r.B });
+    }
+    console.log(`   Spreizung A/B im Median:  geflaggt ${median(G.map((x) => x.spreizung)).toFixed(2)}  |  sauber ${median(S.map((x) => x.spreizung)).toFixed(2)}`);
+    console.log(`   Daraus die Trennlinie:    geflaggt ${median(G.map((x) => x.k)).toFixed(2)}x Basis  |  sauber ${median(S.map((x) => x.k)).toFixed(2)}x Basis`);
+    console.log('   Die geflaggte Gruppe wird also gegen eine VIEL tiefer haengende Latte gemessen.');
+    // Der mechanische Nullwert: jede geflaggte Zeile behaelt ihre EIGENE Latte, aber
+    // das Ergebnis kommt aus der sauberen Verteilung. So oft faellt eine beliebige
+    // Zeile unter diese Latte, ganz OHNE dass ein Erkenner etwas geleistet haette.
+    let erwartet = 0;
+    for (const g of G) erwartet += S.filter((s) => s.verhaeltnis < g.k).length / S.length;
+    const null_ = 100 * erwartet / G.length;
+    const ist = 100 * G.filter((x) => x.verhaeltnis < x.k).length / G.length;
+    console.log(`   Erwartung ohne jede Erkennerleistung: ${null_.toFixed(1)} %`);
+    console.log(`   tatsaechlich erreicht:                ${ist.toFixed(1)} %`);
+    console.log(`   => der Erkenner liegt ${(null_ - ist).toFixed(1)} pp ${ist < null_ ? 'UNTER' : 'ueber'} dem mechanischen Nullwert.`);
+    console.log('\n   Dieselbe Frage mit EINER Latte fuer beide Gruppen:');
+    for (const k of [1.0, 1.2, 1.5, 2.0]) {
+      const g = 100 * G.filter((x) => x.verhaeltnis < k).length / G.length;
+      const s = 100 * S.filter((x) => x.verhaeltnis < k).length / S.length;
+      console.log(`     Q0 < ${k.toFixed(1)}x Basis:  geflaggt ${g.toFixed(1)} %  sauber ${s.toFixed(1)} %  Abstand ${(g - s >= 0 ? '+' : '') + (g - s).toFixed(1)} pp`);
+    }
+    console.log('   => das Vorzeichen des "Befunds" haengt daran, wo die gemeinsame Latte liegt.');
+    console.log('      Nur bei exakt 1,0x fuehrt die geflaggte Gruppe. Ein einziger Punkt ist kein Beleg.');
+  }
+
+  console.log('\n[4] EMPFINDLICHKEIT der Trennlinie — prueft NICHT, was sie zu pruefen vorgibt');
+  console.log('    (sie skaliert (A-B), und genau dieser Abstand ist der Konfundierer aus [3b])');
   for (const lage of [0.25, 0.5, 0.75]) {
     const r = lauf(lage);
     const g = r.z.geflaggtZurueck + r.z.geflaggtGehalten;
@@ -189,9 +241,13 @@ function main() {
   beispiele.fehlalarm.forEach((b) => console.log('      ' + b));
 
   console.log('\n[6] GRENZEN');
-  console.log('    - Der Saison-Schutz des Erkenners braucht 8 Quartale; die meisten');
-  console.log('      Snapshots tragen nur 5. Im Blindtest laeuft er daher fast nie mit,');
-  console.log('      der Erkenner wird hier also in seiner STRENGSTEN Form gemessen.');
+  console.log('    - KORRIGIERT: hier stand "der Saison-Schutz laeuft fast nie mit, der');
+  console.log('      Erkenner wird in seiner STRENGSTEN Form gemessen". Beides war falsch.');
+  console.log('      Der Block-Schutz lief in NULL von 3.491 Faellen (kein lokaler Snapshot');
+  console.log('      traegt mehr als 6 Quartale), und er UNTERDRUECKT die Lampe — ohne ihn');
+  console.log('      ist der Erkenner BREITER, nicht strenger. Genau dieser Ausfall hat');
+  console.log('      H&R Block als "Einmalertrag" gefuehrt, obwohl es die Steuersaison ist.');
+  console.log('      Behoben am 29.07.: der Schutz prueft jetzt das EINZELNE Vorjahresquartal.');
   console.log('    - Ein einzelnes Folgequartal ist ein kurzer Beleg. Ein Einmalertrag,');
   console.log('      auf den zufaellig ein starkes Quartal folgt, zaehlt hier als Fehlalarm.');
   console.log('    - Lokaler Snapshot-Bestand, nicht das CI-Universum. Keine Waechter-Basis.');
