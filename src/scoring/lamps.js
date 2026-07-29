@@ -417,6 +417,40 @@ function einmalertrag(s) {
   const letzte4 = roh.slice(0, 4);
   const brauchbar = (v) => Number.isFinite(v) && v > 0;
   if (letzte4.length < 4 || !letzte4.every(brauchbar)) return null;   // nicht bewertbar, nicht "sauber"
+  // 29.07.: UNGLEICHE PERIODENLAENGEN sind nicht vergleichbar.
+  // Bei chinesischen A-Aktien und weiteren Boersen fehlt in der Quartalsreihe das
+  // September-Quartal; die Enden lauten dann z. B. 2026-03-31 / 2025-12-31 / 2025-06-30 /
+  // 2025-03-31 — Abstaende 3, 6, 3 Monate. Der Halbjahres-Eintrag deckt ZWEI Quartale ab,
+  // ist mechanisch doppelt so gross und reisst die 50-%-Marke ohne jeden Einmalertrag.
+  // Zwei unabhaengige Pruefungen haben das getrennt gemessen: von 19 geflaggten Zeilen mit
+  // pruefbaren Enden erlischt die Lampe bei 18, sobald man den Halbjahres-Eimer aufloest.
+  // Fuenf davon standen im Kopf ihres Boards (688336.SS auf Rang 3 mit Anteil 0,742 gegen
+  // 0,401 nach Aufloesung).
+  //
+  // VERWORFEN statt AUFGELOEST: den Eimer rechnerisch zu halbieren waere eine erfundene
+  // Zahl, und in diesem Projekt wird nichts fabriziert. Eine Reihe mit ungleicher Kadenz
+  // ist schlicht nicht bewertbar -> null, nicht false.
+  // PREIS, offen benannt: dabei fallen auch die echten Faelle unter diesen Firmen heraus
+  // (gemessen: einer von 19, BURE.ST). Das ist der richtige Tausch — ein Anteil, dessen
+  // Nenner aus verschieden langen Perioden besteht, sagt nichts, auch wenn er zufaellig
+  // richtig liegt.
+  //
+  // Die Enden werden DIREKT gelesen, nicht ueber norm(): es sind ISO-Datums-Strings, und
+  // norm() ist auf Zahlenserien gebaut (toFinite -> null). Defensiv: fehlen die Enden
+  // (Snapshots vor der A10-Erweiterung tragen sie nicht), wird NICHT geraten — dann laeuft
+  // die Lampe wie bisher, statt eine ganze Alt-Population stumm zu schalten.
+  const enden = (s && s.timeseries && Array.isArray(s.timeseries.revenueQEnds))
+    ? s.timeseries.revenueQEnds.slice(0, 4) : null;
+  if (enden && enden.length === 4 && enden.every((d) => typeof d === 'string' && d)) {
+    const TAG = 86400000;
+    for (let i = 0; i + 1 < 4; i++) {
+      const a = Date.parse(enden[i] + 'T00:00:00Z');
+      const b = Date.parse(enden[i + 1] + 'T00:00:00Z');
+      if (!Number.isFinite(a) || !Number.isFinite(b)) return null;   // unlesbares Datum: nicht raten
+      const tage = (a - b) / TAG;
+      if (!(tage >= 75 && tage <= 105)) return null;                 // kein Quartalsabstand
+    }
+  }
   const summe = letzte4.reduce((a, b) => a + b, 0);
   if (!(summe > 0)) return null;
   const groesster = Math.max(...letzte4);

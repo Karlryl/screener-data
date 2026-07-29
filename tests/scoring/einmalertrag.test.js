@@ -199,5 +199,35 @@ test('die Lampe druckt den Score NICHT - sie ist keine data-suspect-Lampe', () =
     'einmalertrag darf NICHT in DATA_SUSPECT_LAMPS stehen');
 });
 
+
+test('ungleiche Quartalslaengen sind nicht bewertbar - der Halbjahres-Eimer', () => {
+  // 29.07.: Bei chinesischen A-Aktien und weiteren fehlt das September-Quartal. Der
+  // Eintrag zum 31.12. deckt dann ein HALBJAHR ab, ist mechanisch doppelt so gross und
+  // reisst die 50-%-Marke ohne jeden Einmalertrag. An den CI-Kohorten gemessen: von 48
+  // geflaggten Zeilen erloeschen 19, darunter BURE.ST auf Rang 1 (financials),
+  // 688336.SS auf Rang 3 (health-care) und GODREJPROP.NS auf Rang 17.
+  const mitEnden = (q, ends) => ({ timeseries: {
+    revenueQ: q.map((v) => ({ value: v })), revenueQEnds: ends,
+  } });
+  // 3/6/3 Monate -> nicht bewertbar, obwohl der Anteil 0,55 betraegt
+  assert.equal(einmalertrag(mitEnden([100, 550, 150, 200],
+    ['2026-03-31', '2025-12-31', '2025-06-30', '2025-03-31'])), null,
+  'ungleiche Kadenz muss null ergeben (nicht bewertbar), nicht false (sauber)');
+  // dieselbe Reihe mit sauberer Kadenz -> die Lampe MUSS anschlagen
+  assert.equal(einmalertrag(mitEnden([100, 550, 150, 200],
+    ['2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'])), true,
+  'bei gleichen Quartalsabstaenden bleibt der Befund bestehen - die Sperre darf kein Freibrief sein');
+  // fehlende Enden: NICHT raten, sondern wie bisher bewerten (Alt-Snapshots tragen sie nicht)
+  assert.equal(einmalertrag(mitEnden([100, 550, 150, 200], null)), true,
+    'ohne Enden wird nicht geraten - sonst waere eine ganze Alt-Population stumm');
+  // unlesbares Datum -> nicht bewertbar
+  assert.equal(einmalertrag(mitEnden([100, 550, 150, 200],
+    ['kaputt', '2025-12-31', '2025-09-30', '2025-06-30'])), null);
+  // der Anlassfall traegt saubere Kadenz und bleibt erkannt
+  assert.equal(einmalertrag(mitEnden([5, 10, 8, 1382],
+    ['2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'])), true, 'Zealand-Form bleibt geflaggt');
+});
+
+
 console.log(`\neinmalertrag: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);
