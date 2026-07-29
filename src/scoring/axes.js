@@ -199,8 +199,13 @@ function gpGrowth(s) {
 
 // --- 4. Growth-Efficiency (Rule-of-X, growth-dominant) ----------------------
 // alpha*revGrowth(%) + FCF-Marge(%) — FCF-Term nur wenn fcfSignGuard ihn
-// validiert UND includeFcf (Profitable-Track). Unprofitable-Track: includeFcf
-// = false -> reiner alpha*revGrowth (kein BE-Penalty).
+// validiert UND includeFcf. ACHTUNG (Court 29.07., Richterbefund): includeFcf
+// haengt am ECHTEN FCF-Vorzeichen, NICHT am Track — der Aufrufer setzt es in
+// score.js rawAxisValue() auf fcfTrack(...) === 'profitable'. Der frueher hier
+// stehende Satz "Unprofitable-Track: includeFcf = false" war falsch und hat in
+// einer Formel-Pruefung zu einem Fehlschluss gefuehrt. Wo der FCF-Term entfaellt,
+// ist ruleOfX eine reine Skalierung von revGrowthLevel (identisches Kohorten-
+// Perzentil) — gemessen 41,1 % aller 5.677 gerouteten Zeilen (Stand 28.07.).
 // Datenrichtigkeits-Fix 14.07.2026: rev aus der berechneten Reihe (revGrowthLevel),
 // nicht mehr aus dem defekten Provider-Skalar — beide Achsen teilen EINEN Wachstumsbegriff.
 function ruleOfX(s, alpha = 2.3, includeFcf = true, growthBounds) {
