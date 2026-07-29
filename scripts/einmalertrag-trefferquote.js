@@ -180,6 +180,17 @@ function main() {
     console.log(`   Erwartung ohne jede Erkennerleistung: ${null_.toFixed(1)} %`);
     console.log(`   tatsaechlich erreicht:                ${ist.toFixed(1)} %`);
     console.log(`   => der Erkenner liegt ${(null_ - ist).toFixed(1)} pp ${ist < null_ ? 'UNTER' : 'ueber'} dem mechanischen Nullwert.`);
+    // WICHTIGE EINSCHRAENKUNG (von einem Richter nachgerechnet, 29.07.): das ist KEIN
+    // Schadensnachweis. Auch dieser Nullwert ist konfundiert - 45,2 % der geflaggten
+    // Zeilen haben eine laufende Basis unter 10 Mio gegen 1,3 % der sauberen, und eine
+    // gemeinsame Latte IN EINHEITEN VON B ist deshalb ebenfalls unfair, nur in die andere
+    // Richtung. Bewiesen ist damit nicht "der Erkenner schadet", sondern: es existiert
+    // IN KEINER RICHTUNG eine gueltige Wirksamkeitsmessung. Fuer die Frage "darf man
+    // darauf eine Regel bauen" aendert das nichts (eine zusammengebrochene Messung traegt
+    // keine positive Behauptung); fuer das Zitieren dieser Zahl aendert es alles.
+    console.log('      ACHTUNG: das ist KEIN Schadensnachweis. Auch der Nullwert ist verzerrt');
+    console.log('      (45,2 % der geflaggten Zeilen haben Basis < 10 Mio gegen 1,3 % der');
+    console.log('      sauberen). Belegt ist MESSVERSAGEN in beide Richtungen, nicht Schaden.');
     console.log('\n   Dieselbe Frage mit EINER Latte fuer beide Gruppen:');
     for (const k of [1.0, 1.2, 1.5, 2.0]) {
       const g = 100 * G.filter((x) => x.verhaeltnis < k).length / G.length;
