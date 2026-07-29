@@ -525,6 +525,30 @@ function priorVintageDate(date) {
   return dates.length ? dates[dates.length - 1] : null;
 }
 
+// Live belegt am 2026-07-29: an diesem Tag standen ALLE Vorgaenger (14.-18.07. wegen
+// Tag 437, 26.-28.07. wegen Tag 489) auf der Ausschlussliste. priorDate war null, das
+// Wert-Gate hat also NICHTS verglichen — und im geschriebenen Vintage steht dann
+// p99Delta: null, suspect: false. Das ist von "geprueft und sauber" nicht zu
+// unterscheiden, weder in der Datei noch im Lauf-Protokoll (dort stand nur ein
+// beilaeufiges "prior=null" in der Kopfzeile).
+//
+// Genau dieselbe Luecke, die der Kommentar an der GATE-Kopfzeile im CLI-Teil fuer den
+// Bruch-Fall schon benennt: "sonst ist gruen nicht von Gate uebergangen zu
+// unterscheiden". Der Fall "gar keine Vergleichsbasis" gehoert in denselben Kanal.
+//
+// Unterschieden werden muessen zwei Faelle, die beide priorDate=null ergeben:
+//   (a) erster Lauf ueberhaupt — es gibt nichts zu vergleichen, voellig in Ordnung
+//   (b) es GAB Vorgaenger, sie sind nur alle ausgeschlossen — heute wurde blind
+//       geschrieben, und das muss im Protokoll stehen
+// Diese Funktion liefert die uebersprungenen Daten; leer heisst Fall (a).
+function uebersprungeneVorgaenger(date) {
+  if (!fs.existsSync(P.HISTORY_DIR)) return [];
+  const ausgeschlossen = excludedDates();
+  return fs.readdirSync(P.HISTORY_DIR)
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && d < date && ausgeschlossen.has(d))
+    .sort();
+}
+
 // Global ausgeschlossene Vintage-Daten aus board-history/_excluded.json. Bewusst nur die
 // GLOBALEN Einträge (ohne board-Feld): ein board-enger Ausschluss betrifft die Messreihe
 // dieses einen Boards, nicht die Vergleichbarkeit des Tages insgesamt. Defensiv: eine
@@ -780,7 +804,11 @@ function run(opts) {
     writeJsonAtomic(assertNoPicksHistory(P.GATE_CALIB_FILE), gateCalib);
   }
 
-  return { mode: 'write', date, dryRun, priorDate, bruch: bruch ? { tag: bruch.tag, boards: Array.from(bruch.boards) } : null, boards: results, regime: regimeForDate(date), exitCode: anySuspect ? 2 : 0 };
+  // Fall (b) aus uebersprungeneVorgaenger(): es gab Vorgaenger, alle ausgeschlossen.
+  // Nur dann ist "heute wurde nichts verglichen" eine meldepflichtige Tatsache.
+  const blind = priorDate === null ? uebersprungeneVorgaenger(date) : [];
+
+  return { mode: 'write', date, dryRun, priorDate, ohneVergleichsbasis: blind.length ? blind : null, bruch: bruch ? { tag: bruch.tag, boards: Array.from(bruch.boards) } : null, boards: results, regime: regimeForDate(date), exitCode: anySuspect ? 2 : 0 };
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
@@ -815,6 +843,16 @@ if (require.main === module) {
       res.compacted.forEach((f) => console.log('  archiviert+gestrippt: ' + f));
     } else {
       console.log(tag + 'board-history ' + res.date + ' (prior=' + res.priorDate + ', regime=' + res.regime.label + ')');
+      // "Heute wurde gar nicht verglichen" gehoert in denselben Alarmkanal wie die
+      // erhoehte Bruch-Schwelle darunter — sonst sieht ein blinder Tag im Protokoll
+      // genauso aus wie ein sauber gepruefter (p99Delta null, suspect false).
+      if (res.ohneVergleichsbasis) {
+        console.log('::warning::GATE BLIND fuer ' + res.date + ': keine Vergleichsbasis — alle '
+          + res.ohneVergleichsbasis.length + ' Vorgaenger stehen auf der Ausschlussliste ('
+          + res.ohneVergleichsbasis.join(', ') + '). Das Wert-Gate hat heute NICHTS geprueft; '
+          + 'p99Delta=null in allen Boards heisst "nicht gemessen", nicht "sauber". Der naechste '
+          + 'Lauf vergleicht wieder, sobald ein nicht ausgeschlossenes Vintage vorliegt.');
+      }
       // Karls einziger Alarmkanal ist das Lauf-Protokoll: eine ausgesetzte oder erhöhte
       // Grenze MUSS im Klartext dort stehen, sonst ist "gruen" nicht von "Gate uebergangen"
       // zu unterscheiden. Kopfzeile vor der Board-Liste, damit sie ohne Scrollen sichtbar ist.
