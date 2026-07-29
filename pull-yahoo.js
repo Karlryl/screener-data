@@ -1323,6 +1323,56 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
         }
         return (Object.keys(out).length > 0) ? out : null;
       })(),
+      // 29.07.: revenueEstimates — die UMSATZ-Prognose aus demselben earningsTrend-Modul,
+      // das oben schon geholt und dessen epsRevisions-Teil schon persistiert wird. Der
+      // Umsatzteil wurde bisher WEGGEWORFEN. Kosten: null zusaetzliche Abrufe.
+      //
+      // WARUM JETZT UND NICHT ERST BEI BEDARF: die Prognose von heute ist nicht die
+      // Prognose von damals. Wird sie nicht ab sofort mitgeschrieben, laesst sich spaeter
+      // NIE zeigen, ob eine darauf gebaute Regel getaugt haette — jeder Rueckblick waere
+      // Look-ahead. Zwei getrennte Gerichtsurteile haben das als die einzige eilige
+      // Massnahme benannt, unabhaengig davon, ob je eine Regel daraus wird. Das hier ist
+      // reine Datenerfassung: KEINE Score-Wirkung, kein Konsument.
+      // Ehrlich dazu: fuer den Altbestand entsteht die Historie nie. Nur vorwaerts.
+      //
+      // ZWEI MINEN, beide bindend (am Live-Bestand belegt):
+      // (1) Fuer nicht abgedeckte Titel liefert Yahoo NICHT null, sondern avg = 0 bei
+      //     numberOfAnalysts = 0. Wer daraus selbst eine Wachstumsrate rechnet
+      //     (avg/trailing - 1), erzeugt fuer genau diese Titel -100 % — die maximal
+      //     moegliche Negativprognose, ausgerechnet fuer die ohnehin schlecht
+      //     abgedeckten asiatischen Nebenwerte. Deshalb: Gate numberOfAnalysts > 0 UND
+      //     avg > 0, und die Wachstumsrate wird NIE hergeleitet.
+      // (2) growth === null heisst NICHT "keine Abdeckung": LFTO traegt 14 Analysten und
+      //     einen gefuellten avg, aber growth null — ein Rechenartefakt der Quelle.
+      //     Solche Faelle bleiben mit growth: null stehen (= "nicht anwendbar"), sie
+      //     duerfen weder als fehlend noch als negativ gelesen werden.
+      // Der Stand gilt zum meta.fetchedAt des Snapshots; ein zweites Datum waere Redundanz.
+      revenueEstimates: (function() {
+        const et = yahoo.earningsTrend;
+        const trend = et && Array.isArray(et.trend) ? et.trend : null;
+        if (!trend || trend.length === 0) return null;
+        const _v = (x) => {
+          if (x == null) return null;
+          if (typeof x === 'number') return Number.isFinite(x) ? x : null;
+          if (typeof x === 'object' && Number.isFinite(x.value)) return x.value;
+          return null;
+        };
+        const out = {};
+        for (const t of trend) {
+          if (!t || typeof t !== 'object') continue;
+          const pk = t.period;
+          if (!pk || typeof pk !== 'string') continue;
+          const re = t.revenueEstimate;
+          if (!re || typeof re !== 'object') continue;
+          const n = _v(re.numberOfAnalysts);
+          const avg = _v(re.avg);
+          // Mine (1): ohne echte Analystenzahl UND positiven Durchschnitt ist das keine
+          // Prognose, sondern eine Fehlstelle. Nicht speichern statt 0 speichern.
+          if (!(n > 0) || !(avg > 0)) continue;
+          out[pk] = { avg, growth: _v(re.growth), numberOfAnalysts: n };
+        }
+        return (Object.keys(out).length > 0) ? out : null;
+      })(),
       // Tag 220c (audit F-219c-F7 MEDIUM): earningsHistory — last 4 quarters
       // with epsActual / epsEstimate / epsDifference / surprisePercent / quarter.
       // Persisted as data lake (no method consumes it yet); useful future input
