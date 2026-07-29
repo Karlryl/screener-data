@@ -162,9 +162,27 @@ const heute = () => new Date().toISOString().slice(0, 10);
 
 async function run(argv = process.argv.slice(2)) {
   const trocken = argv.includes('--dry');
+  // Quellen EINZELN holen (Fund 29.07.2026): faellt eine aus, darf sie nicht den ganzen
+  // Tag mitreissen. Am 29.07. lieferte www.sec.gov den GitHub-Laeufern zweimal HTTP 403,
+  // waehrend derselbe Aufruf mit demselben User-Agent von aussen 200 gab — die Sperre gilt
+  // den Rechenzentrums-IPs, nicht uns. Folge damals: dieser Schritt kippte den ganzen
+  // scoring-Job, also Score, Vintage UND Export. Der Kommentar unten in baueKarte sagt seit
+  // jeher "kaputtes SEC-JSON darf den Rest nicht kippen" — fuer den ABRUF galt das nie.
   const roh = {};
+  const fehlend = [];
   for (const [k, u] of Object.entries(QUELLEN)) {
-    roh[k] = await hole(u);
+    try {
+      roh[k] = await hole(u);
+    } catch (e) {
+      roh[k] = '';
+      fehlend.push(k);
+      console.log(`::warning::Ticker-Quelle "${k}" nicht erreichbar (${e.message}) — der Tag wird aus den `
+        + 'uebrigen Quellen gebaut. Fehlende Felder werden aus dem Vortagesstand uebernommen, '
+        + 'und die Luecke steht als quellenFehlend in der Tageszeile.');
+    }
+  }
+  if (fehlend.length === Object.keys(QUELLEN).length) {
+    throw new Error('ALLE Ticker-Quellen nicht erreichbar (' + fehlend.join(', ') + ') — nichts zu bauen');
   }
   const neu = baueKarte(roh);
   // Fail-loud: eine der drei Quellen liefert manchmal eine Wartungsseite mit HTTP 200.
@@ -187,11 +205,29 @@ async function run(argv = process.argv.slice(2)) {
   // Ein zweiter Lauf am selben Tag ersetzt seine Zeile, statt eine zweite anzuhaengen —
   // sonst haengt der Zustand davon ab, wie oft der Job lief.
   const vorher = zustandAus(grundbild, zeilen.filter((z) => z.datum < datum));
+
+  // Fehlt die SEC, fehlt die CIK — und sie steckt in alsText(), geht also in den
+  // Aenderungsvergleich ein. Ohne Uebernahme meldete der Tag tausende Symbole als
+  // "geaendert", nur weil eine Quelle schwieg: die Historie waere verdorben, und
+  // zwar unauffaellig. Deshalb Vortageswert uebernehmen statt leer schreiben.
+  if (fehlend.includes('sec')) {
+    let uebernommen = 0;
+    for (const [sym, d] of neu) {
+      const alt = vorher.get(sym);   // zustandAus liefert eine Map, keinen Objekt-Index
+      if (!d.c && alt && alt.c) { d.c = alt.c; uebernommen++; }
+    }
+    console.log(`  CIK aus dem Vortagesstand uebernommen: ${uebernommen} Symbole `
+      + '(die SEC-Quelle schwieg — ohne das waere jedes davon faelschlich als geaendert gezaehlt worden)');
+  }
+
   const { hinzu, weg, geaendert } = diff(vorher, neu);
 
   const zeile = {
     datum,
     summe: neu.size,
+    // Leere Liste heisst ausdruecklich "alle Quellen waren da" — das Feld fehlt nie,
+    // damit ein spaeterer Leser nicht raten muss, ob es nur nicht geschrieben wurde.
+    quellenFehlend: fehlend,
     hinzu, weg, geaendert,
     // Damit ein spaeterer Leser pruefen kann, ob sein Abspielen denselben Stand ergibt.
     pruefsumme: require('crypto').createHash('sha256')

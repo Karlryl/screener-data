@@ -169,5 +169,56 @@ check('der Tageslauf ruft den Mitschnitt auf UND committet ihn', () => {
     'der Schritt laeuft nach dem Commit — dann faengt der Commit ihn nicht');
 });
 
+// --- Ausfall EINER Quelle (Fund 29.07.2026) --------------------------------
+// Am 29.07. lieferte www.sec.gov den GitHub-Laeufern zweimal HTTP 403, waehrend
+// derselbe Aufruf mit demselben User-Agent von aussen 200 gab. Der Schritt kippte
+// den gesamten scoring-Job: kein Score, kein Vintage, kein Export. Zwei Dinge muessen
+// deshalb gelten und werden hier festgenagelt.
+const fsMod = require('node:fs');
+const pathMod = require('node:path');
+const QUELLTEXT = fsMod.readFileSync(pathMod.join(__dirname, '..', 'scripts', 'snapshot-ticker-map.js'), 'utf8');
+const nasdaqRoh = 'Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot|ETF|NextShares\n'
+  + 'AAPL|Apple Inc|Q|N|N|100|N|N\nMSFT|Microsoft Corp|Q|N|N|100|N|N\n';
+const secRoh = JSON.stringify({
+  0: { ticker: 'AAPL', cik_str: 320193, title: 'Apple Inc' },
+  1: { ticker: 'MSFT', cik_str: 789019, title: 'Microsoft Corp' },
+});
+
+check('ohne SEC-Quelle entsteht trotzdem eine Karte aus den uebrigen Quellen', () => {
+  const ohne = T.baueKarte({ nasdaq: nasdaqRoh, other: '', sec: '' });
+  assert.equal(ohne.size, 2, 'die NASDAQ-Namen muessen erhalten bleiben');
+  assert.equal(ohne.get('AAPL').n, 'Apple Inc');
+  assert.equal(ohne.get('AAPL').c, undefined, 'die CIK kann ohne SEC nicht da sein — das ist der Punkt');
+});
+
+check('ohne CIK-Uebernahme wuerde der Tag die Historie verderben', () => {
+  const mit = T.baueKarte({ nasdaq: nasdaqRoh, other: '', sec: secRoh });
+  const ohne = T.baueKarte({ nasdaq: nasdaqRoh, other: '', sec: '' });
+  const vorher = new Map([...mit.entries()]);
+  // GEGENPROBE: genau das darf NICHT passieren — jedes Symbol gaelte als geaendert,
+  // obwohl sich nichts geaendert hat ausser dass eine Quelle schwieg.
+  const ohneUebernahme = Object.keys(T.diff(vorher, ohne).geaendert).length;
+  assert.equal(ohneUebernahme, 2, 'ohne Uebernahme muessen ALLE Symbole faelschlich als geaendert gelten');
+  // und so sieht es mit der Uebernahme aus, die run() macht:
+  for (const [sym, d] of ohne) { const alt = vorher.get(sym); if (!d.c && alt && alt.c) d.c = alt.c; }
+  assert.equal(Object.keys(T.diff(vorher, ohne).geaendert).length, 0,
+    'mit Uebernahme darf KEIN Symbol als geaendert gelten');
+});
+
+check('run() uebernimmt die CIK wirklich aus dem Vortagesstand (Quelltext-Anker)', () => {
+  const stelle = QUELLTEXT.slice(QUELLTEXT.indexOf('function run'));
+  assert.match(stelle, /fehlend\.includes\('sec'\)/,
+    'run() muss den SEC-Ausfall behandeln — sonst ist die Uebernahme oben nur ein Testartefakt');
+  assert.match(stelle, /vorher\.get\(sym\)/,
+    'zustandAus liefert eine Map — ein Objekt-Index waere still undefined und die Uebernahme wirkungslos');
+  assert.match(stelle, /quellenFehlend/,
+    'die Luecke muss in der Tageszeile stehen, sonst ist sie spaeter nicht erkennbar');
+});
+
+check('fallen ALLE Quellen aus, wird hart gestoppt statt leer geschrieben', () => {
+  assert.match(QUELLTEXT, /fehlend\.length === Object\.keys\(QUELLEN\)\.length/,
+    'ohne diesen Riegel wuerde ein Totalausfall eine leere Karte schreiben');
+});
+
 console.log('\nticker-map: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);
