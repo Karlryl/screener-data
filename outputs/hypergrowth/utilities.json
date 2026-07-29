@@ -2,7 +2,7 @@
   "profitable": [
     {
       "ticker": "SJVN.NS",
-      "score": 97.5,
+      "score": 97.4,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -19,7 +19,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 2786960907.929289,
+      "marketCap": 2816859751.5113926,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "seasoned",
@@ -27,11 +27,12 @@
       "ipoYear": 2010,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 196.68318794607455,
-      "scoreBase": 96.4,
-      "scoreShrunk": 92.9,
+      "profitStreak": null,
+      "scoreBase": 96.3,
+      "scoreShrunk": 92.8,
       "factors": {
         "burn": 1,
         "growth": 1.05,
@@ -45,7 +46,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 96,
+          "pct": 95.7,
           "weight": 0.5
         },
         {
@@ -60,12 +61,83 @@
         },
         {
           "key": "marginTrajectory",
+          "pct": 99.3,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 66.4,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "ticker": "ENELGXCH.SN",
+      "score": 96.4,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.119,
+        "companion": 407.2
+      },
+      "name": "Enel Generación Chile S.A.",
+      "country": "Chile",
+      "region": "South America",
+      "sector": "Utilities",
+      "marketCap": 4944460644.225279,
+      "phase": "established",
+      "mcapBand": "mid",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2000,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.93,
+      "cohortN": 267,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 171.55605077232346,
+      "profitStreak": null,
+      "scoreBase": 95.3,
+      "scoreShrunk": 91.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1.05,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 99.4,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 57.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 86.1,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 99.4,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
           "pct": 99.8,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 67,
+          "pct": 98.7,
           "weight": 0.5
         },
         {
@@ -77,7 +149,7 @@
     },
     {
       "ticker": "JSWENERGY.NS",
-      "score": 96.3,
+      "score": 96.2,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -93,7 +165,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 10406872547.187164,
+      "marketCap": 10469742880.855425,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "seasoned",
@@ -101,11 +173,12 @@
       "ipoYear": 2010,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 63.26413514810041,
-      "scoreBase": 92.1,
-      "scoreShrunk": 91.8,
+      "profitStreak": null,
+      "scoreBase": 92,
+      "scoreShrunk": 91.6,
       "factors": {
         "burn": 1,
         "growth": 1.049,
@@ -139,84 +212,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 74.9,
+          "pct": 74.6,
           "weight": 0.5
         },
         {
           "key": "dilution",
-          "pct": 63.1,
-          "weight": 0.5
-        }
-      ]
-    },
-    {
-      "ticker": "ENELGXCH.SN",
-      "score": 95.8,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.119,
-        "companion": 407.2
-      },
-      "name": "Enel Generación Chile S.A.",
-      "country": "Chile",
-      "region": "South America",
-      "sector": "Utilities",
-      "marketCap": 4826322631.141307,
-      "phase": "established",
-      "mcapBand": "mid",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2000,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.93,
-      "cohortN": 266,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 171.55605077232346,
-      "scoreBase": 94.6,
-      "scoreShrunk": 91.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1.05,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 99.4,
-          "weight": 2.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 57.8,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 86.1,
-          "weight": 0.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 99.4,
-          "weight": 2.2
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 97.4,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 92.6,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
+          "pct": 61.5,
           "weight": 0.5
         }
       ]
@@ -239,7 +240,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 96417546240,
+      "marketCap": 92782247936,
       "phase": "inflected",
       "mcapBand": "mega",
       "ipoRecency": "recent",
@@ -247,14 +248,21 @@
       "ipoYear": 2022,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 63.84796700058928,
+      "profitStreak": {
+        "jahre": 4,
+        "basis": "opInc",
+        "tiefe": 4,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
       "scoreBase": 86.9,
-      "scoreShrunk": 84.2,
+      "scoreShrunk": 84.1,
       "factors": {
         "burn": 1,
-        "growth": 1.043,
+        "growth": 1.044,
         "cycle": 1
       },
       "axisBreakdown": [
@@ -265,7 +273,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 78.2,
+          "pct": 77.9,
           "weight": 0.5
         },
         {
@@ -285,7 +293,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 67.7,
+          "pct": 67.1,
           "weight": 0.5
         },
         {
@@ -313,7 +321,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 16588212224,
+      "marketCap": 15583560704,
       "phase": "inflected",
       "mcapBand": "large",
       "ipoRecency": "recent",
@@ -321,9 +329,16 @@
       "ipoYear": 2023,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 96.67194928684629,
+      "profitStreak": {
+        "jahre": 0,
+        "basis": "opInc",
+        "tiefe": 3,
+        "mindestens": false,
+        "letzterVerlust": 2025
+      },
       "scoreBase": 83.8,
       "scoreShrunk": 83.5,
       "factors": {
@@ -371,7 +386,7 @@
     },
     {
       "ticker": "NTPCGREEN.NS",
-      "score": 87.2,
+      "score": 87.1,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -388,7 +403,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 8098322934.341108,
+      "marketCap": 8087054454.595387,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "recent",
@@ -396,11 +411,12 @@
       "ipoYear": 2024,
       "coverageAxes": "5/7",
       "coverageWeight": 0.87,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 80.69018769303872,
-      "scoreBase": 88.1,
-      "scoreShrunk": 83.2,
+      "profitStreak": null,
+      "scoreBase": 88,
+      "scoreShrunk": 83.1,
       "factors": {
         "burn": 1,
         "growth": 1.048,
@@ -414,7 +430,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 75.6,
+          "pct": 75.3,
           "weight": 0.5
         },
         {
@@ -434,7 +450,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 36,
+          "pct": 35.9,
           "weight": 0.5
         },
         {
@@ -458,7 +474,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 11918597556.447477,
+      "marketCap": 11931636902.246744,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "recent",
@@ -466,9 +482,10 @@
       "ipoYear": 2025,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 27.379622239957445,
+      "profitStreak": null,
       "scoreBase": 84.3,
       "scoreShrunk": 81.7,
       "factors": {
@@ -516,7 +533,7 @@
     },
     {
       "ticker": "PNE3.DE",
-      "score": 85.5,
+      "score": 85.4,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -535,7 +552,7 @@
       "country": "Germany",
       "region": "Europe",
       "sector": "Utilities",
-      "marketCap": 919658098.9888256,
+      "marketCap": 918471756.780416,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "mature",
@@ -543,9 +560,10 @@
       "ipoYear": 2000,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 101.43369175627241,
+      "profitStreak": null,
       "scoreBase": 84,
       "scoreShrunk": 81.5,
       "factors": {
@@ -566,7 +584,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 53.9,
+          "pct": 54.1,
           "weight": 0.4
         },
         {
@@ -576,12 +594,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 99.3,
+          "pct": 98.8,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 42.1,
+          "pct": 42.3,
           "weight": 0.5
         },
         {
@@ -609,7 +627,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 2621740641.270694,
+      "marketCap": 2682016293.808243,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "recent",
@@ -617,9 +635,10 @@
       "ipoYear": 2024,
       "coverageAxes": "6/7",
       "coverageWeight": 0.94,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 56.94818516268783,
+      "profitStreak": null,
       "scoreBase": 83.1,
       "scoreShrunk": 81.1,
       "factors": {
@@ -655,7 +674,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 24,
+          "pct": 23.9,
           "weight": 0.5
         },
         {
@@ -666,8 +685,84 @@
       ]
     },
     {
-      "ticker": "IG.MI",
+      "ticker": "1REE.MI",
       "score": 84.2,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "fcfArtefact"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.042,
+        "companion": 200.5
+      },
+      "name": "Redeia Corporación, S.A.",
+      "country": "Spain",
+      "region": "Europe",
+      "sector": "Utilities",
+      "marketCap": 9686158068.073984,
+      "phase": "established",
+      "mcapBand": "large",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2000,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.93,
+      "cohortN": 267,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 87.19186076897614,
+      "profitStreak": null,
+      "scoreBase": 82.9,
+      "scoreShrunk": 80.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1.047,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 97.9,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 83.6,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 37.7,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 97.9,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 3.1,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 81.8,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "ticker": "IG.VI",
+      "score": 84.1,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -682,7 +777,7 @@
       "country": "Italy",
       "region": "Europe",
       "sector": "Utilities",
-      "marketCap": 11602878106.374552,
+      "marketCap": 11270499261.787136,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "growth",
@@ -690,11 +785,12 @@
       "ipoYear": 2016,
       "coverageAxes": "6/7",
       "coverageWeight": 0.91,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 41.541221732527944,
-      "scoreBase": 83.5,
-      "scoreShrunk": 80.6,
+      "profitStreak": null,
+      "scoreBase": 83.4,
+      "scoreShrunk": 80.5,
       "factors": {
         "burn": 1,
         "growth": 1.045,
@@ -713,7 +809,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 93.5,
+          "pct": 93.6,
           "weight": 0.4
         },
         {
@@ -728,87 +824,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 15.7,
+          "pct": 16,
           "weight": 0.5
         },
         {
           "key": "dilution",
-          "pct": 53.3,
-          "weight": 0.5
-        }
-      ]
-    },
-    {
-      "ticker": "REE.VI",
-      "score": 84,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "shortRunway",
-        "lowRoic",
-        "fcfArtefact"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.042,
-        "companion": 200.5
-      },
-      "name": "Redeia Corporación, S.A.",
-      "country": "Spain",
-      "region": "Europe",
-      "sector": "Utilities",
-      "marketCap": 9680335569.165106,
-      "phase": "established",
-      "mcapBand": "large",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2000,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.93,
-      "cohortN": 266,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 87.19186076897614,
-      "scoreBase": 82.6,
-      "scoreShrunk": 80.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1.047,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 97.9,
-          "weight": 2.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 83.9,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 37.5,
-          "weight": 0.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 97.9,
-          "weight": 2.2
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 1.2,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 80.6,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
+          "pct": 51.6,
           "weight": 0.5
         }
       ]
@@ -830,7 +851,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Utilities",
-      "marketCap": 9523890589.31753,
+      "marketCap": 9642047533.614735,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "seasoned",
@@ -838,9 +859,10 @@
       "ipoYear": 2007,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 24.532890952145237,
+      "profitStreak": null,
       "scoreBase": 82.6,
       "scoreShrunk": 80.2,
       "factors": {
@@ -861,12 +883,12 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 88.4,
+          "pct": 88.5,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 85.3,
+          "pct": 85.4,
           "weight": 2.2
         },
         {
@@ -876,7 +898,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 77.9,
+          "pct": 78,
           "weight": 0.5
         },
         {
@@ -905,7 +927,7 @@
       "country": "Israel",
       "region": "Middle East",
       "sector": "Utilities",
-      "marketCap": 12768622592,
+      "marketCap": 12139488256,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "recent",
@@ -913,9 +935,10 @@
       "ipoYear": 2023,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 42.57457315184314,
+      "profitStreak": null,
       "scoreBase": 80.3,
       "scoreShrunk": 80.1,
       "factors": {
@@ -931,7 +954,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 25.2,
+          "pct": 25.1,
           "weight": 0.5
         },
         {
@@ -951,7 +974,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 22.1,
+          "pct": 22,
           "weight": 0.5
         },
         {
@@ -977,7 +1000,7 @@
       "country": "Argentina",
       "region": "South America",
       "sector": "Utilities",
-      "marketCap": 2231795200,
+      "marketCap": 2179300096,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "growth",
@@ -985,9 +1008,10 @@
       "ipoYear": 2018,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 63.056807703637595,
+      "profitStreak": null,
       "scoreBase": 81.9,
       "scoreShrunk": 79.5,
       "factors": {
@@ -1003,12 +1027,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 57.4,
+          "pct": 57.2,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 15.5,
+          "pct": 15.4,
           "weight": 0.4
         },
         {
@@ -1023,7 +1047,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 88.9,
+          "pct": 89.3,
           "weight": 0.5
         },
         {
@@ -1051,7 +1075,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 2269178573.73739,
+      "marketCap": 2317748258.829312,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "veteran",
@@ -1059,9 +1083,10 @@
       "ipoYear": 1993,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 28.497968673586517,
+      "profitStreak": null,
       "scoreBase": 82,
       "scoreShrunk": 79.6,
       "factors": {
@@ -1077,17 +1102,17 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 93,
+          "pct": 92.6,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 35.1,
+          "pct": 35.4,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 88.7,
+          "pct": 88.8,
           "weight": 2.2
         },
         {
@@ -1097,7 +1122,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 50,
+          "pct": 49.8,
           "weight": 0.5
         },
         {
@@ -1123,7 +1148,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 5914723840,
+      "marketCap": 5366673920,
       "phase": "inflected",
       "mcapBand": "mid",
       "ipoRecency": "recent",
@@ -1131,9 +1156,10 @@
       "ipoYear": 2026,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 34.78146750492341,
+      "profitStreak": null,
       "scoreBase": 79.3,
       "scoreShrunk": 79.1,
       "factors": {
@@ -1159,7 +1185,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 90.6,
+          "pct": 90.7,
           "weight": 2.2
         },
         {
@@ -1169,7 +1195,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 97.5,
+          "pct": 97.9,
           "weight": 0.5
         },
         {
@@ -1181,7 +1207,7 @@
     },
     {
       "ticker": "PEG",
-      "score": 82.4,
+      "score": 82.3,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -1195,7 +1221,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 39472037888,
+      "marketCap": 39342473216,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "veteran",
@@ -1203,14 +1229,21 @@
       "ipoYear": 1980,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 19.428926132836754,
+      "profitStreak": {
+        "jahre": 4,
+        "basis": "opInc",
+        "tiefe": 17,
+        "mindestens": false,
+        "letzterVerlust": 2021
+      },
       "scoreBase": 81.7,
       "scoreShrunk": 79.4,
       "factors": {
         "burn": 1,
-        "growth": 1.038,
+        "growth": 1.037,
         "cycle": 1
       },
       "axisBreakdown": [
@@ -1221,12 +1254,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 94.1,
+          "pct": 93.8,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 84.9,
+          "pct": 85,
           "weight": 0.4
         },
         {
@@ -1241,7 +1274,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 74.5,
+          "pct": 74.2,
           "weight": 0.5
         },
         {
@@ -1253,7 +1286,7 @@
     },
     {
       "ticker": "PNN.L",
-      "score": 81.9,
+      "score": 81.6,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1270,7 +1303,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Utilities",
-      "marketCap": 2890139212.0545278,
+      "marketCap": 2948482907.0532355,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "veteran",
@@ -1278,11 +1311,12 @@
       "ipoYear": 1989,
       "coverageAxes": "6/7",
       "coverageWeight": 0.91,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 23.248711586180583,
-      "scoreBase": 81.5,
-      "scoreShrunk": 78.8,
+      "profitStreak": null,
+      "scoreBase": 81.3,
+      "scoreShrunk": 78.5,
       "factors": {
         "burn": 1,
         "growth": 1.04,
@@ -1296,17 +1330,17 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 64.6,
+          "pct": 64.3,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 83.7,
+          "pct": 83.8,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 84.9,
+          "pct": 85,
           "weight": 2.2
         },
         {
@@ -1316,7 +1350,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 53.8,
+          "pct": 50.2,
           "weight": 0.5
         },
         {
@@ -1328,7 +1362,7 @@
     },
     {
       "ticker": "UU.L",
-      "score": 81.7,
+      "score": 81.6,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1344,7 +1378,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Utilities",
-      "marketCap": 13485976302.059519,
+      "marketCap": 13613313005.595034,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "veteran",
@@ -1352,9 +1386,10 @@
       "ipoYear": 1989,
       "coverageAxes": "6/7",
       "coverageWeight": 0.91,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
-      "revGrowthYoYPct": 21.96065634905835,
+      "revGrowthYoYPct": 21.96065634905837,
+      "profitStreak": null,
       "scoreBase": 81.3,
       "scoreShrunk": 78.6,
       "factors": {
@@ -1370,7 +1405,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 74.8,
+          "pct": 74.5,
           "weight": 0.5
         },
         {
@@ -1380,7 +1415,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 83,
+          "pct": 83.1,
           "weight": 2.2
         },
         {
@@ -1390,7 +1425,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 57.5,
+          "pct": 57.3,
           "weight": 0.5
         },
         {
@@ -1402,7 +1437,7 @@
     },
     {
       "ticker": "MTLN.L",
-      "score": 80.4,
+      "score": 80.3,
       "track": "profitable",
       "lamps": [
         "burning"
@@ -1416,7 +1451,7 @@
       "country": "Greece",
       "region": "Europe",
       "sector": "Utilities",
-      "marketCap": 7132600053.429043,
+      "marketCap": 7346119711.902208,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "recent",
@@ -1424,11 +1459,12 @@
       "ipoYear": 2025,
       "coverageAxes": "5/7",
       "coverageWeight": 0.84,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 25.058085967936417,
+      "profitStreak": null,
       "scoreBase": 82.2,
-      "scoreShrunk": 77.3,
+      "scoreShrunk": 77.2,
       "factors": {
         "burn": 1,
         "growth": 1.04,
@@ -1437,12 +1473,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 88.7,
+          "pct": 88.8,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 89.6,
+          "pct": 89.2,
           "weight": 0.5
         },
         {
@@ -1489,7 +1525,7 @@
       "country": "Thailand",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 2506133004.20481,
+      "marketCap": 2518865963.1984477,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "mature",
@@ -1497,9 +1533,10 @@
       "ipoYear": 2000,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 99.70585330677453,
+      "profitStreak": null,
       "scoreBase": 78.5,
       "scoreShrunk": 76.4,
       "factors": {
@@ -1515,12 +1552,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 60.8,
+          "pct": 60.6,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 36.7,
+          "pct": 36.9,
           "weight": 0.4
         },
         {
@@ -1559,7 +1596,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 7504540005.290672,
+      "marketCap": 7473347784.553923,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "growth",
@@ -1567,11 +1604,12 @@
       "ipoYear": 2018,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 30.737515470527722,
-      "scoreBase": 78.2,
-      "scoreShrunk": 76.1,
+      "profitStreak": null,
+      "scoreBase": 78.3,
+      "scoreShrunk": 76.2,
       "factors": {
         "burn": 1,
         "growth": 1.04,
@@ -1580,17 +1618,17 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 90.6,
+          "pct": 90.7,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 61.2,
+          "pct": 60.9,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 50.4,
+          "pct": 50.6,
           "weight": 0.4
         },
         {
@@ -1600,12 +1638,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 14.4,
+          "pct": 14.9,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 89.2,
+          "pct": 89.7,
           "weight": 0.5
         },
         {
@@ -1633,7 +1671,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 6275637248,
+      "marketCap": 6051331584,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "seasoned",
@@ -1641,11 +1679,18 @@
       "ipoYear": 2004,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 75.79538827134165,
-      "scoreBase": 75.6,
-      "scoreShrunk": 75.4,
+      "profitStreak": {
+        "jahre": 13,
+        "basis": "opInc",
+        "tiefe": 16,
+        "mindestens": false,
+        "letzterVerlust": 2012
+      },
+      "scoreBase": 75.7,
+      "scoreShrunk": 75.5,
       "factors": {
         "burn": 1,
         "growth": 1.045,
@@ -1659,12 +1704,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 61.6,
+          "pct": 61.3,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 15.9,
+          "pct": 15.8,
           "weight": 0.4
         },
         {
@@ -1674,12 +1719,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 47.9,
+          "pct": 48.3,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 54.9,
+          "pct": 55.1,
           "weight": 0.5
         },
         {
@@ -1691,7 +1736,7 @@
     },
     {
       "ticker": "UTL",
-      "score": 78.7,
+      "score": 78.6,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1708,7 +1753,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 999209728,
+      "marketCap": 1007305600,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "veteran",
@@ -1716,9 +1761,16 @@
       "ipoYear": 1985,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 26.990632318501163,
+      "profitStreak": {
+        "jahre": 16,
+        "basis": "opInc",
+        "tiefe": 16,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
       "scoreBase": 78,
       "scoreShrunk": 75.9,
       "factors": {
@@ -1734,12 +1786,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 87.7,
+          "pct": 87.4,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 80.6,
+          "pct": 80.7,
           "weight": 0.4
         },
         {
@@ -1754,7 +1806,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 24.3,
+          "pct": 24.2,
           "weight": 0.5
         },
         {
@@ -1766,7 +1818,7 @@
     },
     {
       "ticker": "1SLR.MI",
-      "score": 78.5,
+      "score": 78.4,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1783,7 +1835,7 @@
       "country": "Spain",
       "region": "Europe",
       "sector": "Utilities",
-      "marketCap": 2736152214.205235,
+      "marketCap": 2789120234.315264,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "recent",
@@ -1791,9 +1843,10 @@
       "ipoYear": 2025,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 45.410226934048616,
+      "profitStreak": null,
       "scoreBase": 77.3,
       "scoreShrunk": 75.3,
       "factors": {
@@ -1809,12 +1862,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 87.1,
+          "pct": 86.8,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 56.5,
+          "pct": 56.6,
           "weight": 0.4
         },
         {
@@ -1829,7 +1882,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 30.6,
+          "pct": 30.1,
           "weight": 0.5
         },
         {
@@ -1840,8 +1893,8 @@
       ]
     },
     {
-      "ticker": "SLR.VI",
-      "score": 78.5,
+      "ticker": "SLR.MC",
+      "score": 78.4,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1858,7 +1911,7 @@
       "country": "Spain",
       "region": "Europe",
       "sector": "Utilities",
-      "marketCap": 2719564892.6981115,
+      "marketCap": 2613760821.469952,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "seasoned",
@@ -1866,9 +1919,10 @@
       "ipoYear": 2007,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 45.410226934048616,
+      "profitStreak": null,
       "scoreBase": 77.3,
       "scoreShrunk": 75.3,
       "factors": {
@@ -1884,12 +1938,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 87.1,
+          "pct": 86.8,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 56.5,
+          "pct": 56.6,
           "weight": 0.4
         },
         {
@@ -1904,7 +1958,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 30.6,
+          "pct": 30.1,
           "weight": 0.5
         },
         {
@@ -1916,7 +1970,7 @@
     },
     {
       "ticker": "NPI.TO",
-      "score": 78.5,
+      "score": 78.4,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -1930,7 +1984,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 4093907696.4089856,
+      "marketCap": 4030388047.3605633,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "seasoned",
@@ -1938,9 +1992,10 @@
       "ipoYear": 2003,
       "coverageAxes": "5/7",
       "coverageWeight": 0.87,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 16.45295386720189,
+      "profitStreak": null,
       "scoreBase": 80.6,
       "scoreShrunk": 76.7,
       "factors": {
@@ -1951,12 +2006,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 81.1,
+          "pct": 81.2,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 43,
+          "pct": 42.8,
           "weight": 0.5
         },
         {
@@ -1966,7 +2021,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 91,
+          "pct": 91.1,
           "weight": 2.2
         },
         {
@@ -1976,7 +2031,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 81.3,
+          "pct": 81,
           "weight": 0.5
         },
         {
@@ -1988,7 +2043,7 @@
     },
     {
       "ticker": "CEN.NZ",
-      "score": 78.4,
+      "score": 78.3,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -2003,7 +2058,7 @@
       "country": "New Zealand",
       "region": "Oceania",
       "sector": "Utilities",
-      "marketCap": 5700211799.488819,
+      "marketCap": 5611383612.199322,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "mature",
@@ -2011,25 +2066,26 @@
       "ipoYear": 2000,
       "coverageAxes": "5/7",
       "coverageWeight": 0.84,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 20.098556846180916,
-      "scoreBase": 80,
+      "profitStreak": null,
+      "scoreBase": 80.1,
       "scoreShrunk": 75.5,
       "factors": {
         "burn": 1,
-        "growth": 1.039,
+        "growth": 1.038,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 85.3,
+          "pct": 85.4,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 12.7,
+          "pct": 12.6,
           "weight": 0.5
         },
         {
@@ -2039,7 +2095,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 87.2,
+          "pct": 87.3,
           "weight": 2.2
         },
         {
@@ -2049,7 +2105,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 83.2,
+          "pct": 83.3,
           "weight": 0.5
         },
         {
@@ -2061,7 +2117,7 @@
     },
     {
       "ticker": "CPLE3.SA",
-      "score": 78,
+      "score": 77.9,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -2076,7 +2132,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Utilities",
-      "marketCap": 8579132531.825049,
+      "marketCap": 8644741345.86458,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "mature",
@@ -2084,30 +2140,31 @@
       "ipoYear": 2000,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 19.952441291590105,
+      "profitStreak": null,
       "scoreBase": 77.2,
-      "scoreShrunk": 75.3,
+      "scoreShrunk": 75.2,
       "factors": {
         "burn": 1,
-        "growth": 1.036,
+        "growth": 1.035,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 84.9,
+          "pct": 85,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 70.3,
+          "pct": 70,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 59.4,
+          "pct": 59.2,
           "weight": 0.4
         },
         {
@@ -2122,7 +2179,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 73,
+          "pct": 72.7,
           "weight": 0.5
         },
         {
@@ -2148,7 +2205,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 52964622336,
+      "marketCap": 50118799360,
       "phase": "inflected",
       "mcapBand": "mega",
       "ipoRecency": "growth",
@@ -2156,11 +2213,18 @@
       "ipoYear": 2016,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 43.40198321891686,
-      "scoreBase": 75.2,
-      "scoreShrunk": 75,
+      "profitStreak": {
+        "jahre": 3,
+        "basis": "opInc",
+        "tiefe": 7,
+        "mindestens": false,
+        "letzterVerlust": 2022
+      },
+      "scoreBase": 75.1,
+      "scoreShrunk": 74.9,
       "factors": {
         "burn": 1,
         "growth": 1.039,
@@ -2169,7 +2233,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 92.9,
+          "pct": 93,
           "weight": 2.2
         },
         {
@@ -2179,7 +2243,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 26.1,
+          "pct": 26,
           "weight": 0.4
         },
         {
@@ -2189,12 +2253,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 98.8,
+          "pct": 98.3,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 52.3,
+          "pct": 52.1,
           "weight": 0.5
         },
         {
@@ -2206,7 +2270,7 @@
     },
     {
       "ticker": "CDIA.JK",
-      "score": 77.9,
+      "score": 77.8,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -2222,7 +2286,7 @@
       "country": "Indonesia",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 4694474708.435274,
+      "marketCap": 4490843181.841449,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "recent",
@@ -2230,9 +2294,10 @@
       "ipoYear": 2025,
       "coverageAxes": "5/7",
       "coverageWeight": 0.86,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 44.76840761406082,
+      "profitStreak": null,
       "scoreBase": 78.3,
       "scoreShrunk": 74.4,
       "factors": {
@@ -2258,7 +2323,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 92.9,
+          "pct": 93,
           "weight": 2.2
         },
         {
@@ -2269,80 +2334,6 @@
         {
           "key": "capitalEfficiency",
           "pct": 4.7,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.5
-        }
-      ]
-    },
-    {
-      "ticker": "600995.SS",
-      "score": 77.6,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "shortRunway",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.288,
-        "companion": 27
-      },
-      "name": "China Southern Power Grid Energy Storage Co., Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Utilities",
-      "marketCap": 5903399242.658284,
-      "phase": "established",
-      "mcapBand": "mid",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2004,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.93,
-      "cohortN": 266,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 11.758827301481656,
-      "scoreBase": 77.1,
-      "scoreShrunk": 75.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1.034,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 76.5,
-          "weight": 2.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 69.5,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 87.3,
-          "weight": 0.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 71.9,
-          "weight": 2.2
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 96.9,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 77.5,
           "weight": 0.5
         },
         {
@@ -2371,7 +2362,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 14561628875.693098,
+      "marketCap": 13939783401.093119,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "mature",
@@ -2379,11 +2370,12 @@
       "ipoYear": 1999,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 52.31551529923992,
+      "profitStreak": null,
       "scoreBase": 76.4,
-      "scoreShrunk": 74.5,
+      "scoreShrunk": 74.4,
       "factors": {
         "burn": 1,
         "growth": 1.041,
@@ -2402,7 +2394,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 32,
+          "pct": 31.8,
           "weight": 0.4
         },
         {
@@ -2417,7 +2409,82 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 51.5,
+          "pct": 51.3,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "ticker": "600995.SS",
+      "score": 77.4,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.288,
+        "companion": 27
+      },
+      "name": "China Southern Power Grid Energy Storage Co., Ltd.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Utilities",
+      "marketCap": 6059160177.626112,
+      "phase": "established",
+      "mcapBand": "mid",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2004,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.93,
+      "cohortN": 267,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 11.758827301481656,
+      "profitStreak": null,
+      "scoreBase": 76.9,
+      "scoreShrunk": 74.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1.033,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 76.2,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 69.2,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 87.3,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 71.7,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 96.9,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 77.6,
           "weight": 0.5
         },
         {
@@ -2445,7 +2512,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 2694990880.205532,
+      "marketCap": 2700039661.571738,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "veteran",
@@ -2453,11 +2520,12 @@
       "ipoYear": 1996,
       "coverageAxes": "5/7",
       "coverageWeight": 0.87,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 20.67510548523208,
+      "profitStreak": null,
       "scoreBase": 78.8,
-      "scoreShrunk": 75.2,
+      "scoreShrunk": 75.1,
       "factors": {
         "burn": 1,
         "growth": 1.022,
@@ -2471,7 +2539,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 83.5,
+          "pct": 83.2,
           "weight": 0.5
         },
         {
@@ -2481,7 +2549,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 82.6,
+          "pct": 82.7,
           "weight": 2.2
         },
         {
@@ -2491,7 +2559,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 47.4,
+          "pct": 47.2,
           "weight": 0.5
         },
         {
@@ -2519,7 +2587,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 61803339776,
+      "marketCap": 62111174656,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "veteran",
@@ -2527,9 +2595,16 @@
       "ipoYear": 1980,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 23.13542688910697,
+      "profitStreak": {
+        "jahre": 17,
+        "basis": "opInc",
+        "tiefe": 17,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
       "scoreBase": 75.9,
       "scoreShrunk": 74,
       "factors": {
@@ -2545,27 +2620,27 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 77.5,
+          "pct": 77.2,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 75.9,
+          "pct": 75.6,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 84.5,
+          "pct": 84.6,
           "weight": 2.2
         },
         {
           "key": "marginTrajectory",
-          "pct": 14.9,
+          "pct": 15.3,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 57.9,
+          "pct": 57.7,
           "weight": 0.5
         },
         {
@@ -2577,7 +2652,7 @@
     },
     {
       "ticker": "CPX.TO",
-      "score": 76.6,
+      "score": 76.7,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -2592,7 +2667,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 7959621473.070285,
+      "marketCap": 7569591072.506266,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "seasoned",
@@ -2600,11 +2675,12 @@
       "ipoYear": 2009,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 41.26611957796014,
-      "scoreBase": 75.7,
-      "scoreShrunk": 73.8,
+      "profitStreak": null,
+      "scoreBase": 75.8,
+      "scoreShrunk": 74,
       "factors": {
         "burn": 1,
         "growth": 1.038,
@@ -2618,12 +2694,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 71.4,
+          "pct": 71.1,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 7.3,
+          "pct": 7.2,
           "weight": 0.4
         },
         {
@@ -2633,7 +2709,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 66.7,
+          "pct": 68.6,
           "weight": 0.6
         },
         {
@@ -2672,11 +2748,12 @@
       "ipoYear": 2000,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 22.06037557065228,
-      "scoreBase": 76.4,
-      "scoreShrunk": 74.5,
+      "profitStreak": null,
+      "scoreBase": 76.6,
+      "scoreShrunk": 74.6,
       "factors": {
         "burn": 1,
         "growth": 1.027,
@@ -2690,17 +2767,17 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 28.6,
+          "pct": 28.5,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 46.5,
+          "pct": 46.7,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 83.4,
+          "pct": 83.5,
           "weight": 2.2
         },
         {
@@ -2710,7 +2787,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 55.3,
+          "pct": 56.6,
           "weight": 0.5
         },
         {
@@ -2738,7 +2815,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 3563898275.3399606,
+      "marketCap": 3759026039.7957115,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "mature",
@@ -2746,10 +2823,11 @@
       "ipoYear": 2000,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 17.25237485829063,
-      "scoreBase": 75.5,
+      "profitStreak": null,
+      "scoreBase": 75.6,
       "scoreShrunk": 73.7,
       "factors": {
         "burn": 1,
@@ -2764,12 +2842,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 63.8,
+          "pct": 63.6,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 93.1,
+          "pct": 93.2,
           "weight": 0.4
         },
         {
@@ -2795,8 +2873,8 @@
       ]
     },
     {
-      "ticker": "ELI.BR",
-      "score": 76.2,
+      "ticker": "ELIA.VI",
+      "score": 76.1,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -2813,43 +2891,44 @@
       "country": "Belgium",
       "region": "Europe",
       "sector": "Utilities",
-      "marketCap": 17085916456.815516,
+      "marketCap": 16831274310.216705,
       "phase": "established",
-      "mcapBand": "mega",
+      "mcapBand": "large",
       "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2005,
       "coverageAxes": "5/7",
       "coverageWeight": 0.84,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 17.924077515264123,
+      "profitStreak": null,
       "scoreBase": 77.7,
       "scoreShrunk": 73.5,
       "factors": {
         "burn": 1,
-        "growth": 1.037,
+        "growth": 1.036,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 82.6,
+          "pct": 82.7,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 88.1,
+          "pct": 87.7,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 97.8,
+          "pct": 97.9,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 80.3,
+          "pct": 80.4,
           "weight": 2.2
         },
         {
@@ -2871,7 +2950,7 @@
     },
     {
       "ticker": "600236.SS",
-      "score": 75.9,
+      "score": 75.5,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -2883,7 +2962,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 11740925232.734045,
+      "marketCap": 12719149389.207552,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "mature",
@@ -2891,45 +2970,46 @@
       "ipoYear": 2000,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 8.278051434704281,
-      "scoreBase": 76.5,
-      "scoreShrunk": 74.6,
+      "profitStreak": null,
+      "scoreBase": 76.3,
+      "scoreShrunk": 74.4,
       "factors": {
         "burn": 1,
-        "growth": 1.017,
+        "growth": 1.016,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 67,
+          "pct": 66.3,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 50.2,
+          "pct": 49.6,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 88,
+          "pct": 88.1,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 80.7,
+          "pct": 80.8,
           "weight": 2.2
         },
         {
           "key": "marginTrajectory",
-          "pct": 97.9,
+          "pct": 97.4,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 91.5,
+          "pct": 91.9,
           "weight": 0.5
         },
         {
@@ -2941,7 +3021,7 @@
     },
     {
       "ticker": "ECL.SN",
-      "score": 75.8,
+      "score": 75.5,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -2959,7 +3039,7 @@
       "country": "Chile",
       "region": "South America",
       "sector": "Utilities",
-      "marketCap": 2090389761.3749714,
+      "marketCap": 2066575570.4225168,
       "phase": "inflected",
       "mcapBand": "micro",
       "ipoRecency": "mature",
@@ -2967,11 +3047,12 @@
       "ipoYear": 2000,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 13.07349340907309,
-      "scoreBase": 75.5,
-      "scoreShrunk": 73.7,
+      "profitStreak": null,
+      "scoreBase": 75.3,
+      "scoreShrunk": 73.4,
       "factors": {
         "burn": 1,
         "growth": 1.028,
@@ -2980,12 +3061,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 77.3,
+          "pct": 77,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 51.3,
+          "pct": 51.1,
           "weight": 0.5
         },
         {
@@ -2995,7 +3076,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 73.5,
+          "pct": 73.2,
           "weight": 2.2
         },
         {
@@ -3005,80 +3086,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 60.9,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.5
-        }
-      ]
-    },
-    {
-      "ticker": "ENIC",
-      "score": 74.9,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.647,
-        "companion": 31.3
-      },
-      "name": "Enel Chile S.A.",
-      "country": "Chile",
-      "region": "South America",
-      "sector": "Utilities",
-      "marketCap": 6045157376,
-      "phase": "established",
-      "mcapBand": "mid",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2016,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.93,
-      "cohortN": 266,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 8.711433756805809,
-      "scoreBase": 75.2,
-      "scoreShrunk": 73.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1.019,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 68.1,
-          "weight": 2.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 95.6,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 97.1,
-          "weight": 0.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 76.1,
-          "weight": 2.2
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 58.3,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 85.1,
+          "pct": 60.3,
           "weight": 0.5
         },
         {
@@ -3105,7 +3113,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 42322313167.20819,
+      "marketCap": 42151231696.3531,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "seasoned",
@@ -3113,9 +3121,10 @@
       "ipoYear": 2009,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 32.76223186817819,
+      "profitStreak": null,
       "scoreBase": 74.2,
       "scoreShrunk": 72.5,
       "factors": {
@@ -3126,17 +3135,17 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 91,
+          "pct": 91.1,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 11.6,
+          "pct": 11.5,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 45.7,
+          "pct": 45.9,
           "weight": 0.4
         },
         {
@@ -3162,8 +3171,82 @@
       ]
     },
     {
+      "ticker": "ENIC",
+      "score": 74.5,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.647,
+        "companion": 31.3
+      },
+      "name": "Enel Chile S.A.",
+      "country": "Chile",
+      "region": "South America",
+      "sector": "Utilities",
+      "marketCap": 6045157376,
+      "phase": "established",
+      "mcapBand": "mid",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2016,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.93,
+      "cohortN": 267,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 8.711433756805809,
+      "profitStreak": null,
+      "scoreBase": 75,
+      "scoreShrunk": 73.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1.019,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 67.5,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 95.3,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 97.1,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 75.9,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 58.3,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 85.9,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
       "ticker": "EDPR.LS",
-      "score": 74.3,
+      "score": 74.4,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -3179,19 +3262,20 @@
       "country": "Spain",
       "region": "Europe",
       "sector": "Utilities",
-      "marketCap": 16649657914.57116,
-      "phase": "established",
+      "marketCap": 16727639536.878593,
+      "phase": "inflected",
       "mcapBand": "large",
       "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
+      "profitTier": "seit-kurzem-profitabel",
       "ipoYear": 2008,
       "coverageAxes": "5/7",
       "coverageWeight": 0.84,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 16.29466532841528,
-      "scoreBase": 75.7,
-      "scoreShrunk": 71.9,
+      "profitStreak": null,
+      "scoreBase": 75.9,
+      "scoreShrunk": 72,
       "factors": {
         "burn": 1,
         "growth": 1.034,
@@ -3200,17 +3284,17 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 80.7,
+          "pct": 80.8,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 76.7,
+          "pct": 76.4,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 65.7,
+          "pct": 65.4,
           "weight": 0.4
         },
         {
@@ -3225,7 +3309,88 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 50.4,
+          "pct": 52.8,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "ticker": "DTE",
+      "score": 74.3,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.105,
+        "companion": 23.1
+      },
+      "name": "DTE Energy Company",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Utilities",
+      "marketCap": 30388776960,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1962,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.93,
+      "cohortN": 267,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 15.788288288288289,
+      "profitStreak": {
+        "jahre": 17,
+        "basis": "opInc",
+        "tiefe": 17,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "scoreBase": 73.3,
+      "scoreShrunk": 71.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1.039,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 80.4,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 96.4,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 78.7,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 77.8,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 11.6,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 68.6,
           "weight": 0.5
         },
         {
@@ -3253,7 +3418,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 3022556613.935596,
+      "marketCap": 3089678849.8805757,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "recent",
@@ -3261,10 +3426,11 @@
       "ipoYear": 2021,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 16.590366537229805,
-      "scoreBase": 72.9,
+      "profitStreak": null,
+      "scoreBase": 73,
       "scoreShrunk": 71.3,
       "factors": {
         "burn": 1,
@@ -3279,17 +3445,17 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 24.8,
+          "pct": 24.7,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 79,
+          "pct": 79.1,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 79.2,
+          "pct": 79.3,
           "weight": 2.2
         },
         {
@@ -3299,7 +3465,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 76.4,
+          "pct": 76.1,
           "weight": 0.5
         },
         {
@@ -3325,7 +3491,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 7709507584,
+      "marketCap": 7548642304,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "growth",
@@ -3333,14 +3499,21 @@
       "ipoYear": 2015,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 18.791946308724828,
+      "profitStreak": {
+        "jahre": 13,
+        "basis": "opInc",
+        "tiefe": 13,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
       "scoreBase": 73.6,
       "scoreShrunk": 71.9,
       "factors": {
         "burn": 1,
-        "growth": 1.025,
+        "growth": 1.024,
         "cycle": 1
       },
       "axisBreakdown": [
@@ -3351,12 +3524,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 46.8,
+          "pct": 46.6,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 33.9,
+          "pct": 34.2,
           "weight": 0.4
         },
         {
@@ -3399,7 +3572,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 3644461312,
+      "marketCap": 3513147904,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "growth",
@@ -3407,9 +3580,10 @@
       "ipoYear": 2015,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 73.22404371584699,
+      "profitStreak": null,
       "scoreBase": 70.5,
       "scoreShrunk": 70.4,
       "factors": {
@@ -3425,12 +3599,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 63.4,
+          "pct": 63.2,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 31.6,
+          "pct": 31.4,
           "weight": 0.4
         },
         {
@@ -3457,7 +3631,7 @@
     },
     {
       "ticker": "ADANIENSOL.NS",
-      "score": 73.2,
+      "score": 73.1,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -3474,7 +3648,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 20910092928.04214,
+      "marketCap": 20852215012.69338,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "growth",
@@ -3482,11 +3656,12 @@
       "ipoYear": 2015,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 52.340703230644216,
+      "profitStreak": null,
       "scoreBase": 71.7,
-      "scoreShrunk": 70.2,
+      "scoreShrunk": 70.1,
       "factors": {
         "burn": 1,
         "growth": 1.043,
@@ -3495,7 +3670,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 94.8,
+          "pct": 94.9,
           "weight": 2.2
         },
         {
@@ -3505,12 +3680,12 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 26.9,
+          "pct": 26.8,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 94.8,
+          "pct": 94.9,
           "weight": 2.2
         },
         {
@@ -3520,7 +3695,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 33.8,
+          "pct": 33.3,
           "weight": 0.5
         },
         {
@@ -3532,7 +3707,7 @@
     },
     {
       "ticker": "RGSI.TO",
-      "score": 73,
+      "score": 72.8,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -3544,7 +3719,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 2491993548.9248667,
+      "marketCap": 2486298327.8825727,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "recent",
@@ -3552,11 +3727,12 @@
       "ipoYear": 2025,
       "coverageAxes": "4/7",
       "coverageWeight": 0.8,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 15.43462557187576,
-      "scoreBase": 75.5,
-      "scoreShrunk": 70.7,
+      "profitStreak": null,
+      "scoreBase": 75.4,
+      "scoreShrunk": 70.5,
       "factors": {
         "burn": 1,
         "growth": 1.033,
@@ -3565,7 +3741,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 80,
+          "pct": 79.7,
           "weight": 2.2
         },
         {
@@ -3602,7 +3778,7 @@
     },
     {
       "ticker": "EGIE3.SA",
-      "score": 72.9,
+      "score": 72.8,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -3614,7 +3790,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Utilities",
-      "marketCap": 8316673895.666484,
+      "marketCap": 8287794266.610647,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "seasoned",
@@ -3622,11 +3798,12 @@
       "ipoYear": 2002,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 14.63137003744217,
-      "scoreBase": 72.3,
-      "scoreShrunk": 70.7,
+      "profitStreak": null,
+      "scoreBase": 72.2,
+      "scoreShrunk": 70.6,
       "factors": {
         "burn": 1,
         "growth": 1.031,
@@ -3635,22 +3812,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 78.8,
+          "pct": 78.5,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 67.6,
+          "pct": 67.4,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 25.7,
+          "pct": 25.6,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 78.4,
+          "pct": 78.5,
           "weight": 2.2
         },
         {
@@ -3688,7 +3865,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Utilities",
-      "marketCap": 4131945530.5089025,
+      "marketCap": 4142329397.1861506,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "mature",
@@ -3696,11 +3873,12 @@
       "ipoYear": 2000,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 18.13289791442527,
+      "profitStreak": null,
       "scoreBase": 71.7,
-      "scoreShrunk": 70.1,
+      "scoreShrunk": 70.2,
       "factors": {
         "burn": 1,
         "growth": 1.037,
@@ -3709,7 +3887,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 83,
+          "pct": 83.1,
           "weight": 2.2
         },
         {
@@ -3719,12 +3897,12 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 6.9,
+          "pct": 6.8,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 81.1,
+          "pct": 81.2,
           "weight": 2.2
         },
         {
@@ -3734,7 +3912,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 89.6,
+          "pct": 90,
           "weight": 0.5
         },
         {
@@ -3764,7 +3942,7 @@
       "country": "Germany",
       "region": "Europe",
       "sector": "Utilities",
-      "marketCap": 25743406562.502243,
+      "marketCap": 25881901741.73594,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "mature",
@@ -3772,9 +3950,10 @@
       "ipoYear": 1999,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 25.70588311169011,
+      "profitStreak": null,
       "scoreBase": 74.4,
       "scoreShrunk": 72.7,
       "factors": {
@@ -3785,22 +3964,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 89.1,
+          "pct": 89.2,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 41.1,
+          "pct": 40.9,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 36.3,
+          "pct": 36.5,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 86.8,
+          "pct": 86.9,
           "weight": 2.2
         },
         {
@@ -3838,7 +4017,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 8255690104.511464,
+      "marketCap": 8194024382.674371,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "seasoned",
@@ -3846,9 +4025,10 @@
       "ipoYear": 2009,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 23.123108677779914,
+      "profitStreak": null,
       "scoreBase": 70.2,
       "scoreShrunk": 68.8,
       "factors": {
@@ -3859,17 +4039,17 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 87.2,
+          "pct": 87.3,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 46,
+          "pct": 45.8,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 71.6,
+          "pct": 71.3,
           "weight": 0.4
         },
         {
@@ -3884,7 +4064,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 37.2,
+          "pct": 37,
           "weight": 0.5
         },
         {
@@ -3896,7 +4076,7 @@
     },
     {
       "ticker": "CESC.NS",
-      "score": 71.2,
+      "score": 71,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -3911,7 +4091,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 2271635371.2419634,
+      "marketCap": 2278367318.8016787,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "seasoned",
@@ -3919,11 +4099,12 @@
       "ipoYear": 2002,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
-      "revGrowthYoYPct": 15.023869699522585,
-      "scoreBase": 70.8,
-      "scoreShrunk": 69.4,
+      "revGrowthYoYPct": 15.02386969952263,
+      "profitStreak": null,
+      "scoreBase": 70.6,
+      "scoreShrunk": 69.2,
       "factors": {
         "burn": 1,
         "growth": 1.026,
@@ -3932,22 +4113,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 79.6,
+          "pct": 79.3,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 39.2,
+          "pct": 39.1,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 82.5,
+          "pct": 82.6,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 76.5,
+          "pct": 76.2,
           "weight": 2.2
         },
         {
@@ -3957,7 +4138,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 41.3,
+          "pct": 41.5,
           "weight": 0.5
         },
         {
@@ -3969,7 +4150,7 @@
     },
     {
       "ticker": "AWR",
-      "score": 70.2,
+      "score": 70,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -3984,7 +4165,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 3374095360,
+      "marketCap": 3451304960,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "veteran",
@@ -3992,11 +4173,18 @@
       "ipoYear": 1973,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 14.308202657874647,
-      "scoreBase": 68.5,
-      "scoreShrunk": 68.3,
+      "profitStreak": {
+        "jahre": 15,
+        "basis": "opInc",
+        "tiefe": 15,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "scoreBase": 68.3,
+      "scoreShrunk": 68.1,
       "factors": {
         "burn": 1,
         "growth": 1.027,
@@ -4005,22 +4193,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 78.1,
+          "pct": 77.8,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 71.8,
+          "pct": 71.5,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 45.3,
+          "pct": 45.5,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 75,
+          "pct": 74.7,
           "weight": 2.2
         },
         {
@@ -4030,7 +4218,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 85.8,
+          "pct": 85.5,
           "weight": 0.5
         },
         {
@@ -4042,7 +4230,7 @@
     },
     {
       "ticker": "ADANIGREEN.NS",
-      "score": 70.1,
+      "score": 69.8,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -4059,7 +4247,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 23794888518.92424,
+      "marketCap": 23667173007.29499,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "growth",
@@ -4067,11 +4255,12 @@
       "ipoYear": 2018,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 15.557337610264632,
-      "scoreBase": 69.5,
-      "scoreShrunk": 68.1,
+      "profitStreak": null,
+      "scoreBase": 69.3,
+      "scoreShrunk": 67.9,
       "factors": {
         "burn": 1,
         "growth": 1.029,
@@ -4080,22 +4269,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 80.3,
+          "pct": 80,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 21.4,
+          "pct": 21.3,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 88.8,
+          "pct": 88.9,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 76.9,
+          "pct": 76.6,
           "weight": 2.2
         },
         {
@@ -4117,7 +4306,7 @@
     },
     {
       "ticker": "BREN.JK",
-      "score": 69.5,
+      "score": 69.4,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -4129,7 +4318,7 @@
       "country": "Indonesia",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 25157652297.28389,
+      "marketCap": 24288544856.704456,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "recent",
@@ -4137,11 +4326,12 @@
       "ipoYear": 2023,
       "coverageAxes": "5/7",
       "coverageWeight": 0.87,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 6.197597860192383,
-      "scoreBase": 72.2,
-      "scoreShrunk": 69.5,
+      "profitStreak": null,
+      "scoreBase": 72.1,
+      "scoreShrunk": 69.4,
       "factors": {
         "burn": 1,
         "growth": 1.001,
@@ -4150,12 +4340,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 59.7,
+          "pct": 59.5,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 50.9,
+          "pct": 50.8,
           "weight": 0.5
         },
         {
@@ -4187,7 +4377,7 @@
     },
     {
       "ticker": "2082.SR",
-      "score": 69,
+      "score": 68.9,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -4201,7 +4391,7 @@
       "country": "Saudi Arabia",
       "region": "Middle East",
       "sector": "Utilities",
-      "marketCap": 39204991577.98405,
+      "marketCap": 38693737770.975235,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "recent",
@@ -4209,35 +4399,36 @@
       "ipoYear": 2021,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 16.523454178053676,
+      "profitStreak": null,
       "scoreBase": 67.9,
-      "scoreShrunk": 66.7,
+      "scoreShrunk": 66.6,
       "factors": {
         "burn": 1,
-        "growth": 1.035,
+        "growth": 1.034,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 81.5,
+          "pct": 81.6,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 80.1,
+          "pct": 79.8,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 48.8,
+          "pct": 49,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 78.8,
+          "pct": 78.9,
           "weight": 2.2
         },
         {
@@ -4247,7 +4438,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 34.2,
+          "pct": 33.6,
           "weight": 0.5
         },
         {
@@ -4259,7 +4450,7 @@
     },
     {
       "ticker": "EQTL3.SA",
-      "score": 69,
+      "score": 68.8,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -4271,7 +4462,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Utilities",
-      "marketCap": 9517346276.81403,
+      "marketCap": 9501120595.195454,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "seasoned",
@@ -4279,11 +4470,12 @@
       "ipoYear": 2008,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 11.290336811464385,
-      "scoreBase": 67,
-      "scoreShrunk": 66.8,
+      "profitStreak": null,
+      "scoreBase": 66.8,
+      "scoreShrunk": 66.7,
       "factors": {
         "burn": 1,
         "growth": 1.032,
@@ -4292,22 +4484,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 74.6,
+          "pct": 74.3,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 76.3,
+          "pct": 76,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 46.9,
+          "pct": 47.1,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 77.3,
+          "pct": 77,
           "weight": 2.2
         },
         {
@@ -4317,7 +4509,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 87.4,
+          "pct": 87.8,
           "weight": 0.5
         },
         {
@@ -4328,82 +4520,8 @@
       ]
     },
     {
-      "ticker": "A2A.MI",
-      "score": 68.9,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "lowRoic",
-        "cyclePeak"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.036,
-        "companion": 25.2
-      },
-      "name": "A2A S.p.A.",
-      "country": "Italy",
-      "region": "Europe",
-      "sector": "Utilities",
-      "marketCap": 8304770967.293337,
-      "phase": "established",
-      "mcapBand": "large",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2000,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.84,
-      "cohortN": 266,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 9.299920445505162,
-      "scoreBase": 70.5,
-      "scoreShrunk": 67.5,
-      "factors": {
-        "burn": 1,
-        "growth": 1.02,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 68.9,
-          "weight": 2.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 90.7,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 48,
-          "weight": 0.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 70.4,
-          "weight": 2.2
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 75.7,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.5
-        }
-      ]
-    },
-    {
       "ticker": "FE",
-      "score": 68.8,
+      "score": 68.5,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -4419,7 +4537,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 28528224256,
+      "marketCap": 28719108096,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "veteran",
@@ -4427,11 +4545,18 @@
       "ipoYear": 1997,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 11.606905710491366,
-      "scoreBase": 68.3,
-      "scoreShrunk": 67.1,
+      "profitStreak": {
+        "jahre": 9,
+        "basis": "opInc",
+        "tiefe": 17,
+        "mindestens": false,
+        "letzterVerlust": 2016
+      },
+      "scoreBase": 68.1,
+      "scoreShrunk": 66.8,
       "factors": {
         "burn": 1,
         "growth": 1.025,
@@ -4440,22 +4565,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 76.1,
+          "pct": 75.9,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 63.1,
+          "pct": 62.8,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 51.2,
+          "pct": 51.4,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 71.6,
+          "pct": 71.3,
           "weight": 2.2
         },
         {
@@ -4465,7 +4590,82 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 68.9,
+          "pct": 68.2,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "ticker": "A2A.MI",
+      "score": 68.5,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "lowRoic",
+        "cyclePeak"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.036,
+        "companion": 25.2
+      },
+      "name": "A2A S.p.A.",
+      "country": "Italy",
+      "region": "Europe",
+      "sector": "Utilities",
+      "marketCap": 8257848491.844096,
+      "phase": "established",
+      "mcapBand": "large",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2000,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.84,
+      "cohortN": 267,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 9.299920445505162,
+      "profitStreak": null,
+      "scoreBase": 70.1,
+      "scoreShrunk": 67.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1.02,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 68.3,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 90.4,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 48.2,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 70.2,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 75.4,
           "weight": 0.5
         },
         {
@@ -4477,7 +4677,7 @@
     },
     {
       "ticker": "CSG.DE",
-      "score": 68.7,
+      "score": 68.5,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -4493,7 +4693,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 22594883634.402096,
+      "marketCap": 22826156958.54797,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "seasoned",
@@ -4501,35 +4701,36 @@
       "ipoYear": 2003,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 11.565181855333062,
-      "scoreBase": 68.1,
-      "scoreShrunk": 66.9,
+      "profitStreak": null,
+      "scoreBase": 67.9,
+      "scoreShrunk": 66.6,
       "factors": {
         "burn": 1,
-        "growth": 1.028,
+        "growth": 1.027,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 75.8,
+          "pct": 75.5,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 75.9,
+          "pct": 75.7,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 74.7,
+          "pct": 74.4,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 71.2,
+          "pct": 70.9,
           "weight": 2.2
         },
         {
@@ -4539,7 +4740,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 56,
+          "pct": 55.8,
           "weight": 0.5
         },
         {
@@ -4551,7 +4752,7 @@
     },
     {
       "ticker": "NLCINDIA.NS",
-      "score": 67.8,
+      "score": 67.5,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -4567,7 +4768,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 4287014578.049581,
+      "marketCap": 4331608016.410182,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "mature",
@@ -4575,11 +4776,12 @@
       "ipoYear": 2000,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 14.303395466817182,
-      "scoreBase": 67,
-      "scoreShrunk": 65.8,
+      "profitStreak": null,
+      "scoreBase": 66.7,
+      "scoreShrunk": 65.6,
       "factors": {
         "burn": 1,
         "growth": 1.03,
@@ -4588,27 +4790,27 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 77.7,
+          "pct": 77.4,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 36.9,
+          "pct": 36.8,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 76.7,
+          "pct": 76.4,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 74.6,
+          "pct": 74.3,
           "weight": 2.2
         },
         {
           "key": "marginTrajectory",
-          "pct": 5.9,
+          "pct": 5.4,
           "weight": 0.6
         },
         {
@@ -4641,7 +4843,7 @@
       "country": "Thailand",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 28986749805.9989,
+      "marketCap": 29134023352.94128,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "recent",
@@ -4649,10 +4851,11 @@
       "ipoYear": 2025,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 22.2738356450489,
-      "scoreBase": 66.4,
+      "profitStreak": null,
+      "scoreBase": 66.5,
       "scoreShrunk": 65.3,
       "factors": {
         "burn": 1,
@@ -4662,7 +4865,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 86.8,
+          "pct": 86.9,
           "weight": 2.2
         },
         {
@@ -4672,7 +4875,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 29.2,
+          "pct": 29.1,
           "weight": 0.4
         },
         {
@@ -4699,7 +4902,7 @@
     },
     {
       "ticker": "ES",
-      "score": 67.2,
+      "score": 66.7,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -4715,7 +4918,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 28089417728,
+      "marketCap": 28352673792,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "veteran",
@@ -4723,11 +4926,18 @@
       "ipoYear": 1973,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 9.372571872571879,
-      "scoreBase": 66.7,
-      "scoreShrunk": 65.6,
+      "profitStreak": {
+        "jahre": 15,
+        "basis": "opInc",
+        "tiefe": 15,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "scoreBase": 66.2,
+      "scoreShrunk": 65.1,
       "factors": {
         "burn": 1,
         "growth": 1.025,
@@ -4736,22 +4946,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 69.3,
+          "pct": 68.6,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 79.4,
+          "pct": 79.1,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 66.9,
+          "pct": 66.6,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 64.3,
+          "pct": 63.7,
           "weight": 2.2
         },
         {
@@ -4761,7 +4971,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 65.5,
+          "pct": 64.8,
           "weight": 0.5
         },
         {
@@ -4773,7 +4983,7 @@
     },
     {
       "ticker": "MGEE",
-      "score": 66.6,
+      "score": 66.3,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -4789,7 +4999,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 3080493568,
+      "marketCap": 3094836992,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "veteran",
@@ -4797,83 +5007,16 @@
       "ipoYear": 1980,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 10.838471023427875,
-      "scoreBase": 66.2,
-      "scoreShrunk": 65.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1.023,
-        "cycle": 1
+      "profitStreak": {
+        "jahre": 16,
+        "basis": "opInc",
+        "tiefe": 16,
+        "mindestens": true,
+        "letzterVerlust": null
       },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 73.5,
-          "weight": 2.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 74.1,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 71.2,
-          "weight": 0.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 68.9,
-          "weight": 2.2
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 27.6,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 56.8,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.5
-        }
-      ]
-    },
-    {
-      "ticker": "ETR",
-      "score": 66.4,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "shortRunway",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.077,
-        "companion": -1.9
-      },
-      "name": "Entergy Corporation",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Utilities",
-      "marketCap": 53079859200,
-      "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1972,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.93,
-      "cohortN": 266,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 11.96933900130459,
       "scoreBase": 66,
       "scoreShrunk": 64.9,
       "factors": {
@@ -4884,32 +5027,32 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 76.9,
+          "pct": 73.2,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 73.3,
+          "pct": 73.8,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 70,
+          "pct": 70.9,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 72.3,
+          "pct": 68.6,
           "weight": 2.2
         },
         {
           "key": "marginTrajectory",
-          "pct": 11.1,
+          "pct": 27.6,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 45.8,
+          "pct": 57,
           "weight": 0.5
         },
         {
@@ -4921,7 +5064,7 @@
     },
     {
       "ticker": "EQPA3.SA",
-      "score": 66.4,
+      "score": 66.2,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -4933,7 +5076,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Utilities",
-      "marketCap": 2266934559.2664065,
+      "marketCap": 2287164873.3538713,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "seasoned",
@@ -4941,11 +5084,12 @@
       "ipoYear": 2002,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 11.529765663791892,
-      "scoreBase": 65.9,
-      "scoreShrunk": 64.9,
+      "profitStreak": null,
+      "scoreBase": 65.7,
+      "scoreShrunk": 64.6,
       "factors": {
         "burn": 1,
         "growth": 1.024,
@@ -4954,12 +5098,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 75.4,
+          "pct": 75.1,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 65.7,
+          "pct": 65.5,
           "weight": 0.5
         },
         {
@@ -4969,7 +5113,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 70.8,
+          "pct": 70.5,
           "weight": 2.2
         },
         {
@@ -4990,8 +5134,8 @@
       ]
     },
     {
-      "ticker": "WEC",
-      "score": 65.8,
+      "ticker": "ETR",
+      "score": 66.1,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -5000,132 +5144,67 @@
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.092,
-        "companion": 0.3
+        "value": 0.077,
+        "companion": -1.9
       },
-      "name": "WEC Energy Group, Inc.",
+      "name": "Entergy Corporation",
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 37709258752,
+      "marketCap": 52407963648,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 1980,
+      "ipoYear": 1972,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
-      "revGrowthYoYPct": 9.039530084140335,
-      "scoreBase": 65.2,
-      "scoreShrunk": 64.2,
+      "revGrowthYoYPct": 11.96933900130459,
+      "profitStreak": {
+        "jahre": 9,
+        "basis": "opInc",
+        "tiefe": 16,
+        "mindestens": false,
+        "letzterVerlust": 2016
+      },
+      "scoreBase": 65.7,
+      "scoreShrunk": 64.6,
       "factors": {
         "burn": 1,
-        "growth": 1.024,
+        "growth": 1.023,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 68.5,
+          "pct": 76.6,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 85.4,
+          "pct": 73,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 69.2,
+          "pct": 69.7,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 63.9,
+          "pct": 72.1,
           "weight": 2.2
         },
         {
           "key": "marginTrajectory",
-          "pct": 34.7,
+          "pct": 10.1,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 70,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.5
-        }
-      ]
-    },
-    {
-      "ticker": "9531.T",
-      "score": 65.6,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.249,
-        "companion": 20.7
-      },
-      "name": "Tokyo Gas Co.,Ltd.",
-      "country": "Japan",
-      "region": "Asia",
-      "sector": "Utilities",
-      "marketCap": 12575484856.315676,
-      "phase": "established",
-      "mcapBand": "large",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2000,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.84,
-      "cohortN": 266,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 7.506800833886729,
-      "scoreBase": 67.2,
-      "scoreShrunk": 64.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1.014,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 63.5,
-          "weight": 2.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 67.2,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 78.6,
-          "weight": 0.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 64.7,
-          "weight": 2.2
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 84.7,
+          "pct": 46.1,
           "weight": 0.5
         },
         {
@@ -5151,7 +5230,7 @@
       "country": "Indonesia",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 2363801143.090474,
+      "marketCap": 2319248168.274534,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "recent",
@@ -5159,30 +5238,31 @@
       "ipoYear": 2023,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 6.289546079779917,
-      "scoreBase": 65.8,
-      "scoreShrunk": 64.7,
+      "profitStreak": null,
+      "scoreBase": 65.7,
+      "scoreShrunk": 64.6,
       "factors": {
         "burn": 1,
-        "growth": 1.009,
+        "growth": 1.01,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 60.5,
+          "pct": 60.3,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 54.7,
+          "pct": 54.5,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 21.8,
+          "pct": 21.7,
           "weight": 0.4
         },
         {
@@ -5197,7 +5277,161 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 86.6,
+          "pct": 87,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "ticker": "WEC",
+      "score": 65.2,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.092,
+        "companion": 0.3
+      },
+      "name": "WEC Energy Group, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Utilities",
+      "marketCap": 37005692928,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1980,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.93,
+      "cohortN": 267,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 9.039530084140335,
+      "profitStreak": {
+        "jahre": 17,
+        "basis": "opInc",
+        "tiefe": 17,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "scoreBase": 64.7,
+      "scoreShrunk": 63.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1.024,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 67.9,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 85.1,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 68.9,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 63.3,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 34.7,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 69,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "ticker": "9531.T",
+      "score": 65.1,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.249,
+        "companion": 20.7
+      },
+      "name": "Tokyo Gas Co.,Ltd.",
+      "country": "Japan",
+      "region": "Asia",
+      "sector": "Utilities",
+      "marketCap": 12710782381.208372,
+      "phase": "established",
+      "mcapBand": "large",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2000,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.84,
+      "cohortN": 267,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 7.506800833886729,
+      "profitStreak": null,
+      "scoreBase": 66.7,
+      "scoreShrunk": 64.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1.013,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 62.9,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 67,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 78.3,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 64.1,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 84.8,
           "weight": 0.5
         },
         {
@@ -5209,7 +5443,7 @@
     },
     {
       "ticker": "AEP",
-      "score": 65.3,
+      "score": 65,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -5225,7 +5459,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 72686985216,
+      "marketCap": 72376852480,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "veteran",
@@ -5233,35 +5467,42 @@
       "ipoYear": 1962,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 10.195863078894373,
-      "scoreBase": 64.8,
-      "scoreShrunk": 63.8,
+      "profitStreak": {
+        "jahre": 16,
+        "basis": "opInc",
+        "tiefe": 16,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "scoreBase": 64.5,
+      "scoreShrunk": 63.5,
       "factors": {
         "burn": 1,
-        "growth": 1.024,
+        "growth": 1.023,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 71.9,
+          "pct": 71.7,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 62.7,
+          "pct": 62.5,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 51.6,
+          "pct": 51.8,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 67,
+          "pct": 66.7,
           "weight": 2.2
         },
         {
@@ -5271,7 +5512,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 62.5,
+          "pct": 61.8,
           "weight": 0.5
         },
         {
@@ -5283,7 +5524,7 @@
     },
     {
       "ticker": "AQN.TO",
-      "score": 64.8,
+      "score": 64.5,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -5299,7 +5540,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 4687692021.636301,
+      "marketCap": 4685989284.475034,
       "phase": "established",
       "mcapBand": "mid",
       "ipoRecency": "seasoned",
@@ -5307,11 +5548,12 @@
       "ipoYear": 2003,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 14.442518775274404,
-      "scoreBase": 63.5,
-      "scoreShrunk": 63.4,
+      "profitStreak": null,
+      "scoreBase": 63.3,
+      "scoreShrunk": 63.2,
       "factors": {
         "burn": 1,
         "growth": 1.021,
@@ -5320,22 +5562,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 78.4,
+          "pct": 78.1,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 66.5,
+          "pct": 66.2,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 48.4,
+          "pct": 48.6,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 75.4,
+          "pct": 75.1,
           "weight": 2.2
         },
         {
@@ -5345,7 +5587,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 52.6,
+          "pct": 52.4,
           "weight": 0.5
         },
         {
@@ -5357,7 +5599,7 @@
     },
     {
       "ticker": "D2MN.DE",
-      "score": 64.4,
+      "score": 64.1,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -5373,7 +5615,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 101172019556.34544,
+      "marketCap": 102447512236.51534,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "seasoned",
@@ -5381,11 +5623,12 @@
       "ipoYear": 2007,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 11.261971148017945,
-      "scoreBase": 64.1,
-      "scoreShrunk": 63.2,
+      "profitStreak": null,
+      "scoreBase": 63.9,
+      "scoreShrunk": 62.9,
       "factors": {
         "burn": 1,
         "growth": 1.018,
@@ -5394,22 +5637,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 74,
+          "pct": 73.8,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 53,
+          "pct": 52.8,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 62.7,
+          "pct": 62.5,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 69.5,
+          "pct": 69.2,
           "weight": 2.2
         },
         {
@@ -5419,7 +5662,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 60.4,
+          "pct": 59.8,
           "weight": 0.5
         },
         {
@@ -5431,7 +5674,7 @@
     },
     {
       "ticker": "DUK",
-      "score": 64.4,
+      "score": 64.1,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -5447,7 +5690,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 100435386368,
+      "marketCap": 100755021824,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "veteran",
@@ -5455,11 +5698,18 @@
       "ipoYear": 1980,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 11.261971148017945,
-      "scoreBase": 64.1,
-      "scoreShrunk": 63.2,
+      "profitStreak": {
+        "jahre": 17,
+        "basis": "opInc",
+        "tiefe": 17,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "scoreBase": 63.9,
+      "scoreShrunk": 62.9,
       "factors": {
         "burn": 1,
         "growth": 1.018,
@@ -5468,22 +5718,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 74,
+          "pct": 73.8,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 53,
+          "pct": 52.8,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 62.7,
+          "pct": 62.5,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 69.5,
+          "pct": 69.2,
           "weight": 2.2
         },
         {
@@ -5493,7 +5743,82 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 60.4,
+          "pct": 59.8,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "ticker": "AWK.VI",
+      "score": 64,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.104,
+        "companion": -14
+      },
+      "name": "American Water Works Company, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Utilities",
+      "marketCap": 26986281167.355904,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2018,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.93,
+      "cohortN": 267,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 9.735269000853975,
+      "profitStreak": null,
+      "scoreBase": 63.6,
+      "scoreShrunk": 62.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1.021,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 69.8,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 44.3,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 58,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 65.2,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 47.4,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 73.1,
           "weight": 0.5
         },
         {
@@ -5505,7 +5830,7 @@
     },
     {
       "ticker": "WTRG",
-      "score": 64.1,
+      "score": 63.8,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -5521,7 +5846,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 11214849024,
+      "marketCap": 11546698752,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "veteran",
@@ -5529,45 +5854,52 @@
       "ipoYear": 1980,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 9.970700308565572,
-      "scoreBase": 62.3,
-      "scoreShrunk": 62.2,
+      "profitStreak": {
+        "jahre": 16,
+        "basis": "opInc",
+        "tiefe": 16,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "scoreBase": 62.1,
+      "scoreShrunk": 62,
       "factors": {
         "burn": 1,
-        "growth": 1.03,
+        "growth": 1.029,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 71.6,
+          "pct": 71.3,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 84.7,
+          "pct": 84.3,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 84.5,
+          "pct": 84.6,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 66.6,
+          "pct": 66.3,
           "weight": 2.2
         },
         {
           "key": "marginTrajectory",
-          "pct": 7.8,
+          "pct": 7.3,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 58.7,
+          "pct": 58.5,
           "weight": 0.5
         },
         {
@@ -5578,75 +5910,75 @@
       ]
     },
     {
-      "ticker": "NI",
-      "score": 64.1,
+      "ticker": "ENELAM.SN",
+      "score": 63.8,
       "track": "profitable",
       "lamps": [
-        "burning",
-        "shortRunway",
-        "lowRoic"
+        "lowRoic",
+        "arDivergence"
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.192,
-        "companion": -3.9
+        "value": 0.048,
+        "companion": 24.4
       },
-      "name": "NiSource Inc.",
-      "country": "United States",
-      "region": "North America",
+      "name": "Enel Américas S.A.",
+      "country": "Chile",
+      "region": "South America",
       "sector": "Utilities",
-      "marketCap": 21963112448,
+      "marketCap": 9473729095.816603,
       "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "veteran",
+      "mcapBand": "large",
+      "ipoRecency": "mature",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 1973,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 266,
+      "ipoYear": 2000,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.93,
+      "cohortN": 267,
       "cohortFallback": false,
-      "revGrowthYoYPct": 8.240197874679378,
-      "scoreBase": 62.1,
-      "scoreShrunk": 62.1,
+      "revGrowthYoYPct": 10.628365491006031,
+      "profitStreak": null,
+      "scoreBase": 64.2,
+      "scoreShrunk": 63.2,
       "factors": {
         "burn": 1,
-        "growth": 1.033,
+        "growth": 1.009,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 66.6,
+          "pct": 72.4,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 91.9,
+          "pct": 27.4,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 86.9,
+          "pct": 42.4,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 62,
+          "pct": 67.9,
           "weight": 2.2
         },
         {
           "key": "marginTrajectory",
-          "pct": 45.5,
+          "pct": 89.4,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 66.6,
+          "pct": 35.5,
           "weight": 0.5
         },
         {
           "key": "dilution",
-          "pct": 9,
+          "pct": null,
           "weight": 0.5
         }
       ]
@@ -5668,7 +6000,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Utilities",
-      "marketCap": 19918796800,
+      "marketCap": 19357704192,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "mature",
@@ -5676,10 +6008,11 @@
       "ipoYear": 2000,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 18.260212195295633,
-      "scoreBase": 62.9,
+      "profitStreak": null,
+      "scoreBase": 63,
       "scoreShrunk": 62.1,
       "factors": {
         "burn": 1,
@@ -5689,7 +6022,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 83.4,
+          "pct": 83.5,
           "weight": 2.2
         },
         {
@@ -5704,7 +6037,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 81.5,
+          "pct": 81.6,
           "weight": 2.2
         },
         {
@@ -5725,8 +6058,89 @@
       ]
     },
     {
-      "ticker": "ALUP3.SA",
+      "ticker": "NI",
       "score": 63.6,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.192,
+        "companion": -3.9
+      },
+      "name": "NiSource Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Utilities",
+      "marketCap": 21924755456,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1973,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 267,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 8.240197874679378,
+      "profitStreak": {
+        "jahre": 16,
+        "basis": "opInc",
+        "tiefe": 16,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "scoreBase": 61.7,
+      "scoreShrunk": 61.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1.032,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 66,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 91.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 86.9,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 61.4,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 46,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 66,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": 9,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "ticker": "ALUP3.SA",
+      "score": 63.4,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -5738,7 +6152,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Utilities",
-      "marketCap": 2296305904.549888,
+      "marketCap": 2267482317.7466264,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "growth",
@@ -5746,35 +6160,36 @@
       "ipoYear": 2016,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 9.889273242274555,
-      "scoreBase": 63.1,
-      "scoreShrunk": 62.3,
+      "profitStreak": null,
+      "scoreBase": 62.9,
+      "scoreShrunk": 62.1,
       "factors": {
         "burn": 1,
-        "growth": 1.022,
+        "growth": 1.021,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 70.4,
+          "pct": 70.2,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 44.1,
+          "pct": 44,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 17.1,
+          "pct": 17,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 72.7,
+          "pct": 72.4,
           "weight": 2.2
         },
         {
@@ -5784,7 +6199,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 90,
+          "pct": 90.4,
           "weight": 0.5
         },
         {
@@ -5796,7 +6211,7 @@
     },
     {
       "ticker": "TAEE3.SA",
-      "score": 63.4,
+      "score": 63.3,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -5808,7 +6223,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Utilities",
-      "marketCap": 2660506422.812672,
+      "marketCap": 2649888137.7743464,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "seasoned",
@@ -5816,11 +6231,12 @@
       "ipoYear": 2007,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 5.540887970511532,
+      "profitStreak": null,
       "scoreBase": 62.2,
-      "scoreShrunk": 61.5,
+      "scoreShrunk": 61.4,
       "factors": {
         "burn": 1,
         "growth": 1.032,
@@ -5829,12 +6245,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 56.3,
+          "pct": 56.5,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 77.8,
+          "pct": 77.5,
           "weight": 0.5
         },
         {
@@ -5844,7 +6260,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 77.7,
+          "pct": 77.4,
           "weight": 2.2
         },
         {
@@ -5866,7 +6282,7 @@
     },
     {
       "ticker": "PPL",
-      "score": 63.4,
+      "score": 63.2,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -5882,7 +6298,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 27092133888,
+      "marketCap": 27332888576,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "veteran",
@@ -5890,35 +6306,42 @@
       "ipoYear": 1980,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 10.782747603833865,
-      "scoreBase": 62.3,
-      "scoreShrunk": 62.3,
+      "profitStreak": {
+        "jahre": 13,
+        "basis": "opInc",
+        "tiefe": 13,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "scoreBase": 62.2,
+      "scoreShrunk": 62.1,
       "factors": {
         "burn": 1,
-        "growth": 1.019,
+        "growth": 1.018,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 73.1,
+          "pct": 72.8,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 58.5,
+          "pct": 58.3,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 75.1,
+          "pct": 74.8,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 68.5,
+          "pct": 68.3,
           "weight": 2.2
         },
         {
@@ -5928,7 +6351,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 40.9,
+          "pct": 41.2,
           "weight": 0.5
         },
         {
@@ -5940,7 +6363,7 @@
     },
     {
       "ticker": "EIX",
-      "score": 63.4,
+      "score": 62.9,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -5957,7 +6380,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 30260195328,
+      "marketCap": 30702710784,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "veteran",
@@ -5965,25 +6388,32 @@
       "ipoYear": 1973,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 7.662030963001842,
-      "scoreBase": 63.1,
-      "scoreShrunk": 62.3,
+      "profitStreak": {
+        "jahre": 7,
+        "basis": "opInc",
+        "tiefe": 17,
+        "mindestens": false,
+        "letzterVerlust": 2018
+      },
+      "scoreBase": 62.7,
+      "scoreShrunk": 61.9,
       "factors": {
         "burn": 1,
-        "growth": 1.018,
+        "growth": 1.017,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 63.9,
+          "pct": 63.3,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 54,
+          "pct": 53.8,
           "weight": 0.5
         },
         {
@@ -5993,7 +6423,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 59.4,
+          "pct": 58.7,
           "weight": 2.2
         },
         {
@@ -6003,80 +6433,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 54.2,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.5
-        }
-      ]
-    },
-    {
-      "ticker": "ENELAM.SN",
-      "score": 63.2,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.048,
-        "companion": 24.4
-      },
-      "name": "Enel Américas S.A.",
-      "country": "Chile",
-      "region": "South America",
-      "sector": "Utilities",
-      "marketCap": 9412922430.99813,
-      "phase": "established",
-      "mcapBand": "large",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2000,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.93,
-      "cohortN": 266,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 10.628365491006031,
-      "scoreBase": 63.6,
-      "scoreShrunk": 62.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1.009,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 72.7,
-          "weight": 2.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 27.5,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 42.2,
-          "weight": 0.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 68.1,
-          "weight": 2.2
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 89.4,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 25.5,
+          "pct": 54.3,
           "weight": 0.5
         },
         {
@@ -6088,7 +6445,7 @@
     },
     {
       "ticker": "600930.SS",
-      "score": 63.2,
+      "score": 62.9,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -6104,7 +6461,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Utilities",
-      "marketCap": 25889201476.104687,
+      "marketCap": 26073743536.656384,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "recent",
@@ -6112,25 +6469,26 @@
       "ipoYear": 2025,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 14.7570496396064,
-      "scoreBase": 62,
-      "scoreShrunk": 61.2,
+      "profitStreak": null,
+      "scoreBase": 61.7,
+      "scoreShrunk": 61,
       "factors": {
         "burn": 1,
-        "growth": 1.032,
+        "growth": 1.031,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 79.2,
+          "pct": 78.9,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 47.2,
+          "pct": 47,
           "weight": 0.5
         },
         {
@@ -6140,17 +6498,17 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 75.8,
+          "pct": 75.5,
           "weight": 2.2
         },
         {
           "key": "marginTrajectory",
-          "pct": 6.4,
+          "pct": 5.9,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 48.9,
+          "pct": 48.7,
           "weight": 0.5
         },
         {
@@ -6162,7 +6520,7 @@
     },
     {
       "ticker": "5110.SR",
-      "score": 63.2,
+      "score": 62.7,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -6179,7 +6537,7 @@
       "country": "Saudi Arabia",
       "region": "Middle East",
       "sector": "Utilities",
-      "marketCap": 19746312991.91538,
+      "marketCap": 19601491038.181786,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "seasoned",
@@ -6187,35 +6545,36 @@
       "ipoYear": 2010,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 9.414988956114922,
-      "scoreBase": 62.3,
-      "scoreShrunk": 61.5,
+      "profitStreak": null,
+      "scoreBase": 61.8,
+      "scoreShrunk": 61.1,
       "factors": {
         "burn": 1,
-        "growth": 1.027,
+        "growth": 1.026,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 69.7,
+          "pct": 69,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 38.4,
+          "pct": 38.3,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 57.1,
+          "pct": 57.2,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 65.1,
+          "pct": 64.4,
           "weight": 2.2
         },
         {
@@ -6225,7 +6584,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 46.2,
+          "pct": 45.7,
           "weight": 0.5
         },
         {
@@ -6237,7 +6596,7 @@
     },
     {
       "ticker": "H.TO",
-      "score": 62.7,
+      "score": 62.4,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -6253,7 +6612,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 25412558447.459778,
+      "marketCap": 25353709435.68896,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "growth",
@@ -6261,11 +6620,12 @@
       "ipoYear": 2015,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 9.966777408637872,
-      "scoreBase": 62.5,
-      "scoreShrunk": 61.7,
+      "profitStreak": null,
+      "scoreBase": 62.3,
+      "scoreShrunk": 61.5,
       "factors": {
         "burn": 1,
         "growth": 1.016,
@@ -6274,22 +6634,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 71.2,
+          "pct": 70.9,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 41.5,
+          "pct": 41.3,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 54.3,
+          "pct": 54.5,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 66.2,
+          "pct": 66,
           "weight": 2.2
         },
         {
@@ -6299,7 +6659,229 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 72.3,
+          "pct": 72,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "ticker": "NTPC.NS",
+      "score": 61.5,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.099,
+        "companion": 23.6
+      },
+      "name": "NTPC Limited",
+      "country": "India",
+      "region": "Asia",
+      "sector": "Utilities",
+      "marketCap": 34727288125.99064,
+      "phase": "established",
+      "mcapBand": "mega",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2004,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.93,
+      "cohortN": 267,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 10.247167536842605,
+      "profitStreak": null,
+      "scoreBase": 62.2,
+      "scoreShrunk": 61.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1.002,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 72.1,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 24.3,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 77.5,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 67.1,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 43.6,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 44.9,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "ticker": "601158.SS",
+      "score": 61.5,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.095,
+        "companion": 21.4
+      },
+      "name": "Chongqing Water Group Co.,Ltd.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Utilities",
+      "marketCap": 2986099502.2079997,
+      "phase": "established",
+      "mcapBand": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2010,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.93,
+      "cohortN": 267,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 5.820888761621856,
+      "profitStreak": null,
+      "scoreBase": 61.8,
+      "scoreShrunk": 61,
+      "factors": {
+        "burn": 1,
+        "growth": 1.007,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 57.2,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 34.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 33.8,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 67.5,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 92.7,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 69.7,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.5
+        }
+      ]
+    },
+    {
+      "ticker": "600396.SS",
+      "score": 61.5,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "lowRoic",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.39,
+        "companion": 3.5
+      },
+      "name": "Huadian Liaoning Energy Development Co.,Ltd",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Utilities",
+      "marketCap": 3516704167.3282557,
+      "phase": "inflected",
+      "mcapBand": "small",
+      "ipoRecency": "mature",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2001,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.93,
+      "cohortN": 267,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 5.646087092930041,
+      "profitStreak": null,
+      "scoreBase": 62.3,
+      "scoreShrunk": 61.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 56.8,
+          "weight": 2.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 94.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 94.7,
+          "weight": 0.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 53,
+          "weight": 2.2
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 96,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 28,
           "weight": 0.5
         },
         {
@@ -6311,7 +6893,7 @@
     },
     {
       "ticker": "REDE3.SA",
-      "score": 61.8,
+      "score": 61.4,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -6323,7 +6905,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Utilities",
-      "marketCap": 2896508590.828339,
+      "marketCap": 2919381417.6101375,
       "phase": "established",
       "mcapBand": "small",
       "ipoRecency": "mature",
@@ -6331,11 +6913,12 @@
       "ipoYear": 2000,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 9.42489944122411,
-      "scoreBase": 61.1,
-      "scoreShrunk": 61,
+      "profitStreak": null,
+      "scoreBase": 60.7,
+      "scoreShrunk": 60.6,
       "factors": {
         "burn": 1,
         "growth": 1.013,
@@ -6344,22 +6927,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 70,
+          "pct": 69.4,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 37.3,
+          "pct": 37.2,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 6.5,
+          "pct": 6.4,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 65.5,
+          "pct": 64.8,
           "weight": 2.2
         },
         {
@@ -6380,227 +6963,8 @@
       ]
     },
     {
-      "ticker": "NTPC.NS",
-      "score": 61.7,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.099,
-        "companion": 23.6
-      },
-      "name": "NTPC Limited",
-      "country": "India",
-      "region": "Asia",
-      "sector": "Utilities",
-      "marketCap": 34839447283.899826,
-      "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2004,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.93,
-      "cohortN": 266,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 10.247167536842605,
-      "scoreBase": 62.4,
-      "scoreShrunk": 61.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1.002,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 72.3,
-          "weight": 2.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 24.4,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 77.8,
-          "weight": 0.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 67.4,
-          "weight": 2.2
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 43.6,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 45.1,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.5
-        }
-      ]
-    },
-    {
-      "ticker": "601158.SS",
-      "score": 61.6,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.095,
-        "companion": 21.4
-      },
-      "name": "Chongqing Water Group Co.,Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Utilities",
-      "marketCap": 2950678239.098102,
-      "phase": "established",
-      "mcapBand": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2010,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.93,
-      "cohortN": 266,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 5.820888761621856,
-      "scoreBase": 62,
-      "scoreShrunk": 61.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1.007,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 57.4,
-          "weight": 2.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 34.7,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 33.5,
-          "weight": 0.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 67.7,
-          "weight": 2.2
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 92.7,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 69.6,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.5
-        }
-      ]
-    },
-    {
-      "ticker": "600396.SS",
-      "score": 61.4,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "lowRoic",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.39,
-        "companion": 3.5
-      },
-      "name": "Huadian Liaoning Energy Development Co.,Ltd",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Utilities",
-      "marketCap": 3575513585.3872337,
-      "phase": "inflected",
-      "mcapBand": "small",
-      "ipoRecency": "mature",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2001,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.93,
-      "cohortN": 266,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 5.646087092930041,
-      "scoreBase": 62.2,
-      "scoreShrunk": 61.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 56.7,
-          "weight": 2.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 94.9,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 94.7,
-          "weight": 0.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 52.9,
-          "weight": 2.2
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 96,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 28.5,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.5
-        }
-      ]
-    },
-    {
       "ticker": "PNW",
-      "score": 61.1,
+      "score": 60.9,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -6616,7 +6980,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 12770703360,
+      "marketCap": 12764644352,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "veteran",
@@ -6624,11 +6988,18 @@
       "ipoYear": 1973,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 11.364842872088964,
-      "scoreBase": 60.3,
-      "scoreShrunk": 60.2,
+      "profitStreak": {
+        "jahre": 16,
+        "basis": "opInc",
+        "tiefe": 16,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "scoreBase": 60.1,
+      "scoreShrunk": 60.1,
       "factors": {
         "burn": 1,
         "growth": 1.014,
@@ -6637,22 +7008,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 75,
+          "pct": 74.7,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 29.7,
+          "pct": 29.6,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 41.8,
+          "pct": 42,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 70,
+          "pct": 69.8,
           "weight": 2.2
         },
         {
@@ -6662,7 +7033,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 19.8,
+          "pct": 19.7,
           "weight": 0.5
         },
         {
@@ -6674,7 +7045,7 @@
     },
     {
       "ticker": "PPC.AT",
-      "score": 60.3,
+      "score": 59.7,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -6689,7 +7060,7 @@
       "country": "Greece",
       "region": "Europe",
       "sector": "Utilities",
-      "marketCap": 15199792194.020966,
+      "marketCap": 14802146109.481985,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "mature",
@@ -6697,11 +7068,12 @@
       "ipoYear": 2001,
       "coverageAxes": "6/7",
       "coverageWeight": 0.91,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 8.046036539966606,
-      "scoreBase": 60.2,
-      "scoreShrunk": 59.4,
+      "profitStreak": null,
+      "scoreBase": 59.6,
+      "scoreShrunk": 58.9,
       "factors": {
         "burn": 1,
         "growth": 1.015,
@@ -6710,22 +7082,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 65.8,
+          "pct": 65.2,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 21,
+          "pct": 20.9,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 83.3,
+          "pct": 83.4,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 60.9,
+          "pct": 60.3,
           "weight": 2.2
         },
         {
@@ -6735,19 +7107,19 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 74.2,
+          "pct": 73.9,
           "weight": 0.5
         },
         {
           "key": "dilution",
-          "pct": 38.5,
+          "pct": 36.9,
           "weight": 0.5
         }
       ]
     },
     {
       "ticker": "NEE",
-      "score": 59.8,
+      "score": 59.4,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -6761,7 +7133,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 185264324608,
+      "marketCap": 186202849280,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "veteran",
@@ -6769,25 +7141,32 @@
       "ipoYear": 1973,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 7.267488394429322,
-      "scoreBase": 59.2,
-      "scoreShrunk": 58.7,
+      "profitStreak": {
+        "jahre": 17,
+        "basis": "opInc",
+        "tiefe": 17,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "scoreBase": 58.8,
+      "scoreShrunk": 58.3,
       "factors": {
         "burn": 1,
-        "growth": 1.02,
+        "growth": 1.019,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 62.8,
+          "pct": 62.2,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 92.2,
+          "pct": 91.9,
           "weight": 0.5
         },
         {
@@ -6797,17 +7176,17 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 58.6,
+          "pct": 58,
           "weight": 2.2
         },
         {
           "key": "marginTrajectory",
-          "pct": 10.1,
+          "pct": 10.6,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 51.1,
+          "pct": 50.9,
           "weight": 0.5
         },
         {
@@ -6819,7 +7198,7 @@
     },
     {
       "ticker": "SO",
-      "score": 59.6,
+      "score": 59,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -6835,7 +7214,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 109630029824,
+      "marketCap": 109100204032,
       "phase": "established",
       "mcapBand": "mega",
       "ipoRecency": "veteran",
@@ -6843,35 +7222,42 @@
       "ipoYear": 1981,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 8.000000000000007,
-      "scoreBase": 58.5,
-      "scoreShrunk": 58.4,
+      "profitStreak": {
+        "jahre": 17,
+        "basis": "opInc",
+        "tiefe": 17,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "scoreBase": 57.9,
+      "scoreShrunk": 57.8,
       "factors": {
         "burn": 1,
-        "growth": 1.02,
+        "growth": 1.019,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 65.5,
+          "pct": 64.8,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 57,
+          "pct": 56.8,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 72.7,
+          "pct": 72.5,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 60.5,
+          "pct": 59.9,
           "weight": 2.2
         },
         {
@@ -6881,19 +7267,19 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 64.7,
+          "pct": 64.1,
           "weight": 0.5
         },
         {
           "key": "dilution",
-          "pct": 36.9,
+          "pct": 35.2,
           "weight": 0.5
         }
       ]
     },
     {
       "ticker": "ORG.AX",
-      "score": 59.3,
+      "score": 58.8,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -6912,7 +7298,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Utilities",
-      "marketCap": 12747972553.893888,
+      "marketCap": 12761537125.928143,
       "phase": "inflected",
       "mcapBand": "large",
       "ipoRecency": "mature",
@@ -6920,11 +7306,12 @@
       "ipoYear": 1999,
       "coverageAxes": "5/7",
       "coverageWeight": 0.84,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 7.148222333500254,
-      "scoreBase": 59.8,
-      "scoreShrunk": 58.6,
+      "profitStreak": null,
+      "scoreBase": 59.3,
+      "scoreShrunk": 58.1,
       "factors": {
         "burn": 1,
         "growth": 1.012,
@@ -6933,22 +7320,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 62.4,
+          "pct": 61.8,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 69.1,
+          "pct": 68.9,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 67.6,
+          "pct": 67.4,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 58.2,
+          "pct": 57.6,
           "weight": 2.2
         },
         {
@@ -6958,7 +7345,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 39.4,
+          "pct": 39.7,
           "weight": 0.5
         },
         {
@@ -6970,7 +7357,7 @@
     },
     {
       "ticker": "AES",
-      "score": 59.1,
+      "score": 58.7,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -6994,25 +7381,32 @@
       "ipoYear": 1991,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 8.6807928913192,
-      "scoreBase": 59.6,
-      "scoreShrunk": 59.1,
+      "profitStreak": {
+        "jahre": 3,
+        "basis": "netIncome",
+        "tiefe": 17,
+        "mindestens": false,
+        "letzterVerlust": 2022
+      },
+      "scoreBase": 59.1,
+      "scoreShrunk": 58.6,
       "factors": {
         "burn": 1,
-        "growth": 1.001,
+        "growth": 1.002,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 67.7,
+          "pct": 67.1,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 55.1,
+          "pct": 54.9,
           "weight": 0.5
         },
         {
@@ -7022,7 +7416,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 63.2,
+          "pct": 62.5,
           "weight": 2.2
         },
         {
@@ -7032,7 +7426,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 27.7,
+          "pct": 27.3,
           "weight": 0.5
         },
         {
@@ -7044,7 +7438,7 @@
     },
     {
       "ticker": "MSEX",
-      "score": 58.9,
+      "score": 58.6,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -7060,7 +7454,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 1046128448,
+      "marketCap": 1077603584,
       "phase": "established",
       "mcapBand": "micro",
       "ipoRecency": "veteran",
@@ -7068,11 +7462,18 @@
       "ipoYear": 1973,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 9.961400419855092,
-      "scoreBase": 58.6,
-      "scoreShrunk": 58.6,
+      "profitStreak": {
+        "jahre": 15,
+        "basis": "opInc",
+        "tiefe": 15,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "scoreBase": 58.3,
+      "scoreShrunk": 58.3,
       "factors": {
         "burn": 1,
         "growth": 1.006,
@@ -7081,22 +7482,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 70.8,
+          "pct": 70.5,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 14.6,
+          "pct": 14.5,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 40.2,
+          "pct": 40.4,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 65.8,
+          "pct": 65.6,
           "weight": 2.2
         },
         {
@@ -7106,85 +7507,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 28.9,
+          "pct": 28.4,
           "weight": 0.5
         },
         {
           "key": "dilution",
-          "pct": 68,
-          "weight": 0.5
-        }
-      ]
-    },
-    {
-      "ticker": "2083.SR",
-      "score": 58.7,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.463,
-        "companion": 33.8
-      },
-      "name": "Power and Water Utility Company for Jubail and Yanbu",
-      "country": "Saudi Arabia",
-      "region": "Middle East",
-      "sector": "Utilities",
-      "marketCap": 2578720346.4,
-      "phase": "established",
-      "mcapBand": "small",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2022,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.93,
-      "cohortN": 266,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 6.491982149690023,
-      "scoreBase": 59.2,
-      "scoreShrunk": 58.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 61.6,
-          "weight": 2.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 24.1,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 1,
-          "weight": 0.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 79.6,
-          "weight": 2.2
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 29,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 77.2,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
+          "pct": 66.4,
           "weight": 0.5
         }
       ]
@@ -7208,7 +7536,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 16628649587.8477,
+      "marketCap": 16672824230.694706,
       "phase": "established",
       "mcapBand": "large",
       "ipoRecency": "veteran",
@@ -7216,35 +7544,36 @@
       "ipoYear": 1995,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 266,
+      "cohortN": 267,
       "cohortFallback": false,
       "revGrowthYoYPct": 5.1195814648729465,
+      "profitStreak": null,
       "scoreBase": 57.4,
       "scoreShrunk": 57,
       "factors": {
         "burn": 1,
-        "growth": 1.029,
+        "growth": 1.028,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 53.2,
+          "pct": 53.4,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 94.5,
+          "pct": 94.2,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 89.2,
+          "pct": 89.3,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 50.2,
+          "pct": 50.4,
           "weight": 2.2
         },
         {
@@ -7254,80 +7583,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 68.5,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.5
-        }
-      ]
-    },
-    {
-      "ticker": "600025.SS",
-      "score": 58.4,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.085,
-        "companion": 12.6
-      },
-      "name": "Huaneng Lancang River Hydropower Inc.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Utilities",
-      "marketCap": 27255748559.09114,
-      "phase": "established",
-      "mcapBand": "mega",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2017,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.93,
-      "cohortN": 266,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 5.469423306732257,
-      "scoreBase": 58.4,
-      "scoreShrunk": 57.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1.009,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 55.5,
-          "weight": 2.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 50.6,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 50,
-          "weight": 0.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 52.1,
-          "weight": 2.2
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 82.8,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 83.6,
+          "pct": 67.9,
           "weight": 0.5
         },
         {
@@ -7341,7 +7597,7 @@
   "unprofitable": [
     {
       "ticker": "FLNC",
-      "score": 28.9,
+      "score": 28.8,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -7359,9 +7615,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 2490037504,
+      "marketCap": 2326000896,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "ipoRecency": "recent",
       "profitTier": "kurz-vor-profitabel",
       "ipoYear": 2021,
@@ -7370,8 +7626,15 @@
       "cohortN": 3,
       "cohortFallback": true,
       "revGrowthYoYPct": 7.708899999536634,
-      "scoreBase": 45.2,
-      "scoreShrunk": 47.1,
+      "profitStreak": {
+        "jahre": 0,
+        "basis": "netIncome",
+        "tiefe": 4,
+        "mindestens": false,
+        "letzterVerlust": 2025
+      },
+      "scoreBase": 44.9,
+      "scoreShrunk": 46.9,
       "factors": {
         "burn": 0.92,
         "growth": 1,
@@ -7380,7 +7643,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 64.3,
+          "pct": 63.7,
           "weight": 2.2
         },
         {
@@ -7390,12 +7653,12 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 18.9,
+          "pct": 18.8,
           "weight": 1.4
         },
         {
           "key": "ruleOfX",
-          "pct": 59.8,
+          "pct": 59.2,
           "weight": 1.6
         },
         {
@@ -7432,7 +7695,7 @@
       "country": "Poland",
       "region": "Europe",
       "sector": "Utilities",
-      "marketCap": 6043929923.925074,
+      "marketCap": 5821148697.6835575,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "ipoRecency": "seasoned",
@@ -7443,8 +7706,9 @@
       "cohortN": 3,
       "cohortFallback": true,
       "revGrowthYoYPct": 1.6659870682122824,
+      "profitStreak": null,
       "scoreBase": 39.9,
-      "scoreShrunk": 43.9,
+      "scoreShrunk": 44,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -7453,12 +7717,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 44.3,
+          "pct": 44.5,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 96.1,
+          "pct": 95.7,
           "weight": 1
         },
         {
@@ -7468,7 +7732,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 40.2,
+          "pct": 40.4,
           "weight": 1.6
         },
         {
@@ -7478,7 +7742,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 23.3,
+          "pct": 23.2,
           "weight": 0.5
         },
         {
@@ -7510,9 +7774,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 7065586176,
+      "marketCap": 6222901760,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mid",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2026,
@@ -7521,7 +7785,8 @@
       "cohortN": 3,
       "cohortFallback": true,
       "revGrowthYoYPct": -30.65326633165829,
-      "scoreBase": 0.9,
+      "profitStreak": null,
+      "scoreBase": 0.8,
       "scoreShrunk": 30.2,
       "factors": {
         "burn": 0.653,
