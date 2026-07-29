@@ -25,6 +25,21 @@
    "date": "2026-07-18",
    "board": null,
    "reason": "ALTER MASSSTAB (vor Tag 437, ece786900b): die Beschleunigungs-Achse revAcceleration war bis dahin saison-verseucht und wurde mit Tag 437 saison-bereinigt. Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Das Vintage bleibt unveraendert stehen (aufgezeichnete Vergangenheit wird nicht ueberschrieben) und faellt nur aus der laufenden Auswertung."
+  },
+  {
+   "date": "2026-07-26",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 489, 5888764562): der Screener las bis dahin Yahoos NORMALISIERTES Betriebsergebnis statt des berichteten. Der Wechsel aendert Score-Niveau UND Profitabilitaets-Track universumsweit (zwei volle Vergleichslaeufe ueber 4.037 Snapshots: 170 Stufenwechsel, 20 Track-Flips, 54 Quality-Board-Abgaenge). Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Nachgetragen am 29.07. — die Commit-Nachricht meldete den Bruch, dieser Eintrag fehlte, und nur DIESE Datei wird von scripts/rank-ic.js gelesen. Das Vintage bleibt unveraendert stehen und faellt nur aus der laufenden Auswertung."
+  },
+  {
+   "date": "2026-07-27",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 489, 5888764562): der Screener las bis dahin Yahoos NORMALISIERTES Betriebsergebnis statt des berichteten. Der Wechsel aendert Score-Niveau UND Profitabilitaets-Track universumsweit (zwei volle Vergleichslaeufe ueber 4.037 Snapshots: 170 Stufenwechsel, 20 Track-Flips, 54 Quality-Board-Abgaenge). Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Nachgetragen am 29.07. — die Commit-Nachricht meldete den Bruch, dieser Eintrag fehlte, und nur DIESE Datei wird von scripts/rank-ic.js gelesen. Das Vintage bleibt unveraendert stehen und faellt nur aus der laufenden Auswertung."
+  },
+  {
+   "date": "2026-07-28",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 489, 5888764562): der Screener las bis dahin Yahoos NORMALISIERTES Betriebsergebnis statt des berichteten. Der Wechsel aendert Score-Niveau UND Profitabilitaets-Track universumsweit (zwei volle Vergleichslaeufe ueber 4.037 Snapshots: 170 Stufenwechsel, 20 Track-Flips, 54 Quality-Board-Abgaenge). Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Nachgetragen am 29.07. — die Commit-Nachricht meldete den Bruch, dieser Eintrag fehlte, und nur DIESE Datei wird von scripts/rank-ic.js gelesen. Das Vintage bleibt unveraendert stehen und faellt nur aus der laufenden Auswertung."
   }
  ],
  "_massstab_brueche": [
