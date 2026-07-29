@@ -149,9 +149,17 @@ function main() {
       faelle: [...new Set(funde.map(schluessel))].sort(),
     };
     fs.writeFileSync(BASELINE_PATH, JSON.stringify(neuerBestand, null, 1) + '\n', 'utf8');
-    console.error(`::error::Bestand NEU AUFGENOMMEN: ${neuerBestand.faelle.length} Faelle auf ${dateien.length} Snapshots. `
-      + 'Dieser Lauf ist damit NICHT geprueft (die Basis ist sein eigenes Ergebnis) — der naechste ist es. Absichtlich rot.');
-    return 1;
+    // BEWUSST exit 0, nicht 1. Erste Fassung liess den Lauf absichtlich rot werden
+    // ("die Basis ist sein eigenes Ergebnis, also wurde nichts geprueft"). Das ist
+    // methodisch sauber und operativ falsch: der Waechter laeuft VOR dem Commit und
+    // VOR dem scoring-Job — ein roter Lauf kostet einen ganzen Tag Score, Vintage und
+    // Export, ohne dass irgendjemand etwas dazulernt. Neuaufnehmen passiert nur auf
+    // ausdruecklichen Zuruf eines Menschen; der weiss, was er getan hat, und es steht
+    // im Bestand (aufgenommenAm, snapshotsBeiAufnahme) und hier im Protokoll.
+    console.log(`::warning::Ausreisser-Bestand NEU AUFGENOMMEN: ${neuerBestand.faelle.length} Faelle `
+      + `auf ${dateien.length} Snapshots. Dieser Lauf ist damit NICHT auf neue Ausreisser geprueft `
+      + '(die Basis ist sein eigenes Ergebnis) — der naechste ist es wieder.');
+    return 0;
   }
 
   // POPULATIONS-WACHE (Fund 29.07.): Ein Bestand, der auf einer ANDEREN Population

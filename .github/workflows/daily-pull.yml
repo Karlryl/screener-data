@@ -10,7 +10,17 @@ name: Daily Yahoo Pull
 on:
   schedule:
     - cron: '17 2 * * 2-6'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      # Tag 497: der Ausreisser-Bestand kann NUR hier neu aufgenommen werden, nie
+      # lokal — snapshots/ ist gitignored (Tag 151), was lokal liegt ist Schutt
+      # alter Laeufe. Genau daran ist der erste Bestand gescheitert: lokal auf 4.768
+      # statt 12.482 Snapshots aufgenommen -> 75 Schein-Neuzugaenge, Lauf rot,
+      # scoring uebersprungen. Bewusster Zuruf, kein Automatismus.
+      spikes_neu_aufnehmen:
+        description: 'Jahres-Ausreisser-Bestand auf der CI-Population neu aufnehmen (nur bewusst!)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -649,7 +659,7 @@ jobs:
       # Bestand — bekannte schweigen, sonst waere der Waechter ab Tag eins rot.
       - name: Watch Annual Spikes
         id: w_spikes
-        run: node scripts/watch-annual-spikes.js
+        run: node scripts/watch-annual-spikes.js ${{ inputs.spikes_neu_aufnehmen && '--neu-aufnehmen' || '' }}
         continue-on-error: true
 
       - name: Watch FX Sanity
