@@ -72,6 +72,47 @@ function findeAusreisser(reihe, faktor = FAKTOR, minBetrag = MIN_BETRAG) {
   return treffer;
 }
 
+// Wie weit die heutige Population vom Aufnahme-Zeitpunkt abweichen darf, bevor der
+// Bestand als ungueltig gilt. 20 % ist grob: das Universum waechst taeglich um
+// einzelne Namen, aber nicht um ein Drittel.
+const POP_TOLERANZ = 0.2;
+
+/**
+ * POPULATIONS-WACHE (Fund 29.07.2026) — rein, ohne I/O, damit sie pruefbar ist.
+ *
+ * Ein Bestand, der auf einer ANDEREN Population aufgenommen wurde, kann nicht sagen,
+ * was neu ist. Anlass: der erste Bestand wurde am 29.07. LOKAL auf 4.768 Snapshots
+ * aufgenommen, waehrend der CI-Lauf mit 12.482 arbeitet. snapshots/ steht seit Tag 151
+ * in der .gitignore — was lokal liegt, ist Schutt alter Laeufe und kein Ausschnitt der
+ * Wirklichkeit. Folge im ersten Echtlauf: 75 "neue" Faelle, fast alle blosse
+ * Zweitnotierungen laengst bekannter (1INTC.MI und 4335.HK zahlengleich mit INTC).
+ * Ohne diese Wache untersucht der naechste Leser die FUNDE statt der BASIS.
+ */
+function basisGueltig(basis, anzahlSnapshots) {
+  if (!basis || !Array.isArray(basis.faelle)) return { ok: true, grund: '' };  // Erstlauf: nichts zu pruefen
+  const beiAufnahme = Number(basis.snapshotsBeiAufnahme) || 0;
+  if (beiAufnahme <= 0) {
+    return {
+      ok: false,
+      grund: 'Der Ausreisser-Bestand nennt nicht, auf wie vielen Snapshots er aufgenommen wurde '
+        + '(Feld snapshotsBeiAufnahme). Damit ist nicht pruefbar, ob er zur heutigen Population passt — '
+        + 'einmal IM CI mit --neu-aufnehmen erneuern.',
+    };
+  }
+  const abweichung = Math.abs(anzahlSnapshots - beiAufnahme) / beiAufnahme;
+  if (abweichung > POP_TOLERANZ) {
+    return {
+      ok: false,
+      grund: `Der Ausreisser-Bestand ist UNGUELTIG, nicht die Funde: aufgenommen auf ${beiAufnahme} `
+        + `Snapshots, dieser Lauf hat ${anzahlSnapshots} (${(abweichung * 100).toFixed(0)} % Abweichung). `
+        + 'Ein Bestand aus einer anderen Population kann nicht sagen, was neu ist. Heilung: '
+        + '"node scripts/watch-annual-spikes.js --neu-aufnehmen" IM CI laufen lassen (nie lokal — '
+        + 'snapshots/ ist gitignored und lokal nur Schutt alter Laeufe).',
+    };
+  }
+  return { ok: true, grund: '' };
+}
+
 function main() {
   if (!fs.existsSync(SNAP_DIR)) {
     console.error('::error::watch-annual-spikes: snapshots/ fehlt — Snapshot-Restore kaputt?');
@@ -95,10 +136,41 @@ function main() {
     }
   }
   const schluessel = (x) => `${x.ticker}|${x.reihe}|${x.index}`;
-  const bestand = new Set((loadJson(BASELINE_PATH, {}).faelle) || []);
+  const basis = loadJson(BASELINE_PATH, {});
+  const mio = (v) => (v / 1e6).toFixed(0);
+
+  // Bewusstes Neuaufnehmen: NUR im CI sinnvoll (siehe Populations-Wache unten).
+  if (process.argv.includes('--neu-aufnehmen')) {
+    const neuerBestand = {
+      hinweis: basis.hinweis || 'Bestand der bekannten Jahres-Ausreisser. Der Waechter meldet nur, was DAZUKOMMT.',
+      aufgenommenAm: new Date().toISOString().slice(0, 10),
+      snapshotsBeiAufnahme: dateien.length,
+      anzahl: funde.length,
+      faelle: [...new Set(funde.map(schluessel))].sort(),
+    };
+    fs.writeFileSync(BASELINE_PATH, JSON.stringify(neuerBestand, null, 1) + '\n', 'utf8');
+    console.error(`::error::Bestand NEU AUFGENOMMEN: ${neuerBestand.faelle.length} Faelle auf ${dateien.length} Snapshots. `
+      + 'Dieser Lauf ist damit NICHT geprueft (die Basis ist sein eigenes Ergebnis) — der naechste ist es. Absichtlich rot.');
+    return 1;
+  }
+
+  // POPULATIONS-WACHE (Fund 29.07.): Ein Bestand, der auf einer ANDEREN Population
+  // aufgenommen wurde, ist ungueltig — nicht die Funde sind dann verdaechtig, sondern
+  // die Basis. Anlass: der erste Bestand wurde am 29.07. lokal auf 4.768 Snapshots
+  // aufgenommen, waehrend der CI-Lauf mit 12.482 arbeitet. snapshots/ ist per
+  // .gitignore NICHT im Repo (Tag 151) — was lokal liegt, ist Schutt alter Laeufe und
+  // kein Ausschnitt der Wirklichkeit. Ergebnis: 75 "neue" Faelle, fast alle nur
+  // Zweitnotierungen laengst bekannter (1INTC.MI und 4335.HK zahlengleich mit INTC).
+  // Ohne diese Wache haette der naechste Leser die FUNDE untersucht statt der BASIS.
+  const gueltig = basisGueltig(basis, dateien.length);
+  if (!gueltig.ok) {
+    console.error('::error::' + gueltig.grund);
+    return 1;
+  }
+
+  const bestand = new Set(basis.faelle || []);
   const neu = funde.filter((x) => !bestand.has(schluessel(x)));
 
-  const mio = (v) => (v / 1e6).toFixed(0);
   console.log(`Jahres-Ausreisser: ${funde.length} in ${dateien.length} Snapshots · davon NEU: ${neu.length} (erlaubt ${MAX_NEU})`);
   // Immer die NEUEN vollstaendig zeigen — sie sind der Grund fuer diesen Lauf.
   for (const x of neu) console.log(`  NEU  ${x.ticker} · ${x.reihe}[${x.index}] = ${mio(x.wert)} Mio, Nachbarn ${mio(x.links)} / ${mio(x.rechts)}`);
@@ -114,7 +186,7 @@ function main() {
   return 0;
 }
 
-module.exports = { findeAusreisser, FAKTOR, MIN_BETRAG };
+module.exports = { findeAusreisser, basisGueltig, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
 
 if (require.main === module) {
   try {

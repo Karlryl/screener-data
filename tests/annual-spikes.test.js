@@ -58,5 +58,46 @@ check('die Schwelle ist einstellbar und wirkt', () => {
   assert.equal(findeAusreisser(r, 4).length, 1, 'mit Faktor 4 muss derselbe Punkt auffliegen');
 });
 
+// --- Populations-Wache (Fund 29.07.2026) -----------------------------------
+// Die Wache klagt die BASIS an, wenn sie auf einer anderen Population aufgenommen
+// wurde. Geprueft wird beides: dass sie feuert UND dass sie schweigt — eine Wache,
+// die immer feuert, ist genauso wertlos wie eine, die nie feuert.
+const { basisGueltig, POP_TOLERANZ } = require('../scripts/watch-annual-spikes.js');
+const basisMit = (n) => ({ faelle: ['A|annualRev|1'], snapshotsBeiAufnahme: n });
+
+check('gleiche Population -> Basis gilt, es wird normal geprueft', () => {
+  assert.equal(basisGueltig(basisMit(12000), 12000).ok, true);
+  assert.equal(basisGueltig(basisMit(12000), 13000).ok, true, '8 % Wachstum ist Alltag');
+});
+
+check('andere Population -> die BASIS wird angeklagt, nicht die Funde', () => {
+  const r = basisGueltig(basisMit(4768), 12482);
+  assert.equal(r.ok, false);
+  assert.match(r.grund, /UNGUELTIG, nicht die Funde/,
+    'die Meldung muss auf die Basis zeigen — sonst untersucht der Leser die falschen Zahlen');
+  assert.match(r.grund, /4768/, 'die Aufnahme-Zahl gehoert in die Meldung');
+  assert.match(r.grund, /12482/, 'die heutige Zahl gehoert in die Meldung');
+  // auch der umgekehrte Fall: Population geschrumpft
+  assert.equal(basisGueltig(basisMit(12482), 4768).ok, false);
+});
+
+check('die Toleranzgrenze wirkt in BEIDE Richtungen', () => {
+  const n = 10000, knappDrunter = Math.round(n * (1 + POP_TOLERANZ * 0.9));
+  const knappDrueber = Math.round(n * (1 + POP_TOLERANZ * 1.1));
+  assert.equal(basisGueltig(basisMit(n), knappDrunter).ok, true, 'knapp innerhalb muss durchgehen');
+  assert.equal(basisGueltig(basisMit(n), knappDrueber).ok, false, 'knapp ausserhalb muss auffliegen');
+});
+
+check('Basis ohne Populationsangabe ist ungueltig — Schweigen waere hier das Schlimmste', () => {
+  const r = basisGueltig({ faelle: ['A|annualRev|1'] }, 12482);
+  assert.equal(r.ok, false);
+  assert.match(r.grund, /snapshotsBeiAufnahme/);
+});
+
+check('Erstlauf ohne Basis wird NICHT angeklagt', () => {
+  assert.equal(basisGueltig({}, 12482).ok, true);
+  assert.equal(basisGueltig(null, 12482).ok, true);
+});
+
 console.log('\nannual-spikes: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);
