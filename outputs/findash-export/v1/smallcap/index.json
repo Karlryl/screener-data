@@ -1,13 +1,13 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-07-29T08:14:12.895Z",
+  "generated_at": "2026-07-29T09:38:20.297Z",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
     "coverage_pct": 70.1
   },
-  "generatedFromSnapshots": 735,
+  "generatedFromSnapshots": 718,
   "boards": [
     "smallcap-consumer-discretionary",
     "smallcap-consumer-staples",
@@ -38,7 +38,7 @@
   },
   "counts": {
     "smallcap-consumer-discretionary": {
-      "profitable": 29,
+      "profitable": 25,
       "unprofitable": 18
     },
     "smallcap-consumer-staples": {
@@ -55,18 +55,18 @@
     },
     "smallcap-health-care": {
       "profitable": 23,
-      "unprofitable": 56
+      "unprofitable": 55
     },
     "smallcap-industrials": {
-      "profitable": 37,
-      "unprofitable": 23
+      "profitable": 35,
+      "unprofitable": 22
     },
     "smallcap-it-services": {
       "profitable": 4,
       "unprofitable": 0
     },
     "smallcap-materials": {
-      "profitable": 15,
+      "profitable": 14,
       "unprofitable": 0
     },
     "smallcap-real-estate": {
@@ -87,19 +87,19 @@
     }
   },
   "excluded": {
-    "balance-sheet-bank": 65,
-    "data-suspect": 12,
+    "balance-sheet-bank": 63,
+    "data-suspect": 10,
     "dup-issuer": 1,
     "insurer": 9,
     "lender-gp0": 7,
     "mortgage-reit": 6,
-    "no-revenue": 43,
+    "no-revenue": 42,
     "no-sector": 2,
-    "non-operating-rev": 184,
-    "smallcap-mcap-out-of-band": 5,
+    "non-operating-rev": 181,
+    "smallcap-mcap-out-of-band": 6,
     "smallcap-thin-coverage": 38,
     "telecom": 5,
-    "unrouted": 13
+    "unrouted": 12
   },
-  "coverageFloor": 0.68
+  "coverageFloor": 0.6660000000000001
 }

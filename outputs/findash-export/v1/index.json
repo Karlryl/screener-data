@@ -1,13 +1,13 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-07-29T08:14:12.818Z",
+  "generated_at": "2026-07-29T09:38:20.216Z",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
     "coverage_pct": 70.1
   },
-  "generatedFromSnapshots": 10709,
+  "generatedFromSnapshots": 10723,
   "branches": [
     "consumer-discretionary",
     "consumer-staples",
@@ -41,14 +41,14 @@
   "counts": {
     "consumer-discretionary": {
       "profitable": 629,
-      "unprofitable": 51
+      "unprofitable": 52
     },
     "consumer-staples": {
-      "profitable": 342,
+      "profitable": 344,
       "unprofitable": 0
     },
     "energy": {
-      "profitable": 248,
+      "profitable": 249,
       "unprofitable": 14
     },
     "financials": {
@@ -60,19 +60,19 @@
       "unprofitable": 186
     },
     "industrials": {
-      "profitable": 1148,
-      "unprofitable": 54
+      "profitable": 1146,
+      "unprofitable": 55
     },
     "it-services": {
-      "profitable": 84,
+      "profitable": 85,
       "unprofitable": 0
     },
     "materials": {
-      "profitable": 608,
+      "profitable": 610,
       "unprofitable": 0
     },
     "real-estate": {
-      "profitable": 297,
+      "profitable": 299,
       "unprofitable": 0
     },
     "semiconductors": {
@@ -80,30 +80,30 @@
       "unprofitable": 52
     },
     "software-comm-services": {
-      "profitable": 362,
+      "profitable": 363,
       "unprofitable": 69
     },
     "tech-hardware": {
-      "profitable": 361,
+      "profitable": 360,
       "unprofitable": 49
     },
     "utilities": {
-      "profitable": 267,
+      "profitable": 269,
       "unprofitable": 3
     }
   },
-  "survivalCount": 81,
+  "survivalCount": 80,
   "excluded": {
     "balance-sheet-bank": 568,
     "data-suspect": 29,
     "dup-issuer": 2183,
-    "insurer": 235,
-    "lender-gp0": 95,
+    "insurer": 237,
+    "lender-gp0": 96,
     "mortgage-reit": 13,
     "no-axes": 10,
-    "no-sector": 18,
-    "non-operating-rev": 48,
+    "no-sector": 21,
+    "non-operating-rev": 46,
     "non-us": 1511,
-    "telecom": 160
+    "telecom": 161
   }
 }
