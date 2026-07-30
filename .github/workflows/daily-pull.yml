@@ -1143,7 +1143,12 @@ jobs:
           # rc=2 wird das Tagesverzeichnis jetzt vom Commit ausgenommen (Dateien bleiben
           # lokal auf dem Runner, verschwinden mit dessen Teardown).
           VINTAGE_DATE="${{ steps.vintage.outputs.date }}"
-          if [ "${{ steps.vintage.outputs.rc }}" = "2" ]; then
+          # Tag 512: rc EINMAL in eine Shell-Variable, damit Betreffzeile und
+          # Erfolgsmeldung unten dieselbe Quelle benutzen wie die Ausschluss-Entscheidung
+          # hier. Vorher stand in beiden Texten unbedingt "board-history vintage <heute>",
+          # auch wenn genau dieses Vintage ausgeschlossen wurde.
+          VINTAGE_RC="${{ steps.vintage.outputs.rc }}"
+          if [ "$VINTAGE_RC" = "2" ]; then
             echo "::warning::board-history vintage SUSPECT geflaggt (Wert-Gate) fuer $VINTAGE_DATE — wird NICHT committet."
             git add board-history/ ":(exclude)board-history/$VINTAGE_DATE"
           else
@@ -1165,7 +1170,12 @@ jobs:
           if git diff --staged --quiet; then
             echo "No vintage changes to commit."
           else
-            git commit -m "chore: board-history vintage $(date -u +%F)"
+            # Tag 512: Betreffzeile sagt, was WIRKLICH drin ist. Bei rc=2 nur die
+            # Sidecars — das Vintage ist per :(exclude) oben ausgenommen. Und das Datum
+            # kommt aus $VINTAGE_DATE statt aus $(date -u +%F): bei einem Backfill oder
+            # einem Lauf ueber Mitternacht nannte die alte Zeile einen anderen Tag als
+            # den geschriebenen.
+            git commit -m "$(node scripts/vintage-commit-text.js "$VINTAGE_RC" "$VINTAGE_DATE" --subject)"
             COMMIT_SHA=$(git rev-parse HEAD)
             COMMIT_TREE=$(git rev-parse HEAD^{tree})
             ok=0
@@ -1190,9 +1200,15 @@ jobs:
               echo "::error::board-history vintage push failed after 3 attempts"
               exit 1
             fi
-            echo "✓ board-history vintage committed to main"
+            # Tag 512: stand hier unbedingt, also auch direkt unter der Warnung
+            # "wird NICHT committet" — die Erfolgszeile widersprach der Warnung im
+            # selben Protokoll.
+            node scripts/vintage-commit-text.js "$VINTAGE_RC" "$VINTAGE_DATE" --done; echo
           fi
-          if [ "${{ steps.vintage.outputs.rc }}" = "2" ]; then
+          # Tag 512: dieselbe Shell-Variable wie die Ausschluss-Entscheidung und die
+          # Textbildung oben. Vorher stand hier ein zweites Mal der Roh-Ausdruck — zwei
+          # Quellen fuer dieselbe Frage koennen auseinanderlaufen.
+          if [ "$VINTAGE_RC" = "2" ]; then
             echo "::error::board-history vintage SUSPECT geflaggt (Wert-Gate) fuer $VINTAGE_DATE — NICHT committet, bitte pruefen."
             exit 2
           fi
