@@ -449,6 +449,18 @@ function capNewTickerAdmission(newTickers, existingSize, maxUniverse) {
   return newTickers.filter(info => budgetMap.has(info.ticker));
 }
 
+// Tag 510: die Bedingung des Doppelausfall-Waechters als REINE Funktion, damit sie
+// einzeln pruefbar ist (der Waechter selbst sitzt mitten in main() hinter Netzaufrufen).
+// Wahr genau dann, wenn BEIDE Yahoo-Kanaele im selben Lauf nichts geliefert haben:
+//   - Predefined-Screener: 0 nicht-leere Buckets
+//   - Exchange-Screener:   Schema-Fehler (fatal) ODER 0 neue Tickers
+// Der Exchange-Teil braucht BEIDE Formen: ein Schema-Bruch bricht die Schleife ab
+// (customAdded bleibt 0), ein stiller Ausfall liefert 0 ohne Fehler. Wer nur auf
+// exchangeScreenerFatal prueft, uebersieht den stillen Fall.
+function beideYahooKanaeleLeer(predefinedNonEmpty, exchangeScreenerFatal, customAdded) {
+  return predefinedNonEmpty === 0 && (exchangeScreenerFatal === true || customAdded === 0);
+}
+
 async function main() {
   const args = parseArgs(process.argv);
   console.log('Auto-Universe-Refresh');
@@ -546,10 +558,20 @@ async function main() {
   console.log('  Predefined-Buckets: ' + predefinedNonEmpty + '/' + predefinedAttempted +
     ' nicht-leer, ' + predefinedTotalQuotes + ' Quotes gesamt.');
   if (predefinedNonEmpty === 0) {
-    // BH-100: total collapse of this channel — surface it, but don't abort. It's
-    // redundant coverage (EXCHANGE_CODES + the discovery adapters cover the same ground),
-    // so a collapse here alone isn't result-corrupting; MIN_DISCOVERY_CANDIDATES below
-    // still gates a genuine systemic outage.
+    // BH-100: total collapse of this channel — surface it, but don't abort.
+    //
+    // Tag 510 KORREKTUR der Begruendung: hier stand "redundant coverage (EXCHANGE_CODES
+    // + the discovery adapters cover the same ground)". Auf EXCHANGE_CODES darf sich
+    // diese Stelle NICHT stuetzen — jener Kanal ist seit Tag 248 (05.07.2026) permanent
+    // kaputt (v3.14-Schema, siehe BH-038 unten), und BH-038 begruendete seinen eigenen
+    // Nicht-Abbruch umgekehrt mit "see BH-100 above". Ein Zirkelschluss: zwei
+    // Begruendungen, die sich gegenseitig als Auffangnetz nennen, und beide leer.
+    //
+    // Der tragende Schutz ist AUSSCHLIESSLICH MIN_DISCOVERY_CANDIDATES weiter unten
+    // (BH-193) — er prueft die Entdeckung als Ganzes und ist von beiden Yahoo-Kanaelen
+    // unabhaengig. Nur darauf stuetzt sich der Nicht-Abbruch hier.
+    // Dass BEIDE Yahoo-Kanaele im selben Lauf leer laufen, meldet der Waechter nach
+    // dem Exchange-Block (Tag 510) — keiner der beiden Kanaele kann das fuer sich sehen.
     console.error('::error::Predefined-Screener-Kanal (SCREENER_IDS x REGIONS) liefert 0 nicht-leere ' +
       'Buckets ueber ' + predefinedAttempted + ' Aufrufe — moeglicher Yahoo-Schema-Bruch/Totalausfall ' +
       'dieses Kanals. Kein Prozess-Abbruch (redundant zu Custom-Exchange-Screener und Discovery-Adaptern), ' +
@@ -570,9 +592,15 @@ async function main() {
   // transient per-exchange failure — every exchange will throw the identical error (see
   // Bug-3 comment below). The channel used to process.exit(1) HERE, before the country
   // adapters and the watchlist write (further down in main()) ever ran, freezing the
-  // ENTIRE universe refresh on one broken (and redundant — see BH-100 above) channel.
+  // ENTIRE universe refresh on one broken channel.
   // Fail loud but let the rest of main() run: mark the channel fatal, stop retrying it,
   // and flip the eventual process exit code without aborting execution.
+  //
+  // Tag 510 KORREKTUR der Begruendung: hier stand "(and redundant — see BH-100 above)".
+  // BH-100 stuetzte sich seinerseits auf GENAU DIESEN Kanal. Der Verweis ist entfernt;
+  // der Nicht-Abbruch stuetzt sich allein auf MIN_DISCOVERY_CANDIDATES (BH-193), das
+  // von beiden Yahoo-Kanaelen unabhaengig ist. Den gleichzeitigen Ausfall beider
+  // Kanaele meldet der Waechter am Ende dieses Blocks.
   let exchangeScreenerFatal = false;
   for (const exch of EXCHANGE_CODES) {
     if (exchangeScreenerFatal) break;
@@ -663,6 +691,33 @@ async function main() {
   if (zeroQuoteExchanges.length > 0) {
     console.warn('[WARN] Exchanges with 0 quotes and no error (possible silent failure): ' +
       zeroQuoteExchanges.join(', '));
+  }
+
+  // Tag 510: BEIDE Yahoo-Kanaele gleichzeitig auf 0 — die Redundanz-Begruendungen
+  // beider Kanaele verweisen AUFEINANDER und laufen dann zusammen leer.
+  //
+  // BH-100 (oben, Predefined) begruendet den Nicht-Abbruch mit "redundant coverage
+  // (EXCHANGE_CODES + the discovery adapters)". BH-038 (oben, Exchange) begruendet
+  // ihn mit "redundant — see BH-100 above". Jede Begruendung nennt die andere als
+  // Auffangnetz. Fallen beide im SELBEN Lauf aus, ist keine der beiden Begruendungen
+  // mehr gedeckt — und bis hierher sagt das niemand, weil jeder Kanal nur sich selbst
+  // prueft. Genau die Lage am 2026-07-30 (Lauf 30516194703): Predefined 0/325,
+  // Exchange-Kanal fatal (v3.14-Schema, seit Tag 248 am 05.07. bekannt).
+  //
+  // Das ist KEIN Abbruch: der tragende Schutz ist MIN_DISCOVERY_CANDIDATES weiter
+  // unten (BH-193), der unabhaengig von beiden Kanaelen prueft, ob die Entdeckung
+  // insgesamt zusammengebrochen ist. Der bleibt die Reissleine. Dieser Waechter
+  // sagt etwas anderes: die BREITE ausserhalb der US-Quellen faellt aus, ohne dass
+  // ein Kanal fuer sich das melden kann.
+  if (beideYahooKanaeleLeer(predefinedNonEmpty, exchangeScreenerFatal, customAdded)) {
+    console.error('::error::BEIDE Yahoo-Entdeckungskanaele liefern 0 im selben Lauf — Predefined-Screener ' +
+      '(' + predefinedAttempted + ' Aufrufe, 0 nicht-leere Buckets) UND Custom-Exchange-Screener ' +
+      '(' + EXCHANGE_CODES.length + ' Boersen, ' + (exchangeScreenerFatal ? 'Schema-Fehler' : '0 neue Tickers') + '). ' +
+      'Die Redundanz-Begruendung JEDES der beiden Kanaele nennt den ANDEREN als Auffangnetz (BH-100 / BH-038) — ' +
+      'zusammen ist keine der beiden gedeckt. Die Entdeckung laeuft nur noch auf den Discovery-Adaptern, also ' +
+      'US-lastig; der Exchange-Kanal war fuer die globale Breite gebaut (Tag 131: "10k+ statt ~3500"). ' +
+      'Kein Abbruch — MIN_DISCOVERY_CANDIDATES unten bleibt die Reissleine.');
+    process.exitCode = 1;
   }
 
   // Tag 133/135: Merge additional discovery sources into allTickers
@@ -1141,7 +1196,8 @@ async function main() {
 // for BH-193/BH-040/BH-039/BH-038 test coverage.
 module.exports = {
   toYahooClassShare, _looksUS, dedupKey, applyDeadRegistryAndCap,
-  numEnv, capNewTickerAdmission, _isNonEquityQuote, EXCHANGE_SCREENER_SCHEMA_ERROR_RE
+  numEnv, capNewTickerAdmission, _isNonEquityQuote, EXCHANGE_SCREENER_SCHEMA_ERROR_RE,
+  beideYahooKanaeleLeer   // Tag 510: Doppelausfall-Waechter, einzeln pruefbar
 };
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
