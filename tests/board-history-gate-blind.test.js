@@ -149,5 +149,24 @@ check('das Skript selbst enthaelt den Meldezweig (nicht nur der Testtreiber)', (
     'und zwar im Warnkanal — eine console.log-Zeile ohne ::warning:: geht in der Lauf-Ausgabe unter');
 });
 
+// -- 6. Der Alarmkanal ist SYMMETRISCH ---------------------------------------
+// 30.07.: der blinde Tag meldete im Warnkanal, die AKTIVE Bruch-Ausnahme schrieb nur
+// eine stille Zeile. Damit war ausgerechnet der Fall, in dem die Grenze bewusst
+// angehoben wurde, schlechter sichtbar als der, in dem gar nicht verglichen wurde.
+// Beide Faelle heissen "das Gate hat nicht normal geprueft" und muessen denselben
+// Kanal benutzen. Alle drei Richter des Gate-Urteils vom 30.07. haben genau diese
+// Ein-Zeilen-Korrektur gefordert. Geprueft am Quelltext, weil der CLI-Zweig gegen
+// REPO_ROOT laeuft und nicht gegen ein Fixture.
+//
+// GEGENPROBE (durchgefuehrt): ::warning:: an einer der beiden Stellen entfernt -> rot.
+check('beide Gate-Ausnahmen melden im WARNKANAL, nicht eine still', () => {
+  const src = fs.readFileSync(path.resolve(__dirname, '..', 'scripts', 'write-board-history.js'), 'utf8');
+  assert.ok(/::warning::GATE BLIND/.test(src),
+    'der blinde Tag (keine Vergleichsbasis) muss im Warnkanal melden');
+  assert.ok(/::warning::GATE: Massstab-Bruch aktiv/.test(src),
+    'die AKTIVE Bruch-Ausnahme muss ebenfalls im Warnkanal melden - eine angehobene '
+    + 'Grenze ist mindestens so meldepflichtig wie eine ausgefallene Pruefung');
+});
+
 console.log(fail ? '\nFAILED: ' + fail : '\nalle gruen');
 process.exit(fail ? 1 : 0);

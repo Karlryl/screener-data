@@ -858,7 +858,13 @@ if (require.main === module) {
       // zu unterscheiden. Kopfzeile vor der Board-Liste, damit sie ohne Scrollen sichtbar ist.
       if (res.bruch) {
         const erhoeht = res.boards.filter((b) => b.bruchGrenze).length;
-        console.log('GATE: Massstab-Bruch aktiv fuer ' + res.date
+        // 30.07.: ::warning:: ERGAENZT. Der Kanal war asymmetrisch — der BLINDE Tag (Z. 850)
+        // meldete im Warnkanal, die AKTIVE Ausnahme schrieb nur eine stille Zeile. Damit war
+        // ausgerechnet der Fall, in dem die Grenze bewusst angehoben wurde, schlechter
+        // sichtbar als der, in dem gar nicht verglichen wurde. Alle drei Richter des
+        // Gate-Urteils vom 30.07. haben dieselbe Ein-Zeilen-Korrektur gefordert; der
+        // Kommentar zwei Zeilen darueber verlangt sie eigentlich schon selbst.
+        console.log('::warning::GATE: Massstab-Bruch aktiv fuer ' + res.date
           + (res.bruch.tag ? ' (' + res.bruch.tag + ')' : '')
           + ' — ' + erhoeht + ' Board(s) mit erhoehter Tagesschwelle, '
           + (res.boards.length - erhoeht) + ' unveraendert; uebrige Integritaetspruefungen AKTIV');
