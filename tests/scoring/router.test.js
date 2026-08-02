@@ -187,6 +187,19 @@ test('Negativer Jahresumsatz (Investment-Trust/CEF) -> exclude non-operating-rev
     annual: { annualRev: [{ value: 300 }, { value: 200 }], annualGP: [{ value: 180 }] } };
   assert.equal(route(op).action, 'route');
 });
+// --- audit/fix Hard-Review AE-SC-002: (a) faelschlich UNIVERSELL, fing echte Healthcare/Biotech-
+// Firmen mit einem einzelnen negativen Glitch-Jahr statt nur Non-Operating-Vehikel ---
+test('Biotech mit EINEM negativen Jahresumsatz (Glitch, sonst real) bleibt drin (NBTX-Muster, AE-SC-002)', () => {
+  const bio = { meta: { sector: 'Healthcare', industry: 'Biotechnology', region: 'US', ticker: 'NBTXX' },
+    annual: { annualRev: [{ value: 37982751 }, { value: -8380142 }, { value: 42194381 }, { value: 5565784 }] } };
+  const r = route(bio);
+  assert.equal(r.action, 'route', 'echte Biotech-Umsatztraeger duerfen nicht als non-operating-rev excludiert werden');
+  assert.equal(r.formulaId, 'health-care');
+  // Kontrolle: ein Non-Healthcare-CEF mit negativem Jahresumsatz bleibt weiter gefangen (Zielbild von (a) intakt).
+  const cef = { meta: { sector: 'Financial Services', industry: 'Closed-End Fund - Equity', region: 'US', ticker: 'CEFY' },
+    annual: { annualRev: [{ value: -500 }, { value: 200 }] } };
+  assert.equal(route(cef).reason, 'non-operating-rev');
+});
 test('Investment-Holding (Asset-Mgmt, GP=0, ni~rev) -> non-operating-rev (3i-Group-Muster)', () => {
   const holding = { meta: { sector: 'Financial Services', industry: 'Asset Management', region: 'US', ticker: 'HOLD' },
     annual: { annualRev: [{ value: 5211 }], annualGP: [{ value: 0 }], annualNetIncome: [{ value: 5045 }] } };

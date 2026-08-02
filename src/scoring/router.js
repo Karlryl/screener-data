@@ -169,11 +169,17 @@ function structExcludeReason(s) {
 //       "Umsatz" IST der Anlagegewinn, kein Fee-Geschaeft (3i Group, dessen Quartal positiv bleibt).
 function isNonOperatingVehicle(s) {
   // (a) negativer JAHRESumsatz -> Closed-End-Funds/Bullion-Trusts (SMT.L/ADX): "Umsatz" = Anlage-
-  //     gewinn/-verlust, kein operativer Umsatz. Universell sicher (1 harmloser Borderline: NBTX,
-  //     ein Biotech mit korruptem -8.4M-Glitch-Jahr -> ohnehin Datenmangel). Eine NI~rev-Verfeinerung
-  //     wurde VERWORFEN: sie gab 3 echte Muni-Bond-CEFs (BTT/NZF/PTA, NI/rev 1.8-3.5) faelschlich frei.
+  //     gewinn/-verlust, kein operativer Umsatz. Eine NI~rev-Verfeinerung wurde VERWORFEN: sie gab
+  //     3 echte Muni-Bond-CEFs (BTT/NZF/PTA, NI/rev 1.8-3.5) faelschlich frei.
+  //     audit/fix (Hard-Review AE-SC-002): NICHT mehr universell -- NBTX (Biotech, sector=Healthcare)
+  //     hat ein einzelnes korruptes -8.4M-Glitch-Jahr NEBEN drei realen $30-40M-Umsatzjahren und
+  //     wurde bisher faelschlich als Non-Operating-Vehicle excludiert (kein "harmloser" Fall, sondern
+  //     ein echter Umsatztraeger, der aus dem Score-Universum fiel). Kein CEF/Bullion-Trust traegt
+  //     sector=Healthcare, also verliert (a) dadurch nichts von seinem Zielbild.
   const revAnn = norm(s, 'annualRev');
-  if (hasPresent(revAnn) && presentValues(revAnn).some((v) => v < 0)) return true;        // (a)
+  const sec = lc(s && s.meta ? s.meta.sector : '');
+  const isHealthcareSector = sec.includes('healthcare') || sec.includes('health care');
+  if (!isHealthcareSector && hasPresent(revAnn) && presentValues(revAnn).some((v) => v < 0)) return true; // (a)
   const ind = lc(s && s.meta ? s.meta.industry : '');
   // (d) KEIN operativer Umsatz (leer ODER alle present-Werte ==0) + Finanz-Vehikel-Industrie ->
   //     CEF/Shell/Asset-Manager/BDC (BMEZ/RVI = leer; PIN.L = present-Null [0,0,0,0]; XXI = Shell).
