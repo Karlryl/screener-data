@@ -196,5 +196,34 @@ test('BH-156: unconditional "git add board-history/" vor der rc-Verzweigung ist 
   assert.match(beforeIf, /steps\.vintage\.outputs\.rc/, 'git add laeuft noch VOR der rc-Pruefung (altes bedingungsloses Verhalten)');
 });
 
+// ── AE-CI-001 (Hard Review 2026-07-31): beide gh-pages-Deploys unterscheiden jetzt
+//    "Ref fehlt wirklich" (git ls-remote --exit-code == 2) von jedem anderen Nonzero-
+//    Exit (transientes DNS/Auth/Transport, typ. 128). Vorher behandelte `if git
+//    ls-remote --exit-code ...; then ... else ...` JEDEN Nonzero-Exit identisch als
+//    "Branch fehlt" -> frischer leerer Branch -> Force-Push loeschte den kompletten
+//    bestehenden gh-pages-Baum bei einem rein transienten Netzfehler.
+test('AE-CI-001: Deploy 1 (merge-Job) wertet ls-remote-Exit-Code explizit aus (0/2/sonst)', () => {
+  const s = section('name: Deploy to GitHub Pages', '\n  scoring:');
+  assert.match(s, /ls_remote_rc=\$\?/);
+  assert.match(s, /if \[ "\$ls_remote_rc" -eq 0 \]/);
+  assert.match(s, /elif \[ "\$ls_remote_rc" -eq 2 \]/);
+  assert.match(s, /echo "::error::git ls-remote failed with exit \$ls_remote_rc/);
+});
+test('AE-CI-001: Deploy 2 (scoring-Job) wertet ls-remote-Exit-Code ebenso explizit aus', () => {
+  const s = section('name: Deploy Scoring Output to GitHub Pages', 'name: Write board-history vintage');
+  assert.match(s, /ls_remote_rc=\$\?/);
+  assert.match(s, /if \[ "\$ls_remote_rc" -eq 0 \]/);
+  assert.match(s, /elif \[ "\$ls_remote_rc" -eq 2 \]/);
+  assert.match(s, /echo "::error::git ls-remote failed with exit \$ls_remote_rc/);
+});
+test('AE-CI-001: alter blinder truthy-if ("if git ls-remote ...; then") ist aus beiden Deploys weg', () => {
+  const codeLines = yml.split('\n').filter((l) => !/^\s*#/.test(l));
+  const stillBlind = codeLines.some((l) => /if git ls-remote --exit-code[^\n]*; then/.test(l));
+  assert.ok(!stillBlind, 'jeder Nonzero-Exit wuerde damit wieder als "Branch fehlt" gelesen (Kommentarzeilen ausgenommen)');
+});
+// (Kein separater Bash-Ausfuehrungstest: `bash` loest lokal auf Windows nicht
+// zuverlaessig auf dieselbe Shell auf wie unter ubuntu-latest in CI — die drei
+// Text-Pins oben decken alle drei Zweige (0/2/sonst) bereits eindeutig ab.)
+
 console.log('\nbh-b09-dailyyml.test.js: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);
