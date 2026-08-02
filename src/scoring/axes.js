@@ -192,7 +192,12 @@ function gpGrowth(s) {
   // ueberspringen sie. Ratio-Plausibilitaets-Guard, kein aufgezwungenes Niveau -> waehrungs-invariant.
   const gm = ratioSeries(norm(s, 'annualGP'), norm(s, 'annualRev'))
     .map((v) => (v !== null && v >= 0 && v <= 1) ? v : null);
-  const gmNew = firstPresent(gm), gmOld = lastPresent(gm);
+  // audit/fix (Hard-Review NRB-SC-002, BH-080-Analog): firstPresent(gm) ueberspringt eine FUEHRENDE
+  // Luecke (annualRev[0] fehlt/0 -> gm[0]=null) und liefert ein AELTERES Jahr als "gmNew" (UAN-Muster:
+  // annualRev[0]=0, annualGP[0] present -> gm[0]=null, firstPresent gab bisher gm[1] als "neuestes"
+  // Jahr aus). gm[0] muss selbst present sein, sonst ist die Margen-Trajektorie fuers juengste Jahr
+  // unbekannt -> neutral (gmTraj=0 unten), analog zum bestehenden Fallback bei fehlendem gmOld/gmNew.
+  const gmNew = (gm[0] !== null) ? gm[0] : null, gmOld = lastPresent(gm);
   const gmTraj = (gmNew !== null && gmOld !== null) ? (gmNew - gmOld) : 0;
   return gpYoY + gmTraj;
 }
@@ -325,9 +330,15 @@ function capitalEfficiency(s) {
   // dem Eigen-Schnitt -> Discount holt den ROIC auf zyklus-bereinigtes Niveau
   // zurueck. Trough-Recovery/stabil (cur <= histRest) -> Discount 1 (neutral);
   // Software mit stabil hoher Marge unberuehrt. 1/(1+overshoot) bleibt in (0,1].
-  const margins = presentValues(ratioSeries(norm(s, 'annualOpInc'), norm(s, 'annualRev')));
+  const opIncRaw = norm(s, 'annualOpInc'), revRaw = norm(s, 'annualRev');
+  const marginsRaw = ratioSeries(opIncRaw, revRaw);
+  const margins = presentValues(marginsRaw);
   let cycleDiscount = 1;
-  if (margins.length >= 3) {
+  // audit/fix (Hard-Review NRB-SC-002, BH-080-Analog): presentValues() kompaktiert eine FUEHRENDE
+  // Luecke weg (annualRev[0] fehlt/0 -> marginsRaw[0]=null) -- margins[0] waere dann eine AELTERE
+  // Marge, faelschlich als "cur" (juengste Marge) fuer den Zyklus-Peak-Discount gewertet (UAN-Muster).
+  // Discount nur anwenden, wenn die ROHE (nicht-kompaktierte) Marge am Index 0 selbst present ist.
+  if (marginsRaw[0] !== null && margins.length >= 3) {
     const cur = margins[0];
     const prev = margins[1];
     const histRest = mean(margins.slice(1));
