@@ -156,6 +156,32 @@ function readJsonOrNull(file) {
   catch (_) { return null; }
 }
 
+// AX-SK-001 (Hard Review 2026-07-31): readJsonOrNull() is intentionally lenient for
+// most callers here (excludedDates(), per-ticker readSnapshot(), prior-vintage board
+// reads) — those read thousands of files per run and a single missing/corrupt one
+// must not crash the whole write, documented explicitly at excludedDates(). The TWO
+// GOVERNANCE state files below are different: "file missing" legitimately means
+// "scaffold a fresh empty structure" (readOrScaffoldExcluded) or "start calibration
+// from scratch" (gate-calibration) — but readJsonOrNull() made "file exists but is
+// corrupt/unreadable" look IDENTICAL to "missing", so a truncated write or a bad
+// permission silently replaced hand-curated exclusions or reset frozen gate
+// thresholds instead of failing loud. Distinguish ENOENT (genuinely absent, safe to
+// scaffold) from every other failure (refuse — never silently treat as absent).
+function readJsonExistingOrThrow(file) {
+  let raw;
+  try { raw = fs.readFileSync(file, 'utf8'); }
+  catch (e) {
+    if (e.code === 'ENOENT') return null; // legitimately absent — scaffold/reset is safe
+    throw new Error('write-board-history: ' + file + ' exists but is unreadable (' + e.message
+      + ') — refusing to silently scaffold over it.');
+  }
+  try { return JSON.parse(raw); }
+  catch (e) {
+    throw new Error('write-board-history: ' + file + ' exists but contains invalid JSON (' + e.message
+      + ') — refusing to silently scaffold over it. Fix it, restore from git history, or delete it explicitly if it should truly be reset.');
+  }
+}
+
 // Boden auf eine Gate-Schwelle anwenden (nur echte, aus Bewegung abgeleitete Schwellen
 // erreichen diese Funktion — s. updateGateCalibration).
 function flooredThreshold(t) {
@@ -490,7 +516,7 @@ function updateGateCalibration(gateCalib, board, p99Delta, date) {
 
 // ── Exclusion-Gerüst (Writer schreibt nie Einträge, legt nur das Gerüst an) ───
 function readOrScaffoldExcluded(dryRun) {
-  const existing = readJsonOrNull(P.EXCLUDED_FILE);
+  const existing = readJsonExistingOrThrow(P.EXCLUDED_FILE);
   if (existing) return existing;
   const scaffold = {
     _doc: 'Vintage-Ausschlussliste. Von Hand/Audit gepflegt (Datum + Grund). ' +
@@ -722,7 +748,7 @@ function run(opts) {
   if (boards.length === 0) throw new Error('no full-cohort board files in ' + P.FULL_DIR);
 
   readOrScaffoldExcluded(dryRun);
-  const gateCalib = readJsonOrNull(P.GATE_CALIB_FILE) || { _doc: 'Gate-Kalibrierung je Board: erste 3 messbare P99-Tagesdeltas → Schwelle P99×2 eingefroren.', boards: {} };
+  const gateCalib = readJsonExistingOrThrow(P.GATE_CALIB_FILE) || { _doc: 'Gate-Kalibrierung je Board: erste 3 messbare P99-Tagesdeltas → Schwelle P99×2 eingefroren.', boards: {} };
   const priorDate = priorVintageDate(date);
   // Der Bruch hängt am EXAKTEN Vorgänger (Begründung an der Funktion): er greift genau
   // dann, wenn tatsächlich gegen den letzten Stand des alten Maßstabs verglichen wird,

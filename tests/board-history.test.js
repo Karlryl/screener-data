@@ -316,6 +316,38 @@ check('(d) legt _excluded.json-Gerüst an (leer), Writer schreibt nie Einträge'
   assert.ok(/rank-ic/i.test(ex._doc), 'Doku verweist auf rank-ic als Konsument');
 });
 
+// ── AX-SK-001 (Hard Review 2026-07-31): ein KAPUTTES _excluded.json/_gate-
+//    calibration.json darf NICHT stillschweigend wie "fehlt" behandelt und durch
+//    ein leeres Geruest ersetzt werden — das loescht eine von Hand gepflegte
+//    Ausschlussliste bzw. setzt eingefrorene Gate-Schwellen zurueck, ohne dass es
+//    im Lauf sichtbar wird. readJsonOrNull() kollabierte Datei-, Rechte- und
+//    JSON-Parsefehler bisher alle zu null — genau wie eine echte Abwesenheit.
+check('(d1) AX-SK-001: kaputtes _excluded.json wird NICHT still durch ein leeres Geruest ersetzt', () => {
+  const base = mkBase();
+  W._setPaths(base);
+  try {
+    const hist = path.join(base, 'board-history');
+    fs.mkdirSync(hist, { recursive: true });
+    fs.writeFileSync(path.join(hist, '_excluded.json'), '{ acht Eintraege kaputt am Ende...');
+    assert.throws(() => W.readOrScaffoldExcluded(false), /unlesbar|invalid JSON|kaputt/i,
+      'ein korruptes _excluded.json muss den Lauf hart stoppen, nicht scaffolden');
+    const stillCorrupt = fs.readFileSync(path.join(hist, '_excluded.json'), 'utf8');
+    assert.ok(stillCorrupt.includes('kaputt'), 'die kaputte Datei darf NICHT ueberschrieben worden sein');
+  } finally {
+    W._setPaths(null);
+  }
+});
+check('(d2) AX-SK-001: eine wirklich fehlende _excluded.json scaffoldet weiterhin normal (Gegenprobe)', () => {
+  const base = mkBase();
+  W._setPaths(base);
+  try {
+    const excl = W.readOrScaffoldExcluded(false);
+    assert.deepStrictEqual(excl.excluded, [], 'echte Abwesenheit bleibt ein harmloses leeres Geruest');
+  } finally {
+    W._setPaths(null);
+  }
+});
+
 // ── (e) picks-history unberührt ──────────────────────────────────────────────
 check('(e) picks-history bleibt byte-identisch (Verzeichnis-Diff vor/nach)', () => {
   const base = mkBase();
