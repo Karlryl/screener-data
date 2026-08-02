@@ -129,10 +129,14 @@ check('(a2) E1 Option B: buildPit trägt priceSales/priceSalesAsOf additiv, evSa
   assert.strictEqual(abc.pit.priceSalesAsOf, '2026-07-09T00:00:00.000Z', 'priceSalesAsOf = echte Bewertungs-asOf');
   // Bestandsfeld unverändert (byte-identisch für Bestandsleser):
   assert.strictEqual(abc.pit.evSales, 8.2, 'evSales unverändert');
-  // Additiv = neue Keys am ENDE (Bestands-Serialisierung bleibt bit-stabil bis grossProfitQEnds):
+  // Additiv = neue Keys am ENDE (Bestands-Serialisierung bleibt bit-stabil bis grossProfitQEnds).
+  // audit/fix (Hard-Review R4-SCR-02): marketCap ist seitdem additiv NACH priceSalesAsOf angehängt
+  // (screener-formel-ledger.md §4a Size-Regressor) -- priceSales/priceSalesAsOf ruecken um 1 nach vorn,
+  // bleiben aber selbst weiterhin ein zusammenhaengendes additives Paar, evSales unveraendert an Index 1.
   const keys = Object.keys(abc.pit);
-  assert.strictEqual(keys[keys.length - 2], 'priceSales', 'priceSales angehängt');
-  assert.strictEqual(keys[keys.length - 1], 'priceSalesAsOf', 'priceSalesAsOf zuletzt');
+  assert.strictEqual(keys[keys.length - 3], 'priceSales', 'priceSales angehängt');
+  assert.strictEqual(keys[keys.length - 2], 'priceSalesAsOf', 'priceSalesAsOf danach');
+  assert.strictEqual(keys[keys.length - 1], 'marketCap', 'marketCap zuletzt (R4-SCR-02)');
   assert.strictEqual(keys.indexOf('evSales'), 1, 'evSales behält seine Position (byte-additiv)');
 
   // Fehlendes priceSales → beide Felder null (kein Crash, LOSS-/GM0-robust):
@@ -145,6 +149,27 @@ check('(a2) E1 Option B: buildPit trägt priceSales/priceSalesAsOf additiv, evSa
   assert.strictEqual(nops.pit.priceSalesAsOf, null, 'kein asOf → null');
 });
 
+// ── (a2b) R4-SCR-02: marketCap wird als Size-Regressor ins PIT geschrieben ──
+// screener-formel-ledger.md §4a fixiert die Regressor-Liste 'Size (log-MarketCap), Markt-Beta,
+// 1-2 Bewertungs-Proxys' -- buildPit() lieferte bisher KEIN marketCap-Feld.
+check('(a2b) R4-SCR-02: buildPit trägt marketCap additiv (Size-Regressor), fehlend → null', () => {
+  const base = mkBase();
+  const withMcap = snapFull('ABC', { withEnds: true });
+  withMcap.marketCap = { value: 31756744704 };
+  writeJson(path.join(base, 'snapshots', 'ABC.json'), withMcap);
+  writeJson(path.join(base, 'outputs', 'calibration.json'), { schema: 'calibration/v4', generated_at: 'x' });
+  writeBoard(base, 'semiconductors', [row('ABC', 90)]);
+  W.run({ baseDir: base, date: '2026-07-13' });
+  const abc = readVintage(base, '2026-07-13', 'semiconductors').cohort.profitable[0];
+  assert.strictEqual(abc.pit.marketCap, 31756744704, 'marketCap aus snap.marketCap.value');
+
+  // Fehlendes marketCap → null (kein Crash).
+  writeJson(path.join(base, 'snapshots', 'NOMC.json'), snapFull('NOMC', {}));
+  writeBoard(base, 'semiconductors', [row('NOMC', 70)]);
+  W.run({ baseDir: base, date: '2026-07-14' });
+  const nomc = readVintage(base, '2026-07-14', 'semiconductors').cohort.profitable[0];
+  assert.strictEqual(nomc.pit.marketCap, null, 'kein snap.marketCap → null');
+});
 // ── (a3) bh-null-ends (T2): leere/all-null Perioden-Enden gelten als ABSENT ──
 // Vorher: ts.revenueQEnds/grossProfitQEnds wurde nur gegen != null geprüft. Ein
 // FTS-Cache-Treffer vor A10 liefert [] (leer) oder [null,null,null] (Serie ohne

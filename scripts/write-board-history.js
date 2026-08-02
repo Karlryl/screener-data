@@ -281,6 +281,13 @@ function buildPit(snap, pitGaps) {
     // keyed hierauf, NIE auf fetchedAt.
     priceSales: val(m.priceSales),
     priceSalesAsOf: (m.priceSales && m.priceSales.asOf) || null,
+    // audit/fix (Hard-Review R4-SCR-02): screener-formel-ledger.md §4a fixiert die Regressor-Liste
+    // 'Size (log-MarketCap), Markt-Beta, 1-2 Bewertungs-Proxys' -- buildPit() lieferte beta/evSales/
+    // priceGrossProfit, aber KEIN marketCap-Feld, obwohl rank-ic.js Size als Kontroll-Regressor
+    // braucht. Rein additiv am ENDE (wie priceSales/priceSalesAsOf, E1 Option B): kein neuer Fetch
+    // (snap.marketCap liegt bereits am Snapshot, wie score.js mcapOf() es liest), Bestandsfelder
+    // bleiben byte-identisch positioniert.
+    marketCap: val(snap.marketCap),
   };
 }
 
