@@ -10,7 +10,7 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { scoreUniverse, produceRankings, calibrationDrift, quantile, MEGA_CAP_USD, MIN_COHORT_N } = require('./score.js');
+const { scoreUniverse, produceRankings, calibrationDrift, quantile, MIN_COHORT_N } = require('./score.js');
 const formulas = require('./formulas/index.js');
 // 3.1 QC-Board (DIAGNOSTIC, additiv): eigener Membership-Router + eigene Formel-Registry + Board-Status.
 const { qualityRoute } = require('./quality-route.js');
@@ -165,6 +165,18 @@ function loadUniverse() {
   // (siehe rawCount oben), damit legitimes Watchlist-Prunen (ganze Boersen ohne Watchlist-Eintraege)
   // den Floor nicht mehr faelschlich ausloest. Wirkt nur auf das zurueckgegebene Scoring-Universum.
   const wl = loadWatchlist(WATCHLIST_PATH);
+  // S5-SC-001-Fix: ein Ladefehler (Datei fehlt/kaputt/unbekannte Form) liefert wl.stocks=[]
+  // — GENAU das Signal, bei dem filterToAuthorizedUniverse() (siehe deren eigener Fail-open-
+  // Vertrag oben) auf "kein Schnitt" faellt und ALLE on-disk-Snapshots durchlaesst, auch
+  // laengst aus der Watchlist geflogene. Das ist fuer eine echte leere Watchlist gewollt
+  // (Fail-open), aber fuer einen Ladefehler Datenkorruption. Gleiches Muster wie der
+  // Coverage-Floor oben: bei echtem Fehler hart abbrechen statt lautlos ungefiltert scoren.
+  if (wl.error) {
+    throw new Error(
+      `[run-screener] loadUniverse: Watchlist nicht ladbar (${WATCHLIST_PATH}): ${wl.error}. ` +
+      `Abbruch statt lautlosem Scoring des kompletten ungefilterten on-disk-Bestands.`
+    );
+  }
   const { filtered, dropped } = filterToAuthorizedUniverse(u, wl.stocks);
   u = filtered;
   // audit/fix (C3): still geschluckte Parse-Fehler / Schema-Drift verzerren lautlos die
@@ -201,10 +213,20 @@ function loadSmallcapUniverse(snapDir = SMALLCAP_SNAP_DIR, watchlistPath = SMALL
     if (s && s.meta && s.meta.ticker) u.push(s);
   }
   if (u.length === 0) return null; // leeres Verzeichnis -> Fallback-Signal
-  // Autorisierungs-Schnitt auf die Small-Cap-Watchlist (fehlt sie -> fail-open, kein Schnitt).
-  let stocks = [];
-  try { stocks = (JSON.parse(fs.readFileSync(watchlistPath, 'utf8')).stocks) || []; } catch (_) {}
-  const { filtered, dropped } = filterToAuthorizedUniverse(u, stocks);
+  // Autorisierungs-Schnitt auf die Small-Cap-Watchlist. S5-SC-001-Fix: identisches Muster wie
+  // loadUniverse() oben — ueber loadWatchlist() laden statt roh JSON.parse+try/catch-Schlucken,
+  // damit ein Ladefehler von einer echten leeren Watchlist unterscheidbar ist. Ladefehler ->
+  // hart abbrechen (der try/catch um den loadSmallcapUniverse()-Call beim Aufrufer faengt das
+  // fail-soft ab: Small-Cap-Pass entfaellt diesen Lauf mit Marker, HG/QC bleiben unberuehrt),
+  // statt lautlos den kompletten ungefilterten Small-Cap-Bestand zu scoren.
+  const wl = loadWatchlist(watchlistPath);
+  if (wl.error) {
+    throw new Error(
+      `[run-screener] loadSmallcapUniverse: Watchlist nicht ladbar (${watchlistPath}): ${wl.error}. ` +
+      `Abbruch statt lautlosem Scoring des kompletten ungefilterten Small-Cap-Bestands.`
+    );
+  }
+  const { filtered, dropped } = filterToAuthorizedUniverse(u, wl.stocks);
   mergeSecIntoUniverse(filtered);
   console.log(`[run-screener] loadSmallcapUniverse: ${filtered.length} Small-Cap-Snapshots aus ${snapDir} (${parseFail} parse-fail, ${dropped} nicht in watchlist-smallcap.json)`);
   return filtered;
@@ -283,13 +305,13 @@ function run(topN) {
     if (!drift.ok) console.warn(`[run-screener] ⚠ KALIBRIER-DRIFT: maxKS ${drift.maxKs.toFixed(3)} > ${drift.ksThreshold} in ${drift.drifted.length} Achsen (Normierungsbasis verschoben).`);
     else console.log(`[run-screener] Kalibrier-Drift ok (maxKS ${drift.maxKs.toFixed(3)} <= ${drift.ksThreshold}).`);
   }
-  // Tag 468 — Karls stehende Anweisung ("alles ueber der Large-Cap-Grenze geht in den anderen
-  // Screener"), ausgefuehrt als reiner Anzeige-Filter auf DIESER Uebersicht. Der
-  // Quality-Compounder-Durchlauf weiter unten ruft produceRankings bewusst OHNE die Option auf:
-  // dort gehoeren grosse reife Firmen hin. Begruendung und Messung stehen an MEGA_CAP_USD.
-  const ranked = produceRankings(results, { topN: topN || 100, overviewMaxMcap: MEGA_CAP_USD });
-  const grosseRaus = (results || []).filter((e) => e.action === 'route' && Number(e.marketCap) >= MEGA_CAP_USD).length;
-  console.log(`[run-screener] Uebersicht: ${grosseRaus} Firmen ab ${(MEGA_CAP_USD / 1e9).toFixed(1)} Mrd. USD nicht angezeigt (stehen weiter in Branchen- und Quality-Boards).`);
+  // 02.08. — Karl-Entscheid: die Uebersicht wird NICHT mehr nach Marktwert beschnitten
+  // (vorher: alles ab 200 Mrd. raus). Groesse ordnet jetzt ein, statt auszuschliessen —
+  // findash zeigt fuenf Kohorten-Reiter auf Basis der mcapKlasse je Zeile.
+  const ranked = produceRankings(results, { topN: topN || 100 });
+  const proKlasse = {};
+  for (const e of results) if (e.action === 'route' && e.mcapKlasse) proKlasse[e.mcapKlasse] = (proKlasse[e.mcapKlasse] || 0) + 1;
+  console.log(`[run-screener] Uebersicht ohne Groessen-Grenze. Geroutet je Groessenklasse: ${['micro', 'small', 'mid', 'large', 'mega'].map((k) => `${k} ${proKlasse[k] || 0}`).join(' · ')}`);
   // Echte Kohorten-Counts aus results (NICHT aus der gekappten topN-Anzeigeliste).
   const counts = {};
   for (const e of results) {

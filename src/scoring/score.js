@@ -154,27 +154,30 @@ const issuerKeyLoose = (s) => {
  */
 const MCAP_KLASSEN_USD = Object.freeze({ micro: 300e6, small: 2e9, mid: 10e9, large: 200e9 });
 
-/**
- * Obergrenze fuer die Hypergrowth-Uebersicht: die Mega-Cap-Schwelle (200 Mrd. USD).
+/*
+ * ⚠ HIER STAND MEGA_CAP_USD — die Obergrenze der Hypergrowth-Uebersicht. Am 02.08.2026 auf
+ * Karls Entscheid ERSATZLOS entfernt.
  *
- * KARL-KORREKTUR 27.07.2026 (Sichtabnahme). Vorher standen hier 22,7 Mrd. — das ist die
- * Aufnahmeschwelle fuer den S&P 500, nicht die Large-Cap-Grenze, und sie war damit viel zu
- * scharf. Gemessen am ausgelieferten Stand: die Uebersicht enthielt nur noch Firmen bis
- * 22,24 Mrd. (Median 4,37 Mrd.), waehrend CRDO (39,8), ALAB (50,0) und BE (52,6) —
- * die Kernnamen, um die es Karl geht — herausfielen. Sein Urteil: "Ich glaube, ich habe
- * gerade einen Small-Cap-Screener."
+ * Kurze Geschichte, damit niemand sie versehentlich wieder einbaut: eingefuehrt Tag 468 mit
+ * 22,7 Mrd. (das ist die S&P-500-Aufnahmeschwelle, nicht die Large-Cap-Grenze — viel zu scharf,
+ * warf CRDO/ALAB/BE heraus), am 27.07. von Karl auf 200 Mrd. korrigiert, am 02.08. ganz
+ * gestrichen. Sie hat 5 der 56 Namen erklaert, die Karl am 02.08. vermisste.
  *
- * Die neue Grenze trennt dort, wo die Luecke wirklich ist: zwischen BE (52,6 Mrd.) und
- * AVGO (1.817 Mrd.) liegt der Faktor 35. Sie haelt weiterhin fern, was Karl fernhalten
- * wollte (NVIDIA 5.010 Mrd., TSM 2.066, AVGO 1.817 — alle Mega Cap), und laesst herein,
- * was er sehen will. Der urspruengliche Zweck von Tag 468 bleibt damit erfuellt: ein Board
- * namens Hypergrowth enthaelt keine Billionen-Konzerne.
+ * Der Grund fuer das Streichen ist nicht, dass die Zahl falsch war, sondern dass eine Grenze
+ * die falsche Bauform ist: sie NIMMT Namen weg, statt sie einzuordnen. An ihre Stelle treten
+ * fuenf Groessen-Kohorten (MCAP_KLASSEN_USD oben) als Reiter mit verschiebbaren Grenzen.
  *
- * Sie ist ABSOLUT und altert mit den Kursen — bewusst, aus demselben Grund wie zuvor: die
- * Alternative (Anteil am Gesamtmarkt) haengt am Marktregime und wuerde Firmen aus dem Board
- * werfen, die sich selbst gar nicht bewegt haben.
+ * ⚠ WAS DAS STREICHEN ALLEIN NICHT LEISTET — hier stand zuerst die falsche Behauptung,
+ * NVIDIA stehe damit im Mega-Reiter. Am vollen Bestand nachgemessen (outputs/hypergrowth/full,
+ * 3.036 gescorte Zeilen): die Uebersicht ist die nach Score sortierte Top-200-Liste, und dort
+ * liegen nach dem Wegfall der Grenze genau VIER Mega-Namen. NVIDIA steht auf Rang 465
+ * (Score 68,4), AAPL 483, MSFT 906, AVGO 1.187. Von 79 Mega-Firmen im Bestand schaffen es
+ * vier in die Top 200 — die Grenze war nie der einzige Grund, warum sie fehlten.
+ * FOLGE, bindend fuer den findash-Teil: die Groessen-Reiter duerfen NICHT aus dieser
+ * Top-200-Liste gefiltert werden (der Mega-Reiter zeigte sonst vier Namen und behauptete,
+ * das sei die Klasse). Sie brauchen je Klasse eine eigene Liste aus der VOLLEN Kohorte,
+ * plus die ehrliche Angabe "gezeigt X von Y der Klasse".
  */
-const MEGA_CAP_USD = MCAP_KLASSEN_USD.large;
 
 /**
  * Absolute Groessenklasse einer Firma. Unabhaengig vom Universum und damit ueber Laeufe
@@ -1290,28 +1293,26 @@ function breakdown(e) {
  */
 function produceRankings(results, opts = {}) {
   const topN = opts.topN || 50;
-  // Tag 468 — Karls stehende Anweisung: "alles ueber der Large-Cap-Grenze geht in den anderen
-  // Screener." Umgesetzt als reiner ANZEIGE-Filter auf der Uebersicht, mit drei Auflagen aus
-  // Rat und Gericht:
-  //   1. NACH dem Scoren, nicht davor. Das Scoring ist kohorten-relativ (q() ist ein
-  //      Rang-Perzentil ueber die Kohorte, Winsor-Schranken werden universumsweit gelernt).
-  //      Wer die Grossen VOR der Kohortenbildung entfernt, verschiebt still die Scores ALLER
-  //      anderen — ein Seiteneffekt, den niemand sieht. Hier aendert sich kein einziger Score.
-  //   2. NUR die Uebersicht, nicht die Branchen-Boards. Am ausgelieferten Board nachgemessen:
-  //      von 34 betroffenen Zeilen faengt das Quality-Board 27 auf, und ALLE SIEBEN uebrigen
-  //      (Constellation Energy, Eternal, Formula One, Liberty Media, Nintendo, Carvana zweimal)
-  //      stehen in ihrem Branchen-Board. Es verschwindet also niemand — die Uebersicht wird
-  //      sauber, die Detailtiefe bleibt vollstaendig.
-  //   3. Nur fuer den Hypergrowth-Durchlauf. Der Quality-Compounder-Durchlauf ruft
-  //      produceRankings OHNE diese Option auf — dort gehoeren grosse reife Firmen hin.
-  const overviewMaxMcap = Number.isFinite(opts.overviewMaxMcap) ? opts.overviewMaxMcap : null;
+  // ⚠ 02.08.2026 — KARL-ENTSCHEID: der Groessen-Filter auf der Uebersicht ist ERSATZLOS
+  // entfernt. Hier stand seit Tag 468 ein Anzeige-Filter (zuerst 22,7 Mrd., ab 27.07. 200 Mrd.),
+  // der grosse Firmen NACH dem Scoren aus der Uebersicht nahm. Er hat 5 der 56 Namen erklaert,
+  // die Karl am 02.08. vermisste (NVDA, PLTR, COST, TSM, 300750.SZ).
+  // An seine Stelle treten fuenf Groessen-Kohorten als Reiter in findash (mcapKlasse je Zeile,
+  // verschiebbare Grenzen, Rangfolge ueber die sichtbare Auswahl). Eine Grenze, die Namen
+  // wegnimmt, wird damit durch eine Einteilung ersetzt, die sie sortiert — niemand verschwindet.
+  // Der Waechter dagegen steht in tests/scoring/uebersicht-largecap.test.js: keine Option darf
+  // die Uebersicht noch nach Marktwert beschneiden.
   const branches = {};
   const overview = [];
   const survival = [];
   const excluded = {};
   // A2: die in scoreUniverse angehefteten Anzeige-/geo-Felder an jede Output-Zeile spreaden
   // (?? null haelt die Form stabil, falls produceRankings mit handgebauten results laeuft).
-  const rowMeta = (e) => ({ name: e.name ?? null, country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, ipoRecency: e.ipoRecency ?? null, profitTier: e.profitTier ?? null, ipoYear: e.ipoYear ?? null, coverageAxes: e.coverageAxes ?? null, coverageWeight: e.coverageWeight ?? null, cohortN: e.cohortN ?? null, cohortFallback: e.cohortFallback ?? null, revGrowthYoYPct: e.revGrowthYoYPct ?? null, profitStreak: e.profitStreak ?? null });
+  // 02.08.: mcapKlasse fehlte hier — berechnet in Z.1205, aber nie gespreadet. Der Writer
+  // fuehrt sie in ROW_FIELDS und schrieb deshalb pflichtgemaess null; in JEDEM ausgelieferten
+  // Export war sie auf allen 200 Zeilen null (Staende 21.07. und 29.07. nachgesehen). Sie ist
+  // die Grundlage der fuenf Kohorten-Reiter (Karl-Entscheid 02.08.) und muss die Zeile erreichen.
+  const rowMeta = (e) => ({ name: e.name ?? null, country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, mcapKlasse: e.mcapKlasse ?? null, ipoRecency: e.ipoRecency ?? null, profitTier: e.profitTier ?? null, ipoYear: e.ipoYear ?? null, coverageAxes: e.coverageAxes ?? null, coverageWeight: e.coverageWeight ?? null, cohortN: e.cohortN ?? null, cohortFallback: e.cohortFallback ?? null, revGrowthYoYPct: e.revGrowthYoYPct ?? null, profitStreak: e.profitStreak ?? null });
   for (const e of (Array.isArray(results) ? results : [])) {
     if (e.action === 'survival') {
       survival.push({ ticker: e.ticker, runwayQuarters: e.overview ? e.overview.value : null, lamps: e.lamps, ...rowMeta(e) });
@@ -1369,19 +1370,9 @@ function produceRankings(results, opts = {}) {
     if (cv === null) return -1;
     return (cv - av) || cmpTicker(a.ticker, c.ticker);
   });
-  // Tag 468: der Groessen-Filter greift NACH dem Sortieren und VOR dem Kappen — so ruecken
-  // genau so viele Namen nach, wie herausfallen, und die Liste bleibt gleich lang.
-  // Zeilen ohne brauchbaren Marktwert bleiben drin. Zwei Faelle, und nur der zweite ist heikel:
-  // FEHLT der Wert, macht rowMeta() daraus null, und Number(null) ist 0 — harmlos klein.
-  // Ist er KAPUTT (z. B. ein Text), ergibt Number() NaN. Deshalb `!(x >= grenze)` und nicht
-  // `x < grenze`: das erste behaelt NaN, das zweite wirft es hinaus. Eine unlesbare Zahl darf
-  // keine Firma aus dem Board werfen — der haeufigste Weg, wie ein Filter still zu viel
-  // entfernt. Beide Faelle sind im Waechter festgenagelt; die Gegenprobe hat gezeigt, dass
-  // ein Test mit `null` allein den Unterschied gar nicht sieht.
-  const uebersicht = overviewMaxMcap === null
-    ? overview
-    : overview.filter((r) => !(Number(r.marketCap) >= overviewMaxMcap));
-  return { branches, overview: uebersicht.slice(0, topN * 2).map(stripRaw), survival, excluded, full };
+  // 02.08.: hier stand der Groessen-Filter (s. Begruendung oben). Die Uebersicht wird jetzt
+  // nur noch sortiert und gekappt — kein Marktwert entscheidet mehr ueber Sichtbarkeit.
+  return { branches, overview: overview.slice(0, topN * 2).map(stripRaw), survival, excluded, full };
 }
 
 // 2.9 Slice 2: Drift-Waechter. KS-Distanz (max |CDF|-Differenz) je Kohorte/Achse zwischen dem
@@ -1442,5 +1433,4 @@ module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings
   shrinkToNeutral, SHRINK_K, MIN_COHORT_N,
   // 5.2 Small-Cap-Board: reine Funktion, additiv exportiert fuer den Coverage-Floor (run-screener.js)
   quantile,
-  // Tag 468: Large-Cap-Grenze der Hypergrowth-Uebersicht — fuer run-screener.js und den Waechter
-  MEGA_CAP_USD };
+  // Tag 468: Large-Cap-Grenze der Hypergrowth-Uebersicht — fuer run-screener.js und den Waechter };

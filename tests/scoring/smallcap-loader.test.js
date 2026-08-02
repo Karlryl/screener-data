@@ -50,13 +50,37 @@ test('loadSmallcapUniverse: befuellt -> nur watchlist-smallcap-autorisierte Snap
   fs.rmSync(d, { recursive: true, force: true });
 });
 
-test('loadSmallcapUniverse: fehlende Watchlist -> fail-open (kein Schnitt)', () => {
+test('loadSmallcapUniverse: nicht ladbare Watchlist -> Abbruch statt ungefiltertem Scoring', () => {
+  // ⚠ UMGEDREHT 02.08. (Hard Review S5-SC-001). Hier stand vorher die Erwartung
+  // "fehlende Watchlist -> fail-open (kein Schnitt)", also: alle vorhandenen Snapshots werden
+  // ungefiltert gescort. Genau das ist der gemeldete Defekt — der Test nagelte ihn fest.
+  //
+  // WARUM DAS NACHZIEHEN UND KEIN ABSCHWAECHEN IST: es gibt zwei verschiedene Zustaende, und
+  // nur einer ist harmlos. (a) Verzeichnis fehlt oder ist leer = "noch kein getrennter
+  // Small-Cap-Pull gelaufen" -> legitimer Fallback, gibt weiterhin null (eigener Test unten).
+  // (b) Verzeichnis VOLL, aber die Watchlist dazu nicht ladbar = widerspruechlicher Zustand,
+  // denn der Small-Cap-Pull schreibt beides. Frueher fuehrte (b) dazu, dass der komplette
+  // on-disk-Bestand ohne Autorisierungs-Schnitt in die Kohorten-Perzentile ging — lautlos.
+  // Der Abbruch ist fail-soft aufgefangen: run-screener.js:395 umschliesst den Aufruf mit
+  // try/catch (nachgesehen, nicht angenommen), der Small-Cap-Pass entfaellt diesen Lauf mit
+  // sichtbarem Fehl-Marker, HG und QC bleiben unberuehrt.
   const d = tmpDir();
   writeSnap(d, 'AAA', 4e8);
   const noWl = path.join(d, 'nonexistent-wl.json');
-  const u = loadSmallcapUniverse(d, noWl);
-  assert.ok(Array.isArray(u));
-  assert.equal(u.length, 1); // ohne Watchlist kein Autorisierungs-Schnitt
+  assert.throws(() => loadSmallcapUniverse(d, noWl), /Watchlist nicht ladbar/,
+    'eine nicht ladbare Watchlist darf nicht wie "keine Einschraenkung" wirken');
+  fs.rmSync(d, { recursive: true, force: true });
+});
+
+test('loadSmallcapUniverse: fehlendes Verzeichnis bleibt der legitime Fallback (null, kein Wurf)', () => {
+  // Die Gegenprobe zum Test darueber: der harmlose Zustand darf NICHT mitgerissen werden.
+  // Sonst waere aus dem Fix ein zweiter Defekt geworden (jeder Lauf ohne getrennten
+  // Small-Cap-Pull haette den Small-Cap-Pass mit Fehl-Marker abgebrochen).
+  const d = tmpDir();
+  const fehlt = path.join(d, 'gibt-es-nicht');
+  assert.equal(loadSmallcapUniverse(fehlt, path.join(d, 'auch-nicht.json')), null);
+  // Und: Verzeichnis da, aber leer -> ebenfalls null, ohne die Watchlist ueberhaupt anzufassen.
+  assert.equal(loadSmallcapUniverse(d, path.join(d, 'auch-nicht.json')), null);
   fs.rmSync(d, { recursive: true, force: true });
 });
 
