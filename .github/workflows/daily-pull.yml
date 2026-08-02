@@ -25,6 +25,17 @@ on:
 permissions:
   contents: write
 
+# AS-SK-001 (Hard Review 2026-07-31): every SEC-EDGAR caller in this repo (snapshot-
+# ticker-map.js, refresh-universe.js's discovery/sec-tickers.js, the daily Form-4
+# puller) reads process.env.SEC_CONTACT at request time — SEC silently 403s a
+# contactless User-Agent. The GitHub repo secret SEC_CONTACT exists (set 2026-07-21)
+# but was never wired into this workflow's env, so every job here always sent an
+# empty User-Agent regardless. Top-level env applies to every job/step below —
+# fixing it once here instead of per-step matches how every SEC caller shares the
+# same lib/sec-user-agent.js.
+env:
+  SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
+
 # Tag 153: serialize pushes to main — daily + monthly-sec-xbrl both push via retry-rebase.
 # On the 1st of the month both fire within ~90 min of each other; without this one silently fails.
 # Tag 219a (audit F-218c-03): manual workflow_dispatch runs get a per-run group so
