@@ -84,11 +84,35 @@ function annualConcept(gaap, concept) {
 }
 
 // Umsatz-Union: je fy den Wert des zum Datum gueltigen Konzepts (Prioritaets-Reihenfolge).
-function annualRevUnion(gaap) {
+// S4-SEC-001-Fix: der erste (hoechst-priorisierte) Treffer gewinnt NICHT mehr blind. Meldet
+// ein niedriger priorisiertes Konzept fuer DASSELBE fy einen Wert, der um mehr als Faktor 2
+// abweicht, ist das kein Rundungsrauschen, sondern ein Konzept-Mismatch (Beleg: 58,1 Mio. vs.
+// 805,7 Mio. im selben Geschaeftsjahr). Fail closed statt raten: das fy wird verworfen (nicht
+// in die Union aufgenommen) und fail-loud geloggt (Ticker + beide Konzepte + Werte), statt
+// einen falschen Umsatz lautlos in jede Wachstumsachse zu speisen.
+function annualRevUnion(gaap, ticker) {
   const maps = REV_CONCEPTS.map((c) => annualConcept(gaap, c));
+  const fySet = new Set();
+  for (const m of maps) for (const fy of m.keys()) fySet.add(fy);
   const out = new Map();
-  for (const m of maps) {
-    for (const [fy, v] of m) if (!out.has(fy)) out.set(fy, v); // erstes (hoechste Prioritaet) gewinnt
+  for (const fy of fySet) {
+    let winnerIdx = -1, winner = null, conflictIdx = -1;
+    for (let i = 0; i < maps.length; i++) {
+      const row = maps[i].get(fy);
+      if (!row) continue;
+      if (winner === null) { winner = row; winnerIdx = i; continue; }
+      const a = Math.abs(winner.val), b = Math.abs(row.val);
+      if (a > 0 && b > 0 && Math.max(a, b) / Math.min(a, b) > 2) { conflictIdx = i; break; }
+    }
+    if (conflictIdx >= 0) {
+      const loser = maps[conflictIdx].get(fy);
+      console.warn(
+        `[merge-sec-xbrl] Umsatz-Konflikt ${ticker || 'unknown'} FY${fy}: ${REV_CONCEPTS[winnerIdx]}=${winner.val} ` +
+        `vs. ${REV_CONCEPTS[conflictIdx]}=${loser.val} (Faktor>2) — Jahr verworfen statt geraten`
+      );
+      continue;
+    }
+    if (winner) out.set(fy, winner);
   }
   return out;
 }
@@ -118,8 +142,8 @@ function sharesAtFyEnd(gaap, dei, fyEnd) {
 }
 
 // Tiefe annual-Serien, alle auf EINER fy-Achse (Union der fy) index-aligned, newest-first.
-function buildAnnual(gaap, dei = {}) {
-  const rev = annualRevUnion(gaap);
+function buildAnnual(gaap, dei = {}, ticker) {
+  const rev = annualRevUnion(gaap, ticker);
   const opinc = annualConcept(gaap, C_OPINC);
   const ni = annualConcept(gaap, C_NETINC);
   const ocf = annualConcept(gaap, C_OCF);
@@ -184,13 +208,14 @@ function buildAnnual(gaap, dei = {}) {
 }
 
 /**
- * extractSecSeries(companyfacts) -> { annual:{...} }
- * Reine Funktion. companyfacts = geparste CIK<cik>.json.
+ * extractSecSeries(companyfacts, ticker) -> { annual:{...} }
+ * Reine Funktion. companyfacts = geparste CIK<cik>.json. ticker ist OPTIONAL — nur fuer die
+ * S4-SEC-001-Konflikt-Logzeile in annualRevUnion (Aufrufer, die ihn nicht kennen, bekommen 'unknown').
  */
-function extractSecSeries(companyfacts) {
+function extractSecSeries(companyfacts, ticker) {
   const gaap = (companyfacts && companyfacts.facts && companyfacts.facts['us-gaap']) || {};
   const dei = (companyfacts && companyfacts.facts && companyfacts.facts.dei) || {};
-  return { annual: buildAnnual(gaap, dei) };
+  return { annual: buildAnnual(gaap, dei, ticker) };
 }
 
 // --- Overlap-Validierung (SEC vs Yahoo fuer die gemeinsamen Fuehrungsjahre) ---

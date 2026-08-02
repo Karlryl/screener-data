@@ -147,7 +147,7 @@ async function run() {
       if (!body) { no404++; await sleep(125); continue; }
       writeFileAtomic(tmpFile, body); pulled++; await sleep(130);
     }
-    let sec; try { sec = extractSecSeries(JSON.parse(body)); } catch (_) { continue; }
+    let sec; try { sec = extractSecSeries(JSON.parse(body), tk); } catch (_) { continue; }
     const snap = uni.find(x => x.meta.ticker === tk);
     if (!looseSanity(snap.annual && snap.annual.annualOpInc, sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) { divergent++; continue; }
     out[tk] = { cik, nfy: sec.annual._fys[0], annualOpInc: sec.annual.annualOpInc, annualRev: sec.annual.annualRev,
