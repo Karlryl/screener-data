@@ -192,7 +192,12 @@ function gpGrowth(s) {
   // ueberspringen sie. Ratio-Plausibilitaets-Guard, kein aufgezwungenes Niveau -> waehrungs-invariant.
   const gm = ratioSeries(norm(s, 'annualGP'), norm(s, 'annualRev'))
     .map((v) => (v !== null && v >= 0 && v <= 1) ? v : null);
-  const gmNew = firstPresent(gm), gmOld = lastPresent(gm);
+  // audit/fix (Hard-Review NRB-SC-002, BH-080-Analog): firstPresent(gm) ueberspringt eine FUEHRENDE
+  // Luecke (annualRev[0] fehlt/0 -> gm[0]=null) und liefert ein AELTERES Jahr als "gmNew" (UAN-Muster:
+  // annualRev[0]=0, annualGP[0] present -> gm[0]=null, firstPresent gab bisher gm[1] als "neuestes"
+  // Jahr aus). gm[0] muss selbst present sein, sonst ist die Margen-Trajektorie fuers juengste Jahr
+  // unbekannt -> neutral (gmTraj=0 unten), analog zum bestehenden Fallback bei fehlendem gmOld/gmNew.
+  const gmNew = (gm[0] !== null) ? gm[0] : null, gmOld = lastPresent(gm);
   const gmTraj = (gmNew !== null && gmOld !== null) ? (gmNew - gmOld) : 0;
   return gpYoY + gmTraj;
 }
@@ -325,9 +330,15 @@ function capitalEfficiency(s) {
   // dem Eigen-Schnitt -> Discount holt den ROIC auf zyklus-bereinigtes Niveau
   // zurueck. Trough-Recovery/stabil (cur <= histRest) -> Discount 1 (neutral);
   // Software mit stabil hoher Marge unberuehrt. 1/(1+overshoot) bleibt in (0,1].
-  const margins = presentValues(ratioSeries(norm(s, 'annualOpInc'), norm(s, 'annualRev')));
+  const opIncRaw = norm(s, 'annualOpInc'), revRaw = norm(s, 'annualRev');
+  const marginsRaw = ratioSeries(opIncRaw, revRaw);
+  const margins = presentValues(marginsRaw);
   let cycleDiscount = 1;
-  if (margins.length >= 3) {
+  // audit/fix (Hard-Review NRB-SC-002, BH-080-Analog): presentValues() kompaktiert eine FUEHRENDE
+  // Luecke weg (annualRev[0] fehlt/0 -> marginsRaw[0]=null) -- margins[0] waere dann eine AELTERE
+  // Marge, faelschlich als "cur" (juengste Marge) fuer den Zyklus-Peak-Discount gewertet (UAN-Muster).
+  // Discount nur anwenden, wenn die ROHE (nicht-kompaktierte) Marge am Index 0 selbst present ist.
+  if (marginsRaw[0] !== null && margins.length >= 3) {
     const cur = margins[0];
     const prev = margins[1];
     const histRest = mean(margins.slice(1));
@@ -387,8 +398,14 @@ function dilution(s) {
   // SLOPE nur wenn das aelteste SBC/Rev plausibel ist (<=1) — ein near-zero-Nenner-Blowup (IBRX old=167)
   // -> Slope=0 (nur Niveau zaehlt) statt das Ranking zu invertieren. Ratio-Plausibilitaet, kein Niveau.
   const raw = ratioSeries(sbc, norm(s, 'annualRev'));
-  const levelRaw = firstPresent(raw);
-  if (levelRaw === null) return null;
+  // audit/fix (Hard-Review S2-SC-002, BH-080-Analog): firstPresent(raw) ueberspringt eine FUEHRENDE
+  // Luecke (annualSBC[0] fehlt) und liefert ein AELTERES Jahr als "level" (EE: annualSBC=[null,null,
+  // null,956000,null] -> firstPresent gab das 4 Jahre alte SBC/Rev-Verhaeltnis als aktuelles Niveau
+  // aus, dilution~-0.0004 statt "unbekannt"). raw[0] (echtes juengstes GJ) muss selbst present sein,
+  // sonst ist das AKTUELLE Dilutions-Niveau unbekannt -> Achse droppen (renorm-on-drop), KEIN aus
+  // einem Altjahr abgeleiteter Fake-Wert.
+  const levelRaw = raw[0];
+  if (levelRaw === null || levelRaw === undefined) return null;
   const level = Math.min(1, Math.max(0, levelRaw));            // clampen, NIE droppen (Heavy-Diluter behaelt Strafe)
   const oldRaw = lastPresent(raw);
   const slope = (oldRaw !== null && oldRaw >= 0 && oldRaw <= 1) ? (level - oldRaw) : 0; // implausibles old -> Slope=0

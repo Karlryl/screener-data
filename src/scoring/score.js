@@ -647,7 +647,15 @@ function trackOf(s, formula) {
       // Lead-0-Stub (601162.SS opInc=[0,-28M,-72M,-71M]) ist Platzhalter/break-even-Ambiguitaet,
       // kein echtes profitable; signTrack(0)='profitable' umging die Rescue. NetIncome entscheidet.
       // Stimmt NetIncome mit profitable ueberein (5 kosmetische Faelle), aendert sich nichts.
-      if (t === 'unknown' || firstPresent(opInc) === 0) t = signTrack(norm(s, 'annualNetIncome'));
+      // audit/fix (Hard-Review R1-SC-002, BH-081-Analog): signTrack() ruft firstPresent() ohne
+      // Pruefung, ob Index 0 (echtes juengstes GJ) selbst present ist. Bei einer FUEHRENDEN
+      // opInc-Luecke (2038.HK: annualOpInc=[null,null,-73.4M,-31.8M], annualNetIncome[0]=+52.7M)
+      // wertet signTrack() ein 2 Jahre altes Verlustjahr faelschlich als "juengstes" -> 'unprofitable',
+      // obwohl das aktuelle Jahr (per NetIncome) profitabel ist. opInc[0] fehlend zaehlt jetzt wie
+      // der bestehende leer/Lead-0-Fall: NetIncome-Rescue statt eines aus einem Altjahr abgeleiteten Tracks.
+      if (t === 'unknown' || firstPresent(opInc) === 0 || opInc[0] === null || opInc[0] === undefined) {
+        t = signTrack(norm(s, 'annualNetIncome'));
+      }
       break;
     }
     case 'NetIncome': t = signTrack(norm(s, 'annualNetIncome')); break;
@@ -758,6 +766,15 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
         if (!(refAxes && Array.isArray(refAxes[ax.key]))) {
           throw new Error(`scoreUniverse: refCalibration-Lineal kennt Achse '${ax.key}' in Kohorte '${cohortKey}' nicht (Lineal aelter als die aktuelle formulas-Version). Mit aktuellem Code neu einfrieren.`);
         }
+      }
+      // audit/fix (Hard-Review U-SC-002): n fliesst unten (Z.~957) nur per Number.isFinite geprueft in
+      // nCohort ein -- eine kaputte, aber FINITE Kohortengroesse (n:0.5 aus einem beschaedigten Lineal-
+      // Artefakt, oder n<0) besteht diesen Guard und verschiebt still den Fallback-Entscheid (isFallback
+      // = nCohort<MIN_COHORT_N) und die EB-Shrinkage. Ein Kohorten-n ist strukturell ein nicht-negativer
+      // Integer -- alles andere ist ein defektes Lineal-Artefakt, kein gueltiger gefrorener Zustand.
+      const refN = refCal.cohortBases[cohortKey].n;
+      if (refN !== undefined && !(Number.isInteger(refN) && refN >= 0)) {
+        throw new Error(`scoreUniverse: refCalibration-Lineal hat ein unplausibles n='${refN}' in Kohorte '${cohortKey}' (muss nicht-negativer Integer sein). Teil-Artefakt/kaputtes Lineal -- mit aktuellem Code neu einfrieren.`);
       }
     }
   }

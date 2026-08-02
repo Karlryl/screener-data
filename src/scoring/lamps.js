@@ -229,12 +229,22 @@ function newestQtrSuspect(s) {
 // 12. annual-revenue currency-leak (3-Leg). USD-Reporter, dessen annualRev in der TRADING-ccy landet
 // (NOK ~10x: AKRBP.OL/GMAB.CO) -> annual-Metriken untrustworthy. Die Quartals-Seite muss GESUND sein
 // (isoliert das annual-Array als das geleakte, vs. ein separat kaputtes Quartals-TTM).
+// audit/fix (Hard-Review AJ-SC-001): repOrig===trade schloss bisher JEDE Same-Currency-Divergenz
+// aus, auch den USD/USD-Envelope-Leak (annualRev bleibt trotz USD-Envelope home-currency-grossen
+// Massstabs, z.B. ENIC: annualRev[0]/qTTM=x883.7, annualRev[0]/marketCap=x705.2, ttmRatio~0.98 —
+// lib/annual-currency-guard.js:90-95 erkennt genau dieses Muster, lamps.js nicht). Portiert den
+// dortigen USD/USD-Zweig 1:1 (staerkere Schwelle 20 statt 3, zusaetzlich marketCap-Beleg), NEU
+// gerechnet aus den Snapshot-Serien (nicht aus meta._annualCurrencyLeakSuspect gelesen — Kommentar
+// oben: pre-A2-Snapshots tragen dieses Flag nicht, alle Daten-Qualitaets-Lampen rechnen deshalb selbst).
+const SAME_USD_ANNUAL_TO_QTTM_MIN = 20;
+const SAME_USD_ANNUAL_TO_MARKET_CAP_MIN = 10;
 function annualCurrencyLeak(s) {
   const meta = s && s.meta;
   if (!meta) return null;
   const repOrig = meta.reportingCurrencyOriginal, trade = meta.tradingCurrency;
   if (!repOrig || !trade) return null;                   // ccy-Felder fehlen -> nicht bewertbar
-  if (repOrig === trade) return false;                   // keine ccy-Divergenz -> kein Leak moeglich
+  const sameUsdEnvelope = repOrig === trade && String(repOrig).toUpperCase() === 'USD';
+  if (repOrig === trade && !sameUsdEnvelope) return false; // gleiche Nicht-USD-Waehrung -> kein Leak moeglich
   const a0 = norm(s, 'annualRev')[0];                    // neuestes annual (positional)
   if (!(a0 > 0)) return null;
   const revQ = norm(s, 'revenueQ');
@@ -244,11 +254,17 @@ function annualCurrencyLeak(s) {
   const qTTM = q[0] + q[1] + q[2] + q[3];
   if (!(qTTM > 0)) return null;
   const ratio = a0 / qTTM;
-  if (!(ratio > 3)) return false;                        // annual nicht inflationiert -> kein Leak
+  const ratioMin = sameUsdEnvelope ? SAME_USD_ANNUAL_TO_QTTM_MIN : 3;
+  if (!(ratio > ratioMin)) return false;                  // annual nicht inflationiert -> kein Leak
   const revTTM = metricVal(s, 'revenueTTM');
   if (revTTM === null) return null;
   const ttmRatio = revTTM / qTTM;
   if (ttmRatio < 0.6 || ttmRatio > 1.6) return false;    // Quartals-TTM kaputt -> anderes Defekt
+  if (sameUsdEnvelope) {
+    const marketCap = (s.marketCap && Number.isFinite(s.marketCap.value)) ? s.marketCap.value : null;
+    if (!(marketCap > 0)) return null;
+    if (!(a0 / marketCap > SAME_USD_ANNUAL_TO_MARKET_CAP_MIN)) return false;
+  }
   return true;
 }
 
@@ -259,9 +275,16 @@ function annualCurrencyLeak(s) {
 // STRUKTURELL aus dem Gate. REIN WARNEND (nicht in DATA_SUSPECT_LAMPS) — druckt den Score NICHT (der
 // Score-Abzug fuer Verschlechterer ist als naechste Iteration deferred, muss veto-sicher gebaut werden).
 function burnAccelerating(s) {
-  const fcf = presentValues(norm(s, 'annualFCF'));
-  const opi = presentValues(norm(s, 'annualOpInc'));
-  if (fcf.length < 2 || opi.length < 2) return null;
+  // audit/fix (Hard-Review R1-SC-003): fcf/opi wurden bisher UNABHAENGIG voneinander kompaktiert
+  // (presentValues() je Serie separat) -- bei UNTERSCHIEDLICHEN Luecken-Mustern (2038.HK: annualOpInc
+  // hat 2 fuehrende Luecken, annualFCF keine) landen positionsfremde Jahre nebeneinander: opi[0]/opi[1]
+  // (kompaktiert) waren tatsaechlich FY-2/FY-3, wurden aber gegen fcf[0]/fcf[1] (echtes FY-aktuell/FY-1)
+  // verglichen -> feuerte 'true', obwohl kein einziges Jahr tatsaechlich verglichen wurde. Jetzt
+  // positionsgebunden auf den ROHEN Serien: Index 0 UND 1 muessen bei BEIDEN Serien am SELBEN Platz
+  // present sein, sonst ist der YoY-Vergleich fuer dieses Firmenjahr nicht bewertbar.
+  const fcf = norm(s, 'annualFCF');
+  const opi = norm(s, 'annualOpInc');
+  if (!Number.isFinite(fcf[0]) || !Number.isFinite(fcf[1]) || !Number.isFinite(opi[0]) || !Number.isFinite(opi[1])) return null;
   if (!(fcf[0] < 0) || !(opi[0] < 0)) return false;   // Gate: noch am Verbrennen UND operativ unprofitabel
   return fcf[0] < fcf[1] && opi[0] < opi[1];           // beide tiefer als Vorjahr -> Burn/Verlust beschleunigt
 }

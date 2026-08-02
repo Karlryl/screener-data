@@ -313,6 +313,13 @@ const FX_FALLBACK = {
   HUF: 0.0028, RON: 0.22, AED: 0.27, SAR: 0.27,
   QAR: 0.27, ILS: 0.27
 };
+// V-SK-001 (Hard Review 2026-07-31): single source of truth for "is this a usable
+// FX rate". Zero, negative, non-finite (NaN/Infinity), or non-numeric values must
+// never be trusted as a conversion factor — a 0 rate zeros out marketCap/financials,
+// a negative rate flips their sign, both silently, both with fxConverted:true.
+function _isValidFxRate(r) {
+  return typeof r === 'number' && Number.isFinite(r) && r > 0;
+}
 const FX_STALE_DAYS = 14;
 let FX_TO_USD = FX_FALLBACK;
 let FX_SOURCE = 'fallback-hardcoded';
@@ -364,7 +371,15 @@ for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded
         ? (Date.now() - lastSuccess.getTime()) / 86400000
         : Infinity;
       const inFailedList = failedList.includes(k) || failedList.includes(up);
-      if (perCurAgeDays > FX_STALE_DAYS) {
+      // V-SK-001 (Hard Review 2026-07-31): raw.rates[k] came off disk (fx-rates.json)
+      // with no numeric validation. A 0, negative, or non-numeric rate silently
+      // reached FX_TO_USD and from there _convertSnapshotToUSD — zeroing or
+      // inverting marketCap/financials instead of failing loud. Treat an invalid
+      // rate exactly like a stale one: fall back to the hardcoded table (or drop
+      // the currency entirely so conversion fails closed).
+      const rawRate = raw.rates[k];
+      const rateIsValid = _isValidFxRate(rawRate);
+      if (perCurAgeDays > FX_STALE_DAYS || !rateIsValid) {
         // F-DP-051 / F-DQ-008: revert to FX_FALLBACK; mark provenance so
         // snapshot-side ratios that depend on this currency can flag
         // fxRateSource accordingly.
@@ -374,12 +389,16 @@ for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded
           delete FX_TO_USD[up];  // no fallback at all → conversion will fail loudly
         }
         FX_PROVENANCE[up] = 'fallback-hardcoded';
-        staleCount++;
-        console.log('[FX] ' + up + ' stale (' + perCurAgeDays.toFixed(1) +
-          'd since last success) → using fallback');
+        if (!rateIsValid) {
+          console.warn('[FX] ' + up + ' has invalid rate (' + rawRate + ') in fx-rates.json — using fallback');
+        } else {
+          staleCount++;
+          console.log('[FX] ' + up + ' stale (' + perCurAgeDays.toFixed(1) +
+            'd since last success) → using fallback');
+        }
       } else {
         FX_PROVENANCE[up] = 'live';
-        FX_TO_USD[up] = raw.rates[k];  // ensure uppercase key lookup hits
+        FX_TO_USD[up] = rawRate;  // ensure uppercase key lookup hits
         // F-DP-034 (Tag 190): if the latest refresh-fx run failed THIS currency
         // but last-success is still within FX_STALE_DAYS, the rate is OK for
         // now — but worth flagging so operators see drift before it tips over
@@ -466,7 +485,9 @@ function _applyTradingScale(snap, financialFactor) {
     const tradingPence = tradingCcyRaw === 'GBp' || tradingCcyRaw === 'GBX' || tradingCcyRaw.toUpperCase() === 'GBPENCE';
     const tradingKey = tradingPence ? 'GBP' : tradingCcyRaw.toUpperCase();
     const tradingRate = FX_TO_USD[tradingKey];
-    if (tradingRate != null && Number.isFinite(tradingRate)) {
+    // V-SK-001: was Number.isFinite() only — a 0 or negative tradingRate passed
+    // this check and zeroed/inverted marketCap & analyst targets silently.
+    if (_isValidFxRate(tradingRate)) {
       tradingFactor = tradingPence ? tradingRate / 100 : tradingRate;
       snap.meta.tradingCurrencyOriginal = tradingCcyRaw;
       snap.meta.tradingFxRateApplied = tradingFactor;
@@ -553,8 +574,11 @@ function _convertSnapshotToUSD(snap) {
   const fxKey = isPence ? 'GBP' : origCurrency.toUpperCase();
 
   const rate = FX_TO_USD[fxKey];
-  if (rate == null) {
-    // unknown currency — keep values as-is, flag for diagnostics
+  // V-SK-001: defense-in-depth — loadFx() already keeps invalid rates out of
+  // FX_TO_USD, but a consumer must never trust the table blindly either. Same
+  // fail-closed treatment as "no rate at all": flag, don't convert.
+  if (!_isValidFxRate(rate)) {
+    // unknown/invalid currency rate — keep values as-is, flag for diagnostics
     snap.meta.reportingCurrencyOriginal = origCurrency;
     snap.meta.fxRateApplied = null;
     snap.meta.fxConversionFailed = true;
@@ -611,7 +635,9 @@ function _convertSnapshotToUSD(snap) {
     const tradingPence = tradingCcyRaw === 'GBp' || tradingCcyRaw === 'GBX' || tradingCcyRaw.toUpperCase() === 'GBPENCE';
     const tradingKey = tradingPence ? 'GBP' : tradingCcyRaw.toUpperCase();
     const tradingRate = FX_TO_USD[tradingKey];
-    if (tradingRate != null && Number.isFinite(tradingRate)) {
+    // V-SK-001: was Number.isFinite() only — a 0 or negative tradingRate passed
+    // this check and zeroed/inverted marketCap & analyst targets silently.
+    if (_isValidFxRate(tradingRate)) {
       tradingFactor = tradingPence ? tradingRate / 100 : tradingRate;
       tradingOverride = true;
       snap.meta.tradingCurrencyOriginal = tradingCcyRaw;
@@ -791,6 +817,30 @@ function _trimTrailingNull(mapped) {
   return mapped.slice(0, end);
 }
 
+// NRB-SK-001 (Hard Review 2026-07-31): a literal 0 annual revenue for a fiscal year
+// that ALSO reports positive gross profit or positive operating income in that SAME
+// year is a logical impossibility, not a real data point — gross profit can never
+// exceed revenue (GP = Rev − COGS, COGS >= 0), so GP>0 or OpInc>0 requires Rev>0.
+// Yahoo occasionally returns a literal 0 for totalRevenue where the true value is
+// simply missing/mistagged. Downstream this 0 was read as -100% YoY growth AND as a
+// zero margin denominator that triggers stale-value compression — treat it as
+// unknown (null) instead of persisting an impossible data point as fact. Mutates
+// annualRev in place (positionally aligned with annualOpInc/annualGP by construction
+// at both call sites — same source row per index).
+function _nullOutImpossibleZeroRevenue(annualRev, annualOpInc, annualGP) {
+  if (!Array.isArray(annualRev)) return annualRev;
+  for (let i = 0; i < annualRev.length; i++) {
+    const rev = annualRev[i];
+    if (!rev || rev.value !== 0) continue;
+    const gp = annualGP && annualGP[i];
+    const oi = annualOpInc && annualOpInc[i];
+    const gpPositive = gp && Number.isFinite(gp.value) && gp.value > 0;
+    const oiPositive = oi && Number.isFinite(oi.value) && oi.value > 0;
+    if (gpPositive || oiPositive) annualRev[i] = null;
+  }
+  return annualRev;
+}
+
 function _arr(history, key) {
   if (!Array.isArray(history)) return [];
   return _trimTrailingNull(history.map(r => {
@@ -947,6 +997,10 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   let annualOpInc = _arr(isHist, 'operatingIncome');
   const annualNetIncome = _arr(isHist, 'netIncome');
   const annualGP = _arr(isHist, 'grossProfit');
+  // NRB-SK-001: null out any literal 0 revenue year that contradicts positive
+  // native GP/OpInc in the same year, BEFORE it can feed the sector-OpInc
+  // derivation below (which multiplies annualRev × operatingMargin).
+  _nullOutImpossibleZeroRevenue(annualRev, annualOpInc, annualGP);
 
   // Tag 203: sector-aware OpInc fallback for Financial Services.
   // Yahoo's incomeStatementHistory.operatingIncome is null for banks (JPM,
@@ -1551,6 +1605,9 @@ function mapFTSToAnnual(annualRows, cashRows) {
     annualGP.push(gp != null ? { value: gp } : null);
     annualNetIncome.push(ni != null ? { value: ni } : null);
   }
+  // NRB-SK-001 (Hard Review 2026-07-31): same coherence guard as the QS build path —
+  // a literal 0 revenue year that also reports positive GP/OpInc is impossible.
+  _nullOutImpossibleZeroRevenue(annualRev, annualOpInc, annualGP);
   // audit/fix F1 (2026-06-25): trim trailing all-null income rows (oldest) — no
   // information to contribute; mirrors mapFTSToQuarterly's trailing-null trim so
   // the arrays stay tight while interior nulls (which carry alignment) are kept.
@@ -2199,7 +2256,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const isPence = tradingCcyRaw === 'GBp' || tradingCcyRaw === 'GBX' || tradingCcyRaw.toUpperCase() === 'GBPENCE';
       const tradingFxKey = isPence ? 'GBP' : tradingCcyRaw.toUpperCase();
       const tradingRate = FX_TO_USD[tradingFxKey];
-      if (tradingRate != null && Number.isFinite(tradingRate)) {
+      // V-SK-001: was Number.isFinite() only — a 0/negative rate silently
+      // zeroed/inverted price-only-path marketCap/price.
+      if (_isValidFxRate(tradingRate)) {
         tradingFactor = isPence ? tradingRate / 100 : tradingRate;
       }
     }
@@ -3477,4 +3536,8 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   shouldRetryKosdaq, nextNotFoundState,
   // audit fix BH-043: shared request-spacing gate fuer TDD (timing test, no network).
   acquireYfSlot, _setYfGateSleepMs: (ms) => { _yfGateSleepMs = ms; _yfGateNextSlotAt = 0; },
-  YF_REQUESTS_PER_TICKER, _getYfGateSleepMs: () => _yfGateSleepMs };
+  YF_REQUESTS_PER_TICKER, _getYfGateSleepMs: () => _yfGateSleepMs,
+  // V-SK-001 (Hard Review 2026-07-31): FX-rate validity predicate fuer TDD.
+  _isValidFxRate,
+  // NRB-SK-001 (Hard Review 2026-07-31): fuer TDD.
+  _nullOutImpossibleZeroRevenue };

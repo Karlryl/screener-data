@@ -129,10 +129,14 @@ check('(a2) E1 Option B: buildPit trägt priceSales/priceSalesAsOf additiv, evSa
   assert.strictEqual(abc.pit.priceSalesAsOf, '2026-07-09T00:00:00.000Z', 'priceSalesAsOf = echte Bewertungs-asOf');
   // Bestandsfeld unverändert (byte-identisch für Bestandsleser):
   assert.strictEqual(abc.pit.evSales, 8.2, 'evSales unverändert');
-  // Additiv = neue Keys am ENDE (Bestands-Serialisierung bleibt bit-stabil bis grossProfitQEnds):
+  // Additiv = neue Keys am ENDE (Bestands-Serialisierung bleibt bit-stabil bis grossProfitQEnds).
+  // audit/fix (Hard-Review R4-SCR-02): marketCap ist seitdem additiv NACH priceSalesAsOf angehängt
+  // (screener-formel-ledger.md §4a Size-Regressor) -- priceSales/priceSalesAsOf ruecken um 1 nach vorn,
+  // bleiben aber selbst weiterhin ein zusammenhaengendes additives Paar, evSales unveraendert an Index 1.
   const keys = Object.keys(abc.pit);
-  assert.strictEqual(keys[keys.length - 2], 'priceSales', 'priceSales angehängt');
-  assert.strictEqual(keys[keys.length - 1], 'priceSalesAsOf', 'priceSalesAsOf zuletzt');
+  assert.strictEqual(keys[keys.length - 3], 'priceSales', 'priceSales angehängt');
+  assert.strictEqual(keys[keys.length - 2], 'priceSalesAsOf', 'priceSalesAsOf danach');
+  assert.strictEqual(keys[keys.length - 1], 'marketCap', 'marketCap zuletzt (R4-SCR-02)');
   assert.strictEqual(keys.indexOf('evSales'), 1, 'evSales behält seine Position (byte-additiv)');
 
   // Fehlendes priceSales → beide Felder null (kein Crash, LOSS-/GM0-robust):
@@ -145,6 +149,27 @@ check('(a2) E1 Option B: buildPit trägt priceSales/priceSalesAsOf additiv, evSa
   assert.strictEqual(nops.pit.priceSalesAsOf, null, 'kein asOf → null');
 });
 
+// ── (a2b) R4-SCR-02: marketCap wird als Size-Regressor ins PIT geschrieben ──
+// screener-formel-ledger.md §4a fixiert die Regressor-Liste 'Size (log-MarketCap), Markt-Beta,
+// 1-2 Bewertungs-Proxys' -- buildPit() lieferte bisher KEIN marketCap-Feld.
+check('(a2b) R4-SCR-02: buildPit trägt marketCap additiv (Size-Regressor), fehlend → null', () => {
+  const base = mkBase();
+  const withMcap = snapFull('ABC', { withEnds: true });
+  withMcap.marketCap = { value: 31756744704 };
+  writeJson(path.join(base, 'snapshots', 'ABC.json'), withMcap);
+  writeJson(path.join(base, 'outputs', 'calibration.json'), { schema: 'calibration/v4', generated_at: 'x' });
+  writeBoard(base, 'semiconductors', [row('ABC', 90)]);
+  W.run({ baseDir: base, date: '2026-07-13' });
+  const abc = readVintage(base, '2026-07-13', 'semiconductors').cohort.profitable[0];
+  assert.strictEqual(abc.pit.marketCap, 31756744704, 'marketCap aus snap.marketCap.value');
+
+  // Fehlendes marketCap → null (kein Crash).
+  writeJson(path.join(base, 'snapshots', 'NOMC.json'), snapFull('NOMC', {}));
+  writeBoard(base, 'semiconductors', [row('NOMC', 70)]);
+  W.run({ baseDir: base, date: '2026-07-14' });
+  const nomc = readVintage(base, '2026-07-14', 'semiconductors').cohort.profitable[0];
+  assert.strictEqual(nomc.pit.marketCap, null, 'kein snap.marketCap → null');
+});
 // ── (a3) bh-null-ends (T2): leere/all-null Perioden-Enden gelten als ABSENT ──
 // Vorher: ts.revenueQEnds/grossProfitQEnds wurde nur gegen != null geprüft. Ein
 // FTS-Cache-Treffer vor A10 liefert [] (leer) oder [null,null,null] (Serie ohne
@@ -314,6 +339,38 @@ check('(d) legt _excluded.json-Gerüst an (leer), Writer schreibt nie Einträge'
   const ex = JSON.parse(fs.readFileSync(path.join(base, 'board-history', '_excluded.json'), 'utf8'));
   assert.deepStrictEqual(ex.excluded, [], 'Gerüst ist leer');
   assert.ok(/rank-ic/i.test(ex._doc), 'Doku verweist auf rank-ic als Konsument');
+});
+
+// ── AX-SK-001 (Hard Review 2026-07-31): ein KAPUTTES _excluded.json/_gate-
+//    calibration.json darf NICHT stillschweigend wie "fehlt" behandelt und durch
+//    ein leeres Geruest ersetzt werden — das loescht eine von Hand gepflegte
+//    Ausschlussliste bzw. setzt eingefrorene Gate-Schwellen zurueck, ohne dass es
+//    im Lauf sichtbar wird. readJsonOrNull() kollabierte Datei-, Rechte- und
+//    JSON-Parsefehler bisher alle zu null — genau wie eine echte Abwesenheit.
+check('(d1) AX-SK-001: kaputtes _excluded.json wird NICHT still durch ein leeres Geruest ersetzt', () => {
+  const base = mkBase();
+  W._setPaths(base);
+  try {
+    const hist = path.join(base, 'board-history');
+    fs.mkdirSync(hist, { recursive: true });
+    fs.writeFileSync(path.join(hist, '_excluded.json'), '{ acht Eintraege kaputt am Ende...');
+    assert.throws(() => W.readOrScaffoldExcluded(false), /unlesbar|invalid JSON|kaputt/i,
+      'ein korruptes _excluded.json muss den Lauf hart stoppen, nicht scaffolden');
+    const stillCorrupt = fs.readFileSync(path.join(hist, '_excluded.json'), 'utf8');
+    assert.ok(stillCorrupt.includes('kaputt'), 'die kaputte Datei darf NICHT ueberschrieben worden sein');
+  } finally {
+    W._setPaths(null);
+  }
+});
+check('(d2) AX-SK-001: eine wirklich fehlende _excluded.json scaffoldet weiterhin normal (Gegenprobe)', () => {
+  const base = mkBase();
+  W._setPaths(base);
+  try {
+    const excl = W.readOrScaffoldExcluded(false);
+    assert.deepStrictEqual(excl.excluded, [], 'echte Abwesenheit bleibt ein harmloses leeres Geruest');
+  } finally {
+    W._setPaths(null);
+  }
 });
 
 // ── (e) picks-history unberührt ──────────────────────────────────────────────

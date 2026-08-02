@@ -187,6 +187,19 @@ test('Negativer Jahresumsatz (Investment-Trust/CEF) -> exclude non-operating-rev
     annual: { annualRev: [{ value: 300 }, { value: 200 }], annualGP: [{ value: 180 }] } };
   assert.equal(route(op).action, 'route');
 });
+// --- audit/fix Hard-Review AE-SC-002: (a) faelschlich UNIVERSELL, fing echte Healthcare/Biotech-
+// Firmen mit einem einzelnen negativen Glitch-Jahr statt nur Non-Operating-Vehikel ---
+test('Biotech mit EINEM negativen Jahresumsatz (Glitch, sonst real) bleibt drin (NBTX-Muster, AE-SC-002)', () => {
+  const bio = { meta: { sector: 'Healthcare', industry: 'Biotechnology', region: 'US', ticker: 'NBTXX' },
+    annual: { annualRev: [{ value: 37982751 }, { value: -8380142 }, { value: 42194381 }, { value: 5565784 }] } };
+  const r = route(bio);
+  assert.equal(r.action, 'route', 'echte Biotech-Umsatztraeger duerfen nicht als non-operating-rev excludiert werden');
+  assert.equal(r.formulaId, 'health-care');
+  // Kontrolle: ein Non-Healthcare-CEF mit negativem Jahresumsatz bleibt weiter gefangen (Zielbild von (a) intakt).
+  const cef = { meta: { sector: 'Financial Services', industry: 'Closed-End Fund - Equity', region: 'US', ticker: 'CEFY' },
+    annual: { annualRev: [{ value: -500 }, { value: 200 }] } };
+  assert.equal(route(cef).reason, 'non-operating-rev');
+});
 test('Investment-Holding (Asset-Mgmt, GP=0, ni~rev) -> non-operating-rev (3i-Group-Muster)', () => {
   const holding = { meta: { sector: 'Financial Services', industry: 'Asset Management', region: 'US', ticker: 'HOLD' },
     annual: { annualRev: [{ value: 5211 }], annualGP: [{ value: 0 }], annualNetIncome: [{ value: 5045 }] } };
@@ -213,6 +226,19 @@ test('operative Firma mit EINEM negativen Quartal bleibt drin (negQ NUR Asset-Mg
     annual: { annualRev: [{ value: 12000 }], annualGP: [{ value: 4000 }] },
     timeseries: { revenueQ: [{ value: 3000 }, { value: -100 }, { value: 3100 }] } };
   assert.equal(route(op).action, 'route');
+});
+// --- audit/fix Hard-Review AE-SC-003: isPreRevenue() pruefte annualRev, nie revenueQ ---
+test('annualRev=[0,0,0,0] mit echtem revenueQ ist NICHT pre-revenue (PAH3.DE-Muster, AE-SC-003)', () => {
+  const s = { meta: { sector: 'Consumer Cyclical', industry: 'Auto Manufacturers', region: 'US', ticker: 'PAH3X' },
+    annual: { annualRev: [{ value: 0 }, { value: 0 }, { value: 0 }, { value: 0 }] },
+    timeseries: { revenueQ: [{ value: 957000000 }, { value: 1320000000 }, { value: 1508000000 }] } };
+  const r = route(s);
+  assert.notEqual(r.action, 'survival', 'echter revenueQ-Umsatz darf nicht als pre-revenue gelten');
+  assert.equal(r.formulaId, 'consumer-discretionary');
+  // Kontrolle: revenueQ fehlt/ist all-0 -> weiterhin echtes pre-revenue.
+  const noRevQ = { meta: { sector: 'Consumer Cyclical', industry: 'Auto Manufacturers', region: 'US', ticker: 'PREREV' },
+    annual: { annualRev: [{ value: 0 }] } };
+  assert.equal(route(noRevQ).track, 'pre-revenue');
 });
 // --- Court Fall 8/1b: leer-annualRev Finanz-Vehikel (Branch d) ---------------
 test('leer-annualRev CEF/Shell/Asset-Mgmt -> exclude non-operating-rev (Branch d)', () => {

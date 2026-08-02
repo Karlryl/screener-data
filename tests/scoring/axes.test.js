@@ -64,6 +64,15 @@ test('gpGrowth(CRDO) > 1 (starkes GP-Wachstum)', () => {
 test('gpGrowth: nur 1 GP-Jahr -> null', () => {
   assert.equal(ax.gpGrowth({ annual: { annualGP: [{ value: 100 }], annualRev: [{ value: 200 }] } }), null);
 });
+// audit/fix (Hard-Review NRB-SC-002): firstPresent(gm) ueberspringt eine FUEHRENDE Rev-Luecke und
+// nimmt ein AELTERES Jahr als "gmNew" -- UAN-Muster: annualRev[0]=0 (annualGP[0] present).
+test('gpGrowth: fuehrende annualRev-Luecke -> gmTraj=0 statt Alt-Jahr-Marge (UAN-Muster, NRB-SC-002)', () => {
+  const s = { annual: { annualGP: [{ value: 163370000 }, { value: 118865000 }, { value: 232464000 }, { value: 352367000 }],
+    annualRev: [{ value: 0 }, { value: 404177000 }, { value: 351082000 }, { value: 330800000 }] } };
+  const gpYoY = 163370000 / 118865000 - 1; // zweijaehriges Fenster fuer gpYoY, unveraendert
+  assert.ok(Math.abs(ax.gpGrowth(s) - gpYoY) < 1e-9,
+    'gmTraj muss 0 sein (fuehrende Rev-Luecke), gpGrowth == reines gpYoY. War ' + ax.gpGrowth(s));
+});
 
 // --- 4 ruleOfX --------------------------------------------------------------
 test('ruleOfX(CRDO): includeFcf addiert gueltige FCF-Marge', () => {
@@ -205,6 +214,18 @@ test('capitalEfficiency: stabile Marge -> kein Discount (cur ~ hist)', () => {
     annualBalance: [{ totalAssets: 100, currentLiabilities: 0 }, { totalAssets: 100, currentLiabilities: 0 }, { totalAssets: 100, currentLiabilities: 0 }] } };
   assert.ok(Math.abs(ax.capitalEfficiency(s) - 0.2) < 1e-9); // roic 0.2, Discount 1
 });
+// audit/fix (Hard-Review NRB-SC-002): presentValues() kompaktiert eine FUEHRENDE Rev-Luecke weg und
+// nimmt margins[0] als "cur" fuer den Zyklus-Peak-Discount -- obwohl das eine AELTERE Marge ist
+// (annualRev[0] fehlt, annualOpInc[0] present -> roic zaehlt das Jahr, die Marge ist unbekannt).
+test('capitalEfficiency: fuehrende annualRev-Luecke -> kein Zyklus-Discount (UAN-Muster, NRB-SC-002)', () => {
+  const flatBal = [{ totalAssets: 100, currentLiabilities: 0 }, { totalAssets: 100, currentLiabilities: 0 },
+    { totalAssets: 100, currentLiabilities: 0 }, { totalAssets: 100, currentLiabilities: 0 }];
+  const s = { annual: { annualOpInc: [{ value: 50 }, { value: 35 }, { value: 12 }, { value: 10 }],
+    annualRev: [{ value: null }, { value: 100 }, { value: 100 }, { value: 100 }], annualBalance: flatBal } };
+  // roic = mean(50,35,12,10)/100 = 0.2675, KEIN Discount (Marge des juengsten Jahres unbekannt).
+  assert.ok(Math.abs(ax.capitalEfficiency(s) - 0.2675) < 1e-9,
+    'Discount haette nicht auf eine kompaktierte Alt-Jahr-Marge greifen duerfen. War ' + ax.capitalEfficiency(s));
+});
 // --- capitalEfficiency Trailing-Loss-Trim (Court Inflection, Karl-Direktive) --
 test('capitalEfficiency: gerade-profitabel -> Vor-Profit-Verluste getrimmt (ROIC positiv statt negativ)', () => {
   const bal = [{ totalAssets: 1000, currentLiabilities: 200 }, { totalAssets: 1000, currentLiabilities: 200 }, { totalAssets: 1000, currentLiabilities: 200 }];
@@ -288,6 +309,17 @@ test('dilution (F17/R2F1): echter Heavy-Diluter (newest SBC/Rev>1) behaelt die A
   // Jetzt: level=clamp(1.5)=1 -> dilution != null und stark negativ (harte Verwaesserungs-Strafe).
   const d = ax.dilution(s);
   assert.ok(d !== null && d < 0, `Heavy-Diluter muss Achse behalten + negative dilution haben, ist ${d}`);
+});
+// audit/fix (Hard-Review S2-SC-002, BH-080-Analog): firstPresent(raw) ueberspringt eine FUEHRENDE
+// annualSBC-Luecke und liefert ein 4 Jahre altes SBC/Rev-Verhaeltnis als "aktuelles Niveau" (EE-Muster).
+test('dilution: fuehrende annualSBC-Luecke -> Achse droppt (null), kein Alt-Jahr-Fake-Niveau (EE-Muster, S2-SC-002)', () => {
+  const s = { annual: { annualSBC: [null, null, null, 956000, null],
+    annualRev: [{ value: 1228263000 }, { value: 851437000 }, { value: 1158963000 }, { value: 2472973000 }] } };
+  assert.equal(ax.dilution(s), null,
+    'annualSBC[0] fehlt -- das aktuelle Dilutions-Niveau ist unbekannt, kein 4-Jahre-alter Fake-Wert');
+  // Kontrolle: annualSBC[0] present -> unveraendertes Verhalten (kein Regress).
+  const noGap = { annual: { annualSBC: [500000, null, null, 956000], annualRev: [{ value: 1000000 }, { value: 851437000 }] } };
+  assert.ok(ax.dilution(noGap) !== null, 'present annualSBC[0] darf die Achse nicht droppen');
 });
 
 test('marginTrajectory (F12, R2 mutation): revenueQ===0 wird verworfen (r>0-Guard, nicht r>=0)', () => {

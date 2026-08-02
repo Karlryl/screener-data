@@ -25,6 +25,17 @@ on:
 permissions:
   contents: write
 
+# AS-SK-001 (Hard Review 2026-07-31): every SEC-EDGAR caller in this repo (snapshot-
+# ticker-map.js, refresh-universe.js's discovery/sec-tickers.js, the daily Form-4
+# puller) reads process.env.SEC_CONTACT at request time — SEC silently 403s a
+# contactless User-Agent. The GitHub repo secret SEC_CONTACT exists (set 2026-07-21)
+# but was never wired into this workflow's env, so every job here always sent an
+# empty User-Agent regardless. Top-level env applies to every job/step below —
+# fixing it once here instead of per-step matches how every SEC caller shares the
+# same lib/sec-user-agent.js.
+env:
+  SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
+
 # Tag 153: serialize pushes to main — daily + monthly-sec-xbrl both push via retry-rebase.
 # On the 1st of the month both fire within ~90 min of each other; without this one silently fails.
 # Tag 219a (audit F-218c-03): manual workflow_dispatch runs get a per-run group so
@@ -618,6 +629,33 @@ jobs:
         timeout-minutes: 25
         continue-on-error: true
 
+      # R5-SK-001 (Hard Review 2026-07-31): macro-regime.js's "leave an EXISTING
+      # args.out untouched on failure" fallback (BH-138) can only protect a
+      # last-good regime file that is ALREADY on disk when it runs. The merge job
+      # is a fresh runner — outputs/macro-regime.json never pre-exists here — so on
+      # a bad SPY-price day the guard silently no-ops and the empty placeholder gets
+      # published over yesterday's good regime via Deploy 1. Restore the last
+      # published copy from gh-pages first so the existing "keep last-good" logic
+      # has something to keep. Missing branch/file (first-ever deploy) is not an
+      # error — macro-regime.js's own empty-placeholder path is correct there.
+      - name: Restore last-good macro-regime.json from gh-pages
+        run: |
+          mkdir -p outputs
+          rm -rf _macro_restore
+          if git clone --depth 1 --branch gh-pages --filter=blob:none --sparse \
+            https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git _macro_restore 2>/dev/null; then
+            (cd _macro_restore && git sparse-checkout set outputs/macro-regime.json) 2>/dev/null || true
+            if [ -f _macro_restore/outputs/macro-regime.json ]; then
+              cp _macro_restore/outputs/macro-regime.json outputs/macro-regime.json
+              echo "Restored last-good macro-regime.json from gh-pages."
+            else
+              echo "No macro-regime.json on gh-pages yet (first run?) — proceeding without it."
+            fi
+          else
+            echo "gh-pages branch not clonable yet (first-ever deploy?) — proceeding without a last-good macro-regime.json."
+          fi
+          rm -rf _macro_restore
+
       # Tag 139: Macro-Regime-Tagging — SPY 200d-MA → BULL/BEAR/SIDEWAYS.
       - name: Compute Macro Regime
         run: node scripts/macro-regime.js
@@ -818,17 +856,32 @@ jobs:
           # separat pruefen. Existiert er und der Clone scheitert trotzdem (transientes
           # Netz/Auth), hart abbrechen statt einen frischen (leeren) Branch zu
           # initialisieren und einen gestrippten Tree force-zu-pushen.
-          if git ls-remote --exit-code https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages >/dev/null 2>&1; then
+          # AE-CI-001 (Hard Review 2026-07-31): `if git ls-remote --exit-code ...; then`
+          # behandelte JEDEN Nonzero-Exit als "Branch fehlt" — `git ls-remote --exit-code`
+          # gibt aber exit 2 nur, wenn die Ref wirklich fehlt; ein transienter DNS/Auth/
+          # Transport-Fehler liefert einen ANDEREN Nonzero-Code (typ. 128) und wurde bisher
+          # identisch behandelt: frischer leerer Branch -> spaeter Force-Push loescht den
+          # gesamten bestehenden gh-pages-Baum. Exit-Code explizit auswerten statt nur
+          # truthy/falsy.
+          set +e
+          git ls-remote --exit-code https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages >/dev/null 2>&1
+          ls_remote_rc=$?
+          set -e
+          if [ "$ls_remote_rc" -eq 0 ]; then
             if ! git clone --depth 1 --branch gh-pages \
               https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git _site; then
               echo "::error::gh-pages branch exists but clone failed (transient?) — aborting instead of force-pushing a stripped tree."
               exit 1
             fi
-          else
+          elif [ "$ls_remote_rc" -eq 2 ]; then
+            # exit 2 = git ls-remote confirmed the ref does not exist (first-ever deploy).
             mkdir -p _site
             cd _site
             git init -b gh-pages
             cd ..
+          else
+            echo "::error::git ls-remote failed with exit $ls_remote_rc (network/auth/transport?) — aborting instead of assuming gh-pages is missing."
+            exit 1
           fi
           mkdir -p _site/outputs
           cp index.html _site/ 2>/dev/null || true
@@ -1038,17 +1091,27 @@ jobs:
         if: success()
         run: |
           rm -rf _ghp
-          if git ls-remote --exit-code https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages >/dev/null 2>&1; then
+          # AE-CI-001 (Hard Review 2026-07-31): siehe merge-Deploy oben — exit 2 heisst
+          # "Ref fehlt wirklich", jeder andere Nonzero-Code ist ein transienter Fehler
+          # und muss hart abbrechen statt einen frischen Branch zu initialisieren.
+          set +e
+          git ls-remote --exit-code https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git gh-pages >/dev/null 2>&1
+          ls_remote_rc=$?
+          set -e
+          if [ "$ls_remote_rc" -eq 0 ]; then
             if ! git clone --depth 1 --branch gh-pages \
               https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git _ghp; then
               echo "::error::gh-pages branch exists but clone failed (transient?) — aborting instead of force-pushing a stripped tree."
               exit 1
             fi
-          else
+          elif [ "$ls_remote_rc" -eq 2 ]; then
             mkdir -p _ghp
             cd _ghp
             git init -b gh-pages
             cd ..
+          else
+            echo "::error::git ls-remote failed with exit $ls_remote_rc (network/auth/transport?) — aborting instead of assuming gh-pages is missing."
+            exit 1
           fi
           mkdir -p _ghp/outputs/hypergrowth
           cp outputs/hypergrowth/*.json _ghp/outputs/hypergrowth/

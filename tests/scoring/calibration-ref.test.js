@@ -162,6 +162,32 @@ test('R2.7 Test C — komplett fehlende (=live-neue) Kohorte im Lineal wirft NIC
     'eine im Lineal komplett fehlende (=neue) Kohorte darf NICHT werfen — gewollter Live-Fallback');
 });
 
+// (4c) Hard-Review U-SC-002: ein FINITES, aber unplausibles n (n:0.5 bzw. n<0 aus einem beschaedigten
+// Lineal-Artefakt) bestand bisher nur den Number.isFinite-Guard bei der Shrinkage-Berechnung (score.js
+// ~957) und verschob still den Fallback-Entscheid/die EB-Shrinkage. n ist strukturell ein nicht-negativer
+// Integer -- der Guard-Block prueft das jetzt VOR jeder Emission, analog zum Achsen-Luecken-Guard oben.
+test('U-SC-002 Test A — Lineal-Kohorte mit n=0.5 (nicht-Integer) -> scoreUniverse wirft', () => {
+  const shifted = roundtrip(calA);
+  const key = Object.keys(shifted.cohortBases)[0];
+  shifted.cohortBases[key].n = 0.5;
+  assert.throws(() => scoreUniverse(universe, formulas, { refCalibration: shifted }), /unplausibles n/,
+    'ein nicht-integer n ist ein defektes Lineal-Artefakt, kein gueltiger gefrorener Zustand');
+});
+test('U-SC-002 Test B — Lineal-Kohorte mit n=-3 (negativ) -> scoreUniverse wirft', () => {
+  const shifted = roundtrip(calA);
+  const key = Object.keys(shifted.cohortBases)[0];
+  shifted.cohortBases[key].n = -3;
+  assert.throws(() => scoreUniverse(universe, formulas, { refCalibration: shifted }), /unplausibles n/,
+    'eine negative Kohortengroesse ist strukturell unmoeglich');
+});
+test('U-SC-002 Test C — Lineal-Kohorte OHNE n-Feld wirft NICHT (Schema-Evolution, entries.length-Fallback)', () => {
+  const shifted = roundtrip(calA);
+  const key = Object.keys(shifted.cohortBases)[0];
+  delete shifted.cohortBases[key].n;
+  assert.doesNotThrow(() => scoreUniverse(universe, formulas, { refCalibration: shifted }),
+    'fehlendes n ist ein toleriertes aelteres Schema (score.js faellt auf entries.length zurueck), kein Fehler');
+});
+
 // (5) 2.11 Stufe B: Drift-Waechter faengt gDistByCohort-Drift (nicht nur cohortBases-Achsen).
 test('Drift: verschobene gDistByCohort -> feuert (Verify-T2-Haertung)', () => {
   const shifted = roundtrip(calA);

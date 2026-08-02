@@ -173,8 +173,20 @@ test('BH-156: Write-Step stempelt das tatsaechliche Vintage-Datum als Output (fu
 });
 test('BH-156: Commit-Step schliesst das Tagesverzeichnis bei rc=2 per Pathspec vom `git add` aus', () => {
   const s = section('name: Commit board-history vintage to main', null);
-  assert.match(s, /steps\.vintage\.outputs\.rc.*=\s*"2"/);
-  assert.match(s, /:\(exclude\)board-history\/\$VINTAGE_DATE/);
+  // Tag 512 hat rc in eine Shell-Variable gehoben, damit Betreffzeile und Ausschluss
+  // dieselbe Quelle nutzen. Der alte Anker verlangte rc-Ausdruck und `= "2"` in EINER
+  // Zeile und ging daran kaputt. Geprueft wird jetzt die Sache statt der Schreibweise:
+  // der verglichene Wert MUSS aus steps.vintage.outputs.rc stammen (direkt oder ueber
+  // genau eine Shell-Variable), und GENAU dieser rc=2-Zweig macht den Ausschluss,
+  // waehrend der else-Zweig weiterhin voll addet.
+  const rcVar = s.match(/(\w+)="\$\{\{\s*steps\.vintage\.outputs\.rc\s*\}\}"/);
+  const rcExpr = rcVar ? '$' + rcVar[1] : '${{ steps.vintage.outputs.rc }}';
+  const branch = s.match(/if \[ "([^"]+)" = "2" \]; then([\s\S]*?)\n[ \t]*else\r?\n([\s\S]*?)\n[ \t]*fi\b/);
+  assert.ok(branch, 'keine rc=2-Verzweigung um den `git add` gefunden');
+  assert.equal(branch[1], rcExpr,
+    'rc=2-Vergleich haengt nicht am rc des Write-Steps, sondern an: ' + branch[1]);
+  assert.match(branch[2], /git add board-history\/ ":\(exclude\)board-history\/\$VINTAGE_DATE"/);
+  assert.match(branch[3], /git add board-history\/\s*$/, 'else-Zweig addet das Vintage nicht mehr voll');
 });
 test('BH-156: unconditional "git add board-history/" vor der rc-Verzweigung ist weg', () => {
   const s = section('name: Commit board-history vintage to main', null);
@@ -182,6 +194,56 @@ test('BH-156: unconditional "git add board-history/" vor der rc-Verzweigung ist 
   // Vorher: git add board-history/ lief IMMER als allererste Aktion nach den
   // git-config-Zeilen, unabhaengig von rc. Jetzt muss die rc-Verzweigung davor stehen.
   assert.match(beforeIf, /steps\.vintage\.outputs\.rc/, 'git add laeuft noch VOR der rc-Pruefung (altes bedingungsloses Verhalten)');
+});
+
+// ── AE-CI-001 (Hard Review 2026-07-31): beide gh-pages-Deploys unterscheiden jetzt
+//    "Ref fehlt wirklich" (git ls-remote --exit-code == 2) von jedem anderen Nonzero-
+//    Exit (transientes DNS/Auth/Transport, typ. 128). Vorher behandelte `if git
+//    ls-remote --exit-code ...; then ... else ...` JEDEN Nonzero-Exit identisch als
+//    "Branch fehlt" -> frischer leerer Branch -> Force-Push loeschte den kompletten
+//    bestehenden gh-pages-Baum bei einem rein transienten Netzfehler.
+test('AE-CI-001: Deploy 1 (merge-Job) wertet ls-remote-Exit-Code explizit aus (0/2/sonst)', () => {
+  const s = section('name: Deploy to GitHub Pages', '\n  scoring:');
+  assert.match(s, /ls_remote_rc=\$\?/);
+  assert.match(s, /if \[ "\$ls_remote_rc" -eq 0 \]/);
+  assert.match(s, /elif \[ "\$ls_remote_rc" -eq 2 \]/);
+  assert.match(s, /echo "::error::git ls-remote failed with exit \$ls_remote_rc/);
+});
+test('AE-CI-001: Deploy 2 (scoring-Job) wertet ls-remote-Exit-Code ebenso explizit aus', () => {
+  const s = section('name: Deploy Scoring Output to GitHub Pages', 'name: Write board-history vintage');
+  assert.match(s, /ls_remote_rc=\$\?/);
+  assert.match(s, /if \[ "\$ls_remote_rc" -eq 0 \]/);
+  assert.match(s, /elif \[ "\$ls_remote_rc" -eq 2 \]/);
+  assert.match(s, /echo "::error::git ls-remote failed with exit \$ls_remote_rc/);
+});
+test('AE-CI-001: alter blinder truthy-if ("if git ls-remote ...; then") ist aus beiden Deploys weg', () => {
+  const codeLines = yml.split('\n').filter((l) => !/^\s*#/.test(l));
+  const stillBlind = codeLines.some((l) => /if git ls-remote --exit-code[^\n]*; then/.test(l));
+  assert.ok(!stillBlind, 'jeder Nonzero-Exit wuerde damit wieder als "Branch fehlt" gelesen (Kommentarzeilen ausgenommen)');
+});
+// (Kein separater Bash-Ausfuehrungstest: `bash` loest lokal auf Windows nicht
+// zuverlaessig auf dieselbe Shell auf wie unter ubuntu-latest in CI — die drei
+// Text-Pins oben decken alle drei Zweige (0/2/sonst) bereits eindeutig ab.)
+
+// ── R5-SK-001 (Hard Review 2026-07-31): macro-regime.js's BH-138 "leave an
+//    existing last-good file untouched" fallback can only work if that file
+//    already exists when the merge job's fresh runner starts. Ohne Restore-Schritt
+//    ist outputs/macro-regime.json auf jedem Lauf neu leer -> BH-138 no-opt sich
+//    selbst, ein schlechter SPY-Tag ueberschreibt den letzten guten Stand via
+//    Deploy 1. Der Restore-Schritt muss VOR "Compute Macro Regime" laufen.
+test('R5-SK-001: ein Restore-Schritt fuer macro-regime.json aus gh-pages laeuft VOR "Compute Macro Regime"', () => {
+  const iRestore = yml.indexOf('name: Restore last-good macro-regime.json from gh-pages');
+  const iCompute = yml.indexOf('name: Compute Macro Regime');
+  assert.ok(iRestore > 0, 'Restore-Schritt fehlt');
+  assert.ok(iCompute > iRestore, 'Compute Macro Regime muss NACH dem Restore laufen, sonst bleibt outputs/macro-regime.json leer');
+});
+test('R5-SK-001: der Restore-Schritt holt outputs/macro-regime.json vom gh-pages-Branch und scheitert nicht hart, wenn er fehlt', () => {
+  const s = section('name: Restore last-good macro-regime.json from gh-pages', 'name: Compute Macro Regime');
+  assert.match(s, /--branch gh-pages/);
+  assert.match(s, /outputs\/macro-regime\.json/);
+  // Ein fehlender Branch/fehlende Datei (erster Deploy ueberhaupt) darf den Job
+  // nicht rot machen — macro-regime.js's eigener Leerplatzhalter ist dort korrekt.
+  assert.match(s, /proceeding without/);
 });
 
 console.log('\nbh-b09-dailyyml.test.js: ' + pass + ' ok, ' + fail + ' fail');

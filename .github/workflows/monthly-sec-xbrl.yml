@@ -20,6 +20,16 @@ permissions:
   contents: write
   actions: read  # BH-004 fix: needed to list/download the daily-pull "snapshots" artifact below
 
+# AS-SK-001 (Hard Review 2026-07-31): pull-sec-xbrl.js/discovery/sec-tickers.js read
+# process.env.SEC_CONTACT at request time — SEC silently 403s a contactless
+# User-Agent. The repo secret SEC_CONTACT exists but was never wired into this
+# workflow's env: Production run 30694660128 (01.08.2026) confirmed the "Guard SEC
+# User-Agent" step green (it only greps source text) while the Pull step's own env
+# carried nothing but MAX_INPUT, got HTTP 403 on company_tickers.json, and aborted
+# before a single ticker. Top-level env applies to every step below.
+env:
+  SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
+
 concurrency:
   group: ${{ github.event_name == 'workflow_dispatch' && format('manual-{0}', github.run_id) || 'main-push' }}
   cancel-in-progress: false

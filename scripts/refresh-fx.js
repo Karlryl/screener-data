@@ -100,7 +100,19 @@ async function main() {
         '). Backup at ' + backup + '. Per-currency staleness history is being rebuilt from this run only.');
     }
   }
-  const rates = Object.assign({ USD: 1.0 }, existing);
+  // V-SK-001 (Hard Review 2026-07-31): `existing` came straight off disk. A rate
+  // that predates this validation (or a hand-edited fx-rates.json) could carry a
+  // 0/negative/non-numeric value forward FOREVER on every subsequent fetch
+  // failure, since a failed fetch just keeps whatever was already in `rates`.
+  // Drop invalid old values here so a fetch failure degrades to "no rate for
+  // this currency" (pull-yahoo falls back to its hardcoded table) instead of
+  // silently perpetuating a corrupt one.
+  const validExisting = {};
+  for (const [c, r] of Object.entries(existing)) {
+    if (Number.isFinite(r) && r > 0) validExisting[c] = r;
+    else console.error('::error::fx-rates.json had invalid existing rate for ' + c + ' (' + r + ') — dropping, not carrying forward');
+  }
+  const rates = Object.assign({ USD: 1.0 }, validExisting);
   const currencyMeta = Object.assign({}, existingMeta);
   const failed = [];
   const nowIso = new Date().toISOString();

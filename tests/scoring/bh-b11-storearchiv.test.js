@@ -8,7 +8,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const store = require('../../lib/price-history-store.js');
-const { archiveDirByDate } = require('../../scripts/archive-old-snapshots.js');
+const { archiveDirByDate, parseArgs } = require('../../scripts/archive-old-snapshots.js');
 const { readStateFileOrThrow, allFailed } = require('../../scripts/backfill-prices-max.js');
 
 let pass = 0, fail = 0;
@@ -128,6 +128,41 @@ test('BH-145: allFailed true only when 0 ok AND >0 failed AND >0 attempted', () 
   assert.equal(allFailed(10, 3, 7), false, 'partial failure is fine');
   assert.equal(allFailed(10, 10, 0), false, 'full success is fine');
   assert.equal(allFailed(0, 0, 0), false, 'nothing to do is fine (empty universe)');
+});
+
+// --- NRC-SK-003 (Hard Review 2026-07-31): negative --keep-days must abort, not
+// silently move the cutoff into the future (which would archive EVERYTHING,
+// including today's file, on a CLI typo). ---
+function runParseArgsExpectExit(argv) {
+  const origExit = process.exit;
+  const origError = console.error;
+  let exitCode = null, errMsg = '';
+  process.exit = (code) => { exitCode = code; throw new Error('__EXIT__'); };
+  console.error = (msg) => { errMsg += msg; };
+  try {
+    assert.throws(() => parseArgs(['node', 'archive-old-snapshots.js', ...argv]), /__EXIT__/);
+  } finally {
+    process.exit = origExit;
+    console.error = origError;
+  }
+  return { exitCode, errMsg };
+}
+test('NRC-SK-003: --keep-days -1 wird abgelehnt (waere sonst ein Cutoff in der Zukunft -> alles archiviert)', () => {
+  const { exitCode, errMsg } = runParseArgsExpectExit(['--keep-days', '-1']);
+  assert.equal(exitCode, 1);
+  assert.match(errMsg, /invalid --keep-days value/);
+});
+test('NRC-SK-003: --methods-keep-days -5 und --picks-keep-days -5 werden ebenfalls abgelehnt', () => {
+  assert.equal(runParseArgsExpectExit(['--methods-keep-days', '-5']).exitCode, 1);
+  assert.equal(runParseArgsExpectExit(['--picks-keep-days', '-5']).exitCode, 1);
+});
+test('NRC-SK-003: --keep-days 0 bleibt gueltig (Grenzfall, kein Tippfehler)', () => {
+  const args = parseArgs(['node', 'archive-old-snapshots.js', '--keep-days', '0']);
+  assert.equal(args.keepDays, 0);
+});
+test('NRC-SK-003: normale positive --keep-days-Werte funktionieren weiterhin', () => {
+  const args = parseArgs(['node', 'archive-old-snapshots.js', '--keep-days', '60']);
+  assert.equal(args.keepDays, 60);
 });
 
 console.log('\nbh-b11-storearchiv: ' + pass + ' passed, ' + fail + ' failed');

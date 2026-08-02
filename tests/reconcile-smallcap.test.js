@@ -124,13 +124,22 @@ check('(c2) negativer Jahresumsatz bei OPERATIVER Branche -> behalten (der Altim
   // Die Gegenrichtung, und der eigentliche Zweck der Korrektur: eine echte Firma mit einem
   // kaputten Umsatzjahr darf nicht aus dem Universum fallen. Im Scoring wird sie fuer EINEN
   // Tag ausgeschlossen und ist morgen wieder da — hier waere die Entfernung dauerhaft.
+  //
+  // audit/fix (Hard-Review AE-SC-002, 02.08.): router.js isNonOperatingVehicle() Zweig (a) scoped
+  // jetzt selbst auf sector!=Healthcare (statt universell jedes negative Jahresumsatz-Jahr zu
+  // fangen) — der genau hier zitierte Fehltreffer ("1 harmloser Borderline: NBTX") ist damit an der
+  // WURZEL behoben. route() liefert fuer dieses Healthcare-Fixture jetzt direkt action:'route'
+  // (nicht mehr 'exclude'/'non-operating-rev'), der reconcile-smallcap-Workaround unten (Zeile
+  // 167-174) greift also nicht mehr — die Zeile faellt stattdessen auf 'im-band' durch. Die
+  // eigentliche Garantie (entscheidung='behalten', ALT bleibt im Universum) ist DIESELBE, nur der
+  // Weg dorthin ist jetzt der direkte statt der kompensierende.
   const s = snap({});
   s.meta.industry = 'Biotechnology';
   s.meta.sector = 'Healthcare';
   s.annual = { annualRev: [{ value: -68e3 }, { value: 426e3 }], annualOpInc: [{ value: -1e6 }], annualNetIncome: [{ value: -1e6 }] };
   const u = R.classify(s, OPTS);
-  assert.strictEqual(u.entscheidung, 'behalten');
-  assert.strictEqual(u.grund, 'auffaellige-umsatzreihe-aber-operative-branche');
+  assert.strictEqual(u.entscheidung, 'behalten', 'die eigentliche Garantie: Altimmune-Muster bleibt im Universum');
+  assert.strictEqual(u.grund, 'im-band', 'route() klassifiziert seit AE-SC-002 direkt korrekt statt ueber den non-operating-rev-Workaround');
 });
 
 // ── (d) Frische-Sperre ───────────────────────────────────────────────────────

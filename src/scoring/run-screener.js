@@ -267,8 +267,14 @@ function run(topN) {
   let refCalibration = null;
   const refPath = process.env.SCORING_REF_CALIB;
   if (refPath) {
+    // audit/fix (Hard-Review U-SC-002): SCORING_REF_CALIB ist ein explizites Opt-in (kein optionaler
+    // Cache wie die Watchlist) -- wer es setzt, will EXPLIZIT gegen ein eingefrorenes Lineal scoren,
+    // um Score-Drift beim Universe-Ausbau zu verhindern. Ein console.warn-Fallback auf 'live-lernend'
+    // erzeugt STILL genau die Drift, die der Aufruf verhindern sollte, ohne den Aufrufer zu warnen
+    // (CI-Log wird nicht gelesen). Fail-loud: ein explizit angefordertes, aber unlesbares/kaputtes
+    // Lineal bricht den Lauf ab statt lautlos zu degradieren.
     try { refCalibration = JSON.parse(fs.readFileSync(refPath, 'utf8')); console.log(`[run-screener] Referenz-Lineal geladen (${refPath}, schema ${refCalibration.schema})`); }
-    catch (e) { console.warn(`[run-screener] SCORING_REF_CALIB nicht lesbar (${refPath}): ${e.message} -> live-lernend`); }
+    catch (e) { throw new Error(`[run-screener] SCORING_REF_CALIB explizit gesetzt, aber nicht lesbar (${refPath}): ${e.message}`); }
   }
   const results = scoreUniverse(universe, formulas, refCalibration ? { refCalibration } : {});
   // Drift-Waechter: aktuelles Universum vs. eingefrorenes Lineal — fail-loud bei verschobener Basis (0.7-Kanal).

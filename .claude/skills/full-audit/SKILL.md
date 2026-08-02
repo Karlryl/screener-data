@@ -54,7 +54,7 @@ ls -1 src/scoring/formulas/*.js src/scoring/formulas/quality/*.js 2>/dev/null
 ```
 
 ```!
-for f in src/scoring/formulas/*.js; do base=$(basename "$f"); if ! grep -q "$base" src/scoring/formulas/index.js 2>/dev/null; then echo "CHECK-UNREGISTERED: $f"; fi; done
+for f in src/scoring/formulas/*.js; do base=$(basename "$f"); [ "$base" = "index.js" ] && continue; if ! grep -q "$base" src/scoring/formulas/index.js 2>/dev/null; then echo "CHECK-UNREGISTERED: $f"; fi; done
 ```
 
 ### B. Hard-fail steps without continue-on-error

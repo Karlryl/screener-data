@@ -138,8 +138,15 @@ function gpClass(s) {
 // --- Schritt 0: Pre-Revenue -------------------------------------------------
 function isPreRevenue(s) {
   const rev = norm(s, 'annualRev');
-  if (!hasPresent(rev)) return true;
-  return presentValues(rev).every((v) => v === 0);
+  const annualEmpty = !hasPresent(rev) || presentValues(rev).every((v) => v === 0);
+  if (!annualEmpty) return false;
+  // audit/fix (Hard-Review AE-SC-003): annualRev=[] bzw. all-0 pruefte bisher NIE gegen revenueQ.
+  // PAH3.DE (Auto Manufacturers) hat annualRev=[0,0,0,0] trotz Milliarden-Umsatz in revenueQ und
+  // landete faelschlich im Survival-/Pre-Revenue-Track statt im normalen Sektor-Routing. Ein
+  // present + von-0-verschiedener revenueQ-Wert widerlegt Pre-Revenue, unabhaengig vom annualRev-Stand.
+  const revQ = norm(s, 'revenueQ');
+  if (hasPresent(revQ) && presentValues(revQ).some((v) => v !== 0)) return false;
+  return true;
 }
 
 // --- Schritt 1: Struktur-Hard-Exclude ---------------------------------------
@@ -169,11 +176,17 @@ function structExcludeReason(s) {
 //       "Umsatz" IST der Anlagegewinn, kein Fee-Geschaeft (3i Group, dessen Quartal positiv bleibt).
 function isNonOperatingVehicle(s) {
   // (a) negativer JAHRESumsatz -> Closed-End-Funds/Bullion-Trusts (SMT.L/ADX): "Umsatz" = Anlage-
-  //     gewinn/-verlust, kein operativer Umsatz. Universell sicher (1 harmloser Borderline: NBTX,
-  //     ein Biotech mit korruptem -8.4M-Glitch-Jahr -> ohnehin Datenmangel). Eine NI~rev-Verfeinerung
-  //     wurde VERWORFEN: sie gab 3 echte Muni-Bond-CEFs (BTT/NZF/PTA, NI/rev 1.8-3.5) faelschlich frei.
+  //     gewinn/-verlust, kein operativer Umsatz. Eine NI~rev-Verfeinerung wurde VERWORFEN: sie gab
+  //     3 echte Muni-Bond-CEFs (BTT/NZF/PTA, NI/rev 1.8-3.5) faelschlich frei.
+  //     audit/fix (Hard-Review AE-SC-002): NICHT mehr universell -- NBTX (Biotech, sector=Healthcare)
+  //     hat ein einzelnes korruptes -8.4M-Glitch-Jahr NEBEN drei realen $30-40M-Umsatzjahren und
+  //     wurde bisher faelschlich als Non-Operating-Vehicle excludiert (kein "harmloser" Fall, sondern
+  //     ein echter Umsatztraeger, der aus dem Score-Universum fiel). Kein CEF/Bullion-Trust traegt
+  //     sector=Healthcare, also verliert (a) dadurch nichts von seinem Zielbild.
   const revAnn = norm(s, 'annualRev');
-  if (hasPresent(revAnn) && presentValues(revAnn).some((v) => v < 0)) return true;        // (a)
+  const sec = lc(s && s.meta ? s.meta.sector : '');
+  const isHealthcareSector = sec.includes('healthcare') || sec.includes('health care');
+  if (!isHealthcareSector && hasPresent(revAnn) && presentValues(revAnn).some((v) => v < 0)) return true; // (a)
   const ind = lc(s && s.meta ? s.meta.industry : '');
   // (d) KEIN operativer Umsatz (leer ODER alle present-Werte ==0) + Finanz-Vehikel-Industrie ->
   //     CEF/Shell/Asset-Manager/BDC (BMEZ/RVI = leer; PIN.L = present-Null [0,0,0,0]; XXI = Shell).

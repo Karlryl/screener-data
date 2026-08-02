@@ -75,6 +75,24 @@ for (const rel of SEC_SCRIPTS) {
     'no secUserAgent()/process.env.SEC_CONTACT — set the contact via env, not code');
 }
 
+// AS-SK-001 (Hard Review 2026-07-31): the two checks above are static source
+// inspection — they proved every SEC puller CAN read SEC_CONTACT, never that a
+// given CI run actually HAD it set. Production run 30694660128 (01.08.2026) shows
+// exactly that gap: this step reported green while the same job's Pull step sent
+// an empty User-Agent and got HTTP 403 before a single ticker. In CI, also assert
+// the runtime value — the whole reason this guard exists is 403 protection, and a
+// static-only check cannot catch a workflow that forgot to wire the secret. Not
+// enforced outside CI: a dev machine without SEC_CONTACT set must keep passing the
+// local test gate (this file matches tests/*test.js).
+if (process.env.CI || process.env.GITHUB_ACTIONS) {
+  try {
+    require(path.join(ROOT, 'lib', 'sec-user-agent.js')).assertSecContact();
+    check('SEC_CONTACT is set and contact-bearing at runtime (CI only)', true);
+  } catch (e) {
+    check('SEC_CONTACT is set and contact-bearing at runtime (CI only)', false, e.message);
+  }
+}
+
 if (failed > 0) {
   console.log('\nFAILED: ' + failed + ' SEC User-Agent assertion(s)');
   process.exit(1);

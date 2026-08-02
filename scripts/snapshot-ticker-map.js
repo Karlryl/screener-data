@@ -218,6 +218,23 @@ async function run(argv = process.argv.slice(2)) {
     }
     console.log(`  CIK aus dem Vortagesstand uebernommen: ${uebernommen} Symbole `
       + '(die SEC-Quelle schwieg — ohne das waere jedes davon faelschlich als geaendert gezaehlt worden)');
+
+    // R1-SK-002 (Hard Review 2026-07-31): Symbole, die NUR ueber die SEC bekannt sind
+    // (b:'SEC' — kein NASDAQ-/otherlisted-Eintrag, z.B. manche OTC-/Foreign-Private-
+    // Issuer), verschwinden bei einem SEC-Ausfall komplett aus `neu`, weil baueKarte()
+    // sie ausschliesslich aus roh.sec erzeugt. diff() liest das dann als "weg" —
+    // Delisting statt Quellenausfall. Am 29.07. waren das 3.356 Symbole an einem
+    // einzigen Tag. Fix: bei fehlender SEC-Quelle jeden reinen SEC-Datensatz aus dem
+    // Vortagesstand unveraendert in `neu` uebernehmen, bevor diff() laeuft — echte
+    // Delistings (aus nasdaq/otherlisted) bleiben davon unberuehrt.
+    let secOnlyUebernommen = 0;
+    for (const [sym, alt] of vorher) {
+      if (alt.b === 'SEC' && !neu.has(sym)) { neu.set(sym, alt); secOnlyUebernommen++; }
+    }
+    if (secOnlyUebernommen > 0) {
+      console.log(`  Reine SEC-Symbole aus dem Vortagesstand uebernommen: ${secOnlyUebernommen} `
+        + '(sonst faelschlich als "weg"/delisted gezaehlt, weil die SEC-Quelle schwieg)');
+    }
   }
 
   const { hinzu, weg, geaendert } = diff(vorher, neu);

@@ -45,8 +45,13 @@ function parseArgs(argv) {
     ['--methods-keep-days', args.methodsKeepDays],
     ['--picks-keep-days', args.picksKeepDays],
   ]) {
-    if (val !== null && !Number.isFinite(val)) {
-      console.error(`::error::archive-old-snapshots: invalid ${name} value (not a finite number) — aborting to avoid silently disabling archiving`);
+    // NRC-SK-003 (Hard Review 2026-07-31): finite-only check let `--keep-days -1`
+    // through — the cutoff computation below (`d.setUTCDate(d.getUTCDate() - keepDays)`)
+    // then moves the cutoff into the FUTURE, so every file (even today's) reads
+    // `date < cutoff` and gets archived out of the tracked directory. A retention
+    // window can't be negative — reject it the same way a non-numeric value already is.
+    if (val !== null && (!Number.isFinite(val) || val < 0)) {
+      console.error(`::error::archive-old-snapshots: invalid ${name} value (${val} — must be a finite number >= 0) — aborting to avoid silently disabling archiving`);
       process.exit(1);
     }
   }
@@ -219,4 +224,4 @@ if (require.main === module) {
   try { main(); } catch (e) { console.error('archive failed: ' + e.message); process.exit(1); }
 }
 
-module.exports = { archiveDirByDate };
+module.exports = { archiveDirByDate, parseArgs };
