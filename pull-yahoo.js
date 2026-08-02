@@ -817,6 +817,30 @@ function _trimTrailingNull(mapped) {
   return mapped.slice(0, end);
 }
 
+// NRB-SK-001 (Hard Review 2026-07-31): a literal 0 annual revenue for a fiscal year
+// that ALSO reports positive gross profit or positive operating income in that SAME
+// year is a logical impossibility, not a real data point — gross profit can never
+// exceed revenue (GP = Rev − COGS, COGS >= 0), so GP>0 or OpInc>0 requires Rev>0.
+// Yahoo occasionally returns a literal 0 for totalRevenue where the true value is
+// simply missing/mistagged. Downstream this 0 was read as -100% YoY growth AND as a
+// zero margin denominator that triggers stale-value compression — treat it as
+// unknown (null) instead of persisting an impossible data point as fact. Mutates
+// annualRev in place (positionally aligned with annualOpInc/annualGP by construction
+// at both call sites — same source row per index).
+function _nullOutImpossibleZeroRevenue(annualRev, annualOpInc, annualGP) {
+  if (!Array.isArray(annualRev)) return annualRev;
+  for (let i = 0; i < annualRev.length; i++) {
+    const rev = annualRev[i];
+    if (!rev || rev.value !== 0) continue;
+    const gp = annualGP && annualGP[i];
+    const oi = annualOpInc && annualOpInc[i];
+    const gpPositive = gp && Number.isFinite(gp.value) && gp.value > 0;
+    const oiPositive = oi && Number.isFinite(oi.value) && oi.value > 0;
+    if (gpPositive || oiPositive) annualRev[i] = null;
+  }
+  return annualRev;
+}
+
 function _arr(history, key) {
   if (!Array.isArray(history)) return [];
   return _trimTrailingNull(history.map(r => {
@@ -973,6 +997,10 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   let annualOpInc = _arr(isHist, 'operatingIncome');
   const annualNetIncome = _arr(isHist, 'netIncome');
   const annualGP = _arr(isHist, 'grossProfit');
+  // NRB-SK-001: null out any literal 0 revenue year that contradicts positive
+  // native GP/OpInc in the same year, BEFORE it can feed the sector-OpInc
+  // derivation below (which multiplies annualRev × operatingMargin).
+  _nullOutImpossibleZeroRevenue(annualRev, annualOpInc, annualGP);
 
   // Tag 203: sector-aware OpInc fallback for Financial Services.
   // Yahoo's incomeStatementHistory.operatingIncome is null for banks (JPM,
@@ -1577,6 +1605,9 @@ function mapFTSToAnnual(annualRows, cashRows) {
     annualGP.push(gp != null ? { value: gp } : null);
     annualNetIncome.push(ni != null ? { value: ni } : null);
   }
+  // NRB-SK-001 (Hard Review 2026-07-31): same coherence guard as the QS build path —
+  // a literal 0 revenue year that also reports positive GP/OpInc is impossible.
+  _nullOutImpossibleZeroRevenue(annualRev, annualOpInc, annualGP);
   // audit/fix F1 (2026-06-25): trim trailing all-null income rows (oldest) — no
   // information to contribute; mirrors mapFTSToQuarterly's trailing-null trim so
   // the arrays stay tight while interior nulls (which carry alignment) are kept.
@@ -3507,4 +3538,6 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   acquireYfSlot, _setYfGateSleepMs: (ms) => { _yfGateSleepMs = ms; _yfGateNextSlotAt = 0; },
   YF_REQUESTS_PER_TICKER, _getYfGateSleepMs: () => _yfGateSleepMs,
   // V-SK-001 (Hard Review 2026-07-31): FX-rate validity predicate fuer TDD.
-  _isValidFxRate };
+  _isValidFxRate,
+  // NRB-SK-001 (Hard Review 2026-07-31): fuer TDD.
+  _nullOutImpossibleZeroRevenue };
