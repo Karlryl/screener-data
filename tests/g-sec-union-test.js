@@ -104,5 +104,34 @@ test('ohne ticker-Argument (Rueckwaertskompatibel fuer Alt-Aufrufer) -> Log fael
   assert.ok(warnings.some((l) => l.includes('unknown')));
 });
 
+test('Review-Fund 02.08.: eine Null gegen einen echten Umsatz ist ein Konflikt, kein Gleichstand', () => {
+  // Die erste Fassung der Pruefung verlangte a > 0 UND b > 0. Meldet der hoeher priorisierte
+  // Tag eine 0 und der andere den echten Umsatz, war der Faktor damit nicht berechenbar, der
+  // Konflikt blieb unbemerkt und die 0 ging als Jahresumsatz in die Union — ausgerechnet der
+  // schaedlichste Fall war ausgenommen. Ein Nullumsatz vergiftet jede Wachstums- und
+  // Margen-Achse staerker als der Konzept-Mismatch, den die Pruefung fangen soll.
+  const gaap = gaapFixture({
+    RevenueFromContractWithCustomerExcludingAssessedTax: [{ fy: 2023, val: 0, end: '2023-12-31' }],
+    Revenues: [{ fy: 2023, val: 805700000, end: '2023-12-31' }],
+  });
+  let u;
+  const warns = captureWarnings(() => { u = annualRevUnion(gaap, 'NULLFALL'); });
+  assert.equal(u.get(2023), undefined, 'die 0 wurde als Jahresumsatz uebernommen');
+  assert.ok(warns.join(' ').includes('Umsatz-Konflikt NULLFALL FY2023'), 'kein lauter Hinweis');
+});
+
+test('Review-Fund 02.08.: entgegengesetzte Vorzeichen sind ein Konflikt, kein Faktor 1', () => {
+  // Math.abs verglich -805 Mio. gegen +805 Mio. als Faktor 1 — ein Vorzeichenfehler im Tag
+  // waere unbemerkt als Jahresumsatz durchgegangen.
+  const gaap = gaapFixture({
+    RevenueFromContractWithCustomerExcludingAssessedTax: [{ fy: 2023, val: -805700000, end: '2023-12-31' }],
+    Revenues: [{ fy: 2023, val: 805700000, end: '2023-12-31' }],
+  });
+  let u;
+  const warns = captureWarnings(() => { u = annualRevUnion(gaap, 'VORZEICHEN'); });
+  assert.equal(u.get(2023), undefined, 'der negative Umsatz wurde uebernommen');
+  assert.ok(warns.join(' ').includes('Umsatz-Konflikt VORZEICHEN FY2023'), 'kein lauter Hinweis');
+});
+
 console.log(`\ng-sec-union-test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

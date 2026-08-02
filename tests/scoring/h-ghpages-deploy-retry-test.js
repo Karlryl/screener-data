@@ -143,5 +143,29 @@ test('Beide Deploy-Schritte kopieren ihre Dateien innerhalb der Schleife, vor de
   assert.ok(iCp2 >= 0 && iCp2 < iCommit2, 'scoring-Deploy: Datei-Kopie fehlt im Schleifenkoerper oder liegt nach dem Commit');
 });
 
+test('kein gruener Deploy-Job ohne Deploy: die Leer-Pruefung steigt nur im ERSTEN Versuch aus', () => {
+  // Nachgetragen 02.08. nach einem Review-Fund am eigenen Retry-Umbau. Mit dem
+  // Leer-Check IN der Schleife entstand ein neuer stiller Ausfall: schlaegt Versuch 1 beim
+  // Push fehl und Versuch 2 beim `git fetch` (dieselbe Netzstoerung), steht der eigene,
+  // ungepushte Commit noch auf HEAD -> Neu-Kopieren erzeugt keinen Diff -> `exit 0`
+  // -> Job GRUEN, gh-pages nie aktualisiert. Der schlimmste Ausgang, weil ihn niemand meldet.
+  // Geprueft wird die Sache: JEDES `exit 0` am leeren Diff muss an einer Versuchszaehler-
+  // Bedingung haengen, nicht nur an der Leere.
+  const bodies = [
+    ['merge', loopBody(stepSection(yml, 'name: Deploy to GitHub Pages', '\n      - name:'))],
+    ['scoring', loopBody(stepSection(yml, 'name: Deploy Scoring Output to GitHub Pages', '\n      - name:'))],
+  ];
+  for (const [name, body] of bodies) {
+    const i = body.indexOf('git diff --staged --quiet');
+    assert.ok(i >= 0, name + '-Deploy: Leer-Pruefung nicht gefunden');
+    // Das Fenster bis zum naechsten `git push` enthaelt die Entscheidung.
+    const fenster = body.slice(i, body.indexOf('git push', i));
+    assert.ok(/exit 0/.test(fenster), name + '-Deploy: erwartete ein exit 0 am leeren Diff');
+    assert.match(fenster, /\$i"?\s*-eq\s*1|"\$i"\s*=\s*"1"/,
+      name + '-Deploy: das exit 0 am leeren Diff haengt an KEINER Versuchszaehler-Bedingung — '
+      + 'ein fehlgeschlagener Push wuerde ab Versuch 2 gruen ausgehen, ohne zu deployen');
+  }
+});
+
 console.log('\nh-ghpages-deploy-retry-test.js: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);

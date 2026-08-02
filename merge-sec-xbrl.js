@@ -101,14 +101,24 @@ function annualRevUnion(gaap, ticker) {
       const row = maps[i].get(fy);
       if (!row) continue;
       if (winner === null) { winner = row; winnerIdx = i; continue; }
-      const a = Math.abs(winner.val), b = Math.abs(row.val);
-      if (a > 0 && b > 0 && Math.max(a, b) / Math.min(a, b) > 2) { conflictIdx = i; break; }
+      // Review-Fund 02.08.: `a > 0 && b > 0` nahm ausgerechnet den schaedlichsten Fall aus
+      // der Pruefung — meldet der hoeher priorisierte Tag eine 0 und der andere den echten
+      // Umsatz, war der Faktor nicht berechenbar, der Konflikt blieb unbemerkt und die 0
+      // ging als Jahresumsatz in die Union. Ein Nullumsatz vergiftet Wachstums- und
+      // Margen-Achsen staerker als der Konzept-Mismatch, den die Pruefung fangen soll.
+      // Ebenso raus: Math.abs verglich −805 Mio. gegen +805 Mio. als Faktor 1 (kein
+      // Konflikt) — ein Vorzeichenfehler im Tag waere so durchgerutscht.
+      const a = winner.val, b = row.val;
+      const einsNull = (a === 0) !== (b === 0);
+      const vorzeichenweg = a !== 0 && b !== 0 && Math.sign(a) !== Math.sign(b);
+      const faktor = a !== 0 && b !== 0 && Math.max(Math.abs(a), Math.abs(b)) / Math.min(Math.abs(a), Math.abs(b)) > 2;
+      if (einsNull || vorzeichenweg || faktor) { conflictIdx = i; break; }
     }
     if (conflictIdx >= 0) {
       const loser = maps[conflictIdx].get(fy);
       console.warn(
         `[merge-sec-xbrl] Umsatz-Konflikt ${ticker || 'unknown'} FY${fy}: ${REV_CONCEPTS[winnerIdx]}=${winner.val} ` +
-        `vs. ${REV_CONCEPTS[conflictIdx]}=${loser.val} (Faktor>2) — Jahr verworfen statt geraten`
+        `vs. ${REV_CONCEPTS[conflictIdx]}=${loser.val} (Null-gegen-Wert, Vorzeichen oder Faktor>2) — Jahr verworfen statt geraten`
       );
       continue;
     }

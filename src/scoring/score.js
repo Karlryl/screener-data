@@ -1433,4 +1433,4 @@ module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings
   shrinkToNeutral, SHRINK_K, MIN_COHORT_N,
   // 5.2 Small-Cap-Board: reine Funktion, additiv exportiert fuer den Coverage-Floor (run-screener.js)
   quantile,
-  // Tag 468: Large-Cap-Grenze der Hypergrowth-Uebersicht — fuer run-screener.js und den Waechter };
+};

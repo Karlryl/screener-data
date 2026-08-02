@@ -908,8 +908,18 @@ jobs:
             cp ../index.html . 2>/dev/null || true
             cp -r ../outputs/. outputs/ 2>/dev/null || true
             git add -A
-            if git diff --staged --quiet; then echo "No merge-deploy changes."; exit 0; fi
-            git commit -m "deploy: screener reports $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            # ⚠ Die Leer-Pruefung darf NUR im ersten Versuch gruen aussteigen. Ab Versuch 2
+            # heisst "kein Diff" etwas anderes: unser eigener Commit aus dem vorherigen
+            # Versuch steht noch unveroeffentlicht auf HEAD, weil der reset auf
+            # origin/gh-pages nicht durchkam (dieselbe Netzstoerung, die den Push kippte).
+            # Ein exit 0 waere dann ein gruener Deploy-Job OHNE Deploy — der schlimmste
+            # Ausgang, weil ihn niemand meldet.
+            if git diff --staged --quiet; then
+              if [ "$i" -eq 1 ]; then echo "No merge-deploy changes."; exit 0; fi
+              echo "kein neuer Diff in Versuch $i — wiederhole den Push des bestehenden Commits"
+            else
+              git commit -m "deploy: screener reports $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            fi
             if git push --force origin gh-pages; then
               echo "✓ GitHub Pages deployed on attempt $i"
               exit 0
@@ -1155,8 +1165,14 @@ jobs:
             mkdir -p outputs/findash-export/v1
             cp -r ../outputs/findash-export/v1/. outputs/findash-export/v1/
             git add -A
-            if git diff --staged --quiet; then echo "No scoring output changes to deploy."; exit 0; fi
-            git commit -m "deploy: hypergrowth scoring $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            # Siehe die gleichlautende Stelle im merge-Deploy: ab Versuch 2 bedeutet
+            # "kein Diff" einen eigenen, noch nicht gepushten Commit — nicht "nichts zu tun".
+            if git diff --staged --quiet; then
+              if [ "$i" -eq 1 ]; then echo "No scoring output changes to deploy."; exit 0; fi
+              echo "kein neuer Diff in Versuch $i — wiederhole den Push des bestehenden Commits"
+            else
+              git commit -m "deploy: hypergrowth scoring $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            fi
             if git push --force origin gh-pages; then
               echo "✓ Scoring output deployed on attempt $i"
               exit 0
