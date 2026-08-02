@@ -8,7 +8,7 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const {
-  mapFTSToQuarterly, _isoDay, _alignEnds, _convertSnapshotToUSD,
+  mapFTSToQuarterly, mapYahooToCanonical, _isoDay, _alignEnds, _convertSnapshotToUSD,
   _applyCurrencyConsistencyGuard,
 } = require('../pull-yahoo.js');
 
@@ -113,12 +113,18 @@ check('FX: _convertSnapshotToUSD scaled values, aber NICHT die Enden', () => {
     timeseries: {
       revenueQ: [{ value: 100 }, { value: 90 }],
       revenueQEnds: ['2026-01-31', '2025-10-31'],
+      // NRE-SC-001: der Skip ist generisch (key.endsWith('Ends')) — der Test muss deshalb
+      // ALLE Enden-Reihen halten, sonst schuetzt er nur die eine, die zufaellig drinsteht.
+      grossProfitQEnds: ['2026-01-31', '2025-10-31'],
+      opIncQEnds: ['2026-01-31', '2025-10-31'],
     },
   };
   const out = _convertSnapshotToUSD(snap);
   // Enden immer ISO-Strings, keine Zahl, kein NaN — unabhaengig vom FX-Ausgang.
-  assert.deepStrictEqual(out.timeseries.revenueQEnds, ['2026-01-31', '2025-10-31']);
-  out.timeseries.revenueQEnds.forEach(d => assert.strictEqual(typeof d, 'string'));
+  for (const feld of ['revenueQEnds', 'grossProfitQEnds', 'opIncQEnds']) {
+    assert.deepStrictEqual(out.timeseries[feld], ['2026-01-31', '2025-10-31'], feld);
+    out.timeseries[feld].forEach(d => assert.strictEqual(typeof d, 'string', feld));
+  }
   if (out.meta.fxConverted === true) {
     // Loop lief -> values skaliert (Beweis, dass der Ends-Skip wirklich greift).
     assert.notStrictEqual(out.timeseries.revenueQ[0].value, 100);
@@ -165,6 +171,47 @@ check('price-only: _priceOnlyUpdate fasst timeseries nicht an', () => {
   const body = nextFn > -1 ? after.slice(0, nextFn) : after;
   assert.ok(!/\btimeseries\b/.test(body),
     'price-only darf timeseries nicht schreiben (Enden bleiben erhalten)');
+});
+
+// -- NRE-SC-001 Teil 1: opIncQEnds - die dritte Quartalsreihe hatte kein Perioden-Ende --
+// Die Achsen rechnen rq[i]/rq[i+4] rein positional. Fuer revenueQ und grossProfitQ gibt es
+// seit A10 ein Perioden-Ende je Index, fuer opIncQ nicht. revenueQEnds ersatzweise zu nehmen
+// traegt nicht: _arr() trimmt jede Reihe EINZELN auf ihre letzte Nicht-Null, also koennen die
+// Laengen auseinanderlaufen. Kein Guard hier - nur das Substrat, damit er spaeter gebaut
+// werden KANN (der Guard selbst aendert Scores und gehoert Karl).
+check('NRE-SC-001: mapFTSToQuarterly liefert opIncQEnds im Lockstep zu opIncQ', () => {
+  // FTS liefert AELTEST zuerst; mapFTSToQuarterly dreht auf newest-first (Engine-Konvention).
+  const rows = [
+    { date: '2025-12-31', totalRevenue: 250, totalOperatingIncomeAsReported: 25, grossProfit: 120 },
+    { date: '2026-03-31', totalRevenue: 300, totalOperatingIncomeAsReported: 30, grossProfit: 150 },
+  ];
+  const q = mapFTSToQuarterly(rows);
+  assert.ok(Array.isArray(q.opIncQEnds), 'opIncQEnds existiert');
+  assert.strictEqual(q.opIncQEnds.length, q.opIncQ.length, 'laengengleich zu opIncQ');
+  assert.deepStrictEqual(q.opIncQEnds, ['2026-03-31', '2025-12-31'], 'newest first');
+  assert.strictEqual(q.opIncQ[0].value, 30, 'Index 0 ist das juengste Quartal');
+  assert.deepStrictEqual(q.opIncQEnds, q.revenueQEnds, 'dieselbe FTS-Row -> dieselbe Periode');
+});
+
+check('NRE-SC-001: opIncQ laenger als revenueQ -> eigene Enden statt fremder Laenge', () => {
+  // Genau der Fall, in dem revenueQEnds NICHT als Ersatz taugt: das aelteste Quartal hat
+  // keinen Umsatz gemeldet, wohl aber ein operatives Ergebnis. _arr trimmt nur TRAILING
+  // null, also bleibt revenueQ hier kuerzer als opIncQ.
+  const isHistQ = [
+    { endDate: '2026-03-31', totalRevenue: 300, operatingIncome: 30, grossProfit: 150 },
+    { endDate: '2025-12-31', totalRevenue: 250, operatingIncome: 25, grossProfit: 120 },
+    { endDate: '2025-09-30', totalRevenue: null, operatingIncome: 20, grossProfit: null },
+  ];
+  const c = mapYahooToCanonical(
+    { incomeStatementHistoryQuarterly: { incomeStatementHistory: isHistQ }, summaryDetail: { marketCap: 1 } },
+    { ticker: 'NRE1' }, '2026-04-01T00:00:00Z');
+  const ts = c.timeseries || {};
+  assert.strictEqual(ts.opIncQ.length, 3, 'opIncQ behaelt das aelteste-Quartal-Ergebnis');
+  assert.strictEqual(ts.revenueQ.length, 2, 'revenueQ wird trailing-null getrimmt');
+  assert.ok(Array.isArray(ts.opIncQEnds), 'opIncQEnds existiert auch im isHistQ-Pfad');
+  assert.strictEqual(ts.opIncQEnds.length, 3, 'opIncQEnds folgt opIncQ, nicht revenueQ');
+  assert.deepStrictEqual(ts.opIncQEnds, ['2026-03-31', '2025-12-31', '2025-09-30']);
+  assert.strictEqual(ts.revenueQEnds.length, 2, 'revenueQEnds bleibt unveraendert an revenueQ');
 });
 
 console.log(fail === 0 ? '\nA10 period-ends: ALL PASS' : `\nA10 period-ends: ${fail} FAIL`);
