@@ -207,6 +207,30 @@ test('annualCurrencyLeak: kaputtes Quartals-TTM (anderes Defekt, kein ccy-Leak) 
     annual: { annualRev: V([1000]) }, timeseries: { revenueQ: V([25, 25, 25, 25]) }, metrics: { revenueTTM: { value: 1000 } } };
   assert.equal(L.annualCurrencyLeak(s), false); // ttmRatio=10 ausserhalb [0.6,1.6]
 });
+// audit/fix (Hard-Review AJ-SC-001): repOrig===trade schloss bisher JEDE Same-Currency-Divergenz
+// aus -- auch den USD/USD-Envelope-Leak (ENIC-Muster: annualRev bleibt trotz USD-Envelope home-
+// currency-grossen Massstabs). Portiert lib/annual-currency-guard.js's USD/USD-Zweig (Schwelle 20
+// statt 3, plus marketCap-Beleg >10x).
+test('annualCurrencyLeak: USD/USD-Envelope-Leak mit starker marketCap-Evidenz -> true (ENIC-Muster, AJ-SC-001)', () => {
+  const s = { meta: { reportingCurrencyOriginal: 'USD', tradingCurrency: 'USD' },
+    annual: { annualRev: V([4068047830000]) },
+    timeseries: { revenueQ: V([1198000000, 1029547000, 1200000000, 1176000000]) },
+    metrics: { revenueTTM: { value: 4531902976 } },
+    marketCap: { value: 5768491008 } };
+  assert.equal(L.annualCurrencyLeak(s), true);
+});
+test('annualCurrencyLeak: USD/USD, Ratio>3 aber <20 (schwache Evidenz) bleibt false', () => {
+  const s = { meta: { reportingCurrencyOriginal: 'USD', tradingCurrency: 'USD' },
+    annual: { annualRev: V([1000]) }, timeseries: { revenueQ: V([25, 25, 25, 25]) },
+    metrics: { revenueTTM: { value: 100 } }, marketCap: { value: 1 } };
+  assert.equal(L.annualCurrencyLeak(s), false); // ratio=10 < SAME_USD_ANNUAL_TO_QTTM_MIN=20
+});
+test('annualCurrencyLeak: USD/USD, Ratio>20 aber marketCap-Ratio zu schwach -> false', () => {
+  const s = { meta: { reportingCurrencyOriginal: 'USD', tradingCurrency: 'USD' },
+    annual: { annualRev: V([3000]) }, timeseries: { revenueQ: V([25, 25, 25, 25]) },
+    metrics: { revenueTTM: { value: 100 } }, marketCap: { value: 1000 } }; // a0/marketCap=3 < 10
+  assert.equal(L.annualCurrencyLeak(s), false);
+});
 test('annualCurrencyLeak: fehlende ccy-Felder (US-Name) -> null', () => {
   const s = { meta: {}, annual: { annualRev: V([1000]) }, timeseries: { revenueQ: V([25, 25, 25, 25]) }, metrics: { revenueTTM: { value: 100 } } };
   assert.equal(L.annualCurrencyLeak(s), null);
