@@ -1,13 +1,13 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-07-30T06:33:10.180Z",
+  "generated_at": "2026-08-02T15:50:11.915Z",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 69.8
+    "coverage_pct": 70
   },
-  "generatedFromSnapshots": 718,
+  "generatedFromSnapshots": 516,
   "boards": [
     "smallcap-consumer-discretionary",
     "smallcap-consumer-staples",
@@ -38,27 +38,27 @@
   },
   "counts": {
     "smallcap-consumer-discretionary": {
-      "profitable": 25,
+      "profitable": 22,
       "unprofitable": 18
     },
     "smallcap-consumer-staples": {
-      "profitable": 20,
+      "profitable": 18,
       "unprofitable": 0
     },
     "smallcap-energy": {
-      "profitable": 14,
-      "unprofitable": 3
+      "profitable": 12,
+      "unprofitable": 4
     },
     "smallcap-financials": {
       "profitable": 8,
       "unprofitable": 8
     },
     "smallcap-health-care": {
-      "profitable": 23,
-      "unprofitable": 55
+      "profitable": 21,
+      "unprofitable": 57
     },
     "smallcap-industrials": {
-      "profitable": 35,
+      "profitable": 36,
       "unprofitable": 22
     },
     "smallcap-it-services": {
@@ -78,7 +78,7 @@
       "unprofitable": 2
     },
     "smallcap-software-comm-services": {
-      "profitable": 41,
+      "profitable": 40,
       "unprofitable": 19
     },
     "smallcap-utilities": {
@@ -87,19 +87,18 @@
     }
   },
   "excluded": {
-    "balance-sheet-bank": 63,
-    "data-suspect": 10,
+    "balance-sheet-bank": 60,
+    "data-suspect": 11,
     "dup-issuer": 1,
-    "insurer": 9,
+    "insurer": 7,
     "lender-gp0": 7,
-    "mortgage-reit": 6,
-    "no-revenue": 42,
+    "mortgage-reit": 5,
+    "no-axes": 1,
+    "no-revenue": 38,
     "no-sector": 2,
-    "non-operating-rev": 181,
-    "smallcap-mcap-out-of-band": 6,
-    "smallcap-thin-coverage": 38,
+    "smallcap-thin-coverage": 37,
     "telecom": 5,
     "unrouted": 12
   },
-  "coverageFloor": 0.6660000000000001
+  "coverageFloor": 0.672
 }
