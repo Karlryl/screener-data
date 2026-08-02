@@ -635,6 +635,25 @@ test('trackOf (R4): present-0 Lead-Stub OpInc faellt auf NetIncome zurueck (6011
   const prof = { annual: { annualOpInc: V([50, 40, 30]), annualNetIncome: V([20, 15, 10]) } };
   assert.equal(trackOf(prof, f), 'profitable');
 });
+// audit/fix (Hard-Review R1-SC-002, BH-081-Analog): signTrack()->firstPresent() ueberspringt eine
+// FUEHRENDE opInc-Luecke (Index 0/1 fehlend) und liefert ein 2 Jahre altes Verlustjahr als "juengstes"
+// -- 2038.HK-Muster: annualOpInc=[null,null,-73.4M,-31.8M], annualNetIncome[0]=+52.7M (profitabel).
+test('trackOf (R1-SC-002): FUEHRENDE opInc-Luecke faellt auf NetIncome zurueck (2038.HK-Muster)', () => {
+  const { trackOf } = require('../../src/scoring/score.js');
+  const V = (arr) => arr.map((v) => (v === null ? null : { value: v }));
+  const f = { splitMetric: 'OpInc' };
+  const leadingGap = { annual: { annualOpInc: V([null, null, -73413000, -31770000]),
+    annualNetIncome: V([52727000, -20331000]) } };
+  assert.equal(trackOf(leadingGap, f), 'profitable',
+    'aktuelles Jahr ist per NetIncome profitabel -- ein 2 Jahre altes opInc-Verlustjahr darf das nicht uebersteuern');
+  // Kontrolle: fuehrende Luecke, aber NetIncome[0] ebenfalls negativ -> bleibt unprofitable.
+  const leadingGapLoss = { annual: { annualOpInc: V([null, null, -73413000, -31770000]),
+    annualNetIncome: V([-5000000, -20331000]) } };
+  assert.equal(trackOf(leadingGapLoss, f), 'unprofitable');
+  // Kontrolle: opInc[0] present (kein Regress) -> unveraendert direkt aus opInc gelesen.
+  const noGap = { annual: { annualOpInc: V([10, -73413000]), annualNetIncome: V([-5000000]) } };
+  assert.equal(trackOf(noGap, f), 'profitable');
+});
 test('C3/R5: fuehrende null-Luecke im neuesten GJ -> KEIN aktueller Umsatz -> data-suspect (RTEZ-Muster)', () => {
   const V = (arr) => arr.map((v) => ({ value: v }));
   // annualRev[0]=null (neuestes GJ fehlt), aelterer 5000 ist STALE, revenueQ leer, mcap present,
