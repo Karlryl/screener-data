@@ -310,6 +310,17 @@ test('dilution (F17/R2F1): echter Heavy-Diluter (newest SBC/Rev>1) behaelt die A
   const d = ax.dilution(s);
   assert.ok(d !== null && d < 0, `Heavy-Diluter muss Achse behalten + negative dilution haben, ist ${d}`);
 });
+// audit/fix (Hard-Review S2-SC-002, BH-080-Analog): firstPresent(raw) ueberspringt eine FUEHRENDE
+// annualSBC-Luecke und liefert ein 4 Jahre altes SBC/Rev-Verhaeltnis als "aktuelles Niveau" (EE-Muster).
+test('dilution: fuehrende annualSBC-Luecke -> Achse droppt (null), kein Alt-Jahr-Fake-Niveau (EE-Muster, S2-SC-002)', () => {
+  const s = { annual: { annualSBC: [null, null, null, 956000, null],
+    annualRev: [{ value: 1228263000 }, { value: 851437000 }, { value: 1158963000 }, { value: 2472973000 }] } };
+  assert.equal(ax.dilution(s), null,
+    'annualSBC[0] fehlt -- das aktuelle Dilutions-Niveau ist unbekannt, kein 4-Jahre-alter Fake-Wert');
+  // Kontrolle: annualSBC[0] present -> unveraendertes Verhalten (kein Regress).
+  const noGap = { annual: { annualSBC: [500000, null, null, 956000], annualRev: [{ value: 1000000 }, { value: 851437000 }] } };
+  assert.ok(ax.dilution(noGap) !== null, 'present annualSBC[0] darf die Achse nicht droppen');
+});
 
 test('marginTrajectory (F12, R2 mutation): revenueQ===0 wird verworfen (r>0-Guard, nicht r>=0)', () => {
   const s = { timeseries: {

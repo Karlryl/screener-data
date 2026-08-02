@@ -398,8 +398,14 @@ function dilution(s) {
   // SLOPE nur wenn das aelteste SBC/Rev plausibel ist (<=1) — ein near-zero-Nenner-Blowup (IBRX old=167)
   // -> Slope=0 (nur Niveau zaehlt) statt das Ranking zu invertieren. Ratio-Plausibilitaet, kein Niveau.
   const raw = ratioSeries(sbc, norm(s, 'annualRev'));
-  const levelRaw = firstPresent(raw);
-  if (levelRaw === null) return null;
+  // audit/fix (Hard-Review S2-SC-002, BH-080-Analog): firstPresent(raw) ueberspringt eine FUEHRENDE
+  // Luecke (annualSBC[0] fehlt) und liefert ein AELTERES Jahr als "level" (EE: annualSBC=[null,null,
+  // null,956000,null] -> firstPresent gab das 4 Jahre alte SBC/Rev-Verhaeltnis als aktuelles Niveau
+  // aus, dilution~-0.0004 statt "unbekannt"). raw[0] (echtes juengstes GJ) muss selbst present sein,
+  // sonst ist das AKTUELLE Dilutions-Niveau unbekannt -> Achse droppen (renorm-on-drop), KEIN aus
+  // einem Altjahr abgeleiteter Fake-Wert.
+  const levelRaw = raw[0];
+  if (levelRaw === null || levelRaw === undefined) return null;
   const level = Math.min(1, Math.max(0, levelRaw));            // clampen, NIE droppen (Heavy-Diluter behaelt Strafe)
   const oldRaw = lastPresent(raw);
   const slope = (oldRaw !== null && oldRaw >= 0 && oldRaw <= 1) ? (level - oldRaw) : 0; // implausibles old -> Slope=0
