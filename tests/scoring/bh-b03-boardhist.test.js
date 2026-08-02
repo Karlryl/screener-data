@@ -115,8 +115,12 @@ check('BH-108: pit traegt reportingCurrencyOriginal/fxRateApplied additiv', () =
   assert.equal(mks.pit.priceSales, 10.0);
   assert.equal(mks.pit.priceSalesAsOf, '2026-07-09T00:00:00.000Z');
   const keys = Object.keys(mks.pit);
-  assert.equal(keys[keys.length - 2], 'priceSales', 'priceSales bleibt vorletztes Feld');
-  assert.equal(keys[keys.length - 1], 'priceSalesAsOf', 'priceSalesAsOf bleibt letztes Feld');
+  // audit/fix (Hard-Review R4-SCR-02): marketCap ist additiv NACH priceSalesAsOf angehaengt
+  // (screener-formel-ledger.md Paragraph 4a Size-Regressor) -- priceSales/priceSalesAsOf ruecken
+  // um 1 nach vorn, bleiben aber selbst ein zusammenhaengendes additives Paar.
+  assert.equal(keys[keys.length - 3], 'priceSales', 'priceSales bleibt drittletztes Feld');
+  assert.equal(keys[keys.length - 2], 'priceSalesAsOf', 'priceSalesAsOf bleibt vorletztes Feld');
+  assert.equal(keys[keys.length - 1], 'marketCap', 'marketCap ist das neue letzte Feld (R4-SCR-02)');
 });
 check('BH-108: fehlende FX-Provenienz -> beide Felder null (kein Crash)', () => {
   const base = mkBase();
