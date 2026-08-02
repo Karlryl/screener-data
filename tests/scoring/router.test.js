@@ -227,6 +227,19 @@ test('operative Firma mit EINEM negativen Quartal bleibt drin (negQ NUR Asset-Mg
     timeseries: { revenueQ: [{ value: 3000 }, { value: -100 }, { value: 3100 }] } };
   assert.equal(route(op).action, 'route');
 });
+// --- audit/fix Hard-Review AE-SC-003: isPreRevenue() pruefte annualRev, nie revenueQ ---
+test('annualRev=[0,0,0,0] mit echtem revenueQ ist NICHT pre-revenue (PAH3.DE-Muster, AE-SC-003)', () => {
+  const s = { meta: { sector: 'Consumer Cyclical', industry: 'Auto Manufacturers', region: 'US', ticker: 'PAH3X' },
+    annual: { annualRev: [{ value: 0 }, { value: 0 }, { value: 0 }, { value: 0 }] },
+    timeseries: { revenueQ: [{ value: 957000000 }, { value: 1320000000 }, { value: 1508000000 }] } };
+  const r = route(s);
+  assert.notEqual(r.action, 'survival', 'echter revenueQ-Umsatz darf nicht als pre-revenue gelten');
+  assert.equal(r.formulaId, 'consumer-discretionary');
+  // Kontrolle: revenueQ fehlt/ist all-0 -> weiterhin echtes pre-revenue.
+  const noRevQ = { meta: { sector: 'Consumer Cyclical', industry: 'Auto Manufacturers', region: 'US', ticker: 'PREREV' },
+    annual: { annualRev: [{ value: 0 }] } };
+  assert.equal(route(noRevQ).track, 'pre-revenue');
+});
 // --- Court Fall 8/1b: leer-annualRev Finanz-Vehikel (Branch d) ---------------
 test('leer-annualRev CEF/Shell/Asset-Mgmt -> exclude non-operating-rev (Branch d)', () => {
   // BMEZ/RVI/PIN.L (Asset Management) + XXI (Shell Companies): komplett leerer annualRev faellt

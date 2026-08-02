@@ -138,8 +138,15 @@ function gpClass(s) {
 // --- Schritt 0: Pre-Revenue -------------------------------------------------
 function isPreRevenue(s) {
   const rev = norm(s, 'annualRev');
-  if (!hasPresent(rev)) return true;
-  return presentValues(rev).every((v) => v === 0);
+  const annualEmpty = !hasPresent(rev) || presentValues(rev).every((v) => v === 0);
+  if (!annualEmpty) return false;
+  // audit/fix (Hard-Review AE-SC-003): annualRev=[] bzw. all-0 pruefte bisher NIE gegen revenueQ.
+  // PAH3.DE (Auto Manufacturers) hat annualRev=[0,0,0,0] trotz Milliarden-Umsatz in revenueQ und
+  // landete faelschlich im Survival-/Pre-Revenue-Track statt im normalen Sektor-Routing. Ein
+  // present + von-0-verschiedener revenueQ-Wert widerlegt Pre-Revenue, unabhaengig vom annualRev-Stand.
+  const revQ = norm(s, 'revenueQ');
+  if (hasPresent(revQ) && presentValues(revQ).some((v) => v !== 0)) return false;
+  return true;
 }
 
 // --- Schritt 1: Struktur-Hard-Exclude ---------------------------------------
