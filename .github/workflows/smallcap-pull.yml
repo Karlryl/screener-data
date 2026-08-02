@@ -104,15 +104,34 @@ jobs:
           fi
 
       # Restore-only: der zuletzt gemergte Store (job "merge" unten schreibt ihn), damit
-      # die Freshness-Diaet in pull-yahoo.js greift. Fehlt er (allererster Lauf) -> leerer
-      # Ordner -> pull-yahoo.js macht fuer diesen Shard einen Voll-Pull (erwartet, einmalig).
+      # die Freshness-Diaet in pull-yahoo.js greift. Restauriert in einen EIGENEN
+      # Baseline-Ordner, NICHT den --output-Pfad von pull-yahoo.js unten (NRL-SK-001-Fix,
+      # Hard Review 2026-08-02): vorher restaurierte dieser Schritt direkt nach
+      # snapshots-smallcap, denselben Ordner, den "Upload shard snapshots" komplett
+      # hochlud — jeder der 4 Shards lud damit den GESAMTEN (bis zu 24h alten) Altbestand
+      # als eigenes Artefakt hoch, nicht nur seine ~194 tatsaechlich angefassten Ticker.
+      # Beim Merge (merge-multiple) ueberschrieb dann, wer zuletzt entpackt wurde, die
+      # frischen Pulls der anderen Shards mit seiner Kopie des Altbestands. Fehlt der Cache
+      # (allererster Lauf) -> leerer Baseline-Ordner -> die Kopie im naechsten Schritt ist
+      # ein No-Op -> pull-yahoo.js macht fuer diesen Shard einen Voll-Pull (erwartet, einmalig).
       - name: Restore merged small-cap store (diet baseline)
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          path: snapshots-smallcap
+          path: snapshots-smallcap-baseline
           key: snapshots-smallcap-store-nonexistent
           restore-keys: |
             snapshots-smallcap-store-
+
+      # NRL-SK-001-Fix: den Baseline-Bestand in den Arbeitsordner kopieren, den
+      # pull-yahoo.js liest UND beschreibt (--output kennt keinen getrennten
+      # Nur-Lese-Parameter). Der Baseline-Ordner selbst bleibt unveraendert liegen — er
+      # ist der Vergleichsmassstab fuer "Isolate fresh shard output" weiter unten.
+      - name: Seed working dir from baseline
+        run: |
+          mkdir -p snapshots-smallcap
+          if [ -d snapshots-smallcap-baseline ]; then
+            cp -r snapshots-smallcap-baseline/. snapshots-smallcap/
+          fi
 
       - name: Run Yahoo Pull (small-cap shard ${{ matrix.shard }}/${{ env.SHARD_COUNT }})
         env:
@@ -123,14 +142,31 @@ jobs:
         continue-on-error: true
         timeout-minutes: 45
 
+      # NRL-SK-001-Fix: nur Dateien, die pull-yahoo.js in DIESEM Lauf neu angelegt oder
+      # inhaltlich veraendert hat, landen im separaten Ausgabeordner, den der naechste
+      # Schritt hochlaedt — per Inhaltsvergleich gegen die unveraenderte Baseline (nicht
+      # Datei-Alter/mtime: die Kopie im vorigen Schritt stempelt ohnehin neu). Der
+      # Altbestand, den dieser Shard nie angefasst hat, verlaesst diesen Job nicht mehr.
+      - name: Isolate fresh shard output
+        if: always()
+        run: |
+          mkdir -p snapshots-smallcap-fresh
+          for f in snapshots-smallcap/*.json; do
+            [ -e "$f" ] || continue
+            base="$(basename "$f")"
+            if [ "$base" = "_manifest.json" ]; then continue; fi
+            if ! cmp -s "$f" "snapshots-smallcap-baseline/$base" 2>/dev/null; then
+              cp "$f" "snapshots-smallcap-fresh/$base"
+            fi
+          done
+          echo "Frische/aktualisierte Dateien dieses Shards: $(ls snapshots-smallcap-fresh | wc -l)"
+
       - name: Upload shard snapshots
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: snapshots-smallcap-shard-${{ matrix.shard }}
-          path: |
-            snapshots-smallcap/*.json
-            !snapshots-smallcap/_manifest.json
+          path: snapshots-smallcap-fresh/*.json
           if-no-files-found: warn
           retention-days: 1
 

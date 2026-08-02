@@ -883,17 +883,33 @@ jobs:
             echo "::error::git ls-remote failed with exit $ls_remote_rc (network/auth/transport?) — aborting instead of assuming gh-pages is missing."
             exit 1
           fi
-          mkdir -p _site/outputs
-          cp index.html _site/ 2>/dev/null || true
-          cp -r outputs/. _site/outputs/ 2>/dev/null || true
           cd _site
           git config user.name "yahoo-pull-bot"
           git config user.email "yahoo-pull-bot@users.noreply.github.com"
           git remote get-url origin >/dev/null 2>&1 || git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          git add -A
-          if git diff --staged --quiet; then echo "No merge-deploy changes."; exit 0; fi
-          git commit -m "deploy: screener reports $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          # R1-SK-003 (Hard Review 2026-08-02): manuelle Laeufe bekommen seit Zeile 48-50
+          # eine EIGENE Concurrency-Gruppe (geplante Laeufe teilen sich 'main-push') — ein
+          # manueller und ein geplanter Lauf koennen also gleichzeitig hier ankommen. Der
+          # alte Retry pushte bei einem transienten Fehlschlag denselben, VOR dem Clone
+          # gebauten lokalen Commit unveraendert erneut (force) — hatte der jeweils andere
+          # Lauf zwischenzeitlich bereits erfolgreich deployt, ueberschrieb der spaeter
+          # fertige Lauf dessen (moeglicherweise neueren) Stand blind. Fix: vor jedem
+          # weiteren Versuch neu vom Remote holen und die eigenen Dateien darauf neu
+          # anwenden — dasselbe fetch-vor-jedem-Versuch-Prinzip wie der bestehende
+          # retry-rebase-Loop im "Commit Snapshots"-Schritt oben, hier ohne rebase
+          # (gh-pages ist ein reiner Datei-Snapshot-Branch, kein Merge-Ziel).
           for i in 1 2 3; do
+            if [ "$i" -gt 1 ]; then
+              if git fetch origin gh-pages 2>/dev/null && git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then
+                git reset --hard origin/gh-pages
+              fi
+            fi
+            mkdir -p outputs
+            cp ../index.html . 2>/dev/null || true
+            cp -r ../outputs/. outputs/ 2>/dev/null || true
+            git add -A
+            if git diff --staged --quiet; then echo "No merge-deploy changes."; exit 0; fi
+            git commit -m "deploy: screener reports $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             if git push --force origin gh-pages; then
               echo "✓ GitHub Pages deployed on attempt $i"
               exit 0
@@ -1113,24 +1129,34 @@ jobs:
             echo "::error::git ls-remote failed with exit $ls_remote_rc (network/auth/transport?) — aborting instead of assuming gh-pages is missing."
             exit 1
           fi
-          mkdir -p _ghp/outputs/hypergrowth
-          cp outputs/hypergrowth/*.json _ghp/outputs/hypergrowth/
-          # F11: Ziel-v1 VOR dem Kopieren leeren — sonst ueberleben aus dem frischen Export
-          # verschwundene Dateien (v.a. das optionale quality/-Board bei einem QC-Fehl-Lauf)
-          # aus dem alten gh-pages-Checkout und werden als frisch weiter-serviert (stiller
-          # Stale-Feed). Nach dem rm ist der deployte v1-Stand exakt der DIESES Laufs; HG bleibt
-          # unberuehrt (BRANCHES+overview+survival+index werden jeden Lauf voll neu geschrieben).
-          rm -rf _ghp/outputs/findash-export/v1
-          mkdir -p _ghp/outputs/findash-export/v1
-          cp -r outputs/findash-export/v1/. _ghp/outputs/findash-export/v1/
           cd _ghp
           git config user.name "yahoo-pull-bot"
           git config user.email "yahoo-pull-bot@users.noreply.github.com"
           git remote get-url origin >/dev/null 2>&1 || git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          git add -A
-          if git diff --staged --quiet; then echo "No scoring output changes to deploy."; exit 0; fi
-          git commit -m "deploy: hypergrowth scoring $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          # R1-SK-003 (Hard Review 2026-08-02): siehe merge-Deploy oben, gleiche Haertung —
+          # vor jedem weiteren Push-Versuch neu vom Remote holen, sonst ueberschreibt der
+          # spaeter fertige von zwei parallelen Laeufen (manuell + geplant, seit Zeile
+          # 48-50 gleichzeitig moeglich) den anderen blind.
           for i in 1 2 3; do
+            if [ "$i" -gt 1 ]; then
+              if git fetch origin gh-pages 2>/dev/null && git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then
+                git reset --hard origin/gh-pages
+              fi
+            fi
+            mkdir -p outputs/hypergrowth
+            cp ../outputs/hypergrowth/*.json outputs/hypergrowth/
+            # F11: Ziel-v1 VOR dem Kopieren leeren — sonst ueberleben aus dem frischen Export
+            # verschwundene Dateien (v.a. das optionale quality/-Board bei einem QC-Fehl-Lauf)
+            # aus dem alten gh-pages-Checkout und werden als frisch weiter-serviert (stiller
+            # Stale-Feed). Nach dem rm ist der deployte v1-Stand exakt der DIESES Laufs; HG
+            # bleibt unberuehrt (BRANCHES+overview+survival+index werden jeden Lauf voll neu
+            # geschrieben).
+            rm -rf outputs/findash-export/v1
+            mkdir -p outputs/findash-export/v1
+            cp -r ../outputs/findash-export/v1/. outputs/findash-export/v1/
+            git add -A
+            if git diff --staged --quiet; then echo "No scoring output changes to deploy."; exit 0; fi
+            git commit -m "deploy: hypergrowth scoring $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             if git push --force origin gh-pages; then
               echo "✓ Scoring output deployed on attempt $i"
               exit 0
