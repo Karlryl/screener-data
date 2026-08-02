@@ -205,6 +205,52 @@ check('ohne CIK-Uebernahme wuerde der Tag die Historie verderben', () => {
     'mit Uebernahme darf KEIN Symbol als geaendert gelten');
 });
 
+// --- R1-SK-002 (Hard Review 2026-07-31): reine SEC-Symbole duerfen bei SEC-Ausfall
+// nicht als "weg"/delisted gelten. baueKarte() erzeugt Datensaetze mit b:'SEC' NUR
+// fuer Symbole, die in keiner NASDAQ-/otherlisted-Datei stehen. Fehlt roh.sec, fehlen
+// diese Symbole komplett in `neu` -> diff() liest das als Delisting. Am 29.07.2026
+// waren das 3.356 Symbole an einem Tag, dauerhaft in die Ticker-Historie geschrieben.
+check('OHNE Uebernahme: ein SEC-Ausfall macht reine SEC-Symbole faelschlich zu "weg" (Repro)', () => {
+  const vorher = new Map([
+    ['AAPL', { n: 'Apple Inc', b: 'Q' }],
+    ['NURSEC', { n: 'Nur bei der SEC', b: 'SEC', c: '0000000099' }],
+  ]);
+  const neuOhneSec = T.baueKarte({ nasdaq: nasdaqRoh, other: '', sec: '' }); // enthaelt nur AAPL/MSFT
+  const d = T.diff(vorher, neuOhneSec);
+  assert.ok(d.weg.includes('NURSEC'),
+    'GEGENPROBE: ohne Uebernahme muss das reine SEC-Symbol faelschlich als weg/delisted gelten');
+});
+check('MIT Uebernahme (wie run() sie macht): reine SEC-Symbole bleiben bei SEC-Ausfall erhalten', () => {
+  const vorher = new Map([
+    ['AAPL', { n: 'Apple Inc', b: 'Q' }],
+    ['NURSEC', { n: 'Nur bei der SEC', b: 'SEC', c: '0000000099' }],
+  ]);
+  const neu = T.baueKarte({ nasdaq: nasdaqRoh, other: '', sec: '' });
+  // Exakt die Uebernahme, die run() bei fehlend.includes('sec') macht:
+  for (const [sym, alt] of vorher) {
+    if (alt.b === 'SEC' && !neu.has(sym)) neu.set(sym, alt);
+  }
+  const d = T.diff(vorher, neu);
+  assert.ok(!d.weg.includes('NURSEC'), 'reines SEC-Symbol darf NICHT als weg gelten, nur weil die SEC-Quelle schwieg');
+  assert.equal(d.weg.length, 0, 'echte Boersen-Symbole (AAPL) sind unveraendert vorhanden, MSFT fehlt hier bewusst nicht in vorher');
+});
+check('die Uebernahme ueberschreibt KEIN echtes Boersen-Delisting', () => {
+  // Gegenprobe zur Gegenprobe: ein Symbol, das WIRKLICH von der Boerse verschwunden ist
+  // (nicht b:'SEC'), muss trotz SEC-Ausfall weiterhin als "weg" gelten.
+  const vorher = new Map([['DELISTED', { n: 'Echt weg AG', b: 'Q' }]]);
+  const neu = T.baueKarte({ nasdaq: nasdaqRoh, other: '', sec: '' });
+  for (const [sym, alt] of vorher) {
+    if (alt.b === 'SEC' && !neu.has(sym)) neu.set(sym, alt);
+  }
+  const d = T.diff(vorher, neu);
+  assert.ok(d.weg.includes('DELISTED'), 'ein echtes Boersen-Delisting darf die Uebernahme nicht verdecken');
+});
+check('run() uebernimmt reine SEC-Symbole wirklich aus dem Vortagesstand (Quelltext-Anker)', () => {
+  const stelle = QUELLTEXT.slice(QUELLTEXT.indexOf('function run'));
+  assert.match(stelle, /alt\.b === 'SEC' && !neu\.has\(sym\)/,
+    'run() muss reine SEC-Datensaetze bei SEC-Ausfall in neu uebernehmen, sonst ist die obige Uebernahme nur ein Testartefakt');
+});
+
 check('run() uebernimmt die CIK wirklich aus dem Vortagesstand (Quelltext-Anker)', () => {
   const stelle = QUELLTEXT.slice(QUELLTEXT.indexOf('function run'));
   assert.match(stelle, /fehlend\.includes\('sec'\)/,
