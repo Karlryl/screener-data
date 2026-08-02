@@ -48,19 +48,52 @@ function fileCount() {
   catch (e) { return 0; }
 }
 
+// NA-SK-001 (Hard Review 2026-07-31): classify() trusted m.n_ok>0 as "manifest usable"
+// without checking n_total>0, n_ok<=n_total or negative counters — {n_ok:5000,n_total:1}
+// passed straight through to finishGood() and came out coverage_pct:500000, status:'ok'.
+// A manifest whose own numbers are logically impossible is exactly as untrustworthy as
+// a missing one — route it through the same fallback path instead of trusting it raw.
+function manifestNumbersSane(m) {
+  if (!m || typeof m !== 'object') return false;
+  if (!Number.isFinite(m.n_ok) || m.n_ok < 0) return false;
+  if (m.n_total !== undefined && m.n_total !== null) {
+    if (!Number.isFinite(m.n_total) || m.n_total <= 0) return false;
+    if (m.n_ok > m.n_total) return false;
+  }
+  if (m.n_failed !== undefined && m.n_failed !== null && (!Number.isFinite(m.n_failed) || m.n_failed < 0)) return false;
+  return true;
+}
+
 // Pure classifier — unit-testable. Returns {status, reasons[], n_ok, n_total, source}.
 function classify(m, wlSize, fCount) {
   const reasons = [];
-  if (!m || !(m.n_ok > 0)) {
-    // schema-broken / no usable manifest: fall back to on-disk file count (as old step did)
+  const manifestUsable = m && m.n_ok > 0 && manifestNumbersSane(m);
+  if (!manifestUsable) {
+    // schema-broken / internally-inconsistent / no usable manifest: fall back to
+    // on-disk file count (as old step did).
     const ok = fCount, total = wlSize > 0 ? wlSize : fCount, source = 'file-count/watchlist-denom';
     const hard = Math.max(HARD_ABS, Math.floor(total * HARD_PCT));
+    // NRE-SK-001 (Hard Review 2026-07-31): the file-count fallback cannot see
+    // partial/failure-mass/honest-coverage at all — it is a strictly weaker signal
+    // than a real manifest. Passing it through to finishGood() let a broken/missing
+    // manifest come out as a silent 'ok' whenever raw file counts happened to clear
+    // the hard/soft floors — the SAME on-disk state that a real manifest reported as
+    // 'degradiert' (partial=true, high failure-mass, low honest-coverage) went green
+    // just because the manifest that would have proven it degraded failed to write/
+    // parse. Absence of the manifest is itself an anomaly worth a banner: never let
+    // this branch return a bare 'ok' — it always carries a reason.
+    const brokenReason = !m
+      ? 'manifest-unreadable-or-missing (schema-broken)'
+      : (!(m.n_ok > 0) ? 'n_ok==0 in manifest' : 'manifest-internally-inconsistent (n_ok/n_total/n_failed impossible)');
     if (!(ok > 0) || ok < hard) {
-      reasons.push(!m ? 'manifest-unreadable-or-missing (schema-broken)' : 'n_ok==0 in manifest');
+      reasons.push(brokenReason);
       if (ok < hard) reasons.push(`n_ok ${ok} < HARD_FLOOR ${hard}`);
       return { status: 'katastrophal', reasons, n_ok: ok, n_total: total, source };
     }
-    return finishGood(ok, total, source, m, reasons);
+    reasons.push(brokenReason + ' — falling back to file-count (cannot verify partial/failure-mass/honest-coverage)');
+    const out = finishGood(ok, total, source, null, reasons);
+    out.status = 'degradiert'; // file-count fallback can never certify a clean 'ok'
+    return out;
   }
   return finishGood(m.n_ok, m.n_total || wlSize || fCount, 'manifest', m, reasons);
 }
@@ -278,13 +311,39 @@ function selftest() {
   tampered.degraded = false;
   const negOk = validateMarker(tampered).length > 0;
   console.log(`${negOk ? 'PASS' : 'FAIL'}  marker-contract negative-control (tampered degraded flag is rejected)`);
-  const total = cases.length * 2 + 2;   // +1 Doppelabzug-Test, +1 Negativ-Kontrolle
   if (negOk) pass++;
+
+  // NA-SK-001 (Hard Review 2026-07-31): ein Manifest mit logisch unmoeglichen Zahlen
+  // (n_ok > n_total) durfte NICHT wie ein gesundes Manifest durchgereicht werden.
+  const unmoeglich = { n_ok: 5000, n_total: 1, partial: false, n_failed: 0 };
+  const resUnmoeglich = classify(unmoeglich, N, 0);
+  const naSk001Ok = resUnmoeglich.status !== 'ok' && resUnmoeglich.source !== 'manifest';
+  console.log(`${naSk001Ok ? 'PASS' : 'FAIL'}  NA-SK-001: n_ok>n_total wird verworfen statt als 'ok' durchgereicht (status=${resUnmoeglich.status} source=${resUnmoeglich.source})`);
+  if (naSk001Ok) pass++;
+  const negativ = { n_ok: 100, n_total: -5, partial: false };
+  const resNegativ = classify(negativ, N, 0);
+  const naSk001NegOk = resNegativ.status !== 'ok' && resNegativ.source !== 'manifest';
+  console.log(`${naSk001NegOk ? 'PASS' : 'FAIL'}  NA-SK-001: negatives n_total wird verworfen (status=${resNegativ.status} source=${resNegativ.source})`);
+  if (naSk001NegOk) pass++;
+
+  // NRE-SK-001 (Hard Review 2026-07-31): der Datei-Fallback (kein/kaputtes Manifest)
+  // darf NIE 'ok' zurueckgeben, selbst wenn die rohe Dateizahl die Schwellen locker
+  // reisst — er kann partial/failure-mass/honest-coverage nicht sehen und ist damit
+  // strukturell blind fuer genau die Zustaende, die ein echtes Manifest als
+  // 'degradiert' melden wuerde. Realistischer Fall: gleiche Dateizahl wie ein
+  // gesunder Voll-Pull, aber das Manifest fehlt (Schreibfehler in merge-shard-
+  // manifests.js).
+  const resFallback = classify(null, N, Math.floor(N * 0.9)); // 90% der Dateien vorhanden, KEIN Manifest
+  const nreSk001Ok = resFallback.status === 'degradiert';
+  console.log(`${nreSk001Ok ? 'PASS' : 'FAIL'}  NRE-SK-001: Datei-Fallback ohne Manifest ist bestenfalls 'degradiert', nie 'ok' (status=${resFallback.status})`);
+  if (nreSk001Ok) pass++;
+
+  const total = cases.length * 2 + 2 + 3;   // +1 Doppelabzug, +1 Negativ-Kontrolle, +3 NA/NRE-SK-001
   console.log(`${pass}/${total} passed`);
   process.exit(pass === total ? 0 : 1);
 }
 
-module.exports = { classify, buildMarker, validateMarker, degradedMarkerBroken };
+module.exports = { classify, buildMarker, validateMarker, degradedMarkerBroken, manifestNumbersSane };
 
 // require.main-Guard: ohne ihn wuerde ein `require('./coverage-gate.js')' aus
 // einem Test heraus sofort run()/selftest() gegen echte ./snapshots,

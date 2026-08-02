@@ -30,6 +30,8 @@
  */
 const fs = require('fs');
 const path = require('path');
+// NRE-SK-001 (Hard Review 2026-07-31): siehe unten bei writeFileAtomic-Aufruf.
+const { writeFileAtomic } = require(path.join(__dirname, '..', 'lib', 'atomic-write.js'));
 
 function readJSON(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return null; } }
 
@@ -200,7 +202,14 @@ function run() {
   merged.n_shard_collisions = rec.gap;     // Instrumentierung (0 = sauber disjunkt)
 
   fs.mkdirSync(snapDir, { recursive: true });
-  fs.writeFileSync(path.join(snapDir, '_manifest.json'), JSON.stringify(merged));
+  // NRE-SK-001 (Hard Review 2026-07-31): plain writeFileSync can leave a truncated/
+  // partial _manifest.json behind on a killed/crashed step (timeout, OOM, runner
+  // eviction mid-write). coverage-gate.js reads that as "unreadable" and falls back
+  // to a strictly weaker file-count-only classification that cannot see partial/
+  // failure-mass/honest-coverage — a write failure here silently downgrades Karls
+  // einzigen Coverage-Alarm. Atomic write (tmp + rename) means the file is either
+  // the complete previous version or the complete new one, never a half-written one.
+  writeFileAtomic(path.join(snapDir, '_manifest.json'), JSON.stringify(merged));
   console.log(`Merged manifest: n_ok=${merged.n_ok}/${merged.n_total} full=${merged.n_full} price-only=${merged.n_priceonly} failed=${merged.n_failed} partial=${merged.partial} shards=${merged.n_shards_present}/${merged.n_shards_expected} (on-disk snapshots=${onDisk}) adressierbar=${merged.n_addressable} (mcap-Skips ${merged.n_skipped_mcap}, Small-Cap-eigene ${merged.n_skipped_owned}) unerklaert=${merged.n_addressable - merged.n_ok - merged.n_failed}`);
   // Tag 464, Plausibilitaets-Anker fuer den Nenner: adressierbar - n_ok sollte ungefaehr
   // n_failed sein. Am Lauf 30230485209 nachgerechnet: 12373-10672 = 1701 gegen 1678
