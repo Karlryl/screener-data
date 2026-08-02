@@ -242,6 +242,18 @@ test('burnAccelerating: Burn UND Verlust vertiefen sich -> true; Turnaround (FCF
   const turn = { annual: { annualFCF: V([29, -46]), annualOpInc: V([38, -10]) } }; // CRDO-Muster (neuestes positiv)
   assert.equal(L.burnAccelerating(turn), false);
 });
+// audit/fix (Hard-Review R1-SC-003): fcf/opi wurden unabhaengig kompaktiert -- bei unterschiedlichen
+// Luecken-Mustern (2038.HK: annualOpInc 2 fuehrende Luecken, annualFCF keine) verglich die Lampe
+// positionsfremde Jahre (FY-2/FY-3 gegen FY-aktuell/FY-1) und feuerte faelschlich 'true'.
+test('burnAccelerating: unterschiedliche Luecken-Muster in fcf/opi -> null statt positionsfremdem Vergleich (2038.HK-Muster, R1-SC-003)', () => {
+  const s = { annual: { annualFCF: V([-78835000, 237227000, 9483000, 266119000]),
+    annualOpInc: [null, null, { value: -73413000 }, { value: -31770000 }] } };
+  assert.equal(L.burnAccelerating(s), null,
+    'annualOpInc fehlt an Index 0/1 -- kein bewertbarer YoY-Vergleich zum SELBEN Firmenjahr, kein positionsfremdes Feuern');
+  // Kontrolle: beide Serien luecken-frei UND SYNCHRON -> unveraendertes Verhalten (kein Regress).
+  const synced = { annual: { annualFCF: V([-300, -100]), annualOpInc: V([-50, -20]) } };
+  assert.equal(L.burnAccelerating(synced), true);
+});
 test('burnPressFactor: Verbrenner -> Faktor <1 (Score gedrueckt), Nicht-Verbrenner -> exakt 1.0', () => {
   const burner = { annual: { annualFCF: V([-300, -100]), annualOpInc: V([-50, -20]), annualRev: V([100, 80]) } };
   const f = L.burnPressFactor(burner); // mag = dBurn 200 / scale max(80,300,100)=300 = 0.667 -> 1/1.667 = 0.6

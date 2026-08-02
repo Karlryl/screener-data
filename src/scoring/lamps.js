@@ -275,9 +275,16 @@ function annualCurrencyLeak(s) {
 // STRUKTURELL aus dem Gate. REIN WARNEND (nicht in DATA_SUSPECT_LAMPS) — druckt den Score NICHT (der
 // Score-Abzug fuer Verschlechterer ist als naechste Iteration deferred, muss veto-sicher gebaut werden).
 function burnAccelerating(s) {
-  const fcf = presentValues(norm(s, 'annualFCF'));
-  const opi = presentValues(norm(s, 'annualOpInc'));
-  if (fcf.length < 2 || opi.length < 2) return null;
+  // audit/fix (Hard-Review R1-SC-003): fcf/opi wurden bisher UNABHAENGIG voneinander kompaktiert
+  // (presentValues() je Serie separat) -- bei UNTERSCHIEDLICHEN Luecken-Mustern (2038.HK: annualOpInc
+  // hat 2 fuehrende Luecken, annualFCF keine) landen positionsfremde Jahre nebeneinander: opi[0]/opi[1]
+  // (kompaktiert) waren tatsaechlich FY-2/FY-3, wurden aber gegen fcf[0]/fcf[1] (echtes FY-aktuell/FY-1)
+  // verglichen -> feuerte 'true', obwohl kein einziges Jahr tatsaechlich verglichen wurde. Jetzt
+  // positionsgebunden auf den ROHEN Serien: Index 0 UND 1 muessen bei BEIDEN Serien am SELBEN Platz
+  // present sein, sonst ist der YoY-Vergleich fuer dieses Firmenjahr nicht bewertbar.
+  const fcf = norm(s, 'annualFCF');
+  const opi = norm(s, 'annualOpInc');
+  if (!Number.isFinite(fcf[0]) || !Number.isFinite(fcf[1]) || !Number.isFinite(opi[0]) || !Number.isFinite(opi[1])) return null;
   if (!(fcf[0] < 0) || !(opi[0] < 0)) return false;   // Gate: noch am Verbrennen UND operativ unprofitabel
   return fcf[0] < fcf[1] && opi[0] < opi[1];           // beide tiefer als Vorjahr -> Burn/Verlust beschleunigt
 }
