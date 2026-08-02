@@ -618,6 +618,33 @@ jobs:
         timeout-minutes: 25
         continue-on-error: true
 
+      # R5-SK-001 (Hard Review 2026-07-31): macro-regime.js's "leave an EXISTING
+      # args.out untouched on failure" fallback (BH-138) can only protect a
+      # last-good regime file that is ALREADY on disk when it runs. The merge job
+      # is a fresh runner — outputs/macro-regime.json never pre-exists here — so on
+      # a bad SPY-price day the guard silently no-ops and the empty placeholder gets
+      # published over yesterday's good regime via Deploy 1. Restore the last
+      # published copy from gh-pages first so the existing "keep last-good" logic
+      # has something to keep. Missing branch/file (first-ever deploy) is not an
+      # error — macro-regime.js's own empty-placeholder path is correct there.
+      - name: Restore last-good macro-regime.json from gh-pages
+        run: |
+          mkdir -p outputs
+          rm -rf _macro_restore
+          if git clone --depth 1 --branch gh-pages --filter=blob:none --sparse \
+            https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git _macro_restore 2>/dev/null; then
+            (cd _macro_restore && git sparse-checkout set outputs/macro-regime.json) 2>/dev/null || true
+            if [ -f _macro_restore/outputs/macro-regime.json ]; then
+              cp _macro_restore/outputs/macro-regime.json outputs/macro-regime.json
+              echo "Restored last-good macro-regime.json from gh-pages."
+            else
+              echo "No macro-regime.json on gh-pages yet (first run?) — proceeding without it."
+            fi
+          else
+            echo "gh-pages branch not clonable yet (first-ever deploy?) — proceeding without a last-good macro-regime.json."
+          fi
+          rm -rf _macro_restore
+
       # Tag 139: Macro-Regime-Tagging — SPY 200d-MA → BULL/BEAR/SIDEWAYS.
       - name: Compute Macro Regime
         run: node scripts/macro-regime.js

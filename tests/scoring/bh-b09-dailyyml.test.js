@@ -225,5 +225,26 @@ test('AE-CI-001: alter blinder truthy-if ("if git ls-remote ...; then") ist aus 
 // zuverlaessig auf dieselbe Shell auf wie unter ubuntu-latest in CI — die drei
 // Text-Pins oben decken alle drei Zweige (0/2/sonst) bereits eindeutig ab.)
 
+// ── R5-SK-001 (Hard Review 2026-07-31): macro-regime.js's BH-138 "leave an
+//    existing last-good file untouched" fallback can only work if that file
+//    already exists when the merge job's fresh runner starts. Ohne Restore-Schritt
+//    ist outputs/macro-regime.json auf jedem Lauf neu leer -> BH-138 no-opt sich
+//    selbst, ein schlechter SPY-Tag ueberschreibt den letzten guten Stand via
+//    Deploy 1. Der Restore-Schritt muss VOR "Compute Macro Regime" laufen.
+test('R5-SK-001: ein Restore-Schritt fuer macro-regime.json aus gh-pages laeuft VOR "Compute Macro Regime"', () => {
+  const iRestore = yml.indexOf('name: Restore last-good macro-regime.json from gh-pages');
+  const iCompute = yml.indexOf('name: Compute Macro Regime');
+  assert.ok(iRestore > 0, 'Restore-Schritt fehlt');
+  assert.ok(iCompute > iRestore, 'Compute Macro Regime muss NACH dem Restore laufen, sonst bleibt outputs/macro-regime.json leer');
+});
+test('R5-SK-001: der Restore-Schritt holt outputs/macro-regime.json vom gh-pages-Branch und scheitert nicht hart, wenn er fehlt', () => {
+  const s = section('name: Restore last-good macro-regime.json from gh-pages', 'name: Compute Macro Regime');
+  assert.match(s, /--branch gh-pages/);
+  assert.match(s, /outputs\/macro-regime\.json/);
+  // Ein fehlender Branch/fehlende Datei (erster Deploy ueberhaupt) darf den Job
+  // nicht rot machen — macro-regime.js's eigener Leerplatzhalter ist dort korrekt.
+  assert.match(s, /proceeding without/);
+});
+
 console.log('\nbh-b09-dailyyml.test.js: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);
