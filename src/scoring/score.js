@@ -767,6 +767,15 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
           throw new Error(`scoreUniverse: refCalibration-Lineal kennt Achse '${ax.key}' in Kohorte '${cohortKey}' nicht (Lineal aelter als die aktuelle formulas-Version). Mit aktuellem Code neu einfrieren.`);
         }
       }
+      // audit/fix (Hard-Review U-SC-002): n fliesst unten (Z.~957) nur per Number.isFinite geprueft in
+      // nCohort ein -- eine kaputte, aber FINITE Kohortengroesse (n:0.5 aus einem beschaedigten Lineal-
+      // Artefakt, oder n<0) besteht diesen Guard und verschiebt still den Fallback-Entscheid (isFallback
+      // = nCohort<MIN_COHORT_N) und die EB-Shrinkage. Ein Kohorten-n ist strukturell ein nicht-negativer
+      // Integer -- alles andere ist ein defektes Lineal-Artefakt, kein gueltiger gefrorener Zustand.
+      const refN = refCal.cohortBases[cohortKey].n;
+      if (refN !== undefined && !(Number.isInteger(refN) && refN >= 0)) {
+        throw new Error(`scoreUniverse: refCalibration-Lineal hat ein unplausibles n='${refN}' in Kohorte '${cohortKey}' (muss nicht-negativer Integer sein). Teil-Artefakt/kaputtes Lineal -- mit aktuellem Code neu einfrieren.`);
+      }
     }
   }
   // audit/fix (BH-075): der Guard oben validiert NUR die cohortBases-Achsen-Arrays. Die weiter unten roh aus
