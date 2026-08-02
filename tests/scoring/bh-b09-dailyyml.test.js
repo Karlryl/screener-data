@@ -173,8 +173,20 @@ test('BH-156: Write-Step stempelt das tatsaechliche Vintage-Datum als Output (fu
 });
 test('BH-156: Commit-Step schliesst das Tagesverzeichnis bei rc=2 per Pathspec vom `git add` aus', () => {
   const s = section('name: Commit board-history vintage to main', null);
-  assert.match(s, /steps\.vintage\.outputs\.rc.*=\s*"2"/);
-  assert.match(s, /:\(exclude\)board-history\/\$VINTAGE_DATE/);
+  // Tag 512 hat rc in eine Shell-Variable gehoben, damit Betreffzeile und Ausschluss
+  // dieselbe Quelle nutzen. Der alte Anker verlangte rc-Ausdruck und `= "2"` in EINER
+  // Zeile und ging daran kaputt. Geprueft wird jetzt die Sache statt der Schreibweise:
+  // der verglichene Wert MUSS aus steps.vintage.outputs.rc stammen (direkt oder ueber
+  // genau eine Shell-Variable), und GENAU dieser rc=2-Zweig macht den Ausschluss,
+  // waehrend der else-Zweig weiterhin voll addet.
+  const rcVar = s.match(/(\w+)="\$\{\{\s*steps\.vintage\.outputs\.rc\s*\}\}"/);
+  const rcExpr = rcVar ? '$' + rcVar[1] : '${{ steps.vintage.outputs.rc }}';
+  const branch = s.match(/if \[ "([^"]+)" = "2" \]; then([\s\S]*?)\n[ \t]*else\r?\n([\s\S]*?)\n[ \t]*fi\b/);
+  assert.ok(branch, 'keine rc=2-Verzweigung um den `git add` gefunden');
+  assert.equal(branch[1], rcExpr,
+    'rc=2-Vergleich haengt nicht am rc des Write-Steps, sondern an: ' + branch[1]);
+  assert.match(branch[2], /git add board-history\/ ":\(exclude\)board-history\/\$VINTAGE_DATE"/);
+  assert.match(branch[3], /git add board-history\/\s*$/, 'else-Zweig addet das Vintage nicht mehr voll');
 });
 test('BH-156: unconditional "git add board-history/" vor der rc-Verzweigung ist weg', () => {
   const s = section('name: Commit board-history vintage to main', null);
