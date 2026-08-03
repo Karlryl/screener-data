@@ -283,6 +283,18 @@ function _vorGateVerworfen(q) {
 // every single exchange — a permanent config incompatibility, not a transient per-exchange
 // outage. Named/exported so the classification itself is unit-testable.
 const EXCHANGE_SCREENER_SCHEMA_ERROR_RE = /invalid options|invalidoptions|additionalproperties|scrids/i;
+// T569-F3 (Review Tag 569): die Regel oben ist die RETRY-Frage ("noch 28 Boersen probieren?")
+// und bleibt bewusst breit. Fuer die ROT-Frage war sie zu breit: unter EXCHANGE_KANAL_BEKANNT_
+// DEFEKT lief damit JEDER kuenftige Schema-Bruch dieses Kanals als "bekannter Dauerdefekt"
+// still mit. Der bekannte Fall ist eng belegbar — yahoo-finance2 3.15.4 nennt in seiner
+// Invalid-options-Meldung woertlich das verbotene Zusatzfeld `query` (eigene Messung 04.08.
+// gegen die installierte Version: additionalProperties -> {"query": …}). Fehlt `query`, ist es
+// ein ANDERER Bruch und der Lauf wird wieder rot.
+const EXCHANGE_SCHEMA_QUERY_RE = /\bquery\b/i;
+function exchangeDefektIstDerBekannte(fehler) {
+  const m = String(fehler == null ? '' : fehler);
+  return EXCHANGE_SCREENER_SCHEMA_ERROR_RE.test(m) && EXCHANGE_SCHEMA_QUERY_RE.test(m);
+}
 // audit/fix: class-share suffix is restricted to A/B/C — the real Yahoo class-share
 // letters present in the live universe (BRK-A, BRK-B, BF-A, CIG-C). It deliberately
 // EXCLUDES '.V': on NASDAQ-Trader '.V' is a when-issued / rights artifact (FDX.V,
@@ -796,7 +808,14 @@ async function main() {
           exchangeScreenerFatal = true;
           // T566-H2: bekannter Dauerdefekt -> keine Rot-Faerbung (Begruendung + Abnahme-
           // Kriterium an EXCHANGE_KANAL_BEKANNT_DEFEKT). Die ::error::-Zeile oben bleibt.
-          if (!EXCHANGE_KANAL_BEKANNT_DEFEKT) process.exitCode = 1;
+          // T569-F3: und zwar NUR fuer den belegten query-Fall. Jeder andere Schema-Bruch
+          // dieses Kanals faerbt weiterhin rot — sonst deckt der Dauerdefekt-Schalter eine
+          // ganze Fehlerklasse ab, von der genau ein Fall gemessen ist.
+          if (!(EXCHANGE_KANAL_BEKANNT_DEFEKT && exchangeDefektIstDerBekannte(error))) {
+            console.error('::error::Dieser Schema-Bruch ist NICHT der bekannte Dauerdefekt — die ' +
+              'Meldung nennt kein verbotenes `query`-Feld. Der Lauf wird rot (T569-F3).');
+            process.exitCode = 1;
+          }
           pageEmpty = true;
           break;
         }
@@ -1390,6 +1409,7 @@ module.exports = {
   beideYahooKanaeleLeer,  // Tag 510: Doppelausfall-Waechter, einzeln pruefbar
   predefinedKanalEingebrochen, MIN_PREDEFINED_NONEMPTY_ANTEIL,  // T566-H2: Anteil statt "== 0"
   EXCHANGE_KANAL_BEKANNT_DEFEKT,                                // T566-H2: bekannter Dauerdefekt
+  exchangeDefektIstDerBekannte,                                 // T569-F3: nur der BELEGTE Fall
   kanalLeerlaufAlarm,     // T562-M1: Kanal holt Quotes ab und behaelt keine einzige
   discoveryErtragsZeile,  // S4-DISC-001: Teilausfaelle sichtbar machen, einzeln pruefbar
   inDiscoveryMcapBand, MIN_MCAP_DISCOVERY, MAX_MCAP_DISCOVERY  // F-11: $800M-$500B-Band

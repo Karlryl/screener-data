@@ -36,8 +36,10 @@ const {
   FLOOR_BASIS_ONDISK,
   assertParseFailAnteil,   // T565-H1
   loadUniverse,            // T565-H1 (Fixture an der echten Leseschleife)
+  loadSmallcapUniverse,    // T569-F4 (Fixture am zweiten Loader)
   baselineFuer,            // T565-M2
   naechstesHochwasser,     // T565-M2
+  COVERAGE_FLOOR_RATIO_ONDISK, // T569-F1
 } = require('../../src/scoring/run-screener.js');
 
 let pass = 0, fail = 0;
@@ -231,10 +233,18 @@ test('T565-H1: unter der Mindest-Fallzahl wird nicht gequotelt (Kaltstart/Fixtur
   assert.doesNotThrow(() => assertParseFailAnteil(0, 24, 0), '24 Faelle bleiben unter der Grenze');
   assert.throws(() => assertParseFailAnteil(0, 25, 0), /nicht parsebar/i, 'ab 25 Faellen zaehlt der Anteil');
 });
-test('T565-H1: skippedNoMeta gehoert in den Nenner (Schema-Drift ist keine Korruption)', () => {
-  // 30 von 3000 Dateien unlesbar = 1 %. Ohne skippedNoMeta im Nenner waeren es 30/1030 = 2,9 %
-  // -> falsch-roter Abbruch, sobald Yahoo einmal ein Feld umbenennt.
-  assert.doesNotThrow(() => assertParseFailAnteil(1000, 30, 1970));
+// T569-F1 (Review Tag 569) DREHT DIESE ZUSICHERUNG BEWUSST UM — sie wird nicht abgeschwaecht,
+// sondern verschaerft. Tag 565 zaehlte Schema-Drift NUR im Nenner ("Schema-Drift ist keine
+// Korruption") und pinnte assertParseFailAnteil(1000, 30, 1970) als GRUEN. Das sind 1.970 von
+// 3.000 Dateien ohne meta.ticker = 66 % — genau der Ausfall, den der eigene Docstring der
+// Wache als "Schema-Drift" fuehrt. Der Grund, den Tag 565 dafuer angab (der Parse-Anteil darf
+// nicht kuenstlich aufgeblasen werden), bleibt geschuetzt: der Nenner ist unveraendert die
+// Summe aller drei Zaehler, eine KLEINE Drift kostet weiterhin keinen falsch-roten Abbruch.
+test('T569-F1: Schema-Drift steht jetzt AUCH im Zaehler (Tag-565-Toleranz war die halbe Wache)', () => {
+  assert.throws(() => assertParseFailAnteil(1000, 30, 1970), /unbrauchbar|nicht parsebar/i,
+    'BEFUND: 66 % der Dateien ohne meta.ticker liefen bis Tag 571 gruen durch');
+  assert.doesNotThrow(() => assertParseFailAnteil(2950, 30, 20),
+    '50 von 3000 = 1,7 % — eine kleine Drift darf weiterhin nicht falsch-rot werden');
 });
 test('T565-H1: leeres Verzeichnis wirft nicht (0/0 ist kein Anteil)', () => {
   assert.doesNotThrow(() => assertParseFailAnteil(0, 0, 0));
@@ -306,6 +316,166 @@ test('T565-M2: der High-Water der gemessenen Population bleibt monoton', () => {
     { [FLOOR_BASIS_EINGANG]: 12540, [FLOOR_BASIS_ONDISK]: 10700 }, 'Dip senkt nicht');
   assert.deepEqual(naechstesHochwasser(vor, FLOOR_BASIS_EINGANG, 13000),
     { [FLOOR_BASIS_EINGANG]: 13000, [FLOOR_BASIS_ONDISK]: 10700 }, 'Wachstum hebt nur die eigene');
+});
+
+// --- T569-F1 (Review Tag 569): beide Haelften der Lade-Wache waren blind -----------
+// Repro repro-q3q4.js, zwei getrennte Befunde an derselben Leseschleife:
+//  (a) 12.500 Dateien parsen sauber, KEINE traegt meta.ticker -> assertParseFailAnteil
+//      schwieg (parseFail=0), run() hat keinen Leer-Universum-Schutz -> gruener Lauf auf
+//      einem leeren Universum;
+//  (b) assertCoverageFloor lief NUR gegen floor.count (die Manifest-Eingangszahl). Die real
+//      geladene Menge (rawCount) hat der Floor nie gesehen: ein Manifest, das 12.500 meldet,
+//      waehrend 300 Dateien auf der Platte liegen, kam ungebremst durch.
+test('T569-F1a: Schema-Drift ohne einen einzigen Parse-Fehler bricht ab (Repro repro-q3q4.js)', () => {
+  assert.throws(() => assertParseFailAnteil(0, 0, 12500), /unbrauchbar|nicht parsebar/i,
+    'BEFUND: 12.500 parsebare Dateien, 0 mit meta.ticker — bis Tag 571 schwieg die Wache');
+});
+test('T569-F1a: die Mindest-Fallzahl gilt fuer die SUMME, nicht nur fuer parseFail', () => {
+  assert.doesNotThrow(() => assertParseFailAnteil(0, 12, 12), '24 unbrauchbare bleiben unter der Grenze');
+  assert.throws(() => assertParseFailAnteil(0, 12, 13), /unbrauchbar|nicht parsebar/i,
+    'ab 25 unbrauchbaren Dateien zaehlt der Anteil — egal aus welchem der beiden Gruende');
+});
+test('T569-F1a: der gemessene gesunde Stand geht durch (04.08.: 0/4769 und 0/101 unbrauchbar)', () => {
+  assert.doesNotThrow(() => assertParseFailAnteil(4769, 0, 0));
+  assert.doesNotThrow(() => assertParseFailAnteil(101, 0, 0));
+});
+
+// Fixture-Bauer fuer die echte Leseschleife: Dateien, Manifest und High-Water-Stand frei
+// setzbar — sonst laesst sich die Floor-Verdrahtung nur behaupten, nicht pruefen.
+function schreibeFloorFixture({ dateien, ohneMeta = 0, manifestEingang = null, lastGood = null }) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 't569f1-'));
+  const snapDir = path.join(root, 'snapshots');
+  fs.mkdirSync(snapDir, { recursive: true });
+  const ticker = [];
+  for (let i = 0; i < dateien; i++) {
+    const t = 'T' + i;
+    ticker.push(t);
+    fs.writeFileSync(path.join(snapDir, t + '.json'), JSON.stringify(
+      i < ohneMeta ? { metrics: {} } : { meta: { ticker: t }, metrics: {} }));
+  }
+  if (manifestEingang !== null) {
+    fs.writeFileSync(path.join(snapDir, '_manifest.json'), JSON.stringify({ n_eingang_snapshots: manifestEingang }));
+  }
+  if (lastGood) fs.writeFileSync(path.join(snapDir, '_last_good_disk.json'), JSON.stringify(lastGood));
+  const wl = path.join(root, 'watchlist.json');
+  fs.writeFileSync(wl, JSON.stringify({ stocks: ticker.map((t) => ({ ticker: t })) }));
+  return { snapDir, wl };
+}
+
+test('T569-F1a (Fixture): 100 parsebare Dateien ohne meta.ticker brechen loadUniverse ab', () => {
+  const { snapDir, wl } = schreibeFloorFixture({ dateien: 100, ohneMeta: 100 });
+  assert.throws(() => loadUniverse(snapDir, wl), /unbrauchbar|nicht parsebar/i,
+    'BEFUND: bis Tag 571 lieferte genau das ein leeres Universum und einen gruenen Lauf');
+});
+
+test('T569-F1b (Fixture): Manifest meldet 1000, auf der Platte liegen 30 -> Abbruch', () => {
+  const lastGood = { value: 1000, basis: FLOOR_BASIS_EINGANG, hochwasser: { eingang: 1000, ondisk: 1000 } };
+  const { snapDir, wl } = schreibeFloorFixture({ dateien: 30, manifestEingang: 1000, lastGood });
+  assert.throws(() => loadUniverse(snapDir, wl), /Coverage-Floor|geschrumpft/i,
+    'BEFUND: der Floor verglich nur die Manifest-Zahl gegen sich selbst und blieb gruen');
+});
+
+test('T569-F1b (Fixture): legitimes Watchlist-Pruning (50 %/Tag) reisst den on-disk-Floor NICHT', () => {
+  // prune-watchlist.js deckelt bei max(200, 50 % des Vorstands) — genau diese Kuerzung darf
+  // den zweiten Floor nicht ausloesen, sonst ist F-12-R1 rueckgaengig gemacht.
+  const lastGood = { value: 1000, basis: FLOOR_BASIS_EINGANG, hochwasser: { eingang: 1000, ondisk: 1000 } };
+  const { snapDir, wl } = schreibeFloorFixture({ dateien: 500, manifestEingang: 1000, lastGood });
+  assert.equal(loadUniverse(snapDir, wl).length, 500, 'die halbierte, aber gesunde Menge muss durchgehen');
+  assert.ok(COVERAGE_FLOOR_RATIO_ONDISK < 0.5,
+    'der on-disk-Floor muss UNTER dem prune-watchlist-Deckel liegen, sonst ist er dauerhaft falsch-rot');
+});
+
+test('T569-F1b: der on-disk-High-Water wird JEDEN Lauf fortgeschrieben (sonst bleibt der Floor blind)', () => {
+  // Ohne diese Zeile waere der zweite Floor in Produktion wirkungslos: naechstesHochwasser()
+  // hebt nur die GEMESSENE Population, und die ist mit vorhandenem Manifest immer "eingang".
+  const { snapDir, wl } = schreibeFloorFixture({ dateien: 40, manifestEingang: 1000 });
+  loadUniverse(snapDir, wl);
+  const stand = JSON.parse(fs.readFileSync(path.join(snapDir, '_last_good_disk.json'), 'utf8'));
+  assert.equal(stand.hochwasser[FLOOR_BASIS_EINGANG], 1000);
+  assert.equal(stand.hochwasser[FLOOR_BASIS_ONDISK], 40,
+    'BEFUND: ohne mitgefuehrten on-disk-High-Water hat der neue Floor nie eine Baseline');
+  // und der Folgelauf ist damit wirklich scharf:
+  const eingebrochen = schreibeFloorFixture({ dateien: 5, manifestEingang: 1000, lastGood: stand });
+  assert.throws(() => loadUniverse(eingebrochen.snapDir, eingebrochen.wl), /Coverage-Floor|geschrumpft/i);
+});
+
+// --- T569-F4 (Review Tag 569): drei weitere Loader zaehlten, ohne zu konsumieren ----
+// loadSmallcapUniverse zaehlte parseFail und LOGGTE ihn nur. Derselbe Korpus speist
+// runSmallcapPass; ein kaputter Cache-Restore haette dort lautlos auf der Restmenge gerankt.
+test('T569-F4: loadSmallcapUniverse bricht bei kaputtem Small-Cap-Korpus ab (bis Tag 571 nur geloggt)', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 't569f4-'));
+  const snapDir = path.join(root, 'snapshots-smallcap');
+  fs.mkdirSync(snapDir, { recursive: true });
+  const ticker = [];
+  for (let i = 0; i < 100; i++) {
+    const t = 'S' + i;
+    ticker.push(t);
+    fs.writeFileSync(path.join(snapDir, t + '.json'),
+      i < 20 ? '{"meta":{"ticker":"' + t + '"' : JSON.stringify({ meta: { ticker: t }, metrics: {} }));
+  }
+  const wl = path.join(root, 'watchlist-smallcap.json');
+  fs.writeFileSync(wl, JSON.stringify({ stocks: ticker.map((t) => ({ ticker: t })) }));
+  assert.throws(() => loadSmallcapUniverse(snapDir, wl), /unbrauchbar|nicht parsebar/i,
+    'BEFUND: 20 % kaputte Small-Cap-Snapshots liefen bis Tag 571 mit einer Log-Zeile durch');
+});
+
+test('T569-F4: der gesunde Small-Cap-Korpus geht durch (sonst waere die Wache falsch-rot)', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 't569f4ok-'));
+  const snapDir = path.join(root, 'snapshots-smallcap');
+  fs.mkdirSync(snapDir, { recursive: true });
+  const ticker = [];
+  for (let i = 0; i < 100; i++) {
+    const t = 'S' + i;
+    ticker.push(t);
+    fs.writeFileSync(path.join(snapDir, t + '.json'), JSON.stringify({ meta: { ticker: t }, metrics: {} }));
+  }
+  const wl = path.join(root, 'watchlist-smallcap.json');
+  fs.writeFileSync(wl, JSON.stringify({ stocks: ticker.map((t) => ({ ticker: t })) }));
+  assert.equal(loadSmallcapUniverse(snapDir, wl).length, 100);
+  // Kaltstart-Schutz: die kleine Population darf nicht an Einzelfaellen sterben.
+  fs.writeFileSync(path.join(snapDir, 'S7.json'), '{"meta":');
+  assert.equal(loadSmallcapUniverse(snapDir, wl).length, 99, 'ein Einzelfall ist kein Befund');
+});
+
+// Die beiden anderen Loader desselben Befunds. Sie standen bis Tag 571 auf einem BLANKEN
+// `catch (_) { continue; }` — nicht einmal ein Zaehler. Ihr Ergebnis wird COMMITTET
+// (external-data/sec-secannual*.json) und speist Zyklus-Daempfer und roicStability; eine
+// halb gelesene Platte haette dort dauerhaft eine geschrumpfte Serie eingefroren.
+const { loadUniverse: secLoadUniverse } = require('../../scripts/build-secannual.js');
+const { loadSmallcapUniverse: secLoadSmallcap } = require('../../scripts/build-secannual-smallcap.js');
+
+function schreibeSecFixture(praefix, gesamt, kaputt, ohneMeta = 0) {
+  const snapDir = fs.mkdtempSync(path.join(os.tmpdir(), praefix));
+  for (let i = 0; i < gesamt; i++) {
+    const t = 'X' + i;
+    let inhalt;
+    if (i < kaputt) inhalt = '{"meta":{"ticker":"' + t + '"';
+    else if (i < kaputt + ohneMeta) inhalt = JSON.stringify({ metrics: {} });
+    else inhalt = JSON.stringify({ meta: { ticker: t }, metrics: {} });
+    fs.writeFileSync(path.join(snapDir, t + '.json'), inhalt);
+  }
+  return snapDir;
+}
+
+test('T569-F4: build-secannual.js loadUniverse bricht bei kaputtem Korpus ab (blanker catch)', () => {
+  assert.throws(() => secLoadUniverse(schreibeSecFixture('t569f4-sec-', 1000, 300)),
+    /unbrauchbar|nicht parsebar/i,
+    'BEFUND: 30 % unlesbare Snapshots waeren still in eine committete SEC-Datei gewandert');
+  assert.equal(secLoadUniverse(schreibeSecFixture('t569f4-secok-', 1000, 0)).length, 1000,
+    'der gesunde Korpus muss durchgehen');
+  assert.equal(secLoadUniverse(schreibeSecFixture('t569f4-secmini-', 300, 5)).length, 295,
+    'Einzelfaelle unter der Mindest-Fallzahl bleiben ein Nicht-Befund');
+});
+
+test('T569-F4: build-secannual-smallcap.js loadSmallcapUniverse bricht bei kaputtem Korpus ab', () => {
+  assert.throws(() => secLoadSmallcap(schreibeSecFixture('t569f4-sc-', 100, 20)),
+    /unbrauchbar|nicht parsebar/i,
+    'BEFUND: derselbe blanke catch, kleinere Population — 20 % kaputt liefen gruen durch');
+  assert.equal(secLoadSmallcap(schreibeSecFixture('t569f4-scok-', 100, 0)).length, 100);
+  assert.equal(secLoadSmallcap(schreibeSecFixture('t569f4-scmini-', 100, 5)).length, 95,
+    'die kleine Population darf nicht an Einzelfaellen sterben');
+  assert.deepEqual(secLoadSmallcap(path.join(os.tmpdir(), 'gibt-es-nicht-t569')), [],
+    'fehlendes Verzeichnis bleibt das Fallback-Signal, kein Wurf');
 });
 
 console.log(`bh-b07-runscreener.test.js: ${pass} ok, ${fail} fail`);

@@ -159,7 +159,14 @@ test('kein gruener Deploy-Job ohne Deploy: die Leer-Pruefung steigt nur im ERSTE
     const i = body.indexOf('git diff --staged --quiet');
     assert.ok(i >= 0, name + '-Deploy: Leer-Pruefung nicht gefunden');
     // Das Fenster bis zum naechsten `git push` enthaelt die Entscheidung.
-    const fenster = body.slice(i, body.indexOf('git push', i));
+    // T571-SIB (Sibling von T568-F3): ohne diesen Guard liefert indexOf() bei fehlendem
+    // `git push` eine -1, und slice(i, -1) schneidet dann bis zum VORLETZTEN Zeichen der
+    // Datei — das Fenster waere plötzlich der halbe Workflow und beide Zusicherungen unten
+    // wuerden irgendwo anders fuendig. Derselbe -1-Slice-Defekt, dieselbe Bugklasse.
+    const iEnd = body.indexOf('git push', i);
+    assert.ok(iEnd > i,
+      name + '-Deploy: kein `git push` hinter der Leer-Pruefung — das Entscheidungs-Fenster ist nicht abgrenzbar');
+    const fenster = body.slice(i, iEnd);
     assert.ok(/exit 0/.test(fenster), name + '-Deploy: erwartete ein exit 0 am leeren Diff');
     assert.match(fenster, /\$i"?\s*-eq\s*1|"\$i"\s*=\s*"1"/,
       name + '-Deploy: das exit 0 am leeren Diff haengt an KEINER Versuchszaehler-Bedingung — '

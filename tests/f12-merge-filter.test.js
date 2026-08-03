@@ -259,6 +259,40 @@ test('T565-M1: ohne Ventil (Default 0) bleibt es beim harten Stop', () => {
   assert.notEqual(r.code, 0, 'das Ventil darf nicht versehentlich per Default offen stehen');
 });
 
+// ── T569-F8 (Review Tag 569): das Ventil war ein Schalter, kein Deckel ─────────────
+// BEFUND: `=== '1'` machte aus dem Ventil einen Dauer-AN-Schalter. Genau die Zahl, die laut
+// T565-M1 monoton nach oben ratcht, waere danach nie wieder aufgefallen — 15 %, 40 %, 80 %
+// uebersprungene Snapshots haetten alle dieselbe ::warning::-Zeile erzeugt. Jetzt ist der Wert
+// die OBERGRENZE (Anteil 0..1), bis zu der das Ventil gilt; weiteres Anwachsen fliegt wieder auf.
+test('T569-F8: ueber der gesetzten Obergrenze stoppt der Lauf wieder hart', () => {
+  const r = lauf(tickerBis(100), VIELE, { env: { ALLOW_UEBERSPRUNGEN_DRIFT: '0.35' } }); // 50 % > 35 %
+  assert.notEqual(r.code, 0, 'BEFUND: als Schalter haette hier nichts mehr angeschlagen. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /::error::[^\n]*ueber der Schwelle/);
+});
+
+test('T569-F8: bis zur gesetzten Obergrenze faehrt der Lauf weiter, Befund sichtbar', () => {
+  const r = lauf(tickerBis(100), VIELE, { env: { ALLOW_UEBERSPRUNGEN_DRIFT: '0.6' } }); // 50 % <= 60 %
+  assert.equal(r.code, 0, 'unter der Obergrenze muss das Ventil greifen. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /::warning::[^\n]*ueber der Schwelle/);
+  assert.ok(!/::error::/.test(r.ausgabe), 'mit Ventil kein ::error::');
+});
+
+test('T569-F8: ventilObergrenze — reine Auswertung des Rohwerts', () => {
+  const { ventilObergrenze } = require(SCRIPT);
+  assert.equal(ventilObergrenze('1'), 1, '"1" bleibt rueckwaerts-kompatibel = kein Deckel');
+  assert.equal(ventilObergrenze('0.35'), 0.35);
+  assert.equal(ventilObergrenze('0'), null, 'der Workflow-Default darf nichts oeffnen');
+  for (const v of [undefined, '', 'ja', 'true', '-1', 'NaN', '2', '1.0001'])
+    assert.equal(ventilObergrenze(v), null, `"${String(v)}" darf das Ventil nicht oeffnen`);
+});
+
+test('T569-F8: unbrauchbare Ventil-Werte oeffnen nichts (fail-closed)', () => {
+  for (const wert of ['ja', 'true', '', '-1', 'NaN', '2']) {
+    const r = lauf(tickerBis(100), VIELE, { env: { ALLOW_UEBERSPRUNGEN_DRIFT: wert } });
+    assert.notEqual(r.code, 0, `ALLOW_UEBERSPRUNGEN_DRIFT="${wert}" darf das Ventil nicht oeffnen. Ausgabe:\n` + r.ausgabe);
+  }
+});
+
 test('F-12-R2: unter der Mindest-Fallzahl quotelt die Wache nicht (2 von 3 sind kein Befund)', () => {
   const r = lauf(['AAPL'], [['AAPL.json', 'AAPL'], ['TOTX.json', 'TOTX'], ['ZZZQ.json', 'ZZZQ']]);
   assert.equal(r.code, 0, 'ein Anteil aus 3 Dateien ist kein Signal — der Kaltstart darf nicht daran sterben');

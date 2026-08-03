@@ -410,14 +410,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      # T569-F7 (Review Tag 569): `cancelled` und `skipped` fielen bis Tag 571 in denselben
+      # Zweig wie `success` — ein abgebrochener oder uebersprungener prep-Job meldete woertlich
+      # "Entdeckungs-Kanaele still" und war damit von einem gesunden Lauf nicht zu unterscheiden.
+      # Genau der stille Ausgang, gegen den dieser Job gebaut ist. Drei Faelle, drei Ausgaenge.
       - name: Entdeckungs-Kanal einsammeln (rotes X)
         run: |
           AUSGANG="${{ needs.prep.outputs.refresh_universe_outcome }}"
-          if [ "$AUSGANG" = "failure" ]; then
-            echo "::error::refresh-universe.js hat angeschlagen (Schritt 'Refresh Universe' im prep-Job, Details dort). Entweder ist ein Entdeckungs-Kanal eingebrochen/leergelaufen, oder der Schritt lief in sein 20-Minuten-Timeout — dann wurde watchlist.json ueberhaupt nicht neu geschrieben und der Tag laeuft auf dem Universum des Vortags. Die Daten sind trotzdem gezogen (der Pull haengt nicht an diesem Job)."
-            exit 1
-          fi
-          echo "Entdeckungs-Kanaele still (Ausgang: ${AUSGANG:-<leer, prep uebersprungen>})."
+          case "$AUSGANG" in
+            failure)
+              echo "::error::refresh-universe.js hat angeschlagen (Schritt 'Refresh Universe' im prep-Job, Details dort). Entweder ist ein Entdeckungs-Kanal eingebrochen/leergelaufen, oder der Schritt lief in sein 20-Minuten-Timeout — dann wurde watchlist.json ueberhaupt nicht neu geschrieben und der Tag laeuft auf dem Universum des Vortags. Die Daten sind trotzdem gezogen (der Pull haengt nicht an diesem Job)."
+              exit 1
+              ;;
+            cancelled|skipped)
+              echo "::warning::Der Entdeckungs-Lauf wurde weder gruen noch rot beendet (Ausgang: $AUSGANG) — der Schritt 'Refresh Universe' ist abgebrochen oder gar nicht gelaufen. watchlist.json ist damit moeglicherweise der Stand des Vortags. Kein rotes X, weil das keine Aussage ueber die Entdeckungs-Kanaele ist, aber auch kein gruener Freibrief."
+              ;;
+            *)
+              echo "Entdeckungs-Kanaele still (Ausgang: ${AUSGANG:-<leer, prep uebersprungen>})."
+              ;;
+          esac
 
   # ============================================================================
   # PULL (matrix, N shards in parallel) — the ONLY parallelised work.
@@ -638,8 +649,12 @@ jobs:
       # n_ok der Shards und merge-shard-manifests' Kollisions-Stop wuerde falsch feuern.
       # T565-M1: Ventil wie bei "Pull-Stats Check" (ALLOW_PULL_DRIFT). Der uebersprungene
       # Anteil ratcht monoton nach oben (Karteileichen werden nie ausgetragen) — laeuft er
-      # eines Tages legitim ueber 30 %, laesst `vars.ALLOW_UEBERSPRUNGEN_DRIFT=1` den Tag
+      # eines Tages legitim ueber 30 %, laesst `vars.ALLOW_UEBERSPRUNGEN_DRIFT` den Tag
       # durch, ohne die Schwelle dauerhaft hochzudrehen. Befund bleibt als ::warning::.
+      # T569-F8: der Wert ist die OBERGRENZE als Anteil (z. B. `0.35` = bis 35 % tolerieren),
+      # KEIN An/Aus-Schalter mehr. Ein weiteres Anwachsen ueber die gesetzte Grenze faellt
+      # damit wieder auf, statt fuer immer unter einer ::warning::-Zeile zu verschwinden.
+      # `1` bleibt gueltig und heisst "kein Deckel" (= das Verhalten vor Tag 572).
       - name: F-12 Karteileichen-Filter (nur autorisierte Snapshots ins Artefakt)
         env:
           ALLOW_UEBERSPRUNGEN_DRIFT: ${{ vars.ALLOW_UEBERSPRUNGEN_DRIFT || '0' }}

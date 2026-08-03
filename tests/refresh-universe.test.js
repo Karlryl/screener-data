@@ -144,9 +144,37 @@ const INGEST_MARKER = 'for (const q of quotes) {';
 // starten bei Tiefe 1 und schneiden bei Tiefe 0. Kommentare fliegen VOR dem Zaehlen raus
 // (sonst kippt eine auskommentierte Klammer die Tiefe) — und damit auch weiterhin, bevor
 // irgendetwas gesucht wird, sonst haelt eine auskommentierte Gate-Zeile den Pruefer gruen.
+// T569-F6: String-bewusst statt roher Regex. `//` beginnt nur dann einen Kommentar, wenn es
+// NICHT in einem String-/Template-Literal steht — und umgekehrt darf ein Anfuehrungszeichen IN
+// einem Kommentar den Scanner nicht in den String-Modus werfen, sonst frisst er den Rest.
+// ponytail: Regex-Literale und ${}-Einbettungen in Templates sind bewusst nicht modelliert —
+// Deckel bekannt. Beide erzeugen im Zweifel eine unbalancierte Klammer und damit einen LAUTEN
+// Fehlschlag am Rumpf-Ende-Pin (T567-W1), nie ein stilles Gruen. Upgrade-Pfad waere ein echter
+// Tokenizer; erst noetig, wenn eine dieser Formen wirklich in eine Ingest-Schleife wandert.
+function ohneZeilenkommentare(code) {
+  let out = '', quote = null;
+  for (let i = 0; i < code.length; i++) {
+    const c = code[i];
+    if (quote) {
+      out += c;
+      if (c === '\\') { out += code[++i] || ''; continue; }
+      if (c === quote) quote = null;
+      continue;
+    }
+    if (c === '/' && code[i + 1] === '/') {
+      while (i < code.length && code[i] !== '\n') i++;
+      out += '\n';
+      continue;
+    }
+    if (c === '"' || c === "'" || c === '`') quote = c;
+    out += c;
+  }
+  return out;
+}
+
 function ingestSchleifen(src) {
   return src.split(INGEST_MARKER).slice(1).map((rest) => {
-    const ohneKommentar = rest.replace(/\/\/[^\n]*/g, '');
+    const ohneKommentar = ohneZeilenkommentare(rest);
     let tiefe = 1, i = 0;
     for (; i < ohneKommentar.length && tiefe > 0; i++) {
       const c = ohneKommentar[i];
@@ -254,6 +282,35 @@ test('T567-W2: ein Zweitboden fliegt auch unter anderem Namen auf (Repro q3.js)'
     assert.ok(verdrahtungsMaengel(mutiert).length > 0,
       name + ': BEFUND (Repro q3.js) — der namensgebundene Pruefer blieb hier gruen');
   }
+});
+
+// ── T569-F6 (Review Tag 569): der Kommentar-Stripper schnitt auch in Strings ──────
+// Repro repro-q5b.js Q5a2: `const u = 'http://x'; if (q.marketCap < 2e9) continue;` — das `//`
+// im String-Literal galt als Kommentarbeginn, alles danach auf der Zeile war fuer den Waechter
+// unsichtbar, der Zweitboden blieb GRUEN. Gewaehlt wurde der String-bewusste Stripper statt
+// eines blossen Kommentars an der Deckel-Stelle: die Luecke ist EINE gewoehnliche Zeile weit
+// entfernt (eine geloggte URL genuegt), und dieser Waechter ist das einzige, was die
+// F-11-Invariante "genau EIN Boden" an den beiden Ingest-Schleifen haelt. Ein Kommentar haette
+// dieselbe Lesezeit gekostet und null Schutz gebracht.
+test('T569-F6: ein Zweitboden hinter einem // IM STRING fliegt auf (Repro repro-q5b.js Q5a2)', () => {
+  const mutiert = SRC_RU.replace(GATE_ZEILE,
+    "const u = 'http://x'; if (q.marketCap < 2e9) continue;\n        " + GATE_ZEILE);
+  assert.notEqual(mutiert, SRC_RU, 'Mutation griff nicht — dann prueft die Gegenprobe nichts');
+  // Beleg des Befunds: der naive Stripper schneidet den Zweitboden mit weg.
+  assert.ok(!mutiert.split(INGEST_MARKER)[1].replace(/\/\/[^\n]*/g, '').includes('q.marketCap < 2e9'),
+    'der naive Stripper haette den Zweitboden entfernt (das IST der Befund)');
+  assert.ok(verdrahtungsMaengel(mutiert).length > 0,
+    'BEFUND (Repro repro-q5b.js Q5a2): ein hinter einem String-// getarnter Zweitboden blieb gruen');
+});
+
+test('T569-F6: ein Anfuehrungszeichen IM KOMMENTAR kippt den Stripper nicht (Falsch-Rot-Probe)', () => {
+  // Die klassische Regression eines String-bewussten Scanners: `// Karls Boden` wuerde den
+  // Scanner in den String-Modus werfen und danach jede Klammer verschlucken.
+  const mitApostroph = SRC_RU.replace(GATE_ZEILE, "// Karl's Boden bleibt hier\n        " + GATE_ZEILE);
+  assert.notEqual(mitApostroph, SRC_RU, 'Mutation griff nicht');
+  assert.deepEqual(verdrahtungsMaengel(mitApostroph), [],
+    'ein Apostroph in einem Kommentar darf den Pruefer weder blind noch falsch-rot machen');
+  assert.deepEqual(verdrahtungsMaengel(SRC_RU), [], 'und der gueltige Stand bleibt unberuehrt');
 });
 
 test('T567-W2: der gueltige Stand bleibt gruen (sonst waere der Pruefer falsch-rot)', () => {
@@ -406,14 +463,35 @@ test('T567-W3: geht die Zerlegung nicht auf, wird KEINE Ursache behauptet', () =
 // Die Zerlegung ist nur vollstaendig, solange es GENAU ZWEI verwerfende Pfade je Schleife
 // gibt. Ein dritter, ungezaehlter continue wuerde still in die Band-Zahl wandern und die
 // Ursachen-Behauptung wieder ungedeckt machen — deshalb am Objekt gezaehlt.
+// T569-F5 (Review Tag 569): der Pin hing woertlich an `continue;`. Repro repro-q5b.js:
+// `if (kept > 50) break;` und `if (kept > 50) return;` sind genauso verwerfende Pfade, wurden
+// aber nicht gezaehlt — der Pin blieb bei 2 und damit gruen, waehrend der Rest der
+// bandDrops-Rechnung (kanalLeerlaufAlarm) ab da eine Ursache behauptet, die es nicht gibt.
+// EINE Quelle fuer Pin und Gegenprobe, damit beide nicht auseinanderdriften koennen.
+function verwerfendePfade(block) {
+  return (block.match(/\b(continue|break|return)\b/g) || []).length;
+}
+
 test('T567-W3: jede Ingest-Schleife hat genau zwei verwerfende Pfade (Vor-Gate + Band)', () => {
   ingestSchleifen(SRC_RU).forEach((b, i) => {
-    assert.equal((b.match(/\bcontinue;/g) || []).length, 2,
-      'Schleife ' + (i + 1) + ': jeder weitere continue-Pfad muss gezaehlt werden, sonst ' +
+    assert.equal(verwerfendePfade(b), 2,
+      'Schleife ' + (i + 1) + ': jeder weitere verwerfende Pfad muss gezaehlt werden, sonst ' +
       'behauptet kanalLeerlaufAlarm wieder eine Ursache, die er nicht kennt');
     assert.match(b, /_vorGateVerworfen\(q\)\) \{ \w+\+\+; continue; \}/,
       'Schleife ' + (i + 1) + ': der Vor-Gate-Pfad muss gezaehlt werden');
   });
+});
+
+test('T569-F5: ein dritter verwerfender Pfad fliegt auch ohne `continue` auf (Repro repro-q5b.js)', () => {
+  for (const einschub of ['if (kept > 50) break;', 'if (kept > 50) return;']) {
+    const mutiert = SRC_RU.replace(GATE_ZEILE, einschub + '\n        ' + GATE_ZEILE);
+    assert.notEqual(mutiert, SRC_RU, einschub + ': Mutation griff nicht — dann prueft die Gegenprobe nichts');
+    // Beleg des Befunds: der alte, woertliche Zaehler blieb bei 2 und damit gruen.
+    assert.equal((ingestSchleifen(mutiert)[0].match(/\bcontinue;/g) || []).length, 2,
+      einschub + ': alter Pin -> unveraendert 2 Treffer (das IST der Befund)');
+    assert.notEqual(verwerfendePfade(ingestSchleifen(mutiert)[0]), 2,
+      einschub + ': BEFUND (Repro repro-q5b.js) — ein dritter Verwerfungs-Pfad blieb unsichtbar');
+  }
 });
 
 test('T562-M1: BEIDE Yahoo-Kanaele sind an den Waechter verdrahtet', () => {
@@ -525,16 +603,60 @@ test('T566-H2: der Befund faerbt den Lauf rot (::error:: + exitCode im selben Zw
 
 // Der bekannte Dauerdefekt ist die Bedingung dafuer, dass der neue Exit-Code-Konsument
 // ueberhaupt etwas aussagt — aber er darf die Meldung nicht mitnehmen.
-test('T566-H2: der bekannte Exchange-Dauerdefekt bleibt SICHTBAR, faerbt aber nicht rot', () => {
-  assert.equal(ru.EXCHANGE_KANAL_BEKANNT_DEFEKT, true,
-    'solange der query-Aufruf gegen das scrIds-Schema laeuft, ist das der Ist-Zustand');
+//
+// ── T569-F3 (Review Tag 569): die Unterdrueckung war ZU BREIT und der Test war eine FALLE ──
+// (a) Unterdrueckt wurde die ganze invalid-options-Klasse (EXCHANGE_SCREENER_SCHEMA_ERROR_RE).
+//     Damit haette auch ein KUENFTIGER, ganz anderer Schema-Bruch des Exchange-Kanals still
+//     unter dem "bekannten Dauerdefekt" mitgelaufen. Gebunden wird jetzt an den BELEGTEN Fall:
+//     yahoo-finance2 3.15.4 wirft "Invalid options" und nennt dabei woertlich das verbotene
+//     Zusatzfeld `query` (eigene Messung 04.08. gegen die installierte Version).
+// (b) Die Zusicherung `EXCHANGE_KANAL_BEKANNT_DEFEKT === true` PINNTE den Ist-Zustand: wer den
+//     Kanal repariert und den Schalter — wie es der Kommentar im Quelltext ausdruecklich
+//     verlangt — auf false setzt, machte damit diesen Test ROT. Ein Waechter, der die eigene
+//     Reparatur bestraft, wird beim naechsten Mal einfach geloescht. Der Wert wird deshalb
+//     NICHT MEHR gepinnt. Ersatz ist keine Abschwaechung, sondern eine Abnahme-Mechanik: der
+//     Schalter darf seine MESSGRUNDLAGE nicht ueberleben. Faellt die im Lock stehende
+//     yahoo-finance2-Version von der gemessenen ab, muss der Schalter neu begruendet werden.
+const GEMESSENE_YF_VERSION = '3.15.4';   // Stand der Messung vom 04.08.2026 (5er-Stichprobe)
+
+test('T569-F3: der Dauerdefekt-Schalter darf seine Messgrundlage nicht ueberleben', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const lock = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package-lock.json'), 'utf8'));
+  const eintrag = lock.packages && lock.packages['node_modules/yahoo-finance2'];
+  assert.ok(eintrag && eintrag.version, 'yahoo-finance2 fehlt im package-lock.json');
+  if (eintrag.version !== GEMESSENE_YF_VERSION) {
+    assert.equal(ru.EXCHANGE_KANAL_BEKANNT_DEFEKT, false,
+      `package-lock.json haelt yahoo-finance2 ${eintrag.version}, gemessen wurde ${GEMESSENE_YF_VERSION}. ` +
+      'Die Grundlage fuer "bekannter Dauerdefekt" ist damit weg: entweder den Schalter auf false ' +
+      'setzen (dann ist ein Schema-Bruch wieder sofort rot) oder gegen die neue Version neu messen ' +
+      'und GEMESSENE_YF_VERSION hier nachziehen.');
+  }
+});
+
+test('T569-F3: nur der BELEGTE query-Fall unterdrueckt die Rot-Faerbung', () => {
+  // Die echte Meldung der installierten 3.15.4 (gekuerzt, Struktur erhalten).
+  const echt = '[yahooFinance.screener] Invalid options ("#/definitions/ScreenerOptions")\n' +
+    '{"errors":[{"schemaPath":"#/definitions/ScreenerOptions/required","message":"Missing required properties",' +
+    '"params":{"missing":["scrIds"]}},{"schemaPath":"#/definitions/ScreenerOptions/additionalProperties",' +
+    '"message":"should NOT have additional properties","params":{"additionalProperties":{"query":{}}}}]}';
+  assert.equal(ru.exchangeDefektIstDerBekannte(echt), true, 'der belegte Fall muss weiter durchgehen');
+  assert.equal(ru.exchangeDefektIstDerBekannte('[yahooFinance.screener] Invalid options: scrIds must be a string'), false,
+    'BEFUND: die breite invalid-options-Klasse deckte auch jeden KUENFTIGEN Schema-Bruch mit ab');
+  assert.equal(ru.exchangeDefektIstDerBekannte('429 Too Many Requests'), false);
+  assert.equal(ru.exchangeDefektIstDerBekannte(''), false);
+  // Die Klassifikation "nicht weiter retryen" bleibt bewusst breit — sie spart 29 vergebliche
+  // Boersen-Durchlaeufe und ist von der Rot-Frage getrennt.
+  assert.equal(ru.EXCHANGE_SCREENER_SCHEMA_ERROR_RE.test('[yahooFinance.screener] Invalid options: scrIds must be a string'), true);
+});
+
+test('T569-F3: die Ausnahme im Quelltext haengt am belegten Fall, nicht nur am Schalter', () => {
   const i = SRC_RU.indexOf('exchangeScreenerFatal = true;');
   assert.notEqual(i, -1);
-  const block = SRC_RU.slice(i - 1200, i + 400);
+  const block = SRC_RU.slice(i - 1400, i + 500);
   assert.match(block, /::error::Custom-Exchange-Screener ist mit yahoo-finance2/,
     'die Annotation muss bleiben — sie ist die einzige Spur des Defekts');
-  assert.match(SRC_RU.slice(i, i + 400), /if \(!EXCHANGE_KANAL_BEKANNT_DEFEKT\) process\.exitCode = 1;/,
-    'die Ausnahme muss an den benannten Schalter gebunden sein, nicht stillschweigend geloescht');
+  assert.match(SRC_RU.slice(i, i + 900), /EXCHANGE_KANAL_BEKANNT_DEFEKT && exchangeDefektIstDerBekannte\(error\)/,
+    'BEFUND: die Ausnahme galt fuer die ganze invalid-options-Klasse, nicht fuer den belegten Fall');
 });
 
 // ── T566-H2, Verdrahtung im Workflow: der Alarm muss ANKOMMEN ──────────────────────
@@ -555,8 +677,29 @@ test('T566-H2: der Refresh-Schritt traegt eine id und reicht seinen Ausgang als 
   const halten = ymlBlock('- name: Entdeckungs-Ausgang festhalten', '- name: ');
   assert.match(halten, /if: always\(\)/, 'sonst faellt der Ausgang aus, sobald ein spaeterer prep-Schritt kippt');
   assert.match(halten, /outcome=\$\{\{ steps\.refresh_universe\.outcome \}\}/);
-  assert.match(YML, /refresh_universe_outcome: \$\{\{ steps\.refresh_ausgang\.outputs\.outcome \}\}/,
-    'der Job-Ausgang fehlt — dann liest der Waechter-Job eine leere Zeichenkette und ist immer gruen');
+  // T569-F7: am OBJEKT (outputs-Block des prep-Jobs) statt dateiweit. Ein dateiweites
+  // assert.match(YML, …) bleibt gruen, sobald die Zeichenkette IRGENDWO sonst auftaucht —
+  // z. B. in einem Kommentar oder einem zweiten Job —, waehrend genau der geschuetzte
+  // Job-Ausgang verschwindet. Dieselbe Bugklasse wie T566-H2/F1113 (retention-days).
+  const prepOutputs = ymlBlock('  prep:', '\n    steps:');
+  assert.match(prepOutputs, /^ +refresh_universe_outcome: \$\{\{ steps\.refresh_ausgang\.outputs\.outcome \}\}\s*$/m,
+    'der Job-Ausgang fehlt im outputs-Block von prep — dann liest der Waechter-Job eine leere Zeichenkette und ist immer gruen');
+});
+
+test('T569-F7 Gegenprobe: eine Attrappe anderswo haelt den dateiweiten Pin gruen, den Objekt-Pin nicht', () => {
+  // Der Befund selbst: geschuetzte Zeile raus, dieselbe Zeichenkette als Kommentar in einen
+  // anderen Job — der alte, dateiweite Pin merkt nichts.
+  const echt = '      refresh_universe_outcome: ${{ steps.refresh_ausgang.outputs.outcome }}';
+  assert.ok(YML.includes(echt), 'Anker fehlt — dann prueft die Gegenprobe nichts');
+  const mutiert = YML.replace(echt, '      # entfernt')
+    .replace('  entdeckungs-waechter:', '  # merke: refresh_universe_outcome: ${{ steps.refresh_ausgang.outputs.outcome }}\n  entdeckungs-waechter:');
+  assert.notEqual(mutiert, YML, 'Mutation griff nicht');
+  assert.match(mutiert, /refresh_universe_outcome: \$\{\{ steps\.refresh_ausgang\.outputs\.outcome \}\}/,
+    'alter dateiweiter Pin: unveraendert ein Treffer -> gruen (das IST der Befund)');
+  const start = mutiert.indexOf('  prep:');
+  const prepOutputs = mutiert.slice(start, mutiert.indexOf('\n    steps:', start));
+  assert.doesNotMatch(prepOutputs, /^ +refresh_universe_outcome:/m,
+    'der Objekt-Pin muss die Attrappe durchschauen');
 });
 test('T566-H2: der Waechter-Job faerbt rot und blockiert keinen Datenschritt', () => {
   const job = ymlBlock('  entdeckungs-waechter:', '\n  pull:');
@@ -564,6 +707,15 @@ test('T566-H2: der Waechter-Job faerbt rot und blockiert keinen Datenschritt', (
   assert.match(job, /if: always\(\)/, 'ohne always() liefe er bei rotem prep gar nicht');
   assert.match(job, /needs\.prep\.outputs\.refresh_universe_outcome/);
   assert.match(job, /exit 1/, 'ohne exit 1 bleibt der Lauf gruen — der ganze Befund');
+  // T569-F7: `cancelled` und `skipped` liefen bis Tag 571 in denselben Zweig wie `success` —
+  // ein abgebrochener oder uebersprungener prep-Job meldete woertlich "Entdeckungs-Kanaele
+  // still". Genau der stille Ausgang, gegen den dieser Job gebaut ist. Drei Faelle, drei
+  // Ausgaenge: failure = rot, cancelled/skipped = sichtbare Warnung, sonst = still.
+  assert.match(job, /case "\$AUSGANG" in/,
+    'BEFUND: ohne Fallunterscheidung ist "cancelled" dasselbe Signal wie "alles gut"');
+  assert.match(job, /cancelled\|skipped\)/, 'die beiden Zwischenzustaende brauchen einen eigenen Zweig');
+  assert.match(job, /::warning::/, 'ohne Annotation sieht Karl den Zwischenzustand nicht');
+  assert.match(job, /\bfailure\)/, 'der rote Fall muss ein eigener case-Zweig sein');
   // Der Kern des Befunds: KEIN Datenjob darf an diesem Waechter haengen, sonst kostet ein
   // Entdeckungs-Ausfall den Tageslauf (genau der Grund, warum continue-on-error steht).
   for (const j of ['pull', 'merge', 'scoring']) {

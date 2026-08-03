@@ -64,6 +64,23 @@ const MAX_UEBERSPRUNGEN_ANTEIL = 0.30;
 const DRIFT_VENTIL = 'ALLOW_UEBERSPRUNGEN_DRIFT';
 
 /**
+ * T569-F8 (Review Tag 569): das Ventil war ein SCHALTER (`=== '1'`) und damit ein Dauer-AN.
+ * Genau der Anteil, der laut T565-M1 monoton nach oben ratcht, waere nach einmaligem Setzen
+ * nie wieder aufgefallen — 35 %, 50 %, 80 % uebersprungene Snapshots haetten alle dieselbe
+ * ::warning::-Zeile erzeugt, und der eigentliche Zweck der Wache (Namensschema-/Watchlist-
+ * Bruch) waere dauerhaft abgeschaltet gewesen. Der Wert ist jetzt die OBERGRENZE (Anteil in
+ * (0,1]), BIS ZU DER das Ventil gilt; darueber stoppt der Lauf wieder hart.
+ * `1` bleibt rueckwaerts-kompatibel: 1.0 = 100 % = kein Deckel, also exakt das bisherige
+ * Verhalten fuer eine eventuell schon gesetzte Repo-Variable. Alles Unbrauchbare (leer, '0',
+ * 'ja', negativ, >1) oeffnet nichts (fail-closed).
+ * Reine Funktion, damit die Auswertung ohne Prozess pruefbar ist.
+ */
+function ventilObergrenze(rohwert) {
+  const v = Number(rohwert);
+  return Number.isFinite(v) && v > 0 && v <= 1 ? v : null;
+}
+
+/**
  * Mindest-Fallzahl, unter der ein ANTEIL nichts aussagt (2 von 3 Dateien sind 67 %, aber kein
  * Befund). Gleiche Bauform wie MIN_HISTORY_RUNS (check-pull-stats.js) und MIN_COHORT_N
  * (score.js): erst genug Masse, dann quoteln. Real kommen ~12.500 Snapshots an — ein Lauf
@@ -195,10 +212,16 @@ function run(argv) {
     const befund = `${uebersprungen.length} von ${gescannt} Snapshots nicht autorisiert (${(uebersprungen.length / gescannt * 100).toFixed(1)} %), ueber der Schwelle ${(MAX_UEBERSPRUNGEN_ANTEIL * 100).toFixed(0)} %. Der reale Karteileichen-Bestand liegt bei ~15 %; so viel auf einmal ist ein Namensschema-/Watchlist-Bruch, keine Karteileichen-Lage.`;
     // T565-M1: Ventil (s. DRIFT_VENTIL oben) — der Anteil ratcht monoton, ein legitimer
     // Karteileichen-Berg darf den Tageslauf nicht dauerhaft toeten. Befund bleibt sichtbar.
-    if (process.env[DRIFT_VENTIL] === '1') {
-      console.error(`::warning::filter-snapshot-merge — ${befund} ${DRIFT_VENTIL}=1 gesetzt: Lauf faehrt trotzdem weiter.`);
+    // T569-F8: der Ventil-Wert ist die OBERGRENZE, nicht ein An/Aus (s. ventilObergrenze).
+    const deckel = ventilObergrenze(process.env[DRIFT_VENTIL]);
+    const istAnteil = uebersprungen.length / gescannt;
+    if (deckel !== null && istAnteil <= deckel) {
+      console.error(`::warning::filter-snapshot-merge — ${befund} ${DRIFT_VENTIL}=${process.env[DRIFT_VENTIL]} deckelt bis ${(deckel * 100).toFixed(0)} %: Lauf faehrt trotzdem weiter.`);
     } else {
-      console.error(`::error::filter-snapshot-merge — ${befund} Stop. (Legitimer Karteileichen-Berg? ${DRIFT_VENTIL}=1 setzen — der Anteil ratcht monoton nach oben, weil nichts ausgetragen wird.)`);
+      const zusatz = deckel === null
+        ? `${DRIFT_VENTIL} auf die tolerierte Obergrenze setzen (Anteil 0..1, z. B. 0.35) — der Anteil ratcht monoton nach oben, weil nichts ausgetragen wird.`
+        : `${DRIFT_VENTIL}=${process.env[DRIFT_VENTIL]} deckelt nur bis ${(deckel * 100).toFixed(0)} %, gemessen sind ${(istAnteil * 100).toFixed(1)} % — die Obergrenze bewusst neu setzen oder die Ursache suchen.`;
+      console.error(`::error::filter-snapshot-merge — ${befund} Stop. (${zusatz})`);
       return 1;
     }
   }
@@ -212,5 +235,5 @@ function run(argv) {
   return 0;
 }
 
-module.exports = { autorisierteDateinamen, teileEingang, run, MAX_UEBERSPRUNGEN_ANTEIL, MIN_GESCANNT_FUER_ANTEIL, MANIFEST_EINGANG_FELD, DRIFT_VENTIL };
+module.exports = { autorisierteDateinamen, teileEingang, run, MAX_UEBERSPRUNGEN_ANTEIL, MIN_GESCANNT_FUER_ANTEIL, MANIFEST_EINGANG_FELD, DRIFT_VENTIL, ventilObergrenze };
 if (require.main === module) process.exit(run(process.argv));

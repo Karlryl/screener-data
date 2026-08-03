@@ -77,11 +77,37 @@ const LAST_GOOD_DISK = path.join(SNAP_DIR, '_last_good_disk.json'); // git-ignor
 // Snapshots und damit weit jenseits von Einzelfall-Rauschen (halb geschriebene Datei bei
 // Runner-Eviction), aber weit unter jedem echten Bruch-Szenario (Schema-Wechsel, kaputter
 // Cache-Restore, Encoding-Unfall treffen ALLES).
+// T569-F1 (Review Tag 569): dieselbe Schwelle gilt jetzt fuer die SUMME aus parseFail und
+// skippedNoMeta. Tag 565 zaehlte Schema-Drift nur im NENNER — damit war exakt die Haelfte
+// gedeckt, die der eigene Docstring oben verspricht: 12.500 sauber parsende Dateien, von
+// denen KEINE meta.ticker traegt, liessen die Wache schweigen (parseFail=0), und run() hat
+// keinen Leer-Universum-Schutz dahinter. Empirie fuer die gemeinsame 2-%-Schwelle: in
+// snapshots/ liegen NUR von pull-yahoo geschriebene Staende (alle mit meta.ticker) plus die
+// beiden namentlich uebersprungenen Metadateien — gemessen am 04.08.2026: 0 von 4.769
+// unbrauchbar im Hauptkorpus, 0 von 101 im Small-Cap-Korpus. Jede nennenswerte Quote ist
+// also Bruch, nicht Bestand.
 const MAX_PARSE_FAIL_ANTEIL = 0.02;
 // Mindest-Fallzahl, unter der ein ANTEIL nichts aussagt — gleiche Bauform wie
 // MIN_GESCANNT_FUER_ANTEIL (filter-snapshot-merge.js) und MIN_COHORT_N (score.js).
 // Schuetzt Kaltstart und Fixture-Laeufe: 1 von 3 Dateien sind 33 %, aber kein Befund.
 const MIN_PARSE_FAIL_FAELLE = 25;
+// T569-F4: der Small-Cap-Korpus ist eine ANDERE Population — watchlist-smallcap.json fuehrt
+// 596 Namen, on-disk liegen derzeit 101 Staende. 25 absolute Faelle waeren dort erst bei
+// ~25 % Ausfall erreicht, die Wache also praktisch nie scharf. 10 Faelle sind bei ~100
+// Dateien 10 % (weit ueber Einzelfall-Rauschen) und bei den ~600 des Vollbestands 1,7 %,
+// womit dort wieder die 2-%-Quote bindet und nicht die Fallzahl.
+const MIN_PARSE_FAIL_FAELLE_SMALLCAP = 10;
+
+// T569-F1b (Review Tag 569): der Coverage-Floor lief bis Tag 571 NUR gegen floor.count — mit
+// vorhandenem Manifest also gegen n_eingang_snapshots. Die real geladene Menge (rawCount) hat
+// er nie gesehen: ein Manifest, das 12.500 meldet, waehrend 300 Dateien auf der Platte liegen
+// (Artefakt-Download halb angekommen, Cache-Restore abgebrochen), kam ungebremst durch.
+// Deshalb ein ZWEITER Floor auf der on-disk-Population — mit EIGENER, viel lockererer Ratio:
+// diese Population ist seit F-12 watchlist-gefiltert, und prune-watchlist.js darf pro Lauf bis
+// auf max(200, 50 % des Vorstands) kuerzen. 0.95 waere hier woertlich der Fehl-Abbruch, den
+// F-12-R1 behoben hat. 0.25 liegt unter ZWEI aufeinanderfolgenden Maximal-Kuerzungen
+// (0.5 x 0.5) und faengt trotzdem jeden echten Einbruch (300 von 12.400 sind 2,4 %).
+const COVERAGE_FLOOR_RATIO_ONDISK = 0.25;
 
 // F-12-R1 (Review Tag 563): Name der Population, gegen die der Floor rechnet. Seit dem
 // F-12-Karteileichen-Filter im merge-Job enthaelt snapshots/ NUR NOCH watchlist-autorisierte
@@ -190,26 +216,35 @@ function assertCoverageFloor(loadedCount, baseline, floorRatio = COVERAGE_FLOOR_
 
 /**
  * T565-H1: wirft (Fail-Loud), wenn ein zu grosser ANTEIL der gelesenen Snapshot-Dateien
- * nicht parsebar war. Reine Funktion (testbar, kein I/O).
+ * unbrauchbar war. Reine Funktion (testbar, kein I/O).
  *   gelesene       — Dateien mit gueltigem JSON UND meta.ticker (= das Arbeitsuniversum)
  *   parseFail      — JSON.parse geworfen (defekte/halbe Datei)
  *   skippedNoMeta  — parsebar, aber ohne meta.ticker (Schema-Drift)
  * Nenner ist die Summe der drei = alle Kandidaten-Dateien des Verzeichnisses. Unter
  * minFaelle absoluten Faellen wird bewusst NICHT gequotelt (Kaltstart/Fixture-Schutz).
+ *
+ * T569-F1a: ZAEHLER ist die Summe aus parseFail UND skippedNoMeta. Fuer das Scoring sind
+ * beide dasselbe Ergebnis — die Datei ist nicht im Universum —, und der Docstring nannte
+ * Schema-Drift von Anfang an als gedeckten Fall, ohne ihn zu decken. Der Grund, aus dem
+ * Tag 565 die Drift nur in den Nenner nahm (der Parse-Anteil darf nicht kuenstlich steigen),
+ * bleibt gewahrt: der Nenner ist unveraendert die Summe aller drei Zaehler.
+ * Der Aufrufer-Name steht in der Meldung, weil inzwischen VIER Loader diese Wache rufen.
  */
 function assertParseFailAnteil(gelesene, parseFail, skippedNoMeta,
-  maxAnteil = MAX_PARSE_FAIL_ANTEIL, minFaelle = MIN_PARSE_FAIL_FAELLE) {
+  maxAnteil = MAX_PARSE_FAIL_ANTEIL, minFaelle = MIN_PARSE_FAIL_FAELLE, wo = 'loadUniverse') {
   const gesamt = gelesene + parseFail + skippedNoMeta;
-  if (gesamt <= 0 || parseFail < minFaelle) return;
-  const anteil = parseFail / gesamt;
+  const unbrauchbar = parseFail + skippedNoMeta;
+  if (gesamt <= 0 || unbrauchbar < minFaelle) return;
+  const anteil = unbrauchbar / gesamt;
   if (anteil > maxAnteil) {
     throw new Error(
-      `[run-screener] loadUniverse: ${parseFail} von ${gesamt} Snapshot-Dateien nicht parsebar ` +
-      `(${(anteil * 100).toFixed(1)} %, Schwelle ${(maxAnteil * 100).toFixed(0)} %). Das ist ` +
-      `Datenkorruption, kein Pruning: der Coverage-Floor sieht sie NICHT (er zaehlt ` +
-      `n_eingang_snapshots, also Dateien, nicht Inhalte). Lauf abgebrochen, bevor die ` +
-      `Kohorten-Perzentile auf der Restmenge gerechnet werden (defekten Cache-Restore/ ` +
-      `Artefakt-Download pruefen).`
+      `[run-screener] ${wo}: ${unbrauchbar} von ${gesamt} Snapshot-Dateien unbrauchbar ` +
+      `(${parseFail} nicht parsebar, ${skippedNoMeta} ohne meta.ticker; ${(anteil * 100).toFixed(1)} %, ` +
+      `Schwelle ${(maxAnteil * 100).toFixed(0)} %). Das ist Datenkorruption oder Schema-Drift, kein ` +
+      `Pruning: der Coverage-Floor sieht beides NICHT (er zaehlt n_eingang_snapshots, also ` +
+      `Dateien, nicht Inhalte). Lauf abgebrochen, bevor die Kohorten-Perzentile auf der ` +
+      `Restmenge gerechnet werden (defekten Cache-Restore/Artefakt-Download pruefen; bei ` +
+      `Schema-Drift das meta.ticker-Feld der Snapshot-Schreiber).`
     );
   }
 }
@@ -301,6 +336,12 @@ function loadUniverse(snapDir = SNAP_DIR, watchlistPath = WATCHLIST_PATH) {
     console.warn(`[run-screener] loadUniverse: on-disk ${rawCount} weicht >20% von manifest n_ok ${nOk} ab (verschiedene Populationen — nur Diagnose).`);
   }
   assertCoverageFloor(floor.count, baseline);
+  // T569-F1b: ZWEITER Floor auf der real geladenen Menge. Der obige rechnet mit vorhandenem
+  // Manifest ausschliesslich gegen n_eingang_snapshots und kann deshalb prinzipiell nicht
+  // sehen, ob die Dateien ueberhaupt angekommen sind. Eigene, lockere Ratio (Begruendung an
+  // COVERAGE_FLOOR_RATIO_ONDISK) und eigene Baseline-Population — die on-disk-Baseline wird
+  // unten in JEDEM Lauf mitgeschrieben, sonst haette dieser Floor nie eine.
+  assertCoverageFloor(rawCount, baselineFuer(lastGood, FLOOR_BASIS_ONDISK), COVERAGE_FLOOR_RATIO_ONDISK);
   // High-Water nach bestandenem Floor monoton fortschreiben — gegen DIESELBE Zahl, die der Floor
   // eben verglichen hat (floor.count), samt Populations-Name. Zwei Populationen im selben
   // High-Water waeren exakt der Fehler, den F-12-R1 behebt: die naechste Runde verglich sonst
@@ -313,6 +354,11 @@ function loadUniverse(snapDir = SNAP_DIR, watchlistPath = WATCHLIST_PATH) {
   // Alt-Feld fuer jeden Leser der alten Form stehen (und sind der Wert dieses Laufs).
   try {
     const hochwasser = naechstesHochwasser(lastGood, floor.basis, floor.count);
+    // T569-F1b: die on-disk-Population wird IMMER mitgefuehrt, nicht nur wenn sie zufaellig
+    // die gemessene ist. naechstesHochwasser() hebt nur floor.basis — und das ist mit
+    // vorhandenem Manifest dauerhaft "eingang". Ohne diese Zeile bliebe der zweite Floor
+    // oben in Produktion fuer immer ohne Baseline und damit wirkungslos (fail-open).
+    hochwasser[FLOOR_BASIS_ONDISK] = nextHighWater(hochwasser[FLOOR_BASIS_ONDISK], rawCount);
     writeJsonAtomic(lastGoodPfad, {
       value: hochwasser[floor.basis], basis: floor.basis, hochwasser, generatedAt: new Date().toISOString(),
     });
@@ -361,7 +407,7 @@ function loadSmallcapUniverse(snapDir = SMALLCAP_SNAP_DIR, watchlistPath = SMALL
   try { files = fs.readdirSync(snapDir); }
   catch (_) { return null; } // Verzeichnis fehlt -> Fallback-Signal
   const u = [];
-  let parseFail = 0;
+  let parseFail = 0, skippedNoMeta = 0;
   for (const f of files) {
     if (!f.endsWith('.json')) continue;
     if (f.startsWith('_manifest') || f === '_last_good_disk.json') continue;
@@ -369,7 +415,15 @@ function loadSmallcapUniverse(snapDir = SMALLCAP_SNAP_DIR, watchlistPath = SMALL
     try { s = JSON.parse(fs.readFileSync(path.join(snapDir, f), 'utf8')); }
     catch (_) { parseFail++; continue; }
     if (s && s.meta && s.meta.ticker) u.push(s);
+    else skippedNoMeta++;
   }
+  // T569-F4: bis Tag 571 wurde parseFail hier NUR gezaehlt und geloggt — dieselbe Wache wie
+  // im Hauptkorpus, aber ohne Konsumenten. Ein halb zurueckgespielter Small-Cap-Cache haette
+  // lautlos auf der Restmenge gerankt (runSmallcapPass), und der Aufrufer faengt einen Wurf
+  // ohnehin fail-soft ab (Marker statt stalem Board). Eigene Mindest-Fallzahl, weil die
+  // Population zwei Groessenordnungen kleiner ist (Begruendung an der Konstante).
+  assertParseFailAnteil(u.length, parseFail, skippedNoMeta,
+    MAX_PARSE_FAIL_ANTEIL, MIN_PARSE_FAIL_FAELLE_SMALLCAP, 'loadSmallcapUniverse');
   if (u.length === 0) return null; // leeres Verzeichnis -> Fallback-Signal
   // Autorisierungs-Schnitt auf die Small-Cap-Watchlist. S5-SC-001-Fix: identisches Muster wie
   // loadUniverse() oben — ueber loadWatchlist() laden statt roh JSON.parse+try/catch-Schlucken,
@@ -386,7 +440,7 @@ function loadSmallcapUniverse(snapDir = SMALLCAP_SNAP_DIR, watchlistPath = SMALL
   }
   const { filtered, dropped } = filterToAuthorizedUniverse(u, wl.stocks);
   mergeSecIntoUniverse(filtered);
-  console.log(`[run-screener] loadSmallcapUniverse: ${filtered.length} Small-Cap-Snapshots aus ${snapDir} (${parseFail} parse-fail, ${dropped} nicht in watchlist-smallcap.json)`);
+  console.log(`[run-screener] loadSmallcapUniverse: ${filtered.length} Small-Cap-Snapshots aus ${snapDir} (${parseFail} parse-fail, ${skippedNoMeta} ohne meta.ticker, ${dropped} nicht in watchlist-smallcap.json)`);
   return filtered;
 }
 
@@ -817,5 +871,6 @@ if (require.main === module) {
 // einmal von 1 auf 5 Dateien gewachsen, eine Kopie waere still veraltet.
 module.exports = { loadUniverse, loadSmallcapUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO,
   assertParseFailAnteil, MAX_PARSE_FAIL_ANTEIL, MIN_PARSE_FAIL_FAELLE,  // T565-H1
+  MIN_PARSE_FAIL_FAELLE_SMALLCAP, COVERAGE_FLOOR_RATIO_ONDISK,          // T569-F1/F4
   baselineFuer, naechstesHochwasser,                                    // T565-M2
   floorReferenz, FLOOR_BASIS_EINGANG, FLOOR_BASIS_ONDISK, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex, filterToAuthorizedUniverse, mergeSecIntoUniverse, hasFiniteSeries, parseTopNArg, runSmallcapPass, lampeBNachruesten, SMALLCAP_OUT_DIR, SMALLCAP_SNAP_DIR, SMALLCAP_WATCHLIST_PATH, SMALLCAP_COVERAGE_FLOOR_PCTL };

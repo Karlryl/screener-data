@@ -35,13 +35,24 @@ const { fetchSecTickers } = require(path.join(ROOT, 'discovery/sec-tickers.js'))
 // mid-write left a truncated companyfacts cache file or a truncated OUT).
 const { writeFileAtomic } = require(path.join(ROOT, 'lib/atomic-write.js'));
 
-function loadUniverse() {
+// T569-F4 (Review Tag 569): dieser Loader stand auf einem BLANKEN `catch (_) { continue; }` —
+// nicht einmal ein Zaehler. Sein Ergebnis wird COMMITTET (external-data/sec-secannual.json)
+// und speist den Zyklus-Daempfer (score.js cycleSeriesPair) sowie roicStability (axes.js);
+// eine halb gelesene Platte haette dort eine geschrumpfte Serie dauerhaft eingefroren, ohne
+// dass irgendwo eine Zeile davon erzaehlt. Gleiche Wache wie im Scorer, gleiche Population
+// (snapshots/) und damit gleiche Schwellen — EINE Regel, kein zweiter Schwellen-Ort.
+// snapDir ist Test-Seam mit dem produktiven Default (Bauform wie run-screener loadUniverse).
+const { assertParseFailAnteil } = require(path.join(ROOT, 'src/scoring/run-screener.js'));
+function loadUniverse(snapDir = SNAP) {
   const u = [];
-  for (const f of fs.readdirSync(SNAP)) {
+  let parseFail = 0, skippedNoMeta = 0;
+  for (const f of fs.readdirSync(snapDir)) {
     if (!f.endsWith('.json') || f.startsWith('_manifest') || f === '_last_good_disk.json') continue;
-    let s; try { s = JSON.parse(fs.readFileSync(path.join(SNAP, f), 'utf8')); } catch (_) { continue; }
+    let s; try { s = JSON.parse(fs.readFileSync(path.join(snapDir, f), 'utf8')); } catch (_) { parseFail++; continue; }
     if (s && s.meta && s.meta.ticker) u.push(s);
+    else skippedNoMeta++;
   }
+  assertParseFailAnteil(u.length, parseFail, skippedNoMeta, undefined, undefined, 'build-secannual loadUniverse');
   return u;
 }
 function get(url, depth = 0) {
@@ -172,4 +183,4 @@ if (require.main === module) {
   run().catch((e) => { console.error(e); process.exit(1); });
 }
 
-module.exports = { newestPresent, bilanzGuardOk, chooseCacheSource, run, get, sleep, looseSanity, plain };
+module.exports = { newestPresent, bilanzGuardOk, chooseCacheSource, run, get, sleep, looseSanity, plain, loadUniverse };

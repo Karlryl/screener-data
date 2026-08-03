@@ -31,15 +31,25 @@ const { fetchSecTickers } = require(path.join(ROOT, 'discovery/sec-tickers.js'))
 const { writeFileAtomic } = require(path.join(ROOT, 'lib/atomic-write.js'));
 const { newestPresent, bilanzGuardOk, chooseCacheSource, get, sleep, looseSanity } = require('./build-secannual.js');
 
-function loadSmallcapUniverse() {
+// T569-F4: derselbe blanke `catch (_) { continue; }` wie in build-secannual.js, nur auf der
+// KLEINEREN Population (watchlist-smallcap.json fuehrt 596 Namen, on-disk liegen ~100) — die
+// Wache bekommt deshalb die Small-Cap-Mindestfallzahl, sonst waere sie hier nie scharf.
+// Fehlendes Verzeichnis bleibt unveraendert das leise Fallback-Signal (leeres Array).
+const { assertParseFailAnteil, MAX_PARSE_FAIL_ANTEIL, MIN_PARSE_FAIL_FAELLE_SMALLCAP } =
+  require(path.join(ROOT, 'src/scoring/run-screener.js'));
+function loadSmallcapUniverse(snapDir = SNAP) {
   const u = [];
   let files;
-  try { files = fs.readdirSync(SNAP); } catch (_) { return u; }
+  try { files = fs.readdirSync(snapDir); } catch (_) { return u; }
+  let parseFail = 0, skippedNoMeta = 0;
   for (const f of files) {
     if (!f.endsWith('.json') || f.startsWith('_manifest') || f === '_last_good_disk.json') continue;
-    let s; try { s = JSON.parse(fs.readFileSync(path.join(SNAP, f), 'utf8')); } catch (_) { continue; }
+    let s; try { s = JSON.parse(fs.readFileSync(path.join(snapDir, f), 'utf8')); } catch (_) { parseFail++; continue; }
     if (s && s.meta && s.meta.ticker) u.push(s);
+    else skippedNoMeta++;
   }
+  assertParseFailAnteil(u.length, parseFail, skippedNoMeta,
+    MAX_PARSE_FAIL_ANTEIL, MIN_PARSE_FAIL_FAELLE_SMALLCAP, 'build-secannual-smallcap loadSmallcapUniverse');
   return u;
 }
 
