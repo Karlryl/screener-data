@@ -144,6 +144,7 @@ async function fetchLseUniverse() {
     } catch (e) {
       console.error(`  [LSE-UK] ${market} failed: ` + e.message);
       // fail-soft per market — keep whatever the other market gathered
+      result.partial = true; // S4-DISC-001: sonst sieht "nur MAINMARKET" aus wie "beide Maerkte"
     }
   }
   console.log(`  [LSE-UK] Total: ${result.size} tickers`);

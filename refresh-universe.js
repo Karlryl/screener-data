@@ -461,6 +461,17 @@ function beideYahooKanaeleLeer(predefinedNonEmpty, exchangeScreenerFatal, custom
   return predefinedNonEmpty === 0 && (exchangeScreenerFatal === true || customAdded === 0);
 }
 
+// S4-DISC-001: die Ertragszeile des Discovery-Merges. `quelle=1234` wie bisher,
+// `quelle=1234!` wenn die Quelle nur einen TEIL ihrer Scheiben geliefert hat,
+// `quelle=FAIL` bei komplettem Ausfall. Einzeln pruefbar, weil sie sonst nur im
+// Rumpf von main() lebte und kein Waechter an sie herankaeme.
+function discoveryErtragsZeile(namen, ertrag, degradiert) {
+  const d = new Set(degradiert || []);
+  return namen
+    .map(n => n + '=' + (ertrag[n] === -1 ? 'FAIL' : (ertrag[n] || 0)) + (d.has(n) ? '!' : ''))
+    .join(' ');
+}
+
 async function main() {
   const args = parseArgs(process.argv);
   console.log('Auto-Universe-Refresh');
@@ -764,6 +775,13 @@ async function main() {
   // Track, per source, whether it contributed a NON-EMPTY map and how many raw
   // candidate rows it yielded, so a degraded run can be detected after the merge.
   const discoveryYield = {};   // sourceName -> raw candidate count (-1 = rejected/failed)
+  // S4-DISC-001 (Block-5-Verifikation 2026-08-03): fuenf Adapter stempeln seit jeher
+  // `partial` auf die zurueckgegebene Map, wenn sie nur einen TEIL ihrer Scheiben
+  // (Seiten/Maerkte/Kategorien/Indizes) bekommen haben. Gelesen wurde das Feld hier
+  // nirgends — die Zeile unten zeigte nur .size, und eine halbierte Quelle war von
+  // einer gesunden nicht zu unterscheiden. KEINE Rot-Schwelle: ab welchem Anteil das
+  // den Lauf kippen soll, ist eine Schwellen-Frage und gehoert vor den Rat.
+  const degradedSources = [];
   let nonEmptySources = 0;
   let totalDiscoveryCandidates = 0;
   for (let i = 0; i < discoverySources.length; i++) {
@@ -787,6 +805,7 @@ async function main() {
       continue;
     }
     discoveryYield[srcName] = srcMap.size;
+    if (srcMap.partial) degradedSources.push(srcName);   // S4-DISC-001
     totalDiscoveryCandidates += srcMap.size;
     if (srcMap.size > 0) nonEmptySources++;
     for (const [sym, info] of srcMap) {
@@ -870,12 +889,16 @@ async function main() {
   // audit/fix (BUG HIGH — discovery-yield observability + fail-loud signal):
   // surface per-source yield so a partial degradation is visible even when the run
   // stays above the hard floor.
-  const yieldSummary = DISCOVERY_SOURCE_NAMES
-    .map(n => n + '=' + (discoveryYield[n] === -1 ? 'FAIL' : (discoveryYield[n] || 0)))
-    .join(' ');
+  const yieldSummary = discoveryErtragsZeile(DISCOVERY_SOURCE_NAMES, discoveryYield, degradedSources);
   console.log('  Discovery per-source yield: ' + yieldSummary +
     '  (non-empty sources: ' + nonEmptySources + '/' + DISCOVERY_SOURCE_NAMES.length +
     ', total raw candidates: ' + totalDiscoveryCandidates + ')');
+  if (degradedSources.length) {
+    console.log('  Discovery Teilausfaelle (im Ertrag mit ! markiert): ' + degradedSources.length +
+      ' von ' + DISCOVERY_SOURCE_NAMES.length + ' Quellen lieferten nur einen TEIL ihrer Scheiben — ' +
+      degradedSources.join(', ') + '. Die Zahl vor dem ! ist damit eine Untergrenze, nicht der Bestand: ' +
+      'was diese Quellen heute nicht mitgebracht haben, fehlt im Universum, ohne dass irgendwo etwas rot wird.');
+  }
 
   // audit/fix (BUG HIGH — fail-loud on silent total-discovery-outage):
   // because all six sources return an empty Map() rather than rejecting, a day when
@@ -1197,7 +1220,8 @@ async function main() {
 module.exports = {
   toYahooClassShare, _looksUS, dedupKey, applyDeadRegistryAndCap,
   numEnv, capNewTickerAdmission, _isNonEquityQuote, EXCHANGE_SCREENER_SCHEMA_ERROR_RE,
-  beideYahooKanaeleLeer   // Tag 510: Doppelausfall-Waechter, einzeln pruefbar
+  beideYahooKanaeleLeer,  // Tag 510: Doppelausfall-Waechter, einzeln pruefbar
+  discoveryErtragsZeile   // S4-DISC-001: Teilausfaelle sichtbar machen, einzeln pruefbar
 };
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });

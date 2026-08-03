@@ -143,6 +143,7 @@ async function fetchNordicUniverse() {
         ? j.data.instrumentListing.rows : null;
       if (!rows) {
         console.error(`  [Nordic] ${category}: unexpected response shape`);
+        result.partial = true; // S4-DISC-001: eine verlorene Kategorie ist ein Teilausfall
         continue;
       }
       const added = addRows(rows, result);
@@ -150,6 +151,7 @@ async function fetchNordicUniverse() {
     } catch (e) {
       // fail-silent per contract: one bad category must not kill the others.
       console.error(`  [Nordic] ${category} failed: ` + e.message);
+      result.partial = true; // S4-DISC-001: dito — sonst sieht 2-von-3 aus wie 3-von-3
     }
   }
   console.log(`  [Nordic] Total: ${result.size} tickers`);

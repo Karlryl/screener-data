@@ -237,6 +237,7 @@ async function fetchWikipediaIndices() {
       console.log(`  [Wikipedia] ${idx.name}: ${added} tickers`);
     } catch (e) {
       console.error(`  [Wikipedia] ${idx.name} failed: ` + e.message);
+      result.partial = true; // S4-DISC-001: ein ausgefallener Index ist ein Teilausfall
     }
     await sleep(500);
   }
