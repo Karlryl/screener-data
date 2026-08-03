@@ -285,7 +285,7 @@ Der einzige Alarmkanal ist das **rote X in GitHub Actions** (plus GitHubs native
 - **Snapshot freshness gate.** ≥50 % of snapshots must have `asOf` or `fetchedAt` < 36 h old. Hard-fail on breach (Tag 218).
 - **Date-rollover safety.** All snapshot scripts honour `RUN_DATE_UTC` (frozen at job start) over `Date.now()` so a pull crossing UTC midnight produces consistent vintages.
 - **Atomic writes.** Output scripts use `tmp + rename` (Tag 218b hardening).
-- **Push race.** The commit step retries-with-rebase up to 3× against `main`. On rebase loss the just-made commit SHA is cherry-picked back (Tag 179, F-CI-001 v2).
+- **Push race.** The commit step retries-with-rebase up to 3× against `main` (Tag 179, F-CI-001 v2). On a content conflict the rebase is aborted — which keeps the just-made commit — and the run goes **red** after 3 attempts: the first writer's data wins, nothing is overwritten. (Tag 544: the cherry-pick-back branch that used to sit here was dead code and could never fire.)
 
 ---
 

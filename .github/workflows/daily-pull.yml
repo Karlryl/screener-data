@@ -712,8 +712,8 @@ jobs:
         run: node scripts/update-ath-state.js
         continue-on-error: true
 
-      # F-CI-001 v2 (Tag 179/232c-7): DER EINZIGE Commit-to-main, retry-rebase,
-      # tree-verified. Nur der merge-Job pusht auf main -> kein 17-Shard-Race.
+      # F-CI-001 v2 (Tag 179/232c-7): DER EINZIGE Commit-to-main, retry-rebase.
+      # Nur der merge-Job pusht auf main -> kein 17-Shard-Race.
       # Schutzliste (picks-history/, methods-history/, earnings-calendar.json) wird
       # nur aktualisiert, nie geloescht. git add -A committet auch die frisch von prep
       # durchgereichte earnings-calendar.json + fx-rates.json + insider-cache.
@@ -727,22 +727,24 @@ jobs:
           else
             git commit -m "chore: yahoo-pull $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             COMMIT_SHA=$(git rev-parse HEAD)
-            COMMIT_TREE=$(git rev-parse HEAD^{tree})
-            echo "Local commit to publish: $COMMIT_SHA (tree $COMMIT_TREE)"
+            echo "Local commit to publish: $COMMIT_SHA"
             for i in 1 2 3; do
               git fetch origin main
               # Tag 232c-7: plain rebase (no --strategy-option theirs, which would
-              # silently drop our bytes on conflict). Verify BOTH the commit object
-              # survived AND its tree hash is unchanged; else abort + cherry-pick.
+              # silently drop our bytes on conflict).
               if ! git rebase --autostash origin/main; then
+                # Bei Konflikt bewusst ROT: die Daten des ersten Schreibers gewinnen.
+                # --abort stellt unseren Commit wieder her, der naechste Versuch holt neu
+                # und rebased erneut; bleibt der Konflikt, scheitert der Push dreimal und
+                # der Lauf faellt aus — der gewollte Alarm (43/43-Konflikt am 03.08.).
+                # Tag 544: der cherry-pick-Fallback von hier ist ersatzlos raus. Er konnte
+                # NIE feuern (nach --abort ist HEAD wieder $COMMIT_SHA, und der Baum-
+                # Vergleich las den Baum EBEN DIESES unveraenderlichen Commits, nie den von
+                # HEAD) — und haette er gefeuert, haette er nach `reset --hard origin/main`
+                # denselben Drei-Wege-Merge und damit denselben Konflikt wiederholt, nur
+                # ohne unseren Commit im Workspace. Verifiziert per lokalem git-Repro.
                 echo "::warning::Rebase failed on attempt $i — aborting cleanly (preserves local commit)"
                 git rebase --abort || true
-                NEW_TREE=$(git log -1 --format=%T "$COMMIT_SHA" 2>/dev/null || echo "MISSING")
-                if ! git merge-base --is-ancestor "$COMMIT_SHA" HEAD || [ "$NEW_TREE" != "$COMMIT_TREE" ]; then
-                  echo "::warning::Local commit lost or mutated during rebase — restoring from $COMMIT_SHA (tree $COMMIT_TREE)"
-                  git reset --hard origin/main
-                  git cherry-pick "$COMMIT_SHA" || { echo "::error::cherry-pick failed"; exit 1; }
-                fi
               else
                 COMMIT_SHA=$(git rev-parse HEAD)
               fi
@@ -1282,18 +1284,16 @@ jobs:
             # den geschriebenen.
             git commit -m "$(node scripts/vintage-commit-text.js "$VINTAGE_RC" "$VINTAGE_DATE" --subject)"
             COMMIT_SHA=$(git rev-parse HEAD)
-            COMMIT_TREE=$(git rev-parse HEAD^{tree})
             ok=0
             for i in 1 2 3; do
               git fetch origin main
               if ! git rebase --autostash origin/main; then
+                # Tag 544, gleiche Sache wie im Schritt "Commit Snapshots": bei Konflikt
+                # bewusst rot, --abort haelt unseren Commit; der tote cherry-pick-Fallback
+                # (konnte nach --abort nie feuern, und haette nur denselben Konflikt
+                # wiederholt) ist raus.
                 echo "::warning::vintage rebase failed on attempt $i — aborting cleanly"
                 git rebase --abort || true
-                NEW_TREE=$(git log -1 --format=%T "$COMMIT_SHA" 2>/dev/null || echo "MISSING")
-                if ! git merge-base --is-ancestor "$COMMIT_SHA" HEAD || [ "$NEW_TREE" != "$COMMIT_TREE" ]; then
-                  git reset --hard origin/main
-                  git cherry-pick "$COMMIT_SHA" || { echo "::error::vintage cherry-pick failed"; exit 1; }
-                fi
               else
                 COMMIT_SHA=$(git rev-parse HEAD)
               fi
