@@ -988,6 +988,10 @@ module.exports = {
   maxPriceDate,
   businessDaysSince,
   MAX_PRICE_STALENESS_BUSINESS_DAYS,
+  // Grenzen-Audit C-5: lib/forward-returns.js hielt bis 03.08.2026 eine handgepflegte Kopie
+  // dieser Zahl ("not exported by walk-forward-perf.js, so we define it here"). Zwei Kopien
+  // derselben Messgroesse heissen: wer eine aendert, aendert die Messung nur zur Haelfte.
+  PRICE_MAX_STALE_DAYS,
   // BH-141/BH-187: exported for direct hermetic testing (bh-w2-wfp.test.js)
   // of the aggregation/regime logic without needing full main() file I/O.
   businessDaysBetween,
