@@ -155,13 +155,22 @@ check('(3) dieselbe Bewegung: ueber 4 Tage erlaubt, an EINEM Tag verdaechtig', (
 });
 
 check('(3b) die Grenze waechst genau mit dem Abstand, nicht sprunghaft', () => {
-  const roh = { dailyP99Samples: [], sampleDates: [], threshold: null, frozen: false };
-  for (const [von, bis, tage] of [['2026-08-02', '2026-08-03', 1], ['2026-07-31', '2026-08-03', 3], ['2026-07-29', '2026-08-03', 5]]) {
+  // Erwartungswerte als LITERALE, nicht als Nachbau der Produktionsformel: BODEN * tage
+  // haette jede Aenderung an der Formel stillschweigend mitgemacht (die Rechnung stand auf
+  // beiden Seiten der Gleichung). Herleitung der Zahlen von Hand aus dem gemessenen Boden
+  // 11,50/Tag: 1 Tag = 11,50 · 3 Tage = 11,50+11,50+11,50 = 34,50 · 5 Tage = 57,50.
+  assert.strictEqual(BODEN, 11.5, 'Wird der Boden neu kalibriert, MUESSEN die drei Literale unten neu hergeleitet werden');
+  for (const [von, bis, tage, erwartet] of [
+    ['2026-08-02', '2026-08-03', 1, 11.5],
+    ['2026-07-31', '2026-08-03', 3, 34.5],
+    ['2026-07-29', '2026-08-03', 5, 57.5],
+  ]) {
+    const roh = { dailyP99Samples: [], sampleDates: [], threshold: null, frozen: false };
     const { vorher, nachher } = paar(von, bis, 0.1);
     const g = W.evaluateGate(nachher, vorher, roh, null, 'utilities');
     assert.strictEqual(g.gapDays, tage, von + '->' + bis);
-    assert.ok(Math.abs(g.wirksameSchwelle - BODEN * tage) < 1e-9,
-      'Grenze bei ' + tage + ' Tagen muss ' + (BODEN * tage) + ' sein, war ' + g.wirksameSchwelle);
+    assert.ok(Math.abs(g.wirksameSchwelle - erwartet) < 1e-9,
+      'Grenze bei ' + tage + ' Tagen muss ' + erwartet + ' sein, war ' + g.wirksameSchwelle);
   }
 });
 
@@ -266,6 +275,44 @@ check('(7) N Stichproben noetig — und EINE Ausreisser-Stichprobe setzt die Sch
   assert.ok(gc.boards.b.threshold < 999,
     'ein einzelner Bruchtag darf die Schwelle nicht mehr setzen (war genau der Fehler bei it-services 40,20), war ' + gc.boards.b.threshold);
   assert.ok(gc.boards.b.dailyP99Samples.includes(999), 'die Rohmessung bleibt trotzdem unveraendert stehen');
+});
+
+// ── 8. Der Boden ist ein Kalibrier-Ersatz, keine Dauer-Untergrenze ───────────
+check('(8) nach dem Einfrieren gilt die board-eigene Schwelle OHNE Boden', () => {
+  // Der Boden 11,5 ist aus dem LAUTESTEN Board abgeleitet (utilities, 5,73/Tag x 2).
+  // Dauerhaft auf jede board-eigene Schwelle angewandt, koennte ein ruhiges Board nie
+  // darunter fallen — it-services hat ein Tagesrauschen von ~2 Punkten, echte Wertfehler
+  // von 2 bis 11 Punkten waeren dort fuer immer unsichtbar geblieben. Der Boden gilt
+  // deshalb nur, solange die board-eigene Schwelle noch nicht aus CALIBRATION_SAMPLES
+  // Stichproben eingefroren ist. Das macht das Gate schaerfer, nicht laxer.
+  const gc = { boards: {} };
+  const N = W._const.CALIBRATION_SAMPLES;
+  for (let i = 0; i < N; i++) W.updateGateCalibration(gc, 'it-services', 1.0, '2026-01-' + String(i + 1).padStart(2, '0'));
+  const st = gc.boards['it-services'];
+  assert.strictEqual(st.frozen, true, 'Vorbedingung: das Board ist auskalibriert');
+  assert.ok(Math.abs(st.threshold - 2.0) < 1e-9,
+    'Tagesrauschen 1,0 x THRESHOLD_MULTIPLIER = 2,0 — der Boden darf das nicht mehr ueberschreiben, war ' + st.threshold);
+  assert.ok(st.threshold < BODEN, 'Vorbedingung: das ruhige Board liegt unter dem Boden');
+  const { vorher, nachher } = paar('2026-08-02', '2026-08-03', 5);   // 5 Punkte: unter dem Boden, weit ueber 2,0
+  const g = W.evaluateGate(nachher, vorher, st, null, 'it-services');
+  assert.strictEqual(g.calibrating, false, 'eine eingefrorene Schwelle ist keine Kalibrierphase');
+  assert.strictEqual(g.suspect, true, 'ein 5-Punkte-Sprung auf einem Board mit Tagesrauschen 2 MUSS auffallen');
+  assert.ok(g.reasons.includes('p99-delta-exceeds-threshold'));
+});
+
+check('(8b) waehrend der Kalibrierphase gilt der Boden weiterhin', () => {
+  // Gegenprobe zu (8): der Boden verschwindet nicht, er wandert nur dorthin, wo es noch
+  // kein board-eigenes Mass gibt. Sonst waere ein frisch zurueckgesetztes Board ungegatet.
+  const gc = { boards: {} };
+  for (let i = 0; i < W._const.CALIBRATION_SAMPLES - 1; i++) W.updateGateCalibration(gc, 'it-services', 1.0, '2026-01-' + String(i + 1).padStart(2, '0'));
+  const st = gc.boards['it-services'];
+  assert.strictEqual(st.frozen, false, 'Vorbedingung: noch nicht auskalibriert');
+  const still = paar('2026-08-02', '2026-08-03', 5);
+  assert.strictEqual(W.evaluateGate(still.nachher, still.vorher, st, null, 'it-services').suspect, false,
+    '5 Punkte liegen unter dem Boden — in der Kalibrierphase kein Fund');
+  const laut = paar('2026-08-02', '2026-08-03', BODEN + 0.5);
+  assert.strictEqual(W.evaluateGate(laut.nachher, laut.vorher, st, null, 'it-services').suspect, true,
+    'ueber dem Boden feuert es auch in der Kalibrierphase');
 });
 
 console.log(fail === 0 ? 'ALLE GRUEN' : fail + ' FEHLER');

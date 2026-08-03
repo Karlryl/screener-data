@@ -465,10 +465,19 @@ check('(f2) EINE Bewegung im Null-Fenster friert nichts ein — erst eine bewegt
   assert.strictEqual(gc2.boards.energy.frozen, true, 'bewegte Messreihe + genug Samples → frozen');
   assert.strictEqual(gc2.boards.energy.threshold, 2 * BODEN, 'Schwelle aus Messwerten, nicht vom Boden');
 
-  // Boden bleibt als Untergrenze gegen zu kleine, aber ECHTE Schwellen wirksam:
+  // UMGEDREHT am 03.08.2026 (Review zu Tag 513). Hier stand: „Boden bleibt als Untergrenze
+  // gegen zu kleine, aber ECHTE Schwellen wirksam — 0.1×2=0.2 → auf den Boden angehoben."
+  // Das war zu viel des Guten. Der Boden 11,5 ist aus dem LAUTESTEN Board (utilities)
+  // abgeleitet; dauerhaft auf jede board-eigene Schwelle gelegt, könnte ein RUHIGES Board
+  // nie darunter fallen — it-services misst ein Tagesrauschen von ~2, ein Wertfehler von
+  // 5 Punkten wäre dort auf ewig unsichtbar. Der Boden ist ein Kalibrier-ERSATZ (er gilt,
+  // solange es kein board-eigenes Maß gibt), keine Dauer-Untergrenze. Das macht das Gate
+  // schärfer, nicht laxer, und hält die Kalibrierung echt.
   const gc3 = { boards: {} };
   for (let i = 0; i < N; i++) W.updateGateCalibration(gc3, 'x', 0.1, '2026-04-' + String(i + 1).padStart(2, '0'));
-  assert.strictEqual(gc3.boards.x.threshold, BODEN, '0.1×2=0.2 → auf den gemessenen Boden angehoben');
+  assert.ok(Math.abs(gc3.boards.x.threshold - 0.2) < 1e-9,
+    '0.1×2=0.2 bleibt die gemessene Schwelle des ruhigen Boards, war ' + gc3.boards.x.threshold);
+  assert.ok(gc3.boards.x.threshold < BODEN, 'Vorbedingung dieses Tests: die Messung liegt unter dem Boden');
 });
 
 // VORHER ROT: Tag 2 (Delta 2) hätte mit der übertünchten Boden-Schwelle 1.0 bereits

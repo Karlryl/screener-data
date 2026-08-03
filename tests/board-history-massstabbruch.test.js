@@ -38,8 +38,9 @@ function check(name, fn) {
 // ── Fixture-Helfer ───────────────────────────────────────────────────────────
 // Minimales Vintage-Gerippe: evaluateGate liest fuer die Schwellen-Entscheidung nur
 // cohort.{profitable,unprofitable}[].{ticker,score} und pitCoverage.
-function vintageMit(paare) {
+function vintageMit(paare, datum) {
   return {
+    date: datum || null,          // nur die Abstands-Tests setzen ein Datum; ohne Datum gilt 1 Tag
     pitCoverage: { beta: 1 },
     cohort: { profitable: paare.map(([ticker, score]) => ({ ticker, score })), unprofitable: [] },
   };
@@ -61,10 +62,11 @@ const WEG_MITTE = Math.round(ZEILEN * 1.3 * BODEN / 100);
 const STRUKTUR_MITTE = 100 * WEG_MITTE / ZEILEN;
 
 // `ZEILEN` Zeilen vorher, `weg` davon fallen weg, die Ueberlebenden bewegen sich um `bewegung`.
-function lage(weg, bewegung) {
+// datumVorher/datumNachher optional — ohne sie liest tagesabstand() konservativ 1 Tag.
+function lage(weg, bewegung, datumVorher, datumNachher) {
   const vorher = []; for (let i = 0; i < ZEILEN; i++) vorher.push(['T' + i, 50]);
   const nachher = []; for (let i = weg; i < ZEILEN; i++) nachher.push(['T' + i, 50 + bewegung]);
-  return { vorher: vintageMit(vorher), nachher: vintageMit(nachher) };
+  return { vorher: vintageMit(vorher, datumVorher), nachher: vintageMit(nachher, datumNachher) };
 }
 
 // Fixture fuer die Register-Tests, die durch run() gehen muessen (Verdrahtung, nicht nur Logik).
@@ -139,6 +141,38 @@ check('der Deckel begrenzt: auch massive Schrumpfung hebt nie ueber 2x die Schwe
   assert.strictEqual(g.suspect, true, 'Bewegung ueber dem Deckel bleibt suspect');
 });
 
+check('mehrtaegiger Abstand: die Struktur-Allowance wird NICHT mit den Tagen multipliziert', () => {
+  // Der Bruch-Zuschlag gilt fuer den EINEN Alt-gegen-Neu-Vergleich: eine Definitions-
+  // aenderung passiert einmal, sie akkumuliert nicht pro Kalendertag. Nur die normale
+  // Tagesgrenze waechst mit dem Abstand. Vorher wurde die ganze Bruch-Tagesschwelle mit
+  // gapDays multipliziert — bei 5 Tagen Abstand stand die Grenze bei 74,56 statt 60,91,
+  // ein echter Wertfehler dazwischen wurde verschluckt. Die bestehenden Bruch-Fixtures
+  // haben kein date-Feld, gapDays war dort immer 1 — genau die Luecke.
+  const { vorher, nachher } = lage(WEG_MITTE, 0.1, '2026-07-29', '2026-08-03');
+  const g = W.evaluateGate(nachher, vorher, GATE_BODEN, BRUCH, 'software-comm-services');
+  assert.strictEqual(g.gapDays, 5, 'Vorbedingung: fuenf Kalendertage Abstand');
+  const erwartet = BODEN * 5 + (STRUKTUR_MITTE - BODEN);   // normale Bewegung x 5 Tage + EINMAL die Allowance
+  assert.ok(Math.abs(g.wirksameSchwelle - erwartet) < 1e-9,
+    'wirksame Grenze muss ' + erwartet.toFixed(2) + ' sein, war ' + g.wirksameSchwelle);
+  // und der Bereich, den die alte Rechnung freigab, faellt wieder auf:
+  const mitskaliert = STRUKTUR_MITTE * 5;
+  assert.ok(erwartet < mitskaliert, 'Vorbedingung: die alte Rechnung war lockerer (' + mitskaliert.toFixed(2) + ')');
+  const laut = lage(WEG_MITTE, (erwartet + mitskaliert) / 2, '2026-07-29', '2026-08-03');
+  const gl = W.evaluateGate(laut.nachher, laut.vorher, GATE_BODEN, BRUCH, 'software-comm-services');
+  assert.strictEqual(gl.suspect, true, 'eine Bewegung zwischen neuer und alter Grenze MUSS auffallen');
+  assert.ok(gl.reasons.includes('p99-delta-exceeds-threshold'));
+});
+
+check('am Bruch-Tag selbst (1 Tag Abstand) bleibt die Grenze unveraendert', () => {
+  // Gegenprobe zur Zeile darueber: die Zerlegung darf den Normalfall gapDays=1 nicht
+  // verschieben — dort ist Boden x 1 + Allowance genau die alte Tagesschwelle.
+  const { vorher, nachher } = lage(WEG_MITTE, 0.1, '2026-08-02', '2026-08-03');
+  const g = W.evaluateGate(nachher, vorher, GATE_BODEN, BRUCH, 'software-comm-services');
+  assert.strictEqual(g.gapDays, 1);
+  assert.ok(Math.abs(g.wirksameSchwelle - STRUKTUR_MITTE) < 1e-9,
+    'bei 1 Tag muss die wirksame Grenze die Tagesschwelle sein, war ' + g.wirksameSchwelle);
+});
+
 // ── 2. Gegenproben: jede der drei Bedingungen einzeln entfernt ───────────────
 
 check('Gegenprobe BOARD: ein nicht namentlich registriertes Board bekommt die normale Schwelle', () => {
@@ -173,12 +207,28 @@ check('winzige Schrumpfung weicht nichts auf — und macht auch nichts strenger'
   assert.strictEqual(g.suspect, true);
 });
 
-check('in der Kalibrierphase (keine eingefrorene Schwelle) gibt es keine Bruch-Grenze', () => {
-  const { vorher, nachher } = lage(30, 1.3);
+check('in der Kalibrierphase gilt die Bruch-Grenze ebenfalls — Basis ist dann der Boden', () => {
+  // UMGEDREHT am 03.08.2026 (Review zu Tag 513). Hier stand vorher das Gegenteil
+  // ("in der Kalibrierphase keine Bruch-Grenze, ohne Bezugsschwelle waere jeder Deckel
+  // erfunden"). Das war richtig formuliert, solange jedes Board eine eigene eingefrorene
+  // Schwelle hatte. Die Neukalibrierung hat ALLE 14 Boards auf calibrating zurueckgesetzt
+  // und CALIBRATION_SAMPLES auf 20 gehoben (~vier Betriebswochen) — ein in diesem Fenster
+  // registrierter Massstab-Bruch (historisch ~1x/Monat) traefe sonst auf bruchGrenze=null
+  // und wuerde nur am nackten Boden gemessen: mehrtaegiger Rueckfall in genau die
+  // Dauersperre, die Tag 513 beheben soll. Der Deckel ist hier auch nicht erfunden — der
+  // Boden ist an 26 echten Tagesbewegungen gemessen (Herleitung an MIN_GATE_THRESHOLD).
+  const { vorher, nachher } = lage(WEG_MITTE, STRUKTUR_MITTE - 0.5);
   const roh = { dailyP99Samples: [0.3], sampleDates: ['a'], threshold: null, frozen: false };
   const g = W.evaluateGate(nachher, vorher, roh, BRUCH, 'software-comm-services');
-  assert.strictEqual(g.calibrating, true);
-  assert.strictEqual(g.bruchGrenze, null, 'ohne Bezugsschwelle waere jeder Deckel erfunden');
+  assert.strictEqual(g.calibrating, true, 'Vorbedingung: kein board-eigenes Mass');
+  assert.ok(g.bruchGrenze, 'auch ohne board-eigene Schwelle braucht der Bruch-Tag seine Grenze');
+  assert.strictEqual(g.bruchGrenze.normaleSchwelle, BODEN, 'Basis ist der gemessene Boden');
+  assert.ok(Math.abs(g.bruchGrenze.tagesschwelle - STRUKTUR_MITTE) < 1e-9);
+  assert.strictEqual(g.suspect, false, 'strukturell erklaerbare Bewegung darf nicht suspect sein');
+  // Gegenprobe: ueber der Bruch-Grenze beisst sie auch in der Kalibrierphase.
+  const zuViel = lage(WEG_MITTE, STRUKTUR_MITTE + 0.5);
+  const gz = W.evaluateGate(zuViel.nachher, zuViel.vorher, roh, BRUCH, 'software-comm-services');
+  assert.strictEqual(gz.suspect, true, 'die Ausnahme ist auch in der Kalibrierphase eine Grenze');
 });
 
 // ── 3. Die uebrigen Pruefungen bleiben am Bruch-Tag scharf ───────────────────
