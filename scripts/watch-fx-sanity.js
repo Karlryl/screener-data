@@ -29,6 +29,12 @@ const BASELINE_PATH = path.join(ROOT, 'data-health', 'fx-cap-count-baseline.json
 const CAP_US = 800e6;
 const CAP_FOREIGN = 2e9;
 const JUMP_THRESHOLD = 0.25;
+// Die Baseline ist eine ZAEHL-Datei: genau diese zwei Felder liest checkJump, genau diese zwei
+// duerfen hinein. Als Allowlist IN updateBaseline (nicht nur beim Aufrufer), sonst haengt die
+// Reinheit der Datei daran, dass JEDER kuenftige Aufrufer daran denkt — so kamen Tag 520-522
+// gescannt/parseFehler hinein, und mit dem gemeinsamen Scan (Tag 529) staende jetzt auch die
+// Waehrungs-Tabelle drin. Waechter: tests/watch-fx-sanity-samedayrerun.test.js.
+const BUCKETS = ['usOver', 'foreignOver'];
 
 function loadJson(p, fallback) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return fallback; }
@@ -132,7 +138,7 @@ function isBucketJump(todayVal, prevVal) {
 
 function checkJump(today, baseline) {
   const problems = [];
-  for (const bucket of ['usOver', 'foreignOver']) {
+  for (const bucket of BUCKETS) {
     const prevVal = baseline && Number.isFinite(baseline.last && baseline.last[bucket]) ? baseline.last[bucket] : null;
     if (!isBucketJump(today[bucket], prevVal)) continue;
     const jump = (today[bucket] - prevVal) / prevVal;
@@ -151,6 +157,7 @@ function checkJump(today, baseline) {
 // compatible with existing baseline files lacking it (no match -> not a same-day
 // rerun -> first post-fix run advances the pointer exactly like before).
 function updateBaseline(baseline, today, dateStr) {
+  const nurZaehlstaende = (o) => { const r = {}; for (const b of BUCKETS) r[b] = (o || {})[b]; return r; };
   if (baseline && baseline.date === dateStr) {
     // same-day rerun (Codex-Gegenreview Tag 353): .prev bleibt am WAHREN Vortag verankert,
     // aber .last nimmt den HEUTIGEN latest-Stand — ein Rerun korrigiert normalerweise den
@@ -159,7 +166,7 @@ function updateBaseline(baseline, today, dateStr) {
     // Folgetag ausloesen (sicher); das Pinnen des ersten Werts wuerde stattdessen eine echte
     // Korrektur still verwerfen. BH-124's Freeze greift hier bewusst NICHT — ein Rerun IST
     // die Korrektur, kein zweiter unabhaengiger Tageswert.
-    return { prev: (baseline.prev != null ? baseline.prev : null), last: today, date: dateStr, updatedAt: new Date().toISOString() };
+    return { prev: (baseline.prev != null ? baseline.prev : null), last: nurZaehlstaende(today), date: dateStr, updatedAt: new Date().toISOString() };
   }
   // BH-124: a NEW calendar day's bucket that jumped >25% vs the reference must NOT
   // become tomorrow's reference — otherwise persistent corruption (100->50->50->...)
@@ -168,7 +175,7 @@ function updateBaseline(baseline, today, dateStr) {
   // advances normally.
   const prevLast = baseline && baseline.last ? baseline.last : {};
   const nextLast = {};
-  for (const bucket of ['usOver', 'foreignOver']) {
+  for (const bucket of BUCKETS) {
     const prevVal = Number.isFinite(prevLast[bucket]) ? prevLast[bucket] : null;
     nextLast[bucket] = isBucketJump(today[bucket], prevVal) ? prevVal : today[bucket];
   }

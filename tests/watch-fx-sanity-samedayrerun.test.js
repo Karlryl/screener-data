@@ -46,6 +46,28 @@ check('SAME-DAY rerun takes the latest reading into .last but does NOT shift .pr
   assert.equal(rerun.date, '2026-07-18');
 });
 
+// Review-Befund 03.08.2026 (MITTEL): die Baseline-Reinheit hing am AUFRUFER. main() projiziert
+// heute auf die zwei Zaehlstaende, der same-day-rerun-Zweig von updateBaseline nahm `today`
+// aber UNVERAENDERT. Genau so kamen Tag 520-522 gescannt/parseFehler in die Datei; mit dem
+// gemeinsamen Scan (Tag 529) waere jetzt zusaetzlich die Waehrungs-Tabelle mitgewandert.
+// Der Waechter steht deshalb hier, am Entstehungsort: die Funktion selbst haelt die Baseline
+// bei dem, was checkJump liest — egal was ein Aufrufer hineinreicht.
+check('same-day rerun schreibt NUR die zwei Zaehlstaende in .last (Feld-Allowlist IN der Funktion)', () => {
+  const day1 = updateBaseline(null, { usOver: 100, foreignOver: 50 }, '2026-07-18');
+  const verschmutzt = { usOver: 102, foreignOver: 51, gescannt: 4768, parseFehler: 2, n: 7, jeWaehrung: { INR: 3 } };
+  const rerun = updateBaseline(day1, verschmutzt, '2026-07-18');
+  assert.deepEqual(Object.keys(rerun.last).sort(), ['foreignOver', 'usOver'],
+    '.last darf nur die zwei Zaehlstaende tragen, hat aber: ' + JSON.stringify(rerun.last));
+  assert.deepEqual(rerun.last, { usOver: 102, foreignOver: 51 });
+});
+
+check('NEUER Tag schreibt ebenfalls nur die zwei Zaehlstaende (Gegenstueck, kein Regress)', () => {
+  const day1 = updateBaseline(null, { usOver: 100, foreignOver: 50 }, '2026-07-18');
+  const day2 = updateBaseline(day1, { usOver: 102, foreignOver: 51, gescannt: 4768, parseFehler: 2 }, '2026-07-19');
+  assert.deepEqual(Object.keys(day2.last).sort(), ['foreignOver', 'usOver'],
+    '.last darf nur die zwei Zaehlstaende tragen, hat aber: ' + JSON.stringify(day2.last));
+});
+
 check('end-to-end: a CORRECTED same-day rerun becomes the reference (no false alarm next day)', () => {
   // Day 1 first run glitched high (145); a same-day rerun corrects it to 100.
   const day1 = updateBaseline(null, { usOver: 145, foreignOver: 50 }, '2026-07-18');
