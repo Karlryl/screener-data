@@ -138,5 +138,39 @@ test('F-11: Discovery-Boden liegt nie UEBER dem Pull-Boden aus daily-pull.yml', 
     'das Band dazwischen ist tot: der Pull wuerde diese Firmen nehmen, die Entdeckung schlaegt sie nie vor.');
 });
 
+// ── BH-100/F-11-FOLGE (04.08.2026): die Bibliotheks-Untergrenze IST der Kanal ──────
+// Der Predefined-Kanal war seit dem 11.05.2026 tot: 325 von 325 Aufrufen warfen
+// FailedYahooValidationError, weil yahoo-finance2 unter 3.15.0 ein Ergebnis komplett
+// verwirft, sobald Yahoo EIN unbekanntes Feld mitschickt (impliedSharesOutstanding, seit
+// Mai 2026, von unserem Code nirgends benutzt). Keine Zeile eigener Code war schuld, und
+// keine Zeile eigener Code heilt es — nur die Version. Eigene Messung 04.08. an derselben
+// 5er-Stichprobe: 3.14.0 = 5/5 Aufrufe tot, 0 Quotes; 3.15.4 = 1/5 tot, 971 Quotes.
+// Ein Rueckfall unter 3.15.0 toetet den Kanal wieder, und der einzige Alarm dagegen waere
+// eine Zeile im CI-Log, die drei Monate lang niemand gelesen hat. Deshalb hier, statisch.
+// Geprueft wird der LOCK (das ist, was `npm ci` installiert) UND die Range in package.json.
+test('BH-100/F-11-FOLGE: yahoo-finance2 >= 3.15.0 — darunter ist der Predefined-Kanal tot', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const ROOT = path.join(__dirname, '..');
+  const MINDEST = [3, 15, 0];
+  const mindestens = (v, min) => {
+    const t = String(v).split('.').map(Number);
+    for (let i = 0; i < 3; i++) {
+      if (!Number.isFinite(t[i])) return false;
+      if (t[i] !== min[i]) return t[i] > min[i];
+    }
+    return true;
+  };
+  const lock = JSON.parse(fs.readFileSync(path.join(ROOT, 'package-lock.json'), 'utf8'));
+  const eintrag = lock.packages && lock.packages['node_modules/yahoo-finance2'];
+  assert.ok(eintrag && eintrag.version, 'yahoo-finance2 fehlt im package-lock.json');
+  assert.ok(mindestens(eintrag.version, MINDEST),
+    `package-lock.json haelt yahoo-finance2 ${eintrag.version} — unter 3.15.0 wirft der ` +
+    'Predefined-Screener bei JEDEM Aufruf FailedYahooValidationError (gemessen: 3.14.0 = 5/5 tot).');
+  const range = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).dependencies['yahoo-finance2'];
+  assert.ok(mindestens(String(range).replace(/^[^0-9]*/, ''), MINDEST),
+    `package.json erlaubt "${range}" — die Untergrenze muss die geheilte Version dokumentieren, ` +
+    'sonst loest ein Lock-Neubau wieder auf eine tote Version auf.');
+});
+
 console.log(`\nrefresh-universe.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);
