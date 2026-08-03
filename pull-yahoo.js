@@ -1851,6 +1851,41 @@ function mapFTSToQuarterly(quarterlyRows) {
   return { revenueQ, opIncQ, grossProfitQ, revenueQEnds, grossProfitQEnds, opIncQEnds };
 }
 
+// Tag 561: Laengengleichheit der drei Quartals-Kernreihen ist seit F-002 eine
+// KONSTRUKTIONS-Invariante der Funktion oben — jede Row schreibt in alle drei Reihen,
+// der Trailing-Trim poppt alle drei zusammen. Ihre Verletzung ist deshalb ein sicherer
+// Nachweis, dass ein Payload aus der Zeit VOR F-002 stammt (damals uebersprang revenueQ
+// null-Umsatz-Rows, opIncQ/grossProfitQ nicht), und keine Heuristik.
+// Gemessen am lokalen Bestand (fundamentals-cache/, 03.08.2026): 2.044 von 5.054
+// Eintraegen (40 %) tragen die Verschiebung, 15 der 23 Tag-559-Namen darunter.
+// Warum das jetzt weh tut: seit Tag 559 laeuft NRB-SK-001 auf der Gewinner-Umsatzreihe
+// des Quartals-Buendels — bei verschobenen Reihen prueft es den Umsatz gegen ein
+// FREMDES Quartals-GP/OpInc und nullt das falsche Quartal (oder eben nicht).
+// Rueckgabe: null wenn in Ordnung, sonst die drei Laengen als Meldungstext.
+// Kein ftsQuarterly im Payload -> null: das ist der Alt-Cache-Fall aus der Zeit vor der
+// Reihe ueberhaupt, den der Merge schon heute vertraegt; ihn zu verwerfen waere eine
+// Neu-Fetch-Welle ohne Befund.
+function _quarterSeriesMisaligned(ftsQuarterly) {
+  if (!ftsQuarterly) return null;
+  const nRev = (ftsQuarterly.revenueQ || []).length;
+  const nOi = (ftsQuarterly.opIncQ || []).length;
+  const nGp = (ftsQuarterly.grossProfitQ || []).length;
+  return (nRev === nOi && nRev === nGp) ? null : `rev=${nRev} oi=${nOi} gp=${nGp}`;
+}
+
+// Tag 561: die Quartals-Nettoergebnis-Reihe las bisher NUR `r.netIncome`, waehrend die
+// Jahres-Seite (mapFTSToAnnual, oben) seit jeher drei Schluessel probiert. Rows, die
+// Yahoo mit grossem `NetIncome` oder als `netIncomeContinuousOperations` liefert, kamen
+// dadurch als null an. Seit Tag 559 entscheidet die Quartals-NI ueber die Buendel-DICHTE
+// mit (_quarterBundleDensity) — eine luecklige Reihe verschiebt dort die QUELLENWAHL,
+// nicht bloss eine Kennzahl. _ftsValue deckt zusaetzlich die snake_case-Edge-Nodes ab
+// (F-DP-041). FTS liefert oldest-first; die Reihe wird gedreht, damit sie index-aligned
+// neben mapFTSToQuarterly steht (newest-first).
+function _mapFTSQuarterlyNI(quarterlyRows) {
+  return (quarterlyRows || []).slice().reverse()
+    .map(r => _ftsValue(r, 'netIncome', 'NetIncome', 'netIncomeContinuousOperations'));
+}
+
 // ─── Main Pull ─────────────────────────────────────────────────────
 
 async function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -2665,6 +2700,23 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         if (staleSchema && !cacheHasTag211l) {
           cacheBypassReason = 'schema-stale + cache-pre-Tag-211l';
         }
+        // Tag 561: bis hierher wurde cached.payload.ftsQuarterly UNGEPRUEFT in den
+        // Merge uebernommen. Ein Payload mit ungleich langen Kernreihen stammt aus der
+        // Zeit vor F-002 und ist quartalsverschoben (Volltext an _quarterSeriesMisaligned).
+        // Verwerfen statt flicken: WO die fehlenden Umsatz-Quartale sassen, steht im
+        // Cache nicht mehr drin — nur der Neu-Fetch stellt die Ausrichtung wieder her.
+        // Selbstheilend: der frische Pull schreibt den Cache F-002-konform zurueck, der
+        // Befund tritt am selben Namen kein zweites Mal auf. Ueberschreibt einen etwaigen
+        // schema-stale-Grund bewusst — beide fuehren zum selben Neu-Fetch, aber diese
+        // Diagnose ist die spezifischere.
+        const _qDrift = _quarterSeriesMisaligned(cached.payload.ftsQuarterly);
+        if (_qDrift) {
+          cacheBypassReason = `quartals-laengendrift (${_qDrift}, Cache vor F-002)`;
+          // Laut, mit Ticker: der schema-stale-Bypass daneben bleibt bewusst still (er
+          // trifft fast das ganze Universum), dieser hier ist ein Datenbefund und muss
+          // im Lauf-Log auffindbar sein.
+          _log('WARN', `FTS-Cache verworfen (${stock.ticker}): Quartalsreihen ungleich lang (${_qDrift}) → Neu-Fetch`);
+        }
       } else if (staleSchema) {
         // No cache to use anyway — re-fetch is happening regardless.
         cacheBypassReason = 'schema-stale (no cache)';
@@ -2770,8 +2822,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         ftsAnnualDividendsPaid = _ftsExtractByYear(fts.annualCash, ['cashDividendsPaid']);
         ftsAnnualNetCommonStockIssuance = _ftsExtractByYear(fts.annualCash, ['netCommonStockIssuance']);
         // Tag-90: Quarterly NetIncome (8-Quarter-Earnings-Stability)
-        ftsQuarterlyNI = (fts.quarterlyFin || []).slice().reverse()
-          .map(r => r && r.netIncome != null ? r.netIncome : null);
+        // Tag 561: Drei-Schluessel-Lesung wie die Jahres-Seite — Volltext an _mapFTSQuarterlyNI.
+        ftsQuarterlyNI = _mapFTSQuarterlyNI(fts.quarterlyFin);
         // F-DP-005: detect partial FTS result — any module that returned empty array
         const ftsPartial = (
           (fts.annualFin || []).length === 0 ||
@@ -3688,6 +3740,9 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // (tests/tag559-quartals-buendel.test.js) FUEHRT sie aus, statt Quelltext nach
   // Schreibmustern abzusuchen.
   _mergeQuarterBundle, _nonZeroCount,
+  // Tag 561: Cache-Integritaet + Quartals-NI-Lesung als Seams — der Waechter
+  // (tests/tag561-fts-cache-integritaet.test.js) FUEHRT sie aus.
+  _quarterSeriesMisaligned, _mapFTSQuarterlyNI,
   // 03.08.2026: die FTS-Extraktion als Seam, damit Tests sie AUSFUEHREN koennen statt den
   // Quelltext nach Schreibmustern abzusuchen (tests/scoring/f1-ausschuettungsfelder.test.js).
   _ftsExtractByYear,

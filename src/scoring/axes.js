@@ -503,8 +503,12 @@ function roicStabilitySource(s) {
   const useSec = opS && assetsS && curLiabS
     && opS[0] !== null && assetsS[0] !== null && curLiabS[0] !== null
     && opS.length >= opY.length;
-  return useSec ? { opInc: opS, assets: assetsS, curLiab: curLiabS }
-                : { opInc: opY, assets: assetsY, curLiab: curLiabY };
+  // Tag 561: _source benennt die getroffene Wahl, damit Diagnose-Zaehler (run-screener
+  // mergeSecIntoUniverse) die WIRKSAME Abdeckung melden koennen, ohne die useSec-Regel
+  // ein zweites Mal nachzubauen. Keine Logik-Aenderung: alle Leser destrukturieren
+  // opInc/assets/curLiab namentlich.
+  return useSec ? { opInc: opS, assets: assetsS, curLiab: curLiabS, _source: 'sec' }
+                : { opInc: opY, assets: assetsY, curLiab: curLiabY, _source: 'yahoo' };
 }
 function roicStability(s) {
   const { opInc: opIncS, assets, curLiab } = roicStabilitySource(s);

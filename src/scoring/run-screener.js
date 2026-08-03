@@ -20,6 +20,9 @@ const { boardStatus } = require('./board-status.js');
 const { smallcapRoute } = require('./smallcap-route.js');
 const smallcapFormulas = require('./formulas/smallcap/index.js');
 const { buildShareGrowthPctlFn, shareCountDilution, shareDilutionDetail } = require('./lamps.js');
+// Tag 561: die EINE Quellenwahl der Achsen (SEC-Trio wo vollstaendig, sonst Yahoo) — das
+// Diagnose-Log meldet die WIRKSAME Abdeckung damit aus der produktiven Regel selbst.
+const { roicStabilitySource } = require('./axes.js');
 // audit/fix (C2): Outputs atomar schreiben (tmp+rename), wie das ganze Daten-Fundament —
 // plain fs.writeFileSync hinterlaesst bei Crash/CI-Timeout truncated JSON fuers Dashboard.
 const { writeJsonAtomic } = require('../../lib/atomic-write.js');
@@ -256,17 +259,31 @@ function hasFiniteSeries(arr) {
   return Array.isArray(arr) && arr.some((e) => Number.isFinite((e && typeof e === 'object') ? e.value : e));
 }
 
-function mergeSecIntoUniverse(u) {
+// Tag 561: `files` nur als Test-Seam (Default = die committeten Dateien) — der Waechter
+// tests/scoring/tag561-sec-merge-log.test.js fuehrt beide Zweige AUS, statt den Quelltext
+// nach Schreibmustern abzusuchen. Produktive Aufrufe bleiben einstellig.
+function mergeSecIntoUniverse(u, files = SECANNUAL_FILES) {
   const data = {};
-  for (const p of SECANNUAL_FILES) {
+  for (const p of files) {
     try { Object.assign(data, JSON.parse(fs.readFileSync(p, 'utf8'))); } catch (_) { /* Datei fehlt -> skip */ }
   }
-  if (!Object.keys(data).length) return u; // keine committete Datei -> heutiges 4J-Verhalten
+  if (!Object.keys(data).length) {
+    // Tag 561 (Tag-520-Lehre): der stille return machte "der Schritt lief gar nicht"
+    // im Log ununterscheidbar von "0 Abdeckung". Beide Faelle nennen jetzt den
+    // geprueften Umfang, damit die 0 einzuordnen ist.
+    console.log(`[run-screener] mergeSecIntoUniverse: 0 Namen — SEC-Store fehlt/leer (${u.length} Universum geprueft)`);
+    return u; // keine committete Datei -> heutiges 4J-Verhalten
+  }
   // BH-011: "merged" zaehlte bisher jede blosse Key-Praesenz (d truthy) mit, auch wenn die
   // angehaengten Serien komplett leer/undefined sind -> Logs/Doku ueberzeichneten die tatsaechliche
   // Tiefe. Das Scoring selbst faellt bei toten Keys ohnehin korrekt auf Yahoo zurueck (secSeries()==
   // null -> Fallback); hier geht es NUR um Messehrlichkeit im Diagnose-Log.
-  let keys = 0, rev = 0, oi = 0, both = 0, roicTrio = 0;
+  // Tag 561: roicTrio zaehlt LOCKERER als die produktive Regel (hasFiniteSeries verlangt nur
+  // "irgendwo eine finite Zahl"; axes.js verlangt zusaetzlich Index 0 non-null und eine
+  // SEC-Reihe mindestens so tief wie die Yahoo-Reihe). Gemessen: 81 nach Log-Regel,
+  // 74 wirklich wirksam. Beide Zahlen stehen jetzt getrennt in der Zeile — die wirksame
+  // kommt aus dem EXPORT roicStabilitySource, nicht aus einer zweiten Kopie der Regel.
+  let keys = 0, rev = 0, oi = 0, both = 0, roicTrio = 0, wirksam = 0;
   for (const s of u) {
     const tk = s && s.meta && s.meta.ticker;
     const d = tk && data[tk];
@@ -283,8 +300,10 @@ function mergeSecIntoUniverse(u) {
     if (hasOi) oi++;
     if (hasRev && hasOi) both++;
     if (hasOi && hasFiniteSeries(d.annualAssets) && hasFiniteSeries(d.annualCurrentLiabilities)) roicTrio++;
+    // Nach dem Anhaengen von s.secAnnual: die Achsen-Entscheidung selbst befragen.
+    if (roicStabilitySource(s)._source === 'sec') wirksam++;
   }
-  if (keys > 0) console.log(`[run-screener] mergeSecIntoUniverse: ${keys} Namen mit SEC-Key angehaengt (finite Serien: rev=${rev}, oi=${oi}, both=${both}, roicTrio=${roicTrio})`);
+  console.log(`[run-screener] mergeSecIntoUniverse: ${keys} Namen mit SEC-Key angehaengt (${u.length} Universum geprueft; finite Serien: rev=${rev}, oi=${oi}, both=${both}, roicTrio=${roicTrio}, davon in den Achsen wirksam=${wirksam})`);
   return u;
 }
 
