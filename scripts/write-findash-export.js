@@ -96,7 +96,11 @@ const BRANCHES = [
 // GELERNT wird und deshalb mit ihm wandert — am 27.07. fielen CRDO (39,8 Mrd.) und NVIDIA
 // (5.010 Mrd.) in dieselbe gelernte Klasse. findash filtert nach mcapKlasse, die Kohorten
 // und das Scoring nutzen weiter mcapBand. Additiv OPTIONAL wie die coverage-Felder.
-const ROW_FIELDS = ['name', 'country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'mcapKlasse', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback', 'scoreBase', 'scoreShrunk', 'factors', 'axisBreakdown', 'revGrowthYoYPct', 'profitStreak'];
+// F-2 Stufe 1 (Karl-Mandat, 03.08.): einmalertragPrognose = Prognose-Zustand zur Lampe
+// 'einmalertrag' (string|null), erzeugt in src/scoring/lamps.js einmalertragPrognose().
+// Additiv OPTIONAL wie revGrowthYoYPct. NUR Zeilen, die die Lampe tragen, duerfen einen
+// Zustand fuehren — das prueft checkEinmalertragPrognose in BEIDE Richtungen.
+const ROW_FIELDS = ['name', 'country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'mcapKlasse', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback', 'scoreBase', 'scoreShrunk', 'factors', 'axisBreakdown', 'revGrowthYoYPct', 'profitStreak', 'einmalertragPrognose'];
 // Task 4.5: profitStreak = {jahre, basis, tiefe, mindestens, letzterVerlust} | null.
 // Additiv OPTIONAL wie revGrowthYoYPct. Belegte Laenge der ununterbrochenen Gewinnserie
 // aus der SEC-Langhistorie — NEBEN profitTier, nicht statt dessen. Grund: profitTier sieht
@@ -495,6 +499,28 @@ function checkOptionalProfitStreak(r, where, errs) {
   // sichtbares Verlustjahr geben — und umgekehrt.
   if (p.mindestens === true && p.letzterVerlust !== null) errs.push(where + ': profitStreak mindestens=true, aber letzterVerlust gesetzt');
 }
+// F-2 Stufe 1: einmalertragPrognose — additiv OPTIONAL, aber in BEIDE Richtungen gepruefte
+// WERTE (nicht Anwesenheit): (1) nur die vier gepflegten Zustaende sind erlaubt, sonst faellt
+// findash still auf 'nichtPruefbar' zurueck und ein Tippfehler im Erzeuger bliebe unsichtbar;
+// (2) ein Zustand auf einer Zeile OHNE die Lampe ist eine Aussage ueber eine Firma, ueber die
+// nichts auszusagen war — der Konsument (lamp-legend.js einmalertragZustand) wuerde ihn nie
+// zeigen, und genau deshalb faellt so ein Fehler sonst niemandem auf.
+// Die Wertemenge traegt bereits 'bestaetigt'/'eingebrochen' fuer Stufe 2; heute emittiert der
+// Erzeuger sie nie (Sperre + Waechter in tests/einmalertrag-prognose.test.js).
+const EINMALERTRAG_LAMPE = 'einmalertrag';
+const VALID_EINMALERTRAG_PROGNOSE = ['bestaetigt', 'eingebrochen', 'nichtAnwendbar', 'nichtPruefbar'];
+function checkEinmalertragPrognose(r, where, errs) {
+  if (!('einmalertragPrognose' in r)) return;   // Abwesenheit legitim (Altbestand)
+  const v = r.einmalertragPrognose;
+  if (v === null) return;
+  if (typeof v !== 'string' || !VALID_EINMALERTRAG_PROGNOSE.includes(v)) {
+    errs.push(`${where}: einmalertragPrognose=${JSON.stringify(v)} unbekannter Zustand`);
+    return;
+  }
+  if (!Array.isArray(r.lamps) || !r.lamps.includes(EINMALERTRAG_LAMPE)) {
+    errs.push(`${where}: einmalertragPrognose=${JSON.stringify(v)} auf Zeile OHNE Lampe '${EINMALERTRAG_LAMPE}'`);
+  }
+}
 // enum|null field must be PRESENT and either null or one of the allowed values.
 function checkEnumOrNull(r, key, allowed, where, errs) {
   if (!(key in r)) errs.push(`${where}: ${key} missing`);
@@ -524,6 +550,7 @@ function validateGeo(r, where, errs) {
   checkNumOrNull(r, 'marketCap', where, errs);
   checkOptionalNumOrNull(r, 'revGrowthYoYPct', where, errs);
   checkOptionalProfitStreak(r, where, errs);                       // 4.5 additiv OPTIONAL
+  checkEinmalertragPrognose(r, where, errs);                       // F-2 Stufe 1 additiv OPTIONAL
   checkEnumOrNull(r, 'phase', VALID_PHASE, where, errs);
   checkEnumOrNull(r, 'mcapBand', VALID_MCAP, where, errs);
   checkEnumOrNull(r, 'ipoRecency', VALID_IPO, where, errs);
@@ -887,6 +914,20 @@ function selftest() {
   // und wer bis zum Reihenanfang durchlaeuft, kann kein Verlustjahr in Sicht haben.
   trip(validateBoardRow, { ...bStreakOk, profitStreak: { ...bStreakOk.profitStreak, jahre: 20 } }, 'board profitStreak jahre > tiefe');
   trip(validateBoardRow, { ...bStreakOk, profitStreak: { ...bStreakOk.profitStreak, mindestens: true } }, 'board profitStreak mindestens+letzterVerlust');
+
+  // F-2 Stufe 1 einmalertragPrognose — beide Richtungen. cleanBoard traegt lamps:['peakMargin'],
+  // also KEINE Einmalertrags-Lampe: dort muss jeder Zustand auffliegen. Mit Lampe muss jeder der
+  // vier gepflegten Zustaende durchgehen, ein unbekannter nicht.
+  const bLampe = mapBoardRow({ ...cleanBoard, lamps: ['einmalertrag'] }, 0);
+  for (const z of VALID_EINMALERTRAG_PROGNOSE) {
+    pass_(validateBoardRow, { ...bLampe, einmalertragPrognose: z }, 'board einmalertragPrognose ' + z + ' mit Lampe geht durch');
+    trip(validateBoardRow, { ...b0, einmalertragPrognose: z }, 'board einmalertragPrognose ' + z + ' OHNE Lampe');
+  }
+  pass_(validateBoardRow, { ...bLampe, einmalertragPrognose: null }, 'board einmalertragPrognose null geht durch');
+  pass_(validateBoardRow, b0, 'board ohne einmalertragPrognose geht durch');
+  trip(validateBoardRow, { ...bLampe, einmalertragPrognose: 'bestätigt' }, 'board einmalertragPrognose Umlaut-Variante');
+  trip(validateBoardRow, { ...bLampe, einmalertragPrognose: 'toString' }, 'board einmalertragPrognose Prototyp-Name');
+  trip(validateBoardRow, { ...bLampe, einmalertragPrognose: 1 }, 'board einmalertragPrognose Zahl');
 
   const o0 = mapOverviewRow(cleanOv, 0);
   trip(validateOverviewRow, { ...o0, track: 'ghost' }, 'overview track bad enum');

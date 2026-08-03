@@ -15,7 +15,7 @@
 const { norm, metricVal, firstPresent, presentValues, firstTwoPresent } = require('./snapshot.js');
 const { q, weightedScore, coverageWeight, signTrack, fcfTrack } = require('./engine.js');
 const { route, isUS, isUsPrimaryListing } = require('./router.js');
-const { evaluateLamps, burnPressFactor } = require('./lamps.js');
+const { evaluateLamps, burnPressFactor, einmalertragPrognose } = require('./lamps.js');
 const { overviewMetric } = require('./overview.js');
 const { normalizeCountry } = require('./country.js');
 const axesFns = require('./axes.js');
@@ -1235,6 +1235,13 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
       const g = hatQuartal ? comps[comps.length - 1] : comps[0];
       return Number.isFinite(g) ? g * 100 : null;
     })();
+    // F-2 Stufe 1 (03.08.): Prognose-Zustand zur Einmalertrags-Lampe — REINE ANZEIGE,
+    // kein Score-Input. Nur Zeilen, die die Lampe tragen, koennen einen Zustand haben;
+    // alle anderen bleiben null (die Funktion selbst haelt diese Bedingung, damit sie an
+    // EINER Stelle steht und nicht in jeder Station neu geprueft werden muss).
+    // Muss hier stehen, SOLANGE der Snapshot lebt (external.revenueEstimates) — eine
+    // Zeile spaeter waere e.snapshot geloescht und das Feld auf allen Zeilen null.
+    e.einmalertragPrognose = einmalertragPrognose(e.snapshot, Array.isArray(e.lamps) && e.lamps.includes('einmalertrag'));
     delete e.snapshot;
     delete e.formula;
   }
@@ -1312,7 +1319,7 @@ function produceRankings(results, opts = {}) {
   // fuehrt sie in ROW_FIELDS und schrieb deshalb pflichtgemaess null; in JEDEM ausgelieferten
   // Export war sie auf allen 200 Zeilen null (Staende 21.07. und 29.07. nachgesehen). Sie ist
   // die Grundlage der fuenf Kohorten-Reiter (Karl-Entscheid 02.08.) und muss die Zeile erreichen.
-  const rowMeta = (e) => ({ name: e.name ?? null, country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, mcapKlasse: e.mcapKlasse ?? null, ipoRecency: e.ipoRecency ?? null, profitTier: e.profitTier ?? null, ipoYear: e.ipoYear ?? null, coverageAxes: e.coverageAxes ?? null, coverageWeight: e.coverageWeight ?? null, cohortN: e.cohortN ?? null, cohortFallback: e.cohortFallback ?? null, revGrowthYoYPct: e.revGrowthYoYPct ?? null, profitStreak: e.profitStreak ?? null });
+  const rowMeta = (e) => ({ name: e.name ?? null, country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, mcapKlasse: e.mcapKlasse ?? null, ipoRecency: e.ipoRecency ?? null, profitTier: e.profitTier ?? null, ipoYear: e.ipoYear ?? null, coverageAxes: e.coverageAxes ?? null, coverageWeight: e.coverageWeight ?? null, cohortN: e.cohortN ?? null, cohortFallback: e.cohortFallback ?? null, revGrowthYoYPct: e.revGrowthYoYPct ?? null, profitStreak: e.profitStreak ?? null, einmalertragPrognose: e.einmalertragPrognose ?? null });
   for (const e of (Array.isArray(results) ? results : [])) {
     if (e.action === 'survival') {
       survival.push({ ticker: e.ticker, runwayQuarters: e.overview ? e.overview.value : null, lamps: e.lamps, ...rowMeta(e) });

@@ -522,6 +522,53 @@ function einmalertrag(s) {
   return true;
 }
 
+// ── Prognose-Zustand zur Einmalertrags-Lampe (F-2 Stufe 1, 03.08.2026) ──────────────────
+// findash zeigt zu jeder markierten Zeile an, ob der Sprung nach heutigem Stand wiederkommt,
+// und liest dafuer rows[].einmalertragPrognose (findash/data-layer/lamp-legend.js,
+// einmalertragZustand()). Der Zustand wird hier erzeugt, NICHT in findash geraten.
+//
+// ⛔ WAS DIESE FUNKTION HEUTE NICHT TUT: urteilen. Die beiden urteilenden Zustaende
+// 'bestaetigt'/'eingebrochen' verlangen eine Einbruchs-SCHWELLE ("wieviel weniger ist
+// deutlich weniger"). Die ist weder gelernt noch praeregistriert, und
+// scripts/einmalertrag-trefferquote.js hat am 29.07. vorgefuehrt, was eine frei gewaehlte
+// Schwelle wert ist: das Vorzeichen des Befunds haengt daran, wo man sie hinlegt. Eine
+// "vorlaeufige" Schwelle waere genau der Verstoss gegen Invariante 3 (keine aufgezwungenen
+// Niveaus). Stufe 1 liefert deshalb nur, was OHNE Schwelle wahr ist: ob die Frage
+// ueberhaupt beantwortbar ist.
+//
+// DIE DREI AUSGAENGE, jeder aus den Daten abgeleitet (nicht gesetzt):
+//   null            — die Zeile traegt die Lampe nicht (es gibt nichts zu sagen), ODER die
+//                     Prognose ist vollstaendig und vergleichbar: dann ist das Urteil faellig,
+//                     aber es fehlt die Schwelle. Kein Zustand ist ehrlicher als ein falscher;
+//                     findash faellt hier auf seinen dokumentierten Fall D zurueck. GENAU
+//                     DIESE Zeilen fuellt Stufe 2 mit bestaetigt/eingebrochen.
+//   'nichtPruefbar' — keine verwertbare Umsatzprognose fuer das naechste Geschaeftsjahr
+//                     (external.revenueEstimates fehlt oder traegt kein '+1y'). pull-yahoo.js
+//                     speichert eine Periode nur mit numberOfAnalysts > 0 UND avg > 0; alles
+//                     andere ist dort schon als Fehlstelle aussortiert.
+//   'nichtAnwendbar'— Schaetzung vorhanden (Analysten + avg), aber die Quelle liefert keine
+//                     Veraenderung: growth === null. pull-yahoo.js benennt diesen Fall
+//                     woertlich ("LFTO: 14 Analysten, gefuellter avg, growth null — ein
+//                     Rechenartefakt der Quelle ... = nicht anwendbar"); findashs Legendentext
+//                     zu nichtAnwendbar sagt dasselbe.
+//
+// WARUM '+1y' UND KEINE ANDERE PERIODE: die Frage lautet "kommt so etwas wieder", und das
+// beantwortet nur das NAECHSTE Geschaeftsjahr. Am lokalen Bestand nachgesehen (nicht geraten):
+// die Perioden heissen 0q/+1q/0y/+1y, '+1y' liegt auf 2.309 von 2.314 abgedeckten Titeln.
+//
+// KEINE LAMPE: bewusst NICHT in LAMPS — evaluateLamps bleibt unveraendert, die Lampenliste
+// jeder Zeile ist byte-identisch. Reine Anzeige, kein Score-Input.
+const EINMALERTRAG_PROGNOSE_PERIODE = '+1y';
+function einmalertragPrognose(s, lampeAktiv) {
+  if (lampeAktiv !== true) return null;
+  const re = s && s.external && s.external.revenueEstimates;
+  const p = (re && typeof re === 'object') ? re[EINMALERTRAG_PROGNOSE_PERIODE] : null;
+  // Object.prototype-Namen ('toString') duerfen nie als Prognose durchgehen.
+  if (!p || typeof p !== 'object' || !(p.avg > 0) || !(p.numberOfAnalysts > 0)) return 'nichtPruefbar';
+  if (!Number.isFinite(p.growth)) return 'nichtAnwendbar';
+  return null; // vollstaendig und vergleichbar -> Urteil erst mit der Schwelle aus Stufe 2
+}
+
 const LAMPS = {
   unprofit, burning, shortRunway, highDilution, peakMargin,
   lowRoic, arDivergence, crashRisk, fcfArtefact, cyclePeak,
@@ -551,4 +598,5 @@ function evaluateLamps(s, ctx) {
 module.exports = {
   evaluateLamps, burnPressFactor, LAMPS, TH, ...LAMPS,
   shareGrowthRate, buildShareGrowthPctlFn,
+  einmalertragPrognose, EINMALERTRAG_PROGNOSE_PERIODE,
 };
