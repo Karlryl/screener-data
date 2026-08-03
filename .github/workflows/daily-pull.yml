@@ -854,8 +854,23 @@ jobs:
           fi
           echo "alle vier Daten-Waechter still."
 
-      - name: Pipeline Health Check
+      # R5-OPS-001 (Block-5-Verifikation 2026-08-03): dieser Schritt prueft seit dem
+      # Hypergrowth-Umbau NICHTS mehr. Der Umbau loeschte jedes Skript, das je einen
+      # pipeline-health/<name>.json-Bericht schrieb; EXPECTED_SCRIPTS ist seither leer,
+      # es gibt keinen Erzeuger mehr, und pipeline-health/ steht in .gitignore. Der
+      # Schritt meldet also "nothing to check", endet mit 0 und setzt einen gruenen
+      # Haken -- der wie eine bestandene Pruefung aussieht. Keine Logik geaendert (der
+      # Checker taugt unveraendert, sobald wieder jemand Berichte schreibt), nur der
+      # Name sagt jetzt die Wahrheit und der echo nennt die Bedingung fuers Aufwachen.
+      - name: Pipeline Health Check (inaktiv)
         run: |
+          echo "HINWEIS: dieser Schritt prueft derzeit NICHTS. Kein Skript der datenreinen"
+          echo "Tages-Kette schreibt mehr pipeline-health/<name>.json (vom Hypergrowth-Umbau"
+          echo "entfernt), EXPECTED_SCRIPTS ist leer und pipeline-health/ ist gitignored."
+          echo "Ein gruener Haken hier heisst NICHT 'Pipeline gesund' -- die echten"
+          echo "Datenwaechter sind die Schritte 'Verify Pull Coverage' und 'Verify Snapshot"
+          echo "Freshness' darueber. Er wacht auf, sobald wieder ein Skript Berichte"
+          echo "schreibt und in EXPECTED_SCRIPTS eingetragen wird."
           node scripts/pipeline-health-check.js
 
       # Tag 146/153: gh-pages-Deploy 1 von 2 (index.html + outputs/, inkl. dem
