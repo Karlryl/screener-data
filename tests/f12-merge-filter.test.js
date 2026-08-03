@@ -39,6 +39,7 @@ function test(name, fn) {
 }
 
 const SCRIPT = path.join(__dirname, '..', 'scripts', 'filter-snapshot-merge.js');
+const MERGE_SCRIPT = path.join(__dirname, '..', 'scripts', 'merge-shard-manifests.js');
 
 function tmpdir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'f12-'));
@@ -57,16 +58,22 @@ function lauf(tickerInWatchlist, dateien, opts = {}) {
   const ziel = path.join(root, 'ziel');
   fs.mkdirSync(eingang, { recursive: true });
   for (const [datei, ticker] of dateien) snapshot(eingang, datei, ticker);
+  if (opts.eingangsManifest) fs.writeFileSync(path.join(eingang, '_manifest.json'), JSON.stringify(opts.eingangsManifest));
   const wlPfad = path.join(root, 'watchlist.json');
   fs.writeFileSync(wlPfad, opts.kaputteWatchlist
     ? '{ das ist kein JSON'
-    : JSON.stringify({ stocks: tickerInWatchlist.map((t) => ({ ticker: t })) }));
+    : JSON.stringify({ stocks: opts.watchlistEintraege || tickerInWatchlist.map((t) => ({ ticker: t })) }));
   const r = spawnSync(process.execPath, [SCRIPT, '--eingang', eingang, '--ziel', ziel, '--watchlist', wlPfad], { encoding: 'utf8' });
+  const manifestPfad = path.join(ziel, '_manifest.json');
   return {
     root, eingang, ziel, code: r.status,
     ausgabe: (r.stdout || '') + (r.stderr || ''),
-    imZiel: fs.existsSync(ziel) ? fs.readdirSync(ziel).sort() : [],
+    // Metadateien raus: seit F-12-R1 legt der Filter zusaetzlich _manifest.json im Ziel ab
+    // (Eingangs-Zahl fuer den Coverage-Floor). Hier interessieren die SNAPSHOTS — _CON.json
+    // bleibt drin, das ist ein echter Ticker-Stand (safeSnapshotFilename).
+    imZiel: fs.existsSync(ziel) ? fs.readdirSync(ziel).filter((f) => !f.startsWith('_manifest')).sort() : [],
     imEingang: fs.readdirSync(eingang).sort(),
+    zielManifest: fs.existsSync(manifestPfad) ? JSON.parse(fs.readFileSync(manifestPfad, 'utf8')) : null,
   };
 }
 
@@ -128,6 +135,106 @@ test('unlesbare Watchlist -> harter Stop, KEIN stiller Voll-Durchlauf', () => {
   assert.ok(!r.imZiel.includes('TOTX.json'), 'bei Ladefehler darf nichts Ungefiltertes ins Ergebnis');
 });
 
+// ── F-12-R1 (Review Tag 563, H1): die EINGANGS-Zahl ist die Floor-Referenz ────────
+// Seit dem Filter enthaelt snapshots/ nur noch autorisierte Staende. Der Coverage-Floor in
+// run-screener.js zaehlte dieses Verzeichnis — und maass damit wieder das Watchlist-Pruning
+// statt der Korruption, die er fangen soll (prune-watchlist darf bis 50 %/Tag kuerzen,
+// COVERAGE_FLOOR_RATIO=0.95 -> jeder Schrumpf >5 % riss den Folgelauf). Der Filter kennt als
+// Einziger beide Zahlen und schreibt die ungefilterte Eingangs-Menge ins Manifest.
+test('F-12-R1: der Filter schreibt die GESCANNTE Eingangs-Zahl ins Ziel-Manifest', () => {
+  const r = lauf(['AAPL'], [['AAPL.json', 'AAPL'], ['TOTX.json', 'TOTX'], ['ZZZQ.json', 'ZZZQ']]);
+  assert.equal(r.code, 0, r.ausgabe);
+  assert.ok(r.zielManifest, 'ohne Manifest-Feld faellt der Coverage-Floor auf die gefilterte Verzeichnis-Zaehlung zurueck');
+  assert.equal(r.zielManifest.n_eingang_snapshots, 3,
+    'die Zahl muss die UNGEFILTERTE Eingangs-Menge sein (3), nicht die uebernommene (1): ' + JSON.stringify(r.zielManifest));
+  assert.deepEqual(r.imZiel, ['AAPL.json'], 'Gegenprobe: gefiltert wird trotzdem');
+});
+
+test('F-12-R1: ein vorhandenes Eingangs-Manifest behaelt seine Felder (kompatibel ergaenzt)', () => {
+  const r = lauf(['AAPL'], [['AAPL.json', 'AAPL'], ['TOTX.json', 'TOTX']], {
+    eingangsManifest: { pulled_at: '2026-08-04T00:00:00.000Z', n_ok: 7, partial: false },
+  });
+  assert.equal(r.zielManifest.n_ok, 7, 'das Feld darf das Manifest nicht ersetzen, nur ergaenzen');
+  assert.equal(r.zielManifest.partial, false);
+  assert.equal(r.zielManifest.n_eingang_snapshots, 2);
+});
+
+test('F-12-R1: merge-shard-manifests traegt n_eingang_snapshots ins gemergte Manifest weiter', () => {
+  // Dieser Schritt ueberschreibt snapshots/_manifest.json vollstaendig — ohne bewusste
+  // Uebernahme verschwindet das Feld genau zwischen Filter und Scoring-Job.
+  const root = tmpdir();
+  const snapDir = path.join(root, 'snapshots');
+  const manifestDir = path.join(root, 'shard-manifests');
+  fs.mkdirSync(snapDir, { recursive: true });
+  fs.mkdirSync(manifestDir, { recursive: true });
+  snapshot(snapDir, 'AAPL.json', 'AAPL');
+  fs.writeFileSync(path.join(snapDir, '_manifest.json'), JSON.stringify({ n_eingang_snapshots: 4242 }));
+  fs.writeFileSync(path.join(manifestDir, 'shard-0.json'), JSON.stringify({
+    n_ok: 1, n_full: 1, n_priceonly: 0, n_skipped_mcap: 0, n_failed: 0, partial: false,
+  }));
+  const wlPfad = path.join(root, 'watchlist.json');
+  fs.writeFileSync(wlPfad, JSON.stringify({ stocks: [{ ticker: 'AAPL' }] }));
+  const r = spawnSync(process.execPath, [MERGE_SCRIPT,
+    '--shard-manifests', manifestDir, '--snapshots', snapDir, '--watchlist', wlPfad, '--expected-shards', '1',
+  ], { encoding: 'utf8' });
+  assert.equal(r.status, 0, (r.stdout || '') + (r.stderr || ''));
+  const m = JSON.parse(fs.readFileSync(path.join(snapDir, '_manifest.json'), 'utf8'));
+  assert.equal(m.n_eingang_snapshots, 4242, 'das gemergte Manifest hat die Eingangs-Zahl verloren: ' + JSON.stringify(m));
+  assert.equal(m.n_total, 1, 'Gegenprobe: der Umzaehler hat trotzdem normal gemergt');
+});
+
+test('F-12-R1: fehlt die Eingangs-Zahl beim Mergen, wird das laut gemeldet (kein stiller Verlust)', () => {
+  const root = tmpdir();
+  const snapDir = path.join(root, 'snapshots');
+  const manifestDir = path.join(root, 'shard-manifests');
+  fs.mkdirSync(snapDir, { recursive: true });
+  fs.mkdirSync(manifestDir, { recursive: true });
+  snapshot(snapDir, 'AAPL.json', 'AAPL');
+  fs.writeFileSync(path.join(manifestDir, 'shard-0.json'), JSON.stringify({ n_ok: 1, n_failed: 0, partial: false }));
+  const wlPfad = path.join(root, 'watchlist.json');
+  fs.writeFileSync(wlPfad, JSON.stringify({ stocks: [{ ticker: 'AAPL' }] }));
+  const r = spawnSync(process.execPath, [MERGE_SCRIPT,
+    '--shard-manifests', manifestDir, '--snapshots', snapDir, '--watchlist', wlPfad, '--expected-shards', '1',
+  ], { encoding: 'utf8' });
+  assert.match((r.stdout || '') + (r.stderr || ''), /::warning::[^\n]*n_eingang_snapshots/,
+    'ein verschwundenes Feld muss laut sein — es schaltet den Coverage-Floor auf die falsche Population zurueck');
+});
+
+// ── F-12-R2 (H2): Verhaeltnis-Wache ───────────────────────────────────────────────
+// Der bisherige Stop griff erst bei 100 % uebersprungen. Ein Namensschema-Bruch, der "nur"
+// die Haelfte erwischt (Suffix-Regel, Grossschreibung, halbe Watchlist), lief still durch.
+const VIELE = Array.from({ length: 200 }, (_, i) => [`T${i}.json`, `T${i}`]);
+const tickerBis = (n) => VIELE.slice(0, n).map(([, t]) => t);
+
+test('F-12-R2: uebersprungener Anteil ueber der Schwelle -> harter Stop', () => {
+  const r = lauf(tickerBis(100), VIELE); // 100 von 200 = 50 % uebersprungen
+  assert.notEqual(r.code, 0, 'ein 50-%-Ausfall darf nicht still ins Artefakt wandern. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /::error::[^\n]*ueber der Schwelle/);
+});
+
+test('F-12-R2: normaler Karteileichen-Anteil (unter der Schwelle) geht DURCH', () => {
+  // Gegenprobe zur Wache: der reale Bestand liegt bei 14–16 % — die gueltige Form muss
+  // durchgehen, sonst haette der Wachhund den taeglichen Lauf erschossen.
+  const r = lauf(tickerBis(170), VIELE); // 30 von 200 = 15 %, der reale Stand
+  assert.equal(r.code, 0, 'ein normaler Karteileichen-Anteil ist kein Fehler. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /30 von 200 Snapshots uebersprungen/);
+});
+
+test('F-12-R2: unter der Mindest-Fallzahl quotelt die Wache nicht (2 von 3 sind kein Befund)', () => {
+  const r = lauf(['AAPL'], [['AAPL.json', 'AAPL'], ['TOTX.json', 'TOTX'], ['ZZZQ.json', 'ZZZQ']]);
+  assert.equal(r.code, 0, 'ein Anteil aus 3 Dateien ist kein Signal — der Kaltstart darf nicht daran sterben');
+});
+
+// ── F-12-R6 (L6): der verschluckte Grund ──────────────────────────────────────────
+test('F-12-R6: der erste Namens-Fehler der Watchlist wird mitgeloggt, nicht nur gezaehlt', () => {
+  const r = lauf(['AAPL'], [['AAPL.json', 'AAPL']], {
+    watchlistEintraege: [{ ticker: 'AAPL' }, { ticker: null }],
+  });
+  assert.match(r.ausgabe, /::warning::[^\n]*ohne brauchbaren Ticker/, 'die Zaehlung fehlt. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /null\/undefined|empty after sanitisation/,
+    'die erste Fehlermeldung muss mit — sonst ist "1 Eintrag unbrauchbar" nicht diagnostizierbar. Ausgabe:\n' + r.ausgabe);
+});
+
 // ── Verdrahtung: ein Filter, den niemand aufruft, filtert nichts ──────────────────
 // Am OBJEKT gesucht (Block ab dem benannten Schritt bis zum naechsten `- name:`), nicht
 // per Volltext-Suche ueber die ganze Datei — sonst haelt ein beliebiges zweites Vorkommen
@@ -165,10 +272,44 @@ test('Verdrahtung: der Eingangsordner ist git-ignoriert (der Commit-Schritt faeh
     'ohne diesen Eintrag wuerde "git add -A" im merge-Job taeglich ~12.500 Snapshot-JSONs (30 MB) ins Repo committen');
 });
 
-test('Verdrahtung: Restore- und Save-Key der Coverage-Floor-Baseline teilen EINEN Namespace', () => {
-  const ns = new Set((YML.match(/last-good-disk-scoring-[a-z0-9-]*/g) || [])
+// F-12-R4 (Review Tag 563, M4): der Namespace-Scan lief ueber den YAML-VOLLTEXT inklusive
+// Kommentaren. Jede Begruendungs-Zeile, die einen frueheren Namespace nennt ("vorher
+// last-good-disk-scoring-"), haette den Waechter falsch-rot gemacht, obwohl Restore und Save
+// sauber denselben Namespace tragen — der Repro steht unten als Positiv-Fixture. Jetzt wird
+// am OBJEKT gesucht: nur die beiden benannten Schritte, darin nur die Nicht-Kommentar-Zeilen.
+function namespacesAusSchluesselzeilen(text) {
+  return new Set(text.split('\n')
+    .filter((z) => !/^\s*#/.test(z))
+    .flatMap((z) => z.match(/last-good-disk-scoring-[a-z0-9-]*/g) || [])
     .map((s) => s.replace(/-$/, '')));
+}
+
+test('Verdrahtung: Restore- und Save-Key der Coverage-Floor-Baseline teilen EINEN Namespace', () => {
+  const ns = namespacesAusSchluesselzeilen(
+    schrittBlock('Restore Coverage-Floor Baseline (_last_good_disk.json)') +
+    schrittBlock('Save Coverage-Floor Baseline (_last_good_disk.json)'));
   assert.equal(ns.size, 1, 'Restore und Save duerfen nicht in verschiedene Cache-Namespaces zeigen (der F-12-Reset waere sonst nach einem Lauf wieder aufgehoben): ' + JSON.stringify([...ns]));
+});
+
+test('F-12-R4: eine Namespace-Erwaehnung im Kommentar macht den Waechter NICHT mehr falsch-rot', () => {
+  const gueltig = [
+    '      - name: Restore Coverage-Floor Baseline',
+    '        # F-12: Namespace einmalig von last-good-disk-scoring- auf -f12- gehoben.',
+    '        with:',
+    '          key: last-good-disk-scoring-f12-${{ github.run_id }}',
+    '          restore-keys: |',
+    '            last-good-disk-scoring-f12-',
+  ].join('\n');
+  assert.equal(namespacesAusSchluesselzeilen(gueltig).size, 1, 'gueltige Form muss DURCHGEHEN (das war der Falsch-Rot-Repro)');
+});
+
+test('F-12-R4: ein echter Namespace-Bruch fliegt weiterhin auf (Negativ-Fixture)', () => {
+  const kaputt = [
+    '          key: last-good-disk-scoring-f12-${{ github.run_id }}',
+    '          restore-keys: |',
+    '            last-good-disk-scoring-alt-',
+  ].join('\n');
+  assert.equal(namespacesAusSchluesselzeilen(kaputt).size, 2, 'abweichende Namespaces muessen auffliegen');
 });
 
 console.log(`\nf12-merge-filter.test.js: ${pass} ok, ${fail} fail`);

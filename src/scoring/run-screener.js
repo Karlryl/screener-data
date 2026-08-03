@@ -63,6 +63,56 @@ const SMALLCAP_COVERAGE_FLOOR_PCTL = 0.10;
 const COVERAGE_FLOOR_RATIO = 0.95;
 const LAST_GOOD_DISK = path.join(SNAP_DIR, '_last_good_disk.json'); // git-ignored (wie snapshots/)
 
+// F-12-R1 (Review Tag 563): Name der Population, gegen die der Floor rechnet. Seit dem
+// F-12-Karteileichen-Filter im merge-Job enthaelt snapshots/ NUR NOCH watchlist-autorisierte
+// Staende — die on-disk-Zaehlung ist damit selbst plattengefiltert und misst wieder das
+// Pruning statt der Korruption (genau die Kopplung, die BH-116/C1 oben geloest hatte, nur
+// eine Ebene frueher wieder eingezogen: prune-watchlist darf bis 50 %/Tag kuerzen, der Floor
+// bricht ab 5 % ab). Referenz ist deshalb die EINGANGS-Menge aus snapshots/_manifest.json
+// (n_eingang_snapshots, geschrieben von scripts/filter-snapshot-merge.js): die Snapshots, die
+// aus den Shard-Artefakten ankamen, BEVOR autorisiert wurde. Sie schrumpft nur bei echtem
+// Schwund. Der Populations-Name wandert in die Baseline mit, damit ein Fallback-Lauf nicht
+// gegen die Zahl der jeweils anderen Population vergleicht.
+const FLOOR_BASIS_EINGANG = 'eingang';
+const FLOOR_BASIS_ONDISK = 'ondisk';
+
+/**
+ * Reine Entscheidung (kein I/O): welche Zahl der Coverage-Floor vergleicht, gegen welche
+ * Baseline, und was dabei laut zu melden ist. loadUniverse liest die zwei Dateien und loggt.
+ *   manifest  — geparstes snapshots/_manifest.json (oder null)
+ *   rawCount  — on-disk-Parse-Erfolge dieses Laufs (der bisherige, jetzt gefilterte Zaehler)
+ *   lastGood  — geparstes snapshots/_last_good_disk.json (oder null)
+ */
+function floorReferenz(manifest, rawCount, lastGood) {
+  const warnungen = [];
+  const eingang = manifest && manifest.n_eingang_snapshots;
+  let count, basis;
+  if (Number.isFinite(eingang) && eingang > 0) {
+    count = eingang; basis = FLOOR_BASIS_EINGANG;
+  } else {
+    // LAUTER Fallback auf das bisherige Verhalten — kein stilles Anders-Rechnen.
+    count = rawCount; basis = FLOOR_BASIS_ONDISK;
+    warnungen.push(
+      `snapshots/_manifest.json ohne brauchbares n_eingang_snapshots (${JSON.stringify(eingang)}) — ` +
+      `Coverage-Floor faellt auf die on-disk-Zaehlung ${rawCount} zurueck. Die ist seit F-12 ` +
+      `watchlist-gefiltert und misst damit auch legitimes Pruning als Schwund. ` +
+      `Lief scripts/filter-snapshot-merge.js vor merge-shard-manifests.js?`
+    );
+  }
+  let baseline = lastGood && lastGood.value;
+  // Alt-Datei ohne basis-Feld: das war die on-disk-Population (so wurde sie geschrieben).
+  const baselineBasis = (lastGood && lastGood.basis) || FLOOR_BASIS_ONDISK;
+  if (Number.isFinite(baseline) && baseline > 0 && baselineBasis !== basis) {
+    warnungen.push(
+      `Self-Baseline ${baseline} stammt aus Population "${baselineBasis}", dieser Lauf misst ` +
+      `"${basis}" — verschiedene Populationen. Baseline verworfen (Floor diesen Lauf nicht ` +
+      `erzwungen, Erstlauf-Vertrag), ankert unten neu. Kein Cache-Reset noetig.`
+    );
+    baseline = null;
+  }
+  return { count, basis, baseline: Number.isFinite(baseline) && baseline > 0 ? baseline : null, warnungen };
+}
+
 /**
  * Wirft (Fail-Loud), wenn die geladene Snapshot-Anzahl unter den Self-Baseline-relativen
  * Coverage-Floor faellt. Reine Funktion (testbar, kein I/O). Ohne verwertbare Baseline
@@ -130,12 +180,17 @@ function loadUniverse() {
   // rawCount VOR dem BH-116-Filter fixiert; Floor/High-Water unten rechnen dagegen, der Watchlist-
   // Schnitt (BH-116) folgt ERST NACH dem Floor-Check auf das zurueckgegebene Universum.
   const rawCount = u.length;
-  // audit/fix (Court Fall C1): HARTER Floor gegen die Self-Baseline (zuletzt-gesunder on-disk-Count).
-  // I/O hier isoliert, die Floor-/High-Water-Logik bleibt rein (assertCoverageFloor/nextHighWater).
-  let baseline = null;
-  try {
-    baseline = JSON.parse(fs.readFileSync(LAST_GOOD_DISK, 'utf8')).value;
-  } catch (_) { /* Erstlauf / kein High-Water -> fail-open, gleich Startwert schreiben */ }
+  // audit/fix (Court Fall C1): HARTER Floor gegen die Self-Baseline (zuletzt-gesunder Count).
+  // I/O hier isoliert, die Floor-/High-Water-Logik bleibt rein (floorReferenz/assertCoverageFloor/
+  // nextHighWater). F-12-R1 (Review Tag 563): welche Zahl verglichen wird, entscheidet
+  // floorReferenz() — seit dem Karteileichen-Filter ist rawCount selbst watchlist-gefiltert und
+  // maesse Pruning statt Korruption (Begruendung am Konstanten-Block oben).
+  let manifest = null, lastGood = null;
+  try { manifest = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, '_manifest.json'), 'utf8')); } catch (_) { /* s. lauter Fallback in floorReferenz */ }
+  try { lastGood = JSON.parse(fs.readFileSync(LAST_GOOD_DISK, 'utf8')); } catch (_) { /* Erstlauf / kein High-Water -> fail-open, gleich Startwert schreiben */ }
+  const floor = floorReferenz(manifest, rawCount, lastGood);
+  for (const w of floor.warnungen) console.warn('::warning::[run-screener] loadUniverse: ' + w);
+  const baseline = floor.baseline;
   // BH-117: baseline ist in JEDEM CI-Lauf null (_last_good_disk.json liegt gitignored in snapshots/
   // und wird von keinem Artefakt/Cache-Schritt in daily-pull.yml ueber Laeufe hinweg persistiert,
   // der scoring-Job startet also stets ohne Self-Baseline). assertCoverageFloor ist dafuer bewusst
@@ -145,22 +200,22 @@ function loadUniverse() {
   if (!Number.isFinite(baseline) || baseline <= 0) {
     console.warn('[run-screener] loadUniverse: keine Self-Baseline (_last_good_disk.json fehlt/unbrauchbar) — Coverage-Floor NICHT erzwungen diesen Lauf.');
   }
-  // manifest.n_ok nur noch als Diagnose (NICHT mehr als Floor-Referenz — andere Population).
-  try {
-    const nOk = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, '_manifest.json'), 'utf8')).n_ok;
-    if (Number.isFinite(nOk) && Math.abs(rawCount - nOk) > 0.2 * nOk) {
-      console.warn(`[run-screener] loadUniverse: on-disk ${rawCount} weicht >20% von manifest n_ok ${nOk} ab (verschiedene Populationen — nur Diagnose).`);
-    }
-  } catch (_) { /* manifest optional fuer die Diagnose */ }
-  assertCoverageFloor(rawCount, baseline);
-  // High-Water nach bestandenem Floor monoton fortschreiben, gegen den ROHEN Count (rawCount, siehe
-  // oben) — nicht gegen den watchlist-gefilterten. ATOMAR (tmp+rename) via writeJsonAtomic —
+  // manifest.n_ok nur noch als Diagnose (NICHT als Floor-Referenz — andere Population).
+  const nOk = manifest && manifest.n_ok;
+  if (Number.isFinite(nOk) && Math.abs(rawCount - nOk) > 0.2 * nOk) {
+    console.warn(`[run-screener] loadUniverse: on-disk ${rawCount} weicht >20% von manifest n_ok ${nOk} ab (verschiedene Populationen — nur Diagnose).`);
+  }
+  assertCoverageFloor(floor.count, baseline);
+  // High-Water nach bestandenem Floor monoton fortschreiben — gegen DIESELBE Zahl, die der Floor
+  // eben verglichen hat (floor.count), samt Populations-Name. Zwei Populationen im selben
+  // High-Water waeren exakt der Fehler, den F-12-R1 behebt: die naechste Runde verglich sonst
+  // Eingang gegen on-disk und braeche ohne fehlenden Snapshot ab. ATOMAR (tmp+rename) via writeJsonAtomic —
   // audit/fix (Court R3 Runde-4-Regress): genau dieser State-File ist der Anker des Coverage-Floors;
   // ein plain fs.writeFileSync hinterliesse bei Crash/CI-Timeout truncated JSON -> Read liefert baseline=
   // null -> Floor fail-open + nextHighWater re-ankert auf den geschrumpften Wert -> High-Water-Lock weg
   // (F-SM-015-baseline-wipe). Best effort, kein Abbruch bei I/O-Fehler.
   try {
-    writeJsonAtomic(LAST_GOOD_DISK, { value: nextHighWater(baseline, rawCount), generatedAt: new Date().toISOString() });
+    writeJsonAtomic(LAST_GOOD_DISK, { value: nextHighWater(baseline, floor.count), basis: floor.basis, generatedAt: new Date().toISOString() });
   } catch (e) {
     console.warn('[run-screener] loadUniverse: _last_good_disk.json nicht schreibbar — Self-Baseline nicht fortgeschrieben:', e.message);
   }
@@ -660,4 +715,5 @@ if (require.main === module) {
 // mergeSecIntoUniverse ist exportiert, damit Messskripte (scripts/score-digest.js) denselben
 // Produktionsweg nehmen statt die SECANNUAL_FILES-Liste nachzubauen — die Liste ist schon
 // einmal von 1 auf 5 Dateien gewachsen, eine Kopie waere still veraltet.
-module.exports = { loadUniverse, loadSmallcapUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex, filterToAuthorizedUniverse, mergeSecIntoUniverse, hasFiniteSeries, parseTopNArg, runSmallcapPass, lampeBNachruesten, SMALLCAP_OUT_DIR, SMALLCAP_SNAP_DIR, SMALLCAP_WATCHLIST_PATH, SMALLCAP_COVERAGE_FLOOR_PCTL };
+module.exports = { loadUniverse, loadSmallcapUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO,
+  floorReferenz, FLOOR_BASIS_EINGANG, FLOOR_BASIS_ONDISK, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex, filterToAuthorizedUniverse, mergeSecIntoUniverse, hasFiniteSeries, parseTopNArg, runSmallcapPass, lampeBNachruesten, SMALLCAP_OUT_DIR, SMALLCAP_SNAP_DIR, SMALLCAP_WATCHLIST_PATH, SMALLCAP_COVERAGE_FLOOR_PCTL };

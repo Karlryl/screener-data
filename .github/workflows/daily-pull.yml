@@ -1046,14 +1046,19 @@ jobs:
       # Bootstrapping-Deadlock — ohne vorherigen erfolgreichen Save gibt es nie einen
       # Cache-Hit). Eigener Key-Namespace (last-good-disk-scoring-f12-), keine
       # Ueberschneidung mit den Shard-Caches.
-      # F-12 (04.08.2026): Namespace EINMALIG auf -f12- gehoben. Der Filter oben nimmt dem
-      # scoring-Job in einem Schlag ~1.806 Karteileichen-Snapshots weg (14,4 %). Die alte
-      # High-Water-Baseline stand auf dem UNGEFILTERTEN Bestand — assertCoverageFloor haette
-      # den ersten gefilterten Lauf mit "Universum geschrumpft" hart abgebrochen, obwohl kein
-      # einziger Snapshot fehlt. Genau der Reset, den die Fehlermeldung in run-screener.js
-      # vorsieht ("bei legitimem Schrumpfen _last_good_disk.json loeschen"); ein
-      # Cache-Namespace-Wechsel ist die CI-Fassung davon. Der Floor greift ab dem zweiten
-      # Lauf wieder voll, jetzt auf der ehrlichen Population.
+      # F-12 (04.08.2026): Namespace EINMALIG auf -f12- gehoben, weil der Filter oben dem
+      # scoring-Job in einem Schlag ~1.806 Karteileichen-Snapshots wegnahm (14,4 %) und die
+      # alte High-Water-Baseline auf dem UNGEFILTERTEN Bestand stand.
+      # F-12-R1/R3 (Review Tag 563): DIESER HANDGRIFF IST NICHT MEHR NOETIG und soll nicht
+      # wiederholt werden. Der Coverage-Floor rechnet jetzt gegen die EINGANGS-Menge
+      # (snapshots/_manifest.json:n_eingang_snapshots, geschrieben von
+      # scripts/filter-snapshot-merge.js) statt gegen das gefilterte Verzeichnis, und die
+      # Baseline traegt den Namen ihrer Population mit ("basis"). Wechselt die Population,
+      # verwirft run-screener.js die Baseline von selbst — LAUT, fail-open fuer genau einen
+      # Lauf, danach neu verankert. Ein Namespace-Bump wuerde dieselbe Wirkung erzielen, aber
+      # die Baseline BLANKEN (Cache-Miss = alles weg) statt sie kontrolliert neu zu setzen;
+      # deshalb bleibt dieser Suffix jetzt stehen. Ein Reset ist nur noch bei echtem
+      # Cache-Defekt ein Mittel, nicht bei Populations-Wechseln.
       - name: Restore Coverage-Floor Baseline (_last_good_disk.json)
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:

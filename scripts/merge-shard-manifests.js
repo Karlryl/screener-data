@@ -201,6 +201,19 @@ function run() {
   merged.n_ok = rec.n_ok;                  // autoritativ = distinct on-disk (was das Scoring liest)
   merged.n_shard_collisions = rec.gap;     // Instrumentierung (0 = sauber disjunkt)
 
+  // F-12-R1 (Review Tag 563): scripts/filter-snapshot-merge.js hat die Zahl der GESCANNTEN
+  // Eingangs-Snapshots (vor dem Karteileichen-Filter) in genau diese Datei geschrieben — sie
+  // ist die Korruptions-Population, gegen die der Coverage-Floor im scoring-Job rechnet. Der
+  // Write unten ersetzt das Manifest VOLLSTAENDIG; ohne diese bewusste Uebernahme faellt das
+  // Feld genau zwischen Filter und Scoring-Job unter den Tisch, und der Floor misst wieder
+  // das (autorisierte) Verzeichnis, also legitimes Pruning statt Schwund.
+  const vorheriges = readJSON(path.join(snapDir, '_manifest.json'));
+  if (vorheriges && Number.isFinite(vorheriges.n_eingang_snapshots)) {
+    merged.n_eingang_snapshots = vorheriges.n_eingang_snapshots;
+  } else {
+    console.error('::warning::merge-shard-manifests — kein n_eingang_snapshots im vorhandenen snapshots/_manifest.json (lief scripts/filter-snapshot-merge.js vor diesem Schritt?). Der Coverage-Floor im scoring-Job faellt auf die watchlist-gefilterte on-disk-Zaehlung zurueck und misst damit auch legitimes Pruning.');
+  }
+
   fs.mkdirSync(snapDir, { recursive: true });
   // NRE-SK-001 (Hard Review 2026-07-31): plain writeFileSync can leave a truncated/
   // partial _manifest.json behind on a killed/crashed step (timeout, OOM, runner

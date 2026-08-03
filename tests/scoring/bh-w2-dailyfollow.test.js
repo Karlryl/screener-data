@@ -168,6 +168,46 @@ test('BH-117: Restore-Step cached exakt snapshots/_last_good_disk.json (nicht de
   assert.ok(ns, 'Restore-Key muss last-good-disk-scoring-<namespace>${{ github.run_id }} lauten');
   assert.match(s, new RegExp('restore-keys:\\s*\\|\\s*\\n\\s*' + ns[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*\\n'));
 });
+// F-12-R5 (Review Tag 563, M5): der Test oben nagelt fest, DASS eine restore-keys-Zeile mit
+// dem Key-Namespace existiert — nicht, dass sie die EINZIGE ist. Repro: eine breitere
+// Fallback-Zeile darunter (`last-good-disk-scoring-`) liess ihn gruen, waehrend der Cache-
+// Restore beim Prefix-Fallback wieder den Vor-f12-Stand geholt haette. Genau das, wogegen
+// der Namespace-Wechsel gebaut war. Der Block traegt GENAU EINE Zeile.
+function restoreKeysZeilen(abschnitt) {
+  const m = abschnitt.match(/^([ ]*)restore-keys:[ ]*\|[ ]*\r?$/m);
+  assert.ok(m, 'restore-keys-Blockskalar fehlt');
+  const keyIndent = m[1].length;
+  const rest = abschnitt.slice(abschnitt.indexOf(m[0]) + m[0].length).split('\n').slice(1);
+  const zeilen = [];
+  for (const roh of rest) {
+    const z = roh.replace(/\r$/, '');
+    if (z.trim() === '') { if (zeilen.length) break; else continue; }
+    if (z.match(/^ */)[0].length <= keyIndent) break;
+    zeilen.push(z.trim());
+  }
+  return zeilen;
+}
+
+test('BH-117 (F-12-R5): der restore-keys-Block traegt GENAU EINE Zeile (kein breiterer Fallback darunter)', () => {
+  const s = section('name: Restore Coverage-Floor Baseline', 'name: Live-Universum-Gate');
+  const ns = s.match(/key: (last-good-disk-scoring-[\w.-]*)\$\{\{ github\.run_id \}\}/);
+  const zeilen = restoreKeysZeilen(s);
+  assert.equal(zeilen.length, 1, 'eine zweite, breitere Fallback-Zeile holt beim Restore den Vor-Namespace-Stand zurueck: ' + JSON.stringify(zeilen));
+  assert.equal(zeilen[0], ns[1], 'die eine Zeile muss GENAU der Namespace des Keys sein');
+});
+
+test('BH-117 (F-12-R5): eine zweite Fallback-Zeile fliegt auf (Negativ-Fixture)', () => {
+  const kaputt = [
+    '        with:',
+    '          key: last-good-disk-scoring-f12-${{ github.run_id }}',
+    '          restore-keys: |',
+    '            last-good-disk-scoring-f12-',
+    '            last-good-disk-scoring-',
+    '',
+  ].join('\n');
+  assert.equal(restoreKeysZeilen(kaputt).length, 2, 'der breitere Fallback muss sichtbar werden');
+});
+
 test('BH-117: Save-Step folgt direkt auf Run Hypergrowth Screener, vor Build findash-export', () => {
   const iRun = yml.indexOf('name: Run Hypergrowth Screener');
   const iSave = yml.indexOf('name: Save Coverage-Floor Baseline');

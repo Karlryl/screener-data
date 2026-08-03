@@ -28,6 +28,9 @@ const {
   hasFiniteSeries,
   parseTopNArg,
   assertCoverageFloor,
+  floorReferenz,
+  FLOOR_BASIS_EINGANG,
+  FLOOR_BASIS_ONDISK,
 } = require('../../src/scoring/run-screener.js');
 
 let pass = 0, fail = 0;
@@ -126,6 +129,62 @@ test('BH-116-Regression: Floor gegen rawCount uebersteht legitimes Watchlist-Pru
   // ist die alte, falsche Verdrahtung zurueckgekehrt.
   assert.throws(() => assertCoverageFloor(filtered.length, baseline), /Coverage-Floor|geschrumpft/i,
     'gegenprobe: der gefilterte Count waere faelschlich unter den Floor gefallen (das war der Bug)');
+});
+
+// --- F-12-R1 (Review Tag 563): die Floor-Referenz ist die EINGANGS-Zahl ----------
+// Seit dem F-12-Karteileichen-Filter im merge-Job enthaelt snapshots/ nur noch die
+// watchlist-autorisierten Staende. Damit war rawCount SELBST plattengefiltert und der Floor
+// mass wieder Pruning statt Korruption — exakt die Kopplung, die BH-116/C1 oben geloest
+// hatte, nur eine Ebene frueher wieder eingezogen. Referenz ist jetzt n_eingang_snapshots
+// (die Menge VOR dem Filter, geschrieben von scripts/filter-snapshot-merge.js).
+test('F-12-R1: mit n_eingang_snapshots rechnet der Floor gegen die Eingangs-Menge', () => {
+  const r = floorReferenz({ n_eingang_snapshots: 12540 }, 10734, { value: 12540, basis: FLOOR_BASIS_EINGANG });
+  assert.equal(r.count, 12540, 'nicht die plattengefilterte Verzeichnis-Zaehlung');
+  assert.equal(r.basis, FLOOR_BASIS_EINGANG);
+  assert.equal(r.baseline, 12540);
+  assert.deepEqual(r.warnungen, []);
+  assert.doesNotThrow(() => assertCoverageFloor(r.count, r.baseline));
+});
+
+test('F-12-R1: der Filter selbst (14,4 % weg) reisst den Floor NICHT mehr', () => {
+  // Genau der Lauf, fuer den Tag 563 den Cache-Namespace bumpen musste: on-disk faellt von
+  // 12540 auf 10734 (-14,4 %), floor waere ceil(0.95*12540)=11913. Ueber die Eingangs-Zahl
+  // bleibt die Referenz 12540 — kein Abbruch, kein Reset noetig.
+  const r = floorReferenz({ n_eingang_snapshots: 12540 }, 10734, { value: 12540, basis: FLOOR_BASIS_EINGANG });
+  assert.doesNotThrow(() => assertCoverageFloor(r.count, r.baseline));
+  assert.throws(() => assertCoverageFloor(10734, 12540), /Coverage-Floor|geschrumpft/i,
+    'gegenprobe: die on-disk-Zaehlung waere gefallen (das war der Befund)');
+});
+
+test('F-12-R1: fehlendes Feld -> LAUTER Fallback auf die on-disk-Zaehlung', () => {
+  for (const m of [null, {}, { n_eingang_snapshots: 0 }, { n_eingang_snapshots: 'viele' }]) {
+    const r = floorReferenz(m, 10734, null);
+    assert.equal(r.count, 10734, 'Fallback = bisheriges Verhalten');
+    assert.equal(r.basis, FLOOR_BASIS_ONDISK);
+    assert.ok(r.warnungen.some((w) => /n_eingang_snapshots/.test(w)),
+      `stilles Anders-Rechnen bei ${JSON.stringify(m)} — der Fallback muss laut sein`);
+  }
+});
+
+test('F-12-R1: eine Baseline aus der ANDEREN Population wird verworfen statt falsch verglichen', () => {
+  // Ohne diese Pruefung wuerde ein Fallback-Lauf (on-disk 10734) gegen eine Eingangs-Baseline
+  // (12540) rechnen -> Fehl-Abbruch, obwohl kein Snapshot fehlt. Mischpopulationen sind genau
+  // der Fehler, den dieser Befund behebt — nicht einer, den er neu einbaut.
+  const r = floorReferenz({}, 10734, { value: 12540, basis: FLOOR_BASIS_EINGANG });
+  assert.equal(r.basis, FLOOR_BASIS_ONDISK);
+  assert.equal(r.baseline, null, 'Baseline anderer Population muss fallen (fail-open + laut), nicht falsch vergleichen');
+  assert.ok(r.warnungen.some((w) => /Population/.test(w)));
+  assert.doesNotThrow(() => assertCoverageFloor(r.count, r.baseline));
+});
+
+test('F-12-R1: eine Alt-Baseline ohne basis-Feld gilt als on-disk (kein Cache-Reset noetig)', () => {
+  const alt = floorReferenz({}, 10734, { value: 10700 });
+  assert.equal(alt.baseline, 10700, 'gleiche Population -> Baseline bleibt gueltig');
+  assert.deepEqual(alt.warnungen.filter((w) => /Population/.test(w)), []);
+  // Umstieg auf die Eingangs-Zahl: Alt-Baseline faellt EINMAL, danach ankert sie neu.
+  const neu = floorReferenz({ n_eingang_snapshots: 12540 }, 10734, { value: 10700 });
+  assert.equal(neu.baseline, null);
+  assert.ok(neu.warnungen.some((w) => /Population/.test(w)));
 });
 
 // --- BH-198: parseTopNArg ----------------------------------------------------

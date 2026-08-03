@@ -34,6 +34,34 @@ const fs = require('fs');
 const path = require('path');
 const { safeSnapshotFilename, isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { loadWatchlist } = require('../lib/watchlist-fs.js');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
+
+/**
+ * F-12-R2 (Review Tag 563): Anteil uebersprungener Snapshots, ab dem dieser Schritt hart
+ * stoppt. Der bisherige Stop griff erst bei 100 % — ein Namensschema-Bruch, der "nur" die
+ * Haelfte erwischt (Suffix-Regel, Grossschreibung, halb geschriebene Watchlist), waere still
+ * durchgelaufen und haette das halbe Universum aus jeder Messung und aus dem Artefakt genommen.
+ * 0.30 gegen real gemessene 14,4 % (CI) / 15,4 % (lokal): Luft fuer den normalen
+ * Karteileichen-Bestand, aber weit unter jedem Bruch-Szenario. Benannte Konstante am
+ * Modulkopf wie COVERAGE_FLOOR_RATIO (run-screener.js) und FAIL_MASS_MAX (coverage-gate.js) —
+ * dieses Repo fuehrt Schwellen dort, nicht in einer Config-Datei (filter-config.json ist
+ * ausdrueckliches Alt-Gut, das kein Produktionscode liest).
+ */
+const MAX_UEBERSPRUNGEN_ANTEIL = 0.30;
+
+/**
+ * Mindest-Fallzahl, unter der ein ANTEIL nichts aussagt (2 von 3 Dateien sind 67 %, aber kein
+ * Befund). Gleiche Bauform wie MIN_HISTORY_RUNS (check-pull-stats.js) und MIN_COHORT_N
+ * (score.js): erst genug Masse, dann quoteln. Real kommen ~12.500 Snapshots an — ein Lauf
+ * unter 100 ist ohnehin katastrophal und wird vom Coverage-Gate gefangen, nicht hier. Der
+ * 100-%-Stop darunter greift unabhaengig von dieser Grenze.
+ */
+const MIN_GESCANNT_FUER_ANTEIL = 100;
+
+/**
+ * F-12-R1 (Review Tag 563): Feldname der Eingangs-Zahl im Manifest. Siehe schreibeEingangsZahl().
+ */
+const MANIFEST_EINGANG_FELD = 'n_eingang_snapshots';
 
 /**
  * Watchlist-Eintraege -> Menge der ERWARTETEN Snapshot-Dateinamen. Bewusst ueber
@@ -45,11 +73,46 @@ const { loadWatchlist } = require('../lib/watchlist-fs.js');
 function autorisierteDateinamen(stocks) {
   const erlaubt = new Set();
   let unbrauchbar = 0;
+  // F-12-R6 (Review Tag 563): der Grund wurde verschluckt. "3 Eintraege ohne brauchbaren
+  // Ticker" ist ohne die erste Fehlermeldung nicht diagnostizierbar — null/undefined,
+  // leerer String und ein Ticker, der nach der Bereinigung nur aus "_" besteht, sind drei
+  // verschiedene Watchlist-Defekte mit drei verschiedenen Ursachen.
+  let ersterFehler = null;
   for (const s of stocks || []) {
     const t = typeof s === 'string' ? s : (s && s.ticker);
-    try { erlaubt.add(safeSnapshotFilename(t)); } catch (_) { unbrauchbar++; }
+    try { erlaubt.add(safeSnapshotFilename(t)); }
+    catch (e) {
+      unbrauchbar++;
+      if (ersterFehler === null) ersterFehler = `erster Fall: ${JSON.stringify(t) || String(t)} -> ${e.message}`;
+    }
   }
-  return { erlaubt, unbrauchbar };
+  return { erlaubt, unbrauchbar, ersterFehler };
+}
+
+/**
+ * F-12-R1 (Review Tag 563, H1): die Zahl der GESCANNTEN Eingangs-Snapshots ins Ziel-Manifest.
+ *
+ * WARUM: seit diesem Filter enthaelt snapshots/ nur noch die watchlist-autorisierten Staende.
+ * Der Coverage-Floor in run-screener.js zaehlte genau dieses Verzeichnis — und maass damit
+ * wieder das Watchlist-Pruning statt der Snapshot-Korruption, die er fangen soll. Das ist die
+ * Kopplung, die BH-116/C1 bewusst geloest hatte (prune-watchlist darf bis 50 %/Tag kuerzen,
+ * COVERAGE_FLOOR_RATIO=0.95 -> jeder Schrumpf ueber 5 % riss den Folgelauf hart ab). Dieser
+ * Schritt ist der einzige Ort, der BEIDE Zahlen kennt; er reicht die ungefilterte weiter.
+ *
+ * KOMPATIBEL ERGAENZT: das vorhandene Manifest (aus dem Eingang mitkopiert) wird gelesen und
+ * nur um dieses eine Feld erweitert — merge-shard-manifests.js ueberschreibt die Datei
+ * gleich danach vollstaendig und uebernimmt das Feld bewusst (siehe dort). Atomar wie jeder
+ * andere Schreiber dieser Datei (NRE-SK-001).
+ */
+function schreibeEingangsZahl(ziel, gescannt) {
+  const p = path.join(ziel, '_manifest.json');
+  let manifest = {};
+  try {
+    const vorhanden = JSON.parse(fs.readFileSync(p, 'utf8'));
+    if (vorhanden && typeof vorhanden === 'object' && !Array.isArray(vorhanden)) manifest = vorhanden;
+  } catch (_) { /* kein/kaputtes Manifest im Eingang: merge-shard-manifests schreibt es ohnehin neu */ }
+  manifest[MANIFEST_EINGANG_FELD] = gescannt;
+  writeFileAtomic(p, JSON.stringify(manifest));
 }
 
 /**
@@ -85,9 +148,9 @@ function run(argv) {
     console.error(`::error::filter-snapshot-merge — Watchlist nicht ladbar (${watchlistPfad}): ${wl.error}. Abbruch statt lautlosem Filtern gegen eine leere Menge.`);
     return 1;
   }
-  const { erlaubt, unbrauchbar } = autorisierteDateinamen(wl.stocks);
+  const { erlaubt, unbrauchbar, ersterFehler } = autorisierteDateinamen(wl.stocks);
   if (unbrauchbar > 0) {
-    console.error(`::warning::filter-snapshot-merge — ${unbrauchbar} Watchlist-Eintraege ohne brauchbaren Ticker (kein Dateiname ableitbar); ihre Snapshots gelten als nicht autorisiert.`);
+    console.error(`::warning::filter-snapshot-merge — ${unbrauchbar} Watchlist-Eintraege ohne brauchbaren Ticker (kein Dateiname ableitbar); ihre Snapshots gelten als nicht autorisiert. ${ersterFehler}`);
   }
 
   let files;
@@ -111,15 +174,22 @@ function run(argv) {
     // still weg — die teuerste denkbare Variante eines leisen Fehlers.
     console.error(`::error::filter-snapshot-merge — ALLE ${gescannt} Snapshots gelten als nicht autorisiert (Watchlist ${watchlistPfad}: ${wl.stocks.length} Eintraege). Das ist ein Namensschema-/Watchlist-Bruch, keine Karteileichen-Lage. Stop.`);
     return 1;
+  } else if (gescannt >= MIN_GESCANNT_FUER_ANTEIL && uebersprungen.length > MAX_UEBERSPRUNGEN_ANTEIL * gescannt) {
+    // F-12-R2 (Review Tag 563): derselbe Fehler eine Stufe frueher. Ein Bruch, der nicht
+    // gleich 100 % erwischt, hat bisher still das halbe Universum aus dem Artefakt genommen —
+    // und die Boards haetten auf der Reststrecke ganz normal gerankt.
+    console.error(`::error::filter-snapshot-merge — ${uebersprungen.length} von ${gescannt} Snapshots nicht autorisiert (${(uebersprungen.length / gescannt * 100).toFixed(1)} %), ueber der Schwelle ${(MAX_UEBERSPRUNGEN_ANTEIL * 100).toFixed(0)} %. Der reale Karteileichen-Bestand liegt bei ~15 %; so viel auf einmal ist ein Namensschema-/Watchlist-Bruch, keine Karteileichen-Lage. Stop.`);
+    return 1;
   }
 
   fs.mkdirSync(ziel, { recursive: true });
   for (const f of uebernehmen) fs.copyFileSync(path.join(eingang, f), path.join(ziel, f));
+  schreibeEingangsZahl(ziel, gescannt); // F-12-R1: NACH dem Kopieren (das Manifest kommt aus dem Eingang mit)
 
   const anteil = gescannt > 0 ? (uebersprungen.length / gescannt * 100).toFixed(1) : '0.0';
-  console.log(`[f12-filter] ${uebersprungen.length} von ${gescannt} Snapshots uebersprungen (kein Watchlist-Eintrag) = ${anteil} % — ${uebernehmen.length} Dateien nach ${ziel} uebernommen. Nichts geloescht: ${eingang} bleibt vollstaendig.`);
+  console.log(`[f12-filter] ${uebersprungen.length} von ${gescannt} Snapshots uebersprungen (kein Watchlist-Eintrag) = ${anteil} % — ${uebernehmen.length} Dateien nach ${ziel} uebernommen. Nichts geloescht: ${eingang} bleibt vollstaendig. Eingangs-Zahl fuer den Coverage-Floor: ${MANIFEST_EINGANG_FELD}=${gescannt}.`);
   return 0;
 }
 
-module.exports = { autorisierteDateinamen, teileEingang, run };
+module.exports = { autorisierteDateinamen, teileEingang, run, MAX_UEBERSPRUNGEN_ANTEIL, MIN_GESCANNT_FUER_ANTEIL, MANIFEST_EINGANG_FELD };
 if (require.main === module) process.exit(run(process.argv));
