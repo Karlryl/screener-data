@@ -132,22 +132,29 @@ function basisGueltig(basis, anzahlSnapshots) {
   return { ok: true, grund: '' };
 }
 
-function main() {
-  if (!fs.existsSync(SNAP_DIR)) {
-    console.error('::error::watch-annual-spikes: snapshots/ fehlt — Snapshot-Restore kaputt?');
-    return 1;
-  }
-  const dateien = fs.readdirSync(SNAP_DIR).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
-  if (dateien.length === 0) {
-    console.error('::error::watch-annual-spikes: leeres Snapshot-Verzeichnis — nichts geprueft');
-    return 1;
-  }
+/**
+ * EIN Durchgang, alle Zaehler — mit dem Umfang, den er wirklich hatte (Review-Befund 03.08.2026).
+ *
+ * Vorher stand hier ein "catch (_) { continue; }": eine unlesbare Datei fiel still aus jeder
+ * Zaehlung, und die Ergebniszeile nannte trotzdem die Zahl der GEFUNDENEN Dateien als Umfang.
+ * Ein Verzeichnis voll kaputter Snapshots haette also "0 Ausreisser in 12.482 Snapshots"
+ * gemeldet — die Entwarnung eines Laufs, der nichts gelesen hat. Der Schwester-Waechter
+ * watch-fx-sanity fuehrt ueber DERSELBEN Population (snapshots/) laengst einen
+ * parseFehler-Zaehler; hier fehlte das Gegenstueck.
+ * Rein bis auf das Lesen des uebergebenen Verzeichnisses — damit ohne den echten Baum pruefbar
+ * (tests/annual-spikes.test.js, Temp-Fixture mit einer kaputten Datei).
+ */
+function scanSnapshots(snapDir) {
   const funde = [];
   const capexPositiv = [];
-  let capexWerte = 0;
+  let capexWerte = 0, gescannt = 0, parseFehler = 0;
+  const dateien = fs.existsSync(snapDir)
+    ? fs.readdirSync(snapDir).filter((f) => f.endsWith('.json') && !f.startsWith('_'))
+    : [];
   for (const f of dateien) {
+    gescannt++;
     let s;
-    try { s = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, f), 'utf8')); } catch (_) { continue; }
+    try { s = JSON.parse(fs.readFileSync(path.join(snapDir, f), 'utf8')); } catch (_) { parseFehler++; continue; }
     const annual = s && s.annual;
     if (!annual) continue;
     const ticker = (s.meta && s.meta.ticker) || f.replace(/\.json$/, '');
@@ -159,9 +166,39 @@ function main() {
     capexWerte += norm(s, 'annualCapex').filter(Number.isFinite).length;
     for (const t of positiveCapexJahre(s)) capexPositiv.push({ ticker, ...t });
   }
+  return { funde, capexPositiv, capexWerte, gescannt, parseFehler };
+}
+
+function main() {
+  if (!fs.existsSync(SNAP_DIR)) {
+    console.error('::error::watch-annual-spikes: snapshots/ fehlt — Snapshot-Restore kaputt?');
+    return 1;
+  }
+  const scan = scanSnapshots(SNAP_DIR);
+  if (scan.gescannt === 0) {
+    console.error('::error::watch-annual-spikes: leeres Snapshot-Verzeichnis — nichts geprueft');
+    return 1;
+  }
+  const { funde, capexPositiv, capexWerte } = scan;
+  const gelesen = scan.gescannt - scan.parseFehler;
   const schluessel = (x) => `${x.ticker}|${x.reihe}|${x.index}`;
   const basis = loadJson(BASELINE_PATH, {});
   const mio = (v) => (v / 1e6).toFixed(0);
+
+  // LESE-UMFANG ZUERST, aus demselben Grund wie die Capex-Pruefung darunter: er haengt nicht am
+  // Ausreisser-Bestand und darf deshalb weder von der Populations-Wache noch vom
+  // --neu-aufnehmen-Zweig uebersprungen werden. Schwelle "mindestens einer" wie beim
+  // hartkodierten FX-Kurs: watch-fx-sanity zaehlt ueber demselben Verzeichnis und wird ab dem
+  // ersten Parse-Fehler rot — die Grundlast ist dort bereits als 0 erzwungen.
+  console.log(`Lese-Umfang: ${gelesen} von ${scan.gescannt} Snapshot-Dateien gelesen`
+    + (scan.parseFehler ? `, ${scan.parseFehler} nicht lesbar` : ''));
+  let datenExit = 0;
+  if (scan.parseFehler > 0) {
+    datenExit = 1;
+    console.error(`::error::${scan.parseFehler} Snapshot-Datei(en) nicht lesbar (JSON-Parse-Fehler) — sie fallen `
+      + 'still aus JEDER Zaehlung dieses Waechters heraus (Ausreisser wie Capex-Vorzeichen). Die Zahlen unten '
+      + 'gelten nur fuer die gelesenen Dateien, nicht fuer das Universum. Grundlast im Bestand: 0.');
+  }
 
   // Capex-Vorzeichen ZUERST und UNABHAENGIG von allem darunter: die Annahme, auf der die
   // OCF-Rekonstruktion der Burn-Bremse ruht, hat mit dem Ausreisser-Bestand nichts zu tun.
@@ -172,9 +209,8 @@ function main() {
   console.log(`Capex-Vorzeichen: ${capexPositiv.length} positive Werte bei ${capexWerte} geprueften (Annahme: Capex <= 0)`);
   for (const x of capexPositiv.slice(0, 20)) console.log(`  POSITIV  ${x.ticker} · annualCapex[${x.index}] = ${mio(x.wert)} Mio`);
   if (capexPositiv.length > 20) console.log(`  … und ${capexPositiv.length - 20} weitere`);
-  let capexExit = 0;
   if (capexPositiv.length > 0) {
-    capexExit = 1;
+    datenExit = 1;
     console.error(`::error::${capexPositiv.length} POSITIVE annualCapex-Werte (Grundlast im Bestand: 0 von 40.950 — jedes Auftreten ist ein Ereignis). `
       + 'Die Burn-Bremse rekonstruiert fehlendes OCF als FCF minus Capex (lamps.js operatingCashSeries) und rechnet dabei mit Capex <= 0. '
       + 'Ist das Vorzeichen gedreht, kann eine Strafe entstehen, die die Lampe nicht anzeigt. Liste oben.');
@@ -185,7 +221,7 @@ function main() {
     const neuerBestand = {
       hinweis: basis.hinweis || 'Bestand der bekannten Jahres-Ausreisser. Der Waechter meldet nur, was DAZUKOMMT.',
       aufgenommenAm: new Date().toISOString().slice(0, 10),
-      snapshotsBeiAufnahme: dateien.length,
+      snapshotsBeiAufnahme: scan.gescannt,
       anzahl: funde.length,
       faelle: [...new Set(funde.map(schluessel))].sort(),
     };
@@ -198,9 +234,9 @@ function main() {
     // ausdruecklichen Zuruf eines Menschen; der weiss, was er getan hat, und es steht
     // im Bestand (aufgenommenAm, snapshotsBeiAufnahme) und hier im Protokoll.
     console.log(`::warning::Ausreisser-Bestand NEU AUFGENOMMEN: ${neuerBestand.faelle.length} Faelle `
-      + `auf ${dateien.length} Snapshots. Dieser Lauf ist damit NICHT auf neue Ausreisser geprueft `
+      + `auf ${scan.gescannt} Snapshots. Dieser Lauf ist damit NICHT auf neue Ausreisser geprueft `
       + '(die Basis ist sein eigenes Ergebnis) — der naechste ist es wieder.');
-    return capexExit; // die Capex-Pruefung oben lief trotzdem und behaelt ihr Urteil
+    return datenExit; // Lese-Umfang und Capex-Pruefung oben liefen trotzdem und behalten ihr Urteil
   }
 
   // POPULATIONS-WACHE (Fund 29.07.): Ein Bestand, der auf einer ANDEREN Population
@@ -211,7 +247,7 @@ function main() {
   // kein Ausschnitt der Wirklichkeit. Ergebnis: 75 "neue" Faelle, fast alle nur
   // Zweitnotierungen laengst bekannter (1INTC.MI und 4335.HK zahlengleich mit INTC).
   // Ohne diese Wache haette der naechste Leser die FUNDE untersucht statt der BASIS.
-  const gueltig = basisGueltig(basis, dateien.length);
+  const gueltig = basisGueltig(basis, scan.gescannt);
   if (!gueltig.ok) {
     console.error('::error::' + gueltig.grund);
     return 1;
@@ -220,7 +256,7 @@ function main() {
   const bestand = new Set(basis.faelle || []);
   const neu = funde.filter((x) => !bestand.has(schluessel(x)));
 
-  console.log(`Jahres-Ausreisser: ${funde.length} in ${dateien.length} Snapshots · davon NEU: ${neu.length} (erlaubt ${MAX_NEU})`);
+  console.log(`Jahres-Ausreisser: ${funde.length} in ${gelesen} gelesenen Snapshots · davon NEU: ${neu.length} (erlaubt ${MAX_NEU})`);
   // Immer die NEUEN vollstaendig zeigen — sie sind der Grund fuer diesen Lauf.
   for (const x of neu) console.log(`  NEU  ${x.ticker} · ${x.reihe}[${x.index}] = ${mio(x.wert)} Mio, Nachbarn ${mio(x.links)} / ${mio(x.rechts)}`);
   // Vom Bestand nur eine Kostprobe, aber die Zahl bleibt genannt — kein stilles Kappen.
@@ -232,10 +268,10 @@ function main() {
     console.error(`::error::${neu.length} NEUE Jahres-Ausreisser (erlaubt ${MAX_NEU}) — einzelne Jahre weichen um Faktor ${FAKTOR}+ von BEIDEN Nachbarn ab. Entweder echte Sonderjahre oder frisch eingefrorene Fehlabrufe; Liste oben.`);
     return 1;
   }
-  return capexExit;
+  return datenExit;
 }
 
-module.exports = { findeAusreisser, basisGueltig, positiveCapexJahre, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
+module.exports = { findeAusreisser, basisGueltig, positiveCapexJahre, scanSnapshots, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
 
 if (require.main === module) {
   try {

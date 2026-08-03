@@ -128,5 +128,45 @@ check('positiveCapexJahre: exakt 0 ist KEIN Verstoss (Capex <= 0 ist die Annahme
   assert.deepEqual(positiveCapexJahre({ annual: { annualCapex: [0, -1] } }), []);
 });
 
+// --- Parse-Fehler-Zaehler (Review-Befund 03.08.2026) -----------------------
+// Bis hierher verschluckte der Scan kaputte Snapshots per "catch (_) { continue; }". Folge:
+// die Pruefmenge schrumpft lautlos, und die Zeile "Jahres-Ausreisser: N in M Snapshots" nennt
+// M = gefundene DATEIEN, nicht M = tatsaechlich GELESENE. Ein Verzeichnis voll unlesbarer
+// Dateien meldet damit "0 Ausreisser bei 12.482 Snapshots" — eine Entwarnung fuer einen Lauf,
+// der nichts gelesen hat. watch-fx-sanity zaehlt ueber DERSELBEN Population bereits
+// parseFehler und wird ab dem ersten rot; hier fehlte das Gegenstueck.
+const fsT = require('node:fs');
+const osT = require('node:os');
+const pathT = require('node:path');
+const { scanSnapshots } = require('../scripts/watch-annual-spikes.js');
+
+check('scanSnapshots zaehlt kaputte Dateien, statt die Pruefmenge lautlos zu schrumpfen', () => {
+  const dir = fsT.mkdtempSync(pathT.join(osT.tmpdir(), 'annual-spikes-test-'));
+  try {
+    fsT.writeFileSync(pathT.join(dir, 'GUT.json'), JSON.stringify({
+      meta: { ticker: 'GUT' }, annual: { annualCapex: [-100e6, -90e6] },
+    }));
+    fsT.writeFileSync(pathT.join(dir, 'KAPUTT.json'), '{ das ist kein JSON');
+    const r = scanSnapshots(dir);
+    assert.equal(r.gescannt, 2, 'beide Dateien liegen im Verzeichnis und werden angefasst');
+    assert.equal(r.parseFehler, 1, 'die kaputte Datei MUSS gezaehlt werden, nicht verschluckt');
+    assert.equal(r.capexWerte, 2, 'nur die lesbare Datei kann Werte beitragen');
+  } finally { fsT.rmSync(dir, { recursive: true, force: true }); }
+});
+
+check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe)', () => {
+  const dir = fsT.mkdtempSync(pathT.join(osT.tmpdir(), 'annual-spikes-test-'));
+  try {
+    fsT.writeFileSync(pathT.join(dir, 'A.json'), JSON.stringify({
+      meta: { ticker: 'A' }, annual: { annualCapex: [-5e6], annualRev: [{ value: 100e6 }, { value: 900e6 }, { value: 110e6 }] },
+    }));
+    const r = scanSnapshots(dir);
+    assert.equal(r.gescannt, 1);
+    assert.equal(r.parseFehler, 0, 'ein Zaehler, der immer feuert, waere so wertlos wie keiner');
+    assert.equal(r.funde.length, 1, 'der eingebaute Ausreisser (900 gegen 100/110) muss gefunden werden');
+    assert.equal(r.funde[0].ticker, 'A');
+  } finally { fsT.rmSync(dir, { recursive: true, force: true }); }
+});
+
 console.log('\nannual-spikes: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);
