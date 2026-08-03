@@ -206,7 +206,14 @@ const NON_STOCK_NAME_RE = new RegExp([
   '\\bPhysical\\b(?=.*\\b(?:Gold|Silver|Platinum|Palladium|Copper|Uranium|Bullion|Metals?)\\b)(?=.*\\b(?:Trust|Fund)\\b)',
   // Geldmarkt: "Money Market"/"Cash Management" allein koennte ein Dienstleister
   // sein, darum zusaetzlich ein Vehikel-Wort dahinter.
-  '\\b(?:Money Market|Cash Management)\\b(?=.*\\b(?:Fund|Trust|Portfolio|Class)\\b)',
+  // Tag 554: das Vehikel-Wort muss DANEBEN stehen. Vorher stand hier
+  // `(?=.*\b(?:Fund|Trust|Portfolio|Class)\b)` — der Lookahead durchsuchte den
+  // ganzen Reststring, als einzige der sechs Regeln ohne Naehe-Bindung, und
+  // "Class" war ausserdem gar kein Vehikel-Wort, sondern die Aktiengattung.
+  // "Meridian Money Market Innovations Inc., Class A Subordinate Voting Shares"
+  // flog damit als Fonds. Fenster 3 Woerter (gemessen: alle echten Vehikel
+  // tragen ihr Wort direkt dahinter, "Purpose USD Cash Management Fund" mit 0).
+  '\\b(?:Money Market|Cash Management)\\b(?=(?:\\s+\\S+){0,3}\\s+(?:Fund|Trust|Portfolio)\\b)',
   '\\bT-Bills?\\b|\\bTreasury Bills?\\b',
   '\\bBond (?:Fund|Trust)\\b',                    // "Bond" allein waere zu breit
 ].join('|'), 'i');

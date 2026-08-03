@@ -112,5 +112,41 @@ check('der Schrumpf-Waechter meldet Drift jetzt als Fehler, nicht als Notiz', ()
     'der Absturzpfad meldet Erfolg — ein toter Waechter waere fuer immer gruen');
 });
 
+check('eine KAPUTTE Eingabedatei ist von einer fehlenden unterscheidbar', () => {
+  // Tag 554: loadJson() schluckte jeden Fehler wortlos (`catch { return null; }`).
+  // Eine fehlende Datei ist der Normalfall (der erste Lauf hat keine history.json)
+  // — ein korruptes _manifest.json/fx-rates.json aber nicht: es liefert dieselbe
+  // null, die Metrik wird still zu null, und detectStatsDrift ueberspringt sie
+  // ("todayVal == null -> continue"). Der Drift-Waechter meldet dann nicht etwa
+  // einen Einbruch, sondern gar nichts. Genau der Fall braucht eine Sichtspur.
+  const { loadJson } = require(path.join(__dirname, '..', 'scripts', 'check-pull-stats.js'));
+  const dir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'pullstats-'));
+  const kaputt = path.join(dir, 'fx-rates.json');
+  fs.writeFileSync(kaputt, '{ "rates": ');            // abgeschnitten wie ein halber Write
+  const fehlt = path.join(dir, 'gibt-es-nicht.json');
+
+  const gesagt = [];
+  const orig = console.warn;
+  console.warn = (...a) => gesagt.push(a.join(' '));
+  let ausKaputt, ausFehlt;
+  try {
+    ausKaputt = loadJson(kaputt);
+    const nachKaputt = gesagt.length;
+    ausFehlt = loadJson(fehlt);
+    assert.equal(gesagt.length, nachKaputt,
+      'die FEHLENDE Datei hat gewarnt — das ist der Normalfall und wuerde jeden Lauf zumuellen: ' + gesagt.slice(nachKaputt).join(' | '));
+  } finally {
+    console.warn = orig;
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+
+  assert.equal(ausKaputt, null, 'Rueckgabe muss null bleiben — kein throw, das Skript laeuft weiter');
+  assert.equal(ausFehlt, null, 'fehlende Datei muss weiterhin still null liefern');
+  assert.equal(gesagt.length, 1,
+    'kaputte Datei wird nicht gemeldet: ein korruptes fx-rates.json ist von einem fehlenden nicht zu unterscheiden, die Metrik faellt still auf null');
+  assert.ok(gesagt[0].includes('fx-rates.json'),
+    'die Warnung nennt die Datei nicht — bei fuenf Eingabedateien unbrauchbar: ' + gesagt[0]);
+});
+
 console.log('\ndaten-waechter-alarm: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);

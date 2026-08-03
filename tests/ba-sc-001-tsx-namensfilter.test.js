@@ -55,6 +55,7 @@ const FLIEGEN = [
   ['BMO Ultra Short-Term US Bond ETF',            'ZUS',  'ETF'],
   ['Sprott Physical Gold Trust',                  'PHYS', 'physischer Metall-Treuhaender'],
   ['Purpose USD Cash Management Fund',            'MNU',  'Geldmarkt'],
+  ['US Premium Cash Management Fund',             'MUSD', 'Geldmarkt (Vehikel-Wort direkt dahinter)'],
   ['Guardian Ultra-Short U.S. T-Bill Fund',       'GUTB', 'T-Bill'],
   ['Lysander-Canso U.S. Corporate Value Bond Fund', 'LYUV', 'Anleihefonds'],
 ];
@@ -79,6 +80,15 @@ const BLEIBEN = [
   ['Precious Metals and Mining Trust',                           'MMP',  'Metall-Trust OHNE "Physical" (managed, keine Physik)'],
   ['Dream Impact Trust',                                         'MPCT', 'Impact-Trust'],
   ['Constellation Software Inc.',                                'CSU',  'gewoehnliche Firma'],
+  // Tag 554: der Geldmarkt-Zweig band sein Vehikel-Wort nicht in Wortnaehe
+  // (`(?=.*\b(?:Fund|Trust|Portfolio|Class)\b)` sah bis ans Zeilenende) und fuehrte
+  // ausserdem "Class" als Vehikel-Wort — im TMX-Register ist das die
+  // Aktiengattung, kein Fonds. Beide Zeilen matchten damit voll, obwohl der
+  // Firmenname "Money Market"/"Cash Management" nur als Geschaeftsfeld traegt.
+  // Im echten Register fielen sie nicht auf, weil die TMX-Namensspalte keine
+  // Gattungs-Zusaetze fuehrt — die naechste Quelle, die es tut, haette sie geloescht.
+  ['Meridian Money Market Innovations Inc., Class A Subordinate Voting Shares', 'MMKT', 'Firma mit "Money Market" im Namen, Vehikel-Wort weit entfernt'],
+  ['Payfare Cash Management Solutions Inc. Class A',              'PAYF', 'Firma mit "Cash Management" im Namen, "Class" ist die Gattung'],
 ];
 check('operative Firmen / REITs bleiben', () => {
   const { result, stats } = run(BLEIBEN.map(([n, t]) => [n, t]));

@@ -51,7 +51,19 @@ const OUT_DIR = path.join(ROOT, 'outputs', 'pull-stats');
 // score-history/), damit die Historie ueber CI-Laeufe hinweg akkumuliert.
 const HIST_DIR = path.join(ROOT, 'pull-stats');
 
-function loadJson(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return null; } }
+// Tag 554: Datei-fehlt (ENOENT) ist der Normalfall — der erste Lauf hat keine
+// history.json — und bleibt still. Jeder ANDERE Fehler (abgeschnittenes JSON,
+// halber Write, Rechteproblem) lieferte bis hierher dieselbe wortlose null: die
+// Metrik fiel auf null, detectStatsDrift ueberspringt null-Metriken, der
+// Drift-Waechter meldete dann nicht einen Einbruch, sondern gar nichts.
+// Rueckgabe bleibt null (kein throw) — nur die Sichtspur kommt dazu.
+function loadJson(p) {
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
+  catch (e) {
+    if (e.code !== 'ENOENT') console.warn('::warning::' + path.basename(p) + ' nicht lesbar, Metrik faellt auf null: ' + e.message);
+    return null;
+  }
+}
 function median(values) {
   const sorted = values.filter(v => Number.isFinite(v)).sort((a, b) => a - b);
   if (sorted.length === 0) return null;
@@ -175,7 +187,7 @@ async function main() {
   return 1;
 }
 
-module.exports = { collectStats, detectStatsDrift, median, HIST_DIR, OUT_DIR };
+module.exports = { collectStats, detectStatsDrift, loadJson, median, HIST_DIR, OUT_DIR };
 
 if (require.main === module) {
   main().then(code => process.exit(code || 0)).catch(e => {
