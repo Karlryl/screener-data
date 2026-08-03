@@ -35,12 +35,13 @@ function loadJson(p, fallback) {
 }
 
 function countOverCap(snapDir) {
-  let usOver = 0, foreignOver = 0;
-  if (!fs.existsSync(snapDir)) return { usOver, foreignOver };
+  let usOver = 0, foreignOver = 0, gescannt = 0, parseFehler = 0;
+  if (!fs.existsSync(snapDir)) return { usOver, foreignOver, gescannt, parseFehler };
   const files = fs.readdirSync(snapDir).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
   for (const f of files) {
+    gescannt++;
     const s = loadJson(path.join(snapDir, f), null);
-    if (!s) continue;
+    if (!s) { parseFehler++; continue; }
     const mcap = s.marketCap && Number.isFinite(s.marketCap.value) ? s.marketCap.value : null;
     if (mcap === null) continue;
     const meta = s.meta || {};
@@ -50,7 +51,7 @@ function countOverCap(snapDir) {
       if (mcap >= CAP_FOREIGN) foreignOver++;
     }
   }
-  return { usOver, foreignOver };
+  return { usOver, foreignOver, gescannt, parseFehler };
 }
 
 // ── Grenzen-Audit C-3 (03.08.2026): wurde ueberhaupt hartkodiert umgerechnet? ───────────
@@ -73,24 +74,41 @@ function countOverCap(snapDir) {
 // im lokalen Bestand 0 von 4.768 Snapshots, bei 2.967 tatsaechlich umgerechneten — jedes
 // Auftreten ist ein Ereignis. Deshalb Schwelle "mindestens einer", nicht "mehr als x %".
 const HARDCODED_MARKER = 'hardcoded-fallback';
+// SCAN-UMFANG (03.08.2026, Review-Befund): der Zaehler meldet mit, WIEVIEL er gesehen hat.
+// Reproduziert: bei fehlendem UND bei leerem snapshots/ kam hier identisch n=0 heraus, und
+// befunde() machte daraus []. Ein Waechter, der bei "nichts gescannt" gruen meldet, ist
+// genau dann still, wenn er am noetigsten waere. Ebenso schluckte loadJson jeden
+// Parse-Fehler lautlos — Grundlast ausgezaehlt: 0 in 17.367 Snapshots ueber drei Baeume,
+// also ist jedes Auftreten ein Ereignis (dieselbe Begruendung wie beim HARDCODED_MARKER).
 function countHardcodedFallback(snapDir) {
   const jeWaehrung = {};
-  let n = 0;
-  if (!fs.existsSync(snapDir)) return { n, jeWaehrung };
+  let n = 0, gescannt = 0, parseFehler = 0;
+  if (!fs.existsSync(snapDir)) return { n, jeWaehrung, gescannt, parseFehler };
   for (const f of fs.readdirSync(snapDir).filter((x) => x.endsWith('.json') && !x.startsWith('_'))) {
+    gescannt++;
     const s = loadJson(path.join(snapDir, f), null);
-    if (!s || !s.meta || s.meta.fxRateSource !== HARDCODED_MARKER) continue;
+    if (!s) { parseFehler++; continue; }
+    if (!s.meta || s.meta.fxRateSource !== HARDCODED_MARKER) continue;
     n++;
     const ccy = s.meta.reportingCurrencyOriginal || '?';
     jeWaehrung[ccy] = (jeWaehrung[ccy] || 0) + 1;
   }
-  return { n, jeWaehrung };
+  return { n, jeWaehrung, gescannt, parseFehler };
 }
 
 // Alle Befunde eines Laufs an EINER Stelle — main() bleibt Ausgabe und Exit-Code.
 // So ist der Weg vom Befund in Karls rotes X testbar, ohne den Waechter zu starten.
 function befunde(today, baseline, hardcoded) {
   const problems = checkJump(today, baseline);
+  // Der Scan-Umfang ZUERST: ohne ihn ist jede Null-Meldung darunter bedeutungslos.
+  if (!hardcoded || !Number.isFinite(hardcoded.gescannt)) {
+    problems.push('Scan-Umfang unbekannt (kein gescannt-Zaehler uebergeben) — "0 Treffer" ist hier keine Entwarnung, sondern eine unbeantwortete Frage.');
+  } else if (hardcoded.gescannt === 0) {
+    problems.push(`0 Snapshots gescannt (${SNAP_DIR} fehlt oder ist leer) — der FX-Waechter hat NICHTS geprueft. Seine Null-Zaehler sind kein Gesundheitszeugnis.`);
+  }
+  if (hardcoded && hardcoded.parseFehler > 0) {
+    problems.push(`${hardcoded.parseFehler} Snapshot-Datei(en) nicht lesbar (JSON-Parse-Fehler) — sie fallen still aus jeder Zaehlung heraus. Grundlast im Bestand: 0, jedes Auftreten ist ein Ereignis.`);
+  }
   if (hardcoded && hardcoded.n > 0) {
     const nachWaehrung = Object.entries(hardcoded.jeWaehrung)
       .sort((a, b) => b[1] - a[1])
@@ -159,8 +177,15 @@ function updateBaseline(baseline, today, dateStr) {
   };
 }
 
+// Die letzte Zeile von main(), die kein Test je erreicht hat — als Funktion testbar.
+// Kein Befund-Array = kaputter Aufrufer, das ist ein Fehler und keine Gesundmeldung.
+function exitCodeFor(problems) {
+  return (Array.isArray(problems) && problems.length === 0) ? 0 : 1;
+}
+
 function main() {
   const today = countOverCap(SNAP_DIR);
+  console.log(`Gescannt: ${today.gescannt} Snapshot-Dateien` + (today.parseFehler ? `, davon ${today.parseFehler} nicht lesbar` : ''));
   console.log(`Over-cap counts — US-primary (>=${CAP_US / 1e6}M): ${today.usOver}, foreign (>=${CAP_FOREIGN / 1e9}B): ${today.foreignOver}`);
 
   const hardcoded = countHardcodedFallback(SNAP_DIR); // C-3: Wirkungs-Anker, kein Alters-Schwellwert
@@ -175,9 +200,9 @@ function main() {
   writeJsonAtomic(BASELINE_PATH, nextBaseline);
   console.log('Baseline updated: ' + BASELINE_PATH);
 
+  process.exitCode = exitCodeFor(problems);
   if (problems.length > 0) {
     console.error('::error::FX-sanity: ' + problems.join('; '));
-    process.exitCode = 1;
     return;
   }
   console.log('No FX-sanity drift.');
@@ -185,4 +210,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { countOverCap, checkJump, updateBaseline, isBucketJump, countHardcodedFallback, befunde };
+module.exports = { countOverCap, checkJump, updateBaseline, isBucketJump, countHardcodedFallback, befunde, exitCodeFor };

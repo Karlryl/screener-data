@@ -29,7 +29,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { countHardcodedFallback, befunde } = require('../scripts/watch-fx-sanity.js');
+const { countHardcodedFallback, befunde, exitCodeFor } = require('../scripts/watch-fx-sanity.js');
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -94,16 +94,63 @@ test('VERDRAHTUNG: ein Treffer erzeugt einen Befund (und damit exit 1)', () => {
   assert.ok(p.some((x) => /812/.test(x) && /INR/.test(x)), 'Befund nennt weder Anzahl noch Waehrungen: ' + p.join('; '));
 });
 
+// Ein gesunder Lauf muss jetzt SAGEN, wieviel er gesehen hat — siehe Scan-Umfang unten.
+const gesunderScan = { n: 0, jeWaehrung: {}, gescannt: 4768, parseFehler: 0 };
+
 test('VERDRAHTUNG: sauberer Lauf bleibt still (kein Falsch-Rot)', () => {
-  assert.deepEqual(befunde(keinSprung, basislinie, { n: 0, jeWaehrung: {} }), []);
-  // und ohne den Befund-Parameter (Alt-Aufruf) ebenfalls
-  assert.deepEqual(befunde(keinSprung, basislinie), []);
+  assert.deepEqual(befunde(keinSprung, basislinie, gesunderScan), []);
 });
 
 test('VERDRAHTUNG: der bestehende Sprung-Befund bleibt unberuehrt', () => {
-  const p = befunde({ usOver: 200, foreignOver: 50 }, basislinie, { n: 0, jeWaehrung: {} });
+  const p = befunde({ usOver: 200, foreignOver: 50 }, basislinie, gesunderScan);
   assert.equal(p.length, 1, 'genau der Sprung-Befund');
   assert.ok(/usOver/.test(p[0]), p[0]);
+});
+
+// ── Scan-Umfang: "0 Treffer" ist ohne "wieviel gesehen" keine Entwarnung ────────────────
+// Reproduziert (03.08.2026): bei fehlendem UND bei leerem snapshots/ liefern countOverCap
+// und countHardcodedFallback identisch 0 — und befunde() sagte dazu []. Ein Waechter, der
+// bei "nichts gescannt" gruen meldet, ist genau dann still, wenn er am noetigsten waere.
+test('SCAN-UMFANG: 0 gescannte Dateien ist ein eigener Befund', () => {
+  const p = befunde(keinSprung, basislinie, { n: 0, jeWaehrung: {}, gescannt: 0, parseFehler: 0 });
+  assert.ok(p.some((x) => /gescannt|keine Snapshots/i.test(x)), 'kein Befund bei 0 gescannten Dateien: ' + JSON.stringify(p));
+});
+
+test('SCAN-UMFANG: fehlende Scan-Angabe ist ein eigener Befund (nicht stille Entwarnung)', () => {
+  assert.ok(befunde(keinSprung, basislinie, { n: 0, jeWaehrung: {} }).length > 0, 'ohne gescannt-Zahl darf nicht [] herauskommen');
+  assert.ok(befunde(keinSprung, basislinie).length > 0, 'ganz ohne Scan-Objekt erst recht nicht');
+});
+
+// ── Parse-Fehler: loadJson schluckte sie still ──────────────────────────────────────────
+// Grundlast ausgezaehlt (nicht geschaetzt): 0 Parse-Fehler in 17.367 Snapshots ueber drei
+// Baeume (snapshots/ 4.768, snapshots-smallcap/ 101, CI-Baum 12.498). Wie beim
+// hartkodiert-Marker ist damit jedes Auftreten ein Ereignis -> Schwelle "mindestens einer".
+test('PARSE-FEHLER: werden gezaehlt statt still verschluckt', () => {
+  const d = korpus([hart('INR'), live('EUR')]);
+  fs.writeFileSync(path.join(d, 'kaputt.json'), '{ das ist kein JSON');
+  const r = countHardcodedFallback(d);
+  assert.equal(r.gescannt, 3, 'alle drei Dateien wurden angefasst');
+  assert.equal(r.parseFehler, 1, 'die kaputte Datei wird gezaehlt');
+  assert.equal(r.n, 1, 'der Treffer-Zaehler bleibt unveraendert');
+});
+
+test('PARSE-FEHLER: erzeugen einen Befund', () => {
+  const p = befunde(keinSprung, basislinie, { n: 0, jeWaehrung: {}, gescannt: 4768, parseFehler: 3 });
+  assert.ok(p.some((x) => /nicht lesbar|Parse/i.test(x)), 'kein Befund bei 3 Parse-Fehlern: ' + JSON.stringify(p));
+});
+
+test('SCAN-UMFANG: countOverCap meldet denselben Umfang', () => {
+  const d = korpus([live('EUR'), usd()]);
+  const r = countHardcodedFallback(d);
+  assert.equal(r.gescannt, 2);
+  assert.equal(r.parseFehler, 0);
+});
+
+// ── die letzte ungetestete Zeile von main(): Befund -> Exit-Code ────────────────────────
+test('EXIT-CODE: Befunde ergeben 1, Stille ergibt 0', () => {
+  assert.equal(exitCodeFor([]), 0);
+  assert.equal(exitCodeFor(['irgendein Befund']), 1);
+  assert.equal(exitCodeFor(undefined), 1, 'kein Befund-Array = kaputter Aufrufer, nicht "gesund"');
 });
 
 console.log(`\nwatch-fx-hardcoded-fallback: ${pass} ok, ${fail} fail`);
