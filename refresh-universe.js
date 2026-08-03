@@ -2,7 +2,7 @@
 /**
  * Tag 165 — Auto-Universum-Refresh
  * ==================================
- * Pullt Yahoo-Screener für Stocks $2B–$500B Mcap weltweit
+ * Pullt Yahoo-Screener für Stocks $800M–$500B Mcap weltweit (F-11, 04.08.2026)
  * und merged in watchlist.json. Macht Universum dynamisch:
  * neue IPOs / wachsende Mid-Caps werden automatisch sichtbar.
  *
@@ -76,8 +76,10 @@ const { fetchAsxUniverse }      = require('./discovery/asx-au.js');
 const { discoverTvScanner, TV_FOREIGN_CANON } = require('./discovery/tv-scanner.js');
 // Marktkap-Vorpruefung (Karl-Sizing-Fix): filtert die Auslands-null-mcap-Zeilen VOR dem teuren Pull
 // billig auf >= $2B USD (Batch-Yahoo-quote). Nur die Ueberlebenden gehen in den Fundamental-Pull.
-const { prefilterByMcap, toUsd } = require('./discovery/mcap-prefilter.js');
-// Bug 4: Yahoo liefert q.marketCap in der LISTING-Waehrung. Das $1B/$500B-Gate ist in USD
+// T562-M1: isUnpriceable trennt "Waehrung fehlt in fx-rates.json" von "kein bewertbares
+// marketCap" — ohne diese Trennung sagt der Leerlauf-Alarm unten nur "nichts behalten".
+const { prefilterByMcap, toUsd, isUnpriceable } = require('./discovery/mcap-prefilter.js');
+// Bug 4: Yahoo liefert q.marketCap in der LISTING-Waehrung. Das $800M/$500B-Gate ist in USD
 // definiert -> vor dem Vergleich mit toUsd() (fx-rates.json) konvertieren, sonst verschiebt
 // der FX-Faktor das Fenster (JP akzeptiert ~$6M-$3B, KR ~$0.65M-$327M).
 // BH-041: a missing/corrupt fx-rates.json used to fall back to {USD:1} — every non-USD
@@ -158,7 +160,7 @@ const SCREENER_IDS = [
 const REGIONS = ['US', 'GB', 'DE', 'FR', 'HK', 'JP', 'AU', 'CA', 'CN', 'IN', 'IT', 'NL', 'SE', 'ES', 'KR', 'TW', 'BR', 'MX', 'SG', 'CH', 'DK', 'NO', 'FI', 'ZA', 'SA'];
 
 // Tag 131: Exchange-Code-basierter Custom-Screener (geht über curated Yahoo-Listen hinaus)
-// Paginiert über alle Stocks $1B–$500B mcap je Exchange → ~10k+ Coverage möglich
+// Paginiert über alle Stocks $800M–$500B mcap je Exchange → ~10k+ Coverage möglich (F-11)
 const EXCHANGE_CODES = [
   'NMS',  // NASDAQ Global Select
   'NYQ',  // NYSE
@@ -307,7 +309,7 @@ async function fetchScreener(id, region) {
 }
 
 // Tag 131: Custom Exchange-Screener mit Pagination.
-// Liefert ALLE Stocks je Exchange die $1B-$500B Mcap haben — nicht nur curated Listen.
+// Liefert ALLE Stocks je Exchange die $800M-$500B Mcap haben — nicht nur curated Listen (F-11).
 //
 // F-DP-037 (Tag 190): vorher schluckte der catch-Branch jede Yahoo-screener-Fehlermeldung
 // silent → wenn LSE/SHA/HKG einen 429 / Schema-Break hatten, fiel die exchange einfach raus
@@ -484,12 +486,43 @@ function discoveryErtragsZeile(namen, ertrag, degradiert) {
 const MIN_MCAP_DISCOVERY = 800e6;
 const MAX_MCAP_DISCOVERY = 500e9;
 
-// Der Gate als reine Funktion, damit er ohne Netz/main() pruefbar ist. Bildet das alte
-// `!mcap || mcap < MIN || mcap > MAX` exakt ab: `!mcap` fing null/0/NaN — das uebernimmt
-// hier Number.isFinite + > 0, sonst liesse der neue Boden ploetzlich null-mcap-Zeilen durch.
+// Der Gate als reine Funktion, damit er ohne Netz/main() pruefbar ist.
+// T562-L2 (Praezisierung): deckungsgleich mit dem alten `!mcap || mcap < MIN || mcap > MAX`
+// fuer alle Werte, die toUsd() ueberhaupt liefern kann — null oder endlich positiv; `!mcap`
+// fing null/0/NaN, das uebernimmt hier Number.isFinite + > 0. Fuer NICHT-Zahlen ist die
+// Funktion bewusst STRENGER als der alte Ausdruck: ein Objekt ({raw: 2e9}) machte dort beide
+// Vergleiche NaN-falsch und rutschte durch, ein Zahl-String wurde still gecastet. Beides
+// faellt jetzt raus. toUsd() gibt so etwas nie zurueck, aber der Gate ist exportiert und
+// wird auch direkt aufgerufen — die strengere Form ist die richtige Fehlerrichtung.
 function inDiscoveryMcapBand(mcapUsd) {
   return Number.isFinite(mcapUsd) && mcapUsd > 0 &&
     mcapUsd >= MIN_MCAP_DISCOVERY && mcapUsd <= MAX_MCAP_DISCOVERY;
+}
+
+// T562-M1 (Hard-Review Tag 562): ein Entdeckungskanal kann am Mcap-Gate LAUTLOS komplett
+// leerlaufen. toUsd() liefert null, sobald q.currency fehlt oder einen unbekannten Code
+// traegt (Schema-Bruch-Klasse, kein Ladefehler — BH-041 greift also nicht), und dann
+// verwirft inDiscoveryMcapBand() JEDE Zeile. Kein bestehender Waechter sieht das:
+//   - Tag 510 (beideYahooKanaeleLeer) zaehlt nicht-leere BUCKETS, also ABGEHOLTES,
+//   - die 0-Quotes-Warnung des Exchange-Kanals prueft totalQuotes — das ist hier > 0,
+//   - MIN_DISCOVERY_CANDIDATES (BH-193) kennt die beiden Yahoo-Kanaele gar nicht:
+//     DISCOVERY_SOURCE_NAMES listet nur die 20 Adapter.
+// Ergebnis waere: volle Buckets, 0 Kandidaten, Lauf gruen. Seit Tag 566 ist der
+// Predefined-Kanal wieder scharf, die Lage ist also nicht mehr theoretisch.
+// Reine Funktion (Zaehler rein, Meldung raus), damit sie ohne Netz pruefbar ist — und
+// damit BEIDE Kanaele dieselbe Wache rufen statt jeder seine eigene zu bauen.
+function kanalLeerlaufAlarm(kanal, abgeholt, behalten, fxLuecken) {
+  if (!(abgeholt > 0 && behalten === 0)) return null;
+  return '::error::' + kanal + ' hat ' + abgeholt + ' Quotes abgeholt und davon KEINE EINZIGE behalten. ' +
+    (fxLuecken > 0
+      ? fxLuecken + ' Zeilen hatten ein echtes marketCap, aber fx-rates.json kennt ihre Handelswaehrung ' +
+        'nicht — FX-Artefakt-Luecke, keine Groessen-Entscheidung.'
+      : 'Keine FX-Luecke: entweder fehlt/aendert sich das Waehrungsfeld der Quotes (dann liefert toUsd() ' +
+        'null und das Band-Gate verwirft alles), oder wirklich jede Zeile lag ausserhalb $' +
+        (MIN_MCAP_DISCOVERY / 1e6) + 'M-$' + (MAX_MCAP_DISCOVERY / 1e9) + 'B.') +
+    ' Der Kanal LAEUFT und meldet trotzdem nichts: der Tag-510-Waechter misst abgeholte Buckets statt ' +
+    'Behaltenes, und MIN_DISCOVERY_CANDIDATES sieht die Yahoo-Kanaele nicht (DISCOVERY_SOURCE_NAMES ' +
+    'listet nur die Adapter).';
 }
 
 async function main() {
@@ -527,6 +560,7 @@ async function main() {
 
   // 1. Pull all screener-buckets x regions in parallel
   // Tag 116: Mcap-Range gesenkt auf $1B (mehr Mid-Cap-Coverage), max bleibt $500B
+  // F-11 (04.08.2026): Untergrenze weiter auf $800M — gleicher Boden wie der Pull.
   console.log('\nPulling Yahoo Screener-Buckets (Multi-Region)...');
   const allTickers = new Map(); // ticker -> {marketCap, name, sector, exchange}
   // BH-100: this predefined-bucket channel (13 SCREENER_IDS x 25 REGIONS) had no
@@ -535,6 +569,9 @@ async function main() {
   // distinguishable from a normal day where these buckets mostly overlap with other
   // sources. Track it the same way exchangeStats/discoveryYield already do below.
   let predefinedAttempted = 0, predefinedNonEmpty = 0, predefinedTotalQuotes = 0;
+  // T562-M1: abgeholt ist nicht behalten. Ohne diese beiden Zaehler kann der Kanal 325 volle
+  // Buckets melden und trotzdem 0 Kandidaten liefern, ohne dass irgendetwas rot wird.
+  let predefinedKept = 0, predefinedFxLuecke = 0;
   for (const region of REGIONS) {
     console.log('  --- Region: ' + region + ' ---');
     for (const id of SCREENER_IDS) {
@@ -562,6 +599,9 @@ async function main() {
         // Bug 4: q.marketCap ist in q.currency (Listing-Waehrung), das Gate in USD.
         // Nach USD konvertieren, gegen $800M/$500B pruefen und den USD-Wert speichern.
         const mcap = toUsd(q.marketCap, q.currency, _FX_RATES);
+        // T562-M1: Drop-Grund trennen, BEVOR das Gate verwirft — "Waehrung fehlt in
+        // fx-rates.json" ist ein Artefakt-Problem, "ausserhalb des Bands" eine Entscheidung.
+        if (isUnpriceable(q.marketCap, q.currency, _FX_RATES)) predefinedFxLuecke++;
         if (!inDiscoveryMcapBand(mcap)) continue;  // F-11: $800M+ Mid/Large-Cap universe
         // audit/fix: key the candidate map on the class-share-normalized symbol so a
         // US class-share dot collapses onto its dash twin; foreign keys unchanged.
@@ -583,6 +623,7 @@ async function main() {
         kept++;
       }
       if (kept > 0) console.log('    ' + id.padEnd(36) + quotes.length + ' -> ' + kept);
+      predefinedKept += kept;  // T562-M1: hier zaehlt `kept` die Band-Durchlaeufer (nicht nur Neuzugaenge)
       await _sleep(300);
     }
   }
@@ -608,6 +649,10 @@ async function main() {
       'dieses Kanals. Kein Prozess-Abbruch (redundant zu Custom-Exchange-Screener und Discovery-Adaptern), ' +
       'aber sichtbar gemacht statt still.');
   }
+  // T562-M1: der andere Totalausfall — Buckets kommen an, aber am Mcap-Gate bleibt nichts uebrig.
+  const predefinedLeerlauf = kanalLeerlaufAlarm('Predefined-Screener-Kanal (SCREENER_IDS x REGIONS)',
+    predefinedTotalQuotes, predefinedKept, predefinedFxLuecke);
+  if (predefinedLeerlauf) { console.error(predefinedLeerlauf); process.exitCode = 1; }
 
   // Tag 131: Custom Exchange-Screener (paginiert) — zusätzlich zu predefined Screener-Buckets.
   // Ziel: 10k+ Stocks statt ~3500.
@@ -635,6 +680,8 @@ async function main() {
   // von beiden Yahoo-Kanaelen unabhaengig ist. Den gleichzeitigen Ausfall beider
   // Kanaele meldet der Waechter am Ende dieses Blocks.
   let exchangeScreenerFatal = false;
+  // T562-M1: FX-Luecken ueber alle Boersen — Drop-Grund fuer den Leerlauf-Alarm unten.
+  let exchangeFxLuecke = 0;
   for (const exch of EXCHANGE_CODES) {
     if (exchangeScreenerFatal) break;
     let offset = 0;
@@ -642,6 +689,10 @@ async function main() {
     let pageErrors = 0;
     let totalQuotes = 0;
     let totalKept = 0;
+    // T562-M1: eigener Zaehler noetig — `totalKept` zaehlt NEUZUGAENGE (kept++ steht im
+    // has()-Zweig), nicht Band-Durchlaeufer. Eine Boerse, die nur schon Bekanntes liefert,
+    // haette sonst faelschlich als "alles verworfen" gegolten.
+    let totalBandOk = 0;
     while (!pageEmpty) {
       const { quotes, error } = await fetchExchangePage(exch, MIN_MCAP_CUSTOM, MAX_MCAP_CUSTOM, offset);
       if (error) {
@@ -682,7 +733,9 @@ async function main() {
         if (_isNonEquityQuote(q)) continue;
         // Bug 4: USD-konvertieren vor dem Gate (die Schwellen sind USD-Schwellen).
         const mcap = toUsd(q.marketCap, q.currency, _FX_RATES);
+        if (isUnpriceable(q.marketCap, q.currency, _FX_RATES)) exchangeFxLuecke++;  // T562-M1
         if (!inDiscoveryMcapBand(mcap)) continue;  // F-11: identischer Boden wie oben
+        totalBandOk++;  // T562-M1: Band-Durchlaeufer, unabhaengig davon ob schon bekannt
         // audit/fix: class-share-normalize the map key. `exch` is the Yahoo
         // exchange CODE (NMS/NYQ/ASE = US; LSE/FRA/etc = foreign), so US class
         // shares pulled here fold onto their dash twin; foreign codes pass through.
@@ -708,7 +761,7 @@ async function main() {
       if (quotes.length < 250) { pageEmpty = true; }
       else { offset += 250; await _sleep(400); }
     }
-    exchangeStats[exch] = { totalQuotes, totalKept, pageErrors };
+    exchangeStats[exch] = { totalQuotes, totalKept, totalBandOk, pageErrors };
   }
   console.log('Custom-Screener total neue Tickers: ' + customAdded);
   // F-DP-037: per-exchange summary + soft alert when an exchange returned 0 quotes.
@@ -725,6 +778,14 @@ async function main() {
     console.warn('[WARN] Exchanges with 0 quotes and no error (possible silent failure): ' +
       zeroQuoteExchanges.join(', '));
   }
+  // T562-M1: die Gegenrichtung zur 0-Quotes-Warnung — Quotes kamen ueber ALLE Boersen an,
+  // und keine einzige ueberlebte das Mcap-Gate. Aggregiert, weil eine einzelne Boerse auch
+  // legitim leer sein kann; ueber alle 29 hinweg ist das Breakage.
+  const exchangeQuotesGesamt = Object.values(exchangeStats).reduce((s, x) => s + x.totalQuotes, 0);
+  const exchangeBandOkGesamt = Object.values(exchangeStats).reduce((s, x) => s + x.totalBandOk, 0);
+  const exchangeLeerlauf = kanalLeerlaufAlarm('Custom-Exchange-Screener (' + EXCHANGE_CODES.length + ' Boersen)',
+    exchangeQuotesGesamt, exchangeBandOkGesamt, exchangeFxLuecke);
+  if (exchangeLeerlauf) { console.error(exchangeLeerlauf); process.exitCode = 1; }
 
   // Tag 510: BEIDE Yahoo-Kanaele gleichzeitig auf 0 — die Redundanz-Begruendungen
   // beider Kanaele verweisen AUFEINANDER und laufen dann zusammen leer.
@@ -1243,6 +1304,7 @@ module.exports = {
   toYahooClassShare, _looksUS, dedupKey, applyDeadRegistryAndCap,
   numEnv, capNewTickerAdmission, _isNonEquityQuote, EXCHANGE_SCREENER_SCHEMA_ERROR_RE,
   beideYahooKanaeleLeer,  // Tag 510: Doppelausfall-Waechter, einzeln pruefbar
+  kanalLeerlaufAlarm,     // T562-M1: Kanal holt Quotes ab und behaelt keine einzige
   discoveryErtragsZeile,  // S4-DISC-001: Teilausfaelle sichtbar machen, einzeln pruefbar
   inDiscoveryMcapBand, MIN_MCAP_DISCOVERY, MAX_MCAP_DISCOVERY  // F-11: $800M-$500B-Band
 };
