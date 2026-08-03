@@ -408,10 +408,58 @@ function inflationSuspect(s) {
 // shareGrowthRate(s) ueber genau diese Menge zaehlen.
 // REIHENFOLGE: erst die TIEFE SEC-Serie, dann Yahoo. Tiefe schlaegt Breite, wo beide da sind —
 // der Median ueber mehr Jahre ist robuster gegen ein einzelnes Sonderjahr.
+//
+// ⚠ BEOBACHTUNG (b), 03.08.2026 — NUR NOTIERT, NICHT GEBAUT: DIE ZWEI REIHEN ZAEHLEN NICHT
+// DASSELBE. Aus dem Code gelesen, nicht geraten:
+//   secAnnual.annualShares <- merge-sec-xbrl.js SHARE_CONCEPTS: dei:EntityCommonStockShares-
+//     Outstanding > us-gaap:CommonStockSharesOutstanding > WeightedAverageNumberOfShares-
+//     OutstandingBasic  ==> AUSSTEHENDE / BASIC Aktien.
+//   annual.annualShares <- pull-yahoo.js: dilutedAverageShares > basicAverageShares > FTS-
+//     Bilanz  ==> in aller Regel die DILUTED-Reihe.
+// Die verduennte Reihe folgt der EPS-Methodik: sie enthaelt Optionen/RSUs und bei Up-C-
+// Strukturen (Holding + LLC, umtauschbare Einheiten) springt sie zwischen Jahren um einen
+// Faktor, ohne dass eine einzige Aktie ausgegeben wurde. Am 03.08. an CWH direkt aus den
+// SEC-Zahlen belegt: die diluted-Reihe oszilliert um Faktor ~2, die reale Basis wuchs +0,3 %.
+// Eine solche Zeile feuert die Lampe, ohne dass jemand verwaessert wurde.
+// GEMESSEN, wie gross die betroffene Population sein KANN (nicht wie gross sie IST — das
+// entscheidet erst der Vergleich, den die Daten nicht hergeben):
+//   CI-Bestand 03.08. (10.722 Snapshots, 5.793 geroutete Zeilen, 1.446 Feuerungen):
+//     1.426 von 1.446 Feuerungen (98,6 %) ranken auf der DILUTED-Reihe — sie sind die
+//     Risikopopulation. Nur 20 haben ueberhaupt eine SEC/Basic-Reihe und sind strukturell immun.
+//     Fuer die 1.426 ist die Frage "diluted vs. basic" NICHT beantwortbar: der Snapshot traegt
+//     nur die eine Reihe. Wo beide vorliegen (20 Zeilen), betraegt die Divergenz der Raten
+//     im Median 2,54 pp, im Extrem FLNC 8,4 % (basic) gegen 58,0 % (diluted) — Faktor 7.
+//     Die enge CWH-Form (ein starkes Auf UND ein starkes Ab in derselben Reihe) trifft je nach
+//     Schnitt 9 bis 26 Zeilen; beim weitesten Schnitt liegen 25 von 26 auf der diluted-Reihe.
+//   Lokaler Baum (3.042 geroutete Zeilen, 437 Feuerungen): 421 diluted, 16 SEC, 2-4 Schwinger.
+// WARUM HIER NICHTS GEAENDERT WIRD: die Quellenwahl basic vs. diluted ist eine METHODIK-Frage
+// (welcher Begriff von "Verwaesserung" gemessen werden soll), nicht ein Anzeige-Fix. Sie
+// gehoert vor Karl bzw. den Court, nicht in einen Anzeige-Chunk. Nachmessbar mit den beiden
+// Reihen je Snapshot; die Zahlen oben stammen aus genau dieser Auszaehlung.
 // GEMISCHTE KOHORTEN sind hier vertretbar: verglichen werden RATEN (Median der organischen
 // YoY-Beine), keine Niveaus, und der Split-Guard in shareYoYLegs greift fuer beide Quellen
 // gleich. Eine tiefe und eine flache Reihe liefern denselben Begriff, nur unterschiedlich
 // robust — das ist Praezision, keine Vergleichbarkeitsluecke.
+//
+// ⚠ BEOBACHTUNG (a), 03.08.2026 — NUR NOTIERT, NICHT GEBAUT, UND ZUR HAELFTE WIDERLEGT.
+// Die Vermutung lautete: eine flache 4-Jahres-Reihe rauscht staerker als eine 14-Jahres-Reihe,
+// also muessten Yahoo-Namen unter den Feuerungen ueberrepraesentiert sein — und das Perzentil
+// muesste vielleicht je Quellen-Tiefe getrennt ranken.
+// Der TIEFENUNTERSCHIED ist real und gemessen (CI-Bestand 03.08.): Median-Tiefe der rankenden
+// Reihe 14,5 Geschaeftsjahre bei SEC gegen 5 bei Yahoo.
+// DIE UEBERREPRAESENTATION IST ES NICHT. Gegen die Basisrate gerechnet — Anteil der Quelle
+// unter ALLEN bewertbaren Zeilen (die bilden die Kohorte) gegen den Anteil unter den
+// feuernden — feuern beide Quellen praktisch auf ihrer Erwartung von 25 % (die Lampe ist p75):
+//   CI-Bestand : SEC 20 von 74 = 27,0 %  ·  Yahoo 1.426 von 5.678 = 25,1 %
+//   lokaler Baum: SEC 16 von 79 = 20,3 %  ·  Yahoo 421 von 1.642 = 25,6 %
+// Die Richtung DREHT SICH zwischen den beiden Baeumen, und beide Male haengt sie an einer
+// SEC-Teilmenge von unter 80 Namen. Daraus laesst sich kein Bias ableiten.
+// FOLGE FUER DEN VORSCHLAG "getrennt je Quellen-Tiefe ranken": er ist an diesem Bestand nicht
+// baubar. Die SEC-Teilmenge sind 74 Namen (1,3 % der Kohorte), verteilt auf 27 Boards mal zwei
+// Tracks — die meisten Kohorten haetten null oder einen Namen, und buildShareGrowthPctlFn
+// liefert dort per Degenerations-Guard null. Man wuerde die Lampe fuer genau die Namen mit der
+// BESTEN Datenlage abschalten. Entschieden wird das trotzdem nicht hier: Kohortenbildung ist
+// Methodik und gehoert vor Karl/Court.
 // ERLAUBT IST DAS, WEIL DIE LAMPE NICHTS VERRECHNET: sie steht nicht in DATA_SUSPECT_LAMPS
 // (score.js) und wird in runSmallcapPass erst NACH scoreUniverse an lamps[] angehaengt — der
 // Score ist da laengst gerechnet und wird nicht neu gerechnet. Beleg: score-digest.js,
