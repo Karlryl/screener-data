@@ -48,7 +48,14 @@ const FIELD_REGISTRY = {
   // Dividende kommen als negative Betraege, netCommonStockIssuance ist positiv bei Emission
   // und negativ bei Netto-Rueckkauf. Heute reine DATENERFASSUNG: kein Scoring-Konsument.
   // Aktienzahl-Jahresreihe aus fundamentalsTimeSeries (Tag 219, pull-yahoo _ftsExtractByYear
-  // ueber annualFin/annualBs) — STUECKZAHL, laeuft deshalb NICHT durch die FX-Umrechnung.
+  // ueber annualFin/annualBs) — eine STUECKZAHL, kein Waehrungsbetrag, und sie laeuft als
+  // einzige annual-Reihe NICHT durch die FX-Umrechnung.
+  // ACHTUNG, KEIN KAUSALZUSAMMENHANG (Kommentar-Korrektur 03.08.2026): dieser Eintrag hier
+  // bewirkt das NICHT. Das FIELD_REGISTRY beschreibt ausschliesslich das SPEICHERFORMAT
+  // (['annual','scalar']) fuer norm(); es steuert keine Umrechnung. Der FX-Ausschluss haengt
+  // an einem eigenen String-Vergleich in pull-yahoo.js (_convertSnapshotToUSD, :767
+  // "if (key === 'annualShares') continue;") und wuerde eine Aenderung hier nicht bemerken —
+  // wer den Ausschluss anfassen will, muss DORT hin.
   // Leser: lamps.js annualSharesSeries als Rueckfall, wenn die tiefe SEC-Serie fehlt.
   annualShares:                  ['annual', 'scalar'],
   annualRepurchase:              ['annual', 'scalar'],

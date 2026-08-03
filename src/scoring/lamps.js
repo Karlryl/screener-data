@@ -394,6 +394,18 @@ function inflationSuspect(s) {
 // Die Lampe las bis hierher NUR secAnnual. Das haengt an ~100 Namen — am lokalen Baum feuerte
 // sie damit bei 0 von 3.042 gerouteten Zeilen, also nie. Yahoo traegt dieselbe Groesse in
 // 12.418 von 12.501 Snapshots (99,3 %), nur flacher (~4 GJ statt 10-15).
+//
+// ZWEI NENNER — NICHT VERWECHSELN (nachgemessen 03.08.2026): die 99,3 % sind die ROHE
+// Serien-Verfuegbarkeit, gezaehlt ueber ALLE Snapshots des CI-Baums. Sie sagen NICHT, wie oft
+// die Lampe eine Aussage machen kann. Die funktionale Reichweite steht auf der Messebene, um
+// die es hier geht — den GEROUTETEN Zeilen: von 3.042 (lokaler Baum) tragen 1.732 ueberhaupt
+// eine Aktienzahl-Reihe (56,9 %), und 1.721 liefern eine verwertbare Rate (56,6 %).
+// Der Abstand 99,3 -> 56,6 kommt NICHT vom Split-Filter — der kostet 11 von 1.732 Zeilen.
+// Er kommt aus Messebene (alle Snapshots vs. geroutete Zeilen: lokal 62,0 % -> 56,9 %) und
+// Baum (snapshots/ ist seit Tag 151 gitignored, der lokale Baum ist Schutt alter Laeufe und
+// duenner als der CI-Baum). Wer die 99,3 % als "so oft wirkt die Lampe" liest, ueberschaetzt
+// sie um rund 43 Punkte. Nachmessbar: geroutete Ticker aus scoreUniverse ziehen und
+// shareGrowthRate(s) ueber genau diese Menge zaehlen.
 // REIHENFOLGE: erst die TIEFE SEC-Serie, dann Yahoo. Tiefe schlaegt Breite, wo beide da sind —
 // der Median ueber mehr Jahre ist robuster gegen ein einzelnes Sonderjahr.
 // GEMISCHTE KOHORTEN sind hier vertretbar: verglichen werden RATEN (Median der organischen
