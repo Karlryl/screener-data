@@ -46,6 +46,14 @@ function unprofit(s) {
 }
 
 // 2. Burning (juengstes FCF-Jahr negativ) ------------------------------------
+// BEWUSSTE DIVERGENZ zu burnAccelerating (F-1, 03.08.2026): burning und shortRunway bleiben
+// FREE-CASH-basiert, das Score-druckende Tor (burnAccelerating/burnPressFactor) misst seit F-1
+// nur noch den OPERATIVEN Verbrauch. Kein Versehen, sondern zwei verschiedene Fragen:
+//   Anzeige  — "geht diesem Namen das Geld aus?" Da zaehlt der GESAMTE Abfluss inklusive
+//              Investitionen; wer sein Cash verbaut, hat es trotzdem nicht mehr. Karl braucht
+//              das fuers Entry-Timing im Chart.
+//   Strafe   — "verschlechtert sich die Einheiten-Oekonomie?" Da darf Bauen nicht zaehlen.
+// Folge: ein Nebius-Fall zeigt weiter die Lampe 'burning', bekommt aber keinen Score-Abzug.
 function burning(s) {
   const f = firstPresent(norm(s, 'annualFCF'));
   if (f === null) return null;
@@ -279,12 +287,32 @@ function annualCurrencyLeak(s) {
   return true;
 }
 
-// 13. Burn-Beschleunigung (Council/Court, Karl-Direktive): Firma verbrennt Cash UND vertieft den
-// operativen Verlust ggue. dem Vorjahres-GJ -> die Einheiten-Oekonomie VERSCHLECHTERT sich, trotz evtl.
-// starkem Rueckblick-Wachstum (IONQ: Umsatz +755%, aber FCF -57M->-300M). Vorzeichen-Gate + YoY-Schritt,
-// data-learned (keine Magic Number). Turnaround-zu-positiv (CRDO/ALAB/BE: neuestes FCF & OpInc >=0) faellt
-// STRUKTURELL aus dem Gate. REIN WARNEND (nicht in DATA_SUSPECT_LAMPS) — druckt den Score NICHT (der
-// Score-Abzug fuer Verschlechterer ist als naechste Iteration deferred, muss veto-sicher gebaut werden).
+// F-1 (Karl-Mandat 03.08.2026): die OPERATIVE Cash-Reihe, positionsgetreu (null-Luecken bleiben
+// an Ort und Stelle, damit der YoY-Vergleich weiter unten dasselbe Firmenjahr trifft).
+// annualOCF direkt, wo vorhanden (95,3 % der Snapshots). Fehlt es an einer Position, wird es aus
+// FCF - Capex rekonstruiert — Capex ist durchgehend NEGATIV gespeichert, die Identitaet
+// OCF + Capex = FCF haelt an 98,5 % der 11.539 pruefbaren Snapshots (Vorabmessung 03.08.).
+// Fehlt eines der beiden Ersatzteile -> null an dieser Position: KEIN Urteil ist besser als ein
+// geratener Wert (dieselbe Konvention wie beim fehlenden FCF vorher -> Faktor 1).
+function operatingCashSeries(s) {
+  const ocf = norm(s, 'annualOCF');
+  const fcf = norm(s, 'annualFCF');
+  const cap = norm(s, 'annualCapex');
+  const n = Math.max(ocf.length, fcf.length, cap.length);
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    if (Number.isFinite(ocf[i])) { out.push(ocf[i]); continue; }
+    out.push((Number.isFinite(fcf[i]) && Number.isFinite(cap[i])) ? fcf[i] - cap[i] : null);
+  }
+  return out;
+}
+
+// 13. Burn-Beschleunigung (Council/Court, Karl-Direktive): Firma verbrennt OPERATIV Cash UND
+// vertieft den operativen Verlust ggue. dem Vorjahres-GJ -> die Einheiten-Oekonomie VERSCHLECHTERT
+// sich, trotz evtl. starkem Rueckblick-Wachstum. Vorzeichen-Gate + YoY-Schritt, data-learned (keine
+// Magic Number). Turnaround-zu-positiv (CRDO/ALAB/BE: neuestes OCF & OpInc >=0) faellt STRUKTURELL
+// aus dem Gate. REIN WARNEND (nicht in DATA_SUSPECT_LAMPS) — die Lampe selbst schliesst nichts aus;
+// den Score druckt der davon abgeleitete burnPressFactor.
 function burnAccelerating(s) {
   // audit/fix (Hard-Review R1-SC-003): fcf/opi wurden bisher UNABHAENGIG voneinander kompaktiert
   // (presentValues() je Serie separat) -- bei UNTERSCHIEDLICHEN Luecken-Mustern (2038.HK: annualOpInc
@@ -293,11 +321,20 @@ function burnAccelerating(s) {
   // verglichen -> feuerte 'true', obwohl kein einziges Jahr tatsaechlich verglichen wurde. Jetzt
   // positionsgebunden auf den ROHEN Serien: Index 0 UND 1 muessen bei BEIDEN Serien am SELBEN Platz
   // present sein, sonst ist der YoY-Vergleich fuer dieses Firmenjahr nicht bewertbar.
-  const fcf = norm(s, 'annualFCF');
+  //
+  // F-1 (Karl-Mandat 03.08.2026): das Tor steht jetzt auf OCF < 0 statt FCF < 0. FCF ist
+  // OCF MINUS Investitionen — ein Tor auf FCF bestraft also die Investition mit. Karls Regel:
+  // "Investitionen, die dem Unternehmen zugutekommen, sind nichts Schlechtes; Auszahlungen an
+  // Aktionaere schon." Gemessen am CI-Baum 03.08.: von 168 heute Getroffenen haben 36 ein
+  // POSITIVES OCF und brennen ausschliesslich, weil sie bauen (Nebius: OCF +385 Mio., Faktor
+  // 0,54, Kohorten-Rang 39 statt 1). Die Vertiefungs-Pruefung laeuft aus demselben Grund
+  // ebenfalls auf der operativen Groesse: ein groesseres Bauprogramm ist keine
+  // Verschlechterung der Einheiten-Oekonomie.
+  const ocf = operatingCashSeries(s);
   const opi = norm(s, 'annualOpInc');
-  if (!Number.isFinite(fcf[0]) || !Number.isFinite(fcf[1]) || !Number.isFinite(opi[0]) || !Number.isFinite(opi[1])) return null;
-  if (!(fcf[0] < 0) || !(opi[0] < 0)) return false;   // Gate: noch am Verbrennen UND operativ unprofitabel
-  return fcf[0] < fcf[1] && opi[0] < opi[1];           // beide tiefer als Vorjahr -> Burn/Verlust beschleunigt
+  if (!Number.isFinite(ocf[0]) || !Number.isFinite(ocf[1]) || !Number.isFinite(opi[0]) || !Number.isFinite(opi[1])) return null;
+  if (!(ocf[0] < 0) || !(opi[0] < 0)) return false;   // Gate: operativ Cash-verbrennend UND operativ unprofitabel
+  return ocf[0] < ocf[1] && opi[0] < opi[1];           // beide tiefer als Vorjahr -> Burn/Verlust beschleunigt
 }
 
 // Score-Press-Faktor fuer beschleunigte Cash-Verbrenner (Court, Karl-Direktive Teil 2): 1.0 wenn die
@@ -308,10 +345,12 @@ function burnAccelerating(s) {
 // Number, kein Deckel. Veto: CRDO/ALAB/BE feuern nicht (FCF & OpInc positiv) -> Faktor 1.0 -> Score identisch.
 function burnPressFactor(s) {
   if (burnAccelerating(s) !== true) return 1;
-  const fcf = presentValues(norm(s, 'annualFCF'));
+  // F-1: dieselbe operative Groesse wie im Tor. burnAccelerating hat bereits geprueft, dass
+  // Index 0 UND 1 present sind -> direkter Positionszugriff, kein Kompaktieren noetig.
+  const ocf = operatingCashSeries(s);
   const rev = presentValues(norm(s, 'annualRev'));
-  const dBurn = Math.max(0, fcf[1] - fcf[0]);
-  const scale = Math.max(rev.length > 1 ? Math.abs(rev[1]) : 0, Math.abs(fcf[0]), Math.abs(fcf[1]));
+  const dBurn = Math.max(0, ocf[1] - ocf[0]);
+  const scale = Math.max(rev.length > 1 ? Math.abs(rev[1]) : 0, Math.abs(ocf[0]), Math.abs(ocf[1]));
   const mag = scale > 0 ? dBurn / scale : 0;
   return 1 / (1 + mag);
 }

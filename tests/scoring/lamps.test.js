@@ -236,30 +236,70 @@ test('annualCurrencyLeak: fehlende ccy-Felder (US-Name) -> null', () => {
   assert.equal(L.annualCurrencyLeak(s), null);
 });
 // burnAccelerating + burnPressFactor (Court, Karl-Direktive Teil 2) ----------
-test('burnAccelerating: Burn UND Verlust vertiefen sich -> true; Turnaround (FCF>=0) -> false', () => {
-  const burner = { annual: { annualFCF: V([-300, -100]), annualOpInc: V([-50, -20]) } };
+// F-1 (Karl-Mandat 03.08.2026) — DREI Tests unten sind umgedreht, weil das Tor von FCF auf OCF
+// gewechselt ist. Die Schutzwirkung bleibt in jedem einzelnen Fall erhalten, es aendert sich nur
+// die GROESSE, an der gemessen wird; die Fixtures tragen dieselben Zahlen wie vorher, nur auf
+// annualOCF statt annualFCF. Dazu kommen die Faelle, die den Wechsel ueberhaupt begruenden:
+// Investitions-Burn wird NICHT mehr bestraft, und OCF darf rekonstruiert werden.
+test('burnAccelerating: Burn UND Verlust vertiefen sich -> true; Turnaround (OCF>=0) -> false', () => {
+  const burner = { annual: { annualOCF: V([-300, -100]), annualOpInc: V([-50, -20]) } };
   assert.equal(L.burnAccelerating(burner), true);
-  const turn = { annual: { annualFCF: V([29, -46]), annualOpInc: V([38, -10]) } }; // CRDO-Muster (neuestes positiv)
+  const turn = { annual: { annualOCF: V([29, -46]), annualOpInc: V([38, -10]) } }; // CRDO-Muster (neuestes positiv)
   assert.equal(L.burnAccelerating(turn), false);
+});
+// DER GRUND FUER DEN WECHSEL (Karl: "Investitionen sind nichts Schlechtes"): operativ Cash-positiv,
+// aber wegen eines grossen Bauprogramms tief FCF-negativ. Vor F-1 feuerte die Lampe hier (FCF<0,
+// OpInc<0, beide vertiefen sich) und drueckte den Score; jetzt faellt der Fall strukturell aus dem Tor.
+test('F-1: reiner Investitions-Burn (OCF>=0, FCF<0) feuert NICHT mehr (Nebius-Klasse)', () => {
+  const bauer = { annual: { annualOCF: V([385, 100]), annualFCF: V([-900, -200]),
+    annualCapex: [-1285, -300], annualOpInc: V([-50, -20]) } };
+  assert.equal(L.burnAccelerating(bauer), false, 'positives OCF -> kein operativer Verbrauch -> kein Urteil "beschleunigt"');
+  assert.strictEqual(L.burnPressFactor(bauer), 1, 'und damit Faktor exakt 1.0 (kein Score-Abzug)');
+});
+test('F-1: fehlendes annualOCF wird aus FCF - Capex rekonstruiert (Capex negativ gespeichert)', () => {
+  const s = { annual: { annualFCF: V([-300, -100]), annualCapex: [-50, -40], annualOpInc: V([-50, -20]) } };
+  // OCF = [-300-(-50), -100-(-40)] = [-250, -60] -> operativ negativ UND vertieft sich
+  assert.equal(L.burnAccelerating(s), true);
+});
+test('F-1: weder OCF noch das Ersatzteil-Paar -> null (kein Urteil, Faktor 1)', () => {
+  const nurFcf = { annual: { annualFCF: V([-300, -100]), annualOpInc: V([-50, -20]) } }; // Capex fehlt
+  assert.equal(L.burnAccelerating(nurFcf), null, 'ohne Capex ist OCF nicht rekonstruierbar -> nicht bewertbar');
+  assert.strictEqual(L.burnPressFactor(nurFcf), 1);
 });
 // audit/fix (Hard-Review R1-SC-003): fcf/opi wurden unabhaengig kompaktiert -- bei unterschiedlichen
 // Luecken-Mustern (2038.HK: annualOpInc 2 fuehrende Luecken, annualFCF keine) verglich die Lampe
 // positionsfremde Jahre (FY-2/FY-3 gegen FY-aktuell/FY-1) und feuerte faelschlich 'true'.
-test('burnAccelerating: unterschiedliche Luecken-Muster in fcf/opi -> null statt positionsfremdem Vergleich (2038.HK-Muster, R1-SC-003)', () => {
-  const s = { annual: { annualFCF: V([-78835000, 237227000, 9483000, 266119000]),
+// F-1: dieselbe Schutzwirkung wie vor dem Wechsel — die Luecke sitzt jetzt in der Serie, die
+// tatsaechlich gegen OpInc gestellt wird. Ein positionsfremder Jahresvergleich bleibt verboten.
+test('burnAccelerating: unterschiedliche Luecken-Muster in ocf/opi -> null statt positionsfremdem Vergleich (2038.HK-Muster, R1-SC-003)', () => {
+  const s = { annual: { annualOCF: V([-78835000, 237227000, 9483000, 266119000]),
     annualOpInc: [null, null, { value: -73413000 }, { value: -31770000 }] } };
   assert.equal(L.burnAccelerating(s), null,
     'annualOpInc fehlt an Index 0/1 -- kein bewertbarer YoY-Vergleich zum SELBEN Firmenjahr, kein positionsfremdes Feuern');
+  // Spiegelbild: die Luecke in der OCF-Serie statt in OpInc -- ebenfalls nicht bewertbar.
+  const ocfLuecke = { annual: { annualOCF: [null, { value: -100 }, { value: -80 }],
+    annualOpInc: V([-50, -20, -10]) } };
+  assert.equal(L.burnAccelerating(ocfLuecke), null,
+    'OCF fehlt am juengsten Jahr -- kein Urteil (und keine Rekonstruktion ohne FCF+Capex)');
   // Kontrolle: beide Serien luecken-frei UND SYNCHRON -> unveraendertes Verhalten (kein Regress).
-  const synced = { annual: { annualFCF: V([-300, -100]), annualOpInc: V([-50, -20]) } };
+  const synced = { annual: { annualOCF: V([-300, -100]), annualOpInc: V([-50, -20]) } };
   assert.equal(L.burnAccelerating(synced), true);
 });
 test('burnPressFactor: Verbrenner -> Faktor <1 (Score gedrueckt), Nicht-Verbrenner -> exakt 1.0', () => {
-  const burner = { annual: { annualFCF: V([-300, -100]), annualOpInc: V([-50, -20]), annualRev: V([100, 80]) } };
+  const burner = { annual: { annualOCF: V([-300, -100]), annualOpInc: V([-50, -20]), annualRev: V([100, 80]) } };
   const f = L.burnPressFactor(burner); // mag = dBurn 200 / scale max(80,300,100)=300 = 0.667 -> 1/1.667 = 0.6
   assert.ok(Math.abs(f - 1 / (1 + 200 / 300)) < 1e-9, 'Verbrenner-Faktor ~0.6, war ' + f);
-  const turn = { annual: { annualFCF: V([29, -46]), annualOpInc: V([38, -10]), annualRev: V([100, 80]) } };
+  const turn = { annual: { annualOCF: V([29, -46]), annualOpInc: V([38, -10]), annualRev: V([100, 80]) } };
   assert.equal(L.burnPressFactor(turn), 1); // feuert nicht -> byte-identisch
+});
+// F-1: die Anzeige-Lampen bleiben bewusst FREE-CASH-basiert (Karl sieht den Gesamt-Abfluss
+// inklusive Investition), waehrend die STRAFE nur den operativen Verbrauch misst. Waechter gegen
+// ein spaeteres "Vereinheitlichen", das die Divergenz versehentlich einebnet.
+test('F-1 Divergenz: burning bleibt FCF-basiert, waehrend die Strafe schweigt (Nebius-Klasse)', () => {
+  const bauer = { annual: { annualOCF: V([385, 100]), annualFCF: V([-900, -200]),
+    annualCapex: [-1285, -300], annualOpInc: V([-50, -20]) } };
+  assert.equal(L.burning(bauer), true, 'Anzeige: der Name verbrennt Cash (inkl. Investition)');
+  assert.strictEqual(L.burnPressFactor(bauer), 1, 'Strafe: aber operativ kein Verbrauch -> kein Abzug');
 });
 
 // --- 14 inflationSuspect (2.13/#24, Disclosure-Lampe) -----------------------
