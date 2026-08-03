@@ -29,7 +29,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { countHardcodedFallback, befunde, exitCodeFor } = require('../scripts/watch-fx-sanity.js');
+const watcher = require('../scripts/watch-fx-sanity.js');
+const { countHardcodedFallback, countOverCap, befunde, exitCodeFor } = watcher;
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -84,41 +85,42 @@ test('fehlendes Verzeichnis -> 0 statt Absturz (Waechter darf den Lauf nicht spr
 });
 
 // ── die Verdrahtung: der Befund muss im Alarm-Kanal ankommen ────────────────────────────
+// EIN Scan-Objekt (03.08.2026): befunde() bekommt nicht mehr zwei getrennte Zaehler,
+// sondern das Ergebnis des einen Durchgangs. `lauf(...)` baut daraus einen gesunden Lauf
+// und ueberschreibt genau das Feld, um das es im jeweiligen Fall geht.
 const keinSprung = { usOver: 100, foreignOver: 50 };
+const gesunderScan = { n: 0, jeWaehrung: {}, gescannt: 4768, parseFehler: 0 };
+const lauf = (...teile) => Object.assign({}, keinSprung, gesunderScan, ...teile);
 const basislinie = { last: { usOver: 100, foreignOver: 50 }, prev: null, date: '2026-08-02' };
 
 test('VERDRAHTUNG: ein Treffer erzeugt einen Befund (und damit exit 1)', () => {
-  const p = befunde(keinSprung, basislinie, { n: 812, jeWaehrung: { EUR: 400, INR: 212, JPY: 200 } });
+  const p = befunde(lauf({ n: 812, jeWaehrung: { EUR: 400, INR: 212, JPY: 200 } }), basislinie);
   assert.ok(p.length > 0, 'kein Befund trotz 812 hartkodiert umgerechneter Snapshots');
   assert.ok(p.some((x) => /hartkodiert/i.test(x)), 'Befund benennt die Ursache nicht: ' + p.join('; '));
   assert.ok(p.some((x) => /812/.test(x) && /INR/.test(x)), 'Befund nennt weder Anzahl noch Waehrungen: ' + p.join('; '));
 });
 
-// Ein gesunder Lauf muss jetzt SAGEN, wieviel er gesehen hat — siehe Scan-Umfang unten.
-const gesunderScan = { n: 0, jeWaehrung: {}, gescannt: 4768, parseFehler: 0 };
-
 test('VERDRAHTUNG: sauberer Lauf bleibt still (kein Falsch-Rot)', () => {
-  assert.deepEqual(befunde(keinSprung, basislinie, gesunderScan), []);
+  assert.deepEqual(befunde(lauf(), basislinie), []);
 });
 
 test('VERDRAHTUNG: der bestehende Sprung-Befund bleibt unberuehrt', () => {
-  const p = befunde({ usOver: 200, foreignOver: 50 }, basislinie, gesunderScan);
+  const p = befunde(lauf({ usOver: 200 }), basislinie);
   assert.equal(p.length, 1, 'genau der Sprung-Befund');
   assert.ok(/usOver/.test(p[0]), p[0]);
 });
 
 // ── Scan-Umfang: "0 Treffer" ist ohne "wieviel gesehen" keine Entwarnung ────────────────
-// Reproduziert (03.08.2026): bei fehlendem UND bei leerem snapshots/ liefern countOverCap
-// und countHardcodedFallback identisch 0 — und befunde() sagte dazu []. Ein Waechter, der
-// bei "nichts gescannt" gruen meldet, ist genau dann still, wenn er am noetigsten waere.
+// Reproduziert (03.08.2026): bei fehlendem UND bei leerem snapshots/ kam identisch 0 heraus
+// — und befunde() sagte dazu []. Ein Waechter, der bei "nichts gescannt" gruen meldet, ist
+// genau dann still, wenn er am noetigsten waere.
 test('SCAN-UMFANG: 0 gescannte Dateien ist ein eigener Befund', () => {
-  const p = befunde(keinSprung, basislinie, { n: 0, jeWaehrung: {}, gescannt: 0, parseFehler: 0 });
-  assert.ok(p.some((x) => /gescannt|keine Snapshots/i.test(x)), 'kein Befund bei 0 gescannten Dateien: ' + JSON.stringify(p));
+  const p = befunde(lauf({ gescannt: 0 }), basislinie);
+  assert.ok(p.some((x) => /^0 Snapshots gescannt/.test(x)), 'kein Befund bei 0 gescannten Dateien: ' + JSON.stringify(p));
 });
 
 test('SCAN-UMFANG: fehlende Scan-Angabe ist ein eigener Befund (nicht stille Entwarnung)', () => {
-  assert.ok(befunde(keinSprung, basislinie, { n: 0, jeWaehrung: {} }).length > 0, 'ohne gescannt-Zahl darf nicht [] herauskommen');
-  assert.ok(befunde(keinSprung, basislinie).length > 0, 'ganz ohne Scan-Objekt erst recht nicht');
+  assert.ok(befunde(keinSprung, basislinie).length > 0, 'ohne gescannt-Zahl darf nicht [] herauskommen');
 });
 
 // ── Parse-Fehler: loadJson schluckte sie still ──────────────────────────────────────────
@@ -135,15 +137,45 @@ test('PARSE-FEHLER: werden gezaehlt statt still verschluckt', () => {
 });
 
 test('PARSE-FEHLER: erzeugen einen Befund', () => {
-  const p = befunde(keinSprung, basislinie, { n: 0, jeWaehrung: {}, gescannt: 4768, parseFehler: 3 });
+  const p = befunde(lauf({ parseFehler: 3 }), basislinie);
   assert.ok(p.some((x) => /nicht lesbar|Parse/i.test(x)), 'kein Befund bei 3 Parse-Fehlern: ' + JSON.stringify(p));
 });
 
-test('SCAN-UMFANG: countOverCap meldet denselben Umfang', () => {
-  const d = korpus([live('EUR'), usd()]);
-  const r = countHardcodedFallback(d);
-  assert.equal(r.gescannt, 2);
-  assert.equal(r.parseFehler, 0);
+// ── EIN Scan statt zwei ────────────────────────────────────────────────────────────────
+// Reproduziert (03.08.2026, Review-Befund HOCH): befunde() las Umfang und Parse-Fehler NUR
+// aus dem hardcoded-Zaehler — nie aus countOverCap, dem PRIMAEREN Zaehler und Input des
+// FX-Sprung-Alarms. Dass die Luecke bisher nicht aufgefallen ist, lag daran, dass beide
+// Zaehler DASSELBE Verzeichnis lesen: der eine deckte den anderen zufaellig mit ab. Genau
+// diese Annahme war nirgends erzwungen. Ein einziger Scan macht sie zur Bauart.
+// Dazu der zweite Befund: der Testfall hiess "countOverCap meldet denselben Umfang", rief
+// aber countHardcodedFallback auf — countOverCap wurde repo-weit von KEINEM Test angefasst.
+const usPrimary = (mcap) => ({ meta: { ticker: 'USP', exchangeName: 'NasdaqGS', fxConverted: false }, marketCap: { value: mcap } });
+
+test('EIN SCAN: over-cap-Zaehler und hardcoded-Zaehler kommen aus demselben Durchgang', () => {
+  const d = korpus([usPrimary(5e9), usPrimary(100e6), live('EUR'), hart('INR')]);
+  fs.writeFileSync(path.join(d, 'kaputt.json'), '{ das ist kein JSON');
+  const r = watcher.scanSnapshots(d);
+  assert.equal(r.usOver, 1, 'ein US-Primary ueber 800M');
+  assert.equal(r.foreignOver, 2, 'live(EUR) + hart(INR), beide 5 Mrd >= 2 Mrd');
+  assert.equal(r.n, 1, 'ein hartkodiert umgerechneter Snapshot');
+  assert.deepEqual(r.jeWaehrung, { INR: 1 });
+  assert.equal(r.gescannt, 5, 'alle fuenf Dateien in EINEM Durchgang');
+  assert.equal(r.parseFehler, 1);
+});
+
+test('EIN SCAN: countOverCap wird wirklich aufgerufen und liefert dieselbe Basis', () => {
+  const d = korpus([usPrimary(5e9), live('EUR'), hart('INR')]);
+  const oc = countOverCap(d), hc = countHardcodedFallback(d);
+  assert.equal(oc.gescannt, 3);
+  assert.equal(oc.parseFehler, 0);
+  assert.equal(oc.usOver, 1);
+  assert.equal(oc.foreignOver, 2);
+  assert.deepEqual(oc, hc, 'beide Namen muessen exakt dieselbe Zahlenbasis liefern');
+});
+
+test('KAPUTTER AUFRUFER: gar kein Scan-Objekt ist ein Befund, kein Absturz', () => {
+  assert.ok(befunde(undefined, basislinie).length > 0, 'ohne Scan-Objekt darf nicht [] herauskommen');
+  assert.ok(befunde(null, null).length > 0, 'auch ohne Baseline kein stilles []');
 });
 
 // ── die letzte ungetestete Zeile von main(): Befund -> Exit-Code ────────────────────────

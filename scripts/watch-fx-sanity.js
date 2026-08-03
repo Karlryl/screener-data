@@ -34,26 +34,6 @@ function loadJson(p, fallback) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return fallback; }
 }
 
-function countOverCap(snapDir) {
-  let usOver = 0, foreignOver = 0, gescannt = 0, parseFehler = 0;
-  if (!fs.existsSync(snapDir)) return { usOver, foreignOver, gescannt, parseFehler };
-  const files = fs.readdirSync(snapDir).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
-  for (const f of files) {
-    gescannt++;
-    const s = loadJson(path.join(snapDir, f), null);
-    if (!s) { parseFehler++; continue; }
-    const mcap = s.marketCap && Number.isFinite(s.marketCap.value) ? s.marketCap.value : null;
-    if (mcap === null) continue;
-    const meta = s.meta || {};
-    if (isUsPrimaryListing(meta)) {
-      if (mcap >= CAP_US) usOver++;
-    } else {
-      if (mcap >= CAP_FOREIGN) foreignOver++;
-    }
-  }
-  return { usOver, foreignOver, gescannt, parseFehler };
-}
-
 // ── Grenzen-Audit C-3 (03.08.2026): wurde ueberhaupt hartkodiert umgerechnet? ───────────
 // Die Luecke, die das schliesst: pull-yahoo.js verwirft fx-rates.json ab FX_STALE_DAYS = 14
 // KOMPLETT und rechnet mit der 2024er Hartkodierung weiter (INR bis 14,5 % daneben, still,
@@ -74,47 +54,70 @@ function countOverCap(snapDir) {
 // im lokalen Bestand 0 von 4.768 Snapshots, bei 2.967 tatsaechlich umgerechneten — jedes
 // Auftreten ist ein Ereignis. Deshalb Schwelle "mindestens einer", nicht "mehr als x %".
 const HARDCODED_MARKER = 'hardcoded-fallback';
-// SCAN-UMFANG (03.08.2026, Review-Befund): der Zaehler meldet mit, WIEVIEL er gesehen hat.
-// Reproduziert: bei fehlendem UND bei leerem snapshots/ kam hier identisch n=0 heraus, und
-// befunde() machte daraus []. Ein Waechter, der bei "nichts gescannt" gruen meldet, ist
-// genau dann still, wenn er am noetigsten waere. Ebenso schluckte loadJson jeden
-// Parse-Fehler lautlos — Grundlast ausgezaehlt: 0 in 17.367 Snapshots ueber drei Baeume,
-// also ist jedes Auftreten ein Ereignis (dieselbe Begruendung wie beim HARDCODED_MARKER).
-function countHardcodedFallback(snapDir) {
+
+// ── EIN Durchgang, alle Zaehler (03.08.2026, Review-Befund HOCH) ───────────────────────
+// Vorher liefen ZWEI getrennte Scans ueber dasselbe Verzeichnis (over-cap und
+// hardcoded-Marker), und befunde() las Umfang + Parse-Fehler nur aus dem zweiten. Der
+// PRIMAERE Zaehler — der Input des FX-Sprung-Alarms — meldete seinen Umfang nirgends hin.
+// Aufgefallen ist das nie, weil beide Scans dasselbe Verzeichnis lasen und der eine den
+// anderen zufaellig mit abdeckte; erzwungen war diese Deckungsgleichheit nirgends. Ein
+// einziger Durchgang macht sie zur Bauart: der Umfang KANN nicht mehr divergieren, und die
+// Haelfte der Datei-I/O faellt weg (4.768 Dateien wurden zweimal gelesen und geparst).
+function scanSnapshots(snapDir) {
   const jeWaehrung = {};
-  let n = 0, gescannt = 0, parseFehler = 0;
-  if (!fs.existsSync(snapDir)) return { n, jeWaehrung, gescannt, parseFehler };
-  for (const f of fs.readdirSync(snapDir).filter((x) => x.endsWith('.json') && !x.startsWith('_'))) {
+  let usOver = 0, foreignOver = 0, n = 0, gescannt = 0, parseFehler = 0;
+  if (!fs.existsSync(snapDir)) return { usOver, foreignOver, n, jeWaehrung, gescannt, parseFehler };
+  const files = fs.readdirSync(snapDir).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
+  for (const f of files) {
     gescannt++;
     const s = loadJson(path.join(snapDir, f), null);
     if (!s) { parseFehler++; continue; }
-    if (!s.meta || s.meta.fxRateSource !== HARDCODED_MARKER) continue;
-    n++;
-    const ccy = s.meta.reportingCurrencyOriginal || '?';
-    jeWaehrung[ccy] = (jeWaehrung[ccy] || 0) + 1;
+    const meta = s.meta || {};
+    const mcap = s.marketCap && Number.isFinite(s.marketCap.value) ? s.marketCap.value : null;
+    if (mcap !== null) {
+      if (isUsPrimaryListing(meta)) {
+        if (mcap >= CAP_US) usOver++;
+      } else {
+        if (mcap >= CAP_FOREIGN) foreignOver++;
+      }
+    }
+    if (meta.fxRateSource === HARDCODED_MARKER) {
+      n++;
+      const ccy = meta.reportingCurrencyOriginal || '?';
+      jeWaehrung[ccy] = (jeWaehrung[ccy] || 0) + 1;
+    }
   }
-  return { n, jeWaehrung, gescannt, parseFehler };
+  return { usOver, foreignOver, n, jeWaehrung, gescannt, parseFehler };
 }
+// Beide bisherigen Namen bleiben gueltig — sie zeigen jetzt auf denselben Durchgang.
+const countOverCap = scanSnapshots;
+const countHardcodedFallback = scanSnapshots;
 
 // Alle Befunde eines Laufs an EINER Stelle — main() bleibt Ausgabe und Exit-Code.
 // So ist der Weg vom Befund in Karls rotes X testbar, ohne den Waechter zu starten.
-function befunde(today, baseline, hardcoded) {
-  const problems = checkJump(today, baseline);
+// EIN Scan-Objekt, EIN Umfang: `scan` traegt seit 03.08.2026 beide Sichten (over-cap UND
+// hardcoded-Marker). Vorher nahm die Funktion zwei getrennte Objekte und pruefte Umfang und
+// Parse-Fehler nur am zweiten — der Alarm-Input selbst blieb ungeprueft.
+function befunde(scan, baseline) {
+  if (!scan || typeof scan !== 'object') {
+    return ['Kein Scan-Ergebnis uebergeben — der FX-Waechter kann nichts beurteilt haben. Kaputter Aufrufer, keine Gesundmeldung.'];
+  }
+  const problems = checkJump(scan, baseline);
   // Der Scan-Umfang ZUERST: ohne ihn ist jede Null-Meldung darunter bedeutungslos.
-  if (!hardcoded || !Number.isFinite(hardcoded.gescannt)) {
+  if (!Number.isFinite(scan.gescannt)) {
     problems.push('Scan-Umfang unbekannt (kein gescannt-Zaehler uebergeben) — "0 Treffer" ist hier keine Entwarnung, sondern eine unbeantwortete Frage.');
-  } else if (hardcoded.gescannt === 0) {
+  } else if (scan.gescannt === 0) {
     problems.push(`0 Snapshots gescannt (${SNAP_DIR} fehlt oder ist leer) — der FX-Waechter hat NICHTS geprueft. Seine Null-Zaehler sind kein Gesundheitszeugnis.`);
   }
-  if (hardcoded && hardcoded.parseFehler > 0) {
-    problems.push(`${hardcoded.parseFehler} Snapshot-Datei(en) nicht lesbar (JSON-Parse-Fehler) — sie fallen still aus jeder Zaehlung heraus. Grundlast im Bestand: 0, jedes Auftreten ist ein Ereignis.`);
+  if (scan.parseFehler > 0) {
+    problems.push(`${scan.parseFehler} Snapshot-Datei(en) nicht lesbar (JSON-Parse-Fehler) — sie fallen still aus jeder Zaehlung heraus. Grundlast im Bestand: 0, jedes Auftreten ist ein Ereignis.`);
   }
-  if (hardcoded && hardcoded.n > 0) {
-    const nachWaehrung = Object.entries(hardcoded.jeWaehrung)
+  if (scan.n > 0) {
+    const nachWaehrung = Object.entries(scan.jeWaehrung || {})
       .sort((a, b) => b[1] - a[1])
       .map(([c, k]) => `${c}:${k}`)
       .join(', ');
-    problems.push(`${hardcoded.n} Snapshots wurden mit HARTKODIERTEN 2024er FX-Kursen umgerechnet (${nachWaehrung}) — fx-rates.json ist zu alt (> FX_STALE_DAYS in pull-yahoo.js), fehlt, oder deckt diese Waehrungen nicht ab. Die USD-Werte dieser Titel sind falsch (INR-Groessenordnung: bis 14,5 %).`);
+    problems.push(`${scan.n} Snapshots wurden mit HARTKODIERTEN 2024er FX-Kursen umgerechnet (${nachWaehrung}) — fx-rates.json ist zu alt (> FX_STALE_DAYS in pull-yahoo.js), fehlt, oder deckt diese Waehrungen nicht ab. Die USD-Werte dieser Titel sind falsch (INR-Groessenordnung: bis 14,5 %).`);
   }
   return problems;
 }
@@ -184,18 +187,20 @@ function exitCodeFor(problems) {
 }
 
 function main() {
-  const today = countOverCap(SNAP_DIR);
-  console.log(`Gescannt: ${today.gescannt} Snapshot-Dateien` + (today.parseFehler ? `, davon ${today.parseFehler} nicht lesbar` : ''));
-  console.log(`Over-cap counts — US-primary (>=${CAP_US / 1e6}M): ${today.usOver}, foreign (>=${CAP_FOREIGN / 1e9}B): ${today.foreignOver}`);
-
-  const hardcoded = countHardcodedFallback(SNAP_DIR); // C-3: Wirkungs-Anker, kein Alters-Schwellwert
-  console.log(`Hartkodiert umgerechnet: ${hardcoded.n} Snapshots` + (hardcoded.n ? ` (${Object.entries(hardcoded.jeWaehrung).sort((a, b) => b[1] - a[1]).map(([c, k]) => c + ':' + k).join(', ')})` : ''));
+  const scan = scanSnapshots(SNAP_DIR); // EIN Durchgang: over-cap + C-3-Wirkungs-Anker
+  console.log(`Gescannt: ${scan.gescannt} Snapshot-Dateien` + (scan.parseFehler ? `, davon ${scan.parseFehler} nicht lesbar` : ''));
+  console.log(`Over-cap counts — US-primary (>=${CAP_US / 1e6}M): ${scan.usOver}, foreign (>=${CAP_FOREIGN / 1e9}B): ${scan.foreignOver}`);
+  console.log(`Hartkodiert umgerechnet: ${scan.n} Snapshots` + (scan.n ? ` (${Object.entries(scan.jeWaehrung).sort((a, b) => b[1] - a[1]).map(([c, k]) => c + ':' + k).join(', ')})` : ''));
 
   const baseline = loadJson(BASELINE_PATH, null);
-  const problems = befunde(today, baseline, hardcoded);
+  const problems = befunde(scan, baseline);
 
   const dateStr = process.env.RUN_DATE_UTC || new Date().toISOString().slice(0, 10); // frozen run-date (prep) mit Wall-Clock-Fallback — Codex-Gegenreview Tag 353
-  const nextBaseline = updateBaseline(baseline, today, dateStr);
+  // NUR die zwei Zaehlstaende in die Baseline — sie ist eine Zaehl-Datei. Der same-day-rerun-
+  // Zweig von updateBaseline uebernimmt `today` unveraendert; seit Tag 520 waren dadurch
+  // gescannt/parseFehler mit hineingerutscht, mit dem gemeinsamen Scan kaeme jetzt auch noch
+  // die Waehrungs-Tabelle mit. Die Projektion haelt die Datei bei dem, was checkJump liest.
+  const nextBaseline = updateBaseline(baseline, { usOver: scan.usOver, foreignOver: scan.foreignOver }, dateStr);
   fs.mkdirSync(path.dirname(BASELINE_PATH), { recursive: true });
   writeJsonAtomic(BASELINE_PATH, nextBaseline);
   console.log('Baseline updated: ' + BASELINE_PATH);
@@ -210,4 +215,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { countOverCap, checkJump, updateBaseline, isBucketJump, countHardcodedFallback, befunde, exitCodeFor };
+module.exports = { scanSnapshots, countOverCap, checkJump, updateBaseline, isBucketJump, countHardcodedFallback, befunde, exitCodeFor };
