@@ -491,13 +491,14 @@ function learnWinsorBounds(snapshots) {
 // --- AUFGABE 2: Wachstums-Bonus (rein additiv-multiplikativer AUFWAERTS-Faktor) ---
 // Zwei TIEFEN-UNSENSITIVE YoY-Beine einer Aktie (EDGAR-A/B-invariant fuer den annual-Teil):
 //  - annual-lag1: firstTwoPresent(annualRev) -> ar[0]/ar[1]-1 (2 neueste present, luecken-sicher).
-//  - quartal-lag4 POSITIONAL: revenueQ[0]/revenueQ[4]-1 (Muster lamps.js). Verlangt 5 FINITE Fuehrungs-
-//    Quartale (rev[0..4]): eine interne null-Luecke wuerde Index 4 vom year-ago-Quartal wegschieben ->
-//    dann Bein droppen, annual-lag1 traegt. EHRLICHE GRENZE: revenueQ traegt nur {value}, KEIN Perioden-
-//    Enddatum -> eine KOMPLETT fehlende Quartals-Row (ohne null-Platzhalter) ist nicht detektierbar; die
-//    5-finite-Regel SETZT regelmaessige Provider-Kadenz VORAUS (Live-Scan aller Snapshots: 0 solche Luecken).
-//    Die robuste datums-basierte Ausrichtung wuerde snapshot.js/FIELD_REGISTRY beruehren (Brief verbietet es)
-//    -> dokumentiertes Rest-Risiko, kein aktiver Defekt. div0-Skip: Nenner STRIKT > 0 (0 UND negativ = Stub/Glitch).
+//  - quartal-YoY DATUMSBASIERT (seit Tag 518, F-4): axes.js revQuartalsYoY nimmt das Quartal, dessen
+//    Perioden-Enddatum am naechsten an (Ende[0] − 365 Tage) liegt (snapshot.js jahresVergleichIdx,
+//    Toleranz 15 Tage). Nur wo KEIN Enddatum vorliegt, gilt weiter die Positionsregel revenueQ[4] —
+//    fehlendes Datum ist kein Beweis fuer eine Luecke. Datiert, aber kein Quartal im Jahresfenster ->
+//    Bein droppt, annual-lag1 traegt. Der Luecken-Proxy (alle Quartale bis zum Vergleichsquartal finit)
+//    gilt in BEIDEN Zweigen. Der frueher hier dokumentierte Grund fuer die Positionsregel ("revenueQ
+//    traegt kein Perioden-Enddatum") ist ueberholt: die Enden-Reihen stehen seit A10 im Snapshot.
+//    div0-Skip: Nenner STRIKT > 0 (0 UND negativ = Stub/Glitch).
 // Datenrichtigkeits-Fix 14.07.2026: Implementierung nach axes.js gewandert
 // (revYoYComponents) — die revGrowthLevel-Achse liest jetzt dieselben Komponenten
 // (Single-Source). Name + Export hier bleiben fuer growthBoost/TDD stabil.

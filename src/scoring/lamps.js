@@ -212,6 +212,12 @@ function newestQtrSuspect(s) {
   // F-4 (03.08.2026): das "year-ago-Quartal" ist das mit dem passenden ENDDATUM, nicht
   // Position 4 — sonst entlastet (oder belastet) ein Quartal aus einer anderen Saison.
   // Ohne Enden liefert jahresVergleichIdx Position 4 zurueck (unveraendert).
+  // BEOBACHTUNGSPUNKT (ausgezaehlt 03.08.2026, 4.768 lokale Snapshots): der Index stammt aus
+  // den revenueQ-Enddaten und wird unten AUCH auf opIncQ angewandt — 2.399 Snapshots (50,3 %)
+  // haben revenueQ.length !== opIncQ.length, und opIncQEnds existiert in KEINEM Snapshot, die
+  // Ausrichtung von opIncQ ist also gar nicht pruefbar. Heute 0 wirksame Faelle (kein einziger
+  // laengen-ungleicher Snapshot hat ueberhaupt einen datierten Jahresindex); die Zahl waechst
+  // mit der Enddaten-Abdeckung. Wer sie loest, braucht opIncQEnds, nicht mehr Logik hier.
   const vjIdx = jahresVergleichIdx(s, 'revenueQ', 0);
   const r4 = vjIdx ? rev[vjIdx.idx] : null, oi4 = vjIdx ? oi[vjIdx.idx] : null;
   const q4opm = (r4 > 0 && Number.isFinite(oi4)) ? oi4 / r4 : null;
