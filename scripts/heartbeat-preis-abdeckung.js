@@ -105,7 +105,17 @@ function main() {
     return 0;
   }
 
-  const m = messePreisAbdeckung(zeilen, alle);
+  let m;
+  try { m = messePreisAbdeckung(zeilen, alle); }
+  catch (e) {
+    // Ohne diesen Fang haengt die Garantie "wird nie rot" daran, dass die Messung NIE
+    // wirft — ein Argument, keine Sicherung. Belegter Weg dorthin: ein Store, der statt
+    // einer Karte null liefert (JSON.parse('null')), laesst die Messung mit TypeError
+    // abbrechen, node endet auf 1, der Schritt faerbt rot — und ausgerechnet dann fehlen
+    // die Kennzahlen, die erklaeren wuerden, wie schlimm es steht.
+    console.log('::warning::Preis-Abdeckung nicht messbar: Messung fehlgeschlagen (' + e.message + ').');
+    return 0;
+  }
   const anteil = m.leerAnteil == null ? 'n/a' : (m.leerAnteil * 100).toFixed(1) + ' %';
 
   // Tag-520-Lehre: beide Kennzahlen IMMER drucken, auch wenn sie unauffaellig sind.
@@ -128,6 +138,6 @@ function main() {
   return 0;
 }
 
-module.exports = { messePreisAbdeckung, watchlistZeilen };
+module.exports = { messePreisAbdeckung, watchlistZeilen, main };
 
 if (require.main === module) process.exit(main());

@@ -125,6 +125,37 @@ check('das Skript kann gar nicht rot werden (keine Rot-Schwelle mitgebaut)', () 
   assert.ok(!/::error::/.test(src), 'ein ::error:: waere in CI ein Alarm — dieser Schritt ist eine Messung');
 });
 
+check('GEGENPROBE zur Schreibweise: ein VERGIFTETER Store macht den Lauf trotzdem nicht rot', () => {
+  // Der Test darueber greppt nur Schreibweisen (kein exit(1), kein ::error::) — rot wird
+  // der Schritt aber auch durch eine WERFENDE Messung. Realer Weg dorthin: loadAll gibt
+  // im Legacy-Zweig geparstes null zurueck (prices/history.json mit Inhalt "null"), dann
+  // wirft messePreisAbdeckung TypeError, node endet auf 1 und der Schritt faerbt rot —
+  // und ausgerechnet dann fehlen die "immer drucken"-Kennzahlen. Hier laeuft deshalb der
+  // ECHTE main()-Pfad gegen einen Store, der genau das tut.
+  const store = require('../lib/price-history-store.js');
+  const echtesLoadAll = store.loadAll;
+  const echtesLog = console.log;
+  const gedruckt = [];
+  let rc, err = null;
+  try {
+    store.loadAll = () => null;
+    console.log = (...a) => gedruckt.push(a.join(' '));
+    rc = M.main();
+  } catch (e) {
+    err = e;
+  } finally {
+    store.loadAll = echtesLoadAll;
+    console.log = echtesLog;
+  }
+  const out = gedruckt.join('\n');
+  assert.equal(err, null, 'main() darf nicht werfen — ein Wurf ist Exit 1 und damit ein roter Schritt: '
+    + (err && err.message));
+  assert.equal(rc, 0, 'der Schritt endet immer mit 0');
+  assert.ok(!/watchlist\.json nicht lesbar/.test(out),
+    'sonst bestaende der Test nur, weil er vor der Messung abgebogen ist');
+  assert.match(out, /::warning::/, 'der Messausfall muss laut sein, nicht still');
+});
+
 // ── Einbau in den Heartbeat ─────────────────────────────────────────────────
 check('der Heartbeat ruft die Messung als DRITTEN Schritt auf, nach den beiden Frische-Pruefungen', () => {
   const iExport = HB.indexOf('- name: Check export freshness');

@@ -131,6 +131,26 @@ test('legacy-fallback: dir with only history.json → loadAll returns its conten
   assert.deepEqual(store.loadShard(dir, store.shardOf('SPY')), {});
 });
 
+test('legacy-fallback: eine Datei, die zu null/Array/Zahl parst, wirft statt sie durchzureichen', () => {
+  // JSON.parse('null') wirft NICHT — es liefert null. Ein solcher Rueckgabewert sieht
+  // fuer jeden der zehn loadAll-Aufrufer wie eine Ticker-Karte aus und knallt erst
+  // spaeter irgendwo im Consumer als TypeError (belegt: heartbeat-preis-abdeckung.js
+  // brach damit mit Exit 1 ab und faerbte einen Schritt rot, der nie rot werden darf).
+  // Dieselbe Klasse wie der corrupt-shard-Wurf: hier genauso laut.
+  for (const inhalt of ['null', '[]', '5', '"SPY"']) {
+    const dir = tmpDir();
+    fs.writeFileSync(store.legacyPath(dir), inhalt);
+    let err = null, wert;
+    try { wert = store.loadAll(dir); } catch (e) { err = e; }
+    assert.ok(err, 'loadAll muss bei ' + inhalt + ' werfen, gab aber ' + JSON.stringify(wert) + ' zurueck');
+    assert.equal(err.shardPath, store.legacyPath(dir), 'der Wurf benennt die unbrauchbare Datei');
+  }
+  // GEGENPROBE: die gueltige Form muss weiter DURCHGEHEN (auch die leere Karte).
+  const leer = tmpDir();
+  fs.writeFileSync(store.legacyPath(leer), '{}');
+  assert.deepEqual(store.loadAll(leer), {}, 'ein leerer Monolith ist gueltig, kein Fehler');
+});
+
 test('shards win over legacy once they exist', () => {
   const dir = tmpDir();
   fs.writeFileSync(store.legacyPath(dir), JSON.stringify({ SPY: [{ date: '2000-01-01', close: 1 }] }));
