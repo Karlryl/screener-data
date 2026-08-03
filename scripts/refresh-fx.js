@@ -67,6 +67,20 @@ async function fetchFXRate(currency) {
 // Each currency independently tracks lastSuccessAt.
 const STALE_WARN_DAYS = 7;
 
+/**
+ * R5-SK-002: Darf fx-rates.json ueberhaupt geschrieben werden?
+ *
+ * Nein, wenn in diesem Lauf KEIN Kurs gelang UND es keinen frueheren Stempel gibt:
+ * dann landete bisher `fetchedAt: null` auf der Platte, und das Frische-Gate im
+ * Tageslauf las null als "nicht messbar" -> Alter 0 -> gruen. Der schlimmste Tag sah
+ * damit am frischesten aus. Gar nicht zu schreiben ist ehrlicher: dann greift der
+ * "Datei fehlt"-Zweig des Gates (Warnung, harte Fallback-Kurse in pull-yahoo).
+ *
+ * Ein Fehl-Lauf MIT frueherem Stempel schreibt weiter — dort ist der eingefrorene
+ * Stempel genau das Alterssignal, das die 7-/30-Tage-Schwellen messen (F-DP-010).
+ */
+const darfSchreiben = (anySuccess, existingFetchedAt) => Boolean(anySuccess) || existingFetchedAt != null;
+
 async function main() {
   const outPath = path.join(__dirname, '..', 'fx-rates.json');
   let existing = { USD: 1.0 };
@@ -150,6 +164,14 @@ async function main() {
     failed,
     currencyMeta  // F-DP-010: per-currency success tracking
   };
+  // R5-SK-002: lieber gar keine Datei als eine mit fetchedAt:null (Begruendung an
+  // darfSchreiben oben). Exit 1 haette dieser Lauf ohnehin gleich genommen — die
+  // Gates unten greifen bei null Erfolgen immer —, nur eben NACH dem Schreiben.
+  if (!darfSchreiben(anySuccess, existingFetchedAt)) {
+    console.error('::error::Kein einziger FX-Kurs abrufbar UND kein frueherer fetchedAt-Stempel vorhanden — '
+      + 'fx-rates.json wird NICHT geschrieben. Ein fetchedAt:null wuerde das Frische-Gate als "frisch" lesen.');
+    process.exit(1);
+  }
   // F-SM-016 (Tag 179) → factored into shared lib/atomic-write.js in Tag 189
   // (F-DP-033). Previous inline tmp+rename was correct but duplicated; helper
   // also cleans up the tmp file on failure.
@@ -174,4 +196,4 @@ async function main() {
 if (require.main === module) {
   main().catch(e => { console.error(e); process.exit(1); });
 }
-module.exports = { fetchFXRate };
+module.exports = { fetchFXRate, darfSchreiben };

@@ -272,11 +272,30 @@ jobs:
       # refresh-fx.js die Datei bei JEDEM Lauf neu schreibt, auch bei Totalausfall),
       # waehrend `fetchedAt` bei einem Fehl-Lauf eingefroren bleibt (refresh-fx.js
       # anySuccess-Gate) — der 7-/30-Tage-Check war damit strukturell unerreichbar.
+      # R5-SK-002 (Block-5-Verifikation 2026-08-03): der Einzeiler warf frueher DREI
+      # verschiedene Lagen in einen Topf. `fetchedAt: null` — genau das, was refresh-fx.js
+      # bei einem Totalausfall ohne frueheren Stempel schrieb — lief durch
+      # `d.fetchedAt ? ... : NaN` in den Fail-open-Zweig und meldete Alter 0, also gruen.
+      # Der Tag, an dem KEIN einziger Kurs abrufbar war, sah damit am frischesten aus.
+      # Jetzt drei Zustaende: NULL (ausdruecklich null) = rot · KEIN_STEMPEL (Schluessel
+      # fehlt / Datei unlesbar / unparsbarer Text) = fail-open wie bisher · Sekunden = messen.
+      # Der Einzeiler kommt ohne Shell-Einsetzung aus, damit der Waechter GENAU diesen
+      # Text ausfuehren kann statt einen Nachbau zu pruefen.
       - name: Verify FX-Rates Freshness
         run: |
           if [ -f fx-rates.json ]; then
             now=$(date +%s)
-            fetched=$(node -e "try{const d=require('./fx-rates.json');const t=d.fetchedAt?Date.parse(d.fetchedAt):NaN;console.log(Number.isFinite(t)?Math.floor(t/1000):$now);}catch(e){console.log($now);}")
+            fx_state=$(node -e "try{const d=require('./fx-rates.json');if(Object.prototype.hasOwnProperty.call(d,'fetchedAt')&&d.fetchedAt===null){console.log('NULL');}else{const t=d.fetchedAt?Date.parse(d.fetchedAt):NaN;console.log(Number.isFinite(t)?Math.floor(t/1000):'KEIN_STEMPEL');}}catch(e){console.log('KEIN_STEMPEL');}")
+            if [ "$fx_state" = "NULL" ]; then
+              echo "::error::fx-rates.json hat fetchedAt:null — refresh-fx.js konnte KEINEN einzigen Kurs holen und es gab keinen frueheren Stempel. Nicht-USD-Marktkapitalisierungen laufen auf harten Fallback-Kursen. NAECHSTER SCHRITT: Schritt \"Refresh FX-Rates\" oben im selben Lauf pruefen."
+              exit 1
+            fi
+            if [ "$fx_state" = "KEIN_STEMPEL" ]; then
+              echo "::warning::fx-rates.json ohne verwertbaren fetchedAt-Stempel (Schluessel fehlt, Datei unlesbar oder Stempel unparsbar) — die Frische ist nicht messbar, der Lauf geht wie bisher fail-open weiter."
+              fetched=$now
+            else
+              fetched=$fx_state
+            fi
             age_days=$(( (now - fetched) / 86400 ))
             echo "fx-rates.json fetchedAt age: ${age_days} days"
             if [ "$age_days" -gt 30 ]; then
