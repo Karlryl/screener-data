@@ -116,6 +116,14 @@ test('Extraktion (ausgefuehrt): die drei Cashflow-Schluessel kommen latest-first
   // Gegenprobe: ein FREMDER Schluessel darf NICHTS liefern — sonst wuerde der Test auch dann
   // gruen bleiben, wenn die Extraktion die Namen gar nicht mehr beachtet.
   assert.deepEqual(_ftsExtractByYear(annualCash, ['gibtEsNicht']), [null, null, null]);
+  // DER PRAXIS-NORMALFALL (Luecke 03.08.2026): bis zum FTS-Cache-Ablauf (28 Tage) liefert
+  // Yahoo fuer die meisten Namen ueberhaupt keine Cash-Flow-Zeilen, und _ftsExtractByYear
+  // bekommt undefined statt eines Arrays. Das MUSS eine leere Reihe geben — nicht werfen und
+  // nicht [null] — sonst faellt der Pull genau bei der Mehrheit der Namen um. Der haeufigste
+  // Fall war bis hierher der einzige ungetestete.
+  assert.deepEqual(_ftsExtractByYear(undefined, ['repurchaseOfCapitalStock']), []);
+  assert.deepEqual(_ftsExtractByYear(null, ['repurchaseOfCapitalStock']), []);
+  assert.deepEqual(_ftsExtractByYear([], ['repurchaseOfCapitalStock']), []);
 });
 
 // --- 4b. Verdrahtung: die zwei Stellen OHNE ausfuehrbaren Seam ---------------
