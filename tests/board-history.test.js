@@ -401,17 +401,23 @@ check('(e2) assertNoPicksHistory blockt jeden picks-history-Pfad strukturell', (
 });
 
 // ── Gate-Kalibrierungs-Mechanik (Unit) ───────────────────────────────────────
-check('updateGateCalibration friert Schwelle nach 3 Samples = max×2 ein', () => {
+// UMGESTELLT mit der Gate-Neukalibrierung (03.08.2026): hiess vorher „nach 3 Samples =
+// max×2". Beide Zahlen sind bewusst gefallen — 3 Stichproben haben nachweislich 8 von 13
+// Schwellen falsch gesetzt, und das MAXIMUM liess einen einzelnen Bruchtag die Schwelle
+// allein bestimmen (it-services 40,2 aus [0,0,0,0,0,20,1]). Die Zusicherung selbst ist
+// unveraendert: N-1 friert nicht ein, N friert ein, danach aendert nichts mehr die Schwelle.
+check('updateGateCalibration friert erst nach CALIBRATION_SAMPLES Stichproben ein', () => {
+  const N = W._const.CALIBRATION_SAMPLES;
+  const BODEN = W._const.MIN_GATE_THRESHOLD;
   const gc = { boards: {} };
-  W.updateGateCalibration(gc, 'b', 0.4);
-  W.updateGateCalibration(gc, 'b', 0.6);
-  assert.strictEqual(gc.boards.b.frozen, false, 'nach 2 Samples noch nicht frozen');
-  W.updateGateCalibration(gc, 'b', 0.5);
-  assert.strictEqual(gc.boards.b.frozen, true, 'nach 3 Samples frozen');
-  assert.strictEqual(gc.boards.b.threshold, 1.2, 'Schwelle = max(0.6)*2');
+  for (let i = 0; i < N - 1; i++) W.updateGateCalibration(gc, 'b', BODEN, '2026-01-' + String(i + 1).padStart(2, '0'));
+  assert.strictEqual(gc.boards.b.frozen, false, 'nach N-1 Samples noch nicht frozen');
+  W.updateGateCalibration(gc, 'b', BODEN, '2026-02-01');
+  assert.strictEqual(gc.boards.b.frozen, true, 'nach N Samples frozen');
+  assert.strictEqual(gc.boards.b.threshold, 2 * BODEN, 'Schwelle = Quantil der Messungen × 2 (ueber dem Boden, also aus Messwerten)');
   // Nach frozen keine weiteren Samples:
-  W.updateGateCalibration(gc, 'b', 99);
-  assert.strictEqual(gc.boards.b.threshold, 1.2, 'Schwelle bleibt eingefroren');
+  W.updateGateCalibration(gc, 'b', 999, '2026-02-02');
+  assert.strictEqual(gc.boards.b.threshold, 2 * BODEN, 'Schwelle bleibt eingefroren');
 });
 
 // ── R3 Fund #3: degeneriertes Kalibrierfenster friert NICHT ein ──────────────
@@ -438,19 +444,31 @@ check('(f1) bewegungsloses Kalibrierfenster → NICHT frozen, sammelt weiter', (
 
 // VORHER ROT: das Board war nach dem 3. Null-Sample frozen, das 4. Sample (die erste echte
 // Bewegung) wurde verworfen → threshold blieb der Boden 1.0 statt der gemessenen 2*2=4.
-check('(f2) erstes echtes Delta nach Null-Fenster → Schwelle AUS Messwerten abgeleitet', () => {
+check('(f2) EINE Bewegung im Null-Fenster friert nichts ein — erst eine bewegte Messreihe tut es', () => {
+  const N = W._const.CALIBRATION_SAMPLES;
+  const BODEN = W._const.MIN_GATE_THRESHOLD;
+  // VERSCHAERFT gegenueber der Fassung vor dem 03.08.2026: dort fror ein einzelner
+  // Messwert unter lauter Nullen die Schwelle ein (max×2). Genau so sind die vier zu
+  // lockeren Live-Schwellen entstanden. Jetzt entscheidet ein Quantil, also die Messreihe.
   const gc = { boards: {} };
-  W.updateGateCalibration(gc, 'energy', 0);
-  W.updateGateCalibration(gc, 'energy', 0);
-  W.updateGateCalibration(gc, 'energy', 0);
-  W.updateGateCalibration(gc, 'energy', 2);   // erste echte Bewegung
-  assert.strictEqual(gc.boards.energy.frozen, true, 'genug Samples + Bewegung → jetzt frozen');
-  assert.strictEqual(gc.boards.energy.threshold, 4, 'Schwelle = max(Samples) 2 × 2 = 4, nicht der Boden 1.0');
-  assert.deepStrictEqual(gc.boards.energy.dailyP99Samples, [0, 0, 0, 2], 'auch das 4. Sample zählt');
-  // Boden bleibt als Schutz gegen absurd kleine, aber ECHTE Schwellen wirksam:
+  for (let i = 0; i < N - 1; i++) W.updateGateCalibration(gc, 'energy', 0, '2026-01-' + String(i + 1).padStart(2, '0'));
+  W.updateGateCalibration(gc, 'energy', 2, '2026-02-01');   // die einzige Bewegung
+  assert.strictEqual(gc.boards.energy.frozen, false, 'ein Ausreisser unter Nullen kalibriert nichts');
+  assert.strictEqual(gc.boards.energy.threshold, null, 'keine Schwelle aus einer einzigen Messung');
+  assert.strictEqual(gc.boards.energy.dailyP99Samples.length, N, 'die Rohmessungen bleiben trotzdem alle stehen');
+  assert.ok(gc.boards.energy.dailyP99Samples.includes(2), 'auch die Bewegung ist gespeichert, nur nicht wirksam');
+
+  // Eine durchgehend bewegte Messreihe leitet die Schwelle sehr wohl aus den Messwerten ab
+  // — und zwar UEBER dem Boden, sonst wuerde der Boden die Aussage tragen statt der Messung.
   const gc2 = { boards: {} };
-  for (const d of [0.1, 0.1, 0.1]) W.updateGateCalibration(gc2, 'x', d);
-  assert.strictEqual(gc2.boards.x.threshold, W._const.MIN_GATE_THRESHOLD, '0.1×2=0.2 → auf Boden 1.0 angehoben');
+  for (let i = 0; i < N; i++) W.updateGateCalibration(gc2, 'energy', BODEN, '2026-03-' + String(i + 1).padStart(2, '0'));
+  assert.strictEqual(gc2.boards.energy.frozen, true, 'bewegte Messreihe + genug Samples → frozen');
+  assert.strictEqual(gc2.boards.energy.threshold, 2 * BODEN, 'Schwelle aus Messwerten, nicht vom Boden');
+
+  // Boden bleibt als Untergrenze gegen zu kleine, aber ECHTE Schwellen wirksam:
+  const gc3 = { boards: {} };
+  for (let i = 0; i < N; i++) W.updateGateCalibration(gc3, 'x', 0.1, '2026-04-' + String(i + 1).padStart(2, '0'));
+  assert.strictEqual(gc3.boards.x.threshold, BODEN, '0.1×2=0.2 → auf den gemessenen Boden angehoben');
 });
 
 // VORHER ROT: Tag 2 (Delta 2) hätte mit der übertünchten Boden-Schwelle 1.0 bereits
@@ -479,17 +497,22 @@ check('(f3) geheiltes 0-Schwellen-Board: echter Wertfehler → suspect + exit 2'
   // Messdaten-Ehrlichkeit: die 0-Samples wurden nicht umgeschrieben, nur ergänzt.
   const gc = JSON.parse(fs.readFileSync(path.join(base, 'board-history', '_gate-calibration.json'), 'utf8'));
   assert.deepStrictEqual(gc.boards.energy.dailyP99Samples, [0, 0, 0, 2], 'Samples roh ergänzt, nichts gefälscht');
-  assert.strictEqual(gc.boards.energy.threshold, 4, 'Schwelle jetzt aus echtem Messwert: 2×2');
-  assert.strictEqual(gc.boards.energy.frozen, true, 'abgeleitete Felder in der Datei mitgeheilt');
+  // UMGESTELLT 03.08.2026: hier stand `threshold === 4, frozen === true` — drei Stichproben
+  // plus eine Bewegung froren die Schwelle ein. Genau diese Eile war der Defekt.
+  assert.strictEqual(gc.boards.energy.threshold, null, 'vier Stichproben frieren nichts mehr ein');
+  assert.strictEqual(gc.boards.energy.frozen, false, 'abgeleitete Felder in der Datei mitgeheilt');
 
-  // Tag 3: Score springt um +40 — echter Wertbruch, weit über der gemessenen Schwelle 4.
+  // Tag 3: Score springt um +40 — echter Wertbruch, weit über der wirksamen Grenze.
+  // Der Fund kommt jetzt vom gemessenen Boden statt von einer board-eigenen Schwelle;
+  // gefangen wird er unverändert, und das ist die Zusicherung dieses Tests.
   writeBoard(base, 'energy', [row('ABC', 132)]);
   const r3 = W.run({ baseDir: base, date: '2026-07-15' });
   assert.strictEqual(r3.exitCode, 2, 'exit 2: Board ist jetzt scharf und bissig');
   const v3 = readVintage(base, '2026-07-15', 'energy');
   assert.strictEqual(v3.gate.suspect, true, 'suspect-Flag gesetzt');
-  assert.strictEqual(v3.gate.calibrating, false, 'echte Schwelle → Kalibrierphase vorbei');
-  assert.strictEqual(v3.gate.threshold, 4, 'gestraft wird am gemessenen Maß, nicht am Boden');
+  assert.strictEqual(v3.gate.calibrating, true, 'noch keine board-eigene Schwelle — geprüft wird trotzdem');
+  assert.strictEqual(v3.gate.threshold, null, 'board-eigene Schwelle gibt es (noch) keine');
+  assert.strictEqual(v3.gate.wirksameSchwelle, W._const.MIN_GATE_THRESHOLD, 'gestraft wird am gemessenen Boden × 1 Tag');
   assert.ok(v3.gate.reasons.includes('p99-delta-exceeds-threshold'), 'Grund: Schwellen-Bruch');
 });
 

@@ -44,16 +44,26 @@ function vintageMit(paare) {
     cohort: { profitable: paare.map(([ticker, score]) => ({ ticker, score })), unprofitable: [] },
   };
 }
-// Eingefrorene Schwelle 1,00 — exakt der Live-Stand von software-comm-services
-// (board-history/_gate-calibration.json, Stichproben 0.3/0.5/0.0).
-const GATE_1_00 = { dailyP99Samples: [0.3, 0.5, 0.0], threshold: 1.0, frozen: true };
+// UMGESTELLT mit der Gate-Neukalibrierung (03.08.2026): die Zahlen hingen vorher an der
+// damaligen Live-Schwelle 1,00 von software-comm-services. Diese Schwelle war der Defekt
+// (sie stammte aus ausgeschlossenen Vintages und lag unter der normalen Tagesbewegung) und
+// existiert nicht mehr. Geprueft wird hier nie eine Zahl, sondern eine BEZIEHUNG — Grenze
+// gegen Strukturgrenze gegen Deckel. Alle Groessen leiten sich deshalb aus der wirksamen
+// Tagesgrenze ab; die naechste Neukalibrierung zieht diese Tests automatisch mit.
+const BODEN = W._const.MIN_GATE_THRESHOLD;
+const GATE_BODEN = { dailyP99Samples: [], sampleDates: [], threshold: BODEN, frozen: true };
 const BRUCH = { tag: 'Tag 467-469', letztesAltesVintage: '2026-07-27', boards: new Set(['software-comm-services']) };
 
-// 456 Zeilen vorher, `weg` davon fallen weg, die Ueberlebenden bewegen sich um `bewegung`.
-// weg=30 entspricht exakt dem echten Bruch (30 von 456 = 6,58 %).
+const ZEILEN = 456;
+// Schrumpfung so gewaehlt, dass die Strukturgrenze ZWISCHEN Schwelle und Deckel liegt —
+// nur dann prueft der Test die Ausnahme selbst und nicht max()/min() an ihren Raendern.
+const WEG_MITTE = Math.round(ZEILEN * 1.3 * BODEN / 100);
+const STRUKTUR_MITTE = 100 * WEG_MITTE / ZEILEN;
+
+// `ZEILEN` Zeilen vorher, `weg` davon fallen weg, die Ueberlebenden bewegen sich um `bewegung`.
 function lage(weg, bewegung) {
-  const vorher = []; for (let i = 0; i < 456; i++) vorher.push(['T' + i, 50]);
-  const nachher = []; for (let i = weg; i < 456; i++) nachher.push(['T' + i, 50 + bewegung]);
+  const vorher = []; for (let i = 0; i < ZEILEN; i++) vorher.push(['T' + i, 50]);
+  const nachher = []; for (let i = weg; i < ZEILEN; i++) nachher.push(['T' + i, 50 + bewegung]);
   return { vorher: vintageMit(vorher), nachher: vintageMit(nachher) };
 }
 
@@ -92,67 +102,74 @@ console.log('board-history: Massstab-Bruch-Grenze');
 
 // ── 1. Die Ausnahme greift, wo sie soll ──────────────────────────────────────
 
+check('Vorbedingung der Fixture: die Strukturgrenze liegt zwischen Schwelle und Deckel', () => {
+  // Ohne diese Lage pruefen die drei folgenden Tests nicht die Ausnahme, sondern nur, dass
+  // max()/min() an einem Rand kleben — sie waeren dann gruen, ohne etwas festzunageln.
+  assert.ok(STRUKTUR_MITTE > BODEN, 'Strukturgrenze ' + STRUKTUR_MITTE + ' muss ueber der Schwelle ' + BODEN + ' liegen');
+  assert.ok(STRUKTUR_MITTE < 2 * BODEN, 'Strukturgrenze ' + STRUKTUR_MITTE + ' muss unter dem Deckel ' + (2 * BODEN) + ' liegen');
+});
+
 check('Bruch-Tag: Bewegung unter der Tagesschwelle ist NICHT suspect', () => {
-  // 30 von 456 weg = 6,58 % -> Strukturgrenze 6,58, gedeckelt auf 2 x 1,00 = 2,00.
-  // Bewegung 1,30 liegt UEBER der normalen Schwelle 1,00, aber unter 2,00.
-  const { vorher, nachher } = lage(30, 1.3);
-  const g = W.evaluateGate(nachher, vorher, GATE_1_00, BRUCH, 'software-comm-services');
-  assert.strictEqual(g.suspect, false, 'p99Δ 1,30 unter Tagesschwelle 2,00 darf nicht suspect sein');
-  assert.strictEqual(g.bruchGrenze.tagesschwelle, 2.0);
-  assert.strictEqual(g.bruchGrenze.normaleSchwelle, 1.0);
-  assert.strictEqual(g.bruchGrenze.zeilenVorher, 456);
-  assert.strictEqual(g.bruchGrenze.zeilenNachher, 426);
-  assert.strictEqual(g.threshold, 1.0, 'im Vintage bleibt die KALIBRIERTE Schwelle stehen (Historie ehrlich)');
+  const bewegung = STRUKTUR_MITTE - 0.5;
+  assert.ok(bewegung > BODEN, 'Vorbedingung: die Bewegung waere OHNE Ausnahme suspect');
+  const { vorher, nachher } = lage(WEG_MITTE, bewegung);
+  const g = W.evaluateGate(nachher, vorher, GATE_BODEN, BRUCH, 'software-comm-services');
+  assert.strictEqual(g.suspect, false, 'Bewegung unter der Tagesschwelle darf nicht suspect sein');
+  assert.ok(Math.abs(g.bruchGrenze.tagesschwelle - STRUKTUR_MITTE) < 1e-9, 'Tagesschwelle = Strukturgrenze');
+  assert.strictEqual(g.bruchGrenze.normaleSchwelle, BODEN);
+  assert.strictEqual(g.bruchGrenze.zeilenVorher, ZEILEN);
+  assert.strictEqual(g.bruchGrenze.zeilenNachher, ZEILEN - WEG_MITTE);
+  assert.strictEqual(g.threshold, BODEN, 'im Vintage bleibt die KALIBRIERTE Schwelle stehen (Historie ehrlich)');
 });
 
 check('die Grenze beisst weiter: Bewegung ueber der Tagesschwelle ist suspect', () => {
-  const { vorher, nachher } = lage(30, 2.5);
-  const g = W.evaluateGate(nachher, vorher, GATE_1_00, BRUCH, 'software-comm-services');
-  assert.strictEqual(g.suspect, true, 'p99Δ 2,50 ueber Tagesschwelle 2,00 MUSS suspect sein');
+  const { vorher, nachher } = lage(WEG_MITTE, STRUKTUR_MITTE + 0.5);
+  const g = W.evaluateGate(nachher, vorher, GATE_BODEN, BRUCH, 'software-comm-services');
+  assert.strictEqual(g.suspect, true, 'Bewegung ueber der Tagesschwelle MUSS suspect sein');
   assert.ok(g.reasons.includes('p99-delta-exceeds-threshold'));
 });
 
 check('der Deckel begrenzt: auch massive Schrumpfung hebt nie ueber 2x die Schwelle', () => {
-  // 200 von 456 weg = 43,9 % -> Strukturgrenze 43,86. Ohne Deckel waere die Grenze 43,86
+  // 200 von 456 weg = 43,9 % -> Strukturgrenze 43,86. Ohne Deckel waere das die Grenze
   // und das Gate an diesem Tag faktisch abgeschaltet.
-  const { vorher, nachher } = lage(200, 3.0);
-  const g = W.evaluateGate(nachher, vorher, GATE_1_00, BRUCH, 'software-comm-services');
-  assert.ok(g.bruchGrenze.strukturgrenze > 40, 'Strukturgrenze muss hier gross sein: ' + g.bruchGrenze.strukturgrenze);
-  assert.strictEqual(g.bruchGrenze.tagesschwelle, 2.0, 'Deckel muss auf 2 x 1,00 kappen');
-  assert.strictEqual(g.suspect, true, 'Bewegung 3,00 ueber dem Deckel bleibt suspect');
+  const { vorher, nachher } = lage(200, 2 * BODEN + 1);
+  const g = W.evaluateGate(nachher, vorher, GATE_BODEN, BRUCH, 'software-comm-services');
+  assert.ok(g.bruchGrenze.strukturgrenze > 2 * BODEN, 'Vorbedingung: Strukturgrenze ueber dem Deckel, war ' + g.bruchGrenze.strukturgrenze);
+  assert.strictEqual(g.bruchGrenze.tagesschwelle, 2 * BODEN, 'Deckel muss auf 2 x Schwelle kappen');
+  assert.strictEqual(g.suspect, true, 'Bewegung ueber dem Deckel bleibt suspect');
 });
 
 // ── 2. Gegenproben: jede der drei Bedingungen einzeln entfernt ───────────────
 
 check('Gegenprobe BOARD: ein nicht namentlich registriertes Board bekommt die normale Schwelle', () => {
-  const { vorher, nachher } = lage(30, 1.3);
-  const g = W.evaluateGate(nachher, vorher, GATE_1_00, BRUCH, 'health-care');
+  const { vorher, nachher } = lage(WEG_MITTE, STRUKTUR_MITTE - 0.5);
+  const g = W.evaluateGate(nachher, vorher, GATE_BODEN, BRUCH, 'health-care');
   assert.strictEqual(g.bruchGrenze, null, 'nicht registriertes Board darf keine Bruch-Grenze bekommen');
-  assert.strictEqual(g.suspect, true, 'mit normaler Schwelle 1,00 ist 1,30 suspect');
+  assert.strictEqual(g.suspect, true, 'mit normaler Schwelle ist dieselbe Bewegung suspect');
 });
 
 check('Gegenprobe DATUM: ohne Bruch-Eintrag gilt die normale Schwelle', () => {
-  const { vorher, nachher } = lage(30, 1.3);
-  const g = W.evaluateGate(nachher, vorher, GATE_1_00, null, 'software-comm-services');
+  const { vorher, nachher } = lage(WEG_MITTE, STRUKTUR_MITTE - 0.5);
+  const g = W.evaluateGate(nachher, vorher, GATE_BODEN, null, 'software-comm-services');
   assert.strictEqual(g.bruchGrenze, null);
   assert.strictEqual(g.suspect, true);
 });
 
 check('Gegenprobe SCHRUMPFUNG: waechst die Kohorte, gibt es keine Bruch-Grenze', () => {
   const vorher = []; for (let i = 0; i < 400; i++) vorher.push(['T' + i, 50]);
-  const nachher = []; for (let i = 0; i < 456; i++) nachher.push(['T' + i, 51.3]);
-  const g = W.evaluateGate(vintageMit(nachher), vintageMit(vorher), GATE_1_00, BRUCH, 'software-comm-services');
+  const nachher = []; for (let i = 0; i < ZEILEN; i++) nachher.push(['T' + i, 50 + STRUKTUR_MITTE - 0.5]);
+  const g = W.evaluateGate(vintageMit(nachher), vintageMit(vorher), GATE_BODEN, BRUCH, 'software-comm-services');
   assert.strictEqual(g.bruchGrenze, null, 'ohne Schrumpfung keine Ausnahme');
   assert.strictEqual(g.suspect, true);
 });
 
 check('winzige Schrumpfung weicht nichts auf — und macht auch nichts strenger', () => {
-  // 1 von 456 weg = 0,22 % -> Strukturgrenze 0,22 < normale Schwelle 1,00. max() haelt die
-  // Grenze bei 1,00 (kein Fehlalarm), min() haelt sie dort (keine Aufweichung).
-  const { vorher, nachher } = lage(1, 1.3);
-  const g = W.evaluateGate(nachher, vorher, GATE_1_00, BRUCH, 'software-comm-services');
-  assert.ok(g.bruchGrenze.strukturgrenze < 1.0, 'Strukturgrenze war ' + g.bruchGrenze.strukturgrenze);
-  assert.strictEqual(g.bruchGrenze.tagesschwelle, 1.0);
+  // 1 von 456 weg = 0,22 % -> Strukturgrenze 0,22 unter der normalen Schwelle. max() haelt
+  // die Grenze bei der Schwelle (kein Fehlalarm), min() haelt sie dort (keine Aufweichung).
+  const { vorher, nachher } = lage(1, BODEN + 1);
+  const g = W.evaluateGate(nachher, vorher, GATE_BODEN, BRUCH, 'software-comm-services');
+  assert.ok(g.bruchGrenze.strukturgrenze < BODEN, 'Strukturgrenze war ' + g.bruchGrenze.strukturgrenze);
+  assert.strictEqual(g.bruchGrenze.tagesschwelle, BODEN);
   assert.strictEqual(g.suspect, true);
 });
 
@@ -169,7 +186,7 @@ check('in der Kalibrierphase (keine eingefrorene Schwelle) gibt es keine Bruch-G
 check('am Bruch-Tag feuert nan-break unveraendert', () => {
   const vorher = vintageMit([['A', 50], ['B', 50], ['C', 50], ['D', 50]]);
   const nachher = vintageMit([['A', 50], ['B', NaN], ['C', 50]]);   // D+ weg -> Schrumpfung, B kaputt
-  const g = W.evaluateGate(nachher, vorher, GATE_1_00, BRUCH, 'software-comm-services');
+  const g = W.evaluateGate(nachher, vorher, GATE_BODEN, BRUCH, 'software-comm-services');
   assert.ok(g.reasons.includes('nan-break'), 'nan-break muss trotz Bruch-Grenze feuern');
   assert.strictEqual(g.suspect, true);
 });
@@ -177,7 +194,7 @@ check('am Bruch-Tag feuert nan-break unveraendert', () => {
 check('am Bruch-Tag feuert der Kohorten-Ueberlappungsboden unveraendert', () => {
   const vorher = []; for (let i = 0; i < 100; i++) vorher.push(['T' + i, 50]);
   const nachher = []; for (let i = 0; i < 30; i++) nachher.push(['T' + i, 50]);
-  const g = W.evaluateGate(vintageMit(nachher), vintageMit(vorher), GATE_1_00, BRUCH, 'software-comm-services');
+  const g = W.evaluateGate(vintageMit(nachher), vintageMit(vorher), GATE_BODEN, BRUCH, 'software-comm-services');
   assert.ok(g.reasons.includes('cohort-overlap-collapse'), '70 % Kohortenverlust muss weiter auffallen');
   assert.strictEqual(g.suspect, true);
 });

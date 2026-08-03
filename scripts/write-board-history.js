@@ -18,14 +18,21 @@
  *       board-history-archive/ (GG7c, außerhalb CI-Checkout). NICHTS wird ohne Archiv-Kopie entfernt.
  *
  * Wert-Plausibilitäts-Gate VOR dem Schreiben (Ledger 2.3 „Wert-Plausibilitäts-Gate"):
- *   Vergleich gegen Vortags-Vintage; P99-Tages-Delta der Scores. Kalibrierphase (calibrating:true,
- *   Gate loggt nur) läuft, bis MINDESTENS CALIBRATION_SAMPLES messbare Deltas vorliegen UND
- *   davon eines > 0 war (ein bewegungsloses Fenster kalibriert nichts → weiter sammeln).
- *   Danach Schwelle = größtes Kalibrier-Delta × 2, mindestens MIN_GATE_THRESHOLD (Boden nur
- *   gegen absurd kleine, aber echte Schwellen) (im _gate-calibration.json eingefroren + im
- *   Vintage-Meta persistiert). Bruch / NaN-Einbruch /
- *   Coverage-Absturz → Vintage MIT suspect:true geschrieben (nie still) + exit 2 (0.7-Kanal).
- *   KEINE Löschung je.
+ *   Vergleich gegen das jüngste nicht ausgeschlossene Vorgänger-Vintage; P99-Tages-Delta
+ *   der Scores. Die wirksame Grenze ist IMMER
+ *       Tagesgrenze × Tagesabstand zum Vorgänger,
+ *   wobei die Tagesgrenze der gemessene Boden MIN_GATE_THRESHOLD ist, solange ein Board
+ *   keine eigene eingefrorene Schwelle hat, sonst die eingefrorene Schwelle (Herleitung
+ *   an den Konstanten). Eigene Schwelle = GATE_CALIB_QUANTILE der Tages-Stichproben × 2,
+ *   eingefroren erst nach CALIBRATION_SAMPLES Stichproben MIT Bewegung; Stichproben sind
+ *   pro Tag normiert, suspect-/Bruch-Tage liefern keine. Liegt der Vorgänger mehr als
+ *   GATE_MAX_ABSTAND_TAGE zurück, urteilt die Wert-Achse NICHT (gate.abstandZuGross +
+ *   ::warning::) — sonst sperrt sich die Messreihe selbst fest, je länger sie steht.
+ *   Schwellen-Bruch / NaN-Einbruch / Coverage-Absturz / Kohorten-Kollaps → Vintage MIT
+ *   suspect:true geschrieben (nie still) + exit 2 (0.7-Kanal). KEINE Löschung je.
+ *   Neukalibrierung 2026-08-03: die bis dahin eingefrorenen Schwellen stammten
+ *   ausnahmslos aus Vintages, die auf board-history/_excluded.json stehen — Details und
+ *   Messgrundlage im Kopf von board-history/_gate-calibration.json.
  *
  * picks-history/ wird NIE berührt (Schutzliste, GG). Strukturell erzwungen: assertNoPicksHistory()
  * prüft jeden Ausgabepfad; dieses Skript baut nie einen Pfad mit picks-history-Bezug.
@@ -74,24 +81,65 @@ function resolvePaths(base) {
 let P = resolvePaths(REPO_ROOT);
 function _setPaths(base) { P = resolvePaths(base || REPO_ROOT); return P; }
 
-// 2.3-Gate-Kalibrierung: erste 3 messbare Tages-Deltas = Kalibrierphase (Ledger:
-// „erste 3 Live-Vintages"). Ein Vintage ist erst messbar, wenn es einen Vorgänger
-// hat (Vintage #1 hat keinen) → die 3 Samples stammen aus den Vintages #2/#3/#4.
-// MINDEST-Anzahl, kein Ausreichen-Kriterium: siehe updateGateCalibration (Bewegung nötig).
-const CALIBRATION_SAMPLES = 3;
+// 2.3-Gate-Kalibrierung: Anzahl messbarer Tages-Deltas, bevor eine board-eigene Schwelle
+// eingefroren wird. Ein Vintage ist erst messbar, wenn es einen Vorgänger hat (Vintage #1
+// hat keinen). MINDEST-Anzahl, kein Ausreichen-Kriterium: siehe updateGateCalibration
+// (Bewegung nötig).
+//
+// WAR 3 („erste 3 Live-Vintages", Ledger) — und 3 ist nachweislich zu wenig. Am Live-Stand
+// vom 30.07.2026 gemessen: 8 von 13 eingefrorenen Schwellen lagen falsch, in BEIDE Richtungen.
+// Vier stammten aus zufällig ruhigen Fenstern und lagen UNTER der normalen Tagesbewegung
+// (health-care 1,00 · software-comm-services 1,00 · utilities 1,20 · materials 1,40), vier
+// hatten einen einzelnen Bruchtag im Fenster und lagen ÜBER allem, was je gemessen wurde
+// (industrials 17,60 · consumer-staples 18,00 · semiconductors 38,20 · it-services 40,20 —
+// letzteres aus der Stichprobe [0,0,0,0,0,20,1]). Bei drei Stichproben setzt EINE Messung
+// die Schwelle allein; das ist eine Lotterie über die Kalibrierphase, keine Kalibrierung.
+// 20 ≈ vier Betriebswochen (Lauf Di–Sa) und ist die Anzahl, ab der GATE_CALIB_QUANTILE
+// (s. u.) die beiden größten Stichproben nicht mehr durchschlagen lässt.
+const CALIBRATION_SAMPLES = 20;
 // Schwelle = P99-Tagesdelta × 2 (Ledger-Anhalt „P99-Tagesdelta × 2").
 const THRESHOLD_MULTIPLIER = 2;
-// Boden unter einer eingefrorenen Wert-Gate-Schwelle. Er ist NICHT die Antwort auf
-// bewegungslose Kalibrierfenster (die frieren gar nicht erst ein, s. updateGateCalibration),
-// sondern nur der Schutz gegen eine echte, aber absurd kleine Schwelle: Scores laufen auf
-// einer 0–100-Skala, 1.0 = 1 % der Skala.
-// An den echten Messwerten aus board-history/_gate-calibration.json (Stand 2026-07-17) geprüft:
-// die kleinste je aus Bewegung eingefrorene Schwelle ist 1.0 (health-care, software-comm-services),
-// die nächstkleineren sind 1.2 (utilities) und 1.4 (materials) → der Boden hebt kein einziges
-// bestehendes Board an, er ist reine Untergrenze für künftige Fenster mit Mini-Bewegung.
-// Keine Aussage über „Rausch-Höhe": die gemessenen Tages-Deltas streuen real von 0.1 bis 19.1
-// (semiconductors) — Schwellen deutlich über dem Boden sind der Normalfall, nicht die Ausnahme.
-const MIN_GATE_THRESHOLD = 1.0;
+// Welche Stichprobe als „repräsentatives Tagesdelta" in die Schwelle eingeht. WAR: das
+// MAXIMUM der Stichproben. Genau daran sind die vier zu lockeren Schwellen entstanden —
+// ein einziger Bruchtag im Kalibrierfenster hat die Schwelle für alle Zukunft gesetzt
+// (it-services: fünf Nullen und eine 20,1 → 40,2). Ein Quantil statt des Maximums heilt
+// das automatisch, sobald genug Stichproben da sind, und fällt bei wenigen Stichproben
+// (nearest-rank) von selbst auf das Maximum zurück — also keine zweite Regel, kein Zweig.
+const GATE_CALIB_QUANTILE = 0.9;
+// GEMESSENER Boden unter der wirksamen Wert-Gate-Grenze — pro Tag Abstand.
+//
+// WAR 1.0, hergeleitet als „1 % der 0–100-Skala" — eine gesetzte Zahl, keine Messung, und
+// damit zu tief: die normale Tagesbewegung des Universums liegt heute darüber.
+//
+// Herleitung der 11.5 (nachrechenbar, board-history/_gate-calibration.json → _boden_herleitung):
+// Es gibt auf dem HEUTIGEN Maßstab genau zwei Messungen der Tagesbewegung — die beiden
+// Läufe, deren Vintages das Gate verworfen hat:
+//   Lauf 30516194703 (2026-07-30 gegen 2026-07-29, 1 Tag):  0,40 … 5,30 je Board
+//   Lauf 30752200575 (2026-08-02 gegen 2026-07-29, 4 Tage): 1,70 … 22,90 → pro Tag 0,43 … 5,73
+// Größte gemessene Tagesbewegung = 5,73 (utilities, in beiden Läufen das lauteste Board:
+// 5,30 bzw. 5,73/Tag — also sein Niveau, kein Ausreißertag). × THRESHOLD_MULTIPLIER = 11,46,
+// aufgerundet 11,5.
+//
+// Der Boden gilt IMMER — auch für ein Board ohne eigene eingefrorene Schwelle. Das ist die
+// Umkehr der R3-Regel „ohne Bewegung keine Schwelle", und sie ist begründet: jene Regel
+// wehrte einen ERFUNDENEN Boden ab (1.0 stand für kein einziges Messergebnis). Dieser Boden
+// ist an 26 echten Tagesbewegungen gemessen, die JEDES Board abdecken. Ohne ihn hätte die
+// Neukalibrierung — die alle Boards auf „noch nicht kalibriert" zurücksetzt — die Wert-Achse
+// für ~20 Läufe komplett abgeschaltet. Nebenwirkung, gewollt: survival war bis heute NIE
+// wertgeprüft (frozen:false seit Beginn) und ist es ab jetzt.
+const MIN_GATE_THRESHOLD = 11.5;
+// Maximaler Vintage-Abstand, über den die Wert-Achse noch urteilt (Kalendertage).
+// Darüber wird NICHT gesperrt, sondern laut abgestanden (gate.abstandZuGross + ::warning::).
+// Grund ist die Selbstverstärkung, die den Betrieb seit dem 30.07. blockiert hat: ein
+// verworfenes Vintage vergrößert den Abstand des nächsten Vergleichs, der dadurch mehr
+// Bewegung sieht und noch sicherer verworfen wird. Ein Deckel, der bei Überschreitung
+// SPERRT, wäre genau diese Falle mit einer Stufe mehr. Also: über einer Woche gibt es
+// keinen Tages-Maßstab mehr — dann ist „nicht geprüft" die ehrliche Antwort, nicht
+// „verdächtig". Die übrigen Integritätsprüfungen (NaN-Einbruch, Coverage-Absturz,
+// Kohorten-Überlappung) laufen unverändert weiter. 7 Kalendertage = eine volle Woche;
+// derselbe Anhalt wie REGIME_MAX_STALE_DAYS weiter unten (Lauf Di–Sa, größte planmäßige
+// Lücke Sa→Di = 3 Tage, plus Feiertags-/Ausfallpuffer).
+const GATE_MAX_ABSTAND_TAGE = 7;
 const P99 = 0.99;
 // Coverage-Absturz: fällt der present-Anteil eines Kontroll-Felds gegenüber dem
 // Vortag um mehr als das → suspect. Heuristik-Decke (kein Ledger-Wert); 0.25 = ein
@@ -123,6 +171,21 @@ const REGIME_MAX_STALE_DAYS = 7;
 
 // ── kleine Helfer ────────────────────────────────────────────────────────────
 function isoDay(d) { return new Date(d).toISOString().slice(0, 10); }
+
+// Kalendertage zwischen dem Vorgänger-Vintage und diesem. Die Wert-Achse misst eine
+// TAGESbewegung; vergleicht sie in Wahrheit über mehrere Tage, muss die Grenze mitwachsen.
+// Belegt an den beiden Läufen mit demselben Vorgänger (2026-07-29): über 1 Tag lagen die
+// Board-Bewegungen bei 0,40–5,30, über 4 Tage bei 1,70–22,90 — pro Tag also auf demselben
+// Niveau (Median-Verhältnis 0,8 nach Normierung). Deshalb linear in den Tagen, nicht
+// wurzelförmig: die Wurzel (Faktor 2,0 statt 4,0) hätte den 4-Tages-Lauf weiter verworfen.
+// Ohne verwertbare Daten (Test-Gerippe ohne date, kein Vorgänger) konservativ 1 Tag.
+function tagesabstand(vintage, priorVintage) {
+  const neu = vintage && vintage.date;
+  const alt = priorVintage && priorVintage.date;
+  if (typeof neu !== 'string' || typeof alt !== 'string') return 1;
+  const tage = Math.round((Date.parse(neu + 'T00:00:00Z') - Date.parse(alt + 'T00:00:00Z')) / MS_PER_DAY);
+  return Number.isFinite(tage) && tage >= 1 ? tage : 1;
+}
 
 // BH-147: --date wurde bisher jeder String verbatim übernommen und direkt in
 // path.join(HISTORY_DIR, date) verwendet — weder Format- noch Zukunfts- noch
@@ -437,10 +500,20 @@ function evaluateGate(vintage, priorVintage, gateState, bruch, board) {
   }
   const p99Delta = deltas.length ? quantile(deltas, P99) : null;
 
-  // Keine gültige eingefrorene Schwelle (nie kalibriert ODER degeneriert) → Kalibrierphase:
-  // das Gate LOGGT (p99Delta steht im Vintage-Meta), straft aber nicht.
+  // Keine gültige eingefrorene Schwelle (nie kalibriert ODER degeneriert) → Kalibrierphase.
+  // Die BOARD-EIGENE Schwelle fehlt dann; geprüft wird trotzdem, nämlich am gemessenen
+  // Boden (MIN_GATE_THRESHOLD, Herleitung dort). Nur so ist die Neukalibrierung — die alle
+  // Boards auf „noch nicht kalibriert" zurücksetzt — keine Abschaltung der Wert-Achse.
   const threshold = frozenThresholdOf(gateState);
   const calibrating = threshold == null;
+  const basisSchwelle = threshold != null ? threshold : MIN_GATE_THRESHOLD;
+
+  // Tagesabstand zum Vorgänger. Über GATE_MAX_ABSTAND_TAGE hinaus gibt es keinen
+  // Tages-Maßstab mehr: dann urteilt die Wert-Achse NICHT (kein suspect aus dem Delta),
+  // sondern weist den Abstand aus. Alles andere wäre die Selbstverstärkung mit einer
+  // Stufe mehr — je länger die Messreihe steht, desto sicherer bliebe sie stehen.
+  const gapDays = priorVintage ? tagesabstand(vintage, priorVintage) : 1;
+  const abstandZuGross = !!priorVintage && gapDays > GATE_MAX_ABSTAND_TAGE;
 
   // ── Maßstab-Bruch: erhöhte Tagesgrenze für den EINEN Neu-gegen-Alt-Vergleich ──
   // Ändert sich die Score-DEFINITION (z. B. die Kohorte wird entdoppelt), misst der
@@ -479,14 +552,23 @@ function evaluateGate(vintage, priorVintage, gateState, bruch, board) {
       tagesschwelle: Math.max(threshold, Math.min(strukturgrenze, deckel)),
     };
   }
-  const wirksameSchwelle = bruchGrenze ? bruchGrenze.tagesschwelle : threshold;
+  // Tagesgrenze × Tagesabstand: dieselbe Bewegung ist über vier Tage normal und an
+  // einem Tag ein Fund. Ohne diesen Faktor scheitert jede Neukalibrierung am ersten
+  // Lauf nach einer Lücke — genau daran ist der Betrieb seit dem 30.07. hängen
+  // geblieben (30.07. gegen 29.07. = 1 Tag → 4 Boards suspect; 02.08. gegen denselben
+  // 29.07. = 4 Tage → 8 Boards suspect, utilities 22,90 gegen Schwelle 1,20).
+  const tagesGrenze = bruchGrenze ? bruchGrenze.tagesschwelle : basisSchwelle;
+  const wirksameSchwelle = abstandZuGross ? null : tagesGrenze * gapDays;
 
-  // Threshold-Bruch nur NACH der Kalibrierphase (Ledger: „Gate loggt nur" solange calibrating).
-  if (!calibrating && p99Delta != null && p99Delta > wirksameSchwelle) {
+  if (!abstandZuGross && p99Delta != null && p99Delta > wirksameSchwelle) {
     reasons.push('p99-delta-exceeds-threshold');
   }
 
-  return { calibrating, p99Delta, threshold, bruchGrenze, suspect: reasons.length > 0, reasons };
+  return {
+    calibrating, p99Delta, threshold, bruchGrenze,
+    gapDays, abstandZuGross, wirksameSchwelle,
+    suspect: reasons.length > 0, reasons,
+  };
 }
 
 // Aktualisiert den Gate-Kalibrierungs-Zustand je Board: sammelt messbare P99-Tagesdeltas
@@ -513,9 +595,13 @@ function updateGateCalibration(gateCalib, board, p99Delta, date) {
     if (idx >= 0) b.dailyP99Samples[idx] = p99Delta;   // Rerun DESSELBEN Vintage-Tags → ersetzen, nicht anhängen
     else { b.dailyP99Samples.push(p99Delta); b.sampleDates.push(date != null ? date : ('nodate#' + b.sampleDates.length)); }
   }
-  // Repräsentatives P99-Tagesdelta = das größte der Kalibrier-Samples (konservativ), × 2.
-  const peak = Math.max(0, ...b.dailyP99Samples);
-  const ready = b.dailyP99Samples.length >= CALIBRATION_SAMPLES && peak > 0;
+  // Repräsentatives Tagesdelta = GATE_CALIB_QUANTILE der Kalibrier-Stichproben, × 2.
+  // WAR: das Maximum. Damit setzte ein einzelner Bruchtag die Schwelle für alle Zukunft
+  // (it-services [0,0,0,0,0,20.1] → 40,2 — das Board konnte danach nicht mehr auffallen).
+  // nearest-rank: bei wenigen Stichproben ist das Quantil ohnehin das Maximum, ab
+  // CALIBRATION_SAMPLES fallen die beiden größten heraus.
+  const peak = quantile(b.dailyP99Samples, GATE_CALIB_QUANTILE);
+  const ready = b.dailyP99Samples.length >= CALIBRATION_SAMPLES && Number.isFinite(peak) && peak > 0;
   b.threshold = ready ? flooredThreshold(peak * THRESHOLD_MULTIPLIER) : null;
   b.frozen = ready;
   return b;
@@ -795,11 +881,26 @@ function run(opts) {
     // Ein Bruch-Tag liefert AUCH kein Sample: sein Delta enthält den Maßstab-Wechsel,
     // nicht nur Tagesbewegung — es würde die eingefrorene Schwelle dauerhaft hochziehen
     // (dieselbe Falle wie beim suspect-Tag, nur mit umgekehrtem Vorzeichen im Urteil).
-    const gs = updateGateCalibration(gateCalib, board, (gate.suspect || gate.bruchGrenze) ? null : gate.p99Delta, date);
+    // Die Kalibrierung lernt eine TAGESbewegung: ein Vergleich über mehrere Tage geht
+    // deshalb pro Tag ein, nicht roh — sonst zöge jede Lücke die Schwelle hoch (dieselbe
+    // Falle wie beim suspect- und beim Bruch-Tag, nur mit dem Kalender als Auslöser).
+    // Ein Vergleich jenseits von GATE_MAX_ABSTAND_TAGE liefert gar kein Sample: er wurde
+    // nicht beurteilt, und eine Normierung über mehr als eine Woche wäre eine Annahme,
+    // keine Messung.
+    const tagesSample = (gate.suspect || gate.bruchGrenze || gate.abstandZuGross || gate.p99Delta == null)
+      ? null : gate.p99Delta / gate.gapDays;
+    const gs = updateGateCalibration(gateCalib, board, tagesSample, date);
     vintage.gate = {
       calibrating: gate.calibrating,
       p99Delta: gate.p99Delta,
       threshold: gate.threshold,          // unverändert die KALIBRIERTE Schwelle (Historie bleibt ehrlich)
+      // …und daneben die Grenze, an der HEUTE tatsächlich gemessen wurde (Boden bzw.
+      // Bruch-Grenze × Tagesabstand). Ohne sie stünde in der Historie ein threshold:null,
+      // obwohl geprüft wurde — „nicht kalibriert" wäre von „nicht geprüft" nicht zu
+      // unterscheiden, dieselbe Lücke, die Tag 502 für den blinden Tag geschlossen hat.
+      wirksameSchwelle: gate.wirksameSchwelle,
+      gapDays: gate.gapDays,
+      abstandZuGross: gate.abstandZuGross,
       bruchGrenze: gate.bruchGrenze || null,   // an einem Bruch-Tag: die tatsächlich angelegte Grenze + ihre Herleitung
       suspect: gate.suspect,
       reasons: gate.reasons,
@@ -811,7 +912,7 @@ function run(opts) {
       fs.mkdirSync(dateDir, { recursive: true });
       writeJsonAtomic(assertNoPicksHistory(path.join(dateDir, board + '.json')), vintage);
     }
-    results.push({ board, suspect: gate.suspect, calibrating: gate.calibrating, p99Delta: gate.p99Delta, threshold: gate.threshold, bruchGrenze: gate.bruchGrenze || null, rows: vintage.cohort.profitable.length + vintage.cohort.unprofitable.length, pitCoverage: vintage.pitCoverage });
+    results.push({ board, suspect: gate.suspect, calibrating: gate.calibrating, p99Delta: gate.p99Delta, threshold: gate.threshold, wirksameSchwelle: gate.wirksameSchwelle, gapDays: gate.gapDays, abstandZuGross: gate.abstandZuGross, bruchGrenze: gate.bruchGrenze || null, rows: vintage.cohort.profitable.length + vintage.cohort.unprofitable.length, pitCoverage: vintage.pitCoverage });
   }
 
   // Seiten-Artefakte je Datum: calibration.json-Kopie + regime.json.
@@ -902,6 +1003,18 @@ if (require.main === module) {
           + ' — ' + erhoeht + ' Board(s) mit erhoehter Tagesschwelle, '
           + (res.boards.length - erhoeht) + ' unveraendert; uebrige Integritaetspruefungen AKTIV');
       }
+      // Dritter Fall im selben Alarmkanal wie GATE BLIND und Massstab-Bruch: der Vergleich
+      // spannt mehr als GATE_MAX_ABSTAND_TAGE. Dann urteilt die Wert-Achse bewusst nicht —
+      // das MUSS im Klartext stehen, sonst sieht ein ungeprueftes Vintage aus wie ein
+      // bestandenes (dieselbe Verwechslung, die Tag 502 fuer den blinden Tag geschlossen hat).
+      const zuWeit = res.boards.filter((b) => b.abstandZuGross);
+      if (zuWeit.length) {
+        console.log('::warning::GATE ABSTAND fuer ' + res.date + ': Vorgaenger ' + res.priorDate
+          + ' liegt ' + zuWeit[0].gapDays + ' Tage zurueck (Maximum ' + GATE_MAX_ABSTAND_TAGE
+          + '). Die Wert-Achse hat in ' + zuWeit.length + ' Board(s) NICHT geurteilt — p99Δ steht '
+          + 'im Protokoll, ist aber "nicht geprueft", nicht "sauber". NaN-Einbruch, Coverage-Absturz '
+          + 'und Kohorten-Ueberlappung wurden unveraendert geprueft.');
+      }
       for (const b of res.boards) {
         if (b.error) { console.log('  ' + b.board + ': ' + b.error); continue; }
         const flag = b.suspect ? ' SUSPECT[' + '⚠' + ']' : (b.calibrating ? ' (calibrating)' : '');
@@ -916,8 +1029,17 @@ if (require.main === module) {
             + ' -> Tagesschwelle ' + g.tagesschwelle.toFixed(2)
             + ' statt ' + g.normaleSchwelle.toFixed(2) + ']'
           : '';
+        // thr= ist jetzt die WIRKSAME Grenze (Tagesgrenze × Tagesabstand) und sagt in
+        // Klammern dazu, woher die Tagesgrenze kommt — Boden oder board-eigene Messung.
+        // Vorher stand hier die kalibrierte Schwelle, die seit der Tagesabstands-Rechnung
+        // nicht mehr die Zahl ist, an der geurteilt wurde.
+        const grenzeText = b.abstandZuGross
+          ? ', thr=— (Abstand ' + b.gapDays + 'd > ' + GATE_MAX_ABSTAND_TAGE + 'd: Wert-Achse NICHT geprueft)'
+          : ', thr=' + (b.wirksameSchwelle == null ? '—' : b.wirksameSchwelle.toFixed(2))
+            + ' (' + (b.threshold == null ? 'Boden ' + MIN_GATE_THRESHOLD.toFixed(2) : 'kalibriert ' + b.threshold.toFixed(2))
+            + ' x ' + b.gapDays + 'd)';
         console.log('  ' + b.board + ': ' + b.rows + ' Zeilen, p99Δ=' + (b.p99Delta == null ? '—' : b.p99Delta.toFixed(2)) +
-          ', thr=' + (b.threshold == null ? '—' : b.threshold.toFixed(2)) +
+          grenzeText +
           ', beta-cov=' + (b.pitCoverage.beta * 100).toFixed(0) + '%' + flag + bruchText);
       }
       if (res.exitCode === 2) console.log('EXIT 2: mindestens ein suspect-Vintage geschrieben (0.7-Kanal).');
@@ -937,5 +1059,6 @@ module.exports = {
   _setPaths, resolvePaths,
   flooredThreshold, frozenThresholdOf,
   isValidDateStr, requiresBackfillContract, resolveFullCalibration,   // BH-147/BH-155
-  _const: { CALIBRATION_SAMPLES, THRESHOLD_MULTIPLIER, MIN_GATE_THRESHOLD, COVERAGE_COLLAPSE_DROP, RETENTION_DAYS, MIN_COHORT_OVERLAP },
+  tagesabstand,
+  _const: { CALIBRATION_SAMPLES, THRESHOLD_MULTIPLIER, MIN_GATE_THRESHOLD, COVERAGE_COLLAPSE_DROP, RETENTION_DAYS, MIN_COHORT_OVERLAP, GATE_CALIB_QUANTILE, GATE_MAX_ABSTAND_TAGE },
 };

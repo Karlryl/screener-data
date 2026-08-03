@@ -106,9 +106,13 @@ check('(F8) drei Reruns DESSELBEN Tags zählen als EIN Live-Vintage (kein Freeze
   assert.deepStrictEqual(readGateCalib(base).boards.semiconductors.dailyP99Samples, [],
     'Vintage #1 liefert kein Sample (kein Vorgänger)');
 
-  // Tag 2: Score springt 90→130 (Delta 40). Workflow wird 3× am SELBEN UTC-Tag gefahren
+  // Tag 2: Score bewegt sich um +2. Workflow wird 3× am SELBEN UTC-Tag gefahren
   // (cron + zwei manuelle Re-runs). Jeder Lauf vergleicht gegen denselben Vortag.
-  writeBoard(base, 'semiconductors', [row('ABC', 130)]);
+  // ANGEPASST 03.08.2026: hier stand ein Sprung 90→130. Der ist seit der Gate-
+  // Neukalibrierung ein Fund (ueber dem gemessenen Boden), und ein suspect-Tag liefert
+  // per BH-111 gar keine Stichprobe — der Test haette dann die Dedup-Zusicherung gar
+  // nicht mehr erreicht. Gemessen wird hier die Dedup nach Vintage-Datum, nicht die Hoehe.
+  writeBoard(base, 'semiconductors', [row('ABC', 92)]);
   let lastVintage;
   for (let i = 0; i < 3; i++) {
     W.run({ baseDir: base, date: '2026-07-14' });
@@ -124,16 +128,24 @@ check('(F8) drei Reruns DESSELBEN Tags zählen als EIN Live-Vintage (kein Freeze
     'die deklarierte Live-Vintage-Zählung = distinkte Vintage-Tage, nicht Lauf-Anzahl');
 });
 
-check('(F8b) drei DISTINKTE bewegte Tage frieren regulär ein (Fix engt nur Reruns ein)', () => {
+check('(F8b) genug DISTINKTE bewegte Tage frieren regulär ein (Fix engt nur Reruns ein)', () => {
   const base = mkBase();
   writeJson(path.join(base, 'snapshots', 'ABC.json'), snapFull('ABC'));
   writeJson(path.join(base, 'outputs', 'calibration.json'), { schema: 'calibration/v4', generated_at: 'x' });
-  // 4 aufeinanderfolgende Tage mit je echter Bewegung: #1 ohne Delta, #2/#3/#4 mit Delta.
-  const days = [['2026-07-13', 90], ['2026-07-14', 92], ['2026-07-15', 95], ['2026-07-16', 99]];
-  for (const [d, s] of days) { writeBoard(base, 'semiconductors', [row('ABC', s)]); W.run({ baseDir: base, date: d }); }
+  // ANGEPASST 03.08.2026: waren fest drei Tage. Die Anzahl haengt jetzt an
+  // CALIBRATION_SAMPLES (3 war nachweislich zu wenig); die Zusicherung ist unveraendert,
+  // dass DISTINKTE bewegte Tage regulaer einfrieren.
+  const N = W._const.CALIBRATION_SAMPLES;
+  // N+1 aufeinanderfolgende Tage mit je +2 Bewegung: #1 ohne Delta (kein Vorgaenger), dann N mit.
+  const start = Date.parse('2026-07-13T00:00:00Z');
+  for (let i = 0; i <= N; i++) {
+    const d = new Date(start + i * 86400000).toISOString().slice(0, 10);
+    writeBoard(base, 'semiconductors', [row('ABC', 90 + 2 * i)]);
+    W.run({ baseDir: base, date: d });
+  }
   const gc = readGateCalib(base).boards.semiconductors;
-  assert.strictEqual(gc.dailyP99Samples.length, 3, 'drei distinkte messbare Tage → drei Samples');
-  assert.strictEqual(gc.frozen, true, 'drei distinkte bewegte Tage frieren die Schwelle regulär ein');
+  assert.strictEqual(gc.dailyP99Samples.length, N, N + ' distinkte messbare Tage → ' + N + ' Samples');
+  assert.strictEqual(gc.frozen, true, 'genug distinkte bewegte Tage frieren die Schwelle regulär ein');
 });
 
 // ── F9: compact() lässt Sidecars unberührt (kein injiziertes cohort) ──────────

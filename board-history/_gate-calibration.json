@@ -1,147 +1,82 @@
 {
-  "_doc": "Gate-Kalibrierung je Board: erste 3 messbare P99-Tagesdeltas → Schwelle P99×2 eingefroren.",
+  "_doc": "Gate-Kalibrierung je Board. Stichproben sind P99-Tagesdeltas PRO TAG (ein Vergleich ueber n Kalendertage geht mit p99/n ein). Schwelle = quantile(Stichproben, GATE_CALIB_QUANTILE) x THRESHOLD_MULTIPLIER, eingefroren erst ab CALIBRATION_SAMPLES Stichproben mit Bewegung. Bis dahin — und als Untergrenze auch danach — gilt der gemessene Boden MIN_GATE_THRESHOLD pro Tag Abstand (_boden_herleitung unten). Geschrieben von scripts/write-board-history.js; von Hand wird hier nur zurueckgesetzt, nie eine Schwelle eingetragen.",
+  "_neukalibrierung_2026_08_03": {
+    "entscheid": "Karl, 03.08.2026: Schwellen neu kalibrieren (das Wert-Gate blockierte seit dem 30.07. jeden neuen Messpunkt; letzter gelandeter Eintrag 2026-07-29).",
+    "befund": "Die 13 eingefrorenen Schwellen stammten ausnahmslos aus den Vintages 2026-07-14 bis 2026-07-18 (it-services zusaetzlich 2026-07-26). JEDES dieser Vintages steht in board-history/_excluded.json als 'ALTER MASSSTAB'. Das Projekt vergleicht ueber einen Massstabsbruch hinweg nicht — eine Schwelle, die genau daraus gelernt wurde, misst nicht den heutigen Screener. Nachgerechnet an den committeten Vintages: die Tagesbewegung jener Tage lag im Median bei 0,20, die des heutigen Universums bei 2,00 (Faktor 10; die Kohorten haben sich seit dem 26.07. rund verdoppelt).",
+    "wirkung": "Vier Boards waren zu STRENG (health-care 1,00 · software-comm-services 1,00 · utilities 1,20 · materials 1,40 — unter der normalen Tagesbewegung, also Dauer-Fehlalarm), vier zu LOCKER (industrials 17,60 · consumer-staples 18,00 · semiconductors 38,20 · it-services 40,20 — je ein einzelner Bruchtag im Drei-Stichproben-Fenster hatte die Schwelle gesetzt; diese Boards konnten faktisch nicht mehr auffallen). survival war nie kalibriert und damit ueberhaupt nie wertgeprueft.",
+    "was_zurueckgesetzt_wurde": "Alle Boards auf dailyP99Samples [] / threshold null / frozen false. Die alten Rohmessungen sind unter _verworfen vollstaendig erhalten (nichts geloescht, nur ausser Kraft gesetzt). Ab dem naechsten Lauf sammeln alle Boards neue Stichproben auf dem heutigen Massstab; bis eine board-eigene Schwelle steht, prueft der Boden.",
+    "keine_erfundenen_stichproben": "Bewusst NICHT vorbefuellt. Die beiden einzigen Messungen auf dem heutigen Massstab (siehe _boden_herleitung) sind die Herleitung des Bodens und stehen als solche hier — sie werden nicht als board-eigene Stichproben ausgegeben, weil zwei Werte je Board keine Board-Schwelle tragen."
+  },
+  "_boden_herleitung": {
+    "was": "MIN_GATE_THRESHOLD in scripts/write-board-history.js = 11.5 (Grenze pro Tag Abstand).",
+    "rechenweg": "groesste gemessene Tagesbewegung 5,73 x THRESHOLD_MULTIPLIER 2 = 11,46, aufgerundet auf 11,5.",
+    "quellen": [
+      {
+        "lauf": 30516194703,
+        "vintage": "2026-07-30",
+        "vorgaenger": "2026-07-29",
+        "abstandTage": 1,
+        "p99DeltaJeBoard": {
+          "consumer-discretionary": 3.0, "consumer-staples": 0.4, "energy": 0.8,
+          "financials": 2.6, "health-care": 2.2, "industrials": 1.8, "it-services": 2.0,
+          "materials": 1.6, "real-estate": 4.3, "semiconductors": 0.9,
+          "software-comm-services": 2.5, "tech-hardware": 0.4, "utilities": 5.3
+        },
+        "groesstesProTag": 5.3
+      },
+      {
+        "lauf": 30752200575,
+        "vintage": "2026-08-02",
+        "vorgaenger": "2026-07-29",
+        "abstandTage": 4,
+        "p99DeltaJeBoard": {
+          "consumer-discretionary": 6.4, "consumer-staples": 8.4, "energy": 13.9,
+          "financials": 5.2, "health-care": 4.2, "industrials": 9.3, "it-services": 1.7,
+          "materials": 5.1, "real-estate": 7.6, "semiconductors": 7.5,
+          "software-comm-services": 4.5, "tech-hardware": 2.8, "utilities": 22.9
+        },
+        "groesstesProTag": 5.725
+      }
+    ],
+    "warum_diese_beiden": "Es sind die einzigen Vergleiche auf dem heutigen Massstab. Beide Vintages wurden vom Gate verworfen und liegen deshalb nicht in board-history/ — die Zahlen stammen aus den Lauf-Protokollen (gh run view <lauf> --log, Schritt 'Write board-history vintage (2.3)') und sind dort nachlesbar.",
+    "warum_utilities": "utilities ist in BEIDEN Laeufen das lauteste Board (5,30 bzw. 5,73 pro Tag) — das ist sein Niveau, kein Ausreissertag. Der Boden darf auf keinem Board auf normaler Bewegung feuern, also bindet das lauteste.",
+    "beisst_der_boden_noch": "Ja. Groesste in der committeten Historie gemessene EIN-Tages-Bewegung eines Bruchtags: industrials 19,50 und semiconductors 19,10 (16.->17.07.2026). Beide liegen ueber 11,5 und wuerden weiterhin als verdaechtig gemeldet. Fuer die vier bisher zu lockeren Boards ist 11,5 zudem eine deutliche VERSCHAERFUNG (bisher 17,60 bis 40,20).",
+    "tagesabstand": "Die Grenze waechst linear mit dem Abstand zum Vorgaenger. Belegt an denselben zwei Laeufen: gleicher Vorgaenger, 1 Tag gegen 4 Tage — die Bewegung skaliert pro Tag auf dasselbe Niveau (Median-Verhaeltnis 0,80 nach Normierung). Eine Wurzel-Skalierung (Faktor 2,0 statt 4,0) haette den 4-Tages-Lauf weiter verworfen und die Sperre erhalten."
+  },
   "boards": {
-    "consumer-discretionary": {
-      "dailyP99Samples": [
-        1,
-        1,
-        2
-      ],
-      "threshold": 4,
-      "frozen": true
-    },
-    "consumer-staples": {
-      "dailyP99Samples": [
-        0,
-        0.5,
-        9
-      ],
-      "threshold": 18,
-      "frozen": true
-    },
-    "energy": {
-      "dailyP99Samples": [
-        0,
-        0,
-        0,
-        0,
-        0.30000000000000426
-      ],
-      "threshold": 1,
-      "frozen": true,
-      "sampleDates": [
-        "legacy#0",
-        "legacy#1",
-        "legacy#2",
-        "2026-07-17",
-        "2026-07-18"
-      ]
-    },
-    "financials": {
-      "dailyP99Samples": [
-        0,
-        1.5,
-        1.6000000000000014
-      ],
-      "threshold": 3.200000000000003,
-      "frozen": true
-    },
-    "health-care": {
-      "dailyP99Samples": [
-        0.5,
-        0.30000000000000426,
-        0.30000000000000426
-      ],
-      "threshold": 1,
-      "frozen": true
-    },
-    "industrials": {
-      "dailyP99Samples": [
-        0.6000000000000014,
-        0.10000000000000853,
-        8.799999999999997
-      ],
-      "threshold": 17.599999999999994,
-      "frozen": true
-    },
-    "it-services": {
-      "dailyP99Samples": [
-        0,
-        0,
-        0,
-        0,
-        0,
-        20.099999999999994
-      ],
-      "threshold": 40.19999999999999,
-      "frozen": true,
-      "sampleDates": [
-        "legacy#0",
-        "legacy#1",
-        "legacy#2",
-        "2026-07-17",
-        "2026-07-18",
-        "2026-07-26"
-      ]
-    },
-    "materials": {
-      "dailyP99Samples": [
-        0.30000000000000426,
-        0.20000000000000284,
-        0.7000000000000028
-      ],
-      "threshold": 1.4000000000000057,
-      "frozen": true
-    },
-    "real-estate": {
-      "dailyP99Samples": [
-        0.30000000000000426,
-        2.9000000000000057,
-        0.30000000000000426
-      ],
-      "threshold": 5.800000000000011,
-      "frozen": true
-    },
-    "semiconductors": {
-      "dailyP99Samples": [
-        2.6999999999999993,
-        0,
-        19.10000000000001
-      ],
-      "threshold": 38.20000000000002,
-      "frozen": true
-    },
-    "software-comm-services": {
-      "dailyP99Samples": [
-        0.29999999999999716,
-        0.5,
-        0
-      ],
-      "threshold": 1,
-      "frozen": true
-    },
-    "survival": {
-      "dailyP99Samples": [],
-      "threshold": null,
-      "frozen": false
-    },
-    "tech-hardware": {
-      "dailyP99Samples": [
-        1.7000000000000028,
-        0,
-        0.7999999999999972
-      ],
-      "threshold": 3.4000000000000057,
-      "frozen": true
-    },
-    "utilities": {
-      "dailyP99Samples": [
-        0.6000000000000014,
-        0.6000000000000014,
-        0
-      ],
-      "threshold": 1.2000000000000028,
-      "frozen": true
+    "consumer-discretionary": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
+    "consumer-staples": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
+    "energy": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
+    "financials": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
+    "health-care": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
+    "industrials": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
+    "it-services": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
+    "materials": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
+    "real-estate": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
+    "semiconductors": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
+    "software-comm-services": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
+    "survival": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
+    "tech-hardware": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
+    "utilities": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false }
+  },
+  "_verworfen": {
+    "_doc": "Rohmessungen der alten Kalibrierung, unveraendert erhalten. Ausser Kraft gesetzt am 03.08.2026 (Grund: _neukalibrierung_2026_08_03). Keine Loeschung, nur ein Flag — dieselbe Regel wie in _excluded.json.",
+    "stichproben_stammen_aus": "2026-07-14 bis 2026-07-18 (it-services zusaetzlich 2026-07-26) — alle auf der Ausschlussliste in board-history/_excluded.json. Wo sampleDates fehlt, war die Datei aelter als die Datums-Mitschrift (F8); die Werte decken sich mit den nachgerechneten Deltas genau dieser Vintages.",
+    "boards": {
+      "consumer-discretionary": { "dailyP99Samples": [1, 1, 2], "threshold": 4, "frozen": true },
+      "consumer-staples": { "dailyP99Samples": [0, 0.5, 9], "threshold": 18, "frozen": true },
+      "energy": { "dailyP99Samples": [0, 0, 0, 0, 0.30000000000000426], "threshold": 1, "frozen": true, "sampleDates": ["legacy#0", "legacy#1", "legacy#2", "2026-07-17", "2026-07-18"] },
+      "financials": { "dailyP99Samples": [0, 1.5, 1.6000000000000014], "threshold": 3.200000000000003, "frozen": true },
+      "health-care": { "dailyP99Samples": [0.5, 0.30000000000000426, 0.30000000000000426], "threshold": 1, "frozen": true },
+      "industrials": { "dailyP99Samples": [0.6000000000000014, 0.10000000000000853, 8.799999999999997], "threshold": 17.599999999999994, "frozen": true },
+      "it-services": { "dailyP99Samples": [0, 0, 0, 0, 0, 20.099999999999994], "threshold": 40.19999999999999, "frozen": true, "sampleDates": ["legacy#0", "legacy#1", "legacy#2", "2026-07-17", "2026-07-18", "2026-07-26"] },
+      "materials": { "dailyP99Samples": [0.30000000000000426, 0.20000000000000284, 0.7000000000000028], "threshold": 1.4000000000000057, "frozen": true },
+      "real-estate": { "dailyP99Samples": [0.30000000000000426, 2.9000000000000057, 0.30000000000000426], "threshold": 5.800000000000011, "frozen": true },
+      "semiconductors": { "dailyP99Samples": [2.6999999999999993, 0, 19.10000000000001], "threshold": 38.20000000000002, "frozen": true },
+      "software-comm-services": { "dailyP99Samples": [0.29999999999999716, 0.5, 0], "threshold": 1, "frozen": true },
+      "survival": { "dailyP99Samples": [], "threshold": null, "frozen": false },
+      "tech-hardware": { "dailyP99Samples": [1.7000000000000028, 0, 0.7999999999999972], "threshold": 3.4000000000000057, "frozen": true },
+      "utilities": { "dailyP99Samples": [0.6000000000000014, 0.6000000000000014, 0], "threshold": 1.2000000000000028, "frozen": true }
     }
   }
 }
