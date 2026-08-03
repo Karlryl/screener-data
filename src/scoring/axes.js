@@ -26,7 +26,7 @@
  *  9 marginLevel           Bruttomarge-NIVEAU (Franchise-vs-commodity-Diskriminator, 2.12b)
  */
 
-const { norm, hasPresent, firstPresent, presentValues, metricVal, ratioSeries } = require('./snapshot.js');
+const { norm, hasPresent, firstPresent, presentValues, metricVal, ratioSeries, jahresVergleichIdx } = require('./snapshot.js');
 const { fcfMarginValid } = require('./engine.js');
 
 // --- kleine Helfer auf normalisierten Serien (luecken-sicher) ---------------
@@ -66,14 +66,43 @@ function adjacentTwoPresent(series) {
 // die ACHSE selbst behaelt die Skalar-Semantik (Quartals-YoY, s. u.). growthBounds
 // (data-learned p1/p99, score.js) klemmt Mini-Basis-/Stub-Komponenten (JOBY-Muster),
 // KEIN aufgezwungenes Niveau.
+function revAnnualYoY(s) {
+  const ar = adjacentTwoPresent(norm(s, 'annualRev'));
+  if (!ar || !(ar[1] > 0)) return null;
+  const g = ar[0] / ar[1] - 1;
+  return Number.isFinite(g) ? g : null;
+}
+// F-4 (Karl-Mandat 03.08.2026): das Vorjahresquartal wird ueber sein ENDDATUM gewaehlt.
+// Bis heute stand hier starr Position 4. Ausgezaehlt ueber 12.543 CI-Snapshots war das bei
+// 1.774 von 6.203 pruefbaren Reihen (28,6 %) das falsche Quartal — dort fehlt in der
+// Yahoo-Reihe ein Quartal, und Position 4 zeigt dann 455 statt 365 Tage zurueck (CN 51,9 %,
+// IN 60,2 %, SE 77,6 % betroffen; US nur 3,2 %). Begruendung der Toleranz: snapshot.js.
+// Drei Ausgaenge, alle drei aus jahresVergleichIdx:
+//   quelle 'datum'    -> das datierte Jahresquartal, egal an welcher Position.
+//   quelle 'position' -> KEIN Enddatum vorhanden: es liegt nichts vor, worueber zu urteilen
+//                        waere. Die alte Regel bleibt in Kraft, MITSAMT ihrem Luecken-Proxy
+//                        (fuehrende Quartale alle finit) — ohne Enden ist eine komplett
+//                        fehlende Quartals-Zeile nicht detektierbar.
+//   null              -> datiert, aber kein Quartal im Jahresfenster: der Jahresvergleich
+//                        ist nicht bildbar. Behandelt wie bisher "zu wenige Quartale":
+//                        das Quartals-Bein droppt, annual-lag1 traegt (revGrowthLevel).
+function revQuartalsYoY(s) {
+  const v = jahresVergleichIdx(s, 'revenueQ', 0);
+  if (v === null) return null;
+  const rq = norm(s, 'revenueQ');
+  if (v.idx >= rq.length) return null;
+  if (v.quelle === 'position' && !rq.slice(0, v.idx + 1).every(Number.isFinite)) return null;
+  const a = rq[0], b = rq[v.idx];
+  if (!Number.isFinite(a) || !(b > 0)) return null;
+  const g = a / b - 1;
+  return Number.isFinite(g) ? g : null;
+}
 function revYoYComponents(s) {
   const comps = [];
-  const ar = adjacentTwoPresent(norm(s, 'annualRev'));
-  if (ar && ar[1] > 0) { const g = ar[0] / ar[1] - 1; if (Number.isFinite(g)) comps.push(g); }
-  const rq = norm(s, 'revenueQ');
-  if (rq.length >= 5 && rq.slice(0, 5).every(Number.isFinite) && rq[4] > 0) {
-    const g = rq[0] / rq[4] - 1; if (Number.isFinite(g)) comps.push(g);
-  }
+  const jahr = revAnnualYoY(s);
+  if (jahr !== null) comps.push(jahr);
+  const quartal = revQuartalsYoY(s);
+  if (quartal !== null) comps.push(quartal);
   return comps; // 0..2 Werte (Bruchteile, nicht %)
 }
 // CHIRURGISCH, nicht semantisch: das Skalar WAR Yahoos Quartals-YoY (juengstes Quartal
@@ -83,13 +112,15 @@ function revYoYComponents(s) {
 // WACHSTUMSBEGRIFFS (z. B. robustG-Blend) waere eine Formel-Verbesserung und gehoert
 // vor den Court (2.14-v4), nicht in einen Datenrichtigkeits-Fix — Audit 14.07.: der
 // Blend reorderte median 9 Raenge ueber 3354 Namen ohne Anker-/Glitch-Nutzen.
+// Quartals-Bein wenn bildbar, sonst annual-lag1, sonst null (Achse droppt ehrlich —
+// renorm-on-drop, KEIN Skalar-Fallback; der Skalar ist genau fuer reihen-lose Namen
+// unpruefbar). Vorher stand die Auswahlbedingung hier ein ZWEITES Mal (und in score.js
+// ein drittes Mal) — jetzt entscheidet revQuartalsYoY an EINER Stelle, ob es ein
+// Quartals-Bein gibt.
 function revGrowthLevel(s, growthBounds) {
-  const comps = revYoYComponents(s); // [annual-lag1?, quartal-lag4?] (Bruchteile)
-  if (!comps.length) return null; // keine Reihe -> Achse droppt ehrlich (renorm-on-drop), KEIN Skalar-Fallback (der Skalar ist genau fuer reihen-lose Namen unpruefbar)
-  // Reihenfolge in revYoYComponents: annual zuerst, quartal zweit (wenn beide da).
-  const rq = norm(s, 'revenueQ');
-  const hasQuarter = rq.length >= 5 && rq.slice(0, 5).every(Number.isFinite) && rq[4] > 0;
-  let g = hasQuarter ? comps[comps.length - 1] : comps[0];
+  const quartal = revQuartalsYoY(s);
+  let g = (quartal !== null) ? quartal : revAnnualYoY(s);
+  if (g === null) return null;
   if (growthBounds) g = Math.max(growthBounds[0], Math.min(growthBounds[1], g));
   return g * 100; // % wie zuvor (negativ rankt natuerlich unten)
 }
@@ -158,11 +189,15 @@ function quarterQoQRates(s, bounds) {
 // vorhandene SEC-XBRL-Schicht, nicht ein Rueckbau auf die kaputte QoQ-Konstruktion.
 // Jahresdaten sind saisonfrei, die Groesse ist dieselbe, nur eine Ebene grober und
 // traeger (reagiert ein Jahr spaeter).
+// F-4: der Jahrespartner je Position kommt aus dem Enddatum (jahresVergleichIdx), nicht
+// mehr aus i+4. Ohne Enden liefert die Auswahl i+4 zurueck -> byte-identisch zu vorher.
 function revAcceleration(s, bounds) {
   const rq = norm(s, 'revenueQ');
   const yoy = [];
-  for (let i = 0; i + 4 < rq.length; i++) {
-    const a = rq[i], b = rq[i + 4];
+  for (let i = 0; i < rq.length; i++) {
+    const v = jahresVergleichIdx(s, 'revenueQ', i);
+    if (v === null || v.idx >= rq.length) continue; // kein Jahrespartner -> kein Paar
+    const a = rq[i], b = rq[v.idx];
     if (a === null || a === undefined || b === null || b === undefined) continue; // Luecke ueberspringen
     if (a > 0 && b > 0) yoy.push(clampWinsor(a / b - 1, bounds));
   }
@@ -488,6 +523,7 @@ function roicStability(s) {
 
 module.exports = {
   revGrowthLevel, revAcceleration, gpGrowth, ruleOfX, revYoYComponents,
+  revAnnualYoY, revQuartalsYoY, // F-4: die beiden Beine einzeln (Tests/Messung)
   marginTrajectory, capitalEfficiency, revisionsMomentum, dilution, marginLevel, roicStability,
   // C2: per-Quartal-Rohwerte fuer die universe-weite Winsor-Schranken-Sammlung in score.js
   quarterOpMargins, quarterQoQRates,

@@ -20,7 +20,7 @@
  * Begleitspalte: Rule-of-X (alpha=2.3) fuer den Wachstum-vs-Effizienz-Blick.
  */
 
-const { norm, firstPresent, firstTwoPresent } = require('./snapshot.js');
+const { norm, firstPresent, firstTwoPresent, jahresFensterAusgerichtet } = require('./snapshot.js');
 const { ruleOfX } = require('./axes.js');
 
 // YoY-Wachstum einer {value}-Jahres-/Quartalsserie via norm()-Feldname.
@@ -38,8 +38,14 @@ function grossProfitGrowthYoY(s) {
   // null-Luecken -> slice(4,8) wuerde bei interner Luecke das Vorjahres-Fenster
   // verschieben (kein Jahresvergleich mehr). Nur wenn die ersten 8 Quartale
   // luecken-frei finit sind, ist die positionale TTM-ueber-TTM-Bildung ehrlich.
+  // F-4 (03.08.2026): "luecken-frei finit" reicht nicht — eine Reihe kann acht finite
+  // Quartale tragen und trotzdem ein Quartal AUSLASSEN (bei chinesischen A-Aktien der
+  // Normalfall). Dann ist slice(4,8) nicht das Vorjahr, sondern ein verschobenes Fenster.
+  // jahresFensterAusgerichtet prueft genau das am Enddatum; ohne Enden ist es true und
+  // das Verhalten byte-identisch zu vorher.
   const raw = norm(s, 'grossProfitQ');
-  if (raw.length >= 8 && raw.slice(0, 8).every(Number.isFinite)) {
+  if (raw.length >= 8 && raw.slice(0, 8).every(Number.isFinite)
+      && jahresFensterAusgerichtet(s, 'grossProfitQ', 4)) {
     const ttmNew = raw.slice(0, 4).reduce((p, c) => p + c, 0);
     const ttmOld = raw.slice(4, 8).reduce((p, c) => p + c, 0);
     if (ttmOld > 0) return ttmNew / ttmOld - 1;

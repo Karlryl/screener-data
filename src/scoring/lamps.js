@@ -9,7 +9,8 @@
  * true (an) / false (aus) / null (nicht bewertbar).
  */
 
-const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVal, ratioSeries } = require('./snapshot.js');
+const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVal, ratioSeries,
+  jahresVergleichIdx, jahresFensterAusgerichtet } = require('./snapshot.js');
 
 // Schwellen (bewusst konservativ; Feinkalibrierung in der Formel-/Fixture-Phase)
 const TH = {
@@ -208,7 +209,11 @@ function newestQtrSuspect(s) {
   // (kleine YoY-Diskontinuitaet, TH 0.20 aus leg1 wiederverwendet) -> Saisonalitaet, kein korruptes
   // Quartal -> de-fire. SNDK (70.0% vs -2.5% YoY, |d|=0.73) und Samsung (42.8% vs 8.4%, |d|=0.34)
   // bleiben YoY-anomal -> feuern weiter (keine pauschale Exoneration).
-  const r4 = rev[4], oi4 = oi[4];
+  // F-4 (03.08.2026): das "year-ago-Quartal" ist das mit dem passenden ENDDATUM, nicht
+  // Position 4 — sonst entlastet (oder belastet) ein Quartal aus einer anderen Saison.
+  // Ohne Enden liefert jahresVergleichIdx Position 4 zurueck (unveraendert).
+  const vjIdx = jahresVergleichIdx(s, 'revenueQ', 0);
+  const r4 = vjIdx ? rev[vjIdx.idx] : null, oi4 = vjIdx ? oi[vjIdx.idx] : null;
   const q4opm = (r4 > 0 && Number.isFinite(oi4)) ? oi4 / r4 : null;
   const legSeasonal = q4opm !== null && Math.abs(q0opm - q4opm) <= 0.20;
   // audit/fix (Court Phase A Runde 6): 6. Leg legRamp, NUR ENTSCHAERFEND. Eine echte monotone Frueh-
@@ -506,14 +511,22 @@ function einmalertrag(s) {
   //
   // Der Anlassfall bleibt betroffen: Zealands Spitze liegt an Position 3, das
   // Vorjahresquartal waere Position 7 und fehlt -> keine Entlastung, die Lampe brennt.
+  //
+  // F-4 (03.08.2026): "Position 7" hiess bis heute woertlich Index 7. Fehlt in der Reihe
+  // weiter hinten ein Quartal, sprach dort ein FREMDES Quartal die Zeile frei. Der Partner
+  // kommt jetzt aus dem Enddatum; ohne Enden bleibt es Index spitzeIdx+4.
   const spitzeIdx = letzte4.indexOf(groesster);
-  const vorjahresQuartal = roh[spitzeIdx + 4];
+  const vjIdx = jahresVergleichIdx(s, 'revenueQ', spitzeIdx);
+  const vorjahresQuartal = vjIdx ? roh[vjIdx.idx] : null;
   if (brauchbar(vorjahresQuartal) && vorjahresQuartal >= EINMALERTRAG_ANTEIL * groesster) return false;
 
   // Saison-Schutz Teil 2: dominiert im Vorjahr DASSELBE Quartal ebenso stark, ist es Saison
   // und kein Einmaleffekt. Fehlt das Vorjahr, wird nicht geraten — dann bleibt es beim Verdacht.
+  // F-4: der Block-Vergleich stellt Quartal gegen Quartal ueber die POSITION — das gilt nur,
+  // wenn zu jedem der vier juengsten Quartale der Jahrespartner wirklich vier Plaetze weiter
+  // hinten steht. Ohne Enden ist die Pruefung true (unveraendert).
   const vorjahr = roh.slice(4, 8);
-  if (vorjahr.length === 4 && vorjahr.every(brauchbar)) {
+  if (vorjahr.length === 4 && vorjahr.every(brauchbar) && jahresFensterAusgerichtet(s, 'revenueQ', 4)) {
     const groessterVorjahr = Math.max(...vorjahr);
     const anteilVorjahr = groessterVorjahr / vorjahr.reduce((a, b) => a + b, 0);
     if (letzte4.indexOf(groesster) === vorjahr.indexOf(groessterVorjahr)

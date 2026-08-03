@@ -160,6 +160,96 @@ function recentSumPresent(series, n) {
   return vals.length ? vals.reduce((p, c) => p + c, 0) : null;
 }
 
+// --- Jahres-Vergleichsquartal, DATUMSBEWUSST (F-4, Karl-Mandat 03.08.2026) -----
+// Bis heute suchte jede Quartals-YoY-Rechnung ihr Vorjahresquartal an der POSITION i+4.
+// Das setzt voraus, dass die Reihe lueckenlos vier Quartale je Jahr traegt. Ausgezaehlt
+// ueber die 12.543 Snapshots des CI-Laufs 30787450668: von 6.203 YoY-pruefbaren Reihen
+// liegen 1.774 (28,6 %) NICHT bei ~365 Tagen - bei chinesischen A-Aktien (CN 51,9 %
+// ausserhalb), Indien (60,2 %) und Schweden (77,6 %) fehlt regelmaessig ein Quartal, und
+// Position 4 zeigt dann auf ein Quartal 455 Tage frueher. Handprobe 000962.SZ:
+// revenueQEnds = [2026-03-31, 2025-12-31, 2025-06-30, 2025-03-31, 2024-12-31] - das
+// richtige Vergleichsquartal (2025-03-31, exakt 365 Tage) steht an Position 3, verglichen
+// wurde gegen Position 4 (2024-12-31, 455 Tage).
+//
+// TOLERANZ AUS DEN DATEN, nicht gesetzt. Gemessen wurde die Abweichung |Abstand - 365 Tage|
+// zum jeweils BESTEN datierten Kandidaten ueber alle 30.004 auswertbaren Positionen
+// (scripts/f4-quartalsvergleich.js --abstand):
+//   0 Tage  9.608 · 1 Tag  23   -> echte Jahrespartner
+//   [2 .. 29 Tage]  KEIN EINZIGER FALL
+//   30 Tage 1 (AAP: 395 Tage = 13 Monate, in einer Reihe, deren zwei neueste "Quartale"
+//            30 Tage auseinanderliegen - keine Jahresdifferenz)
+//   [31 .. 88 Tage] KEIN EINZIGER FALL
+//   89-93 Tage 5.985 -> ein Quartal daneben (das Jahresquartal fehlt in der Reihe)
+// Die Schwelle liegt in der Mitte der leeren Bank 2..29. UNEMPFINDLICH, ausgezaehlt:
+// JEDER Wert aus 2..29 laesst exakt dieselben 9.631 von 30.004 Positionen durch; selbst
+// der Sprung in die benachbarte leere Bank 31..88 verschiebt genau EINE Position (0,003 %).
+const JAHR_TAGE = 365;
+const JAHRESVERGLEICH_TOLERANZ_TAGE = 15;
+const MS_PRO_TAG = 86400000;
+
+// ISO-Tagesdatum -> Tagesnummer (UTC), sonst null. Keine Zeitzonen-Arithmetik.
+function _tagesnummer(iso) {
+  if (typeof iso !== 'string' || !/^\d{4}-\d{2}-\d{2}/.test(iso)) return null;
+  const t = Date.parse(iso.slice(0, 10) + 'T00:00:00Z');
+  return Number.isFinite(t) ? t / MS_PRO_TAG : null;
+}
+
+/**
+ * periodEnds(snapshot, field) -> Array<string|null> in der LAENGE der Wert-Serie.
+ * Perioden-Enden (`<field>Ends`, A10/NRE-SC-001) als ISO-Tage. Fehlt die Enden-Reihe
+ * (Snapshots vor A10, netIncomeQ) oder passt ihre Laenge nicht zur Wert-Serie, kommt
+ * eine ehrliche null-Serie zurueck - Index-Integritaet vor Daten, wie _alignEnds.
+ */
+function periodEnds(snapshot, field) {
+  const werte = norm(snapshot, field);
+  const roh = (snapshot && snapshot.timeseries) ? snapshot.timeseries[field + 'Ends'] : undefined;
+  if (!Array.isArray(roh) || roh.length !== werte.length) return werte.map(() => null);
+  return roh.map((d) => (_tagesnummer(d) === null ? null : d));
+}
+
+/**
+ * jahresVergleichIdx(snapshot, field, i) -> { idx, quelle } | null
+ *   { idx, quelle:'datum' }    Enddatum vorhanden und ein Quartal liegt innerhalb der
+ *                              Toleranz um (Ende_i - 365 Tage) - das ist der Jahrespartner.
+ *   { idx, quelle:'position' } KEIN Enddatum an i ODER kein einziger datierter Kandidat:
+ *                              es liegt nichts vor, worueber zu urteilen waere -> die
+ *                              bestehende Positionsregel i+4 bleibt in Kraft (fehlendes
+ *                              Datum ist KEIN Beweis fuer eine Luecke; 33 % der Reihen
+ *                              tragen heute schlicht keine Enden).
+ *   null                       datiert, aber kein Quartal im Fenster -> echtes Loch, der
+ *                              Jahresvergleich ist fuer diese Position nicht bildbar.
+ * idx kann ausserhalb der Serie liegen (Positionsregel) - der Aufrufer prueft das wie bisher.
+ */
+function jahresVergleichIdx(snapshot, field, i) {
+  const enden = periodEnds(snapshot, field);
+  const ti = _tagesnummer(enden[i]);
+  if (ti === null) return { idx: i + 4, quelle: 'position' };
+  let best = null, bestAbw = Infinity;
+  for (let j = i + 1; j < enden.length; j++) {
+    const tj = _tagesnummer(enden[j]);
+    if (tj === null) continue;
+    const abw = Math.abs((ti - tj) - JAHR_TAGE);
+    if (abw < bestAbw) { bestAbw = abw; best = j; }
+  }
+  if (best === null) return { idx: i + 4, quelle: 'position' };
+  return (bestAbw <= JAHRESVERGLEICH_TOLERANZ_TAGE) ? { idx: best, quelle: 'datum' } : null;
+}
+
+/**
+ * jahresFensterAusgerichtet(snapshot, field, n) -> boolean
+ * Fuer BLOCK-Vergleiche (TTM gegen TTM, 4 Quartale gegen 4 Quartale): liegt zu JEDER der
+ * n juengsten Positionen der Jahrespartner genau n Plaetze weiter hinten? Nur dann ist ein
+ * positionales Vorjahres-FENSTER (slice(n, 2n)) wirklich das Vorjahr. Ohne Enden ist die
+ * Antwort immer true - byte-identisch zum bisherigen Verhalten.
+ */
+function jahresFensterAusgerichtet(snapshot, field, n) {
+  for (let i = 0; i < n; i++) {
+    const v = jahresVergleichIdx(snapshot, field, i);
+    if (v === null || v.idx !== i + n) return false;
+  }
+  return true;
+}
+
 // Null-sicherer metrics-Skalar-Zugriff: snapshot.metrics[key].value oder null.
 function metricVal(snapshot, key) {
   const v = (snapshot && snapshot.metrics && snapshot.metrics[key]) ? snapshot.metrics[key].value : undefined;
@@ -169,4 +259,7 @@ function metricVal(snapshot, key) {
 module.exports = {
   norm, hasPresent, firstPresent, sumPresent, sign, FIELD_REGISTRY,
   presentValues, firstTwoPresent, recentSumPresent, metricVal, ratioSeries,
+  // F-4: datumsbewusste Auswahl des Jahres-Vergleichsquartals
+  periodEnds, jahresVergleichIdx, jahresFensterAusgerichtet,
+  JAHR_TAGE, JAHRESVERGLEICH_TOLERANZ_TAGE,
 };

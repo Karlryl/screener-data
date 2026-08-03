@@ -1227,14 +1227,10 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
     // sieht — sonst stuenden zwei verschiedene Wachstumszahlen fuer dieselbe Firma
     // nebeneinander. UNGEKLEMMT (ohne growthBounds): die Winsorisierung dient dem Ranking,
     // in der Anzeige waere sie eine stille Verfaelschung des berichteten Werts.
-    e.revGrowthYoYPct = (() => {
-      const comps = growthYoYComponents(e.snapshot);   // Single-Source: axesFns.revYoYComponents
-      if (!comps.length) return null;
-      const rq = norm(e.snapshot, 'revenueQ');
-      const hatQuartal = rq.length >= 5 && rq.slice(0, 5).every(Number.isFinite) && rq[4] > 0;
-      const g = hatQuartal ? comps[comps.length - 1] : comps[0];
-      return Number.isFinite(g) ? g * 100 : null;
-    })();
+    // F-4 (03.08.2026): hier stand die Auswahlbedingung der Achse ein drittes Mal nachgebaut
+    // (revYoYComponents + eigener hatQuartal-Test). Die Achse OHNE growthBounds liefert exakt
+    // dieselbe Zahl ungeklemmt — eine Kopie weniger, die auseinanderlaufen kann.
+    e.revGrowthYoYPct = axesFns.revGrowthLevel(e.snapshot);
     // F-2 Stufe 1 (03.08.): Prognose-Zustand zur Einmalertrags-Lampe — REINE ANZEIGE,
     // kein Score-Input. Nur Zeilen, die die Lampe tragen, koennen einen Zustand haben;
     // alle anderen bleiben null (die Funktion selbst haelt diese Bedingung, damit sie an
