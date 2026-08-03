@@ -57,12 +57,21 @@ function bisherigeZeilen(dir = LOG_DIR) {
   const dateien = fs.readdirSync(dir).filter((f) => /^\d{4}-\d{2}\.jsonl$/.test(f)).sort();
   const raus = [];
   for (const f of dateien) {
-    for (const z of fs.readFileSync(path.join(dir, f), 'utf8').split(/\r?\n/)) {
+    const zeilen = fs.readFileSync(path.join(dir, f), 'utf8').split(/\r?\n/);
+    for (let i = 0; i < zeilen.length; i++) {
+      const z = zeilen[i];
       if (!z.trim()) continue;
       try {
         const o = JSON.parse(z);
         if (o && typeof o.date === 'string' && Array.isArray(o.members)) raus.push(o);
-      } catch { /* kaputte Zeile ueberspringen */ }
+      } catch (e) {
+        // BK-SK-001: die Zeile wird weiterhin uebersprungen (ein verlorener Tag ist kein
+        // Grund, den heutigen auch zu verlieren) — aber nicht mehr stumm. Faellt die
+        // JUENGSTE Zeile aus, vergleicht der heutige Lauf gegen einen aelteren Vorgaenger
+        // und meldet Zu-/Abgaenge, die es so nie gab.
+        console.log('::warning::Kaputte Zeile im Newcomer-Log uebersprungen: ' + f + ':' + (i + 1)
+          + ' (' + e.message + ') — die Zu-/Abgaenge dieses Tages sind verloren.');
+      }
     }
   }
   return raus.sort((a, b) => a.date.localeCompare(b.date));

@@ -118,6 +118,29 @@ function baueKarte(roh) {
 /** Stabile Textform eines Datensatzes — nur dafuer da, Gleichheit zu pruefen. */
 const alsText = (d) => JSON.stringify([d.n || '', d.b || '', d.e || '', d.t || '', d.c || '']);
 
+/**
+ * Pruefsumme ueber eine Symbolmenge. BK-SK-001: es gibt genau EINE solche Stelle —
+ * die schreibende (run) und die nachrechnende (zustandAus) Seite teilen sie sich.
+ * Zwei getrennte Formeln driften auseinander, und dann warnt die Pruefung entweder
+ * dauernd oder nie; beides ist schlimmer als gar keine Pruefung.
+ */
+const summeVon = (schluessel) => require('crypto').createHash('sha256')
+  .update([...schluessel].sort().join(',')).digest('hex').slice(0, 16);
+
+/**
+ * Grundbild lesen. Zwei Formen sind gueltig:
+ *   Rohform   { SYM: {...}, ... }                 — alles, was vor der Monats-Rotation entstand
+ *   Wickelform{ ab, erzeugt, symbole: { SYM: … } } — seit BK-SK-001
+ * `ab` = Datum, AB DEM die Tageszeilen auf DIESES Bild gehoeren. Aeltere Zeilen
+ * gehoeren zum archivierten Vorgaenger unter archiv/.
+ */
+function alsGrundbild(j) {
+  if (j && typeof j === 'object' && j.symbole && typeof j.symbole === 'object') {
+    return { ab: j.ab || null, symbole: j.symbole };
+  }
+  return { ab: null, symbole: j || {} };   // Rohform gilt seit jeher, also ohne Grenze
+}
+
 /** Was hat sich geaendert? Reine Funktion, damit sie einzeln testbar ist. */
 function diff(alt, neu) {
   const hinzu = {}, weg = [], geaendert = {};
@@ -131,14 +154,45 @@ function diff(alt, neu) {
   return { hinzu, weg, geaendert };
 }
 
-/** Spielt Grundbild + alle Tageszeilen bis einschliesslich `bis` ab. */
+/**
+ * Spielt Grundbild + alle Tageszeilen bis einschliesslich `bis` ab.
+ *
+ * BK-SK-001: `pruefsumme` wurde seit jeher in jede Tageszeile GESCHRIEBEN und
+ * nirgends GELESEN — ihr einziger Zweck ("ergibt mein Abspielen denselben Stand,
+ * den der Schreiber sah?") war nie in Betrieb. Jetzt wird sie nach jeder Zeile
+ * nachgerechnet. Abweichung = Warnung, kein Abbruch: der Stand ist dann zwar
+ * verdaechtig, aber immer noch das Beste, was verfuegbar ist — und ein harter
+ * Abbruch wuerde den Tageslauf an einem alten Datenfehler aufhaengen.
+ */
 function zustandAus(grundbild, zeilen, bis = null) {
-  const k = new Map(Object.entries(grundbild || {}));
+  const g = alsGrundbild(grundbild);
+  const k = new Map(Object.entries(g.symbole || {}));
+  if (bis && g.ab && bis < g.ab) {
+    console.log('::warning::Stichtag ' + bis + ' liegt VOR der Grundbild-Grenze ' + g.ab
+      + ' — dieser Stand stammt aus dem Grundbild dieser Aera und bildet den ' + bis
+      + ' NICHT ab. Fuer den aelteren Zeitraum das archivierte Vorgaenger-Bild aus '
+      + 'external-data/ticker-map/archiv/ verwenden.');
+  }
+  const abweichend = [];
   for (const z of zeilen) {
+    // Zeilen der Vorgaenger-Aera sind bereits im Grundbild verrechnet; sie ein
+    // zweites Mal anzuwenden ergaebe einen Stand, den es nie gab.
+    if (g.ab && z.datum < g.ab) continue;
     if (bis && z.datum > bis) break;
     for (const [sym, d] of Object.entries(z.hinzu || {})) k.set(sym, d);
     for (const [sym, d] of Object.entries(z.geaendert || {})) k.set(sym, d);
     for (const sym of z.weg || []) k.delete(sym);
+    // ponytail: Summe je Zeile ueber alle Schluessel. Kosten sind durch die
+    // Monats-Rotation auf ~31 Zeilen je Aera gedeckelt; ohne Rotation waere das
+    // ueber ein Jahr spuerbar geworden.
+    if (z.pruefsumme && summeVon(k.keys()) !== z.pruefsumme) abweichend.push(z.datum);
+  }
+  if (abweichend.length) {
+    console.log('::warning::Abgespielter Stand weicht von der mitgeschriebenen pruefsumme ab, '
+      + 'zuerst am ' + abweichend[0] + ' (' + abweichend.length + ' Tag(e) betroffen'
+      + (abweichend.length > 1 ? ', zuletzt ' + abweichend[abweichend.length - 1] : '') + '). '
+      + 'Ursache ist entweder ein verdorbenes Grundbild oder eine verlorene Tageszeile — '
+      + 'die Rekonstruktion "welche Ticker gab es am X?" ist ab diesem Tag nicht mehr belastbar.');
   }
   return k;
 }
@@ -149,13 +203,56 @@ function alleZeilen(dir = DIR) {
   let dateien;
   try { dateien = fs.readdirSync(dir); } catch (_) { return raus; }
   for (const f of dateien.filter((x) => /^\d{4}-\d{2}\.jsonl$/.test(x)).sort()) {
-    for (const z of fs.readFileSync(path.join(dir, f), 'utf8').split('\n')) {
+    const zeilen = fs.readFileSync(path.join(dir, f), 'utf8').split('\n');
+    for (let i = 0; i < zeilen.length; i++) {
+      const z = zeilen[i];
       if (!z.trim()) continue;
-      try { raus.push(JSON.parse(z)); } catch (_) { /* eine kaputte Zeile kippt nicht den Lauf */ }
+      try { raus.push(JSON.parse(z)); } catch (e) {
+        // BK-SK-001: eine kaputte Zeile kippt weiterhin nicht den Lauf — aber sie
+        // verschwand bisher voellig stumm. Ein verlorener Tag sah danach aus wie ein
+        // Tag ohne Aenderungen, und die Ticker-Historie ist nicht nachholbar.
+        console.log('::warning::Kaputte Zeile in der Ticker-Landkarte uebersprungen: '
+          + f + ':' + (i + 1) + ' (' + e.message + ') — dieser Tag fehlt beim Abspielen '
+          + 'und laesst sich nicht nachtraeglich holen.');
+      }
     }
   }
   raus.sort((a, b) => String(a.datum).localeCompare(String(b.datum)));
   return raus;
+}
+
+/**
+ * Monats-Rotation des Grundbilds (BK-SK-001).
+ *
+ * Das Grundbild ist der Nullpunkt JEDER Rekonstruktion. Ist es einmal verdorben,
+ * ist jeder spaetere Abruf verdorben — dauerhaft und unauffaellig. Ein frisches
+ * Bild je Monat begrenzt den Schaden auf den laufenden Monat.
+ *
+ * Das alte Bild wird VORHER als NEUE Datei nach archiv/ kopiert. Es wird nichts
+ * geloescht und nichts ueberschrieben: die alte Aera bleibt exakt so abspielbar,
+ * wie sie geschrieben wurde (Rohform-Bild + die Tageszeilen davor).
+ *
+ * Rueckgabe: Beschreibung der Rotation, oder null wenn nichts zu tun war.
+ */
+function rotiereGrundbild(karte, datum, dir = DIR, trocken = false) {
+  const gb = path.join(dir, '_grundbild.json');
+  let ab;
+  try { ab = alsGrundbild(JSON.parse(fs.readFileSync(gb, 'utf8'))).ab; }
+  catch (_) { return null; }   // kein/unlesbares Grundbild -> das ist Sache der Erstanlage in run()
+  if (ab && ab.slice(0, 7) === datum.slice(0, 7)) return null;   // in diesem Monat schon rotiert
+  const archiv = path.join(dir, 'archiv', '_grundbild-bis-' + datum + '.json');
+  if (fs.existsSync(archiv)) return null;   // eine Archiv-Kopie wird NIE ueberschrieben
+  if (!trocken) {
+    fs.mkdirSync(path.dirname(archiv), { recursive: true });
+    fs.copyFileSync(gb, archiv);
+    writeFileAtomic(gb, JSON.stringify({
+      ab: datum,
+      erzeugt: new Date().toISOString(),
+      hinweis: 'Tageszeilen VOR ' + datum + ' gehoeren zum Vorgaenger in archiv/; dieses Bild gilt ab ' + datum + '.',
+      symbole: Object.fromEntries([...karte.entries()].sort((a, b) => a[0].localeCompare(b[0]))),
+    }, null, 0));
+  }
+  return { ab: datum, vorher: ab, symbole: karte.size, archiv: path.relative(dir, archiv) };
 }
 
 const heute = () => new Date().toISOString().slice(0, 10);
@@ -196,7 +293,14 @@ async function run(argv = process.argv.slice(2)) {
   if (!grundbild) {
     const obj = Object.fromEntries([...neu.entries()].sort((a, b) => a[0].localeCompare(b[0])));
     console.log('Grundbild wird angelegt: ' + neu.size + ' Symbole');
-    if (!trocken) writeFileAtomic(GRUNDBILD, JSON.stringify(obj, null, 0));
+    // Seit BK-SK-001 in der Wickelform mit `ab` — sonst wuesste ein spaeterer Leser
+    // nach der ersten Monats-Rotation nicht, welche Tageszeilen zu welchem Bild gehoeren.
+    if (!trocken) writeFileAtomic(GRUNDBILD, JSON.stringify({
+      ab: heute(),
+      erzeugt: new Date().toISOString(),
+      hinweis: 'Erstanlage. Tageszeilen ab ' + heute() + ' gehoeren auf dieses Bild.',
+      symbole: obj,
+    }, null, 0));
     return { erstanlage: true, symbole: neu.size };
   }
 
@@ -247,8 +351,8 @@ async function run(argv = process.argv.slice(2)) {
     quellenFehlend: fehlend,
     hinzu, weg, geaendert,
     // Damit ein spaeterer Leser pruefen kann, ob sein Abspielen denselben Stand ergibt.
-    pruefsumme: require('crypto').createHash('sha256')
-      .update([...neu.keys()].sort().join(',')).digest('hex').slice(0, 16),
+    // Seit BK-SK-001 rechnet zustandAus() sie beim Abspielen tatsaechlich nach.
+    pruefsumme: summeVon(neu.keys()),
   };
 
   const datei = path.join(DIR, datum.slice(0, 7) + '.jsonl');
@@ -265,9 +369,23 @@ async function run(argv = process.argv.slice(2)) {
   if (weg.length) console.log('  verschwunden: ' + weg.slice(0, 15).join(' ') + (weg.length > 15 ? ' …' : ''));
 
   if (!trocken) writeFileAtomic(datei, inhalt);
+
+  // NACH der Tageszeile rotieren: die Zeile bleibt damit ein echter Diff gegen gestern,
+  // und der neue Nullpunkt ist genau der Stand, den sie erzeugt. Ein Abspielen ab dem
+  // neuen Bild ueberspringt sie korrekt (sie ist bereits darin verrechnet).
+  const rot = rotiereGrundbild(neu, datum, DIR, trocken);
+  if (rot) {
+    console.log('Grundbild rotiert (Monatswechsel): neuer Nullpunkt ab ' + rot.ab
+      + ' mit ' + rot.symbole + ' Symbolen; das bisherige Bild'
+      + (rot.vorher ? ' (ab ' + rot.vorher + ')' : ' (Rohform)') + ' liegt unveraendert als '
+      + rot.archiv + ' — kopiert, nicht verschoben.');
+  }
   return zeile;
 }
 
-module.exports = { baueKarte, diff, zustandAus, alleZeilen, alsText, QUELLEN, DIR, GRUNDBILD };
+module.exports = {
+  baueKarte, diff, zustandAus, alleZeilen, alsText, summeVon, alsGrundbild, rotiereGrundbild,
+  QUELLEN, DIR, GRUNDBILD,
+};
 
 if (require.main === module) run().catch((e) => { console.error('::error::' + e.message); process.exit(1); });
