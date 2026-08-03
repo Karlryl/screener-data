@@ -92,6 +92,22 @@ const V = (arr) => arr.map((v) => (v === null || v === undefined ? null : { valu
     assert.doesNotThrow(() => scoreUniverse([], {}, { refCalibration: wbRefCal({ opMargin: null, qoq: null }) }),
       'null = legitime gefrorene Degeneration aus learnWinsorBounds, darf nicht werfen');
   });
+  // Tag 558 (Konvergenz-Check am echten scoreUniverse-Lauf): das Gate des BH-075b-Guards lautete
+  // `winsorBounds && typeof winsorBounds === 'object'`. Truthy PRIMITIVES (String/Zahl/Boolean) fielen
+  // durch das typeof-Gate -> der GESAMTE Unterschluessel-Block wurde uebersprungen, byte-identisch zum
+  // legitimen null-Fall, waehrend `"x" && "x".opMargin` -> undefined -> clampWinsor(v, undefined) die
+  // Achsen LAUTLOS UNGEKLEMMT laufen liess: exakt die Bugklasse, die BH-075b schliessen sollte, ueber
+  // den TYP-Vektor. `winsorBounds: undefined` kam gleich durch: der Top-Level-`in`-Check sieht den Key
+  // (Praesenz != Wert). Arrays warfen zwar, aber mit der irrefuehrenden "fehlt Unterschluessel"-Meldung.
+  test('BH-075b scoreUniverse: winsorBounds mit falschem TYP -> fail-loud mit Typ-Meldung (vorher: Primitives rutschten still durch)', () => {
+    assert.throws(() => scoreUniverse([], {}, { refCalibration: wbRefCal('corrupt') }), /falschen Typ \(string\)/);
+    assert.throws(() => scoreUniverse([], {}, { refCalibration: wbRefCal(42) }), /falschen Typ \(number\)/);
+    assert.throws(() => scoreUniverse([], {}, { refCalibration: wbRefCal(true) }), /falschen Typ \(boolean\)/);
+    assert.throws(() => scoreUniverse([], {}, { refCalibration: wbRefCal(undefined) }), /falschen Typ \(undefined\)/,
+      'gesetzter-aber-undefined Key passiert den Top-Level-`in`-Check -> muss HIER knallen');
+    assert.throws(() => scoreUniverse([], {}, { refCalibration: wbRefCal([-1, 1]) }), /falschen Typ \(Array\)/,
+      'Array warf vorher schon, aber mit der irrefuehrenden "fehlt Unterschluessel"-Meldung');
+  });
 })();
 
 // --- BH-079: gpGrowth / revYoYComponents Adjazenz ---------------------------

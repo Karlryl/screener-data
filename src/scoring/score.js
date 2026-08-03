@@ -807,7 +807,21 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
     // Degeneration, downstream per Falsy-Gate dasselbe wie "keine Schranken"); nur das FEHLEN des
     // Schluessels bzw. ein nicht-finites Paar ist das kaputte Teil-Artefakt. winsorBounds===null (ganzes
     // Objekt degeneriert) bleibt unveraendert erlaubt — dann gibt es keine Unterschluessel zu pruefen.
-    if (refCal.winsorBounds && typeof refCal.winsorBounds === 'object') {
+    // audit/fix (Tag 558, Konvergenz-Check am echten scoreUniverse-Lauf): das Gate lautete
+    // `refCal.winsorBounds && typeof refCal.winsorBounds === 'object'` — truthy PRIMITIVES (String
+    // "corrupt", Zahl, Boolean) fielen durch das typeof-Gate und uebersprangen den GESAMTEN Block:
+    // byte-identisch zum legitimen null-Fall, waehrend `winsorBounds && winsorBounds.opMargin` ->
+    // undefined -> clampWinsor(v, undefined) die Achsen LAUTLOS UNGEKLEMMT laufen liess — exakt die
+    // Bugklasse, die BH-075b schliessen sollte, nur ueber den TYP- statt den Fehlt-Vektor. Auch ein
+    // gesetztes `winsorBounds: undefined` kam durch: der Top-Level-`in`-Check oben prueft Key-PRAESENZ,
+    // nicht den Wert. Darum jetzt gegen `null` (der einzige legitime degenerierte Zustand) gaten und
+    // alles Nicht-Objekt explizit werfen — statt `!== null && !== undefined`, was undefined weiter
+    // still durchgelassen haette. Arrays warfen zwar schon, aber mit der irrefuehrenden Meldung
+    // "fehlt Unterschluessel" statt "falscher Typ".
+    if (refCal.winsorBounds !== null) {
+      if (typeof refCal.winsorBounds !== 'object' || Array.isArray(refCal.winsorBounds)) {
+        throw new Error(`scoreUniverse: refCalibration-Lineal hat ein 'winsorBounds' vom falschen Typ (${Array.isArray(refCal.winsorBounds) ? 'Array' : typeof refCal.winsorBounds}) — erwartet Objekt {opMargin,qoq} oder null; die Achsen liefen sonst lautlos UNGEKLEMMT. Mit aktuellem Code neu einfrieren.`);
+      }
       for (const subKey of ['opMargin', 'qoq']) { // die real gelesenen Felder, s.o. Z.~382/383
         const b = refCal.winsorBounds[subKey];
         if (!(subKey in refCal.winsorBounds)) {
