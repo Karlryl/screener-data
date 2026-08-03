@@ -27,6 +27,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { norm } = require('../src/scoring/snapshot.js'); // das einzige Tor zu snapshot.annual.*
 
 const ROOT = path.join(__dirname, '..');
 const SNAP_DIR = path.join(ROOT, 'snapshots');
@@ -47,6 +48,24 @@ const BASELINE_PATH = path.join(ROOT, 'data-health', 'annual-spikes-baseline.jso
 const MAX_NEU = Number(process.env.ANNUAL_SPIKE_MAX_NEU || 5);
 
 const REIHEN = ['annualOpInc', 'annualRev', 'annualNetIncome'];
+
+// ── Capex-Vorzeichen (Review-Befund 03.08.2026) ──────────────────────────────────────
+// Die Burn-Bremse rekonstruiert fehlendes OCF als FCF minus Capex (lamps.js
+// operatingCashSeries). Dass daraus nie eine Strafe OHNE sichtbare Lampe wird, ruht auf
+// einer DATENannahme: Capex steht negativ im Store (Mittelabfluss, wie annualSBC). Die
+// Annahme gilt heute vollstaendig — 0 positive Werte bei 17.357 gemessenen im lokalen
+// Baum, 0 von 40.950 im CI-Baum vom 03.08. — war aber ungeprueft, und der
+// snake_case-Fallback in _ftsValue (pull-yahoo.js) koennte sie theoretisch verletzen.
+// Grundlast 0 heisst: JEDES Auftreten ist ein Ereignis, kein Anteil. Deshalb Schwelle
+// "mindestens einer", genau wie beim hartkodierten FX-Kurs in watch-fx-sanity.js.
+// MELDEN, nicht reparieren — wie der ganze Waechter.
+function positiveCapexJahre(s) {
+  const treffer = [];
+  norm(s || {}, 'annualCapex').forEach((v, index) => {
+    if (Number.isFinite(v) && v > 0) treffer.push({ index, wert: v });
+  });
+  return treffer;
+}
 
 function loadJson(p, fallback) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (_) { return fallback; }
@@ -124,20 +143,42 @@ function main() {
     return 1;
   }
   const funde = [];
+  const capexPositiv = [];
+  let capexWerte = 0;
   for (const f of dateien) {
     let s;
     try { s = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, f), 'utf8')); } catch (_) { continue; }
     const annual = s && s.annual;
     if (!annual) continue;
+    const ticker = (s.meta && s.meta.ticker) || f.replace(/\.json$/, '');
     for (const name of REIHEN) {
       for (const t of findeAusreisser(annual[name])) {
-        funde.push({ ticker: (s.meta && s.meta.ticker) || f.replace(/\.json$/, ''), reihe: name, ...t });
+        funde.push({ ticker, reihe: name, ...t });
       }
     }
+    capexWerte += norm(s, 'annualCapex').filter(Number.isFinite).length;
+    for (const t of positiveCapexJahre(s)) capexPositiv.push({ ticker, ...t });
   }
   const schluessel = (x) => `${x.ticker}|${x.reihe}|${x.index}`;
   const basis = loadJson(BASELINE_PATH, {});
   const mio = (v) => (v / 1e6).toFixed(0);
+
+  // Capex-Vorzeichen ZUERST und UNABHAENGIG von allem darunter: die Annahme, auf der die
+  // OCF-Rekonstruktion der Burn-Bremse ruht, hat mit dem Ausreisser-Bestand nichts zu tun.
+  // Stuende die Pruefung weiter unten, wuerde sie von der Populations-Wache und vom
+  // --neu-aufnehmen-Zweig uebersprungen — also genau dann schweigen, wenn ohnehin niemand
+  // hinsieht. Der gepruefte UMFANG wird immer mitgenannt: "0 Verstoesse" ohne ihn ist keine
+  // Entwarnung, sondern eine unbeantwortete Frage.
+  console.log(`Capex-Vorzeichen: ${capexPositiv.length} positive Werte bei ${capexWerte} geprueften (Annahme: Capex <= 0)`);
+  for (const x of capexPositiv.slice(0, 20)) console.log(`  POSITIV  ${x.ticker} · annualCapex[${x.index}] = ${mio(x.wert)} Mio`);
+  if (capexPositiv.length > 20) console.log(`  … und ${capexPositiv.length - 20} weitere`);
+  let capexExit = 0;
+  if (capexPositiv.length > 0) {
+    capexExit = 1;
+    console.error(`::error::${capexPositiv.length} POSITIVE annualCapex-Werte (Grundlast im Bestand: 0 von 40.950 — jedes Auftreten ist ein Ereignis). `
+      + 'Die Burn-Bremse rekonstruiert fehlendes OCF als FCF minus Capex (lamps.js operatingCashSeries) und rechnet dabei mit Capex <= 0. '
+      + 'Ist das Vorzeichen gedreht, kann eine Strafe entstehen, die die Lampe nicht anzeigt. Liste oben.');
+  }
 
   // Bewusstes Neuaufnehmen: NUR im CI sinnvoll (siehe Populations-Wache unten).
   if (process.argv.includes('--neu-aufnehmen')) {
@@ -159,7 +200,7 @@ function main() {
     console.log(`::warning::Ausreisser-Bestand NEU AUFGENOMMEN: ${neuerBestand.faelle.length} Faelle `
       + `auf ${dateien.length} Snapshots. Dieser Lauf ist damit NICHT auf neue Ausreisser geprueft `
       + '(die Basis ist sein eigenes Ergebnis) — der naechste ist es wieder.');
-    return 0;
+    return capexExit; // die Capex-Pruefung oben lief trotzdem und behaelt ihr Urteil
   }
 
   // POPULATIONS-WACHE (Fund 29.07.): Ein Bestand, der auf einer ANDEREN Population
@@ -191,10 +232,10 @@ function main() {
     console.error(`::error::${neu.length} NEUE Jahres-Ausreisser (erlaubt ${MAX_NEU}) — einzelne Jahre weichen um Faktor ${FAKTOR}+ von BEIDEN Nachbarn ab. Entweder echte Sonderjahre oder frisch eingefrorene Fehlabrufe; Liste oben.`);
     return 1;
   }
-  return 0;
+  return capexExit;
 }
 
-module.exports = { findeAusreisser, basisGueltig, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
+module.exports = { findeAusreisser, basisGueltig, positiveCapexJahre, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
 
 if (require.main === module) {
   try {

@@ -99,5 +99,34 @@ check('Erstlauf ohne Basis wird NICHT angeklagt', () => {
   assert.equal(basisGueltig(null, 12482).ok, true);
 });
 
+// --- Capex-Vorzeichen (Review-Befund 03.08.2026) ---------------------------
+// Die Burn-Bremse rekonstruiert fehlendes OCF als FCF minus Capex (lamps.js
+// operatingCashSeries). Dass daraus nie eine Strafe OHNE sichtbare Lampe wird, ruht auf
+// einer DATENannahme: Capex ist negativ gespeichert (Mittelabfluss). Heute gilt sie
+// vollstaendig — 0 positive Werte bei 17.357 gemessenen im lokalen Baum, 0 von 40.950 im
+// CI-Baum. Ungeprueft war sie trotzdem, und der snake_case-Fallback in _ftsValue koennte
+// sie theoretisch verletzen. Grundlast 0 heisst: JEDES Auftreten ist ein Ereignis, nicht
+// ein Anteil (dieselbe Schwellen-Logik wie beim hartkodierten FX-Kurs in watch-fx-sanity).
+const { positiveCapexJahre } = require('../scripts/watch-annual-spikes.js');
+
+check('positiveCapexJahre: der Normalfall (alles negativ) meldet nichts', () => {
+  assert.deepEqual(positiveCapexJahre({ annual: { annualCapex: [-500e6, -300e6, null, -100e6] } }), []);
+  assert.deepEqual(positiveCapexJahre({ annual: {} }), [], 'fehlende Reihe ist kein Befund');
+  assert.deepEqual(positiveCapexJahre({}), []);
+});
+
+check('positiveCapexJahre: ein POSITIVER Wert fliegt auf, mit Position und Betrag', () => {
+  const t = positiveCapexJahre({ annual: { annualCapex: [-500e6, 42e6, -100e6] } });
+  assert.equal(t.length, 1);
+  assert.equal(t[0].index, 1);
+  assert.equal(t[0].wert, 42e6);
+  // mehrere zugleich werden alle gemeldet, keine stille Kappung
+  assert.equal(positiveCapexJahre({ annual: { annualCapex: [7, -1, 9] } }).length, 2);
+});
+
+check('positiveCapexJahre: exakt 0 ist KEIN Verstoss (Capex <= 0 ist die Annahme)', () => {
+  assert.deepEqual(positiveCapexJahre({ annual: { annualCapex: [0, -1] } }), []);
+});
+
 console.log('\nannual-spikes: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);
