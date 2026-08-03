@@ -272,3 +272,25 @@ Das QC-Achsenset enthaelt eine **Dauerhaftigkeits-/Stabilitaets-Achse `roicStabi
 ### Retention / Deploy
 
 `quality/` faellt unter dieselbe **Retention-Grundgesetz-7a**-Regel (§8): latest-only, atomar ueberschrieben, kein Anhaengen. Der Deploy-Step kopiert `outputs/findash-export/v1/.` rekursiv (`cp -r`) und nimmt den `quality/`-Unterordner damit automatisch mit — **keine** Aenderung am Deploy-Step noetig.
+
+---
+
+## 11. Datenkanal-Beipack (F-17a) — NICHT Teil des v1-Vertrags
+
+**Karl-Entscheid 04.08.2026, Option c.** findash las bis dahin zwei Dinge per `git pull` aus einem lokalen Checkout dieses Repos statt aus dem oeffentlichen Kanal: den Termin-Kalender und die Vintages der Bewegungs-Anzeige. Auf dem findash-Server gibt es diesen Checkout nicht — der Pull wird dort abgeschaltet, beides liegt jetzt auf `gh-pages`.
+
+Diese Pfade sind **bewusst ausserhalb** von `outputs/findash-export/v1/`: sie folgen nicht der v1-Datei-Huelle, unterliegen nicht dem `--check`-Vertragsgate und loesen keinen v2-Bump aus. Sie sind ein Beipack zum selben Publish, kein Vertragsbestandteil.
+
+| Pfad auf `gh-pages` | Quelle | Publiziert von | Groesse |
+| ------------------- | ------ | -------------- | ------- |
+| `outputs/earnings-calendar.json` | `earnings-calendar.json` (Repo-Wurzel, aus dem prep-Job) | `daily-pull.yml`, merge-Job, Schritt „Stage earnings-calendar…" + Deploy 1/2 | ~0,54 MB, byte-genaue Kopie |
+| `outputs/board-history/index.json` | abgeleitet | `daily-pull.yml`, scoring-Job, Schritt „Publish board-history vintages…" | ~1 KB |
+| `outputs/board-history/<YYYY-MM-DD>/<board>.json` | `board-history/<datum>/` | dito | ~0,25 MB je Vintage |
+
+**`index.json`** (`schema: board-history-publish/v1`) listet `vintages: [{ date, files: [...] }]`, aelteste zuerst. Ueber HTTP gibt es kein `readdir` — ohne diese Liste findet ein Konsument die Vintages nicht.
+
+**Warum nur ein Ausschnitt** (`scripts/stage-public-data.js`): das ganze `board-history/` sind 95 MB, zwei volle Vintages 27 MB. Publiziert werden (1) nur die **2 juengsten** Vintages — findashs `computeMovement()` nimmt `vintages.slice(-2)`, aeltere liest es nie; (2) nur Dateien **mit `cohort`** — die Sidecars `calibration.json`/`regime.json` erkennt findash ohnehin inhaltsbasiert als Nicht-Board; (3) je Zeile nur **`rank`/`ticker`/`score`** — mehr liest die Bewegungs-Anzeige nicht (`score` bleibt, weil ihre Zeilen-Pruefung den anwesenden Schluessel verlangt). Ergebnis: **0,5 MB statt 27 MB**, bei unveraenderter Dateiform (`cohort.profitable` / `cohort.unprofitable`).
+
+**Frische.** Der Kalender wird im merge-Job publiziert (dort ist er frisch; der scoring-Job checkt den Trigger-Commit aus und saehe den Vortagsstand). Die Vintages werden **nach** dem Vintage-Commit publiziert — vorher existiert das Vintage von heute noch nicht, und die Anzeige vergleicht die zwei juengsten Staende. Ein **SUSPECT**-Vintage (Wert-Gate, rc=2) geht weder nach `main` noch in den Kanal.
+
+**Fail-loud.** Fehlt eine Quelle, endet der Publish mit `::error::` + Exit 1 statt sie still wegzulassen — sonst zeigte findash nach der Umstellung wortlos nichts. Waechter: `tests/stage-public-data.test.js`.

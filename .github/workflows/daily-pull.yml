@@ -891,6 +891,22 @@ jobs:
           echo "schreibt und in EXPECTED_SCRIPTS eingetragen wird."
           node scripts/pipeline-health-check.js
 
+      # F-17a (Karl-Entscheid 04.08.2026, Option c): earnings-calendar.json in den
+      # OEFFENTLICHEN Datenkanal. findash las die Datei bisher per git-Pull aus einem
+      # lokalen Checkout dieses Repos; auf dem findash-Server gibt es diesen Checkout
+      # nicht, der Pull wird abgeschaltet (Teil b, findash-Seite).
+      # HIER und nicht im scoring-Job: der scoring-Job checkt github.sha aus (den
+      # Trigger-Commit) und saehe den Stand von GESTERN. Die frische Datei entsteht im
+      # prep-Job und liegt genau hier vor (prep-state-Artefakt + der Commit oben).
+      # outputs/ ist gitignored und wird vom Deploy-Schritt darunter komplett nach
+      # gh-pages kopiert -> keine zweite Publish-Mechanik noetig.
+      # Fehlt die Quelle, endet der Schritt mit ::error:: + exit 1 statt sie still
+      # wegzulassen; ein stilles Weglassen hiesse: findash zeigt keine Termine mehr und
+      # niemand erfaehrt warum. Waechter: tests/stage-public-data.test.js.
+      - name: Stage earnings-calendar for public data channel (F-17a)
+        if: success()
+        run: node scripts/stage-public-data.js --ziel outputs --earnings earnings-calendar.json
+
       # Tag 146/153: gh-pages-Deploy 1 von 2 (index.html + outputs/, inkl. dem
       # coverage-status.json-Marker). Nur bei erfolgreichem Data-Commit (if:success()).
       # scoring-Deploy (2/2) laeuft danach (needs:merge) -> die zwei Force-Pushes racen NICHT.
@@ -1379,3 +1395,60 @@ jobs:
             echo "::error::board-history vintage SUSPECT geflaggt (Wert-Gate) fuer $VINTAGE_DATE — NICHT committet, bitte pruefen."
             exit 2
           fi
+
+      # F-17a (Karl-Entscheid 04.08.2026, Option c): die Bewegungs-Anzeige (NEU/Rangpfeile)
+      # in den OEFFENTLICHEN Datenkanal. findash las board-history/ bisher per git-Pull aus
+      # einem lokalen Checkout dieses Repos; der Pull wird abgeschaltet (Teil b).
+      #
+      # WARUM HIER UNTEN und nicht im Deploy-Schritt oben: das Vintage von HEUTE entsteht
+      # erst im Schritt "Write board-history vintage" DANACH, und die Anzeige vergleicht die
+      # zwei juengsten Staende. Aus dem Deploy-Schritt heraus publiziert waeren das gestern
+      # und vorgestern — findash zeigte dann die Bewegung von GESTERN unter den Boards von
+      # HEUTE, ohne dass es jemandem auffiele. Die Schritt-Reihenfolge oben bleibt damit
+      # unangetastet (ein SUSPECT-Vintage darf den Board-Deploy weiterhin nicht blocken).
+      #
+      # if: success() erledigt zugleich den SUSPECT-Fall: bei rc=2 endet der Commit-Schritt
+      # darueber mit exit 2, dieser Schritt wird uebersprungen — das suspekte Vintage geht
+      # also weder nach main noch in den Kanal. Genau das Verhalten, das der git-Pull hatte.
+      #
+      # Kein eigener Klon: _ghp ist der gh-pages-Klon aus "Deploy Scoring Output to GitHub
+      # Pages" — derselbe Job, dasselbe Arbeitsverzeichnis, und der Schritt lief bereits.
+      # Fehlt er, ist das ein Defekt und kein Grund, still nichts zu publizieren.
+      - name: Publish board-history vintages to public data channel (F-17a)
+        if: success()
+        run: |
+          node scripts/stage-public-data.js --ziel _public --board-history board-history --vintages 2
+          if [ ! -d _ghp/.git ]; then
+            echo "::error::_ghp fehlt (gh-pages-Klon des Deploy-Schritts) — board-history NICHT publiziert; findash zeigt sonst still keine Bewegung."
+            exit 1
+          fi
+          cd _ghp
+          for i in 1 2 3; do
+            if [ "$i" -gt 1 ]; then
+              if git fetch origin gh-pages 2>/dev/null && git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then
+                git reset --hard origin/gh-pages
+              fi
+            fi
+            # Ziel VOR dem Kopieren leeren — sonst sammeln sich die Vintage-Ordner auf
+            # gh-pages unbegrenzt an (jeder Tag legt einen neuen an, keiner geht je wieder).
+            rm -rf outputs/board-history
+            mkdir -p outputs
+            cp -r ../_public/board-history outputs/board-history
+            git add -A
+            # Wie in den beiden Deploys oben: ab Versuch 2 heisst "kein Diff" nicht "nichts
+            # zu tun", sondern "unser Commit steht noch unveroeffentlicht auf HEAD".
+            if git diff --staged --quiet; then
+              if [ "$i" -eq 1 ]; then echo "board-history im Datenkanal unveraendert."; exit 0; fi
+              echo "kein neuer Diff in Versuch $i — wiederhole den Push des bestehenden Commits"
+            else
+              git commit -m "deploy: board-history vintages $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            fi
+            if git push --force origin gh-pages; then
+              echo "✓ board-history im Datenkanal publiziert (Versuch $i)"
+              exit 0
+            fi
+            echo "board-history publish attempt $i failed, retrying..."
+            sleep $((5 * i))
+          done
+          echo "::error::board-history publish failed after 3 attempts — findash sieht die Bewegungs-Anzeige nicht."
+          exit 1
