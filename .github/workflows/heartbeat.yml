@@ -111,6 +111,22 @@ jobs:
             console.log('OK: Preis-Substrat frisch (oder Bootstrap).');
           "
 
+      # S4-PRICE-001 (Block-5-Verifikation 2026-08-03) — dritter Schritt: WIE VIEL Preis
+      # steht ueberhaupt da? Die beiden Schritte darueber messen, ob der Pull noch schreibt
+      # (Store-Stempel) und ob die Benchmark fortschreitet (SPY). Beide sahen am 03.08. frisch
+      # aus, waehrend 1.801 von 15.337 Watchlist-Titeln (11,7 %) keine einzige Kurszeile hatten
+      # und 38 Serien aelter als 30 Tage waren. Genau diese Luecke ist zwischen "der Pull lebt"
+      # und "die Benchmark lebt" hindurchgefallen.
+      #
+      # MESSUNG, KEIN GATE: der Schritt kann nicht rot werden (das Skript kennt kein exit 1 und
+      # kein ::error::). Ab welchem Anteil das ein Alarm sein soll, ist eine Schwellen-Frage und
+      # gehoert vor den Rat — eine ausgedachte Schwelle waere entweder Dauer-Alarm oder Deko.
+      # if: always(), damit die Zahl, die erklaert WIE SCHLIMM es steht, nicht ausgerechnet dann
+      # ausfaellt, wenn der Substrat-Schritt darueber angeschlagen hat.
+      - name: Check price coverage (S4-PRICE-001, Messung ohne Schwelle)
+        if: always()
+        run: node scripts/heartbeat-preis-abdeckung.js
+
       # Masterplan Task 0.10 — Dead-Man fuer die Schutz-Kadenzen (weekly-guard / monthly-plan-check).
       # Der Heartbeat ist der bewiesen-taeglich-lebende, unabhaengige Kanal; er liest die committeten
       # Kadenz-Marker und wird rot, wenn ein Trigger ausbleibt (Cron still gestoppt / disabled / Marker-
