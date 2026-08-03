@@ -135,15 +135,34 @@ const SRC_RU = require('node:fs').readFileSync(
 const GATE_ZEILE = 'if (!inDiscoveryMcapBand(mcap)) continue;';
 const INGEST_MARKER = 'for (const q of quotes) {';
 
-// Schleifenkoerper = vom Marker bis zur schliessenden Klammer auf Schleifen-Einrueckung
-// (6 Leerzeichen; alles Innere steht tiefer eingerueckt). Zeilenkommentare fliegen raus,
-// sonst haelt eine auskommentierte Gate-Zeile den Pruefer gruen.
+// T567-W1 (Konvergenz-Check Tag 567): der Schleifenkoerper wurde an der EINRUECKUNG erkannt
+// (`\n      }` = 6 Leerzeichen). Repro q3d.js: dieselbe Datei um 4 Leerzeichen flacher
+// eingerueckt (Extraktion in eine Top-Level-Funktion — eine voellig normale Refaktorierung)
+// liess den Sucher den Block nach 0 Zeichen enden; ein eingefuegter Zweitboden blieb GRUEN.
+// Der Waechter haette also genau in dem Moment geschwiegen, in dem jemand den Code anfasst.
+// Jetzt werden KLAMMERN gezaehlt: der Marker hat seine oeffnende schon verbraucht, wir
+// starten bei Tiefe 1 und schneiden bei Tiefe 0. Kommentare fliegen VOR dem Zaehlen raus
+// (sonst kippt eine auskommentierte Klammer die Tiefe) — und damit auch weiterhin, bevor
+// irgendetwas gesucht wird, sonst haelt eine auskommentierte Gate-Zeile den Pruefer gruen.
 function ingestSchleifen(src) {
-  return src.split(INGEST_MARKER).slice(1).map(rest => {
-    const ende = rest.search(/\n {6}\}/);
-    return (ende < 0 ? rest : rest.slice(0, ende)).replace(/\/\/[^\n]*/g, '');
+  return src.split(INGEST_MARKER).slice(1).map((rest) => {
+    const ohneKommentar = rest.replace(/\/\/[^\n]*/g, '');
+    let tiefe = 1, i = 0;
+    for (; i < ohneKommentar.length && tiefe > 0; i++) {
+      const c = ohneKommentar[i];
+      if (c === '{') tiefe++;
+      else if (c === '}') tiefe--;
+    }
+    return tiefe === 0 ? ohneKommentar.slice(0, i - 1) : ohneKommentar;
   });
 }
+// T567-W2 (Konvergenz-Check Tag 567): das Zweitboden-Muster hing am NAMEN `mcap`. Repro q3.js:
+// 'if (mcapUsd < 2e9) continue;' und 'if (q.marketCap < 2e9) continue;' — der zweite ist
+// woertlich der Bug-4-Fehler (Vergleich auf dem Rohfeld in Listing-Waehrung) — blieben beide
+// GRUEN. Wirkungsgebunden statt namensgebunden: JEDER Vergleich gegen ein grosses Zahl-Literal
+// im Schleifenkoerper ist verdaechtig, egal wie die Variable heisst. Der gueltige Stand
+// enthaelt nur `sym.length > 12` (2 Ziffern, kein Exponent) und faellt nicht darunter.
+const ZWEITBODEN_RE = /[<>]=?\s*(\d+(\.\d+)?e\d+|\d{7,})/g;
 function verdrahtungsMaengel(src) {
   const maengel = [];
   const bloecke = ingestSchleifen(src);
@@ -154,6 +173,8 @@ function verdrahtungsMaengel(src) {
     if (!b.includes(GATE_ZEILE)) maengel.push('Schleife ' + (i + 1) + ': Gate fehlt in der verwerfenden Form');
     for (const t of b.match(/\bmcap\s*[<>]=?\s*[\w.]/g) || [])
       maengel.push('Schleife ' + (i + 1) + ': zweiter mcap-Vergleich neben dem Gate ("' + t.trim() + '")');
+    for (const t of b.match(ZWEITBODEN_RE) || [])
+      maengel.push('Schleife ' + (i + 1) + ': Vergleich gegen ein grosses Zahl-Literal ("' + t.trim() + '")');
   });
   return maengel;
 }
@@ -186,6 +207,66 @@ test('T562-M2 Gegenprobe: ein entferntes Gate fliegt auf — auch als Kommentar 
   assert.equal((getarnt.match(/if \(!inDiscoveryMcapBand\(mcap\)\) continue;/g) || []).length, 2,
     'alter Zaehler-Waechter: 2 Treffer -> gruen, obwohl eine Schleife ungefiltert laeuft');
   assert.ok(verdrahtungsMaengel(getarnt).length > 0, 'die Kommentar-Tarnung muss auffliegen');
+});
+
+// ── T567-W1: der Blockschnitt hing an der EINRUECKUNG ─────────────────────────────
+test('T567-W1: eine flacher eingerueckte Datei bleibt pruefbar (Repro q3d.js)', () => {
+  // Die Refaktorierung, die den alten Waechter blind machte: Ingest-Schleife eine Ebene
+  // hoeher (z. B. in eine eigene Funktion gezogen). Fachlich identisch, Waechter tot.
+  const flach = SRC_RU.split('\n').map((l) => (l.startsWith('      ') ? l.slice(4) : l)).join('\n');
+  assert.deepEqual(verdrahtungsMaengel(flach), [], 'der gueltige Stand muss auch flach eingerueckt durchgehen');
+  // Zweitboden ans ENDE des Rumpfes (vor kept++) — genau dort, wo der einrueckungs-
+  // abhaengige Schnitt nach dem Reindent zu frueh abschneidet.
+  const mitZweitboden = flach.replace('kept++;', 'if (mcap < 2e9) continue;\n    kept++;');
+  assert.notEqual(mitZweitboden, flach, 'Mutation griff nicht — dann prueft die Gegenprobe nichts');
+  assert.ok(verdrahtungsMaengel(mitZweitboden).length > 0,
+    'BEFUND (Repro q3d.js): nach dem Reindent blieb der alte Sucher gruen, obwohl ein Zweitboden drinstand');
+  // Beleg, dass der ALTE, einrueckungs-abhaengige Schnitt hier wirklich versagt haette:
+  const altSchnitt = (src) => src.split(INGEST_MARKER).slice(1)
+    .map((rest) => { const o = rest.replace(/\/\/[^\n]*/g, ''); const e = o.search(/\n {6}\}/); return e < 0 ? o : o.slice(0, e); });
+  assert.ok(!altSchnitt(mitZweitboden)[0].includes('mcap < 2e9'),
+    'der alte Schnitt haette den Zweitboden aus dem Block geschnitten (das IST der Befund)');
+  assert.ok(ingestSchleifen(mitZweitboden)[0].includes('mcap < 2e9'),
+    'der Klammer-Zaehler haelt ihn im Block');
+});
+
+test('T567-W1: der Block endet am echten Schleifen-Ende, nicht irgendwo', () => {
+  const [predefined, exchange] = ingestSchleifen(SRC_RU);
+  // Rumpf-Ende-Pin: das jeweils letzte Statement der Schleife muss drin sein …
+  assert.match(predefined, /kept\+\+;\s*$/, 'Predefined-Schleife endet auf kept++');
+  assert.match(exchange, /customAdded\+\+;\s*\}\s*$/, 'Exchange-Schleife endet auf den if-Block');
+  // … und das erste Statement NACH der Schleife darf nicht mehr drin sein.
+  assert.ok(!predefined.includes('predefinedKept +='), 'Predefined-Block laeuft ueber das Schleifen-Ende hinaus');
+  assert.ok(!exchange.includes('totalKept += kept;'), 'Exchange-Block laeuft ueber das Schleifen-Ende hinaus');
+});
+
+// ── T567-W2: das Zweitboden-Muster hing am Variablennamen ─────────────────────────
+test('T567-W2: ein Zweitboden fliegt auch unter anderem Namen auf (Repro q3.js)', () => {
+  const faelle = {
+    'mcapUsd-Zweitboden': 'const mcapUsd = mcap;\n        if (mcapUsd < 2e9) continue;\n        ',
+    'q.marketCap-Zweitboden (der Bug-4-Fehler selbst)': 'if (q.marketCap < 2e9) continue;\n        ',
+    'Zweitboden als Ganzzahl-Literal': 'if (q.marketCap < 2000000000) continue;\n        ',
+    'negierte Form': 'if (!(mcap >= 2e9)) continue;\n        ',
+  };
+  for (const [name, einschub] of Object.entries(faelle)) {
+    const mutiert = SRC_RU.replace(GATE_ZEILE, einschub + GATE_ZEILE);
+    assert.notEqual(mutiert, SRC_RU, name + ': Mutation griff nicht');
+    assert.ok(verdrahtungsMaengel(mutiert).length > 0,
+      name + ': BEFUND (Repro q3.js) — der namensgebundene Pruefer blieb hier gruen');
+  }
+});
+
+test('T567-W2: der gueltige Stand bleibt gruen (sonst waere der Pruefer falsch-rot)', () => {
+  // Das ist die eigentliche Gefahr einer wirkungsgebundenen Regel: sie darf die kleinen,
+  // legitimen Zahlenvergleiche der Ingest-Schleifen nicht mitnehmen (Symbol-Laenge,
+  // Seitengroesse). Nur Groessenordnungen, in denen eine Marktkapitalisierung lebt.
+  assert.deepEqual(verdrahtungsMaengel(SRC_RU), []);
+  for (const harmlos of ['if (sym.length > 12) continue;', 'if (quotes.length < 250) {', 'offset += 250;']) {
+    assert.deepEqual(harmlos.match(ZWEITBODEN_RE), null, 'falsch-rot bei: ' + harmlos);
+  }
+  for (const boden of ['if (mcapUsd < 2e9)', 'x >= 800000000', 'if (v<1.5e9)']) {
+    assert.notEqual(boden.match(ZWEITBODEN_RE), null, 'muss als Zweitboden gelten: ' + boden);
+  }
 });
 
 const YML = require('node:fs').readFileSync(
@@ -261,26 +342,26 @@ test('T562-M1: Fixture — eine gesunde Boersenseite laeuft am Gate komplett lee
   assert.equal(behalten, 0, 'Vorbedingung des Befunds: jede Zeile faellt still am Gate');
   assert.equal(ru.beideYahooKanaeleLeer(325, false, 0), false,
     'Beleg der Luecke: der Tag-510-Waechter schweigt, weil er Buckets misst statt Behaltenes');
-  assert.ok(ru.kanalLeerlaufAlarm('Test-Kanal', seite.length, behalten, 2),
+  assert.ok(ru.kanalLeerlaufAlarm('Test-Kanal', seite.length, behalten, 2, 0),
     'genau hier muss der neue Waechter feuern');
 });
 
 test('T562-M1: Waechter feuert NUR bei "abgeholt > 0 und nichts behalten"', () => {
-  assert.equal(ru.kanalLeerlaufAlarm('K', 0, 0, 0), null,
+  assert.equal(ru.kanalLeerlaufAlarm('K', 0, 0, 0, 0), null,
     'gar nichts abgeholt ist der Fall der bestehenden Waechter (Tag 510 / BH-100), nicht dieser');
-  assert.equal(ru.kanalLeerlaufAlarm('K', 5000, 1, 0), null,
+  assert.equal(ru.kanalLeerlaufAlarm('K', 5000, 1, 0, 0), null,
     'eine einzige behaltene Zeile heisst: der Kanal lebt');
-  assert.ok(ru.kanalLeerlaufAlarm('K', 5000, 0, 0), 'abgeholt und nichts behalten -> Alarm');
+  assert.ok(ru.kanalLeerlaufAlarm('K', 5000, 0, 0, 0), 'abgeholt und nichts behalten -> Alarm');
 });
 
 test('T562-M1: der Alarm trennt den Drop-Grund (FX-Luecke vs. ausserhalb Band)', () => {
   // Ohne getrennten Grund sagt die Meldung nur "nichts behalten" — die naechste Debug-Runde
   // faengt dann wieder bei null an. isUnpriceable() kann genau das unterscheiden.
-  assert.match(ru.kanalLeerlaufAlarm('K', 100, 0, 100), /fx-rates\.json/);
-  assert.doesNotMatch(ru.kanalLeerlaufAlarm('K', 100, 0, 0), /fx-rates\.json/);
-  assert.ok(ru.kanalLeerlaufAlarm('K', 100, 0, 0).startsWith('::error::'),
+  assert.match(ru.kanalLeerlaufAlarm('K', 100, 0, 100, 0), /fx-rates\.json/);
+  assert.doesNotMatch(ru.kanalLeerlaufAlarm('K', 100, 0, 0, 0), /fx-rates\.json/);
+  assert.ok(ru.kanalLeerlaufAlarm('K', 100, 0, 0, 0).startsWith('::error::'),
     'muss als GitHub-Annotation sichtbar sein, sonst sieht Karl es nicht');
-  assert.match(ru.kanalLeerlaufAlarm('Predefined-Screener-Kanal', 100, 0, 0), /Predefined-Screener-Kanal/,
+  assert.match(ru.kanalLeerlaufAlarm('Predefined-Screener-Kanal', 100, 0, 0, 0), /Predefined-Screener-Kanal/,
     'die Meldung muss sagen, WELCHER Kanal leerlief');
 });
 
@@ -291,6 +372,47 @@ test('T562-M1: beide Ingest-Schleifen trennen den Drop-Grund (isUnpriceable)', (
   ingestSchleifen(SRC_RU).forEach((b, i) => {
     assert.match(b, /isUnpriceable\(q\.marketCap, q\.currency, _FX_RATES\)/,
       'Schleife ' + (i + 1) + ': zaehlt den FX-Drop-Grund nicht mit');
+  });
+});
+
+// ── T567-W3: die Ursachen-Behauptung war ungedeckt ────────────────────────────────
+test('T567-W3: alles fiel VOR dem Gate -> keine FX-/Band-Ursache behaupten', () => {
+  // Die 4 bewusst nicht-Equity-Buckets (Fonds/Anleihen) koennen genau das erzeugen.
+  const m = ru.kanalLeerlaufAlarm('K', 100, 0, 0, 100);
+  assert.match(m, /KEINE EINZIGE Zeile hat das Groessen-Gate ueberhaupt erreicht/);
+  assert.doesNotMatch(m, /ausserhalb \$/,
+    'BEFUND: bis Tag 570 behauptete der Alarm hier eine Groessen-Ursache, die es nie gab');
+  assert.doesNotMatch(m, /fx-rates\.json/);
+  assert.match(m, /100 Zeilen fielen VOR dem Gate/, 'die Zahl gehoert in die Meldung');
+});
+
+test('T567-W3: was am Gate ankam, wird weiter sauber getrennt', () => {
+  assert.match(ru.kanalLeerlaufAlarm('K', 100, 0, 40, 60), /fx-rates\.json/,
+    '40 von 40 Gate-Erreichern hatten eine FX-Luecke');
+  const band = ru.kanalLeerlaufAlarm('K', 100, 0, 0, 60);
+  assert.match(band, /ausserhalb \$800M-\$500B/);
+  assert.match(band, /jede der 40 Zeilen am Gate/, 'die Restmenge muss beziffert sein');
+  assert.match(band, /60 Zeilen fielen VOR dem Gate/);
+});
+
+test('T567-W3: geht die Zerlegung nicht auf, wird KEINE Ursache behauptet', () => {
+  for (const [fx, vor] of [[0, undefined], [0, -1], [0, 200], [80, 60]]) {
+    const m = ru.kanalLeerlaufAlarm('K', 100, 0, fx, vor);
+    assert.match(m, /Zerlegung geht nicht auf/, `fx=${fx} vor=${vor}`);
+    assert.doesNotMatch(m, /fx-rates\.json/, 'keine Ursache raten, wenn die Rechnung nicht stimmt');
+  }
+});
+
+// Die Zerlegung ist nur vollstaendig, solange es GENAU ZWEI verwerfende Pfade je Schleife
+// gibt. Ein dritter, ungezaehlter continue wuerde still in die Band-Zahl wandern und die
+// Ursachen-Behauptung wieder ungedeckt machen — deshalb am Objekt gezaehlt.
+test('T567-W3: jede Ingest-Schleife hat genau zwei verwerfende Pfade (Vor-Gate + Band)', () => {
+  ingestSchleifen(SRC_RU).forEach((b, i) => {
+    assert.equal((b.match(/\bcontinue;/g) || []).length, 2,
+      'Schleife ' + (i + 1) + ': jeder weitere continue-Pfad muss gezaehlt werden, sonst ' +
+      'behauptet kanalLeerlaufAlarm wieder eine Ursache, die er nicht kennt');
+    assert.match(b, /_vorGateVerworfen\(q\)\) \{ \w+\+\+; continue; \}/,
+      'Schleife ' + (i + 1) + ': der Vor-Gate-Pfad muss gezaehlt werden');
   });
 });
 

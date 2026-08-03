@@ -259,6 +259,25 @@ function _looksUS(exchange, source) {
 function _isNonEquityQuote(q) {
   return !!(q && q.quoteType && q.quoteType !== 'EQUITY');
 }
+// T567-W3 (Konvergenz-Check Tag 567): alle Verwerfungen VOR dem Mcap-Gate an einer Stelle.
+// Beide Ingest-Schleifen fuhren dieselben fuenf continue-Zeilen (Tag 221 Junk-Suffixe +
+// BH-039 Nicht-Equity) doppelt — und keine davon war gezaehlt. Fuer kanalLeerlaufAlarm ist
+// das der Unterschied zwischen "am Groessen-Gate ist alles verworfen worden" und "es kam nie
+// eine Zeile am Gate an": die vier bewusst nicht-Equity-Buckets (solid_*_funds,
+// conservative_foreign_funds, high_yield_bond) koennen einen Bucket komplett vor dem Gate
+// leeren, und der Alarm behauptete dann eine FX-/Band-Ursache, die es nie gab.
+// Tag 221 (audit Tag 221a): Junk-Suffixe. NASDAQ-Trader und manche Yahoo-Screener-Antworten
+// liefern Vorzugsaktien-Varianten (ABR$D, ACP$A — 375 Stueck in der Pre-Tag-221-Watchlist),
+// die Yahoos quoteSummary nicht kennt; sie kosten taeglich Rate-Limit-Budget fuer nichts.
+// Deshalb schon in der Entdeckung raus, damit sie nie in die Watchlist kommen.
+function _vorGateVerworfen(q) {
+  if (!q || !q.symbol) return true;
+  const sym = String(q.symbol).toUpperCase();
+  if (/[$]/.test(sym)) return true;        // preferred-stock variants
+  if (/[/\\\s]/.test(sym)) return true;    // path-separators or whitespace = corrupt
+  if (sym.length > 12) return true;        // longer than any real ticker — likely a name
+  return _isNonEquityQuote(q);             // BH-039: explizite Nicht-Equity-Zeilen
+}
 // BH-038: yahoo-finance2 v3.14's screener() schema accepts only {scrIds}; the query-based
 // exchange-screener call throws this message deterministically, before any network I/O, on
 // every single exchange — a permanent config incompatibility, not a transient per-exchange
@@ -546,18 +565,46 @@ function inDiscoveryMcapBand(mcapUsd) {
 // Predefined-Kanal wieder scharf, die Lage ist also nicht mehr theoretisch.
 // Reine Funktion (Zaehler rein, Meldung raus), damit sie ohne Netz pruefbar ist — und
 // damit BEIDE Kanaele dieselbe Wache rufen statt jeder seine eigene zu bauen.
-function kanalLeerlaufAlarm(kanal, abgeholt, behalten, fxLuecken) {
+// T567-W3 (Konvergenz-Check Tag 567): die Ursachen-Behauptung war ungedeckt. Der Alarm kannte
+// nur "abgeholt" und "behalten" und schloss daraus auf FX-Luecke ODER Band-Entscheidung — aber
+// zwischen beiden liegt der Vor-Gate-Filter (_vorGateVerworfen: Junk-Suffixe, Nicht-Equity).
+// Die vier bewusst nicht-Equity-Buckets (solid_*_funds, conservative_foreign_funds,
+// high_yield_bond) koennen einen Kanal komplett VOR dem Gate leeren; die Meldung haette dann
+// eine Waehrungs- oder Groessen-Ursache behauptet, die es nie gab, und die naechste
+// Debug-Runde in die falsche Richtung geschickt.
+// Jetzt wird zerlegt: abgeholt = vorFilterVerworfen + (behalten + fxLuecken + bandDrops).
+// Weil `behalten === 0` die Alarmbedingung ist, faellt bandDrops als Rest heraus. Die Rechnung
+// ist nur deshalb vollstaendig, weil es in beiden Ingest-Schleifen GENAU ZWEI verwerfende
+// Pfade gibt (Vor-Gate-Helfer + Band-Gate) — tests/refresh-universe.test.js pinnt das am
+// Objekt. Geht die Zerlegung trotzdem nicht auf, wird KEINE Ursache behauptet.
+function kanalLeerlaufAlarm(kanal, abgeholt, behalten, fxLuecken, vorFilterVerworfen) {
   if (!(abgeholt > 0 && behalten === 0)) return null;
-  return '::error::' + kanal + ' hat ' + abgeholt + ' Quotes abgeholt und davon KEINE EINZIGE behalten. ' +
-    (fxLuecken > 0
-      ? fxLuecken + ' Zeilen hatten ein echtes marketCap, aber fx-rates.json kennt ihre Handelswaehrung ' +
-        'nicht — FX-Artefakt-Luecke, keine Groessen-Entscheidung.'
-      : 'Keine FX-Luecke: entweder fehlt/aendert sich das Waehrungsfeld der Quotes (dann liefert toUsd() ' +
-        'null und das Band-Gate verwirft alles), oder wirklich jede Zeile lag ausserhalb $' +
-        (MIN_MCAP_DISCOVERY / 1e6) + 'M-$' + (MAX_MCAP_DISCOVERY / 1e9) + 'B.') +
-    ' Der Kanal LAEUFT und meldet trotzdem nichts: der Tag-510-Waechter misst abgeholte Buckets statt ' +
+  const kopf = '::error::' + kanal + ' hat ' + abgeholt + ' Quotes abgeholt und davon KEINE EINZIGE behalten. ';
+  const schluss = ' Der Kanal LAEUFT und meldet trotzdem nichts: der Tag-510-Waechter misst abgeholte Buckets statt ' +
     'Behaltenes, und MIN_DISCOVERY_CANDIDATES sieht die Yahoo-Kanaele nicht (DISCOVERY_SOURCE_NAMES ' +
     'listet nur die Adapter).';
+  const gateErreicht = abgeholt - vorFilterVerworfen;
+  const bandDrops = gateErreicht - behalten - fxLuecken;
+  if (!Number.isFinite(vorFilterVerworfen) || !(vorFilterVerworfen >= 0) || gateErreicht < 0 || bandDrops < 0) {
+    return kopf + 'Die Zerlegung geht nicht auf (' + abgeholt + ' abgeholt gegen ' + vorFilterVerworfen +
+      ' vor dem Gate + ' + fxLuecken + ' FX-Luecken + ' + behalten + ' behalten) — Ursache offen, es gibt ' +
+      'einen ungezaehlten Verwerfungs-Pfad in der Ingest-Schleife.' + schluss;
+  }
+  const vorFilterSatz = vorFilterVerworfen > 0
+    ? vorFilterVerworfen + ' Zeilen fielen VOR dem Gate (Nicht-Equity/Junk-Symbole). ' : '';
+  if (gateErreicht === 0) {
+    return kopf + vorFilterSatz + 'KEINE EINZIGE Zeile hat das Groessen-Gate ueberhaupt erreicht — das ist ' +
+      'keine Waehrungs- und keine Groessen-Frage. Bei den bewusst nicht-Equity-Buckets (Fonds/Anleihen) ' +
+      'ist genau das der Normalfall; sonst hat sich die Form der Quotes geaendert (Symbol-Feld, quoteType).' +
+      schluss;
+  }
+  return kopf + vorFilterSatz + (fxLuecken > 0
+    ? fxLuecken + ' Zeilen hatten ein echtes marketCap, aber fx-rates.json kennt ihre Handelswaehrung ' +
+      'nicht — FX-Artefakt-Luecke, keine Groessen-Entscheidung.'
+    : 'Keine FX-Luecke: entweder fehlt/aendert sich das Waehrungsfeld der Quotes (dann liefert toUsd() ' +
+      'null und das Band-Gate verwirft alles), oder wirklich jede der ' + bandDrops + ' Zeilen am Gate lag ' +
+      'ausserhalb $' + (MIN_MCAP_DISCOVERY / 1e6) + 'M-$' + (MAX_MCAP_DISCOVERY / 1e9) + 'B.') +
+    schluss;
 }
 
 async function main() {
@@ -606,7 +653,8 @@ async function main() {
   let predefinedAttempted = 0, predefinedNonEmpty = 0, predefinedTotalQuotes = 0;
   // T562-M1: abgeholt ist nicht behalten. Ohne diese beiden Zaehler kann der Kanal 325 volle
   // Buckets melden und trotzdem 0 Kandidaten liefern, ohne dass irgendetwas rot wird.
-  let predefinedKept = 0, predefinedFxLuecke = 0;
+  // T567-W3: dritter Zaehler — was schon vor dem Gate rausfiel (Junk/Nicht-Equity).
+  let predefinedKept = 0, predefinedFxLuecke = 0, predefinedVorFilter = 0;
   for (const region of REGIONS) {
     console.log('  --- Region: ' + region + ' ---');
     for (const id of SCREENER_IDS) {
@@ -617,20 +665,11 @@ async function main() {
       predefinedTotalQuotes += quotes.length;
       let kept = 0;
       for (const q of quotes) {
-        if (!q || !q.symbol) continue;
+        // T567-W3: EIN gezaehlter Vor-Gate-Pfad (siehe _vorGateVerworfen) statt fuenf
+        // ungezaehlter continue-Zeilen — sonst kann der Leerlauf-Alarm unten nicht sagen,
+        // ob am Gate etwas verworfen wurde oder ob nie eine Zeile bis dorthin kam.
+        if (_vorGateVerworfen(q)) { predefinedVorFilter++; continue; }
         const sym = q.symbol.toUpperCase();
-        // Tag 221 (audit Tag 221a): filter junk-suffix tickers. NASDAQ-Trader
-        // and some Yahoo screener responses include preferred-stock variants
-        // (ABR$D, ACP$A — 375 such entries in pre-Tag-221 watchlist) that
-        // Yahoo's quoteSummary doesn't recognize. They cycle through pull-yahoo
-        // every day eating rate-limit budget for nothing. Filter at the
-        // discovery stage so they never enter the watchlist.
-        if (/[$]/.test(sym)) continue;        // preferred-stock variants
-        if (/[/\\\s]/.test(sym)) continue;    // path-separators or whitespace = corrupt
-        if (sym.length > 12) continue;        // longer than any real ticker — likely a name
-        // BH-039: reject explicit non-equity rows (fund/bond screener buckets). See
-        // _isNonEquityQuote() above for the rationale.
-        if (_isNonEquityQuote(q)) continue;
         // Bug 4: q.marketCap ist in q.currency (Listing-Waehrung), das Gate in USD.
         // Nach USD konvertieren, gegen $800M/$500B pruefen und den USD-Wert speichern.
         const mcap = toUsd(q.marketCap, q.currency, _FX_RATES);
@@ -696,7 +735,7 @@ async function main() {
   }
   // T562-M1: der andere Totalausfall — Buckets kommen an, aber am Mcap-Gate bleibt nichts uebrig.
   const predefinedLeerlauf = kanalLeerlaufAlarm('Predefined-Screener-Kanal (SCREENER_IDS x REGIONS)',
-    predefinedTotalQuotes, predefinedKept, predefinedFxLuecke);
+    predefinedTotalQuotes, predefinedKept, predefinedFxLuecke, predefinedVorFilter);
   if (predefinedLeerlauf) { console.error(predefinedLeerlauf); process.exitCode = 1; }
 
   // Tag 131: Custom Exchange-Screener (paginiert) — zusätzlich zu predefined Screener-Buckets.
@@ -727,6 +766,8 @@ async function main() {
   let exchangeScreenerFatal = false;
   // T562-M1: FX-Luecken ueber alle Boersen — Drop-Grund fuer den Leerlauf-Alarm unten.
   let exchangeFxLuecke = 0;
+  // T567-W3: dritter Zaehler wie im Predefined-Kanal (Junk/Nicht-Equity vor dem Gate).
+  let exchangeVorFilter = 0;
   for (const exch of EXCHANGE_CODES) {
     if (exchangeScreenerFatal) break;
     let offset = 0;
@@ -770,14 +811,9 @@ async function main() {
       totalQuotes += quotes.length;
       let kept = 0;
       for (const q of quotes) {
-        if (!q || !q.symbol) continue;
+        // T567-W3: derselbe gezaehlte Vor-Gate-Pfad wie im Predefined-Kanal.
+        if (_vorGateVerworfen(q)) { exchangeVorFilter++; continue; }
         const sym = q.symbol.toUpperCase();
-        // Tag 221: same junk-suffix filter as the screener-buckets loop above.
-        if (/[$]/.test(sym)) continue;
-        if (/[/\\\s]/.test(sym)) continue;
-        if (sym.length > 12) continue;
-        // BH-039: reject explicit non-equity rows. See _isNonEquityQuote() above.
-        if (_isNonEquityQuote(q)) continue;
         // Bug 4: USD-konvertieren vor dem Gate (die Schwellen sind USD-Schwellen).
         const mcap = toUsd(q.marketCap, q.currency, _FX_RATES);
         if (isUnpriceable(q.marketCap, q.currency, _FX_RATES)) exchangeFxLuecke++;  // T562-M1
@@ -831,7 +867,7 @@ async function main() {
   const exchangeQuotesGesamt = Object.values(exchangeStats).reduce((s, x) => s + x.totalQuotes, 0);
   const exchangeBandOkGesamt = Object.values(exchangeStats).reduce((s, x) => s + x.totalBandOk, 0);
   const exchangeLeerlauf = kanalLeerlaufAlarm('Custom-Exchange-Screener (' + EXCHANGE_CODES.length + ' Boersen)',
-    exchangeQuotesGesamt, exchangeBandOkGesamt, exchangeFxLuecke);
+    exchangeQuotesGesamt, exchangeBandOkGesamt, exchangeFxLuecke, exchangeVorFilter);
   if (exchangeLeerlauf) { console.error(exchangeLeerlauf); process.exitCode = 1; }
 
   // Tag 510: BEIDE Yahoo-Kanaele gleichzeitig auf 0 — die Redundanz-Begruendungen
@@ -1350,6 +1386,7 @@ async function main() {
 module.exports = {
   toYahooClassShare, _looksUS, dedupKey, applyDeadRegistryAndCap,
   numEnv, capNewTickerAdmission, _isNonEquityQuote, EXCHANGE_SCREENER_SCHEMA_ERROR_RE,
+  _vorGateVerworfen,      // T567-W3: EIN gezaehlter Vor-Gate-Pfad fuer beide Ingest-Schleifen
   beideYahooKanaeleLeer,  // Tag 510: Doppelausfall-Waechter, einzeln pruefbar
   predefinedKanalEingebrochen, MIN_PREDEFINED_NONEMPTY_ANTEIL,  // T566-H2: Anteil statt "== 0"
   EXCHANGE_KANAL_BEKANNT_DEFEKT,                                // T566-H2: bekannter Dauerdefekt
