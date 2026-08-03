@@ -53,6 +53,54 @@ function countOverCap(snapDir) {
   return { usOver, foreignOver };
 }
 
+// ── Grenzen-Audit C-3 (03.08.2026): wurde ueberhaupt hartkodiert umgerechnet? ───────────
+// Die Luecke, die das schliesst: pull-yahoo.js verwirft fx-rates.json ab FX_STALE_DAYS = 14
+// KOMPLETT und rechnet mit der 2024er Hartkodierung weiter (INR bis 14,5 % daneben, still,
+// mit fxConverted:true im Snapshot). Die CI wird aber erst ab > 30 Tagen hart rot (ab > 7
+// nur Warnung) — 16 Tage stille Falschbewertung aller Nicht-USD-Titel.
+//
+// WARUM NICHT EINFACH DIE CI-SCHWELLE AUF 14 ZIEHEN: das waere eine zweite Kopie derselben
+// Zahl (eine Konstante in JS, eine in YAML-Shell) und wuerde nur EINEN der Wege in die
+// Hartkodierung sehen. Die anderen bleiben blind: fx-rates.json fehlt ganz (die CI warnt
+// auch da nur), oder eine einzelne Waehrung fehlt im frischen Feed und faellt per
+// FX_PROVENANCE auf die 2024er Zahl zurueck, obwohl die Datei tagesfrisch ist.
+// meta.fxRateSource === 'hardcoded-fallback' (pull-yahoo.js, im Umrechnungs-Zweig gesetzt)
+// steht genau dann im Snapshot, wenn wirklich mit einem hartkodierten Kurs gerechnet wurde
+// — der Alarm haengt damit an der WIRKUNG, nicht am Dateialter, und braucht keinen eigenen
+// Schwellwert.
+//
+// KEIN SCORING-WERT, reiner Betriebs-Waechter. Grundlast ausgezaehlt (nicht geschaetzt):
+// im lokalen Bestand 0 von 4.768 Snapshots, bei 2.967 tatsaechlich umgerechneten — jedes
+// Auftreten ist ein Ereignis. Deshalb Schwelle "mindestens einer", nicht "mehr als x %".
+const HARDCODED_MARKER = 'hardcoded-fallback';
+function countHardcodedFallback(snapDir) {
+  const jeWaehrung = {};
+  let n = 0;
+  if (!fs.existsSync(snapDir)) return { n, jeWaehrung };
+  for (const f of fs.readdirSync(snapDir).filter((x) => x.endsWith('.json') && !x.startsWith('_'))) {
+    const s = loadJson(path.join(snapDir, f), null);
+    if (!s || !s.meta || s.meta.fxRateSource !== HARDCODED_MARKER) continue;
+    n++;
+    const ccy = s.meta.reportingCurrencyOriginal || '?';
+    jeWaehrung[ccy] = (jeWaehrung[ccy] || 0) + 1;
+  }
+  return { n, jeWaehrung };
+}
+
+// Alle Befunde eines Laufs an EINER Stelle — main() bleibt Ausgabe und Exit-Code.
+// So ist der Weg vom Befund in Karls rotes X testbar, ohne den Waechter zu starten.
+function befunde(today, baseline, hardcoded) {
+  const problems = checkJump(today, baseline);
+  if (hardcoded && hardcoded.n > 0) {
+    const nachWaehrung = Object.entries(hardcoded.jeWaehrung)
+      .sort((a, b) => b[1] - a[1])
+      .map(([c, k]) => `${c}:${k}`)
+      .join(', ');
+    problems.push(`${hardcoded.n} Snapshots wurden mit HARTKODIERTEN 2024er FX-Kursen umgerechnet (${nachWaehrung}) — fx-rates.json ist zu alt (> FX_STALE_DAYS in pull-yahoo.js), fehlt, oder deckt diese Waehrungen nicht ab. Die USD-Werte dieser Titel sind falsch (INR-Groessenordnung: bis 14,5 %).`);
+  }
+  return problems;
+}
+
 // BH-124: shared jump predicate — same condition checkJump alerts on, reused
 // by updateBaseline() so an alarming bucket can be kept OUT of tomorrow's
 // reference (see there).
@@ -115,8 +163,11 @@ function main() {
   const today = countOverCap(SNAP_DIR);
   console.log(`Over-cap counts — US-primary (>=${CAP_US / 1e6}M): ${today.usOver}, foreign (>=${CAP_FOREIGN / 1e9}B): ${today.foreignOver}`);
 
+  const hardcoded = countHardcodedFallback(SNAP_DIR); // C-3: Wirkungs-Anker, kein Alters-Schwellwert
+  console.log(`Hartkodiert umgerechnet: ${hardcoded.n} Snapshots` + (hardcoded.n ? ` (${Object.entries(hardcoded.jeWaehrung).sort((a, b) => b[1] - a[1]).map(([c, k]) => c + ':' + k).join(', ')})` : ''));
+
   const baseline = loadJson(BASELINE_PATH, null);
-  const problems = checkJump(today, baseline);
+  const problems = befunde(today, baseline, hardcoded);
 
   const dateStr = process.env.RUN_DATE_UTC || new Date().toISOString().slice(0, 10); // frozen run-date (prep) mit Wall-Clock-Fallback — Codex-Gegenreview Tag 353
   const nextBaseline = updateBaseline(baseline, today, dateStr);
@@ -125,7 +176,7 @@ function main() {
   console.log('Baseline updated: ' + BASELINE_PATH);
 
   if (problems.length > 0) {
-    console.error('::error::FX-sanity — day-over-day over-cap count jump: ' + problems.join('; '));
+    console.error('::error::FX-sanity: ' + problems.join('; '));
     process.exitCode = 1;
     return;
   }
@@ -134,4 +185,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { countOverCap, checkJump, updateBaseline, isBucketJump };
+module.exports = { countOverCap, checkJump, updateBaseline, isBucketJump, countHardcodedFallback, befunde };
