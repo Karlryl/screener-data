@@ -10,6 +10,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const L = require('../../src/scoring/lamps.js');
+const A = require('../../src/scoring/axes.js'); // U-SC-003: Achsen-Quelle als Referenz der Lampen-Waechter
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -97,6 +98,36 @@ test('lowRoic: curLiab present, ROIC unter Huerde -> true', () => {
   const s = { annual: { annualOpInc: [{ value: 60 }],
     annualBalance: [{ totalAssets: 1000, currentLiabilities: 200 }] } };
   assert.equal(L.lowRoic(s), true); // 60/(1000-200)=0.075 < 0.09 -> true (curLiab korrekt abgezogen)
+});
+
+// U-SC-003 (Tag 556): Lampe und ACHSE muessen dieselbe ROIC-Quelle lesen. Vorher las lowRoic
+// ausschliesslich Yahoo, waehrend roicStabilitySource() (capitalEfficiency + roicStability) die
+// tiefe SEC-Serie bevorzugt -> Anzeige und Achse widersprachen sich am selben Namen. Die drei
+// Waechter nageln die SACHE fest (gemeinsame Quelle), nicht ein Schreibmuster: sie fragen erst
+// die Achsen-Quelle und verlangen dann dieselbe Antwort von der Lampe.
+test('lowRoic: SEC widerspricht Yahoo -> Lampe folgt der Achsen-Quelle (SEC)', () => {
+  const s = {
+    annual: { annualOpInc: [{ value: 300 }], annualBalance: [{ totalAssets: 1000, currentLiabilities: 0 }] },
+    secAnnual: { annualOpInc: [{ value: 10 }, { value: 10 }],
+      annualAssets: [{ value: 1000 }, { value: 1000 }],
+      annualCurrentLiabilities: [{ value: 0 }, { value: 0 }] },
+  };
+  assert.equal(A.roicStabilitySource(s).opInc[0], 10); // die Achse liest das tiefe SEC-Trio ...
+  assert.equal(L.lowRoic(s), true);                    // ... die Lampe muss dasselbe: 10/1000=0.01 < 0.09
+                                                       // (Yahoo allein waere 300/1000=0.30 -> false)
+});
+test('lowRoic: unvollstaendiges SEC-Trio -> Yahoo-Fallback wie die Achse (keine Feld-Mischung)', () => {
+  const s = {
+    annual: { annualOpInc: [{ value: 10 }], annualBalance: [{ totalAssets: 1000, currentLiabilities: 0 }] },
+    secAnnual: { annualOpInc: [{ value: 300 }, { value: 300 }] }, // tiefe Bilanz fehlt -> kein Trio
+  };
+  assert.equal(A.roicStabilitySource(s).opInc[0], 10); // Achse bleibt geschlossen bei Yahoo ...
+  assert.equal(L.lowRoic(s), true);                    // ... Lampe auch: 10/1000=0.01 < 0.09.
+                                                       // Ein feldweiser Misch (SEC-OpInc 300 + Yahoo-Bilanz) waere false.
+});
+test('lowRoic: weder SEC- noch Yahoo-Serien -> null (nicht berechenbar bleibt)', () => {
+  assert.equal(L.lowRoic({ annual: {} }), null);
+  assert.equal(L.lowRoic({}), null);
 });
 
 // --- evaluateLamps Aggregat -------------------------------------------------

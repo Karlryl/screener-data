@@ -530,6 +530,10 @@ module.exports = {
   revGrowthLevel, revAcceleration, gpGrowth, ruleOfX, revYoYComponents,
   revAnnualYoY, revQuartalsYoY, // F-4: die beiden Beine einzeln (Tests/Messung)
   marginTrajectory, capitalEfficiency, revisionsMomentum, dilution, marginLevel, roicStability,
+  // U-SC-003: die EINE Quellenwahl fuer OpInc/Assets/CurrLiab — auch die Anzeige-Lampe lowRoic
+  // (lamps.js) liest sie, damit Lampe und Achse nie zwei verschiedene ROIC-Quellen benutzen.
+  // Reiner Export, keine Logik-Aenderung an der Achse.
+  roicStabilitySource,
   // C2: per-Quartal-Rohwerte fuer die universe-weite Winsor-Schranken-Sammlung in score.js
   quarterOpMargins, quarterQoQRates,
   // Helfer fuer Tests/Formeln

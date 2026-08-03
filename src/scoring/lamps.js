@@ -11,6 +11,9 @@
 
 const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVal, ratioSeries,
   jahresVergleichIdx, jahresFensterAusgerichtet } = require('./snapshot.js');
+// U-SC-003: die ROIC-Quellenwahl der ACHSEN (SEC-Trio wo vollstaendig, sonst Yahoo) — lowRoic liest
+// sie, statt eine zweite Yahoo-Kopie zu pflegen. axes.js kennt lamps.js nicht -> kein Zyklus.
+const { roicStabilitySource } = require('./axes.js');
 
 // Schwellen (bewusst konservativ; Feinkalibrierung in der Formel-/Fixture-Phase)
 const TH = {
@@ -111,9 +114,13 @@ function peakMargin(s) {
 function lowRoic(s) {
   // audit/fix (L2): wie capitalEfficiency (E1) — op (alle OpInc-Jahre) und inv (alle assets-Jahre)
   // mittelten ueber verschiedene Jahres-Sets. Jetzt pro Jahr zippen (OpInc present UND assets present).
-  const opS = norm(s, 'annualOpInc');
-  const assets = norm(s, 'annualBalance', 'totalAssets');
-  const curLiab = norm(s, 'annualBalance', 'currentLiabilities');
+  // audit/fix (U-SC-003, Tag 556): Quelle NICHT mehr selbst aus Yahoo lesen, sondern
+  // roicStabilitySource() der Achsen benutzen — dieselbe Single-Source-Trio-Wahl (tiefe SEC-Serie
+  // wo vollstaendig, sonst Yahoo, NIE feldweise gemischt), die capitalEfficiency und roicStability
+  // speist. Vorher lief die Anzeige-Lampe auf Yahoo, waehrend die ROIC-ACHSE am selben Namen SEC
+  // las -> Lampe und Achse widersprachen sich sichtbar. Reine Anzeige: lowRoic steht nicht in
+  // DATA_SUSPECT_LAMPS (score.js) -> kein Score-, kein Exclude-Effekt.
+  const { opInc: opS, assets, curLiab } = roicStabilitySource(s);
   const opP = [], invP = [];
   const nYears = Math.max(opS.length, assets.length);
   for (let i = 0; i < nYears; i++) {
