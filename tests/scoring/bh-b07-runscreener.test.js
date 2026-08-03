@@ -23,6 +23,9 @@
  * Usage:  node tests/scoring/bh-b07-runscreener.test.js   (Exit 0/1)
  */
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 const {
   filterToAuthorizedUniverse,
   hasFiniteSeries,
@@ -31,6 +34,10 @@ const {
   floorReferenz,
   FLOOR_BASIS_EINGANG,
   FLOOR_BASIS_ONDISK,
+  assertParseFailAnteil,   // T565-H1
+  loadUniverse,            // T565-H1 (Fixture an der echten Leseschleife)
+  baselineFuer,            // T565-M2
+  naechstesHochwasser,     // T565-M2
 } = require('../../src/scoring/run-screener.js');
 
 let pass = 0, fail = 0;
@@ -203,6 +210,102 @@ test('parseTopNArg: 0/NaN/nicht-numerisch -> REJECTED', () => {
   assert.equal(parseTopNArg(['node', 'run-screener.js', '--topN', '0']).ok, false);
   assert.equal(parseTopNArg(['node', 'run-screener.js', '--topN', 'foo']).ok, false);
   assert.equal(parseTopNArg(['node', 'run-screener.js', '--topN', 'Infinity']).ok, false);
+});
+
+// --- T565-H1 (Review Tag 565): der Coverage-Floor misst keine KORRUPTION mehr ------
+// Seit F-12-R1 rechnet der Floor gegen n_eingang_snapshots — eine Datei-ZAEHLUNG, die den
+// Inhalt nicht kennt. parseFail (die einzige Zahl, die Korruption sieht) hatte bis Tag 569
+// keinen harten Konsumenten: 40 % unlesbare Snapshots liefen gruen durch, und die Kohorten-
+// Perzentile wurden lautlos auf der Restmenge gerechnet. Zwei Ebenen gepinnt: die reine
+// Entscheidung UND die echte Leseschleife an einem Verzeichnis-Fixture.
+test('T565-H1: Anteil ueber der Schwelle -> Abbruch', () => {
+  assert.throws(() => assertParseFailAnteil(60, 40, 0), /nicht parsebar|Datenkorruption/i,
+    '40 % unlesbar muss hart stoppen');
+});
+test('T565-H1: normaler Anteil (1 %) geht DURCH — die gueltige Form darf nicht sterben', () => {
+  assert.doesNotThrow(() => assertParseFailAnteil(2574, 26, 0));
+  assert.doesNotThrow(() => assertParseFailAnteil(12500, 0, 0), 'der Normalfall: 0 unlesbar');
+});
+test('T565-H1: unter der Mindest-Fallzahl wird nicht gequotelt (Kaltstart/Fixture-Schutz)', () => {
+  assert.doesNotThrow(() => assertParseFailAnteil(2, 1, 0), '1 von 3 sind 33 %, aber kein Befund');
+  assert.doesNotThrow(() => assertParseFailAnteil(0, 24, 0), '24 Faelle bleiben unter der Grenze');
+  assert.throws(() => assertParseFailAnteil(0, 25, 0), /nicht parsebar/i, 'ab 25 Faellen zaehlt der Anteil');
+});
+test('T565-H1: skippedNoMeta gehoert in den Nenner (Schema-Drift ist keine Korruption)', () => {
+  // 30 von 3000 Dateien unlesbar = 1 %. Ohne skippedNoMeta im Nenner waeren es 30/1030 = 2,9 %
+  // -> falsch-roter Abbruch, sobald Yahoo einmal ein Feld umbenennt.
+  assert.doesNotThrow(() => assertParseFailAnteil(1000, 30, 1970));
+});
+test('T565-H1: leeres Verzeichnis wirft nicht (0/0 ist kein Anteil)', () => {
+  assert.doesNotThrow(() => assertParseFailAnteil(0, 0, 0));
+});
+
+// Verhaltens-Beleg an der ECHTEN Leseschleife (kein Nachbau): Verzeichnis-Fixture, loadUniverse.
+function schreibeFixture(gesamt, kaputt) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 't565h1-'));
+  const snapDir = path.join(root, 'snapshots');
+  fs.mkdirSync(snapDir, { recursive: true });
+  const ticker = [];
+  for (let i = 0; i < gesamt; i++) {
+    const t = 'T' + i;
+    ticker.push(t);
+    fs.writeFileSync(path.join(snapDir, t + '.json'),
+      i < kaputt ? '{"meta":{"ticker":"' + t + '"' : JSON.stringify({ meta: { ticker: t }, metrics: {} }));
+  }
+  const wl = path.join(root, 'watchlist.json');
+  fs.writeFileSync(wl, JSON.stringify({ stocks: ticker.map((t) => ({ ticker: t })) }));
+  return { snapDir, wl };
+}
+
+test('T565-H1 (Fixture): 40 % kaputte Snapshots brechen loadUniverse ab', () => {
+  const { snapDir, wl } = schreibeFixture(100, 40);
+  assert.throws(() => loadUniverse(snapDir, wl), /nicht parsebar|Datenkorruption/i,
+    'BEFUND: bis Tag 569 lief genau das gruen durch — der Floor sieht Dateien, nicht Inhalte');
+});
+
+test('T565-H1 (Fixture): 1 % kaputte Snapshots laufen normal durch', () => {
+  const { snapDir, wl } = schreibeFixture(2600, 26); // 26 Faelle > Mindestzahl, 1,0 % < 2 %
+  const u = loadUniverse(snapDir, wl);
+  assert.equal(u.length, 2574, 'die gesunden Staende muessen vollstaendig ankommen');
+});
+
+// --- T565-M2 (Review Tag 565): beide High-Water nebeneinander ---------------------
+// Bisher fuehrte _last_good_disk.json EINEN Wert plus Populations-Namen. Jeder Wechsel der
+// Population (Manifest-Feld faellt einmal aus -> on-disk-Fallback, danach wieder Eingang)
+// verwarf das High-Water und kostete einen fail-open-Lauf OHNE Floor. Bei flatterndem
+// Manifest ist der Floor damit nie scharf.
+test('T565-M2: Flip eingang -> ondisk -> eingang kostet KEINEN fail-open-Lauf mehr', () => {
+  // Lauf 1: Eingangs-Population ankert.
+  let stand = naechstesHochwasser(null, FLOOR_BASIS_EINGANG, 12540);
+  let datei = { value: stand[FLOOR_BASIS_EINGANG], basis: FLOOR_BASIS_EINGANG, hochwasser: stand };
+  // Lauf 2: Manifest-Feld faellt aus -> on-disk. Eingangs-High-Water muss ERHALTEN bleiben.
+  let r = floorReferenz({}, 10734, datei);
+  assert.equal(r.basis, FLOOR_BASIS_ONDISK);
+  stand = naechstesHochwasser(datei, r.basis, r.count);
+  assert.equal(stand[FLOOR_BASIS_EINGANG], 12540, 'die andere Population darf nicht verloren gehen');
+  datei = { value: stand[r.basis], basis: r.basis, hochwasser: stand };
+  // Lauf 3: Manifest wieder da -> Eingang. JETZT muss die alte Baseline wieder greifen.
+  r = floorReferenz({ n_eingang_snapshots: 12540 }, 10734, datei);
+  assert.equal(r.baseline, 12540, 'BEFUND: hier war die Baseline bisher null -> Floor nicht erzwungen');
+  assert.deepEqual(r.warnungen, [], 'und es gibt nichts mehr zu warnen');
+  assert.throws(() => assertCoverageFloor(11000, r.baseline), /Coverage-Floor|geschrumpft/i,
+    'Gegenprobe: der Floor ist in diesem Lauf wirklich scharf');
+});
+
+test('T565-M2: Alt-Datei (nur value+basis) bleibt lesbar und wird mitgetragen', () => {
+  assert.equal(baselineFuer({ value: 10700 }, FLOOR_BASIS_ONDISK), 10700, 'fehlendes basis-Feld = on-disk');
+  assert.equal(baselineFuer({ value: 10700 }, FLOOR_BASIS_EINGANG), null);
+  const stand = naechstesHochwasser({ value: 10700 }, FLOOR_BASIS_EINGANG, 12540);
+  assert.deepEqual(stand, { [FLOOR_BASIS_ONDISK]: 10700, [FLOOR_BASIS_EINGANG]: 12540 },
+    'der Alt-Wert wandert in die neue Form statt verworfen zu werden');
+});
+
+test('T565-M2: der High-Water der gemessenen Population bleibt monoton', () => {
+  const vor = { hochwasser: { [FLOOR_BASIS_EINGANG]: 12540, [FLOOR_BASIS_ONDISK]: 10700 } };
+  assert.deepEqual(naechstesHochwasser(vor, FLOOR_BASIS_EINGANG, 12000),
+    { [FLOOR_BASIS_EINGANG]: 12540, [FLOOR_BASIS_ONDISK]: 10700 }, 'Dip senkt nicht');
+  assert.deepEqual(naechstesHochwasser(vor, FLOOR_BASIS_EINGANG, 13000),
+    { [FLOOR_BASIS_EINGANG]: 13000, [FLOOR_BASIS_ONDISK]: 10700 }, 'Wachstum hebt nur die eigene');
 });
 
 console.log(`bh-b07-runscreener.test.js: ${pass} ok, ${fail} fail`);

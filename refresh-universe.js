@@ -144,6 +144,11 @@ const SCREENER_IDS = [
   'most_actives',                  // Volume-leaders weltweit
   'day_gainers',                   // momentum candidates
   'undervalued_growth_stocks',     // Quality-Value-Mix
+  // T565-M3 (Messung 04.08.2026): der EINZIGE Bucket, der auch unter yahoo-finance2 3.15.4
+  // tot bleibt — 3 von 3 Runden warfen einen oneOf-Schema-Fehler (die anderen 12 Buckets
+  // lieferten nach dem Upgrade wieder Quotes). Also kein Zufallsausfall, sondern eine
+  // Feld-Form, die das Schema der Bibliothek in DIESEM Bucket nicht kennt. Bleibt in der
+  // Liste: er kostet nur einen Aufruf, und ein Heilen faellt so von selbst auf.
   'growth_technology_stocks',      // Hypergrowth-Tech
   'aggressive_small_caps',         // potential mid-cap upgrades
   'small_cap_gainers',
@@ -463,6 +468,36 @@ function beideYahooKanaeleLeer(predefinedNonEmpty, exchangeScreenerFatal, custom
   return predefinedNonEmpty === 0 && (exchangeScreenerFatal === true || customAdded === 0);
 }
 
+// T566-H2 (Review Tag 566): die BH-100-Wache sprach erst bei predefinedNonEmpty === 0 an.
+// Genau die Bugklasse, die F-12-R2 (filter-snapshot-merge.js) eine Stufe frueher schon hatte:
+// ein Ausfall, der "nur" die Haelfte erwischt, laeuft still durch. Real belegt am 04.08. an
+// derselben 5er-Stichprobe: unter yahoo-finance2 3.14 waren 5/5 Aufrufe tot, unter 3.15.4
+// noch 1/5 — ein Rueckfall auf z. B. 3.15.0 oder ein Yahoo-Feld-Wechsel, der nur einen Teil
+// der Buckets zerlegt, landet also mitten zwischen "alles tot" und "gesund" und war bis hier
+// unsichtbar. 0.30: der gesunde Stand liegt bei ~80 % nicht-leeren Buckets (4/5), die reale
+// Bandbreite ueber Regionen/Buckets ist gross (kleine Regionen liefern legitim leere Buckets),
+// aber unter einem Drittel ist kein Regions-Effekt mehr, sondern Bruch.
+const MIN_PREDEFINED_NONEMPTY_ANTEIL = 0.30;
+
+// T566-H2, zweite Haelfte: der Exit-Code dieses Skripts bekommt mit Tag 569 einen HARTEN
+// Konsumenten (daily-pull.yml, Job "entdeckungs-waechter" -> rotes X). Damit dieser Konsument
+// etwas aussagt, darf kein DAUERZUSTAND ihn setzen. Genau das tut aber der Schema-Fatal-Pfad
+// des Custom-Exchange-Kanals: yahoo-finance2 akzeptiert im screener()-Schema ausschliesslich
+// scrIds (nachgesehen in der installierten 3.15.4: ScreenerOptions kennt kein `query`,
+// additionalProperties:false) — der query-basierte Exchange-Call wirft seit Tag 248 (05.07.)
+// bei JEDEM Lauf, zuletzt belegt im Lauf 30788278952 vom 03.08. Waere das rot, waere Karls
+// rotes X ab sofort jeden Tag rot und damit wertlos.
+// Deshalb: die ::error::-Annotation bleibt unveraendert (Sichtbarkeit im Schritt-Log), aber
+// dieser EINE bekannte Dauerdefekt faerbt den Lauf nicht rot.
+// ABNAHME DES FIXES: wer den Exchange-Kanal auf einen 3.15-kompatiblen Aufruf umbaut, setzt
+// diesen Schalter auf false — dann ist ein erneuter Schema-Bruch wieder sofort rot.
+const EXCHANGE_KANAL_BEKANNT_DEFEKT = true;
+
+// Reine Funktion (Zaehler rein, Urteil raus), damit sie ohne Netz pruefbar ist.
+function predefinedKanalEingebrochen(nonEmpty, attempted, minAnteil = MIN_PREDEFINED_NONEMPTY_ANTEIL) {
+  return attempted > 0 && nonEmpty < minAnteil * attempted;
+}
+
 // S4-DISC-001: die Ertragszeile des Discovery-Merges. `quelle=1234` wie bisher,
 // `quelle=1234!` wenn die Quelle nur einen TEIL ihrer Scheiben geliefert hat,
 // `quelle=FAIL` bei komplettem Ausfall. Einzeln pruefbar, weil sie sonst nur im
@@ -629,7 +664,7 @@ async function main() {
   }
   console.log('  Predefined-Buckets: ' + predefinedNonEmpty + '/' + predefinedAttempted +
     ' nicht-leer, ' + predefinedTotalQuotes + ' Quotes gesamt.');
-  if (predefinedNonEmpty === 0) {
+  if (predefinedKanalEingebrochen(predefinedNonEmpty, predefinedAttempted)) {
     // BH-100: total collapse of this channel — surface it, but don't abort.
     //
     // Tag 510 KORREKTUR der Begruendung: hier stand "redundant coverage (EXCHANGE_CODES
@@ -644,10 +679,20 @@ async function main() {
     // unabhaengig. Nur darauf stuetzt sich der Nicht-Abbruch hier.
     // Dass BEIDE Yahoo-Kanaele im selben Lauf leer laufen, meldet der Waechter nach
     // dem Exchange-Block (Tag 510) — keiner der beiden Kanaele kann das fuer sich sehen.
-    console.error('::error::Predefined-Screener-Kanal (SCREENER_IDS x REGIONS) liefert 0 nicht-leere ' +
-      'Buckets ueber ' + predefinedAttempted + ' Aufrufe — moeglicher Yahoo-Schema-Bruch/Totalausfall ' +
-      'dieses Kanals. Kein Prozess-Abbruch (redundant zu Custom-Exchange-Screener und Discovery-Adaptern), ' +
-      'aber sichtbar gemacht statt still.');
+    //
+    // T566-H2: die Schwelle ist ein ANTEIL, nicht mehr "0" (Begruendung an der Konstanten),
+    // und der Befund faerbt den Lauf rot (process.exitCode) statt nur eine Annotation zu
+    // hinterlassen. Kein Prozess-Abbruch: der Rest von main() (Laenderadapter, Watchlist-
+    // Write) soll laufen, damit ein halb kaputter Entdeckungstag nicht das Universum
+    // einfriert — aber der Tag ist danach nicht mehr gruen.
+    console.error('::error::Predefined-Screener-Kanal (SCREENER_IDS x REGIONS) liefert nur ' +
+      predefinedNonEmpty + ' nicht-leere Buckets ueber ' + predefinedAttempted + ' Aufrufe (' +
+      (predefinedAttempted > 0 ? (predefinedNonEmpty / predefinedAttempted * 100).toFixed(1) : '0.0') +
+      ' %, unter der Schwelle ' + (MIN_PREDEFINED_NONEMPTY_ANTEIL * 100).toFixed(0) + ' %) — ' +
+      'moeglicher Yahoo-Schema-Bruch/Teilausfall dieses Kanals (Bibliotheks-Rueckfall unter ' +
+      'yahoo-finance2 3.15.0 sieht genau so aus). Kein Prozess-Abbruch (Rest von main() laeuft ' +
+      'weiter), aber der Lauf endet rot.');
+    process.exitCode = 1;
   }
   // T562-M1: der andere Totalausfall — Buckets kommen an, aber am Mcap-Gate bleibt nichts uebrig.
   const predefinedLeerlauf = kanalLeerlaufAlarm('Predefined-Screener-Kanal (SCREENER_IDS x REGIONS)',
@@ -708,7 +753,9 @@ async function main() {
             'Der gesamte Exchange-Kanal (' + EXCHANGE_CODES.length + ' Boersen) liefert 0. ' +
             'Fix: query-Form auf einen v3.14-kompatiblen HTTP-Call umbauen oder Library-Version anpassen.');
           exchangeScreenerFatal = true;
-          process.exitCode = 1;
+          // T566-H2: bekannter Dauerdefekt -> keine Rot-Faerbung (Begruendung + Abnahme-
+          // Kriterium an EXCHANGE_KANAL_BEKANNT_DEFEKT). Die ::error::-Zeile oben bleibt.
+          if (!EXCHANGE_KANAL_BEKANNT_DEFEKT) process.exitCode = 1;
           pageEmpty = true;
           break;
         }
@@ -1304,6 +1351,8 @@ module.exports = {
   toYahooClassShare, _looksUS, dedupKey, applyDeadRegistryAndCap,
   numEnv, capNewTickerAdmission, _isNonEquityQuote, EXCHANGE_SCREENER_SCHEMA_ERROR_RE,
   beideYahooKanaeleLeer,  // Tag 510: Doppelausfall-Waechter, einzeln pruefbar
+  predefinedKanalEingebrochen, MIN_PREDEFINED_NONEMPTY_ANTEIL,  // T566-H2: Anteil statt "== 0"
+  EXCHANGE_KANAL_BEKANNT_DEFEKT,                                // T566-H2: bekannter Dauerdefekt
   kanalLeerlaufAlarm,     // T562-M1: Kanal holt Quotes ab und behaelt keine einzige
   discoveryErtragsZeile,  // S4-DISC-001: Teilausfaelle sichtbar machen, einzeln pruefbar
   inDiscoveryMcapBand, MIN_MCAP_DISCOVERY, MAX_MCAP_DISCOVERY  // F-11: $800M-$500B-Band

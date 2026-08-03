@@ -68,6 +68,9 @@ jobs:
       run_date: ${{ steps.freeze.outputs.run_date }}
       shard_count: ${{ steps.shards.outputs.count }}
       shard_matrix: ${{ steps.shards.outputs.matrix }}
+      # T566-H2: Ausgang des Entdeckungs-Laufs. Schritt-Ergebnisse sind job-lokal — ohne
+      # diesen Ausgang kaeme der Waechter-Job unten nie an das Ergebnis heran.
+      refresh_universe_outcome: ${{ steps.refresh_ausgang.outputs.outcome }}
     steps:
       # Tag 219 (audit F-219b-01 HIGH): freeze a shared run-date at job start so
       # every downstream script (in prep, pull AND merge) agrees on TODAY's date
@@ -222,6 +225,7 @@ jobs:
       # 17x parallel waere ein Race auf dieselbe Datei. MAX_UNIVERSE 25000 (Tag 227a
       # silent-cap audit). Finnhub-Secret-Warnung (Tag 232c-18) surfaced degraded coverage.
       - name: Refresh Universe
+        id: refresh_universe
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           MAX_UNIVERSE: '25000'
@@ -231,6 +235,14 @@ jobs:
             echo "::warning::FINNHUB_API_KEY not set — universe refresh will skip Finnhub source (degraded coverage). Set the secret in Settings → Secrets → Actions to enable."
           fi
           node refresh-universe.js --watchlist watchlist.json
+        # WARUM continue-on-error BLEIBT (nachgesehen 2026-08-03, Historie Tag 179/207a/234/280
+        # + F-CI-003-Begruendung unten): ein gescheiterter Refresh ist kein Grund, den Tag zu
+        # verlieren — die watchlist.json des Vortags bleibt gueltig, und die Reissleine ist der
+        # Sanity-Gate darunter (< 200 Namen -> harter Stop). Wuerde der Schritt den prep-Job
+        # faellen, wuerde die gesamte Pipeline ausfallen: `pull` haengt an `needs: prep`, und
+        # `merge` laeuft nur bei `needs.prep.result == 'success'`. Also kein Ausbau, sondern
+        # dieselbe Bauform wie "Daten-Waechter einsammeln" im merge-Job: Ausgang festhalten,
+        # danach einsammeln (T566-H2, Job "entdeckungs-waechter" direkt unter diesem Job).
         continue-on-error: true
 
       # audit BH-143: Prune lief frueher HIER (vor dem Fan-out) gegen ein snapshots/,
@@ -370,9 +382,42 @@ jobs:
           if-no-files-found: warn
           retention-days: 1
 
+      # T566-H2: Ausgang des Refresh-Schritts als Job-Ausgang festhalten. `if: always()`,
+      # damit er auch dann geschrieben wird, wenn ein spaeterer prep-Schritt gefallen ist.
+      - name: Entdeckungs-Ausgang festhalten
+        id: refresh_ausgang
+        if: always()
+        run: echo "outcome=${{ steps.refresh_universe.outcome }}" >> "$GITHUB_OUTPUT"
+
       # 29.07.: Discord-Benachrichtigung bei Fehlschlag entfernt (Karl-Freigabe) —
       # DISCORD_WEBHOOK war nie gesetzt, der Schritt also immer ein No-Op. Ein
       # fehlgeschlagener prep-Job ist ohnehin ein rotes X in Actions.
+
+  # ============================================================================
+  # T566-H2 (Review Tag 566): SAMMEL-ALARM fuer den Entdeckungs-Kanal.
+  # BEFUND: refresh-universe.js meldet vier Ausfaelle per ::error:: und nicht-null Exit
+  # (Predefined-Kanal eingebrochen, Exchange-Schema-Bruch, Kanal-Leerlauf am Mcap-Gate,
+  # beide Yahoo-Kanaele gleichzeitig leer) — und ALLE vier waren folgenlos, weil der
+  # Schritt continue-on-error traegt. Der Lauf endete gruen; Karls einziger Alarm-Kanal
+  # (rotes X) sah nichts. Dasselbe Muster wie der 28.07.-Befund im merge-Job.
+  # WARUM EIN EIGENER JOB und kein Folge-Schritt in prep: ein fallender prep-Job wuerde
+  # `pull` (needs: prep) und `merge` (if: needs.prep.result == 'success') mitreissen — der
+  # ganze Tag waere weg, obwohl die Watchlist des Vortags voll gueltig ist. Dieser Job
+  # haengt an NICHTS: er faerbt den Lauf rot und blockiert keinen einzigen Datenschritt.
+  entdeckungs-waechter:
+    needs: prep
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Entdeckungs-Kanal einsammeln (rotes X)
+        run: |
+          AUSGANG="${{ needs.prep.outputs.refresh_universe_outcome }}"
+          if [ "$AUSGANG" = "failure" ]; then
+            echo "::error::refresh-universe.js hat angeschlagen (Schritt 'Refresh Universe' im prep-Job, Details dort). Entweder ist ein Entdeckungs-Kanal eingebrochen/leergelaufen, oder der Schritt lief in sein 20-Minuten-Timeout — dann wurde watchlist.json ueberhaupt nicht neu geschrieben und der Tag laeuft auf dem Universum des Vortags. Die Daten sind trotzdem gezogen (der Pull haengt nicht an diesem Job)."
+            exit 1
+          fi
+          echo "Entdeckungs-Kanaele still (Ausgang: ${AUSGANG:-<leer, prep uebersprungen>})."
 
   # ============================================================================
   # PULL (matrix, N shards in parallel) — the ONLY parallelised work.
@@ -591,7 +636,13 @@ jobs:
       # VOR "Prune Watchlist": der Filter soll gegen die COMMITTETE Watchlist schneiden,
       # nicht gegen die frisch geprunte — sonst faellt die on-disk-Zahl unter die summierte
       # n_ok der Shards und merge-shard-manifests' Kollisions-Stop wuerde falsch feuern.
+      # T565-M1: Ventil wie bei "Pull-Stats Check" (ALLOW_PULL_DRIFT). Der uebersprungene
+      # Anteil ratcht monoton nach oben (Karteileichen werden nie ausgetragen) — laeuft er
+      # eines Tages legitim ueber 30 %, laesst `vars.ALLOW_UEBERSPRUNGEN_DRIFT=1` den Tag
+      # durch, ohne die Schwelle dauerhaft hochzudrehen. Befund bleibt als ::warning::.
       - name: F-12 Karteileichen-Filter (nur autorisierte Snapshots ins Artefakt)
+        env:
+          ALLOW_UEBERSPRUNGEN_DRIFT: ${{ vars.ALLOW_UEBERSPRUNGEN_DRIFT || '0' }}
         run: node scripts/filter-snapshot-merge.js --eingang snapshots-eingang --ziel snapshots --watchlist watchlist.json
 
       # audit BH-143 (verschoben von Tag 142/prep — siehe Kommentar dort): Prune lief

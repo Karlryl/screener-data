@@ -63,7 +63,8 @@ function lauf(tickerInWatchlist, dateien, opts = {}) {
   fs.writeFileSync(wlPfad, opts.kaputteWatchlist
     ? '{ das ist kein JSON'
     : JSON.stringify({ stocks: opts.watchlistEintraege || tickerInWatchlist.map((t) => ({ ticker: t })) }));
-  const r = spawnSync(process.execPath, [SCRIPT, '--eingang', eingang, '--ziel', ziel, '--watchlist', wlPfad], { encoding: 'utf8' });
+  const r = spawnSync(process.execPath, [SCRIPT, '--eingang', eingang, '--ziel', ziel, '--watchlist', wlPfad],
+    { encoding: 'utf8', env: { ...process.env, ...(opts.env || {}) } });
   const manifestPfad = path.join(ziel, '_manifest.json');
   return {
     root, eingang, ziel, code: r.status,
@@ -200,6 +201,29 @@ test('F-12-R1: fehlt die Eingangs-Zahl beim Mergen, wird das laut gemeldet (kein
     'ein verschwundenes Feld muss laut sein — es schaltet den Coverage-Floor auf die falsche Population zurueck');
 });
 
+// T565-M2 (Review Tag 565): die Uebernahme prueft jetzt `> 0` statt nur Number.isFinite.
+// Eine 0 ist keine Eingangs-Menge, sondern ein kaputter/leerer Vorlauf — sie wurde bis Tag 569
+// als gueltige Referenz weitergereicht, und der Coverage-Floor verwarf sie dann WORTLOS.
+test('T565-M2: n_eingang_snapshots=0 wird nicht uebernommen, sondern gemeldet', () => {
+  const root = tmpdir();
+  const snapDir = path.join(root, 'snapshots');
+  const manifestDir = path.join(root, 'shard-manifests');
+  fs.mkdirSync(snapDir, { recursive: true });
+  fs.mkdirSync(manifestDir, { recursive: true });
+  snapshot(snapDir, 'AAPL.json', 'AAPL');
+  fs.writeFileSync(path.join(snapDir, '_manifest.json'), JSON.stringify({ n_eingang_snapshots: 0 }));
+  fs.writeFileSync(path.join(manifestDir, 'shard-0.json'), JSON.stringify({ n_ok: 1, n_failed: 0, partial: false }));
+  const wlPfad = path.join(root, 'watchlist.json');
+  fs.writeFileSync(wlPfad, JSON.stringify({ stocks: [{ ticker: 'AAPL' }] }));
+  const r = spawnSync(process.execPath, [MERGE_SCRIPT,
+    '--shard-manifests', manifestDir, '--snapshots', snapDir, '--watchlist', wlPfad, '--expected-shards', '1',
+  ], { encoding: 'utf8' });
+  const aus = (r.stdout || '') + (r.stderr || '');
+  assert.match(aus, /::warning::[^\n]*n_eingang_snapshots/, 'die 0 muss in den Warn-Zweig fallen. Ausgabe:\n' + aus);
+  const m = JSON.parse(fs.readFileSync(path.join(snapDir, '_manifest.json'), 'utf8'));
+  assert.ok(!(m.n_eingang_snapshots === 0), 'eine 0 darf nicht als gueltige Floor-Referenz weiterwandern: ' + JSON.stringify(m));
+});
+
 // ── F-12-R2 (H2): Verhaeltnis-Wache ───────────────────────────────────────────────
 // Der bisherige Stop griff erst bei 100 % uebersprungen. Ein Namensschema-Bruch, der "nur"
 // die Haelfte erwischt (Suffix-Regel, Grossschreibung, halbe Watchlist), lief still durch.
@@ -218,6 +242,21 @@ test('F-12-R2: normaler Karteileichen-Anteil (unter der Schwelle) geht DURCH', (
   const r = lauf(tickerBis(170), VIELE); // 30 von 200 = 15 %, der reale Stand
   assert.equal(r.code, 0, 'ein normaler Karteileichen-Anteil ist kein Fehler. Ausgabe:\n' + r.ausgabe);
   assert.match(r.ausgabe, /30 von 200 Snapshots uebersprungen/);
+});
+
+// T565-M1: der Anteil ratcht monoton (Karteileichen werden nie ausgetragen) — ohne Ventil
+// wuerde die Wache eines Tages jeden Tageslauf toeten, ohne dass etwas kaputt waere.
+test('T565-M1: Ventil laesst den legitimen Karteileichen-Berg durch, Befund bleibt sichtbar', () => {
+  const r = lauf(tickerBis(100), VIELE, { env: { ALLOW_UEBERSPRUNGEN_DRIFT: '1' } }); // 50 %
+  assert.equal(r.code, 0, 'mit Ventil darf der Lauf nicht sterben. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /::warning::[^\n]*ueber der Schwelle/, 'der Befund muss trotzdem gemeldet werden');
+  assert.ok(!/::error::/.test(r.ausgabe), 'mit Ventil kein ::error:: (sonst faerbt es den Job weiter rot)');
+  assert.ok(r.imZiel.length > 0, 'und die autorisierten Snapshots muessen ankommen');
+});
+
+test('T565-M1: ohne Ventil (Default 0) bleibt es beim harten Stop', () => {
+  const r = lauf(tickerBis(100), VIELE, { env: { ALLOW_UEBERSPRUNGEN_DRIFT: '0' } });
+  assert.notEqual(r.code, 0, 'das Ventil darf nicht versehentlich per Default offen stehen');
 });
 
 test('F-12-R2: unter der Mindest-Fallzahl quotelt die Wache nicht (2 von 3 sind kein Befund)', () => {
@@ -264,6 +303,18 @@ test('Verdrahtung: der Filter laeuft VOR dem Watchlist-Prune (sonst falscher Kol
   const prune = YML.indexOf('- name: Prune Watchlist');
   assert.ok(filter > -1 && prune > -1, 'beide Schritte muessen existieren');
   assert.ok(filter < prune, 'gegen die geprunte Watchlist gefiltert faellt die on-disk-Zahl unter die summierte n_ok der Shards -> merge-shard-manifests wuerde eine Ticker-Kollision melden, die es nicht gibt');
+});
+
+// T564-L1 (Review Tag 564): dieselbe Reihenfolge-Frage wie beim Prune-Pin darueber, nur in
+// die andere Richtung. merge-shard-manifests.js liest n_eingang_snapshots aus dem Manifest,
+// das GENAU DIESER Filter schreibt (F-12-R1), und zaehlt zusaetzlich die on-disk-Dateien in
+// snapshots/. Liefe der Merge zuerst, faende er das Feld nicht (nur ::warning::) und der
+// Coverage-Floor im scoring-Job fiele still auf die falsche Population zurueck.
+test('Verdrahtung: der Filter laeuft VOR dem Manifest-Merge (sonst fehlt die Eingangs-Zahl)', () => {
+  const filter = YML.indexOf('scripts/filter-snapshot-merge.js');
+  const merge = YML.indexOf('- name: Merge shard manifests');
+  assert.ok(filter > -1 && merge > -1, 'beide Schritte muessen existieren');
+  assert.ok(filter < merge, 'der Merge ueberschreibt _manifest.json vollstaendig und uebernimmt n_eingang_snapshots aus dem vorhandenen Stand — laeuft er zuerst, gibt es nichts zu uebernehmen');
 });
 
 test('Verdrahtung: der Eingangsordner ist git-ignoriert (der Commit-Schritt faehrt git add -A)', () => {

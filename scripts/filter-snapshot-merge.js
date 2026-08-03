@@ -50,6 +50,20 @@ const { writeFileAtomic } = require('../lib/atomic-write.js');
 const MAX_UEBERSPRUNGEN_ANTEIL = 0.30;
 
 /**
+ * T565-M1 (Review Tag 565): der gemessene Anteil RATCHT nach oben und kann nie sinken.
+ * Karteileichen werden bewusst NICHT geloescht (Karl-Entscheid), und der Eingang traegt sie
+ * ueber die per-Shard-Caches taeglich wieder heran — jedes weitere Watchlist-Prunen hebt den
+ * Zaehler, nichts senkt ihn je. 14,4 % waren der Stand vom 04.08.; mit jeder Kuerzung wandert
+ * er Richtung 30 %, und dann stoppt dieser Schritt jeden Tag, ohne dass irgendetwas kaputt
+ * waere. Das VENTIL (gleiche Bauform wie ALLOW_PULL_DRIFT in scripts/check-pull-stats.js,
+ * verdrahtet ueber `vars.` in daily-pull.yml) macht diesen Tag entstoerbar, ohne die Schwelle
+ * dauerhaft hochzudrehen: Befund bleibt sichtbar (::warning::), der Lauf laeuft weiter.
+ * Die dauerhafte Reparatur ist eine ANDERUNGS- statt Pegel-Messung (Sprung gegenueber dem
+ * Vorlauf statt absoluter Anteil) — eigener Punkt, bewusst nicht hier.
+ */
+const DRIFT_VENTIL = 'ALLOW_UEBERSPRUNGEN_DRIFT';
+
+/**
  * Mindest-Fallzahl, unter der ein ANTEIL nichts aussagt (2 von 3 Dateien sind 67 %, aber kein
  * Befund). Gleiche Bauform wie MIN_HISTORY_RUNS (check-pull-stats.js) und MIN_COHORT_N
  * (score.js): erst genug Masse, dann quoteln. Real kommen ~12.500 Snapshots an — ein Lauf
@@ -178,8 +192,15 @@ function run(argv) {
     // F-12-R2 (Review Tag 563): derselbe Fehler eine Stufe frueher. Ein Bruch, der nicht
     // gleich 100 % erwischt, hat bisher still das halbe Universum aus dem Artefakt genommen —
     // und die Boards haetten auf der Reststrecke ganz normal gerankt.
-    console.error(`::error::filter-snapshot-merge — ${uebersprungen.length} von ${gescannt} Snapshots nicht autorisiert (${(uebersprungen.length / gescannt * 100).toFixed(1)} %), ueber der Schwelle ${(MAX_UEBERSPRUNGEN_ANTEIL * 100).toFixed(0)} %. Der reale Karteileichen-Bestand liegt bei ~15 %; so viel auf einmal ist ein Namensschema-/Watchlist-Bruch, keine Karteileichen-Lage. Stop.`);
-    return 1;
+    const befund = `${uebersprungen.length} von ${gescannt} Snapshots nicht autorisiert (${(uebersprungen.length / gescannt * 100).toFixed(1)} %), ueber der Schwelle ${(MAX_UEBERSPRUNGEN_ANTEIL * 100).toFixed(0)} %. Der reale Karteileichen-Bestand liegt bei ~15 %; so viel auf einmal ist ein Namensschema-/Watchlist-Bruch, keine Karteileichen-Lage.`;
+    // T565-M1: Ventil (s. DRIFT_VENTIL oben) — der Anteil ratcht monoton, ein legitimer
+    // Karteileichen-Berg darf den Tageslauf nicht dauerhaft toeten. Befund bleibt sichtbar.
+    if (process.env[DRIFT_VENTIL] === '1') {
+      console.error(`::warning::filter-snapshot-merge — ${befund} ${DRIFT_VENTIL}=1 gesetzt: Lauf faehrt trotzdem weiter.`);
+    } else {
+      console.error(`::error::filter-snapshot-merge — ${befund} Stop. (Legitimer Karteileichen-Berg? ${DRIFT_VENTIL}=1 setzen — der Anteil ratcht monoton nach oben, weil nichts ausgetragen wird.)`);
+      return 1;
+    }
   }
 
   fs.mkdirSync(ziel, { recursive: true });
@@ -191,5 +212,5 @@ function run(argv) {
   return 0;
 }
 
-module.exports = { autorisierteDateinamen, teileEingang, run, MAX_UEBERSPRUNGEN_ANTEIL, MIN_GESCANNT_FUER_ANTEIL, MANIFEST_EINGANG_FELD };
+module.exports = { autorisierteDateinamen, teileEingang, run, MAX_UEBERSPRUNGEN_ANTEIL, MIN_GESCANNT_FUER_ANTEIL, MANIFEST_EINGANG_FELD, DRIFT_VENTIL };
 if (require.main === module) process.exit(run(process.argv));

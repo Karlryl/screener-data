@@ -208,7 +208,11 @@ function run() {
   // Feld genau zwischen Filter und Scoring-Job unter den Tisch, und der Floor misst wieder
   // das (autorisierte) Verzeichnis, also legitimes Pruning statt Schwund.
   const vorheriges = readJSON(path.join(snapDir, '_manifest.json'));
-  if (vorheriges && Number.isFinite(vorheriges.n_eingang_snapshots)) {
+  // T565-M2 (Review Tag 565): `> 0` statt nur Number.isFinite. Eine 0 ist keine brauchbare
+  // Eingangs-Zahl — sie wuerde als gueltige Referenz weitergereicht, und floorReferenz()
+  // (run-screener.js) verwirft sie dort erneut, aber ohne diese Warnung. Mit `> 0` faellt
+  // die 0 in den bestehenden ::warning::-Zweig darunter, wo sie hingehoert.
+  if (vorheriges && Number.isFinite(vorheriges.n_eingang_snapshots) && vorheriges.n_eingang_snapshots > 0) {
     merged.n_eingang_snapshots = vorheriges.n_eingang_snapshots;
   } else {
     console.error('::warning::merge-shard-manifests — kein n_eingang_snapshots im vorhandenen snapshots/_manifest.json (lief scripts/filter-snapshot-merge.js vor diesem Schritt?). Der Coverage-Floor im scoring-Job faellt auf die watchlist-gefilterte on-disk-Zaehlung zurueck und misst damit auch legitimes Pruning.');

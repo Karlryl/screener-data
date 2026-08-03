@@ -338,5 +338,118 @@ test('BH-100/F-11-FOLGE: yahoo-finance2 >= 3.15.0 — darunter ist der Predefine
     'sonst loest ein Lock-Neubau wieder auf eine tote Version auf.');
 });
 
+// ── DEP-NPMRC (Review Tag 565): Install-Skripte fremder Pakete ────────────────────
+// Lifecycle-Skripte (preinstall/install/postinstall/prepare) laufen bei `npm ci` mit den
+// Rechten des CI-Jobs. Der Zustand ist heute sauber (0 Pakete mit Install-Skript) — und
+// genau deshalb wird er festgenagelt: .npmrc schaltet sie ab, dieser Test haelt beide
+// Haelften zusammen, damit weder die Datei noch die Eigenschaft still verschwindet.
+test('DEP-NPMRC: .npmrc schaltet Dependency-Install-Skripte ab', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const npmrc = fs.readFileSync(path.join(__dirname, '..', '.npmrc'), 'utf8');
+  assert.match(npmrc, /^\s*ignore-scripts\s*=\s*true\s*$/m,
+    '.npmrc ohne ignore-scripts=true — dann laeuft wieder jedes fremde postinstall im CI');
+});
+test('DEP-NPMRC: kein Paket im Lockfile bringt ueberhaupt ein Install-Skript mit', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const lock = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package-lock.json'), 'utf8'));
+  const mitSkript = Object.entries(lock.packages || {})
+    .filter(([, p]) => p && p.hasInstallScript === true).map(([n]) => n);
+  assert.deepEqual(mitSkript, [],
+    'ein neues Paket bringt ein Install-Skript mit. Mit ignore-scripts=true laeuft es NICHT — ' +
+    'pruefen, ob das Paket ohne seinen Install-Schritt funktioniert, und die Entscheidung hier festhalten.');
+});
+
+// ── T566-H2 (Review Tag 566): die Wache sprach erst bei NULL nicht-leeren Buckets an ──
+// Ein Teilausfall (Bibliotheks-Rueckfall, Yahoo-Feld-Wechsel, der nur einen Teil der Buckets
+// zerlegt) landet zwischen "alles tot" und "gesund" und lief still durch. Gleiche Bugklasse
+// wie F-12-R2 im Filter, eine Stufe frueher.
+test('T566-H2: Anteil unter der Schwelle -> Befund (nicht erst bei 0)', () => {
+  assert.equal(ru.predefinedKanalEingebrochen(0, 325), true, 'Totalausfall bleibt ein Befund');
+  assert.equal(ru.predefinedKanalEingebrochen(80, 325), true,
+    'BEFUND: 24,6 % nicht-leere Buckets liefen bis Tag 569 still durch');
+  assert.equal(ru.predefinedKanalEingebrochen(97, 325), true, 'knapp unter 30 % ist noch Befund');
+});
+test('T566-H2: der gesunde Stand geht DURCH (sonst waere der Waechter falsch-rot)', () => {
+  assert.equal(ru.predefinedKanalEingebrochen(260, 325), false, '80 % = der gemessene 3.15.4-Stand');
+  assert.equal(ru.predefinedKanalEingebrochen(98, 325), false, 'genau ueber der Schwelle');
+  assert.equal(ru.predefinedKanalEingebrochen(325, 325), false);
+  assert.equal(ru.predefinedKanalEingebrochen(0, 0), false, 'kein Aufruf = kein Anteil, kein Befund');
+});
+
+// Verdrahtung am OBJEKT: der Block ab der Wache bis zum Ende des if-Zweiges. Ein dateiweiter
+// Treffer wuerde gruen bleiben, wenn ausgerechnet dieser Zweig seine Rot-Faerbung verliert.
+function predefinedWachenBlock(src) {
+  const start = src.indexOf('if (predefinedKanalEingebrochen(');
+  assert.notEqual(start, -1, 'die Anteils-Wache ist aus dem Predefined-Kanal verschwunden');
+  const rest = src.slice(start);
+  const ende = rest.indexOf('\n  }');
+  return ende === -1 ? rest : rest.slice(0, ende);
+}
+test('T566-H2: der Befund faerbt den Lauf rot (::error:: + exitCode im selben Zweig)', () => {
+  const b = predefinedWachenBlock(SRC_RU);
+  assert.match(b, /::error::/, 'ohne Annotation sieht Karl im Schritt-Log nichts');
+  assert.match(b, /process\.exitCode = 1/,
+    'BEFUND: der Zweig meldete nur und liess den Lauf gruen — genau das war folgenlos');
+  assert.ok(!/predefinedNonEmpty\s*===\s*0/.test(b),
+    'die alte Null-Wache darf nicht daneben stehen bleiben (zwei Schwellen an zwei Orten)');
+  // Das eine legitime Vorkommen ist der Tag-510-Doppelausfall-Waechter (anderer Befund,
+  // anderer Zweck: dort ist "beide Kanaele auf 0" genau die Frage). Mehr als eines waere
+  // wieder die Zwei-Schwellen-Lage, gegen die T566-H2 gebaut ist.
+  assert.equal((SRC_RU.replace(/\/\/[^\n]*/g, '').match(/predefinedNonEmpty\s*===\s*0/g) || []).length, 1,
+    'erwartet: genau EIN Vorkommen, naemlich in beideYahooKanaeleLeer()');
+  assert.match(SRC_RU.slice(SRC_RU.indexOf('function beideYahooKanaeleLeer'), SRC_RU.indexOf('function beideYahooKanaeleLeer') + 300),
+    /predefinedNonEmpty === 0/, 'und zwar genau dort');
+});
+
+// Der bekannte Dauerdefekt ist die Bedingung dafuer, dass der neue Exit-Code-Konsument
+// ueberhaupt etwas aussagt — aber er darf die Meldung nicht mitnehmen.
+test('T566-H2: der bekannte Exchange-Dauerdefekt bleibt SICHTBAR, faerbt aber nicht rot', () => {
+  assert.equal(ru.EXCHANGE_KANAL_BEKANNT_DEFEKT, true,
+    'solange der query-Aufruf gegen das scrIds-Schema laeuft, ist das der Ist-Zustand');
+  const i = SRC_RU.indexOf('exchangeScreenerFatal = true;');
+  assert.notEqual(i, -1);
+  const block = SRC_RU.slice(i - 1200, i + 400);
+  assert.match(block, /::error::Custom-Exchange-Screener ist mit yahoo-finance2/,
+    'die Annotation muss bleiben — sie ist die einzige Spur des Defekts');
+  assert.match(SRC_RU.slice(i, i + 400), /if \(!EXCHANGE_KANAL_BEKANNT_DEFEKT\) process\.exitCode = 1;/,
+    'die Ausnahme muss an den benannten Schalter gebunden sein, nicht stillschweigend geloescht');
+});
+
+// ── T566-H2, Verdrahtung im Workflow: der Alarm muss ANKOMMEN ──────────────────────
+// Am OBJEKT gesucht (Block ab dem benannten Schritt/Job), nicht per Volltext: sonst haelt
+// ein beliebiges zweites Vorkommen den Test gruen, waehrend die geschuetzte Stelle kippt.
+function ymlBlock(anker, bis) {
+  const start = YML.indexOf(anker);
+  assert.notEqual(start, -1, 'Anker "' + anker + '" fehlt in daily-pull.yml');
+  const rest = YML.slice(start + anker.length);
+  const ende = rest.indexOf(bis);
+  return ende === -1 ? rest : rest.slice(0, ende);
+}
+test('T566-H2: der Refresh-Schritt traegt eine id und reicht seinen Ausgang als Job-Ausgang weiter', () => {
+  const schritt = ymlBlock('- name: Refresh Universe', '- name: ');
+  assert.match(schritt, /id: refresh_universe\b/, 'ohne id ist der Ausgang nirgends abgreifbar');
+  assert.match(schritt, /continue-on-error: true/,
+    'das bleibt bewusst stehen: ein fallender prep-Job wuerde pull UND merge mitreissen');
+  const halten = ymlBlock('- name: Entdeckungs-Ausgang festhalten', '- name: ');
+  assert.match(halten, /if: always\(\)/, 'sonst faellt der Ausgang aus, sobald ein spaeterer prep-Schritt kippt');
+  assert.match(halten, /outcome=\$\{\{ steps\.refresh_universe\.outcome \}\}/);
+  assert.match(YML, /refresh_universe_outcome: \$\{\{ steps\.refresh_ausgang\.outputs\.outcome \}\}/,
+    'der Job-Ausgang fehlt — dann liest der Waechter-Job eine leere Zeichenkette und ist immer gruen');
+});
+test('T566-H2: der Waechter-Job faerbt rot und blockiert keinen Datenschritt', () => {
+  const job = ymlBlock('  entdeckungs-waechter:', '\n  pull:');
+  assert.match(job, /needs: prep/);
+  assert.match(job, /if: always\(\)/, 'ohne always() liefe er bei rotem prep gar nicht');
+  assert.match(job, /needs\.prep\.outputs\.refresh_universe_outcome/);
+  assert.match(job, /exit 1/, 'ohne exit 1 bleibt der Lauf gruen — der ganze Befund');
+  // Der Kern des Befunds: KEIN Datenjob darf an diesem Waechter haengen, sonst kostet ein
+  // Entdeckungs-Ausfall den Tageslauf (genau der Grund, warum continue-on-error steht).
+  for (const j of ['pull', 'merge', 'scoring']) {
+    const jb = ymlBlock('\n  ' + j + ':', '\n    steps:');
+    assert.ok(!/entdeckungs-waechter/.test(jb),
+      'Job "' + j + '" haengt am Waechter — ein Entdeckungs-Ausfall wuerde den Datenlauf toeten');
+  }
+});
+
 console.log(`\nrefresh-universe.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

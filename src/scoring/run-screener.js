@@ -63,6 +63,26 @@ const SMALLCAP_COVERAGE_FLOOR_PCTL = 0.10;
 const COVERAGE_FLOOR_RATIO = 0.95;
 const LAST_GOOD_DISK = path.join(SNAP_DIR, '_last_good_disk.json'); // git-ignored (wie snapshots/)
 
+// T565-H1 (Review Tag 565): der Coverage-Floor misst seit F-12-R1 KEINE Korruption mehr.
+// Er rechnet gegen n_eingang_snapshots — eine reine ZAEHLUNG der Dateien, die aus den Shard-
+// Artefakten ankamen. Ob deren INHALT parsebar ist, sieht diese Zahl nicht: 12.540 kaputt
+// geschriebene Snapshots sind fuer sie dasselbe wie 12.540 gesunde. Die einzige Zahl, die
+// Korruption ueberhaupt sehen kann, ist parseFail aus der Leseschleife unten — und die hatte
+// bis hierher KEINEN harten Konsumenten (nur eine console.warn-Zeile am Ende von loadUniverse).
+// Beides zusammen heisst: seit Tag 565 kann die halbe Platte unlesbar sein, ohne dass der Lauf
+// stoppt; die Kohorten-Perzentile verschieben sich lautlos auf der Restmenge.
+// Deshalb eine EIGENE Wache auf dem Parse-Fail-ANTEIL, direkt hinter der Leseschleife —
+// unabhaengig vom Floor (der bleibt die Pruning-/Schwund-Frage) und vor jeder weiteren Arbeit.
+// 0.02: die produktiven Laeufe liegen bei 0 unlesbaren Dateien; 2 % von ~12.500 sind 250
+// Snapshots und damit weit jenseits von Einzelfall-Rauschen (halb geschriebene Datei bei
+// Runner-Eviction), aber weit unter jedem echten Bruch-Szenario (Schema-Wechsel, kaputter
+// Cache-Restore, Encoding-Unfall treffen ALLES).
+const MAX_PARSE_FAIL_ANTEIL = 0.02;
+// Mindest-Fallzahl, unter der ein ANTEIL nichts aussagt — gleiche Bauform wie
+// MIN_GESCANNT_FUER_ANTEIL (filter-snapshot-merge.js) und MIN_COHORT_N (score.js).
+// Schuetzt Kaltstart und Fixture-Laeufe: 1 von 3 Dateien sind 33 %, aber kein Befund.
+const MIN_PARSE_FAIL_FAELLE = 25;
+
 // F-12-R1 (Review Tag 563): Name der Population, gegen die der Floor rechnet. Seit dem
 // F-12-Karteileichen-Filter im merge-Job enthaelt snapshots/ NUR NOCH watchlist-autorisierte
 // Staende — die on-disk-Zaehlung ist damit selbst plattengefiltert und misst wieder das
@@ -99,18 +119,55 @@ function floorReferenz(manifest, rawCount, lastGood) {
       `Lief scripts/filter-snapshot-merge.js vor merge-shard-manifests.js?`
     );
   }
-  let baseline = lastGood && lastGood.value;
-  // Alt-Datei ohne basis-Feld: das war die on-disk-Population (so wurde sie geschrieben).
-  const baselineBasis = (lastGood && lastGood.basis) || FLOOR_BASIS_ONDISK;
-  if (Number.isFinite(baseline) && baseline > 0 && baselineBasis !== basis) {
+  const baseline = baselineFuer(lastGood, basis);
+  if (baseline === null && baselineFuer(lastGood, andereBasis(basis)) !== null) {
     warnungen.push(
-      `Self-Baseline ${baseline} stammt aus Population "${baselineBasis}", dieser Lauf misst ` +
-      `"${basis}" — verschiedene Populationen. Baseline verworfen (Floor diesen Lauf nicht ` +
-      `erzwungen, Erstlauf-Vertrag), ankert unten neu. Kein Cache-Reset noetig.`
+      `Self-Baseline fuer Population "${basis}" fehlt (die Datei fuehrt bisher nur ` +
+      `"${andereBasis(basis)}") — Floor diesen Lauf nicht erzwungen (Erstlauf-Vertrag), ankert ` +
+      `unten neu. Ab diesem Lauf werden BEIDE High-Water nebeneinander gefuehrt, ein Rueck- ` +
+      `oder Vorwaerts-Wechsel der Population kostet danach keinen fail-open-Lauf mehr.`
     );
-    baseline = null;
   }
-  return { count, basis, baseline: Number.isFinite(baseline) && baseline > 0 ? baseline : null, warnungen };
+  return { count, basis, baseline, warnungen };
+}
+
+/** Die jeweils andere der beiden Floor-Populationen. */
+function andereBasis(basis) {
+  return basis === FLOOR_BASIS_EINGANG ? FLOOR_BASIS_ONDISK : FLOOR_BASIS_EINGANG;
+}
+
+/**
+ * T565-M2 (Review Tag 565): High-Water fuer EINE Population aus der Baseline-Datei lesen.
+ * Bisher fuehrte die Datei genau EINEN Wert plus seinen Populations-Namen — ein Wechsel der
+ * Population (n_eingang_snapshots fehlt einmal -> on-disk-Fallback, danach wieder Eingang)
+ * verwarf das High-Water JEDES MAL und kostete einen ungeschuetzten fail-open-Lauf. Bei einem
+ * flatternden Manifest ist der Floor damit nie scharf. Jetzt stehen BEIDE High-Water
+ * nebeneinander in `hochwasser`; der Wechsel kostet nichts mehr.
+ * Alt-Dateien (nur value+basis, basis fehlend = on-disk, so wurden sie geschrieben) bleiben
+ * lesbar — sie liefern weiterhin genau ihre eine Population.
+ */
+function baselineFuer(lastGood, basis) {
+  if (!lastGood || typeof lastGood !== 'object') return null;
+  const h = lastGood.hochwasser;
+  if (h && typeof h === 'object' && Number.isFinite(h[basis]) && h[basis] > 0) return h[basis];
+  const altBasis = lastGood.basis || FLOOR_BASIS_ONDISK;
+  if (altBasis === basis && Number.isFinite(lastGood.value) && lastGood.value > 0) return lastGood.value;
+  return null;
+}
+
+/**
+ * T565-M2: fortgeschriebener High-Water-Stand BEIDER Populationen. Die gemessene wird
+ * monoton angehoben (nextHighWater), die andere unveraendert mitgetragen — auch wenn sie
+ * aus einer Alt-Datei stammt. Reine Funktion.
+ */
+function naechstesHochwasser(lastGood, basis, count) {
+  const stand = {};
+  for (const b of [FLOOR_BASIS_EINGANG, FLOOR_BASIS_ONDISK]) {
+    const v = baselineFuer(lastGood, b);
+    if (v !== null) stand[b] = v;
+  }
+  stand[basis] = nextHighWater(stand[basis], count);
+  return stand;
 }
 
 /**
@@ -127,6 +184,32 @@ function assertCoverageFloor(loadedCount, baseline, floorRatio = COVERAGE_FLOOR_
       `${floor} (= ${floorRatio} x Self-Baseline ${baseline}, zuletzt-gesunder on-disk-Count). Universum ` +
       `geschrumpft — Kohorten-Perzentile waeren unzuverlaessig. Lauf abgebrochen (defekte/fehlende ` +
       `Snapshots pruefen; bei legitimem Schrumpfen snapshots/_last_good_disk.json loeschen zum Reset).`
+    );
+  }
+}
+
+/**
+ * T565-H1: wirft (Fail-Loud), wenn ein zu grosser ANTEIL der gelesenen Snapshot-Dateien
+ * nicht parsebar war. Reine Funktion (testbar, kein I/O).
+ *   gelesene       — Dateien mit gueltigem JSON UND meta.ticker (= das Arbeitsuniversum)
+ *   parseFail      — JSON.parse geworfen (defekte/halbe Datei)
+ *   skippedNoMeta  — parsebar, aber ohne meta.ticker (Schema-Drift)
+ * Nenner ist die Summe der drei = alle Kandidaten-Dateien des Verzeichnisses. Unter
+ * minFaelle absoluten Faellen wird bewusst NICHT gequotelt (Kaltstart/Fixture-Schutz).
+ */
+function assertParseFailAnteil(gelesene, parseFail, skippedNoMeta,
+  maxAnteil = MAX_PARSE_FAIL_ANTEIL, minFaelle = MIN_PARSE_FAIL_FAELLE) {
+  const gesamt = gelesene + parseFail + skippedNoMeta;
+  if (gesamt <= 0 || parseFail < minFaelle) return;
+  const anteil = parseFail / gesamt;
+  if (anteil > maxAnteil) {
+    throw new Error(
+      `[run-screener] loadUniverse: ${parseFail} von ${gesamt} Snapshot-Dateien nicht parsebar ` +
+      `(${(anteil * 100).toFixed(1)} %, Schwelle ${(maxAnteil * 100).toFixed(0)} %). Das ist ` +
+      `Datenkorruption, kein Pruning: der Coverage-Floor sieht sie NICHT (er zaehlt ` +
+      `n_eingang_snapshots, also Dateien, nicht Inhalte). Lauf abgebrochen, bevor die ` +
+      `Kohorten-Perzentile auf der Restmenge gerechnet werden (defekten Cache-Restore/ ` +
+      `Artefakt-Download pruefen).`
     );
   }
 }
@@ -156,10 +239,17 @@ function filterToAuthorizedUniverse(u, watchlistStocks) {
   return { filtered, dropped: u.length - filtered.length };
 }
 
-function loadUniverse() {
+/**
+ * snapDir/watchlistPath sind Parameter mit den produktiven Defaults — dieselbe Bauform wie
+ * loadSmallcapUniverse() unten. Kein Verhaltenswechsel fuer die Aufrufer (run(), calibrate.js
+ * rufen ohne Argumente); die T565-H1-Wache ist damit an der ECHTEN Leseschleife pruefbar
+ * statt nur als reine Funktion neben ihr.
+ */
+function loadUniverse(snapDir = SNAP_DIR, watchlistPath = WATCHLIST_PATH) {
+  const lastGoodPfad = path.join(snapDir, '_last_good_disk.json');
   let u = [];
   let parseFail = 0, skippedNoMeta = 0;
-  for (const f of fs.readdirSync(SNAP_DIR)) {
+  for (const f of fs.readdirSync(snapDir)) {
     if (!f.endsWith('.json')) continue;
     // audit/fix (C3): NUR die Manifeste (_manifest.json/_manifest-full.json) explizit skippen,
     // NICHT pauschal jedes "_"-Praefix — safeSnapshotFilename praefixt Windows-Reserved-Ticker
@@ -167,11 +257,16 @@ function loadUniverse() {
     if (f.startsWith('_manifest') || f === '_last_good_disk.json') continue;
     let s;
     try {
-      s = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, f), 'utf8'));
+      s = JSON.parse(fs.readFileSync(path.join(snapDir, f), 'utf8'));
     } catch (_) { parseFail++; continue; } // defekter Snapshot
     if (s && s.meta && s.meta.ticker) u.push(s);
     else skippedNoMeta++;
   }
+  // T565-H1: Korruptions-Wache DIREKT hinter der Leseschleife — vor Floor, Watchlist-Schnitt
+  // und jeder Perzentil-Rechnung. Der Coverage-Floor unten bleibt unangetastet; er beantwortet
+  // die Pruning-/Schwund-Frage (wie viele Dateien kamen an), diese hier die Korruptions-Frage
+  // (waren sie lesbar). Zwei verschiedene Fragen, zwei Wachen.
+  assertParseFailAnteil(u.length, parseFail, skippedNoMeta);
   // audit/fix (Opus-Review b07, BH-116-Regression): der Coverage-Floor braucht die ROHE on-disk-
   // Parse-Erfolgs-Menge (die Korruptions-Population, die C1 faengt), NICHT den watchlist-gefilterten
   // Count. Vorher lief der BH-116-Schnitt VOR dem Floor -> ganze Boersen ohne Watchlist-Eintraege
@@ -186,8 +281,8 @@ function loadUniverse() {
   // floorReferenz() — seit dem Karteileichen-Filter ist rawCount selbst watchlist-gefiltert und
   // maesse Pruning statt Korruption (Begruendung am Konstanten-Block oben).
   let manifest = null, lastGood = null;
-  try { manifest = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, '_manifest.json'), 'utf8')); } catch (_) { /* s. lauter Fallback in floorReferenz */ }
-  try { lastGood = JSON.parse(fs.readFileSync(LAST_GOOD_DISK, 'utf8')); } catch (_) { /* Erstlauf / kein High-Water -> fail-open, gleich Startwert schreiben */ }
+  try { manifest = JSON.parse(fs.readFileSync(path.join(snapDir, '_manifest.json'), 'utf8')); } catch (_) { /* s. lauter Fallback in floorReferenz */ }
+  try { lastGood = JSON.parse(fs.readFileSync(lastGoodPfad, 'utf8')); } catch (_) { /* Erstlauf / kein High-Water -> fail-open, gleich Startwert schreiben */ }
   const floor = floorReferenz(manifest, rawCount, lastGood);
   for (const w of floor.warnungen) console.warn('::warning::[run-screener] loadUniverse: ' + w);
   const baseline = floor.baseline;
@@ -214,15 +309,20 @@ function loadUniverse() {
   // ein plain fs.writeFileSync hinterliesse bei Crash/CI-Timeout truncated JSON -> Read liefert baseline=
   // null -> Floor fail-open + nextHighWater re-ankert auf den geschrumpften Wert -> High-Water-Lock weg
   // (F-SM-015-baseline-wipe). Best effort, kein Abbruch bei I/O-Fehler.
+  // T565-M2: BEIDE High-Water werden gefuehrt (hochwasser), value/basis bleiben als
+  // Alt-Feld fuer jeden Leser der alten Form stehen (und sind der Wert dieses Laufs).
   try {
-    writeJsonAtomic(LAST_GOOD_DISK, { value: nextHighWater(baseline, floor.count), basis: floor.basis, generatedAt: new Date().toISOString() });
+    const hochwasser = naechstesHochwasser(lastGood, floor.basis, floor.count);
+    writeJsonAtomic(lastGoodPfad, {
+      value: hochwasser[floor.basis], basis: floor.basis, hochwasser, generatedAt: new Date().toISOString(),
+    });
   } catch (e) {
     console.warn('[run-screener] loadUniverse: _last_good_disk.json nicht schreibbar — Self-Baseline nicht fortgeschrieben:', e.message);
   }
   // BH-116: Altbestand ausserhalb der aktuellen Watchlist raus — ERST NACH dem Korruptions-Floor
   // (siehe rawCount oben), damit legitimes Watchlist-Prunen (ganze Boersen ohne Watchlist-Eintraege)
   // den Floor nicht mehr faelschlich ausloest. Wirkt nur auf das zurueckgegebene Scoring-Universum.
-  const wl = loadWatchlist(WATCHLIST_PATH);
+  const wl = loadWatchlist(watchlistPath);
   // S5-SC-001-Fix: ein Ladefehler (Datei fehlt/kaputt/unbekannte Form) liefert wl.stocks=[]
   // — GENAU das Signal, bei dem filterToAuthorizedUniverse() (siehe deren eigener Fail-open-
   // Vertrag oben) auf "kein Schnitt" faellt und ALLE on-disk-Snapshots durchlaesst, auch
@@ -231,7 +331,7 @@ function loadUniverse() {
   // Coverage-Floor oben: bei echtem Fehler hart abbrechen statt lautlos ungefiltert scoren.
   if (wl.error) {
     throw new Error(
-      `[run-screener] loadUniverse: Watchlist nicht ladbar (${WATCHLIST_PATH}): ${wl.error}. ` +
+      `[run-screener] loadUniverse: Watchlist nicht ladbar (${watchlistPath}): ${wl.error}. ` +
       `Abbruch statt lautlosem Scoring des kompletten ungefilterten on-disk-Bestands.`
     );
   }
@@ -716,4 +816,6 @@ if (require.main === module) {
 // Produktionsweg nehmen statt die SECANNUAL_FILES-Liste nachzubauen — die Liste ist schon
 // einmal von 1 auf 5 Dateien gewachsen, eine Kopie waere still veraltet.
 module.exports = { loadUniverse, loadSmallcapUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO,
+  assertParseFailAnteil, MAX_PARSE_FAIL_ANTEIL, MIN_PARSE_FAIL_FAELLE,  // T565-H1
+  baselineFuer, naechstesHochwasser,                                    // T565-M2
   floorReferenz, FLOOR_BASIS_EINGANG, FLOOR_BASIS_ONDISK, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex, filterToAuthorizedUniverse, mergeSecIntoUniverse, hasFiniteSeries, parseTopNArg, runSmallcapPass, lampeBNachruesten, SMALLCAP_OUT_DIR, SMALLCAP_SNAP_DIR, SMALLCAP_WATCHLIST_PATH, SMALLCAP_COVERAGE_FLOOR_PCTL };
