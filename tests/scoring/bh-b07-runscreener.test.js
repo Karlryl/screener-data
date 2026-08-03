@@ -52,6 +52,32 @@ test('hasFiniteSeries: leeres Array / kein Array / undefined -> false', () => {
   assert.equal(hasFiniteSeries('not-an-array'), false);
 });
 
+// --- Review-Befund 03.08.2026: das Diagnose-Log meldete das GEGENTEIL der Wahrheit ---
+// hasFiniteSeries prueft mit Number.isFinite auf PLAIN NUMBERS. Die SEC-Datei speichert aber
+// {value:N}-Objekte — dieselbe Form, die normSec (score.js), secSeries (axes.js) und
+// annualSharesSeries (lamps.js) alle auspacken, bevor sie rechnen. Folge: der Zaehler in
+// mergeSecIntoUniverse meldete seit BH-011 strukturell rev=0, oi=0, roicTrio=0, waehrend das
+// Scoring die Serien in Wirklichkeit voll benutzt. Kein Score-Bezug, aber das Log log.
+test('hasFiniteSeries: {value:N}-Objektform (die ECHTE Form der SEC-Datei) -> true', () => {
+  assert.equal(hasFiniteSeries([{ value: null }, { value: 12831000000 }]), true);
+});
+test('hasFiniteSeries: {value:null}-only bleibt false (leere Serie mit Objekt-Huelle)', () => {
+  assert.equal(hasFiniteSeries([{ value: null }, { value: null }]), false);
+  assert.equal(hasFiniteSeries([{}, { value: NaN }]), false);
+});
+test('hasFiniteSeries: gegen die committete SEC-Datei — der Zaehler darf nicht strukturell 0 sein', () => {
+  // Der Beleg am echten Artefakt, nicht an einer Fixture: wenn die Datei da ist, MUSS die
+  // Klassifikation Namen mit Umsatzreihe finden. Fehlt die Datei (Alt-Checkout), ist nichts
+  // zu pruefen — dann still ueberspringen statt falsch gruen behaupten.
+  const p = require('node:path').join(__dirname, '..', '..', 'external-data', 'sec-secannual.json');
+  if (!require('node:fs').existsSync(p)) return;
+  const data = JSON.parse(require('node:fs').readFileSync(p, 'utf8'));
+  const tickers = Object.keys(data);
+  const mitRev = tickers.filter((t) => hasFiniteSeries(data[t].annualRev)).length;
+  assert.ok(mitRev > 0,
+    `0 von ${tickers.length} SEC-Namen mit finiter annualRev — das Diagnose-Log meldet das Gegenteil der Wahrheit`);
+});
+
 // --- BH-116: filterToAuthorizedUniverse -------------------------------------
 test('filterToAuthorizedUniverse: schneidet Snapshots raus, die nicht in der Watchlist stehen', () => {
   const u = [

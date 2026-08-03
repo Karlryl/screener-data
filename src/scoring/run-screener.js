@@ -246,8 +246,14 @@ function loadSmallcapUniverse(snapDir = SMALLCAP_SNAP_DIR, watchlistPath = SMALL
 const SECANNUAL_FILES = ['sec-secannual.json', 'sec-secannual-smallcap.json', 'kr-secannual.json', 'jp-secannual.json', 'tw-secannual.json']
   .map((f) => path.join(ROOT, 'external-data', f));
 // BH-011: Coverage anhand finiter Serien ausweisen statt blosser Key-Praesenz. Reine Funktion.
+// Review-Befund 03.08.2026: die SEC-Dateien speichern {value:N}-OBJEKTE, nicht plain numbers —
+// Number.isFinite({value:12831000000}) ist false, also meldete das Diagnose-Log seit BH-011
+// strukturell rev=0, oi=0, roicTrio=0, obwohl das Scoring die Serien voll benutzt. Hier wird
+// dieselbe Auspack-Konvention angewandt wie bei ALLEN drei echten Lesern derselben Serien
+// (normSec score.js, secSeries axes.js, annualSharesSeries lamps.js). Kein Score-Bezug — das
+// Log hat gelogen, nicht die Engine. Waechter: tests/scoring/bh-b07-runscreener.test.js.
 function hasFiniteSeries(arr) {
-  return Array.isArray(arr) && arr.some((v) => Number.isFinite(v));
+  return Array.isArray(arr) && arr.some((e) => Number.isFinite((e && typeof e === 'object') ? e.value : e));
 }
 
 function mergeSecIntoUniverse(u) {
