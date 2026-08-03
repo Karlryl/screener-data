@@ -71,6 +71,27 @@ const V = (arr) => arr.map((v) => (v === null || v === undefined ? null : { valu
   test('BH-075 scoreUniverse: refCal mit allen Feldern (auch null) -> kein Wurf', () => {
     assert.doesNotThrow(() => scoreUniverse([], {}, { refCalibration: validRefCal() }));
   });
+  // BH-075b: winsorBounds ist ein OBJEKT — seine Unterschluessel werden einzeln konsumiert
+  // (score.js opMargin -> marginTrajectory, qoq -> revAcceleration). Fehlt einer, liefert
+  // clampWinsor(v, undefined) die Identitaet -> Achse laeuft lautlos UNGEKLEMMT.
+  const wbRefCal = (winsorBounds) => ({ ...validRefCal(), winsorBounds });
+  test('BH-075b scoreUniverse: refCal fehlt ein winsorBounds-Unterschluessel -> fail-loud statt lautlos ungeklemmt', () => {
+    for (const k of ['opMargin', 'qoq']) {
+      const wb = { opMargin: [-1, 1], qoq: [-0.5, 1.5] };
+      delete wb[k];
+      assert.throws(() => scoreUniverse([], {}, { refCalibration: wbRefCal(wb) }),
+        new RegExp(`winsorBounds\\.${k}`), `fehlendes 'winsorBounds.${k}' muss werfen`);
+    }
+  });
+  test('BH-075b scoreUniverse: nicht-finites winsorBounds-Paar -> fail-loud', () => {
+    assert.throws(() => scoreUniverse([], {}, { refCalibration: wbRefCal({ opMargin: [-1, null], qoq: [-0.5, 1.5] }) }), /winsorBounds\.opMargin/);
+    assert.throws(() => scoreUniverse([], {}, { refCalibration: wbRefCal({ opMargin: [-1, 1], qoq: [-0.5] }) }), /winsorBounds\.qoq/);
+  });
+  test('BH-075b scoreUniverse: vollstaendiges winsorBounds (auch mit null-Unterschluessel) -> kein Wurf', () => {
+    assert.doesNotThrow(() => scoreUniverse([], {}, { refCalibration: wbRefCal({ opMargin: [-20.3, 1], qoq: [-0.6, 1.36] }) }));
+    assert.doesNotThrow(() => scoreUniverse([], {}, { refCalibration: wbRefCal({ opMargin: null, qoq: null }) }),
+      'null = legitime gefrorene Degeneration aus learnWinsorBounds, darf nicht werfen');
+  });
 })();
 
 // --- BH-079: gpGrowth / revYoYComponents Adjazenz ---------------------------

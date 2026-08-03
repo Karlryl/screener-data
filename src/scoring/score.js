@@ -797,6 +797,27 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
         throw new Error(`scoreUniverse: refCalibration-Lineal fehlt Feld '${scalarKey}' (Teil-Artefakt/aeltere Schema-Version) — mit aktuellem Code neu einfrieren.`);
       }
     }
+    // audit/fix (BH-075b, Court-Richter): der Guard oben prueft nur die TOP-LEVEL-Praesenz. winsorBounds ist
+    // aber ein OBJEKT, dessen UNTERSCHLUESSEL einzeln konsumiert werden (Z.~382 opMargin -> marginTrajectory,
+    // Z.~383 qoq -> revAcceleration). Traegt ein aelteres Lineal winsorBounds, aber nicht den vom aktuellen
+    // Code gelesenen Unterschluessel, liefert `winsorBounds && winsorBounds.<key>` -> undefined und
+    // clampWinsor(v, undefined) (axes.js:139) die IDENTITAET: die Achse laeuft LAUTLOS UNGEKLEMMT — ein
+    // DRITTES Verhalten, weder das alte (gefrorene Schranken) noch das neue (live gelernte). `null` bleibt
+    // legitim (learnWinsorBounds gibt opMargin:null zurueck, wenn keine Samples da sind -> gefrorene
+    // Degeneration, downstream per Falsy-Gate dasselbe wie "keine Schranken"); nur das FEHLEN des
+    // Schluessels bzw. ein nicht-finites Paar ist das kaputte Teil-Artefakt. winsorBounds===null (ganzes
+    // Objekt degeneriert) bleibt unveraendert erlaubt — dann gibt es keine Unterschluessel zu pruefen.
+    if (refCal.winsorBounds && typeof refCal.winsorBounds === 'object') {
+      for (const subKey of ['opMargin', 'qoq']) { // die real gelesenen Felder, s.o. Z.~382/383
+        const b = refCal.winsorBounds[subKey];
+        if (!(subKey in refCal.winsorBounds)) {
+          throw new Error(`scoreUniverse: refCalibration-Lineal fehlt Unterschluessel 'winsorBounds.${subKey}' (Teil-Artefakt/aeltere Schema-Version) — die Achse liefe sonst lautlos UNGEKLEMMT. Mit aktuellem Code neu einfrieren.`);
+        }
+        if (b !== null && !(Array.isArray(b) && b.length === 2 && b.every(Number.isFinite))) {
+          throw new Error(`scoreUniverse: refCalibration-Lineal hat ein unplausibles 'winsorBounds.${subKey}'=${JSON.stringify(b)} (muss null oder [lo,hi] finit sein) — die Achse liefe sonst lautlos UNGEKLEMMT. Mit aktuellem Code neu einfrieren.`);
+        }
+      }
+    }
   }
   // 3.1 QC-Board (additive Seams, HG byte-identisch per Default):
   //  (a) classify: erlaubt einem zweiten Pass eine EIGENE Membership-Funktion (qualityRoute) statt route().
