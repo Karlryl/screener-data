@@ -58,6 +58,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { execFileSync } = require('node:child_process');
 
 const ROOT = path.join(__dirname, '..');
 const lies = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8').replace(/\r\n/g, '\n');
@@ -80,9 +81,19 @@ function test(name, fn) {
 function schritt(text, startMarker) {
   const s = text.indexOf(startMarker);
   assert.ok(s >= 0, 'Schritt nicht gefunden: ' + startMarker);
-  let e = text.indexOf('\n      - ', s + startMarker.length);
-  if (e < 0) e = text.length;
-  const zeilen = text.slice(s, e).split('\n');
+  const alle = text.slice(s).split('\n');
+  const zeilen = [alle[0]];
+  for (let i = 1; i < alle.length; i++) {
+    // KV571-1a (Review Tag 571, Ausbau-Probe 3): das Ende eines Schritts ist der
+    // naechste Listenpunkt auf Schritt-Ebene ODER das Ende des JOBS — jede nicht-leere
+    // Zeile mit weniger Einrueckung. Ohne den zweiten Fall lief die Sektion des LETZTEN
+    // Schritts eines Jobs bis zum naechsten `- ` im FOLGE-Job weiter; dessen
+    // job-eigenes `if: always()` erfuellte dann eine Zusicherung, die im Schritt selbst
+    // nichts findet. Belegt: der Ausbau von `if: always()` am Schritt "Earnings-Ausgang
+    // festhalten" blieb gruen, weil `entdeckungs-waechter:` sein eigenes mitbrachte.
+    if (/^ {6}- /.test(alle[i]) || /^ {0,5}\S/.test(alle[i])) break;
+    zeilen.push(alle[i]);
+  }
   while (zeilen.length && /^\s*(#.*)?$/.test(zeilen[zeilen.length - 1])) zeilen.pop();
   return zeilen.join('\n');
 }
@@ -140,10 +151,58 @@ function zweig(text, kopfRe, wie) {
   let tiefe = 0;
   for (let k = ende - 1; k < text.length; k++) {
     if (text[k] === '{') tiefe++;
-    else if (text[k] === '}' && --tiefe === 0) return text.slice(m.index, k + 1);
+    else if (text[k] === '}' && --tiefe === 0) {
+      const z = text.slice(m.index, k + 1);
+      // KV571-2 (Review Tag 571, Repro G): der Zaehler oben kennt keine Strings — eine
+      // unbalancierte `{` im Meldungstext treibt die Tiefe hoch, das echte Zweig-Ende
+      // schliesst sie nicht mehr, und der Schnitt laeuft in den NACHBAR-Zweig hinein.
+      // Alle hier geprueften Zweige sind einzeilig; ein Zeilenumbruch im Schnitt ist
+      // deshalb IMMER ein Ueberlauf, egal wodurch er entstanden ist.
+      assert.ok(!/[\r\n]/.test(z), 'der Schnitt fuer den Zweig "' + wie + '" ist ueber sein Ende '
+        + 'hinausgelaufen (mehrzeilig) — vermutlich eine unbalancierte { in einem Meldungstext. '
+        + 'Der Schnitt enthaelt dann den NACHBAR-Zweig, dessen ::error:: + process.exit(1) jede '
+        + 'Zusicherung gruen halten, waehrend der gemeinte Zweig ausgebaut sein kann. Schnitt: '
+        + JSON.stringify(z.slice(0, 200)));
+      return z;
+    }
   }
   return assert.fail('Zweig "' + wie + '" hat keine schliessende Klammer');
 }
+
+// ── KV571-2 (Review Tag 571, Repro G): zweig() muss den Nachbarn ausschliessen ────
+// Der Klammerzaehler oben kennt keine Strings. Eine unbalancierte `{` im MELDUNGSTEXT
+// eines Zweigs treibt die Tiefe hoch, das echte Zweig-Ende schliesst sie nicht mehr,
+// und der Schnitt laeuft in den NACHBAR-Zweig hinein. Repro G: der komplette
+// Veraltungs-Zweig liess sich entschaerfen (kein ::error::, kein exit 1) — beide
+// Zusicherungen blieben gruen, weil sie den n<2-Nachbarn mitschnitten. Genau die
+// Fehlerklasse, gegen die zweig() ueberhaupt gebaut wurde (T568-F2).
+// Alle drei hier geprueften Zweige sind einzeilig; ein mehrzeiliger Schnitt ist
+// deshalb IMMER ein ueberlaufener Schnitt, egal wodurch.
+const REPRO_G = [
+  "if(age>MAX){ console.log('Schwelle {MAX ueberschritten'); }",
+  "if(n<2){ console.log('::error::zu wenige'); process.exit(1); }",
+  '});',
+].join('\n');
+
+test('KV571-2: zweig() sammelt bei unbalancierter { im Meldungstext NICHT den Nachbarn ein', () => {
+  assert.throws(() => zweig(REPRO_G, /if\(age>MAX\)\{/, 'age>MAX'),
+    /ueber sein Ende hinaus|hinausgelaufen/,
+    'zweig() liefert bei einer unbalancierten { im Meldungstext einen Schnitt, der den '
+    + 'NACHBAR-Zweig enthaelt — dessen ::error:: + process.exit(1) halten die Zusicherungen '
+    + 'gruen, waehrend der gemeinte Zweig komplett ausgebaut sein kann (Repro G).');
+});
+
+test('KV571-2: der gesunde einzeilige Zweig geht unveraendert durch (Gegenprobe)', () => {
+  const gesund = [
+    "if(age>MAX){ console.log('::error::veraltet'); process.exit(1); }",
+    "if(n<2){ console.log('::error::zu wenige'); process.exit(1); }",
+    '});',
+  ].join('\n');
+  const z = zweig(gesund, /if\(age>MAX\)\{/, 'age>MAX');
+  assert.equal(z, "if(age>MAX){ console.log('::error::veraltet'); process.exit(1); }",
+    'ein sauberer einzeiliger Zweig muss weiterhin exakt geschnitten werden — sonst ist die '
+    + 'Haertung ein Falsch-Rot-Generator statt einer Wache.');
+});
 
 // ── T564-B2: Publish-Schleife holt den Remote-Stand ab Versuch 1 ──────────────────
 const publish = schritt(daily, 'name: Publish board-history vintages to public data channel (F-17a)');
@@ -296,6 +355,90 @@ test('B6: der merge-Deploy vergleicht die Kalender-Kopie mit der frisch gestaget
   const fenster = mergeDeploy.slice(iCmp, iAdd);
   assert.match(fenster, /exit 1/, 'die Kalender-Pruefung macht den Schritt nicht rot');
   assert.match(fenster, /::error::/, 'die Kalender-Pruefung meldet sich nicht in Karls Kanal');
+});
+
+// ── KV571-1 (Review Tag 571): TRANSPORT-Netz fuer den Earnings-Pull ───────────────
+// BEFUND: der cmp-Check oben deckt "Quelle fehlt/weicht ab", nicht "Quelle alt". Der
+// Schritt "Pull Earnings-Calendar" traegt continue-on-error und earnings-calendar.json
+// ist git-getrackt: faellt Yahoo aus, steht der gestrige Stand beidseitig identisch da,
+// cmp wird gruen und der alte Kalender geht kommentarlos in den Datenkanal. Dasselbe
+// gilt fuer ein still fehlgeschlagenes cp (gleiche alte Bytes). check-pull-stats zaehlt
+// nur Abwaerts-Drift der PULL-Zahlen und sieht den Kalender nie.
+// Geprueft wird das VERHALTEN: der case/esac-Rumpf wird aus der Workflow-Datei
+// herausgeschnitten und mit gesetztem $AUSGANG ausgefuehrt (gleiche Bauart wie
+// tests/r5-sk-002-fx-frische-drei-zustaende.test.js) — ein Nachbau wuerde genau die
+// Abweichung nicht finden, um die es geht.
+const transportSchritt = () => schritt(daily, 'name: Earnings-Transport pruefen (KV571-1)');
+
+/** Eine ausfuehrbare `sh` finden (Linux/CI: auf PATH; Windows: die von Git). */
+function shBinaer() {
+  const kandidaten = ['sh', 'C:/Program Files/Git/usr/bin/sh.exe', 'C:/Program Files (x86)/Git/usr/bin/sh.exe'];
+  for (const k of kandidaten) {
+    try { execFileSync(k, ['-c', 'exit 0'], { stdio: 'ignore' }); return k; } catch (e) { /* naechster */ }
+  }
+  return assert.fail('keine ausfuehrbare sh gefunden (' + kandidaten.join(', ') + ') — dieser Waechter '
+    + 'kann das Verhalten des Transport-Checks dann nicht messen. Ein stiller Skip waere hier der '
+    + 'schlimmste Ausgang: die Wache saehe aus wie bestanden.');
+}
+
+/** Den case/esac-Rumpf des Transport-Checks mit gesetztem AUSGANG fahren. */
+function transportLauf(ausgang) {
+  const s = transportSchritt();
+  const i = s.indexOf('case "$AUSGANG" in');
+  assert.ok(i >= 0, 'kein `case "$AUSGANG" in` im Transport-Check — der Ausgang wird nicht ausgewertet');
+  const j = s.indexOf('esac', i);
+  assert.ok(j > i, 'kein `esac` im Transport-Check');
+  const block = s.slice(i, j + 4).split('\n').map((z) => z.replace(/^ {10}/, '')).join('\n');
+  try {
+    const out = execFileSync(shBinaer(), ['-c', block],
+      { encoding: 'utf8', env: Object.assign({}, process.env, { AUSGANG: ausgang }), stdio: ['ignore', 'pipe', 'pipe'] });
+    return { code: 0, out };
+  } catch (e) {
+    return { code: e.status === undefined ? -1 : e.status, out: (e.stdout || '') + (e.stderr || '') };
+  }
+}
+
+test('KV571-1a: der Earnings-Pull-Ausgang steht als Job-Ausgang zur Verfuegung', () => {
+  const pull = schritt(daily, 'name: Pull Earnings-Calendar');
+  assert.match(pull, /^\s*id:\s*pull_earnings\s*$/m,
+    'der Schritt "Pull Earnings-Calendar" hat keine id — ohne sie gibt es kein steps.<id>.outcome '
+    + 'und der Ausfall des Pulls bleibt job-lokal und damit unsichtbar.');
+  const halten = schritt(daily, 'name: Earnings-Ausgang festhalten');
+  assert.match(halten, /if:\s*always\(\)/,
+    'der Ausgang wird nicht mit `if: always()` festgehalten — faellt ein spaeterer prep-Schritt, '
+    + 'gaebe es gar keinen Ausgang und der Transport-Check saehe einen leeren Wert.');
+  assert.match(halten, /steps\.pull_earnings\.outcome/, 'der festgehaltene Ausgang ist nicht der des Earnings-Pulls');
+  einmalig(daily, /pull_earnings_outcome:\s*\$\{\{\s*steps\.earnings_ausgang\.outputs\.outcome\s*\}\}/,
+    'der prep-Job reicht den Earnings-Ausgang nicht als Job-Ausgang heraus — der merge-Job kaeme '
+    + 'nie an das Ergebnis heran (Schritt-Ergebnisse sind job-lokal).');
+});
+
+test('KV571-1a: der Transport-Check verbraucht genau diesen Job-Ausgang', () => {
+  assert.match(transportSchritt(), /needs\.prep\.outputs\.pull_earnings_outcome/,
+    'der Transport-Check liest nicht den Earnings-Ausgang des prep-Jobs.');
+});
+
+test('KV571-1a: Ausgang "failure" macht den Deploy-Pfad ROT', () => {
+  const r = transportLauf('failure');
+  assert.equal(r.code, 1, 'ein gefallener Earnings-Pull laeuft gruen durch (exit ' + r.code + ') — genau der '
+    + 'Ausfall, bei dem der Stand von gestern still weiterdeployt wird.');
+  assert.match(r.out, /::error::/, 'der Fehlschlag meldet sich nicht in Karls einzigem Kanal (rotes X).');
+});
+
+test('KV571-1a: auch "cancelled"/"skipped"/leer machen ROT (nicht-success ist nicht gruen)', () => {
+  for (const a of ['cancelled', 'skipped', '']) {
+    const r = transportLauf(a);
+    assert.equal(r.code, 1, 'Ausgang "' + a + '" laeuft gruen durch — ein weder-gruen-noch-rot beendeter '
+      + 'Pull ist von einem gesunden Lauf nicht zu unterscheiden.');
+    assert.match(r.out, /::error::/, 'Ausgang "' + a + '" meldet sich nicht per ::error::');
+  }
+});
+
+test('KV571-1a: Ausgang "success" geht gruen durch (Gegenprobe, kein Dauer-Falschalarm)', () => {
+  const r = transportLauf('success');
+  assert.equal(r.code, 0, 'ein gruener Earnings-Pull macht den Lauf rot (exit ' + r.code + ') — die Wache '
+    + 'waere ein Falsch-Rot-Generator: ' + r.out.trim());
+  assert.ok(!/::error::/.test(r.out), 'der Erfolgsfall meldet einen Fehler: ' + r.out.trim());
 });
 
 // ── T564-B4: Runner-Scratch gehoert nicht ins Repo ────────────────────────────────

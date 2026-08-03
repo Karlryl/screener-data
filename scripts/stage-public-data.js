@@ -47,24 +47,50 @@ function schreibeJson(ziel, obj) {
  * Termin-Kalender byte-genau uebernehmen (nur mit vorherigem Parse-Check - eine halb
  * geschriebene Quelle darf nie als gueltiger Kanal-Inhalt erscheinen).
  *
- * T564-B6: der Check ist BEWUSST nur ein Parse-Check, keine Inhaltspruefung. Ob der
- * Kalender plausibel gefuellt ist, entscheidet pull-earnings-dates.js mit seinem
- * Collapse-Guard eine Stufe frueher; hier ginge es nur um "ist das ueberhaupt JSON".
- * Ein leerer, aber gueltiger Kalender passiert also absichtlich - er ist ein Befund
- * des Pulls, nicht des Publish. ponytail: Deckel dieser Stufe.
+ * T564-B6: Plausibilitaet und Vollstaendigkeit entscheidet weiterhin der Collapse-Guard
+ * in pull-earnings-dates.js eine Stufe frueher - hier steht KEINE zweite Meinung dazu.
+ *
+ * KV571-1 (Review Tag 571): die einzige Ausnahme ist eine strukturelle. Der Deploy-cmp
+ * in daily-pull.yml deckt "Quelle fehlt/weicht ab", NICHT "Quelle alt": der Pull traegt
+ * continue-on-error und earnings-calendar.json ist git-getrackt, also steht bei einem
+ * Yahoo-Ausfall der gestrige Stand beidseitig identisch da und cmp wird gruen. Ein
+ * Termin-Kalender ganz OHNE Zukunftstermin ist per Konstruktion kaputt oder steinalt -
+ * das ist keine Plausibilitaets-Schwelle, sondern eine Form-Aussage, und sie darf nicht
+ * still in den Datenkanal. Bewusst NUR diese eine Eigenschaft, keine weiteren Schwellen.
+ * ponytail: Deckel dieser Stufe.
  * @returns {{datei: string, bytes: number}}
  */
-function stageEarnings(quelle, zielDir) {
+function stageEarnings(quelle, zielDir, heute) {
   let text;
   try {
     text = fs.readFileSync(quelle, 'utf8');
   } catch (e) {
     throw new Error('earnings-calendar.json nicht lesbar (' + quelle + '): ' + (e && e.message || e));
   }
+  let daten;
   try {
-    JSON.parse(text);
+    daten = JSON.parse(text);
   } catch (e) {
     throw new Error('earnings-calendar.json ist kein gueltiges JSON (' + quelle + '): ' + (e && e.message || e));
+  }
+  // ISO-Datumsstrings sind lexikografisch sortierbar - kein Date.parse noetig.
+  // Stichtag ist das im prep-Job eingefrorene Lauf-Datum (Muster wie in
+  // archive-old-snapshots.js / watch-fx-sanity.js), mit Wanduhr-Fallback: ein Lauf
+  // ueber UTC-Mitternacht wuerde sonst gegen einen anderen Tag messen als jeder
+  // andere Schritt desselben Laufs (Klasse F-219b-01).
+  const stichtag = heute || process.env.RUN_DATE_UTC || new Date().toISOString().slice(0, 10);
+  const termine = Object.values(daten || {})
+    .map((e) => (e && typeof e === 'object' ? e.date : null))
+    .filter((d) => typeof d === 'string' && d !== '');
+  const kuenftig = termine.filter((d) => d >= stichtag).length;
+  if (kuenftig === 0) {
+    const juengster = termine.length ? termine.slice().sort().pop() : '(kein einziger Termin)';
+    throw new Error('earnings-calendar.json enthaelt keinen einzigen Zukunftstermin (Lauftag ' + stichtag
+      + ', juengster Termin ' + juengster + ', ' + termine.length + ' Termine gesamt) - ein Termin-Kalender '
+      + 'ohne kuenftige Termine ist per Konstruktion kaputt oder steinalt. WAHRSCHEINLICHE URSACHE: '
+      + 'pull-earnings-dates.js ist ausgefallen (continue-on-error) und der git-getrackte Stand von '
+      + 'gestern wurde durchgereicht; der Deploy-cmp kann das nicht sehen, weil Quelle und Kopie dann '
+      + 'byte-gleich sind. NAECHSTER SCHRITT: Schritt "Pull Earnings-Calendar" im prep-Job pruefen.');
   }
   const ziel = path.join(zielDir, 'earnings-calendar.json');
   fs.mkdirSync(zielDir, { recursive: true });

@@ -32,6 +32,12 @@ function writeJson(p, o) { fs.mkdirSync(path.dirname(p), { recursive: true }); f
 function readJson(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
 function mkTmp() { return fs.mkdtempSync(path.join(os.tmpdir(), 'spd-')); }
 
+// KV571-1: seit der Frische-Wache in stageEarnings() braucht JEDE gueltige Kalender-
+// Fixture mindestens einen Zukunftstermin. Feste Datumswerte waeren eine Zeitbombe —
+// sie wandern in die Vergangenheit und faerben die Tests irgendwann ohne Bug rot.
+function inTagen(n) { return new Date(Date.now() + n * 86400000).toISOString().slice(0, 10); }
+const TERMIN_KUENFTIG = inTagen(24);
+
 // Eine Vintage-Zeile in der ECHTEN Form, die scripts/write-board-history.js schreibt:
 // die drei Felder, die die Bewegungs-Anzeige liest, plus der ganze Rest, der sie nichts
 // angeht (axisBreakdown/lamps/pit machen 98 % der 13,5 MB pro Vintage aus).
@@ -68,7 +74,7 @@ function mkQuelle(dates) {
     writeJson(path.join(base, 'board-history', date, 'calibration.json'), { schema: 'calibration/v4', generated_at: date });
     writeJson(path.join(base, 'board-history', date, 'regime.json'), { regime: 'BULL' });
   }
-  writeJson(path.join(base, 'earnings-calendar.json'), { NVDA: { date: '2026-08-27' }, XOM: { date: '2026-08-01' } });
+  writeJson(path.join(base, 'earnings-calendar.json'), { NVDA: { date: TERMIN_KUENFTIG }, XOM: { date: '2026-08-01' } });
   return base;
 }
 
@@ -79,7 +85,7 @@ check('(a) earnings-calendar.json + die 2 juengsten Vintages + index.json landen
   S.run({ ziel, earnings: path.join(src, 'earnings-calendar.json'), boardHistory: path.join(src, 'board-history'), vintages: 2 });
 
   assert.ok(fs.existsSync(path.join(ziel, 'earnings-calendar.json')), 'earnings-calendar.json fehlt im Ziel');
-  assert.deepStrictEqual(readJson(path.join(ziel, 'earnings-calendar.json')).NVDA, { date: '2026-08-27' });
+  assert.deepStrictEqual(readJson(path.join(ziel, 'earnings-calendar.json')).NVDA, { date: TERMIN_KUENFTIG });
   for (const date of ['2026-08-02', '2026-08-03']) {
     assert.ok(fs.existsSync(path.join(ziel, 'board-history', date, 'energy.json')), date + '/energy.json fehlt');
     assert.ok(fs.existsSync(path.join(ziel, 'board-history', date, 'semiconductors.json')), date + '/semiconductors.json fehlt');
@@ -202,6 +208,78 @@ check('(j) CLI: Erfolgsfall -> exit 0 und beide Quellen liegen im Ziel', () => {
   assert.ok(fs.existsSync(path.join(ziel, 'earnings-calendar.json')));
   assert.ok(fs.existsSync(path.join(ziel, 'board-history', '2026-08-03', 'energy.json')));
   assert.ok(fs.existsSync(path.join(ziel, 'board-history', 'index.json')));
+});
+
+// ── (n) KV571-1 (Review Tag 571): Frische-Wache am Kalender selbst ───────────────
+// BEFUND: der Deploy-cmp deckt nur "Quelle fehlt/weicht ab", nicht "Quelle alt".
+// pull-earnings-dates.js traegt continue-on-error und earnings-calendar.json ist
+// git-getrackt — faellt Yahoo aus, steht der gestrige Stand beidseitig identisch da
+// und cmp wird gruen. Dieses zweite, INHALTLICHE Netz haengt an einer strukturellen
+// Eigenschaft: ein Termin-Kalender ohne einen einzigen Zukunftstermin ist per
+// Konstruktion kaputt oder steinalt. Bewusst KEINE weitere Schwelle — Vollstaendigkeit
+// und Plausibilitaet entscheidet der Collapse-Guard in pull-earnings-dates.js.
+check('(n) Kalender OHNE Zukunftstermin -> wirft (steinalt/kaputt, nie still publizieren)', () => {
+  const src = mkTmp();
+  writeJson(path.join(src, 'earnings-calendar.json'),
+    { AAPL: { date: '2025-01-30', pulledAt: '2025-01-02' }, MSFT: { date: inTagen(-1), pulledAt: '2025-01-02' } });
+  assert.throws(() => S.run({ ziel: path.join(src, '_public'), earnings: path.join(src, 'earnings-calendar.json') }),
+    /Zukunftstermin/,
+    'ein Kalender, dessen juengster Termin in der Vergangenheit liegt, geht still in den Datenkanal — '
+    + 'findash zeigt danach wortlos einen toten Terminkalender.');
+});
+
+check('(n2) Kalender MIT Zukunftstermin -> geht durch (Gegenprobe, kein Falsch-Rot)', () => {
+  const src = mkTmp();
+  writeJson(path.join(src, 'earnings-calendar.json'),
+    { AAPL: { date: '2025-01-30', pulledAt: '2025-01-02' }, MSFT: { date: inTagen(1), pulledAt: '2025-01-02' } });
+  const ziel = path.join(src, '_public');
+  S.run({ ziel, earnings: path.join(src, 'earnings-calendar.json') });
+  assert.ok(fs.existsSync(path.join(ziel, 'earnings-calendar.json')),
+    'ein gueltiger Kalender muss weiter publiziert werden — sonst ist die Wache ein Falsch-Rot-Generator');
+});
+
+check('(n3) der Stichtag ist der LAUFTAG, nicht ein fester Wert (Termin GENAU heute zaehlt)', () => {
+  const src = mkTmp();
+  writeJson(path.join(src, 'earnings-calendar.json'), { AAPL: { date: inTagen(0) } });
+  const ziel = path.join(src, '_public');
+  S.run({ ziel, earnings: path.join(src, 'earnings-calendar.json') });
+  assert.ok(fs.existsSync(path.join(ziel, 'earnings-calendar.json')),
+    'ein Termin am Lauftag selbst muss als Zukunftstermin zaehlen (Datum >= Lauftag)');
+});
+
+// Silent-Failure-Review zum Tag-573-Chunk: der Stichtag darf nicht die Wanduhr des
+// Runners sein, wenn der Lauf ein eingefrorenes Datum hat. Ein Lauf, der ueber UTC-
+// Mitternacht laeuft, misst sonst gegen einen anderen Tag als jeder andere Schritt
+// (dieselbe Klasse wie F-219b-01). Muster wie in archive-old-snapshots.js /
+// watch-fx-sanity.js: RUN_DATE_UTC mit Wanduhr-Fallback.
+check('(n5) der Stichtag kommt aus RUN_DATE_UTC, wenn gesetzt (eingefrorenes Lauf-Datum)', () => {
+  const src = mkTmp();
+  writeJson(path.join(src, 'earnings-calendar.json'), { AAPL: { date: inTagen(3) } });
+  const alt = process.env.RUN_DATE_UTC;
+  try {
+    process.env.RUN_DATE_UTC = inTagen(9); // Lauftag NACH dem einzigen Termin
+    assert.throws(() => S.run({ ziel: path.join(src, '_public'), earnings: path.join(src, 'earnings-calendar.json') }),
+      /Zukunftstermin/,
+      'die Wache misst gegen die Wanduhr statt gegen das eingefrorene RUN_DATE_UTC — ein Lauf ueber '
+      + 'UTC-Mitternacht bewertet den Kalender dann gegen einen anderen Tag als jeder andere Schritt.');
+    process.env.RUN_DATE_UTC = inTagen(1); // Lauftag VOR dem Termin
+    S.run({ ziel: path.join(src, '_public'), earnings: path.join(src, 'earnings-calendar.json') });
+    assert.ok(fs.existsSync(path.join(src, '_public', 'earnings-calendar.json')), 'Gegenprobe: gueltiger Stand muss durchgehen');
+  } finally {
+    if (alt === undefined) delete process.env.RUN_DATE_UTC; else process.env.RUN_DATE_UTC = alt;
+  }
+});
+
+check('(n4) CLI: toter Kalender -> exit 1 UND ::error:: (Karls Alarmkanal)', () => {
+  const src = mkTmp();
+  writeJson(path.join(src, 'earnings-calendar.json'), { AAPL: { date: '2025-01-30' } });
+  let rc = 0; let out = '';
+  try {
+    out = execFileSync(process.execPath, [SCRIPT, '--ziel', path.join(src, '_public'),
+      '--earnings', path.join(src, 'earnings-calendar.json')], { encoding: 'utf8', stdio: 'pipe' });
+  } catch (e) { rc = e.status; out = String(e.stdout || '') + String(e.stderr || ''); }
+  assert.strictEqual(rc, 1, 'ein toter Kalender muss den Schritt rot machen (exit 1), nicht gruen durchlaufen');
+  assert.ok(out.includes('::error::'), 'ohne ::error::-Annotation sieht Karl den Ausfall nicht: ' + out.slice(0, 300));
 });
 
 // ── (k-l) T564-B3: Board-Familie zwischen den zwei Vintages ──────────────────────
