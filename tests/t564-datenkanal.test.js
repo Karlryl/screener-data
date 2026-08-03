@@ -441,6 +441,161 @@ test('KV571-1a: Ausgang "success" geht gruen durch (Gegenprobe, kein Dauer-Falsc
   assert.ok(!/::error::/.test(r.out), 'der Erfolgsfall meldet einen Fehler: ' + r.out.trim());
 });
 
+// ── T573-R1 (SFH-Review ueber Tag 573, F2566): der Check darf den Lauf nicht kapern ──
+// BEFUND: der Transport-Check sass als LETZTER SCHRITT im merge-Job und trug kein
+// continue-on-error. Sein `exit 1` machte damit die merge-CONCLUSION rot, und `scoring`
+// (needs: merge, KEIN eigenes if:) wird bei einer roten Conclusion komplett UEBERSPRUNGEN:
+// Hypergrowth-/findash-Deploy, Vintage-Messreihe und die nicht nachholbare "Snapshot
+// ticker map" fielen aus. Eintrittsbedingung war ein gewoehnlicher Yahoo-Ausfall.
+// Geprueft wird die STRUKTUR am Objekt (der Check ist aus dem merge-Job raus, der neue
+// Job traegt if: always(), niemand haengt an ihm) UND das Verhalten des VOLLEN
+// run-Blocks inklusive des neuen MERGE-Vorlaufs.
+/** Den Rumpf EINES benannten Jobs schneiden (bis zum naechsten Eintrag auf Job-Ebene). */
+function job(text, name) {
+  const kopf = '\n  ' + name + ':\n';
+  const s = text.indexOf(kopf);
+  assert.ok(s >= 0, 'Job nicht gefunden: ' + name);
+  const alle = text.slice(s + 1).split('\n');
+  const zeilen = [alle[0]];
+  for (let i = 1; i < alle.length; i++) {
+    // Naechster Eintrag auf Job-Ebene (2 Leerzeichen) ODER Datei-Ebene = Job zu Ende.
+    if (/^ {0,2}\S/.test(alle[i])) break;
+    zeilen.push(alle[i]);
+  }
+  return zeilen.join('\n');
+}
+
+test('T573-R1: der Transport-Check sitzt NICHT mehr im merge-Job', () => {
+  const m = job(daily, 'merge');
+  assert.ok(m.includes('- name: Deploy to GitHub Pages'),
+    'der merge-Job wurde nicht richtig geschnitten (kein Deploy-Schritt darin) — dann prueft '
+    + 'die Abwesenheits-Zusicherung unten nichts.');
+  assert.ok(!/Earnings-Transport pruefen/.test(m),
+    'der Transport-Check steht wieder im merge-Job. Sein `exit 1` faerbt dann die '
+    + 'merge-CONCLUSION rot, und `scoring` (needs: merge, kein eigenes if:) wird komplett '
+    + 'uebersprungen — ein ausgefallener Earnings-Pull kostet dann Hypergrowth-Deploy, '
+    + 'Vintage-Messreihe und die nicht nachholbare Snapshot-ticker-map (T573-R1/F2566).');
+});
+
+test('T573-R1: es gibt einen eigenen Waechter-Job mit if: always() und needs [prep, merge]', () => {
+  const w = job(daily, 'earnings-transport-waechter');
+  assert.match(w, /^ {4}if:\s*always\(\)\s*$/m,
+    'der Waechter-Job traegt kein job-eigenes `if: always()` — dann meldet er nicht mehr, '
+    + 'wenn der merge-Job selbst gefallen ist, also genau im interessanten Fall.');
+  assert.match(w, /^ {4}needs:\s*\[prep, merge\]\s*$/m,
+    'der Waechter haengt nicht an [prep, merge] — prep liefert den Ausgang (Schritt-Ergebnisse '
+    + 'sind job-lokal), merge sorgt fuer die Reihenfolge nach dem Deploy.');
+  // Am SCHLUESSEL geprueft, nicht am Wort: "continue-on-error" steht auch im Meldungstext
+  // des failure-Zweigs (er erklaert, warum der PULL weiterlief). Eine Substring-Suche waere
+  // hier dauerhaft falsch-rot gewesen — und umgekehrt haette sie, einmal auf den Text
+  // umgebogen, jede echte Entschaerfung gedeckt.
+  assert.ok(!/^\s*continue-on-error\s*:/m.test(w),
+    'continue-on-error am Waechter macht sein exit 1 wirkungslos — Karls einziger Alarm-Kanal '
+    + 'ist das rote X.');
+  assert.ok(w.includes('- name: Earnings-Transport pruefen (KV571-1)'),
+    'der Check-Schritt liegt nicht in diesem Job.');
+});
+
+test('T573-R1: KEIN Job haengt am Waechter (er darf nichts blockieren)', () => {
+  // Positiv-Pin am Objekt: jede needs-Zeile der Datei wird gelesen, nicht nur nach dem
+  // Namen gesucht — ein `needs: earnings-transport-waechter` in irgendeinem Folge-Job
+  // wuerde genau den Befund wieder einbauen (Ausfall reisst andere Jobs mit).
+  const needsZeilen = daily.split('\n').filter((z) => /^ {4}needs:/.test(z));
+  assert.ok(needsZeilen.length >= 4, 'zu wenige needs-Zeilen gefunden (' + needsZeilen.length
+    + ') — der Sucher greift nicht mehr, die Zusicherung waere leer.');
+  for (const z of needsZeilen) {
+    assert.ok(!z.includes('earnings-transport-waechter'),
+      'ein Job haengt am Transport-Waechter ("' + z.trim() + '") — dann reisst dessen rotes X '
+      + 'wieder fremde Jobs mit, und T573-R1 ist rueckgaengig gemacht.');
+  }
+});
+
+/** Den VOLLEN run-Block des Transport-Checks fahren (inkl. MERGE-Vorlauf, T573-R1). */
+function transportVollLauf(mergeErgebnis, ausgang) {
+  const s = transportSchritt();
+  const i = s.indexOf('run: |');
+  assert.ok(i >= 0, 'kein `run: |` im Transport-Check');
+  const block = s.slice(i + 'run: |'.length).split('\n').map((z) => z.replace(/^ {10}/, '')).join('\n')
+    .replace(/\$\{\{\s*needs\.merge\.result\s*\}\}/g, mergeErgebnis)
+    .replace(/\$\{\{\s*needs\.prep\.outputs\.pull_earnings_outcome\s*\}\}/g, ausgang);
+  assert.ok(!block.includes('${{'),
+    'im ausgefuehrten Block steht noch ein unersetzter GitHub-Ausdruck — dann misst dieser '
+    + 'Waechter etwas anderes als der Runner ausfuehrt. Rest: '
+    + JSON.stringify((block.match(/\$\{\{[^}]*\}\}/) || [''])[0]));
+  try {
+    const out = execFileSync(shBinaer(), ['-c', block], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    return { code: 0, out };
+  } catch (e) {
+    return { code: e.status === undefined ? -1 : e.status, out: (e.stdout || '') + (e.stderr || '') };
+  }
+}
+
+test('T573-R1: uebersprungener merge-Job -> Warnung statt rot (Erreichbarkeit unveraendert)', () => {
+  for (const m of ['skipped', 'cancelled']) {
+    const r = transportVollLauf(m, 'failure');
+    assert.equal(r.code, 0, 'merge=' + m + ' macht den Waechter rot — es wurde aber gar nichts '
+      + 'deployt, die Meldung "hat den Kalender von gestern deployt" waere schlicht falsch. '
+      + 'Im merge-Job war dieser Fall unerreichbar; als eigener Job mit if: always() ist er es '
+      + 'nicht mehr. Ausgabe: ' + r.out.trim());
+    assert.match(r.out, /::warning::/, 'merge=' + m + ' meldet sich gar nicht — stiller gruener '
+      + 'Haken auf einen Lauf, ueber den nichts auszusagen ist.');
+    assert.ok(!/::error::/.test(r.out), 'merge=' + m + ' meldet ::error:: statt ::warning::');
+  }
+});
+
+test('T573-R1: gelaufener merge-Job -> der Ausgang entscheidet (rot bei failure, still bei success)', () => {
+  const rot = transportVollLauf('success', 'failure');
+  assert.equal(rot.code, 1, 'bei gelaufenem merge macht ein gefallener Earnings-Pull den Waechter '
+    + 'nicht rot — dann ist der Alarm ausgebaut. Ausgabe: ' + rot.out.trim());
+  assert.match(rot.out, /::error::/, 'der Fehlschlag meldet sich nicht in Karls einzigem Kanal.');
+  const still = transportVollLauf('success', 'success');
+  assert.equal(still.code, 0, 'ein gruener Earnings-Pull macht den Waechter rot — Falsch-Rot-Generator: '
+    + still.out.trim());
+  assert.ok(!/::error::|::warning::/.test(still.out), 'der Erfolgsfall meldet einen Alarm: ' + still.out.trim());
+});
+
+// ── T573-R3 (SFH-Review ueber Tag 573, F2566): schritt() endet am JOB-Ende ────────
+// Der Wurzelfix aus Tag 573 (KV571-1a, Ausbau-Probe 3) hatte keinen eigenen Test — er
+// wurde nur zufaellig ueber die echte Workflow-Datei mitgetestet und waere bei jeder
+// Umstellung dort still verschwunden. Synthetisches Fixture: LETZTER Schritt eines Jobs,
+// der FOLGE-Job traegt ein job-eigenes `if: always()`.
+test('T573-R3: schritt() nimmt den FOLGE-Job nicht mit (Regression zu Ausbau-Probe 3)', () => {
+  const fixture = [
+    'jobs:',
+    '  ersterJob:',
+    '    steps:',
+    '      - name: Letzter Schritt des Jobs',
+    '        if: always()',
+    '        run: echo hallo',
+    '',
+    '  folgeJob:',
+    '    needs: ersterJob',
+    '    if: always()',
+    '    steps:',
+    '      - name: Irgendetwas',
+    '        run: echo welt',
+  ].join('\n');
+  const s = schritt(fixture, 'name: Letzter Schritt des Jobs');
+  assert.match(s, /run: echo hallo/, 'der Schritt selbst ist unvollstaendig geschnitten');
+  assert.ok(!s.includes('folgeJob'), 'der Schnitt laeuft in den FOLGE-Job hinein');
+  assert.ok(!s.includes('echo welt'), 'der Schnitt enthaelt Befehle des FOLGE-Jobs');
+  assert.equal((s.match(/if:\s*always\(\)/g) || []).length, 1,
+    'der Schnitt enthaelt mehr als das EINE `if: always()` des Schritts — das zweite stammt '
+    + 'aus dem Folge-Job und wuerde eine Zusicherung erfuellen, die im Schritt selbst nichts findet.');
+  // Beleg, dass GENAU DAS die alte Logik durchgelassen haette (das IST der Befund):
+  const altSchnitt = (text, marker) => {
+    const i = text.indexOf(marker);
+    const alle = text.slice(i).split('\n');
+    const z = [alle[0]];
+    for (let k = 1; k < alle.length; k++) { if (/^ {6}- /.test(alle[k])) break; z.push(alle[k]); }
+    return z.join('\n');
+  };
+  const alt = altSchnitt(fixture, 'name: Letzter Schritt des Jobs');
+  assert.ok(alt.includes('folgeJob') && (alt.match(/if:\s*always\(\)/g) || []).length === 2,
+    'die alte, nur am naechsten `- ` orientierte Logik haette hier NICHT in den Folge-Job '
+    + 'gelesen — dann bildet das Fixture den Befund nicht ab und der Test beweist nichts.');
+});
+
 // ── T564-B4: Runner-Scratch gehoert nicht ins Repo ────────────────────────────────
 test('B4: .gitignore deckt _public/ und _ghp/ ab', () => {
   const zeilen = gitignore.split('\n').map((z) => z.trim());

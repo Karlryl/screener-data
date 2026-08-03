@@ -90,7 +90,11 @@ function stageEarnings(quelle, zielDir, heute) {
       + 'ohne kuenftige Termine ist per Konstruktion kaputt oder steinalt. WAHRSCHEINLICHE URSACHE: '
       + 'pull-earnings-dates.js ist ausgefallen (continue-on-error) und der git-getrackte Stand von '
       + 'gestern wurde durchgereicht; der Deploy-cmp kann das nicht sehen, weil Quelle und Kopie dann '
-      + 'byte-gleich sind. NAECHSTER SCHRITT: Schritt "Pull Earnings-Calendar" im prep-Job pruefen.');
+      + 'byte-gleich sind. ODER: Feldname/Format in earnings-calendar.json hat sich geaendert — dann '
+      + 'liest diese Pruefung die Termine nur nicht mehr, und der Pull ist voellig unschuldig (T573-R2: '
+      + 'die Meldung nannte frueher in JEDEM Fall den Pull und schickte damit zum falschen Schritt). '
+      + 'NAECHSTER SCHRITT: Schritt "Pull Earnings-Calendar" im prep-Job pruefen — und wenn der gruen '
+      + 'war, den Aufbau von earnings-calendar.json gegen das erwartete {ticker:{date:"YYYY-MM-DD"}}.');
   }
   const ziel = path.join(zielDir, 'earnings-calendar.json');
   fs.mkdirSync(zielDir, { recursive: true });

@@ -1098,31 +1098,58 @@ jobs:
           echo "gh-pages push failed after 3 attempts"
           exit 1
 
-      # ========================================================================
-      # KV571-1 (Review Tag 571): TRANSPORT-Netz fuer den Earnings-Kalender.
-      # BEFUND: der cmp-Check im Deploy-Schritt darueber deckt "Quelle fehlt" und
-      # "Kopie weicht ab" — NICHT "Quelle alt". "Pull Earnings-Calendar" traegt
-      # continue-on-error und earnings-calendar.json ist git-getrackt: faellt Yahoo
-      # aus, steht der gestrige Stand in Quelle UND Kopie byte-gleich da, cmp wird
-      # gruen und der alte Kalender geht kommentarlos in den Datenkanal. Ein still
-      # fehlgeschlagenes cp ist aus demselben Grund unsichtbar (gleiche alte Bytes).
-      # Ein zweites Netz gab es nicht: check-pull-stats zaehlt nur Abwaerts-Drift der
-      # PULL-Zahlen und sieht den Kalender nie.
-      # Das INHALTLICHE Gegenstueck sitzt in scripts/stage-public-data.js (Kalender
-      # ohne Zukunftstermin = rot); die beiden decken verschiedene Ausfallarten.
-      #
-      # WARUM NACH DEM DEPLOY und nicht davor: dieselbe Abwaegung wie beim Job
-      # `entdeckungs-waechter` oben. Vor dem Deploy platziert wuerde ein transienter
-      # Yahoo-Ausfall den GESAMTEN Datenkanal des Tages blocken (coverage-status,
-      # macro-regime, pull-stats) — findash saehe dann ueberall den Stand von gestern
-      # statt nur bei den Terminen. Hier faerbt der Ausfall den Lauf rot (Karls
-      # einziger Alarm-Kanal) und blockiert keinen einzigen Datenschritt.
-      # `if: always()`, damit der Check auch dann meldet, wenn der Deploy selbst fiel.
-      # Waechter: tests/t564-datenkanal.test.js (KV571-1a, faehrt diesen case/esac aus).
-      # ========================================================================
+      # 29.07.: Discord-Benachrichtigung bei Fehlschlag entfernt (Karl-Freigabe) —
+      # DISCORD_WEBHOOK war nie gesetzt, der Schritt also immer ein No-Op. Ein
+      # fehlgeschlagener merge-Job ist ohnehin ein rotes X in Actions.
+
+  # ============================================================================
+  # KV571-1 (Review Tag 571): TRANSPORT-Netz fuer den Earnings-Kalender.
+  # BEFUND: der cmp-Check im merge-Deploy deckt "Quelle fehlt" und "Kopie weicht ab"
+  # — NICHT "Quelle alt". "Pull Earnings-Calendar" traegt continue-on-error und
+  # earnings-calendar.json ist git-getrackt: faellt Yahoo aus, steht der gestrige
+  # Stand in Quelle UND Kopie byte-gleich da, cmp wird gruen und der alte Kalender
+  # geht kommentarlos in den Datenkanal. Ein still fehlgeschlagenes cp ist aus
+  # demselben Grund unsichtbar (gleiche alte Bytes). Ein zweites Netz gab es nicht:
+  # check-pull-stats zaehlt nur Abwaerts-Drift der PULL-Zahlen und sieht den
+  # Kalender nie. Das INHALTLICHE Gegenstueck sitzt in scripts/stage-public-data.js
+  # (Kalender ohne Zukunftstermin = rot); die beiden decken verschiedene Ausfallarten.
+  #
+  # T573-R1 (SFH-Review ueber Tag 573, F2566): dieser Check sass bis Tag 573 als
+  # LETZTER SCHRITT IM merge-JOB und trug kein continue-on-error. Sein `exit 1` machte
+  # damit die merge-CONCLUSION rot — und `scoring` haengt per `needs: merge` OHNE
+  # eigenes `if:` daran, wird also komplett UEBERSPRUNGEN. Ein gewoehnlicher
+  # Yahoo-/Cloudflare-Ausfall beim Earnings-Pull (im File selbst mehrfach als
+  # wiederkehrend dokumentiert) haette so Hypergrowth-/findash-Deploy, die
+  # Vintage-Messreihe UND die nicht nachholbare "Snapshot ticker map" mitgerissen —
+  # ein Termin-Kalender von gestern haette den ganzen Scoring-Tag gekostet.
+  # Jetzt dieselbe Bauform wie `entdeckungs-waechter` oben: EIGENER Job, `if: always()`,
+  # KEIN Job haengt an ihm. Er faerbt nur sich selbst rot (Karls Alarm-Kanal bleibt
+  # bedient) und blockiert keinen einzigen Datenschritt.
+  # `needs: [prep, merge]` — prep liefert den Ausgang (Schritt-Ergebnisse sind
+  # job-lokal, id: pull_earnings sitzt im prep-Job), merge nur fuer die Reihenfolge:
+  # die Aussage lautet "der Lauf hat gerade den Kalender von gestern DEPLOYT", und
+  # deployt wird im merge-Job.
+  # Waechter: tests/t564-datenkanal.test.js (KV571-1a faehrt diesen case/esac aus,
+  # T573-R1 pinnt die Job-Struktur).
+  # ============================================================================
+  earnings-transport-waechter:
+    needs: [prep, merge]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
       - name: Earnings-Transport pruefen (KV571-1)
-        if: always()
         run: |
+          # T573-R1: Erreichbarkeit unveraendert lassen. Im merge-Job lief dieser Check
+          # nur, WENN merge lief (merge: `if: always() && needs.prep.result == 'success'`).
+          # Als eigener Job mit `if: always()` liefe er auch bei uebersprungenem merge —
+          # dann wurde aber gar nichts deployt, und die Meldung unten ("hat den Kalender
+          # von gestern deployt") waere schlicht falsch. Also: kein Deploy, keine Aussage.
+          MERGE="${{ needs.merge.result }}"
+          if [ "$MERGE" = "skipped" ] || [ "$MERGE" = "cancelled" ]; then
+            echo "::warning::Der merge-Job ist gar nicht (oder nicht zu Ende) gelaufen (Ergebnis: ${MERGE:-<leer>}) — es wurde nichts in den oeffentlichen Datenkanal deployt, ueber den Termin-Transport ist damit nichts auszusagen. Kein rotes X, weil das keine Aussage ueber den Earnings-Pull ist, aber auch kein gruener Freibrief."
+            exit 0
+          fi
           AUSGANG="${{ needs.prep.outputs.pull_earnings_outcome }}"
           case "$AUSGANG" in
             success)
@@ -1137,10 +1164,6 @@ jobs:
               exit 1
               ;;
           esac
-
-      # 29.07.: Discord-Benachrichtigung bei Fehlschlag entfernt (Karl-Freigabe) —
-      # DISCORD_WEBHOOK war nie gesetzt, der Schritt also immer ein No-Op. Ein
-      # fehlgeschlagener merge-Job ist ohnehin ein rotes X in Actions.
 
   # ============================================================================
   # SCORING (unchanged logic; needs: pull -> needs: merge, + snapshot source).

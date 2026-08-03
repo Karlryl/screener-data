@@ -228,6 +228,32 @@ check('(n) Kalender OHNE Zukunftstermin -> wirft (steinalt/kaputt, nie still pub
     + 'findash zeigt danach wortlos einen toten Terminkalender.');
 });
 
+// T573-R2 (SFH-Review ueber Tag 573, F2566): dieselbe Meldung nannte in JEDEM Fall
+// "pull-earnings-dates.js ist ausgefallen" als wahrscheinliche Ursache. Sie feuert aber
+// genauso, wenn sich Feldname oder Format in earnings-calendar.json geaendert haben —
+// dann liest nur diese Pruefung die Termine nicht mehr und der Pull ist voellig
+// unschuldig. Karl folgt dem "NAECHSTER SCHRITT" woertlich und landet am falschen Schritt.
+// Geprueft wird die Meldung selbst, weil die Meldung der Befund ist.
+check('(n1b) die Meldung nennt BEIDE Ursachen — Pull-Ausfall UND Schema-/Feldnamenwechsel', () => {
+  const src = mkTmp();
+  // Der Schema-Fall selbst: die Termine stehen unter einem anderen Feldnamen, die
+  // Pruefung sieht deshalb null Termine — obwohl der Pull tadellos gelaufen sein kann.
+  writeJson(path.join(src, 'earnings-calendar.json'),
+    { AAPL: { earningsDate: inTagen(5), pulledAt: '2025-01-02' } });
+  let meldung = '';
+  try {
+    S.run({ ziel: path.join(src, '_public'), earnings: path.join(src, 'earnings-calendar.json') });
+    assert.fail('ein Kalender ohne lesbare Termine muss werfen');
+  } catch (e) { meldung = String(e && e.message || e); }
+  assert.match(meldung, /pull-earnings-dates\.js/,
+    'die Meldung nennt den Pull-Ausfall nicht mehr — das ist weiterhin die haeufigste Ursache.');
+  assert.match(meldung, /Feldname|Format/,
+    'die Meldung nennt nur den Pull als Ursache. Genau dieser Fixture-Fall (Termin unter '
+    + '`earningsDate` statt `date`) ist ein SCHEMA-Wechsel: der Pull ist gruen gelaufen, die '
+    + 'Pruefung liest die Termine nur nicht mehr. Wer der Meldung folgt, prueft den falschen '
+    + 'Schritt und findet dort nichts (T573-R2).');
+});
+
 check('(n2) Kalender MIT Zukunftstermin -> geht durch (Gegenprobe, kein Falsch-Rot)', () => {
   const src = mkTmp();
   writeJson(path.join(src, 'earnings-calendar.json'),
