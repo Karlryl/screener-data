@@ -110,6 +110,45 @@ function kippBefund(s, band = KIPP_BAND) {
   };
 }
 
+/**
+ * UMFANGS-WACHE (Review-Befund 03.08.2026) — rein, ohne I/O, damit sie ohne Snapshots pruefbar ist.
+ *
+ * Diese Liste antwortet mit einer ZAHL, und "0" hat zwei voellig verschiedene Bedeutungen:
+ * "gemessen, niemand gefaehrdet" und "nichts gemessen". Reproduziert am 03.08.2026 gegen ein
+ * leeres Temp-Verzeichnis: "geroutete Zeilen: 0 · KIPP-KANDIDATEN: 0 · (keiner — kein
+ * gerouteter Name haengt heute an einer knappen Rekonstruktion)", Exit 0. Das ist wortwoertlich
+ * eine Entwarnung fuer einen Lauf, der nichts angesehen hat. Dieselbe Luecke wurde am selben
+ * Tag in den Schwester-Waechtern geschlossen (watch-fx-sanity gescannt===0, watch-annual-spikes
+ * leeres Verzeichnis) — hier steht sie nur deshalb noch offen, weil das Skript heute nirgends
+ * automatisiert laeuft. Vor der ersten Verdrahtung ist sie zu.
+ *
+ * KEINE gewaehlte Untergrenze. Geprueft wird ausschliesslich der Nullfall — jede positive
+ * Mindestzahl waere eine Magic Number ohne Anker im Datenbestand (das Skript kennt seine
+ * Referenz-Population nicht; es bekommt sein Verzeichnis per argv). Der NAHE-Null-Fall
+ * braucht sie auch nicht: der Umfang steht als "geroutete Zeilen: N" direkt ueber dem
+ * Ergebnis, ein Lauf ueber drei Dateien ist dort als solcher lesbar. Nur die echte Null
+ * liest sich als Befund, und genau die faellt hier auf.
+ */
+function umfangGueltig(geladen, geroutet) {
+  if (!(geladen > 0)) {
+    return {
+      ok: false,
+      grund: `0 Snapshots geladen — die Kipp-Liste hat NICHTS geprueft. Ihre Null-Zaehler sind `
+        + 'kein Gesundheitszeugnis, sondern eine unbeantwortete Frage. Zeigt der uebergebene '
+        + 'Pfad auf das richtige Snapshot-Verzeichnis?',
+    };
+  }
+  if (!(geroutet > 0)) {
+    return {
+      ok: false,
+      grund: `${geladen} Snapshots geladen, aber 0 geroutete Zeilen — die Kandidaten werden AUS `
+        + 'den gerouteten Zeilen gezogen, also hat die Liste NICHTS geprueft. Entweder passt das '
+        + 'Verzeichnis nicht zur watchlist.json oder der Scoring-Pfad ist kaputt.',
+    };
+  }
+  return { ok: true, grund: '' };
+}
+
 // --bandherleitung: die Messung aus dem Kopfkommentar reproduzierbar machen.
 function bandherleitung(dir) {
   const abweichungen = [];
@@ -154,6 +193,14 @@ function main() {
       .filter((e) => e.action === 'route' && Number.isFinite(e.score))
       .map((e) => e.ticker));
 
+  // Umfang ZUERST: eine Kandidaten-Null ohne gepruefte Menge ist keine Aussage (s.o.).
+  const umfang = umfangGueltig(universum.length, geroutet.size);
+  if (!umfang.ok) {
+    console.error('FEHLER: ' + umfang.grund);
+    console.error(`Messebene: ${dir}`);
+    process.exit(2);   // kaputter Aufruf — dieselbe Klasse wie ein fehlendes Verzeichnis
+  }
+
   let rekonstruierend = 0;
   const kandidaten = [];
   for (const s of universum) {
@@ -177,4 +224,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { kippBefund, rekonstruierendePositionen, KIPP_BAND };
+module.exports = { kippBefund, rekonstruierendePositionen, umfangGueltig, KIPP_BAND };

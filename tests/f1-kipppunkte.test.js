@@ -11,7 +11,7 @@
  * Usage: node tests/f1-kipppunkte.test.js   (Exit 0/1)
  */
 const assert = require('node:assert/strict');
-const { kippBefund, rekonstruierendePositionen, KIPP_BAND } = require('../scripts/f1-rekonstruktions-kipppunkte.js');
+const { kippBefund, rekonstruierendePositionen, umfangGueltig, KIPP_BAND } = require('../scripts/f1-rekonstruktions-kipppunkte.js');
 
 let pass = 0, fail = 0;
 function check(name, fn) {
@@ -84,6 +84,32 @@ check('der Snapshot wird NICHT veraendert — die Gegenrechnung darf nicht zurue
   const vorher = JSON.stringify(s);
   kippBefund(s);
   assert.equal(JSON.stringify(s), vorher, 'kippBefund muss rein lesend sein');
+});
+
+// ── UMFANGS-WACHE ────────────────────────────────────────────────────────────────────────
+// Die Liste beantwortet die Frage "bei wem haengt das Burn-Urteil an einer Rekonstruktion?"
+// mit einer ZAHL. Eine Null aus einem leeren Verzeichnis sieht aus wie eine Null aus einem
+// vollen — und liest sich als Entwarnung. Reproduziert 03.08.2026: das Skript gegen ein
+// leeres Temp-Verzeichnis meldete "geroutete Zeilen: 0 / KIPP-KANDIDATEN: 0" und beendete
+// sich mit Exit 0, ununterscheidbar von "niemand gefaehrdet".
+check('UMFANGS-WACHE: 0 geladene Snapshots sind kein Freispruch', () => {
+  const r = umfangGueltig(0, 0);
+  assert.equal(r.ok, false, 'ein leeres Verzeichnis MUSS auffliegen');
+  assert.match(r.grund, /NICHTS geprueft/, 'der Grund muss sagen, dass nichts geprueft wurde');
+});
+
+check('UMFANGS-WACHE: geladen, aber keine geroutete Zeile -> ebenfalls kein Freispruch', () => {
+  // Die Kandidaten werden AUS den gerouteten Zeilen gezogen. Ist diese Menge leer, ist die
+  // Null der Kandidaten eine Tautologie und kein Befund — auch wenn Dateien da waren.
+  const r = umfangGueltig(120, 0);
+  assert.equal(r.ok, false, 'ohne geroutete Zeile kann die Liste nichts gefunden haben');
+  assert.match(r.grund, /geroutete/i);
+});
+
+check('UMFANGS-WACHE: ein echter Lauf geht durch (Gegenprobe, sonst blockiert die Wache alles)', () => {
+  // Gemessene Groessen des lokalen Laufs vom 03.08.2026: 4.036 geladen, 3.042 geroutet.
+  assert.equal(umfangGueltig(4036, 3042).ok, true, 'die Wache darf den Normalfall nicht anhalten');
+  assert.equal(umfangGueltig(1, 1).ok, true, 'auch ein winziger, aber echter Lauf ist ein Lauf');
 });
 
 console.log('\nf1-kipppunkte: ' + pass + ' ok, ' + fail + ' fail');
