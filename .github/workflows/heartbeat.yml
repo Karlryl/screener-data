@@ -78,6 +78,42 @@ jobs:
           fi
           echo "OK: Export frisch (<= ${MAX_AGE_DAYS} Tage)."
 
+      # T564-B1 (Review Tag 564, F-17a-Publish) — dieselbe Sonde ein zweites Mal, diesmal
+      # auf den BEWEGUNGS-Kanal (NEU/Rangpfeile). Der Schritt darueber misst nur den
+      # v1-Export; zwischen dessen Deploy und dem Vintage-Publish liegen im scoring-Job
+      # vier weitere Schritte (Vintage schreiben, Wert-Gate, main-Commit, Publish).
+      # Scheitert einer davon, bleibt der Export frisch, waehrend outputs/board-history/
+      # unbegrenzt lange stehen bleibt — findash traegt dann heutige Boards ueber
+      # gestrigen Bewegungsdaten, und niemand erfaehrt es. Genau das macht diese Sonde rot.
+      #
+      # BEWUSST GEGEN DIE WANDUHR und NICHT gegen den generated_at des v1-Index: der
+      # Vintage-Publish liegt konstruktionsbedingt Minuten hinter dem Board-Deploy, ein
+      # Skew-Vergleich der beiden Stempel waere ein Dauer-Falschalarm. Schwelle, 9999-bei-
+      # unlesbar und Alarmweg sind identisch zum Export-Check darueber.
+      #
+      # T564-B5 mitgeloest: <2 Vintages im Kanal heisst, die Bewegungs-Anzeige BLEIBT leer
+      # (findash vergleicht die zwei juengsten Staende). stage-public-data.js kann das nur
+      # als ::warning:: melden — kein Kanal, den Karl je sieht. Hier wird es rot.
+      # if: always(), damit diese Zahl auch dann kommt, wenn der Export-Check schon rot ist.
+      - name: Check board-history channel freshness (T564-B1)
+        if: always()
+        env:
+          BH_MAX_AGE_DAYS: '2'
+        run: |
+          (curl -s --max-time 20 "https://raw.githubusercontent.com/${{ github.repository }}/gh-pages/outputs/board-history/index.json" || true) | node -e "
+            let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{
+              const MAX=Number(process.env.BH_MAX_AGE_DAYS);
+              let idx=null; try { idx=JSON.parse(s); } catch(e){ idx=null; }
+              const t=idx?Date.parse(idx.generated_at):NaN;
+              const age=Number.isFinite(t)?Math.floor((Date.now()-t)/86400000):9999;
+              const n=(idx&&Array.isArray(idx.vintages))?idx.vintages.length:0;
+              console.log('Bewegungs-Kanal (gh-pages outputs/board-history/index.json): '+age+' Tage alt (Schwelle '+MAX+'), '+n+' Vintage(s)');
+              if(age>MAX){ console.log('::error::BEWEGUNGS-ANZEIGE VERALTET: board-history im Datenkanal '+age+' Tage alt (Schwelle '+MAX+'d), waehrend die Boards weiter deployt werden. URSACHE: einer der vier Schritte zwischen Board-Deploy und Vintage-Publish faellt aus. FOLGE: findash zeigt heutige Boards mit gestrigen Bewegungspfeilen. NAECHSTER SCHRITT: Actions -> daily-pull.yml -> Schritte \"Write board-history vintage\" / \"Commit board-history vintage\" / \"Publish board-history vintages\".'); process.exit(1); }
+              if(n<2){ console.log('::error::BEWEGUNGS-ANZEIGE OHNE VERGLEICHSSTAND: nur '+n+' Vintage(s) im Datenkanal — findash vergleicht die zwei juengsten Staende und zeigt ohne den zweiten gar keine Bewegung, ohne es zu melden. NAECHSTER SCHRITT: board-history/ im Repo und den Publish-Schritt in daily-pull.yml pruefen.'); process.exit(1); }
+              console.log('OK: Bewegungs-Kanal frisch (<= '+MAX+' Tage) mit '+n+' Vintages.');
+            });
+          "
+
       # Masterplan 2.3-Vorbedingung A7-b — Fail-loud-Gate fuers Preis-Substrat (prices/history/-Shards).
       # A7-Fehlermodus: der Pull-Historical-Prices-Step meldet success (continue-on-error), aber der
       # Store wird nie geschrieben (Timeout-Kill vor dem Write) — wochenlang unbemerkt. Seit Tag 294/295

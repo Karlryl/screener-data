@@ -977,6 +977,17 @@ jobs:
             mkdir -p outputs
             cp ../index.html . 2>/dev/null || true
             cp -r ../outputs/. outputs/ 2>/dev/null || true
+            # T564-B6 (Review Tag 564): der cp darueber traegt ein `|| true` (ein leeres
+            # outputs/ darf den Bestands-Deploy nicht kippen) — es verschluckt aber auch
+            # den Fall, dass die frisch gestagete earnings-calendar.json NICHT mitkommt;
+            # findash zeigte danach still keine Termine. Geprueft wird darum das benannte
+            # Artefakt, nicht der Rueckgabewert des cp: der Schritt "Stage earnings-calendar
+            # for public data channel" lief mit if:success() direkt davor durch, die Datei
+            # MUSS also hier liegen. Der uebrige Baum bleibt vom `|| true` gedeckt.
+            if [ ! -f outputs/earnings-calendar.json ]; then
+              echo "::error::outputs/earnings-calendar.json fehlt im gh-pages-Baum, obwohl der Stage-Schritt gruen war — der Termin-Kanal waere still leer. Abbruch statt stillem Deploy."
+              exit 1
+            fi
             git add -A
             # ⚠ Die Leer-Pruefung darf NUR im ersten Versuch gruen aussteigen. Ab Versuch 2
             # heisst "kein Diff" etwas anderes: unser eigener Commit aus dem vorherigen
@@ -1428,11 +1439,17 @@ jobs:
             exit 1
           fi
           cd _ghp
+          # T564-B2 (Review Tag 564): hier steht BEWUSST kein `$i -gt 1`-Guard vor dem
+          # Fetch/Reset, anders als in den beiden Deploy-Schritten oben. Dort ist der Klon
+          # unmittelbar vorher entstanden; HIER liegen zwischen Klonen und Publish vier
+          # Schritte (Vintage schreiben, Wert-Gate, main-Commit, dieser Publish) — der
+          # _ghp-Stand ist also minutenalt. Ein parallel laufender Lauf (manuell + geplant,
+          # siehe R1-SK-003 oben) haette seinen Stand sonst schon im ERSTEN Versuch per
+          # Force-Push zurueckgerollt. Fehlt origin/gh-pages, laeuft der Reset nicht (die
+          # rev-parse-Bedingung) und der Klon bleibt, wie er ist.
           for i in 1 2 3; do
-            if [ "$i" -gt 1 ]; then
-              if git fetch origin gh-pages 2>/dev/null && git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then
-                git reset --hard origin/gh-pages
-              fi
+            if git fetch origin gh-pages 2>/dev/null && git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then
+              git reset --hard origin/gh-pages
             fi
             # Ziel VOR dem Kopieren leeren — sonst sammeln sich die Vintage-Ordner auf
             # gh-pages unbegrenzt an (jeder Tag legt einen neuen an, keiner geht je wieder).

@@ -46,6 +46,12 @@ function schreibeJson(ziel, obj) {
 /**
  * Termin-Kalender byte-genau uebernehmen (nur mit vorherigem Parse-Check - eine halb
  * geschriebene Quelle darf nie als gueltiger Kanal-Inhalt erscheinen).
+ *
+ * T564-B6: der Check ist BEWUSST nur ein Parse-Check, keine Inhaltspruefung. Ob der
+ * Kalender plausibel gefuellt ist, entscheidet pull-earnings-dates.js mit seinem
+ * Collapse-Guard eine Stufe frueher; hier ginge es nur um "ist das ueberhaupt JSON".
+ * Ein leerer, aber gueltiger Kalender passiert also absichtlich - er ist ein Befund
+ * des Pulls, nicht des Publish. ponytail: Deckel dieser Stufe.
  * @returns {{datei: string, bytes: number}}
  */
 function stageEarnings(quelle, zielDir) {
@@ -108,6 +114,12 @@ function stageBoardHistory(quellDir, zielDir, anzahl) {
   const alle = eintraege.filter((e) => e.isDirectory() && VINTAGE_DIR_RE.test(e.name)).map((e) => e.name).sort();
   if (alle.length === 0) throw new Error('kein Vintage in ' + quellDir + ' - die Bewegungs-Anzeige haette keine Quelle');
   if (alle.length < anzahl) {
+    // T564-B5: hier bewusst nur ::warning:: - beim allerersten Vintage (Bootstrap) ist das
+    // ein legitimer Zustand und darf den Lauf nicht kippen. Karl sieht ::warning:: aber nie.
+    // Der Kanal, der ihn erreicht, ist die Frische-Sonde in heartbeat.yml
+    // ("Check board-history channel freshness"): sie wird ROT, wenn im publizierten
+    // index.json weniger als 2 Vintages stehen - also genau dann, wenn die
+    // Bewegungs-Anzeige dauerhaft leer bliebe statt nur einmal beim Bootstrap.
     console.log('::warning::board-history hat nur ' + alle.length + ' Vintage(s), ' + anzahl
       + ' angefordert - die Bewegungs-Anzeige bleibt leer, bis zwei Staende vorliegen.');
   }
@@ -134,6 +146,27 @@ function stageBoardHistory(quellDir, zielDir, anzahl) {
     }
     if (geschrieben.length === 0) throw new Error('kein Board im Vintage ' + date + ' - nur Sidecars, das ist ein Defekt');
     vintages.push({ date, files: geschrieben });
+  }
+  // T564-B3: die Board-Familien der publizierten Staende muessen zusammenpassen. findash
+  // vergleicht Board fuer Board; fehlt eines im JUENGEREN Stand, liest sich jede Zeile des
+  // aelteren als Abgang. Repro aus dem Tag-564-Review: ein entferntes utilities.json ergab
+  // 117 Phantom-Abgaenge, gemeldet als warning:null. Darum hart abbrechen statt publizieren.
+  // ZUGEWINN ist der bewusste Gegenfall (eine neue Board-Familie kommt dazu) und geht
+  // durch - nur laut protokolliert, damit ein unerwarteter Zugewinn nicht unsichtbar ist.
+  for (let i = 1; i < vintages.length; i++) {
+    const alt = vintages[i - 1], neu = vintages[i];
+    const fehlend = alt.files.filter((f) => !neu.files.includes(f));
+    const dazu = neu.files.filter((f) => !alt.files.includes(f));
+    if (fehlend.length) {
+      throw new Error('Board-Familie schrumpft zwischen ' + alt.date + ' und ' + neu.date + ': '
+        + fehlend.join(', ') + ' fehlt im juengeren Vintage - jede Zeile dieser Boards erschiene '
+        + 'in der Bewegungs-Anzeige als Abgang. Erst die Ursache klaeren (Board-Lauf gescheitert?), '
+        + 'nicht publizieren.');
+    }
+    if (dazu.length) {
+      console.log('::warning::neue Board-Familie in ' + neu.date + ': ' + dazu.join(', ')
+        + ' - kommt gegenueber ' + alt.date + ' dazu (kein Abgangs-Risiko, wird publiziert).');
+    }
   }
   schreibeJson(path.join(zielBH, 'index.json'), {
     schema: 'board-history-publish/v1',

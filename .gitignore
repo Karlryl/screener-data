@@ -128,6 +128,14 @@ screener-detail.json
 # board-history/ selbst BLEIBT getrackt (GG7b, Messgrundlage) — nur das Archiv nicht.
 board-history-archive/
 
+# T564-B4: Runner-Scratch des F-17a-Publish. _public/ baut scripts/stage-public-data.js
+# (schlanke Vintages vor dem Push), _ghp/ ist der gh-pages-Klon des Deploy-Schritts.
+# Beide liegen im Arbeitsbaum, waehrend im selben Job noch nach main committet wird —
+# ein kuenftiges `git add -A` statt des gezielten `git add board-history/` wuerde sie
+# sonst mit ins Repo nehmen (gleiche Klasse wie snapshots-eingang/ oben).
+_public/
+_ghp/
+
 # 2.2: Max-Preis-Historie lebt AUSSERHALB des CI-Checkouts (GG7c) — nur der kleine
 # committete Vertrag external-data/ath-state.json fliesst in CI/Export.
 prices-max/

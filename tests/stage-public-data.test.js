@@ -204,5 +204,31 @@ check('(j) CLI: Erfolgsfall -> exit 0 und beide Quellen liegen im Ziel', () => {
   assert.ok(fs.existsSync(path.join(ziel, 'board-history', 'index.json')));
 });
 
+// ── (k-l) T564-B3: Board-Familie zwischen den zwei Vintages ──────────────────────
+// Repro aus dem Tag-564-Review: verschwindet ein Board im JUENGEREN Vintage (Datei
+// faellt aus, Board-Lauf kracht, Datei wird nicht geschrieben), publiziert der Kanal
+// zwei Staende mit unterschiedlichen Board-Listen. findash vergleicht sie Board fuer
+// Board — jede Zeile des fehlenden Boards liest sich dann als ABGANG. Im Repro:
+// 117 Phantom-Abgaenge bei entferntem utilities.json, gemeldet als warning:null.
+// Zugewinn ist der harmlose Gegenfall (neues Board kommt dazu) und muss durchgehen.
+check('(k) juengeres Vintage VERLIERT ein Board -> wirft (Phantom-Abgaenge, T564-B3)', () => {
+  const src = mkQuelle(['2026-08-02', '2026-08-03']);
+  fs.rmSync(path.join(src, 'board-history', '2026-08-03', 'energy.json'));
+  assert.throws(() => S.run({ ziel: path.join(src, '_public'), boardHistory: path.join(src, 'board-history'), vintages: 2 }),
+    /energy\.json/, 'ein im juengeren Vintage fehlendes Board muss auffliegen, nicht als Abgang durchgehen');
+});
+
+check('(l) juengeres Vintage GEWINNT ein Board -> geht durch (neue Board-Familie)', () => {
+  const src = mkQuelle(['2026-08-02', '2026-08-03']);
+  writeJson(path.join(src, 'board-history', '2026-08-03', 'utilities.json'),
+    vintageFile('2026-08-03', 'utilities', [fatRow(1, 'NEE', 70.1)], []));
+  const ziel = path.join(src, '_public');
+  S.run({ ziel, boardHistory: path.join(src, 'board-history'), vintages: 2 });
+  const idx = readJson(path.join(ziel, 'board-history', 'index.json'));
+  assert.deepStrictEqual(idx.vintages[1].files.slice().sort(),
+    ['energy.json', 'semiconductors.json', 'utilities.json'], 'das neue Board fehlt im Kanal');
+  assert.deepStrictEqual(idx.vintages[0].files.slice().sort(), ['energy.json', 'semiconductors.json']);
+});
+
 console.log(fail ? ('\nFAIL: ' + fail + ' Test(s)') : '\nAlle stage-public-data-Tests gruen');
 process.exit(fail ? 1 : 0);
