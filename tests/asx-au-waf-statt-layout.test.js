@@ -17,6 +17,10 @@
  *   (b) der Adapter fragt nicht mehr den toten asx.com.au-Pfad
  *   (c) 200 + text/html bricht MIT WAF-Wortlaut ab, statt Layout zu behaupten
  *   (d) Vertrag bleibt: fail-silent (leere Map), marketCap wird nie gesetzt
+ *   (e) 200 ganz ohne Content-Type-Header meldet "(fehlt)", nicht den leeren Typ
+ *   (f) 302 mit Location wird verfolgt und das Ziel liefert die Daten
+ *   (g) 302 ohne Location bricht ab, statt "undefined" abzurufen
+ *   (h) Umleitungsschleife endet bei MAX_REDIRECTS=5 (genau 6 Abrufe)
  *
  * Hermetisch: kein Netz, keine Dateien. Laeuft im pre-pull-Gate (tests/*test.js);
  * tests/discovery/asx-au.test.js bleibt der Live-Check und ist gate-exempt.
@@ -53,17 +57,26 @@ const WAF_HTML = '<html><head><title>Request Rejected</title></head><body>'
 const echtesGet = https.get;
 const angefragt = [];
 
-function netzAntwortetMit(koerper, headers, statusCode = 200) {
+// Antwort haengt an der angefragten URL: nur so laesst sich eine Umleitungskette
+// nachbauen (Original -> Location -> Datei). Der Handler bekommt die URL und
+// liefert {koerper, headers, statusCode}.
+function netzAntwortetJe(handler) {
   https.get = (url, opts, cb) => {
-    angefragt.push(String(url));
+    const u = String(url);
+    angefragt.push(u);
     const fn = typeof opts === 'function' ? opts : cb;
-    const res = Readable.from([Buffer.from(koerper, 'utf8')]);
-    res.statusCode = statusCode;
-    res.headers = headers;
+    const a = handler(u);
+    const res = Readable.from([Buffer.from(a.koerper || '', 'utf8')]);
+    res.statusCode = a.statusCode === undefined ? 200 : a.statusCode;
+    res.headers = a.headers;
     setImmediate(() => fn(res));
     const req = { on() { return req; }, once() { return req; }, setTimeout() { return req; }, destroy() {}, end() {} };
     return req;
   };
+}
+
+function netzAntwortetMit(koerper, headers, statusCode = 200) {
+  netzAntwortetJe(() => ({ koerper, headers, statusCode }));
 }
 
 // Der Adapter ist fail-silent: der Grund landet ausschliesslich auf console.error.
@@ -137,8 +150,77 @@ async function check(name, fn) {
     } finally { https.get = echtesGet; }
   });
 
-  console.log('\nGeprueft: discovery/asx-au.js wirklich ausgefuehrt (4 Laeufe, https abgeklemmt) — '
-    + 'neues markitdigital-Layout, Endpunkt-Host, WAF-Abweisung (200+text/html) und text/plain-Gegenprobe.');
-  console.log('asx-au-waf-statt-layout: ' + (4 - fails) + ' ok, ' + fails + ' fail');
+  // ── (e) 200 ganz OHNE Content-Type: der '(fehlt)'-Zweig des Guards ────────
+  // Eine WAF/ein Proxy muss den Header nicht setzen. Ohne den Fallback stuende
+  // im Log "Content-Type  (WAF-/..." — eine Meldung, die die Ursache verschweigt.
+  await check('HTTP 200 ganz ohne Content-Type meldet "(fehlt)", nicht den leeren Typ', async () => {
+    angefragt.length = 0;
+    netzAntwortetMit(WAF_HTML, {});
+    try {
+      const { map, zeilen } = await mitschnitt(() => fetchAsxUniverse());
+      const text = zeilen.join('\n');
+      assert.strictEqual(map.size, 0, 'fail-silent-Vertrag: ohne Content-Type keine Daten');
+      assert.ok(!/layout changed/i.test(text),
+        'auch der kopflose Fall darf nicht als Layoutwechsel gemeldet werden: ' + JSON.stringify(text));
+      const erwartet = 'HTTP 200 aber Content-Type (fehlt) (WAF-/Fehlerseite, '
+        + Buffer.byteLength(WAF_HTML) + ' Bytes)';
+      assert.ok(text.includes(erwartet),
+        'Wortlaut-Waechter: erwartet "' + erwartet + '"\n       gemeldet: ' + JSON.stringify(text));
+    } finally { https.get = echtesGet; }
+  });
+
+  // ── (f)-(h) Umleitungen: folgen, aber nur mit Ziel und nur begrenzt ───────
+  const UMLEITUNGSZIEL = 'https://asx.api.markitdigital.com/asx-research/1.0/companies/directory/file-v2.csv';
+
+  await check('302 mit Location wird verfolgt, das Ziel liefert die Daten', async () => {
+    angefragt.length = 0;
+    netzAntwortetJe(u => (u === UMLEITUNGSZIEL
+      ? { koerper: CSV_NEU, headers: { 'content-type': 'text/csv' } }
+      : { koerper: '', headers: { location: UMLEITUNGSZIEL }, statusCode: 302 }));
+    try {
+      const { map } = await mitschnitt(() => fetchAsxUniverse());
+      assert.deepStrictEqual([...map.keys()].sort(), ['A2M.AX', 'BHP.AX', 'CBA.AX', 'CSL.AX'],
+        'nach der Umleitung muessen dieselben Codes ankommen');
+      assert.strictEqual(angefragt.length, 2,
+        'Original + Ziel = 2 Abrufe erwartet, sah: ' + JSON.stringify(angefragt));
+      assert.strictEqual(angefragt[1], UMLEITUNGSZIEL,
+        'der zweite Abruf muss die Location sein, ging an: ' + angefragt[1]);
+    } finally { https.get = echtesGet; }
+  });
+
+  await check('302 ohne Location bricht sauber ab, statt "undefined" abzurufen', async () => {
+    angefragt.length = 0;
+    netzAntwortetMit('', {}, 302);
+    try {
+      const { map, zeilen } = await mitschnitt(() => fetchAsxUniverse());
+      const text = zeilen.join('\n');
+      assert.strictEqual(map.size, 0, 'fail-silent-Vertrag: ohne Location keine Daten');
+      assert.ok(/without Location header/.test(text),
+        'Wortlaut-Waechter: "HTTP 302 without Location header" erwartet, gemeldet: ' + JSON.stringify(text));
+      assert.strictEqual(angefragt.length, 1,
+        'kein Folgeabruf erlaubt — schon gar nicht auf "undefined", sah: ' + JSON.stringify(angefragt));
+    } finally { https.get = echtesGet; }
+  });
+
+  await check('Umleitungsschleife endet nach MAX_REDIRECTS=5, also genau 6 Abrufen', async () => {
+    angefragt.length = 0;
+    let sprung = 0;
+    netzAntwortetJe(() => ({ koerper: '', statusCode: 302,
+      headers: { location: UMLEITUNGSZIEL + '?hop=' + (++sprung) } }));
+    try {
+      const { map, zeilen } = await mitschnitt(() => fetchAsxUniverse());
+      const text = zeilen.join('\n');
+      assert.strictEqual(map.size, 0, 'fail-silent-Vertrag: eine Schleife liefert keine Daten');
+      assert.ok(/too many redirects/.test(text),
+        'Wortlaut-Waechter: "too many redirects" erwartet, gemeldet: ' + JSON.stringify(text));
+      assert.strictEqual(angefragt.length, 6,
+        '1 Original + MAX_REDIRECTS=5 = 6 Abrufe erwartet, sah: ' + angefragt.length);
+    } finally { https.get = echtesGet; }
+  });
+
+  console.log('\nGeprueft: discovery/asx-au.js wirklich ausgefuehrt (8 Laeufe, https abgeklemmt) — '
+    + 'neues markitdigital-Layout, Endpunkt-Host, WAF-Abweisung (200+text/html), text/plain-Gegenprobe, '
+    + 'fehlender Content-Type und die drei Umleitungsfaelle (verfolgt / ohne Location / Schleife).');
+  console.log('asx-au-waf-statt-layout: ' + (8 - fails) + ' ok, ' + fails + ' fail');
   process.exit(fails ? 1 : 0);
 })();
