@@ -1035,8 +1035,15 @@ jobs:
             # Artefakt, nicht der Rueckgabewert des cp: der Schritt "Stage earnings-calendar
             # for public data channel" lief mit if:success() direkt davor durch, die Datei
             # MUSS also hier liegen. Der uebrige Baum bleibt vom `|| true` gedeckt.
-            if [ ! -f outputs/earnings-calendar.json ]; then
-              echo "::error::outputs/earnings-calendar.json fehlt im gh-pages-Baum, obwohl der Stage-Schritt gruen war — der Termin-Kanal waere still leer. Abbruch statt stillem Deploy."
+            # T568-F4 (Review Tag 568): die Pruefung war bis Tag 570 ein blosses
+            # `[ ! -f outputs/earnings-calendar.json ]` — und damit praktisch ein No-Op:
+            # sie sah in den gh-pages-KLON, in dem der Kalender von GESTERN immer schon
+            # liegt. Faellt die Quelle aus, findet die Existenzpruefung die alte Datei und
+            # der Deploy schiebt den Stand von gestern still weiter. Verglichen wird darum
+            # der INHALT gegen die frisch gestagete Quelle: `cmp -s` wird rot, wenn die
+            # Quelle fehlt UND wenn die Kopie nicht im Baum angekommen ist.
+            if ! cmp -s ../outputs/earnings-calendar.json outputs/earnings-calendar.json; then
+              echo "::error::outputs/earnings-calendar.json im gh-pages-Baum ist nicht die frisch gestagete Datei (fehlt oder weicht ab) — der Termin-Kanal zeigte sonst still den Stand von gestern. Abbruch statt stillem Deploy."
               exit 1
             fi
             git add -A
@@ -1496,11 +1503,29 @@ jobs:
           # Schritte (Vintage schreiben, Wert-Gate, main-Commit, dieser Publish) — der
           # _ghp-Stand ist also minutenalt. Ein parallel laufender Lauf (manuell + geplant,
           # siehe R1-SK-003 oben) haette seinen Stand sonst schon im ERSTEN Versuch per
-          # Force-Push zurueckgerollt. Fehlt origin/gh-pages, laeuft der Reset nicht (die
-          # rev-parse-Bedingung) und der Klon bleibt, wie er ist.
+          # Force-Push zurueckgerollt. Der Fetch ist darum der ERSTE Befehl im
+          # Schleifenkoerper — Waechter: tests/t564-datenkanal.test.js pinnt genau das
+          # POSITIV (nicht die Abwesenheit einer bestimmten Guard-Schreibweise).
+          #
+          # T568-F5 (Review Tag 568): die drei Faelle sind jetzt getrennt statt in EINE
+          # &&-Kette gepackt. Vorher hiess "fetch kaputt" dasselbe wie "origin/gh-pages
+          # gibt es nicht": der Reset entfiel und der Lauf pushte den minutenalten Klon per
+          # --force — genau der Rueckroller, den B2 verhindern soll, nur ausgeloest durch
+          # eine transiente Netzstoerung statt durch einen Guard. Jetzt: Fetch ok -> reset
+          # (falls die Ref existiert); Fetch rot, Ref existiert aber -> naechster Versuch
+          # statt Blind-Push; Fetch rot UND keine Ref -> es gibt nichts zurueckzurollen,
+          # der Push legt den Branch an. Das `2>/dev/null` am Fetch ist raus: die
+          # Fehlermeldung gehoert ins Protokoll, sonst ist der Grund fuers Neuansetzen
+          # nirgends zu sehen.
           for i in 1 2 3; do
-            if git fetch origin gh-pages 2>/dev/null && git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then
-              git reset --hard origin/gh-pages
+            if git fetch origin gh-pages; then
+              if git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then
+                git reset --hard origin/gh-pages
+              fi
+            elif git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then
+              echo "::warning::git fetch origin gh-pages fehlgeschlagen (Versuch $i), origin/gh-pages existiert aber — kein Force-Push vom minutenalten Klon, naechster Versuch."
+              sleep $((5 * i))
+              continue
             fi
             # Ziel VOR dem Kopieren leeren — sonst sammeln sich die Vintage-Ordner auf
             # gh-pages unbegrenzt an (jeder Tag legt einen neuen an, keiner geht je wieder).
@@ -1510,6 +1535,11 @@ jobs:
             git add -A
             # Wie in den beiden Deploys oben: ab Versuch 2 heisst "kein Diff" nicht "nichts
             # zu tun", sondern "unser Commit steht noch unveroeffentlicht auf HEAD".
+            # T568-F7 (Nebenbefund): der "unveraendert"-Ausstieg im ERSTEN Versuch ist
+            # toter Code — stage-public-data.js schreibt in jedes index.json ein frisches
+            # generated_at, es gibt also IMMER einen Diff. Er bleibt als Netz stehen (falls
+            # der Stempel je entfaellt), aber niemand darf ihn als "nichts zu tun"-Beleg
+            # lesen. ponytail: toter Zweig, bewusst behalten.
             if git diff --staged --quiet; then
               if [ "$i" -eq 1 ]; then echo "board-history im Datenkanal unveraendert."; exit 0; fi
               echo "kein neuer Diff in Versuch $i — wiederhole den Push des bestehenden Commits"

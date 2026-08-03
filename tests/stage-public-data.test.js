@@ -230,5 +230,31 @@ check('(l) juengeres Vintage GEWINNT ein Board -> geht durch (neue Board-Familie
   assert.deepStrictEqual(idx.vintages[0].files.slice().sort(), ['energy.json', 'semiconductors.json']);
 });
 
+// ── (m) T568-F6: dasselbe Phantom-Abgangs-Muster OHNE fehlende Datei ─────────────
+// Ein Board kann auch VORHANDEN und LEER sein (cohort-Arrays []) — die Familien-
+// Pruefung (k) sieht die Datei und ist zufrieden. findash vergleicht Board fuer Board
+// und liest jede Zeile des aelteren Stands als Abgang. Repro Fall C aus dem
+// Tag-568-Review: 3 Zeilen -> 0 Zeilen ging still durch. Gegenfall (m2): ein Board,
+// das in BEIDEN Staenden leer ist, ist kein Kollaps und muss durchgehen.
+check('(m) Board kollabiert im juengeren Vintage auf 0 Zeilen -> wirft (T568-F6)', () => {
+  const src = mkQuelle(['2026-08-02', '2026-08-03']);
+  writeJson(path.join(src, 'board-history', '2026-08-03', 'energy.json'),
+    vintageFile('2026-08-03', 'energy', [], []));
+  assert.throws(() => S.run({ ziel: path.join(src, '_public'), boardHistory: path.join(src, 'board-history'), vintages: 2 }),
+    /energy\.json/, 'ein auf 0 Zeilen kollabiertes Board muss auffliegen, nicht als 3 Abgaenge durchgehen');
+});
+
+check('(m2) in BEIDEN Staenden leeres Board -> geht durch (kein Kollaps)', () => {
+  const src = mkQuelle(['2026-08-02', '2026-08-03']);
+  for (const d of ['2026-08-02', '2026-08-03']) {
+    writeJson(path.join(src, 'board-history', d, 'energy.json'), vintageFile(d, 'energy', [], []));
+  }
+  const ziel = path.join(src, '_public');
+  S.run({ ziel, boardHistory: path.join(src, 'board-history'), vintages: 2 });
+  const idx = readJson(path.join(ziel, 'board-history', 'index.json'));
+  assert.deepStrictEqual(idx.vintages[1].files.slice().sort(), ['energy.json', 'semiconductors.json'],
+    'ein durchgaengig leeres Board darf den Publish nicht kippen');
+});
+
 console.log(fail ? ('\nFAIL: ' + fail + ' Test(s)') : '\nAlle stage-public-data-Tests gruen');
 process.exit(fail ? 1 : 0);

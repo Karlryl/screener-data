@@ -127,10 +127,14 @@ function stageBoardHistory(quellDir, zielDir, anzahl) {
   const zielBH = path.join(zielDir, 'board-history');
   fs.rmSync(zielBH, { recursive: true, force: true }); // nie Reste eines frueheren Laufs mitpublizieren
   const vintages = [];
+  // T568-F6: Zeilenzahl je Board, parallel zu `vintages` gehalten und NICHT ins index.json
+  // geschrieben — der publizierte Vertrag (schema board-history-publish/v1) bleibt unveraendert.
+  const zeilenJeVintage = [];
   for (const date of gewaehlt) {
     const dir = path.join(quellDir, date);
     const dateien = fs.readdirSync(dir).filter((n) => n.endsWith('.json')).sort();
     const geschrieben = [];
+    const zeilen = {};
     for (const name of dateien) {
       const wo = date + '/' + name;
       let roh;
@@ -143,9 +147,11 @@ function stageBoardHistory(quellDir, zielDir, anzahl) {
       if (!slim) continue; // Sidecar ohne cohort - gehoert nicht in den Kanal
       schreibeJson(path.join(zielBH, date, name), slim);
       geschrieben.push(name);
+      zeilen[name] = slim.cohort.profitable.length + slim.cohort.unprofitable.length;
     }
     if (geschrieben.length === 0) throw new Error('kein Board im Vintage ' + date + ' - nur Sidecars, das ist ein Defekt');
     vintages.push({ date, files: geschrieben });
+    zeilenJeVintage.push(zeilen);
   }
   // T564-B3: die Board-Familien der publizierten Staende muessen zusammenpassen. findash
   // vergleicht Board fuer Board; fehlt eines im JUENGEREN Stand, liest sich jede Zeile des
@@ -162,6 +168,19 @@ function stageBoardHistory(quellDir, zielDir, anzahl) {
         + fehlend.join(', ') + ' fehlt im juengeren Vintage - jede Zeile dieser Boards erschiene '
         + 'in der Bewegungs-Anzeige als Abgang. Erst die Ursache klaeren (Board-Lauf gescheitert?), '
         + 'nicht publizieren.');
+    }
+    // T568-F6: dasselbe Phantom-Abgangs-Muster OHNE fehlende Datei. Ein Board kann auch
+    // VORHANDEN und LEER sein (cohort-Arrays []) - die Familien-Pruefung darueber sieht die
+    // Datei und ist zufrieden, findash liest ein leeres Board und meldet jede Zeile des
+    // aelteren Stands als Abgang. Repro (Fall C, Review Tag 568): 3 Zeilen -> 0 Zeilen ging
+    // still durch. Kollaps = im juengeren Stand 0 Zeilen UND im aelteren > 0; ein Board, das
+    // in BEIDEN Staenden leer ist, ist kein Kollaps und geht bewusst durch.
+    const kollaps = neu.files.filter((f) => zeilenJeVintage[i][f] === 0 && zeilenJeVintage[i - 1][f] > 0);
+    if (kollaps.length) {
+      throw new Error('Board(s) ohne eine einzige Zeile im juengeren Vintage ' + neu.date + ': '
+        + kollaps.join(', ') + ' - im aelteren Stand ' + alt.date + ' waren sie gefuellt. Jede Zeile '
+        + 'des aelteren Stands erschiene in der Bewegungs-Anzeige als Abgang. Erst die Ursache '
+        + 'klaeren (Board-Lauf leer gelaufen?), nicht publizieren.');
     }
     if (dazu.length) {
       console.log('::warning::neue Board-Familie in ' + neu.date + ': ' + dazu.join(', ')

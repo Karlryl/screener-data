@@ -95,6 +95,17 @@ jobs:
       # (findash vergleicht die zwei juengsten Staende). stage-public-data.js kann das nur
       # als ::warning:: melden — kein Kanal, den Karl je sieht. Hier wird es rot.
       # if: always(), damit diese Zahl auch dann kommt, wenn der Export-Check schon rot ist.
+      #
+      # T568-F7 (Review Tag 568): der generated_at-Stempel sagt nur, dass der PUBLISH lief —
+      # nicht, dass er etwas Neues trug. Ein Lauf, der taeglich dieselben zwei alten Vintages
+      # erneut hochschiebt (Vintage-Schreiben tot, Publish gesund), haelt den Stempel ewig
+      # frisch und diese Sonde ewig gruen. Darum zusaetzlich das DATUM des juengsten Vintages
+      # gegen dieselbe Schwelle. Kadenz nachgerechnet: der Pull laeuft Di–Sa, der Heartbeat
+      # taeglich 12:30 UTC — am Montag ist der juengste Stand der Samstag, floor(2,5d) = 2,
+      # also gruen; faellt der Samstag aus, sind es 3 -> rot. MAX=2 bleibt damit richtig.
+      # Reihenfolge der drei Zweige ist Diagnose-Reihenfolge: erst "Publish laeuft gar nicht"
+      # (age), dann "kein Vergleichsstand" (n), dann "Publish laeuft, Daten stehen" (vAlter) —
+      # sonst meldete die Sonde "der Publish LAEUFT", waehrend er in Wahrheit tot ist.
       - name: Check board-history channel freshness (T564-B1)
         if: always()
         env:
@@ -107,10 +118,13 @@ jobs:
               const t=idx?Date.parse(idx.generated_at):NaN;
               const age=Number.isFinite(t)?Math.floor((Date.now()-t)/86400000):9999;
               const n=(idx&&Array.isArray(idx.vintages))?idx.vintages.length:0;
-              console.log('Bewegungs-Kanal (gh-pages outputs/board-history/index.json): '+age+' Tage alt (Schwelle '+MAX+'), '+n+' Vintage(s)');
+              const vt=n?Date.parse(idx.vintages.at(-1).date):NaN;
+              const vAlter=Number.isFinite(vt)?Math.floor((Date.now()-vt)/86400000):9999;
+              console.log('Bewegungs-Kanal (gh-pages outputs/board-history/index.json): '+age+' Tage alt (Schwelle '+MAX+'), '+n+' Vintage(s), juengster Stand vom '+((idx&&n)?idx.vintages.at(-1).date:'?')+' ('+vAlter+' Tage alt)');
               if(age>MAX){ console.log('::error::BEWEGUNGS-ANZEIGE VERALTET: board-history im Datenkanal '+age+' Tage alt (Schwelle '+MAX+'d), waehrend die Boards weiter deployt werden. URSACHE: einer der vier Schritte zwischen Board-Deploy und Vintage-Publish faellt aus. FOLGE: findash zeigt heutige Boards mit gestrigen Bewegungspfeilen. NAECHSTER SCHRITT: Actions -> daily-pull.yml -> Schritte \"Write board-history vintage\" / \"Commit board-history vintage\" / \"Publish board-history vintages\".'); process.exit(1); }
               if(n<2){ console.log('::error::BEWEGUNGS-ANZEIGE OHNE VERGLEICHSSTAND: nur '+n+' Vintage(s) im Datenkanal — findash vergleicht die zwei juengsten Staende und zeigt ohne den zweiten gar keine Bewegung, ohne es zu melden. NAECHSTER SCHRITT: board-history/ im Repo und den Publish-Schritt in daily-pull.yml pruefen.'); process.exit(1); }
-              console.log('OK: Bewegungs-Kanal frisch (<= '+MAX+' Tage) mit '+n+' Vintages.');
+              if(vAlter>MAX){ console.log('::error::BEWEGUNGS-DATEN VERALTET: der juengste publizierte Vintage traegt das Datum '+idx.vintages.at(-1).date+', ist also '+vAlter+' Tage alt (Schwelle '+MAX+'d). Der Publish LAEUFT (sein Stempel ist frisch), schiebt aber immer denselben alten Stand hoch — findash zeigt heutige Boards mit alten Bewegungspfeilen. NAECHSTER SCHRITT: Actions -> daily-pull.yml -> Schritt \"Write board-history vintage\": entsteht ueberhaupt noch ein Vintage von heute?'); process.exit(1); }
+              console.log('OK: Bewegungs-Kanal frisch (<= '+MAX+' Tage) mit '+n+' Vintages, juengster Stand '+vAlter+' Tage alt.');
             });
           "
 
