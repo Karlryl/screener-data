@@ -10,7 +10,7 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { scoreUniverse, produceRankings, calibrationDrift, quantile, MIN_COHORT_N } = require('./score.js');
+const { scoreUniverse, produceRankings, calibrationDrift, quantile, MIN_COHORT_N, tickerOf } = require('./score.js');
 const formulas = require('./formulas/index.js');
 // 3.1 QC-Board (DIAGNOSTIC, additiv): eigener Membership-Router + eigene Formel-Registry + Board-Status.
 const { qualityRoute } = require('./quality-route.js');
@@ -469,25 +469,50 @@ function runQualityPass(universe, topN, qcOutDir = QC_OUT_DIR) {
 //       Kohorten-Floor (p10, SMALLCAP_COVERAGE_FLOOR_PCTL) liegt werden NACHTRAEGLICH excludiert
 //       (reason 'smallcap-thin-coverage') -- VOR produceRankings, damit sie nicht in Boards/Overview
 //       auftauchen, aber weiterhin im Run-Log als Zaehl-Beleg sichtbar sind (index.json.excluded).
+/**
+ * Lampe B (shareCountDilution) kohorten-scoped an die Ergebniszeilen nachtragen.
+ *
+ * WARUM DAS UNIVERSUM UND NICHT e.snapshot (Review-Befund 03.08.2026): scoreUniverse LOESCHT
+ * e.snapshot am Ende jedes Laufs (score.js :1242, "SOLANGE der Snapshot lebt"). Die
+ * Nachbearbeitung lief danach — sie bekam also fuer JEDE Zeile undefined, buildShareGrowthPctlFn
+ * lieferte fuer JEDE Kohorte null, und die Schleife brach mit `continue` ab. Die Lampe konnte
+ * seit ihrer Verdrahtung (Tag 421/422) strukturell NIE feuern; sichtbar war das nirgends, weil
+ * "keine Lampe" genau so aussieht wie "keine Verwaesserung". Nachgezaehlt am lokalen Baum:
+ * 0 von 4.036 Ergebniszeilen tragen nach scoreUniverse noch einen Snapshot.
+ * Der Snapshot kommt deshalb ueber tickerOf (denselben Schluessel, den scoreUniverse an die
+ * Zeile schreibt) aus dem Universum zurueck, das hier ohnehin in der Hand liegt.
+ * REIN ANZEIGE: additiv zu lamps[], kein Score-, kein Exclude-Effekt (nicht in
+ * DATA_SUSPECT_LAMPS, und der Score ist an dieser Stelle laengst gerechnet).
+ * Waechter: tests/scoring/share-dilution.test.js.
+ */
+function lampeBNachruesten(scResults, universe) {
+  const jeTicker = new Map((universe || []).map((s) => [tickerOf(s), s]));
+  const byCohort = {};
+  for (const e of scResults) {
+    if (e.action === 'route' && e.score !== null) (byCohort[e.formulaId + '|' + e.track] ||= []).push(e);
+  }
+  let gefeuert = 0;
+  for (const entries of Object.values(byCohort)) {
+    const pctlFn = buildShareGrowthPctlFn(entries.map((e) => jeTicker.get(e.ticker)));
+    if (!pctlFn) continue; // Degenerations-Guard (n<2 oder konstant) -> keine Kohorte, keine Lampe
+    const ctx = { shareGrowthPctlFn: pctlFn };
+    for (const e of entries) {
+      if (shareCountDilution(jeTicker.get(e.ticker), ctx) === true && !e.lamps.includes('shareCountDilution')) {
+        e.lamps.push('shareCountDilution');
+        gefeuert++;
+      }
+    }
+  }
+  return gefeuert;
+}
+
 function runSmallcapPass(universe, topN, scOutDir = SMALLCAP_OUT_DIR) {
   clearStaleQualityIndex(scOutDir);
   const scResults = scoreUniverse(universe, smallcapFormulas, { classify: smallcapRoute, growthBoost: false });
 
   // (a) Lampe B kohorten-scoped nachruesten.
-  const byCohort = {};
-  for (const e of scResults) {
-    if (e.action === 'route' && e.score !== null) (byCohort[e.formulaId + '|' + e.track] ||= []).push(e);
-  }
-  for (const entries of Object.values(byCohort)) {
-    const pctlFn = buildShareGrowthPctlFn(entries.map((e) => e.snapshot));
-    if (!pctlFn) continue; // Degenerations-Guard (n<2 oder konstant) -> keine Kohorte, keine Lampe
-    const ctx = { shareGrowthPctlFn: pctlFn };
-    for (const e of entries) {
-      if (shareCountDilution(e.snapshot, ctx) === true && !e.lamps.includes('shareCountDilution')) {
-        e.lamps.push('shareCountDilution');
-      }
-    }
-  }
+  const lampeB = lampeBNachruesten(scResults, universe);
+  console.log(`[run-screener] Small-Cap Lampe B (shareCountDilution): ${lampeB} Namen`);
 
   // (b) Coverage-Gate: Floor aus der coverageWeight-Verteilung DIESES Laufs (data-abgeleitet, kein
   // fester Achsen-Count). Ungescorte/nicht-routete Zeilen bleiben unberuehrt (Filter oben: route+score).
@@ -606,4 +631,4 @@ if (require.main === module) {
 // mergeSecIntoUniverse ist exportiert, damit Messskripte (scripts/score-digest.js) denselben
 // Produktionsweg nehmen statt die SECANNUAL_FILES-Liste nachzubauen — die Liste ist schon
 // einmal von 1 auf 5 Dateien gewachsen, eine Kopie waere still veraltet.
-module.exports = { loadUniverse, loadSmallcapUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex, filterToAuthorizedUniverse, mergeSecIntoUniverse, hasFiniteSeries, parseTopNArg, runSmallcapPass, SMALLCAP_OUT_DIR, SMALLCAP_SNAP_DIR, SMALLCAP_WATCHLIST_PATH, SMALLCAP_COVERAGE_FLOOR_PCTL };
+module.exports = { loadUniverse, loadSmallcapUniverse, run, assertCoverageFloor, nextHighWater, COVERAGE_FLOOR_RATIO, writeQualityFailedMarker, runQualityPass, clearStaleQualityIndex, filterToAuthorizedUniverse, mergeSecIntoUniverse, hasFiniteSeries, parseTopNArg, runSmallcapPass, lampeBNachruesten, SMALLCAP_OUT_DIR, SMALLCAP_SNAP_DIR, SMALLCAP_WATCHLIST_PATH, SMALLCAP_COVERAGE_FLOOR_PCTL };

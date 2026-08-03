@@ -390,17 +390,27 @@ function inflationSuspect(s) {
 // Tiefenserie (secAnnual, Tag 421/422); hier lokal statt importiert (reine Anzeige-Lampe, kein
 // Cross-Modul-Kopplungsrisiko).
 //
-// KORREKTUR 03.08.2026: hier stand "Yahoo hat keine Aktienzahl-Historie". Das ist am Datenstand
-// widerlegt — Tag 219 zieht annualShares aus fundamentalsTimeSeries nach, und im CI-Snapshot-Baum
-// vom 03.08. tragen 12 418 von 12 501 Snapshots (99,3 %) mindestens zwei Jahre annual.annualShares.
-// Die Quelle hier bleibt trotzdem secAnnual, weil sie die TIEFE Serie liefert; die ehrliche Folge
-// ist aber nicht "Yahoo kann es nicht", sondern: secAnnual haengt nur an ~100 Namen, die Lampe
-// liefert fuer alle uebrigen null. Ein Yahoo-Fallback waere eine Verhaltensaenderung und gehoert
-// in einen eigenen Chunk, nicht in eine Kommentar-Korrektur.
+// REICHWEITE (03.08.2026, der eigene Chunk, den die Kommentar-Korrektur angekuendigt hat):
+// Die Lampe las bis hierher NUR secAnnual. Das haengt an ~100 Namen — am lokalen Baum feuerte
+// sie damit bei 0 von 3.042 gerouteten Zeilen, also nie. Yahoo traegt dieselbe Groesse in
+// 12.418 von 12.501 Snapshots (99,3 %), nur flacher (~4 GJ statt 10-15).
+// REIHENFOLGE: erst die TIEFE SEC-Serie, dann Yahoo. Tiefe schlaegt Breite, wo beide da sind —
+// der Median ueber mehr Jahre ist robuster gegen ein einzelnes Sonderjahr.
+// GEMISCHTE KOHORTEN sind hier vertretbar: verglichen werden RATEN (Median der organischen
+// YoY-Beine), keine Niveaus, und der Split-Guard in shareYoYLegs greift fuer beide Quellen
+// gleich. Eine tiefe und eine flache Reihe liefern denselben Begriff, nur unterschiedlich
+// robust — das ist Praezision, keine Vergleichbarkeitsluecke.
+// ERLAUBT IST DAS, WEIL DIE LAMPE NICHTS VERRECHNET: sie steht nicht in DATA_SUSPECT_LAMPS
+// (score.js) und wird in runSmallcapPass erst NACH scoreUniverse an lamps[] angehaengt — der
+// Score ist da laengst gerechnet und wird nicht neu gerechnet. Beleg: score-digest.js,
+// Gesamt-Digest vor und nach dieser Aenderung identisch.
 function annualSharesSeries(s) {
   const raw = s && s.secAnnual && s.secAnnual.annualShares;
-  if (!Array.isArray(raw) || raw.length === 0) return null;
-  return raw.map((e) => { const v = (e && typeof e === 'object') ? e.value : e; return Number.isFinite(v) ? v : null; });
+  if (Array.isArray(raw) && raw.length > 0) {
+    return raw.map((e) => { const v = (e && typeof e === 'object') ? e.value : e; return Number.isFinite(v) ? v : null; });
+  }
+  const yahoo = norm(s || {}, 'annualShares');
+  return yahoo.length > 0 ? yahoo : null;
 }
 
 // Split/Reverse-Split-Guard: eine ECHTE organische Jahres-Verwaesserung (SBC/Secondary) verdoppelt

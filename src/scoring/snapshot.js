@@ -47,6 +47,10 @@ const FIELD_REGISTRY = {
   // Vorzeichen: Yahoo speichert Mittelabfluesse negativ (wie annualCapex) — Rueckkauf und
   // Dividende kommen als negative Betraege, netCommonStockIssuance ist positiv bei Emission
   // und negativ bei Netto-Rueckkauf. Heute reine DATENERFASSUNG: kein Scoring-Konsument.
+  // Aktienzahl-Jahresreihe aus fundamentalsTimeSeries (Tag 219, pull-yahoo _ftsExtractByYear
+  // ueber annualFin/annualBs) — STUECKZAHL, laeuft deshalb NICHT durch die FX-Umrechnung.
+  // Leser: lamps.js annualSharesSeries als Rueckfall, wenn die tiefe SEC-Serie fehlt.
+  annualShares:                  ['annual', 'scalar'],
   annualRepurchase:              ['annual', 'scalar'],
   annualDividendsPaid:           ['annual', 'scalar'],
   annualNetCommonStockIssuance:  ['annual', 'scalar'],
