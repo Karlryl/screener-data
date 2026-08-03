@@ -24,7 +24,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { norm, presentValues, FIELD_REGISTRY } = require('../../src/scoring/snapshot.js');
-const { _convertSnapshotToUSD } = require('../../pull-yahoo.js');
+const { _convertSnapshotToUSD, _ftsExtractByYear } = require('../../pull-yahoo.js');
 
 let pass = 0, fail = 0;
 function test(name, fn) { try { fn(); pass++; console.log('  ok   ' + name); } catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); } }
@@ -93,13 +93,40 @@ test('FX-Umrechnung skaliert die drei Reihen (annualShares als Kontrolle unverae
   assert.equal(o.annual.annualShares[0], 1000, 'annualShares ist eine Stueckzahl und darf NICHT skaliert werden');
 });
 
-// --- 4. Verdrahtung in pull-yahoo.js: alle drei Stellen, je Feld einzeln ----
-test('pull-yahoo verdrahtet jede Reihe an Extraktion, Cache-Payload und canonical.annual', () => {
+// --- 4a. Extraktion: AUSGEFUEHRT auf einer gemockten FTS-Antwort ------------
+// Bis 03.08.2026 stand hier ein Quelltext-Grep ("kommt dieser String in pull-yahoo.js vor?").
+// Der prueft ein Schreibmuster, nicht die Sache: eine gleichwertige Umformulierung der Zeile
+// haette ihn rot gemacht, und ein Vorkommen an einer beliebigen anderen Stelle haette ihn
+// gruen gehalten, ohne dass je eine Zahl extrahiert wurde. Jetzt laeuft die echte Extraktion
+// ueber gemockte Cash-Flow-Zeilen und das ERGEBNIS wird geprueft.
+test('Extraktion (ausgefuehrt): die drei Cashflow-Schluessel kommen latest-first und positionsgetreu an', () => {
+  // FTS liefert oldest-first; _ftsExtractByYear dreht auf latest-first. Die Luecke in der
+  // Mitte muss als null an ihrer Position bleiben (sonst verrutschen die Geschaeftsjahre).
+  const annualCash = [
+    { repurchaseOfCapitalStock: -100, cashDividendsPaid: -10, netCommonStockIssuance: 25 }, // aeltestes GJ
+    null,                                                                                   // GJ ohne Zeile
+    { repurchaseOfCapitalStock: -300, cashDividendsPaid: -30, netCommonStockIssuance: -7 }, // juengstes GJ
+  ];
+  assert.deepEqual(_ftsExtractByYear(annualCash, ['repurchaseOfCapitalStock']), [-300, null, -100],
+    'annualRepurchase: falscher Schluessel, falsche Reihenfolge oder verschluckte Luecke');
+  assert.deepEqual(_ftsExtractByYear(annualCash, ['cashDividendsPaid']), [-30, null, -10],
+    'annualDividendsPaid: falscher Schluessel, falsche Reihenfolge oder verschluckte Luecke');
+  assert.deepEqual(_ftsExtractByYear(annualCash, ['netCommonStockIssuance']), [-7, null, 25],
+    'annualNetCommonStockIssuance: falscher Schluessel, falsche Reihenfolge oder verschluckte Luecke');
+  // Gegenprobe: ein FREMDER Schluessel darf NICHTS liefern — sonst wuerde der Test auch dann
+  // gruen bleiben, wenn die Extraktion die Namen gar nicht mehr beachtet.
+  assert.deepEqual(_ftsExtractByYear(annualCash, ['gibtEsNicht']), [null, null, null]);
+});
+
+// --- 4b. Verdrahtung: die zwei Stellen OHNE ausfuehrbaren Seam ---------------
+// Cache-Payload und canonical.annual liegen mitten in pullAll() (Netzwerk-Pfad, kein
+// aufrufbarer Einstieg). Sie bleiben deshalb bewusst Quelltext-Pruefungen — mit dem
+// Unterschied, dass die Extraktion darueber jetzt wirklich AUSGEFUEHRT wird und diese
+// Greps nur noch die Frage "landet das Ergebnis auch im Snapshot?" beantworten muessen.
+test('pull-yahoo fuehrt jede Reihe in Cache-Payload und canonical.annual (kein Seam vorhanden)', () => {
   const quelle = fs.readFileSync(path.join(__dirname, '..', '..', 'pull-yahoo.js'), 'utf8');
-  for (const [yfKey, feld] of Object.entries(YF_KEYS)) {
+  for (const feld of FELDER) {
     const variable = 'ftsAnnual' + feld.slice('annual'.length);
-    assert.ok(quelle.includes(`${variable} = _ftsExtractByYear(fts.annualCash, ['${yfKey}'])`),
-      `${feld}: Extraktion aus fts.annualCash mit Schluessel '${yfKey}' fehlt`);
     assert.ok(new RegExp(`payload:\\s*\\{[^}]*\\b${variable}\\b`, 's').test(quelle),
       `${feld}: ${variable} fehlt im FTS-Cache-Payload — der naechste Lauf zieht es aus dem Cache als undefined`);
     assert.ok(quelle.includes(`canonical.annual.${feld} = ${variable}`),

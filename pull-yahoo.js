@@ -3584,6 +3584,9 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   salvageValidationReject,
   // A10 (2.3-Vorbedingung, §4b Delivery-IC): Perioden-Ende-Substrat fuer TDD.
   mapFTSToQuarterly, _isoDay, _alignEnds, _applyCurrencyConsistencyGuard,
+  // 03.08.2026: die FTS-Extraktion als Seam, damit Tests sie AUSFUEHREN koennen statt den
+  // Quelltext nach Schreibmustern abzusuchen (tests/scoring/f1-ausschuettungsfelder.test.js).
+  _ftsExtractByYear,
   _silentErrorCounts: () => ({ lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors }),
   _resetSilentErrorCounts: () => { _lampErrors = 0; _needsFullPullThrew = 0; _corruptYoungSnapshots = 0; _ftsCacheParseErrors = 0; },
   // audit fix BH-042/BH-047: pure decisions fuer TDD.
