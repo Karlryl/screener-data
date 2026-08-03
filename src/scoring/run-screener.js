@@ -19,7 +19,7 @@ const { boardStatus } = require('./board-status.js');
 // 5.2 Small-Cap-Board (DIAGNOSTIC, additiv): eigener Membership-Router + eigene Formel-Registry.
 const { smallcapRoute } = require('./smallcap-route.js');
 const smallcapFormulas = require('./formulas/smallcap/index.js');
-const { buildShareGrowthPctlFn, shareCountDilution } = require('./lamps.js');
+const { buildShareGrowthPctlFn, shareCountDilution, shareDilutionDetail } = require('./lamps.js');
 // audit/fix (C2): Outputs atomar schreiben (tmp+rename), wie das ganze Daten-Fundament —
 // plain fs.writeFileSync hinterlaesst bei Crash/CI-Timeout truncated JSON fuers Dashboard.
 const { writeJsonAtomic } = require('../../lib/atomic-write.js');
@@ -497,10 +497,20 @@ function lampeBNachruesten(scResults, universe) {
     if (!pctlFn) continue; // Degenerations-Guard (n<2 oder konstant) -> keine Kohorte, keine Lampe
     const ctx = { shareGrowthPctlFn: pctlFn };
     for (const e of entries) {
-      if (shareCountDilution(jeTicker.get(e.ticker), ctx) === true && !e.lamps.includes('shareCountDilution')) {
-        e.lamps.push('shareCountDilution');
-        gefeuert++;
-      }
+      if (shareCountDilution(jeTicker.get(e.ticker), ctx) !== true || e.lamps.includes('shareCountDilution')) continue;
+      e.lamps.push('shareCountDilution');
+      // BETRAG STATT AN/AUS (03.08.2026): dieselbe Rechnung, aus der die Lampe ihre Schwelle
+      // liest — hier nur mit sichtbaren Zahlen. Ohne sie sieht ein Kohorten-Spitzenreiter mit
+      // +1 % Aktienzahl im Jahr exakt aus wie einer mit +66 %, und beides heisst "oberstes
+      // Viertel". Gerundet wird ERST HIER (Anzeige), nie im Schwellvergleich: ratePct in
+      // Prozent mit einer Nachkommastelle, pctl auf drei Stellen (Kohorten-Rang 0..1, dieselbe
+      // Skala wie TH.SHARE_DILUTION_PCTL, damit der Grund am Wert ablesbar bleibt).
+      // Der `if` ist kein toter Guard: bliebe er weg und liefe die Delegation je auseinander,
+      // stuerzte der CI-Lauf hier ab. Faellt der Betrag dagegen aus, bleibt das Feld leer und
+      // der --check schlaegt sichtbar an ("Lampe ohne shareDilution") statt still zu schweigen.
+      const d = shareDilutionDetail(jeTicker.get(e.ticker), ctx);
+      if (d) e.shareDilution = { ratePct: Math.round(d.rate * 1000) / 10, pctl: Math.round(d.pctl * 1000) / 1000 };
+      gefeuert++;
     }
   }
   return gefeuert;

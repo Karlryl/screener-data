@@ -467,17 +467,35 @@ function buildShareGrowthPctlFn(cohortSnapshots) {
   };
 }
 
-// shareCountDilution(s, ctx): ctx.shareGrowthPctlFn ist die Kohorten-Perzentil-Funktion (vom Aufrufer
-// gebaut, s.o.) — OHNE ctx (z.B. HG/QC-Board, die Lampe B nicht verdrahten) liefert die Lampe null
-// (nicht bewertbar), byte-identisch zum bisherigen Verhalten dort. Feuert bei Kohorten-p75+ (TH.SHARE_DILUTION_PCTL).
-function shareCountDilution(s, ctx) {
+// shareDilutionDetail(s, ctx) -> {rate, pctl} | null — die ROHEN Zahlen hinter der Lampe:
+// `rate` = Median-YoY der organischen Beine (Anteil, nicht Prozent), `pctl` = Rang dieser Rate in
+// der Kohorte. Sie werden gebraucht, weil die Lampe allein nur an/aus sagt: seit dem
+// Reichweiten-Fix (Tag 536) feuert sie fuer 437 von 3.042 gerouteten Zeilen, und darunter sieht
+// der Kohorten-Spitzenreiter mit +1 % Aktienzahl im Jahr exakt aus wie einer mit +66 %.
+// EIN RECHENWEG: shareCountDilution liest seine Schwelle an genau diesem Ergebnis ab und rechnet
+// nichts Eigenes mehr. Zwei Wege zur selben Aussage laufen irgendwann auseinander — genau die
+// Falle, die score.js F-4 dreimal nachgebaut vorgefunden hat.
+// UNGERUNDET, absichtlich: der Schwellvergleich laeuft auf dem rohen `pctl`. Wuerde hier schon
+// gerundet, kaeme eine Zeile mit p=0,7495 als 0,75 durch und die Lampe feuerte neu — eine
+// Schwellenaenderung durch die Hintertuer. Gerundet wird erst bei der Ausgabe
+// (run-screener.js lampeBNachruesten), wo es die Anzeige betrifft und nicht die Entscheidung.
+function shareDilutionDetail(s, ctx) {
   const g = shareGrowthRate(s);
   if (g === null) return null;
   const pctlFn = ctx && ctx.shareGrowthPctlFn;
   if (typeof pctlFn !== 'function') return null;
   const p = pctlFn(g);
   if (!Number.isFinite(p)) return null;
-  return p >= TH.SHARE_DILUTION_PCTL;
+  return { rate: g, pctl: p };
+}
+
+// shareCountDilution(s, ctx): ctx.shareGrowthPctlFn ist die Kohorten-Perzentil-Funktion (vom Aufrufer
+// gebaut, s.o.) — OHNE ctx (z.B. HG/QC-Board, die Lampe B nicht verdrahten) liefert die Lampe null
+// (nicht bewertbar), byte-identisch zum bisherigen Verhalten dort. Feuert bei Kohorten-p75+ (TH.SHARE_DILUTION_PCTL).
+function shareCountDilution(s, ctx) {
+  const d = shareDilutionDetail(s, ctx);
+  if (d === null) return null;
+  return d.pctl >= TH.SHARE_DILUTION_PCTL;
 }
 
 // 16. Einmalertrag (Karl-Sichtabnahme 27.07.2026): ein einzelnes Quartal traegt den ganzen
@@ -687,6 +705,6 @@ function evaluateLamps(s, ctx) {
 
 module.exports = {
   evaluateLamps, burnPressFactor, LAMPS, TH, ...LAMPS,
-  shareGrowthRate, buildShareGrowthPctlFn,
+  shareGrowthRate, buildShareGrowthPctlFn, shareDilutionDetail,
   einmalertragPrognose, EINMALERTRAG_PROGNOSE_PERIODE,
 };

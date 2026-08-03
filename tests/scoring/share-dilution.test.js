@@ -122,6 +122,133 @@ test('lampeBNachruesten: nicht-geroutete Zeilen bleiben unberuehrt', () => {
   assert.deepEqual(zeilen[0].lamps, []);
 });
 
+// --- Betrag statt an/aus (03.08.2026) ---------------------------------------
+// Seit dem Reichweiten-Fix feuert die Lampe fuer 437 von 3.042 gerouteten Zeilen — zeigt aber
+// nur an/aus. Der Kohorten-Spitzenreiter mit +1 % Aktienzahl im Jahr sieht damit exakt aus wie
+// einer mit +66 %, und beides heisst "oberstes Viertel". Rate und Kohorten-Perzentil reisen
+// deshalb als `shareDilution` mit. REINE ANZEIGE: dieselbe Rechnung, aus der auch die Lampe
+// ihren Schwellvergleich zieht (shareDilutionDetail) — kein zweiter Rechenweg, der ausscheren
+// koennte, und kein Score-Input (Beleg: Gesamt-Digest vor/nach identisch).
+test('shareDilutionDetail: liefert die ROHEN Zahlen, mit denen die Lampe rankt', () => {
+  const { shareDilutionDetail } = require('../../src/scoring/lamps.js');
+  const cohort = [snap(NVAX), snap(MMI), snap(GME)];
+  const ctx = { shareGrowthPctlFn: buildShareGrowthPctlFn(cohort) };
+  const d = shareDilutionDetail(snap(NVAX), ctx);
+  assert.equal(d.rate, shareGrowthRate(snap(NVAX)), 'die Rate MUSS die Zahl der Lampe sein, keine zweite Rechnung');
+  assert.equal(d.pctl, ctx.shareGrowthPctlFn(d.rate), 'das Perzentil MUSS aus derselben Kohorten-Funktion kommen');
+  // Ungerundet: der Schwellvergleich der Lampe laeuft auf genau diesem Wert. Wuerde hier schon
+  // gerundet, kaeme p=0,7495 als 0,75 durch und die Lampe feuerte neu — Schwellenaenderung
+  // durch die Hintertuer.
+  const knapp = { shareGrowthPctlFn: () => 0.7495 };
+  assert.equal(shareDilutionDetail(snap(NVAX), knapp).pctl, 0.7495, 'Detail darf nicht runden');
+  assert.equal(shareCountDilution(snap(NVAX), knapp), false, 'knapp unter p75 darf NICHT feuern');
+  // Nicht bewertbar bleibt nicht bewertbar — dieselben Ausgaenge wie die Lampe.
+  assert.equal(shareDilutionDetail({}, ctx), null);
+  assert.equal(shareDilutionDetail(snap(NVAX), undefined), null);
+});
+
+test('KETTE: shareDilution erreicht die Export-Zeile (lampeBNachruesten -> produceRankings -> mapBoardRow)', () => {
+  const { lampeBNachruesten } = require('../../src/scoring/run-screener.js');
+  const { produceRankings } = require('../../src/scoring/score.js');
+  const { mapBoardRow, mapOverviewRow } = require('../../scripts/write-findash-export.js');
+  const universum = [
+    { meta: { ticker: 'NVAXT' }, secAnnual: { annualShares: asShares(NVAX) } },
+    { meta: { ticker: 'MMIT' }, secAnnual: { annualShares: asShares(MMI) } },
+    { meta: { ticker: 'GMET' }, secAnnual: { annualShares: asShares(GME) } },
+  ];
+  const zeilen = ['NVAXT', 'MMIT', 'GMET'].map((t, i) => ({
+    ticker: t, action: 'route', score: 50 - i, formulaId: 'testformel', track: 'profitable', lamps: [],
+    cohortN: 3, cohortFallback: false,
+  }));
+  assert.equal(lampeBNachruesten(zeilen, universum), 1);
+
+  const rk = produceRankings(zeilen, { topN: 50 });
+  const alle = [].concat(...Object.values(rk.branches).map((b) => [].concat(b.profitable || [], b.unprofitable || [])));
+  const nvax = alle.find((r) => r.ticker === 'NVAXT');
+  const mmi = alle.find((r) => r.ticker === 'MMIT');
+  assert.ok(nvax && mmi, 'beide Zeilen muessen im Board stehen');
+
+  // Station 2 (score.js rowMeta): der Betrag ueberlebt das Zeilen-Mapping.
+  const erwarteteRate = Math.round(shareGrowthRate(snap(NVAX)) * 1000) / 10;
+  assert.equal(nvax.shareDilution.ratePct, erwarteteRate, 'Rate in PROZENT, eine Nachkommastelle');
+  assert.ok(nvax.shareDilution.pctl >= 0.75, 'das Perzentil muss den Lampen-Grund belegen');
+  assert.equal(mmi.shareDilution, null, 'Zeile ohne Lampe traegt keinen Betrag');
+
+  // Station 3 (Writer ROW_FIELDS): das Feld faellt im Export nicht heraus.
+  const exportiert = mapBoardRow(nvax, 0);
+  assert.ok('shareDilution' in exportiert, 'Feld faellt im Export-Writer heraus');
+  assert.deepEqual(exportiert.shareDilution, nvax.shareDilution, 'Wert am Ende der Kette');
+  assert.ok(exportiert.lamps.includes('shareCountDilution'), 'Betrag ohne Lampe waere sinnlos');
+  // Uebersichts-Zeile fuehrt ihn ebenso.
+  const ov = rk.overview.find((r) => r.ticker === 'NVAXT');
+  assert.deepEqual(mapOverviewRow(ov, 0).shareDilution, nvax.shareDilution, 'Uebersichts-Zeile traegt den Betrag ebenfalls');
+});
+
+// --- Der Waechter im --check: beide Richtungen -------------------------------
+const basisZeile = {
+  ticker: 'MTC', name: 'MMTec Inc', score: 61.2, track: 'profitable', lamps: ['shareCountDilution'],
+  overview: { kind: 'gp', value: 0.2, companion: 89.1 },
+  country: 'United States', region: 'North America', sector: 'Technology',
+  marketCap: 4e8, phase: 'established', mcapBand: 'micro', ipoRecency: 'mature',
+  profitTier: 'langfristig-profitabel', ipoYear: 2019, cohortN: 90, cohortFallback: false,
+  shareDilution: { ratePct: 66.0, pctl: 0.997 },
+};
+const errsOf = (row) => {
+  const { validateBoardRow } = require('../../scripts/write-findash-export.js');
+  const e = []; validateBoardRow(row, 'r', e); return e;
+};
+
+test('WAECHTER shareDilution: jede gueltige Form geht durch (kein Falsch-Rot in Karls Alarmkanal)', () => {
+  const { mapBoardRow } = require('../../scripts/write-findash-export.js');
+  assert.deepEqual(errsOf(mapBoardRow(basisZeile, 0)), [], 'Lampe + Betrag ist der Normalfall');
+  assert.deepEqual(errsOf(mapBoardRow({ ...basisZeile, lamps: [], shareDilution: null }, 0)), [],
+    'Zeile ohne Lampe, Feld null — der Fall fuer ~86 % aller Zeilen');
+  const ohne = { ...basisZeile }; delete ohne.shareDilution; ohne.lamps = [];
+  assert.deepEqual(errsOf(mapBoardRow(ohne, 0)), [], 'Abwesenheit im Erzeuger (Altbestand) geht durch');
+  // Negative Rate (Rueckkauf-Kohorte, in der auch p75 noch schrumpft) ist gueltig.
+  assert.deepEqual(errsOf(mapBoardRow({ ...basisZeile, shareDilution: { ratePct: -0.4, pctl: 0.81 } }, 0)), []);
+});
+
+test('WAECHTER shareDilution: kaputte Form, unmoegliches Perzentil und Betrag OHNE Lampe fliegen auf', () => {
+  const { mapBoardRow } = require('../../scripts/write-findash-export.js');
+  const rot = (row, was) => {
+    const e = errsOf(mapBoardRow(row, 0));
+    assert.ok(e.some((x) => /shareDilution/.test(x)), 'unbemerkt durch: ' + was + ' -> ' + JSON.stringify(e));
+  };
+  for (const kaputt of [{}, { ratePct: 1 }, { pctl: 0.9 }, { ratePct: '1', pctl: 0.9 },
+    { ratePct: 1, pctl: null }, { ratePct: NaN, pctl: 0.9 }, { ratePct: 1, pctl: Infinity },
+    [66, 0.9], 66, 'viel', true]) {
+    rot({ ...basisZeile, shareDilution: kaputt }, JSON.stringify(kaputt));
+  }
+  rot({ ...basisZeile, shareDilution: { ratePct: 66, pctl: 1.4 } }, 'pctl > 1');
+  rot({ ...basisZeile, shareDilution: { ratePct: 66, pctl: -0.1 } }, 'pctl < 0');
+  rot({ ...basisZeile, lamps: ['peakMargin'] }, 'Betrag auf Zeile OHNE die Lampe');
+  // Und die Gegenrichtung, die es bei einmalertragPrognose bewusst NICHT gibt: hier IST
+  // "Lampe ⟹ Betrag" strukturell wahr, denn die Lampe feuert nur, wenn Rate UND Perzentil
+  // vorliegen (shareDilutionDetail). Ein leeres Feld auf einer Lampen-Zeile heisst also:
+  // die Kette ist zwischen Erzeuger und Writer gerissen — genau die Panne, die die Lampe
+  // von Tag 421 bis 03.08. unsichtbar stumm hielt.
+  rot({ ...basisZeile, shareDilution: null }, 'Lampe ohne Betrag (gerissene Kette)');
+});
+
+test('DATEI-WAECHTER shareDilution: das Feld ist entweder auf allen Zeilen da oder auf keiner', () => {
+  const { mapBoardRow, validateFile, SCHEMA } = require('../../scripts/write-findash-export.js');
+  const mitFeld = mapBoardRow({ ...basisZeile, lamps: [], shareDilution: null }, 0);
+  const ohneFeld = { ...mitFeld }; delete ohneFeld.shareDilution;
+  const datei = (rows) => ({ schema: SCHEMA, generated_at: new Date().toISOString(),
+    branch: 'semiconductors', boardStatus: 'core', coverage: null,
+    profitable: rows.map((r, i) => ({ ...r, rank: i + 1, score: 90 - i })), unprofitable: [] });
+  const errs = [];
+  validateFile(datei([mitFeld, ohneFeld]), 'semiconductors', errs);
+  assert.ok(errs.some((x) => /shareDilution/.test(x)), 'halb verdrahteter Producer blieb unbemerkt');
+  const gruen = [];
+  validateFile(datei([mitFeld, { ...mitFeld }]), 'semiconductors', gruen);
+  assert.deepEqual(gruen, [], 'einheitlich gefuellte Datei muss durchgehen');
+  const altbestand = [];
+  validateFile(datei([ohneFeld, { ...ohneFeld }]), 'semiconductors', altbestand);
+  assert.deepEqual(altbestand, [], 'Altbestand ohne das Feld muss durchgehen');
+});
+
 test('evaluateLamps: bestehende 14 Lampen ignorieren den neuen ctx-Parameter (arity 1, byte-identisch)', () => {
   const { evaluateLamps } = require('../../src/scoring/lamps.js');
   const s = { meta: {}, secAnnual: { annualShares: asShares(MMI) } };
