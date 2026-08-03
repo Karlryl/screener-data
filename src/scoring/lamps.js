@@ -338,11 +338,14 @@ function burnAccelerating(s) {
 }
 
 // Score-Press-Faktor fuer beschleunigte Cash-Verbrenner (Court, Karl-Direktive Teil 2): 1.0 wenn die
-// burnAccelerating-Lampe NICHT feuert (Nicht-Feuernde bleiben byte-identisch), sonst 1/(1+mag). mag =
-// FCF-Burn-VERTIEFUNG (dBurn = fcf[1]-fcf[0] > 0) skaliert an der EIGENEN Cash-Flow-Groesse der Firma
-// max(|rev[1]|,|fcf[0]|,|fcf[1]|). Das Gate garantiert fcf[0]<0 -> |fcf[0]|>0 -> Nenner strukturell NIE
-// near-zero (kein Stub-Denominator-Artefakt wie JOBY/FRVO). Self-bounded (wie cycleDiscount), keine Magic
-// Number, kein Deckel. Veto: CRDO/ALAB/BE feuern nicht (FCF & OpInc positiv) -> Faktor 1.0 -> Score identisch.
+// burnAccelerating-Lampe NICHT feuert (Nicht-Feuernde bleiben byte-identisch), sonst 1/(1+mag).
+// F-1 (Tag 529): die Groesse ist der OPERATIVE Cash-Fluss, nicht mehr FCF — hier stand bis zum
+// 03.08. noch die alte FCF-Formel mit einer Variablen (dBurn = fcf[1]-fcf[0]), die es nicht mehr gibt.
+// mag = OCF-Burn-VERTIEFUNG (dBurn = max(0, ocf[1]-ocf[0]); der Boden bei 0 haelt eine VERBESSERUNG
+// vom Faktor fern) skaliert an der EIGENEN Cash-Flow-Groesse der Firma max(|rev[1]|,|ocf[0]|,|ocf[1]|).
+// Das Gate garantiert ocf[0]<0 -> |ocf[0]|>0 -> Nenner strukturell NIE near-zero (kein
+// Stub-Denominator-Artefakt wie JOBY/FRVO). Self-bounded (wie cycleDiscount), keine Magic Number,
+// kein Deckel. Veto: CRDO/ALAB/BE feuern nicht (OCF & OpInc positiv) -> Faktor 1.0 -> Score identisch.
 function burnPressFactor(s) {
   if (burnAccelerating(s) !== true) return 1;
   // F-1: dieselbe operative Groesse wie im Tor. burnAccelerating hat bereits geprueft, dass

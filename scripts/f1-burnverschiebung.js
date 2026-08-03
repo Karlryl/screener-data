@@ -23,7 +23,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { scoreUniverse } = require('../src/scoring/score.js');
+const { scoreUniverse, cmpTicker } = require('../src/scoring/score.js');
 const formulas = require('../src/scoring/formulas/index.js');
 const { loadWatchlist } = require('../lib/watchlist-fs.js');
 const { filterToAuthorizedUniverse, mergeSecIntoUniverse } = require('../src/scoring/run-screener.js');
@@ -61,15 +61,28 @@ function ladeUniversum(dir, altesTor) {
 }
 
 // Kohorten-Rang (formulaId|track) nach Score, absteigend.
+// EXAKT die Produktions-Sortierung (score.js byScore, :1353): Score absteigend, bei Gleichstand
+// der Ticker-Tie-Break — importiert, nicht nachgebaut. Ohne ihn haengt die Reihenfolge
+// score-gleicher Namen an der Array-Reihenfolge, und die hier gedruckten Raenge stimmen dann
+// nicht mit den Board-Raengen ueberein, die sie belegen sollen.
 function raenge(routed) {
   const kohorten = {};
   for (const e of routed) (kohorten[e.formulaId + '|' + e.track] ||= []).push(e);
   const rang = new Map(), n = new Map();
   for (const list of Object.values(kohorten)) {
-    list.slice().sort((a, b) => b.score - a.score).forEach((e, i) => rang.set(e.ticker, i + 1));
+    list.slice().sort((a, b) => (b.score - a.score) || cmpTicker(a.ticker, b.ticker)).forEach((e, i) => rang.set(e.ticker, i + 1));
     for (const e of list) n.set(e.ticker, list.length);
   }
   return { rang, n };
+}
+
+// Der Faktor liegt bei den NEU Getroffenen oft knapp unter 1 (0,9995) und druckte mit zwei
+// Dezimalen als "1.00" — also als "keine Strafe", genau das Gegenteil des Befunds. Drei
+// Dezimalen; und was auch dann noch auf 1 rundet, wird ausdruecklich als knapp-unter-1
+// gekennzeichnet statt gerundet zu luegen.
+function fmtFaktor(x) {
+  const s = x.toFixed(3);
+  return s === '1.000' ? '<1 (' + x.toPrecision(6) + ')' : s;
 }
 
 function lauf(dir, altesTor) {
@@ -117,13 +130,13 @@ function main() {
 
   console.log(`\nDie ${Math.min(top, mitGewinn.length)} groessten Rang-Gewinne der Freigewordenen:`);
   for (const r of mitGewinn.slice(0, top)) {
-    console.log(`  ${String(r.t).padEnd(12)} Faktor war ${r.fVor.toFixed(2)} | Kohorten-Rang ${r.rangNach}/${r.n} statt ${r.rangVor} (+${r.gewinn})  ${r.kohorte}  ${(r.name || '').slice(0, 32)}`);
+    console.log(`  ${String(r.t).padEnd(12)} Faktor war ${fmtFaktor(r.fVor)} | Kohorten-Rang ${r.rangNach}/${r.n} statt ${r.rangVor} (+${r.gewinn})  ${r.kohorte}  ${(r.name || '').slice(0, 32)}`);
   }
   if (neu.length) {
     console.log('\nNEU getroffen (Namen, deren OCF-Bild schlechter ist als ihr FCF-Bild):');
     for (const t of neu.slice(0, top)) {
       const nn = nachher.get(t);
-      console.log(`  ${String(t).padEnd(12)} Faktor ${nn.f.toFixed(2)}  ${(nn.name || '').slice(0, 32)}`);
+      console.log(`  ${String(t).padEnd(12)} Faktor ${fmtFaktor(nn.f)}  ${(nn.name || '').slice(0, 32)}`);
     }
   }
   // Alle Freigewordenen als eine Zeile — fuer den Bericht kopierbar.

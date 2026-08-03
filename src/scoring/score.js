@@ -1437,4 +1437,8 @@ module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings
   shrinkToNeutral, SHRINK_K, MIN_COHORT_N,
   // 5.2 Small-Cap-Board: reine Funktion, additiv exportiert fuer den Coverage-Floor (run-screener.js)
   quantile,
+  // 03.08.2026: der Ticker-Tie-Break der Produktions-Sortierung (byScore, :1353). Mess-Skripte,
+  // die Kohorten-Raenge nachbauen, muessen DIESEN Vergleicher benutzen und keinen nachgebauten —
+  // sonst weichen ihre Raenge bei Score-Gleichstand vom Board ab (f1-burnverschiebung.js).
+  cmpTicker,
 };
