@@ -19,6 +19,8 @@
  */
 'use strict';
 const https = require('https');
+// DT-1: Gesamt-Zeitbudget statt Retry-Leiter je Anfrage (Herleitung dort).
+const { zeitbudget, budgetRissMelden, mitBudget } = require('./zeitbudget.js');
 
 const EXCHANGES = [
   { code: 'nasdaq', label: 'NASDAQ' },
@@ -109,7 +111,10 @@ function get(url, redirectsLeft = MAX_REDIRECTS) {
  *       marketCap, country, ipoyear, volume, sector, industry, url }, ... ],
  *       headers: {...} }, asOf: "...", totalrecords: N }, status: {...} }
  */
-async function fetchExchange(exchangeCode, exchangeLabel) {
+const RETRY_DELAYS = [15000, 45000];
+const istTimeout = (e) => /timeout fetching/i.test(String((e && e.message) || ''));
+
+async function fetchExchange(exchangeCode, exchangeLabel, budget, holen) {
   const url = `https://api.nasdaq.com/api/screener/stocks?tableonly=true&limit=${REQUEST_LIMIT}&exchange=${exchangeCode}&download=true`;
   console.log(`  [NASDAQ-API] Fetching ${exchangeLabel} (${exchangeCode})...`);
 
@@ -119,23 +124,13 @@ async function fetchExchange(exchangeCode, exchangeLabel) {
   // moments. Two retries with exponential backoff (15s, 45s) recover ~80%
   // of transient failures empirically. Errors other than timeout are
   // rethrown immediately (HTTP 4xx/5xx don't retry — they're persistent).
-  let body;
-  const DELAYS = [15000, 45000];
-  let lastErr;
-  for (let attempt = 0; attempt <= DELAYS.length; attempt++) {
-    try {
-      body = await get(url);
-      break;
-    } catch (e) {
-      lastErr = e;
-      const isTimeout = /timeout fetching/i.test(String(e.message || ''));
-      if (!isTimeout || attempt >= DELAYS.length) throw e;
-      const delay = DELAYS[attempt];
-      console.warn(`  [NASDAQ-API] ${exchangeLabel} timeout (attempt ${attempt + 1}/${DELAYS.length + 1}) — retrying in ${delay / 1000}s`);
-      await sleep(delay);
-    }
-  }
-  if (!body) throw lastErr;
+  //
+  // DT-1 (Verifikation Exchange-Kanal 2026-08-04): 3 Boersen x 3 Versuchen x 45s
+  // Socket-Timeout + [15s,45s] Backoff = 9m47s Worst case. Am 03.08. sind alle drei
+  // in den Timeout gelaufen; zusammen mit otc-markets.js hat das den Schritt
+  // "Refresh Universe" getoetet. Die Leiter bleibt, das Adapter-Budget schlaegt sie.
+  const body = await mitBudget(budget, exchangeLabel, RETRY_DELAYS, istTimeout,
+    () => (holen || get)(url));
   let parsed;
   try {
     parsed = JSON.parse(body);
@@ -187,13 +182,19 @@ function parseMcap(str) {
  * Main entry point.
  * Returns Map<ticker, {ticker, name, sector, exchange, marketCap, source}>
  */
-async function fetchNasdaqApiList() {
+async function fetchNasdaqApiList(opts) {
   const result = new Map();
+  // DT-1: ein Budget fuer den GANZEN Adapter. `opts` nur fuer die Waechter (kein Netz,
+  // keine echte Wartezeit); im Lauf sind es immer die Vorgabewerte.
+  const budget = (opts && opts.budget) || zeitbudget('NASDAQ-API');
   console.log('  [NASDAQ-API] Fetching full exchange lists via NASDAQ Screener API (Tag 165)...');
 
+  // DT-1: KEINE zweite Budget-Pruefung hier — mitBudget() prueft vor jedem Versuch und vor
+  // jedem Backoff. Ein Boden, ein Ort (siehe otc-markets.js).
+  let budgetGerissen = false;
   for (const { code, label } of EXCHANGES) {
     try {
-      const rows = await fetchExchange(code, label);
+      const rows = await fetchExchange(code, label, budget, opts && opts.holen);
       let added = 0;
 
       for (const row of rows) {
@@ -231,7 +232,17 @@ async function fetchNasdaqApiList() {
 
       console.log(`  [NASDAQ-API] ${label}: ${rows.length} rows, ${added} new symbols`);
     } catch (e) {
+      // DT-1: ein Budget-Riss ist kein Boersen-Einzelfehler — er beendet den Adapter.
+      if (e && e.budgetRiss) {
+        budgetRissMelden(result, budget, label + ' (' + e.message + ')');
+        budgetGerissen = true;
+        break;
+      }
       console.error(`  [NASDAQ-API] ${label} (${code}) failed: ${e.message}`);
+      // audit/fix DT-1: ein ausgefallener Boersen-Abzug war bisher NUR eine Konsolenzeile —
+      // die zurueckgegebene Map trug kein Signal, ein Aufrufer sah an .size einen glatten
+      // Erfolg (dieselbe Luecke, die BH-058 in otc-markets.js geschlossen hat).
+      result.partial = true;
       // Non-fatal: continue with remaining exchanges
     }
 
@@ -240,7 +251,8 @@ async function fetchNasdaqApiList() {
     }
   }
 
-  console.log(`  [NASDAQ-API] Total tickers: ${result.size}`);
+  console.log(`  [NASDAQ-API] Total tickers: ${result.size}` +
+    (budgetGerissen ? ' (TEILBESTAND — Zeitbudget gerissen, siehe ::error:: oben)' : ''));
   return result;
 }
 

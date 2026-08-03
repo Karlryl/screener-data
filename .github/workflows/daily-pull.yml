@@ -226,6 +226,25 @@ jobs:
       # alle Shards laden (jeder sliced sie intern via --shard). MUSS einmal laufen —
       # 17x parallel waere ein Race auf dieselbe Datei. MAX_UNIVERSE 25000 (Tag 227a
       # silent-cap audit). Finnhub-Secret-Warnung (Tag 232c-18) surfaced degraded coverage.
+      # DT-2 (Verifikation Exchange-Kanal 2026-08-04): Referenz fuer den Schreib-Beweis
+      # des Sanity-Gates weiter unten. Ohne einen VORHER-Stand kann kein Gate der Welt ein
+      # Nicht-Schreiben von einem erfolgreichen Lauf unterscheiden — es liest sonst nur die
+      # Datei, die auch der Checkout mitgebracht hat.
+      - name: Watchlist-Referenz vor dem Refresh (DT-2)
+        id: watchlist_vorher
+        run: |
+          if [ -f watchlist.json ]; then
+            M=$(date -r watchlist.json +%s)
+            S=$(sha256sum watchlist.json | cut -d' ' -f1)
+            echo "mtime=$M" >> "$GITHUB_OUTPUT"
+            echo "sha=$S" >> "$GITHUB_OUTPUT"
+            echo "Referenz vor dem Refresh: mtime=$M sha256=$(echo "$S" | cut -c1-16)..."
+          else
+            echo "mtime=" >> "$GITHUB_OUTPUT"
+            echo "sha=" >> "$GITHUB_OUTPUT"
+            echo "watchlist.json existiert vor dem Refresh nicht — der Schreib-Beweis unten kann dann nur pruefen, DASS sie danach da ist."
+          fi
+
       - name: Refresh Universe
         id: refresh_universe
         env:
@@ -259,6 +278,30 @@ jobs:
       # array | keys). This gate must trip BEFORE the matrix starts so 17 runners
       # never fan out onto a broken universe. Prune (now post-snapshot, in the merge
       # job) can only shrink further — it never repairs a refresh that got nothing.
+      #
+      # DT-2 (Verifikation Exchange-Kanal 2026-08-04, Lauf 30788278952): dieser Gate hat
+      # genau EINE Frage beantwortet ("sind es genug Namen?") und dabei so ausgesehen, als
+      # beantworte er eine zweite ("hat der Refresh funktioniert?"). Am 03.08. lief der
+      # Refresh in sein 20-Minuten-Timeout, watchlist.json wurde NICHT neu geschrieben —
+      # der Gate las die Datei aus dem Checkout, meldete "watchlist size: 15300" und ging
+      # GRUEN. Ein Gate, das ein Nicht-Schreiben nicht von einem erfolgreichen Lauf
+      # unterscheiden kann, zertifiziert den Ausfall als Gesundheit.
+      # SCHREIB-BEWEIS statt blindem Lesen: mtime vor dem Refresh (Schritt oben) gegen
+      # mtime danach.
+      # EHRLICHE GRENZE, am Code nachgesehen: refresh-universe.js schreibt bei
+      # "nichts Neues, nichts repariert" GAR NICHT (Zweig "Nothing to add, nothing to
+      # repair. Universe unchanged." vor dem writeFileAtomic). Eine unveraenderte mtime
+      # ist also ein legitimer Ausgang — sie allein beweist nichts. Entscheidend ist die
+      # KOMBINATION mit dem Ausgang des Refresh-Schritts: `success` heisst, der Prozess ist
+      # bis zu diesem Zweig gekommen und hat bewusst nicht geschrieben; alles andere heisst,
+      # er ist unterwegs gestorben und die Datei ist der Stand des Vortags. Umgekehrt hebt
+      # jedes Schreiben die mtime (writeFileAtomic = schreiben + rename), auch bei
+      # byte-gleichem Inhalt — der Beweis kann in dieser Richtung nicht falsch-negativ werden.
+      # KEIN exit 1 in DIESEM Schritt: ein fallender prep-Job reisst `pull` (needs: prep) und
+      # `merge` mit, der ganze Tag waere weg — dieselbe Abwaegung, die oben das
+      # continue-on-error am Refresh-Schritt traegt. Das rote X traegt der Job
+      # `entdeckungs-waechter` (er faellt bei genau diesem Ausgang bereits).
+      # Waechter: tests/dt2-watchlist-schreibbeweis.test.js (faehrt diesen Block per sh aus).
       - name: Verify Watchlist Sanity
         run: |
           if [ ! -f watchlist.json ]; then
@@ -270,6 +313,18 @@ jobs:
           if [ "$size" -lt 200 ]; then
             echo "::error::watchlist size $size < 200 — refresh likely corrupted the universe"
             exit 1
+          fi
+          VORHER_MTIME="${{ steps.watchlist_vorher.outputs.mtime }}"
+          REFRESH_AUSGANG="${{ steps.refresh_universe.outcome }}"
+          NACHHER_MTIME=$(date -r watchlist.json +%s)
+          if [ -n "$VORHER_MTIME" ] && [ "$VORHER_MTIME" = "$NACHHER_MTIME" ]; then
+            if [ "$REFRESH_AUSGANG" = "success" ]; then
+              echo "Schreib-Beweis: watchlist.json unveraendert (mtime $NACHHER_MTIME), aber der Refresh ist sauber durchgelaufen (Ausgang: $REFRESH_AUSGANG) — refresh-universe.js schreibt bei 'nichts Neues, nichts repariert' bewusst nicht. Die $size Namen sind ein bestaetigter Stand."
+            else
+              echo "::error::KEIN SCHREIB-BEWEIS: watchlist.json ist UNVERAENDERT (mtime $NACHHER_MTIME, genau wie vor dem Refresh) UND der Schritt 'Refresh Universe' ist nicht sauber durchgelaufen (Ausgang: ${REFRESH_AUSGANG:-<leer>}). Die oben gemeldeten $size Namen sind damit der Stand des VORTAGS und KEIN Beleg fuer einen erfolgreichen Refresh — genau so ging dieser Gate am 03.08. (Lauf 30788278952) nach einem 20-Minuten-Timeout gruen durch. Der Tag laeuft bewusst weiter (das Universum von gestern ist gueltig); rot wird der Lauf ueber den Job 'entdeckungs-waechter'. NAECHSTER SCHRITT: Actions -> prep-Job -> Schritt 'Refresh Universe'."
+            fi
+          else
+            echo "Schreib-Beweis: watchlist.json wurde in diesem Lauf neu geschrieben (mtime ${VORHER_MTIME:-<keine Referenz>} -> $NACHHER_MTIME)."
           fi
 
       # Tag 133b: ONE fresh fx-rates.json -> handed to every shard as an artifact

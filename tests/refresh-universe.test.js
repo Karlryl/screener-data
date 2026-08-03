@@ -147,11 +147,66 @@ const INGEST_MARKER = 'for (const q of quotes) {';
 // T569-F6: String-bewusst statt roher Regex. `//` beginnt nur dann einen Kommentar, wenn es
 // NICHT in einem String-/Template-Literal steht — und umgekehrt darf ein Anfuehrungszeichen IN
 // einem Kommentar den Scanner nicht in den String-Modus werfen, sonst frisst er den Rest.
-// ponytail: Regex-Literale und ${}-Einbettungen in Templates sind bewusst nicht modelliert —
-// Deckel bekannt. Beide erzeugen im Zweifel eine unbalancierte Klammer und damit einen LAUTEN
-// Fehlschlag am Rumpf-Ende-Pin (T567-W1), nie ein stilles Gruen. Upgrade-Pfad waere ein echter
-// Tokenizer; erst noetig, wenn eine dieser Formen wirklich in eine Ingest-Schleife wandert.
+// T572-Q4 (Review Tag 572, F2563): der Deckel "Regex-Literale sind nicht modelliert" war
+// KEIN lauter Fehlschlag, sondern ein stilles Gruen. Ein `/^http:\/\//` endet auf dem
+// escapten Slash-Paar `\/\/`; der Stripper sah dort einen Kommentarbeginn und schnitt alles
+// dahinter AUF DERSELBEN ZEILE weg. Repro repro-q4b.js Deckel 1: ein Zweitboden hinter so
+// einem Regex-Literal liess verdrahtungsMaengel() [] liefern — der Waechter blieb GRUEN.
+// (Die ${}-Einbettung in Templates flog schon vorher auf; sie bleibt unmodelliert.)
+// Jetzt wird der Regex-Kontext mitgefuehrt: nach = ( , ; : [ { ! & | ? und nach den
+// Schluesselwoertern return/typeof/... beginnt ein `/` ein Regex-Literal, sonst ist es eine
+// Division. Die einfache Heuristik reicht fuer diese Datei; ein echter Tokenizer waere Overkill.
+// ponytail: Block-Kommentare (/* */) bleiben bewusst unmodelliert und geschweifte Klammern IN
+// einem Regex (`/\d{2}/`) zaehlen weiter mit — beides erzeugt im Zweifel eine unbalancierte
+// Klammer und damit einen LAUTEN Fehlschlag am Rumpf-Ende-Pin (T567-W1), nie ein stilles Gruen.
+// Genau diese Unterscheidung fehlte oben: der Regex-Deckel WAR still.
+const REGEX_VORGAENGER = /(?:[=(,;:[{!&|?+\-*%~^<>]|\b(?:return|typeof|instanceof|in|of|case|do|else|new|delete|void|yield|await))$/;
 function ohneZeilenkommentare(code) {
+  let out = '', quote = null, regex = false, klasse = false;
+  for (let i = 0; i < code.length; i++) {
+    const c = code[i];
+    if (quote) {
+      out += c;
+      if (c === '\\') { out += code[++i] || ''; continue; }
+      if (c === quote) quote = null;
+      continue;
+    }
+    if (regex) {
+      out += c;
+      if (c === '\\') { out += code[++i] || ''; continue; }
+      // Die naechsten drei Zeilen sind Schutz, kein Fix: sie begrenzen eine FEHL-Erkennung
+      // (ein Regex-Literal kann keine Zeile ueberspannen; ein `/` in [...] beendet keins).
+      // EHRLICH GEMESSEN (Scratchpad q4-wirkung.js, 5 konstruierte Faelle inkl.
+      // `offset++ / 2` und `/['/]/`): sie aendern KEIN Urteil — im Regex-Modus wird jedes
+      // Zeichen weiterhin ausgegeben, es geht also nichts verloren, und der Klammerzaehler
+      // faengt sich wieder. Darum haben sie auch keine eigene Ausbau-Probe; die Zusicherung
+      // "ein Regex-Literal gilt nicht als Kommentar" haengt allein an der Erkennung unten.
+      // Sie bleiben stehen, weil sie richtig und billig sind, nicht weil sie etwas halten.
+      if (c === '\n') { regex = false; klasse = false; continue; }
+      if (c === '[') klasse = true;
+      else if (c === ']') klasse = false;
+      else if (c === '/' && !klasse) regex = false;
+      continue;
+    }
+    // `//` ist IMMER ein Kommentar: ein leeres Regex-Literal gibt es in JS nicht.
+    if (c === '/' && code[i + 1] === '/') {
+      while (i < code.length && code[i] !== '\n') i++;
+      out += '\n';
+      continue;
+    }
+    if (c === '/' && code[i + 1] !== '*' && REGEX_VORGAENGER.test(out.slice(-32).trimEnd())) {
+      regex = true; klasse = false;
+      out += c;
+      continue;
+    }
+    if (c === '"' || c === "'" || c === '`') quote = c;
+    out += c;
+  }
+  return out;
+}
+
+/** Der Stand VOR T572-Q4 — nur als Beleg, dass der Befund echt war (nie im Pruefpfad). */
+function ohneZeilenkommentareVorQ4(code) {
   let out = '', quote = null;
   for (let i = 0; i < code.length; i++) {
     const c = code[i];
@@ -311,6 +366,75 @@ test('T569-F6: ein Anfuehrungszeichen IM KOMMENTAR kippt den Stripper nicht (Fal
   assert.deepEqual(verdrahtungsMaengel(mitApostroph), [],
     'ein Apostroph in einem Kommentar darf den Pruefer weder blind noch falsch-rot machen');
   assert.deepEqual(verdrahtungsMaengel(SRC_RU), [], 'und der gueltige Stand bleibt unberuehrt');
+});
+
+// ── T572-Q4 (Review Tag 572, F2563): Regex-Literale mit escaptem Slash ────────────
+// Der bis Tag 573 dokumentierte Deckel behauptete, unmodellierte Regex-Literale wuerden
+// "im Zweifel eine unbalancierte Klammer und damit einen LAUTEN Fehlschlag" erzeugen.
+// Das stimmte fuer die haeufigste Form NICHT: `/^http:\/\//` endet auf `\/\/`, der
+// Stripper sah dort einen Kommentarbeginn und schnitt den REST DER ZEILE weg. Ein
+// Zweitboden dahinter blieb damit unsichtbar und der Waechter GRUEN — das schlimmste
+// Ergebnis fuer eine Wache, die die F-11-Invariante "genau EIN Boden" halten soll.
+const BS = String.fromCharCode(92);
+const SLASH_REGEX = '/^http:' + BS + '/' + BS + '/' + '/';   // ergibt: /^http:\/\//
+
+test('T572-Q4: Zweitboden hinter einem Regex-Literal, SELBE Zeile, fliegt auf (Repro repro-q4b.js Deckel 1)', () => {
+  const mutiert = SRC_RU.replace(GATE_ZEILE,
+    'const re = ' + SLASH_REGEX + '; if (q.marketCap < 2e9) continue;\n        ' + GATE_ZEILE);
+  assert.notEqual(mutiert, SRC_RU, 'Mutation griff nicht — dann prueft die Gegenprobe nichts');
+  // Beleg, dass GENAU DAS der alte Stripper verschluckt hat (das IST der Befund):
+  assert.ok(!ohneZeilenkommentareVorQ4(mutiert.split(INGEST_MARKER)[1]).includes('q.marketCap < 2e9'),
+    'der regex-blinde Stripper haette den Zweitboden hier NICHT weggeschnitten — dann bildet '
+    + 'diese Gegenprobe den Befund nicht ab und beweist nichts.');
+  assert.ok(verdrahtungsMaengel(mutiert).length > 0,
+    'BEFUND (Repro repro-q4b.js Deckel 1): ein Zweitboden hinter einem Regex-Literal mit escaptem '
+    + 'Slash blieb GRUEN — das `\\/\\/` galt als Kommentarbeginn und der Rest der Zeile fiel weg.');
+});
+
+test('T572-Q4: der Regex-Kontext frisst nicht die FOLGE-Zeile (Abwesenheits-Probe)', () => {
+  // Gegenrichtung zum Notausstieg am Zeilenumbruch: ein Regex-Literal darf hoechstens
+  // sich selbst betreffen. Frisst der Scanner darueber hinaus, verschwindet der naechste
+  // Boden genauso still wie vorher — nur eine Zeile weiter.
+  const mutiert = SRC_RU.replace(GATE_ZEILE,
+    'const re = ' + SLASH_REGEX + ';\n        if (q.marketCap < 2e9) continue;\n        ' + GATE_ZEILE);
+  assert.notEqual(mutiert, SRC_RU, 'Mutation griff nicht');
+  assert.ok(ingestSchleifen(mutiert)[0].includes('q.marketCap < 2e9'),
+    'die Zeile NACH dem Regex-Literal ist aus dem Schleifenkoerper verschwunden');
+  assert.ok(verdrahtungsMaengel(mutiert).length > 0, 'der Zweitboden eine Zeile spaeter muss auffliegen');
+});
+
+test('T572-Q4: Template-Literal-Fall bleibt laut (war schon vorher gedeckt, muss es bleiben)', () => {
+  const mutiert = SRC_RU.replace(GATE_ZEILE,
+    'const u = `x${(1+2)}`; if (q.marketCap < 2e9) continue;\n        ' + GATE_ZEILE);
+  assert.notEqual(mutiert, SRC_RU, 'Mutation griff nicht');
+  assert.ok(verdrahtungsMaengel(mutiert).length > 0,
+    'der Template-Fall (repro-q4b.js Deckel 2) flog vor T572-Q4 auf und darf durch die '
+    + 'Regex-Erweiterung nicht still werden.');
+});
+
+test('T572-Q4: Division und gewoehnliche Regex-Literale machen den Pruefer nicht falsch-rot', () => {
+  // Die eigentliche Gefahr einer Kontext-Heuristik: sie haelt eine Division fuer einen
+  // Regex-Beginn und frisst ab da alles bis zum naechsten `/` — dann ist der Waechter
+  // entweder blind (Zeichen weg) oder ein Dauer-Falschalarm.
+  assert.deepEqual(verdrahtungsMaengel(SRC_RU), [], 'der gueltige Stand muss durchgehen');
+  const faelle = {
+    'Division nach Klammer': 'const h = (quotes.length + 1) / 2;\n        ',
+    'Division nach Bezeichner': 'const h = offset / 2;\n        ',
+    'Regex-Literal nach =': 'const ok = /^[A-Z]$/.test(sym);\n        ',
+    'Regex-Literal als Argument': 'const ok = String(sym).replace(/[^A-Z]/g, "");\n        ',
+    'Regex mit Slash in der Zeichenklasse': 'const ok = /[/]/.test(sym);\n        ',
+  };
+  for (const [name, einschub] of Object.entries(faelle)) {
+    const mutiert = SRC_RU.replace(GATE_ZEILE, einschub + GATE_ZEILE);
+    assert.notEqual(mutiert, SRC_RU, name + ': Mutation griff nicht');
+    assert.deepEqual(verdrahtungsMaengel(mutiert), [],
+      name + ': harmloser Code macht den Pruefer rot — eine Kontext-Heuristik, die Division '
+      + 'fuer einen Regex-Beginn haelt, blockiert Karls Tagslauf ohne Bug.');
+    // … und der Waechter ist danach noch scharf, nicht nur still:
+    const mitBoden = SRC_RU.replace(GATE_ZEILE, einschub + 'if (q.marketCap < 2e9) continue;\n        ' + GATE_ZEILE);
+    assert.ok(verdrahtungsMaengel(mitBoden).length > 0,
+      name + ': hinter diesem Einschub bleibt ein Zweitboden unsichtbar — still statt scharf.');
+  }
 });
 
 test('T567-W2: der gueltige Stand bleibt gruen (sonst waere der Pruefer falsch-rot)', () => {
@@ -723,6 +847,54 @@ test('T566-H2: der Waechter-Job faerbt rot und blockiert keinen Datenschritt', (
     assert.ok(!/entdeckungs-waechter/.test(jb),
       'Job "' + j + '" haengt am Waechter — ein Entdeckungs-Ausfall wuerde den Datenlauf toeten');
   }
+});
+
+// ── DT-3 (Verifikation Exchange-Kanal 2026-08-04): die 0-Quotes-Warnung log ───────
+// BEFUND, im Lauf 91606250192 woertlich mitgeschrieben:
+//   [WARN] Exchanges with 0 quotes and no error (possible silent failure): NMS
+// NMS HATTE einen Fehler — der Schema-Fatal-Zweig hat geworfen und den Kanal abgebrochen.
+// Er zaehlte `pageErrors` nur nie hoch, also stand in der Statistik {0 Quotes, 0 Fehler}
+// und der Reporter stufte ausgerechnet die geworfene Boerse als "still ausgefallen" ein.
+// Ein Waechter, der auf einen lauten Fehler mit "kein Fehler" antwortet, verbrennt genau
+// die Aufmerksamkeit, fuer die er gebaut wurde.
+test('DT-3: der Schema-Fatal-Zweig zaehlt den Wurf als Seitenfehler (Anwesenheit am Zweig)', () => {
+  // Am Objekt geschnitten, nicht dateiweit: ein `pageErrors++` irgendwo sonst in der Datei
+  // (der normale Fehlerzweig hat eins) wuerde eine dateiweite Suche gruen halten.
+  const start = SRC_RU.indexOf('if (EXCHANGE_SCREENER_SCHEMA_ERROR_RE.test(error)) {');
+  assert.ok(start >= 0, 'Schema-Fatal-Zweig nicht gefunden');
+  let tiefe = 0, i = SRC_RU.indexOf('{', start);
+  const von = i;
+  for (; i < SRC_RU.length; i++) {
+    if (SRC_RU[i] === '{') tiefe++;
+    else if (SRC_RU[i] === '}' && --tiefe === 0) break;
+  }
+  const zweig = SRC_RU.slice(von, i + 1);
+  assert.match(zweig, /exchangeScreenerFatal\s*=\s*true/, 'falscher Zweig geschnitten');
+  assert.match(zweig, /pageErrors\s*\+\+/,
+    'der Schema-Fatal-Zweig zaehlt pageErrors nicht hoch — dann meldet die 0-Quotes-Warnung '
+    + 'die geworfene Boerse als "0 quotes and no error" (Befund DT-3, Lauf 91606250192).');
+});
+
+test('DT-3: die Warnung nennt nur STILLE Ausfaelle (Verhalten, beide Richtungen)', () => {
+  assert.deepEqual(ru.nullQuotenOhneFehler({ NMS: { totalQuotes: 0, pageErrors: 0 } }), ['NMS'],
+    '0 Quotes ohne jeden Fehler ist der Fall, fuer den die Warnung gebaut ist — sie muss ihn nennen.');
+  assert.deepEqual(ru.nullQuotenOhneFehler({ NMS: { totalQuotes: 0, pageErrors: 1 } }), [],
+    'eine Boerse mit gezaehltem Fehler darf NICHT als "no error" gemeldet werden — das ist der '
+    + 'Befund DT-3 in seiner Wirkung.');
+  assert.deepEqual(ru.nullQuotenOhneFehler({ NMS: { totalQuotes: 250, pageErrors: 0 } }), [],
+    'eine Boerse mit Quotes ist kein Null-Fall.');
+  assert.deepEqual(ru.nullQuotenOhneFehler({
+    NMS: { totalQuotes: 0, pageErrors: 1 }, LSE: { totalQuotes: 0, pageErrors: 0 },
+  }), ['LSE'], 'aus einem gemischten Feld muss genau die stille Boerse herausfallen.');
+});
+
+test('DT-3: main() benutzt genau diese Funktion (kein zurueckgelassener Zweitpfad)', () => {
+  assert.match(SRC_RU, /const zeroQuoteExchanges = nullQuotenOhneFehler\(exchangeStats\)/,
+    'die 0-Quotes-Warnung in main() haengt nicht an der geprueften Funktion — dann prueft der '
+    + 'Test oben einen Nebenpfad, waehrend der Lauf weiter den alten Ausdruck fuehrt.');
+  assert.ok(!/\.filter\(\(\[_?,? ?\]?,? ?s\]\) => s\.totalQuotes === 0 && s\.pageErrors === 0\)/.test(SRC_RU),
+    'der alte Inline-Ausdruck steht noch in der Datei — zwei Boeden an zwei Orten sind genau die '
+    + 'Bugklasse, gegen die die Verdrahtungs-Waechter oben gebaut sind.');
 });
 
 console.log(`\nrefresh-universe.test.js: ${pass} ok, ${fail} fail`);

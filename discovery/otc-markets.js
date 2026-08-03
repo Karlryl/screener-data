@@ -13,6 +13,8 @@
  */
 'use strict';
 const https = require('https');
+// DT-1: Gesamt-Zeitbudget statt Retry-Leiter je Anfrage (Herleitung dort).
+const { zeitbudget, budgetRissMelden, mitBudget } = require('./zeitbudget.js');
 
 // OTC market tiers to fetch — OTCQX and OTCQB have best Yahoo Finance coverage
 const OTC_MARKETS = ['OTCQX', 'OTCQB', 'Expert'];
@@ -87,30 +89,24 @@ function get(url, redirectsLeft = MAX_REDIRECTS) {
  *   { stocks: { rows: [ { symbol, companyName, marketTier, ... }, ... ], totalRecords: N } }
  *   or top-level array or { rows: [...] } — we handle the common variants.
  */
-async function fetchOTCPage(markets, page) {
+const RETRY_DELAYS = [10000, 30000];
+const istTimeout = (e) => /timeout fetching/i.test(String((e && e.message) || ''));
+
+async function fetchOTCPage(markets, page, budget, holen) {
   const marketParams = markets.map(m => `market=${encodeURIComponent(m)}`).join('&');
   const url = `https://www.otcmarkets.com/research/stock-screener/api?${marketParams}&pageSize=${PAGE_SIZE}&page=${page}`;
   // Tag 215i: retry on transient timeout. Run #107 logs show OTC Page 1
   // failed with timeout fetching — same pattern as NASDAQ-API. Two retries
   // with exponential backoff (10s, 30s) before giving up. Non-timeout
   // errors (HTTP 4xx/5xx, JSON parse) re-thrown immediately.
-  let body;
-  const DELAYS = [10000, 30000];
-  let lastErr;
-  for (let attempt = 0; attempt <= DELAYS.length; attempt++) {
-    try {
-      body = await get(url);
-      break;
-    } catch (e) {
-      lastErr = e;
-      const isTimeout = /timeout fetching/i.test(String(e.message || ''));
-      if (!isTimeout || attempt >= DELAYS.length) throw e;
-      const delay = DELAYS[attempt];
-      console.warn(`  [OTC-Markets] Page ${page} timeout (attempt ${attempt + 1}/${DELAYS.length + 1}) — retrying in ${delay / 1000}s`);
-      await sleep(delay);
-    }
-  }
-  if (!body) throw lastErr;
+  //
+  // DT-1 (Verifikation Exchange-Kanal 2026-08-04): die Leiter selbst war der Killer.
+  // 10 Seiten x 3 Versuchen x 30s Socket-Timeout + [10s,30s] Backoff = 21m45s Worst
+  // case — allein schon MEHR als das 20-Minuten-Timeout des Workflow-Schritts. Am
+  // 03.08. lief genau das: 18m28s in dieser Schleife, Schritt tot, watchlist.json
+  // ungeschrieben. Die Leiter bleibt, aber das Gesamtbudget des Adapters schlaegt sie.
+  const body = await mitBudget(budget, 'Seite ' + page, RETRY_DELAYS, istTimeout,
+    () => (holen || get)(url));
   let data;
   try {
     data = JSON.parse(body);
@@ -146,8 +142,11 @@ async function fetchOTCPage(markets, page) {
  * Main entry point.
  * Returns Map<ticker, {ticker, name, exchange, market, source}>
  */
-async function fetchOTCMarkets() {
+async function fetchOTCMarkets(opts) {
   const result = new Map();
+  // DT-1: ein Budget fuer den GANZEN Adapter. `opts` nur, damit Waechter das Verhalten
+  // ohne echte Wartezeit messen koennen — im Lauf ist es immer der Vorgabewert.
+  const budget = (opts && opts.budget) || zeitbudget('OTC-Markets');
   console.log('  [OTC-Markets] Fetching OTCQX, OTCQB, Expert tiers (Tag 165)...');
 
   let totalRecords = null;
@@ -156,9 +155,13 @@ async function fetchOTCMarkets() {
   // zero-quote alert) instead of being hidden behind a lone console.error.
   let pageErrors = 0;
 
+  // DT-1: KEINE zweite Budget-Pruefung hier. mitBudget() prueft vor JEDEM Versuch und vor
+  // jedem Backoff — zwei Boeden an zwei Orten sind genau die Bugklasse, die dieses Repo
+  // an anderer Stelle (F-11) schon einmal teuer bezahlt hat.
+  let budgetGerissen = false;
   for (let page = 1; page <= MAX_PAGES; page++) {
     try {
-      const { rows, total } = await fetchOTCPage(OTC_MARKETS, page);
+      const { rows, total } = await fetchOTCPage(OTC_MARKETS, page, budget, opts && opts.holen);
 
       if (total !== null && totalRecords === null) {
         totalRecords = total;
@@ -216,6 +219,13 @@ async function fetchOTCMarkets() {
 
       await sleep(PAGE_DELAY_MS);
     } catch (e) {
+      // DT-1: ein Budget-Riss ist kein Seitenfehler, den man ueberspringen kann — er
+      // beendet den Adapter. Laut melden, Teilbestand zurueckgeben, Schleife verlassen.
+      if (e && e.budgetRiss) {
+        budgetRissMelden(result, budget, 'Seite ' + page + ' (' + e.message + ')');
+        budgetGerissen = true;
+        break;
+      }
       console.error(`  [OTC-Markets] Page ${page} failed: ${e.message}`);
       // audit F-A-2026-06-21: prevents one bad page truncating the entire OTC
       // tail. A single transient error (HTTP 5xx, JSON-parse) on an
@@ -253,7 +263,8 @@ async function fetchOTCMarkets() {
     result.partial = true;
     if (totalRecords !== null) result.totalRecords = totalRecords;
   }
-  console.log(`  [OTC-Markets] Total OTC tickers: ${result.size}`);
+  console.log(`  [OTC-Markets] Total OTC tickers: ${result.size}` +
+    (budgetGerissen ? ' (TEILBESTAND — Zeitbudget gerissen, siehe ::error:: oben)' : ''));
   return result;
 }
 

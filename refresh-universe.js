@@ -499,6 +499,19 @@ function beideYahooKanaeleLeer(predefinedNonEmpty, exchangeScreenerFatal, custom
   return predefinedNonEmpty === 0 && (exchangeScreenerFatal === true || customAdded === 0);
 }
 
+// DT-3 (Verifikation Exchange-Kanal 2026-08-04): die "0 Quotes und KEIN Fehler"-Warnung
+// als reine Funktion — sie sass als Ausdruck mitten in main() hinter Netzaufrufen und war
+// damit nur per Volllauf pruefbar. Genau das hat den Befund verdeckt: der Schema-Zweig
+// zaehlte pageErrors nicht hoch, die Warnung nannte deshalb ausgerechnet die Boerse, die
+// geworfen hatte, als "kein Fehler" (Lauf 91606250192: "... possible silent failure: NMS").
+// Der Sinn der Warnung ist der STILLE Ausfall: 0 Quotes, obwohl nichts schiefging. Eine
+// Boerse mit gezaehltem Fehler gehoert hier nie hinein — die meldet sich selbst.
+function nullQuotenOhneFehler(exchangeStats) {
+  return Object.entries(exchangeStats || {})
+    .filter(([, s]) => s && s.totalQuotes === 0 && s.pageErrors === 0)
+    .map(([e]) => e);
+}
+
 // T566-H2 (Review Tag 566): die BH-100-Wache sprach erst bei predefinedNonEmpty === 0 an.
 // Genau die Bugklasse, die F-12-R2 (filter-snapshot-merge.js) eine Stufe frueher schon hatte:
 // ein Ausfall, der "nur" die Haelfte erwischt, laeuft still durch. Real belegt am 04.08. an
@@ -801,6 +814,14 @@ async function main() {
         // transienter Ausfall: fail-loud (::error:: + non-zero exit code), aber ohne den
         // Rest von main() (Laenderadapter, Watchlist-Write) zu blockieren (BH-038).
         if (EXCHANGE_SCREENER_SCHEMA_ERROR_RE.test(error)) {
+          // DT-3 (Verifikation Exchange-Kanal 2026-08-04): DIESER Zweig zaehlte pageErrors
+          // nie hoch. Folge im Lauf 91606250192: die Statistik fuer NMS stand auf
+          // {totalQuotes:0, pageErrors:0}, und die 0-Quotes-Warnung weiter unten meldete
+          // woertlich "Exchanges with 0 quotes and no error (possible silent failure): NMS"
+          // — ausgerechnet ueber die Boerse, die soeben geworfen HAT. Ein blinder Waechter,
+          // der auf einen lauten Fehler mit "kein Fehler" antwortet. Der Wurf wird gezaehlt
+          // wie jeder andere Seitenfehler auch; die Fatal-Behandlung darunter bleibt.
+          pageErrors++;
           console.error('::error::Custom-Exchange-Screener ist mit yahoo-finance2 (v3.14) inkompatibel — ' +
             'screener() akzeptiert nur scrIds, der query-basierte Exchange-Call wirft "' + error + '". ' +
             'Der gesamte Exchange-Kanal (' + EXCHANGE_CODES.length + ' Boersen) liefert 0. ' +
@@ -873,9 +894,7 @@ async function main() {
     .map(([e, s]) => `${e}=${s.totalQuotes}/${s.totalKept}n${s.pageErrors > 0 ? ' ERR:' + s.pageErrors : ''}`)
     .join(' ');
   console.log('  Per-exchange (totalQuotes/newKept): ' + totalsByExch);
-  const zeroQuoteExchanges = Object.entries(exchangeStats)
-    .filter(([_, s]) => s.totalQuotes === 0 && s.pageErrors === 0)
-    .map(([e]) => e);
+  const zeroQuoteExchanges = nullQuotenOhneFehler(exchangeStats);
   if (zeroQuoteExchanges.length > 0) {
     console.warn('[WARN] Exchanges with 0 quotes and no error (possible silent failure): ' +
       zeroQuoteExchanges.join(', '));
@@ -1411,6 +1430,7 @@ module.exports = {
   EXCHANGE_KANAL_BEKANNT_DEFEKT,                                // T566-H2: bekannter Dauerdefekt
   exchangeDefektIstDerBekannte,                                 // T569-F3: nur der BELEGTE Fall
   kanalLeerlaufAlarm,     // T562-M1: Kanal holt Quotes ab und behaelt keine einzige
+  nullQuotenOhneFehler,   // DT-3: "0 Quotes und kein Fehler" — nur noch echte STILLE Faelle
   discoveryErtragsZeile,  // S4-DISC-001: Teilausfaelle sichtbar machen, einzeln pruefbar
   inDiscoveryMcapBand, MIN_MCAP_DISCOVERY, MAX_MCAP_DISCOVERY  // F-11: $800M-$500B-Band
 };
