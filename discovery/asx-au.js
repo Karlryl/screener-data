@@ -2,23 +2,38 @@
 /**
  * ASX Australia (Australian Securities Exchange) Universe Discovery
  * =================================================================
- * Source: official ASX Listed Companies register (keyless, live-verified 2026-07-03).
- *   https://www.asx.com.au/asx/research/ASXListedCompanies.csv
+ * Source: ASX company-directory export (keyless, live-verified 2026-08-03).
+ *   https://asx.api.markitdigital.com/asx-research/1.0/companies/directory/file
+ *
+ * ENDPOINT MOVED 2026-08-03. The old register path
+ * www.asx.com.au/asx/research/ASXListedCompanies.csv is switched off: the origin
+ * answers 404, but the Imperva WAF in front of it hands our UA an HTTP **200**
+ * with 378 bytes of "Request Rejected" HTML. Fed to a CSV parser, that reads as a
+ * layout change — which is why get() below carries a Content-Type guard: being
+ * turned away must never masquerade as "header row not found".
+ *
+ * The access_token in the URL is NOT a secret: the same value ships verbatim as
+ * API_TOKEN inside the public asx.com.au clientlib bundle
+ * (/etc.clientlibs/asx/clientlibs/clientlib-base-*.min.js) and is what the ASX
+ * website itself calls this endpoint with — free, no account. Rotation risk: if
+ * ASX cycles it we get 401/403 instead of data; pull a fresh token out of that
+ * same bundle (its version number changes with every site release).
  *
  * A single plain-CSV file — no ZIP, no JSON, no paging. It is a full register
- * of every company listed on ASX (~1987 rows incl. small caps and young IPOs),
- * not an index/top-list, so it catches early-stage listings.
+ * of every company listed on ASX (1840 data rows on 2026-08-03, incl. small caps
+ * and young IPOs), not an index/top-list, so it catches early-stage listings.
  *
- * File layout (verified live):
- *   line 0: "ASX listed companies as at <date>"   (banner)
- *   line 1: (blank)
- *   line 2: "Company name,ASX code,GICS industry group"  (header)
- *   line 3+: `"NAME","CODE","GICS group"`  (all fields double-quoted)
- * Every ASX code is a 3-char [A-Z0-9] symbol. yahooTicker = CODE + '.AX'.
+ * File layout (verified live 2026-08-03 — NO banner line any more):
+ *   line 0: "ASX code","Company name","GICs industry group","Listing date","Market Cap"
+ *   line 1+: `"CODE","NAME","GICs group","YYYY-MM-DD","<almost always empty>"`
+ * All fields double-quoted, no BOM. locateColumns() matches columns by NAME and
+ * order-independently, so this layout parses unchanged. Ordinary share codes are
+ * 3-char [A-Z0-9]; the ~9 longer codes are second lines and are dropped on
+ * purpose. yahooTicker = CODE + '.AX'.
  *
- * The host serves the CSV without auth but expects a browser-ish UA/Referer;
- * we send both to avoid a WAF 403. No ISIN/currency/marketCap in this file —
- * marketCap is intentionally NOT set (Yahoo fills it later).
+ * Do NOT wire up the new `Market Cap` column: it is populated on 1 of 1840 rows,
+ * i.e. worthless. marketCap stays unset and comes from Yahoo later — that is the
+ * contract, asserted in tests/discovery/asx-au.test.js:38.
  *
  * Node built-ins only. Never throws — returns an empty Map() on any failure
  * (fail-silent, mirroring sse-cn.js / edinet-jp.js).
@@ -28,7 +43,8 @@
 'use strict';
 const https = require('https');
 
-const ASX_URL = 'https://www.asx.com.au/asx/research/ASXListedCompanies.csv';
+const ASX_URL = 'https://asx.api.markitdigital.com/asx-research/1.0/companies/directory/file'
+  + '?access_token=83ff96335c2d45a094df02a206a39ff4';
 const REFERER = 'https://www.asx.com.au/';
 const MAX_REDIRECTS = 5;
 
@@ -58,9 +74,21 @@ function get(url, redirectsLeft = MAX_REDIRECTS) {
         res.resume(); // drain non-200 body to avoid socket leak
         return reject(new Error('HTTP ' + res.statusCode));
       }
+      // A 200 does not mean "we got the file": on 2026-08-03 the WAF in front of
+      // asx.com.au answered 200 + 378 bytes of HTML. Checking the Content-Type keeps
+      // a rejection out of the CSV parser, where it would surface as a bogus
+      // "layout changed". Checked after buffering so the message can name the real size.
       const chunks = [];
       res.on('data', c => chunks.push(c));
-      res.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+      res.on('end', () => {
+        const buf = Buffer.concat(chunks);
+        const ct = String((res.headers || {})['content-type'] || '').split(';')[0].trim();
+        if (!/^text\/(csv|plain)$/i.test(ct)) {
+          return reject(new Error('HTTP 200 aber Content-Type ' + (ct || '(fehlt)')
+            + ' (WAF-/Fehlerseite, ' + buf.length + ' Bytes)'));
+        }
+        resolve(buf.toString('utf8'));
+      });
       res.on('error', reject);
     });
     req.on('error', reject);
