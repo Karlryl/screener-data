@@ -70,5 +70,73 @@ test('Tag 510: beide gesund -> Waechter schweigt', () => {
   assert.equal(ru.beideYahooKanaeleLeer(12, false, 500), false);
 });
 
+// ── F-11 (Karl-Entscheid 2026-08-04): Discovery-Untergrenze $1 Mrd -> $800 Mio ──
+// WARUM ES DEN GIBT: pull-yahoo.js laeuft in daily-pull.yml seit 2026-06 mit
+// MIN_MCAP_USD=800000000, die beiden Yahoo-Entdeckungskanaele in refresh-universe.js
+// schnitten aber bei $1 Mrd ab. Das Band $800M-$1B war damit fuer diese Kanaele tot:
+// der Pull haette solche Firmen akzeptiert, die Entdeckung schlug sie nie vor.
+// Karl hat GENAU diese Luecke geschlossen — und den $500-Mrd-Deckel ausdruecklich NICHT
+// angefasst. Der Test nagelt beides fest: die neue Untergrenze UND den unveraenderten
+// Deckel. Waere nur der Boden geprueft, koennte ein spaeterer "Aufraeum"-Commit den
+// Deckel mitnehmen, ohne dass etwas rot wird.
+test('F-11: $850M passiert die Discovery-Schwelle (das vorher tote Band)', () => {
+  assert.equal(ru.inDiscoveryMcapBand(850e6), true);
+});
+
+test('F-11: $799M passiert NICHT (neue Untergrenze $800M haelt nach unten dicht)', () => {
+  assert.equal(ru.inDiscoveryMcapBand(799e6), false);
+  assert.equal(ru.inDiscoveryMcapBand(800e6), true, 'die Grenze selbst gehoert ins Band');
+});
+
+test('F-11: $501 Mrd passiert weiterhin NICHT (Deckel unveraendert)', () => {
+  assert.equal(ru.inDiscoveryMcapBand(501e9), false);
+  assert.equal(ru.inDiscoveryMcapBand(500e9), true, 'der Deckel selbst gehoert ins Band');
+});
+
+test('F-11: unbrauchbare Werte fallen wie vorher raus (null/0/NaN/negativ)', () => {
+  // Der alte Gate war `!mcap || mcap < 1e9 || mcap > 500e9`. `!mcap` fing null/0/NaN.
+  // Das muss die Extraktion in eine Funktion mitnehmen, sonst laesst der neue Boden
+  // plötzlich null-mcap-Zeilen durch, die vorher sauber ausgefiltert wurden.
+  for (const v of [null, undefined, 0, NaN, Infinity, -1e9, '850000000']) {
+    assert.equal(ru.inDiscoveryMcapBand(v), false, `${String(v)} darf nie ins Band`);
+  }
+});
+
+test('F-11: BEIDE Yahoo-Kanaele gehen durch die Schwellen-Funktion (Verdrahtung)', () => {
+  // Verhaltens-Beleg allein reicht hier nicht: die exportierte Funktion koennte korrekt
+  // sein, waehrend die beiden Ingest-Schleifen weiter ihr eigenes `mcap < 1e9` fahren —
+  // dann waere der Waechter gruen und die Luecke offen. Diese Stellen sind ohne Netz
+  // nicht erreichbar, also am OBJEKT pruefen: Anwesenheit des Aufrufs an beiden Gates
+  // UND Abwesenheit jedes nackten Zahlen-Bodens in den Ingest-Schleifen.
+  const src = require('node:fs').readFileSync(
+    require('node:path').join(__dirname, '..', 'refresh-universe.js'), 'utf8');
+  const aufrufe = (src.match(/if \(!inDiscoveryMcapBand\(mcap\)\) continue;/g) || []).length;
+  assert.equal(aufrufe, 2, 'Predefined-Bucket- UND Custom-Exchange-Schleife muessen den Gate rufen');
+  assert.ok(!/mcap\s*<\s*(1e9|1000000000|MIN_MCAP_CUSTOM)/.test(src),
+    'kein Ingest-Gate darf am Zahlen-/Alt-Boden vorbei vergleichen');
+});
+
+test('F-11: Discovery-Boden liegt nie UEBER dem Pull-Boden aus daily-pull.yml', () => {
+  // DAS WAR DER BEFUND, nicht nur seine Folge: der Pull-Boden wurde 2026-06 auf $800M
+  // gesenkt, der Entdeckungs-Boden blieb bei $1 Mrd — zwei Zahlen an zwei Orten, und
+  // niemand hielt sie zusammen. Genau diese Richtung wird hier gepinnt.
+  // Umgekehrt (Discovery UNTER Pull) ist erlaubt: dann schlaegt die Entdeckung Firmen
+  // vor, die der Pull verwirft — Verschwendung, aber keine Luecke. Nur Discovery > Pull
+  // erzeugt das tote Band, in dem eine Firma von KEINEM Kanal vorgeschlagen werden kann.
+  const yml = require('node:fs').readFileSync(
+    require('node:path').join(__dirname, '..', '.github', 'workflows', 'daily-pull.yml'), 'utf8');
+  // Am OBJEKT suchen, nicht dateiweit: nur der Block des "Run Yahoo Pull"-Schritts.
+  // Dateiweites Greifen faende auch fremde MIN_MCAP_USD-Vorkommen und wuerde gruen
+  // bleiben, wenn sich ausgerechnet der hier gemeinte Wert aendert.
+  const block = yml.split(/^ {6}- name: /m).find(b => b.startsWith('Run Yahoo Pull'));
+  assert.ok(block, 'Schritt "Run Yahoo Pull" nicht mehr in daily-pull.yml gefunden — Test zeigt ins Leere');
+  const m = block.match(/^\s*MIN_MCAP_USD:\s*'?(\d+)'?\s*$/m);
+  assert.ok(m, 'MIN_MCAP_USD fehlt im "Run Yahoo Pull"-Block — Pull-Boden nicht mehr ablesbar');
+  const pullBoden = Number(m[1]);
+  assert.ok(ru.MIN_MCAP_DISCOVERY <= pullBoden,
+    `Discovery-Boden $${ru.MIN_MCAP_DISCOVERY / 1e6}M liegt UEBER dem Pull-Boden $${pullBoden / 1e6}M — ` +
+    'das Band dazwischen ist tot: der Pull wuerde diese Firmen nehmen, die Entdeckung schlaegt sie nie vor.');
+});
+
 console.log(`\nrefresh-universe.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

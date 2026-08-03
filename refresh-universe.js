@@ -472,6 +472,26 @@ function discoveryErtragsZeile(namen, ertrag, degradiert) {
     .join(' ');
 }
 
+// F-11 (Karl-Entscheid 2026-08-04): Untergrenze des Entdeckungs-Kanals $1 Mrd -> $800 Mio.
+// WARUM: pull-yahoo.js laeuft in .github/workflows/daily-pull.yml seit 2026-06 mit
+// MIN_MCAP_USD=800000000 — der Pull haette Firmen ab $800M genommen. Die beiden
+// Yahoo-Entdeckungskanaele hier schnitten aber weiter bei $1 Mrd ab, jeder mit seinem
+// EIGENEN Zahlen-Boden (Zeile ~545 als Literal, Zeile ~595 als MIN_MCAP_CUSTOM). Damit
+// war das Band $800M-$1B ueber diese Kanaele unerreichbar: was der Pull akzeptiert haette,
+// schlug die Entdeckung nie vor. Ein Boden an EINER Stelle statt zwei, damit die naechste
+// Verschiebung nicht wieder nur die Haelfte trifft.
+// Der Deckel $500 Mrd bleibt UNVERAENDERT — Karl hat ihn ausdruecklich nicht gewaehlt.
+const MIN_MCAP_DISCOVERY = 800e6;
+const MAX_MCAP_DISCOVERY = 500e9;
+
+// Der Gate als reine Funktion, damit er ohne Netz/main() pruefbar ist. Bildet das alte
+// `!mcap || mcap < MIN || mcap > MAX` exakt ab: `!mcap` fing null/0/NaN — das uebernimmt
+// hier Number.isFinite + > 0, sonst liesse der neue Boden ploetzlich null-mcap-Zeilen durch.
+function inDiscoveryMcapBand(mcapUsd) {
+  return Number.isFinite(mcapUsd) && mcapUsd > 0 &&
+    mcapUsd >= MIN_MCAP_DISCOVERY && mcapUsd <= MAX_MCAP_DISCOVERY;
+}
+
 async function main() {
   const args = parseArgs(process.argv);
   console.log('Auto-Universe-Refresh');
@@ -540,9 +560,9 @@ async function main() {
         // _isNonEquityQuote() above for the rationale.
         if (_isNonEquityQuote(q)) continue;
         // Bug 4: q.marketCap ist in q.currency (Listing-Waehrung), das Gate in USD.
-        // Nach USD konvertieren, gegen $1B/$500B pruefen und den USD-Wert speichern.
+        // Nach USD konvertieren, gegen $800M/$500B pruefen und den USD-Wert speichern.
         const mcap = toUsd(q.marketCap, q.currency, _FX_RATES);
-        if (!mcap || mcap < 1e9 || mcap > 500e9) continue;  // Tag 101: $1B+ Mid/Large-Cap universe
+        if (!inDiscoveryMcapBand(mcap)) continue;  // F-11: $800M+ Mid/Large-Cap universe
         // audit/fix: key the candidate map on the class-share-normalized symbol so a
         // US class-share dot collapses onto its dash twin; foreign keys unchanged.
         // audit/fix (BUG MEDIUM): prefer the exchange CODE (q.exchange = NMS/NYQ/ASE,
@@ -592,8 +612,10 @@ async function main() {
   // Tag 131: Custom Exchange-Screener (paginiert) — zusätzlich zu predefined Screener-Buckets.
   // Ziel: 10k+ Stocks statt ~3500.
   console.log('\nCustom Exchange-Screener (Tag 131)...');
-  const MIN_MCAP_CUSTOM = 1e9;  // $1B+ minimum (Tag 170 reverted)
-  const MAX_MCAP_CUSTOM = 500e9;
+  // F-11: derselbe Boden wie im Predefined-Kanal — EINE Quelle, kein zweiter Zahlen-Boden.
+  // Diese beiden gehen zusaetzlich als serverseitige Query-Grenzen an fetchExchangePage().
+  const MIN_MCAP_CUSTOM = MIN_MCAP_DISCOVERY;  // $800M+ (Tag 170 reverted, F-11 gesenkt)
+  const MAX_MCAP_CUSTOM = MAX_MCAP_DISCOVERY;  // $500B — unveraendert
   let customAdded = 0;
   // F-DP-037 (Tag 190): per-exchange statistics so we can surface silent
   // breakage. Without this, a 429 or schema break on one exchange just made
@@ -658,9 +680,9 @@ async function main() {
         if (sym.length > 12) continue;
         // BH-039: reject explicit non-equity rows. See _isNonEquityQuote() above.
         if (_isNonEquityQuote(q)) continue;
-        // Bug 4: USD-konvertieren vor dem Gate (MIN/MAX_MCAP_CUSTOM sind USD-Schwellen).
+        // Bug 4: USD-konvertieren vor dem Gate (die Schwellen sind USD-Schwellen).
         const mcap = toUsd(q.marketCap, q.currency, _FX_RATES);
-        if (!mcap || mcap < MIN_MCAP_CUSTOM || mcap > MAX_MCAP_CUSTOM) continue;
+        if (!inDiscoveryMcapBand(mcap)) continue;  // F-11: identischer Boden wie oben
         // audit/fix: class-share-normalize the map key. `exch` is the Yahoo
         // exchange CODE (NMS/NYQ/ASE = US; LSE/FRA/etc = foreign), so US class
         // shares pulled here fold onto their dash twin; foreign codes pass through.
@@ -1221,7 +1243,8 @@ module.exports = {
   toYahooClassShare, _looksUS, dedupKey, applyDeadRegistryAndCap,
   numEnv, capNewTickerAdmission, _isNonEquityQuote, EXCHANGE_SCREENER_SCHEMA_ERROR_RE,
   beideYahooKanaeleLeer,  // Tag 510: Doppelausfall-Waechter, einzeln pruefbar
-  discoveryErtragsZeile   // S4-DISC-001: Teilausfaelle sichtbar machen, einzeln pruefbar
+  discoveryErtragsZeile,  // S4-DISC-001: Teilausfaelle sichtbar machen, einzeln pruefbar
+  inDiscoveryMcapBand, MIN_MCAP_DISCOVERY, MAX_MCAP_DISCOVERY  // F-11: $800M-$500B-Band
 };
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
