@@ -120,6 +120,29 @@ check(`Toleranz ${JAHRESVERGLEICH_TOLERANZ_TAGE} Tage: 366 Tage zaehlen, 455 Tag
   assert.strictEqual(jahresVergleichIdx(fern, 'revenueQ', 0), null);
 });
 
+// ── Gleichstand und Kalender: zwei Verteidigungslinien mit 0 Live-Vorkommen ─────────
+check('Gleichstand bei exakt gleicher Abweichung: der juengere Index gewinnt', () => {
+  // 2025-04-05 liegt 360 Tage vor 2026-03-31, 2025-03-26 liegt 370 Tage davor — beide
+  // exakt 5 Tage neben der Jahresmarke und beide im Toleranzfenster. Deterministisch
+  // gewinnt der kleinere Index (das juengere Quartal), nicht "wer zuerst gefunden wurde".
+  const s = snap([100, 90, 80], ['2026-03-31', '2025-04-05', '2025-03-26']);
+  assert.deepStrictEqual(jahresVergleichIdx(s, 'revenueQ', 0), { idx: 1, quelle: 'datum' });
+});
+
+check('Kalender-Round-Trip: der 30. Februar ist kein Datum, kein 2. Maerz', () => {
+  // Date.parse rollt "2025-02-30" still auf den 2. Maerz weiter. Genau hier kippt der
+  // Versatz eine Entscheidung: gerollt laegen 2026-03-02 und "2025-02-30" exakt 365 Tage
+  // auseinander (Abweichung 0) und Position 1 gewaenne — obwohl es diesen Tag nicht gibt.
+  // Ehrlich ist Position 2 (2025-02-25, 370 Tage, Abweichung 5, im Fenster).
+  const s = snap([100, 90, 80], ['2026-03-02', '2025-02-30', '2025-02-25']);
+  assert.deepStrictEqual(periodEnds(s, 'revenueQ'), ['2026-03-02', null, '2025-02-25'],
+    'unmoeglicher Tag -> null, nicht stillschweigend weitergerollt');
+  assert.deepStrictEqual(jahresVergleichIdx(s, 'revenueQ', 0), { idx: 2, quelle: 'datum' });
+  // Gegenprobe: der 28. Februar existiert und geht unveraendert durch.
+  assert.deepStrictEqual(periodEnds(snap([100, 90], ['2026-03-31', '2025-02-28']), 'revenueQ'),
+    ['2026-03-31', '2025-02-28']);
+});
+
 // ── Block-Vergleiche (TTM gegen TTM) ────────────────────────────────────────────────
 check('jahresFensterAusgerichtet: sauberes 8-Quartals-Fenster -> true', () => {
   const enden = ['2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30',

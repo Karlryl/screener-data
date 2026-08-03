@@ -188,10 +188,17 @@ const JAHRESVERGLEICH_TOLERANZ_TAGE = 15;
 const MS_PRO_TAG = 86400000;
 
 // ISO-Tagesdatum -> Tagesnummer (UTC), sonst null. Keine Zeitzonen-Arithmetik.
+// ROUND-TRIP-PRUEFUNG (03.08.2026, reine Verteidigungslinie): das Muster ^\d{4}-\d{2}-\d{2}
+// laesst kalendarisch unmoegliche Tage durch, und Date.parse ROLLT sie still weiter —
+// "2025-02-30" wird zum 2. Maerz. Zwei Tage Versatz koennen bei einer Toleranz von 15 Tagen
+// eine Kandidaten-Entscheidung kippen. Deshalb: das aus der Tagesnummer zurueckformatierte
+// Datum muss dem Original entsprechen, sonst null (ehrlich kein Datum statt ein falsches).
+// 0 Vorkommen im lokalen Bestand — die Pruefung kostet nichts und schliesst die Klasse.
 function _tagesnummer(iso) {
   if (typeof iso !== 'string' || !/^\d{4}-\d{2}-\d{2}/.test(iso)) return null;
   const t = Date.parse(iso.slice(0, 10) + 'T00:00:00Z');
-  return Number.isFinite(t) ? t / MS_PRO_TAG : null;
+  if (!Number.isFinite(t)) return null;
+  return (new Date(t).toISOString().slice(0, 10) === iso.slice(0, 10)) ? t / MS_PRO_TAG : null;
 }
 
 /**
@@ -229,6 +236,13 @@ function jahresVergleichIdx(snapshot, field, i) {
     const tj = _tagesnummer(enden[j]);
     if (tj === null) continue;
     const abw = Math.abs((ti - tj) - JAHR_TAGE);
+    // GLEICHSTAND: strikt `<`, also gewinnt der KLEINERE Index — das juengere Quartal.
+    // Zwei Kandidaten mit exakt gleicher Abweichung liegen zwangslaeufig symmetrisch um die
+    // 365-Tage-Marke (einer davor, einer danach); der juengere haelt den Vergleich naeher am
+    // aktuellen Berichtsrhythmus, statt ihn weiter in die Vergangenheit zu ziehen. Die Regel
+    // ist damit deterministisch und nicht von der Fundreihenfolge abhaengig. Ausgezaehlt
+    // 03.08.2026: 0 Gleichstaende im Toleranzfenster ueber 886 datierte Positionen (4.768
+    // lokale Snapshots, Felder revenueQ/grossProfitQ/opIncQ) — festgenagelt, nicht geloggt.
     if (abw < bestAbw) { bestAbw = abw; best = j; }
   }
   if (best === null) return { idx: i + 4, quelle: 'position' };
