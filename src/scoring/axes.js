@@ -80,18 +80,23 @@ function revAnnualYoY(s) {
 // Drei Ausgaenge, alle drei aus jahresVergleichIdx:
 //   quelle 'datum'    -> das datierte Jahresquartal, egal an welcher Position.
 //   quelle 'position' -> KEIN Enddatum vorhanden: es liegt nichts vor, worueber zu urteilen
-//                        waere. Die alte Regel bleibt in Kraft, MITSAMT ihrem Luecken-Proxy
-//                        (fuehrende Quartale alle finit) — ohne Enden ist eine komplett
-//                        fehlende Quartals-Zeile nicht detektierbar.
+//                        waere. Die alte Regel bleibt in Kraft.
 //   null              -> datiert, aber kein Quartal im Jahresfenster: der Jahresvergleich
 //                        ist nicht bildbar. Behandelt wie bisher "zu wenige Quartale":
 //                        das Quartals-Bein droppt, annual-lag1 traegt (revGrowthLevel).
+// Der LUECKEN-PROXY (alle Quartale bis zum Vergleichsquartal finit) gilt in BEIDEN Zweigen.
+// Tag 518 hatte ihn im Datums-Zweig ersatzlos fallen lassen — begruendbar (das Enddatum
+// beweist die Paarung, ein Loch DAVOR stoert sie nicht), aber das ist eine zweite
+// Semantik-Aenderung, die als Nebenwirkung eines Datenrichtigkeits-Fixes reingerutscht ist.
+// Reproduziert an CRD-A (Werte-Loch an Position 2, Enden luecken-los): die Achse lieferte
+// dadurch neu -0,994 % statt wie vorher ehrlich auf die Jahresreihe zurueckzufallen
+// (-2,073 %). F-4 aendert ausschliesslich, WELCHES Quartal verglichen wird.
 function revQuartalsYoY(s) {
   const v = jahresVergleichIdx(s, 'revenueQ', 0);
   if (v === null) return null;
   const rq = norm(s, 'revenueQ');
   if (v.idx >= rq.length) return null;
-  if (v.quelle === 'position' && !rq.slice(0, v.idx + 1).every(Number.isFinite)) return null;
+  if (!rq.slice(0, v.idx + 1).every(Number.isFinite)) return null;
   const a = rq[0], b = rq[v.idx];
   if (!Number.isFinite(a) || !(b > 0)) return null;
   const g = a / b - 1;

@@ -131,12 +131,12 @@ function ursache(s) {
   if (!enden[0]) return 'ohne Perioden-Ende (Positionsregel unveraendert)';
   if (v === null) return `kein Quartal im Jahresfenster zu ${enden[0]} -> Quartals-Bein faellt weg, Jahresreihe traegt`;
   if (v.idx === 4) {
-    // Gleiche Position, andere Zulassung: die alte Regel verlangte ZUSAETZLICH, dass alle
-    // fuehrenden fuenf Quartale finit sind (Luecken-Proxy). Das Datum beweist die Ausrichtung
-    // direkt — eine Luecke DAZWISCHEN stoert den 0-gegen-4-Vergleich nicht.
+    // Der Luecken-Proxy (alle Quartale bis zum Vergleichsquartal finit) gilt in BEIDEN
+    // Zweigen — F-4 aendert nur, WELCHES Quartal verglichen wird. Bei Position 4 mit einem
+    // Loch davor bleibt es deshalb beim Fallback auf die Jahresreihe, wie vor F-4.
     const rq = norm({ ...s }, 'revenueQ');
     if (rq.slice(0, 5).some((x) => !Number.isFinite(x))) {
-      return `${enden[0]} vs ${enden[4]} (Pos 4, per Datum bestaetigt) — Quartals-Bein greift jetzt trotz Luecke davor`;
+      return `${enden[0]} vs ${enden[4]} (Pos 4, per Datum bestaetigt) — aber Loch in den Fuehrungsquartalen: Quartals-Bein faellt weg (unveraendert)`;
     }
     return 'Position 4 ist das Jahresquartal (unveraendert)';
   }

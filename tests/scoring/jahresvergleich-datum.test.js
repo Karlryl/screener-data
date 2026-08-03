@@ -11,7 +11,7 @@ const assert = require('assert');
 const {
   jahresVergleichIdx, jahresFensterAusgerichtet, periodEnds, JAHRESVERGLEICH_TOLERANZ_TAGE,
 } = require('../../src/scoring/snapshot.js');
-const { revGrowthLevel, revYoYComponents, revAcceleration } = require('../../src/scoring/axes.js');
+const { revGrowthLevel, revYoYComponents, revAcceleration, revQuartalsYoY } = require('../../src/scoring/axes.js');
 const { LAMPS } = require('../../src/scoring/lamps.js');
 const { overviewMetric } = require('../../src/scoring/overview.js');
 
@@ -82,6 +82,30 @@ check('kein Jahrespartner im Fenster -> null (wie "zu wenige Quartale")', () => 
 check('gar kein Jahres-Kandidat UND kein annual -> null (Achse droppt ehrlich)', () => {
   const s = snap([100, 90, 80, 70], ['2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'], []);
   assert.strictEqual(revGrowthLevel(s), null);
+});
+
+// ── Werte-Loch bei vollstaendigen Enden: die Luecken-Regel gilt in BEIDEN Zweigen ───
+// CRD-A-Muster (echte Reihe aus snapshots/CRD-A.json): revenueQ traegt an Position 2 ein
+// Loch, die Enden-Reihe ist LUECKENLOS und bestaetigt Position 4 als Jahresquartal. Die
+// Vollfinit-Regel bleibt trotzdem in Kraft — F-4 aendert ausschliesslich, WELCHES Quartal
+// verglichen wird, nicht ob eine loechrige Reihe ueberhaupt ein Quartals-Bein bekommt.
+const CRDA_WERTE = [320126000, 320086000, null, 334595000, 323339000, 358318000];
+const CRDA_ENDEN = ['2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30', '2025-03-31', '2024-12-31'];
+
+check('Werte-Loch trotz vollstaendiger Enden: Quartals-Bein droppt, Jahresreihe traegt', () => {
+  const s = snap(CRDA_WERTE, CRDA_ENDEN, [800, 1000]);
+  assert.deepStrictEqual(jahresVergleichIdx(s, 'revenueQ', 0), { idx: 4, quelle: 'datum' });
+  assert.strictEqual(revQuartalsYoY(s), null, 'loechrige Reihe darf keine Quartalszahl liefern');
+  assert.strictEqual(revYoYComponents(s).length, 1, 'nur das Jahres-Bein');
+  assert.ok(Math.abs(revGrowthLevel(s) - (-20)) < 1e-9, `revGrowthLevel=${revGrowthLevel(s)} erwartet -20 (Jahresreihe)`);
+});
+
+check('Gegenprobe: dieselbe Reihe OHNE Loch liefert das Quartals-Bein', () => {
+  const gefuellt = CRDA_WERTE.slice(); gefuellt[2] = 330000000;
+  const s = snap(gefuellt, CRDA_ENDEN, [800, 1000]);
+  const erwartet = (CRDA_WERTE[0] / CRDA_WERTE[4] - 1) * 100;   // -0,99 %
+  assert.ok(Math.abs(revQuartalsYoY(s) * 100 - erwartet) < 1e-9, 'gueltige Form muss durchgehen');
+  assert.ok(Math.abs(revGrowthLevel(s) - erwartet) < 1e-9, `revGrowthLevel=${revGrowthLevel(s)}`);
 });
 
 // ── Toleranz: aus den Daten begruendet, nicht gesetzt ───────────────────────────────
