@@ -42,6 +42,14 @@ const FIELD_REGISTRY = {
   annualCapex:        ['annual', 'scalar'],
   annualSGA:          ['annual', 'scalar'],
   annualDepreciation: ['annual', 'scalar'],
+  // F-1 (Karl-Mandat 03.08.2026) — Ausschuettungen an Aktionaere, aus demselben FTS-Cash-Flow-
+  // Modul wie annualSBC/annualCapex (pull-yahoo.js), deshalb dieselbe Skalar-Form.
+  // Vorzeichen: Yahoo speichert Mittelabfluesse negativ (wie annualCapex) — Rueckkauf und
+  // Dividende kommen als negative Betraege, netCommonStockIssuance ist positiv bei Emission
+  // und negativ bei Netto-Rueckkauf. Heute reine DATENERFASSUNG: kein Scoring-Konsument.
+  annualRepurchase:              ['annual', 'scalar'],
+  annualDividendsPaid:           ['annual', 'scalar'],
+  annualNetCommonStockIssuance:  ['annual', 'scalar'],
   // annual — Multi-Key-Objekt-Array
   annualBalance:      ['annual', 'multikey'],
   // timeseries — {value}-Objekt-Arrays (juengstes Quartal zuerst)

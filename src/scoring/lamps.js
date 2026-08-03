@@ -344,10 +344,17 @@ function inflationSuspect(s) {
 }
 
 // 15. Aktienzahl-Verwaesserung (5.2 Small-Cap-Board, Karl E-20260721-4 A1): Kohorten-relative
-// Warnung, KEIN Score-Effekt (wie alle Timing-Lampen 1-10). Liest annualShares direkt aus der SEC-
-// Tiefenserie (secAnnual, Tag 421/422) — Yahoo hat keine Aktienzahl-Historie, dieselbe Grenze wie
-// normSec()/cycleSeriesPair in score.js; hier lokal statt importiert (reine Anzeige-Lampe, kein
+// Warnung, KEIN Score-Effekt (wie alle Timing-Lampen 1-10). Liest annualShares aus der SEC-
+// Tiefenserie (secAnnual, Tag 421/422); hier lokal statt importiert (reine Anzeige-Lampe, kein
 // Cross-Modul-Kopplungsrisiko).
+//
+// KORREKTUR 03.08.2026: hier stand "Yahoo hat keine Aktienzahl-Historie". Das ist am Datenstand
+// widerlegt — Tag 219 zieht annualShares aus fundamentalsTimeSeries nach, und im CI-Snapshot-Baum
+// vom 03.08. tragen 12 418 von 12 501 Snapshots (99,3 %) mindestens zwei Jahre annual.annualShares.
+// Die Quelle hier bleibt trotzdem secAnnual, weil sie die TIEFE Serie liefert; die ehrliche Folge
+// ist aber nicht "Yahoo kann es nicht", sondern: secAnnual haengt nur an ~100 Namen, die Lampe
+// liefert fuer alle uebrigen null. Ein Yahoo-Fallback waere eine Verhaltensaenderung und gehoert
+// in einen eigenen Chunk, nicht in eine Kommentar-Korrektur.
 function annualSharesSeries(s) {
   const raw = s && s.secAnnual && s.secAnnual.annualShares;
   if (!Array.isArray(raw) || raw.length === 0) return null;

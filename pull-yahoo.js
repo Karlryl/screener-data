@@ -2594,6 +2594,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       }
       let ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD;
       let ftsAnnualSGA, ftsAnnualDepreciation, ftsAnnualShares;
+      // F-1 (Karl-Mandat 03.08.2026): Ausschuettungs-Reihen. Karls Trennung lautet
+      // "Investitionen ins Unternehmen sind nichts Schlechtes, Auszahlungen an Aktionaere schon" —
+      // dafuer braucht die Engine ueberhaupt erst die Zahlen. Reine DATENERFASSUNG, kein Scoring:
+      // keine Achse und keine Lampe liest die drei Reihen heute (Beleg: scripts/score-digest.js).
+      let ftsAnnualRepurchase, ftsAnnualDividendsPaid, ftsAnnualNetCommonStockIssuance;
       let ftsQuarterlyNI;
       if (useCache && cached.payload) {
         ftsAnnual = cached.payload.ftsAnnual;
@@ -2611,6 +2616,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // Tag 219 (audit F4 HIGH): annualShares added — same gradual-rollout
         // pattern as Tag 211l SGA/Depreciation.
         ftsAnnualShares = cached.payload.ftsAnnualShares || [];
+        // F-1: dieselbe schrittweise Einfuehrung wie Tag 211l/219 — KEIN FTS_CACHE_VERSION-Bump.
+        // Alte Caches liefern undefined -> leeres Array -> das Feld fehlt im Snapshot, wie bisher.
+        // Die Reihen fuellen sich mit dem Cache-Ablauf (CACHE_TTL_MS = 28 Tage) ueber die
+        // Rotation; volle Abdeckung also Ende August, nicht am Tag des Merges.
+        ftsAnnualRepurchase = cached.payload.ftsAnnualRepurchase || [];
+        ftsAnnualDividendsPaid = cached.payload.ftsAnnualDividendsPaid || [];
+        ftsAnnualNetCommonStockIssuance = cached.payload.ftsAnnualNetCommonStockIssuance || [];
       } else {
         // Tag-14: fundamentalsTimeSeries-Pull für annualOpInc/FCF/opIncQ.
         // F-DP-003: timeout raised to 60s (4 sequential HTTP calls inside);
@@ -2663,6 +2675,18 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           ftsAnnualShares = _ftsExtractByYear(fts.annualBs,
             ['ordinarySharesNumber', 'shareIssued']);
         }
+        // F-1 (Karl-Mandat 03.08.2026): Ausschuettungen an Aktionaere. KEIN zusaetzlicher
+        // Netzabruf — fts.annualCash traegt das komplette Cash-Flow-Modul bereits (Z.~1515),
+        // es wurden bisher nur SBC/Capex/D&A daraus gelesen.
+        // Schluesselnamen VERIFIZIERT gegen die Bibliotheks-Typen, nicht geraten:
+        // node_modules/yahoo-finance2/script/src/modules/fundamentalsTimeSeries.schema.js,
+        // Definition FundamentalsTimeSeriesCashFlowResult (Z.1339-1802) fuehrt
+        // repurchaseOfCapitalStock (Z.1365), cashDividendsPaid (Z.1425) und
+        // netCommonStockIssuance (Z.1443) — alle drei camelCase, alle im cash-flow-Modul.
+        // _ftsValue probiert zusaetzlich die snake_case-Variante der Edge-Nodes.
+        ftsAnnualRepurchase = _ftsExtractByYear(fts.annualCash, ['repurchaseOfCapitalStock']);
+        ftsAnnualDividendsPaid = _ftsExtractByYear(fts.annualCash, ['cashDividendsPaid']);
+        ftsAnnualNetCommonStockIssuance = _ftsExtractByYear(fts.annualCash, ['netCommonStockIssuance']);
         // Tag-90: Quarterly NetIncome (8-Quarter-Earnings-Stability)
         ftsQuarterlyNI = (fts.quarterlyFin || []).slice().reverse()
           .map(r => r && r.netIncome != null ? r.netIncome : null);
@@ -2681,7 +2705,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
             _cacheVersion: FTS_CACHE_VERSION,
             _ftsPartial: ftsPartial,
             cachedAt: new Date().toISOString(),
-            payload: { ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD, ftsQuarterlyNI, ftsAnnualSGA, ftsAnnualDepreciation, ftsAnnualShares }
+            payload: { ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD, ftsQuarterlyNI, ftsAnnualSGA, ftsAnnualDepreciation, ftsAnnualShares,
+              ftsAnnualRepurchase, ftsAnnualDividendsPaid, ftsAnnualNetCommonStockIssuance }
           }));
         } catch (e) { _log('WARN', 'FTS cache write failed for ' + (stock && stock.ticker) + ': ' + e.message); }
         if (ftsPartial) canonical._ftsPartial = true;
@@ -2807,6 +2832,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         ftsAnnualRnD           = _realignFtsAnchoredSeries(ftsAnnualRnD, true);
         ftsAnnualSGA           = _realignFtsAnchoredSeries(ftsAnnualSGA, true);
         ftsAnnualDepreciation  = _realignFtsAnchoredSeries(ftsAnnualDepreciation, true);
+        // F-1: die drei Ausschuettungs-Reihen stammen aus derselben FTS-Cash-Flow-Quelle und
+        // muessen denselben Versatz mitgehen — sonst stuende ein Rueckkauf neben dem Umsatz
+        // eines anderen Geschaeftsjahres.
+        ftsAnnualRepurchase              = _realignFtsAnchoredSeries(ftsAnnualRepurchase, true);
+        ftsAnnualDividendsPaid           = _realignFtsAnchoredSeries(ftsAnnualDividendsPaid, true);
+        ftsAnnualNetCommonStockIssuance  = _realignFtsAnchoredSeries(ftsAnnualNetCommonStockIssuance, true);
       }
       // Tag-28: annualBalance aus FTS überschreiben wenn FTS mehr nicht-null Werte hat
       // F-DQ-011: extend usability check to include Tag 211l fields so FTS rows that
@@ -2851,6 +2882,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // Tag 219: shares per year — see Tag 219c agent F4 fix. Unblocks
       // methods/buyback-yield.js + makes capital-allocation-quality 4/4.
       if ((ftsAnnualShares || []).length > 0)       canonical.annual.annualShares = ftsAnnualShares;
+      // F-1: Ausschuettungs-Reihen, additiv wie SGA/Depreciation (nur setzen wenn nicht leer,
+      // damit ein alter FTS-Cache kein leeres Feld ins Schema schreibt). Alle drei sind
+      // WAEHRUNGS-Betraege und laufen deshalb — anders als annualShares (Stueckzahl, Z.767) —
+      // korrekt durch die FX-Skalierung von snap.annual mit.
+      if ((ftsAnnualRepurchase || []).length > 0)              canonical.annual.annualRepurchase = ftsAnnualRepurchase;
+      if ((ftsAnnualDividendsPaid || []).length > 0)           canonical.annual.annualDividendsPaid = ftsAnnualDividendsPaid;
+      if ((ftsAnnualNetCommonStockIssuance || []).length > 0)  canonical.annual.annualNetCommonStockIssuance = ftsAnnualNetCommonStockIssuance;
       // Tag-90: quarterlyNI in timeseries
       // F-NY-001 (audit 2026-06-08): nulls were wrapped as {value:null}, so length-
       // based "computable" checks saw N entries that could be entirely empty. Keep
