@@ -509,6 +509,16 @@ function checkOptionalProfitStreak(r, where, errs) {
 // Erzeuger sie nie (Sperre + Waechter in tests/einmalertrag-prognose.test.js).
 const EINMALERTRAG_LAMPE = 'einmalertrag';
 const VALID_EINMALERTRAG_PROGNOSE = ['bestaetigt', 'eingebrochen', 'nichtAnwendbar', 'nichtPruefbar'];
+// ⚠ WARUM HIER KEIN "Lampe ⟹ non-null" STEHT (Review-Befund 2, 03.08.2026): null IST auf
+// einer Lampen-Zeile der SOLL-Zustand, sobald die Prognose vollstaendig und vergleichbar
+// ist (lamps.js einmalertragPrognose, letzte Zeile; docs/findash-export-v1.md). Eine solche
+// Regel wuerde also genau die am besten belegten Zeilen falsch-rot faerben.
+// WO DIE VERDRAHTUNG STATTDESSEN HAENGT: tests/einmalertrag-prognose.test.js, Block "KETTE"
+// — er faehrt ein Fixture MIT unvollstaendiger Prognose durch scoreUniverse ->
+// produceRankings -> mapBoardRow und verlangt am ENDE 'nichtPruefbar', einen Wert, der nie
+// null sein darf. Gegengeprobt am 03.08. durch Ausbau JEDER der drei Stationen:
+// ROW_FIELDS -> 3 fail, score.js rowMeta -> 1 fail, lamps.js Erzeuger -> 5 fail.
+// Was eine EINZELNE Zeile strukturell nicht sehen kann, prueft checkPrognoseFeldHomogen.
 function checkEinmalertragPrognose(r, where, errs) {
   if (!('einmalertragPrognose' in r)) return;   // Abwesenheit legitim (Altbestand)
   const v = r.einmalertragPrognose;
@@ -519,6 +529,19 @@ function checkEinmalertragPrognose(r, where, errs) {
   }
   if (!Array.isArray(r.lamps) || !r.lamps.includes(EINMALERTRAG_LAMPE)) {
     errs.push(`${where}: einmalertragPrognose=${JSON.stringify(v)} auf Zeile OHNE Lampe '${EINMALERTRAG_LAMPE}'`);
+  }
+}
+// Datei-Ebene: das Feld ist entweder auf ALLEN Zeilen da oder auf KEINER. Die Zeilen-Pruefung
+// oben laesst Abwesenheit durch (Altbestand trug das Feld nie) und kann deshalb einen halb
+// verdrahteten Erzeuger nicht sehen. Der Writer fuehrt einmalertragPrognose in ROW_FIELDS und
+// setzt es auf JEDER Zeile (undefined -> null) — Uneinheitlichkeit innerhalb einer Datei ist
+// damit kein legitimer Zustand, sondern ein kaputter Producer. Kein Falsch-Rot-Risiko: alte
+// Dateien haben es auf keiner Zeile, neue auf jeder.
+function checkPrognoseFeldHomogen(rows, where, errs) {
+  if (!Array.isArray(rows) || rows.length < 2) return;
+  const mit = rows.filter((r) => r && typeof r === 'object' && 'einmalertragPrognose' in r).length;
+  if (mit !== 0 && mit !== rows.length) {
+    errs.push(`${where}: einmalertragPrognose nur auf ${mit} von ${rows.length} Zeilen vorhanden — halb verdrahteter Producer (das Feld steht in ROW_FIELDS und muss auf jeder Zeile stehen)`);
   }
 }
 // enum|null field must be PRESENT and either null or one of the allowed values.
@@ -708,6 +731,7 @@ function validateFile(mk, kind, errs, opts = {}) {
   if (!Array.isArray(mk.unprofitable)) errs.push(`${kind}: unprofitable not array`);
   (mk.profitable || []).forEach((r, i) => validateBoardRow(r, `${kind}.profitable[${i}]`, errs));
   (mk.unprofitable || []).forEach((r, i) => validateBoardRow(r, `${kind}.unprofitable[${i}]`, errs));
+  checkPrognoseFeldHomogen([].concat(mk.profitable || [], mk.unprofitable || []), kind, errs);
   // R2.18: each track is its OWN score-desc list (score.js rankBy/byScore sorts profitable and
   // unprofitable separately), so rank(a)+score(b) are checked per track, not across both.
   checkRankSequence(mk.profitable, `${kind}.profitable`, errs);

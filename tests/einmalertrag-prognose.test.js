@@ -26,7 +26,7 @@ const assert = require('node:assert/strict');
 const { einmalertrag, einmalertragPrognose } = require('../src/scoring/lamps.js');
 const { scoreUniverse, produceRankings } = require('../src/scoring/score.js');
 const formulas = require('../src/scoring/formulas/index.js');
-const { mapBoardRow, mapOverviewRow, validateBoardRow, validateOverviewRow } = require('../scripts/write-findash-export.js');
+const { mapBoardRow, mapOverviewRow, validateBoardRow, validateOverviewRow, validateFile } = require('../scripts/write-findash-export.js');
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -189,6 +189,41 @@ test('WAECHTER: ein Zustand auf einer Zeile OHNE die Lampe fliegt auf', () => {
     einmalertragPrognose: 'nichtPruefbar' };
   const e = []; validateOverviewRow(mapOverviewRow(ov, 0), 'o', e);
   assert.ok(e.some((x) => /einmalertragPrognose/.test(x)), 'Uebersichts-Zeile ohne Lampe blieb unbemerkt');
+});
+
+// ── 5. Die Luecke, die eine ZEILE strukturell nicht sehen kann ──────────────────────────
+// checkEinmalertragPrognose kehrt bei fehlendem Feld sofort um ("Abwesenheit legitim
+// (Altbestand)"). Das ist fuer eine EINZELNE Zeile richtig — alte Exporte tragen das Feld
+// nicht. Ueber die ganze DATEI hinweg ist Uneinheitlichkeit aber unmoeglich: der Writer
+// fuehrt das Feld in ROW_FIELDS und setzt es auf JEDER Zeile (r[k] === undefined -> null).
+// Traegt eine Datei es auf einigen Zeilen und auf anderen nicht, ist der Erzeuger halb
+// kaputt — und genau das sieht keine Einzelzeilen-Pruefung.
+// KEIN Falsch-Rot-Risiko: alte Dateien haben es auf KEINER Zeile, neue auf JEDER.
+// (Warum hier nicht "Lampe ⟹ non-null" steht: null IST auf einer Lampen-Zeile der
+//  Soll-Zustand, sobald die Prognose vollstaendig ist. Die Verdrahtung selbst sichert der
+//  KETTE-Test oben mit 'nichtPruefbar' — einem Wert, der nie null sein darf; gegengeprobt
+//  am 03.08. durch Ausbau aller drei Stationen: ROW_FIELDS 3 fail, score.js rowMeta 1 fail,
+//  lamps.js Erzeuger 5 fail.)
+test('DATEI-WAECHTER: das Feld ist entweder auf allen Zeilen da oder auf keiner', () => {
+  const mitFeld = mapBoardRow({ ...basisZeile, einmalertragPrognose: 'nichtPruefbar' }, 0);
+  const ohneFeld = mapBoardRow(basisZeile, 1);
+  delete ohneFeld.einmalertragPrognose;
+  const datei = (rows) => ({ schema: 'findash-export/v1', branch: 'semiconductors', boardStatus: 'core',
+    profitable: rows, unprofitable: [] });
+
+  const gemischt = [];
+  validateFile(datei([mitFeld, ohneFeld]), 'semiconductors', gemischt);
+  assert.ok(gemischt.some((x) => /einmalertragPrognose/.test(x)),
+    'halb verdrahtete Datei blieb unbemerkt: ' + JSON.stringify(gemischt));
+
+  const alleMit = [];
+  validateFile(datei([mitFeld, mapBoardRow({ ...basisZeile, einmalertragPrognose: null }, 1)]), 'semiconductors', alleMit);
+  assert.ok(!alleMit.some((x) => /einmalertragPrognose/.test(x)), 'neue Datei falsch-rot: ' + JSON.stringify(alleMit));
+
+  const alleOhne = [];
+  const ohne2 = mapBoardRow(basisZeile, 1); delete ohne2.einmalertragPrognose;
+  validateFile(datei([ohneFeld, ohne2]), 'semiconductors', alleOhne);
+  assert.ok(!alleOhne.some((x) => /einmalertragPrognose/.test(x)), 'Altbestand falsch-rot: ' + JSON.stringify(alleOhne));
 });
 
 console.log(`\neinmalertrag-prognose: ${pass} ok, ${fail} fail`);
