@@ -36,6 +36,11 @@ const JUMP_THRESHOLD = 0.25;
 // Waehrungs-Tabelle drin. Waechter: tests/watch-fx-sanity-samedayrerun.test.js.
 const BUCKETS = ['usOver', 'foreignOver'];
 
+// Bekannte, bewusst nicht behobene Unschaerfe (Review-Notiz 03.08.2026): der Aufrufer prueft
+// das Ergebnis mit `if (!s)`, also zaehlt eine Datei, die gueltiges JSON mit dem Inhalt
+// false / 0 / null enthaelt, als Parse-Fehler. Praktisch irrelevant — ein Snapshot ist immer
+// ein Objekt, und ein solcher Inhalt waere ohnehin ein Befund. Hier notiert statt gefixt,
+// damit der naechste Leser nicht dieselbe Runde dreht.
 function loadJson(p, fallback) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return fallback; }
 }
