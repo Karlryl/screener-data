@@ -117,7 +117,11 @@ check('PRAEMISSE: es gibt weiterhin keinen Erzeuger von pipeline-health/-Bericht
     treffer = execFileSync('git', ['grep', '-l', 'pipeline-health', '--', '*.js', '*.yml'],
       { cwd: ROOT, encoding: 'utf8' }).trim().split(/\r?\n/).filter(Boolean);
   } catch (e) { treffer = []; }   // kein Treffer -> git grep endet mit 1
-  const erlaubt = new Set(['scripts/pipeline-health-check.js', '.github/workflows/daily-pull.yml']);
+  // Die eigene Datei nennt pipeline-health natuerlich auch — sie SCHREIBT aber nur in
+  // ein Temp-Verzeichnis, nie ins Repo. Der Pfad kommt aus __filename statt als
+  // getippte Zeichenkette, damit ein Umbenennen den Waechter nicht heimlich entschaerft.
+  const selbst = path.relative(ROOT, __filename).split(path.sep).join('/');
+  const erlaubt = new Set(['scripts/pipeline-health-check.js', '.github/workflows/daily-pull.yml', selbst]);
   const fremd = treffer.filter((f) => !erlaubt.has(f));
   assert.deepEqual(fremd, [],
     'neue Datei(en) fassen pipeline-health an: ' + fremd.join(', ')
