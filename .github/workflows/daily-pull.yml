@@ -566,15 +566,33 @@ jobs:
           name: prep-state
           path: .
 
-      # Alle Shard-Snapshot-Segmente in EINEN snapshots/-Ordner mergen. Disjunkt
+      # Alle Shard-Snapshot-Segmente in EINEN Ordner mergen. Disjunkt
       # (pull-shard.test.js beweist die Partition) -> keine Dateikollision; falls doch,
       # faengt der merge-Helfer sie (on-disk < summierte n_ok -> exit 1).
+      # F-12 (Karl 04.08.): Ziel ist NICHT mehr direkt snapshots/, sondern der
+      # Eingangsordner — der Filter-Schritt darunter uebernimmt von dort nur die
+      # autorisierten Staende nach snapshots/. Der Eingang bleibt vollstaendig liegen
+      # (keine Loeschung); er lebt ohnehin nur fuer die Dauer dieses Jobs auf dem Runner.
       - name: Download all shard snapshots
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: snapshots-shard-*
-          path: snapshots
+          path: snapshots-eingang
           merge-multiple: true
+
+      # F-12 (Karl-Entscheid 04.08.2026): 1.806 der 12.540 Snapshots (14,4 %) gehoeren zu
+      # Tickern, die seit der Watchlist-Kuerzung am 17.07. nicht mehr in watchlist.json
+      # stehen. Sie werden nie wieder gezogen, ueberleben aber in den per-Shard-Caches und
+      # wandern taeglich durch den Merge in jede Messung und ins 30-MB-Artefakt.
+      # DIESE STELLE deckt alle Artefakt-Wege: alles, was danach im merge-Job laeuft
+      # (prune-watchlist, merge-shard-manifests, verify-freshness, coverage-gate, die vier
+      # Watcher, update-ath-state) liest snapshots/, und das hochgeladene "snapshots"-
+      # Artefakt fuer scoring-Job und monthly-sec-xbrl.yml wird daraus gebaut.
+      # VOR "Prune Watchlist": der Filter soll gegen die COMMITTETE Watchlist schneiden,
+      # nicht gegen die frisch geprunte — sonst faellt die on-disk-Zahl unter die summierte
+      # n_ok der Shards und merge-shard-manifests' Kollisions-Stop wuerde falsch feuern.
+      - name: F-12 Karteileichen-Filter (nur autorisierte Snapshots ins Artefakt)
+        run: node scripts/filter-snapshot-merge.js --eingang snapshots-eingang --ziel snapshots --watchlist watchlist.json
 
       # audit BH-143 (verschoben von Tag 142/prep — siehe Kommentar dort): Prune lief
       # frueher im prep-Job VOR dem Fan-out, wo snapshots/ nur die alte _manifest.json
@@ -1010,15 +1028,23 @@ jobs:
       # Cross-Run-Cache-Mechanismus wie die per-Shard-Snapshot-Persistenz (Tag 261):
       # restore-only hier, separater Save NACH dem Scoring mit if:always() (sonst
       # Bootstrapping-Deadlock — ohne vorherigen erfolgreichen Save gibt es nie einen
-      # Cache-Hit). Eigener Key-Namespace (last-good-disk-scoring-), keine
+      # Cache-Hit). Eigener Key-Namespace (last-good-disk-scoring-f12-), keine
       # Ueberschneidung mit den Shard-Caches.
+      # F-12 (04.08.2026): Namespace EINMALIG auf -f12- gehoben. Der Filter oben nimmt dem
+      # scoring-Job in einem Schlag ~1.806 Karteileichen-Snapshots weg (14,4 %). Die alte
+      # High-Water-Baseline stand auf dem UNGEFILTERTEN Bestand — assertCoverageFloor haette
+      # den ersten gefilterten Lauf mit "Universum geschrumpft" hart abgebrochen, obwohl kein
+      # einziger Snapshot fehlt. Genau der Reset, den die Fehlermeldung in run-screener.js
+      # vorsieht ("bei legitimem Schrumpfen _last_good_disk.json loeschen"); ein
+      # Cache-Namespace-Wechsel ist die CI-Fassung davon. Der Floor greift ab dem zweiten
+      # Lauf wieder voll, jetzt auf der ehrlichen Population.
       - name: Restore Coverage-Floor Baseline (_last_good_disk.json)
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: snapshots/_last_good_disk.json
-          key: last-good-disk-scoring-${{ github.run_id }}
+          key: last-good-disk-scoring-f12-${{ github.run_id }}
           restore-keys: |
-            last-good-disk-scoring-
+            last-good-disk-scoring-f12-
 
       # audit BH-003: die vier Live-Universum-Anker-Suiten (score.integration/
       # quality-board/phase/score-breakdown) liefen nach dem synthetischen Pre-Pull-
@@ -1110,7 +1136,9 @@ jobs:
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: snapshots/_last_good_disk.json
-          key: last-good-disk-scoring-${{ github.run_id }}
+          # F-12: Namespace muss zum Restore oben passen (-f12-), sonst schriebe der Save in
+          # den alten Namespace und der Reset waere nach einem Lauf wieder aufgehoben.
+          key: last-good-disk-scoring-f12-${{ github.run_id }}
 
       - name: Build findash-export v1
         run: |

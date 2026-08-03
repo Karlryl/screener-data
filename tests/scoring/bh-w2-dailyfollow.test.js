@@ -157,8 +157,16 @@ test('BH-117: Restore-Step cached exakt snapshots/_last_good_disk.json (nicht de
   const s = section('name: Restore Coverage-Floor Baseline', 'name: Live-Universum-Gate');
   assert.match(s, /uses: actions\/cache\/restore@[0-9a-f]{40} # v4\.\d+\.\d+/);
   assert.match(s, /path: snapshots\/_last_good_disk\.json/);
-  assert.match(s, /key: last-good-disk-scoring-\$\{\{ github\.run_id \}\}/);
-  assert.match(s, /restore-keys:\s*\|\s*\n\s*last-good-disk-scoring-/);
+  // F-12 (04.08.2026): der Namespace-SUFFIX darf sich aendern — ein Wechsel ist die
+  // CI-Fassung des dokumentierten Baseline-Resets (run-screener.js: "bei legitimem
+  // Schrumpfen snapshots/_last_good_disk.json loeschen zum Reset"), und der F-12-Filter
+  // nimmt dem scoring-Job einmalig 14 % Karteileichen weg. Festgenagelt bleibt die SACHE
+  // (strenger als vorher): Praefix last-good-disk-scoring-, per-Lauf-Schluessel
+  // (github.run_id) UND ein restore-keys-Fallback mit GENAU demselben Namespace — vorher
+  // reichte dort das blosse Praefix, ein abweichender Suffix waere durchgegangen.
+  const ns = s.match(/key: (last-good-disk-scoring-[\w.-]*)\$\{\{ github\.run_id \}\}/);
+  assert.ok(ns, 'Restore-Key muss last-good-disk-scoring-<namespace>${{ github.run_id }} lauten');
+  assert.match(s, new RegExp('restore-keys:\\s*\\|\\s*\\n\\s*' + ns[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*\\n'));
 });
 test('BH-117: Save-Step folgt direkt auf Run Hypergrowth Screener, vor Build findash-export', () => {
   const iRun = yml.indexOf('name: Run Hypergrowth Screener');
@@ -171,7 +179,9 @@ test('BH-117: Save-Step laeuft if:always() (sonst Bootstrapping-Deadlock, analog
   assert.match(s, /if:\s*always\(\)/);
   assert.match(s, /uses: actions\/cache\/save@[0-9a-f]{40} # v4\.\d+\.\d+/);
   assert.match(s, /path: snapshots\/_last_good_disk\.json/);
-  assert.match(s, /key: last-good-disk-scoring-\$\{\{ github\.run_id \}\}/);
+  // F-12: Namespace-Suffix frei (s. Restore-Test oben), per-Lauf-Schluessel Pflicht.
+  // Dass Restore und Save DENSELBEN Namespace tragen, prueft der Gleichheits-Test unten.
+  assert.match(s, /key: last-good-disk-scoring-[\w.-]*\$\{\{ github\.run_id \}\}/);
 });
 test('BH-117: Save-Key traegt denselben Namespace/Praefix wie der Restore-Key (sonst nie ein Cache-Hit)', () => {
   const restoreSection = section('name: Restore Coverage-Floor Baseline', 'name: Live-Universum-Gate');

@@ -56,6 +56,14 @@ snapshots/
 !snapshots/_manifest.json
 snapshots/_manifest-full.json
 
+# F-12 (04.08.2026): Eingangsordner des Karteileichen-Filters im merge-Job — dorthin
+# laedt download-artifact die Shard-Segmente, scripts/filter-snapshot-merge.js uebernimmt
+# von dort nur die autorisierten Staende nach snapshots/. Der Ordner MUSS ignoriert sein:
+# der Commit-Schritt in daily-pull.yml faehrt `git add -A` und wuerde sonst taeglich
+# ~12.500 Snapshot-JSONs (30 MB) ins Repo schreiben — genau der Bloat, den Tag 151
+# fuer snapshots/ abgestellt hat.
+snapshots-eingang/
+
 # 5.2 WEG 1b: der getrennte Small-Cap-Snapshot-Store, genau wie snapshots/ oben NICHT
 # committet (gleicher Grund: taeglicher Git-Commit von hunderten Snapshot-JSONs waere
 # Repo-Bloat, exakt was Tag 151 fuer snapshots/ vermeiden wollte). KORRIGIERT (Tag 432,
