@@ -181,6 +181,58 @@ function toIpoDate(raw) {
 // analogous to the subtype:'common' filter in tv-scanner.js.
 const NON_COMMON_SUFFIX_RE = /\.(?:PR(?:\.[A-Z]+)?|PF|P|WT|RT)$/i;
 
+// BA-SC-001 Stufe 1: das TMX-Register ist ein VOLLREGISTER aller listed issuers —
+// darin stehen neben Firmen auch Vehikel, die nie eine Aktie werden koennen und die
+// der Suffix-Filter oben nicht sieht, weil sie voellig normale Root-Ticker tragen:
+// CDRs (kanadische Zertifikate auf US-Aktien: "Apple CDR (CAD Hedged)" -> AAPL.TO),
+// ETFs/ETNs, physische Metall-Treuhaender (Sprott PHYS/PSLV/CEF/COP/U), Geldmarkt-,
+// T-Bill- und Anleihefonds. Sie tragen nur ein Merkmal: den Namen.
+// Gemessen 2026-08-03: 1336 von 3603 Registerzeilen sind solche Vehikel, 45 davon
+// lagen bereits im Bestand (watchlist.json, added_via~tsx). Jede kostet einen
+// Yahoo-Abruf und verzerrt den Universums-Nenner. Fundamentals fangen sie spaeter
+// ohnehin ab — das hier ist Hygiene am Zufluss, kein Scoring.
+//
+// BEWUSST NUR diese sechs Klassen. Ein generischer Fund/Trust/REIT-Filter (Stufe 2)
+// ist NICHT gebaut: er wuerde operative Firmen im Trust-Mantel erschlagen
+// (Chemtrade Logistics Income Fund, Boston Pizza Royalties Income Fund) und die
+// gesamte kanadische REIT-Landschaft. Jede Alternative unten braucht darum einen
+// harten, mehrteiligen Anker statt eines Substring-Treffers.
+const NON_STOCK_NAME_RE = new RegExp([
+  '\\bCDRs?\\b',                                  // Canadian Depositary Receipt
+  '\\b(?:ETFs?|ETNs?)\\b',                        // Exchange Traded Fund / Note
+  // Physischer Metall-Treuhaender: verlangt ALLE drei Bestandteile (Physical +
+  // Metall + Trust/Fund). "Precious Metals and Mining Trust" (aktiv gemanagter
+  // Minen-Fonds) und jeder operative Minenbetreiber bleiben damit unberuehrt.
+  '\\bPhysical\\b(?=.*\\b(?:Gold|Silver|Platinum|Palladium|Copper|Uranium|Bullion|Metals?)\\b)(?=.*\\b(?:Trust|Fund)\\b)',
+  // Geldmarkt: "Money Market"/"Cash Management" allein koennte ein Dienstleister
+  // sein, darum zusaetzlich ein Vehikel-Wort dahinter.
+  '\\b(?:Money Market|Cash Management)\\b(?=.*\\b(?:Fund|Trust|Portfolio|Class)\\b)',
+  '\\bT-Bills?\\b|\\bTreasury Bills?\\b',
+  '\\bBond (?:Fund|Trust)\\b',                    // "Bond" allein waere zu breit
+].join('|'), 'i');
+
+// Ertrags-Untergrenze (BA-SC-001): ein Namensfilter, der ploetzlich fast die ganze
+// Ausbeute frisst, ist kein Hygiene-Effekt mehr, sondern der Verdacht auf Layout-
+// Drift — etwa eine Spaltenverschiebung, nach der der "Name" aus einer Spalte
+// kommt, in der bei jeder Zeile "ETF" steht. Der Auftrag nannte 30 %; die Messung
+// vom 2026-08-03 widerlegt das als Schwelle: 1336/3603 = 37,1 % des Registers SIND
+// Fondsvehikel, eine 30 %-Schwelle haette bei jedem gesunden Lauf gefeuert und die
+// Warnung wertlos gemacht. Darum 55 % — ~18 Punkte Luft ueber dem Normalstand und
+// weit unter dem "matcht auf alles"-Fall (~100 %). Kein Abbruch, nur Warnung.
+const NAME_FILTER_WARN_RATIO = 0.55;
+
+// Zaehlzeile + optionale Warnung als reine Funktion, damit die Schwelle einzeln
+// pruefbar ist (in fetchTsxCanada saesse sie hinter dem Netzaufruf).
+function nameFilterLines(dropped, seen) {
+  const lines = [`  [TSX-CA] TSX-Namensfilter: ${dropped} von ${seen} gedroppt (Stufe 1)`];
+  if (seen > 0 && dropped / seen > NAME_FILTER_WARN_RATIO) {
+    lines.push(`::warning::[TSX-CA] Namensfilter frisst ${(dropped / seen * 100).toFixed(1)} % der ` +
+      `Discovery-Ausbeute (${dropped}/${seen}, Schwelle ${(NAME_FILTER_WARN_RATIO * 100).toFixed(0)} %) — ` +
+      `Layout-Drift im TMX-Register? Namensspalte pruefen.`);
+  }
+  return lines;
+}
+
 // TMX root ticker -> Yahoo symbol. TMX uses '.' for class/preferred/CPC suffixes
 // (BBD.B); Yahoo rewrites that as '-' and appends the venue suffix.
 // Verified live: BBD.B -> BBD-B.TO.
@@ -214,7 +266,7 @@ function locateColumns(rows, strings) {
   return null;
 }
 
-function parseSheet(sheetXml, strings, result) {
+function parseSheet(sheetXml, strings, result, stats = { seen: 0, dropped: 0 }) {
   const rows = [];
   const rowRe = /<row\b[^>]*>([\s\S]*?)<\/row>/g;
   let rm;
@@ -237,12 +289,17 @@ function parseSheet(sheetXml, strings, result) {
     const root = cells[cols.cTicker];
     // audit/fix BH-063: preferred/CPC/warrant/right suffix -> not common equity, drop.
     if (NON_COMMON_SUFFIX_RE.test(String(root || '').trim())) continue;
+    // BA-SC-001 Stufe 1: Nicht-Aktien am Namen abfangen. Gezaehlt, nicht still
+    // gedroppt — fetchTsxCanada meldet die Quote und warnt bei Layout-Drift.
+    const name = String(cells[cols.cName] || '').trim();
+    stats.seen++;
+    if (NON_STOCK_NAME_RE.test(name)) { stats.dropped++; continue; }
     const yahoo = toYahooTicker(root, exch);
     if (!yahoo) continue;
     if (result.has(yahoo)) continue;
     const info = {
       ticker: yahoo,
-      name: String(cells[cols.cName] || '').trim(),
+      name,
       exchange: exch,
       source: 'tsx',
       country: 'Canada',
@@ -269,13 +326,15 @@ async function fetchTsxCanada() {
       ? parseSharedStrings(entries['xl/sharedStrings.xml'].toString('utf8'))
       : [];
     let tsxCount = 0, tsxvCount = 0;
+    const nameStats = { seen: 0, dropped: 0 };
     if (entries['xl/worksheets/sheet1.xml']) {
-      tsxCount = parseSheet(entries['xl/worksheets/sheet1.xml'].toString('utf8'), strings, result);
+      tsxCount = parseSheet(entries['xl/worksheets/sheet1.xml'].toString('utf8'), strings, result, nameStats);
     }
     if (entries['xl/worksheets/sheet2.xml']) {
-      tsxvCount = parseSheet(entries['xl/worksheets/sheet2.xml'].toString('utf8'), strings, result);
+      tsxvCount = parseSheet(entries['xl/worksheets/sheet2.xml'].toString('utf8'), strings, result, nameStats);
     }
     console.log(`  [TSX-CA] TSX ${tsxCount} + TSXV ${tsxvCount} = ${result.size} issuers`);
+    for (const line of nameFilterLines(nameStats.dropped, nameStats.seen)) console.log(line);
     // audit/fix BH-061: a missing sheet entry or an unlocatable header row
     // (locateColumns returns null) silently yields 0 for that venue while the
     // OTHER sheet still keeps the whole Map nonempty/green — no contract check
@@ -292,7 +351,10 @@ async function fetchTsxCanada() {
   return result;
 }
 
-module.exports = { fetchTsxCanada, NON_COMMON_SUFFIX_RE, toYahooTicker };
+module.exports = {
+  fetchTsxCanada, NON_COMMON_SUFFIX_RE, toYahooTicker,
+  parseSheet, NON_STOCK_NAME_RE, nameFilterLines, NAME_FILTER_WARN_RATIO,
+};
 
 if (require.main === module) {
   fetchTsxCanada().then(m => {
