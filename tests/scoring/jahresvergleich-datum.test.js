@@ -54,8 +54,10 @@ check('000962.SZ-Muster: revGrowthLevel rechnet gegen das 365-Tage-Quartal', () 
 check('ohne Enden-Reihe: Positionsregel i+4 unveraendert', () => {
   const s = snap(SZ_WERTE, null);
   assert.deepStrictEqual(jahresVergleichIdx(s, 'revenueQ', 0), { idx: 4, quelle: 'position' });
-  const g = revGrowthLevel(s);
-  assert.ok(Math.abs(g - (SZ_WERTE[0] / SZ_WERTE[4] - 1) * 100) < 1e-9, 'byte-identisch zur alten Rechnung');
+  // STRIKT gleich, nicht "nah dran": die Achse rechnet dieselben Operationen in derselben
+  // Reihenfolge, also muss auch dasselbe Bitmuster herauskommen. Eine 1e-9-Toleranz haette
+  // hier "byte-identisch" behauptet und es nicht geprueft.
+  assert.strictEqual(revGrowthLevel(s), (SZ_WERTE[0] / SZ_WERTE[4] - 1) * 100, 'byte-identisch zur alten Rechnung');
 });
 
 check('Enden vorhanden, aber Position i ohne Datum -> Positionsregel', () => {
