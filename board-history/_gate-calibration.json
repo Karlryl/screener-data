@@ -17,10 +17,19 @@
         "vorgaenger": "2026-07-29",
         "abstandTage": 1,
         "p99DeltaJeBoard": {
-          "consumer-discretionary": 3.0, "consumer-staples": 0.4, "energy": 0.8,
-          "financials": 2.6, "health-care": 2.2, "industrials": 1.8, "it-services": 2.0,
-          "materials": 1.6, "real-estate": 4.3, "semiconductors": 0.9,
-          "software-comm-services": 2.5, "tech-hardware": 0.4, "utilities": 5.3
+          "consumer-discretionary": 3,
+          "consumer-staples": 0.4,
+          "energy": 0.8,
+          "financials": 2.6,
+          "health-care": 2.2,
+          "industrials": 1.8,
+          "it-services": 2,
+          "materials": 1.6,
+          "real-estate": 4.3,
+          "semiconductors": 0.9,
+          "software-comm-services": 2.5,
+          "tech-hardware": 0.4,
+          "utilities": 5.3
         },
         "groesstesProTag": 5.3
       },
@@ -30,10 +39,19 @@
         "vorgaenger": "2026-07-29",
         "abstandTage": 4,
         "p99DeltaJeBoard": {
-          "consumer-discretionary": 6.4, "consumer-staples": 8.4, "energy": 13.9,
-          "financials": 5.2, "health-care": 4.2, "industrials": 9.3, "it-services": 1.7,
-          "materials": 5.1, "real-estate": 7.6, "semiconductors": 7.5,
-          "software-comm-services": 4.5, "tech-hardware": 2.8, "utilities": 22.9
+          "consumer-discretionary": 6.4,
+          "consumer-staples": 8.4,
+          "energy": 13.9,
+          "financials": 5.2,
+          "health-care": 4.2,
+          "industrials": 9.3,
+          "it-services": 1.7,
+          "materials": 5.1,
+          "real-estate": 7.6,
+          "semiconductors": 7.5,
+          "software-comm-services": 4.5,
+          "tech-hardware": 2.8,
+          "utilities": 22.9
         },
         "groesstesProTag": 5.725
       }
@@ -44,39 +62,289 @@
     "tagesabstand": "Die Grenze waechst linear mit dem Abstand zum Vorgaenger. Belegt an denselben zwei Laeufen: gleicher Vorgaenger, 1 Tag gegen 4 Tage — die Bewegung skaliert pro Tag auf dasselbe Niveau (Median-Verhaeltnis 0,80 nach Normierung). Eine Wurzel-Skalierung (Faktor 2,0 statt 4,0) haette den 4-Tages-Lauf weiter verworfen und die Sperre erhalten."
   },
   "boards": {
-    "consumer-discretionary": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
-    "consumer-staples": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
-    "energy": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
-    "financials": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
-    "health-care": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
-    "industrials": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
-    "it-services": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
-    "materials": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
-    "real-estate": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
-    "semiconductors": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
-    "software-comm-services": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
-    "survival": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
-    "tech-hardware": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false },
-    "utilities": { "dailyP99Samples": [], "sampleDates": [], "threshold": null, "frozen": false }
+    "consumer-discretionary": {
+      "dailyP99Samples": [
+        1.319999999999999
+      ],
+      "sampleDates": [
+        "2026-08-03"
+      ],
+      "threshold": null,
+      "frozen": false
+    },
+    "consumer-staples": {
+      "dailyP99Samples": [
+        1.6799999999999997
+      ],
+      "sampleDates": [
+        "2026-08-03"
+      ],
+      "threshold": null,
+      "frozen": false
+    },
+    "energy": {
+      "dailyP99Samples": [
+        2.78
+      ],
+      "sampleDates": [
+        "2026-08-03"
+      ],
+      "threshold": null,
+      "frozen": false
+    },
+    "financials": {
+      "dailyP99Samples": [
+        1.0200000000000002
+      ],
+      "sampleDates": [
+        "2026-08-03"
+      ],
+      "threshold": null,
+      "frozen": false
+    },
+    "health-care": {
+      "dailyP99Samples": [
+        1.0599999999999994
+      ],
+      "sampleDates": [
+        "2026-08-03"
+      ],
+      "threshold": null,
+      "frozen": false
+    },
+    "industrials": {
+      "dailyP99Samples": [
+        2.039999999999999
+      ],
+      "sampleDates": [
+        "2026-08-03"
+      ],
+      "threshold": null,
+      "frozen": false
+    },
+    "it-services": {
+      "dailyP99Samples": [
+        0.4799999999999997
+      ],
+      "sampleDates": [
+        "2026-08-03"
+      ],
+      "threshold": null,
+      "frozen": false
+    },
+    "materials": {
+      "dailyP99Samples": [
+        1.0800000000000005
+      ],
+      "sampleDates": [
+        "2026-08-03"
+      ],
+      "threshold": null,
+      "frozen": false
+    },
+    "real-estate": {
+      "dailyP99Samples": [
+        1.5
+      ],
+      "sampleDates": [
+        "2026-08-03"
+      ],
+      "threshold": null,
+      "frozen": false
+    },
+    "semiconductors": {
+      "dailyP99Samples": [
+        1.6400000000000006
+      ],
+      "sampleDates": [
+        "2026-08-03"
+      ],
+      "threshold": null,
+      "frozen": false
+    },
+    "software-comm-services": {
+      "dailyP99Samples": [
+        0.9
+      ],
+      "sampleDates": [
+        "2026-08-03"
+      ],
+      "threshold": null,
+      "frozen": false
+    },
+    "survival": {
+      "dailyP99Samples": [],
+      "sampleDates": [],
+      "threshold": null,
+      "frozen": false
+    },
+    "tech-hardware": {
+      "dailyP99Samples": [
+        0.5599999999999994
+      ],
+      "sampleDates": [
+        "2026-08-03"
+      ],
+      "threshold": null,
+      "frozen": false
+    },
+    "utilities": {
+      "dailyP99Samples": [
+        4.739999999999999
+      ],
+      "sampleDates": [
+        "2026-08-03"
+      ],
+      "threshold": null,
+      "frozen": false
+    }
   },
   "_verworfen": {
     "_doc": "Rohmessungen der alten Kalibrierung, unveraendert erhalten. Ausser Kraft gesetzt am 03.08.2026 (Grund: _neukalibrierung_2026_08_03). Keine Loeschung, nur ein Flag — dieselbe Regel wie in _excluded.json.",
     "stichproben_stammen_aus": "2026-07-14 bis 2026-07-18 (it-services zusaetzlich 2026-07-26) — alle auf der Ausschlussliste in board-history/_excluded.json. Wo sampleDates fehlt, war die Datei aelter als die Datums-Mitschrift (F8); die Werte decken sich mit den nachgerechneten Deltas genau dieser Vintages.",
     "boards": {
-      "consumer-discretionary": { "dailyP99Samples": [1, 1, 2], "threshold": 4, "frozen": true },
-      "consumer-staples": { "dailyP99Samples": [0, 0.5, 9], "threshold": 18, "frozen": true },
-      "energy": { "dailyP99Samples": [0, 0, 0, 0, 0.30000000000000426], "threshold": 1, "frozen": true, "sampleDates": ["legacy#0", "legacy#1", "legacy#2", "2026-07-17", "2026-07-18"] },
-      "financials": { "dailyP99Samples": [0, 1.5, 1.6000000000000014], "threshold": 3.200000000000003, "frozen": true },
-      "health-care": { "dailyP99Samples": [0.5, 0.30000000000000426, 0.30000000000000426], "threshold": 1, "frozen": true },
-      "industrials": { "dailyP99Samples": [0.6000000000000014, 0.10000000000000853, 8.799999999999997], "threshold": 17.599999999999994, "frozen": true },
-      "it-services": { "dailyP99Samples": [0, 0, 0, 0, 0, 20.099999999999994], "threshold": 40.19999999999999, "frozen": true, "sampleDates": ["legacy#0", "legacy#1", "legacy#2", "2026-07-17", "2026-07-18", "2026-07-26"] },
-      "materials": { "dailyP99Samples": [0.30000000000000426, 0.20000000000000284, 0.7000000000000028], "threshold": 1.4000000000000057, "frozen": true },
-      "real-estate": { "dailyP99Samples": [0.30000000000000426, 2.9000000000000057, 0.30000000000000426], "threshold": 5.800000000000011, "frozen": true },
-      "semiconductors": { "dailyP99Samples": [2.6999999999999993, 0, 19.10000000000001], "threshold": 38.20000000000002, "frozen": true },
-      "software-comm-services": { "dailyP99Samples": [0.29999999999999716, 0.5, 0], "threshold": 1, "frozen": true },
-      "survival": { "dailyP99Samples": [], "threshold": null, "frozen": false },
-      "tech-hardware": { "dailyP99Samples": [1.7000000000000028, 0, 0.7999999999999972], "threshold": 3.4000000000000057, "frozen": true },
-      "utilities": { "dailyP99Samples": [0.6000000000000014, 0.6000000000000014, 0], "threshold": 1.2000000000000028, "frozen": true }
+      "consumer-discretionary": {
+        "dailyP99Samples": [
+          1,
+          1,
+          2
+        ],
+        "threshold": 4,
+        "frozen": true
+      },
+      "consumer-staples": {
+        "dailyP99Samples": [
+          0,
+          0.5,
+          9
+        ],
+        "threshold": 18,
+        "frozen": true
+      },
+      "energy": {
+        "dailyP99Samples": [
+          0,
+          0,
+          0,
+          0,
+          0.30000000000000426
+        ],
+        "threshold": 1,
+        "frozen": true,
+        "sampleDates": [
+          "legacy#0",
+          "legacy#1",
+          "legacy#2",
+          "2026-07-17",
+          "2026-07-18"
+        ]
+      },
+      "financials": {
+        "dailyP99Samples": [
+          0,
+          1.5,
+          1.6000000000000014
+        ],
+        "threshold": 3.200000000000003,
+        "frozen": true
+      },
+      "health-care": {
+        "dailyP99Samples": [
+          0.5,
+          0.30000000000000426,
+          0.30000000000000426
+        ],
+        "threshold": 1,
+        "frozen": true
+      },
+      "industrials": {
+        "dailyP99Samples": [
+          0.6000000000000014,
+          0.10000000000000853,
+          8.799999999999997
+        ],
+        "threshold": 17.599999999999994,
+        "frozen": true
+      },
+      "it-services": {
+        "dailyP99Samples": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          20.099999999999994
+        ],
+        "threshold": 40.19999999999999,
+        "frozen": true,
+        "sampleDates": [
+          "legacy#0",
+          "legacy#1",
+          "legacy#2",
+          "2026-07-17",
+          "2026-07-18",
+          "2026-07-26"
+        ]
+      },
+      "materials": {
+        "dailyP99Samples": [
+          0.30000000000000426,
+          0.20000000000000284,
+          0.7000000000000028
+        ],
+        "threshold": 1.4000000000000057,
+        "frozen": true
+      },
+      "real-estate": {
+        "dailyP99Samples": [
+          0.30000000000000426,
+          2.9000000000000057,
+          0.30000000000000426
+        ],
+        "threshold": 5.800000000000011,
+        "frozen": true
+      },
+      "semiconductors": {
+        "dailyP99Samples": [
+          2.6999999999999993,
+          0,
+          19.10000000000001
+        ],
+        "threshold": 38.20000000000002,
+        "frozen": true
+      },
+      "software-comm-services": {
+        "dailyP99Samples": [
+          0.29999999999999716,
+          0.5,
+          0
+        ],
+        "threshold": 1,
+        "frozen": true
+      },
+      "survival": {
+        "dailyP99Samples": [],
+        "threshold": null,
+        "frozen": false
+      },
+      "tech-hardware": {
+        "dailyP99Samples": [
+          1.7000000000000028,
+          0,
+          0.7999999999999972
+        ],
+        "threshold": 3.4000000000000057,
+        "frozen": true
+      },
+      "utilities": {
+        "dailyP99Samples": [
+          0.6000000000000014,
+          0.6000000000000014,
+          0
+        ],
+        "threshold": 1.2000000000000028,
+        "frozen": true
+      }
     }
   }
 }

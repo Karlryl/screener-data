@@ -1,0 +1,7505 @@
+{
+  "date": "2026-08-03",
+  "board": "it-services",
+  "boardStatus": "diagnostic",
+  "formulaVersion": "calibration/v4",
+  "formulaCommit": "45ff054494d290b9580e164b1d1a784f69bca312",
+  "calibrationGeneratedAt": "2026-08-03T06:50:34.812Z",
+  "cohortCount": {
+    "profitable": 89,
+    "unprofitable": 0
+  },
+  "pitCoverage": {
+    "beta": 0.9213483146067416,
+    "evSales": 0.9887640449438202,
+    "priceGrossProfit": 0.9662921348314607,
+    "revenueQEnds": 0.6629213483146067,
+    "grossProfitQEnds": 0.6629213483146067,
+    "revenueQEndsFresh": 0.6629213483146067,
+    "grossProfitQEndsFresh": 0.6629213483146067
+  },
+  "pitGaps": [
+    "grossProfitQEnds-missing",
+    "revenueQEnds-missing"
+  ],
+  "gate": {
+    "calibrating": true,
+    "p99Delta": 2.3999999999999986,
+    "threshold": null,
+    "wirksameSchwelle": 57.5,
+    "gapDays": 5,
+    "abstandZuGross": false,
+    "bruchGrenze": null,
+    "suspect": false,
+    "reasons": [],
+    "priorDate": "2026-07-29",
+    "calibrationSamples": 1
+  },
+  "cohort": {
+    "profitable": [
+      {
+        "rank": 1,
+        "ticker": "3317.HK",
+        "track": "profitable",
+        "score": 90.4,
+        "runwayQuarters": null,
+        "scoreBase": 93.1,
+        "scoreShrunk": 86.3,
+        "coverageAxes": "5/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 96,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 98.3,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 92.4,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 96,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 81.3,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "unprofit",
+          "burning",
+          "lowRoic",
+          "arDivergence"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": 29.784,
+          "priceGrossProfit": 50.8246590006001,
+          "fetchedAt": "2026-07-26T18:39:44.237Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.1478918,
+          "priceSales": 31.33696,
+          "priceSalesAsOf": "2026-07-26T18:39:44.237Z",
+          "marketCap": 5015787554.711061
+        }
+      },
+      {
+        "rank": 2,
+        "ticker": "MGRT",
+        "track": "profitable",
+        "score": 78.2,
+        "runwayQuarters": null,
+        "scoreBase": 79.1,
+        "scoreShrunk": 74.5,
+        "coverageAxes": "5/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 99.4,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 99.4,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 99.4,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 99.4,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 0.6,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "burning",
+          "shortRunway",
+          "peakMargin"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": 92.4,
+          "priceGrossProfit": 182.35094227923037,
+          "fetchedAt": "2026-07-08T05:54:30.462Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 92.40634,
+          "priceSalesAsOf": "2026-07-08T05:54:30.462Z",
+          "marketCap": 1304875008
+        }
+      },
+      {
+        "rank": 3,
+        "ticker": "COFORGE.NS",
+        "track": "profitable",
+        "score": 77.8,
+        "runwayQuarters": null,
+        "scoreBase": 75.3,
+        "scoreShrunk": 74.7,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 90.3,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 48.9,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 93.6,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 90.3,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 89.1,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 82.1,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 28.7,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "arDivergence"
+        ],
+        "pit": {
+          "beta": 0.23,
+          "evSales": 3.116,
+          "priceGrossProfit": 12.425813181082045,
+          "fetchedAt": "2026-07-28T06:00:57.335Z",
+          "revenueQ": [
+            464757363.688,
+            437365251.407,
+            385202231.642,
+            357381954.434,
+            340244914.30700004
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            177040975.791,
+            193718521.85,
+            153700765.746,
+            121724155.832,
+            135655180.53
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "INR",
+          "fxRateApplied": 0.010443047,
+          "priceSales": 4.526848,
+          "priceSalesAsOf": "2026-07-28T06:00:57.335Z",
+          "marketCap": 8044231709.418587
+        }
+      },
+      {
+        "rank": 4,
+        "ticker": "PERSISTENT.NS",
+        "track": "profitable",
+        "score": 77.2,
+        "runwayQuarters": null,
+        "scoreBase": 74.9,
+        "scoreShrunk": 74.4,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 89.2,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 50,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 86.6,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 88.1,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 68.8,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 80.9,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 62,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.121,
+          "evSales": 5.411,
+          "priceGrossProfit": 17.759918995675463,
+          "fetchedAt": "2026-07-26T18:51:09.029Z",
+          "revenueQ": [
+            420077978.29880995,
+            391312961.22165,
+            345263372.54331,
+            335789203.42656,
+            317164214.26092
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            134401148.2671,
+            121966812.68382,
+            106457760.96423,
+            99675301.94505,
+            89611295.24294999
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "INR",
+          "fxRateApplied": 0.010357113,
+          "priceSales": 5.5030885,
+          "priceSalesAsOf": "2026-07-26T18:51:09.029Z",
+          "marketCap": 8932411818.436068
+        }
+      },
+      {
+        "rank": 5,
+        "ticker": "REDINGTON.NS",
+        "track": "profitable",
+        "score": 75.6,
+        "runwayQuarters": null,
+        "scoreBase": 75.5,
+        "scoreShrunk": 73.2,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 83.5,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 82.2,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 54.1,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 81.3,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 34.1,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 83.3,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.795,
+          "evSales": 0.187,
+          "priceGrossProfit": 3.4370080808080807,
+          "fetchedAt": "2026-07-26T18:52:26.616Z",
+          "revenueQ": [
+            3439911047.8238997,
+            3202598517.6548996,
+            2687876930.0487,
+            2738387534.4384,
+            2767014594.7704
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            120897544.3377,
+            114057706.9125,
+            93257516.8746,
+            105944980.29959999,
+            110348824.7472
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "INR",
+          "fxRateApplied": 0.010357113,
+          "priceSales": 0.1701319,
+          "priceSalesAsOf": "2026-07-26T18:52:26.616Z",
+          "marketCap": 2787535122.0519896
+        }
+      },
+      {
+        "rank": 6,
+        "ticker": "ATEA.OL",
+        "track": "profitable",
+        "score": 73.4,
+        "runwayQuarters": null,
+        "scoreBase": 72.4,
+        "scoreShrunk": 71.9,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 80.1,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 79.9,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 42.4,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 74.4,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 39.9,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 84.6,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 69.4,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.712,
+          "evSales": 0.56,
+          "priceGrossProfit": 1.710280604356992,
+          "fetchedAt": "2026-07-30T05:57:23.274Z",
+          "revenueQ": [
+            1086017605.82,
+            1005892158.36,
+            1172394713.68,
+            952232073.26,
+            891174190.02
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            299350338.82,
+            296224508.62,
+            321647927.58,
+            289243487.84,
+            279449219.88
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "NOK",
+          "fxRateApplied": 0.10419434,
+          "priceSales": 0.48674586,
+          "priceSalesAsOf": "2026-07-30T05:57:23.274Z",
+          "marketCap": 2010570254.9524481
+        }
+      },
+      {
+        "rank": 7,
+        "ticker": "NETC.CO",
+        "track": "profitable",
+        "score": 73.1,
+        "runwayQuarters": null,
+        "scoreBase": 70.7,
+        "scoreShrunk": 70.3,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 91.5,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 85.6,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 56.4,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 91.5,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 22.5,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 53.7,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 38,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.75,
+          "evSales": null,
+          "priceGrossProfit": 5.9719445482400415,
+          "fetchedAt": "2026-07-26T18:50:05.571Z",
+          "revenueQ": [
+            367166597.446,
+            344472510.558,
+            260845104.586,
+            265316995.702,
+            255262845.948
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            89316138.208,
+            102016917.398,
+            67367366.506,
+            78349357.614,
+            75124728.646
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "DKK",
+          "fxRateApplied": 0.15210514,
+          "priceSales": 1.5982118,
+          "priceSalesAsOf": "2026-07-26T18:50:05.571Z",
+          "marketCap": 2221585508.7139225
+        }
+      },
+      {
+        "rank": 8,
+        "ticker": "7203.SR",
+        "track": "profitable",
+        "score": 73,
+        "runwayQuarters": null,
+        "scoreBase": 71.2,
+        "scoreShrunk": 70.8,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 71,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 51.1,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 82,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 76.7,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 87.7,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 93.2,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 41.7,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.432,
+          "evSales": 4.723,
+          "priceGrossProfit": 12.339815616563948,
+          "fetchedAt": "2026-08-03T06:06:26.286Z",
+          "revenueQ": [
+            658234380.4056396,
+            747681981.8163912,
+            597776749.8664266,
+            499953295.00198805,
+            567008174.3995297
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            279422160.28614,
+            234181733.3043552,
+            253967291.92665723,
+            205648950.5969508,
+            220277271.2740488
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "SAR",
+          "fxRateApplied": 0.2662974,
+          "priceSales": 4.845352,
+          "priceSalesAsOf": "2026-08-03T06:06:26.286Z",
+          "marketCap": 12979513000.754381
+        }
+      },
+      {
+        "rank": 9,
+        "ticker": "IOS.DE",
+        "track": "profitable",
+        "score": 71.9,
+        "runwayQuarters": null,
+        "scoreBase": 72.3,
+        "scoreShrunk": 71.9,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 41.5,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 91.4,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 85.5,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 57.4,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 60.1,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 89.5,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 85.2,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "peakMargin"
+        ],
+        "pit": {
+          "beta": 0.468,
+          "evSales": 3.846,
+          "priceGrossProfit": 5.3079724729166315,
+          "fetchedAt": "2026-07-26T18:48:59.289Z",
+          "revenueQ": [
+            396281418.51699996,
+            382951877.131,
+            96908200.184,
+            510455003.50699997,
+            374975537.807
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            240824703.64299998,
+            228460922.67999998,
+            172317140.068,
+            239276529.396,
+            223453528.826
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "EUR",
+          "fxRateApplied": 1.137527,
+          "priceSales": 3.1700804,
+          "priceSalesAsOf": "2026-07-26T18:48:59.289Z",
+          "marketCap": 4961026078.51899
+        }
+      },
+      {
+        "rank": 10,
+        "ticker": "3923.T",
+        "track": "profitable",
+        "score": 71.8,
+        "runwayQuarters": null,
+        "scoreBase": 71.3,
+        "scoreShrunk": 69.4,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 81.3,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 22.4,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 90.1,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 85.8,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 96.9,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 82.4,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "peakMargin"
+        ],
+        "pit": {
+          "beta": 1.477,
+          "evSales": 5.849,
+          "priceGrossProfit": 7.9676253932017564,
+          "fetchedAt": "2026-07-08T06:13:50.181Z",
+          "revenueQ": [
+            98512667.5464,
+            95598383.24159999,
+            90570780.72,
+            86756949.8856
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "JPY",
+          "fxRateApplied": 0.0061612776,
+          "priceSales": 6.003048,
+          "priceSalesAsOf": "2026-07-08T06:13:50.181Z",
+          "marketCap": 2353303397.2677774
+        }
+      },
+      {
+        "rank": 11,
+        "ticker": "LTTS.NS",
+        "track": "profitable",
+        "score": 71.4,
+        "runwayQuarters": null,
+        "scoreBase": 70.6,
+        "scoreShrunk": 70.2,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 61.9,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 87.9,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 23.8,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 48.3,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 77.5,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 90.7,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 91.7,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.064,
+          "evSales": 2.987,
+          "priceGrossProfit": 7.87473685501877,
+          "fetchedAt": "2026-07-26T18:50:02.949Z",
+          "revenueQ": [
+            304509479.31299996,
+            295995932.427,
+            302790198.555,
+            273168855.375,
+            273199926.714
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            127081776.50999999,
+            121820363.10599999,
+            132674617.52999999,
+            110955751.56899999,
+            112820031.909
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "INR",
+          "fxRateApplied": 0.010357113,
+          "priceSales": 3.2095065,
+          "priceSalesAsOf": "2026-07-26T18:50:02.949Z",
+          "marketCap": 3984036477.4172263
+        }
+      },
+      {
+        "rank": 12,
+        "ticker": "4768.T",
+        "track": "profitable",
+        "score": 70.1,
+        "runwayQuarters": null,
+        "scoreBase": 71.5,
+        "scoreShrunk": 68.1,
+        "coverageAxes": "5/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 76.7,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 73,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 47.1,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 75.6,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 75.9,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.121,
+          "evSales": 0.734,
+          "priceGrossProfit": 4.705469143576826,
+          "fetchedAt": "2026-08-03T06:06:25.190Z",
+          "revenueQ": [
+            2204063399.3251,
+            2027094151.9024,
+            1985634465.8529,
+            2426788540.8197002
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "JPY",
+          "fxRateApplied": 0.0063931667,
+          "priceSales": 0.8966742,
+          "priceSalesAsOf": "2026-08-03T06:06:25.190Z",
+          "marketCap": 7750475382.955102
+        }
+      },
+      {
+        "rank": 13,
+        "ticker": "PONY",
+        "track": "profitable",
+        "score": 70,
+        "runwayQuarters": null,
+        "scoreBase": 67.3,
+        "scoreShrunk": 66.9,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 98.3,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 90.2,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 6.4,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 98.3,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 99.3,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 31.3,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 2.8,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "highDilution",
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": 17.423,
+          "priceGrossProfit": 169.08414317389926,
+          "fetchedAt": "2026-07-10T13:51:59.224Z",
+          "revenueQ": [
+            34250000,
+            29125000,
+            25442000,
+            21455000,
+            13979000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            5561000,
+            3713000,
+            4669000,
+            3463000,
+            2316000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 26.689932,
+          "priceSalesAsOf": "2026-07-10T13:51:59.224Z",
+          "marketCap": 3418834944
+        }
+      },
+      {
+        "rank": 14,
+        "ticker": "TECHM.NS",
+        "track": "profitable",
+        "score": 69.9,
+        "runwayQuarters": null,
+        "scoreBase": 69.3,
+        "scoreShrunk": 68.8,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 72.2,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 67.2,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 69.2,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 64.2,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 84.8,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 61.1,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 76.9,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "peakMargin"
+        ],
+        "pit": {
+          "beta": 0.173,
+          "evSales": 2.237,
+          "priceGrossProfit": 6.509844789977069,
+          "fetchedAt": "2026-07-26T18:53:05.883Z",
+          "revenueQ": [
+            1627299237.4469998,
+            1561448712.9929998,
+            1490719988.316,
+            1382798870.856,
+            1386196003.9199998
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            626025338.1719999,
+            568118719.3889999,
+            547673778.327,
+            470368286.895,
+            483449320.61399996
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "INR",
+          "fxRateApplied": 0.010357113,
+          "priceSales": 2.3277903,
+          "priceSalesAsOf": "2026-07-26T18:53:05.883Z",
+          "marketCap": 15230650848.221857
+        }
+      },
+      {
+        "rank": 15,
+        "ticker": "FORTY",
+        "track": "profitable",
+        "score": 69.6,
+        "runwayQuarters": null,
+        "scoreBase": 68.1,
+        "scoreShrunk": 67.7,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 75.6,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 86.8,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 63.4,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 65.3,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 83.3,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 48.8,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 25,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.18,
+          "evSales": 0.597,
+          "priceGrossProfit": 3.1241870843400648,
+          "fetchedAt": "2026-07-10T13:41:31.221Z",
+          "revenueQ": [
+            738285000,
+            708376000,
+            696638000,
+            743369000,
+            619383000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            146036000,
+            140111000,
+            135708000,
+            185495000,
+            120229000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 0.6200262,
+          "priceSalesAsOf": "2026-07-10T13:41:31.221Z",
+          "marketCap": 1656452352
+        }
+      },
+      {
+        "rank": 16,
+        "ticker": "HCLTECH.NS",
+        "track": "profitable",
+        "score": 67.3,
+        "runwayQuarters": null,
+        "scoreBase": 67.1,
+        "scoreShrunk": 66.7,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 60.8,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 47.7,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 72.7,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 63.1,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 71.7,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 98.1,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 65.7,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.062,
+          "evSales": 232.723,
+          "priceGrossProfit": 683.7082387035432,
+          "fetchedAt": "2026-07-26T18:47:11.286Z",
+          "revenueQ": [
+            345790000000,
+            339810000000,
+            338720000000,
+            null,
+            303490000000,
+            302460000000
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            140370000000,
+            138950000000,
+            142330000000,
+            130210000000,
+            122430000000,
+            null
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 232.48817,
+          "priceSalesAsOf": "2026-07-26T18:47:11.286Z",
+          "marketCap": 38326957438.08065
+        }
+      },
+      {
+        "rank": 17,
+        "ticker": "LTM.NS",
+        "track": "profitable",
+        "score": 67.2,
+        "runwayQuarters": null,
+        "scoreBase": 66.1,
+        "scoreShrunk": 65.7,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 74.4,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 59.2,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 29.7,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 82.4,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 73.2,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 67.3,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 88,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "arDivergence"
+        ],
+        "pit": {
+          "beta": 0.255,
+          "evSales": 2.471,
+          "priceGrossProfit": 9.22130710830422,
+          "fetchedAt": "2026-07-26T18:50:11.358Z",
+          "revenueQ": [
+            1202253677.04,
+            1169494128.6209998,
+            1116600352.53,
+            1019202061.8779999,
+            1012066011.0209999
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            365896088.06399995,
+            359267535.74399996,
+            347843640.10499996,
+            293593082.21099997,
+            279362408.949
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "INR",
+          "fxRateApplied": 0.010357113,
+          "priceSales": 2.7449987,
+          "priceSalesAsOf": "2026-07-26T18:50:11.358Z",
+          "marketCap": 14060421547.436804
+        }
+      },
+      {
+        "rank": 18,
+        "ticker": "FSL.NS",
+        "track": "profitable",
+        "score": 65.7,
+        "runwayQuarters": null,
+        "scoreBase": 63.8,
+        "scoreShrunk": 63.5,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 84.7,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 19,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 91.3,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 84.7,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 64.5,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 71,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 47.2,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.231,
+          "evSales": 2.176,
+          "priceGrossProfit": 5.214394909217703,
+          "fetchedAt": "2026-07-29T06:12:13.984Z",
+          "revenueQ": [
+            273009687.38064,
+            257797776.88332,
+            232042207.10904,
+            226487446.82208,
+            218137649.346
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            118730049.5862,
+            108269347.07988,
+            94055947.73748,
+            85283321.48208,
+            81578998.68228
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "INR",
+          "fxRateApplied": 0.010447956,
+          "priceSales": 2.0936317,
+          "priceSalesAsOf": "2026-07-29T06:12:13.984Z",
+          "marketCap": 2322577840.018129
+        }
+      },
+      {
+        "rank": 19,
+        "ticker": "VNET",
+        "track": "profitable",
+        "score": 65.1,
+        "runwayQuarters": null,
+        "scoreBase": 63.5,
+        "scoreShrunk": 63.2,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 77.8,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 83.3,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 84.3,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 71,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 21,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 4.3,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 95.4,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "burning",
+          "shortRunway",
+          "peakMargin",
+          "lowRoic",
+          "cyclePeak"
+        ],
+        "pit": {
+          "beta": 0.281,
+          "evSales": 2.844,
+          "priceGrossProfit": 0.9785602873030584,
+          "fetchedAt": "2026-07-08T06:59:17.585Z",
+          "revenueQ": [
+            396606867.69536,
+            396010440.01814,
+            380485635.37922,
+            358741594.7683,
+            331037256.5172
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            90763559.25042,
+            79639232.49984,
+            79439539.02254,
+            80722588.0361,
+            83317276.86366001
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.14737526,
+          "priceSales": 0.21117331,
+          "priceSalesAsOf": "2026-07-08T06:59:17.585Z",
+          "marketCap": 2041239168
+        }
+      },
+      {
+        "rank": 20,
+        "ticker": "GDS",
+        "track": "profitable",
+        "score": 65,
+        "runwayQuarters": null,
+        "scoreBase": 63.8,
+        "scoreShrunk": 63.5,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 82.4,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 66.1,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 78.5,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 80.1,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 93.5,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 21.6,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 23.1,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "burning",
+          "peakMargin",
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 0.409,
+          "evSales": 3.502,
+          "priceGrossProfit": 1.9835115374031997,
+          "fetchedAt": "2026-07-08T06:31:54.377Z",
+          "revenueQ": [
+            496227090.57074004,
+            430586591.89252,
+            425490944.90276,
+            427430698.07488,
+            401326118.27108
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            166757906.81994,
+            90256588.35602,
+            94207719.07662,
+            101530648.37076001,
+            95031252.02950001
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.14737526,
+          "priceSales": 0.5045855,
+          "priceSalesAsOf": "2026-07-08T06:31:54.377Z",
+          "marketCap": 6560363520
+        }
+      },
+      {
+        "rank": 21,
+        "ticker": "MPHASIS.NS",
+        "track": "profitable",
+        "score": 64.9,
+        "runwayQuarters": null,
+        "scoreBase": 63.9,
+        "scoreShrunk": 63.6,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 73.3,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 60.3,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 57.6,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 68.8,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 31.2,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 59.9,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 89.8,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.408,
+          "evSales": 2.608,
+          "priceGrossProfit": 5.925794695282446,
+          "fetchedAt": "2026-07-26T18:50:11.845Z",
+          "revenueQ": [
+            454061426.76101995,
+            439417918.97484,
+            414551629.94426996,
+            386578103.44257,
+            384253138.71633
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            204585503.08482,
+            200415729.39102,
+            184218240.37032,
+            164470954.44,
+            165964760.84798998
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "INR",
+          "fxRateApplied": 0.010357113,
+          "priceSales": 2.634075,
+          "priceSalesAsOf": "2026-07-26T18:50:11.845Z",
+          "marketCap": 4748979645.545447
+        }
+      },
+      {
+        "rank": 22,
+        "ticker": "EXLS",
+        "track": "profitable",
+        "score": 63.7,
+        "runwayQuarters": null,
+        "scoreBase": 62.8,
+        "scoreShrunk": 62.5,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 69.9,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 44.3,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 77.3,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 73.3,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 54.3,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 85.8,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 12,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.84,
+          "evSales": 2.286,
+          "priceGrossProfit": 5.620882719900187,
+          "fetchedAt": "2026-07-29T06:05:25.135Z",
+          "revenueQ": [
+            570351000,
+            542615000,
+            529585000,
+            514460000,
+            501019000
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            222081000,
+            209638000,
+            203936000,
+            194188000,
+            193314000
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 2.162466,
+          "priceSalesAsOf": "2026-07-29T06:05:25.135Z",
+          "marketCap": 5144211968
+        }
+      },
+      {
+        "rank": 23,
+        "ticker": "2327.T",
+        "track": "profitable",
+        "score": 63.2,
+        "runwayQuarters": null,
+        "scoreBase": 64.4,
+        "scoreShrunk": 62.2,
+        "coverageAxes": "5/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 68.8,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 56.9,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 87.8,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 52.8,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 58.6,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "burning",
+          "fcfArtefact"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": 1.617,
+          "priceGrossProfit": 6.784099048892851,
+          "fetchedAt": "2026-08-02T15:08:40.507Z",
+          "revenueQ": [
+            595044505.23,
+            673094064.7725,
+            616391393.3100001,
+            607947936.6855
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30"
+          ],
+          "grossProfitQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30"
+          ],
+          "reportingCurrencyOriginal": "JPY",
+          "fxRateApplied": 0.0063532405,
+          "priceSales": 1.8260081,
+          "priceSalesAsOf": "2026-08-02T15:08:40.507Z",
+          "marketCap": 4412601276.392421
+        }
+      },
+      {
+        "rank": 24,
+        "ticker": "CAMS.NS",
+        "track": "profitable",
+        "score": 62.9,
+        "runwayQuarters": null,
+        "scoreBase": 63.2,
+        "scoreShrunk": 62.9,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 46,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 69.5,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 44.8,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 66.5,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 19.6,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 94.4,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 93.5,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.133,
+          "evSales": 12.501,
+          "priceGrossProfit": 20.109795833444753,
+          "fetchedAt": "2026-08-03T06:06:23.065Z",
+          "revenueQ": [
+            41514728.152804,
+            40980988.64078,
+            null,
+            37200830.962838,
+            37412375.086916,
+            38838541.096658
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            28349423.130730003,
+            27907721.436630003,
+            null,
+            24339790.655896,
+            25037847.399806,
+            26264591.134578
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "INR",
+          "fxRateApplied": 0.010504202,
+          "priceSales": 13.198058,
+          "priceSalesAsOf": "2026-08-03T06:06:23.065Z",
+          "marketCap": 2102052807.4318154
+        }
+      },
+      {
+        "rank": 25,
+        "ticker": "301316.SZ",
+        "track": "profitable",
+        "score": 62.1,
+        "runwayQuarters": null,
+        "scoreBase": 60.7,
+        "scoreShrunk": 59.8,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 85.8,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 64.9,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 40.1,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 83.5,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 12.3,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 41.4,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 0.166,
+          "evSales": 6.003,
+          "priceGrossProfit": 29.930410438434233,
+          "fetchedAt": "2026-07-26T18:40:23.685Z",
+          "revenueQ": [
+            90960282.7153178,
+            92350383.59382066,
+            null,
+            76920696.78621824,
+            74797866.91041805,
+            79329363.60379227
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            16074706.534960736,
+            17608754.587175123,
+            null,
+            17326735.285874628,
+            14304856.410104133,
+            18133014.358163852
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.1478918,
+          "priceSales": 5.98698,
+          "priceSalesAsOf": "2026-07-26T18:40:23.685Z",
+          "marketCap": 2159541472.3321037
+        }
+      },
+      {
+        "rank": 26,
+        "ticker": "CDW",
+        "track": "profitable",
+        "score": 61.1,
+        "runwayQuarters": null,
+        "scoreBase": 61.2,
+        "scoreShrunk": 60.9,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 56.3,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 81,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 36.6,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 47.2,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 37,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 72.2,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 67.6,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "arDivergence"
+        ],
+        "pit": {
+          "beta": 0.962,
+          "evSales": 1.02,
+          "priceGrossProfit": 3.5998841090302243,
+          "fetchedAt": "2026-07-08T06:23:50.380Z",
+          "revenueQ": [
+            5679800000,
+            5511000000,
+            5737400000,
+            5976600000,
+            5199100000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            1190000000,
+            1254400000,
+            1255500000,
+            1241200000,
+            1122300000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 0.776567,
+          "priceSalesAsOf": "2026-07-08T06:23:50.380Z",
+          "marketCap": 18897289216
+        }
+      },
+      {
+        "rank": 27,
+        "ticker": "TCS.NS",
+        "track": "profitable",
+        "score": 59.4,
+        "runwayQuarters": null,
+        "scoreBase": 60.1,
+        "scoreShrunk": 59.2,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 65.3,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 38.5,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 39,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 67.6,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 38.4,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 99.4,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.241,
+          "evSales": 2.838,
+          "priceGrossProfit": 7.453636881329075,
+          "fetchedAt": "2026-07-27T09:48:27.070Z",
+          "revenueQ": [
+            7539837858,
+            7375322820.96,
+            6998617812.24,
+            6617844264.24,
+            6726547288.08
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            3002790631.68,
+            3036903768.72,
+            3177529177.68,
+            2607620713.92,
+            2604804032.88
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "INR",
+          "fxRateApplied": 0.010432152,
+          "priceSales": 3.0104494,
+          "priceSalesAsOf": "2026-07-27T09:48:27.070Z",
+          "marketCap": 92333441903.40715
+        }
+      },
+      {
+        "rank": 28,
+        "ticker": "HEXT.NS",
+        "track": "profitable",
+        "score": 59.2,
+        "runwayQuarters": null,
+        "scoreBase": 59.1,
+        "scoreShrunk": 58.3,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 66.5,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 28.2,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 79.7,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 69.9,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 64.8,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 73.1,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": null,
+          "evSales": 2.331,
+          "priceGrossProfit": 5.898819877288664,
+          "fetchedAt": "2026-07-26T18:47:20.511Z",
+          "revenueQ": [
+            374202492.69,
+            382363897.73399997,
+            361867171.107,
+            337714383.59099996
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "INR",
+          "fxRateApplied": 0.010357113,
+          "priceSales": 2.4227633,
+          "priceSalesAsOf": "2026-07-26T18:47:20.511Z",
+          "marketCap": 3554984938.9959087
+        }
+      },
+      {
+        "rank": 29,
+        "ticker": "FIS",
+        "track": "profitable",
+        "score": 58.9,
+        "runwayQuarters": null,
+        "scoreBase": 57.7,
+        "scoreShrunk": 57.5,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 88.1,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 52.3,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 27.3,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 89.2,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 74.6,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 27.8,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 36.1,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 0.813,
+          "evSales": 3.707,
+          "priceGrossProfit": 5.304511781727986,
+          "fetchedAt": "2026-07-08T06:16:05.657Z",
+          "revenueQ": [
+            3295000000,
+            2812000000,
+            2717000000,
+            2616000000,
+            2532000000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            1108000000,
+            1077000000,
+            1028000000,
+            952000000,
+            879000000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 1.9247421,
+          "priceSalesAsOf": "2026-07-08T06:16:05.657Z",
+          "marketCap": 23140679680
+        }
+      },
+      {
+        "rank": 30,
+        "ticker": "IDR.VI",
+        "track": "profitable",
+        "score": 58.9,
+        "runwayQuarters": null,
+        "scoreBase": 57.2,
+        "scoreShrunk": 56.6,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 93.8,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 46.6,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 45.9,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 92.6,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 76.1,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 1.9,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "arDivergence"
+        ],
+        "pit": {
+          "beta": 0.964,
+          "evSales": 1.309,
+          "priceGrossProfit": 5.6830616217057885,
+          "fetchedAt": "2026-07-26T18:47:39.567Z",
+          "revenueQ": [
+            2098132150.636,
+            1517574770.7,
+            3420382160.166,
+            1462170380.638,
+            1324536438.8
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            767166409.232,
+            222045270.4,
+            901945158.3,
+            554585363.472,
+            141508358.79999998
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "EUR",
+          "fxRateApplied": 1.137527,
+          "priceSales": 1.4599217,
+          "priceSalesAsOf": "2026-07-26T18:47:39.567Z",
+          "marketCap": 11533641749.767988
+        }
+      },
+      {
+        "rank": 31,
+        "ticker": "EPAM",
+        "track": "profitable",
+        "score": 58.5,
+        "runwayQuarters": null,
+        "scoreBase": 58.1,
+        "scoreShrunk": 57.9,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 49.4,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 89.1,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 32,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 55.1,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 61.6,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 66,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 10.2,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 1.431,
+          "evSales": 0.707,
+          "priceGrossProfit": 2.8984618826363793,
+          "fetchedAt": "2026-07-08T05:41:17.947Z",
+          "revenueQ": [
+            1400061000,
+            1407548000,
+            1394373000,
+            1353443000,
+            1301692000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            388009000,
+            423202000,
+            411204000,
+            389431000,
+            349684000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 0.8421481,
+          "priceSalesAsOf": "2026-07-08T05:41:17.947Z",
+          "marketCap": 5514924032
+        }
+      },
+      {
+        "rank": 32,
+        "ticker": "JKHY",
+        "track": "profitable",
+        "score": 58.3,
+        "runwayQuarters": null,
+        "scoreBase": 58.5,
+        "scoreShrunk": 58.3,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 55.1,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 42,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 59.9,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 60.8,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 57.2,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 88.3,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 45.4,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.571,
+          "evSales": 4.19,
+          "priceGrossProfit": 9.404959938261797,
+          "fetchedAt": "2026-07-08T06:37:22.377Z",
+          "revenueQ": [
+            636245000,
+            619334000,
+            644738000,
+            615372000,
+            585087000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            272323000,
+            268345000,
+            296172000,
+            271493000,
+            244501000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 4.1435432,
+          "priceSalesAsOf": "2026-07-08T06:37:22.377Z",
+          "marketCap": 10944662528
+        }
+      },
+      {
+        "rank": 33,
+        "ticker": "INOD",
+        "track": "profitable",
+        "score": 56.6,
+        "runwayQuarters": null,
+        "scoreBase": 54.3,
+        "scoreShrunk": 54.2,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 92.6,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 2.9,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 95.9,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 93.8,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 86.2,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 26.5,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 8.3,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "peakMargin",
+          "arDivergence",
+          "crashRisk"
+        ],
+        "pit": {
+          "beta": 2.889,
+          "evSales": 7.626,
+          "priceGrossProfit": 19.3320834819536,
+          "fetchedAt": "2026-07-08T06:20:54.045Z",
+          "revenueQ": [
+            90096000,
+            72376000,
+            62550000,
+            58393000,
+            58344000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            39792000,
+            27700000,
+            25504000,
+            23023000,
+            23252000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 8.026295,
+          "priceSalesAsOf": "2026-07-08T06:20:54.045Z",
+          "marketCap": 2051736192
+        }
+      },
+      {
+        "rank": 34,
+        "ticker": "TATATECH.NS",
+        "track": "profitable",
+        "score": 55.6,
+        "runwayQuarters": null,
+        "scoreBase": 54.3,
+        "scoreShrunk": 54.2,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 86.9,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 68.4,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 12.2,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 86.9,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 13.8,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 6.8,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 80.6,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.937,
+          "evSales": 5.127,
+          "priceGrossProfit": 21.318566782560865,
+          "fetchedAt": "2026-07-26T18:52:45.528Z",
+          "revenueQ": [
+            172386895.9059,
+            162836602.0086,
+            141450199.37489998,
+            128872521.3477,
+            133156223.28449999
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            42695126.9199,
+            41621094.3018,
+            33778688.338199995,
+            32194050.0492,
+            36773965.417799994
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "INR",
+          "fxRateApplied": 0.010357113,
+          "priceSales": 5.239038,
+          "priceSalesAsOf": "2026-07-26T18:52:45.528Z",
+          "marketCap": 3230927307.6319523
+        }
+      },
+      {
+        "rank": 35,
+        "ticker": "301638.SZ",
+        "track": "profitable",
+        "score": 54,
+        "runwayQuarters": null,
+        "scoreBase": 51.9,
+        "scoreShrunk": 51.8,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 94.9,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 8.6,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 51.7,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 94.9,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 92,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 10.5,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "lowRoic",
+          "einmalertrag"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": 8.828,
+          "priceGrossProfit": 33.84399801411397,
+          "fetchedAt": "2026-07-26T18:39:49.240Z",
+          "revenueQ": [
+            150597794.25711638,
+            656356932.3863622,
+            180655564.24696043,
+            145666304.0625682,
+            84705344.59238517
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            50138483.89103317,
+            166045860.7130349,
+            62363947.52182442,
+            41110493.423110954,
+            35316357.27014656
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.1478918,
+          "priceSales": 9.543669,
+          "priceSalesAsOf": "2026-07-26T18:39:49.240Z",
+          "marketCap": 11552347101.633577
+        }
+      },
+      {
+        "rank": 36,
+        "ticker": "CHRN",
+        "track": "profitable",
+        "score": 54,
+        "runwayQuarters": null,
+        "scoreBase": 64.5,
+        "scoreShrunk": 54,
+        "coverageAxes": "2/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": null,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": null,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": null,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": null,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 56.3,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 85.2,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 0.992,
+          "evSales": 2.852,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-07-28T06:00:54.713Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 34.86836,
+          "priceSalesAsOf": "2026-07-28T06:00:54.713Z",
+          "marketCap": 3199082752
+        }
+      },
+      {
+        "rank": 37,
+        "ticker": "4733.T",
+        "track": "profitable",
+        "score": 52.6,
+        "runwayQuarters": null,
+        "scoreBase": 52.7,
+        "scoreShrunk": 52.4,
+        "coverageAxes": "5/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 57.4,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 30.5,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 64.5,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 77.8,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 54.9,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": null,
+          "evSales": 8.66,
+          "priceGrossProfit": 12.762924872546819,
+          "fetchedAt": "2026-07-26T18:40:49.325Z",
+          "revenueQ": [
+            84447526.7659175,
+            82563259.6401385,
+            79037595.8734505,
+            78031374.5408355
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30"
+          ],
+          "grossProfitQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30"
+          ],
+          "reportingCurrencyOriginal": "JPY",
+          "fxRateApplied": 0.0061053415,
+          "priceSales": 10.817473,
+          "priceSalesAsOf": "2026-07-26T18:40:49.325Z",
+          "marketCap": 3812736385.155046
+        }
+      },
+      {
+        "rank": 38,
+        "ticker": "ACN",
+        "track": "profitable",
+        "score": 52.5,
+        "runwayQuarters": null,
+        "scoreBase": 52.5,
+        "scoreShrunk": 52.5,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 39.2,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 74.1,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 28.5,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 56.3,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 42.8,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 74.7,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 17.6,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 1.122,
+          "evSales": 1.188,
+          "priceGrossProfit": 3.7168868897010583,
+          "fetchedAt": "2026-07-08T05:28:37.959Z",
+          "revenueQ": [
+            18718144000,
+            18044066000,
+            18742125000,
+            17596260000,
+            17727871000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            6134335000,
+            5459361000,
+            6197118000,
+            5610934000,
+            5826650000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 1.189887,
+          "priceSalesAsOf": "2026-07-08T05:28:37.959Z",
+          "marketCap": 101533425664
+        }
+      },
+      {
+        "rank": 39,
+        "ticker": "4307.T",
+        "track": "profitable",
+        "score": 52.4,
+        "runwayQuarters": null,
+        "scoreBase": 52.7,
+        "scoreShrunk": 52.4,
+        "coverageAxes": "5/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 44.9,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 53.4,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 55.2,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 38.1,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 68.5,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "arDivergence"
+        ],
+        "pit": {
+          "beta": 0.318,
+          "evSales": 3.291,
+          "priceGrossProfit": 8.535068825910932,
+          "fetchedAt": "2026-08-02T15:08:41.461Z",
+          "revenueQ": [
+            1337071229.4275,
+            1349269451.1875,
+            1304116970.954,
+            1278875546.4475
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30"
+          ],
+          "grossProfitQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30"
+          ],
+          "reportingCurrencyOriginal": "JPY",
+          "fxRateApplied": 0.0063532405,
+          "priceSales": 3.162243,
+          "priceSalesAsOf": "2026-08-02T15:08:41.461Z",
+          "marketCap": 16864239613.31402
+        }
+      },
+      {
+        "rank": 40,
+        "ticker": "6701.T",
+        "track": "profitable",
+        "score": 52.2,
+        "runwayQuarters": null,
+        "scoreBase": 52.5,
+        "scoreShrunk": 52.2,
+        "coverageAxes": "5/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 36.9,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 76.4,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 73.8,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 31.3,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 40.1,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "peakMargin",
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 0.326,
+          "evSales": 1.684,
+          "priceGrossProfit": 5.643115067329855,
+          "fetchedAt": "2026-07-30T05:50:57.069Z",
+          "revenueQ": [
+            7096607597.952,
+            5213757521.736,
+            5223438472.212,
+            4376914880.4
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "JPY",
+          "fxRateApplied": 0.006115572,
+          "priceSales": 1.8606479,
+          "priceSalesAsOf": "2026-07-30T05:50:57.069Z",
+          "marketCap": 40193014972.91853
+        }
+      },
+      {
+        "rank": 41,
+        "ticker": "4812.T",
+        "track": "profitable",
+        "score": 52.1,
+        "runwayQuarters": null,
+        "scoreBase": 52.2,
+        "scoreShrunk": 52,
+        "coverageAxes": "5/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 52.8,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 45.4,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 37.8,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 32.4,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 79.6,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.223,
+          "evSales": 3.146,
+          "priceGrossProfit": 8.44770642201835,
+          "fetchedAt": "2026-07-30T05:51:08.618Z",
+          "revenueQ": [
+            267984365.04,
+            267336114.408,
+            250200281.66399997,
+            244586186.568
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "JPY",
+          "fxRateApplied": 0.006115572,
+          "priceSales": 3.103096,
+          "priceSalesAsOf": "2026-07-30T05:51:08.618Z",
+          "marketCap": 3384061069.463506
+        }
+      },
+      {
+        "rank": 42,
+        "ticker": "KEEL",
+        "track": "profitable",
+        "score": 51.3,
+        "runwayQuarters": null,
+        "scoreBase": 49.4,
+        "scoreShrunk": 49.5,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 6.3,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 97.1,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": null,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 6.3,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 0.7,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 68.8,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 99.1,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "lowRoic",
+          "arDivergence",
+          "crashRisk"
+        ],
+        "pit": {
+          "beta": 4.123,
+          "evSales": 13.332,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-07-08T06:37:44.373Z",
+          "revenueQ": [
+            36992000,
+            50226000,
+            69245000,
+            77800000,
+            47651000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            -26305000,
+            -16270000,
+            -2882000,
+            -5480000,
+            276000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 12.263454,
+          "priceSalesAsOf": "2026-07-08T06:37:44.373Z",
+          "marketCap": 2397199872
+        }
+      },
+      {
+        "rank": 43,
+        "ticker": "BR",
+        "track": "profitable",
+        "score": 51.2,
+        "runwayQuarters": null,
+        "scoreBase": 51.2,
+        "scoreShrunk": 51.2,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 51.7,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 37.4,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 66.9,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 59.7,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 29.7,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 63.6,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 49.1,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.903,
+          "evSales": 2.771,
+          "priceGrossProfit": 7.49565497860382,
+          "fetchedAt": "2026-07-08T06:07:49.788Z",
+          "revenueQ": [
+            1953600000,
+            1713900000,
+            1589400000,
+            2065400000,
+            1811700000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            626900000,
+            473600000,
+            422600000,
+            769800000,
+            575800000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 2.3471894,
+          "priceSalesAsOf": "2026-07-08T06:07:49.788Z",
+          "marketCap": 17805594624
+        }
+      },
+      {
+        "rank": 44,
+        "ticker": "7200.SR",
+        "track": "profitable",
+        "score": 50.8,
+        "runwayQuarters": null,
+        "scoreBase": 50.8,
+        "scoreShrunk": 50.8,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 7.4,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 92.5,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 65.7,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 7.4,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 80.4,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 57.4,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "arDivergence"
+        ],
+        "pit": {
+          "beta": 0.282,
+          "evSales": 6.944,
+          "priceGrossProfit": 26.343099640158716,
+          "fetchedAt": "2026-08-02T15:14:13.954Z",
+          "revenueQ": [
+            83854431.2130971,
+            75142208.5388038,
+            74661031.02057399,
+            81013079.6269387,
+            108008350.92588249
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            19723871.4092471,
+            17734269.8519918,
+            22106149.9686884,
+            17766836.090520598,
+            21816128.409732997
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "SAR",
+          "fxRateApplied": 0.2662903,
+          "priceSales": 6.473817,
+          "priceSalesAsOf": "2026-08-02T15:14:13.954Z",
+          "marketCap": 2037175075.913933
+        }
+      },
+      {
+        "rank": 45,
+        "ticker": "WIPRO.NS",
+        "track": "profitable",
+        "score": 50.6,
+        "runwayQuarters": null,
+        "scoreBase": 50.6,
+        "scoreShrunk": 50.6,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 58.5,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 61.5,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 16.9,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 61.9,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 32.6,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 45.1,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 60.2,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.378,
+          "evSales": 1.655,
+          "priceGrossProfit": 6.331599242554657,
+          "fetchedAt": "2026-07-26T18:53:09.827Z",
+          "revenueQ": [
+            2535276262.818,
+            2510180978.019,
+            2439700824.054,
+            2350785008.949,
+            2292505534.098
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            723817199.1179999,
+            729648253.737,
+            708001887.5669999,
+            695386923.933,
+            663880586.1869999
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "INR",
+          "fxRateApplied": 0.010357113,
+          "priceSales": 1.839013,
+          "priceSalesAsOf": "2026-07-26T18:53:09.827Z",
+          "marketCap": 19343079031.054794
+        }
+      },
+      {
+        "rank": 46,
+        "ticker": "CTSH",
+        "track": "profitable",
+        "score": 50.4,
+        "runwayQuarters": null,
+        "scoreBase": 50.4,
+        "scoreShrunk": 50.4,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 42.6,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 62.6,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 22.7,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 42.6,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 25.4,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 77.2,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.859,
+          "evSales": 1.094,
+          "priceGrossProfit": 3.5142656800143226,
+          "fetchedAt": "2026-07-30T05:52:12.392Z",
+          "revenueQ": [
+            5413000000,
+            5333000000,
+            5415000000,
+            5245000000,
+            5115000000
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            1775000000,
+            1799000000,
+            1834000000,
+            1766000000,
+            1718000000
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 1.177771,
+          "priceSalesAsOf": "2026-07-30T05:52:12.392Z",
+          "marketCap": 24932087808
+        }
+      },
+      {
+        "rank": 47,
+        "ticker": "300738.SZ",
+        "track": "profitable",
+        "score": 50.4,
+        "runwayQuarters": null,
+        "scoreBase": 48.9,
+        "scoreShrunk": 49.1,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 79,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 4,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 97.1,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 72.2,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 90.6,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 5.6,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "burning",
+          "shortRunway",
+          "peakMargin",
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 0.512,
+          "evSales": 11.42,
+          "priceGrossProfit": 21.602104174341825,
+          "fetchedAt": "2026-07-26T18:39:30.544Z",
+          "revenueQ": [
+            103954773.03571565,
+            103204616.51898955,
+            90513502.21014225,
+            79265040.07966858,
+            86314441.51424938
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            35877888.85680041,
+            35125390.4334905,
+            31830216.739768326,
+            25035514.653361533,
+            24761907.350388877
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.1478918,
+          "priceSales": 7.6227345,
+          "priceSalesAsOf": "2026-07-26T18:39:30.544Z",
+          "marketCap": 3264265269.720023
+        }
+      },
+      {
+        "rank": 48,
+        "ticker": "GIB",
+        "track": "profitable",
+        "score": 49.4,
+        "runwayQuarters": null,
+        "scoreBase": 49.4,
+        "scoreShrunk": 49.4,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 33.5,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 70.7,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 41.3,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 40.3,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 41.3,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 51.2,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 63.9,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.168,
+          "evSales": 1.142,
+          "priceGrossProfit": 4.61313393525826,
+          "fetchedAt": "2026-07-30T05:58:37.079Z",
+          "revenueQ": [
+            2958190691.271,
+            2902805876.445,
+            2856884609.283,
+            2911223850.138,
+            2863697566.431
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            492233306.907,
+            466665500.109,
+            475435082.748,
+            474279897.89100003,
+            474182386.908
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "CAD",
+          "fxRateApplied": 0.711759,
+          "priceSales": 0.9442163,
+          "priceSalesAsOf": "2026-07-30T05:58:37.079Z",
+          "marketCap": 15147566080
+        }
+      },
+      {
+        "rank": 49,
+        "ticker": "INFY.NS",
+        "track": "profitable",
+        "score": 49.2,
+        "runwayQuarters": null,
+        "scoreBase": 49.1,
+        "scoreShrunk": 49.2,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 32.4,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 43.1,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 25,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 43.8,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 51.4,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 95.7,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 54.6,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.131,
+          "evSales": 207.554,
+          "priceGrossProfit": 698.560183313115,
+          "fetchedAt": "2026-07-26T18:47:29.125Z",
+          "revenueQ": [
+            5082000000,
+            5040000000,
+            5099000000,
+            5076000000,
+            4941000000
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            1600000000,
+            1555000000,
+            1439000000,
+            1560000000,
+            1525000000
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 207.30472,
+          "priceSalesAsOf": "2026-07-26T18:47:29.125Z",
+          "marketCap": 49286432906.71088
+        }
+      },
+      {
+        "rank": 50,
+        "ticker": "301236.SZ",
+        "track": "profitable",
+        "score": 48.3,
+        "runwayQuarters": null,
+        "scoreBase": 47.4,
+        "scoreShrunk": 47.7,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 64.2,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 84.5,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 5.2,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 50.6,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 9.4,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 16.7,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "burning",
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 0.804,
+          "evSales": 1.042,
+          "priceGrossProfit": 9.938107026930384,
+          "fetchedAt": "2026-07-26T18:40:06.419Z",
+          "revenueQ": [
+            1200504677.3322988,
+            1435614128.791185,
+            null,
+            1297016808.9734213,
+            1036824728.8048087,
+            1347092739.8063097
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            93446191.47377573,
+            153618595.30927983,
+            null,
+            140964946.81168738,
+            107003468.1407051,
+            173497278.21852538
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.1478918,
+          "priceSales": 1.0009661,
+          "priceSalesAsOf": "2026-07-26T18:40:06.419Z",
+          "marketCap": 5702157260.688261
+        }
+      },
+      {
+        "rank": 51,
+        "ticker": "300383.SZ",
+        "track": "profitable",
+        "score": 47.5,
+        "runwayQuarters": null,
+        "scoreBase": 47.2,
+        "scoreShrunk": 47.5,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 67.6,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 71.8,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 0.6,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 51.7,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 45.7,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 15.4,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "burning",
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 0.302,
+          "evSales": 3.845,
+          "priceGrossProfit": 8.453638181575789,
+          "fetchedAt": "2026-07-26T18:40:32.641Z",
+          "revenueQ": [
+            241549286.05165204,
+            251249496.27164063,
+            278668357.1490463,
+            270872538.0917449,
+            215214603.6313127
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            34041623.51345708,
+            25746745.722965695,
+            42305679.264124475,
+            41002335.07856113,
+            35759641.05118125
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.1478918,
+          "priceSales": 3.170537,
+          "priceSalesAsOf": "2026-07-26T18:40:32.641Z",
+          "marketCap": 3591671054.7057867
+        }
+      },
+      {
+        "rank": 52,
+        "ticker": "BC8.DE",
+        "track": "profitable",
+        "score": 46.7,
+        "runwayQuarters": null,
+        "scoreBase": 46.3,
+        "scoreShrunk": 46.7,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 50.6,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 54.6,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 35.5,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 39.2,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 50,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 38.9,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "arDivergence"
+        ],
+        "pit": {
+          "beta": 0.855,
+          "evSales": 0.662,
+          "priceGrossProfit": 3.3315184928197965,
+          "fetchedAt": "2026-07-08T06:19:33.585Z",
+          "revenueQ": [
+            1794577530.1212,
+            2134591232.0700002,
+            1813410597.042,
+            1698079471.1496,
+            1668230190.4752002
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            335468143.5996,
+            407129481.84480006,
+            333555606.4896,
+            312631879.5996,
+            307166019.8112
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "EUR",
+          "fxRateApplied": 1.1418132,
+          "priceSales": 0.62182796,
+          "priceSalesAsOf": "2026-07-08T06:19:33.585Z",
+          "marketCap": 5363913544.893645
+        }
+      },
+      {
+        "rank": 53,
+        "ticker": "PENG",
+        "track": "profitable",
+        "score": 45.9,
+        "runwayQuarters": null,
+        "scoreBase": 45.8,
+        "scoreShrunk": 45.9,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 10.8,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 96,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 76.2,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 10.8,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 63,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 32.7,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 15.7,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "lowRoic",
+          "crashRisk"
+        ],
+        "pit": {
+          "beta": 2.827,
+          "evSales": 2.536,
+          "priceGrossProfit": 8.631799661040887,
+          "fetchedAt": "2026-07-08T06:45:29.505Z",
+          "revenueQ": [
+            342999000,
+            343071000,
+            337922000,
+            324251000,
+            365519000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            93702000,
+            96109000,
+            96731000,
+            95083000,
+            104648000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 2.4446983,
+          "priceSalesAsOf": "2026-07-08T06:45:29.505Z",
+          "marketCap": 2696903424
+        }
+      },
+      {
+        "rank": 54,
+        "ticker": "TIETO.HE",
+        "track": "profitable",
+        "score": 45.8,
+        "runwayQuarters": null,
+        "scoreBase": 45.4,
+        "scoreShrunk": 45.8,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 9.7,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 94.8,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 9.9,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 17.6,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 96.4,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 47.5,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.7,
+          "evSales": 1.344,
+          "priceGrossProfit": 4.79238588678599,
+          "fetchedAt": "2026-07-26T18:34:23.575Z",
+          "revenueQ": [
+            485269018.2,
+            509953354.09999996,
+            528040033.4,
+            526788753.7,
+            535547711.59999996
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            108633828.5,
+            117392786.39999999,
+            127175518.6,
+            86679557.39999999,
+            94983504.5
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "EUR",
+          "fxRateApplied": 1.137527,
+          "priceSales": 1.1192138,
+          "priceSalesAsOf": "2026-07-26T18:34:23.575Z",
+          "marketCap": 2401261735.0275073
+        }
+      },
+      {
+        "rank": 55,
+        "ticker": "8056.T",
+        "track": "profitable",
+        "score": 45.2,
+        "runwayQuarters": null,
+        "scoreBase": 44.1,
+        "scoreShrunk": 45.2,
+        "coverageAxes": "5/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 48.3,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 33.9,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 48.3,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 49.4,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 46.3,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.135,
+          "evSales": 1.1,
+          "priceGrossProfit": 3.849275887850467,
+          "fetchedAt": "2026-07-26T18:41:31.566Z",
+          "revenueQ": [
+            774413726.543,
+            620986494.648,
+            661135220.352,
+            591265692.226
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "JPY",
+          "fxRateApplied": 0.0061053415,
+          "priceSales": 1.0296813,
+          "priceSalesAsOf": "2026-07-26T18:41:31.566Z",
+          "marketCap": 2964251634.5047846
+        }
+      },
+      {
+        "rank": 56,
+        "ticker": "000034.SZ",
+        "track": "profitable",
+        "score": 45.1,
+        "runwayQuarters": null,
+        "scoreBase": 44,
+        "scoreShrunk": 44.6,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 59.7,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 63.8,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 2.9,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 44.9,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 55.8,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 17.9,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": 0.116,
+          "evSales": 0.285,
+          "priceGrossProfit": 5.382321223130488,
+          "fetchedAt": "2026-07-26T18:36:20.039Z",
+          "revenueQ": [
+            5998068735.5634165,
+            6120605439.343946,
+            5887140429.771385,
+            4699769027.064472,
+            5412131182.111361
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            201937658.83207718,
+            184984582.46625614,
+            194446963.261046,
+            175137614.01177296,
+            189711658.4013773
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.1478918,
+          "priceSales": 0.17777807,
+          "priceSalesAsOf": "2026-07-26T18:36:20.039Z",
+          "marketCap": 3584098890.471506
+        }
+      },
+      {
+        "rank": 57,
+        "ticker": "CACI",
+        "track": "profitable",
+        "score": 44.9,
+        "runwayQuarters": null,
+        "scoreBase": 44.5,
+        "scoreShrunk": 44.6,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 54,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 36.2,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 80.8,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 46,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 58.7,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 9.3,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 50.9,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.541,
+          "evSales": 1.795,
+          "priceGrossProfit": 3.68289957817498,
+          "fetchedAt": "2026-07-08T06:21:00.682Z",
+          "revenueQ": [
+            2351002000,
+            2220097000,
+            2287623000,
+            2304144000,
+            2166982000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            228877000,
+            206469000,
+            212275000,
+            206677000,
+            196369000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 1.1991152,
+          "priceSalesAsOf": "2026-07-08T06:21:00.682Z",
+          "marketCap": 10995946496
+        }
+      },
+      {
+        "rank": 58,
+        "ticker": "IBM",
+        "track": "profitable",
+        "score": 44.9,
+        "runwayQuarters": null,
+        "scoreBase": 44.7,
+        "scoreShrunk": 44.9,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 26.7,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 75.3,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 71.5,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 41.5,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 23.9,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 35.2,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 13.9,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.675,
+          "evSales": 3.749,
+          "priceGrossProfit": 5.026946538607181,
+          "fetchedAt": "2026-07-26T18:34:12.046Z",
+          "revenueQ": [
+            17162000000,
+            15917000000,
+            19687000000,
+            16331000000,
+            16977000000
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            9907000000,
+            8950000000,
+            11928000000,
+            9360000000,
+            9977000000
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 2.9205554,
+          "priceSalesAsOf": "2026-07-26T18:34:12.046Z",
+          "marketCap": 210708348928
+        }
+      },
+      {
+        "rank": 59,
+        "ticker": "3626.T",
+        "track": "profitable",
+        "score": 43.9,
+        "runwayQuarters": null,
+        "scoreBase": 42.6,
+        "scoreShrunk": 43.9,
+        "coverageAxes": "5/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 35.8,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 40.8,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 30.8,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 19.9,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 73.5,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": -0.145,
+          "evSales": 1.295,
+          "priceGrossProfit": 4.633722594127439,
+          "fetchedAt": "2026-08-02T15:08:51.558Z",
+          "revenueQ": [
+            953691284.6955,
+            1017967018.834,
+            938538806.103,
+            941607421.2645
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30"
+          ],
+          "grossProfitQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30"
+          ],
+          "reportingCurrencyOriginal": "JPY",
+          "fxRateApplied": 0.0063532405,
+          "priceSales": 1.3082389,
+          "priceSalesAsOf": "2026-08-02T15:08:51.558Z",
+          "marketCap": 4962088960.017885
+        }
+      },
+      {
+        "rank": 60,
+        "ticker": "REY.VI",
+        "track": "profitable",
+        "score": 43.7,
+        "runwayQuarters": null,
+        "scoreBase": 43,
+        "scoreShrunk": 43.7,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 43.8,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 35.1,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 14.5,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 26.7,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 44.2,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 78.4,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.857,
+          "evSales": 1.303,
+          "priceGrossProfit": 8.72066009557945,
+          "fetchedAt": "2026-07-26T18:52:36.690Z",
+          "revenueQ": [
+            733660551.447,
+            716883165.724,
+            680831522.513,
+            690162656.494,
+            691093153.5799999
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            312104420.51699996,
+            379463081.82199997,
+            297664652.779,
+            282372877.31799996,
+            302036169.03999996
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "EUR",
+          "fxRateApplied": 1.137527,
+          "priceSales": 1.4598385,
+          "priceSalesAsOf": "2026-07-26T18:52:36.690Z",
+          "marketCap": 4666002244.286515
+        }
+      },
+      {
+        "rank": 61,
+        "ticker": "KD",
+        "track": "profitable",
+        "score": 42.2,
+        "runwayQuarters": null,
+        "scoreBase": 42.1,
+        "scoreShrunk": 42.2,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 22.2,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 78.7,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 61,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 34.7,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 35.5,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 3.1,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 75,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "peakMargin",
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 1.737,
+          "evSales": 0.343,
+          "priceGrossProfit": 0.8307111380127168,
+          "fetchedAt": "2026-07-08T06:22:18.044Z",
+          "revenueQ": [
+            3769000000,
+            3859000000,
+            3721000000,
+            3743000000,
+            3800000000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            849000000,
+            843000000,
+            801000000,
+            796000000,
+            825000000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 0.18103687,
+          "priceSalesAsOf": "2026-07-08T06:22:18.044Z",
+          "marketCap": 2988008192
+        }
+      },
+      {
+        "rank": 62,
+        "ticker": "G",
+        "track": "profitable",
+        "score": 41.6,
+        "runwayQuarters": null,
+        "scoreBase": 41.4,
+        "scoreShrunk": 41.6,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 47.2,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 39.7,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 43.6,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 54,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 47.1,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 31.5,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 26.9,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.618,
+          "evSales": 1.137,
+          "priceGrossProfit": 2.6904502410136346,
+          "fetchedAt": "2026-07-08T06:29:58.288Z",
+          "revenueQ": [
+            1296072000,
+            1319278000,
+            1291257000,
+            1254418000,
+            1214926000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            471668000,
+            482294000,
+            469656000,
+            450068000,
+            428994000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 0.97676796,
+          "priceSalesAsOf": "2026-07-08T06:29:58.288Z",
+          "marketCap": 6222583808
+        }
+      },
+      {
+        "rank": 63,
+        "ticker": "AMAD.VI",
+        "track": "profitable",
+        "score": 41.4,
+        "runwayQuarters": null,
+        "scoreBase": 40.5,
+        "scoreShrunk": 41.4,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 27.8,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 15.5,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 50.6,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 79,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 28.3,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 69.8,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.577,
+          "evSales": 3.835,
+          "priceGrossProfit": 7.854187956073945,
+          "fetchedAt": "2026-08-02T15:08:51.340Z",
+          "revenueQ": [
+            1904668501.71,
+            1939596454.0200002,
+            1869279454.3200002,
+            1885071960.8100002,
+            1876426428.0600002
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            888414945.3900001,
+            878386127.4000001,
+            783169993.3800001,
+            845878924.2600001,
+            843112353.7800001
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "EUR",
+          "fxRateApplied": 1.1527377,
+          "priceSales": 3.5052457,
+          "priceSalesAsOf": "2026-08-02T15:08:51.340Z",
+          "marketCap": 26660010079.04809
+        }
+      },
+      {
+        "rank": 64,
+        "ticker": "IT",
+        "track": "profitable",
+        "score": 40.7,
+        "runwayQuarters": null,
+        "scoreBase": 40.5,
+        "scoreShrunk": 40.7,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 17.6,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 31.6,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 26.2,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 29,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 79,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 92,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 19.4,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.963,
+          "evSales": 1.717,
+          "priceGrossProfit": 2.1106507023062315,
+          "fetchedAt": "2026-07-08T06:22:01.654Z",
+          "revenueQ": [
+            1511041000,
+            1752570000,
+            1524072000,
+            1686454000,
+            1534130000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            1081734000,
+            1179974000,
+            1049854000,
+            1154723000,
+            1059100000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 1.4560746,
+          "priceSalesAsOf": "2026-07-08T06:22:01.654Z",
+          "marketCap": 10111074304
+        }
+      },
+      {
+        "rank": 65,
+        "ticker": "LDOS",
+        "track": "profitable",
+        "score": 39.1,
+        "runwayQuarters": null,
+        "scoreBase": 38.9,
+        "scoreShrunk": 39.1,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 34.7,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 20.1,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 70.3,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 30.1,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 26.8,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 50,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 58.3,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "peakMargin"
+        ],
+        "pit": {
+          "beta": 0.547,
+          "evSales": 1.236,
+          "priceGrossProfit": 4.798034178487658,
+          "fetchedAt": "2026-07-29T06:05:51.615Z",
+          "revenueQ": [
+            4400000000,
+            4207000000,
+            4469000000,
+            4253000000,
+            4245000000
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            761000000,
+            739000000,
+            821000000,
+            782000000,
+            757000000
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 0.859136,
+          "priceSalesAsOf": "2026-07-29T06:05:51.615Z",
+          "marketCap": 14540798976
+        }
+      },
+      {
+        "rank": 66,
+        "ticker": "300170.SZ",
+        "track": "profitable",
+        "score": 38.2,
+        "runwayQuarters": null,
+        "scoreBase": 36.9,
+        "scoreShrunk": 38.2,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 38.1,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 21.3,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 83.1,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 23.3,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 70.3,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 19.1,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "peakMargin",
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 0.752,
+          "evSales": 3.707,
+          "priceGrossProfit": 11.6615570905472,
+          "fetchedAt": "2026-07-26T18:39:19.723Z",
+          "revenueQ": [
+            116684077.76204431,
+            144403130.30391973,
+            null,
+            123190948.32250687,
+            109672728.50308484,
+            130514889.2043287
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            40685651.83087677,
+            54183652.09045132,
+            null,
+            44274325.9103549,
+            36918427.439974636,
+            43434586.58008416
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.1478918,
+          "priceSales": 4.1523304,
+          "priceSalesAsOf": "2026-07-26T18:39:19.723Z",
+          "marketCap": 2468677663.131812
+        }
+      },
+      {
+        "rank": 67,
+        "ticker": "6702.T",
+        "track": "profitable",
+        "score": 36.4,
+        "runwayQuarters": null,
+        "scoreBase": 33.7,
+        "scoreShrunk": 36.4,
+        "coverageAxes": "5/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 18.8,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 25.9,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 58.7,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 18.8,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 56.2,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "peakMargin"
+        ],
+        "pit": {
+          "beta": 0.738,
+          "evSales": 1.671,
+          "priceGrossProfit": 5.0419597834927234,
+          "fetchedAt": "2026-08-02T15:08:36.527Z",
+          "revenueQ": [
+            6682255765.7735,
+            5620343382.401,
+            5188583511.2615,
+            4764034568.0895
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "JPY",
+          "fxRateApplied": 0.0063532405,
+          "priceSales": 1.7978116,
+          "priceSalesAsOf": "2026-08-02T15:08:36.527Z",
+          "marketCap": 38814894142.43578
+        }
+      },
+      {
+        "rank": 68,
+        "ticker": "CAPG.VI",
+        "track": "profitable",
+        "score": 35.6,
+        "runwayQuarters": null,
+        "scoreBase": 34.2,
+        "scoreShrunk": 35.6,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 30.1,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 55.7,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 20.3,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 27.8,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 25.3,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 30.6,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.651,
+          "evSales": 0.973,
+          "priceGrossProfit": 2.4477397177627287,
+          "fetchedAt": "2026-07-26T18:44:29.210Z",
+          "revenueQ": [
+            6760322961,
+            6785348555,
+            6134683111,
+            6317824958
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "EUR",
+          "fxRateApplied": 1.137527,
+          "priceSales": 0.66191775,
+          "priceSalesAsOf": "2026-07-26T18:44:29.210Z",
+          "marketCap": 20128926842.00018
+        }
+      },
+      {
+        "rank": 69,
+        "ticker": "600602.SS",
+        "track": "profitable",
+        "score": 35,
+        "runwayQuarters": null,
+        "scoreBase": 33,
+        "scoreShrunk": 34.6,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 63.1,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 17.8,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 7.6,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 58.5,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 18.1,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 20.4,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "peakMargin",
+          "lowRoic",
+          "cyclePeak"
+        ],
+        "pit": {
+          "beta": 0.089,
+          "evSales": 3.572,
+          "priceGrossProfit": 22.888599888977982,
+          "fetchedAt": "2026-07-26T18:40:28.221Z",
+          "revenueQ": [
+            214354368.92594534,
+            258658310.71201316,
+            null,
+            254650996.60046047,
+            208588986.06533358,
+            238227699.1708389
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            33750187.151508376,
+            44087979.41318476,
+            null,
+            38376591.07232108,
+            36058555.14050532,
+            44189300.45213643
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.1478918,
+          "priceSales": 3.7109287,
+          "priceSalesAsOf": "2026-07-26T18:40:28.221Z",
+          "marketCap": 3589545279.4802995
+        }
+      },
+      {
+        "rank": 70,
+        "ticker": "SOP.PA",
+        "track": "profitable",
+        "score": 34.3,
+        "runwayQuarters": null,
+        "scoreBase": 32.7,
+        "scoreShrunk": 34.3,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 13.1,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 14.4,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 68,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 13.1,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 52.5,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 78.7,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.908,
+          "evSales": 0.662,
+          "priceGrossProfit": 3.508736032117765,
+          "fetchedAt": "2026-07-26T21:35:28.494Z",
+          "revenueQ": [
+            1667654399.2,
+            1696375620.4,
+            1499658049.8,
+            1628447652.8
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "EUR",
+          "fxRateApplied": 1.139731,
+          "priceSales": 0.5243806,
+          "priceSalesAsOf": "2026-07-26T21:35:28.494Z",
+          "marketCap": 4037125397.703322
+        }
+      },
+      {
+        "rank": 71,
+        "ticker": "DXC",
+        "track": "profitable",
+        "score": 34.3,
+        "runwayQuarters": null,
+        "scoreBase": 32.7,
+        "scoreShrunk": 34.3,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 16.5,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 58,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 19.2,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 15.3,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 30.2,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 56.5,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 0.82,
+          "evSales": 0.343,
+          "priceGrossProfit": 0.6345582032439014,
+          "fetchedAt": "2026-08-02T15:09:22.774Z",
+          "revenueQ": [
+            null,
+            3130000000,
+            3194000000,
+            3161000000,
+            3159000000,
+            3169000000
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            null,
+            723000000,
+            759000000,
+            778000000,
+            771000000,
+            768000000
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 0.14592935,
+          "priceSalesAsOf": "2026-08-02T15:09:22.774Z",
+          "marketCap": 1821782016
+        }
+      },
+      {
+        "rank": 72,
+        "ticker": "ATE.PA",
+        "track": "profitable",
+        "score": 33.6,
+        "runwayQuarters": null,
+        "scoreBase": 31.9,
+        "scoreShrunk": 33.6,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 19.9,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 29.3,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 4.1,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 16.5,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 62.3,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 71.3,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 1.196,
+          "evSales": 0.501,
+          "priceGrossProfit": 2.8226080004488328,
+          "fetchedAt": "2026-07-26T18:42:56.223Z",
+          "revenueQ": [
+            1198612199.8999999,
+            1162666346.7,
+            1147423484.8999999,
+            1184165607
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-06-30",
+            "2024-09-30",
+            "2024-06-30"
+          ],
+          "grossProfitQ": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-06-30",
+            "2024-09-30",
+            "2024-06-30"
+          ],
+          "reportingCurrencyOriginal": "EUR",
+          "fxRateApplied": 1.137527,
+          "priceSales": 0.50310165,
+          "priceSalesAsOf": "2026-07-26T18:42:56.223Z",
+          "marketCap": 2958453854.2006273
+        }
+      },
+      {
+        "rank": 73,
+        "ticker": "NXT.AX",
+        "track": "profitable",
+        "score": 32.6,
+        "runwayQuarters": null,
+        "scoreBase": 45.1,
+        "scoreShrunk": 45.9,
+        "coverageAxes": "5/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 40.3,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 16.7,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 52.9,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 24.4,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 93.8,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "lowRoic",
+          "burnAccelerating"
+        ],
+        "pit": {
+          "beta": 1.223,
+          "evSales": 23.865,
+          "priceGrossProfit": 33.69889487870619,
+          "fetchedAt": "2026-07-26T18:49:46.024Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "AUD",
+          "fxRateApplied": 0.698324,
+          "priceSales": 22.504122,
+          "priceSalesAsOf": "2026-07-26T18:49:46.024Z",
+          "marketCap": 7206647008.922009
+        }
+      },
+      {
+        "rank": 74,
+        "ticker": "SAIC",
+        "track": "profitable",
+        "score": 32.5,
+        "runwayQuarters": null,
+        "scoreBase": 32.1,
+        "scoreShrunk": 32.5,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 29,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 27,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 13.4,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 21,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 81.9,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 36.4,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 43.5,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.283,
+          "evSales": 1.011,
+          "priceGrossProfit": 5.228994843316144,
+          "fetchedAt": "2026-07-08T06:03:17.160Z",
+          "revenueQ": [
+            1906000000,
+            1750000000,
+            1866000000,
+            1769000000,
+            1877000000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            249000000,
+            221000000,
+            227000000,
+            215000000,
+            209000000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 0.6591148,
+          "priceSalesAsOf": "2026-07-08T06:03:17.160Z",
+          "marketCap": 4951883776
+        }
+      },
+      {
+        "rank": 75,
+        "ticker": "VYX",
+        "track": "profitable",
+        "score": 31.4,
+        "runwayQuarters": null,
+        "scoreBase": 47,
+        "scoreShrunk": 47.1,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 21,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 77.6,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 62.2,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 11.9,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 52.9,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 29,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 97.2,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "burning",
+          "shortRunway",
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 1.493,
+          "evSales": 0.921,
+          "priceGrossProfit": 1.8119155978485728,
+          "fetchedAt": "2026-07-08T06:45:33.782Z",
+          "revenueQ": [
+            606000000,
+            720000000,
+            684000000,
+            666000000,
+            612000000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            130000000,
+            180000000,
+            166000000,
+            153000000,
+            134000000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 0.43794,
+          "priceSalesAsOf": "2026-07-08T06:45:33.782Z",
+          "marketCap": 1139665280
+        }
+      },
+      {
+        "rank": 76,
+        "ticker": "603613.SS",
+        "track": "profitable",
+        "score": 31.1,
+        "runwayQuarters": null,
+        "scoreBase": 29.1,
+        "scoreShrunk": 31.1,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 11.9,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 32.8,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 75,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 9.7,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 67.4,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 13,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "arDivergence"
+        ],
+        "pit": {
+          "beta": 0.093,
+          "evSales": 0.257,
+          "priceGrossProfit": 4.142005756703529,
+          "fetchedAt": "2026-07-29T07:32:50.683Z",
+          "revenueQ": [
+            1451019174.4614246,
+            1802924872.847405,
+            null,
+            1925405109.561755,
+            1628313664.4877942,
+            1971598014.2489169
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            100623112.16063222,
+            140658120.7632371,
+            null,
+            122466494.66154493,
+            103358692.28189649,
+            123894920.40958534
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.14776725,
+          "priceSales": 0.2734138,
+          "priceSalesAsOf": "2026-07-29T07:32:50.683Z",
+          "marketCap": 2116278245.8002636
+        }
+      },
+      {
+        "rank": 77,
+        "ticker": "APLD",
+        "track": "profitable",
+        "score": 30.8,
+        "runwayQuarters": null,
+        "scoreBase": 54.2,
+        "scoreShrunk": 54.1,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 97.2,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 0.6,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 94.8,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 97.2,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 94.9,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 18.8,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 6.5,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "highDilution",
+          "lowRoic",
+          "crashRisk",
+          "burnAccelerating"
+        ],
+        "pit": {
+          "beta": 5.68,
+          "evSales": 30.133,
+          "priceGrossProfit": 51.989929309167785,
+          "fetchedAt": "2026-07-28T06:00:58.289Z",
+          "revenueQ": [
+            126637000,
+            126589000,
+            64216000,
+            -33300000,
+            52921000
+          ],
+          "revenueQEnds": [
+            "2026-02-28",
+            "2025-11-30",
+            "2025-08-31",
+            "2025-05-31",
+            "2025-02-28"
+          ],
+          "grossProfitQ": [
+            53805000,
+            26036000,
+            8610000,
+            27811000,
+            3780000
+          ],
+          "grossProfitQEnds": [
+            "2026-02-28",
+            "2025-11-30",
+            "2025-08-31",
+            "2025-05-31",
+            "2025-02-28"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 23.608107,
+          "priceSalesAsOf": "2026-07-28T06:00:58.289Z",
+          "marketCap": 7885132288
+        }
+      },
+      {
+        "rank": 78,
+        "ticker": "MLPT.JK",
+        "track": "profitable",
+        "score": 29.8,
+        "runwayQuarters": null,
+        "scoreBase": 27.7,
+        "scoreShrunk": 29.8,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 1.7,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 12.1,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 49.4,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 4,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 15.2,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 87,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 1.333,
+          "evSales": 21.347,
+          "priceGrossProfit": 135.41905814026893,
+          "fetchedAt": "2026-07-26T18:50:29.952Z",
+          "revenueQ": [
+            46714161.12,
+            62255735.8995,
+            50107193.367,
+            43894648.4955,
+            69960544.8795
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            6993989.706,
+            10461487.674,
+            6897540.4575000005,
+            7712934.5370000005,
+            9588435.5325
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "IDR",
+          "fxRateApplied": 0.0000556545,
+          "priceSales": 21.451733,
+          "priceSalesAsOf": "2026-07-26T18:50:29.952Z",
+          "marketCap": 4872498309.056137
+        }
+      },
+      {
+        "rank": 79,
+        "ticker": "1FISV.MI",
+        "track": "profitable",
+        "score": 27.2,
+        "runwayQuarters": null,
+        "scoreBase": 26.7,
+        "scoreShrunk": 27.2,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 14.8,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 24.1,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 33.7,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 36.4,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 5.8,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 43.2,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 33.3,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 0.819,
+          "evSales": 2.503,
+          "priceGrossProfit": 1.881456449710096,
+          "fetchedAt": "2026-07-26T18:38:09.179Z",
+          "revenueQ": [
+            5027000000,
+            5284000000,
+            5263000000,
+            5516000000,
+            5130000000
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            2720000000,
+            3016000000,
+            3098000000,
+            3410000000,
+            3057000000
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 1.0922983,
+          "priceSalesAsOf": "2026-07-26T18:38:09.179Z",
+          "marketCap": 29379114709.57118
+        }
+      },
+      {
+        "rank": 80,
+        "ticker": "FIV.DE",
+        "track": "profitable",
+        "score": 27.2,
+        "runwayQuarters": null,
+        "scoreBase": 26.7,
+        "scoreShrunk": 27.2,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 14.8,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 24.1,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 33.7,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 36.4,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 5.8,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 43.2,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 33.3,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 0.819,
+          "evSales": 2.497,
+          "priceGrossProfit": 1.9729160796256757,
+          "fetchedAt": "2026-07-26T18:46:01.917Z",
+          "revenueQ": [
+            5027000000,
+            5284000000,
+            5263000000,
+            5516000000,
+            5130000000
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            2720000000,
+            3016000000,
+            3098000000,
+            3410000000,
+            3057000000
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 1.1453961,
+          "priceSalesAsOf": "2026-07-26T18:46:01.917Z",
+          "marketCap": 28363919175.187664
+        }
+      },
+      {
+        "rank": 81,
+        "ticker": "CIFR",
+        "track": "profitable",
+        "score": 25.2,
+        "runwayQuarters": null,
+        "scoreBase": 35.8,
+        "scoreShrunk": 36.1,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 4,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 93.7,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 98.3,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 2.8,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 3.6,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 6.3,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 4.6,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway",
+          "highDilution",
+          "lowRoic",
+          "crashRisk",
+          "burnAccelerating"
+        ],
+        "pit": {
+          "beta": 3.196,
+          "evSales": 59.243,
+          "priceGrossProfit": 322.47736565656567,
+          "fetchedAt": "2026-07-08T06:24:34.375Z",
+          "revenueQ": [
+            34838000,
+            59711000,
+            71707000,
+            43565000,
+            48959000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            -17870000,
+            730000,
+            30529000,
+            12576000,
+            19762000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 39.906574,
+          "priceSalesAsOf": "2026-07-08T06:24:34.375Z",
+          "marketCap": 9129977856
+        }
+      },
+      {
+        "rank": 82,
+        "ticker": "CNXC",
+        "track": "profitable",
+        "score": 24.2,
+        "runwayQuarters": null,
+        "scoreBase": 23.7,
+        "scoreShrunk": 24.2,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 31.3,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 5.2,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 15.7,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 25.6,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 16.7,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 37.7,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 39.8,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 0.453,
+          "evSales": 0.664,
+          "priceGrossProfit": 0.40452654482158396,
+          "fetchedAt": "2026-07-08T06:24:03.587Z",
+          "revenueQ": [
+            2462473000,
+            2500391000,
+            2552925000,
+            2483253000,
+            2417371000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            823349000,
+            849657000,
+            875957000,
+            855007000,
+            848148000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 0.1394403,
+          "priceSalesAsOf": "2026-07-08T06:24:03.587Z",
+          "marketCap": 1501051520
+        }
+      },
+      {
+        "rank": 83,
+        "ticker": "GLOB",
+        "track": "profitable",
+        "score": 22.8,
+        "runwayQuarters": null,
+        "scoreBase": 22.2,
+        "scoreShrunk": 22.8,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 23.3,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 9.8,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 11,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 22.2,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 48.6,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 34,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 21.3,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 1.06,
+          "evSales": 0.691,
+          "priceGrossProfit": 1.5973696573851268,
+          "fetchedAt": "2026-07-08T06:31:34.163Z",
+          "revenueQ": [
+            607085000,
+            612469000,
+            617143000,
+            614180000,
+            611085000
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            209481000,
+            213661000,
+            214759000,
+            217641000,
+            213230000
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 0.5576098,
+          "priceSalesAsOf": "2026-07-08T06:31:34.163Z",
+          "marketCap": 1580371712
+        }
+      },
+      {
+        "rank": 84,
+        "ticker": "603881.SS",
+        "track": "profitable",
+        "score": 22.4,
+        "runwayQuarters": null,
+        "scoreBase": 19.6,
+        "scoreShrunk": 22.4,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 2.8,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 10.9,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 89,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 1.7,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 8,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 22.8,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "peakMargin",
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 0.569,
+          "evSales": 12.923,
+          "priceGrossProfit": 32.03604596686365,
+          "fetchedAt": "2026-07-26T18:41:38.500Z",
+          "revenueQ": [
+            56222285.68707244,
+            70972318.86071505,
+            61446929.57941905,
+            58420218.46035482,
+            79554203.09767197
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            17848385.03871427,
+            43409295.121238895,
+            17695074.04688146,
+            17055165.859438993,
+            32264173.123995297
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.1478918,
+          "priceSales": 12.23873,
+          "priceSalesAsOf": "2026-07-26T18:41:38.500Z",
+          "marketCap": 3234164984.132076
+        }
+      },
+      {
+        "rank": 85,
+        "ticker": "0696.HK",
+        "track": "profitable",
+        "score": 22,
+        "runwayQuarters": null,
+        "scoreBase": 16.6,
+        "scoreShrunk": 22,
+        "coverageAxes": "5/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 24.4,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 7.5,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 18,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 33.5,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": null,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 8,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "peakMargin",
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 0.373,
+          "evSales": 1.403,
+          "priceGrossProfit": 5.532160887001651,
+          "fetchedAt": "2026-07-26T18:37:08.424Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.1478918,
+          "priceSales": 2.8140996,
+          "priceSalesAsOf": "2026-07-26T18:37:08.424Z",
+          "marketCap": 3197900171.309445
+        }
+      },
+      {
+        "rank": 86,
+        "ticker": "PSN",
+        "track": "profitable",
+        "score": 19.2,
+        "runwayQuarters": null,
+        "scoreBase": 18.5,
+        "scoreShrunk": 19.2,
+        "coverageAxes": "7/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 25.6,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 6.3,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 21.5,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 14.2,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 10.9,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 14.2,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 52.8,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [],
+        "pit": {
+          "beta": 0.658,
+          "evSales": 1.292,
+          "priceGrossProfit": 3.0010952882799806,
+          "fetchedAt": "2026-07-30T05:52:12.255Z",
+          "revenueQ": [
+            1575867000,
+            1491176000,
+            1603814000,
+            1621748000,
+            1584323000
+          ],
+          "revenueQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "grossProfitQ": [
+            295238000,
+            357420000,
+            369343000,
+            359855000,
+            348353000
+          ],
+          "grossProfitQEnds": [
+            "2026-06-30",
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30"
+          ],
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 0.68343943,
+          "priceSalesAsOf": "2026-07-30T05:52:12.255Z",
+          "marketCap": 4721866240
+        }
+      },
+      {
+        "rank": 87,
+        "ticker": "300182.SZ",
+        "track": "profitable",
+        "score": 19,
+        "runwayQuarters": null,
+        "scoreBase": 15.9,
+        "scoreShrunk": 19,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 5.1,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 13.2,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 8.7,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 5.1,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 97.8,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 11.7,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "burning",
+          "shortRunway",
+          "lowRoic",
+          "fcfArtefact"
+        ],
+        "pit": {
+          "beta": 0.98,
+          "evSales": 5.657,
+          "priceGrossProfit": 25.596792301523653,
+          "fetchedAt": "2026-08-02T15:13:51.540Z",
+          "revenueQ": [
+            84400508.603374,
+            87745468.60103257,
+            97276175.24468999,
+            105273945.53414479,
+            111584506.53188421
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            29538025.19183313,
+            23587800.533254296,
+            18538712.00587922,
+            31723799.70180747,
+            -13022826.002297955
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.14813717,
+          "priceSales": 5.426264,
+          "priceSalesAsOf": "2026-08-02T15:13:51.540Z",
+          "marketCap": 2008245912.0378675
+        }
+      },
+      {
+        "rank": 88,
+        "ticker": "SHAZ",
+        "track": "profitable",
+        "score": 18.6,
+        "runwayQuarters": null,
+        "scoreBase": 16.5,
+        "scoreShrunk": 28.8,
+        "coverageAxes": "5/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 8.5,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": null,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": null,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 8.5,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 2.2,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 43.8,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": 0.9,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "unprofit",
+          "burning",
+          "highDilution",
+          "lowRoic",
+          "crashRisk",
+          "burnAccelerating"
+        ],
+        "pit": {
+          "beta": 6.081,
+          "evSales": 802.867,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-07-08T06:03:53.283Z",
+          "revenueQ": [
+            294014,
+            357807,
+            506747,
+            376985,
+            325092
+          ],
+          "revenueQEnds": null,
+          "grossProfitQ": [
+            -231802,
+            -24591,
+            134969,
+            -21282,
+            11710
+          ],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "USD",
+          "fxRateApplied": 1,
+          "priceSales": 1102.9062,
+          "priceSalesAsOf": "2026-07-08T06:03:53.283Z",
+          "marketCap": 1507813120
+        }
+      },
+      {
+        "rank": 89,
+        "ticker": "002261.SZ",
+        "track": "profitable",
+        "score": 14.1,
+        "runwayQuarters": null,
+        "scoreBase": 10.5,
+        "scoreShrunk": 14.1,
+        "coverageAxes": "6/7",
+        "axisBreakdown": [
+          {
+            "key": "revGrowthLevel",
+            "pct": 0.6,
+            "weight": 2.8
+          },
+          {
+            "key": "revAcceleration",
+            "pct": 1.7,
+            "weight": 2.6
+          },
+          {
+            "key": "gpGrowth",
+            "pct": 1.7,
+            "weight": 1.3
+          },
+          {
+            "key": "ruleOfX",
+            "pct": 0.6,
+            "weight": 1
+          },
+          {
+            "key": "marginTrajectory",
+            "pct": 65.9,
+            "weight": 0.8
+          },
+          {
+            "key": "capitalEfficiency",
+            "pct": 24.1,
+            "weight": 2
+          },
+          {
+            "key": "dilution",
+            "pct": null,
+            "weight": 0.8
+          }
+        ],
+        "lamps": [
+          "peakMargin",
+          "lowRoic"
+        ],
+        "pit": {
+          "beta": 0.142,
+          "evSales": 10.561,
+          "priceGrossProfit": 70.62114855119968,
+          "fetchedAt": "2026-07-26T18:36:38.282Z",
+          "revenueQ": [
+            87785826.93528432,
+            161593012.6659365,
+            101067212.84393336,
+            92139153.18767527,
+            171882792.05883354
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "grossProfitQ": [
+            15110510.59073406,
+            22404007.818338946,
+            18514853.812568035,
+            12769372.79437092,
+            15318835.88430615
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-06-30",
+            "2025-03-31",
+            "2024-12-31"
+          ],
+          "reportingCurrencyOriginal": "CNY",
+          "fxRateApplied": 0.1478918,
+          "priceSales": 10.77255,
+          "priceSalesAsOf": "2026-07-26T18:36:38.282Z",
+          "marketCap": 4885651789.27956
+        }
+      }
+    ],
+    "unprofitable": []
+  }
+}
