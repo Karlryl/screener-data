@@ -831,7 +831,11 @@ function _trimTrailingNull(mapped) {
 // zero margin denominator that triggers stale-value compression — treat it as
 // unknown (null) instead of persisting an impossible data point as fact. Mutates
 // annualRev in place (positionally aligned with annualOpInc/annualGP by construction
-// at both call sites — same source row per index).
+// at every call site — same source row per index).
+// Tag 559: gilt WORTGLEICH fuer Quartale (GP = Umsatz − COGS kennt keine Periode) und
+// wird seither auch von _mergeQuarterBundle aufgerufen, dort auf der GEWINNER-Reihe
+// nach dem Merge. Die drei Reihen sind auch da index-aligned (dieselbe isHistQ- bzw.
+// FTS-Row je Index).
 function _nullOutImpossibleZeroRevenue(annualRev, annualOpInc, annualGP) {
   if (!Array.isArray(annualRev)) return annualRev;
   for (let i = 0; i < annualRev.length; i++) {
@@ -844,6 +848,75 @@ function _nullOutImpossibleZeroRevenue(annualRev, annualOpInc, annualGP) {
     if (gpPositive || oiPositive) annualRev[i] = null;
   }
   return annualRev;
+}
+
+// Tag 559 (Interleaving-Wurzel Teil 2): _nonZeroCount ist die Nicht-Null-Zaehlung OHNE
+// Null-Blindheit — eine literale 0 zaehlt NICHT als Datum. Nur fuer QUELLEN-
+// Entscheidungen; die Werte selbst bleiben unangetastet (ein echtes 0-Umsatz-Quartal
+// eines Pre-Revenue-Biotechs ist ein valides Datum). Kennt beide Formen, die diese
+// Reihen tragen: rohe Zahl und {value:n}.
+function _nonZeroCount(arr) {
+  return (arr || []).filter(v => {
+    const x = (v == null) ? null : (typeof v === 'number' ? v : v.value);
+    return Number.isFinite(x) && x !== 0;
+  }).length;
+}
+
+// Tag 559: das QUARTALS-Buendel (revenueQ/opIncQ/grossProfitQ/netIncomeQ + die drei
+// Ends) kommt aus EINER Quelle, entschieden von EINER Regel — die Quartals-Spiegelung
+// des Jahres-Fixes F2 (mergeAnnualIncomeBundle, fba7f69f3f vom 2026-06-25).
+//
+// Zwei Defekte lagen vorher hier, beide aus der Familie der verschraenkten Jahresreihen:
+//
+// (a) NULL-BLINDHEIT der Gewinner-Zaehlung. Verglichen wurde mit _nonNullCount-Semantik,
+//     und die zaehlt eine literale 0 als Datum. Melder mit Halbjahres-/unregelmaessigem
+//     Rhythmus (JP, HK, CN, EU, SG) liefern in quoteSummary nullgepolsterte
+//     Zwischenquartale — 8015.T: [0, 2967G, 0, 2594G] —, die damit als VIER volle
+//     Quartale gegen die echten FTS-Quartale antraten und gewannen. Eine 0 ist kein
+//     Beleg dafuer, dass diese Quelle das Quartal FUEHRT; sie ist genau die Polsterung,
+//     die den Defekt erzeugt. Deshalb _nonZeroCount.
+//
+// (b) FELD-FUER-FELD-SPLIT zwischen Rev/NI und den Nachbarn. netIncomeQ wurde
+//     BEDINGUNGSLOS aus FTS gesetzt, waehrend revenueQ/opIncQ/grossProfitQ dem
+//     Zaehl-Vergleich folgten. Gewann quoteSummary, stand ein FTS-Nettoergebnis
+//     Index-fuer-Index neben quoteSummary-Umsatzquartalen — zwei Quellen, durch nichts
+//     auf dasselbe Quartal verpflichtet. Das ist bit-fuer-bit die Zwei-Regeln-
+//     Konstruktion, die auf der Jahresseite die Fremdwert-Einschuebe erzeugt hat.
+//
+// Entscheidungsregel exakt wie mergeAnnualIncomeBundle: Umsatz-Zaehlung zuerst, bei
+// Gleichstand die Buendel-Dichte, FTS gewinnt nur strikt reicher (QS behaelt es bei
+// Gleichstand — Vorverhalten). Geschwister folgen bedingungslos, auch wenn leer, damit
+// keine quellfremden Reste stehen bleiben.
+//
+// Danach NRB-SK-001 auf der Gewinner-Reihe: ein 0-Umsatz-Quartal mit positivem GP/OpInc
+// im SELBEN Quartal ist genauso unmoeglich wie das 0-Umsatz-Jahr. Auf einer Kopie der
+// Umsatzreihe, damit das (evtl. aus dem FTS-Cache stammende) Eingabe-Objekt unberuehrt
+// bleibt. Gibt ein neues Buendel zurueck, mutiert die Eingaben nicht.
+function _quarterBundleDensity(b) {
+  return _nonZeroCount(b.revenueQ) + _nonZeroCount(b.opIncQ) +
+         _nonZeroCount(b.grossProfitQ) + _nonZeroCount(b.netIncomeQ);
+}
+function _mergeQuarterBundle(qsB, ftsB) {
+  const qsRev = _nonZeroCount(qsB.revenueQ);
+  const ftsRev = _nonZeroCount(ftsB.revenueQ);
+  const winner = (ftsRev !== qsRev)
+    ? (ftsRev > qsRev ? ftsB : qsB)
+    : (_quarterBundleDensity(ftsB) > _quarterBundleDensity(qsB) ? ftsB : qsB);
+  const revenueQ = (winner.revenueQ || []).slice();
+  const opIncQ = winner.opIncQ || [];
+  const grossProfitQ = winner.grossProfitQ || [];
+  _nullOutImpossibleZeroRevenue(revenueQ, opIncQ, grossProfitQ);
+  return {
+    revenueQ, opIncQ, grossProfitQ,
+    netIncomeQ: winner.netIncomeQ || [],
+    // audit/fix A10 + NRE-SC-001 Teil 1: jedes Ends-Array bewegt sich als EINE Einheit
+    // mit seiner Wert-Serie. Cache-Eintraege VOR A10 haben keine Enden → _alignEnds
+    // liefert eine ehrliche null-Serie in Serien-Laenge (kein Fabrizieren).
+    revenueQEnds: _alignEnds(winner.revenueQEnds, revenueQ),
+    grossProfitQEnds: _alignEnds(winner.grossProfitQEnds, grossProfitQ),
+    opIncQEnds: _alignEnds(winner.opIncQEnds, opIncQ),
+    _source: winner === ftsB ? 'fts' : 'quoteSummary',
+  };
 }
 
 function _arr(history, key) {
@@ -1092,6 +1165,15 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   const revenueQ = _arr(isHistQ, 'totalRevenue');
   const opIncQ = _arr(isHistQ, 'operatingIncome');
   const grossProfitQ = _arr(isHistQ, 'grossProfit');
+  // Tag 559: netIncomeQ aus DERSELBEN isHistQ-Row wie die drei Geschwister (Feldname
+  // wie im Jahres-Pfad weiter oben: `_arr(isHist,'netIncome')`). Vorher gab es auf der
+  // quoteSummary-Seite ueberhaupt keine Quartals-NI-Reihe — canonical.timeseries.netIncomeQ
+  // wurde im Merge BEDINGUNGSLOS aus FTS gesetzt. Genau diese Asymmetrie (ein Feld folgt
+  // einer anderen Regel als seine Nachbarn) ist die Wurzel der verschraenkten Reihen, die
+  // auf der Jahresseite mit fba7f69f3f (F2, 2026-06-25) geschlossen wurde. Mit einer
+  // echten QS-Reihe kann das Quartals-Buendel als EINE Einheit aus EINER Quelle kommen,
+  // ohne dass die Nettoergebnis-Quartale verloren gehen.
+  const netIncomeQ = _arr(isHistQ, 'netIncome');
   // audit/fix A10 (2.3-Vorbedingung, §4b Delivery-IC): Perioden-Ende je Quartal aus
   // DERSELBEN isHistQ-Row (endDate), index-aligned & längengleich zu revenueQ (das
   // _arr trailing-null-getrimmt hat → slice auf revenueQ.length hält den Index).
@@ -1474,7 +1556,7 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     timeseries: {
       // audit/fix A10: revenueQEnds ist ein ADDITIVES Geschwister-Feld — value-Shapes
       // (revenueQ=[{value:N}]) bleiben unangetastet; norm()/FIELD_REGISTRY lesen es nie.
-      revenueQ, opIncQ, grossProfitQ, revenueQEnds, grossProfitQEnds, opIncQEnds
+      revenueQ, opIncQ, grossProfitQ, netIncomeQ, revenueQEnds, grossProfitQEnds, opIncQEnds
     },
     annual: {
       annualRev, annualOpInc, annualNetIncome, annualGP, annualFCF, annualOCF, annualBalance,
@@ -2736,13 +2818,6 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         }
         return _nonNullCount(ftsArr) > _nonNullCount(qsArr) ? ftsArr : qsArr;
       };
-      // mergeQuarterTriplet: moves revenueQ + opIncQ + grossProfitQ as ONE unit so
-      // the three quarter series always come from the SAME source (F-010). Picks
-      // the source whose revenueQ has more non-null quarters; siblings follow
-      // unconditionally (even if empty) to avoid stale cross-source leftovers.
-      const mergeQuarterTriplet = (qsTrip, ftsTrip) => (
-        _nonNullCount(ftsTrip.revenueQ) > _nonNullCount(qsTrip.revenueQ) ? ftsTrip : qsTrip
-      );
       // audit/fix F2 (2026-06-25): the annual INCOME bundle (Rev/OpInc/GP/NI) must
       // come from ONE source. Previously annualRev (mergePreferRicher), annualOpInc
       // (its own non-null compare), annualGP (mergePreferRicher) and annualNetIncome
@@ -2894,7 +2969,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // based "computable" checks saw N entries that could be entirely empty. Keep
       // RAW null placeholders instead (Bug #26 pattern): positional alignment stays,
       // but finite-counting (_arrLen) and v!=null checks now see the truth.
-      canonical.timeseries.netIncomeQ = (ftsQuarterlyNI || []).map(v => v != null ? { value: v } : null);
+      // Tag 559: die Zuweisung stand hier BEDINGUNGSLOS ("netIncomeQ kommt immer aus
+      // FTS") und ist damit in das Quartals-Buendel unten gewandert — sie folgt jetzt
+      // demselben Gewinner wie revenueQ/opIncQ/grossProfitQ.
       // audit/fix F2 (2026-06-25): annualGP and annualNetIncome are now moved as part
       // of the single-source income bundle above (alongside annualRev/annualOpInc) so
       // grossMargin / net-margin can never pair a QS gross/net with an FTS revenue from
@@ -2921,28 +2998,51 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         canonical.annual.annualFCF = _cashWinner.annualFCF;
         canonical.annual.annualOCF = _cashWinner.annualOCF;
       }
-      const _ftsRevQNonNull = (ftsQuarterly.revenueQ||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
-      const _qsRevQNonNull = (canonical.timeseries.revenueQ||[]).filter(v=>v!=null&&(v.value!=null||typeof v==='number')).length;
       // F-010 (audit 2026-06-08): opIncQ/grossProfitQ must come from the SAME source
       // as revenueQ. Previously FTS opIncQ/grossProfitQ overwrote unconditionally —
       // when quoteSummary kept revenueQ, methods zipped QS revenue quarters against
       // FTS opInc quarters (different windows/lengths → wrong-quarter ratios). The
-      // three series now move as one unit: FTS wins revenueQ → FTS siblings replace
-      // QS siblings (even when empty, to avoid stale cross-source leftovers); QS
-      // keeps revenueQ → QS siblings stay. Trade-off: a ticker whose opIncQ only
-      // exists in the losing source goes incomputable instead of misaligned.
-      if (_ftsRevQNonNull > _qsRevQNonNull) {
-        canonical.timeseries.revenueQ = ftsQuarterly.revenueQ;
-        canonical.timeseries.opIncQ = ftsQuarterly.opIncQ;
-        canonical.timeseries.grossProfitQ = ftsQuarterly.grossProfitQ;
-        // audit/fix A10: Ends bewegen sich als EINE Einheit mit revenueQ. FTS-Cache-
-        // Einträge VOR A10 haben keine revenueQEnds → _alignEnds liefert ehrliche
-        // null-Serie in revenueQ-Länge (kein Fabrizieren, index/länge konsistent).
-        canonical.timeseries.revenueQEnds = _alignEnds(ftsQuarterly.revenueQEnds, ftsQuarterly.revenueQ);
-        canonical.timeseries.grossProfitQEnds = _alignEnds(ftsQuarterly.grossProfitQEnds, ftsQuarterly.grossProfitQ);
-        // NRE-SC-001 Teil 1: opIncQEnds bewegt sich mit opIncQ. Fuer FTS-Cache-Eintraege
-        // ohne das Feld liefert _alignEnds eine ehrliche null-Serie in opIncQ-Laenge.
-        canonical.timeseries.opIncQEnds = _alignEnds(ftsQuarterly.opIncQEnds, ftsQuarterly.opIncQ);
+      // series move as one unit: FTS wins revenueQ → FTS siblings replace QS siblings
+      // (even when empty, to avoid stale cross-source leftovers); QS keeps revenueQ →
+      // QS siblings stay. Trade-off: a ticker whose opIncQ only exists in the losing
+      // source goes incomputable instead of misaligned.
+      //
+      // Tag 559 (Interleaving-Wurzel Teil 2): netIncomeQ gehoert seither ins selbe
+      // Buendel (es wurde vorher BEDINGUNGSLOS aus FTS gesetzt) und die Gewinner-
+      // Zaehlung ist nicht mehr null-blind. Volltext-Begruendung an _mergeQuarterBundle
+      // auf Modulebene — hier steht nur noch das Einsammeln der beiden Seiten.
+      {
+        const _qsQuarters = {
+          revenueQ: canonical.timeseries.revenueQ,
+          opIncQ: canonical.timeseries.opIncQ,
+          grossProfitQ: canonical.timeseries.grossProfitQ,
+          netIncomeQ: canonical.timeseries.netIncomeQ,
+          revenueQEnds: canonical.timeseries.revenueQEnds,
+          grossProfitQEnds: canonical.timeseries.grossProfitQEnds,
+          opIncQEnds: canonical.timeseries.opIncQEnds,
+        };
+        const _ftsQuarters = {
+          revenueQ: ftsQuarterly.revenueQ,
+          opIncQ: ftsQuarterly.opIncQ,
+          grossProfitQ: ftsQuarterly.grossProfitQ,
+          // ftsQuarterlyNI stammt aus demselben `quarterlyFin`-Block wie
+          // mapFTSToQuarterly und ist genauso newest-first gedreht → index-aligned.
+          netIncomeQ: (ftsQuarterlyNI || []).map(v => v != null ? { value: v } : null),
+          revenueQEnds: ftsQuarterly.revenueQEnds,
+          grossProfitQEnds: ftsQuarterly.grossProfitQEnds,
+          opIncQEnds: ftsQuarterly.opIncQEnds,
+        };
+        // _mergeQuarterBundle entscheidet die Quelle, bewegt alle sieben Reihen
+        // zusammen und laesst NRB-SK-001 auf der Gewinner-Umsatzreihe laufen
+        // (Volltext-Begruendung an der Funktion, Modulebene).
+        const _qWinner = _mergeQuarterBundle(_qsQuarters, _ftsQuarters);
+        canonical.timeseries.revenueQ = _qWinner.revenueQ;
+        canonical.timeseries.opIncQ = _qWinner.opIncQ;
+        canonical.timeseries.grossProfitQ = _qWinner.grossProfitQ;
+        canonical.timeseries.netIncomeQ = _qWinner.netIncomeQ;
+        canonical.timeseries.revenueQEnds = _qWinner.revenueQEnds;
+        canonical.timeseries.grossProfitQEnds = _qWinner.grossProfitQEnds;
+        canonical.timeseries.opIncQEnds = _qWinner.opIncQEnds;
       }
 
       // Tag 203: post-FTS sector-aware OpInc fallback. After both quoteSummary
@@ -3584,6 +3684,10 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   salvageValidationReject,
   // A10 (2.3-Vorbedingung, §4b Delivery-IC): Perioden-Ende-Substrat fuer TDD.
   mapFTSToQuarterly, _isoDay, _alignEnds, _applyCurrencyConsistencyGuard,
+  // Tag 559: die Quartals-Buendel-Entscheidung als Seam — der Waechter
+  // (tests/tag559-quartals-buendel.test.js) FUEHRT sie aus, statt Quelltext nach
+  // Schreibmustern abzusuchen.
+  _mergeQuarterBundle, _nonZeroCount,
   // 03.08.2026: die FTS-Extraktion als Seam, damit Tests sie AUSFUEHREN koennen statt den
   // Quelltext nach Schreibmustern abzusuchen (tests/scoring/f1-ausschuettungsfelder.test.js).
   _ftsExtractByYear,
