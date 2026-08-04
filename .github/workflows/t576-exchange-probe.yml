@@ -158,7 +158,11 @@ jobs:
             }
           }
 
-          function zeile(q) { return [q.symbol, q.marketCap, q.currency, q.exchange, q.region || q.market || "", q.longName || q.shortName || ""]; }
+          // Dump-Spalten fuer die Zweitlistungs-Messung. `region` steht bewusst NICHT drin:
+          // sie echot die ANFRAGE-Region (fuer jede Boerse "US") und traegt keine Herkunft.
+          // Getragen wird die Messung von financialCurrency (Berichtswaehrung der Firma) vs
+          // currency (Notierungswaehrung) und von `market` (dr_market bei Hinterlegungsscheinen).
+          function zeile(q) { return [q.symbol, q.marketCap, q.currency, q.financialCurrency || "", q.exchange, q.market || "", q.quoteType || "", q.longName || q.shortName || ""]; }
 
           (async function () {
             const aus = { zeit: new Date().toISOString(), node: process.version, vorwaermen: null, stufeA: null, stufeB: {}, dump: {} };
@@ -191,7 +195,10 @@ jobs:
               console.log("STUFE-B " + c + ": ok=" + r.ok + " total=" + r.total + " n=" + r.n + " " + r.ms + "ms" + (r.fehler ? " FEHLER[" + r.klasse + "/" + r.httpCode + "]=" + r.fehler : ""));
             }
 
-            for (const c of ["FRA", "MIL", "SAO", "MEX"]) {
+            // Mehr Seiten fuer die vier Zweitlistungs-Verdaechtigen UND fuer die
+            // Primaer-Boersen, die im Kipp-Fall der Ersatz waeren — sonst waere die
+            // Vergleichszahl aus einer Seite geschaetzt und die aus dreien gemessen.
+            for (const c of ["FRA", "MIL", "SAO", "MEX", "JPX", "SHZ", "BSE", "NSI", "KOE", "TAI"]) {
               for (const off of [250, 500]) {
                 const r = await stufeB(c, off, 250);
                 if (r.quotes.length) aus.dump[c] = (aus.dump[c] || []).concat(r.quotes.map(zeile));
