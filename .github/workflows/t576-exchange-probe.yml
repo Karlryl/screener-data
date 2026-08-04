@@ -105,12 +105,12 @@ jobs:
           const MIN = 800e6, MAX = 500e9;
           const yf = new YF({ suppressNotices: ["yahooSurvey"], validation: { logErrors: false, logOptionsErrors: false } });
 
-          function rumpf(code, offset, size) {
+          function rumpf(code, offset, size, min, max) {
             return {
               size: size || 250, offset: offset || 0,
               sortField: "intradaymarketcap", sortType: "DESC", quoteType: "EQUITY",
               query: { operator: "AND", operands: [
-                { operator: "btwn", operands: ["intradaymarketcap", MIN, MAX] },
+                { operator: "btwn", operands: ["intradaymarketcap", min == null ? MIN : min, max == null ? MAX : max] },
                 { operator: "eq", operands: ["exchange", code] }
               ] },
               userId: "", userIdType: "guid"
@@ -141,13 +141,14 @@ jobs:
             } catch (e) { return { fehler: String((e && e.message) || e), ms: Date.now() - t0 }; }
           }
 
-          async function stufeB(code, offset, size) {
+          async function stufeB(code, offset, size) { return stufeBLokal(code, offset, size, null, null); }
+          async function stufeBLokal(code, offset, size, min, max) {
             const t0 = Date.now();
             try {
               const antwort = await yf._fetch(
                 "https://${YF_QUERY_HOST}/v1/finance/screener",
                 { lang: "en-US", region: "US", formatted: "false" },
-                { fetchOptions: { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(rumpf(code, offset, size)) } },
+                { fetchOptions: { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(rumpf(code, offset, size, min, max)) } },
                 "json", true);
               const r = antwort && antwort.finance && antwort.finance.result && antwort.finance.result[0];
               return { ok: true, ms: Date.now() - t0, total: r ? r.total : null,
@@ -204,6 +205,41 @@ jobs:
                 if (r.quotes.length) aus.dump[c] = (aus.dump[c] || []).concat(r.quotes.map(zeile));
                 console.log("STUFE-B " + c + " offset=" + off + ": ok=" + r.ok + " n=" + r.n + (r.fehler ? " FEHLER=" + r.fehler : ""));
               }
+            }
+
+            // ── STUFE C: Erstlauf-Zahlen mit den RICHTIGEN Schranken ────────────────
+            // Befund aus Stufe B: Yahoos serverseitiger `intradaymarketcap`-Filter rechnet in
+            // der LISTING-WAEHRUNG, nicht in USD. Beleg: JPX lieferte mit 800e6..500e9 als
+            // Literal einen USD-Bereich von genau 487M..3.2B — 500e9 JPY sind $3,2 Mrd, der
+            // Deckel traf also punktgenau. Dasselbe bei KOE (500e9 KRW = $362M, deshalb lag
+            // die GESAMTE koreanische Ausbeute unter dem $800M-Boden), BSE/NSI (INR),
+            // TAI (TWD), SHZ (CNY). Dieselbe Falle hat discovery/tv-scanner.js schon geloest
+            // ("sonst waere right:2e9 nur 2 Mrd LOKAL"). Stufe C wiederholt die Messung mit
+            // je Boerse umgerechneten Schranken und paginiert VOLL durch — das sind die
+            // Erstlauf-Untergrenzen fuer die Abnahme-Messung.
+            const RATES = JSON.parse(fs.readFileSync("fx-rates.json", "utf8")).rates;
+            const PRIMAER = { JPX: "JPY", SHZ: "CNY", BSE: "INR", NSI: "INR", KOE: "KRW", TAI: "TWD" };
+            aus.stufeC = {};
+            aus.dumpC = {};
+            for (const c of Object.keys(PRIMAER)) {
+              const kurs = RATES[PRIMAER[c]];
+              const lokalMin = Math.floor(MIN / kurs), lokalMax = Math.ceil(MAX / kurs);
+              let offset = 0, seiten = 0, gesamt = null, zeilen = [];
+              while (seiten < 40) {
+                const r = await stufeBLokal(c, offset, 250, lokalMin, lokalMax);
+                if (!r.ok) { zeilen = null; aus.stufeC[c] = { fehler: r.fehler }; break; }
+                if (gesamt === null) gesamt = r.total;
+                if (!r.quotes.length) break;
+                zeilen = zeilen.concat(r.quotes.map(zeile));
+                seiten++;
+                if (r.quotes.length < 250) break;
+                offset += 250;
+              }
+              if (zeilen) {
+                aus.stufeC[c] = { waehrung: PRIMAER[c], kurs: kurs, lokalMin: lokalMin, lokalMax: lokalMax, total: gesamt, seiten: seiten, zeilen: zeilen.length };
+                aus.dumpC[c] = zeilen;
+              }
+              console.log("STUFE-C " + c + " (" + PRIMAER[c] + " " + lokalMin + ".." + lokalMax + "): " + JSON.stringify(aus.stufeC[c]));
             }
 
             fs.writeFileSync("t576-probe.json", JSON.stringify(aus, null, 1));
