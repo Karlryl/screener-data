@@ -259,6 +259,36 @@ jobs:
               console.log("STUFE-C " + c + " (" + PRIMAER[c] + " " + lokalMin + ".." + lokalMax + "): " + JSON.stringify(aus.stufeC[c]));
             }
 
+            // ── STUFE D: der GEBAUTE Code gegen den echten Endpunkt ─────────────────
+            // Stufe A-C haben Probe-Code gemessen. Was in refresh-universe.js steht, ist
+            // damit NICHT belegt — und der erste Probelauf hat vorgefuehrt, wohin ein
+            // Nachbau fuehrt (er mass seinen eigenen Crumb-Fehler). Also wird hier die
+            // echte fetchExchangePage gerufen, mit den echten EXCHANGE_KANAELE-Eintraegen
+            // und den echten lokaleSchranken. Zwei kleine Boersen, eine Seite je Boerse.
+            try {
+              const ru = require("./refresh-universe.js");
+              const rates = JSON.parse(fs.readFileSync("fx-rates.json", "utf8")).rates;
+              aus.stufeD = {};
+              for (const code of ["HEL", "KSC"]) {
+                const kanal = ru.EXCHANGE_KANAELE.find(function (k) { return k.code === code; });
+                const s = ru.lokaleSchranken(kanal.ccy, rates);
+                const t0 = Date.now();
+                const r = await ru.fetchExchangePage(kanal, s.min, s.max, 0);
+                let bandOk = 0, zweit = 0;
+                for (const q of r.quotes || []) {
+                  if (ru.istZweitlistung(q)) { zweit++; continue; }
+                  if (ru.inDiscoveryMcapBand(toUsd(q.marketCap, q.currency, rates))) bandOk++;
+                }
+                aus.stufeD[code] = { ccy: kanal.ccy, lokalMin: s.min, lokalMax: s.max, total: r.total,
+                  n: (r.quotes || []).length, bandOk: bandOk, zweit: zweit, boden: kanal.boden,
+                  ueberBoden: bandOk >= kanal.boden, fehler: r.error, ms: Date.now() - t0 };
+                console.log("STUFE-D " + code + " (gebauter Code): " + JSON.stringify(aus.stufeD[code]));
+              }
+            } catch (e) {
+              aus.stufeD = { fehler: String((e && e.stack) || e) };
+              console.log("STUFE-D FEHLER: " + aus.stufeD.fehler);
+            }
+
             fs.writeFileSync("t576-probe.json", JSON.stringify(aus, null, 1));
             const gescheitert = Object.keys(aus.stufeB).filter(function (k) { return !aus.stufeB[k].ok; });
             console.log("");

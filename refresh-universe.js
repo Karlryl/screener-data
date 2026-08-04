@@ -1730,7 +1730,12 @@ module.exports = {
   lokaleSchranken,             // USD-Band -> Listing-Waehrung (Yahoos Filter rechnet lokal)
   istZweitlistung,             // domicile/subtype-Aequivalent auf den Screener-Feldern
   exchangeFehlerIstFatal, exchangeFehlerIstTransient,  // retargetierter Klassifizierer
-  boersenUnterBoden            // Abnahme je Boerse gegen die Erstlauf-Untergrenze
+  boersenUnterBoden,           // Abnahme je Boerse gegen die Erstlauf-Untergrenze
+  // Der Netzaufruf selbst — exportiert NUR, damit die CI-Probe den GEBAUTEN Code gegen den
+  // echten Endpunkt fahren kann statt einen Nachbau. Ein Nachbau haette genau die Abweichung
+  // nicht gefunden, um die es geht (der erste Probelauf hat das vorgefuehrt: er mass seinen
+  // eigenen Crumb-Fehler). Kein Test im Gate ruft ihn — das Gate bleibt netzfrei.
+  fetchExchangePage, crumbVorwaermen
 };
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
