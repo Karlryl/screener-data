@@ -1597,6 +1597,13 @@ jobs:
           # Die Ticker-Landkarte kommt aus demselben Lauf und geht in denselben Commit.
           # Gleiche Existenzpruefung statt `|| true`, gleicher Grund.
           if [ -d external-data/ticker-map ]; then git add external-data/ticker-map/; fi
+          # F-9 Stufe 1: die p99Δ/thr/beta-cov-Sidecar-Reihe (REINE MESSUNG, kein Gate-
+          # Verhalten) faehrt genau wie newcomer-log/ticker-map UNBEDINGT mit — auch bei
+          # rc=2, wo oben nur board-history/$VINTAGE_DATE ausgenommen wird. Die Sidecar-
+          # Datei steht bewusst NICHT unter board-history/, damit die :(exclude)-Pathspec
+          # sie nie erfasst; gezieltes add auf die Datei (nie -A), NIE das ganze
+          # data-health/ (das traegt bereits anderswo committete Baseline-Dateien).
+          if [ -f data-health/p99-delta-history.json ]; then git add data-health/p99-delta-history.json; fi
           if git diff --staged --quiet; then
             echo "No vintage changes to commit."
           else

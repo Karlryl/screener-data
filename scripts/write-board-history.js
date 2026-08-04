@@ -98,6 +98,12 @@ function resolvePaths(base) {
     },
     get EXCLUDED_FILE() { return path.join(this.HISTORY_DIR, '_excluded.json'); },
     get GATE_CALIB_FILE() { return path.join(this.HISTORY_DIR, '_gate-calibration.json'); },
+    // F-9 Stufe 1 (Rat-gedeckt, REINE MESSUNG): committete Sidecar-Reihe der p99Δ/thr/
+    // beta-cov-Werte, die sonst nur im fluechtigen Lauf-Protokoll stehen. Eigener
+    // Top-Level-Ordner (nicht unter board-history/), damit die Suspect-Ausschluss-
+    // Pathspec ":(exclude)board-history/$VINTAGE_DATE" im Commit-Schritt sie NICHT
+    // beruehrt — die Sidecar-Reihe muss gerade an Suspect-Tagen mitfahren.
+    P99_DELTA_HISTORY_FILE: path.join(base, 'data-health', 'p99-delta-history.json'),
     base,
   };
 }
@@ -664,6 +670,36 @@ function updateGateCalibration(gateCalib, board, p99Delta, date) {
   return b;
 }
 
+// F-9 Stufe 1 (Rat-gedeckt, REINE MESSUNG — kein Gate-/rc-Einfluss): traegt die
+// Tageswerte aus dem Lauf-Protokoll (p99Δ/thr/beta-cov, s. CLI-Ausgabe unten) zusaetzlich
+// in die committete Sidecar-Datei ein. AUCH an SUSPECT-Tagen (results traegt jeden Board-
+// Eintrag unabhaengig von suspect) — die Sidecar-Commits laufen an Suspect-Tagen ohnehin
+// (git add board-history/ + newcomer-log/ + ticker-map/ unabhaengig vom rc, .github/
+// workflows/daily-pull.yml "Commit board-history vintage to main"); data-health/ faehrt
+// dort im selben unbedingten Zweig mit.
+// thr = wirksameSchwelle (exakt die Zahl hinter "thr=" im Lauf-Protokoll, NICHT die roh
+// eingefrorene threshold — die ist mit Tagesabstand/Bruch-Allowance bereits multipliziert).
+// betaCov = pitCoverage.beta (Anteil 0..1, Log zeigt denselben Wert ×100 gerundet als %).
+// Reines Anhaengen je Datum (byDate[date] = ...) — ein Rerun desselben Tages ersetzt den
+// Eintrag statt ihn zu duplizieren, fruehere Tage bleiben unberuehrt.
+function updateP99DeltaHistory(existing, date, results) {
+  const out = existing && typeof existing === 'object' ? existing : {};
+  if (typeof out._doc !== 'string') {
+    out._doc = 'Taegliche p99Δ/thr/beta-cov-Messreihe je Board (F-9 Stufe 1, Rat-gedeckt, REINE '
+      + 'MESSUNG — kein Gate-Verhalten, keine rc-Semantik). thr = wirksameSchwelle des Laufs '
+      + '(dieselbe Zahl wie "thr=" im Lauf-Protokoll), betaCov = pitCoverage.beta (Anteil 0..1), '
+      + 'suspect = gate.suspect. Wird AUCH an SUSPECT-Tagen geschrieben — die Sidecar-Commits '
+      + 'laufen an Suspect-Tagen ohnehin ("chore: nur Sidecars"-Pfad).';
+  }
+  if (!out.byDate || typeof out.byDate !== 'object') out.byDate = {};
+  const day = {};
+  for (const b of results) {
+    day[b.board] = { p99Delta: b.p99Delta, thr: b.wirksameSchwelle, betaCov: b.pitCoverage.beta, suspect: b.suspect };
+  }
+  out.byDate[date] = day;
+  return out;
+}
+
 // ── Exclusion-Gerüst (Writer schreibt nie Einträge, legt nur das Gerüst an) ───
 function readOrScaffoldExcluded(dryRun) {
   const existing = readJsonExistingOrThrow(P.EXCLUDED_FILE);
@@ -1004,6 +1040,10 @@ function run(opts) {
     }
     writeJsonAtomic(assertNoPicksHistory(path.join(dateDir, 'regime.json')), regimeForDate(date));
     writeJsonAtomic(assertNoPicksHistory(P.GATE_CALIB_FILE), gateCalib);
+    // F-9 Stufe 1: UNBEDINGT (auch bei anySuspect) — reine Zusatzmessung, kein Gate-Zweig.
+    const p99History = readJsonExistingOrThrow(P.P99_DELTA_HISTORY_FILE) || {};
+    fs.mkdirSync(path.dirname(P.P99_DELTA_HISTORY_FILE), { recursive: true });
+    writeJsonAtomic(assertNoPicksHistory(P.P99_DELTA_HISTORY_FILE), updateP99DeltaHistory(p99History, date, results));
   }
 
   // Fall (b) aus uebersprungeneVorgaenger(): es gab Vorgaenger, alle ausgeschlossen.
@@ -1128,6 +1168,7 @@ if (require.main === module) {
 
 module.exports = {
   run, parseArgs, buildBoardVintage, evaluateGate, updateGateCalibration,
+  updateP99DeltaHistory,
   compact, readOrScaffoldExcluded, regimeForDate, priceGrossProfit, pitCoverageBlock,
   quantile, assertNoPicksHistory, buildPit,
   priorVintageDate, excludedDates, massstabBruchFuer,
