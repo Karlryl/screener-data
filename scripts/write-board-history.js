@@ -157,8 +157,22 @@ const GATE_CALIB_QUANTILE = 0.9;
 // ERFUNDENEN Boden ab (1.0 stand für kein einziges Messergebnis). Dieser Boden ist an 26
 // echten Tagesbewegungen gemessen, die JEDES Board abdecken. Ohne ihn hätte die
 // Neukalibrierung — die alle Boards auf „noch nicht kalibriert" zurücksetzt — die Wert-Achse
-// für ~20 Läufe komplett abgeschaltet. Nebenwirkung, gewollt: survival war bis heute NIE
-// wertgeprüft (frozen:false seit Beginn) und ist es ab jetzt.
+// für ~20 Läufe komplett abgeschaltet.
+//
+// PRÄZISIERUNG (Codex-Gegenprüfung 04.08.2026 — die vorherige Fassung hier behauptete, dieser
+// Boden mache survival „ab jetzt" wertgeprüft; das ist zu ungenau). evaluateGate() läuft für
+// survival GENAUSO wie für jedes andere Board (buildBoardVintage friert es als Single-Track
+// 'flat' ein, s. Kommentar dort, und run() ruft evaluateGate() dafür unverändert auf) — die
+// STRUKTUR-Prüfungen (cohort-empty, cohort-overlap-collapse, coverage-collapse) greifen also
+// genauso. Der WERT-BODEN hier (MIN_GATE_THRESHOLD als Ersatz für eine fehlende eingefrorene
+// Schwelle) kann survival dagegen strukturell NIE beurteilen: survival-Zeilen tragen nie einen
+// Score (s. „survival-Zeilen sind nie gescort" in buildTrack unten), evaluateGate() sammelt
+// Tages-Deltas aber nur aus Zeilenpaaren mit BEIDSEITIG finitem score — die deltas-Liste bleibt
+// für survival also immer leer, p99Delta ist immer null, und „p99-delta-exceeds-threshold" kann
+// nie feuern. Ohne je ein Sample zu liefern, friert für survival auch nie eine board-eigene
+// Schwelle ein (tagesSample bleibt null) — das Board steht im Lauf-Protokoll dauerhaft als
+// „calibrating" mit p99Δ=—, mit oder ohne diesen Boden. Der Boden ändert an survivals
+// Wert-Prüfbarkeit also NICHTS; er wirkt ausschließlich auf die score-tragenden Boards.
 //
 // ER IST EIN KALIBRIER-ERSATZ, KEINE DAUER-UNTERGRENZE (Review 03.08.2026). Bis dahin wurde
 // er auch auf jede board-eigene, eingefrorene Schwelle gelegt. Damit hätte ein RUHIGES Board
