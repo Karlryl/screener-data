@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { shareGrowthRate, buildShareGrowthPctlFn, shareCountDilution, LAMPS } = require('../../src/scoring/lamps.js');
+const { shareGrowthRate, buildShareGrowthPctlFn, shareCountDilution, shareDilutionDetail, TH, LAMPS } = require('../../src/scoring/lamps.js');
 
 // Echte SEC-annual-Aktienzahl-Serien (external-data/sec-secannual.json, 2026-07-21-Regen), newest-first,
 // als {value}-Objekte wie run-screener.js sie in snapshot.secAnnual.annualShares anliefert.
@@ -247,6 +247,58 @@ test('DATEI-WAECHTER shareDilution: das Feld ist entweder auf allen Zeilen da od
   const altbestand = [];
   validateFile(datei([ohneFeld, { ...ohneFeld }]), 'semiconductors', altbestand);
   assert.deepEqual(altbestand, [], 'Altbestand ohne das Feld muss durchgehen');
+});
+
+// --- Stufe A, Rat-Entscheid 04.08.2026 (_RAT-52-VERWAESSERUNG-2026-08-04.md) ------------------
+// shareCountDilution feuert nicht mehr auf reinem Kohorten-Rang: eine schrumpfende Kohorte hat
+// trotzdem einen "staerksten" (= am wenigsten schrumpfenden) Namen im p75+, obwohl niemand dort
+// verwaessert wird (MGPI-Klasse). Die Rate-Schranke TH.SHARE_DILUTION_MIN_RATE = 0.02 (2 %/Jahr,
+// SBC-Run-Rate-Anker) schliesst diese Zeilen aus, ohne echte Verwaesserer (BTBT-Klasse: hohe
+// Rate UND hoher Rang) zu beruehren. shareDilutionDetail (die ROHEN rate/pctl-Zahlen) bleibt
+// unveraendert — nur der An/Aus-Vergleich in shareCountDilution bekommt die Konjunktion.
+test('TH.SHARE_DILUTION_MIN_RATE: die Rat-Konstante steht bei den uebrigen TH-/CAP-Konstanten', () => {
+  assert.equal(TH.SHARE_DILUTION_MIN_RATE, 0.02, '2 % p.a., SBC-Run-Rate-Anker analog SHARES_ORGANIC_CAP');
+});
+
+test('shareCountDilution: MGPI-Klasse (Rate negativ, aber p75+ in einer schrumpfenden Kohorte) darf NICHT feuern', () => {
+  // Aktienzahl schrumpft leicht (Rueckkauf-Programm) -- Legs ~-1 %/Jahr, Median klar negativ.
+  const mgpi = snap([98, 99, 100]);
+  const rate = shareGrowthRate(mgpi);
+  assert.ok(rate < 0, `Vorbedingung: die Rate muss negativ sein, war ${rate}`);
+  // ctx simuliert eine Kohorte, in der MGPI trotzdem der am wenigsten schrumpfende (= "staerkste")
+  // Name ist -- reiner Rang-Vergleich waere hier p75+ (wie 'knapp'-Fixture oben: fixe Rueckgabe).
+  const ctx = { shareGrowthPctlFn: () => 1.0 };
+  const d = shareDilutionDetail(mgpi, ctx);
+  assert.equal(d.rate, rate, 'shareDilutionDetail bleibt die ROHE, unveraenderte Rechnung');
+  assert.equal(d.pctl, 1.0, 'shareDilutionDetail bleibt die ROHE, unveraenderte Rechnung');
+  assert.equal(shareCountDilution(mgpi, ctx), false,
+    'GATE-DEFEKT (Rot-Beleg): reiner Kohorten-Rang liesse dies feuern, obwohl niemand verwaessert wird');
+});
+
+test('shareCountDilution: BTBT-Klasse (hohe positive Rate UND hoher Rang) feuert weiterhin', () => {
+  // Ein starkes Verwaesserungsjahr (+66 %) -- deutlich ueber der 2-%-Schranke.
+  const btbt = snap([166, 100]);
+  const rate = shareGrowthRate(btbt);
+  assert.ok(rate > TH.SHARE_DILUTION_MIN_RATE, `Vorbedingung: Rate muss klar ueber der Schranke liegen, war ${rate}`);
+  const ctx = { shareGrowthPctlFn: () => 0.9 };
+  assert.equal(shareCountDilution(btbt, ctx), true, 'echte Verwaesserer duerfen durch die neue Schranke nicht verstummen');
+});
+
+test('shareGrowthRate/Split-Guard: ratio exakt 2.0 wird als Split gefiltert (beidseitig einschliessend)', () => {
+  // Bein 1 (200/100): ratio EXAKT 2.0 -- Split-Signatur, muss rausfallen (vorher: > statt >=, kam durch).
+  // Bein 2 (100/102): ratio ~0.9804 -- organisches Bein (~-1.96 %/Jahr), bleibt.
+  const mitGenauZwei = shareGrowthRate(snap([200, 100, 102]));
+  const nurOrganisch = -0.0196078431372549; // 100/102 - 1
+  assert.ok(Math.abs(mitGenauZwei - nurOrganisch) < 1e-9,
+    `GATE-DEFEKT (Rot-Beleg): ratio===2.0 muss als Split gefiltert werden, Median war ${mitGenauZwei} `
+    + `statt des rein organischen Beins ${nurOrganisch} — ohne Filter draengt das Split-Bein den `
+    + `Median auf einen positiven Wert ~0.49`);
+  // Gegenprobe symmetrisch: ratio EXAKT 0.5 (Reverse-Split-Signatur) faellt ebenso raus.
+  // Bein 1 (100/200): ratio EXAKT 0.5 -- muss raus. Bein 2 (200/198): ratio ~1.0101 -- organisch, bleibt.
+  const mitGenauHalb = shareGrowthRate(snap([100, 200, 198]));
+  const nurOrganischRev = 200 / 198 - 1;
+  assert.ok(Math.abs(mitGenauHalb - nurOrganischRev) < 1e-9,
+    `ratio===0.5 muss ebenfalls als Split gefiltert werden, Median war ${mitGenauHalb} statt ${nurOrganischRev}`);
 });
 
 test('evaluateLamps: bestehende 14 Lampen ignorieren den neuen ctx-Parameter (arity 1, byte-identisch)', () => {

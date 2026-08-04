@@ -25,6 +25,14 @@ const TH = {
   HIGH_BETA: 2.5,          // Beta-Crash-Risiko
   SHARES_ORGANIC_CAP: 2,   // s. shareYoYLegs()
   SHARE_DILUTION_PCTL: 0.75, // s. shareCountDilution() — reuse der etablierten p75-Konvention (wie CYCLE_DD_PCTL, score.js)
+  // SBC-Run-Rate-Anker analog SHARES_ORGANIC_CAP; Rat 04.08. (Stufe A, _RAT-52-VERWAESSERUNG-
+  // 2026-08-04.md): reines Kohorten-Perzentil feuert auch fuer eine Firma, deren Aktienzahl real
+  // SCHRUMPFT — pctl misst nur den Rang, nicht das Vorzeichen/die Groesse der Rate (MGPI-Klasse:
+  // negative Rate, aber schwaechste Kohorte -> trotzdem p75+). 2 % p.a. ist die Reichweiten-
+  // Untergrenze, ab der ueberhaupt von Verwaesserung die Rede sein kann — die Lampe feuert ab
+  // jetzt als KONJUNKTION (pctl >= SHARE_DILUTION_PCTL UND rate >= SHARE_DILUTION_MIN_RATE),
+  // shareDilutionDetail (die rohen Rate/Perzentil-Zahlen) bleibt UNVERAENDERT.
+  SHARE_DILUTION_MIN_RATE: 0.02,
 };
 
 function meanPresent(series) {
@@ -492,7 +500,11 @@ function shareYoYLegs(series) {
     const cur = series[i], prev = series[i + 1];
     if (!Number.isFinite(cur) || !Number.isFinite(prev) || prev <= 0) continue;
     const ratio = cur / prev;
-    if (ratio > TH.SHARES_ORGANIC_CAP || ratio < 1 / TH.SHARES_ORGANIC_CAP) continue; // Split-Signatur
+    // Rat 04.08.2026 (Stufe A, _RAT-52-VERWAESSERUNG-2026-08-04.md): beidseitig EINSCHLIESSEND
+    // (>= / <=, vorher > / <). Ein exakter Genau-Faktor-2-Sprung (ratio===2 bzw. ===0.5) ist
+    // dieselbe Split-Signatur wie jeder groessere Sprung — ihn knapp UNTERHALB des Deckels als
+    // "organisches Bein" durchzulassen waere eine Zufallsluecke am Rand, keine bewusste Grenze.
+    if (ratio >= TH.SHARES_ORGANIC_CAP || ratio <= 1 / TH.SHARES_ORGANIC_CAP) continue; // Split-Signatur
     legs.push(ratio - 1);
   }
   return legs;
@@ -546,11 +558,17 @@ function shareDilutionDetail(s, ctx) {
 
 // shareCountDilution(s, ctx): ctx.shareGrowthPctlFn ist die Kohorten-Perzentil-Funktion (vom Aufrufer
 // gebaut, s.o.) — OHNE ctx (z.B. HG/QC-Board, die Lampe B nicht verdrahten) liefert die Lampe null
-// (nicht bewertbar), byte-identisch zum bisherigen Verhalten dort. Feuert bei Kohorten-p75+ (TH.SHARE_DILUTION_PCTL).
+// (nicht bewertbar), byte-identisch zum bisherigen Verhalten dort.
+// Rat 04.08.2026 (Stufe A): KONJUNKTION statt reinem Kohorten-Rang — Kohorten-p75+
+// (TH.SHARE_DILUTION_PCTL) UND eine Rate, die ueberhaupt eine Verwaesserung TRAEGT
+// (TH.SHARE_DILUTION_MIN_RATE, s. Konstante). Ein reiner Rang-Vergleich feuert sonst auch fuer die
+// schwaechste Zeile einer schrumpfenden Kohorte (negative Rate, trotzdem p75+ — MGPI-Klasse).
+// shareDilutionDetail() selbst bleibt die ROHE Rechnung, unveraendert (die Anzeige zeigt weiter
+// die echte Rate/das echte Perzentil, auch wenn die Lampe wegen der Rate-Schranke nicht feuert).
 function shareCountDilution(s, ctx) {
   const d = shareDilutionDetail(s, ctx);
   if (d === null) return null;
-  return d.pctl >= TH.SHARE_DILUTION_PCTL;
+  return d.pctl >= TH.SHARE_DILUTION_PCTL && d.rate >= TH.SHARE_DILUTION_MIN_RATE;
 }
 
 // 16. Einmalertrag (Karl-Sichtabnahme 27.07.2026): ein einzelnes Quartal traegt den ganzen
