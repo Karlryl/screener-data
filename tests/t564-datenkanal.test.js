@@ -543,6 +543,53 @@ test('T573-R1: uebersprungener merge-Job -> Warnung statt rot (Erreichbarkeit un
   }
 });
 
+// ── R575-1 (Review ueber Tag 574/575): der Frueh-Ausstieg kannte failure nicht ────
+// BEFUND: der Vorlauf stieg nur bei merge in {skipped, cancelled} aus. Ein GEFALLENER
+// merge-Job (failure) fiel durch in den case/esac — und bei gruenem Earnings-Pull meldete
+// der Waechter dann woertlich "der Termin-Kanal traegt den Stand von heute". Deployt wurde
+// aber nichts: der Deploy-Schritt liegt IM merge-Job, ein gefallener merge hat ihn entweder
+// nicht erreicht oder ist an ihm gestorben. Genau die Aussage, die T573-R1 fuer skipped/
+// cancelled schon als "schlicht falsch" verworfen hatte — nur fuer den haeufigeren Ausgang.
+// Der Fall ist NICHT exotisch: merge traegt 60 Minuten Timeout, laedt 17 Shard-Artefakte
+// und macht einen gh-pages-Force-Push; er faellt oefter als er uebersprungen wird.
+test('R575-1: gefallener merge-Job -> Warnung statt falscher Erfolgsmeldung', () => {
+  const r = transportVollLauf('failure', 'success');
+  assert.equal(r.code, 0, 'merge=failure macht den Waechter rot — der Earnings-PULL war aber gruen, '
+    + 'ueber ihn ist nichts zu beanstanden. Der Waechter ist fuer den Pull zustaendig, nicht fuer '
+    + 'den merge-Job (der meldet sich selbst). Ausgabe: ' + r.out.trim());
+  assert.ok(!/traegt den Stand von heute/.test(r.out),
+    'merge=failure und der Waechter behauptet trotzdem, der Termin-Kanal trage den Stand von '
+    + 'heute. Der Deploy sitzt IM merge-Job — ist der gefallen, wurde nichts deployt und findash '
+    + 'zeigt weiter die Termine von gestern. Ausgabe: ' + r.out.trim());
+  assert.match(r.out, /::warning::/, 'merge=failure meldet sich gar nicht — stiller gruener Haken '
+    + 'auf einen Lauf, ueber den nichts auszusagen ist.');
+  assert.ok(!/::error::/.test(r.out), 'merge=failure meldet ::error:: statt ::warning:: — der '
+    + 'merge-Job ist bereits selbst rot, ein zweites rotes X fuer denselben Vorfall verwaessert '
+    + 'Karls einzigen Alarm-Kanal. Ausgabe: ' + r.out.trim());
+});
+
+test('R575-1 Ausbau-Probe: ohne den failure-Zweig faellt der Waechter in die falsche Meldung', () => {
+  // Der Pruefer oben wird einmal absichtlich entwaffnet: der Vorlauf-Block wird auf den
+  // Stand VOR R575-1 zurueckgebaut (nur skipped|cancelled) und derselbe Fall gefahren.
+  // Kommt dann NICHT die falsche Erfolgsmeldung heraus, misst der Test oben nichts.
+  const s = transportSchritt();
+  const i = s.indexOf('run: |');
+  const block = s.slice(i + 'run: |'.length).split('\n').map((z) => z.replace(/^ {10}/, '')).join('\n')
+    .replace(/\$\{\{\s*needs\.merge\.result\s*\}\}/g, 'failure')
+    .replace(/\$\{\{\s*needs\.prep\.outputs\.pull_earnings_outcome\s*\}\}/g, 'success');
+  const vorher = block.replace(
+    /if \[ "\$MERGE" = "skipped" \] \|\| \[ "\$MERGE" = "cancelled" \] \|\| \[ "\$MERGE" = "failure" \]/,
+    'if [ "$MERGE" = "skipped" ] || [ "$MERGE" = "cancelled" ]');
+  assert.notEqual(vorher, block, 'der Rueckbau hat nichts getroffen — die Bedingung sieht anders '
+    + 'aus als erwartet, damit ist diese Ausbau-Probe blind.');
+  let out;
+  try { out = execFileSync(shBinaer(), ['-c', vorher], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }); }
+  catch (e) { out = (e.stdout || '') + (e.stderr || ''); }
+  assert.match(out, /traegt den Stand von heute/,
+    'der zurueckgebaute Stand liefert die falsche Erfolgsmeldung NICHT — dann fing der Test '
+    + 'darueber nie den Befund, sondern etwas anderes. Ausgabe: ' + out.trim());
+});
+
 test('T573-R1: gelaufener merge-Job -> der Ausgang entscheidet (rot bei failure, still bei success)', () => {
   const rot = transportVollLauf('success', 'failure');
   assert.equal(rot.code, 1, 'bei gelaufenem merge macht ein gefallener Earnings-Pull den Waechter '

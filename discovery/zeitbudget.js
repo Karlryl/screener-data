@@ -24,10 +24,26 @@
  *   Reserve fuer alles ausser den budgetierten Adaptern: die HAELFTE des Schritts
  *   (600s) — das rund Sechsfache des gemessenen Nicht-Adapter-Anteils.
  *   Die uebrigen 600s werden auf die budgetierten Adapter aufgeteilt: 300s je Adapter.
- *   Damit bleibt selbst die SUMME aller Budgets (600s) plus Overhead sicher unter dem
+ *   Damit bleibt selbst die SUMME aller Budgets plus Overhead sicher unter dem
  *   Schritt-Timeout — obwohl die Adapter tatsaechlich in Promise.allSettled parallel
- *   laufen und der Wanduhr-Fall damit das MAXIMUM ist (300s), nicht die Summe.
+ *   laufen und der Wanduhr-Fall damit das MAXIMUM ist, nicht die Summe.
  *   Zum Vergleich: ein GESUNDER Lauf braucht je Adapter unter einer Minute.
+ *
+ * R575-3 (Review ueber Tag 574/575) — DAS BUDGET IST EINE DECKE MIT UEBERSTAND:
+ *   Hier stand "300s je Adapter" als harte Obergrenze. Das ist zu genau formuliert.
+ *   `mitBudget` prueft VOR einem Versuch, ob das Budget noch traegt — es kann einen
+ *   laufenden Versuch nicht abschneiden. Startet eine Anfrage bei 299,9s Verbrauch, laeuft
+ *   sie noch in ihren vollen SOCKET-Timeout hinein. Der ist adapterspezifisch und steht im
+ *   jeweiligen Adapter, nicht hier:
+ *     otc-markets.js  req.setTimeout(30000)  ->  Decke  300s + 30s = ca. 330s
+ *     nasdaq-api.js   req.setTimeout(45000)  ->  Decke  300s + 45s = ca. 345s
+ *   Pessimistischste Summe beider Decken: 675s (statt der 600s, die hier standen). Auch
+ *   die traegt: 1200s Schritt-Timeout - 675s = 525s bleiben fuer die Yahoo-Kanaele und
+ *   den Rest von main(). Der Wanduhr-Fall ist ohnehin freundlicher — die Adapter laufen
+ *   parallel, gemessen wird also max(330, 345) = 345s.
+ *   Die Zahl wird hier genannt und nicht "wegdefiniert": wer den Socket-Timeout eines
+ *   budgetierten Adapters erhoeht, hebt damit auch dessen Decke, und diese Rechnung ist
+ *   die Stelle, an der das auffallen muss.
  *
  * Aendert jemand timeout-minutes im Workflow, wird SCHRITT_TIMEOUT_MIN hier rot:
  * tests/dt1-adapter-zeitbudget.test.js rechnet die Herleitung gegen die Workflow-Datei nach.

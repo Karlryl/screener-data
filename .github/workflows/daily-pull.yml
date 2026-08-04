@@ -301,6 +301,19 @@ jobs:
       # `merge` mit, der ganze Tag waere weg — dieselbe Abwaegung, die oben das
       # continue-on-error am Refresh-Schritt traegt. Das rote X traegt der Job
       # `entdeckungs-waechter` (er faellt bei genau diesem Ausgang bereits).
+      # R575-2 (Review ueber Tag 574/575) — WAS `success` HIER NICHT HEISST:
+      # Der Text unten nennt die Namen bei Ausgang `success` einen "bestaetigten Stand".
+      # Bestaetigt ist damit AUSSCHLIESSLICH: refresh-universe.js ist bis zum Ende gelaufen
+      # und hat keinen Exit-Code gesetzt. NICHT bestaetigt ist "alle Entdeckungs-Kanaele
+      # gesund". Die Luecke ist benannt und gewollt, nicht uebersehen: die Adapter-Zeitbudgets
+      # aus Tag 575 (discovery/zeitbudget.js, budgetRissMelden) setzen bewusst KEINEN
+      # exitCode — ein gerissenes Budget liefert einen TEILBESTAND, stempelt ihn mit
+      # `partial`/`budgetRiss` und laesst den Lauf gruen, damit die uebrigen Adapter den Tag
+      # nicht verlieren. Ein halbierter otc-markets- oder nasdaq-api-Ertrag kommt also als
+      # `success` hier an und wird als "bestaetigter Stand" ausgewiesen. Das zu sehen ist
+      # Aufgabe von S4-DISC-001 (der Ertragszeile mit `quelle=1234!`), fuer die es bis heute
+      # keinen Waechter gibt — bewusst vertagt, hier nur ehrlich benannt, damit niemand aus
+      # diesem gruenen Haken mehr liest, als er traegt.
       # Waechter: tests/dt2-watchlist-schreibbeweis.test.js (faehrt diesen Block per sh aus).
       - name: Verify Watchlist Sanity
         run: |
@@ -319,7 +332,7 @@ jobs:
           NACHHER_MTIME=$(date -r watchlist.json +%s)
           if [ -n "$VORHER_MTIME" ] && [ "$VORHER_MTIME" = "$NACHHER_MTIME" ]; then
             if [ "$REFRESH_AUSGANG" = "success" ]; then
-              echo "Schreib-Beweis: watchlist.json unveraendert (mtime $NACHHER_MTIME), aber der Refresh ist sauber durchgelaufen (Ausgang: $REFRESH_AUSGANG) — refresh-universe.js schreibt bei 'nichts Neues, nichts repariert' bewusst nicht. Die $size Namen sind ein bestaetigter Stand."
+              echo "Schreib-Beweis: watchlist.json unveraendert (mtime $NACHHER_MTIME), aber der Refresh ist sauber durchgelaufen (Ausgang: $REFRESH_AUSGANG) — refresh-universe.js schreibt bei 'nichts Neues, nichts repariert' bewusst nicht. Die $size Namen sind ein bestaetigter Stand IN DIESEM SINNE: der Refresh ist durchgelaufen und hat nichts zu aendern gefunden. Ob jeder einzelne Entdeckungs-Kanal voll geliefert hat, sagt dieser Ausgang NICHT (ein gerissenes Adapter-Zeitbudget liefert einen Teilbestand und bleibt gruen — R575-2)."
             else
               echo "::error::KEIN SCHREIB-BEWEIS: watchlist.json ist UNVERAENDERT (mtime $NACHHER_MTIME, genau wie vor dem Refresh) UND der Schritt 'Refresh Universe' ist nicht sauber durchgelaufen (Ausgang: ${REFRESH_AUSGANG:-<leer>}). Die oben gemeldeten $size Namen sind damit der Stand des VORTAGS und KEIN Beleg fuer einen erfolgreichen Refresh — genau so ging dieser Gate am 03.08. (Lauf 30788278952) nach einem 20-Minuten-Timeout gruen durch. Der Tag laeuft bewusst weiter (das Universum von gestern ist gueltig); rot wird der Lauf ueber den Job 'entdeckungs-waechter'. NAECHSTER SCHRITT: Actions -> prep-Job -> Schritt 'Refresh Universe'."
             fi
@@ -1200,9 +1213,20 @@ jobs:
           # Als eigener Job mit `if: always()` liefe er auch bei uebersprungenem merge —
           # dann wurde aber gar nichts deployt, und die Meldung unten ("hat den Kalender
           # von gestern deployt") waere schlicht falsch. Also: kein Deploy, keine Aussage.
+          # R575-1 (Review ueber Tag 574/575): `failure` gehoert in denselben Zweig.
+          # Der Frueh-Ausstieg kannte nur skipped/cancelled. Ein GEFALLENER merge-Job fiel
+          # damit durch in das case/esac darunter — und bei gruenem Earnings-Pull meldete
+          # dieser Job woertlich "der Termin-Kanal traegt den Stand von heute". Deployt wurde
+          # aber nichts: der Deploy-Schritt liegt IM merge-Job, ein gefallener merge hat ihn
+          # entweder nicht erreicht oder ist an ihm gestorben. Das ist genau die Aussage, die
+          # T573-R1 fuer skipped/cancelled schon als falsch verworfen hat — nur fuer den
+          # HAEUFIGEREN Ausgang: merge traegt 60 Minuten Timeout, laedt 17 Shard-Artefakte und
+          # macht einen gh-pages-Force-Push, er faellt oefter als er uebersprungen wird.
+          # Kein rotes X: der merge-Job ist in diesem Fall bereits selbst rot; ein zweites
+          # rotes X fuer denselben Vorfall verwaessert Karls einzigen Alarm-Kanal.
           MERGE="${{ needs.merge.result }}"
-          if [ "$MERGE" = "skipped" ] || [ "$MERGE" = "cancelled" ]; then
-            echo "::warning::Der merge-Job ist gar nicht (oder nicht zu Ende) gelaufen (Ergebnis: ${MERGE:-<leer>}) — es wurde nichts in den oeffentlichen Datenkanal deployt, ueber den Termin-Transport ist damit nichts auszusagen. Kein rotes X, weil das keine Aussage ueber den Earnings-Pull ist, aber auch kein gruener Freibrief."
+          if [ "$MERGE" = "skipped" ] || [ "$MERGE" = "cancelled" ] || [ "$MERGE" = "failure" ]; then
+            echo "::warning::Der merge-Job ist gar nicht, nicht zu Ende oder nicht erfolgreich gelaufen (Ergebnis: ${MERGE:-<leer>}) — es wurde nichts in den oeffentlichen Datenkanal deployt, ueber den Termin-Transport ist damit nichts auszusagen. Bei Ergebnis 'failure' heisst das ausdruecklich: der merge-Job ist gefallen, der Kalender von HEUTE ist also NICHT deployt, egal wie der Earnings-Pull ausging — findash zeigt weiter die Termine von gestern. Kein zusaetzliches rotes X, weil der merge-Job sich selbst schon rot meldet und das hier keine Aussage ueber den Earnings-Pull ist. NAECHSTER SCHRITT: Actions -> Job 'merge'."
             exit 0
           fi
           AUSGANG="${{ needs.prep.outputs.pull_earnings_outcome }}"

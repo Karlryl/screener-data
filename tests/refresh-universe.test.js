@@ -160,7 +160,15 @@ const INGEST_MARKER = 'for (const q of quotes) {';
 // einem Regex (`/\d{2}/`) zaehlen weiter mit — beides erzeugt im Zweifel eine unbalancierte
 // Klammer und damit einen LAUTEN Fehlschlag am Rumpf-Ende-Pin (T567-W1), nie ein stilles Gruen.
 // Genau diese Unterscheidung fehlte oben: der Regex-Deckel WAR still.
-const REGEX_VORGAENGER = /(?:[=(,;:[{!&|?+\-*%~^<>]|\b(?:return|typeof|instanceof|in|of|case|do|else|new|delete|void|yield|await))$/;
+// R575-4 (Review ueber Tag 574/575): `+` und `-` sind als Vorgaenger MEHRDEUTIG. Nach
+// `a + /re/` beginnt ein Regex-Literal, nach `offset++ / 2` eine Division. Der alte Ausdruck
+// nahm beides — und schaltete bei jedem Nach-Inkrement faelschlich in den Regex-Modus. Folge:
+// ein Zeilenkommentar auf derselben Zeile wird nicht mehr gestrippt (sein erster Slash
+// verbraucht den Regex-Ausstieg), seine geschweiften Klammern zaehlen in der Klammerbilanz
+// mit -> Phantom-Fund oder falsch geschnittener Schleifenkoerper. Deshalb: ein `+`/`-` gilt
+// nur dann als Vorgaenger, wenn NICHT dasselbe Zeichen davorsteht. Alle anderen Operatoren
+// bleiben unveraendert — `**`/`<<`/`&&`/`||` sind als Vorgaenger eindeutig richtig.
+const REGEX_VORGAENGER = /(?:(?<![+\-])[+\-]|[=(,;:[{!&|?*%~^<>]|\b(?:return|typeof|instanceof|in|of|case|do|else|new|delete|void|yield|await))$/;
 function ohneZeilenkommentare(code) {
   let out = '', quote = null, regex = false, klasse = false;
   for (let i = 0; i < code.length; i++) {
@@ -435,6 +443,48 @@ test('T572-Q4: Division und gewoehnliche Regex-Literale machen den Pruefer nicht
     assert.ok(verdrahtungsMaengel(mitBoden).length > 0,
       name + ': hinter diesem Einschub bleibt ein Zweitboden unsichtbar — still statt scharf.');
   }
+});
+
+// ── R575-4 (Review ueber Tag 574/575): `++`/`--` vor `/` ist mehrdeutig ──────────
+// BEFUND: REGEX_VORGAENGER fuehrt `+` und `-` in seiner Zeichenklasse. Nach `a + /re/` ist
+// das richtig — nach `offset++ / 2` ist es falsch: dort ist der Slash eine DIVISION. Der
+// Stripper ging trotzdem in den Regex-Modus und blieb dort bis zum naechsten `/`. Steht auf
+// derselben Zeile danach ein Zeilenkommentar, verbraucht sein erster Slash den Regex-Ausstieg
+// und der zweite bleibt als gewoehnliches Zeichen stehen — der Kommentar wird NICHT
+// gestrippt, und jede Klammer darin zaehlt in der Klammerbilanz mit. Das ist genau die
+// Phantom-Klasse: der Waechter meldet einen Mangel, den es nicht gibt, oder schneidet den
+// Schleifenkoerper falsch. Der alte Kommentar oben nannte `offset++ / 2` sogar als gemessenen
+// Fall — gemessen wurde damals aber nur, dass KEIN Zeichen verloren geht, nicht der
+// Kommentar-Fall.
+test('R575-4: eine Division nach ++/-- schaltet den Stripper nicht in den Regex-Modus', () => {
+  const faelle = {
+    'Nach-Inkrement': 'let a = offset++ / 2;  // Rest mit { Klammer\nlet b = 1;\n',
+    'Nach-Dekrement': 'let a = i-- / 2;  // Rest mit { Klammer\nlet b = 1;\n',
+  };
+  for (const [name, code] of Object.entries(faelle)) {
+    const raus = ohneZeilenkommentare(code);
+    assert.ok(!raus.includes('{'),
+      name + ': der Zeilenkommentar hinter der Division wurde nicht gestrippt — seine geschweifte '
+      + 'Klammer zaehlt jetzt in der Klammerbilanz mit und erzeugt einen Phantom-Fund oder einen '
+      + 'falsch geschnittenen Schleifenkoerper. Ergebnis: ' + JSON.stringify(raus));
+    assert.ok(raus.includes('let b = 1;'),
+      name + ': die Folgezeile ist verschwunden — der Stripper hat mehr gefressen als die Zeile.');
+  }
+});
+
+test('R575-4 Ausbau-Probe: die alte Zeichenklasse faellt bei genau diesem Fall durch', () => {
+  // Der Pruefer oben wird gegen den Stand VOR R575-4 gefahren. Bleibt der auch sauber, misst
+  // der Test darueber nichts. Nachgebaut wird nur die Vorgaenger-REGEX, nicht der ganze Scanner.
+  const ALT = /(?:[=(,;:[{!&|?+\-*%~^<>]|\b(?:return|typeof|instanceof|in|of|case|do|else|new|delete|void|yield|await))$/;
+  assert.equal(ALT.test('let a = offset++'), true,
+    'die alte Zeichenklasse trifft `offset++` nicht mehr — dann ist der Befund nicht nachgebaut.');
+  assert.equal(REGEX_VORGAENGER.test('let a = offset++'), false,
+    'der neue Vorgaenger-Test haelt `offset++` weiter fuer einen Regex-Beginn — der Fix greift nicht.');
+  // Und die Gegenrichtung: ein ECHTER Plus-Vorgaenger muss weiter als Regex-Beginn gelten,
+  // sonst ist der Fix eine Verschlechterung.
+  assert.equal(REGEX_VORGAENGER.test('const x = a +'), true,
+    'ein einzelnes `+` gilt nicht mehr als Regex-Vorgaenger — dann bricht `a + /re/.test(s)`.');
+  assert.equal(REGEX_VORGAENGER.test('const x = a -'), true, 'dasselbe fuer ein einzelnes `-`');
 });
 
 test('T567-W2: der gueltige Stand bleibt gruen (sonst waere der Pruefer falsch-rot)', () => {
