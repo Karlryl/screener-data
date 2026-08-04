@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-03T06:50:37.938Z",
+  "generated_at": "2026-08-04T21:58:40.276Z",
   "branch": "semiconductors",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 70.1
+    "coverage_pct": 72.7
   },
   "profitable": [
     {
       "rank": 1,
       "ticker": "NVEC",
-      "score": 50.7,
+      "score": 50.9,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -25,7 +25,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 562417408,
+      "marketCap": 594584576,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -36,8 +36,8 @@
       "coverageWeight": 1,
       "cohortN": 1,
       "cohortFallback": true,
-      "scoreBase": 52.2,
-      "scoreShrunk": 50.7,
+      "scoreBase": 52.6,
+      "scoreShrunk": 50.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -46,37 +46,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 83.3,
+          "pct": 87.5,
           "weight": 1.7
         },
         {
           "key": "revAcceleration",
-          "pct": 16.7,
+          "pct": 12.5,
           "weight": 2.6
         },
         {
           "key": "gpGrowth",
-          "pct": 16.7,
+          "pct": 12.5,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 83.3,
+          "pct": 87.5,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 75,
+          "pct": 83.3,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 83.3,
+          "pct": 87.5,
           "weight": 0.8
         },
         {
           "key": "dilution",
-          "pct": 83.3,
+          "pct": 87.5,
           "weight": 0.7
         }
       ],
@@ -88,14 +88,102 @@
         "mindestens": true,
         "letzterVerlust": null
       },
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     }
   ],
   "unprofitable": [
     {
       "rank": 1,
+      "ticker": "ALMU",
+      "score": 45.6,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "highDilution",
+        "lowRoic",
+        "arDivergence",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 8.27,
+        "companion": -6
+      },
+      "name": "Aeluma, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": 305149952,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2023,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 3,
+      "cohortFallback": true,
+      "scoreBase": 42.7,
+      "scoreShrunk": 45.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 12.5,
+          "weight": 2.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 62.5,
+          "weight": 2.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 87.5,
+          "weight": 2.1
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 12.5,
+          "weight": 1.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 16.7,
+          "weight": 0.7
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 37.5,
+          "weight": 0.4
+        },
+        {
+          "key": "dilution",
+          "pct": 37.5,
+          "weight": 0.5
+        }
+      ],
+      "revGrowthYoYPct": -2.6294820717131517,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 7.1,
+        "pctl": 1
+      },
+      "ath": null
+    },
+    {
+      "rank": 2,
       "ticker": "MRAM",
-      "score": 42.6,
+      "score": 44.3,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -110,7 +198,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 339051936,
+      "marketCap": 362265056,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -119,10 +207,10 @@
       "ipoYear": 2016,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 2,
+      "cohortN": 3,
       "cohortFallback": true,
-      "scoreBase": 35.2,
-      "scoreShrunk": 42.6,
+      "scoreBase": 40.6,
+      "scoreShrunk": 44.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -131,48 +219,50 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 16.7,
+          "pct": 37.5,
           "weight": 2.3
         },
         {
           "key": "revAcceleration",
-          "pct": 50,
+          "pct": 37.5,
           "weight": 2.5
         },
         {
           "key": "gpGrowth",
-          "pct": 50,
+          "pct": 37.5,
           "weight": 2.1
         },
         {
           "key": "ruleOfX",
-          "pct": 16.7,
+          "pct": 37.5,
           "weight": 1.7
         },
         {
           "key": "marginTrajectory",
-          "pct": 25,
+          "pct": 50,
           "weight": 0.7
         },
         {
           "key": "capitalEfficiency",
-          "pct": 50,
+          "pct": 62.5,
           "weight": 0.4
         },
         {
           "key": "dilution",
-          "pct": 50,
+          "pct": 62.5,
           "weight": 0.5
         }
       ],
       "revGrowthYoYPct": 13.19835591414218,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
-      "rank": 2,
+      "rank": 3,
       "ticker": "LAES",
-      "score": 33.5,
+      "score": 34.4,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -191,7 +281,7 @@
       "country": "Switzerland",
       "region": "Europe",
       "sector": "Technology",
-      "marketCap": 525746624,
+      "marketCap": 559162752,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -200,34 +290,34 @@
       "ipoYear": 2023,
       "coverageAxes": "6/7",
       "coverageWeight": 0.93,
-      "cohortN": 2,
+      "cohortN": 3,
       "cohortFallback": true,
-      "scoreBase": 63,
-      "scoreShrunk": 56,
+      "scoreBase": 64.3,
+      "scoreShrunk": 57.7,
       "factors": {
-        "burn": 0.598,
+        "burn": 0.597,
         "growth": 1,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 50,
+          "pct": 62.5,
           "weight": 2.3
         },
         {
           "key": "revAcceleration",
-          "pct": 83.3,
+          "pct": 87.5,
           "weight": 2.5
         },
         {
           "key": "gpGrowth",
-          "pct": 83.3,
+          "pct": 62.5,
           "weight": 2.1
         },
         {
           "key": "ruleOfX",
-          "pct": 50,
+          "pct": 62.5,
           "weight": 1.7
         },
         {
@@ -237,22 +327,24 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 16.7,
+          "pct": 12.5,
           "weight": 0.4
         },
         {
           "key": "dilution",
-          "pct": 16.7,
+          "pct": 12.5,
           "weight": 0.5
         }
       ],
       "revGrowthYoYPct": 66.21437027593116,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": {
-        "distancePct": -89.8,
+        "distancePct": -88.4,
         "athDate": "2023-05-24",
         "monthsAgo": 38,
-        "lastDate": "2026-07-29"
+        "lastDate": "2026-08-04"
       }
     }
   ]

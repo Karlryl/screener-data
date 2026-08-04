@@ -1,47 +1,45 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-03T06:50:37.916Z",
+  "generated_at": "2026-08-04T21:58:40.266Z",
   "branch": "financials",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 70.1
+    "coverage_pct": 72.7
   },
   "profitable": [
     {
       "rank": 1,
-      "ticker": "ABTC",
-      "score": 75.4,
+      "ticker": "TWFG",
+      "score": 73.5,
       "track": "profitable",
       "lamps": [
-        "burning",
-        "shortRunway",
-        "lowRoic"
+        "burning"
       ],
       "overview": {
         "kind": "gp",
-        "value": 1.909,
-        "companion": 682.5
+        "value": 0.349,
+        "companion": 66.9
       },
-      "name": "American Bitcoin Corp",
+      "name": "TWFG, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 697840000,
-      "phase": "inflected",
-      "mcapBand": "mega",
+      "marketCap": 355730976,
+      "phase": "established",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2018,
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2024,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
       "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 78.6,
-      "scoreShrunk": 75.4,
+      "scoreBase": 76.4,
+      "scoreShrunk": 73.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -50,48 +48,50 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 96.9,
+          "pct": 78.1,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 96.9,
+          "pct": 84.4,
           "weight": 2.7
         },
         {
           "key": "gpGrowth",
-          "pct": 83.3,
+          "pct": 75,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 96.9,
+          "pct": 71.9,
           "weight": 0.7
         },
         {
           "key": "marginTrajectory",
-          "pct": 31.3,
+          "pct": 64.3,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 31.3,
+          "pct": 92.9,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 90,
+          "pct": 37.5,
           "weight": 0.9
         }
       ],
-      "revGrowthYoYPct": 296.742671009772,
+      "revGrowthYoYPct": 35.915900841763836,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 2,
       "ticker": "VINP",
-      "score": 63,
+      "score": 64.2,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -105,7 +105,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Financial Services",
-      "marketCap": 645993920,
+      "marketCap": 649924928,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -116,8 +116,8 @@
       "coverageWeight": 0.8,
       "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 68.2,
-      "scoreShrunk": 63,
+      "scoreBase": 70.2,
+      "scoreShrunk": 64.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -127,6 +127,82 @@
         {
           "key": "revGrowthLevel",
           "pct": 59.4,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 96.9,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 59.4,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 78.6,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 35.7,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 62.5,
+          "weight": 0.9
+        }
+      ],
+      "revGrowthYoYPct": 17.098597909858924,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 3,
+      "ticker": "NOAH",
+      "score": 60.8,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 4.2
+      },
+      "name": "Noah Holdings Limited",
+      "country": "Singapore",
+      "region": "Asia",
+      "sector": "Financial Services",
+      "marketCap": 584175424,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2010,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.8,
+      "cohortN": 16,
+      "cohortFallback": false,
+      "scoreBase": 65.3,
+      "scoreShrunk": 60.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 46.9,
           "weight": 1
         },
         {
@@ -141,257 +217,35 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 59.4,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 81.3,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 43.8,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 50,
-          "weight": 0.9
-        }
-      ],
-      "revGrowthYoYPct": 17.09859790985895,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 3,
-      "ticker": "TWFG",
-      "score": 62,
-      "track": "profitable",
-      "lamps": [
-        "burning"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.349,
-        "companion": 66.9
-      },
-      "name": "TWFG, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Financial Services",
-      "marketCap": 341564128,
-      "phase": "established",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2024,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 16,
-      "cohortFallback": false,
-      "scoreBase": 63.5,
-      "scoreShrunk": 62,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 65.6,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 78.1,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 50,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 65.6,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 68.8,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 68.8,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 30,
-          "weight": 0.9
-        }
-      ],
-      "revGrowthYoYPct": 35.915900841763836,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 4,
-      "ticker": "TREE",
-      "score": 58.6,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 89.1
-      },
-      "name": "LendingTree, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Financial Services",
-      "marketCap": 544167680,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2008,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.8,
-      "cohortN": 16,
-      "cohortFallback": false,
-      "scoreBase": 62.1,
-      "scoreShrunk": 58.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 71.9,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 46.9,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 71.9,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 43.8,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 81.3,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 70,
-          "weight": 0.9
-        }
-      ],
-      "revGrowthYoYPct": 36.51596809717681,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 5,
-      "ticker": "NOAH",
-      "score": 57.9,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 4.2
-      },
-      "name": "Noah Holdings Limited",
-      "country": "Singapore",
-      "region": "Asia",
-      "sector": "Financial Services",
-      "marketCap": 595158720,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2010,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.8,
-      "cohortN": 16,
-      "cohortFallback": false,
-      "scoreBase": 61.2,
-      "scoreShrunk": 57.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 46.9,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 84.4,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
           "pct": 40.6,
           "weight": 0.7
         },
         {
           "key": "marginTrajectory",
-          "pct": 93.8,
+          "pct": 92.9,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 56.3,
+          "pct": 64.3,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 10,
+          "pct": 12.5,
           "weight": 0.9
         }
       ],
       "revGrowthYoYPct": 1.815344764185789,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
-      "rank": 6,
+      "rank": 4,
       "ticker": "GCMG",
-      "score": 57.9,
+      "score": 56.8,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -403,7 +257,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 755997248,
+      "marketCap": 795246272,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -414,8 +268,8 @@
       "coverageWeight": 0.71,
       "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 62.8,
-      "scoreShrunk": 57.9,
+      "scoreBase": 61.3,
+      "scoreShrunk": 56.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -429,7 +283,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 59.4,
+          "pct": 65.6,
           "weight": 2.7
         },
         {
@@ -444,12 +298,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 56.3,
+          "pct": 50,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 93.8,
+          "pct": 78.6,
           "weight": 1.5
         },
         {
@@ -460,26 +314,104 @@
       ],
       "revGrowthYoYPct": 1.3080617194179744,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
-      "rank": 7,
+      "rank": 5,
+      "ticker": "TREE",
+      "score": 55.4,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 63.2
+      },
+      "name": "LendingTree, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Financial Services",
+      "marketCap": 448283200,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2008,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.8,
+      "cohortN": 16,
+      "cohortFallback": false,
+      "scoreBase": 57.8,
+      "scoreShrunk": 55.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 71.9,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 53.1,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 65.6,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 21.4,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 50,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 87.5,
+          "weight": 0.9
+        }
+      ],
+      "revGrowthYoYPct": 25.310655855682974,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 6,
       "ticker": "VALU",
-      "score": 39.2,
+      "score": 43.1,
       "track": "profitable",
       "lamps": [
         "lowRoic"
       ],
       "overview": {
         "kind": "gp",
-        "value": -0.089,
-        "companion": -9.8
+        "value": -0.075,
+        "companion": -2.5
       },
       "name": "Value Line, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 358123136,
+      "marketCap": 341883200,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -490,8 +422,8 @@
       "coverageWeight": 0.9,
       "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 36.6,
-      "scoreShrunk": 39.2,
+      "scoreBase": 41.5,
+      "scoreShrunk": 43.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -505,27 +437,27 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 71.9,
+          "pct": 78.1,
           "weight": 2.7
         },
         {
           "key": "gpGrowth",
-          "pct": 16.7,
+          "pct": 25,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 28.1,
+          "pct": 34.4,
           "weight": 0.7
         },
         {
           "key": "marginTrajectory",
-          "pct": 6.3,
+          "pct": 7.1,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 18.8,
+          "pct": 21.4,
           "weight": 1.5
         },
         {
@@ -534,7 +466,7 @@
           "weight": 0.9
         }
       ],
-      "revGrowthYoYPct": -7.706033232965314,
+      "revGrowthYoYPct": -4.506975080481701,
       "profitStreak": {
         "jahre": 14,
         "basis": "opInc",
@@ -542,12 +474,14 @@
         "mindestens": true,
         "letzterVerlust": null
       },
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
-      "rank": 8,
+      "rank": 7,
       "ticker": "BRBI",
-      "score": 39,
+      "score": 42.2,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -574,8 +508,8 @@
       "coverageWeight": 0.71,
       "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 32.7,
-      "scoreShrunk": 39,
+      "scoreBase": 38,
+      "scoreShrunk": 42.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -584,12 +518,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 78.1,
+          "pct": 84.4,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 21.9,
+          "pct": 28.1,
           "weight": 2.7
         },
         {
@@ -604,12 +538,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 18.8,
+          "pct": 35.7,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": 6.3,
+          "pct": 7.1,
           "weight": 1.5
         },
         {
@@ -620,6 +554,8 @@
       ],
       "revGrowthYoYPct": 46.784910887792506,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     }
   ],
@@ -627,7 +563,7 @@
     {
       "rank": 1,
       "ticker": "BETR",
-      "score": 64.7,
+      "score": 65.3,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -645,19 +581,19 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 423438848,
+      "marketCap": 515146176,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2021,
       "coverageAxes": "6/7",
       "coverageWeight": 0.82,
-      "cohortN": 10,
+      "cohortN": 11,
       "cohortFallback": true,
-      "scoreBase": 73.9,
-      "scoreShrunk": 64.7,
+      "scoreBase": 73.8,
+      "scoreShrunk": 65.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -666,12 +602,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 78.8,
+          "pct": 79.6,
           "weight": 1.2
         },
         {
           "key": "revAcceleration",
-          "pct": 94,
+          "pct": 98.1,
           "weight": 2.7
         },
         {
@@ -681,7 +617,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 78.8,
+          "pct": 79.6,
           "weight": 0.4
         },
         {
@@ -691,23 +627,106 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 32.4,
+          "pct": 26.5,
           "weight": 1.7
         },
         {
           "key": "dilution",
-          "pct": 39.3,
+          "pct": 34.6,
           "weight": 0.6
         }
       ],
       "revGrowthYoYPct": 64.50086058519793,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 2,
+      "ticker": "ABTC",
+      "score": 54.9,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "burnAccelerating"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 1.909,
+        "companion": 928
+      },
+      "name": "American Bitcoin Corp",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Financial Services",
+      "marketCap": 713699968,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2018,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 11,
+      "cohortFallback": true,
+      "scoreBase": 76.6,
+      "scoreShrunk": 72.5,
+      "factors": {
+        "burn": 0.757,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 98.1,
+          "weight": 1.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 78.8,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 92.9,
+          "weight": 1.7
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 98.1,
+          "weight": 0.4
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 11.5,
+          "weight": 1.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 79.4,
+          "weight": 1.7
+        },
+        {
+          "key": "dilution",
+          "pct": 96.2,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 403.46895769168424,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 3,
       "ticker": "ALTI",
-      "score": 51.9,
+      "score": 52.8,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -727,7 +746,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 517016832,
+      "marketCap": 588277248,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -736,24 +755,24 @@
       "ipoYear": 2021,
       "coverageAxes": "6/7",
       "coverageWeight": 0.82,
-      "cohortN": 10,
+      "cohortN": 11,
       "cohortFallback": true,
-      "scoreBase": 65.5,
-      "scoreShrunk": 59,
+      "scoreBase": 68.7,
+      "scoreShrunk": 61.8,
       "factors": {
-        "burn": 0.879,
+        "burn": 0.854,
         "growth": 1,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 59.6,
+          "pct": 64.8,
           "weight": 1.2
         },
         {
           "key": "revAcceleration",
-          "pct": 90,
+          "pct": 94.2,
           "weight": 2.7
         },
         {
@@ -763,12 +782,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 59.6,
+          "pct": 61.1,
           "weight": 0.4
         },
         {
           "key": "marginTrajectory",
-          "pct": 50,
+          "pct": 57.7,
           "weight": 1.3
         },
         {
@@ -778,18 +797,20 @@
         },
         {
           "key": "dilution",
-          "pct": 32.1,
+          "pct": 26.9,
           "weight": 0.6
         }
       ],
       "revGrowthYoYPct": 28.058927601730698,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
-      "rank": 3,
+      "rank": 4,
       "ticker": "CSHR",
-      "score": 41.7,
+      "score": 43.1,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -804,7 +825,7 @@
       "country": "Jersey",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 645723008,
+      "marketCap": 690528256,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -813,10 +834,10 @@
       "ipoYear": 2026,
       "coverageAxes": "5/7",
       "coverageWeight": 0.69,
-      "cohortN": 10,
+      "cohortN": 11,
       "cohortFallback": true,
-      "scoreBase": 40.6,
-      "scoreShrunk": 41.7,
+      "scoreBase": 41.8,
+      "scoreShrunk": 43.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -825,12 +846,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 82.7,
+          "pct": 83.3,
           "weight": 1.2
         },
         {
           "key": "revAcceleration",
-          "pct": 26,
+          "pct": 32.7,
           "weight": 2.7
         },
         {
@@ -840,88 +861,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 82.7,
-          "weight": 0.4
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 1.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 14.7,
-          "weight": 1.7
-        },
-        {
-          "key": "dilution",
-          "pct": 67.9,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 66.66068571479609,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 4,
-      "ticker": "OIO",
-      "score": 39.4,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "highDilution",
-        "lowRoic",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.238,
-        "companion": -10.1
-      },
-      "name": "OIO Group",
-      "country": "Singapore",
-      "region": "Asia",
-      "sector": "Financial Services",
-      "marketCap": 706484864,
-      "phase": "unprofitable",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2022,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.86,
-      "cohortN": 10,
-      "cohortFallback": true,
-      "scoreBase": 37,
-      "scoreShrunk": 39.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 25,
-          "weight": 1.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 66,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 35.7,
-          "weight": 1.7
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 21.2,
+          "pct": 83.3,
           "weight": 0.4
         },
         {
@@ -936,18 +876,20 @@
         },
         {
           "key": "dilution",
-          "pct": 25,
+          "pct": 65.4,
           "weight": 0.6
         }
       ],
-      "revGrowthYoYPct": -4.395685284888284,
+      "revGrowthYoYPct": 66.66068571479609,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 5,
       "ticker": "CNCK",
-      "score": 38.5,
+      "score": 41.8,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -963,19 +905,19 @@
       "country": "Netherlands",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 520935072,
+      "marketCap": 453902944,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 10,
+      "cohortN": 11,
       "cohortFallback": true,
-      "scoreBase": 36.2,
-      "scoreShrunk": 38.5,
+      "scoreBase": 40.4,
+      "scoreShrunk": 41.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -984,22 +926,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 40.4,
+          "pct": 38.9,
           "weight": 1.2
         },
         {
           "key": "revAcceleration",
-          "pct": 18,
+          "pct": 25,
           "weight": 2.7
         },
         {
           "key": "gpGrowth",
-          "pct": 21.4,
+          "pct": 35.7,
           "weight": 1.7
         },
         {
           "key": "ruleOfX",
-          "pct": 36.5,
+          "pct": 35.2,
           "weight": 0.4
         },
         {
@@ -1014,18 +956,20 @@
         },
         {
           "key": "dilution",
-          "pct": 82.1,
+          "pct": 80.8,
           "weight": 0.6
         }
       ],
       "revGrowthYoYPct": 4.465041587027296,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 6,
       "ticker": "GEMI",
-      "score": 26,
+      "score": 27,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1045,33 +989,33 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 562625920,
+      "marketCap": 504466848,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2025,
       "coverageAxes": "6/7",
       "coverageWeight": 0.82,
-      "cohortN": 10,
+      "cohortN": 11,
       "cohortFallback": true,
-      "scoreBase": 35.9,
-      "scoreShrunk": 38.7,
+      "scoreBase": 38.1,
+      "scoreShrunk": 40.5,
       "factors": {
-        "burn": 0.671,
+        "burn": 0.666,
         "growth": 1,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 71.2,
+          "pct": 72.2,
           "weight": 1.2
         },
         {
           "key": "revAcceleration",
-          "pct": 42,
+          "pct": 48.1,
           "weight": 2.7
         },
         {
@@ -1081,33 +1025,35 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 71.2,
+          "pct": 68.5,
           "weight": 0.4
         },
         {
           "key": "marginTrajectory",
-          "pct": 11.5,
+          "pct": 19.2,
           "weight": 1.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 20.6,
+          "pct": 14.7,
           "weight": 1.7
         },
         {
           "key": "dilution",
-          "pct": 10.7,
+          "pct": 11.5,
           "weight": 0.6
         }
       ],
       "revGrowthYoYPct": 42.324896664968016,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 7,
       "ticker": "AXG",
-      "score": 17.5,
+      "score": 19.7,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1133,10 +1079,10 @@
       "ipoYear": 2023,
       "coverageAxes": "6/7",
       "coverageWeight": 0.86,
-      "cohortN": 10,
+      "cohortN": 11,
       "cohortFallback": true,
-      "scoreBase": 18.8,
-      "scoreShrunk": 26.2,
+      "scoreBase": 23.3,
+      "scoreShrunk": 29.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1145,22 +1091,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 9.6,
+          "pct": 13,
           "weight": 1.2
         },
         {
           "key": "revAcceleration",
-          "pct": 30,
+          "pct": 36.5,
           "weight": 2.7
         },
         {
           "key": "gpGrowth",
-          "pct": 7.1,
+          "pct": 21.4,
           "weight": 1.7
         },
         {
           "key": "ruleOfX",
-          "pct": 9.6,
+          "pct": 13,
           "weight": 0.4
         },
         {
@@ -1170,23 +1116,25 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 26.5,
+          "pct": 20.6,
           "weight": 1.7
         },
         {
           "key": "dilution",
-          "pct": 3.6,
+          "pct": 3.8,
           "weight": 0.6
         }
       ],
       "revGrowthYoYPct": -33.68055555555556,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 8,
       "ticker": "BTBT",
-      "score": 13.4,
+      "score": 13.2,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1196,7 +1144,8 @@
         "lowRoic",
         "arDivergence",
         "crashRisk",
-        "burnAccelerating"
+        "burnAccelerating",
+        "shareCountDilution"
       ],
       "overview": {
         "kind": "gp",
@@ -1207,33 +1156,33 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 462953984,
+      "marketCap": 481519008,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
-      "profitTier": "nicht-profitabel",
+      "profitTier": "kurz-vor-profitabel",
       "ipoYear": 2018,
       "coverageAxes": "6/7",
       "coverageWeight": 0.82,
-      "cohortN": 10,
+      "cohortN": 11,
       "cohortFallback": true,
-      "scoreBase": 14.8,
-      "scoreShrunk": 24.2,
+      "scoreBase": 17.1,
+      "scoreShrunk": 25.8,
       "factors": {
-        "burn": 0.551,
+        "burn": 0.511,
         "growth": 1,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 44.2,
+          "pct": 42.6,
           "weight": 1.2
         },
         {
           "key": "revAcceleration",
-          "pct": 10,
+          "pct": 17.3,
           "weight": 2.7
         },
         {
@@ -1243,7 +1192,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 40.4,
+          "pct": 38.9,
           "weight": 0.4
         },
         {
@@ -1258,7 +1207,7 @@
         },
         {
           "key": "dilution",
-          "pct": 17.9,
+          "pct": 19.2,
           "weight": 0.6
         }
       ],
@@ -1269,6 +1218,97 @@
         "tiefe": 2,
         "mindestens": false,
         "letzterVerlust": 2025
+      },
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 61.7,
+        "pctl": 0.889
+      },
+      "ath": null
+    },
+    {
+      "rank": 9,
+      "ticker": "MTC",
+      "score": 11.8,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "lowRoic",
+        "arDivergence",
+        "burnAccelerating",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.886,
+        "companion": -130.6
+      },
+      "name": "MMTec, Inc.",
+      "country": "Hong Kong",
+      "region": "Asia",
+      "sector": "Financial Services",
+      "marketCap": 390384224,
+      "phase": "unprofitable",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "growth",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2019,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.8,
+      "cohortN": 11,
+      "cohortFallback": true,
+      "scoreBase": 16.4,
+      "scoreShrunk": 25.8,
+      "factors": {
+        "burn": 0.455,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 9.3,
+          "weight": 1.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 9.6,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 7.1,
+          "weight": 1.7
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 5.6,
+          "weight": 0.4
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 1.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 44.1,
+          "weight": 1.7
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": -56.77965330591495,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 65.9,
+        "pctl": 1
       },
       "ath": null
     }

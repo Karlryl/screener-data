@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-03T06:50:37.931Z",
+  "generated_at": "2026-08-04T21:58:40.273Z",
   "branch": "it-services",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 70.1
+    "coverage_pct": 72.7
   },
   "profitable": [
     {
       "rank": 1,
       "ticker": "IBEX",
-      "score": 72.1,
+      "score": 64.9,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -25,7 +25,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 473171360,
+      "marketCap": 479196480,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -34,10 +34,10 @@
       "ipoYear": 2020,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 4,
+      "cohortN": 3,
       "cohortFallback": true,
-      "scoreBase": 83.2,
-      "scoreShrunk": 72.1,
+      "scoreBase": 74.8,
+      "scoreShrunk": 64.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -46,48 +46,50 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 87.5,
+          "pct": 83.3,
           "weight": 2.8
         },
         {
           "key": "revAcceleration",
-          "pct": 87.5,
+          "pct": 83.3,
           "weight": 2.6
         },
         {
           "key": "gpGrowth",
-          "pct": 87.5,
+          "pct": 83.3,
           "weight": 1.3
         },
         {
           "key": "ruleOfX",
-          "pct": 87.5,
+          "pct": 83.3,
           "weight": 1
         },
         {
           "key": "marginTrajectory",
-          "pct": 87.5,
+          "pct": 50,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 83.3,
+          "pct": 75,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 37.5,
+          "pct": 16.7,
           "weight": 0.8
         }
       ],
       "revGrowthYoYPct": 16.819434970441115,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 2,
       "ticker": "TASK",
-      "score": 52.9,
+      "score": 45.9,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -99,19 +101,19 @@
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 505511712,
+      "marketCap": 582437440,
       "phase": "established",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 4,
+      "cohortN": 3,
       "cohortFallback": true,
-      "scoreBase": 54.4,
-      "scoreShrunk": 52.9,
+      "scoreBase": 43.2,
+      "scoreShrunk": 45.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -120,75 +122,78 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 62.5,
+          "pct": 50,
           "weight": 2.8
         },
         {
           "key": "revAcceleration",
-          "pct": 62.5,
+          "pct": 50,
           "weight": 2.6
         },
         {
           "key": "gpGrowth",
-          "pct": 62.5,
+          "pct": 50,
           "weight": 1.3
         },
         {
           "key": "ruleOfX",
-          "pct": 62.5,
+          "pct": 50,
           "weight": 1
         },
         {
           "key": "marginTrajectory",
-          "pct": 62.5,
+          "pct": 16.7,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 16.7,
+          "pct": 25,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 62.5,
+          "pct": 50,
           "weight": 0.8
         }
       ],
       "revGrowthYoYPct": 10.250115194102062,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 3,
       "ticker": "GDYN",
-      "score": 45.5,
+      "score": 39.2,
       "track": "profitable",
       "lamps": [
         "unprofit",
-        "lowRoic"
+        "lowRoic",
+        "shareCountDilution"
       ],
       "overview": {
         "kind": "gp",
         "value": 0.121,
-        "companion": 14.9
+        "companion": 21.5
       },
       "name": "Grid Dynamics Holdings, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Technology",
-      "marketCap": 514300256,
+      "marketCap": 553285312,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
-      "profitTier": "nicht-profitabel",
+      "profitTier": "kurz-vor-profitabel",
       "ipoYear": 2018,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 4,
+      "cohortN": 3,
       "cohortFallback": true,
-      "scoreBase": 43.3,
-      "scoreShrunk": 45.5,
+      "scoreBase": 32,
+      "scoreShrunk": 39.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -197,27 +202,27 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 37.5,
+          "pct": 16.7,
           "weight": 2.8
         },
         {
           "key": "revAcceleration",
-          "pct": 37.5,
+          "pct": 16.7,
           "weight": 2.6
         },
         {
           "key": "gpGrowth",
-          "pct": 37.5,
+          "pct": 16.7,
           "weight": 1.3
         },
         {
           "key": "ruleOfX",
-          "pct": 37.5,
+          "pct": 16.7,
           "weight": 1
         },
         {
           "key": "marginTrajectory",
-          "pct": 37.5,
+          "pct": 83.3,
           "weight": 0.8
         },
         {
@@ -227,86 +232,17 @@
         },
         {
           "key": "dilution",
-          "pct": 87.5,
+          "pct": 83.3,
           "weight": 0.8
         }
       ],
-      "revGrowthYoYPct": 3.6697704526216235,
+      "revGrowthYoYPct": 6.992432860181008,
       "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 4,
-      "ticker": "VRRM",
-      "score": 29.4,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.084,
-        "companion": 5.8
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 8.7,
+        "pctl": 1
       },
-      "name": "Verra Mobility Corporation",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Technology",
-      "marketCap": 636488896,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2017,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 4,
-      "cohortFallback": true,
-      "scoreBase": 19.1,
-      "scoreShrunk": 29.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 12.5,
-          "weight": 2.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 12.5,
-          "weight": 2.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 12.5,
-          "weight": 1.3
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 12.5,
-          "weight": 1
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 12.5,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 50,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 12.5,
-          "weight": 0.8
-        }
-      ],
-      "revGrowthYoYPct": 0.14064697609001975,
-      "profitStreak": null,
       "ath": null
     }
   ],

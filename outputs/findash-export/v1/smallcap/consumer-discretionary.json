@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-03T06:50:37.911Z",
+  "generated_at": "2026-08-04T21:58:40.262Z",
   "branch": "consumer-discretionary",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 70.1
+    "coverage_pct": 72.7
   },
   "profitable": [
     {
       "rank": 1,
       "ticker": "ELA",
-      "score": 86.2,
+      "score": 84.5,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -28,7 +28,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 556916608,
+      "marketCap": 554579840,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -37,10 +37,10 @@
       "ipoYear": 1992,
       "coverageAxes": "6/7",
       "coverageWeight": 0.94,
-      "cohortN": 22,
+      "cohortN": 25,
       "cohortFallback": false,
-      "scoreBase": 92.2,
-      "scoreShrunk": 86.2,
+      "scoreBase": 89.9,
+      "scoreShrunk": 84.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -49,32 +49,32 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 97.7,
+          "pct": 98,
           "weight": 1.45
         },
         {
           "key": "revAcceleration",
-          "pct": 93.2,
+          "pct": 90,
           "weight": 2.65
         },
         {
           "key": "gpGrowth",
-          "pct": 88.6,
+          "pct": 86,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 97.7,
+          "pct": 98,
           "weight": 0.55
         },
         {
           "key": "marginTrajectory",
-          "pct": 92.5,
+          "pct": 84.1,
           "weight": 0.35
         },
         {
           "key": "capitalEfficiency",
-          "pct": 88.6,
+          "pct": 86,
           "weight": 2.3
         },
         {
@@ -85,38 +85,41 @@
       ],
       "revGrowthYoYPct": 103.87358799700652,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 2,
       "ticker": "RCKY",
-      "score": 70.7,
+      "score": 68.8,
       "track": "profitable",
       "lamps": [
-        "lowRoic"
+        "lowRoic",
+        "shareCountDilution"
       ],
       "overview": {
         "kind": "gp",
         "value": 0.102,
-        "companion": 21.7
+        "companion": 14.3
       },
       "name": "Rocky Brands, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 365708992,
+      "marketCap": 380235488,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 1993,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 22,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.96,
+      "cohortN": 25,
       "cohortFallback": false,
-      "scoreBase": 72.6,
-      "scoreShrunk": 70.7,
+      "scoreBase": 71.1,
+      "scoreShrunk": 68.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -125,72 +128,79 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 88.6,
+          "pct": 82,
           "weight": 1.45
         },
         {
           "key": "revAcceleration",
-          "pct": 79.5,
+          "pct": 74,
           "weight": 2.65
         },
         {
           "key": "gpGrowth",
-          "pct": 84.1,
+          "pct": 78,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 88.6,
+          "pct": 58,
           "weight": 0.55
         },
         {
           "key": "marginTrajectory",
-          "pct": 12.5,
+          "pct": null,
           "weight": 0.35
         },
         {
           "key": "capitalEfficiency",
-          "pct": 56.8,
+          "pct": 62,
           "weight": 2.3
         },
         {
           "key": "dilution",
-          "pct": 55.3,
+          "pct": 61.4,
           "weight": 0.6
         }
       ],
-      "revGrowthYoYPct": 9.053851481069142,
+      "revGrowthYoYPct": 6.2154562203044605,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 0.7,
+        "pctl": 0.792
+      },
       "ath": null
     },
     {
       "rank": 3,
-      "ticker": "MCFT",
-      "score": 64.4,
+      "ticker": "CTRN",
+      "score": 66.3,
       "track": "profitable",
-      "lamps": [],
+      "lamps": [
+        "lowRoic"
+      ],
       "overview": {
         "kind": "gp",
-        "value": -0.206,
-        "companion": 13.8
+        "value": 0.151,
+        "companion": 37
       },
-      "name": "MasterCraft Boat Holdings, Inc.",
+      "name": "Citi Trends, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 602165632,
-      "phase": "established",
+      "marketCap": 582173056,
+      "phase": "inflected",
       "mcapBand": "large",
       "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2015,
+      "ipoRecency": "mature",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2005,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 22,
+      "cohortN": 25,
       "cohortFallback": false,
-      "scoreBase": 65.7,
-      "scoreShrunk": 64.4,
+      "scoreBase": 67.6,
+      "scoreShrunk": 66.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -199,128 +209,50 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 61.4,
+          "pct": 94,
           "weight": 1.45
         },
         {
           "key": "revAcceleration",
-          "pct": 97.7,
+          "pct": 78,
           "weight": 2.65
         },
         {
           "key": "gpGrowth",
-          "pct": 2.3,
+          "pct": 82,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 61.4,
+          "pct": 86,
           "weight": 0.55
         },
         {
           "key": "marginTrajectory",
-          "pct": 7.5,
+          "pct": 65.9,
           "weight": 0.35
         },
         {
           "key": "capitalEfficiency",
-          "pct": 97.7,
+          "pct": 34,
           "weight": 2.3
         },
         {
           "key": "dilution",
-          "pct": 7.9,
+          "pct": 34.1,
           "weight": 0.6
         }
       ],
-      "revGrowthYoYPct": 2.9568193786203345,
-      "profitStreak": {
-        "jahre": 5,
-        "basis": "opInc",
-        "tiefe": 10,
-        "mindestens": false,
-        "letzterVerlust": 2020
-      },
+      "revGrowthYoYPct": 14.44023635786802,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 4,
-      "ticker": "DIN",
-      "score": 63.3,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": -0.043,
-        "companion": 16.6
-      },
-      "name": "Dine Brands Global, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Cyclical",
-      "marketCap": 432437632,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1991,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 22,
-      "cohortFallback": false,
-      "scoreBase": 64.5,
-      "scoreShrunk": 63.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 75,
-          "weight": 1.45
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 84.1,
-          "weight": 2.65
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 25,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 75,
-          "weight": 0.55
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 27.5,
-          "weight": 0.35
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 75,
-          "weight": 2.3
-        },
-        {
-          "key": "dilution",
-          "pct": 23.7,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 4.841713221601496,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 5,
       "ticker": "BBW",
-      "score": 63.1,
+      "score": 62.5,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -338,15 +270,15 @@
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
-      "ipoRecency": "veteran",
+      "ipoRecency": "mature",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2004,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 22,
+      "cohortN": 25,
       "cohortFallback": false,
-      "scoreBase": 64.3,
-      "scoreShrunk": 63.1,
+      "scoreBase": 63.5,
+      "scoreShrunk": 62.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -355,60 +287,220 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 25,
+          "pct": 34,
           "weight": 1.45
         },
         {
           "key": "revAcceleration",
-          "pct": 61.4,
+          "pct": 58,
           "weight": 2.65
         },
         {
           "key": "gpGrowth",
-          "pct": 79.5,
+          "pct": 74,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 20.5,
+          "pct": 26,
           "weight": 0.55
         },
         {
           "key": "marginTrajectory",
-          "pct": 87.5,
+          "pct": 79.5,
           "weight": 0.35
         },
         {
           "key": "capitalEfficiency",
-          "pct": 93.2,
+          "pct": 90,
           "weight": 2.3
         },
         {
           "key": "dilution",
-          "pct": 50,
+          "pct": 56.8,
           "weight": 0.6
         }
       ],
       "revGrowthYoYPct": -2.4338954009112457,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 5,
+      "ticker": "MCFT",
+      "score": 61.4,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": -0.206,
+        "companion": 13.8
+      },
+      "name": "MasterCraft Boat Holdings, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 582303424,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2015,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 25,
+      "cohortFallback": false,
+      "scoreBase": 62.3,
+      "scoreShrunk": 61.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 54,
+          "weight": 1.45
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 94,
+          "weight": 2.65
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 2,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 54,
+          "weight": 0.55
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 15.9,
+          "weight": 0.35
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 94,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": 6.8,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 2.9568193786203345,
+      "profitStreak": {
+        "jahre": 5,
+        "basis": "opInc",
+        "tiefe": 10,
+        "mindestens": false,
+        "letzterVerlust": 2020
+      },
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 6,
+      "ticker": "DIN",
+      "score": 61.1,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": -0.043,
+        "companion": 16.6
+      },
+      "name": "Dine Brands Global, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 457681152,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1991,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 25,
+      "cohortFallback": false,
+      "scoreBase": 62,
+      "scoreShrunk": 61.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 70,
+          "weight": 1.45
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 82,
+          "weight": 2.65
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 22,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 74,
+          "weight": 0.55
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 29.5,
+          "weight": 0.35
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 74,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": 15.9,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 4.841713221601496,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 7,
       "ticker": "ETD",
-      "score": 58.5,
+      "score": 57.5,
       "track": "profitable",
       "lamps": [],
       "overview": {
         "kind": "gp",
         "value": -0.053,
-        "companion": -5.5
+        "companion": -11.2
       },
       "name": "Ethan Allen Interiors Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 582975616,
+      "marketCap": 597988992,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -417,10 +509,10 @@
       "ipoYear": 1993,
       "coverageAxes": "6/7",
       "coverageWeight": 0.96,
-      "cohortN": 22,
+      "cohortN": 25,
       "cohortFallback": false,
-      "scoreBase": 59.7,
-      "scoreShrunk": 58.5,
+      "scoreBase": 58.4,
+      "scoreShrunk": 57.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -429,22 +521,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 11.4,
+          "pct": 14,
           "weight": 1.45
         },
         {
           "key": "revAcceleration",
-          "pct": 88.6,
+          "pct": 86,
           "weight": 2.65
         },
         {
           "key": "gpGrowth",
-          "pct": 29.5,
+          "pct": 26,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 15.9,
+          "pct": 14,
           "weight": 0.55
         },
         {
@@ -454,12 +546,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 84.1,
+          "pct": 82,
           "weight": 2.3
         },
         {
           "key": "dilution",
-          "pct": 71.1,
+          "pct": 75,
           "weight": 0.6
         }
       ],
@@ -471,36 +563,40 @@
         "mindestens": true,
         "letzterVerlust": null
       },
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
-      "rank": 7,
-      "ticker": "BLMN",
-      "score": 54.2,
+      "rank": 8,
+      "ticker": "NATH",
+      "score": 56.3,
       "track": "profitable",
-      "lamps": [],
+      "lamps": [
+        "arDivergence"
+      ],
       "overview": {
         "kind": "gp",
-        "value": -0.121,
-        "companion": 7.9
+        "value": -0.059,
+        "companion": 42.8
       },
-      "name": "Bloomin' Brands, Inc.",
+      "name": "Nathan's Famous, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 736282880,
+      "marketCap": 403298880,
       "phase": "established",
-      "mcapBand": "mega",
+      "mcapBand": "small",
       "mcapKlasse": "small",
-      "ipoRecency": "mature",
+      "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 2012,
+      "ipoYear": 1993,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 22,
+      "cohortN": 25,
       "cohortFallback": false,
-      "scoreBase": 54.6,
-      "scoreShrunk": 54.2,
+      "scoreBase": 56.8,
+      "scoreShrunk": 56.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -509,46 +605,54 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 47.7,
+          "pct": 86,
           "weight": 1.45
         },
         {
           "key": "revAcceleration",
-          "pct": 70.5,
+          "pct": 38,
           "weight": 2.65
         },
         {
           "key": "gpGrowth",
-          "pct": 11.4,
+          "pct": 10,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 52.3,
+          "pct": 94,
           "weight": 0.55
         },
         {
           "key": "marginTrajectory",
-          "pct": 52.5,
+          "pct": 11.4,
           "weight": 0.35
         },
         {
           "key": "capitalEfficiency",
-          "pct": 61.4,
+          "pct": 98,
           "weight": 2.3
         },
         {
           "key": "dilution",
-          "pct": 86.8,
+          "pct": 20.5,
           "weight": 0.6
         }
       ],
-      "revGrowthYoYPct": 0.9602760686513001,
-      "profitStreak": null,
+      "revGrowthYoYPct": 13.89872348718615,
+      "profitStreak": {
+        "jahre": 12,
+        "basis": "opInc",
+        "tiefe": 15,
+        "mindestens": false,
+        "letzterVerlust": 2013
+      },
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
-      "rank": 8,
+      "rank": 9,
       "ticker": "LOCO",
       "score": 53.1,
       "track": "profitable",
@@ -564,7 +668,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 501294176,
+      "marketCap": 504035168,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -573,9 +677,9 @@
       "ipoYear": 2014,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 22,
+      "cohortN": 25,
       "cohortFallback": false,
-      "scoreBase": 53.4,
+      "scoreBase": 53.3,
       "scoreShrunk": 53.1,
       "factors": {
         "burn": 1,
@@ -585,277 +689,54 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 84.1,
+          "pct": 78,
           "weight": 1.45
         },
         {
           "key": "revAcceleration",
-          "pct": 43.2,
+          "pct": 42,
           "weight": 2.65
         },
         {
           "key": "gpGrowth",
-          "pct": 65.9,
+          "pct": 62,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 84.1,
+          "pct": 82,
           "weight": 0.55
         },
         {
           "key": "marginTrajectory",
-          "pct": 67.5,
+          "pct": 47.7,
           "weight": 0.35
         },
         {
           "key": "capitalEfficiency",
-          "pct": 38.6,
+          "pct": 50,
           "weight": 2.3
         },
         {
           "key": "dilution",
-          "pct": 13.2,
+          "pct": 11.4,
           "weight": 0.6
         }
       ],
       "revGrowthYoYPct": 5.877811993925008,
       "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 9,
-      "ticker": "GCO",
-      "score": 50,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.027,
-        "companion": 9.6
-      },
-      "name": "Genesco Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Cyclical",
-      "marketCap": 428729152,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1973,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 22,
-      "cohortFallback": false,
-      "scoreBase": 50,
-      "scoreShrunk": 50,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 56.8,
-          "weight": 1.45
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 65.9,
-          "weight": 2.65
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 52.3,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 56.8,
-          "weight": 0.55
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 57.5,
-          "weight": 0.35
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 20.5,
-          "weight": 2.3
-        },
-        {
-          "key": "dilution",
-          "pct": 60.5,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 2.753743356689098,
-      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 10,
-      "ticker": "CDRO",
-      "score": 49.6,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.047,
-        "companion": 18.2
-      },
-      "name": "Codere Online Luxembourg, S.A.",
-      "country": "Luxembourg",
-      "region": "Europe",
-      "sector": "Consumer Cyclical",
-      "marketCap": 417413856,
-      "phase": "inflected",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.9,
-      "cohortN": 22,
-      "cohortFallback": false,
-      "scoreBase": 49.7,
-      "scoreShrunk": 49.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 70.5,
-          "weight": 1.45
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 2.3,
-          "weight": 2.65
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 56.8,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 79.5,
-          "weight": 0.55
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.35
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 79.5,
-          "weight": 2.3
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 4.834482621173475,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 11,
-      "ticker": "WEYS",
-      "score": 49.4,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": -0.093,
-        "companion": 15.7
-      },
-      "name": "Weyco Group, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Cyclical",
-      "marketCap": 364320768,
-      "phase": "established",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1980,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 22,
-      "cohortFallback": false,
-      "scoreBase": 49.3,
-      "scoreShrunk": 49.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 34.1,
-          "weight": 1.45
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 56.8,
-          "weight": 2.65
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 20.5,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 70.5,
-          "weight": 0.55
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 62.5,
-          "weight": 0.35
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 65.9,
-          "weight": 2.3
-        },
-        {
-          "key": "dilution",
-          "pct": 34.2,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": -0.036748493311777874,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 12,
       "ticker": "HDL",
-      "score": 48.1,
+      "score": 51.8,
       "track": "profitable",
       "lamps": [
-        "lowRoic"
+        "lowRoic",
+        "shareCountDilution"
       ],
       "overview": {
         "kind": "gp",
@@ -875,10 +756,10 @@
       "ipoYear": 2024,
       "coverageAxes": "6/7",
       "coverageWeight": 0.94,
-      "cohortN": 22,
+      "cohortN": 25,
       "cohortFallback": false,
-      "scoreBase": 47.9,
-      "scoreShrunk": 48.1,
+      "scoreBase": 52.1,
+      "scoreShrunk": 51.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -887,32 +768,32 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 93.2,
+          "pct": 90,
           "weight": 1.45
         },
         {
           "key": "revAcceleration",
-          "pct": 6.8,
+          "pct": 18,
           "weight": 2.65
         },
         {
           "key": "gpGrowth",
-          "pct": 61.4,
+          "pct": 58,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 93.2,
+          "pct": 90,
           "weight": 0.55
         },
         {
           "key": "marginTrajectory",
-          "pct": 72.5,
+          "pct": 56.8,
           "weight": 0.35
         },
         {
           "key": "capitalEfficiency",
-          "pct": 43.2,
+          "pct": 54,
           "weight": 2.3
         },
         {
@@ -923,12 +804,414 @@
       ],
       "revGrowthYoYPct": 14.229736630549649,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 2,
+        "pctl": 0.875
+      },
+      "ath": null
+    },
+    {
+      "rank": 11,
+      "ticker": "GCO",
+      "score": 51.7,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.027,
+        "companion": 9.6
+      },
+      "name": "Genesco Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 434726912,
+      "phase": "inflected",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 1973,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 25,
+      "cohortFallback": false,
+      "scoreBase": 51.8,
+      "scoreShrunk": 51.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 50,
+          "weight": 1.45
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 62,
+          "weight": 2.65
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 50,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 50,
+          "weight": 0.55
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 52.3,
+          "weight": 0.35
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 38,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": 70.5,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 2.753743356689098,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 12,
+      "ticker": "BLMN",
+      "score": 49.8,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.121,
+        "companion": 7.9
+      },
+      "name": "Bloomin' Brands, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 773953152,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2012,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 25,
+      "cohortFallback": false,
+      "scoreBase": 49.7,
+      "scoreShrunk": 49.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 42,
+          "weight": 1.45
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 66,
+          "weight": 2.65
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 6,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 46,
+          "weight": 0.55
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 38.6,
+          "weight": 0.35
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 58,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": 84.1,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 0.9602760686513001,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 13,
+      "ticker": "CDRO",
+      "score": 49.2,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.047,
+        "companion": 18.2
+      },
+      "name": "Codere Online Luxembourg, S.A.",
+      "country": "Luxembourg",
+      "region": "Europe",
+      "sector": "Consumer Cyclical",
+      "marketCap": 421506144,
+      "phase": "inflected",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2021,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.9,
+      "cohortN": 25,
+      "cohortFallback": false,
+      "scoreBase": 49.1,
+      "scoreShrunk": 49.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 66,
+          "weight": 1.45
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 6,
+          "weight": 2.65
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 54,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 78,
+          "weight": 0.55
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.35
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 78,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 4.834482621173475,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 0.3,
+        "pctl": 0.75
+      },
+      "ath": null
+    },
+    {
+      "rank": 14,
+      "ticker": "WEYS",
+      "score": 48.7,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": -0.093,
+        "companion": 15.7
+      },
+      "name": "Weyco Group, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 385291584,
+      "phase": "established",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1980,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 25,
+      "cohortFallback": false,
+      "scoreBase": 48.6,
+      "scoreShrunk": 48.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 38,
+          "weight": 1.45
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 54,
+          "weight": 2.65
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 18,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 70,
+          "weight": 0.55
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 43.2,
+          "weight": 0.35
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 66,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": 43.2,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": -0.036748493311777874,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 15,
+      "ticker": "FLXS",
+      "score": 48.3,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "lowRoic",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.123,
+        "companion": 7.1
+      },
+      "name": "Flexsteel Industries, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 316760384,
+      "phase": "established",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1980,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 25,
+      "cohortFallback": false,
+      "scoreBase": 48.1,
+      "scoreShrunk": 48.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 46,
+          "weight": 1.45
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 34,
+          "weight": 2.65
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 90,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 38,
+          "weight": 0.55
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 93.2,
+          "weight": 0.35
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 46,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": 2.3,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 1.0116519846979921,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 2.5,
+        "pctl": 0.917
+      },
+      "ath": null
+    },
+    {
+      "rank": 16,
       "ticker": "ZUMZ",
-      "score": 47.1,
+      "score": 47.8,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -942,7 +1225,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 319559776,
+      "marketCap": 345374240,
       "phase": "inflected",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -951,10 +1234,10 @@
       "ipoYear": 2005,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 22,
+      "cohortN": 25,
       "cohortFallback": false,
-      "scoreBase": 46.8,
-      "scoreShrunk": 47.1,
+      "scoreBase": 47.6,
+      "scoreShrunk": 47.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -963,75 +1246,76 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 79.5,
+          "pct": 74,
           "weight": 1.45
         },
         {
           "key": "revAcceleration",
-          "pct": 47.7,
+          "pct": 46,
           "weight": 2.65
         },
         {
           "key": "gpGrowth",
-          "pct": 75,
+          "pct": 70,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 65.9,
+          "pct": 66,
           "weight": 0.55
         },
         {
           "key": "marginTrajectory",
-          "pct": 77.5,
+          "pct": 61.4,
           "weight": 0.35
         },
         {
           "key": "capitalEfficiency",
-          "pct": 2.3,
+          "pct": 14,
           "weight": 2.3
         },
         {
           "key": "dilution",
-          "pct": 28.9,
+          "pct": 38.6,
           "weight": 0.6
         }
       ],
       "revGrowthYoYPct": 4.884915619253238,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
-      "rank": 14,
-      "ticker": "FLXS",
-      "score": 46.7,
+      "rank": 17,
+      "ticker": "MNRO",
+      "score": 42.6,
       "track": "profitable",
       "lamps": [
-        "peakMargin",
         "lowRoic"
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.123,
-        "companion": 7.1
+        "value": -0.03,
+        "companion": -7.7
       },
-      "name": "Flexsteel Industries, Inc.",
+      "name": "Monro, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 301476640,
+      "marketCap": 398616768,
       "phase": "established",
-      "mcapBand": "micro",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 1980,
+      "ipoYear": 1991,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 22,
+      "cohortN": 25,
       "cohortFallback": false,
-      "scoreBase": 46.4,
-      "scoreShrunk": 46.7,
+      "scoreBase": 42,
+      "scoreShrunk": 42.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1040,48 +1324,50 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 52.3,
+          "pct": 18,
           "weight": 1.45
         },
         {
           "key": "revAcceleration",
-          "pct": 38.6,
+          "pct": 50,
           "weight": 2.65
         },
         {
           "key": "gpGrowth",
-          "pct": 93.2,
+          "pct": 38,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 43.2,
+          "pct": 18,
           "weight": 0.55
         },
         {
           "key": "marginTrajectory",
-          "pct": 42.5,
+          "pct": 70.5,
           "weight": 0.35
         },
         {
           "key": "capitalEfficiency",
-          "pct": 34.1,
+          "pct": 42,
           "weight": 2.3
         },
         {
           "key": "dilution",
-          "pct": 2.6,
+          "pct": 79.5,
           "weight": 0.6
         }
       ],
-      "revGrowthYoYPct": 1.0116519846979921,
+      "revGrowthYoYPct": -4.619396415699173,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
-      "rank": 15,
+      "rank": 18,
       "ticker": "LE",
-      "score": 44.5,
+      "score": 41.8,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -1097,19 +1383,19 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 369505248,
-      "phase": "established",
+      "marketCap": 382416384,
+      "phase": "inflected",
       "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
+      "profitTier": "seit-kurzem-profitabel",
       "ipoYear": 2014,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 22,
+      "cohortN": 25,
       "cohortFallback": false,
-      "scoreBase": 44,
-      "scoreShrunk": 44.5,
+      "scoreBase": 41.2,
+      "scoreShrunk": 41.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1118,46 +1404,124 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 6.8,
+          "pct": 10,
           "weight": 1.45
         },
         {
           "key": "revAcceleration",
-          "pct": 75,
+          "pct": 70,
           "weight": 2.65
         },
         {
           "key": "gpGrowth",
-          "pct": 70.5,
+          "pct": 66,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 6.8,
+          "pct": 10,
           "weight": 0.55
         },
         {
           "key": "marginTrajectory",
-          "pct": 2.5,
+          "pct": 2.3,
           "weight": 0.35
         },
         {
           "key": "capitalEfficiency",
-          "pct": 29.5,
+          "pct": 22,
           "weight": 2.3
         },
         {
           "key": "dilution",
-          "pct": 44.7,
+          "pct": 52.3,
           "weight": 0.6
         }
       ],
       "revGrowthYoYPct": -8.534194971057552,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
-      "rank": 16,
+      "rank": 19,
+      "ticker": "MBUU",
+      "score": 40.4,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": -0.02,
+        "companion": 14.3
+      },
+      "name": "Malibu Boats, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 548266176,
+      "phase": "inflected",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2014,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 25,
+      "cohortFallback": false,
+      "scoreBase": 61.4,
+      "scoreShrunk": 60.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 0.667
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 58,
+          "weight": 1.45
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 98,
+          "weight": 2.65
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 14,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 62,
+          "weight": 0.55
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 6.8,
+          "weight": 0.35
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 70,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": 25,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 3.077030726574592,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 20,
       "ticker": "PTLO",
       "score": 39.6,
       "track": "profitable",
@@ -1165,7 +1529,8 @@
         "burning",
         "shortRunway",
         "lowRoic",
-        "arDivergence"
+        "arDivergence",
+        "shareCountDilution"
       ],
       "overview": {
         "kind": "gp",
@@ -1176,7 +1541,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 314857184,
+      "marketCap": 328609568,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1185,9 +1550,9 @@
       "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 22,
+      "cohortN": 25,
       "cohortFallback": false,
-      "scoreBase": 38.6,
+      "scoreBase": 38.8,
       "scoreShrunk": 39.6,
       "factors": {
         "burn": 1,
@@ -1197,37 +1562,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 65.9,
+          "pct": 62,
           "weight": 1.45
         },
         {
           "key": "revAcceleration",
-          "pct": 25,
+          "pct": 30,
           "weight": 2.65
         },
         {
           "key": "gpGrowth",
-          "pct": 47.7,
+          "pct": 46,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 47.7,
+          "pct": 42,
           "weight": 0.55
         },
         {
           "key": "marginTrajectory",
-          "pct": 32.5,
+          "pct": 25,
           "weight": 0.35
         },
         {
           "key": "capitalEfficiency",
-          "pct": 15.9,
+          "pct": 18,
           "weight": 2.3
         },
         {
           "key": "dilution",
-          "pct": 92.1,
+          "pct": 88.6,
           "weight": 0.6
         }
       ],
@@ -1239,403 +1604,22 @@
         "mindestens": true,
         "letzterVerlust": null
       },
-      "ath": null
-    },
-    {
-      "rank": 17,
-      "ticker": "MNRO",
-      "score": 39.1,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.03,
-        "companion": -7.7
-      },
-      "name": "Monro, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Cyclical",
-      "marketCap": 382984736,
-      "phase": "established",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1991,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 22,
-      "cohortFallback": false,
-      "scoreBase": 38.1,
-      "scoreShrunk": 39.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 15.9,
-          "weight": 1.45
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 52.3,
-          "weight": 2.65
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 38.6,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 11.4,
-          "weight": 0.55
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 82.5,
-          "weight": 0.35
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 25,
-          "weight": 2.3
-        },
-        {
-          "key": "dilution",
-          "pct": 76.3,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": -4.619396415699173,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 18,
-      "ticker": "OXM",
-      "score": 38.7,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": -0.06,
-        "companion": 0
-      },
-      "name": "Oxford Industries, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Cyclical",
-      "marketCap": 566180928,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1980,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 22,
-      "cohortFallback": false,
-      "scoreBase": 37.7,
-      "scoreShrunk": 38.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 29.5,
-          "weight": 1.45
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 34.1,
-          "weight": 2.65
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 15.9,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 29.5,
-          "weight": 0.55
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 22.5,
-          "weight": 0.35
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 70.5,
-          "weight": 2.3
-        },
-        {
-          "key": "dilution",
-          "pct": 18.4,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": -0.3713781719233977,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 19,
-      "ticker": "XPOF",
-      "score": 37,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.013,
-        "companion": -38
-      },
-      "name": "Xponential Fitness, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Cyclical",
-      "marketCap": 320166720,
-      "phase": "established",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 22,
-      "cohortFallback": false,
-      "scoreBase": 35.8,
-      "scoreShrunk": 37,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 2.3,
-          "weight": 1.45
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 20.5,
-          "weight": 2.65
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 43.2,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 2.3,
-          "weight": 0.55
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 97.5,
-          "weight": 0.35
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 52.3,
-          "weight": 2.3
-        },
-        {
-          "key": "dilution",
-          "pct": 97.4,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": -21.030656972282557,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 20,
-      "ticker": "WOOF",
-      "score": 33.3,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "lowRoic",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.008,
-        "companion": 2.5
-      },
-      "name": "Petco Health and Wellness Company, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Cyclical",
-      "marketCap": 776737472,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 22,
-      "cohortFallback": false,
-      "scoreBase": 31.7,
-      "scoreShrunk": 33.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 38.6,
-          "weight": 1.45
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 29.5,
-          "weight": 2.65
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 34.1,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 38.6,
-          "weight": 0.55
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 47.5,
-          "weight": 0.35
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 11.4,
-          "weight": 2.3
-        },
-        {
-          "key": "dilution",
-          "pct": 81.6,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 0.22318215024919041,
-      "profitStreak": {
-        "jahre": 2,
-        "basis": "opInc",
-        "tiefe": 5,
-        "mindestens": false,
-        "letzterVerlust": 2023
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 11.6,
+        "pctl": 1
       },
       "ath": null
     },
     {
       "rank": 21,
-      "ticker": "KLC",
-      "score": 32.4,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.04,
-        "companion": 1.5
-      },
-      "name": "KinderCare Learning Companies, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Defensive",
-      "marketCap": 602800064,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2024,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 22,
-      "cohortFallback": false,
-      "scoreBase": 30.8,
-      "scoreShrunk": 32.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 43.2,
-          "weight": 1.45
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 15.9,
-          "weight": 2.65
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 6.8,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 34.1,
-          "weight": 0.55
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 17.5,
-          "weight": 0.35
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 47.7,
-          "weight": 2.3
-        },
-        {
-          "key": "dilution",
-          "pct": 65.8,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 0.6401853215292519,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 22,
       "ticker": "STRT",
-      "score": 30.8,
+      "score": 38,
       "track": "profitable",
       "lamps": [
         "peakMargin",
-        "lowRoic"
+        "lowRoic",
+        "shareCountDilution"
       ],
       "overview": {
         "kind": "gp",
@@ -1646,19 +1630,19 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 367274656,
+      "marketCap": 362719776,
       "phase": "inflected",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "seit-kurzem-profitabel",
       "ipoYear": 1995,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 22,
+      "cohortN": 25,
       "cohortFallback": false,
-      "scoreBase": 29,
-      "scoreShrunk": 30.8,
+      "scoreBase": 37,
+      "scoreShrunk": 38,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1667,42 +1651,369 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 20.5,
+          "pct": 22,
           "weight": 1.45
         },
         {
           "key": "revAcceleration",
-          "pct": 11.4,
+          "pct": 22,
           "weight": 2.65
         },
         {
           "key": "gpGrowth",
-          "pct": 97.7,
+          "pct": 94,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 25,
+          "pct": 30,
           "weight": 0.55
         },
         {
           "key": "marginTrajectory",
-          "pct": 37.5,
+          "pct": 34.1,
           "weight": 0.35
         },
         {
           "key": "capitalEfficiency",
-          "pct": 6.8,
+          "pct": 26,
           "weight": 2.3
         },
         {
           "key": "dilution",
-          "pct": 39.5,
+          "pct": 47.7,
           "weight": 0.6
         }
       ],
       "revGrowthYoYPct": -4.476617481711798,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 1.8,
+        "pctl": 0.833
+      },
+      "ath": null
+    },
+    {
+      "rank": 22,
+      "ticker": "XPOF",
+      "score": 33.5,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.013,
+        "companion": -38
+      },
+      "name": "Xponential Fitness, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 326550400,
+      "phase": "inflected",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2021,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 25,
+      "cohortFallback": false,
+      "scoreBase": 32.2,
+      "scoreShrunk": 33.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 6,
+          "weight": 1.45
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 26,
+          "weight": 2.65
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 42,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 6,
+          "weight": 0.55
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 88.6,
+          "weight": 0.35
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 30,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": 97.7,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": -21.030656972282557,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 8.8,
+        "pctl": 0.958
+      },
+      "ath": null
+    },
+    {
+      "rank": 23,
+      "ticker": "LOT",
+      "score": 26.8,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.526,
+        "companion": -91.6
+      },
+      "name": "Lotus Technology Inc.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Consumer Cyclical",
+      "marketCap": 550849408,
+      "phase": "inflected",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2021,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 25,
+      "cohortFallback": false,
+      "scoreBase": 25,
+      "scoreShrunk": 26.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 2,
+          "weight": 1.45
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 2,
+          "weight": 2.65
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 98,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 2,
+          "weight": 0.55
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 97.7,
+          "weight": 0.35
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 2,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": 65.9,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": -39.84369820937958,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 24,
+      "ticker": "LEGH",
+      "score": 25.7,
+      "track": "profitable",
+      "lamps": [
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.092,
+        "companion": -4.7
+      },
+      "name": "Legacy Housing Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 624504832,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2018,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 25,
+      "cohortFallback": false,
+      "scoreBase": 23.8,
+      "scoreShrunk": 25.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 26,
+          "weight": 1.45
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 10,
+          "weight": 2.65
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 34,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 22,
+          "weight": 0.55
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 75,
+          "weight": 0.35
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 6,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": 93.2,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": -3.655733109055226,
+      "profitStreak": {
+        "jahre": 7,
+        "basis": "opInc",
+        "tiefe": 7,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 25,
+      "ticker": "SHOE",
+      "score": 22.6,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": -0.032,
+        "companion": -1.5
+      },
+      "name": "Shoe Station Group Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 418673184,
+      "phase": "established",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1993,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 25,
+      "cohortFallback": false,
+      "scoreBase": 20.4,
+      "scoreShrunk": 22.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 30,
+          "weight": 1.45
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 14,
+          "weight": 2.65
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 30,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 34,
+          "weight": 0.55
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 20.5,
+          "weight": 0.35
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 10,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": 29.5,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": -2.51516842806474,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     }
   ],
@@ -1710,7 +2021,7 @@
     {
       "rank": 1,
       "ticker": "UXIN",
-      "score": 75.8,
+      "score": 76.9,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1736,10 +2047,10 @@
       "ipoYear": 2018,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 78.5,
-      "scoreShrunk": 75.8,
+      "scoreBase": 79.6,
+      "scoreShrunk": 76.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1748,213 +2059,57 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 92.1,
+          "pct": 92.5,
           "weight": 1.9
         },
         {
           "key": "revAcceleration",
-          "pct": 97.4,
+          "pct": 97.5,
           "weight": 3
         },
         {
           "key": "gpGrowth",
-          "pct": 91.2,
+          "pct": 91.7,
           "weight": 1.4
         },
         {
           "key": "ruleOfX",
-          "pct": 92.1,
+          "pct": 92.5,
           "weight": 0.8
         },
         {
           "key": "marginTrajectory",
-          "pct": 21.9,
+          "pct": 36.1,
           "weight": 0.9
         },
         {
           "key": "capitalEfficiency",
-          "pct": 60.5,
+          "pct": 52.5,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 41.7,
+          "pct": 44.7,
           "weight": 1.2
         }
       ],
       "revGrowthYoYPct": 112.92983941820087,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 2,
-      "ticker": "EVGO",
-      "score": 63.7,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "lowRoic",
-        "crashRisk"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 1.751,
-        "companion": 104.6
-      },
-      "name": "EVgo, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Cyclical",
-      "marketCap": 524145120,
-      "phase": "unprofitable",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "growth",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2020,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 19,
-      "cohortFallback": false,
-      "scoreBase": 65.1,
-      "scoreShrunk": 63.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 81.6,
-          "weight": 1.9
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 18.4,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 97.1,
-          "weight": 1.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 81.6,
-          "weight": 0.8
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 78.1,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 65.8,
-          "weight": 0.9
-        },
-        {
-          "key": "dilution",
-          "pct": 97.2,
-          "weight": 1.2
-        }
-      ],
-      "revGrowthYoYPct": 45.48461221724867,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 3,
-      "ticker": "JMIA",
-      "score": 63.1,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.023,
-        "companion": 90.7
-      },
-      "name": "Jumia Technologies AG",
-      "country": "Germany",
-      "region": "Europe",
-      "sector": "Consumer Cyclical",
-      "marketCap": 739400064,
-      "phase": "unprofitable",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "growth",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2019,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 19,
-      "cohortFallback": false,
-      "scoreBase": 64.5,
-      "scoreShrunk": 63.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 76.3,
-          "weight": 1.9
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 71.1,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 44.1,
-          "weight": 1.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 76.3,
-          "weight": 0.8
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 84.4,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 34.2,
-          "weight": 0.9
-        },
-        {
-          "key": "dilution",
-          "pct": 52.8,
-          "weight": 1.2
-        }
-      ],
-      "revGrowthYoYPct": 39.43906676594688,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 4,
       "ticker": "TRON",
-      "score": 63.1,
+      "score": 66.9,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
         "burning",
         "lowRoic",
-        "crashRisk"
+        "crashRisk",
+        "shareCountDilution"
       ],
       "overview": {
         "kind": "gp",
@@ -1965,7 +2120,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 692597824,
+      "marketCap": 711573120,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -1974,10 +2129,10 @@
       "ipoYear": 2023,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 64.4,
-      "scoreShrunk": 63.1,
+      "scoreBase": 68.6,
+      "scoreShrunk": 66.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1986,37 +2141,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 44.7,
+          "pct": 57.5,
           "weight": 1.9
         },
         {
           "key": "revAcceleration",
-          "pct": 76.3,
+          "pct": 77.5,
           "weight": 3
         },
         {
           "key": "gpGrowth",
-          "pct": 85.3,
+          "pct": 86.1,
           "weight": 1.4
         },
         {
           "key": "ruleOfX",
-          "pct": 44.7,
+          "pct": 57.5,
           "weight": 0.8
         },
         {
           "key": "marginTrajectory",
-          "pct": 71.9,
+          "pct": 75,
           "weight": 0.9
         },
         {
           "key": "capitalEfficiency",
-          "pct": 7.9,
+          "pct": 7.5,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 91.7,
+          "pct": 92.1,
           "weight": 1.2
         }
       ],
@@ -2028,6 +2183,11 @@
         "mindestens": false,
         "letzterVerlust": 2025
       },
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 42.1,
+        "pctl": 1
+      },
       "ath": {
         "distancePct": -87.3,
         "athDate": "2025-06-20",
@@ -2036,9 +2196,9 @@
       }
     },
     {
-      "rank": 5,
+      "rank": 3,
       "ticker": "JOUT",
-      "score": 62.4,
+      "score": 66.7,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -2054,7 +2214,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 493672256,
+      "marketCap": 501842496,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -2063,10 +2223,10 @@
       "ipoYear": 1987,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 63.7,
-      "scoreShrunk": 62.4,
+      "scoreBase": 68.4,
+      "scoreShrunk": 66.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2075,48 +2235,383 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 65.8,
+          "pct": 72.5,
           "weight": 1.9
         },
         {
           "key": "revAcceleration",
-          "pct": 60.5,
+          "pct": 62.5,
           "weight": 3
         },
         {
           "key": "gpGrowth",
-          "pct": 55.9,
+          "pct": 69.4,
           "weight": 1.4
         },
         {
           "key": "ruleOfX",
-          "pct": 71.1,
+          "pct": 77.5,
           "weight": 0.8
         },
         {
           "key": "marginTrajectory",
-          "pct": 34.4,
+          "pct": 47.2,
           "weight": 0.9
         },
         {
           "key": "capitalEfficiency",
-          "pct": 97.4,
+          "pct": 87.5,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 69.4,
+          "pct": 71.1,
           "weight": 1.2
         }
       ],
       "revGrowthYoYPct": 15.521921722136756,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 4,
+      "ticker": "JMIA",
+      "score": 66.4,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.023,
+        "companion": 90.7
+      },
+      "name": "Jumia Technologies AG",
+      "country": "Germany",
+      "region": "Europe",
+      "sector": "Consumer Cyclical",
+      "marketCap": 754262464,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "growth",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2019,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 68.1,
+      "scoreShrunk": 66.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 82.5,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 72.5,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 52.8,
+          "weight": 1.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 82.5,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 91.7,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 27.5,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 55.3,
+          "weight": 1.2
+        }
+      ],
+      "revGrowthYoYPct": 39.43906676594688,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 9,
+        "pctl": 0.842
+      },
+      "ath": null
+    },
+    {
+      "rank": 5,
+      "ticker": "EVGO",
+      "score": 63.1,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "crashRisk",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 1.751,
+        "companion": 104.6
+      },
+      "name": "EVgo, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 505313568,
+      "phase": "unprofitable",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "growth",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2020,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 64.5,
+      "scoreShrunk": 63.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 87.5,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 12.5,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 97.2,
+          "weight": 1.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 87.5,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 80.6,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 57.5,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 97.4,
+          "weight": 1.2
+        }
+      ],
+      "revGrowthYoYPct": 45.48461221724867,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 23.4,
+        "pctl": 0.947
+      },
       "ath": null
     },
     {
       "rank": 6,
-      "ticker": "CTRN",
-      "score": 58.8,
+      "ticker": "PACK",
+      "score": 59.1,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "lowRoic",
+        "crashRisk",
+        "fcfArtefact"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.065,
+        "companion": 32.1
+      },
+      "name": "Ranpak Holdings Corp.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 464809920,
+      "phase": "unprofitable",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2018,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 60,
+      "scoreShrunk": 59.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 67.5,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 42.5,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 47.2,
+          "weight": 1.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 67.5,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 69.4,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 77.5,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 81.6,
+          "weight": 1.2
+        }
+      ],
+      "revGrowthYoYPct": 13.976164680390024,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 7,
+      "ticker": "ZKH",
+      "score": 57.9,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.023,
+        "companion": 21.2
+      },
+      "name": "ZKH Group Limited",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Consumer Cyclical",
+      "marketCap": 461901760,
+      "phase": "unprofitable",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2023,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 58.7,
+      "scoreShrunk": 57.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 62.5,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 52.5,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 58.3,
+          "weight": 1.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 62.5,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 52.8,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 72.5,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 60.5,
+          "weight": 1.2
+        }
+      ],
+      "revGrowthYoYPct": 9.220294599694512,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 8,
+      "ticker": "FOXF",
+      "score": 57.6,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -2124,26 +2619,26 @@
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.151,
-        "companion": 37
+        "value": 0.046,
+        "companion": 12
       },
-      "name": "Citi Trends, Inc.",
+      "name": "Fox Factory Holding Corp.",
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 524114016,
+      "marketCap": 785463744,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "kurz-vor-profitabel",
-      "ipoYear": 2005,
+      "ipoYear": 2013,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 59.8,
-      "scoreShrunk": 58.8,
+      "scoreBase": 58.3,
+      "scoreShrunk": 57.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2152,48 +2647,131 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 60.5,
+          "pct": 37.5,
           "weight": 1.9
         },
         {
           "key": "revAcceleration",
-          "pct": 55.3,
+          "pct": 57.5,
           "weight": 3
         },
         {
           "key": "gpGrowth",
-          "pct": 73.5,
+          "pct": 63.9,
           "weight": 1.4
         },
         {
           "key": "ruleOfX",
-          "pct": 60.5,
+          "pct": 42.5,
           "weight": 0.8
         },
         {
           "key": "marginTrajectory",
-          "pct": 40.6,
+          "pct": 97.2,
           "weight": 0.9
         },
         {
           "key": "capitalEfficiency",
-          "pct": 86.8,
+          "pct": 82.5,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 47.2,
+          "pct": 50,
           "weight": 1.2
         }
       ],
-      "revGrowthYoYPct": 14.44023635786802,
+      "revGrowthYoYPct": 3.8382671886882713,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
-      "rank": 7,
+      "rank": 9,
+      "ticker": "KRUS",
+      "score": 51.7,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "lowRoic",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.132,
+        "companion": 27
+      },
+      "name": "Kura Sushi USA, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 580154688,
+      "phase": "unprofitable",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "growth",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2019,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 51.8,
+      "scoreShrunk": 51.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 77.5,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 27.5,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 80.6,
+          "weight": 1.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 72.5,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 30.6,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 67.5,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 28.9,
+          "weight": 1.2
+        }
+      ],
+      "revGrowthYoYPct": 16.165754072872307,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 10,
       "ticker": "FWDI",
-      "score": 54,
+      "score": 49.4,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -2212,7 +2790,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 301650752,
+      "marketCap": 300175712,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -2221,298 +2799,62 @@
       "ipoYear": 1994,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 69.3,
-      "scoreShrunk": 67.5,
+      "scoreBase": 63,
+      "scoreShrunk": 61.8,
       "factors": {
-        "burn": 0.8,
+        "burn": 0.799,
         "growth": 1,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 97.4,
+          "pct": 97.5,
           "weight": 1.9
         },
         {
           "key": "revAcceleration",
-          "pct": 81.6,
+          "pct": 82.5,
           "weight": 3
         },
         {
           "key": "gpGrowth",
-          "pct": 61.8,
+          "pct": 75,
           "weight": 1.4
         },
         {
           "key": "ruleOfX",
-          "pct": 97.4,
+          "pct": 97.5,
           "weight": 0.8
         },
         {
           "key": "marginTrajectory",
-          "pct": 96.9,
+          "pct": 2.8,
           "weight": 0.9
         },
         {
           "key": "capitalEfficiency",
-          "pct": 2.6,
+          "pct": 2.5,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 13.9,
+          "pct": 13.2,
           "weight": 1.2
         }
       ],
       "revGrowthYoYPct": 315.0301655527032,
       "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 8,
-      "ticker": "PACK",
-      "score": 53.6,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "lowRoic",
-        "crashRisk",
-        "fcfArtefact",
-        "burnAccelerating"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.065,
-        "companion": 25.2
-      },
-      "name": "Ranpak Holdings Corp.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Cyclical",
-      "marketCap": 499582080,
-      "phase": "unprofitable",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2018,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 19,
-      "cohortFallback": false,
-      "scoreBase": 56.4,
-      "scoreShrunk": 55.8,
-      "factors": {
-        "burn": 0.96,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 55.3,
-          "weight": 1.9
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 44.7,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 38.2,
-          "weight": 1.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 55.3,
-          "weight": 0.8
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 59.4,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 92.1,
-          "weight": 0.9
-        },
-        {
-          "key": "dilution",
-          "pct": 80.6,
-          "weight": 1.2
-        }
-      ],
-      "revGrowthYoYPct": 10.964912280701755,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 9,
-      "ticker": "ZKH",
-      "score": 53.2,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.023,
-        "companion": 21.2
-      },
-      "name": "ZKH Group Limited",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Consumer Cyclical",
-      "marketCap": 465087296,
-      "phase": "unprofitable",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "kurz-vor-profitabel",
-      "ipoYear": 2023,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 19,
-      "cohortFallback": false,
-      "scoreBase": 53.5,
-      "scoreShrunk": 53.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 50,
-          "weight": 1.9
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 50,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 50,
-          "weight": 1.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 50,
-          "weight": 0.8
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 46.9,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 81.6,
-          "weight": 0.9
-        },
-        {
-          "key": "dilution",
-          "pct": 58.3,
-          "weight": 1.2
-        }
-      ],
-      "revGrowthYoYPct": 9.220294599694533,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 10,
-      "ticker": "KRUS",
-      "score": 49.9,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "lowRoic",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.132,
-        "companion": 27
-      },
-      "name": "Kura Sushi USA, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Cyclical",
-      "marketCap": 559742912,
-      "phase": "unprofitable",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "growth",
-      "profitTier": "kurz-vor-profitabel",
-      "ipoYear": 2019,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 19,
-      "cohortFallback": false,
-      "scoreBase": 49.9,
-      "scoreShrunk": 49.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 71.1,
-          "weight": 1.9
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 34.2,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 67.6,
-          "weight": 1.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 65.8,
-          "weight": 0.8
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 15.6,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 76.3,
-          "weight": 0.9
-        },
-        {
-          "key": "dilution",
-          "pct": 30.6,
-          "weight": 1.2
-        }
-      ],
-      "revGrowthYoYPct": 16.165754072872307,
-      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 11,
       "ticker": "SFIX",
-      "score": 44.1,
+      "score": 49.3,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -2527,19 +2869,19 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 477664544,
+      "marketCap": 552383040,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2017,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 43.5,
-      "scoreShrunk": 44.1,
+      "scoreBase": 49.2,
+      "scoreShrunk": 49.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2548,48 +2890,50 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 34.2,
+          "pct": 47.5,
           "weight": 1.9
         },
         {
           "key": "revAcceleration",
-          "pct": 65.8,
+          "pct": 67.5,
           "weight": 3
         },
         {
           "key": "gpGrowth",
-          "pct": 32.4,
+          "pct": 41.7,
           "weight": 1.4
         },
         {
           "key": "ruleOfX",
-          "pct": 39.5,
+          "pct": 52.5,
           "weight": 0.8
         },
         {
           "key": "marginTrajectory",
-          "pct": 28.1,
+          "pct": 41.7,
           "weight": 0.9
         },
         {
           "key": "capitalEfficiency",
-          "pct": 50,
+          "pct": 42.5,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 25,
+          "pct": 23.7,
           "weight": 1.2
         }
       ],
       "revGrowthYoYPct": 4.695461146528168,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 12,
       "ticker": "BALY",
-      "score": 38.4,
+      "score": 39.7,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -2606,19 +2950,19 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 681856768,
+      "marketCap": 689199040,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
+      "profitTier": "kurz-vor-profitabel",
       "ipoYear": 2024,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.91,
-      "cohortN": 19,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 35.6,
-      "scoreShrunk": 38.4,
+      "scoreBase": 38.7,
+      "scoreShrunk": 39.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2627,48 +2971,295 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 28.9,
+          "pct": 27.5,
           "weight": 1.9
         },
         {
           "key": "revAcceleration",
-          "pct": 28.9,
+          "pct": 22.5,
           "weight": 3
         },
         {
           "key": "gpGrowth",
-          "pct": 26.5,
+          "pct": 36.1,
           "weight": 1.4
         },
         {
           "key": "ruleOfX",
-          "pct": 28.9,
+          "pct": 27.5,
           "weight": 0.8
         },
         {
           "key": "marginTrajectory",
-          "pct": null,
+          "pct": 86.1,
           "weight": 0.9
         },
         {
           "key": "capitalEfficiency",
-          "pct": 39.5,
+          "pct": 32.5,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 75,
+          "pct": 76.3,
           "weight": 1.2
         }
       ],
       "revGrowthYoYPct": 0.05736864519758633,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 13,
+      "ticker": "OXM",
+      "score": 39.6,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.06,
+        "companion": 0
+      },
+      "name": "Oxford Industries, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 568121920,
+      "phase": "unprofitable",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 1980,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 38.6,
+      "scoreShrunk": 39.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 22.5,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 47.5,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 25,
+          "weight": 1.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 22.5,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 25,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 97.5,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 34.2,
+          "weight": 1.2
+        }
+      ],
+      "revGrowthYoYPct": -0.3713781719233977,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 14,
+      "ticker": "KLC",
+      "score": 39.3,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.04,
+        "companion": 1.5
+      },
+      "name": "KinderCare Learning Companies, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Defensive",
+      "marketCap": 640697088,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2024,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 38.3,
+      "scoreShrunk": 39.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 32.5,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 37.5,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 8.3,
+          "weight": 1.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 32.5,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 13.9,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 92.5,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 65.8,
+          "weight": 1.2
+        }
+      ],
+      "revGrowthYoYPct": 0.6401853215292519,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 15,
+      "ticker": "XMAX",
+      "score": 38.2,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "highDilution",
+        "lowRoic",
+        "arDivergence",
+        "fcfArtefact",
+        "einmalertrag",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.015,
+        "companion": -74.5
+      },
+      "name": "XMax Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 558428416,
+      "phase": "unprofitable",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2011,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 37,
+      "scoreShrunk": 38.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 12.5,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 92.5,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 13.9,
+          "weight": 1.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 12.5,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 19.4,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 17.5,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 7.9,
+          "weight": 1.2
+        }
+      ],
+      "revGrowthYoYPct": -32.40092452986245,
+      "profitStreak": null,
+      "einmalertragPrognose": "nichtPruefbar",
+      "shareDilution": {
+        "ratePct": 12.3,
+        "pctl": 0.895
+      },
+      "ath": null
+    },
+    {
+      "rank": 16,
       "ticker": "ECX",
-      "score": 38.3,
+      "score": 36.5,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -2685,7 +3276,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Consumer Cyclical",
-      "marketCap": 416570304,
+      "marketCap": 428360064,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -2694,10 +3285,10 @@
       "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 37,
-      "scoreShrunk": 38.3,
+      "scoreBase": 35.2,
+      "scoreShrunk": 36.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2706,301 +3297,50 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 23.7,
+          "pct": 17.5,
           "weight": 1.9
         },
         {
           "key": "revAcceleration",
-          "pct": 39.5,
+          "pct": 32.5,
           "weight": 3
         },
         {
           "key": "gpGrowth",
-          "pct": 20.6,
+          "pct": 30.6,
           "weight": 1.4
         },
         {
           "key": "ruleOfX",
-          "pct": 23.7,
+          "pct": 17.5,
           "weight": 0.8
         },
         {
           "key": "marginTrajectory",
-          "pct": 53.1,
+          "pct": 58.3,
           "weight": 0.9
         },
         {
           "key": "capitalEfficiency",
-          "pct": 13.2,
+          "pct": 12.5,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 86.1,
+          "pct": 86.8,
           "weight": 1.2
         }
       ],
       "revGrowthYoYPct": -21.586165772212283,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
-    },
-    {
-      "rank": 14,
-      "ticker": "XMAX",
-      "score": 38.2,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "highDilution",
-        "lowRoic",
-        "arDivergence",
-        "fcfArtefact",
-        "einmalertrag"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.015,
-        "companion": -74.5
-      },
-      "name": "XMax Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Cyclical",
-      "marketCap": 536167648,
-      "phase": "unprofitable",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "kurz-vor-profitabel",
-      "ipoYear": 2011,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 19,
-      "cohortFallback": false,
-      "scoreBase": 37,
-      "scoreShrunk": 38.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 18.4,
-          "weight": 1.9
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 92.1,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 8.8,
-          "weight": 1.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 18.4,
-          "weight": 0.8
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 9.4,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 18.4,
-          "weight": 0.9
-        },
-        {
-          "key": "dilution",
-          "pct": 8.3,
-          "weight": 1.2
-        }
-      ],
-      "revGrowthYoYPct": -32.40092452986245,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 15,
-      "ticker": "LOT",
-      "score": 34.7,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.526,
-        "companion": -91.6
-      },
-      "name": "Lotus Technology Inc.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Consumer Cyclical",
-      "marketCap": 566469504,
-      "phase": "unprofitable",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "kurz-vor-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 19,
-      "cohortFallback": false,
-      "scoreBase": 33.1,
-      "scoreShrunk": 34.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 13.2,
-          "weight": 1.9
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 2.6,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 79.4,
-          "weight": 1.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 13.2,
-          "weight": 0.8
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 90.6,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 23.7,
-          "weight": 0.9
-        },
-        {
-          "key": "dilution",
-          "pct": 63.9,
-          "weight": 1.2
-        }
-      ],
-      "revGrowthYoYPct": -39.84369820937958,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 16,
-      "ticker": "SLDP",
-      "score": 22.3,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "highDilution",
-        "lowRoic",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": -135.5
-      },
-      "name": "Solid Power, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Cyclical",
-      "marketCap": 467966080,
-      "phase": "unprofitable",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.86,
-      "cohortN": 19,
-      "cohortFallback": false,
-      "scoreBase": 13.9,
-      "scoreShrunk": 22.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 7.9,
-          "weight": 1.9
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 7.9,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 7.9,
-          "weight": 0.8
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 3.1,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 55.3,
-          "weight": 0.9
-        },
-        {
-          "key": "dilution",
-          "pct": 19.4,
-          "weight": 1.2
-        }
-      ],
-      "revGrowthYoYPct": -58.92682926829269,
-      "profitStreak": {
-        "jahre": 0,
-        "basis": "opInc",
-        "tiefe": 5,
-        "mindestens": false,
-        "letzterVerlust": 2025
-      },
-      "ath": {
-        "distancePct": -85.5,
-        "athDate": "2021-11-15",
-        "monthsAgo": 56,
-        "lastDate": "2026-07-31"
-      }
     },
     {
       "rank": 17,
       "ticker": "FNKO",
-      "score": 22,
+      "score": 22.9,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -3019,7 +3359,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 341738240,
+      "marketCap": 322752800,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -3028,10 +3368,10 @@
       "ipoYear": 2017,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 35.7,
-      "scoreShrunk": 37,
+      "scoreBase": 37.5,
+      "scoreShrunk": 38.6,
       "factors": {
         "burn": 0.891,
         "growth": 1,
@@ -3040,48 +3380,144 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 39.5,
+          "pct": 52.5,
           "weight": 1.9
         },
         {
           "key": "revAcceleration",
-          "pct": 23.7,
+          "pct": 17.5,
           "weight": 3
         },
         {
           "key": "gpGrowth",
-          "pct": 14.7,
+          "pct": 19.4,
           "weight": 1.4
         },
         {
           "key": "ruleOfX",
-          "pct": 34.2,
+          "pct": 47.5,
           "weight": 0.8
         },
         {
           "key": "marginTrajectory",
-          "pct": 65.6,
+          "pct": 63.9,
           "weight": 0.9
         },
         {
           "key": "capitalEfficiency",
-          "pct": 71.1,
+          "pct": 62.5,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 36.1,
+          "pct": 39.5,
           "weight": 1.2
         }
       ],
       "revGrowthYoYPct": 5.337136086484673,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 18,
+      "ticker": "SLDP",
+      "score": 20.5,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "highDilution",
+        "lowRoic",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": -135.5
+      },
+      "name": "Solid Power, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 479215296,
+      "phase": "unprofitable",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2021,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.86,
+      "cohortN": 20,
+      "cohortFallback": false,
+      "scoreBase": 11.5,
+      "scoreShrunk": 20.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 7.5,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 2.5,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 7.5,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 8.3,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 47.5,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 18.4,
+          "weight": 1.2
+        }
+      ],
+      "revGrowthYoYPct": -58.92682926829269,
+      "profitStreak": {
+        "jahre": 0,
+        "basis": "opInc",
+        "tiefe": 5,
+        "mindestens": false,
+        "letzterVerlust": 2025
+      },
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": {
+        "distancePct": -85.5,
+        "athDate": "2021-11-15",
+        "monthsAgo": 56,
+        "lastDate": "2026-07-31"
+      }
+    },
+    {
+      "rank": 19,
       "ticker": "AIIO",
-      "score": 8.1,
+      "score": 7.1,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -3090,18 +3526,19 @@
         "highDilution",
         "lowRoic",
         "arDivergence",
-        "burnAccelerating"
+        "burnAccelerating",
+        "shareCountDilution"
       ],
       "overview": {
         "kind": "gp",
         "value": -0.777,
-        "companion": -211.3
+        "companion": -211
       },
       "name": "Robo.ai Inc.",
       "country": "United Arab Emirates",
       "region": "Middle East",
       "sector": "Consumer Cyclical",
-      "marketCap": 435727424,
+      "marketCap": 495827776,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -3110,10 +3547,10 @@
       "ipoYear": 2020,
       "coverageAxes": "6/7",
       "coverageWeight": 0.91,
-      "cohortN": 19,
+      "cohortN": 20,
       "cohortFallback": false,
-      "scoreBase": 10.2,
-      "scoreShrunk": 17.5,
+      "scoreBase": 7.6,
+      "scoreShrunk": 15.3,
       "factors": {
         "burn": 0.465,
         "growth": 1,
@@ -3122,22 +3559,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 2.6,
+          "pct": 2.5,
           "weight": 1.9
         },
         {
           "key": "revAcceleration",
-          "pct": 13.2,
+          "pct": 7.5,
           "weight": 3
         },
         {
           "key": "gpGrowth",
-          "pct": 2.9,
+          "pct": 2.8,
           "weight": 1.4
         },
         {
           "key": "ruleOfX",
-          "pct": 2.6,
+          "pct": 2.5,
           "weight": 0.8
         },
         {
@@ -3147,17 +3584,22 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 44.7,
+          "pct": 37.5,
           "weight": 0.9
         },
         {
           "key": "dilution",
-          "pct": 2.8,
+          "pct": 2.6,
           "weight": 1.2
         }
       ],
       "revGrowthYoYPct": -92.08003334722801,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 8.1,
+        "pctl": 0.789
+      },
       "ath": null
     }
   ]

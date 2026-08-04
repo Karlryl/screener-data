@@ -1,102 +1,24 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-03T06:50:37.937Z",
+  "generated_at": "2026-08-04T21:58:40.275Z",
   "branch": "real-estate",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 70.1
+    "coverage_pct": 72.7
   },
   "profitable": [
     {
       "rank": 1,
-      "ticker": "SKYH",
-      "score": 85.5,
+      "ticker": "FVR",
+      "score": 80.8,
       "track": "profitable",
       "lamps": [
         "unprofit",
-        "burning",
-        "shortRunway",
-        "highDilution",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.705,
-        "companion": 128.8
-      },
-      "name": "Sky Harbour Group Corporation",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Real Estate",
-      "marketCap": 779054464,
-      "phase": "unprofitable",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "growth",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2020,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 18,
-      "cohortFallback": false,
-      "scoreBase": 89.4,
-      "scoreShrunk": 85.5,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 97.2,
-          "weight": 1.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 25,
-          "weight": 0.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 91.2,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 97.2,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 96.9,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 90,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": 95.8,
-          "weight": 1
-        }
-      ],
-      "revGrowthYoYPct": 55.9985696406222,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 2,
-      "ticker": "FVR",
-      "score": 71.9,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic"
+        "lowRoic",
+        "shareCountDilution"
       ],
       "overview": {
         "kind": "gp",
@@ -107,19 +29,19 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 618563648,
-      "phase": "established",
+      "marketCap": 589441088,
+      "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
+      "profitTier": "kurz-vor-profitabel",
       "ipoYear": 2024,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
       "cohortN": 18,
       "cohortFallback": false,
-      "scoreBase": 74.4,
-      "scoreShrunk": 71.9,
+      "scoreBase": 84.2,
+      "scoreShrunk": 80.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -148,31 +70,35 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 78.1,
+          "pct": 65.6,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 37.5,
+          "pct": 90,
           "weight": 1.6
         },
         {
           "key": "dilution",
-          "pct": 54.2,
+          "pct": 62.5,
           "weight": 1
         }
       ],
       "revGrowthYoYPct": 11.955919473003762,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 15.5,
+        "pctl": 1
+      },
       "ath": null
     },
     {
-      "rank": 3,
+      "rank": 2,
       "ticker": "PINE",
-      "score": 66.4,
+      "score": 69.3,
       "track": "profitable",
       "lamps": [
-        "peakMargin",
         "lowRoic"
       ],
       "overview": {
@@ -184,7 +110,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 358166016,
+      "marketCap": 360118368,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -195,8 +121,8 @@
       "coverageWeight": 1,
       "cohortN": 18,
       "cohortFallback": false,
-      "scoreBase": 68.2,
-      "scoreShrunk": 66.4,
+      "scoreBase": 71.4,
+      "scoreShrunk": 69.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -210,12 +136,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 63.9,
+          "pct": 58.3,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 73.5,
+          "pct": 79.4,
           "weight": 1.5
         },
         {
@@ -230,49 +156,129 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 20.8,
+          "pct": 29.2,
           "weight": 1.6
         },
         {
           "key": "dilution",
-          "pct": 79.2,
+          "pct": 87.5,
           "weight": 1
         }
       ],
       "revGrowthYoYPct": 34.57579223575322,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 3,
+      "ticker": "OLP",
+      "score": 64.8,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.065,
+        "companion": 82.9
+      },
+      "name": "One Liberty Properties, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 531085376,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1983,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.88,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 68.5,
+      "scoreShrunk": 64.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 80.6,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 75,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 55.9,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 86.1,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 78.1,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 45.8,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 17.045924700041382,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 4,
-      "ticker": "AHRT",
+      "ticker": "GOOD",
       "score": 58.9,
       "track": "profitable",
       "lamps": [
         "lowRoic",
-        "arDivergence"
+        "shareCountDilution"
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.026,
-        "companion": 9.8
+        "value": 0.07,
+        "companion": 74.2
       },
-      "name": "AH REALTY TRUST INC",
+      "name": "Gladstone Commercial Corporation",
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 683819456,
+      "marketCap": 608856320,
       "phase": "established",
-      "mcapBand": "mega",
+      "mcapBand": "large",
       "mcapKlasse": "small",
-      "ipoRecency": "mature",
+      "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 2013,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
+      "ipoYear": 2003,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.88,
       "cohortN": 18,
       "cohortFallback": false,
-      "scoreBase": 59.8,
+      "scoreBase": 61.1,
       "scoreShrunk": 58.9,
       "factors": {
         "burn": 1,
@@ -282,52 +288,58 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 58.3,
+          "pct": 69.4,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 30.6,
+          "pct": 69.4,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 79.4,
+          "pct": 73.5,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 36.1,
+          "pct": 80.6,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 84.4,
+          "pct": 59.4,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 79.2,
+          "pct": 20.8,
           "weight": 1.6
         },
         {
           "key": "dilution",
-          "pct": 37.5,
+          "pct": null,
           "weight": 1
         }
       ],
-      "revGrowthYoYPct": 4.254513570603002,
+      "revGrowthYoYPct": 11.754353217247537,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 4.6,
+        "pctl": 0.813
+      },
       "ath": null
     },
     {
       "rank": 5,
       "ticker": "REAX",
-      "score": 58.8,
+      "score": 58.7,
       "track": "profitable",
       "lamps": [
         "unprofit",
-        "lowRoic"
+        "lowRoic",
+        "shareCountDilution"
       ],
       "overview": {
         "kind": "gp",
@@ -338,9 +350,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 368325600,
+      "marketCap": 355248960,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "kurz-vor-profitabel",
@@ -349,8 +361,8 @@
       "coverageWeight": 1,
       "cohortN": 18,
       "cohortFallback": false,
-      "scoreBase": 59.8,
-      "scoreShrunk": 58.8,
+      "scoreBase": 59.7,
+      "scoreShrunk": 58.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -369,7 +381,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 85.3,
+          "pct": 91.2,
           "weight": 1.5
         },
         {
@@ -379,7 +391,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 65.6,
+          "pct": 53.1,
           "weight": 0.8
         },
         {
@@ -395,112 +407,46 @@
       ],
       "revGrowthYoYPct": 31.51864083100506,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 7.3,
+        "pctl": 0.938
+      },
       "ath": null
     },
     {
       "rank": 6,
-      "ticker": "GOOD",
-      "score": 58.3,
+      "ticker": "XRN",
+      "score": 58.4,
       "track": "profitable",
       "lamps": [
-        "lowRoic"
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "fcfArtefact"
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.07,
-        "companion": 74.2
+        "value": 0.054,
+        "companion": 22.8
       },
-      "name": "Gladstone Commercial Corporation",
+      "name": "Chiron Real Estate Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 611297664,
+      "marketCap": 554419200,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
-      "ipoRecency": "veteran",
+      "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 2003,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.88,
-      "cohortN": 18,
-      "cohortFallback": false,
-      "scoreBase": 59.9,
-      "scoreShrunk": 58.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 69.4,
-          "weight": 1.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 75,
-          "weight": 0.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 67.6,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 80.6,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 71.9,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 12.5,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1
-        }
-      ],
-      "revGrowthYoYPct": 11.754353217247537,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 7,
-      "ticker": "UHT",
-      "score": 58.3,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.001,
-        "companion": 45.9
-      },
-      "name": "Universal Health Realty Income Trust",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Real Estate",
-      "marketCap": 603479296,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1986,
+      "ipoYear": 2016,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
       "cohortN": 18,
       "cohortFallback": false,
-      "scoreBase": 59.2,
-      "scoreShrunk": 58.3,
+      "scoreBase": 59.4,
+      "scoreShrunk": 58.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -509,83 +455,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 41.7,
-          "weight": 1.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 36.1,
-          "weight": 0.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 38.2,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
           "pct": 63.9,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 46.9,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 95.8,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": 70.8,
-          "weight": 1
-        }
-      ],
-      "revGrowthYoYPct": -0.07739938080495445,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 8,
-      "ticker": "OLP",
-      "score": 57.9,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.065,
-        "companion": 82.9
-      },
-      "name": "One Liberty Properties, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Real Estate",
-      "marketCap": 542213312,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1983,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.88,
-      "cohortN": 18,
-      "cohortFallback": false,
-      "scoreBase": 59.5,
-      "scoreShrunk": 57.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 80.6,
           "weight": 1.3
         },
         {
@@ -600,60 +470,63 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 86.1,
+          "pct": 47.2,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 34.4,
+          "pct": 28.1,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 29.2,
+          "pct": 87.5,
           "weight": 1.6
         },
         {
           "key": "dilution",
-          "pct": null,
+          "pct": 54.2,
           "weight": 1
         }
       ],
-      "revGrowthYoYPct": 17.045924700041382,
+      "revGrowthYoYPct": 9.90316519728285,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
-      "rank": 9,
-      "ticker": "ILPT",
-      "score": 54.8,
+      "rank": 7,
+      "ticker": "AHRT",
+      "score": 56.7,
       "track": "profitable",
       "lamps": [
         "lowRoic",
-        "crashRisk"
+        "arDivergence",
+        "shareCountDilution"
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.02,
-        "companion": 41.1
+        "value": 0.026,
+        "companion": 9.8
       },
-      "name": "Industrial Logistics Properties Trust",
+      "name": "AH REALTY TRUST INC",
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 565337600,
+      "marketCap": 675064960,
       "phase": "established",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
+      "ipoRecency": "mature",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 2018,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.88,
+      "ipoYear": 2013,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
       "cohortN": 18,
       "cohortFallback": false,
-      "scoreBase": 55.5,
-      "scoreShrunk": 54.8,
+      "scoreBase": 57.4,
+      "scoreShrunk": 56.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -667,7 +540,89 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 58.3,
+          "pct": 25,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 85.3,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 30.6,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 71.9,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 79.2,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 37.5,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 4.254513570603002,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 3.9,
+        "pctl": 0.75
+      },
+      "ath": null
+    },
+    {
+      "rank": 8,
+      "ticker": "ILPT",
+      "score": 51.4,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "crashRisk"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.02,
+        "companion": 45.3
+      },
+      "name": "Industrial Logistics Properties Trust",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 584026432,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2018,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.88,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 51.6,
+      "scoreShrunk": 51.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 41.7,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 52.8,
           "weight": 0.6
         },
         {
@@ -677,12 +632,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 58.3,
+          "pct": 63.9,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 59.4,
+          "pct": 34.4,
           "weight": 0.8
         },
         {
@@ -696,14 +651,92 @@
           "weight": 1
         }
       ],
-      "revGrowthYoYPct": 4.033778651534781,
+      "revGrowthYoYPct": 1.8073632657430672,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 9,
+      "ticker": "UHT",
+      "score": 50.8,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.001,
+        "companion": 0.4
+      },
+      "name": "Universal Health Realty Income Trust",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 592360384,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1986,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.9,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 50.8,
+      "scoreShrunk": 50.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 36.1,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 30.6,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 38.2,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 19.4,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 95.8,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 79.2,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 0.180787993253273,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 10,
       "ticker": "AGNT",
-      "score": 52.2,
+      "score": 49.9,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -719,7 +752,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 664690240,
+      "marketCap": 673728064,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -730,8 +763,8 @@
       "coverageWeight": 1,
       "cohortN": 18,
       "cohortFallback": false,
-      "scoreBase": 52.4,
-      "scoreShrunk": 52.2,
+      "scoreBase": 49.9,
+      "scoreShrunk": 49.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -740,12 +773,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 63.9,
+          "pct": 58.3,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 41.7,
+          "pct": 36.1,
           "weight": 0.6
         },
         {
@@ -755,12 +788,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 41.7,
+          "pct": 36.1,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 53.1,
+          "pct": 40.6,
           "weight": 0.8
         },
         {
@@ -770,7 +803,7 @@
         },
         {
           "key": "dilution",
-          "pct": 62.5,
+          "pct": 70.8,
           "weight": 1
         }
       ],
@@ -782,12 +815,14 @@
         "mindestens": false,
         "letzterVerlust": 2025
       },
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 11,
       "ticker": "FRPH",
-      "score": 45,
+      "score": 45.7,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -802,7 +837,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 427880544,
+      "marketCap": 432481408,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -813,8 +848,8 @@
       "coverageWeight": 1,
       "cohortN": 18,
       "cohortFallback": false,
-      "scoreBase": 44.5,
-      "scoreShrunk": 45,
+      "scoreBase": 45.2,
+      "scoreShrunk": 45.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -828,27 +863,27 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 69.4,
+          "pct": 63.9,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 61.8,
+          "pct": 67.6,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 52.8,
+          "pct": 58.3,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 9.4,
+          "pct": 15.6,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 45.8,
+          "pct": 37.5,
           "weight": 1.6
         },
         {
@@ -859,86 +894,14 @@
       ],
       "revGrowthYoYPct": 2.79448864738987,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 12,
-      "ticker": "RMAX",
-      "score": 39.5,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": -0.043,
-        "companion": 1.8
-      },
-      "name": "RE/MAX Holdings, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Real Estate",
-      "marketCap": 516382144,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2013,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 18,
-      "cohortFallback": false,
-      "scoreBase": 38.4,
-      "scoreShrunk": 39.5,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 25,
-          "weight": 1.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 52.8,
-          "weight": 0.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 26.5,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 25,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 21.9,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 87.5,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": 20.8,
-          "weight": 1
-        }
-      ],
-      "revGrowthYoYPct": -5.692454375763756,
-      "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 13,
       "ticker": "FPI",
-      "score": 37.5,
+      "score": 44.6,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -946,13 +909,13 @@
       "overview": {
         "kind": "gp",
         "value": -0.107,
-        "companion": 4.1
+        "companion": 19.6
       },
-      "name": "Farmland Partners Inc.",
+      "name": "Farmland Partners Inc. Common Stock",
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 422366400,
+      "marketCap": 420350144,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -963,8 +926,8 @@
       "coverageWeight": 1,
       "cohortN": 18,
       "cohortFallback": false,
-      "scoreBase": 36.1,
-      "scoreShrunk": 37.5,
+      "scoreBase": 44,
+      "scoreShrunk": 44.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -973,7 +936,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 36.1,
+          "pct": 25,
           "weight": 1.3
         },
         {
@@ -988,12 +951,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 30.6,
+          "pct": 52.8,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 28.1,
+          "pct": 84.4,
           "weight": 0.8
         },
         {
@@ -1007,14 +970,97 @@
           "weight": 1
         }
       ],
-      "revGrowthYoYPct": -1.4631291455325823,
+      "revGrowthYoYPct": -5.65261044176707,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 13,
+      "ticker": "FPH",
+      "score": 38.1,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "lowRoic",
+        "arDivergence",
+        "einmalertrag"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.552,
+        "companion": 197.9
+      },
+      "name": "Five Point Holdings, LLC",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 758739840,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2017,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 57.9,
+      "scoreShrunk": 57.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 0.667
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 97.2,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 2.8,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 8.8,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 97.2,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 96.9,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 10,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 95.8,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 86.029706945002,
+      "profitStreak": null,
+      "einmalertragPrognose": "nichtPruefbar",
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 14,
       "ticker": "LAND",
-      "score": 36.9,
+      "score": 36.2,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1030,9 +1076,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 364504032,
+      "marketCap": 347680800,
       "phase": "established",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "langfristig-profitabel",
@@ -1041,8 +1087,8 @@
       "coverageWeight": 0.88,
       "cohortN": 18,
       "cohortFallback": false,
-      "scoreBase": 32.9,
-      "scoreShrunk": 36.9,
+      "scoreBase": 32.4,
+      "scoreShrunk": 36.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1066,12 +1112,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 19.4,
+          "pct": 13.9,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 15.6,
+          "pct": 21.9,
           "weight": 0.8
         },
         {
@@ -1087,12 +1133,14 @@
       ],
       "revGrowthYoYPct": -1.4996429421566315,
       "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 15,
       "ticker": "RMR",
-      "score": 34.9,
+      "score": 34.3,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -1104,7 +1152,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 325457984,
+      "marketCap": 322210208,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1115,8 +1163,8 @@
       "coverageWeight": 0.88,
       "cohortN": 18,
       "cohortFallback": false,
-      "scoreBase": 30.4,
-      "scoreShrunk": 34.9,
+      "scoreBase": 30.1,
+      "scoreShrunk": 34.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1125,7 +1173,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 13.9,
+          "pct": 8.3,
           "weight": 1.3
         },
         {
@@ -1135,17 +1183,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 55.9,
+          "pct": 61.8,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 47.2,
+          "pct": 41.7,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 40.6,
+          "pct": 46.9,
           "weight": 0.8
         },
         {
@@ -1167,19 +1215,103 @@
         "mindestens": true,
         "letzterVerlust": null
       },
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     },
     {
       "rank": 16,
+      "ticker": "RMAX",
+      "score": 24.5,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "lowRoic",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.043,
+        "companion": 1.8
+      },
+      "name": "RE/MAX Holdings, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 505360128,
+      "phase": "inflected",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2013,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 18,
+      "cohortFallback": false,
+      "scoreBase": 21.6,
+      "scoreShrunk": 24.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 19.4,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 47.2,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 26.5,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 25,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 9.4,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 12.5,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 20.8,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": -5.692454375763756,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": {
+        "ratePct": 5.7,
+        "pctl": 0.875
+      },
+      "ath": null
+    },
+    {
+      "rank": 17,
       "ticker": "SEG",
-      "score": 20.4,
+      "score": 21.5,
       "track": "profitable",
       "lamps": [
         "unprofit",
         "burning",
         "shortRunway",
-        "lowRoic",
-        "burnAccelerating"
+        "lowRoic"
       ],
       "overview": {
         "kind": "gp",
@@ -1190,7 +1322,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 337458368,
+      "marketCap": 333617760,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1201,17 +1333,17 @@
       "coverageWeight": 1,
       "cohortN": 18,
       "cohortFallback": false,
-      "scoreBase": 20.3,
-      "scoreShrunk": 23.2,
+      "scoreBase": 18.3,
+      "scoreShrunk": 21.5,
       "factors": {
-        "burn": 0.878,
+        "burn": 1,
         "growth": 1,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 8.3,
+          "pct": 2.8,
           "weight": 1.3
         },
         {
@@ -1226,7 +1358,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 8.3,
+          "pct": 2.8,
           "weight": 1.6
         },
         {
@@ -1247,84 +1379,8 @@
       ],
       "revGrowthYoYPct": -20.735577820648455,
       "profitStreak": null,
-      "ath": null
-    },
-    {
-      "rank": 17,
-      "ticker": "FPH",
-      "score": 15.4,
-      "track": "profitable",
-      "lamps": [
-        "unprofit",
-        "lowRoic",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.552,
-        "companion": -123.6
-      },
-      "name": "Five Point Holdings, LLC",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Real Estate",
-      "marketCap": 790157888,
-      "phase": "unprofitable",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2017,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.9,
-      "cohortN": 18,
-      "cohortFallback": false,
-      "scoreBase": 16.6,
-      "scoreShrunk": 23.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 0.667
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 2.8,
-          "weight": 1.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 2.8,
-          "weight": 0.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 8.8,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 2.8,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 10,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": 87.5,
-          "weight": 1
-        }
-      ],
-      "revGrowthYoYPct": -53.758731706496974,
-      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
       "ath": null
     }
   ],
