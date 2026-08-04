@@ -451,6 +451,20 @@ function boersenUnterBoden(exchangeStats, kanaele) {
   return unter;
 }
 
+// Review-Befund 1 ueber Tag 579: die Nachsicht fuer ein gerissenes Zeitbudget gilt JE BOERSE.
+// Vorher entschied ein prozessweites Bool — riss das Budget bei IRGENDEINER Boerse, wurde der
+// Alarm fuer ALLE heruntergestuft, auch fuer die, die Minuten vorher vollstaendig durchgelaufen
+// waren. Ein echter Einbruch auf NYQ waere still geblieben, weil zufaellig ASE am Ende der
+// Liste abgeschnitten wurde. Reine Funktion, damit genau diese Trennung ohne main() pruefbar
+// ist — als Quelltext-Pin war sie es nicht (die Ausbau-Probe hat den Pin ausgetrickst).
+function abnahmeUrteil(unterBoden, budgetOpfer) {
+  const opfer = budgetOpfer instanceof Set ? budgetOpfer : new Set(budgetOpfer || []);
+  return {
+    echt: (unterBoden || []).filter((u) => !opfer.has(u.code)),
+    budgetErklaert: (unterBoden || []).filter((u) => opfer.has(u.code)),
+  };
+}
+
 // Der Crumb-Vorlauf muss EINMAL ueber einen normalen Bibliotheks-Aufruf laufen, bevor der
 // erste POST rausgeht. Grund, an der Quelle nachgelesen (yahooFinanceFetch.js): die
 // Bibliothek baut `fetchOptionsBase` inklusive moduleOpts.fetchOptions und reicht es an
@@ -460,6 +474,22 @@ function boersenUnterBoden(exchangeStats, kanaele) {
 // 20 von 20 Boersen tot mit "No set-cookie header present in Yahoo's response".
 // Nach dem Vorwaermen liefert getCrumb den zwischengespeicherten Crumb zurueck, OHNE noch
 // einmal zu fetchen — der Leck-Pfad ist dann gar nicht mehr erreichbar.
+//
+// ponytail: BEKANNTE DECKE (Review-Befund 3 ueber Tag 579, an der Quelle nachgelesen):
+// Ein einmal abgelaufener Crumb laesst sich INNERHALB dieses Prozesses NICHT erneuern.
+// getCrumb.js haelt `crumb` UND das laufende `promise` modulglobal und setzt das promise
+// ausschliesslich im .catch zurueck — nach einem erfolgreichen Abruf liefert jeder weitere
+// getCrumb-Aufruf dasselbe memoisierte Promise, unabhaengig von Cookie-Jar oder Instanz.
+// Ein erneutes crumbVorwaermen() waere also ein Heilungs-Pfad, der nur so AUSSIEHT (genau
+// die Klasse Fehler, gegen die dieser ganze Umbau gebaut ist) — deshalb gibt es ihn nicht.
+// Was stattdessen passiert: der Fehler gilt als transient, wird dreimal wiederholt, und
+// bleibt er, faellt die betroffene Boerse mit gezaehltem Seitenfehler aus. Die
+// Abnahme-Messung unten faerbt den Lauf dann rot. Das ist die richtige Lautstaerke — die
+// Watchlist von gestern bleibt gueltig, der naechste Lauf hat einen frischen Prozess.
+// UPGRADE-PFAD, falls das je oefter vorkommt: getCrumb.js exportiert getCrumbClear(jar),
+// das beide Modul-Variablen zuruecksetzt. Es steht nicht in den package-exports, waere also
+// ein gezielter Griff nach node_modules-Interna — bewusst nicht gemacht, solange der
+// Kanal 35 s laeuft und ein Crumb Stunden haelt.
 let _crumbVorgewaermt = false;
 async function crumbVorwaermen() {
   if (_crumbVorgewaermt) return;
@@ -477,9 +507,20 @@ const EXCHANGE_VERTRAGSBRUCH_RE = /\b(bad request|unauthorized|forbidden|not fou
 // "Invalid Crumb" seit langem als transiente auth-Klasse — dieselbe Einstufung hier).
 const EXCHANGE_TRANSIENT_RE = /429|too many requests|rate limit|invalid crumb|no set-cookie|etimedout|econnreset|econnrefused|socket hang up|network|fetch failed|\b5\d\d\b/i;
 function exchangeFehlerIstFatal(meldung, httpStatus) {
-  if (EXCHANGE_FATAL_STATUS.has(Number(httpStatus))) return true;
   const m = String(meldung == null ? '' : meldung);
-  if (EXCHANGE_TRANSIENT_RE.test(m)) return false;   // transient schlaegt Vertragsbruch
+  // REIHENFOLGE IST TRAGEND (Review-Befund 2 ueber Tag 579): die Transient-Pruefung steht
+  // VOR der Status-Pruefung, sonst gilt die dokumentierte Regel "transient schlaegt
+  // Vertragsbruch" nur auf dem Papier. Der belegte Schadensfall: yahooFinanceFetch.js setzt
+  // error.code = response.status fuer JEDE non-200-Antwort, also auch fuer den 401, mit dem
+  // Yahoo einen rotierten Crumb quittiert. Stand die Status-Pruefung zuerst, brach eine
+  // gewoehnliche, selbstheilende Crumb-Rotation den GESAMTEN 19-Boersen-Kanal ab
+  // (exchangeScreenerFatal -> break) und faerbte den Tag rot. Gemessen:
+  //   exchangeFehlerIstFatal('Invalid Crumb', 401) === true
+  //   exchangeFehlerIstTransient('Invalid Crumb', 401) === true   <- Widerspruch
+  // Jetzt gewinnt der Text: ein 401, der von Crumb/Cookie spricht, ist transient; ein 401
+  // ohne diesen Text bleibt Vertragsbruch.
+  if (EXCHANGE_TRANSIENT_RE.test(m)) return false;
+  if (EXCHANGE_FATAL_STATUS.has(Number(httpStatus))) return true;
   if (EXCHANGE_VERTRAGSBRUCH_RE.test(m)) return true;
   // Und der ALTE Dauerdefekt: wer den Aufruf auf yf.screener() zurueckbaut, faellt wieder
   // in die Schema-Validierung der Bibliothek. Das bleibt fatal — und ab Tag 576 ROT,
@@ -559,8 +600,9 @@ async function fetchExchangePage(kanal, minLokal, maxLokal, offset, attempt) {
     const msg = String((e && e.message) || e);
     const status = e && e.code;
     if (exchangeFehlerIstTransient(msg, status) && attempt < MAX_ATTEMPTS) {
-      // Ein abgelaufener Crumb heilt nur, wenn der Vorlauf noch einmal laeuft.
-      if (/invalid crumb|no set-cookie|401/i.test(msg)) _crumbVorgewaermt = false;
+      // KEIN Zuruecksetzen von _crumbVorgewaermt: das waere ein Heilungs-Pfad, der nicht
+      // heilt (Decke an crumbVorwaermen erklaert, warum). Wiederholt wird die ANFRAGE —
+      // die haeufigen transienten Faelle (429, Netz-Aussetzer, 5xx) heilen genau dadurch.
       const backoffMs = 1000 * Math.pow(2, attempt);
       console.warn('  [' + kanal.code + '] transient (Versuch ' + attempt + '/' + MAX_ATTEMPTS +
         ', ' + msg.slice(0, 80) + ') — backoff ' + backoffMs + 'ms');
@@ -984,7 +1026,13 @@ async function main() {
   // in Listing-Waehrung, die Umrechnung macht lokaleSchranken() je Boerse (Messbefund 2).
   let customAdded = 0;
   const exchangeT0 = Date.now();
-  let exchangeBudgetGerissen = false;
+  // Review-Befund 1 ueber Tag 579: das war ein einziges prozessweites Bool, und die
+  // Abnahme-Messung unten stufte damit ALLE Boersen auf "nur Warnung" herunter, sobald
+  // IRGENDEINE das Budget riss — auch die, die Minuten vorher vollstaendig durchgelaufen
+  // waren. Ein echter Einbruch auf NYQ waere still geblieben, weil zufaellig ASE am Ende
+  // der Liste in die Deadline lief. Jetzt wird ATTRIBUIERT: nur wer vom Budget
+  // abgeschnitten oder gar nicht mehr gefragt wurde, bekommt die Nachsicht.
+  const exchangeBudgetOpfer = new Set();
   // F-DP-037 (Tag 190): per-exchange statistics so we can surface silent
   // breakage. Without this, a 429 or schema break on one exchange just made
   // the exchange disappear with zero diagnostic.
@@ -1016,7 +1064,8 @@ async function main() {
     // VOR jeder Boerse, nicht nur am Ende — eine Boerse mit vielen Seiten soll gar nicht
     // erst anfangen, wenn das Budget schon aufgebraucht ist.
     if (Date.now() - exchangeT0 >= EXCHANGE_BUDGET_MS) {
-      exchangeBudgetGerissen = true;
+      // Diese Boerse UND alle dahinter wurden nie gefragt — sie alle sind Budget-Opfer.
+      for (const rest of EXCHANGE_CODES.slice(EXCHANGE_CODES.indexOf(exch))) exchangeBudgetOpfer.add(rest);
       console.error('::error::EXCHANGE-ZEITBUDGET GERISSEN: ' + Math.round(EXCHANGE_BUDGET_MS / 1000) +
         's aufgebraucht (' + Math.round((Date.now() - exchangeT0) / 1000) + 's verbraucht) vor Boerse ' +
         exch + '. Die restlichen Boersen (' + EXCHANGE_CODES.slice(EXCHANGE_CODES.indexOf(exch)).join(',') +
@@ -1048,7 +1097,7 @@ async function main() {
     let totalBandOk = 0;
     while (!pageEmpty) {
       if (Date.now() - exchangeT0 >= EXCHANGE_BUDGET_MS) {
-        exchangeBudgetGerissen = true;
+        exchangeBudgetOpfer.add(exch);   // nur DIESE Boerse wurde abgeschnitten
         pageErrors++;
         console.error('::error::EXCHANGE-ZEITBUDGET GERISSEN mitten in ' + exch + ' (offset=' + offset +
           '). Diese Boerse liefert einen Teilbestand und faellt damit womoeglich unter ihren ' +
@@ -1168,21 +1217,28 @@ async function main() {
   // die grossen Boersen liefern, verschwindet der Ausfall einer kleinen im Rauschen. Deshalb
   // je Boerse, gegen die Haelfte der gemessenen Erstlauf-Ausbeute.
   const unterBoden = boersenUnterBoden(exchangeStats, EXCHANGE_KANAELE);
-  if (unterBoden.length > 0 && !exchangeBudgetGerissen) {
-    console.error('::error::EXCHANGE-ABNAHME VERFEHLT bei ' + unterBoden.length + ' von ' +
+  // Review-Befund 1: die Nachsicht gilt JE BOERSE, nicht fuer den ganzen Lauf. Eine Boerse,
+  // die vollstaendig durchgelaufen ist und trotzdem unter ihrem Boden liegt, ist ein echter
+  // Befund — auch dann, wenn eine ANDERE Boerse spaeter ins Zeitbudget gelaufen ist.
+  const { echt: echtUnterBoden, budgetErklaert } = abnahmeUrteil(unterBoden, exchangeBudgetOpfer);
+  if (budgetErklaert.length > 0) {
+    console.warn('::warning::' + budgetErklaert.length + ' Boersen unter ihrem Abnahme-Boden, aber vom ' +
+      'Zeitbudget abgeschnitten oder gar nicht mehr gefragt (' +
+      budgetErklaert.map((u) => u.code).join(', ') + ') — der Teilbestand erklaert die ' +
+      'Unterschreitung, dafuer gibt es kein zweites rotes X (das Budget hat sich oben gemeldet).');
+  }
+  if (echtUnterBoden.length > 0) {
+    console.error('::error::EXCHANGE-ABNAHME VERFEHLT bei ' + echtUnterBoden.length + ' von ' +
       EXCHANGE_KANAELE.length + ' Boersen: ' +
-      unterBoden.map((u) => u.code + ' ' + u.ist + '<' + u.boden + ' (Erstlauf ' + u.erstlauf + ')').join(', ') +
-      '. Gemessen werden Zeilen im USD-Band NACH dem Zweitlistungs-Filter, nicht Neuzugaenge. ' +
+      echtUnterBoden.map((u) => u.code + ' ' + u.ist + '<' + u.boden + ' (Erstlauf ' + u.erstlauf + ')').join(', ') +
+      '. Diese Boersen sind VOLLSTAENDIG abgefragt worden — das Zeitbudget erklaert hier nichts. ' +
+      'Gemessen werden Zeilen im USD-Band NACH dem Zweitlistungs-Filter, nicht Neuzugaenge. ' +
       'Faellt EINE Boerse unter die Haelfte ihrer Erstlauf-Ausbeute, ist das entweder ein ' +
       'geaenderter Boersencode, ein Waehrungs-/Einheitenwechsel in Yahoos Filter oder ein ' +
       'Ausfall genau dieses Marktes — alle drei sind sonst unsichtbar, weil die grossen ' +
       'Boersen den Aggregat-Wert halten. NAECHSTER SCHRITT: Per-exchange-Zeile darueber.');
     process.exitCode = 1;
-  } else if (unterBoden.length > 0) {
-    console.warn('::warning::' + unterBoden.length + ' Boersen unter ihrem Abnahme-Boden, ABER das ' +
-      'Exchange-Zeitbudget ist gerissen — der Teilbestand erklaert die Unterschreitung, es wird ' +
-      'kein zweites rotes X dafuer gesetzt (das Budget hat sich oben schon gemeldet).');
-  } else {
+  } else if (unterBoden.length === 0) {
     console.log('  Exchange-Abnahme: alle ' + EXCHANGE_KANAELE.length +
       ' Boersen ueber ihrer Erstlauf-Untergrenze.');
   }
@@ -1730,7 +1786,7 @@ module.exports = {
   lokaleSchranken,             // USD-Band -> Listing-Waehrung (Yahoos Filter rechnet lokal)
   istZweitlistung,             // domicile/subtype-Aequivalent auf den Screener-Feldern
   exchangeFehlerIstFatal, exchangeFehlerIstTransient,  // retargetierter Klassifizierer
-  boersenUnterBoden,           // Abnahme je Boerse gegen die Erstlauf-Untergrenze
+  boersenUnterBoden, abnahmeUrteil,  // Abnahme je Boerse + Budget-Nachsicht je Boerse
   // Der Netzaufruf selbst — exportiert NUR, damit die CI-Probe den GEBAUTEN Code gegen den
   // echten Endpunkt fahren kann statt einen Nachbau. Ein Nachbau haette genau die Abweichung
   // nicht gefunden, um die es geht (der erste Probelauf hat das vorgefuehrt: er mass seinen

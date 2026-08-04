@@ -909,6 +909,30 @@ test('T576: exchangeFehlerIstFatal trennt Vertragsbruch von Transientem', () => 
   for (const s of [400, 401, 403, 404, 405, 410, 422]) {
     assert.equal(ru.exchangeFehlerIstFatal('irgendwas', s), true, 'HTTP ' + s + ' muss fatal sein');
   }
+  // ── Review-Befund 2 ueber Tag 579: der Text schlaegt den Status ────────────────
+  // yahooFinanceFetch.js setzt error.code = response.status fuer JEDE non-200-Antwort, also
+  // auch fuer den 401, mit dem Yahoo einen rotierten Crumb quittiert. Lief die Status-
+  // Pruefung zuerst, brach eine gewoehnliche Crumb-Rotation den GESAMTEN 19-Boersen-Kanal
+  // ab und faerbte den Tag rot — ein Dauer-Falschalarm-Generator. Beide Funktionen duerfen
+  // fuer denselben Fehler nie gleichzeitig true sagen.
+  for (const [m, s] of [['Invalid Crumb', 401], ['No set-cookie header present in Yahoo\'s response.', 401],
+                        ['Too Many Requests', 429], ['fetch failed', 503]]) {
+    assert.equal(ru.exchangeFehlerIstFatal(m, s), false,
+      '"' + m + '" mit HTTP ' + s + ' gilt als Vertragsbruch — dann killt eine selbstheilende '
+      + 'Crumb-Rotation den ganzen Kanal fuer den Tag.');
+    assert.equal(ru.exchangeFehlerIstTransient(m, s), true, '"' + m + '" muss transient sein');
+  }
+  // Ein 401 OHNE Crumb-/Cookie-Text bleibt Vertragsbruch — die Verengung darf die Klasse
+  // nicht komplett entschaerfen.
+  assert.equal(ru.exchangeFehlerIstFatal('Unauthorized', 401), true,
+    'ein 401 ohne Crumb-Bezug muss weiter fatal sein');
+  // Keine Ueberschneidung: fuer keinen gemessenen Fall duerfen beide Klassifizierer true sagen.
+  for (const [m, s] of [['Invalid Crumb', 401], ['Unauthorized', 401], ['Bad Request', 400],
+                        ['Too Many Requests', 429], ['ETIMEDOUT', undefined], ['Forbidden', 403]]) {
+    assert.ok(!(ru.exchangeFehlerIstFatal(m, s) && ru.exchangeFehlerIstTransient(m, s)),
+      '"' + m + '"/' + s + ' ist GLEICHZEITIG fatal und transient — dann entscheidet die '
+      + 'Aufrufreihenfolge in der Schleife statt der Klassifizierer.');
+  }
   // FATAL: Yahoos Fehlerbeschreibung, die yahoo-finance2 als message durchreicht.
   assert.equal(ru.exchangeFehlerIstFatal('Bad Request: Missing required query parameter'), true);
   assert.equal(ru.exchangeFehlerIstFatal('Unauthorized'), true);
@@ -1180,10 +1204,56 @@ test('T576: der Abnahme-Alarm ist verdrahtet (und schweigt bei gerissenem Budget
   const block = ohneZeilenkommentare(SRC_RU.slice(i, i + 2200));
   assert.match(block, /::error::EXCHANGE-ABNAHME VERFEHLT/, 'kein Alarm bei Unterschreitung');
   assert.match(block, /process\.exitCode = 1/, 'ohne exitCode bleibt der Lauf gruen — der Befund');
-  assert.match(block, /!exchangeBudgetGerissen/,
-    'der Alarm unterscheidet nicht zwischen "Boerse liefert nicht" und "wir haben sie gar nicht '
-    + 'mehr gefragt" — ein gerissenes Budget wuerde sonst ein zweites rotes X fuer denselben '
-    + 'Vorfall erzeugen.');
+  // Review-Befund 1 ueber Tag 579: die Nachsicht fuer ein gerissenes Budget muss JE BOERSE
+  // greifen. Ein prozessweites Bool stufte den Alarm fuer ALLE Boersen herunter, sobald
+  // IRGENDEINE ins Budget lief — ein echter Einbruch auf NYQ waere still geblieben, weil
+  // zufaellig ASE am Ende der Liste abgeschnitten wurde.
+  assert.match(block, /abnahmeUrteil\(unterBoden, exchangeBudgetOpfer\)/,
+    'die Budget-Nachsicht laeuft nicht ueber die geprueefte Trennfunktion');
+  assert.ok(!/exchangeBudgetGerissen/.test(SRC_RU),
+    'das prozessweite Budget-Bool lebt noch — genau es war der Maskierer (Review-Befund 1).');
+  assert.match(block, /echtUnterBoden/, 'der rote Zweig laeuft nicht ueber die attribuierte Liste');
+});
+
+test('T576/Befund-1: die Budget-Nachsicht gilt JE BOERSE, nicht fuer den ganzen Lauf', () => {
+  // Der Schadensfall im Verhalten, nicht am Quelltext: NYQ ist vollstaendig abgefragt und
+  // bricht ein; ASE laeuft spaeter ins Zeitbudget. Ein prozessweites Bool haette NYQ
+  // mitentschuldigt — der Silent-Shrink auf der groessten Boerse waere still geblieben.
+  const unter = [
+    { code: 'NYQ', ist: 12, boden: 719, erstlauf: 1439 },
+    { code: 'ASE', ist: 0, boden: 14, erstlauf: 29 },
+  ];
+  const u = ru.abnahmeUrteil(unter, new Set(['ASE']));
+  assert.deepEqual(u.echt.map((x) => x.code), ['NYQ'],
+    'NYQ wird vom Budget-Riss auf ASE mitentschuldigt — genau der Maskierer aus Review-Befund 1');
+  assert.deepEqual(u.budgetErklaert.map((x) => x.code), ['ASE'],
+    'die abgeschnittene Boerse gehoert in den Warn-Topf, nicht in den roten');
+  // Beide Richtungen: kein Budget-Opfer -> alles echt; alle Opfer -> nichts echt.
+  assert.equal(ru.abnahmeUrteil(unter, new Set()).echt.length, 2);
+  assert.equal(ru.abnahmeUrteil(unter, new Set(['NYQ', 'ASE'])).echt.length, 0);
+  // Robust gegen die Aufrufform (Set oder Liste) und gegen leere Eingaben.
+  assert.deepEqual(ru.abnahmeUrteil(unter, ['ASE']).echt.map((x) => x.code), ['NYQ']);
+  assert.deepEqual(ru.abnahmeUrteil(null, null), { echt: [], budgetErklaert: [] });
+});
+
+test('T576/Befund-1: der Heilungs-Pfad, der nicht heilt, ist raus', () => {
+  // getCrumb.js haelt `crumb` UND das laufende `promise` modulglobal und setzt das promise
+  // nur im .catch zurueck — nach einem erfolgreichen Abruf liefert JEDER weitere Aufruf
+  // dasselbe memoisierte Promise. Ein `_crumbVorgewaermt = false` im Retry sah deshalb aus
+  // wie eine Reparatur und war keine. Genau die Bugklasse, gegen die dieser Umbau gebaut ist.
+  const i = SRC_RU.indexOf('async function fetchExchangePage(');
+  const block = ohneZeilenkommentare(SRC_RU.slice(i, SRC_RU.indexOf('\n}', i)));
+  assert.ok(!/_crumbVorgewaermt = false/.test(block),
+    'der Retry setzt _crumbVorgewaermt zurueck und tut so, als koenne er den Crumb erneuern. '
+    + 'Kann er nicht (Promise-Memoisierung in getCrumb.js) — ein Heilungs-Pfad, der nur so '
+    + 'AUSSIEHT, ist schlimmer als keiner.');
+  // Die Praemisse, an der Quelle nachgelesen: das Promise wird nur im Fehlerfall genullt.
+  const gc = require('node:fs').readFileSync(
+    require('node:path').join(__dirname, '..', 'node_modules', 'yahoo-finance2', 'script', 'src', 'lib', 'getCrumb.js'), 'utf8');
+  assert.match(gc, /if \(!promise\) \{/, 'getCrumb memoisiert nicht mehr — die Decke oben ist ueberholt');
+  assert.match(gc, /promise = null;\s*\n\s*throw error;/,
+    'das Promise wird nicht mehr nur im .catch genullt — dann waere ein Heilungs-Pfad wieder '
+    + 'moeglich und die Decke an crumbVorwaermen() muss neu bewertet werden.');
 });
 
 test('T576 Ausbau-Probe: ohne die Abnahme-Messung bleibt ein toter Kanal gruen', () => {
