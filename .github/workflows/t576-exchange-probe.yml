@@ -1,0 +1,171 @@
+# ============================================================================
+# Tag 576 / Schritt 0 — WEGWERF-PROBE fuer den Custom-Exchange-Kanal.
+# ============================================================================
+# WARUM DIESE DATEI EXISTIERT (und warum sie NICHT in den Tagesbetrieb gehoert):
+# Der Befund _BEFUND-EXCHANGE-KANAL-2026-08-04.md hat den rohen Yahoo-POST-
+# Screener von KARLS HEIM-IP aus live gemessen (200er, 250 Zeilen/Seite, 29
+# Boersen). Das ist NICHT dasselbe wie vom GitHub-Runner: am 03.08. haben genau
+# dort otcmarkets.com und api.nasdaq.com in Timeouts/Sperren gelaufen, waehrend
+# sie lokal erreichbar waren. Runner-IPs werden von Finanz-Endpunkten haerter
+# behandelt. Deshalb steht im Befund §6 als KILL-KRITERIUM: liefert der rohe
+# POST vom Runner 429/403/Timeout, faellt Weg (a) und der Umbau findet nicht
+# statt.
+#
+# Diese Datei ist die Probe dazu — ausdruecklich EINMALIG und WEGWERF:
+#   - nur `workflow_dispatch` (kein Cron, kein push, kein pull_request)
+#   - `permissions: contents: read` (schreibt nichts, committet nichts)
+#   - beruehrt keinen Datenstand, keinen Artefakt-Vertrag, keinen Deploy
+# Sie bleibt nach dem Lauf als BELEG stehen; ihre Loeschung ist ein eigener
+# Karl-Punkt (Loeschen nie ohne Freigabe).
+#
+# WAS GEMESSEN WIRD — zwei Wege, weil zwei Fragen offen sind:
+#   STUFE A (roh): Cookie von fc.yahoo.com -> Crumb von /v1/test/getcrumb ->
+#     POST /v1/finance/screener. Das ist die Fallback-Bauform (~40 Zeilen) und
+#     beantwortet das Kill-Kriterium woertlich so, wie es formuliert ist.
+#   STUFE B (Bibliothek): derselbe POST ueber yf._fetch(url, params, moduleOpts,
+#     func, needsCrumb=true) — Cookie/Crumb/Drossel erledigt yahoo-finance2
+#     gratis. Das ist die geplante Bauform (~10 Zeilen). Ein gruener Stufe-A-Lauf
+#     nuetzt nichts, wenn der Weg, der tatsaechlich gebaut wird, anders geblockt
+#     wird — also wird er mitgemessen statt angenommen.
+#
+# WAS SONST NOCH AUS DIESEM EINEN LAUF FAELLT (damit kein zweiter noetig ist):
+#   - die vier fraglichen Boersencodes: TYO vs JPX, NIM vs NCM, SWX vs EBS und
+#     SGX vs SES/SIN (fuer SGX nennt der Befund keinen richtigen Code)
+#   - Symbol-Dumps fuer FRA/MIL/SAO/MEX (3 Seiten je Boerse) als Messgrundlage
+#     fuer den Zweitlistungs-Anteil (Kipp-Kriterium >70 %)
+#   - die Feldliste einer Screener-Zeile (welche Herkunfts-/Typ-Felder Yahoo
+#     ueberhaupt mitliefert) — geraten wird hier nichts
+#
+# KEINE Massen-Abrufe: ~28 POSTs gesamt, eine Stichprobe. Der Lauf selbst ist
+# damit zugleich der Drossel-Test (28 Anfragen hintereinander vom selben Runner).
+# ============================================================================
+name: T576 Exchange-Kanal Probe (Wegwerf)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      # Der Probe-Code steht bewusst INLINE (node -e) statt als Datei unter
+      # scripts/: die Auflage lautet "NUR diese eine Datei darf vorab gepusht
+      # werden". Deshalb auch durchgaengig doppelte Anfuehrungszeichen im JS —
+      # der ganze Block ist ein einfach-gequoteter Shell-String.
+      - name: POST-Stichprobe (Stufe A roh + Stufe B via yahoo-finance2 _fetch)
+        run: |
+          node -e '
+          "use strict";
+          const YF = require("yahoo-finance2").default;
+          const fs = require("fs");
+          const UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+          const MIN = 800e6, MAX = 500e9;
+          const yf = new YF({ suppressNotices: ["yahooSurvey"], validation: { logErrors: false, logOptionsErrors: false } });
+
+          function rumpf(code, offset, size) {
+            return {
+              size: size || 250, offset: offset || 0,
+              sortField: "intradaymarketcap", sortType: "DESC", quoteType: "EQUITY",
+              query: { operator: "AND", operands: [
+                { operator: "btwn", operands: ["intradaymarketcap", MIN, MAX] },
+                { operator: "eq", operands: ["exchange", code] }
+              ] },
+              userId: "", userIdType: "guid"
+            };
+          }
+
+          async function stufeA(code) {
+            const t0 = Date.now();
+            try {
+              const r0 = await fetch("https://fc.yahoo.com/", { headers: { "user-agent": UA } });
+              const sc = typeof r0.headers.getSetCookie === "function" ? r0.headers.getSetCookie() : [];
+              const cookie = sc.map(function (c) { return c.split(";")[0]; }).join("; ");
+              const r1 = await fetch("https://query2.finance.yahoo.com/v1/test/getcrumb", { headers: { cookie: cookie, "user-agent": UA } });
+              const crumb = (await r1.text()).trim();
+              const url = "https://query2.finance.yahoo.com/v1/finance/screener?crumb=" + encodeURIComponent(crumb) + "&lang=en-US&region=US&formatted=false";
+              const r2 = await fetch(url, { method: "POST", headers: { cookie: cookie, "content-type": "application/json", "user-agent": UA }, body: JSON.stringify(rumpf(code, 0, 25)) });
+              const txt = await r2.text();
+              let j = null; try { j = JSON.parse(txt); } catch (e) { j = null; }
+              const r = j && j.finance && j.finance.result && j.finance.result[0];
+              return { statusCookie: r0.status, cookies: sc.length, statusCrumb: r1.status, crumbLaenge: crumb.length,
+                status: r2.status, ms: Date.now() - t0, total: r ? r.total : null,
+                n: r && r.quotes ? r.quotes.length : 0, kopf: txt.slice(0, 240) };
+            } catch (e) { return { fehler: String((e && e.message) || e), ms: Date.now() - t0 }; }
+          }
+
+          async function stufeB(code, offset, size) {
+            const t0 = Date.now();
+            try {
+              const antwort = await yf._fetch(
+                "https://${YF_QUERY_HOST}/v1/finance/screener",
+                { lang: "en-US", region: "US", formatted: "false" },
+                { fetchOptions: { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(rumpf(code, offset, size)) } },
+                "json", true);
+              const r = antwort && antwort.finance && antwort.finance.result && antwort.finance.result[0];
+              return { ok: true, ms: Date.now() - t0, total: r ? r.total : null,
+                n: r && r.quotes ? r.quotes.length : 0, quotes: (r && r.quotes) || [] };
+            } catch (e) {
+              return { ok: false, ms: Date.now() - t0, fehler: String((e && e.message) || e),
+                httpCode: e && e.code, klasse: e && e.name, quotes: [] };
+            }
+          }
+
+          function zeile(q) { return [q.symbol, q.marketCap, q.currency, q.exchange, q.region || q.market || "", q.longName || q.shortName || ""]; }
+
+          (async function () {
+            const aus = { zeit: new Date().toISOString(), node: process.version, stufeA: null, stufeB: {}, dump: {} };
+
+            aus.stufeA = await stufeA("NMS");
+            console.log("STUFE-A roh NMS: " + JSON.stringify(aus.stufeA));
+
+            const CODES = ["NMS", "NYQ", "TYO", "JPX", "NIM", "NCM", "SWX", "EBS", "SGX", "SES", "SIN",
+                           "BSE", "NSI", "SHZ", "KOE", "TAI", "FRA", "MIL", "SAO", "MEX"];
+            for (const c of CODES) {
+              const r = await stufeB(c, 0, 250);
+              aus.stufeB[c] = { ok: r.ok, ms: r.ms, total: r.total, n: r.n, fehler: r.fehler, httpCode: r.httpCode, klasse: r.klasse };
+              if (r.quotes.length) {
+                aus.stufeB[c].felder = Object.keys(r.quotes[0]).sort();
+                aus.stufeB[c].beispiel = r.quotes[0];
+                aus.dump[c] = r.quotes.map(zeile);
+              }
+              console.log("STUFE-B " + c + ": ok=" + r.ok + " total=" + r.total + " n=" + r.n + " " + r.ms + "ms" + (r.fehler ? " FEHLER[" + r.klasse + "/" + r.httpCode + "]=" + r.fehler : ""));
+            }
+
+            for (const c of ["FRA", "MIL", "SAO", "MEX"]) {
+              for (const off of [250, 500]) {
+                const r = await stufeB(c, off, 250);
+                if (r.quotes.length) aus.dump[c] = (aus.dump[c] || []).concat(r.quotes.map(zeile));
+                console.log("STUFE-B " + c + " offset=" + off + ": ok=" + r.ok + " n=" + r.n + (r.fehler ? " FEHLER=" + r.fehler : ""));
+              }
+            }
+
+            fs.writeFileSync("t576-probe.json", JSON.stringify(aus, null, 1));
+            const gescheitert = Object.keys(aus.stufeB).filter(function (k) { return !aus.stufeB[k].ok; });
+            console.log("");
+            console.log("ZUSAMMENFASSUNG: StufeA-HTTP=" + aus.stufeA.status + " · StufeB gescheitert: " + (gescheitert.join(",") || "keine"));
+          })().catch(function (e) { console.error("PROBE-ABBRUCH: " + (e && e.stack)); process.exit(1); });
+          '
+
+      - name: Probe-Artefakt hochladen
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: t576-probe
+          path: t576-probe.json
+          retention-days: 7
