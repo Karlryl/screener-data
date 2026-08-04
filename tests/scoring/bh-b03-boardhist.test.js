@@ -12,6 +12,7 @@
  *   BH-111 Kohorten-Mindestgröße + Überlappungs-Boden + suspect-Tage kalibrieren nicht
  *   BH-147 --date-Format/Zukunfts-Guard + Pfad-Escape-Guard + Backfill-Vertrag
  *   BH-154 ARCHIVE_DIR außerhalb REPO_ROOT im Produktionspfad (env-konfigurierbar)
+ *   T20    ARCHIVE_DIR fail-closed statt os.tmpdir()-Default (PIT-Daten nicht ins Temp)
  *   BH-155 calibration.json-Sidecar-Dedup (sameAs-Kette) statt Volldupe je Tag
  *
  * Run: node tests/scoring/bh-b03-boardhist.test.js
@@ -258,17 +259,38 @@ check('BH-147: isValidDateStr grenzt exakt YYYY-MM-DD ab', () => {
   assert.equal(W.isValidDateStr(null), false);
 });
 
-// ── BH-154: ARCHIVE_DIR ausserhalb REPO_ROOT (Produktionspfad, env-konfigurierbar) ─
-check('BH-154: ARCHIVE_DIR liegt im Produktionspfad NICHT unter REPO_ROOT', () => {
+// ── BH-154 / T20: ARCHIVE_DIR ist im Produktionspfad fail-closed ──────────────
+// T20 (03.08.2026): Der BH-154-Fix hatte als Default os.tmpdir()/board-history-archive.
+// Das ist der Ort, den das Betriebssystem selbst aufraeumt — ein Archiv-Lauf haette die
+// PIT-Voll-Snapshots (die einzige Kopie, bevor compact() die pit-Bloecke strippt) still
+// dorthin gelegt und beim naechsten Temp-Cleanup verloren. Kein Default mehr: ohne
+// gesetztes BOARD_HISTORY_ARCHIVE_DIR wirft der Archivpfad.
+check('T20: ohne BOARD_HISTORY_ARCHIVE_DIR wirft der Archivpfad (statt still nach tmp)', () => {
   const prevEnv = process.env.BOARD_HISTORY_ARCHIVE_DIR;
   try {
     delete process.env.BOARD_HISTORY_ARCHIVE_DIR;
-    const repoRoot = path.resolve(__dirname, '..', '..');
-    const p = W.resolvePaths(repoRoot);   // Default-Base = Produktionspfad
-    assert.ok(!p.ARCHIVE_DIR.startsWith(repoRoot + path.sep), 'ARCHIVE_DIR ausserhalb des Checkouts: ' + p.ARCHIVE_DIR);
+    const p = W.resolvePaths(path.resolve(__dirname, '..', '..'));   // Default-Base = Produktionspfad
+    assert.throws(() => p.ARCHIVE_DIR, /Archivziel nicht konfiguriert/,
+      'ohne Env muss der Archivpfad werfen, nicht still einen tmp-Pfad liefern');
   } finally {
     if (prevEnv === undefined) delete process.env.BOARD_HISTORY_ARCHIVE_DIR; else process.env.BOARD_HISTORY_ARCHIVE_DIR = prevEnv;
   }
+});
+check('T20: Archivziel INNERHALB des Checkouts wirft (BH-154-Invariante bleibt)', () => {
+  const prevEnv = process.env.BOARD_HISTORY_ARCHIVE_DIR;
+  try {
+    const repoRoot = path.resolve(__dirname, '..', '..');
+    process.env.BOARD_HISTORY_ARCHIVE_DIR = path.join(repoRoot, 'board-history-archive');
+    const p = W.resolvePaths(repoRoot);
+    assert.throws(() => p.ARCHIVE_DIR, /innerhalb des Checkouts/,
+      'ein Archivziel im Checkout ist genauso fluechtig (actions/checkout loescht den Baum)');
+  } finally {
+    if (prevEnv === undefined) delete process.env.BOARD_HISTORY_ARCHIVE_DIR; else process.env.BOARD_HISTORY_ARCHIVE_DIR = prevEnv;
+  }
+});
+check('T20: kein tmpdir-Default kann zurueckkommen (Quell-Waechter)', () => {
+  const src = fs.readFileSync(path.resolve(__dirname, '..', '..', 'scripts', 'write-board-history.js'), 'utf8');
+  assert.ok(!/tmpdir/.test(src), 'write-board-history.js darf os.tmpdir() nirgends als Ablageort nennen');
 });
 check('BH-154: BOARD_HISTORY_ARCHIVE_DIR-Env wird respektiert', () => {
   const prevEnv = process.env.BOARD_HISTORY_ARCHIVE_DIR;

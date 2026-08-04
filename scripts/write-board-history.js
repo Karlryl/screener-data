@@ -16,6 +16,8 @@
  *   A10 revenueQEnds/grossProfitQEnds kommen parallel via pull-yahoo; fehlt es → null + pitGaps.
  *   A12 Kompaktierung frühestens t0+2Q (≈180 Kalendertage); PIT-Voll-Snapshots vorher nach
  *       board-history-archive/ (GG7c, außerhalb CI-Checkout). NICHTS wird ohne Archiv-Kopie entfernt.
+ *       Das Archivziel MUSS per BOARD_HISTORY_ARCHIVE_DIR gesetzt sein (T20, fail-closed) —
+ *       weder Temp noch Checkout überleben, und die Archiv-Kopie ist die einzige der PIT-Blöcke.
  *
  * Wert-Plausibilitäts-Gate VOR dem Schreiben (Ledger 2.3 „Wert-Plausibilitäts-Gate"):
  *   Vergleich gegen das jüngste nicht ausgeschlossene Vorgänger-Vintage; P99-Tages-Delta
@@ -57,10 +59,18 @@ function resolvePaths(base) {
   // (base===REPO_ROOT) hieß das INNERHALB des Checkouts, entgegen dem eigenen
   // Kommentar "außerhalb CI-Checkout": ein frischer actions/checkout löscht den
   // kompletten Baum, eine dort abgelegte Archiv-Kopie wäre flüchtig (BH-103
-  // verschärft das zur Messblockade). Fix nur für den Default-Pfad: Env-Override,
-  // sonst os.tmpdir()-Unterordner — Muster wie SEC_XBRL_CACHE_DIR in
-  // scripts/build-secannual.js, der einzige im Repo bereits etablierte
-  // "außerhalb des Checkouts"-Pfad. Test-Hermetik (_setPaths(base)) bleibt
+  // verschärft das zur Messblockade).
+  //
+  // T20 (03.08.2026): Der BH-154-Fix wählte als Default den Temp-Ordner des Systems.
+  // Das tauscht nur die Art der Flüchtigkeit: die Archiv-Kopie ist der EINZIGE
+  // Verbleib der PIT-Blöcke, die compact() danach aus dem Vintage strippt — im Temp
+  // löscht sie das Betriebssystem, ohne dass irgendjemand es merkt. Es gibt keinen
+  // richtigen Default: repo-lokal dupliziert committete Vintages, Temp verliert sie.
+  // Also fail-closed — ohne konfiguriertes Ziel wirft der Archivpfad, statt still
+  // irgendwohin zu schreiben. Ein Archivziel IM Checkout wirft ebenfalls (das ist
+  // genau der BH-154-Defekt). Getter statt Feld, weil resolvePaths() beim Laden des
+  // Moduls läuft und jeder Aufrufer sonst am Archiv-Wurf stürbe, auch der normale
+  // Vintage-Lauf, der das Archiv nie anfasst. Test-Hermetik (_setPaths(base)) bleibt
   // unverändert base-relativ, weil board-history.test.js Check (c) das Archiv
   // gezielt unter dem Test-Sandkasten erwartet.
   const isDefaultBase = base === REPO_ROOT;
@@ -70,9 +80,22 @@ function resolvePaths(base) {
     MACRO_REGIME_FILE: path.join(base, 'outputs', 'macro-regime.json'),
     SNAP_DIR: path.join(base, 'snapshots'),
     HISTORY_DIR: path.join(base, 'board-history'),          // GG7b: committet, Messgrundlage
-    ARCHIVE_DIR: isDefaultBase                               // GG7c: gitignored, außerhalb CI-Checkout
-      ? (process.env.BOARD_HISTORY_ARCHIVE_DIR || path.join(require('os').tmpdir(), 'board-history-archive'))
-      : path.join(base, 'board-history-archive'),
+    get ARCHIVE_DIR() {                                      // GG7c: gitignored, außerhalb CI-Checkout
+      if (!isDefaultBase) return path.join(base, 'board-history-archive');
+      const dir = (process.env.BOARD_HISTORY_ARCHIVE_DIR || '').trim();
+      if (!dir) {
+        throw new Error('write-board-history: Archivziel nicht konfiguriert — PIT-Daten gehören nicht nach tmp. '
+          + 'BOARD_HISTORY_ARCHIVE_DIR auf ein dauerhaftes Verzeichnis AUSSERHALB des Checkouts setzen '
+          + '(GG7c); ohne das darf keine Kompaktierung laufen, weil die Archiv-Kopie der einzige '
+          + 'Verbleib der PIT-Blöcke ist.');
+      }
+      const abs = path.resolve(dir);
+      if (abs === REPO_ROOT || abs.startsWith(REPO_ROOT + path.sep)) {
+        throw new Error('write-board-history: Archivziel liegt innerhalb des Checkouts (' + abs + ') — '
+          + 'ein frischer actions/checkout löscht es (BH-154). Ziel außerhalb des Repos wählen.');
+      }
+      return abs;
+    },
     get EXCLUDED_FILE() { return path.join(this.HISTORY_DIR, '_excluded.json'); },
     get GATE_CALIB_FILE() { return path.join(this.HISTORY_DIR, '_gate-calibration.json'); },
     base,
@@ -763,6 +786,13 @@ function massstabBruchFuer(priorDate) {
 // Vintages älter als RETENTION_DAYS: PIT-Voll-Snapshot nach board-history-archive/
 // kopieren (GG7c), dann im Vintage die per-Zeile-pit-Blöcke strippen (Kern bleibt:
 // rank/score/scoreBase/scoreShrunk/flags/axisBreakdown). NICHTS ohne Archiv-Kopie.
+//
+// NICHT VERDRAHTET, UND DAS IST SO GEWOLLT (F-16-Akte §6/§7, gemessen 03.08.2026):
+// compact() steht in KEINEM der 7 Workflows. Im Mess-Zweig-Konzept ist das
+// Kompaktieren bereits COMMITTETER Vintages verboten — ein committetes Vintage ist
+// die Messgrundlage, sein nachträgliches Strippen ändert rückwirkend, was gemessen
+// wurde. Wer diesen Pfad scharfschaltet, braucht vorher eine Entscheidung zu §6/§7,
+// nicht nur ein Archivziel. Das Archivziel (P.ARCHIVE_DIR) ist seit T20 fail-closed.
 function compact(date, dryRun) {
   if (!fs.existsSync(P.HISTORY_DIR)) return { compacted: [] };
   const cutoff = new Date(date + 'T00:00:00Z').getTime() - RETENTION_DAYS * MS_PER_DAY;
