@@ -217,12 +217,29 @@ jobs:
             // ("sonst waere right:2e9 nur 2 Mrd LOKAL"). Stufe C wiederholt die Messung mit
             // je Boerse umgerechneten Schranken und paginiert VOLL durch — das sind die
             // Erstlauf-Untergrenzen fuer die Abnahme-Messung.
+            // Umrechnung ueber die Funktion des Repos, nicht ueber eine eigene Formel:
+            // toUsd kennt die Sub-Einheiten (GBp, ZAc) und die Richtung des Kurses.
             const RATES = JSON.parse(fs.readFileSync("fx-rates.json", "utf8")).rates;
-            const PRIMAER = { JPX: "JPY", SHZ: "CNY", BSE: "INR", NSI: "INR", KOE: "KRW", TAI: "TWD" };
+            const toUsd = require("./discovery/mcap-prefilter.js").toUsd;
+            // VOLLER Kandidatenkreis, nicht die Kurzliste aus der Vorlage. Grund: die dort
+            // genannte "Primaer-Boersen"-Liste (JPX, SHZ, BSE/NSI, KOE, TAI) fuehrt Korea nur
+            // mit KOE — das ist KOSDAQ, nicht KOSPI. Stufe C hat dafuer 68 Firmen gemessen;
+            // Samsung, SK Hynix und der Rest des koreanischen Grossmarkts liegen unter KSC.
+            // Welche Boersen am Ende in den Kanal duerfen, entscheidet die MESSUNG (Anteil
+            // Zweitlistungen), nicht eine Aufzaehlung — deshalb wird hier breit gemessen.
+            const PRIMAER = {
+              JPX: "JPY", SHZ: "CNY", SHH: "CNY", BSE: "INR", NSI: "INR",
+              KOE: "KRW", KSC: "KRW", TAI: "TWD", HKG: "HKD", TOR: "CAD",
+              ASX: "AUD", LSE: "GBp", STO: "SEK", CPH: "DKK", HEL: "EUR",
+              OSL: "NOK", AMS: "EUR", PAR: "EUR", MIL: "EUR", FRA: "EUR",
+              SAO: "BRL", MEX: "MXN", EBS: "CHF", SES: "SGD", JNB: "ZAc",
+              SAU: "SAR", NMS: "USD", NYQ: "USD", NCM: "USD", NGM: "USD", ASE: "USD",
+            };
             aus.stufeC = {};
             aus.dumpC = {};
             for (const c of Object.keys(PRIMAER)) {
-              const kurs = RATES[PRIMAER[c]];
+              const kurs = toUsd(1, PRIMAER[c], RATES);   // USD je 1 Einheit Listing-Waehrung
+              if (!kurs) { aus.stufeC[c] = { fehler: "kein FX-Kurs fuer " + PRIMAER[c] }; console.log("STUFE-C " + c + ": kein FX-Kurs"); continue; }
               const lokalMin = Math.floor(MIN / kurs), lokalMax = Math.ceil(MAX / kurs);
               let offset = 0, seiten = 0, gesamt = null, zeilen = [];
               while (seiten < 40) {
