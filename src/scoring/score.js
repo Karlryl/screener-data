@@ -235,9 +235,31 @@ const fxSuspect = (s) => {
 // nur zusaetzlich ohne die Anteilsklasse — die Schutzwirkung gegen echte Fehlverschmelzungen
 // (FBNC/FBP, Graham Corp gegen Graham Holdings) bleibt unveraendert, weil dort keine
 // Gattungs-Bezeichnung im Spiel ist.
+// audit/fix (Tag 584, VSXY/VSCO): Yahoo schreibt denselben Emittentennamen je Notierung mal
+// mit, mal ohne Apostroph/Punkt ("Victoria's Secret & Co" vs "Victorias Secret & Co.") — beide
+// Beine sind derselbe Emittent (VSCO delistet am 04.08.2026, VSXY die Nachfolge-Notierung), aber
+// der STRENGE Schluessel normalisierte bislang GAR KEINE Zeichensetzung (nur Gattung + Case) und
+// hielt sie deshalb faelschlich fuer zwei Firmen. Zwei gezielte, wortgrenzen-sichere Kanonisierungen:
+//  1) Apostroph-Varianten werden GELOESCHT (nicht durch Leerzeichen ersetzt) — Yahoo laesst ihn bei
+//     einer Notierung manchmal ganz weg, ersetzt ihn nie durch ein anderes Zeichen.
+//  2) Ein trailing Punkt nach dem EIGENSTAENDIGEN Wort "co" (Abkuerzung fuer "Company") faellt weg.
+//     \b VOR "co" ist der Grund, warum das den FBNC/FBP-Schutzfall NICHT beruehrt: "First BanCorp."
+//     endet auf das zusammengesetzte Wort "Bancorp", nicht auf ein eigenstaendiges "co" — \b greift
+//     zwischen zwei Buchstaben ("n" vor "c") nicht, das Muster matcht dort also nicht.
+//
+// GEMESSEN am vollen CI-Snapshot-Bestand (Actions-Lauf 30938140990, 14.538 Snapshots): 41 Gruppen
+// mit >=2 US-Primaerlistings insgesamt (Kandidaten fuer diesen Rueckfall). Ausser victoriassecretco
+// (VSCO/VSXY) traegt KEINE einzige einen Apostroph oder ein eigenstaendiges "Co."/"Co"-Suffix — die
+// Kanonisierung greift am realen Bestand ausschliesslich am Bugfall, der geschuetzte firstbancorp-
+// Fall (FBNC/FBP) bleibt unveraendert getrennt (Beleg: node scripts/probe-issuer-strict-key-punct.js).
+const STRENGE_APOSTROPH_VARIANTEN = /['’‘ʼ´`]/g;
+const STRENGE_CO_PUNKT_ENDE = /\bco\.$/i;
 const issuerKeyStrengOhneGattung = (s) => {
   const n = issuerName(s);
-  return n ? n.replace(GATTUNG_AM_ENDE, '').toLowerCase() : null;
+  if (!n) return null;
+  return n.replace(GATTUNG_AM_ENDE, '').toLowerCase()
+    .replace(STRENGE_APOSTROPH_VARIANTEN, '')
+    .replace(STRENGE_CO_PUNKT_ENDE, 'co');
 };
 function splitFalseIssuerMerges(groups) {
   const out = [];
@@ -1462,6 +1484,9 @@ function calibrationDrift(liveCal, refCal, ksThreshold = 0.15) {
 module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings, phaseOf, mcapBandOf, mcapKlasseOf, MCAP_KLASSEN_USD, ipoRecencyOf, ipoRecencyVonJahr, ipoYearOf, ipoYearEffektiv, calibrationDrift,
   // audit/fix (Bug 0/9/7): fuer calibrate.js — Kohorten-Gates + Winsor-Schranken exakt spiegeln
   learnWinsorBounds, winsorTailBounds, isDataSuspect, issuerDedupComparator, issuerKey, issuerKeyLoose, issuerDedupGroups,
+  // Tag 584 (VSXY/VSCO): fuer scripts/probe-issuer-strict-key-punct.js — der STRENGE Schluessel
+  // selbst, damit die Kanonisierungs-Messung nicht dieselbe Logik ein zweites Mal nachbaut.
+  issuerKeyStrengOhneGattung,
   // AUFGABE 2 (Wachstums-Bonus): fuer TDD + gezielte Wiederverwendung
   growthBoostFactor, growthYoYComponents, robustG, growthPctlFn, boostFromPctl, GROWTH_BOOST_K,
   // PHASE 3 (Zyklus-Daempfer): fuer TDD + Mess-Skripte

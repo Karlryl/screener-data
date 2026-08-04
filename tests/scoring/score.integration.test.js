@@ -463,6 +463,27 @@ test('Issuer-Dedup Fehlverschmelzungs-Schutz: zwei US-Primaerlistings sind NIE d
   assert.notEqual(bt['ERSTA'].reason, 'dup-issuer', 'ERSTA darf nicht als Doppelung verschwinden');
   assert.notEqual(bt['ERSTB'].reason, 'dup-issuer', 'ERSTB darf nicht als Doppelung verschwinden');
 });
+// audit/fix (Tag 584): Realfall aus dem CI-Universum vom 04.08.2026 (Lauf 30938140990) — VSCO
+// ("Victoria's Secret & Co", delistet 04.08.) und VSXY ("Victorias Secret & Co.", die Nachfolge-
+// Notierung) sind DERSELBE Emittent, beide NYSE/US-primaer. Der lockere Schluessel gruppierte sie
+// zwar zusammen ("victoriassecretco"), aber weil beide US-primaer sind, fiel der Fehlverschmelzungs-
+// Schutz auf den strengen Schluessel zurueck — der bis Tag 584 GAR KEINE Zeichensetzung
+// normalisierte und die beiden am Apostroph/Punkt auseinanderhielt. Namens-Strings woertlich aus
+// dem Snapshot-Artefakt des Laufs (KEIN Erfindungs-Risiko).
+test('Issuer-Dedup Apostroph/Punkt (Tag 584, VSXY/VSCO-Fall): gleicher Emittent trotz Zeichensetzungs-Differenz', () => {
+  const mk = (ticker, name, delisted) => ({
+    meta: { name, sector: 'Consumer Cyclical', industry: 'Apparel Retail', exchangeName: 'NYSE', ticker, tradingCurrency: 'USD', region: 'US', delisted: !!delisted },
+    annual: { annualRev: [{ value: 6553 }, { value: 6230 }, { value: 6182 }], annualGP: [{ value: 2384 }] },
+    metrics: { revenueTTM: { value: 6553 } },
+    marketCap: { value: 7.1e9 } });
+  const res = scoreUniverse([
+    mk('VSCO', "Victoria's Secret & Co", true),
+    mk('VSXY', 'Victorias Secret & Co.', false),
+  ], formulas);
+  const bt = Object.fromEntries(res.map((r) => [r.ticker, r]));
+  const dedupt = ['VSCO', 'VSXY'].filter((t) => bt[t].reason === 'dup-issuer').length;
+  assert.equal(dedupt, 1, 'VSCO und VSXY sind derselbe Emittent — genau EIN Bein darf uebrig bleiben, nicht beide');
+});
 test('Issuer-Dedup FX-Haertung (F50): FX-suspektes dual-non-USD-Bein verliert den Tie-Break', () => {
   // CMOC-Muster: ein Bein mit tradingCurrency!=reportingCurrencyOriginal UND fehlendem
   // tradingFxRateApplied (stale -> marketCap mit falschem FX-Faktor inflationiert) verliert den
