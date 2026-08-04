@@ -646,14 +646,73 @@ function verwerfendePfade(block) {
   return (block.match(/\b(continue|break|return)\b/g) || []).length;
 }
 
-test('T567-W3: jede Ingest-Schleife hat genau zwei verwerfende Pfade (Vor-Gate + Band)', () => {
+// T576: die feste Zahl 2 war die falsche Formulierung derselben Zusicherung. Der
+// Exchange-Kanal hat mit dem Zweitlistungs-Filter einen dritten Pfad bekommen — einen
+// GEZAEHLTEN, an den kanalLeerlaufAlarm() seither einen eigenen Term hat. Ein Pin auf "2"
+// haette diese richtige Erweiterung bestraft und waere beim naechsten Mal weggeschraubt
+// worden. Die SACHE ist: jeder verwerfende Pfad ausser dem Band-Gate muss einen Zaehler
+// hochsetzen. Das Band-Gate selbst bleibt die Restmenge der Zerlegung und zaehlt nicht.
+function gezaehlteVerwerfungen(block) {
+  // Form: `{ zaehler++; continue; }` oder `{ a++; b++; continue; }` — ein oder mehrere
+  // Inkremente unmittelbar vor dem continue.
+  return (block.match(/\{\s*(?:\w+\+\+;\s*)+continue;\s*\}/g) || []).length;
+}
+test('T567-W3/T576: jeder verwerfende Pfad ausser dem Band-Gate ist gezaehlt', () => {
   ingestSchleifen(SRC_RU).forEach((b, i) => {
-    assert.equal(verwerfendePfade(b), 2,
-      'Schleife ' + (i + 1) + ': jeder weitere verwerfende Pfad muss gezaehlt werden, sonst ' +
-      'behauptet kanalLeerlaufAlarm wieder eine Ursache, die er nicht kennt');
+    assert.equal(verwerfendePfade(b) - 1, gezaehlteVerwerfungen(b),
+      'Schleife ' + (i + 1) + ': ' + verwerfendePfade(b) + ' verwerfende Pfade, davon nur ' +
+      gezaehlteVerwerfungen(b) + ' gezaehlt (+1 Band-Gate als Restmenge). Ein ungezaehlter Pfad ' +
+      'wandert still in die bandDrops-Restmenge, und kanalLeerlaufAlarm behauptet wieder eine ' +
+      'Ursache, die er nicht kennt.');
     assert.match(b, /_vorGateVerworfen\(q\)\) \{ \w+\+\+; continue; \}/,
       'Schleife ' + (i + 1) + ': der Vor-Gate-Pfad muss gezaehlt werden');
   });
+  // Die Praemisse: es GIBT beide Schleifen und die zweite hat den dritten Pfad.
+  const schleifen = ingestSchleifen(SRC_RU);
+  assert.equal(schleifen.length, 2, 'erwartet: Predefined- und Exchange-Ingest-Schleife');
+  assert.match(schleifen[1], /istZweitlistung\(q\)\) \{ \w+\+\+; \w+\+\+; continue; \}/,
+    'der Zweitlistungs-Filter fehlt in der Exchange-Schleife oder zaehlt nicht beide Zaehler '
+    + '(per-Boerse und ueber alle Boersen) — ohne den zweiten fehlt kanalLeerlaufAlarm sein Term.');
+});
+
+test('T567-W3/T576 Ausbau-Probe: ein UNgezaehlter dritter Pfad fliegt auf', () => {
+  // Der Befund selbst, kuenstlich eingebaut: ein `continue` ohne Zaehler.
+  const mutiert = SRC_RU.replace(GATE_ZEILE,
+    'if (q.currency === "XXX") continue;\n        ' + GATE_ZEILE);
+  assert.notEqual(mutiert, SRC_RU, 'Mutation griff nicht');
+  const schleifen = ingestSchleifen(mutiert);
+  const kaputt = schleifen.filter((b) => verwerfendePfade(b) - 1 !== gezaehlteVerwerfungen(b));
+  assert.ok(kaputt.length > 0,
+    'ein ungezaehlter verwerfender Pfad bleibt unbemerkt — dann prueft die Zusicherung darueber nichts.');
+});
+
+test('T576: kanalLeerlaufAlarm rechnet den Zweitlistungs-Term mit', () => {
+  // Ohne den vierten Term wanderten die Zweitlistungen in die Band-Restmenge und die
+  // Meldung behauptete eine Groessen-Ursache. Mit ihm ist die Zerlegung wieder vollstaendig.
+  const m = ru.kanalLeerlaufAlarm('K', 100, 0, 0, 10, 90);
+  assert.match(m, /90 Zeilen waren Zweitlistungen/, 'der Term fehlt in der Meldung');
+  assert.match(m, /KEINE EINZIGE Zeile hat das Groessen-Gate ueberhaupt erreicht/,
+    '10 vor dem Gate + 90 Zweitlistungen = 100 abgeholt, am Gate kam nichts an — genau das muss dastehen');
+  assert.doesNotMatch(m, /ausserhalb \$/, 'keine Groessen-Ursache behaupten, die es nicht gibt');
+  // Und die Gegenrichtung — DAS ist der Schaden: laesst man den Term weg, geht die Rechnung
+  // scheinbar auf, und die Meldung behauptet, alle 90 Zeilen haetten am Gate gelegen und
+  // seien zu gross/zu klein gewesen. Genau die ungedeckte Ursachen-Behauptung aus T567-W3.
+  const ohneTerm = ru.kanalLeerlaufAlarm('K', 100, 0, 0, 10);
+  assert.match(ohneTerm, /ausserhalb \$/,
+    'ohne den Zweitlistungs-Term muss die alte, FALSCHE Groessen-Behauptung herauskommen — '
+    + 'sonst misst der Test darueber nichts. Ausgabe: ' + ohneTerm);
+  assert.match(ohneTerm, /jede der 90 Zeilen am Gate/,
+    'die falsche Behauptung muss die 90 Zweitlistungen als Gate-Erreicher fuehren');
+  // Der Predefined-Kanal uebergibt nichts — seine Rechnung muss unveraendert bleiben.
+  assert.equal(ru.kanalLeerlaufAlarm('K', 100, 0, 40, 60), ru.kanalLeerlaufAlarm('K', 100, 0, 40, 60, 0),
+    'der Vorgabewert 0 aendert die Meldung des Predefined-Kanals');
+  // Und die VERDRAHTUNG: die reine Funktion nuetzt nichts, wenn der Aufruf im
+  // Exchange-Block den Zaehler nicht mitgibt. In der Ausbau-Probe war genau das die
+  // einzige Mutation, die alle Verhaltens-Tests gruen liess.
+  assert.match(SRC_RU, /kanalLeerlaufAlarm\('Custom-Exchange-Screener[^;]*exchangeVorFilter, exchangeZweitlistung\);/,
+    'der Exchange-Kanal uebergibt seinen Zweitlistungs-Zaehler nicht an kanalLeerlaufAlarm — '
+    + 'dann wandern die verworfenen Zeilen still in die Band-Restmenge und die Meldung '
+    + 'behauptet wieder eine Groessen-Ursache, die es nicht gibt.');
 });
 
 test('T569-F5: ein dritter verwerfender Pfad fliegt auch ohne `continue` auf (Repro repro-q5b.js)', () => {
@@ -823,14 +882,363 @@ test('T569-F3: nur der BELEGTE query-Fall unterdrueckt die Rot-Faerbung', () => 
   assert.equal(ru.EXCHANGE_SCREENER_SCHEMA_ERROR_RE.test('[yahooFinance.screener] Invalid options: scrIds must be a string'), true);
 });
 
-test('T569-F3: die Ausnahme im Quelltext haengt am belegten Fall, nicht nur am Schalter', () => {
+// T576: RETARGETIERT. Der Pin verlangte woertlich die Annotation "Custom-Exchange-Screener
+// ist mit yahoo-finance2 ... inkompatibel". Diese Meldung kann es nach dem Umbau auf
+// yf._fetch nicht mehr geben — die Bibliotheks-Schemapruefung liegt nicht mehr im Weg. Ein
+// Pin auf einen Text, den der Code nie wieder erzeugt, ist ein Pin auf nichts. Geprueft wird
+// jetzt die SACHE: der Fatal-Zweig existiert, er entscheidet ueber den retargetierten
+// Klassifizierer, er meldet sich in Karls Kanal, und die Schalter-Bedingung steht noch da
+// (ausgeschrieben, damit sichtbar bleibt, was sie decken wuerde).
+test('T569-F3/T576: der Fatal-Zweig haengt am Klassifizierer und meldet sich laut', () => {
   const i = SRC_RU.indexOf('exchangeScreenerFatal = true;');
-  assert.notEqual(i, -1);
-  const block = SRC_RU.slice(i - 1400, i + 500);
-  assert.match(block, /::error::Custom-Exchange-Screener ist mit yahoo-finance2/,
-    'die Annotation muss bleiben — sie ist die einzige Spur des Defekts');
+  assert.notEqual(i, -1, 'kein Fatal-Zweig mehr — dann laeuft ein Vertragsbruch 19-mal durch');
+  const block = SRC_RU.slice(i - 1600, i + 900);
+  assert.match(block, /if \(fatal \|\| exchangeFehlerIstFatal\(error, httpStatus\)\)/,
+    'der Fatal-Zweig entscheidet nicht ueber den retargetierten Klassifizierer — dann haengt er '
+    + 'wieder an einer Bibliotheksmeldung, die es nach dem Umbau nicht mehr gibt');
+  assert.match(block, /::error::Custom-Exchange-Screener: VERTRAGSBRUCH/,
+    'die Annotation fehlt — sie ist die einzige Spur des Bruchs in Karls Kanal');
   assert.match(SRC_RU.slice(i, i + 900), /EXCHANGE_KANAL_BEKANNT_DEFEKT && exchangeDefektIstDerBekannte\(error\)/,
-    'BEFUND: die Ausnahme galt fuer die ganze invalid-options-Klasse, nicht fuer den belegten Fall');
+    'die Schalter-Bedingung ist verschwunden — sie bleibt ausgeschrieben stehen, damit der Weg '
+    + 'zurueck (falls der Kanal je wieder belegt dauerhaft ausfaellt) sichtbar ist');
+});
+
+// ── T576: der retargetierte Klassifizierer, beide Richtungen ─────────────────────
+test('T576: exchangeFehlerIstFatal trennt Vertragsbruch von Transientem', () => {
+  // FATAL: HTTP-Status, die "der Aufruf ist falsch oder nicht mehr erlaubt" heissen.
+  for (const s of [400, 401, 403, 404, 405, 410, 422]) {
+    assert.equal(ru.exchangeFehlerIstFatal('irgendwas', s), true, 'HTTP ' + s + ' muss fatal sein');
+  }
+  // FATAL: Yahoos Fehlerbeschreibung, die yahoo-finance2 als message durchreicht.
+  assert.equal(ru.exchangeFehlerIstFatal('Bad Request: Missing required query parameter'), true);
+  assert.equal(ru.exchangeFehlerIstFatal('Unauthorized'), true);
+  // FATAL: der ALTE Dauerdefekt — wer den Aufruf auf yf.screener() zurueckbaut, faellt
+  // wieder in die Schemapruefung. Genau die Meldung, die am HEAD 850a0aec58 gemessen wurde.
+  assert.equal(ru.exchangeFehlerIstFatal('yahooFinance.screener called with invalid options.'), true,
+    'ein Rueckbau auf yf.screener() muss weiter als Vertragsbruch gelten');
+  // NICHT FATAL: alles, was sich beim naechsten Versuch von selbst erledigt.
+  for (const m of ['429 Too Many Requests', 'ETIMEDOUT', 'socket hang up', 'fetch failed',
+                   'Invalid Crumb', 'No set-cookie header present in Yahoo\'s response.']) {
+    assert.equal(ru.exchangeFehlerIstFatal(m), false, 'transient darf nicht fatal sein: ' + m);
+    assert.equal(ru.exchangeFehlerIstTransient(m), true, 'muss als transient gelten: ' + m);
+  }
+  assert.equal(ru.exchangeFehlerIstFatal('Too Many Requests', 429), false, '429 ist Drossel, kein Bruch');
+  assert.equal(ru.exchangeFehlerIstTransient('', 503), true, '5xx ist transient');
+  assert.equal(ru.exchangeFehlerIstFatal('', 503), false, '5xx darf den Kanal nicht abbrechen');
+});
+
+test('T576 Ausbau-Probe: die ALTE Regex allein wuerde nach dem Umbau nichts mehr fangen', () => {
+  // Der Kern des Retargeting-Befunds: die Meldungen, die der neue Aufruf-Weg erzeugt,
+  // matchen die alte Schema-Regex NICHT. Ein Fatal-Zweig, der nur an ihr haengt, waere tot.
+  for (const m of ['Bad Request: Missing required query parameter', 'Unauthorized', 'Forbidden']) {
+    assert.equal(ru.EXCHANGE_SCREENER_SCHEMA_ERROR_RE.test(m), false,
+      'die alte Regex faengt "' + m + '" — dann ist der Befund nicht nachgebaut');
+    assert.equal(ru.exchangeFehlerIstFatal(m), true,
+      'der neue Klassifizierer faengt "' + m + '" nicht — dann liefe der Vertragsbruch durch');
+  }
+});
+
+test('T576: lokaleSchranken rechnet in die Listing-Waehrung statt USD durchzureichen', () => {
+  const rates = { USD: 1, JPY: 0.0063931667, KRW: 0.0007002899 };
+  const usd = ru.lokaleSchranken('USD', rates);
+  assert.deepEqual(usd, { min: ru.MIN_MCAP_DISCOVERY, max: ru.MAX_MCAP_DISCOVERY },
+    'USD muss unveraendert durchgehen');
+  const jpy = ru.lokaleSchranken('JPY', rates);
+  // Gegenprobe an der Messung: mit dem USD-Literal 500e9 als Deckel lieferte JPX genau
+  // $3,2 Mrd als groesste Firma (500e9 JPY). Der Deckel muss jetzt oberhalb davon liegen.
+  assert.ok(jpy.max > 7e13, 'der JPY-Deckel liegt bei ' + jpy.max + ' — er muss ~7,8e13 sein '
+    + '($500 Mrd in Yen). Bleibt er bei 5e11, ist der halbe japanische Markt unsichtbar.');
+  assert.ok(Math.abs(jpy.max * rates.JPY - ru.MAX_MCAP_DISCOVERY) < 1e6, 'Ruecktransformation muss stimmen');
+  const krw = ru.lokaleSchranken('KRW', rates);
+  assert.ok(krw.max > 7e14, 'der KRW-Deckel muss ~7,1e14 sein — mit 5e11 lag die GESAMTE '
+    + 'koreanische Ausbeute oberhalb des Deckels (gemessen: 0 Zeilen im Band)');
+  assert.equal(ru.lokaleSchranken('XYZ', rates), null, 'unbekannte Waehrung -> null, nicht NaN-Schranken');
+  assert.equal(ru.lokaleSchranken('JPY', {}), null, 'fehlender Kurs -> null');
+});
+
+test('T576: istZweitlistung faengt beide gemessenen Formen und nur die', () => {
+  // dr_market: Frankfurt, 6185 von 6185 Zeilen (JNJ0.F & Co.)
+  assert.equal(ru.istZweitlistung({ market: 'dr_market', currency: 'EUR', financialCurrency: 'EUR' }), true);
+  // fremde Berichtswaehrung: Mailand 1MA.MI (Mastercard), Sao Paulo D1DG34.SA (Datadog),
+  // Mexiko ZM.MX (Zoom) — Yahoo fuehrt sie alle als LOKALEN Markt, `market` faengt sie nicht.
+  assert.equal(ru.istZweitlistung({ market: 'it_market', currency: 'EUR', financialCurrency: 'USD' }), true);
+  // Primaer-Listings: Berichts- und Notierungswaehrung stimmen ueberein.
+  assert.equal(ru.istZweitlistung({ market: 'jp_market', currency: 'JPY', financialCurrency: 'JPY' }), false);
+  assert.equal(ru.istZweitlistung({ market: 'us_market', currency: 'USD', financialCurrency: 'USD' }), false);
+  // Fehlende Felder duerfen NICHT verwerfen — fail-open, sonst leert ein Feldwechsel bei
+  // Yahoo den ganzen Kanal still (dieselbe Bugklasse wie BH-039).
+  assert.equal(ru.istZweitlistung({ symbol: 'X' }), false, 'ohne Waehrungsfelder nicht verwerfen');
+  assert.equal(ru.istZweitlistung({ currency: 'USD' }), false);
+  assert.equal(ru.istZweitlistung(null), false);
+});
+
+test('T576: der Guard auf yf._fetch — die Funktion ist nicht Teil der oeffentlichen API', () => {
+  // Der ganze Umbau haengt an ihr. Verschwindet sie in einer neuen yahoo-finance2-Version,
+  // muss das HIER auffallen und nicht erst als "0 Zeilen aus 19 Boersen" im Nachtlauf.
+  const YF = require('yahoo-finance2').default;
+  const yf = new YF({ suppressNotices: ['yahooSurvey'], validation: { logErrors: false, logOptionsErrors: false } });
+  assert.equal(typeof yf._fetch, 'function',
+    'yahoo-finance2 hat _fetch verloren — der Exchange-Kanal kann seinen POST dann nicht mehr '
+    + 'absetzen. Fallback steht als Kommentar an EXCHANGE_SCREENER_URL in refresh-universe.js: '
+    + 'roher https-POST MIT vollstaendigem GUCE-Consent-Vorlauf (nicht nur Cookie+Crumb — die '
+    + 'CI-Probe hat den kurzen Weg mit HTTP 429 quittiert).');
+  assert.equal(yf._fetch.length >= 1, true, 'unerwartete Signatur von _fetch');
+  // Die URL muss die Platzhalter-Form der Bibliothek tragen, sonst greift die
+  // Host-Substitution (substituteVariables) nicht und YF_QUERY_HOST waere wirkungslos.
+  assert.equal(ru.EXCHANGE_SCREENER_URL, 'https://${YF_QUERY_HOST}/v1/finance/screener');
+});
+
+test('T576: die Boersenliste ist gemessen, nicht geraten (Codes, Waehrung, Boden)', () => {
+  const codes = ru.EXCHANGE_CODES;
+  // Die vier toten Codes aus dem Befund duerfen NICHT mehr drinstehen …
+  for (const tot of ['TYO', 'NIM', 'SWX', 'SGX']) {
+    assert.ok(!codes.includes(tot), tot + ' ist ein toter Code (gemessen 0 Zeilen am '
+      + 'funktionierenden Endpunkt) und gehoert nicht mehr in die Liste');
+  }
+  // … und ihre richtigen Nachfolger drin sein, soweit sie die Zweitlistungs-Huerde nehmen.
+  assert.ok(codes.includes('JPX'), 'Tokio fehlt (TYO -> JPX)');
+  assert.ok(codes.includes('NCM'), 'NASDAQ Capital Market fehlt (NIM -> NCM)');
+  // KOE ist KOSDAQ. Ohne KSC fehlt der koreanische Grossmarkt komplett.
+  assert.ok(codes.includes('KSC'), 'KOSPI (KSC) fehlt — KOE ist KOSDAQ mit 69 Firmen, Samsung '
+    + 'und SK Hynix liegen unter KSC');
+  // NSI ist eine eigene Boerse, nicht "BSE/NSE India".
+  assert.ok(codes.includes('NSI') && codes.includes('BSE'), 'Indien braucht beide Codes');
+  // Die ausgemessenen Zweitlistungs-Boersen sind draussen.
+  for (const raus of ['FRA', 'MEX', 'HKG', 'SAO', 'MIL', 'LSE', 'OSL', 'JNB', 'TOR', 'EBS', 'SES', 'CPH']) {
+    assert.ok(!codes.includes(raus), raus + ' hat einen gemessenen Zweitlistungs-Anteil ueber 25 % '
+      + 'und verdraengt im 25.000er-Cap echte Neuzugaenge');
+  }
+  assert.equal(new Set(codes).size, codes.length, 'doppelter Boersencode in der Liste');
+  for (const k of ru.EXCHANGE_KANAELE) {
+    assert.ok(k.ccy && typeof k.ccy === 'string', k.code + ': keine Listing-Waehrung — dann gingen '
+      + 'die USD-Schranken roh an Yahoos Filter, der lokal rechnet');
+    assert.ok(Number.isFinite(k.boden) && k.boden > 0, k.code + ': kein Abnahme-Boden');
+    assert.ok(k.boden < k.erstlauf, k.code + ': der Boden liegt nicht unter der Erstlauf-Ausbeute — '
+      + 'dann ist er ab Tag eins ein Dauer-Falschalarm');
+  }
+});
+
+// ── T576: der Screener-Kanarienvogel, netzfrei gefahren ─────────────────────────
+// Die Formpruefung sitzt in tests/yahoo-schema-canary.js (dort haengt schon die
+// exit-1/exit-2-Verdrahtung im prep-Job). Requiren fuehrt sie NICHT aus — run() ist auf
+// require.main === module gegated. Geprueft werden beide Richtungen: die gueltige Form muss
+// DURCHGEHEN, jede kaputte muss auffliegen.
+const canary = require('./yahoo-schema-canary.js');
+function screenerAntwort(ueberschreiben) {
+  const q = Object.assign({
+    symbol: 'INTC', marketCap: 459e9, currency: 'USD',
+    financialCurrency: 'USD', market: 'us_market', quoteType: 'EQUITY'
+  }, (ueberschreiben && ueberschreiben.quote) || {});
+  const r = Object.assign({ total: 921, quotes: [q] }, (ueberschreiben && ueberschreiben.result) || {});
+  return { finance: { result: [r], error: null } };
+}
+
+test('T576 Canary: die gueltige Screener-Antwort geht durch', () => {
+  assert.deepEqual(canary.pruefeScreenerForm(screenerAntwort()), [],
+    'die echte Antwortform wird beanstandet — ein Dauer-Falschalarm im prep-Job');
+  assert.deepEqual(canary.screenerHinweise(screenerAntwort()), []);
+});
+
+test('T576 Canary: jeder Formbruch fliegt auf (Ausbau-Probe je Feld)', () => {
+  const faelle = {
+    'total fehlt': { result: { total: undefined } },
+    'total ist ein String': { result: { total: '921' } },
+    'quotes kein Array': { result: { quotes: {} } },
+    'quotes leer': { result: { quotes: [] } },
+    'symbol fehlt': { quote: { symbol: undefined } },
+    'symbol leer': { quote: { symbol: '' } },
+    'marketCap fehlt': { quote: { marketCap: undefined } },
+    'marketCap ist ein String': { quote: { marketCap: '459000000000' } },
+    'currency fehlt': { quote: { currency: undefined } },
+  };
+  for (const [name, ueberschreiben] of Object.entries(faelle)) {
+    const m = canary.pruefeScreenerForm(screenerAntwort(ueberschreiben));
+    assert.ok(m.length > 0, name + ': der Kanarienvogel schweigt — genau so schrumpft das '
+      + 'Universum still (jede Zeile faellt am Mcap-Gate durch, der Kanal meldet trotzdem Zeilen)');
+  }
+  // Und die Wurzel: gar keine Antwort.
+  assert.ok(canary.pruefeScreenerForm(null).length > 0);
+  assert.ok(canary.pruefeScreenerForm({ finance: { result: [] } }).length > 0);
+});
+
+test('T576 Canary: fehlende Zweitlistungs-Felder sind ein HINWEIS, kein Drift', () => {
+  // Absichtlich fail-open: istZweitlistung verwirft ohne die Felder nichts. Das darf den
+  // Tageslauf nicht rot machen (sonst wird der Kanarienvogel bei der naechsten
+  // Yahoo-Feldumstellung abgeschaltet), muss aber sichtbar sein.
+  const ohne = screenerAntwort({ quote: { financialCurrency: undefined, market: undefined } });
+  assert.deepEqual(canary.pruefeScreenerForm(ohne), [], 'fehlende Filter-Felder sind kein Drift-Fehler');
+  const h = canary.screenerHinweise(ohne);
+  assert.equal(h.length, 1, 'der Hinweis fehlt — dann faellt der stumpfe Filter niemandem auf');
+  assert.match(h[0], /financialCurrency\/market/);
+  assert.equal(ru.istZweitlistung({ symbol: 'X', currency: 'EUR' }), false,
+    'die Praemisse des Hinweises: ohne die Felder verwirft der Filter tatsaechlich nichts');
+});
+
+// ── T576: Deadline-Guard — Herleitung UND Verdrahtung ───────────────────────────
+test('T576: das Exchange-Budget passt neben die beiden Adapter-Budgets ins Schritt-Timeout', () => {
+  // Nachgerechnet gegen die WORKFLOW-DATEI, nicht gegen eine Zahl im Kommentar: wer
+  // timeout-minutes senkt, muss hier rot werden. Gleiche Bauart wie
+  // tests/dt1-adapter-zeitbudget.test.js, damit die beiden Rechnungen nicht auseinanderlaufen.
+  const schritt = YML.slice(YML.indexOf('- name: Refresh Universe'));
+  const m = schritt.match(/timeout-minutes:\s*(\d+)/);
+  assert.ok(m, 'kein timeout-minutes am Schritt "Refresh Universe" gefunden');
+  const schrittMs = Number(m[1]) * 60 * 1000;
+  const zb = require('../discovery/zeitbudget.js');
+  // R575-3: die Decke eines budgetierten Adapters ist sein Budget PLUS sein Socket-Timeout.
+  const otcDecke = zb.ADAPTER_BUDGET_MS + 30000;      // otc-markets.js req.setTimeout(30000)
+  const nasdaqDecke = zb.ADAPTER_BUDGET_MS + 45000;   // nasdaq-api.js  req.setTimeout(45000)
+  const predefinedGemessen = 104000;                  // Lauf 91606250192, 03.08.
+  const summe = otcDecke + nasdaqDecke + predefinedGemessen + ru.EXCHANGE_BUDGET_MS;
+  assert.ok(summe < schrittMs,
+    'die pessimistische Summe aller Budgets (' + Math.round(summe / 1000) + 's) erreicht das '
+    + 'Schritt-Timeout (' + Math.round(schrittMs / 1000) + 's) — dann kann der Schritt sterben, '
+    + 'BEVOR watchlist.json geschrieben wird, und der Tag laeuft auf dem Universum von gestern '
+    + '(genau der 03.08.-Fall). Entweder EXCHANGE_BUDGET_MS senken oder timeout-minutes heben.');
+  const reserve = schrittMs - summe;
+  assert.ok(reserve >= 120000,
+    'nur ' + Math.round(reserve / 1000) + 's Reserve fuer Mcap-Prefilter, Dedup, Cap und das '
+    + 'Schreiben — zu knapp. Erwartet: mindestens 120s.');
+  // Und die Gegenrichtung: das Budget muss GROSS genug fuer den gemessenen Bedarf sein.
+  // CI-Probe 30869143397: 47 Seiten, bis 620ms je Seite, 400ms Pause dazwischen.
+  const gemessenerBedarf = 47 * (620 + 400);
+  assert.ok(ru.EXCHANGE_BUDGET_MS > gemessenerBedarf * 3,
+    'das Budget (' + Math.round(ru.EXCHANGE_BUDGET_MS / 1000) + 's) liegt unter dem Dreifachen '
+    + 'des gemessenen Bedarfs (' + Math.round(gemessenerBedarf / 1000) + 's) — dann reisst es '
+    + 'schon bei normaler Yahoo-Traegheit und der Kanal liefert dauernd Teilbestaende.');
+});
+
+test('T576: der Deadline-Guard sitzt VOR jeder Boerse UND in der Seiten-Schleife', () => {
+  // Am OBJEKT geschnitten (die Boersen-Schleife), nicht dateiweit — sonst haelt ein
+  // Vorkommen im Kommentar den Pin gruen.
+  const start = SRC_RU.indexOf('for (const kanal of EXCHANGE_KANAELE) {');
+  assert.ok(start >= 0, 'die Boersen-Schleife wurde umbenannt — der Pin greift nicht mehr');
+  const ende = SRC_RU.indexOf('console.log(\'Custom-Screener total neue Tickers:', start);
+  assert.ok(ende > start, 'Schleifen-Ende nicht gefunden');
+  const block = ohneZeilenkommentare(SRC_RU.slice(start, ende));
+  // Die BEDINGUNG wird gepinnt, nicht nur der Ausdruck: `if (false && Date.now() - ... )`
+  // enthaelt den Ausdruck weiterhin und haette einen reinen Vorkommens-Zaehler gruen
+  // gehalten (in der Ausbau-Probe genau so gemessen). Deshalb die ganze if-Form.
+  const treffer = (block.match(/if \(Date\.now\(\) - exchangeT0 >= EXCHANGE_BUDGET_MS\) \{/g) || []).length;
+  assert.equal(treffer, 2,
+    'erwartet: GENAU ZWEI Budget-Pruefungen in genau dieser Form — eine vor jeder Boerse '
+    + '(damit eine Boerse mit vielen Seiten gar nicht erst anfaengt) und eine in der '
+    + 'Seiten-Schleife (damit eine einzelne haengende Boerse den Rest nicht mitnimmt). '
+    + 'Gefunden: ' + treffer);
+  assert.match(block, /::error::EXCHANGE-ZEITBUDGET GERISSEN/,
+    'ein Budget-Riss ohne Meldung ist ein stiller Teilbestand — genau die Klasse, gegen die '
+    + 'discovery/zeitbudget.js gebaut wurde');
+  assert.ok(!/process\.exit\(/.test(block),
+    'ein process.exit() im Exchange-Block wuerde die Laenderadapter und den Watchlist-Write '
+    + 'mitnehmen — der Kanal darf den Tag nicht kosten (BH-038).');
+});
+
+test('T576: die Seitenabfrage bekommt LOKALE Schranken, nie die USD-Zahlen roh', () => {
+  // Der teuerste Einzelbefund des Tages: Yahoos serverseitiger intradaymarketcap-Filter
+  // rechnet in Listing-Waehrung. Wer hier wieder MIN_MCAP_DISCOVERY/MAX_MCAP_DISCOVERY roh
+  // durchreicht, macht bei KOE/KSC die GESAMTE koreanische Ausbeute unsichtbar (500e9 KRW =
+  // $362M, also liegt alles ueber dem Deckel) und schneidet Japan bei $3,2 Mrd ab. Und zwar
+  // OHNE Fehlermeldung — die Boersen liefern brav, nur die falschen Firmen.
+  const start = SRC_RU.indexOf('for (const kanal of EXCHANGE_KANAELE) {');
+  const ende = SRC_RU.indexOf('console.log(\'Custom-Screener total neue Tickers:', start);
+  const block = ohneZeilenkommentare(SRC_RU.slice(start, ende));
+  assert.match(block, /const schranken = lokaleSchranken\(kanal\.ccy, _FX_RATES\);/,
+    'die Schranken werden nicht mehr je Boerse umgerechnet');
+  assert.match(block, /fetchExchangePage\(kanal, schranken\.min, schranken\.max, offset\)/,
+    'die Seitenabfrage bekommt etwas anderes als die umgerechneten Schranken');
+  assert.ok(!/fetchExchangePage\([^)]*MIN_MCAP_DISCOVERY/.test(block),
+    'die rohen USD-Schranken gehen wieder direkt an Yahoo — dann filtert der Server in '
+    + 'Listing-Waehrung gegen USD-Zahlen (Messbefund: KOE 0 Zeilen im Band, JPX bei $3,2 Mrd '
+    + 'abgeschnitten).');
+  // Und der laute Ausweg, wenn kein Kurs da ist: NICHT mit NaN-Schranken abfragen.
+  assert.match(block, /if \(!schranken\) \{/, 'kein Zweig fuer die fehlende Waehrung');
+  assert.match(block, /kein FX-Kurs fuer die Listing-Waehrung/, 'der Ausweg meldet sich nicht');
+});
+
+test('T576: "total>0, aber 0 Zeilen" gilt als Formwechsel, nicht als Seitenende', () => {
+  // Der stille Fall in der Paginierung: Yahoo meldet weiter einen Gesamtbestand, liefert aber
+  // keine Zeile mehr. Eine reine `quotes.length === 0`-Pruefung haelt das fuer ein normales
+  // Seitenende, bricht ab und die Boerse gilt als "fertig" — mit halbem Bestand und ohne
+  // Fehler. Die Reihenfolge ist tragend: die Formwechsel-Pruefung muss VOR dem Seitenende
+  // stehen, sonst ist sie unerreichbar.
+  const start = SRC_RU.indexOf('for (const kanal of EXCHANGE_KANAELE) {');
+  const ende = SRC_RU.indexOf('console.log(\'Custom-Screener total neue Tickers:', start);
+  const block = ohneZeilenkommentare(SRC_RU.slice(start, ende));
+  const iForm = block.indexOf('if (quotes.length === 0 && Number.isFinite(total) && total > offset) {');
+  const iEnde = block.indexOf('if (quotes.length === 0) { pageEmpty = true; break; }');
+  assert.ok(iForm >= 0, 'die Formwechsel-Pruefung fehlt — dann bricht die Paginierung bei einem '
+    + 'Schemawechsel still ab und die Boerse liefert einen halben Bestand ohne Fehler');
+  assert.ok(iEnde >= 0, 'das normale Seitenende fehlt');
+  assert.ok(iForm < iEnde, 'die Formwechsel-Pruefung steht NACH dem Seitenende und ist damit '
+    + 'unerreichbar — sie waere reine Dekoration');
+  assert.match(block.slice(iForm, iEnde), /process\.exitCode = 1/,
+    'der Formwechsel faerbt den Lauf nicht rot');
+});
+
+test('T576: der Abnahme-Alarm ist verdrahtet (und schweigt bei gerissenem Budget)', () => {
+  const i = SRC_RU.indexOf('const unterBoden = boersenUnterBoden(');
+  assert.ok(i >= 0, 'die Abnahme-Messung ist gar nicht aufgerufen — dann misst Schritt 6 nichts');
+  const block = ohneZeilenkommentare(SRC_RU.slice(i, i + 2200));
+  assert.match(block, /::error::EXCHANGE-ABNAHME VERFEHLT/, 'kein Alarm bei Unterschreitung');
+  assert.match(block, /process\.exitCode = 1/, 'ohne exitCode bleibt der Lauf gruen — der Befund');
+  assert.match(block, /!exchangeBudgetGerissen/,
+    'der Alarm unterscheidet nicht zwischen "Boerse liefert nicht" und "wir haben sie gar nicht '
+    + 'mehr gefragt" — ein gerissenes Budget wuerde sonst ein zweites rotes X fuer denselben '
+    + 'Vorfall erzeugen.');
+});
+
+test('T576 Ausbau-Probe: ohne die Abnahme-Messung bleibt ein toter Kanal gruen', () => {
+  // Der eigentliche Befund dieses ganzen Tages: der Kanal war fuenf Monate tot, weil nichts
+  // eine ERWARTUNG an ihn hatte. Hier wird die Erwartung einmal ausgebaut und geprueft, dass
+  // sie fehlt — sonst pinnt der Test darueber eine Zeile statt einer Wirkung.
+  const alleTot = {};
+  for (const k of ru.EXCHANGE_KANAELE) alleTot[k.code] = { totalQuotes: 0, totalBandOk: 0, totalKept: 0, pageErrors: 0 };
+  assert.equal(ru.boersenUnterBoden(alleTot, ru.EXCHANGE_KANAELE).length, ru.EXCHANGE_KANAELE.length,
+    'ein komplett toter Kanal muss JEDE Boerse als unterschritten melden');
+  // Gegenprobe: die gemessene Erstlauf-Ausbeute selbst muss sauber durchgehen, sonst ist der
+  // Boden ein Dauer-Falschalarm ab dem ersten Tag.
+  const erstlauf = {};
+  for (const k of ru.EXCHANGE_KANAELE) erstlauf[k.code] = { totalQuotes: k.erstlauf, totalBandOk: k.erstlauf, totalKept: 0, pageErrors: 0 };
+  assert.deepEqual(ru.boersenUnterBoden(erstlauf, ru.EXCHANGE_KANAELE), [],
+    'die Erstlauf-Zahlen selbst loesen Alarm aus — dann ist der Boden falsch gesetzt');
+  // Und die Schaerfe: eine EINZELNE Boerse knapp unter dem Boden muss reichen.
+  const eineKnappDrunter = JSON.parse(JSON.stringify(erstlauf));
+  const opfer = ru.EXCHANGE_KANAELE[ru.EXCHANGE_KANAELE.length - 1];
+  eineKnappDrunter[opfer.code].totalBandOk = opfer.boden - 1;
+  assert.deepEqual(ru.boersenUnterBoden(eineKnappDrunter, ru.EXCHANGE_KANAELE).map((u) => u.code), [opfer.code],
+    'die KLEINSTE Boerse faellt durchs Raster — genau sie verschwindet sonst im Aggregat');
+});
+
+test('T576: jede Kanal-Boerse hat einen Regions-Eimer (sonst landet sie in OTHER)', () => {
+  // Der Kanal schreibt seinen Boersencode als exchange_hint in die Watchlist; die
+  // Regionszuordnung liest ihn. Fehlt der Code in der Tabelle, faellt die ganze Boerse in
+  // den Eimer 'OTHER' — und zwar STILL. Genau so ist SAU seit Tag 132 durchgerutscht: der
+  // Code stand in EXCHANGE_CODES, aber nie in lib/region-mapping.js, und weil der Kanal
+  // tot war, hat es niemand gemerkt.
+  const { EXCHANGE_TO_REGION, CURRENCY_TO_REGION_FALLBACK } = require('../lib/region-mapping.js');
+  const luecken = ru.EXCHANGE_KANAELE
+    .filter((k) => !EXCHANGE_TO_REGION[k.code])
+    .map((k) => k.code + ' (Waehrungs-Netz ' + k.ccy + ': ' + (CURRENCY_TO_REGION_FALLBACK[k.ccy] || 'FEHLT') + ')');
+  assert.deepEqual(luecken, [], 'diese Boersen des Exchange-Kanals haben keinen Eintrag in '
+    + 'EXCHANGE_TO_REGION und landen im Eimer OTHER: ' + luecken.join(', '));
+  // Und das zweite Netz: auch ueber die Waehrung muss jede Boerse landen koennen.
+  const ccyLuecken = ru.EXCHANGE_KANAELE
+    .filter((k) => !CURRENCY_TO_REGION_FALLBACK[k.ccy]).map((k) => k.code + '/' + k.ccy);
+  assert.deepEqual(ccyLuecken, [], 'Waehrungs-Fallback fehlt fuer: ' + ccyLuecken.join(', '));
+});
+
+test('T576: boersenUnterBoden misst totalBandOk, nicht Neuzugaenge', () => {
+  const kanaele = [{ code: 'A', boden: 100, erstlauf: 200 }, { code: 'B', boden: 50, erstlauf: 100 }];
+  // Der Kern: eine Boerse, die NICHTS Neues liefert, aber voll im Band ist, ist GESUND —
+  // im eingeschwungenen Betrieb ist das der Normalfall.
+  assert.deepEqual(ru.boersenUnterBoden({ A: { totalBandOk: 150, totalKept: 0 }, B: { totalBandOk: 60, totalKept: 0 } }, kanaele), [],
+    'null Neuzugaenge bei vollem Band-Durchsatz ist der Normalfall und darf nie Alarm sein');
+  const unter = ru.boersenUnterBoden({ A: { totalBandOk: 99, totalKept: 99 }, B: { totalBandOk: 60 } }, kanaele);
+  assert.deepEqual(unter.map((u) => u.code), ['A'], 'die unterschrittene Boerse muss genannt werden');
+  assert.equal(unter[0].ist, 99);
+  assert.equal(unter[0].boden, 100);
+  // Eine fehlende Boerse (gar nicht abgefragt) zaehlt als 0 und muss auffallen.
+  assert.deepEqual(ru.boersenUnterBoden({}, kanaele).map((u) => u.code), ['A', 'B'],
+    'eine Boerse, die gar nicht abgefragt wurde, faellt sonst durch das Raster');
 });
 
 // ── T566-H2, Verdrahtung im Workflow: der Alarm muss ANKOMMEN ──────────────────────
@@ -907,12 +1315,18 @@ test('T566-H2: der Waechter-Job faerbt rot und blockiert keinen Datenschritt', (
 // und der Reporter stufte ausgerechnet die geworfene Boerse als "still ausgefallen" ein.
 // Ein Waechter, der auf einen lauten Fehler mit "kein Fehler" antwortet, verbrennt genau
 // die Aufmerksamkeit, fuer die er gebaut wurde.
-test('DT-3: der Schema-Fatal-Zweig zaehlt den Wurf als Seitenfehler (Anwesenheit am Zweig)', () => {
-  // Am Objekt geschnitten, nicht dateiweit: ein `pageErrors++` irgendwo sonst in der Datei
-  // (der normale Fehlerzweig hat eins) wuerde eine dateiweite Suche gruen halten.
-  const start = SRC_RU.indexOf('if (EXCHANGE_SCREENER_SCHEMA_ERROR_RE.test(error)) {');
-  assert.ok(start >= 0, 'Schema-Fatal-Zweig nicht gefunden');
-  let tiefe = 0, i = SRC_RU.indexOf('{', start);
+// T576: derselbe Befund, neuer Anker. Der Schnitt hing an `if (EXCHANGE_SCREENER_SCHEMA_
+// ERROR_RE.test(error)) {` — dieser Zweig existiert nach dem Umbau nicht mehr. Die SACHE ist
+// unveraendert: JEDER Fehlerweg im Exchange-Block muss pageErrors hochzaehlen, sonst meldet
+// die 0-Quotes-Warnung ausgerechnet die geworfene Boerse als "kein Fehler". Deshalb wird
+// jetzt der GANZE `if (error) {`-Block geschnitten und darin geprueft, dass das
+// Hochzaehlen VOR der Fallunterscheidung passiert — dann kann kein Zweig es vergessen.
+test('DT-3/T576: jeder Fehlerweg im Exchange-Block zaehlt pageErrors (Anwesenheit am Zweig)', () => {
+  const start = SRC_RU.indexOf('const { quotes, total, error, httpStatus, fatal } = await fetchExchangePage(');
+  assert.ok(start >= 0, 'Exchange-Seitenaufruf nicht gefunden — der Schnitt greift nicht mehr');
+  const iErr = SRC_RU.indexOf('if (error) {', start);
+  assert.ok(iErr >= 0 && iErr - start < 400, 'kein `if (error) {` direkt nach dem Seitenaufruf');
+  let tiefe = 0, i = SRC_RU.indexOf('{', iErr);
   const von = i;
   for (; i < SRC_RU.length; i++) {
     if (SRC_RU[i] === '{') tiefe++;
@@ -920,9 +1334,24 @@ test('DT-3: der Schema-Fatal-Zweig zaehlt den Wurf als Seitenfehler (Anwesenheit
   }
   const zweig = SRC_RU.slice(von, i + 1);
   assert.match(zweig, /exchangeScreenerFatal\s*=\s*true/, 'falscher Zweig geschnitten');
-  assert.match(zweig, /pageErrors\s*\+\+/,
-    'der Schema-Fatal-Zweig zaehlt pageErrors nicht hoch — dann meldet die 0-Quotes-Warnung '
-    + 'die geworfene Boerse als "0 quotes and no error" (Befund DT-3, Lauf 91606250192).');
+  // pageErrors++ muss VOR der Fallunterscheidung stehen, nicht in jedem Zweig einzeln —
+  // genau die Doppelpflege hat den DT-3-Befund erzeugt (ein Zweig hatte es, der andere nicht).
+  const bisFallunterscheidung = zweig.slice(0, zweig.indexOf('if (fatal'));
+  assert.match(bisFallunterscheidung, /pageErrors\s*\+\+/,
+    'pageErrors wird erst INNERHALB der Fallunterscheidung hochgezaehlt — dann kann ein neuer '
+    + 'Zweig es wieder vergessen, und die 0-Quotes-Warnung meldet die geworfene Boerse als '
+    + '"0 quotes and no error" (Befund DT-3, Lauf 91606250192).');
+  assert.equal((zweig.match(/pageErrors\s*\+\+/g) || []).length, 1,
+    'pageErrors wird mehrfach hochgezaehlt — dann zaehlt ein Fehler doppelt.');
+});
+
+test('DT-3/T576 Ausbau-Probe: ohne das Hochzaehlen meldet die Warnung die geworfene Boerse', () => {
+  // Der Befund im Verhalten, nicht nur am Text: eine Boerse mit 0 Quotes und 0 gezaehlten
+  // Fehlern landet in nullQuotenOhneFehler() — obwohl sie geworfen hat.
+  assert.deepEqual(ru.nullQuotenOhneFehler({ NMS: { totalQuotes: 0, pageErrors: 0 } }), ['NMS'],
+    'genau das war die Falschmeldung im Lauf 91606250192');
+  assert.deepEqual(ru.nullQuotenOhneFehler({ NMS: { totalQuotes: 0, pageErrors: 1 } }), [],
+    'mit gezaehltem Fehler darf sie nicht mehr als STILLER Ausfall gelten');
 });
 
 test('DT-3: die Warnung nennt nur STILLE Ausfaelle (Verhalten, beide Richtungen)', () => {

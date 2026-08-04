@@ -164,40 +164,74 @@ const SCREENER_IDS = [
 // Tag 132: Multi-Region Pull — 25 Regionen (+KR/TW/BR/MX/SG/CH/DK/NO/FI/ZA/SA)
 const REGIONS = ['US', 'GB', 'DE', 'FR', 'HK', 'JP', 'AU', 'CA', 'CN', 'IN', 'IT', 'NL', 'SE', 'ES', 'KR', 'TW', 'BR', 'MX', 'SG', 'CH', 'DK', 'NO', 'FI', 'ZA', 'SA'];
 
-// Tag 131: Exchange-Code-basierter Custom-Screener (geht über curated Yahoo-Listen hinaus)
-// Paginiert über alle Stocks $800M–$500B mcap je Exchange → ~10k+ Coverage möglich (F-11)
-const EXCHANGE_CODES = [
-  'NMS',  // NASDAQ Global Select
-  'NYQ',  // NYSE
-  'NGM',  // NASDAQ Global Market
-  'NIM',  // NASDAQ Capital Market
-  'ASE',  // NYSE American
-  'LSE',  // London
-  'FRA',  // Frankfurt
-  'PAR',  // Paris (Euronext)
-  'AMS',  // Amsterdam
-  'MIL',  // Milan
-  'STO',  // Stockholm
-  'HKG',  // Hong Kong
-  'TYO',  // Tokyo
-  'SHH',  // Shanghai
-  'SHZ',  // Shenzhen
-  'BSE',  // Bombay/NSE India
-  'KOE',  // Korea
-  'TAI',  // Taiwan
-  'ASX',  // Australia
-  'TOR',  // Toronto
-  // Tag 132: Additional exchanges
-  'CPH',  // Copenhagen
-  'OSL',  // Oslo
-  'HEL',  // Helsinki
-  'SAO',  // Sao Paulo (B3)
-  'MEX',  // Mexico
-  'SGX',  // Singapore
-  'SWX',  // Swiss Exchange
-  'JNB',  // Johannesburg
-  'SAU',  // Saudi Arabia (Tadawul)
+// ── Tag 576: Exchange-Kanal, gemessen neu aufgesetzt ──────────────────────────────
+// Der Kanal (Tag 131) hat NIE gelaufen — nicht einen Tag: yahoo-finance2 kennt in
+// ScreenerOptions kein `query`, der Aufruf warf deterministisch vor jedem Netzzugriff
+// (Verifikation _BEFUND-EXCHANGE-KANAL-2026-08-04.md; Repro am IST in Tag 576 Commit).
+// Der Umbau geht auf den rohen POST-Screener; drei Messbefunde aus der CI-Probe
+// (Laeufe 30868618833 / 30869012795 / 30869143397, alle vom GitHub-Runner) tragen die
+// Liste hier — nichts davon ist geschaetzt:
+//
+// (1) VIER DER 29 CODES WAREN TOT und lieferten auch am funktionierenden Endpunkt 0:
+//     TYO -> richtig JPX · NIM -> richtig NCM · SWX -> richtig EBS · SGX -> richtig SES.
+//     Dazu ein fuenfter, schwererer Fehler: `KOE` ist KOSDAQ (gemessen 69 Firmen),
+//     NICHT "Korea". Der koreanische Grossmarkt liegt unter KSC (KOSPI, 236) — Samsung,
+//     SK Hynix und der Rest fehlten dem Kanal also selbst dann, wenn er gelaufen waere.
+//     Und `BSE` (Bombay, 675) trug den Kommentar "Bombay/NSE India", obwohl NSE eine
+//     eigene Boerse mit eigenem Code ist (NSI, 661).
+//
+// (2) YAHOOS SERVERSEITIGER `intradaymarketcap`-FILTER RECHNET IN LISTING-WAEHRUNG,
+//     nicht in USD. Beleg: mit dem USD-Literal 800e6..500e9 lieferte JPX exakt den
+//     USD-Bereich 487M..3,2 Mrd — 500e9 JPY SIND $3,2 Mrd, der Deckel traf punktgenau.
+//     Bei KOE war der Deckel 500e9 KRW = $362M, also lag die GESAMTE koreanische
+//     Ausbeute oberhalb des Deckels. Dieselbe Falle hat discovery/tv-scanner.js schon
+//     geloest ("sonst waere right:2e9 nur 2 Mrd LOKAL"). Deshalb traegt jede Zeile hier
+//     ihre Listing-Waehrung; die Schranken werden je Boerse umgerechnet.
+//
+// (3) ZWEITLISTUNGEN VERDRAENGEN im 25.000er-Cap. Gemessen als Anteil der Zeilen, deren
+//     Berichtswaehrung von der Notierungswaehrung abweicht oder die Yahoo als
+//     `market: dr_market` (Hinterlegungsschein) fuehrt — das Aequivalent zum
+//     domicile/subtype-Filter in tv-scanner.js. Frankfurt: 100,0 % von 6185 Zeilen,
+//     also 6185 Cap-Slots fuer NULL neue Firmen. Mexiko 89,8 %, Hongkong 79,5 %,
+//     Sao Paulo 77,1 %, Mailand 69,0 %, London 67,2 %, Oslo 54,5 %.
+//     AUFGENOMMEN wird nur, wessen gemessener Anteil <= 25 % liegt. Die Ausgeschlossenen
+//     sind samt und sonders schon durch einen eigenen Adapter gedeckt (xetra/FRA,
+//     lse-uk/LSE, hkex-hk/HKG, tsx-ca/TOR, oslo/OSL, tv-milan, tv-brazil, tv-mexico,
+//     tv-swiss, tv-singapore, tv-rsa) — es geht nichts verloren ausser der Bequemlichkeit,
+//     die Marktkapitalisierung gratis mitgeliefert zu bekommen.
+//
+// `boden` = Abnahme-Untergrenze fuer totalBandOk je Boerse: die HALBE Erstlauf-Ausbeute
+// aus der Probe (Zeilen im USD-Band NACH dem Zweitlistungs-Filter). Bewusst nicht an
+// Neuzugaengen gemessen — die gehen im eingeschwungenen Betrieb korrekt gegen null,
+// ein Boden darauf waere ab Tag zwei ein Dauer-Falschalarm.
+const EXCHANGE_KANAELE = [
+  // code   ccy    zweit%  erstlauf  boden   Boerse
+  { code: 'NYQ', ccy: 'USD', zweit: 0.100, erstlauf: 1439, boden: 719 },  // NYSE
+  { code: 'SHZ', ccy: 'CNY', zweit: 0.007, erstlauf: 1429, boden: 714 },  // Shenzhen
+  { code: 'SHH', ccy: 'CNY', zweit: 0.004, erstlauf: 1387, boden: 693 },  // Shanghai
+  { code: 'NMS', ccy: 'USD', zweit: 0.048, erstlauf:  867, boden: 433 },  // NASDAQ Global Select
+  { code: 'JPX', ccy: 'JPY', zweit: 0.002, erstlauf:  851, boden: 425 },  // Tokio (war faelschlich TYO)
+  { code: 'BSE', ccy: 'INR', zweit: 0.003, erstlauf:  673, boden: 336 },  // Bombay
+  { code: 'NSI', ccy: 'INR', zweit: 0.003, erstlauf:  659, boden: 329 },  // NSE Indien (fehlte ganz)
+  { code: 'TAI', ccy: 'TWD', zweit: 0.010, erstlauf:  278, boden: 139 },  // Taiwan
+  { code: 'KSC', ccy: 'KRW', zweit: 0.004, erstlauf:  233, boden: 116 },  // KOSPI (fehlte ganz)
+  { code: 'ASX', ccy: 'AUD', zweit: 0.243, erstlauf:  201, boden: 100 },  // Australien
+  { code: 'STO', ccy: 'SEK', zweit: 0.129, erstlauf:  175, boden:  87 },  // Stockholm
+  { code: 'PAR', ccy: 'EUR', zweit: 0.043, erstlauf:  166, boden:  83 },  // Paris
+  { code: 'NGM', ccy: 'USD', zweit: 0.045, erstlauf:  147, boden:  73 },  // NASDAQ Global Market
+  { code: 'NCM', ccy: 'USD', zweit: 0.063, erstlauf:  104, boden:  52 },  // NASDAQ Capital Market (war faelschlich NIM)
+  { code: 'SAU', ccy: 'SAR', zweit: 0.010, erstlauf:   98, boden:  49 },  // Tadawul
+  { code: 'KOE', ccy: 'KRW', zweit: 0.000, erstlauf:   69, boden:  34 },  // KOSDAQ
+  { code: 'AMS', ccy: 'EUR', zweit: 0.131, erstlauf:   53, boden:  26 },  // Amsterdam
+  { code: 'HEL', ccy: 'EUR', zweit: 0.087, erstlauf:   42, boden:  21 },  // Helsinki
+  { code: 'ASE', ccy: 'USD', zweit: 0.119, erstlauf:   29, boden:  14 },  // NYSE American
 ];
+// AUSGESCHLOSSEN (gemessener Zweitlistungs-Anteil > 25 %, je mit eigenem Adapter gedeckt):
+//   FRA 100,0 % · JNB 100,0 % · MEX 89,8 % · HKG 79,5 % · SAO 77,1 % · MIL 69,0 %
+//   LSE 67,2 % · OSL 54,5 % · SES 37,1 % · EBS 35,9 % · TOR 35,3 % · CPH 27,5 %
+const EXCHANGE_CODES = EXCHANGE_KANAELE.map((k) => k.code);
+// Summe der Erstlauf-Ausbeute: 8900 Zeilen ueber 47 Seiten. Zum Vergleich der Anspruch
+// von Tag 131 ("10k+ statt ~3500") — erreicht wird er ohne die Zweitlistungs-Flut.
 
 // audit/fix (BUG HIGH — US class-share dot→dash for Yahoo): US class-share
 // tickers are stored in DOT form (BRK.B, BF.A, HEI.A) but Yahoo Finance's API
@@ -353,35 +387,187 @@ async function fetchScreener(id, region) {
 //   - return value ist {quotes, error}
 //   - 429-Antwort triggert ein retry-with-backoff (max 3 attempts)
 //   - error wird vom Caller geloggt & in den per-exchange-Stats summiert
-async function fetchExchangePage(exchangeCode, minMcap, maxMcap, offset, attempt) {
+// Tag 576: der Aufruf geht ueber yf._fetch statt ueber yf.screener(). Das ist die
+// gesamte Reparatur — Cookie-Beschaffung, Crumb, Drossel-Warteschlange und
+// Fehlerklassifikation liegen damit weiter in der Bibliothek und nicht in dieser Datei.
+// yf._fetch(urlBase, params, moduleOpts, func, needsCrumb) haengt die params als
+// Query-String an, uebernimmt moduleOpts.fetchOptions in den fetch-Aufruf (also Methode
+// POST und den JSON-Rumpf) und wirft bei Yahoo-Fehlerobjekten bzw. non-200 von selbst.
+// `${YF_QUERY_HOST}` ist eine Platzhalter-Variable der Bibliothek (substituteVariables),
+// KEIN Template-Literal — die einfachen Anfuehrungszeichen sind hier Absicht.
+//
+// FALLBACK, falls yf._fetch je verschwindet (die Funktion ist nicht Teil der oeffentlichen
+// API; tests/refresh-universe.test.js haelt deshalb einen Guard darauf): der Weg ohne
+// Bibliothek waere ein roher https-POST mit eigenem Crumb-Vorlauf. Er ist aber NICHT die
+// "~40 Zeilen", als die er im Befund veranschlagt war — die CI-Probe hat ihn gemessen:
+// Cookie von finance.yahoo.com/quote/AAPL holen und damit /v1/test/getcrumb rufen
+// antwortet vom GitHub-Runner mit HTTP 429. Was fehlt, ist der vollstaendige
+// GUCE-Consent-Durchlauf (guce.yahoo.com -> collectConsent -> Formular-POST -> copyConsent
+// -> Redirect zurueck), den getCrumb.js der Bibliothek ueber ~120 Zeilen abwickelt. Wer
+// diesen Fallback baut, baut also diesen Consent-Fluss nach, nicht einen POST.
+const EXCHANGE_SCREENER_URL = 'https://${YF_QUERY_HOST}/v1/finance/screener';
+const EXCHANGE_SEITE = 250;
+
+// ── T576 Deadline-Guard fuer den Exchange-Block ───────────────────────────────────
+// HERLEITUNG (keine Magic Number), gerechnet gegen die beiden Budgets, die es schon gibt:
+//
+//   Schritt "Refresh Universe" in .github/workflows/daily-pull.yml: timeout-minutes: 20
+//                                                                    = 1200 s
+//   davon belegt (Tag 575, discovery/zeitbudget.js):
+//     otc-markets  300 s Budget + 30 s Socket-Timeout-Ueberstand  =  330 s
+//     nasdaq-api   300 s Budget + 45 s Socket-Timeout-Ueberstand  =  345 s
+//     (die Ueberstaende sind der R575-3-Befund: mitBudget prueft VOR einem Versuch und
+//      kann einen laufenden nicht abschneiden)
+//     Predefined-Yahoo-Kanal, gemessen im Lauf 91606250192 am 03.08.       =  104 s
+//   Exchange-Kanal NEU                                                     =  240 s
+//   ------------------------------------------------------------------------------
+//   Summe im pessimistischsten Fall (alle Decken gleichzeitig ausgereizt)  = 1019 s
+//   Reserve bis zum Schritt-Timeout fuer Mcap-Prefilter, Dedup, Cap, Schreiben = 181 s
+//
+// Diese Summe ist ABSICHTLICH pessimistisch: die beiden Adapter laufen in
+// Promise.allSettled parallel, der Wanduhr-Fall ist also max(330, 345) = 345 s statt 675 s.
+// Real bleiben damit 1200 - 345 - 104 - 240 = 511 s Reserve. Selbst die pessimistische
+// Rechnung traegt — das ist der Punkt der Herleitung.
+//
+// Warum 240 s reichen: die CI-Probe (Lauf 30869143397) hat die 19 Boersen dieses Kanals
+// voll durchpaginiert — 47 Seiten, gemessen 200-620 ms je Seite. Mit den 400 ms Pause
+// zwischen zwei Seiten derselben Boerse ergibt das rund 35 s. Das Budget ist also das
+// ~7-Fache des gemessenen Bedarfs und greift erst, wenn Yahoo klemmt.
+const EXCHANGE_BUDGET_MS = numEnv('EXCHANGE_BUDGET_MS', 240000, { min: 1000 });
+
+// Abnahme-Messung (T576): jede Boerse gegen ihre Erstlauf-Untergrenze. Gemessen wird
+// totalBandOk — die Zeilen, die das USD-Band und den Zweitlistungs-Filter ueberlebt haben.
+// AUSDRUECKLICH NICHT Neuzugaenge: die gehen im eingeschwungenen Betrieb korrekt gegen
+// null (das Universum kennt die Namen dann schon), ein Boden darauf waere ab dem zweiten
+// Tag ein Dauer-Falschalarm — und ein Dauer-Falschalarm ist genau der Zustand, aus dem
+// dieser Kanal gerade herausgeholt wird. Reine Funktion, damit sie ohne Netz pruefbar ist.
+function boersenUnterBoden(exchangeStats, kanaele) {
+  const unter = [];
+  for (const k of kanaele || []) {
+    const s = (exchangeStats || {})[k.code];
+    const ist = s && Number.isFinite(s.totalBandOk) ? s.totalBandOk : 0;
+    if (ist < k.boden) unter.push({ code: k.code, ist: ist, boden: k.boden, erstlauf: k.erstlauf });
+  }
+  return unter;
+}
+
+// Der Crumb-Vorlauf muss EINMAL ueber einen normalen Bibliotheks-Aufruf laufen, bevor der
+// erste POST rausgeht. Grund, an der Quelle nachgelesen (yahooFinanceFetch.js): die
+// Bibliothek baut `fetchOptionsBase` inklusive moduleOpts.fetchOptions und reicht es an
+// getCrumb WEITER. Ein POST-fetchOptions-Objekt geht damit an die HTML-Seite
+// finance.yahoo.com/quote/AAPL, die darauf ohne set-cookie antwortet — getCrumb wirft,
+// bevor der Screener ueberhaupt drankommt. Gemessen im ersten CI-Probelauf (30868439516):
+// 20 von 20 Boersen tot mit "No set-cookie header present in Yahoo's response".
+// Nach dem Vorwaermen liefert getCrumb den zwischengespeicherten Crumb zurueck, OHNE noch
+// einmal zu fetchen — der Leck-Pfad ist dann gar nicht mehr erreichbar.
+let _crumbVorgewaermt = false;
+async function crumbVorwaermen() {
+  if (_crumbVorgewaermt) return;
+  await yf.quote('AAPL');          // needsCrumb:true, fuellt Cookie-Jar + Crumb-Cache
+  _crumbVorgewaermt = true;
+}
+
+// Vertragsbrueche gelten fuer ALLE Boersen gleich und beenden den Kanal; alles Transiente
+// wird per Boerse wiederholt. Der Unterschied ist der Grund, warum es zwei Klassen gibt:
+// 29 Boersen nacheinander gegen einen kaputten Vertrag laufen zu lassen kostet Zeit und
+// erzeugt 29-mal dieselbe Meldung.
+const EXCHANGE_FATAL_STATUS = new Set([400, 401, 403, 404, 405, 410, 422]);
+const EXCHANGE_VERTRAGSBRUCH_RE = /\b(bad request|unauthorized|forbidden|not found|method not allowed|unprocessable)\b/i;
+// Transiente Klassen: Drossel, Netz, und der abgelaufene Crumb (pull-yahoo.js fuehrt
+// "Invalid Crumb" seit langem als transiente auth-Klasse — dieselbe Einstufung hier).
+const EXCHANGE_TRANSIENT_RE = /429|too many requests|rate limit|invalid crumb|no set-cookie|etimedout|econnreset|econnrefused|socket hang up|network|fetch failed|\b5\d\d\b/i;
+function exchangeFehlerIstFatal(meldung, httpStatus) {
+  if (EXCHANGE_FATAL_STATUS.has(Number(httpStatus))) return true;
+  const m = String(meldung == null ? '' : meldung);
+  if (EXCHANGE_TRANSIENT_RE.test(m)) return false;   // transient schlaegt Vertragsbruch
+  if (EXCHANGE_VERTRAGSBRUCH_RE.test(m)) return true;
+  // Und der ALTE Dauerdefekt: wer den Aufruf auf yf.screener() zurueckbaut, faellt wieder
+  // in die Schema-Validierung der Bibliothek. Das bleibt fatal — und ab Tag 576 ROT,
+  // weil EXCHANGE_KANAL_BEKANNT_DEFEKT nicht mehr traegt.
+  return EXCHANGE_SCREENER_SCHEMA_ERROR_RE.test(m);
+}
+function exchangeFehlerIstTransient(meldung, httpStatus) {
+  const s = Number(httpStatus);
+  if (s === 429 || (s >= 500 && s < 600)) return true;
+  return EXCHANGE_TRANSIENT_RE.test(String(meldung == null ? '' : meldung));
+}
+
+// Die USD-Schranken in die LISTING-Waehrung der Boerse umrechnen (Messbefund 2, siehe
+// EXCHANGE_KANAELE). toUsd(1, ccy, rates) liefert den USD-Wert EINER Einheit und kennt
+// dabei die Sub-Einheiten (GBp/ZAc) — die Umrechnung wird deshalb nicht nachgebaut,
+// sondern ueber dieselbe Funktion gefuehrt, die spaeter auch das USD-Gate rechnet.
+// Fehlt der Kurs, gibt es keine sinnvollen Schranken: null zurueck, der Aufrufer
+// ueberspringt die Boerse LAUT statt sie mit falschen Grenzen abzufragen.
+function lokaleSchranken(ccy, rates) {
+  const kurs = toUsd(1, ccy, rates);
+  if (!Number.isFinite(kurs) || kurs <= 0) return null;
+  return { min: Math.floor(MIN_MCAP_DISCOVERY / kurs), max: Math.ceil(MAX_MCAP_DISCOVERY / kurs) };
+}
+
+// Zweitlistungs-Erkennung — das Aequivalent zum domicile/subtype-Filter in
+// discovery/tv-scanner.js, gebaut auf die Felder, die der Yahoo-Screener tatsaechlich
+// mitliefert (nachgesehen an einer echten Antwort, nicht geraten):
+//   market === 'dr_market'   -> Hinterlegungsschein (Frankfurt: 6185 von 6185 Zeilen)
+//   financialCurrency !== currency -> die Firma berichtet in einer anderen Waehrung als
+//     der, in der sie hier notiert. Das ist der Trager-Fall fuer Mailand (1MA.MI =
+//     Mastercard), Sao Paulo (D1DG34.SA = Datadog) und Mexiko (ZM.MX = Zoom), die Yahoo
+//     alle als lokalen Markt fuehrt und die `market` deshalb NICHT faengt.
+// Bewusste Fehlerrichtung: die Regel verwirft auch echte Lokal-Firmen, die in Fremdwaehrung
+// bilanzieren (STMicroelectronics in Mailand berichtet in USD). Diese Faelle sind fast
+// ausnahmslos zusaetzlich in den USA notiert und damit ueber die US-Quellen ohnehin im
+// Universum — die Verwerfung kostet also nichts, waehrend die Gegenrichtung (Zweitlistung
+// durchlassen) einen Cap-Slot fuer eine bereits bekannte Firma verbrennt.
+function istZweitlistung(q) {
+  if (!q) return false;
+  if (q.market === 'dr_market') return true;
+  return !!(q.currency && q.financialCurrency && q.currency !== q.financialCurrency);
+}
+
+async function fetchExchangePage(kanal, minLokal, maxLokal, offset, attempt) {
   attempt = attempt || 1;
   const MAX_ATTEMPTS = 3;
   try {
-    const r = await yf.screener({
+    await crumbVorwaermen();
+    const rumpf = {
+      size: EXCHANGE_SEITE,
+      offset: offset || 0,
+      sortField: 'intradaymarketcap',
+      sortType: 'DESC',
+      quoteType: 'EQUITY',
       query: {
         operator: 'AND',
         operands: [
-          { operator: 'btwn', operands: ['intradaymarketcap', minMcap, maxMcap] },
-          { operator: 'eq', operands: ['exchange', exchangeCode] }
+          { operator: 'btwn', operands: ['intradaymarketcap', minLokal, maxLokal] },
+          { operator: 'eq', operands: ['exchange', kanal.code] }
         ]
       },
-      count: 250,
-      offset: offset || 0,
-      sortField: 'intradaymarketcap',
-      sortType: 'DESC'
-    });
-    return { quotes: (r && r.quotes) || [], error: null };
-  } catch (e) {
-    const msg = String(e && e.message || e);
-    const is429 = /429|too many requests|rate limit/i.test(msg);
-    if (is429 && attempt < MAX_ATTEMPTS) {
-      const backoffMs = 1000 * Math.pow(2, attempt);
-      console.warn('  [' + exchangeCode + '] 429 (attempt ' + attempt + '/' + MAX_ATTEMPTS +
-        ') — backoff ' + backoffMs + 'ms');
-      await new Promise(r => setTimeout(r, backoffMs));
-      return fetchExchangePage(exchangeCode, minMcap, maxMcap, offset, attempt + 1);
+      userId: '', userIdType: 'guid'
+    };
+    const antwort = await yf._fetch(
+      EXCHANGE_SCREENER_URL,
+      { lang: 'en-US', region: 'US', formatted: 'false' },
+      { fetchOptions: { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(rumpf) } },
+      'json', true);
+    const r = antwort && antwort.finance && antwort.finance.result && antwort.finance.result[0];
+    if (!r || !Array.isArray(r.quotes)) {
+      // Antwortform gebrochen. NICHT als leere Seite durchwinken: genau so sieht ein
+      // Schema-Wechsel aus, und genau so wuerde er still das Universum schrumpfen.
+      return { quotes: [], total: null, error: 'Antwortform gebrochen: finance.result[0].quotes ist kein Array', fatal: true };
     }
-    return { quotes: [], error: msg };
+    return { quotes: r.quotes, total: Number.isFinite(r.total) ? r.total : null, error: null };
+  } catch (e) {
+    const msg = String((e && e.message) || e);
+    const status = e && e.code;
+    if (exchangeFehlerIstTransient(msg, status) && attempt < MAX_ATTEMPTS) {
+      // Ein abgelaufener Crumb heilt nur, wenn der Vorlauf noch einmal laeuft.
+      if (/invalid crumb|no set-cookie|401/i.test(msg)) _crumbVorgewaermt = false;
+      const backoffMs = 1000 * Math.pow(2, attempt);
+      console.warn('  [' + kanal.code + '] transient (Versuch ' + attempt + '/' + MAX_ATTEMPTS +
+        ', ' + msg.slice(0, 80) + ') — backoff ' + backoffMs + 'ms');
+      await new Promise((r) => setTimeout(r, backoffMs));
+      return fetchExchangePage(kanal, minLokal, maxLokal, offset, attempt + 1);
+    }
+    return { quotes: [], total: null, error: msg, httpStatus: status };
   }
 }
 
@@ -535,7 +721,27 @@ const MIN_PREDEFINED_NONEMPTY_ANTEIL = 0.30;
 // dieser EINE bekannte Dauerdefekt faerbt den Lauf nicht rot.
 // ABNAHME DES FIXES: wer den Exchange-Kanal auf einen 3.15-kompatiblen Aufruf umbaut, setzt
 // diesen Schalter auf false — dann ist ein erneuter Schema-Bruch wieder sofort rot.
-const EXCHANGE_KANAL_BEKANNT_DEFEKT = true;
+//
+// ── TAG 576: ABGENOMMEN, SCHALTER AUF false ──────────────────────────────────────
+// Der Umbau ist erfolgt (fetchExchangePage geht ueber yf._fetch auf den POST-Screener,
+// CI-Probe 30869143397 vom GitHub-Runner: 19 Boersen, 47 Seiten, alle HTTP 200). Damit
+// gibt es keinen bekannten Dauerdefekt mehr, den dieser Schalter decken duerfte — jeder
+// Vertragsbruch dieses Kanals faerbt den Lauf ab sofort wieder rot.
+//
+// NEBENBEFUND, der die Umstellung ohnehin erzwungen haette: die T569-F3-Verengung hat seit
+// Tag 569 NICHT MEHR GEGRIFFEN. Sie verlangt, dass die Fehlermeldung woertlich das verbotene
+// Feld `query` nennt — gemessen wurde das aber gegen eine Bibliothek mit eingeschalteter
+// Optionsprotokollierung. refresh-universe.js baut seinen Client mit
+// validation.logOptionsErrors=false; die Meldung lautet dann nur noch
+//   "yahooFinance.screener called with invalid options."
+// und enthaelt kein `query`. exchangeDefektIstDerBekannte() lieferte damit im ECHTEN Lauf
+// false, der Lauf wurde also taeglich rot — genau der Dauer-Falschalarm, den der Schalter
+// verhindern sollte. Lokal am HEAD 850a0aec58 reproduziert (Tag 576, Commit-Beleg).
+// Der Schalter und die Funktion bleiben stehen: sie sind der Weg zurueck, falls der Kanal
+// je wieder belegt dauerhaft ausfaellt. Wer ihn erneut auf true setzt, muss die
+// Messgrundlage neu belegen — tests/refresh-universe.test.js bindet ihn an die im
+// package-lock stehende yahoo-finance2-Version.
+const EXCHANGE_KANAL_BEKANNT_DEFEKT = false;
 
 // Reine Funktion (Zaehler rein, Urteil raus), damit sie ohne Netz pruefbar ist.
 function predefinedKanalEingebrochen(nonEmpty, attempted, minAnteil = MIN_PREDEFINED_NONEMPTY_ANTEIL) {
@@ -602,21 +808,29 @@ function inDiscoveryMcapBand(mcapUsd) {
 // ist nur deshalb vollstaendig, weil es in beiden Ingest-Schleifen GENAU ZWEI verwerfende
 // Pfade gibt (Vor-Gate-Helfer + Band-Gate) — tests/refresh-universe.test.js pinnt das am
 // Objekt. Geht die Zerlegung trotzdem nicht auf, wird KEINE Ursache behauptet.
-function kanalLeerlaufAlarm(kanal, abgeholt, behalten, fxLuecken, vorFilterVerworfen) {
+// T576: vierter Term `zweitlistungen`. Der Exchange-Kanal hat mit dem Zweitlistungs-Filter
+// einen DRITTEN verwerfenden Pfad bekommen. Bliebe er hier unbekannt, wanderte er still in
+// die bandDrops-Restmenge — und die Meldung behauptete wieder eine Groessen-Ursache, die es
+// nicht gibt (genau der T567-W3-Befund, nur mit anderem Verursacher). Der Predefined-Kanal
+// hat diesen Pfad nicht und uebergibt nichts; der Vorgabewert 0 haelt seine Rechnung gleich.
+function kanalLeerlaufAlarm(kanal, abgeholt, behalten, fxLuecken, vorFilterVerworfen, zweitlistungen) {
   if (!(abgeholt > 0 && behalten === 0)) return null;
+  const zweit = zweitlistungen === undefined ? 0 : zweitlistungen;
   const kopf = '::error::' + kanal + ' hat ' + abgeholt + ' Quotes abgeholt und davon KEINE EINZIGE behalten. ';
   const schluss = ' Der Kanal LAEUFT und meldet trotzdem nichts: der Tag-510-Waechter misst abgeholte Buckets statt ' +
     'Behaltenes, und MIN_DISCOVERY_CANDIDATES sieht die Yahoo-Kanaele nicht (DISCOVERY_SOURCE_NAMES ' +
     'listet nur die Adapter).';
-  const gateErreicht = abgeholt - vorFilterVerworfen;
+  const gateErreicht = abgeholt - vorFilterVerworfen - zweit;
   const bandDrops = gateErreicht - behalten - fxLuecken;
-  if (!Number.isFinite(vorFilterVerworfen) || !(vorFilterVerworfen >= 0) || gateErreicht < 0 || bandDrops < 0) {
+  if (!Number.isFinite(vorFilterVerworfen) || !(vorFilterVerworfen >= 0) ||
+      !Number.isFinite(zweit) || !(zweit >= 0) || gateErreicht < 0 || bandDrops < 0) {
     return kopf + 'Die Zerlegung geht nicht auf (' + abgeholt + ' abgeholt gegen ' + vorFilterVerworfen +
-      ' vor dem Gate + ' + fxLuecken + ' FX-Luecken + ' + behalten + ' behalten) — Ursache offen, es gibt ' +
-      'einen ungezaehlten Verwerfungs-Pfad in der Ingest-Schleife.' + schluss;
+      ' vor dem Gate + ' + zweit + ' Zweitlistungen + ' + fxLuecken + ' FX-Luecken + ' + behalten +
+      ' behalten) — Ursache offen, es gibt einen ungezaehlten Verwerfungs-Pfad in der Ingest-Schleife.' + schluss;
   }
-  const vorFilterSatz = vorFilterVerworfen > 0
-    ? vorFilterVerworfen + ' Zeilen fielen VOR dem Gate (Nicht-Equity/Junk-Symbole). ' : '';
+  const vorFilterSatz = (vorFilterVerworfen > 0
+    ? vorFilterVerworfen + ' Zeilen fielen VOR dem Gate (Nicht-Equity/Junk-Symbole). ' : '') +
+    (zweit > 0 ? zweit + ' Zeilen waren Zweitlistungen (Hinterlegungsscheine/fremde Berichtswaehrung). ' : '');
   if (gateErreicht === 0) {
     return kopf + vorFilterSatz + 'KEINE EINZIGE Zeile hat das Groessen-Gate ueberhaupt erreicht — das ist ' +
       'keine Waehrungs- und keine Groessen-Frage. Bei den bewusst nicht-Equity-Buckets (Fonds/Anleihen) ' +
@@ -763,14 +977,14 @@ async function main() {
     predefinedTotalQuotes, predefinedKept, predefinedFxLuecke, predefinedVorFilter);
   if (predefinedLeerlauf) { console.error(predefinedLeerlauf); process.exitCode = 1; }
 
-  // Tag 131: Custom Exchange-Screener (paginiert) — zusätzlich zu predefined Screener-Buckets.
-  // Ziel: 10k+ Stocks statt ~3500.
-  console.log('\nCustom Exchange-Screener (Tag 131)...');
+  // Tag 131 / Tag 576: Custom Exchange-Screener (paginiert) — zusätzlich zu predefined Buckets.
+  console.log('\nCustom Exchange-Screener (Tag 131, Tag 576 neu aufgesetzt)...');
   // F-11: derselbe Boden wie im Predefined-Kanal — EINE Quelle, kein zweiter Zahlen-Boden.
-  // Diese beiden gehen zusaetzlich als serverseitige Query-Grenzen an fetchExchangePage().
-  const MIN_MCAP_CUSTOM = MIN_MCAP_DISCOVERY;  // $800M+ (Tag 170 reverted, F-11 gesenkt)
-  const MAX_MCAP_CUSTOM = MAX_MCAP_DISCOVERY;  // $500B — unveraendert
+  // Sie gehen NICHT mehr direkt als Query-Grenzen raus: Yahoos serverseitiger Filter rechnet
+  // in Listing-Waehrung, die Umrechnung macht lokaleSchranken() je Boerse (Messbefund 2).
   let customAdded = 0;
+  const exchangeT0 = Date.now();
+  let exchangeBudgetGerissen = false;
   // F-DP-037 (Tag 190): per-exchange statistics so we can surface silent
   // breakage. Without this, a 429 or schema break on one exchange just made
   // the exchange disappear with zero diagnostic.
@@ -793,57 +1007,104 @@ async function main() {
   let exchangeFxLuecke = 0;
   // T567-W3: dritter Zaehler wie im Predefined-Kanal (Junk/Nicht-Equity vor dem Gate).
   let exchangeVorFilter = 0;
-  for (const exch of EXCHANGE_CODES) {
+  // T576: Zweitlistungen als eigener, GEZAEHLTER Verwerfungs-Pfad (siehe istZweitlistung).
+  let exchangeZweitlistung = 0;
+  for (const kanal of EXCHANGE_KANAELE) {
+    const exch = kanal.code;
     if (exchangeScreenerFatal) break;
+    // T576 Deadline-Guard: die Boersen-Schleife darf den Schritt nicht toeten. Sie prueft
+    // VOR jeder Boerse, nicht nur am Ende — eine Boerse mit vielen Seiten soll gar nicht
+    // erst anfangen, wenn das Budget schon aufgebraucht ist.
+    if (Date.now() - exchangeT0 >= EXCHANGE_BUDGET_MS) {
+      exchangeBudgetGerissen = true;
+      console.error('::error::EXCHANGE-ZEITBUDGET GERISSEN: ' + Math.round(EXCHANGE_BUDGET_MS / 1000) +
+        's aufgebraucht (' + Math.round((Date.now() - exchangeT0) / 1000) + 's verbraucht) vor Boerse ' +
+        exch + '. Die restlichen Boersen (' + EXCHANGE_CODES.slice(EXCHANGE_CODES.indexOf(exch)).join(',') +
+        ') werden NICHT abgefragt; der Kanal liefert einen Teilbestand. Kein Abbruch — die ' +
+        'Laenderadapter und der Watchlist-Write danach sollen laufen (T576, Herleitung an ' +
+        'EXCHANGE_BUDGET_MS).');
+      break;
+    }
+    const schranken = lokaleSchranken(kanal.ccy, _FX_RATES);
+    if (!schranken) {
+      // LAUT ueberspringen statt mit falschen Grenzen abzufragen: ohne Kurs waeren die
+      // Schranken NaN, Yahoo lieferte irgendetwas, und niemand saehe den Unterschied.
+      exchangeStats[exch] = { totalQuotes: 0, totalKept: 0, totalBandOk: 0, pageErrors: 1, zweitlistung: 0 };
+      console.error('::error::[' + exch + '] kein FX-Kurs fuer die Listing-Waehrung ' + kanal.ccy +
+        ' in fx-rates.json — die serverseitigen Schranken waeren NaN. Boerse uebersprungen; ' +
+        'sie faellt unten zusaetzlich unter ihren Abnahme-Boden.');
+      process.exitCode = 1;
+      continue;
+    }
     let offset = 0;
     let pageEmpty = false;
     let pageErrors = 0;
     let totalQuotes = 0;
     let totalKept = 0;
+    let zweitlistung = 0;
     // T562-M1: eigener Zaehler noetig — `totalKept` zaehlt NEUZUGAENGE (kept++ steht im
     // has()-Zweig), nicht Band-Durchlaeufer. Eine Boerse, die nur schon Bekanntes liefert,
     // haette sonst faelschlich als "alles verworfen" gegolten.
     let totalBandOk = 0;
     while (!pageEmpty) {
-      const { quotes, error } = await fetchExchangePage(exch, MIN_MCAP_CUSTOM, MAX_MCAP_CUSTOM, offset);
+      if (Date.now() - exchangeT0 >= EXCHANGE_BUDGET_MS) {
+        exchangeBudgetGerissen = true;
+        pageErrors++;
+        console.error('::error::EXCHANGE-ZEITBUDGET GERISSEN mitten in ' + exch + ' (offset=' + offset +
+          '). Diese Boerse liefert einen Teilbestand und faellt damit womoeglich unter ihren ' +
+          'Abnahme-Boden — das ist gewollt sichtbar, nicht kaschiert.');
+        break;
+      }
+      const { quotes, total, error, httpStatus, fatal } = await fetchExchangePage(kanal, schranken.min, schranken.max, offset);
       if (error) {
-        // Bug 3: yahoo-finance2 v3.14 akzeptiert im screener()-Schema nur 'scrIds'
-        // (additionalProperties verboten). Der {query,offset,sortField,sortType}-Call
-        // wirft deterministisch VOR jedem Netzwerk-Zugriff 'called with invalid options'
-        // -> alle 29 Boersen liefern still 0. Das ist ein permanenter Konfig-Fehler, kein
-        // transienter Ausfall: fail-loud (::error:: + non-zero exit code), aber ohne den
-        // Rest von main() (Laenderadapter, Watchlist-Write) zu blockieren (BH-038).
-        if (EXCHANGE_SCREENER_SCHEMA_ERROR_RE.test(error)) {
-          // DT-3 (Verifikation Exchange-Kanal 2026-08-04): DIESER Zweig zaehlte pageErrors
-          // nie hoch. Folge im Lauf 91606250192: die Statistik fuer NMS stand auf
-          // {totalQuotes:0, pageErrors:0}, und die 0-Quotes-Warnung weiter unten meldete
-          // woertlich "Exchanges with 0 quotes and no error (possible silent failure): NMS"
-          // — ausgerechnet ueber die Boerse, die soeben geworfen HAT. Ein blinder Waechter,
-          // der auf einen lauten Fehler mit "kein Fehler" antwortet. Der Wurf wird gezaehlt
-          // wie jeder andere Seitenfehler auch; die Fatal-Behandlung darunter bleibt.
-          pageErrors++;
-          console.error('::error::Custom-Exchange-Screener ist mit yahoo-finance2 (v3.14) inkompatibel — ' +
-            'screener() akzeptiert nur scrIds, der query-basierte Exchange-Call wirft "' + error + '". ' +
-            'Der gesamte Exchange-Kanal (' + EXCHANGE_CODES.length + ' Boersen) liefert 0. ' +
-            'Fix: query-Form auf einen v3.14-kompatiblen HTTP-Call umbauen oder Library-Version anpassen.');
+        pageErrors++;
+        // T576: der Fatal-Zweig ist RETARGETIERT. Bis Tag 575 suchte er die Meldung
+        // "called with invalid options" der Bibliotheks-Schemapruefung — die kann es nach
+        // dem Umbau auf yf._fetch gar nicht mehr geben, der Zweig waere also tot gewesen
+        // und jeder Vertragsbruch waere als gewoehnlicher Seitenfehler durchgelaufen.
+        // Jetzt entscheidet exchangeFehlerIstFatal() ueber HTTP-Status (400/401/403/404/
+        // 405/410/422), ueber Yahoos Fehlerbeschreibung (finance.error.description, die
+        // yahoo-finance2 als message durchreicht) und ueber `fatal` aus der gebrochenen
+        // Antwortform. Die alte Schema-Regex bleibt EINE der Bedingungen: wer den Aufruf
+        // auf yf.screener() zurueckbaut, faellt wieder in genau sie hinein.
+        if (fatal || exchangeFehlerIstFatal(error, httpStatus)) {
+          console.error('::error::Custom-Exchange-Screener: VERTRAGSBRUCH bei ' + exch +
+            ' (HTTP ' + (httpStatus == null ? '-' : httpStatus) + '): "' + error + '". ' +
+            'Das ist kein transienter Ausfall — er trifft alle ' + EXCHANGE_CODES.length +
+            ' Boersen gleich, deshalb bricht der Kanal hier ab statt ihn ' +
+            (EXCHANGE_CODES.length - 1) + '-mal zu wiederholen. Der Lauf wird rot. ' +
+            'NAECHSTER SCHRITT: tests/yahoo-schema-canary.js gegen den Screener laufen lassen — ' +
+            'er nennt das gebrochene Feld.');
           exchangeScreenerFatal = true;
-          // T566-H2: bekannter Dauerdefekt -> keine Rot-Faerbung (Begruendung + Abnahme-
-          // Kriterium an EXCHANGE_KANAL_BEKANNT_DEFEKT). Die ::error::-Zeile oben bleibt.
-          // T569-F3: und zwar NUR fuer den belegten query-Fall. Jeder andere Schema-Bruch
-          // dieses Kanals faerbt weiterhin rot — sonst deckt der Dauerdefekt-Schalter eine
-          // ganze Fehlerklasse ab, von der genau ein Fall gemessen ist.
+          // T566-H2/T569-F3: der Dauerdefekt-Schalter durfte den Lauf gruen halten, solange
+          // der Kanal belegt tot war. Seit Tag 576 ist er false — jeder Vertragsbruch faerbt
+          // wieder rot. Die Bedingung bleibt AUSGESCHRIEBEN stehen (statt sie zu loeschen),
+          // damit sichtbar ist, was der Schalter gedeckt hat und wann er wieder greifen wuerde.
           if (!(EXCHANGE_KANAL_BEKANNT_DEFEKT && exchangeDefektIstDerBekannte(error))) {
-            console.error('::error::Dieser Schema-Bruch ist NICHT der bekannte Dauerdefekt — die ' +
-              'Meldung nennt kein verbotenes `query`-Feld. Der Lauf wird rot (T569-F3).');
             process.exitCode = 1;
+          } else {
+            console.error('::error::Dieser Bruch ist der als Dauerdefekt eingetragene Fall — der ' +
+              'Lauf bleibt gruen. Wenn Sie das hier lesen, steht EXCHANGE_KANAL_BEKANNT_DEFEKT ' +
+              'wieder auf true und die Abnahme von Tag 576 ist zurueckgenommen worden.');
           }
           pageEmpty = true;
           break;
         }
-        pageErrors++;
         console.warn('  [' + exch + ' offset=' + offset + '] FAIL: ' + error);
         // F-DP-037: don't pretend the page was empty — break to next exchange
         // but record the error.
+        pageEmpty = true;
+        break;
+      }
+      // T576 Schema-Kanarienvogel im Betrieb: Yahoo meldet `total` und liefert trotzdem
+      // keine Zeile. Das ist kein leeres Ergebnis, sondern ein Formwechsel — und es ist
+      // genau der Fall, den eine "0 Quotes"-Pruefung als legitimes Seitenende durchwinkt.
+      if (quotes.length === 0 && Number.isFinite(total) && total > offset) {
+        pageErrors++;
+        console.error('::error::[' + exch + ' offset=' + offset + '] Yahoo meldet total=' + total +
+          ', liefert aber 0 Zeilen. Das ist ein Formwechsel der Antwort, kein Seitenende — ' +
+          'die Paginierung wuerde hier still abbrechen und die Boerse als "fertig" gelten.');
+        process.exitCode = 1;
         pageEmpty = true;
         break;
       }
@@ -853,6 +1114,10 @@ async function main() {
       for (const q of quotes) {
         // T567-W3: derselbe gezaehlte Vor-Gate-Pfad wie im Predefined-Kanal.
         if (_vorGateVerworfen(q)) { exchangeVorFilter++; continue; }
+        // T576: Zweitlistungen VOR dem Mcap-Gate raus und gezaehlt. Vor dem Gate, weil sie
+        // sonst als Band-Durchlaeufer in totalBandOk landen und den Abnahme-Boden mit
+        // Zeilen fuellen wuerden, die gar nicht ins Universum sollen.
+        if (istZweitlistung(q)) { zweitlistung++; exchangeZweitlistung++; continue; }
         const sym = q.symbol.toUpperCase();
         // Bug 4: USD-konvertieren vor dem Gate (die Schwellen sind USD-Schwellen).
         const mcap = toUsd(q.marketCap, q.currency, _FX_RATES);
@@ -881,19 +1146,46 @@ async function main() {
       }
       totalKept += kept;
       if (kept > 0) console.log(`  ${exch} offset=${offset}: ${quotes.length} quotes, ${kept} new`);
-      if (quotes.length < 250) { pageEmpty = true; }
-      else { offset += 250; await _sleep(400); }
+      if (quotes.length < EXCHANGE_SEITE) { pageEmpty = true; }
+      else { offset += EXCHANGE_SEITE; await _sleep(400); }
     }
-    exchangeStats[exch] = { totalQuotes, totalKept, totalBandOk, pageErrors };
+    exchangeStats[exch] = { totalQuotes, totalKept, totalBandOk, pageErrors, zweitlistung };
   }
-  console.log('Custom-Screener total neue Tickers: ' + customAdded);
+  console.log('Custom-Screener total neue Tickers: ' + customAdded +
+    ' (Zweitlistungen verworfen: ' + exchangeZweitlistung + ', Laufzeit ' +
+    Math.round((Date.now() - exchangeT0) / 1000) + 's von ' + Math.round(EXCHANGE_BUDGET_MS / 1000) + 's)');
   // F-DP-037: per-exchange summary + soft alert when an exchange returned 0 quotes.
   // If a previously-productive exchange suddenly returns 0 (and no error was raised),
   // that's the silent-shrink scenario — log it conspicuously.
   const totalsByExch = Object.entries(exchangeStats)
-    .map(([e, s]) => `${e}=${s.totalQuotes}/${s.totalKept}n${s.pageErrors > 0 ? ' ERR:' + s.pageErrors : ''}`)
+    .map(([e, s]) => `${e}=${s.totalQuotes}/${s.totalBandOk}b/${s.totalKept}n${s.zweitlistung ? ' Z:' + s.zweitlistung : ''}${s.pageErrors > 0 ? ' ERR:' + s.pageErrors : ''}`)
     .join(' ');
-  console.log('  Per-exchange (totalQuotes/newKept): ' + totalsByExch);
+  console.log('  Per-exchange (totalQuotes/bandOk/newKept): ' + totalsByExch);
+
+  // ── T576 ABNAHME: jede Boerse gegen ihre Erstlauf-Untergrenze ───────────────────
+  // Der Sinn: der Kanal war fuenf Monate tot, ohne dass es jemandem auffiel, weil nichts
+  // eine ERWARTUNG an ihn hatte. Eine Aggregat-Zahl haette das auch nicht gefangen — solange
+  // die grossen Boersen liefern, verschwindet der Ausfall einer kleinen im Rauschen. Deshalb
+  // je Boerse, gegen die Haelfte der gemessenen Erstlauf-Ausbeute.
+  const unterBoden = boersenUnterBoden(exchangeStats, EXCHANGE_KANAELE);
+  if (unterBoden.length > 0 && !exchangeBudgetGerissen) {
+    console.error('::error::EXCHANGE-ABNAHME VERFEHLT bei ' + unterBoden.length + ' von ' +
+      EXCHANGE_KANAELE.length + ' Boersen: ' +
+      unterBoden.map((u) => u.code + ' ' + u.ist + '<' + u.boden + ' (Erstlauf ' + u.erstlauf + ')').join(', ') +
+      '. Gemessen werden Zeilen im USD-Band NACH dem Zweitlistungs-Filter, nicht Neuzugaenge. ' +
+      'Faellt EINE Boerse unter die Haelfte ihrer Erstlauf-Ausbeute, ist das entweder ein ' +
+      'geaenderter Boersencode, ein Waehrungs-/Einheitenwechsel in Yahoos Filter oder ein ' +
+      'Ausfall genau dieses Marktes — alle drei sind sonst unsichtbar, weil die grossen ' +
+      'Boersen den Aggregat-Wert halten. NAECHSTER SCHRITT: Per-exchange-Zeile darueber.');
+    process.exitCode = 1;
+  } else if (unterBoden.length > 0) {
+    console.warn('::warning::' + unterBoden.length + ' Boersen unter ihrem Abnahme-Boden, ABER das ' +
+      'Exchange-Zeitbudget ist gerissen — der Teilbestand erklaert die Unterschreitung, es wird ' +
+      'kein zweites rotes X dafuer gesetzt (das Budget hat sich oben schon gemeldet).');
+  } else {
+    console.log('  Exchange-Abnahme: alle ' + EXCHANGE_KANAELE.length +
+      ' Boersen ueber ihrer Erstlauf-Untergrenze.');
+  }
   const zeroQuoteExchanges = nullQuotenOhneFehler(exchangeStats);
   if (zeroQuoteExchanges.length > 0) {
     console.warn('[WARN] Exchanges with 0 quotes and no error (possible silent failure): ' +
@@ -905,7 +1197,7 @@ async function main() {
   const exchangeQuotesGesamt = Object.values(exchangeStats).reduce((s, x) => s + x.totalQuotes, 0);
   const exchangeBandOkGesamt = Object.values(exchangeStats).reduce((s, x) => s + x.totalBandOk, 0);
   const exchangeLeerlauf = kanalLeerlaufAlarm('Custom-Exchange-Screener (' + EXCHANGE_CODES.length + ' Boersen)',
-    exchangeQuotesGesamt, exchangeBandOkGesamt, exchangeFxLuecke, exchangeVorFilter);
+    exchangeQuotesGesamt, exchangeBandOkGesamt, exchangeFxLuecke, exchangeVorFilter, exchangeZweitlistung);
   if (exchangeLeerlauf) { console.error(exchangeLeerlauf); process.exitCode = 1; }
 
   // Tag 510: BEIDE Yahoo-Kanaele gleichzeitig auf 0 — die Redundanz-Begruendungen
@@ -1432,7 +1724,13 @@ module.exports = {
   kanalLeerlaufAlarm,     // T562-M1: Kanal holt Quotes ab und behaelt keine einzige
   nullQuotenOhneFehler,   // DT-3: "0 Quotes und kein Fehler" — nur noch echte STILLE Faelle
   discoveryErtragsZeile,  // S4-DISC-001: Teilausfaelle sichtbar machen, einzeln pruefbar
-  inDiscoveryMcapBand, MIN_MCAP_DISCOVERY, MAX_MCAP_DISCOVERY  // F-11: $800M-$500B-Band
+  inDiscoveryMcapBand, MIN_MCAP_DISCOVERY, MAX_MCAP_DISCOVERY, // F-11: $800M-$500B-Band
+  // ── T576: der neu aufgesetzte Exchange-Kanal, Stueck fuer Stueck einzeln pruefbar ──
+  EXCHANGE_KANAELE, EXCHANGE_CODES, EXCHANGE_SCREENER_URL, EXCHANGE_SEITE, EXCHANGE_BUDGET_MS,
+  lokaleSchranken,             // USD-Band -> Listing-Waehrung (Yahoos Filter rechnet lokal)
+  istZweitlistung,             // domicile/subtype-Aequivalent auf den Screener-Feldern
+  exchangeFehlerIstFatal, exchangeFehlerIstTransient,  // retargetierter Klassifizierer
+  boersenUnterBoden            // Abnahme je Boerse gegen die Erstlauf-Untergrenze
 };
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });

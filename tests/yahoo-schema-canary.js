@@ -300,6 +300,113 @@ async function checkAnchor(anchor, failures, warnings) {
   }
 }
 
+// ── T576: zweiter Kanarienvogel — der POST-Exchange-Screener ─────────────────────
+// WARUM HIER UND NICHT ALS EIGENE DATEI: dieser Kanarienvogel haengt schon im prep-Job
+// (Schritt "Schema-Drift Canary") mit genau der Ausgangs-Semantik, die gebraucht wird —
+// exit 1 = Drift blockt hart, exit 2 / Yahoo-unerreichbar = Warnung. Eine zweite Datei
+// haette dieselbe Verdrahtung noch einmal gebraucht, und eine Verdrahtung, die es zweimal
+// gibt, driftet auseinander.
+//
+// WAS ER SCHUETZT: refresh-universe.js liest aus der Antwort genau vier Dinge —
+// finance.result[0].total (Paginierungs-Ende + der "total>0 aber 0 Zeilen"-Alarm) und je
+// Zeile symbol, marketCap, currency (Mcap-Gate). Faellt eines davon weg, schrumpft das
+// Universum STILL: der Kanal meldet weiter Zeilen, sie fallen nur alle am Gate durch.
+// Genau die Bugklasse, gegen die dieser ganze Kanarienvogel gebaut ist (Tag 219c F1).
+//
+// ANKER NMS: US-Boerse, Notierung in USD — der Formcheck braucht damit keine FX-Datei und
+// bleibt so eigenstaendig wie der Rest dieser Datei (nur yahoo-finance2).
+const SCREENER_ANKER = 'NMS';
+const SCREENER_FELDER = ['symbol', 'marketCap', 'currency'];
+
+// Die Formpruefung als REINE Funktion (Antwort rein, Mangelliste raus), damit sie ohne Netz
+// pruefbar ist — tests/refresh-universe.test.js faehrt beide Richtungen.
+function pruefeScreenerForm(antwort) {
+  const maengel = [];
+  const r = antwort && antwort.finance && antwort.finance.result && antwort.finance.result[0];
+  if (!r) {
+    maengel.push('screener: finance.result[0] fehlt in der Antwort');
+    return maengel;
+  }
+  if (!Number.isFinite(r.total)) {
+    maengel.push('screener: finance.result[0].total ist keine endliche Zahl (' + typeof r.total +
+      '=' + JSON.stringify(r.total) + ') — refresh-universe.js braucht sie fuer das ' +
+      'Paginierungs-Ende und fuer den "total>0 aber 0 Zeilen"-Alarm');
+  }
+  if (!Array.isArray(r.quotes)) {
+    maengel.push('screener: finance.result[0].quotes ist kein Array (' + typeof r.quotes + ')');
+    return maengel;
+  }
+  if (r.quotes.length === 0) {
+    maengel.push('screener: finance.result[0].quotes ist leer — der Anker ' + SCREENER_ANKER +
+      ' hat immer Hunderte Zeilen; leer heisst Filter- oder Formwechsel, nicht "keine Treffer"');
+    return maengel;
+  }
+  const q = r.quotes[0];
+  for (const feld of SCREENER_FELDER) {
+    const v = q[feld];
+    const ok = feld === 'marketCap' ? checkType(v, 'number') : checkType(v, 'string');
+    if (!ok) {
+      maengel.push('screener: quotes[0].' + feld + ' fehlt oder hat den falschen Typ (' +
+        typeof v + '=' + JSON.stringify(v) + ') — ohne dieses Feld verwirft das Mcap-Gate ' +
+        'in refresh-universe.js JEDE Zeile, und das Universum schrumpft still');
+    }
+  }
+  // financialCurrency und market sind der Zweitlistungs-Filter (T576). Ihr Fehlen ist KEIN
+  // Drift-Fehler — der Filter ist bewusst fail-open gebaut —, aber es ist meldenswert:
+  // ohne sie laesst er wieder alle Hinterlegungsscheine durch.
+  return maengel;
+}
+function screenerHinweise(antwort) {
+  const r = antwort && antwort.finance && antwort.finance.result && antwort.finance.result[0];
+  const q = r && Array.isArray(r.quotes) && r.quotes[0];
+  if (!q) return [];
+  const fehlt = ['financialCurrency', 'market'].filter((f) => q[f] == null);
+  if (fehlt.length === 0) return [];
+  return ['screener: die Zweitlistungs-Felder ' + fehlt.join('/') + ' fehlen in der Antwort. ' +
+    'istZweitlistung() ist fail-open gebaut, verwirft dann also nichts mehr — Frankfurt & Co. ' +
+    'kaemen wieder ungefiltert in den 25.000er-Cap, falls sie je in EXCHANGE_KANAELE zurueckkehren.'];
+}
+
+async function checkScreener(failures, warnings) {
+  console.log('[canary] Exchange-Screener (POST, ' + SCREENER_ANKER + ')...');
+  let antwort;
+  try {
+    // Crumb-Vorlauf ueber einen normalen Aufruf — sonst reicht die Bibliothek die
+    // POST-fetchOptions an getCrumb weiter und der Cookie-Vorlauf scheitert.
+    // (Gemessen in der CI-Probe 30868439516: 20/20 Aufrufe tot ohne diesen Vorlauf.)
+    await yf.quote('AAPL');
+    antwort = await yf._fetch(
+      'https://${YF_QUERY_HOST}/v1/finance/screener',
+      { lang: 'en-US', region: 'US', formatted: 'false' },
+      { fetchOptions: {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          size: 25, offset: 0, sortField: 'intradaymarketcap', sortType: 'DESC', quoteType: 'EQUITY',
+          query: { operator: 'AND', operands: [
+            { operator: 'btwn', operands: ['intradaymarketcap', 800e6, 500e9] },
+            { operator: 'eq', operands: ['exchange', SCREENER_ANKER] }
+          ] },
+          userId: '', userIdType: 'guid'
+        })
+      } },
+      'json', true);
+  } catch (e) {
+    // Ein Wurf heisst hier "Yahoo unerreichbar oder drosselt" — dieselbe Einstufung wie bei
+    // den quoteSummary-Ankern. Ein VERTRAGSbruch (400/403) faellt im Tageslauf ueber den
+    // Fatal-Zweig in refresh-universe.js auf, nicht ueber diesen Kanarienvogel.
+    throw new YahooUnreachable('screener(' + SCREENER_ANKER + ') threw: ' + e.message);
+  }
+  const maengel = pruefeScreenerForm(antwort);
+  for (const m of maengel) failures.push(m);
+  for (const h of screenerHinweise(antwort)) warnings.push(h);
+  if (maengel.length === 0) {
+    const r = antwort.finance.result[0];
+    console.log('  OK   ' + ('screener.' + SCREENER_ANKER + ' total=' + r.total +
+      ' quotes=' + r.quotes.length).padEnd(56) + ' (Form intakt)');
+  }
+}
+
 // One full pass over all anchors. Returns { failures, warnings }.
 // Re-throws YahooUnreachable so run() can decide whether to retry.
 async function runOnce() {
@@ -308,6 +415,7 @@ async function runOnce() {
   for (const anchor of ANCHORS) {
     await checkAnchor(anchor, failures, warnings);
   }
+  await checkScreener(failures, warnings);
   return { failures, warnings };
 }
 
@@ -366,4 +474,8 @@ if (require.main === module) {
   });
 }
 
-module.exports = { SCHEMA_EXPECTATIONS, MODULES, ANCHORS, getPath, checkType, _ftsValue };
+module.exports = {
+  SCHEMA_EXPECTATIONS, MODULES, ANCHORS, getPath, checkType, _ftsValue,
+  // T576: der Screener-Kanarienvogel — Formpruefung netzfrei pruefbar.
+  SCREENER_ANKER, SCREENER_FELDER, pruefeScreenerForm, screenerHinweise
+};
