@@ -9,7 +9,7 @@
  * Usage:  node tests/scoring/bh-w2-krannual.test.js   (Exit 0/1)
  */
 const assert = require('node:assert/strict');
-const { buildSeries } = require('../../scripts/build-krannual.js');
+const { buildSeries, yearsFor } = require('../../scripts/build-krannual.js');
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -44,14 +44,9 @@ test('BH-012: full symmetric coverage (SK Hynix today) is unchanged -- no null c
 
 // ─── BH-013: YEARS must be able to reach the current-year-minus-1 FY, not stop at 2024 ───
 test('BH-013: YEARS upper bound tracks the current year, not a stale 2024 literal', () => {
-  delete require.cache[require.resolve('../../scripts/build-krannual.js')];
-  const src = require('node:fs').readFileSync(require.resolve('../../scripts/build-krannual.js'), 'utf8');
-  assert.ok(!/const YEARS = \[2015, 2016.*2024\]/.test(src), 'YEARS must no longer be the static [2015..2024] literal');
-  // Re-derive the expression's own logic against a couple of plausible "current years" to confirm
-  // it always reaches last-completed-FY without depending on wall-clock time in this test.
-  const lastCompletedFyFor = (currentYear) => 2015 + (currentYear - 2015) - 1;
-  assert.equal(lastCompletedFyFor(2026), 2025, 'in 2026 the build must be able to reach FY2025');
-  assert.equal(lastCompletedFyFor(2030), 2029, 'in 2030 the build must be able to reach FY2029, still no manual edit needed');
+  assert.deepEqual(yearsFor(2026), [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]);
+  assert.equal(yearsFor(2030).at(-1), 2029,
+    'in 2030 the production helper must reach FY2029 without a manual edit');
 });
 
 console.log(`\nbh-w2-krannual.test.js: ${pass} ok, ${fail} fail`);

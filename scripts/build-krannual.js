@@ -37,7 +37,10 @@ const KR = { '000660.KS': '00164779' }; // SK hynix Inc.
 // BH-013 fix: was a static [2015..2024] literal -> from 2025 on the build could never reach the
 // completed FY2025+ without a manual edit here. Dynamic upper bound = last completed calendar FY;
 // a not-yet-filed year just gets skipped below (status!=='000'), so overshooting costs nothing.
-const YEARS = Array.from({ length: new Date().getFullYear() - 2015 }, (_, i) => 2015 + i);
+function yearsFor(currentYear) {
+  return Array.from({ length: currentYear - 2015 }, (_, i) => 2015 + i);
+}
+const YEARS = yearsFor(new Date().getFullYear());
 
 function getJSON(u) {
   return new Promise((res, rej) => {
@@ -115,4 +118,4 @@ async function main() {
 }
 if (require.main === module) main();
 
-module.exports = { numOf, buildSeries };
+module.exports = { numOf, buildSeries, yearsFor };
