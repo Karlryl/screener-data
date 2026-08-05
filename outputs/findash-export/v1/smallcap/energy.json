@@ -1,13 +1,13 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-04T21:58:40.265Z",
+  "generated_at": "2026-08-05T04:54:37.786Z",
   "branch": "energy",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 72.7
+    "coverage_pct": 71.9
   },
   "profitable": [
     {
@@ -732,9 +732,7 @@
       "ticker": "REPX",
       "score": 44.6,
       "track": "profitable",
-      "lamps": [
-        "shareCountDilution"
-      ],
+      "lamps": [],
       "overview": {
         "kind": "gp",
         "value": -0.221,
@@ -802,10 +800,7 @@
       "revGrowthYoYPct": 11.150043432854751,
       "profitStreak": null,
       "einmalertragPrognose": null,
-      "shareDilution": {
-        "ratePct": 1.6,
-        "pctl": 0.769
-      },
+      "shareDilution": null,
       "ath": null
     },
     {
@@ -1546,10 +1541,10 @@
         "pctl": 0.833
       },
       "ath": {
-        "distancePct": -62.7,
+        "distancePct": -60.2,
         "athDate": "2011-02-01",
         "monthsAgo": 186,
-        "lastDate": "2026-07-31"
+        "lastDate": "2026-08-04"
       }
     }
   ]

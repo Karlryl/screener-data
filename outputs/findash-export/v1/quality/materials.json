@@ -1,13 +1,13 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-04T21:58:40.237Z",
+  "generated_at": "2026-08-05T04:54:37.753Z",
   "branch": "materials",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 72.7
+    "coverage_pct": 71.9
   },
   "profitable": [
     {
@@ -27,7 +27,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Basic Materials",
-      "marketCap": 2982119431.3980365,
+      "marketCap": 2980635848.852813,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -53,22 +53,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 93.2,
+          "pct": 93.1,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 96.5,
+          "pct": 96.7,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 89,
+          "pct": 88.9,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 90.7,
+          "pct": 90.6,
           "weight": 0.8
         },
         {
@@ -86,7 +86,7 @@
     {
       "rank": 2,
       "ticker": "KNT.TO",
-      "score": 91.8,
+      "score": 91.7,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -101,7 +101,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Basic Materials",
-      "marketCap": 4235535572.4604106,
+      "marketCap": 4233428424.5779967,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -112,8 +112,8 @@
       "coverageWeight": 1,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 91.9,
-      "scoreShrunk": 91.8,
+      "scoreBase": 91.8,
+      "scoreShrunk": 91.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -127,22 +127,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 97.8,
+          "pct": 97.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 94,
+          "pct": 94.2,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 63.3,
+          "pct": 63.1,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 91.6,
+          "pct": 91.5,
           "weight": 0.8
         },
         {
@@ -172,7 +172,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Basic Materials",
-      "marketCap": 2426826785.067917,
+      "marketCap": 2564794199.3925886,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -198,12 +198,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 93.8,
+          "pct": 93.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 94.4,
+          "pct": 94.5,
           "weight": 1.5
         },
         {
@@ -213,7 +213,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 97,
+          "pct": 96.8,
           "weight": 0.8
         },
         {
@@ -230,6 +230,85 @@
     },
     {
       "rank": 4,
+      "ticker": "AUGO",
+      "score": 88.5,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 1.129,
+        "companion": 334.5
+      },
+      "name": "Aura Minerals Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 4825464832,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2025,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 834,
+      "cohortFallback": false,
+      "scoreBase": 88.5,
+      "scoreShrunk": 88.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 96.3,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 91.5,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 94.7,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 51.8,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 98.7,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 136.46263380386148,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": {
+        "distancePct": -46.5,
+        "athDate": "2026-04-17",
+        "monthsAgo": 4,
+        "lastDate": "2026-08-04"
+      }
+    },
+    {
+      "rank": 5,
       "ticker": "HINDCOPPER.NS",
       "score": 88.4,
       "track": "profitable",
@@ -245,7 +324,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 4992390644.163871,
+      "marketCap": 5142661300.494336,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -276,7 +355,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 91.3,
+          "pct": 91.4,
           "weight": 1.5
         },
         {
@@ -286,7 +365,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 90.1,
+          "pct": 90,
           "weight": 0.8
         },
         {
@@ -300,85 +379,6 @@
       "einmalertragPrognose": null,
       "shareDilution": null,
       "ath": null
-    },
-    {
-      "rank": 5,
-      "ticker": "AUGO",
-      "score": 88.3,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 1.129,
-        "companion": 319.1
-      },
-      "name": "Aura Minerals Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Basic Materials",
-      "marketCap": 4825464832,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2025,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 834,
-      "cohortFallback": false,
-      "scoreBase": 88.4,
-      "scoreShrunk": 88.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 96,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 91.6,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 94.5,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 52.1,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 97.5,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 123.07176548097272,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "shareDilution": null,
-      "ath": {
-        "distancePct": -46.5,
-        "athDate": "2026-04-17",
-        "monthsAgo": 4,
-        "lastDate": "2026-08-04"
-      }
     },
     {
       "rank": 6,
@@ -397,7 +397,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 5805771553.324155,
+      "marketCap": 6304729748.783104,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -423,22 +423,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 98,
+          "pct": 97.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 95.7,
+          "pct": 95.8,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 36.7,
+          "pct": 36.3,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 92.6,
+          "pct": 92.4,
           "weight": 0.8
         },
         {
@@ -455,79 +455,6 @@
     },
     {
       "rank": 7,
-      "ticker": "NAVINFLUOR.NS",
-      "score": 87.1,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.492,
-        "companion": 79
-      },
-      "name": "Navin Fluorine International Limited",
-      "country": "India",
-      "region": "Asia",
-      "sector": "Basic Materials",
-      "marketCap": 4103765103.3162384,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "mid",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2007,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 834,
-      "cohortFallback": false,
-      "scoreBase": 87.2,
-      "scoreShrunk": 87.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 84.6,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 89.9,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 83.8,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 96.2,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 81.1,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 33.77892544297658,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "shareDilution": null,
-      "ath": null
-    },
-    {
-      "rank": 8,
       "ticker": "GFI",
       "score": 87.1,
       "track": "profitable",
@@ -543,7 +470,7 @@
       "country": "South Africa",
       "region": "Africa",
       "sector": "Basic Materials",
-      "marketCap": 30374453248,
+      "marketCap": 30508617728,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -569,22 +496,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 89.7,
+          "pct": 89.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 94.3,
+          "pct": 94.4,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 47.9,
+          "pct": 48.2,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 92.4,
+          "pct": 92.3,
           "weight": 0.8
         },
         {
@@ -600,9 +527,82 @@
       "ath": null
     },
     {
+      "rank": 8,
+      "ticker": "NAVINFLUOR.NS",
+      "score": 87.1,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.492,
+        "companion": 79
+      },
+      "name": "Navin Fluorine International Limited",
+      "country": "India",
+      "region": "Asia",
+      "sector": "Basic Materials",
+      "marketCap": 4162454318.800896,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "mid",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2007,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 834,
+      "cohortFallback": false,
+      "scoreBase": 87.2,
+      "scoreShrunk": 87.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 84.6,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 89.8,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 83.9,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 96.1,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 80.9,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 33.77892544297658,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
       "rank": 9,
       "ticker": "SVM",
-      "score": 85.6,
+      "score": 85.5,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -616,7 +616,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Basic Materials",
-      "marketCap": 2114696320,
+      "marketCap": 2258477824,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "mid",
@@ -628,7 +628,7 @@
       "cohortN": 834,
       "cohortFallback": false,
       "scoreBase": 85.6,
-      "scoreShrunk": 85.6,
+      "scoreShrunk": 85.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -642,22 +642,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 91.5,
+          "pct": 91.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 93.4,
+          "pct": 93.5,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 78.2,
+          "pct": 78.1,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 96.3,
+          "pct": 96.1,
           "weight": 0.8
         },
         {
@@ -671,16 +671,16 @@
       "einmalertragPrognose": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -40.4,
+        "distancePct": -34.9,
         "athDate": "2026-05-13",
         "monthsAgo": 3,
-        "lastDate": "2026-07-31"
+        "lastDate": "2026-08-04"
       }
     },
     {
       "rank": 10,
       "ticker": "001337.SZ",
-      "score": 85.2,
+      "score": 85.1,
       "track": "profitable",
       "lamps": [
         "burning"
@@ -694,7 +694,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 2446843626.331382,
+      "marketCap": 2693952101.9467573,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -706,7 +706,7 @@
       "cohortN": 834,
       "cohortFallback": false,
       "scoreBase": 91.4,
-      "scoreShrunk": 85.2,
+      "scoreShrunk": 85.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -720,12 +720,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 93.7,
+          "pct": 93.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 89.9,
+          "pct": 90,
           "weight": 1.5
         },
         {
@@ -735,7 +735,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 91,
+          "pct": 90.9,
           "weight": 0.8
         },
         {
@@ -778,7 +778,7 @@
       "coverageWeight": 1,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 84.2,
+      "scoreBase": 84.1,
       "scoreShrunk": 84.1,
       "factors": {
         "burn": 1,
@@ -793,22 +793,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 86.2,
+          "pct": 86.1,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 93.8,
+          "pct": 93.9,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 72.6,
+          "pct": 72.4,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 97.3,
+          "pct": 97.2,
           "weight": 0.8
         },
         {
@@ -845,7 +845,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 2767983712.3041363,
+      "marketCap": 2814707763.11808,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -876,7 +876,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 83.5,
+          "pct": 83.6,
           "weight": 1.5
         },
         {
@@ -886,7 +886,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 84.2,
+          "pct": 84.1,
           "weight": 0.8
         },
         {
@@ -903,81 +903,6 @@
     },
     {
       "rank": 13,
-      "ticker": "SOLARINDS.BO",
-      "score": 83.6,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "shortRunway",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.394,
-        "companion": 79.8
-      },
-      "name": "Solar Industries India Limited",
-      "country": "India",
-      "region": "Asia",
-      "sector": "Basic Materials",
-      "marketCap": 17827020157.98549,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2006,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 834,
-      "cohortFallback": false,
-      "scoreBase": 89.6,
-      "scoreShrunk": 83.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 99.1,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 83.9,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 84,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 84.8,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 40.90374097066765,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "shareDilution": null,
-      "ath": null
-    },
-    {
-      "rank": 14,
       "ticker": "RRL.AX",
       "score": 83.6,
       "track": "profitable",
@@ -993,7 +918,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Basic Materials",
-      "marketCap": 3331525487.2544255,
+      "marketCap": 3511619268.8140798,
       "phase": "inflected",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -1019,12 +944,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 86.1,
+          "pct": 86,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 93.5,
+          "pct": 93.7,
           "weight": 1.5
         },
         {
@@ -1050,9 +975,84 @@
       "ath": null
     },
     {
+      "rank": 14,
+      "ticker": "SOLARINDS.NS",
+      "score": 83.6,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.394,
+        "companion": 79.8
+      },
+      "name": "Solar Industries India Limited",
+      "country": "India",
+      "region": "Asia",
+      "sector": "Basic Materials",
+      "marketCap": 17940778500.685825,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2006,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 834,
+      "cohortFallback": false,
+      "scoreBase": 89.6,
+      "scoreShrunk": 83.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 99.1,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 83.8,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 84.1,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 84.7,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 40.90374097066763,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
       "rank": 15,
       "ticker": "FRES.MX",
-      "score": 83.1,
+      "score": 83,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -1066,7 +1066,7 @@
       "country": "Mexico",
       "region": "North America",
       "sector": "Basic Materials",
-      "marketCap": 24814940417.996883,
+      "marketCap": 24835265706.28193,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -1077,8 +1077,8 @@
       "coverageWeight": 1,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 83.2,
-      "scoreShrunk": 83.1,
+      "scoreBase": 83.1,
+      "scoreShrunk": 83,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1092,17 +1092,17 @@
         },
         {
           "key": "marginLevel",
-          "pct": 92,
+          "pct": 91.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 95,
+          "pct": 95.2,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 57.2,
+          "pct": 57,
           "weight": 1.2
         },
         {
@@ -1139,7 +1139,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Basic Materials",
-      "marketCap": 14032249157.641788,
+      "marketCap": 14025268216.603237,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -1165,12 +1165,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 96,
+          "pct": 95.8,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 91.8,
+          "pct": 91.9,
           "weight": 1.5
         },
         {
@@ -1180,7 +1180,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 90.5,
+          "pct": 90.4,
           "weight": 0.8
         },
         {
@@ -1212,7 +1212,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 24952812553.668396,
+      "marketCap": 25402640251.94496,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -1238,12 +1238,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 90.9,
+          "pct": 90.8,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 61,
+          "pct": 61.1,
           "weight": 1.5
         },
         {
@@ -1253,7 +1253,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 92.9,
+          "pct": 92.8,
           "weight": 0.8
         },
         {
@@ -1271,7 +1271,7 @@
     {
       "rank": 18,
       "ticker": "KGC",
-      "score": 82.1,
+      "score": 82,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -1296,8 +1296,8 @@
       "coverageWeight": 1,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 82.2,
-      "scoreShrunk": 82.1,
+      "scoreBase": 82.1,
+      "scoreShrunk": 82,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1311,22 +1311,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 88,
+          "pct": 87.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 94.2,
+          "pct": 94.3,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 70,
+          "pct": 69.8,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 91.2,
+          "pct": 91.1,
           "weight": 0.8
         },
         {
@@ -1374,7 +1374,7 @@
       "coverageWeight": 1,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 82.1,
+      "scoreBase": 82,
       "scoreShrunk": 82,
       "factors": {
         "burn": 1,
@@ -1389,22 +1389,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 89.6,
+          "pct": 89.5,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 91.7,
+          "pct": 91.8,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 77.7,
+          "pct": 77.6,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 94.6,
+          "pct": 94.5,
           "weight": 0.8
         },
         {
@@ -1427,7 +1427,7 @@
     {
       "rank": 20,
       "ticker": "SCCO",
-      "score": 81.7,
+      "score": 81.6,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -1453,7 +1453,7 @@
       "cohortN": 834,
       "cohortFallback": false,
       "scoreBase": 87.3,
-      "scoreShrunk": 81.7,
+      "scoreShrunk": 81.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1467,12 +1467,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 88.7,
+          "pct": 88.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 76.1,
+          "pct": 76.2,
           "weight": 1.5
         },
         {
@@ -1482,7 +1482,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 65.9,
+          "pct": 65.8,
           "weight": 0.8
         },
         {
@@ -1502,10 +1502,10 @@
       "einmalertragPrognose": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -15.2,
+        "distancePct": -9.5,
         "athDate": "2026-03-02",
         "monthsAgo": 5,
-        "lastDate": "2026-07-31"
+        "lastDate": "2026-08-04"
       }
     },
     {
@@ -1525,7 +1525,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Basic Materials",
-      "marketCap": 13956559268.554506,
+      "marketCap": 14888467345.160275,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -1546,27 +1546,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 67.1,
+          "pct": 67,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 87.2,
+          "pct": 87,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 91.5,
+          "pct": 91.6,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 88.5,
+          "pct": 88.4,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 83.8,
+          "pct": 83.7,
           "weight": 0.8
         },
         {
@@ -1596,7 +1596,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 2469006561.971282,
+      "marketCap": 2591933105.191199,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -1622,12 +1622,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 86.7,
+          "pct": 86.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 86,
+          "pct": 86.1,
           "weight": 1.5
         },
         {
@@ -1637,7 +1637,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 88.6,
+          "pct": 88.4,
           "weight": 0.8
         },
         {
@@ -1669,7 +1669,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 7260404121.142427,
+      "marketCap": 7371864313.233408,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -1680,7 +1680,7 @@
       "coverageWeight": 0.86,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 86.6,
+      "scoreBase": 86.5,
       "scoreShrunk": 81,
       "factors": {
         "burn": 1,
@@ -1695,12 +1695,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 90.5,
+          "pct": 90.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 92,
+          "pct": 92.1,
           "weight": 1.5
         },
         {
@@ -1710,7 +1710,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 30.7,
+          "pct": 30.6,
           "weight": 0.8
         },
         {
@@ -1754,7 +1754,7 @@
       "coverageWeight": 0.86,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 86.3,
+      "scoreBase": 86.2,
       "scoreShrunk": 80.7,
       "factors": {
         "burn": 1,
@@ -1769,12 +1769,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 85.2,
+          "pct": 85.1,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 95.5,
+          "pct": 95.7,
           "weight": 1.5
         },
         {
@@ -1821,7 +1821,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 6623140799.97051,
+      "marketCap": 6705055989.569782,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -1847,12 +1847,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 92.1,
+          "pct": 92,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 87,
+          "pct": 87.1,
           "weight": 1.5
         },
         {
@@ -1862,7 +1862,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 88.7,
+          "pct": 88.6,
           "weight": 0.8
         },
         {
@@ -1894,7 +1894,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 1483386346.5075998,
+      "marketCap": 1519548223.819776,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1920,22 +1920,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 90.8,
+          "pct": 90.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 89,
+          "pct": 89.1,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 47.4,
+          "pct": 47.7,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 48.6,
+          "pct": 48.4,
           "weight": 0.8
         },
         {
@@ -1968,7 +1968,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 5571671519.296226,
+      "marketCap": 5731046508.884911,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -1994,12 +1994,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 86.4,
+          "pct": 86.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 96.8,
+          "pct": 96.9,
           "weight": 1.5
         },
         {
@@ -2009,7 +2009,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 86.4,
+          "pct": 86.3,
           "weight": 0.8
         },
         {
@@ -2041,7 +2041,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 10623976496.668344,
+      "marketCap": 11375422484.520552,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "large",
@@ -2067,12 +2067,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 87.8,
+          "pct": 87.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 90.3,
+          "pct": 90.4,
           "weight": 1.5
         },
         {
@@ -2082,7 +2082,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 87.7,
+          "pct": 87.6,
           "weight": 0.8
         },
         {
@@ -2118,7 +2118,7 @@
       "country": "Indonesia",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 1518410315.2958057,
+      "marketCap": 1595380401.4703891,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -2144,12 +2144,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 78,
+          "pct": 77.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 98.4,
+          "pct": 98.6,
           "weight": 1.5
         },
         {
@@ -2159,7 +2159,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 88.9,
+          "pct": 88.8,
           "weight": 0.8
         },
         {
@@ -2189,7 +2189,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 1850734101.664432,
+      "marketCap": 1866204753.752064,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -2220,7 +2220,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 53.9,
+          "pct": 54.2,
           "weight": 1.5
         },
         {
@@ -2230,7 +2230,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 66.3,
+          "pct": 66.2,
           "weight": 0.8
         },
         {
@@ -2262,10 +2262,10 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Basic Materials",
-      "marketCap": 9179544848.880108,
+      "marketCap": 10169055707.170734,
       "phase": "established",
       "mcapBand": "large",
-      "mcapKlasse": "mid",
+      "mcapKlasse": "large",
       "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2003,
@@ -2273,7 +2273,7 @@
       "coverageWeight": 0.86,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 84.6,
+      "scoreBase": 84.5,
       "scoreShrunk": 79.3,
       "factors": {
         "burn": 1,
@@ -2283,17 +2283,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 71.9,
+          "pct": 71.8,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 87.3,
+          "pct": 87.2,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 98.7,
+          "pct": 98.8,
           "weight": 1.5
         },
         {
@@ -2303,7 +2303,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 91.9,
+          "pct": 91.8,
           "weight": 0.8
         },
         {
@@ -2336,7 +2336,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 2707685601.8696604,
+      "marketCap": 2981411940.9293723,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -2357,17 +2357,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 82.8,
+          "pct": 82.7,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 91.3,
+          "pct": 91.1,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 83,
+          "pct": 83.1,
           "weight": 1.5
         },
         {
@@ -2421,7 +2421,7 @@
       "coverageWeight": 1,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 79,
+      "scoreBase": 78.9,
       "scoreShrunk": 78.9,
       "factors": {
         "burn": 1,
@@ -2431,17 +2431,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 45.3,
+          "pct": 45.1,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 95.8,
+          "pct": 95.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 89.1,
+          "pct": 89.3,
           "weight": 1.5
         },
         {
@@ -2451,7 +2451,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 94.5,
+          "pct": 94.4,
           "weight": 0.8
         },
         {
@@ -2465,15 +2465,15 @@
       "einmalertragPrognose": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -30.2,
+        "distancePct": -27.5,
         "athDate": "2026-02-27",
         "monthsAgo": 5,
-        "lastDate": "2026-07-31"
+        "lastDate": "2026-08-04"
       }
     },
     {
       "rank": 34,
-      "ticker": "SANDUMA.NS",
+      "ticker": "SANDUMA.BO",
       "score": 78.8,
       "track": "profitable",
       "lamps": [],
@@ -2486,7 +2486,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 1075396329.2330394,
+      "marketCap": 1088821551.009792,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -2512,12 +2512,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 79.8,
+          "pct": 79.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 86.6,
+          "pct": 86.7,
           "weight": 1.5
         },
         {
@@ -2527,7 +2527,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 60.4,
+          "pct": 60.2,
           "weight": 0.8
         },
         {
@@ -2545,7 +2545,7 @@
     {
       "rank": 35,
       "ticker": "MLX.AX",
-      "score": 78.8,
+      "score": 78.7,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -2559,7 +2559,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Basic Materials",
-      "marketCap": 1046599326.5436672,
+      "marketCap": 1095097650.7580929,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -2571,7 +2571,7 @@
       "cohortN": 834,
       "cohortFallback": false,
       "scoreBase": 83.9,
-      "scoreShrunk": 78.8,
+      "scoreShrunk": 78.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2585,12 +2585,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 83.4,
+          "pct": 83.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 65.3,
+          "pct": 65.4,
           "weight": 1.5
         },
         {
@@ -2618,7 +2618,7 @@
     {
       "rank": 36,
       "ticker": "VEDL.BO",
-      "score": 78.7,
+      "score": 78.6,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -2630,7 +2630,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 11055034768.229925,
+      "marketCap": 11084028123.9552,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "large",
@@ -2641,8 +2641,8 @@
       "coverageWeight": 1,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 78.8,
-      "scoreShrunk": 78.7,
+      "scoreBase": 78.7,
+      "scoreShrunk": 78.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2656,22 +2656,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 73.7,
+          "pct": 73.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 69.7,
+          "pct": 69.8,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 72.1,
+          "pct": 71.9,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 89,
+          "pct": 88.9,
           "weight": 0.8
         },
         {
@@ -2689,7 +2689,7 @@
     {
       "rank": 37,
       "ticker": "WPM",
-      "score": 78.6,
+      "score": 78.5,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -2715,8 +2715,8 @@
       "coverageWeight": 1,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 78.7,
-      "scoreShrunk": 78.6,
+      "scoreBase": 78.6,
+      "scoreShrunk": 78.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2730,22 +2730,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 97.2,
+          "pct": 97,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 93.2,
+          "pct": 93.3,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 26.4,
+          "pct": 26,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 96.1,
+          "pct": 95.9,
           "weight": 0.8
         },
         {
@@ -2759,16 +2759,16 @@
       "einmalertragPrognose": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -34,
+        "distancePct": -30.1,
         "athDate": "2026-03-02",
         "monthsAgo": 5,
-        "lastDate": "2026-07-31"
+        "lastDate": "2026-08-04"
       }
     },
     {
       "rank": 38,
       "ticker": "600989.SS",
-      "score": 78.6,
+      "score": 78.5,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -2782,7 +2782,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 25075494040.692986,
+      "marketCap": 24969949180.787754,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -2794,7 +2794,7 @@
       "cohortN": 834,
       "cohortFallback": false,
       "scoreBase": 78.6,
-      "scoreShrunk": 78.6,
+      "scoreShrunk": 78.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2808,17 +2808,17 @@
         },
         {
           "key": "marginLevel",
-          "pct": 69,
+          "pct": 68.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 86.3,
+          "pct": 86.4,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 68.5,
+          "pct": 68.3,
           "weight": 1.2
         },
         {
@@ -2846,7 +2846,7 @@
     {
       "rank": 39,
       "ticker": "VMET",
-      "score": 78.4,
+      "score": 78.2,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -2856,13 +2856,13 @@
       "overview": {
         "kind": "gp",
         "value": 10.298,
-        "companion": 294.7
+        "companion": 298.5
       },
       "name": "Versamet Royalties Corporation",
       "country": "Canada",
       "region": "North America",
       "sector": "Basic Materials",
-      "marketCap": 1044638080,
+      "marketCap": 1044626112,
       "phase": "inflected",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -2873,8 +2873,8 @@
       "coverageWeight": 1,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 78.4,
-      "scoreShrunk": 78.4,
+      "scoreBase": 78.3,
+      "scoreShrunk": 78.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2883,12 +2883,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 54.7,
+          "pct": 54.4,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 73.2,
+          "pct": 73.1,
           "weight": 2.2
         },
         {
@@ -2903,7 +2903,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 98.8,
+          "pct": 98.7,
           "weight": 0.8
         },
         {
@@ -2917,10 +2917,10 @@
       "einmalertragPrognose": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -34.7,
+        "distancePct": -28.9,
         "athDate": "2026-05-29",
         "monthsAgo": 2,
-        "lastDate": "2026-07-31"
+        "lastDate": "2026-08-04"
       }
     },
     {
@@ -2951,7 +2951,7 @@
       "coverageWeight": 1,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 77.8,
+      "scoreBase": 77.7,
       "scoreShrunk": 77.7,
       "factors": {
         "burn": 1,
@@ -2966,12 +2966,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 78.4,
+          "pct": 78.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 85.3,
+          "pct": 85.4,
           "weight": 1.5
         },
         {
@@ -2981,7 +2981,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 23.9,
+          "pct": 23.5,
           "weight": 0.8
         },
         {
@@ -3024,7 +3024,7 @@
       "coverageWeight": 0.86,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 81.8,
+      "scoreBase": 81.7,
       "scoreShrunk": 76.9,
       "factors": {
         "burn": 1,
@@ -3039,12 +3039,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 55,
+          "pct": 54.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 85.4,
+          "pct": 85.5,
           "weight": 1.5
         },
         {
@@ -3054,7 +3054,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 93.5,
+          "pct": 93.4,
           "weight": 0.8
         },
         {
@@ -3084,7 +3084,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 18803186725.20315,
+      "marketCap": 19907961130.882336,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -3110,12 +3110,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 92.5,
+          "pct": 92.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 67.8,
+          "pct": 67.9,
           "weight": 1.5
         },
         {
@@ -3157,7 +3157,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Basic Materials",
-      "marketCap": 11679409720.37763,
+      "marketCap": 11673599299.70258,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "large",
@@ -3183,12 +3183,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 85.7,
+          "pct": 85.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 95.2,
+          "pct": 95.3,
           "weight": 1.5
         },
         {
@@ -3242,7 +3242,7 @@
       "coverageWeight": 1,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 76.6,
+      "scoreBase": 76.5,
       "scoreShrunk": 76.5,
       "factors": {
         "burn": 1,
@@ -3257,22 +3257,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 91.9,
+          "pct": 91.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 92.8,
+          "pct": 92.9,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 30.5,
+          "pct": 30.2,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 92.1,
+          "pct": 91.9,
           "weight": 0.8
         },
         {
@@ -3294,6 +3294,77 @@
     },
     {
       "rank": 45,
+      "ticker": "603979.SS",
+      "score": 76.3,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.5,
+        "companion": 110.2
+      },
+      "name": "JCHX Mining Management Co.,Ltd.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Basic Materials",
+      "marketCap": 7073841100.078162,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2015,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 834,
+      "cohortFallback": false,
+      "scoreBase": 81,
+      "scoreShrunk": 76.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 91.6,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 64.5,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 85.1,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 84,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 39.74452211127082,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 46,
       "ticker": "CYL.AX",
       "score": 76.3,
       "track": "profitable",
@@ -3303,13 +3374,13 @@
       "overview": {
         "kind": "gp",
         "value": 3.958,
-        "companion": 294.7
+        "companion": 298.5
       },
       "name": "Catalyst Metals Limited",
       "country": "Australia",
       "region": "Oceania",
       "sector": "Basic Materials",
-      "marketCap": 1072027619.4429888,
+      "marketCap": 1107415383.1454592,
       "phase": "inflected",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -3320,7 +3391,7 @@
       "coverageWeight": 0.86,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 81.1,
+      "scoreBase": 81,
       "scoreShrunk": 76.3,
       "factors": {
         "burn": 1,
@@ -3330,7 +3401,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 49.4,
+          "pct": 49.1,
           "weight": 2.6
         },
         {
@@ -3340,7 +3411,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 99.1,
+          "pct": 99.2,
           "weight": 1.5
         },
         {
@@ -3350,7 +3421,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 98.8,
+          "pct": 98.7,
           "weight": 0.8
         },
         {
@@ -3366,7 +3437,7 @@
       "ath": null
     },
     {
-      "rank": 46,
+      "rank": 47,
       "ticker": "ASIANPAINT.NS",
       "score": 76.3,
       "track": "profitable",
@@ -3380,7 +3451,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 27894450559.48941,
+      "marketCap": 27914358572.777473,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -3406,22 +3477,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 79.1,
+          "pct": 79,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 55.8,
+          "pct": 56,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 67.9,
+          "pct": 67.8,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 67,
+          "pct": 66.9,
           "weight": 0.8
         },
         {
@@ -3431,77 +3502,6 @@
         }
       ],
       "revGrowthYoYPct": 17.894019714291808,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "shareDilution": null,
-      "ath": null
-    },
-    {
-      "rank": 47,
-      "ticker": "603979.SS",
-      "score": 76.3,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.5,
-        "companion": 110.2
-      },
-      "name": "JCHX Mining Management Co.,Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Basic Materials",
-      "marketCap": 6607710209.359545,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2015,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 834,
-      "cohortFallback": false,
-      "scoreBase": 81,
-      "scoreShrunk": 76.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 91.7,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 64.6,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 85,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 84.1,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 39.74452211127082,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "shareDilution": null,
@@ -3522,7 +3522,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 4781700373.655225,
+      "marketCap": 4883808408.899626,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -3548,7 +3548,7 @@
         },
         {
           "key": "marginLevel",
-          "pct": 87,
+          "pct": 86.9,
           "weight": 2.2
         },
         {
@@ -3563,7 +3563,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 49.3,
+          "pct": 49.2,
           "weight": 0.8
         },
         {
@@ -3581,7 +3581,7 @@
     {
       "rank": 49,
       "ticker": "002170.SZ",
-      "score": 76,
+      "score": 75.9,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -3595,7 +3595,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 1658354943.187067,
+      "marketCap": 1687332790.6246247,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -3606,8 +3606,8 @@
       "coverageWeight": 0.86,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 80.7,
-      "scoreShrunk": 76,
+      "scoreBase": 80.6,
+      "scoreShrunk": 75.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3621,12 +3621,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 68.1,
+          "pct": 68,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 92.9,
+          "pct": 93,
           "weight": 1.5
         },
         {
@@ -3636,7 +3636,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 89.3,
+          "pct": 89.2,
           "weight": 0.8
         },
         {
@@ -3666,7 +3666,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 37169114400.227325,
+      "marketCap": 37353596627.77959,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -3677,7 +3677,7 @@
       "coverageWeight": 1,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 76,
+      "scoreBase": 75.9,
       "scoreShrunk": 75.9,
       "factors": {
         "burn": 1,
@@ -3692,22 +3692,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 98.4,
+          "pct": 98.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 51,
+          "pct": 51.3,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 74.1,
+          "pct": 74,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 63.5,
+          "pct": 63.4,
           "weight": 0.8
         },
         {
@@ -3739,7 +3739,7 @@
       "country": "Mexico",
       "region": "North America",
       "sector": "Basic Materials",
-      "marketCap": 4033150862.6458216,
+      "marketCap": 4036454314.219733,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -3765,12 +3765,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 94.8,
+          "pct": 94.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 50.9,
+          "pct": 51.2,
           "weight": 1.5
         },
         {
@@ -3780,7 +3780,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 34.3,
+          "pct": 34.2,
           "weight": 0.8
         },
         {
@@ -3810,7 +3810,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 1012904151.7451673,
+      "marketCap": 1151494292.6954496,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -3836,7 +3836,7 @@
         },
         {
           "key": "marginLevel",
-          "pct": 93.1,
+          "pct": 93,
           "weight": 2.2
         },
         {
@@ -3851,7 +3851,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 61.2,
+          "pct": 61.1,
           "weight": 0.8
         },
         {
@@ -3868,92 +3868,8 @@
     },
     {
       "rank": 53,
-      "ticker": "NEMCL",
-      "score": 75.4,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.689,
-        "companion": 144.7
-      },
-      "name": "NEWMONT Corp /DE/",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Basic Materials",
-      "marketCap": 118013534208,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2024,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 834,
-      "cohortFallback": false,
-      "scoreBase": 75.4,
-      "scoreShrunk": 75.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 59.7,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 88.4,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 91.1,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 58.5,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 86.7,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 45.84830339321358,
-      "profitStreak": {
-        "jahre": 2,
-        "basis": "netIncome",
-        "tiefe": 17,
-        "mindestens": false,
-        "letzterVerlust": 2023
-      },
-      "einmalertragPrognose": null,
-      "shareDilution": null,
-      "ath": {
-        "distancePct": 0,
-        "athDate": "2026-05-26",
-        "monthsAgo": 2,
-        "lastDate": "2026-07-31"
-      }
-    },
-    {
-      "rank": 54,
       "ticker": "WDFC",
-      "score": 75.3,
+      "score": 75.2,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -3977,7 +3893,7 @@
       "cohortN": 834,
       "cohortFallback": false,
       "scoreBase": 75.3,
-      "scoreShrunk": 75.3,
+      "scoreShrunk": 75.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3991,17 +3907,17 @@
         },
         {
           "key": "marginLevel",
-          "pct": 89.5,
+          "pct": 89.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 57,
+          "pct": 57.2,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 22.8,
+          "pct": 22.4,
           "weight": 1.2
         },
         {
@@ -4028,9 +3944,93 @@
       "ath": null
     },
     {
+      "rank": 54,
+      "ticker": "NEMCL",
+      "score": 75.2,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.689,
+        "companion": 144.7
+      },
+      "name": "NEWMONT Corp /DE/",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 118013534208,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2024,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 834,
+      "cohortFallback": false,
+      "scoreBase": 75.2,
+      "scoreShrunk": 75.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 59.3,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 88.3,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 91.2,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 58.2,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 86.6,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 45.84830339321358,
+      "profitStreak": {
+        "jahre": 2,
+        "basis": "netIncome",
+        "tiefe": 17,
+        "mindestens": false,
+        "letzterVerlust": 2023
+      },
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": {
+        "distancePct": 0,
+        "athDate": "2026-05-26",
+        "monthsAgo": 2,
+        "lastDate": "2026-08-03"
+      }
+    },
+    {
       "rank": 55,
       "ticker": "IAG",
-      "score": 75.3,
+      "score": 75.1,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -4056,8 +4056,8 @@
       "coverageWeight": 1,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 75.3,
-      "scoreShrunk": 75.3,
+      "scoreBase": 75.2,
+      "scoreShrunk": 75.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4066,27 +4066,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 55.2,
+          "pct": 54.9,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 77.8,
+          "pct": 77.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 94.8,
+          "pct": 94.9,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 75.6,
+          "pct": 75.5,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 97.2,
+          "pct": 97,
           "weight": 0.8
         },
         {
@@ -4118,10 +4118,10 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 1962681777.627218,
+      "marketCap": 2083186200.8524494,
       "phase": "established",
       "mcapBand": "small",
-      "mcapKlasse": "small",
+      "mcapKlasse": "mid",
       "ipoRecency": "recent",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2021,
@@ -4144,12 +4144,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 80.7,
+          "pct": 80.5,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 65.2,
+          "pct": 65.3,
           "weight": 1.5
         },
         {
@@ -4159,7 +4159,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 59.3,
+          "pct": 59.1,
           "weight": 0.8
         },
         {
@@ -4177,7 +4177,7 @@
     {
       "rank": 57,
       "ticker": "4626.T",
-      "score": 75,
+      "score": 74.9,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -4191,7 +4191,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 3383905758.7376947,
+      "marketCap": 3454076898.8328757,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -4202,8 +4202,8 @@
       "coverageWeight": 0.86,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 79.5,
-      "scoreShrunk": 75,
+      "scoreBase": 79.4,
+      "scoreShrunk": 74.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4217,12 +4217,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 84.8,
+          "pct": 84.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 70.8,
+          "pct": 70.9,
           "weight": 1.5
         },
         {
@@ -4232,7 +4232,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 63.4,
+          "pct": 63.3,
           "weight": 0.8
         },
         {
@@ -4262,7 +4262,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 17289032299.53776,
+      "marketCap": 17717011980.288002,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -4288,22 +4288,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 89.1,
+          "pct": 89,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 71.6,
+          "pct": 71.7,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 15.1,
+          "pct": 15.2,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 59.7,
+          "pct": 59.6,
           "weight": 0.8
         },
         {
@@ -4320,79 +4320,8 @@
     },
     {
       "rank": 59,
-      "ticker": "603659.SS",
-      "score": 74.8,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.348,
-        "companion": 89.1
-      },
-      "name": "Shanghai Putailai New Energy Technology Group Co.,Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Basic Materials",
-      "marketCap": 7684224250.273465,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2017,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 834,
-      "cohortFallback": false,
-      "scoreBase": 74.8,
-      "scoreShrunk": 74.8,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 86.1,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 61.4,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 74.2,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 71,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 82,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 35.324856944269435,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "shareDilution": null,
-      "ath": null
-    },
-    {
-      "rank": 60,
       "ticker": "OGC",
-      "score": 74.8,
+      "score": 74.7,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -4418,7 +4347,7 @@
       "cohortN": 834,
       "cohortFallback": false,
       "scoreBase": 74.8,
-      "scoreShrunk": 74.8,
+      "scoreShrunk": 74.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4427,17 +4356,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 87.5,
+          "pct": 87.4,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 81.9,
+          "pct": 81.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 95.3,
+          "pct": 95.4,
           "weight": 1.5
         },
         {
@@ -4447,7 +4376,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 87.1,
+          "pct": 87,
           "weight": 0.8
         },
         {
@@ -4461,11 +4390,82 @@
       "einmalertragPrognose": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -43.1,
+        "distancePct": -41.1,
         "athDate": "2026-03-02",
         "monthsAgo": 5,
-        "lastDate": "2026-07-31"
+        "lastDate": "2026-08-04"
       }
+    },
+    {
+      "rank": 60,
+      "ticker": "603659.SS",
+      "score": 74.7,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.348,
+        "companion": 89.1
+      },
+      "name": "Shanghai Putailai New Energy Technology Group Co.,Ltd.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Basic Materials",
+      "marketCap": 7803100922.13887,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2017,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 834,
+      "cohortFallback": false,
+      "scoreBase": 74.8,
+      "scoreShrunk": 74.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 86.1,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 61.3,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 74.3,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 70.9,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 81.9,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 35.324856944269435,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
     },
     {
       "rank": 61,
@@ -4485,7 +4485,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 4450775449.584402,
+      "marketCap": 4470467658.743808,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -4511,7 +4511,7 @@
         },
         {
           "key": "marginLevel",
-          "pct": 98.5,
+          "pct": 98.4,
           "weight": 2.2
         },
         {
@@ -4543,80 +4543,6 @@
     },
     {
       "rank": 62,
-      "ticker": "FSM",
-      "score": 74.4,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 1.001,
-        "companion": 207.6
-      },
-      "name": "Fortuna Mining Corp.",
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Basic Materials",
-      "marketCap": 2741764352,
-      "phase": "inflected",
-      "mcapBand": "mid",
-      "mcapKlasse": "mid",
-      "ipoRecency": "veteran",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 1994,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 834,
-      "cohortFallback": false,
-      "scoreBase": 78.8,
-      "scoreShrunk": 74.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 60.4,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 85.4,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 93.3,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 93.8,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 75.59283623107412,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "shareDilution": null,
-      "ath": null
-    },
-    {
-      "rank": 63,
       "ticker": "MAH.AX",
       "score": 74.4,
       "track": "profitable",
@@ -4630,7 +4556,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Basic Materials",
-      "marketCap": 1572261567.024384,
+      "marketCap": 1598649713.520768,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -4651,17 +4577,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 72.9,
+          "pct": 72.8,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 98.1,
+          "pct": 98,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 65.8,
+          "pct": 65.9,
           "weight": 1.5
         },
         {
@@ -4687,80 +4613,9 @@
       "ath": null
     },
     {
-      "rank": 64,
-      "ticker": "000975.SZ",
-      "score": 74.4,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.339,
-        "companion": 103.5
-      },
-      "name": "Shanjin International Gold Co., Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Basic Materials",
-      "marketCap": 9262697423.64754,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2000,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 834,
-      "cohortFallback": false,
-      "scoreBase": 78.8,
-      "scoreShrunk": 74.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 91.4,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 61.5,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 79.9,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 83.2,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 37.408396013637834,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "shareDilution": null,
-      "ath": null
-    },
-    {
-      "rank": 65,
-      "ticker": "PRIVISCL.BO",
-      "score": 74.4,
+      "rank": 63,
+      "ticker": "PRIVISCL.NS",
+      "score": 74.3,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -4774,7 +4629,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 1504951249.7915165,
+      "marketCap": 1521660234.645504,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -4786,7 +4641,7 @@
       "cohortN": 834,
       "cohortFallback": false,
       "scoreBase": 78.8,
-      "scoreShrunk": 74.4,
+      "scoreShrunk": 74.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4800,12 +4655,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 73.6,
+          "pct": 73.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 81,
+          "pct": 81.1,
           "weight": 1.5
         },
         {
@@ -4831,7 +4686,78 @@
       "ath": null
     },
     {
-      "rank": 66,
+      "rank": 64,
+      "ticker": "000975.SZ",
+      "score": 74.3,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.339,
+        "companion": 103.5
+      },
+      "name": "Shanjin International Gold Co., Ltd.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Basic Materials",
+      "marketCap": 9892488956.302992,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2000,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 834,
+      "cohortFallback": false,
+      "scoreBase": 78.7,
+      "scoreShrunk": 74.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 91.4,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 61.4,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 80,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 83.1,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 37.408396013637834,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 65,
       "ticker": "NMDC.BO",
       "score": 74.3,
       "track": "profitable",
@@ -4845,7 +4771,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 7806508388.996612,
+      "marketCap": 7849307471.560704,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -4856,7 +4782,7 @@
       "coverageWeight": 0.86,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 78.8,
+      "scoreBase": 78.7,
       "scoreShrunk": 74.3,
       "factors": {
         "burn": 1,
@@ -4871,7 +4797,7 @@
         },
         {
           "key": "marginLevel",
-          "pct": 81.1,
+          "pct": 81,
           "weight": 2.2
         },
         {
@@ -4886,7 +4812,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 91.3,
+          "pct": 91.2,
           "weight": 0.8
         },
         {
@@ -4896,6 +4822,80 @@
         }
       ],
       "revGrowthYoYPct": 61.93852887892079,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 66,
+      "ticker": "FSM",
+      "score": 74.3,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 1.001,
+        "companion": 207.6
+      },
+      "name": "Fortuna Mining Corp.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 2741764352,
+      "phase": "inflected",
+      "mcapBand": "mid",
+      "mcapKlasse": "mid",
+      "ipoRecency": "veteran",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 1994,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 834,
+      "cohortFallback": false,
+      "scoreBase": 78.7,
+      "scoreShrunk": 74.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 60.1,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 85.2,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 93.4,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 93.6,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 75.59283623107412,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "shareDilution": null,
@@ -4918,7 +4918,7 @@
       "country": "Taiwan",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 1016315127.5858821,
+      "marketCap": 1065280799.8406984,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -4949,7 +4949,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 75.6,
+          "pct": 75.7,
           "weight": 1.5
         },
         {
@@ -4959,7 +4959,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 54.8,
+          "pct": 54.7,
           "weight": 0.8
         },
         {
@@ -4994,7 +4994,7 @@
       "sector": "Basic Materials",
       "marketCap": 2381631488,
       "phase": "established",
-      "mcapBand": "mid",
+      "mcapBand": "small",
       "mcapKlasse": "mid",
       "ipoRecency": "recent",
       "profitTier": "langfristig-profitabel",
@@ -5018,12 +5018,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 72.5,
+          "pct": 72.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 94.9,
+          "pct": 95,
           "weight": 1.5
         },
         {
@@ -5033,7 +5033,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 94.9,
+          "pct": 94.7,
           "weight": 0.8
         },
         {
@@ -5051,7 +5051,7 @@
     {
       "rank": 69,
       "ticker": "4021.T",
-      "score": 74.1,
+      "score": 74.2,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -5063,7 +5063,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 6414455971.148267,
+      "marketCap": 6564599212.674253,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -5075,7 +5075,7 @@
       "cohortN": 834,
       "cohortFallback": false,
       "scoreBase": 78.5,
-      "scoreShrunk": 74.1,
+      "scoreShrunk": 74.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5089,12 +5089,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 82.2,
+          "pct": 82.1,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 54.1,
+          "pct": 54.5,
           "weight": 1.5
         },
         {
@@ -5104,7 +5104,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 55.1,
+          "pct": 55,
           "weight": 0.8
         },
         {
@@ -5121,8 +5121,8 @@
     },
     {
       "rank": 70,
-      "ticker": "UPL.BO",
-      "score": 73.8,
+      "ticker": "UPL.NS",
+      "score": 73.7,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -5134,7 +5134,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 5158495632.402874,
+      "marketCap": 5184220000.567296,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -5146,7 +5146,7 @@
       "cohortN": 834,
       "cohortFallback": false,
       "scoreBase": 73.8,
-      "scoreShrunk": 73.8,
+      "scoreShrunk": 73.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5160,22 +5160,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 84.5,
+          "pct": 84.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 60,
+          "pct": 60.1,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 80.3,
+          "pct": 80.2,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 66.6,
+          "pct": 66.5,
           "weight": 0.8
         },
         {
@@ -5193,7 +5193,7 @@
     {
       "rank": 71,
       "ticker": "RBT.PA",
-      "score": 73.7,
+      "score": 73.6,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -5205,7 +5205,7 @@
       "country": "France",
       "region": "Europe",
       "sector": "Basic Materials",
-      "marketCap": 1945759782.7132418,
+      "marketCap": 1946433482.30016,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -5216,8 +5216,8 @@
       "coverageWeight": 0.86,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 78,
-      "scoreShrunk": 73.7,
+      "scoreBase": 77.9,
+      "scoreShrunk": 73.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5231,7 +5231,7 @@
         },
         {
           "key": "marginLevel",
-          "pct": 92.6,
+          "pct": 92.5,
           "weight": 2.2
         },
         {
@@ -5246,7 +5246,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 38.1,
+          "pct": 38,
           "weight": 0.8
         },
         {
@@ -5278,7 +5278,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 3286695479.966188,
+      "marketCap": 3411673177.6232452,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -5309,7 +5309,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 88.8,
+          "pct": 88.9,
           "weight": 1.5
         },
         {
@@ -5319,7 +5319,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 88.1,
+          "pct": 88,
           "weight": 0.8
         },
         {
@@ -5336,77 +5336,6 @@
     },
     {
       "rank": 73,
-      "ticker": "688093.SS",
-      "score": 73.2,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.414,
-        "companion": -14.8
-      },
-      "name": "Suzhou Shihua New Material Technology Co., Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Basic Materials",
-      "marketCap": 1112778415.7957735,
-      "phase": "established",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2020,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 834,
-      "cohortFallback": false,
-      "scoreBase": 77.5,
-      "scoreShrunk": 73.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 84.2,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 91.7,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 78.7,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 13.9,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": -6.449428226216147,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "shareDilution": null,
-      "ath": null
-    },
-    {
-      "rank": 74,
       "ticker": "KTY.WA",
       "score": 73.2,
       "track": "profitable",
@@ -5420,7 +5349,7 @@
       "country": "Poland",
       "region": "Europe",
       "sector": "Basic Materials",
-      "marketCap": 3441083387.1581798,
+      "marketCap": 3445152876.0795035,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -5431,7 +5360,7 @@
       "coverageWeight": 0.86,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 77.5,
+      "scoreBase": 77.4,
       "scoreShrunk": 73.2,
       "factors": {
         "burn": 1,
@@ -5446,12 +5375,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 78.6,
+          "pct": 78.5,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 64.4,
+          "pct": 64.5,
           "weight": 1.5
         },
         {
@@ -5461,7 +5390,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 30.8,
+          "pct": 30.7,
           "weight": 0.8
         },
         {
@@ -5477,32 +5406,32 @@
       "ath": null
     },
     {
-      "rank": 75,
-      "ticker": "BERGEPAINT.NS",
+      "rank": 74,
+      "ticker": "688093.SS",
       "score": 73.2,
       "track": "profitable",
       "lamps": [],
       "overview": {
         "kind": "gp",
-        "value": 0.057,
-        "companion": 21.3
+        "value": 0.414,
+        "companion": -14.8
       },
-      "name": "Berger Paints India Limited",
-      "country": "India",
+      "name": "Suzhou Shihua New Material Technology Co., Ltd.",
+      "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 6526427412.305281,
+      "marketCap": 1124689879.7881958,
       "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "mature",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 2002,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
+      "ipoYear": 2020,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 73.3,
+      "scoreBase": 77.4,
       "scoreShrunk": 73.2,
       "factors": {
         "burn": 1,
@@ -5512,27 +5441,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 89.4,
+          "pct": 84.2,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 77.5,
+          "pct": 91.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 54.4,
+          "pct": 78.8,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 74.6,
+          "pct": null,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 42.3,
+          "pct": 13.5,
           "weight": 0.8
         },
         {
@@ -5541,28 +5470,28 @@
           "weight": 0
         }
       ],
-      "revGrowthYoYPct": 6.065021467957088,
+      "revGrowthYoYPct": -6.449428226216147,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "shareDilution": null,
       "ath": null
     },
     {
-      "rank": 76,
-      "ticker": "PRU.TO",
+      "rank": 75,
+      "ticker": "PRU.AX",
       "score": 73.1,
       "track": "profitable",
       "lamps": [],
       "overview": {
         "kind": "gp",
         "value": 0.184,
-        "companion": -61.1
+        "companion": -61.3
       },
       "name": "Perseus Mining Limited",
       "country": "Australia",
       "region": "Oceania",
       "sector": "Basic Materials",
-      "marketCap": 4595840433.983416,
+      "marketCap": 4800920208.978125,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -5573,7 +5502,7 @@
       "coverageWeight": 0.86,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 77.3,
+      "scoreBase": 77.2,
       "scoreShrunk": 73.1,
       "factors": {
         "burn": 1,
@@ -5588,7 +5517,7 @@
         },
         {
           "key": "marginLevel",
-          "pct": 92.7,
+          "pct": 92.6,
           "weight": 2.2
         },
         {
@@ -5619,9 +5548,9 @@
       "ath": null
     },
     {
-      "rank": 77,
+      "rank": 76,
       "ticker": "NEM",
-      "score": 73,
+      "score": 72.8,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -5646,8 +5575,8 @@
       "coverageWeight": 1,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 73,
-      "scoreShrunk": 73,
+      "scoreBase": 72.8,
+      "scoreShrunk": 72.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5656,27 +5585,27 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 59.7,
+          "pct": 59.3,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 88.4,
+          "pct": 88.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 91.1,
+          "pct": 91.2,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 58.5,
+          "pct": 58.2,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 61.8,
+          "pct": 61.7,
           "weight": 0.8
         },
         {
@@ -5703,9 +5632,9 @@
       }
     },
     {
-      "rank": 78,
+      "rank": 77,
       "ticker": "688300.SS",
-      "score": 72.7,
+      "score": 72.8,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -5717,7 +5646,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 3975675687.7370987,
+      "marketCap": 4406293504.202957,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -5729,7 +5658,7 @@
       "cohortN": 834,
       "cohortFallback": false,
       "scoreBase": 76.9,
-      "scoreShrunk": 72.7,
+      "scoreShrunk": 72.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5738,7 +5667,7 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 86.5,
+          "pct": 86.4,
           "weight": 2.6
         },
         {
@@ -5748,7 +5677,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 63,
+          "pct": 63.1,
           "weight": 1.5
         },
         {
@@ -5774,7 +5703,7 @@
       "ath": null
     },
     {
-      "rank": 79,
+      "rank": 78,
       "ticker": "301683.SZ",
       "score": 72.5,
       "track": "profitable",
@@ -5790,7 +5719,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 949638846.8568065,
+      "marketCap": 965458261.097129,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -5811,17 +5740,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 73.9,
+          "pct": 73.8,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 80.4,
+          "pct": 80.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 83.1,
+          "pct": 83.2,
           "weight": 1.5
         },
         {
@@ -5831,7 +5760,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 62.9,
+          "pct": 62.8,
           "weight": 0.8
         },
         {
@@ -5847,7 +5776,7 @@
       "ath": null
     },
     {
-      "rank": 80,
+      "rank": 79,
       "ticker": "600301.SS",
       "score": 72.4,
       "track": "profitable",
@@ -5861,7 +5790,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 4215430635.1041746,
+      "marketCap": 4466230442.739324,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -5882,17 +5811,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 92.2,
+          "pct": 92.1,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 70.4,
+          "pct": 70.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 59,
+          "pct": 59.1,
           "weight": 1.5
         },
         {
@@ -5918,7 +5847,7 @@
       "ath": null
     },
     {
-      "rank": 81,
+      "rank": 80,
       "ticker": "SOL.MI",
       "score": 72.3,
       "track": "profitable",
@@ -5932,7 +5861,7 @@
       "country": "Italy",
       "region": "Europe",
       "sector": "Basic Materials",
-      "marketCap": 5827650334.3005705,
+      "marketCap": 5829668099.11296,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -5943,7 +5872,7 @@
       "coverageWeight": 0.58,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 89.6,
+      "scoreBase": 89.5,
       "scoreShrunk": 72.3,
       "factors": {
         "burn": 1,
@@ -5953,12 +5882,12 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 82.3,
+          "pct": 82.2,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 98.3,
+          "pct": 98.1,
           "weight": 2.2
         },
         {
@@ -5989,81 +5918,7 @@
       "ath": null
     },
     {
-      "rank": 82,
-      "ticker": "PE&OLES.MX",
-      "score": 72.2,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.885,
-        "companion": 222.4
-      },
-      "name": "Industrias Peñoles, S.A.B. de C.V.",
-      "country": "Mexico",
-      "region": "North America",
-      "sector": "Basic Materials",
-      "marketCap": 18165850029.273254,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2000,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 834,
-      "cohortFallback": false,
-      "scoreBase": 76.3,
-      "scoreShrunk": 72.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 63.7,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 72.8,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 92.5,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 95.9,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 91.56974141215271,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "shareDilution": null,
-      "ath": null
-    },
-    {
-      "rank": 83,
+      "rank": 81,
       "ticker": "688708.SS",
       "score": 72.2,
       "track": "profitable",
@@ -6080,7 +5935,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 2790954319.2955294,
+      "marketCap": 2810348386.411848,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -6091,7 +5946,7 @@
       "coverageWeight": 0.86,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 76.3,
+      "scoreBase": 76.2,
       "scoreShrunk": 72.2,
       "factors": {
         "burn": 1,
@@ -6106,12 +5961,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 95.4,
+          "pct": 95.2,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 12.4,
+          "pct": 12.5,
           "weight": 1.5
         },
         {
@@ -6137,7 +5992,81 @@
       "ath": null
     },
     {
-      "rank": 84,
+      "rank": 82,
+      "ticker": "PE&OLES.MX",
+      "score": 72.2,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.885,
+        "companion": 222.4
+      },
+      "name": "Industrias Peñoles, S.A.B. de C.V.",
+      "country": "Mexico",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 18180729216.269814,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2000,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 834,
+      "cohortFallback": false,
+      "scoreBase": 76.2,
+      "scoreShrunk": 72.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 63.7,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 72.7,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 92.7,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 95.8,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 91.56974141215271,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 83,
       "ticker": "SARDAEN.BO",
       "score": 72.2,
       "track": "profitable",
@@ -6153,7 +6082,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 1882953553.2205014,
+      "marketCap": 1899949652.1523201,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -6179,12 +6108,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 83.8,
+          "pct": 83.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 82.1,
+          "pct": 82.2,
           "weight": 1.5
         },
         {
@@ -6194,7 +6123,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 28.1,
+          "pct": 27.9,
           "weight": 0.8
         },
         {
@@ -6210,7 +6139,7 @@
       "ath": null
     },
     {
-      "rank": 85,
+      "rank": 84,
       "ticker": "603132.SS",
       "score": 72.2,
       "track": "profitable",
@@ -6227,7 +6156,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 2478057832.583209,
+      "marketCap": 2634192154.8106756,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -6253,12 +6182,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 95,
+          "pct": 94.9,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 55.6,
+          "pct": 55.8,
           "weight": 1.5
         },
         {
@@ -6268,7 +6197,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 55.9,
+          "pct": 55.8,
           "weight": 0.8
         },
         {
@@ -6284,9 +6213,9 @@
       "ath": null
     },
     {
-      "rank": 86,
+      "rank": 85,
       "ticker": "UAN",
-      "score": 72.2,
+      "score": 72.1,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -6310,7 +6239,7 @@
       "cohortN": 834,
       "cohortFallback": false,
       "scoreBase": 72.2,
-      "scoreShrunk": 72.2,
+      "scoreShrunk": 72.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6324,17 +6253,17 @@
         },
         {
           "key": "marginLevel",
-          "pct": 52.6,
+          "pct": 52.5,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 67.7,
+          "pct": 67.8,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 61.3,
+          "pct": 61.1,
           "weight": 1.2
         },
         {
@@ -6359,14 +6288,14 @@
       "einmalertragPrognose": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -4.2,
+        "distancePct": -6.3,
         "athDate": "2026-03-12",
         "monthsAgo": 5,
-        "lastDate": "2026-07-31"
+        "lastDate": "2026-08-04"
       }
     },
     {
-      "rank": 87,
+      "rank": 86,
       "ticker": "USHAMART.NS",
       "score": 72,
       "track": "profitable",
@@ -6382,7 +6311,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 1607415506.9212263,
+      "marketCap": 1637241454.81728,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -6408,22 +6337,22 @@
         },
         {
           "key": "marginLevel",
-          "pct": 81.7,
+          "pct": 81.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 50.1,
+          "pct": 50.4,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 71.5,
+          "pct": 71.4,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "pct": 64.5,
+          "pct": 64.3,
           "weight": 0.8
         },
         {
@@ -6439,9 +6368,9 @@
       "ath": null
     },
     {
-      "rank": 88,
+      "rank": 87,
       "ticker": "ERO",
-      "score": 72,
+      "score": 71.9,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -6468,7 +6397,7 @@
       "cohortN": 834,
       "cohortFallback": false,
       "scoreBase": 72,
-      "scoreShrunk": 72,
+      "scoreShrunk": 71.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6482,12 +6411,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 79.6,
+          "pct": 79.5,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 90,
+          "pct": 90.1,
           "weight": 1.5
         },
         {
@@ -6497,7 +6426,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 96.9,
+          "pct": 96.7,
           "weight": 0.8
         },
         {
@@ -6513,8 +6442,79 @@
       "ath": null
     },
     {
+      "rank": 88,
+      "ticker": "BERGEPAINT.NS",
+      "score": 71.8,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.052,
+        "companion": 21.3
+      },
+      "name": "Berger Paints India Limited",
+      "country": "India",
+      "region": "Asia",
+      "sector": "Basic Materials",
+      "marketCap": 6535436251.348992,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2002,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 834,
+      "cohortFallback": false,
+      "scoreBase": 71.9,
+      "scoreShrunk": 71.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 89.4,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 75.5,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 49.9,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 74.5,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 42.1,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 6.065021467957088,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
       "rank": 89,
-      "ticker": "AETHER.BO",
+      "ticker": "AETHER.NS",
       "score": 71.8,
       "track": "profitable",
       "lamps": [
@@ -6524,13 +6524,13 @@
       "overview": {
         "kind": "gp",
         "value": 0.42,
-        "companion": 62.7
+        "companion": 10.4
       },
       "name": "Aether Industries Limited",
       "country": "India",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 2198772313.4282956,
+      "marketCap": 2207310979.2768,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "mid",
@@ -6551,17 +6551,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 65.1,
+          "pct": 65,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 83.6,
+          "pct": 83.4,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 82.5,
+          "pct": 82.6,
           "weight": 1.5
         },
         {
@@ -6571,7 +6571,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 77.1,
+          "pct": 76.7,
           "weight": 0.8
         },
         {
@@ -6580,7 +6580,7 @@
           "weight": 0
         }
       ],
-      "revGrowthYoYPct": 27.248674156077456,
+      "revGrowthYoYPct": 27.03042515279188,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "shareDilution": null,
@@ -6588,8 +6588,87 @@
     },
     {
       "rank": 90,
+      "ticker": "OR",
+      "score": 71.7,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.531,
+        "companion": 226
+      },
+      "name": "OR Royalties Inc.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 5767373312,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2014,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 834,
+      "cohortFallback": false,
+      "scoreBase": 71.8,
+      "scoreShrunk": 71.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 60.5,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 99.2,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 87.9,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 10.1,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 95.3,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 87.25325952363609,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": {
+        "distancePct": -35.3,
+        "athDate": "2026-03-02",
+        "monthsAgo": 5,
+        "lastDate": "2026-08-04"
+      }
+    },
+    {
+      "rank": 91,
       "ticker": "CF",
-      "score": 71.8,
+      "score": 71.7,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -6612,8 +6691,8 @@
       "coverageWeight": 1,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 71.8,
-      "scoreShrunk": 71.8,
+      "scoreBase": 71.7,
+      "scoreShrunk": 71.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6622,22 +6701,22 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 97.1,
+          "pct": 97,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 73.1,
+          "pct": 73,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 63.3,
+          "pct": 63.4,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 27.4,
+          "pct": 27.1,
           "weight": 1.2
         },
         {
@@ -6669,7 +6748,7 @@
       }
     },
     {
-      "rank": 91,
+      "rank": 92,
       "ticker": "ARIS",
       "score": 71.5,
       "track": "profitable",
@@ -6707,17 +6786,17 @@
       "axisBreakdown": [
         {
           "key": "capitalEfficiency",
-          "pct": 71.3,
+          "pct": 71.2,
           "weight": 2.6
         },
         {
           "key": "marginLevel",
-          "pct": 85.8,
+          "pct": 85.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 96.9,
+          "pct": 97,
           "weight": 1.5
         },
         {
@@ -6727,7 +6806,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 91.5,
+          "pct": 91.3,
           "weight": 0.8
         },
         {
@@ -6748,7 +6827,7 @@
       }
     },
     {
-      "rank": 92,
+      "rank": 93,
       "ticker": "001257.SZ",
       "score": 71.4,
       "track": "profitable",
@@ -6764,7 +6843,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 6881383461.918802,
+      "marketCap": 7013408403.4686165,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -6790,12 +6869,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 83.7,
+          "pct": 83.6,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 57.8,
+          "pct": 58,
           "weight": 1.5
         },
         {
@@ -6805,7 +6884,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 22.9,
+          "pct": 22.6,
           "weight": 0.8
         },
         {
@@ -6815,77 +6894,6 @@
         }
       ],
       "revGrowthYoYPct": -1.5698598441705847,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "shareDilution": null,
-      "ath": null
-    },
-    {
-      "rank": 93,
-      "ticker": "2245.HK",
-      "score": 71.4,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.441,
-        "companion": 86.6
-      },
-      "name": "Lygend Resources & Technology Co., Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Basic Materials",
-      "marketCap": 2662560771.358925,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "mid",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2022,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 834,
-      "cohortFallback": false,
-      "scoreBase": 71.5,
-      "scoreShrunk": 71.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 89.6,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 34.6,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 78.6,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 82.8,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 83.5,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 37.65211854373409,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "shareDilution": null,
@@ -6906,7 +6914,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 992623804.459991,
+      "marketCap": 1053755151.5753677,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -6932,7 +6940,7 @@
         },
         {
           "key": "marginLevel",
-          "pct": 96.3,
+          "pct": 96.2,
           "weight": 2.2
         },
         {
@@ -6947,7 +6955,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 38.4,
+          "pct": 38.3,
           "weight": 0.8
         },
         {
@@ -6964,6 +6972,158 @@
     },
     {
       "rank": 95,
+      "ticker": "HL",
+      "score": 71.4,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "lowRoic",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 2.139,
+        "companion": 247.9
+      },
+      "name": "Hecla Mining Company",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": 10322264064,
+      "phase": "inflected",
+      "mcapBand": "large",
+      "mcapKlasse": "large",
+      "ipoRecency": "veteran",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 1980,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 834,
+      "cohortFallback": false,
+      "scoreBase": 71.4,
+      "scoreShrunk": 71.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 59.6,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 79.3,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 98.1,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 32.7,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 96.2,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 100.37256372544246,
+      "profitStreak": {
+        "jahre": 2,
+        "basis": "opInc",
+        "tiefe": 16,
+        "mindestens": false,
+        "letzterVerlust": 2023
+      },
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 96,
+      "ticker": "2245.HK",
+      "score": 71.4,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.441,
+        "companion": 86.6
+      },
+      "name": "Lygend Resources & Technology Co., Ltd.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Basic Materials",
+      "marketCap": 2711832546.5294437,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "mid",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2022,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 834,
+      "cohortFallback": false,
+      "scoreBase": 71.4,
+      "scoreShrunk": 71.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 89.5,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 34.5,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 78.7,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 82.7,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 83.4,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 37.65211854373409,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 97,
       "ticker": "301665.SZ",
       "score": 71.4,
       "track": "profitable",
@@ -6980,7 +7140,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Basic Materials",
-      "marketCap": 1498067476.8092365,
+      "marketCap": 1501556484.4227586,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -7006,12 +7166,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 52.2,
+          "pct": 52.1,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 86.1,
+          "pct": 86.2,
           "weight": 1.5
         },
         {
@@ -7021,7 +7181,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 80.8,
+          "pct": 80.7,
           "weight": 0.8
         },
         {
@@ -7037,80 +7197,9 @@
       "ath": null
     },
     {
-      "rank": 96,
-      "ticker": "7821.T",
-      "score": 71.4,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.148,
-        "companion": 34.1
-      },
-      "name": "Maeda Kosen Co., Ltd.",
-      "country": "Japan",
-      "region": "Asia",
-      "sector": "Basic Materials",
-      "marketCap": 831540977.415045,
-      "phase": "established",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2007,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 834,
-      "cohortFallback": false,
-      "scoreBase": 71.4,
-      "scoreShrunk": 71.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 85.5,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 71.1,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 58.2,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 64.9,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 61.1,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 14.82098400587466,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "shareDilution": null,
-      "ath": null
-    },
-    {
-      "rank": 97,
+      "rank": 98,
       "ticker": "EMR.AX",
-      "score": 71.4,
+      "score": 71.3,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -7122,7 +7211,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Basic Materials",
-      "marketCap": 2548786442.1046653,
+      "marketCap": 2682772995.570048,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -7133,8 +7222,8 @@
       "coverageWeight": 0.86,
       "cohortN": 834,
       "cohortFallback": false,
-      "scoreBase": 75.3,
-      "scoreShrunk": 71.4,
+      "scoreBase": 75.2,
+      "scoreShrunk": 71.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -7148,12 +7237,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 90.4,
+          "pct": 90.3,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 18.5,
+          "pct": 18.7,
           "weight": 1.5
         },
         {
@@ -7163,7 +7252,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 66.2,
+          "pct": 66,
           "weight": 0.8
         },
         {
@@ -7179,7 +7268,78 @@
       "ath": null
     },
     {
-      "rank": 98,
+      "rank": 99,
+      "ticker": "7821.T",
+      "score": 71.3,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.148,
+        "companion": 34.1
+      },
+      "name": "Maeda Kosen Co., Ltd.",
+      "country": "Japan",
+      "region": "Asia",
+      "sector": "Basic Materials",
+      "marketCap": 832559040.8314471,
+      "phase": "established",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2007,
+      "coverageAxes": "5/5",
+      "coverageWeight": 1,
+      "cohortN": 834,
+      "cohortFallback": false,
+      "scoreBase": 71.4,
+      "scoreShrunk": 71.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 85.5,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 71,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 58.4,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 64.7,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 61,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 14.82098400587466,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "shareDilution": null,
+      "ath": null
+    },
+    {
+      "rank": 100,
       "ticker": "ABX.TO",
       "score": 71.3,
       "track": "profitable",
@@ -7195,7 +7355,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Basic Materials",
-      "marketCap": 64027464396.28701,
+      "marketCap": 63995611202.349464,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -7221,12 +7381,12 @@
         },
         {
           "key": "marginLevel",
-          "pct": 86.9,
+          "pct": 86.7,
           "weight": 2.2
         },
         {
           "key": "gpGrowth",
-          "pct": 90.8,
+          "pct": 91,
           "weight": 1.5
         },
         {
@@ -7236,7 +7396,7 @@
         },
         {
           "key": "revGrowthLevel",
-          "pct": 92.3,
+          "pct": 92.1,
           "weight": 0.8
         },
         {
@@ -7250,158 +7410,6 @@
       "einmalertragPrognose": null,
       "shareDilution": null,
       "ath": null
-    },
-    {
-      "rank": 99,
-      "ticker": "B",
-      "score": 71.3,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.752,
-        "companion": 181.1
-      },
-      "name": "B",
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Basic Materials",
-      "marketCap": 64452288512,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1985,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 834,
-      "cohortFallback": false,
-      "scoreBase": 71.4,
-      "scoreShrunk": 71.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 68.6,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 86.9,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 90.8,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 10.8,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 92.3,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 66.70926517571884,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "shareDilution": null,
-      "ath": null
-    },
-    {
-      "rank": 100,
-      "ticker": "OR",
-      "score": 71.2,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.531,
-        "companion": 226
-      },
-      "name": "OR Royalties Inc.",
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Basic Materials",
-      "marketCap": 5767373312,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2014,
-      "coverageAxes": "5/5",
-      "coverageWeight": 1,
-      "cohortN": 834,
-      "cohortFallback": false,
-      "scoreBase": 71.2,
-      "scoreShrunk": 71.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 58.8,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 99.2,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 87.8,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 10,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 95.5,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 87.25325952363609,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "shareDilution": null,
-      "ath": {
-        "distancePct": -37.4,
-        "athDate": "2026-03-02",
-        "monthsAgo": 5,
-        "lastDate": "2026-07-31"
-      }
     }
   ],
   "unprofitable": []
