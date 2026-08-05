@@ -126,17 +126,27 @@ test('Extraktion (ausgefuehrt): die drei Cashflow-Schluessel kommen latest-first
   assert.deepEqual(_ftsExtractByYear([], ['repurchaseOfCapitalStock']), []);
 });
 
-// --- 4b. Verdrahtung: die zwei Stellen OHNE ausfuehrbaren Seam ---------------
-// Cache-Payload und canonical.annual liegen mitten in pullAll() (Netzwerk-Pfad, kein
-// aufrufbarer Einstieg). Sie bleiben deshalb bewusst Quelltext-Pruefungen — mit dem
-// Unterschied, dass die Extraktion darueber jetzt wirklich AUSGEFUEHRT wird und diese
-// Greps nur noch die Frage "landet das Ergebnis auch im Snapshot?" beantworten muessen.
-test('pull-yahoo fuehrt jede Reihe in Cache-Payload und canonical.annual (kein Seam vorhanden)', () => {
+// --- 4b. Verdrahtung: Cache-Payload und canonical.annual --------------------
+// canonical.annual liegt mitten in pullAll() (Netzwerk-Pfad, kein aufrufbarer Einstieg)
+// und bleibt deshalb bewusst eine Quelltext-Pruefung. Die Cache-Payload-Haelfte ging bis
+// Tag 591 direkt auf das Inline-Objektliteral `payload: {...}`; Tag 591 verschob den Write
+// in die Seam-Funktion _writeFTSCache(cachePath, version, partial, payload) — der Callsite
+// in pullAll() uebergibt das Payload-Objekt jetzt als viertes Argument. Verankert wird daher
+// nicht mehr auf das alte `payload:`-Schreibmuster, sondern auf das Objekt-Argument des
+// _writeFTSCache(...)-Aufrufs selbst — die SACHE (landet die Reihe im geschriebenen Cache?)
+// bleibt je Feld einzeln pruefbar.
+test('pull-yahoo fuehrt jede Reihe in den _writeFTSCache-Aufruf und in canonical.annual', () => {
   const quelle = fs.readFileSync(path.join(__dirname, '..', '..', 'pull-yahoo.js'), 'utf8');
+  // [^)]* vor der `{` schliesst die Funktionsdefinition `_writeFTSCache(a, b, c, payload) {`
+  // aus: deren Parameterliste enthaelt kein `{` vor dem schliessenden `)`, also matcht der
+  // Regex erst am tatsaechlichen Aufruf mit dem inline Objektliteral als viertem Argument.
+  const aufrufMatch = /_writeFTSCache\([^)]*\{([^}]*)\}[^)]*\)/s.exec(quelle);
+  assert.ok(aufrufMatch, 'kein _writeFTSCache(...)-Aufruf mit Objekt-Argument in pull-yahoo.js gefunden');
+  const payloadArgument = aufrufMatch[1];
   for (const feld of FELDER) {
     const variable = 'ftsAnnual' + feld.slice('annual'.length);
-    assert.ok(new RegExp(`payload:\\s*\\{[^}]*\\b${variable}\\b`, 's').test(quelle),
-      `${feld}: ${variable} fehlt im FTS-Cache-Payload — der naechste Lauf zieht es aus dem Cache als undefined`);
+    assert.ok(new RegExp(`\\b${variable}\\b`).test(payloadArgument),
+      `${feld}: ${variable} fehlt im Objekt-Argument von _writeFTSCache — der naechste Lauf zieht es aus dem Cache als undefined`);
     assert.ok(quelle.includes(`canonical.annual.${feld} = ${variable}`),
       `${feld}: landet nicht in canonical.annual — der Snapshot bekommt die Reihe nie`);
     assert.ok(new RegExp(`${variable}\\s*=\\s*_realignFtsAnchoredSeries\\(`).test(quelle),
