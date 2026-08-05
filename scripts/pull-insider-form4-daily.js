@@ -61,11 +61,11 @@ const TICKER_CIK_MAP_PATH = path.join(EXTERNAL_DIR, 'sec-ticker-cik-map.json');
 const FORM4_CACHE_PATH = path.join(EXTERNAL_DIR, 'sec-form4-cache.json');
 
 const USER_AGENT = require('../lib/sec-user-agent').secUserAgent();
-const RATE_DELAY_MS = 125;          // ≤8 req/s, under SEC's 10/s/IP limit
+const SEC_RATE_LIMIT = require('../lib/sec-rate-limit.js');
+const { RATE_DELAY_MS, RATE_LIMIT_BACKOFF_MS } = SEC_RATE_LIMIT;
 // audit/fix: 429 IP-block backoff. On HTTP 429/503 SEC wants the client to slow
 // WAY down; the normal 125 ms cadence keeps tripping the 10/s/IP limit and risks
 // a ~10-min IP block. Wait 30 s and retry WITHOUT counting it as an error.
-const RATE_LIMIT_BACKOFF_MS = 30000;
 const FORM4_LOOKBACK_DAYS = 180;    // drop txns older than this at merge time
 // audit/fix BH-020: hard cap on how many trading days a single run will
 // catch up when resuming after a gap (CI outage, missed runs). Bounds the
@@ -608,5 +608,6 @@ module.exports = {
   _internals: {
     httpGet, quarterOf, ymd, parseYmd, withinLookback, txnKey,
     purgeAmendedPeriod, maxYmd, resolveMergeTicker, _isTotalFailure
-  }
+  },
+  _secRateLimit: SEC_RATE_LIMIT
 };

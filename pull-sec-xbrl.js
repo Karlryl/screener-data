@@ -45,8 +45,8 @@ const MANIFEST_PATH = path.join(CACHE_DIR, '_manifest.json');
 // (the 51-error abort gate at the pull loop tripped on 51 consecutive 403s).
 // Keep this string identical to the other two SEC scripts.
 const USER_AGENT = require('./lib/sec-user-agent').secUserAgent();
-const RATE_DELAY_MS = 125;       // 8 req/sec (under SEC 10/sec limit)
-const RATE_LIMIT_BACKOFF_MS = 30000; // F-006: pause after an HTTP 429 before continuing
+const SEC_RATE_LIMIT = require('./lib/sec-rate-limit.js');
+const { RATE_DELAY_MS, RATE_LIMIT_BACKOFF_MS } = SEC_RATE_LIMIT;
 const STALE_DAYS = 90;           // re-pull after 90 days (typical 10-Q cycle)
 // Negativ-Cache (29.07.): Ein CIK, der KEINE companyfacts hat, antwortet jeden Monat
 // wieder mit 404 — bei rund 1.000 solchen CIKs sind das >1.000 vergebliche Anfragen je
@@ -286,4 +286,4 @@ if (require.main === module) {
   main().catch(e => { console.error(e); process.exit(1); });
 }
 
-module.exports = { main, istNegativGesperrt, NOTFOUND_STREAK, NOTFOUND_PAUSE_DAYS };
+module.exports = { main, istNegativGesperrt, NOTFOUND_STREAK, NOTFOUND_PAUSE_DAYS, _secRateLimit: SEC_RATE_LIMIT };
