@@ -3,20 +3,20 @@
   "board": "survival",
   "boardStatus": "diagnostic",
   "formulaVersion": "calibration/v4",
-  "formulaCommit": "ee2f2bb4b452c17a96c1aee950aded7185f0a053",
-  "calibrationGeneratedAt": "2026-08-05T04:54:34.626Z",
+  "formulaCommit": "6b57f777ef45336985b5c167d353043856f5e30a",
+  "calibrationGeneratedAt": "2026-08-05T06:37:20.893Z",
   "cohortCount": {
-    "profitable": 94,
+    "profitable": 97,
     "unprofitable": 0
   },
   "pitCoverage": {
-    "beta": 0.7340425531914894,
-    "evSales": 0.06382978723404255,
-    "priceGrossProfit": 0.06382978723404255,
-    "revenueQEnds": 0.5,
-    "grossProfitQEnds": 0.5,
-    "revenueQEndsFresh": 0.4787234042553192,
-    "grossProfitQEndsFresh": 0.4787234042553192
+    "beta": 0.7319587628865979,
+    "evSales": 0.07216494845360824,
+    "priceGrossProfit": 0.061855670103092786,
+    "revenueQEnds": 0.4948453608247423,
+    "grossProfitQEnds": 0.4948453608247423,
+    "revenueQEndsFresh": 0.4742268041237113,
+    "grossProfitQEndsFresh": 0.4742268041237113
   },
   "pitGaps": [
     "grossProfitQEnds-missing",
@@ -63,7 +63,7 @@
           "fxRateApplied": 0.14809549,
           "priceSales": 25.762033,
           "priceSalesAsOf": "2026-08-04T05:54:59.393Z",
-          "marketCap": 1150294812.788567
+          "marketCap": 1147204971.216691
         }
       },
       {
@@ -327,7 +327,7 @@
           "fxRateApplied": 0.1478918,
           "priceSales": null,
           "priceSalesAsOf": null,
-          "marketCap": 1537036125.878006
+          "marketCap": 1528227402.091315
         }
       },
       {
@@ -386,7 +386,7 @@
           "beta": null,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:10:11.792Z",
+          "fetchedAt": "2026-08-05T05:52:19.158Z",
           "revenueQ": [
             null,
             null,
@@ -439,7 +439,7 @@
           "beta": 1.201,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:10:27.494Z",
+          "fetchedAt": "2026-08-05T05:52:45.723Z",
           "revenueQ": [
             null,
             null,
@@ -620,7 +620,7 @@
           "beta": 1.648,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:08:29.586Z",
+          "fetchedAt": "2026-08-05T05:51:04.621Z",
           "revenueQ": [
             null,
             null,
@@ -650,7 +650,7 @@
             "2025-03-31"
           ],
           "reportingCurrencyOriginal": "CAD",
-          "fxRateApplied": 0.7107321,
+          "fxRateApplied": 0.71055025,
           "priceSales": null,
           "priceSalesAsOf": null,
           "marketCap": 6460236288
@@ -706,7 +706,7 @@
           "fxRateApplied": 1,
           "priceSales": null,
           "priceSalesAsOf": null,
-          "marketCap": 990701888
+          "marketCap": 1097310720
         }
       },
       {
@@ -945,6 +945,59 @@
       },
       {
         "rank": 21,
+        "ticker": "NAK",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 9.43445660605016,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "burning"
+        ],
+        "pit": {
+          "beta": 0.551,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-08-05T04:09:15.769Z",
+          "revenueQ": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "revenueQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "grossProfitQ": [
+            -19189.7667,
+            -19189.7667,
+            -18479.0346,
+            -19189.7667,
+            -19900.498799999998
+          ],
+          "grossProfitQEnds": [
+            "2026-03-31",
+            "2025-12-31",
+            "2025-09-30",
+            "2025-06-30",
+            "2025-03-31"
+          ],
+          "reportingCurrencyOriginal": "CAD",
+          "fxRateApplied": 0.7107321,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 896497856
+        }
+      },
+      {
+        "rank": 22,
         "ticker": "PVLA",
         "track": "flat",
         "score": null,
@@ -960,7 +1013,7 @@
           "beta": null,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:10:11.243Z",
+          "fetchedAt": "2026-08-05T05:52:28.034Z",
           "revenueQ": [
             null,
             null,
@@ -997,7 +1050,7 @@
         }
       },
       {
-        "rank": 22,
+        "rank": 23,
         "ticker": "IMVT",
         "track": "flat",
         "score": null,
@@ -1036,7 +1089,7 @@
         }
       },
       {
-        "rank": 23,
+        "rank": 24,
         "ticker": "PHVS",
         "track": "flat",
         "score": null,
@@ -1075,7 +1128,7 @@
         }
       },
       {
-        "rank": 24,
+        "rank": 25,
         "ticker": "DYN",
         "track": "flat",
         "score": null,
@@ -1124,7 +1177,7 @@
         }
       },
       {
-        "rank": 25,
+        "rank": 26,
         "ticker": "NGEX.TO",
         "track": "flat",
         "score": null,
@@ -1169,11 +1222,11 @@
           "fxRateApplied": 0.7096225,
           "priceSales": null,
           "priceSalesAsOf": null,
-          "marketCap": 4161469312.601702
+          "marketCap": 4160404546.8559365
         }
       },
       {
-        "rank": 26,
+        "rank": 27,
         "ticker": "LAR",
         "track": "flat",
         "score": null,
@@ -1226,7 +1279,7 @@
         }
       },
       {
-        "rank": 27,
+        "rank": 28,
         "ticker": "DFTX",
         "track": "flat",
         "score": null,
@@ -1276,11 +1329,11 @@
         }
       },
       {
-        "rank": 28,
+        "rank": 29,
         "ticker": "MI6.AX",
         "track": "flat",
         "score": null,
-        "runwayQuarters": 7.505527971094338,
+        "runwayQuarters": 7.505527971094339,
         "scoreBase": null,
         "scoreShrunk": null,
         "coverageAxes": null,
@@ -1293,20 +1346,20 @@
           "beta": 1.699,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:14:12.640Z",
+          "fetchedAt": "2026-08-05T05:56:23.268Z",
           "revenueQ": [],
           "revenueQEnds": null,
           "grossProfitQ": [],
           "grossProfitQEnds": null,
           "reportingCurrencyOriginal": "AUD",
-          "fxRateApplied": 0.7051689,
+          "fxRateApplied": 0.70492035,
           "priceSales": null,
           "priceSalesAsOf": null,
-          "marketCap": 1019938334.8977792
+          "marketCap": 1019578838.5088447
         }
       },
       {
-        "rank": 29,
+        "rank": 30,
         "ticker": "MLTX",
         "track": "flat",
         "score": null,
@@ -1360,7 +1413,7 @@
         }
       },
       {
-        "rank": 30,
+        "rank": 31,
         "ticker": "OICT",
         "track": "flat",
         "score": null,
@@ -1391,7 +1444,7 @@
         }
       },
       {
-        "rank": 31,
+        "rank": 32,
         "ticker": "KOD",
         "track": "flat",
         "score": null,
@@ -1431,7 +1484,7 @@
         }
       },
       {
-        "rank": 32,
+        "rank": 33,
         "ticker": "FBRX",
         "track": "flat",
         "score": null,
@@ -1472,7 +1525,7 @@
         }
       },
       {
-        "rank": 33,
+        "rank": 34,
         "ticker": "VERA",
         "track": "flat",
         "score": null,
@@ -1522,7 +1575,7 @@
         }
       },
       {
-        "rank": 34,
+        "rank": 35,
         "ticker": "COAG",
         "track": "flat",
         "score": null,
@@ -1539,7 +1592,7 @@
           "beta": null,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:09:51.791Z",
+          "fetchedAt": "2026-08-05T05:52:22.631Z",
           "revenueQ": [
             null,
             null
@@ -1564,7 +1617,7 @@
         }
       },
       {
-        "rank": 35,
+        "rank": 36,
         "ticker": "ELVN",
         "track": "flat",
         "score": null,
@@ -1604,7 +1657,7 @@
         }
       },
       {
-        "rank": 36,
+        "rank": 37,
         "ticker": "KLRA",
         "track": "flat",
         "score": null,
@@ -1638,7 +1691,7 @@
         }
       },
       {
-        "rank": 37,
+        "rank": 38,
         "ticker": "IPX",
         "track": "flat",
         "score": null,
@@ -1668,7 +1721,7 @@
         }
       },
       {
-        "rank": 38,
+        "rank": 39,
         "ticker": "MLYS",
         "track": "flat",
         "score": null,
@@ -1708,7 +1761,7 @@
         }
       },
       {
-        "rank": 39,
+        "rank": 40,
         "ticker": "COGT",
         "track": "flat",
         "score": null,
@@ -1762,7 +1815,7 @@
         }
       },
       {
-        "rank": 40,
+        "rank": 41,
         "ticker": "CELC",
         "track": "flat",
         "score": null,
@@ -1802,7 +1855,7 @@
         }
       },
       {
-        "rank": 41,
+        "rank": 42,
         "ticker": "TRAX",
         "track": "flat",
         "score": null,
@@ -1819,7 +1872,7 @@
           "beta": null,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:10:22.315Z",
+          "fetchedAt": "2026-08-05T05:52:33.034Z",
           "revenueQ": [
             null,
             null
@@ -1844,7 +1897,7 @@
         }
       },
       {
-        "rank": 42,
+        "rank": 43,
         "ticker": "CMPS",
         "track": "flat",
         "score": null,
@@ -1894,7 +1947,7 @@
         }
       },
       {
-        "rank": 43,
+        "rank": 44,
         "ticker": "NUVL",
         "track": "flat",
         "score": null,
@@ -1934,7 +1987,7 @@
         }
       },
       {
-        "rank": 44,
+        "rank": 45,
         "ticker": "JBIO",
         "track": "flat",
         "score": null,
@@ -1974,7 +2027,7 @@
         }
       },
       {
-        "rank": 45,
+        "rank": 46,
         "ticker": "MBX",
         "track": "flat",
         "score": null,
@@ -1991,7 +2044,7 @@
           "beta": null,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:09:38.552Z",
+          "fetchedAt": "2026-08-05T05:52:13.668Z",
           "revenueQ": [
             null,
             null,
@@ -2028,7 +2081,7 @@
         }
       },
       {
-        "rank": 46,
+        "rank": 47,
         "ticker": "BCAX",
         "track": "flat",
         "score": null,
@@ -2045,7 +2098,7 @@
           "beta": null,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:09:54.961Z",
+          "fetchedAt": "2026-08-05T05:52:32.458Z",
           "revenueQ": [
             null,
             null,
@@ -2082,7 +2135,7 @@
         }
       },
       {
-        "rank": 47,
+        "rank": 48,
         "ticker": "SION",
         "track": "flat",
         "score": null,
@@ -2099,7 +2152,7 @@
           "beta": null,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:10:06.958Z",
+          "fetchedAt": "2026-08-05T05:52:36.723Z",
           "revenueQ": [
             null,
             null,
@@ -2136,7 +2189,7 @@
         }
       },
       {
-        "rank": 48,
+        "rank": 49,
         "ticker": "ANNX",
         "track": "flat",
         "score": null,
@@ -2186,7 +2239,7 @@
         }
       },
       {
-        "rank": 49,
+        "rank": 50,
         "ticker": "QS",
         "track": "flat",
         "score": null,
@@ -2237,7 +2290,7 @@
         }
       },
       {
-        "rank": 50,
+        "rank": 51,
         "ticker": "TYRA",
         "track": "flat",
         "score": null,
@@ -2277,7 +2330,7 @@
         }
       },
       {
-        "rank": 51,
+        "rank": 52,
         "ticker": "SIND",
         "track": "flat",
         "score": null,
@@ -2322,11 +2375,11 @@
         }
       },
       {
-        "rank": 52,
-        "ticker": "SEA.TO",
+        "rank": 53,
+        "ticker": "SA",
         "track": "flat",
         "score": null,
-        "runwayQuarters": 3.0840970668696004,
+        "runwayQuarters": 3.0840970668696,
         "scoreBase": null,
         "scoreShrunk": null,
         "coverageAxes": null,
@@ -2336,43 +2389,47 @@
           "shortRunway"
         ],
         "pit": {
-          "beta": 1.843,
+          "beta": 1.846,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-07-26T18:52:01.907Z",
+          "fetchedAt": "2026-08-05T04:09:02.320Z",
           "revenueQ": [
-            0,
-            0,
-            0,
-            0
+            null,
+            null,
+            null,
+            null,
+            null
           ],
           "revenueQEnds": [
             "2026-03-31",
             "2025-12-31",
             "2025-09-30",
-            "2023-06-30"
+            "2025-06-30",
+            "2025-03-31"
           ],
           "grossProfitQ": [
-            0,
-            0,
-            0,
-            0
+            null,
+            null,
+            null,
+            null,
+            null
           ],
           "grossProfitQEnds": [
             "2026-03-31",
             "2025-12-31",
             "2025-09-30",
-            "2023-06-30"
+            "2025-06-30",
+            "2025-03-31"
           ],
           "reportingCurrencyOriginal": "CAD",
-          "fxRateApplied": 0.7096225,
+          "fxRateApplied": 0.7107321,
           "priceSales": null,
           "priceSalesAsOf": null,
-          "marketCap": 2931903052.5228286
+          "marketCap": 2935953664
         }
       },
       {
-        "rank": 53,
+        "rank": 54,
         "ticker": "RGC",
         "track": "flat",
         "score": null,
@@ -2404,7 +2461,7 @@
         }
       },
       {
-        "rank": 54,
+        "rank": 55,
         "ticker": "REPL",
         "track": "flat",
         "score": null,
@@ -2450,11 +2507,42 @@
           "fxRateApplied": 1,
           "priceSales": null,
           "priceSalesAsOf": null,
-          "marketCap": 1000626304
+          "marketCap": 1001590784
         }
       },
       {
-        "rank": 55,
+        "rank": 56,
+        "ticker": "ARU.AX",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 2.866473222049944,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": 1.223,
+          "evSales": 193.98,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-08-05T04:15:31.821Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "AUD",
+          "fxRateApplied": 0.7051689,
+          "priceSales": 779.2517,
+          "priceSalesAsOf": "2026-08-05T04:15:31.821Z",
+          "marketCap": 800476690.8667583
+        }
+      },
+      {
+        "rank": 57,
         "ticker": "ERAS",
         "track": "flat",
         "score": null,
@@ -2494,7 +2582,7 @@
         }
       },
       {
-        "rank": 56,
+        "rank": 58,
         "ticker": "KARD",
         "track": "flat",
         "score": null,
@@ -2511,7 +2599,7 @@
           "beta": null,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:12:12.843Z",
+          "fetchedAt": "2026-08-05T05:54:49.797Z",
           "revenueQ": [
             null,
             null
@@ -2536,7 +2624,7 @@
         }
       },
       {
-        "rank": 57,
+        "rank": 59,
         "ticker": "LAC",
         "track": "flat",
         "score": null,
@@ -2554,7 +2642,7 @@
           "beta": 3.454,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:09:17.152Z",
+          "fetchedAt": "2026-08-05T05:51:54.136Z",
           "revenueQ": [
             null,
             null,
@@ -2591,11 +2679,11 @@
           "fxRateApplied": 1,
           "priceSales": null,
           "priceSalesAsOf": null,
-          "marketCap": 1081272320
+          "marketCap": 1074369920
         }
       },
       {
-        "rank": 58,
+        "rank": 60,
         "ticker": "FRMI",
         "track": "flat",
         "score": null,
@@ -2633,7 +2721,7 @@
         }
       },
       {
-        "rank": 59,
+        "rank": 61,
         "ticker": "AVLN",
         "track": "flat",
         "score": null,
@@ -2650,7 +2738,7 @@
           "beta": null,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:10:06.615Z",
+          "fetchedAt": "2026-08-05T05:52:36.449Z",
           "revenueQ": [
             null,
             null
@@ -2675,7 +2763,7 @@
         }
       },
       {
-        "rank": 60,
+        "rank": 62,
         "ticker": "VKTX",
         "track": "flat",
         "score": null,
@@ -2725,7 +2813,7 @@
         }
       },
       {
-        "rank": 61,
+        "rank": 63,
         "ticker": "EVEX",
         "track": "flat",
         "score": null,
@@ -2779,7 +2867,7 @@
         }
       },
       {
-        "rank": 62,
+        "rank": 64,
         "ticker": "SPTX",
         "track": "flat",
         "score": null,
@@ -2796,7 +2884,7 @@
           "beta": null,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:09:51.438Z",
+          "fetchedAt": "2026-08-05T05:52:22.301Z",
           "revenueQ": [
             null,
             null
@@ -2821,7 +2909,7 @@
         }
       },
       {
-        "rank": 63,
+        "rank": 65,
         "ticker": "APGE",
         "track": "flat",
         "score": null,
@@ -2838,7 +2926,7 @@
           "beta": 0.343,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:10:11.126Z",
+          "fetchedAt": "2026-08-05T05:52:18.828Z",
           "revenueQ": [
             null,
             null,
@@ -2875,7 +2963,7 @@
         }
       },
       {
-        "rank": 64,
+        "rank": 66,
         "ticker": "ORKA",
         "track": "flat",
         "score": null,
@@ -2915,7 +3003,7 @@
         }
       },
       {
-        "rank": 65,
+        "rank": 67,
         "ticker": "IRON",
         "track": "flat",
         "score": null,
@@ -2955,7 +3043,7 @@
         }
       },
       {
-        "rank": 66,
+        "rank": 68,
         "ticker": "CGEM",
         "track": "flat",
         "score": null,
@@ -2995,7 +3083,7 @@
         }
       },
       {
-        "rank": 67,
+        "rank": 69,
         "ticker": "SANA",
         "track": "flat",
         "score": null,
@@ -3035,7 +3123,7 @@
         }
       },
       {
-        "rank": 68,
+        "rank": 70,
         "ticker": "MAU.TO",
         "track": "flat",
         "score": null,
@@ -3081,11 +3169,11 @@
           "fxRateApplied": 1,
           "priceSales": null,
           "priceSalesAsOf": null,
-          "marketCap": 4903798037.247283
+          "marketCap": 4902543337.096448
         }
       },
       {
-        "rank": 69,
+        "rank": 71,
         "ticker": "TRVI",
         "track": "flat",
         "score": null,
@@ -3135,7 +3223,7 @@
         }
       },
       {
-        "rank": 70,
+        "rank": 72,
         "ticker": "EWTX",
         "track": "flat",
         "score": null,
@@ -3175,7 +3263,7 @@
         }
       },
       {
-        "rank": 71,
+        "rank": 73,
         "ticker": "ORIC",
         "track": "flat",
         "score": null,
@@ -3211,11 +3299,11 @@
           "fxRateApplied": 1,
           "priceSales": null,
           "priceSalesAsOf": null,
-          "marketCap": 1396201344
+          "marketCap": 1394381568
         }
       },
       {
-        "rank": 72,
+        "rank": 74,
         "ticker": "BHVN",
         "track": "flat",
         "score": null,
@@ -3270,7 +3358,7 @@
         }
       },
       {
-        "rank": 73,
+        "rank": 75,
         "ticker": "DRTS",
         "track": "flat",
         "score": null,
@@ -3310,7 +3398,7 @@
         }
       },
       {
-        "rank": 74,
+        "rank": 76,
         "ticker": "SKE",
         "track": "flat",
         "score": null,
@@ -3350,7 +3438,7 @@
         }
       },
       {
-        "rank": 75,
+        "rank": 77,
         "ticker": "OLMA",
         "track": "flat",
         "score": null,
@@ -3390,7 +3478,7 @@
         }
       },
       {
-        "rank": 76,
+        "rank": 78,
         "ticker": "SVRA",
         "track": "flat",
         "score": null,
@@ -3430,7 +3518,7 @@
         }
       },
       {
-        "rank": 77,
+        "rank": 79,
         "ticker": "MANE",
         "track": "flat",
         "score": null,
@@ -3447,7 +3535,7 @@
           "beta": null,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:09:26.126Z",
+          "fetchedAt": "2026-08-05T05:51:33.829Z",
           "revenueQ": [
             null,
             null,
@@ -3480,7 +3568,7 @@
         }
       },
       {
-        "rank": 78,
+        "rank": 80,
         "ticker": "AVBP",
         "track": "flat",
         "score": null,
@@ -3516,11 +3604,11 @@
           "fxRateApplied": 1,
           "priceSales": null,
           "priceSalesAsOf": null,
-          "marketCap": 1399110912
+          "marketCap": 1466644480
         }
       },
       {
-        "rank": 79,
+        "rank": 81,
         "ticker": "TBN",
         "track": "flat",
         "score": null,
@@ -3537,7 +3625,7 @@
           "beta": 0.27,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:09:26.519Z",
+          "fetchedAt": "2026-08-05T05:51:40.302Z",
           "revenueQ": [
             null,
             null,
@@ -3574,7 +3662,38 @@
         }
       },
       {
-        "rank": 80,
+        "rank": 82,
+        "ticker": "VAML.NS",
+        "track": "flat",
+        "score": null,
+        "runwayQuarters": 1.1074380165289257,
+        "scoreBase": null,
+        "scoreShrunk": null,
+        "coverageAxes": null,
+        "axisBreakdown": null,
+        "lamps": [
+          "unprofit",
+          "burning",
+          "shortRunway"
+        ],
+        "pit": {
+          "beta": null,
+          "evSales": null,
+          "priceGrossProfit": null,
+          "fetchedAt": "2026-07-26T18:55:06.226Z",
+          "revenueQ": [],
+          "revenueQEnds": null,
+          "grossProfitQ": [],
+          "grossProfitQEnds": null,
+          "reportingCurrencyOriginal": "INR",
+          "fxRateApplied": 0.010357113,
+          "priceSales": null,
+          "priceSalesAsOf": null,
+          "marketCap": 18972045736.648117
+        }
+      },
+      {
+        "rank": 83,
         "ticker": "PCVX",
         "track": "flat",
         "score": null,
@@ -3591,7 +3710,7 @@
           "beta": 1.21,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:08:46.618Z",
+          "fetchedAt": "2026-08-05T05:51:12.055Z",
           "revenueQ": [
             null,
             null,
@@ -3628,7 +3747,7 @@
         }
       },
       {
-        "rank": 81,
+        "rank": 84,
         "ticker": "PBLS",
         "track": "flat",
         "score": null,
@@ -3645,7 +3764,7 @@
           "beta": null,
           "evSales": null,
           "priceGrossProfit": null,
-          "fetchedAt": "2026-08-05T04:09:58.818Z",
+          "fetchedAt": "2026-08-05T05:52:35.801Z",
           "revenueQ": [
             null,
             null
@@ -3670,7 +3789,7 @@
         }
       },
       {
-        "rank": 82,
+        "rank": 85,
         "ticker": "CRVS",
         "track": "flat",
         "score": null,
@@ -3710,7 +3829,7 @@
         }
       },
       {
-        "rank": 83,
+        "rank": 86,
         "ticker": "CRML",
         "track": "flat",
         "score": null,
@@ -3726,9 +3845,9 @@
         ],
         "pit": {
           "beta": 1.913,
-          "evSales": 968.226,
+          "evSales": 905.074,
           "priceGrossProfit": 1295.7855,
-          "fetchedAt": "2026-08-05T04:12:27.562Z",
+          "fetchedAt": "2026-08-05T05:55:02.997Z",
           "revenueQ": [],
           "revenueQEnds": null,
           "grossProfitQ": [],
@@ -3736,12 +3855,12 @@
           "reportingCurrencyOriginal": "USD",
           "fxRateApplied": 1,
           "priceSales": 1295.7855,
-          "priceSalesAsOf": "2026-08-05T04:12:27.562Z",
+          "priceSalesAsOf": "2026-08-05T05:55:02.997Z",
           "marketCap": 995905792
         }
       },
       {
-        "rank": 84,
+        "rank": 87,
         "ticker": "NEXT",
         "track": "flat",
         "score": null,
@@ -3791,7 +3910,7 @@
         }
       },
       {
-        "rank": 85,
+        "rank": 88,
         "ticker": "IDREAM.BO",
         "track": "flat",
         "score": null,
@@ -3843,11 +3962,11 @@
           "fxRateApplied": 0.010490152,
           "priceSales": null,
           "priceSalesAsOf": null,
-          "marketCap": 1817744276.287488
+          "marketCap": 1815593173.168423
         }
       },
       {
-        "rank": 86,
+        "rank": 89,
         "ticker": "IMC",
         "track": "flat",
         "score": null,
@@ -3879,7 +3998,7 @@
         }
       },
       {
-        "rank": 87,
+        "rank": 90,
         "ticker": "BSP",
         "track": "flat",
         "score": null,
@@ -3906,7 +4025,7 @@
         }
       },
       {
-        "rank": 88,
+        "rank": 91,
         "ticker": "BXDC",
         "track": "flat",
         "score": null,
@@ -3933,7 +4052,7 @@
         }
       },
       {
-        "rank": 89,
+        "rank": 92,
         "ticker": "IPEU",
         "track": "flat",
         "score": null,
@@ -3960,7 +4079,7 @@
         }
       },
       {
-        "rank": 90,
+        "rank": 93,
         "ticker": "RCIT",
         "track": "flat",
         "score": null,
@@ -3987,7 +4106,7 @@
         }
       },
       {
-        "rank": 91,
+        "rank": 94,
         "ticker": "SECZ",
         "track": "flat",
         "score": null,
@@ -4014,7 +4133,7 @@
         }
       },
       {
-        "rank": 92,
+        "rank": 95,
         "ticker": "SWICH.AS",
         "track": "flat",
         "score": null,
@@ -4037,11 +4156,11 @@
           "fxRateApplied": 1.137527,
           "priceSales": 32.548466,
           "priceSalesAsOf": "2026-07-26T18:53:24.943Z",
-          "marketCap": 3577245174.3628798
+          "marketCap": 3577657789.7465086
         }
       },
       {
-        "rank": 93,
+        "rank": 96,
         "ticker": "SWRD",
         "track": "flat",
         "score": null,
@@ -4070,7 +4189,7 @@
         }
       },
       {
-        "rank": 94,
+        "rank": 97,
         "ticker": "XXI",
         "track": "flat",
         "score": null,
