@@ -698,6 +698,21 @@ function applyDeadRegistryAndCap(allTickers, deadRegistry, MAX_UNIVERSE) {
   return deadCandidatesBlocked;
 }
 
+function applyForeignPrefilterOutcome(allTickers, foreignNull, result) {
+  const { kept: keptUsd, answered, renamed, unpriceable } = result;
+  for (const [key, v] of foreignNull) {
+    const eff = (renamed && renamed.get(key)) || key;
+    if (eff !== key) {
+      allTickers.delete(key);
+      v.ticker = eff;
+      allTickers.set(eff, v);
+    }
+    const usd = keptUsd.get(eff);
+    if (Number.isFinite(usd)) v.marketCap = usd;
+    else if (answered.has(eff) && !(unpriceable && unpriceable.has(eff))) allTickers.delete(eff);
+  }
+}
+
 // BH-040: applyDeadRegistryAndCap() only caps the raw discovery candidate map; existing
 // watchlist rows never go through any cap at all, so the persisted union(existing,
 // newTickers) could grow past MAX_UNIVERSE over time (only prune-watchlist ever shrinks
@@ -1503,31 +1518,8 @@ async function main() {
     const foreignNull = [...allTickers.entries()].filter(([, v]) =>
       v && !v.marketCap && v.source && String(v.source).split(',').some((s) => FOREIGN_CANON_SET.has(s.trim())));
     if (foreignNull.length) {
-      const { kept: keptUsd, answered, renamed, unpriceable } = await prefilterByMcap(foreignNull.map(([k]) => k));
-      for (const [key, v] of foreignNull) {
-        // Bug 5: hat der Prefilter dieses .KS-Symbol als KOSDAQ erkannt, ist die effektive
-        // Kennung (und der answered/kept-Schluessel) das .KQ-Symbol. Zeile in allTickers
-        // umschluesseln (falsches .KS-Listing raus, .KQ rein), bevor mcap gesetzt wird.
-        const eff = (renamed && renamed.get(key)) || key;
-        if (eff !== key) {
-          allTickers.delete(key);
-          v.ticker = eff;
-          allTickers.set(eff, v);
-        }
-        const usd = keptUsd.get(eff);
-        if (Number.isFinite(usd)) v.marketCap = usd;   // >= $2B: USD-mcap setzen -> withMcap-Zweig
-        // Bug 16: nur verwerfen, wenn Yahoo GEANTWORTET hat und < $2B ist. Ein 429/Netzfehler
-        // (Symbol nicht in 'answered') darf die Zeile NICHT loeschen -> null-mcap belassen, damit
-        // der Foreign-Slot-Schutz unten greift (kein stiller Verlust ganzer Batches).
-        // BH-041 (gefixt): 'answered' heisst nur "Yahoo hat eine Quote geliefert", NICHT "die
-        // Zeile war bepreisbar". Fehlt in einer sonst validen fx-rates.json nur EINE Waehrung
-        // (partielle Degradation statt Totalausfall), liefert toUsd() innerhalb prefilterByMcap()
-        // fuer genau diese Zeilen still null. prefilterByMcap markiert diesen Fall jetzt separat
-        // in 'unpriceable' (echtes, positives marketCap + unbekannte Waehrung) -> hier NICHT wie
-        // "geprueft und < $2B" loeschen, sondern wie unbeantwortet behandeln (null-mcap, Slot-Schutz).
-        else if (answered.has(eff) && !(unpriceable && unpriceable.has(eff))) allTickers.delete(eff); // beantwortet, bepreisbar und < $2B: verwerfen
-        // sonst: unbeantwortet ODER unbewertbar (FX-Luecke) -> null-mcap belassen (Slot-Schutz)
-      }
+      const prefilterResult = await prefilterByMcap(foreignNull.map(([k]) => k));
+      applyForeignPrefilterOutcome(allTickers, foreignNull, prefilterResult);
     }
   } catch (e) { console.warn('[refresh-universe] mcap-prefilter uebersprungen:', e.message); }
 
@@ -1771,6 +1763,7 @@ async function main() {
 // for BH-193/BH-040/BH-039/BH-038 test coverage.
 module.exports = {
   toYahooClassShare, _looksUS, dedupKey, applyDeadRegistryAndCap,
+  applyForeignPrefilterOutcome,
   numEnv, capNewTickerAdmission, _isNonEquityQuote, EXCHANGE_SCREENER_SCHEMA_ERROR_RE,
   _vorGateVerworfen,      // T567-W3: EIN gezaehlter Vor-Gate-Pfad fuer beide Ingest-Schleifen
   beideYahooKanaeleLeer,  // Tag 510: Doppelausfall-Waechter, einzeln pruefbar
