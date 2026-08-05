@@ -32,8 +32,91 @@ function test(name, fn) {
   catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
 }
 
+function workflowStepObjects(text) {
+  const lines = text.replace(/\r\n/g, '\n').split('\n');
+  const steps = [];
+  let inJobs = false;
+  let job = null;
+  let step = null;
+  let runIndent = null;
+  let inWith = false;
+  for (const raw of lines) {
+    const indent = raw.match(/^ */)[0].length;
+    const trimmed = raw.trim();
+    if (runIndent !== null && step) {
+      if (indent > runIndent) { step.run += raw.slice(runIndent + 2) + '\n'; continue; }
+      runIndent = null;
+    }
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    if (indent === 0) { inJobs = trimmed === 'jobs:'; job = null; }
+    if (!inJobs) continue;
+    const jobMatch = indent === 2 && trimmed.match(/^([A-Za-z0-9_-]+):$/);
+    if (jobMatch) { job = jobMatch[1]; step = null; continue; }
+    const stepMatch = indent === 6 && trimmed.match(/^-(?:\s+)(name|uses|run):\s*(.*)$/);
+    if (job && stepMatch) {
+      step = { job, name: null, uses: null, if: null, run: '', with: {} };
+      steps.push(step);
+      inWith = false;
+      const [, key, value] = stepMatch;
+      if (key === 'name') step.name = value.trim();
+      if (key === 'uses') step.uses = value.trim();
+      if (key === 'run') step.run = value.trim() + '\n';
+      continue;
+    }
+    if (!step) continue;
+    if (indent === 8 && trimmed === 'with:') { inWith = true; continue; }
+    if (indent <= 8) inWith = false;
+    if (inWith && indent === 10) {
+      const m = trimmed.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+      if (m) step.with[m[1]] = m[2].replace(/\s+#.*$/, '').replace(/^(['"])(.*)\1$/, '$2').trim();
+      continue;
+    }
+    if (indent !== 8) continue;
+    const field = trimmed.match(/^(name|uses|if|run):\s*(.*)$/);
+    if (!field) continue;
+    const [, key, value] = field;
+    if (key === 'name') step.name = value.trim();
+    if (key === 'uses') step.uses = value.trim();
+    if (key === 'if') step.if = value.trim();
+    if (key === 'run') {
+      if (['|', '|-', '|+', '>', '>-'].includes(value.trim())) runIndent = indent;
+      else step.run = value.trim() + '\n';
+    }
+  }
+  return steps;
+}
+
+function liveShell(run) {
+  const out = [];
+  let deadDepth = 0;
+  for (const line of run.replace(/\r\n/g, '\n').split('\n')) {
+    const code = line.replace(/\s+#.*$/, '').trim();
+    if (/^if\s+(?:false|\[\s+"?0"?\s+=\s+"?1"?\s+\])\s*;?\s*then\b/.test(code)) { deadDepth++; continue; }
+    if (deadDepth && /^if\b.*\bthen\b/.test(code)) { deadDepth++; continue; }
+    if (deadDepth && /^fi\b/.test(code)) { deadDepth--; continue; }
+    if (!deadDepth) out.push(line);
+  }
+  return out.join('\n');
+}
+
+function oneStep(steps, predicate, label) {
+  const found = steps.filter(predicate);
+  assert.equal(found.length, 1, `${label}: genau ein Workflow-Step erwartet, gefunden ${found.length}`);
+  return found[0];
+}
+
 // ---- BH-004: monthly-sec-xbrl.yml baut + committet sec-secannual.json ----------
 const secXbrl = read('monthly-sec-xbrl.yml');
+const secSteps = workflowStepObjects(secXbrl);
+
+test('BH-004: Build ist ein erreichbarer Step; tote if-false-Attrappen und fruehes exit 0 zaehlen nicht', () => {
+  const build = oneStep(secSteps, (s) => s.job === 'pull' && s.name === 'Build sec-secannual (scored deep-XBRL layer)', 'SEC-Build');
+  assert.ok(!/^false$|^\$\{\{\s*false\s*\}\}$/i.test(build.if || ''), 'SEC-Build-Step ist deaktiviert');
+  const live = liveShell(build.run);
+  const iBuild = live.indexOf('node scripts/build-secannual.js');
+  assert.ok(iBuild >= 0, 'Build-Aufruf existiert nur in einem literal toten if-false-Block');
+  assert.ok(!/(^|\n)\s*exit\s+0\b/.test(live.slice(0, iBuild)), 'unbedingtes exit 0 beendet den Step vor dem Build');
+});
 
 test('BH-004: Pull-Job baut die gescorete sec-secannual.json (build-secannual.js)', () => {
   assert.match(secXbrl, /node scripts\/build-secannual\.js/,
@@ -79,6 +162,15 @@ test('BH-004: Build-Step ist an die Snapshot-Restore-Bedingung gegated statt unc
 
 // ---- BH-119: heartbeat.yml misst das publizierte gh-pages-Produkt --------------
 const heartbeat = read('heartbeat.yml');
+const heartbeatSteps = workflowStepObjects(heartbeat);
+
+test('BH-119: Export-Freshness ist ein erreichbares Step-Objekt und liest im aktiven run das Deploy-Produkt', () => {
+  const step = oneStep(heartbeatSteps, (s) => s.job === 'freshness' && s.name === 'Check export freshness', 'Export-Freshness');
+  assert.ok(!/^false$|^\$\{\{\s*false\s*\}\}$/i.test(step.if || ''), 'Export-Freshness-Step ist deaktiviert');
+  const live = liveShell(step.run);
+  assert.match(live, /gh-pages\/outputs\/findash-export\/v1\/index\.json/);
+  assert.match(live, /idx\.generated_at/);
+});
 
 test('BH-119: Freshness-Check liest gh-pages findash-export/v1/index.json (nicht mehr das lokale Pull-Manifest)', () => {
   assert.match(heartbeat, /gh-pages\/outputs\/findash-export\/v1\/index\.json/,
@@ -121,6 +213,17 @@ for (const [name, wf] of [['weekly-guard.yml', weeklyGuard], ['monthly-plan-chec
 
 // ---- BH-134: node-version Vertrag (package.json engines >=22) ------------------
 const tvReach = read('tv-reachability.yml');
+const structured = [
+  ['weekly-guard.yml', workflowStepObjects(weeklyGuard)],
+  ['monthly-plan-check.yml', workflowStepObjects(monthlyPlan)],
+  ['tv-reachability.yml', workflowStepObjects(tvReach)],
+];
+test('BH-134: aktive setup-node-Step-Objekte tragen numerisch Node 22, unabhaengig von YAML-Quotes', () => {
+  for (const [name, steps] of structured) {
+    const setup = oneStep(steps, (s) => /^actions\/setup-node@/.test(s.uses || ''), name + '/setup-node');
+    assert.equal(Number(setup.with['node-version']), 22, `${name}: aktiver setup-node-Step nutzt ${setup.with['node-version']}`);
+  }
+});
 for (const [name, wf] of [
   ['weekly-guard.yml', weeklyGuard],
   ['monthly-plan-check.yml', monthlyPlan],
