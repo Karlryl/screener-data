@@ -81,16 +81,15 @@ const SEC_ARCHIVE_INDEX_JSON = (cik, accNoDash) =>
 
 // Tag 211j: real contact — SEC silently rate-limits fake addresses.
 const USER_AGENT = require('../lib/sec-user-agent').secUserAgent();
+const SEC_RATE_LIMIT = require('../lib/sec-rate-limit.js');
 
 // 125 ms ≈ 8 req/s (SEC limit: 10/s/IP).
-const RATE_DELAY_MS = 125;
+const { RATE_DELAY_MS, RATE_LIMIT_BACKOFF_MS } = SEC_RATE_LIMIT;
 
 // audit/fix: 429 IP-block backoff. On HTTP 429 (rate-limited) or 503 SEC wants
 // the client to slow WAY down — a normal 125 ms cadence keeps tripping the
 // 10/s/IP limit and risks a ~10-min IP block. Wait 30 s and retry the
 // institution WITHOUT counting it as an abort-budget error.
-const RATE_LIMIT_BACKOFF_MS = 30000;
-
 // 13F-HR filings are quarterly (45-day deadline post-quarter-end). A 100-day
 // TTL means we refresh roughly once per quarter, which matches the data's
 // natural cadence.
@@ -1167,5 +1166,6 @@ module.exports = {
     _normName,  // Tag 226a-1: exposed for test coverage
     // audit F-A-2026-06-22: exposed so truncation telemetry is testable.
     _parse13fXmlDetailed
-  }
+  },
+  _secRateLimit: SEC_RATE_LIMIT
 };

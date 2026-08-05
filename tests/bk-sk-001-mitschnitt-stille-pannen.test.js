@@ -116,6 +116,13 @@ check('die geschriebene und die nachgerechnete Summe stammen aus DERSELBEN Funkt
     'sha256 wird an ' + treffer.length + ' Stellen gebildet — Schreiben und Nachrechnen muessen sich EINE Stelle teilen');
 });
 
+check('Pruefsumme ist unabhaengig von der Einfuegereihenfolge', () => {
+  assert.equal(T.summeVon(['A', 'B']), 'b17c8419f544abd0',
+    'bekannte Symbolmenge muss die kanonische Summe behalten');
+  assert.equal(T.summeVon(['B', 'A']), 'b17c8419f544abd0',
+    'dieselben Symbole in anderer Reihenfolge duerfen keine Driftwarnung erzeugen');
+});
+
 // ── (3) Monats-Rotation des Grundbilds mit Archiv-Kopie ─────────────────────
 check('Rotation: altes Grundbild landet als NEUE Datei im Archiv, nichts wird geloescht', () => {
   const dir = tmp('bk3-');

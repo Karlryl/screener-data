@@ -125,6 +125,26 @@ function checkYamlStructure(text) {
   }
 }
 
+// GitHub-Actions-Ausdruecke sind ein eigener Syntax-Layer ueber YAML. Der YAML-
+// Strukturcheck oben darf deshalb nicht schon bei "valider YAML" aufhoeren: jeder
+// Ausdrucksanfang muss auf derselben logischen Zeile geschlossen werden.
+function checkActionsExpressionDelimiters(text) {
+  const lines = text.replace(/\r\n/g, '\n').split('\n');
+  for (let idx = 0; idx < lines.length; idx++) {
+    const line = lines[idx];
+    let cursor = 0;
+    while (cursor < line.length) {
+      const open = line.indexOf('${{', cursor);
+      if (open === -1) break;
+      const end = line.indexOf('}}', open + 3);
+      if (end === -1) {
+        throw new Error(`Zeile ${idx + 1}: ungeschlossener Actions-Ausdruck ab "${line.slice(open)}"`);
+      }
+      cursor = end + 2;
+    }
+  }
+}
+
 test('YAML-Parse-Check: daily-pull.yml ist strukturell valide', () => {
   checkYamlStructure(yml); // wirft bei Bruch — kein Wurf = bestanden
 });
@@ -144,6 +164,15 @@ test('YAML-Parse-Check: Block-Skalar-Koerper ist von der Struktur-Pruefung ausge
   // Bash-Body mit Doppelpunkten/Tabs-artigen Mustern/unausgeglichenen Anfuehrungszeichen
   // im Kommentar waere ausserhalb eines Block-Skalars ein Bruch — im Koerper legal.
   checkYamlStructure("jobs:\n  foo:\n    run: |\n      echo \"a: b 'c\"\n      # comment: with colon\n    next: 1\n");
+});
+test('Actions-Syntax-Check: alle ${{ ... }}-Ausdruecke im echten Workflow sind geschlossen', () => {
+  checkActionsExpressionDelimiters(yml);
+});
+test('Actions-Syntax-Check: erkennt eine ungeschlossene if:-Expression (Negativ-Fixture)', () => {
+  assert.throws(
+    () => checkActionsExpressionDelimiters('steps:\n  - name: kaputt\n    if: ${{ success()\n'),
+    /ungeschlossener Actions-Ausdruck/
+  );
 });
 
 // ── BH-117: Cross-Run-Persistenz der Coverage-Floor-Baseline im scoring-Job ──────

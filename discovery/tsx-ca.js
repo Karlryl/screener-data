@@ -319,12 +319,15 @@ function parseSheet(sheetXml, strings, result, stats = { seen: 0, dropped: 0 }) 
   return added;
 }
 
-async function fetchTsxCanada() {
+async function fetchTsxCanada(options = {}) {
+  const getImpl = options.get || get;
+  const readEntries = options.readZipEntries || readZipEntries;
+  const log = options.log || console.log;
   const result = new Map();
   try {
-    console.log('  [TSX-CA] Fetching TMX listed-companies register (XLSX)...');
-    const xlsx = await get(REGISTER_URL);
-    const entries = readZipEntries(xlsx, [
+    log('  [TSX-CA] Fetching TMX listed-companies register (XLSX)...');
+    const xlsx = await getImpl(REGISTER_URL);
+    const entries = readEntries(xlsx, [
       'xl/sharedStrings.xml',
       'xl/worksheets/sheet1.xml',
       'xl/worksheets/sheet2.xml',
@@ -340,8 +343,8 @@ async function fetchTsxCanada() {
     if (entries['xl/worksheets/sheet2.xml']) {
       tsxvCount = parseSheet(entries['xl/worksheets/sheet2.xml'].toString('utf8'), strings, result, nameStats);
     }
-    console.log(`  [TSX-CA] TSX ${tsxCount} + TSXV ${tsxvCount} = ${result.size} issuers`);
-    for (const line of nameFilterLines(nameStats.dropped, nameStats.seen)) console.log(line);
+    log(`  [TSX-CA] TSX ${tsxCount} + TSXV ${tsxvCount} = ${result.size} issuers`);
+    for (const line of nameFilterLines(nameStats.dropped, nameStats.seen)) log(line);
     // audit/fix BH-061: a missing sheet entry or an unlocatable header row
     // (locateColumns returns null) silently yields 0 for that venue while the
     // OTHER sheet still keeps the whole Map nonempty/green — no contract check

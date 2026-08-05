@@ -49,5 +49,25 @@ if (geprueft === 0) {
   fehler++;
 }
 
-console.log('\nwaechter-absturz: ' + geprueft + ' Einstiegspunkte geprueft, ' + fehler + ' mit stillem Erfolg beim Absturz');
-process.exit(fehler ? 1 : 0);
+(async () => {
+  try {
+    const exits = [];
+    const errors = [];
+    const { runCli } = require('../scripts/check-pull-stats.js');
+    await runCli(async () => { throw new Error('synthetischer Absturz'); }, {
+      exit: code => exits.push(code),
+      error: line => errors.push(String(line)),
+    });
+    if (exits.length !== 1 || exits[0] !== 1) {
+      throw new Error('echter CLI-Handler meldet Exit ' + JSON.stringify(exits) + ' statt [1]');
+    }
+    if (!errors.some(line => /::error::.*synthetischer Absturz/.test(line))) {
+      throw new Error('echter CLI-Handler meldet den Absturz nicht im Fehlerkanal');
+    }
+  } catch (e) {
+    console.error('FAIL   check-pull-stats.js: ' + e.message);
+    fehler++;
+  }
+  console.log('\nwaechter-absturz: ' + geprueft + ' Einstiegspunkte geprueft, ' + fehler + ' mit stillem Erfolg beim Absturz');
+  process.exit(fehler ? 1 : 0);
+})();

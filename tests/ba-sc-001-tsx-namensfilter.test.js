@@ -21,7 +21,7 @@
  */
 'use strict';
 const assert = require('assert');
-const { parseSheet, nameFilterLines, NAME_FILTER_WARN_RATIO } = require('../discovery/tsx-ca');
+const { fetchTsxCanada, parseSheet, nameFilterLines, NAME_FILTER_WARN_RATIO } = require('../discovery/tsx-ca');
 
 // ── Mini-XLSX-Fixture ────────────────────────────────────────────────────────
 // Genau die Form, die parseSheet aus der TMX-Mappe bekommt: Kopfzeile
@@ -136,5 +136,31 @@ check('Warnschwelle feuert bei kuenstlich hoher Drop-Quote', () => {
     'Schwelle muss ueber dem gemessenen Normalstand (37,1 %) und unter 100 % liegen, ist ' + NAME_FILTER_WARN_RATIO);
 });
 
-if (fails) { console.error(`FAIL ba-sc-001-tsx-namensfilter: ${fails} Pruefung(en) rot`); process.exit(1); }
-console.log('PASS ba-sc-001-tsx-namensfilter: Stufe-1-Filter greift, Stufe 2 unangetastet, Ertrags-Untergrenze kalibriert');
+(async () => {
+  try {
+    const logs = [];
+    const entries = {
+      'xl/worksheets/sheet1.xml': Buffer.from(sheetXml([
+        ['Apple CDR (CAD Hedged)', 'AAPL'],
+        ['Constellation Software Inc.', 'CSU'],
+      ])),
+      'xl/worksheets/sheet2.xml': Buffer.from(sheetXml([
+        ['Shopify Inc.', 'SHOP'],
+      ])),
+    };
+    const result = await fetchTsxCanada({
+      get: async () => Buffer.alloc(0),
+      readZipEntries: () => entries,
+      log: line => logs.push(String(line)),
+    });
+    assert.equal(result.size, 2, 'Fixture muss genau die zwei Aktien liefern');
+    assert.match(logs.join('\n'), /TSX-Namensfilter: 1 von 3 gedroppt/,
+      'der echte fetchTsxCanada-Lauf muss die Filterquote melden');
+    console.log('  ok   fetchTsxCanada meldet die Quote im echten Laufpfad');
+  } catch (e) {
+    fails++;
+    console.error('FAIL fetchTsxCanada meldet die Quote im echten Laufpfad: ' + e.message);
+  }
+  if (fails) { console.error(`FAIL ba-sc-001-tsx-namensfilter: ${fails} Pruefung(en) rot`); process.exit(1); }
+  console.log('PASS ba-sc-001-tsx-namensfilter: Stufe-1-Filter greift, Stufe 2 unangetastet, Ertrags-Untergrenze kalibriert');
+})();

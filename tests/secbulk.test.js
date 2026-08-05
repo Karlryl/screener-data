@@ -193,11 +193,16 @@ check('der Vertrauensbereich ist reproduzierbar', () => {
 });
 
 check('das Datentor des Berichts stimmt mit dem der Achse ueberein', () => {
-  const achse = require('fs').readFileSync(require('path').join(__dirname, '..', 'src', 'scoring', 'axes.js'), 'utf8');
-  const m = achse.match(/const ROIC_STAB_MIN_YEARS = (\d+)/);
-  assert.ok(m, 'ROIC_STAB_MIN_YEARS in axes.js nicht gefunden');
-  assert.equal(Number(m[1]), R.ROIC_STAB_MIN_YEARS,
-    'Bericht und Achse haben verschiedene Datentore — der Bericht misst dann etwas anderes als das System rechnet');
+  const { roicStability } = require('../src/scoring/axes.js');
+  const snapshotMitJahren = (n) => ({ secAnnual: {
+    annualOpInc: Array.from({ length: n }, () => ({ value: 100 })),
+    annualAssets: Array.from({ length: n }, () => ({ value: 1000 })),
+    annualCurrentLiabilities: Array.from({ length: n }, () => ({ value: 400 })),
+  } });
+  assert.equal(roicStability(snapshotMitJahren(R.ROIC_STAB_MIN_YEARS - 1)), null,
+    'ein Jahr unter dem Berichtstor muss auch an der Achse scheitern');
+  assert.notEqual(roicStability(snapshotMitJahren(R.ROIC_STAB_MIN_YEARS)), null,
+    'am Berichtstor muss die Achse einen Wert liefern');
 });
 
 

@@ -77,17 +77,16 @@ const SEC_ARCHIVE_URL = (cik, accNoDash, doc) =>
 // Tag 211j: real contact per SEC EDGAR Terms of Use — fake addresses can
 // be silently rate-limited or rejected. Karl's screener-data, public repo.
 const USER_AGENT = require('../lib/sec-user-agent').secUserAgent();
+const SEC_RATE_LIMIT = require('../lib/sec-rate-limit.js');
 
 // Throttle: 8 req/sec = 125 ms inter-call delay, comfortably under SEC's
-// documented 10/sec/IP limit. Same value used by pull-sec-xbrl.js.
-const RATE_DELAY_MS = 125;
+// documented 10/sec/IP limit. Shared with the other SEC pullers.
+const { RATE_DELAY_MS, RATE_LIMIT_BACKOFF_MS } = SEC_RATE_LIMIT;
 
 // audit/fix: 429 IP-block backoff. On HTTP 429 (rate-limited) or 503 SEC wants
 // the client to slow WAY down — a normal 125 ms cadence keeps tripping the
 // 10/s/IP limit and risks a ~10-min IP block. Wait 30 s and retry the ticker
 // WITHOUT counting it as an abort-budget error.
-const RATE_LIMIT_BACKOFF_MS = 30000;
-
 // Per-ticker cache freshness gate. Form 4s have a T+2 filing deadline so
 // 24 h is plenty fresh for trading-day purposes.
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
@@ -670,5 +669,6 @@ if (require.main === module) {
 
 module.exports = {
   parseForm4Xml, selectUsTickers, loadTickerCikMap,
-  _internals: { httpGet, _normalizeSubmissions, _withinLookback, _isAllParseFailure }
+  _internals: { httpGet, _normalizeSubmissions, _withinLookback, _isAllParseFailure },
+  _secRateLimit: SEC_RATE_LIMIT
 };

@@ -109,6 +109,24 @@ function parseRow(rowXml) {
   return cells;
 }
 
+function parseSheet(sheetXml) {
+  const result = new Map();
+  const rows = String(sheetXml).split('<x:row ').slice(1);
+  for (const r of rows) {
+    const c = parseRow(r);
+    if (c['C'] !== 'Equity') continue;
+    const num = parseInt(c['A'], 10);
+    if (!Number.isFinite(num) || num < 1 || num > 9999) continue;
+    const yahoo = String(num).padStart(4, '0') + '.HK';
+    if (result.has(yahoo)) continue;
+    const isin = (c['F'] || '').trim();
+    const entry = { ticker: yahoo, name: (c['B'] || '').trim(), exchange: 'HKEX', source: 'hkex', country: 'Hong Kong' };
+    if (isin) entry.isin = isin;
+    result.set(yahoo, entry);
+  }
+  return result;
+}
+
 async function fetchHkexUniverse() {
   const result = new Map();
   try {
@@ -123,22 +141,8 @@ async function fetchHkexUniverse() {
       console.error('  [HKEX] sheet1.xml not found in xlsx — skipping');
       return result;
     }
-    const rows = sheet.toString('utf8').split('<x:row ').slice(1);
-    let added = 0;
-    for (const r of rows) {
-      const c = parseRow(r);
-      if (c['C'] !== 'Equity') continue;            // only equity securities
-      const num = parseInt(c['A'], 10);
-      if (!Number.isFinite(num) || num < 1 || num > 9999) continue; // skip 8xxxx RMB counters
-      const yahoo = String(num).padStart(4, '0') + '.HK';
-      if (result.has(yahoo)) continue;
-      const isin = (c['F'] || '').trim();
-      const entry = { ticker: yahoo, name: (c['B'] || '').trim(), exchange: 'HKEX', source: 'hkex', country: 'Hong Kong' };
-      if (isin) entry.isin = isin;
-      result.set(yahoo, entry);
-      added++;
-    }
-    console.log(`  [HKEX] ${added} equity tickers`);
+    for (const [ticker, entry] of parseSheet(sheet.toString('utf8'))) result.set(ticker, entry);
+    console.log(`  [HKEX] ${result.size} equity tickers`);
   } catch (e) {
     console.error('  [HKEX] failed: ' + e.message);
     return new Map(); // fail-silent per contract
@@ -146,7 +150,7 @@ async function fetchHkexUniverse() {
   return result;
 }
 
-module.exports = { fetchHkexUniverse };
+module.exports = { fetchHkexUniverse, parseSheet };
 
 if (require.main === module) {
   fetchHkexUniverse().then(m => {

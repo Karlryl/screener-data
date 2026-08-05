@@ -35,8 +35,8 @@ const ROOT = path.join(__dirname, '..');
 const IN_DEFAULT = path.join(ROOT, 'external-data', 'sec-annual-bulk.jsonl');
 const { route } = require(path.join(ROOT, 'src/scoring/router.js'));
 
-// Das Produktions-Gate der Achse. NICHT hier neu erfunden, sondern aus der Achse gelesen —
-// weicht es ab, misst der Bericht etwas anderes als das System rechnet.
+// Spiegelwert des Produktions-Gates aus axes.js; der Bericht importiert die Achse bewusst
+// nicht. tests/secbulk.test.js gleicht diesen Wert gegen das ausgeführte Achsenverhalten ab.
 const ROIC_STAB_MIN_YEARS = 6;
 
 const wert = (x) => (x && typeof x === 'object' ? x.value : x);

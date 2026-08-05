@@ -17,6 +17,7 @@
  */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 
@@ -38,6 +39,108 @@ function section(startMarker, endMarker) {
   assert.ok(!endMarker || e > s, 'End-Marker nicht gefunden: ' + endMarker);
   return yml.slice(s, e < 0 ? yml.length : e);
 }
+
+// Der Workflow wird bis zur Job-/Step-Ebene als Objekt gelesen. Damit zaehlt ein
+// gleichnamiger, aber per `if: false` deaktivierter Step nicht als Schutzbeleg.
+function workflowStepObjects(text) {
+  const lines = text.replace(/\r\n/g, '\n').split('\n');
+  const steps = [];
+  let inJobs = false;
+  let job = null;
+  let step = null;
+  let runIndent = null;
+  for (const raw of lines) {
+    const indent = raw.match(/^ */)[0].length;
+    const trimmed = raw.trim();
+    if (runIndent !== null && step) {
+      if (indent > runIndent) {
+        step.run += raw.slice(runIndent + 2) + '\n';
+        continue;
+      }
+      runIndent = null;
+    }
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    if (indent === 0) {
+      inJobs = trimmed === 'jobs:';
+      job = null;
+    }
+    if (!inJobs) continue;
+    const jobMatch = indent === 2 && trimmed.match(/^([A-Za-z0-9_-]+):$/);
+    if (jobMatch) { job = jobMatch[1]; step = null; continue; }
+    const stepMatch = indent === 6 && trimmed.match(/^- name:\s*(.+)$/);
+    if (job && stepMatch) {
+      step = { job, name: stepMatch[1].trim(), if: null, run: '' };
+      steps.push(step);
+      continue;
+    }
+    if (!step || indent !== 8) continue;
+    const field = trimmed.match(/^(if|run):\s*(.*)$/);
+    if (!field) continue;
+    if (field[1] === 'if') step.if = field[2].trim();
+    if (field[1] === 'run') {
+      if (['|', '|-', '|+', '>', '>-'].includes(field[2].trim())) runIndent = indent;
+      else step.run = field[2].trim() + '\n';
+    }
+  }
+  return steps;
+}
+
+const workflowSteps = workflowStepObjects(yml);
+function workflowStep(job, name) {
+  const found = workflowSteps.filter((s) => s.job === job && (s.name === name || s.name.startsWith(name + ' ')));
+  assert.equal(found.length, 1, `Step ${job}/${name} muss genau einmal aktiv verankert sein; gefunden: ${found.length}`);
+  return found[0];
+}
+
+test('geschuetzte Daily-Steps sind echte, nicht per if:false deaktivierte Workflow-Objekte', () => {
+  const protectedSteps = [
+    ['scoring', 'Live-Universum-Gate'],
+    ['prep', 'Verify FX-Rates Freshness'],
+    ['merge', 'Download all shard snapshots'],
+    ['merge', 'Prune Watchlist (post-snapshot)'],
+    ['merge', 'Merge shard manifests (recount n_total to full universe)'],
+    ['merge', 'Restore last-good macro-regime.json from gh-pages'],
+    ['merge', 'Compute Macro Regime'],
+    ['merge', 'Deploy to GitHub Pages'],
+    ['scoring', 'Restore Coverage-Floor Baseline (_last_good_disk.json)'],
+    ['scoring', 'Run Hypergrowth Screener'],
+    ['scoring', 'Save Coverage-Floor Baseline (_last_good_disk.json)'],
+    ['scoring', 'Deploy Scoring Output to GitHub Pages'],
+    ['scoring', 'Write board-history vintage (2.3)'],
+    ['scoring', 'Commit board-history vintage to main'],
+  ];
+  for (const [job, name] of protectedSteps) {
+    const step = workflowStep(job, name);
+    assert.ok(!/^\$\{\{\s*false\s*\}\}$|^false$/i.test(step.if || ''), `${job}/${name} ist deaktiviert`);
+  }
+});
+
+// Fuehrt den Node-Einzeiler aus dem echten FX-Step aus. Die Fixtures pruefen damit
+// nicht mehr nur den lokalen Nachbau `fxFetchedEpochSec` weiter unten.
+const fxStep = workflowStep('prep', 'Verify FX-Rates Freshness');
+const fxProgramMatch = fxStep.run.match(/fx_state=\$\(node -e "([\s\S]*?)"\)/);
+assert.ok(fxProgramMatch, 'Node-Einzeiler aus Verify FX-Rates Freshness nicht extrahierbar');
+function actualFxState(jsonText) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'workflow-fx-state-'));
+  try {
+    fs.writeFileSync(path.join(dir, 'fx-rates.json'), jsonText);
+    return execFileSync(process.execPath, ['-e', fxProgramMatch[1]], { cwd: dir, encoding: 'utf8' }).trim();
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test('BH-121: echter Workflow-Einzeiler liefert Epoch fuer frisches und altes fetchedAt', () => {
+  const fresh = '2026-08-05T12:00:00.000Z';
+  const old = '2026-06-26T12:00:00.000Z';
+  assert.equal(actualFxState(JSON.stringify({ fetchedAt: fresh })), String(Date.parse(fresh) / 1000));
+  assert.equal(actualFxState(JSON.stringify({ fetchedAt: old })), String(Date.parse(old) / 1000));
+});
+test('BH-121: echter Workflow-Einzeiler meldet fehlenden/kaputten Stempel und fetchedAt:null explizit', () => {
+  assert.equal(actualFxState(JSON.stringify({ rates: {} })), 'KEIN_STEMPEL');
+  assert.equal(actualFxState('not json'), 'KEIN_STEMPEL');
+  assert.equal(actualFxState(JSON.stringify({ fetchedAt: null })), 'NULL');
+});
 
 // ── BH-035: Waechter/Gate-Glob faengt jetzt auch die '-test.js'-Schreibweise ─
 test('BH-035: GATE_GLOB nutzt *test.js (faengt .test.js UND -test.js)', () => {

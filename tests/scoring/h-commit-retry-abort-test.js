@@ -47,6 +47,67 @@ function test(name, fn) {
   catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
 }
 
+// Liest jeden Workflow bis zum aktiven Step-/run-Objekt. Der Sicherheitscheck
+// darunter haengt damit nicht mehr an einer einzigen Schreibweise des `if ! rebase`.
+function workflowRunSteps(text, file) {
+  const lines = text.replace(/\r\n/g, '\n').split('\n');
+  const steps = [];
+  let inJobs = false;
+  let job = null;
+  let step = null;
+  let runIndent = null;
+  for (const raw of lines) {
+    const indent = raw.match(/^ */)[0].length;
+    const trimmed = raw.trim();
+    if (runIndent !== null && step) {
+      if (indent > runIndent) { step.run += raw.slice(runIndent + 2) + '\n'; continue; }
+      runIndent = null;
+    }
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    if (indent === 0) { inJobs = trimmed === 'jobs:'; job = null; }
+    if (!inJobs) continue;
+    const jobMatch = indent === 2 && trimmed.match(/^([A-Za-z0-9_-]+):$/);
+    if (jobMatch) { job = jobMatch[1]; step = null; continue; }
+    const start = indent === 6 && trimmed.match(/^-(?:\s+)(name|run):\s*(.*)$/);
+    if (job && start) {
+      step = { file, job, name: null, if: null, run: '' };
+      steps.push(step);
+      if (start[1] === 'name') step.name = start[2].trim();
+      if (start[1] === 'run') step.run = start[2].trim() + '\n';
+      continue;
+    }
+    if (!step || indent !== 8) continue;
+    const field = trimmed.match(/^(name|if|run):\s*(.*)$/);
+    if (!field) continue;
+    if (field[1] === 'name') step.name = field[2].trim();
+    if (field[1] === 'if') step.if = field[2].trim();
+    if (field[1] === 'run') {
+      if (['|', '|-', '|+', '>', '>-'].includes(field[2].trim())) runIndent = indent;
+      else step.run = field[2].trim() + '\n';
+    }
+  }
+  return steps;
+}
+
+test('alle aktiven Workflow-run-Objekte verbieten cherry-pick/reset-main und halten Rebase-Abort', () => {
+  let rebaseSteps = 0;
+  for (const file of fs.readdirSync(WF_DIR).filter((f) => /\.ya?ml$/.test(f))) {
+    const text = fs.readFileSync(path.join(WF_DIR, file), 'utf8');
+    for (const step of workflowRunSteps(text, file)) {
+      if (/^false$|^\$\{\{\s*false\s*\}\}$/i.test(step.if || '')) continue;
+      const code = step.run.split('\n').map((line) => line.replace(/(^|\s)#.*$/, '')).join('\n');
+      const label = `${file}/${step.job}/${step.name || '(unbenannt)'}`;
+      assert.ok(!/\bgit\s+cherry-pick\b/.test(code), `${label}: aktiver cherry-pick-Fallback`);
+      assert.ok(!/\bgit\s+reset\s+--hard\s+(?:refs\/remotes\/origin\/)?origin\/main\b/.test(code), `${label}: aktiver reset --hard origin/main`);
+      if (/\bgit\s+rebase\s+--autostash\s+origin\/main\b/.test(code)) {
+        rebaseSteps++;
+        assert.match(code, /\bgit\s+rebase\s+--abort\b/, `${label}: Rebase ohne datenerhaltendes abort`);
+      }
+    }
+  }
+  assert.ok(rebaseSteps >= 3, `nur ${rebaseSteps} aktive Commit-Rebase-Steps gefunden`);
+});
+
 /**
  * Schneidet die Konflikt-Zweige heraus: ab der `if ! git rebase …; then`-Zeile bis zum
  * `else`/`fi` auf DERSELBEN Einrueckung (der Zweig endet dort, verschachtelte else/fi

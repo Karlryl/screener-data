@@ -13,9 +13,8 @@
  * Usage:  node tests/scoring/bh-w2-fxfollow.test.js   (Exit 0/1)
  */
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const { toUsd, isUnpriceable } = require('../../discovery/mcap-prefilter.js');
+const { applyForeignPrefilterOutcome } = require('../../refresh-universe.js');
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -83,15 +82,20 @@ test('BH-041: Totalausfall-Fallback {USD:1} markiert jede Fremdwaehrung als unpr
   }
 });
 
-// --- Wiring-Regression: refresh-universe.js darf eine 'answered'-Zeile nur loeschen,
-// wenn sie NICHT in 'unpriceable' steht. Reiner Quelltext-Pin gegen ein versehentliches
-// Zurueckrollen auf die alte "answered => delete"-Bedingung (kein Netz noetig).
+// --- Wiring-Regression am echten Produktionshelfer: answered+unpriceable bleibt erhalten,
+// answered+bewertbar+unter Schwelle wird entfernt.
 test('BH-041 Wiring: refresh-universe.js prueft unpriceable, bevor eine answered-Zeile geloescht wird', () => {
-  const src = fs.readFileSync(path.join(__dirname, '..', '..', 'refresh-universe.js'), 'utf8');
-  assert.match(src, /const \{ kept: keptUsd, answered, renamed, unpriceable \} = await prefilterByMcap/,
-    'prefilterByMcap-Aufruf muss unpriceable destructuren');
-  assert.match(src, /answered\.has\(eff\)\s*&&\s*!\(unpriceable\s*&&\s*unpriceable\.has\(eff\)\)/,
-    'Loesch-Bedingung muss unpriceable ausschliessen, nicht nur answered pruefen');
+  const allTickers = new Map([
+    ['KEEP.DE', { ticker: 'KEEP.DE', marketCap: null }],
+    ['DROP.DE', { ticker: 'DROP.DE', marketCap: null }],
+  ]);
+  const foreignNull = [...allTickers.entries()];
+  applyForeignPrefilterOutcome(allTickers, foreignNull, {
+    kept: new Map(), answered: new Set(['KEEP.DE', 'DROP.DE']),
+    renamed: new Map(), unpriceable: new Set(['KEEP.DE']),
+  });
+  assert.ok(allTickers.has('KEEP.DE'), 'FX-unbewertbare Antwort muss erhalten bleiben');
+  assert.ok(!allTickers.has('DROP.DE'), 'bewertbare Antwort unter Schwelle muss entfernt werden');
 });
 
 console.log(`\nbh-w2-fxfollow.test.js: ${pass} ok, ${fail} fail`);
