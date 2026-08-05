@@ -47,6 +47,72 @@ function test(name, fn) {
   catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
 }
 
+function workflowRunSteps(text) {
+  const lines = text.replace(/\r\n/g, '\n').split('\n');
+  const steps = [];
+  let inJobs = false;
+  let job = null;
+  let step = null;
+  let runIndent = null;
+  for (const raw of lines) {
+    const indent = raw.match(/^ */)[0].length;
+    const trimmed = raw.trim();
+    if (runIndent !== null && step) {
+      if (indent > runIndent) { step.run += raw.slice(runIndent + 2) + '\n'; continue; }
+      runIndent = null;
+    }
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    if (indent === 0) { inJobs = trimmed === 'jobs:'; job = null; }
+    if (!inJobs) continue;
+    const jobMatch = indent === 2 && trimmed.match(/^([A-Za-z0-9_-]+):$/);
+    if (jobMatch) { job = jobMatch[1]; step = null; continue; }
+    const start = indent === 6 && trimmed.match(/^-(?:\s+)(name|run):\s*(.*)$/);
+    if (job && start) {
+      step = { job, name: null, if: null, run: '' };
+      steps.push(step);
+      if (start[1] === 'name') step.name = start[2].trim();
+      if (start[1] === 'run') step.run = start[2].trim() + '\n';
+      continue;
+    }
+    if (!step || indent !== 8) continue;
+    const field = trimmed.match(/^(name|if|run):\s*(.*)$/);
+    if (!field) continue;
+    if (field[1] === 'name') step.name = field[2].trim();
+    if (field[1] === 'if') step.if = field[2].trim();
+    if (field[1] === 'run') {
+      if (['|', '|-', '|+', '>', '>-'].includes(field[2].trim())) runIndent = indent;
+      else step.run = field[2].trim() + '\n';
+    }
+  }
+  return steps;
+}
+
+// Literal tote Shell-Zweige sind kein Verhalten. Verschachtelte ifs innerhalb des
+// toten Zweigs werden mitgezaehlt, damit ihre `fi`-Zeilen den Zweig nicht zu frueh oeffnen.
+function reachableShell(text) {
+  const out = [];
+  let deadDepth = 0;
+  for (const line of text.split('\n')) {
+    const code = line.replace(/\s+#.*$/, '').trim();
+    if (/^if\s+(?:false|\[\s+"?0"?\s+=\s+"?1"?\s+\])\s*;?\s*then\b/.test(code)) { deadDepth++; continue; }
+    if (deadDepth) {
+      const opens = (code.match(/\bif\b[^;]*;?\s*then\b/g) || []).length;
+      const closes = (code.match(/\bfi\b/g) || []).length;
+      deadDepth += opens - closes;
+      continue;
+    }
+    if (!deadDepth) out.push(line);
+  }
+  return out.join('\n');
+}
+
+function deployStep(job, name) {
+  const found = workflowRunSteps(yml).filter((s) => s.job === job && s.name === name);
+  assert.equal(found.length, 1, `${job}/${name}: genau ein Workflow-Step erwartet`);
+  assert.ok(!/^false$|^\$\{\{\s*false\s*\}\}$/i.test(found[0].if || ''), `${job}/${name}: Step deaktiviert`);
+  return found[0];
+}
+
 function stepSection(text, startMarker, endMarker) {
   const s = text.indexOf(startMarker);
   assert.ok(s >= 0, 'Schritt nicht gefunden: ' + startMarker);
@@ -110,6 +176,25 @@ function checkDeployStep(stepName, nextMarker, commitPrefix, pushLine) {
   assert.match(body.slice(0, iFetch), /"\$i"\s*-gt\s*1/,
     stepName + ': Fetch/Reset ist nicht auf Versuch > 1 begrenzt');
 }
+
+test('aktive Deploy-Step-Objekte enthalten den kompletten erreichbaren Retry-Zyklus; if-false-Attrappen zaehlen nicht', () => {
+  const cases = [
+    [deployStep('merge', 'Deploy to GitHub Pages'), 'cp ../index.html', 'git commit -m "deploy: screener reports', 'git push --force origin gh-pages'],
+    [deployStep('scoring', 'Deploy Scoring Output to GitHub Pages'), 'cp ../outputs/hypergrowth', 'git commit -m "deploy: hypergrowth scoring', 'git push --force origin gh-pages'],
+  ];
+  for (const [step, copy, commit, push] of cases) {
+    const body = loopBody(reachableShell(step.run));
+    const positions = [
+      body.indexOf('git fetch origin gh-pages'),
+      body.indexOf('git reset --hard origin/gh-pages'),
+      body.indexOf(copy),
+      body.indexOf(commit),
+      body.indexOf(push),
+    ];
+    assert.ok(positions.every((n) => n >= 0), `${step.job}/${step.name}: erreichbarer Retry-Zyklus unvollstaendig: ${positions.join(',')}`);
+    assert.deepEqual([...positions].sort((a, b) => a - b), positions, `${step.job}/${step.name}: erreichbare Retry-Reihenfolge verletzt`);
+  }
+});
 
 test('Deploy to GitHub Pages (merge-Job): Fetch+Reset vor jedem Retry, Commit/Push im Schleifenkoerper', () => {
   checkDeployStep(
