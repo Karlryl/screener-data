@@ -13,9 +13,19 @@
  * Usage:  node tests/discovery/hkex-hk.test.js   (Exit 0/1)
  */
 const assert = require('node:assert/strict');
-const { fetchHkexUniverse } = require('../../discovery/hkex-hk.js');
+const { fetchHkexUniverse, parseSheet } = require('../../discovery/hkex-hk.js');
 
 (async () => {
+  const fixture = '<x:row r="2">' +
+    '<x:c r="A2" t="str"><x:v>700</x:v></x:c>' +
+    '<x:c r="B2" t="str"><x:v>TENCENT HOLDINGS</x:v></x:c>' +
+    '<x:c r="C2" t="str"><x:v>Equity</x:v></x:c>' +
+    '<x:c r="F2" t="str"><x:v>KYG875721634</x:v></x:c></x:row>';
+  const parsed = parseSheet(fixture);
+  assert.equal(parsed.size, 1, 'hermetische Equity-Zeile muss genau einen Treffer liefern');
+  assert.equal(parsed.get('0700.HK').name, 'TENCENT HOLDINGS');
+  assert.equal(parsed.get('0700.HK').isin, 'KYG875721634');
+
   const map = await fetchHkexUniverse();
   assert.ok(map instanceof Map, 'returns a Map');
 
