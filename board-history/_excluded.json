@@ -40,6 +40,16 @@
    "date": "2026-07-28",
    "board": null,
    "reason": "ALTER MASSSTAB (vor Tag 489, 5888764562): der Screener las bis dahin Yahoos NORMALISIERTES Betriebsergebnis statt des berichteten. Der Wechsel aendert Score-Niveau UND Profitabilitaets-Track universumsweit (zwei volle Vergleichslaeufe ueber 4.037 Snapshots: 170 Stufenwechsel, 20 Track-Flips, 54 Quality-Board-Abgaenge). Scores vor und nach diesem Commit messen nicht dasselbe und duerfen nicht in einer Reihe verglichen werden. Nachgetragen am 29.07. — die Commit-Nachricht meldete den Bruch, dieser Eintrag fehlte, und nur DIESE Datei wird von scripts/rank-ic.js gelesen. Das Vintage bleibt unveraendert stehen und faellt nur aus der laufenden Auswertung."
+  },
+  {
+   "date": "2026-07-29",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 579, 828cba41a9, Exchange-Kanal-Go-live): watchlist 15337->19866 Firmen (+4529) am 04.08.; Scores sind kohorten-relative Perzentile (score.js:5-8), die Kohorten-Erweiterung verschiebt jedes Score-Niveau. Vintages davor sind mit spaeteren nicht vergleichbar. Vintage bleibt unveraendert stehen, faellt nur aus der laufenden Auswertung. Folge: der erste Post-Transitions-Lauf schreibt mit priorDate=null (GATE BLIND) und ist der neue Anker; er entstand per manuellem workflow_dispatch und zaehlt NICHT als sauberer automatischer Lauftag. Court-Akte: _COURT-GATE-NEUANKER-2026-08-05.md (PASSED 8/10)."
+  },
+  {
+   "date": "2026-08-03",
+   "board": null,
+   "reason": "ALTER MASSSTAB (vor Tag 579, 828cba41a9, Exchange-Kanal-Go-live): watchlist 15337->19866 Firmen (+4529) am 04.08.; Scores sind kohorten-relative Perzentile (score.js:5-8), die Kohorten-Erweiterung verschiebt jedes Score-Niveau. Vintages davor sind mit spaeteren nicht vergleichbar. Vintage bleibt unveraendert stehen, faellt nur aus der laufenden Auswertung. Folge: der erste Post-Transitions-Lauf schreibt mit priorDate=null (GATE BLIND) und ist der neue Anker; er entstand per manuellem workflow_dispatch und zaehlt NICHT als sauberer automatischer Lauftag. Court-Akte: _COURT-GATE-NEUANKER-2026-08-05.md (PASSED 8/10)."
   }
  ],
  "_massstab_brueche": [
@@ -87,6 +97,16 @@
    "belege": "An 143 Konfliktfirmen live gemessen (516 vergleichbare Jahre): die berichtete Zahl deckt sich zu 93,6 % mit dem SEC-Abschluss, die normalisierte nur zu 23,4 %. End-to-end verifiziert: AGCO [699,927,1716,1308] -> [596,-122,1700,1265] = exakt die eingereichten Werte; ALB ebenso.",
    "nachpruefen": "Meldet der Wert-Gate am Lauf NACH dem naechsten erneut SUSPECT, ist die Umstellung NICHT mehr die Ursache — dann echter Defekt, eigener Befund.",
    "entscheid": "Rat (4 Stimmen, alle vier laufen auf dieselbe Zeile zu) + 9 adversarische Gegenproben, 8 halten. Der Gegenvorschlag SEC-Quelle ist tot: der Bulk-Extrakt hat 0 von 1.589 Nicht-US-Tickern, ein Wechsel liesse ein Drittel des Universums unversorgt."
+  },
+  {
+   "ab_commit": "828cba41a9",
+   "tag": "Tag 579",
+   "datum": "2026-08-04",
+   "was": "Exchange-Kanal-Go-live erweitert das watchlist-Universum 15337->19866 Firmen (+4529).",
+   "wirkung": "Scores sind kohorten-relative Perzentile (score.js:5-8); die Kohorten-Erweiterung verschiebt jedes Score-Niveau universumsweit. Vintages davor sind mit spaeteren nicht vergleichbar.",
+   "letztes_altes_vintage": "2026-08-03",
+   "boards": null,
+   "entscheid": "Court-Urteil PASSED 8/10 (Karl-Zuruf 'gate court'), Akte _COURT-GATE-NEUANKER-2026-08-05.md: Bruch rein dokumentarisch fuehren, boards:null (massstabBruchFuer liefert dadurch null, keine Schwelle wird angehoben). Vintages 2026-07-29 und 2026-08-03 zusaetzlich global in excluded[] ausgeschlossen; der erste Post-Transitions-Lauf (2026-08-05) laeuft mit priorDate=null als neuer Gate-Anker (GATE BLIND)."
   }
  ]
 }
