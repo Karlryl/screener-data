@@ -32,7 +32,10 @@ const { writeJsonAtomic } = require('../lib/atomic-write.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const OVERVIEW = path.join(REPO_ROOT, 'outputs', 'hypergrowth', 'overview.json');
-const LOG_DIR = path.join(REPO_ROOT, 'newcomer-log');
+function newcomerLogDir(repoRoot = REPO_ROOT) {
+  return path.join(repoRoot, 'newcomer-log');
+}
+const LOG_DIR = newcomerLogDir();
 
 function isoHeute(now = Date.now()) {
   return new Date(now).toISOString().slice(0, 10);
@@ -178,4 +181,4 @@ if (require.main === module) {
   process.exit(res.exitCode);
 }
 
-module.exports = { run, diffMitglieder, mitgliederAus, bisherigeZeilen, isoHeute };
+module.exports = { run, diffMitglieder, mitgliederAus, bisherigeZeilen, isoHeute, newcomerLogDir };
