@@ -187,10 +187,12 @@ async function main() {
   return 1;
 }
 
-module.exports = { collectStats, detectStatsDrift, loadJson, median, HIST_DIR, OUT_DIR };
-
-if (require.main === module) {
-  main().then(code => process.exit(code || 0)).catch(e => {
+async function runCli(mainImpl = main, io = {}) {
+  const exit = io.exit || process.exit;
+  const error = io.error || console.error;
+  try {
+    exit((await mainImpl()) || 0);
+  } catch (e) {
     // 29.07.: Hier stand `process.exit(0)` mit einem Discord-Ping als Sichtbarmachung.
     // Der Ping geht ins Leere (DISCORD_WEBHOOK ist nicht gesetzt), und damit war ein
     // ABGESTUERZTER Waechter fuer immer gruen — genau die Klasse Fehler, gegen die er
@@ -199,7 +201,13 @@ if (require.main === module) {
     // Jetzt derselbe Weg wie beim erkannten Drift zwei Zeilen weiter oben: ::error::
     // plus Exit 1. Der Schritt traegt continue-on-error, sein Ergebnis wird am Ende
     // des Jobs eingesammelt und faerbt den Lauf rot — Karls einziger Alarmkanal.
-    console.error('::error::check-pull-stats abgestuerzt (Waechter hat NICHT geprueft): ' + e.message);
-    process.exit(1);
-  });
+    error('::error::check-pull-stats abgestuerzt (Waechter hat NICHT geprueft): ' + e.message);
+    exit(1);
+  }
+}
+
+module.exports = { collectStats, detectStatsDrift, loadJson, median, HIST_DIR, OUT_DIR, runCli };
+
+if (require.main === module) {
+  runCli();
 }
