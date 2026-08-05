@@ -90,6 +90,13 @@ check('ein fehlendes Log-Verzeichnis ist kein Fehler', () => {
 check('das Skript fasst picks-history NICHT an', () => {
   const root = path.join(os.tmpdir(), 'repo-root');
   assert.equal(newcomerLogDir(root), path.join(root, 'newcomer-log'));
+
+  // Grundgesetz-Schutzliste. Geprueft am Quelltext, weil ein Pfad-Fehler sonst erst im
+  // Betrieb auffiele — und dort waere er nicht mehr gutzumachen.
+  const src = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'write-newcomer-log.js'), 'utf8');
+  const codeOhneKommentare = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  assert.ok(!/picks-history/.test(codeOhneKommentare), 'picks-history darf in keinem Pfad vorkommen');
+  assert.ok(/newcomer-log/.test(codeOhneKommentare), 'schreibt nach newcomer-log/');
 });
 
 console.log('\nnewcomer-log: ' + pass + ' ok, ' + fail + ' fail');
