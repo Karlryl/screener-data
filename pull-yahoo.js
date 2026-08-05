@@ -1634,6 +1634,42 @@ function _ftsExtractByYear(rows, fieldNames) {
   return out;
 }
 
+function _mapFTSAnnualShares(annualFin, annualBs) {
+  // Tag 219 (audit F4 HIGH): shares per year — unblocks methods/buyback-yield.js
+  // which has been computable=false universally because annual.annualShares
+  // never existed. Tries dilutedAverageShares (more conservative — counts
+  // options/RSUs) first, falls back to basicAverageShares, then to FTS
+  // annualBs ordinarySharesNumber. methods/capital-allocation-quality.js
+  // will scale 4/4 instead of 3/4 once this lands.
+  let ftsAnnualShares = _ftsExtractByYear(annualFin,
+    ['dilutedAverageShares', 'basicAverageShares']);
+  if (!ftsAnnualShares.some(v => v != null)) {
+    ftsAnnualShares = _ftsExtractByYear(annualBs,
+      ['ordinarySharesNumber', 'shareIssued']);
+  }
+  // Raw companion for the later dilution decision: no diluted or balance-sheet
+  // fallback, and null keeps the same year slot where Yahoo has no basic value.
+  const ftsAnnualSharesBasic = _ftsExtractByYear(annualFin, ['basicAverageShares']);
+  return { ftsAnnualShares, ftsAnnualSharesBasic };
+}
+
+function _readFTSAnnualSharesFromCache(cached) {
+  const payload = (cached && cached.payload) || {};
+  return {
+    ftsAnnualShares: payload.ftsAnnualShares || [],
+    ftsAnnualSharesBasic: payload.ftsAnnualSharesBasic || [],
+  };
+}
+
+function _writeFTSCache(cachePath, cacheVersion, ftsPartial, payload) {
+  writeFileAtomic(cachePath, JSON.stringify({
+    _cacheVersion: cacheVersion,
+    _ftsPartial: ftsPartial,
+    cachedAt: new Date().toISOString(),
+    payload,
+  }));
+}
+
 // Bug 21 (audit 2026-07-03): re-align an FTS-anchored side-series to a QS-won
 // income bundle. The FTS side-series (annualSBC/Capex/RnD/SGA/Depreciation,
 // annualBalance) are latest-first and anchored on the FTS newest FY; when the
@@ -2727,7 +2763,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         useCache = false;
       }
       let ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD;
-      let ftsAnnualSGA, ftsAnnualDepreciation, ftsAnnualShares;
+      let ftsAnnualSGA, ftsAnnualDepreciation, ftsAnnualShares, ftsAnnualSharesBasic;
       // F-1 (Karl-Mandat 03.08.2026): Ausschuettungs-Reihen. Karls Trennung lautet
       // "Investitionen ins Unternehmen sind nichts Schlechtes, Auszahlungen an Aktionaere schon" —
       // dafuer braucht die Engine ueberhaupt erst die Zahlen. Reine DATENERFASSUNG, kein Scoring:
@@ -2749,7 +2785,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         ftsAnnualDepreciation = cached.payload.ftsAnnualDepreciation || [];
         // Tag 219 (audit F4 HIGH): annualShares added — same gradual-rollout
         // pattern as Tag 211l SGA/Depreciation.
-        ftsAnnualShares = cached.payload.ftsAnnualShares || [];
+        const cachedShares = _readFTSAnnualSharesFromCache(cached);
+        ftsAnnualShares = cachedShares.ftsAnnualShares;
+        // FTS-basic-series: raw basicAverageShares companion — same gradual
+        // rollout as Tag 211l/219/F-1, with NO FTS_CACHE_VERSION bump. Old
+        // caches return undefined → empty array and fill over CACHE_TTL_MS.
+        ftsAnnualSharesBasic = cachedShares.ftsAnnualSharesBasic;
         // F-1: dieselbe schrittweise Einfuehrung wie Tag 211l/219 — KEIN FTS_CACHE_VERSION-Bump.
         // Alte Caches liefern undefined -> leeres Array -> das Feld fehlt im Snapshot, wie bisher.
         // Die Reihen fuellen sich mit dem Cache-Ablauf (CACHE_TTL_MS = 28 Tage) ueber die
@@ -2797,18 +2838,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // annualFin and 'depreciationAndAmortization' on annualCash.
         ftsAnnualSGA = _ftsExtractByYear(fts.annualFin, ['sellingGeneralAndAdministration', 'SellingGeneralAndAdministration']);
         ftsAnnualDepreciation = _ftsExtractByYear(fts.annualCash, ['depreciationAndAmortization', 'depreciationAmortizationDepletion', 'DepreciationAndAmortization']);
-        // Tag 219 (audit F4 HIGH): shares per year — unblocks methods/buyback-yield.js
-        // which has been computable=false universally because annual.annualShares
-        // never existed. Tries dilutedAverageShares (more conservative — counts
-        // options/RSUs) first, falls back to basicAverageShares, then to FTS
-        // annualBs ordinarySharesNumber. methods/capital-allocation-quality.js
-        // will scale 4/4 instead of 3/4 once this lands.
-        ftsAnnualShares = _ftsExtractByYear(fts.annualFin,
-          ['dilutedAverageShares', 'basicAverageShares']);
-        if (!ftsAnnualShares.some(v => v != null)) {
-          ftsAnnualShares = _ftsExtractByYear(fts.annualBs,
-            ['ordinarySharesNumber', 'shareIssued']);
-        }
+        ({ ftsAnnualShares, ftsAnnualSharesBasic } = _mapFTSAnnualShares(
+          fts.annualFin, fts.annualBs));
         // F-1 (Karl-Mandat 03.08.2026): Ausschuettungen an Aktionaere. KEIN zusaetzlicher
         // Netzabruf — fts.annualCash traegt das komplette Cash-Flow-Modul bereits (Z.~1515),
         // es wurden bisher nur SBC/Capex/D&A daraus gelesen.
@@ -2835,13 +2866,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           // F-DP-052 (Tag 189): atomic FTS-cache write; worker pool can hit
           // same ticker if a retry races, and a truncated cache fails downstream
           // _ftsExtractByYear silently → quarterly-NI series goes empty.
-          writeFileAtomic(cachePath, JSON.stringify({
-            _cacheVersion: FTS_CACHE_VERSION,
-            _ftsPartial: ftsPartial,
-            cachedAt: new Date().toISOString(),
-            payload: { ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD, ftsQuarterlyNI, ftsAnnualSGA, ftsAnnualDepreciation, ftsAnnualShares,
-              ftsAnnualRepurchase, ftsAnnualDividendsPaid, ftsAnnualNetCommonStockIssuance }
-          }));
+          _writeFTSCache(cachePath, FTS_CACHE_VERSION, ftsPartial, {
+            ftsAnnual, ftsQuarterly, ftsBalance, ftsAnnualSBC, ftsAnnualCapex, ftsAnnualRnD,
+            ftsQuarterlyNI, ftsAnnualSGA, ftsAnnualDepreciation, ftsAnnualShares,
+            ftsAnnualSharesBasic, ftsAnnualRepurchase, ftsAnnualDividendsPaid, ftsAnnualNetCommonStockIssuance
+          });
         } catch (e) { _log('WARN', 'FTS cache write failed for ' + (stock && stock.ticker) + ': ' + e.message); }
         if (ftsPartial) canonical._ftsPartial = true;
       }
@@ -3745,7 +3774,7 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   _quarterSeriesMisaligned, _mapFTSQuarterlyNI,
   // 03.08.2026: die FTS-Extraktion als Seam, damit Tests sie AUSFUEHREN koennen statt den
   // Quelltext nach Schreibmustern abzusuchen (tests/scoring/f1-ausschuettungsfelder.test.js).
-  _ftsExtractByYear,
+  _ftsExtractByYear, _mapFTSAnnualShares, _readFTSAnnualSharesFromCache, _writeFTSCache,
   _silentErrorCounts: () => ({ lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors }),
   _resetSilentErrorCounts: () => { _lampErrors = 0; _needsFullPullThrew = 0; _corruptYoungSnapshots = 0; _ftsCacheParseErrors = 0; },
   // audit fix BH-042/BH-047: pure decisions fuer TDD.
