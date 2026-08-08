@@ -1,0 +1,1050 @@
+{
+  "schema": "gqs-formula-registry/v1",
+  "identity": {
+    "formulaId": "GQS-00",
+    "formulaSemver": "1.0.0",
+    "canonicalId": "GQS-00@1.0.0",
+    "freezeDate": "2026-08-08",
+    "activationDate": "2026-08-08",
+    "firstVerifiedProductionVintage": "2026-08-07",
+    "status": "frozen_baseline"
+  },
+  "provenance": {
+    "formulaCommit": "4cae8dcdbe445abf9bc03dadc3f852e6b0fd864b",
+    "scoringTreeGitSha1": "2728be605cc614cec2863c937c423afd8a249efe",
+    "productionBoardCommit": "734025a1915d4bda5947a75ab71d9ba4bd9f8ded",
+    "productionDataCommit": "b26e1c0b4a0f5fc00f04a7b5229941186d3fad38",
+    "productionWorkflowRun": 31147698301,
+    "calibrationVersion": "calibration/v4",
+    "calibrationArtifact": "frozen-calibration.json",
+    "note": "calibration/v4 is a calibration schema, not the formula semantic version."
+  },
+  "constants": {
+    "percentile": {
+      "method": "midrank",
+      "formula": "100*(count(x<v)+0.5*count(x=v))/n",
+      "finiteOnly": true
+    },
+    "winsorTail": 0.01,
+    "opMarginUpperBound": 1,
+    "empiricalBayes": {
+      "target": 50,
+      "k": 2,
+      "formula": "50 + n/(n+2)*(scoreBase-50)"
+    },
+    "minimumCohortN": 15,
+    "coverageShrink": {
+      "target": "post-EB cohort median",
+      "factor": "present axis weight / total axis weight"
+    },
+    "growthBoost": {
+      "k": 0.05,
+      "maximumFactor": 1.05,
+      "minimumDistinctValues": 10,
+      "cohortRelative": true
+    },
+    "cycleDamper": {
+      "k": 0.5,
+      "drawdownQuantile": 0.75,
+      "minimumDistinctValues": 10
+    },
+    "displayRoundingDecimals": 1,
+    "finalScoreCap": null
+  },
+  "axisDefinitions": {
+    "revGrowthLevel": {
+      "label": "Revenue growth level",
+      "unit": "percentage_points",
+      "direction": "higher_is_better",
+      "implementation": "src/scoring/axes.js#revGrowthLevel",
+      "formula": "100 * winsor(latest_quarter/prior_year_quarter - 1); if unavailable, 100 * winsor(annualRev[0]/annualRev[1] - 1)",
+      "periodRule": "Quarterly YoY uses a period-end match around 365 days (+/-15 days); position 4 only when period ends are absent. Annual fallback requires adjacent current/prior fiscal years.",
+      "inputPointers": [
+        "$.timeseries.revenueQ",
+        "$.timeseries.revenueQEnds",
+        "$.annual.annualRev"
+      ],
+      "missing": "Quarterly leg drops when no valid prior-year pair or an intervening value gap exists; annual fallback requires two adjacent finite years and a positive denominator; otherwise null."
+    },
+    "revAcceleration": {
+      "label": "Revenue acceleration",
+      "unit": "decimal_change",
+      "direction": "higher_is_better",
+      "implementation": "src/scoring/axes.js#revAcceleration",
+      "formula": "newest quarterly YoY - oldest quarterly YoY; fallback: (annualRev[0]/annualRev[1]-1) - (annualRev[1]/annualRev[2]-1)",
+      "periodRule": "Quarterly path requires at least two valid period-end-matched YoY pairs; otherwise three positive annual values are used.",
+      "inputPointers": [
+        "$.timeseries.revenueQ",
+        "$.timeseries.revenueQEnds",
+        "$.annual.annualRev"
+      ],
+      "missing": "Fewer than two quarterly YoY pairs and fewer than three positive annual values yields null."
+    },
+    "gpGrowth": {
+      "label": "Gross-profit growth plus gross-margin trajectory",
+      "unit": "decimal_change",
+      "direction": "higher_is_better",
+      "implementation": "src/scoring/axes.js#gpGrowth",
+      "formula": "(annualGP[0]/annualGP[1]-1) + (grossMarginNewest-grossMarginOldest)",
+      "periodRule": "Adjacent current/prior fiscal-year gross profit; margin trajectory over valid annual GP/revenue pairs.",
+      "inputPointers": [
+        "$.annual.annualGP",
+        "$.annual.annualRev"
+      ],
+      "missing": "Adjacent positive prior-year GP is mandatory; invalid gross margins outside [0,1] are ignored; absent trajectory contributes zero."
+    },
+    "ruleOfX": {
+      "label": "Growth efficiency",
+      "unit": "percentage_points",
+      "direction": "higher_is_better",
+      "implementation": "src/scoring/axes.js#ruleOfX",
+      "formula": "branch_alpha * revGrowthLevel + valid_fcfMarginTTM",
+      "periodRule": "Uses the same period selection as revGrowthLevel and current TTM FCF margin.",
+      "inputPointers": [
+        "$.timeseries.revenueQ",
+        "$.timeseries.revenueQEnds",
+        "$.annual.annualRev",
+        "$.metrics.fcfMarginTTM",
+        "$.annual.annualFCF",
+        "$.annual.annualOCF"
+      ],
+      "missing": "Revenue growth is mandatory. FCF term is omitted unless sign and recent FCF/OCF guards validate it."
+    },
+    "marginTrajectory": {
+      "label": "Operating-margin trajectory",
+      "unit": "decimal_change",
+      "direction": "higher_is_better",
+      "implementation": "src/scoring/axes.js#marginTrajectory",
+      "formula": "winsor(opIncQ[0]/revenueQ[0]) - winsor(oldest_valid_opIncQ/revenueQ)",
+      "periodRule": "Newest versus oldest valid quarterly operating margin; newest quarter itself must be present.",
+      "inputPointers": [
+        "$.timeseries.opIncQ",
+        "$.timeseries.revenueQ"
+      ],
+      "missing": "Requires a valid newest quarter and at least two valid positive-revenue quarterly pairs; otherwise null."
+    },
+    "capitalEfficiency": {
+      "label": "Capital efficiency",
+      "unit": "ratio",
+      "direction": "higher_is_better",
+      "implementation": "src/scoring/axes.js#capitalEfficiency",
+      "formula": "mean(opInc)/mean(totalAssets-currentLiabilities) * cycle_peak_discount - max(0,asset_growth-revenue_growth)",
+      "periodRule": "Fiscal-year-aligned SEC trio when complete and at least as deep as Yahoo, otherwise Yahoo annual trio; profitable-regime trim is sign-based.",
+      "inputPointers": [
+        "$.secAnnual",
+        "$.annual.annualOpInc",
+        "$.annual.annualBalance.totalAssets",
+        "$.annual.annualBalance.currentLiabilities",
+        "$.annual.annualRev"
+      ],
+      "missing": "Only fiscal years with finite opInc, assets, current liabilities and positive invested capital are used; no valid year yields null."
+    },
+    "dilution": {
+      "label": "Dilution drag",
+      "unit": "negative_ratio",
+      "direction": "higher_is_better",
+      "implementation": "src/scoring/axes.js#dilution",
+      "formula": "-clamp(annualSBC[0]/annualRev[0],0,1) - valid_level_change",
+      "periodRule": "Current fiscal-year SBC/revenue level and oldest valid annual comparison.",
+      "inputPointers": [
+        "$.annual.annualSBC",
+        "$.annual.annualRev"
+      ],
+      "missing": "Current-year ratio is mandatory. An implausible oldest ratio neutralizes only the slope; missing current ratio yields null."
+    },
+    "marginLevel": {
+      "label": "Gross-margin level",
+      "unit": "ratio",
+      "direction": "higher_is_better",
+      "implementation": "src/scoring/axes.js#marginLevel",
+      "formula": "first valid index-aligned annualGP/annualRev in [0,1]",
+      "periodRule": "Newest jointly valid fiscal year.",
+      "inputPointers": [
+        "$.annual.annualGP",
+        "$.annual.annualRev"
+      ],
+      "missing": "No jointly valid gross-margin year yields null."
+    }
+  },
+  "formulas": [
+    {
+      "branchFormulaId": "consumer-discretionary",
+      "splitMetric": "OpInc",
+      "subCohortByProfit": false,
+      "alpha": 2.2,
+      "tracks": [
+        "profitable",
+        "unprofitable"
+      ],
+      "axes": [
+        {
+          "key": "revGrowthLevel",
+          "weights": {
+            "profitable": 1.45,
+            "unprofitable": 1.9
+          }
+        },
+        {
+          "key": "revAcceleration",
+          "weights": {
+            "profitable": 2.65,
+            "unprofitable": 3
+          }
+        },
+        {
+          "key": "gpGrowth",
+          "weights": {
+            "profitable": 1.5,
+            "unprofitable": 1.4
+          }
+        },
+        {
+          "key": "ruleOfX",
+          "weights": {
+            "profitable": 0.55,
+            "unprofitable": 0.8
+          }
+        },
+        {
+          "key": "marginTrajectory",
+          "weights": {
+            "profitable": 0.35,
+            "unprofitable": 0.9
+          }
+        },
+        {
+          "key": "capitalEfficiency",
+          "weights": {
+            "profitable": 2.3,
+            "unprofitable": 0.9
+          }
+        },
+        {
+          "key": "dilution",
+          "weights": {
+            "profitable": 0.6,
+            "unprofitable": 1.2
+          }
+        }
+      ]
+    },
+    {
+      "branchFormulaId": "consumer-staples",
+      "splitMetric": "none",
+      "subCohortByProfit": false,
+      "alpha": 1.8,
+      "tracks": [
+        "profitable"
+      ],
+      "axes": [
+        {
+          "key": "revGrowthLevel",
+          "weights": {
+            "profitable": 4.2,
+            "unprofitable": 4.2
+          }
+        },
+        {
+          "key": "revAcceleration",
+          "weights": {
+            "profitable": 0.5,
+            "unprofitable": 0.5
+          }
+        },
+        {
+          "key": "gpGrowth",
+          "weights": {
+            "profitable": 1.8,
+            "unprofitable": 1.8
+          }
+        },
+        {
+          "key": "ruleOfX",
+          "weights": {
+            "profitable": 0.6,
+            "unprofitable": 0.6
+          }
+        },
+        {
+          "key": "marginTrajectory",
+          "weights": {
+            "profitable": 0.3,
+            "unprofitable": 0.3
+          }
+        },
+        {
+          "key": "capitalEfficiency",
+          "weights": {
+            "profitable": 2,
+            "unprofitable": 2
+          }
+        },
+        {
+          "key": "dilution",
+          "weights": {
+            "profitable": 2.4,
+            "unprofitable": 2.4
+          }
+        }
+      ]
+    },
+    {
+      "branchFormulaId": "energy",
+      "splitMetric": "OpInc",
+      "subCohortByProfit": false,
+      "alpha": 2,
+      "tracks": [
+        "profitable",
+        "unprofitable"
+      ],
+      "axes": [
+        {
+          "key": "revGrowthLevel",
+          "weights": {
+            "profitable": 0.8,
+            "unprofitable": 2
+          }
+        },
+        {
+          "key": "revAcceleration",
+          "weights": {
+            "profitable": 3,
+            "unprofitable": 3
+          }
+        },
+        {
+          "key": "gpGrowth",
+          "weights": {
+            "profitable": 1.8,
+            "unprofitable": 1.3
+          }
+        },
+        {
+          "key": "ruleOfX",
+          "weights": {
+            "profitable": 1.5,
+            "unprofitable": 0.8
+          }
+        },
+        {
+          "key": "marginTrajectory",
+          "weights": {
+            "profitable": 0.4,
+            "unprofitable": 1.2
+          }
+        },
+        {
+          "key": "capitalEfficiency",
+          "weights": {
+            "profitable": 2.4,
+            "unprofitable": 0.5
+          }
+        },
+        {
+          "key": "dilution",
+          "weights": {
+            "profitable": 0.55,
+            "unprofitable": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "branchFormulaId": "financials",
+      "splitMetric": "OpInc",
+      "subCohortByProfit": false,
+      "alpha": 2,
+      "tracks": [
+        "profitable",
+        "unprofitable"
+      ],
+      "axes": [
+        {
+          "key": "revGrowthLevel",
+          "weights": {
+            "profitable": 1,
+            "unprofitable": 1.2
+          }
+        },
+        {
+          "key": "revAcceleration",
+          "weights": {
+            "profitable": 2.7,
+            "unprofitable": 2.7
+          }
+        },
+        {
+          "key": "gpGrowth",
+          "weights": {
+            "profitable": 1.8,
+            "unprofitable": 1.7
+          }
+        },
+        {
+          "key": "ruleOfX",
+          "weights": {
+            "profitable": 0.7,
+            "unprofitable": 0.4
+          }
+        },
+        {
+          "key": "marginTrajectory",
+          "weights": {
+            "profitable": 0.6,
+            "unprofitable": 1.3
+          }
+        },
+        {
+          "key": "capitalEfficiency",
+          "weights": {
+            "profitable": 1.5,
+            "unprofitable": 1.7
+          }
+        },
+        {
+          "key": "dilution",
+          "weights": {
+            "profitable": 0.9,
+            "unprofitable": 0.6
+          }
+        }
+      ]
+    },
+    {
+      "branchFormulaId": "health-care",
+      "splitMetric": "FCF",
+      "subCohortByProfit": false,
+      "alpha": 2.6,
+      "tracks": [
+        "profitable",
+        "unprofitable"
+      ],
+      "axes": [
+        {
+          "key": "revGrowthLevel",
+          "weights": {
+            "profitable": 1.7,
+            "unprofitable": 2
+          }
+        },
+        {
+          "key": "revAcceleration",
+          "weights": {
+            "profitable": 2.5,
+            "unprofitable": 2.8
+          }
+        },
+        {
+          "key": "gpGrowth",
+          "weights": {
+            "profitable": 2,
+            "unprofitable": 1.8
+          }
+        },
+        {
+          "key": "ruleOfX",
+          "weights": {
+            "profitable": 1.1,
+            "unprofitable": 1
+          }
+        },
+        {
+          "key": "marginTrajectory",
+          "weights": {
+            "profitable": 0.7,
+            "unprofitable": 0.8
+          }
+        },
+        {
+          "key": "capitalEfficiency",
+          "weights": {
+            "profitable": 2.3,
+            "unprofitable": 0.4
+          }
+        },
+        {
+          "key": "dilution",
+          "weights": {
+            "profitable": 0.6,
+            "unprofitable": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "branchFormulaId": "industrials",
+      "splitMetric": "OpInc",
+      "subCohortByProfit": false,
+      "alpha": 2,
+      "tracks": [
+        "profitable",
+        "unprofitable"
+      ],
+      "axes": [
+        {
+          "key": "revGrowthLevel",
+          "weights": {
+            "profitable": 1.9,
+            "unprofitable": 2
+          }
+        },
+        {
+          "key": "revAcceleration",
+          "weights": {
+            "profitable": 2.4,
+            "unprofitable": 2.8
+          }
+        },
+        {
+          "key": "gpGrowth",
+          "weights": {
+            "profitable": 2.1,
+            "unprofitable": 2
+          }
+        },
+        {
+          "key": "ruleOfX",
+          "weights": {
+            "profitable": 1.4,
+            "unprofitable": 0.9
+          }
+        },
+        {
+          "key": "marginTrajectory",
+          "weights": {
+            "profitable": 0.9,
+            "unprofitable": 0.8
+          }
+        },
+        {
+          "key": "capitalEfficiency",
+          "weights": {
+            "profitable": 1.6,
+            "unprofitable": 0.9
+          }
+        },
+        {
+          "key": "dilution",
+          "weights": {
+            "profitable": 0.6,
+            "unprofitable": 0.6
+          }
+        }
+      ]
+    },
+    {
+      "branchFormulaId": "it-services",
+      "splitMetric": "none",
+      "subCohortByProfit": true,
+      "alpha": 2,
+      "tracks": [
+        "profitable"
+      ],
+      "axes": [
+        {
+          "key": "revGrowthLevel",
+          "weights": {
+            "profitable": 2.8,
+            "unprofitable": 2.8
+          }
+        },
+        {
+          "key": "revAcceleration",
+          "weights": {
+            "profitable": 2.6,
+            "unprofitable": 2.6
+          }
+        },
+        {
+          "key": "gpGrowth",
+          "weights": {
+            "profitable": 1.3,
+            "unprofitable": 1.3
+          }
+        },
+        {
+          "key": "ruleOfX",
+          "weights": {
+            "profitable": 1,
+            "unprofitable": 1
+          }
+        },
+        {
+          "key": "marginTrajectory",
+          "weights": {
+            "profitable": 0.8,
+            "unprofitable": 0.8
+          }
+        },
+        {
+          "key": "capitalEfficiency",
+          "weights": {
+            "profitable": 2,
+            "unprofitable": 2
+          }
+        },
+        {
+          "key": "dilution",
+          "weights": {
+            "profitable": 0.8,
+            "unprofitable": 0.8
+          }
+        }
+      ]
+    },
+    {
+      "branchFormulaId": "materials",
+      "splitMetric": "none",
+      "subCohortByProfit": false,
+      "alpha": 1.5,
+      "tracks": [
+        "profitable"
+      ],
+      "axes": [
+        {
+          "key": "revGrowthLevel",
+          "weights": {
+            "profitable": 0.5,
+            "unprofitable": 0.5
+          }
+        },
+        {
+          "key": "revAcceleration",
+          "weights": {
+            "profitable": 1.9,
+            "unprofitable": 1.9
+          }
+        },
+        {
+          "key": "gpGrowth",
+          "weights": {
+            "profitable": 0.8,
+            "unprofitable": 0.8
+          }
+        },
+        {
+          "key": "ruleOfX",
+          "weights": {
+            "profitable": 0.6,
+            "unprofitable": 0.6
+          }
+        },
+        {
+          "key": "marginTrajectory",
+          "weights": {
+            "profitable": 0.4,
+            "unprofitable": 0.4
+          }
+        },
+        {
+          "key": "capitalEfficiency",
+          "weights": {
+            "profitable": 2,
+            "unprofitable": 2
+          }
+        },
+        {
+          "key": "dilution",
+          "weights": {
+            "profitable": 0.8,
+            "unprofitable": 0.8
+          }
+        }
+      ]
+    },
+    {
+      "branchFormulaId": "real-estate",
+      "splitMetric": "none",
+      "subCohortByProfit": true,
+      "alpha": 1.8,
+      "tracks": [
+        "profitable"
+      ],
+      "axes": [
+        {
+          "key": "revGrowthLevel",
+          "weights": {
+            "profitable": 1.3,
+            "unprofitable": 1.3
+          }
+        },
+        {
+          "key": "revAcceleration",
+          "weights": {
+            "profitable": 0.6,
+            "unprofitable": 0.6
+          }
+        },
+        {
+          "key": "gpGrowth",
+          "weights": {
+            "profitable": 1.5,
+            "unprofitable": 1.5
+          }
+        },
+        {
+          "key": "ruleOfX",
+          "weights": {
+            "profitable": 1.6,
+            "unprofitable": 1.6
+          }
+        },
+        {
+          "key": "marginTrajectory",
+          "weights": {
+            "profitable": 0.8,
+            "unprofitable": 0.8
+          }
+        },
+        {
+          "key": "capitalEfficiency",
+          "weights": {
+            "profitable": 1.6,
+            "unprofitable": 1.6
+          }
+        },
+        {
+          "key": "dilution",
+          "weights": {
+            "profitable": 1,
+            "unprofitable": 1
+          }
+        }
+      ]
+    },
+    {
+      "branchFormulaId": "semiconductors",
+      "splitMetric": "OpInc",
+      "subCohortByProfit": false,
+      "alpha": 3,
+      "tracks": [
+        "profitable",
+        "unprofitable"
+      ],
+      "axes": [
+        {
+          "key": "revGrowthLevel",
+          "weights": {
+            "profitable": 1.7,
+            "unprofitable": 2.3
+          }
+        },
+        {
+          "key": "revAcceleration",
+          "weights": {
+            "profitable": 2.6,
+            "unprofitable": 2.5
+          }
+        },
+        {
+          "key": "gpGrowth",
+          "weights": {
+            "profitable": 1.8,
+            "unprofitable": 2.1
+          }
+        },
+        {
+          "key": "ruleOfX",
+          "weights": {
+            "profitable": 1.6,
+            "unprofitable": 1.7
+          }
+        },
+        {
+          "key": "marginTrajectory",
+          "weights": {
+            "profitable": 0.3,
+            "unprofitable": 0.7
+          }
+        },
+        {
+          "key": "capitalEfficiency",
+          "weights": {
+            "profitable": 0.8,
+            "unprofitable": 0.4
+          }
+        },
+        {
+          "key": "dilution",
+          "weights": {
+            "profitable": 0.7,
+            "unprofitable": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "branchFormulaId": "software-comm-services",
+      "splitMetric": "FCF",
+      "subCohortByProfit": false,
+      "alpha": 3,
+      "tracks": [
+        "profitable",
+        "unprofitable"
+      ],
+      "axes": [
+        {
+          "key": "revGrowthLevel",
+          "weights": {
+            "profitable": 1.1,
+            "unprofitable": 1.2
+          }
+        },
+        {
+          "key": "revAcceleration",
+          "weights": {
+            "profitable": 2.9,
+            "unprofitable": 2.8
+          }
+        },
+        {
+          "key": "gpGrowth",
+          "weights": {
+            "profitable": 2.2,
+            "unprofitable": 2
+          }
+        },
+        {
+          "key": "ruleOfX",
+          "weights": {
+            "profitable": 1.8,
+            "unprofitable": 1.2
+          }
+        },
+        {
+          "key": "marginTrajectory",
+          "weights": {
+            "profitable": 0.4,
+            "unprofitable": 0.4
+          }
+        },
+        {
+          "key": "capitalEfficiency",
+          "weights": {
+            "profitable": 2,
+            "unprofitable": 1.6
+          }
+        },
+        {
+          "key": "dilution",
+          "weights": {
+            "profitable": 0.8,
+            "unprofitable": 1.3
+          }
+        }
+      ]
+    },
+    {
+      "branchFormulaId": "tech-hardware",
+      "splitMetric": "OpInc",
+      "subCohortByProfit": false,
+      "alpha": 2.3,
+      "tracks": [
+        "profitable",
+        "unprofitable"
+      ],
+      "axes": [
+        {
+          "key": "gpGrowth",
+          "weights": {
+            "profitable": 2.6,
+            "unprofitable": 2.4
+          }
+        },
+        {
+          "key": "capitalEfficiency",
+          "weights": {
+            "profitable": 2.4,
+            "unprofitable": 1
+          }
+        },
+        {
+          "key": "marginLevel",
+          "weights": {
+            "profitable": 2.6,
+            "unprofitable": 2.6
+          }
+        },
+        {
+          "key": "revAcceleration",
+          "weights": {
+            "profitable": 1.4,
+            "unprofitable": 2.2
+          }
+        },
+        {
+          "key": "ruleOfX",
+          "weights": {
+            "profitable": 1.2,
+            "unprofitable": 1
+          }
+        },
+        {
+          "key": "revGrowthLevel",
+          "weights": {
+            "profitable": 0.9,
+            "unprofitable": 1.2
+          }
+        },
+        {
+          "key": "dilution",
+          "weights": {
+            "profitable": 0.8,
+            "unprofitable": 1.1
+          }
+        },
+        {
+          "key": "marginTrajectory",
+          "weights": {
+            "profitable": 0.6,
+            "unprofitable": 0.7
+          }
+        }
+      ]
+    },
+    {
+      "branchFormulaId": "utilities",
+      "splitMetric": "OpInc",
+      "subCohortByProfit": false,
+      "alpha": 1.8,
+      "tracks": [
+        "profitable",
+        "unprofitable"
+      ],
+      "axes": [
+        {
+          "key": "revGrowthLevel",
+          "weights": {
+            "profitable": 2.2,
+            "unprofitable": 2.2
+          }
+        },
+        {
+          "key": "revAcceleration",
+          "weights": {
+            "profitable": 0.5,
+            "unprofitable": 1
+          }
+        },
+        {
+          "key": "gpGrowth",
+          "weights": {
+            "profitable": 0.4,
+            "unprofitable": 1.4
+          }
+        },
+        {
+          "key": "ruleOfX",
+          "weights": {
+            "profitable": 2.2,
+            "unprofitable": 1.6
+          }
+        },
+        {
+          "key": "marginTrajectory",
+          "weights": {
+            "profitable": 0.6,
+            "unprofitable": 0.9
+          }
+        },
+        {
+          "key": "capitalEfficiency",
+          "weights": {
+            "profitable": 0.5,
+            "unprofitable": 0.5
+          }
+        },
+        {
+          "key": "dilution",
+          "weights": {
+            "profitable": 0.5,
+            "unprofitable": 0.4
+          }
+        }
+      ]
+    }
+  ],
+  "cohort": {
+    "key": "<branchFormulaId>|<track>",
+    "ownDistributionWhen": "frozen cohort n >= 15",
+    "parentFallbackWhen": "frozen cohort n < 15; concatenate both frozen branch tracks per axis",
+    "subCohortRule": "For real-estate and it-services capitalEfficiency only, compare against the same annual operating-income sign.",
+    "trackRules": {
+      "OpInc": "newest present annual operating income sign",
+      "FCF": "validated TTM FCF margin sign, else newest annual FCF sign, else annual OCF sum sign",
+      "none": "forced profitable display track; no unprofitable display track"
+    }
+  },
+  "pipeline": [
+    "route and data-quality gate",
+    "issuer deduplication",
+    "learn or load frozen global bounds",
+    "calculate raw axes",
+    "select own or parent cohort comparison distribution",
+    "midrank percentiles",
+    "weighted mean with renormalization over present axes",
+    "empirical-Bayes shrink toward 50",
+    "coverage shrink toward post-EB cohort median",
+    "multiply burn, growth and cycle factors",
+    "rank by unrounded score descending with ticker tie-break",
+    "round display score to one decimal; no final cap"
+  ],
+  "missingData": {
+    "axisRule": "A missing raw axis maps to null, is dropped, and remaining positive weights are renormalized; no fake neutral percentile is inserted.",
+    "noAxesRule": "A routed row with all axes missing is excluded with reason no-axes.",
+    "coverageRule": "After EB shrinkage, incomplete weight coverage shrinks toward the frozen post-EB cohort median.",
+    "periodFallbackRule": "Only the explicitly documented quarterly-to-annual fallbacks are allowed; current/latest provider scalars are not historical PIT facts."
+  },
+  "endFactors": {
+    "burn": {
+      "implementation": "src/scoring/score.js#burnPressFactor",
+      "rule": "accelerating cash burn multiplies by 1/(1+magnitude); otherwise 1"
+    },
+    "growth": {
+      "implementation": "src/scoring/score.js#growthBoostFactor",
+      "rule": "cohort-relative robust-growth percentile above median raises score up to 1.05; otherwise 1"
+    },
+    "cycle": {
+      "implementation": "src/scoring/score.js#cycleDamperFactor",
+      "rule": "oscillation plus revenue drawdown above frozen p75 multiplies by 1/(1+0.5*signal); otherwise 1"
+    },
+    "combination": "scoreFinal = scoreAfterCoverage * burn * growth * cycle"
+  },
+  "immutableDefinitions": {
+    "sourceFiles": {
+      "src/scoring/axes.js": "077c3ba92eea6eebf9b2b0c9e150e8d107d4a2300922abf7a8c78c1ded99be45",
+      "src/scoring/board-status.js": "379a020705cea530c04dace47d0635f8fe65df083dd8547da272c79fe8b63c10",
+      "src/scoring/calibrate.js": "977e0d4b3c62187725a15f15b6ab08ab4fd4e6f408384cd31fde77002fd93f63",
+      "src/scoring/country.js": "f336f7cb34b2e1c6b24fa16f22bbcba66ef62b3da8e22325aa57ed186fae3c42",
+      "src/scoring/engine.js": "f2c02a97ca941d320aa7e4c9020cee560421bfeaf4dff4bb30ce577c23badb63",
+      "src/scoring/formulas/consumer-discretionary.js": "30f9e19000fb9fee635408c220403b9bb3d8f198e98d96415c4da0a83ed47922",
+      "src/scoring/formulas/consumer-staples.js": "f74e5a418599dfee462ab4c6eb0531d5963016fe631ac84d8d5f41c8d1fcc52b",
+      "src/scoring/formulas/energy.js": "35c9bc00b8f1aec17c89612394f62719fc78fe1e7b5e7bfc695acce0391f3712",
+      "src/scoring/formulas/financials.js": "00fb5afa17fee85c0c8706b84f3f6c14331382b6e5704cf19ae28cbe7150f6d7",
+      "src/scoring/formulas/health-care.js": "4d477708a43501e4553fa8a3d8b9e3d60196f84a4559ba4c9cf6556d1340fcc0",
+      "src/scoring/formulas/index.js": "51fe969ec1242d5a01fffaaae7eb640a110b56bc52cc6c71679291b0fa141518",
+      "src/scoring/formulas/industrials.js": "d87dbf92a6cbec83c45d62b545c20e36df4df16249b5bb7269a78ddf351c9d3f",
+      "src/scoring/formulas/it-services.js": "e57eb351874134d2dbf9bb0ded79641d8c9feb6a80be49e229957920197b9712",
+      "src/scoring/formulas/materials.js": "af3faf4c4da2e862640537a4e687c3de843c45e60cec06b41a3e71afd7ae29d1",
+      "src/scoring/formulas/quality/index.js": "d464aebe63d24a44deb4b8b6b61ee4b507d7ac9a5ee10fb442389eb2737e2cf2",
+      "src/scoring/formulas/real-estate.js": "78b18d0264d42ff8bb312a00d785007c8a974c516ddb8d92ecbd5341c59233e8",
+      "src/scoring/formulas/semiconductors.js": "33562d1f8a9f4e35428ad801f92a3da8b3ac4d82afd2bec8340025d86bf42a4b",
+      "src/scoring/formulas/smallcap/index.js": "1403f5a9df8c96d82b6654ab1e08caabd6bc39c848f82558c3b0b26b8cb4b503",
+      "src/scoring/formulas/software-comm-services.js": "08020a1fba14d7397b348ec693dbd4e433f4cd026e4c605cbc442044a47d46b3",
+      "src/scoring/formulas/tech-hardware.js": "597cb2d2a67984aa0d8a6147809698faeb6d64068e517a1b014d3cd7954cbf69",
+      "src/scoring/formulas/utilities.js": "5d53c10238ba97135fe831177606fea038d23a76829eefee33613a8e4466871c",
+      "src/scoring/lamps.js": "59b752f2c7a03fdb8eae6d8a8b65745c21aad11c8fe1963860e7ac872e88b0ff",
+      "src/scoring/overview.js": "8665e51961853940bcba8d4b0b9c0a7684037c11f78be58946efd99e8a3e5d23",
+      "src/scoring/profit-streak.js": "7dc7d43c61d749c698c38ce34ba0bb9325e715455240fcfa08dc4ae248d57c9f",
+      "src/scoring/profit-tier.js": "9fd9967e3e1a3ceeed0682286d9fa093a59f7589714a2ad7fd9f0c555b5d9667",
+      "src/scoring/quality-route.js": "770c3a98ca5d407ed80b3a0bd922c9872d93dafe0e9dd18b6ba6709f945b36f7",
+      "src/scoring/router.js": "8919667076b2d6d2bb4a1d720f29fc0a8aa4fb9a14f32d0e4d1e0f97b273c123",
+      "src/scoring/run-screener.js": "4d44fa1535d93b3f4a9e2cbaffd1bc6e38fdb62f4474b423786a0d4cb4cfef4c",
+      "src/scoring/score.js": "6633e0bef48c29f69f47c98c0b7441e59607b107a052007de3f565ac06d7a927",
+      "src/scoring/smallcap-route.js": "5fdf4fe649f097bc5423b8fdc370d23c34cb5ac5b5921e5dcdb61cb2284cce2b",
+      "src/scoring/snapshot.js": "70c9fb6269cb04cc147928fc019b36ef70b2d72422e66a10ebfd5526cc8efb51"
+    },
+    "sourceTreeScope": "complete src/scoring tree",
+    "sourceTreeGitSha1AtFormulaCommit": "2728be605cc614cec2863c937c423afd8a249efe"
+  }
+}

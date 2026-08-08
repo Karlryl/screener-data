@@ -1,0 +1,33 @@
+{
+  "schema": "gqs-hash-manifest/v1",
+  "canonicalId": "GQS-00@1.0.0",
+  "sealedAt": "2026-08-08T00:00:00+02:00",
+  "canonicalization": "Recursively sort object keys; preserve array order; JSON.stringify without whitespace; UTF-8; SHA-256 lowercase hex.",
+  "formulaRegistrySha256": "c75ed41b1133fab82981fee9769d492645ed52d56e80c6b3f55adc9ba368d2eb",
+  "artifacts": {
+    "formula-registry.json": {
+      "canonicalJsonSha256": "c75ed41b1133fab82981fee9769d492645ed52d56e80c6b3f55adc9ba368d2eb",
+      "bytesSha256": "34417b0d22841b01f13cdcb8ef59fb3c347aa96e3105665252219f2f58d4d1e2"
+    },
+    "frozen-calibration.json": {
+      "canonicalJsonSha256": "39021657401663889f2d383821cfaff2279c23d5d23171c9455c6e3bd7853990",
+      "bytesSha256": "b8c331d7f148e17b6a6c828fa9b3208039fd73caee52d034eb0242b5890ee1d4"
+    },
+    "golden-fixtures.json": {
+      "canonicalJsonSha256": "1e041af1f52a9feddfe253c3402b49afb5dcd2586b8eec4d70331c61b9aeeedf",
+      "bytesSha256": "4299534d1994c4b3b9d265414ff3212a76539282cb9e6f24e01a89ab47d997ae"
+    },
+    "score-traces.json": {
+      "canonicalJsonSha256": "b2b2700ed824bf38af924e96351d8f1f5c0d6af75ec1dd5ae9671d72fb0e8bf2",
+      "bytesSha256": "fea59cf48df94d4074fc4c08d567f94a6de3dcdc70657bb0a048225572125d16"
+    },
+    "production-equivalence.json": {
+      "canonicalJsonSha256": "73558c03c1b55f4dae267722ba0826432a27eb7ea06c9f91d3729683bd047e15",
+      "bytesSha256": "106d8a499ed344181cd93b56afa41fa329e5db5b675ad1858d0b0900f6eb5fc1"
+    },
+    "ges-sec-us-pilot-preregistration.json": {
+      "canonicalJsonSha256": "b2616b7fd35176e1f603b8ec8d34566a6fb57535debe63371383515789b4c895",
+      "bytesSha256": "08c4830f4d86b4c01e540aba1dc94a98a51aad98a922cfecbee469d2bf7e84c5"
+    }
+  }
+}

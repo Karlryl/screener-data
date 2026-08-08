@@ -1,0 +1,267 @@
+{
+  "schema": "gqs-production-equivalence/v1",
+  "canonicalId": "GQS-00@1.0.0",
+  "comparisonDate": "2026-08-08",
+  "input": {
+    "workflowRun": 31147698301,
+    "formulaCommit": "4cae8dcdbe445abf9bc03dadc3f852e6b0fd864b",
+    "snapshotArtifactDigestSha256": "7134ad55484e1d607868cf0f04570b5b210a2d8d3ccdd7dee0c45acecfc9c664",
+    "snapshotManifestSha256": "c514b6678eb9b9ecc7c551496812f2ff83adf62f7c793033515d37ac18dc8d90",
+    "snapshotFiles": 14695,
+    "loadedUniverse": 14654,
+    "boardVintage": "2026-08-07",
+    "productionBoardCommit": "734025a1915d4bda5947a75ab71d9ba4bd9f8ded"
+  },
+  "unroundedOldVsFrozen": {
+    "priorScoringTree": "2728be605cc614cec2863c937c423afd8a249efe",
+    "currentScoringTree": "2728be605cc614cec2863c937c423afd8a249efe",
+    "comparedResults": 14654,
+    "resultShapeMismatches": 0,
+    "rawScoreMismatches": 0,
+    "rawRankMismatches": 0
+  },
+  "publishedBoardVsFrozen": {
+    "comparedRows": 8763,
+    "tickerMismatches": 0,
+    "scoreMismatches": 0,
+    "rankMismatches": 0,
+    "tracks": [
+      {
+        "formulaId": "consumer-discretionary",
+        "track": "profitable",
+        "expectedRows": 1004,
+        "actualRows": 1004,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "consumer-discretionary",
+        "track": "unprofitable",
+        "expectedRows": 97,
+        "actualRows": 97,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "consumer-staples",
+        "track": "profitable",
+        "expectedRows": 487,
+        "actualRows": 487,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "consumer-staples",
+        "track": "unprofitable",
+        "expectedRows": 0,
+        "actualRows": 0,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "energy",
+        "track": "profitable",
+        "expectedRows": 295,
+        "actualRows": 295,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "energy",
+        "track": "unprofitable",
+        "expectedRows": 27,
+        "actualRows": 27,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "financials",
+        "track": "profitable",
+        "expectedRows": 316,
+        "actualRows": 316,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "financials",
+        "track": "unprofitable",
+        "expectedRows": 33,
+        "actualRows": 33,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "health-care",
+        "track": "profitable",
+        "expectedRows": 654,
+        "actualRows": 654,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "health-care",
+        "track": "unprofitable",
+        "expectedRows": 274,
+        "actualRows": 274,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "industrials",
+        "track": "profitable",
+        "expectedRows": 1859,
+        "actualRows": 1859,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "industrials",
+        "track": "unprofitable",
+        "expectedRows": 177,
+        "actualRows": 177,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "it-services",
+        "track": "profitable",
+        "expectedRows": 141,
+        "actualRows": 141,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "it-services",
+        "track": "unprofitable",
+        "expectedRows": 0,
+        "actualRows": 0,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "materials",
+        "track": "profitable",
+        "expectedRows": 973,
+        "actualRows": 973,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "materials",
+        "track": "unprofitable",
+        "expectedRows": 0,
+        "actualRows": 0,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "real-estate",
+        "track": "profitable",
+        "expectedRows": 438,
+        "actualRows": 438,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "real-estate",
+        "track": "unprofitable",
+        "expectedRows": 0,
+        "actualRows": 0,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "semiconductors",
+        "track": "profitable",
+        "expectedRows": 288,
+        "actualRows": 288,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "semiconductors",
+        "track": "unprofitable",
+        "expectedRows": 74,
+        "actualRows": 74,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "software-comm-services",
+        "track": "profitable",
+        "expectedRows": 499,
+        "actualRows": 499,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "software-comm-services",
+        "track": "unprofitable",
+        "expectedRows": 117,
+        "actualRows": 117,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "tech-hardware",
+        "track": "profitable",
+        "expectedRows": 558,
+        "actualRows": 558,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "tech-hardware",
+        "track": "unprofitable",
+        "expectedRows": 118,
+        "actualRows": 118,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "utilities",
+        "track": "profitable",
+        "expectedRows": 329,
+        "actualRows": 329,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      },
+      {
+        "formulaId": "utilities",
+        "track": "unprofitable",
+        "expectedRows": 5,
+        "actualRows": 5,
+        "tickerOrderMismatches": 0,
+        "displayScoreMismatches": 0,
+        "publishedRankMismatches": 0
+      }
+    ]
+  },
+  "verdict": "IDENTICAL",
+  "allowedChanges": "None to score, rank, routing, filters, or export values; freeze artifacts are additive only."
+}
