@@ -1,0 +1,698 @@
+{
+  "schema": "early-detection-data-inventory/v1",
+  "generatedAt": "2026-08-08T16:20:40.315Z",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "status": "DESCRIPTIVE_ONLY",
+  "overview": {
+    "rows": 200,
+    "unitedStatesRows": 100,
+    "sectors": {
+      "Industrials": 40,
+      "Technology": 27,
+      "Healthcare": 25,
+      "Consumer Cyclical": 23,
+      "Utilities": 18,
+      "Energy": 15,
+      "Basic Materials": 13,
+      "Consumer Defensive": 13,
+      "Financial Services": 10,
+      "Communication Services": 8,
+      "Real Estate": 8
+    },
+    "currentGqsTop20DescriptiveOnly": [
+      {
+        "rank": 1,
+        "ticker": "ALNY",
+        "name": "Alnylam Pharmaceuticals, Inc.",
+        "sector": "Healthcare",
+        "score": 96.6
+      },
+      {
+        "rank": 2,
+        "ticker": "LQDA",
+        "name": "Liquidia Corporation",
+        "sector": "Healthcare",
+        "score": 96.5
+      },
+      {
+        "rank": 3,
+        "ticker": "PLTR",
+        "name": "Palantir Technologies Inc.",
+        "sector": "Technology",
+        "score": 95.1
+      },
+      {
+        "rank": 4,
+        "ticker": "BTO.TO",
+        "name": "B2Gold Corp.",
+        "sector": "Basic Materials",
+        "score": 94.8
+      },
+      {
+        "rank": 5,
+        "ticker": "9633.HK",
+        "name": "Nongfu Spring Co., Ltd.",
+        "sector": "Consumer Defensive",
+        "score": 94.6
+      },
+      {
+        "rank": 6,
+        "ticker": "SPHR",
+        "name": "Sphere Entertainment Co.",
+        "sector": "Communication Services",
+        "score": 94.2
+      },
+      {
+        "rank": 7,
+        "ticker": "1530.HK",
+        "name": "3SBio Inc.",
+        "sector": "Healthcare",
+        "score": 93.6
+      },
+      {
+        "rank": 8,
+        "ticker": "GPOR",
+        "name": "Gulfport Energy Corporation",
+        "sector": "Energy",
+        "score": 91.7
+      },
+      {
+        "rank": 9,
+        "ticker": "ECG",
+        "name": "Everus Construction Group, Inc.",
+        "sector": "Industrials",
+        "score": 91.3
+      },
+      {
+        "rank": 10,
+        "ticker": "DLO",
+        "name": "DLocal Limited",
+        "sector": "Technology",
+        "score": 91.1
+      },
+      {
+        "rank": 11,
+        "ticker": "CNX",
+        "name": "CNX Resources Corporation",
+        "sector": "Energy",
+        "score": 90
+      },
+      {
+        "rank": 12,
+        "ticker": "2360.TW",
+        "name": "Chroma ATE Inc.",
+        "sector": "Technology",
+        "score": 90
+      },
+      {
+        "rank": 13,
+        "ticker": "ELTP",
+        "name": "Elite Pharmaceuticals, Inc.",
+        "sector": "Healthcare",
+        "score": 89.9
+      },
+      {
+        "rank": 14,
+        "ticker": "5269.TW",
+        "name": "ASMedia Technology Inc.",
+        "sector": "Technology",
+        "score": 89.9
+      },
+      {
+        "rank": 15,
+        "ticker": "DSV.CO",
+        "name": "DSV A/S",
+        "sector": "Industrials",
+        "score": 89.6
+      },
+      {
+        "rank": 16,
+        "ticker": "CRDO",
+        "name": "Credo Technology Group Holding Ltd",
+        "sector": "Technology",
+        "score": 89.6
+      },
+      {
+        "rank": 17,
+        "ticker": "CEG",
+        "name": "Constellation Energy Corporation",
+        "sector": "Utilities",
+        "score": 89.6
+      },
+      {
+        "rank": 18,
+        "ticker": "AU",
+        "name": "AngloGold Ashanti plc",
+        "sector": "Basic Materials",
+        "score": 89.5
+      },
+      {
+        "rank": 19,
+        "ticker": "6301.T",
+        "name": "Komatsu Ltd.",
+        "sector": "Industrials",
+        "score": 89.4
+      },
+      {
+        "rank": 20,
+        "ticker": "ATZ.TO",
+        "name": "Aritzia Inc.",
+        "sector": "Consumer Cyclical",
+        "score": 89
+      }
+    ],
+    "disclaimer": "Current GQS output only. These rows are not FEM candidates, Elliott reviews, valuations or buy signals."
+  },
+  "prices": {
+    "directory": "prices-max",
+    "payloadJsonFiles": 9545,
+    "payloadBytes": 1681456472,
+    "manifests": {
+      "standardEntries": 956,
+      "standardEntriesWithPayload": 956,
+      "researchEntries": 8589,
+      "researchEntriesWithPayload": 8589,
+      "provenanceWarning": "The research manifest is present, but its upstream retrieval and corporate-action provenance have not passed the FEM data gate."
+    },
+    "deterministicSampleRule": "SPY plus first 50 current overview rows when files exist",
+    "sampleCount": 47,
+    "sample": [
+      {
+        "ticker": "SPY",
+        "rows": 8423,
+        "firstDate": "1993-01-29",
+        "lastDate": "2026-07-17",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "ALNY",
+        "rows": 5563,
+        "firstDate": "2004-06-01",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "LQDA",
+        "rows": 2000,
+        "firstDate": "2018-07-26",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "PLTR",
+        "rows": 1451,
+        "firstDate": "2020-09-30",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "9633.HK",
+        "rows": 1434,
+        "firstDate": "2020-09-08",
+        "lastDate": "2026-07-14",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "SPHR",
+        "rows": 1571,
+        "firstDate": "2020-04-09",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "1530.HK",
+        "rows": 2730,
+        "firstDate": "2015-06-11",
+        "lastDate": "2026-07-14",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "GPOR",
+        "rows": 1293,
+        "firstDate": "2021-05-18",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "ECG",
+        "rows": 426,
+        "firstDate": "2024-10-28",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "DLO",
+        "rows": 1282,
+        "firstDate": "2021-06-03",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "CNX",
+        "rows": 6841,
+        "firstDate": "1999-04-30",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "2360.TW",
+        "rows": 6595,
+        "firstDate": "2000-01-04",
+        "lastDate": "2026-07-14",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "ELTP",
+        "rows": 6638,
+        "firstDate": "2000-02-24",
+        "lastDate": "2026-07-17",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "5269.TW",
+        "rows": 3356,
+        "firstDate": "2012-10-03",
+        "lastDate": "2026-07-14",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "DSV.CO",
+        "rows": 6682,
+        "firstDate": "2000-01-21",
+        "lastDate": "2026-07-10",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "CRDO",
+        "rows": 1117,
+        "firstDate": "2022-01-27",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "CEG",
+        "rows": 1123,
+        "firstDate": "2022-01-19",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "AU",
+        "rows": 7026,
+        "firstDate": "1998-08-05",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "6301.T",
+        "rows": 6620,
+        "firstDate": "2000-01-04",
+        "lastDate": "2026-07-14",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "ATZ.TO",
+        "rows": 2453,
+        "firstDate": "2016-10-03",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "SGI",
+        "rows": 5679,
+        "firstDate": "2003-12-18",
+        "lastDate": "2026-07-17",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "6781.TW",
+        "rows": 1291,
+        "firstDate": "2021-03-22",
+        "lastDate": "2026-07-14",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "3017.TW",
+        "rows": 5881,
+        "firstDate": "2002-09-30",
+        "lastDate": "2026-07-14",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "600989.SS",
+        "rows": 1737,
+        "firstDate": "2019-05-17",
+        "lastDate": "2026-07-14",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "TLN",
+        "rows": 779,
+        "firstDate": "2023-06-02",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "LMP.L",
+        "rows": 4717,
+        "firstDate": "2007-11-07",
+        "lastDate": "2026-07-10",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "VG",
+        "rows": 367,
+        "firstDate": "2025-01-24",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "7733.T",
+        "rows": 6620,
+        "firstDate": "2000-01-04",
+        "lastDate": "2026-07-14",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "FUTU",
+        "rows": 1846,
+        "firstDate": "2019-03-08",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "EQT",
+        "rows": 11674,
+        "firstDate": "1980-03-17",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "9009.T",
+        "rows": 6620,
+        "firstDate": "2000-01-04",
+        "lastDate": "2026-07-14",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "NBIS",
+        "rows": 431,
+        "firstDate": "2024-10-21",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "FWONK",
+        "rows": 3021,
+        "firstDate": "2014-07-08",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "GLNG",
+        "rows": 5785,
+        "firstDate": "2003-07-15",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "LASR",
+        "rows": 2063,
+        "firstDate": "2018-04-26",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "FIVE",
+        "rows": 3518,
+        "firstDate": "2012-07-19",
+        "lastDate": "2026-07-17",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "7747.T",
+        "rows": 5197,
+        "firstDate": "2005-06-17",
+        "lastDate": "2026-07-14",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "LB",
+        "rows": 510,
+        "firstDate": "2024-06-28",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "9048.T",
+        "rows": 6361,
+        "firstDate": "2001-01-01",
+        "lastDate": "2026-07-14",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "6861.T",
+        "rows": 6361,
+        "firstDate": "2001-01-01",
+        "lastDate": "2026-07-14",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "HALO",
+        "rows": 5616,
+        "firstDate": "2004-03-16",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "ARX.TO",
+        "rows": 7516,
+        "firstDate": "1996-08-13",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "2914.T",
+        "rows": 6620,
+        "firstDate": "2000-01-04",
+        "lastDate": "2026-07-14",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "DOO",
+        "rows": 3251,
+        "firstDate": "2013-08-07",
+        "lastDate": "2026-07-13",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "ROAD",
+        "rows": 2061,
+        "firstDate": "2018-05-04",
+        "lastDate": "2026-07-17",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "STRL",
+        "rows": 8816,
+        "firstDate": "1991-07-12",
+        "lastDate": "2026-07-17",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      },
+      {
+        "ticker": "4543.T",
+        "rows": 6620,
+        "firstDate": "2000-01-04",
+        "lastDate": "2026-07-14",
+        "adjustedClose": false,
+        "ohlc": false,
+        "volume": false
+      }
+    ],
+    "conclusion": "MIXED_OR_UNPROVEN_CAPABILITY",
+    "confirmatoryOhlcvReady": false
+  },
+  "shortPriceHistory": {
+    "directory": "prices/history",
+    "schema": "price-history-store/1",
+    "updatedAt": "2026-08-08T04:51:22.081Z",
+    "currentTickerCount": 32756,
+    "shards": 32,
+    "deterministicSample": {
+      "ticker": "006360.KS",
+      "rows": 268,
+      "keys": [
+        "close",
+        "date"
+      ],
+      "firstDate": "2025-06-30",
+      "lastDate": "2026-08-06"
+    },
+    "conclusion": "CURRENT-TICKER ADJUSTED-CLOSE STORE; NOT A HISTORICAL POINT-IN-TIME UNIVERSE"
+  },
+  "sec": {
+    "directory": "external-data/sec-xbrl",
+    "payloadJsonFiles": 129,
+    "manifestEntries": 1540,
+    "localPayloadsPresentInManifest": 56,
+    "localPayloadsAbsentFromManifest": 73,
+    "deterministicSampleRule": "first 25 filenames lexicographically",
+    "sampleCount": 25,
+    "sampleWithFiledKey": 25,
+    "sampleWithAccessionKey": 25,
+    "sampleWithAcceptanceTimestamp": 0,
+    "annualBulk": {
+      "exists": true,
+      "bytes": 4696754,
+      "companyRows": 2272,
+      "companyYearSlots": 23119,
+      "firstRowKeys": [
+        "annual",
+        "cik",
+        "name",
+        "ticker"
+      ],
+      "hasFilingAvailabilityInFirstRow": false
+    },
+    "conclusion": "USEFUL_FOR_PROTOTYPING_BUT_APPEND_ONLY_REVISION_AND_ACCEPTANCE_HISTORY_NOT_PROVEN",
+    "confirmatoryPitReady": false
+  },
+  "readiness": {
+    "status": "NOT_READY_TO_EXECUTE",
+    "missing": [
+      "entityListingLedger",
+      "appendOnlySecStore",
+      "historicalUniverse",
+      "asOfLeakageGate",
+      "adjustedOhlcv",
+      "corporateActionsDelistings",
+      "historicalGqsAdapter",
+      "conceptMapFrozen",
+      "independentAuditPassed",
+      "blindCodingAgreementPassed",
+      "researchCorpusSealed"
+    ],
+    "resultComputationAllowed": false,
+    "gates": {
+      "protocolSealed": true,
+      "confirmatoryAnalysisImplementationSealed": true,
+      "entityListingLedger": false,
+      "appendOnlySecStore": false,
+      "historicalUniverse": false,
+      "asOfLeakageGate": false,
+      "adjustedOhlcv": false,
+      "corporateActionsDelistings": false,
+      "historicalGqsAdapter": false,
+      "conceptMapFrozen": false,
+      "independentAuditPassed": false,
+      "blindCodingAgreementPassed": false,
+      "researchCorpusSealed": false
+    }
+  },
+  "forbiddenConclusions": [
+    "GQS is late",
+    "FEM detects future growth",
+    "technical indicators predict growth",
+    "the non-AI universe is robust",
+    "a company is investable or technically buyable"
+  ],
+  "environmentSmokes": {
+    "status": "SEPARATE_NON_SEALING_GATE",
+    "excludedPrefixes": [
+      "tests/discovery/"
+    ],
+    "reason": "Discovery smoke tests call live external registers and may return 429/5xx independently of repository correctness."
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "schema": "early-detection-readiness/v1",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "generatedAt": "2026-08-08T16:20:40.315Z",
+  "status": "NOT_READY_TO_EXECUTE",
+  "missing": [
+    "entityListingLedger",
+    "appendOnlySecStore",
+    "historicalUniverse",
+    "asOfLeakageGate",
+    "adjustedOhlcv",
+    "corporateActionsDelistings",
+    "historicalGqsAdapter",
+    "conceptMapFrozen",
+    "independentAuditPassed",
+    "blindCodingAgreementPassed",
+    "researchCorpusSealed"
+  ],
+  "resultComputationAllowed": false,
+  "gates": {
+    "protocolSealed": true,
+    "confirmatoryAnalysisImplementationSealed": true,
+    "entityListingLedger": false,
+    "appendOnlySecStore": false,
+    "historicalUniverse": false,
+    "asOfLeakageGate": false,
+    "adjustedOhlcv": false,
+    "corporateActionsDelistings": false,
+    "historicalGqsAdapter": false,
+    "conceptMapFrozen": false,
+    "independentAuditPassed": false,
+    "blindCodingAgreementPassed": false,
+    "researchCorpusSealed": false
+  }
+}
