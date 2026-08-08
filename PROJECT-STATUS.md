@@ -1,5 +1,14 @@
 # Project Status — screener-data
 
+> **CURRENT ADDENDUM — 2026-08-08:** Der aktive Growth-Quality-Score ist als
+> [`GQS-00@1.0.0`](protocol/gqs-00/1.0.0/README.md) eingefroren. Formelcheckout,
+> Daten- und Boardcommit sind belegt; alter und heutiger Code liefern auf 14.654
+> identischen Eingaben 0 Score- und 0 Rangabweichungen, alle 8.763 publizierten
+> Boardzeilen stimmen. Register, Hashes, Golden-Fixtures, Volltraces, PIT-Spezifikation
+> und die noch **nicht ausgeführte** SEC-US-GES-Präregistrierung liegen im verlinkten
+> Protokollordner. Readiness: **GQS-Baseline READY; PIT-Foundation und Pilot-Ausführung
+> NOT_READY**. Der historische Tag-239-Snapshot darunter bleibt absichtlich unverändert.
+
 > **SUPERSEDED — frozen snapshot, Tag 239 era (2026-06-10).** Every artefact
 > named below (`methods/index.js`, `methods/score-aggregator.js`,
 > `engine-v7.3.js`, `score-orchestrator.js`, `tag28-tests.js`,
